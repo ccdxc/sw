@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -389,12 +390,16 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			wstream := stream.(auth.AuthV1_AutoWatchUserServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "auth.User")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "User")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.User")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -406,7 +411,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "auth.User")
 					return err
 				}
 				events = &auth.AutoMsgUserWatchHelper{}
@@ -416,7 +421,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for User Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "auth.User")
 						return nil
 					}
 					in, ok := ev.Object.(*auth.User)
@@ -436,7 +441,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "User", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "User", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "auth.User")
 							break
 						}
 						strEvent.Object = i.(*auth.User)
@@ -461,7 +466,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for User Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "auth.User")
 					return wstream.Context().Err()
 				}
 			}
@@ -476,12 +481,16 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			wstream := stream.(auth.AuthV1_AutoWatchAuthenticationPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "AuthenticationPolicy")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -493,7 +502,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
 					return err
 				}
 				events = &auth.AutoMsgAuthenticationPolicyWatchHelper{}
@@ -503,7 +512,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for AuthenticationPolicy Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
 						return nil
 					}
 					in, ok := ev.Object.(*auth.AuthenticationPolicy)
@@ -523,7 +532,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "AuthenticationPolicy", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "AuthenticationPolicy", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
 							break
 						}
 						strEvent.Object = i.(*auth.AuthenticationPolicy)
@@ -548,7 +557,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for AuthenticationPolicy Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "auth.AuthenticationPolicy")
 					return wstream.Context().Err()
 				}
 			}
@@ -563,12 +572,16 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			wstream := stream.(auth.AuthV1_AutoWatchRoleServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "auth.Role")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Role")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.Role")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -580,7 +593,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "auth.Role")
 					return err
 				}
 				events = &auth.AutoMsgRoleWatchHelper{}
@@ -590,7 +603,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Role Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "auth.Role")
 						return nil
 					}
 					in, ok := ev.Object.(*auth.Role)
@@ -610,7 +623,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Role", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Role", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "auth.Role")
 							break
 						}
 						strEvent.Object = i.(*auth.Role)
@@ -635,7 +648,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Role Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "auth.Role")
 					return wstream.Context().Err()
 				}
 			}
@@ -650,12 +663,16 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			wstream := stream.(auth.AuthV1_AutoWatchRoleBindingServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "auth.RoleBinding")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "RoleBinding")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "auth.RoleBinding")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -667,7 +684,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "auth.RoleBinding")
 					return err
 				}
 				events = &auth.AutoMsgRoleBindingWatchHelper{}
@@ -677,7 +694,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for RoleBinding Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "auth.RoleBinding")
 						return nil
 					}
 					in, ok := ev.Object.(*auth.RoleBinding)
@@ -697,7 +714,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "RoleBinding", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "RoleBinding", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "auth.RoleBinding")
 							break
 						}
 						strEvent.Object = i.(*auth.RoleBinding)
@@ -722,7 +739,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for RoleBinding Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "auth.RoleBinding")
 					return wstream.Context().Err()
 				}
 			}

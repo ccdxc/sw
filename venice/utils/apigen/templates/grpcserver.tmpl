@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/listerwatcher"
@@ -273,12 +274,16 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 			wstream := stream.({{$pkgname}}.{{$svcname}}_AutoWatch{{.}}Server)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "{{.}}")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -290,7 +295,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
 					return err
 				}
 				events = &{{$pkgname}}.AutoMsg{{.}}WatchHelper{}
@@ -300,7 +305,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for {{.}} Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
 						return nil
 					}
 					in, ok := ev.Object.(*{{$pkgname}}.{{.}})
@@ -327,7 +332,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "{{.}}", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "{{.}}", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
 							break
 						}
 						strEvent.Object = i.(*{{$pkgname}}.{{.}})
@@ -352,7 +357,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 							return err
 						}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for {{.}} Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
 					return wstream.Context().Err()
 				}
 			}

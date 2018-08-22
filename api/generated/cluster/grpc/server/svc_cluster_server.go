@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -469,12 +470,16 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			wstream := stream.(cluster.ClusterV1_AutoWatchClusterServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "cluster.Cluster")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Cluster")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Cluster")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -486,7 +491,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.Cluster")
 					return err
 				}
 				events = &cluster.AutoMsgClusterWatchHelper{}
@@ -496,7 +501,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Cluster Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.Cluster")
 						return nil
 					}
 					in, ok := ev.Object.(*cluster.Cluster)
@@ -516,7 +521,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Cluster", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Cluster", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "cluster.Cluster")
 							break
 						}
 						strEvent.Object = i.(*cluster.Cluster)
@@ -541,7 +546,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Cluster Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "cluster.Cluster")
 					return wstream.Context().Err()
 				}
 			}
@@ -556,12 +561,16 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			wstream := stream.(cluster.ClusterV1_AutoWatchNodeServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "cluster.Node")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Node")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Node")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -573,7 +582,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.Node")
 					return err
 				}
 				events = &cluster.AutoMsgNodeWatchHelper{}
@@ -583,7 +592,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Node Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.Node")
 						return nil
 					}
 					in, ok := ev.Object.(*cluster.Node)
@@ -603,7 +612,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Node", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Node", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "cluster.Node")
 							break
 						}
 						strEvent.Object = i.(*cluster.Node)
@@ -628,7 +637,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Node Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "cluster.Node")
 					return wstream.Context().Err()
 				}
 			}
@@ -643,12 +652,16 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			wstream := stream.(cluster.ClusterV1_AutoWatchHostServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "cluster.Host")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Host")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Host")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -660,7 +673,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.Host")
 					return err
 				}
 				events = &cluster.AutoMsgHostWatchHelper{}
@@ -670,7 +683,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Host Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.Host")
 						return nil
 					}
 					in, ok := ev.Object.(*cluster.Host)
@@ -690,7 +703,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Host", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Host", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "cluster.Host")
 							break
 						}
 						strEvent.Object = i.(*cluster.Host)
@@ -715,7 +728,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Host Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "cluster.Host")
 					return wstream.Context().Err()
 				}
 			}
@@ -730,12 +743,16 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			wstream := stream.(cluster.ClusterV1_AutoWatchSmartNICServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "cluster.SmartNIC")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "SmartNIC")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.SmartNIC")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -747,7 +764,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.SmartNIC")
 					return err
 				}
 				events = &cluster.AutoMsgSmartNICWatchHelper{}
@@ -757,7 +774,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for SmartNIC Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.SmartNIC")
 						return nil
 					}
 					in, ok := ev.Object.(*cluster.SmartNIC)
@@ -777,7 +794,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "SmartNIC", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "SmartNIC", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "cluster.SmartNIC")
 							break
 						}
 						strEvent.Object = i.(*cluster.SmartNIC)
@@ -802,7 +819,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for SmartNIC Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "cluster.SmartNIC")
 					return wstream.Context().Err()
 				}
 			}
@@ -817,12 +834,16 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			wstream := stream.(cluster.ClusterV1_AutoWatchTenantServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "cluster.Tenant")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Tenant")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "cluster.Tenant")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -834,7 +855,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "cluster.Tenant")
 					return err
 				}
 				events = &cluster.AutoMsgTenantWatchHelper{}
@@ -844,7 +865,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Tenant Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.Tenant")
 						return nil
 					}
 					in, ok := ev.Object.(*cluster.Tenant)
@@ -864,7 +885,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Tenant", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Tenant", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "cluster.Tenant")
 							break
 						}
 						strEvent.Object = i.(*cluster.Tenant)
@@ -889,7 +910,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Tenant Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "cluster.Tenant")
 					return wstream.Context().Err()
 				}
 			}

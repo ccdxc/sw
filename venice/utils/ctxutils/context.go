@@ -47,6 +47,22 @@ context.Background.WithCancel.WithValue(
 	// other values, not shown here, make available the URL and other HTTP headers
 */
 
+type contextID struct{}
+
+// SetContextID marks an ID in the context
+func SetContextID(ctx context.Context, id string) context.Context {
+	return context.WithValue(ctx, contextID{}, id)
+}
+
+// GetContextID retrieves the context ID from the context
+func GetContextID(ctx context.Context) string {
+	v := ctx.Value(contextID{})
+	if val, ok := v.(string); ok {
+		return val
+	}
+	return ""
+}
+
 // GetPeerAddress returns a stringified version of peer IP address
 func GetPeerAddress(ctx context.Context) string {
 	peer, ok := peer.FromContext(ctx)

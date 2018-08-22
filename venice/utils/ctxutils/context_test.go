@@ -3,6 +3,7 @@
 package ctxutils
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -44,4 +45,14 @@ func TestGetFunctions(t *testing.T) {
 	Assert(t, GetPeerAddress(ctx4) == "", "Context with nil address returned non-empty peer address")
 	Assert(t, GetPeerCertificate(ctx4) == nil, "Context with nil certificate returned non-empty certificate")
 	Assert(t, GetPeerID(ctx4) == "", "Context with nil certificate returned non-empty peer ID")
+}
+
+func TestGetSetContextId(t *testing.T) {
+	ctx := context.TODO()
+	id := "TestContextId"
+	nctx := SetContextID(ctx, id)
+	rid := GetContextID(nctx)
+	if rid != id {
+		t.Fatalf("could not retreive context ID")
+	}
 }

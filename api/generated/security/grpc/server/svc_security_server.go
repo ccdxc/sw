@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -479,12 +480,16 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			wstream := stream.(security.SecurityV1_AutoWatchSecurityGroupServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.SecurityGroup")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "SecurityGroup")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.SecurityGroup")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -496,7 +501,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.SecurityGroup")
 					return err
 				}
 				events = &security.AutoMsgSecurityGroupWatchHelper{}
@@ -506,7 +511,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for SecurityGroup Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.SecurityGroup")
 						return nil
 					}
 					in, ok := ev.Object.(*security.SecurityGroup)
@@ -526,7 +531,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "SecurityGroup", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "SecurityGroup", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "security.SecurityGroup")
 							break
 						}
 						strEvent.Object = i.(*security.SecurityGroup)
@@ -551,7 +556,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for SecurityGroup Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "security.SecurityGroup")
 					return wstream.Context().Err()
 				}
 			}
@@ -566,12 +571,16 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			wstream := stream.(security.SecurityV1_AutoWatchSGPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.SGPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "SGPolicy")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.SGPolicy")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -583,7 +592,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.SGPolicy")
 					return err
 				}
 				events = &security.AutoMsgSGPolicyWatchHelper{}
@@ -593,7 +602,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for SGPolicy Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.SGPolicy")
 						return nil
 					}
 					in, ok := ev.Object.(*security.SGPolicy)
@@ -613,7 +622,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "SGPolicy", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "SGPolicy", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "security.SGPolicy")
 							break
 						}
 						strEvent.Object = i.(*security.SGPolicy)
@@ -638,7 +647,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for SGPolicy Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "security.SGPolicy")
 					return wstream.Context().Err()
 				}
 			}
@@ -653,12 +662,16 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			wstream := stream.(security.SecurityV1_AutoWatchAppServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.App")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "App")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.App")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -670,7 +683,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.App")
 					return err
 				}
 				events = &security.AutoMsgAppWatchHelper{}
@@ -680,7 +693,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for App Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.App")
 						return nil
 					}
 					in, ok := ev.Object.(*security.App)
@@ -700,7 +713,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "App", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "App", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "security.App")
 							break
 						}
 						strEvent.Object = i.(*security.App)
@@ -725,7 +738,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for App Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "security.App")
 					return wstream.Context().Err()
 				}
 			}
@@ -740,12 +753,16 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			wstream := stream.(security.SecurityV1_AutoWatchCertificateServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.Certificate")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Certificate")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.Certificate")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -757,7 +774,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.Certificate")
 					return err
 				}
 				events = &security.AutoMsgCertificateWatchHelper{}
@@ -767,7 +784,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Certificate Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.Certificate")
 						return nil
 					}
 					in, ok := ev.Object.(*security.Certificate)
@@ -787,7 +804,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Certificate", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Certificate", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "security.Certificate")
 							break
 						}
 						strEvent.Object = i.(*security.Certificate)
@@ -812,7 +829,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Certificate Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "security.Certificate")
 					return wstream.Context().Err()
 				}
 			}
@@ -827,12 +844,16 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			wstream := stream.(security.SecurityV1_AutoWatchTrafficEncryptionPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "TrafficEncryptionPolicy")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -844,7 +865,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
 					return err
 				}
 				events = &security.AutoMsgTrafficEncryptionPolicyWatchHelper{}
@@ -854,7 +875,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for TrafficEncryptionPolicy Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
 						return nil
 					}
 					in, ok := ev.Object.(*security.TrafficEncryptionPolicy)
@@ -874,7 +895,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "TrafficEncryptionPolicy", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "TrafficEncryptionPolicy", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
 							break
 						}
 						strEvent.Object = i.(*security.TrafficEncryptionPolicy)
@@ -899,7 +920,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for TrafficEncryptionPolicy Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
 					return wstream.Context().Err()
 				}
 			}

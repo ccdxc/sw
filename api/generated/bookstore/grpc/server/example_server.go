@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -1610,12 +1611,16 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchOrderServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Order")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Order")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Order")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -1627,7 +1632,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Order")
 					return err
 				}
 				events = &bookstore.AutoMsgOrderWatchHelper{}
@@ -1637,7 +1642,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Order Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Order")
 						return nil
 					}
 					in, ok := ev.Object.(*bookstore.Order)
@@ -1657,7 +1662,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Order", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Order", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "bookstore.Order")
 							break
 						}
 						strEvent.Object = i.(*bookstore.Order)
@@ -1682,7 +1687,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Order Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "bookstore.Order")
 					return wstream.Context().Err()
 				}
 			}
@@ -1697,12 +1702,16 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchBookServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Book")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Book")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Book")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -1714,7 +1723,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Book")
 					return err
 				}
 				events = &bookstore.AutoMsgBookWatchHelper{}
@@ -1724,7 +1733,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Book Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Book")
 						return nil
 					}
 					in, ok := ev.Object.(*bookstore.Book)
@@ -1744,7 +1753,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Book", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Book", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "bookstore.Book")
 							break
 						}
 						strEvent.Object = i.(*bookstore.Book)
@@ -1769,7 +1778,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Book Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "bookstore.Book")
 					return wstream.Context().Err()
 				}
 			}
@@ -1784,12 +1793,16 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchPublisherServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Publisher")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Publisher")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Publisher")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -1801,7 +1814,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Publisher")
 					return err
 				}
 				events = &bookstore.AutoMsgPublisherWatchHelper{}
@@ -1811,7 +1824,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Publisher Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Publisher")
 						return nil
 					}
 					in, ok := ev.Object.(*bookstore.Publisher)
@@ -1831,7 +1844,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Publisher", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Publisher", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "bookstore.Publisher")
 							break
 						}
 						strEvent.Object = i.(*bookstore.Publisher)
@@ -1856,7 +1869,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Publisher Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "bookstore.Publisher")
 					return wstream.Context().Err()
 				}
 			}
@@ -1871,12 +1884,16 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchStoreServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Store")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Store")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Store")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -1888,7 +1905,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Store")
 					return err
 				}
 				events = &bookstore.AutoMsgStoreWatchHelper{}
@@ -1898,7 +1915,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Store Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Store")
 						return nil
 					}
 					in, ok := ev.Object.(*bookstore.Store)
@@ -1918,7 +1935,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Store", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Store", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "bookstore.Store")
 							break
 						}
 						strEvent.Object = i.(*bookstore.Store)
@@ -1943,7 +1960,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Store Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "bookstore.Store")
 					return wstream.Context().Err()
 				}
 			}
@@ -1958,12 +1975,16 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchCouponServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Coupon")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Coupon")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Coupon")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -1975,7 +1996,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Coupon")
 					return err
 				}
 				events = &bookstore.AutoMsgCouponWatchHelper{}
@@ -1985,7 +2006,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Coupon Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Coupon")
 						return nil
 					}
 					in, ok := ev.Object.(*bookstore.Coupon)
@@ -2005,7 +2026,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Coupon", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Coupon", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "bookstore.Coupon")
 							break
 						}
 						strEvent.Object = i.(*bookstore.Coupon)
@@ -2030,7 +2051,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Coupon Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "bookstore.Coupon")
 					return wstream.Context().Err()
 				}
 			}
@@ -2045,12 +2066,16 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchCustomerServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
+			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "bookstore.Customer")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Customer")
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "bookstore.Customer")
 				return err
 			}
 			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
@@ -2062,7 +2087,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			sendToStream := func() error {
 				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
 				if err := wstream.Send(events); err != nil {
-					l.DebugLog("msg", "Stream send error'ed for Order", "error", err)
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "bookstore.Customer")
 					return err
 				}
 				events = &bookstore.AutoMsgCustomerWatchHelper{}
@@ -2072,7 +2097,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 				select {
 				case ev, ok := <-watcher.EventChan():
 					if !ok {
-						l.DebugLog("Channel closed for Customer Watcher")
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "bookstore.Customer")
 						return nil
 					}
 					in, ok := ev.Object.(*bookstore.Customer)
@@ -2099,7 +2124,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 					if version != in.APIVersion {
 						i, err := txfn(in.APIVersion, version, in)
 						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "Customer", "fromver", in.APIVersion, "tover", version)
+							l.ErrorLog("msg", "Failed to transform message", "type", "Customer", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "bookstore.Customer")
 							break
 						}
 						strEvent.Object = i.(*bookstore.Customer)
@@ -2124,7 +2149,7 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 						return err
 					}
 				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Customer Watcher")
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "bookstore.Customer")
 					return wstream.Context().Err()
 				}
 			}

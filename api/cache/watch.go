@@ -15,6 +15,7 @@ import (
 	"github.com/tchap/go-patricia/patricia"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -26,7 +27,7 @@ var (
 	defSweepInterval     = (3 * time.Second)
 	defRetentionDuration = (30 * time.Second)
 	defRetentionDepthMax = 1024 * 1024
-	defEvictInterval     = (10 * time.Second)
+	defEvictInterval     = (30 * time.Second)
 	defPurgeInterval     = (10 * time.Second)
 )
 
@@ -299,18 +300,19 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	var wg sync.WaitGroup
 	var startVer uint64
 
+	peer := ctxutils.GetContextID(ctx)
 	sendevent := func(e *list.Element) {
 		sendCh := make(chan error)
 		obj := e.Value.(*watchEvent)
 		if obj.version != 0 && obj.version < startVer {
-			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "SendDrop", "type", obj.evType, "path", w.path, "startVer", startVer, "ver", obj.version)
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "SendDrop", "type", obj.evType, "path", w.path, "startVer", startVer, "ver", obj.version, "peer", peer)
 			return
 		}
 		defer tracker.Unlock()
 		tracker.Lock()
 		hdr.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
-			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path)
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "peer", peer)
 			cb(obj.evType, obj.item, obj.prev)
 			close(sendCh)
 		}()
@@ -327,7 +329,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	w.janitorVerMu.Lock()
 	tracker.version = w.janitorVer
 	w.janitorVerMu.Unlock()
-	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Start", "path", w.path, "fromVer", fromver)
+	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Start", "path", w.path, "fromVer", fromver, "peer", peer)
 	var opts api.ListWatchOptions
 	opts.ResourceVersion = fmt.Sprintf("%d", fromver)
 	maxver := uint64(0)
@@ -367,7 +369,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 				}
 			}
 			for _, obj := range objs {
-				w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "reason", "list", "type", kvstore.Created, "path", w.path)
+				w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "reason", "list", "type", kvstore.Created, "path", w.path, "peer", peer)
 				cb(kvstore.Created, obj, nil)
 			}
 		}
@@ -375,13 +377,13 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 		if qver+1 > startVer {
 			startVer = qver + 1
 		}
-		w.log.InfoLog("oper", "WatchEventQDequeue", "startVer", startVer, "path", w.path, "fromVer", fromver)
+		w.log.InfoLog("oper", "WatchEventQDequeue", "startVer", startVer, "path", w.path, "fromVer", fromver, "peer", peer)
 	} else {
 		startVer = fromver
 	}
 
 	// Scan the current eventList
-	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Catchup", "path", w.path, "fromVer", fromver)
+	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Catchup", "path", w.path, "fromVer", fromver, "peer", peer)
 	var prev, item *list.Element
 	item = w.eventList.Front()
 	prev = item
@@ -394,7 +396,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 				Message: []string{fmt.Sprintf("version too old")},
 				Code:    http.StatusGone,
 			}
-			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up")
+			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up", "peer", peer)
 			cb(kvstore.WatcherError, &errmsg, nil)
 			return
 		}
@@ -447,7 +449,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 	<-deferCh
 	// Kickstart the dequeue monitor
 	w.notify()
-	w.log.InfoLog("oper", "WatchEventQDequeue", "prefix", w.path, "msg", "starting dequeue monitor")
+	w.log.InfoLog("oper", "WatchEventQDequeue", "prefix", w.path, "msg", "starting dequeue monitor", "peer", peer)
 	for {
 		select {
 		case <-condCh:
@@ -486,8 +488,9 @@ func (w *watchEventQ) janitorFn() {
 		if ver < minVer {
 			minVer = ver
 		}
-		if ver < tailver && time.Since(lastupd) > (w.config.EvictInterval) {
-			w.log.ErrorLog("Watcher idle for %dmsecs, evicting", time.Since(lastupd).Nanoseconds()/int64(time.Millisecond))
+		peer := ctxutils.GetContextID(v.ctx)
+		if ver != 0 && ver < tailver && time.Since(lastupd) > (w.config.EvictInterval) {
+			w.log.Errorf("Watcher [%s] idle for %dmsecs, evicting", peer, time.Since(lastupd).Nanoseconds()/int64(time.Millisecond))
 			w.stats.clientEvictions.Add(1)
 			v.cancel()
 		}

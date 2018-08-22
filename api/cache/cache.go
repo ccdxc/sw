@@ -630,9 +630,9 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	if err != nil {
 		return nil, fmt.Errorf("Establishing watch failed: %s", err.Error())
 	}
-	peer := ctxutils.GetPeerID(ctx)
 	nctx, cancel := context.WithCancel(ctx)
 	ret := newWatchServer(cancel)
+	peer := ctxutils.GetContextID(nctx)
 	watchHandler := func(evType kvstore.WatchEventType, item, prev runtime.Object) {
 		for _, fn := range filters {
 			if !fn(item, prev) {
