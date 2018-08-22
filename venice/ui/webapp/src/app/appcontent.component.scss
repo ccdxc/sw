@@ -193,6 +193,7 @@ $sidenavWidth: 200px;
   margin-left: 10px;
   background: #bfd2eb;
   border-radius: 2px;
+  width:920px;
 }
 
 .app-search-button {
@@ -200,33 +201,9 @@ $sidenavWidth: 200px;
   font-size: 20px;
   padding: 5px;
   margin: 0px -40px 3px 5px;
-}
+} 
 
-.app-header-search-autocomplete-widget {
-  background: transparent;
-}
 
-.app-header-search-autocomplete-widget.ui-autocomplete  .ui-inputtext {
-  background: transparent !important;
-  color: #222222;
-  transition: .2s;
-  width: 570px;
-  /* text-indent: 30px; */
-  margin-top: 1px;
-  border: 0px;
-}
-
-.app-search-autocomplete-suggestion-div {
-  display: flex;
-}
-
-.app-search-autocomplete-suggestion-item-name {
-  width: 50%;
-}
-
-.app-search-autocomplete-suggestion-item-desc {
-  width: 50%;
-}
 
 /*-------- Seach --------*/
 

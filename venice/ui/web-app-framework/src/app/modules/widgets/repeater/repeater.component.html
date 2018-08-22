@@ -1,15 +1,23 @@
 <div class="repeater">
   <ng-container *ngFor="let repeater of repeaterList; let first = first; let last = last;" [formGroup]="repeater.formGroup">
-    <div fxFlex="row" fxLayout="start center" class="repeater-group">
+    <div fxFlex="row" fxLayout="start center" class="repeater-group" >
       <!-- Key -->
       <div fxFlex="nogrow" class="repeater-selector repeater-key">
-          <p-dropdown [styleClass]="styleClass" 
+          <p-dropdown [styleClass]="styleClass" *ngIf="!isToUseInputField(repeater)" 
                       (onChange)="keyDropdownChange(repeater)" 
                       [formControlName]="keyFormName" 
-                      [options]="keyOptions">
+                      [options]="keyOptions"
+                      [filter]="keyDropdownFilter">
           </p-dropdown>
+          <input class="repeater-input" *ngIf="isToUseInputField(repeater)" 
+                                        (input)="emitValues()" 
+                                        spellcheck="false" 
+                                        type="text"  
+                                        pInputText  
+                                        [placeholder]="placeholderForKey(repeater, keyFormName)" 
+                                        [formControlName]="keytextFormName">
       </div>
-      <!-- Operator-->
+      <!-- Operator -->
       <div fxFlex="nogrow" class="repeater-selector repeater-operator">
           <p-dropdown [styleClass]="styleClass" 
                       (onChange)="emitValues()" 
@@ -39,17 +47,17 @@
                                         spellcheck="false" 
                                         type="text"  
                                         pInputText  
-                                        [placeholder]="keyToValueHintText[repeater.formGroup.value[keyFormName]]" 
+                                        [placeholder]="placeholderForValue(repeater, keyFormName)" 
                                         [formControlName]="valueFormName">
       </div>
       <!-- Add and delete buttons -->
       <!-- Only show and if its the last row -->
       <div fxFlex="nogrow" *ngIf="last" class="repeater-and">
-        <span (click)="addRepeater()">+ AND</span>
+        <span (click)="addRepeater()" tabindex="0" (keydown)="onAddRepeaterKeydown($event)">+ AND</span>
       </div> 
       <!-- Only show if its not the only repeater left -->
       <div fxFlex="nogrow" *ngIf="repeaterList.length != 1" class="repeater-trash-icon">
-        <mat-icon (click)="removeRepeater(repeater.id)">delete</mat-icon>
+        <mat-icon (click)="removeRepeater(repeater.id)"  tabindex="0" (keydown)="onRomveRepeaterKeydown($event, repeater.id)">delete</mat-icon>
       </div>
     </div>
   </ng-container>

@@ -1,3 +1,5 @@
+
+<h5>Form Group</h5>
 <div [formGroup]="formGroup">
   <app-repeater [data]="data" [formArray]="formGroup.get('test')" (repeaterValues)="handleRepeaterData($event)"></app-repeater>
   <p-button label="Console log repeater output" (onClick)="repeaterOutput()"></p-button>
@@ -6,3 +8,28 @@
     <textarea [style.margin]="'10px'" pInputTextarea></textarea>
   </div>
 </div>
+<hr/>
+<h5>Load repeater where field is a text input (close/open repeater)</h5>
+<div style="display:inline-block">
+    <i class="guidesearch-set-selectfield fa " 
+    (click)="setShowSelectField($event)"  [ngClass]="{'fa-plus':!isToSelectField,'fa-remove':isToSelectField}"  
+    title="{{isToSelectField? 'Close' : 'Open'}}"
+    ></i>
+  <app-repeater #repeater2 [data]="data2" (repeaterValues)="handleRepeater2Data($event)" 
+  [formArray]="formGroup.get('test2')" *ngIf="isToSelectField"></app-repeater>
+  <p-button label="Console log for Repeater2" (onClick)="repeater2Output()" *ngIf="isToSelectField"></p-button>
+  <hr *ngIf="isToSelectField"/>
+</div>
+<h5>New repeaters where field is a text input</h5>
+<app-repeater #repeater3 [data]="data3" (repeaterValues)="handleRepeater3Data($event)" 
+></app-repeater>
+<p-button label="Console log for Repeater3" (onClick)="repeater3Output()"></p-button>
+<hr/>
+<h5>Dynamically load repeater config data. Allow search in key field</h5>
+<app-repeater #repeaterDyn [data]="getDynRepeaterData()" (repeaterValues)="handleRepeaterDynData($event)" 
+  [keyDropdownFilter]="true"
+  [buildKeyPlaceholder] ="buildKeyPlaceholder"
+  [buildValuePlaceholder]="buildValuePlaceholder"
+></app-repeater>
+<p-button label="Console log for Repeater-Dyn" (onClick)="repeaterDynOutput()"></p-button>
+

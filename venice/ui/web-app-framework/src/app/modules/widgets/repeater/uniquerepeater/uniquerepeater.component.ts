@@ -8,9 +8,9 @@ import { RepeaterData, RepeaterItem, ValueType, RepeaterItemUnique } from '../in
  * Creates field selectors that are related, [key, operator, value]
  * Once key is chosen, it fills operator and value with the possible options
  * The value can either be a single select, multi select, or input field
- * 
+ *
  * Keys are unique and can only be picked once.
- * 
+ *
  * Existing data must be passed in as an Angular FormArray.
  */
 @Component({
@@ -20,13 +20,13 @@ import { RepeaterData, RepeaterItem, ValueType, RepeaterItemUnique } from '../in
   encapsulation: ViewEncapsulation.None,
 })
 export class UniquerepeaterComponent implements OnInit {
-  // The data for filling the reactive dropdown options 
+  // The data for filling the reactive dropdown options
   @Input() data: RepeaterData[] = [];
 
   // names to use when looking up and setting values in the repeaters
-  @Input() keyFormName: string = 'keyFormControl';
-  @Input() operatorFormName: string = 'operatorFormControl';
-  @Input() valueFormName: string = 'valueFormControl';
+  @Input() keyFormName = 'keyFormControl';
+  @Input() operatorFormName = 'operatorFormControl';
+  @Input() valueFormName = 'valueFormControl';
 
   // Passed in data to load into the repeaters
   @Input() formArray: FormArray;
@@ -56,7 +56,7 @@ export class UniquerepeaterComponent implements OnInit {
       this.keyToOperator[d.key.value] = d.operators;
       this.keyToValueType[d.key.value] = d.valueType;
       // if value is a single select or multi select, we add to the keyToValues map
-      if (d.valueType != ValueType.inputField && d.values != null) {
+      if (d.valueType !== ValueType.inputField && d.values != null) {
         this.keyToValues[d.key.value] = d.values;
       } else {
         if (d.valueHintText != null) {
@@ -65,20 +65,24 @@ export class UniquerepeaterComponent implements OnInit {
           this.keyToValueHintText[d.key.value] = 'Enter ' + d.key.value;
         }
       }
-    })
+    });
 
     // Always start with one repeater if given no existing data
-    if (this.formArray == null || this.formArray.length == 0) {
+    if (this.formArray == null || this.formArray.length === 0) {
       this.createRepeater();
     } else {
-      this.loadRepeaters();
+      try {
+        this.loadRepeaters();
+      } catch (error) {
+        throw error;
+      }
     }
   }
 
   /**
    * Creates a new repeater with the first available key selected, its first operator
    * selected, and the first value selected if it is a single select field
-   * 
+   *
    * @param shouldEmit Whether to emit a value change and write to the form array
    */
   private createRepeater(shouldEmit = true) {
@@ -98,7 +102,7 @@ export class UniquerepeaterComponent implements OnInit {
       formGroup: new FormGroup({
       }),
       keyOptions: options
-    }
+    };
     newRepeater.formGroup.addControl(this.keyFormName, new FormControl(options[0].value));
     newRepeater.formGroup.addControl(this.operatorFormName, new FormControl(operator));
     newRepeater.formGroup.addControl(this.valueFormName, new FormControl(value));
@@ -108,7 +112,7 @@ export class UniquerepeaterComponent implements OnInit {
 
     this.repeaterList.push(newRepeater);
     if (shouldEmit) {
-      this.emitValues()
+      this.emitValues();
     }
   }
 
@@ -118,7 +122,7 @@ export class UniquerepeaterComponent implements OnInit {
   regenerateAllOptions() {
     this.repeaterList.forEach((repeater) => {
       repeater.keyOptions = this.generateOptions(repeater);
-    })
+    });
   }
 
   // Marks the given option as used and updates all options
@@ -135,17 +139,17 @@ export class UniquerepeaterComponent implements OnInit {
 
   /**
    * Returns a list of all available key options
-   * 
+   *
    * @param repeater optional, if passed in includes the repeaters own value in the returned options
    */
   generateOptions(repeater: RepeaterItemUnique = null) {
-    let options = [];
+    const options = [];
     this.keyOptions.forEach((keyObj) => {
       // the repeaters own key will be marked as used, but we need to include it in options
-      if (this.keyUsed[keyObj.value] === false || (repeater != null && repeater.formGroup.value[this.keyFormName] == keyObj.value)) {
+      if (this.keyUsed[keyObj.value] === false || (repeater != null && repeater.formGroup.value[this.keyFormName] === keyObj.value)) {
         options.push(keyObj);
       }
-    })
+    });
     return options;
   }
 
@@ -164,13 +168,13 @@ export class UniquerepeaterComponent implements OnInit {
     const patchObj = {};
     patchObj[this.operatorFormName] = operator;
     patchObj[this.valueFormName] = valueOption;
-    repeater.formGroup.patchValue(patchObj)
+    repeater.formGroup.patchValue(patchObj);
 
     // there is a value marked as used that isn't actually used.
-    let usedKeys = [];
-    this.repeaterList.forEach((repeater) => {
-      usedKeys.push(repeater.formGroup.value[this.keyFormName]);
-    })
+    const usedKeys = [];
+    this.repeaterList.forEach((repeaterItem) => {
+      usedKeys.push(repeaterItem.formGroup.value[this.keyFormName]);
+    });
     // check that all key options that are listed as used are in fact being used
     this.keyOptions.forEach((option: SelectItem) => {
       if (this.keyUsed[option.value] === true) {
@@ -193,7 +197,7 @@ export class UniquerepeaterComponent implements OnInit {
     // checking if there are any keys left before creating
     if (this.repeaterList.length < this.keyOptions.length) {
       this.createRepeater();
-      this.emitValues()
+      this.emitValues();
     }
   }
 
@@ -202,17 +206,17 @@ export class UniquerepeaterComponent implements OnInit {
     if (this.repeaterList.length > 1) {
       let index = -1;
       for (let i = 0; i < this.repeaterList.length; i++) {
-        if (this.repeaterList[i].id == id) {
+        if (this.repeaterList[i].id === id) {
           index = i;
           break;
         }
       }
 
-      if (index != -1) {
+      if (index !== -1) {
         const removedRepeater = this.repeaterList.splice(index, 1)[0];
         const value = removedRepeater.formGroup.value[this.keyFormName];
         this.markOptionAvailable(value);
-        this.emitValues()
+        this.emitValues();
       }
     }
   }
@@ -221,7 +225,7 @@ export class UniquerepeaterComponent implements OnInit {
    * Emits the current value, as well as writes to the form control
    */
   emitValues() {
-    let formGroups = [];
+    const formGroups = [];
     this.repeaterList.forEach((repeater, index) => {
       formGroups.push(repeater.formGroup.value);
 
@@ -234,32 +238,32 @@ export class UniquerepeaterComponent implements OnInit {
           this.formArray.at(index).patchValue(repeater.formGroup.value);
         }
       }
-    })
+    });
     this.repeaterValues.emit(formGroups);
   }
 
   /**
    * Validates the data of the passed in control
-   * The Key, operator, and possibly value should be part of the 
+   * The Key, operator, and possibly value should be part of the
    * repeater data
    * .
    * @param control FormControl or FormGroup to be loaded
    */
   validateControl(control: AbstractControl) {
     const key = control.value[this.keyFormName];
-    const operator = control.value[this.operatorFormName]
-    const value = control.value[this.valueFormName]
+    const operator = control.value[this.operatorFormName];
+    const value = control.value[this.valueFormName];
     if (key == null) {
-      throw new Error("key cannot be blank");
+      throw new Error('key cannot be blank');
     }
     let keyContained = false;
     this.keyOptions.forEach((keyItem) => {
-      if (keyItem.value == key) {
+      if (keyItem.value === key) {
         keyContained = true;
       }
     });
     if (!keyContained) {
-      throw new Error("key is not part of the known keys supplied");
+      throw new Error('key is not part of the known keys supplied');
     }
 
     if (operator != null) {
@@ -269,9 +273,9 @@ export class UniquerepeaterComponent implements OnInit {
         if (operatorItem.value === operator) {
           operatorContained = true;
         }
-      })
+      });
       if (!operatorContained) {
-        throw new Error("operator is not part of the known operators supplied");
+        throw new Error('operator is not part of the known operators supplied');
       }
     }
 
@@ -286,20 +290,20 @@ export class UniquerepeaterComponent implements OnInit {
         if (valueItem.value === value) {
           valueContained = true;
         }
-      })
+      });
       if (!valueContained) {
-        throw new Error("value is not part of the known values supplied");
+        throw new Error('value is not part of the known values supplied');
       }
     } else {
-      value.forEach(value => {
+      value.forEach(myValue => {
         valueContained = false;
         this.keyToValues[key].forEach((valueItem: SelectItem) => {
-          if (valueItem.value === value) {
+          if (valueItem.value === myValue) {
             valueContained = true;
           }
-        })
+        });
         if (!valueContained) {
-          throw new Error("value is not part of the known values supplied");
+          throw new Error('value is not part of the known values supplied');
         }
         valueContained = false;
       });
@@ -312,18 +316,22 @@ export class UniquerepeaterComponent implements OnInit {
    * load data from the given form array into the repeaters
    */
   loadRepeaters() {
-    if (this.formArray != null && this.formArray.length != 0) {
+    if (this.formArray != null && this.formArray.length !== 0) {
       this.formArray.controls.forEach((control: AbstractControl, index: number) => {
         // Check that the control's key value exists in our set of keys
+        // this.validateControl(control);
         this.validateControl(control);
 
-        // Index should only be one off from actual length, 
+        // Index should only be one off from actual length,
         // we create a new repeater for it if needed
+
         if (index >= this.repeaterList.length) {
           this.createRepeater(false);
         }
         this.repeaterList[index].formGroup.patchValue(control.value);
+
       });
+
 
       // Reset all keyUsed
       this.keyOptions.forEach((key) => {
@@ -341,6 +349,30 @@ export class UniquerepeaterComponent implements OnInit {
         this.repeaterList[index].formGroup.patchValue(control.value);
       });
       this.emitValues();
+    }
+  }
+
+  /**
+   * This API serves html template
+   * @param event
+   *
+   * If "enter" key is down, add a repeater
+   */
+  onAddRepeaterKeydown(event) {
+    if (event && event.which === 13) {
+      this.addRepeater();
+    }
+  }
+
+  /**
+   * This API serves html template
+   * @param event
+   *
+   * If "enter" key is down, add a repeater
+   */
+  onRomveRepeaterKeydown(event, repeaterId: any) {
+    if (event && event.which === 13) {
+      this.removeRepeater(repeaterId);
     }
   }
 }

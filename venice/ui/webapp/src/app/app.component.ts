@@ -1,8 +1,8 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { LogService } from '@app/services/logging/log.service';
-import { CommonComponent } from './common.component';
-import { Utility } from './common/Utility';
-import { ControllerService } from './services/controller.service';
+import { CommonComponent } from '@app/common.component';
+import { Utility } from '@app/common/Utility';
+import { ControllerService } from '@app/services/controller.service';
 
 
 /**

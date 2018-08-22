@@ -36,3 +36,11 @@
     text-decoration: underline;
     cursor: pointer;
 }
+
+.repeater-key .ui-dropdown-filter.ui-inputtext{
+    text-indent: 2px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 2px;
+    padding-right: 2px;
+}

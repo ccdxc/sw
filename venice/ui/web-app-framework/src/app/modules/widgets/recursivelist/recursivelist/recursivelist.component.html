@@ -1,6 +1,6 @@
 
 <!-- -->
-<ul #recursivelist [ngClass]="getStyleClass()">
+<ul #recursivelist [ngClass]="getStyleClass()" *ngIf="list">
   <ng-template #recursiveList let-list>
     <li *ngFor="let item of list">
       <a (click)="selectItem(item)">{{getListLabel(item)}}</a>

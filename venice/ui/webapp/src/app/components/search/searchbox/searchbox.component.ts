@@ -1,15 +1,14 @@
 import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
-import { SearchComponent } from './search.component';
+import { SearchComponent } from '@app/components/search/search/search.component';
 
-import { CommonComponent } from '../../common.component';
+import { CommonComponent } from '@app/common.component';
 import { Utility } from '@app/common/Utility';
-import { SearchUtil } from '@app/common/SearchUtil';
+import { SearchUtil } from '@app/components/search/SearchUtil';
 import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-
-import { SearchSearchResponse, SearchSearchRequest, ApiStatus, SearchSearchQuery_categories, SearchSearchQuery_kinds } from '@sdk/v1/models/generated/search';
-
+import { SearchsuggestionTypes, SearchSuggestion, SearchSpec, SearchExpression, GuidedSearchCriteria} from '@app/components/search';
+import { SearchSearchResponse, SearchSearchRequest  } from '@sdk/v1/models/generated/search';
 
 /**
  * This component provides the search service UI. It wraps a search-widget and invoke search to feed data to search-widget.
@@ -64,28 +63,8 @@ import { SearchSearchResponse, SearchSearchRequest, ApiStatus, SearchSearchQuery
  * onSeachInputClick(..)  // handles when user clicks on search-input box
  *
  *
- * TODO: 2018-07-16
- * We will introduce guided search like gmail advance search UI. That feature will be in subsequent PRs.
  *
  */
-
-interface SearchSuggestion {
-  name: string;
-  label?: string;
-  sample?: string;
-  searchType: SearchsuggestionTypes;
-  count?: number;
-}
-
-enum SearchsuggestionTypes {
-  KINDS = 'kinds',
-  CATEGORIES = 'categories',
-  INIT = 'init',
-  OP_IN = 'in',
-  OP_IS = 'is',
-  OP_HAS = 'has',
-  OP_TAG = 'tag'
-}
 
 
 @Component({
@@ -124,13 +103,14 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    */
   filterVeniceApplicationSearchSuggestions(event: any) {
     const searchstring = event.query;
-    const formattedString = this.formatInputString(searchstring);
+    const formattedString = SearchUtil.formatInputString(searchstring);
     if (formattedString !== searchstring) {
       this.setSearchInputString(formattedString);
     }
     if (formattedString.length > 2) {
       this.getVeniceApplicationSearchSuggestions(formattedString);
     }
+    this._searchwidget.loading = false;
   }
 
   /**
@@ -141,51 +121,13 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    * in:cluster and hello, world is:wonder
    */
   protected parseInput(value: string): any {
-    const inputstr = this.formatInputString(value);
-    const output = [];
-    if (!this.isSearchInputStartsWithGrammarTag(inputstr)) {
+    const inputstr = SearchUtil.formatInputString(value);
+    let output = [];
+    if (!SearchUtil.isSearchInputStartsWithGrammarTag(inputstr)) {
       return output;
     }
-    const list = inputstr.split(' ');
-    let prevObj = null;
-    for (let i = 0; list && i < list.length; i++) {
-      const listStr = list[i];
-      if (listStr && listStr.trim().length > 0) {
-        const strs = listStr.split(':');
-        if (strs.length === 2) {
-          const obj = {};
-          obj['type'] = strs[0];
-          obj['value'] = strs[1];
-          output.push(obj);
-          prevObj = obj;
-        } else {
-          if (prevObj) {
-            prevObj['value'] = prevObj['value'] + ' ' + listStr;
-          }
-        }
-      }
-    }
+    output = SearchUtil.parseSearchStringToObjectList(inputstr);
     return output;
-  }
-
-  /**
-   * This API reformats input string (string middle space,etc ', ' -> ',')
-   * It tries to correct user input space error and make the search-input-string grammarically correct.
-   *
-   * @param value
-   */
-  private formatInputString(value: string): string {
-    let inputstr = value.trim(); // "in:cluster is: node  has:meta.name=node9 ";
-    inputstr = inputstr.replace(/\s\s+/g, ' ');
-    inputstr = inputstr.replace(';', ':'); // format [is;node]  double [is:node]
-    inputstr = inputstr.replace(',,', ','); // format [in: cluster is,,monitoring is:node]  double ",,"
-    inputstr = inputstr.replace(', ', ',');  // format [in:cluster,  network is:node,tenants]
-    inputstr = inputstr.replace(': ', ':');  // format [is:node has: name=node9   in:cluster]
-    inputstr = inputstr.replace(' :', ':');  // format [in:cluster is :node,monitoring]
-    inputstr = inputstr.replace('= ', '=');  // format [is:node has: name= node9   in:cluster]
-    inputstr = inputstr.replace(' =', '=');  // format [is:node has: name =node9   in:cluster]
-    inputstr = inputstr.replace(/\s\s+/g, ' ');
-    return inputstr;
   }
 
   /**
@@ -224,7 +166,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
       const payloadJSON = JSON.stringify(payload);
       this._callSearchRESTAPI(payloadJSON, inputSearchString);
     } else {
-      const tag = this.getFirstLastSearchGrammarTag(inputSearchString);  // Say, the curretn input-string is 'in:cluster is:Node'.  We build a {'start':in, 'end', 'is'}
+      const tag = SearchUtil.getFirstLastSearchGrammarTag(inputSearchString);  // Say, the curretn input-string is 'in:cluster is:Node'.  We build a {'start':in, 'end', 'is'}
       this.getSearchSuggestionsByGrammarTag(tag, searchGrammarGroup);    // base on 'in:cluster is:Node'. we make suggestions
     }
   }
@@ -294,6 +236,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     this._searchService.PostQuery(this.buildSearchSearchRequest(payloadJSON)).subscribe(response => {
       const status = response.statusCode;
       const body: SearchSearchResponse = response.body as SearchSearchResponse;
+      this._searchwidget.loading = false;
       if (status === 200) {
         if (suggestionMode) {
           this._processGlobalSearchResult(searched, body);  // response.body
@@ -305,6 +248,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
             searched: searched,
             searchrequest: payloadJSON
           };
+          this._searchwidget.isInGuidedSearchMode = false; // close guided-search overlay panel
           this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA] = payload;
           this._controllerService.publish(Eventtypes.SEARCH_RESULT_LOAD_REQUEST, payload);
           this.displaySuggestionPanelVisible(false);
@@ -317,6 +261,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
       this.successMessage = '';
       this.errorMessage = 'Failed to retrieve data! ' + err;
       this.error(err);
+      this._searchwidget.loading = false;
     });
   }
 
@@ -394,7 +339,11 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     return this.buildFieldsLabelsPayloadHelper(obj, true);
   }
 
-  private buildFieldsLabelsPayloadHelper(obj: any, isField: boolean): any {
+  private buildLabelsPayload(obj): any {
+    return this.buildFieldsLabelsPayloadHelper(obj, false);
+  }
+
+  buildFieldsLabelsPayloadHelper(obj: any, isField: boolean): any {
     const output = [];
     const values = obj.value.split(',');
     for (let i = 0; i < values.length; i++) {
@@ -407,127 +356,15 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     return output;
   }
 
-  private buildLabelsPayload(obj): any {
-    return this.buildFieldsLabelsPayloadHelper(obj, false);
-  }
-
   /**
    * Build expression for searching "field" and "label".
    */
-  buildExpression(inputString: string, isField: boolean): any {
-    const operators = (isField) ? SearchUtil.SEARCH_FIELD_OPERATORS : SearchUtil.SEARCH_LABEL_OPERATORS;
-    let obj = null;
-    for (let i = 0; i < operators.length; i++) {
-      const op = operators[i];
-      if (inputString.indexOf(op.operator) >= 0) {
-        const strs = inputString.split(op.operator);
-        obj = {};
-        // cases sensitive.
-        obj['key'] = this.padKey(strs[0], isField);
-        obj['operator'] = op.label;
-        obj['values'] = [strs[1].trim()];
-      }
-    }
-    return obj;
+  buildExpression(inputString: string, isField: boolean): SearchExpression {
+    const searchExpression = SearchUtil.parseToExpression(inputString, isField);
+    searchExpression.key = SearchUtil.padKey(searchExpression.key , isField);
+    return searchExpression;
   }
-
-  /**
-   * Check whether current input search string starts with prammar tag. like "is:xxx"
-   */
-  protected isSearchInputStartsWithGrammarTag(inputString: string): boolean {
-    return this.isSearchInputStartsEndsWithGrammarTag(inputString, true);
-  }
-
-  /**
-   * Check whether current input search string end with prammar tag. like "is:xxx has:"
-   */
-  protected isSearchInputEndsWithGrammarTag(inputString: string): boolean {
-    return this.isSearchInputStartsEndsWithGrammarTag(inputString, false);
-  }
-
-  /**
-   * Helper function
-   * @param inputString
-   * @param isStartsWith
-   */
-  protected isSearchInputStartsEndsWithGrammarTag(inputString: string, isStartsWith: boolean): boolean {
-    inputString = inputString.trim();
-    const grammars = Object.keys(SearchUtil.SEARCH_GRAMMAR_TAGS);
-    for (let i = 0; i < grammars.length; i++) {
-      const op = SearchUtil.SEARCH_GRAMMAR_TAGS[grammars[i]];
-      if (isStartsWith) {
-        if (inputString.startsWith(op.key)) {
-          return true;
-        }
-      } else {
-        if (inputString.endsWith(op.key)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  /**
-   * When input search string is like "in:xxx is:yyy has:".  UI builds a object {'start': 'in', 'end':'has'}
-   * This object will help compute suggestions and how to update the input-search string.
-   * @param inputString
-   */
-  protected getFirstLastSearchGrammarTag(inputString: string) {
-    const obj = {};
-    inputString = inputString.trim();
-    const grammars = Object.keys(SearchUtil.SEARCH_GRAMMAR_TAGS);
-    for (let i = 0; i < grammars.length; i++) {
-      const op = SearchUtil.SEARCH_GRAMMAR_TAGS[grammars[i]];
-      if (inputString.startsWith(op.key)) {
-        obj['start'] = op.key;
-      }
-      if (inputString.endsWith(op.key)) {
-        obj['end'] = op.key;
-      }
-    }
-    return obj;
-
-  }
-
-  /**
-   * Object model looks like
-   * "meta": {
-   *            "name": "dev",
-   *             "tenant": "default",
-   *             "resource-version": "1097",
-   *             "uuid": "0fc5f896-864b-4df9-9e02-8b9cd1be3ea6",
-   *             "labels": {
-   *                "_category": "Cluster"
-   *            },
-   * User can input name=dev
-   * UI will make it as:
-   *  "fields": {
-   *   "requirements": [
-   *     {
-   *       "key": "meta.name",
-   *       "operator": "equals",
-   *      "values": [
-   *         "node9"
-   *       ]
-   *     }
-   *   ]
-   * }
-   * @param inputString
-   * @param isField
-   */
-  private padKey(inputString: string, isField: boolean): string {
-    if (isField) {
-      if (!inputString.startsWith('meta.')) {
-        return 'meta.' + inputString.trim();
-      }
-    } else {
-      if (!inputString.startsWith('meta.')) {
-        return 'meta.labels.' + inputString.trim();
-      }
-    }
-    return inputString;
-  }
+ 
 
 
   /**
@@ -585,16 +422,41 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     if (Utility.isEmpty(this.getSearchInputString())) {
       return; // do nothing
     }
-    const output = this.parseInput(searched);  // parse search-string to see if it contains search-grammar keywords (in:, is:, etc)
+    const grammarList = this.parseInput(searched);  // parse search-string to see if it contains search-grammar keywords (in:, is:, etc)
     let payload = null;
-    if (output.length === 0 || !this.isSearchInputStartsWithGrammarTag(searched)) {
+    // if (grammarList.length === 0 || !this.isSearchInputStartsWithGrammarTag(searched)) {
+    if (this.shouldRunTextSearch(searched)) {
       payload = this.buildTextSearchPayload(searched);
     } else {
-      payload = this.buildComplexSearchPayload(output, searched);
+      payload = this.buildComplexSearchPayload(grammarList, searched);
     }
     const payloadJSON = JSON.stringify(payload);
     this._callSearchRESTAPI(payloadJSON, searched, mode);
   }
+
+  /**
+   * Decside whether to run text search or guided search
+   * @param inputSearchString
+   */
+  private shouldRunTextSearch(inputSearchString: string): boolean {
+    const grammarList = this.parseInput(inputSearchString);
+    if (grammarList.length === 0 || !SearchUtil.isSearchInputStartsWithGrammarTag(inputSearchString)) {
+        return true;
+    } else {
+        if (grammarList.length === 1) {
+            // in input is like "in:", it is a text search
+            const value = grammarList[0]['value'];
+            if (Utility.isEmpty(value)) {
+              return true;
+            }
+        } else {
+          return false;
+        }
+    }
+    return false;
+  }
+
+
 
   /**
    * This api handle what to do when user select item from suggestion panel
@@ -667,9 +529,9 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     }
     const grammarlist = this.parseInput(searched);
     if (grammarlist.length === 0) {
-      this.setSearchInputString(this.getSearchInputString() + ' ' + grammarTag + '' + selectedOption);
+      this.setSearchInputString(this.getSearchInputString() + ' ' + grammarTag + ':' + selectedOption);
     }
-    const tag = this.getFirstLastSearchGrammarTag(searched);
+    const tag = SearchUtil.getFirstLastSearchGrammarTag(searched);
     const endTagType = tag['end'];
     if (endTagType) {
       // case-1: "in: cluster is:"
@@ -677,8 +539,12 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     } else {
       // case-2: "in: cluster is:nod"
       const lastGrammarItem = grammarlist.slice(-1)[0];
-      const grammarType = lastGrammarItem.type;
-      const grammarValue = lastGrammarItem.value;
+      const grammarType = (lastGrammarItem) ? lastGrammarItem.type : null;
+      const grammarValue = (lastGrammarItem) ? lastGrammarItem.value : null;
+      if (this.getSearchInputString().endsWith(selectedOption)) {
+        // for example, existing text is "is:Node", selection is "Node".  There is  no need to update.
+        return ;
+      }
       if (Utility.isEmpty(grammarValue)) {
         this.setSearchInputString(this.getSearchInputString() + selectedOption);
       } else {
@@ -832,10 +698,10 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
   }
 
   private getCategories(): string[] {
-    return Object.keys(SearchSearchQuery_categories);
+    return SearchUtil.getCategories();
   }
   private getKinds(): string[] {
-    return Object.keys(SearchSearchQuery_kinds);
+    return SearchUtil.getKinds();
   }
 
   protected setSearchInputString(text: string) {
@@ -845,4 +711,65 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
   protected getSearchInputString(): string {
     return this._searchwidget.getInputText();
   }
+
+  /**
+   * This API serves HTML template
+   *
+   * It handles search request from guided-search panel
+   * @param guidedSearchCriteria
+   *
+   * guidedSearchCriteria is a JSON object. It looks like
+   * {"in":["Network","Auth"],"is":["Certificate","FwlogPolicy"],"has":[{"keyFormControl":"name","operatorFormControl":"equal","valueFormControl":"hello"}],"tag":[{"keyFormControl":"text","operatorFormControl":"equal","valueFormControl":"esx","keytextFormName":"os"},{"keyFormControl":"text","operatorFormControl":"equal","valueFormControl":"ssd","keytextFormName":"storage"}]}
+   * We convert it to a search-input string as:
+   * in:Network,Auth is:Certificate,FwlogPolicy has:name=hello tag:os=esx,storage=ssd
+   * Then we run invoke Search REST API to get search-result
+   */
+  onInvokeGuidedSearch(guidedSearchCriteria: GuidedSearchCriteria) {
+    const inStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IN].length > 0) ? SearchsuggestionTypes.OP_IN + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IN].join(',') : '';
+    const isStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IS].length > 0) ? SearchsuggestionTypes.OP_IS + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IS].join(',') : '';
+    const hasStr = this.getHasStringFromGuidedSearchSpec(guidedSearchCriteria);
+    const tagStr = this.getTagStringFromGuidedSearchSpec(guidedSearchCriteria);
+    const list  = [inStr, isStr, hasStr, tagStr];
+    const searchInputString = list.join(' ').trim();
+    if (Utility.isEmpty(searchInputString)) {
+        return;
+    }
+    const grammarList = this.parseInput(searchInputString);
+    const payload = this.buildComplexSearchPayload(grammarList, searchInputString);
+    const payloadJSON = JSON.stringify(payload);
+    this.setSearchInputString(searchInputString);
+    this._callSearchRESTAPI(payloadJSON, searchInputString, false);
+  }
+
+  /**
+   * extract out the 'has' configs
+   */
+  private getHasStringFromGuidedSearchSpec(guidedsearchCriteria: any): any {
+     const list = [];
+     const type = SearchsuggestionTypes.OP_HAS;
+     const hasSpecList = guidedsearchCriteria[type];
+     hasSpecList.filter( (repeaterValueItem ) => {
+      if (!Utility.isEmpty(repeaterValueItem.keyFormControl) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
+       const str = repeaterValueItem.keyFormControl + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
+       list.push(str);
+      }
+     });
+     return (list.length > 0) ? type + ':' + list.join(',') : '';
+  }
+
+  /**
+   * extract out the 'tag' configs
+   */
+  private getTagStringFromGuidedSearchSpec(guidedsearchCriteria: any): any {
+    const list = [];
+    const type = SearchsuggestionTypes.OP_TAG;
+    const tagSpecList = guidedsearchCriteria[type];
+    tagSpecList.filter( (repeaterValueItem) => {
+      if (!Utility.isEmpty(repeaterValueItem.keytextFormName) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
+        const str = repeaterValueItem.keytextFormName + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
+        list.push(str);
+      }
+    });
+    return (list.length > 0) ? type + ':' + list.join(',') : '';
+ }
 }

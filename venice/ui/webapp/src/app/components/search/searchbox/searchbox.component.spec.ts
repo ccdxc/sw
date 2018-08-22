@@ -13,10 +13,17 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { SearchService } from '@app/services/generated/search.service';
 import { SearchSearchResponse, SearchSearchRequest, ApiStatus } from '@sdk/v1/models/generated/search';
 
+import { SharedModule } from '@app/components/shared/shared.module';
+import { PrimengModule } from '@app/lib/primeng.module';
+import { WidgetsModule } from 'web-app-framework';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 
-import { SearchboxComponent } from './searchbox.component';
-import { SearchComponent } from './search.component';
-import { SearchsuggestionsComponent } from './searchsuggestions.component';
+import { SearchComponent } from '@app/components/search/search/search.component';
+import { SearchboxComponent } from '@app/components/search/searchbox/searchbox.component';
+import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
+import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
+import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
+
 @Component({
   template: ''
 })
@@ -32,6 +39,8 @@ describe('SearchboxComponent', () => {
         SearchboxComponent,
         SearchComponent,
         SearchsuggestionsComponent,
+        GuidesearchComponent,
+        SearchresultComponent,
         DummyComponent,
       ],
       imports: [
@@ -40,7 +49,12 @@ describe('SearchboxComponent', () => {
         ]),
         FormsModule,
         HttpClientTestingModule,
-        RouterTestingModule
+        RouterTestingModule,
+        FormsModule,
+        SharedModule,
+        WidgetsModule,
+        PrimengModule,
+        MaterialdesignModule
       ],
       providers: [
         ControllerService,

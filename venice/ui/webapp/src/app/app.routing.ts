@@ -1,9 +1,9 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { SettingsComponent } from './components/settings';
-import { DashboardComponent } from './components/dashboard';
+import { SettingsComponent } from '@app/components/settings';
+import { DashboardComponent } from '@app/components/dashboard';
 import { AuthGuard } from '@app/services/authguard.service';
-import { SearchresultComponent } from './components/search/searchresult.component';
+import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
 import { RouteGuard } from '@app/services/routeguard.service';
 import { UIConfigsResolver } from '@app/services/uiconfigs.service';
 import { AppcontentComponent } from '@app/appcontent.component';

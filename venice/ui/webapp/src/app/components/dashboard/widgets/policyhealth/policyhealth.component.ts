@@ -109,7 +109,7 @@ export class PolicyhealthComponent implements OnInit, OnDestroy, OnChanges {
           },
           font: {
             weight: 'bold',
-            family: 'Fira San'
+            family: 'Fira Sans Condensed'
           },
           formatter: Math.round
         }
@@ -127,7 +127,7 @@ export class PolicyhealthComponent implements OnInit, OnDestroy, OnChanges {
             const textCtx = element.getContext('2d');
             textCtx.textAlign = 'center';
             textCtx.textBaseline = 'middle';
-            textCtx.font = '36px Fira San';
+            textCtx.font = '36px Fira Sans Condensed';
             textCtx.fillText(total, 190, 95);
           }
         }

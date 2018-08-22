@@ -8,8 +8,9 @@ import { ObjectUtils } from 'primeng/components/utils/objectutils';
 
 import { Utility } from '@app/common/Utility';
 
-import { SearchsuggestionsComponent } from './searchsuggestions.component';
-import { SearchUtil } from '@app/common/SearchUtil';
+import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
+import { SearchUtil } from '@app/components/search/SearchUtil';
+import { GuidesearchComponent } from '@components/search/guidedsearch/guidedsearch.component';
 
 /**
  * SearchComponent extends PrimeNG AutoComplete component
@@ -40,6 +41,7 @@ import { SearchUtil } from '@app/common/SearchUtil';
 })
 export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
   @ViewChild('suggestionWidget') _suggestionWidget: SearchsuggestionsComponent;
+  @ViewChild('guidesearchWidget') _guidesearchWidget: GuidesearchComponent;
 
   protected id_prefix = 'app-searchbox_';
   @Input() id: string = null;
@@ -48,15 +50,19 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
 
   @Output() invokeSearch: EventEmitter<any> = new EventEmitter();
   @Output() invokeSuggestionOnSearchClick: EventEmitter<any> = new EventEmitter();
+  @Output() invokeGuidedSearch: EventEmitter<any> = new EventEmitter();
 
-  _lastWindowClickEvent;
+  _lastWindowClickEvent: any;
+  isInGuidedSearchMode: boolean = false;
+
+  scrollHeight = '1000px';
+  guidesearchInput: any;
 
   constructor(public el: ElementRef, public domHandler: DomHandler, public differs: IterableDiffers,
     public renderer: Renderer2, public objectUtils: ObjectUtils, public changeDetector: ChangeDetectorRef,
   ) {
     super(el, domHandler, renderer, objectUtils, changeDetector, differs);
   }
-
   ngOnInit() {
 
   }
@@ -76,7 +82,7 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    */
   onDocumentClick($event) {
     this._lastWindowClickEvent = $event;
-    if (this.overlayVisible) {
+    if (this.overlayVisible && !this.isInGuidedSearchMode) {
       if (!this.isFocusWithinWidget(this.el.nativeElement)) {
         this.overlayVisible = false;
         this.unbindDocumentClickListener();
@@ -91,9 +97,11 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    *
    */
   onSearchWidgetFocusOut($event) {
-    if (!this.isFocusWithinWidget($event.currentTarget)) {
-      this.overlayVisible = false;
-      this.unbindDocumentClickListener();
+    if (!this.isInGuidedSearchMode) {
+      if (!this.isFocusWithinWidget($event.currentTarget)) {
+        this.overlayVisible = false;
+        this.unbindDocumentClickListener();
+      }
     }
   }
 
@@ -114,6 +122,9 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
       if (classlist && classlist[0] && classlist[0] === 'searchbox-panel-div') {
         return true;
       }
+      if (classlist && classlist[0] && classlist[0] === 'guidesearch') {
+        return true;
+      }
       parentElement = parentElement.parentNode;
     }
     return false;
@@ -126,7 +137,6 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    * @param isSuggestionMode
    */
   onInvokeSearch($event, isSuggestionMode: boolean = true) {
-    console.log('SearchboxComponent.invokeSearch()', this.value);
     this.invokeSearch.emit({
       text: this.getInputText(),
       mode: isSuggestionMode
@@ -195,8 +205,12 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    * We want to invoke seach only when enter-key is pressed.
    */
   onKeydown(event) {
+    this.loading = false;
+    if (this.isInGuidedSearchMode) {
+      return;
+    }
     switch (event.which) {
-      case SearchUtil.EVENT_KEY_ENETER:
+      case SearchUtil.EVENT_KEY_ENTER:
         const query = this.getInputText();
         this.onInvokeSearch(event, true);  // invoke search to get get search suggestions. (2nd parameter is true)
         break;
@@ -261,8 +275,8 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    */
   getKeywords() {
     const value = this.getInputText();
-    if (value.length > 50) {
-      return value.substring(0, 49) + ' ...';
+    if (value.length > 80) {
+      return value.substring(0, 79) + ' ...'; // in case the search string is too long, we shorten it.
     }
     return this.getInputText();
   }
@@ -299,6 +313,9 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    * This API serves html template
    */
   showSearchIcons(): boolean {
+    if (this.isInGuidedSearchMode) {
+      return false;
+    }
     const value = this.getInputText();
     return (!this.disabled && this.multiple && value && value.length > 0);
   }
@@ -321,6 +338,25 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
       this.suggestions.length = 0;
     }
     this.onModelChange(this.value);
+  }
+
+  showGuidedSearch(event) {
+    this.isInGuidedSearchMode = !this.isInGuidedSearchMode;
+    this.overlayVisible = this.isInGuidedSearchMode;
+    this.loading = false;
+    if (this.isInGuidedSearchMode === true ) {
+      const inputStr = this.getInputText();
+      if (!Utility.isEmpty(inputStr)) {
+        // We are openning up guieded-search panel. But a "SearchSpec" for guided-search widget
+        const typevalueList =  SearchUtil.parseSearchStringToObjectList(inputStr);
+        this.guidesearchInput  = SearchUtil.convertToSearchSpec(typevalueList);
+      }
+    }
+  }
+
+  onGuidedSearchRequest(event) {
+    const searchSpec = event;
+    this.invokeGuidedSearch.emit(searchSpec);
   }
 }
 

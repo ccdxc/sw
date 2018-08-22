@@ -2,11 +2,11 @@ import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { Utility } from '@app/common/Utility';
-import { SearchUtil } from '@app/common/SearchUtil';
+import { SearchUtil } from '@components/search/SearchUtil';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 
 
-import { SearchSearchResponse, SearchSearchRequest, ApiStatus, SearchSearchQuery_categories, SearchSearchQuery_kinds } from '@sdk/v1/models/generated/search';
+import { SearchSearchResponse } from '@sdk/v1/models/generated/search';
 
 /**
  * SearchResult is a component hosted in VenicUI app main page.
@@ -49,11 +49,18 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
    */
   ngOnInit() {
     if (!this._started) {
-      this.getSearchResult();
-      this._started = true;
+      const lastSeachData = this._controllerService.isUserLogin() ? this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA] : null;
+      if (lastSeachData) {
+        this.getSearchResult();
+        this._started = true;
+      }
     }
     this.subscriptions[Eventtypes.SEARCH_RESULT_LOAD_REQUEST] = this._controllerService.subscribe(Eventtypes.SEARCH_RESULT_LOAD_REQUEST, (payload) => {
       this.getSearchResult();
+    });
+
+    this._controllerService.setToolbarData({
+      breadcrumb: [{ label: 'Search Results', url: '' }]
     });
   }
 
@@ -68,13 +75,16 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
 
     if (this._controllerService.LoginUserInfo) {
       const data = this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA];
+      if (!data) {
+        return;
+      }
       const result = data['result'];
       const searchSearchResponse = new SearchSearchResponse(result);
       this.searchSearchResponse = searchSearchResponse;
       const tenants = searchSearchResponse['aggregated-entries'].tenants;
       if (!tenants) {
         // it means search service returns no record.
-        return ;
+        return;
       }
       const tenantKeys = Object.keys(tenants);
       for (let i = 0; i < tenantKeys.length; i++) {
@@ -88,7 +98,12 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
           this.categories.push(catUIObj);
         }
       }
+      // refresh the selected category and selected kind
       this.selectedCategory = this.categories[0];
+      const kinds = this.getKinds(this.selectedCategory);
+      if (kinds && kinds.length > 0) {
+        this.selectedKind = kinds[0];
+      }
     }
   }
 
@@ -135,9 +150,9 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     return counts;
   }
 
-   /**
-   * This API serves html.
-   */
+  /**
+  * This API serves html.
+  */
   getEntries(selectedKind): any {
     const entries = selectedKind.value.entries;
     return entries;
@@ -179,7 +194,7 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     const list = [];
     const keys = Object.keys(entry.meta.labels);
     keys.forEach(key => {
-      list.push( key + ' = ' + entry.meta.labels[key]);
+      list.push(key + ' = ' + entry.meta.labels[key]);
     });
     return list.toString();
   }

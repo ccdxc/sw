@@ -1,0 +1,51 @@
+<span class="searchwidget" [ngClass]="{'ui-autocomplete ui-widget':true,'ui-autocomplete-dd':dropdown,'ui-autocomplete-multiple':multiple}"
+    [ngStyle]="style" [class]="styleClass" (focusout)="onSearchWidgetFocusOut($event)" >
+    <div fxLayout="row" fxLayoutAlign="start center">
+        <ul *ngIf="multiple" #multiContainer class="ui-autocomplete-multiple-container ui-widget ui-inputtext ui-state-default ui-corner-all"
+            [ngClass]="{'ui-state-disabled':disabled,'ui-state-focus':focus}" (click)="multiIn.focus()"  fxFlex>
+            <li #token *ngFor="let val of value" class="ui-autocomplete-token ui-state-highlight ui-corner-all searchwidget-multi-selected-item-li">
+                <span class="ui-autocomplete-token-icon fa fa-fw fa-close"  *ngIf="!disabled"></span>
+                <span *ngIf="!selectedItemTemplate" class="ui-autocomplete-token-label">{{field ? objectUtils.resolveFieldData(val, field): val}}</span>
+                <ng-container *ngTemplateOutlet="selectedItemTemplate; context: {$implicit: val}"></ng-container>
+            </li>
+            <li class="ui-autocomplete-input-token" fxFlexFill>
+                <!-- search input will be disabled when guidedsearchMode is tree -->
+                <input #multiIn [attr.type]="type" [attr.id]="inputId" [disabled]="disabled || isInGuidedSearchMode" [attr.placeholder]="(value && value.length ? null : placeholder)"
+                    [attr.tabindex]="tabindex" (input)="onInput($event)" (click)="onInputClick($event)" (keydown)="onKeydown($event)"
+                    (keyup)="onKeyup($event)" (focus)="onInputFocus($event)" (blur)="onInputBlur($event)" autocomplete="off" [ngStyle]="inputStyle"
+                    class="ui-autocomplete-input-text">
+            </li>
+        </ul>
+        <i *ngIf="loading" class="ui-autocomplete-loader fa fa-circle-o-notch fa-spin fa-fw" fxFlex="26px"></i> 
+        <i class="ui-autocomplete-token-icon-btn searchwidget-autocomplete-token-icon-rmAll  fa fa-fw fa-close " (click)="clearSearchInputText($event)"
+            *ngIf="showSearchIcons()" fxFlex="26px" title="Clear sarch input text"></i>
+        <i class="ui-autocomplete-token-icon-icon-btn searchwidget-autocomplete-token-icon-search   fa fa-fw fa-search" (click)="onInvokeSearch($event, true)"
+            *ngIf="showSearchIcons()" fxFlex="26px" title="Click to see more suggestions"></i>
+        <i class="ui-autocomplete-token-icon-btn searchwidget-autocomplete-token-icon-guided fa fa-fw  " 
+            (click)="showGuidedSearch($event)"  [ngClass]="{'fa-chevron-down':!isInGuidedSearchMode,'fa-close':isInGuidedSearchMode}"  fxFlex="26px"
+            title="{{isInGuidedSearchMode? 'Close advanced search panel' : 'Advanced Search'}}" ></i> 
+        
+    </div>
+    <div #panel class="ui-autocomplete-panel ui-widget-content ui-corner-all ui-shadow" [style.display]="overlayVisible ? 'block' : 'none'"
+        [style.width]="appendTo ? 'auto' : '100%'" [style.max-height]="scrollHeight" >
+        <div class="ui-autocomplete-items ui-autocomplete-list ui-widget-content ui-widget ui-corner-all ui-helper-reset " *ngIf="!isInGuidedSearchMode">
+            <div *ngIf="showKeywordDiv()" class="searchwidget-search-keyword-div">
+                <span class="searchwidget_keyword_label">Keyword:</span><span title="{{getKeywordsTooltip()}}">{{getKeywords()}}</span>
+                <button class="searchwidget-search-keyword-button" (keydown)="onSearchButtonKeyDown($event)" (click)="onInvokeSearch($event, false)">Search<i class="material-icons searchwidget-search-keyword-button-icon">&#xe5d9;</i>                
+                </button>
+            </div>
+            <ul class="ui-autocomplete-items ui-autocomplete-list ui-widget-content ui-widget ui-corner-all ui-helper-reset searchwidget-searchhistory">
+                <li *ngFor="let option of searchhistory; let idx = index" [ngClass]="{'ui-autocomplete-list-item ui-corner-all':true,'ui-state-highlight':(highlightOption==option && option.indicator)}"
+                    (mouseenter)="option.indicator? highlightOption=null : highlightOption=option" (mouseleave)="highlightOption=null"
+                    (click)="selectItem(option)">
+                    <div class="searchwidget-panel-div">
+                        <ng-container *ngTemplateOutlet="searchboxPensando; context:{item:option, index:idx}"></ng-container>
+                    </div>
+                </li>
+            </ul>
+             <app-searchsuggestions #suggestionWidget [suggestions]="searchsuggestions" (suggestionItemClick)="onSearchSuggestionItemSelect($event)" ></app-searchsuggestions>
+        </div>
+        <app-guidedsearch *ngIf="isInGuidedSearchMode" #guidesearchWidget  (proceedGuidedSearch)="onGuidedSearchRequest($event)" [inputConfig]="guidesearchInput"></app-guidedsearch>
+    </div>
+</span>
+

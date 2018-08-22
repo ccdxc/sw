@@ -31,7 +31,8 @@
     height: 30px;
 }
 
+/* avoid UI issue of having uncessary space gap */
 .pagebody-content {
     height: 100%;
-    overflow: scroll;
+    overflow: auto;
 }

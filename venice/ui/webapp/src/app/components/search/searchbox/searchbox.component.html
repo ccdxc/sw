@@ -1,6 +1,6 @@
 
 <app-search styleClass="app-header-search-autocomplete-widget" [(ngModel)]="searchVeniceApplication" [suggestions]="searchSuggestions"
   (completeMethod)="filterVeniceApplicationSearchSuggestions($event)" [minLength]="1" placeholder="Search" field="name" (onSelect)="onSearchVeniceApplicationSelect($event)"
-  emptyMessage="{{noSearchSuggestion}}" [multiple]="true" dataKey="code" (invokeSearch)="onInvokeSearch($event)" delay="1500" [searchsuggestions]="searchSuggestions"
-  (invokeSuggestionOnSearchClick) ="onSeachInputClick($event)"  #search  >
+  emptyMessage="{{noSearchSuggestion}}" [multiple]="true" dataKey="code" (invokeSearch)="onInvokeSearch($event)" delay="1000" [searchsuggestions]="searchSuggestions"
+  (invokeSuggestionOnSearchClick) ="onSeachInputClick($event)"    (invokeGuidedSearch)= "onInvokeGuidedSearch($event)" #search  >
 </app-search>

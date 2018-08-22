@@ -1,0 +1,91 @@
+<div fxLayout="column" class="guidesearch">
+
+  <div fxLayout="row" fxLayoutAlign="start" class="guidesearch-row">
+    <div fxLayout="column">
+      <div class="guidesearch-section-title guidesearch-category-title"><span class="guidesearch-title-label-left">In:</span><span class="guidesearch-title-label-right">Category</span></div>
+      <div class="guidesearch-category-selected-categores-content-div">
+
+        <div fxLayout="row wrap" class="guidesearch-selected-list-div guidesearch-category-selected-categores-list-div">
+          <div fxLayout="row wrap" fxLayoutGap="5px" *ngFor="let option of selectedCategories; let idx = index">
+            <p-checkbox labelStyleClass="guidesearch-checkbox guidesearch-category-checkbox" name="{{option}}" value="{{option}}" label="{{option}}" [(ngModel)]="selectedCategories"
+              inputId="{{option}}" ></p-checkbox>
+          </div>
+        </div>
+        <div fxLayout="row wrap">
+          <div fxLayout="row wrap" fxLayoutGap="5px" *ngFor="let option of getAvailableCategories(); let idx = index">
+            <p-checkbox labelStyleClass="guidesearch-checkbox guidesearch-category-checkbox" name="{{option}}" value="{{option}}" label="{{option}}" [(ngModel)]="selectedCategories"
+              inputId="{{option}}" ></p-checkbox>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div fxLayout="row" fxLayoutAlign="start" class="guidesearch-row">
+    <div fxLayout="column">
+      <div class="guidesearch-section-title guidesearch-kind-title"><span class="guidesearch-title-label-left">Is:</span><span class="guidesearch-title-label-right">Kind</span></div>
+      <div class="guidesearch-kind-selected-kinds-content-div">
+
+        <div fxLayout="row wrap" class="guidesearch-selected-list-div guidesearch-kind-selected-kinds-list-div">
+          <div fxLayout="row wrap" fxLayoutGap="5px" *ngFor="let option of selectedKinds; let idx = index">
+            <p-checkbox labelStyleClass="guidesearch-checkbox guidesearch-kind-checkbox" name="{{option}}" value="{{option}}" label="{{option}}" [(ngModel)]="selectedKinds"
+              inputId="{{option}}" (onChange)="onKindSelectionCheck($event, option, true)"></p-checkbox>
+          </div>
+        </div>
+        <div fxLayout="row wrap">
+          <div fxLayout="row wrap" fxLayoutGap="5px" *ngFor="let option of getAvailableKinds(); let idx = index">
+            <p-checkbox labelStyleClass="guidesearch-checkbox guidesearch-kind-checkbox" name="{{option}}" value="{{option}}" label="{{option}}" [(ngModel)]="selectedKinds"
+              inputId="{{option}}" (onChange)="onKindSelectionCheck($event, option, false)"></p-checkbox>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div fxLayout="row" fxLayoutAlign="start" class="guidesearch-row" *ngIf="selectedKinds && selectedKinds.length == 1">
+      <div fxLayout="column">
+        <div class="guidesearch-section-title guidesearch-field-title">
+          <span class="guidesearch-title-label-left">Has:</span><span class="guidesearch-title-label-right">Field</span>
+          <i class="guidesearch-set-selectfield fa "  tabindex="0"  
+            (click)="setShowSelectField($event)" 
+            (keydown)="($event.which ==13)? setShowSelectField($event) : return "
+            [ngClass]="{'fa-plus':!isToSelectField,'fa-remove':isToSelectField}"  fxFlex="26px"
+            title="{{isToSelectField? 'Clear Field Search' : 'Open Field Search'}}"
+            ></i> 
+        </div>
+        <div class="guidesearch-field-selected-fields-content-div" *ngIf="isToSelectField">
+            <app-repeater  #fieldRepeater [data]="getFieldData()"
+                           (repeaterValues)="handleFieldRepeaterData($event)" 
+                           [formArray]="fieldFormArray" 
+                           [keyDropdownFilter]="true"
+                           [buildValuePlaceholder]="buildFieldValuePlaceholder"
+                           >
+            </app-repeater>
+        </div>
+      </div>
+  </div>
+  <div fxLayout="row" fxLayoutAlign="start" class="guidesearch-row">
+      <div fxLayout="column">
+        <div class="guidesearch-section-title guidesearch-label-title">
+          <span class="guidesearch-title-label-left">Tag:</span><span class="guidesearch-title-label-right">Label</span>
+          <i class="guidesearch-set-selectlabel fa "  tabindex="0"  
+            (click)="setShowSelectLabel($event)" 
+            (keydown)="($event.which ==13)? setShowSelectLabel($event) : return "
+             [ngClass]="{'fa-plus':!isToSelectLabel,'fa-remove':isToSelectLabel}"  fxFlex="26px"
+            title="{{isToSelectLabel? 'Clear Label Search' : 'Open Label Search'}}"
+          ></i> 
+        </div>
+        <div class="guidesearch-label-selected-label-content-div" *ngIf="isToSelectLabel">
+            <app-repeater  #labelRepeater [data]="labelData" [formArray]="labelFormArray" (repeaterValues)="handleLabelRepeaterData($event)"></app-repeater>
+        </div>
+      </div>
+  </div>
+  <div class="guidesearch-button-div" fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
+      <div fxFlex="nogrow">
+          <span (click)="onCancelGuidedSearchClick($event)" tabindex="0"  (keydown)="($event.which ==13)? onCancelGuidedSearchClick($event) : return" class="global-button-neutral guidesearch-clear">CLEAR</span>
+      </div>
+      <div fxFlex="nogrow">
+        <span (click)="onProceedGuidedSearchClick($event)"  tabindex="0"  (keydown)="($event.which ==13)? onProceedGuidedSearchClick($event) : return "  class="global-button-primary guidesearch-search">SEARCH</span>
+      </div>
+      
+  </div>
+</div>
+

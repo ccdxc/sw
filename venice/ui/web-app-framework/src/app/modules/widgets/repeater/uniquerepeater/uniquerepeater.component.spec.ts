@@ -2,7 +2,6 @@ import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-// import { MultiselectComponent } from '@modules/widgets/multiselect/multiselect.component';
 import { MaterialModule } from '../../../../material.module';
 import { PrimengModule } from '../../../../primeng.module';
 import { ValueType } from '../index';
@@ -59,9 +58,10 @@ describe('UniquerepeaterComponent', () => {
         ],
         valueType: ValueType.inputField
       },
-    ]
+    ];
   });
 
+  // It is important to clean up after each test
   afterEach(() => {
     TestBed.resetTestingModule();
   });
@@ -113,6 +113,8 @@ describe('UniquerepeaterComponent', () => {
     trashElem = fixture.debugElement.queryAll(By.css('.uniquerepeater-trash-icon'));
     expect(addElem.length).toBe(0);
     expect(trashElem.length).toBe(3);
+     spy.calls.reset();
+    fixture.detectChanges();
 
     // delete
     trashElem[0].nativeElement.children[0].click();
@@ -150,15 +152,15 @@ describe('UniquerepeaterComponent', () => {
     expect(trashElem.length).toBe(0);
   });
 
-  it('should load form control data and set correct values', () => {
+  it('should load form control data and set correct values -1', () => {
     // Create two repeaters
     component.keyFormName = 'keyControl';
     component.operatorFormName = 'operatorControl';
-    component.valueFormName = 'valueControl'
+    component.valueFormName = 'valueControl';
     component.formArray = new FormArray([
       new FormControl({ keyControl: 'name', operatorControl: 'is not', valueControl: 'testing' }),
       new FormControl({ keyControl: 'severity', operatorControl: 'is', valueControl: 'critical' })
-    ])
+    ]);
     spyOn(component.repeaterValues, 'emit');
     fixture.detectChanges();
 
@@ -172,7 +174,7 @@ describe('UniquerepeaterComponent', () => {
 
     // Changing key
     // Since we have two repeaters, the number of key options should be two
-    let repeaterKey = fixture.debugElement.queryAll(By.css('.uniquerepeater-key'));
+    const repeaterKey = fixture.debugElement.queryAll(By.css('.uniquerepeater-key'));
     expect(repeaterKey.length).toBe(2);
     repeaterKey[1].nativeElement.children[0].children[0].click();
     fixture.detectChanges();
@@ -196,7 +198,7 @@ describe('UniquerepeaterComponent', () => {
     );
 
     // Selecting one of the multipicker options
-    let valueKey = fixture.debugElement.queryAll(By.css('.uniquerepeater-value'));
+    const valueKey = fixture.debugElement.queryAll(By.css('.uniquerepeater-value'));
     expect(valueKey.length).toBe(2);
     valueKey[1].nativeElement.children[0].children[0].click();
     fixture.detectChanges();
@@ -218,13 +220,14 @@ describe('UniquerepeaterComponent', () => {
     );
   });
 
+
   // Same test as above, but data is passed in as form
   // groups instead of form controls
-  it('should load form group data and set correct values', () => {
+  it('should load form group data and set correct values 2', () => {
     // Create two repeaters
     component.keyFormName = 'keyControl';
     component.operatorFormName = 'operatorControl';
-    component.valueFormName = 'valueControl'
+    component.valueFormName = 'valueControl';
     component.formArray = new FormArray([
       new FormGroup(
         {
@@ -254,7 +257,7 @@ describe('UniquerepeaterComponent', () => {
 
     // Changing key
     // Since we have two repeaters, the number of key options should be two
-    let repeaterKey = fixture.debugElement.queryAll(By.css('.uniquerepeater-key'));
+    const repeaterKey = fixture.debugElement.queryAll(By.css('.uniquerepeater-key'));
     expect(repeaterKey.length).toBe(2);
     repeaterKey[1].nativeElement.children[0].children[0].click();
     fixture.detectChanges();
@@ -278,7 +281,7 @@ describe('UniquerepeaterComponent', () => {
     );
 
     // Selecting one of the multipicker options
-    let valueKey = fixture.debugElement.queryAll(By.css('.uniquerepeater-value'));
+    const valueKey = fixture.debugElement.queryAll(By.css('.uniquerepeater-value'));
     expect(valueKey.length).toBe(2);
     valueKey[1].nativeElement.children[0].children[0].click();
     fixture.detectChanges();
@@ -305,31 +308,34 @@ describe('UniquerepeaterComponent', () => {
   it('should throw validation errors', () => {
     component.keyFormName = 'keyControl';
     component.operatorFormName = 'operatorControl';
-    component.valueFormName = 'valueControl'
+    component.valueFormName = 'valueControl';
+
     component.formArray = new FormArray([
       new FormControl({ keyControl: null, operatorControl: 'is not', valueControl: 'testing' }),
-    ])
-    expect(() => { component.ngOnInit() }).toThrowError('key cannot be blank');
+    ]);
+    expect(() => { component.ngOnInit(); }).toThrowError('key cannot be blank');
 
     component.formArray = new FormArray([
       new FormControl({ keyControl: 'type', operatorControl: 'is not', valueControl: 'testing' }),
-    ])
-    expect(() => { component.ngOnInit() }).toThrowError('key is not part of the known keys supplied');
+    ]);
+    expect(() => { component.ngOnInit(); }).toThrowError('key is not part of the known keys supplied');
+
 
     component.formArray = new FormArray([
       new FormControl({ keyControl: 'name', operatorControl: 'equal', valueControl: null }),
-    ])
-    expect(() => { component.ngOnInit() }).toThrowError('operator is not part of the known operators supplied');
+    ]);
+    expect(() => { component.ngOnInit(); }).toThrowError('operator is not part of the known operators supplied');
+
 
     component.formArray = new FormArray([
       new FormControl({ keyControl: 'kind', operatorControl: 'is', valueControl: ['workload'] }),
-    ])
-    expect(() => { component.ngOnInit() }).toThrowError('value is not part of the known values supplied');
+    ]);
+    expect(() => { component.ngOnInit(); }).toThrowError('value is not part of the known values supplied');
 
     component.formArray = new FormArray([
       new FormControl({ keyControl: 'severity', operatorControl: 'is', valueControl: 'notification' }),
-    ])
-    expect(() => { component.ngOnInit() }).toThrowError('value is not part of the known values supplied');
-  })
+    ]);
+    expect(() => { component.ngOnInit(); }).toThrowError('value is not part of the known values supplied');
 
+  });
 });

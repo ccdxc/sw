@@ -14,29 +14,31 @@ import { Store } from '@ngrx/store';
 /* ---------------------------------------------------
     Venice App libraries
 ----------------------------------------------------- */
-import { AppComponent } from './app.component';
-import { ControllerService } from './services/controller.service';
+import { AppComponent } from '@app/app.component';
+import { ControllerService } from '@app/services/controller.service';
 
-import { LogService } from './services/logging/log.service';
-import { LogPublishersService } from './services/logging/log-publishers.service';
-import { AuthService } from './services/auth.service';
+import { LogService } from '@app/services/logging/log.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { AuthService } from '@app/services/auth.service';
 import { CoreModule } from '@app/core';
 import { AlertlistModule } from '@app/components/alertlist';
-import { LoginModule } from './components/login/login.module';
-import { ToolbarComponent } from './widgets/toolbar/toolbar.component';
+import { LoginModule } from '@app/components/login/login.module';
+import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 
 /* ---------------------------------------------------
     Third-party libraries
 ----------------------------------------------------- */
-import { PrimengModule } from './lib/primeng.module';
-import { MaterialdesignModule } from './lib/materialdesign.module';
+import { PrimengModule } from '@app/lib/primeng.module';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
 import { AlerttableService } from '@app/services/alerttable.service';
 
 
-import { SearchComponent } from '@app/components/search/search.component';
-import { SearchboxComponent } from '@app/components/search/searchbox.component';
-import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions.component';
+import { SearchComponent } from '@app/components/search/search/search.component';
+import { SearchboxComponent } from '@app/components/search/searchbox/searchbox.component';
+import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
+import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
+import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
 
 describe('AppComponent', () => {
   beforeEach(() => {
@@ -47,6 +49,7 @@ describe('AppComponent', () => {
         SearchComponent,
         SearchboxComponent,
         SearchsuggestionsComponent,
+        GuidesearchComponent,
       ],
       imports: [
                 // Other modules...

@@ -155,16 +155,16 @@ export class NaplesComponent implements OnInit, OnDestroy, OnChanges {
               const textCtx = element.getContext('2d');
               textCtx.textAlign = 'center';
               textCtx.textBaseline = 'middle';
-              textCtx.font = '36px Fira San';
+              textCtx.font = '36px Fira Sans Condensed';
               textCtx.fillStyle = '#88b358';
               textCtx.fillText(mainLabel, 185, 80);
-              textCtx.font = '10px Fira San';
+              textCtx.font = '10px Fira Sans Condensed';
               textCtx.fillStyle = '#676763';
               textCtx.fillText(tag, 185, 100);
-              textCtx.font = '10px Fira San';
+              textCtx.font = '10px Fira Sans Condensed';
               textCtx.fillStyle = '#e57553';
               textCtx.fillText(badNum, 185, 130);
-              textCtx.font = '12px Fira San';
+              textCtx.font = '12px Fira Sans Condensed';
               textCtx.fillStyle = '#88b358';
               textCtx.fillText(goodNum, 185, 145);
             }

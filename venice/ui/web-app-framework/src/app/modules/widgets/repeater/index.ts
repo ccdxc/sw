@@ -1,5 +1,5 @@
-import { FormGroup } from "@angular/forms";
-import { SelectItem } from "primeng/primeng";
+import { FormGroup } from '@angular/forms';
+import { SelectItem } from 'primeng/primeng';
 
 export enum ValueType {
   singleSelect = 'singleSelect',
@@ -8,21 +8,26 @@ export enum ValueType {
 }
 
 export interface RepeaterData {
-  key: SelectItem,
-  operators: SelectItem[],
-  values?: SelectItem[],
-  valueType: ValueType,
+  key: SelectItem;
+  operators: SelectItem[];
+  values?: SelectItem[];
+  valueType: ValueType;
   // If valueType is inputField
-  valueHintText?: string,
+  fieldType?: ValueType;
+  // If fieldType is inputField
+  valueHintText?: string;
 }
 
 export interface RepeaterItem {
   id: number;
-  formGroup: FormGroup,
+  formGroup: FormGroup;
+  // we build repeater from formArray. The generated repeater can link back to formArray
+  formArrayIndex?: number;
 }
+
 
 export interface RepeaterItemUnique {
   id: number;
-  formGroup: FormGroup,
+  formGroup: FormGroup;
   keyOptions: any[];
 }

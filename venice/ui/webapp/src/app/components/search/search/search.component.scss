@@ -1,6 +1,11 @@
 @import 'styles';
 
-
+.searchwidget .ui-autocomplete-loader {
+    position: relative;
+    right: 0;
+    top: 0px;
+    margin-top: 0px;
+}
 .searchwidget-select-panel-template-item-options-item{
     cursor: pointer;
     display:inline-block;
@@ -24,12 +29,16 @@ span.searchwidget-select-panel-template-item-options-item:hover{
     margin-right:5px;
 }
 
+.searchwidget-autocomplete-token-icon-guided {
+    margin-right:5px;
+}
+
 .searchwidget-panel-separator-hr {
     margin: 2px;
 }
 
 .searchwidget .ui-autocomplete-input-token {
-    min-width: 500px;
+    width:100%;
 }
 
 .searchwidget .ui-autocomplete-input-text{
@@ -61,6 +70,11 @@ span.searchwidget-select-panel-template-item-options-item:hover{
 .searchwidget .ui-autocomplete-panel .ui-autocomplete-list {
     padding: 0.01em 0.2em;
     font-family: "Fira Sans Condensed"; 
+    font-weight: 400;
+}
+
+.searchwidget .ui-autocomplete-panel {
+    top:45px !important; /* force the panel is below the search input box */
 }
 
 .searchwidget .searchwidget-search-keyword-div {
@@ -90,3 +104,20 @@ span.searchwidget-select-panel-template-item-options-item:hover{
     border:0px;
     box-shadow: none;
 }
+
+.searchwidget .ui-autocomplete-input-text{
+    border: 0px;
+    color: #222222;
+    transition: .2s;
+    margin-top: 1px;
+    width:100%;
+
+}
+
+.searchwidget .ui-autocomplete-multiple-container {
+    background: transparent ;
+    padding-right: 0px;
+}
+
+
+

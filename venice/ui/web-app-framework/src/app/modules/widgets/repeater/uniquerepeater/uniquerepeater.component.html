@@ -1,4 +1,4 @@
-<div class="uniquerepeater">
+<div class="uniquerepeater" >
   <ng-container *ngFor="let repeater of repeaterList; let first = first; let last = last;" [formGroup]="repeater.formGroup">
     <div fxFlex="row" fxLayout="start center" class="uniquerepeater-group">
       <!-- Key -->
@@ -45,11 +45,11 @@
       <!-- Add and delete buttons -->
       <!-- Only show and if its the last row, and there are keys left -->
       <div fxFlex="nogrow" *ngIf="last && repeaterList.length < keyOptions.length" class="uniquerepeater-and">
-        <span (click)="addRepeater()">+ AND</span>
+        <span (click)="addRepeater()"  tabindex="0" (keydown)="onAddRepeaterKeydown($event)">+ AND</span>
       </div> 
       <!-- Only show if its not the only repeater left -->
       <div fxFlex="nogrow" *ngIf="repeaterList.length != 1" class="uniquerepeater-trash-icon">
-        <mat-icon (click)="removeRepeater(repeater.id)">delete</mat-icon>
+        <mat-icon (click)="removeRepeater(repeater.id)" tabindex="0" (keydown)="onRomveRepeaterKeydown($event, repeater.id)">delete</mat-icon>
       </div>
     </div>
   </ng-container>

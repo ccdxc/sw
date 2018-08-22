@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnInit, ViewEncapsulation, ViewChild, OnChanges, AfterViewInit, AfterViewChecked, DoCheck } from '@angular/core';
-import { SearchUtil } from '@app/common/SearchUtil';
+import { SearchUtil } from '@components/search/SearchUtil';
 
 /**
  * This component displays suggestions for global search widget. search.component.html includes this component.
@@ -98,7 +98,9 @@ export class SearchsuggestionsComponent implements OnInit, OnChanges, AfterViewC
         break;
 
       // enter
-      case SearchUtil.EVENT_KEY_ENETER:
+      case SearchUtil.EVENT_KEY_ENTER:
+      // right
+      case SearchUtil.EVENT_KEY_RIGHT:
         if (this.highlightOption) {
           this.selectItem(event, this.highlightOption);
         }

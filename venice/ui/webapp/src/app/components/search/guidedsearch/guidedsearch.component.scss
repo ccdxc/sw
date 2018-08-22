@@ -1,0 +1,107 @@
+
+@import 'global-mixins';
+@import 'styles';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.guidesearch {
+    font-family: "Fira Sans Condensed";
+    color: #676763;
+    font-size:14px;
+    padding: 5px;
+}
+.guidesearch-row,
+.guidesearch-selected-list-div {
+    border-bottom: 1px solid #eee;
+}
+
+.guidesearch-section-title  {
+    cursor: default
+}
+
+
+.guidesearch-category-checkbox {
+    width:140px;
+    font-weight: 400;
+}
+
+.guidesearch-kind-checkbox {
+    width:140px;
+    font-weight: 400;
+}
+
+.guidesearch .repeater-group p-dropdown > div .ui-dropdown-label {
+    height: 28px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    line-height: 2;
+    font-family: "Fira Sans Condensed" !important;
+}
+
+.guidesearch .ui-chkbox-box.ui-state-active, .ui-radiobutton-box.ui-state-active {
+    border: 1px solid #86a8d7;
+    background: #86a8d7;
+    color: #FFFFFF;
+}
+
+.guidesearch .guidesearch-checkbox  {
+    margin-bottom: 0px;
+}
+
+.guidesearch .guidesearch-checkbox.ui-chkbox-label:hover {
+    cursor: pointer;
+}
+
+.guidesearch-button-div {
+    padding-top:5px;
+}
+
+.guidesearch-search, 
+.guidesearch-clear {
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: $vertical-gutter $horizontal-gutter;
+}
+
+.guidesearch-set-selectfield {
+    cursor: pointer;
+}
+
+.guidesearch-title-label-left {
+  width: 20px;
+  height: 19px;  
+  font-size: 16px;
+  font-weight: 500;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  color: #383838;
+}
+
+.guidesearch-title-label-right {
+  margin-left:5px;
+  margin-right:10px;
+  width: 190px;
+  height: 17px;
+  font-size: 14px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  color: #bebebe;
+}
+
+.guidesearch .repeater-trash-icon .mat-icon {
+    font-size: 24px;
+}
+
+.guidesearch .repeater-key .ui-dropdown-filter.ui-inputtext{
+    text-indent: 2px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 2px;
+    padding-right: 2px;
+    height: 28px;
+}

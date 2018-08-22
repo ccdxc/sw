@@ -33,12 +33,16 @@ import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
 import { AlerttableService } from '@app/services/alerttable.service';
 
 
-import { SearchComponent } from '@app/components/search/search.component';
-import { SearchboxComponent } from '@app/components/search/searchbox.component';
-import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions.component';
+import { SearchComponent } from '@app/components/search/search/search.component';
+import { SearchboxComponent } from '@app/components/search/searchbox/searchbox.component';
+import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
+import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
+import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
+
 import { AppcontentComponent } from '@app/appcontent.component';
 import { SearchService } from '@app/services/generated/search.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+
 
 describe('AppcontentComponent', () => {
   beforeEach(() => {
@@ -49,6 +53,7 @@ describe('AppcontentComponent', () => {
         SearchComponent,
         SearchboxComponent,
         SearchsuggestionsComponent,
+        GuidesearchComponent
       ],
       imports: [
         // Other modules...

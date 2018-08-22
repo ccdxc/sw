@@ -57,15 +57,14 @@ import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.compo
 import { AuthGuard } from '@app/services/authguard.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { SharedModule } from '@app/components/shared/shared.module';
-import { SearchComponent } from '@app/components/search/search.component';
-import { SearchboxComponent } from '@app/components/search/searchbox.component';
-import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions.component';
-import { SearchresultComponent } from './components/search/searchresult.component';
+import { SearchComponent } from '@app/components/search/search/search.component';
+import { SearchboxComponent } from '@app/components/search/searchbox/searchbox.component';
+import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
+import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
+import { GuidesearchComponent } from './components/search/guidedsearch/guidedsearch.component';
 import { UIConfigsService, UIConfigsResolver } from '@app/services/uiconfigs.service';
 import { RouteGuard } from '@app/services/routeguard.service';
 import { AppcontentComponent } from '@app/appcontent.component';
-import { EventsService } from '@app/services/generated/events.service';
-import { SecurityService } from '@app/services/generated/security.service';
 
 
 /**
@@ -88,7 +87,8 @@ import { SecurityService } from '@app/services/generated/security.service';
     SearchComponent,
     SearchboxComponent,
     SearchsuggestionsComponent,
-    SearchresultComponent
+    SearchresultComponent,
+    GuidesearchComponent
   ],
   entryComponents: [
     BaseComponent,
@@ -139,8 +139,6 @@ import { SecurityService } from '@app/services/generated/security.service';
     SearchService,
     ClusterService,
     MonitoringService,
-    SecurityService,
-    EventsService,
     // Route Guards
     AuthGuard,
     RouteGuard,
