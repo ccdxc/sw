@@ -159,14 +159,11 @@ pciehw_openmem(pciehw_t *phw)
 {
     pciehw_mem_t *pciehwmem;
     const char *pciehw_addr_env = getenv("PCIEHW_ADDR");
-    u_int64_t pciehw_pa = 0;
+    u_int64_t pciehw_pa = roundup(0x013c096c00, 1024*1024);
 
     if (pciehw_addr_env) {
         pciehw_pa = strtoull(pciehw_addr_env, NULL, 0);
         pciehsys_log("$PCIEHW_ADDR override 0x%"PRIx64"\n", pciehw_pa);
-    } else {
-        pciehw_pa = roundup(0x013c096c00, 1024*1024);
-        pciehsys_log("PCIEHW_ADDR 0x%"PRIx64"\n", pciehw_pa);
     }
 
     pciehwmem = pal_mem_map(pciehw_pa, sizeof(pciehw_mem_t));
@@ -793,7 +790,7 @@ pciehw_iowr(const u_int8_t port,
     return 0;
 }
 
-int
+unsigned long long
 pciehw_barsz(const u_int8_t port, const u_int16_t bdf, const int i)
 {
     pciehwdev_t *phwdev;

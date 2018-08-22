@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <setjmp.h>
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>
@@ -448,7 +449,7 @@ cmd_bars(int argc, char *argv[])
         for (b = pciehbars_get_first(pbars);
              b;
              b = pciehbars_get_next(pbars, b)) {
-            printf("%3d %-5s 0x%04x %4d %s%s%s\n",
+            printf("%3d %-5s 0x%04" PRIx64 " %4d %s%s%s\n",
                    b->cfgidx,
                    b->type == PCIEHBARTYPE_MEM   ? "mem" :
                    b->type == PCIEHBARTYPE_MEM64 ? "mem64" :

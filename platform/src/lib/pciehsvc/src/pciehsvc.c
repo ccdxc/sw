@@ -74,7 +74,7 @@ pciehsvc_iowr(const u_int32_t addr, const u_int8_t size, u_int32_t val)
     return pciehw_iowr(0, addr, size, val);
 }
 
-int
+unsigned long long
 pciehsvc_barsz(const u_int32_t bdf, const int i)
 {
     return pciehw_barsz(0, bdf, i);

@@ -34,7 +34,7 @@ static void
 pciehbar_finalize(pciehbar_t *pbar)
 {
     pciehbarreg_t *preg;
-    u_int32_t baroff;
+    u_int64_t baroff;
     int i;
 
     baroff = 0;

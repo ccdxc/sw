@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #ifndef __MISC_H__
@@ -16,6 +16,7 @@ char *hex_format(char *buf, size_t buflen,
                  const void *data, const size_t datalen);
 char *strncpy0(char *d, const char *s, const size_t n);
 int strtoargv(char *s, char *argv[], const int maxac);
+unsigned long long strtoull_ext(const char *s);
 
 char *human_readable(u_int64_t n);
 char * human_readable_buf(char *buf, size_t bufsz, u_int64_t n);

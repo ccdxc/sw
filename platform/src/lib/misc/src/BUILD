@@ -9,6 +9,7 @@ cc_library(
         "mapfile.c",
         "strncpy0.c",
         "strtoargv.c",
+        "strtoull_ext.c",
         "human_readable.c",
     ],
     hdrs = [

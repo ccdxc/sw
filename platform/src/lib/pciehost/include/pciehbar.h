@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #ifndef __PCIEHBAR_H__
@@ -19,9 +19,9 @@ typedef struct pciehbarreg_s {
     u_int16_t flags;                    /* PCIEHBARREGF_* flags below */
     u_int16_t regtype;                  /* PCIEHBARREGTYPE_* below */
     u_int64_t paddr;                    /* physical address */
-    u_int32_t size;                     /* actual size of region */
-    u_int32_t align;                    /* alignment of this region in bar */
-    u_int32_t baroff;                   /* offset from beginning of bar */
+    u_int64_t size;                     /* actual size of region */
+    u_int64_t align;                    /* alignment of this region in bar */
+    u_int64_t baroff;                   /* offset from beginning of bar */
     u_int8_t upd[8];                    /* db*: upd vector for qtypes */
     u_int8_t qtyshift;                  /* db*: qtype shift */
     u_int8_t qtywidth;                  /* db*: qtype width */
@@ -80,7 +80,7 @@ typedef struct pciehbar_s {
     u_int32_t rombar:1;         /* bar is rombar */
     pciehbartype_t type;        /* bar type (mem, mem64, io) */
     u_int8_t cfgidx;            /* config bars index (0-5) */
-    u_int32_t size;             /* bar size */
+    u_int64_t size;             /* bar size */
     u_int8_t nregs;             /* number of entries in regs[] */
     pciehbarreg_t *regs;        /* barreg table */
 } pciehbar_t;

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017, Pensando Systems Inc.
+# Copyright (c) 2017-2018, Pensando Systems Inc.
 #
 
 LIBRARY = libmisc.a libmisc.so
@@ -9,6 +9,7 @@ SOURCES = \
 	mapfile.c \
 	strncpy0.c \
 	strtoargv.c \
+	strtoull_ext.c \
 	human_readable.c \
 	$(NULL)
 

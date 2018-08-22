@@ -197,7 +197,7 @@ bar_show_bar(const int idx, pciehwbar_t *phwbar)
     pciehw_spmt_t *spmt = &phwmem->spmt[phwbar->pmti];
 
     pciehsys_log("%3d %4d %4d %4d +%-3d 0x%06x "
-                 "0x%08"PRIx64" 0x%08x %c%c%c\n",
+                 "0x%08"PRIx64" 0x%08"PRIx64" %c%c%c\n",
                  idx,
                  phwbar->pmti,
                  phwbar->type,

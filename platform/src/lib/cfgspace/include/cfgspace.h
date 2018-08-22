@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #ifndef __CFGSPACE_H__
@@ -101,7 +101,7 @@ typedef enum cfgspace_bartype_e {
 
 typedef struct cfgspace_bar_s {
     cfgspace_bartype_t type;    /* bar type */
-    u_int32_t size;             /* bar size */
+    u_int64_t size;             /* bar size */
     u_int8_t cfgidx;            /* bar index in cfg space bars region */
 } cfgspace_bar_t;
 

@@ -45,8 +45,8 @@ int pciehw_iord(const u_int8_t port,
 int pciehw_iowr(const u_int8_t port,
                 const u_int32_t addr, const u_int8_t size, u_int32_t val);
 
-int pciehw_barsz(const u_int8_t port,
-                 const u_int16_t bdf, const int i);
+unsigned long long pciehw_barsz(const u_int8_t port,
+                                const u_int16_t bdf, const int i);
 
 int pciehw_poll(void);
 

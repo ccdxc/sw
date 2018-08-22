@@ -1,13 +1,15 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <sys/types.h>
 
 #include "pci_ids.h"
+#include "misc.h"
 #include "pciehost.h"
 #include "pciehdevices.h"
 
@@ -16,34 +18,52 @@
 static void
 init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 {
-    pciehbarreg_t preg;
-    pciehbar_t pbar;
+    struct { u_int64_t sz, pa; } defaults[3] = {
+        [0] = { 64 * 1024 * 1024, 0x80000000 },
+    };
+    int i;
 
-    /* bar mem64 */
-    memset(&pbar, 0, sizeof(pbar));
-    pbar.type = PCIEHBARTYPE_MEM64;
-    {
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RW | PCIEHBARREGF_MEM;
-        preg.paddr = 0x80000000;
-        preg.size = 128 * 1024 * 1024;
-        pciehbar_add_reg(&pbar, &preg);
-    }
-    pciehbars_add_bar(pbars, &pbar);
+    /*
+     * Take bar config from env:
+     *     DEBUG_BAR0_SZ
+     *     DEBUG_BAR0_PA
+     */
 
-    /* bar mem64 */
-    memset(&pbar, 0, sizeof(pbar));
-    pbar.type = PCIEHBARTYPE_MEM64;
-    {
-        memset(&preg, 0, sizeof(preg));
-        preg.regtype = PCIEHBARREGT_RES;
-        preg.flags = PCIEHBARREGF_RW;
-        preg.paddr = 0;
-        preg.size = 128 * 1024 * 1024;
-        pciehbar_add_reg(&pbar, &preg);
+    for (i = 0; i < 3; i++) {
+        char env_sz[] = "DEBUG_BARx_SZ";
+        char env_pa[] = "DEBUG_BARx_PA";
+        char *env;
+        u_int64_t sz, pa;
+
+        sz = defaults[i].sz;
+        pa = defaults[i].pa;
+
+        env_sz[9] = '0' + i;
+        env_pa[9] = '0' + i;
+        if ((env = getenv(env_sz)) != NULL) {
+            sz = strtoull_ext(env);
+        }
+        if ((env = getenv(env_pa)) != NULL) {
+            pa = strtoull_ext(env);
+        }
+
+        if (sz) {
+            pciehbarreg_t preg;
+            pciehbar_t pbar;
+
+            memset(&pbar, 0, sizeof(pbar));
+            pbar.type = PCIEHBARTYPE_MEM64;
+            {
+                memset(&preg, 0, sizeof(preg));
+                preg.regtype = PCIEHBARREGT_RES;
+                preg.flags = PCIEHBARREGF_RW;
+                preg.paddr = pa;
+                preg.size = sz;
+                pciehbar_add_reg(&pbar, &preg);
+            }
+            pciehbars_add_bar(pbars, &pbar);
+        }
     }
-    pciehbars_add_bar(pbars, &pbar);
 }
 
 static void

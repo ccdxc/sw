@@ -19,8 +19,8 @@ typedef struct pciehbars_s {
 /*
  * roundup_power2 - Round up to next power of 2.
  */
-static inline u_int32_t
-roundup_power2(u_int32_t n)
+static inline u_int64_t
+roundup_power2(u_int64_t n)
 {
     while (n & (n - 1)) {
         n = (n | (n - 1)) + 1;

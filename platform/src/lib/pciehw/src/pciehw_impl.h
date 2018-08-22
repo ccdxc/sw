@@ -104,7 +104,7 @@ typedef struct pciehw_sprt_s {
     u_int32_t indirect:1;               /* indirect access */
     u_int32_t qidsel:1;                 /* db32/16: qid in 0:addr 1:data */
     u_int32_t pmvdis:1;                 /* disable PMV violation check */
-    u_int32_t ressize;                  /* size of mapping */
+    u_int64_t ressize;                  /* size of mapping */
     u_int64_t resaddr;                  /* mapped resource address */
     u_int64_t updvec;                   /* per-qtype UPD vector */
     u_int8_t idxshift;                  /* db32/16: shift data for index */
@@ -120,7 +120,7 @@ typedef struct pciehw_spmt_s {
     u_int32_t notify:1;                 /* notify access */
     u_int32_t indirect:1;               /* indirect access */
     u_int64_t baraddr;                  /* bar address */
-    u_int32_t barsize;                  /* bar size */
+    u_int64_t barsize;                  /* bar size */
     u_int32_t prtbase;                  /* start of contiguous prt entries */
     u_int32_t prtcount;                 /* count of contiguous prt entries */
     u_int32_t prtsize;                  /* size of each prt */

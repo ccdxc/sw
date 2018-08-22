@@ -227,7 +227,7 @@ cfgspace_set_bar(cfgspace_t *cs, const cfgspace_bar_t *b)
         break;
     case CFGSPACE_BARTYPE_MEM64:
         v = 0x2 << 1;   /* 64-bit */
-        m = ~((u_int64_t)b->size - 1) & ~0xfULL;
+        m = ~(b->size - 1) & ~0xfULL;
         cfgspace_setdm(cs, cfgoff, v, m);
         cfgspace_setdm(cs, cfgoff + 4, v >> 32, m >> 32);
         break;
