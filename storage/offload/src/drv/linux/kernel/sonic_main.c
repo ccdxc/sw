@@ -38,6 +38,8 @@ module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
 #endif
 
+int body(void);
+
 int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 {
 	static struct cmds {
@@ -378,10 +380,17 @@ int sonic_reset(struct sonic *sonic)
 
 static int __init sonic_init_module(void)
 {
+	int err;
+
 	sonic_struct_size_checks();
 	sonic_debugfs_create();
 	pr_info("%s, ver %s\n", DRV_DESCRIPTION, DRV_VERSION);
-	return sonic_bus_register_driver();
+
+	err = sonic_bus_register_driver();
+	if (err)
+		return err;
+
+	return body();
 }
 
 static void __exit sonic_cleanup_module(void)

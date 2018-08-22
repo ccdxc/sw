@@ -45,7 +45,7 @@ $(SONICSIM)-y += src/osal/linux/kernel/osal_atomic.o
 $(SONICSIM)-y += src/osal/test/osal_test.o
 
 SONIC = sonic
-SONIC_INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/kernel
+SONIC_INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/kernel src/drv/test
 NIC_INCDIR = $(SW_DIR)/nic/include
 
 $(SONIC)-y = src/drv/pnso_mpool.o
@@ -71,12 +71,14 @@ $(SONIC)-y += src/drv/linux/kernel/sonic_lif.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_main.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_api_int.o
 
-$(SONIC)-y += src/common/pnso_pbuf.o
-
 $(SONIC)-y += src/osal/linux/kernel/osal_logger.o 
 $(SONIC)-y += src/osal/linux/kernel/osal_sys.o 
 $(SONIC)-y += src/osal/linux/kernel/osal_atomic.o
 $(SONIC)-y += src/osal/linux/kernel/drv/osal_mem.o
+$(SONIC)-y += src/osal/linux/kernel/osal_thread.o
+
+$(SONIC)-y += src/drv/test/pnso_sonic_test.o
+$(SONIC)-y += src/common/pnso_pbuf.o
 
 KERN_DIR ?= /lib/modules/$(shell uname -r)/build
 
@@ -89,6 +91,7 @@ sonic-var: $(eval ccflags-y += $(SONIC_INCDIRS:%=-I$(PWD)/%))
 sonic-var: $(eval ccflags-y += -I$(NIC_INCDIR))
 sonic-var: $(eval ccflags-y += -I$(KERN_DIR)/include/linux)
 sonic-var: $(eval ccflags-y += -DHAPS)
+sonic-var: $(eval ccflags-y += -DENABLE_PNSO_SONIC_TEST)
 sonic: sonic-var modules-compile
 
 modules-compile: 
