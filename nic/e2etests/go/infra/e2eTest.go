@@ -13,6 +13,7 @@ import (
 
 	"github.com/pensando/sw/nic/e2etests/go/cfg"
 	"github.com/pensando/sw/nic/e2etests/go/common"
+	Common "github.com/pensando/sw/nic/e2etests/go/common"
 	TestApi "github.com/pensando/sw/nic/e2etests/go/tests/api"
 )
 
@@ -123,7 +124,7 @@ func _GetHntapCfgForEp(ep *Endpoint) *HntapCfg {
 	return &HntapCfg{
 		Name:  ep.Name,
 		Local: !ep.Remote,
-		Port:  ep.Interface.ID,
+		Port:  ep.Interface.ID - Common.NaplesUplinkStartIndex + 1,
 		LifID: ep.Interface.ID,
 	}
 }

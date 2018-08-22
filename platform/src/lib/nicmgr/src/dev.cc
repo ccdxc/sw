@@ -71,7 +71,7 @@ DeviceManager::LoadConfig(string path)
 
     // Create topology
     uint64_t vrf_id = 1, vrf_handle = 0;
-    uint64_t uplink_if_id = 1, uplink_if_handle = 0;
+    uint64_t uplink_if_id = 128, uplink_if_handle = 0;
     uint8_t port_num = 1, num_uplinks = 2;
     vector<uint16_t> vlans = {1, 10, 16};
     uint64_t native_l2seg_id = 1; /* l2seg_id = vlan_id */
@@ -286,7 +286,7 @@ DeviceManager::AdminQPoll()
     uint8_t resp_data[4096] = { 0 };
 
     uint64_t req_qstate_addr = info.qstate_addr[NICMGR_QTYPE_REQ];
-    uint64_t req_db_addr = 
+    uint64_t req_db_addr =
 #ifdef __aarch64__
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
@@ -297,7 +297,7 @@ DeviceManager::AdminQPoll()
     uint64_t req_db_data = 0x0;
 
     uint64_t resp_qstate_addr = info.qstate_addr[NICMGR_QTYPE_RESP];
-    uint64_t resp_db_addr = 
+    uint64_t resp_db_addr =
 #ifdef __aarch64__
                 CAP_ADDR_BASE_DB_WA_OFFSET +
 #endif
@@ -321,7 +321,7 @@ DeviceManager::AdminQPoll()
                p_index0, c_index0, req_head, req_tail);
 
         // Read nicmgr request descriptor
-        req_desc_addr = req_ring_base + (sizeof(req_desc) * req_tail); 
+        req_desc_addr = req_ring_base + (sizeof(req_desc) * req_tail);
         READ_MEM(req_desc_addr, (uint8_t *)&req_desc, sizeof(req_desc));
 
         // printf("[DEBUG] request:");

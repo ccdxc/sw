@@ -55,8 +55,8 @@ class CpuObject(base.ConfigObjectBase):
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
         #get_req_spec.key_or_handle.if_handle = self.hal_handle
-        # HAL reserved 1003 as CPU If ID.
-        get_req_spec.key_or_handle.interface_id = 1003
+        # HAL reserved 1 as CPU If ID.
+        get_req_spec.key_or_handle.interface_id = 1
         return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp):

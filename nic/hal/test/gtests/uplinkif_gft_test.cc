@@ -66,7 +66,7 @@ TEST_F(uplinkif_test, test1)
 
     spec.set_type(intf::IF_TYPE_UPLINK);
 
-    spec.mutable_key_or_handle()->set_interface_id(1);
+    spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
     spec.mutable_if_uplink_info()->set_port_num(1);
     spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
 

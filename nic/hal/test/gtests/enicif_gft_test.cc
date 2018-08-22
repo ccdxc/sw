@@ -81,7 +81,7 @@ TEST_F(enicif_test, test1)
     // Create enicif
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
-    enicif_spec.mutable_key_or_handle()->set_interface_id(1);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 1);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_GFT);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x0000DEADBEEF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -90,7 +90,7 @@ TEST_F(enicif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // delete enicif
-    del_req.mutable_key_or_handle()->set_interface_id(1);
+    del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();

@@ -154,7 +154,7 @@ void arp_topo_setup()
 
    // Create an uplink
    up_spec.set_type(intf::IF_TYPE_UPLINK);
-   up_spec.mutable_key_or_handle()->set_interface_id(1);
+   up_spec.mutable_key_or_handle()->set_interface_id(128);
    up_spec.mutable_if_uplink_info()->set_port_num(1);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::interface_create(up_spec, &up_rsp);

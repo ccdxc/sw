@@ -72,7 +72,7 @@ trigger:
     packets:
         - packet:
             object  : ref://testcase/packets/id=VXLAN_IGMP_PKT
-            port    : ref://testcase/config/src/segment/floodlist/oifs/id=Tunnel23/ports
+            port    : ref://testcase/config/src/segment/floodlist/oifs/id=Tunnel146/ports
 
 expect:
     delay  : callback://networking/packets/GetExpectDelay

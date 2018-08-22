@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define IF_ID_OFFSET 255
+#define UPLINK_IF_ID_OFFSET 127
+
 class hal_base_test : public ::testing::Test {
 protected:
   hal_base_test() {

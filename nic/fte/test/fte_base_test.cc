@@ -17,6 +17,8 @@
 #include "nic/gen/proto/hal/nat.pb.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
+#define UPLINK_IF_ID_OFFSET 127
+
 using namespace hal::plugins::sfw;
 
 uint32_t fte_base_test::vrf_id_ = 0;
@@ -108,7 +110,7 @@ hal_handle_t fte_base_test::add_uplink(uint8_t port_num)
 
     // Create an uplink
     spec.set_type(intf::IF_TYPE_UPLINK);
-    spec.mutable_key_or_handle()->set_interface_id(++intf_id_);
+    spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + ++intf_id_);
     spec.mutable_if_uplink_info()->set_port_num(port_num);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(spec, &resp);
@@ -417,7 +419,7 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
     Tins::TCP *tcp = eth.find_pdu<Tins::TCP>();
     if (tcp) {
         cpu_rxhdr.tcp_seq_num = ntohl(tcp->seq());
-        cpu_rxhdr.tcp_flags = ((tcp->get_flag(Tins::TCP::SYN) << 1) | 
+        cpu_rxhdr.tcp_flags = ((tcp->get_flag(Tins::TCP::SYN) << 1) |
                                (tcp->get_flag(Tins::TCP::ACK) << 4));
     }
 
@@ -627,7 +629,7 @@ fte_base_test::process_e2e_packets (void)
                     cpu_rxhdr.payload_offset = payload_offset;
                     tcp_header_t  *tcp = (tcp_header_t *)((uint8_t *)inp + l4_offset);
                     cpu_rxhdr.tcp_seq_num = tcp->seq;
-                    cpu_rxhdr.tcp_flags = ((tcp->syn << 1) | (tcp->ack << 4)); 
+                    cpu_rxhdr.tcp_flags = ((tcp->syn << 1) | (tcp->ack << 4));
                     rc = inject_pkt(&cpu_rxhdr, (uint8_t *)inp, nread);
                     EXPECT_EQ(rc, HAL_RET_OK);
                     EXPECT_FALSE(ctx_.drop());
@@ -653,7 +655,7 @@ fte_base_test::process_e2e_packets (void)
                 }
 
                 fix_checksum((uint8_t *)outp, pkt_len);
-#ifdef DEBUG 
+#ifdef DEBUG
                 printf("Received packet:");
                 for (int i = 0; i< pkt_len; i++) {
                     if (i % 16 == 0) {
@@ -682,7 +684,7 @@ fte_base_test::run_service(hal_handle_t ep_h, std::string service)
     std::system(cmd.c_str());
 }
 
-std::string 
+std::string
 fte_base_test::prefix_cmd(hal_handle_t ep_h)
 {
     int idx = std::distance(eps.begin(), eps.find(ep_h));
@@ -692,16 +694,16 @@ fte_base_test::prefix_cmd(hal_handle_t ep_h)
 }
 
 
-void 
+void
 fte_base_test::gen_rules(uint32_t num_rules, uint32_t num_tenants,
-                      vector<fte_base_test::v4_rule_t *> &rules) 
+                      vector<fte_base_test::v4_rule_t *> &rules)
 {
-    uint32_t num_ips_32 = num_rules/10, 
-        num_ips_24 = num_rules/10, 
-        num_ips_16 = num_rules/100, 
+    uint32_t num_ips_32 = num_rules/10,
+        num_ips_24 = num_rules/10,
+        num_ips_16 = num_rules/100,
         num_port_ranges = 100,
         num_exact_ports = 100;
-    
+
     // generate ips (ip, plen)
     vector<pair<uint32_t, uint8_t>> ips;
     for (uint32_t i = 0; i < num_ips_32; i++) {

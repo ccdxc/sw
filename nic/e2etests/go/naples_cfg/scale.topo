@@ -4,7 +4,7 @@ interfaces:
         lif_start: 100
     remote:
         uplinks: 2
-        uplink_start: uplink1
+        uplink_start: uplink128
 namespaces:
     count : 1023
     api: api/namespaces/

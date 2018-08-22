@@ -315,7 +315,7 @@ TEST_F(nat_pool_test, test1)
 
     // Create an uplink
     up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(1);
+    up_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
@@ -374,7 +374,7 @@ TEST_F(nat_pool_test, test1)
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::nat_mapping_create(nat_mapping_spec, &nat_mapping_rsp);
     hal::hal_cfg_db_close();
-    
+
     EXPECT_EQ(ret, HAL_RET_OK);
 
 

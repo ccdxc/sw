@@ -17,7 +17,7 @@ cpu_if_type_seen = 0
 port_num = 1
 num_uplink_ifs = 0
 max_uplink_ifs = 31
-if_id = [i for i in range(1,255)]
+if_id = [i for i in range(128,255)]
 uplink_if_id = []
 
 def PreCreateCb(data, req_spec, resp_spec):

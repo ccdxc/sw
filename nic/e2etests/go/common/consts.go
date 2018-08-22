@@ -66,6 +66,9 @@ var NaplesHalTimeout = 600 * time.Second
 //NaplesSimimeout Sim timeout
 var NaplesSimimeout = 600 * time.Second
 
+//NaplesUplinkStartIndex start index of uplink
+var NaplesUplinkStartIndex = 128
+
 func _getCwd() string {
 	dir, err := os.Getwd()
 	if err != nil {

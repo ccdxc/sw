@@ -66,7 +66,8 @@ using intf::InterfaceStats;
 
 namespace hal {
 
-#define IF_ID_CPU 1003
+// 0 - 127: Reserved IFs. Internally created in HAL.
+#define IF_ID_CPU 1
 
 extern uint8_t g_num_uplink_ifs;
 extern std::vector<uint8_t > g_uplink_if_ids;

@@ -301,7 +301,7 @@ TEST_F(ipsec_encrypt_test, test1)
     IpsecRuleSpec rule_req;
     IpsecRuleResponse rule_rsp;
 
- 
+
     ::google::protobuf::uint32  ip1 = 0x0a010001;
     ::google::protobuf::uint32  ip2 = 0x0a010002;
     NetworkKeyHandle            *nkh = NULL;
@@ -391,7 +391,7 @@ TEST_F(ipsec_encrypt_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
-    
+
     l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     nkh = l2seg_spec.add_network_key_handle();
     nkh->set_nw_handle(nw_hdl);
@@ -417,7 +417,7 @@ TEST_F(ipsec_encrypt_test, test1)
 
     // Create an uplink
     up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(1);
+    up_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);

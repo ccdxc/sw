@@ -116,7 +116,7 @@ TEST_F(hal_filter_test, test1)
     // Create enicif
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
-    enicif_spec.mutable_key_or_handle()->set_interface_id(1);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 1);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(1);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(10);

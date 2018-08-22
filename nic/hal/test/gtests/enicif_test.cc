@@ -86,7 +86,7 @@ TEST_F(enicif_test, test1)
     NetworkKeyHandle                *nkh = NULL;
 
     // Set device mode as Smart switch
-    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);    
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::device_create(&nic_req, &nic_rsp);
     hal::hal_cfg_db_close();
@@ -145,7 +145,7 @@ TEST_F(enicif_test, test1)
     // Create enicif
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
-    enicif_spec.mutable_key_or_handle()->set_interface_id(1);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 1);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(1);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(20);
@@ -172,7 +172,7 @@ TEST_F(enicif_test, test1)
 
 
     // delete enicif
-    del_req.mutable_key_or_handle()->set_interface_id(1);
+    del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -180,7 +180,7 @@ TEST_F(enicif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Set device mode as Smart switch
-    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);    
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::device_create(&nic_req, &nic_rsp);
     hal::hal_cfg_db_close();
@@ -222,7 +222,7 @@ TEST_F(enicif_test, test2)
     // bool                     is_leak = false;
 
     // Set device mode as Smart switch
-    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);    
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::device_create(&nic_req, &nic_rsp);
     hal::hal_cfg_db_close();
@@ -259,7 +259,7 @@ TEST_F(enicif_test, test2)
 
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
-    upif_spec.mutable_key_or_handle()->set_interface_id(200);
+    upif_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 20);
     upif_spec.mutable_if_uplink_info()->set_port_num(1);
     // upif_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -270,7 +270,7 @@ TEST_F(enicif_test, test2)
 
     // Create Uplink If -2
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
-    upif_spec.mutable_key_or_handle()->set_interface_id(201);
+    upif_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 21);
     upif_spec.mutable_if_uplink_info()->set_port_num(1);
     // upif_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -323,7 +323,7 @@ TEST_F(enicif_test, test2)
     // Create enicif with wrong enic info
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
-    enicif_spec.mutable_key_or_handle()->set_interface_id(21);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(21);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(20);
@@ -335,7 +335,7 @@ TEST_F(enicif_test, test2)
     // Create classic enic
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
-    enicif_spec.mutable_key_or_handle()->set_interface_id(21);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
     enicif_spec.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(up_hdl);
     auto l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
@@ -358,7 +358,7 @@ TEST_F(enicif_test, test2)
 
     // Update classic enic - Change uplink
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
-    enicif_spec1.mutable_key_or_handle()->set_interface_id(21);
+    enicif_spec1.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
     enicif_spec1.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(up_hdl1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -374,7 +374,7 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // delete enicif
-    del_req.mutable_key_or_handle()->set_interface_id(21);
+    del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -384,7 +384,7 @@ TEST_F(enicif_test, test2)
     // Create classic enic
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
-    enicif_spec1.mutable_key_or_handle()->set_interface_id(21);
+    enicif_spec1.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
     enicif_spec1.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(up_hdl);
     l2kh = enicif_spec1.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
@@ -398,7 +398,7 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // delete enicif
-    del_req.mutable_key_or_handle()->set_interface_id(21);
+    del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -412,7 +412,7 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // delete enicif
-    del_req.mutable_key_or_handle()->set_interface_id(21);
+    del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -426,7 +426,7 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // delete enicif
-    del_req.mutable_key_or_handle()->set_interface_id(21);
+    del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -440,7 +440,7 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // delete enicif
-    del_req.mutable_key_or_handle()->set_interface_id(21);
+    del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -454,7 +454,7 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // delete enicif
-    del_req.mutable_key_or_handle()->set_interface_id(21);
+    del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -468,7 +468,7 @@ TEST_F(enicif_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // delete enicif
-    del_req.mutable_key_or_handle()->set_interface_id(21);
+    del_req.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -483,9 +483,9 @@ TEST_F(enicif_test, test2)
 
     // Update classic enic - Change native l2seg
     // Update classic enic - Change l2seg list
-    
+
     // Set device mode as Host Pinned
-    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);    
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::device_create(&nic_req, &nic_rsp);
     hal::hal_cfg_db_close();
@@ -522,7 +522,7 @@ TEST_F(enicif_test, test3)
     // bool                        is_leak = false;
 
     // Set device mode as Smart switch
-    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);    
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::device_create(&nic_req, &nic_rsp);
     hal::hal_cfg_db_close();
@@ -559,7 +559,7 @@ TEST_F(enicif_test, test3)
 
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
-    upif_spec.mutable_key_or_handle()->set_interface_id(300);
+    upif_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 30);
     upif_spec.mutable_if_uplink_info()->set_port_num(1);
     // upif_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -570,7 +570,7 @@ TEST_F(enicif_test, test3)
 
     // Create Uplink If -2
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
-    upif_spec.mutable_key_or_handle()->set_interface_id(301);
+    upif_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 31);
     upif_spec.mutable_if_uplink_info()->set_port_num(1);
     // upif_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -609,7 +609,7 @@ TEST_F(enicif_test, test3)
     // Create enicif with wrong enic info
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(31);
-    enicif_spec.mutable_key_or_handle()->set_interface_id(31);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 31);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_PVLAN);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(301);
     enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(20);
@@ -619,7 +619,7 @@ TEST_F(enicif_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Set device mode as Smart switch
-    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);    
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::device_create(&nic_req, &nic_rsp);
     hal::hal_cfg_db_close();
@@ -691,7 +691,7 @@ TEST_F(enicif_test, test4)
 
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
-    upif_spec.mutable_key_or_handle()->set_interface_id(400);
+    upif_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 40);
     upif_spec.mutable_if_uplink_info()->set_port_num(1);
     // upif_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -702,7 +702,7 @@ TEST_F(enicif_test, test4)
 
     // Create Uplink If -2
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
-    upif_spec.mutable_key_or_handle()->set_interface_id(401);
+    upif_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 41);
     upif_spec.mutable_if_uplink_info()->set_port_num(1);
     // upif_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -737,7 +737,7 @@ TEST_F(enicif_test, test4)
 
     // Adding L2segment on Uplink
     if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(401);
-    if_l2seg_spec.mutable_if_key_handle()->set_interface_id(400);
+    if_l2seg_spec.mutable_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 40);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::add_l2seg_on_uplink(if_l2seg_spec, &if_l2seg_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
@@ -746,7 +746,7 @@ TEST_F(enicif_test, test4)
     // Create classic enic
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(41);
-    enicif_spec.mutable_key_or_handle()->set_interface_id(41);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 41);
     enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
     enicif_spec.mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(up_hdl);
     auto l2kh = enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
@@ -761,7 +761,7 @@ TEST_F(enicif_test, test4)
 
     // Adding L2segment on Uplink
     if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(402);
-    if_l2seg_spec.mutable_if_key_handle()->set_interface_id(400);
+    if_l2seg_spec.mutable_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 40);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::add_l2seg_on_uplink(if_l2seg_spec, &if_l2seg_rsp);
     ASSERT_TRUE(ret == HAL_RET_OK);
@@ -776,7 +776,7 @@ TEST_F(enicif_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Set device mode as Smart switch
-    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);    
+    nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::device_create(&nic_req, &nic_rsp);
     hal::hal_cfg_db_close();

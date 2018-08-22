@@ -150,7 +150,7 @@ TEST_F(session_test, test1)
 
     // Create an uplink
     up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(1);
+    up_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
@@ -159,7 +159,7 @@ TEST_F(session_test, test1)
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(2);
+    up_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 2);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
@@ -258,7 +258,7 @@ TEST_F(session_test, test2)
     NetworkKeyHandle                *nkh = NULL;
     DeviceRequest               nic_req;
     DeviceResponseMsg           nic_rsp;
-    
+
     // Set device mode as Smart switch
     nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -517,7 +517,7 @@ TEST_F(session_test, test3)
     NetworkKeyHandle                *nkh = NULL;
     DeviceRequest               nic_req;
     DeviceResponseMsg           nic_rsp;
-    
+
     // Set device mode as Smart switch
     nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -1757,7 +1757,7 @@ TEST_F(session_test, test10)
     NetworkKeyHandle                *nkh = NULL;
     DeviceRequest               nic_req;
     DeviceResponseMsg           nic_rsp;
-    
+
     // Set device mode as Smart switch
     nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -1922,7 +1922,7 @@ TEST_F(session_test, test10)
     // Delete Session
     ret = fte::session_delete(hal::find_session_by_handle(sess_rsp.status().session_handle()));
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
     // Set device mode as Smart switch
     nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

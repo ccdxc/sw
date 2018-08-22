@@ -162,7 +162,7 @@ void
 print_tx_qstate (const char *qstate)
 {
    eth_tx_qstate  *tx  = (eth_tx_qstate *)qstate;
-   std::cout  << "tx_qstate: " 
+   std::cout  << "tx_qstate: "
               << "pc offset: " << tx->pc_offset << "\n"
               << "rsvd0:" << tx->rsvd0 << "\n"
               << "cosA:" << tx->cosA << "\n"
@@ -194,7 +194,7 @@ void
 print_rx_qstate (const char *qstate)
 {
    eth_rx_qstate  *rx  = (eth_rx_qstate *)qstate;
-   std::cout  << "rx_qstate: " 
+   std::cout  << "rx_qstate: "
               << "pc offset " << rx->pc_offset << "\n"
               << "rsvd0" << rx->rsvd0 << "\n"
               << "cosA" << rx->cosA << "\n"
@@ -225,10 +225,10 @@ void
 print_admin_qstate (const char *qstate)
 {
    eth_admin_qstate *ad  = (eth_admin_qstate *)qstate;
-   std::cout  << "admin_qstate: " 
+   std::cout  << "admin_qstate: "
               << "pc offset " << ad->pc_offset << "\n"
               << "rsvd0" << ad->rsvd0 << "\n"
-              << "cosA" << ad->cosA << "\n" 
+              << "cosA" << ad->cosA << "\n"
               << "cosB" << ad->cosB << "\n"
               << "cos_sel" << ad->cos_sel << "\n"
               << "eval_last" << ad->eval_last << "\n"
@@ -318,8 +318,8 @@ public:
         QStateSetReq         *lif_qstate;
         ClientContext        context;
         Status               status;
-        
-        print_tx_qstate(tx_qstate); 
+
+        print_tx_qstate(tx_qstate);
         print_rx_qstate(rx_qstate);
         print_admin_qstate(admin_qstate);
 
@@ -382,7 +382,7 @@ public:
                     auto & qstate = rsp.qstate()[i];
                     std::cout << "[INFO] lif " << rsp.status().hw_lif_id()
                         << " qtype " << qstate.type_num()
-                        << " qstate 0x" << std::hex << qstate.addr() 
+                        << " qstate 0x" << std::hex << qstate.addr()
                         << std::endl;
                 }
             }//end of for
@@ -441,7 +441,7 @@ main (int argc, char** argv)
 {
     uint64_t       uplink_if_handle;
     uint64_t       lif_id = 100;
-    uint64_t       if_id = 1;
+    uint64_t       if_id = 128;
     uint64_t       num_lifs = 16, num_uplinks = 2;
     std::string    svc_endpoint;
     std::string    max_lifs;
