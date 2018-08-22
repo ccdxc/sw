@@ -250,6 +250,16 @@ catalog::populate_mac_profiles(ptree &prop_tree)
     return SDK_RET_OK;
 }
 
+uint32_t
+catalog::serdes_index_get(uint32_t sbus_addr)
+{
+    if (sbus_addr < SERDES_SBUS_START) {
+        return sbus_addr;
+    }
+
+    return (sbus_addr - SERDES_SBUS_START);
+}
+
 sdk_ret_t
 catalog::populate_serdes(ptree &prop_tree)
 {
@@ -260,7 +270,7 @@ catalog::populate_serdes(ptree &prop_tree)
         uint32_t sbus_addr   = serdes.second.get<uint32_t>("sbus_addr", 0);
         uint32_t speed       = serdes.second.get<uint32_t>("speed", 0);
         uint32_t cable_type  = serdes.second.get<uint32_t>("cable_type", 0);
-        uint32_t serdes_lane = sbus_addr - SERDES_SBUS_START;
+        uint32_t serdes_lane = serdes_index_get(sbus_addr);
 
         uint32_t port_speed =
                     static_cast<uint32_t>(port_speed_t::PORT_SPEED_NONE);
@@ -286,11 +296,16 @@ catalog::populate_serdes(ptree &prop_tree)
             break;
         }
 
-        catalog_db_.serdes[serdes_lane][port_speed][cable_type].sbus_divider =
-                                    serdes.second.get<uint32_t>("sbus_divider", 0);
+        serdes_info_t *serdes_info =
+                    &catalog_db_.serdes[serdes_lane][port_speed][cable_type];
 
-        catalog_db_.serdes[serdes_lane][port_speed][cable_type].slip_value =
-                                    serdes.second.get<uint32_t>("slip_value", 0);
+        serdes_info->sbus_divider =
+                            serdes.second.get<uint32_t>("sbus_divider", 0);
+
+        serdes_info->slip_value =
+                            serdes.second.get<uint32_t>("slip_value", 0);
+
+        serdes_info->width = serdes.second.get<uint32_t>("width", 0);
 
         uint32_t asic = 0;
         uint32_t asic_port = 0;
@@ -557,8 +572,9 @@ catalog::serdes_info_get(uint32_t sbus_addr,
                          uint32_t port_speed,
                          uint32_t cable_type)
 {
-    return &catalog_db_.
-                serdes[sbus_addr-SERDES_SBUS_START][port_speed][cable_type];
+    uint32_t addr = serdes_index_get(sbus_addr);
+
+    return &catalog_db_.serdes[addr][port_speed][cable_type];
 }
 
 uint32_t

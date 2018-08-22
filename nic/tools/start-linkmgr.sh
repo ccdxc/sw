@@ -7,4 +7,15 @@ export ZMQ_SOC_DIR=$NIC_DIR
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/../bazel-bin/nic/model_sim/:$SNORT_EXPORT_DIR/x86_64/lib/:$NIC_DIR/sdk/obj/lib:$NIC_DIR/conf/linkmgr:$NIC_DIR/sdk/obj/lib/external/
 rm -f $NIC_DIR/linkmgr.log
-$GDB $NIC_DIR/../bazel-bin/nic/linkmgr/linkmgr
+
+catalog_file=catalog.json
+
+if [ $# -eq 1 ]; then
+    if [ $1 == "serdes_test_board" ]; then
+        catalog_file=catalog_serdes_test_board.json
+    fi
+fi
+
+echo "catalog: $catalog_file"
+
+$GDB $NIC_DIR/../bazel-bin/nic/linkmgr/linkmgr -p $catalog_file

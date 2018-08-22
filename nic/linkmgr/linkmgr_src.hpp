@@ -25,6 +25,8 @@ extern linkmgr_state *g_linkmgr_state;
 typedef uint32_t port_num_t;
 
 typedef struct linkmgr_cfg_s {
+    std::string        cfg_file;
+    std::string        catalog_file;
     std::string        grpc_port;
     platform_type_t    platform_type;
 } linkmgr_cfg_t;
@@ -172,7 +174,7 @@ hal_ret_t
 linkmgr_generic_debug_opn(GenericOpnRequest& req,
                           GenericOpnResponse *resp);
 
-hal_ret_t linkmgr_global_init();
+hal_ret_t linkmgr_global_init(linkmgr_cfg_t*);
 hal_ret_t linkmgr_init(sdk::linkmgr::linkmgr_cfg_t *sdk_cfg);
 
 sdk::lib::thread *current_thread(void);

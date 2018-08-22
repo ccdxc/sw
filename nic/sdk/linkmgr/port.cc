@@ -280,12 +280,6 @@ port::port_serdes_rdy(void)
     return serdes_rdy;
 }
 
-bool
-port::port_serdes_dfe_complete(void)
-{
-    return true;
-}
-
 sdk_ret_t
 port::sbus_addr_set (uint32_t lane, uint32_t sbus_addr)
 {
@@ -296,6 +290,66 @@ port::sbus_addr_set (uint32_t lane, uint32_t sbus_addr)
 bool
 port::port_dfe_tuning_enabled(void)
 {
+    switch (this->port_speed_) {
+        case port_speed_t::PORT_SPEED_100G:
+        case port_speed_t::PORT_SPEED_50G:
+        case port_speed_t::PORT_SPEED_25G:
+            return true;
+
+        default:
+            break;
+    }
+
+    return false;
+}
+
+int
+port::port_serdes_ical_start(void)
+{
+    uint32_t lane = 0;
+
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        serdes_fns.serdes_ical_start(port_sbus_addr(lane));
+    }
+
+    return 0;
+}
+
+int
+port::port_serdes_pcal_start(void)
+{
+    uint32_t lane = 0;
+
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        serdes_fns.serdes_pcal_start(port_sbus_addr(lane));
+    }
+
+    return 0;
+}
+
+int
+port::port_serdes_pcal_continuous_start(void)
+{
+    uint32_t lane = 0;
+
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        serdes_fns.serdes_pcal_continuous_start(port_sbus_addr(lane));
+    }
+
+    return 0;
+}
+
+bool
+port::port_serdes_dfe_complete(void)
+{
+    uint32_t lane = 0;
+
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        if (serdes_fns.serdes_dfe_status(port_sbus_addr(lane)) != 1) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -304,7 +358,7 @@ port::port_link_sm_dfe_process(void)
 {
     bool dfe_complete = false;
     bool ret          = true;
-    int  timeout      = 500; //msecs
+    int  timeout      = 40; //msecs
 
     switch(this->link_dfe_sm_) {
         case port_link_sm_t::PORT_LINK_SM_DFE_DISABLED:
@@ -316,6 +370,8 @@ port::port_link_sm_dfe_process(void)
         case port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL:
 
             SDK_PORT_TRACE(this, "start ICAL");
+
+            port_serdes_ical_start();
 
             // transition to wait for ical complete
             set_port_link_dfe_sm(
@@ -348,6 +404,8 @@ port::port_link_sm_dfe_process(void)
 
             SDK_PORT_TRACE(this, "start PCAL");
 
+            port_serdes_pcal_start();
+
             // transition to wait for pcal complete
             set_port_link_dfe_sm(
                     port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL);
@@ -359,6 +417,8 @@ port::port_link_sm_dfe_process(void)
             dfe_complete = port_serdes_dfe_complete();
 
             if(dfe_complete == false) {
+                timeout = 100; // 100 msec for pCal
+
                 this->bringup_timer_val_ += timeout;
 
                 this->link_bring_up_timer_ =
@@ -377,6 +437,8 @@ port::port_link_sm_dfe_process(void)
 
         case port_link_sm_t::PORT_LINK_SM_DFE_PCAL_CONTINUOUS:
             SDK_PORT_TRACE(this, "PCAL continuous");
+
+            port_serdes_pcal_continuous_start();
 
             break;
 

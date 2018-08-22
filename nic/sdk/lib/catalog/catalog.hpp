@@ -39,6 +39,7 @@ typedef enum mac_mode_e {
 typedef struct serdes_info_s {
     uint32_t sbus_divider;
     uint32_t slip_value;
+    uint32_t width;
     uint8_t  tx_pol;
     uint8_t  rx_pol;
 } serdes_info_t;
@@ -206,6 +207,7 @@ private:
 
     sdk_ret_t serdes_init(std::string& serdes_file);
     sdk_ret_t populate_serdes(ptree &prop_tree);
+    uint32_t  serdes_index_get(uint32_t sbus_addr);
 };
 
 }    // namespace lib

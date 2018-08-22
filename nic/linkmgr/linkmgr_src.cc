@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------
 
 #include "sdk/port_mac.hpp"
+#include "sdk/port_serdes.hpp"
 #include "linkmgr_src.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
@@ -1051,10 +1052,11 @@ port_get (PortGetRequest& req, PortGetResponseMsg *rsp)
 hal_ret_t
 linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
 {
-    port_t      *pi_p     = NULL;
-    port_args_t port_args = { 0 };
-    hal_ret_t   ret       = HAL_RET_OK;
-    sdk_ret_t   sdk_ret   = SDK_RET_OK;
+    port_t        *pi_p        = NULL;
+    port_args_t   port_args    = { 0 };
+    hal_ret_t     ret          = HAL_RET_OK;
+    sdk_ret_t     sdk_ret      = SDK_RET_OK;
+    serdes_info_t *serdes_info = NULL;
 
     uint32_t    port_id       = 0;
     uint32_t    mac_port_num  = 0;
@@ -1062,6 +1064,9 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
     uint32_t    num_lanes     = 0;
     bool        enable        = false;
     bool        reset         = false;
+    uint32_t    sbus_addr     = 0x0;
+    uint32_t    cable_type    = 0x0;
+    int         eye_type      = 0;
 
     sdk::linkmgr::port_args_init(&port_args);
     kh::PortKeyHandle key_handle;
@@ -1185,6 +1190,78 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             HAL_TRACE_DEBUG("mac_sync mac_port: {}, sync: {}",
                             mac_port_num,
                             sdk::linkmgr::mac_fns.mac_sync_get(mac_port_num));
+            break;
+
+        case 7:
+            sbus_addr  = req.val1();
+            speed      = req.val2();
+            cable_type = req.val3();
+
+            serdes_info =
+                    catalog()->serdes_info_get(sbus_addr, speed, cable_type);
+
+            HAL_TRACE_DEBUG("serdes_cfg sbus_addr: {}, speed: {}, cable: {}",
+                            sbus_addr, speed, cable_type);
+            sdk::linkmgr::serdes_fns.serdes_cfg(sbus_addr, serdes_info);
+            break;
+
+        case 8:
+            sbus_addr = req.val1();
+            enable    = req.val2();
+
+            HAL_TRACE_DEBUG("serdes_output_enable sbus_addr: {}, enable: {}",
+                            sbus_addr, enable);
+            sdk::linkmgr::serdes_fns.serdes_output_enable(sbus_addr, enable);
+            break;
+
+        case 9:
+            sbus_addr = req.val1();
+
+            HAL_TRACE_DEBUG("serdes_ical_start sbus_addr: {}",
+                            sbus_addr);
+            sdk::linkmgr::serdes_fns.serdes_ical_start(sbus_addr);
+            break;
+
+        case 10:
+            sbus_addr = req.val1();
+
+            HAL_TRACE_DEBUG("serdes_pcal_start sbus_addr: {}",
+                            sbus_addr);
+            sdk::linkmgr::serdes_fns.serdes_pcal_start(sbus_addr);
+            break;
+
+        case 11:
+            sbus_addr = req.val1();
+
+            HAL_TRACE_DEBUG("serdes_pcal_continuous_start sbus_addr: {}",
+                            sbus_addr);
+            sdk::linkmgr::serdes_fns.serdes_pcal_continuous_start(sbus_addr);
+            break;
+
+        case 12:
+            sbus_addr = req.val1();
+
+            HAL_TRACE_DEBUG(
+                    "serdes_dfe_status sbus_addr: {}, status: {}",
+                    sbus_addr,
+                    sdk::linkmgr::serdes_fns.serdes_dfe_status(sbus_addr));
+            break;
+
+        case 13:
+            sbus_addr = req.val1();
+            eye_type  = req.val2();
+
+            HAL_TRACE_DEBUG("serdes_eye_get sbus_addr: {}, eye_type: {}",
+                            sbus_addr, eye_type);
+            sdk::linkmgr::serdes_fns.serdes_eye_get(sbus_addr, eye_type);
+            break;
+
+        case 14:
+            sbus_addr = req.val1();
+            enable    = req.val2();
+            HAL_TRACE_DEBUG("serdes_rx_lpbk sbus_addr: {}, enable: {}",
+                            sbus_addr, enable);
+            sdk::linkmgr::serdes_fns.serdes_rx_lpbk(sbus_addr, enable);
             break;
 
         default:

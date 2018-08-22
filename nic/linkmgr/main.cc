@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "sdk/linkmgr.hpp"
 #include "linkmgr_src.hpp"
+#include <getopt.h>
 
 extern "C" void __gcov_flush(void);
 
@@ -12,6 +12,8 @@ extern "C" void __gcov_flush(void);
 #endif
 
 namespace linkmgr {
+
+linkmgr_cfg_t linkmgr_cfg;
 
 //------------------------------------------------------------------------------
 // initialize all the signal handlers
@@ -75,6 +77,81 @@ linkmgr_sig_init (void)
     return HAL_RET_OK;
 }
 
+static void inline
+print_usage (char **argv)
+{
+    fprintf(stdout,
+            "Usage : %s [-c|--config <cfg.json>] [-p|--platform <catalog.json>]\n",
+            argv[0]);
+}
+
+int
+parse_options(int argc, char **argv)
+{
+    int oc = 0;
+
+	struct option longopts[] = {
+	   { "config",    required_argument, NULL, 'c' },
+	   { "platform",  optional_argument, NULL, 'p' },
+	   { "help",      no_argument,       NULL, 'h' },
+	   { 0,           0,                 0,     0 }
+	};
+
+    // parse CLI options
+    while ((oc = getopt_long(argc, argv, ":hc:p:W;", longopts, NULL)) != -1) {
+        switch (oc) {
+        case 'c':
+            if (optarg) {
+                linkmgr_cfg.cfg_file = std::string(optarg);
+            } else {
+                fprintf(stderr, "config file is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'p':
+            if (optarg) {
+                linkmgr_cfg.catalog_file = std::string(optarg);
+            } else {
+                fprintf(stderr, "platform catalog file is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'h':
+            print_usage(argv);
+            exit(0);
+            break;
+
+        case ':':
+            fprintf(stderr, "%s: option -%c requires an argument\n",
+                    argv[0], optopt);
+            print_usage(argv);
+            exit(1);
+            break;
+
+        case '?':
+        default:
+            fprintf(stderr, "%s: option -%c is invalid, quitting ...\n",
+                    argv[0], optopt);
+            print_usage(argv);
+            exit(1);
+            break;
+        }
+    }
+
+    return 0;
+}
+
+static void
+linkmgr_cfg_init(void)
+{
+    linkmgr_cfg.cfg_file     = "linkmgr.json";
+    linkmgr_cfg.catalog_file = "catalog.json";
+}
+
 } // namespace linkmgr
 
 int
@@ -120,7 +197,11 @@ main (int argc, char **argv)
                            true, "linkmgr.log", hal::utils::trace_debug);
     sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
 
-    linkmgr::linkmgr_global_init();
+    linkmgr::linkmgr_cfg_init();
+
+    linkmgr::parse_options(argc, argv);
+
+    linkmgr::linkmgr_global_init(&linkmgr::linkmgr_cfg);
 
     HAL_TRACE_DEBUG("linkmgr done");
 

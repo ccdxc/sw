@@ -194,6 +194,10 @@ public:
     // set the sbus addr for each serdes
     sdk_ret_t sbus_addr_set (uint32_t lane, uint32_t sbus_addr);
 
+    int port_serdes_ical_start(void);
+    int port_serdes_pcal_start(void);
+    int port_serdes_pcal_continuous_start(void);
+
     // ----------------------------------------------------
     // static methods
     // ----------------------------------------------------

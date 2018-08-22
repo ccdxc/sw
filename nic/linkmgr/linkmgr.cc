@@ -20,8 +20,6 @@ using sdk::types::platform_type_t;
 
 namespace linkmgr {
 
-linkmgr_cfg_t linkmgr_cfg;
-
 // TODO required?
 extern class linkmgr_state *g_linkmgr_state;
 
@@ -67,12 +65,6 @@ static uint32_t
 mac_ch (uint32_t port, uint32_t lane)
 {
     return catalog()->mac_ch(port, lane);
-}
-
-static platform_type_t
-platform_type (void)
-{
-    return linkmgr_cfg.platform_type;
 }
 
 static hal_ret_t
@@ -192,34 +184,38 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
 }
 
 hal_ret_t
-linkmgr_global_init (void)
+linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
 {
-    hal_ret_t                    ret_hal   = HAL_RET_OK;
-    std::string                  cfg_file  = "linkmgr.json";
-    char                         *cfg_path = NULL;
-    sdk::lib::catalog            *catalog;
-    sdk::linkmgr::linkmgr_cfg_t  sdk_cfg;
+    hal_ret_t          ret_hal       = HAL_RET_OK;
+    std::string        cfg_file      = linkmgr_cfg->cfg_file;
+    std::string        catalog_file  = linkmgr_cfg->catalog_file;
+    char               *cfg_path     = NULL;
+    sdk::lib::catalog  *catalog      = NULL;
+
+    sdk::linkmgr::linkmgr_cfg_t sdk_cfg;
 
     // makeup the full file path
     cfg_path = std::getenv("HAL_CONFIG_PATH");
+
     if (cfg_path) {
-        cfg_file = std::string(cfg_path) + "/" + cfg_file;
+        cfg_file     = std::string(cfg_path) + "/" + cfg_file;
+        catalog_file = std::string(cfg_path) + "/" + catalog_file;
     } else {
         HAL_ASSERT(FALSE);
     }
 
-    linkmgr_parse_cfg(cfg_file.c_str(), &linkmgr_cfg);
+    linkmgr_parse_cfg(cfg_file.c_str(), linkmgr_cfg);
 
-    catalog =
-        sdk::lib::catalog::factory(std::string(cfg_path) + "/catalog.json");
+    catalog = sdk::lib::catalog::factory(catalog_file);
+
     HAL_ASSERT_RETURN((catalog != NULL), HAL_RET_ERR);
 
-    if (sdk::lib::pal_init(platform_type()) != sdk::lib::PAL_RET_OK) {
+    if (sdk::lib::pal_init(linkmgr_cfg->platform_type) != sdk::lib::PAL_RET_OK) {
         HAL_TRACE_ERR("pal init failed");
         return HAL_RET_ERR;
     }
 
-    sdk_cfg.platform_type = platform_type();
+    sdk_cfg.platform_type = linkmgr_cfg->platform_type;
     sdk_cfg.cfg_path = cfg_path;
     sdk_cfg.catalog  = catalog;
 
@@ -240,7 +236,7 @@ linkmgr_global_init (void)
     sdk::linkmgr::linkmgr_event_wait();
 
     // register for all gRPC services
-    svc_reg(std::string("localhost:") + linkmgr_cfg.grpc_port);
+    svc_reg(std::string("localhost:") + linkmgr_cfg->grpc_port);
 
     return ret_hal;
 }
