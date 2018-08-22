@@ -91,8 +91,8 @@ struct ionic_sq_meta {
 	uint64_t		wrid;
 	uint32_t		len;
 	uint16_t		seq;
-	uint8_t			op;
-	uint8_t			status;
+	uint8_t			ibop;
+	uint8_t			ibsts;
 	bool			remote;
 	bool			signal;
 };
@@ -177,231 +177,34 @@ static inline struct ionic_ah *to_ionic_ah(struct ibv_ah *ibah)
         return container_of(ibah, struct ionic_ah, ibah);
 }
 
-static inline uint16_t ionic_get_sqe_size(uint16_t max_sge,
-					  uint16_t max_inline)
+static inline bool ionic_ibop_is_local(enum ibv_wr_opcode op)
 {
-	if (max_sge < 2)
-		max_sge = 2;
-
-	max_sge *= 16;
-
-	if (max_sge < max_inline)
-		max_sge = max_inline;
-
-	return 32 + max_sge;
+	return op == IBV_WR_LOCAL_INV || op == IBV_WR_BIND_MW;
 }
 
-static inline uint32_t ionic_get_rqe_size(uint16_t max_sge)
+static inline int ionic_ibop_to_wc(enum ibv_wr_opcode op)
 {
-	if (max_sge < 2)
-		max_sge = 2;
-
-	max_sge *= 16;
-
-	return 32 + max_sge;
-}
-
-static inline uint8_t ibv_to_ionic_wr_opcd(uint8_t ibv_opcd)
-{
-	uint8_t bnxt_opcd;
-
-	switch (ibv_opcd) {
+	switch (op) {
 	case IBV_WR_SEND:
-		bnxt_opcd = IONIC_WR_OPCD_SEND;
-		break;
 	case IBV_WR_SEND_WITH_IMM:
-		bnxt_opcd = IONIC_WR_OPCD_SEND_IMM;
-		break;
+	case IBV_WR_SEND_WITH_INV:
+		return IBV_WC_SEND;
 	case IBV_WR_RDMA_WRITE:
-		bnxt_opcd = IONIC_WR_OPCD_RDMA_WRITE;
-		break;
 	case IBV_WR_RDMA_WRITE_WITH_IMM:
-		bnxt_opcd = IONIC_WR_OPCD_RDMA_WRITE_IMM;
-		break;
+		return IBV_WC_RDMA_WRITE;
 	case IBV_WR_RDMA_READ:
-		bnxt_opcd = IONIC_WR_OPCD_RDMA_READ;
-		break;
+		return IBV_WC_RDMA_READ;
 	case IBV_WR_ATOMIC_CMP_AND_SWP:
-		bnxt_opcd = IONIC_WR_OPCD_ATOMIC_CS;
-		break;
+		return IBV_WC_COMP_SWAP;
 	case IBV_WR_ATOMIC_FETCH_AND_ADD:
-		bnxt_opcd = IONIC_WR_OPCD_ATOMIC_FA;
-		break;
-		/* TODO: Add other opcodes */
+		return IBV_WC_FETCH_ADD;
+	case IBV_WR_BIND_MW:
+		return IBV_WC_BIND_MW;
+	case IBV_WR_LOCAL_INV:
+		return IBV_WC_LOCAL_INV;
 	default:
-		bnxt_opcd = IONIC_WR_OPCD_INVAL;
-		break;
-	};
-
-	return bnxt_opcd;
-}
-
-static inline void ionic_set_ibv_send_flags(int flags, struct sqwqe_t *wqe)
-{
-	if (flags & IBV_SEND_FENCE) {
-		wqe->base.fence = 1;
+		return -1;
 	}
-	if (flags & IBV_SEND_SOLICITED) {
-		wqe->base.solicited_event = 1;
-	}
-	if (flags & IBV_SEND_INLINE) {
-		wqe->base.inline_data_vld = 1;
-	}
-	if (flags & IBV_SEND_SIGNALED) {
-		wqe->base.complete_notify = 1;
-	}
-}
-
-static inline uint8_t ionic_ibv_wr_to_wc_opcd(uint8_t wr_opcd)
-{
-	uint8_t wc_opcd;
-
-	switch (wr_opcd) {
-	case IBV_WR_SEND_WITH_IMM:
-	case IBV_WR_SEND:
-		wc_opcd = IBV_WC_SEND;
-		break;
-	case IBV_WR_RDMA_WRITE_WITH_IMM:
-	case IBV_WR_RDMA_WRITE:
-		wc_opcd = IBV_WC_RDMA_WRITE;
-		break;
-	case IBV_WR_RDMA_READ:
-		wc_opcd = IBV_WC_RDMA_READ;
-		break;
-	case IBV_WR_ATOMIC_CMP_AND_SWP:
-		wc_opcd = IBV_WC_COMP_SWAP;
-		break;
-	case IBV_WR_ATOMIC_FETCH_AND_ADD:
-		wc_opcd = IBV_WC_FETCH_ADD;
-		break;
-	default:
-		wc_opcd = 0xFF;
-		break;
-	}
-
-	return wc_opcd;
-}
-
-#define CQ_STATUS_SUCCESS		0
-#define CQ_STATUS_LOCAL_LEN_ERR		1
-#define CQ_STATUS_LOCAL_QP_OPER_ERR	2
-#define CQ_STATUS_LOCAL_PROT_ERR	3
-#define CQ_STATUS_WQE_FLUSHED_ERR	4
-#define CQ_STATUS_MEM_MGMT_OPER_ERR	5
-#define CQ_STATUS_BAD_RESP_ERR		6
-#define CQ_STATUS_LOCAL_ACC_ERR		7
-#define CQ_STATUS_REMOTE_INV_REQ_ERR	8
-#define CQ_STATUS_REMOTE_ACC_ERR	9
-#define CQ_STATUS_REMOTE_OPER_ERR	10
-#define CQ_STATUS_RETRY_EXCEEDED	11
-#define CQ_STATUS_RNR_RETRY_EXCEEDED	12
-#define CQ_STATUS_XRC_VIO_ERR		13
-
-#define OP_TYPE_SEND			0
-#define OP_TYPE_SEND_INV		1
-#define OP_TYPE_SEND_IMM		2
-#define OP_TYPE_READ			3
-#define OP_TYPE_WRITE			4
-#define OP_TYPE_WRITE_IMM		5
-#define OP_TYPE_CMP_N_SWAP		6
-#define OP_TYPE_FETCH_N_ADD		7
-#define OP_TYPE_FRPNR			8
-#define OP_TYPE_LOCAL_INV		9
-#define OP_TYPE_BIND_MW			10
-#define OP_TYPE_SEND_INV_IMM		11 // vendor specific
-
-#define OP_TYPE_RDMA_OPER_WITH_IMM	16
-#define OP_TYPE_SEND_RCVD		17
-#define OP_TYPE_INVALID			18
-
-static inline enum ibv_wc_opcode ionic_to_ibv_wc_opcd(uint8_t ionic_opcd)
-{
-	enum ibv_wc_opcode ibv_opcd;
-
-	/* XXX should this use ionic_wc_type instead? */
-	switch (ionic_opcd) {
-	case OP_TYPE_SEND:
-	case OP_TYPE_SEND_INV:
-	case OP_TYPE_SEND_IMM:
-		ibv_opcd = IBV_WC_SEND;
-		break;
-	case OP_TYPE_READ:
-		ibv_opcd = IBV_WC_RDMA_READ;
-		break;
-	case OP_TYPE_WRITE:
-	case OP_TYPE_WRITE_IMM:
-		ibv_opcd = IBV_WC_RDMA_WRITE;
-		break;
-	case OP_TYPE_CMP_N_SWAP:
-		ibv_opcd = IBV_WC_COMP_SWAP;
-		break;
-	case OP_TYPE_FETCH_N_ADD:
-		ibv_opcd = IBV_WC_FETCH_ADD;
-		break;
-	case OP_TYPE_LOCAL_INV:
-		ibv_opcd = IBV_WC_LOCAL_INV;
-		break;
-	case OP_TYPE_BIND_MW:
-		ibv_opcd = IBV_WC_BIND_MW;
-		break;
-	default:
-		ibv_opcd = 0;
-	}
-
-	return ibv_opcd;
-}
-
-static inline uint8_t ionic_to_ibv_wc_status(uint8_t wcst)
-{
-	uint8_t ibv_wcst;
-
-	/* XXX should this use ionic_{req,rsp}_wc_status instead?
-	 * also, do we really need two different enums for wc status? */
-	switch (wcst) {
-	case 0:
-		ibv_wcst = IBV_WC_SUCCESS;
-		break;
-	case CQ_STATUS_LOCAL_LEN_ERR:
-		ibv_wcst = IBV_WC_LOC_LEN_ERR;
-		break;
-	case CQ_STATUS_LOCAL_QP_OPER_ERR:
-		ibv_wcst = IBV_WC_LOC_QP_OP_ERR;
-		break;
-	case CQ_STATUS_LOCAL_PROT_ERR:
-		ibv_wcst = IBV_WC_LOC_PROT_ERR;
-		break;
-	case CQ_STATUS_WQE_FLUSHED_ERR:
-		ibv_wcst = IBV_WC_WR_FLUSH_ERR;
-		break;
-	case CQ_STATUS_LOCAL_ACC_ERR:
-		ibv_wcst = IBV_WC_LOC_ACCESS_ERR;
-		break;
-	case CQ_STATUS_REMOTE_INV_REQ_ERR:
-		ibv_wcst = IBV_WC_REM_INV_REQ_ERR;
-		break;
-	case CQ_STATUS_REMOTE_ACC_ERR:
-		ibv_wcst = IBV_WC_REM_ACCESS_ERR;
-		break;
-	case CQ_STATUS_REMOTE_OPER_ERR:
-		ibv_wcst = IBV_WC_REM_OP_ERR;
-		break;
-	case CQ_STATUS_RNR_RETRY_EXCEEDED:
-		ibv_wcst = IBV_WC_RNR_RETRY_EXC_ERR;
-		break;
-	case CQ_STATUS_RETRY_EXCEEDED:
-		ibv_wcst = IBV_WC_RETRY_EXC_ERR;
-		break;
-	default:
-		ibv_wcst = IBV_WC_GENERAL_ERR;
-		break;
-	}
-
-	return ibv_wcst;
-}
-
-static inline bool ionic_op_is_local(uint8_t opcd)
-{
-	return opcd == OP_TYPE_LOCAL_INV || opcd == OP_TYPE_BIND_MW;
 }
 
 #endif /* IONIC_H */
