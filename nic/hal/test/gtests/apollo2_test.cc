@@ -475,9 +475,9 @@ TEST_F(apollo_test, test1) {
     std::vector<uint8_t> ipkt;
     std::vector<uint8_t> opkt;
     std::vector<uint8_t> epkt;
-    
+
     uint32_t i = 0;
-    uint32_t tcscale = 0;
+    uint32_t tcscale = 1;
     int tcid = 0;
     int tcid_filter = 0;
 
@@ -495,6 +495,7 @@ TEST_F(apollo_test, test1) {
         memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
         epkt.resize(sizeof(g_rcv_pkt1));
         memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
+        std::cout << "Testing Host to Switch" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i+1);
             step_network_pkt(ipkt, port);
