@@ -118,6 +118,9 @@ enum sonic_queue_type {
 	SONIC_QTYPE_CRYPTO_STATUS
 };
 
+#define SONIC_SEQ_Q_DESC_SIZE        64
+#define SONIC_SEQ_STATUS_Q_DESC_SIZE 128
+
 #define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)
 #define lif_to_rxq(lif, i)	(&lif->rxqcqs[i]->q)
 
