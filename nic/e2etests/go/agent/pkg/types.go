@@ -10,7 +10,7 @@ var (
 	SIM_START_UP_SCRIPT    = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/sim/naples/start-naples-docker.sh", os.Getenv("GOPATH"))
 	SIM_STOP_SCRIPT        = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/sim/naples/stop-naples-docker.sh", os.Getenv("GOPATH"))
 	HEALTH_CHECK_SCRIPT    = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/e2etests/go/agent/scripts/check-naples-health.sh", os.Getenv("GOPATH"))
-	LIF_COUNT              = 256 // TODO get this from the manifest file
+	LIF_COUNT              = 256   // TODO get this from the manifest file
 	LIF_START              = 100 // TODO don't hard code this. Currently hntap assumes the lifs will start from id 100.
 	UPLINK_COUNT           = 2   // TODO get this from the manifest file
 	UPLINK_START           = 1   // TODO don't hard code this.

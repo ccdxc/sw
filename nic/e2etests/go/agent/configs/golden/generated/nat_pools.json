@@ -1,0 +1,58 @@
+[
+  {
+    "kind": "NatPool",
+    "meta": {
+      "name": "scale-nat-pool-0",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ip-range": "177.75.132.50-177.75.132.57"
+    },
+    "status": {}
+  },
+  {
+    "kind": "NatPool",
+    "meta": {
+      "name": "scale-nat-pool-1",
+      "tenant": "default",
+      "namespace": "scale-vrf-1",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ip-range": "223.97.165.130-223.97.165.137"
+    },
+    "status": {}
+  },
+  {
+    "kind": "NatPool",
+    "meta": {
+      "name": "scale-nat-pool-2",
+      "tenant": "default",
+      "namespace": "scale-vrf-2",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ip-range": "112.211.249.98-112.211.249.105"
+    },
+    "status": {}
+  },
+  {
+    "kind": "NatPool",
+    "meta": {
+      "name": "scale-nat-pool-3",
+      "tenant": "default",
+      "namespace": "scale-vrf-3",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "ip-range": "4.121.175.18-4.121.175.25"
+    },
+    "status": {}
+  }
+]

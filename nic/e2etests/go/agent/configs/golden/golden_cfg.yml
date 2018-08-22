@@ -42,3 +42,9 @@ objects:
   count: 2
   rest-endpoint: "/api/ipsec/policies/"
   spec-file: "generated/ipsec_policies.json"
+- kind: NatPool
+  name: scale-nat-pool
+  count: 4
+  rest-endpoint: "/api/nat/pools/"
+  spec-file: "generated/nat_pools.json"
+

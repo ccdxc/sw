@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
-
-	"os"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/libs"
@@ -135,7 +134,24 @@ func (c *Config) generateObjs(manifestFile string, vlanOffset int) error {
 				return err
 			}
 			c.Objects[i] = *genObj
-
+		case "NatPool":
+			genObj, err := c.generateNatPool(&o, manifestFile)
+			if err != nil {
+				return err
+			}
+			c.Objects[i] = *genObj
+		case "NatBinding":
+			genObj, err := c.generateNatBinding(&o, manifestFile)
+			if err != nil {
+				return err
+			}
+			c.Objects[i] = *genObj
+		case "NatPolicy":
+			genObj, err := c.generateNatPolicy(&o, manifestFile)
+			if err != nil {
+				return err
+			}
+			c.Objects[i] = *genObj
 		}
 	}
 
@@ -414,6 +430,84 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 		return nil, err
 	}
 	o.SpecFile = specFile
+	return o, nil
+}
+func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error) {
+	var natPools []netproto.NatPool
+	//var portOffset = 8000
+	specFile := "generated/nat_pools.json"
+	// If spec file is already present in the manifest, nothing to do here
+	if len(o.SpecFile) > 0 {
+		return o, nil
+	}
+
+	// Nat Pools sessions need to refer to Namespaces
+	namespaceRef := objCache["Namespace"]
+	networkRef := objCache["Network"]
+
+	// Mirror sessions also need EP IP Addresses
+	//epRef := objCache["Endpoint"]
+
+	// generate networks distributed evenly across
+	for i := 0; i < o.Count; i++ {
+		name := fmt.Sprintf("%s-%d", o.Name, i)
+		namespace := fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
+		network := fmt.Sprintf("%s-%d", networkRef.Name, i%networkRef.Count)
+		subnet := networkCache[network]
+		addrs, _, err := libs.GenIPAddress(subnet, 8)
+		if err != nil {
+			return nil, err
+		}
+		ipRange := fmt.Sprintf("%s-%s", addrs[0], addrs[len(addrs)-1])
+		fmt.Println("BLERION: ", ipRange)
+		//endpoint := fmt.Sprintf("%s-%d", epRef.Name, i%epRef.Count)
+		np := netproto.NatPool{
+			TypeMeta: api.TypeMeta{Kind: "NatPool"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: namespace,
+				Name:      name,
+			},
+			Spec: netproto.NatPoolSpec{
+				IPRange: ipRange,
+			},
+		}
+		natPools = append(natPools, np)
+	}
+	out, err := json.MarshalIndent(&natPools, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	// Automatically interpret the the base dir of the manifest file as the config dir to dump all the generated files
+	configDir, _ := filepath.Split(manifestFile)
+
+	fileName := fmt.Sprintf("%s%s", configDir, specFile)
+
+	// create a generated dir in the config directory to dump the json
+	genDir, _ := filepath.Split(fileName)
+	if _, err := os.Stat(genDir); os.IsNotExist(err) {
+		err = os.MkdirAll(genDir, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("creating the generated directory failed. Err: %v", err)
+		}
+	}
+
+	err = ioutil.WriteFile(fileName, out, 0644)
+	if err != nil {
+		return nil, err
+	}
+	o.SpecFile = specFile
+	return o, nil
+}
+
+func (c *Config) generateNatBinding(o *Object, manifestFile string) (*Object, error) {
+	// TODO add auto gen.
+	return o, nil
+}
+
+func (c *Config) generateNatPolicy(o *Object, manifestFile string) (*Object, error) {
+	// TODO add auto gen.
 	return o, nil
 }
 

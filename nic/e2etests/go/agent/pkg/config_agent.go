@@ -34,6 +34,9 @@ type AgentConfig struct {
 	IPSecSADecryption []netproto.IPSecSADecrypt
 	IPSecPolicies     []netproto.IPSecPolicy
 	MirrorSessions    []tsproto.MirrorSession
+	NatPools          []netproto.NatPool
+	NatBindings       []netproto.NatBinding
+	NatPolicies       []netproto.NatPolicy
 	restApiMap        map[reflect.Type]string
 }
 
@@ -71,6 +74,9 @@ func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig)
 		"IPSecSAEncrypt": &agentCfg.IPSecSAEncryption,
 		"IPSecSADecrypt": &agentCfg.IPSecSADecryption,
 		"IPSecPolicy":    &agentCfg.IPSecPolicies,
+		"NatPool":        &agentCfg.NatPools,
+		"NatBinding":     &agentCfg.NatBindings,
+		"NatPolicy":      &agentCfg.NatPolicies,
 	}
 
 	err = json.Unmarshal(dat, kindMap[o.Kind])
@@ -148,6 +154,13 @@ func (agentCfg *AgentConfig) push() error {
 	restURL = fmt.Sprintf("%s%s", AGENT_URL,
 		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.IPSecPolicies)])
 	for _, ms := range agentCfg.IPSecPolicies {
+		doConfig(ms, restURL)
+	}
+
+	fmt.Printf("Configuring %d Nat Pools...\n", len(agentCfg.NatPools))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.NatPools)])
+	for _, ms := range agentCfg.NatPools {
 		doConfig(ms, restURL)
 	}
 

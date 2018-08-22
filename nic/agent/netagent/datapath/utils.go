@@ -178,7 +178,7 @@ func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetR
 			Spec: &halproto.LifSpec{
 				KeyOrHandle: &halproto.LifKeyHandle{
 					KeyOrHandle: &halproto.LifKeyHandle_LifId{
-						LifId: 1,
+						LifId: 100,
 					},
 				},
 			},
@@ -188,7 +188,7 @@ func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetR
 			Spec: &halproto.LifSpec{
 				KeyOrHandle: &halproto.LifKeyHandle{
 					KeyOrHandle: &halproto.LifKeyHandle_LifId{
-						LifId: 2,
+						LifId: 101,
 					},
 				},
 			},
