@@ -191,6 +191,7 @@ table C_idx {
 }
 
 action mpu_only_action() {
+    modify_field(control_meta.en_C, control_meta.en_D); // causes 1 bit I
 }
 
 table D_mpu_only {

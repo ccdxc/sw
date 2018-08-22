@@ -414,13 +414,18 @@ class capri_table:
         if self.is_wide_key:
             return
 
-        if ((self.final_key_size + self.i_phv_size) > max_ki_size):
+        if self.is_mpu_only():
+            final_key_size = 0
+        else:
+            final_key_size = self.final_key_size
+
+        if ((final_key_size + self.i_phv_size) > max_ki_size):
             self.gtm.tm.logger.critical('%s:Violation Table %s (K+I) %d\n' % \
-                (self.d.name, self.p4_table.name, self.final_key_size + self.i_phv_size))
+                (self.d.name, self.p4_table.name, final_key_size + self.i_phv_size))
             violation = True
         kd_size = self.d_size
         if self.is_hash_table():
-            kd_size += self.final_key_size
+            kd_size += final_key_size
             # XXX for HBM mem need to add i1 size
 
         if (kd_size > max_kd_size):
@@ -443,7 +448,7 @@ class capri_table:
         # initial check using logical key and data widths
         num_bit_extractors = self.gtm.tm.be.hw_model['match_action']['num_bit_extractors']
         key_maker_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
-        num_km = (self.final_key_size + self.i_phv_size + key_maker_width - 1) / key_maker_width
+        num_km = (final_key_size + self.i_phv_size + key_maker_width - 1) / key_maker_width
         num_bit_extractors = num_bit_extractors * num_km
         if total_bit_extractions > num_bit_extractors:
             self.gtm.tm.logger.critical("%s:Violation-%s need %d bit extractors(max %d allowed)" % \
@@ -3566,6 +3571,7 @@ class capri_stage:
         max_km = self.gtm.tm.be.hw_model['match_action']['num_key_makers']
 
         self.p4_table_list = None  # table list from hlir
+        self.p4_table_list_unsorted = None  # table list from hlir
         self.ct_list = None
         self.table_profiles = OrderedDict() # {pred_val : [tables to apply]}
         self.table_profile_masks = OrderedDict() # {pred_val : active_conditions}
@@ -4890,8 +4896,10 @@ class capri_gress_tm:
             if stg not in self.stages:
                 self.stages[stg] = capri_stage(self, stg_id)
                 self.stages[stg].p4_table_list = sorted(table_list, key=lambda k:k.name)
+                self.stages[stg].p4_table_list_unsorted = table_list
             else:
                 self.stages[stg].p4_table_list += sorted(table_list, key=lambda k:k.name)
+                self.stages[stg].p4_table_list_unsorted += table_list
 
             for i,t in enumerate(self.stages[stg].p4_table_list):
                 if isinstance(t, p4.p4_conditional_node):
@@ -5205,7 +5213,7 @@ class capri_gress_tm:
         table_paths = OrderedDict()
         all_tables = []
         for stg in self.stages.keys():
-            all_tables += self.stages[stg].p4_table_list
+            all_tables += self.stages[stg].p4_table_list_unsorted
         table_paths = self.find_table_paths(all_tables)
 
         # go thru' each path and collect all the conditions that apply to a given
@@ -5338,14 +5346,15 @@ class capri_gress_tm:
             self.stages[stg].prune_impossible_table_profiles()
 
     def find_table_paths(self, table_list):
-        def _find_paths(node, paths, current_path, table_list):
+        def _find_paths(node, paths, current_path, tables_visited):
             assert node not in current_path, "Table LOOP at %s" % node.name
+            tables_visited.append(node)
             if isinstance(node, p4.p4_conditional_node):
                 for nxt_node in node.next_.values():
                     if not nxt_node:
                         paths.append(current_path + [node])
                         continue
-                    _find_paths(nxt_node, paths, current_path+[node], table_list)
+                    _find_paths(nxt_node, paths, current_path+[node], tables_visited)
             else:
                 # no support for action function dependency, so really it should be just one
                 # next node
@@ -5354,12 +5363,16 @@ class capri_gress_tm:
                     if not nxt_node:
                         paths.append(current_path + [node])
                         continue
-                    _find_paths(nxt_node, paths, current_path+[node], table_list)
+                    _find_paths(nxt_node, paths, current_path+[node], tables_visited)
 
         paths = []
         current_path = []
+        tables_visited = []
         if len(table_list):
-            _find_paths(table_list[0], paths, current_path, table_list)
+            for p4t in table_list:
+                if p4t in tables_visited:
+                    continue
+                _find_paths(p4t, paths, current_path, tables_visited)
         return paths
 
     def create_key_makers(self):
