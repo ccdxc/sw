@@ -39,7 +39,7 @@ message ExportControlKeyHandle {
 // FlowMonitorRuleKeyHandle is used to operate on a FlowMonitorRule object either by its key or handle
 message FlowMonitorRuleKeyHandle {
   oneof key_or_handle {
-    uint64     flowmonitorrule_id     = 1;   // unique flowmon rule id allocated by app
+    uint64     flowmonitorrule_id     = 1 [(gogoproto.moretags) = "venice:range:0-1024"];   // unique flowmon rule id allocated by app
     fixed64    flowmonitorrule_handle = 2;   // flowmon handle returned by HAL
   }
 }
@@ -55,7 +55,7 @@ message DropMonitorRuleKeyHandle {
 // MirrorSessionKeyHandle is used to operate on a MirrorSession object either by its key or handle
 message MirrorSessionKeyHandle {
   oneof key_or_handle {
-    uint64     mirrorsession_id     = 1 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];   // unique mirror session id allocated by app
+    uint64     mirrorsession_id     = 1 [(gogoproto.moretags) = "venice:range:0-7"]; // unique mirror session id allocated by app
     fixed64    mirrorsession_handle = 2;   // mirror session handle returned by HAL
   }
 }

@@ -56,14 +56,15 @@ enum RuleAction {
 message CollectorSpec {
   types.ObjectMeta      meta              = 1; // Common object meta
   kh.CollectorKeyHandle key_or_handle     = 2 [(gogoproto.moretags) = "venice:key"]; // Collector key or handle
-  types.EncapInfo       encap             = 3; // VLAN encap to be applied to traffic
-  kh.L2SegmentKeyHandle l2seg_key_handle  = 4 [(gogoproto.moretags) = "venice:ref"]; // Hal Handle for the L2 segment (ideally remove encap)
-  types.IPAddress       dest_ip           = 5 [(gogoproto.moretags) = "venice:mandatory"]; // Destination IP of the Collector
-  types.IPAddress       src_ip            = 6 [(gogoproto.moretags) = "venice:mandatory"]; // Source IP to use
-  types.IPProtocol      protocol          = 7 [(gogoproto.moretags) = "venice:mandatory"]; // L4 IP Protocol to use
-  uint32                dest_port         = 8 [(gogoproto.moretags) = "venice:mandatory"]; // L4 Port for the collector
-  ExportFormat          format            = 9 [(gogoproto.moretags) = "venice:mandatory"]; // Format that the collector expects
-  uint32                template_id       = 10 [(gogoproto.moretags) = "venice:mandatory"]; // Data Template ID used to send to the collector 
+  kh.VrfKeyHandle       vrf_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"];
+  types.EncapInfo       encap             = 4; // VLAN encap to be applied to traffic
+  kh.L2SegmentKeyHandle l2seg_key_handle  = 5 [(gogoproto.moretags) = "venice:ref"]; // Hal Handle for the L2 segment (ideally remove encap)
+  types.IPAddress       dest_ip           = 6 [(gogoproto.moretags) = "venice:mandatory"]; // Destination IP of the Collector
+  types.IPAddress       src_ip            = 7 [(gogoproto.moretags) = "venice:mandatory"]; // Source IP to use
+  types.IPProtocol      protocol          = 8 [(gogoproto.moretags) = "venice:mandatory"]; // L4 IP Protocol to use
+  uint32                dest_port         = 9 [(gogoproto.moretags) = "venice:mandatory"]; // L4 Port for the collector
+  ExportFormat          format            = 10 [(gogoproto.moretags) = "venice:mandatory"]; // Format that the collector expects
+  uint32                template_id       = 11 [(gogoproto.moretags) = "venice:mandatory"]; // Data Template ID used to send to the collector 
 }
 
 // CollectorSpec is the operational status of the collector
@@ -237,11 +238,11 @@ message MonitorAction {
 
 // FlowMonitorRuleSpec flow monitor rule specification
 message FlowMonitorRuleSpec {
-  types.ObjectMeta  meta                    = 1; // Common object meta
-  kh.FlowMonitorRuleKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"]; // FlowMonitor key or handle
-  kh.ExportControlKeyHandle   ec_key_handle = 3 [(gogoproto.moretags) = "venice:ref"]; // ExportControl key or handle
-  types.RuleMatch             match         = 4; // match conditions 
-  MonitorAction               action        = 5; // Action for flows that meet the match criteria
+  types.ObjectMeta  meta                        = 1; // Common object meta
+  kh.FlowMonitorRuleKeyHandle key_or_handle     = 2 [(gogoproto.moretags) = "venice:key"]; // FlowMonitor key or handle
+  kh.VrfKeyHandle             vrf_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"];
+  types.RuleMatch             match             = 4; // match conditions 
+  MonitorAction               action            = 5; // Action for flows that meet the match criteria
 }
 
 // FlowMonitorRuleStatus is the operational status of the rule
@@ -269,8 +270,9 @@ message FlowMonitorRuleResponseMsg {
 
 // FlowMonitorRuleDeleteRequest is used to delete a flowmonitor
 message FlowMonitorRuleDeleteRequest {
-  types.ObjectMeta              meta          = 1; // object meta
-  kh.FlowMonitorRuleKeyHandle   key_or_handle = 2 [(gogoproto.moretags) = "venice:key"]; // unique identifier
+  types.ObjectMeta              meta            = 1; // object meta
+  kh.FlowMonitorRuleKeyHandle   key_or_handle   = 2 [(gogoproto.moretags) = "venice:key"]; // unique identifier
+  kh.VrfKeyHandle               vrf_key_handle  = 3 [(gogoproto.moretags) = "venice:ref"];
 }
 
 // FlowMonitorRuleDeleteResponse is response to FlowMonitorRuleDeleteRequest
@@ -409,12 +411,13 @@ message ERSpanSpec {
 // MirrorSessionSpec is the configuration specification for mirror config
 message MirrorSessionSpec {
   types.ObjectMeta          meta            = 1; // Common object meta
-  kh.MirrorSessionKeyHandle key_or_handle   = 2 [(gogoproto.moretags) = "venice:key,venice:constraints={range:0-7}"]; // MirrorSession key or handle
-  uint32                    snaplen         = 3; // maximum  bytes of packet to mirror.
+  kh.MirrorSessionKeyHandle key_or_handle   = 2 [(gogoproto.moretags) = "venice:key"]; // MirrorSession key or handle
+  kh.VrfKeyHandle           vrf_key_handle  = 3 [(gogoproto.moretags) = "venice:ref"];
+  uint32                    snaplen         = 4; // maximum  bytes of packet to mirror.
   oneof destination {
-    kh.InterfaceKeyHandle   local_span_if   = 4 [(gogoproto.moretags) = "venice:ref"]; // Local span destination
-    RSpanSpec               rspan_spec      = 5; // VLAN encap to use when configuration is for RSPAN
-    ERSpanSpec              erspan_spec     = 6; // ERSPAN configuration in case of ERSPAN
+    kh.InterfaceKeyHandle   local_span_if   = 5 [(gogoproto.moretags) = "venice:ref"]; // Local span destination
+    RSpanSpec               rspan_spec      = 6; // VLAN encap to use when configuration is for RSPAN
+    ERSpanSpec              erspan_spec     = 7; // ERSPAN configuration in case of ERSPAN
   }
 }
 

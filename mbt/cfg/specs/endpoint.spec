@@ -16,7 +16,7 @@ objects:
             request  : EndpointRequestMsg
             response : EndpointResponseMsg
             pre_cb   : callback://endpoint/PreCreateCb
-            post_cb  : None
+            post_cb  : callback://endpoint/PostCreateCb
         update:
             api      : EndpointUpdate
             request  : EndpointRequestMsg

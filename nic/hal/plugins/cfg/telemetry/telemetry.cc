@@ -102,10 +102,10 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         ep_t *ep;
         switch (dst_addr.af) {
             case IP_AF_IPV4:
-                ep = find_ep_by_v4_key(spec.meta().vrf_id(), dst_addr.addr.v4_addr);
+                ep = find_ep_by_v4_key(spec.vrf_key_handle().vrf_id(), dst_addr.addr.v4_addr);
                 break;
             case IP_AF_IPV6:
-                ep = find_ep_by_v6_key(spec.meta().vrf_id(), &dst_addr);
+                ep = find_ep_by_v6_key(spec.vrf_key_handle().vrf_id(), &dst_addr);
                 break;
             default:
                 HAL_TRACE_ERR("Unknown ERSPAN dest AF {}", dst_addr.af);
@@ -113,7 +113,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         }
         if (ep == NULL) {
             HAL_TRACE_ERR("Unknown ERSPAN dest {}, vrfId {}",
-                          ipaddr2str(&dst_addr), spec.meta().vrf_id());
+                          ipaddr2str(&dst_addr), spec.vrf_key_handle().vrf_id());
             return HAL_RET_INVALID_ARG;
         }
         auto dest_if = find_if_by_handle(ep->if_handle);
@@ -201,7 +201,7 @@ mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rs
         }
         if (!exists) {
             auto response = rsp->add_response();
-            response->set_api_status(types::API_STATUS_NOT_FOUND);
+            response->set_api_status(types::API_STATUS_OK);
         }
     } else {
         auto response = rsp->add_response();
@@ -269,10 +269,11 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     cfg.collector_id = spec.key_or_handle().collector_id();
     ip_addr_spec_to_ip_addr(&cfg.src_ip, spec.src_ip());
     ip_addr_spec_to_ip_addr(&cfg.dst_ip, spec.dest_ip());
-    auto ep = find_ep_by_v4_key(spec.meta().vrf_id(), cfg.dst_ip.addr.v4_addr);
+    auto ep = find_ep_by_v4_key(spec.vrf_key_handle().vrf_id(), cfg.dst_ip.addr.v4_addr);
     if (ep == NULL) {
         HAL_TRACE_ERR("PI-Collector:{}: Unknown endpoint {} : {}", __FUNCTION__,
-            spec.meta().vrf_id(), ipaddr2str(&cfg.dst_ip));
+            spec.vrf_key_handle().vrf_id(), ipaddr2str(&cfg.dst_ip));
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
     memcpy(cfg.dest_mac, ep->l2_key.mac_addr, sizeof(cfg.dest_mac));
@@ -286,6 +287,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
             break;
         default:
             HAL_TRACE_DEBUG("PI-Collector:{}: Unknown format type {}", __FUNCTION__, spec.template_id());
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
             return HAL_RET_INVALID_ARG;
     }
     cfg.protocol = spec.protocol();
@@ -295,16 +297,19 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         cfg.vlan = encap.encap_value();
     } else {
         HAL_TRACE_DEBUG("PI-Collector:{}: Unsupport Encap {}", __FUNCTION__, encap.encap_type());
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
-    cfg.l2seg = l2seg_lookup_by_handle(spec.l2seg_key_handle().l2segment_handle());
+    cfg.l2seg = l2seg_lookup_key_or_handle(spec.l2seg_key_handle());
     if (cfg.l2seg == NULL) {
         HAL_TRACE_DEBUG("PI-Collector:{}: Could not retrieve L2 segment", __FUNCTION__);
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
     auto dmac = l2seg_get_rtr_mac(cfg.l2seg);
     if (dmac == NULL) {
         HAL_TRACE_DEBUG("PI-Collector:{}: Could not retrieve L2 segment source mac", __FUNCTION__);
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
     memcpy(cfg.src_mac, *dmac, sizeof(cfg.src_mac));
@@ -312,12 +317,17 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     pd_func_args.pd_collector_create = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_OK);
         HAL_TRACE_ERR("PI-Collector:{}: PD API failed {}", __FUNCTION__, ret);
+        return ret;
     }
     HAL_TRACE_DEBUG("{}: SUCCESS: ExportID {}, dest {}, source {},  port {}", __FUNCTION__,
             spec.key_or_handle().collector_id(), ipaddr2str(&cfg.dst_ip),
             ipaddr2str(&cfg.src_ip), cfg.dport);
-    return ret;
+    rsp->set_api_status(types::API_STATUS_OK);
+    rsp->mutable_status()->set_handle(spec.key_or_handle().collector_id());
+
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -386,7 +396,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
     HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
     flowmonrule_spec_dump(spec);
     rule_id = spec.key_or_handle().flowmonitorrule_id();
-    if (spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         HAL_TRACE_ERR("vrf {}", spec.meta().vrf_id());
         ret = HAL_RET_INVALID_ARG;
@@ -399,7 +409,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
         goto end;
     }
     rule = flow_monitor_rule_alloc_init();
-    rule->vrf_id = spec.meta().vrf_id();
+    rule->vrf_id = spec.vrf_key_handle().vrf_id();
     rule->rule_id = rule_id;
     flow_mon_rules[rule_id] = rule;
     
@@ -411,13 +421,18 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
     }
     ret = populate_flow_monitor_rule(spec, rule);
     if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_ERR);
         goto end;
     }
     ret = rule_match_rule_add(&flowmon_acl_ctx, &rule->rule_match, 0,
                               (void *)&rule->ref_count);
     if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_ERR);
         HAL_TRACE_ERR("Rule match add failed: ruleid {}", spec.key_or_handle().flowmonitorrule_id());
+        goto end;
     }
+
+    rsp->set_api_status(types::API_STATUS_OK);
 
 end:
     return ret;
@@ -439,11 +454,11 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
     flow_monitor_rule_t *rule;
     const acl_ctx_t     *flowmon_acl_ctx;
 
-    vrf_id = req.meta().vrf_id();
+    vrf_id = req.vrf_key_handle().vrf_id();
     rule_id = req.key_or_handle().flowmonitorrule_id();
     if (vrf_id == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        HAL_TRACE_ERR("vrf {}", req.meta().vrf_id());
+        HAL_TRACE_ERR("vrf {}", req.vrf_key_handle().vrf_id());
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }

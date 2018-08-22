@@ -193,8 +193,11 @@ class GrpcReqRspMsg:
             if message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_INT32 or \
                message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_UINT32  or \
                message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_UINT64:
-                # Include offset of 65535 to not clash with DOL key ids
-                setattr(message, key_name, KeyIdAllocator.get() + 65535)
+                if grpc_meta_types.is_range_field(message.DESCRIPTOR.fields[0]):
+                    GrpcReqRspMsg.generate_scalar_field(message, message.DESCRIPTOR.fields[0])
+                else:
+                    # Include offset of 65535 to not clash with DOL key ids
+                    setattr(message, key_name, KeyIdAllocator.get() + 65535)
             elif message.DESCRIPTOR.fields[0].type == descriptor.FieldDescriptor.TYPE_MESSAGE:
                 sub_message = getattr(message, key_name)
                 GrpcReqRspMsg.static_generate_message(sub_message, key, ext_refs, external_constraints)
