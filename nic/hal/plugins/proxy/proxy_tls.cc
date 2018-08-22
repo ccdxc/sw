@@ -132,5 +132,38 @@ tls_poll_asym_pend_req_q(void)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+tls_proxy_cfg_rule_action(tcp_proxy_tls_cfg_t *tls_cfg, proxy_flow_info_t *pfi)
+{
+
+    pfi->u.tlsproxy.cert_id = tls_cfg->cert_id;
+    HAL_TRACE_DEBUG("Received ciphers: {}", tls_cfg->ciphers);
+    if(tls_cfg->ciphers.length() > 0) {
+        pfi->u.tlsproxy.ciphers = tls_cfg->ciphers;
+    }
+    pfi->u.tlsproxy.key_type = tls_cfg->asym_key_type;
+    switch(tls_cfg->asym_key_type) {
+    case types::CRYPTO_ASYM_KEY_TYPE_ECDSA:
+        pfi->u.tlsproxy.u.ecdsa_keys.sign_key_id =
+            tls_cfg->u.ecdsa_key.sign_key_idx;
+        break;
+    case types::CRYPTO_ASYM_KEY_TYPE_RSA:
+        pfi->u.tlsproxy.u.rsa_keys.sign_key_id =
+            tls_cfg->u.rsa_key.sign_key_idx;
+        pfi->u.tlsproxy.u.rsa_keys.decrypt_key_id =
+            tls_cfg->u.rsa_key.decrypt_key_idx;
+        break;
+    default:
+        HAL_TRACE_ERR("Unknown key type: {}", tls_cfg->asym_key_type);
+    }
+    pfi->u.tlsproxy.is_valid = true;
+
+    HAL_TRACE_DEBUG("TLS proxy config for qid: {}, cert: {}",
+                    pfi->qid1,
+                    pfi->u.tlsproxy.cert_id);
+
+    return HAL_RET_OK;
+}
+
 } // namespace hal
 } // namespace net

@@ -32,8 +32,24 @@ enum TcpProxyActionType {
   TCP_PROXY_ACTION_TYPE_DISABLE = 2;
 }
 
+message TlsProxyECDSAKey {
+    uint32                  sign_key_idx    = 1;
+}
+
+message TlsProxyRSAKey {
+    uint32                  sign_key_idx    = 1;
+    uint32                  decrypt_key_idx = 2;
+}
+
 message TlsProxyAction {
-  types.CryptoAsymKeyType   asym_key_type = 1;
+  types.CryptoAsymKeyType asym_key_type   = 1;
+  uint32                  cert_id         = 2;    // Certificate info
+  uint32                  trust_root_id   = 3;    // Id of the Trust Root Cert used for verification
+  string                  ciphers         = 4;    // List of ciphers for TLS handshake (':' separated)
+  oneof Keys {
+      TlsProxyECDSAKey    ecdsa_key       = 5;    // ECDSA private key info
+      TlsProxyRSAKey      rsa_key         = 6;    // RSA private key info
+  }
 }
  
 message TcpProxyAction {

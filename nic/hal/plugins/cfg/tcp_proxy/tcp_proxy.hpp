@@ -87,8 +87,33 @@ typedef uint64_t pol_id_t;
 //
 //------------------------------------------------------------------------------
 
+
+typedef struct tls_proxy_tls_cfg_ecdsa_key_s {
+    uint32_t                        sign_key_idx;
+} tls_proxy_tls_cfg_ecdsa_key_t;
+
+typedef struct tls_proxy_tls_cfg_rsa_key_s {
+    uint32_t                        sign_key_idx;
+    uint32_t                        decrypt_key_idx;
+} tls_proxy_tls_cfg_rsa_key_t;
+
+typedef struct tcp_proxy_tls_cfg_s {
+    types::CryptoAsymKeyType        asym_key_type;
+    uint32_t                        cert_id;
+    uint32_t                        trust_root_id;
+    std::string                     ciphers;
+    union {
+        tls_proxy_tls_cfg_ecdsa_key_t   ecdsa_key;
+        tls_proxy_tls_cfg_rsa_key_t     rsa_key;
+    } u;
+} tcp_proxy_tls_cfg_t;
+
 typedef struct tcp_proxy_cfg_rule_action_s {
     tcp_proxy::TcpProxyActionType   tcp_proxy_action;
+    types::ProxyType                proxy_type;
+    union {
+        tcp_proxy_tls_cfg_t         tls_cfg;
+    } u;
     hal_handle_t      tcp_proxy_action_handle;
     vrf_id_t    vrf;
 } tcp_proxy_cfg_rule_action_t;
@@ -293,6 +318,28 @@ tcp_proxy_cfg_rule_action_spec_extract (const tcp_proxy::TcpProxyAction& spec,
 {
     hal_ret_t ret = HAL_RET_OK;
     action->tcp_proxy_action = spec.tcp_proxy_action_type();
+    if (spec.proxy_type() == types::PROXY_TYPE_TLS) {
+        action->u.tls_cfg.asym_key_type = spec.tls().asym_key_type();
+        action->u.tls_cfg.cert_id = spec.tls().cert_id();
+        action->u.tls_cfg.trust_root_id = spec.tls().trust_root_id();
+        if(spec.tls().ciphers().length() > 0) {
+            action->u.tls_cfg.ciphers = spec.tls().ciphers();
+        }
+        switch (spec.tls().asym_key_type()) {
+            case types::CRYPTO_ASYM_KEY_TYPE_ECDSA:
+                action->u.tls_cfg.u.ecdsa_key.sign_key_idx =
+                    spec.tls().ecdsa_key().sign_key_idx();
+                break;
+            case types::CRYPTO_ASYM_KEY_TYPE_RSA:
+                action->u.tls_cfg.u.rsa_key.sign_key_idx = 
+                    spec.tls().rsa_key().sign_key_idx();
+                action->u.tls_cfg.u.rsa_key.sign_key_idx = 
+                    spec.tls().rsa_key().sign_key_idx();
+                break;
+            default:
+                HAL_TRACE_ERR("Unknown key type: {}", spec.tls().asym_key_type());
+        }
+    }
     return ret;
 }
 

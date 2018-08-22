@@ -5,6 +5,7 @@
 #pragma once
 
 #include "nic/include/fte.hpp"
+#include "nic/hal/plugins/cfg/tcp_proxy/tcp_proxy.hpp"
 
 namespace hal {
 namespace proxy {
@@ -50,6 +51,9 @@ void tcp_ring_doorbell(uint32_t qid);
 
 void quiesce_message_tx(void);
 hal_ret_t tls_poll_asym_pend_req_q(void);
+
+hal_ret_t
+tls_proxy_cfg_rule_action(tcp_proxy_tls_cfg_t *tls_cfg, proxy_flow_info_t *pfi);
 
 } // namespace proxy
 } // namespace hal

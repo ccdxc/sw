@@ -622,6 +622,31 @@ tcp_is_proxy_policy_enabled_for_flow(fte::ctx_t &ctx)
     return false;
 }
 
+hal_ret_t
+tcp_proxy_type_action(fte::ctx_t &ctx, proxy_flow_info_t *pfi)
+{
+    const hal::ipv4_rule_t *rule = NULL;
+    tcp_proxy_cfg_rule_t *rule_cfg;
+    acl::ref_t *rc;
+
+    rule = tcp_proxy_lookup_rules(ctx.key().dvrf_id, ctx);
+    if (!rule) {
+        HAL_TRACE_DEBUG("TCP Proxy rule lookup failed for vrf {}",
+                ctx.key().dvrf_id);
+        return HAL_RET_ERR;
+    }
+
+    rc = (acl::ref_t *)rule->data.userdata;
+    rule_cfg = RULE_MATCH_USER_DATA(rc, tcp_proxy_cfg_rule_t, ref_count);
+
+    if (rule_cfg->action.proxy_type  == types::PROXY_TYPE_TLS) {
+        return tls_proxy_cfg_rule_action(&rule_cfg->action.u.tls_cfg, pfi);
+    }
+
+    return HAL_RET_OK;
+}
+
+
 fte::pipeline_action_t
 tcp_exec_cpu_lif(fte::ctx_t& ctx)
 {
@@ -675,6 +700,9 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
         ctx.set_feature_status(ret);
         return fte::PIPELINE_END;
     }
+
+    // Proxy type specific configuration
+    tcp_proxy_type_action(ctx, pfi);
 
     return fte::PIPELINE_CONTINUE;
 }

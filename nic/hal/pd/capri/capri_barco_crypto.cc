@@ -8,6 +8,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
+#include "nic/include/hal_pd.hpp"
 
 namespace hal {
 
@@ -35,6 +36,17 @@ std::string barco_hex_dump(const uint8_t *buf, size_t sz)
 hal_ret_t capri_barco_crypto_init(void)
 {
     hal_ret_t                           ret = HAL_RET_OK;
+    hal_cfg_t *hal_cfg =
+        (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+    HAL_ASSERT(hal_cfg);
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+
+    /* Barco reset */
+    hens.cfg_he_ctl.sw_rst(0xff);
+    hens.cfg_he_ctl.write();
+    hens.cfg_he_ctl.sw_rst(0);
+    hens.cfg_he_ctl.write();
 
     key_desc_array_base = get_start_offset(key_desc_array);
     if (key_desc_array_base == CAPRI_INVALID_OFFSET) {
@@ -84,7 +96,10 @@ hal_ret_t capri_barco_crypto_init(void)
     /*
      * Initialize the barco DRBG random number generator.
      */
-    capri_barco_init_drbg();
+    if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) {
+        /* HAPS does not contain the DRBG block */
+        capri_barco_init_drbg();
+    }
 
     return ret;
 }
