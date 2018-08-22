@@ -232,7 +232,7 @@ start_model_accel() {
     # export GDB="gdb -ex run -e ~/.gdbinit --args"
     LD_LIBRARY_PATH="$PWD/../nic/gen/x86_64/lib" \
     ZMQ_SOC_DIR="$PWD/../nic" \
-    src/sim/model_server/start-model -d "type=accel,bdf=03:00.0"
+    src/sim/model_server/start-model -d "type=accel,bdf=03:00.0,lif=10,intr_count=64,intr_base=1536"
 }
 
 start_model_rdma() {

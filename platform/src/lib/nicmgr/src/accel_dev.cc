@@ -245,41 +245,50 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 {
     uint64_t    lif_handle;
     uint64_t    hbm_addr;
-    uint32_t    devcmd_area_size;
+    uint32_t    hbm_size;
 
     hal = hal_client;
     spec = (accel_devspec_t *)dev_spec;
 
     // Locate HBM region dedicated to STORAGE_SEQ_HBM_HANDLE
     memset(&pci_resources, 0, sizeof(pci_resources));
-    if (hal->AllocHbmAddress(STORAGE_SEQ_HBM_HANDLE, &hbm_addr,
-                             &pci_resources.cmbsz)) {
+    if (hal->AllocHbmAddress(STORAGE_SEQ_HBM_HANDLE, &hbm_addr, &hbm_size)) {
         printf("[ERROR] Failed to get HBM base for %s\n", STORAGE_SEQ_HBM_HANDLE);
         return;
     }
-    pci_resources.cmbpa = ACCEL_DEV_PAGE_ALIGN(hbm_addr);
 
     // hal/pd/capri/capri_hbm.cc stores size in KB;
-    // lib/pciehw requires size to be a power of 2 so leave the size
-    // alone even after the page alignment.
-    pci_resources.cmbsz *= 1024;
-    assert(pci_resources.cmbsz > ACCEL_DEV_PAGE_SIZE);
+    hbm_size *= 1024;
 
+    // First, ensure size is a power of 2, then per PCIe BAR mapping
+    // requirement, align the region on its natural boundary, i.e.,
+    // if size is 64MB then the region must be aligned on a 64MB boundary!
+    // This means we could potentially waste half of the space if
+    // the region was not already aligned.
+    assert(hbm_size && !(hbm_size & (hbm_size - 1)));
+    if (hbm_addr & (hbm_size - 1)) {
+        hbm_size /= 2;
+        hbm_addr = ACCEL_DEV_ADDR_ALIGN(hbm_addr, hbm_size);
+    }
+
+    pci_resources.cmbpa = hbm_addr;
+    pci_resources.cmbsz = hbm_size;
     printf("[INFO] %s HBM address %lx size %u bytes\n", __FUNCTION__,
            pci_resources.cmbpa, pci_resources.cmbsz);
 
     // Find devcmd/devcmddb/rings shadow pndx, etc., area
-    if (hal->AllocHbmAddress(ACCEL_DEVCMD_HBM_HANDLE, &hbm_addr,
-                             &devcmd_area_size)) {
+    if (hal->AllocHbmAddress(ACCEL_DEVCMD_HBM_HANDLE, &hbm_addr, &hbm_size)) {
         printf("[ERROR] Failed to get HBM base for %s\n", ACCEL_DEVCMD_HBM_HANDLE);
         return;
     }
 
+    // devcmd page needs to be page aligned, then all subsequent pages
+    // would fall into the same alignment.
+    hbm_size *= 1024;
+    assert(hbm_size >= ((ACCEL_DEV_BAR0_NUM_PAGES_MAX +
+                         ACCEL_DEV_SHADOW_PINDEX_NUM_PAGES_MAX + 1) *
+                        ACCEL_DEV_PAGE_SIZE));
     pci_resources.devcmdpa = ACCEL_DEV_PAGE_ALIGN(hbm_addr);
-    devcmd_area_size *= 1024;
-    assert(devcmd_area_size >= ((ACCEL_DEV_BAR0_NUM_PAGES_MAX +
-                                 ACCEL_DEV_SHADOW_PINDEX_NUM_PAGES_MAX) *
-                                ACCEL_DEV_PAGE_SIZE));
     pci_resources.devcmddbpa = pci_resources.devcmdpa + ACCEL_DEV_PAGE_SIZE;
     WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)blank_page, ACCEL_DEV_PAGE_SIZE);
 
@@ -649,9 +658,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     admin_qstate.ring_base = (1ULL << 63) | (info.hw_lif_id << 52) | cmd->ring_base;
     admin_qstate.ring_size = cmd->ring_size;
     admin_qstate.cq_ring_base = roundup(admin_qstate.ring_base + (64 << cmd->ring_size), 4096);
-#ifndef __x86_64__
     admin_qstate.intr_assert_addr = intr_assert_addr(spec->intr_base + cmd->intr_index);
-#endif
     if (nicmgr_lif_info) {
         admin_qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
         printf("[INFO] %s lif%lu: nicmgr_qstate_addr RX 0x%lx\n", __FUNCTION__,
@@ -825,11 +832,20 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
 void
 Accel_PF::accel_ring_info_get_all(void)
 {
-#ifdef __x86_64__
     accel_ring_t        *accel_ring;
     const accel_csr_t   *csr;
     uint64_t            shadow_addr;
+    uint32_t            reset;
     accel_ring_id_t     id;
+
+    /*
+     * Temporary workaround for not having cap_top_init take the MD block
+     * out of reset for us.
+     */
+    reset = accel_csr_get32(CAP_HENS_CSR_CFG_HE_CTL_BYTE_ADDRESS);
+    if (reset & 0xff) {
+        accel_csr_set32(CAP_HENS_CSR_CFG_HE_CTL_BYTE_ADDRESS, reset & ~0xff);
+    }
 
     assert(shadow_pndx_page_addr);
     shadow_addr = shadow_pndx_page_addr;
@@ -870,7 +886,6 @@ Accel_PF::accel_ring_info_get_all(void)
     }
 
     shadow_pndx_bytes_used = shadow_addr - shadow_pndx_page_addr;
-#endif
 }
 
 /*
@@ -879,7 +894,6 @@ Accel_PF::accel_ring_info_get_all(void)
 void
 Accel_PF::accel_ring_reset_all(void)
 {
-#ifdef __x86_64__
     accel_ring_t        *accel_ring;
     const accel_csr_t   *csr;
     accel_ring_id_t     id;
@@ -911,7 +925,6 @@ Accel_PF::accel_ring_reset_all(void)
     printf("%s clearing %u shadow_pndx_page_addr bytes\n", __FUNCTION__,
            shadow_pndx_bytes_used);
     WRITE_MEM(shadow_pndx_page_addr, (uint8_t *)blank_page, shadow_pndx_bytes_used);
-#endif
 }
 
 /*
@@ -920,7 +933,6 @@ Accel_PF::accel_ring_reset_all(void)
 void
 Accel_PF::accel_engine_enable_all(void)
 {
-#ifdef __x86_64__
     accel_ring_t        *accel_ring;
     const accel_csr_t   *csr;
     accel_ring_id_t     id;
@@ -938,7 +950,6 @@ Accel_PF::accel_engine_enable_all(void)
                             csr_val | csr->engine_en_data);
         }
     }
-#endif
 }
 
 /*
@@ -947,7 +958,6 @@ Accel_PF::accel_engine_enable_all(void)
 void
 Accel_PF::accel_ring_enable_all(void)
 {
-#ifdef __x86_64__
     accel_ring_t        *accel_ring;
     const accel_csr_t   *csr;
     accel_ring_id_t     id;
@@ -965,7 +975,6 @@ Accel_PF::accel_ring_enable_all(void)
                             csr_val | csr->ring_en_data);
         }
     }
-#endif
 }
 
 /*
