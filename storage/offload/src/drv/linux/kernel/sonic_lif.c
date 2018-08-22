@@ -207,11 +207,14 @@ static void sonic_qcq_free(struct lif *lif, struct qcq *qcq)
 
 static unsigned int sonic_pid_get(struct lif *lif, unsigned int page)
 {
+	return 0;
+#if 0
 	unsigned int ndbpgs_per_lif = lif->sonic->ident->dev.db_pages_per_lif;
 
 	BUG_ON(ndbpgs_per_lif < page + 1);
 
 	return lif->index * ndbpgs_per_lif + page;
+#endif
 }
 
 static int sonic_qcqs_alloc(struct lif *lif)
@@ -484,8 +487,7 @@ static int sonic_cpdc_q_init(struct per_core_resource *res, struct queue *q,
 
 static int get_seq_q_desc_count(uint32_t status_q_count,
 				struct per_core_resource *res,
-				uint32_t ring_id, uint32_t *desc_count,
-				uint16_t *desc_size)
+				uint32_t ring_id, uint32_t *desc_count)
 {
 	int err = -EINVAL;
 	struct accel_ring *ring;
@@ -495,7 +497,7 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 
 	ring = &res->lif->sonic->ident->dev.accel_ring_tbl[ring_id];
 
-	dev_dbg(res->lif->sonic->dev, "get_seq_q_desc_count: ring %u: size=%u, desc_size=%u.\n",
+	dev_dbg(res->lif->sonic->dev, "get_seq_q_desc_count: hw ring %u: size=%u, desc_size=%u.\n",
 		ring_id, ring->ring_size, ring->ring_desc_size);
 
 	*desc_count = rounddown_pow_of_two(ring->ring_size / res->lif->sonic->num_per_core_resources);
@@ -503,12 +505,10 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 		*desc_count = rounddown_pow_of_two(status_q_count);
 	}
 	if (*desc_count == 0) {
-		dev_err(res->lif->sonic->dev, "No descs available for ring %d, ring_size=%u.\n",
+		dev_err(res->lif->sonic->dev, "No descs available for hw ring %d, ring_size=%u.\n",
 			ring_id, ring->ring_size);
 		goto done;
 	}
-
-	*desc_size = ring->ring_desc_size;
 
 	err = 0;
 
@@ -523,7 +523,6 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 	int i;
 	uint32_t status_q_count;
 	uint32_t desc_count;
-	uint16_t desc_size;
 	struct device *dev = res->lif->sonic->dev;
 
 	if (q_count < 4)
@@ -536,22 +535,22 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 	res->num_cpdc_status_qs = status_q_count;
 
 	/* CP queue init */
-	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_CP, &desc_count, &desc_size);
+	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_CP, &desc_count);
 	if (err)
 		goto done;
 	err = sonic_cpdc_q_init(res, &res->cp_seq_q, STORAGE_SEQ_QGROUP_CPDC,
-				desc_count, desc_size);
+				desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err) {
 		dev_err(dev, "sonic_cpdc_q_init failed for CP, err=%d\n", err);
 		goto done;
 	}
 
 	/* DC queue init */
-	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_DC, &desc_count, &desc_size);
+	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_DC, &desc_count);
 	if (err)
 		goto done;
 	err = sonic_cpdc_q_init(res, &res->dc_seq_q, STORAGE_SEQ_QGROUP_CPDC,
-				desc_count, desc_size);
+				desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err) {
 		dev_err(dev, "sonic_cpdc_q_init failed for DC, err=%d\n", err);
 		goto done;
@@ -562,7 +561,7 @@ static int sonic_cpdc_qs_init(struct per_core_resource *res,
 		err = sonic_cpdc_q_init(res, &res->cpdc_seq_status_qs[i],
 					STORAGE_SEQ_QGROUP_CPDC_STATUS,
 					MAX_PER_QUEUE_STATUS_ENTRIES,
-					desc_size);
+					SONIC_SEQ_STATUS_Q_DESC_SIZE);
 		if (err) {
 			dev_err(dev, "sonic_cpdc_q_init failed for CPDC status queue %d, err=%d\n",
 				i, err);
@@ -605,7 +604,6 @@ static int sonic_crypto_qs_init(struct per_core_resource *res,
 	int i;
 	uint32_t status_q_count;
 	uint32_t desc_count;
-	uint16_t desc_size;
 
 	if (q_count < 4)
 		return -EINVAL;
@@ -617,22 +615,22 @@ static int sonic_crypto_qs_init(struct per_core_resource *res,
 	res->num_crypto_status_qs = status_q_count;
 
 	/* Encryption queue init */
-	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_XTS0, &desc_count, &desc_size);
+	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_XTS0, &desc_count);
 	if (err)
 		goto done;
 	err = sonic_crypto_q_init(res, &res->crypto_enc_seq_q,
 				  STORAGE_SEQ_QGROUP_CRYPTO,
-				  desc_count, desc_size);
+				  desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err)
 		goto done;
 
 	/* Decryption queue init */
-	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_XTS1, &desc_count, &desc_size);
+	err = get_seq_q_desc_count(status_q_count, res, ACCEL_RING_XTS1, &desc_count);
 	if (err)
 		goto done;
 	err = sonic_crypto_q_init(res, &res->crypto_dec_seq_q,
 				  STORAGE_SEQ_QGROUP_CRYPTO,
-				  desc_count, desc_size);
+				  desc_count, SONIC_SEQ_Q_DESC_SIZE);
 	if (err)
 		goto done;
 
@@ -641,7 +639,7 @@ static int sonic_crypto_qs_init(struct per_core_resource *res,
 		err = sonic_crypto_q_init(res, &res->crypto_seq_status_qs[i],
 					  STORAGE_SEQ_QGROUP_CRYPTO_STATUS,
 					  MAX_PER_QUEUE_STATUS_ENTRIES,
-					  desc_size);
+					  SONIC_SEQ_STATUS_Q_DESC_SIZE);
 		if (err)
 			goto done;
 	}
