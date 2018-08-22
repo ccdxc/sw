@@ -24,18 +24,6 @@ Aapl_t *aapl = NULL;
 // HAPS platform methods
 //---------------------------------------------------------------------------
 
-bool
-serdes_signal_detect_haps (uint32_t sbus_addr)
-{
-    return true;
-}
-
-bool
-serdes_rdy_haps (uint32_t sbus_addr)
-{
-    return true;
-}
-
 int
 serdes_output_enable_haps (uint32_t sbus_addr, bool enable)
 {
@@ -61,18 +49,6 @@ serdes_cfg_haps (uint32_t sbus_addr, serdes_info_t *serdes_info)
 {
     // for HAPS, serdes cfg is to un-reset serdes
     serdes_output_enable_haps (sbus_addr, true);
-    return SDK_RET_OK;
-}
-
-int
-serdes_tx_rx_enable_haps (uint32_t sbus_addr, bool enable)
-{
-    return SDK_RET_OK;
-}
-
-int
-serdes_reset_haps (uint32_t sbus_addr, bool reset)
-{
     return SDK_RET_OK;
 }
 
@@ -111,7 +87,13 @@ serdes_tx_rx_enable_default (uint32_t sbus_addr, bool enable)
 }
 
 int
-serdes_reset_default (uint32_t sbus_addr, bool reset)
+serdes_sbus_reset_default (uint32_t sbus_addr, int hard)
+{
+    return SDK_RET_OK;
+}
+
+int
+serdes_spico_reset_default (uint32_t sbus_addr)
 {
     return SDK_RET_OK;
 }
@@ -148,6 +130,12 @@ serdes_dfe_status_default(uint32_t sbus_addr)
 
 int
 serdes_rx_lpbk_default(uint32_t sbus_addr, bool enable)
+{
+    return 0;
+}
+
+int
+serdes_spico_upload_default (uint32_t sbus_addr, const char* file_name)
 {
     return 0;
 }
@@ -261,6 +249,9 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     uint32_t divider = serdes_info->sbus_divider;
     uint32_t width   = serdes_info->width;
 
+    SDK_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u",
+                    sbus_addr, divider, width);
+
     Avago_serdes_init_config_t *cfg = avago_serdes_init_config_construct(aapl);
     if (NULL == cfg) {
         SDK_TRACE_ERR("Failed to construct avago config");
@@ -315,8 +306,13 @@ serdes_tx_rx_enable_hw (uint32_t sbus_addr, bool enable)
 }
 
 int
-serdes_reset_hw (uint32_t sbus_addr, bool reset)
+serdes_sbus_reset_hw (uint32_t sbus_addr, int hard)
 {
+    avago_sbus_reset(aapl, sbus_addr, hard);
+
+    return 0;
+
+#if 0
     int  mask     = 0;
     bool rc       = false;
     int  int_code = SPICO_INT_RESET;
@@ -327,6 +323,44 @@ serdes_reset_hw (uint32_t sbus_addr, bool reset)
 
     rc = avago_spico_int_check(aapl, __func__, __LINE__, sbus_addr, int_code, mask);
     return rc ? SDK_RET_OK : SDK_RET_ERR;
+#endif
+}
+
+int
+serdes_spico_reset_hw (uint32_t sbus_addr)
+{
+    int rc = avago_spico_reset (aapl, sbus_addr);
+
+    if (rc < 0) {
+        SDK_TRACE_ERR("spico reset failed for sbus: %u", sbus_addr);
+    }
+
+    return rc;
+
+#if 0
+    int  mask     = 0;
+    bool rc       = false;
+    int  int_code = SPICO_INT_RESET;
+
+    if (reset == true) {
+        mask = 1;
+    }
+
+    rc = avago_spico_int_check(aapl, __func__, __LINE__, sbus_addr, int_code, mask);
+    return rc ? SDK_RET_OK : SDK_RET_ERR;
+#endif
+}
+
+int
+serdes_spico_upload_hw (uint32_t sbus_addr, const char* filename)
+{
+    int rc = avago_spico_upload_file(aapl, sbus_addr, 0, filename);
+
+    if (rc < 0) {
+        SDK_TRACE_ERR("spico upload failed for sbus: %u", sbus_addr);
+    }
+
+    return rc;
 }
 
 int
@@ -396,9 +430,13 @@ serdes_eye_get_hw(uint32_t sbus_addr, int eye_type)
             break;
     }
 
-    cfg->ec_cmp_mode    = AVAGO_SERDES_RX_CMP_MODE_XOR;
+    cfg->ec_cmp_mode       = AVAGO_SERDES_RX_CMP_MODE_XOR;
+    cfg->ec_min_dwell_bits = 0x1e6;
+    cfg->ec_min_dwell_bits = 0x1e8;
+    cfg->ec_x_resolution   = 64;
+    cfg->ec_y_points       = 512;
+
     // cfg->ec_y_step_size = 1;
-    // cfg->ec_y_points    = 512;
 
     avago_serdes_eye_get(aapl, sbus_addr, cfg, edata);
 
@@ -450,13 +488,16 @@ port_serdes_fn_init(linkmgr_cfg_t *cfg)
     serdes_fn->serdes_rdy = &serdes_rdy_default;
     serdes_fn->serdes_output_enable = &serdes_output_enable_default;
     serdes_fn->serdes_tx_rx_enable = &serdes_tx_rx_enable_default;
-    serdes_fn->serdes_reset = &serdes_reset_default;
+    serdes_fn->serdes_sbus_reset = &serdes_sbus_reset_default;
+    serdes_fn->serdes_spico_reset = &serdes_spico_reset_default;
     serdes_fn->serdes_eye_get = &serdes_eye_get_default;
     serdes_fn->serdes_ical_start = &serdes_ical_start_default;
     serdes_fn->serdes_pcal_start = &serdes_pcal_start_default;
-    serdes_fn->serdes_pcal_continuous_start = &serdes_pcal_continuous_start_default;
+    serdes_fn->serdes_pcal_continuous_start =
+                            &serdes_pcal_continuous_start_default;
     serdes_fn->serdes_dfe_status = &serdes_dfe_status_default;
     serdes_fn->serdes_rx_lpbk = &serdes_rx_lpbk_default;
+    serdes_fn->serdes_spico_upload = &serdes_spico_upload_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HW:
@@ -465,13 +506,16 @@ port_serdes_fn_init(linkmgr_cfg_t *cfg)
         serdes_fn->serdes_rdy = &serdes_rdy_hw;
         serdes_fn->serdes_output_enable = &serdes_output_enable_hw;
         serdes_fn->serdes_tx_rx_enable = &serdes_tx_rx_enable_hw;
-        serdes_fn->serdes_reset = &serdes_reset_hw;
+        serdes_fn->serdes_sbus_reset = &serdes_sbus_reset_hw;
+        serdes_fn->serdes_spico_reset = &serdes_spico_reset_hw;
         serdes_fn->serdes_eye_get = &serdes_eye_get_hw;
         serdes_fn->serdes_ical_start = &serdes_ical_start_hw;
         serdes_fn->serdes_pcal_start = &serdes_pcal_start_hw;
-        serdes_fn->serdes_pcal_continuous_start = &serdes_pcal_continuous_start_hw;
+        serdes_fn->serdes_pcal_continuous_start =
+                                &serdes_pcal_continuous_start_hw;
         serdes_fn->serdes_dfe_status = &serdes_dfe_status_hw;
         serdes_fn->serdes_rx_lpbk = &serdes_rx_lpbk_hw;
+        serdes_fn->serdes_spico_upload = &serdes_spico_upload_hw;
 
         // serdes global init
         aapl = serdes_global_init_hw();

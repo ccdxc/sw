@@ -1057,6 +1057,7 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
     hal_ret_t     ret          = HAL_RET_OK;
     sdk_ret_t     sdk_ret      = SDK_RET_OK;
     serdes_info_t *serdes_info = NULL;
+    std::string   filename     = "serdes.rom";
 
     uint32_t    port_id       = 0;
     uint32_t    mac_port_num  = 0;
@@ -1067,6 +1068,7 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
     uint32_t    sbus_addr     = 0x0;
     uint32_t    cable_type    = 0x0;
     int         eye_type      = 0;
+    int         hard          = 0;
 
     sdk::linkmgr::port_args_init(&port_args);
     kh::PortKeyHandle key_handle;
@@ -1262,6 +1264,28 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             HAL_TRACE_DEBUG("serdes_rx_lpbk sbus_addr: {}, enable: {}",
                             sbus_addr, enable);
             sdk::linkmgr::serdes_fns.serdes_rx_lpbk(sbus_addr, enable);
+            break;
+
+        case 15:
+            sbus_addr = req.val1();
+            hard      = req.val2();
+            HAL_TRACE_DEBUG("serdes_sbus_reset sbus_addr: {}, hard: {}",
+                            sbus_addr, hard);
+            sdk::linkmgr::serdes_fns.serdes_sbus_reset(sbus_addr, hard);
+            break;
+
+        case 16:
+            sbus_addr = req.val1();
+            HAL_TRACE_DEBUG("serdes_spico_reset sbus_addr: {}",
+                            sbus_addr);
+            sdk::linkmgr::serdes_fns.serdes_spico_reset(sbus_addr);
+            break;
+
+        case 17:
+            sbus_addr = req.val1();
+            HAL_TRACE_DEBUG("serdes_spico_upload sbus_addr: {}",
+                            sbus_addr);
+            sdk::linkmgr::serdes_fns.serdes_spico_upload(sbus_addr, filename.c_str());
             break;
 
         default:

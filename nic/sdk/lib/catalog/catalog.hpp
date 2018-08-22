@@ -208,6 +208,7 @@ private:
     sdk_ret_t serdes_init(std::string& serdes_file);
     sdk_ret_t populate_serdes(ptree &prop_tree);
     uint32_t  serdes_index_get(uint32_t sbus_addr);
+    uint8_t   cable_type_get(std::string cable_type_str);
 };
 
 }    // namespace lib

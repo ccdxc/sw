@@ -19,6 +19,9 @@ typedef struct serdes_fn_s_ {
     int (*serdes_dfe_status)(uint32_t sbus_addr);
     int (*serdes_eye_get) (uint32_t sbus_addr, int eye_type);
     int (*serdes_rx_lpbk) (uint32_t sbus_addr, bool enable);
+    int (*serdes_spico_reset) (uint32_t sbus_addr);
+    int (*serdes_sbus_reset) (uint32_t sbus_addr, int hard);
+    int (*serdes_spico_upload) (uint32_t sbus_addr, const char*);
 } serdes_fn_t;
 
 extern serdes_fn_t serdes_fns;

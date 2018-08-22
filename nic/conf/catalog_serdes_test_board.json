@@ -33,7 +33,7 @@
     "num_uplink_ports" : "1",
     "uplink_ports"     :
     [
-        {"port_num" : "1", "asic" : "0", "asic_port" : "0" , "speed" : "10G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
+        {"port_num" : "1", "asic" : "0", "asic_port" : "0" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
         {"port_num" : "2", "asic" : "0", "asic_port" : "1" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
         {"port_num" : "3", "asic" : "0", "asic_port" : "2" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },
         {"port_num" : "4", "asic" : "0", "asic_port" : "3" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" },

@@ -386,6 +386,8 @@ port::port_link_sm_dfe_process(void)
             if(dfe_complete == false) {
                 this->bringup_timer_val_ += timeout;
 
+                SDK_TRACE_DEBUG("bringup timer: %d", timeout);
+
                 this->link_bring_up_timer_ =
                     linkmgr_timer_schedule(
                         0, timeout, this,
@@ -418,6 +420,8 @@ port::port_link_sm_dfe_process(void)
 
             if(dfe_complete == false) {
                 timeout = 100; // 100 msec for pCal
+
+                SDK_TRACE_DEBUG("bringup timer: %d", timeout);
 
                 this->bringup_timer_val_ += timeout;
 

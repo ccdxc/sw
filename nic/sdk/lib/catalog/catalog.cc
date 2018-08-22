@@ -260,6 +260,16 @@ catalog::serdes_index_get(uint32_t sbus_addr)
     return (sbus_addr - SERDES_SBUS_START);
 }
 
+uint8_t
+catalog::cable_type_get(std::string cable_type_str)
+{
+    if (cable_type_str == "CU") {
+        return 0;
+    }
+
+    return 1;
+}
+
 sdk_ret_t
 catalog::populate_serdes(ptree &prop_tree)
 {
@@ -268,33 +278,18 @@ catalog::populate_serdes(ptree &prop_tree)
         uint32_t mac_id      = serdes.second.get<uint32_t>("mac_id", 0);
         uint32_t mac_ch      = serdes.second.get<uint32_t>("mac_ch", 0);
         uint32_t sbus_addr   = serdes.second.get<uint32_t>("sbus_addr", 0);
-        uint32_t speed       = serdes.second.get<uint32_t>("speed", 0);
-        uint32_t cable_type  = serdes.second.get<uint32_t>("cable_type", 0);
-        uint32_t serdes_lane = serdes_index_get(sbus_addr);
+        uint32_t serdes_lane = 0;
+        uint8_t  cable_type  = 0;
+        uint32_t port_speed  = 0;
 
-        uint32_t port_speed =
-                    static_cast<uint32_t>(port_speed_t::PORT_SPEED_NONE);
+        std::string cable_type_str =
+                    serdes.second.get<std::string>("cable_type", "CU");
+        std::string speed_str = serdes.second.get<std::string>("speed", "10G");
 
-        switch(speed) {
-        case 100:
-            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_100G);
-            break;
-        case 50:
-            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_50G);
-            break;
-        case 40:
-            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_40G);
-            break;
-        case 25:
-            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_25G);
-            break;
-        case 10:
-            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_10G);
-            break;
-        default:
-            port_speed = static_cast<uint32_t>(port_speed_t::PORT_SPEED_NONE);
-            break;
-        }
+        serdes_lane = serdes_index_get(sbus_addr);
+        cable_type  = cable_type_get(cable_type_str);
+        port_speed  = static_cast<uint32_t>(
+                                catalog_speed_to_port_speed(speed_str));
 
         serdes_info_t *serdes_info =
                     &catalog_db_.serdes[serdes_lane][port_speed][cable_type];
