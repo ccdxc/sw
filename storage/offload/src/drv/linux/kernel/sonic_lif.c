@@ -207,14 +207,11 @@ static void sonic_qcq_free(struct lif *lif, struct qcq *qcq)
 
 static unsigned int sonic_pid_get(struct lif *lif, unsigned int page)
 {
-	return 0;
-#if 0
 	unsigned int ndbpgs_per_lif = lif->sonic->ident->dev.db_pages_per_lif;
 
 	BUG_ON(ndbpgs_per_lif < page + 1);
 
 	return lif->index * ndbpgs_per_lif + page;
-#endif
 }
 
 static int sonic_qcqs_alloc(struct lif *lif)
@@ -306,8 +303,7 @@ int sonic_lifs_alloc(struct sonic *sonic)
 	INIT_LIST_HEAD(&sonic->lifs);
 
 	for (i = 0; i < sonic->ident->dev.num_lifs; i++) {
-		err = sonic_lif_alloc(sonic,
-			sonic->ident->dev.hw_lif_id_tbl[i]);
+		err = sonic_lif_alloc(sonic, i);
 		if (err)
 			return err;
 	}
