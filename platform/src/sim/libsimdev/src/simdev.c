@@ -184,6 +184,19 @@ simdev_alloc_hbm_address(const char *handle,
 }
 
 int
+simdev_lif_find(u_int32_t sw_lif_id,
+                u_int64_t *ret_hw_lif_id)
+{
+    simdev_api_t *api = simdevinfo_api();
+
+    if (api && api->lif_find) {
+        return api->lif_find(sw_lif_id, ret_hw_lif_id);
+    }
+
+    return -1;
+}
+
+int
 simdev_read_reg(u_int64_t addr, u_int32_t *data)
 {
     simdev_api_t *api = simdevinfo_api();

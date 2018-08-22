@@ -68,6 +68,8 @@ typedef struct simdev_api_s {
     int (*alloc_hbm_address)(const char *handle,
                              u_int64_t *addr,
                              u_int32_t *size);
+    int (*lif_find)(u_int32_t sw_lif_id,
+                    u_int64_t *ret_hw_lif_id);
 } simdev_api_t;
 
 int simdev_open(simdev_api_t *api);

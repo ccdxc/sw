@@ -21,23 +21,25 @@
 
 #define READ_REG        sdk::lib::pal_reg_read
 #define WRITE_REG       sdk::lib::pal_reg_write
-#define READ_REG32(addr) { \
-    uint32_t val; \
-    sdk::lib::pal_reg_write(addr, &val); \
-    return val; \
+static inline uint32_t READ_REG32(uint64_t addr)
+{
+    uint32_t val;
+    sdk::lib::pal_reg_write(addr, &val);
+    return val;
 }
 #define WRITE_REG32(addr, val) { \
     uint32_t v = val; \
     sdk::lib::pal_reg_write(addr, &v); \
 }
-#define READ_REG64(addr) { \
-    uint64_t val; \
-    sdk::lib::pal_reg_write(addr, &val, 2); \
-    return val; \
+static inline uint64_t READ_REG64(uint64_t addr)
+{
+    uint64_t val;
+    sdk::lib::pal_reg_read(addr, (uint32_t *)&val, 2);
+    return val;
 }
 #define WRITE_REG64(addr, val) { \
     uint64_t v = val; \
-    sdk::lib::pal_reg_write(addr, &v, 2); \
+    sdk::lib::pal_reg_write(addr, (uint32_t *)&v, 2); \
 }
 
 #define WRITE_DB64      sdk::lib::pal_ring_doorbell
@@ -53,7 +55,7 @@
 #define READ_REG32      pal_reg_rd32       
 #define WRITE_REG32     pal_reg_wr32
 #define READ_REG64      pal_reg_rd64
-#define WRITE_REG64     pal_reg_rd64
+#define WRITE_REG64     pal_reg_wr64
 
 #define WRITE_DB64      pal_reg_wr64
 #endif

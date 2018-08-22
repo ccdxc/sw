@@ -388,14 +388,12 @@ loop()
         devmgr->AddDevice(ETH_PF, (void *)&eth_dev[i]);
     }
 
-#ifdef __x86_64__
     for (int i = 0; i < ACCEL_NUM_DEVICES; i++) {
         if (pciehdev_type == ACCEL) {
             accel_devices[i].enable_pciehdev_create = 1;
         }
         devmgr->AddDevice(ACCEL, (void *)&accel_devices[i]);
     }
-#endif
 
     // Register for PCI events
 #ifdef __aarch64__
