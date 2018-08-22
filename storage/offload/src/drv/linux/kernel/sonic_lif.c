@@ -843,7 +843,7 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	return 0;	
 }
 
-static struct per_core_resource *get_per_core_res(struct lif *lif)
+struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
 {
 	int err = -ENOSPC;
 	int pc_res_idx = -1;
@@ -869,7 +869,7 @@ int get_seq_subq(struct lif *lif, enum sonic_queue_type sonic_qtype, struct queu
 	struct per_core_resource *pc_res = NULL;
 
 	*q = NULL;
-	pc_res = get_per_core_res(lif);
+	pc_res = sonic_get_per_core_res(lif);
 	if(pc_res == NULL)
 		return err;
 	switch(sonic_qtype) {
@@ -901,7 +901,7 @@ int alloc_cpdc_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype, s
 	struct per_core_resource *pc_res = NULL;
 
 	*q = NULL;
-	pc_res = get_per_core_res(lif);
+	pc_res = sonic_get_per_core_res(lif);
 	if(pc_res == NULL)
 		return err;
 	//TODO - Change MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES to actual value
