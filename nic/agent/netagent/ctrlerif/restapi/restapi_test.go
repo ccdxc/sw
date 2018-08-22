@@ -391,6 +391,35 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		return
 	}
 
+	tcpProxy := netproto.TCPProxyPolicy{
+		TypeMeta: api.TypeMeta{Kind: "TCPProxyPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "preCreatedTCPProxyPolicy",
+		},
+		Spec: netproto.TCPProxyPolicySpec{
+			Rules: []netproto.TCPProxyRule{
+				{
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"64.0.0.1"},
+					},
+
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"100.0.0.1"},
+					},
+					Action: "ENABLE",
+				},
+			},
+		},
+	}
+
+	err = nagent.CreateTCPProxyPolicy(&tcpProxy)
+	if err != nil {
+		log.Errorf("Failed to create tcp proxy policy. {%v}", tcpProxy)
+		return
+	}
+
 	lif := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{

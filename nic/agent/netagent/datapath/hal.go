@@ -70,21 +70,23 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		hal.Tnclient = halproto.NewVrfClient(hal.client.ClientConn)
 		hal.Natclient = halproto.NewNatClient(hal.client.ClientConn)
 		hal.IPSecclient = halproto.NewIpsecClient(hal.client.ClientConn)
+		hal.TCPProxyPolicyClient = halproto.NewTcpProxyClient(hal.client.ClientConn)
 		haldp.Hal = hal
 		return &haldp, nil
 	}
 	hal.mockCtrl = gomock.NewController(&hal)
 	hal.MockClients = mockClients{
-		MockEpclient:    halproto.NewMockEndpointClient(hal.mockCtrl),
-		MockIfclient:    halproto.NewMockInterfaceClient(hal.mockCtrl),
-		MockL2Segclient: halproto.NewMockL2SegmentClient(hal.mockCtrl),
-		MockNetClient:   halproto.NewMockNetworkClient(hal.mockCtrl),
-		MockLbclient:    halproto.NewMockL4LbClient(hal.mockCtrl),
-		MockSgclient:    halproto.NewMockNwSecurityClient(hal.mockCtrl),
-		MockSessclient:  halproto.NewMockSessionClient(hal.mockCtrl),
-		MockTnclient:    halproto.NewMockVrfClient(hal.mockCtrl),
-		MockNatClient:   halproto.NewMockNatClient(hal.mockCtrl),
-		MockIPSecClient: halproto.NewMockIpsecClient(hal.mockCtrl),
+		MockEpclient:       halproto.NewMockEndpointClient(hal.mockCtrl),
+		MockIfclient:       halproto.NewMockInterfaceClient(hal.mockCtrl),
+		MockL2Segclient:    halproto.NewMockL2SegmentClient(hal.mockCtrl),
+		MockNetClient:      halproto.NewMockNetworkClient(hal.mockCtrl),
+		MockLbclient:       halproto.NewMockL4LbClient(hal.mockCtrl),
+		MockSgclient:       halproto.NewMockNwSecurityClient(hal.mockCtrl),
+		MockSessclient:     halproto.NewMockSessionClient(hal.mockCtrl),
+		MockTnclient:       halproto.NewMockVrfClient(hal.mockCtrl),
+		MockNatClient:      halproto.NewMockNatClient(hal.mockCtrl),
+		MockIPSecClient:    halproto.NewMockIpsecClient(hal.mockCtrl),
+		MockTCPProxyClient: halproto.NewMockTcpProxyClient(hal.mockCtrl),
 	}
 
 	hal.Epclient = hal.MockClients.MockEpclient
@@ -97,6 +99,7 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 	hal.Tnclient = hal.MockClients.MockTnclient
 	hal.Natclient = hal.MockClients.MockNatClient
 	hal.IPSecclient = hal.MockClients.MockIPSecClient
+	hal.TCPProxyPolicyClient = hal.MockClients.MockTCPProxyClient
 	haldp.Hal = hal
 	haldp.Hal.setExpectations()
 	return &haldp, nil
@@ -172,6 +175,10 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockIPSecClient.EXPECT().IpsecSADecryptCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIPSecClient.EXPECT().IpsecSADecryptUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockIPSecClient.EXPECT().IpsecSADecryptDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
+	hd.MockClients.MockTCPProxyClient.EXPECT().TcpProxyRuleCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTCPProxyClient.EXPECT().TcpProxyRuleUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	hd.MockClients.MockTCPProxyClient.EXPECT().TcpProxyRuleDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 }
 
 func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {

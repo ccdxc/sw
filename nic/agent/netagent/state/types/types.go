@@ -30,6 +30,7 @@ const (
 	IPSecSADecryptID = "ipSecSADencryptID"
 	IPSecRuleID      = "ipSecRuleID"
 	SGPolicyID       = "securityGroupPolicyID"
+	TCPProxyPolicyID = "tcpProxyPolicyID"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -99,6 +100,7 @@ type NetAgent struct {
 	IPSecSADecryptDB map[string]*netproto.IPSecSADecrypt // IPSecSADecrypt Object DB
 	SGPolicyDB       map[string]*netproto.SGPolicy       // Security group policy DB
 	TunnelDB         map[string]*netproto.Tunnel         // Tunnel object DB
+	TCPProxyPolicyDB map[string]*netproto.TCPProxyPolicy // TCP Proxy Policy DB
 	IPSecPolicyLUT   map[string]*IPSecRuleRef            // IPSec Policy to rule look up table. Key: <IPSec SA Type>|<IPSec SA Name> This is used as an in memory binding between an IPSec encrypt/decrypt rule to its allocalted IDs. T
 	NatPoolLUT       map[string]*NatPoolRef              // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
 	HwIfDB           map[string]*netproto.Interface      // Has all the Uplinks and Lifs
@@ -185,6 +187,11 @@ type CtrlerIntf interface {
 	ListTunnel() []*netproto.Tunnel                                           // lists Tunnel
 	UpdateTunnel(tun *netproto.Tunnel) error                                  // updates an Tunnel
 	DeleteTunnel(tn, ns, name string) error                                   // deletes an Tunnel
+	CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error                  // creates an TCP Proxy Policy
+	FindTCPProxyPolicy(meta api.ObjectMeta) (*netproto.TCPProxyPolicy, error) // finds an TCP Proxy Policy
+	ListTCPProxyPolicy() []*netproto.TCPProxyPolicy                           // lists TCP Proxy Policy
+	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error                  // updates an TCP Proxy Policy
+	DeleteTCPProxyPolicy(tcp, ns, name string) error                          // deletes an TCP Proxy Policy
 	GetHwInterfaces() error                                                   // Gets all the uplinks created on the hal by nic mgr
 }
 
@@ -243,6 +250,9 @@ type NetDatapathAPI interface {
 	CreateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                                 // creates a tunnel in the datapath
 	UpdateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                                 // updates a tunnel in the datapath
 	DeleteTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) error                                                                                                 // deletes a tunnel in the datapath
+	CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // creates a tcp proxy policy in the datapath
+	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // updates a tcp proxy policy in the datapath
+	DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // deletes a tcp proxy policy in the datapath
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths

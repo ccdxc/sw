@@ -14,33 +14,35 @@ type Kind string
 
 // Hal holds clients to talk to HAL gRPC server. ToDo Remove mock clients, datapath DB and expectations prior to FCS
 type Hal struct {
-	client      *rpckit.RPCClient
-	mockCtrl    *gomock.Controller
-	MockClients mockClients
-	Epclient    halproto.EndpointClient
-	Ifclient    halproto.InterfaceClient
-	L2SegClient halproto.L2SegmentClient
-	Netclient   halproto.NetworkClient
-	Lbclient    halproto.L4LbClient
-	Sgclient    halproto.NwSecurityClient
-	Sessclient  halproto.SessionClient
-	Tnclient    halproto.VrfClient
-	Natclient   halproto.NatClient
-	IPSecclient halproto.IpsecClient
+	client               *rpckit.RPCClient
+	mockCtrl             *gomock.Controller
+	MockClients          mockClients
+	Epclient             halproto.EndpointClient
+	Ifclient             halproto.InterfaceClient
+	L2SegClient          halproto.L2SegmentClient
+	Netclient            halproto.NetworkClient
+	Lbclient             halproto.L4LbClient
+	Sgclient             halproto.NwSecurityClient
+	Sessclient           halproto.SessionClient
+	Tnclient             halproto.VrfClient
+	Natclient            halproto.NatClient
+	IPSecclient          halproto.IpsecClient
+	TCPProxyPolicyClient halproto.TcpProxyClient
 }
 
 // MockClients stores references for mockclients to be used for setting expectations
 type mockClients struct {
-	MockEpclient    *halproto.MockEndpointClient
-	MockIfclient    *halproto.MockInterfaceClient
-	MockL2Segclient *halproto.MockL2SegmentClient
-	MockNetClient   *halproto.MockNetworkClient
-	MockLbclient    *halproto.MockL4LbClient
-	MockSgclient    *halproto.MockNwSecurityClient
-	MockSessclient  *halproto.MockSessionClient
-	MockTnclient    *halproto.MockVrfClient
-	MockNatClient   *halproto.MockNatClient
-	MockIPSecClient *halproto.MockIpsecClient
+	MockEpclient       *halproto.MockEndpointClient
+	MockIfclient       *halproto.MockInterfaceClient
+	MockL2Segclient    *halproto.MockL2SegmentClient
+	MockNetClient      *halproto.MockNetworkClient
+	MockLbclient       *halproto.MockL4LbClient
+	MockSgclient       *halproto.MockNwSecurityClient
+	MockSessclient     *halproto.MockSessionClient
+	MockTnclient       *halproto.MockVrfClient
+	MockNatClient      *halproto.MockNatClient
+	MockIPSecClient    *halproto.MockIpsecClient
+	MockTCPProxyClient *halproto.MockTcpProxyClient
 }
 
 // DB holds all the state information.

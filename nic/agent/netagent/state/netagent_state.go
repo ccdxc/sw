@@ -186,5 +186,6 @@ func (na *Nagent) init(emdb emstore.Emstore, nodeUUID string, dp types.NetDatapa
 	na.IPSecPolicyLUT = make(map[string]*types.IPSecRuleRef)
 	na.SGPolicyDB = make(map[string]*netproto.SGPolicy)
 	na.TunnelDB = make(map[string]*netproto.Tunnel)
+	na.TCPProxyPolicyDB = make(map[string]*netproto.TCPProxyPolicy)
 	na.Solver = dependencies.NewDepSolver()
 }

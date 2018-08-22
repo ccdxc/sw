@@ -18,6 +18,7 @@
 		sgpolicy.proto
 		tenant.proto
 		tunnel.proto
+		tcp_proxy.proto
 
 	It has these top-level messages:
 		Endpoint
@@ -113,6 +114,12 @@
 		TunnelStatus
 		TunnelList
 		TunnelEvent
+		TCPProxyPolicy
+		TCPProxyPolicySpec
+		TCPProxyRule
+		TCPProxyPolicyStatus
+		TCPProxyPolicyList
+		TCPProxyEvent
 */
 package netproto
 

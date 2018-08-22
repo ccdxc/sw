@@ -457,6 +457,31 @@ func (ag *fakeAgent) DeleteTunnel(tn, namespace, name string) error {
 	return nil
 }
 
+// CreateTCPProxyPolicy creates a tcp proxy policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error {
+	return nil
+}
+
+// FindTCPProxyPolicy finds a tcp proxy policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) FindTCPProxyPolicy(meta api.ObjectMeta) (*netproto.TCPProxyPolicy, error) {
+	return nil, nil
+}
+
+// ListTCPProxyPolicy lists a tcp proxy policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) ListTCPProxyPolicy() []*netproto.TCPProxyPolicy {
+	return nil
+}
+
+// UpdateTCPProxyPolicy updates a tcp proxy policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy) error {
+	return nil
+}
+
+// DeleteTCPProxyPolicy deletes a tcp proxy policy. Stubbed out to satisfy interface
+func (ag *fakeAgent) DeleteTCPProxyPolicy(tcp, namespace, name string) error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network

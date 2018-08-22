@@ -42,6 +42,8 @@ import (
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/nat/policies/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "SGPolicy"}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/security/policies/", &{{lower $crudObject}}{{title .}} )
+                        {{else if strEq $crudObject "TCPProxyPolicy"}}
+                            err := netutils.HTTPGet("http://"+agentRestURL+"/api/tcp/proxies/", &{{lower $crudObject}}{{title .}} )
                         {{else}}
                             err := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}{{title .}} )
                         {{end}}
@@ -339,6 +341,30 @@ import (
                             }
                             err := netutils.HTTPPost("http://"+agentRestURL+"/api/tunnels/", &postData, &resp)
                             getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/tunnels/", &{{lower $crudObject}}List )
+                        {{else if strEq $crudObject "TCPProxyPolicy"}}
+                            postData := netproto.{{title $crudObject}}{
+                                TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
+                                ObjectMeta: api.ObjectMeta{
+                                    Tenant: "default",
+                                    Namespace: "default",
+                                    Name:   "test{{title .}}{{title $crudObject}}",
+                                },
+                                Spec: netproto.{{title $crudObject}}Spec{
+                                    Rules: []netproto.TCPProxyRule{
+                                       {
+                                         Action: "ENABLE",
+                                         Src: &netproto.MatchSelector{
+                                                 Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+                                             },
+                                         Dst: &netproto.MatchSelector{
+                                                 Addresses: []string{"192.168.0.1 - 192.168.1.0", "8.8.8.8"},
+                                             },
+                                       },
+                                    },
+                            },
+                          }
+                            err := netutils.HTTPPost("http://"+agentRestURL+"/api/tcp/proxies/", &postData, &resp)
+                            getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/tcp/proxies/", &{{lower $crudObject}}List )
 
                          {{else if strEq $crudObject "NatBinding"}}
                                                    {{lower .}}Data := netproto.NatBinding{
@@ -606,6 +632,43 @@ import (
                                }
                                AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
 
+                               {{else if strEq $crudObject "TCPProxyPolicy"}}
+
+                                   var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
+                                   updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
+                                                                          Rules: []netproto.TCPProxyRule{
+                                                                               {
+                                                                                 Action: "ENABLE",
+                                                                                 Src: &netproto.MatchSelector{
+                                                                                          Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+                                                                                      },
+                                                                                 Dst: &netproto.MatchSelector{
+                                                                                          Addresses: []string{"192.168.0.1 - 192.168.1.0", "8.8.8.8"},
+                                                                                      },
+                                                                               },
+                                                                          },
+                                                                       }
+                                   {{lower .}}Data := netproto.{{title $crudObject}}{
+                                       TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
+                                       ObjectMeta: api.ObjectMeta{
+                                           Tenant: "default",
+                                           Name:   "preCreated{{title $crudObject}}",
+                                           Namespace: "default",
+                                       },
+                                       Spec: updated{{title $crudObject}}Spec,
+                                   }
+                                  err := netutils.HTTPPut("http://"+agentRestURL+"/api/tcp/proxies/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                                  AssertOk(t, err, "Error updating {{lower $crudObject}} to REST Server")
+
+                                  getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/tcp/proxies/", &{{lower $crudObject}}List )
+                                  AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
+                                  for _, o := range {{lower $crudObject}}List{
+                                       if o.Name == "preCreated{{title $crudObject}}"{
+                                               actual{{title $crudObject}}Spec = o.Spec
+                                               break
+                                       }
+                                  }
+                                  AssertEquals(t,updated{{title $crudObject}}Spec, actual{{title $crudObject}}Spec, "Could not validate updated spec.")
 
                            {{else if strEq $crudObject "NatBinding"}}
 
@@ -1175,6 +1238,43 @@ import (
                           err := netutils.HTTPDelete("http://"+agentRestURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                           getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/{{lower $crudObject}}s/", &{{lower $crudObject}}List )
 
+                          {{else if strEq $crudObject "TCPProxyPolicy"}}
+                                  {{lower .}}Data := netproto.{{title $crudObject}}{
+                                      TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
+                                      ObjectMeta: api.ObjectMeta{
+                                          Tenant: "default",
+                                          Namespace: "default",
+                                          Name: "test{{title .}}{{title $crudObject}}",
+                                      },
+                                      Spec: netproto.{{title $crudObject}}Spec{
+                                           Rules: []netproto.TCPProxyRule{
+                                               {
+                                                Src: &netproto.MatchSelector{
+                                                       Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+                                                       },
+
+                                                Dst: &netproto.MatchSelector{
+                                                       Addresses: []string{"10.0.0.0 - 10.0.1.0", "172.17.0.0/24", "4.4.4.4"},
+                                                       },
+                                                Action: "ENABLE",
+                                               },
+                                               {
+                                                Src: &netproto.MatchSelector{
+                                                       Addresses: []string{"8.8.8.8"},
+                                                       },
+
+                                                Dst: &netproto.MatchSelector{
+                                                       Addresses: []string{"172.17.0.0"},
+                                                       },
+                                                Action: "DISABLE",
+                                               },
+                                           },
+                                         },
+                                       }
+                                  postErr := netutils.HTTPPost("http://"+agentRestURL+"/api/tcp/proxies/", &{{lower .}}Data, &resp)
+                                  err := netutils.HTTPDelete("http://"+agentRestURL+"/api/tcp/proxies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                                  getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/tcp/proxies/", &{{lower $crudObject}}List )
+
                         {{end}}
                         AssertOk(t, postErr, "Error posting {{lower $crudObject}} to REST Server")
                         AssertOk(t, err, "Error deleting {{lower $crudObject}} from REST Server")
@@ -1234,6 +1334,8 @@ import (
             err := netutils.HTTPPost("http://"+agentRestURL+"/api/security/policies/", &badPostData, &resp)
           {{else if strEq $crudObject "Tunnel"}}
             err := netutils.HTTPPost("http://"+agentRestURL+"/api/tunnels/", &badPostData, &resp)
+          {{else if strEq $crudObject "TCPProxyPolicy"}}
+            err := netutils.HTTPPost("http://"+agentRestURL+"/api/tcp/proxies/", &badPostData, &resp)
           {{end}}
           Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
         }
@@ -1278,6 +1380,8 @@ import (
          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/security/policies/default/default/badObject", &badDelData, &resp)
        {{else if strEq $crudObject "Tunnel"}}
          err := netutils.HTTPDelete("http://"+agentRestURL+"/api/tunnels/default/default/badObject", &badDelData, &resp)
+       {{else if strEq $crudObject "TCPProxyPolicy"}}
+         err := netutils.HTTPDelete("http://"+agentRestURL+"/api/tcp/proxies/default/default/badObject", &badDelData, &resp)
 
        {{end}}
        Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
@@ -1323,7 +1427,9 @@ import (
        err := netutils.HTTPPut("http://"+agentRestURL+"/api/security/policies/default/default/badObject", &badDelData, &resp)
     {{else if strEq $crudObject "Tunnel"}}
        err := netutils.HTTPPut("http://"+agentRestURL+"/api/tunnels/default/default/badObject", &badDelData, &resp)
-    {{end}}
+   {{else if strEq $crudObject "TCPProxyPolicy"}}
+      err := netutils.HTTPPut("http://"+agentRestURL+"/api/tcp/proxies/default/default/badObject", &badDelData, &resp)
+   {{end}}
     Assert(t, err!=nil, "Expected test to error out with 500. It passed instead")
   }
 
