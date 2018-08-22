@@ -53,6 +53,9 @@
 #define IONIC_MIN_RDMA_VERSION	0
 #define IONIC_MAX_RDMA_VERSION	1
 
+#define IONIC_META_LAST ((void *)1ul)
+#define IONIC_META_POSTED ((void *)2ul)
+
 struct ionic_ctx {
 	struct verbs_context	vctx;
 
@@ -98,6 +101,7 @@ struct ionic_sq_meta {
 };
 
 struct ionic_rq_meta {
+	struct ionic_rq_meta	*next;
 	uint64_t		wrid;
 	uint32_t		len; /* XXX byte_len must come from cqe */
 };
@@ -135,6 +139,7 @@ struct ionic_qp {
 	bool			rq_flush;
 	struct ionic_queue	rq;
 	struct ionic_rq_meta	*rq_meta;
+	struct ionic_rq_meta	*rq_meta_head;
 };
 
 struct ionic_ah {
