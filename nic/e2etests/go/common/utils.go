@@ -17,21 +17,30 @@ import (
 //CmdHandle Running command handle to stop bg process later
 type CmdHandle *exec.Cmd
 
+//CommandVerbose should command run be verbose or not
+var CommandVerbose = true
+
 //Run Run shelll command
 func Run(cmdArgs []string, timeout int, background bool) (CmdHandle, error) {
 	process := exec.Command(cmdArgs[0], cmdArgs[1:]...)
 	var err error
 	if background {
-		fmt.Println("Starting background command :", strings.Join(cmdArgs, " "))
+		if CommandVerbose {
+			fmt.Println("Starting background command :", strings.Join(cmdArgs, " "))
+		}
 		//For now don't send signal to background process.
 		process.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 		err = process.Start()
 		return process, err
 	}
-	fmt.Println("Running command :", strings.Join(cmdArgs, " "))
+	if CommandVerbose {
+		fmt.Println("Running command :", strings.Join(cmdArgs, " "))
+	}
 	stdoutStderr, err := process.CombinedOutput()
-	fmt.Printf("%s\n", stdoutStderr)
-	fmt.Println("Command Status : ", err)
+	if CommandVerbose {
+		fmt.Printf("%s\n", stdoutStderr)
+		fmt.Println("Command Status : ", err)
+	}
 	return nil, err
 }
 

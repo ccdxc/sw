@@ -7,15 +7,16 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
+	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic"
 )
 
 var (
-	VLANOffset                                int
-	ConfigManifest, uplinkMapFile, configFile string
-	SkipGen, EnableSim, SkipConfig            bool
-	configs                                   *pkg.Config
-	err                                       error
-	maxEpPairTraffc                           int
+	VLANOffset                                             int
+	ConfigManifest, uplinkMapFile, configFile, TrafficTest string
+	TestEnv, TestSuite                                     string
+	SkipGen, EnableSim, SkipConfig, trafficVerbose         bool
+	configs                                                *pkg.Config
+	err                                                    error
 )
 
 var runCmd = &cobra.Command{
@@ -85,8 +86,8 @@ var trafficCmd = &cobra.Command{
 			fmt.Println("Error in getting agent config.")
 			return err
 		}
-
-		return pkg.RunTraffic(uplinkMapFile, agentCfg, pkg.TrafficUplinkToUplink, maxEpPairTraffc)
+		/* For now just uplink to uplink traffic is supported */
+		return traffic.RunTests(TestEnv, TestSuite, uplinkMapFile, agentCfg)
 	},
 }
 
@@ -98,5 +99,6 @@ func init() {
 	runCmd.Flags().IntVarP(&VLANOffset, "vlan-start", "v", 100, "VLAN Start index for networks")
 	trafficCmd.Flags().StringVarP(&uplinkMapFile, "uplink-map", "m", "", "Object config manifest file")
 	trafficCmd.Flags().StringVarP(&ConfigManifest, "config-file", "c", "", "Agent config file")
-	trafficCmd.Flags().IntVarP(&maxEpPairTraffc, "max-pair-traffic", "t", 1, "Max EP pair traffic to send")
+	trafficCmd.Flags().StringVarP(&TestEnv, "test-env", "t", "sim", "Test Environment")
+	trafficCmd.Flags().StringVarP(&TestSuite, "test-suite", "s", "sanity", "Test Suite")
 }

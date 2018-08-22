@@ -177,6 +177,10 @@ func (ns *NS) GetInterfaces() []*Interface {
 //Delete delete namespace
 func (ns *NS) Delete() {
 	for _, intf := range ns._Interfaces {
+		for _, subIntf := range intf._VlanIntfs {
+			delVlanCmd := []string{"ip", "link", "delete", subIntf.Name}
+			ns.RunCommand(delVlanCmd, 0, false)
+		}
 		ns.MoveInterface(intf.Name, 1)
 	}
 	cmdArgs := []string{"ip", "netns", "del", ns.Name}

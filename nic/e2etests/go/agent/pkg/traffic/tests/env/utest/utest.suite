@@ -1,0 +1,10 @@
+name: sanity
+ep-pairs: 1
+enabled: True
+traffic-type: Uplink-Uplink
+
+modules:
+    - module:
+        name    : Utest
+        program : Utest
+        enabled: True

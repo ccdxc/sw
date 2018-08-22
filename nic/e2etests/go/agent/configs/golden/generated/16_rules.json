@@ -15,12 +15,12 @@
           "action": "PERMIT",
           "source": {
             "addresses": [
-              "64.0.0.0"
+              "64.0.0.1"
             ]
           },
           "destination": {
             "addresses": [
-              "172.0.0.0"
+              "64.0.0.2"
             ],
             "app-configs": [
               {
@@ -38,12 +38,12 @@
           "action": "DENY",
           "source": {
             "addresses": [
-              "64.0.0.1"
+              "177.75.132.52"
             ]
           },
           "destination": {
             "addresses": [
-              "172.0.0.1"
+              "170.22.196.85"
             ],
             "app-configs": [
               {
@@ -61,12 +61,12 @@
           "action": "REJECT",
           "source": {
             "addresses": [
-              "64.0.0.2"
+              "177.75.132.53"
             ]
           },
           "destination": {
             "addresses": [
-              "172.0.0.2"
+              "170.22.196.84"
             ],
             "app-configs": [
               {

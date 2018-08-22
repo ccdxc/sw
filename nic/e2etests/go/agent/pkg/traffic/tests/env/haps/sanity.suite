@@ -1,0 +1,18 @@
+name: sanity
+ep-pairs: 1
+enabled: True
+traffic-type: Uplink-Uplink
+
+modules:
+    - module:
+        name    : PING
+        program : Ping
+        enabled: True
+    - module:
+        name    : FirewallDeny
+        program : FirewallDeny
+        enabled: True
+    - module:
+        name    : FirewallReject
+        program : FirewallReject
+        enabled: True
