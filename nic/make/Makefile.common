@@ -1,4 +1,4 @@
-.PHONY: p4 asm hal utils linkmgr sdk third-party agent fte_sim delphi
+.PHONY: p4 asm hal utils linkmgr sdk third-party agent fte_sim delphi sysmgr
 
 %/.dir:
 	$(Q)mkdir -p $(@D) && touch $@
@@ -18,6 +18,13 @@ delphi:
 delphi-test:
 	bazel test //nic/delphi/... --jobs=1 --cache_test_results=no --test_output=all
 	go test -v github.com/pensando/sw/nic/delphi/...
+
+####################################################
+#################### sysmgr ########################
+####################################################
+ sysmgr:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/sysmgr/...
+	bazel $(BZL_OPT) test $(BZL_BLD_OPT) //nic/sysmgr/...
 
 ###########################################################
 #################### UPGRADE Infra ########################
