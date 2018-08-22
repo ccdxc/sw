@@ -37,7 +37,7 @@
       }
     },
     "@pensando/swagger-ts-generator": {
-      "version": "file:../../../../../../../../../import/src/github.com/pensando/sw/venice/ui/venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz",
+      "version": "file:pensando-swagger-ts-generator-1.1.29.tgz",
       "integrity": "sha512-VOo+k2ZRy1tjgkTTMAuOZTf30ZqYajpcjkTPRHtyMM4K6BjqEYEX3CCRKJVdjC6Rt+OVay57MD+7MQMAYI+miw==",
       "requires": {
         "fs": "0.0.2",
