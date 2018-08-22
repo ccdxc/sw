@@ -42,6 +42,7 @@ func main() {
 
 	postResp, err := http.DefaultClient.Do(postReq)
 	if err != nil {
+		fmt.Println("Netagent is not running. Unable to connect.")
 		panic(err)
 	}
 	defer postResp.Body.Close()
