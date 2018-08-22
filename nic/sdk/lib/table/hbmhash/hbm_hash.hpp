@@ -51,7 +51,6 @@
 #include <map>
 #include <queue>
 #include "include/sdk/indexer.hpp"
-#include <boost/crc.hpp>
 #include "include/sdk/mem.hpp"
 #include "include/sdk/crc_fast.hpp"
 #include "hbm_hash_mem_types.hpp"

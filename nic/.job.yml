@@ -76,6 +76,7 @@ targets:
   # iris-c gtests
   filter/gtest:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make gtests-iris-c && ./run.py --filter_gtest ; ret=$? ; make sanity_logs ; exit $ret" ]
   span/gtest:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make gtests-iris-c && ./run.py --span_gtest ; ret=$? ; make sanity_logs ; exit $ret" ]
+  newmake: ["sh", "-c", "cd /sw && make pull-assets && cd nic/sdk && make -j -f Makefile.nrmake && make ARCH=aarch64 -j -f Makefile.nrmake" ]
 
 cache:
   name: "sw"
