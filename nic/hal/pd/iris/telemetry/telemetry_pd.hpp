@@ -29,33 +29,19 @@ typedef struct telemetry_pd_ipfix_header_s telemetry_pd_ipfix_header_t;
 struct telemetry_pd_ipfix_header_s {
     vlan_header_t vlan;
     ipv4_header_t iphdr;
-    udp_header_t udphdr;
+    udp_header_t  udphdr;
 } __attribute__ ((__packed__));
 
-class telemetry_export_dest {
-public:
-    hal_ret_t set_src_mac(mac_addr_t in);
-    hal_ret_t set_dst_mac(mac_addr_t in);
-    hal_ret_t set_vlan(uint16_t in);
-    hal_ret_t set_dscp(uint8_t in);
-    hal_ret_t set_ttl(uint8_t in);
-    hal_ret_t set_src_ip(ip_addr_t in);
-    hal_ret_t set_dst_ip(ip_addr_t in);
-    hal_ret_t set_sport(uint16_t in);
-    hal_ret_t set_dport(uint16_t in);
-    uint16_t get_collector_id();
-    hal_ret_t commit();
-    hal_ret_t init(uint16_t id);
-
-private:
-    telemetry_pd_export_buf_header_t buf_hdr_;
-    telemetry_pd_ipfix_header_t ipfix_hdr_;
-    uint16_t id_;
-    uint64_t base_addr_;
-    void * buffer_;
-    // base addr
+typedef struct telemetry_export_dest_s telemetry_export_dest_t;
+struct telemetry_export_dest_s {
+    bool                             valid;
+    uint16_t                         id;
+    void                             *buffer;
+    uint64_t                         base_addr;
+    telemetry_pd_export_buf_header_t buf_hdr;
     // IPFix Header defined and maintained
-};
+    telemetry_pd_ipfix_header_t      ipfix_hdr;
+} __attribute__ ((__packed__));
 
 }    // namespace pd
 }    // namespace hal

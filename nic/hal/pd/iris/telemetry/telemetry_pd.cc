@@ -17,6 +17,9 @@
 namespace hal {
 namespace pd {
 
+telemetry_export_dest_t export_destinations[TELEMETRY_NUM_EXPORT_DEST];
+char _deb_buf[TELEMETRY_EXPORT_BUFF_SIZE + 1];
+
 hal_ret_t
 pd_mirror_update_hw(uint32_t id, mirror_actiondata *action_data)
 {
@@ -168,151 +171,54 @@ pd_mirror_session_get(pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
-telemetry_export_dest *_export_destinations[TELEMETRY_NUM_EXPORT_DEST];
 hal_ret_t
-// pd_collector_create(collector_config_t *cfg)
-pd_collector_create(pd_func_args_t *pd_func_args)
-{
-    pd_collector_create_args_t *c_args = pd_func_args->pd_collector_create;
-    collector_config_t *cfg = c_args->cfg;
-    pd_l2seg_get_fromcpu_vlanid_args_t args;
-    pd_func_args_t pd_func_args1 = {0};
-    HAL_TRACE_DEBUG("{}: CollectorID {}", __FUNCTION__, cfg->collector_id);
-    // Id is less than max size allows.
-    if (cfg->collector_id >= (TELEMETRY_NUM_EXPORT_DEST)) {
-        HAL_TRACE_ERR(" invalid Id {}", cfg->collector_id );
-        return HAL_RET_INVALID_ARG;
-    }
-
-    telemetry_export_dest *d = _export_destinations[cfg->collector_id];
-    if (d != NULL) {
-        HAL_TRACE_ERR(" Already exists Id {}", cfg->collector_id );
-        return HAL_RET_INVALID_ARG;
-    }
-    d = new(telemetry_export_dest);
-    _export_destinations[cfg->collector_id] = d;
-    d->init(cfg->collector_id);
-
-    args.l2seg = cfg->l2seg;
-    args.vid = &cfg->vlan;
-    pd_func_args1.pd_l2seg_get_fromcpu_vlanid = &args;
-    // if (pd_l2seg_get_fromcpu_vlanid(cfg->l2seg, &cfg->vlan) != HAL_RET_OK)
-    if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID, &pd_func_args1) != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("{}: Could not retrieve CPU VLAN", __FUNCTION__);
-        return HAL_RET_INVALID_ARG;
-    }
-    HAL_TRACE_DEBUG("{}: CPU VLAN {}", __FUNCTION__, cfg->vlan);
-
-    d->set_vlan(cfg->vlan);
-    d->set_dscp(0);
-    d->set_ttl(64);
-    d->set_src_ip(cfg->src_ip);
-    d->set_dst_ip(cfg->dst_ip);
-    d->set_sport(32007);
-    d->set_dport(cfg->dport);
-    d->set_dst_mac(cfg->dest_mac);
-    d->set_src_mac(cfg->src_mac);
-    d->commit();
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-telemetry_export_dest::init(uint16_t id)
+telemetry_export_dest_init(telemetry_export_dest_t *d, uint16_t id)
 {
     HAL_TRACE_DEBUG("{}: Export Destination Init {}", __FUNCTION__, id);
     uint64_t hbm_start = get_start_offset(JP4_IPFIX);
-    base_addr_ = hbm_start + (id * TELEMETRY_IPFIX_BUFSIZE);
-    buf_hdr_.packet_start = sizeof(telemetry_pd_export_buf_header_t);
-    buf_hdr_.payload_start = sizeof(telemetry_pd_export_buf_header_t) + sizeof(telemetry_pd_ipfix_header_t);
-    buf_hdr_.payload_length = TELEMETRY_IPFIX_BUFSIZE - buf_hdr_.payload_start;
-    buf_hdr_.ip_hdr_start = sizeof(telemetry_pd_export_buf_header_t) + offsetof(telemetry_pd_ipfix_header_t, iphdr);
-    memset(&ipfix_hdr_, 0, sizeof(telemetry_pd_ipfix_header_t));
-    ipfix_hdr_.vlan.tpid = htons(0x8100);
-    ipfix_hdr_.vlan.etype = htons(0x0800);
-    ipfix_hdr_.iphdr.version = 4;
-    ipfix_hdr_.iphdr.ihl = 5;
-    ipfix_hdr_.iphdr.protocol = 17;
-    ipfix_init(id, base_addr_ + buf_hdr_.packet_start,
-               sizeof(telemetry_pd_ipfix_header_t), buf_hdr_.payload_length);
+    d->base_addr = hbm_start + (id * TELEMETRY_IPFIX_BUFSIZE);
+    d->buf_hdr.packet_start = sizeof(telemetry_pd_export_buf_header_t);
+    d->buf_hdr.payload_start = sizeof(telemetry_pd_export_buf_header_t) + sizeof(telemetry_pd_ipfix_header_t);
+    d->buf_hdr.payload_length = TELEMETRY_IPFIX_BUFSIZE - d->buf_hdr.payload_start;
+    d->buf_hdr.ip_hdr_start = sizeof(telemetry_pd_export_buf_header_t) + offsetof(telemetry_pd_ipfix_header_t, iphdr);
+    memset(&d->ipfix_hdr, 0, sizeof(telemetry_pd_ipfix_header_t));
+    d->ipfix_hdr.vlan.tpid = htons(0x8100);
+    d->ipfix_hdr.vlan.etype = htons(0x0800);
+    d->ipfix_hdr.iphdr.version = 4;
+    d->ipfix_hdr.iphdr.ihl = 5;
+    d->ipfix_hdr.iphdr.protocol = 17;
+    ipfix_init(id, d->base_addr + d->buf_hdr.packet_start,
+               sizeof(telemetry_pd_ipfix_header_t), d->buf_hdr.payload_length);
     HAL_TRACE_DEBUG("{}: Export Destination Init Done {}", __FUNCTION__, id);
     return HAL_RET_OK;
 }
 
-hal_ret_t
-telemetry_export_dest::set_src_mac(mac_addr_t in)
+void
+telemetry_export_dest_set_mac(telemetry_export_dest_t *d, mac_addr_t in,
+                              bool src)
 {
-    memcpy(ipfix_hdr_.vlan.smac, in, sizeof(uint8_t) * ETH_ADDR_LEN);
-    return HAL_RET_OK;
+    if (src) {
+        memcpy(d->ipfix_hdr.vlan.smac, in, sizeof(uint8_t) * ETH_ADDR_LEN);
+    } else {
+        memcpy(d->ipfix_hdr.vlan.dmac, in, sizeof(uint8_t) * ETH_ADDR_LEN);
+    }
+    return;
 }
 
 hal_ret_t
-telemetry_export_dest::set_dst_mac(mac_addr_t in)
-{
-    memcpy(ipfix_hdr_.vlan.dmac, in, sizeof(uint8_t) * ETH_ADDR_LEN);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-telemetry_export_dest::set_vlan(uint16_t in)
-{
-    ipfix_hdr_.vlan.vlan_tag = htons(in);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-telemetry_export_dest::set_dscp(uint8_t in)
-{
-    ipfix_hdr_.iphdr.tos = in;
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-telemetry_export_dest::set_ttl(uint8_t in)
-{
-    ipfix_hdr_.iphdr.ttl = in;
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-telemetry_export_dest::set_src_ip(ip_addr_t in)
+telemetry_export_dest_set_ip(telemetry_export_dest_t *d, ip_addr_t in,
+                             bool src)
 {
     if (in.af != IP_AF_IPV4) {
         HAL_TRACE_ERR("Non IPV4 source");
         return HAL_RET_INVALID_OP;
     }
-    ipfix_hdr_.iphdr.saddr = htonl(in.addr.v4_addr);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-telemetry_export_dest::set_dst_ip(ip_addr_t in)
-{
-    if (in.af != IP_AF_IPV4) {
-        HAL_TRACE_ERR("Non IPV4 destination");
-        return HAL_RET_INVALID_OP;
+    if (src) {
+        d->ipfix_hdr.iphdr.saddr = htonl(in.addr.v4_addr);
+    } else {
+        d->ipfix_hdr.iphdr.daddr = htonl(in.addr.v4_addr);
     }
-    ipfix_hdr_.iphdr.daddr = htonl(in.addr.v4_addr);
     return HAL_RET_OK;
-}
-
-hal_ret_t
-telemetry_export_dest::set_sport(uint16_t in)
-{
-    ipfix_hdr_.udphdr.sport = htons(in);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-telemetry_export_dest::set_dport(uint16_t in)
-{
-    ipfix_hdr_.udphdr.dport = htons(in);
-    return HAL_RET_OK;
-}
-
-uint16_t
-telemetry_export_dest::get_collector_id()
-{
-    return id_;
 }
 
 // helper to dump Packet buffer
@@ -329,23 +235,72 @@ print_buffer(char *outbuf, int max_size, uint8_t *inbuf, int size)
     }
 }
 
-char _deb_buf[TELEMETRY_EXPORT_BUFF_SIZE + 1];
 hal_ret_t
-telemetry_export_dest::commit()
+telemetry_export_dest_commit(telemetry_export_dest_t *d)
 {
-    HAL_TRACE_DEBUG("{}: Export Destination commit {}-> {}", __FUNCTION__, id_, base_addr_);
-    p4plus_hbm_write(base_addr_, (uint8_t*)&buf_hdr_, sizeof(buf_hdr_),
+    HAL_TRACE_DEBUG("{}: Export Destination commit {}-> {}", __FUNCTION__, d->id, d->base_addr);
+    p4plus_hbm_write(d->base_addr, (uint8_t*)&d->buf_hdr, sizeof(d->buf_hdr),
             P4PLUS_CACHE_ACTION_NONE);
-    print_buffer(_deb_buf, TELEMETRY_EXPORT_BUFF_SIZE, (uint8_t*)&buf_hdr_,
-                 sizeof(buf_hdr_));
+    print_buffer(_deb_buf, TELEMETRY_EXPORT_BUFF_SIZE, (uint8_t*)&d->buf_hdr,
+                 sizeof(d->buf_hdr));
     HAL_TRACE_DEBUG("{} : Buffer Header: Wrote: {}", __FUNCTION__, _deb_buf);
-    // memcpy(base_addr_, &buf_hdr_, sizeof(buf_hdr_));
-    uint64_t hdr = base_addr_ + sizeof(buf_hdr_);
-    p4plus_hbm_write(hdr, (uint8_t*)&ipfix_hdr_, sizeof(ipfix_hdr_),
+    // memcpy(d->base_addr, &d->buf_hdr, sizeof(d->buf_hdr));
+    uint64_t hdr = d->base_addr + sizeof(d->buf_hdr);
+    p4plus_hbm_write(hdr, (uint8_t*)&d->ipfix_hdr, sizeof(d->ipfix_hdr),
             P4PLUS_CACHE_ACTION_NONE);
-    print_buffer(_deb_buf, TELEMETRY_EXPORT_BUFF_SIZE, (uint8_t*)&ipfix_hdr_,
-                 sizeof(ipfix_hdr_));
+    print_buffer(_deb_buf, TELEMETRY_EXPORT_BUFF_SIZE, (uint8_t*)&d->ipfix_hdr,
+                 sizeof(d->ipfix_hdr));
     HAL_TRACE_DEBUG("{} : IPFIX-Header: Wrote: {}", __FUNCTION__, _deb_buf);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_collector_create(pd_func_args_t *pd_func_args)
+{
+    pd_collector_create_args_t          *c_args;
+    collector_config_t                  *cfg;
+    pd_l2seg_get_fromcpu_vlanid_args_t  args;
+    pd_func_args_t                      pd_func_args1 = {0};
+    telemetry_export_dest_t             *d;
+
+    c_args = pd_func_args->pd_collector_create;
+    cfg = c_args->cfg;
+    HAL_TRACE_DEBUG("{}: CollectorID {}", __FUNCTION__, cfg->collector_id);
+    
+    if (cfg->collector_id >= (TELEMETRY_NUM_EXPORT_DEST)) {
+        HAL_TRACE_ERR(" invalid Id {}", cfg->collector_id );
+        return HAL_RET_INVALID_ARG;
+    }
+
+    d = &export_destinations[cfg->collector_id];
+    if (d->valid) {
+        HAL_TRACE_ERR(" Already exists Id {}", cfg->collector_id );
+        return HAL_RET_INVALID_ARG;
+    }
+    export_destinations[cfg->collector_id] = *d;
+    telemetry_export_dest_init(d, cfg->collector_id);
+
+    args.l2seg = cfg->l2seg;
+    args.vid = &cfg->vlan;
+    pd_func_args1.pd_l2seg_get_fromcpu_vlanid = &args;
+    
+    if (hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID, &pd_func_args1) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("{}: Could not retrieve CPU VLAN", __FUNCTION__);
+        return HAL_RET_INVALID_ARG;
+    }
+    HAL_TRACE_DEBUG("{}: CPU VLAN {}", __FUNCTION__, cfg->vlan);
+
+    d->ipfix_hdr.vlan.vlan_tag = htons(cfg->vlan);
+    d->ipfix_hdr.iphdr.tos = 0;
+    d->ipfix_hdr.iphdr.ttl = 64;
+    d->ipfix_hdr.udphdr.sport = htons(32007);
+    d->ipfix_hdr.udphdr.dport = htons(cfg->dport);
+    d->valid = true;
+    telemetry_export_dest_set_ip(d, cfg->src_ip, true);
+    telemetry_export_dest_set_ip(d, cfg->dst_ip, false);
+    telemetry_export_dest_set_mac(d, cfg->src_mac, true);
+    telemetry_export_dest_set_mac(d, cfg->dest_mac, false);
+    telemetry_export_dest_commit(d);
     return HAL_RET_OK;
 }
 
