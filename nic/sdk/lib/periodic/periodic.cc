@@ -8,7 +8,7 @@
 #include <string.h>
 #include "sdk/thread.hpp"
 #include "sdk/timerfd.hpp"
-#include "nic/hal/core/periodic/periodic.hpp"
+#include "lib/periodic/periodic.hpp"
 
 //------------------------------------------------------------------------------
 //          ALTERNATE DESIGN TO CONSIDER LATER
@@ -21,8 +21,8 @@
 //
 //------------------------------------------------------------------------------
 
-namespace hal {
-namespace periodic {
+namespace sdk {
+namespace lib {
 
 // global timer wheel for periodic thread's use
 sdk::lib::twheel *g_twheel;
@@ -43,7 +43,7 @@ periodic_thread_init (void *ctxt)
     g_twheel = sdk::lib::twheel::factory(TWHEEL_DEFAULT_SLICE_DURATION,
                                          TWHEEL_DEFAULT_DURATION, true);
     if (g_twheel == NULL) {
-        HAL_TRACE_ERR("Periodic thread failed to create timer wheel");
+        SDK_TRACE_ERR("Periodic thread failed to create timer wheel");
         return NULL;
     }
 
@@ -51,7 +51,7 @@ periodic_thread_init (void *ctxt)
     sdk::lib::timerfd_init(&timerfd_info);
     timerfd_info.usecs = TWHEEL_DEFAULT_SLICE_DURATION * TIME_USECS_PER_MSEC;
     if (sdk::lib::timerfd_prepare(&timerfd_info) < 0) {
-        HAL_TRACE_ERR("Periodic thread failed to intiialize timerfd");
+        SDK_TRACE_ERR("Periodic thread failed to intiialize timerfd");
         return NULL;
     }
 
@@ -70,7 +70,7 @@ periodic_thread_run (void *ctxt)
     while (TRUE) {
         // wait for timer to fire
         if (sdk::lib::timerfd_wait(&timerfd_info, &missed) < 0) {
-            HAL_TRACE_ERR("Periodic thread failed to wait on timer");
+            SDK_TRACE_ERR("Periodic thread failed to wait on timer");
             break;
         }
 
@@ -78,7 +78,7 @@ periodic_thread_run (void *ctxt)
         g_twheel->tick(missed * TWHEEL_DEFAULT_SLICE_DURATION);
     }
     g_twheel_is_running = false;
-    HAL_TRACE_ERR("Periodic thread exiting !!!");
+    SDK_TRACE_ERR("Periodic thread exiting !!!");
 
     return NULL;
 }
@@ -142,5 +142,5 @@ timer_update (void *timer, void *ctxt)
     return NULL;
 }
 
-}    // namespace periodic
-}    // namespace hal
+}    // namespace lib
+}    // namespace sdk

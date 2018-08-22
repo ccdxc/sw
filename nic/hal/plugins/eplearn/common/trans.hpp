@@ -8,7 +8,7 @@
 #include "nic/include/hal_state.hpp"
 #include <netinet/if_ether.h>
 #include "nic/utils/fsm/fsm.hpp"
-#include "nic/include/periodic.hpp"
+#include "sdk/periodic.hpp"
 
 using hal::utils::fsm_state_machine_t;
 using hal::utils::fsm_state_machine_def_t;
@@ -54,25 +54,25 @@ public:
         virtual fsm_state_timer_ctx add_timer(uint64_t timeout,
                                               fsm_state_machine_t *ctx,
                                               bool periodic = false) {
-            void *timer = hal::periodic::timer_schedule(
+            void *timer = sdk::lib::timer_schedule(
                 this->get_timer_id(), timeout, ctx, timeout_handler, periodic);
             return reinterpret_cast<fsm_state_timer_ctx>(timer);
         }
         virtual void delete_timer(fsm_state_timer_ctx timer) {
-            hal::periodic::timer_delete(timer);
+            sdk::lib::timer_delete(timer);
         }
 
         fsm_state_timer_ctx add_timer_with_custom_handler(uint64_t timeout,
                                               fsm_state_machine_t *ctx,
                                               sdk::lib::twheel_cb_t cb,
                                               bool periodic = false) {
-            void *timer = hal::periodic::timer_schedule(
+            void *timer = sdk::lib::timer_schedule(
                 this->get_timer_id(), timeout, ctx, cb, periodic);
             return reinterpret_cast<fsm_state_timer_ctx>(timer);
         }
 
         virtual uint64_t get_timeout_remaining(fsm_state_timer_ctx timer) {
-            return hal::periodic::get_timeout_remaining(timer) / TIME_MSECS_PER_SEC ;
+            return sdk::lib::get_timeout_remaining(timer) / TIME_MSECS_PER_SEC ;
         }
         static void timeout_handler(void *timer, uint32_t timer_id, void *ctxt) {
             fsm_state_machine_t* sm_ = reinterpret_cast<fsm_state_machine_t*>(ctxt);

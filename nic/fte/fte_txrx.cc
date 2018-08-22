@@ -40,7 +40,7 @@ public:
     ipc_logger *get_ipc_logger() const { return logger_; }
     void incr_feature_drop_stats(uint16_t feature_id);
     fte_stats_t get_stats() { return stats_; }
-    
+
 private:
     uint8_t                 id_;
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
@@ -77,7 +77,7 @@ thread_local inst_t *t_inst;
 //-----------------------------------------------------------------------------
 // FTE thread local variables
 // ----------------------------------------------------------------------------
-thread_local timespec_t t_old_ts; 
+thread_local timespec_t t_old_ts;
 thread_local timespec_t t_cur_ts;
 thread_local uint64_t t_rx_pkts;
 
@@ -437,7 +437,7 @@ void incr_inst_feature_drop(uint16_t feature_id)
 //----------------------------------------------------------------------------
 void inst_t::incr_feature_drop_stats(uint16_t feature_id)
 {
-    if (feature_id <= feature_state_size_) 
+    if (feature_id <= feature_state_size_)
         stats_.feature_drop_pkts[feature_id]++;
 }
 
@@ -451,13 +451,13 @@ void inst_t::compute_cps(void)
 
     // Get the current timestamp
     clock_gettime(CLOCK_MONOTONIC, &t_cur_ts);
- 
+
     temp_ts = t_cur_ts;
     sdk::timestamp_subtract(&temp_ts, &t_old_ts);
     sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
 
     if (time_diff > TIME_NSECS_PER_SEC) {
-        stats_.cps = t_rx_pkts; 
+        stats_.cps = t_rx_pkts;
         t_old_ts = t_cur_ts;
         t_rx_pkts = 1;
     } else if (time_diff == TIME_NSECS_PER_SEC) {
@@ -466,7 +466,7 @@ void inst_t::compute_cps(void)
     } else {
         t_rx_pkts++;
     }
-    
+
 }
 
 //-----------------------------------------------------------------------------
@@ -538,7 +538,7 @@ void inst_t::process_arq()
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
 
     do {
- 
+
         // Update Rx Counters
         update_rx_stats(cpu_rxhdr, pkt_len);
 

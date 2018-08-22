@@ -4,7 +4,7 @@
 
 #include "nic/hal/core/core.hpp"
 #include "nic/hal/core/heartbeat/heartbeat.hpp"
-#include "nic/hal/core/periodic/periodic.hpp"
+#include "sdk/periodic.hpp"
 
 #define HAL_HEARTBEAT_SCAN_INTVL        1000
 
@@ -28,10 +28,10 @@ heartbeat_monitor_cb (void *timer, uint32_t timer_id, void *ctxt)
 hal_ret_t
 heartbeat_init (void)
 {
-    while (!hal::periodic::periodic_thread_is_running()) {
+    while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
-    g_hb_timer = hal::periodic::timer_schedule(
+    g_hb_timer = sdk::lib::timer_schedule(
                      HAL_TIMER_ID_HEARTBEAT,
                      HAL_HEARTBEAT_SCAN_INTVL,
                      (void *)0,    // ctxt

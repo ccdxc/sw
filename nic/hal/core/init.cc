@@ -8,7 +8,7 @@
 #include "sdk/utils.hpp"
 #include "nic/hal/core/core.hpp"
 #include "nic/hal/core/plugins.hpp"
-#include "nic/hal/core/periodic/periodic.hpp"
+#include "sdk/periodic.hpp"
 
 namespace hal {
 
@@ -51,11 +51,11 @@ void *
 periodic_thread_start (void *ctxt)
 {
     // initialize timer wheel
-    hal::periodic::periodic_thread_init(ctxt);
+    sdk::lib::periodic_thread_init(ctxt);
     // do any plugin-specific thread initialization
     thread_init_plugins(HAL_THREAD_ID_PERIODIC);
     // run main loop
-    hal::periodic::periodic_thread_run(ctxt);
+    sdk::lib::periodic_thread_run(ctxt);
     // cleanup per thread state, if any
     thread_exit_plugins(HAL_THREAD_ID_PERIODIC);
 

@@ -6,7 +6,7 @@ gl_deps_list = [
     "//nic/hal/plugins/cfg/l4lb:l4lb_includes",
     # PI
     "//nic/fte:fte",
-    "//nic/hal/core:periodic",
+    "@sdk//obj:sdk_periodic",
     "//nic/hal/svc:hal_svc",
     "//nic/utils/trace",
     "//nic/utils/print",

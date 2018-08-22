@@ -12,7 +12,7 @@
 #include "nic/include/hal_state.hpp"
 #include "sdk/ht.hpp"
 #include "sdk/twheel.hpp"
-#include "nic/include/periodic.hpp"
+#include "sdk/periodic.hpp"
 #include "../common/trans.hpp"
 
 #define HAL_MAX_ARP_TRANS 512

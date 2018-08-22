@@ -22,7 +22,7 @@
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "nic/include/hal_pd.hpp"
-#include "nic/hal/core/periodic/periodic.hpp"
+#include "sdk/periodic.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
@@ -1339,12 +1339,12 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
 {
     void    *timer_ctxt;
 
-    if (g_delay_delete && hal::periodic::periodic_thread_is_running()) {
+    if (g_delay_delete && sdk::lib::periodic_thread_is_running()) {
         timer_ctxt =
-            hal::periodic::timer_schedule(slab_id,
-                                          TIME_MSECS_PER_SEC << 1, elem,
-                                          (sdk::lib::twheel_cb_t)pd_slab_delay_delete_cb,
-                                          false);
+            sdk::lib::timer_schedule(slab_id,
+                                     TIME_MSECS_PER_SEC << 1, elem,
+                                     (sdk::lib::twheel_cb_t)pd_slab_delay_delete_cb,
+                                     false);
         if (!timer_ctxt) {
             return HAL_RET_ERR;
         }

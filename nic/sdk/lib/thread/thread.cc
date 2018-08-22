@@ -228,8 +228,8 @@ thread::start(void *ctxt)
         int conf_cores, avail_cores;
         conf_cores = get_nprocs_conf();
         avail_cores = get_nprocs();
-        SDK_TRACE_ERR("pthread_create success, conf_cores : %d avail_cores : %d",
-                      conf_cores, avail_cores);
+        SDK_TRACE_DEBUG("thread created successfully, configured cores : %d, "
+                        "available cores : %d", conf_cores, avail_cores);
 
     }
 

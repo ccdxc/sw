@@ -28,7 +28,7 @@ common_deps = [
     "//nic:grpc_includes",
     "//nic:google_includes",
     "//nic:boost",
-    "//nic/hal/core:periodic",
+    "@sdk//obj:sdk_periodic",
 ]
 
 cc_binary(

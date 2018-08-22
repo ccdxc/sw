@@ -33,7 +33,7 @@ cc_library(
         "//nic:gen_proto_includes",
         "//nic:hal_svc_gen_includes",
         "//nic:hal_gen_includes",
-        "//nic/hal/core:periodic_includes",
+        "@sdk//obj:sdk_periodic",
         "//nic/hal/lib:hal_lib_includes",
         "//nic/utils/block_list",
         "//nic/fte:fte_includes",

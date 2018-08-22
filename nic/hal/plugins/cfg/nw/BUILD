@@ -34,7 +34,7 @@ cc_library(
         "//nic:hal_svc_gen_includes",
         "//nic/hal/svc:hal_svc_includes",
         "//nic:hal_gen_includes",
-        "//nic/hal/core:periodic_includes",
+        "@sdk//obj:sdk_periodic",
         "//nic/hal/lib:hal_lib_includes",
         "//nic/fte:fte_includes",
         "//nic/utils/bm_allocator",

@@ -7,14 +7,15 @@
 // - flow table scan to age out sessions or detect dead flows
 // - periodic stats collection and/or aggregation
 //------------------------------------------------------------------------------
-#ifndef __HAL_PERIODIC_HPP__
-#define __HAL_PERIODIC_HPP__
 
-#include "nic/include/base.hpp"
+#ifndef __PERIODIC_HPP__
+#define __PERIODIC_HPP__
+
+#include "sdk/base.hpp"
 #include "sdk/twheel.hpp"
 
-namespace hal {
-namespace periodic {
+namespace sdk {
+namespace lib {
 
 //------------------------------------------------------------------------------
 // return true if periodic thread is up and running
@@ -53,8 +54,8 @@ void *timer_delete(void *timer);
 //------------------------------------------------------------------------------
 void *timer_update(void *timer, void *ctxt);
 
-}    // namespace periodic
-}    // namespace hal
+}    // namespace lib
+}    // namespace sdk
 
-#endif    // __HAL_PERIODIC_HPP__
+#endif    // __PERIODIC_HPP__
 

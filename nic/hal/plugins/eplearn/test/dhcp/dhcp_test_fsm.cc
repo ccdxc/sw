@@ -31,6 +31,7 @@ using sdk::lib::twheel;
 using namespace hal;
 
 twheel *hal_twheel;
+
 /*
  * Note: For now timer wheel is supposed to be non-thread safe.
  * Reason: Update tick locks that slice and calls the callback function.
@@ -39,10 +40,13 @@ twheel *hal_twheel;
  */
 namespace hal {
 extern hal_state    *g_hal_state;
-namespace periodic {
-twheel *g_twheel;
-}
 }  // namespace hal
+
+namespace sdk {
+namespace lib {
+extern twheel *g_twheel;
+}    // lib
+}    // sdk
 
 vrf_t *dummy_ten;
 #define MAX_ENDPOINTS 4
@@ -828,7 +832,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_bound_timeout) {
     ASSERT_TRUE(trans != NULL);
 
     sleep(1);
-    hal::periodic::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
+    sdk::lib::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
@@ -989,7 +993,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_rebind_lease_timeout) {
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()), 0);
     sleep(1);
-    hal::periodic::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
+    sdk::lib::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
@@ -1042,7 +1046,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_lease_timeout) {
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()), 0);
     sleep(1);
-    hal::periodic::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
+    sdk::lib::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));

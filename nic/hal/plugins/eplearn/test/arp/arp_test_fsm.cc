@@ -234,7 +234,7 @@ class arp_fsm_test : public hal_base_test {
         hal_base_test::SetUpTestCase();
         //hal_test_utils_slab_disable_delete();
         /* Override the timer so that we can control  */
-        //hal::periodic::g_twheel = twheel::factory(10, 100, false);
+        //sdk::lib::g_twheel = twheel::factory(10, 100, false);
         arp_topo_setup();
         //Reduce the time to avoid thread locking.
         arp_trans_t::set_state_timeout(ARP_BOUND, 1 * TIME_MSECS_PER_MIN);

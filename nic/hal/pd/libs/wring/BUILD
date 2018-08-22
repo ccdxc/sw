@@ -17,7 +17,7 @@ cc_library(
         "//nic/hal/pd/iris:iris_includes",
         "//nic/utils/block_list:block_list",
         "//nic/hal/lib:hal_lib_includes",
-        "//nic/hal/core:periodic_includes",
+        "@sdk//obj:sdk_periodic",
         "//nic/utils/bm_allocator",
         "//nic:gen_proto_includes",
         "//nic:google_includes",
@@ -34,7 +34,7 @@ cc_library(
             ],
     deps = [
         "//nic/hal:hal_hdrs",
-        "//nic/hal/core:periodic_includes",
+        "@sdk//obj:sdk_periodic",
     ],
 )
 

@@ -56,7 +56,7 @@ cc_library(
         "//nic/hal/lib:hal_lib_includes",
         "//nic/hal/core:core_includes",
         "//nic/include:base_includes",
-        "//nic/hal/core:periodic_includes",
+        "@sdk//obj:sdk_periodic",
     ]
 )
 
@@ -101,7 +101,7 @@ cc_library(
         "//nic/hal/lib:hal_lib",
         "//nic/hal/core:core",
         "//nic/hal/pd:pdcommon",
-        "//nic/hal/core:periodic",
+        "@sdk//obj:sdk_periodic",
         "//nic/hal/core:core_includes",
         "//nic/hal/plugins/app_redir:app_redir_includes",
         "//nic/hal/plugins/network:network_includes",

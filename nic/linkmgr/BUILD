@@ -36,6 +36,7 @@ cc_library(
         "//nic:gen_proto_includes",
         "@sdk//obj:sdk_logger",
         "@sdk//obj:sdk_pal",
+        "@sdk//obj:sdk_periodic",
         "@sdk//obj:sdk_shmmgr",
         "@sdk//obj:sdk_catalog",
         "@sdk//obj:sdk_utils",
@@ -47,7 +48,6 @@ cc_library(
         "//nic/hal/lib:hal_lib_includes",
         "//nic/hal/lib:hal_lib",
         "//nic/hal:hal_includes",
-        "//nic/hal/core:periodic",
         "//nic:halproto",
         "//nic:grpc_includes",
         "//nic:libprotobuf",
@@ -138,6 +138,7 @@ cc_library(
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_timerfd",
+        "@sdk//obj:sdk_periodic",
 
         "//nic:halproto",
         "//nic:spdlog",

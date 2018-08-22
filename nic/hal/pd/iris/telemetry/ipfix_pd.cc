@@ -11,7 +11,7 @@
 #include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/hal/core/periodic/periodic.hpp"
+#include "sdk/periodic.hpp"
 
 namespace hal {
 namespace pd {
@@ -187,7 +187,7 @@ hal_ret_t
 ipfix_module_init (hal_cfg_t *hal_cfg)
 {
     // wait until the periodic thread is ready
-    while (!hal::periodic::periodic_thread_is_running()) {
+    while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
 
@@ -197,11 +197,11 @@ ipfix_module_init (hal_cfg_t *hal_cfg)
     }
 
     t_ipfix_doorbell_timer =
-        hal::periodic::timer_schedule(HAL_TIMER_ID_IPFIX,
-                                      HAL_IPFIX_DOORBELL_TIMER_INTVL,
-                                      (void *)0,    // ctxt
-                                      ipfix_doorbell_ring_cb,
-                                      true);
+        sdk::lib::timer_schedule(HAL_TIMER_ID_IPFIX,
+                                 HAL_IPFIX_DOORBELL_TIMER_INTVL,
+                                 (void *)0,    // ctxt
+                                 ipfix_doorbell_ring_cb,
+                                 true);
     if (!t_ipfix_doorbell_timer) {
         HAL_TRACE_ERR("Failed to start periodic ipfix doorbell ring timer");
         return HAL_RET_ERR;

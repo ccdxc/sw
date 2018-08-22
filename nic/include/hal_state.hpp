@@ -16,7 +16,7 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/ip.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "nic/hal/core/periodic/periodic.hpp"
+#include "sdk/periodic.hpp"
 #include "nic/fte/acl/acl.hpp"
 
 #ifdef SHM
@@ -653,12 +653,12 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
 
     HAL_ASSERT(elem != NULL);
 
-    if (g_delay_delete && hal::periodic::periodic_thread_is_running()) {
+    if (g_delay_delete && sdk::lib::periodic_thread_is_running()) {
         timer_ctxt =
-            hal::periodic::timer_schedule(slab_id,
-                                          TIME_MSECS_PER_SEC << 1, elem,
-                                          (sdk::lib::twheel_cb_t)slab_delay_delete_cb,
-                                          false);
+            sdk::lib::timer_schedule(slab_id,
+                                     TIME_MSECS_PER_SEC << 1, elem,
+                                     (sdk::lib::twheel_cb_t)slab_delay_delete_cb,
+                                     false);
         if (!timer_ctxt) {
             return HAL_RET_ERR;
         }

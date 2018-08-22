@@ -20,7 +20,7 @@ cc_library(
         "@sdk//obj:sdk_list",
         "//nic/hal/lib:hal_lib_includes",
         "//:gtest",
-        "//nic/hal/core:periodic",
+        "@sdk//obj:sdk_periodic",
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic/hal/pd:pdcommon",
     ],

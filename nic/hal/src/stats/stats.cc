@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/hal/src/stats/stats.hpp"
-#include "nic/hal/core/periodic/periodic.hpp"
+#include "sdk/periodic.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 
@@ -40,14 +40,14 @@ hal_stats_init_cb (hal_cfg_t *hal_cfg)
     }
 
     // wait until the periodic thread is ready
-    while (!hal::periodic::periodic_thread_is_running()) {
+    while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
 
-    t_stats_timer = hal::periodic::timer_schedule(HAL_TIMER_ID_STATS,
-                                                  HAL_STATS_COLLECTION_INTVL,
-                                                  (void *)0,    // ctxt
-                                                  stats_timer_cb, true);
+    t_stats_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_STATS,
+                                             HAL_STATS_COLLECTION_INTVL,
+                                             (void *)0,    // ctxt
+                                             stats_timer_cb, true);
     if (!t_stats_timer) {
         HAL_TRACE_ERR("Failed to start periodic stats timer");
         return HAL_RET_ERR;

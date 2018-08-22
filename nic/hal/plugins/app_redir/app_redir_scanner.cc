@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/include/hal.hpp"
-#include "nic/hal/core/periodic/periodic.hpp"
+#include "sdk/periodic.hpp"
 #include "snort_api.h"
 #include "application_ids.h"
 #include "app_redir_scanner.hpp"
@@ -210,8 +210,8 @@ hal_ret_t scanner_init(int thread_num) {
         if (snort_dl.lib_init_main_thread(PEN_SNORT_THREAD_COUNT, lua_path.c_str(), NULL) != 0) {
             goto error;
         }
-        if (hal::periodic::periodic_thread_is_running()) {
-            scanner_periodic_timer = hal::periodic::timer_schedule(
+        if (sdk::lib::periodic_thread_is_running()) {
+            scanner_periodic_timer = sdk::lib::timer_schedule(
                     SNORT_PERIODIC_TIMER_ID, SNORT_PERIODIC_INTERVAL, nullptr,
                     scanner_periodic_cb, true);
         } // else this is probably running in gtest
@@ -279,7 +279,7 @@ hal_ret_t scanner_cleanup(int thread_num) {
             goto error;
         }
         if (scanner_periodic_timer) {
-            hal::periodic::timer_delete(scanner_periodic_timer);
+            sdk::lib::timer_delete(scanner_periodic_timer);
             scanner_periodic_timer = nullptr;
         }
         if (snort_dl.lib_cleanup_main_thread() != 0) {
@@ -419,7 +419,7 @@ hal_ret_t scanner_run(appid_info_t& appid_info, uint8_t* pkt, uint32_t pkt_len, 
 
     tid -= hal::HAL_THREAD_ID_FTE_MIN;
 
-    if (!hal::periodic::periodic_thread_is_running()) {
+    if (!sdk::lib::periodic_thread_is_running()) {
         HAL_TRACE_WARN("scanning pkt for appid, len {}, periodic thread IS NOT running, periodic_cb_count {}",
                        pkt_len, scanner_periodic_cb_count);
         // TODO: allow for now because of gtests, but eventually treat this as error

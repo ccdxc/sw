@@ -29,7 +29,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic:boost",
-        "//nic/hal/core:periodic_includes",
+        "@sdk//obj:sdk_periodic",
         "//nic/fte:fte_includes"
     ],
     copts = sdk_copts,

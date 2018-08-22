@@ -579,16 +579,16 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
 {
     // pd_clock_delta_comp_args_t *args = pd_func_args->pd_clock_delta_comp;
     // wait until the periodic thread is ready
-    while (!hal::periodic::periodic_thread_is_running()) {
+    while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
 
     clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
     t_clock_delta_timer =
-        hal::periodic::timer_schedule(HAL_TIMER_ID_CLOCK_SYNC,            // timer_id
-                                      HAL_TIMER_ID_CLOCK_SYNC_INTVL,
-                                      (void *)0,    // ctxt
-                                      clock_delta_comp_cb, true);
+        sdk::lib::timer_schedule(HAL_TIMER_ID_CLOCK_SYNC,            // timer_id
+                                 HAL_TIMER_ID_CLOCK_SYNC_INTVL,
+                                 (void *)0,    // ctxt
+                                 clock_delta_comp_cb, true);
     if (!t_clock_delta_timer) {
         return HAL_RET_ERR;
     }

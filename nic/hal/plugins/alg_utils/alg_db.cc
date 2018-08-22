@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/include/periodic.hpp"
+#include "sdk/periodic.hpp"
 #include "alg_db.hpp"
 
 namespace hal {
@@ -83,7 +83,7 @@ start_expected_flow_timer(expected_flow_t *entry, uint32_t timer_id,
                           uint32_t time_intvl, sdk::lib::twheel_cb_t cb,
                           void *timer_ctxt)
 {
-    entry->timer = hal::periodic::timer_schedule(timer_id, time_intvl,
+    entry->timer = sdk::lib::timer_schedule(timer_id, time_intvl,
                                             (void *)timer_ctxt, cb, false);
     if (!entry->timer) {
         HAL_TRACE_ERR("Failed to start timer for expected flow with key: {}",
@@ -97,7 +97,7 @@ start_expected_flow_timer(expected_flow_t *entry, uint32_t timer_id,
 void*
 delete_expected_flow_timer(expected_flow_t *entry)
 {
-    return (hal::periodic::timer_delete(entry->timer));
+    return (sdk::lib::timer_delete(entry->timer));
 }
 
 //------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
     expected_flow_t *entry = NULL;
     exp_flow_key_t key, lookup_key;
 
-    if (!expected_flow_ht()->num_entries()) 
+    if (!expected_flow_ht()->num_entries())
         return NULL;
 
     bzero((void *)&key, sizeof(exp_flow_key_t));

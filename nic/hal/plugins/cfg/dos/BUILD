@@ -24,7 +24,7 @@ cc_library(
         "//nic:hal_gen_includes",
         "//nic:spdlog",
         "//nic/hal/lib:hal_lib_includes",
-        "//nic/hal/core:periodic_includes",
+        "@sdk//obj:sdk_periodic",
         "//nic/fte:fte_includes",
         "//nic/hal/plugins/cfg/nw:nw_includes",
         "//nic/utils/block_list:block_list",

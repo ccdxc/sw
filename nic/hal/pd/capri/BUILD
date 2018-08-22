@@ -81,7 +81,7 @@ cc_library(
                "//nic:spdlog",
                "//nic:google_includes",
                "//nic:grpc_includes",
-               "//nic/hal/core:periodic_includes",
+               "@sdk//obj:sdk_periodic",
                "//nic:openssl",
                "//nic/hal/pd/asicpd:asicpd",
            ] + capri_util_deps +

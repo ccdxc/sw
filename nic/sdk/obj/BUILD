@@ -190,6 +190,17 @@ cc_library(
     ],
 )
 
+# periodic library
+cc_library(
+    name = "sdk_periodic",
+    srcs = [
+        "lib/libperiodic.so",
+    ],
+    deps = [
+        "//:sdk_headers",
+    ],
+)
+
 # csr_lite library
 cc_library(
     name = "sdk_csrlite",

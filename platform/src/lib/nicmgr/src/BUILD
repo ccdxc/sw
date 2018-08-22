@@ -61,7 +61,6 @@ cc_binary(
                 "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
                 "//nic/hal/lib:hal_lib_includes",
                 "//nic/hal/core:core_includes",
-                "//nic/hal/core:periodic_includes",
                 "//nic/fte:fte_includes",
                 "@sdk//:sdk_headers",
                 "@sdk//lib/pal:pal",

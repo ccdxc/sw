@@ -43,7 +43,7 @@ thread_local void *g_session_timer;
 #define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
 #define MAX_TCP_TICKLES                             3
 #define HAL_MAX_SESSION_PER_ENQ                     5
-#define HAL_MAX_DATA_THREAD                        (g_hal_state->oper_db()->max_data_threads()) 
+#define HAL_MAX_DATA_THREAD                        (g_hal_state->oper_db()->max_data_threads())
 
 void *
 session_get_handle_key_func (void *entry)
@@ -857,7 +857,7 @@ session_delete(const session_args_t *args, session_t *session)
 
     // Stop any timers that might be running
     if (session->tcp_cxntrack_timer) {
-        periodic::timer_delete(session->tcp_cxntrack_timer);
+        sdk::lib::timer_delete(session->tcp_cxntrack_timer);
         session->tcp_cxntrack_timer = NULL;
     }
 
@@ -993,7 +993,7 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
             pd::pd_vrf_get_fromcpu_vlanid_args_t args;
             args.vrf = hal::vrf_lookup_by_handle(vrf_handle);
             args.vid = &cpu_header->hw_vlan_id;
-            
+
             pd_func_args.pd_vrf_get_fromcpu_vlanid = &args;
             if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FRCPU_VLANID,
                                          &pd_func_args) == HAL_RET_OK) {
@@ -1012,13 +1012,13 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
         }
     } else { // FROM_DMA
         if_t   *sif = NULL;
-     
+
         sif = hal::find_if_by_handle(sep->if_handle);
         if (sif == NULL) {
             HAL_TRACE_ERR("Couldnt get source if for session :{}", key);
             return HAL_RET_ERR;
         }
-        
+
         pd::pd_if_get_hw_lif_id_args_t args;
         args.pi_if = sif;
         pd_func_args.pd_if_get_hw_lif_id = &args;
@@ -1259,7 +1259,7 @@ build_and_send_tcp_pkt (void *data)
         HAL_TRACE_DEBUG("Sending another tickle and starting timer {}",
                          session->iflow->config.key);
         ctxt->num_tickles++;
-        session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
+        session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                               HAL_TIMER_ID_TCP_TICKLE_WAIT,
                                               SESSION_DEFAULT_TCP_TICKLE_TIMEOUT,
                                               (void *)ctxt,
@@ -1376,7 +1376,7 @@ session_age_cb (void *entry, void *ctxt)
             if (args->num_ctx[session->fte_id] == HAL_MAX_SESSION_PER_ENQ) {
 
                 ret = fte::fte_softq_enqueue(session->fte_id,
-                                    process_hal_periodic_tkle, 
+                                    process_hal_periodic_tkle,
                                     (void *)tctx_list[session->fte_id]);
                 // If the tickle is successfully queued then
                 // return otherwise go ahead and cleanup
@@ -1397,7 +1397,7 @@ session_age_cb (void *entry, void *ctxt)
 
             if (args->num_ctx[session->fte_id] == HAL_MAX_SESSION_PER_ENQ) {
                 ret = fte::fte_softq_enqueue(session->fte_id,
-                                    process_hal_periodic_sess_delete, 
+                                    process_hal_periodic_sess_delete,
                                     (void *)session_list[session->fte_id]);
                 HAL_ASSERT(ret != HAL_RET_OK);
 
@@ -1426,7 +1426,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     session_age_cb_args_t args;
 
-    args.num_ctx = (uint8_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_AGE_ARGS, 
+    args.num_ctx = (uint8_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_AGE_ARGS,
                                    (sizeof(uint8_t)*HAL_MAX_DATA_THREAD));
     HAL_ASSERT(args.num_ctx != NULL);
 
@@ -1488,7 +1488,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     }
 
     // store the bucket id to resume on next invocation
-    hal::periodic::timer_update(timer, reinterpret_cast<void *>(bucket));
+    sdk::lib::timer_update(timer, reinterpret_cast<void *>(bucket));
 }
 
 //------------------------------------------------------------------------------
@@ -1505,11 +1505,11 @@ session_init (hal_cfg_t *hal_cfg)
     }
 
     // wait until the periodic thread is ready
-    while (!hal::periodic::periodic_thread_is_running()) {
+    while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
     g_session_timer =
-        hal::periodic::timer_schedule(HAL_TIMER_ID_SESSION_AGEOUT,            // timer_id
+        sdk::lib::timer_schedule(HAL_TIMER_ID_SESSION_AGEOUT,            // timer_id
                                       HAL_SESSION_AGE_SCAN_INTVL,
                                       (void *)0,    // ctxt
                                       session_age_walk_cb, true);
@@ -1622,11 +1622,11 @@ schedule_tcp_close_timer (session_t *session)
 
     // Delete the previous timers if any and start a new one
     if (session->tcp_cxntrack_timer != NULL) {
-        periodic::timer_delete(session->tcp_cxntrack_timer);
+        sdk::lib::timer_delete(session->tcp_cxntrack_timer);
         session->tcp_cxntrack_timer = NULL;
     }
 
-    session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
+    session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                      HAL_TIMER_ID_TCP_CLOSE_WAIT,
                                      get_tcp_timeout(session, TCP_CLOSE_TIMEOUT),
                                      (void *)(session->hal_handle), tcp_close_cb, false);
@@ -1695,11 +1695,11 @@ schedule_tcp_half_closed_timer (session_t *session)
 
     // Delete the previous timers if any and start a new one
     if (session->tcp_cxntrack_timer != NULL) {
-        periodic::timer_delete(session->tcp_cxntrack_timer);
+        sdk::lib::timer_delete(session->tcp_cxntrack_timer);
         session->tcp_cxntrack_timer = NULL;
     }
 
-    session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
+    session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                      HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT,
                                      get_tcp_timeout(session, TCP_HALF_CLOSED_TIMEOUT),
                                      (void *)(session->hal_handle),
@@ -1773,7 +1773,7 @@ schedule_tcp_cxnsetup_timer (session_t *session)
         return HAL_RET_OK;
     }
 
-    session->tcp_cxntrack_timer = hal::periodic::timer_schedule(
+    session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                         HAL_TIMER_ID_TCP_CXNSETUP_WAIT,
                                         get_tcp_timeout(session, TCP_CXNSETUP_TIMEOUT),
                                         (void *)(session->hal_handle),
