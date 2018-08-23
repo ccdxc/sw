@@ -74,6 +74,7 @@ cc_library(
         "//nic/hal/plugins/cfg/gft:gft_includes",
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic/hal/plugins/cfg/tcp_proxy:tcp_proxy_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
     ],
     alwayslink = 1,

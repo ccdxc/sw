@@ -11,7 +11,6 @@ load("//nic/bazel:common_deps.bzl", "test_deps_list")
 
 cc_library(
     name = "nat_includes",
-    srcs = glob(["*.hpp"]),
     hdrs = glob(["*.hpp"]),
     deps = [],
 )
@@ -19,7 +18,6 @@ cc_library(
 cc_library(
     name = "nat",
     srcs = glob(["*.cc"]),
-    hdrs = glob(["*.hpp"]),
     deps = [
         "//nic/utils/nat:nat",
         "//nic/include:base_includes",
@@ -35,6 +33,7 @@ cc_library(
         "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
         "//nic/hal/plugins/sfw:firewall_includes",
         "//nic/hal/plugins/cfg/mcast:mcast_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",

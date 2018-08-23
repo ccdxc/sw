@@ -8,7 +8,7 @@
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/gen/proxyc_txdma/include/proxyc_txdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
@@ -184,7 +184,7 @@ p4pd_add_or_del_proxyc_tx_stage0_entry(pd_proxyccb_t* proxyccb_pd,
 
         data.u.start_d.chain_txq_base = txq_base;
         data.u.start_d.chain_txq_ring_indices_addr =
-             g_lif_manager->GetLIFQStateAddr(lif, 0, proxyccb->chain_txq_qid) +
+             lif_manager()->GetLIFQStateAddr(lif, 0, proxyccb->chain_txq_qid) +
              (CAPRI_QSTATE_HEADER_COMMON_SIZE +
               (proxyccb->chain_txq_ring * CAPRI_QSTATE_HEADER_RING_SINGLE_SIZE));
         data.u.start_d.chain_txq_ring_size_shift  = ring_size_shift;
@@ -357,7 +357,7 @@ pd_proxyccb_get_base_hw_addr(pd_proxyccb_t* proxyccb_pd)
 
     // Get the base address of PROXYC CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
+    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
                                                       APP_REDIR_PROXYC_QTYPE, 0);
     HAL_TRACE_DEBUG("PROXYCCB received offset {:#x}", offset);
     return offset + \

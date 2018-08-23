@@ -36,6 +36,7 @@ cc_library(
         "//nic/hal/plugins/cfg/gft:gft_includes",
         "//nic/hal/plugins/sfw:firewall_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/utils/bm_allocator",
         "//nic/hal/pd:hal_pd_includes",
         "//nic:spdlog",

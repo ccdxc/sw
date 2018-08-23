@@ -510,10 +510,16 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
         .p4pd_txdma_pgm_name = "p4plus",
     };
 
+    pd_mem_init_phase2_args_t           *ph2_args;
+    hal::hal_cfg_t                      *hal_cfg;
+
+    ph2_args = pd_func_args->pd_mem_init_phase2;
+    hal_cfg = ph2_args->hal_cfg;
+
     // gft specific capri inits
     HAL_ASSERT(asicpd_p4plus_table_mpu_base_init(&p4pd_cfg) == HAL_RET_OK);
     HAL_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
-    HAL_ASSERT(asicpd_p4plus_table_init() == HAL_RET_OK);
+    HAL_ASSERT(asicpd_p4plus_table_init(hal_cfg) == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_recirc_init() == HAL_RET_OK);
 
     // common asic pd init (must be called after capri asic init)

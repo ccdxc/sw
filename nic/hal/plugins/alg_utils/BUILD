@@ -14,6 +14,7 @@ cc_library(
     deps = [
         "//nic/fte:fte",
         "//nic/include:base_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/model_sim/include:modelsim_includes",
     ],
     alwayslink = 1,

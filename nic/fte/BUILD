@@ -20,6 +20,7 @@ cc_library(
         "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
         "//nic:spdlog",
         "//nic/hal/plugins/app_redir:app_redir_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/utils/agent_api:agent_api",
         "//nic/hal/iris/datapath/p4/include:p4_iris_includes",
         "//nic/p4/common:p4_common_includes",

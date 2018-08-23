@@ -14,6 +14,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 
 #define NUM_MAX_COSES 16
 // Size of RSS seed in bytes
@@ -147,6 +148,8 @@ lif_unlock (lif_t *lif, const char *fname,
                     fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&lif->slock);
 }
+
+extern LIFManager *lif_manager();
 
 extern void *lif_id_get_key_func(void *entry);
 extern uint32_t lif_id_compute_hash_func(void *key, uint32_t ht_size);

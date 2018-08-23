@@ -170,6 +170,7 @@ hal_thread_create (const char *name, uint32_t thread_id,
     if (g_hal_threads[thread_id]) {
         g_hal_threads[thread_id]->set_data(data);
     }
+
     return g_hal_threads[thread_id];
 }
 

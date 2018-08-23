@@ -2,14 +2,12 @@
 #include "sdk/thread.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_mem.hpp"
-
 namespace hal {
 
 uint64_t               hal_handle = 1;
 thread                 *g_hal_threads[HAL_THREAD_ID_MAX];
 bool                   gl_super_user = false;
 thread_local thread    *t_curr_thread;
-LIFManager             *g_lif_manager = nullptr;
 class hal_state        *g_hal_state;
 
 slab *

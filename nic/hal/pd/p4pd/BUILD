@@ -28,6 +28,7 @@ cc_library(
     deps = [
         "//nic/include:base_includes",
         "//nic/hal/pd:hal_pd_includes",
+        "//nic/hal/lib:hal_lib_includes",
         "//nic:gen_common_includes",
         "//nic:boost",
         "//nic:spdlog",

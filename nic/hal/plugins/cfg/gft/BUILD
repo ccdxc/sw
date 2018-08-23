@@ -27,6 +27,7 @@ cc_library(
         "//nic/fte:fte_includes",
         "//nic/utils/bm_allocator",
         "//nic/hal/plugins/cfg/mcast:mcast_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
 	    "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
         "//nic:spdlog",

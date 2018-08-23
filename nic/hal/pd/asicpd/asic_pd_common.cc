@@ -300,7 +300,7 @@ asicpd_toeplitz_init (void)
 }
 
 hal_ret_t
-asicpd_p4plus_table_init (void)
+asicpd_p4plus_table_init (hal::hal_cfg_t *hal_cfg)
 {
     p4pd_table_properties_t tbl_ctx_apphdr;
     p4pd_table_properties_t tbl_ctx_apphdr_ext;
@@ -322,7 +322,8 @@ asicpd_p4plus_table_init (void)
                                      &tbl_ctx_txdma_act);
     p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T1,
                                      &tbl_ctx_txdma_act_ext);
-    capri_p4plus_table_init(tbl_ctx_apphdr.stage,
+    capri_p4plus_table_init(hal_cfg,
+                            tbl_ctx_apphdr.stage,
                             tbl_ctx_apphdr.stage_tableid,
                             tbl_ctx_apphdr_ext.stage,
                             tbl_ctx_apphdr_ext.stage_tableid,

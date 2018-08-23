@@ -10,14 +10,14 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/gen/proto/hal/l2segment.pb.h"
-#include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/hal/plugins/cfg/nw/filter.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/src/internal/rdma.hpp"
-#include "nic/hal/src/lif/lif.hpp"
-#include "nic/hal/src/lif/eth.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
+#include "nic/hal/src/internal/eth.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 
 using hal::pd::pd_if_create_args_t;
@@ -277,7 +277,7 @@ lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif, bool dont_ze
     hint_cos = (lif->qos_info.coses & 0xf0) >> 4;
     // make sure that when you are creating with hw_lif_id the lif is alloced
     // already, otherwise this call may return an error
-    if ((ec = g_lif_manager->InitLIFQState(hw_lif_id, &qs_params, hint_cos)) < 0) {
+    if ((ec = lif_manager()->InitLIFQState(hw_lif_id, &qs_params, hint_cos)) < 0) {
         HAL_TRACE_ERR("Failed to initialize LIFQState: err_code : {}", ec);
         return HAL_RET_INVALID_ARG;
     }
@@ -300,7 +300,7 @@ lif_qstate_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
         uint8_t *state = (uint8_t *)req.queue_state().c_str();
         if (req.has_label()) {
             uint8_t off;
-            int ret = g_lif_manager->GetPCOffset(req.label().handle().c_str(),
+            int ret = lif_manager()->GetPCOffset(req.label().handle().c_str(),
                 req.label().prog_name().c_str(),
                 req.label().label().c_str(), &off);
             if (ret < 0) {
@@ -317,7 +317,7 @@ lif_qstate_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
             }
         }
 
-        int ret = g_lif_manager->WriteQState(hw_lif_id, req.type_num(),
+        int ret = lif_manager()->WriteQState(hw_lif_id, req.type_num(),
                                              req.qid(), state,
                                              req.queue_state().size());
         if (ret < 0) {
@@ -451,7 +451,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         // Check that only service lifs are already allocated
         if (hw_lif_id >= SERVICE_LIF_START && hw_lif_id < SERVICE_LIF_END) {
             // make sure hw_lif_id is already allocated.
-            LIFQState *qstate = g_lif_manager->GetLIFQState(hw_lif_id);
+            LIFQState *qstate = lif_manager()->GetLIFQState(hw_lif_id);
             if (qstate == nullptr) {
                 HAL_TRACE_ERR("Failed to get LifQState for service Lif");
                 ret = HAL_RET_INVALID_ARG;
@@ -461,7 +461,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         memcpy(&lif_info, lif_hal_info, sizeof(lif_info));
         dont_zero_qstate_mem = lif_hal_info->dont_zero_qstate_mem;
     } else {
-        hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
+        hw_lif_id = lif_manager()->LIFRangeAlloc(-1, 1);
         if (((int32_t)hw_lif_id) < 0) {
             HAL_TRACE_ERR("Failed to allocate lif, hw_lif_id : {}", hw_lif_id);
             ret = HAL_RET_NO_RESOURCE;
@@ -816,7 +816,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         const auto &ent = spec.lif_qstate_map(i);
         entry = rsp->add_qstate();
         entry->set_type_num(ent.type_num());
-        entry->set_addr(g_lif_manager->GetLIFQStateAddr(hw_lif_id, ent.type_num(), 0));
+        entry->set_addr(lif_manager()->GetLIFQStateAddr(hw_lif_id, ent.type_num(), 0));
     }
 
     // Return LIF RDMA data for RDMA enabled lifs
@@ -1570,7 +1570,7 @@ LifGetQState (const intf::QStateGetReq &req, intf::QStateGetResp *rsp)
 {
     std::unique_ptr<char[]> buf(new char[kMaxQStateSize]);
     uint32_t size_to_copy = std::min(kMaxQStateSize, req.ret_data_size());
-    int64_t ret = g_lif_manager->GetLIFQStateAddr(
+    int64_t ret = lif_manager()->GetLIFQStateAddr(
         req.lif_handle(), req.type_num(), req.qid());
 
     if (ret < 0) {
@@ -1578,7 +1578,7 @@ LifGetQState (const intf::QStateGetReq &req, intf::QStateGetResp *rsp)
         return;
     }
     rsp->set_q_addr((uint64_t)ret);
-    int ret2 = g_lif_manager->ReadQState(req.lif_handle(), req.type_num(),
+    int ret2 = lif_manager()->ReadQState(req.lif_handle(), req.type_num(),
                                          req.qid(), (uint8_t *)buf.get(),
                                          kMaxQStateSize);
     if (ret2 < 0) {
@@ -1602,7 +1602,7 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
     uint8_t *state = (uint8_t *)req.queue_state().c_str();
     if (req.has_label()) {
         uint8_t off;
-        int ret = g_lif_manager->GetPCOffset(req.label().handle().c_str(),
+        int ret = lif_manager()->GetPCOffset(req.label().handle().c_str(),
             req.label().prog_name().c_str(),
             req.label().label().c_str(), &off);
         if (ret < 0) {
@@ -1615,7 +1615,7 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
         state = buf.get();
     }
 
-    int ret = g_lif_manager->WriteQState(req.lif_handle(), req.type_num(),
+    int ret = lif_manager()->WriteQState(req.lif_handle(), req.type_num(),
                                          req.qid(), state,
                                          req.queue_state().size());
     rsp->set_error_code(0 - ret);
@@ -1652,7 +1652,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
         const auto &ent = lif->qinfo[i];
         entry = rsp->add_qstate();
         entry->set_type_num(ent.type);
-        entry->set_addr(g_lif_manager->GetLIFQStateAddr(hw_lif_id, ent.type, 0));
+        entry->set_addr(lif_manager()->GetLIFQStateAddr(hw_lif_id, ent.type, 0));
     }
 
     rsp->set_api_status(types::API_STATUS_OK);

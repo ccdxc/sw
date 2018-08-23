@@ -8,7 +8,7 @@
 #include "sdk/pal.hpp"
 #include "sdk/utils.hpp"
 #include "sdk/types.hpp"
-#include "nic/hal/src/lif/lif_manager_base.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager_base.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"

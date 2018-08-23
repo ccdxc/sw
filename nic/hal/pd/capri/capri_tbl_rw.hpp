@@ -14,6 +14,7 @@
 #ifndef P4PD_CLI
 #include "nic/include/base.hpp"
 #endif
+#include "nic/include/hal.hpp"
 
 #define CAPRI_P4_NUM_STAGES     6
 #define CAPRI_P4PLUS_NUM_STAGES 8
@@ -143,7 +144,8 @@ void capri_program_table_mpu_pc(int tableid, bool gress, int stage, int stage_ta
 
 int capri_toeplitz_init(int stage, int stage_tableid);
 
-int capri_p4plus_table_init(int stage_apphdr, int stage_tableid_apphdr,
+int capri_p4plus_table_init(hal::hal_cfg_t *hal_cfg,
+                            int stage_apphdr, int stage_tableid_apphdr,
                             int stage_apphdr_ext, int stage_tableid_apphdr_ext,
                             int stage_apphdr_off, int stage_tableid_apphdr_off,
                             int stage_apphdr_ext_off, int stage_tableid_apphdr_ext_off,

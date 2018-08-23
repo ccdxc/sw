@@ -16,6 +16,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
         "//nic/hal/plugins/sfw:sfw_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/hal/plugins/alg_utils:alg_utils_includes",
         "//nic:libtirpc",
     ],

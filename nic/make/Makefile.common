@@ -187,7 +187,7 @@ csrlite:
 bazel-build:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) $(target)
 
-hal:
+hal: plugins
     ifeq ($(PROFILING),1)
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal:hal_perf
     else

@@ -4,7 +4,7 @@
 #ifndef __LIF_API_HPP__
 #define __LIF_API_HPP__
 
-#include "nic/hal/src/lif/lif.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 
 namespace hal {
 

@@ -12,6 +12,9 @@ include $(TOPDIR)/make/Makefile.common
 BZL_BLD_OPT := $(BZL_BLD_OPT) --define p4pipeline=apollo2
 BZL_BLD_CMD := bazel $(BZL_OPT) build $(BZL_BLD_OPT)
 
+plugins:
+	$(BZL_BLD_CMD) --build_tag_filters=-gtests //nic/hal/plugins/...
+
 ####################################################
 #################### Oracle ########################
 ####################################################
@@ -23,8 +26,9 @@ apollo2: capsim-master
 	$(MAKE) gen_proto
 	$(MAKE) -j4 build_proto
 	$(MAKE) sdk
-	$(MAKE) linkmgr
-	$(BZL_BLD_CMD) //nic/hal:hal
+	$(MAKE) linkmgr	
+	$(MAKE) third-party
+	$(MAKE) hal
 	$(BZL_BLD_CMD) //nic/hal/test/gtests:apollo2_test
 	$(BZL_BLD_CMD) //nic/utils/host_mem:all
 

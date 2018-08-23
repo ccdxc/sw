@@ -24,6 +24,15 @@
             "exit_func" : "mcast_exit",
             "auto_load" : "true",
             "deps"      : ["pensando.io/nw"]
+        },
+        {
+            "name"      : "lif",
+            "provider"  : "pensando.io",
+            "lib"       : "lif/liblif.so",
+            "init_func" : "lif_init",
+            "exit_func" : "lif_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
         }
     ],
     "pipelines": [

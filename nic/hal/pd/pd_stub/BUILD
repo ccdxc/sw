@@ -14,6 +14,7 @@ cc_library(
         "//nic/hal/plugins/cfg/mcast:mcast_includes",
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
         "//nic:halproto",
         "//nic:gen_proto_includes",

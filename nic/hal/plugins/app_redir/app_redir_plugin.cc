@@ -31,10 +31,12 @@ void app_redir_plugin_exit() {
 
 void app_redir_thread_init(int tid) {
     sdk::lib::thread *t = sdk::lib::thread::current_thread();
+    HAL_TRACE_DEBUG("Enter app redir thread init for {}", tid);
     if (t) {
         // Must be run in the correct thread
         assert((int) t->thread_id() == tid);
     }
+    HAL_TRACE_DEBUG("Enter app redir scanner init for {}", tid);
     scanner_init(tid);
 }
 

@@ -29,6 +29,9 @@ swig-cli-gft: swig-cli-gft-clean
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C $(TOPDIR)/debug_cli PGM=common_rxdma_actions
 	PATH=$(TOOLCHAIN_PATH)/bin:$$PATH make -C $(TOPDIR)/debug_cli PGM=cli
 
+plugins:
+	$(BAZEL_BUILD) --build_tag_filters=-gtests //nic/hal/plugins/...
+
 gft: platform capsim-master
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C $(TOPDIR)/p4 msft_gft
@@ -38,7 +41,8 @@ gft: platform capsim-master
 	$(MAKE) csrlite
 	$(MAKE) sdk
 	$(MAKE) linkmgr
-	$(BAZEL_BUILD) //nic/hal:hal
+	$(MAKE) third-party
+	$(MAKE) hal
 	$(BAZEL_BUILD) //nic/hal/pd/gft:all
 	$(BAZEL_BUILD) //nic/hal/pd/pd_stub
 	$(MAKE) gtests_gft

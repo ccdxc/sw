@@ -11,7 +11,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h"
 
@@ -439,7 +439,7 @@ pd_ipseccb_get_base_hw_index(pd_ipseccb_encrypt_t* ipseccb_pd)
 
     // Get the base address of IPSEC CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_IPSEC_ESP, 0, 0);
+    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_IPSEC_ESP, 0, 0);
     HAL_TRACE_DEBUG("received offset {:#x}", offset);
     return offset + \
         (ipseccb_pd->ipseccb->cb_id * P4PD_HBM_IPSEC_CB_ENTRY_SIZE);

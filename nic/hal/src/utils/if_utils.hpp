@@ -14,7 +14,7 @@
 #include "nic/hal/plugins/cfg/nw/filter.hpp"
 #include "nic/hal/plugins/cfg/nw/route.hpp"
 #include "nic/hal/pd/pd_api.hpp"
-#include "nic/hal/src/lif/lif.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
 #include "nic/include/ip.hpp"

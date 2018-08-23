@@ -20,6 +20,7 @@ cc_library(
         "//nic:hal_gen_includes",
         "//nic/utils/block_list",
         "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
     ],
 )
 
@@ -42,6 +43,7 @@ cc_library(
         "//nic:spdlog",
         "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
         "//nic/hal/plugins/sfw:firewall_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/hal/plugins/cfg/mcast:mcast_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",

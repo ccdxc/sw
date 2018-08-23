@@ -116,11 +116,9 @@ agent_proto:
 	$(MAKE) -C ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto
 
 plugins:
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) --build_tag_filters=-gtests //nic/hal/plugins/...
     ifeq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) --build_tag_filters=-gtests //nic/hal/plugins/...
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) --build_tag_filters=sharedlib //nic/hal/tls/engine/...
-    else
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/...
     endif
 
 pd: pd_stub
@@ -139,7 +137,7 @@ stage1_DEV: iris_asm asm capmodel build_proto sdk
 stage1: stage1_DEV third-party agent delphi linkmgr
 
 # app building stage
-stage2_DEV: plugins platform pd hal
+stage2_DEV: platform hal pd
 stage2: stage2_DEV swig-cli hntap fte_sim iris-c
 
 # post build stage

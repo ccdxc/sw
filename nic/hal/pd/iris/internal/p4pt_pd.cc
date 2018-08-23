@@ -1,9 +1,9 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif/lif.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/internal/p4pt.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {
@@ -17,11 +17,11 @@ p4pt_pd_init(pd_func_args_t *pd_func_args) {
     uint32_t qid = 0;
 
     uint8_t pgm_offset = 0;
-    int ret = g_lif_manager->GetPCOffset("p4plus", "rxdma_stage0.bin",
+    int ret = lif_manager()->GetPCOffset("p4plus", "rxdma_stage0.bin",
                                          "p4pt_rx_stage0", &pgm_offset);
     HAL_ABORT(ret == 0);
 
-    g_lif_manager->WriteQState(lif_id, 0, qid,
+    lif_manager()->WriteQState(lif_id, 0, qid,
                                (uint8_t *)&pgm_offset, 1);
     return HAL_RET_OK;
 }

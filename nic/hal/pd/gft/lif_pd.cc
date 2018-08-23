@@ -8,7 +8,7 @@
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/p4/gft/include/defines.h"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/hal/src/lif/eth.hpp"
+#include "nic/hal/src/internal/eth.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
 
 namespace hal {

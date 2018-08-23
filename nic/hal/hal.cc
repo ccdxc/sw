@@ -11,7 +11,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "sdk/periodic.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/src/internal/rdma.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -40,9 +40,6 @@ namespace hal {
 // process globals
 // TODO: clean this up and make thread store static to core
 extern bool      gl_super_user;
-
-// TODO_CLEANUP: THIS DOESN'T BELONG HERE !!
-LIFManager *g_lif_manager = nullptr;
 
 //------------------------------------------------------------------------------
 // initialize all the signal handlers
@@ -183,27 +180,30 @@ hal_init (hal_cfg_t *hal_cfg)
     // do HAL state initialization
     HAL_ABORT(hal_state_init(hal_cfg) == HAL_RET_OK);
 
+    // do platform dependent init
+    HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
+    HAL_TRACE_DEBUG("Platform initialization done");
+
     // init fte and hal plugins
     hal::init_plugins(hal_cfg);
 
     // spawn all necessary PI threads
     HAL_ABORT(hal_thread_init(hal_cfg) == HAL_RET_OK);
-    HAL_TRACE_DEBUG("Spawned all HAL threads");
+    HAL_TRACE_DEBUG("Spawned all HAL thread");
 
-    // do platform dependent init
-    HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
-    HAL_TRACE_DEBUG("Platform initialization done");
-
-    // TODO_CLEANUP: this doesn't belong here, why is this outside
-    // hal_state ??? how it this special compared to other global state ??
-    g_lif_manager = new LIFManager();
-
-    // Allocate LIF 0, so that we don't use it later
-    int32_t hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
-    HAL_TRACE_DEBUG("Allocated hw_lif_id:{}", hw_lif_id);
+    // do platform dependent clock delta comp init
+    HAL_ABORT(hal::pd::hal_pd_clock_delta_comp_init(hal_cfg) == HAL_RET_OK);
+    HAL_TRACE_DEBUG("Platform Clock Delta Comp initialization done");
 
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);
+
+    // unless periodic thread is fully initialized and
+    // done calling all plugins' thread init callbacks
+    // we shouldn't spawn FTE threads
+    while (!sdk::lib::periodic_thread_is_ready()) {
+        pthread_yield();
+    }
 
     if (!getenv("DISABLE_FTE") &&
         (hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&

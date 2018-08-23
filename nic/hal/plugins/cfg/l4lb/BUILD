@@ -30,6 +30,7 @@ cc_library(
         "//nic/hal/plugins/cfg/nw:nw_includes",
         "//nic/hal/plugins/sfw:firewall_includes",
         "//nic/hal/plugins/cfg/dos:dos_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/hal/plugins/cfg/aclqos:aclqos_includes",
         "//nic/hal/plugins/cfg/mcast:mcast_includes",
         "//nic/hal/plugins/cfg/telemetry:telemetry_includes",

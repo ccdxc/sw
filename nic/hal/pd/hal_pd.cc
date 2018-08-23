@@ -510,6 +510,18 @@ hal_pd_module_init (hal_cfg_t *hal_cfg)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+hal_pd_clock_delta_comp_init (hal_cfg_t *hal_cfg)
+{
+    pd_clock_delta_comp_args_t          clock_args;
+    pd_func_args_t                      pd_func_args = { 0 };
+
+    pd_func_args.pd_clock_delta_comp = &clock_args;
+    HAL_ABORT(hal_pd_call(PD_FUNC_ID_CLOCK_DELTA_COMP, &pd_func_args) == HAL_RET_OK);
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // PD init routine to
 // - start USD thread that inits the ASIC, which will then start ASIC RW thread
@@ -523,7 +535,6 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     pd_mem_init_phase2_args_t           ph2_args;
     pd_pgm_def_entries_args_t           pgm_def_args;
     pd_pgm_def_p4plus_entries_args_t    pgm_p4p_args;
-    pd_clock_delta_comp_args_t          clock_args;
     pd_func_args_t                      pd_func_args = { 0 };
     sdk::lib::thread                    *hal_thread;
 
@@ -582,9 +593,6 @@ hal_pd_init (hal_cfg_t *hal_cfg)
         HAL_TRACE_ERR("HAL Programming default p4plus entries failed, err : {}", ret);
         goto cleanup;
     }
-
-    pd_func_args.pd_clock_delta_comp = &clock_args;
-    HAL_ABORT(hal_pd_call(PD_FUNC_ID_CLOCK_DELTA_COMP, &pd_func_args) == HAL_RET_OK);
 
     return HAL_RET_OK;
 

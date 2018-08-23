@@ -27,6 +27,7 @@ namespace lib {
 // global timer wheel for periodic thread's use
 sdk::lib::twheel *g_twheel;
 static volatile bool g_twheel_is_running = false;
+static volatile bool g_periodic_thread_ready = false;
 
 // thread local variables
 thread_local timerfd_info_t timerfd_info;
@@ -54,8 +55,8 @@ periodic_thread_init (void *ctxt)
         SDK_TRACE_ERR("Periodic thread failed to intiialize timerfd");
         return NULL;
     }
-
     g_twheel_is_running = true;
+
     return NULL;
 }
 
@@ -68,6 +69,8 @@ periodic_thread_run (void *ctxt)
     uint64_t            missed;
     sdk::lib::thread    *curr_thread = (sdk::lib::thread *)ctxt;
 
+    // mark periodic thread as ready
+    g_periodic_thread_ready = true;
     while (TRUE) {
         // wait for timer to fire
         if (sdk::lib::timerfd_wait(&timerfd_info, &missed) < 0) {
@@ -92,6 +95,15 @@ bool
 periodic_thread_is_running (void)
 {
     return g_twheel_is_running;
+}
+
+//------------------------------------------------------------------------------
+// returns true only if periodic thread is fully initialized
+//------------------------------------------------------------------------------
+bool
+periodic_thread_is_ready (void)
+{
+    return g_periodic_thread_ready;
 }
 
 //------------------------------------------------------------------------------

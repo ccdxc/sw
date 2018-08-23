@@ -15,9 +15,6 @@
 
 namespace hal {
 
-// TODO_CLEANUP - these don't belong here !!
-class LIFManager;
-extern LIFManager *g_lif_manager;
 extern hal::hal_cfg_t g_hal_cfg;
 
 using sdk::lib::thread;

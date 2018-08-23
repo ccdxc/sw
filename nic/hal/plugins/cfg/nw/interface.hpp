@@ -14,7 +14,7 @@
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
-#include "nic/hal/src/lif/lif.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 
 using sdk::lib::ht_ctxt_t;
@@ -323,9 +323,6 @@ if_t *if_lookup_key_or_handle(const InterfaceKeyHandle& key_handle);
 const char *if_spec_keyhandle_to_str(const InterfaceKeyHandle& key_handle);
 const char *if_keyhandle_to_str(if_t *hal_if);
 void if_spec_dump(InterfaceSpec& spec);
-
-void LifGetQState(const QStateGetReq &req, QStateGetResp *resp);
-void LifSetQState(const QStateSetReq &req, QStateSetResp *resp);
 
 hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,
                      lif_hal_info_t *lif_hal_info);

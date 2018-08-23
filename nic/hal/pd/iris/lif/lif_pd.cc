@@ -9,7 +9,7 @@
 #include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/hal/src/lif/eth.hpp"
+#include "nic/hal/src/internal/eth.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 

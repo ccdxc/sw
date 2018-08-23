@@ -490,9 +490,10 @@ cc_library(
         "//nic:spdlog",
         "//nic:grpc_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",
-        "//nic/utils/nat:nat",
+        "//nic/utils/nat:nat_util_includes",
         "//nic/hal/plugins/cfg/l4lb:l4lb_includes",
         "//nic/hal/plugins/cfg/dos:dos_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
     ],
 )
 
@@ -672,6 +673,11 @@ cc_library(
 cc_library(
     name = "libsknobs",
     deps = ["//nic/hal/third-party:libsknobs"],
+)
+
+cc_library(
+    name = "liblif",
+    srcs = ["conf/plugins/lif/liblif.so"],
 )
 
 config_setting(

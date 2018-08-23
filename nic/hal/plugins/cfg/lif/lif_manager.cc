@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 // #include "nic/hal/pd/capri/capri_hbm.hpp"
 

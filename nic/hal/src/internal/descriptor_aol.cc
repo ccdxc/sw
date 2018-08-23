@@ -7,7 +7,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/lif/descriptor_aol.hpp"
+#include "nic/hal/src/internal/descriptor_aol.hpp"
 
 namespace hal {
 

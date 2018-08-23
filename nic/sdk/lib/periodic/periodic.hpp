@@ -23,6 +23,11 @@ namespace lib {
 bool periodic_thread_is_running(void);
 
 //------------------------------------------------------------------------------
+// return true if periodic thread is ready and fully initialized
+//------------------------------------------------------------------------------
+bool periodic_thread_is_ready(void);
+
+//------------------------------------------------------------------------------
 // one time initialization for periodic thread
 //------------------------------------------------------------------------------
 void *periodic_thread_init(void *ctxt);

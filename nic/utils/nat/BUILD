@@ -4,10 +4,23 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
-    name = "nat",
-    srcs = glob(["*.cc"]),
+    name = "nat_util_includes",
     hdrs = glob(["*.hpp"]),
     deps = [
+        "//nic/include:base_includes",
+        "//nic:spdlog",
+        "//nic:hal_gen_includes",
+        "//nic/hal:hal_includes",
+        #"//nic/hal/lib:hal_lib",
+        #"@sdk//obj:sdk_ht",
+        #"@sdk//obj:sdk_slab",
+    ],
+)
+cc_library(
+    name = "nat",
+    srcs = glob(["*.cc"]),
+    deps = [
+        ":nat_util_includes",
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic:hal_gen_includes",

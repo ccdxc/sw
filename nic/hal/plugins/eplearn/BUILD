@@ -58,6 +58,7 @@ cc_library(
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",
         "//nic/hal/plugins/cfg/mcast:mcast_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/utils/fsm:fsm",
         "//nic/fte:fte_includes",
         "//nic/include:base_includes",

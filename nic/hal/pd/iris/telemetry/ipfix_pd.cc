@@ -3,10 +3,10 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/lif/lif.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
@@ -146,7 +146,7 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
 
     ipfix_qstate_t qstate = { 0 };
     uint8_t pgm_offset = 0;
-    int ret = g_lif_manager->GetPCOffset("p4plus", "txdma_stage0.bin",
+    int ret = lif_manager()->GetPCOffset("p4plus", "txdma_stage0.bin",
                                          "ipfix_tx_stage0", &pgm_offset);
     HAL_ABORT(ret == 0);
     qstate.pc = pgm_offset;
@@ -164,9 +164,9 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     ipfix_test_init(qstate.flow_hash_index_next, qstate.flow_hash_index_max,
                     export_id);
 
-    g_lif_manager->WriteQState(lif_id, 0, qid,
+    lif_manager()->WriteQState(lif_id, 0, qid,
                                (uint8_t *)&qstate, sizeof(qstate));
-    g_lif_manager->WriteQState(lif_id, 0, qid + 16,
+    lif_manager()->WriteQState(lif_id, 0, qid + 16,
                                (uint8_t *)&qstate, sizeof(qstate));
     return HAL_RET_OK;
 }

@@ -10,7 +10,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/gen/rawr_rxdma/include/rawr_rxdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
@@ -352,7 +352,7 @@ pd_rawrcb_get_base_hw_addr(pd_rawrcb_t* rawrcb_pd)
 
     // Get the base address of RAWR CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
+    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
                                                       APP_REDIR_RAWR_QTYPE, 0);
     HAL_TRACE_DEBUG("RAWRCB received offset {:#x}", offset);
     return offset + \

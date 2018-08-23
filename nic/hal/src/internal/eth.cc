@@ -6,10 +6,10 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/src/lif/eth.hpp"
+#include "nic/hal/src/internal/eth.hpp"
 #include "nic/utils/host_mem/host_mem.hpp"
 
 namespace hal {

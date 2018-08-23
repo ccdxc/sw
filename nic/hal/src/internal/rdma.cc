@@ -7,7 +7,8 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/internal/rdma.hpp"
@@ -25,7 +26,7 @@ const static uint32_t kAllocUnit = 4096;
 uint32_t g_pt_base[MAX_LIFS] = {0};
 
 RDMAManager *g_rdma_manager = nullptr;
-extern LIFManager *g_lif_manager;
+extern LIFManager *lif_manager();
 
 RDMAManager::RDMAManager() {
   pd::pd_get_start_offset_args_t off_args = {0};
@@ -300,7 +301,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     uint64_t            pad_size;
     hal_ret_t           rc;
 
-    LIFQState *qstate = g_lif_manager->GetLIFQState(lif);
+    LIFQState *qstate = lif_manager()->GetLIFQState(lif);
     if (qstate == nullptr)
         return HAL_RET_ERR;
 
@@ -327,7 +328,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     g_pt_base[lif] = 0;
 
     // Fill the CQ info in sram_lif_entry
-    cq_base_addr = g_lif_manager->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_CQ);
+    cq_base_addr = lif_manager()->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_CQ);
     HAL_TRACE_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}, max_cqs: {} log_num_cq_entries: {}",
            __FUNCTION__, __LINE__, lif, cq_base_addr,
            max_cqs, log2(roundup_to_pow_2(max_cqs)));
@@ -1265,8 +1266,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
     memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
     memrev((uint8_t*)&sqcb_p->sqcb2, sizeof(sqcb2_t));
-    g_lif_manager->WriteQState(lif, Q_TYPE_SQ, spec.qp_num(), (uint8_t *)sqcb_p, sizeof(sqcb_t));
-    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_SQ, spec.qp_num()));
+    lif_manager()->WriteQState(lif, Q_TYPE_SQ, spec.qp_num(), (uint8_t *)sqcb_p, sizeof(sqcb_t));
+    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_SQ, spec.qp_num()));
 
     // allocate rqcb
     memset(rqcb_p, 0, sizeof(rqcb_t));
@@ -1374,7 +1375,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial RQCB State", __FUNCTION__, lif);
-    g_lif_manager->WriteQState(lif, Q_TYPE_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
+    lif_manager()->WriteQState(lif, Q_TYPE_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
 
     pd::pd_get_start_offset_args_t off_args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
@@ -1566,14 +1567,14 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 
     // Read sqcb from HW
     memset(sqcb_p, 0, sizeof(sqcb_t));
-    g_lif_manager->ReadQState(lif, Q_TYPE_SQ, qp_num, (uint8_t *)sqcb_p, sizeof(sqcb_t));
+    lif_manager()->ReadQState(lif, Q_TYPE_SQ, qp_num, (uint8_t *)sqcb_p, sizeof(sqcb_t));
     memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
     memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
     memrev((uint8_t*)&sqcb_p->sqcb2, sizeof(sqcb2_t));
 
     // Read rqcb from HW
     memset(rqcb_p, 0, sizeof(rqcb_t));
-    g_lif_manager->ReadQState(lif, Q_TYPE_RQ, qp_num, (uint8_t *)rqcb_p, sizeof(rqcb_t));
+    lif_manager()->ReadQState(lif, Q_TYPE_RQ, qp_num, (uint8_t *)rqcb_p, sizeof(rqcb_t));
     memrev((uint8_t*)&rqcb_p->rqcb0, sizeof(rqcb0_t));
     memrev((uint8_t*)&rqcb_p->rqcb1, sizeof(rqcb1_t));
 
@@ -1661,12 +1662,12 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
     memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
     memrev((uint8_t*)&sqcb_p->sqcb2, sizeof(sqcb2_t));
-    g_lif_manager->WriteQState(lif, Q_TYPE_SQ, spec.qp_num(), (uint8_t *)sqcb_p, sizeof(sqcb_t));
+    lif_manager()->WriteQState(lif, Q_TYPE_SQ, spec.qp_num(), (uint8_t *)sqcb_p, sizeof(sqcb_t));
 
     // Convert and write RQCB to HBM
     memrev((uint8_t*)&rqcb_p->rqcb0, sizeof(rqcb0_t));
     memrev((uint8_t*)&rqcb_p->rqcb1, sizeof(rqcb1_t));
-    g_lif_manager->WriteQState(lif, Q_TYPE_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
+    lif_manager()->WriteQState(lif, Q_TYPE_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
 
@@ -1764,8 +1765,8 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
                     __FUNCTION__, lif, cqcb.pt_base_addr, sizeof(cqcb_t));
     // Convert data before writting to HBM
     memrev((uint8_t*)&cqcb, sizeof(cqcb_t));
-    g_lif_manager->WriteQState(lif, Q_TYPE_RDMA_CQ, spec.cq_num(), (uint8_t *)&cqcb, sizeof(cqcb_t));
-    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_CQ, spec.cq_num()));
+    lif_manager()->WriteQState(lif, Q_TYPE_RDMA_CQ, spec.cq_num(), (uint8_t *)&cqcb, sizeof(cqcb_t));
+    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_CQ, spec.cq_num()));
 
     rsp->set_api_status(types::API_STATUS_OK);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
@@ -1826,8 +1827,8 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
                     __FUNCTION__, lif, sizeof(eqcb_t));
     // Convert data before writting to HBM
     memrev((uint8_t*)&eqcb, sizeof(eqcb_t));
-    g_lif_manager->WriteQState(lif, Q_TYPE_RDMA_EQ, spec.eq_id(), (uint8_t *)&eqcb, sizeof(eqcb_t));
-    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_EQ, spec.eq_id()));
+    lif_manager()->WriteQState(lif, Q_TYPE_RDMA_EQ, spec.eq_id(), (uint8_t *)&eqcb, sizeof(eqcb_t));
+    HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__, lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_EQ, spec.eq_id()));
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
 
@@ -1865,7 +1866,7 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     aqcb.aq_id = spec.aq_num();
     aqcb.phy_base_addr = spec.phy_base_addr();
     aqcb.cq_id = spec.cq_num();
-    aqcb.cqcb_addr = g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_CQ, spec.cq_num());
+    aqcb.cqcb_addr = lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_CQ, spec.cq_num());
     
     aqcb.proxy_pindex = 0;
 
@@ -1881,10 +1882,10 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
                     __FUNCTION__, lif, aqcb.phy_base_addr, sizeof(aqcb_t));
     // Convert data before writting to HBM
     memrev((uint8_t*)&aqcb, sizeof(aqcb_t));
-    g_lif_manager->WriteQState(lif, Q_TYPE_ADMINQ, spec.aq_num(),
+    lif_manager()->WriteQState(lif, Q_TYPE_ADMINQ, spec.aq_num(),
                                (uint8_t *)&aqcb, sizeof(aqcb_t));
     HAL_TRACE_DEBUG("{}: QstateAddr = {:#x}\n", __FUNCTION__,
-                    g_lif_manager->GetLIFQStateAddr(lif, Q_TYPE_ADMINQ, spec.aq_num()));
+                    lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_ADMINQ, spec.aq_num()));
 
     rsp->set_api_status(types::API_STATUS_OK);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");

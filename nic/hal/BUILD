@@ -71,7 +71,6 @@ cc_library(
     glob(["src/stats/*.cc"]) +
     glob(["src/debug/*.cc"]) +
     glob(["src/internal/*.cc"]) +
-    glob(["src/lif/*.cc"]) +
     glob(["src/utils/*.cc"]),
     hdrs = [
         "hal.hpp",
@@ -79,7 +78,6 @@ cc_library(
     glob(["src/stats/*.hpp"]) +
     glob(["src/debug/*.hpp"]) +
     glob(["src/internal/*.hpp"]) +
-    glob(["src/lif/*.hpp"]) +
     glob(["src/utils/*.hpp"]) +
     glob(["src/export/*.hpp"]),
     copts = sdk_copts,
@@ -110,6 +108,7 @@ cc_library(
         "//nic/hal/plugins/cfg/ipsec:ipsec_includes",
         "//nic/hal/plugins/cfg/tcp_proxy:tcp_proxy_includes",
         "//nic/hal/plugins/cfg/tls_proxy:tls_proxy_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/hal/plugins/cfg/gft:gft_includes",
         "//nic/hal/tls:tls_api",
         "//nic/include:base_includes",
@@ -135,6 +134,7 @@ cc_library(
         "//nic/hal/plugins/cfg/ipsec:ipsec",
         "//nic/hal/plugins/cfg/tcp_proxy:tcp_proxy",
         "//nic/hal/plugins/cfg/tls_proxy:tls_proxy",
+        "//nic:liblif",
         "//nic/hal/plugins/cfg/mcast:mcast",
         "//nic/hal/plugins/cfg/telemetry:telemetry",
         "//nic/hal/plugins/cfg/dos:dos",
@@ -158,9 +158,9 @@ cc_library(
         glob(["src/stats/*.hpp"]) +
         glob(["src/debug/*.hpp"]) +
         glob(["src/internal/*.hpp"]) +
-        glob(["src/lif/*.hpp"]) +
         glob(["plugins/sfw/cfg/*.hpp"]) +
-        glob(["src/ipsec/*.hpp"]) +
+        glob(["plugins/cfg/firewall/*.hpp"]) +
+        glob(["plugins/cfg/ipsec/*.hpp"]) +
         glob(["src/tcp_proxy/*.hpp"]) +
         glob(["src/tls_proxy/*.hpp"]) +
         glob(["src/utils/*.hpp"]) +
@@ -168,6 +168,7 @@ cc_library(
         glob(["plugins/cfg/telemetry/*.hpp"]) +
         glob(["plugins/cfg/nat/*.hpp"]) +
         glob(["plugins/cfg/mcast/*.hpp"]) +
+        glob(["plugins/cfg/lif/*.hpp"]) +
         glob(["src/export/*.hpp"]),
     deps = [
         "//nic/hal/core:core_includes",

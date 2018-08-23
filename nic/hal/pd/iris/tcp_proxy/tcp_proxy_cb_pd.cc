@@ -15,7 +15,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/app_redir_shared.h"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
@@ -339,7 +339,7 @@ uint64_t tcp_proxy_cb_pd_serq_prod_ci_addr_get(uint32_t qid)
 {
     uint64_t addr;
 
-    addr = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0,
+    addr = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0,
             qid) + (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_READ_TX2RX);
     // offsetof does not work on bitfields
     //addr += offsetof(common_p4plus_stage0_app_header_table_read_tx2rx_d, serq_cidx);
@@ -754,7 +754,7 @@ tcp_proxy_cb_p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcp_proxy_cb_t* tcp_proxy_
     if(!del) {
         uint64_t tls_stage0_addr;
 
-        tls_stage0_addr = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
+        tls_stage0_addr = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
                     tcp_proxy_cb_pd->tcp_proxy_cb->other_qid);
         data.sesq_ci_addr =
             htonl(tls_stage0_addr + pd_tlscb_sesq_ci_offset_get());
@@ -1166,7 +1166,7 @@ pd_tcp_proxy_cb_get_base_hw_index(pd_tcp_proxy_cb_t* tcp_proxy_cb_pd)
 
     // Get the base address of TCP CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0,
+    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0,
                     tcp_proxy_cb_pd->tcp_proxy_cb->cb_id);
     HAL_TRACE_DEBUG("received offset {:#x}", offset);
     return offset;

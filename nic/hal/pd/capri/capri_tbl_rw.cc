@@ -391,7 +391,8 @@ capri_toeplitz_init (int stage, int stage_tableid)
 }
 
 int
-capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
+capri_p4plus_table_init (hal::hal_cfg_t *hal_cfg,
+                         int stage_apphdr, int stage_tableid_apphdr,
                          int stage_apphdr_ext, int stage_tableid_apphdr_ext,
                          int stage_apphdr_off, int stage_tableid_apphdr_off,
                          int stage_apphdr_ext_off, int stage_tableid_apphdr_ext_off,
@@ -402,8 +403,6 @@ capri_p4plus_table_init (int stage_apphdr, int stage_tableid_apphdr,
     cap_te_csr_t *te_csr = NULL;
     uint64_t capri_action_p4plus_asm_base;
 
-    hal::hal_cfg_t *hal_cfg =
-                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
     HAL_ASSERT(hal_cfg);
 
     // Resolve the p4plus rxdma stage 0 program to its action pc

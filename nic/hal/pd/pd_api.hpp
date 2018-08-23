@@ -32,7 +32,7 @@
 #include "nic/hal/src/internal/proxyccb.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
-#include "nic/hal/src/lif/lif_manager_base.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager_base.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/gen/proto/hal/crypto_apis.grpc.pb.h"

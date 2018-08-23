@@ -7,7 +7,7 @@
 #ifndef _LIF_MANAGER_HPP_
 #define _LIF_MANAGER_HPP_
 
-#include "nic/hal/src/lif/lif_manager_base.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager_base.hpp"
 #include <memory>
 #include <map>
 

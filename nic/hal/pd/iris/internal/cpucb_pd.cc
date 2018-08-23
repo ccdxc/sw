@@ -9,7 +9,7 @@
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/gen/cpu_rxdma/include/cpu_rxdma_p4plus_ingress.h"
 #include "nic/gen/cpu_txdma/include/cpu_txdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
@@ -292,7 +292,7 @@ pd_cpucb_get_base_hw_index(pd_cpucb_t* cpucb_pd)
 
     // Get the base address of CPU CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_CPU, 0, 0);
+    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_CPU, 0, 0);
     HAL_TRACE_DEBUG("received offset {:#x}", offset);
     return offset + \
         (cpucb_pd->cpucb->cb_id * P4PD_HBM_CPU_CB_ENTRY_SIZE);

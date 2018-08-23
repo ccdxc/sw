@@ -6,8 +6,8 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
 #include "sdk/ht.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 
 namespace hal {
 
@@ -385,7 +385,7 @@ if_allocate_hwlif_id (void)
 {
     int32_t hw_lif_id = -1;
 
-    hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
+    hw_lif_id = lif_manager()->LIFRangeAlloc(-1, 1);
     if (hw_lif_id < 0) {
         HAL_TRACE_ERR("Failed to allocate hw_lif_id : {}", hw_lif_id);
         return INVALID_INDEXER_INDEX;
@@ -523,7 +523,7 @@ lif_get_total_qcount (uint32_t hw_lif_id)
 {
     uint32_t total_qcount = 0, i = 0;
 
-    LIFQState *qstate = g_lif_manager->GetLIFQState(hw_lif_id);
+    LIFQState *qstate = lif_manager()->GetLIFQState(hw_lif_id);
 
     if (qstate == NULL)
         goto end;

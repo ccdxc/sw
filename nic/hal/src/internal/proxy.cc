@@ -11,7 +11,8 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/app_redir_shared.h"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/hal/src/internal/rawrcb.hpp"
@@ -568,7 +569,7 @@ hal_proxy_svc_init(void)
     hal_ret_t       ret = HAL_RET_OK;
 
     // Reserve Service LIFs
-    if(g_lif_manager->LIFRangeAlloc(SERVICE_LIF_START, (SERVICE_LIF_END - SERVICE_LIF_START))
+    if(lif_manager()->LIFRangeAlloc(SERVICE_LIF_START, (SERVICE_LIF_END - SERVICE_LIF_START))
             <= 0)
     {
         HAL_TRACE_ERR("Failed to reserve service LIF");

@@ -9,7 +9,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/hal/src/lif/lif_manager.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/include/app_redir_shared.h"
@@ -431,7 +431,7 @@ pd_tlscb_get_base_hw_index(pd_tlscb_t* tlscb_pd)
 
     // Get the base address of TLS CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
+    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
             tlscb_pd->tlscb->cb_id);
     HAL_TRACE_DEBUG("received offset 0x{:x}", offset);
     return offset;

@@ -15,6 +15,7 @@ cc_library(
         "//nic/include:base_includes",
         "//nic:spdlog",
         "//nic/hal/plugins/eplearn:eplearn_includes",
+        "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/hal:hal_includes",
         "//nic:gen_proto_includes",
      ],
