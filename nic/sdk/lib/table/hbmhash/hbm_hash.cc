@@ -297,7 +297,7 @@ HbmHash::insert(void *key, void *data, uint32_t *index)
     rs = alloc_entry_index_(&fe_idx);
     if (rs != SDK_RET_OK) goto end;
 
-    hbm_hash_print_bytes(key, key_len_);
+    //hbm_hash_print_bytes(key, key_len_);
 
     SDK_TRACE_DEBUG("Insert entry_pi_idx_:%d for tbl_id:%d\n",
                     fe_idx, table_id_);
@@ -388,7 +388,7 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
     rs = alloc_entry_index_(&fe_idx);
     if (rs != SDK_RET_OK) goto end;
 
-    hbm_hash_print_bytes(key, key_len_);
+    //hbm_hash_print_bytes(key, key_len_);
 
     SDK_TRACE_DEBUG("Insert entry_pi_idx:%d for tbl_id:%d\n",
                     fe_idx, table_id_);
