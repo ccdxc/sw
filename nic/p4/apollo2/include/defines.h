@@ -69,7 +69,7 @@
 #define PKTQ_QSTATE \
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host_rings, total_rings, pid, \
     p_index0, c_index0, arm_pindex1, arm_cindex1, sw_pindex0, sw_cindex0, \
-    ring_base0, ring_base1, ring_sz_mask0, ring_sz_mask1
+    ring_base0, ring_base1, ring_size0, ring_size1
 
 #define PKTQ_QSTATE_DVEC_SCRATCH(_scratch_qstate_hdr, _scratch_qstate_txdma_fte_q) \
     modify_field(_scratch_qstate_hdr.pc, pc);                                 \
@@ -90,5 +90,5 @@
     modify_field(_scratch_qstate_txdma_fte_q.sw_cindex0, sw_cindex0);             \
     modify_field(_scratch_qstate_txdma_fte_q.ring_base0, ring_base0);             \
     modify_field(_scratch_qstate_txdma_fte_q.ring_base1, ring_base1);             \
-    modify_field(_scratch_qstate_txdma_fte_q.ring_sz_mask0, ring_sz_mask0);       \
-    modify_field(_scratch_qstate_txdma_fte_q.ring_sz_mask1, ring_sz_mask1)
+    modify_field(_scratch_qstate_txdma_fte_q.ring_size0, ring_size0);             \
+    modify_field(_scratch_qstate_txdma_fte_q.ring_size1, ring_size1)

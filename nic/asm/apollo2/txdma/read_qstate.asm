@@ -19,7 +19,7 @@ read_qstate_info:
     // Increment sw_cindex0
     // update sw_cindex0, unlock
     tblmincri.f d.read_qstate_info_d.sw_cindex0, \
-                    d.{read_qstate_info_d.ring_sz_mask0}.hx, 1
+                    d.{read_qstate_info_d.ring_size0}.hx, 1
 
     add         r2, r2, d.{read_qstate_info_d.ring_base0}.dx
     phvwr       p.txdma_control_control_addr, r2

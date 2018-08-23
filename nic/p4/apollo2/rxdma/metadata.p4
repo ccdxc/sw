@@ -66,6 +66,45 @@ header_type udp_flow_metadata_t {
         udp_flow_qid    : 8;
     }
 }
+header_type toeplitz_seed_t {
+    fields {
+        t_type  : 8;
+        seed    : 320;
+    }
+}
+header_type toeplitz_key0_t {
+    fields {
+        data : 128;
+    }
+}
+header_type toeplitz_key1_t {
+    fields {
+        data : 128;
+    }
+}
+header_type toeplitz_key2_t {
+    fields {
+        data : 64;
+    }
+}
+
+header_type toeplitz_result_t {
+    fields {
+        cpu_qid_hash : 32;
+    }
+}
+
+header_type flow_key_t {
+    fields {
+        pad                 : 12;
+        flow_ktype          : 4;
+        flow_src            : 128;
+        flow_dst            : 128;
+        flow_proto          : 8;
+        flow_dport          : 16;
+        flow_sport          : 16;
+    }
+}
 
 // Phv header instantiation -
 // start with intrinsic followed by p4_to_rxdma..., followed by rxdma metadata
@@ -103,8 +142,28 @@ metadata udp_scratch_metadata_t udp_scratch;
 @pragma dont_trim
 metadata udp_flow_metadata_t    udp_flow_meta;
 
+metadata toeplitz_result_t      hash_results;
+
+@pragma scratch_metadata
+metadata toeplitz_result_t      scratch_hash_results;
+@pragma scratch_metadata
+metadata toeplitz_seed_t        scratch_toeplitz_seed;
+
+@pragma scratch_metadata
+metadata flow_key_t             scratch_flow_key;
 
 @pragma pa_align 512
+// key and seed MUST come from the same flit (h/w req.t)
+metadata toeplitz_key0_t  toeplitz_key0;  // from packet
+metadata toeplitz_key0_t  toeplitz_seed0; // same size as key
+metadata toeplitz_key1_t  toeplitz_key1;  // from packet
+metadata toeplitz_key1_t  toeplitz_seed1; // same size as key
+
+@pragma pa_align 512
+// key and seed MUST come from the same flit (h/w req.t)
+metadata toeplitz_key2_t  toeplitz_key2;  // from packet
+metadata toeplitz_key2_t  toeplitz_seed2; // same size as key
+
 @pragma dont_trim
 metadata doorbell_addr_t    doorbell_addr;
 @pragma dont_trim

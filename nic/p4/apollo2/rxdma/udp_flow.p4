@@ -50,12 +50,12 @@ action udp_flow_info() {
 @pragma hbm_table
 table udp_flow_hash0 {
     reads {
-        p4_to_rxdma_header.udp_flow_ktype   : exact;
-        p4_to_rxdma_header.udp_flow_src     : exact;
-        p4_to_rxdma_header.udp_flow_dst     : exact;
-        p4_to_rxdma_header.udp_flow_proto   : exact;
-        p4_to_rxdma_header.udp_flow_dport   : exact;
-        p4_to_rxdma_header.udp_flow_sport   : exact;
+        p4_to_rxdma_header.flow_ktype   : exact;
+        p4_to_rxdma_header.flow_src     : exact;
+        p4_to_rxdma_header.flow_dst     : exact;
+        p4_to_rxdma_header.flow_proto   : exact;
+        p4_to_rxdma_header.flow_dport   : exact;
+        p4_to_rxdma_header.flow_sport   : exact;
     }
     actions {
         udp_flow_info;
@@ -81,12 +81,12 @@ table udp_flow_overflow0 {
 @pragma hbm_table
 table udp_flow_hash1 {
     reads {
-        p4_to_rxdma_header.udp_flow_ktype   : exact;
-        p4_to_rxdma_header.udp_flow_src     : exact;
-        p4_to_rxdma_header.udp_flow_dst     : exact;
-        p4_to_rxdma_header.udp_flow_proto   : exact;
-        p4_to_rxdma_header.udp_flow_dport   : exact;
-        p4_to_rxdma_header.udp_flow_sport   : exact;
+        p4_to_rxdma_header.flow_ktype   : exact;
+        p4_to_rxdma_header.flow_src     : exact;
+        p4_to_rxdma_header.flow_dst     : exact;
+        p4_to_rxdma_header.flow_proto   : exact;
+        p4_to_rxdma_header.flow_dport   : exact;
+        p4_to_rxdma_header.flow_sport   : exact;
     }
     actions {
         udp_flow_info;
@@ -112,12 +112,12 @@ table udp_flow_overflow1 {
 @pragma hbm_table
 table udp_flow_hash2 {
     reads {
-        p4_to_rxdma_header.udp_flow_ktype   : exact;
-        p4_to_rxdma_header.udp_flow_src     : exact;
-        p4_to_rxdma_header.udp_flow_dst     : exact;
-        p4_to_rxdma_header.udp_flow_proto   : exact;
-        p4_to_rxdma_header.udp_flow_dport   : exact;
-        p4_to_rxdma_header.udp_flow_sport   : exact;
+        p4_to_rxdma_header.flow_ktype   : exact;
+        p4_to_rxdma_header.flow_src     : exact;
+        p4_to_rxdma_header.flow_dst     : exact;
+        p4_to_rxdma_header.flow_proto   : exact;
+        p4_to_rxdma_header.flow_dport   : exact;
+        p4_to_rxdma_header.flow_sport   : exact;
     }
     actions {
         udp_flow_info;
@@ -143,12 +143,12 @@ table udp_flow_overflow2 {
 @pragma hbm_table
 table udp_flow_hash3 {
     reads {
-        p4_to_rxdma_header.udp_flow_ktype   : exact;
-        p4_to_rxdma_header.udp_flow_src     : exact;
-        p4_to_rxdma_header.udp_flow_dst     : exact;
-        p4_to_rxdma_header.udp_flow_proto   : exact;
-        p4_to_rxdma_header.udp_flow_dport   : exact;
-        p4_to_rxdma_header.udp_flow_sport   : exact;
+        p4_to_rxdma_header.flow_ktype   : exact;
+        p4_to_rxdma_header.flow_src     : exact;
+        p4_to_rxdma_header.flow_dst     : exact;
+        p4_to_rxdma_header.flow_proto   : exact;
+        p4_to_rxdma_header.flow_dport   : exact;
+        p4_to_rxdma_header.flow_sport   : exact;
     }
     actions {
         udp_flow_info;
@@ -236,7 +236,7 @@ action read_update_qid(qid) {
 }
 
 control udp_flow_queuing {
-    if (p4_to_rxdma_header.udp_queue_bypass == FALSE) {
+    if (p4_to_rxdma_header.udp_queue_enable == TRUE) {
         if (p4_to_rxdma_header.udp_queue_drain == TRUE) {
             // qid comes from P4 pipeline (preserved)
             apply(udp_q_drain);

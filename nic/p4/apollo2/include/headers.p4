@@ -181,23 +181,23 @@ header_type p4_to_rxdma_header_t {
         l4_dport            : 16;
 
         udp_flow_hash_lkp   : 1;    // Must never be set
-        udp_queue_bypass    : 1;    // False = subject packet to udp flow queueing, could be either flow miss or flow_state == queueing
+        udp_queue_enable    : 1;    // True = subject packet to udp flow queueing, could be either flow miss or flow_state == queueing
         udp_queue_drain     : 1;
         udp_queue_delete    : 1;
         udp_flow_hit        : 1;    // flow hit, flow_state == queuing
-        pad0                : 1;
+        fte_rss_enable      : 1;
         udp_q_counter       : 10;   // packets received while flow entry is in 'queuing' state, 0 indicates flow miss
 
         udp_oflow_index     : 32;
         udp_flow_qid        : 8;    // qid - useful when drain is set
 
         pad2                : 12;
-        udp_flow_ktype      : 4;
-        udp_flow_src        : 128;
-        udp_flow_dst        : 128;
-        udp_flow_proto      : 8;
-        udp_flow_dport      : 16;
-        udp_flow_sport      : 16;
+        flow_ktype          : 4;
+        flow_src            : 128;
+        flow_dst            : 128;
+        flow_proto          : 8;
+        flow_dport          : 16;
+        flow_sport          : 16;
     }
 }
 
@@ -278,7 +278,7 @@ header_type qstate_txdma_fte_q_t {
         sw_cindex0      : 16;
         ring_base0      : 64;
         ring_base1      : 64;
-        ring_sz_mask0   : 16;   // max_pindex-1
-        ring_sz_mask1   : 16;   // max_pindex-1
+        ring_size0      : 16;   // log2(max_pindex)
+        ring_size1      : 16;   // log2(max_pindex)
     }
 }
