@@ -44,6 +44,7 @@ func (s *ssearchSearchBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		"search.Kind":                 apisrvpkg.NewMessage("search.Kind"),
 		"search.KindAggregation":      apisrvpkg.NewMessage("search.KindAggregation"),
 		"search.KindPreview":          apisrvpkg.NewMessage("search.KindPreview"),
+		"search.PolicyMatchEntry":     apisrvpkg.NewMessage("search.PolicyMatchEntry"),
 		"search.PolicySearchRequest":  apisrvpkg.NewMessage("search.PolicySearchRequest"),
 		"search.PolicySearchResponse": apisrvpkg.NewMessage("search.PolicySearchResponse"),
 		"search.SearchQuery":          apisrvpkg.NewMessage("search.SearchQuery"),

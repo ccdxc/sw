@@ -25,6 +25,7 @@ import (
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/search"
+	"github.com/pensando/sw/api/generated/security"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
 	testutils "github.com/pensando/sw/test/utils"
@@ -36,6 +37,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
+	pcache "github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	"github.com/pensando/sw/venice/utils"
@@ -60,9 +62,11 @@ const (
 
 	from       = int32(0)
 	maxResults = int32(50)
-	// objectCount is count of objects to be generated
+	// objectCount is count of objects perk Kind to be generated
 	objectCount int64 = 5
 	eventCount  int64 = 100
+	// SGpolicy object count
+	sgPolicyCount = 3
 )
 
 var (
@@ -100,6 +104,7 @@ type testInfo struct {
 	evtsMgr           *evtsmgr.EventsManager
 	evtsProxy         *evtsproxy.EventsProxy
 	tmpEventsDir      string
+	pcache            pcache.Interface
 }
 
 var tInfo testInfo
@@ -120,8 +125,11 @@ func (tInfo *testInfo) setup(kvstoreConfig *store.Config) error {
 		return fmt.Errorf("elasticsearch cluster not healthy")
 	}
 
+	// Create new policy cache for spyglass
+	tInfo.pcache = pcache.NewCache(tInfo.l)
+
 	// start spyglass finder
-	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", tInfo.mockResolver, tInfo.l)
+	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", tInfo.mockResolver, tInfo.pcache, tInfo.l)
 	if err != nil {
 		return err
 	}
@@ -143,7 +151,7 @@ func (tInfo *testInfo) setup(kvstoreConfig *store.Config) error {
 	}
 
 	// start spygalss indexer
-	idr, _, err := testutils.StartSpyglass("indexer", tInfo.apiServerAddr, tInfo.mockResolver, tInfo.l)
+	idr, _, err := testutils.StartSpyglass("indexer", tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l)
 	if err != nil {
 		return err
 	}
@@ -255,6 +263,10 @@ func getSearchURL() string {
 	return fmt.Sprintf("http://%s/search/v1/query", tInfo.apiGwAddr)
 }
 
+func getPolicySearchURL() string {
+	return fmt.Sprintf("http://%s/search/v1/policy-query", tInfo.apiGwAddr)
+}
+
 // TestSpyglass does e2e test for Spyglass search service
 // - brings up elasticsearch docker
 // - brings up finder gRPC server which is the search backend
@@ -273,7 +285,7 @@ func TestSpyglass(t *testing.T) {
 
 	// cluster bind mounts in local directory. certain filesystems (like vboxsf, nfs) dont support unix binds.
 	os.Chdir("/tmp")
-	cluster := integration.NewClusterV3(t) //create etcd cluster
+	cluster := integration.NewClusterV3(t) //create etcd/memkv cluster
 
 	AssertOk(t, tInfo.setup(&store.Config{
 		Type:    store.KVStoreTypeEtcd,
@@ -291,7 +303,7 @@ func TestSpyglass(t *testing.T) {
 	go recordEvents(tInfo.mockResolver.GetURLs(globals.EvtsProxy)[0], tInfo.tmpEventsDir, eventCount)
 
 	// Validate the index operations counter
-	expectedCount := uint64(3*objectCount + int64(len(Tenants)))
+	expectedCount := uint64(3*objectCount+int64(len(Tenants))) + sgPolicyCount
 	expectedCount += 4 // for cluster, default tenant, auth policy and test user
 	AssertEventually(t,
 		func() (bool, interface{}) {
@@ -325,6 +337,8 @@ func TestSpyglass(t *testing.T) {
 	performSearchTests(t, GetWithURI)
 	performSearchTests(t, GetWithBody)
 	performSearchTests(t, PostWithBody)
+	performPolicySearchTests(t, GetWithBody)
+	performPolicySearchTests(t, PostWithBody)
 
 	// Stop Indexer
 	t.Logf("Stopping indexer ...")
@@ -334,7 +348,7 @@ func TestSpyglass(t *testing.T) {
 	t.Logf("Creating and starting new indexer instance")
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.l)
+			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l)
 			if err != nil {
 				t.Logf("Error creating indexer: %v", err)
 				return false, nil
@@ -364,6 +378,8 @@ func TestSpyglass(t *testing.T) {
 	performSearchTests(t, GetWithURI)
 	performSearchTests(t, GetWithBody)
 	performSearchTests(t, PostWithBody)
+	performPolicySearchTests(t, GetWithBody)
+	performPolicySearchTests(t, PostWithBody)
 	tInfo.idr.Stop()
 	t.Logf("Done with Tests ....")
 }
@@ -768,7 +784,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		{
 			// Precise match on a IP address, part of Network object
 			search.SearchRequest{
-				QueryString: "10.0.1.254",
+				QueryString: "12.0.1.254",
 				From:        from,
 				MaxResults:  maxResults,
 			},
@@ -1644,7 +1660,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 				Query: &search.SearchQuery{
 					Texts: []*search.TextRequirement{
 						&search.TextRequirement{
-							Text: []string{"10.0.1.254"},
+							Text: []string{"12.0.1.254"},
 						},
 					},
 				},
@@ -1668,7 +1684,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		},
 		// Test case for time based query using range operators [gt, gte, lt, lte]
 		{
-			// Query all SmartNIC objects created in the last 60secs using using RFC3339Nano format
+			// Query all SmartNIC objects created in the last 3mins using using RFC3339Nano format
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Kinds: []string{"SmartNIC"},
@@ -1677,7 +1693,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							&fields.Requirement{
 								Key:      "meta.creation-time",
 								Operator: "gte",
-								Values:   []string{time.Now().Add(-300 * time.Second).Format(time.RFC3339Nano)},
+								Values:   []string{time.Now().Add(-3 * time.Minute).Format(time.RFC3339Nano)},
 							},
 							&fields.Requirement{
 								Key:      "meta.creation-time",
@@ -1710,7 +1726,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			nil,
 		},
 		{
-			// Query all Tenant objects modified in the last 60secs using RFC3339Nano format
+			// Query all Tenant objects modified in the last 3mins using RFC3339Nano format
 			search.SearchRequest{
 				Query: &search.SearchQuery{
 					Kinds: []string{"Tenant"},
@@ -1719,7 +1735,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							&fields.Requirement{
 								Key:      "meta.mod-time",
 								Operator: "gte",
-								Values:   []string{time.Now().Add(-300 * time.Second).Format(time.RFC3339Nano)},
+								Values:   []string{time.Now().Add(-3 * time.Minute).Format(time.RFC3339Nano)},
 							},
 							&fields.Requirement{
 								Key:      "meta.mod-time",
@@ -1996,7 +2012,9 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
+						start := time.Now().UTC()
 						_, err = restcl.Req("GET", searchURL, nil, &resp)
+						t.Logf("@@@ Search response time: %+v\n", time.Since(start))
 					} else {
 						// Query using Body - via POST, GET
 						var httpMethod string
@@ -2009,19 +2027,21 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							httpMethod = "GET"
 						}
 
-						t.Logf("@@@ %s Query Body: %+v\n", httpMethod, tc.query)
+						t.Logf("@@@ Search request [%s] Body: %+v\n", httpMethod, tc.query)
 						searchURL = getSearchURL()
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
+						start := time.Now().UTC()
 						_, err = restcl.Req(httpMethod, searchURL, &tc.query, &resp)
+						t.Logf("@@@ Search response time: %+v\n", time.Since(start))
 					}
 
 					if (err != nil && tc.err == nil) ||
 						(err == nil && tc.err != nil) ||
 						(err != nil && tc.err != nil && err.Error() != tc.err.Error()) {
-						t.Logf("## Search request URL: %s didn't match expected error, expected:%+v actual:%+v",
-							searchURL, tc.err, err)
+						t.Logf("@@@ Search response didn't match expected error, expected:%+v actual:%+v",
+							tc.err, err)
 						return false, nil
 					}
 
@@ -2171,6 +2191,635 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 	}
 }
 
+// Execute policy search test cases
+func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
+
+	t.Logf("@@@ performPolicySearchTests, method: %d", searchMethod)
+
+	// Testcases for various queries on config objects
+	queryTestcases := []struct {
+		desc     string
+		request  search.PolicySearchRequest
+		response search.PolicySearchResponse
+	}{
+		{
+			// Empty request
+			"Empty Request",
+			search.PolicySearchRequest{},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// Request with valid tenant alone
+			"Empty Request with Valid Tenant",
+			search.PolicySearchRequest{
+				Tenant: "default",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// Request with non-existent tenant
+			"Empty Request with non-existent Tenant",
+			search.PolicySearchRequest{
+				Tenant: "GoDaddy",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// Request with all any's, should return first match
+			"Any request with specific SGP",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "any",
+				FromIPAddress: "any",
+				ToIPAddress:   "any",
+				SGPolicy:      "sgp-1",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-1": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{
+								"tcp/80",
+								"udp/53",
+							},
+							FromIPAddresses: []string{
+								"172.0.0.1",
+								"172.0.0.2",
+								"10.0.0.1/30",
+							},
+							ToIPAddresses: []string{
+								"229.204.171.210/16",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 0,
+					},
+				},
+			},
+		},
+		{
+			// Match on specific SGPolicy
+			"Exact match on IP, APP and SGP",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/443",
+				FromIPAddress: "37.232.218.135",
+				ToIPAddress:   "37.232.218.136",
+				SGPolicy:      "sgp-1",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-1": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{"tcp/443"},
+							FromIPAddresses: []string{
+								"37.232.218.135/22",
+							},
+							ToIPAddresses: []string{
+								"37.232.218.136/30",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 1,
+					},
+				},
+			},
+		},
+		{
+			// Exact match on IP and APP
+			"Exact match on IP and APP",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "icmp/1000",
+				FromIPAddress: "10.1.1.1",
+				ToIPAddress:   "20.1.1.1",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-1": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{"icmp/1000"},
+							FromIPAddresses: []string{
+								"10.1.1.1",
+							},
+							ToIPAddresses: []string{
+								"20.1.1.1",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 3,
+					},
+				},
+			},
+		},
+		{
+			// Exact match on APP, any on IP
+			"Exact match on APP and Any IP",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/22",
+				FromIPAddress: "1.1.1.1",
+				ToIPAddress:   "2.1.1.1",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-1": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{"tcp/22"},
+							FromIPAddresses: []string{
+								"any",
+							},
+							ToIPAddresses: []string{
+								"any",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 2,
+					},
+				},
+			},
+		},
+		{
+			// Subnet match on FromIP and ToIP
+			"Subnet match on IP",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/80",
+				FromIPAddress: "10.0.0.2",
+				ToIPAddress:   "229.204.172.212",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-1": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{
+								"tcp/80",
+								"udp/53",
+							},
+							FromIPAddresses: []string{
+								"172.0.0.1",
+								"172.0.0.2",
+								"10.0.0.1/30",
+							},
+							ToIPAddresses: []string{
+								"229.204.171.210/16",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 0,
+					},
+				},
+			},
+		},
+		{
+			// Subnet mismatch on From-IP
+			"Subnet mismatch on From-IP",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/80",
+				FromIPAddress: "10.0.0.6",
+				ToIPAddress:   "229.204.172.212",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// Subnet mismatch on To-IP
+			"Subnet mismatch on To-IP",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/80",
+				FromIPAddress: "10.0.0.2",
+				ToIPAddress:   "229.205.1.1",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// Mismatch on Port
+			"Exact match on IP",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "icmp/5000",
+				FromIPAddress: "10.1.1.1",
+				ToIPAddress:   "20.1.1.1",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// Match on SGs #1
+			"Match on SGs #1",
+			search.PolicySearchRequest{
+				Tenant:            "default",
+				App:               "udp/53",
+				FromSecurityGroup: "dns-clients",
+				ToSecurityGroup:   "dns-servers",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-1": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{"udp/53"},
+							FromSecurityGroups: []string{
+								"dns-clients",
+							},
+							ToSecurityGroups: []string{
+								"dns-servers",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 4,
+					},
+				},
+			},
+		},
+		{
+			// Match on SGs #2
+			"Match on SGs #2",
+			search.PolicySearchRequest{
+				Tenant:            "default",
+				App:               "udp/53",
+				FromSecurityGroup: "test-servers",
+				ToSecurityGroup:   "dns-servers",
+				SGPolicy:          "sgp-1",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-1": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{"udp/53"},
+							FromIPAddresses: []string{
+								"any",
+							},
+							FromSecurityGroups: []string{
+								"test-servers",
+							},
+							ToSecurityGroups: []string{
+								"dns-servers",
+							},
+							Action: security.SGRule_DENY.String(),
+						},
+						Index: 5,
+					},
+				},
+			},
+		},
+		{
+			// Match on SGs #3
+			"Match on SGs #3",
+			search.PolicySearchRequest{
+				Tenant:            "default",
+				App:               "tcp/1024",
+				FromSecurityGroup: "web-servers",
+				ToSecurityGroup:   "app-servers",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-2": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{
+								"tcp/1024",
+							},
+							FromSecurityGroups: []string{
+								"web-servers",
+							},
+							ToSecurityGroups: []string{
+								"app-servers",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 0,
+					},
+				},
+			},
+		},
+		{
+			// Match on IP range #1
+			"Match on IP range #1",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/80",
+				FromIPAddress: "30.1.1.1",
+				ToIPAddress:   "40.1.1.10",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-2": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{"tcp/80"},
+							FromIPAddresses: []string{
+								"30.1.1.1-30.1.1.10",
+							},
+							ToIPAddresses: []string{
+								"40.1.1.1-40.1.1.10",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 1,
+					},
+				},
+			},
+		},
+		{
+			// Match on IP range #2
+			"Match on IP range #2",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/80",
+				FromIPAddress: "30.1.1.5",
+				ToIPAddress:   "40.1.1.5",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-2": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{"tcp/80"},
+							FromIPAddresses: []string{
+								"30.1.1.1-30.1.1.10",
+							},
+							ToIPAddresses: []string{
+								"40.1.1.1-40.1.1.10",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 1,
+					},
+				},
+			},
+		},
+		{
+			// Miss on IP range #1
+			"Miss on IP range #1",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/80",
+				FromIPAddress: "30.1.1.5",
+				ToIPAddress:   "40.1.1.20",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// Miss on IP range #2
+			"Miss on IP range #2",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/80",
+				FromIPAddress: "30.1.1.0",
+				ToIPAddress:   "40.1.1.0",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// Miss on IP range #3
+			"Miss on IP range #3",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/80",
+				FromIPAddress: "30.1.1.15",
+				ToIPAddress:   "40.1.1.15",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// No match on Port & IP rules
+			"No Match on IP",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/32000",
+				FromIPAddress: "any",
+				ToIPAddress:   "any",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// No match on Port & SG rules
+			"No Match on SG",
+			search.PolicySearchRequest{
+				Tenant:            "default",
+				App:               "tcp/32000",
+				FromSecurityGroup: "any",
+				ToSecurityGroup:   "any",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// No match on App
+			"No Match on App",
+			search.PolicySearchRequest{
+				Tenant:            "default",
+				App:               "ftp",
+				FromSecurityGroup: "any",
+				ToSecurityGroup:   "any",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+		{
+			// Scale profile, Any match, should match first rule
+			"Scale test with match on any IP",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/1",
+				FromIPAddress: "any",
+				ToIPAddress:   "any",
+				SGPolicy:      "sgp-scale",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-scale": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{"tcp/1"},
+							FromIPAddresses: []string{
+								"10.0.0.0/32",
+							},
+							ToIPAddresses: []string{
+								"20.0.0.0/32",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 0, // zero base
+					},
+				},
+			},
+		},
+		{
+			// Scale profile, match on 35000th rule
+			"Scale test with match on 35001th Rule",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "tcp/35001",
+				FromIPAddress: "10.0.136.184",
+				ToIPAddress:   "any",
+				SGPolicy:      "sgp-scale",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-scale": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{"tcp/35001"},
+							FromIPAddresses: []string{
+								"10.0.136.184/32",
+							},
+							ToIPAddresses: []string{
+								"20.0.136.184/32",
+							},
+							Action: security.SGRule_PERMIT.String(),
+						},
+						Index: 35000, // zero base
+					},
+				},
+			},
+		},
+		{
+			// Scale profile, match on 70000th rule
+			"Scale test with match on 70000th Rule",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "udp/4464",
+				FromIPAddress: "10.1.17.111",
+				ToIPAddress:   "20.1.17.111",
+				SGPolicy:      "sgp-scale",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MATCH.String(),
+				Results: map[string]*search.PolicyMatchEntry{
+					"sgp-scale": &search.PolicyMatchEntry{
+						Rule: &security.SGRule{
+							Apps: []string{"udp/4464"},
+							FromIPAddresses: []string{
+								"10.1.17.111/32",
+							},
+							ToIPAddresses: []string{
+								"20.1.17.111/32",
+							},
+							Action: security.SGRule_DENY.String(),
+						},
+						Index: 69999, // zero base
+					},
+				},
+			},
+		},
+		{
+			// Scale profile, MISS
+			"Scale test MISS with 70k Rule",
+			search.PolicySearchRequest{
+				Tenant:        "default",
+				App:           "udp/80000",
+				FromIPAddress: "10.1.17.111",
+				ToIPAddress:   "20.1.17.111",
+				SGPolicy:      "sgp-scale",
+			},
+			search.PolicySearchResponse{
+				Status: search.PolicySearchResponse_MISS.String(),
+			},
+		},
+
+		// TODO : Add tests for IPv6 addresses.
+	}
+
+	// Execute the Query Testcases
+	for _, tc := range queryTestcases {
+
+		t.Run(tc.desc, func(t *testing.T) {
+			AssertEventually(t,
+				func() (bool, interface{}) {
+
+					// execute search
+					var response search.PolicySearchResponse
+					var searchURL string
+
+					// Query using Body - via POST, GET
+					var httpMethod string
+					switch searchMethod {
+					case GetWithBody:
+						httpMethod = "GET"
+					case PostWithBody:
+						httpMethod = "POST"
+					default:
+						httpMethod = "GET"
+					}
+
+					t.Logf("@@@ PolicySearch request [%s]: %+v\n", httpMethod, tc.request)
+					searchURL = getPolicySearchURL()
+					restcl := netutils.NewHTTPClient()
+					restcl.SetHeader("Authorization", tInfo.authzHeader)
+					start := time.Now().UTC()
+					_, err := restcl.Req(httpMethod, searchURL, &tc.request, &response)
+					t.Logf("@@@ PolicySearch response time: %+v\n", time.Since(start))
+					if err != nil {
+						t.Logf("Http request failed, err: {%+v}", err)
+						return false, nil
+					}
+
+					if tc.response.Status != response.Status {
+						t.Logf("@@@ PolicySearch result status didn't match, expected: %s actual: %s",
+							tc.response.Status, response.Status)
+						return false, nil
+					}
+
+					if tc.response.Status == search.PolicySearchResponse_MATCH.String() {
+
+						if len(tc.response.Results) != len(response.Results) {
+							t.Logf("@@@ PolicySearch result entry count didn't match, expected: %d actual: %d",
+								len(tc.response.Results), len(response.Results))
+							return false, nil
+						}
+
+						// Iterate over expected results
+						for name, eEntry := range tc.response.Results {
+
+							// validate actual result obtained
+							aEntry, ok := response.Results[name]
+							if !ok {
+								t.Logf("@@@ PolicySearch required SGP object not found, obj: %s", name)
+								return false, nil
+							}
+							if eEntry.Index != aEntry.Index {
+								t.Logf("@@@ PolicySearch SGrule mismatch SGP object: %s expected: %d actual: %d",
+									name, eEntry.Index, aEntry.Index)
+								return false, nil
+							}
+						}
+					}
+					return true, nil
+				}, fmt.Sprintf("Query failed for: %s", tc.desc), "100ms", "1m")
+		})
+	}
+}
+
 func TestMain(m *testing.M) {
 
 	rand.Seed(time.Now().UnixNano())
@@ -2179,7 +2828,7 @@ func TestMain(m *testing.M) {
 	logConfig := &log.Config{
 		Module:      "search-integ-test",
 		Format:      log.LogFmt,
-		Filter:      log.AllowAllFilter,
+		Filter:      log.AllowInfoFilter,
 		Debug:       false,
 		CtxSelector: log.ContextAll,
 		LogToStdout: true,

@@ -195,6 +195,26 @@ func recordEvents(proxyURL, eventsDir string, eventCount int64) {
 	}
 }
 
+func createSGPolicy(tenant, namespace, name string, rules []*security.SGRule) *security.SGPolicy {
+	// SGPolicy object
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind:       "SGPolicy",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules:        rules,
+		},
+	}
+	return &sgp
+}
+
 // PolicyGenerator is a helper function that creates config/policy
 // objects in API-server
 func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount int64) {
@@ -232,8 +252,8 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		netObj := createNetwork(Tenants[i%2],
 			Namespaces[i%2],
 			fmt.Sprintf("net%02x", i),
-			fmt.Sprintf("10.%x.%x.0/24", i/256, i%256),
-			fmt.Sprintf("10.%x.%x.254", i/256, i%256))
+			fmt.Sprintf("12.%x.%x.0/24", i/256, i%256),
+			fmt.Sprintf("12.%x.%x.254", i/256, i%256))
 		log.Infof("Creating Network uuid: %s name: %s", netObj.ObjectMeta.UUID, netObj.Name)
 		if _, err := apiClient.NetworkV1().Network().Create(ctx, netObj); err != nil {
 			log.Errorf("Failed to create tenant object: %s err: %v", netObj.Name, err)
@@ -248,5 +268,134 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		if _, err := apiClient.SecurityV1().SecurityGroup().Create(ctx, sg); err != nil {
 			log.Errorf("Failed to create Security-Group object: %s err: %v", sg.Name, err)
 		}
+	}
+
+	// Create SGPolicy object-1
+	rules1 := []*security.SGRule{
+		// 0
+		&security.SGRule{
+			Apps: []string{
+				"tcp/80",
+				"udp/53",
+			},
+			FromIPAddresses: []string{
+				"172.0.0.1",
+				"172.0.0.2",
+				"10.0.0.1/30",
+			},
+			ToIPAddresses: []string{
+				"229.204.171.210/16",
+			},
+			Action: security.SGRule_PERMIT.String(),
+		},
+		// 1
+		&security.SGRule{
+			Apps: []string{"tcp/443"},
+			FromIPAddresses: []string{
+				"37.232.218.135/22",
+			},
+			ToIPAddresses: []string{
+				"37.232.218.136/30",
+			},
+			Action: security.SGRule_PERMIT.String(),
+		},
+		// 2
+		&security.SGRule{
+			Apps: []string{"tcp/22"},
+			FromIPAddresses: []string{
+				"any",
+			},
+			ToIPAddresses: []string{
+				"any",
+			},
+			Action: security.SGRule_PERMIT.String(),
+		},
+		// 3
+		&security.SGRule{
+			Apps: []string{"icmp/1000"},
+			FromIPAddresses: []string{
+				"10.1.1.1",
+			},
+			ToIPAddresses: []string{
+				"20.1.1.1",
+			},
+			Action: security.SGRule_PERMIT.String(),
+		},
+		// 4
+		&security.SGRule{
+			Apps: []string{"udp/53"},
+			FromSecurityGroups: []string{
+				"dns-clients",
+			},
+			ToSecurityGroups: []string{
+				"dns-servers",
+			},
+			Action: security.SGRule_PERMIT.String(),
+		},
+		// 5
+		&security.SGRule{
+			Apps: []string{"udp/53"},
+			FromSecurityGroups: []string{
+				"test-servers",
+			},
+			ToSecurityGroups: []string{
+				"dns-servers",
+			},
+			Action: security.SGRule_DENY.String(),
+		},
+	}
+	sgp1 := createSGPolicy(globals.DefaultTenant, "", "sgp-1", rules1)
+	log.Infof("\nCreating SGP policy name: %s", sgp1.Name)
+	if _, err := apiClient.SecurityV1().SGPolicy().Create(ctx, sgp1); err != nil {
+		log.Errorf("Failed to create SGPolicy object: %s err: %v", sgp1.Name, err)
+	}
+
+	// Create SGPolicy object-2
+	rules2 := []*security.SGRule{
+		// 0
+		&security.SGRule{
+			Apps: []string{
+				"tcp/1024",
+			},
+			FromSecurityGroups: []string{
+				"web-servers",
+			},
+			ToSecurityGroups: []string{
+				"app-servers",
+			},
+			Action: security.SGRule_PERMIT.String(),
+		},
+		&security.SGRule{
+			Apps: []string{"tcp/80"},
+			FromIPAddresses: []string{
+				"30.1.1.1-30.1.1.10",
+			},
+			ToIPAddresses: []string{
+				"40.1.1.1-40.1.1.10",
+			},
+			Action: security.SGRule_PERMIT.String(),
+		},
+	}
+	sgp2 := createSGPolicy(globals.DefaultTenant, "", "sgp-2", rules2)
+	log.Infof("\nCreating SGP policy name: %s", sgp2.Name)
+	if _, err := apiClient.SecurityV1().SGPolicy().Create(ctx, sgp2); err != nil {
+		log.Errorf("Failed to create SGPolicy object: %s err: %v", sgp2.Name, err)
+	}
+
+	// Create SGPolicy object-3 with 70k rules
+	proto := []string{"tcp", "udp"}
+	actions := []string{security.SGRule_PERMIT.String(), security.SGRule_DENY.String()}
+	rules3 := make([]*security.SGRule, 70000)
+	for i := 0; i < 70000; i++ {
+		rules3[i] = &security.SGRule{
+			Apps:            []string{fmt.Sprintf("%s/%d", proto[i%2], (i+1)%65536)},
+			Action:          actions[i%2],
+			FromIPAddresses: []string{fmt.Sprintf("10.%d.%d.%d/32", (i/(256*256))%256, (i/256)%256, i%256)},
+			ToIPAddresses:   []string{fmt.Sprintf("20.%d.%d.%d/32", (i/(256*256))%256, (i/256)%256, i%256)},
+		}
+	}
+	sgp3 := createSGPolicy(globals.DefaultTenant, "", "sgp-scale", rules3)
+	if _, err := apiClient.SecurityV1().SGPolicy().Create(ctx, sgp3); err != nil {
+		log.Errorf("Failed to create SGPolicy object: %s err: %v", sgp3.Name, err)
 	}
 }

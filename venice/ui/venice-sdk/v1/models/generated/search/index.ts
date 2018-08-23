@@ -23,6 +23,7 @@ export * from './protobuf-any.model';
 export * from './search-entry.model';
 export * from './search-entry-list.model';
 export * from './search-error.model';
+export * from './search-policy-match-entry.model';
 export * from './search-policy-search-request.model';
 export * from './search-policy-search-response.model';
 export * from './search-search-query.model';

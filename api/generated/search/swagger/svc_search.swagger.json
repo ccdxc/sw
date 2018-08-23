@@ -31,35 +31,42 @@
         "parameters": [
           {
             "name": "tenant",
-            "description": "Tenant Name, to perform query within a Tenant's scope.\nThis is an optional field, specified by user. In the backend\nthis field gets auto-filled \u0026 validated by apigw-hook based on\nuser login context.",
+            "description": "Tenant Name, to perform query within a Tenant's scope.\nThe default tenant is \"default\". In the backend\nthis field gets auto-filled \u0026 validated by apigw-hook\nbased on user login context.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "Namespace is optional. If provided policy-search will\nbe limited to the specified namespace.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "sg-policy",
-            "description": "SGPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object.",
+            "description": "SGPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "app",
-            "description": "App specification, proto/port format, or predefined apps and alg config.",
+            "description": "App specification, proto/port format, or predefined apps and alg config\neg: tcp/443, udp/53.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "from-ip-address",
-            "description": "Inbound ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses.",
+            "description": "Inbound ip-address, use any to refer to all ipaddresses\neg: 10.1.1.1, any.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "to-ip-address",
-            "description": "Outbound ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses.",
+            "description": "Outbound ip-address, use any to refer to all ipaddresses\neg: 20.1.1.1, any.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -640,28 +647,48 @@
       },
       "description": "KindPreview contains map of search summary (#hits) grouped by Kind."
     },
+    "searchPolicyMatchEntry": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "$ref": "#/definitions/securitySGRule",
+          "title": "Matching SGRule"
+        },
+        "index": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Index of the matching SG rule"
+        }
+      },
+      "description": "PolicyMatchEntry contains the matching SGrule and Index\nwithin the SGPolicy ruleset."
+    },
     "searchPolicySearchRequest": {
       "type": "object",
       "properties": {
         "tenant": {
           "type": "string",
-          "description": "Tenant Name, to perform query within a Tenant's scope.\nThis is an optional field, specified by user. In the backend\nthis field gets auto-filled \u0026 validated by apigw-hook based on\nuser login context."
+          "default": "default",
+          "description": "Tenant Name, to perform query within a Tenant's scope.\nThe default tenant is \"default\". In the backend\nthis field gets auto-filled \u0026 validated by apigw-hook\nbased on user login context."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace is optional. If provided policy-search will\nbe limited to the specified namespace."
         },
         "sg-policy": {
           "type": "string",
-          "description": "SGPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object."
+          "description": "SGPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name."
         },
         "app": {
           "type": "string",
-          "title": "App specification, proto/port format, or predefined apps and alg config"
+          "title": "App specification, proto/port format, or predefined apps and alg config\neg: tcp/443, udp/53"
         },
         "from-ip-address": {
           "type": "string",
-          "title": "Inbound ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses"
+          "title": "Inbound ip-address, use any to refer to all ipaddresses\neg: 10.1.1.1, any"
         },
         "to-ip-address": {
           "type": "string",
-          "title": "Outbound ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses"
+          "title": "Outbound ip-address, use any to refer to all ipaddresses\neg: 20.1.1.1, any"
         },
         "from-security-group": {
           "type": "string",
@@ -686,18 +713,12 @@
           "default": "MATCH",
           "title": "Status of firewall policy search"
         },
-        "sg-policy": {
-          "type": "string",
-          "title": "Matching SG policy name if there is a MATCH"
-        },
-        "rule": {
-          "$ref": "#/definitions/securitySGRule",
-          "title": "Matching SG rule if there is a MATCH"
-        },
-        "index": {
-          "type": "integer",
-          "format": "int64",
-          "title": "Index of the matching SG rule if there is a MATCH"
+        "results": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/searchPolicyMatchEntry"
+          },
+          "description": "Result is Map of \u003cSGPolicy object name, PolicyMatch Entry\u003e."
         }
       },
       "title": "PolicySearchResponse is response to the security/firewall policy search request"

@@ -14,6 +14,7 @@ import (
 
 	apiservice "github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
 	elastic "github.com/pensando/sw/venice/utils/elastic"
@@ -96,6 +97,9 @@ type Indexer struct {
 	// Running status of the indexer
 	// Used by Set/GetRunningStatus() functions
 	runningStatus uint32
+
+	// Policy cache
+	cache cache.Interface
 }
 
 // WatchHandler is handler func for watch events on API-server objects
@@ -108,7 +112,7 @@ type indexRequest struct {
 }
 
 // NewIndexer instantiates a new indexer
-func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interface, logger log.Logger) (Interface, error) {
+func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interface, cache cache.Interface, logger log.Logger) (Interface, error) {
 
 	log.Debugf("Creating Indexer, apiserver-addr: %s", apiServerAddr)
 
@@ -152,6 +156,7 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 		requests:          make([][]*elastic.BulkRequest, maxWriters),
 		done:              make(chan bool),
 		count:             0,
+		cache:             cache,
 	}
 
 	log.Infof("Created new indexer: {%+v}", &indexer)

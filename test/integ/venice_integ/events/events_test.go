@@ -334,7 +334,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	defer ti.teardown()
 
 	// start spyglass (backend service for events)
-	fdrTemp, fdrAddr, err := testutils.StartSpyglass("finder", "", ti.mockResolver, ti.logger)
+	fdrTemp, fdrAddr, err := testutils.StartSpyglass("finder", "", ti.mockResolver, nil, ti.logger)
 	AssertOk(t, err, "failed to start spyglass finder")
 	fdr := fdrTemp.(finder.Interface)
 	defer fdr.Stop()

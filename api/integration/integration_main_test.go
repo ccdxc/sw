@@ -97,6 +97,7 @@ func startSpyglass() finder.Interface {
 	fdr, err := finder.NewFinder(context.Background(),
 		"localhost:0",
 		rsr,
+		nil,
 		tinfo.l)
 	if err != nil {
 		log.Errorf("Error creating finder: %+v", err)

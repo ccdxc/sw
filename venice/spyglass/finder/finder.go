@@ -4,7 +4,6 @@ package finder
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -22,6 +21,7 @@ import (
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/utils"
 	venutils "github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -51,15 +51,17 @@ type Finder struct {
 	rsr           resolver.Interface
 	finderAddr    string
 	rpcServer     *rpckit.RPCServer
+	cache         cache.Interface
 }
 
 // NewFinder instantiates a new finder instance
-func NewFinder(ctx context.Context, finderAddr string, rsr resolver.Interface, logger log.Logger) (Interface, error) {
+func NewFinder(ctx context.Context, finderAddr string, rsr resolver.Interface, cache cache.Interface, logger log.Logger) (Interface, error) {
 
 	fdr := Finder{
 		ctx:        ctx,
 		finderAddr: finderAddr,
 		rsr:        rsr,
+		cache:      cache,
 		logger:     logger,
 	}
 
@@ -327,7 +329,6 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 	// Add Category-Aggregation to Tenant-Aggregation
 	aggTenant = aggTenant.SubAggregation(elastic.CategoryAggKey, aggCategory)
-	fdr.logger.Debugf("Spyglass Aggregation: %+v", aggTenant)
 
 	// Execute Search with required index, query etc
 	result, err := fdr.elasticClient.Search(ctx,
@@ -340,7 +341,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 		in.SortBy,
 		true) // ascending order sort
 	if err != nil {
-		fdr.logger.Errorf("Search failed for query: %v, err:%v", query, err)
+		fdr.logger.Errorf("Search failed for query: %v, result: %+v err: %v", query, result, err)
 		var eType, eReason string
 		if result != nil && result.Error != nil {
 			eType = result.Error.Type
@@ -533,13 +534,6 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	//     }
 	//   }
 
-	// TODO: Remove all the debugs once the search feature is complete.
-	fdr.logger.Debugf("Elastic query result: {%+v}", result)
-	fdr.logger.Debugf("Search hits, len: %d {%+v}",
-		len(result.Hits.Hits), result.Hits.Hits)
-	fdr.logger.Debugf("Search aggregations, len: %d {%+v}",
-		len(result.Aggregations), result.Aggregations)
-
 	// Marshall the elasticDB response and populate the SearchResult
 	var resp search.SearchResponse
 	resp.TotalHits = result.Hits.TotalHits
@@ -555,18 +549,11 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 			if err == nil {
 
 				databytes := []byte(jsondata)
-				fdr.logger.Debugf("Search hits result - raw string: %d {%s}", i, string(databytes))
-
-				str, _ := base64.StdEncoding.DecodeString(string(databytes))
-				fdr.logger.Debugf("Search hits result - base64 string: %d {%s}", i, string(str))
-
 				e := search.Entry{}
 				err = json.Unmarshal([]byte(databytes), &e)
 				if err != nil {
 					fdr.logger.Errorf("Error unmarshalling json data to search.entry : %+v", err)
 				}
-
-				fdr.logger.Debugf("Search hits result - entry proto: %d {%+v}", i, e)
 				resp.Entries[i] = &e
 			} else {
 				resp.Entries[i] = nil
@@ -578,9 +565,6 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 	// Deserialize Tenant aggregations
 	if tenantAgg, found := result.Aggregations.Terms(elastic.TenantAggKey); found {
-
-		log.Debugf("Found tenant_agg, : %d", len(result.Aggregations))
-		log.Debugf("tenantAgg Buckets, : %d", len(tenantAgg.Buckets))
 
 		if in.Mode == search.SearchRequest_Full.String() {
 			resp.AggregatedEntries = &search.TenantAggregation{
@@ -596,12 +580,8 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 		for _, tenantBucket := range tenantAgg.Buckets {
 
-			log.Debugf("tenant key : %s", tenantBucket.Key.(string))
-
 			// Deserialize Category aggregations
 			if categoryAgg, found := tenantBucket.Terms(elastic.CategoryAggKey); found {
-
-				log.Debugf("categoryAgg Buckets, : %d", len(categoryAgg.Buckets))
 
 				if in.Mode == search.SearchRequest_Full.String() {
 					resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)] = &search.CategoryAggregation{
@@ -617,12 +597,8 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 				for _, categoryBucket := range categoryAgg.Buckets {
 
-					log.Debugf("category key : %s", categoryBucket.Key.(string))
-
 					// Deserialize Kind aggregations
 					if kindAgg, found := categoryBucket.Terms(elastic.KindAggKey); found {
-
-						log.Debugf("kindAgg Buckets, : %d", len(kindAgg.Buckets))
 
 						if in.Mode == search.SearchRequest_Full.String() {
 							resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)] = &search.KindAggregation{
@@ -638,14 +614,10 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 						for _, kindBucket := range kindAgg.Buckets {
 
-							log.Debugf("kind key : %s", kindBucket.Key.(string))
-
 							// Deserialize Top hits aggregations
 							if topHits, ok := kindBucket.TopHits(string(elastic.TopHitsKey)); ok {
 
 								hits := topHits.Hits.Hits
-								log.Debugf("hits per kind : %d", len(hits))
-
 								if in.Mode == search.SearchRequest_Full.String() {
 									resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)] = &search.EntryList{
 										Entries: make([]*search.Entry, len(hits)),
@@ -657,19 +629,12 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 										if err == nil {
 
 											databytes := []byte(jsondata)
-											fdr.logger.Debugf("Agg Search hits result - raw string: %d {%s}", i, string(databytes))
-
-											str, _ := base64.StdEncoding.DecodeString(string(databytes))
-											fdr.logger.Debugf("Agg Search hits result - base64 string: %d {%s}", i, string(str))
-
 											e := search.Entry{}
 											err = json.Unmarshal([]byte(databytes), &e)
 											if err != nil {
 												fdr.logger.Errorf("Error unmarshalling Agg json data to search.entry : %+v", err)
 											}
 
-											log.Debugf("Entry: %d %s", i, e.GetName())
-											log.Debugf("Agg Search hits result - entry proto: %d {%+v}", i, e)
 											resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = &e
 										} else {
 											resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = nil
@@ -736,6 +701,8 @@ func (fdr *Finder) GetListenURL() string {
 // PolicyQuery is the handler for security policy search query
 func (fdr *Finder) PolicyQuery(ctx context.Context, in *search.PolicySearchRequest) (*search.PolicySearchResponse, error) {
 
-	// TODO: Fill in handler
-	return &search.PolicySearchResponse{}, nil
+	fdr.logger.Infof("Policy Search request: {%+v}", *in)
+	resp, err := fdr.cache.SearchPolicy(in)
+	fdr.logger.Infof("Policy Search response: {%+v} err: %v", *resp, err)
+	return resp, err
 }

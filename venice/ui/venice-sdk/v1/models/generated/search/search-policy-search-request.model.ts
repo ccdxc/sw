@@ -10,6 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 export interface ISearchPolicySearchRequest {
     'tenant'?: string;
+    'namespace'?: string;
     'sg-policy'?: string;
     'app'?: string;
     'from-ip-address'?: string;
@@ -21,12 +22,15 @@ export interface ISearchPolicySearchRequest {
 
 export class SearchPolicySearchRequest extends BaseModel implements ISearchPolicySearchRequest {
     /** Tenant Name, to perform query within a Tenant's scope.
-    This is an optional field, specified by user. In the backend
-    this field gets auto-filled & validated by apigw-hook based on
-    user login context. */
+    The default tenant is "default". In the backend
+    this field gets auto-filled & validated by apigw-hook
+    based on user login context. */
     'tenant': string = null;
+    /** Namespace is optional. If provided policy-search will
+    be limited to the specified namespace. */
+    'namespace': string = null;
     /** SGPolicy name is optional. If provided policy-search will
-    be limited to the specified SGpolicy object. */
+    be limited to the specified SGpolicy object name. */
     'sg-policy': string = null;
     'app': string = null;
     'from-ip-address': string = null;
@@ -35,11 +39,16 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
     'to-security-group': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tenant': {
-            description:  'Tenant Name, to perform query within a Tenant&#x27;s scope. This is an optional field, specified by user. In the backend this field gets auto-filled &amp; validated by apigw-hook based on user login context.',
+            default: 'default',
+            description:  'Tenant Name, to perform query within a Tenant&#x27;s scope. The default tenant is &quot;default&quot;. In the backend this field gets auto-filled &amp; validated by apigw-hook based on user login context.',
+            type: 'string'
+        },
+        'namespace': {
+            description:  'Namespace is optional. If provided policy-search will be limited to the specified namespace.',
             type: 'string'
         },
         'sg-policy': {
-            description:  'SGPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object.',
+            description:  'SGPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object name.',
             type: 'string'
         },
         'app': {
@@ -91,6 +100,11 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
         } else if (SearchPolicySearchRequest.hasDefaultValue('tenant')) {
             this['tenant'] = SearchPolicySearchRequest.propInfo['tenant'].default;
         }
+        if (values && values['namespace'] != null) {
+            this['namespace'] = values['namespace'];
+        } else if (SearchPolicySearchRequest.hasDefaultValue('namespace')) {
+            this['namespace'] = SearchPolicySearchRequest.propInfo['namespace'].default;
+        }
         if (values && values['sg-policy'] != null) {
             this['sg-policy'] = values['sg-policy'];
         } else if (SearchPolicySearchRequest.hasDefaultValue('sg-policy')) {
@@ -130,6 +144,7 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'tenant': new FormControl(this['tenant']),
+                'namespace': new FormControl(this['namespace']),
                 'sg-policy': new FormControl(this['sg-policy']),
                 'app': new FormControl(this['app']),
                 'from-ip-address': new FormControl(this['from-ip-address']),
@@ -144,6 +159,7 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
     setFormGroupValues() {
         if (this._formGroup) {
             this._formGroup.controls['tenant'].setValue(this['tenant']);
+            this._formGroup.controls['namespace'].setValue(this['namespace']);
             this._formGroup.controls['sg-policy'].setValue(this['sg-policy']);
             this._formGroup.controls['app'].setValue(this['app']);
             this._formGroup.controls['from-ip-address'].setValue(this['from-ip-address']);

@@ -216,6 +216,31 @@ func (m *KindPreview) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *PolicyMatchEntry) Clone(into interface{}) (interface{}, error) {
+	var out *PolicyMatchEntry
+	var ok bool
+	if into == nil {
+		out = &PolicyMatchEntry{}
+	} else {
+		out, ok = into.(*PolicyMatchEntry)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PolicyMatchEntry) Defaults(ver string) bool {
+	var ret bool
+	if m.Rule != nil {
+		ret = m.Rule.Defaults(ver) || ret
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *PolicySearchRequest) Clone(into interface{}) (interface{}, error) {
 	var out *PolicySearchRequest
 	var ok bool
@@ -233,7 +258,13 @@ func (m *PolicySearchRequest) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *PolicySearchRequest) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Tenant = "default"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -255,8 +286,11 @@ func (m *PolicySearchResponse) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *PolicySearchResponse) Defaults(ver string) bool {
 	var ret bool
-	if m.Rule != nil {
-		ret = m.Rule.Defaults(ver) || ret
+	for k := range m.Results {
+		if m.Results[k] != nil {
+			i := m.Results[k]
+			ret = i.Defaults(ver) || ret
+		}
 	}
 	ret = true
 	switch ver {
@@ -467,12 +501,7 @@ func (m *KindPreview) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *PolicySearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PolicyMatchEntry) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Rule != nil {
 		dlmtr := "."
@@ -481,6 +510,26 @@ func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []e
 		}
 		npath := path + dlmtr + "Rule"
 		if errs := m.Rule.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *PolicySearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Results {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sResults[%d]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}

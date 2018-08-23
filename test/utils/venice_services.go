@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
+	scache "github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
@@ -184,12 +185,12 @@ func StartAPIGateway(serverAddr string, backends map[string]string, skipServices
 }
 
 // StartSpyglass helper function to spyglass finder and indexer
-func StartSpyglass(service, apiServerAddr string, mr *mockresolver.ResolverClient, logger log.Logger) (interface{}, string, error) {
+func StartSpyglass(service, apiServerAddr string, mr *mockresolver.ResolverClient, cache scache.Interface, logger log.Logger) (interface{}, string, error) {
 	switch service {
 	case "finder": // create finder
 		log.Info("starting finder ...")
 		ctx := context.Background()
-		fdr, err := finder.NewFinder(ctx, "localhost:0", mr, logger)
+		fdr, err := finder.NewFinder(ctx, "localhost:0", mr, cache, logger)
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to create finder, err: %v", err)
 		}
@@ -213,7 +214,7 @@ func StartSpyglass(service, apiServerAddr string, mr *mockresolver.ResolverClien
 	case "indexer": // create the indexer
 		log.Info("starting indexer ...")
 		ctx := context.Background()
-		idr, err := indexer.NewIndexer(ctx, apiServerAddr, mr, logger)
+		idr, err := indexer.NewIndexer(ctx, apiServerAddr, mr, cache, logger)
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to create indexer, err: %v", err)
 		}

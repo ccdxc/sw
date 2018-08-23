@@ -17,7 +17,8 @@ type ClusterV3 struct {
 // NewClusterV3 creates and starts a new etcd server and client.
 func NewClusterV3(t *testing.T) *ClusterV3 {
 	cfg := &integration.ClusterConfig{
-		Size: 1,
+		Size:            1,
+		MaxRequestBytes: 100 * 1024 * 1024, // 100 MB
 	}
 	return &ClusterV3{
 		c: integration.NewClusterV3(t, cfg),

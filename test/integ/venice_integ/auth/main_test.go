@@ -104,7 +104,7 @@ func (tInfo *tInfo) setup(kvstoreConfig *store.Config) error {
 	tInfo.mockResolver.AddServiceInstance(si) // add mock elastic service to mock resolver
 
 	// start spyglass finder
-	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", tInfo.mockResolver, tInfo.l)
+	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", tInfo.mockResolver, nil, tInfo.l)
 	if err != nil {
 		return err
 	}

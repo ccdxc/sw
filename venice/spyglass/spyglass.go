@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -54,11 +55,16 @@ func main() {
 	rslr := resolver.New(&resolver.Config{Name: "spyglass",
 		Servers: strings.Split(*resolverAddrs, ",")})
 
+	// Create new policy cache
+	cache := cache.NewCache(logger)
+
 	// Create the finder and associated search endpoint
 	fdr, err := finder.NewFinder(ctx,
 		*finderAddr,
 		rslr,
-		logger)
+		cache,
+		logger,
+	)
 	if err != nil || fdr == nil {
 		log.Fatalf("Failed to create finder, err: %v", err)
 	}
@@ -73,6 +79,7 @@ func main() {
 	idxer, err := indexer.NewIndexer(ctx,
 		*apiServerAddr,
 		rslr,
+		cache,
 		logger)
 
 	if err != nil || idxer == nil {

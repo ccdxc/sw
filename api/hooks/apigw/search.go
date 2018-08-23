@@ -40,7 +40,7 @@ func (e *searchHooks) operations(ctx context.Context, in interface{}) (context.C
 
 func registerSearchHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	r := &searchHooks{logger: l}
-	methods := []string{"Query"}
+	methods := []string{"Query", "PolicyQuery"}
 	for _, method := range methods {
 		prof, err := svc.GetServiceProfile(method)
 		if err != nil {

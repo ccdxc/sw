@@ -382,9 +382,21 @@ func (idr *Indexer) startWriter(id int) {
 				id, ometa.GetName(), req.evType,
 				len(idr.requests[id]))
 
+			// Update Policy cache for SGpolicy objects
+			kind := req.object.(runtime.Object).GetObjectKind()
+			switch kind {
+			case "SGPolicy":
+				idr.logger.Infof("Policy cache update: %s/%s/%s evType: %v",
+					ometa.Tenant,
+					ometa.Namespace,
+					ometa.Name,
+					req.evType)
+				idr.updatePolicyCache(req.object, req.evType)
+			}
+
 			// TODO: Once the category is available in Kind attribute or a new Meta
 			// attribute we will use it here. Until then, it is derived from this map.
-			category := globals.Kind2Category[req.object.(runtime.Object).GetObjectKind()]
+			category := globals.Kind2Category[kind]
 			if category == "" {
 				category = "default"
 			}
@@ -491,4 +503,20 @@ func (idr *Indexer) stopWriters() {
 
 	close(idr.reqChan)
 	idr.logger.Info("Stopped writers")
+}
+
+// Update the policy cache
+func (idr *Indexer) updatePolicyCache(obj interface{}, evType kvstore.WatchEventType) error {
+
+	var err error
+	switch evType {
+	case kvstore.Created:
+		fallthrough
+	case kvstore.Updated:
+		err = idr.cache.UpdateObject(obj)
+	case kvstore.Deleted:
+		err = idr.cache.DeleteObject(obj)
+	}
+
+	return err
 }

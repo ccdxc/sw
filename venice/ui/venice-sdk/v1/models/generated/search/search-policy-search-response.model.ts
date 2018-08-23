@@ -8,35 +8,26 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchPolicySearchResponse_status,  } from './enums';
-import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
 
 export interface ISearchPolicySearchResponse {
     'status'?: SearchPolicySearchResponse_status;
-    'sg-policy'?: string;
-    'rule'?: ISecuritySGRule;
-    'index'?: number;
+    'results'?: object;
 }
 
 
 export class SearchPolicySearchResponse extends BaseModel implements ISearchPolicySearchResponse {
     'status': SearchPolicySearchResponse_status = null;
-    'sg-policy': string = null;
-    'rule': SecuritySGRule = null;
-    'index': number = null;
+    /** Result is Map of <SGPolicy object name, PolicyMatch Entry>. */
+    'results': object = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'status': {
             enum: SearchPolicySearchResponse_status,
             default: 'MATCH',
             type: 'string'
         },
-        'sg-policy': {
-            type: 'string'
-        },
-        'rule': {
+        'results': {
+            description:  'Result is Map of &lt;SGPolicy object name, PolicyMatch Entry&gt;.',
             type: 'object'
-        },
-        'index': {
-            type: 'number'
         },
     }
 
@@ -59,7 +50,6 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
     */
     constructor(values?: any) {
         super();
-        this['rule'] = new SecuritySGRule();
         this.setValues(values);
     }
 
@@ -73,18 +63,10 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
         } else if (SearchPolicySearchResponse.hasDefaultValue('status')) {
             this['status'] = <SearchPolicySearchResponse_status>  SearchPolicySearchResponse.propInfo['status'].default;
         }
-        if (values && values['sg-policy'] != null) {
-            this['sg-policy'] = values['sg-policy'];
-        } else if (SearchPolicySearchResponse.hasDefaultValue('sg-policy')) {
-            this['sg-policy'] = SearchPolicySearchResponse.propInfo['sg-policy'].default;
-        }
-        if (values) {
-            this['rule'].setValues(values['rule']);
-        }
-        if (values && values['index'] != null) {
-            this['index'] = values['index'];
-        } else if (SearchPolicySearchResponse.hasDefaultValue('index')) {
-            this['index'] = SearchPolicySearchResponse.propInfo['index'].default;
+        if (values && values['results'] != null) {
+            this['results'] = values['results'];
+        } else if (SearchPolicySearchResponse.hasDefaultValue('results')) {
+            this['results'] = SearchPolicySearchResponse.propInfo['results'].default;
         }
     }
 
@@ -95,9 +77,7 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'status': new FormControl(this['status'], [enumValidator(SearchPolicySearchResponse_status), ]),
-                'sg-policy': new FormControl(this['sg-policy']),
-                'rule': this['rule'].$formGroup,
-                'index': new FormControl(this['index']),
+                'results': new FormControl(this['results']),
             });
         }
         return this._formGroup;
@@ -106,9 +86,7 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
     setFormGroupValues() {
         if (this._formGroup) {
             this._formGroup.controls['status'].setValue(this['status']);
-            this._formGroup.controls['sg-policy'].setValue(this['sg-policy']);
-            this['rule'].setFormGroupValues();
-            this._formGroup.controls['index'].setValue(this['index']);
+            this._formGroup.controls['results'].setValue(this['results']);
         }
     }
 }
