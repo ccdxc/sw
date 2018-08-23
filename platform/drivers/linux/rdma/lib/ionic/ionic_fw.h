@@ -10,6 +10,54 @@ struct ionic_sge {
 	__be32				lkey;
 };
 
+/* admin queue mr type */
+enum ionic_mr_flags {
+	/* bits that determine mr access */
+	IONIC_MRF_LOCAL_WRITE		= (1u << 0),
+	IONIC_MRF_REMOTE_WRITE		= (1u << 1),
+	IONIC_MRF_REMOTE_READ		= (1u << 2),
+	IONIC_MRF_REMOTE_ATOMIC		= (1u << 3),
+	IONIC_MRF_MW_BIND		= (1u << 4),
+	IONIC_MRF_ZERO_BASED		= (1u << 5),
+	IONIC_MRF_ON_DEMAND		= (1u << 6),
+	IONIC_MRF_ACCESS_MASK		= (1u << 12) - 1,
+
+	/* bits that determine mr type */
+	IONIC_MRF_IS_MW			= (1u << 14),
+	IONIC_MRF_INV_EN		= (1u << 15),
+
+	/* base flags combinations for mr types */
+	IONIC_MRF_USER_MR		= 0,
+	IONIC_MRF_PHYS_MR		= IONIC_MRF_INV_EN,
+	IONIC_MRF_MW_1			= IONIC_MRF_IS_MW,
+	IONIC_MRF_MW_2			= IONIC_MRF_IS_MW | IONIC_MRF_INV_EN,
+};
+
+static inline int to_ionic_mr_flags(int access)
+{
+	int flags = 0;
+
+	if (access & IBV_ACCESS_LOCAL_WRITE)
+		flags |= IONIC_MRF_LOCAL_WRITE;
+
+	if (access & IBV_ACCESS_REMOTE_READ)
+		flags |= IONIC_MRF_REMOTE_READ;
+
+	if (access & IBV_ACCESS_REMOTE_WRITE)
+		flags |= IONIC_MRF_REMOTE_WRITE;
+
+	if (access & IBV_ACCESS_REMOTE_ATOMIC)
+		flags |= IONIC_MRF_REMOTE_ATOMIC;
+
+	if (access & IBV_ACCESS_MW_BIND)
+		flags |= IONIC_MRF_MW_BIND;
+
+	if (access & IBV_ACCESS_ZERO_BASED)
+		flags |= IONIC_MRF_ZERO_BASED;
+
+	return flags;
+}
+
 /* cqe status indicated in status_length field when err bit is set */
 enum ionic_status {
 	IONIC_STS_OK,

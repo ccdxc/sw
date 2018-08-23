@@ -1590,6 +1590,87 @@ static int ionic_v1_prep_atomic(struct ionic_qp *qp,
 	return 0;
 }
 
+static int ionic_v1_prep_inv(struct ionic_qp *qp, struct ibv_send_wr *wr)
+{
+	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
+	struct ionic_sq_meta *meta;
+	struct ionic_v1_send_wqe *wqe;
+
+	if (wr->send_flags & (IBV_SEND_SOLICITED | IBV_SEND_INLINE))
+		return EINVAL;
+
+	meta = &qp->sq_meta[qp->sq.prod];
+	wqe = ionic_queue_at_prod(&qp->sq);
+
+	memset(wqe, 0, 1u << qp->sq.stride_log2);
+
+	wqe->base.op = IONIC_V1_OP_LOCAL_INV;
+	wqe->base.length_key = htobe32(wr->invalidate_rkey);
+
+	/* XXX makeshift will be removed */
+	if (ctx->version != 1 || ctx->opcodes <= wqe->base.op)
+		return EINVAL;
+
+	ionic_v1_prep_base(qp, wr, meta, wqe);
+
+	return 0;
+}
+
+static int ionic_v1_prep_bind(struct ionic_qp *qp, struct ibv_send_wr *wr)
+{
+	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
+	struct ionic_sq_meta *meta;
+	struct ionic_v1_send_wqe *wqe;
+	int flags;
+
+	if (wr->send_flags & (IBV_SEND_SOLICITED | IBV_SEND_INLINE))
+		return EINVAL;
+
+	/* only remote access is allowed */
+	if (wr->bind_mw.bind_info.mw_access_flags &
+	    ~(IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ |
+	      IBV_ACCESS_REMOTE_ATOMIC))
+		return EINVAL;
+
+	/* iff length is given, some kind of access must be allowed */
+	if (!wr->bind_mw.bind_info.length !=
+	    !wr->bind_mw.bind_info.mw_access_flags)
+		return EINVAL;
+
+	/* only type 1 can unbind with zero length */
+	if (!wr->bind_mw.bind_info.length &&
+	    wr->bind_mw.mw->type != IBV_MW_TYPE_1)
+		return EINVAL;
+
+	meta = &qp->sq_meta[qp->sq.prod];
+	wqe = ionic_queue_at_prod(&qp->sq);
+
+	memset(wqe, 0, 1u << qp->sq.stride_log2);
+
+	flags = to_ionic_mr_flags(wr->bind_mw.bind_info.mw_access_flags);
+
+	if (wr->bind_mw.mw->type == IBV_MW_TYPE_1)
+		flags |= IONIC_MRF_MW_1;
+	else
+		flags |= IONIC_MRF_MW_2;
+
+	wqe->base.op = IONIC_V1_OP_BIND_MW;
+	wqe->base.num_sge_key = wr->bind_mw.rkey;
+	wqe->base.flags = htobe16(flags);
+	wqe->base.length_key = htobe32(wr->bind_mw.mw->rkey);
+	wqe->bind_mw.va = htobe64(wr->bind_mw.bind_info.addr);
+	wqe->bind_mw.length = htobe32(wr->bind_mw.bind_info.length);
+	wqe->bind_mw.lkey = htobe32(wr->bind_mw.bind_info.mr->lkey);
+
+	/* XXX makeshift will be removed */
+	if (ctx->version != 1 || ctx->opcodes <= wqe->base.op)
+		return EINVAL;
+
+	ionic_v1_prep_base(qp, wr, meta, wqe);
+
+	return 0;
+}
+
 static int ionic_prep_one_rc(struct ionic_qp *qp,
 			     struct ibv_send_wr *wr)
 {
@@ -1610,6 +1691,15 @@ static int ionic_prep_one_rc(struct ionic_qp *qp,
 	case IBV_WR_ATOMIC_CMP_AND_SWP:
 	case IBV_WR_ATOMIC_FETCH_AND_ADD:
 		rc = ionic_v1_prep_atomic(qp, wr);
+		break;
+	case IBV_WR_LOCAL_INV:
+		rc = ionic_v1_prep_inv(qp, wr);
+		break;
+	case IBV_WR_BIND_MW:
+		if (wr->bind_mw.mw->type != IBV_MW_TYPE_2)
+			rc = EINVAL;
+		else
+			rc = ionic_v1_prep_bind(qp, wr);
 		break;
 	default:
 		ionic_dbg(ctx, "invalid opcode %d", wr->opcode);
@@ -2075,6 +2165,34 @@ static int ionic_destroy_ah(struct ibv_ah *ibah)
 	return 0;
 }
 
+static int ionic_bind_mw(struct ibv_qp *ibqp, struct ibv_mw *ibmw,
+			 struct ibv_mw_bind *bind)
+{
+	struct ionic_qp *qp = to_ionic_qp(ibqp);
+	struct ibv_send_wr wr = {
+		.wr_id = bind->wr_id,
+		.send_flags = bind->send_flags,
+		.bind_mw = {
+			.mw = ibmw,
+			.rkey = ibmw->rkey,
+			.bind_info = bind->bind_info,
+		}
+	};
+	int rc;
+
+	if (ibmw->type != IBV_MW_TYPE_1)
+		return EINVAL;
+
+	if (bind->bind_info.length)
+		wr.bind_mw.rkey = ibv_inc_rkey(ibmw->rkey);
+
+	rc = ionic_v1_prep_bind(qp, &wr);
+	if (!rc)
+		ibmw->rkey = wr.bind_mw.rkey;
+
+	return rc;
+}
+
 const struct verbs_context_ops ionic_ctx_ops = {
 	.create_cq		= ionic_create_cq,
 	.poll_cq		= ionic_poll_cq,
@@ -2094,5 +2212,6 @@ const struct verbs_context_ops ionic_ctx_ops = {
 	.post_send		= ionic_post_send,
 	.post_recv		= ionic_post_recv,
 	.create_ah		= ionic_create_ah,
-	.destroy_ah		= ionic_destroy_ah
+	.destroy_ah		= ionic_destroy_ah,
+	.bind_mw		= ionic_bind_mw,
 };

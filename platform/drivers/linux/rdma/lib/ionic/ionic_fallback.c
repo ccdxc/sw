@@ -445,6 +445,49 @@ static int fallback_destroy_ah(struct ibv_ah *ibah)
 	return 0;
 }
 
+static struct ibv_mw *fallback_alloc_mw(struct ibv_pd *ibpd,
+					enum ibv_mw_type type)
+{
+	struct ibv_mw *ibmw;
+	struct ibv_alloc_mw cmd;
+	struct ib_uverbs_alloc_mw_resp resp;
+	int rc;
+
+	ibmw = calloc(1, sizeof(*ibmw));
+	if (!ibmw) {
+		rc = errno;
+		goto err_mw;
+	}
+
+	rc = ibv_cmd_alloc_mw(ibpd, type, ibmw,
+			      &cmd, sizeof(cmd),
+			      &resp, sizeof(resp));
+	if (rc)
+		goto err_cmd;
+
+	return ibmw;
+
+err_cmd:
+	free(ibmw);
+err_mw:
+	errno = rc;
+	return NULL;
+}
+
+static int fallback_dealloc_mw(struct ibv_mw *ibmw)
+{
+	struct ibv_dealloc_mw cmd;
+	int rc;
+
+	rc = ibv_cmd_dealloc_mw(ibmw, &cmd, sizeof(cmd));
+	if (rc)
+		return rc;
+
+	free(ibmw);
+
+	return 0;
+}
+
 const struct verbs_context_ops fallback_ctx_ops = {
 	.query_device		= fallback_query_device,
 	.query_port		= fallback_query_port,
@@ -472,5 +515,7 @@ const struct verbs_context_ops fallback_ctx_ops = {
 	.post_send		= fallback_post_send,
 	.post_recv		= fallback_post_recv,
 	.create_ah		= fallback_create_ah,
-	.destroy_ah		= fallback_destroy_ah
+	.destroy_ah		= fallback_destroy_ah,
+	.alloc_mw		= fallback_alloc_mw,
+	.dealloc_mw		= fallback_dealloc_mw,
 };
