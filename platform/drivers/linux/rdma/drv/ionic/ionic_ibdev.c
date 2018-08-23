@@ -435,6 +435,10 @@ static void ionic_put_mrid(struct ionic_ibdev *dev, u32 mrid)
 
 static void ionic_put_pgtbl(struct ionic_ibdev *dev, u32 pos, int order)
 {
+	/* XXX segment aligned in device pagetbl, not final */
+	if (order < 3)
+		order = 3;
+
 	mutex_lock(&dev->inuse_lock);
 	bitmap_release_region(dev->inuse_pgtbl, pos, order);
 	mutex_unlock(&dev->inuse_lock);
