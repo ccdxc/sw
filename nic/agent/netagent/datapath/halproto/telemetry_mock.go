@@ -164,78 +164,6 @@ func (_mr *MockTelemetryClientMockRecorder) CollectorGet(arg0, arg1 interface{},
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "CollectorGet", reflect.TypeOf((*MockTelemetryClient)(nil).CollectorGet), _s...)
 }
 
-// ExportControlCreate mocks base method
-func (_m *MockTelemetryClient) ExportControlCreate(ctx context.Context, in *ExportControlRequestMsg, opts ...grpc.CallOption) (*ExportControlResponseMsg, error) {
-	_s := []interface{}{ctx, in}
-	for _, _x := range opts {
-		_s = append(_s, _x)
-	}
-	ret := _m.ctrl.Call(_m, "ExportControlCreate", _s...)
-	ret0, _ := ret[0].(*ExportControlResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExportControlCreate indicates an expected call of ExportControlCreate
-func (_mr *MockTelemetryClientMockRecorder) ExportControlCreate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	_s := append([]interface{}{arg0, arg1}, arg2...)
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ExportControlCreate", reflect.TypeOf((*MockTelemetryClient)(nil).ExportControlCreate), _s...)
-}
-
-// ExportControlUpdate mocks base method
-func (_m *MockTelemetryClient) ExportControlUpdate(ctx context.Context, in *ExportControlRequestMsg, opts ...grpc.CallOption) (*ExportControlResponseMsg, error) {
-	_s := []interface{}{ctx, in}
-	for _, _x := range opts {
-		_s = append(_s, _x)
-	}
-	ret := _m.ctrl.Call(_m, "ExportControlUpdate", _s...)
-	ret0, _ := ret[0].(*ExportControlResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExportControlUpdate indicates an expected call of ExportControlUpdate
-func (_mr *MockTelemetryClientMockRecorder) ExportControlUpdate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	_s := append([]interface{}{arg0, arg1}, arg2...)
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ExportControlUpdate", reflect.TypeOf((*MockTelemetryClient)(nil).ExportControlUpdate), _s...)
-}
-
-// ExportControlDelete mocks base method
-func (_m *MockTelemetryClient) ExportControlDelete(ctx context.Context, in *ExportControlDeleteRequestMsg, opts ...grpc.CallOption) (*ExportControlDeleteResponseMsg, error) {
-	_s := []interface{}{ctx, in}
-	for _, _x := range opts {
-		_s = append(_s, _x)
-	}
-	ret := _m.ctrl.Call(_m, "ExportControlDelete", _s...)
-	ret0, _ := ret[0].(*ExportControlDeleteResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExportControlDelete indicates an expected call of ExportControlDelete
-func (_mr *MockTelemetryClientMockRecorder) ExportControlDelete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	_s := append([]interface{}{arg0, arg1}, arg2...)
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ExportControlDelete", reflect.TypeOf((*MockTelemetryClient)(nil).ExportControlDelete), _s...)
-}
-
-// ExportControlGet mocks base method
-func (_m *MockTelemetryClient) ExportControlGet(ctx context.Context, in *ExportControlGetRequestMsg, opts ...grpc.CallOption) (*ExportControlGetResponseMsg, error) {
-	_s := []interface{}{ctx, in}
-	for _, _x := range opts {
-		_s = append(_s, _x)
-	}
-	ret := _m.ctrl.Call(_m, "ExportControlGet", _s...)
-	ret0, _ := ret[0].(*ExportControlGetResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExportControlGet indicates an expected call of ExportControlGet
-func (_mr *MockTelemetryClientMockRecorder) ExportControlGet(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	_s := append([]interface{}{arg0, arg1}, arg2...)
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ExportControlGet", reflect.TypeOf((*MockTelemetryClient)(nil).ExportControlGet), _s...)
-}
-
 // FlowMonitorRuleCreate mocks base method
 func (_m *MockTelemetryClient) FlowMonitorRuleCreate(ctx context.Context, in *FlowMonitorRuleRequestMsg, opts ...grpc.CallOption) (*FlowMonitorRuleResponseMsg, error) {
 	_s := []interface{}{ctx, in}
@@ -525,58 +453,6 @@ func (_m *MockTelemetryServer) CollectorGet(_param0 context.Context, _param1 *Co
 // CollectorGet indicates an expected call of CollectorGet
 func (_mr *MockTelemetryServerMockRecorder) CollectorGet(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "CollectorGet", reflect.TypeOf((*MockTelemetryServer)(nil).CollectorGet), arg0, arg1)
-}
-
-// ExportControlCreate mocks base method
-func (_m *MockTelemetryServer) ExportControlCreate(_param0 context.Context, _param1 *ExportControlRequestMsg) (*ExportControlResponseMsg, error) {
-	ret := _m.ctrl.Call(_m, "ExportControlCreate", _param0, _param1)
-	ret0, _ := ret[0].(*ExportControlResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExportControlCreate indicates an expected call of ExportControlCreate
-func (_mr *MockTelemetryServerMockRecorder) ExportControlCreate(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ExportControlCreate", reflect.TypeOf((*MockTelemetryServer)(nil).ExportControlCreate), arg0, arg1)
-}
-
-// ExportControlUpdate mocks base method
-func (_m *MockTelemetryServer) ExportControlUpdate(_param0 context.Context, _param1 *ExportControlRequestMsg) (*ExportControlResponseMsg, error) {
-	ret := _m.ctrl.Call(_m, "ExportControlUpdate", _param0, _param1)
-	ret0, _ := ret[0].(*ExportControlResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExportControlUpdate indicates an expected call of ExportControlUpdate
-func (_mr *MockTelemetryServerMockRecorder) ExportControlUpdate(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ExportControlUpdate", reflect.TypeOf((*MockTelemetryServer)(nil).ExportControlUpdate), arg0, arg1)
-}
-
-// ExportControlDelete mocks base method
-func (_m *MockTelemetryServer) ExportControlDelete(_param0 context.Context, _param1 *ExportControlDeleteRequestMsg) (*ExportControlDeleteResponseMsg, error) {
-	ret := _m.ctrl.Call(_m, "ExportControlDelete", _param0, _param1)
-	ret0, _ := ret[0].(*ExportControlDeleteResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExportControlDelete indicates an expected call of ExportControlDelete
-func (_mr *MockTelemetryServerMockRecorder) ExportControlDelete(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ExportControlDelete", reflect.TypeOf((*MockTelemetryServer)(nil).ExportControlDelete), arg0, arg1)
-}
-
-// ExportControlGet mocks base method
-func (_m *MockTelemetryServer) ExportControlGet(_param0 context.Context, _param1 *ExportControlGetRequestMsg) (*ExportControlGetResponseMsg, error) {
-	ret := _m.ctrl.Call(_m, "ExportControlGet", _param0, _param1)
-	ret0, _ := ret[0].(*ExportControlGetResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExportControlGet indicates an expected call of ExportControlGet
-func (_mr *MockTelemetryServerMockRecorder) ExportControlGet(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "ExportControlGet", reflect.TypeOf((*MockTelemetryServer)(nil).ExportControlGet), arg0, arg1)
 }
 
 // FlowMonitorRuleCreate mocks base method

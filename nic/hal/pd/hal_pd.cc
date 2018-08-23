@@ -278,6 +278,8 @@ hal_pd_load_symbols (void)
 
     // collector
     PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_CREATE, pd_collector_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_DELETE, pd_collector_delete);
+    PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_GET, pd_collector_get);
 
     // mc entry
     PD_FUNC_LOAD(PD_FUNC_ID_MC_ENTRY_CREATE, pd_mc_entry_create);

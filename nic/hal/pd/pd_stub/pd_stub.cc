@@ -244,6 +244,8 @@ PD_FUNC_STUB(pd_drop_monitor_rule_get);
 
 // collector
 PD_FUNC_STUB(pd_collector_create);
+PD_FUNC_STUB(pd_collector_delete);
+PD_FUNC_STUB(pd_collector_get);
 
 // mc entry
 PD_FUNC_STUB(pd_mc_entry_create);

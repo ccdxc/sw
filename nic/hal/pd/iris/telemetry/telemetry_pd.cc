@@ -304,6 +304,18 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+pd_collector_delete(pd_func_args_t *pd_func_args)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_collector_get(pd_func_args_t *pd_func_args)
+{
+    return HAL_RET_OK;
+}
+
 static hal_ret_t
 program_drop_stats_actiondata_table (drop_stats_actiondata *data,
                                      uint8_t sessid_bitmap, bool reason, int code)

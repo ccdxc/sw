@@ -69,21 +69,6 @@ using telemetry::DropMonitorRuleGetRequestMsg;
 using telemetry::DropMonitorRuleGetResponse;
 using telemetry::DropMonitorRuleGetResponseMsg;
 
-using telemetry::ExportControlSpec;
-using telemetry::ExportControlStatus;
-using telemetry::ExportControlResponse;
-using telemetry::ExportControlRequestMsg;
-using telemetry::ExportControlResponseMsg;
-using telemetry::ExportControlDeleteRequest;
-using telemetry::ExportControlDeleteResponse;
-using telemetry::ExportControlDeleteRequestMsg;
-using telemetry::ExportControlDeleteResponseMsg;
-using telemetry::ExportControlGetRequest;
-using telemetry::ExportControlGetRequestMsg;
-using telemetry::ExportControlGetResponse;
-using telemetry::ExportControlGetResponseMsg;
-
-
 namespace hal {
 
 #define MAX_FLOW_MONITOR_RULES      1024
@@ -334,19 +319,6 @@ dropmonrule_spec_dump (DropMonitorRuleSpec& spec)
     HAL_TRACE_DEBUG("{}", cfg.c_str());
 }
 
-static inline void
-exportcontrol_spec_dump (ExportControlSpec& spec)
-{
-    std::string    cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &cfg);
-    HAL_TRACE_DEBUG("ExportControlSpec configuration:");
-    HAL_TRACE_DEBUG("{}", cfg.c_str());
-}
-
 hal_ret_t mirror_session_create(MirrorSessionSpec &spec, MirrorSessionResponse *rsp);
 hal_ret_t mirror_session_update(MirrorSessionSpec &spec, MirrorSessionResponse *rsp);
 hal_ret_t mirror_session_delete(MirrorSessionDeleteRequest &spec, MirrorSessionDeleteResponse *rsp);
@@ -366,11 +338,6 @@ hal_ret_t drop_monitor_rule_create(DropMonitorRuleSpec &spec, DropMonitorRuleRes
 hal_ret_t drop_monitor_rule_update(DropMonitorRuleSpec &spec, DropMonitorRuleResponse *rsp);
 hal_ret_t drop_monitor_rule_delete(DropMonitorRuleDeleteRequest &req, DropMonitorRuleDeleteResponse *rsp);
 hal_ret_t drop_monitor_rule_get(DropMonitorRuleGetRequest &req, DropMonitorRuleGetResponseMsg *rsp);
-
-hal_ret_t export_control_create(ExportControlSpec &spec, ExportControlResponse *rsp);
-hal_ret_t export_control_update(ExportControlSpec &spec, ExportControlResponse *rsp);
-hal_ret_t export_control_delete(ExportControlDeleteRequest &req, ExportControlDeleteResponse *rsp);
-hal_ret_t export_control_get(ExportControlGetRequest &req, ExportControlGetResponseMsg *rsp);
 
 hal_ret_t flow_monitor_acl_ctx_create(void);
 

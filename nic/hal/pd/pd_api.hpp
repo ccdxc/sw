@@ -1908,6 +1908,28 @@ pd_collector_create_args_init (pd_collector_create_args_t *args)
     args->cfg = NULL;
 }
 
+// collector delete
+typedef struct pd_collector_delete_args_s {
+    collector_config_t *cfg;
+} __PACK__ pd_collector_delete_args_t;
+
+static inline void
+pd_collector_delete_args_init (pd_collector_delete_args_t *args)
+{
+    args->cfg = NULL;
+}
+
+// collector get
+typedef struct pd_collector_get_args_s {
+    collector_config_t *cfg;
+} __PACK__ pd_collector_get_args_t;
+
+static inline void
+pd_collector_get_args_init (pd_collector_get_args_t *args)
+{
+    args->cfg = NULL;
+}
+
 // mc entry
 typedef struct pd_mc_entry_create_args_s {
     mc_entry_t      *mc_entry;
@@ -2990,7 +3012,9 @@ typedef struct pd_quiesce_stop_args_s {
     ENTRY(PD_FUNC_ID_TLS_PROXY_CB_DELETE,      257, "PD_FUNC_ID_TLSCB_DELETE")          \
     ENTRY(PD_FUNC_ID_TLS_PROXY_CB_UPDATE,      258, "PD_FUNC_ID_TLSCB_UPDATE")          \
     ENTRY(PD_FUNC_ID_TLS_PROXY_CB_GET,         259, "PD_FUNC_ID_TLSCB_GET")        \
-    ENTRY(PD_FUNC_ID_MAX,                      260, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_COLLECTOR_DELETE,         260, "PD_FUNC_ID_COLLECTOR_DELETE")\
+    ENTRY(PD_FUNC_ID_COLLECTOR_GET,            261, "PD_FUNC_ID_COLLECTOR_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      262, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3209,6 +3233,8 @@ typedef struct pd_func_args_s {
 
         // collector
         PD_UNION_ARGS_FIELD(pd_collector_create);
+        PD_UNION_ARGS_FIELD(pd_collector_delete);
+        PD_UNION_ARGS_FIELD(pd_collector_get);
 
         // mc entry
         PD_UNION_ARGS_FIELD(pd_mc_entry_create);
@@ -3595,6 +3621,8 @@ PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_get);
 
 // collector
 PD_FUNCP_TYPEDEF(pd_collector_create);
+PD_FUNCP_TYPEDEF(pd_collector_delete);
+PD_FUNCP_TYPEDEF(pd_collector_get);
 
 // mc entry
 PD_FUNCP_TYPEDEF(pd_mc_entry_create);
@@ -3992,6 +4020,8 @@ PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_get);
 
 // collector
 PD_FUNCP_TYPEDEF(pd_collector_create);
+PD_FUNCP_TYPEDEF(pd_collector_delete);
+PD_FUNCP_TYPEDEF(pd_collector_get);
 
 // mc entry
 PD_FUNCP_TYPEDEF(pd_mc_entry_create);
@@ -4384,6 +4414,8 @@ typedef struct pd_call_s {
 
         // collector
         PD_UNION_FIELD(pd_collector_create);
+        PD_UNION_FIELD(pd_collector_delete);
+        PD_UNION_FIELD(pd_collector_get);
 
         // mc entry
         PD_UNION_FIELD(pd_mc_entry_create);

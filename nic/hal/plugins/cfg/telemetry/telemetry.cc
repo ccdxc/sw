@@ -593,34 +593,4 @@ drop_monitor_rule_get (DropMonitorRuleGetRequest &req, DropMonitorRuleGetRespons
     return ret;
 }
 
-hal_ret_t
-export_control_create (ExportControlSpec &spec, ExportControlResponse *rsp)
-{
-    exportcontrol_spec_dump(spec);
-    hal_ret_t ret = HAL_RET_OK;
-    return ret;
-}
-
-hal_ret_t
-export_control_update (ExportControlSpec &spec, ExportControlResponse *rsp)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    return ret;
-}
-
-hal_ret_t
-export_control_delete (ExportControlDeleteRequest &req, ExportControlDeleteResponse *rsp)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    return ret;
-}
-
-
-hal_ret_t
-export_control_get(ExportControlGetRequest &req, ExportControlGetResponseMsg *rsp)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    return ret;
-}
-
 }    // namespace hal

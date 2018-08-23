@@ -35,37 +35,6 @@ objects:
             pre_cb   : None
             post_cb  : None
     - object :
-        name : ExportControl
-        key_handle : ExportControlKeyHandle
-        ignore:
-            - op : Get
-        ignore_v2:
-            - op : Update
-        create:
-            api      : None
-            request  : None
-            response : None
-            pre_cb   : None
-            post_cb  : None
-        update:
-            api      : None
-            request  : None
-            response : None
-            pre_cb   : None
-            post_cb  : None
-        delete:
-            api      : None
-            request  : None
-            response : None
-            pre_cb   : None
-            post_cb  : None
-        get:
-            api      : None
-            request  : None
-            response : None
-            pre_cb   : None
-            post_cb  : None
-    - object :
         name : FlowMonitorRule
         key_handle : FlowMonitorRuleKeyHandle
         ignore:

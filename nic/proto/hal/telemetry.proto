@@ -14,12 +14,6 @@ service Telemetry {
   rpc CollectorDelete (CollectorDeleteRequestMsg) returns (CollectorDeleteResponseMsg) {}
   rpc CollectorGet (CollectorGetRequestMsg) returns (CollectorGetResponseMsg) {}
 
-  // ExportConfig CRUD operations
-  rpc ExportControlCreate (ExportControlRequestMsg) returns (ExportControlResponseMsg) {}
-  rpc ExportControlUpdate (ExportControlRequestMsg) returns (ExportControlResponseMsg) {}
-  rpc ExportControlDelete (ExportControlDeleteRequestMsg) returns (ExportControlDeleteResponseMsg) {}
-  rpc ExportControlGet (ExportControlGetRequestMsg) returns (ExportControlGetResponseMsg) {}
-
   // FlowMonitorRules CRUD Operations
   rpc FlowMonitorRuleCreate (FlowMonitorRuleRequestMsg) returns (FlowMonitorRuleResponseMsg) {}
   rpc FlowMonitorRuleUpdate (FlowMonitorRuleRequestMsg) returns (FlowMonitorRuleResponseMsg) {}
@@ -65,6 +59,7 @@ message CollectorSpec {
   uint32                dest_port         = 9 [(gogoproto.moretags) = "venice:mandatory"]; // L4 Port for the collector
   ExportFormat          format            = 10 [(gogoproto.moretags) = "venice:mandatory"]; // Format that the collector expects
   uint32                template_id       = 11 [(gogoproto.moretags) = "venice:mandatory"]; // Data Template ID used to send to the collector 
+  uint32                export_interval   = 12 [(gogoproto.moretags) = "venice:mandatory"]; // Export interval (in seconds)
 }
 
 // CollectorSpec is the operational status of the collector
@@ -136,84 +131,6 @@ message CollectorGetResponseMsg {
   repeated CollectorGetResponse    response   = 1;    // batch get response
 }
 
-// ExportControlSpec is the configuration specification for Export Control
-message ExportControlSpec {
-  types.ObjectMeta               meta                 = 1; // Common object meta
-  kh.ExportControlKeyHandle      key_or_handle        = 2 [(gogoproto.moretags) = "venice:key"]; // ExportControl key or handle
-  repeated kh.CollectorKeyHandle collector_key_handle = 3 [(gogoproto.moretags) = "venice:ref"]; // Collector key or handle
-  uint32                         active_timeout       = 4; // time before which active flows are exported
-  uint32                         inactive_timeout     = 5; // time before which in-active flows are exported
-}
-
-// ExportControlSpec is the operational status of the Export Control object
-message ExportControlStatus {
-  fixed64                   handle  = 1; // id of exportcontrol object returned by HAL
-}
-
-// ExportControl is a container that holds both the configuration and the operational 
-// state
-message ExportControlResponse {
-  types.ApiStatus     api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
-  ExportControlStatus status     = 2; // ExportControl status, if api succeeds
-}
-
-// ExportControlConfigsMsg is used in requests and is a batchable request message
-message ExportControlRequestMsg {
-  repeated ExportControlSpec request = 1;
-}
-
-// ExportControlConfigsMsg message is used as response for API requests.
-message ExportControlResponseMsg {
-  repeated ExportControlResponse  response = 1; // batched reponse
-}
-
-// ExportControlDeleteRequest is used to delete an export control object
-message ExportControlDeleteRequest {
-  types.ObjectMeta               meta          = 1;  // object meta
-  kh.ExportControlKeyHandle      key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];  // unique identifier
-}
-
-// ExportControlDeleteResponse is response to ExportControlDeleteRequest
-message ExportControlDeleteResponse {
-  types.ApiStatus           api_status     = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
-  kh.ExportControlKeyHandle key_or_handle  = 2;
-}
-
-// ExportControlDeleteRequestMsg is used to delete a batch of exportcontrol objects
-message ExportControlDeleteRequestMsg {
-  repeated ExportControlDeleteRequest    request = 1;    // batched delete request
-}
-
-// ExportControlDeleteResponseMsg is batched response to ExportControlDeleteRequestMsg
-message ExportControlDeleteResponseMsg {
-  repeated ExportControlDeleteResponse    response = 1;    // batched response
-}
-
-// ExportControlGetRequest is used to get information about an exportcontrol object
-message ExportControlGetRequest {
-  types.ObjectMeta          meta                = 1;    // object meta
-  kh.ExportControlKeyHandle key_or_handle       = 2 [(gogoproto.moretags) = "venice:key"];
-}
-
-// ExportControlGetRequestMsg is batched GET requests for exportcontrol objects
-message ExportControlGetRequestMsg {
-  repeated ExportControlGetRequest    request = 1;    // batched get request
-}
-
-message ExportControlStats {
-}
-
-message ExportControlGetResponse {
-  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
-  ExportControlSpec  spec       = 2;     // ExportControl configuration
-  ExportControlStats stats      = 3;    // stats
-}
-
-// ExportControlGetResponseMsg is batched response to ExportControlGetRequestMsg
-message ExportControlGetResponseMsg {
-  repeated ExportControlGetResponse    response   = 1;    // batch get response
-}
-
 // AggregationScheme is an enumeration of aggregation schemes supported
 enum AggregationScheme {
   NONE              = 0; // Full Flow tuple with no aggregation
@@ -238,11 +155,12 @@ message MonitorAction {
 
 // FlowMonitorRuleSpec flow monitor rule specification
 message FlowMonitorRuleSpec {
-  types.ObjectMeta  meta                        = 1; // Common object meta
-  kh.FlowMonitorRuleKeyHandle key_or_handle     = 2 [(gogoproto.moretags) = "venice:key"]; // FlowMonitor key or handle
-  kh.VrfKeyHandle             vrf_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"];
-  types.RuleMatch             match             = 4; // match conditions 
-  MonitorAction               action            = 5; // Action for flows that meet the match criteria
+  types.ObjectMeta                  meta                    = 1; // Common object meta
+  kh.FlowMonitorRuleKeyHandle       key_or_handle           = 2 [(gogoproto.moretags) = "venice:key"]; // FlowMonitor key or handle
+  repeated kh.CollectorKeyHandle    collector_key_handle    = 3 [(gogoproto.moretags) = "venice:ref"]; // Collector key or handle
+  kh.VrfKeyHandle                   vrf_key_handle          = 4 [(gogoproto.moretags) = "venice:ref"];
+  types.RuleMatch                   match                   = 5; // match conditions 
+  MonitorAction                     action                  = 6; // Action for flows that meet the match criteria
 }
 
 // FlowMonitorRuleStatus is the operational status of the rule
