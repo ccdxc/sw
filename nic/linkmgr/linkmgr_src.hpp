@@ -169,6 +169,8 @@ hal_ret_t port_delete(PortDeleteRequest& req,
                       PortDeleteResponseMsg *rsp);
 hal_ret_t port_get(port::PortGetRequest& req,
                    port::PortGetResponseMsg *rsp);
+hal_ret_t port_info_get(port::PortInfoGetRequest& req,
+                        port::PortInfoGetResponseMsg *rsp);
 
 hal_ret_t
 linkmgr_generic_debug_opn(GenericOpnRequest& req,

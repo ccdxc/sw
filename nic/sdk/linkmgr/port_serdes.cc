@@ -430,12 +430,12 @@ serdes_eye_get_hw(uint32_t sbus_addr, int eye_type)
             break;
     }
 
-    cfg->ec_cmp_mode       = AVAGO_SERDES_RX_CMP_MODE_XOR;
     cfg->ec_min_dwell_bits = 0x1e6;
-    cfg->ec_min_dwell_bits = 0x1e8;
+    cfg->ec_max_dwell_bits = 0x1e8;
     cfg->ec_x_resolution   = 64;
     cfg->ec_y_points       = 512;
 
+    // cfg->ec_cmp_mode       = AVAGO_SERDES_RX_CMP_MODE_XOR;
     // cfg->ec_y_step_size = 1;
 
     avago_serdes_eye_get(aapl, sbus_addr, cfg, edata);

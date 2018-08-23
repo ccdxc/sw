@@ -98,3 +98,25 @@ PortServiceImpl::PortGet(ServerContext *context,
     linkmgr::g_linkmgr_state->cfg_db_close();
     return Status::OK;
 }
+
+Status
+PortServiceImpl::PortInfoGet(ServerContext *context,
+                             const PortInfoGetRequestMsg *req,
+                             PortInfoGetResponseMsg *rsp)
+{
+    uint32_t i     = 0;
+    uint32_t nreqs = req->request_size();
+
+    HAL_TRACE_DEBUG("Rcvd Port Get Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_READ);
+    for (i = 0; i < nreqs; i++) {
+        auto request = req->request(i);
+        linkmgr::port_info_get(request, rsp);
+    }
+    linkmgr::g_linkmgr_state->cfg_db_close();
+    return Status::OK;
+}

@@ -31,6 +31,10 @@ using port::PortGetRequest;
 using port::PortGetRequestMsg;
 using port::PortGetResponse;
 using port::PortGetResponseMsg;
+using port::PortInfoGetRequest;
+using port::PortInfoGetRequestMsg;
+using port::PortInfoGetResponse;
+using port::PortInfoGetResponseMsg;
 
 class PortServiceImpl final : public Port::Service {
 public:
@@ -49,6 +53,10 @@ public:
     Status PortGet(ServerContext *context,
                    const PortGetRequestMsg *req,
                    PortGetResponseMsg *rsp) override;
+
+    Status PortInfoGet(ServerContext *context,
+                       const PortInfoGetRequestMsg *req,
+                       PortInfoGetResponseMsg *rsp) override;
 };
 
 #endif    // __LINKMGR_SVC_HPP__

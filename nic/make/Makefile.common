@@ -101,7 +101,9 @@ package: package-clean
     endif
 
 package-sim: package-clean
-	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target sim --no-strip
+    ifneq ($(ARCH),aarch64)
+		cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target sim --no-strip
+    endif
 
 package-arm-dev: package-clean
 	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target arm-dev --no-strip

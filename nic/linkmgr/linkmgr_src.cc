@@ -40,6 +40,36 @@ sbus_addr (uint32_t port, uint32_t lane)
     return catalog()->sbus_addr(port, lane);
 }
 
+static uint32_t
+num_uplink_ports (void)
+{
+    return catalog()->num_uplink_ports();
+}
+
+static port_speed_t
+port_speed (uint32_t port)
+{
+    return catalog()->port_speed(port);
+}
+
+static uint32_t
+num_lanes (uint32_t port)
+{
+    return catalog()->num_lanes(port);
+}
+
+static uint32_t
+mac_id (uint32_t port, uint32_t lane)
+{
+    return catalog()->mac_id(port, lane);
+}
+
+static uint32_t
+mac_ch (uint32_t port, uint32_t lane)
+{
+    return catalog()->mac_ch(port, lane);
+}
+
 hal_ret_t
 linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
 {
@@ -1047,6 +1077,61 @@ port_get (PortGetRequest& req, PortGetResponseMsg *rsp)
     hal::hal_api_trace(" API End: port get ");
 
     return HAL_RET_OK;
+}
+
+hal_ret_t
+populate_port_info(uint32_t uplink_port, PortInfoGetResponse *response)
+{
+    response->mutable_spec()->mutable_key_or_handle()->set_port_id(uplink_port);
+    response->mutable_spec()->set_port_speed(
+            linkmgr::sdk_port_speed_to_port_speed_spec(port_speed(uplink_port)));
+    response->mutable_spec()->set_mac_id(mac_id(uplink_port, 0));
+    response->mutable_spec()->set_mac_ch(mac_ch(uplink_port, 0));
+    response->mutable_spec()->set_num_lanes(num_lanes(uplink_port));
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+populate_port_info_response(uint32_t uplink_port,
+                            PortInfoGetResponseMsg *rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    PortInfoGetResponse *response = rsp->add_response();
+
+    ret = populate_port_info(uplink_port, response);
+
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error getting port info {}", uplink_port);
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+    } else {
+        response->set_api_status(types::API_STATUS_OK);
+    }
+
+    return ret;
+}
+
+hal_ret_t
+port_info_get (PortInfoGetRequest& req, PortInfoGetResponseMsg *rsp)
+{
+    uint32_t  uplink_port = 0;
+    hal_ret_t ret         = HAL_RET_OK;
+
+    if (!req.has_key_or_handle()) {
+        for (uplink_port = 1; uplink_port <= num_uplink_ports();
+                              ++uplink_port) {
+            populate_port_info_response(uplink_port, rsp);
+        }
+        return ret;
+    }
+
+    // TODO handle case?
+    uplink_port = req.key_or_handle().port_id();
+
+    populate_port_info_response(uplink_port, rsp);
+
+    return ret;
 }
 
 hal_ret_t

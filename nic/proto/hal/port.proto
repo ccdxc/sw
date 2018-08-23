@@ -14,10 +14,11 @@ option go_package="halproto";
 
 // port service definition
 service Port {
-  rpc PortCreate (PortRequestMsg)       returns (PortResponseMsg)       {}
-  rpc PortUpdate (PortRequestMsg)       returns (PortResponseMsg)       {}
-  rpc PortDelete (PortDeleteRequestMsg) returns (PortDeleteResponseMsg) {}
-  rpc PortGet    (PortGetRequestMsg)    returns (PortGetResponseMsg)    {}
+  rpc PortCreate  (PortRequestMsg)        returns (PortResponseMsg)        {}
+  rpc PortUpdate  (PortRequestMsg)        returns (PortResponseMsg)        {}
+  rpc PortDelete  (PortDeleteRequestMsg)  returns (PortDeleteResponseMsg)  {}
+  rpc PortGet     (PortGetRequestMsg)     returns (PortGetResponseMsg)     {}
+  rpc PortInfoGet (PortInfoGetRequestMsg) returns (PortInfoGetResponseMsg) {}
 }
 
 // PortOperStatus reflects the current status of the port
@@ -253,5 +254,36 @@ message PortGetResponse {
 //------------------------------------------------------------------------------
 message PortGetResponseMsg {
   repeated PortGetResponse  response = 1;    // batched get response
+}
+
+message PortInfoGetRequest {
+  types.ObjectMeta  meta          = 1;    // object meta
+
+  // key_or_handle is the port number
+  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+}
+
+message PortInfoGetRequestMsg {
+  repeated PortInfoGetRequest  request = 1;    // batched get request
+}
+
+message PortInfoSpec {
+  types.ObjectMeta  meta             = 1;    // common object meta
+
+  // key_or_handle is the port number
+  kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
+  PortSpeed         port_speed       = 3;    // speed of the port
+  uint32            mac_id           = 4 [(gogoproto.moretags) = "venice:immutable"];    // mac associated with the port
+  uint32            mac_ch           = 5 [(gogoproto.moretags) = "venice:immutable"];    // mac channel associated with the port
+  uint32            num_lanes        = 6 [(gogoproto.moretags) = "venice:immutable"];    // number of lanes for the port
+}
+
+message PortInfoGetResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  PortInfoSpec     spec       = 2;    // port configuration
+}
+
+message PortInfoGetResponseMsg {
+  repeated PortInfoGetResponse  response = 1;    // batched get response
 }
 
