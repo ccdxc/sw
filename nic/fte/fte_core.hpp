@@ -37,7 +37,7 @@ hal_ret_t register_pipeline(const std::string& name,
 hal_ret_t add_feature(const std::string& name);
 
 // FTE pkt loop (infinite loop)
-void fte_start(uint8_t fte_id);
+void fte_start(void *ctxt);
 
 // diable all fte threads
 void disable_fte(void);

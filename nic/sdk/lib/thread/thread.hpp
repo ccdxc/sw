@@ -9,6 +9,7 @@
 
 #include <pthread.h>
 #include "include/sdk/base.hpp"
+#include "include/sdk/timestamp.hpp"
 
 namespace sdk {
 namespace lib {
@@ -52,17 +53,15 @@ public:
     uint32_t priority(void) const { return prio_; }
     void set_pthread_id(pthread_t pthread_id) { pthread_id_ = pthread_id; }
     pthread_t pthread_id(void) const { return pthread_id_; }
+    void punch_heartbeat(void);    // punch heart-beat
+    timespec_t heartbeat_ts(void) const { return hb_ts_; }
     bool is_running(void) const { return running_; }
     bool can_yield(void) const { return can_yield_; }
     void set_running(bool running) { running_ = running; }
     void set_data(void *data) { data_ = data; }
-
+    void *data(void) const { return data_; }
     thread_role_t thread_role (void) const { return thread_role_; }
     uint64_t      cores_mask  (void) const { return cores_mask_;  }
-
-    void* data() {
-        return data_;
-    }
 
     // set the current thread instance
     static void set_current_thread (thread *curr_thread) {
@@ -97,6 +96,7 @@ private:
     bool                       running_;
     thread_role_t              thread_role_;
     uint64_t                   cores_mask_;
+    timespec_t                 hb_ts_;
     static thread_local thread *t_curr_thread_;
     static uint64_t            control_cores_mask_;
     static uint64_t            data_cores_free_;

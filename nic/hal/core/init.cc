@@ -66,9 +66,9 @@ static void *
 fte_pkt_loop_start (void *ctxt)
 {
     SDK_THREAD_INIT(ctxt);
-    sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
+    sdk::lib::thread *curr_thread = (sdk::lib::thread *)ctxt;
     thread_init_plugins(curr_thread->thread_id());
-    fte::fte_start(curr_thread->thread_id() - HAL_THREAD_ID_FTE_MIN);
+    fte::fte_start(ctxt);
     thread_exit_plugins(curr_thread->thread_id());
     return NULL;
 }

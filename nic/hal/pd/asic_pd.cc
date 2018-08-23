@@ -422,13 +422,14 @@ asic_port_cfg (uint32_t port_num,
 // other HAL threads
 //------------------------------------------------------------------------------
 static void
-asic_rw_loop (void)
+asic_rw_loop (void *ctxt)
 {
     uint32_t            qid;
     uint16_t            cindx;
     bool                work_done = false;
     pal_ret_t           rv        = PAL_RET_OK;
     asic_rw_entry_t     *rw_entry = NULL;
+    sdk::lib::thread    *curr_thread = (sdk::lib::thread *)ctxt;
 
     while (TRUE) {
         work_done = false;
@@ -479,7 +480,8 @@ asic_rw_loop (void)
             }
 
             // populate the results
-            rw_entry->status =  IS_PAL_API_SUCCESS(rv) ? HAL_RET_OK : HAL_RET_ERR;
+            rw_entry->status =
+                IS_PAL_API_SUCCESS(rv) ? HAL_RET_OK : HAL_RET_ERR;
             rw_entry->done.store(true);
 
             // advance to next entry in the queue
@@ -490,6 +492,7 @@ asic_rw_loop (void)
             g_asic_rw_workq[qid].nentries--;
             work_done = true;
         }
+        curr_thread->punch_heartbeat();
 
         // all queues scanned once, check if any work was found
         if (!work_done) {
@@ -575,7 +578,7 @@ asic_rw_start (void *ctxt)
     g_asic_rw_ready_.store(true);
 
     // keep polling the queue and serve the read/write requests
-    asic_rw_loop();
+    asic_rw_loop(ctxt);
 
     return NULL;
 }

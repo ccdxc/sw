@@ -13,6 +13,7 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "sdk/timestamp.hpp"
+#include "sdk/thread.hpp"
 
 namespace fte {
 
@@ -31,7 +32,7 @@ void disable_fte()
 class inst_t {
 public:
     inst_t(uint8_t fte_id);
-    void start(void);
+    void start(sdk::lib::thread *curr_thread);
     hal_ret_t asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
                        hal::pd::p4plus_to_p4_header_t* p4plus_header,
                        uint8_t* pkt, size_t pkt_len);
@@ -86,14 +87,18 @@ thread_local uint64_t t_rx_pkts;
 // Creates FTE instance and starts it
 //------------------------------------------------------------------------------
 void
-fte_start(uint8_t fte_id)
+fte_start(void *ctxt)
 {
+    sdk::lib::thread   *curr_thread = (sdk::lib::thread *)ctxt;
+    uint8_t            fte_id;
+
+    fte_id = curr_thread->thread_id() - hal::HAL_THREAD_ID_FTE_MIN;
     HAL_ASSERT(t_inst == NULL);
     HAL_ASSERT(fte_id < hal::MAX_FTE_THREADS);
     HAL_ASSERT(g_inst_list[fte_id] == NULL);
 
     t_inst = g_inst_list[fte_id] = new inst_t(fte_id);
-    t_inst->start();
+    t_inst->start(curr_thread);
     HAL_TRACE_DEBUG("Started FTE thread: {}", fte_id);
 }
 
@@ -322,10 +327,9 @@ void inst_t::ctx_mem_init()
 //------------------------------------------------------------------------------
 // FTE main loop
 //------------------------------------------------------------------------------
-void inst_t::start()
+void inst_t::start(sdk::lib::thread *curr_thread)
 {
-    hal::hal_cfg_t *hal_cfg =
-                (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+    hal::hal_cfg_t *hal_cfg = (hal::hal_cfg_t *)curr_thread->data();
     HAL_ASSERT(hal_cfg);
 
     HAL_TRACE_DEBUG("Starting FTE instance: {}", hal_cfg->shm_mode);
@@ -335,7 +339,7 @@ void inst_t::start()
     }
 
     ctx_mem_init();
-    while(true) {
+    while (true) {
         if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_SIM) {
             usleep(1000000/30);
         } else if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_RTL ||
@@ -345,6 +349,7 @@ void inst_t::start()
         process_arq();
         process_softq();
         process_tls_pendq();
+        curr_thread->punch_heartbeat();
     }
 }
 

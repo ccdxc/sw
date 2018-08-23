@@ -5,7 +5,7 @@
 
 namespace fte {
 
-void fte_start(uint8_t fte_id)
+void fte_start(void *ctxt)
 {
 }
 

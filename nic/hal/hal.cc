@@ -25,6 +25,7 @@
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/utils/agent_api/agent_api.hpp"
+#include "nic/hal/core/heartbeat/heartbeat.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -241,6 +242,9 @@ hal_init (hal_cfg_t *hal_cfg)
         HAL_TRACE_ERR("linkmgr init failed");
         return HAL_RET_ERR;
     }
+
+    // start monitoring HAL heartbeat
+    hal::hb::heartbeat_init();
 
     // install signal handlers
     hal_sig_init(hal_sig_handler);

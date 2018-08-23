@@ -65,7 +65,8 @@ periodic_thread_init (void *ctxt)
 void *
 periodic_thread_run (void *ctxt)
 {
-    uint64_t                missed;
+    uint64_t            missed;
+    sdk::lib::thread    *curr_thread = (sdk::lib::thread *)ctxt;
 
     while (TRUE) {
         // wait for timer to fire
@@ -76,6 +77,7 @@ periodic_thread_run (void *ctxt)
 
         // drive the timer wheel if enough time elapsed
         g_twheel->tick(missed * TWHEEL_DEFAULT_SLICE_DURATION);
+        curr_thread->punch_heartbeat();
     }
     g_twheel_is_running = false;
     SDK_TRACE_ERR("Periodic thread exiting !!!");

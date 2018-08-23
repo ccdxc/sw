@@ -110,10 +110,10 @@ timestamp_add_timespecs (timespec_t *ts1, timespec_t *ts2)
 }
 
 //--------------------------------------------------------------------------
-// do ts1 -= ts2 if ts1 > ts2 or else return zero timestamp
+// helper function to compute timestamp diff
 //--------------------------------------------------------------------------
 static inline void
-timestamp_subtract (timespec_t *ts1, timespec_t *ts2)
+timestamp_subtract_common (timespec_t *ts1, timespec_t *ts2)
 {
     if (timestamp_later(ts1, ts2)) {
         if (ts1->tv_nsec < ts2->tv_nsec) {
@@ -125,6 +125,28 @@ timestamp_subtract (timespec_t *ts1, timespec_t *ts2)
     } else {
         ts1->tv_sec = ts2->tv_nsec = 0;
     }
+}
+
+//--------------------------------------------------------------------------
+// do ts1 -= ts2 if ts1 > ts2 or else return zero timestamp
+//--------------------------------------------------------------------------
+static inline void
+timestamp_subtract (timespec_t *ts1, timespec_t *ts2)
+{
+    timestamp_subtract_common(ts1, ts2);
+}
+
+//---------------------------------------------------------------------------
+// return ts = ts1 - ts2 if ts1 > ts2 and else return zero timestamp
+//---------------------------------------------------------------------------
+static inline timespec_t
+timestamp_diff (timespec_t *ts1, timespec_t *ts2)
+{
+    timespec_t    ts_diff;
+
+    ts_diff = *ts1;
+    timestamp_subtract_common(&ts_diff, ts2);
+    return ts_diff;
 }
 
 //--------------------------------------------------------------------------

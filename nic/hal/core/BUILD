@@ -48,6 +48,7 @@ cc_library(
         "//nic/include:base_includes",
         "@sdk//obj:sdk_periodic",
         "//nic/hal/core:heartbeat_includes",
+        "@sdk//:sdk_headers",
         "//nic/hal/core:core_includes",
         "//nic:spdlog",
     ],

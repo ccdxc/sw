@@ -38,6 +38,7 @@ thread::init(const char *name, uint32_t thread_id,
     thread_role_ = thread_role;
     pthread_id_ = 0;
     running_ = false;
+    memset(&hb_ts_, 0, sizeof(hb_ts_));
 
     return 0;
 }
@@ -274,6 +275,15 @@ thread::stop(void)
 
     running_ = false;
     return SDK_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// punch heart beat
+//------------------------------------------------------------------------------
+void
+thread::punch_heartbeat(void)
+{
+    clock_gettime(CLOCK_MONOTONIC, &hb_ts_);
 }
 
 }    // namespace lib

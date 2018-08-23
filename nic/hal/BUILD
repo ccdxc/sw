@@ -103,6 +103,7 @@ cc_library(
         "//nic/hal/pd:pdcommon",
         "@sdk//obj:sdk_periodic",
         "//nic/hal/core:core_includes",
+        "//nic/hal/core:heartbeat",
         "//nic/hal/plugins/app_redir:app_redir_includes",
         "//nic/hal/plugins/network:network_includes",
         "//nic/hal/plugins/proxy:proxyplugin_includes",
