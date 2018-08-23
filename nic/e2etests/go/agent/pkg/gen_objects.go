@@ -98,6 +98,12 @@ func (c *Config) generateObjs(manifestFile string, vlanOffset int) error {
 				return err
 			}
 			c.Objects[i] = *genObj
+		case "Tunnel":
+			genObj, err := c.generateTunnels(&o, manifestFile)
+			if err != nil {
+				return err
+			}
+			c.Objects[i] = *genObj
 		case "Endpoint":
 			genObj, err := c.generateEndpoints(&o, manifestFile)
 			if err != nil {
@@ -434,7 +440,6 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 }
 func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error) {
 	var natPools []netproto.NatPool
-	//var portOffset = 8000
 	specFile := "generated/nat_pools.json"
 	// If spec file is already present in the manifest, nothing to do here
 	if len(o.SpecFile) > 0 {
@@ -444,9 +449,6 @@ func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error
 	// Nat Pools sessions need to refer to Namespaces
 	namespaceRef := objCache["Namespace"]
 	networkRef := objCache["Network"]
-
-	// Mirror sessions also need EP IP Addresses
-	//epRef := objCache["Endpoint"]
 
 	// generate networks distributed evenly across
 	for i := 0; i < o.Count; i++ {
@@ -459,7 +461,6 @@ func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error
 			return nil, err
 		}
 		ipRange := fmt.Sprintf("%s-%s", addrs[0], addrs[len(addrs)-1])
-		fmt.Println("BLERION: ", ipRange)
 		//endpoint := fmt.Sprintf("%s-%d", epRef.Name, i%epRef.Count)
 		np := netproto.NatPool{
 			TypeMeta: api.TypeMeta{Kind: "NatPool"},
@@ -475,6 +476,70 @@ func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error
 		natPools = append(natPools, np)
 	}
 	out, err := json.MarshalIndent(&natPools, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	// Automatically interpret the the base dir of the manifest file as the config dir to dump all the generated files
+	configDir, _ := filepath.Split(manifestFile)
+
+	fileName := fmt.Sprintf("%s%s", configDir, specFile)
+
+	// create a generated dir in the config directory to dump the json
+	genDir, _ := filepath.Split(fileName)
+	if _, err := os.Stat(genDir); os.IsNotExist(err) {
+		err = os.MkdirAll(genDir, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("creating the generated directory failed. Err: %v", err)
+		}
+	}
+
+	err = ioutil.WriteFile(fileName, out, 0644)
+	if err != nil {
+		return nil, err
+	}
+	o.SpecFile = specFile
+	return o, nil
+}
+
+func (c *Config) generateTunnels(o *Object, manifestFile string) (*Object, error) {
+	var tunnels []netproto.Tunnel
+	specFile := "generated/tunnels.json"
+	// If spec file is already present in the manifest, nothing to do here
+	if len(o.SpecFile) > 0 {
+		return o, nil
+	}
+
+	// Tunnels should refer to valid Remote EPs
+	endpointRef := objCache["Endpoint"]
+	networkRef := objCache["Network"]
+	// Every fourth remote EP will be used as Tunnel Dst
+	epOffset := 3
+	epOffsetIncrements := endpointRef.Count / networkRef.Count // Gives the #EP per Network
+
+	// generate gre tunnels to distribute evenly across namespaces.
+	for i := 0; i < o.Count; i++ {
+		name := fmt.Sprintf("%s-%d", o.Name, i)
+		endpoint := fmt.Sprintf("%s-%d", endpointRef.Name, (epOffset+epOffsetIncrements*i)%endpointRef.Count)
+		fmt.Println("BALERION: ", epOffset, endpoint)
+		endpointIP := endpointCache[endpoint]
+		tun := netproto.Tunnel{
+			TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "infra",
+				Name:      name,
+			},
+			Spec: netproto.TunnelSpec{
+				Type:        "GRE",
+				AdminStatus: "UP",
+				Src:         "100.100.100.100", // Fixed currently
+				Dst:         endpointIP,
+			},
+		}
+		tunnels = append(tunnels, tun)
+	}
+	out, err := json.MarshalIndent(&tunnels, "", "  ")
 	if err != nil {
 		return nil, err
 	}

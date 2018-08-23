@@ -17,6 +17,11 @@ objects:
   count: 32
   rest-endpoint: "/api/endpoints/"
   spec-file: "generated/endpoints.json"
+- kind: Tunnel
+  name: scale-gre-tunnel
+  count: 8
+  rest-endpoint: "/api/tunnels/"
+  spec-file: "generated/tunnels.json"
 - kind: MirrorSession
   name: scale-mirror
   rest-endpoint: "/api/mirror/sessions/"
@@ -28,7 +33,7 @@ objects:
   rest-endpoint: "/api/security/policies/"
   spec-file: "generated/16_rules.json"
 - kind: IPSecSAEncrypt
-  name: scale-ipsec-encrypt-sa 
+  name: scale-ipsec-encrypt-sa
   count: 1
   rest-endpoint: "/api/ipsec/encryption/"
   spec-file: "generated/ipsec_encryption.json"
@@ -47,4 +52,3 @@ objects:
   count: 4
   rest-endpoint: "/api/nat/pools/"
   spec-file: "generated/nat_pools.json"
-

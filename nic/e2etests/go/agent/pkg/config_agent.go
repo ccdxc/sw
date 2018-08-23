@@ -37,6 +37,7 @@ type AgentConfig struct {
 	NatPools          []netproto.NatPool
 	NatBindings       []netproto.NatBinding
 	NatPolicies       []netproto.NatPolicy
+	Tunnels           []netproto.Tunnel
 	restApiMap        map[reflect.Type]string
 }
 
@@ -77,6 +78,7 @@ func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig)
 		"NatPool":        &agentCfg.NatPools,
 		"NatBinding":     &agentCfg.NatBindings,
 		"NatPolicy":      &agentCfg.NatPolicies,
+		"Tunnel":         &agentCfg.Tunnels,
 	}
 
 	err = json.Unmarshal(dat, kindMap[o.Kind])
@@ -120,6 +122,13 @@ func (agentCfg *AgentConfig) push() error {
 		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.Endpoints)])
 	for _, ep := range agentCfg.Endpoints {
 		doConfig(ep, restURL)
+	}
+
+	fmt.Printf("Configuring %d Tunnels...\n", len(agentCfg.Tunnels))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.Tunnels)])
+	for _, ms := range agentCfg.Tunnels {
+		doConfig(ms, restURL)
 	}
 
 	fmt.Printf("Configuring %d SGPolicies...\n", len(agentCfg.SgPolicies))

@@ -3,12 +3,13 @@ package modules
 import (
 	"strings"
 
+	"github.com/pkg/errors"
+
 	Pkg "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	Tests "github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic/tests"
 	TestApi "github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic/tests/api"
 	Infra "github.com/pensando/sw/nic/e2etests/go/infra"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
-	"github.com/pkg/errors"
 )
 
 type FirewallDeny struct {
