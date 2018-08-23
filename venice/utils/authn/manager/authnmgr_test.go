@@ -35,9 +35,11 @@ const (
 
 var (
 	// create events recorder
-	_, _ = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "authnmgr_test"},
-		evtsapi.GetEventTypes(), "", "/tmp")
+	_, _ = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "authnmgr_test"},
+		EvtTypes:      evtsapi.GetEventTypes(),
+		BackupDir:     "/tmp",
+		SkipEvtsProxy: true})
 )
 
 var apicl apiclient.Services

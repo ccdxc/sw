@@ -65,9 +65,9 @@ func main() {
 	// FIXME: eventSource.NodeName should match with the name in node object; either we
 	// enforce user to provide hostname as the node name or we find workaround to
 	// update the event source.
-	if _, err = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Cmd},
-		append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...), "", ""); err != nil {
+	if _, err = recorder.NewRecorder(&recorder.Config{
+		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Cmd},
+		EvtTypes: append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...)}); err != nil {
 		fmt.Printf("failed to create events recorder, err: %v", err)
 	}
 

@@ -31,9 +31,11 @@ func setupTestCluster(t *testing.T, tmpDir string) (*integration.ClusterV3, kvst
 		t.Fatalf("Failed to create store, error: %v", err)
 	}
 
-	_, err = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: "test", Component: "cmd"},
-		cmd.GetEventTypes(), "", tmpDir)
+	_, err = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: "test", Component: "cmd"},
+		EvtTypes:      cmd.GetEventTypes(),
+		BackupDir:     tmpDir,
+		SkipEvtsProxy: true})
 	if err != nil {
 		t.Fatalf("Failed to create recorder, error: %v", err)
 	}

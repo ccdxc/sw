@@ -75,9 +75,11 @@ const (
 
 var (
 	// create events recorder
-	_, _ = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice_integ_test"},
-		evtsapi.GetEventTypes(), "", "/tmp")
+	_, _ = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice_integ_test"},
+		EvtTypes:      evtsapi.GetEventTypes(),
+		BackupDir:     "/tmp",
+		SkipEvtsProxy: true})
 )
 
 // veniceIntegSuite is the state of integ test

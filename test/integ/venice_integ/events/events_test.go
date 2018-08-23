@@ -66,8 +66,11 @@ func TestEvents(t *testing.T) {
 	defer os.RemoveAll(recorderEventsDir)
 
 	// create recorder
-	evtsRecorder, err := recorder.NewRecorder(testEventSource, testEventTypes,
-		ti.evtsProxy.RPCServer.GetListenURL(), recorderEventsDir)
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+		Source:       testEventSource,
+		EvtTypes:     testEventTypes,
+		EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
+		BackupDir:    recorderEventsDir})
 	AssertOk(t, err, "failed to create events recorder")
 
 	// send events  (recorder -> proxy -> dispatcher -> writer -> evtsmgr -> elastic)
@@ -151,8 +154,11 @@ func TestEventsProxyRestart(t *testing.T) {
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
 			testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
-			evtsRecorder, err := recorder.NewRecorder(testEventSource, testEventTypes,
-				ti.evtsProxy.RPCServer.GetListenURL(), recorderEventsDir)
+			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+				Source:       testEventSource,
+				EvtTypes:     testEventTypes,
+				EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
+				BackupDir:    recorderEventsDir})
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -248,8 +254,11 @@ func TestEventsMgrRestart(t *testing.T) {
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
 			testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
-			evtsRecorder, err := recorder.NewRecorder(testEventSource, testEventTypes,
-				ti.evtsProxy.RPCServer.GetListenURL(), recorderEventsDir)
+			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+				Source:       testEventSource,
+				EvtTypes:     testEventTypes,
+				EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
+				BackupDir:    recorderEventsDir})
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -383,8 +392,11 @@ func TestEventsRESTEndpoints(t *testing.T) {
 		defer wg.Done()
 
 		testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: uuid.NewV4().String()}
-		evtsRecorder, err := recorder.NewRecorder(testEventSource, testEventTypes,
-			ti.evtsProxy.RPCServer.GetListenURL(), recorderEventsDir)
+		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+			Source:       testEventSource,
+			EvtTypes:     testEventTypes,
+			EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir})
 		if err != nil {
 			log.Errorf("failed to create recorder")
 			return

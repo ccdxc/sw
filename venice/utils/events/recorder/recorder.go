@@ -76,41 +76,46 @@ type failedEventsForwarder struct {
 	wg   sync.WaitGroup
 }
 
+// Config represents the recorder configuration
+type Config struct {
+	Source        *evtsapi.EventSource // event source for all the events
+	EvtTypes      []string             // list of event types supported by the recorder
+	EvtsProxyURL  string               // proxy URL to connect to
+	BackupDir     string               // store events in a file, if proxy connection becomes unavailable
+	SkipEvtsProxy bool                 // use local store for events; skip connecting to proxy
+}
+
 // NewRecorder creates and returns a recorder instance and instantiates the singleton object.
 // if `evtsproxyURL` is empty, it will it use local events proxy RPC port.
 // First recorder instance created in the process is same as the singleton recorder.
-func NewRecorder(source *evtsapi.EventSource, eventTypes []string, evtsproxyURL, eventsBackupDir string) (events.Recorder, error) {
-	if source == nil {
+func NewRecorder(config *Config) (events.Recorder, error) {
+	if config.Source == nil {
 		return nil, fmt.Errorf("missing event source")
 	}
 
-	if eventTypes == nil {
-		return nil, fmt.Errorf("missing event types")
-	}
-
-	if len(eventTypes) == 0 {
+	if len(config.EvtTypes) == 0 {
 		return nil, fmt.Errorf("empty event types")
 	}
 
-	if utils.IsEmpty(evtsproxyURL) {
-		evtsproxyURL = fmt.Sprintf(":%s", globals.EvtsProxyRPCPort)
+	if utils.IsEmpty(config.EvtsProxyURL) {
+		config.EvtsProxyURL = fmt.Sprintf(":%s", globals.EvtsProxyRPCPort)
 	}
 
-	if utils.IsEmpty(eventsBackupDir) {
-		eventsBackupDir = filepath.Join(globals.EventsDir, "recorder")
+	if utils.IsEmpty(config.BackupDir) {
+		config.BackupDir = filepath.Join(globals.EventsDir, "recorder")
 	}
 
-	eventsFile, err := newFile(eventsBackupDir, events.GetSourceKey(source))
+	eventsFile, err := newFile(config.BackupDir, events.GetSourceKey(config.Source))
 	if err != nil {
 		return nil, err
 	}
 
 	recorder := &recorderImpl{
-		id:          fmt.Sprintf("%s-%s", source.GetNodeName(), source.GetComponent()),
-		eventSource: source,
-		eventTypes:  constructEventTypesMap(eventTypes),
+		id:          fmt.Sprintf("%s-%s", config.Source.GetNodeName(), config.Source.GetComponent()),
+		eventSource: config.Source,
+		eventTypes:  constructEventTypesMap(config.EvtTypes),
 		eventsProxy: &eventsProxy{
-			url: evtsproxyURL,
+			url: config.EvtsProxyURL,
 			ctx: context.Background(), // context for all the proxy calls
 		},
 		eventsFile: eventsFile,
@@ -120,8 +125,12 @@ func NewRecorder(source *evtsapi.EventSource, eventTypes []string, evtsproxyURL,
 		},
 	}
 
-	// create events proxy client
-	go recorder.createEvtsProxyRPCClient()
+	if config.SkipEvtsProxy {
+		log.Debug("skipping events proxy")
+		recorder.eventsProxy.connectionAlive = false // all the writes will be sent to file
+	} else {
+		go recorder.createEvtsProxyRPCClient() // create events proxy client
+	}
 
 	once.Do(func() {
 		singletonRecorder = recorder

@@ -74,9 +74,11 @@ var (
 	rpcTrace    = flag.Bool("rpc-trace", false, "Enable gRPC tracing")
 
 	// create events recorder
-	_, _ = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nic_admission_test"},
-		append(pencluster.GetEventTypes(), evtsapi.GetEventTypes()...), "", "/tmp")
+	_, _ = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nic_admission_test"},
+		EvtTypes:      append(pencluster.GetEventTypes(), evtsapi.GetEventTypes()...),
+		BackupDir:     "/tmp",
+		SkipEvtsProxy: true})
 )
 
 type testInfo struct {
@@ -584,11 +586,6 @@ func TestMain(m *testing.M) {
 			return true, true
 		}
 	}
-
-	// create events recorder
-	_, _ = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
-		pencluster.GetEventTypes(), "", "/tmp")
 
 	// Setup
 	Setup(m)

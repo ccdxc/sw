@@ -40,9 +40,11 @@ var (
 	hooksCalled int
 
 	// create events recorder
-	_, _ = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "apigw_test"},
-		evtsapi.GetEventTypes(), "", "/tmp")
+	_, _ = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "apigw_test"},
+		EvtTypes:      evtsapi.GetEventTypes(),
+		BackupDir:     "/tmp",
+		SkipEvtsProxy: true})
 )
 
 type testGwService struct {

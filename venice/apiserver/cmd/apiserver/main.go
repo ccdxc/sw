@@ -69,9 +69,9 @@ func main() {
 		pl.Infof("Failed to load etcd credentials")
 	}
 
-	if _, err = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIServer},
-		evtsapi.GetEventTypes(), "", ""); err != nil {
+	if _, err = recorder.NewRecorder(&recorder.Config{
+		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIServer},
+		EvtTypes: evtsapi.GetEventTypes()}); err != nil {
 		pl.Fatalf("failed to create events recorder, err: %v", err)
 	}
 

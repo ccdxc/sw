@@ -36,9 +36,11 @@ var (
 	nicKey3 = "6666.6666.6666"
 
 	// create events recorder
-	_, _ = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
-		cmd.GetEventTypes(), "", "/tmp")
+	_, _ = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
+		EvtTypes:      cmd.GetEventTypes(),
+		BackupDir:     "/tmp",
+		SkipEvtsProxy: true})
 )
 
 // Mock platform agent

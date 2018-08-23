@@ -54,9 +54,11 @@ const (
 
 var (
 	// create events recorder
-	_, _ = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "smartnic_test"},
-		append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...), "", "/tmp")
+	_, _ = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "smartnic_test"},
+		EvtTypes:      append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...),
+		BackupDir:     "/tmp",
+		SkipEvtsProxy: true})
 )
 
 type testInfo struct {

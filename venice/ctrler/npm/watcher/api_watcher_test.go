@@ -35,9 +35,11 @@ import (
 
 var (
 	// create events recorder
-	_, _ = recorder.NewRecorder(
-		&evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "api_watcher_test"},
-		evtsapi.GetEventTypes(), "", "/tmp")
+	_, _ = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "api_watcher_test"},
+		EvtTypes:      evtsapi.GetEventTypes(),
+		BackupDir:     "/tmp",
+		SkipEvtsProxy: true})
 )
 
 func createAPIServer(url string) (apiserver.Server, apiserver.Config) {
