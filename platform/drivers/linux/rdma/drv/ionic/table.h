@@ -178,7 +178,7 @@ static inline void tbl_insert(struct tbl_root *tbl, void *val, uint32_t key)
 	if (WARN_ON(key >> TBL_KEY_SHIFT))
 		return;
 
-	node = rcu_dereference(tbl->node[node_i]);
+	node = rcu_dereference_protected(tbl->node[node_i], true);
 	if (!node)
 		node = tbl->free_node;
 
@@ -222,7 +222,7 @@ static inline void tbl_delete(struct tbl_root *tbl, uint32_t key)
 	if (WARN_ON(key >> TBL_KEY_SHIFT))
 		return;
 
-	node = rcu_dereference(tbl->node[node_i]);
+	node = rcu_dereference_protected(tbl->node[node_i], true);
 	if (WARN_ON(!node) || WARN_ON(!node->val[key & TBL_NODE_MASK]))
 		return;
 
