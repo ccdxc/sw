@@ -11,6 +11,7 @@ nic/hal/third-party/judy/aarch64/lib/libJudy.so.1                /nic/lib/
 nic/third-party/avago/aarch64/lib/aapl/C/libAAPL.so              /nic/lib/
 platform/gen/aarch64/lib                                         /platform/lib/
 nic/tools/start-hal-haps.sh                                      /nic/tools/
+nic/tools/sysinit.sh                                             /nic/tools/
 nic/tools/start-hal-haps-classic.sh                              /nic/tools/
 nic/tools/start-hal-haps-hostpin.sh                              /nic/tools/
 nic/tools/start-linkmgr-haps.sh                                  /nic/tools/
