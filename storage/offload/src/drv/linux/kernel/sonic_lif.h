@@ -96,6 +96,7 @@ struct lif {
 	struct sonic *sonic;
 	bool registered;
 	unsigned int index;
+	unsigned int seq_q_index;
 	spinlock_t adminq_lock;
 	struct qcq *adminqcq;
 	union stats_dump *stats_dump;

@@ -222,7 +222,8 @@ static int sonic_qcqs_alloc(struct lif *lif)
 
 	pid = sonic_pid_get(lif, 0);
 	flags = QCQ_F_INTR;
-	err = sonic_qcq_alloc(lif, 0, "admin", flags, 1 << 4,
+	err = sonic_qcq_alloc(lif, 0, "admin", flags,
+			1024 * 16, /* TODO choose smaller value once wrapping works */
 			sizeof(struct admin_cmd),
 			sizeof(struct admin_cpl),
 			pid, &lif->adminqcq);
@@ -468,7 +469,8 @@ static int sonic_cpdc_q_init(struct per_core_resource *res, struct queue *q,
 	err = sonic_q_alloc(res->lif, q, num_descs, desc_size, true);
 	if (err)
 		return err;
-	err = sonic_q_init(res->lif, &res->lif->sonic->idev, q, 0, "cpdc",
+	err = sonic_q_init(res->lif, &res->lif->sonic->idev, q,
+			   res->lif->seq_q_index++, "cpdc",
 			   num_descs, desc_size, pid);
 	if (err) {
 		sonic_q_free(res->lif, q);
@@ -580,8 +582,9 @@ static int sonic_crypto_q_init(struct per_core_resource *res,
 	err = sonic_q_alloc(res->lif, q, num_descs, desc_size, true);
 	if (err)
 		return err;
-	err = sonic_q_init(res->lif, &res->lif->sonic->idev, q, 0, "crypto",
-			   num_descs, desc_size, 0);
+	err = sonic_q_init(res->lif, &res->lif->sonic->idev, q,
+			   res->lif->seq_q_index++, "crypto",
+			   num_descs, desc_size, pid);
 	if (err) {
 		sonic_q_free(res->lif, q);
 		return err;
@@ -666,14 +669,13 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	err = sonic_lif_crypto_seq_qs_init(res);
 	if (err)
 		goto done;
-#if 0
+
 	err = sonic_lif_cpdc_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
 	if (err)
 		goto done;
 	err = sonic_lif_crypto_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
 	if (err)
 		goto done;
-#endif
 	
 	res->initialized = true;
 done:
@@ -811,11 +813,11 @@ int sonic_lifs_size(struct sonic *sonic)
 	sonic->num_per_core_resources = MAX_NUM_CORES;
 	nintrs = MAX_NUM_CORES;
 	if (nintrs > dev_nintrs)
-		return -(ENOSPC + 1000 + dev_nintrs);
+		return -ENOSPC;
 
 	err = sonic_bus_alloc_irq_vectors(sonic, nintrs);
 	if (err < 0)
-		return err - 2000;
+		return err;
 	sonic->nintrs = nintrs;
 	return sonic_debugfs_add_sizes(sonic);
 }
@@ -936,10 +938,6 @@ struct lif* sonic_get_lif(void)
 {
 	return sonic_glif;
 }
-
-
-
-/* TODO below */
 
 static int sonic_lif_seq_q_init(struct queue *q)
 {
