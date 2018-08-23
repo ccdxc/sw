@@ -18,8 +18,12 @@
 
 #define ACCEL_DEV_PAGE_SIZE             4096
 #define ACCEL_DEV_PAGE_MASK             (ACCEL_DEV_PAGE_SIZE - 1)
+
+#define ACCEL_DEV_ADDR_ALIGN(addr, sz)  \
+    (((addr) + ((uint64_t)(sz) - 1)) & ~((uint64_t)(sz) - 1))
+    
 #define ACCEL_DEV_PAGE_ALIGN(addr)      \
-    (((addr) + ACCEL_DEV_PAGE_MASK) & ~ACCEL_DEV_PAGE_MASK)
+    ACCEL_DEV_ADDR_ALIGN(addr, ACCEL_DEV_PAGE_SIZE)
 
 enum {
     ACCEL_DEV_BAR0_DEV_CMD_REGS_PAGE    = 0,
