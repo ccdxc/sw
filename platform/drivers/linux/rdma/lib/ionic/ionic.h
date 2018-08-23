@@ -70,6 +70,8 @@ struct ionic_ctx {
 	uint8_t			rq_qtype;
 	uint8_t			cq_qtype;
 
+	uint8_t			max_stride;
+
 	uint64_t		*dbpage;
 
 	pthread_mutex_t		mut;

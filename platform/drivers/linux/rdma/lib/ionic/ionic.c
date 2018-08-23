@@ -117,6 +117,8 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 		ctx->rq_qtype = resp.rq_qtype;
 		ctx->cq_qtype = resp.cq_qtype;
 
+		ctx->max_stride = resp.max_stride;
+
 		ctx->dbpage = ionic_map_device(1u << ctx->pg_shift, cmd_fd,
 					       resp.dbell_offset);
 		if (!ctx->dbpage) {
