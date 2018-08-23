@@ -129,7 +129,7 @@ static int ionic_destroy_cq(struct ibv_cq *ibcq)
 
 static int ionic_flush_recv(struct ionic_qp *qp, struct ibv_wc *wc)
 {
-	struct ionic_v1_recv_wqe *wqe;
+	struct ionic_v1_wqe *wqe;
 	struct ionic_rq_meta *meta;
 
 	if (!qp->rq_flush)
@@ -697,9 +697,9 @@ static int ionic_qp_sq_init(struct ionic_ctx *ctx, struct ionic_qp *qp,
 
 	if (max_wr < 0 || max_wr > 0xffff)
 		return EINVAL;
-	if (max_sge < 0 || max_sge > ionic_v1_send_wqe_max_sge(wqe_size))
+	if (max_sge < 0 || max_sge > ionic_v1_send_wqe_max_sge(ctx->max_stride))
 		return EINVAL;
-	if (max_data < 0 || max_data > ionic_v1_send_wqe_max_data(wqe_size))
+	if (max_data < 0 || max_data > ionic_v1_send_wqe_max_data(ctx->max_stride))
 		return EINVAL;
 
 	wqe_size = ionic_v1_send_wqe_min_size(max_sge, max_data);
@@ -756,7 +756,7 @@ static int ionic_qp_rq_init(struct ionic_ctx *ctx, struct ionic_qp *qp,
 
 	if (max_wr < 0 || max_wr > 0xffff)
 		return EINVAL;
-	if (max_sge < 0 || max_sge > ionic_v1_recv_wqe_max_sge(wqe_size))
+	if (max_sge < 0 || max_sge > ionic_v1_recv_wqe_max_sge(ctx->max_stride))
 		return EINVAL;
 
 	wqe_size = ionic_v1_recv_wqe_min_size(max_sge);
@@ -893,12 +893,9 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 
 	ex->cap.max_send_wr = qp->sq.mask;
 	ex->cap.max_recv_wr = qp->rq.mask;
-	ex->cap.max_send_sge =
-		ionic_v1_send_wqe_max_sge(1u << qp->sq.stride_log2);
-	ex->cap.max_recv_sge =
-		ionic_v1_recv_wqe_max_sge(1u << qp->rq.stride_log2);
-	ex->cap.max_inline_data =
-		ionic_v1_send_wqe_max_data(1u << qp->sq.stride_log2);
+	ex->cap.max_send_sge = ionic_v1_send_wqe_max_sge(qp->sq.stride_log2);
+	ex->cap.max_recv_sge = ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2);
+	ex->cap.max_inline_data = ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
 
 	return &qp->vqp.qp;
 
@@ -1141,7 +1138,7 @@ static void ionic_v0_prep_base(struct ionic_qp *qp,
 static void ionic_v1_prep_base(struct ionic_qp *qp,
 			       struct ibv_send_wr *wr,
 			       struct ionic_sq_meta *meta,
-			       struct ionic_v1_send_wqe *wqe)
+			       struct ionic_v1_wqe *wqe)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 
@@ -1190,12 +1187,12 @@ static int ionic_v0_prep_common(struct ionic_qp *qp,
 	if (wr->send_flags & IBV_SEND_INLINE) {
 		wqe->base.num_sges = 0;
 		wqe->base.inline_data_vld = 1;
-		mval = ionic_v1_send_wqe_max_data(1u << qp->sq.stride_log2);
+		mval = ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
 		signed_len = ionic_prep_inline(wqe->u.non_atomic.sg_arr, mval,
 					       wr->sg_list, wr->num_sge);
 	} else {
 		wqe->base.num_sges = wr->num_sge;
-		mval = ionic_v1_send_wqe_max_sge(1u << qp->sq.stride_log2);
+		mval = ionic_v1_send_wqe_max_sge(qp->sq.stride_log2);
 		signed_len = ionic_prep_sgl(wqe->u.non_atomic.sg_arr, mval,
 					    wr->sg_list, wr->num_sge);
 	}
@@ -1214,7 +1211,7 @@ static int ionic_v0_prep_common(struct ionic_qp *qp,
 static int ionic_v1_prep_common(struct ionic_qp *qp,
 				struct ibv_send_wr *wr,
 				struct ionic_sq_meta *meta,
-				struct ionic_v1_send_wqe *wqe)
+				struct ionic_v1_wqe *wqe)
 {
 	int64_t signed_len;
 	uint32_t mval;
@@ -1222,12 +1219,12 @@ static int ionic_v1_prep_common(struct ionic_qp *qp,
 	if (wr->send_flags & IBV_SEND_INLINE) {
 		wqe->base.num_sge_key = 0;
 		wqe->base.flags |= htobe32(IONIC_V1_FLAG_INL);
-		mval = ionic_v1_send_wqe_max_data(1u << qp->sq.stride_log2);
+		mval = ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
 		signed_len = ionic_prep_inline(wqe->common.data, mval,
 					       wr->sg_list, wr->num_sge);
 	} else {
 		wqe->base.num_sge_key = wr->num_sge;
-		mval = ionic_v1_send_wqe_max_sge(1u << qp->sq.stride_log2);
+		mval = ionic_v1_send_wqe_max_sge(qp->sq.stride_log2);
 		signed_len = ionic_prep_sgl(wqe->common.sgl, mval,
 					    wr->sg_list, wr->num_sge);
 	}
@@ -1287,7 +1284,7 @@ static int ionic_v1_prep_send(struct ionic_qp *qp,
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 	struct ionic_sq_meta *meta;
-	struct ionic_v1_send_wqe *wqe;
+	struct ionic_v1_wqe *wqe;
 
 	meta = &qp->sq_meta[qp->sq.prod];
 	wqe = ionic_queue_at_prod(&qp->sq);
@@ -1364,7 +1361,7 @@ static int ionic_v1_prep_send_ud(struct ionic_qp *qp, struct ibv_send_wr *wr)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 	struct ionic_sq_meta *meta;
-	struct ionic_v1_send_wqe *wqe;
+	struct ionic_v1_wqe *wqe;
 	struct ionic_ah *ah;
 
 	if (unlikely(!wr->wr.ud.ah))
@@ -1448,7 +1445,7 @@ static int ionic_v1_prep_rdma(struct ionic_qp *qp,
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 	struct ionic_sq_meta *meta;
-	struct ionic_v1_send_wqe *wqe;
+	struct ionic_v1_wqe *wqe;
 
 	meta = &qp->sq_meta[qp->sq.prod];
 	wqe = ionic_queue_at_prod(&qp->sq);
@@ -1541,7 +1538,7 @@ static int ionic_v1_prep_atomic(struct ionic_qp *qp,
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 	struct ionic_sq_meta *meta;
-	struct ionic_v1_send_wqe *wqe;
+	struct ionic_v1_wqe *wqe;
 
 	if (wr->num_sge != 1 || wr->sg_list[0].length != 8)
 		return EINVAL;
@@ -1594,7 +1591,7 @@ static int ionic_v1_prep_inv(struct ionic_qp *qp, struct ibv_send_wr *wr)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 	struct ionic_sq_meta *meta;
-	struct ionic_v1_send_wqe *wqe;
+	struct ionic_v1_wqe *wqe;
 
 	if (wr->send_flags & (IBV_SEND_SOLICITED | IBV_SEND_INLINE))
 		return EINVAL;
@@ -1620,7 +1617,7 @@ static int ionic_v1_prep_bind(struct ionic_qp *qp, struct ibv_send_wr *wr)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 	struct ionic_sq_meta *meta;
-	struct ionic_v1_send_wqe *wqe;
+	struct ionic_v1_wqe *wqe;
 	int flags;
 
 	if (wr->send_flags & (IBV_SEND_SOLICITED | IBV_SEND_INLINE))
@@ -1852,7 +1849,7 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 	struct ionic_rq_meta *meta;
-	struct ionic_v1_recv_wqe *wqe;
+	struct ionic_v1_wqe *wqe;
 	int64_t signed_len;
 	uint32_t mval;
 
@@ -1869,8 +1866,8 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 
 	memset(wqe, 0, 1u << qp->rq.stride_log2);
 
-	mval = ionic_v1_recv_wqe_max_sge(1u << qp->rq.stride_log2);
-	signed_len = ionic_prep_sgl(wqe->sgl, mval,
+	mval = ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2);
+	signed_len = ionic_prep_sgl(wqe->recv.sgl, mval,
 				    wr->sg_list, wr->num_sge);
 	if (signed_len < 0)
 		return (int)-signed_len;
@@ -2044,7 +2041,7 @@ static struct ibv_srq *ionic_create_srq_ex(struct ibv_context *ibctx,
 	}
 
 	ex->attr.max_wr = qp->rq.mask;
-	ex->attr.max_sge = ionic_v1_recv_wqe_max_sge(1u << qp->rq.stride_log2);
+	ex->attr.max_sge = ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2);
 
 	return &qp->vsrq.srq;
 

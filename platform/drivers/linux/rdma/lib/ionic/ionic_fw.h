@@ -111,7 +111,7 @@ static inline int ionic_to_ibv_status(int sts)
 	}
 }
 
-/* specific to version 1 */
+/* fw abi v1 */
 
 /* completion queue v1 cqe */
 struct ionic_v1_cqe {
@@ -192,7 +192,7 @@ static inline uint32_t ionic_v1_cqe_qtf_qid(uint32_t qtf)
 }
 
 /* v1 base wqe header */
-struct ionic_v1_base_wqe {
+struct ionic_v1_base_hdr {
 	uint64_t			wqe_id;
 	uint8_t				op;
 	uint8_t				num_sge_key;
@@ -200,61 +200,73 @@ struct ionic_v1_base_wqe {
 	__be32				length_key;
 };
 
-/* v1 recv wqe */
-struct ionic_v1_recv_wqe {
-	struct ionic_v1_base_wqe	base;
+/* v1 receive wqe body */
+struct ionic_v1_recv_bdy {
 	uint8_t				rsvd[16]; /* XXX want sge here */
 	struct ionic_sge		sgl[2];
 };
 
-/* v1 send wqe */
-struct ionic_v1_send_wqe {
-	struct ionic_v1_base_wqe	base;
+/* v1 send/rdma wqe body (common, has sgl) */
+struct ionic_v1_common_bdy {
 	union {
 		struct {
-			union {
-				struct {
-					__le32	ah_id;
-					__be32	dest_qpn;
-					__be32	dest_qkey;
-					__be32	imm_data_rkey;
-				} send;
-				struct {
-					__be64	remote_va;
-					__be32	remote_rkey;
-					__be32	imm_data;
-				} rdma;
-			};
-			union {
-				uint8_t	data[32];
-				struct ionic_sge sgl[2];
-			};
-		} common;
+			__le32		ah_id;
+			__be32		dest_qpn;
+			__be32		dest_qkey;
+			__be32		imm_data_rkey;
+		} send;
 		struct {
 			__be64		remote_va;
 			__be32		remote_rkey;
-			__be32		swap_add_high;
-			__be32		swap_add_low;
-			__be32		compare_high;
-			__be32		compare_low;
-			uint8_t		rsvd[4];
-			struct ionic_sge sge;
-		} atomic;
-		struct {
-			__le64		va;
-			__le64		length;
-			__le64		offset;
-			__le64		dma_addr;
-			uint8_t		dir_size_log2;
-			uint8_t		page_size_log2;
-			uint8_t		rsvd[14];
-		} reg_mr;
-		struct {
-			__le64		va;
-			__le64		length;
-			__le32		lkey;
-			uint8_t		rsvd[28];
-		} bind_mw;
+			__be32		imm_data;
+		} rdma;
+	};
+	union {
+		uint8_t			data[32];
+		struct ionic_sge	sgl[2];
+	};
+};
+
+/* v1 atomic wqe body */
+struct ionic_v1_atomic_bdy {
+	__be64				remote_va;
+	__be32				remote_rkey;
+	__be32				swap_add_high;
+	__be32				swap_add_low;
+	__be32				compare_high;
+	__be32				compare_low;
+	uint8_t				rsvd[4];
+	struct ionic_sge		sge;
+};
+
+/* v1 reg mr wqe body */
+struct ionic_v1_reg_mr_bdy {
+	__le64				va;
+	__le64				length;
+	__le64				offset;
+	__le64				dma_addr;
+	uint8_t				dir_size_log2;
+	uint8_t				page_size_log2;
+	uint8_t				rsvd[14];
+};
+
+/* v1 bind mw wqe body */
+struct ionic_v1_bind_mw_bdy {
+	__le64				va;
+	__le64				length;
+	__le32				lkey;
+	uint8_t				rsvd[28];
+};
+
+/* v1 send/recv wqe */
+struct ionic_v1_wqe {
+	struct ionic_v1_base_hdr	base;
+	union {
+		struct ionic_v1_recv_bdy	recv;
+		struct ionic_v1_common_bdy	common;
+		struct ionic_v1_atomic_bdy	atomic;
+		struct ionic_v1_reg_mr_bdy	reg_mr;
+		struct ionic_v1_bind_mw_bdy	bind_mw;
 	};
 };
 
@@ -284,9 +296,9 @@ static inline size_t ionic_v1_send_wqe_min_size(int min_sge, int min_data)
 {
 	size_t sz_wqe, sz_sgl, sz_data;
 
-	sz_wqe = sizeof(struct ionic_v1_send_wqe);
-	sz_sgl = offsetof(struct ionic_v1_send_wqe, common.sgl[min_sge]);
-	sz_data = offsetof(struct ionic_v1_send_wqe, common.data[min_data]);
+	sz_wqe = sizeof(struct ionic_v1_wqe);
+	sz_sgl = offsetof(struct ionic_v1_wqe, common.sgl[min_sge]);
+	sz_data = offsetof(struct ionic_v1_wqe, common.data[min_data]);
 
 	if (sz_sgl > sz_wqe)
 		sz_wqe = sz_sgl;
@@ -299,7 +311,7 @@ static inline size_t ionic_v1_send_wqe_min_size(int min_sge, int min_data)
 
 static inline int ionic_v1_send_wqe_max_sge(uint8_t stride_log2)
 {
-	struct ionic_v1_send_wqe *wqe = (void *)0;
+	struct ionic_v1_wqe *wqe = (void *)0;
 	struct ionic_sge *sge = (void *)(1ull << stride_log2);
 
 	return sge - wqe->common.sgl;
@@ -307,7 +319,7 @@ static inline int ionic_v1_send_wqe_max_sge(uint8_t stride_log2)
 
 static inline int ionic_v1_send_wqe_max_data(uint8_t stride_log2)
 {
-	struct ionic_v1_send_wqe *wqe = (void *)0;
+	struct ionic_v1_wqe *wqe = (void *)0;
 	uint8_t *data = (void *)(1ull << stride_log2);
 
 	return data - wqe->common.data;
@@ -317,8 +329,8 @@ static inline size_t ionic_v1_recv_wqe_min_size(int min_sge)
 {
 	size_t sz_wqe, sz_sgl;
 
-	sz_wqe = sizeof(struct ionic_v1_recv_wqe);
-	sz_sgl = offsetof(struct ionic_v1_recv_wqe, sgl[min_sge]);
+	sz_wqe = sizeof(struct ionic_v1_wqe);
+	sz_sgl = offsetof(struct ionic_v1_wqe, recv.sgl[min_sge]);
 
 	if (sz_sgl > sz_wqe)
 		sz_wqe = sz_sgl;
@@ -328,10 +340,10 @@ static inline size_t ionic_v1_recv_wqe_min_size(int min_sge)
 
 static inline int ionic_v1_recv_wqe_max_sge(uint8_t stride_log2)
 {
-	struct ionic_v1_recv_wqe *wqe = (void *)0;
+	struct ionic_v1_wqe *wqe = (void *)0;
 	struct ionic_sge *sge = (void *)(1ull << stride_log2);
 
-	return sge - wqe->sgl;
+	return sge - wqe->recv.sgl;
 }
 
 /* XXX to end of file: makeshift, will be removed */
