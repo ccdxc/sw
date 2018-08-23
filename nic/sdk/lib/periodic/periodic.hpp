@@ -11,8 +11,8 @@
 #ifndef __PERIODIC_HPP__
 #define __PERIODIC_HPP__
 
-#include "sdk/base.hpp"
-#include "sdk/twheel.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/twheel.hpp"
 
 namespace sdk {
 namespace lib {

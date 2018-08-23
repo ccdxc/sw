@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
-#include "sdk/thread.hpp"
-#include "sdk/timerfd.hpp"
+#include "include/sdk/thread.hpp"
+#include "include/sdk/timerfd.hpp"
 #include "lib/periodic/periodic.hpp"
 
 //------------------------------------------------------------------------------
