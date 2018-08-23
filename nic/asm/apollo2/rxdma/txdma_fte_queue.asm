@@ -22,7 +22,7 @@ pkt_enqueue:
     // check q full
     add         r1, r0, d.pkt_enqueue_d.sw_pindex0
     mincr       r1, d.{pkt_enqueue_d.ring_size0}.hx, 1
-    seq         c2, r1, d.pkt_enqueue_d.c_index0
+    seq         c2, r1, d.{pkt_enqueue_d.c_index0}.hx
     bcf         [c2], txdma_q_full
     // compute entry offset for current p_index
     mul         r2, d.pkt_enqueue_d.sw_pindex0, PKTQ_PAGE_SIZE

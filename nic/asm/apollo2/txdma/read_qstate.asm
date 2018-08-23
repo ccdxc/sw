@@ -10,7 +10,7 @@ struct read_qstate_d        d;
 
 read_qstate_info:
     seq         c2, d.read_qstate_info_d.sw_cindex0, \
-                    d.read_qstate_info_d.p_index0
+                    d.{read_qstate_info_d.p_index0}.hx
     bcf         [c2], txdma_q_empty
 
     // Compute control offset based on current cindex
