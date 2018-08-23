@@ -19,8 +19,15 @@ var showCmd = &cobra.Command{
 	// },
 }
 
+var debugCmd = &cobra.Command{
+	Use:   "debug",
+	Short: "Set debug options",
+	Long:  `Set debug options`,
+}
+
 func init() {
 	rootCmd.AddCommand(showCmd)
+	rootCmd.AddCommand(debugCmd)
 
 	// Here you will define your flags and configuration settings.
 
