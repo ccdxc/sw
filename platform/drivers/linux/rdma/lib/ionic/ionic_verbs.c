@@ -53,8 +53,7 @@ static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 
 	int rc;
 
-	/* XXX hardcode value */
-	if (ncqe > 0xffff) {
+	if (ncqe < 1 || ncqe > 0xffff) {
 		rc = EINVAL;
 		goto err;
 	}
@@ -283,10 +282,10 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	src_qpn = be32toh(cqe->recv.src_qpn_op);
 	op = src_qpn >> IONIC_V1_CQE_RECV_OP_SHIFT;
 
-	/* XXX fixup op: cqe has recv flags in qtf, not all in srq_qpn_op */
+	/* XXX makeshift: cqe has recv flags in qtf, not all in srq_qpn_op */
 	if (op == OP_TYPE_RDMA_OPER_WITH_IMM) {
 		op = IONIC_V1_CQE_RECV_OP_RDMA_IMM;
-	} else {
+	} else if (op == OP_TYPE_SEND_RCVD) {
 		op = IONIC_V1_CQE_RECV_OP_SEND;
 		if (cqe->qid_type_flags & htobe32(IONIC_V1_CQE_RCVD_WITH_IMM))
 			op = IONIC_V1_CQE_RECV_OP_SEND_IMM;
@@ -312,11 +311,6 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	wc->byte_len = meta->len; /* XXX byte_len must come from cqe */
 	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
 	wc->pkey_index = be16toh(cqe->recv.pkey_index);
-
-	/* XXX: also need from cqe... slid, sl, dlid_path_bits */
-	wc->slid = 0;
-	wc->sl = 0;
-	wc->dlid_path_bits = 0;
 
 out:
 	ionic_queue_consume(&qp->rq);
