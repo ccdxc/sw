@@ -65,6 +65,7 @@ table udp_flow_hash0 {
 
 @pragma stage 0
 @pragma hbm_table
+//@pragma table_write
 @pragma overflow_table udp_flow_hash0
 table udp_flow_overflow0 {
     reads {
@@ -95,7 +96,7 @@ table udp_flow_hash1 {
 
 @pragma stage 1
 @pragma hbm_table
-@pragma table_write
+//@pragma table_write
 @pragma overflow_table udp_flow_hash1
 table udp_flow_overflow1 {
     reads {
@@ -126,7 +127,7 @@ table udp_flow_hash2 {
 
 @pragma stage 2
 @pragma hbm_table
-@pragma table_write
+//@pragma table_write
 @pragma overflow_table udp_flow_hash2
 table udp_flow_overflow2 {
     reads {
@@ -157,7 +158,7 @@ table udp_flow_hash3 {
 
 @pragma stage 3
 @pragma hbm_table
-@pragma table_write
+//@pragma table_write
 @pragma overflow_table udp_flow_hash3
 table udp_flow_overflow3 {
     reads {
@@ -184,6 +185,7 @@ table udp_q_drain {
 
 @pragma stage 4
 @pragma table_write
+@pragma index_table
 table udp_flow_qid_allocator{
     // single entry SRAM table
     reads {
@@ -202,6 +204,7 @@ action qid_alloc_free(qid_bitmap) {
 
 @pragma stage 4
 @pragma hbm_table
+@pragma index_table
 table udp_flow_qid_update_virtual {
     // this is physically the same table as udp_flow_qid_update
     reads {
@@ -216,6 +219,7 @@ table udp_flow_qid_update_virtual {
 @pragma stage 5
 @pragma hbm_table
 @pragma table_write
+@pragma index_table
 table udp_flow_qid_update {
     reads {
         udp_flow_meta.udp_qid_tbl_idx : exact;

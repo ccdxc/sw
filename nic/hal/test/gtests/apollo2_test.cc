@@ -355,6 +355,11 @@ class apollo_test : public ::testing::Test {
 TEST_F(apollo_test, test1) {
     int ret = 0;
     uint64_t asm_base_addr;
+    char *default_config_dir = NULL;
+    capri_cfg_t cfg;
+    sdk::lib::catalog *catalog;
+
+
     p4pd_cfg_t p4pd_cfg = {
         .table_map_cfg_file  = "apollo2/capri_p4_table_map.json",
         .p4pd_pgm_name       = "apollo2_p4",
@@ -376,10 +381,11 @@ TEST_F(apollo_test, test1) {
         .p4pd_txdma_pgm_name = "apollo2_txdma",
         .cfg_path = std::getenv("HAL_CONFIG_PATH")
     };
+
     const char *hal_conf_file = "conf/hal.json";
-    char *default_config_dir = NULL;
-    capri_cfg_t cfg;
-    sdk::lib::catalog *catalog;
+    if (getenv("HAL_PLATFORM_MODE_RTL")) {
+        hal_conf_file = "conf/apollo2/hal_rtl.json";
+    }
 
     printf("Connecting to ASIC SIM\n");
     hal::utils::trace_init("hal", 0, true, "hal.log", hal::utils::trace_debug);
@@ -397,9 +403,6 @@ TEST_F(apollo_test, test1) {
     printf("Parsing HBM config\n");
     ret = capri_hbm_parse(&cfg);
     ASSERT_NE(ret, -1);
-    if (getenv("HAL_PLATFORM_MODE_RTL")) {
-        hal_conf_file = "conf/apollo2/hal_rtl.json";
-    }
 
     printf("Loading Programs\n");
     asm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
@@ -417,6 +420,7 @@ TEST_F(apollo_test, test1) {
                                   (char *)"obj/apollo2_txdma/asm_bin",
                                   asm_base_addr, NULL, 0);
     ASSERT_NE(ret, -1);
+
     std::ifstream json_cfg(hal_conf_file);
     ptree pt;
     read_json(json_cfg, pt);
@@ -428,6 +432,8 @@ TEST_F(apollo_test, test1) {
     ret = capri_hbm_cache_init(NULL);
     ASSERT_NE(ret, -1);
     ret = capri_hbm_cache_regions_init();
+    ASSERT_NE(ret, -1);
+    ret = capri_tm_asic_init();
     ASSERT_NE(ret, -1);
     ret = p4pluspd_rxdma_init(&p4pd_rxdma_cfg);
     ASSERT_NE(ret, -1);
@@ -446,7 +452,6 @@ TEST_F(apollo_test, test1) {
 
     catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
     ASSERT_TRUE(catalog != NULL);
-
     if (!catalog->qos_sw_init_enabled()) {
         default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
         if (default_config_dir) {
@@ -457,6 +462,7 @@ TEST_F(apollo_test, test1) {
         ret = capri_default_config_init(&cfg);
     }
     ASSERT_NE(ret, -1);
+
     ret = capri_tm_init(catalog);
     ASSERT_NE(ret, -1);
 

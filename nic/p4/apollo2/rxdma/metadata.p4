@@ -60,10 +60,10 @@ header_type udp_scratch_metadata_t {
 }
 header_type udp_flow_metadata_t {
     fields {
-        zero                        : 1;
-        pad0                        : 3;
-        udp_qid_tbl_idx             : 12;   // stg_id | udp_oflow_index[10:0]
-        udp_flow_qid                : 8;
+        zero            : 1;
+        pad0            : 3;
+        udp_qid_tbl_idx : 12;   // stg_id | udp_oflow_index[10:0]
+        udp_flow_qid    : 8;
     }
 }
 

@@ -3228,6 +3228,7 @@ def capri_te_cfg_output(stage):
     max_key_sel = stage.gtm.tm.be.hw_model['match_action']['num_predicate_bits']
     max_tbl_profiles = stage.gtm.tm.be.hw_model['match_action']['num_table_profiles']
     max_hw_flits = stage.gtm.tm.be.hw_model['phv']['max_hw_flits']
+    num_km = stage.gtm.tm.be.hw_model['match_action']['num_key_makers']
     json_tbl_prof_key = json_regs['cap_te_csr_cfg_table_profile_key']
 
     # XXX TCAM programming can be handled in a loop for all predicate values
@@ -3337,7 +3338,6 @@ def capri_te_cfg_output(stage):
         fid = 0
         prev_fid = -1
         cyc_done = False
-        num_km = stage.gtm.tm.be.hw_model['match_action']['num_key_makers']
         prev_km_prof = [(-1,-1) for _ in range(num_km)] # preserve the profile_id on unused flits
         for cyc in range(len(stage.table_sequencer[prof_val])):
             cyc_km_used = {}
@@ -3461,11 +3461,16 @@ def capri_te_cfg_output(stage):
 
         prof_idx += 1
 
-    if len(stage.active_predicates) > 0:
+    if len(stage.active_predicates) > 0 or prof_idx == 0:
+        # prof_idx == 0 indicates that no tables to be run in this stage, use catch-all
+        if prof_idx == 0:
+            stage.gtm.tm.logger.debug(\
+                "%s:Stage[%d]:Empty Stage. Use catch-all to skip it" % \
+                (stage.gtm.d.name, stage.id))
         if prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles']:
             # create a catch-all entry to execute NO tables
             # ASIC seems to use tcam entry 0 on miss (Initally plan was to skip table lookups on miss)
-            # If all entries al already programmed.. we can skip this... but need to make sure if there
+            # If all entries are already programmed.. we can skip this... but need to make sure if there
             # can be a tcam miss - XXX
             te = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx]
             _fill_te_tcam_catch_all(te)
@@ -3483,6 +3488,11 @@ def capri_te_cfg_output(stage):
             # setup sram entry to launch no lookup
             se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
             se['lkup']['value'] = te_consts['no_op']
+            # init a few other values to keep RTL sim happy
+            se['tableid']['value'] = str(0)
+            se['hash_sel']['value'] = str(0)
+            se['hash_chain']['value'] = str(0)
+            se['hash_store']['value'] = str(0)
             # For good measures, hw model checks that key-makers are cleared on very first
             # cycle of the sequencer
             for kmid in range(num_km):
