@@ -748,6 +748,10 @@ cq_next:
 	if (old_prod != aq->q.prod)
 		ionic_dbell_ring(&dev->dbpage[dev->admin_qtype],
 				 ionic_queue_dbell_val(&aq->q));
+
+	/* XXX work around event queue */
+	if (!ionic_queue_empty(&aq->q))
+		queue_work(ionic_workq, &dev->admin_work);
 }
 
 static void ionic_admin_work(struct work_struct *ws)
