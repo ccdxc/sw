@@ -1,7 +1,10 @@
-export TOPDIR := ${realpath ${CURDIR}}
+export TOPDIR   := ${realpath ${CURDIR}}
+export SDKDIR   := ${TOPDIR}
+export BLDTOP   := ${TOPDIR}
+export MAKEDEFS := ${TOPDIR}/makedefs
 
-include makedefs/config.mk
-include makedefs/modules.mk
+include ${MAKEDEFS}/config.mk
+include ${MAKEDEFS}/generator.mk
 
 .DEFAULT_GOAL := all
 

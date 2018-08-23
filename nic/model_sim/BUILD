@@ -4,7 +4,7 @@ licenses(["notice"])  # MIT license
 cc_library(
     name = "model_client",
     srcs = [
-            "src/lib_model_client.cc"
+            "src/client/lib_model_client.cc"
             ],
     linkopts = [
             "-lzmq",
@@ -18,7 +18,7 @@ cc_library(
 cc_binary(
     name = "cap_model",
     srcs = [
-            "src/model_server.cc",
+            "src/server/model_server.cc",
             "libs/libmodel_cc.so",
             "libs/libcapsim.a",
             "libs/libcommon_cc.so",
@@ -72,7 +72,7 @@ cc_library(
 cc_binary(
     name = "model_cli",
     srcs = [
-            "examples/model_cli.cc",
+            "model_cli/model_cli.cc",
             ],
     deps = [
             "//nic/model_sim/include:modelsim_includes",

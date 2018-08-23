@@ -1,0 +1,18 @@
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+export TOPDIR   := ${realpath ${CURDIR}/../}
+export NICDIR   := ${TOPDIR}/nic
+export SDKDIR   := ${NICDIR}/sdk
+export BLDTOP   := ${realpath .}
+export MAKEDEFS := ${TOPDIR}/nic/sdk/makedefs
+#export MODULES  := $(shell find ./ -name module.mk -not -path './sdk/*')
+
+include ${MAKEDEFS}/config.mk
+include ${MAKEDEFS}/generator.mk
+
+.DEFAULT_GOAL := all
+
+.PHONY: all clean
+all: ${ALL_TARGETS} 
+
+clean:
+	${AT}rm -rf ${BLD_ARCH_DIR}

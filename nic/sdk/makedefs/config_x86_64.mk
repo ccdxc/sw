@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
-include makedefs/common.mk
-include makedefs/release.mk
+include ${MAKEDEFS}/common.mk
+include ${MAKEDEFS}/release.mk
 
 CMD_GXX             := g++
 CMD_GXX_FLAGS       := ${COMMON_GXX_FLAGS} ${RELEASE_GXX_FLAGS}

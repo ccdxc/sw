@@ -50,7 +50,7 @@ class HostMem : public pen_mem_base {
                           unsigned int len, bool secure, bool reverse_bo) {
     uint64_t orig_addr = addr;
     addr &= (1ULL << 52) - 1;
-    for (int i = 0; i < match_addr.size(); i++) {
+    for (unsigned int i = 0; i < match_addr.size(); i++) {
        if ((addr == (match_addr[i] & ((1ULL << 52) - 1))) && (orig_addr != match_addr[i])) {
          return false;
        }
@@ -65,7 +65,7 @@ class HostMem : public pen_mem_base {
                            unsigned int len, bool secure, bool reverse_bo) {
     uint64_t orig_addr = addr;
     addr &= (1ULL << 52) - 1;
-    for (int i = 0; i < match_addr.size(); i++) {
+    for (unsigned int i = 0; i < match_addr.size(); i++) {
        if ((addr == (match_addr[i] & ((1ULL << 52) - 1))) && (orig_addr != match_addr[i])) {
          return false;
        }
@@ -117,8 +117,7 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
         case BUFF_TYPE_STEP_PKT:
         {
             std::vector<unsigned char> pkt_vector(buff->data, buff->data + buff->size);
-            uint32_t port;
-            uint32_t cos;
+            uint32_t port = 0;
             /* Send packet through the model */
             env->step_network_pkt(pkt_vector, buff->port);
             buff->type = BUFF_TYPE_STATUS;
@@ -459,8 +458,6 @@ model_sig_init (void)
 
 int main (int argc, char ** argv)
 {
-    int rc;
-
     model_sig_init();
 
     HOST_MEM::access(&g_host_mem);

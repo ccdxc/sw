@@ -3,7 +3,7 @@
           before including the common p4 defines.
 */
 
-#include "../common-p4+/common_txdma_dummy.p4"
+#include "nic/p4/common-p4+/common_txdma_dummy.p4"
 
 #define common_p4plus_stage0_app_header_table_action_dummy adminq_fetch_desc
 #define tx_table_s0_t0_action adminq_fetch_desc
@@ -12,7 +12,7 @@
 #define tx_table_s3_t0_action adminq_commit
 
 
-#include "../common-p4+/common_txdma.p4"
+#include "nic/p4/common-p4+/common_txdma.p4"
 #include "adminq_txdma.p4"
 #include "defines.h"
 

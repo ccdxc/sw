@@ -68,3 +68,4 @@ debug_cli/cli/cli_wrap.cc
 debug_cli/cli/.dir
 debug_cli/cli/.swig
 mmap.bin
+build

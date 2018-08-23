@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
-include makedefs/common.mk
-include makedefs/release.mk
+include ${MAKEDEFS}/common.mk
+include ${MAKEDEFS}/release.mk
 
 TOOLCHAIN_DIR       = /tool/toolchain/aarch64-1.1
 TOOLCHAIN_PREFIX    = ${TOOLCHAIN_DIR}/bin/aarch64-linux-gnu
@@ -33,7 +33,6 @@ CMD_OBJCOPY			:= ${TOOLCHAIN_PREFIX}-objcopy
 CMD_OBJDUMP         := ${TOOLCHAIN_PREFIX}-objdump
 CMD_STRIP           := ${TOOLCHAIN_PREFIX}-strip
 CMD_AS              := ${TOOLCHAIN_PREFIX}-as
-
 
 CONFIG_ARLIB_FLAGS  := ${COMMON_ARLIB_FLAGS}  ${RELEASE_ARLIB_FLAGS}
 

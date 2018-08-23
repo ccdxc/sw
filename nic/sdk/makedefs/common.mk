@@ -22,15 +22,15 @@ COMMON_AR_FLAGS         := rcs
 COMMON_ARLIB_FLAGS      := 
 COMMON_SOLIB_FLAGS      := -shared
 
-COMMON_DEPS             := $(wildcard makedefs/*) ${TOP_MAKEFILE}
-COMMON_INCS__           := ${TOPDIR}
+COMMON_DEPS             := $(wildcard ${MAKEDEFS}/*) ${TOP_MAKEFILE}
+COMMON_INCS__           := ${TOPDIR} ${SDKDIR}
 COMMON_INCS             := $(addprefix -I,${COMMON_INCS__})
 
 COMMON_LDPATHS__        := ${BLD_LIB_DIR}
 COMMON_LDPATHS          := $(addprefix -L,${COMMON_LDPATHS__})
 
 # GTEST specific defines
-COMMON_GTEST_DIR                = third-party/googletest-release-1.8.0/googletest/
+COMMON_GTEST_DIR                = ${SDKDIR}/third-party/googletest-release-1.8.0/googletest/
 COMMON_GTEST_INCS               := -I${COMMON_GTEST_DIR}/include/
 COMMON_GTEST_LIBS               := -lpthread
 COMMON_GTEST_LDPATHS            := -L${COMMON_GTEST_DIR}/make/
@@ -38,9 +38,14 @@ COMMON_GTEST_FLAGS              := -Wno-sign-compare
 # For gtest, we cant use the following GCC flags.
 COMMON_GTEST_GCC_EXCLUDE_FLAGS  := -Werror
 
+COMMON_GCC_SHORT_NAME       := "[  GCC  ]"
+COMMON_ARLIB_SHORT_NAME     := "[ ARLIB ]"
+COMMON_SOLIB_SHORT_NAME     := "[ SOLIB ]"
+COMMON_BIN_SHORT_NAME       := "[  BIN  ]"
+COMMON_SYMLINK_SHORT_NAME   := "[SYMLINK]"
+COMMON_NCC_SHORT_NAME       := "[  NCC  ]"
+COMMON_P4BIN_SHORT_NAME     := "[ P4BIN ]"
+COMMON_ASMBIN_SHORT_NAME    := "[  ASM  ]"
 
-COMMON_GCC_SHORT_NAME       := "[ GCC ]"
-COMMON_ARLIB_SHORT_NAME     := "[ARLIB]"
-COMMON_SOLIB_SHORT_NAME     := "[SOLIB]"
-COMMON_BIN_SHORT_NAME       := "[ BIN ]"
-COMMON_SYMLINK_SHORT_NAME   := "[SLINK]"
+COMMON_CMD_NCC              := ${TOPDIR}/nic/tools/ncc/capri-ncc.py
+COMMON_NCC_OPTS             := 
