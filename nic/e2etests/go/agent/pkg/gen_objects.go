@@ -314,7 +314,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string) (*Object, err
 			} else {
 
 				ifType = "uplink"
-				ifName = fmt.Sprintf("uplink%d", (i*endpointsPerNetwork+j+1)%2+1)
+				ifName = fmt.Sprintf("uplink%d", ((i*endpointsPerNetwork+j+1)%UPLINK_COUNT)+UPLINK_START)
 				nodeUUID = "GWUUID" // This will ensure that the EP is remote
 
 			}

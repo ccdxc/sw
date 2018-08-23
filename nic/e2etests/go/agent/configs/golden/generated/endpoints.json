@@ -49,7 +49,7 @@
     "spec": {
       "network-name": "scale-nw-0",
       "interface-type": "uplink",
-      "interface": "uplink2",
+      "interface": "uplink129",
       "ipv4-address": "177.75.132.52/32",
       "mac-address": "76:b9:95:16:a6:6f",
       "node-uuid": "GWUUID",
@@ -69,7 +69,7 @@
     "spec": {
       "network-name": "scale-nw-0",
       "interface-type": "uplink",
-      "interface": "uplink1",
+      "interface": "uplink128",
       "ipv4-address": "177.75.132.53/32",
       "mac-address": "1e:a1:5a:53:16:f5",
       "node-uuid": "GWUUID",
@@ -127,7 +127,7 @@
     "spec": {
       "network-name": "scale-nw-1",
       "interface-type": "uplink",
-      "interface": "uplink2",
+      "interface": "uplink129",
       "ipv4-address": "223.97.165.132/32",
       "mac-address": "0a:e2:ee:df:6f:50",
       "node-uuid": "GWUUID",
@@ -147,7 +147,7 @@
     "spec": {
       "network-name": "scale-nw-1",
       "interface-type": "uplink",
-      "interface": "uplink1",
+      "interface": "uplink128",
       "ipv4-address": "223.97.165.133/32",
       "mac-address": "6e:87:64:0d:fb:73",
       "node-uuid": "GWUUID",
@@ -205,7 +205,7 @@
     "spec": {
       "network-name": "scale-nw-2",
       "interface-type": "uplink",
-      "interface": "uplink2",
+      "interface": "uplink129",
       "ipv4-address": "112.211.249.100/32",
       "mac-address": "0e:3d:80:db:70:38",
       "node-uuid": "GWUUID",
@@ -225,7 +225,7 @@
     "spec": {
       "network-name": "scale-nw-2",
       "interface-type": "uplink",
-      "interface": "uplink1",
+      "interface": "uplink128",
       "ipv4-address": "112.211.249.101/32",
       "mac-address": "12:e6:b1:2b:d0:d8",
       "node-uuid": "GWUUID",
@@ -283,7 +283,7 @@
     "spec": {
       "network-name": "scale-nw-3",
       "interface-type": "uplink",
-      "interface": "uplink2",
+      "interface": "uplink129",
       "ipv4-address": "4.121.175.20/32",
       "mac-address": "2e:5f:a4:c2:de:af",
       "node-uuid": "GWUUID",
@@ -303,7 +303,7 @@
     "spec": {
       "network-name": "scale-nw-3",
       "interface-type": "uplink",
-      "interface": "uplink1",
+      "interface": "uplink128",
       "ipv4-address": "4.121.175.21/32",
       "mac-address": "0a:4a:44:62:42:bb",
       "node-uuid": "GWUUID",
@@ -361,7 +361,7 @@
     "spec": {
       "network-name": "scale-nw-4",
       "interface-type": "uplink",
-      "interface": "uplink2",
+      "interface": "uplink129",
       "ipv4-address": "170.22.196.84/32",
       "mac-address": "32:38:00:2f:57:05",
       "node-uuid": "GWUUID",
@@ -381,7 +381,7 @@
     "spec": {
       "network-name": "scale-nw-4",
       "interface-type": "uplink",
-      "interface": "uplink1",
+      "interface": "uplink128",
       "ipv4-address": "170.22.196.85/32",
       "mac-address": "76:2a:cf:d2:0a:95",
       "node-uuid": "GWUUID",
@@ -439,7 +439,7 @@
     "spec": {
       "network-name": "scale-nw-5",
       "interface-type": "uplink",
-      "interface": "uplink2",
+      "interface": "uplink129",
       "ipv4-address": "16.45.218.228/32",
       "mac-address": "0a:e2:c4:1b:73:b8",
       "node-uuid": "GWUUID",
@@ -459,7 +459,7 @@
     "spec": {
       "network-name": "scale-nw-5",
       "interface-type": "uplink",
-      "interface": "uplink1",
+      "interface": "uplink128",
       "ipv4-address": "16.45.218.229/32",
       "mac-address": "5a:5d:ba:bc:f0:ec",
       "node-uuid": "GWUUID",
@@ -517,7 +517,7 @@
     "spec": {
       "network-name": "scale-nw-6",
       "interface-type": "uplink",
-      "interface": "uplink2",
+      "interface": "uplink129",
       "ipv4-address": "91.39.142.132/32",
       "mac-address": "0e:28:aa:10:1f:8d",
       "node-uuid": "GWUUID",
@@ -537,7 +537,7 @@
     "spec": {
       "network-name": "scale-nw-6",
       "interface-type": "uplink",
-      "interface": "uplink1",
+      "interface": "uplink128",
       "ipv4-address": "91.39.142.133/32",
       "mac-address": "72:7f:93:da:35:f1",
       "node-uuid": "GWUUID",
@@ -595,7 +595,7 @@
     "spec": {
       "network-name": "scale-nw-7",
       "interface-type": "uplink",
-      "interface": "uplink2",
+      "interface": "uplink129",
       "ipv4-address": "54.199.28.20/32",
       "mac-address": "62:6c:5a:a9:a0:70",
       "node-uuid": "GWUUID",
@@ -615,7 +615,7 @@
     "spec": {
       "network-name": "scale-nw-7",
       "interface-type": "uplink",
-      "interface": "uplink1",
+      "interface": "uplink128",
       "ipv4-address": "54.199.28.21/32",
       "mac-address": "6e:d3:46:56:f7:1b",
       "node-uuid": "GWUUID",

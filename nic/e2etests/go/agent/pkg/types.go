@@ -13,7 +13,7 @@ var (
 	LIF_COUNT              = 256 // TODO get this from the manifest file
 	LIF_START              = 100 // TODO don't hard code this. Currently hntap assumes the lifs will start from id 100.
 	UPLINK_COUNT           = 2   // TODO get this from the manifest file
-	UPLINK_START           = 1   // TODO don't hard code this.
+	UPLINK_START           = 128 // TODO don't hard code this.
 	AGENT_URL              = "http://localhost:9007"
 )
 
