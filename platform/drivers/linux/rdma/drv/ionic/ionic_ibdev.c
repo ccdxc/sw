@@ -3523,8 +3523,6 @@ static void ionic_qp_sq_init_hbm(struct ionic_ibdev *dev,
 {
 	int rc;
 
-	INIT_LIST_HEAD(&qp->sq_hbm_mmap.ctx_ent);
-
 	if (!qp->has_sq)
 		goto err_hbm;
 
@@ -3585,31 +3583,6 @@ static void ionic_qp_sq_destroy_hbm(struct ionic_ibdev *dev,
 	ionic_api_put_hbm(dev->lif, qp->sq_hbm_pgid, qp->sq_hbm_order);
 }
 
-static void ionic_qp_no_sq(struct ionic_qp *qp, struct ionic_tbl_buf *buf)
-{
-	memset(&qp->sq, 0, sizeof(qp->sq));
-
-	qp->sq_is_hbm = false;
-	qp->sq_hbm_ptr = NULL;
-	qp->sq_hbm_prod = 0;
-	qp->sq_hbm_order = 0;
-	qp->sq_hbm_pgid = 0;
-	qp->sq_hbm_addr = 0;
-
-	/* XXX move to sq_init, and no need for no_sq() */
-	INIT_LIST_HEAD(&qp->sq_hbm_mmap.ctx_ent);
-	qp->sq_hbm_mmap.offset = 0;
-	qp->sq_hbm_mmap.size = 0;
-	qp->sq_hbm_mmap.pfn = 0;
-
-	qp->sq_umem = NULL;
-	qp->sq_res.tbl_order = 0;
-	qp->sq_res.tbl_pos = 0;
-
-	buf->tbl_limit = 0;
-	buf->tbl_pages = 0;
-}
-
 static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			    struct ionic_qp *qp, struct ionic_qdesc *sq,
 			    struct ionic_tbl_buf *buf, int max_wr, int max_sge,
@@ -3623,11 +3596,12 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	qp->sq_npg_cons = 0;
 	qp->sq_hbm_prod = 0;
 
+	INIT_LIST_HEAD(&qp->sq_hbm_mmap.ctx_ent);
+
 	if (!qp->has_sq) {
 		if (ctx)
 			rc = ionic_validate_qdesc_zero(sq);
 
-		ionic_qp_no_sq(qp, buf);
 		return rc;
 	}
 
@@ -3739,18 +3713,6 @@ static void ionic_qp_sq_destroy(struct ionic_ibdev *dev,
 		ionic_queue_destroy(&qp->sq, dev->hwdev);
 }
 
-static void ionic_qp_no_rq(struct ionic_qp *qp, struct ionic_tbl_buf *buf)
-{
-	memset(&qp->rq, 0, sizeof(qp->rq));
-
-	qp->rq_umem = NULL;
-	qp->rq_res.tbl_order = 0;
-	qp->rq_res.tbl_pos = 0;
-
-	buf->tbl_limit = 0;
-	buf->tbl_pages = 0;
-}
-
 static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			    struct ionic_qp *qp, struct ionic_qdesc *rq,
 			    struct ionic_tbl_buf *buf, int max_wr, int max_sge)
@@ -3762,7 +3724,6 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 		if (ctx)
 			rc = ionic_validate_qdesc_zero(rq);
 
-		ionic_qp_no_rq(qp, buf);
 		return rc;
 	}
 
@@ -4759,8 +4720,6 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	qp->is_srq = true;
 
 	spin_lock_init(&qp->rq_lock);
-
-	ionic_qp_no_sq(qp, &sq_buf);
 
 	rc = ionic_qp_rq_init(dev, ctx, qp, &req.rq, &rq_buf,
 			      attr->attr.max_wr, attr->attr.max_sge);
