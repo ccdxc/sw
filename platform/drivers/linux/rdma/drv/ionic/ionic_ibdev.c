@@ -426,7 +426,11 @@ static void ionic_put_ahid(struct ionic_ibdev *dev, u32 ahid)
 
 static void ionic_put_mrid(struct ionic_ibdev *dev, u32 mrid)
 {
-	clear_bit(mrid / 2, dev->inuse_mrid); /* XXX see get_mrid */
+	if (ionic_xxx_mrid)
+		/* should do this when supported on device */
+		clear_bit(mrid >> 8, dev->inuse_mrid);
+	else
+		clear_bit(mrid, dev->inuse_mrid);
 }
 
 static void ionic_put_pgtbl(struct ionic_ibdev *dev, u32 pos, int order)
