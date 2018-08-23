@@ -3809,7 +3809,7 @@ static void ionic_qp_rq_destroy(struct ionic_ibdev *dev,
 	if (!qp->has_rq)
 		return;
 
-	ionic_pgtbl_unres(dev, &qp->sq_res);
+	ionic_pgtbl_unres(dev, &qp->rq_res);
 
 	if (qp->rq_meta)
 		kfree(qp->rq_meta);
