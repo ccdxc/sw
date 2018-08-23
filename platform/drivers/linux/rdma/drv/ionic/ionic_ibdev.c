@@ -1276,6 +1276,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	resp.rq_qtype = dev->rq_qtype;
 	resp.cq_qtype = dev->cq_qtype;
 	resp.admin_qtype = dev->admin_qtype;
+	resp.max_stride = dev->max_stride;
 
 	rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
 	if (rc)
@@ -3595,6 +3596,7 @@ static void ionic_qp_no_sq(struct ionic_qp *qp, struct ionic_tbl_buf *buf)
 	qp->sq_hbm_pgid = 0;
 	qp->sq_hbm_addr = 0;
 
+	/* XXX move to sq_init, and no need for no_sq() */
 	INIT_LIST_HEAD(&qp->sq_hbm_mmap.ctx_ent);
 	qp->sq_hbm_mmap.offset = 0;
 	qp->sq_hbm_mmap.size = 0;
@@ -3611,9 +3613,9 @@ static void ionic_qp_no_sq(struct ionic_qp *qp, struct ionic_tbl_buf *buf)
 static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			    struct ionic_qp *qp, struct ionic_qdesc *sq,
 			    struct ionic_tbl_buf *buf, int max_wr, int max_sge,
-			    int max_inline)
+			    int max_data)
 {
-	int rc;
+	int rc = 0;
 	u32 wqe_size;
 
 	qp->sq_msn_prod = 0;
@@ -3622,75 +3624,78 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	qp->sq_hbm_prod = 0;
 
 	if (!qp->has_sq) {
-		if (ctx) {
+		if (ctx)
 			rc = ionic_validate_qdesc_zero(sq);
-			if (rc)
-				goto err_sq;
-		}
 
 		ionic_qp_no_sq(qp, buf);
+		return rc;
+	}
+
+	rc = -EINVAL;
+	if (max_wr < 1 || max_wr > 0xffff)
+		goto err_sq;
+	if (max_sge < 1 || max_sge > ionic_v1_send_wqe_max_sge(dev->max_stride))
+		goto err_sq;
+	if (max_data < 0 || max_data > ionic_v1_send_wqe_max_data(dev->max_stride))
+		goto err_sq;
+
+	if (ctx) {
+		rc = ionic_validate_qdesc(sq);
+		if (rc)
+			goto err_sq;
+
+		qp->sq.ptr = NULL;
+		qp->sq.size = sq->size;
+		qp->sq.mask = sq->mask;
+		qp->sq.depth_log2 = sq->depth_log2;
+		qp->sq.stride_log2 = sq->stride_log2;
+
+		qp->sq_meta = NULL;
+		qp->sq_msn_idx = NULL;
+
+		qp->sq_umem = ib_umem_get(&ctx->ibctx, sq->addr,
+					  sq->size, 0, 0);
+		if (IS_ERR(qp->sq_umem)) {
+			rc = PTR_ERR(qp->sq_umem);
+			goto err_sq;
+		}
 	} else {
-		if (ctx) {
-			rc = ionic_validate_qdesc(sq);
-			if (rc)
-				goto err_sq;
+		qp->sq_umem = NULL;
 
-			qp->sq.ptr = NULL;
-			qp->sq.size = sq->size;
-			qp->sq.mask = sq->mask;
-			qp->sq.depth_log2 = sq->depth_log2;
-			qp->sq.stride_log2 = sq->stride_log2;
+		wqe_size = ionic_sq_wqe_size(max_sge, max_data);
+		rc = ionic_queue_init(&qp->sq, dev->hwdev,
+				      max_wr, wqe_size);
+		if (rc)
+			goto err_sq;
 
-			qp->sq_meta = NULL;
-			qp->sq_msn_idx = NULL;
+		ionic_queue_dbell_init(&qp->sq, qp->qpid);
 
-			qp->sq_umem = ib_umem_get(&ctx->ibctx, sq->addr,
-						  sq->size, 0, 0);
-			if (IS_ERR(qp->sq_umem)) {
-				rc = PTR_ERR(qp->sq_umem);
-				goto err_sq;
-			}
-
-			ionic_qp_sq_init_hbm(dev, ctx, qp, max_inline > 0);
-		} else {
-			qp->sq_umem = NULL;
-
-			wqe_size = ionic_sq_wqe_size(max_sge, max_inline);
-			rc = ionic_queue_init(&qp->sq, dev->hwdev,
-					      max_wr, wqe_size);
-			if (rc)
-				goto err_sq;
-
-			ionic_queue_dbell_init(&qp->sq, qp->qpid);
-
-			qp->sq_meta = kmalloc_array((u32)qp->sq.mask + 1,
-						    sizeof(*qp->sq_meta),
-						    GFP_KERNEL);
-			if (!qp->sq_meta) {
-				rc = -ENOMEM;
-				goto err_sq_meta;
-			}
-
-			qp->sq_msn_idx = kmalloc_array((u32)qp->sq.mask + 1,
-						       sizeof(*qp->sq_msn_idx),
-						       GFP_KERNEL);
-			if (!qp->sq_msn_idx) {
-				rc = -ENOMEM;
-				goto err_sq_msn;
-			}
-
-			ionic_qp_sq_init_hbm(dev, ctx, qp, max_inline > 0);
+		qp->sq_meta = kmalloc_array((u32)qp->sq.mask + 1,
+					    sizeof(*qp->sq_meta),
+					    GFP_KERNEL);
+		if (!qp->sq_meta) {
+			rc = -ENOMEM;
+			goto err_sq_meta;
 		}
 
-		if (qp->sq_is_hbm)
-			rc = ionic_pgtbl_init(dev, &qp->sq_res, buf,
-					      NULL, qp->sq_hbm_addr, 1);
-		else
-			rc = ionic_pgtbl_init(dev, &qp->sq_res, buf,
-					      qp->sq_umem, qp->sq.dma, 1);
-		if (rc)
-			goto err_sq_tbl;
+		qp->sq_msn_idx = kmalloc_array((u32)qp->sq.mask + 1,
+					       sizeof(*qp->sq_msn_idx),
+					       GFP_KERNEL);
+		if (!qp->sq_msn_idx) {
+			rc = -ENOMEM;
+			goto err_sq_msn;
+		}
 	}
+
+	ionic_qp_sq_init_hbm(dev, ctx, qp, max_data > 0);
+	if (qp->sq_is_hbm)
+		rc = ionic_pgtbl_init(dev, &qp->sq_res, buf,
+				      NULL, qp->sq_hbm_addr, 1);
+	else
+		rc = ionic_pgtbl_init(dev, &qp->sq_res, buf,
+				      qp->sq_umem, qp->sq.dma, 1);
+	if (rc)
+		goto err_sq_tbl;
 
 	return 0;
 
@@ -3708,7 +3713,6 @@ err_sq_meta:
 	else
 		ionic_queue_destroy(&qp->sq, dev->hwdev);
 err_sq:
-
 	return rc;
 }
 
@@ -3751,64 +3755,68 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			    struct ionic_qp *qp, struct ionic_qdesc *rq,
 			    struct ionic_tbl_buf *buf, int max_wr, int max_sge)
 {
-	int rc;
 	u32 wqe_size;
+	int rc = 0;
 
 	if (!qp->has_rq) {
-		if (ctx) {
+		if (ctx)
 			rc = ionic_validate_qdesc_zero(rq);
-			if (rc)
-				goto err_rq;
-		}
 
 		ionic_qp_no_rq(qp, buf);
-	} else {
-		if (ctx) {
-			rc = ionic_validate_qdesc(rq);
-			if (rc)
-				goto err_rq;
-
-			qp->rq.ptr = NULL;
-			qp->rq.size = rq->size;
-			qp->rq.mask = rq->mask;
-			qp->rq.depth_log2 = rq->depth_log2;
-			qp->rq.stride_log2 = rq->stride_log2;
-
-			qp->rq_meta = NULL;
-
-			qp->rq_umem = ib_umem_get(&ctx->ibctx, rq->addr,
-						  rq->size, 0, 0);
-			if (IS_ERR(qp->rq_umem)) {
-				rc = PTR_ERR(qp->rq_umem);
-				goto err_rq;
-			}
-		} else {
-			qp->rq_umem = NULL;
-			qp->rq_res.tbl_order = 0;
-			qp->rq_res.tbl_pos = 0;
-
-			wqe_size = ionic_rq_wqe_size(max_sge);
-			rc = ionic_queue_init(&qp->rq, dev->hwdev,
-					      max_wr, wqe_size);
-			if (rc)
-				goto err_rq;
-
-			ionic_queue_dbell_init(&qp->rq, qp->qpid);
-
-			qp->rq_meta = kmalloc_array((u32)qp->rq.mask + 1,
-						    sizeof(*qp->rq_meta),
-						    GFP_KERNEL);
-			if (!qp->rq_meta) {
-				rc = -ENOMEM;
-				goto err_rq_meta;
-			}
-		}
-
-		rc = ionic_pgtbl_init(dev, &qp->rq_res, buf, qp->rq_umem,
-				      qp->rq.dma, 1);
-		if (rc)
-			goto err_rq_tbl;
+		return rc;
 	}
+
+	rc = -EINVAL;
+	if (max_wr < 1 || max_wr > 0xffff)
+		goto err_rq;
+	if (max_sge < 1 || max_sge > ionic_v1_recv_wqe_max_sge(dev->max_stride))
+		goto err_rq;
+
+	if (ctx) {
+		rc = ionic_validate_qdesc(rq);
+		if (rc)
+			goto err_rq;
+
+		qp->rq.ptr = NULL;
+		qp->rq.size = rq->size;
+		qp->rq.mask = rq->mask;
+		qp->rq.depth_log2 = rq->depth_log2;
+		qp->rq.stride_log2 = rq->stride_log2;
+
+		qp->rq_meta = NULL;
+
+		qp->rq_umem = ib_umem_get(&ctx->ibctx, rq->addr,
+					  rq->size, 0, 0);
+		if (IS_ERR(qp->rq_umem)) {
+			rc = PTR_ERR(qp->rq_umem);
+			goto err_rq;
+		}
+	} else {
+		qp->rq_umem = NULL;
+		qp->rq_res.tbl_order = 0;
+		qp->rq_res.tbl_pos = 0;
+
+		wqe_size = ionic_rq_wqe_size(max_sge);
+		rc = ionic_queue_init(&qp->rq, dev->hwdev,
+				      max_wr, wqe_size);
+		if (rc)
+			goto err_rq;
+
+		ionic_queue_dbell_init(&qp->rq, qp->qpid);
+
+		qp->rq_meta = kmalloc_array((u32)qp->rq.mask + 1,
+					    sizeof(*qp->rq_meta),
+					    GFP_KERNEL);
+		if (!qp->rq_meta) {
+			rc = -ENOMEM;
+			goto err_rq_meta;
+		}
+	}
+
+	rc = ionic_pgtbl_init(dev, &qp->rq_res, buf, qp->rq_umem,
+			      qp->rq.dma, 1);
+	if (rc)
+		goto err_rq_tbl;
 
 	return 0;
 
@@ -3881,6 +3889,9 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	INIT_LIST_HEAD(&qp->cq_flush_sq);
 	INIT_LIST_HEAD(&qp->cq_flush_rq);
 
+	spin_lock_init(&qp->sq_lock);
+	spin_lock_init(&qp->rq_lock);
+
 	if (attr->qp_type == IB_QPT_SMI) {
 		rc = -EINVAL;
 		goto err_qp;
@@ -3913,9 +3924,6 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 		if (rc)
 			goto err_ahid;
 	}
-
-	spin_lock_init(&qp->sq_lock);
-	spin_lock_init(&qp->rq_lock);
 
 	rc = ionic_qp_sq_init(dev, ctx, qp, &req.sq, &sq_buf,
 			      attr->cap.max_send_wr, attr->cap.max_send_sge,
@@ -4718,7 +4726,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	struct ionic_cq *cq;
 	struct ionic_srq_req req;
 	struct ionic_srq_resp resp = {0};
-	struct ionic_tbl_buf sq_buf, rq_buf;
+	struct ionic_tbl_buf rq_buf;
 	unsigned long irqflags;
 	int rc;
 
@@ -5616,6 +5624,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->rq_qtype = 4;
 	dev->cq_qtype = 5;
 	dev->eq_qtype = 6;
+	dev->max_stride = 11; /* enough for 30 send sges */
 
 	/* XXX hardcode values, intentionally low, should come from identify */
 	dev->dev_attr.fw_ver = 0;

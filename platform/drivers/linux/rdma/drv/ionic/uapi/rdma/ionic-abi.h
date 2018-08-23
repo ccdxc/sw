@@ -35,7 +35,8 @@
 
 #include <linux/types.h>
 
-#define IONIC_ABI_VERSION	4
+/* XXX make abi version 1 for release */
+#define IONIC_ABI_VERSION	5
 
 struct ionic_ctx_req {
 	__u32 fallback;
@@ -56,6 +57,9 @@ struct ionic_ctx_resp {
 	__u8 rq_qtype;
 	__u8 cq_qtype;
 	__u8 admin_qtype;
+
+	__u8 max_stride;
+	__u8 rsvd[3];
 };
 
 struct ionic_qdesc {

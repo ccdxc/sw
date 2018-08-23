@@ -103,6 +103,8 @@ struct ionic_ibdev {
 	u8			cq_qtype;
 	u8			eq_qtype;
 
+	u8			max_stride;
+
 	struct mutex		tbl_lock; /* for modify cq_tbl, qp_tbl */
 
 	struct tbl_root		qp_tbl;
