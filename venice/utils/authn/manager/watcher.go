@@ -156,7 +156,7 @@ func (w *watcher) runWatcher() {
 	defer w.waitGrp.Done()
 
 	// create logger
-	config := log.GetDefaultConfig(w.name)
+	config := log.GetDefaultConfig(w.name + "-authn-watcher-grpcclient")
 	l := log.GetNewLogger(config)
 	b := balancer.New(w.resolver)
 	// loop forever

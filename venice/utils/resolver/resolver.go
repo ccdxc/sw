@@ -17,6 +17,8 @@ import (
 // Observer is an interface implemented by observers of resolver.
 type Observer interface {
 	// OnNotifyResolver handles an event published by the resolver
+	// Observers should be able to handle receiving this event even after Deregister is called
+	//	(Possible if Deregister happens in the middle of notification)
 	OnNotifyResolver(types.ServiceInstanceEvent) error
 }
 
@@ -262,7 +264,11 @@ func (r *resolverClient) Deregister(o Observer) {
 // All the observers are notified of the event even if someone fails
 func (r *resolverClient) notify(e types.ServiceInstanceEvent) error {
 	var err error
-	for _, o := range r.observers {
+	r.Lock()
+	observers := make([]Observer, len(r.observers))
+	copy(observers, r.observers)
+	r.Unlock()
+	for _, o := range observers {
 		er := o.OnNotifyResolver(e)
 		if err == nil && er != nil {
 			err = er

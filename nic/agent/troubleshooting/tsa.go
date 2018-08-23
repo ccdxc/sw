@@ -83,4 +83,8 @@ func NewTsAgent(dp types.TsDatapathAPI, dbPath, nodeUUID, ctrlerURL string, reso
 // Stop stops the agent
 func (agent *Agent) Stop() {
 	agent.TroubleShootingAgent.Stop()
+	if agent.tsClient != nil {
+		agent.tsClient.Stop()
+		agent.tsClient = nil
+	}
 }

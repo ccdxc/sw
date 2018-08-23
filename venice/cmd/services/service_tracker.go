@@ -26,6 +26,8 @@ type ServiceTracker struct {
 
 	// addrs is used to collect all possible service instances from resolver
 	addrs map[string]map[string]struct{}
+
+	stopped bool
 }
 
 // NewServiceTracker returns an instance of ServiceTracker.
@@ -64,6 +66,7 @@ func (m *ServiceTracker) Run(resolverClient interface{}, nodeService types.NodeS
 
 // Stop the service tracker
 func (m *ServiceTracker) Stop() {
+	m.stopped = true
 	m.resolverClient.Deregister(m)
 	m.nodeService = nil
 	m.resolverClient = nil
@@ -101,6 +104,10 @@ func (m *ServiceTracker) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 func (m *ServiceTracker) OnNotifyResolver(e protos.ServiceInstanceEvent) error {
 	m.Lock()
 	defer m.Unlock()
+
+	if m.stopped {
+		return nil
+	}
 
 	if e.Instance.Node == "" {
 		return nil

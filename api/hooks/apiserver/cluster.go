@@ -134,6 +134,7 @@ func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Inter
 	// set version
 	apiSrv := apisrvpkg.MustGetAPIServer()
 	adminRole.APIVersion = apiSrv.GetVersion()
+	adminRole.SelfLink = adminRole.MakeURI("configs", adminRole.APIVersion, "auth")
 	if err := txn.Create(adminRole.MakeKey("auth"), adminRole); err != nil {
 		return r, false, err
 	}

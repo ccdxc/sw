@@ -309,6 +309,7 @@ func TestWatchEventQ(t *testing.T) {
 		return q3.watcherList.Len() == 0, nil
 	}, "expecting watcher to exit", "10ms", "1000ms")
 	q3.Stop()
+	cancel()
 
 	// Test timebased janitor cleanup
 	t.Logf(" --> Test timed janitor cleanup")

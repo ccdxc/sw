@@ -308,8 +308,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "SendDrop", "type", obj.evType, "path", w.path, "startVer", startVer, "ver", obj.version, "peer", peer)
 			return
 		}
-		defer tracker.Unlock()
-		tracker.Lock()
+
 		hdr.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
 			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "peer", peer)
@@ -320,15 +319,19 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandl
 		case <-sendCh:
 		case <-tracker.ctx.Done():
 		}
+		tracker.Lock()
 		tracker.version = obj.version
 		tracker.lastUpd = time.Now()
+		tracker.Unlock()
 		w.stats.dequeues.Add(1)
 	}
 
 	// Freeze the janitor at its current version
+	tracker.Lock()
 	w.janitorVerMu.Lock()
 	tracker.version = w.janitorVer
 	w.janitorVerMu.Unlock()
+	tracker.Unlock()
 	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Start", "path", w.path, "fromVer", fromver, "peer", peer)
 	var opts api.ListWatchOptions
 	opts.ResourceVersion = fmt.Sprintf("%d", fromver)
@@ -484,7 +487,7 @@ func (w *watchEventQ) janitorFn() {
 	tailver := obj.version
 	cmpfn := func(i interface{}) bool {
 		v := i.(*watcher)
-		ver, lastupd := v.getState()
+		ver, lastupd := v.GetState()
 		if ver < minVer {
 			minVer = ver
 		}

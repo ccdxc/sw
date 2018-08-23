@@ -551,6 +551,11 @@ func (e *sNetworkV1GwService) CompleteRegistration(ctx context.Context,
 	}
 	wg.Add(1)
 	go func() {
+		defer func() {
+			muxMutex.Lock()
+			mux = nil
+			muxMutex.Unlock()
+		}()
 		defer wg.Done()
 		for {
 			nctx, cancel := context.WithCancel(ctx)

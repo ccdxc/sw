@@ -5,12 +5,14 @@ package veniceinteg
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	. "gopkg.in/check.v1"
 
@@ -34,6 +36,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/ctrler/tsm"
+	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/simapi"
@@ -47,9 +50,8 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/testenv"
-	"github.com/pensando/sw/venice/utils/tsdb"
-
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // integ test suite parameters
@@ -88,6 +90,7 @@ type veniceIntegSuite struct {
 	tpm            *tpm.PolicyManager
 	tsCtrler       *tsm.TsCtrler
 	agents         []*netagent.Agent
+	tsAgents       []*troubleshooting.Agent
 	datapaths      []*datapath.Datapath
 	datapathKind   datapath.Kind
 	numAgents      int
@@ -97,6 +100,10 @@ type veniceIntegSuite struct {
 	resolverSrv    *rpckit.RPCServer
 	resolverClient resolver.Interface
 	userCred       *auth.PasswordCredential
+	tmpFiles       []string
+	tlsProviders   []*tlsproviders.CMDBasedProvider
+	eps            *evtsproxy.EventsProxy
+	epsDir         string
 }
 
 // test args
@@ -117,7 +124,6 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	it.numAgents = *numAgents
 	it.datapathKind = datapath.Kind(*datapathKind)
 
-	logger := log.GetNewLogger(log.GetDefaultConfig("venice_integ"))
 	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
 	// start certificate server
@@ -132,6 +138,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		if err != nil {
 			return nil, err
 		}
+		it.tlsProviders = append(it.tlsProviders, p)
 		return p, nil
 	}
 	testenv.EnableRpckitTestMode()
@@ -186,29 +193,48 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	}
 	m.AddServiceInstance(&tsmSi)
 
+	rc := resolver.New(&resolver.Config{Name: "venice_integ_rslvr", Servers: []string{resolverServer.GetListenURL()}})
+	it.resolverClient = rc
+
+	tmpDir, err := ioutil.TempDir("", "evtsprxy_venice_integ")
+	c.Assert(err, IsNil)
+	l := log.GetNewLogger(log.GetDefaultConfig("evts-prxy"))
+
+	it.epsDir = tmpDir
+	eps, err := evtsproxy.NewEventsProxy("venice_integ_evtsprxy", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "", rc,
+		5*time.Second, time.Second, it.epsDir, []evtsproxy.WriterType{}, l)
+	c.Assert(err, IsNil)
+	it.eps = eps
+
+	// Unique name per test for memkv
+	tmpfile, err := ioutil.TempFile("", "memkv_venice_integ")
+	c.Assert(err, IsNil)
+	n := tmpfile.Name()
+	tmpfile.Close()
+
+	logConf := log.GetDefaultConfig("apisrv")
+	logConf.Filter = log.AllowAllFilter
+	l = log.GetNewLogger(logConf)
 	// start API server
 	it.apiSrv, it.apiSrvAddr, err = testutils.StartAPIServer(integTestApisrvURL, &store.Config{
 		Type:    store.KVStoreTypeMemkv,
-		Servers: []string{""},
+		Servers: []string{n},
 		Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme()),
-	}, logger)
+	}, l)
 	c.Assert(err, IsNil)
 
+	l = log.GetNewLogger(log.GetDefaultConfig("api-gw"))
 	// start API gateway
-	it.apiGw, _, err = testutils.StartAPIGateway(integTestAPIGWURL, map[string]string{globals.APIServer: it.apiSrvAddr}, []string{"search", "events"}, []string{resolverServer.GetListenURL()}, logger)
+	it.apiGw, _, err = testutils.StartAPIGateway(integTestAPIGWURL, map[string]string{globals.APIServer: it.apiSrvAddr}, []string{"search", "events"}, []string{resolverServer.GetListenURL()}, l)
 	c.Assert(err, IsNil)
 
 	// create a controller
-	rc := resolver.New(&resolver.Config{Name: globals.Npm, Servers: []string{resolverServer.GetListenURL()}})
-	it.resolverClient = rc
 	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestNpmRESTURL, globals.APIServer, "", rc)
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 
 	// create a trouble shooting controller
-	tsmrc := resolver.New(&resolver.Config{Name: globals.Tsm, Servers: []string{resolverServer.GetListenURL()}})
-	// The resolver client will be used by trouble shooting net agent...
-	tsCtrler, err := tsm.NewTsCtrler(integTestTsmURL, integTestTsmRestURL, globals.APIServer, tsmrc)
+	tsCtrler, err := tsm.NewTsCtrler(integTestTsmURL, integTestTsmRestURL, globals.APIServer, rc)
 	c.Assert(err, IsNil)
 	it.tsCtrler = tsCtrler
 
@@ -226,16 +252,28 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 			dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 		}
 
+		tmpfile, err2 := ioutil.TempFile("", "nicagent_db")
+		c.Assert(err2, IsNil)
+		n = tmpfile.Name()
+		tmpfile.Close()
+		it.tmpFiles = append(it.tmpFiles, n)
+
 		// Create netagent
-		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), globals.Npm, rc, state.AgentMode_MANAGED)
+		agent, aerr := netagent.NewAgent(dp, n, fmt.Sprintf("dummy-uuid-%d", i), globals.Npm, rc, state.AgentMode_MANAGED)
 		c.Assert(aerr, IsNil)
 
 		tsdp, aerr := tshal.NewHalDatapath("mock")
 		c.Assert(aerr, IsNil)
 		//it.datapaths = append(it.datapaths, dp)
 
+		tmpfile, err2 = ioutil.TempFile("", "tsagent_db")
+		c.Assert(err2, IsNil)
+		n = tmpfile.Name()
+		tmpfile.Close()
+		it.tmpFiles = append(it.tmpFiles, n)
+
 		log.Infof("creating troubleshooting subagent")
-		tsa, aerr := troubleshooting.NewTsAgent(tsdp, fmt.Sprintf("/tmp/TsAgent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), globals.Tsm, tsmrc, state.AgentMode_MANAGED, agent.NetworkAgent)
+		tsa, aerr := troubleshooting.NewTsAgent(tsdp, n, fmt.Sprintf("dummy-uuid-%d", i), globals.Tsm, rc, state.AgentMode_MANAGED, agent.NetworkAgent)
 		c.Assert(aerr, IsNil)
 		if tsa == nil {
 			c.Fatalf("cannot create troubleshooting agent. Err: %v", err)
@@ -250,6 +288,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		}
 		agent.RestServer = restServer
 		it.agents = append(it.agents, agent)
+		it.tsAgents = append(it.tsAgents, tsa)
 
 	}
 
@@ -261,7 +300,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	it.restClient = restcl
 
 	// create api server client
-	l := log.GetNewLogger(log.GetDefaultConfig("VeniceIntegTest"))
+	l = log.GetNewLogger(log.GetDefaultConfig("VeniceIntegTest"))
 	apicl, err := apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, l, rpckit.WithBalancer(balancer.New(rc)))
 	if err != nil {
 		c.Fatalf("cannot create grpc client")
@@ -270,8 +309,8 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	time.Sleep(time.Millisecond * 100)
 
 	// create tpm
-	rs := resolver.New(&resolver.Config{Name: globals.Tpm, Servers: []string{resolverServer.GetListenURL()}})
-	pm, err := tpm.NewPolicyManager(integTestTPMURL, rs)
+	//rs := resolver.New(&resolver.Config{Name: globals.Tpm, Servers: []string{resolverServer.GetListenURL()}})
+	pm, err := tpm.NewPolicyManager(integTestTPMURL, rc)
 	c.Assert(err, IsNil)
 	it.tpm = pm
 
@@ -280,7 +319,8 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		Password: testutils.TestLocalPassword,
 		Tenant:   testutils.TestTenant,
 	}
-	err = testutils.SetupAuth(integTestApisrvURL, true, false, it.userCred, logger)
+	l = log.GetNewLogger(log.GetDefaultConfig("VeniceIntegTest-setupAuth"))
+	err = testutils.SetupAuth(integTestApisrvURL, true, false, it.userCred, l)
 	c.Assert(err, IsNil)
 
 	it.vcHub.SetUp(c, it.numAgents)
@@ -293,12 +333,9 @@ func (it *veniceIntegSuite) SetUpTest(c *C) {
 func (it *veniceIntegSuite) TearDownTest(c *C) {
 	log.Infof("============================= %s completed ==========================", c.TestName())
 	// Remove persisted agent db files
-	for i := 0; i < it.numAgents; i++ {
-		// mock datapath
-		os.Remove(fmt.Sprintf("/tmp/agent_%d.db", i))
-		os.Remove(fmt.Sprintf("/tmp/TsAgent_%d.db", i))
+	for _, i := range it.tmpFiles {
+		os.Remove(i)
 	}
-
 }
 
 func (it *veniceIntegSuite) TearDownSuite(c *C) {
@@ -306,7 +343,19 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	for _, ag := range it.agents {
 		ag.Stop()
 	}
+	for _, ag := range it.tsAgents {
+		ag.Stop()
+	}
+	for _, t := range it.tlsProviders {
+		t.Close()
+	}
+	it.tlsProviders = nil
+	if it.epsDir != "" {
+		os.RemoveAll(it.epsDir)
+	}
+	it.epsDir = ""
 	it.agents = []*netagent.Agent{}
+	it.tsAgents = []*troubleshooting.Agent{}
 	it.datapaths = []*datapath.Datapath{}
 
 	// stop server and client
@@ -317,12 +366,21 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	it.tsCtrler.Stop()
 	it.tsCtrler = nil
 	it.apiSrv.Stop()
+	it.apiSrv = nil
 	it.apiGw.Stop()
+	it.apiGw = nil
 	it.certSrv.Stop()
 	it.vcHub.TearDown()
 	it.resolverClient.Stop()
 	it.resolverSrv.Stop()
 	it.apisrvClient.Close()
+	it.eps.RPCServer.Stop()
+
+	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
+		return nil, errors.New("Suite is being shutdown")
+	}
+	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
+	log.Infof("============================= TearDownSuite completed ==========================")
 }
 
 // basic test to make sure all components come up
@@ -430,7 +488,9 @@ func (it *veniceIntegSuite) TestTenantWatch(c *C) {
 	c.Skip("## skip tenant test ")
 	// create watch
 	client := it.apisrvClient
-	kvWatch, err := client.ClusterV1().Tenant().Watch(context.Background(), &api.ListWatchOptions{})
+	ctx, cancel := context.WithCancel(context.Background())
+	kvWatch, err := client.ClusterV1().Tenant().Watch(ctx, &api.ListWatchOptions{})
+	defer cancel()
 	AssertOk(c, err, "failed to watch tenants")
 	tenChan := kvWatch.EventChan()
 	defer kvWatch.Stop()
@@ -533,18 +593,4 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 		return err != nil, nil
 
 	}, "failed to delete fwlog policy")
-}
-
-func (it *veniceIntegSuite) initGrpcClient() (apiclient.Services, error) {
-	for i := 0; i < 3; i++ {
-		rs := resolver.New(&resolver.Config{Name: globals.Tpm, Servers: []string{it.resolverSrv.GetListenURL()}})
-		// create a grpc client
-		client, apiErr := apiclient.NewGrpcAPIClient(globals.Cmd, globals.APIServer, log.WithContext("pkg", "TPM-IT-GRPC-API"),
-			rpckit.WithBalancer(balancer.New(rs)))
-		if apiErr == nil {
-			return client, nil
-		}
-		time.Sleep(1 * time.Second)
-	}
-	return nil, fmt.Errorf("failed to connect to {%s}, exhausted all attempts)", globals.APIGw)
 }

@@ -112,7 +112,6 @@ func reinitAPIServer() {
 	singletonAPISrv.Lock()
 	singletonAPISrv.services = make(map[string]apiserver.Service)
 	singletonAPISrv.messages = make(map[string]apiserver.Message)
-	singletonAPISrv.hookregs = make(map[string]apiserver.ServiceHookCb)
 	singletonAPISrv.doneCh = make(chan error)
 	singletonAPISrv.activeWatches = safelist.New()
 }
@@ -136,7 +135,7 @@ func (a *apiSrv) insertWatcher(ctx context.Context) (handle interface{}) {
 	defer a.RUnlock()
 	a.RLock()
 	handle = a.activeWatches.Insert(ctx)
-	return
+	return handle
 }
 
 // removeWatcher removes a active Watcher from the list of active Watchers

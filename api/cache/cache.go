@@ -376,9 +376,9 @@ func (c *cache) Start() error {
 					err = errors.Wrap(err, "could not create KV conn pool")
 					return err
 				}
-				k := conn.(kvstore.Interface)
-				k.Close()
-				c.pool.DelFromPool(k)
+				k1 := conn.(kvstore.Interface)
+				k1.Close()
+				c.pool.DelFromPool(k1)
 			}
 		}
 		if c.config.Config.Type == kvs.KVStoreTypeMemkv {

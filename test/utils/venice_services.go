@@ -48,7 +48,7 @@ var (
 // SetupAuth setsup the authentication service
 func SetupAuth(apiServerAddr string, enableLocalAuth, enableLdapAuth bool, creds *auth.PasswordCredential, logger log.Logger) error {
 	// create API server client
-	apiClient, err := client.NewGrpcUpstream("venice_integ_test", apiServerAddr, logger)
+	apiClient, err := client.NewGrpcUpstream("venice_integ_test_setupAuth", apiServerAddr, logger)
 	if err != nil {
 		return fmt.Errorf("failed to create gRPC client, err: %v", err)
 	}
@@ -126,6 +126,7 @@ func StartAPIServer(serverAddr string, kvstoreConfig *store.Config, l log.Logger
 		Scheme:         scheme,
 		KVPoolSize:     8,
 		Kvstore:        *kvstoreConfig,
+		DevMode:        true,
 	}
 
 	apiServer := apiserverpkg.MustGetAPIServer()

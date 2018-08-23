@@ -38,6 +38,7 @@ type defaultAuthGetter struct {
 	cache           *memdb.Memdb
 	watcher         *watcher
 	logger          log.Logger
+	stopped         bool
 }
 
 func (ug *defaultAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
@@ -153,13 +154,18 @@ func (ug *defaultAuthGetter) IsAuthBootstrapped() (bool, error) {
 
 func (ug *defaultAuthGetter) Stop() {
 	ug.watcher.stop()
+	ug.stopped = true
 }
 
 func (ug *defaultAuthGetter) Start() {
+	ug.stopped = false
 	ug.watcher.start()
 }
 
 func (ug *defaultAuthGetter) addObj(kind auth.Permission_ResrcKind, objMeta *api.ObjectMeta) (memdb.Object, error) {
+	if ug.stopped {
+		ug.logger.Errorf("Ignoring add of object %v as AuthGetter is in stopped state", *objMeta)
+	}
 	b := balancer.New(ug.resolver)
 	apicl, err := apiclient.NewGrpcAPIClient(ug.name, ug.apiServer, ug.logger, rpckit.WithBalancer(b))
 	if err != nil {
@@ -193,6 +199,12 @@ func (ug *defaultAuthGetter) addObj(kind auth.Permission_ResrcKind, objMeta *api
 
 // GetAuthGetter returns a singleton implementation of AuthGetter
 func GetAuthGetter(name, apiServer string, rslver resolver.Interface, tokenExpiration time.Duration) AuthGetter {
+	if gAuthGetter != nil && gAuthGetter.stopped {
+		gAuthGetter.resolver = rslver
+		gAuthGetter.watcher.resolver = rslver
+		gAuthGetter.apiServer = apiServer
+		gAuthGetter.Start()
+	}
 	once.Do(func() {
 		// create logger
 		config := log.GetDefaultConfig(name)
@@ -209,6 +221,7 @@ func GetAuthGetter(name, apiServer string, rslver resolver.Interface, tokenExpir
 			cache:           cache,
 			watcher:         watcher,
 			logger:          l,
+			stopped:         false,
 		}
 	})
 

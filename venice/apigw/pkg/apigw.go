@@ -84,6 +84,14 @@ func initAPIGw() {
 	singletonAPIGw.hooks = make(map[string]apigw.ServiceHookCb)
 }
 
+// reinitAPIGw performs needed initialization on reinit.
+func reinitAPIGw() {
+	singletonAPIGw.svcname = make(map[string]string)
+	singletonAPIGw.doneCh = make(chan error)
+	singletonAPIGw.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
+	singletonAPIGw.backendOverride = make(map[string]string)
+}
+
 func isSkipped(config apigw.Config, svc string) bool {
 	for _, s := range config.SkipBackends {
 		if strings.HasPrefix(svc, s+".") {
@@ -316,15 +324,13 @@ func (a *apiGw) Run(config apigw.Config) {
 	if err != nil {
 		panic(fmt.Sprintf("could not start a listener on port %v", config.HTTPAddr))
 	}
+	defer ln.Close()
 	a.runstate.addr = ln.Addr()
 	a.logger.Log("msg", "Started Listener", "Port", a.runstate.addr)
-	var rslvr resolver.Interface
-	{
-		if len(config.Resolvers) > 0 {
-			rslvr = resolver.New(&resolver.Config{Name: globals.APIGw, Servers: config.Resolvers})
-		}
+
+	if len(config.Resolvers) > 0 {
+		a.rslver = resolver.New(&resolver.Config{Name: globals.APIGw, Servers: config.Resolvers})
 	}
-	a.rslver = rslvr
 	a.logger.Infof("Resolving via %v", config.Resolvers)
 	// Let all the services complete registration. All services served by this
 	// gateway should have registered themselves via their init().
@@ -350,11 +356,29 @@ func (a *apiGw) Run(config apigw.Config) {
 	gwruntime.HTTPError = a.HTTPErrorHandler
 	gwruntime.OtherErrorHandler = a.HTTPOtherErrorHandler
 
+	// cleanup any events in the doneChannel from previous run (especially in integ tests)
+Loop:
+	for {
+		select {
+		case <-a.doneCh:
+		default:
+			break Loop
+		}
+	}
+	a.logger.Infof("cleaned up DoneCh")
+
 	wg.Add(1)
-	go func() {
+	go func(c context.Context) {
 		wg.Done()
-		a.doneCh <- http.Serve(ln, a.extractHdrInfo(a.checkCORS(a.tracerMiddleware(m))))
-	}()
+		srv := &http.Server{Handler: a.extractHdrInfo(a.checkCORS(a.tracerMiddleware(m)))}
+		go func() {
+			select {
+			case <-c.Done():
+				srv.Close()
+			}
+		}()
+		srv.Serve(ln)
+	}(ctx)
 
 	for name, svc := range a.svcmap {
 		config.Logger.Log("Svc", name, "msg", "RegisterComplete")
@@ -362,7 +386,7 @@ func (a *apiGw) Run(config apigw.Config) {
 			config.Logger.Log("Svc", name, "msg", "RegisterComplete Skipped")
 			continue
 		}
-		err := svc.CompleteRegistration(ctx, config.Logger, s, m, rslvr, &wg)
+		err := svc.CompleteRegistration(ctx, config.Logger, s, m, a.rslver, &wg)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to complete registration of %v (%v)", name, err))
 		}
@@ -389,15 +413,15 @@ func (a *apiGw) Run(config apigw.Config) {
 	// create authentication manager
 	grpcaddr := globals.APIServer
 	grpcaddr = a.GetAPIServerAddr(grpcaddr)
-	a.authnMgr, err = authnmgr.NewAuthenticationManager(globals.APIGw, grpcaddr, rslvr, apigw.TokenExpInDays*24*60*60) // expiration in seconds
+	a.authnMgr, err = authnmgr.NewAuthenticationManager(globals.APIGw, grpcaddr, a.rslver, apigw.TokenExpInDays*24*60*60) // expiration in seconds
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create authentication manager (%v)", err))
 	}
 	// create authorization manager
-	a.authzMgr = authzmgr.NewAuthorizationManager(globals.APIGw, grpcaddr, rslvr)
+	a.authzMgr = authzmgr.NewAuthorizationManager(globals.APIGw, grpcaddr, a.rslver)
 	// get bootstrapper
 	a.bootstrapper = bootstrapper.GetBootstrapper()
-	if err := a.bootstrapper.CompleteRegistration(globals.APIGw, grpcaddr, rslvr, a.logger); err != nil {
+	if err := a.bootstrapper.CompleteRegistration(globals.APIGw, grpcaddr, a.rslver, a.logger); err != nil {
 		panic(fmt.Sprintf("Failed to complete feature registration in bootstrapper (%v)", err))
 	}
 
@@ -414,6 +438,11 @@ func (a *apiGw) Run(config apigw.Config) {
 
 func (a *apiGw) Stop() {
 	a.doneCh <- errors.New("User called stop")
+	a.authnMgr.Uninitialize()
+	if a.rslver != nil {
+		a.rslver.Stop()
+	}
+	reinitAPIGw()
 }
 
 // WaitRunning blocks till the API gateway is completely initialized

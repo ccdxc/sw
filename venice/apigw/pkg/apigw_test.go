@@ -312,12 +312,27 @@ func TestRunApiGw(t *testing.T) {
 	a := singletonAPIGw
 	hooks := hooksCalled
 	go a.Run(config)
+
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			if strings.Contains(buf.String(), "Http Listen Start") {
+				return true, ""
+			}
+			return false, buf.String()
+		},
+		"Rest server should have started")
+
 	err := errors.New("Testing Exit for ApiGateway")
 	a.doneCh <- err
-	time.Sleep(100 * time.Millisecond)
-	if !strings.Contains(buf.String(), "Testing Exit for ApiGateway") {
-		t.Errorf("APiGateway Run did not close on error")
-	}
+
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			if strings.Contains(buf.String(), "Testing Exit for ApiGateway") {
+				return true, ""
+			}
+			return false, buf.String()
+		},
+		"apigw should have called close on error")
 	a.WaitRunning()
 	_, err = a.GetAddr()
 	if err != nil {

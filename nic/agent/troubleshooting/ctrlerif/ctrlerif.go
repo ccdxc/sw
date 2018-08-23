@@ -126,3 +126,14 @@ func (client *TsClient) isStopped() bool {
 	defer client.Unlock()
 	return client.stopped
 }
+
+// Stop the client
+func (client *TsClient) Stop() {
+	client.Lock()
+	defer client.Unlock()
+	if client.stopped {
+		return
+	}
+	client.watchCancel()
+	client.stopped = true
+}
