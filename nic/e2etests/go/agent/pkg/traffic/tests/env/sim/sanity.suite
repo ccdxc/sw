@@ -1,5 +1,5 @@
 name: sanity
-ep-pairs: 1
+ep-pairs: 8
 enabled: True
 traffic-type: Uplink-Uplink
 
@@ -11,8 +11,8 @@ modules:
     - module:
         name    : FirewallDeny
         program : FirewallDeny
-        enabled: True
+        enabled: False
     - module:
         name    : FirewallReject
         program : FirewallReject
-        enabled: True
+        enabled: False

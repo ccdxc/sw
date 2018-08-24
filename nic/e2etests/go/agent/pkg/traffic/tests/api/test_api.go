@@ -19,7 +19,7 @@ const (
 
 //EpPair represent 2 endpoints
 type EpPair struct {
-	Src, Dst *netproto.Endpoint
+	Src, Dst netproto.Endpoint
 }
 
 //TestInterface Interface

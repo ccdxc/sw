@@ -2,6 +2,7 @@ package traffic
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -16,6 +17,7 @@ import (
 
 	Pkg "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	_ "github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic/tests/modules"
+	Common "github.com/pensando/sw/nic/e2etests/go/common"
 	Infra "github.com/pensando/sw/nic/e2etests/go/infra"
 
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
@@ -59,15 +61,23 @@ func newEpFromAgentConfig(ep *netproto.Endpoint, nw *netproto.Network, intf stri
 
 		Remote: ep.Spec.InterfaceType == "uplink",
 	}
-	infraEp.Interface.Name = intf
+
+	var vlan int
+	if infraEp.Remote {
+		vlan = int(nw.Spec.GetVlanID())
+	} else {
+		vlan = int(ep.Spec.GetUsegVlan())
+	}
+	vlanIntf := intf + "_" + strconv.Itoa(vlan)
+	addVlanCmd := []string{"ip", "link", "add", "link", intf, "name", vlanIntf,
+		"type", "vlan", "id", strconv.Itoa(vlan)}
+	Common.Run(addVlanCmd, 0, false)
+
+	infraEp.Interface.Name = vlanIntf
 	infraEp.Interface.MacAddress = ep.Spec.GetMacAddress()
 	infraEp.Interface.IPAddress = strings.Split(ep.Spec.GetIPv4Address(), "/")[0]
 	infraEp.Interface.PrefixLen, _ = strconv.Atoi(strings.Split(nw.Spec.GetIPv4Subnet(), "/")[1])
-	if infraEp.Remote {
-		infraEp.Interface.EncapVlan = int(nw.Spec.GetVlanID())
-	} else {
-		infraEp.Interface.EncapVlan = int(ep.Spec.GetUsegVlan())
-	}
+
 	infraEp.Init(false)
 
 	return infraEp
@@ -119,11 +129,11 @@ func readSuites(envPath string, suiteName string) ([]suite, error) {
 	return suites, nil
 }
 
-func RunTests(env string, suiteName string, uplinkMapFile string, agentCfg *Pkg.AgentConfig) error {
+func RunTests(env string, suiteName string, trafficHelper TrafficHelper, agentCfg *Pkg.AgentConfig) error {
 
 	envPath := testEnvDir + "/" + env
 	if stat, err := os.Stat(envPath); err != nil || !stat.IsDir() {
-		return errors.Errorf("Environment %s does not exist", env)
+		return errors.Errorf("Environment %s does not exist in path %s", env, envPath)
 	}
 
 	suites, err := readSuites(envPath, suiteName)
@@ -138,7 +148,7 @@ func RunTests(env string, suiteName string, uplinkMapFile string, agentCfg *Pkg.
 	for _, tsuite := range suites {
 		if tsuite.Enabled {
 			fmt.Println("Running test suite : ", tsuite.Name)
-			if err := tsuite.Run(uplinkMapFile, agentCfg); err != nil {
+			if err := tsuite.Run(trafficHelper, agentCfg); err != nil {
 				return errors.Wrapf(err, "Error running suite %s", suiteName)
 			}
 		} else {
@@ -147,4 +157,117 @@ func RunTests(env string, suiteName string, uplinkMapFile string, agentCfg *Pkg.
 	}
 
 	return nil
+}
+
+type baseTrafficHelper struct {
+	configFile  string
+	intfMap     map[string]string
+	trafficType int
+}
+
+type TrafficHelper interface {
+	init() error
+	getTrafficInterface(string) (string, error)
+	GetAllTrafficInterfaces() []string
+	getTrafficType() int
+}
+
+type uplinkToUplinkTrafficHelper struct {
+	baseTrafficHelper
+}
+
+func (b *baseTrafficHelper) getTrafficType() int {
+	return b.trafficType
+}
+
+func (b *baseTrafficHelper) getTrafficInterface(intf string) (string, error) {
+	fmt.Println("Intf " + intf + " act" + b.intfMap[intf])
+	return b.intfMap[intf], nil
+}
+
+func (b *baseTrafficHelper) GetAllTrafficInterfaces() []string {
+	var intfs []string
+	for intf, _ := range b.intfMap {
+		intfs = append(intfs, intf)
+	}
+	return intfs
+}
+
+func (u *uplinkToUplinkTrafficHelper) init() error {
+
+	jsonFile, err := ioutil.ReadFile(u.configFile)
+	if err != nil {
+		return errors.Wrapf(err, "Err opening uplink map file : %s", u.configFile)
+	}
+
+	uplinkMap := map[string]string{}
+	if err = json.Unmarshal(jsonFile, &uplinkMap); err != nil {
+		return errors.Wrapf(err, "Err parsing uplink map file : %s", u.configFile)
+	}
+
+	u.intfMap = uplinkMap
+
+	return nil
+}
+
+type hostToHostTrafficHelper struct {
+	baseTrafficHelper
+}
+
+var getIntfMatchingMac = func(macaddr string) string {
+	intfs, _ := net.Interfaces()
+	for _, intf := range intfs {
+		if intf.HardwareAddr.String() == macaddr {
+			/* Mac address matched */
+			return intf.Name
+		}
+	}
+	return ""
+}
+
+func (h *hostToHostTrafficHelper) init() error {
+
+	sDevices, err := Pkg.ReadStationDevices(h.configFile)
+
+	if err != nil {
+		return errors.Wrap(err, "Error reading station device file")
+	}
+
+	hostIfMap := map[string]string{}
+	for _, device := range sDevices {
+		intfName := getIntfMatchingMac(device.MacAddr)
+		if intfName == "" {
+			return errors.Errorf("Could not find interface for device %s", device.MacAddr)
+		}
+		hostIfMap[fmt.Sprintf("lif%d", device.LifID)] = intfName
+	}
+
+	h.intfMap = hostIfMap
+	return nil
+}
+
+func GetTrafficHelper(trafficType int, file string) (TrafficHelper, error) {
+
+	var helper TrafficHelper
+	switch trafficType {
+	case TrafficHostToHost:
+		helper = &hostToHostTrafficHelper{baseTrafficHelper: baseTrafficHelper{configFile: file, trafficType: trafficType}}
+	case TrafficUplinkToUplink:
+		helper = &uplinkToUplinkTrafficHelper{baseTrafficHelper: baseTrafficHelper{configFile: file, trafficType: trafficType}}
+	}
+
+	if err := helper.init(); err != nil {
+		return nil, err
+	}
+
+	return helper, nil
+
+}
+
+func init() {
+
+	if len(os.Getenv("TRAFFIC_TEST_DIR")) != 0 {
+		testEnvDir = os.Getenv("TRAFFIC_TEST_DIR")
+	}
+
 }

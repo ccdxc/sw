@@ -29,12 +29,23 @@ var networkNSCache map[string]string
 // tunnelCache maintains a mapping of tunnel name and its dest IP Address
 var tunnelCache map[string]string
 
-func GenerateObjectsFromManifest(manifestFile string, vlanOffset int) (*Config, error) {
+var forceGeneration = false
+
+func genRequired(o *Object) bool {
+	if !forceGeneration && len(o.SpecFile) > 0 {
+		return false
+	}
+
+	return true
+}
+
+func GenerateObjectsFromManifest(manifestFile string, sDevices []StationDevice, vlanOffset int, forceGen bool) (*Config, error) {
 	objCache = make(map[string]Object)
 	networkCache = make(map[string]string)
 	networkNSCache = make(map[string]string)
 	endpointCache = make(map[string]string)
 	tunnelCache = make(map[string]string)
+	forceGeneration = forceGen
 
 	dat, err := ioutil.ReadFile(manifestFile)
 	if err != nil {
@@ -53,7 +64,7 @@ func GenerateObjectsFromManifest(manifestFile string, vlanOffset int) (*Config, 
 	}
 
 	// generate configs
-	err = c.generateObjs(manifestFile, vlanOffset)
+	err = c.generateObjs(manifestFile, sDevices, vlanOffset)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +98,7 @@ func GetObjectsFromManifest(manifestFile string) (*Config, error) {
 	return &c, nil
 }
 
-func (c *Config) generateObjs(manifestFile string, vlanOffset int) error {
+func (c *Config) generateObjs(manifestFile string, sdevices []StationDevice, vlanOffset int) error {
 	for i, o := range c.Objects {
 		switch o.Kind {
 		case "Namespace":
@@ -109,7 +120,7 @@ func (c *Config) generateObjs(manifestFile string, vlanOffset int) error {
 			}
 			c.Objects[i] = *genObj
 		case "Endpoint":
-			genObj, err := c.generateEndpoints(&o, manifestFile)
+			genObj, err := c.generateEndpoints(&o, manifestFile, sdevices)
 			if err != nil {
 				return err
 			}
@@ -171,10 +182,10 @@ func (c *Config) generateObjs(manifestFile string, vlanOffset int) error {
 func (c *Config) generateNamespaces(o *Object, manifestFile string) (*Object, error) {
 	var namespaces []netproto.Namespace
 	specFile := "generated/namespaces.json"
-	// If spec file is already present in the manifest, nothing to do here
-	if len(o.SpecFile) > 0 {
+	if !genRequired(o) {
 		return o, nil
 	}
+
 	for i := 0; i < o.Count; i++ {
 		name := fmt.Sprintf("%s-%d", o.Name, i)
 		ns := netproto.Namespace{
@@ -215,8 +226,7 @@ func (c *Config) generateNamespaces(o *Object, manifestFile string) (*Object, er
 func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int) (*Object, error) {
 	var networks []netproto.Network
 	specFile := "generated/networks.json"
-	// If spec file is already present in the manifest, nothing to do here
-	if len(o.SpecFile) > 0 {
+	if !genRequired(o) {
 		return o, nil
 	}
 
@@ -277,13 +287,19 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 	return o, nil
 }
 
-func (c *Config) generateEndpoints(o *Object, manifestFile string) (*Object, error) {
+func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []StationDevice) (*Object, error) {
 	var endpoints []netproto.Endpoint
 	specFile := "generated/endpoints.json"
-	// If spec file is already present in the manifest, nothing to do here
-	if len(o.SpecFile) > 0 {
+	if !genRequired(o) {
 		return o, nil
 	}
+
+	lifIDs := []int{}
+	curLif := 0
+	for i := 0; i < len(sdevices); i++ {
+		lifIDs = append(lifIDs, sdevices[i].LifID)
+	}
+	//TODO : Have to create EP for station devices too.
 
 	// EPs need to refer to Namespaces and Networks
 	namespaceRef := objCache["Namespace"]
@@ -313,7 +329,12 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string) (*Object, err
 			// evenly distribute auto generated endpoints to be local and remote
 			if j < endpointsPerNetwork/2 {
 				ifType = "lif"
-				ifName = fmt.Sprintf("lif%d", (i*j%namespaceRef.Count%LIF_COUNT)+LIF_START)
+				if len(lifIDs) == 0 {
+					ifName = fmt.Sprintf("lif%d", (i*j%namespaceRef.Count%LIF_COUNT)+LIF_START)
+				} else {
+					ifName = fmt.Sprintf("lif%d", (lifIDs[curLif]))
+					curLif = (curLif + 1) % len(lifIDs)
+				}
 
 			} else {
 
@@ -376,8 +397,7 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 	var mirrors []tsproto.MirrorSession
 	var portOffset = 8000
 	specFile := "generated/mirrors.json"
-	// If spec file is already present in the manifest, nothing to do here
-	if len(o.SpecFile) > 0 {
+	if !genRequired(o) {
 		return o, nil
 	}
 
@@ -477,8 +497,7 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error) {
 	var natPools []netproto.NatPool
 	specFile := "generated/nat_pools.json"
-	// If spec file is already present in the manifest, nothing to do here
-	if len(o.SpecFile) > 0 {
+	if !genRequired(o) {
 		return o, nil
 	}
 
@@ -541,8 +560,7 @@ func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error
 func (c *Config) generateTunnels(o *Object, manifestFile string) (*Object, error) {
 	var tunnels []netproto.Tunnel
 	specFile := "generated/tunnels.json"
-	// If spec file is already present in the manifest, nothing to do here
-	if len(o.SpecFile) > 0 {
+	if !genRequired(o) {
 		return o, nil
 	}
 

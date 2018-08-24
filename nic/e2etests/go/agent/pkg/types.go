@@ -28,3 +28,10 @@ type Object struct {
 type Config struct {
 	Objects []Object `yaml:"objects"`
 }
+
+func init() {
+	agentPort := os.Getenv("AGENT_PORT")
+	if len(agentPort) != 0 {
+		AGENT_URL = "http://localhost:" + agentPort
+	}
+}

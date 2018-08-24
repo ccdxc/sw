@@ -1,0 +1,38 @@
+{
+  "eth_dev": [
+    {
+      "name": "eth0",
+      "rxq_count": 1,
+      "txq_count": 1,
+      "adminq_count": 1,
+      "intr_count": 4,
+      "lif_id": 100,
+      "mac_addr": "00:02:00:00:01:01",
+      "pcie": {
+        "port": 0,
+        "num_vfs": 0
+      },
+      "network": {
+        "uplink": 1,
+        "vrf": 2
+      }
+    },
+    {
+      "name": "eth1",
+      "rxq_count": 1,
+      "txq_count": 1,
+      "adminq_count": 1,
+      "intr_count": 4,
+      "lif_id": 101,
+      "mac_addr": "00:02:00:00:01:02",
+      "pcie": {
+        "port": 0,
+        "num_vfs": 0
+      },
+      "network": {
+        "uplink": 2,
+        "vrf": 3
+      }
+    }
+  ]
+}

@@ -32,3 +32,23 @@ objects:
   count: 1
   rest-endpoint: "/api/security/policies/"
   spec-file: "generated/16_rules.json"
+- kind: IPSecSAEncrypt
+  name: scale-ipsec-encrypt-sa
+  count: 1
+  rest-endpoint: "/api/ipsec/encryption/"
+  spec-file: "generated/ipsec_encryption.json"
+- kind: IPSecSADecrypt
+  name: scale-ipsec-decrypt-sa
+  count: 1
+  rest-endpoint: "/api/ipsec/decryption/"
+  spec-file: "generated/ipsec_decryption.json"
+- kind: IPSecPolicy
+  name: scale-ipsec-policies
+  count: 2
+  rest-endpoint: "/api/ipsec/policies/"
+  spec-file: "generated/ipsec_policies.json"
+- kind: NatPool
+  name: scale-nat-pool
+  count: 4
+  rest-endpoint: "/api/nat/pools/"
+  spec-file: "generated/nat_pools.json"

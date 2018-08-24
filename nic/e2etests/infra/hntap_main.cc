@@ -46,6 +46,9 @@ extern bool hntap_drop_rexmit;
 extern bool hntap_go_thru_model;
 
 
+const unsigned char lif_mac_addr_start[]  = { 0x00, 0x02, 0x00, 0x00, 0x01, 0x01};
+const unsigned char uplink_mac_addr_start[] = {0x00, 0x03, 0x00, 0x00, 0x01, 0x01};
+
 class hal_client {
 public:
     hal_client(std::shared_ptr<Channel> channel) :
@@ -112,6 +115,8 @@ int main(int argv, char *argc[])
   ptree             pt;
   const char*cfg_file = nullptr;
   std::string    svc_endpoint;
+  char mac_addr_str[20];
+  const unsigned char *mac_addr;
 
   grpc_init();
   if (getenv("HAL_GRPC_PORT")) {
@@ -165,6 +170,9 @@ int main(int argv, char *argc[])
 
   uint32_t dev_handle_cnt = pt.size();
   uint32_t i = 0;
+  uint32_t lif_mac_offset = 0;
+  uint32_t uplink_mac_offset = 0;
+  uint32_t offset;
 
   TLOG("Number of devices to create : %d\n", dev_handle_cnt);
   dev_handles = (dev_handle_t**)malloc(sizeof(dev_handle_t) * dev_handle_cnt);
@@ -180,7 +188,18 @@ int main(int argv, char *argc[])
 
       /* Create tap interface for -tap */
       tap_endpoint_t type = src_ep_local ? TAP_ENDPOINT_HOST : TAP_ENDPOINT_NET;
-      host_tap_hdl = hntap_create_tap_device(type, src_ep_name.c_str());
+    
+    if(src_ep_local) {
+        mac_addr = lif_mac_addr_start;
+        offset = lif_mac_offset++;
+    } else {
+       mac_addr = uplink_mac_addr_start;
+       offset = uplink_mac_offset++;
+    }
+    sprintf(mac_addr_str,  "%02x:%02x:%02x:%02x:%02x:%02x",
+            mac_addr[0], mac_addr[1], mac_addr[2],
+            mac_addr[3], mac_addr[4], mac_addr[5] + offset);
+      host_tap_hdl = hntap_create_tap_device(type, src_ep_name.c_str(), mac_addr_str);
       if (host_tap_hdl == nullptr ) {
         TLOG("Error creating tap interface %s!\n", src_ep_name.c_str());
         abort();
