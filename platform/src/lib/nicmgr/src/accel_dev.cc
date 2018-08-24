@@ -324,7 +324,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         return;
     }
 
-    printf("[INFO] %s lif%lu: %u sequencer qeueues created\n", __FUNCTION__,
+    printf("[INFO] %s lif%lu: %u sequencer queues created\n", __FUNCTION__,
            info.hw_lif_id, spec->seq_created_count);
 
     name = string_format("accel%d", spec->lif_id);
@@ -352,33 +352,23 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         return;
     }
 
-#ifdef __aarch64__
-
-    // HAPS can support multiple pciehdev creations (both here and in Eth_PF)
-    // so it is safe to enable the creation. Otherwise, we rely on the flag
-    // value passed in from the caller.
-    spec->enable_pciehdev_create = 1;
-#endif
-
     // Create PCI device
-    if (spec->enable_pciehdev_create) {
-        printf("[INFO] %s lif%lu: creating Accel_PF PCI device\n",
-               __FUNCTION__, info.hw_lif_id);
-        pdev = pciehdev_accel_new(name.c_str(), &pci_resources);
-        if (pdev == NULL) {
-            printf("[ERROR] %s lif%lu: Failed to create Accel_PF PCI device\n",
-                   __FUNCTION__, info.hw_lif_id);
-            return;
-        }
-        pciehdev_set_priv(pdev, (void *)this);
+    printf("[INFO] %s lif%lu: creating Accel_PF PCI device\n",
+            __FUNCTION__, info.hw_lif_id);
+    pdev = pciehdev_accel_new(name.c_str(), &pci_resources);
+    if (pdev == NULL) {
+        printf("[ERROR] %s lif%lu: Failed to create Accel_PF PCI device\n",
+                __FUNCTION__, info.hw_lif_id);
+        return;
+    }
+    pciehdev_set_priv(pdev, (void *)this);
 
-        // Add device to PCI topology
-        int ret = pciehdev_add(pdev);
-        if (ret != 0) {
-            printf("[ERROR] %s lif%lu: Failed to add Accel_PF PCI device to topology\n",
-                   __FUNCTION__, info.hw_lif_id);
-            return;
-        }
+    // Add device to PCI topology
+    int ret = pciehdev_add(pdev);
+    if (ret != 0) {
+        printf("[ERROR] %s lif%lu: Failed to add Accel_PF PCI device to topology\n",
+                __FUNCTION__, info.hw_lif_id);
+        return;
     }
 }
 

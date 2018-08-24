@@ -3,6 +3,8 @@
 #ifndef __ETH_COMMON_H__
 #define __ETH_COMMON_H__
 
+#pragma pack(push, 1)
+
 typedef struct eth_tx_qstate {
     uint8_t     pc_offset;
     uint8_t     rsvd0;
@@ -33,7 +35,9 @@ typedef struct eth_tx_qstate {
 
     uint8_t     __pad[16];
 
-} __attribute__((packed)) eth_tx_qstate_t;
+} eth_tx_qstate_t;
+
+static_assert (sizeof(struct eth_tx_qstate) == 64, "");
 
 typedef struct eth_rx_qstate {
     uint8_t     pc_offset;
@@ -64,8 +68,9 @@ typedef struct eth_rx_qstate {
 
     uint8_t     __pad[23];
 
-} __attribute__((packed)) eth_rx_qstate_t;
+} eth_rx_qstate_t;
 
+static_assert (sizeof(struct eth_rx_qstate) == 64, "");
 
 typedef struct eth_admin_qstate {
     uint8_t     pc_offset;
@@ -96,8 +101,9 @@ typedef struct eth_admin_qstate {
 
     uint8_t     __pad[17];
 
-} __attribute__((packed)) eth_admin_qstate_t;
+} eth_admin_qstate_t;
 
+static_assert (sizeof(struct eth_admin_qstate) == 64, "");
 
 typedef struct eth_qstate {
 
@@ -128,13 +134,10 @@ typedef struct eth_qstate {
 
     uint8_t     __pad[25];
 
-} __attribute__((packed)) eth_qstate_t;
+} eth_qstate_t;
 
-
-static_assert (sizeof(struct eth_rx_qstate) == 64, "");
-static_assert (sizeof(struct eth_tx_qstate) == 64, "");
-static_assert (sizeof(struct eth_admin_qstate) == 64, "");
 static_assert (sizeof(struct eth_qstate) == 64, "");
 
+#pragma pack(pop)
 
 #endif    // __ETH_COMMON_H__

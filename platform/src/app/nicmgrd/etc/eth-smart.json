@@ -1,0 +1,35 @@
+{
+    "network" : {
+        "uplink" : [
+            { "id" : 128, "port": 1 },
+            { "id" : 129, "port": 2 }
+        ]
+    },
+
+    "eth_dev" : [
+        {
+            "name" : "eth0",
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "eq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "mac_addr" : "00:02:00:00:01:03",
+            "lif_id" : 100,
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0
+            },
+            "rdma" : {
+                "sq_count" : 32,
+                "rq_count" : 32,
+                "cq_count" : 32,
+                "eq_count" : 32,
+                "adminq_count" : 1,
+                "pid_count" : 32,
+                "pte_count" : 32,
+                "key_count" : 32
+            }
+        }
+    ]
+}

@@ -9,6 +9,10 @@
 #include <algorithm>
 #include <cmath>
 
+#include <boost/lexical_cast.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 #include "dev.hpp"
 #include "eth_dev.hpp"
 #include "accel_dev.hpp"
@@ -16,6 +20,37 @@
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
 #include "cap_wa_c_hdr.h"
+
+
+sdk::lib::indexer *intr_allocator = sdk::lib::indexer::factory(4096);
+
+#define LIF_ID_BASE     (100)
+sdk::lib::indexer *lif_allocator = sdk::lib::indexer::factory(1024);
+
+#define ENIC_ID_BASE    (100)
+sdk::lib::indexer *enic_allocator = sdk::lib::indexer::factory(4096);
+
+
+uint64_t
+mac_to_int(std::string const& s)
+{
+    unsigned char m[6];
+    int rc = sscanf(s.c_str(), "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+                    m + 0, m + 1, m + 2, m + 3, m + 4, m + 5);
+
+    if (rc != 6) {
+        throw std::runtime_error("invalid mac address " + s);
+    }
+
+    return (
+            uint64_t(m[0]) << 40 |
+            uint64_t(m[1]) << 32 |
+            uint64_t(m[2]) << 24 |
+            uint64_t(m[3]) << 16 |
+            uint64_t(m[4]) << 8 |
+            uint64_t(m[5])
+        );
+}
 
 void
 invalidate_rxdma_cacheline(uint64_t addr)
@@ -42,80 +77,6 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
 #elif __aarch64__
     //assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
 #endif
-}
-
-DeviceManager::~DeviceManager()
-{
-}
-
-int
-DeviceManager::LoadConfig(string path)
-{
-    // Discover all VRFs
-    hal->VrfProbe();
-
-    // Discover all L2 Segments
-    hal->L2SegmentProbe();
-
-    // Discover all Lifs
-    hal->LifProbe();
-
-    // Discover all Uplink Interfaces, ENICs
-    hal->InterfaceProbe();
-
-    // Discover all Endpoints
-    hal->EndpointProbe();
-
-    // Discover all Multicast groups
-    hal->MulticastProbe();
-
-    // Create topology
-    uint64_t vrf_id = 1, vrf_handle = 0;
-    uint64_t uplink_if_id = 128, uplink_if_handle = 0;
-    uint8_t port_num = 1, num_uplinks = 2;
-    vector<uint16_t> vlans = {1, 10, 16};
-    uint64_t native_l2seg_id = 1; /* l2seg_id = vlan_id */
-    uint64_t l2seg_handle = 0;
-
-    // Create VRF
-    if (hal->vrf_id2handle.find(vrf_id) == hal->vrf_id2handle.end()) {
-        vrf_handle = hal->VrfCreate(vrf_id);
-        if (vrf_handle == 0) {
-            return -1;
-        }
-    }
-
-    // Create VLANs
-    for (auto it = vlans.cbegin(); it != vlans.cend(); it++) {
-        if (hal->vlan2seg_map.find(*it) == hal->vlan2seg_map.end()) {
-            l2seg_handle = hal->L2SegmentCreate(vrf_id,
-                                                *it, /* l2seg_id = vlan_id */
-                                                ::l2segment::BROADCAST_FWD_POLICY_FLOOD,
-                                                ::l2segment::MULTICAST_FWD_POLICY_FLOOD,
-                                                *it);
-            if (l2seg_handle == 0) {
-                return -1;
-            }
-        }
-    }
-
-    // Create uplinks
-    for (; port_num < num_uplinks + 1; port_num++, uplink_if_id++) {
-        if (hal->uplink_map.find(port_num) == hal->uplink_map.end()) {
-            // Create uplink interface
-            uplink_if_handle = hal->UplinkCreate(uplink_if_id, port_num, native_l2seg_id);
-            if (uplink_if_handle == 0) {
-                return -1;
-            }
-
-            // Add vlans to uplink
-            for (auto it = hal->vlan2seg_map.cbegin(); it != hal->vlan2seg_map.cend(); it++) {
-                if (hal->AddL2SegmentOnUplink(uplink_if_id, it->second)) {
-                    return -1;
-                }
-            }
-        }
-    }
 
     // Create nicmgr service lif
     struct eth_admin_qstate qstate_req = { 0 };
@@ -142,17 +103,10 @@ DeviceManager::LoadConfig(string path)
         },
     };
 
-    if (hal->lif_map.find(1) == hal->lif_map.end()) {
-        lif_handle = hal->LifCreate(1, qinfo, &info, false, 0, 0);
-        if (lif_handle == 0) {
-            return -1;
-        }
-    } else {
-        lif_handle = hal->LifGet(1, &info);
-        if (lif_handle == 0) {
-            return -1;
-        }
-    };
+    lif_handle = hal->LifCreate(1, qinfo, &info, false, 0, 0);
+    if (lif_handle == 0) {
+        throw runtime_error("Failed to create nicmgr lif!");
+    }
 
     // Init QState
     uint64_t hbm_base = NICMGR_BASE;
@@ -219,6 +173,246 @@ DeviceManager::LoadConfig(string path)
 
     WRITE_MEM(info.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp));
     invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_RESP]);
+}
+
+DeviceManager::~DeviceManager()
+{
+}
+
+int
+DeviceManager::LoadConfig(string path)
+{
+    boost::property_tree::read_json(path, spec);
+    struct eth_devspec *eth_spec;
+    struct accel_devspec *accel_spec;
+    uint32_t intr_base = 0, enic_id = 0;
+
+    // Discover existing configuration
+    hal->VrfProbe();
+    hal->L2SegmentProbe();
+    hal->InterfaceProbe();
+    hal->LifProbe();
+    hal->EndpointProbe();
+    hal->MulticastProbe();
+
+    // Create Network
+    if (spec.get_child_optional("network")) {
+        // cout << "network" << endl;
+        // Create VRFs
+        if (spec.get_child_optional("network.vrf")) {
+            // cout << "network.vrf" << endl;
+            for (const auto &node : spec.get_child("network.vrf")) {
+                // cout << "foreach(network.vrf)" << endl;
+                auto val = node.second;
+                auto vrf_handle = hal->VrfCreate(val.get<uint32_t>("id"));
+                if (vrf_handle == 0) {
+                    cerr << "[ERROR] " << "Failed to create vrf" << endl;
+                    return -1;
+                }
+            } // foreach vrf
+        } // Create VRFs
+
+        // Create L2Segments
+        if (spec.get_child_optional("network.l2seg")) {
+            // cout << "network.l2seg" << endl;
+            for (const auto &node : spec.get_child("network.l2seg")) {
+                // cout << "foreach(network.l2seg)" << endl;
+                auto val = node.second;
+                auto l2seg_handle = hal->L2SegmentCreate(val.get<uint64_t>("vrf"),
+                                                    val.get<uint64_t>("id"),
+                                                    val.get<uint16_t>("vlan"));
+                if (l2seg_handle == 0) {
+                    cerr << "Failed to create l2segment for vlan" << endl;
+                    return -1;
+                }
+            } // foreach l2seg
+        } // Create l2segs
+
+        // Create Uplinks
+        if (spec.get_child_optional("network.uplink")) {
+            // cout << "network.uplink" << endl;
+            for (const auto &node : spec.get_child("network.uplink")) {
+                // cout << "foreach(network.uplink)" << endl;
+                auto val = node.second;
+                auto uplink_handle = hal->UplinkCreate(val.get<uint64_t>("id"),
+                                                val.get<uint64_t>("port"),
+                                                val.get<uint64_t>("native_l2seg", 0));
+                if (uplink_handle == 0) {
+                    cerr << "Failed to create uplink interface" << endl;
+                    return -1;
+                }
+
+                // Add native l2segment on uplink
+                if (hal->AddL2SegmentOnUplink(val.get<uint64_t>("id"),
+                    val.get<uint64_t>("native_l2seg", 0))) {
+                    cerr << "Failed to add vlan on uplink" << endl;
+                    // TODO: Currently hal returns incorrect status, when
+                    // vl2seg is already added on uplink.
+                }
+
+                // Add vlans to uplink
+                if (val.get_optional<string>("nonnative_l2seg")) {
+                    // cout << "network.uplink.nonnative_l2seg" << endl;
+                    for (const auto &l2seg : val.get_child("nonnative_l2seg")) {
+                        // cout << "foreach(network.uplink.nonnative_l2seg)" << endl;
+                        if (hal->AddL2SegmentOnUplink(val.get<uint64_t>("id"),
+                            boost::lexical_cast<uint64_t>(l2seg.second.data()))) {
+                            cerr << "Failed to add vlan on uplink" << endl;
+                            // TODO: Currently hal returns incorrect status, when
+                            // vl2seg is already added on uplink.
+                        }
+                    }
+                } // Add vlans to uplink
+            } // foreach uplink
+        } // Create uplinks
+
+    }
+
+    // Create MNICs
+    if (spec.get_child_optional("mnic_dev")) {
+        for (const auto &node : spec.get_child("mnic_dev")) {
+            eth_spec = new struct eth_devspec;
+            memset(eth_spec, 0, sizeof(*eth_spec));
+
+            auto val = node.second;
+
+            // TODO: Refactor into resource allocator.
+            // TODO: For now interrupts must be 256 aligned. The allocator does not support
+            //       aligning resource ids, so allocate 256.
+            if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
+                printf("[ERROR] lif%lu: Failed to allocate interrupts\n", info.hw_lif_id);
+                return -1;
+            }
+
+            eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
+            eth_spec->txq_count = val.get<uint64_t>("txq_count");
+            eth_spec->eq_count = val.get<uint64_t>("eq_count");
+            eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
+            eth_spec->intr_base = intr_base;
+            eth_spec->intr_count = val.get<uint64_t>("intr_count");
+            eth_spec->mac_addr = mac_to_int(val.get<string>("mac_addr"));
+
+            eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
+            if (eth_spec->lif_id == 0) {
+                if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
+                    printf("[ERROR] Failed to allocate lif\n");
+                    return -1;
+                }
+                eth_spec->lif_id = LIF_ID_BASE + lif_id;
+            }
+
+            if (val.get_optional<string>("network")) {
+                eth_spec->vrf_id = val.get<uint64_t>("network.vrf");
+                eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
+                eth_spec->native_l2seg_id = val.get<uint32_t>("network.native_l2seg");
+            }
+
+            eth_spec->enic_id = val.get<uint64_t>("network.enic", 0);
+            if (eth_spec->enic_id == 0) {
+                if (enic_allocator->alloc(&enic_id) != sdk::lib::indexer::SUCCESS) {
+                    printf("[ERROR] Failed to allocate enic\n");
+                    return -1;
+                }
+                eth_spec->enic_id = ENIC_ID_BASE + enic_id;
+            }
+
+            eth_spec->host_dev = false;
+            AddDevice(ETH, (void *)eth_spec);
+        }
+    }
+
+    // Create Ethernet devices
+    if (spec.get_child_optional("eth_dev")) {
+        for (const auto &node : spec.get_child("eth_dev")) {
+            eth_spec = new struct eth_devspec;
+            memset(eth_spec, 0, sizeof(*eth_spec));
+
+            auto val = node.second;
+
+            // TODO: Refactor into resource allocator
+            // TODO: For now interrupts must be 256 aligned. The allocator does not support
+            //       aligning resource ids, so allocate 256.
+            if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
+                printf("[ERROR] lif%lu: Failed to allocate interrupts\n", info.hw_lif_id);
+                return -1;
+            }
+
+            eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
+            eth_spec->txq_count = val.get<uint64_t>("txq_count");
+            eth_spec->eq_count = val.get<uint64_t>("eq_count");
+            eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
+            eth_spec->intr_base = intr_base;
+            eth_spec->intr_count = val.get<uint64_t>("intr_count");
+            eth_spec->mac_addr = mac_to_int(val.get<string>("mac_addr"));
+
+            if (val.get_optional<string>("rdma")) {
+                eth_spec->enable_rdma = true;
+                eth_spec->rdma_sq_count = val.get<uint64_t>("rdma.sq_count");
+                eth_spec->rdma_rq_count = val.get<uint64_t>("rdma.rq_count");
+                eth_spec->rdma_cq_count = val.get<uint64_t>("rdma.cq_count");
+                eth_spec->rdma_eq_count = val.get<uint64_t>("rdma.eq_count");
+                eth_spec->rdma_adminq_count = val.get<uint64_t>("rdma.adminq_count");
+                eth_spec->rdma_pid_count = val.get<uint64_t>("rdma.pid_count");
+                eth_spec->key_count = val.get<uint64_t>("rdma.key_count");
+                eth_spec->pte_count = val.get<uint64_t>("rdma.pte_count");
+            }
+
+            eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
+            if (eth_spec->lif_id == 0) {
+                if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
+                    printf("[ERROR] Failed to allocate lif\n");
+                    return -1;
+                }
+                eth_spec->lif_id = LIF_ID_BASE + lif_id;
+            }
+
+            if (val.get_optional<string>("network")) {
+                eth_spec->vrf_id = val.get<uint64_t>("network.vrf");
+                eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
+                eth_spec->native_l2seg_id = val.get<uint32_t>("network.native_l2seg");
+            }
+
+            eth_spec->enic_id = val.get<uint64_t>("network.enic", 0);
+            if (eth_spec->enic_id == 0) {
+                if (enic_allocator->alloc(&enic_id) != sdk::lib::indexer::SUCCESS) {
+                    printf("[ERROR] Failed to allocate enic\n");
+                    return -1;
+                }
+                eth_spec->enic_id = ENIC_ID_BASE + enic_id;
+            }
+
+            eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
+            eth_spec->host_dev = true;
+            AddDevice(ETH, (void *)eth_spec);
+        }
+    }
+
+    // Create Accelerator devices
+    if (spec.get_child_optional("accel_dev")) {
+        for (const auto &node : spec.get_child("accel_dev")) {
+            accel_spec = new struct accel_devspec;
+            memset(accel_spec, 0, sizeof(*accel_spec));
+
+            auto val = node.second;
+
+            // TODO: Refactor into resource allocator
+            // TODO: For now interrupts must be 256 aligned. The allocator does not support
+            //       aligning resource ids, so allocate 256.
+            if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
+                printf("[ERROR] lif%lu: Failed to allocate interrupts\n", info.hw_lif_id);
+                return -1;
+            }
+
+            accel_spec->lif_id = STORAGE_SEQ_SW_LIF_ID;
+            accel_spec->seq_queue_count = val.get<uint32_t>("seq_queue_count");
+            accel_spec->adminq_count = val.get<uint32_t>("adminq_count");
+            accel_spec->intr_base = intr_base;
+            accel_spec->intr_count = val.get<uint32_t>("intr_count");
+
+            accel_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
+            AddDevice(ACCEL, (void *)accel_spec);
+        }
+    }
 
     return 0;
 }
@@ -226,29 +420,29 @@ DeviceManager::LoadConfig(string path)
 Device *
 DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 {
-    Eth_PF *eth_dev;
+    Eth *eth_dev;
     Accel_PF *accel_dev;
 
     switch (type) {
-    case ETH_PF:
-        eth_dev = new Eth_PF(hal, dev_spec);
+    case MNIC:
+        cerr << "[ERROR] : Unsupported Device Type MNIC" << endl;
+        return NULL;
+    case DEBUG:
+        cerr << "[ERROR] : Unsupported Device Type DEBUG" << endl;
+        return NULL;
+    case ETH:
+        eth_dev = new Eth(hal, dev_spec);
         devices[eth_dev->info.hw_lif_id] = (Device *)eth_dev;
         return (Device *)eth_dev;
-    case ETH_VF:
-        cerr << "[ERROR] : Unsupported Device Type ETH_VF" << endl;
-        return NULL;
-    case NVME:
-        cerr << "[ERROR] : Unsupported Device Type NVME" << endl;
-        return NULL;
     case ACCEL:
         accel_dev = new Accel_PF(hal, dev_spec, &info);
         devices[accel_dev->info.hw_lif_id] = (Device *)accel_dev;
         return (Device *)accel_dev;
+    case NVME:
+        cerr << "[ERROR] : Unsupported Device Type NVME" << endl;
+        return NULL;
     case VIRTIO:
         cerr << "[ERROR] : Unsupported Device Type VIRTIO" << endl;
-        return NULL;
-    case DEBUG:
-        cerr << "[ERROR] : Unsupported Device Type DEBUG" << endl;
         return NULL;
     default:
         return NULL;
@@ -261,8 +455,8 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 void
 DeviceManager::PcieEventHandler(pciehdev_t *pdev, const pciehdev_eventdata_t *evd)
 {
-    Device *obj = (Device *)pciehdev_get_priv(pdev);
-    obj->DevcmdHandler();
+    Device *dev = (Device *)pciehdev_get_priv(pdev);
+    dev->DevcmdHandler();
 }
 #endif
 

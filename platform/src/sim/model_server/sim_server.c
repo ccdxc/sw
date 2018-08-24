@@ -161,15 +161,7 @@ static simdev_api_t sim_server_api = {
     .write_mem = sim_server_write_mem,
     .host_read_mem = sim_server_read_clientmem,
     .host_write_mem = sim_server_write_clientmem,
-    .hal_rdma_devcmd = hal_rdma_devcmd_wrapper,
-    .hal_create_ah = hal_create_ah_wrapper,
-    .hal_create_mr = hal_create_mr_wrapper,
-    .hal_create_cq = hal_create_cq_wrapper,
-    .hal_create_qp = hal_create_qp_wrapper,
-    .hal_modify_qp = hal_modify_qp_wrapper,
-    .set_lif = hal_set_lif_base,
     .alloc_hbm_address = hal_alloc_hbm_address,
-    .lif_find = hal_lif_find,
 };
 
 /*
@@ -259,7 +251,6 @@ sim_server_init(int argc, char *argv[])
     pciehsvc_open(NULL);
     simctx.serverfd = sims_open(NULL, simdev_msg_handler);
     zmq_wait_add_fd(simctx.serverfd, zmq_sim_new_client, NULL);
-    init_lib_driver();
 }
 
 void

@@ -1216,13 +1216,6 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
         HAL_TRACE_DEBUG("{}: End of SQ PT index: {}", __FUNCTION__, g_pt_base[lif]);        
     }
 
-    HAL_TRACE_DEBUG("{}: lif: {}, lkey: {}, rdma_mr_pt_base: {}, rdma_pt_addr: {}, shifted rdma_pt_addr: {} sqcb0_pt_base_addr: {}",
-                     __FUNCTION__, lif, spec.sq_lkey(),
-                    rdma_mr_pt_base_get(lif, spec.sq_lkey()),
-                    rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())),
-                    rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey())) >> PT_BASE_ADDR_SHIFT,
-                    sqcb_p->sqcb0.pt_base_addr);
-
     sqcb_p->sqcb1.log_rrq_size = log2(num_rrq_wqes);
     sqcb_p->sqcb2.log_rrq_size = sqcb_p->sqcb1.log_rrq_size;
 

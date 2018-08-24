@@ -68,7 +68,7 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define PHYS_STATE_DOWN 3
 
 /* XXX remove this section for release */
-static bool ionic_xxx_haps = false;
+static bool ionic_xxx_haps = true;
 module_param_named(xxx_haps, ionic_xxx_haps, bool, 0444);
 MODULE_PARM_DESC(xxx_haps, "XXX Misc workarounds for HAPS.");
 static bool ionic_xxx_limits = false;

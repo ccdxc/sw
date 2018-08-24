@@ -33,125 +33,14 @@
 
 typedef struct accelparams_s {
     int lif;
-    int adq_type;
-    int adq_count;
-    int adq_qidbase;
-    int seq_queue_type;
-    int seq_queue_count;
-    int seq_queue_base;
     int intr_base;
-    int intr_count;
     u_int64_t cmb_base;
     int upd[8];
-    int lif_discovered;
+    u_int64_t devcmd_pa;
+    u_int64_t devcmddb_pa;
 } accelparams_t;
 
 static simdev_t *current_sd;
-
-static pthread_cond_t *accel_cond;
-static pthread_mutex_t *accel_mutex;
-static pthread_t *accel_thread;
-static int accel_thread_has_work;
-static int accel_thread_done;
-
-static pthread_cond_t *
-accel_cond_create(void)
-{
-    pthread_cond_t  *cond;
-
-    cond = calloc(1, sizeof(*cond));
-    if (pthread_cond_init(cond, NULL) == 0) {
-        return cond;
-    }
-
-    free(cond);
-    return NULL;
-}
-
-static void
-accel_cond_wait(pthread_cond_t *cond,
-                pthread_mutex_t *mutex)
-{
-    assert(cond);
-    assert(pthread_cond_wait(cond, mutex) == 0);
-}
-
-static void
-accel_cond_broadcast(pthread_cond_t *cond)
-{
-    assert(cond);
-    assert(pthread_cond_broadcast(cond) == 0);
-}
-
-static void
-accel_cond_destroy(pthread_cond_t *cond)
-{
-    if (cond) {
-		pthread_cond_destroy(cond);
-        free(cond);
-    }
-}
-
-static pthread_mutex_t *
-accel_mutex_create(void)
-{
-    pthread_mutex_t  *mutex;
-
-    mutex = calloc(1, sizeof(*mutex));
-    if (pthread_mutex_init(mutex, NULL) == 0) {
-        return mutex;
-    }
-
-    free(mutex);
-    return NULL;
-}
-
-static void
-accel_mutex_destroy(pthread_mutex_t *mutex)
-{
-    if (mutex) {
-		pthread_mutex_destroy(mutex);
-        free(mutex);
-    }
-}
-
-static void
-accel_mutex_lock(pthread_mutex_t *mutex)
-{
-    assert(mutex);
-	assert(pthread_mutex_lock(mutex) == 0);
-}
-
-static void
-accel_mutex_unlock(pthread_mutex_t *mutex)
-{
-    assert(mutex);
-	assert(pthread_mutex_unlock(mutex) == 0);
-}
-
-static pthread_t *
-accel_thread_create(void *(*thread_fn)(void *),
-                    void* arg) 
-{
-    pthread_t       *handle;
-
-    handle = calloc(1, sizeof(*handle));
-	if (pthread_create(handle, NULL, thread_fn, arg) == 0) {
-        return handle;
-    }
-
-    free(handle);
-    return NULL;
-}
-
-static void
-accel_thread_destroy(pthread_t *handle)
-{
-    if (handle) {
-		pthread_join(*handle, NULL);
-        free(handle);
-    }
-}
 
 static int
 accel_lif(simdev_t *sd)
@@ -167,48 +56,11 @@ accel_intrb(simdev_t *sd)
     return ep->intr_base;
 }
 
-static int
-accel_intrc(simdev_t *sd)
-{
-    accelparams_t *ep = sd->priv;
-    return ep->intr_count;
-}
-
 static u_int64_t
 accel_cmb_base(simdev_t *sd)
 {
     accelparams_t *ep = sd->priv;
     return ep->cmb_base;
-}
-
-static u_int64_t
-bar_mem_rd(u_int64_t offset, u_int8_t size, void *buf)
-{
-    u_int8_t *b = buf;
-    u_int64_t v;
-
-    switch (size) {
-    case 1: v = *(u_int8_t  *)&b[offset]; break;
-    case 2: v = *(u_int16_t *)&b[offset]; break;
-    case 4: v = *(u_int32_t *)&b[offset]; break;
-    case 8: v = *(u_int64_t *)&b[offset]; break;
-    default: v = -1; break;
-    }
-    return v;
-}
-
-static void
-bar_mem_wr(u_int64_t offset, u_int8_t size, void *buf, u_int64_t v)
-{
-    u_int8_t *b = buf;
-
-    switch (size) {
-    case 1: *(u_int8_t  *)&b[offset] = v; break;
-    case 2: *(u_int16_t *)&b[offset] = v; break;
-    case 4: *(u_int32_t *)&b[offset] = v; break;
-    case 8: *(u_int64_t *)&b[offset] = v; break;
-    default: break;
-    }
 }
 
 /*
@@ -217,216 +69,30 @@ bar_mem_wr(u_int64_t offset, u_int8_t size, void *buf, u_int64_t v)
  * ----------------------------------------------------------------
  */
 
-#define PACKED __attribute__((packed))
-
 struct dev_cmd_regs {
     u_int32_t signature;
     u_int32_t done;
     u_int32_t cmd[16];
-    u_int32_t response[4];
-} PACKED;
-
-struct dev_cmd_regs_all {
-    struct dev_cmd_regs regs;
+    u_int32_t comp[4];
     uint8_t data[2048] __attribute__((aligned (2048)));
-} PACKED;
+};
+
+_Static_assert(sizeof(struct dev_cmd_regs) == 4096,
+                "Devcmd region should be 4K bytes");
+_Static_assert((offsetof(struct dev_cmd_regs, cmd)  % 4) == 0,
+                "Devcmd cmd field should be word-aligned");
+_Static_assert(sizeof(((struct dev_cmd_regs*)0)->cmd) == 64,
+                "Devcmd cmd field should be 64 bytes");
+_Static_assert((offsetof(struct dev_cmd_regs, comp) % 4) == 0,
+                "Devcmd comp field should be word-aligned");
+_Static_assert(sizeof(((struct dev_cmd_regs*)0)->comp) == 16,
+                "Devcmd comp field should be 16 bytes");
+_Static_assert((offsetof(struct dev_cmd_regs, data) % 4) == 0,
+                "Devcmd data region should be word-aligned");
 
 static struct dev_cmd_regs dev_cmd_regs = {
     .signature = DEV_CMD_SIGNATURE,
 };
-
-static struct dev_cmd_regs ret_dev_cmd;
-
-static u_int64_t accel_devcmdpa;
-static u_int64_t accel_devcmddbpa;
-
-#define ACCEL_DEVCMD_OPCODE_NAME(id)    \
-    [id] = #id
-
-#define ARRAYSIZE(a)    (sizeof(a) / sizeof(a[0]))
-
-#define ACCEL_DEV_PAGE_SIZE             4096
-#define ACCEL_DEV_PAGE_MASK             (ACCEL_DEV_PAGE_SIZE - 1)
-#define ACCEL_DEV_PAGE_ALIGN(addr)      \
-    (((addr) + ACCEL_DEV_PAGE_MASK) & ~ACCEL_DEV_PAGE_MASK)
-    
-static const char   *opcode_name_tbl[] = {
-    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_NOP),
-    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_RESET),
-    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_IDENTIFY),
-    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_LIF_INIT),
-    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_ADMINQ_INIT),
-    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_SEQ_QUEUE_INIT),
-    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_SEQ_QUEUE_ENABLE),
-    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_SEQ_QUEUE_DISABLE),
-    ACCEL_DEVCMD_OPCODE_NAME(CMD_OPCODE_HANG_NOTIFY),
-};
-
-static const char *
-accel_opcode_name_get(enum cmd_opcode opcode)
-{
-    if ((opcode < ARRAYSIZE(opcode_name_tbl)) && opcode_name_tbl[opcode]) {
-        return opcode_name_tbl[opcode];
-    }
-
-    return "no name";
-}
-
-static void
-accel_lif_discover(void)
-{
-    accelparams_t   *ep = current_sd->priv;
-    uint64_t        hw_lif_id;
-
-    if (!ep->lif_discovered) {
-        if (simdev_lif_find(STORAGE_SEQ_SW_LIF_ID, &hw_lif_id) == 0) {
-
-            simdev_log("%s: changing lif %d to %lu\n", __FUNCTION__,
-                       ep->lif, hw_lif_id);
-            ep->lif = hw_lif_id;
-            ep->lif_discovered = 1;
-        }
-    }
-}
-
-static void
-accel_devcmdpa_init(void)
-{
-    uint32_t    total_size;
-
-    if (!accel_devcmdpa) {
-        if (simdev_alloc_hbm_address("storage_devcmd", &accel_devcmdpa,
-                                     &total_size) == 0) {
-            accel_devcmdpa = ACCEL_DEV_PAGE_ALIGN(accel_devcmdpa);
-            total_size *= 1024;
-            accel_devcmddbpa = accel_devcmdpa + sizeof(struct dev_cmd_regs_all);
-            simdev_log("accel_devcmdpa 0x%"PRIx64" accel_devcmddbpa 0x%"PRIx64
-                       " total_size %u\n", accel_devcmdpa, accel_devcmddbpa,
-                       total_size);
-        }
-    }
-}
-
-static int
-accel_devcmdpa_done_poll(void)
-{
-    ret_dev_cmd.done = 0;
-    int maxpolls = 1000;
-
-    if (accel_devcmdpa) {
-        while (maxpolls--) {
-            if (simdev_read_mem(accel_devcmdpa, &ret_dev_cmd,
-                                sizeof(ret_dev_cmd)) == 0) {
-                if (ret_dev_cmd.done) {
-                    return 0;
-                }
-            }
-            usleep(10000);
-        }
-    }
-    return -1;
-}
-
-static inline void *
-accel_devcmdpa_response(void)
-{
-    return (void *)&ret_dev_cmd.response[0];
-}
-
-static void
-devcmd(struct dev_cmd_regs *dc)
-{
-    identify_cmd_t  *cmd = (identify_cmd_t *)&dc->cmd;
-    identify_cpl_t  *cpl = (identify_cpl_t *)&dc->response;
-    int             status;
-
-    if (dc->done) {
-        simdev_error("devcmd: done set at cmd start!\n");
-        cpl->status = -1;
-        return;
-    }
-
-    simdev_log("%s: opcode %s\n", __FUNCTION__,
-               accel_opcode_name_get(cmd->opcode));
-    memset(cpl, 0, sizeof(*cpl));
-    if (accel_devcmdpa_done_poll()) {
-        simdev_error("%s: timed out\n", __FUNCTION__);
-        cpl->status = 1;
-    } else {
-        memcpy(cpl, accel_devcmdpa_response(), sizeof(*cpl));
-
-        /*
-         * CMD_OPCODE_IDENTIFY has identity info returned in the data area.
-         */
-        if (cmd->opcode == CMD_OPCODE_IDENTIFY) {
-            identity_t      ident = {0};
-            identify_cpl_t  *identify_cpl = (void *)cpl;
-            simdev_t        *sd = current_sd;
-
-            status = simdev_read_mem(accel_devcmdpa +
-                                     offsetof(struct dev_cmd_regs_all, data),
-                                     &ident, sizeof(ident));
-            if (status == 0) {
-                status = sims_memwr(sd->fd, sd->bdf, cmd->addr,
-                                    sizeof(ident), &ident);
-            }
-            if (status) {
-                simdev_error("%s: sims_memwr failed\n", __FUNCTION__);
-                identify_cpl->status = 1;
-                identify_cpl->ver = IDENTITY_VERSION_1;
-            }
-        }
-    }
-
-    dc->done = 1;
-}
-
-/*
- * Because libsimdev/model_server takes a lock when entered,
- * a thread is needed to handle the devcmd processing with the
- * lock released so that the nicmgr process (the real devcmd
- * processor) can enter model_server upon its devcmddb poll.
- */
-static void *
-devcmd_thread(void *arg)
-{
-    accel_mutex_lock(accel_mutex);
-    while (1) {
-        accel_cond_wait(accel_cond, accel_mutex);
-
-        /*
-         * Process the result from Accel_PF
-         */
-        if (accel_thread_done) {
-            break;
-        }
-        if (accel_thread_has_work) {
-            accel_thread_has_work = 0;
-            devcmd(&dev_cmd_regs);
-        }
-    }
-    accel_mutex_unlock(accel_mutex);
-
-    return NULL;
-}
-
-static void
-devcmd_thread_create(void)
-{
-    accel_mutex = accel_mutex_create();
-    accel_cond = accel_cond_create();
-    accel_thread = accel_thread_create(&devcmd_thread, NULL);
-}
-
-static void
-devcmd_thread_destroy(void)
-{
-    accel_thread_done = 1;
-    accel_cond_broadcast(accel_cond);
-    accel_thread_destroy(accel_thread);
-    accel_cond_destroy(accel_cond);
-    accel_mutex_destroy(accel_mutex);
-}
 
 /*
  * ================================================================
@@ -435,7 +101,7 @@ devcmd_thread_destroy(void)
  */
 
 static int
-bar_invalid_rd(int bar, int reg, 
+bar_invalid_rd(int bar, int reg,
                u_int64_t offset, u_int8_t size, u_int64_t *valp)
 {
     simdev_error("invalid_rd: bar %d reg %d off 0x%"PRIx64" size %d\n",
@@ -444,7 +110,7 @@ bar_invalid_rd(int bar, int reg,
 }
 
 static int
-bar_invalid_wr(int bar, int reg, 
+bar_invalid_wr(int bar, int reg,
                u_int64_t offset, u_int8_t size, u_int64_t val)
 {
     simdev_error("invalid_wr: bar %d reg %d off 0x%"PRIx64" "
@@ -454,7 +120,7 @@ bar_invalid_wr(int bar, int reg,
 }
 
 static int
-bar_devcmd_rd(int bar, int reg, 
+bar_devcmd_rd(int bar, int reg,
               u_int64_t offset, u_int8_t size, u_int64_t *valp)
 {
     if (offset + size > sizeof(dev_cmd_regs)) {
@@ -463,13 +129,14 @@ bar_devcmd_rd(int bar, int reg,
         return -1;
     }
 
-    *valp = bar_mem_rd(offset, size, &dev_cmd_regs);
+    accelparams_t *ep = current_sd->priv;
+    simdev_read_mem(ep->devcmd_pa + offset, valp, size);
 
     return 0;
 }
 
 static int
-bar_devcmd_wr(int bar, int reg, 
+bar_devcmd_wr(int bar, int reg,
               u_int64_t offset, u_int8_t size, u_int64_t val)
 {
     if (offset + size >= sizeof(dev_cmd_regs)) {
@@ -478,9 +145,8 @@ bar_devcmd_wr(int bar, int reg,
         return -1;
     }
 
-    accel_mutex_lock(accel_mutex);
-    bar_mem_wr(offset, size, &dev_cmd_regs, val);
-    accel_mutex_unlock(accel_mutex);
+    accelparams_t *ep = current_sd->priv;
+    simdev_write_mem(ep->devcmd_pa + offset, &val, size);
 
     return 0;
 }
@@ -510,22 +176,9 @@ bar_devcmddb_wr(int bar, int reg,
         return -1;
     }
 
-    /*
-     * Send command to the devcmd area of the real Accel_PF device
-     */
-    accel_lif_discover();
-    accel_devcmdpa_init();
-    if (accel_devcmdpa) {
-        u_int32_t ring_db = 1;
+    accelparams_t *ep = current_sd->priv;
+    simdev_write_mem(ep->devcmddb_pa, &val, size);
 
-        accel_mutex_lock(accel_mutex);
-        simdev_write_mem(accel_devcmdpa, &dev_cmd_regs, sizeof(dev_cmd_regs));
-        simdev_write_mem(accel_devcmddbpa, &ring_db, sizeof(ring_db));
-
-        accel_thread_has_work = 1;
-        accel_cond_broadcast(accel_cond);
-        accel_mutex_unlock(accel_mutex);
-    }
     return 0;
 }
 
@@ -965,104 +618,19 @@ accel_iowr(simdev_t *sd, simmsg_t *m)
     sims_writeres(sd->fd, bdf, bar, addr, size, 0);
 }
 
-static void
-accel_init_lif(simdev_t *sd)
-{
-    /* anything to do for lif? */
-}
-
-static void
-accel_init_intr_pba_cfg(simdev_t *sd)
-{
-    const u_int32_t lif = accel_lif(sd);
-    const u_int32_t intrb = accel_intrb(sd);
-    const u_int32_t intrc = accel_intrc(sd);
-
-    intr_pba_cfg(lif, intrb, intrc);
-}
-
-static void
-accel_init_intr_fwcfg(simdev_t *sd)
-{
-    const int lif = accel_lif(sd);
-    const u_int32_t intrb = accel_intrb(sd);
-    const u_int32_t intrc = accel_intrc(sd);
-    u_int32_t intr;
-
-    for (intr = intrb; intr < intrb + intrc; intr++) {
-        intr_fwcfg_msi(intr, lif, 0);
-    }
-}
-
-static void
-accel_init_intr_pba(simdev_t *sd)
-{
-    const u_int32_t intrb = accel_intrb(sd);
-    const u_int32_t intrc = accel_intrc(sd);
-    u_int32_t intr;
-
-    for (intr = intrb; intr < intrb + intrc; intr++) {
-        intr_pba_clear(intr);
-    }
-}
-
-static void
-accel_init_intr_drvcfg(simdev_t *sd)
-{
-    const u_int32_t intrb = accel_intrb(sd);
-    const u_int32_t intrc = accel_intrc(sd);
-    u_int32_t intr;
-
-    for (intr = intrb; intr < intrb + intrc; intr++) {
-        intr_drvcfg(intr);
-    }
-}
-
-static void
-accel_init_intr_msixcfg(simdev_t *sd)
-{
-    const u_int32_t intrb = accel_intrb(sd);
-    const u_int32_t intrc = accel_intrc(sd);
-    u_int32_t intr;
-
-    for (intr = intrb; intr < intrb + intrc; intr++) {
-        intr_msixcfg(intr, 0, 0, 1);
-    }
-}
-
-static void
-accel_init_intrs(simdev_t *sd)
-{
-    accel_init_intr_pba_cfg(sd);
-    accel_init_intr_fwcfg(sd);
-    accel_init_intr_pba(sd);
-    accel_init_intr_drvcfg(sd);
-    accel_init_intr_msixcfg(sd);
-}
-
-static void
-accel_init_device(simdev_t *sd)
-{
-    accel_init_lif(sd);
-    accel_init_intrs(sd);
-}
-
 static int
 accel_init(simdev_t *sd, const char *devparams)
 {
     accelparams_t *ep;
-    char pbuf[80];
 
     if (devparam_str(devparams, "help", NULL, 0) == 0) {
         simdev_error("accel params:\n"
                      "    lif=<lif>\n"
-                     "    adq_type=<adq_type>\n"
-                     "    adq_count=<adq_count>\n"
-                     "    seq_queue_type=<seq_queue_type>\n"
-                     "    seq_queue_count=<seq_queue_count>\n"
                      "    intr_base=<intr_base>\n"
-                     "    intr_count=<intr_count>\n"
-                     "    cmb_base=<cmb_base>\n");
+                     "    cmb_base=<cmb_base>\n"
+                     "    devcmd_pa=<devcmd_pa>\n"
+                     "    devcmddb_pa=<devcmddb_pa>\n"
+                     );
         return -1;
     }
 
@@ -1077,44 +645,29 @@ accel_init(simdev_t *sd, const char *devparams)
     devparam_##TYP(devparams, #P, &ep->P)
 
     GET_PARAM(lif, int);
-    GET_PARAM(adq_type, int);
-    GET_PARAM(adq_count, int);
-    GET_PARAM(seq_queue_type, int);
-    GET_PARAM(seq_queue_count, int);
     GET_PARAM(intr_base, int);
-    GET_PARAM(intr_count, int);
     GET_PARAM(cmb_base, u64);
+    GET_PARAM(devcmd_pa, u64);
+    GET_PARAM(devcmddb_pa, u64);
 
-    /*
-     * upd=0x8:0xb:0:0:0:0:0:0
-     */
-    if (devparam_str(devparams, "upd", pbuf, sizeof(pbuf)) == 0) {
-        char *p, *q, *sp;
-        int i;
+    enum storage_seq_qtype {
+        STORAGE_SEQ_QTYPE_SQ        = 0,
+        STORAGE_SEQ_QTYPE_UNUSED    = 1,
+        STORAGE_SEQ_QTYPE_ADMIN     = 2,
+        STORAGE_SEQ_QTYPE_MAX
+    };
 
-        q = pbuf;
-        for (i = 0; i < 8 && (p = strtok_r(q, ":", &sp)) != NULL; i++) {
-            ep->upd[i] = strtoul(p, NULL, 0);
-            if (q != NULL) q = NULL;
-        }
-    } else {
-        /* UPD defaults */
-        for (int i = 0; i < 8; i++) {
-            ep->upd[i] = 0xb;
-        }
-    }
+    ep->upd[STORAGE_SEQ_QTYPE_SQ] = 0xb;
+    ep->upd[STORAGE_SEQ_QTYPE_ADMIN] = 0xb;
 
-    accel_init_device(sd);
     simdev_set_lif(ep->lif);
 
-    devcmd_thread_create();
     return 0;
 }
 
 static void
 accel_free(simdev_t *sd)
 {
-    devcmd_thread_destroy();
     free(sd->priv);
     sd->priv = NULL;
 }

@@ -23,10 +23,12 @@ echo $GDB $MODEL_SERVER \
     +PLOG_MAX_QUIT_COUNT=0 \
     +plog=${LOG_LEVEL:=err} \
     ${IRIS_DEBUG:++model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json} \
-    $*
+	${VERBOSE:+-v} \
+	$*
 
 $GDB $MODEL_SERVER \
     +PLOG_MAX_QUIT_COUNT=0 \
     +plog=${LOG_LEVEL:=err} \
     ${IRIS_DEBUG:++model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json} \
-    $*
+    ${VERBOSE:+-v} \
+	$*

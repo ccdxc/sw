@@ -20,6 +20,7 @@
 #include "src/sim/libsimdev/src/simdev_impl.h"
 #include "src/sim/libsimdev/include/simdevices.h"
 
+
 typedef struct simdevinfo_s {
     simdev_api_t *api;
     TAILQ_HEAD(, simdev_s) devlist;
@@ -397,8 +398,10 @@ simdev_open(simdev_api_t *api)
     simdevinfo_t *si = simdevinfo_get();
 
     TAILQ_INIT(&si->devlist);
+    // devcmd_init();
     simdevinfo_api_set(api);
     genericdev_init();
+
     return 0;
 }
 
@@ -413,6 +416,7 @@ simdev_close(void)
         TAILQ_REMOVE(&si->devlist, sd, list);
         simdev_delete(sd);
     }
+
     simdevinfo_api_set(NULL);
 }
 

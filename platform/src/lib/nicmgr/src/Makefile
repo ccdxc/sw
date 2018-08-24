@@ -26,6 +26,7 @@ LCFLAGS = \
 	-I $(TOPDIR)/../nic/sdk/include/ \
 	-I $(TOPDIR)/../nic/gen/proto/hal/ \
 	-I $(TOPDIR)/../nic/hal/pd/capri/ \
+	-I $(TOPDIR)/../nic/third-party/boost/include/ \
 	-I $(TOPDIR)/../nic/hal/third-party/include/ \
 	-I $(TOPDIR)/../nic/hal/third-party/grpc/include/ \
 	-I $(TOPDIR)/../nic/hal/third-party/google/include/ \

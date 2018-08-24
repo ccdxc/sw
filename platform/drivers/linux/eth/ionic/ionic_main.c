@@ -46,10 +46,9 @@ MODULE_PARM_DESC(ntxqs, "Hard set the number of Tx queues per LIF");
 MODULE_PARM_DESC(nrxqs, "Hard set the number of Rx queues per LIF");
 
 unsigned int devcmd_timeout = 30;
-#ifdef HAPS
 module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
-#endif
+
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 {

@@ -36,13 +36,13 @@ using namespace std;
 
 HalClient::HalClient(enum ForwardingMode fwd_mode)
 {
-    if (getenv("HAL_SOCK_PATH")) {
-        channel = CreateChannel(std::string("unix:") + std::getenv("HAL_SOCK_PATH") + "halsock", InsecureChannelCredentials());
-    } else if (getenv("HAL_GRPC_PORT")) {
-        channel = CreateChannel(std::string("localhost:") + getenv("HAL_GRPC_PORT"), InsecureChannelCredentials());
-    } else {
-        channel = CreateChannel(std::string("localhost:50054"), InsecureChannelCredentials());
+    string url = std::string("localhost:50054");
+    if (getenv("HAL_GRPC_PORT")) {
+        url = string("localhost:") + getenv("HAL_GRPC_PORT");
     }
+
+    cout << "[INFO] Connecting to HAL @ " << url << endl;
+    channel = CreateChannel(url, InsecureChannelCredentials());
 
     cout << "[INFO] Waiting for HAL to be ready ..." << endl;
     auto state = channel->GetState(true);
@@ -82,7 +82,7 @@ HalClient::VrfProbe()
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
             } else {
                 cout << "[INFO] Discovered Vrf"
                      << " handle " << rsp.status().vrf_handle()
@@ -92,11 +92,51 @@ HalClient::VrfProbe()
             }
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
         return -1;
     }
 
     return 0;
+}
+
+uint64_t
+HalClient::VrfGet(uint64_t vrf_id)
+{
+    /*
+    VrfGetRequest       *req __attribute__((unused));
+    VrfGetResponse      rsp;
+    VrfGetRequestMsg    req_msg;
+    VrfGetResponseMsg   rsp_msg;
+    ClientContext       context;
+    Status              status;
+
+    uint64_t            vrf_handle = 0;
+
+    req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_vrf_id(vrf_id);
+
+    status = vrf_stub_->VrfGet(&context, req_msg, &rsp_msg);
+    if (status.ok()) {
+        for (int i = 0; i < rsp_msg.response().size(); i++) {
+            rsp = rsp_msg.response(i);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            } else {
+                vrf_handle = rsp.status().vrf_handle();
+                assert(rsp.spec().key_or_handle().vrf_id() == vrf_id);
+                cout << "[INFO] Got Vrf"
+                     << " handle " << vrf_handle << " id " << vrf_id
+                     << endl;
+                vrf_id2handle[vrf_id] = vrf_handle;
+            }
+        }
+    } else {
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        return 0;
+    }
+    */
+
+    return vrf_id2handle[vrf_id];
 }
 
 uint64_t
@@ -109,6 +149,11 @@ HalClient::VrfCreate(uint64_t vrf_id)
     ClientContext     context;
     Status            status;
 
+    // if vrf exists then don't try to create it
+    if (vrf_id2handle.find(vrf_id) != vrf_id2handle.end()) {
+        return VrfGet(vrf_id);
+    }
+
     spec = req_msg.add_request();
     spec->mutable_key_or_handle()->set_vrf_id(vrf_id);
     spec->set_vrf_type(::types::VRF_TYPE_CUSTOMER);
@@ -116,17 +161,17 @@ HalClient::VrfCreate(uint64_t vrf_id)
     status = vrf_stub_->VrfCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-        } else {
+        if (rsp.api_status() == types::API_STATUS_OK) {
             cout << "[INFO] VRF create succeeded, handle = "
                  << rsp.vrf_status().vrf_handle()
                  << endl;
             vrf_id2handle[vrf_id] = rsp.vrf_status().vrf_handle();
             return rsp.vrf_status().vrf_handle();
+        } else {
+            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
         return -1;
     }
 
@@ -137,6 +182,12 @@ HalClient::VrfCreate(uint64_t vrf_id)
  * Uplink APIs
  */
 uint64_t
+HalClient::UplinkGet(uint64_t port_num)
+{
+    return uplink2id[port_num];
+}
+
+uint64_t
 HalClient::UplinkCreate(uint64_t uplink_if_id, uint64_t port_num, uint64_t native_l2seg_id)
 {
     InterfaceSpec           *spec;
@@ -146,31 +197,47 @@ HalClient::UplinkCreate(uint64_t uplink_if_id, uint64_t port_num, uint64_t nativ
     ClientContext           context;
     Status                  status;
 
+    if (uplink2id.find(port_num) != uplink2id.end()) {
+        return UplinkGet(port_num);
+    }
+
     spec = req_msg.add_request();
     spec->mutable_key_or_handle()->set_interface_id(uplink_if_id);
     spec->set_type(::intf::IfType::IF_TYPE_UPLINK);
     spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
     spec->mutable_if_uplink_info()->set_port_num(port_num);
-    spec->mutable_if_uplink_info()->set_native_l2segment_id(native_l2seg_id);
+    if (native_l2seg_id) {
+        spec->mutable_if_uplink_info()->set_native_l2segment_id(native_l2seg_id);
+    }
 
     status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
         } else {
             cout << "[INFO] Uplink create succeeded, handle = "
                  << rsp.status().if_handle()
                  << endl;
-            uplink_map[port_num] = rsp.status().if_handle();
+            uplink2id[port_num] = rsp.status().if_handle();
             return rsp.status().if_handle();
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
         return -1;
     }
 
     return 0;
+}
+
+int
+HalClient::UplinkDelete(uint64_t uplink_if_id)
+{
+    if (fwd_mode == FWD_MODE_SMART_NIC) {
+        return 0;
+    }
+
+    return InterfaceDelete(uplink_if_id);
 }
 
 /**
@@ -186,6 +253,7 @@ HalClient::L2SegmentProbe()
     ClientContext               context;
     Status                      status;
     uint64_t                    l2seg_handle, l2seg_id;
+    uint32_t                    vlan_id;
 
     req = req_msg.add_request();
     status = l2seg_stub_->L2SegmentGet(&context, req_msg, &rsp_msg);
@@ -193,23 +261,24 @@ HalClient::L2SegmentProbe()
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
             } else {
                 if (rsp.spec().wire_encap().encap_type() == ENCAP_TYPE_DOT1Q) {
                     l2seg_handle = rsp.status().l2segment_handle();
                     l2seg_id = rsp.spec().key_or_handle().segment_id();
+                    vlan_id = rsp.spec().wire_encap().encap_value();
                     cout << "[INFO] Discovered L2Segment"
                          << " handle " << l2seg_handle
                          << " id " << l2seg_id
-                         << " VLAN " << rsp.spec().wire_encap().encap_value() << endl;
-                    l2seg_handle2id[l2seg_handle] = l2seg_id;
+                         << " VLAN " << vlan_id << endl;
                     l2seg_id2handle[l2seg_id] = l2seg_handle;
-                    vlan2seg_map[rsp.spec().wire_encap().encap_value()] = l2seg_handle;
+                    vlan2seg[vlan_id] = l2seg_id;
+                    seg2vlan[l2seg_id] = vlan_id;
                 }
             }
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
         return -1;
     }
 
@@ -217,51 +286,88 @@ HalClient::L2SegmentProbe()
 }
 
 uint64_t
-HalClient::L2SegmentCreate(uint64_t vrf_id,
-                            uint64_t l2seg_id,
-                           ::l2segment::BroadcastFwdPolicy bcast_policy,
-                           ::l2segment::MulticastFwdPolicy mcast_policy,
-                           uint16_t vlan_id)
+HalClient::L2SegmentGet(uint64_t l2seg_id)
+{
+    L2SegmentGetRequest         *req __attribute__((unused));
+    L2SegmentGetResponse        rsp;
+    L2SegmentGetRequestMsg      req_msg;
+    L2SegmentGetResponseMsg     rsp_msg;
+    ClientContext               context;
+    Status                      status;
+    uint64_t                    l2seg_handle;
+    uint32_t                    vlan_id;
+
+    req = req_msg.add_request();
+    status = l2seg_stub_->L2SegmentGet(&context, req_msg, &rsp_msg);
+    if (status.ok()) {
+        for (int i = 0; i < rsp_msg.response().size(); i++) {
+            rsp = rsp_msg.response(i);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            } else {
+                if (rsp.spec().wire_encap().encap_type() == ENCAP_TYPE_DOT1Q) {
+                    l2seg_handle = rsp.status().l2segment_handle();
+                    l2seg_id = rsp.spec().key_or_handle().segment_id();
+                    vlan_id = rsp.spec().wire_encap().encap_value();
+                    cout << "[INFO] Discovered L2Segment"
+                         << " handle " << l2seg_handle
+                         << " id " << l2seg_id
+                         << " VLAN " << vlan_id << endl;
+                    l2seg_id2handle[l2seg_id] = l2seg_handle;
+                    vlan2seg[vlan_id] = l2seg_id;
+                    seg2vlan[l2seg_id] = vlan_id;
+                    return l2seg_handle;
+                }
+            }
+        }
+    } else {
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+    }
+
+    return -1;
+}
+
+uint64_t
+HalClient::L2SegmentCreate(uint64_t vrf_id, uint64_t l2seg_id, uint16_t vlan_id)
 {
     L2SegmentSpec           *spec;
     L2SegmentResponse       rsp;
     L2SegmentRequestMsg     req_msg;
     L2SegmentResponseMsg    rsp_msg;
-    // NetworkKeyHandle        *nw_kh;
     ClientContext           context;
     Status                  status;
 
     uint64_t                l2seg_handle;
 
+    if (vlan2seg.find(vlan_id) != vlan2seg.end()) {
+        return l2seg_id2handle[l2seg_id];
+    }
+
     spec = req_msg.add_request();
     spec->mutable_meta()->set_vrf_id(vrf_id);
     spec->mutable_key_or_handle()->set_segment_id(l2seg_id);
-    // if (nw_handle) {
-    //     nw_kh = spec->add_network_key_handle();
-    //     nw_kh->set_nw_handle(nw_handle);
-    // }
     spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
-    spec->set_mcast_fwd_policy(mcast_policy);
-    spec->set_bcast_fwd_policy(bcast_policy);
+    spec->set_mcast_fwd_policy(::l2segment::MULTICAST_FWD_POLICY_FLOOD);
+    spec->set_bcast_fwd_policy(::l2segment::BROADCAST_FWD_POLICY_FLOOD);
     spec->mutable_wire_encap()->set_encap_type(::types::ENCAP_TYPE_DOT1Q);
     spec->mutable_wire_encap()->set_encap_value(vlan_id);
     status = l2seg_stub_->L2SegmentCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
         } else {
             l2seg_handle = rsp.l2segment_status().l2segment_handle();
             cout << "[INFO] L2 segment create succeeded, handle = "
                   << l2seg_handle
                   << endl;
-            l2seg_handle2id[l2seg_handle] = l2seg_id;
             l2seg_id2handle[l2seg_id] = l2seg_handle;
-            vlan2seg_map[vlan_id] = l2seg_handle;
+            vlan2seg[vlan_id] = l2seg_id;
+            seg2vlan[l2seg_id] = vlan_id;
             return l2seg_handle;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
         return -1;
     }
 
@@ -269,7 +375,7 @@ HalClient::L2SegmentCreate(uint64_t vrf_id,
 }
 
 int
-HalClient::AddL2SegmentOnUplink(uint64_t uplink_if_id, uint64_t l2seg_handle)
+HalClient::AddL2SegmentOnUplink(uint64_t uplink_if_id, uint64_t l2seg_id)
 {
     InterfaceL2SegmentSpec           *spec __attribute__((unused));
     InterfaceL2SegmentResponse       rsp;
@@ -279,29 +385,29 @@ HalClient::AddL2SegmentOnUplink(uint64_t uplink_if_id, uint64_t l2seg_handle)
     Status                           status;
 
     spec = req_msg.add_request();
-    spec->mutable_l2segment_key_or_handle()->set_l2segment_handle(l2seg_handle);
+    spec->mutable_l2segment_key_or_handle()->set_segment_id(l2seg_id);
     spec->mutable_if_key_handle()->set_interface_id(uplink_if_id);
+
     status = intf_stub_->AddL2SegmentOnUplink(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK &&
-            rsp.api_status() != types::API_STATUS_EXISTS_ALREADY) {
-            cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            cout << "[INFO] L2 Segment id = " << l2seg_id
+                        << " add to uplink id = " << uplink_if_id
+                        << " succeeded"
+                        << endl;
+        } else if (rsp.api_status() == types::API_STATUS_EXISTS_ALREADY) {
+            cout << "[INFO] L2 Segment id = " << l2seg_id
+                        << " already added to uplink id = " << uplink_if_id
+                        << endl;
         } else {
-            if (rsp.api_status() == types::API_STATUS_EXISTS_ALREADY) {
-                cout << "[INFO] L2 Segment handle = " << l2seg_handle
-                          << " already added to uplink id = "  << uplink_if_id
-                          << endl;
-            } else {
-                cout << "[INFO] L2 Segment handle = " << l2seg_handle
-                          << " add to uplink id = "  << uplink_if_id
-                          << " succeeded"
-                          << endl;
-            }
-            return 0;
+            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            return -1;
         }
+
+        return 0;
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
         return -1;
     }
 
@@ -312,11 +418,11 @@ HalClient::AddL2SegmentOnUplink(uint64_t uplink_if_id, uint64_t l2seg_handle)
  * ENIC APIs
  */
 uint64_t
-HalClient::EnicCreate(uint32_t enic_id, uint32_t lif_id,
-                      uint64_t pinned_uplink_if_handle,
-                      uint64_t native_l2seg_handle,
-                      vector<uint64_t> &non_native_l2seg_handles,
-                      uint64_t mac_addr)
+HalClient::EnicCreate(uint64_t enic_id,
+                      uint64_t lif_id,
+                      uint64_t uplink_id,
+                      uint64_t native_l2seg_id,
+                      vector<uint64_t> &nonnative_l2seg_ids)
 {
     InterfaceSpec           *spec;
     InterfaceResponse       rsp;
@@ -325,54 +431,53 @@ HalClient::EnicCreate(uint32_t enic_id, uint32_t lif_id,
     L2SegmentKeyHandle      *l2seg_kh;
     ClientContext           context;
     Status                  status;
-    // TODO: HACK - Need an allocator for useg_vlan
-    uint32_t                useg_vlan = lif_id;
-    assert(lif_id < 4096);
+
+    if (fwd_mode == FWD_MODE_SMART_NIC) {
+        return -1;
+    }
 
     spec = req_msg.add_request();
     spec->mutable_key_or_handle()->set_interface_id(enic_id);
     spec->set_type(::intf::IfType::IF_TYPE_ENIC);
     spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
     spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
-    spec->mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_if_handle(pinned_uplink_if_handle);
-
-    if (fwd_mode == FWD_MODE_CLASSIC_NIC) {
-        spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
-        spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(native_l2seg_handle);
-        for (auto it = non_native_l2seg_handles.cbegin(); it != non_native_l2seg_handles.cend(); it++) {
-            l2seg_kh = spec->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
-            l2seg_kh->set_l2segment_handle(*it);
-        }
-    } else if (fwd_mode == FWD_MODE_SMART_NIC) {
-        spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_USEG);
-        spec->mutable_if_enic_info()->mutable_enic_info()->set_mac_address(mac_addr);
-        spec->mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(useg_vlan);
-        spec->mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_l2segment_handle(native_l2seg_handle);
-        // TODO: support non-native vlans by creating multiple enics
-    } else {
-        assert(0);
+    spec->mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_interface_id(uplink_id);
+    spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
+    spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(l2seg_id2handle[native_l2seg_id]);
+    for (auto it = nonnative_l2seg_ids.cbegin(); it != nonnative_l2seg_ids.cend(); it++) {
+        l2seg_kh = spec->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+        l2seg_kh->set_segment_id(*it);
     }
 
     status = HalClient::intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
         } else {
             cout << "[INFO] ENIC create succeeded, handle = "
                  << rsp.status().if_handle()
                  << endl;
             lif2enic_map[lif_id] = enic_id;
             enic_map[enic_id] = *spec;
-            enic_handle2id[rsp.status().if_handle()] = enic_id;
             enic_id2handle[enic_id] = rsp.status().if_handle();
             return rsp.status().if_handle();
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
     }
 
     return 0;
+}
+
+int
+HalClient::EnicDelete(uint64_t enic_id)
+{
+    if (fwd_mode == FWD_MODE_SMART_NIC) {
+        return 0;
+    }
+
+    return InterfaceDelete(enic_id);
 }
 
 /**
@@ -394,7 +499,7 @@ HalClient::EndpointProbe()
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
             } else {
                 enic_id = rsp.spec().endpoint_attrs().interface_key_handle().interface_id();
                 cout << "[INFO] Discovered Endpoint handle = " << rsp.status().endpoint_handle()
@@ -404,7 +509,7 @@ HalClient::EndpointProbe()
         }
 
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
         return -1;
     }
 
@@ -412,38 +517,31 @@ HalClient::EndpointProbe()
 }
 
 uint64_t
-HalClient::EndpointCreate(uint64_t vrf_id, uint64_t l2seg_handle,
-                          uint64_t enic_id, uint64_t sg_id,
-                          uint64_t mac_addr, uint64_t ip_addr)
+HalClient::EndpointCreate(uint64_t vrf_id, uint64_t l2seg_id,
+                          uint64_t enic_id, uint64_t mac_addr)
 {
     EndpointSpec              *spec;
     EndpointResponse          rsp;
     EndpointRequestMsg        req_msg;
     EndpointResponseMsg       rsp_msg;
-    SecurityGroupKeyHandle    *sg_kh;
-    IPAddress                 *ip;
     ClientContext             context;
     Status                    status;
 
+    if (fwd_mode == FWD_MODE_SMART_NIC) {
+        return -1;
+    }
+
     spec = req_msg.add_request();
-    spec->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_handle);
-    spec->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac_addr);
     spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+    spec->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
+    spec->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac_addr);
     spec->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(enic_id);
-    if (fwd_mode == FWD_MODE_SMART_NIC && ip_addr) {
-        ip = spec->mutable_endpoint_attrs()->add_ip_address();
-        ip->set_ip_af(types::IPAddressFamily::IP_AF_INET);
-        ip->set_v4_addr(ip_addr);
-    }
-    if (fwd_mode == FWD_MODE_SMART_NIC && sg_id) {
-        sg_kh = spec->mutable_endpoint_attrs()->add_sg_key_handle();
-        sg_kh->set_security_group_id(sg_id);
-    }
+
     status = HalClient::ep_stub_->EndpointCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
         } else {
             cout << "[INFO] Endpoint create succeeded, handle = "
                  << rsp.endpoint_status().endpoint_handle()
@@ -451,7 +549,7 @@ HalClient::EndpointCreate(uint64_t vrf_id, uint64_t l2seg_handle,
             return rsp.endpoint_status().endpoint_handle();
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
     }
 
     return 0;
@@ -467,6 +565,10 @@ HalClient::EndpointDelete(uint64_t vrf_id, uint64_t handle)
     ClientContext                   context;
     Status                          status;
 
+    if (fwd_mode == FWD_MODE_SMART_NIC) {
+        return 0;
+    }
+
     req = req_msg.add_request();
     req->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
     req->mutable_key_or_handle()->set_endpoint_handle(handle);
@@ -474,7 +576,7 @@ HalClient::EndpointDelete(uint64_t vrf_id, uint64_t handle)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": Handle = " << handle
                  << ", Status = " << rsp.api_status()
                  << endl;
@@ -483,7 +585,7 @@ HalClient::EndpointDelete(uint64_t vrf_id, uint64_t handle)
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Handle = " << handle
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -511,14 +613,14 @@ HalClient::InterfaceProbe()
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
             } else {
                 if (rsp.spec().type() == IF_TYPE_UPLINK) {
                     cout << "[INFO] Discovered Uplink Interface"
                          << " handle = " << rsp.status().if_handle()
                          << " id = " << rsp.spec().key_or_handle().interface_id()
                          << " port = " << rsp.spec().if_uplink_info().port_num() << endl;
-                    uplink_map[rsp.spec().if_uplink_info().port_num()] = rsp.status().if_handle();
+                    uplink2id[rsp.spec().if_uplink_info().port_num()] = rsp.status().if_handle();
                 }
                 if (rsp.spec().type() == IF_TYPE_ENIC) {
                     cout << "[INFO] Discovered Enic Interface"
@@ -528,13 +630,12 @@ HalClient::InterfaceProbe()
 
                     lif2enic_map[rsp.spec().if_enic_info().lif_key_or_handle().lif_id()] = rsp.spec().key_or_handle().interface_id();
                     enic_map[rsp.spec().key_or_handle().interface_id()] = rsp.spec();
-                    enic_handle2id[rsp.status().if_handle()] = rsp.spec().key_or_handle().interface_id();
                     enic_id2handle[rsp.spec().key_or_handle().interface_id()] = rsp.status().if_handle();
                 }
             }
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
         return -1;
     }
 
@@ -557,7 +658,7 @@ HalClient::InterfaceDelete(uint64_t if_id)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": Id = " << if_id
                  << ", Status = " << rsp.api_status()
                  << endl;
@@ -573,12 +674,11 @@ HalClient::InterfaceDelete(uint64_t if_id)
             }
             enic_map.erase(if_id);
             enic2ep_map.erase(if_id);
-            enic_handle2id.erase(enic_id2handle[if_id]);
             enic_id2handle.erase(if_id);
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Id = " << if_id
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -606,14 +706,14 @@ HalClient::LifProbe()
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
             } else {
                 cout << "[INFO] Discovered Lif id = " << rsp.spec().key_or_handle().lif_id() << endl;
                 lif_map[rsp.spec().key_or_handle().lif_id()] = LifSpec(rsp.spec());
             }
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
         return -1;
     }
 
@@ -637,7 +737,7 @@ HalClient::LifGet(uint64_t lif_id, struct lif_info *lif_info)
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FUNCTION__
+                cerr << "[ERROR] " << __FUNCTION__
                      << ": Id = " << lif_id
                      << ", Status = " << rsp.api_status()
                      << endl;
@@ -659,7 +759,7 @@ HalClient::LifGet(uint64_t lif_id, struct lif_info *lif_info)
             }
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Id = " << lif_id
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -669,9 +769,12 @@ HalClient::LifGet(uint64_t lif_id, struct lif_info *lif_info)
 }
 
 uint64_t
-HalClient::LifCreate(uint32_t lif_id, struct queue_info *queue_info,
+HalClient::LifCreate(uint64_t lif_id,
+                     struct queue_info *queue_info,
                      struct lif_info *lif_info,
-                     bool enable_rdma, uint32_t max_pt_entries, uint32_t max_keys)
+                     bool enable_rdma,
+                     uint32_t max_pt_entries,
+                     uint32_t max_keys)
 {
     LifSpec              *spec;
     LifResponse          rsp;
@@ -681,6 +784,11 @@ HalClient::LifCreate(uint32_t lif_id, struct queue_info *queue_info,
     QStateSetReq         *qstate_req;
     ClientContext        context;
     Status               status;
+
+    // Get and return if LIF already exists
+    if (lif_map.find(lif_id) != lif_map.end()) {
+        return LifGet(lif_id, lif_info);
+    }
 
     spec = req_msg.add_request();
     spec->mutable_key_or_handle()->set_lif_id(lif_id);
@@ -713,12 +821,7 @@ HalClient::LifCreate(uint32_t lif_id, struct queue_info *queue_info,
     status = intf_stub_->LifCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << lif_id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
-        } else {
+        if (rsp.api_status() == types::API_STATUS_OK) {
             cout << "[INFO] Lif create succeeded, id = "
                  << lif_id
                  << ", hw_lif_id = "
@@ -736,9 +839,16 @@ HalClient::LifCreate(uint32_t lif_id, struct queue_info *queue_info,
             }
             lif_map[lif_id] = LifSpec(*spec);
             return rsp.status().lif_handle();
+        } else if (rsp.api_status() == types::API_STATUS_EXISTS_ALREADY) {
+            return LifGet(lif_id, lif_info);
+        } else {
+            cerr << "[ERROR] " << __FUNCTION__
+                 << ": Id = " << lif_id
+                 << ", Status = " << rsp.api_status()
+                 << endl;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Id = " << lif_id
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -748,7 +858,7 @@ HalClient::LifCreate(uint32_t lif_id, struct queue_info *queue_info,
 }
 
 int
-HalClient::LifDelete(uint32_t lif_id)
+HalClient::LifDelete(uint64_t lif_id)
 {
     LifDeleteRequest        *req;
     LifDeleteResponse       rsp;
@@ -763,7 +873,7 @@ HalClient::LifDelete(uint32_t lif_id)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": Id = " << lif_id
                  << ", Status = " << rsp.api_status()
                  << endl;
@@ -773,7 +883,7 @@ HalClient::LifDelete(uint32_t lif_id)
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Id = " << lif_id
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -793,7 +903,7 @@ HalClient::LifSetVlanStrip(uint64_t lif_id, bool enable)
     LifResponseMsg rsp_msg;
 
     if (lif_map.find(lif_id) == lif_map.end()) {
-        cout << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
         cout << *this << endl;
         return (-1);
     }
@@ -805,7 +915,7 @@ HalClient::LifSetVlanStrip(uint64_t lif_id, bool enable)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": Id = " << lif_id
                  << ", Status = " << rsp.api_status()
                  << endl;
@@ -815,7 +925,7 @@ HalClient::LifSetVlanStrip(uint64_t lif_id, bool enable)
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Id = " << lif_id
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -835,7 +945,7 @@ HalClient::LifSetVlanInsert(uint64_t lif_id, bool enable)
     LifResponseMsg rsp_msg;
 
     if (lif_map.find(lif_id) == lif_map.end()) {
-        cout << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
         cout << *this << endl;
         return (-1);
     }
@@ -847,7 +957,7 @@ HalClient::LifSetVlanInsert(uint64_t lif_id, bool enable)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": Id = " << lif_id
                  << ", Status = " << rsp.api_status()
                  << endl;
@@ -857,7 +967,7 @@ HalClient::LifSetVlanInsert(uint64_t lif_id, bool enable)
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Id = " << lif_id
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -881,7 +991,7 @@ HalClient::LifSetBroadcast(uint64_t lif_id, bool enable)
     }
 
     if (lif_map.find(lif_id) == lif_map.end()) {
-        cout << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
         cout << *this << endl;
         return -1;
     }
@@ -893,7 +1003,7 @@ HalClient::LifSetBroadcast(uint64_t lif_id, bool enable)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": Id = " << lif_id
                  << ", Status = " << rsp.api_status()
                  << endl;
@@ -903,7 +1013,7 @@ HalClient::LifSetBroadcast(uint64_t lif_id, bool enable)
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Id = " << lif_id
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -927,7 +1037,7 @@ HalClient::LifSetAllMulticast(uint64_t lif_id, bool enable)
     }
 
     if (lif_map.find(lif_id) == lif_map.end()) {
-        cout << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
         cout << *this << endl;
         return -1;
     }
@@ -939,7 +1049,7 @@ HalClient::LifSetAllMulticast(uint64_t lif_id, bool enable)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": Id = " << lif_id
                  << ", Status = " << rsp.api_status()
                  << endl;
@@ -949,7 +1059,7 @@ HalClient::LifSetAllMulticast(uint64_t lif_id, bool enable)
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Id = " << lif_id
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -969,7 +1079,7 @@ HalClient::LifSetPromiscuous(uint64_t lif_id, bool enable)
     LifResponseMsg rsp_msg;
 
     if (lif_map.find(lif_id) == lif_map.end()) {
-        cout << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
         cout << *this << endl;
         return (-1);
     }
@@ -981,7 +1091,7 @@ HalClient::LifSetPromiscuous(uint64_t lif_id, bool enable)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": Id = " << lif_id
                  << ", Status = " << rsp.api_status()
                  << endl;
@@ -991,7 +1101,7 @@ HalClient::LifSetPromiscuous(uint64_t lif_id, bool enable)
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Id = " << lif_id
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -1011,7 +1121,7 @@ HalClient::LifSetRssConfig(uint64_t lif_id, LifRssType type, string key, string 
     LifResponseMsg rsp_msg;
 
     if (lif_map.find(lif_id) == lif_map.end()) {
-        cout << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
         cout << *this << endl;
         return -1;
     }
@@ -1025,7 +1135,7 @@ HalClient::LifSetRssConfig(uint64_t lif_id, LifRssType type, string key, string 
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": Id = " << lif_id
                  << ", Status = " << rsp.api_status()
                  << endl;
@@ -1035,7 +1145,7 @@ HalClient::LifSetRssConfig(uint64_t lif_id, LifRssType type, string key, string 
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": Id = " << lif_id
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -1065,7 +1175,7 @@ HalClient::MulticastProbe()
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FUNCTION__
+                cerr << "[ERROR] " << __FUNCTION__
                      << " status " << rsp.api_status()
                      << endl;
             } else {
@@ -1082,16 +1192,16 @@ HalClient::MulticastProbe()
                          << " group " << hex << group << resetiosflags(ios::hex)
                          << " vrf_id " <<  vrf_id
                          << " l2seg_id " << l2seg_id
-                         << " if_id " << enic_handle2id[it->if_handle()] // TODO: HAL should return id
+                         << " if_id " << it->interface_id()
                          << endl;
                     tuple<uint64_t, uint64_t, uint64_t> key(vrf_id, l2seg_id, group);
-                    mcast_groups[key].push_back(enic_handle2id[it->if_handle()]);
+                    mcast_groups[key].push_back(it->interface_id());
                 }
             }
         }
         return 0;
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
     }
 
     return -1;
@@ -1112,14 +1222,14 @@ HalClient::MulticastGroupGet(uint64_t group,
 
     req = req_msg.add_request();
     req->mutable_meta()->set_vrf_id(vrf_id);
-    req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_id2handle[l2seg_id]);
+    req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
     req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
     status = multicast_stub_->MulticastEntryGet(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FUNCTION__
+                cerr << "[ERROR] " << __FUNCTION__
                      << ": group " << hex << group << resetiosflags(ios::hex)
                      << " vrf_id " << vrf_id
                      << " l2seg_id " << l2seg_id
@@ -1138,16 +1248,16 @@ HalClient::MulticastGroupGet(uint64_t group,
                          << " group " << hex << group << resetiosflags(ios::hex)
                          << " vrf_id " <<  vrf_id
                          << " l2seg_id " << l2seg_id
-                         << " if_id " << enic_handle2id[it->if_handle()] // TODO: HAL should return id
+                         << " if_id " << it->interface_id()
                          << endl;
                     tuple<uint64_t, uint64_t, uint64_t> key(vrf_id, l2seg_id, group);
-                    mcast_groups[key].push_back(enic_handle2id[it->if_handle()]);
+                    mcast_groups[key].push_back(it->interface_id());
                 }
                 return 0;
             }
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
     }
 
     return -1;
@@ -1184,13 +1294,13 @@ HalClient::MulticastGroupCreate(uint64_t group,
     // Create the group
     spec = req_msg.add_request();
     spec->mutable_meta()->set_vrf_id(vrf_id);
-    spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_id2handle[l2seg_id]);
+    spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
     spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
     status = multicast_stub_->MulticastEntryCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": group " << hex << group << resetiosflags(ios::hex)
                  << " vrf_id " << vrf_id
                  << " l2seg_id " << l2seg_id
@@ -1207,7 +1317,7 @@ HalClient::MulticastGroupCreate(uint64_t group,
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": group " << hex << group << resetiosflags(ios::hex)
              << " vrf_id " << vrf_id
              << " l2seg_id " << l2seg_id
@@ -1238,7 +1348,7 @@ HalClient::MulticastGroupUpdate(uint64_t group,
 
     spec = req_msg.add_request();
     spec->mutable_meta()->set_vrf_id(vrf_id);
-    spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_id2handle[l2seg_id]);
+    spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
     spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
     for (auto it = oifs_list.cbegin(); it != oifs_list.cend(); it++) {
         spec->add_oif_key_handles()->set_interface_id(*it);
@@ -1247,11 +1357,11 @@ HalClient::MulticastGroupUpdate(uint64_t group,
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": group " << hex << group << resetiosflags(ios::hex)
                  << " vrf_id " << vrf_id
                  << " l2seg_id " << l2seg_id
-                 << " oifs_list ";
+                 << " oif_ids ";
             for (auto it = oifs_list.cbegin(); it != oifs_list.cend(); it++)
                 cout << *it << ' ';
             cout << ", API Status " << rsp.api_status()
@@ -1262,18 +1372,18 @@ HalClient::MulticastGroupUpdate(uint64_t group,
                  << " group " << hex << group << resetiosflags(ios::hex)
                  << " vrf_id " << vrf_id
                  << " l2seg_id " << l2seg_id
-                 << " oifs_list ";
+                 << " oif_ids ";
             for (auto it = oifs_list.cbegin(); it != oifs_list.cend(); it++)
                 cout << *it << ' ';
             cout << endl;
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": group " << hex << group << resetiosflags(ios::hex)
              << " vrf_id " << vrf_id
              << " l2seg_id " << l2seg_id
-             << " oifs_list ";
+             << " oif_ids ";
         for (auto it = oifs_list.cbegin(); it != oifs_list.cend(); it++)
             cout << *it << ' ';
         cout << ", Status " << status.error_code() << ":" << status.error_message()
@@ -1434,13 +1544,13 @@ HalClient::MulticastGroupDelete(uint64_t group,
 
     req = req_msg.add_request();
     req->mutable_meta()->set_vrf_id(vrf_id);
-    req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_id2handle[l2seg_id]);
+    req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
     req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
     status = multicast_stub_->MulticastEntryDelete(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
+            cerr << "[ERROR] " << __FUNCTION__
                  << ": group " << hex << group << resetiosflags(ios::hex)
                  << " vrf_id " << vrf_id
                  << " l2seg_id " << l2seg_id
@@ -1457,7 +1567,7 @@ HalClient::MulticastGroupDelete(uint64_t group,
             return 0;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": group " << hex << group << resetiosflags(ios::hex)
              << " vrf_id " << vrf_id
              << " l2seg_id " << l2seg_id
@@ -1475,12 +1585,12 @@ HalClient::MulticastGroupDelete(uint64_t group,
 ostream &operator<<(ostream& os, const HalClient& obj) {
 
     os << "L2SEGMENTS:" << endl;
-    for (auto it = obj.vlan2seg_map.cbegin(); it != obj.vlan2seg_map.cend(); it++) {
+    for (auto it = obj.vlan2seg.cbegin(); it != obj.vlan2seg.cend(); it++) {
         os << "\tvlan = " << it->first << ", handle = " << it->second << endl;
     }
 
     os << "UPLINKS:" << endl;
-    for (auto it = obj.uplink_map.cbegin(); it != obj.uplink_map.cend(); it++) {
+    for (auto it = obj.uplink2id.cbegin(); it != obj.uplink2id.cend(); it++) {
         os << "\tport_num = " << it->first << ", handle = " << it->second << endl;
     }
 
@@ -1515,7 +1625,7 @@ ostream &operator<<(ostream& os, const HalClient& obj) {
     return os;
 }
 
-int HalClient::CreateMR(uint32_t lif_id, uint32_t pd, uint64_t va, uint64_t length,
+int HalClient::CreateMR(uint64_t lif_id, uint32_t pd, uint64_t va, uint64_t length,
                         uint16_t access_flags, uint32_t l_key, uint32_t r_key,
                         uint32_t page_size, uint64_t *pt_table, uint32_t pt_size)
 {
@@ -1536,86 +1646,33 @@ int HalClient::CreateMR(uint32_t lif_id, uint32_t pd, uint64_t va, uint64_t leng
     spec->set_rkey(r_key);
     spec->set_hostmem_pg_size(page_size);
 
-    cout << __FILE__ << ":" << __FUNCTION__ << " VA {} len {}" << va << length << endl;
-    cout << __FILE__ << ":" << __FUNCTION__ << " PA Table:" << endl;
-    
-    //Set the va to pa translations.
     for (int i = 0; i < (int)pt_size; i++) {
         spec->add_va_pages_phy_addr(pt_table[i] | (1ULL << 63) | ((uint64_t)lif_id << 52));
-        cout << "PT Entry: " << pt_table[i] << endl;
     }
 
     Status status = rdma_stub_->RdmaMemReg(&context, request, &response);
     if (status.ok()) {
             RdmaMemRegResponse rsp = response.response(0);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << rsp.api_status() << endl;
+                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
                 return -1;
             } else {
-                cout << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS\n" << endl;
+                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
             }
     } else {
-        cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << status.error_code() << ": " << status.error_message() << endl;
+        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
         return -1;
     }
 
     return 0;
 }
 
-int HalClient::CreateCQ(uint32_t lif_id, uint32_t cq_num, uint16_t cq_wqe_size,
-                        uint16_t num_cq_wqes, uint64_t va, uint64_t length,
-                        uint32_t l_key, uint32_t page_size, uint64_t *pt_table,
-                        uint32_t pt_size, uint32_t eq_id)
+int HalClient::CreateCQ(uint64_t lif_id, uint32_t cq_num, uint16_t cq_wqe_size,
+                        uint16_t num_cq_wqes, uint32_t host_pg_size,
+                        uint64_t *pt_table, uint32_t pt_size)
 {
-    ClientContext context1;
-
-    RdmaMemRegRequestMsg request;
-    RdmaMemRegResponseMsg response;
-
-    /*
-     * Ideally we are supposed to have a single HAL command for CQ and QP
-     * implementation, but its not the case right now. We need to change it
-     * later. For now call MR registration first and then create_cq 
-     */
-    RdmaMemRegSpec *spec = request.add_request();
-    spec->set_hw_lif_id(lif_id);
-    //CQ does not have a PD associated. For now anyway we support only
-    //one PD=1
-    spec->set_pd(1);
-    spec->set_va(va);
-    spec->set_len(length);
-    spec->set_ac_local_wr(1);
-    spec->set_ac_remote_wr(0);
-    spec->set_ac_remote_rd(0);
-    spec->set_ac_remote_atomic(0);
-    spec->set_lkey(l_key);
-    spec->set_hostmem_pg_size(page_size);
-
-    //Set the va to pa translations.
-    for (int i = 0; i < (int)pt_size; i++) {
-        spec->add_va_pages_phy_addr(pt_table[i] | (1ULL << 63) | ((uint64_t)lif_id << 52));
-    }
-
-    Status status = rdma_stub_->RdmaMemReg(&context1, request, &response);
-    if (status.ok()) {
-        RdmaMemRegResponse rsp = response.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << rsp.api_status() << endl;
-            return -1;
-        } else {
-            cout << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS\n" << endl;
-        }
-    } else {
-        cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << status.error_code() << ": " << status.error_message() << endl;
-        return -1;
-    }
-
-    cout << __FILE__ << ":" << __FUNCTION__ << " SUCCESS\n" << endl;
- 
-    /*
-     * create CQ
-     */
-    ClientContext context2;    
+    Status status;
+    ClientContext context;
     RdmaCqRequestMsg cq_request;
     RdmaCqResponseMsg cq_response;
 
@@ -1625,27 +1682,30 @@ int HalClient::CreateCQ(uint32_t lif_id, uint32_t cq_num, uint16_t cq_wqe_size,
     cq_spec->set_hw_lif_id(lif_id);
     cq_spec->set_cq_wqe_size(cq_wqe_size);
     cq_spec->set_num_cq_wqes(num_cq_wqes);
-    cq_spec->set_hostmem_pg_size(page_size);
-    cq_spec->set_cq_lkey(l_key);
+    cq_spec->set_hostmem_pg_size(host_pg_size);
 
-    status = rdma_stub_->RdmaCqCreate(&context2, cq_request, &cq_response);
+    for (int i = 0; i < (int)pt_size; i++) {
+        cq_spec->add_cq_va_pages_phy_addr(pt_table[i] | (1ULL << 63) | ((uint64_t)lif_id << 52));
+    }
+
+    status = rdma_stub_->RdmaCqCreate(&context, cq_request, &cq_response);
     if (status.ok()) {
         RdmaCqResponse rsp = cq_response.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << rsp.api_status() << endl;
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
             return -1;
         } else {
-            cout << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS\n" << endl;
+            cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
         }
     } else {
-        cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << status.error_code() << ": " << status.error_message() << endl;
+        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
         return -1;
     }
 
     return 0;
 }
 
-int HalClient::CreateQP(uint32_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
+int HalClient::CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
                         uint16_t rq_wqe_size, uint16_t num_sq_wqes,
                         uint16_t num_rq_wqes, uint16_t num_rsq_wqes,
                         uint16_t num_rrq_wqes, uint8_t pd_num,
@@ -1664,7 +1724,7 @@ int HalClient::CreateQP(uint32_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
     spec->set_qp_num(qp_num);
     spec->set_hw_lif_id(lif_id);
     spec->set_sq_wqe_size(sq_wqe_size);
-    spec->set_rq_wqe_size(rq_wqe_size);    
+    spec->set_rq_wqe_size(rq_wqe_size);
     spec->set_num_sq_wqes(num_sq_wqes);
     spec->set_num_rq_wqes(num_rq_wqes);
     spec->set_num_rsq_wqes(num_rsq_wqes);
@@ -1686,13 +1746,13 @@ int HalClient::CreateQP(uint32_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
     if (status.ok()) {
         RdmaQpResponse rsp = response.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << rsp.api_status() << endl;
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
             return -1;
         } else {
-            cout << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS\n" << endl;
+            cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
         }
     } else {
-        cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << status.error_code() << ": " << status.error_message() << endl;
+        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
         return -1;
     }
 
@@ -1700,9 +1760,10 @@ int HalClient::CreateQP(uint32_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
     
 }
 
-int HalClient::ModifyQP(uint32_t lif_id, uint32_t qp_num, uint32_t attr_mask,
-                        uint32_t dest_qp_num, uint32_t q_key, uint32_t e_psn,
-                        uint32_t sq_psn, uint32_t header_template_size,
+int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
+                        uint32_t dest_qp_num, uint32_t q_key,
+                        uint32_t e_psn, uint32_t sq_psn,
+                        uint32_t header_template_ah_id, uint32_t header_template_size,
                         unsigned char *header)
 {
     if (attr_mask & IB_QP_AV) {
@@ -1715,21 +1776,22 @@ int HalClient::ModifyQP(uint32_t lif_id, uint32_t qp_num, uint32_t attr_mask,
         spec->set_qp_num(qp_num);
         spec->set_hw_lif_id(lif_id);
         spec->set_oper(RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE);
-        
+
         spec->set_header_template(header, header_template_size);
+        spec->set_ahid(header_template_ah_id);
 
         cout << __FILE__ << ":" << __FUNCTION__ << " set AV:" << endl;
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
         if (status.ok()) {
             RdmaQpUpdateResponse rsp = response.response(0);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << rsp.api_status() << endl;
+                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
                 return -1;
             } else {
-                cout << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS\n" << endl;
+                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
             }
         } else {
-            cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << status.error_code() << ": " << status.error_message() << endl;
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
             return -1;
         }
     }
@@ -1745,17 +1807,18 @@ int HalClient::ModifyQP(uint32_t lif_id, uint32_t qp_num, uint32_t attr_mask,
         spec->set_hw_lif_id(lif_id);
         spec->set_oper(RDMA_UPDATE_QP_OPER_SET_DEST_QP);
         spec->set_dst_qp_num(dest_qp_num);
+
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
         if (status.ok()) {
             RdmaQpUpdateResponse rsp = response.response(0);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << rsp.api_status() << endl;
+                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
                 return -1;
             } else {
-                cout << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS\n" << endl;
+                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
             }
         } else {
-            cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << status.error_code() << ": " << status.error_message() << endl;
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
             return -1;
         }
     }
@@ -1771,17 +1834,18 @@ int HalClient::ModifyQP(uint32_t lif_id, uint32_t qp_num, uint32_t attr_mask,
         spec->set_hw_lif_id(lif_id);
         spec->set_oper(RDMA_UPDATE_QP_OPER_SET_E_PSN);
         spec->set_e_psn(e_psn);
+
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
         if (status.ok()) {
             RdmaQpUpdateResponse rsp = response.response(0);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << rsp.api_status() << endl;
+                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
                 return -1;
             } else {
-                cout << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS\n" << endl;
+                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
             }
         } else {
-            cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << status.error_code() << ": " << status.error_message() << endl;
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
             return -1;
         }
     }
@@ -1797,24 +1861,24 @@ int HalClient::ModifyQP(uint32_t lif_id, uint32_t qp_num, uint32_t attr_mask,
         spec->set_hw_lif_id(lif_id);
         spec->set_oper(RDMA_UPDATE_QP_OPER_SET_TX_PSN);
         spec->set_tx_psn(sq_psn);
+
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
         if (status.ok()) {
             RdmaQpUpdateResponse rsp = response.response(0);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << rsp.api_status() << endl;
+                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
                 return -1;
             } else {
-                cout << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS\n" << endl;
+                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS" << endl;
             }
         } else {
-            cout << __FILE__ << ":" << __FUNCTION__ << "[Error]: Status = "  << status.error_code() << ": " << status.error_message() << endl;
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
             return -1;
         }
     }
     
     return 0;
 }
-
 
 int HalClient::PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr)
 {
@@ -1829,7 +1893,7 @@ int HalClient::PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr)
 
     auto status = internal_stub_->GetProgramAddress(&context, req_msg, &resp_msg);
     if (!status.ok()) {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": prog_name = " << prog_name
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -1839,7 +1903,6 @@ int HalClient::PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr)
     *base_addr = resp_msg.response(0).addr();
     return 0;
 }
-
 
 int HalClient::AllocHbmAddress(const char *handle, uint64_t *addr, uint32_t *size)
 {
@@ -1852,7 +1915,7 @@ int HalClient::AllocHbmAddress(const char *handle, uint64_t *addr, uint32_t *siz
 
     auto status = internal_stub_->AllocHbmAddress(&context, req_msg, &resp_msg);
     if (!status.ok()) {
-        cout << "[ERROR] " << __FUNCTION__
+        cerr << "[ERROR] " << __FUNCTION__
              << ": handle = " << handle
              << ", Status = " << status.error_code() << ":" << status.error_message()
              << endl;
@@ -1864,3 +1927,103 @@ int HalClient::AllocHbmAddress(const char *handle, uint64_t *addr, uint32_t *siz
     return 0;
 }
 
+int
+HalClient::FilterAdd(uint64_t lif_id, uint64_t mac, uint32_t vlan)
+{
+    ClientContext context;
+    Status status;
+    FilterSpec *req;
+    FilterResponse rsp;
+    FilterRequestMsg req_msg;
+    FilterResponseMsg rsp_msg;
+    FilterType type;
+
+    if (fwd_mode == FWD_MODE_CLASSIC_NIC) {
+        return -1;  // STUB SUCCESS
+    }
+
+    req = req_msg.add_request();
+    if (mac != 0 && vlan != 0) {
+        type = FILTER_LIF_MAC_VLAN;
+    } else if (mac != 0) {
+        type = FILTER_LIF_MAC;
+    } else if (vlan != 0) {
+        type = FILTER_LIF_VLAN;
+    } else {
+        type = FILTER_NONE;
+    }
+    req->mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
+    req->mutable_key_or_handle()->mutable_filter_key()->set_type(type);
+    req->mutable_key_or_handle()->mutable_filter_key()->set_mac_address(mac);
+    req->mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(vlan);
+
+    status = HalClient::ep_stub_->FilterCreate(&context, req_msg, &rsp_msg);
+    if (status.ok()) {
+        rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            cout << "[INFO] Filter create succeeded, handle = "
+                 << rsp.filter_status().filter_handle()
+                 << endl;
+            return rsp.filter_status().filter_handle();
+        } else if (rsp.api_status() == types::API_STATUS_EXISTS_ALREADY) {
+            cout << "[INFO] Filter already exists, handle = "
+                 << rsp.filter_status().filter_handle()
+                 << endl;
+            return rsp.filter_status().filter_handle();
+        } else {
+            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+        }
+    } else {
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+    }
+
+    return 0;
+}
+
+int
+HalClient::FilterDel(uint64_t lif_id, uint64_t mac, uint32_t vlan)
+{
+    ClientContext context;
+    Status status;
+    FilterDeleteRequest *req;
+    FilterDeleteResponse rsp;
+    FilterDeleteRequestMsg req_msg;
+    FilterDeleteResponseMsg rsp_msg;
+    FilterType type;
+
+    if (fwd_mode == FWD_MODE_CLASSIC_NIC) {
+        return 0;   // STUB SUCCESS
+    }
+
+    req = req_msg.add_request();
+    if (mac != 0 && vlan != 0) {
+        type = FILTER_LIF_MAC_VLAN;
+    } else if (mac != 0) {
+        type = FILTER_LIF_MAC;
+    } else if (vlan != 0) {
+        type = FILTER_LIF_VLAN;
+    } else {
+        type = FILTER_NONE;
+    }
+    req->mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
+    req->mutable_key_or_handle()->mutable_filter_key()->set_type(type);
+    req->mutable_key_or_handle()->mutable_filter_key()->set_mac_address(mac);
+    req->mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(vlan);
+
+    status = HalClient::ep_stub_->FilterDelete(&context, req_msg, &rsp_msg);
+    if (status.ok()) {
+        rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            cout << "[INFO] Filter delete succeeded" << endl;
+            return 0;
+        } else {
+            // TODO: Handle API_STATUS_NOT_EXISTS instead of returning success here
+            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            return 0;
+        }
+    } else {
+        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+    }
+
+    return -1;
+}

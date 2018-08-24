@@ -16,6 +16,11 @@ struct tx_table_s3_t0_nicmgr_commit_d d;
 #define   _r_flit             r5        // Current DMA flit offset in PHV
 #define   _r_index            r6        // Current DMA command offset in PHV flit
 
+#define NICMGR_DB_ADDR    (0x8800000 + \
+                          (0x5 /* UPD = DB_IDX_UPD_CIDX_SET | DB_SCHED_UPD_EVAL */ << 17) + \
+                          (0x1 /* LIF */ << 6) + \
+                          (0x1 /* QTYPE */ << 3))
+
 %%
 
 .align
@@ -35,7 +40,7 @@ nicmgr_commit_ci_db:
   add             _r_db_data, r0, d.{c_index0}.hx
   mincr           _r_db_data, d.{ring_size}.hx, 1
 
-  addi            _r_db_addr, r0, 0x88a00c8   // 0x8800000 + (0x5 /* DB_IDX_UPD_CIDX_SET | DB_SCHED_UPD_EVAL */ << 17) + (0x3 << 6)
+  addi            _r_db_addr, r0, NICMGR_DB_ADDR
   phvwr           p.nicmgr_to_s2_nicmgr_db_data, _r_db_data.dx
 
   DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)

@@ -350,7 +350,7 @@ def run_nicmgr(args, standalone=False):
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/platform/src/lib/nicmgr/src/"
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/gen/x86_64/lib/"
     os.chdir(bin_dir)
-    cmd = ['./nicmgrd', '-p', 'accel']
+    cmd = ['./nicmgrd', '-c', os.path.join(nic_dir, '../platform/src/app/nicmgrd/etc/accel.json')]
 
     global nicmgr_process
     nicmgr_process = Popen(cmd)

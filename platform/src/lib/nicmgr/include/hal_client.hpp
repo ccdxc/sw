@@ -73,44 +73,49 @@ public:
   /* Segment APIs */
   int L2SegmentProbe();
 
+  uint64_t L2SegmentGet(uint64_t l2seg_id);
+
   uint64_t L2SegmentCreate(uint64_t vrf_id,
                            uint64_t l2seg_id,
-                           ::l2segment::BroadcastFwdPolicy bcast_policy,
-                           ::l2segment::MulticastFwdPolicy mcast_policy,
                            uint16_t vlan_id);
 
   int AddL2SegmentOnUplink(uint64_t uplink_if_id,
-                           uint64_t l2seg_handle);
+                           uint64_t l2seg_id);
 
   /* VRF APIs */
   int VrfProbe();
+
+  uint64_t VrfGet(uint64_t vrf_id);
 
   uint64_t VrfCreate(uint64_t vrf_id);
 
   /* Uplink APIs */
   int UplinkProbe();
 
+  uint64_t UplinkGet(uint64_t port_num);
+
   uint64_t UplinkCreate(uint64_t uplink_if_id,
                         uint64_t port_num,
                         uint64_t native_l2seg_id);
 
+  int UplinkDelete(uint64_t uplink_if_id);
+
   /* Endpoint NIC APIs */
-  uint64_t EnicCreate(uint32_t enic_id,
-                      uint32_t lif_id,
-                      uint64_t pinned_uplink_if_handle,
-                      uint64_t native_l2seg_handle,
-                      vector<uint64_t>& non_native_l2seg_handles,
-                      uint64_t mac_addr);
+  uint64_t EnicCreate(uint64_t enic_id,
+                      uint64_t lif_id,
+                      uint64_t uplink_id,
+                      uint64_t native_l2seg_id,
+                      vector<uint64_t>& nonnative_l2seg_id);
+
+  int EnicDelete(uint64_t enic_id);
 
   /* Endpoint APIs */
   int EndpointProbe();
 
   uint64_t EndpointCreate(uint64_t vrf_id,
-                          uint64_t l2seg_handle,
-                          uint64_t if_id,
-                          uint64_t sg_id,
-                          uint64_t mac_addr,
-                          uint64_t ip_addr);
+                          uint64_t l2seg_id,
+                          uint64_t enic_id,
+                          uint64_t mac_addr);
 
   int EndpointDelete(uint64_t vrf_id, uint64_t handle);
 
@@ -124,14 +129,14 @@ public:
 
   uint64_t LifGet(uint64_t lif_id, struct lif_info *lif_info);
 
-  uint64_t LifCreate(uint32_t lif_id,
+  uint64_t LifCreate(uint64_t lif_id,
                      struct queue_info* queue_info,
                      struct lif_info *lif_info,
                      bool enable_rdma,
                      uint32_t max_pt_entries,
                      uint32_t max_keys);
 
-  int LifDelete(uint32_t lif_id);
+  int LifDelete(uint64_t lif_id);
 
   int LifSetVlanStrip(uint64_t lif_id, bool enable);
 
@@ -184,16 +189,22 @@ public:
 
   /* RDMA APIs */
   
-  int CreateMR(uint32_t lif_id, uint32_t pd, uint64_t va, uint64_t length,
+  int CreateMR(uint64_t lif_id, uint32_t pd, uint64_t va, uint64_t length,
                uint16_t access_flags, uint32_t l_key, uint32_t r_key,
                uint32_t page_size, uint64_t *pt_table, uint32_t pt_size);
-  
-  int CreateCQ(uint32_t lif_id, uint32_t cq_num, uint16_t cq_wqe_size,
+
+  int CreateCQ(uint64_t lif_id, uint32_t cq_num, uint16_t cq_wqe_size,
+               uint16_t num_cq_wqes, uint32_t host_pg_size,
+               uint64_t *pt_table, uint32_t pt_size);
+
+  #if 0
+  int CreateCQ(uint64_t lif_id, uint32_t cq_num, uint16_t cq_wqe_size,
                uint16_t num_cq_wqes, uint64_t va, uint64_t length,
                uint32_t l_key, uint32_t page_size, uint64_t *pt_table,
                uint32_t pt_size, uint32_t eq_id);
-  
-  int CreateQP(uint32_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
+  #endif
+
+  int CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
                uint16_t rq_wqe_size, uint16_t num_sq_wqes,
                uint16_t num_rq_wqes, uint16_t num_rsq_wqes,
                uint16_t num_rrq_wqes, uint8_t pd_num,
@@ -202,29 +213,31 @@ public:
                int service,
                uint32_t sq_pt_size,
                uint32_t pt_size, uint64_t *pt_table);
-  
-  int ModifyQP(uint32_t lif_id, uint32_t qp_num, uint32_t attr_mask,
-               uint32_t dest_qp_num, uint32_t q_key, uint32_t e_psn,
-               uint32_t sq_psn, uint32_t header_template_size,
+
+  int ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
+               uint32_t dest_qp_num, uint32_t q_key,
+               uint32_t e_psn, uint32_t sq_psn,
+               uint32_t header_template_ah_id, uint32_t header_template_size,
                unsigned char *header);
 
+  /* Filter APIs */
+  int FilterAdd(uint64_t lif_id, uint64_t mac, uint32_t vlan);
+  int FilterDel(uint64_t lif_id, uint64_t mac, uint32_t vlan);
+
   /* State */
-  map<uint64_t, uint64_t> vrf_id2handle;      /* vrf_id to vrf_handle */
+  map<uint64_t, LifSpec> lif_map;               /* lif_id to lif_spec */
+  map<uint64_t, uint64_t> lif2enic_map;         /* lif_id to enic_id */
 
-  map<uint64_t, LifSpec> lif_map;             /* lif_id to lif_spec */
-  map<uint64_t, uint64_t> lif2enic_map;       /* lif_id to enic_id */
+  map<uint64_t, InterfaceSpec> enic_map;        /* enic_id to enic_spec */
+  map<uint64_t, vector<uint64_t>> enic2ep_map;  /* enic_id to ep_handle */
 
-  map<uint64_t, InterfaceSpec> enic_map;      /* enic_id to enic_spec */
-  map<uint64_t, uint64_t> enic_handle2id;     /* enic_handle to enic_id */
-  map<uint64_t, uint64_t> enic_id2handle;     /* enic_handle to enic_id */
+  map<uint64_t, uint64_t> uplink2id;            /* uplink_port to uplink_id */
+  map<uint32_t, uint64_t> seg2vlan;             /* l2seg_id to vlan_id */
+  map<uint32_t, uint64_t> vlan2seg;             /* vlan_id to l2seg_id */
 
-  map<uint64_t, uint64_t> uplink_map;         /* uplink_port to if_handle */
-
-  map<uint32_t, uint64_t> vlan2seg_map;       /* vlan_id to l2seg_handle */
-  map<uint64_t, uint64_t> l2seg_handle2id;    /* l2seg_handle to l2seg_id */
-  map<uint64_t, uint64_t> l2seg_id2handle;    /* l2seg_id to l2seg_handle */
-
-  map<uint64_t, vector<uint64_t>> enic2ep_map; /* enic_id to ep_handle */
+  map<uint64_t, uint64_t> vrf_id2handle;        /* vrf_id to vrf_handle */
+  map<uint64_t, uint64_t> enic_id2handle;       /* enic_handle to enic_id */
+  map<uint64_t, uint64_t> l2seg_id2handle;      /* l2seg_id to l2seg_handle */
 
   friend ostream& operator<<(ostream&, const HalClient&);
 

@@ -80,7 +80,6 @@ typedef struct accel_devspec {
     uint32_t intr_count;
     // PCIe
     uint8_t  pcie_port;
-    bool     enable_pciehdev_create;
 
     // HW rings
     accel_ring_t accel_ring_tbl[ACCEL_RING_ID_MAX];

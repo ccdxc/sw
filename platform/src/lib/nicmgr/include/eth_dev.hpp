@@ -102,6 +102,7 @@ union dev_cmd_comp {
     struct create_qp_comp create_qp;
     struct modify_qp_comp modify_qp;
 };
+
 #pragma pack(pop)
 
 struct dev_cmd_regs {
@@ -112,12 +113,19 @@ struct dev_cmd_regs {
     uint8_t data[2048] __attribute__((aligned (2048)));
 };
 
+static_assert(sizeof(struct dev_cmd_regs) == 4096);
+static_assert((offsetof(struct dev_cmd_regs, cmd)  % 4) == 0);
+static_assert(sizeof(((struct dev_cmd_regs*)0)->cmd) == 64);
+static_assert((offsetof(struct dev_cmd_regs, comp) % 4) == 0);
+static_assert(sizeof(((struct dev_cmd_regs*)0)->comp) == 16);
+static_assert((offsetof(struct dev_cmd_regs, data) % 4) == 0);
+
 /**
  * ETH PF Device
  */
-class Eth_PF : public Device {
+class Eth : public Device {
 public:
-    Eth_PF(HalClient *hal_client, void *dev_spec);
+    Eth(HalClient *hal_client, void *dev_spec);
     struct lif_info info;
     struct dev_cmd_regs *devcmd;
     void DevcmdPoll();
@@ -173,7 +181,7 @@ private:
 
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
 
-    friend ostream &operator<<(ostream&, const Eth_PF&);
+    friend ostream &operator<<(ostream&, const Eth&);
 };
 
 #endif

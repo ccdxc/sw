@@ -6,16 +6,21 @@
 #define __DEV_HPP__
 
 #include <string>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "hal_client.hpp"
 
 #ifdef __x86_64__
+
 #include "sdk/pal.hpp"
+
 #define READ_MEM        sdk::lib::pal_mem_read
 #define WRITE_MEM       sdk::lib::pal_mem_write
 #define MEM_SET(pa, val, sz) { \
-    for (size_t i = 0; i < sz; i+=sizeof(val)) {\
-        sdk::lib::pal_mem_write(pa + i, val, sizeof(val)); \
+    uint8_t v = val; \
+    for (size_t i = 0; i < sz; i += sizeof(v)) { \
+        sdk::lib::pal_mem_write(pa + i, &v, sizeof(v)); \
     } \
 }
 
@@ -52,7 +57,7 @@ static inline uint64_t READ_REG64(uint64_t addr)
 
 #define READ_REG        pal_reg_rd32w
 #define WRITE_REG       pal_reg_wr32w
-#define READ_REG32      pal_reg_rd32       
+#define READ_REG32      pal_reg_rd32
 #define WRITE_REG32     pal_reg_wr32
 #define READ_REG64      pal_reg_rd64
 #define WRITE_REG64     pal_reg_wr64
@@ -60,7 +65,7 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #define WRITE_DB64      pal_reg_wr64
 #endif
 
-#ifndef __x86_64__
+#ifdef __aarch64__
 #include "pci_ids.h"
 #include "misc.h"
 #include "bdf.h"
@@ -114,12 +119,12 @@ static_assert(sizeof(struct nicmgr_resp_desc) == 128, "");
 enum DeviceType
 {
     INVALID,
-    ETH_PF,
-    ETH_VF,
-    NVME,
+    MNIC,
+    DEBUG,
+    ETH,
     ACCEL,
+    NVME,
     VIRTIO,
-    DEBUG
 };
 
 /**
@@ -131,41 +136,32 @@ enum DeviceType
  */
 struct eth_devspec {
     // FWD
+    uint32_t uplink_id;
     uint64_t vrf_id;
-    uint32_t uplink;
-    uint32_t native_vlan;
-    uint64_t sg_id;
-    uint64_t mac_addr;
-    uint32_t ip_addr;
-    // RES
     uint64_t lif_id;
     uint64_t enic_id;
-    uint32_t rxq_base;
+    uint64_t native_l2seg_id;
+    // RES
     uint32_t rxq_count;
-    uint32_t txq_base;
     uint32_t txq_count;
-    uint32_t adminq_base;
+    uint32_t eq_count;
     uint32_t adminq_count;
-    uint32_t rdma_sq_size;
-    uint32_t rdma_sq_count;
-    uint32_t rdma_rq_size;
-    uint32_t rdma_rq_count;
-    uint32_t rdma_cq_size;
-    uint32_t rdma_cq_count;
-    uint32_t rdma_eq_size;
-    uint32_t rdma_eq_count;
     uint32_t intr_base;
     uint32_t intr_count;
-    uint32_t eq_base;
-    uint32_t eq_count;
-    uint32_t rdma_pid_count;
+    uint64_t mac_addr;
     // DEV
     bool     host_dev;
     uint8_t  pcie_port;
     // RDMA
     bool     enable_rdma;
-    uint32_t max_pt_entries;
-    uint32_t max_keys; 
+    uint32_t pte_count;
+    uint32_t key_count;
+    uint32_t rdma_sq_count;
+    uint32_t rdma_rq_count;
+    uint32_t rdma_cq_count;
+    uint32_t rdma_eq_count;
+    uint32_t rdma_adminq_count;
+    uint32_t rdma_pid_count;
 };
 
 typedef struct dev_cmd_db {
@@ -219,6 +215,7 @@ public:
     void AdminQPoll();
 
 private:
+    boost::property_tree::ptree spec;
     std::map<uint64_t, Device*> devices; // lif -> device
 
     // Service Lif Info
@@ -227,6 +224,7 @@ private:
 
     // HAL Info
     HalClient *hal;
+    uint32_t lif_id;
     uint64_t lif_handle;
 
     // AdminQ

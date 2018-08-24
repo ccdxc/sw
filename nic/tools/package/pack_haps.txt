@@ -12,8 +12,6 @@ nic/third-party/avago/aarch64/lib/aapl/C/libAAPL.so              /nic/lib/
 platform/gen/aarch64/lib                                         /platform/lib/
 nic/tools/start-hal-haps.sh                                      /nic/tools/
 nic/tools/sysinit.sh                                             /nic/tools/
-nic/tools/start-hal-haps-classic.sh                              /nic/tools/
-nic/tools/start-hal-haps-hostpin.sh                              /nic/tools/
 nic/tools/start-linkmgr-haps.sh                                  /nic/tools/
 bazel-bin/nic/hal/test/hal_test                                  /nic/bin/
 nic/sdk/bazel-bin/examples/pal-app/hal_access                    /nic/bin/
@@ -23,3 +21,4 @@ platform/tools/start-nicmgr-haps.sh                              /platform/tools
 platform/src/third-party/lib/edit/aarch64/*.so                   /platform/lib/
 platform/src/third-party/lib/gmp/aarch64/*.so                    /platform/lib/
 platform/src/third-party/lib/ncurses/aarch64/*.so                /platform/lib/
+platform/src/app/nicmgrd/etc/*.json                              /platform/etc/nicmgrd/
