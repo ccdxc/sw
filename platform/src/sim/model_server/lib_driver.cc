@@ -249,45 +249,6 @@ void hal_rdma_create_cq (struct rdma_queue_cmd *cmd,
 {
     shared_ptr<Rdma::Stub> rdma_svc = GetRdmaStub();
 
-    ClientContext context1;
-
-    RdmaMemRegRequestMsg request;
-    RdmaMemRegResponseMsg response;
-
-    /*
-     * Ideally we are supposed to have a single HAL command for CQ and QP
-     * implementation, but its not the case right now. We need to change it
-     * later. For now call MR registration first and then create_cq 
-     *
-     * Lkey-zero will be reserved in the driver so that it can be used here.
-     */
-    RdmaMemRegSpec *spec = request.add_request();
-    spec->set_hw_lif_id(cmd->lif_id+lif_base);
-    //CQ does not have a PD associated. For now anyway we support only
-    //one PD=1
-    spec->set_pd(1);
-    spec->set_va(0);
-    spec->set_len(1ull << (cmd->depth_log2 + cmd->stride_log2));
-    spec->set_ac_local_wr(1);
-    spec->set_ac_remote_wr(0);
-    spec->set_ac_remote_rd(0);
-    spec->set_ac_remote_atomic(0);
-    spec->set_lkey(0);
-
-    // contiguous, so say page_size == size, and just one dma addr
-    spec->set_hostmem_pg_size(1ull << (cmd->depth_log2 + cmd->stride_log2));
-    spec->add_va_pages_phy_addr(cmd->dma_addr);
-
-    Status status = rdma_svc->RdmaMemReg(&context1, request, &response);
-    if (!status.ok()) {
-        cout << "lib_driver.cc: hal_rdma_create_cq MemReg error: "
-            << status.error_code() << ": " << status.error_message() << endl;
-
-        comp->status = status.error_code();
-        *item->done = 1;
-        return;
-    }
-
     /*
      * create CQ
      */
@@ -305,7 +266,11 @@ void hal_rdma_create_cq (struct rdma_queue_cmd *cmd,
     cq_spec->set_cq_lkey(0);
     cq_spec->set_eq_id(cmd->cid);
 
-    status = rdma_svc->RdmaCqCreate(&context2, cq_request, &cq_response);
+    // contiguous, so say page_size == size, and just one dma addr
+    cq_spec->set_hostmem_pg_size(1ull << (cmd->depth_log2 + cmd->stride_log2));
+    cq_spec->add_cq_va_pages_phy_addr(cmd->dma_addr);
+
+    Status status = rdma_svc->RdmaCqCreate(&context2, cq_request, &cq_response);
     if (!status.ok()) {
         cout << "lib_driver.cc: hal_rdma_create_cq error: "
             << status.error_code() << ": " << status.error_message() << endl;
