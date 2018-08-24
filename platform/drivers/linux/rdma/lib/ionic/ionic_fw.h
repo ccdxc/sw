@@ -273,22 +273,24 @@ struct ionic_v1_atomic_bdy {
 
 /* v1 reg mr wqe body */
 struct ionic_v1_reg_mr_bdy {
-	__le64				va;
-	__le64				length;
-	__le64				offset;
-	__le64				dma_addr;
+	__be64				va;
+	__be64				length;
+	__be64				offset;
+	__be64				dma_addr;
+	__be16				flags;
 	__u8				dir_size_log2;
 	__u8				page_size_log2;
-	__u8				rsvd[14];
+	__u8				rsvd[12];
 };
 
 /* v1 bind mw wqe body */
 struct ionic_v1_bind_mw_bdy {
-	__le64				va;
-	__le64				length;
-	__le32				lkey;
+	__be64				va;
+	__be64				length;
+	__be32				lkey;
 	__u8				rsvd[28];
 };
+
 
 /* v1 send/recv wqe */
 struct ionic_v1_wqe {
