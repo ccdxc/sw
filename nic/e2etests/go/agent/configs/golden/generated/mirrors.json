@@ -16,13 +16,38 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "177.75.132.50",
+            "destination": "177.75.132.53",
             "transport": "TCP/8000"
           },
           "pcap-dir-name": ""
         }
       ],
-      "match-rules": null,
+      "match-rules": [
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "177.75.132.50"
+            ]
+          }
+        },
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "177.75.132.52"
+            ]
+          }
+        }
+      ],
       "packet-filters": [
         "ALL_DROPS"
       ]
@@ -45,13 +70,38 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "177.75.132.51",
+            "destination": "223.97.165.133",
             "transport": "TCP/8001"
           },
           "pcap-dir-name": ""
         }
       ],
-      "match-rules": null,
+      "match-rules": [
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "223.97.165.130"
+            ]
+          }
+        },
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "223.97.165.132"
+            ]
+          }
+        }
+      ],
       "packet-filters": [
         "ALL_DROPS"
       ]
@@ -74,13 +124,38 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "177.75.132.52",
+            "destination": "112.211.249.101",
             "transport": "TCP/8002"
           },
           "pcap-dir-name": ""
         }
       ],
-      "match-rules": null,
+      "match-rules": [
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "112.211.249.98"
+            ]
+          }
+        },
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "112.211.249.100"
+            ]
+          }
+        }
+      ],
       "packet-filters": [
         "ALL_DROPS"
       ]
@@ -103,13 +178,38 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "177.75.132.53",
+            "destination": "4.121.175.21",
             "transport": "TCP/8003"
           },
           "pcap-dir-name": ""
         }
       ],
-      "match-rules": null,
+      "match-rules": [
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "4.121.175.18"
+            ]
+          }
+        },
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "4.121.175.20"
+            ]
+          }
+        }
+      ],
       "packet-filters": [
         "ALL_DROPS"
       ]
@@ -132,13 +232,38 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "223.97.165.130",
+            "destination": "170.22.196.85",
             "transport": "TCP/8004"
           },
           "pcap-dir-name": ""
         }
       ],
-      "match-rules": null,
+      "match-rules": [
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "170.22.196.82"
+            ]
+          }
+        },
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "170.22.196.84"
+            ]
+          }
+        }
+      ],
       "packet-filters": [
         "ALL_DROPS"
       ]
@@ -161,13 +286,38 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "223.97.165.131",
+            "destination": "16.45.218.229",
             "transport": "TCP/8005"
           },
           "pcap-dir-name": ""
         }
       ],
-      "match-rules": null,
+      "match-rules": [
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "16.45.218.226"
+            ]
+          }
+        },
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "16.45.218.228"
+            ]
+          }
+        }
+      ],
       "packet-filters": [
         "ALL_DROPS"
       ]
@@ -190,13 +340,38 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "223.97.165.132",
+            "destination": "91.39.142.133",
             "transport": "TCP/8006"
           },
           "pcap-dir-name": ""
         }
       ],
-      "match-rules": null,
+      "match-rules": [
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "91.39.142.130"
+            ]
+          }
+        },
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "91.39.142.132"
+            ]
+          }
+        }
+      ],
       "packet-filters": [
         "ALL_DROPS"
       ]
@@ -219,13 +394,38 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "223.97.165.133",
+            "destination": "54.199.28.21",
             "transport": "TCP/8007"
           },
           "pcap-dir-name": ""
         }
       ],
-      "match-rules": null,
+      "match-rules": [
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "54.199.28.18"
+            ]
+          }
+        },
+        {
+          "source": {
+            "ip-addresses": [
+              "100.100.100.100"
+            ]
+          },
+          "destination": {
+            "ip-addresses": [
+              "54.199.28.20"
+            ]
+          }
+        }
+      ],
       "packet-filters": [
         "ALL_DROPS"
       ]

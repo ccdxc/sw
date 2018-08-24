@@ -26,11 +26,15 @@ var endpointCache map[string]string
 // networkNSCache maintains a mapping of network name and its namespace
 var networkNSCache map[string]string
 
+// tunnelCache maintains a mapping of tunnel name and its dest IP Address
+var tunnelCache map[string]string
+
 func GenerateObjectsFromManifest(manifestFile string, vlanOffset int) (*Config, error) {
 	objCache = make(map[string]Object)
 	networkCache = make(map[string]string)
 	networkNSCache = make(map[string]string)
 	endpointCache = make(map[string]string)
+	tunnelCache = make(map[string]string)
 
 	dat, err := ioutil.ReadFile(manifestFile)
 	if err != nil {
@@ -381,13 +385,27 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 	namespaceRef := objCache["Namespace"]
 
 	// Mirror sessions also need EP IP Addresses
-	epRef := objCache["Endpoint"]
+	endpointRef := objCache["Endpoint"]
+	networkRef := objCache["Network"]
+	tunRef := objCache["Tunnel"]
 
 	// generate networks distributed evenly across
 	for i := 0; i < o.Count; i++ {
 		name := fmt.Sprintf("%s-%d", o.Name, i)
 		namespace := fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
-		endpoint := fmt.Sprintf("%s-%d", epRef.Name, i%epRef.Count)
+		tunnel := fmt.Sprintf("%s-%d", tunRef.Name, i%tunRef.Count)
+		greTunDst := tunnelCache[tunnel]
+
+		localEpOffset := 0
+		remoteEpOffset := 2
+		epOffsetIncrements := endpointRef.Count / networkRef.Count // Gives the #EP per Network
+
+		local := fmt.Sprintf("%s-%d", endpointRef.Name, (localEpOffset+epOffsetIncrements*i)%endpointRef.Count)
+		remote := fmt.Sprintf("%s-%d", endpointRef.Name, (remoteEpOffset+epOffsetIncrements*i)%endpointRef.Count)
+
+		// Look up EP's IP Address
+		localEP := endpointCache[local]
+		remoteEP := endpointCache[remote]
 		ms := tsproto.MirrorSession{
 			TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 			ObjectMeta: api.ObjectMeta{
@@ -402,12 +420,30 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 					{
 						Type: "ERSPAN",
 						ExportCfg: api.ExportConfig{
-							Destination: endpointCache[endpoint],
+							Destination: greTunDst,
 							Transport:   fmt.Sprintf("TCP/%d", portOffset+i),
 						},
 					},
 				},
 				PacketFilters: []string{"ALL_DROPS"},
+				MatchRules: []tsproto.MatchRule{
+					{
+						Src: &tsproto.MatchSelector{
+							IPAddresses: []string{"100.100.100.100"},
+						},
+						Dst: &tsproto.MatchSelector{
+							IPAddresses: []string{localEP},
+						},
+					},
+					{
+						Src: &tsproto.MatchSelector{
+							IPAddresses: []string{"100.100.100.100"},
+						},
+						Dst: &tsproto.MatchSelector{
+							IPAddresses: []string{remoteEP},
+						},
+					},
+				},
 			},
 		}
 		mirrors = append(mirrors, ms)
@@ -521,7 +557,6 @@ func (c *Config) generateTunnels(o *Object, manifestFile string) (*Object, error
 	for i := 0; i < o.Count; i++ {
 		name := fmt.Sprintf("%s-%d", o.Name, i)
 		endpoint := fmt.Sprintf("%s-%d", endpointRef.Name, (epOffset+epOffsetIncrements*i)%endpointRef.Count)
-		fmt.Println("BALERION: ", epOffset, endpoint)
 		endpointIP := endpointCache[endpoint]
 		tun := netproto.Tunnel{
 			TypeMeta: api.TypeMeta{Kind: "Tunnel"},
@@ -538,6 +573,9 @@ func (c *Config) generateTunnels(o *Object, manifestFile string) (*Object, error
 			},
 		}
 		tunnels = append(tunnels, tun)
+
+		// Update tunnel cache with its dest ip
+		tunnelCache[name] = tun.Spec.Dst
 	}
 	out, err := json.MarshalIndent(&tunnels, "", "  ")
 	if err != nil {
