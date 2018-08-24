@@ -15,11 +15,6 @@ init_config:
     phvwr           p.capri_p4_intrinsic_packet_len, r1
     div             r1, k.p4_to_rxdma_header_slacl_ip_31_16, 51
     div             r2, k.p4_to_rxdma_header_slacl_ip_15_00, 51
-    add             r3, \
-                     k.{p4_to_txdma_header_lpm_addr_sbit0_ebit1, \
-                        p4_to_txdma_header_lpm_addr_sbit2_ebit33}, \
-                     k.key_metadata_dst
-    phvwr           p.p4_to_txdma_header_lpm_addr, r3
     add             r4, r0, k.{p4_to_rxdma_header_slacl_addr1_sbit0_ebit1, \
                                p4_to_rxdma_header_slacl_addr1_sbit2_ebit33}
     add             r1, r4, r1, 6

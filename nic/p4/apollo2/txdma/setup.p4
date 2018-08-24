@@ -46,7 +46,6 @@ action read_control_info (data) {
     modify_field(predicate_header.direction, data);
     modify_field(p4_to_txdma_header.lpm_addr, data);
     modify_field(p4_to_txdma_header.lpm_dst, data);
-    modify_field(p4_to_txdma_header.lpm_base_addr, data);
     modify_field(p4_to_txdma_header.payload_len, data);
 }
 

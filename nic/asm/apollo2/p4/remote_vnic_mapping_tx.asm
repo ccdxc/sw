@@ -9,6 +9,10 @@ struct phv_                     p;
 %%
 
 remote_vnic_mapping_tx_info:
+    // There are issues with this code. Needs to be revisited
+    nop.e
+    nop
+
     seq     c2, d.remote_vnic_mapping_tx_info_d.entry_valid, 1
     bcf     [c1&c2], remote_vnic_hit
     ori      r7, r0, 0x80000000  // Set bit 31 for overflow hash lookup to work

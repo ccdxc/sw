@@ -344,6 +344,22 @@ rewrite_init (void) {
     tep_tx_init();
 }
 
+static void
+route_lpm_init (void) {
+#define ROUTE_LPM_MEM_SIZE  (12 * 1024)
+    uint64_t    data = 0xFFFFFFFFFFFFFFFF;
+    uint64_t    lpm_hbm_addr = get_start_offset(JLPMBASE);
+
+    printf("LPM Base Addr = 0x%0lx\n", lpm_hbm_addr);
+
+    for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i+=8) {
+        capri_hbm_write_mem(lpm_hbm_addr+i, (uint8_t*)&data, 8);
+    }
+
+    data = 0x00000A0A0000FFFF;
+    capri_hbm_write_mem(lpm_hbm_addr+1020, (uint8_t*)&data, 8);
+}
+
 class apollo_test : public ::testing::Test {
   protected:
     apollo_test() {}
@@ -475,6 +491,7 @@ TEST_F(apollo_test, test1) {
     mappings_init();
     flow_init();
     rewrite_init();
+    route_lpm_init();
 
     uint32_t port = 0;
     uint32_t cos = 0;

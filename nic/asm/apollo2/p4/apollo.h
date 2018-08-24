@@ -18,7 +18,6 @@
     phvwr           p.vnic_metadata_vcn_id, vcn_id;                            \
 __use_epoch1:;                                                                 \
     phvwr           p.policer_metadata_resource_group, resource_group_1;       \
-    phvwr           p.p4_to_txdma_header_lpm_base_addr, lpm_addr_1;            \
     phvwr           p.p4_to_txdma_header_lpm_addr, lpm_addr_1;                 \
     phvwr           p.p4_to_rxdma_header_slacl_base_addr, slacl_addr_1;        \
     phvwr           p.p4_to_rxdma_header_slacl_addr1, slacl_addr_1;            \
@@ -27,7 +26,6 @@ __use_epoch1:;                                                                 \
     phvwr           p.service_header_epoch, epoch1;                            \
 __use_epoch2: ;                                                                \
     phvwr           p.policer_metadata_resource_group, resource_group_2;       \
-    phvwr           p.p4_to_txdma_header_lpm_base_addr, lpm_addr_2;            \
     phvwr           p.p4_to_txdma_header_lpm_addr, lpm_addr_2;                 \
     phvwr           p.p4_to_rxdma_header_slacl_base_addr, slacl_addr_2;        \
     phvwr           p.p4_to_rxdma_header_slacl_addr1, slacl_addr_2;            \

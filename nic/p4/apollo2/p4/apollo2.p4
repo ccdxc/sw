@@ -36,7 +36,6 @@ action slacl_init(base_addr) {
 
 action lpm_init(base_addr) {
     modify_field(p4_to_txdma_header.lpm_addr, base_addr);
-    modify_field(p4_to_txdma_header.lpm_base_addr, base_addr);
 }
 
 action remove_egress_headers() {

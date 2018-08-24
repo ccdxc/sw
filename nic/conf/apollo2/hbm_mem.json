@@ -54,7 +54,7 @@
         },
         {
             "name": "lpm",
-            "size_kb": 64
+            "size_kb": 12
         },
         {
             "name": "udp_flow_overflow0",

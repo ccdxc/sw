@@ -7,12 +7,14 @@ header_type txdma_control_metadata_t {
         control_addr    : 34;
         payload_addr    : 40;
         cindex          : 16;
+        lpm_s3_offset   : 16;
     }
 }
 
 header_type scratch_metadata_t {
     fields {
-        lpm_data        : 15;
+        v4_addr         : 32;
+        nh_idx          : 16;
         data512         : 512;
         payload_addr    : 40;
         payload_len     : 14;

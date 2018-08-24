@@ -101,9 +101,6 @@ table key_tunneled {
 }
 
 action init_config() {
-    modify_field(p4_to_txdma_header.lpm_addr,
-                 p4_to_txdma_header.lpm_addr + key_metadata.dst);
-
     modify_field(scratch_metadata.addr,
                  (p4_to_rxdma_header.slacl_ip_31_16 / 51) << 6);
     add(p4_to_rxdma_header.slacl_addr1,

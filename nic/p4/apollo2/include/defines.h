@@ -60,7 +60,7 @@
 #define APOLLO_PREDICATE_HDR_SZ         1
 #define APOLLO_P4_TO_RXDMA_HDR_SZ       72
 #define APOLLO_P4_TO_ARM_HDR_SZ         2
-#define APOLLO_P4_TO_TXDMA_HDR_SZ       30
+#define APOLLO_P4_TO_TXDMA_HDR_SZ       25
 #define APOLLO_I2E_HDR_SZ               39
 
 #define PKTQ_PAGE_SIZE                  10240

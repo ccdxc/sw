@@ -148,8 +148,7 @@ header_type predicate_header_t {
         // Keep the txdma_drop_event as the msb so that copying d-vector
         // into the PHV in txdma read_control is simpler
         txdma_drop_event    : 1;
-        pad0                : 4;
-        lpm_done            : 1;
+        pad0                : 5;
         lpm_bypass          : 1;
         direction           : 1;
     }
@@ -215,8 +214,6 @@ header_type p4_to_txdma_header_t {
         lpm_addr        : 34;
         pad2            : 2;
         payload_len     : 14;
-        pad1            : 6;
-        lpm_base_addr   : 34;
         lpm_dst         : 128;
         // TODO: padding vcn_id to 16 bits so as to unionize it with
         // vnic_metadata.vcn_id . Add pragmas to any index tables using
