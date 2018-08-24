@@ -7,27 +7,25 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
+import { ApiAny, IApiAny } from './api-any.model';
 
 export interface ISearchEntry {
-    'kind'?: string;
-    'api-version'?: string;
-    'meta'?: IApiObjectMeta;
+    'object'?: IApiAny;
 }
 
 
 export class SearchEntry extends BaseModel implements ISearchEntry {
-    'kind': string = null;
-    'api-version': string = null;
-    'meta': ApiObjectMeta = null;
+    /** TODO: Right now our api codegen does not support
+    nested inline and hence this attribute cannot be 
+    be made embedded/inline. api.Any is already had
+    embededed attribute Any. Once infra supports nested
+    inline or an alternative, this attribute should be 
+    embedded and made inline to make json response user
+    friendly for search. */
+    'object': ApiAny = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'kind': {
-            type: 'string'
-        },
-        'api-version': {
-            type: 'string'
-        },
-        'meta': {
+        'object': {
+            description:  'TODO: Right now our api codegen does not support nested inline and hence this attribute cannot be  be made embedded/inline. api.Any is already had embededed attribute Any. Once infra supports nested inline or an alternative, this attribute should be  embedded and made inline to make json response user friendly for search.',
             type: 'object'
         },
     }
@@ -51,7 +49,7 @@ export class SearchEntry extends BaseModel implements ISearchEntry {
     */
     constructor(values?: any) {
         super();
-        this['meta'] = new ApiObjectMeta();
+        this['object'] = new ApiAny();
         this.setValues(values);
     }
 
@@ -60,18 +58,8 @@ export class SearchEntry extends BaseModel implements ISearchEntry {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values && values['kind'] != null) {
-            this['kind'] = values['kind'];
-        } else if (SearchEntry.hasDefaultValue('kind')) {
-            this['kind'] = SearchEntry.propInfo['kind'].default;
-        }
-        if (values && values['api-version'] != null) {
-            this['api-version'] = values['api-version'];
-        } else if (SearchEntry.hasDefaultValue('api-version')) {
-            this['api-version'] = SearchEntry.propInfo['api-version'].default;
-        }
         if (values) {
-            this['meta'].setValues(values['meta']);
+            this['object'].setValues(values['object']);
         }
     }
 
@@ -81,9 +69,7 @@ export class SearchEntry extends BaseModel implements ISearchEntry {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
-                'api-version': new FormControl(this['api-version']),
-                'meta': this['meta'].$formGroup,
+                'object': this['object'].$formGroup,
             });
         }
         return this._formGroup;
@@ -91,9 +77,7 @@ export class SearchEntry extends BaseModel implements ISearchEntry {
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['kind'].setValue(this['kind']);
-            this._formGroup.controls['api-version'].setValue(this['api-version']);
-            this['meta'].setFormGroupValues();
+            this['object'].setFormGroupValues();
         }
     }
 }

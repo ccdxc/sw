@@ -7,17 +7,17 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { ProtobufAny, IProtobufAny } from './protobuf-any.model';
+import { GoogleprotobufAny, IGoogleprotobufAny } from './googleprotobuf-any.model';
 
 export interface IApiWatchEvent {
     'type'?: string;
-    'object'?: IProtobufAny;
+    'object'?: IGoogleprotobufAny;
 }
 
 
 export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
     'type': string = null;
-    'object': ProtobufAny = null;
+    'object': GoogleprotobufAny = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             type: 'string'
@@ -46,7 +46,7 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
     */
     constructor(values?: any) {
         super();
-        this['object'] = new ProtobufAny();
+        this['object'] = new GoogleprotobufAny();
         this.setValues(values);
     }
 

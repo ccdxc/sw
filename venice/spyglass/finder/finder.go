@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	grpccode "google.golang.org/grpc/codes"
@@ -18,6 +20,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	monapi "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/globals"
@@ -28,6 +31,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 const (
@@ -545,16 +549,79 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 		resp.Entries = make([]*search.Entry, len(result.Hits.Hits))
 
 		for i, entry := range result.Hits.Hits {
+			fdr.logger.Debugf("SearchHit - entry: %d {%+v}", i, entry)
 			jsondata, err := entry.Source.MarshalJSON()
 			if err == nil {
 
+				var entry *search.ConfigEntry
+				var robj runtime.Object
 				databytes := []byte(jsondata)
-				e := search.Entry{}
-				err = json.Unmarshal([]byte(databytes), &e)
+
+				fdr.logger.Debugf("Search hits result - raw string: %d [ %s ]", i, string(databytes))
+				err = json.Unmarshal([]byte(databytes), &entry)
 				if err != nil {
-					fdr.logger.Errorf("Error unmarshalling json data to search.entry : %+v", err)
+					fdr.logger.Errorf("Error unmarshalling json data to search result event entry : %+v", err)
+					continue
 				}
-				resp.Entries[i] = &e
+				fdr.logger.Debugf("Search hits result - entry: %d {%+v}", i, entry)
+
+				switch entry.Kind {
+				case "Event":
+					eObj := &evtsapi.Event{}
+					err = json.Unmarshal([]byte(databytes), eObj)
+					if err != nil {
+						fdr.logger.Errorf("Error unmarshalling json data to search result event entry : %+v", err)
+					}
+					fdr.logger.Debugf("Search hits result - event entry: %d {%+v}", i, eObj)
+					robj = eObj
+					obj, err := types.MarshalAny(robj.(proto.Message))
+					if err != nil {
+						fdr.logger.Errorf("Unable to unmarshall event object {%+v} (%v) ", obj, err)
+						continue
+					}
+					resp.Entries[i] = &search.Entry{
+						Object: &api.Any{
+							Any: *obj,
+						},
+					}
+
+				case "Alert":
+					aObj := &monapi.Alert{}
+					err = json.Unmarshal([]byte(databytes), &aObj)
+					if err != nil {
+						fdr.logger.Errorf("Error unmarshalling json data to search result alert entry : %+v", err)
+					}
+					fdr.logger.Debugf("Search hits result - alert entry: %d {%+v}", i, aObj)
+					robj = aObj
+					obj, err := types.MarshalAny(robj.(proto.Message))
+					if err != nil {
+						fdr.logger.Errorf("Unable to unmarshall alert object {%+v} (%v) ", obj, err)
+						continue
+					}
+					resp.Entries[i] = &search.Entry{
+						Object: &api.Any{
+							Any: *obj,
+						},
+					}
+				default:
+					cObj := &search.ConfigEntry{}
+					err = json.Unmarshal([]byte(databytes), &cObj)
+					if err != nil {
+						fdr.logger.Errorf("Error unmarshalling json data to search result config entry : %+v", err)
+					}
+					fdr.logger.Debugf("Search hits result - config entry: %d {%+v}", i, cObj)
+					robj = cObj
+					obj, err := types.MarshalAny(robj.(proto.Message))
+					if err != nil {
+						fdr.logger.Errorf("Unable to unmarshall config object {%+v} (%v) ", obj, err)
+						continue
+					}
+					resp.Entries[i] = &search.Entry{
+						Object: &api.Any{
+							Any: *obj,
+						},
+					}
+				}
 			} else {
 				resp.Entries[i] = nil
 				fdr.logger.Errorf("Failed to marshal hits result-Source i:%d err:%v", i, err)
@@ -614,6 +681,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 						for _, kindBucket := range kindAgg.Buckets {
 
+							kind := kindBucket.Key.(string)
 							// Deserialize Top hits aggregations
 							if topHits, ok := kindBucket.TopHits(string(elastic.TopHitsKey)); ok {
 
@@ -628,17 +696,70 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 										jsondata, err := entry.Source.MarshalJSON()
 										if err == nil {
 
+											var robj runtime.Object
 											databytes := []byte(jsondata)
-											e := search.Entry{}
-											err = json.Unmarshal([]byte(databytes), &e)
-											if err != nil {
-												fdr.logger.Errorf("Error unmarshalling Agg json data to search.entry : %+v", err)
-											}
+											fdr.logger.Debugf("Agg Search hits result - raw string: %d [ %s ]", i, string(databytes))
+											switch kind {
+											case "Event":
+												eObj := &evtsapi.Event{}
+												err = json.Unmarshal([]byte(databytes), eObj)
+												if err != nil {
+													fdr.logger.Errorf("Error unmarshalling json data to search result event entry : %+v", err)
+												}
+												fdr.logger.Debugf("Search hits result - event entry: %d {%+v}", i, eObj)
+												robj = eObj
+												obj, err := types.MarshalAny(robj.(proto.Message))
+												if err != nil {
+													fdr.logger.Errorf("Unable to unmarshall event object {%+v} (%v) ", obj, err)
+													continue
+												}
+												resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = &search.Entry{
+													Object: &api.Any{
+														Any: *obj,
+													},
+												}
 
-											resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = &e
+											case "Alert":
+												aObj := &monapi.Alert{}
+												err = json.Unmarshal([]byte(databytes), &aObj)
+												if err != nil {
+													fdr.logger.Errorf("Error unmarshalling json data to search result alert entry : %+v", err)
+												}
+												fdr.logger.Debugf("Search hits result - alert entry: %d {%+v}", i, aObj)
+												robj = aObj
+												obj, err := types.MarshalAny(robj.(proto.Message))
+												if err != nil {
+													fdr.logger.Errorf("Unable to unmarshall alert object {%+v} (%v) ", obj, err)
+													continue
+												}
+												resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = &search.Entry{
+													Object: &api.Any{
+														Any: *obj,
+													},
+												}
+
+											default:
+												cObj := &search.ConfigEntry{}
+												err = json.Unmarshal([]byte(databytes), &cObj)
+												if err != nil {
+													fdr.logger.Errorf("Error unmarshalling json data to search result config entry : %+v", err)
+												}
+												fdr.logger.Debugf("Search hits result - config entry: %d {%+v}", i, cObj)
+												robj = cObj
+												obj, err := types.MarshalAny(robj.(proto.Message))
+												if err != nil {
+													fdr.logger.Errorf("Unable to unmarshall config object {%+v} (%v) ", obj, err)
+													continue
+												}
+												resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = &search.Entry{
+													Object: &api.Any{
+														Any: *obj,
+													},
+												}
+											}
 										} else {
 											resp.AggregatedEntries.Tenants[tenantBucket.Key.(string)].Categories[categoryBucket.Key.(string)].Kinds[kindBucket.Key.(string)].Entries[i] = nil
-											log.Errorf("Failed to marshal Agg hits result-Source i:%d err:%v", i, err)
+											fdr.logger.Errorf("Failed to marshal Agg hits result-Source i:%d err:%v", i, err)
 											// TBD: Stop here with error or continue with best effort ?
 										}
 									}
@@ -705,4 +826,23 @@ func (fdr *Finder) PolicyQuery(ctx context.Context, in *search.PolicySearchReque
 	resp, err := fdr.cache.SearchPolicy(in)
 	fdr.logger.Infof("Policy Search response: {%+v} err: %v", *resp, err)
 	return resp, err
+}
+
+// ConfigEntry alias to make it compatible with runtime.Object
+type ConfigEntry search.ConfigEntry
+
+// Clone clones the object into into or creates one of into is nil
+func (m *ConfigEntry) Clone(into interface{}) (interface{}, error) {
+	var out *ConfigEntry
+	var ok bool
+	if into == nil {
+		out = &ConfigEntry{}
+	} else {
+		out, ok = into.(*ConfigEntry)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
 }

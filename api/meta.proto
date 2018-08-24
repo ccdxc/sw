@@ -25,6 +25,12 @@ message ListMeta {
 message Timestamp {
   google.protobuf.Timestamp Time = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
 }
+
+// Any is wrapper around the proto Any object.
+message Any {
+  google.protobuf.Any Object  = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+}
+
 // ObjectMeta contains metadata that all objects stored in kvstore must have.
 message ObjectMeta {
   // Name of the object, unique within a Namespace for scoped objects.

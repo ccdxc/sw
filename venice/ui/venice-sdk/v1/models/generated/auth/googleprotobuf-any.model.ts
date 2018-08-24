@@ -8,13 +8,13 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface IProtobufAny {
+export interface IGoogleprotobufAny {
     'type_url'?: string;
     'value'?: string;
 }
 
 
-export class ProtobufAny extends BaseModel implements IProtobufAny {
+export class GoogleprotobufAny extends BaseModel implements IGoogleprotobufAny {
     /** A URL/resource name whose content describes the type of the
     serialized protocol buffer message.
     
@@ -51,16 +51,16 @@ export class ProtobufAny extends BaseModel implements IProtobufAny {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ProtobufAny.propInfo[propName];
+        return GoogleprotobufAny.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ProtobufAny.propInfo[prop] != null &&
-                        ProtobufAny.propInfo[prop].default != null &&
-                        ProtobufAny.propInfo[prop].default != '');
+        return (GoogleprotobufAny.propInfo[prop] != null &&
+                        GoogleprotobufAny.propInfo[prop].default != null &&
+                        GoogleprotobufAny.propInfo[prop].default != '');
     }
 
     /**
@@ -79,13 +79,13 @@ export class ProtobufAny extends BaseModel implements IProtobufAny {
     setValues(values: any): void {
         if (values && values['type_url'] != null) {
             this['type_url'] = values['type_url'];
-        } else if (ProtobufAny.hasDefaultValue('type_url')) {
-            this['type_url'] = ProtobufAny.propInfo['type_url'].default;
+        } else if (GoogleprotobufAny.hasDefaultValue('type_url')) {
+            this['type_url'] = GoogleprotobufAny.propInfo['type_url'].default;
         }
         if (values && values['value'] != null) {
             this['value'] = values['value'];
-        } else if (ProtobufAny.hasDefaultValue('value')) {
-            this['value'] = ProtobufAny.propInfo['value'].default;
+        } else if (GoogleprotobufAny.hasDefaultValue('value')) {
+            this['value'] = GoogleprotobufAny.propInfo['value'].default;
         }
     }
 

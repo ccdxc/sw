@@ -17,6 +17,7 @@
 		ExportConfig
 		ExternalCred
 		SyslogExportConfig
+		Any
 		ListMeta
 		ListWatchOptions
 		ObjectMeta

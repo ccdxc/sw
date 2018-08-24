@@ -49,4 +49,4 @@ export * from './auth-user.model';
 export * from './auth-user-list.model';
 export * from './auth-user-spec.model';
 export * from './auth-user-status.model';
-export * from './protobuf-any.model';
+export * from './googleprotobuf-any.model';

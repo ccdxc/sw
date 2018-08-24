@@ -10,6 +10,12 @@ import "reflect"
 
 var typesMapMeta = map[string]*Struct{
 
+	"api.Any": &Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Any{}) },
+		Fields: map[string]Field{
+			"Object": Field{Name: "Object", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "google.protobuf.Any"},
+		},
+	},
 	"api.ListMeta": &Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ListMeta{}) },
 		Fields: map[string]Field{

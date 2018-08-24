@@ -52,7 +52,7 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
             type: 'number'
         },
         'max-results': {
-            default: '10',
+            default: '50',
             description:  'value should be between 0 and 8192 ',
             type: 'number'
         },

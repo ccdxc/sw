@@ -16,7 +16,7 @@ export * from './api-timestamp.model';
 export * from './api-type-meta.model';
 export * from './api-watch-event.model';
 export * from './api-watch-event-list.model';
-export * from './protobuf-any.model';
+export * from './googleprotobuf-any.model';
 export * from './workload-auto-msg-endpoint-watch-helper.model';
 export * from './workload-auto-msg-endpoint-watch-helper-watch-event.model';
 export * from './workload-auto-msg-workload-watch-helper.model';

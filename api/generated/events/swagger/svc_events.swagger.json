@@ -395,7 +395,7 @@
           "type": "string"
         },
         "object": {
-          "$ref": "#/definitions/protobufAny"
+          "$ref": "#/definitions/googleprotobufAny"
         }
       }
     },
@@ -542,7 +542,7 @@
       },
       "title": "Request for GET /event"
     },
-    "protobufAny": {
+    "googleprotobufAny": {
       "type": "object",
       "properties": {
         "type_url": {

@@ -119,6 +119,40 @@ func DecodeGrpcRespCategoryPreview(ctx context.Context, response interface{}) (i
 	return response, nil
 }
 
+func encodeHTTPConfigEntry(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPConfigEntry(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ConfigEntry
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqConfigEntry encodes GRPC request
+func EncodeGrpcReqConfigEntry(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ConfigEntry)
+	return req, nil
+}
+
+// DecodeGrpcReqConfigEntry decodes GRPC request
+func DecodeGrpcReqConfigEntry(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ConfigEntry)
+	return req, nil
+}
+
+// EncodeGrpcRespConfigEntry encodes GRC response
+func EncodeGrpcRespConfigEntry(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespConfigEntry decodes GRPC response
+func DecodeGrpcRespConfigEntry(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPEntry(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

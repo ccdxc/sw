@@ -90,6 +90,27 @@ func (m *CategoryPreview) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *ConfigEntry) Clone(into interface{}) (interface{}, error) {
+	var out *ConfigEntry
+	var ok bool
+	if into == nil {
+		out = &ConfigEntry{}
+	} else {
+		out, ok = into.(*ConfigEntry)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *ConfigEntry) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *Entry) Clone(into interface{}) (interface{}, error) {
 	var out *Entry
 	var ok bool
@@ -363,7 +384,7 @@ func (m *SearchRequest) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.MaxResults = 10
+		m.MaxResults = 50
 		m.Mode = "Full"
 	}
 	return ret
@@ -467,6 +488,11 @@ func (m *CategoryAggregation) Validate(ver, path string, ignoreStatus bool) []er
 }
 
 func (m *CategoryPreview) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *ConfigEntry) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }

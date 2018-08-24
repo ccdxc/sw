@@ -54,4 +54,4 @@ export * from './cluster-tenant.model';
 export * from './cluster-tenant-list.model';
 export * from './cluster-tenant-spec.model';
 export * from './cluster-tenant-status.model';
-export * from './protobuf-any.model';
+export * from './googleprotobuf-any.model';

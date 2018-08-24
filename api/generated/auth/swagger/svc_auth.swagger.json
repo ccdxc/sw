@@ -2114,7 +2114,7 @@
           "type": "string"
         },
         "object": {
-          "$ref": "#/definitions/protobufAny"
+          "$ref": "#/definitions/googleprotobufAny"
         }
       }
     },
@@ -2807,7 +2807,7 @@
       },
       "title": "status part of user object"
     },
-    "protobufAny": {
+    "googleprotobufAny": {
       "type": "object",
       "properties": {
         "type_url": {

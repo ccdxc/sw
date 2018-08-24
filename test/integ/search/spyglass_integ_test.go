@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	ptypes "github.com/gogo/protobuf/types"
 	grpcruntime "github.com/pensando/grpc-gateway/runtime"
 	uuid "github.com/satori/go.uuid"
 	grpccodes "google.golang.org/grpc/codes"
@@ -2111,7 +2112,28 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 									entries := resp.AggregatedEntries.Tenants[tenantKey].Categories[categoryKey].Kinds[kindKey].Entries
 									omap := make(map[string]interface{}, len(entries))
 									for _, val := range entries {
-										omap[val.GetName()] = nil
+
+										var robj runtime.Object
+										obj := &ptypes.DynamicAny{}
+										err := ptypes.UnmarshalAny(&val.Object.Any, obj)
+										if err != nil {
+											log.Errorf("Failed to get unmarshalAny object: %+v, err: %+v",
+												val, err)
+											continue
+										}
+										var ok bool
+										if robj, ok = obj.Message.(runtime.Object); ok {
+											log.Errorf("Failed to get unmarshalAny object: %+v, err: %+v",
+												val, err)
+											continue
+										}
+										ometa, err := runtime.GetObjectMeta(robj)
+										if err != nil {
+											log.Errorf("Failed to get obj-meta for object: %+v, err: %+v",
+												obj, err)
+											continue
+										}
+										omap[ometa.GetName()] = nil
 									}
 
 									// object verification

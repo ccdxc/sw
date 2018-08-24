@@ -2191,7 +2191,7 @@
           "type": "string"
         },
         "object": {
-          "$ref": "#/definitions/protobufAny"
+          "$ref": "#/definitions/googleprotobufAny"
         }
       }
     },
@@ -2903,7 +2903,7 @@
         }
       }
     },
-    "protobufAny": {
+    "googleprotobufAny": {
       "type": "object",
       "properties": {
         "type_url": {

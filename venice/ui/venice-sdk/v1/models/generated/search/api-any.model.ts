@@ -8,37 +8,35 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface IApiTypeMeta {
-    'kind'?: string;
-    'api-version'?: string;
+export interface IApiAny {
+    'type_url'?: string;
+    'value'?: string;
 }
 
 
-export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
-    /** Kind represents the type of the API object. */
-    'kind': string = null;
-    'api-version': string = null;
+export class ApiAny extends BaseModel implements IApiAny {
+    'type_url': string = null;
+    'value': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'kind': {
-            description:  'Kind represents the type of the API object.',
+        'type_url': {
             type: 'string'
         },
-        'api-version': {
+        'value': {
             type: 'string'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ApiTypeMeta.propInfo[propName];
+        return ApiAny.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ApiTypeMeta.propInfo[prop] != null &&
-                        ApiTypeMeta.propInfo[prop].default != null &&
-                        ApiTypeMeta.propInfo[prop].default != '');
+        return (ApiAny.propInfo[prop] != null &&
+                        ApiAny.propInfo[prop].default != null &&
+                        ApiAny.propInfo[prop].default != '');
     }
 
     /**
@@ -55,15 +53,15 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values && values['kind'] != null) {
-            this['kind'] = values['kind'];
-        } else if (ApiTypeMeta.hasDefaultValue('kind')) {
-            this['kind'] = ApiTypeMeta.propInfo['kind'].default;
+        if (values && values['type_url'] != null) {
+            this['type_url'] = values['type_url'];
+        } else if (ApiAny.hasDefaultValue('type_url')) {
+            this['type_url'] = ApiAny.propInfo['type_url'].default;
         }
-        if (values && values['api-version'] != null) {
-            this['api-version'] = values['api-version'];
-        } else if (ApiTypeMeta.hasDefaultValue('api-version')) {
-            this['api-version'] = ApiTypeMeta.propInfo['api-version'].default;
+        if (values && values['value'] != null) {
+            this['value'] = values['value'];
+        } else if (ApiAny.hasDefaultValue('value')) {
+            this['value'] = ApiAny.propInfo['value'].default;
         }
     }
 
@@ -73,8 +71,8 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
-                'api-version': new FormControl(this['api-version']),
+                'type_url': new FormControl(this['type_url']),
+                'value': new FormControl(this['value']),
             });
         }
         return this._formGroup;
@@ -82,8 +80,8 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['kind'].setValue(this['kind']);
-            this._formGroup.controls['api-version'].setValue(this['api-version']);
+            this._formGroup.controls['type_url'].setValue(this['type_url']);
+            this._formGroup.controls['value'].setValue(this['value']);
         }
     }
 }

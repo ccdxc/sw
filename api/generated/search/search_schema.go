@@ -45,8 +45,8 @@ var typesMapSearch = map[string]*api.Struct{
 			"value": api.Field{Name: "value", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "search.KindPreview"},
 		},
 	},
-	"search.Entry": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Entry{}) },
+	"search.ConfigEntry": &api.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ConfigEntry{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -55,6 +55,12 @@ var typesMapSearch = map[string]*api.Struct{
 			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
 			"O": api.Field{Name: "O", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+		},
+	},
+	"search.Entry": &api.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Entry{}) },
+		Fields: map[string]api.Field{
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Any"},
 		},
 	},
 	"search.EntryList": &api.Struct{

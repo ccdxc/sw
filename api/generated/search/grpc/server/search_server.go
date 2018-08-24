@@ -38,6 +38,7 @@ func (s *ssearchSearchBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		"search.Category":             apisrvpkg.NewMessage("search.Category"),
 		"search.CategoryAggregation":  apisrvpkg.NewMessage("search.CategoryAggregation"),
 		"search.CategoryPreview":      apisrvpkg.NewMessage("search.CategoryPreview"),
+		"search.ConfigEntry":          apisrvpkg.NewMessage("search.ConfigEntry"),
 		"search.Entry":                apisrvpkg.NewMessage("search.Entry"),
 		"search.EntryList":            apisrvpkg.NewMessage("search.EntryList"),
 		"search.Error":                apisrvpkg.NewMessage("search.Error"),

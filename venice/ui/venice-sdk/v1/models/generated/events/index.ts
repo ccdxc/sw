@@ -21,4 +21,4 @@ export * from './events-event-attributes.model';
 export * from './events-event-list.model';
 export * from './events-event-source.model';
 export * from './events-get-event-request.model';
-export * from './protobuf-any.model';
+export * from './googleprotobuf-any.model';

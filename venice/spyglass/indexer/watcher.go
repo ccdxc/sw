@@ -363,7 +363,7 @@ func (idr *Indexer) startWriter(id int) {
 			ometa, err := runtime.GetObjectMeta(req.object)
 			if err != nil {
 				idr.logger.Errorf("Writer: %d Failed to get obj-meta for object: %+v, err: %+v",
-					id, ometa, err)
+					id, req.object, err)
 				continue
 			}
 

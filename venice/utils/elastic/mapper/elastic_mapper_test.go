@@ -331,7 +331,7 @@ func TestElasticMapper(t *testing.T) {
 		expectedMappingPretty string
 	}{
 		{
-			search.Entry{},
+			search.ConfigEntry{},
 			elastic.GetDocType(globals.Configs),
 			nil, // test default option
 			nil,
