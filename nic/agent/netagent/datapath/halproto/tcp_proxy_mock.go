@@ -4,11 +4,128 @@
 package halproto
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
-	reflect "reflect"
 )
+
+// MockisTlsProxyAction_Keys is a mock of isTlsProxyAction_Keys interface
+type MockisTlsProxyAction_Keys struct {
+	ctrl     *gomock.Controller
+	recorder *MockisTlsProxyAction_KeysMockRecorder
+}
+
+// MockisTlsProxyAction_KeysMockRecorder is the mock recorder for MockisTlsProxyAction_Keys
+type MockisTlsProxyAction_KeysMockRecorder struct {
+	mock *MockisTlsProxyAction_Keys
+}
+
+// NewMockisTlsProxyAction_Keys creates a new mock instance
+func NewMockisTlsProxyAction_Keys(ctrl *gomock.Controller) *MockisTlsProxyAction_Keys {
+	mock := &MockisTlsProxyAction_Keys{ctrl: ctrl}
+	mock.recorder = &MockisTlsProxyAction_KeysMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockisTlsProxyAction_Keys) EXPECT() *MockisTlsProxyAction_KeysMockRecorder {
+	return _m.recorder
+}
+
+// isTlsProxyAction_Keys mocks base method
+func (_m *MockisTlsProxyAction_Keys) isTlsProxyAction_Keys() {
+	_m.ctrl.Call(_m, "isTlsProxyAction_Keys")
+}
+
+// isTlsProxyAction_Keys indicates an expected call of isTlsProxyAction_Keys
+func (_mr *MockisTlsProxyAction_KeysMockRecorder) isTlsProxyAction_Keys() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isTlsProxyAction_Keys", reflect.TypeOf((*MockisTlsProxyAction_Keys)(nil).isTlsProxyAction_Keys))
+}
+
+// MarshalTo mocks base method
+func (_m *MockisTlsProxyAction_Keys) MarshalTo(_param0 []byte) (int, error) {
+	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (_mr *MockisTlsProxyAction_KeysMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisTlsProxyAction_Keys)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (_m *MockisTlsProxyAction_Keys) Size() int {
+	ret := _m.ctrl.Call(_m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (_mr *MockisTlsProxyAction_KeysMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisTlsProxyAction_Keys)(nil).Size))
+}
+
+// MockisTcpProxyAction_ProxyConfig is a mock of isTcpProxyAction_ProxyConfig interface
+type MockisTcpProxyAction_ProxyConfig struct {
+	ctrl     *gomock.Controller
+	recorder *MockisTcpProxyAction_ProxyConfigMockRecorder
+}
+
+// MockisTcpProxyAction_ProxyConfigMockRecorder is the mock recorder for MockisTcpProxyAction_ProxyConfig
+type MockisTcpProxyAction_ProxyConfigMockRecorder struct {
+	mock *MockisTcpProxyAction_ProxyConfig
+}
+
+// NewMockisTcpProxyAction_ProxyConfig creates a new mock instance
+func NewMockisTcpProxyAction_ProxyConfig(ctrl *gomock.Controller) *MockisTcpProxyAction_ProxyConfig {
+	mock := &MockisTcpProxyAction_ProxyConfig{ctrl: ctrl}
+	mock.recorder = &MockisTcpProxyAction_ProxyConfigMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (_m *MockisTcpProxyAction_ProxyConfig) EXPECT() *MockisTcpProxyAction_ProxyConfigMockRecorder {
+	return _m.recorder
+}
+
+// isTcpProxyAction_ProxyConfig mocks base method
+func (_m *MockisTcpProxyAction_ProxyConfig) isTcpProxyAction_ProxyConfig() {
+	_m.ctrl.Call(_m, "isTcpProxyAction_ProxyConfig")
+}
+
+// isTcpProxyAction_ProxyConfig indicates an expected call of isTcpProxyAction_ProxyConfig
+func (_mr *MockisTcpProxyAction_ProxyConfigMockRecorder) isTcpProxyAction_ProxyConfig() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "isTcpProxyAction_ProxyConfig", reflect.TypeOf((*MockisTcpProxyAction_ProxyConfig)(nil).isTcpProxyAction_ProxyConfig))
+}
+
+// MarshalTo mocks base method
+func (_m *MockisTcpProxyAction_ProxyConfig) MarshalTo(_param0 []byte) (int, error) {
+	ret := _m.ctrl.Call(_m, "MarshalTo", _param0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (_mr *MockisTcpProxyAction_ProxyConfigMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "MarshalTo", reflect.TypeOf((*MockisTcpProxyAction_ProxyConfig)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (_m *MockisTcpProxyAction_ProxyConfig) Size() int {
+	ret := _m.ctrl.Call(_m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (_mr *MockisTcpProxyAction_ProxyConfigMockRecorder) Size() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Size", reflect.TypeOf((*MockisTcpProxyAction_ProxyConfig)(nil).Size))
+}
 
 // MockisTcpProxyCbKeyHandle_KeyOrHandle is a mock of isTcpProxyCbKeyHandle_KeyOrHandle interface
 type MockisTcpProxyCbKeyHandle_KeyOrHandle struct {
