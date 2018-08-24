@@ -31,12 +31,19 @@ nicmgr_post_adminq:
   add             _r_flit, r0, k.nicmgr_global_dma_cur_flit
   add             _r_index, r0, k.nicmgr_global_dma_cur_index
 
-  // Update the completion descriptor
-  phvwr           p.adminq_comp_desc_color, d.color
-  phvwr           p.adminq_comp_desc_comp_index, k.{nicmgr_t0_s2s_comp_index}.hx
-
-  // Compute the completion descriptor address
+  // Compute completion descriptor address
   add             _r_cq_desc_addr, d.{cq_ring_base}.dx, k.{nicmgr_t0_s2s_comp_index}, LG2_ADMINQ_COMP_DESC_SIZE
+
+  // Update completion descriptor
+  phvwr           p.adminq_comp_desc_comp_index, k.{nicmgr_t0_s2s_comp_index}.hx
+  phvwr           p.adminq_comp_desc_color, d.color
+
+  // Claim completion entry
+  tblmincri       d.{comp_index}.hx, d.{ring_size}.hx, 1
+
+  // Update color
+  seq             c1, d.comp_index, 0
+  tblmincri.c1    d.color, 1, 1
 
   // DMA adminq completion
   DMA_CMD_PTR(_r_ptr, _r_flit, _r_index, r7)

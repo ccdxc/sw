@@ -21,19 +21,11 @@ adminq_commit:
   bcf             [!c1], adminq_commit_abort
   nop
 
+  // Save consumer index
+  phvwr           p.nicmgr_req_desc_comp_index, d.c_index0
+
   // Claim the descriptor
   tblwr           d.c_index0, d.ci_fetch
-
-  // comp_index = (ci - 1)
-  add             r7, r0, d.{c_index0}.hx
-  mincr           r7, d.{ring_size}.hx, -1
-  phvwr           p.nicmgr_req_desc_comp_index, r7.hx
-
-  // Claim the completion entry
-  tblmincri       d.{comp_index}.hx, d.{ring_size}.hx, 1
-  seq             c1, d.comp_index, 0
-  tblmincri.c1    d.color, 1, 1
-
   tblwr.l.f       d.rsvd, 0
 
   // Eval doorbell when pi == ci
