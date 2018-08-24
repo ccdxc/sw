@@ -689,7 +689,7 @@ static int ionic_req_notify_cq(struct ibv_cq *ibcq, int solicited_only)
 static int ionic_qp_sq_init(struct ionic_ctx *ctx, struct ionic_qp *qp,
 			    int max_wr, int max_sge, int max_data)
 {
-	uint32_t wqe_size = 1u << ctx->max_stride;
+	uint32_t wqe_size;
 	int rc;
 
 	if (!qp->has_sq)
@@ -748,7 +748,7 @@ static void ionic_qp_sq_destroy(struct ionic_qp *qp)
 static int ionic_qp_rq_init(struct ionic_ctx *ctx, struct ionic_qp *qp,
 			    int max_wr, int max_sge)
 {
-	uint32_t wqe_size = 1u << ctx->max_stride;
+	uint32_t wqe_size;
 	int rc, i;
 
 	if (!qp->has_sq)
@@ -1238,7 +1238,7 @@ static int ionic_v1_prep_common(struct ionic_qp *qp,
 	}
 
 	if (unlikely(signed_len < 0))
-		return (int)-signed_len;
+		return -signed_len;
 
 	meta->len = signed_len;
 	wqe->base.length_key = htobe32(signed_len);
@@ -1878,7 +1878,7 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 	signed_len = ionic_prep_sgl(wqe->recv.sgl, mval,
 				    wr->sg_list, wr->num_sge);
 	if (signed_len < 0)
-		return (int)-signed_len;
+		return -signed_len;
 
 	meta->wrid = wr->wr_id;
 
