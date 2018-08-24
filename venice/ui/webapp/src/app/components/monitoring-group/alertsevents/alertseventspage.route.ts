@@ -1,12 +1,12 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { AlertseventsComponent } from '@app/components/monitoring-group/alertsevents/alertsevents.component';
+import { AlertseventspageComponent } from '@app/components/monitoring-group/alertsevents/alertseventspage.component';
 
 
 const routes: Routes = [
   {
     path: '',
-    component: AlertseventsComponent
+    component: AlertseventspageComponent
   },
   {
     path: 'alertpolicies',
@@ -23,4 +23,4 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]
 })
-export class AlertsEventsRoutingModule { }
+export class AlertsEventsPageRoutingModule { }

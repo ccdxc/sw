@@ -23,17 +23,18 @@
   /* Alert color stylings */
   .global-alert-critical {
     background-color: #dd3b09;
-    color: #dd3b09;
   }
 
   .global-alert-warning {
     background-color: #fcb710;
-    color: #fcb710;
   }
 
   .global-alert-info {
     background-color: #6ba0e5;
-    color: #6ba0e5;
+  }
+
+  .global-alert-neutral {
+    background-color: #898989;
   }
 
   /* Alert color stylings */
@@ -53,6 +54,10 @@
     pointer-events: none;
     opacity: 0.3;
     cursor: default;
+  }
+
+  .global-button {
+    @extend %button_base;
   }
   
   .global-button-primary {
@@ -144,13 +149,15 @@
         height: 36px;
         vertical-align: text-top;
 
-        //We skip the first so that the checkboxes are the same size
-        //as the one in the header
-        > td:not(:first-child) {
+        > td {
+          border-left: none;
+          border-right: none;
           text-align: left;
-          font-size: 12px !important;
+          font-size: 14px !important;
           font-family: "Roboto Condensed";
-          
+          // Needed so row height doesn't change
+          // Row height needs to be fixed for virtual scroll
+          white-space: nowrap;
         }
 
         &:hover {

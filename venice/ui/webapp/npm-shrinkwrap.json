@@ -19711,7 +19711,7 @@
     },
     "web-app-framework": {
       "version": "file:../web-app-framework/dist/web-app-framework-0.0.0.tgz",
-      "integrity": "sha512-NfcTrGXW3u2DknVU+Uip/t/bEb9hXs5akOvVjWZ1iQvTNvOJj3NLPx2jE/BJkEn9S8LzkuZulQTg4hvfXYxT0Q==",
+      "integrity": "sha512-njhFkOg7wP/wdXv91hy5uk+gAMuDq/schJ47iojR50zdcl9FNTueh1ZtWltH6PiJEFomBEq+uW89o9AsL8uLcw==",
       "requires": {
         "@angular/animations": "5.2.11",
         "@angular/cdk": "5.2.5",

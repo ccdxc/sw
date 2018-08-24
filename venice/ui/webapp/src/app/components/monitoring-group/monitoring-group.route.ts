@@ -21,7 +21,7 @@ const routes: Routes = [
     children: [
       {
         path: '',
-        loadChildren: '@app/components/monitoring-group/alertsevents/alertsevents.module#AlertsEventsModule'
+        loadChildren: '@app/components/monitoring-group/alertsevents/alertseventspage.module#AlertsEventsPageModule'
       }
     ]
   },

@@ -10,6 +10,51 @@
   margin: 0px 10px;
 }
 
+// EVENT TABLE
+.alertsevents-search {
+  @include primary-font(16px, #484848);
+  margin-left: 15px;
+
+  mat-form-field {
+    @include global-mat-form-field;
+  }
+}
+
+.alertsevents-column-event {
+  width: 150px !important;
+}
+
+.alertsevents-column-source {
+  // width: 250px !important;
+  width: 13%;
+}
+
+.alertsevents-column-count {
+  width: 80px !important;
+}
+
+.alertsevents-icon {
+  position: relative;
+  top: 4px;
+  font-size: 18px;
+}
+
+.alertsevents-events-table {
+  height: 100%;
+}
+
+// Mat tab body wrapper doesn't automatically fill its parent
+// Lazy render uses its parent to determine its height, so we
+// need to force this div to take up its parent
+app-shared-alertsevents {
+  .mat-tab-body-wrapper {
+    height: 100%;
+  }
+  mat-tab-group {
+    height: 100%;
+  }
+}
+
 /*====== alert table =====*/
 
 .alertseventsrecord-icon {
@@ -36,7 +81,7 @@
 }
 
 .alertsevents-column-date {
-  width: 15%;
+  width: 10%;
   max-width: 200px !important;
 }
 
@@ -54,7 +99,7 @@
 }
 
 .alertsevents-column-severity {
-  width: 100px !important;
+  width: 150px !important;
 }
 
 .alertsevents-header-div {
@@ -105,41 +150,9 @@
 }
 
 .alertsevents-main-menu-number {
-  height: 30px;
   line-height: normal;
-  letter-spacing: normal;
-  text-align: left;
-  border-radius: 3px;
   padding: 3px 8px;
   margin: auto 10px;
-  cursor: pointer;
-  color: #fff;
 }
 
-.alertsevents-main-menu-number-total {
-  background-color: #898989;
-}
-
-.alertsevents-main-menu-number-critical {
-  background-color: #dd3b09;
-}
-
-.alertsevents-main-menu-number-warning {
-  background-color: #fcb710;
-}
-
-.alertsevents-main-menu-number-info {
-  background-color: #6ba0e5;
-}
 /*----- alert table -----*/
-
-.alertsevents-toolbar-refresh-button {
-  @include primary-font(16px, #ffffff);
-  height: 30px;
-  font-weight: 500;
-  text-align: center;
-  width: 80px;
-  display: block;
-  padding: 0px 10px;
-}
-

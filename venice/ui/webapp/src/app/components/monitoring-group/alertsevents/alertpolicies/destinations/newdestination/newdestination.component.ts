@@ -1,14 +1,14 @@
-import { Component, OnInit, ViewEncapsulation, Input, AfterViewInit, Output, EventEmitter } from '@angular/core';
-import { SelectItem } from 'primeng/primeng';
-import { FormGroup, FormControl, FormArray, Validators } from '@angular/forms';
-import { Animations } from '@app/animations';
-import { IMonitoringAlertDestination, MonitoringAlertDestination, MonitoringSNMPTrapServer, MonitoringAuthConfig, MonitoringPrivacyConfig, IApiStatus } from '@sdk/v1/models/generated/monitoring';
-import { ControllerService } from '@app/services/controller.service';
-import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import { FormArray, Validators } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material';
+import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
+import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
+import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { Observable } from 'rxjs';
+import { IApiStatus, IMonitoringAlertDestination, MonitoringAlertDestination, MonitoringAuthConfig, MonitoringPrivacyConfig, MonitoringSNMPTrapServer } from '@sdk/v1/models/generated/monitoring';
+import { SelectItem } from 'primeng/primeng';
+import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'app-newdestination',
@@ -53,10 +53,10 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
       // Name field can't be blank
       this.newDestination.$formGroup.get(['meta', 'name']).setValidators(Validators.required);
     }
-    // Check if there is a snmp trap server config, 
+    // Check if there is a snmp trap server config,
     // if not, we need to add one so that it shows in the form
     const snmpArray = this.newDestination.$formGroup.get(['spec', 'snmp-trap-servers']) as FormArray;
-    if (snmpArray.length == 0) {
+    if (snmpArray.length === 0) {
       snmpArray.insert(0, new MonitoringSNMPTrapServer().$formGroup);
     }
   }
@@ -71,13 +71,13 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
         {
           cssClass: 'global-button-primary eventalertpolicies-button',
           text: 'CREATE DESTINATION',
-          callback: () => { this.saveDestination() },
-          computeClass: () => { return this.computeButtonClass() }
+          callback: () => { this.saveDestination(); },
+          computeClass: () => this.computeButtonClass()
         },
         {
           cssClass: 'global-button-neutral eventalertpolicies-button',
           text: 'CANCEL',
-          callback: () => { this.cancelDestination() }
+          callback: () => { this.cancelDestination(); }
         },
       ];
 
@@ -111,7 +111,7 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
     if (this.isInline) {
       handler = this._monitoringService.UpdateAlertDestination(this.newDestination.meta.name, this.newDestination);
     } else {
-      handler = this._monitoringService.AddAlertDestination(this.newDestination)
+      handler = this._monitoringService.AddAlertDestination(this.newDestination);
     }
     handler.subscribe((response) => {
       const status = response.statusCode;
@@ -124,8 +124,8 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
       } else {
         console.error(response.body);
       }
-    })
-  };
+    });
+  }
 
   cancelDestination() {
     if (!this.isInline) {

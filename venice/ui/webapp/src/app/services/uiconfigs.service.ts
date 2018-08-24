@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 
 interface UIConfig {
-  "disabled-objects": string[]
+  'disabled-objects': string[];
 }
 
 interface PageRequirement {
@@ -29,7 +30,7 @@ export class UIConfigsService {
   // NOTE: If a subroute is not allowed, further nested paths are automatically blocked
   // Ex. if monitoring is blocked, monitoring/alertsevevnts will be blocked without checking
   pageRequirements: PageRequirementMap = {
-    "monitoring/alertsevents/alertpolicies": {
+    'monitoring/alertsevents/alertpolicies': {
       required: [
         'AlertPolicies'
       ],
@@ -38,13 +39,13 @@ export class UIConfigsService {
         'AlertDestinations'
       ]
     },
-    "monitoring/alertsevents/": {
+    'monitoring/alertsevents/': {
       default: [
         'Alerts',
         'Events'
       ]
     }
-  }
+  };
 
   constructor(protected router: Router,
     protected http: HttpClient
@@ -54,8 +55,8 @@ export class UIConfigsService {
    * We check the route, and if it isn't allowed,
    * we redirect to the homepage and return false to
    * the guard calling this function
-   * 
-   * @param route 
+   *
+   * @param route
    */
   verifySubRoute(route: string) {
     if (!this.canActivateSubRoute(route)) {
@@ -69,14 +70,14 @@ export class UIConfigsService {
    * Looks up the route in the pageRequirements object
    * If the url isn't present it is allowed by default
    * Otherwise we follow the algorithm stated above pageRequirements
-   * @param route 
+   * @param route
    */
   canActivateSubRoute(route: string): boolean {
     if (this.pageRequirements[route] == null) {
       return true;
     }
     const req = this.pageRequirements[route].required;
-    if (req != null && req.length != 0) {
+    if (req != null && req.length !== 0) {
       // If one of the required objects are disabled, we return false
       const reqResult = req.some((obj) => {
         return this.isObjectDisabled(obj);
@@ -87,7 +88,7 @@ export class UIConfigsService {
     }
 
     const defaultObjects = this.pageRequirements[route].default;
-    if (defaultObjects != null && defaultObjects.length != 0) {
+    if (defaultObjects != null && defaultObjects.length !== 0) {
       // If one of the objects isn't disabled, we allow the route
       const defaultObjRes = defaultObjects.some((obj) => {
         return !this.isObjectDisabled(obj);
@@ -101,7 +102,7 @@ export class UIConfigsService {
     if (this.configFile == null) {
       return false;
     }
-    const disabledObjs: string[] = this.configFile["disabled-objects"]
+    const disabledObjs: string[] = this.configFile['disabled-objects'];
     return disabledObjs.some((elem) => {
       return elem.toLowerCase() === objName.toLowerCase();
     });
@@ -126,11 +127,11 @@ export class UIConfigsService {
           observable.complete();
         },
         (error) => {
-          console.error("Failed to get user configurations", error)
-          observable.error(new Error("Failed to get user configurations"));
+          console.error('Failed to get user configurations', error);
+          observable.error(new Error('Failed to get user configurations'));
         }
       );
-      return observable
+      return observable;
     } else {
       return Observable.of();
     }

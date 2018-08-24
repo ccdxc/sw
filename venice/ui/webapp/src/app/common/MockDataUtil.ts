@@ -236,143 +236,143 @@ export class MockDataUtil {
 
   public static mockGlobalSearch() {
     return {
-      "total-hits": 4,
-      "actual-hits": 4,
-      "time-taken-msecs": 50,
-      "entries": [
+      'total-hits': 4,
+      'actual-hits': 4,
+      'time-taken-msecs': 50,
+      'entries': [
         {
-          "kind": "Node",
-          "api-version": "v1",
-          "meta": {
-            "name": "node1",
-            "tenant": "default",
-            "namespace": "default",
-            "resource-version": "3",
-            "uuid": "af867fac-6d1a-4baf-b509-d8b9b4b9b33b",
-            "labels": {
-              "_category": "Cluster"
+          'kind': 'Node',
+          'api-version': 'v1',
+          'meta': {
+            'name': 'node1',
+            'tenant': 'default',
+            'namespace': 'default',
+            'resource-version': '3',
+            'uuid': 'af867fac-6d1a-4baf-b509-d8b9b4b9b33b',
+            'labels': {
+              '_category': 'Cluster'
             },
-            "creation-time": "2018-06-06T19:32:01.975878685Z",
-            "mod-time": "2018-06-06T19:32:01.975878685Z",
-            "self-link": "/venice/cluster/nodes/node1"
+            'creation-time': '2018-06-06T19:32:01.975878685Z',
+            'mod-time': '2018-06-06T19:32:01.975878685Z',
+            'self-link': '/venice/cluster/nodes/node1'
           }
         },
         {
-          "kind": "SmartNIC",
-          "api-version": "v1",
-          "meta": {
-            "name": "02:42:c0:a8:1c:02",
-            "tenant": "default",
-            "namespace": "default",
-            "resource-version": "50932",
-            "uuid": "a83d6ec8-79fa-46c0-8ff9-319f31e3f95d",
-            "labels": {
-              "_category": "Cluster"
+          'kind': 'SmartNIC',
+          'api-version': 'v1',
+          'meta': {
+            'name': '02:42:c0:a8:1c:02',
+            'tenant': 'default',
+            'namespace': 'default',
+            'resource-version': '50932',
+            'uuid': 'a83d6ec8-79fa-46c0-8ff9-319f31e3f95d',
+            'labels': {
+              '_category': 'Cluster'
             },
-            "creation-time": "2018-06-06T19:32:33.610293273Z",
-            "mod-time": "2018-06-07T06:28:15.435273503Z",
-            "self-link": "/venice/cluster/smartnics/02:42:c0:a8:1c:02"
+            'creation-time': '2018-06-06T19:32:33.610293273Z',
+            'mod-time': '2018-06-07T06:28:15.435273503Z',
+            'self-link': '/venice/cluster/smartnics/02:42:c0:a8:1c:02'
           }
         },
         {
-          "kind": "Cluster",
-          "api-version": "v1",
-          "meta": {
-            "name": "testCluster",
-            "tenant": "default",
-            "namespace": "default",
-            "resource-version": "345",
-            "uuid": "25f062d1-753c-4565-8a1d-83c74dee9f41",
-            "labels": {
-              "_category": "Cluster"
+          'kind': 'Cluster',
+          'api-version': 'v1',
+          'meta': {
+            'name': 'testCluster',
+            'tenant': 'default',
+            'namespace': 'default',
+            'resource-version': '345',
+            'uuid': '25f062d1-753c-4565-8a1d-83c74dee9f41',
+            'labels': {
+              '_category': 'Cluster'
             },
-            "creation-time": "2018-06-06T19:32:01.975733471Z",
-            "mod-time": "2018-06-06T19:32:33.460392641Z",
-            "self-link": "/v1/cluster/cluster/testCluster"
+            'creation-time': '2018-06-06T19:32:01.975733471Z',
+            'mod-time': '2018-06-06T19:32:33.460392641Z',
+            'self-link': '/v1/cluster/cluster/testCluster'
           }
         },
         {
-          "kind": "Tenant",
-          "api-version": "v1",
-          "meta": {
-            "name": "default1",
-            "tenant": "default1",
-            "resource-version": "9588",
-            "uuid": "bbe1a39f-3b6e-480a-89ae-6bb98955076e",
-            "labels": {
-              "_category": "Cluster"
+          'kind': 'Tenant',
+          'api-version': 'v1',
+          'meta': {
+            'name': 'default1',
+            'tenant': 'default1',
+            'resource-version': '9588',
+            'uuid': 'bbe1a39f-3b6e-480a-89ae-6bb98955076e',
+            'labels': {
+              '_category': 'Cluster'
             },
-            "creation-time": "2018-06-06T21:30:54.30501474Z",
-            "mod-time": "2018-06-06T21:30:54.305019224Z",
-            "self-link": "/venice/cluster/tenants/default1"
+            'creation-time': '2018-06-06T21:30:54.30501474Z',
+            'mod-time': '2018-06-06T21:30:54.305019224Z',
+            'self-link': '/venice/cluster/tenants/default1'
           }
         }
       ],
-      "aggregated-entries": {
-        "tenants": {
-          "default": {
-            "categories": {
-              "Cluster": {
-                "kinds": {
-                  "Cluster": {
-                    "entries": [
+      'aggregated-entries': {
+        'tenants': {
+          'default': {
+            'categories': {
+              'Cluster': {
+                'kinds': {
+                  'Cluster': {
+                    'entries': [
                       {
-                        "kind": "Cluster",
-                        "api-version": "v1",
-                        "meta": {
-                          "name": "testCluster",
-                          "tenant": "default",
-                          "namespace": "default",
-                          "resource-version": "345",
-                          "uuid": "25f062d1-753c-4565-8a1d-83c74dee9f41",
-                          "labels": {
-                            "_category": "Cluster"
+                        'kind': 'Cluster',
+                        'api-version': 'v1',
+                        'meta': {
+                          'name': 'testCluster',
+                          'tenant': 'default',
+                          'namespace': 'default',
+                          'resource-version': '345',
+                          'uuid': '25f062d1-753c-4565-8a1d-83c74dee9f41',
+                          'labels': {
+                            '_category': 'Cluster'
                           },
-                          "creation-time": "2018-06-06T19:32:01.975733471Z",
-                          "mod-time": "2018-06-06T19:32:33.460392641Z",
-                          "self-link": "/v1/cluster/cluster/testCluster"
+                          'creation-time': '2018-06-06T19:32:01.975733471Z',
+                          'mod-time': '2018-06-06T19:32:33.460392641Z',
+                          'self-link': '/v1/cluster/cluster/testCluster'
                         }
                       }
                     ]
                   },
-                  "Node": {
-                    "entries": [
+                  'Node': {
+                    'entries': [
                       {
-                        "kind": "Node",
-                        "api-version": "v1",
-                        "meta": {
-                          "name": "node1",
-                          "tenant": "default",
-                          "namespace": "default",
-                          "resource-version": "3",
-                          "uuid": "af867fac-6d1a-4baf-b509-d8b9b4b9b33b",
-                          "labels": {
-                            "_category": "Cluster"
+                        'kind': 'Node',
+                        'api-version': 'v1',
+                        'meta': {
+                          'name': 'node1',
+                          'tenant': 'default',
+                          'namespace': 'default',
+                          'resource-version': '3',
+                          'uuid': 'af867fac-6d1a-4baf-b509-d8b9b4b9b33b',
+                          'labels': {
+                            '_category': 'Cluster'
                           },
-                          "creation-time": "2018-06-06T19:32:01.975878685Z",
-                          "mod-time": "2018-06-06T19:32:01.975878685Z",
-                          "self-link": "/venice/cluster/nodes/node1"
+                          'creation-time': '2018-06-06T19:32:01.975878685Z',
+                          'mod-time': '2018-06-06T19:32:01.975878685Z',
+                          'self-link': '/venice/cluster/nodes/node1'
                         }
                       }
                     ]
                   },
-                  "SmartNIC": {
-                    "entries": [
+                  'SmartNIC': {
+                    'entries': [
                       {
-                        "kind": "SmartNIC",
-                        "api-version": "v1",
-                        "meta": {
-                          "name": "02:42:c0:a8:1c:02",
-                          "tenant": "default",
-                          "namespace": "default",
-                          "resource-version": "50932",
-                          "uuid": "a83d6ec8-79fa-46c0-8ff9-319f31e3f95d",
-                          "labels": {
-                            "_category": "Cluster"
+                        'kind': 'SmartNIC',
+                        'api-version': 'v1',
+                        'meta': {
+                          'name': '02:42:c0:a8:1c:02',
+                          'tenant': 'default',
+                          'namespace': 'default',
+                          'resource-version': '50932',
+                          'uuid': 'a83d6ec8-79fa-46c0-8ff9-319f31e3f95d',
+                          'labels': {
+                            '_category': 'Cluster'
                           },
-                          "creation-time": "2018-06-06T19:32:33.610293273Z",
-                          "mod-time": "2018-06-07T06:28:15.435273503Z",
-                          "self-link": "/venice/cluster/smartnics/02:42:c0:a8:1c:02"
+                          'creation-time': '2018-06-06T19:32:33.610293273Z',
+                          'mod-time': '2018-06-07T06:28:15.435273503Z',
+                          'self-link': '/venice/cluster/smartnics/02:42:c0:a8:1c:02'
                         }
                       }
                     ]
@@ -381,26 +381,26 @@ export class MockDataUtil {
               }
             }
           },
-          "default1": {
-            "categories": {
-              "Cluster": {
-                "kinds": {
-                  "Tenant": {
-                    "entries": [
+          'default1': {
+            'categories': {
+              'Cluster': {
+                'kinds': {
+                  'Tenant': {
+                    'entries': [
                       {
-                        "kind": "Tenant",
-                        "api-version": "v1",
-                        "meta": {
-                          "name": "default1",
-                          "tenant": "default1",
-                          "resource-version": "9588",
-                          "uuid": "bbe1a39f-3b6e-480a-89ae-6bb98955076e",
-                          "labels": {
-                            "_category": "Cluster"
+                        'kind': 'Tenant',
+                        'api-version': 'v1',
+                        'meta': {
+                          'name': 'default1',
+                          'tenant': 'default1',
+                          'resource-version': '9588',
+                          'uuid': 'bbe1a39f-3b6e-480a-89ae-6bb98955076e',
+                          'labels': {
+                            '_category': 'Cluster'
                           },
-                          "creation-time": "2018-06-06T21:30:54.30501474Z",
-                          "mod-time": "2018-06-06T21:30:54.305019224Z",
-                          "self-link": "/venice/cluster/tenants/default1"
+                          'creation-time': '2018-06-06T21:30:54.30501474Z',
+                          'mod-time': '2018-06-06T21:30:54.305019224Z',
+                          'self-link': '/venice/cluster/tenants/default1'
                         }
                       }
                     ]
@@ -411,7 +411,7 @@ export class MockDataUtil {
           }
         }
       }
-    }
+    };
   }
 
   public static buidCreateAndModDates(): any {

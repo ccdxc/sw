@@ -7,7 +7,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec, MonitoringAlertStatus } from '@sdk/v1/models/generated/monitoring';
 import { SelectItem } from 'primeng/primeng';
-import { Observable } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { Validators } from '@angular/forms';
 import { SearchSearchQuery_kinds } from '@sdk/v1/models/generated/search';
@@ -90,8 +90,8 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
       this.destinationOptions.push({
         label: destination.meta.name,
         value: destination.meta.name,
-      })
-    })
+      });
+    });
 
   }
 
@@ -105,13 +105,13 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
         {
           cssClass: 'global-button-primary eventalertpolicies-button',
           text: 'CREATE ALERT POLICY',
-          callback: () => { this.savePolicy() },
-          computeClass: () => { return this.computeButtonClass() }
+          callback: () => { this.savePolicy(); },
+          computeClass: () => this.computeButtonClass()
         },
         {
           cssClass: 'global-button-neutral eventalertpolicies-button',
           text: 'CANCEL',
-          callback: () => { this.cancelPolicy() }
+          callback: () => { this.cancelPolicy(); }
         },
       ];
 
@@ -159,7 +159,7 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
       } else {
         console.log(response.body);
       }
-    })
+    });
   }
 
   cancelPolicy() {

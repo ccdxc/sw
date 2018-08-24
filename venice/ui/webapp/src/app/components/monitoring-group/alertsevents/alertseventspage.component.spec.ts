@@ -18,8 +18,10 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { LogService } from '@app/services/logging/log.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
-import { AlertseventsComponent } from './alertsevents.component';
+import { AlertseventspageComponent } from './alertseventspage.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { EventsService } from '@app/services/events.service';
+import { SearchService } from '@app/services/generated/search.service';
 
 
 @Component({
@@ -28,12 +30,12 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 class DummyComponent { }
 
 describe('AlertseventsComponent', () => {
-  let component: AlertseventsComponent;
-  let fixture: ComponentFixture<AlertseventsComponent>;
+  let component: AlertseventspageComponent;
+  let fixture: ComponentFixture<AlertseventspageComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [AlertseventsComponent, DummyComponent],
+      declarations: [AlertseventspageComponent, DummyComponent],
       imports: [
         RouterTestingModule.withRoutes([
           { path: 'login', component: DummyComponent }
@@ -53,13 +55,15 @@ describe('AlertseventsComponent', () => {
         AlerttableService,
         MatIconRegistry,
         UIConfigsService,
+        EventsService,
+        SearchService
       ]
     })
       .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AlertseventsComponent);
+    fixture = TestBed.createComponent(AlertseventspageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

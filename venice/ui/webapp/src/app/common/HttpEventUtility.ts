@@ -13,7 +13,8 @@ enum EventTypes {
 
 export class HttpEventUtility {
   private dataArray = [];
-  private dataMapping = {};
+  // Maps object name to index in data array
+  private dataMapping: { [objName: string]: number } = {};
   private filter: (object: any) => boolean;
 
   /**
@@ -31,7 +32,7 @@ export class HttpEventUtility {
    * Can be used by other components as an efficient way to
    * check if the array has changed
    */
-  public static trackBy(index: number, item: any) {
+  public static trackBy(index: number, item: any): string {
     return item.meta.name + ' - ' + item.meta['mod-time'];
   }
 
@@ -71,7 +72,11 @@ export class HttpEventUtility {
           break;
         case EventTypes.update:
           index = this.dataMapping[objName];
-          this.dataArray[index] = obj;
+          if (index != null) {
+            this.dataArray[index] = obj;
+          } else {
+            console.log('Update event but object was not found');
+          }
           break;
         default:
           break;
@@ -79,6 +84,10 @@ export class HttpEventUtility {
     });
 
     return this.dataArray;
+  }
+
+  public hasItem(objName: string) {
+    return this.dataMapping[objName];
   }
 
   public get array(): ReadonlyArray<any> {

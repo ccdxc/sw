@@ -10,7 +10,9 @@
             <ng-content select="[pagebody-options]"></ng-content>
         </div>
     </div>
-    <div fxFlex fxLayout="column" class="pagebody-content">
-        <ng-content></ng-content>
+    <div fxFlex fxLayout="column" class="pagebody-content-container">
+        <div fxFlex fxLayout="column" class="pagebody-content">
+            <ng-content></ng-content>
+        </div>
     </div>
 </div>

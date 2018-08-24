@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { AlertseventsComponent } from '@app/components/monitoring-group/alertsevents/alertsevents.component';
 import { AlertpoliciesComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/alertpolicies.component';
 
 

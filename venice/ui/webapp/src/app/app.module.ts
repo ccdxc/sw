@@ -65,6 +65,8 @@ import { GuidesearchComponent } from './components/search/guidedsearch/guidedsea
 import { UIConfigsService, UIConfigsResolver } from '@app/services/uiconfigs.service';
 import { RouteGuard } from '@app/services/routeguard.service';
 import { AppcontentComponent } from '@app/appcontent.component';
+import { SecurityService } from '@app/services/generated/security.service';
+import { EventsService } from '@app/services/events.service';
 
 
 /**
@@ -139,11 +141,13 @@ import { AppcontentComponent } from '@app/appcontent.component';
     SearchService,
     ClusterService,
     MonitoringService,
+    SecurityService,
     // Route Guards
     AuthGuard,
     RouteGuard,
     // Other
     ControllerService,
+    EventsService,
     AbstractService,
     AuthService,
     WorkloadService,
@@ -152,6 +156,7 @@ import { AppcontentComponent } from '@app/appcontent.component';
     AlerttableService,
     UIConfigsService,
     UIConfigsResolver,
+    EventsService,
 
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true },

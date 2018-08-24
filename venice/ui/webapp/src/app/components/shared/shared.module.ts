@@ -12,12 +12,21 @@ import { ModalwidgetComponent } from './modal/modalwidget/modalwidget.component'
 
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { TableheaderComponent } from '@app/components/shared/tableheader/tableheader.component';
+import { LazyrenderComponent } from './lazyrender/lazyrender.component';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { AlertseventsComponent } from '@app/components/shared/alertsevents/alertsevents.component';
+import { PrimengModule } from '@app/lib/primeng.module';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { WhitespaceTrimDirective } from '@app/components/shared/directives/whitespacetrim.directive';
 
 @NgModule({
   imports: [
     CommonModule,
     FlexLayoutModule,
-    MaterialdesignModule
+    MaterialdesignModule,
+    PrimengModule,
+    ReactiveFormsModule,
+    FormsModule,
 
   ],
   declarations: [PagebodyComponent,
@@ -28,7 +37,11 @@ import { TableheaderComponent } from '@app/components/shared/tableheader/tablehe
     ModalitemComponent,
     ModalcontentComponent,
     ModalwidgetComponent,
-    TableheaderComponent
+    TableheaderComponent,
+    LazyrenderComponent,
+    PrettyDatePipe,
+    AlertseventsComponent,
+    WhitespaceTrimDirective
   ],
   exports: [
     PagebodyComponent,
@@ -39,7 +52,11 @@ import { TableheaderComponent } from '@app/components/shared/tableheader/tablehe
     ModalitemComponent,
     ModalcontentComponent,
     ModalwidgetComponent,
-    TableheaderComponent
+    TableheaderComponent,
+    LazyrenderComponent,
+    PrettyDatePipe,
+    AlertseventsComponent,
+    WhitespaceTrimDirective
   ]
 })
 export class SharedModule { }

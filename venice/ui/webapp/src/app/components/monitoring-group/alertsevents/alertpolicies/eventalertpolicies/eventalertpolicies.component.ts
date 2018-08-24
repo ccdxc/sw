@@ -84,8 +84,8 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
       {
         cssClass: 'global-button-primary eventalertpolicies-button',
         text: 'ADD EVENT POLICY',
-        computeClass: () => { return this.shouldEnableButtons ? '' : 'global-button-disabled' },
-        callback: () => { this.createNewPolicy() }
+        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+        callback: () => { this.createNewPolicy(); }
       },
     ];
     this._controllerService.setToolbarData(currToolbar);
@@ -101,7 +101,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
 
   creationFormClose() {
     this.creatingMode = false;
-    this.editMode.emit(false)
+    this.editMode.emit(false);
   }
 
   setRowData() {

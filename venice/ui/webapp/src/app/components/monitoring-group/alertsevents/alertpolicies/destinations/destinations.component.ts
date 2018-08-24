@@ -80,8 +80,8 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
       {
         cssClass: 'global-button-primary destinations-button',
         text: 'ADD DESTINATION',
-        computeClass: () => { return this.shouldEnableButtons ? '' : 'global-button-disabled' },
-        callback: () => { this.createNewDestination() }
+        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+        callback: () => { this.createNewDestination(); }
       },
     ];
     this._controllerService.setToolbarData(currToolbar);
@@ -97,7 +97,7 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
 
   creationFormClose() {
     this.creatingMode = false;
-    this.editMode.emit(false)
+    this.editMode.emit(false);
   }
 
   setRowData() {
@@ -184,7 +184,7 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
    * If it is expanding, then we are in ediitng mode (set in onUpdateRecord).
    * If it is collapsing, then editingMode should be false, (set in onUpdateRecord).
    * When it is collapsing, we toggle the row on the turbo table
-   * 
+   *
    * This is because we must wait for the animation to complete before toggling
    * the row on the turbo table for a smooth animation.
    * @param  $event Angular animation end event

@@ -7,8 +7,8 @@ import { SearchUtil } from '@app/components/search/SearchUtil';
 import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { SearchsuggestionTypes, SearchSuggestion, SearchSpec, SearchExpression, GuidedSearchCriteria} from '@app/components/search';
-import { SearchSearchResponse, SearchSearchRequest  } from '@sdk/v1/models/generated/search';
+import { SearchsuggestionTypes, SearchSuggestion, SearchSpec, SearchExpression, GuidedSearchCriteria } from '@app/components/search';
+import { SearchSearchResponse, SearchSearchRequest } from '@sdk/v1/models/generated/search';
 
 /**
  * This component provides the search service UI. It wraps a search-widget and invoke search to feed data to search-widget.
@@ -361,10 +361,10 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    */
   buildExpression(inputString: string, isField: boolean): SearchExpression {
     const searchExpression = SearchUtil.parseToExpression(inputString, isField);
-    searchExpression.key = SearchUtil.padKey(searchExpression.key , isField);
+    searchExpression.key = SearchUtil.padKey(searchExpression.key, isField);
     return searchExpression;
   }
- 
+
 
 
   /**
@@ -441,17 +441,17 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
   private shouldRunTextSearch(inputSearchString: string): boolean {
     const grammarList = this.parseInput(inputSearchString);
     if (grammarList.length === 0 || !SearchUtil.isSearchInputStartsWithGrammarTag(inputSearchString)) {
-        return true;
+      return true;
     } else {
-        if (grammarList.length === 1) {
-            // in input is like "in:", it is a text search
-            const value = grammarList[0]['value'];
-            if (Utility.isEmpty(value)) {
-              return true;
-            }
-        } else {
-          return false;
+      if (grammarList.length === 1) {
+        // in input is like "in:", it is a text search
+        const value = grammarList[0]['value'];
+        if (Utility.isEmpty(value)) {
+          return true;
         }
+      } else {
+        return false;
+      }
     }
     return false;
   }
@@ -543,7 +543,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
       const grammarValue = (lastGrammarItem) ? lastGrammarItem.value : null;
       if (this.getSearchInputString().endsWith(selectedOption)) {
         // for example, existing text is "is:Node", selection is "Node".  There is  no need to update.
-        return ;
+        return;
       }
       if (Utility.isEmpty(grammarValue)) {
         this.setSearchInputString(this.getSearchInputString() + selectedOption);
@@ -729,10 +729,10 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     const isStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IS].length > 0) ? SearchsuggestionTypes.OP_IS + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IS].join(',') : '';
     const hasStr = this.getHasStringFromGuidedSearchSpec(guidedSearchCriteria);
     const tagStr = this.getTagStringFromGuidedSearchSpec(guidedSearchCriteria);
-    const list  = [inStr, isStr, hasStr, tagStr];
+    const list = [inStr, isStr, hasStr, tagStr];
     const searchInputString = list.join(' ').trim();
     if (Utility.isEmpty(searchInputString)) {
-        return;
+      return;
     }
     const grammarList = this.parseInput(searchInputString);
     const payload = this.buildComplexSearchPayload(grammarList, searchInputString);
@@ -745,16 +745,16 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    * extract out the 'has' configs
    */
   private getHasStringFromGuidedSearchSpec(guidedsearchCriteria: any): any {
-     const list = [];
-     const type = SearchsuggestionTypes.OP_HAS;
-     const hasSpecList = guidedsearchCriteria[type];
-     hasSpecList.filter( (repeaterValueItem ) => {
+    const list = [];
+    const type = SearchsuggestionTypes.OP_HAS;
+    const hasSpecList = guidedsearchCriteria[type];
+    hasSpecList.filter((repeaterValueItem) => {
       if (!Utility.isEmpty(repeaterValueItem.keyFormControl) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
-       const str = repeaterValueItem.keyFormControl + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
-       list.push(str);
+        const str = repeaterValueItem.keyFormControl + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
+        list.push(str);
       }
-     });
-     return (list.length > 0) ? type + ':' + list.join(',') : '';
+    });
+    return (list.length > 0) ? type + ':' + list.join(',') : '';
   }
 
   /**
@@ -764,12 +764,12 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     const list = [];
     const type = SearchsuggestionTypes.OP_TAG;
     const tagSpecList = guidedsearchCriteria[type];
-    tagSpecList.filter( (repeaterValueItem) => {
+    tagSpecList.filter((repeaterValueItem) => {
       if (!Utility.isEmpty(repeaterValueItem.keytextFormName) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
         const str = repeaterValueItem.keytextFormName + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
         list.push(str);
       }
     });
     return (list.length > 0) ? type + ':' + list.join(',') : '';
- }
+  }
 }

@@ -1,11 +1,14 @@
 <app-pagebody [icon]="bodyicon" title={{cluster?.meta.name}}>
-  <mat-expansion-panel class="global-mat-expansion-panel" [expanded] = "true">
+  <!-- Since we are manually calculating table dimensions, whenever this panel changes
+        state we need to recalculate the table -->
+  <mat-expansion-panel fxFlex="nogrow" class="global-mat-expansion-panel" [expanded] = "true"
+      (closed)="alertsEventsComponent?.resizeTable(501)" (opened)="alertsEventsComponent?.resizeTable(501)">
     <mat-expansion-panel-header class="cluster-details-panel-header">
         <mat-panel-title class="cluster-details-panel-title">
             Cluster Details
         </mat-panel-title>
     </mat-expansion-panel-header>
-    <div class="cluster-details-panel-content">
+    <div fxFlex="none" class="cluster-details-panel-content">
       <div fxLayout="row">
         <div fxFlex="50">
           <div class="cluster-details-panel-content-label">Leader:</div>
@@ -17,7 +20,7 @@
         </div>
       </div>
       <div fxLayout="row">
-       <div fxFlex="50">
+        <div fxFlex="50">
           <div class="cluster-details-panel-content-label">Quorum Nodes:</div>
           <div class="cluster-details-panel-content-value cluster-details-panel-quorum-nodes">{{cluster?.spec['quorum-nodes'].toString().split(',').join(', ')}}</div>
         </div>
@@ -38,7 +41,12 @@
       </div>
     </div>
   </mat-expansion-panel>
-  <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+  <div fxFlex="none">
+    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+  </div>
+  <div fxFlex class="cluster-alertsevents-container">
+    <app-shared-alertsevents></app-shared-alertsevents>
+  </div>
 </app-pagebody>
 
 <ng-template #DataTable>

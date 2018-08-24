@@ -4,6 +4,7 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { BaseComponent } from '../../base/base.component';
 import { Table } from 'primeng/table';
 import { IApiStatus, ClusterCluster, IClusterCluster, ClusterNode, IClusterNodeList, ClusterNodeList } from '@sdk/v1/models/generated/cluster';
+import { AlertseventsComponent } from '@app/components/shared/alertsevents/alertsevents.component';
 
 @Component({
   selector: 'app-cluster',
@@ -13,6 +14,7 @@ import { IApiStatus, ClusterCluster, IClusterCluster, ClusterNode, IClusterNodeL
 })
 export class ClusterComponent extends BaseComponent implements OnInit {
   @ViewChild('nodestable') nodesTable: Table;
+  @ViewChild(AlertseventsComponent) alertsEventsComponent: AlertseventsComponent;
 
   bodyicon: any = {
     margin: {

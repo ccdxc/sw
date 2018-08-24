@@ -1,15 +1,15 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, ElementRef, Renderer2 } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { IPUtility } from '@app/common/IPUtility';
 import { BaseComponent } from '@app/components/base/base.component';
+import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
-import { Table } from 'primeng/table';
-import { IPUtility } from '@app/common/IPUtility';
 import { SecurityService } from '@app/services/generated/security.service';
-import { ISecuritySGPolicy, IApiStatus, ISecuritySGRule, SecuritySGPolicy, SecuritySGRule } from '@sdk/v1/models/generated/security';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { ArrayChunkUtility } from '@app/common/ArrayChunkUtility';
-import { Utility } from '@app/common/Utility';
+import { IApiStatus, ISecuritySGPolicy, ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
+import { Table } from 'primeng/table';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
 
 class SecuritySGRuleWrapper {
   order: number;
@@ -22,20 +22,23 @@ class SecuritySGRuleWrapper {
   templateUrl: './sgpolicy.component.html',
   styleUrls: ['./sgpolicy.component.scss'],
   encapsulation: ViewEncapsulation.None,
-  host: {
-    '(window:resize)': 'resizeTable()'
-  }
 })
 export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('sgpolicyTable') sgpolicyTurboTable: Table;
+  @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
   viewInitComplete: boolean = false;
 
+  subscriptions = [];
+
   cols: any[];
-  sgPolicies: ReadonlyArray<ISecuritySGPolicy> = []; // Holds all policy objects, for initial use case, there will only be one object
+  // Holds all policy objects, for initial use case, there will only be one object
+  sgPolicies: ReadonlyArray<ISecuritySGPolicy> = [];
   sgPoliciesEventUtility: HttpEventUtility;
 
   // Used for the table - when true there is a loading icon displayed
   loading: boolean = false;
+
+  // show all toggle value
   showAll = false;
 
   bodyicon: any = {
@@ -43,7 +46,15 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
       top: '9px',
       left: '8px'
     },
-    url: '/assets/images/icons/security/icon-security-policy.svg'
+    url: '/assets/images/icons/security/icon-security-policy-black.svg'
+  };
+
+  policyIcon: Icon = {
+    margin: {
+      top: '0px',
+      left: '0px',
+    },
+    svgIcon: 'policy'
   };
 
   // Current policy that is being displayed
@@ -58,21 +69,14 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   portFormControl: FormControl = new FormControl('', [
   ]);
 
-  sgPolicyRulesChunkUtility = new ArrayChunkUtility(false, []);
-  // Whether there is new data that isn't displayed in the table
-  hasUpdate: boolean = false;
   // Holds the policy rules that are currently displayed in the table
-  sgPolicyRulesLazy: ReadonlyArray<SecuritySGRuleWrapper[]> = [];
+  sgPolicyRules: ReadonlyArray<SecuritySGRuleWrapper[]> = [];
 
   constructor(protected _controllerService: ControllerService,
     private elRef: ElementRef,
     protected _securityService: SecurityService
   ) {
     super(_controllerService);
-  }
-
-  tableScroll(event) {
-    this.sgPolicyRulesLazy = this.sgPolicyRulesChunkUtility.requestChunk(event.first, event.first + event.rows);
   }
 
   ngOnInit() {
@@ -115,35 +119,18 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     // Adding our custom filter
     this.sgpolicyTurboTable.filterConstraints['ipSearch'] = this.ipSearch;
     this.viewInitComplete = true;
-    // Need to put into next cycle to prevent primeNG overriding
-    this.resizeTable(0);
   }
 
-  /**
-   * PrimeNG is currently not height responsive when using virtual scroll
-   * It's also calculating it's initial height before Flex Layout has time to take effect
-   * Whenever the page resizes we manually calculate and set the height.
-   * 
-   * Delay is the ms to wait before calculating the new dimensions
-   */
-  resizeTable(delay: number) {
-    // Set table to be container minus header
-    setTimeout(() => {
-      const $ = Utility.getJQuery();
-      const containerHeight = $('.sgpolicy-widget').outerHeight();
-      const headerHeight = $('.ui-table-caption').outerHeight();
-      const tableBodyHeader = $('.ui-table-scrollable-header').outerHeight();
-      const newHeight = containerHeight - headerHeight - tableBodyHeader;
-      $('.ui-table-scrollable-body').css('max-height', newHeight + 'px');
-    }, delay);
-  }
 
   /**
    * Component is about to exit
    */
   ngOnDestroy() {
-    // publish event that AppComponent is about to exist
+    // publish event that AppComponent is about to be destroyed
     this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'sgpolicyComponent', 'state': Eventtypes.COMPONENT_DESTROY });
+    this.subscriptions.forEach(subscription => {
+      subscription.unsubscribe();
+    });
   }
 
   /**
@@ -158,7 +145,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     this.loading = true;
     this.sgPoliciesEventUtility = new HttpEventUtility();
     this.sgPolicies = this.sgPoliciesEventUtility.array;
-    this._securityService.WatchSGPolicy().subscribe(
+    const subscription = this._securityService.WatchSGPolicy().subscribe(
       response => {
         const body: any = response.body;
         this.sgPoliciesEventUtility.processEvents(body);
@@ -166,20 +153,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
         if (this.sgPolicies.length > 0) {
           // Set sgpolicyrules
           this.selectedPolicy = new SecuritySGPolicy(this.sgPolicies[0]);
-          const rules: SecuritySGRuleWrapper[] = this.addOrderRanking(this.selectedPolicy.spec.rules);
-          this.sgPolicyRulesChunkUtility.updateData(rules, false);
-          // Auto update array if blank OR if we are at the top of the table (scroll is 0)
-          // We skip this if view hasn't been initialized for some reason
-          if (this.viewInitComplete) {
-            if (this.getTableScroll() === 0) {
-              // The last requested chunk should contain the default settings the table wants,
-              // as it should have been called in the virtual scroll event on table load
-              this.sgPolicyRulesChunkUtility.switchToNewData();
-              this.sgPolicyRulesLazy = this.sgPolicyRulesChunkUtility.getLastRequestedChunk();
-            } else {
-              this.hasUpdate = true;
-            }
-          }
+          this.sgPolicyRules = this.addOrderRanking(this.selectedPolicy.spec.rules);
         }
         this.loading = false;
       },
@@ -191,33 +165,21 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
           console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
       }
-    )
+    );
+    this.subscriptions.push(subscription);
   }
 
   /**
    * Returns the table's current scroll amount
    */
   getTableScroll() {
-    return this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scrollTop
-  }
-
-  /**
-   * Swithces to use new data and scrolls the table to the top
-   */
-  resetTableView() {
-    this.sgPolicyRulesChunkUtility.switchToNewData();
-    // If we are scrolled a lot, the scroll to the top will trigger the table
-    // to make a new request. If we are near the top though, it won't trigger so we 
-    // must load the new values
-    this.sgPolicyRulesLazy = this.sgPolicyRulesChunkUtility.getLastRequestedChunk();
-    this.hasUpdate = false;
-    this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scroll(0, 0);
+    return this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scrollTop;
   }
 
   /**
    * Adds a wrapper object around the rules to store ordering
    * so that they can easily be uniquely identified
-   * @param rules 
+   * @param rules
    */
   addOrderRanking(rules: ISecuritySGRule[]) {
     const retRules = [];
@@ -227,7 +189,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
           order: index,
           rule: rule
         }
-      )
+      );
     });
     return retRules;
   }

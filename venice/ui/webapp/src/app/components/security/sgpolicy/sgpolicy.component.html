@@ -2,7 +2,7 @@
   <!-- Since we are manually calculating table dimensions, whenever this panel changes
         state we need to recalculate the table -->
   <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel" [expanded]="true"
-        (closed)="resizeTable(500)" (opened)="resizeTable(500)">
+        (closed)="lazyRenderWrapper?.resizeTable(501)" (opened)="lazyRenderWrapper?.resizeTable(501)">
     <mat-expansion-panel-header class="sgpolicy-expansionpanel-header">
       <mat-panel-title class="sgpolicy-summary-panel-header">
         Security Policy Details
@@ -36,63 +36,59 @@
 
 <ng-template #DataTable>
   <div fxFlex class="sgpolicy-widget">
-    <p-table [columns]="cols" sortField="order" [value]="sgPolicyRulesLazy" dataKey="order" 
-            [rows]="28" [scrollable]="true" [virtualScroll]="true" scrollHeight="100%" #sgpolicyTable
-            class="global-primeng-table sgpolicy-table"  [responsive]="true" [loading]="loading" [resizableColumns]="true"
-            [lazy]="true" [totalRecords]="sgPolicyRulesChunkUtility.length"  (onLazyLoad)="tableScroll($event)"
-            [virtualRowHeight]="36" [virtualScrollDelay]="0" (sortFunction)="customSort($event)" [customSort]="true">
-      <!-- Table Caption -->
-      <ng-template pTemplate="caption">
-        <app-tableheader title="Policy Rules" [count]="sgpolicyTurboTable != null &&  sgpolicyTurboTable.hasFilter() ? sgpolicyTurboTable?.filteredValue?.length || 0 : null" [total]="sgPolicyRulesChunkUtility.length" [icon]="policyIcon">
-          <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center" >
-            Find Rule by: 
-            <mat-form-field fxFlex="nogrow" floatLabel="never">
-              <input matInput [formControl]="ipFormControl" placeholder="IP / IP Range" (input)="filterPolicyRules($event)">
-            </mat-form-field>
-            <mat-form-field fxFlex="nogrow" floatLabel="never" (input)="filterPolicyRules($event)">
-              <input matInput [formControl]="portFormControl" placeholder="Protocol / Port">
-            </mat-form-field>
-            <div fxFlex></div>
-            <mat-slide-toggle (change)="toggle($event)" fxFlex='nogrow' class="sgpolicy-table-toggle">Show Entire List</mat-slide-toggle>
-          </div>
-        </app-tableheader>
-          <div *ngIf="hasUpdate" class="sgpolicy-table-refresh">
-            <button mat-raised-button [disableRipple]="true" (click)="resetTableView()">
-              New Data
-              <mat-icon>refresh</mat-icon>
-            </button>
-          </div>
-      </ng-template>
-      <!-- Table Header -->
-      <ng-template pTemplate="header" let-columns>
-        <tr>
-          <!-- Holds the order number of the rule -->
-          <th style="width: 2.25em">
-          </th>
-          <th> Source IPs</th>
-          <th> Destination IPs</th>
-          <th> Action</th>
-          <th >Protocol / Ports</th>
-        </tr>
-      </ng-template>
-      <!-- Table Body -->
-      <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
-        <tr [ngClass] = "computeClass(rowData)" [pSelectableRow]="rowData">
-          <td class = "sgpolicy-rule-number" style="width: 2.25em">
-            {{ rowData.order }}
-          </td>
-          <td> 
-            {{  rowData.rule['from-ip-addresses'].join(', ') }}
-          </td>
-          <td> 
-            {{  rowData.rule['to-ip-addresses'].join(', ') }}
-          </td>
-          <td> {{rowData.rule.action}}</td>
-          <td> 
-            {{  rowData.rule['apps'].join(', ') }}
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+    <app-lazyrender [data]="sgPolicyRules" [rows]="28" [virtualRowHeight]="36">
+      <p-table [columns]="cols" sortField="order" dataKey="order" 
+              #sgpolicyTable
+              class="global-primeng-table sgpolicy-table"  [responsive]="true" 
+              [loading]="loading" [resizableColumns]="true"
+              (sortFunction)="customSort($event)" [customSort]="true">
+        <!-- Table Caption -->
+        <ng-template pTemplate="caption">
+          <app-tableheader title="Policy Rules" [count]="sgpolicyTurboTable != null &&  sgpolicyTurboTable.hasFilter() ? sgpolicyTurboTable?.filteredValue?.length || 0 : null" [total]="sgPolicyRules.length" [icon]="policyIcon">
+            <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center" >
+              Find Rule by: 
+              <mat-form-field fxFlex="nogrow" floatLabel="never">
+                <input matInput [formControl]="ipFormControl" placeholder="IP / IP Range" (input)="filterPolicyRules($event)">
+              </mat-form-field>
+              <mat-form-field fxFlex="nogrow" floatLabel="never" (input)="filterPolicyRules($event)">
+                <input matInput [formControl]="portFormControl" placeholder="Protocol / Port">
+              </mat-form-field>
+              <div fxFlex></div>
+              <mat-slide-toggle (change)="toggle($event)" fxFlex='nogrow' class="sgpolicy-table-toggle">Show Entire List</mat-slide-toggle>
+            </div>
+          </app-tableheader>
+        </ng-template>
+        <!-- Table Header -->
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <!-- Holds the order number of the rule -->
+            <th style="width: 2.25em">
+            </th>
+            <th> Source IPs</th>
+            <th> Destination IPs</th>
+            <th> Action</th>
+            <th >Protocol / Ports</th>
+          </tr>
+        </ng-template>
+        <!-- Table Body -->
+        <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+          <tr [ngClass] = "computeClass(rowData)" [pSelectableRow]="rowData">
+            <td class = "sgpolicy-rule-number" style="width: 2.25em">
+              {{ rowData.order }}
+            </td>
+            <td> 
+              {{  rowData.rule['from-ip-addresses'].join(', ') }}
+            </td>
+            <td> 
+              {{  rowData.rule['to-ip-addresses'].join(', ') }}
+            </td>
+            <td> {{rowData.rule.action}}</td>
+            <td> 
+              {{  rowData.rule['apps'].join(', ') }}
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-lazyrender>
   </div>
 </ng-template>

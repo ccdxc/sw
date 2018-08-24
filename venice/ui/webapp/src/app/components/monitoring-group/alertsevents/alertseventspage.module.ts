@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { AlertseventsComponent } from '@app/components/monitoring-group/alertsevents/alertsevents.component';
-import { AlertsEventsRoutingModule } from '@app/components/monitoring-group/alertsevents/alertsevents.route';
+import { AlertseventspageComponent } from '@app/components/monitoring-group/alertsevents/alertseventspage.component';
+import { AlertsEventsPageRoutingModule } from '@app/components/monitoring-group/alertsevents/alertseventspage.route';
 /**-----
  Venice UI -  imports
  ------------------*/
@@ -20,9 +20,9 @@ import { PrimengModule } from '@lib/primeng.module';
     FlexLayoutModule,
     MaterialdesignModule,
 
-    AlertsEventsRoutingModule,
+    AlertsEventsPageRoutingModule,
     SharedModule
   ],
-  declarations: [AlertseventsComponent]
+  declarations: [AlertseventspageComponent]
 })
-export class AlertsEventsModule { }
+export class AlertsEventsPageModule { }

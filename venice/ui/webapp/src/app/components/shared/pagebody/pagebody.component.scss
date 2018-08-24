@@ -10,10 +10,12 @@
      *  This was observed on the troubleshooting page.
      */
     box-shadow: 0 1px #bdbdbd;
+    overflow-x: hidden;
 }
 
 .pagebody-header {
     height: 48px;
+    border-bottom: solid 1px;
 }
 
 .pagebody-headercontent {
@@ -34,5 +36,11 @@
 /* avoid UI issue of having uncessary space gap */
 .pagebody-content {
     height: 100%;
-    overflow: auto;
+    width: calc(100% - 17px);
+}
+
+.pagebody-content-container {
+    height: 100%;
+    width: calc(100% + 17px);
+    overflow-y: scroll;
 }

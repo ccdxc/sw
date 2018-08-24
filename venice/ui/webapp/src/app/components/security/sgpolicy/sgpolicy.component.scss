@@ -2,6 +2,7 @@
 
 .sgpolicy-widget {
   @include primary-font;
+  overflow: hidden;
 }
 
 .sgpolicyrecord-icon {

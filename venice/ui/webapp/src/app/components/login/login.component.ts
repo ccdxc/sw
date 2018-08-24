@@ -22,6 +22,10 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
   successMessage = '';
   errorMessage = '';
   returnUrl: string;
+  // Used to ensure we are only sending one request at a
+  // time. Otherwise the key we store for the user will be outdated
+  // due to the second request.
+  loginInProgress: boolean = false;
 
 
 
@@ -75,6 +79,10 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
   * We are using anulgar ngRX store/effect. When login, we have the store to dispatch an action
   */
   login(): any {
+    if (this.loginInProgress) {
+      return;
+    }
+    this.loginInProgress = true;
     const payload = {
       username: this.credentials.username,
       password: this.credentials.password,
@@ -84,11 +92,14 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
   }
 
   onLoginFailure(errPayload) {
+    this.loginInProgress = false;
     this.successMessage = '';
     this.errorMessage = this.getErrorMessage(errPayload);
   }
 
   onLoginSuccess(payload) {
+    // Not setting loginInProgress back to false because we should be getting redirected
+    // and this component will be destroyed.
     this._controllerService.LoginUserInfo = (payload['body']) ? payload['body'] : payload;
     this._controllerService.LoginUserInfo[Utility.XSRF_NAME] = (payload.headers) ? payload.headers.get(Utility.XSRF_NAME) : '';
     const redirect = this._authService.redirectUrl ? this._authService.redirectUrl : '/dashboard';

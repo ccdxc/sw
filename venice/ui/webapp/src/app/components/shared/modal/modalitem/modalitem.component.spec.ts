@@ -10,7 +10,7 @@ describe('ModalitemComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [ModalitemComponent],
-      imports: [MaterialdesignModule,]
+      imports: [MaterialdesignModule, ]
     })
       .compileComponents();
   }));

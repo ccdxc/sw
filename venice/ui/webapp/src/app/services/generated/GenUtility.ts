@@ -91,10 +91,20 @@ export class GenServiceUtility {
   public invokeAJAX(method: string, url: string, payload: any,
                        eventPayloadID: any, isOnline: boolean = false): Observable<VeniceResponse> {
     // Removing time fields as null values will be attempted to be parsed
-    if (payload != null && payload.meta != null) {
-      delete payload.meta['creation-time'];
-      delete payload.meta['mod-time'];
+    if (payload != null) {
+      if (payload.meta != null) {
+        delete payload.meta['creation-time'];
+        delete payload.meta['mod-time'];
+      }
+      // Removing time fields from api list watch options
+      if (payload['creation-time'] == null) {
+        delete payload['creation-time'];
+      }
+      if (payload['mod-time'] == null) {
+        delete payload['mod-time'];
+      }
     }
+
     const eventPayload = { 'ajax': 'start', 'method': method, 'name': eventPayloadID + '-ajax', 'url': url };
     this.ajaxStartCallback(eventPayload);
 
