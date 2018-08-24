@@ -210,6 +210,7 @@ typedef struct collector_config_s {
     uint16_t            protocol;
     uint16_t            dport;
     uint32_t            template_id;
+    uint32_t            export_intvl;
     export_formats_en   format;
 } collector_config_t;
 

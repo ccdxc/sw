@@ -194,6 +194,18 @@ telemetry_export_dest_init(telemetry_export_dest_t *d, uint16_t id)
 }
 
 void
+telemetry_export_dest_get_mac (telemetry_export_dest_t *d,
+                               collector_config_t *cfg, bool src)
+{
+    if (src) {
+        memcpy(cfg->src_mac, d->ipfix_hdr.vlan.smac, sizeof(uint8_t) * ETH_ADDR_LEN);
+    } else {
+        memcpy(cfg->dest_mac, d->ipfix_hdr.vlan.dmac, sizeof(uint8_t) * ETH_ADDR_LEN);
+    }
+    return;
+}
+
+void
 telemetry_export_dest_set_mac(telemetry_export_dest_t *d, mac_addr_t in,
                               bool src)
 {
@@ -203,6 +215,20 @@ telemetry_export_dest_set_mac(telemetry_export_dest_t *d, mac_addr_t in,
         memcpy(d->ipfix_hdr.vlan.dmac, in, sizeof(uint8_t) * ETH_ADDR_LEN);
     }
     return;
+}
+
+hal_ret_t
+telemetry_export_dest_get_ip (telemetry_export_dest_t *d,
+                              collector_config_t *cfg, bool src)
+{
+    if (src) {
+        cfg->src_ip.af = IP_AF_IPV4;
+        cfg->src_ip.addr.v4_addr = ntohl(d->ipfix_hdr.iphdr.saddr);
+    } else {
+        cfg->dst_ip.af = IP_AF_IPV4;
+        cfg->dst_ip.addr.v4_addr = ntohl(d->ipfix_hdr.iphdr.daddr);
+    }
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -277,7 +303,6 @@ pd_collector_create(pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR(" Already exists Id {}", cfg->collector_id );
         return HAL_RET_INVALID_ARG;
     }
-    export_destinations[cfg->collector_id] = *d;
     telemetry_export_dest_init(d, cfg->collector_id);
 
     args.l2seg = cfg->l2seg;
@@ -295,6 +320,8 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     d->ipfix_hdr.iphdr.ttl = 64;
     d->ipfix_hdr.udphdr.sport = htons(32007);
     d->ipfix_hdr.udphdr.dport = htons(cfg->dport);
+    d->template_id = cfg->template_id;
+    d->export_intvl = cfg->export_intvl;
     d->valid = true;
     telemetry_export_dest_set_ip(d, cfg->src_ip, true);
     telemetry_export_dest_set_ip(d, cfg->dst_ip, false);
@@ -313,6 +340,33 @@ pd_collector_delete(pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_collector_get(pd_func_args_t *pd_func_args)
 {
+    pd_collector_get_args_t          *c_args;
+    collector_config_t                  *cfg;
+    telemetry_export_dest_t             *d;
+
+    c_args = pd_func_args->pd_collector_get;
+    cfg = c_args->cfg;
+    HAL_TRACE_DEBUG("{}: CollectorID {}", __FUNCTION__, cfg->collector_id);
+
+    if (cfg->collector_id >= (TELEMETRY_NUM_EXPORT_DEST)) {
+        HAL_TRACE_ERR(" invalid Id {}", cfg->collector_id );
+        return HAL_RET_INVALID_ARG;
+    }
+
+    d = &export_destinations[cfg->collector_id];
+    if (!d->valid) {
+        HAL_TRACE_ERR("Collector does not exist: Id {}", cfg->collector_id);
+        return HAL_RET_INVALID_ARG;
+    }
+    cfg->vlan = d->ipfix_hdr.vlan.vlan_tag;
+    cfg->dport = ntohs(d->ipfix_hdr.udphdr.dport);
+    cfg->template_id = d->template_id;
+    cfg->export_intvl = d->export_intvl;
+    telemetry_export_dest_get_ip(d, cfg, true);
+    telemetry_export_dest_get_ip(d, cfg, false);
+    telemetry_export_dest_get_mac(d, cfg, true);
+    telemetry_export_dest_get_mac(d, cfg, false);
+
     return HAL_RET_OK;
 }
 

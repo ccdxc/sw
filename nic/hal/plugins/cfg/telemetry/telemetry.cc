@@ -286,7 +286,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
             cfg.format = EXPORT_FORMAT_NETFLOW9;
             break;
         default:
-            HAL_TRACE_DEBUG("PI-Collector:{}: Unknown format type {}", __FUNCTION__, spec.template_id());
+            HAL_TRACE_DEBUG("PI-Collector:{}: Unknown format type {}", __FUNCTION__, spec.format());
             rsp->set_api_status(types::API_STATUS_INVALID_ARG);
             return HAL_RET_INVALID_ARG;
     }
