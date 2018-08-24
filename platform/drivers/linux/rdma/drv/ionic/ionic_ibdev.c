@@ -111,9 +111,13 @@ static int ionic_sqhbm_order = 0; /* XXX needs tuning */
 module_param_named(sqhbm_order, ionic_sqhbm_order, int, 0644);
 MODULE_PARM_DESC(sqhbm_order, "Only alloc sq hbm less than order.");
 
-static struct workqueue_struct *ionic_workq;
+/* work queue for handling network events, managing ib devices */
+static struct workqueue_struct *ionic_dev_workq;
 
-/* access single-threaded thru ionic_workq cpu 0 */
+/* work queue for polling the event queue and admin cq */
+static struct workqueue_struct *ionic_evt_workq;
+
+/* access single-threaded thru ionic_dev_workq */
 static LIST_HEAD(ionic_ibdev_list);
 
 static int ionic_validate_udata(struct ib_udata *udata,
@@ -719,14 +723,14 @@ cq_next:
 	if (old_prod != cq->q.prod) {
 		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
 				 ionic_queue_dbell_val(&cq->q));
-		queue_work(ionic_workq, &dev->admin_work);
+		queue_work(ionic_evt_workq, &dev->admin_work);
 	} else if (!dev->admin_armed) {
 		dev->admin_armed = true;
 		cq->arm_any_prod = ionic_queue_next(&cq->q, cq->arm_any_prod);
 		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
 				 cq->q.dbell | IONIC_DBELL_RING_ARM |
 				 cq->arm_any_prod);
-		queue_work(ionic_workq, &dev->admin_work);
+		queue_work(ionic_evt_workq, &dev->admin_work);
 	}
 
 	if (dev->admin_state != IONIC_ADMIN_ACTIVE)
@@ -761,7 +765,7 @@ cq_next:
 
 	/* XXX work around event queue */
 	if (!ionic_queue_empty(&aq->q))
-		queue_work(ionic_workq, &dev->admin_work);
+		queue_work(ionic_evt_workq, &dev->admin_work);
 }
 
 static void ionic_admin_work(struct work_struct *ws)
@@ -5035,7 +5039,7 @@ static void ionic_poll_eq_work(struct work_struct *work)
 
 	if (npolled) {
 		ionic_intr_credits(eq->dev, eq->intr, npolled);
-		queue_work(ionic_workq, &eq->work);
+		queue_work(ionic_evt_workq, &eq->work);
 	} else {
 		xchg(&eq->armed, true);
 		ionic_intr_credits(eq->dev, eq->intr, IONIC_INTR_CRED_UNMASK);
@@ -5056,7 +5060,7 @@ static irqreturn_t ionic_poll_eq_isr(int irq, void *eqptr)
 	npolled = ionic_poll_eq(eq, ionic_eq_isr_budget);
 
 	ionic_intr_credits(eq->dev, eq->intr, npolled);
-	queue_work(ionic_workq, &eq->work);
+	queue_work(ionic_evt_workq, &eq->work);
 
 	return IRQ_HANDLED;
 }
@@ -5219,7 +5223,7 @@ static void ionic_rdma_admincq_comp(struct ib_cq *ibcq, void *cq_context)
 	spin_lock_irqsave(&dev->admin_lock, irqflags);
 	dev->admin_armed = false;
 	if (dev->admin_state < IONIC_ADMIN_KILLED)
-		queue_work(ionic_workq, &dev->admin_work);
+		queue_work(ionic_evt_workq, &dev->admin_work);
 	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
 }
 
@@ -6075,7 +6079,7 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 	work->ndev = ndev;
 	work->lif = lif;
 
-	queue_work_on(0, ionic_workq, &work->ws);
+	queue_work(ionic_dev_workq, &work->ws);
 
 out:
 	return NOTIFY_DONE;
@@ -6095,10 +6099,16 @@ static int __init ionic_mod_init(void)
 
 	pr_info("%s v%s : %s\n", DRIVER_NAME, DRIVER_VERSION, DRIVER_DESCRIPTION);
 
-	ionic_workq = create_workqueue(DRIVER_NAME);
-	if (!ionic_workq) {
+	ionic_dev_workq = create_singlethread_workqueue(DRIVER_NAME "-dev");
+	if (!ionic_dev_workq) {
 		rc = -ENOMEM;
-		goto err_workq;
+		goto err_dev_workq;
+	}
+
+	ionic_evt_workq = create_workqueue(DRIVER_NAME "-evt");
+	if (!ionic_evt_workq) {
+		rc = -ENOMEM;
+		goto err_evt_workq;
 	}
 
 	rc = register_netdevice_notifier(&ionic_netdev_notifier);
@@ -6108,8 +6118,10 @@ static int __init ionic_mod_init(void)
 	return 0;
 
 err_notifier:
-	destroy_workqueue(ionic_workq);
-err_workq:
+	destroy_workqueue(ionic_evt_workq);
+err_evt_workq:
+	destroy_workqueue(ionic_dev_workq);
+err_dev_workq:
 	return rc;
 }
 
@@ -6131,11 +6143,12 @@ static void __exit ionic_mod_exit(void)
 	unregister_netdevice_notifier(&ionic_netdev_notifier);
 
 	INIT_WORK_ONSTACK(&ws, ionic_exit_work);
-	queue_work_on(0, ionic_workq, &ws);
+	queue_work(ionic_dev_workq, &ws);
 	flush_work(&ws);
 	destroy_work_on_stack(&ws);
 
-	destroy_workqueue(ionic_workq);
+	destroy_workqueue(ionic_evt_workq);
+	destroy_workqueue(ionic_dev_workq);
 }
 
 module_init(ionic_mod_init);
