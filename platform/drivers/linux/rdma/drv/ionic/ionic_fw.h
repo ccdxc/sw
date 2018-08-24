@@ -466,7 +466,9 @@ struct ionic_v1_admin_wqe {
 		} stats;
 		struct {
 			__le64		dma_addr;
-			__u8		rsvd[48];
+			__le32		length;
+			__le32		pd_id;
+			__u8		rsvd[40];
 		} ah;
 		struct {
 			__le64		va;
@@ -584,6 +586,8 @@ enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_CREATE_QP,
 	IONIC_V1_ADMIN_MODIFY_QP,
 	IONIC_V1_ADMIN_DESTROY_QP,
+	IONIC_V1_ADMIN_CREATE_AH,
+	IONIC_V1_ADMIN_DESTROY_AH,
 
 	/* TODO: move ops up as they are assigned and implemented */
 	IONIC_V1_ADMIN_NOT_IMPLEMENTED = 100,

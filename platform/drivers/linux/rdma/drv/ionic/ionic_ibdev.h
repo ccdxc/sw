@@ -113,7 +113,7 @@ struct ionic_ibdev {
 	struct tbl_root		qp_tbl;
 	struct tbl_root		cq_tbl;
 
-	struct mutex		inuse_lock; /* for id reservation */
+	spinlock_t		inuse_lock; /* for id reservation */
 
 	unsigned long		*inuse_pdid;
 	u32			size_pdid;
