@@ -189,29 +189,4 @@ static inline bool ionic_ibop_is_local(enum ibv_wr_opcode op)
 	return op == IBV_WR_LOCAL_INV || op == IBV_WR_BIND_MW;
 }
 
-static inline int ionic_ibop_to_wc(enum ibv_wr_opcode op)
-{
-	switch (op) {
-	case IBV_WR_SEND:
-	case IBV_WR_SEND_WITH_IMM:
-	case IBV_WR_SEND_WITH_INV:
-		return IBV_WC_SEND;
-	case IBV_WR_RDMA_WRITE:
-	case IBV_WR_RDMA_WRITE_WITH_IMM:
-		return IBV_WC_RDMA_WRITE;
-	case IBV_WR_RDMA_READ:
-		return IBV_WC_RDMA_READ;
-	case IBV_WR_ATOMIC_CMP_AND_SWP:
-		return IBV_WC_COMP_SWAP;
-	case IBV_WR_ATOMIC_FETCH_AND_ADD:
-		return IBV_WC_FETCH_ADD;
-	case IBV_WR_BIND_MW:
-		return IBV_WC_BIND_MW;
-	case IBV_WR_LOCAL_INV:
-		return IBV_WC_LOCAL_INV;
-	default:
-		return -1;
-	}
-}
-
 #endif /* IONIC_H */

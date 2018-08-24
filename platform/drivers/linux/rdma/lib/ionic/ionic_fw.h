@@ -380,11 +380,9 @@ static inline int ionic_v1_recv_wqe_max_sge(uint8_t stride_log2)
 
 /* XXX to end of file: makeshift, will be removed */
 
-/* XXX makeshift, moved here from ionic-abi.h */
-
-#define IONIC_FULL_FLAG_DELTA        0x80
-
-#define IONIC_WR_OPCODE_MASK        0xF
+#define OP_TYPE_RDMA_OPER_WITH_IMM	16
+#define OP_TYPE_SEND_RCVD		17
+#define OP_TYPE_INVALID			18
 
 enum ionic_wr_opcode {
 	IONIC_WR_OPCD_SEND		    = 0x00,
@@ -402,8 +400,6 @@ enum ionic_wr_opcode {
     
 	IONIC_WR_OPCD_INVAL		    = 0x0F
 };
-
-#define IONIC_MAX_INLINE_SIZE		0x100
 
 struct sqwqe_base_t {
     __u64 wrid;
@@ -465,105 +461,5 @@ struct sqwqe_t {
         struct sqwqe_non_atomic_t non_atomic;
     }u;
 }__attribute__ ((__packed__));
-
-/* XXX makeshift, moved to here from ionic.h */
-
-static inline uint8_t ibv_to_ionic_wr_opcd(uint8_t ibv_opcd)
-{
-	uint8_t bnxt_opcd;
-
-	switch (ibv_opcd) {
-	case IBV_WR_SEND:
-		bnxt_opcd = IONIC_WR_OPCD_SEND;
-		break;
-	case IBV_WR_SEND_WITH_IMM:
-		bnxt_opcd = IONIC_WR_OPCD_SEND_IMM;
-		break;
-	case IBV_WR_RDMA_WRITE:
-		bnxt_opcd = IONIC_WR_OPCD_RDMA_WRITE;
-		break;
-	case IBV_WR_RDMA_WRITE_WITH_IMM:
-		bnxt_opcd = IONIC_WR_OPCD_RDMA_WRITE_IMM;
-		break;
-	case IBV_WR_RDMA_READ:
-		bnxt_opcd = IONIC_WR_OPCD_RDMA_READ;
-		break;
-	case IBV_WR_ATOMIC_CMP_AND_SWP:
-		bnxt_opcd = IONIC_WR_OPCD_ATOMIC_CS;
-		break;
-	case IBV_WR_ATOMIC_FETCH_AND_ADD:
-		bnxt_opcd = IONIC_WR_OPCD_ATOMIC_FA;
-		break;
-		/* TODO: Add other opcodes */
-	default:
-		bnxt_opcd = IONIC_WR_OPCD_INVAL;
-		break;
-	};
-
-	return bnxt_opcd;
-}
-
-static inline void ionic_set_ibv_send_flags(int flags, struct sqwqe_t *wqe)
-{
-	if (flags & IBV_SEND_FENCE) {
-		wqe->base.fence = 1;
-	}
-	if (flags & IBV_SEND_SOLICITED) {
-		wqe->base.solicited_event = 1;
-	}
-	if (flags & IBV_SEND_INLINE) {
-		wqe->base.inline_data_vld = 1;
-	}
-	if (flags & IBV_SEND_SIGNALED) {
-		wqe->base.complete_notify = 1;
-	}
-}
-
-static inline uint8_t ionic_ibv_wr_to_wc_opcd(uint8_t wr_opcd)
-{
-	uint8_t wc_opcd;
-
-	switch (wr_opcd) {
-	case IBV_WR_SEND_WITH_IMM:
-	case IBV_WR_SEND:
-		wc_opcd = IBV_WC_SEND;
-		break;
-	case IBV_WR_RDMA_WRITE_WITH_IMM:
-	case IBV_WR_RDMA_WRITE:
-		wc_opcd = IBV_WC_RDMA_WRITE;
-		break;
-	case IBV_WR_RDMA_READ:
-		wc_opcd = IBV_WC_RDMA_READ;
-		break;
-	case IBV_WR_ATOMIC_CMP_AND_SWP:
-		wc_opcd = IBV_WC_COMP_SWAP;
-		break;
-	case IBV_WR_ATOMIC_FETCH_AND_ADD:
-		wc_opcd = IBV_WC_FETCH_ADD;
-		break;
-	default:
-		wc_opcd = 0xFF;
-		break;
-	}
-
-	return wc_opcd;
-}
-
-#define OP_TYPE_SEND			0
-#define OP_TYPE_SEND_INV		1
-#define OP_TYPE_SEND_IMM		2
-#define OP_TYPE_READ			3
-#define OP_TYPE_WRITE			4
-#define OP_TYPE_WRITE_IMM		5
-#define OP_TYPE_CMP_N_SWAP		6
-#define OP_TYPE_FETCH_N_ADD		7
-#define OP_TYPE_FRPNR			8
-#define OP_TYPE_LOCAL_INV		9
-#define OP_TYPE_BIND_MW			10
-#define OP_TYPE_SEND_INV_IMM		11 // vendor specific
-
-#define OP_TYPE_RDMA_OPER_WITH_IMM	16
-#define OP_TYPE_SEND_RCVD		17
-#define OP_TYPE_INVALID			18
 
 #endif
