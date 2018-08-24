@@ -8,11 +8,22 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define PHV_GLOBAL_COMMON_P phv_global_common
 
 #define AQCB_TO_CQ_P t2_s2s_aqcb_to_cq_info
+#define AQCB_TO_WQE_P t3_s2s_aqcb_to_wqe_info
+    
+#define K_OP k.{rdma_aq_feedback_op_sbit0_ebit6,rdma_aq_feedback_op_sbit7_ebit7}
+#define K_PD k.{rdma_aq_feedback_qp_pd_sbit0_ebit15,rdma_aq_feedback_qp_pd_sbit16_ebit31}
+#define K_RQ_MAP_COUNT k.{rdma_aq_feedback_qp_rq_map_count_sbit0_ebit7,rdma_aq_feedback_qp_rq_map_count_sbit8_ebit31}
+#define K_RQ_DMA_ADDR k.{rdma_aq_feedback_qp_rq_dma_addr_sbit0_ebit15...rdma_aq_feedback_qp_rq_dma_addr_sbit48_ebit63}
 
+#define K_RQ_ID k.{rdma_aq_feedback_qp_rq_id_sbit0_ebit15,rdma_aq_feedback_qp_rq_id_sbit16_ebit23}
+#define K_RQ_MAP_COUNT k.{rdma_aq_feedback_qp_rq_map_count_sbit0_ebit7,rdma_aq_feedback_qp_rq_map_count_sbit8_ebit31}
+    
 %%
 
-    .param    rdma_aq_rx_cqcb_process
-
+    .param      rdma_aq_rx_cqcb_process
+    .param      rdma_aq_rx_wqe_process
+    .param      rdma_resp_rx_stage0
+    .param      dummy
 .align
 rdma_aq_rx_aqcb_process:
 
@@ -21,10 +32,13 @@ rdma_aq_rx_aqcb_process:
     CAPRI_SET_TABLE_0_VALID(0) //BD Slot
 
 process_feedback:
-
-    seq            c1, k.rdma_aq_feedback_feedback_type, RDMA_AQ_FEEDBACK
-    bcf            [!c1], exit
-
+    
+    seq         c1, k.rdma_aq_feedback_feedback_type, RDMA_AQ_FEEDBACK
+    bcf         [!c1], exit
+    
+    seq         c1, K_OP, AQ_OP_TYPE_CREATE_QP
+    bcf         [c1], create_qp
+    
 aq_feedback:
     
     #CQCB is loaded by req_rx and resp_rx flows in stage-5, table-2 for mutual
@@ -53,5 +67,57 @@ aq_feedback:
 
 exit:
     phvwr.e       p.common.p4_intr_global_drop, 1   
-    nop //Exit Slot
+    nop         //Exit Slot
 
+create_qp: 
+
+    phvwr       p.{rqcb0.intrinsic.host_rings, rqcb0.intrinsic.total_rings}, (MAX_RQ_RINGS<<4|MAX_RQ_RINGS)
+
+    //          TODO: For now setting it to RTS, but later change it to INIT
+    // state. modify_qp is supposed to set it to RTR and RTS.
+    phvwr       p.rqcb0.state, QP_STATE_RTS
+
+        //TODO: RQ in HBM still need to be implemented
+
+    phvwr       p.rqcb0.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0]
+    phvwrpair       p.rqcb0.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb0.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0]
+    phvwr       p.rqcb0.serv_type, k.rdma_aq_feedback_qp_rq_type_state
+
+    //RQCB1
+
+    phvwr       p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state
+    phvwrpair       p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RTS
+    phvwrpair       p.rqcb1.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb1.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0]
+    phvwrpair       p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state[2:0], p.rqcb1.pd, K_PD
+    phvwr       p.rqcb1.cq_id, k.rdma_aq_feedback_qp_rq_cq_id
+
+    //RQCB2
+    
+    phvwrpair       p.rqcb2.rnr_timeout, 0xb, p.rqcb2.pd, K_PD
+
+    //          TODO: Move RSQ/RRQ allocation to modify_qp frm create_qp
+    //          TODO: Move pmtu setup to modify_qp
+    
+    //populate the PC in RQCB0, RQCB1
+    addi        r4, r0, rdma_resp_rx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    addi        r3, r0, dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    sub         r4, r4, r3
+    phvwr       p.rqcb0.intrinsic.pc, r4
+    phvwr       p.rqcb1.pc, r4
+
+
+    /*
+     * We do not have access to RQCB base address as well as PT base address, so
+     * do the rest of the create_qp work (setting up DMA of RQCB & RQPT) in
+     * stage1.
+     */
+    CAPRI_RESET_TABLE_3_ARG() //BD Slot
+    phvwrpair       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_id), K_RQ_ID, CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_tbl_index), k.rdma_aq_feedback_qp_rq_tbl_index
+    phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_map_count), K_RQ_MAP_COUNT
+    phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_dma_addr), K_RQ_DMA_ADDR
+
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_wqe_process, r0) 
+
+    b           aq_feedback
+    nop
+    

@@ -125,6 +125,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     rx_args.pt_base_addr_page_id = entry_p->pt_base_addr_page_id;
     rx_args.log_num_pt_entries = entry_p->log_num_pt_entries;
     rx_args.cqcb_base_addr_hi = entry_p->cqcb_base_addr_hi;
+    rx_args.sqcb_base_addr_hi = entry_p->sqcb_base_addr_hi;
+    rx_args.rqcb_base_addr_hi = entry_p->rqcb_base_addr_hi;    
     rx_args.log_num_cq_entries = entry_p->log_num_cq_entries;
     rx_args.prefetch_pool_base_addr_page_id = entry_p->prefetch_pool_base_addr_page_id;
     rx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
@@ -150,6 +152,8 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     tx_args.rrq_base_addr_page_id = entry_p->rrq_base_addr_page_id;
     tx_args.rsq_base_addr_page_id = entry_p->rsq_base_addr_page_id;
     tx_args.cqcb_base_addr_hi = entry_p->cqcb_base_addr_hi;
+    tx_args.sqcb_base_addr_hi = entry_p->sqcb_base_addr_hi;
+    tx_args.rqcb_base_addr_hi = entry_p->rqcb_base_addr_hi;    
     tx_args.log_num_cq_entries = entry_p->log_num_cq_entries;
     tx_args.prefetch_pool_base_addr_page_id = entry_p->prefetch_pool_base_addr_page_id;
     tx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
@@ -188,6 +192,8 @@ rdma_rx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
     entry_p->pt_base_addr_page_id = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.pt_base_addr_page_id;
     entry_p->log_num_pt_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_pt_entries;
     entry_p->cqcb_base_addr_hi = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.cqcb_base_addr_hi;
+    entry_p->sqcb_base_addr_hi = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.sqcb_base_addr_hi;
+    entry_p->rqcb_base_addr_hi = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.rqcb_base_addr_hi;    
     entry_p->log_num_cq_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_cq_entries;
     entry_p->prefetch_pool_base_addr_page_id = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id;
     entry_p->log_num_prefetch_pool_entries = data.rx_stage0_rdma_params_table_action_u.rx_stage0_rdma_params_table_rx_stage0_load_rdma_params.log_num_prefetch_pool_entries;
@@ -215,6 +221,8 @@ rdma_tx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
     entry_p->pt_base_addr_page_id = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.pt_base_addr_page_id;
     entry_p->log_num_pt_entries = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.log_num_pt_entries;
     entry_p->cqcb_base_addr_hi = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.cqcb_base_addr_hi;
+    entry_p->sqcb_base_addr_hi = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.sqcb_base_addr_hi;
+    entry_p->rqcb_base_addr_hi = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.rqcb_base_addr_hi;
     entry_p->log_num_cq_entries = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.log_num_cq_entries;
     entry_p->prefetch_pool_base_addr_page_id = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id;
     entry_p->log_num_prefetch_pool_entries = data.tx_stage0_rdma_params_table_action_u.tx_stage0_rdma_params_table_tx_stage0_load_rdma_params.log_num_prefetch_pool_entries;
@@ -298,6 +306,8 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     uint32_t            max_rqps, max_sqps;
     uint32_t            max_rd_atomic, max_dest_rd_atomic;
     uint64_t            cq_base_addr; //address in HBM memory
+    uint64_t            sq_base_addr; //address in HBM memory
+    uint64_t            rq_base_addr; //address in HBM memory
     uint64_t            pad_size;
     hal_ret_t           rc;
 
@@ -336,7 +346,20 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     sram_lif_entry.cqcb_base_addr_hi = cq_base_addr >> CQCB_ADDR_HI_SHIFT;
     sram_lif_entry.log_num_cq_entries = log2(roundup_to_pow_2(max_cqs));
 
+    // Fill the SQ info in sram_lif_entry
+    sq_base_addr = lif_manager()->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
+    HAL_TRACE_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}",
+                    __FUNCTION__, __LINE__, lif, sq_base_addr);
+    HAL_ASSERT((sq_base_addr & ((1 << SQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
 
+    // Fill the RQ info in sram_lif_entry
+    rq_base_addr = lif_manager()->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
+    HAL_TRACE_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}",
+                    __FUNCTION__, __LINE__, lif, rq_base_addr);
+    HAL_ASSERT((rq_base_addr & ((1 << RQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
+    
     // Setup page table and key table entries
     max_pt_entries = roundup_to_pow_2(max_pt_entries);
 

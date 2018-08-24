@@ -127,7 +127,9 @@ class RDMAManager {
 #define HBM_SQ_BASE_ADDR_SHIFT 3
 #define HBM_RQ_BASE_ADDR_SHIFT 3
 #define CQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
-
+#define SQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
+#define RQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
+    
 // all the page_ids are encoded as 22-bits, assuming 4K page size (12-bits)
 // appropriate shift will make 34-bit (22+12) hbm address.
 typedef struct sram_lif_entry_s {
@@ -139,6 +141,9 @@ typedef struct sram_lif_entry_s {
     uint32_t rsq_base_addr_page_id:22;
 
     uint32_t cqcb_base_addr_hi:24;
+    uint32_t sqcb_base_addr_hi:24;
+    uint32_t rqcb_base_addr_hi:24;    
+    
     uint32_t log_num_cq_entries:5;
 
     uint32_t prefetch_pool_base_addr_page_id:22;
@@ -1413,7 +1418,7 @@ typedef struct eqcb_s {
 #define MAX_AQ_HOST_RINGS 1
     
 typedef struct aqcb_s {
-    uint8_t  pad[20];
+    uint8_t  pad[24];
 
     uint64_t cqcb_addr;
     
@@ -1431,7 +1436,7 @@ typedef struct aqcb_s {
 
     uint16_t proxy_pindex;
 
-    qpcb_ring_t           rings[MAX_CQ_RINGS];
+    qpcb_ring_t           rings[MAX_AQ_RINGS];
     qpcb_intrinsic_base_t ring_header;
 } aqcb_t;
     

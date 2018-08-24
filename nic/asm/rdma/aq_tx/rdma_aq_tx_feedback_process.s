@@ -12,8 +12,8 @@ struct aq_tx_s5_t3_k k;
     
 #define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
-#define K_CQ_NUM CAPRI_KEY_RANGE(IN_TO_S_P, cq_num_sbit0_ebit1, cq_num_sbit18_ebit23)
- 
+#define K_CQ_NUM CAPRI_KEY_FIELD(IN_TO_S_P, cq_num)
+    
 %%
 
     .param      dummy

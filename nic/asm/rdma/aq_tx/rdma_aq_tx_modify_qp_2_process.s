@@ -13,9 +13,9 @@ struct aq_tx_s2_t0_k k;
     
 #define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
-#define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit3, ah_base_addr_page_id_sbit20_ebit21)
-#define K_RRQ_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, rrq_base_addr_page_id_sbit0_ebit5, rrq_base_addr_page_id_sbit6_ebit21)
-#define K_RSQ_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, rsq_base_addr_page_id_sbit0_ebit15, rsq_base_addr_page_id_sbit16_ebit21)
+#define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit15, ah_base_addr_page_id_sbit16_ebit21)
+#define K_RRQ_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, rrq_base_addr_page_id_sbit0_ebit1, rrq_base_addr_page_id_sbit18_ebit21)
+#define K_RSQ_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, rsq_base_addr_page_id_sbit0_ebit3, rsq_base_addr_page_id_sbit20_ebit21)
 
 %%
 

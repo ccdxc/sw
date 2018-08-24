@@ -281,6 +281,8 @@ header_type rdma_scratch_metadata_t {
         //are allocated adjacent to each other in HBM in that order.
         //CQCB address is 1K aligned, so store only 24 bits
         cqcb_base_addr_hi: 24;
+        sqcb_base_addr_hi: 24;
+        rqcb_base_addr_hi: 24;        
         log_num_cq_entries: 5;
 
         //RQCB prefetch uses per LIF global ring

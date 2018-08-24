@@ -24,6 +24,8 @@
 #define RSQ_BASE_ADDR_SHIFT 3
 #define HBM_SQ_BASE_ADDR_SHIFT 3
 #define CQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
+#define SQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
+#define RQCB_ADDR_HI_SHIFT 10 // 24 bits of cqcb base addr, so shift 10 bits
 
 #define MAX_SGES_PER_PASS   2
 #define HBM_NUM_SGES_PER_CACHELINE 4
@@ -39,6 +41,9 @@
 #define CB3_OFFSET_BYTES (3 * 64)
 
 #define LOG_SIZEOF_EQCB_T   6   // 2^6 = 64 Bytes
+
+#define LOG_SIZEOF_SQCB_T   10
+#define LOG_SIZEOF_RQCB_T   10
 
 #define SQCB0_ADDR_GET(_r) \
     sll     _r, k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, SQCB_ADDR_SHIFT;
@@ -1098,6 +1103,33 @@ struct p4_to_p4plus_roce_header_t {
     roce_int_recirc_hdr : 16;
 };
 
+struct rdma_aq_feedback_create_qp_ext_t {
+    rq_dma_addr: 64;
+    rq_id      : 24;
+    rsvd: 24;
+};
+        
+struct aq_p4_to_p4plus_roce_header_t {
+    p4plus_app_id : 4;
+    table0_valid : 1;
+    table1_valid : 1;
+    table2_valid : 1;
+    table3_valid : 1;
+        //Parsed UDP options valid flags
+    roce_opt_ts_vld   : 1;
+    roce_opt_msss_vld : 1;
+    rdma_hdr_len : 6;
+    raw_flags    : 16;
+    ecn          : 2;
+    payload_len  : 14;
+    
+    // 14 bytes to use for AQ params
+
+    union {
+        struct rdma_aq_feedback_create_qp_ext_t create_qp_ext;
+    };
+};
+
 //Common DCQCN CB for both req and resp paths.
 struct dcqcn_cb_t {
     // CNP generation params.
@@ -1179,22 +1211,27 @@ struct rdma_aq_feedback_t {
     feedback_type: 8;
     struct {
         cq_num: 24; 
-        status: 8;
-        error:  1;
-        pad: 47;
+        status:  8;
+        error:   1;
+        op:      8;
+        pad:     7;
     }aq_completion;
     union {
         struct {
-            rq_cq_id: 32;
+            rq_cq_id: 24;
             rq_depth_log2: 8;
             rq_stride_log2: 8;
             rq_page_size_log2: 8;
-            pad1 : 88;
+            rq_tbl_index: 32;
+            rq_map_count: 32;
+            pd:           32;
+            rq_type_state: 8;
+            rq_id        : 24;
         } create_qp;
-        pad: 144;
+        pad: 176;
     };
 };
-    
+
 #define RDMA_FEEDBACK_SPLITTER_OFFSET  \
     ((sizeof(struct phv_intr_global_t) + sizeof(struct phv_intr_p4_t) + sizeof(struct phv_intr_rxdma_t) + sizeof(struct p4_to_p4plus_roce_header_t) + sizeof(struct rdma_feedback_t)) >> 3)
 

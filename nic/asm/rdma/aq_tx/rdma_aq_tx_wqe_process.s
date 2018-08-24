@@ -11,14 +11,14 @@ struct aq_tx_s1_t0_k k;
 
 #define IN_TO_S_P to_s1_info
     
-#define K_CQ_NUM CAPRI_KEY_RANGE(IN_TO_S_P, cq_num_sbit0_ebit1, cq_num_sbit18_ebit23)
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
-#define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit3, ah_base_addr_page_id_sbit20_ebit21)
- 
+#define K_SQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, sqcb_base_addr_hi) 
+
 %%
 
     .param      dummy
     .param      rdma_cq_tx_stage0
+    .param      rdma_req_tx_stage0    
     .param      rdma_aq_tx_feedback_process
     .param      rdma_aq_tx_modify_qp_2_process
 .align
@@ -135,8 +135,8 @@ create_cq:
     //Setup DMA to copy PT translations from host to HBM
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_PT)    
 
-    add         r4, r0, d.mr.map_count, CAPRI_LOG_SIZEOF_U64
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.mr.dma_addr)
+    add         r4, r0, d.cq.map_count, CAPRI_LOG_SIZEOF_U64
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.cq.dma_addr)
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r3)
 
     // log_num_pages in r2
@@ -155,18 +155,100 @@ create_cq:
 
     //          setup the DMA for CQCB
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_CB)        
-    DMA_PHV2MEM_SETUP(r6, c1, cqcb, cqcb, r1)
-
     CAPRI_GET_TABLE_0_K(aq_tx_phv_t, r7)
-    AQ_TX_CQCB_ADDR_GET(r1, K_CQ_NUM, K_CQCB_BASE_ADDR_HI)
+    AQ_TX_CQCB_ADDR_GET(r1, d.id_ver[23:0], K_CQCB_BASE_ADDR_HI)
+
+    DMA_PHV2MEM_SETUP(r6, c1, cqcb, cqcb, r1)
 
     b           prepare_feedback
     nop
     
 create_qp:
 
-    phvwr   p.{sqcb0.intrinsic.host_rings, sqcb0.intrinsic.total_rings}, (MAX_SQ_HOST_RINGS<<4|MAX_SQ_DOORBELL_RINGS)
+    // SQCB0:
+    
+    phvwr       p.{sqcb0.intrinsic.host_rings, sqcb0.intrinsic.total_rings}, (MAX_SQ_HOST_RINGS<<4|MAX_SQ_DOORBELL_RINGS)
+    phvwr       p.sqcb0.log_num_wqes, d.qp.sq_depth_log2[4: 0]
+    
 
+    // TODO: For now setting it to RTS, but later change it to INIT
+    // state. modify_qp is supposed to set it to RTR and RTS.
+    phvwr       p.sqcb0.state, QP_STATE_RTS
+    phvwr       p.sqcb0.color, 1
+
+    //TODO: SQ in HBM still need to be implemented
+
+    phvwr       p.sqcb0.log_sq_page_size, d.qp.sq_page_size_log2[4:0]
+    phvwr       p.sqcb0.log_wqe_size, d.qp.sq_stride_log2
+    phvwr       p.sqcb0.pd, d.qp.pd_id
+    phvwr       p.sqcb0.service, d.type_state
+    
+    //compute the offset of the label of CQ program
+    addi        r4, r0, rdma_req_tx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    addi        r3, r0, dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    sub         r4, r4, r3              
+    phvwr       p.sqcb0.intrinsic.pc, r4
+    
+    // SQCB1:
+
+    phvwr       p.sqcb1.cq_id, d.qp.sq_cq_id[23:0]
+    phvwr       p.sqcb1.state, QP_STATE_RTS
+
+    //TODO: Standard says initial value of LSN should be 0. Need to fix
+    phvwrpair   p.sqcb1.service, d.type_state[3:0], p.sqcb1.lsn, 128
+    phvwr       p.sqcb1.ssn, 1
+    phvwr       p.sqcb1.max_ssn, 1
+    
+    //TODO: what    is the correct value of credits? zero?
+    //infinite  retries                 
+    phvwr       p.sqcb1.credits, 0xe
+    phvwr       p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x7<<3|0x7)
+
+//SQCB2:
+
+    phvwrpair   p.sqcb2.log_sq_size, d.qp.sq_depth_log2[4: 0], p.sqcb2.credits, 0xe
+    phvwr       p.sqcb2.ssn, 1
+    phvwrpair   p.{sqcb2.err_retry_ctr, sqcb2.rnr_retry_ctr}, (0x7<<3|0x7), p.sqcb2.lsn,128
+
+    //          TODO: Move RSQ/RRQ allocation to modify_qp frm create_qp
+    //          TODO: Move pmtu setup to modify_qp
+    
+    //populate the PC in SQCB0, SQCB1
+    addi        r4, r0, rdma_req_tx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    addi        r3, r0, dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    sub         r4, r4, r3
+    phvwr       p.sqcb0.intrinsic.pc, r4
+    phvwr       p.sqcb1.pc, r4
+
+    //Setup     DMA for SQ PT
+
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_QP_SQPT)
+    add         r4, r0, d.qp.sq_map_count, CAPRI_LOG_SIZEOF_U64
+
+    PT_BASE_ADDR_GET2(r4) 
+    add         r3, r4, d.qp.sq_tbl_index_xrcd_id, CAPRI_LOG_SIZEOF_U64
+    phvwr       p.sqcb0.pt_base_addr, r3
+
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.qp.sq_dma_addr)
+    DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r3)
+
+    // setup DMA for SQCB
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_QP_CB)        
+
+    CAPRI_GET_TABLE_0_K(aq_tx_phv_t, r7)
+    SQCB_ADDR_GET(r1, d.id_ver[23:0], K_SQCB_BASE_ADDR_HI)
+
+    DMA_PHV2MEM_SETUP(r6, c1, sqcb0, sqcb2, r1)
+
+    phvwrpair   p.rdma_feedback.aq_completion.op, AQ_OP_TYPE_CREATE_QP, p.rdma_feedback.create_qp.rq_cq_id, d.qp.rq_cq_id[23:0]
+    phvwrpair   p.rdma_feedback.create_qp.rq_depth_log2, d.qp.rq_depth_log2, p.rdma_feedback.create_qp.rq_stride_log2, d.qp.rq_stride_log2
+    phvwrpair  p.rdma_feedback.create_qp.rq_page_size_log2, d.qp.rq_page_size_log2, p.rdma_feedback.create_qp.pd, d.qp.pd_id   
+    phvwr       p.p4_to_p4plus.create_qp_ext.rq_dma_addr, d.qp.rq_dma_addr
+    phvwrpair     p.rdma_feedback.create_qp.rq_type_state, d.type_state, p.rdma_feedback.create_qp.rq_id, d.id_ver[23:0]
+
+    b           prepare_feedback
+    nop
+    
 stats_dump:
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
 

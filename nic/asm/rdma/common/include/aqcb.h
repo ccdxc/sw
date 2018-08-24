@@ -40,7 +40,7 @@ struct aqcb_t {
     rsvd3:8;
 
     cqcb_addr: 64;
-    pad: 168;
+    pad: 192;
 };
 
 #endif //__AQCB_H__

@@ -86,15 +86,27 @@ header_type phv_global_common_t {
     }
 }
 
-header_type aq_tx_to_stage_t {
+header_type aq_tx_to_stage_wqe_info_t {
     fields {
         cqcb_base_addr_hi                :   24;
-        log_num_cq_entries               :    4;
+        sqcb_base_addr_hi                :   24;        
+        pad                              :   80;
+    }
+}
+
+header_type aq_tx_to_stage_wqe2_info_t {
+    fields {
         ah_base_addr_page_id             :   22;
         rrq_base_addr_page_id            :   22;
         rsq_base_addr_page_id            :   22;
-        cq_num                           :   24;
-        pad                              :   10;
+        pad                              :   62;
+    }
+}
+
+header_type aq_tx_to_stage_fb_info_t {
+    fields {
+        cq_num                           :    24;
+        pad                              :   104;
     }
 }
 
@@ -111,33 +123,21 @@ metadata phv_global_common_t phv_global_common_scr;
 
 //To-Stage-1
 @pragma pa_header_union ingress to_stage_1
-metadata aq_tx_to_stage_t to_s1_info;
+metadata aq_tx_to_stage_wqe_info_t to_s1_info;
 @pragma scratch_metadata
-metadata aq_tx_to_stage_t to_s1_info_scr;
+metadata aq_tx_to_stage_wqe_info_t to_s1_info_scr;
 
 //To-Stage-2
 @pragma pa_header_union ingress to_stage_2
-metadata aq_tx_to_stage_t to_s2_info;
+metadata aq_tx_to_stage_wqe2_info_t to_s2_info;
 @pragma scratch_metadata
-metadata aq_tx_to_stage_t to_s2_info_scr;
-
-//To-Stage-3
-@pragma pa_header_union ingress to_stage_3
-metadata aq_tx_to_stage_t to_s3_info;
-@pragma scratch_metadata
-metadata aq_tx_to_stage_t to_s3_info_scr;
-
-//To-Stage-4
-@pragma pa_header_union ingress to_stage_4
-metadata aq_tx_to_stage_t to_s4_info;
-@pragma scratch_metadata
-metadata aq_tx_to_stage_t to_s4_info_scr;
+metadata aq_tx_to_stage_wqe2_info_t to_s2_info_scr;
 
 //To-Stage-5
 @pragma pa_header_union ingress to_stage_5
-metadata aq_tx_to_stage_t to_s5_info;
+metadata aq_tx_to_stage_fb_info_t to_s5_info;
 @pragma scratch_metadata
-metadata aq_tx_to_stage_t to_s5_info_scr;
+metadata aq_tx_to_stage_fb_info_t to_s5_info_scr;
 
 //To-Stage-6
 
@@ -171,9 +171,7 @@ action aq_tx_aqwqe_process () {
 
     // to stage
     modify_field(to_s1_info_scr.cqcb_base_addr_hi, to_s1_info.cqcb_base_addr_hi);
-    modify_field(to_s1_info_scr.log_num_cq_entries, to_s1_info.log_num_cq_entries);
-    modify_field(to_s1_info_scr.ah_base_addr_page_id, to_s1_info.ah_base_addr_page_id);
-    modify_field(to_s1_info_scr.cq_num, to_s1_info.cq_num);
+    modify_field(to_s1_info_scr.sqcb_base_addr_hi, to_s1_info.sqcb_base_addr_hi);
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
     
     // stage to stage
@@ -184,12 +182,9 @@ action aq_tx_modify_qp_2_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s2_info_scr.cqcb_base_addr_hi, to_s2_info.cqcb_base_addr_hi);
-    modify_field(to_s2_info_scr.log_num_cq_entries, to_s2_info.log_num_cq_entries);
     modify_field(to_s2_info_scr.ah_base_addr_page_id, to_s2_info.ah_base_addr_page_id);
     modify_field(to_s2_info_scr.rrq_base_addr_page_id, to_s2_info.rrq_base_addr_page_id);
     modify_field(to_s2_info_scr.rsq_base_addr_page_id, to_s2_info.rsq_base_addr_page_id);
-    modify_field(to_s2_info_scr.cq_num, to_s2_info.cq_num);
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
@@ -227,9 +222,6 @@ action aq_tx_feedback_process_s5 () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s5_info_scr.cqcb_base_addr_hi, to_s5_info.cqcb_base_addr_hi);
-    modify_field(to_s5_info_scr.log_num_cq_entries, to_s5_info.log_num_cq_entries);
-    modify_field(to_s5_info_scr.ah_base_addr_page_id, to_s5_info.ah_base_addr_page_id);
     modify_field(to_s5_info_scr.cq_num, to_s5_info.cq_num);
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     

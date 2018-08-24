@@ -5,14 +5,17 @@
 #include "req_rx_args.h"
 #include "resp_rx_args.h"
 
-struct rx_stage0_load_rdma_params_k k;
-struct rx_stage0_load_rdma_params_d d;
+#include "aq_rx_args.h"    
+
+struct      rx_stage0_load_rdma_params_k k ;
+struct      rx_stage0_load_rdma_params_d d ;
 struct phv_ p;
 
 #define REQ_RX_TO_S5_T struct req_rx_to_stage_cq_info_t
 #define REQ_RX_TO_S6_T struct req_rx_to_stage_cq_info_t
 #define RESP_RX_TO_S5_T struct resp_rx_to_stage_wb1_info_t
 #define RESP_RX_TO_S6_T struct resp_rx_to_stage_cqpt_info_t
+#define AQ_RX_TO_S1_T struct aq_rx_to_stage_t
 
 %%
 
@@ -34,6 +37,11 @@ rx_stage0_load_rdma_params:
     bcf [c2], sq
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, log_num_pt_entries, d.u.rx_stage0_load_rdma_params_d.log_num_pt_entries)   //BD Slot
 
+    # is it aq ?
+    seq c3, k.p4_rxdma_intr_qtype, d.u.rx_stage0_load_rdma_params_d.aq_qtype
+    bcf         [c3], aq
+    nop
+
 rq:
     #add r1, r0, offsetof(struct phv_, to_stage_2_to_stage_data)
     #CAPRI_SET_FIELD(r1, TO_S_EXT_HDR_INFO_T, ext_hdr_data, k.{ext_app_header_app_data3_sbit0_ebit31...ext_app_header_app_data3_sbit32_ebit63})
@@ -54,6 +62,28 @@ rq:
     b   done
     nop
 
+aq:
+    // stage 3 for rqwqe
+    phvwr p.to_stage_3_to_stage_data[127:96], k.ext_app_header_app_data3[31:0]
+    // stage 2 for rqrkey
+    phvwr p.to_stage_2_to_stage_data[127:64], k.ext_app_header_app_data3[95:32]
+
+    // copy to stage 5 and 6
+    add r2, r0, offsetof(struct phv_, to_stage_5_to_stage_data)
+    CAPRI_SET_FIELD(r2, RESP_RX_TO_S5_T, cqcb_base_addr_hi, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_hi)
+    CAPRI_SET_FIELD(r2, RESP_RX_TO_S5_T, log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
+
+    add r2, r0, offsetof(struct phv_, to_stage_6_to_stage_data)
+    CAPRI_SET_FIELD(r2, RESP_RX_TO_S6_T, cqcb_base_addr_hi, d.u.rx_stage0_load_rdma_params_d.cqcb_base_addr_hi)
+    CAPRI_SET_FIELD(r2, RESP_RX_TO_S6_T, log_num_cq_entries, d.u.rx_stage0_load_rdma_params_d.log_num_cq_entries)
+
+    add r2, r0, offsetof(struct phv_, to_stage_1_to_stage_data)    
+    CAPRI_SET_FIELD(r2, AQ_RX_TO_S1_T, sqcb_base_addr_hi, d.u.rx_stage0_load_rdma_params_d.sqcb_base_addr_hi)
+    CAPRI_SET_FIELD(r2, AQ_RX_TO_S1_T, rqcb_base_addr_hi, d.u.rx_stage0_load_rdma_params_d.rqcb_base_addr_hi)
+
+    b           done
+    nop
+    
 sq:
     // copy to stage 1,2,3,4, 5, 6
     add r2, r0, offsetof(struct phv_, to_stage_5_to_stage_data)

@@ -18,6 +18,8 @@ pd_rxdma_table_entry_add(pd_func_args_t *pd_func_args) {
                                                                        args->pt_base_addr_page_id,
                                                                        args->log_num_pt_entries,
                                                                        args->cqcb_base_addr_hi,
+                                                                       args->sqcb_base_addr_hi,
+                                                                       args->rqcb_base_addr_hi,
                                                                        args->log_num_cq_entries,
                                                                        args->prefetch_pool_base_addr_page_id,
                                                                        args->log_num_prefetch_pool_entries,
@@ -33,6 +35,8 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint32_t pt_base_addr_page_id,
                                                       uint8_t log_num_pt_entries,
                                                       uint32_t cqcb_base_addr_hi,
+                                                      uint32_t sqcb_base_addr_hi,
+                                                      uint32_t rqcb_base_addr_hi,
                                                       uint8_t log_num_cq_entries,
                                                       uint32_t prefetch_pool_base_addr_page_id,
                                                       uint8_t log_num_prefetch_pool_entries,
@@ -55,6 +59,8 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (uint32_t idx,
     data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id = pt_base_addr_page_id;
     data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_pt_entries = log_num_pt_entries;
     data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.cqcb_base_addr_hi = cqcb_base_addr_hi;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.sqcb_base_addr_hi = sqcb_base_addr_hi;
+    data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rqcb_base_addr_hi = rqcb_base_addr_hi;
     data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_cq_entries = log_num_cq_entries;
     data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
     data.rx_stage0_load_rdma_params_action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;
@@ -112,6 +118,8 @@ pd_txdma_table_entry_add(pd_func_args_t *pd_func_args) {
                                                                        args->rrq_base_addr_page_id,
                                                                        args->rsq_base_addr_page_id,
                                                                        args->cqcb_base_addr_hi,
+                                                                       args->sqcb_base_addr_hi,
+                                                                       args->rqcb_base_addr_hi,
                                                                        args->log_num_cq_entries,
                                                                        args->prefetch_pool_base_addr_page_id,
                                                                        args->log_num_prefetch_pool_entries,
@@ -129,6 +137,8 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint32_t rrq_base_addr_page_id,
                                                       uint32_t rsq_base_addr_page_id,
                                                       uint32_t cqcb_base_addr_hi,
+                                                      uint32_t sqcb_base_addr_hi,
+                                                      uint32_t rqcb_base_addr_hi,
                                                       uint8_t log_num_cq_entries,
                                                       uint32_t prefetch_pool_base_addr_page_id,
                                                       uint8_t log_num_prefetch_pool_entries,
@@ -154,6 +164,8 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rrq_base_addr_page_id = rrq_base_addr_page_id;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rsq_base_addr_page_id = rsq_base_addr_page_id;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.cqcb_base_addr_hi = cqcb_base_addr_hi;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.sqcb_base_addr_hi = sqcb_base_addr_hi;
+    data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rqcb_base_addr_hi = rqcb_base_addr_hi;    
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_cq_entries = log_num_cq_entries;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.prefetch_pool_base_addr_page_id = prefetch_pool_base_addr_page_id;
     data.tx_stage0_lif_params_table_action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_prefetch_pool_entries = log_num_prefetch_pool_entries;

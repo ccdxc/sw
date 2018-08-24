@@ -296,6 +296,26 @@ header_type rdma_aq_completion_feedback_header_t {
         cq_num              : 24;
         status              : 8;
         error               : 1;
+        op                  : 8;
+    }
+}
+
+//248
+header_type rdma_aq_completion_feedback_header_create_qp_t {
+    fields {
+        common_roce_bits    :  48;
+        rq_dma_addr         :  64;
+        rq_id               :  24;
+        rsvd                :  24;
+        aq_comp_common_bits :  88;
+        rq_cq_id            :  24;
+        rq_depth_log2       :   8;
+        rq_stride_log2      :   8;
+        rq_page_size_log2   :   8;
+        rq_tbl_index        :  32;
+        rq_map_count        :  32;
+        pd                  :  32;
+        rq_type_state       :   8;
     }
 }
 

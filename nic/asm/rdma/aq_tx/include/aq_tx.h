@@ -22,13 +22,18 @@
 #define AQ_TX_DMA_CMD_PT_DST_HBM 18
 #define AQ_TX_DMA_CMD_STATS_DUMP_4 18
 
-#define AQ_TX_DMA_CMD_RDMA_FEEDBACK 19   // This should be at the end
+#define AQ_TX_MAX_DMA_CMDS        12
+
 #define AQ_TX_DMA_CMD_START_FLIT_ID 9
 #define AQ_TX_DMA_CMD_START_FLIT_CMD_ID 0
 #define TOTAL_DMA_CMD_BITS 16 * 16 * 8 // (cmds * dma_cmd_size * bits_per_byte) 
 
-#define AQ_TX_DMA_CMD_CREATE_CQ_CB  18
-#define AQ_TX_DMA_CMD_CREATE_CQ_PT  17
+#define AQ_TX_DMA_CMD_RDMA_FEEDBACK (AQ_TX_MAX_DMA_CMDS -1)  // This should be at the end
+#define AQ_TX_DMA_CMD_CREATE_CQ_CB  (AQ_TX_MAX_DMA_CMDS -2)
+#define AQ_TX_DMA_CMD_CREATE_CQ_PT  (AQ_TX_MAX_DMA_CMDS -3)
+
+#define AQ_TX_DMA_CMD_CREATE_QP_CB    (AQ_TX_MAX_DMA_CMDS -2)
+#define AQ_TX_DMA_CMD_CREATE_QP_SQPT  (AQ_TX_MAX_DMA_CMDS -3)
 
 #define AQ_TX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi) \
     CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
@@ -85,7 +90,7 @@ struct aq_tx_phv_t {
         struct {
             struct phv_intr_p4_t p4_intr;            //  5 Bytes
             struct phv_intr_rxdma_t p4_intr_rxdma;   // 10 Bytes
-            struct p4_to_p4plus_roce_header_t p4_to_p4plus; // 20 Bytes
+            struct aq_p4_to_p4plus_roce_header_t p4_to_p4plus; // 20 Bytes
             struct rdma_aq_feedback_t rdma_feedback;    // 29 Bytes
             pad4: 512;
             pad3: 512;
