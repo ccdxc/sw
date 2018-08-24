@@ -16,7 +16,7 @@
  *	- stitch batch/init params for PNSO_NUM_OBJECTS during pool creation
  *
  */
-#define PNSO_NUM_OBJECTS		512
+#define PNSO_NUM_OBJECTS		8
 #define PNSO_NUM_OBJECTS_IN_OBJECT	16
 
 static void
