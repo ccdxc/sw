@@ -2126,7 +2126,8 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
 	int rc;
 
-	if (unlikely(!mr->buf.tbl_buf))
+	/* mr must be allocated using ib_allow_mr() */
+	if (unlikely(!mr->buf.tbl_limit))
 		return -EINVAL;
 
 	mr->buf.tbl_pages = 0;
@@ -4701,6 +4702,74 @@ static int ionic_v1_prep_atomic(struct ionic_qp *qp,
 	return ionic_v1_prep_common(qp, &wr->wr, meta, wqe);
 }
 
+static int ionic_v1_prep_inv(struct ionic_qp *qp, struct ib_send_wr *wr)
+{
+	struct ionic_ibdev *dev = to_ionic_ibdev(qp->ibqp.device);
+	struct ionic_sq_meta *meta;
+	struct ionic_v1_wqe *wqe;
+
+	if (wr->send_flags & (IB_SEND_SOLICITED | IB_SEND_INLINE))
+		return -EINVAL;
+
+	meta = &qp->sq_meta[qp->sq.prod];
+	wqe = ionic_queue_at_prod(&qp->sq);
+
+	memset(wqe, 0, 1u << qp->sq.stride_log2);
+
+	wqe->base.op = IONIC_V1_OP_LOCAL_INV;
+	wqe->base.length_key = cpu_to_be32(wr->ex.invalidate_rkey);
+
+	/* XXX makeshift will be removed */
+	if (dev->rdma_version != 1 || dev->qp_opcodes <= wqe->base.op)
+		return -EINVAL;
+
+	ionic_v1_prep_base(qp, wr, meta, wqe);
+
+	return 0;
+}
+
+static int ionic_v1_prep_reg(struct ionic_qp *qp, struct ib_reg_wr *wr)
+{
+	struct ionic_ibdev *dev = to_ionic_ibdev(qp->ibqp.device);
+	struct ionic_mr *mr = to_ionic_mr(wr->mr);
+	struct ionic_sq_meta *meta;
+	struct ionic_v1_wqe *wqe;
+	int flags;
+
+	if (wr->wr.send_flags & (IB_SEND_SOLICITED | IB_SEND_INLINE))
+		return EINVAL;
+
+	/* must call ib_map_mr_sg before posting reg wr */
+	if (!mr->buf.tbl_pages)
+		return EINVAL;
+
+	meta = &qp->sq_meta[qp->sq.prod];
+	wqe = ionic_queue_at_prod(&qp->sq);
+
+	memset(wqe, 0, 1u << qp->sq.stride_log2);
+
+	flags = to_ionic_mr_flags(wr->access);
+
+	wqe->base.op = IONIC_V1_OP_REG_MR;
+	wqe->base.num_sge_key = wr->key;
+	wqe->base.length_key = cpu_to_be32(mr->ibmr.lkey);
+	wqe->reg_mr.va = cpu_to_be64(mr->ibmr.iova);
+	wqe->reg_mr.length = cpu_to_be32(mr->ibmr.length);
+	wqe->reg_mr.offset = cpu_to_be32(mr->ibmr.iova & (mr->ibmr.page_size - 1));
+	wqe->reg_mr.dma_addr = cpu_to_be64(mr->buf.tbl_dma);
+	wqe->reg_mr.flags = cpu_to_be16(flags);
+	wqe->reg_mr.dir_size_log2 = 0;
+	wqe->reg_mr.page_size_log2 = order_base_2(mr->ibmr.page_size);
+
+	/* XXX makeshift will be removed */
+	if (dev->rdma_version != 1 || dev->qp_opcodes <= wqe->base.op)
+		return -EINVAL;
+
+	ionic_v1_prep_base(qp, &wr->wr, meta, wqe);
+
+	return 0;
+}
+
 static int ionic_prep_one_rc(struct ionic_qp *qp,
 			     struct ib_send_wr *wr)
 {
@@ -4721,6 +4790,12 @@ static int ionic_prep_one_rc(struct ionic_qp *qp,
 	case IB_WR_ATOMIC_CMP_AND_SWP:
 	case IB_WR_ATOMIC_FETCH_AND_ADD:
 		rc = ionic_v1_prep_atomic(qp, atomic_wr(wr));
+		break;
+	case IB_WR_LOCAL_INV:
+		rc = ionic_v1_prep_inv(qp, wr);
+		break;
+	case IB_WR_REG_MR:
+		rc = ionic_v1_prep_reg(qp, reg_wr(wr));
 		break;
 	default:
 		dev_dbg(&dev->ibdev.dev, "invalid opcode %d", wr->opcode);
