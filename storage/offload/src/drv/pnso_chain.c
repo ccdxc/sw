@@ -33,46 +33,29 @@ osal_atomic_int_t g_req_id;
 #endif
 
 static void __attribute__((unused))
-pprint_sgl(const struct cpdc_sgl *sgl)
-{
-	if (!sgl)
-		return;
-
-	OSAL_LOG_INFO("%30s: %llx", "cs_addr_0", sgl->cs_addr_0);
-	OSAL_LOG_INFO("%30s: %d", "cs_len_0", sgl->cs_len_0);
-
-	OSAL_LOG_INFO("%30s: %llx", "cs_addr_1", sgl->cs_addr_1);
-	OSAL_LOG_INFO("%30s: %d", "cs_len_1", sgl->cs_len_1);
-
-	OSAL_LOG_INFO("%30s: %llx", "cs_addr_2", sgl->cs_addr_2);
-	OSAL_LOG_INFO("%30s: %d", "cs_len_2", sgl->cs_len_2);
-
-	OSAL_LOG_INFO("%30s: %llx", "cs_next", sgl->cs_next);
-}
-
-static void __attribute__((unused))
 pprint_service_info(const struct service_info *svc_info)
 {
 	if (!svc_info)
 		return;
 
-	OSAL_LOG_INFO("%30s: %p", "=== svc_info", svc_info);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== svc_info",  (u64) svc_info);
 	OSAL_LOG_INFO("%30s: %d", "si_type", svc_info->si_type);
 	OSAL_LOG_INFO("%30s: %d", "si_flags", svc_info->si_flags);
 
 	OSAL_LOG_INFO("%30s: %d", "si_block_size", svc_info->si_block_size);
 	OSAL_LOG_INFO("%30s: %d", "si_desc_flagss", svc_info->si_desc_flags);
 
-	OSAL_LOG_INFO("%30s: %p", "si_desc", svc_info->si_desc);
-	OSAL_LOG_INFO("%30s: %p", "si_status_desc", svc_info->si_status_desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "si_desc",  (u64) svc_info->si_desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "si_status_desc",
+			(u64) svc_info->si_status_desc);
 
-	OSAL_LOG_INFO("%30s: %p", "si_interm_fbuf", svc_info->si_interm_fbuf);
+	OSAL_LOG_INFO("%30s: 0x%llx", "si_interm_fbuf",
+			(u64) svc_info->si_interm_fbuf);
 
-	OSAL_LOG_INFO("%30s: %p", "=== si_src_sgl", svc_info->si_src_sgl);
-	pprint_sgl(svc_info->si_src_sgl);
-
-	OSAL_LOG_INFO("%30s: %p", "=== si_dst_sgl", svc_info->si_dst_sgl);
-	pprint_sgl(svc_info->si_dst_sgl);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_src_sgl",
+			(u64) svc_info->si_src_sgl);
+	OSAL_LOG_INFO("%30s: %llx", "=== si_dst_sgl",
+			(u64) svc_info->si_dst_sgl);
 
 	/* TODO-chain: include service status and other members */
 }

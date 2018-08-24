@@ -1,6 +1,7 @@
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include "sonic_api_int.h"
+#include "osal_assert.h"
 #include "osal_mem.h"
 #include "osal_logger.h"
 
@@ -59,6 +60,8 @@ uint64_t osal_virt_to_phy(void *ptr)
 {
 	uint64_t pa;
 
+	OSAL_ASSERT(ptr);
+
 	pa = virt_to_phys(ptr);
 
 	return osal_hostpa_to_devpa(pa);
@@ -67,6 +70,8 @@ uint64_t osal_virt_to_phy(void *ptr)
 void *osal_phy_to_virt(uint64_t phy)
 {
 	uint64_t pa;
+
+	OSAL_ASSERT(phy);
 
 	pa = osal_devpa_to_hostpa(phy);
 

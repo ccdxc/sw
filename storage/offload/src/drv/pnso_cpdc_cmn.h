@@ -40,7 +40,10 @@ void cpdc_pprint_desc(const struct cpdc_desc *desc);
 
 void cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc);
 
-pnso_error_t cpdc_update_service_info_params(struct service_info *svc_info,
+pnso_error_t cpdc_update_service_info_sgl(struct service_info *svc_info,
+		const struct service_params *svc_params);
+
+pnso_error_t cpdc_update_service_info_sgls(struct service_info *svc_info,
 		const struct service_params *svc_params);
 
 void cpdc_populate_buffer_list(struct cpdc_sgl *sgl,

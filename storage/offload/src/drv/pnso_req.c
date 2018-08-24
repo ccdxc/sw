@@ -121,9 +121,6 @@ req_pprint_request(const struct pnso_service_request *req)
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== pnso_service_request", (u64) req);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== sgl", (u64) req->sgl);
-	pbuf_pprint_buffer_list(req->sgl);
-
 	OSAL_LOG_INFO("%30s: %d", "num_services", req->num_services);
 	for (i = 0; i < req->num_services; i++) {
 		OSAL_LOG_INFO("%30s: %d", "service #", i+1);
@@ -192,7 +189,6 @@ req_pprint_result(const struct pnso_service_result *res)
 		case PNSO_SVC_TYPE_DECOMPACT:
 			OSAL_LOG_INFO("%30s: %d", "data_len",
 					res->svc[i].u.dst.data_len);
-			pbuf_pprint_buffer_list(res->svc[i].u.dst.sgl);
 			break;
 		case PNSO_SVC_TYPE_HASH:
 			OSAL_LOG_INFO("%30s: %d", "num_tags",
