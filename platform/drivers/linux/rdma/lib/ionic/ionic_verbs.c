@@ -1661,11 +1661,11 @@ static int ionic_v1_prep_bind(struct ionic_qp *qp, struct ibv_send_wr *wr)
 
 	wqe->base.op = IONIC_V1_OP_BIND_MW;
 	wqe->base.num_sge_key = wr->bind_mw.rkey;
-	wqe->base.flags = htobe16(flags);
 	wqe->base.length_key = htobe32(wr->bind_mw.mw->rkey);
 	wqe->bind_mw.va = htobe64(wr->bind_mw.bind_info.addr);
 	wqe->bind_mw.length = htobe32(wr->bind_mw.bind_info.length);
 	wqe->bind_mw.lkey = htobe32(wr->bind_mw.bind_info.mr->lkey);
+	wqe->bind_mw.flags = htobe16(flags);
 
 	/* XXX makeshift will be removed */
 	if (ctx->version != 1 || ctx->opcodes <= wqe->base.op)

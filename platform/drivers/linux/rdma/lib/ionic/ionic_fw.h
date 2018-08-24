@@ -288,7 +288,8 @@ struct ionic_v1_bind_mw_bdy {
 	__be64				va;
 	__be64				length;
 	__be32				lkey;
-	__u8				rsvd[28];
+	__be16				flags;
+	__u8				rsvd[26];
 };
 
 
