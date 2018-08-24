@@ -502,6 +502,9 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 	if (*desc_count > status_q_count) {
 		*desc_count = rounddown_pow_of_two(status_q_count);
 	}
+	if (*desc_count > MAX_PER_QUEUE_SQ_ENTRIES) {
+		*desc_count = MAX_PER_QUEUE_SQ_ENTRIES;
+	}
 	if (*desc_count == 0) {
 		dev_err(res->lif->sonic->dev, "No descs available for hw ring %d, ring_size=%u.\n",
 			ring_id, ring->ring_size);
