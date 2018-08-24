@@ -42,10 +42,12 @@ fi
 if [ -d /naples/nic/data/examples ]; then
     mkdir -p /naples/data/examples/
     mkdir -p /naples/data/examples/config_ipsec/
+    mkdir -p /naples/data/examples/config_tcp_proxy/
     mkdir -p /naples/data/examples/config_vxlan_overlay/
     cp /naples/nic/tools/bootstrap.sh /naples/data/
     cp -r /naples/nic/data/examples/* /naples/data/examples/
     cp -r /naples/nic/data/examples/config_ipsec/* /naples/data/examples/config_ipsec/
+    cp -r /naples/nic/data/examples/config_tcp_proxy/* /naples/data/examples/config_tcp_proxy/
     cp -r /naples/nic/data/examples/config_vxlan_overlay/* /naples/data/examples/config_vxlan_overlay/
 fi
 

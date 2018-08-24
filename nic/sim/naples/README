@@ -15,6 +15,7 @@
    Sample postman configs are placed in the home directory of each VM. There are two set of topologies in the configs directory in teh vm.Run the following command in both the VMs to load the sample config
 
    $ newman run configs/config_ipsec/postman_collection.json -e configs/postman_env.json
+   $ newman run configs/config_tcp_proxy/postman_collection.json -e configs/postman_env.json
    $ newman run configs/config_vxlan_overlay/postman_collection.json -e configs/postman_env.json
    Also there is a README in each of the config/ directory that explains the configs
 

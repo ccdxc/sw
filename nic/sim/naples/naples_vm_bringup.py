@@ -23,6 +23,7 @@ AGENT_PORT = 9007
 NAPLES_DATA_DIR = "/var/run/naples/"
 NAPLES_OVERLAY_CONFIG_DIR = "/home/vagrant/configs/config_vxlan_overlay"
 NAPLES_IPSEC_CONFIG_DIR = "/home/vagrant/configs/config_ipsec"
+NAPLES_TCP_PROXY_CONFIG_DIR = "/home/vagrant/configs/config_tcp_proxy"
 
 NAPLES_SIM_NAME = "naples-sim"
 NAPLES_VOLUME_MOUNTS = {
@@ -41,7 +42,8 @@ _APP_IMAGES = [
 _NAPLES_DIRECTORIES = [
     NAPLES_DATA_DIR,
     NAPLES_OVERLAY_CONFIG_DIR,
-    NAPLES_IPSEC_CONFIG_DIR
+    NAPLES_IPSEC_CONFIG_DIR,
+    NAPLES_TCP_PROXY_CONFIG_DIR
 ]
 
 _SETUP_CMDS = [
