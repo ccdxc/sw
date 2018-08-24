@@ -81,7 +81,7 @@ func (c *userPermissionsCache) addRole(role *auth.Role) {
 	_, ok := c.roles[role.GetTenant()]
 	if !ok {
 		c.roles[role.GetTenant()] = make(map[string]*auth.Role)
-		log.Debugf("initialized role cache for tenant [%s] while adding role [%v]", role.GetTenant(), role)
+		log.Infof("initialized role cache for tenant [%s] while adding role [%v]", role.GetTenant(), role)
 	}
 	c.roles[role.GetTenant()][getKey(role.GetTenant(), role.GetName())] = role
 }
@@ -97,7 +97,7 @@ func (c *userPermissionsCache) getRole(name, tenant string) (auth.Role, bool) {
 	c.RLock()
 	_, ok := c.roles[tenant]
 	if !ok {
-		log.Debugf("no role cache found for tenant [%s]", tenant)
+		log.Infof("no role cache found for tenant [%s]", tenant)
 		return auth.Role{}, false
 	}
 	role, ok := c.roles[tenant][getKey(tenant, name)]
@@ -127,7 +127,7 @@ func (c *userPermissionsCache) addRoleBinding(roleBinding *auth.RoleBinding) {
 	_, ok := c.roleBindings[roleBinding.GetTenant()]
 	if !ok {
 		c.roleBindings[roleBinding.GetTenant()] = make(map[string]*auth.RoleBinding)
-		log.Debugf("initialized role binding cache for tenant [%s] while adding role binding [%v]", roleBinding.GetTenant(), roleBinding)
+		log.Infof("initialized role binding cache for tenant [%s] while adding role binding [%v]", roleBinding.GetTenant(), roleBinding)
 	}
 	c.roleBindings[roleBinding.GetTenant()][getKey(roleBinding.GetTenant(), roleBinding.GetName())] = roleBinding
 }
@@ -144,7 +144,7 @@ func (c *userPermissionsCache) getRoleBinding(name, tenant string) (auth.RoleBin
 
 	_, ok := c.roleBindings[tenant]
 	if !ok {
-		log.Debugf("no role binding cache found for tenant [%s]", tenant)
+		log.Infof("no role binding cache found for tenant [%s]", tenant)
 		return auth.RoleBinding{}, false
 	}
 	roleBinding, ok := c.roleBindings[tenant][getKey(tenant, name)]
@@ -161,12 +161,12 @@ func (c *userPermissionsCache) initializeCacheForTenant(tenant string) {
 	_, ok := c.roles[tenant]
 	if !ok {
 		c.roles[tenant] = make(map[string]*auth.Role)
-		log.Debugf("initialized role cache for tenant [%s]", tenant)
+		log.Infof("initialized role cache for tenant [%s]", tenant)
 	}
 	_, ok = c.roleBindings[tenant]
 	if !ok {
 		c.roleBindings[tenant] = make(map[string]*auth.RoleBinding)
-		log.Debugf("initialized role binding cache for tenant [%s]", tenant)
+		log.Infof("initialized role binding cache for tenant [%s]", tenant)
 	}
 }
 

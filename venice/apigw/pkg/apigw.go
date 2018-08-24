@@ -518,6 +518,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 		nctx, i, skip, err = h(nctx, i)
 		skipAuth = skipAuth || skip
 		if err != nil {
+			a.logger.Errorf("PreAuthNHook failed with err (%v)", err)
 			return nil, apierrors.ToGrpcError(err, []string{"Authentication failed"}, int32(codes.Unauthenticated), "", nil)
 		}
 	}
@@ -535,6 +536,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 			for _, h := range pzHooks {
 				nctx, i, err = h(nctx, i)
 				if err != nil {
+					a.logger.Errorf("PreAuthZHook for user (%s|%s) failed with err (%v)", user.Tenant, user.Name, err)
 					return nil, apierrors.ToGrpcError(err, []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil)
 				}
 			}
@@ -543,17 +545,10 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 			if !ok {
 				return nil, apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil)
 			}
-			a.logger.Debugf("Authorizing Operations: %s", func() string {
-				var message string
-				for _, oper := range operations {
-					if oper != nil {
-						message = message + fmt.Sprintf("%#v, action: %v; ", oper.GetResource(), oper.GetAction())
-					}
-				}
-				return message
-			}())
+			a.logger.Debugf("Authorizing Operations (%s) for user (%s|%s)", login.PrintOperations(operations), user.Tenant, user.Name)
 			ok, err := a.authzMgr.IsAuthorized(user, operations...)
 			if !ok || err != nil {
+				a.logger.Errorf("user (%s|%s) not authorized for operations (%s)", user.Tenant, user.Name, login.PrintOperations(operations))
 				return nil, apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil)
 			}
 		}

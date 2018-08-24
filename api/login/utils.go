@@ -187,3 +187,14 @@ func GetOperationsFromPermissions(permissions []auth.Permission) []authz.Operati
 	}
 	return operations
 }
+
+// PrintOperations creates a string out of operations for logging
+func PrintOperations(operations []authz.Operation) string {
+	var message string
+	for _, oper := range operations {
+		if oper != nil {
+			message = message + fmt.Sprintf("%#v, action: %v; ", oper.GetResource(), oper.GetAction())
+		}
+	}
+	return message
+}

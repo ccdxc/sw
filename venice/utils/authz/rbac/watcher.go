@@ -52,10 +52,12 @@ func (w *watcher) processTenantEvent(evt *kvstore.WatchEvent, tenant *cluster.Te
 	case kvstore.Created:
 		// create role cache for tenant
 		w.cache.initializeCacheForTenant(tenant.GetName())
+		log.Infof("Initialized RBAC cache for Tenant [%#v]", tenant.ObjectMeta)
 	case kvstore.Updated:
 		// do nothing
 	case kvstore.Deleted:
 		w.cache.deleteCacheForTenant(tenant.GetName())
+		log.Infof("Deleted RBAC cache for Tenant [%#v]", tenant.ObjectMeta)
 	}
 }
 
@@ -64,9 +66,10 @@ func (w *watcher) processRoleEvent(evt *kvstore.WatchEvent, role *auth.Role) {
 	switch evt.Type {
 	case kvstore.Created, kvstore.Updated:
 		w.cache.addRole(role)
-
+		log.Infof("Updated Role [%#v] in RBAC cache", role.ObjectMeta)
 	case kvstore.Deleted:
 		w.cache.deleteRole(role)
+		log.Infof("Deleted Role [%#v] in RBAC cache", role.ObjectMeta)
 	}
 }
 
@@ -75,9 +78,10 @@ func (w *watcher) processRoleBindingEvent(evt *kvstore.WatchEvent, roleBinding *
 	switch evt.Type {
 	case kvstore.Created, kvstore.Updated:
 		w.cache.addRoleBinding(roleBinding)
-
+		log.Infof("Updated RoleBinding [%#v] in RBAC cache", roleBinding.ObjectMeta)
 	case kvstore.Deleted:
 		w.cache.deleteRoleBinding(roleBinding)
+		log.Infof("Deleted RoleBinding [%#v] in RBAC cache", roleBinding.ObjectMeta)
 	}
 }
 
