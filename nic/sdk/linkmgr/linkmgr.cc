@@ -426,6 +426,7 @@ port_create (port_args_t *args)
     port_p->set_debounce_time(args->debounce_time);
     port_p->set_fec_type(args->fec_type);
     port_p->set_auto_neg_enable(args->auto_neg_enable);
+    port_p->set_mtu(args->mtu);
 
     for (uint32_t i = 0; i < args->num_lanes; ++i) {
         port_p->sbus_addr_set(i, args->sbus_addr[i]);

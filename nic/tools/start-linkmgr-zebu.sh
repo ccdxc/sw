@@ -6,4 +6,4 @@ export MODEL_ZMQ_TYPE_TCP=1
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export LD_LIBRARY_PATH=$NIC_DIR/conf/linkmgr:$NIC_DIR/conf/sdk/external:$NIC_DIR/conf/sdk:$NIC_DIR/lib:/usr/local/lib:$LD_LIBRARY_PATH
 ulimit -c unlimited
-$GDB $NIC_DIR/bin/linkmgr 2>&1
+$GDB $NIC_DIR/bin/linkmgr -c linkmgr_zebu.json 2>&1

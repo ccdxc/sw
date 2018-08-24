@@ -27,7 +27,7 @@ output_file = args.output
 
 csv_file = open(input_file, 'r')
 
-fields = ( "boardid","macid_lane","sbus_addr","laneid", "mapped_laneid", "speed", "width", "sbus_divider", "tx_pol", "rx_pol", "cable_type", "dfe1", "dfe2", "dfe3", "dfe4", "slip_value" )
+fields = ( "boardid","macid_lane","sbus_addr","laneid", "mapped_laneid", "speed", "width", "sbus_divider", "tx_pol", "rx_pol", "cable_type", "main", "post", "pre1", "pre2", "pre3", "tx_slip_value", "rx_slip_value", "rx_termination" )
 
 dict_reader = csv.DictReader(csv_file, fields)
 

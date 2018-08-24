@@ -73,6 +73,7 @@ message PortSpec {
   PortFecType       fec_type         = 10;   // FEC type
   bool              auto_neg_enable  = 11;   // Enable AutoNeg
   uint32            debounce_time    = 12;   // Debounce time in ms
+  uint32            mtu              = 13;   // port mtu
 }
 
 message PortStatus {

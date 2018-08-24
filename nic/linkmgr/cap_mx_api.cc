@@ -128,7 +128,7 @@ void cap_mx_set_soft_reset(int chip_id, int inst_id, int value) {
     cap_mx_apb_write(chip_id, inst_id, 0x5, value);
 }
 
-void cap_mx_set_mtu(int chip_id , int inst_id, int ch, int max_value, int jabber_value) {
+void cap_mx_set_mtu_jabber(int chip_id , int inst_id, int ch, int max_value, int jabber_value) {
    if (ch == 0) {
       cap_mx_apb_write(chip_id, inst_id, 0x403, max_value);
       cap_mx_apb_write(chip_id, inst_id, 0x404, jabber_value);
@@ -146,6 +146,23 @@ void cap_mx_set_mtu(int chip_id , int inst_id, int ch, int max_value, int jabber
       cap_mx_apb_write(chip_id, inst_id, 0x704, jabber_value);
       cap_mx_apb_write(chip_id, inst_id, 0x705, jabber_value);
    }
+}
+
+void cap_mx_set_mtu(int chip_id, int inst_id, int ch, int speed, int max_value) {
+    switch (speed) {
+    case 100:
+        cap_mx_set_mtu_jabber(chip_id, inst_id, ch, max_value, max_value+16);
+        break;
+
+    case 50:
+    case 40:
+        cap_mx_set_mtu_jabber(chip_id, inst_id, ch, max_value, max_value+8);
+        break;
+
+    default:
+        cap_mx_set_mtu_jabber(chip_id, inst_id, ch, max_value, max_value+4);
+        break;
+    }
 }
 
 int cap_mx_port_to_ch_mapping(int chip_id, int inst_id, int port) {
@@ -344,11 +361,11 @@ void cap_mx_cfg_ch(int chip_id, int inst_id, int ch) {
     cap_mx_set_ch_mode(chip_id, inst_id, ch, mx[inst_id].ch_mode[ch]);
 
     if (mx[inst_id].speed[ch] == 100) {
-       cap_mx_set_mtu(chip_id, inst_id, ch, 9216, 9216+16);
+       cap_mx_set_mtu_jabber(chip_id, inst_id, ch, 9216, 9216+16);
     } else if (mx[inst_id].speed[ch] == 50 || mx[inst_id].speed[ch] == 40) {
-       cap_mx_set_mtu(chip_id, inst_id, ch, 9216, 9216+8);
+       cap_mx_set_mtu_jabber(chip_id, inst_id, ch, 9216, 9216+8);
     } else {
-       cap_mx_set_mtu(chip_id, inst_id, ch, 9216, 9216+4);
+       cap_mx_set_mtu_jabber(chip_id, inst_id, ch, 9216, 9216+4);
     }
     cap_mx_disable_eth_len_err(chip_id, inst_id, ch, 1);
 }
@@ -487,6 +504,14 @@ void cap_mx_load_from_cfg(int chip_id, int inst_id, int rst) {
    }
 
    cap_mx_load_from_cfg_glbl2(chip_id, inst_id, ch_enable_vec);
+}
+
+void cap_mx_set_tx_padding(int chip_id, int inst_id, int enable) {
+   cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+   PLOG_MSG( "MX inst_id:" << inst_id << " Entered: " << __func__ << endl)
+   mx_csr.cfg_mac_gbl.read();
+   mx_csr.cfg_mac_gbl.ff_txdispad_i(enable);
+   mx_csr.cfg_mac_gbl.write();
 }
 
 void cap_mx_tx_pad_disable(int chip_id, int inst_id) {

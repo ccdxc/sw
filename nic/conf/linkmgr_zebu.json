@@ -1,0 +1,6 @@
+{
+  "platform_type" : "zebu",
+  "sw" : {
+    "grpc_port": "50053"
+  }
+}

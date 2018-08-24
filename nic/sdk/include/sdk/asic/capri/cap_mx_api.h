@@ -43,5 +43,10 @@ void cap_mx_sd_clr_error_cnt(int chip_id, int inst_id, int start_ch, int end_ch,
 void cap_mx_set_ch_enable(int chip_id, int inst_id, int ch, int value);
 void cap_mx_set_soft_reset(int chip_id, int inst_id, int ch, int value);
 sdk_ret_t linkmgr_csr_init(void);
+void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report);
+void cap_mx_set_fec(int chip_id, int inst_id, int ch, int value);
+void cap_mx_set_tx_padding(int chip_id, int inst_id, int enable);
+void cap_mx_set_rx_padding(int chip_id, int inst_id, int ch, bool enable);
+void cap_mx_set_mtu(int chip_id, int inst_id, int ch, int speed, int max_value);
 
 #endif // __SDK_LINKMGR_CAP_MX_API_H__

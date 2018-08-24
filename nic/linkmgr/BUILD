@@ -34,6 +34,7 @@ cc_library(
     ],
     deps = [
         "//nic:gen_proto_includes",
+        "@sdk//:csr_includes",
         "@sdk//obj:sdk_logger",
         "@sdk//obj:sdk_pal",
         "@sdk//obj:sdk_periodic",

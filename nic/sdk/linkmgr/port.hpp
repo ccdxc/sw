@@ -89,7 +89,6 @@ public:
         this->link_bring_up_timer_ = link_bring_up_timer;
     }
 
-
     void *link_debounce_timer(void) const {
         return this->link_debounce_timer_;
     }
@@ -97,6 +96,8 @@ public:
     void set_link_debounce_timer(void *link_debounce_timer) {
         this->link_debounce_timer_ = link_debounce_timer;
     }
+
+    void set_mtu(uint32_t mtu) { this->mtu_ = mtu; }
 
     sdk_ret_t port_enable(void);
     sdk_ret_t port_disable(void);
@@ -228,6 +229,7 @@ private:
     uint32_t              mac_id_;                    // mac instance for this port
     uint32_t              mac_ch_;                    // mac channel within mac instance
     uint32_t              num_lanes_;                 // number of lanes for this port
+    uint32_t              mtu_;                       // number of lanes for this port
     uint32_t              debounce_time_;             // Debounce time in ms
     uint32_t              bringup_timer_val_;         // current bringup timer value
     uint32_t              sbus_addr_[MAX_PORT_LANES]; // sbus addr for each serdes

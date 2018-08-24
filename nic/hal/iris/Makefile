@@ -167,6 +167,10 @@ nic: stages
 	$(MAKE) package-size-check
 	$(MAKE) aarch64-libs-check
 
+haps: stages
+	$(MAKE) package-tests
+	$(MAKE) package-haps-dbg
+
 all: stages
 	$(MAKE) tests
 	$(MAKE) package-tests

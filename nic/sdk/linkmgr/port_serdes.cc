@@ -248,6 +248,8 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 {
     uint32_t divider = serdes_info->sbus_divider;
     uint32_t width   = serdes_info->width;
+    uint32_t tx_slip = serdes_info->tx_slip_value;
+    uint32_t rx_slip = serdes_info->rx_slip_value;
 
     SDK_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u",
                     sbus_addr, divider, width);
@@ -275,10 +277,24 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     cfg->sbus_reset  = 1;
     cfg->spico_reset = 1;
 
+    // reset the earlier error code
+    aapl->return_code = 0;
+
     avago_serdes_init(aapl, sbus_addr, cfg);
 
     if(aapl->return_code) {
         SDK_TRACE_ERR("Failed to initialize SerDes\n");
+    }
+
+    if (tx_slip != 0) {
+        // Tx slip value
+        // TODO int_check?
+        avago_spico_int(aapl, sbus_addr, 0xd, tx_slip);
+    }
+
+    if (rx_slip != 0) {
+        // Rx slip value
+        avago_spico_int(aapl, sbus_addr, 0xe, rx_slip);
     }
 
     avago_serdes_init_config_destruct(aapl, cfg);

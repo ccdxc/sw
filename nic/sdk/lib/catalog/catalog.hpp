@@ -38,7 +38,8 @@ typedef enum mac_mode_e {
 
 typedef struct serdes_info_s {
     uint32_t sbus_divider;
-    uint32_t slip_value;
+    uint32_t tx_slip_value;
+    uint32_t rx_slip_value;
     uint32_t width;
     uint8_t  tx_pol;
     uint8_t  rx_pol;

@@ -55,6 +55,7 @@ typedef struct port_create_app_ctxt_s {
     PortFecType      fec_type;                  // FEC type
     bool             auto_neg_enable;           // Enable AutoNeg
     uint32_t         debounce_time;             // Debounce time in ms
+    uint32_t         mtu;                       // mtu
     uint32_t         sbus_addr[MAX_PORT_LANES]; // sbus addr for each lane
 } __PACK__ port_create_app_ctxt_t;
 

@@ -5,6 +5,7 @@ targets:
   halctl: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make &&  cd $GOPATH/src/github.com/pensando/sw/nic/agent/cmd/halctl && go test" ]
   arm_build: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make ARCH=aarch64 && make ARCH=aarch64 sanity-tests && make ARCH=aarch64 gtests && make clean ; ret=$? ; make sanity_logs ; exit $ret" ]
   arm_haps_build: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make PLATFORM=haps ARCH=aarch64 && make PLATFORM=haps ARCH=aarch64 sanity-tests && make PLATFORM=haps ARCH=aarch64 gtests && make clean ; ret=$? ; make sanity_logs ; exit $ret" ]
+  arm_haps_dbg_build: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make ARCH=aarch64 PLATFORM=haps -C hal/iris haps && make clean ; ret=$? ; make sanity_logs ; exit $ret" ]
   storage:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./run.py --storage ; ret=$? ; make sanity_logs ; exit $ret" ]
   storage_perf:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./run.py --storage --storage_test perf; ret=$? ; make sanity_logs ; exit $ret" ]
   storage_nvme:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./run.py --storage --storage_test nvme_dp; ret=$? ; make sanity_logs ; exit $ret" ]

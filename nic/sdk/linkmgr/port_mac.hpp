@@ -9,8 +9,19 @@
 namespace sdk {
 namespace linkmgr {
 
+typedef struct mac_info_s {
+    uint32_t mac_id;
+    uint32_t mac_ch;
+    uint32_t speed;
+    uint32_t num_lanes;
+    uint32_t fec;
+    uint8_t  tx_pad_enable;
+    uint8_t  rx_pad_enable;
+    uint32_t mtu;
+} mac_info_t;
+
 typedef struct mac_fn_s_ {
-    int (*mac_cfg) (uint32_t port_num, uint32_t speed, uint32_t num_lanes);
+    int (*mac_cfg) (mac_info_t *mac_info);
     int (*mac_enable) (uint32_t port_num, uint32_t speed,
                        uint32_t num_lanes, bool enable);
     int (*mac_soft_reset) (uint32_t port_num, uint32_t speed,

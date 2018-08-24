@@ -90,12 +90,20 @@ port::port_mac_port_num_calc(void)
 sdk_ret_t
 port::port_mac_cfg(void)
 {
-    uint32_t mac_port_num = port_mac_port_num_calc();
+    mac_info_t mac_info;
+    memset(&mac_info, 0, sizeof(mac_info_t));
 
-    mac_fns.mac_cfg(
-            mac_port_num,
-            static_cast<uint32_t>(this->port_speed_),
-            this->num_lanes_);
+    mac_info.mac_id    = this->mac_id_;
+    mac_info.mac_ch    = this->mac_ch_;
+    mac_info.speed     = static_cast<uint32_t>(this->port_speed_);
+    mac_info.fec       = static_cast<uint32_t>(this->fec_type_);
+    mac_info.mtu       = this->mtu_;
+    mac_info.num_lanes = this->num_lanes_;
+
+    mac_info.tx_pad_enable = 0;
+    mac_info.rx_pad_enable = 0;
+
+    mac_fns.mac_cfg(&mac_info);
 
     return SDK_RET_OK;
 }

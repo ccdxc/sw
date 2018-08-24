@@ -297,8 +297,11 @@ catalog::populate_serdes(ptree &prop_tree)
         serdes_info->sbus_divider =
                             serdes.second.get<uint32_t>("sbus_divider", 0);
 
-        serdes_info->slip_value =
-                            serdes.second.get<uint32_t>("slip_value", 0);
+        serdes_info->tx_slip_value =
+                            serdes.second.get<uint32_t>("tx_slip_value", 0);
+
+        serdes_info->rx_slip_value =
+                            serdes.second.get<uint32_t>("rx_slip_value", 0);
 
         serdes_info->width = serdes.second.get<uint32_t>("width", 0);
 

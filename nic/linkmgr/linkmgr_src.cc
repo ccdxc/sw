@@ -9,6 +9,7 @@
 #include "linkmgr_src.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
+#include "cap_mx_api.h"
 
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
@@ -17,6 +18,7 @@ using sdk::lib::dllist_reset;
 using sdk::types::platform_type_t;
 using sdk::linkmgr::port_args_t;
 using sdk::SDK_RET_OK;
+using sdk::linkmgr::mac_info_t;
 
 namespace linkmgr {
 
@@ -263,6 +265,7 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     port_args.mac_id      = app_ctxt->mac_id;
     port_args.mac_ch      = app_ctxt->mac_ch;
     port_args.num_lanes   = app_ctxt->num_lanes;
+    port_args.mtu         = app_ctxt->mtu;
     port_args.auto_neg_enable = app_ctxt->auto_neg_enable;
     port_args.debounce_time   = app_ctxt->debounce_time;
     memcpy(port_args.sbus_addr, app_ctxt->sbus_addr,
@@ -466,6 +469,13 @@ port_create (PortSpec& spec, PortResponse *rsp)
     app_ctxt.fec_type    = spec.fec_type();
     app_ctxt.auto_neg_enable = spec.auto_neg_enable();
     app_ctxt.debounce_time   = spec.debounce_time();
+
+    if (spec.mtu() == 0) {
+        // TODO define?
+        app_ctxt.mtu = 9216;
+    } else {
+        app_ctxt.mtu = spec.mtu();
+    }
 
     for (uint32_t i = 0; i < spec.num_lanes(); ++i) {
         app_ctxt.sbus_addr[i] = sbus_addr(spec.key_or_handle().port_id(), i);
@@ -1154,6 +1164,8 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
     uint32_t    cable_type    = 0x0;
     int         eye_type      = 0;
     int         hard          = 0;
+    int         mac_inst      = 0;
+    int         mac_ch        = 0;
 
     sdk::linkmgr::port_args_init(&port_args);
     kh::PortKeyHandle key_handle;
@@ -1233,8 +1245,16 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             HAL_TRACE_DEBUG("mac_cfg mac_port: {}, speed: {}, num_lanes: {}",
                             mac_port_num, speed, num_lanes);
 
-            sdk::linkmgr::mac_fns.mac_cfg(
-                    mac_port_num, speed, num_lanes);
+            mac_info_t mac_info;
+            memset(&mac_info, 0, sizeof(mac_info_t));
+
+            // TODO
+            mac_info.mac_id    = mac_port_num / 4;
+            mac_info.mac_ch    = mac_port_num % 4;
+            mac_info.speed     = speed;
+            mac_info.num_lanes = num_lanes;
+
+            sdk::linkmgr::mac_fns.mac_cfg(&mac_info);
             break;
 
         case 3:
@@ -1371,6 +1391,27 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             HAL_TRACE_DEBUG("serdes_spico_upload sbus_addr: {}",
                             sbus_addr);
             sdk::linkmgr::serdes_fns.serdes_spico_upload(sbus_addr, filename.c_str());
+            break;
+
+        case 18:
+            mac_inst = req.val1();
+            mac_ch   = req.val2();
+
+            HAL_TRACE_DEBUG("mac_stats mac_inst: {}, mac_ch: {}",
+                            mac_inst, mac_ch);
+
+            cap_mx_mac_stat(0 /*chip_id*/, mac_inst, mac_ch, 0);
+            break;
+
+        case 19:
+            mac_inst = req.val1();
+            mac_ch   = req.val2();
+            enable   = req.val3();
+
+            HAL_TRACE_DEBUG("mac_lpbk mac_inst: {}, mac_ch: {}, enable: {}",
+                            mac_inst, mac_ch, enable);
+
+            // TODO
             break;
 
         default:
