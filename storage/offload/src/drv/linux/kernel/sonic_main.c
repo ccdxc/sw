@@ -55,7 +55,7 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 	char *name = "UNKNOWN";
 
 	if (ctx->comp.cpl.status) {
-		while ((++cmd)->cmd)
+		while ((cmd++)->cmd)
 			if (cmd->cmd == ctx->cmd.cmd.opcode)
 				name = cmd->name;
 		dev_err(lif->sonic->dev, "(%d) %s failed: %d\n",

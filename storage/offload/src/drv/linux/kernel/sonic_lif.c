@@ -222,8 +222,7 @@ static int sonic_qcqs_alloc(struct lif *lif)
 
 	pid = sonic_pid_get(lif, 0);
 	flags = QCQ_F_INTR;
-	err = sonic_qcq_alloc(lif, 0, "admin", flags,
-			1024 * 16, /* TODO choose smaller value once wrapping works */
+	err = sonic_qcq_alloc(lif, 0, "admin", flags, 1 << 4,
 			sizeof(struct admin_cmd),
 			sizeof(struct admin_cpl),
 			pid, &lif->adminqcq);
