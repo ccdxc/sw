@@ -225,16 +225,16 @@ static inline uint32_t ionic_v1_cqe_qtf_qid(uint32_t qtf)
 
 /* v1 base wqe header */
 struct ionic_v1_base_hdr {
-	uint64_t			wqe_id;
-	uint8_t				op;
-	uint8_t				num_sge_key;
+	__u64				wqe_id;
+	__u8				op;
+	__u8				num_sge_key;
 	__be16				flags;
 	__be32				length_key;
 };
 
 /* v1 receive wqe body */
 struct ionic_v1_recv_bdy {
-	uint8_t				rsvd[16]; /* XXX want sge here */
+	__u8				rsvd[16]; /* XXX want sge here */
 	struct ionic_sge		sgl[2];
 };
 
@@ -254,7 +254,7 @@ struct ionic_v1_common_bdy {
 		} rdma;
 	};
 	union {
-		uint8_t			data[32];
+		__u8			data[32];
 		struct ionic_sge	sgl[2];
 	};
 };
@@ -267,7 +267,7 @@ struct ionic_v1_atomic_bdy {
 	__be32				swap_add_low;
 	__be32				compare_high;
 	__be32				compare_low;
-	uint8_t				rsvd[4];
+	__u8				rsvd[4];
 	struct ionic_sge		sge;
 };
 
@@ -277,9 +277,9 @@ struct ionic_v1_reg_mr_bdy {
 	__le64				length;
 	__le64				offset;
 	__le64				dma_addr;
-	uint8_t				dir_size_log2;
-	uint8_t				page_size_log2;
-	uint8_t				rsvd[14];
+	__u8				dir_size_log2;
+	__u8				page_size_log2;
+	__u8				rsvd[14];
 };
 
 /* v1 bind mw wqe body */
@@ -287,7 +287,7 @@ struct ionic_v1_bind_mw_bdy {
 	__le64				va;
 	__le64				length;
 	__le32				lkey;
-	uint8_t				rsvd[28];
+	__u8				rsvd[28];
 };
 
 /* v1 send/recv wqe */
@@ -352,7 +352,7 @@ static inline int ionic_v1_send_wqe_max_sge(uint8_t stride_log2)
 static inline int ionic_v1_send_wqe_max_data(uint8_t stride_log2)
 {
 	struct ionic_v1_wqe *wqe = (void *)0;
-	uint8_t *data = (void *)(1ull << stride_log2);
+	__u8 *data = (void *)(1ull << stride_log2);
 
 	return data - wqe->common.data;
 }
