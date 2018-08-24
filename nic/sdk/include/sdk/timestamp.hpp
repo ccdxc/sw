@@ -21,7 +21,7 @@ typedef struct timespec timespec_t;
 #define TIME_NSECS_PER_SEC                           1000000000ULL
 #define TIME_USECS_PER_SEC                           1000000
 #define TIME_USECS_PER_MSEC                          1000
-#define TIME_NSECS_PER_MSEC                          1000000
+#define TIME_NSECS_PER_MSEC                          1000000L
 #define TIME_NSECS_PER_USEC                          1000
 
 //--------------------------------------------------------------------------

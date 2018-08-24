@@ -417,7 +417,8 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
            flow_stats_actiondata    stats = { 0 };
 
            stats.actionid = FLOW_STATS_FLOW_STATS_ID;
-           stats.flow_stats_action_u.flow_stats_flow_stats.last_seen_timestamp = hw_tick;
+           // P4 has 32 bits so we have to use top 32 bits. We lose the precision by 2^16 ns
+           stats.flow_stats_action_u.flow_stats_flow_stats.last_seen_timestamp = hw_tick >> 16;
 
            sdk_ret = dmstats->update(flow_pd->flow_stats_hw_id, &stats);
            ret = hal_sdk_ret_to_hal_ret(sdk_ret);

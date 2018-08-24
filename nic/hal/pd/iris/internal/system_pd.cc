@@ -13,11 +13,14 @@ namespace hal {
 namespace pd {
 
 thread_local void *t_clock_delta_timer;
+thread_local void *t_clock_rollover_timer;
 
-#define HAL_TIMER_ID_CLOCK_SYNC         0
-#define HAL_TIMER_ID_CLOCK_SYNC_INTVL  (60 * TIME_MSECS_PER_MIN)
-#define HW_CLOCK_TICK_TO_NS(x)         (x * 1200480) //based on frequency of 833 Hz
-#define NS_TO_HW_CLOCK_TICK(x)         (x / 1200480)
+#define HAL_TIMER_ID_CLOCK_SYNC            0
+#define HAL_TIMER_ID_CLOCK_ROLLOVER        1
+#define HAL_TIMER_ID_CLOCK_SYNC_INTVL     (60 * TIME_MSECS_PER_MIN)
+#define HAL_TIMER_ID_CLOCK_SYNC_INTVL_NS  (HAL_TIMER_ID_CLOCK_SYNC_INTVL * TIME_NSECS_PER_MSEC)
+#define HW_CLOCK_TICK_TO_NS(x)         (x * 1.200) //based on frequency of 833 MHz
+#define NS_TO_HW_CLOCK_TICK(x)         (x / 1.200)
 
 hal_ret_t
 pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
@@ -510,10 +513,11 @@ hal_ret_t
 pd_conv_hw_clock_to_sw_clock (pd_func_args_t *pd_func_args)
 {
     pd_conv_hw_clock_to_sw_clock_args_t *args = pd_func_args->pd_conv_hw_clock_to_sw_clock;
+
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
         HAL_TRACE_DEBUG("hw tick: {} sw_ns: {}", HW_CLOCK_TICK_TO_NS(args->hw_tick),
                          (HW_CLOCK_TICK_TO_NS(args->hw_tick) + g_hal_state_pd->clock_delta()));
-        *args->sw_ns = HW_CLOCK_TICK_TO_NS(args->hw_tick) + g_hal_state_pd->clock_delta();
+        *args->sw_ns = HW_CLOCK_TICK_TO_NS(args->hw_tick)  + g_hal_state_pd->clock_delta();
     } else {
         *args->sw_ns = HW_CLOCK_TICK_TO_NS(args->hw_tick) - g_hal_state_pd->clock_delta();
     }
@@ -528,6 +532,7 @@ hal_ret_t
 pd_conv_sw_clock_to_hw_clock (pd_func_args_t *pd_func_args)
 {
     pd_conv_sw_clock_to_hw_clock_args_t *args = pd_func_args->pd_conv_sw_clock_to_hw_clock;
+
     if (g_hal_state_pd->clock_delta_op() == HAL_CLOCK_DELTA_OP_ADD) {
         *args->hw_tick = NS_TO_HW_CLOCK_TICK((args->sw_ns - g_hal_state_pd->clock_delta()));
     } else {
@@ -548,12 +553,25 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     // Read hw time
     capri_tm_get_clock_tick(&hw_ns);
-    HW_CLOCK_TICK_TO_NS(hw_ns);
+    hw_ns = HW_CLOCK_TICK_TO_NS(hw_ns);
 
     // get current time
     clock_gettime(CLOCK_MONOTONIC, &sw_ts);
     sdk::timestamp_to_nsecs(&sw_ts, &sw_ns);
 
+    //Compute the delta if rollover happens before the next timer update
+    if (timer_id != HAL_TIMER_ID_CLOCK_ROLLOVER) {
+        uint64_t rollover_window = (HW_CLOCK_TICK_TO_NS(0xFFFFFFFFFFFF)-\
+                                    (HAL_TIMER_ID_CLOCK_SYNC_INTVL_NS));
+        if (hw_ns >= rollover_window) {
+            t_clock_rollover_timer =
+                        sdk::lib::timer_schedule(HAL_TIMER_ID_CLOCK_ROLLOVER, // timer_id
+                                      (HW_CLOCK_TICK_TO_NS(0xFFFFFFFFFFFF)-hw_ns), //time to rollover
+                                      (void *)0,    // ctxt
+                                      clock_delta_comp_cb, false);
+        }
+    }
+ 
     if (sw_ns == hw_ns) {
         // Do nothing. We are in sync in hw!
         return;
@@ -569,6 +587,7 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
     HAL_TRACE_DEBUG("Delta ns: {}", delta_ns);
     HAL_TRACE_DEBUG("Clock delta op: {}", g_hal_state_pd->clock_delta_op());
     g_hal_state_pd->set_clock_delta(delta_ns);
+
 }
 
 //------------------------------------------------------------------------------
