@@ -982,13 +982,21 @@ static int ionic_query_qp(struct ibv_qp *ibqp,
 			  int attr_mask,
 			  struct ibv_qp_init_attr *init_attr)
 {
+	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	struct ibv_query_qp cmd;
 	int rc;
 
 	rc = ibv_cmd_query_qp(ibqp, attr, attr_mask, init_attr,
 			      &cmd, sizeof(cmd));
 
-	init_attr->cap.max_inline_data = IONIC_MAX_INLINE_SIZE;
+	init_attr->cap.max_send_wr = qp->sq.mask;
+	init_attr->cap.max_send_sge =
+		ionic_v1_send_wqe_max_sge(qp->sq.stride_log2);
+	init_attr->cap.max_recv_wr = qp->rq.mask;
+	init_attr->cap.max_recv_sge =
+		ionic_v1_send_wqe_max_sge(qp->rq.stride_log2);
+	init_attr->cap.max_inline_data =
+		ionic_v1_send_wqe_max_data(qp->sq.stride_log2);
 
 	attr->cap = init_attr->cap;
 
