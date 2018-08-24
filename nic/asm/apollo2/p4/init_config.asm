@@ -13,6 +13,7 @@ init_config:
     seq             c1, k.capri_intrinsic_tm_iport, TM_PORT_DMA
     sub.!c1         r1, r1, CAPRI_GLOBAL_INTRINSIC_HDR_SZ
     phvwr           p.capri_p4_intrinsic_packet_len, r1
+    phvwr           p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
     div             r1, k.p4_to_rxdma_header_slacl_ip_31_16, 51
     div             r2, k.p4_to_rxdma_header_slacl_ip_15_00, 51
     add             r4, r0, k.{p4_to_rxdma_header_slacl_addr1_sbit0_ebit1, \

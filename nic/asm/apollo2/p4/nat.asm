@@ -9,12 +9,6 @@ struct phv_ p;
 %%
 
 nat:
-    phvwr       p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_0
-    phvwr       p.capri_txdma_intrinsic_valid, FALSE
-    phvwr       p.predicate_header_valid, FALSE
-    phvwr       p.txdma_to_p4e_header_valid, FALSE
-    phvwr       p.apollo_i2e_metadata_valid, FALSE
-
     bbeq        k.nat_metadata_snat_required, TRUE, snat
     seq         c1, k.ipv4_1_valid, TRUE
     bbeq        k.apollo_i2e_metadata_dnat_required, TRUE, dnat

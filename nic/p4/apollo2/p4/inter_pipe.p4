@@ -43,3 +43,26 @@ table ingress_to_rxdma {
 control ingress_to_rxdma {
     apply(ingress_to_rxdma);
 }
+
+/*****************************************************************************/
+/* Egress pipeline to uplink                                                 */
+/*****************************************************************************/
+action egress_to_uplink() {
+    modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_1);
+    modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    remove_header(capri_txdma_intrinsic);
+    remove_header(predicate_header);
+    remove_header(txdma_to_p4e_header);
+    remove_header(apollo_i2e_metadata);
+}
+
+@pragma stage 5
+table egress_to_uplink {
+    actions {
+        egress_to_uplink;
+    }
+}
+
+control egress_to_uplink {
+    apply(egress_to_uplink);
+}
