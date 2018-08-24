@@ -44,7 +44,7 @@ rdma_aq_tx_feedback_process:
 
     phvwrpair   p.p4_intr_rxdma.intr_qid, K_COMMON_GLOBAL_QID, p.p4_intr_rxdma.intr_qtype, K_COMMON_GLOBAL_QTYPE
     phvwr       p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
-    phvwr       p.p4_to_p4plus.raw_flags, CQ_RX_FLAG_RDMA_FEEDBACK
+    phvwr       p.p4_to_p4plus.raw_flags, AQ_RX_FLAG_RDMA_FEEDBACK
     phvwri      p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_AQ_FEEDBACK_SPLITTER_OFFSET
 
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)

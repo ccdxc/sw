@@ -422,7 +422,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     // TODO: Fill prefetch data and add corresponding code
 
     sram_lif_entry.rdma_en_qtype_mask =
-        ((1 << Q_TYPE_RDMA_SQ) | (1 << Q_TYPE_RDMA_RQ) | (1 << Q_TYPE_RDMA_CQ) | (1 << Q_TYPE_RDMA_EQ));
+        ((1 << Q_TYPE_RDMA_SQ) | (1 << Q_TYPE_RDMA_RQ) | (1 << Q_TYPE_RDMA_CQ) | (1 << Q_TYPE_RDMA_EQ) | (1 << Q_TYPE_ADMINQ));
     sram_lif_entry.sq_qtype = Q_TYPE_RDMA_SQ;
     sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
     sram_lif_entry.aq_qtype = Q_TYPE_ADMINQ;

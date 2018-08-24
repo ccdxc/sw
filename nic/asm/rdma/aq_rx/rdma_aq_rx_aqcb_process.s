@@ -64,6 +64,8 @@ aq_feedback:
     //set dma_cmd_ptr in phv
     RXDMA_DMA_CMD_PTR_SET(AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_START_FLIT_CMD_ID) //Exit Slot
 
+    nop.e
+    nop
 
 exit:
     phvwr.e       p.common.p4_intr_global_drop, 1   
