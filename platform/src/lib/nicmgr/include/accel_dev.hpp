@@ -42,6 +42,29 @@ enum {
 };
 
 
+/*
+ * Physical host address bit manipulation
+ */
+#define ACCEL_PHYS_ADDR_HOST_POS        63
+#define ACCEL_PHYS_ADDR_HOST_MASK       0x1
+#define ACCEL_PHYS_ADDR_LIF_POS         52
+#define ACCEL_PHYS_ADDR_LIF_MASK        0x7ff
+
+#define ACCEL_PHYS_ADDR_FIELD_GET(addr, pos, mask)      \
+    (((addr) >> (pos)) & (mask))
+#define ACCEL_PHYS_ADDR_FIELD_SET(addr, pos, mask, val) \
+    addr |= (((uint64_t)((val) & (mask))) << (pos))
+    
+#define ACCEL_PHYS_ADDR_HOST_GET(addr)                  \
+    ACCEL_PHYS_ADDR_FIELD_GET(addr, ACCEL_PHYS_ADDR_HOST_POS, ACCEL_PHYS_ADDR_HOST_MASK)
+#define ACCEL_PHYS_ADDR_HOST_SET(addr, host)            \
+    ACCEL_PHYS_ADDR_FIELD_SET(addr, ACCEL_PHYS_ADDR_HOST_POS, ACCEL_PHYS_ADDR_HOST_MASK, host)
+    
+#define ACCEL_PHYS_ADDR_LIF_GET(addr)                   \
+    ACCEL_PHYS_ADDR_FIELD_GET(addr, ACCEL_PHYS_ADDR_LIF_POS, ACCEL_PHYS_ADDR_LIF_MASK)
+#define ACCEL_PHYS_ADDR_LIF_SET(addr, lif)              \
+    ACCEL_PHYS_ADDR_FIELD_SET(addr, ACCEL_PHYS_ADDR_LIF_POS, ACCEL_PHYS_ADDR_LIF_MASK, lif)
+    
 /**
  * Accelerator Device Spec
  */
