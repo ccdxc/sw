@@ -2,8 +2,9 @@
 
 export NIC_DIR='/nic'
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
-export LD_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/conf/sdk:$NIC_DIR/conf/linkmgr:$NIC_DIR/conf/sdk/external:/usr/local/lib:/usr/lib/aarch64-linux-gnu:/platform/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/conf/sdk:$NIC_DIR/conf/linkmgr:$NIC_DIR/conf/sdk/external:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
+rm -f hal.log*
 ulimit -c unlimited
 
 # check for all the binaries
@@ -33,7 +34,6 @@ HAL_UP=0
 
 # wait for HAL
 #timeout=1
-#echo "HAL WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
 #while [ "$HAL_UP" -eq 0 ]
 #do
   #echo "Waiting for HAL GRPC server to be up. Sleeping for $timeout seconds..."
@@ -47,15 +47,24 @@ HAL_UP=0
     #exit 1
   #fi
 #done
-#echo "HAL WAIT END: `date +%x_%H:%M:%S:%N`"
 
-echo "Waiting for HAL to come up ..."
-sleep 600
+echo "HAL WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
+
+while [ 1 ]
+do
+    OUTPUT="$(tail hal.log 2>&1 | grep "gRPC server listening on" | cut -d ' ' -f 5-8)"
+    if [ "$OUTPUT" == "gRPC server listening on" ]; then
+	break
+    fi
+    sleep 3
+done
+
+echo "HAL UP: `date +%x_%H:%M:%S:%N`"
+
+# start nicmgr
+LD_LIBRARY_PATH=/platform/lib:/nic/lib:/nic/conf/sdk:$LD_LIBRARY_PATH /platform/bin/nicmgrd > nicmgr.log 2>&1 &
 
 # start netagent
 $NIC_DIR/bin/netagent -datapath hal -logtofile /tmp/agent.log -hostif lo &
-
-# start nicmgr
-/platform/bin/nicmgrd > nicmgr.log 2>&1
 
 echo "All processes brought up, please check ..."
