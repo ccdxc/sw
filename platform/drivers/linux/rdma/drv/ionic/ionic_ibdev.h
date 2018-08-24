@@ -55,6 +55,9 @@
 #define IONIC_MAX_QPID		0xffffff
 #define IONIC_MAX_HBM_ORDER	15
 
+#define IONIC_META_LAST ((void *)1ul)
+#define IONIC_META_POSTED ((void *)2ul)
+
 struct ionic_aq;
 struct ionic_cq;
 struct ionic_eq;
@@ -269,13 +272,14 @@ struct ionic_sq_meta {
 	u64			wrid;
 	u32			len;
 	u16			seq;
-	u8			op;
-	u8			status;
+	u8			ibop;
+	u8			ibsts;
 	bool			remote;
 	bool			signal;
 };
 
 struct ionic_rq_meta {
+	struct ionic_rq_meta	*next;
 	u64			wrid;
 	u32			len; /* XXX byte_len must come from cqe */
 };
@@ -316,7 +320,8 @@ struct ionic_qp {
 	spinlock_t		rq_lock; /* for posting and polling */
 	bool			rq_flush;
 	struct ionic_queue	rq;
-	struct ionic_rq_meta	*rq_meta; /* XXX this rq_meta will go away */
+	struct ionic_rq_meta	*rq_meta;
+	struct ionic_rq_meta	*rq_meta_head;
 
 	/* infrequently accessed, keep at end */
 	bool			sq_is_hbm;
@@ -495,6 +500,11 @@ static inline void ionic_intr_mask_assert(struct ionic_ibdev *dev,
 	intr += IONIC_INTR_REG_MASK_ASSERT;
 
 	iowrite32(mask, &dev->intr_ctrl[intr]);
+}
+
+static inline bool ionic_ibop_is_local(enum ib_wr_opcode op)
+{
+	return op == IB_WR_LOCAL_INV || op == IB_WR_REG_MR;
 }
 
 void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
