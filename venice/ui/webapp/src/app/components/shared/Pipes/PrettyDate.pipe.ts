@@ -2,7 +2,7 @@ import { PipeTransform, Pipe } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
 @Pipe({
-  name: 'prettyDate'
+  name: 'PrettyDate'
 })
 export class PrettyDatePipe extends DatePipe implements PipeTransform {
   transform(value: any, args?: any): any {

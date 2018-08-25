@@ -83,6 +83,26 @@
   }
 }
 
+.sgpolicy-search-button {
+  color: #676767;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.sgpolicy-search-clear-button {
+  color: #676767;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.sgpolicy-search-error {
+  color: #e57553;
+  margin-left: 40px;
+  div {
+    margin-left: 10px;
+  }
+}
+
 .sgpolicy-header-div {
   width: 100%;
   background-color: transparent;

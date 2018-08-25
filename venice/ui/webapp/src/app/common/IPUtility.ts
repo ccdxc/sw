@@ -29,6 +29,33 @@ export class IPUtility {
   }
 
   /**
+   * Returns true if the ip is valid
+   */
+  public static isValidIP(ip) {
+    if (ip === null) {
+      return false;
+    }
+    // Can't end in a dot
+    if (ip[ip.length - 1] === '.') {
+      return false;
+    }
+    const ipParts = ip.split('.');
+    if (ipParts.length !== 4) {
+      return false;
+    }
+    // None of the octets can be greater than 255
+    if (ipParts.some(
+      (part) => {
+        const octet = parseInt(part);
+        return isNaN(octet) || octet > 255;
+      }
+    )) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Creates a fully formed IP from a partially given ip
    * by adding wildcards for the remaining octets
    */

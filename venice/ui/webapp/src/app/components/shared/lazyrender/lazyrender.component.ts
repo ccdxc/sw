@@ -47,6 +47,9 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   // ngDoCheck cycle
   @Input() runDoCheck: boolean = false;
 
+  // Emits when the displayed data set switches to the updated data
+  @Output() dataUpdate: EventEmitter<boolean> = new EventEmitter<boolean>();
+
   // Emits the data entries that are currently loaded
   @Output() loadedData: EventEmitter<ReadonlyArray<any>> = new EventEmitter<ReadonlyArray<any>>();
 
@@ -110,6 +113,7 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
         // The last requested chunk should contain the default settings the table wants,
         // as it should have been called in the virtual scroll event on table load
         this.dataChunkUtility.switchToNewData();
+        this.dataUpdate.emit(true);
         this.dataLazy = this.dataChunkUtility.getLastRequestedChunk();
         this.setTableValues();
       } else {
@@ -131,7 +135,10 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   ngAfterViewInit() {
     this.viewInitComplete = true;
     // Need to put into next cycle to prevent primeNG overriding
-    this.resizeTable(0);
+    // putting longer delay so that the rest of the application
+    // finishes rendering. Currently causing calculations to be ~1 pixel off
+    // and displaying an uneccessary scrollbar
+    this.resizeTable(500);
   }
 
   /**
@@ -204,16 +211,23 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
     return this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scrollTop;
   }
 
+  scrollToRowNumber(rowNum) {
+    const scrollAmount = rowNum * this.virtualRowHeight;
+    this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scroll(0, scrollAmount);
+  }
+
   /**
    * Switches to use new data and scrolls the table to the top
    */
   resetTableView() {
     this.dataChunkUtility.switchToNewData();
+    this.hasUpdate = false;
+    this.dataUpdate.emit(true);
     // If we are scrolled a lot, the scroll to the top will trigger the table
     // to make a new request. If we are near the top though, it won't trigger so we
     // must load the new values
     this.dataLazy = this.dataChunkUtility.getLastRequestedChunk();
-    this.hasUpdate = false;
+    this.setTableValues();
     this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scroll(0, 0);
   }
 }

@@ -16,17 +16,18 @@
         </div>
         <div fxFlex="50">
             <div class="sgpolicy-summary-panel-content-label2">Created on:</div>
-            <div class="sgpolicy-summary-panel-content-value">{{selectedPolicy?.meta["creation-time"] | date:'MM-dd-yyyy HH:mm a'}}</div>
+            <div class="sgpolicy-summary-panel-content-value">{{selectedPolicy?.meta["creation-time"] | PrettyDate }}</div>
         </div>
       </div>
       <div fxLayout="row">
         <div fxFlex="50">
-            <div class="sgpolicy-summary-panel-content-label"> Created By: </div>
-            <div class="sgpolicy-summary-panel-content-value">{{creator}}</div>
+          <!-- Commented out as creator is not available currently -->
+            <!-- <div class="sgpolicy-summary-panel-content-label"> Created By: </div>
+            <div class="sgpolicy-summary-panel-content-value">{{creator}}</div> -->
         </div>
         <div fxFlex="50">
             <div class="sgpolicy-summary-panel-content-label2">Last Modified: </div>
-            <div class="sgpolicy-summary-panel-content-value">{{selectedPolicy?.meta["mod-time"]  | date:'MM-dd-yyyy HH:mm a'}}</div>
+            <div class="sgpolicy-summary-panel-content-value">{{selectedPolicy?.meta["mod-time"]  | PrettyDate }}</div>
         </div>
       </div>
     </div>
@@ -36,25 +37,43 @@
 
 <ng-template #DataTable>
   <div fxFlex class="sgpolicy-widget">
-    <app-lazyrender [data]="sgPolicyRules" [rows]="28" [virtualRowHeight]="36">
-      <p-table [columns]="cols" sortField="order" dataKey="order" 
+    <app-lazyrender [data]="sgPolicyRules" [rows]="28" [virtualRowHeight]="36" (dataUpdate)='dataUpdated()'>
+      <p-table [columns]="cols" sortField="order" dataKey="order"
               #sgpolicyTable
               class="global-primeng-table sgpolicy-table"  [responsive]="true" 
               [loading]="loading" [resizableColumns]="true"
               (sortFunction)="customSort($event)" [customSort]="true">
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
-          <app-tableheader title="Policy Rules" [count]="sgpolicyTurboTable != null &&  sgpolicyTurboTable.hasFilter() ? sgpolicyTurboTable?.filteredValue?.length || 0 : null" [total]="sgPolicyRules.length" [icon]="policyIcon">
+          <app-tableheader title="Policy Rules" [total]="sgPolicyRules.length" [icon]="policyIcon">
             <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center" >
               Find Rule by: 
               <mat-form-field fxFlex="nogrow" floatLabel="never">
-                <input matInput [formControl]="ipFormControl" placeholder="IP / IP Range" (input)="filterPolicyRules($event)">
+                <input matInput (keyup)="keyUpInput($event)" [formControl]="sourceIpFormControl" placeholder="Source IP" maxlength="15" autocomplete="off">
               </mat-form-field>
-              <mat-form-field fxFlex="nogrow" floatLabel="never" (input)="filterPolicyRules($event)">
-                <input matInput [formControl]="portFormControl" placeholder="Protocol / Port">
+              <mat-form-field fxFlex="nogrow" floatLabel="never">
+                <input matInput (keyup)="keyUpInput($event)"  [formControl]="destIpFormControl" placeholder="Destination IP" maxlength="15" autocomplete="off">
               </mat-form-field>
+              <mat-form-field fxFlex="nogrow" floatLabel="never">
+                <input matInput (keyup)="keyUpInput($event)"  [formControl]="portFormControl" placeholder="Protocol / Port" maxlength="15" autocomplete="off">
+              </mat-form-field>
+              <mat-icon fxFlex="none" class="sgpolicy-search-button"
+                        (click)="invokePolicySearch()"
+                        *ngIf="showSearchButton()" >
+                search
+              </mat-icon>
+              <mat-icon fxFlex="none" class="sgpolicy-search-clear-button"
+                        (click)="clearSearch()"
+                        *ngIf="showSearchButton()" >
+               close 
+              </mat-icon>
+              <div class="sgpolicy-search-error" fxFlex="none" fxLayoutAlign="start center" *ngIf="searchErrorMessage !== null && searchErrorMessage !== ''">
+                <mat-icon fxFlex="none">error</mat-icon>
+                <div fxFlex="none">
+                  {{searchErrorMessage}}
+                </div>
+              </div>
               <div fxFlex></div>
-              <mat-slide-toggle (change)="toggle($event)" fxFlex='nogrow' class="sgpolicy-table-toggle">Show Entire List</mat-slide-toggle>
             </div>
           </app-tableheader>
         </ng-template>
@@ -72,8 +91,8 @@
         </ng-template>
         <!-- Table Body -->
         <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
-          <tr [ngClass] = "computeClass(rowData)" [pSelectableRow]="rowData">
-            <td class = "sgpolicy-rule-number" style="width: 2.25em">
+          <tr [class]="rowData.order===selectedRuleIndex ? 'sgpolicy-match' : ''">
+            <td class="sgpolicy-rule-number" style="width: 2.25em">
               {{ rowData.order }}
             </td>
             <td> 

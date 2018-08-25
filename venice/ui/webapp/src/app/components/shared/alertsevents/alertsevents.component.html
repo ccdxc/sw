@@ -55,10 +55,10 @@
         <tr>
           <td *ngFor="let col of eventCols" [ngSwitch]="col.field" [class]="col.class">
             <div *ngSwitchCase="'meta.mod-time'" class="alertseventsrecord-date-row">
-              {{rowData.meta['mod-time'] | prettyDate }}
+              {{rowData.meta['mod-time'] | PrettyDate }}
             </div>
             <div *ngSwitchCase="'meta.creation-time'" class="alertseventsrecord-date-row">
-              {{rowData.meta['creation-time'] | prettyDate }}
+              {{rowData.meta['creation-time'] | PrettyDate }}
             </div>
             <ng-container *ngSwitchCase="'severity'" >
                 <mat-icon *ngIf="rowData.severity === 'CRITICAL'" fxFlex="nogrow" class="alertsevents-icon global-alert-critical-icon">error</mat-icon>

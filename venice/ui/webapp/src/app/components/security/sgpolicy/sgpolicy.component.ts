@@ -2,20 +2,46 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, Vie
 import { FormControl } from '@angular/forms';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { IPUtility } from '@app/common/IPUtility';
+import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
 import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
+import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
+import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
 import { IApiStatus, ISecuritySGPolicy, ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
-import { Icon } from '@app/models/frontend/shared/icon.interface';
+import { SearchUtil } from '@app/components/search/SearchUtil';
 
+/**
+ * Component for displaying a security policy and providing IP searching
+ * on the rules. 
+ * 
+ * When there is text entered in any of the search boxes, the
+ * search button and the clear search button appear. User can hit enter in
+ * any of the boxes to trigger a search or can hit the search button. If they
+ * are searching an invalid IP, an error message will show up to the right
+ * of the buttons. If the search executes and returns no matches, we display
+ * an error message of No Matching Results. Otherwise, the table will scroll
+ * to the matching rule and it will be highlighted. 
+ * 
+ * If the user starts typing in the search box and changes the query, 
+ * then the highlighting wil disappear but the user remains at current 
+ * scroll position. If the user clicks the clear search button, 
+ * the search will clear and they will be brought back to the top of the table.
+ * 
+ * If new data comes in while we have a search displayed, there are two scenarios
+ * 1. User clicks the load new data, and we make a new elastic request and take 
+ * them to the matching rule in the new data.
+ * 2. User makes a new query but haven't clicked load data. We force switch to
+ * the new data and then make the query they requested.
+ */
 class SecuritySGRuleWrapper {
   order: number;
   rule: ISecuritySGRule;
 }
-
 
 @Component({
   selector: 'app-sgpolicy',
@@ -38,9 +64,6 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   // Used for the table - when true there is a loading icon displayed
   loading: boolean = false;
 
-  // show all toggle value
-  showAll = false;
-
   bodyicon: any = {
     margin: {
       top: '9px',
@@ -61,20 +84,35 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   selectedPolicy: ISecuritySGPolicy;
 
   // TODO: Update with actual creator
-  creator = 'rsikdar';
+  creator = 'pensando';
 
-  ipFormControl: FormControl = new FormControl('', [
+  sourceIpFormControl: FormControl = new FormControl('', [
+  ]);
+
+  destIpFormControl: FormControl = new FormControl('', [
   ]);
 
   portFormControl: FormControl = new FormControl('', [
   ]);
 
-  // Holds the policy rules that are currently displayed in the table
+  // Holds all the policy rules of the currently selected policy
   sgPolicyRules: ReadonlyArray<SecuritySGRuleWrapper[]> = [];
+
+  // Current filter applied to all the data in the table
+  currentSearch = null;
+  // Index of the rule to highlight
+  selectedRuleIndex: number = null;
+
+  // Error message to display next to IP search
+  searchErrorMessage = '';
+
+  // subscription for elastic search queries
+  searchSubscription;
 
   constructor(protected _controllerService: ControllerService,
     private elRef: ElementRef,
-    protected _securityService: SecurityService
+    protected securityService: SecurityService,
+    protected searchService: SearchService
   ) {
     super(_controllerService);
   }
@@ -90,34 +128,144 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
       { field: 'protocolPort', header: 'Protocol/Ports' },
     ];
     this._controllerService.setToolbarData({
-
       buttons: [],
       breadcrumb: [{ label: 'Security', url: '' }, { label: 'Security Policy', url: '' }]
     });
   }
 
-  ipSearch(value: any, filter: any): boolean {
-    // value = array of data from the current row
-    // filter = value from the filter that will be searched in the value-array
-    if (filter === undefined || (filter[0] === '' && filter[1] === '')) {
-      return true;
+  keyUpInput(event) {
+    if (event.keyCode === SearchUtil.EVENT_KEY_ENTER) {
+      this.invokePolicySearch();
+    } else if (this.currentSearch != null) {
+      // If the keystroke changed the search fields
+      // to be different than the current search
+      // we clear the current search and selected index,
+      // but we don't scroll to the top like we do on clearSearch
+      const sourceIP = this.sourceIpFormControl.value;
+      const destIP = this.destIpFormControl.value;
+      const port = this.portFormControl.value;
+      if (sourceIP !== this.currentSearch.sourceIP ||
+        destIP !== this.currentSearch.destIP ||
+        port !== this.currentSearch.port) {
+        this.searchErrorMessage = '';
+        this.selectedRuleIndex = null;
+        this.currentSearch.sourceIP = null;
+        this.currentSearch.destIP = null;
+        this.currentSearch.port = null;
+      }
+    } else {
+      this.searchErrorMessage = '';
     }
+  }
 
-    if (value === undefined || value === null || value.length === 0) {
+  /**
+   * Hooked onto the output emitter of lazyRender component
+   * for when the data changes
+   */
+  dataUpdated() {
+    if (this.currentSearch != null) {
+      this.invokePolicySearch(this.currentSearch.sourceIP, this.currentSearch.destIP, this.currentSearch.port);
+    }
+  }
+
+  /**
+   * Called by HTML to decide whether to show the search button
+   */
+  showSearchButton(): boolean {
+    const sourceIP = this.sourceIpFormControl.value;
+    const destIP = this.destIpFormControl.value;
+    const port = this.portFormControl.value;
+    return (sourceIP != null && sourceIP.length > 0) ||
+      (destIP != null && destIP.length > 0) ||
+      (port != null && port.length > 0);
+  }
+
+  clearSearch() {
+    this.sourceIpFormControl.setValue('');
+    this.destIpFormControl.setValue('');
+    this.portFormControl.setValue('');
+    if (this.selectedRuleIndex != null) {
+      this.selectedRuleIndex = null;
+      // scroll back to top
+      this.lazyRenderWrapper.resetTableView();
+    }
+  }
+
+  invokePolicySearch(sourceIP = null, destIP = null, port = null) {
+    // Read values from form control if not provided
+    if (sourceIP == null && destIP == null && port == null) {
+      sourceIP = this.sourceIpFormControl.value;
+      destIP = this.destIpFormControl.value;
+      port = this.portFormControl.value;
+    }
+    if (!IPUtility.isValidIP(sourceIP) && !IPUtility.isValidIP(destIP)) {
+      // Set error states
+      this.searchErrorMessage = "Invalid IP"
       return false;
     }
+    this.searchErrorMessage = '';
 
-    const ip = filter[0];
-    const extractedProtocolPort = IPUtility.extractPortFromString(filter[1]);
-    const protocol = extractedProtocolPort.protocol;
-    const port = extractedProtocolPort.port;
+    const req = new SearchPolicySearchRequest();
+    req.tenant = Utility.getInstance().getTenant();
+    if (port != null && port.trim().length !== 0) {
+      req.app = port.trim();
+    }
+    if (sourceIP != null && sourceIP.trim().length !== 0) {
+      req['from-ip-address'] = sourceIP.trim();
+    } else {
+      req['from-ip-address'] = 'any';
+    }
+    if (destIP != null && destIP.trim().length !== 0) {
+      req['to-ip-address'] = destIP.trim();
+    } else {
+      req['to-ip-address'] = 'any';
+    }
 
-    return IPUtility.filterRuleByIPv4(value, ip) && IPUtility.filterRuleByPort(value, protocol, port);
+
+    if (this.searchSubscription != null) {
+      // There is another call in transit already, we want to ignore
+      // the results of that call
+      this.searchSubscription.unsubscribe();
+    }
+    this.currentSearch = {
+      sourceIP: sourceIP,
+      destIP: destIP,
+      port: port
+    }
+    this.loading = true;
+    // If we are displaying old data, we force update to new data
+    if (this.lazyRenderWrapper.hasUpdate) {
+      // Current search is set to be the new data
+      // When on data update fires from resetting the table view,
+      // We will call this function again with the provided search.
+      this.lazyRenderWrapper.resetTableView();
+      return;
+    }
+    this.searchSubscription = this.searchService.PostPolicyQuery(req).subscribe(
+      (data) => {
+        // const body = data.body as ISearchPolicySearchResponse;
+        const body = data.body as any;
+        if (body.status === "MATCH") {
+          if (body.results[this.selectedPolicy.meta.name] == null) {
+            this.searchErrorMessage = "No Matching Rule"
+          } else {
+            this.searchErrorMessage = '';
+            this.selectedRuleIndex = body.results[this.selectedPolicy.meta.name].index;
+            this.lazyRenderWrapper.scrollToRowNumber(this.selectedRuleIndex);
+          }
+        } else {
+          this.searchErrorMessage = "No Matching Rule"
+        }
+        this.loading = false;
+      },
+      (error) => {
+        console.error('policy search query failed');
+      }
+    )
+
   }
 
   ngAfterViewInit() {
-    // Adding our custom filter
-    this.sgpolicyTurboTable.filterConstraints['ipSearch'] = this.ipSearch;
     this.viewInitComplete = true;
   }
 
@@ -131,6 +279,9 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     this.subscriptions.forEach(subscription => {
       subscription.unsubscribe();
     });
+    if (this.searchSubscription != null) {
+      this.searchSubscription.unsubscribe();
+    }
   }
 
   /**
@@ -142,10 +293,9 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   }
 
   getSGPolicies() {
-    this.loading = true;
     this.sgPoliciesEventUtility = new HttpEventUtility();
     this.sgPolicies = this.sgPoliciesEventUtility.array;
-    const subscription = this._securityService.WatchSGPolicy().subscribe(
+    const subscription = this.securityService.WatchSGPolicy().subscribe(
       response => {
         const body: any = response.body;
         this.sgPoliciesEventUtility.processEvents(body);
@@ -155,7 +305,6 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
           this.selectedPolicy = new SecuritySGPolicy(this.sgPolicies[0]);
           this.sgPolicyRules = this.addOrderRanking(this.selectedPolicy.spec.rules);
         }
-        this.loading = false;
       },
       error => {
         // TODO: Error handling
@@ -193,36 +342,4 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     });
     return retRules;
   }
-
-  // Used for creating the show all toggle highlighting effect
-  computeClass(rowData) {
-    if (this.showAll) {
-      const ip = this.ipFormControl.value;
-      const port = this.portFormControl.value;
-      if (this.ipSearch(rowData, [ip, port])) {
-        return 'sgpolicy-match';
-      }
-      return 'sgpolicy-miss';
-    }
-    return '';
-  }
-
-  // Controled by the showall toggle
-  toggle(event) {
-    this.showAll = event.checked;
-    this.filterPolicyRules(event);
-  }
-
-  // If the show all toggle is on, we reset the search,
-  // Otherwise, we filter the table
-  filterPolicyRules(event) {
-    if ((this.ipFormControl.value !== '' || this.portFormControl.value !== '') && !this.showAll) {
-      const ip = this.ipFormControl.value;
-      const port = this.portFormControl.value;
-      this.sgpolicyTurboTable.filter([ip, port], 'data', 'ipSearch');
-    } else {
-      this.sgpolicyTurboTable.filter(null, 'data', 'ipSearch');
-    }
-  }
-
 }

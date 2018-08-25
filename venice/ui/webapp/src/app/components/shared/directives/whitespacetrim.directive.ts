@@ -24,7 +24,7 @@ export class WhitespaceTrimDirective {
 
   @HostListener('keydown', ['$event'])
   onChange(event: KeyboardEvent) {
-    if (event.keyCode === SPACEBAR || event.keyCode === TAB) {
+    if (event.keyCode === SPACEBAR) {
       if ((this.el.nativeElement as HTMLInputElement).value === '') {
         event.preventDefault();
       }
