@@ -7,31 +7,41 @@
 #include "sdk/indexer.hpp"
 
 #include "hal.hpp"
-#include "l2seg.hpp"
+#include "types.hpp"
 
+typedef std::list<std::shared_ptr<Uplink>> UplinkList;
 
 class Uplink : public HalObject
 {
 public:
-  Uplink(uint32_t port_num);
-  ~Uplink();
 
+  static Uplink *Factory(uplink_id_t id);
+  static void Destroy(Uplink *uplink);
+
+  // Get APIs
   uint32_t GetId();
   uint64_t GetHandle();
+  uint32_t GetPortNum();
+  Vrf *GetVrf();
 
-  void AddL2Segment(std::shared_ptr<L2Segment> l2seg);
-  void DelL2Segment(std::shared_ptr<L2Segment> l2seg);
+  // Set APIs
+  void SetPortNum();
 
-  static void Probe();
+
 
 private:
-  uint32_t id;
+  // APIs
+  Uplink(uplink_id_t id);
+  ~Uplink();
+
+  uplink_id_t id;
   uint64_t handle;
+  uint32_t port_num;
+  intf::InterfaceSpec if_spec;
+  Vrf *vrf;
 
-  std::map<uint64_t, std::shared_ptr<L2Segment>> l2seg_refs;
-
-  static sdk::lib::indexer *allocator;
-  static constexpr uint64_t max_uplinks = 8;
+  // id -> Uplink
+  static std::map<uint64_t, Uplink*> uplink_db;
 };
 
 #endif /* __UPLINK_HPP__ */

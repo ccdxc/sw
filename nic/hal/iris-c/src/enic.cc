@@ -5,322 +5,80 @@
 // #include "kh.grpc.pb.h"
 
 #include "enic.hpp"
+#include "ethlif.hpp"
 
 using namespace std;
 
+#define HAL_NON_RSVD_IF_OFFSET 128
 
-std::map<enic_classic_key_t, std::weak_ptr<Enic>> Enic::classic_registry;
-std::map<enic_hostpin_key_t, std::weak_ptr<Enic>> Enic::hostpin_registry;
 sdk::lib::indexer *Enic::allocator = sdk::lib::indexer::factory(Enic::max_enics, false, true);
 
+Enic *
+Enic::Factory(EthLif *ethlif)
+{
+    Enic *enic = new Enic(ethlif);
+
+    return enic;
+}
 
 void
-Enic::Probe()
+Enic::Destroy(Enic *enic)
 {
-    grpc::ClientContext context;
-    grpc::Status status;
-
-    intf::InterfaceGetRequest         *req __attribute__((unused));
-    intf::InterfaceGetResponse        rsp;
-    intf::InterfaceGetRequestMsg      req_msg;
-    intf::InterfaceGetResponseMsg     rsp_msg;
-
-    uint64_t id, handle, lif_id;
-
-    req = req_msg.add_request();
-    status = hal->intf_stub_->InterfaceGet(&context, req_msg, &rsp_msg);
-    if (status.ok()) {
-        for (int i = 0; i < rsp_msg.response().size(); i++) {
-            rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-                throw ("Failed to discover ENICs");
-            } else {
-                id = rsp.spec().key_or_handle().interface_id();
-                if (rsp.spec().type() == intf::IF_TYPE_ENIC) {
-                    handle = rsp.status().if_handle();
-                    lif_id = rsp.spec().if_enic_info().lif_key_or_handle().lif_id();
-                    cout << "[INFO] Discovered Enic "
-                         << " id = " << id << " handle = " << handle
-                         << " lif = " << lif_id << endl;
-                }
-                allocator->alloc_withid(id);
-            }
-        }
-        return;
-    } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        throw ("Failed to discover ENICs");
+    if (enic) {
+        enic->~Enic();
     }
 }
-
-/**
- * Classic ENIC
- */
 
 // Classic ENIC constructor
-Enic::Enic(std::shared_ptr<Lif> lif, std::shared_ptr<Vrf> vrf)
+Enic::Enic(EthLif *ethlif)
 {
     grpc::ClientContext             context;
     grpc::Status                    status;
 
-    intf::InterfaceSpec             *spec;
+    intf::InterfaceSpec             *req;
     intf::InterfaceResponse         rsp;
     intf::InterfaceRequestMsg       req_msg;
     intf::InterfaceResponseMsg      rsp_msg;
-
-    if (hal->GetMode() != FWD_MODE_CLASSIC) {
-        throw ("Cannot create classic ENIC in hostpin mode!");
-    }
 
     if (allocator->alloc(&id) != sdk::lib::indexer::SUCCESS) {
-        throw ("Failed to allocate ENIC");
+        HAL_TRACE_ERR("Failed to allocate ENIC. Resource exhaustion");
+        return;
     }
 
-    lif_ref = lif;
-    vrf_ref = vrf;
 
-    spec = req_msg.add_request();
-    spec->mutable_key_or_handle()->set_interface_id(id);
-    spec->set_type(::intf::IfType::IF_TYPE_ENIC);
-    spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
-    spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
-    spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif->GetId());
-    // spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(native_l2seg_handle);
-    // spec->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
+    id += HAL_NON_RSVD_IF_OFFSET;
+    HAL_TRACE_DEBUG("Enic create id: {}", id);
 
-    status = hal->intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
+    this->ethlif = ethlif;
+
+    req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_interface_id(id);
+    req->set_type(::intf::IfType::IF_TYPE_ENIC);
+    req->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+    req->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
+    req->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(ethlif->GetLif()->GetId());
+    // req->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(native_l2seg_handle);
+    // req->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
+
+    status = hal->interface_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-        } else {
+        if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.status().if_handle();
-            cout << "[INFO] ENIC create succeeded,"
-                 << " id = " << id << " handle = " << handle
-                 << endl;
-            return;
+            HAL_TRACE_DEBUG("Created Enic id: {} for Lif: {} handle: {}",
+                            id, ethlif->GetLif()->GetId(), handle);
+        } else {
+            HAL_TRACE_ERR("Failed to create Enic for Lif: {}. err: {}",
+                          ethlif->GetLif()->GetId(), rsp.api_status());
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        HAL_TRACE_ERR("Failed to create Enic for Lif: {}. err: {}:{}",
+                      ethlif->GetLif()->GetId(), status.error_code(), status.error_message());
     }
 
-    throw ("Failed to create ENIC");
+    // Store spec
+    spec.CopyFrom(*req);
 }
-
-// Classic NIC instance getter
-shared_ptr<Enic>
-Enic::GetInstance(std::shared_ptr<Lif> lif, std::shared_ptr<Vrf> vrf)
-{
-    if (hal->GetMode() != FWD_MODE_CLASSIC) {
-        throw ("Cannot get ENIC instance!");
-    }
-
-    enic_classic_key_t key(lif->GetId());
-    shared_ptr<Enic> enic;
-
-    if (classic_registry.find(key) == classic_registry.cend()) {
-        // create ENIC and endpoint
-        enic = make_shared<Enic>(lif, vrf);
-        classic_registry[key] = weak_ptr<Enic>(enic);
-    } else {
-        enic = shared_ptr<Enic>(classic_registry[key]);
-    }
-
-    return enic;
-}
-
-int
-Enic::Update()
-{
-    grpc::ClientContext             context;
-    grpc::Status                    status;
-
-    intf::InterfaceSpec             *spec;
-    intf::InterfaceResponse         rsp;
-    intf::InterfaceRequestMsg       req_msg;
-    intf::InterfaceResponseMsg      rsp_msg;
-
-    shared_ptr<L2Segment> l2seg;
-
-    if (hal->GetMode() != FWD_MODE_CLASSIC) {
-        throw ("Cannot update ENIC!");
-    }
-
-    spec = req_msg.add_request();
-    spec->mutable_key_or_handle()->set_interface_id(id);
-    spec->set_type(::intf::IfType::IF_TYPE_ENIC);
-    spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
-    spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
-    spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_ref->GetId());
-    // spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(native_l2seg_handle);
-    for (auto l2seg_it = l2seg_refs.cbegin(); l2seg_it != l2seg_refs.cend(); l2seg_it++) {
-        l2seg = l2seg_it->second;
-        spec->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
-    }
-
-    status = hal->intf_stub_->InterfaceUpdate(&context, req_msg, &rsp_msg);
-    if (status.ok()) {
-        rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            return -1;
-        } else {
-            handle = rsp.status().if_handle();
-            cout << "[INFO] ENIC update succeeded,"
-                 << " id = " << id << " handle = " << handle
-                 << endl;
-        }
-    } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        return -1;
-    }
-
-    return 0;
-}
-
-int
-Enic::AddVlan(vlan_t vlan)
-{
-    int ret = 0;
-    shared_ptr<L2Segment> l2seg = L2Segment::GetInstance(vrf_ref, vlan);
-
-    if (hal->GetMode() != FWD_MODE_CLASSIC) {
-        throw ("Cannot add VLAN to ENIC!");
-    }
-
-    if (l2seg_refs.find(vlan) == l2seg_refs.cend()) {
-
-        cout << "[INFO] Adding VLAN " << vlan << " to ENIC"
-             << " id = " << id << " handle = " << handle
-             << endl;
-
-        l2seg_refs[vlan] = l2seg;
-        ret = Update();
-
-    } else {
-        cout << "[INFO] VLAN " << vlan << " is already added to ENIC "
-             << " id = " << id << " handle = " << handle
-             << endl;
-    }
-
-    return ret;
-}
-
-int
-Enic::DelVlan(vlan_t vlan)
-{
-    int ret = 0;
-    shared_ptr<L2Segment> l2seg = L2Segment::GetInstance(vrf_ref, vlan);
-
-    if (hal->GetMode() != FWD_MODE_CLASSIC) {
-        throw ("Cannot delete VLAN from ENIC!");
-    }
-
-    if (l2seg_refs.find(vlan) != l2seg_refs.cend()) {
-
-        cout << "[INFO] Deleting VLAN " << vlan << " from ENIC"
-             << " id = " << id << " handle = " << handle
-             << endl;
-
-        l2seg_refs.erase(vlan);
-        ret = Update();
-
-    } else {
-        cout << "[INFO] VLAN " << vlan << " is already removed from ENIC "
-             << " id = " << id << " handle = " << handle
-             << endl;
-    }
-
-    return ret;
-}
-
-/**
- * Hostpin ENIC
- */
-
-// Hostpin ENIC constructor
-Enic::Enic(std::shared_ptr<Lif> lif, std::shared_ptr<Vrf> vrf, mac_t mac, vlan_t vlan)
-{
-    grpc::ClientContext             context;
-    grpc::Status                    status;
-
-    intf::InterfaceSpec             *spec;
-    intf::InterfaceResponse         rsp;
-    intf::InterfaceRequestMsg       req_msg;
-    intf::InterfaceResponseMsg      rsp_msg;
-
-    if (hal->GetMode() != FWD_MODE_HOSTPIN) {
-        throw ("Cannot create ENIC!");
-    }
-
-    if (allocator->alloc(&id) != sdk::lib::indexer::SUCCESS) {
-        throw ("Failed to allocate VRF");
-    }
-
-    _mac = mac;
-    _vlan = vlan;
-    lif_ref = lif;
-    vrf_ref = vrf;
-
-    shared_ptr<L2Segment> l2seg = L2Segment::GetInstance(vrf, vlan);
-    l2seg_refs[vlan] = l2seg;
-
-    spec = req_msg.add_request();
-    spec->mutable_key_or_handle()->set_interface_id(id);
-    spec->set_type(::intf::IfType::IF_TYPE_ENIC);
-    spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
-    spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif->GetId());
-    spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_USEG);
-    spec->mutable_if_enic_info()->mutable_enic_info()->set_mac_address(mac);
-    spec->mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(vlan);
-    spec->mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
-
-    status = hal->intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
-    if (status.ok()) {
-        rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-        } else {
-            handle = rsp.status().if_handle();
-            cout << "[INFO] ENIC create succeeded,"
-                 << " id = " << id << " handle = " << handle
-                 << endl;
-            return;
-        }
-    } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-    }
-
-    throw ("Failed to create ENIC");
-}
-
-// Hostpin ENIC instance getter
-shared_ptr<Enic>
-Enic::GetInstance(std::shared_ptr<Lif> lif, std::shared_ptr<Vrf> vrf, mac_t mac, vlan_t vlan)
-{
-    if (hal->GetMode() != FWD_MODE_HOSTPIN) {
-        throw ("Cannot get ENIC instance!");
-    }
-
-    enic_hostpin_key_t key(lif->GetId(), mac, vlan);
-    shared_ptr<Enic> enic;
-
-    if (hostpin_registry.find(key) == hostpin_registry.cend()) {
-        // create ENIC and Endpoint
-        enic = make_shared<Enic>(lif, vrf, mac, vlan);
-        hostpin_registry[key] = weak_ptr<Enic>(enic);
-    } else {
-        // if ENIC exists then retrieve it
-        enic = shared_ptr<Enic>(hostpin_registry[key]);
-    }
-
-    return enic;
-}
-
-/**
- * Common
- */
 
 Enic::~Enic()
 {
@@ -332,31 +90,142 @@ Enic::~Enic()
     intf::InterfaceDeleteRequestMsg       req_msg;
     intf::InterfaceDeleteResponseMsg      rsp_msg;
 
-    assert(l2seg_refs.empty());
-    l2seg_refs.clear();
+    HAL_TRACE_DEBUG("Enic delete id: {}", id);
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_interface_id(id);
-    status = hal->intf_stub_->InterfaceDelete(&context, req_msg, &rsp_msg);
+    status = hal->interface_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            HAL_TRACE_DEBUG("Deleted Enic id: {} handle: {}",
+                            id, handle);
         } else {
-            cout << "[INFO] ENIC delete succeeded,"
-                 << " id = " << id << " handle = " << handle
-                 << endl;
+            HAL_TRACE_ERR("Failed to delete Enic for id: {}. err: {}",
+                          id, rsp.api_status());
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
-             << ": Id = " << id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        HAL_TRACE_ERR("Failed to delete Enic for id: {}. err: {}:{}",
+                      id, status.error_code(), status.error_message());
     }
 }
+
+void
+Enic::TriggerHalUpdate()
+{
+    grpc::ClientContext             context;
+    grpc::Status                    status;
+
+    intf::InterfaceSpec             *spec;
+    intf::InterfaceResponse         rsp;
+    intf::InterfaceRequestMsg       req_msg;
+    intf::InterfaceResponseMsg      rsp_msg;
+
+    L2Segment *l2seg;
+
+    spec = req_msg.add_request();
+    spec->mutable_key_or_handle()->set_interface_id(id);
+    spec->set_type(::intf::IfType::IF_TYPE_ENIC);
+    spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+    spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
+    spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->
+        set_lif_id(ethlif->GetLif()->GetId());
+    for (auto l2seg_it = l2seg_refs.begin(); l2seg_it != l2seg_refs.end(); l2seg_it++) {
+        l2seg = l2seg_it->second->l2seg;
+        spec->mutable_if_enic_info()->mutable_classic_enic_info()->
+            add_l2segment_key_handle()->set_segment_id(l2seg->GetId());
+    }
+
+    status = hal->interface_update(req_msg, rsp_msg);
+    if (status.ok()) {
+        rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            handle = rsp.status().if_handle();
+            HAL_TRACE_DEBUG("Enic update succeeded id: {}, handle: {}",
+                            id, handle);
+        } else {
+            HAL_TRACE_ERR("Failed to update Enic: err: {}", rsp.api_status());
+        }
+    } else {
+        HAL_TRACE_ERR("Failed to update Enic: err: {}, err_msg: {}",
+                      status.error_code(),
+                      status.error_message());
+    }
+}
+
+void
+Enic::AddVlan(vlan_t vlan)
+{
+    std::map<vlan_t, l2seg_info_t *>::iterator it;
+    l2seg_info_t *l2seg_info;
+
+    L2Segment *l2seg = L2Segment::Lookup(ethlif->GetUplink()->GetVrf(), vlan);
+    if (!l2seg) {
+        // Create L2seg
+        l2seg = L2Segment::Factory(ethlif->GetUplink()->GetVrf(), vlan);
+
+    }
+
+    HAL_TRACE_DEBUG("Adding vlan {} on Enic {}", vlan, id);
+
+    // Check for the presence of new vlan
+    it = l2seg_refs.find(vlan);
+    if (it != l2seg_refs.end()) {
+        HAL_TRACE_WARN("Enic already has L2seg {} with Vlan: {}",
+                       it->second->l2seg->GetId(),
+                       vlan);
+        it->second->filter_ref_cnt++;
+        return;
+    }
+
+    // Allocate l2seg info
+    l2seg_info = new l2seg_info_t();
+
+    l2seg_info->filter_ref_cnt++;
+    l2seg_info->l2seg = l2seg;
+
+    l2seg_refs[vlan] = l2seg_info;
+
+    // Sends update to Hal
+    TriggerHalUpdate();
+}
+
+void
+Enic::DelVlan(vlan_t vlan)
+{
+    std::map<vlan_t, l2seg_info_t *>::iterator it;
+    l2seg_info_t *l2seg_info;
+    L2Segment *l2seg = L2Segment::Lookup(ethlif->GetUplink()->GetVrf(), vlan);
+
+    HAL_TRACE_DEBUG("Deleting vlan {} on Enic {}", vlan, id);
+
+    // Check for the presence of vlan
+    it = l2seg_refs.find(vlan);
+    if (it == l2seg_refs.end()) {
+        HAL_TRACE_ERR("Not able to find vlan: {}", l2seg->GetId());
+        return;
+    }
+
+    l2seg_info = it->second;
+
+    // Decrement ref count
+    l2seg_info->filter_ref_cnt--;
+
+    if (!l2seg_info->filter_ref_cnt) {
+        // Del vlan from the map
+        l2seg_refs.erase(vlan);
+
+        // Sends update to Hal
+        TriggerHalUpdate();
+
+        // Delete L2seg
+        L2Segment::Destroy(l2seg);
+
+        // Free up l2seg_info
+        delete(l2seg_info);
+    }
+}
+
 
 uint64_t
 Enic::GetId()
@@ -368,4 +237,15 @@ uint64_t
 Enic::GetHandle()
 {
     return handle;
+}
+
+L2Segment *
+Enic::GetL2seg(vlan_t vlan)
+{
+    std::map<vlan_t, l2seg_info_t *>::iterator it;
+    it = l2seg_refs.find(vlan);
+    if (it != l2seg_refs.end()) {
+        return it->second->l2seg;
+    }
+    return NULL;
 }

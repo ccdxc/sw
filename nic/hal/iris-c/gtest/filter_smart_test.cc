@@ -51,7 +51,9 @@ TEST_F(filter_test, test1)
     // vlan_t vlan3 = 2;
 
     // Create Hal GRPC client
-    HalClient *client = HalGRPCClient::Factory(FWD_MODE_CLASSIC);
+    // shared_ptr<HalClient> client = HalGRPCClient::GetInstance(FWD_MODE_SMART);
+    // HalClient *client = HalGRPCClient::Factory(FWD_MODE_SMART);
+    HalGRPCClient::Factory(FWD_MODE_SMART);
 
     // Create Uplinks
     Uplink *up1 = Uplink::Factory(1);
@@ -122,10 +124,10 @@ TEST_F(filter_test, test1)
     lif1->DelMacVlan(mac1, vlan1);
     lif1->DelMacVlan(mac1, vlan2);
 
-    HalGRPCClient::Destroy(client);
+    // HalGRPCClient::Destroy(client);
 }
 
-TEST_F(filter_test, DISABLED_test2)
+TEST_F(filter_test, test2)
 {
     mac_t mac1 = 0x000102030405;
     mac_t mac2 = 0x000102030406;
@@ -135,15 +137,16 @@ TEST_F(filter_test, DISABLED_test2)
     // vlan_t vlan3 = 2;
 
     // Create Hal GRPC client
-    HalClient *client = HalGRPCClient::Factory(FWD_MODE_CLASSIC);
+    // HalClient *client = HalGRPCClient::Factory(FWD_MODE_SMART);
+    HalGRPCClient::Factory(FWD_MODE_SMART);
 
     // Create Uplinks
-    Uplink *up1 = Uplink::Factory(1);
-    Uplink::Factory(1);
+    Uplink *up1 = Uplink::Factory(20);
+    Uplink::Factory(20);
 
     // Create Lifs
-    EthLif *lif1 = EthLif::Factory(1 /*hw_lif_id*/, up1, false /*is_mgmt*/);
-    EthLif::Factory(1 /*hw_lif_id*/, up1, false /*is_mgmt*/);
+    EthLif *lif1 = EthLif::Factory(20 /*hw_lif_id*/, up1, false /*is_mgmt*/);
+    EthLif::Factory(20 /*hw_lif_id*/, up1, false /*is_mgmt*/);
 
     // Add Mac filter
     lif1->AddMac(mac1);
@@ -209,7 +212,7 @@ TEST_F(filter_test, DISABLED_test2)
     lif1->DelMacVlan(mac1, vlan1);
     lif1->DelMacVlan(mac1, vlan1);
 
-    HalGRPCClient::Destroy(client);
+    // HalGRPCClient::Destroy(client);
 }
 
 int main(int argc, char **argv) {

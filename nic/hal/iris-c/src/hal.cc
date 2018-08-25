@@ -2,13 +2,13 @@
 #include <string>
 #include <memory>
 #include <iostream>
-#include <grpc++/grpc++.h>
+// #include <grpc++/grpc++.h>
 
 #include "hal.hpp"
 
 using namespace std;
 
-
+#if 0
 shared_ptr<HalClient> HalClient::instance = 0;
 
 HalClient::HalClient(enum ForwardingMode mode)
@@ -69,12 +69,12 @@ HalClient::GetMode()
 {
     return mode;
 }
+#endif
 
 /**
  * Hal Object Base class
  */
-
-shared_ptr<HalClient> HalObject::hal = 0;
+HalClient *HalObject::hal = NULL;
 
 HalObject::HalObject()
 {

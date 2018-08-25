@@ -433,7 +433,10 @@ def run_filter_gtest(args):
     #os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     #os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
     os.chdir(nic_dir)
-    cmd = ['../bazel-bin/nic/hal/iris-c/gtest/filter_test']
+    if args.classic is True:
+        cmd = ['../bazel-bin/nic/hal/iris-c/gtest/filter_test']
+    else:
+        cmd = ['../bazel-bin/nic/hal/iris-c/gtest/filter_smart_test']
     p = Popen(cmd)
     #p.communicate()
     return check_for_completion(p, None, model_process, hal_process, args)

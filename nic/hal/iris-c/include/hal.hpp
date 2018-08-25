@@ -2,6 +2,8 @@
 #ifndef __HAL_HPP__
 #define __HAL_HPP__
 
+#include "hal_client.hpp"
+#if 0
 #include <map>
 #include <grpc++/grpc++.h>
 
@@ -53,12 +55,15 @@ private:
 
     std::shared_ptr<grpc::Channel> channel;
 };
-
+#endif
 class HalObject
 {
 public:
     HalObject();
-    static std::shared_ptr<HalClient> hal;
+    // TODO: Cleanup. Why should this be static if its being assigned
+    //       in the constructor, thereby assigning it for every hal object
+    //       created (uplink, lif, etc);
+    static HalClient *hal;
 
 protected:
     // Hal objects are non-copyable
@@ -68,10 +73,39 @@ protected:
 
 // Forward Declrations of all HAL objects
 class Lif;
+class EthLif;
 class Enic;
 class Endpoint;
 class L2Segment;
 class Vrf;
 class Uplink;
+
+//-----------------------------------------------------------------------------
+ // X-Macro for defining enums (generates enum definition and string formatter)
+ //
+ // Example:
+ //
+ // #define SAMPLE_ENUM_ENTRIES(ENTRY)
+ //    ENTRY(OK, 0, "ok")
+ //    ENTRY(ERR, 1, "err")
+ //
+ // DEFINE_ENUM(sample_enum_t, SAMPLE_ENUM_ENTRIES)
+ //------------------------------------------------------------------------------
+
+ #define _ENUM_FIELD(_name, _val, _desc) _name = _val,
+ #define _ENUM_STR(_name, _val, _desc) \
+     inline const char *_name ## _str() {return _desc; }
+ #define _ENUM_CASE(_name, _val, _desc) case _name: return os << #_desc;
+
+ #define DEFINE_ENUM(_typ, _entries)                                     \
+     typedef enum { _entries(_ENUM_FIELD) } _typ;                        \
+     inline std::ostream& operator<<(std::ostream& os, _typ c)           \
+     {                                                                   \
+         switch (c) {                                                    \
+             _entries(_ENUM_CASE);                                       \
+         }                                                               \
+         return os;                                                      \
+     }                                                                   \
+     _entries(_ENUM_STR)                                                 \
 
 #endif /* __HAL_HPP__ */

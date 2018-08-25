@@ -12,8 +12,9 @@
 class Vrf : public HalObject
 {
 public:
-  Vrf();
-  ~Vrf();
+  static Vrf *Factory();
+  static void Destroy(Vrf *vrf);
+
 
   uint64_t GetId();
   uint64_t GetHandle();
@@ -21,9 +22,13 @@ public:
   static void Probe();
 
 private:
+  Vrf();
+  ~Vrf();
+
   uint32_t id;
   uint64_t handle;
 
+  // For vrf id
   static sdk::lib::indexer *allocator;
   static constexpr uint64_t max_vrfs = 8;
 };

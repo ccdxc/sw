@@ -10,36 +10,19 @@
 #include "types.hpp"
 
 
-struct queue_spec {
-    uint32_t type_num;           /* HW Queue Type */
-    uint32_t size;               /* Qstate Size: 2^size */
-    uint32_t entries;            /* Number of Queues: 2^entries */
-    int purpose;                 /* Queue Purpose */
-    const char* prog;            /* Program File Name */
-    const char* label;           /* Program Entry Label */
-    const char* qstate;          /* Qstate structure */
-};
-
-struct lif_spec {
-  struct queue_spec queue_spec[NUM_QUEUE_TYPES];
-  bool enable_rdma;
-};
-
 class Lif : public HalObject {
 public:
-  Lif(struct lif_spec &lif_spec);
-  Lif(uint64_t lif_id);
-  ~Lif();
-
-  static void Probe();
+  static Lif *Factory(uint32_t hw_lif_id, Uplink *pinned_uplink);
+  static void Destroy(Lif *lif);
 
   uint32_t GetId();
 
 private:
+  Lif(uint32_t hw_lif_id, Uplink *pinned_uplink);
+  ~Lif();
   uint32_t id;
   uint64_t handle;
-  uint64_t hw_lif_id;
-  uint64_t qstate_addr[NUM_QUEUE_TYPES];
+  uint32_t hw_lif_id;
 
   intf::LifSpec spec;
 

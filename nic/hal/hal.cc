@@ -100,20 +100,20 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
 
     // check if ini file exists
     ini_file = hal_cfg->cfg_path + "/" + std::string(inifile);
+    std::ifstream in(ini_file.c_str());
     if (access(ini_file.c_str(), R_OK) < 0) {
         fprintf(stderr, "HAL ini file %s doesn't exist or not accessible,"
                 "picking smart-switch mode\n",
                 ini_file.c_str());
         hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_HOST_PINNED;
-        return HAL_RET_OK;
+        goto end;
     }
 
-    std::ifstream in(ini_file.c_str());
     if (!in) {
         HAL_TRACE_ERR("Failed to open ini file ... "
                       "setting forwarding mode to smart-switch\n");
         hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_HOST_PINNED;
-        return HAL_RET_OK;
+        goto end;
     }
 
     while (std::getline(in, line)) {
@@ -127,11 +127,13 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
                               val);
                 HAL_ABORT(0);
             }
-            HAL_TRACE_DEBUG("NIC forwarding mode : {}\n",
-                            hal_cfg->forwarding_mode);
         }
     }
     in.close();
+
+end:
+    HAL_TRACE_DEBUG("NIC forwarding mode : {}\n",
+                    hal_cfg->forwarding_mode);
 
     return HAL_RET_OK;
 }

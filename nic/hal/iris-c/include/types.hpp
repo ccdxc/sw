@@ -2,6 +2,8 @@
 #ifndef __TYPES_HPP__
 #define __TYPES_HPP__
 
+#include "kh.grpc.pb.h"
+
 #define NUM_QUEUE_TYPES     8
 
 /*
@@ -10,7 +12,11 @@
 
 typedef uint64_t mac_t;
 typedef uint16_t vlan_t;
+typedef uint32_t l2seg_id_t;
+typedef uint32_t uplink_id_t;
+typedef kh::FilterType filter_type_t;
 typedef std::tuple<mac_t, vlan_t> mac_vlan_t;
+typedef std::tuple<filter_type_t, mac_t, vlan_t> mac_vlan_filter_t;
 
 /**
  * Ethernet Lifs
@@ -33,13 +39,13 @@ struct eth_spec {
     uint32_t txq_count;
     uint32_t adminq_count;
     uint32_t rdma_sq_size;
-    uint32_t rdma_sq_count;    
+    uint32_t rdma_sq_count;
     uint32_t rdma_rq_size;
-    uint32_t rdma_rq_count;    
+    uint32_t rdma_rq_count;
     uint32_t rdma_cq_size;
-    uint32_t rdma_cq_count;    
+    uint32_t rdma_cq_count;
     uint32_t rdma_eq_size;
-    uint32_t rdma_eq_count;    
+    uint32_t rdma_eq_count;
     uint32_t intr_count;
     uint32_t eq_count;
     uint32_t rdma_pid_count;

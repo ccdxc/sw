@@ -2021,6 +2021,9 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
 
     hal_api_trace(" API Begin: Interface Update ");
 
+    // dump incoming config
+    interface_dump(spec);
+
     // validate the request message
     ret = validate_if_update(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -2854,7 +2857,7 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
     if (if_enic_info.has_pinned_uplink_if_key_handle()) {
         if (if_enic_info.pinned_uplink_if_key_handle().key_or_handle_case() == InterfaceKeyHandle::kInterfaceId) {
             hal_if->pinned_uplink = find_hal_handle_from_if_id(if_enic_info.pinned_uplink_if_key_handle().interface_id());
-        } else { 
+        } else {
             hal_if->pinned_uplink = if_enic_info.pinned_uplink_if_key_handle().if_handle();
         }
     }

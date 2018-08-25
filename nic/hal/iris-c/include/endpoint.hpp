@@ -5,28 +5,30 @@
 #include "sdk/indexer.hpp"
 
 #include "hal.hpp"
-#include "vrf.hpp"
-#include "l2seg.hpp"
 #include "enic.hpp"
 
+typedef std::tuple<L2Segment *, mac_t> ep_key_t;
 
 class Endpoint : public HalObject
 {
 public:
-  Endpoint(
-      std::shared_ptr<Enic> enic,
-      std::shared_ptr<Vrf> vrf,
-      mac_t mac, vlan_t vlan);
-  ~Endpoint();
+  static Endpoint *Factory(L2Segment *l2seg, mac_t mac, Enic *enic);
+  static void Destroy(Endpoint *ep);
+  static Endpoint *Lookup(L2Segment *l2seg, mac_t mac);
 
-  void Probe();
+  L2Segment *GetL2Seg();
+  mac_t GetMac();
 
 private:
-  mac_t _mac;
+  Endpoint(L2Segment *l2seg, mac_t mac, Enic *enic);
+  ~Endpoint();
+
+  mac_t mac;
+  L2Segment *l2seg;
+  Enic *enic;
   uint64_t handle;
 
-  std::shared_ptr<Vrf> vrf_ref;
-  std::shared_ptr<L2Segment> l2seg_ref;
+  static std::map<ep_key_t, Endpoint*> ep_db;
 };
 
 #endif /* __ENDPOINT_HPP__ */

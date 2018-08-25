@@ -8,12 +8,34 @@
 
 using namespace std;
 
+std::map<mcast_key_t, Multicast*> Multicast::mcast_db;
 
-map<mcast_key_t, weak_ptr<Multicast>> Multicast::registry;
+Multicast *
+Multicast::Factory(L2Segment *l2seg, mac_t mac)
+{
+    mcast_key_t mcast_key(l2seg, mac);
 
+    Multicast *mcast = new Multicast(l2seg, mac);
 
-Multicast::Multicast(shared_ptr<Vrf> vrf,
-                     mac_t mac, vlan_t vlan)
+    // Store in DB
+    mcast_db[mcast_key] = mcast;
+    return mcast;
+}
+
+void
+Multicast::Destroy(Multicast *mcast)
+{
+    mcast_key_t mcast_key(mcast->GetL2Seg(), mcast->GetMac());
+
+    if (mcast) {
+        mcast->~Multicast();
+    }
+
+    // Remove from DB
+    mcast_db.erase(mcast_key);
+}
+
+Multicast::Multicast(L2Segment *l2seg, mac_t mac)
 {
     grpc::ClientContext context;
     grpc::Status status;
@@ -23,48 +45,26 @@ Multicast::Multicast(shared_ptr<Vrf> vrf,
     multicast::MulticastEntryRequestMsg req_msg;
     multicast::MulticastEntryResponseMsg rsp_msg;
 
-    _mac = mac;
-    _vlan = vlan;
-
-    if (hal->GetMode() == FWD_MODE_HOSTPIN) {
-        return;
-    }
-
-    shared_ptr<L2Segment> l2seg = L2Segment::GetInstance(vrf, vlan);
+    this->mac = mac;
+    this->l2seg = l2seg;
 
     spec = req_msg.add_request();
-    spec->mutable_meta()->set_vrf_id(vrf->GetId());
+    spec->mutable_meta()->set_vrf_id(l2seg->GetVrf()->GetId());
     spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
     spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(mac);
 
-    status = hal->multicast_stub_->MulticastEntryCreate(&context, req_msg, &rsp_msg);
+    status = hal->multicast_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": mac " << hex << mac << resetiosflags(ios::hex)
-                 << " vrf id " << vrf->GetId() << " handle " << vrf->GetHandle()
-                 << " l2seg id " << l2seg->GetId() << " handle " << l2seg->GetHandle()
-                 << ", API Status " << rsp.api_status()
-                 << endl;
-            throw ("Failed to create multicast entry");
-
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            HAL_TRACE_DEBUG("Created Mcast L2seg: {}, Mac: {}", l2seg->GetId(), mac);
         } else {
-            cout << "[INFO] " << __FUNCTION__
-                 << ": mac " << hex << mac << resetiosflags(ios::hex)
-                 << " vrf id " << vrf->GetId() << " handle " << vrf->GetHandle()
-                 << " l2seg id " << l2seg->GetId() << " handle " << l2seg->GetHandle()
-                 << " succeeded!"
-                 << endl;
+            HAL_TRACE_ERR("Failed to create Mcast L2seg: {}, Mac: {} err: {}", l2seg->GetId(), mac,
+                          rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": mac " << hex << mac << resetiosflags(ios::hex)
-             << " vrf id " << vrf->GetId() << " handle " << vrf->GetHandle()
-             << " l2seg id " << l2seg->GetId() << " handle " << l2seg->GetHandle()
-             << ", Status " << status.error_code() << ":" << status.error_message()
-             << endl;
-        throw ("Failed to create multicast entry");
+        HAL_TRACE_ERR("Failed to create Mcast L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(), mac,
+                      status.error_code(), status.error_message());
     }
 }
 
@@ -78,73 +78,46 @@ Multicast::~Multicast()
     multicast::MulticastEntryDeleteRequestMsg req_msg;
     multicast::MulticastEntryDeleteResponseMsg rsp_msg;
 
-    if (hal->GetMode() == FWD_MODE_HOSTPIN) {
-        return;
-    }
-
-    shared_ptr<L2Segment> l2seg = L2Segment::GetInstance(vrf_ref, _vlan);
-
     req = req_msg.add_request();
-    req->mutable_meta()->set_vrf_id(vrf_ref->GetId());
-    req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_ref->GetHandle());
-    req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(_mac);
+    req->mutable_meta()->set_vrf_id(l2seg->GetVrf()->GetId());
+    req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
+    req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(mac);
 
-    status = hal->multicast_stub_->MulticastEntryDelete(&context, req_msg, &rsp_msg);
+    // status = hal->multicast_stub_->MulticastEntryDelete(&context, req_msg, &rsp_msg);
+    status = hal->multicast_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FUNCTION__
-                 << ": mac " << hex << _mac << resetiosflags(ios::hex)
-                 << " vrf id " << vrf_ref->GetId() << " handle " << vrf_ref->GetHandle()
-                 << " l2seg id " << l2seg_ref->GetId() << " handle " << l2seg_ref->GetHandle()
-                 << ", API Status " << rsp.api_status()
-                 << endl;
+            HAL_TRACE_ERR("Failed to delete Mcast L2seg: {}, Mac: {}. err: {}", l2seg->GetId(), mac,
+                          rsp.api_status());
         } else {
-            cout << "[INFO] " << __FUNCTION__
-                 << ": mac " << hex << _mac << resetiosflags(ios::hex)
-                 << " vrf id " << vrf_ref->GetId() << " handle " << vrf_ref->GetHandle()
-                 << " l2seg id " << l2seg_ref->GetId() << " handle " << l2seg_ref->GetHandle()
-                 << " succeeded!"
-                 << endl;
+            HAL_TRACE_DEBUG("Delete Mcast L2seg: {}, Mac: {}", l2seg->GetId(), mac);
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
-             << ": mac " << hex << _mac << resetiosflags(ios::hex)
-             << " vrf id " << vrf_ref->GetId() << " handle " << vrf_ref->GetHandle()
-             << " l2seg id " << l2seg_ref->GetId() << " handle " << l2seg_ref->GetHandle()
-             << ", Status " << status.error_code() << ":" << status.error_message()
-             << endl;
+        HAL_TRACE_ERR("Failed to delete Mcast L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
+                      mac, status.error_code(), status.error_message());
     }
 }
 
-shared_ptr<Multicast>
-Multicast::GetInstance(shared_ptr<Vrf> vrf,
-                       mac_t mac, vlan_t vlan)
+Multicast *
+Multicast::GetInstance(L2Segment *l2seg, mac_t mac)
 {
-    shared_ptr<L2Segment> l2seg = L2Segment::GetInstance(vrf, vlan);
-    mcast_key_t key(vrf->GetId(), l2seg->GetId(), mac);
-    shared_ptr<Multicast> mcast;
+    std::map<mcast_key_t, Multicast*>::iterator it;
+    mcast_key_t key(l2seg, mac);
+    Multicast *mcast;
 
-    if (registry.find(key) == registry.end()) {
-        // Create the mac
-        mcast = make_shared<Multicast>(vrf, mac, vlan);
-        registry[key] = weak_ptr<Multicast>(mcast);
+    it = mcast_db.find(key);
+    if (it == mcast_db.end()) {
+        // Create the multicast
+        mcast = Multicast::Factory(l2seg, mac);
+        return mcast;
     } else {
-        // Return existing entry
-        mcast = shared_ptr<Multicast>(registry[key]);
-        cout << "[INFO] " << __FUNCTION__
-             << ": mac " << hex << mac << resetiosflags(ios::hex)
-             << " vrf id " << vrf->GetId() << " handle " << vrf->GetHandle()
-             << " l2seg id " << l2seg->GetId() << " handle " << l2seg->GetHandle()
-             << " already exists!"
-             << endl;
+        return it->second;
     }
-
-    return mcast;
 }
 
-int
-Multicast::Update()
+void
+Multicast::TriggerHal()
 {
     grpc::ClientContext context;
     grpc::Status status;
@@ -154,67 +127,56 @@ Multicast::Update()
     multicast::MulticastEntryRequestMsg req_msg;
     multicast::MulticastEntryResponseMsg rsp_msg;
 
-    if (hal->GetMode() == FWD_MODE_HOSTPIN) {
-        return 0;
-    }
-
-    shared_ptr<L2Segment> l2seg = L2Segment::GetInstance(vrf_ref, _vlan);
-
     spec = req_msg.add_request();
-    spec->mutable_meta()->set_vrf_id(vrf_ref->GetId());
+    spec->mutable_meta()->set_vrf_id(l2seg->GetVrf()->GetId());
     spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
-    spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(_mac);
+    spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(mac);
     for (auto it = enic_refs.cbegin(); it != enic_refs.cend(); it++) {
         spec->add_oif_key_handles()->set_interface_id(it->second->GetId());
     }
 
-    status = hal->multicast_stub_->MulticastEntryUpdate(&context, req_msg, &rsp_msg);
+    status = hal->multicast_update(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": mac " << hex << _mac << resetiosflags(ios::hex)
-                 << " vrf id " << vrf_ref->GetId() << " handle " << vrf_ref->GetHandle()
-                 << " l2seg id " << l2seg_ref->GetId() << " handle " << l2seg_ref->GetHandle()
-                 << " oifs_list ";
-            for (auto it = enic_refs.cbegin(); it != enic_refs.cend(); it++)
-                cout << it->second->GetId() << ' ';
-            cerr << ", API Status " << rsp.api_status() << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            HAL_TRACE_DEBUG("Updated Mcast L2seg: {}, Mac: {}", l2seg->GetId(), mac);
         } else {
-            cerr << "[INFO] " << __FUNCTION__
-                 << " mac " << hex << _mac << resetiosflags(ios::hex)
-                 << " vrf id " << vrf_ref->GetId() << " handle " << vrf_ref->GetHandle()
-                 << " l2seg id " << l2seg_ref->GetId() << " handle " << l2seg_ref->GetHandle()
-                 << " oifs_list ";
-            for (auto it = enic_refs.cbegin(); it != enic_refs.cend(); it++)
-                cout << it->second->GetId() << ' ';
-            cerr << " succeeded," << endl;
-            return 0;
+            HAL_TRACE_ERR("Failed to update Mcast L2seg: {}, Mac: {}. err: {}", l2seg->GetId(), mac,
+                          rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": group " << hex << _mac << resetiosflags(ios::hex)
-             << " vrf id " << vrf_ref->GetId() << " handle " << vrf_ref->GetHandle()
-             << " l2seg id " << l2seg_ref->GetId() << " handle " << l2seg_ref->GetHandle()
-             << " oifs_list ";
-        for (auto it = enic_refs.cbegin(); it != enic_refs.cend(); it++)
-            cerr << it->second->GetId() << ' ';
-        cerr << ", Status " << status.error_code() << ":" << status.error_message() << endl;
+        HAL_TRACE_ERR("Failed to update Mcast L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(), mac,
+                      status.error_code(), status.error_message());
     }
-
-    return -1;
 }
 
-int
-Multicast::AddEnic(shared_ptr<Enic> enic)
+void
+Multicast::AddEnic(Enic *enic)
 {
     enic_refs[enic->GetId()] = enic;
-    return Update();
+    return TriggerHal();
 }
 
-int
-Multicast::DelEnic(shared_ptr<Enic> enic)
+void
+Multicast::DelEnic(Enic *enic)
 {
     enic_refs.erase(enic->GetId());
-    return Update();
+    return TriggerHal();
+}
+
+L2Segment *
+Multicast::GetL2Seg()
+{
+    return l2seg;
+}
+mac_t
+Multicast::GetMac()
+{
+    return mac;
+}
+
+uint32_t
+Multicast::GetNumEnics()
+{
+    return enic_refs.size();
 }

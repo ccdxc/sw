@@ -9,27 +9,49 @@
 #include "enic.hpp"
 #include "endpoint.hpp"
 #include "multicast.hpp"
-#include "vrf.hpp"
+#include "kh.grpc.pb.h"
 
+#if 0
+// Have to be in sync with kh::FilterType
+#define FILTER_TYPE(ENTRY)                                          \
+    ENTRY(FILTER_NONE,      0, "FILTER_NONE")                       \
+    ENTRY(FILTER_LIF,       1, "FILTER_LIF")                        \
+    ENTRY(FILTER_LIF_MAC,   2, "FILTER_LIF_MAC")                    \
+    ENTRY(FILTER_LIF_VLAN,  3, "FILTER_LIF_VLAN")                   \
+    ENTRY(FILTER_LIF_MAC_VLAN,    4, "FILTER_LIF_MAC_VLAN")
+DEFINE_ENUM(filter_type_t, FILTER_TYPE)
+#undef FILTER_TYPE
+#endif
+
+typedef kh::FilterType filter_type_t;
 
 class MacVlanFilter : public HalObject
 {
 public:
-    MacVlanFilter(
-        std::shared_ptr<Lif> lif,
-        std::shared_ptr<Vrf> vrf,
-        mac_t mac, vlan_t vlan);
-    ~MacVlanFilter();
+  static MacVlanFilter *Factory(EthLif *eth_lif,
+                                mac_t mac, vlan_t vlan,
+                                filter_type_t type = kh::FILTER_LIF_MAC_VLAN);
+  static void Destroy(MacVlanFilter *filter);
 
 private:
+    MacVlanFilter(
+        EthLif *eth_lif,
+        mac_t mac, vlan_t vlan,
+        filter_type_t type);
+    ~MacVlanFilter();
+
+    filter_type_t _type;
     mac_t _mac;
     vlan_t _vlan;
 
-    std::shared_ptr<Lif> lif_ref;
-    std::shared_ptr<Vrf> vrf_ref;
-    std::shared_ptr<Enic> enic_ref;
-    std::shared_ptr<Endpoint> ep_ref;
-    std::shared_ptr<Multicast> mcast_ref;
+    EthLif *eth_lif;
+    Endpoint *ep;
+    Multicast *mcast;
+
+    uint64_t handle;
+    endpoint::FilterSpec spec;
+
+
 };
 
 #endif  /* __FILTER_HPP__ */

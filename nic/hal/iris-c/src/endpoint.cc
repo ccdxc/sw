@@ -6,48 +6,50 @@
 #include "types.grpc.pb.h"
 
 #include "endpoint.hpp"
+#include "print.hpp"
 
 using namespace std;
 
+std::map<ep_key_t, Endpoint*> Endpoint::ep_db;
+
+Endpoint *
+Endpoint::Factory(L2Segment *l2seg, mac_t mac, Enic *enic)
+{
+    ep_key_t ep_key(l2seg, mac);
+
+    Endpoint *ep = new Endpoint(l2seg, mac, enic);
+
+    // Store in DB
+    ep_db[ep_key] = ep;
+    return ep;
+}
 
 void
-Endpoint::Probe()
+Endpoint::Destroy(Endpoint *ep)
 {
-    grpc::ClientContext                 context;
-    grpc::Status                        status;
+    ep_key_t ep_key(ep->GetL2Seg(), ep->GetMac());
 
-    endpoint::EndpointGetResponse       rsp;
-    endpoint::EndpointGetRequestMsg     req_msg;
-    endpoint::EndpointGetResponseMsg    rsp_msg;
+    if (ep) {
+        ep->~Endpoint();
+    }
 
-    uint64_t enic_id;
-    uint64_t handle;
+    // Remove from DB
+    ep_db.erase(ep_key);
+}
 
-    req_msg.add_request();
-    status = hal->ep_stub_->EndpointGet(&context, req_msg, &rsp_msg);
-    if (status.ok()) {
-        for (int i = 0; i < rsp_msg.response().size(); i++) {
-            rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-                throw ("Failed to discover Endpoints");
-            } else {
-                enic_id = rsp.spec().endpoint_attrs().interface_key_handle().interface_id();
-                handle = rsp.status().endpoint_handle();
-                cout << "[INFO] Discovered Endpoint handle = " << handle
-                     << " enic id " << enic_id << endl;
-                return;
-            }
-        }
+Endpoint *
+Endpoint::Lookup(L2Segment *l2seg, mac_t mac)
+{
+    ep_key_t key(l2seg, mac);
+
+    if (ep_db.find(key) != ep_db.cend()) {
+        return ep_db[key];
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        throw ("Failed to discover Endpoints");
+        return NULL;
     }
 }
 
-Endpoint::Endpoint(shared_ptr<Enic> enic,
-                   shared_ptr<Vrf> vrf,
-                   mac_t mac, vlan_t vlan)
+Endpoint::Endpoint(L2Segment *l2seg, mac_t mac, Enic *enic)
 {
     grpc::ClientContext             context;
     grpc::Status                    status;
@@ -56,44 +58,33 @@ Endpoint::Endpoint(shared_ptr<Enic> enic,
     endpoint::EndpointResponse      rsp;
     endpoint::EndpointRequestMsg    req_msg;
     endpoint::EndpointResponseMsg   rsp_msg;
-    // kh::SecurityGroupKeyHandle      *sg_kh;
-    // types::IPAddress                *ip;
 
-    shared_ptr<L2Segment> l2seg = L2Segment::GetInstance(vrf, vlan);
+    HAL_TRACE_DEBUG("EP create: l2seg: {}, mac: {}, enic: {}",
+                    l2seg->GetId(), macaddr2str(mac), enic->GetId());
 
-    _mac = mac;
-    vrf_ref = vrf;
-    l2seg_ref = l2seg;
+    this->mac = mac;
+    this->l2seg = l2seg;
+    this->enic = enic;
 
     req = req_msg.add_request();
-    req->mutable_vrf_key_handle()->set_vrf_id(vrf->GetId());
+    req->mutable_vrf_key_handle()->set_vrf_id(l2seg->GetVrf()->GetId());
     req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac);
     req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
     req->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(enic->GetId());
-    // if (fwd_mode == FWD_MODE_SMART_NIC && ip_addr) {
-    //     ip = req->mutable_endpoint_attrs()->add_ip_address();
-    //     ip->set_ip_af(types::IPAddressFamily::IP_AF_INET);
-    //     ip->set_v4_addr(ip_addr);
-    // }
-    // if (fwd_mode == FWD_MODE_SMART_NIC && sg_id) {
-    //     sg_kh = req->mutable_endpoint_attrs()->add_sg_key_handle();
-    //     sg_kh->set_security_group_id(sg_id);
-    // }
-    status = hal->ep_stub_->EndpointCreate(&context, req_msg, &rsp_msg);
+    status = hal->endpoint_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            throw ("Failed to create Endpoint");
+            HAL_TRACE_ERR("Failed to create EP L2seg: {}, Mac: {}. err: {}",
+                          l2seg->GetId(), macaddr2str(mac),
+                          rsp.api_status());
         } else {
+            HAL_TRACE_DEBUG("Created EP L2seg: {}, Mac: {}", l2seg->GetId(), macaddr2str(mac));
             handle = rsp.endpoint_status().endpoint_handle();
-            cout << "[INFO] Endpoint create succeeded,"
-                 << " handle = " << handle
-                 << endl;
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        throw ("Failed to create Endpoint");
+        HAL_TRACE_ERR("Failed to create EP L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
+                      macaddr2str(mac), status.error_code(), status.error_message());
     }
 }
 
@@ -107,32 +98,36 @@ Endpoint::~Endpoint()
     endpoint::EndpointDeleteRequestMsg    req_msg;
     endpoint::EndpointDeleteResponseMsg   rsp_msg;
 
-    req = req_msg.add_request();
-    req->mutable_vrf_key_handle()->set_vrf_id(vrf_ref->GetId());
-    req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(_mac);
-    req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_ref->GetHandle());
+    HAL_TRACE_DEBUG("EP delete: l2seg: {}, mac: {}, enic: {}",
+                    l2seg->GetId(), macaddr2str(mac), enic->GetId());
 
-    status = hal->ep_stub_->EndpointDelete(&context, req_msg, &rsp_msg);
+    req = req_msg.add_request();
+    req->mutable_vrf_key_handle()->set_vrf_id(l2seg->GetVrf()->GetId());
+    req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac);
+    req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
+
+    status = hal->endpoint_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Handle = " << handle
-                 << ", Status = " << rsp.api_status()
-                 << endl;
+            HAL_TRACE_ERR("Failed to delete EP L2seg: {}, Mac: {}. err: {}", l2seg->GetId(), macaddr2str(mac),
+                          rsp.api_status());
         } else {
-            cout << "[INFO] Endpoint delete succeeded,"
-                 << " handle = " << handle
-                 << endl;
-            return;
+            HAL_TRACE_DEBUG("Delete EP L2seg: {}, Mac: {}", l2seg->GetId(), macaddr2str(mac));
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Handle = " << handle
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        HAL_TRACE_ERR("Failed to delete EP L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
+                      macaddr2str(mac), status.error_code(), status.error_message());
     }
+}
 
-    l2seg_ref.reset();
-    vrf_ref.reset();
+L2Segment *
+Endpoint::GetL2Seg()
+{
+    return l2seg;
+}
+mac_t
+Endpoint::GetMac()
+{
+    return mac;
 }

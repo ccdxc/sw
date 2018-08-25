@@ -9,40 +9,19 @@ using namespace std;
 
 sdk::lib::indexer *Vrf::allocator = sdk::lib::indexer::factory(Vrf::max_vrfs, false, true);
 
+Vrf *
+Vrf::Factory()
+{
+    Vrf *vrf = new Vrf();
+
+    return vrf;
+}
 
 void
-Vrf::Probe()
+Vrf::Destroy(Vrf *vrf)
 {
-    grpc::ClientContext      context;
-    grpc::Status             status;
-
-    vrf::VrfGetRequest       *req __attribute__((unused));
-    vrf::VrfGetResponse      rsp;
-    vrf::VrfGetRequestMsg    req_msg;
-    vrf::VrfGetResponseMsg   rsp_msg;
-
-    uint64_t id, handle;
-
-    req = req_msg.add_request();
-    status = hal->vrf_stub_->VrfGet(&context, req_msg, &rsp_msg);
-    if (status.ok()) {
-        for (int i = 0; i < rsp_msg.response().size(); i++) {
-            rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-                throw ("Failed to discover Vrfs");
-            } else {
-                id = rsp.spec().key_or_handle().vrf_id();
-                handle =  rsp.status().vrf_handle();
-                cout << "[INFO] Discovered Vrf"
-                     << " id = " << id << " handle = " << handle
-                     << endl;
-                allocator->alloc_withid(id);
-            }
-        }
-    } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        throw ("Failed to discover Vrfs");
+    if (vrf) {
+        vrf->~Vrf();
     }
 }
 
@@ -57,18 +36,23 @@ Vrf::Vrf()
     vrf::VrfResponseMsg         rsp_msg;
 
     if (allocator->alloc(&id) != sdk::lib::indexer::SUCCESS) {
-        throw ("Failed to allocate VRF");
+        HAL_TRACE_ERR("Failed to allocate VRF");
+        return;
     }
+
+    HAL_TRACE_DEBUG("Vrf create id: {}", id);
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_vrf_id(id);
     req->set_vrf_type(::types::VRF_TYPE_CUSTOMER);
 
-    status = hal->vrf_stub_->VrfCreate(&context, req_msg, &rsp_msg);
+    // status = hal->vrf_stub_->VrfCreate(&context, req_msg, &rsp_msg);
+    status = hal->vrf_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.vrf_status().vrf_handle();
+            HAL_TRACE_DEBUG("Vrf Create: id: {}, handle: {}", id, handle);
             cout << "[INFO] VRF create succeeded,"
                  << " id = " << id << " handle = " << handle
                  << endl;
@@ -81,7 +65,7 @@ Vrf::Vrf()
                  << endl;
         } else {
             cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            throw ("Failed to create VRF");          
+            throw ("Failed to create VRF");
         }
     } else {
         cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
@@ -99,6 +83,8 @@ Vrf::~Vrf()
     vrf::VrfDeleteRequestMsg        req_msg;
     vrf::VrfDeleteResponseMsg       rsp_msg;
 
+    HAL_TRACE_DEBUG("Vrf delete id: {}", id);
+
     req = req_msg.add_request();
     if (id == 0) {
         req->mutable_key_or_handle()->set_vrf_id(id);
@@ -106,7 +92,8 @@ Vrf::~Vrf()
         req->mutable_key_or_handle()->set_vrf_handle(handle);
     }
 
-    status = hal->vrf_stub_->VrfDelete(&context, req_msg, &rsp_msg);
+    // status = hal->vrf_stub_->VrfDelete(&context, req_msg, &rsp_msg);
+    status = hal->vrf_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {

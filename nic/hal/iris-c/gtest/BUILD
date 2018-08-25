@@ -24,8 +24,8 @@ cc_test(
 )
 
 cc_test(
-    name = "span_test",
-    srcs = ["span_test.cc"],
+    name = "filter_smart_test",
+    srcs = ["filter_smart_test.cc"],
     deps = [
             # Internal
             "//nic/hal/iris-c:iris-c",
