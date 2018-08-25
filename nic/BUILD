@@ -21,6 +21,7 @@ cc_library(
         "asic/capri/model/cap_bx/cap_bx_csr.cc",
         "asic/capri/model/cap_bx/cap_bx_csr.h",
         "asic/capri/verif/apis/cap_bx_api.h",
+        "asic/capri/verif/apis/cap_base_api.h",
         "asic/capri/model/cap_mx/cap_mx_csr.cc",
         "asic/capri/model/cap_mx/cap_mx_csr.h",
         "asic/capri/verif/apis/cap_mx_api.h",

@@ -13,6 +13,7 @@ namespace sdk {
 namespace linkmgr {
 
 mac_fn_t    mac_fns;
+mac_fn_t    mac_mgmt_fns;
 serdes_fn_t serdes_fns;
 
 #define SDK_PORT_TRACE(port, state) { \
@@ -96,14 +97,19 @@ port::port_mac_cfg(void)
     mac_info.mac_id    = this->mac_id_;
     mac_info.mac_ch    = this->mac_ch_;
     mac_info.speed     = static_cast<uint32_t>(this->port_speed_);
-    mac_info.fec       = static_cast<uint32_t>(this->fec_type_);
+
     mac_info.mtu       = this->mtu_;
     mac_info.num_lanes = this->num_lanes_;
 
-    mac_info.tx_pad_enable = 0;
+    // 0: disable fec, 1: enable fec
+    // TODO current FEC type is determined by global mode in mx api
+    mac_info.fec       = static_cast<uint32_t>(this->fec_type_);
+
+    // Enable Tx padding. Disable Rx padding
+    mac_info.tx_pad_enable = 1;
     mac_info.rx_pad_enable = 0;
 
-    mac_fns.mac_cfg(&mac_info);
+    mac_fns()->mac_cfg(&mac_info);
 
     return SDK_RET_OK;
 }
@@ -113,7 +119,7 @@ port::port_mac_enable(bool enable)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_fns.mac_enable(
+    mac_fns()->mac_enable(
                mac_port_num,
                static_cast<uint32_t>(this->port_speed_),
                this->num_lanes_,
@@ -127,7 +133,7 @@ port::port_mac_soft_reset(bool reset)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_fns.mac_soft_reset(
+    mac_fns()->mac_soft_reset(
                    mac_port_num,
                    static_cast<uint32_t>(this->port_speed_),
                    this->num_lanes_,
@@ -141,7 +147,7 @@ port::port_mac_stats_reset(bool reset)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_fns.mac_stats_reset(
+    mac_fns()->mac_stats_reset(
                     mac_port_num,
                     static_cast<uint32_t>(this->port_speed_),
                     this->num_lanes_,
@@ -155,7 +161,7 @@ port::port_mac_intr_en(bool enable)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_fns.mac_intr_enable(
+    mac_fns()->mac_intr_enable(
             mac_port_num,
             static_cast<uint32_t>(this->port_speed_),
             this->num_lanes_,
@@ -169,7 +175,7 @@ port::port_mac_intr_clr(void)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_fns.mac_intr_clear(
+    mac_fns()->mac_intr_clear(
             mac_port_num,
             static_cast<uint32_t>(this->port_speed_),
             this->num_lanes_);
@@ -182,7 +188,7 @@ port::port_mac_faults_get(void)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    return mac_fns.mac_faults_get(mac_port_num);
+    return mac_fns()->mac_faults_get(mac_port_num);
 }
 
 bool
@@ -190,7 +196,7 @@ port::port_mac_sync_get(void)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    return mac_fns.mac_sync_get(mac_port_num);
+    return mac_fns()->mac_sync_get(mac_port_num);
 }
 
 uint32_t
@@ -214,7 +220,7 @@ port::port_serdes_cfg(void)
                                     static_cast<uint32_t>(this->port_speed_),
                                     this->cable_type_);
 
-        serdes_fns.serdes_cfg(sbus_addr, serdes_info);
+        serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
     }
 
     return SDK_RET_OK;
@@ -225,7 +231,7 @@ port::port_serdes_tx_rx_enable(bool enable)
 {
     uint32_t lane = 0;
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns.serdes_tx_rx_enable(port_sbus_addr(lane),
+        serdes_fns()->serdes_tx_rx_enable(port_sbus_addr(lane),
                                             enable);
     }
 
@@ -237,7 +243,7 @@ port::port_serdes_output_enable(bool enable)
 {
     uint32_t lane = 0;
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns.serdes_output_enable(port_sbus_addr(lane),
+        serdes_fns()->serdes_output_enable(port_sbus_addr(lane),
                                              enable);
     }
 
@@ -249,7 +255,7 @@ port::port_serdes_reset(bool reset)
 {
     uint32_t lane = 0;
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns.serdes_reset(port_sbus_addr(lane),
+        serdes_fns()->serdes_reset(port_sbus_addr(lane),
                                      reset);
     }
 
@@ -263,7 +269,7 @@ port::port_serdes_signal_detect(void)
     bool signal_detect = false;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        signal_detect = serdes_fns.serdes_signal_detect(
+        signal_detect = serdes_fns()->serdes_signal_detect(
                                         port_sbus_addr(lane));
         if (signal_detect == false) {
             break;
@@ -279,7 +285,7 @@ port::port_serdes_rdy(void)
     bool serdes_rdy = false;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_rdy =  serdes_fns.serdes_rdy(port_sbus_addr(lane));
+        serdes_rdy =  serdes_fns()->serdes_rdy(port_sbus_addr(lane));
         if (serdes_rdy == false) {
             break;
         }
@@ -317,7 +323,7 @@ port::port_serdes_ical_start(void)
     uint32_t lane = 0;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns.serdes_ical_start(port_sbus_addr(lane));
+        serdes_fns()->serdes_ical_start(port_sbus_addr(lane));
     }
 
     return 0;
@@ -329,7 +335,7 @@ port::port_serdes_pcal_start(void)
     uint32_t lane = 0;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns.serdes_pcal_start(port_sbus_addr(lane));
+        serdes_fns()->serdes_pcal_start(port_sbus_addr(lane));
     }
 
     return 0;
@@ -341,7 +347,7 @@ port::port_serdes_pcal_continuous_start(void)
     uint32_t lane = 0;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns.serdes_pcal_continuous_start(port_sbus_addr(lane));
+        serdes_fns()->serdes_pcal_continuous_start(port_sbus_addr(lane));
     }
 
     return 0;
@@ -353,7 +359,7 @@ port::port_serdes_dfe_complete(void)
     uint32_t lane = 0;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        if (serdes_fns.serdes_dfe_status(port_sbus_addr(lane)) != 1) {
+        if (serdes_fns()->serdes_dfe_status(port_sbus_addr(lane)) != 1) {
             return false;
         }
     }

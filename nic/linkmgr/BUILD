@@ -91,6 +91,7 @@ cc_library(
     srcs = [
         "pknobs.cc",
         "cap_mx_api.cc",
+        "cap_bx_api.cc",
         "pknobs.hpp",
     ],
     deps = [

@@ -14,14 +14,12 @@ namespace lib {
 using boost::property_tree::ptree;
 
 #define MAX_ASICS          1
-#define MAX_ASIC_PORTS     8
+#define MAX_ASIC_PORTS     9
 #define MAX_UPLINK_PORTS   MAX_ASIC_PORTS
 #define MAX_PORT_LANES     4
-#define MAX_MAC_PROFILES   11
-#define MAX_PORT_SPEEDS    6
 #define MAX_SERDES         9
 #define SERDES_SBUS_START  34
-#define MAX_CABLE_TYPE     2
+#define MAX_PORT_SPEEDS    7
 
 typedef enum mac_mode_e {
     MAC_MODE_1x100g,
@@ -33,7 +31,8 @@ typedef enum mac_mode_e {
     MAC_MODE_2x25g_1x50g,
     MAC_MODE_4x25g,
     MAC_MODE_4x10g,
-    MAC_MODE_4x1g
+    MAC_MODE_4x1g,
+    MAC_MODE_MAX
 } mac_mode_t;
 
 typedef struct serdes_info_s {
@@ -102,10 +101,12 @@ typedef struct catalog_s {
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
     qos_profile_t            qos_profile;                       // qos asic profile
-    mac_profile_t            mac_profiles[MAX_MAC_PROFILES];    // MAC profiles
+    mac_profile_t            mac_profiles[MAC_MODE_MAX];    // MAC profiles
 
     // serdes parameters
-    serdes_info_t            serdes[MAX_SERDES][MAX_PORT_SPEEDS][MAX_CABLE_TYPE];
+    serdes_info_t            serdes[MAX_SERDES]
+                                   [MAX_PORT_SPEEDS]
+                                   [sdk::types::CABLE_TYPE_MAX];
 } catalog_t;
 
 class catalog {

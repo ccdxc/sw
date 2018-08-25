@@ -15,18 +15,27 @@ enum class port_event_t {
     PORT_EVENT_LINK_DOWN = 1
 };
 
+typedef enum cable_type_e {
+    CABLE_TYPE_CU,
+    CABLE_TYPE_FIBER,
+    CABLE_TYPE_MAX
+} cable_type_t;
+
 enum class port_speed_t {
     PORT_SPEED_NONE    = 0,
-    PORT_SPEED_10G     = 1,
-    PORT_SPEED_25G     = 2,
-    PORT_SPEED_40G     = 3,
-    PORT_SPEED_50G     = 4,
-    PORT_SPEED_100G    = 5,
+    PORT_SPEED_1G      = 1,
+    PORT_SPEED_10G     = 2,
+    PORT_SPEED_25G     = 3,
+    PORT_SPEED_40G     = 4,
+    PORT_SPEED_50G     = 5,
+    PORT_SPEED_100G    = 6,
+    PORT_SPEED_MAX     = 7,
 };
 
 enum class port_type_t {
     PORT_TYPE_NONE    = 0,
     PORT_TYPE_ETH     = 1,
+    PORT_TYPE_MGMT    = 2,
 };
 
 enum class platform_type_t {

@@ -3,7 +3,10 @@
 #include "cap_top_csr.h"
 
 cap_mx_lgrp_csr_t::cap_mx_lgrp_csr_t(string name, cap_csr_base * parent) :cap_block_base(name, parent) {}
-cap_mx_lgrp_csr_t::~cap_mx_lgrp_csr_t() { } 
+cap_mx_lgrp_csr_t::~cap_mx_lgrp_csr_t() {}
+
+cap_bx_lgrp_csr_t::cap_bx_lgrp_csr_t(string name, cap_csr_base * parent) :cap_block_base(name, parent) {}
+cap_bx_lgrp_csr_t::~cap_bx_lgrp_csr_t() { }
 
 void cap_mx_lgrp_csr_t::init() {
     mx[0].set_attributes(this,"mx[0]",  0x1d00000);
@@ -15,14 +18,26 @@ void cap_mx_lgrp_csr_t::register_model(int chip_id) {
     CAP_BLK_REG_MODEL_REGISTER(cap_mx_csr_t,chip_id, 1, &mx[1]);
 } // cap_mx_lgrp_csr_t::register_model(int chip_id)
 
-cap_top_csr_t::cap_top_csr_t(string name , cap_csr_base * parent) : 
+void cap_bx_lgrp_csr_t::init() {
+    bx.set_attributes(this,"bx",  0x1000000);
+} // cap_bx_lgrp_csr_t::init()
+
+void cap_bx_lgrp_csr_t::register_model(int chip_id) {
+    CAP_BLK_REG_MODEL_REGISTER(cap_bx_csr_t,chip_id, 0, &bx);
+} // cap_bx_lgrp_csr_t::register_model(int chip_id)
+
+cap_top_csr_t::cap_top_csr_t(string name , cap_csr_base * parent) :
 cap_block_base(name, parent) { }
 cap_top_csr_t::~cap_top_csr_t() { }
 
-void cap_top_csr_t::init(int chip_id) { 
+void cap_top_csr_t::init(int chip_id) {
     mx.set_attributes(this, "mx", 0);
     mx.register_model(chip_id);
-    CAP_BLK_REG_MODEL_REGISTER(cap_mx_lgrp_csr_t, chip_id, 0, &mx); 
+    CAP_BLK_REG_MODEL_REGISTER(cap_mx_lgrp_csr_t, chip_id, 0, &mx);
+
+    bx.set_attributes(this, "bx", 0);
+    bx.register_model(chip_id);
+    CAP_BLK_REG_MODEL_REGISTER(cap_bx_lgrp_csr_t, chip_id, 0, &bx);
 
     vector<pen_csr_base *> all_top_blocks;
     for(auto i : get_children(1)) {
@@ -36,7 +51,7 @@ void cap_top_csr_t::init(int chip_id) {
             if(cmp_blk == i) continue;
             if( ((i->get_offset() >= cmp_blk->get_offset()) && (i->get_offset() <= cmp_blk->get_csr_end_addr())) ||
                     ((i->get_csr_end_addr() >= cmp_blk->get_offset()) && (i->get_csr_end_addr() <= cmp_blk->get_csr_end_addr())) ) {
-                PLOG_ERR( hex << "Overlap :                         Current : " << i->get_hier_path() << " 0x" << i->get_offset() << " - 0x" << i->get_csr_end_addr() << 
+                PLOG_ERR( hex << "Overlap :                         Current : " << i->get_hier_path() << " 0x" << i->get_offset() << " - 0x" << i->get_csr_end_addr() <<
                         " With : " << cmp_blk->get_hier_path() << " 0x" << cmp_blk->get_offset() << " - 0x"<< cmp_blk->get_csr_end_addr() << dec << endl);
             }
         }

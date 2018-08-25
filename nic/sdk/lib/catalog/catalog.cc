@@ -60,7 +60,9 @@ catalog::populate_asics(ptree &prop_tree)
 port_speed_t
 catalog::catalog_speed_to_port_speed(std::string speed)
 {
-    if (speed == "10G") {
+    if (speed == "1G") {
+        return port_speed_t::PORT_SPEED_1G;
+    } else if (speed == "10G") {
         return port_speed_t::PORT_SPEED_10G;
     } else if (speed == "25G") {
         return port_speed_t::PORT_SPEED_25G;
@@ -80,6 +82,8 @@ catalog::catalog_type_to_port_type(std::string type)
 {
     if (type == "eth") {
         return port_type_t::PORT_TYPE_ETH;
+    } else if (type == "mgmt") {
+        return port_type_t::PORT_TYPE_MGMT;
     }
 
     return port_type_t::PORT_TYPE_NONE;
@@ -264,10 +268,10 @@ uint8_t
 catalog::cable_type_get(std::string cable_type_str)
 {
     if (cable_type_str == "CU") {
-        return 0;
+        return sdk::types::CABLE_TYPE_CU;
     }
 
-    return 1;
+    return sdk::types::CABLE_TYPE_FIBER;
 }
 
 sdk_ret_t

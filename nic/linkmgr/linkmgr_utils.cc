@@ -8,21 +8,24 @@ port_speed_t
 port_speed_spec_to_sdk_port_speed (::port::PortSpeed speed)
 {
     switch (speed) {
+    case ::port::PORT_SPEED_1G:
+        return port_speed_t::PORT_SPEED_1G;
+
     case ::port::PORT_SPEED_10G:
         return port_speed_t::PORT_SPEED_10G;
-        break;
+
     case ::port::PORT_SPEED_25G:
         return port_speed_t::PORT_SPEED_25G;
-        break;
+
     case ::port::PORT_SPEED_40G:
         return port_speed_t::PORT_SPEED_40G;
-        break;
+
     case ::port::PORT_SPEED_50G:
         return port_speed_t::PORT_SPEED_50G;
-        break;
+
     case ::port::PORT_SPEED_100G:
         return port_speed_t::PORT_SPEED_100G;
-        break;
+
     default:
         return port_speed_t::PORT_SPEED_NONE;
     }
@@ -34,21 +37,24 @@ port_speed_spec_to_sdk_port_speed (::port::PortSpeed speed)
 sdk_port_speed_to_port_speed_spec (port_speed_t speed)
 {
     switch (speed) {
+    case port_speed_t::PORT_SPEED_1G:
+        return ::port::PORT_SPEED_1G;
+
     case port_speed_t::PORT_SPEED_10G:
         return ::port::PORT_SPEED_10G;
-        break;
+
     case port_speed_t::PORT_SPEED_25G:
         return ::port::PORT_SPEED_25G;
-        break;
+
     case port_speed_t::PORT_SPEED_40G:
         return ::port::PORT_SPEED_40G;
-        break;
+
     case port_speed_t::PORT_SPEED_50G:
         return ::port::PORT_SPEED_50G;
-        break;
+
     case port_speed_t::PORT_SPEED_100G:
         return ::port::PORT_SPEED_100G;
-        break;
+
     default:
         return ::port::PORT_SPEED_NONE;
     }
@@ -62,6 +68,10 @@ port_type_spec_to_sdk_port_type (::port::PortType type)
     switch (type) {
     case ::port::PORT_TYPE_ETH:
         return port_type_t::PORT_TYPE_ETH;
+
+    case ::port::PORT_TYPE_MGMT:
+        return port_type_t::PORT_TYPE_MGMT;
+
     default:
         return port_type_t::PORT_TYPE_NONE;
     }
@@ -75,7 +85,10 @@ sdk_port_type_to_port_type_spec (port_type_t type)
     switch (type) {
     case port_type_t::PORT_TYPE_ETH:
         return ::port::PORT_TYPE_ETH;
-        break;
+
+    case port_type_t::PORT_TYPE_MGMT:
+        return ::port::PORT_TYPE_MGMT;
+
     default:
         return ::port::PORT_TYPE_NONE;
     }

@@ -7,6 +7,8 @@
 #include "include/sdk/types.hpp"
 #include "linkmgr_types.hpp"
 #include "linkmgr.hpp"
+#include "port_mac.hpp"
+#include "port_serdes.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -98,6 +100,12 @@ public:
     }
 
     void set_mtu(uint32_t mtu) { this->mtu_ = mtu; }
+
+    void set_mac_fns(mac_fn_t *mac_fns) { this->mac_fns_ = mac_fns; }
+
+    void set_serdes_fns(serdes_fn_t *serdes_fns) {
+        this->serdes_fns_ = serdes_fns;
+    }
 
     sdk_ret_t port_enable(void);
     sdk_ret_t port_disable(void);
@@ -223,7 +231,6 @@ private:
     port_link_sm_t        link_dfe_sm_;               // port link DFE state machine
     port_fec_type_t       fec_type_;                  // FEC type
     bool                  auto_neg_enable_;           // Enable AutoNeg
-    uint8_t               cable_type_;                // cable type
     void                  *link_bring_up_timer_;      // port link bring up timer
     void                  *link_debounce_timer_;      // port link debounce timer
     uint32_t              mac_id_;                    // mac instance for this port
@@ -234,11 +241,19 @@ private:
     uint32_t              bringup_timer_val_;         // current bringup timer value
     uint32_t              sbus_addr_[MAX_PORT_LANES]; // sbus addr for each serdes
 
+    mac_fn_t              *mac_fns_;                  // mac functions
+    serdes_fn_t           *serdes_fns_;               // serdes functions
+
+    sdk::types::cable_type_t cable_type_;                // cable type
+
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);
 
     // Get serdes sbus address for a port lane
     uint32_t port_sbus_addr(uint32_t lane);
+
+    mac_fn_t*    mac_fns(void)    { return this->mac_fns_; }     // mac functions
+    serdes_fn_t* serdes_fns(void) { return this->serdes_fns_; }  // serdes functions
 };
 
 }    // namespace linkmgr

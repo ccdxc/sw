@@ -428,6 +428,13 @@ port_create (port_args_t *args)
     port_p->set_auto_neg_enable(args->auto_neg_enable);
     port_p->set_mtu(args->mtu);
 
+    port_p->set_mac_fns(&mac_fns);
+    port_p->set_serdes_fns(&serdes_fns);
+
+    if(args->port_type == sdk::types::port_type_t::PORT_TYPE_MGMT) {
+        port_p->set_mac_fns(&mac_mgmt_fns);
+    }
+
     for (uint32_t i = 0; i < args->num_lanes; ++i) {
         port_p->sbus_addr_set(i, args->sbus_addr[i]);
     }

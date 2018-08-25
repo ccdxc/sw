@@ -26,6 +26,7 @@ struct mac_profile_t {
 };
 
 extern mac_profile_t mx[MAX_MAC];
+extern mac_profile_t bx[MAX_MAC];
 
 void cap_mx_set_soft_reset(int chip_id, int inst_id, int value);
 void cap_mx_load_from_cfg(int chip_id, int inst_id, int rst);
@@ -48,5 +49,13 @@ void cap_mx_set_fec(int chip_id, int inst_id, int ch, int value);
 void cap_mx_set_tx_padding(int chip_id, int inst_id, int enable);
 void cap_mx_set_rx_padding(int chip_id, int inst_id, int ch, bool enable);
 void cap_mx_set_mtu(int chip_id, int inst_id, int ch, int speed, int max_value);
+
+void cap_bx_set_glbl_mode(int chip_id, int inst_id, int value);
+void cap_bx_apb_write(int chip_id, int inst_id, int addr, int data);
+void cap_bx_set_tx_rx_enable(int chip_id, int inst_id, int value);
+void cap_bx_set_mtu(int chip_id , int inst_id, int max_value, int jabber_value);
+void cap_bx_set_ch_enable(int chip_id, int inst_id, int value);
+void cap_bx_set_soft_reset(int chip_id, int inst_id, int value);
+int cap_bx_check_sync(int chip_id, int inst_id);
 
 #endif // __SDK_LINKMGR_CAP_MX_API_H__
