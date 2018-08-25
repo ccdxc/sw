@@ -27,7 +27,7 @@ func (n *NMD) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, 
 	}
 
 	log.Infof("Register NIC response mac: %s response: %v", nic.ObjectMeta.Name, resp)
-	recorder.Event(cmd.NICAdmitted, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Smart NIC %s addmitted to the cluster", nic.GetName()), nic)
+	recorder.Event(cmd.NICAdmitted, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Smart NIC %s admitted to the cluster", nic.GetName()), nic)
 	return resp, nil
 }
 
