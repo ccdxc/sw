@@ -24,8 +24,9 @@ is_linkmgr_ctrl_thread();
 
 sdk::lib::thread *current_thread (void);
 
+uint32_t glbl_mode_mgmt (mac_mode_t mac_mode);
+uint32_t ch_mode_mgmt (mac_mode_t mac_mode, uint32_t ch);
 uint32_t glbl_mode (mac_mode_t mac_mode);
-
 uint32_t ch_mode (mac_mode_t mac_mode, uint32_t ch);
 
 serdes_info_t*

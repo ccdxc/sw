@@ -27,6 +27,18 @@ port *link_poll_timer_list[MAX_UPLINK_PORTS];
 linkmgr_queue_t g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
 
 uint32_t
+glbl_mode_mgmt (mac_mode_t mac_mode)
+{
+    return g_linkmgr_cfg.catalog->glbl_mode_mgmt(mac_mode);
+}
+
+uint32_t
+ch_mode_mgmt (mac_mode_t mac_mode, uint32_t ch)
+{
+    return g_linkmgr_cfg.catalog->ch_mode_mgmt(mac_mode, ch);
+}
+
+uint32_t
 glbl_mode (mac_mode_t mac_mode)
 {
     return g_linkmgr_cfg.catalog->glbl_mode(mac_mode);

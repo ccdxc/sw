@@ -198,6 +198,18 @@ catalog::populate_mac_profile(mac_profile_t *mac_profile,
 }
 
 sdk_ret_t
+catalog::populate_mgmt_mac_profiles(ptree &prop_tree)
+{
+    int mode = 0;
+
+    mode = static_cast<int> (MAC_MODE_4x1g);
+    populate_mac_profile(&(catalog_db_.mgmt_mac_profiles[mode]),
+                         "bx.mode_4x1g",
+                         prop_tree);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 catalog::populate_mac_profiles(ptree &prop_tree)
 {
     int mode = 0;
@@ -365,6 +377,8 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
                             prop_tree.get<uint32_t>("num_uplink_ports", 0);
     populate_asics(prop_tree);
     populate_uplink_ports(prop_tree);
+
+    populate_mgmt_mac_profiles(prop_tree);
 
     populate_mac_profiles(prop_tree);
 
@@ -577,6 +591,20 @@ catalog::serdes_info_get(uint32_t sbus_addr,
     uint32_t addr = serdes_index_get(sbus_addr);
 
     return &catalog_db_.serdes[addr][port_speed][cable_type];
+}
+
+uint32_t
+catalog::glbl_mode_mgmt(mac_mode_t mac_mode)
+{
+    int mode = static_cast<int>(mac_mode);
+    return catalog_db_.mgmt_mac_profiles[mode].glbl_mode;
+}
+
+uint32_t
+catalog::ch_mode_mgmt(mac_mode_t mac_mode, uint32_t ch)
+{
+    int mode = static_cast<int>(mac_mode);
+    return catalog_db_.mgmt_mac_profiles[mode].ch_profile[ch].ch_mode;
 }
 
 uint32_t

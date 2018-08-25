@@ -101,7 +101,8 @@ typedef struct catalog_s {
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
     qos_profile_t            qos_profile;                       // qos asic profile
-    mac_profile_t            mac_profiles[MAC_MODE_MAX];    // MAC profiles
+    mac_profile_t            mac_profiles[MAC_MODE_MAX];        // MAC profiles
+    mac_profile_t            mgmt_mac_profiles[MAC_MODE_MAX];   // MGMT MAC profiles
 
     // serdes parameters
     serdes_info_t            serdes[MAX_SERDES]
@@ -138,6 +139,9 @@ public:
 
     uint32_t     glbl_mode  (mac_mode_t mac_mode);
     uint32_t     ch_mode    (mac_mode_t mac_mode, uint32_t ch);
+
+    uint32_t     glbl_mode_mgmt (mac_mode_t mac_mode);
+    uint32_t     ch_mode_mgmt   (mac_mode_t mac_mode, uint32_t ch);
 
     serdes_info_t* serdes_info_get(uint32_t sbus_addr,
                                    uint32_t port_speed,
@@ -199,6 +203,7 @@ private:
                                    std::string   str,
                                    ptree         &prop_tree);
 
+    sdk_ret_t populate_mgmt_mac_profiles(ptree &prop_tree);
     sdk_ret_t populate_mac_profiles(ptree &prop_tree);
 
     sdk_ret_t populate_mac_ch_profile(ch_profile_t *ch_profile,

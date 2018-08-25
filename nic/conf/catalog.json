@@ -45,6 +45,29 @@
         {"port_num" : "9", "asic" : "0", "asic_port" : "8" , "speed" : "1G",  "num_lanes" : "1", "type" : "mgmt", "enabled": "true" }
     ],
 
+    "bx" : {
+       "mode_4x1g" : {
+          "glbl_mode" : "0x3",
+          "channel"   : "0xf",
+          "0" : {
+             "speed"   : "1",
+             "ch_mode" : "0xc"
+          },
+          "1" : {
+             "speed"   : "1",
+             "ch_mode" : "0xc"
+          },
+          "2" : {
+             "speed"   : "1",
+             "ch_mode" : "0xc"
+          },
+          "3" : {
+             "speed"   : "1",
+             "ch_mode" : "0xc"
+          }
+       }
+    },
+
     "mx" : {
        "mode_1x100g" : {
           "glbl_mode" : "0x0",

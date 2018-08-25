@@ -651,13 +651,13 @@ mac_mgmt_cfg_hw (mac_info_t *mac_info)
         break;
     }
 
-    bx[inst_id].glbl_mode = glbl_mode(bx[inst_id].mac_mode);
+    bx[inst_id].glbl_mode = glbl_mode_mgmt(bx[inst_id].mac_mode);
 
     // Only master lane
     mac_ch_en |= (1 << start_lane);
 
     bx[inst_id].ch_mode [start_lane] =
-                           ch_mode(bx[inst_id].mac_mode, start_lane);
+                           ch_mode_mgmt(bx[inst_id].mac_mode, start_lane);
 
     bx[inst_id].speed      [start_lane] = bx_api_speed;
     bx[inst_id].port_enable[start_lane] = 1;
