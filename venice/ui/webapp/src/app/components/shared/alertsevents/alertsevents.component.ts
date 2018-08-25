@@ -299,7 +299,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
         this.filteredEvents = [];
         if (respBody.entries != null) {
           // We reverse the entries to get the sorted order to be latest time first
-          respBody.entries.reverse().forEach(event => {
+          respBody.entries.reverse().forEach(entry => {
+            const event = entry.object as IEventsEvent;
             const match = this.eventMap[event.meta.name];
             if (match != null) {
               this.filteredEvents.push(match);
