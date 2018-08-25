@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/libs"
 	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/libs"
 )
 
 func BringUpSim() error {

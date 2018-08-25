@@ -19,7 +19,7 @@ func GenSubnets(count int) (subnets []string) {
 		}
 		/* Ignore Experimental address to */
 		if net.IP(ip).IsGlobalUnicast() && ip[0] <= 240 {
-			cidr := fmt.Sprintf("%s/28", net.IP(ip).To4().String())
+			cidr := fmt.Sprintf("%s/24", net.IP(ip).To4().String())
 			subnets = append(subnets, cidr)
 		}
 	}

@@ -16,7 +16,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "177.75.132.53",
+            "destination": "42.42.42.2",
             "transport": "TCP/8000"
           },
           "pcap-dir-name": ""
@@ -31,7 +31,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "177.75.132.50"
+              "177.75.132.2"
             ]
           }
         },
@@ -43,7 +43,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "177.75.132.52"
+              "112.211.249.2"
             ]
           }
         }
@@ -70,7 +70,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "223.97.165.133",
+            "destination": "42.42.42.3",
             "transport": "TCP/8001"
           },
           "pcap-dir-name": ""
@@ -85,7 +85,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "223.97.165.130"
+              "170.22.196.2"
             ]
           }
         },
@@ -97,7 +97,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "223.97.165.132"
+              "91.39.142.2"
             ]
           }
         }
@@ -124,7 +124,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "112.211.249.101",
+            "destination": "42.42.42.4",
             "transport": "TCP/8002"
           },
           "pcap-dir-name": ""
@@ -139,7 +139,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "112.211.249.98"
+              "177.75.132.3"
             ]
           }
         },
@@ -151,7 +151,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "112.211.249.100"
+              "112.211.249.3"
             ]
           }
         }
@@ -178,7 +178,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "4.121.175.21",
+            "destination": "42.42.42.5",
             "transport": "TCP/8003"
           },
           "pcap-dir-name": ""
@@ -193,7 +193,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "4.121.175.18"
+              "170.22.196.3"
             ]
           }
         },
@@ -205,7 +205,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "4.121.175.20"
+              "91.39.142.3"
             ]
           }
         }
@@ -232,7 +232,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "170.22.196.85",
+            "destination": "42.42.42.6",
             "transport": "TCP/8004"
           },
           "pcap-dir-name": ""
@@ -247,7 +247,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "170.22.196.82"
+              "177.75.132.4"
             ]
           }
         },
@@ -259,7 +259,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "170.22.196.84"
+              "112.211.249.4"
             ]
           }
         }
@@ -286,7 +286,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "16.45.218.229",
+            "destination": "42.42.42.7",
             "transport": "TCP/8005"
           },
           "pcap-dir-name": ""
@@ -301,7 +301,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "16.45.218.226"
+              "170.22.196.4"
             ]
           }
         },
@@ -313,7 +313,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "16.45.218.228"
+              "91.39.142.4"
             ]
           }
         }
@@ -340,7 +340,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "91.39.142.133",
+            "destination": "42.42.42.8",
             "transport": "TCP/8006"
           },
           "pcap-dir-name": ""
@@ -355,7 +355,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "91.39.142.130"
+              "177.75.132.5"
             ]
           }
         },
@@ -367,7 +367,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "91.39.142.132"
+              "112.211.249.5"
             ]
           }
         }
@@ -394,7 +394,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "54.199.28.21",
+            "destination": "42.42.42.9",
             "transport": "TCP/8007"
           },
           "pcap-dir-name": ""
@@ -409,7 +409,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "54.199.28.18"
+              "170.22.196.5"
             ]
           }
         },
@@ -421,7 +421,7 @@
           },
           "destination": {
             "ip-addresses": [
-              "54.199.28.20"
+              "91.39.142.5"
             ]
           }
         }

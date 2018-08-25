@@ -5,9 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/pkg/errors"
+
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic"
-	"github.com/pkg/errors"
 )
 
 var (

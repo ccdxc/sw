@@ -5,11 +5,12 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/pkg/errors"
+
 	pkg "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	Tests "github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic/tests"
 	TestApi "github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic/tests/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
-	"github.com/pkg/errors"
 )
 
 const (

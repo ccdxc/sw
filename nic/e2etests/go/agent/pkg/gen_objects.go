@@ -235,10 +235,29 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 	// Networks need to refer to Namespaces
 	namespaceRef := objCache["Namespace"]
 
+	// Infra Network is needed as a wrapper to hold all items infra vrf. Eg: Remote TEP for tunnels, Mirror Session ERSPAN Dest
+	infraNw := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "infra",
+			Name:      "infra-nw",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "42.42.42.42/24",
+			IPv4Gateway: "42.0.0.1",
+			VlanID:      42,
+		},
+	}
+	networkCache["infra-nw"] = "42.42.42.42/24"
+	networks = append(networks, infraNw)
+
 	// generate networks distributed evenly across
 	for i := 0; i < o.Count; i++ {
-		name := fmt.Sprintf("%s-%d", o.Name, i)
-		namespace := fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
+		var name, namespace string
+		namespace = fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
+		name = fmt.Sprintf("%s-%d", o.Name, i)
+
 		subnet := subnets[i]
 		_, gwIP, _ := libs.GenIPAddress(subnet, 4)
 		nt := netproto.Network{
@@ -260,6 +279,7 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 		networkCache[name] = subnet
 		networkNSCache[name] = namespace
 	}
+
 	out, err := json.MarshalIndent(&networks, "", "  ")
 	if err != nil {
 		return nil, err
@@ -288,85 +308,126 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 }
 
 func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []StationDevice) (*Object, error) {
-	var endpoints []netproto.Endpoint
 	specFile := "generated/endpoints.json"
+
+	var endpoints []netproto.Endpoint
+	var epMACAddresses []string
+	var err error
+	var lifIDs []int
+	epNetworkIPMap := make(map[string][]string)
+
 	if !genRequired(o) {
 		return o, nil
 	}
 
-	lifIDs := []int{}
 	curLif := 0
 	for i := 0; i < len(sdevices); i++ {
+		//TODO : Have to create EP for station devices too.
 		lifIDs = append(lifIDs, sdevices[i].LifID)
 	}
-	//TODO : Have to create EP for station devices too.
 
 	// EPs need to refer to Namespaces and Networks
 	namespaceRef := objCache["Namespace"]
 	networkRef := objCache["Network"]
 	endpointsPerNetwork := o.Count / networkRef.Count
-
-	// generate endpoints distributed evenly across networks
-	for i := 0; i < networkRef.Count; i++ {
-		for j := 0; j < endpointsPerNetwork; j++ {
-			var ifName, ifType, nodeUUID string
-			name := fmt.Sprintf("%s-%d", o.Name, i*endpointsPerNetwork+j)
-			network := fmt.Sprintf("%s-%d", networkRef.Name, i)
-			namespace := networkNSCache[network]
-			epSubnet := networkCache[network]
-
-			epAddrBlock, _, err := libs.GenIPAddress(epSubnet, endpointsPerNetwork)
-			if err != nil {
-				return nil, err
-			}
-			epMACBlock, err := libs.GenMACAddresses(o.Count)
-			if err != nil {
-				return nil, err
-			}
-			endpointIP := fmt.Sprintf("%s/32", epAddrBlock[j])
-			endpointMAC := epMACBlock[i*j%namespaceRef.Count]
-
-			// evenly distribute auto generated endpoints to be local and remote
-			if j < endpointsPerNetwork/2 {
-				ifType = "lif"
-				if len(lifIDs) == 0 {
-					ifName = fmt.Sprintf("lif%d", (i*j%namespaceRef.Count%LIF_COUNT)+LIF_START)
-				} else {
-					ifName = fmt.Sprintf("lif%d", (lifIDs[curLif]))
-					curLif = (curLif + 1) % len(lifIDs)
-				}
-
-			} else {
-
-				ifType = "uplink"
-				ifName = fmt.Sprintf("uplink%d", ((i*endpointsPerNetwork+j+1)%UPLINK_COUNT)+UPLINK_START)
-				nodeUUID = "GWUUID" // This will ensure that the EP is remote
-
-			}
-
-			ep := netproto.Endpoint{
-				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-				ObjectMeta: api.ObjectMeta{
-					Tenant:    "default",
-					Namespace: namespace,
-					Name:      name,
-				},
-				Spec: netproto.EndpointSpec{
-					NetworkName:   network,
-					UsegVlan:      uint32(i*endpointsPerNetwork+j+1) + 1,
-					IPv4Address:   endpointIP,
-					MacAddress:    endpointMAC,
-					InterfaceType: ifType,
-					Interface:     ifName,
-					NodeUUID:      nodeUUID,
-				},
-			}
-			endpoints = append(endpoints, ep)
-
-			// update ep cache cache with the generated ip address for the EP
-			endpointCache[name] = epAddrBlock[j]
-		}
+	epMACAddresses, err = libs.GenMACAddresses(o.Count + INFRA_EP_COUNT)
+	if err != nil {
+		return nil, fmt.Errorf("could not generate required MAC Addresses. %v", err)
 	}
+
+	// Reserve a block of network subnet IPs for EPs
+	for i := 0; i < networkRef.Count; i++ {
+		network := fmt.Sprintf("%s-%d", networkRef.Name, i)
+		subnet := networkCache[network]
+		ipAddrs, _, err := libs.GenIPAddress(subnet, endpointsPerNetwork)
+		if err != nil {
+			return nil, fmt.Errorf("could not generate %d EP IP Addresses from %v subnet EPs. %v", endpointsPerNetwork, subnet, err)
+		}
+		epNetworkIPMap[network] = ipAddrs
+	}
+
+	// Configure Tunnel EPs in Infra vrf
+	infraSubnet := networkCache["infra-nw"]
+	infraIPAddress, _, err := libs.GenIPAddress(infraSubnet, INFRA_EP_COUNT)
+	if err != nil {
+		return nil, fmt.Errorf("could not generate %d EP IP Addresses from infra subnet %v EPs. %v", INFRA_EP_COUNT, infraSubnet, err)
+	}
+
+	for i := 0; i < INFRA_EP_COUNT; i++ {
+		name := fmt.Sprintf("infra-ep-%d", i)
+		ipAddr := infraIPAddress[i]
+		infraEP := netproto.Endpoint{
+			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "infra",
+				Name:      name,
+			},
+			Spec: netproto.EndpointSpec{
+				NetworkName:   "infra-nw",
+				UsegVlan:      uint32(i) + 1,
+				IPv4Address:   fmt.Sprintf("%s/32", ipAddr),
+				MacAddress:    epMACAddresses[i],
+				InterfaceType: "uplink",
+				Interface:     fmt.Sprintf("uplink%d", (i%UPLINK_COUNT)+UPLINK_START),
+				NodeUUID:      "GWUUID",
+			},
+		}
+		endpoints = append(endpoints, infraEP)
+
+		// update ep cache cache with the generated ip address for the EP
+		endpointCache[name] = ipAddr
+	}
+
+	for i := 0; i < o.Count; i++ {
+		var name, namespace, network, ifType, ifName, nodeUUID, epIP string
+		name = fmt.Sprintf("%s-%d", o.Name, i)
+		//TODO FIX NW NAMES
+		namespace = fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
+		network = fmt.Sprintf("%s-%d", networkRef.Name, i%networkRef.Count)
+
+		// Pop elements here instead of maintaining a complex index
+		epIP, epNetworkIPMap[network] = epNetworkIPMap[network][0], epNetworkIPMap[network][1:]
+		// Offset from Infra EP count index
+		epMAC := epMACAddresses[i+INFRA_EP_COUNT]
+
+		if i%o.Count < 16 {
+			ifType = "uplink"
+			ifName = fmt.Sprintf("uplink%d", (i%UPLINK_COUNT)+UPLINK_START)
+			nodeUUID = "GWUUID" // This will ensure that the EP is remote
+		} else {
+			ifType = "lif"
+			if len(lifIDs) == 0 {
+				ifName = fmt.Sprintf("lif%d", (i%LIF_COUNT)+LIF_START)
+			} else {
+				ifName = fmt.Sprintf("lif%d", lifIDs[curLif])
+				curLif = (curLif + 1) % len(lifIDs)
+			}
+		}
+		ep := netproto.Endpoint{
+			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: namespace,
+				Name:      name,
+			},
+			Spec: netproto.EndpointSpec{
+				NetworkName:   network,
+				UsegVlan:      uint32(i) + 1,
+				IPv4Address:   fmt.Sprintf("%s/32", epIP),
+				MacAddress:    epMAC,
+				InterfaceType: ifType,
+				Interface:     ifName,
+				NodeUUID:      nodeUUID,
+			},
+		}
+		endpoints = append(endpoints, ep)
+
+		// update ep cache cache with the generated ip address for the EP
+		endpointCache[name] = epIP
+
+	}
+
 	out, err := json.MarshalIndent(endpoints, "", "  ")
 	if err != nil {
 		return nil, err
@@ -420,8 +481,13 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 		remoteEpOffset := 2
 		epOffsetIncrements := endpointRef.Count / networkRef.Count // Gives the #EP per Network
 
+		//networkName := networkCache[fmt.Sprintf("%s-%d", networkRef.Name, i%networkRef.Count)]
+
 		local := fmt.Sprintf("%s-%d", endpointRef.Name, (localEpOffset+epOffsetIncrements*i)%endpointRef.Count)
 		remote := fmt.Sprintf("%s-%d", endpointRef.Name, (remoteEpOffset+epOffsetIncrements*i)%endpointRef.Count)
+
+		fmt.Println("LOCAL ", local)
+		fmt.Println("REMOTE ", remote)
 
 		// Look up EP's IP Address
 		localEP := endpointCache[local]
@@ -564,17 +630,10 @@ func (c *Config) generateTunnels(o *Object, manifestFile string) (*Object, error
 		return o, nil
 	}
 
-	// Tunnels should refer to valid Remote EPs
-	endpointRef := objCache["Endpoint"]
-	networkRef := objCache["Network"]
-	// Every fourth remote EP will be used as Tunnel Dst
-	epOffset := 3
-	epOffsetIncrements := endpointRef.Count / networkRef.Count // Gives the #EP per Network
-
 	// generate gre tunnels to distribute evenly across namespaces.
 	for i := 0; i < o.Count; i++ {
 		name := fmt.Sprintf("%s-%d", o.Name, i)
-		endpoint := fmt.Sprintf("%s-%d", endpointRef.Name, (epOffset+epOffsetIncrements*i)%endpointRef.Count)
+		endpoint := fmt.Sprintf("infra-ep-%d", i%INFRA_EP_COUNT)
 		endpointIP := endpointCache[endpoint]
 		tun := netproto.Tunnel{
 			TypeMeta: api.TypeMeta{Kind: "Tunnel"},

@@ -2,18 +2,39 @@
   {
     "kind": "Endpoint",
     "meta": {
-      "name": "scale-ep-0",
+      "name": "infra-ep-0",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "infra",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-0",
-      "interface-type": "lif",
-      "interface": "lif100",
-      "ipv4-address": "177.75.132.50/32",
+      "network-name": "infra-nw",
+      "interface-type": "uplink",
+      "interface": "uplink128",
+      "ipv4-address": "42.42.42.2/32",
       "mac-address": "5e:21:75:4b:6e:23",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 1
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "infra-ep-1",
+      "tenant": "default",
+      "namespace": "infra",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "infra-nw",
+      "interface-type": "uplink",
+      "interface": "uplink129",
+      "ipv4-address": "42.42.42.3/32",
+      "mac-address": "62:c3:42:eb:2b:cf",
+      "node-uuid": "GWUUID",
       "useg-vlan": 2
     },
     "status": {}
@@ -21,18 +42,19 @@
   {
     "kind": "Endpoint",
     "meta": {
-      "name": "scale-ep-1",
+      "name": "infra-ep-2",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "infra",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-0",
-      "interface-type": "lif",
-      "interface": "lif100",
-      "ipv4-address": "177.75.132.51/32",
-      "mac-address": "3a:13:5a:76:42:23",
+      "network-name": "infra-nw",
+      "interface-type": "uplink",
+      "interface": "uplink128",
+      "ipv4-address": "42.42.42.4/32",
+      "mac-address": "22:aa:f1:60:85:32",
+      "node-uuid": "GWUUID",
       "useg-vlan": 3
     },
     "status": {}
@@ -40,18 +62,18 @@
   {
     "kind": "Endpoint",
     "meta": {
-      "name": "scale-ep-2",
+      "name": "infra-ep-3",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "infra",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-0",
+      "network-name": "infra-nw",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "177.75.132.52/32",
-      "mac-address": "76:b9:95:16:a6:6f",
+      "ipv4-address": "42.42.42.5/32",
+      "mac-address": "06:46:bf:e8:a6:ce",
       "node-uuid": "GWUUID",
       "useg-vlan": 4
     },
@@ -60,7 +82,87 @@
   {
     "kind": "Endpoint",
     "meta": {
-      "name": "scale-ep-3",
+      "name": "infra-ep-4",
+      "tenant": "default",
+      "namespace": "infra",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "infra-nw",
+      "interface-type": "uplink",
+      "interface": "uplink128",
+      "ipv4-address": "42.42.42.6/32",
+      "mac-address": "5a:2c:40:80:46:2b",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 5
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "infra-ep-5",
+      "tenant": "default",
+      "namespace": "infra",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "infra-nw",
+      "interface-type": "uplink",
+      "interface": "uplink129",
+      "ipv4-address": "42.42.42.7/32",
+      "mac-address": "4a:32:5d:88:0e:82",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 6
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "infra-ep-6",
+      "tenant": "default",
+      "namespace": "infra",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "infra-nw",
+      "interface-type": "uplink",
+      "interface": "uplink128",
+      "ipv4-address": "42.42.42.8/32",
+      "mac-address": "6a:d4:83:82:97:de",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 7
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "infra-ep-7",
+      "tenant": "default",
+      "namespace": "infra",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "infra-nw",
+      "interface-type": "uplink",
+      "interface": "uplink129",
+      "ipv4-address": "42.42.42.9/32",
+      "mac-address": "46:94:20:6c:f9:36",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 8
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "scale-ep-0",
       "tenant": "default",
       "namespace": "scale-vrf-0",
       "creation-time": "1970-01-01T00:00:00Z",
@@ -70,10 +172,70 @@
       "network-name": "scale-nw-0",
       "interface-type": "uplink",
       "interface": "uplink128",
-      "ipv4-address": "177.75.132.53/32",
-      "mac-address": "1e:a1:5a:53:16:f5",
+      "ipv4-address": "177.75.132.2/32",
+      "mac-address": "46:46:a6:4d:ed:e3",
       "node-uuid": "GWUUID",
-      "useg-vlan": 5
+      "useg-vlan": 1
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "scale-ep-1",
+      "tenant": "default",
+      "namespace": "scale-vrf-1",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "scale-nw-1",
+      "interface-type": "uplink",
+      "interface": "uplink129",
+      "ipv4-address": "223.97.165.2/32",
+      "mac-address": "66:fc:b4:a7:4f:8b",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 2
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "scale-ep-2",
+      "tenant": "default",
+      "namespace": "scale-vrf-2",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "scale-nw-2",
+      "interface-type": "uplink",
+      "interface": "uplink128",
+      "ipv4-address": "112.211.249.2/32",
+      "mac-address": "16:ed:75:1a:fa:ba",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 3
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "scale-ep-3",
+      "tenant": "default",
+      "namespace": "scale-vrf-3",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "scale-nw-3",
+      "interface-type": "uplink",
+      "interface": "uplink129",
+      "ipv4-address": "4.121.175.2/32",
+      "mac-address": "16:9a:c3:b0:b8:86",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 4
     },
     "status": {}
   },
@@ -82,17 +244,18 @@
     "meta": {
       "name": "scale-ep-4",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "scale-vrf-0",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-1",
-      "interface-type": "lif",
-      "interface": "lif100",
-      "ipv4-address": "223.97.165.130/32",
-      "mac-address": "4e:11:c9:8f:5f:af",
-      "useg-vlan": 6
+      "network-name": "scale-nw-4",
+      "interface-type": "uplink",
+      "interface": "uplink128",
+      "ipv4-address": "170.22.196.2/32",
+      "mac-address": "7a:19:12:b5:b3:d2",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 5
     },
     "status": {}
   },
@@ -106,12 +269,13 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-1",
-      "interface-type": "lif",
-      "interface": "lif101",
-      "ipv4-address": "223.97.165.131/32",
-      "mac-address": "4a:95:33:e2:95:f2",
-      "useg-vlan": 7
+      "network-name": "scale-nw-5",
+      "interface-type": "uplink",
+      "interface": "uplink129",
+      "ipv4-address": "16.45.218.2/32",
+      "mac-address": "66:8d:44:bf:3a:53",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 6
     },
     "status": {}
   },
@@ -119,6 +283,66 @@
     "kind": "Endpoint",
     "meta": {
       "name": "scale-ep-6",
+      "tenant": "default",
+      "namespace": "scale-vrf-2",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "scale-nw-6",
+      "interface-type": "uplink",
+      "interface": "uplink128",
+      "ipv4-address": "91.39.142.2/32",
+      "mac-address": "46:33:75:60:32:9d",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 7
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "scale-ep-7",
+      "tenant": "default",
+      "namespace": "scale-vrf-3",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "scale-nw-7",
+      "interface-type": "uplink",
+      "interface": "uplink129",
+      "ipv4-address": "54.199.28.2/32",
+      "mac-address": "1e:f0:1c:cc:c8:14",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 8
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "scale-ep-8",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "scale-nw-0",
+      "interface-type": "uplink",
+      "interface": "uplink128",
+      "ipv4-address": "177.75.132.3/32",
+      "mac-address": "3a:02:9d:92:0e:9e",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 9
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "scale-ep-9",
       "tenant": "default",
       "namespace": "scale-vrf-1",
       "creation-time": "1970-01-01T00:00:00Z",
@@ -128,68 +352,10 @@
       "network-name": "scale-nw-1",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "223.97.165.132/32",
-      "mac-address": "0a:e2:ee:df:6f:50",
+      "ipv4-address": "223.97.165.3/32",
+      "mac-address": "26:7b:39:69:b1:bc",
       "node-uuid": "GWUUID",
-      "useg-vlan": 8
-    },
-    "status": {}
-  },
-  {
-    "kind": "Endpoint",
-    "meta": {
-      "name": "scale-ep-7",
-      "tenant": "default",
-      "namespace": "scale-vrf-1",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "network-name": "scale-nw-1",
-      "interface-type": "uplink",
-      "interface": "uplink128",
-      "ipv4-address": "223.97.165.133/32",
-      "mac-address": "6e:87:64:0d:fb:73",
-      "node-uuid": "GWUUID",
-      "useg-vlan": 9
-    },
-    "status": {}
-  },
-  {
-    "kind": "Endpoint",
-    "meta": {
-      "name": "scale-ep-8",
-      "tenant": "default",
-      "namespace": "scale-vrf-2",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "network-name": "scale-nw-2",
-      "interface-type": "lif",
-      "interface": "lif100",
-      "ipv4-address": "112.211.249.98/32",
-      "mac-address": "4a:b7:47:e3:a8:b3",
       "useg-vlan": 10
-    },
-    "status": {}
-  },
-  {
-    "kind": "Endpoint",
-    "meta": {
-      "name": "scale-ep-9",
-      "tenant": "default",
-      "namespace": "scale-vrf-2",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "network-name": "scale-nw-2",
-      "interface-type": "lif",
-      "interface": "lif102",
-      "ipv4-address": "112.211.249.99/32",
-      "mac-address": "0a:c1:4c:1a:ff:af",
-      "useg-vlan": 11
     },
     "status": {}
   },
@@ -205,11 +371,11 @@
     "spec": {
       "network-name": "scale-nw-2",
       "interface-type": "uplink",
-      "interface": "uplink129",
-      "ipv4-address": "112.211.249.100/32",
-      "mac-address": "0e:3d:80:db:70:38",
+      "interface": "uplink128",
+      "ipv4-address": "112.211.249.3/32",
+      "mac-address": "06:01:6e:0a:ef:e7",
       "node-uuid": "GWUUID",
-      "useg-vlan": 12
+      "useg-vlan": 11
     },
     "status": {}
   },
@@ -218,64 +384,6 @@
     "meta": {
       "name": "scale-ep-11",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "network-name": "scale-nw-2",
-      "interface-type": "uplink",
-      "interface": "uplink128",
-      "ipv4-address": "112.211.249.101/32",
-      "mac-address": "12:e6:b1:2b:d0:d8",
-      "node-uuid": "GWUUID",
-      "useg-vlan": 13
-    },
-    "status": {}
-  },
-  {
-    "kind": "Endpoint",
-    "meta": {
-      "name": "scale-ep-12",
-      "tenant": "default",
-      "namespace": "scale-vrf-3",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "network-name": "scale-nw-3",
-      "interface-type": "lif",
-      "interface": "lif100",
-      "ipv4-address": "4.121.175.18/32",
-      "mac-address": "52:51:2f:fb:ec:fc",
-      "useg-vlan": 14
-    },
-    "status": {}
-  },
-  {
-    "kind": "Endpoint",
-    "meta": {
-      "name": "scale-ep-13",
-      "tenant": "default",
-      "namespace": "scale-vrf-3",
-      "creation-time": "1970-01-01T00:00:00Z",
-      "mod-time": "1970-01-01T00:00:00Z"
-    },
-    "spec": {
-      "network-name": "scale-nw-3",
-      "interface-type": "lif",
-      "interface": "lif103",
-      "ipv4-address": "4.121.175.19/32",
-      "mac-address": "5a:53:ad:b0:e5:a5",
-      "useg-vlan": 15
-    },
-    "status": {}
-  },
-  {
-    "kind": "Endpoint",
-    "meta": {
-      "name": "scale-ep-14",
-      "tenant": "default",
       "namespace": "scale-vrf-3",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
@@ -284,10 +392,70 @@
       "network-name": "scale-nw-3",
       "interface-type": "uplink",
       "interface": "uplink129",
-      "ipv4-address": "4.121.175.20/32",
-      "mac-address": "2e:5f:a4:c2:de:af",
+      "ipv4-address": "4.121.175.3/32",
+      "mac-address": "22:24:e4:5f:eb:4d",
       "node-uuid": "GWUUID",
-      "useg-vlan": 16
+      "useg-vlan": 12
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "scale-ep-12",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "scale-nw-4",
+      "interface-type": "uplink",
+      "interface": "uplink128",
+      "ipv4-address": "170.22.196.3/32",
+      "mac-address": "76:f5:91:08:21:ac",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 13
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "scale-ep-13",
+      "tenant": "default",
+      "namespace": "scale-vrf-1",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "scale-nw-5",
+      "interface-type": "uplink",
+      "interface": "uplink129",
+      "ipv4-address": "16.45.218.3/32",
+      "mac-address": "56:aa:b8:a2:2a:29",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 14
+    },
+    "status": {}
+  },
+  {
+    "kind": "Endpoint",
+    "meta": {
+      "name": "scale-ep-14",
+      "tenant": "default",
+      "namespace": "scale-vrf-2",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "network-name": "scale-nw-6",
+      "interface-type": "uplink",
+      "interface": "uplink128",
+      "ipv4-address": "91.39.142.3/32",
+      "mac-address": "16:73:33:b3:cd:61",
+      "node-uuid": "GWUUID",
+      "useg-vlan": 15
     },
     "status": {}
   },
@@ -301,13 +469,13 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-3",
+      "network-name": "scale-nw-7",
       "interface-type": "uplink",
-      "interface": "uplink128",
-      "ipv4-address": "4.121.175.21/32",
-      "mac-address": "0a:4a:44:62:42:bb",
+      "interface": "uplink129",
+      "ipv4-address": "54.199.28.3/32",
+      "mac-address": "5e:c0:98:a0:27:2c",
       "node-uuid": "GWUUID",
-      "useg-vlan": 17
+      "useg-vlan": 16
     },
     "status": {}
   },
@@ -321,12 +489,12 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-4",
+      "network-name": "scale-nw-0",
       "interface-type": "lif",
-      "interface": "lif100",
-      "ipv4-address": "170.22.196.82/32",
-      "mac-address": "6a:18:c1:38:cf:58",
-      "useg-vlan": 18
+      "interface": "lif116",
+      "ipv4-address": "177.75.132.4/32",
+      "mac-address": "06:c3:32:b7:e6:da",
+      "useg-vlan": 17
     },
     "status": {}
   },
@@ -335,17 +503,17 @@
     "meta": {
       "name": "scale-ep-17",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "scale-vrf-1",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-4",
+      "network-name": "scale-nw-1",
       "interface-type": "lif",
-      "interface": "lif100",
-      "ipv4-address": "170.22.196.83/32",
-      "mac-address": "2a:78:6b:55:b8:0e",
-      "useg-vlan": 19
+      "interface": "lif117",
+      "ipv4-address": "223.97.165.4/32",
+      "mac-address": "26:2c:4e:87:8f:66",
+      "useg-vlan": 18
     },
     "status": {}
   },
@@ -354,18 +522,17 @@
     "meta": {
       "name": "scale-ep-18",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "scale-vrf-2",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-4",
-      "interface-type": "uplink",
-      "interface": "uplink129",
-      "ipv4-address": "170.22.196.84/32",
-      "mac-address": "32:38:00:2f:57:05",
-      "node-uuid": "GWUUID",
-      "useg-vlan": 20
+      "network-name": "scale-nw-2",
+      "interface-type": "lif",
+      "interface": "lif118",
+      "ipv4-address": "112.211.249.4/32",
+      "mac-address": "26:17:60:a8:9c:e0",
+      "useg-vlan": 19
     },
     "status": {}
   },
@@ -374,18 +541,17 @@
     "meta": {
       "name": "scale-ep-19",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "scale-vrf-3",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-4",
-      "interface-type": "uplink",
-      "interface": "uplink128",
-      "ipv4-address": "170.22.196.85/32",
-      "mac-address": "76:2a:cf:d2:0a:95",
-      "node-uuid": "GWUUID",
-      "useg-vlan": 21
+      "network-name": "scale-nw-3",
+      "interface-type": "lif",
+      "interface": "lif119",
+      "ipv4-address": "4.121.175.4/32",
+      "mac-address": "4a:f4:3f:30:48:17",
+      "useg-vlan": 20
     },
     "status": {}
   },
@@ -394,17 +560,17 @@
     "meta": {
       "name": "scale-ep-20",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "scale-vrf-0",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-5",
+      "network-name": "scale-nw-4",
       "interface-type": "lif",
-      "interface": "lif100",
-      "ipv4-address": "16.45.218.226/32",
-      "mac-address": "7e:c8:fc:6b:a3:51",
-      "useg-vlan": 22
+      "interface": "lif120",
+      "ipv4-address": "170.22.196.4/32",
+      "mac-address": "72:ed:48:1c:e1:23",
+      "useg-vlan": 21
     },
     "status": {}
   },
@@ -420,10 +586,10 @@
     "spec": {
       "network-name": "scale-nw-5",
       "interface-type": "lif",
-      "interface": "lif101",
-      "ipv4-address": "16.45.218.227/32",
-      "mac-address": "3a:25:b4:63:5f:47",
-      "useg-vlan": 23
+      "interface": "lif121",
+      "ipv4-address": "16.45.218.4/32",
+      "mac-address": "6e:f2:76:5f:68:9d",
+      "useg-vlan": 22
     },
     "status": {}
   },
@@ -432,18 +598,17 @@
     "meta": {
       "name": "scale-ep-22",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "scale-vrf-2",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-5",
-      "interface-type": "uplink",
-      "interface": "uplink129",
-      "ipv4-address": "16.45.218.228/32",
-      "mac-address": "0a:e2:c4:1b:73:b8",
-      "node-uuid": "GWUUID",
-      "useg-vlan": 24
+      "network-name": "scale-nw-6",
+      "interface-type": "lif",
+      "interface": "lif122",
+      "ipv4-address": "91.39.142.4/32",
+      "mac-address": "22:5d:0e:de:64:bc",
+      "useg-vlan": 23
     },
     "status": {}
   },
@@ -452,18 +617,17 @@
     "meta": {
       "name": "scale-ep-23",
       "tenant": "default",
-      "namespace": "scale-vrf-1",
+      "namespace": "scale-vrf-3",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-5",
-      "interface-type": "uplink",
-      "interface": "uplink128",
-      "ipv4-address": "16.45.218.229/32",
-      "mac-address": "5a:5d:ba:bc:f0:ec",
-      "node-uuid": "GWUUID",
-      "useg-vlan": 25
+      "network-name": "scale-nw-7",
+      "interface-type": "lif",
+      "interface": "lif123",
+      "ipv4-address": "54.199.28.4/32",
+      "mac-address": "5a:6c:c2:d3:2a:4b",
+      "useg-vlan": 24
     },
     "status": {}
   },
@@ -472,17 +636,17 @@
     "meta": {
       "name": "scale-ep-24",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "scale-vrf-0",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-6",
+      "network-name": "scale-nw-0",
       "interface-type": "lif",
-      "interface": "lif100",
-      "ipv4-address": "91.39.142.130/32",
-      "mac-address": "3a:32:6d:2b:1f:89",
-      "useg-vlan": 26
+      "interface": "lif124",
+      "ipv4-address": "177.75.132.5/32",
+      "mac-address": "3a:13:5a:76:42:23",
+      "useg-vlan": 25
     },
     "status": {}
   },
@@ -491,17 +655,17 @@
     "meta": {
       "name": "scale-ep-25",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "scale-vrf-1",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-6",
+      "network-name": "scale-nw-1",
       "interface-type": "lif",
-      "interface": "lif102",
-      "ipv4-address": "91.39.142.131/32",
-      "mac-address": "6a:9a:27:8d:34:a6",
-      "useg-vlan": 27
+      "interface": "lif125",
+      "ipv4-address": "223.97.165.5/32",
+      "mac-address": "72:f6:60:f7:2d:e5",
+      "useg-vlan": 26
     },
     "status": {}
   },
@@ -515,13 +679,12 @@
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-6",
-      "interface-type": "uplink",
-      "interface": "uplink129",
-      "ipv4-address": "91.39.142.132/32",
-      "mac-address": "0e:28:aa:10:1f:8d",
-      "node-uuid": "GWUUID",
-      "useg-vlan": 28
+      "network-name": "scale-nw-2",
+      "interface-type": "lif",
+      "interface": "lif126",
+      "ipv4-address": "112.211.249.5/32",
+      "mac-address": "52:a4:dc:a0:29:5e",
+      "useg-vlan": 27
     },
     "status": {}
   },
@@ -530,18 +693,17 @@
     "meta": {
       "name": "scale-ep-27",
       "tenant": "default",
-      "namespace": "scale-vrf-2",
+      "namespace": "scale-vrf-3",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-6",
-      "interface-type": "uplink",
-      "interface": "uplink128",
-      "ipv4-address": "91.39.142.133/32",
-      "mac-address": "72:7f:93:da:35:f1",
-      "node-uuid": "GWUUID",
-      "useg-vlan": 29
+      "network-name": "scale-nw-3",
+      "interface-type": "lif",
+      "interface": "lif127",
+      "ipv4-address": "4.121.175.5/32",
+      "mac-address": "46:3b:13:70:d5:a0",
+      "useg-vlan": 28
     },
     "status": {}
   },
@@ -550,17 +712,17 @@
     "meta": {
       "name": "scale-ep-28",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "scale-vrf-0",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-7",
+      "network-name": "scale-nw-4",
       "interface-type": "lif",
-      "interface": "lif100",
-      "ipv4-address": "54.199.28.18/32",
-      "mac-address": "32:89:8f:4e:05:5e",
-      "useg-vlan": 30
+      "interface": "lif128",
+      "ipv4-address": "170.22.196.5/32",
+      "mac-address": "3a:64:4a:f5:f5:71",
+      "useg-vlan": 29
     },
     "status": {}
   },
@@ -569,17 +731,17 @@
     "meta": {
       "name": "scale-ep-29",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "scale-vrf-1",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-7",
+      "network-name": "scale-nw-5",
       "interface-type": "lif",
-      "interface": "lif103",
-      "ipv4-address": "54.199.28.19/32",
-      "mac-address": "4a:ce:65:20:88:1a",
-      "useg-vlan": 31
+      "interface": "lif129",
+      "ipv4-address": "16.45.218.5/32",
+      "mac-address": "0e:9b:42:d8:3f:51",
+      "useg-vlan": 30
     },
     "status": {}
   },
@@ -588,18 +750,17 @@
     "meta": {
       "name": "scale-ep-30",
       "tenant": "default",
-      "namespace": "scale-vrf-3",
+      "namespace": "scale-vrf-2",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
     "spec": {
-      "network-name": "scale-nw-7",
-      "interface-type": "uplink",
-      "interface": "uplink129",
-      "ipv4-address": "54.199.28.20/32",
-      "mac-address": "62:6c:5a:a9:a0:70",
-      "node-uuid": "GWUUID",
-      "useg-vlan": 32
+      "network-name": "scale-nw-6",
+      "interface-type": "lif",
+      "interface": "lif130",
+      "ipv4-address": "91.39.142.5/32",
+      "mac-address": "3e:83:2a:9f:ba:e1",
+      "useg-vlan": 31
     },
     "status": {}
   },
@@ -614,12 +775,11 @@
     },
     "spec": {
       "network-name": "scale-nw-7",
-      "interface-type": "uplink",
-      "interface": "uplink128",
-      "ipv4-address": "54.199.28.21/32",
-      "mac-address": "6e:d3:46:56:f7:1b",
-      "node-uuid": "GWUUID",
-      "useg-vlan": 33
+      "interface-type": "lif",
+      "interface": "lif131",
+      "ipv4-address": "54.199.28.5/32",
+      "mac-address": "6e:e8:1f:66:b3:72",
+      "useg-vlan": 32
     },
     "status": {}
   }
