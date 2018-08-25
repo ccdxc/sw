@@ -328,19 +328,44 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     telemetry_export_dest_set_mac(d, cfg->src_mac, true);
     telemetry_export_dest_set_mac(d, cfg->dest_mac, false);
     telemetry_export_dest_commit(d);
+    // TODO: Start timer based on export interval to ring doorbell to trigger
+    // packet export
+
     return HAL_RET_OK;
 }
 
 hal_ret_t
 pd_collector_delete(pd_func_args_t *pd_func_args)
 {
+    pd_collector_delete_args_t          *c_args;
+    collector_config_t                  *cfg;
+    telemetry_export_dest_t             *d;
+
+    c_args = pd_func_args->pd_collector_delete;
+    cfg = c_args->cfg;
+    HAL_TRACE_DEBUG("{}: CollectorID {}", __FUNCTION__, cfg->collector_id);
+    
+    if (cfg->collector_id >= (TELEMETRY_NUM_EXPORT_DEST)) {
+        HAL_TRACE_ERR(" invalid Id {}", cfg->collector_id );
+        return HAL_RET_INVALID_ARG;
+    }
+    d = &export_destinations[cfg->collector_id];
+    if (!d->valid) {
+        HAL_TRACE_ERR("Collector does not exist: Id {}", cfg->collector_id);
+        return HAL_RET_INVALID_ARG;
+    } else {
+        // TODO: Stop the timer to ring the doorbell for export
+        // No other cleanup is required. New collector will overwrite the
+        // deleted collector based on the valid flag
+        d->valid = false;
+    }
     return HAL_RET_OK;
 }
 
 hal_ret_t
 pd_collector_get(pd_func_args_t *pd_func_args)
 {
-    pd_collector_get_args_t          *c_args;
+    pd_collector_get_args_t             *c_args;
     collector_config_t                  *cfg;
     telemetry_export_dest_t             *d;
 
@@ -352,7 +377,6 @@ pd_collector_get(pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR(" invalid Id {}", cfg->collector_id );
         return HAL_RET_INVALID_ARG;
     }
-
     d = &export_destinations[cfg->collector_id];
     if (!d->valid) {
         HAL_TRACE_ERR("Collector does not exist: Id {}", cfg->collector_id);

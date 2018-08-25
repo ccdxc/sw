@@ -160,7 +160,7 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     qstate.flow_hash_index_next = (100 * qid) + 100;
     qstate.flow_hash_index_max = (100 * qid) + 111;
 
-    // install entries for testing (to be removed)
+    // TODO: install flow table entries for testing (to be removed)
     ipfix_test_init(qstate.flow_hash_index_next, qstate.flow_hash_index_max,
                     export_id);
 

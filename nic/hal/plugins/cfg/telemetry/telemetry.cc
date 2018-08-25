@@ -339,14 +339,75 @@ collector_update (CollectorSpec &spec, CollectorResponse *rsp)
 hal_ret_t
 collector_delete (CollectorDeleteRequest &req, CollectorDeleteResponse *rsp)
 {
-    return HAL_RET_OK;
+    hal_ret_t                       ret;
+    collector_config_t              cfg;
+    pd::pd_func_args_t              pd_func_args = {0};
+    pd::pd_collector_delete_args_t  args;
+
+    HAL_TRACE_DEBUG("{}: Collector ID {}", __FUNCTION__,
+            req.key_or_handle().collector_id());
+    args.cfg = &cfg;
+    pd_func_args.pd_collector_delete = &args;
+    
+    args.cfg->collector_id = req.key_or_handle().collector_id();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_DELETE, &pd_func_args);
+    if (ret == HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_OK);
+        rsp->mutable_key_or_handle()->set_collector_id(args.cfg->collector_id);
+    } else {
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+    }
+    return ret;
+}
+
+static hal_ret_t
+collector_process_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp,
+                       pd::pd_collector_get_args_t *args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_func_args_t pd_func_args = {0};
+
+    HAL_TRACE_DEBUG("{}: Collector ID {}", __FUNCTION__,
+            req.key_or_handle().collector_id());
+    memset(args->cfg, 0, sizeof(collector_config_t));
+    pd_func_args.pd_collector_get = args;
+    auto response = rsp->add_response();
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_GET, &pd_func_args);
+    if (ret == HAL_RET_OK) {
+        response->set_api_status(types::API_STATUS_OK);
+        response->mutable_spec()->mutable_key_or_handle()->set_collector_id(args->cfg->collector_id);
+        ip_addr_to_spec(response->mutable_spec()->mutable_src_ip(), &args->cfg->src_ip);
+        ip_addr_to_spec(response->mutable_spec()->mutable_dest_ip(), &args->cfg->dst_ip);
+        response->mutable_spec()->set_dest_port(args->cfg->dport);
+        response->mutable_spec()->set_template_id(args->cfg->template_id);
+        response->mutable_spec()->set_export_interval(args->cfg->export_intvl);
+        //response->mutable_spec()->mutable_vrf_key_or_handle()->set_vrf_id();
+        //response->mutable_spec()->set_format(args->cfg->format);
+    } else {
+        response->set_api_status(types::API_STATUS_INVALID_ARG);
+    }
+    return ret;
 }
 
 hal_ret_t
 collector_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp)
 {
-
-    return HAL_RET_OK;
+    hal_ret_t                   ret = HAL_RET_OK;
+    collector_config_t          cfg;
+    pd::pd_collector_get_args_t args;
+    
+    args.cfg = &cfg;
+    if (!req.has_key_or_handle()) {
+        /* Iterate over all collectors */
+        for (int i = 0; i < MAX_COLLECTORS; i++) {
+            args.cfg->collector_id = i;
+            ret = collector_process_get(req, rsp, &args);
+        }
+    } else {
+        args.cfg->collector_id = req.key_or_handle().collector_id();
+        ret = collector_process_get(req, rsp, &args);
+    }
+    return ret;
 }
 
 hal_ret_t
@@ -470,6 +531,7 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
     }
     flowmon_acl_ctx = acl::acl_get(flowmon_acl_ctx_name(vrf_id));
     if (!flowmon_acl_ctx) {
+        //rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         HAL_TRACE_ERR("Did not find flowmon acl ctx for vrf_id {}", vrf_id);
         ret = HAL_RET_INVALID_ARG;
         goto end;

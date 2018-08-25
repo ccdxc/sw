@@ -327,7 +327,7 @@
         },
         {
             "name": "ipfix",
-            "size_kb": 64
+            "size_kb": 32
         },
         {
             "name": "app-redir-rawc",

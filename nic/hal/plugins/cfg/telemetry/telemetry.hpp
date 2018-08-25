@@ -99,6 +99,7 @@ DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
 // Iris pipeline can support upto 8 mirror destinations
 #define MAX_MIRROR_SESSION_DEST     8
 #define MAX_DROP_REASON             128
+#define MAX_COLLECTORS              16
 
 
 // New reason codes must be added here and in the corresponding PD
