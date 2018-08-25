@@ -24,7 +24,7 @@ ingress_to_rxdma:
     phvwr           p.p4_to_rxdma_header_valid, TRUE
     phvwr           p.predicate_header_valid, TRUE
     phvwr           p.p4_to_txdma_header_valid, TRUE
-    phvwr           p.apollo_i2e_metadata_valid, TRUE
+    phvwr           p.p4i_apollo_i2e_valid, TRUE
     add             r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5,\
                         capri_p4_intrinsic_packet_len_sbit6_ebit13}, \
                         APOLLO_I2E_HDR_SZ

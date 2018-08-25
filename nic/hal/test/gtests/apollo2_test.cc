@@ -350,8 +350,6 @@ route_lpm_init (void) {
     uint64_t    data = 0xFFFFFFFFFFFFFFFF;
     uint64_t    lpm_hbm_addr = get_start_offset(JLPMBASE);
 
-    printf("LPM Base Addr = 0x%0lx\n", lpm_hbm_addr);
-
     for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i+=8) {
         capri_hbm_write_mem(lpm_hbm_addr+i, (uint8_t*)&data, 8);
     }

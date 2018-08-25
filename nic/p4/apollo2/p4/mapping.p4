@@ -17,12 +17,12 @@ action local_ip_mapping_info(entry_valid, vcn_id, vcn_id_valid, xlate_index,
 
         if (control_metadata.direction == RX_FROM_SWITCH) {
             if ((mpls[1].valid == FALSE) and (ip_type == IP_TYPE_PUBLIC)) {
-                modify_field(apollo_i2e_metadata.dnat_required, TRUE);
+                modify_field(p4i_apollo_i2e.dnat_required, TRUE);
             }
         }
         modify_field(service_header.local_ip_mapping_done, TRUE);
 
-        modify_field(apollo_i2e_metadata.xlate_index, xlate_index);
+        modify_field(p4i_apollo_i2e.xlate_index, xlate_index);
 
         // if hardware register indicates miss, compare hints and setup
         // to perform lookup in overflow table
@@ -101,7 +101,7 @@ action remote_vnic_mapping_tx_info(entry_valid, nexthop_index,
                                    hash1, hint1, hash2, hint2,
                                    hash3, hint3, hash4, hint4, hash5, hint5,
                                    hash6, hint6, hash7, hint7, hash8, hint8,
-                                   hashn, hintn) {
+                                   more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(egress_service_header.remote_vnic_mapping_done, TRUE);
@@ -124,7 +124,7 @@ action remote_vnic_mapping_tx_info(entry_valid, nexthop_index,
     modify_field(scratch_metadata.remote_vnic_hash, hash6);
     modify_field(scratch_metadata.remote_vnic_hash, hash7);
     modify_field(scratch_metadata.remote_vnic_hash, hash8);
-    modify_field(scratch_metadata.remote_vnic_hash, hashn);
+    modify_field(scratch_metadata.flag, more_hints);
     modify_field(scratch_metadata.remote_vnic_hint, hint1);
     modify_field(scratch_metadata.remote_vnic_hint, hint2);
     modify_field(scratch_metadata.remote_vnic_hint, hint3);
@@ -133,15 +133,15 @@ action remote_vnic_mapping_tx_info(entry_valid, nexthop_index,
     modify_field(scratch_metadata.remote_vnic_hint, hint6);
     modify_field(scratch_metadata.remote_vnic_hint, hint7);
     modify_field(scratch_metadata.remote_vnic_hint, hint8);
-    modify_field(scratch_metadata.remote_vnic_hint, hintn);
+    modify_field(scratch_metadata.remote_vnic_hint, more_hashes);
 }
 
 @pragma stage 0
 @pragma hbm_table
 table remote_vnic_mapping_tx {
     reads {
-        txdma_to_p4e_header.vcn_id : exact;
-        apollo_i2e_metadata.dst    : exact;
+        txdma_to_p4e_header.vcn_id  : exact;
+        p4e_apollo_i2e.dst          : exact;
     }
     actions {
         remote_vnic_mapping_tx_info;

@@ -9,7 +9,6 @@ struct phv_         p;
 %%
 
 tep_tx:
-    phvwr       p.{apollo_i2e_metadata_valid...capri_txdma_intrinsic_valid}, 0
     phvwr       p.{ctag_1_valid ... ethernet_1_valid}, 0
     phvwrpair   p.ipv4_0_valid, 1, \
                 p.ethernet_0_valid, 1
@@ -31,18 +30,17 @@ tep_tx:
     // Protocol and Label cannot be combined into a phvwrpair,
     // because it only takes a 9-bit constant.
     phvwr       p.gre_0_proto, ETHERTYPE_MPLS_UNICAST
-    .assert(offsetof(k, apollo_i2e_metadata_src_slot_id_sbit0_ebit3) - \
-            offsetof(k, apollo_i2e_metadata_src_slot_id_sbit4_ebit19) == 16)
+    .assert(offsetof(k, p4e_apollo_i2e_src_slot_id_sbit0_ebit3) - \
+            offsetof(k, p4e_apollo_i2e_src_slot_id_sbit4_ebit19) == 16)
     phvwr       p.mpls_0_0_label, k.rewrite_metadata_dst_slot_id
     seq         c1, k.rewrite_metadata_encap_type, VNIC_ENCAP
     add.c1      r1, r1, 4
     phvwr.!c1.e p.mpls_0_0_bos, 1
     phvwr       p.ipv4_0_totalLen, r1
     phvwr.c1.e  p.mpls_0_1_label, \
-                k.{apollo_i2e_metadata_src_slot_id_sbit0_ebit3, \
-                   apollo_i2e_metadata_src_slot_id_sbit4_ebit19}
+                k.{p4e_apollo_i2e_src_slot_id_sbit0_ebit3, \
+                   p4e_apollo_i2e_src_slot_id_sbit4_ebit19}
     phvwr.c1    p.mpls_0_1_valid, 1
-    
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX

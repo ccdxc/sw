@@ -5,9 +5,12 @@ header cap_phv_intr_global_t capri_intrinsic;
 header cap_phv_intr_p4_t capri_p4_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header cap_phv_intr_txdma_t capri_txdma_intrinsic;
+
 @pragma synthetic_header
-@pragma pa_field_union ingress apollo_i2e_metadata.local_vnic_tag   vnic_metadata.local_vnic_tag
-header apollo_i2e_metadata_t apollo_i2e_metadata;
+@pragma pa_field_union ingress p4i_apollo_i2e.dst                   key_metadata.dst
+@pragma pa_field_union ingress p4i_apollo_i2e.local_vnic_tag        vnic_metadata.local_vnic_tag
+header apollo_i2e_metadata_t p4i_apollo_i2e;
+header apollo_i2e_metadata_t p4e_apollo_i2e;
 
 header service_header_t service_header;
 header egress_service_header_t egress_service_header;
@@ -16,9 +19,11 @@ header egress_service_header_t egress_service_header;
 header predicate_header_t predicate_header;
 
 @pragma synthetic_header
-@pragma pa_field_union ingress p4_to_rxdma_header.ip_proto          key_metadata.proto
-@pragma pa_field_union ingress p4_to_rxdma_header.l4_sport          key_metadata.sport
-@pragma pa_field_union ingress p4_to_rxdma_header.l4_dport          key_metadata.dport
+@pragma pa_field_union ingress p4_to_rxdma_header.flow_src          key_metadata.src
+@pragma pa_field_union ingress p4_to_rxdma_header.flow_dst          key_metadata.dst
+@pragma pa_field_union ingress p4_to_rxdma_header.flow_proto        key_metadata.proto
+@pragma pa_field_union ingress p4_to_rxdma_header.flow_sport        key_metadata.sport
+@pragma pa_field_union ingress p4_to_rxdma_header.flow_dport        key_metadata.dport
 @pragma pa_field_union ingress p4_to_rxdma_header.local_vnic_tag    vnic_metadata.local_vnic_tag
 header p4_to_rxdma_header_t p4_to_rxdma_header;
 
@@ -376,7 +381,7 @@ parser parse_span_copy {
 
 @pragma xgress egress
 parser parse_i2e_metadata {
-    extract(apollo_i2e_metadata);
+    extract(p4e_apollo_i2e);
     return parse_packet;
 }
 
@@ -394,7 +399,7 @@ parser deparse_ingress {
     extract(predicate_header);
     extract(p4_to_txdma_header);
     // i2e should be extracted below
-    extract(apollo_i2e_metadata);
+    extract(p4i_apollo_i2e);
 
     return parse_packet;
 }
@@ -410,7 +415,7 @@ parser deparse_egress {
     extract(egress_service_header);
     extract(predicate_header);
     extract(txdma_to_p4e_header);
-    extract(apollo_i2e_metadata);
+    extract(p4e_apollo_i2e);
 
     // layer 0
     /*

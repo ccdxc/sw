@@ -38,12 +38,6 @@ action lpm_init(base_addr) {
     modify_field(p4_to_txdma_header.lpm_addr, base_addr);
 }
 
-action remove_egress_headers() {
-    remove_header(capri_txdma_intrinsic);
-    remove_header(txdma_to_p4e_header);
-    remove_header(apollo_i2e_metadata);
-}
-
 /*****************************************************************************/
 /* Ingress pipeline                                                          */
 /*****************************************************************************/

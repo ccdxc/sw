@@ -22,12 +22,12 @@ action vnic_tx_stats(in_packets, in_bytes) {
                       APOLLO_P4_TO_RXDMA_HDR_SZ));
         add_header(predicate_header);
         add_header(p4_to_txdma_header);
-        add_header(apollo_i2e_metadata);
+        add_header(p4i_apollo_i2e);
         remove_header(service_header);
 
         modify_field(predicate_header.direction, control_metadata.direction);
         if (control_metadata.direction == RX_FROM_SWITCH) {
-            modify_field(predicate_header.lpm_bypass, TRUE); 
+            modify_field(predicate_header.lpm_bypass, TRUE);
         }
     }
 }
@@ -88,7 +88,7 @@ action vnic_rx_stats(out_packets, out_bytes) {
 @pragma table_write
 table vnic_rx_stats {
     reads {
-        apollo_i2e_metadata.local_vnic_tag  : exact;
+        p4e_apollo_i2e.local_vnic_tag   : exact;
     }
     actions {
         vnic_rx_stats;

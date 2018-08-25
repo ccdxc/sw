@@ -53,7 +53,7 @@ action execute_classified_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
                               burst, rate, tbkt);
 }
 
-action policer_stats_common(color, packet_len, 
+action policer_stats_common(color, packet_len,
                             permitted_packets, permitted_bytes,
                             denied_packets, denied_bytes) {
     if (color == POLICER_COLOR_RED) {
@@ -95,8 +95,8 @@ table resource_pool_agg_tx {
 @pragma stage 3
 table resource_pool_classified_tx {
     reads {
-        apollo_i2e_metadata.resource_group     : exact;
-        apollo_i2e_metadata.traffic_class      : exact;
+        p4e_apollo_i2e.resource_group   : exact;
+        p4e_apollo_i2e.traffic_class    : exact;
     }
     actions {
         resource_pool_classified_info;
@@ -108,8 +108,8 @@ table resource_pool_classified_tx {
 @pragma overflow_table resource_pool_classified_tx
 table resource_pool_classified_tx_otcam {
     reads {
-        apollo_i2e_metadata.resource_group     : ternary;
-        apollo_i2e_metadata.traffic_class      : ternary;
+        p4e_apollo_i2e.resource_group   : ternary;
+        p4e_apollo_i2e.traffic_class    : ternary;
     }
     actions {
         resource_pool_classified_info;
@@ -121,7 +121,7 @@ table resource_pool_classified_tx_otcam {
 @pragma policer_table two_color
 table agg_policer_tx {
     reads {
-        policer_metadata.agg_policer_index      : exact;
+        policer_metadata.agg_policer_index  : exact;
     }
     actions {
         execute_agg_policer;
@@ -133,7 +133,7 @@ table agg_policer_tx {
 @pragma table_write
 table agg_policer_tx_stats {
     reads {
-        policer_metadata.agg_policer_index       : exact;
+        policer_metadata.agg_policer_index  : exact;
     }
     actions {
         agg_policer_stats;
@@ -141,11 +141,11 @@ table agg_policer_tx_stats {
     size : AGG_POLICER_TABLE_SIZE;
 }
 
-@pragma stage 4 
+@pragma stage 4
 @pragma policer_table two_color
 table classified_policer_tx {
     reads {
-        apollo_i2e_metadata.classified_policer_index    : exact;
+        p4e_apollo_i2e.classified_policer_index : exact;
     }
     actions {
         execute_classified_policer;
@@ -153,11 +153,11 @@ table classified_policer_tx {
     size : CLASSIFIED_POLICER_TABLE_SIZE;
 }
 
-@pragma stage 5 
+@pragma stage 5
 @pragma table_write
 table classified_policer_tx_stats {
     reads {
-        apollo_i2e_metadata.classified_policer_index    : exact;
+        p4e_apollo_i2e.classified_policer_index : exact;
     }
     actions {
         classified_policer_stats;
@@ -205,7 +205,7 @@ table resource_pool_classified_rx_otcam {
 @pragma policer_table two_color
 table agg_policer_rx {
     reads {
-        apollo_i2e_metadata.agg_policer_index      : exact;
+        p4e_apollo_i2e.agg_policer_index    : exact;
     }
     actions {
         execute_agg_policer;
@@ -217,7 +217,7 @@ table agg_policer_rx {
 @pragma table_write
 table agg_policer_rx_stats {
     reads {
-        apollo_i2e_metadata.agg_policer_index       : exact;
+        p4e_apollo_i2e.agg_policer_index    : exact;
     }
     actions {
         agg_policer_stats;
@@ -225,11 +225,11 @@ table agg_policer_rx_stats {
     size : AGG_POLICER_TABLE_SIZE;
 }
 
-@pragma stage 1 
+@pragma stage 1
 @pragma policer_table two_color
 table classified_policer_rx {
     reads {
-        apollo_i2e_metadata.classified_policer_index    : exact;
+        p4e_apollo_i2e.classified_policer_index : exact;
     }
     actions {
         execute_classified_policer;
@@ -237,11 +237,11 @@ table classified_policer_rx {
     size : CLASSIFIED_POLICER_TABLE_SIZE;
 }
 
-@pragma stage 2 
+@pragma stage 2
 @pragma table_write
 table classified_policer_rx_stats {
     reads {
-        apollo_i2e_metadata.classified_policer_index    : exact;
+        p4e_apollo_i2e.classified_policer_index : exact;
     }
     actions {
         classified_policer_stats;

@@ -8,8 +8,8 @@ struct phv_         p;
 
 k = {
     rewrite_metadata_dst_slot_id = 0x11111;
-    apollo_i2e_metadata_src_slot_id_sbit0_ebit15 = 0x2222;
-    apollo_i2e_metadata_src_slot_id_sbit16_ebit19 = 0x2;
+    p4e_apollo_i2e_src_slot_id_sbit0_ebit15 = 0x2222;
+    p4e_apollo_i2e_src_slot_id_sbit16_ebit19 = 0x2;
     rewrite_metadata_mytep_ip = 0xAAAAAAAA;
     rewrite_metadata_encap_type = 0x0;
 };

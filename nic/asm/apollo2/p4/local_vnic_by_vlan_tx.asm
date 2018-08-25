@@ -13,7 +13,7 @@ local_vnic_info_tx:
     sne.!c1         c2, k.ethernet_1_srcAddr, d.local_vnic_info_tx_d.overlay_mac
     bcf             [c1|c2], local_vnic_info_tx_src_mac_error
     nop
-    phvwr           p.apollo_i2e_metadata_src_slot_id, \
+    phvwr           p.p4i_apollo_i2e_src_slot_id, \
                         d.local_vnic_info_tx_d.src_slot_id
     LOCAL_VNIC_INFO_COMMON_END(d.local_vnic_info_tx_d.local_vnic_tag,
                                d.local_vnic_info_tx_d.vcn_id,

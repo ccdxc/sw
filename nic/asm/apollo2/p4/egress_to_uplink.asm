@@ -13,7 +13,7 @@ egress_to_uplink:
     phvwr       p.capri_txdma_intrinsic_valid, FALSE
     phvwr       p.predicate_header_valid, FALSE
     phvwr.e     p.txdma_to_p4e_header_valid, FALSE
-    phvwr       p.apollo_i2e_metadata_valid, FALSE
+    phvwr       p.p4e_apollo_i2e_valid, FALSE
 
 /*****************************************************************************/
 /* error function                                                            */

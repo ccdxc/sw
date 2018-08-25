@@ -8,15 +8,15 @@ action rvpath_info(tep_index, vcn_id, subnet_id, overlay_mac) {
                      1 << DROP_RVPATH_VCN_MISMATCH);
         drop_packet();
     } else {
-        modify_field(apollo_i2e_metadata.rvpath_subnet_id, subnet_id);
-        modify_field(apollo_i2e_metadata.rvpath_overlay_mac, overlay_mac);
+        modify_field(p4i_apollo_i2e.rvpath_subnet_id, subnet_id);
+        modify_field(p4i_apollo_i2e.rvpath_overlay_mac, overlay_mac);
         modify_field(rvpath_metadata.tep_index, tep_index);
     }
 }
 
 @pragma stage 1
 @pragma hbm_table
-table remote_vnic_mappings_rx {
+table remote_vnic_mapping_rx {
     reads {
         vnic_metadata.src_slot_id : exact;
     }
@@ -48,7 +48,7 @@ table tep_rx {
 
 control rvpath_check {
     if (mpls[1].valid == TRUE) {
-        apply(remote_vnic_mappings_rx);
+        apply(remote_vnic_mapping_rx);
         apply(tep_rx);
     }
 }

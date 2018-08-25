@@ -11,7 +11,7 @@ struct phv_ p;
 nat:
     bbeq        k.nat_metadata_snat_required, TRUE, snat
     seq         c1, k.ipv4_1_valid, TRUE
-    bbeq        k.apollo_i2e_metadata_dnat_required, TRUE, dnat
+    bbeq        k.p4e_apollo_i2e_dnat_required, TRUE, dnat
     seq         c1, k.ipv4_2_valid, TRUE
     nop.e
     nop

@@ -20,9 +20,9 @@ egress_local_vnic_info_rx:
 
     phvwr       p.ethernet_0_dstAddr, d.egress_local_vnic_info_rx_d.overlay_mac
     crestore    [c7-c4], 0, 0xf
-    seq         c4, d.egress_local_vnic_info_rx_d.subnet_id, k.apollo_i2e_metadata_rvpath_subnet_id
-    seq.c4      c5, k.apollo_i2e_metadata_rvpath_overlay_mac, 0
-    phvwr.!c5   p.ethernet_0_srcAddr, k.apollo_i2e_metadata_rvpath_overlay_mac
+    seq         c4, d.egress_local_vnic_info_rx_d.subnet_id, k.p4e_apollo_i2e_rvpath_subnet_id
+    seq.c4      c5, k.p4e_apollo_i2e_rvpath_overlay_mac, 0
+    phvwr.!c5   p.ethernet_0_srcAddr, k.p4e_apollo_i2e_rvpath_overlay_mac
     phvwr.c5    p.ethernet_0_srcAddr, d.egress_local_vnic_info_rx_d.vr_mac
 
     phvwr       p.ethernet_0_etherType, ETHERTYPE_CTAG

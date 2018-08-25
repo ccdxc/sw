@@ -3,7 +3,7 @@
 /*****************************************************************************/
 action flow_hash(entry_valid, flow_index,
                  hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
-                 hash5, hint5, more_hashes, more_hints, ohash_entry) {
+                 hash5, hint5, more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(service_header.flow_done, TRUE);
@@ -31,7 +31,6 @@ action flow_hash(entry_valid, flow_index,
     modify_field(scratch_metadata.flow_hint, hint5);
     modify_field(scratch_metadata.flag, more_hashes);
     modify_field(scratch_metadata.flow_hint, more_hints);
-    modify_field(scratch_metadata.flag, ohash_entry);
 }
 
 action flow_info(permit_packets, permit_bytes, deny_packets, deny_bytes, drop) {

@@ -40,7 +40,7 @@ action local_vnic_info_tx(local_vnic_tag, vcn_id, skip_src_dst_check,
                           resource_group_1, resource_group_2,
                           lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
                           epoch1, epoch2, overlay_mac, src_slot_id) {
-    modify_field(apollo_i2e_metadata.src_slot_id, src_slot_id);
+    modify_field(p4i_apollo_i2e.src_slot_id, src_slot_id);
 
     // validate source mac
     if (ethernet_1.srcAddr == 0) {
@@ -127,7 +127,6 @@ control ingress_vnic_info {
 
 action egress_local_vnic_info_rx(vr_mac, overlay_mac, overlay_vlan_id, subnet_id) {
     // Remove headers
-    remove_egress_headers();
     remove_header(ethernet_1);
     remove_header(ipv4_1);
     remove_header(ipv6_1);
@@ -140,9 +139,9 @@ action egress_local_vnic_info_rx(vr_mac, overlay_mac, overlay_vlan_id, subnet_id
     add_header(ctag_0);
 
     modify_field(ethernet_0.dstAddr, overlay_mac);
-    if (subnet_id == apollo_i2e_metadata.rvpath_subnet_id) {
-        if (apollo_i2e_metadata.rvpath_overlay_mac != 0) {
-            modify_field(ethernet_0.srcAddr, apollo_i2e_metadata.rvpath_overlay_mac);
+    if (subnet_id == p4e_apollo_i2e.rvpath_subnet_id) {
+        if (p4e_apollo_i2e.rvpath_overlay_mac != 0) {
+            modify_field(ethernet_0.srcAddr, p4e_apollo_i2e.rvpath_overlay_mac);
         } else {
             modify_field(ethernet_0.srcAddr, vr_mac);
         }
@@ -162,16 +161,13 @@ action egress_local_vnic_info_rx(vr_mac, overlay_mac, overlay_vlan_id, subnet_id
 
     // scratch metadata
     modify_field(scratch_metadata.subnet_id, subnet_id);
-    modify_field(scratch_metadata.subnet_id, apollo_i2e_metadata.rvpath_subnet_id);
-    modify_field(scratch_metadata.flag, ipv4_2.valid);
-    modify_field(scratch_metadata.flag, ipv6_2.valid);
 }
 
 @pragma stage 0
 @pragma index_table
 table egress_local_vnic_info_rx {
     reads {
-        apollo_i2e_metadata.local_vnic_tag : exact;
+        p4e_apollo_i2e.local_vnic_tag   : exact;
     }
     actions {
         egress_local_vnic_info_rx;
