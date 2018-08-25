@@ -55,14 +55,14 @@ pt::factory(const char *name, uint16_t max_key_len, bool thread_safe)
     void    *mem;
     pt      *new_pt;
 
-    mem = HAL_CALLOC(HAL_MEM_ALLOC_LIB_SLAB, sizeof(pt));
+    mem = HAL_CALLOC(HAL_MEM_ALOC_LIB_PT, sizeof(pt));
     if (!mem) {
         return NULL;
     }
     new_pt = new (mem) pt();
     if (new_pt->init(name, max_key_len, thread_safe) == false) {
         new_pt->~pt();
-        HAL_FREE(HAL_MEM_ALLOC_LIB_SLAB, new_pt);
+        HAL_FREE(HAL_MEM_ALOC_LIB_PT, new_pt);
         return NULL;
     }
 
@@ -90,7 +90,7 @@ pt::destroy(pt *ptree)
         return;
     }
     ptree->~pt();
-    HAL_FREE(HAL_MEM_ALLOC_LIB_SLAB, ptree);
+    HAL_FREE(HAL_MEM_ALOC_LIB_PT, ptree);
 }
 
 //------------------------------------------------------------------------------

@@ -57,7 +57,7 @@ hal_ret_t session_create(SessionSpec& spec, SessionResponse *rsp);
 hal_ret_t session_delete(SessionDeleteRequest& spec, SessionDeleteResponse *rsp);
 hal_ret_t session_get(hal::session_t *session, SessionGetResponse *response);
 
-//Session delete request
+// Session delete request
 hal_ret_t session_delete_in_fte(hal_handle_t session_handle, bool force_delete=false);
 hal_ret_t session_delete(hal::session_t *session, bool force_delete=false);
 hal_ret_t session_delete_async(hal::session_t *session, bool force_delete=false);

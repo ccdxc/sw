@@ -9,6 +9,17 @@
 
 namespace sdk {
 
+enum {
+    SDK_MEM_ALLOC_NONE,
+    SDK_MEM_ALLOC_CATALOG,
+    SDK_MEM_ALLOC_LIB_HT,
+    SDK_MEM_ALLOC_LIB_INDEXER,
+    SDK_MEM_ALLOC_LIB_SHM,
+    SDK_MEM_ALLOC_LIB_SLAB,
+    SDK_MEM_ALLOC_LIB_THREAD,
+    SDK_MEM_ALLOC_LIB_TWHEEL,
+};
+
 static inline void *
 sdk_malloc (const char *id_str, uint32_t size)
 {

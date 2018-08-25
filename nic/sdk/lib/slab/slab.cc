@@ -93,7 +93,7 @@ slab::factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
     if (mmgr) {
         mem = mmgr->alloc(sizeof(slab), 4, true);
     } else {
-        mem = SDK_CALLOC(HAL_MEM_ALLOC_LIB_SLAB, sizeof(slab));
+        mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_SLAB, sizeof(slab));
     }
     if (mem == NULL) {
         SDK_TRACE_ERR("Failed to create slab %s, id %u, elem sz %u, "
@@ -110,7 +110,7 @@ slab::factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
         if (mmgr) {
             mmgr->free(mem);
         } else {
-            SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, mem);
+            SDK_FREE(SDK_MEM_ALLOC_LIB_SLAB, mem);
         }
         return NULL;
     }
@@ -135,7 +135,7 @@ slab::~slab()
         if (mmgr_) {
             mmgr_->free(block);
         } else {
-            SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, block);
+            SDK_FREE(SDK_MEM_ALLOC_LIB_SLAB, block);
         }
         block = this->block_head_;
     }
@@ -157,7 +157,7 @@ slab::destroy(slab *slb)
     if (mmgr) {
         mmgr->free(slb);
     } else {
-        SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, slb);
+        SDK_FREE(SDK_MEM_ALLOC_LIB_SLAB, slb);
     }
 }
 
@@ -179,7 +179,7 @@ slab::alloc_block_(void)
     if (mmgr_) {
         block = (slab_block_t *)mmgr_->alloc(raw_block_sz_, 4, true);
     } else {
-        block = (slab_block_t *)SDK_MALLOC(HAL_MEM_ALLOC_LIB_SLAB, raw_block_sz_);
+        block = (slab_block_t *)SDK_MALLOC(SDK_MEM_ALLOC_LIB_SLAB, raw_block_sz_);
     }
     if (block == NULL) {
         SDK_TRACE_ERR("Failed to allocate block for slab %s, id %u\n",
@@ -315,7 +315,7 @@ slab::free_(void *elem)
             if (mmgr_) {
                 mmgr_->free(block);
             } else {
-                SDK_FREE(HAL_MEM_ALLOC_LIB_SLAB, block);
+                SDK_FREE(SDK_MEM_ALLOC_LIB_SLAB, block);
             }
             this->num_blocks_--;
         }

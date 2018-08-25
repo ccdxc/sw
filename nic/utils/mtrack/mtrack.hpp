@@ -63,7 +63,7 @@ public:
         it = mtrack_map_.find(alloc_id);
         if (it != mtrack_map_.end()) {
             it->second->num_allocs++;
-            //HAL_TRACE_DEBUG("mem_allocation for id: {}, allocs:{}", 
+            //HAL_TRACE_DEBUG("mem_allocation for id: {}, allocs:{}",
                             //alloc_id, it->second->num_allocs);
         } else {
             mtrack_info = (mtrack_info_t *)calloc(1, sizeof(mtrack_info_t));
@@ -103,7 +103,7 @@ public:
         it = mtrack_map_.find(alloc_id);
         if (it != mtrack_map_.end()) {
             it->second->num_frees++;
-            //HAL_TRACE_DEBUG("mem_free for id: {}, frees:{}", 
+            //HAL_TRACE_DEBUG("mem_free for id: {}, frees:{}",
                             //alloc_id, it->second->num_frees);
             if (it->second->num_frees == it->second->num_allocs) {
                 // we can free this state now
@@ -111,6 +111,11 @@ public:
                 mtrack_info = it->second;
                 mtrack_map_.erase(it);
             }
+        } else {
+            // this can happen if mtrack is enabled on the fly and some memory
+            // allocations happened before that and are now being freed
+            HAL_TRACE_ERR("Freed mem {:#x} with alloc id {} without mtrack info",
+                          ptr, alloc_id);
         }
         HAL_SPINLOCK_UNLOCK(&mtrack_map_slock_);
 

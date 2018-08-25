@@ -43,7 +43,7 @@ twheel::init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe)
     slice_intvl_ = slice_intvl;
     thread_safe_ = thread_safe;
     nslices_ = wheel_duration/slice_intvl;
-    twheel_ = (tw_slice_t *)SDK_CALLOC(HAL_MEM_ALLOC_LIB_TWHEEL,
+    twheel_ = (tw_slice_t *)SDK_CALLOC(SDK_MEM_ALLOC_LIB_TWHEEL,
                                        nslices_ * sizeof(tw_slice_t));
     if (twheel_ == NULL) {
         slab::destroy(twentry_slab_);
@@ -73,7 +73,7 @@ twheel::factory(uint64_t slice_intvl, uint32_t wheel_duration,
         (wheel_duration <= slice_intvl)) {
         return NULL;
     }
-    mem = SDK_CALLOC(HAL_MEM_ALLOC_LIB_TWHEEL, sizeof(twheel));
+    mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_TWHEEL, sizeof(twheel));
     if (!mem) {
         return NULL;
     }
@@ -81,7 +81,7 @@ twheel::factory(uint64_t slice_intvl, uint32_t wheel_duration,
     if (new_twheel->init(slice_intvl, wheel_duration, thread_safe) !=
             SDK_RET_OK) {
         new_twheel->~twheel();
-        SDK_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, mem);
+        SDK_FREE(SDK_MEM_ALLOC_LIB_TWHEEL, mem);
         return NULL;
     }
     return new_twheel;
@@ -102,7 +102,7 @@ twheel::~twheel()
             SDK_SPINLOCK_DESTROY(&twheel_[i].slock_);
         }
     }
-    SDK_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, twheel_);
+    SDK_FREE(SDK_MEM_ALLOC_LIB_TWHEEL, twheel_);
 }
 
 void
@@ -112,7 +112,7 @@ twheel::destroy(twheel *twh)
         return;
     }
     twh->~twheel();
-    SDK_FREE(HAL_MEM_ALLOC_LIB_TWHEEL, twh);
+    SDK_FREE(SDK_MEM_ALLOC_LIB_TWHEEL, twh);
 }
 
 //------------------------------------------------------------------------------

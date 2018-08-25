@@ -105,7 +105,7 @@ thread::factory(const char *name, uint32_t thread_id,
         return NULL;
     }
 
-    mem = SDK_CALLOC(HAL_MEM_ALLOC_LIB_THREAD, sizeof(thread));
+    mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_THREAD, sizeof(thread));
     if (!mem) {
         return NULL;
     }
@@ -114,7 +114,7 @@ thread::factory(const char *name, uint32_t thread_id,
                           entry_func, prio, sched_policy, can_yield);
     if (rv < 0) {
         new_thread->~thread();
-        SDK_FREE(HAL_MEM_ALLOC_LIB_THREAD, new_thread);
+        SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, new_thread);
         return NULL;
     }
 
@@ -138,7 +138,7 @@ thread::destroy(thread *th)
         return;
     }
     th->~thread();
-    SDK_FREE(HAL_MEM_ALLOC_LIB_THREAD, th);
+    SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, th);
 }
 
 //------------------------------------------------------------------------------

@@ -1559,6 +1559,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Debug service
 
 type DebugClient interface {
+	// low level APIs for debugging
 	RegisterGet(ctx context.Context, in *RegisterRequestMsg, opts ...grpc.CallOption) (*RegisterResponseMsg, error)
 	RegisterUpdate(ctx context.Context, in *RegisterRequestMsg, opts ...grpc.CallOption) (*RegisterResponseMsg, error)
 	MemoryGet(ctx context.Context, in *MemoryRequestMsg, opts ...grpc.CallOption) (*MemoryResponseMsg, error)
@@ -1694,6 +1695,7 @@ func (c *debugClient) GenericOpn(ctx context.Context, in *GenericOpnRequestMsg, 
 // Server API for Debug service
 
 type DebugServer interface {
+	// low level APIs for debugging
 	RegisterGet(context.Context, *RegisterRequestMsg) (*RegisterResponseMsg, error)
 	RegisterUpdate(context.Context, *RegisterRequestMsg) (*RegisterResponseMsg, error)
 	MemoryGet(context.Context, *MemoryRequestMsg) (*MemoryResponseMsg, error)

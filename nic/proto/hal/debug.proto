@@ -13,15 +13,13 @@ option go_package="halproto";
 
 // HAL debug service
 service Debug {
+  // low level APIs for debugging
   rpc RegisterGet    (RegisterRequestMsg) returns (RegisterResponseMsg) {}
   rpc RegisterUpdate (RegisterRequestMsg) returns (RegisterResponseMsg) {}
-
   rpc MemoryGet      (MemoryRequestMsg)   returns (MemoryResponseMsg) {}
   rpc MemoryUpdate   (MemoryRequestMsg)   returns (MemoryResponseMsg) {}
-
   rpc MemoryRawGet(MemoryRawRequestMsg)     returns (MemoryRawResponseMsg) {}
   rpc MemoryRawUpdate(MemoryRawUpdateRequestMsg)     returns (MemoryRawUpdateResponseMsg) {}
-
   rpc MpuTraceUpdate (MpuTraceRequestMsg) returns (MpuTraceResponseMsg) {}
 
   rpc MemTrackGet(MemTrackGetRequestMsg) returns (MemTrackGetResponseMsg) {}

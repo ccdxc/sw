@@ -80,7 +80,7 @@ shmmgr::factory(const char *name, const std::size_t size,
     } remover(name);
 #endif
 
-    mem = SDK_CALLOC(HAL_MEM_ALLOC_LIB_SHM, sizeof(shmmgr));
+    mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_SHM, sizeof(shmmgr));
     if (mem == NULL) {
         return NULL;
     }
@@ -88,7 +88,7 @@ shmmgr::factory(const char *name, const std::size_t size,
     new_shmmgr = new (mem) shmmgr();
     if (new_shmmgr->init(name, size, mode, baseaddr) == false) {
         new_shmmgr->~shmmgr();
-        SDK_FREE(HAL_MEM_ALLOC_LIB_SHM, new_shmmgr);
+        SDK_FREE(SDK_MEM_ALLOC_LIB_SHM, new_shmmgr);
         return NULL;
     }
     return new_shmmgr;
@@ -118,7 +118,7 @@ shmmgr::destroy(shmmgr *mmgr)
     }
     shmmgr::remove(mmgr->name_);
     mmgr->~shmmgr();
-    SDK_FREE(HAL_MEM_ALLOC_LIB_SHM, mmgr);
+    SDK_FREE(SDK_MEM_ALLOC_LIB_SHM, mmgr);
 }
 
 //------------------------------------------------------------------------------

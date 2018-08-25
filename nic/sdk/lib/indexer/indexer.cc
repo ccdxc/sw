@@ -22,7 +22,7 @@ indexer::factory(uint32_t size, bool thread_safe, bool skip_zero)
     void        *mem     = NULL;
     indexer     *indxr = NULL;
 
-    mem = SDK_CALLOC(HAL_MEM_ALLOC_LIB_INDEXER, sizeof(indexer));
+    mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_INDEXER, sizeof(indexer));
     if (!mem) {
         return NULL;
     }
@@ -39,7 +39,7 @@ indexer::destroy(indexer *indxr)
 {
     if (indxr) {
         indxr->~indexer();
-        SDK_FREE(HAL_MEM_ALLOC_LIB_INDEXER, indxr);
+        SDK_FREE(SDK_MEM_ALLOC_LIB_INDEXER, indxr);
     }
 }
 
@@ -58,7 +58,7 @@ indexer::indexer(uint32_t size, bool thread_safe, bool skip_zero)
     size_ = size;
 
     // allocate and initialize to 0s
-    bits_ = (uint64_t*) SDK_CALLOC(HAL_MEM_ALLOC_LIB_INDEXER,
+    bits_ = (uint64_t*) SDK_CALLOC(SDK_MEM_ALLOC_LIB_INDEXER,
                                    sizeof(uint64_t) * num_words_);
     if (!bits_) {
         return;
@@ -86,7 +86,7 @@ indexer::indexer(uint32_t size, bool thread_safe, bool skip_zero)
 //---------------------------------------------------------------------------
 indexer::~indexer()
 {
-    SDK_FREE(HAL_MEM_ALLOC_LIB_INDEXER, bits_);
+    SDK_FREE(SDK_MEM_ALLOC_LIB_INDEXER, bits_);
 
     if (thread_safe_) {
         SDK_SPINLOCK_DESTROY(&slock_);

@@ -58,10 +58,10 @@ ht::cleanup(ht *htable, shmmgr *mmgr)
         mmgr->free(htable);
     } else {
         if (htable->ht_buckets_) {
-            SDK_FREE(HAL_MEM_ALLOC_LIB_HT,
+            SDK_FREE(SDK_MEM_ALLOC_LIB_HT,
                      htable->ht_buckets_);
             htable->~ht();
-            SDK_FREE(HAL_MEM_ALLOC_LIB_HT, htable);
+            SDK_FREE(SDK_MEM_ALLOC_LIB_HT, htable);
         }
     }
 }
@@ -83,7 +83,7 @@ ht::factory(uint32_t ht_size, ht_get_key_func_t get_key_func,
     if (mmgr) {
         mem = mmgr->alloc(sizeof(ht), 4, true);
     } else {
-        mem = SDK_CALLOC(HAL_MEM_ALLOC_LIB_HT, sizeof(ht));
+        mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_HT, sizeof(ht));
     }
     if (!mem) {
         return NULL;
@@ -97,7 +97,7 @@ ht::factory(uint32_t ht_size, ht_get_key_func_t get_key_func,
                                        4, true);
     } else {
         hash_table->ht_buckets_ =
-            (ht_bucket_t *)SDK_CALLOC(HAL_MEM_ALLOC_LIB_HT,
+            (ht_bucket_t *)SDK_CALLOC(SDK_MEM_ALLOC_LIB_HT,
                                       ht_size * sizeof(ht_bucket_t));
     }
     if (hash_table->ht_buckets_ == NULL) {

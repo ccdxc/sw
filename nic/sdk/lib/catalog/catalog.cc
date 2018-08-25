@@ -422,7 +422,7 @@ catalog::factory(std::string catalog_file) {
         return NULL;
     }
 
-    mem = SDK_CALLOC(hal::HAL_MEM_ALLOC_CATALOG, sizeof(catalog));
+    mem = SDK_CALLOC(sdk::SDK_MEM_ALLOC_CATALOG, sizeof(catalog));
     if (!mem) {
         return NULL;
     }
@@ -431,7 +431,7 @@ catalog::factory(std::string catalog_file) {
     ret = new_catalog->init(catalog_file);
     if (ret != SDK_RET_OK) {
         new_catalog->~catalog();
-        SDK_FREE(hal::HAL_MEM_ALLOC_CATALOG, new_catalog);
+        SDK_FREE(sdk::SDK_MEM_ALLOC_CATALOG, new_catalog);
         return NULL;
     }
 
@@ -476,7 +476,7 @@ catalog::destroy(catalog *clog)
         return;
     }
     clog->~catalog();
-    SDK_FREE(hal::HAL_MEM_ALLOC_CATALOG, clog);
+    SDK_FREE(sdk::SDK_MEM_ALLOC_CATALOG, clog);
 }
 
 catalog_uplink_port_t *
