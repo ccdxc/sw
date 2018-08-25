@@ -172,7 +172,7 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
 
-    sep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_sip4.addr.v4_addr));
+    sep = find_ep_by_v4_key(ipsec->vrf, ipsec->tunnel_sip4.addr.v4_addr);
     if (sep) {
         smac = ep_get_mac_addr(sep);
         if (smac) {
@@ -180,9 +180,9 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
         }
     } else {
         memcpy(ipsec->smac, smac1, ETH_ADDR_LEN);
-        HAL_TRACE_DEBUG("Src EP Lookup failed \n");
+        HAL_TRACE_DEBUG("Src EP Lookup failed in vrf {} for IP {}", ipsec->vrf, ipaddr2str(&ipsec->tunnel_sip4));
     }
-    dep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_dip4.addr.v4_addr));
+    dep = find_ep_by_v4_key(ipsec->vrf, ipsec->tunnel_dip4.addr.v4_addr);
     if (dep) {
         dmac = ep_get_mac_addr(dep);
         if (dmac) {
@@ -190,7 +190,7 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
         }
     } else {
         memcpy(ipsec->dmac, dmac1, ETH_ADDR_LEN);
-        HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
+        HAL_TRACE_DEBUG("Dest EP Lookup failed in vrf {} for IP {}", ipsec->vrf, ipaddr2str(&ipsec->tunnel_dip4));
     }
 
     ipsec->hal_handle = hal_alloc_handle();
@@ -277,23 +277,23 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_sip4, spec.local_gateway_ip());
     ip_addr_spec_to_ip_addr(&ipsec->tunnel_dip4, spec.remote_gateway_ip());
 
-    sep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_sip4.addr.v4_addr));
+    sep = find_ep_by_v4_key(ipsec->vrf, ipsec->tunnel_sip4.addr.v4_addr);
     if (sep) {
         smac = ep_get_mac_addr(sep);
         if (smac) {
             memcpy(ipsec->smac, smac, ETH_ADDR_LEN);
         }
     } else {
-        HAL_TRACE_DEBUG("Src EP Lookup failed \n");
+        HAL_TRACE_DEBUG("Src EP Lookup failed in vrf {} for IP {}", ipsec->vrf, ipaddr2str(&ipsec->tunnel_sip4));
     }
-    dep = find_ep_by_v4_key(ipsec->vrf, htonl(ipsec->tunnel_dip4.addr.v4_addr));
+    dep = find_ep_by_v4_key(ipsec->vrf, ipsec->tunnel_dip4.addr.v4_addr);
     if (dep) {
         dmac = ep_get_mac_addr(dep);
         if (dmac) {
             memcpy(ipsec->dmac, dmac, ETH_ADDR_LEN);
         }
     } else {
-        HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
+        HAL_TRACE_DEBUG("Dest EP Lookup failed in vrf {} for IP {}", ipsec->vrf, ipaddr2str(&ipsec->tunnel_dip4));
     }
     pd_func_args.pd_ipsec_encrypt_update = &pd_ipsec_encrypt_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IPSEC_ENCRYPT_UPDATE, &pd_func_args);
