@@ -166,8 +166,8 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
    * @param entry
    */
   onSearchResultEntryClick($event, category, entry) {
-    // console.log(this.getClassName() + '.onSearchResultEntryClick(..)', $event, category, entry.kind, entry);
-    // TODO: check entry.meta['self-link'] and fire up an event to display entry object detail.
+    // console.log(this.getClassName() + '.onSearchResultEntryClick(..)', $event, category, entry.object.kind, entry);
+    // TODO: check entry.object.meta['self-link'] and fire up an event to display entry object detail.
     return false;
   }
 
@@ -192,9 +192,9 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
    */
   displayLabels(entry): string {
     const list = [];
-    const keys = Object.keys(entry.meta.labels);
+    const keys = Object.keys(entry.object.meta.labels);
     keys.forEach(key => {
-      list.push(key + ' = ' + entry.meta.labels[key]);
+      list.push(key + ' = ' + entry.object.meta.labels[key]);
     });
     return list.toString();
   }

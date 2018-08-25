@@ -366,13 +366,12 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
   }
 
 
-
   /**
    * This functions processes server provided search suggestions
    * @param inputSearchString
    * @param data
    */
-  protected _processGlobalSearchResult(inputSearchString: string, data: any) {
+  protected _processGlobalSearchResult(inputSearchString: string, data: SearchSearchResponse) {
     this._processGlobalSearchResultHelper(inputSearchString, data);
   }
 
@@ -381,10 +380,22 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    * @param inputSearchString
    * @param data
    *
-   *  TODO : need more work to process search REST-API response
+   *  Return an array which looks like
+   *  [
+   *   {"Node":1},{"Event":20}
+   *  ]
    */
-  protected _processGlobalSearchResultHelper(inputSearchString: string, data: any): any {
-    const entries = data['entries'];
+  protected _processGlobalSearchResultHelper(inputSearchString: string, data: SearchSearchResponse): any {
+    // Due to PR5959 change, we have to process data.entries to get to the JSON object level
+    const objects = data.entries;
+    const entries = [];
+    if (!objects ) {
+      return entries;
+    }
+    for (let k = 0; k < objects.length; k++) {
+      entries.push(objects[k].object); // objects[k] is a SearchEntry object
+    }
+
     const list = [];
     const map = {};
     for (let i = 0; entries && i < entries.length; i++) {
@@ -409,7 +420,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
       );
     }
     this.searchSuggestions = outputList;
-    return outputList;  // list;
+    return outputList;
   }
 
   /**
