@@ -25,24 +25,24 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		},
 	}
 
-	gwIP := net.ParseIP(nw.Spec.IPv4Gateway)
-	if len(gwIP) == 0 {
-		return fmt.Errorf("could not parse IP from {%v}", nw.Spec.IPv4Gateway)
-	}
-
-	halGwIP := &halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(gwIP),
-		},
-	}
-
 	if len(nw.Spec.IPv4Subnet) != 0 {
 		ip, network, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
 		if err != nil {
 			return fmt.Errorf("error parsing the subnet mask from {%v}. Err: %v", nw.Spec.IPv4Subnet, err)
 		}
 		prefixLen, _ := network.Mask.Size()
+
+		gwIP := net.ParseIP(nw.Spec.IPv4Gateway)
+		if len(gwIP) == 0 {
+			return fmt.Errorf("could not parse IP from {%v}", nw.Spec.IPv4Gateway)
+		}
+
+		halGwIP := &halproto.IPAddress{
+			IpAf: halproto.IPAddressFamily_IP_AF_INET,
+			V4OrV6: &halproto.IPAddress_V4Addr{
+				V4Addr: ipv4Touint32(gwIP),
+			},
+		}
 
 		nwKey = halproto.NetworkKeyHandle{
 			KeyOrHandle: &halproto.NetworkKeyHandle_NwKey{

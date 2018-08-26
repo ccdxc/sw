@@ -805,3 +805,188 @@ func TestNonExistentTenantDeletion(t *testing.T) {
 	err = stateMgr.DeleteTenant("nonExistingTenant")
 	Assert(t, err == ErrTenantNotFound, "Deleting tenant failed.")
 }
+
+func TestWorkloadCreateDelete(t *testing.T) {
+	// create network state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{})
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// smartNic params
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testSmartNIC",
+			Namespace: "",
+			Tenant:    "default",
+		},
+		Spec: cluster.SmartNICSpec{
+			Ports: []cluster.PortSpec{
+				{
+					MacAddress: "00:01:02:03:04:05",
+				},
+			},
+		},
+		Status: cluster.SmartNICStatus{
+			PrimaryMacAddress: "00:01:02:03:04:05",
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.smartNicReactor.CreateSmartNIC(snic)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testHost",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.HostSpec{
+			Interfaces: map[string]cluster.HostIntfSpec{
+				"00:01:02:03:04:05": cluster.HostIntfSpec{
+					MacAddrs: []string{"00:01:02:03:04:05"},
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.hostReactor.CreateHost(host)
+	AssertOk(t, err, "Could not create the host")
+
+	// workload params
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: map[string]workload.WorkloadIntfSpec{
+				"00:01:02:03:04:05": workload.WorkloadIntfSpec{
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+
+	// create the workload
+	err = stateMgr.workloadReactor.CreateWorkload(wr)
+	AssertOk(t, err, "Could not create the workload")
+
+	// verify we can find the network for the workload
+	nw, err := stateMgr.FindNetwork("default", "Vlan-1")
+	AssertOk(t, err, "Could not find the network")
+
+	// verify we can find the endpoint associated with the workload
+	foundEp, ok := nw.FindEndpoint("testWorkload-00:01:02:03:04:05")
+	Assert(t, ok, "Could not find the endpoint", "testWorkload-00:01:02:03:04:05")
+	Assert(t, (foundEp.Status.WorkloadName == wr.Name), "endpoint params did not match")
+
+	// delete the workload
+	err = stateMgr.workloadReactor.DeleteWorkload(wr)
+	AssertOk(t, err, "Error deleting the workload")
+
+	// verify endpoint is gone from the database
+	_, ok = nw.FindEndpoint("testWorkload-00:01:02:03:04:05")
+	Assert(t, (ok == false), "Deleted endpoint still found in network db", "testWorkload-00:01:02:03:04:05")
+}
+
+func TestHostCreateDelete(t *testing.T) {
+	// create network state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{})
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testHost",
+			Namespace: "",
+			Tenant:    "default",
+		},
+		Spec: cluster.HostSpec{
+			Interfaces: map[string]cluster.HostIntfSpec{
+				"00:01:02:03:04:05": cluster.HostIntfSpec{
+					MacAddrs: []string{"00:01:02:03:04:05"},
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.hostReactor.CreateHost(host)
+	AssertOk(t, err, "Could not create the host")
+
+	// verify we can find the endpoint associated with the host
+	foundHost, err := stateMgr.FindHost("default", "testHost")
+	AssertOk(t, err, "Could not find the host")
+	Assert(t, (len(foundHost.Spec.Interfaces) == 1), "host params did not match")
+
+	// delete the host
+	err = stateMgr.hostReactor.DeleteHost(host)
+	AssertOk(t, err, "Error deleting the host")
+
+	// verify endpoint is gone from the database
+	_, err = stateMgr.FindHost("default", "testHost")
+	Assert(t, (err != nil), "Deleted host still found in db")
+}
+
+func TestSmartNicCreateDelete(t *testing.T) {
+	// create network state manager
+	stateMgr, err := NewStatemgr(&dummyWriter{})
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// smartNic params
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testSmartNIC",
+			Namespace: "",
+			Tenant:    "default",
+		},
+		Spec: cluster.SmartNICSpec{
+			Ports: []cluster.PortSpec{
+				{
+					MacAddress: "00:01:02:03:04:05",
+				},
+			},
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.smartNicReactor.CreateSmartNIC(snic)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// verify we can find the endpoint associated with the smartNic
+	foundSmartNIC, err := stateMgr.FindSmartNIC("default", "testSmartNIC")
+	AssertOk(t, err, "Could not find the smartNic")
+	Assert(t, (len(foundSmartNIC.Spec.Ports) == 1), "smartNic params did not match")
+	Assert(t, (foundSmartNIC.Spec.Ports[0].MacAddress == "00:01:02:03:04:05"), "smartNic params did not match")
+
+	foundSmartNIC, err = stateMgr.FindSmartNICByMacAddr("00:01:02:03:04:05")
+	AssertOk(t, err, "Could not find the smartNic")
+	Assert(t, (len(foundSmartNIC.Spec.Ports) == 1), "smartNic params did not match")
+
+	// delete the smartNic
+	err = stateMgr.smartNicReactor.DeleteSmartNIC(snic)
+	AssertOk(t, err, "Error deleting the smartNic")
+
+	// verify endpoint is gone from the database
+	_, err = stateMgr.FindSmartNIC("default", "testSmartNIC")
+	Assert(t, (err != nil), "Deleted smartNic still found in db")
+}

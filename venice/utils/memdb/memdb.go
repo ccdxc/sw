@@ -31,6 +31,9 @@ const (
 // WatchLen is size of the watch channel buffer
 const WatchLen = 1000
 
+// ErrObjectNotFound is returned when an object is not found
+var ErrObjectNotFound = errors.New("object not found")
+
 // Event is watch event notifications
 type Event struct {
 	EventType EventType
@@ -224,7 +227,7 @@ func (md *Memdb) FindObject(kind string, ometa *api.ObjectMeta) (Object, error) 
 	// see if we have the object
 	obj, ok := od.objects[memdbKey(ometa)]
 	if !ok {
-		return nil, errors.New("object not found")
+		return nil, ErrObjectNotFound
 	}
 
 	return obj, nil

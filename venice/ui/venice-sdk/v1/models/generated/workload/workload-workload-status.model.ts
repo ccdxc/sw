@@ -10,19 +10,14 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 export interface IWorkloadWorkloadStatus {
     'interfaces'?: object;
-    'endpoints'?: Array<string>;
 }
 
 
 export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorkloadStatus {
     'interfaces': object = null;
-    'endpoints': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interfaces': {
             type: 'object'
-        },
-        'endpoints': {
-            type: 'Array<string>'
         },
     }
 
@@ -45,7 +40,6 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     */
     constructor(values?: any) {
         super();
-        this['endpoints'] = new Array<string>();
         this.setValues(values);
     }
 
@@ -59,9 +53,6 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
         } else if (WorkloadWorkloadStatus.hasDefaultValue('interfaces')) {
             this['interfaces'] = WorkloadWorkloadStatus.propInfo['interfaces'].default;
         }
-        if (values) {
-            this.fillModelArray<string>(this, 'endpoints', values['endpoints']);
-        }
     }
 
 
@@ -71,10 +62,7 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'interfaces': new FormControl(this['interfaces']),
-                'endpoints': new FormArray([]),
             });
-            // generate FormArray control elements
-            this.fillFormArray<string>('endpoints', this['endpoints']);
         }
         return this._formGroup;
     }
@@ -82,7 +70,6 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     setFormGroupValues() {
         if (this._formGroup) {
             this._formGroup.controls['interfaces'].setValue(this['interfaces']);
-            this.fillModelArray<string>(this, 'endpoints', this['endpoints']);
         }
     }
 }

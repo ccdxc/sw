@@ -53,16 +53,12 @@ message WorkloadStatus {
     // Status of all interfaces in the Workload identified by Primary MAC
     map<string, WorkloadIntfStatus> Interfaces  = 1 [(gogoproto.nullable) = false,
                                                     (gogoproto.jsontag) = "interfaces,omitempty"];
-
-    // List of all endpoints associated with this Workload
-    repeated string Endpoints                   = 2 [(gogoproto.nullable) = true,
-                                                    (gogoproto.jsontag) = "endpoints,omitempty"];
 }
 
 // Spec of a Workload interface
 message WorkloadIntfSpec {
 
-    // TBD: Is it possible to have multiple/secondary MAC 
+    // TBD: Is it possible to have multiple/secondary MAC
     // addrs on a workload interface ?
 
     // Micro-segmentation vlan assigned for this interface
@@ -79,5 +75,8 @@ message WorkloadIntfSpec {
 message WorkloadIntfStatus {
 
     // List of all IP addresses configured and discovered on a Workload Interface
-    repeated string IpAddrs = 1 [(gogoproto.jsontag) = "ip-addrs,omitempty"];
+    repeated string IpAddrs = 1 [(gogoproto.jsontag) = "ip-addresses,omitempty"];
+
+    // Endpoint associated with this Workload interface
+    string Endpoint         = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint,omitempty"];
 }

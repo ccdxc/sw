@@ -14,7 +14,9 @@ import (
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
@@ -202,6 +204,8 @@ func TestApiWatcher(t *testing.T) {
 			ToIPAddresses:   []string{"192.168.1.1/16"},
 		},
 	}
+
+	// sg policy
 	sgp := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
 		ObjectMeta: api.ObjectMeta{
@@ -217,6 +221,20 @@ func TestApiWatcher(t *testing.T) {
 	sgps, err := apicl.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
 	AssertOk(t, err, "Error creating security policy")
 	AssertEquals(t, rules, sgps.Spec.Rules, "rules did not match")
+
+	// security group object
+	sg := security.SecurityGroup{
+		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "testSg",
+		},
+		Spec: security.SecurityGroupSpec{
+			WorkloadSelector: labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}),
+		},
+	}
+	_, err = apicl.SecurityV1().SecurityGroup().Create(context.Background(), &sg)
+	AssertOk(t, err, "Error creating security group")
 
 	// delete the nwif
 	err = vchstore.NwIFDelete(context.Background(), "test-nwif")
@@ -393,7 +411,7 @@ func TestAPIServerRestarts(t *testing.T) {
 	sgp := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
+			Tenant:    "testTenant",
 			Namespace: "default",
 			Name:      "testpolicy",
 		},
@@ -406,6 +424,105 @@ func TestAPIServerRestarts(t *testing.T) {
 	AssertOk(t, err, "Error creating security policy")
 	AssertEquals(t, rules, sgps.Spec.Rules, "rules did not match")
 
+	// security group object
+	sg := security.SecurityGroup{
+		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "testTenant",
+			Name:   "testSg",
+		},
+		Spec: security.SecurityGroupSpec{
+			WorkloadSelector: labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}),
+		},
+	}
+	_, err = apicl.SecurityV1().SecurityGroup().Create(context.Background(), &sg)
+	AssertOk(t, err, "Error creating security group")
+
+	// smartNic params
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testSmartNIC",
+			Namespace: "",
+			Tenant:    "testTenant",
+		},
+		Spec: cluster.SmartNICSpec{
+			Phase: "ADMITTED",
+			Ports: []cluster.PortSpec{
+				{
+					MacAddress: "00:01:02:03:04:05",
+				},
+			},
+		},
+	}
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testHost",
+		},
+		Spec: cluster.HostSpec{
+			Interfaces: map[string]cluster.HostIntfSpec{
+				"00:01:02:03:04:05": cluster.HostIntfSpec{
+					MacAddrs: []string{"00:01:02:03:04:05"},
+				},
+			},
+		},
+		Status: cluster.HostStatus{
+			Type: "HYPERVISOR",
+		},
+	}
+
+	// workload params
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "",
+			Tenant:    "testTenant",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: map[string]workload.WorkloadIntfSpec{
+				"00:01:02:03:04:05": workload.WorkloadIntfSpec{
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+
+	// create snic object
+	_, err = apicl.ClusterV1().SmartNIC().Create(context.Background(), &snic)
+	AssertOk(t, err, "Error creating snic")
+
+	// verify snic got created
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindSmartNIC("testTenant", "testSmartNIC")
+		return (nerr == nil), nil
+	}, "SmartNIC not found in statemgr")
+
+	// create host object
+	_, err = apicl.ClusterV1().Host().Create(context.Background(), &host)
+	AssertOk(t, err, "Error creating host")
+
+	// verify host got created
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindHost("", "testHost")
+		return (nerr == nil), nil
+	}, "Host not found in statemgr")
+
+	// create workload
+	_, err = apicl.WorkloadV1().Workload().Create(context.Background(), &wr)
+	AssertOk(t, err, "Error creating workload")
+
+	// verify endpoint got created
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindEndpoint("testTenant", "testWorkload-00:01:02:03:04:05")
+		return (nerr == nil), nil
+	}, "Endpoint not found in statemgr")
+
 	// stop api server and watchers
 	apiSrv.Stop()
 	watcher.Stop()
@@ -414,10 +531,29 @@ func TestAPIServerRestarts(t *testing.T) {
 	// restart api server and watchers
 	apiSrv, _ = createAPIServer(apisrvURL)
 	Assert(t, (apiSrv != nil), "Error restarting api server", apiSrv)
+	time.Sleep(time.Millisecond * 100)
 	apicl, err = apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, l)
 	AssertOk(t, err, "Error restarting api server client")
 	watcher, err = NewWatcher(stateMgr, apisrvURL, vmmURL, nil, debug.New(t.Name()).Build())
 	AssertOk(t, err, "Error restarting watcher")
+
+	// wait for the objects to come back
+	time.Sleep(time.Millisecond * 100)
+	AssertEventually(t, func() (bool, interface{}) {
+		_, terr := stateMgr.FindTenant("testTenant")
+		if terr != nil {
+			return false, nil
+		}
+		_, nerr := stateMgr.FindNetwork("testTenant", "testNetwork")
+		if nerr != nil {
+			return false, nil
+		}
+		_, perr := stateMgr.FindEndpoint("testTenant", "test-nwif")
+		if perr != nil {
+			return false, nil
+		}
+		return true, nil
+	}, "Tenant not found in statemgr")
 
 	// delete all the objects
 	_, err = apicl.ClusterV1().Tenant().Delete(context.Background(), &tenant.ObjectMeta)
@@ -431,6 +567,18 @@ func TestAPIServerRestarts(t *testing.T) {
 
 	_, err = apicl.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
 	AssertOk(t, err, "could not delete sg policy")
+
+	// delete the workload
+	_, err = apicl.WorkloadV1().Workload().Delete(context.Background(), &wr.ObjectMeta)
+	AssertOk(t, err, "Error deleting workload")
+
+	// delete host object
+	_, err = apicl.ClusterV1().Host().Delete(context.Background(), &host.ObjectMeta)
+	AssertOk(t, err, "Error deleting host")
+
+	// delete snic object
+	_, err = apicl.ClusterV1().SmartNIC().Delete(context.Background(), &snic.ObjectMeta)
+	AssertOk(t, err, "Error deleting snic")
 
 	// stop the api server
 	apicl.Close()
@@ -516,4 +664,154 @@ func TestApiWatcherConnectDisconnect(t *testing.T) {
 	vcs.StopServer()
 	watcher.Stop()
 	kvs.Close()
+}
+
+func TestWorkloadWatcher(t *testing.T) {
+	// create network state manager
+	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// generate an available port for api server to use.
+	apiSrvListener := netutils.TestListenAddr{}
+	err = apiSrvListener.GetAvailablePort()
+	if err != nil {
+		t.Errorf("could not find an available port for the api server")
+	}
+	apisrvURL := apiSrvListener.ListenURL.String()
+
+	// create api server
+	apiSrv, _ := createAPIServer(apisrvURL)
+	Assert(t, (apiSrv != nil), "Error creating api server", apiSrv)
+
+	// create watcher on api server
+	watcher, err := NewWatcher(stateMgr, apisrvURL, "", nil, debug.New(t.Name()).Build())
+	AssertOk(t, err, "Error creating watchr")
+	Assert(t, (watcher != nil), "Error creating watcher", watcher)
+	time.Sleep(time.Millisecond * 10)
+
+	// create an api server client
+	l := log.GetNewLogger(log.GetDefaultConfig("NpmApiWatcher"))
+	apicl, err := apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, l)
+	AssertOk(t, err, "Error creating api server client")
+
+	// smartNic params
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testSmartNIC",
+			Namespace: "",
+			Tenant:    "default",
+		},
+		Spec: cluster.SmartNICSpec{
+			Phase: "ADMITTED",
+			Ports: []cluster.PortSpec{
+				{
+					MacAddress: "00:01:02:03:04:05",
+				},
+			},
+		},
+	}
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testHost",
+		},
+		Spec: cluster.HostSpec{
+			Interfaces: map[string]cluster.HostIntfSpec{
+				"00:01:02:03:04:05": cluster.HostIntfSpec{
+					MacAddrs: []string{"00:01:02:03:04:05"},
+				},
+			},
+		},
+		Status: cluster.HostStatus{
+			Type: "HYPERVISOR",
+		},
+	}
+
+	// workload params
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "",
+			Tenant:    "testTenant",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: map[string]workload.WorkloadIntfSpec{
+				"00:01:02:03:04:05": workload.WorkloadIntfSpec{
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+
+	// create snic object
+	_, err = apicl.ClusterV1().SmartNIC().Create(context.Background(), &snic)
+	AssertOk(t, err, "Error creating snic")
+
+	// verify snic got created
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindSmartNIC("default", "testSmartNIC")
+		return (nerr == nil), nil
+	}, "SmartNIC not found in statemgr")
+
+	// create host object
+	_, err = apicl.ClusterV1().Host().Create(context.Background(), &host)
+	AssertOk(t, err, "Error creating host")
+
+	// verify host got created
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindHost("", "testHost")
+		return (nerr == nil), nil
+	}, "Host not found in statemgr")
+
+	// create workload
+	_, err = apicl.WorkloadV1().Workload().Create(context.Background(), &wr)
+	AssertOk(t, err, "Error creating workload")
+
+	// verify endpoint got created
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindEndpoint("testTenant", "testWorkload-00:01:02:03:04:05")
+		return (nerr == nil), nil
+	}, "Endpoint not found in statemgr")
+	ep, err := stateMgr.FindEndpoint("testTenant", "testWorkload-00:01:02:03:04:05")
+	AssertOk(t, err, "Could not find the endpoint")
+	Assert(t, (ep.Status.HomingHostName == "testHost"), "Got invalid endpoint", ep)
+
+	// delete the workload
+	_, err = apicl.WorkloadV1().Workload().Delete(context.Background(), &wr.ObjectMeta)
+	AssertOk(t, err, "Error deleting workload")
+
+	// verify endpoint got deleted
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindEndpoint("testTenant", "testWorkload-00:01:02:03:04:05")
+		return (nerr != nil), nil
+	}, "Endpoint still found in statemgr")
+
+	// delete host object
+	_, err = apicl.ClusterV1().Host().Delete(context.Background(), &host.ObjectMeta)
+	AssertOk(t, err, "Error deleting host")
+
+	// verify host got deleted
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindHost("", "testHost")
+		return (nerr != nil), nil
+	}, "Host still found in statemgr")
+
+	// delete snic object
+	_, err = apicl.ClusterV1().SmartNIC().Delete(context.Background(), &snic.ObjectMeta)
+	AssertOk(t, err, "Error deleting snic")
+
+	// verify snic got deleted
+	AssertEventually(t, func() (bool, interface{}) {
+		_, nerr := stateMgr.FindSmartNIC("default", "testSmartNIC")
+		return (nerr != nil), nil
+	}, "SmartNIC still found in statemgr")
 }

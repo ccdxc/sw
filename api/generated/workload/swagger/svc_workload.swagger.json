@@ -951,16 +951,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "status.endpoints",
-            "description": "List of all endpoints associated with this Workload.",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         ],
         "tags": [
@@ -1883,12 +1873,16 @@
     "workloadWorkloadIntfStatus": {
       "type": "object",
       "properties": {
-        "ip-addrs": {
+        "ip-addresses": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "title": "List of all IP addresses configured and discovered on a Workload Interface"
+        },
+        "endpoint": {
+          "type": "string",
+          "title": "Endpoint associated with this Workload interface"
         }
       },
       "title": "Status of a Workload interface"
@@ -1942,13 +1936,6 @@
             "$ref": "#/definitions/workloadWorkloadIntfStatus"
           },
           "title": "Status of all interfaces in the Workload identified by Primary MAC"
-        },
-        "endpoints": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "List of all endpoints associated with this Workload"
         }
       },
       "title": "Status part of Workload object"

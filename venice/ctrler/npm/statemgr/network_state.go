@@ -223,30 +223,35 @@ func (ns *NetworkState) CreateEndpoint(epinfo *workload.Endpoint) (*EndpointStat
 		return nil, fmt.Errorf("Endpoint already exists")
 	}
 
-	// allocate an IP address
-	ipv4Addr, err := ns.allocIPv4Addr(epinfo.Status.IPv4Address)
-
-	if err != nil {
-		log.Errorf("Error allocating IP address from network {%+v}. Err: %v", ns, err)
-		return nil, err
-	}
-
-	// allocate a mac address based on IP address
-	macAddr := ipv4toMac([]byte{0x01, 0x01}, net.ParseIP(ipv4Addr))
-
-	// convert address to CIDR
-	_, ipNet, _ := net.ParseCIDR(ns.Spec.IPv4Subnet)
-	subnetMaskLen, _ := ipNet.Mask.Size()
-	ipv4Addr = fmt.Sprintf("%s/%d", ipv4Addr, subnetMaskLen)
-
-	// populate allocated values
+	// copy endpoint info
 	epi := *epinfo
-	epi.Status.IPv4Address = ipv4Addr
-	epi.Status.IPv4Gateway = ns.Spec.IPv4Gateway
 
-	// assign new mac address if we dont have one
-	if epi.Status.MacAddress == "" {
-		epi.Status.MacAddress = macAddr.String()
+	if ns.Spec.IPv4Subnet != "" {
+		// allocate an IP address
+		ipv4Addr, err := ns.allocIPv4Addr(epinfo.Status.IPv4Address)
+
+		if err != nil {
+			log.Errorf("Error allocating IP address from network {%+v}. Err: %v", ns, err)
+			return nil, err
+		}
+
+		// allocate a mac address based on IP address
+		macAddr := ipv4toMac([]byte{0x01, 0x01}, net.ParseIP(ipv4Addr))
+
+		// convert address to CIDR
+		_, ipNet, _ := net.ParseCIDR(ns.Spec.IPv4Subnet)
+		subnetMaskLen, _ := ipNet.Mask.Size()
+		ipv4Addr = fmt.Sprintf("%s/%d", ipv4Addr, subnetMaskLen)
+
+		// populate allocated values
+		epi.Status.IPv4Address = ipv4Addr
+		epi.Status.IPv4Gateway = ns.Spec.IPv4Gateway
+
+		// assign new mac address if we dont have one
+		if epi.Status.MacAddress == "" {
+			epi.Status.MacAddress = macAddr.String()
+		}
+
 	}
 
 	// create a new endpoint instance
@@ -297,6 +302,8 @@ func (ns *NetworkState) DeleteEndpoint(epmeta *api.ObjectMeta) (*EndpointState, 
 	ns.Unlock()
 	ns.stateMgr.memDB.DeleteObject(eps)
 
+	log.Infof("Deleted endpoint: %+v", eps)
+
 	// write the modified network state to api server
 	err = ns.Write()
 	if err != nil {
@@ -325,26 +332,28 @@ func (ns *NetworkState) Delete() error {
 // NewNetworkState creates new network state object
 func NewNetworkState(nw *network.Network, stateMgr *Statemgr) (*NetworkState, error) {
 	// parse the subnet
-	_, ipnet, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
-	if err != nil {
-		log.Errorf("Error parsing subnet %v. Err: %v", nw.Spec.IPv4Subnet, err)
-		return nil, err
+	if nw.Spec.IPv4Subnet != "" {
+		_, ipnet, err := net.ParseCIDR(nw.Spec.IPv4Subnet)
+		if err != nil {
+			log.Errorf("Error parsing subnet %v. Err: %v", nw.Spec.IPv4Subnet, err)
+			return nil, err
+		}
+
+		subnetMaskLen, maskLen := ipnet.Mask.Size()
+		subnetSize := 1 << uint32(maskLen-subnetMaskLen)
+
+		// build the ip allocation bitset
+		bs := bitset.New(uint(subnetSize))
+		bs.ClearAll()
+
+		// set first and last bits as used
+		bs.Set(0).Set(uint(subnetSize - 1))
+
+		// write the bitset into network object
+		buf := bytes.NewBuffer([]byte{})
+		bs.WriteTo(buf)
+		nw.Status.AllocatedIPv4Addrs = buf.Bytes()
 	}
-
-	subnetMaskLen, maskLen := ipnet.Mask.Size()
-	subnetSize := 1 << uint32(maskLen-subnetMaskLen)
-
-	// build the ip allocation bitset
-	bs := bitset.New(uint(subnetSize))
-	bs.ClearAll()
-
-	// set first and last bits as used
-	bs.Set(0).Set(uint(subnetSize - 1))
-
-	// write the bitset into network object
-	buf := bytes.NewBuffer([]byte{})
-	bs.WriteTo(buf)
-	nw.Status.AllocatedIPv4Addrs = buf.Bytes()
 
 	// create the network state
 	ns := &NetworkState{
@@ -354,17 +363,19 @@ func NewNetworkState(nw *network.Network, stateMgr *Statemgr) (*NetworkState, er
 	}
 
 	// mark gateway addr as used
-	allocAddr, err := ns.allocIPv4Addr(nw.Spec.IPv4Gateway)
-	if err != nil {
-		log.Errorf("Error allocating gw address. Err: %v", err)
-		return nil, err
-	} else if allocAddr != nw.Spec.IPv4Gateway {
-		log.Errorf("Error allocating gw address(req: %v, alloc: %v)", nw.Spec.IPv4Gateway, allocAddr)
-		return nil, fmt.Errorf("Error allocating gw addr")
+	if nw.Spec.IPv4Gateway != "" {
+		allocAddr, err := ns.allocIPv4Addr(nw.Spec.IPv4Gateway)
+		if err != nil {
+			log.Errorf("Error allocating gw address. Err: %v", err)
+			return nil, err
+		} else if allocAddr != nw.Spec.IPv4Gateway {
+			log.Errorf("Error allocating gw address(req: %v, alloc: %v)", nw.Spec.IPv4Gateway, allocAddr)
+			return nil, fmt.Errorf("Error allocating gw addr")
+		}
 	}
 
 	// save it to api server
-	err = ns.Write()
+	err := ns.Write()
 	if err != nil {
 		log.Errorf("Error writing the network state to api server. Err: %v", err)
 		return nil, err

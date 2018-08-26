@@ -119,6 +119,7 @@ error sendMsg(int sock, MessagePtr msg) {
     assert(bytecount == siz);
 */
 
+    delete coded_output;
     free(pkt);
     return 0;
 }

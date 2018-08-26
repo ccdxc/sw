@@ -22,9 +22,17 @@ import (
 func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Services) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	opts := api.ListWatchOptions{}
+
+	// tenant object watcher
+	tnWatcher, err := apicl.ClusterV1().Tenant().Watch(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to start watch (%s)\n", err)
+		return
+	}
+	defer tnWatcher.Stop()
 
 	// network watcher
-	opts := api.ListWatchOptions{}
 	netWatcher, err := apicl.NetworkV1().Network().Watch(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to start watch (%s)\n", err)
@@ -56,13 +64,29 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	}
 	defer epWatcher.Stop()
 
-	// tenant object watcher
-	tnWatcher, err := apicl.ClusterV1().Tenant().Watch(ctx, &opts)
+	// workload object watcher
+	w.wrWatcher, err = apicl.WorkloadV1().Workload().Watch(ctx, &opts)
 	if err != nil {
 		log.Errorf("Failed to start watch (%s)\n", err)
 		return
 	}
-	defer tnWatcher.Stop()
+	defer w.wrWatcher.Stop()
+
+	// host object watcher
+	w.hostWatcher, err = apicl.ClusterV1().Host().Watch(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to start watch (%s)\n", err)
+		return
+	}
+	defer w.hostWatcher.Stop()
+
+	// smart nic object watcher
+	w.snicWatcher, err = apicl.ClusterV1().SmartNIC().Watch(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to start watch (%s)\n", err)
+		return
+	}
+	defer w.snicWatcher.Stop()
 
 	// get all current tenants
 	tnList, err := apicl.ClusterV1().Tenant().List(ctx, &opts)
@@ -144,9 +168,64 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		}
 	}
 
+	// get all current workload objects
+	wrList, err := apicl.WorkloadV1().Workload().List(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to list workloads (%s)\n", err)
+		return
+	}
+
+	// trigger create event for all workloads
+	for _, wr := range wrList {
+		err = w.workloadHandler.CreateWorkload(*wr)
+		if err != nil {
+			log.Errorf("Error creating workload %+v. Err: %v", wr, err)
+		}
+	}
+
+	// get all current host objects
+	hostList, err := apicl.ClusterV1().Host().List(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to list hosts (%s)\n", err)
+		return
+	}
+
+	// trigger create event for all hosts
+	for _, hst := range hostList {
+		err = w.hostHandler.CreateHost(*hst)
+		if err != nil {
+			log.Errorf("Error creating host %+v. Err: %v", hst, err)
+		}
+	}
+
+	// get all current snic objects
+	snicList, err := apicl.ClusterV1().SmartNIC().List(ctx, &opts)
+	if err != nil {
+		log.Errorf("Failed to list snic (%s)\n", err)
+		return
+	}
+
+	// trigger create event for all snic
+	for _, snic := range snicList {
+		err = w.snicHandler.CreateSmartNIC(*snic)
+		if err != nil {
+			log.Errorf("Error creating snic %+v. Err: %v", snic, err)
+		}
+	}
+
 	// wait for events
 	for {
 		select {
+		case evt, ok := <-tnWatcher.EventChan():
+			if !ok {
+				log.Error("Error receiving from apisrv watcher")
+				return
+			}
+			if !w.stopped() {
+				w.tenantWatcher <- *evt
+			} else {
+				log.Errorf("could not add {%v}", evt)
+			}
 		case evt, ok := <-netWatcher.EventChan():
 			if !ok {
 				log.Error("Error receiving from apisrv watcher")
@@ -194,13 +273,33 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 			} else {
 				log.Errorf("could not add {%v}", evt)
 			}
-		case evt, ok := <-tnWatcher.EventChan():
+		case evt, ok := <-w.wrWatcher.EventChan():
 			if !ok {
 				log.Error("Error receiving from apisrv watcher")
 				return
 			}
 			if !w.stopped() {
-				w.tenantWatcher <- *evt
+				w.handleWorkloadEvent(evt)
+			} else {
+				log.Errorf("could not add {%v}", evt)
+			}
+		case evt, ok := <-w.hostWatcher.EventChan():
+			if !ok {
+				log.Error("Error receiving from apisrv watcher")
+				return
+			}
+			if !w.stopped() {
+				w.handleHostEvent(evt)
+			} else {
+				log.Errorf("could not add {%v}", evt)
+			}
+		case evt, ok := <-w.snicWatcher.EventChan():
+			if !ok {
+				log.Error("Error receiving from apisrv watcher")
+				return
+			}
+			if !w.stopped() {
+				w.handleSnicEvent(evt)
 			} else {
 				log.Errorf("could not add {%v}", evt)
 			}

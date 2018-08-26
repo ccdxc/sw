@@ -33,10 +33,10 @@ var typesMapWorkload = map[string]*api.Struct{
 
 		CLITags: map[string]api.CLIInfo{
 			"api-version":    api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"endpoints":      api.CLIInfo{Path: "Status.Endpoints", Skip: false, Insert: "", Help: ""},
+			"endpoint":       api.CLIInfo{Path: "Status.Interfaces[].Endpoint", Skip: false, Insert: "", Help: ""},
 			"external-vlan":  api.CLIInfo{Path: "Spec.Interfaces[].ExternalVlan", Skip: false, Insert: "", Help: ""},
 			"host-name":      api.CLIInfo{Path: "Spec.HostName", Skip: false, Insert: "", Help: ""},
-			"ip-addrs":       api.CLIInfo{Path: "Status.Interfaces[].IpAddrs", Skip: false, Insert: "", Help: ""},
+			"ip-addresses":   api.CLIInfo{Path: "Status.Interfaces[].IpAddrs", Skip: false, Insert: "", Help: ""},
 			"kind":           api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"micro-seg-vlan": api.CLIInfo{Path: "Spec.Interfaces[].MicroSegVlan", Skip: false, Insert: "", Help: ""},
 		},
@@ -52,7 +52,9 @@ var typesMapWorkload = map[string]*api.Struct{
 	"workload.WorkloadIntfStatus": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadIntfStatus{}) },
 		Fields: map[string]api.Field{
-			"IpAddrs": api.Field{Name: "IpAddrs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addrs", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"IpAddrs": api.Field{Name: "IpAddrs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Endpoint": api.Field{Name: "Endpoint", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoint", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"workload.WorkloadSpec": &api.Struct{
@@ -74,8 +76,6 @@ var typesMapWorkload = map[string]*api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadStatus{}) },
 		Fields: map[string]api.Field{
 			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "workload.WorkloadIntfStatus"},
-
-			"Endpoints": api.Field{Name: "Endpoints", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoints", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"workload.WorkloadStatus.InterfacesEntry": &api.Struct{

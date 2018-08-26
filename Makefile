@@ -171,6 +171,7 @@ cluster:
 
 cluster-stop:
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -stop
+	tools/scripts/startSim.py -stop
 
 cluster-restart:
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}

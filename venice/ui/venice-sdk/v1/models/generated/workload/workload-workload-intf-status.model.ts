@@ -9,15 +9,20 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IWorkloadWorkloadIntfStatus {
-    'ip-addrs'?: Array<string>;
+    'ip-addresses'?: Array<string>;
+    'endpoint'?: string;
 }
 
 
 export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWorkloadIntfStatus {
-    'ip-addrs': Array<string> = null;
+    'ip-addresses': Array<string> = null;
+    'endpoint': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'ip-addrs': {
+        'ip-addresses': {
             type: 'Array<string>'
+        },
+        'endpoint': {
+            type: 'string'
         },
     }
 
@@ -40,7 +45,7 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     */
     constructor(values?: any) {
         super();
-        this['ip-addrs'] = new Array<string>();
+        this['ip-addresses'] = new Array<string>();
         this.setValues(values);
     }
 
@@ -50,7 +55,12 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     */
     setValues(values: any): void {
         if (values) {
-            this.fillModelArray<string>(this, 'ip-addrs', values['ip-addrs']);
+            this.fillModelArray<string>(this, 'ip-addresses', values['ip-addresses']);
+        }
+        if (values && values['endpoint'] != null) {
+            this['endpoint'] = values['endpoint'];
+        } else if (WorkloadWorkloadIntfStatus.hasDefaultValue('endpoint')) {
+            this['endpoint'] = WorkloadWorkloadIntfStatus.propInfo['endpoint'].default;
         }
     }
 
@@ -60,17 +70,19 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ip-addrs': new FormArray([]),
+                'ip-addresses': new FormArray([]),
+                'endpoint': new FormControl(this['endpoint']),
             });
             // generate FormArray control elements
-            this.fillFormArray<string>('ip-addrs', this['ip-addrs']);
+            this.fillFormArray<string>('ip-addresses', this['ip-addresses']);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'ip-addrs', this['ip-addrs']);
+            this.fillModelArray<string>(this, 'ip-addresses', this['ip-addresses']);
+            this._formGroup.controls['endpoint'].setValue(this['endpoint']);
         }
     }
 }

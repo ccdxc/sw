@@ -385,12 +385,15 @@ func CreateCluster(apicl apiclient.Services) (*cluster.Cluster, error) {
 	var createdCluster *cluster.Cluster
 	if !testutils.CheckEventually(func() (bool, interface{}) {
 		createdCluster, err = apicl.ClusterV1().Cluster().Create(context.Background(), clusterObj)
-		return err == nil, err
+		if (err == nil) || strings.Contains(err.Error(), "AlreadyExists") {
+			return true, nil
+		}
+		return false, err
 	}, "500ms", "90s") {
 		log.Errorf("Error creating cluster, Err: %v", err)
 		return nil, err
 	}
-	return createdCluster, err
+	return createdCluster, nil
 }
 
 // MustCreateCluster creates a cluster and panics if fails

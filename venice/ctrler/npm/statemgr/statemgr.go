@@ -10,8 +10,16 @@ import (
 
 // Statemgr is the object state manager
 type Statemgr struct {
-	memDB  *memdb.Memdb  // database of all objects
-	writer writer.Writer // writer to apiserver
+	memDB           *memdb.Memdb     // database of all objects
+	writer          writer.Writer    // writer to apiserver
+	workloadReactor *WorkloadReactor // workload event reactor
+	hostReactor     *HostReactor     // host event reactor
+	smartNicReactor *SmartNICReactor // smart nic event reactor
+}
+
+// ErrIsObjectNotFound returns true if the error is object not found
+func ErrIsObjectNotFound(err error) bool {
+	return (err == memdb.ErrObjectNotFound)
 }
 
 // FindObject looks up an object in local db
@@ -43,6 +51,21 @@ func (sm *Statemgr) StopWatchObjects(kind string, watchChan chan memdb.Event) er
 	return sm.memDB.StopWatchObjects(kind, watchChan)
 }
 
+// WorkloadReactor returns the workload event reactor
+func (sm *Statemgr) WorkloadReactor() WorkloadHandler {
+	return sm.workloadReactor
+}
+
+// HostReactor returns the host event reactor
+func (sm *Statemgr) HostReactor() HostHandler {
+	return sm.hostReactor
+}
+
+// SmartNICReactor returns the snic event reactor
+func (sm *Statemgr) SmartNICReactor() SmartNICHandler {
+	return sm.smartNicReactor
+}
+
 // NewStatemgr creates a new state manager object
 func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 	// create new statemgr instance
@@ -50,6 +73,10 @@ func NewStatemgr(wr writer.Writer) (*Statemgr, error) {
 		memDB:  memdb.NewMemdb(),
 		writer: wr,
 	}
+
+	statemgr.workloadReactor, _ = NewWorkloadReactor(statemgr)
+	statemgr.hostReactor, _ = NewHostReactor(statemgr)
+	statemgr.smartNicReactor, _ = NewSmartNICReactor(statemgr)
 
 	return statemgr, nil
 }

@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -19,17 +20,25 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	pencluster "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/protos"
+	"github.com/pensando/sw/nic/agent/nmd"
+	"github.com/pensando/sw/nic/agent/nmd/platform"
+	nmdproto "github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/cmd/cache"
+	cmdenv "github.com/pensando/sw/venice/cmd/env"
+	"github.com/pensando/sw/venice/cmd/grpc"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
+	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
@@ -63,6 +72,10 @@ const (
 	integTestAPIGWURL   = "localhost:9092"
 	integTestTPMURL     = "localhost:9093"
 	vchTestURL          = "localhost:19003"
+
+	smartNICServerURL = "localhost:9199"
+	resolverURLs      = ":" + globals.CMDResolverPort
+
 	// TS Controller
 	integTestTsmURL     = "localhost:9500"
 	integTestTsmRestURL = "localhost:9501"
@@ -74,10 +87,11 @@ const (
 )
 
 var (
+	evtType = append(evtsapi.GetEventTypes(), pencluster.GetEventTypes()...)
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice_integ_test"},
-		EvtTypes:      evtsapi.GetEventTypes(),
+		EvtTypes:      evtType,
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true})
 )
@@ -94,6 +108,7 @@ type veniceIntegSuite struct {
 	agents         []*netagent.Agent
 	tsAgents       []*troubleshooting.Agent
 	datapaths      []*datapath.Datapath
+	nmds           []*nmd.Agent
 	datapathKind   datapath.Kind
 	numAgents      int
 	restClient     apiclient.Services
@@ -106,6 +121,9 @@ type veniceIntegSuite struct {
 	tlsProviders   []*tlsproviders.CMDBasedProvider
 	eps            *evtsproxy.EventsProxy
 	epsDir         string
+	rpcServer      *rpckit.RPCServer
+	smartNICServer *smartnic.RPCServer
+	resolverServer *rpckit.RPCServer
 }
 
 // test args
@@ -119,6 +137,117 @@ func TestVeniceInteg(t *testing.T) {
 
 	var _ = Suite(sts)
 	TestingT(t)
+}
+
+func (it *veniceIntegSuite) APIClient() pencluster.ClusterV1Interface {
+	return it.apisrvClient.ClusterV1()
+}
+
+func (it *veniceIntegSuite) launchCmd(c *C) {
+
+	// create an RPC server for SmartNIC service
+	rpcServer, err := rpckit.NewRPCServer("smartNIC", smartNICServerURL, rpckit.WithTLSProvider(nil))
+	if err != nil {
+		fmt.Printf("Error creating RPC-server: %v", err)
+		c.Assert(err, IsNil)
+	}
+	it.rpcServer = rpcServer
+	cmdenv.UnauthRPCServer = rpcServer
+
+	// create and register the RPC handler for SmartNIC service
+	it.smartNICServer, err = smartnic.NewRPCServer(it,
+		smartnic.HealthWatchInterval,
+		smartnic.DeadInterval,
+		globals.NmdRESTPort,
+		cache.NewStatemgr())
+
+	if err != nil {
+		fmt.Printf("Error creating Smart NIC server: %v", err)
+		c.Assert(err, IsNil)
+	}
+	grpc.RegisterSmartNICRegistrationServer(rpcServer.GrpcServer, it.smartNICServer)
+	rpcServer.Start()
+
+	// Also create a mock resolver
+	rs := mock.NewResolverService()
+	resolverHandler := service.NewRPCHandler(rs)
+	resolverServer, err := rpckit.NewRPCServer(globals.Cmd, resolverURLs, rpckit.WithTracerEnabled(true))
+	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
+	resolverServer.Start()
+	it.resolverServer = resolverServer
+
+}
+
+func (it *veniceIntegSuite) startNmd(c *C) {
+	for i := 0; i < it.numAgents; i++ {
+
+		hostID := fmt.Sprintf("44:44:44:44:%02x:%02x", i/256, i%256)
+		restURL := "localhost:0"
+		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
+		hostName := fmt.Sprintf("host%d", i)
+
+		// create a platform agent
+		pa, err := platform.NewNaplesPlatformAgent()
+		if err != nil {
+			log.Fatalf("Error creating platform agent. Err: %v", err)
+		}
+		resolverCfg := &resolver.Config{
+			Name:    "TestNMD",
+			Servers: strings.Split(resolverURLs, ","),
+		}
+		resolverClient := resolver.New(resolverCfg)
+
+		// create the new NMD
+		nmd, err := nmd.NewAgent(pa, dbPath, hostName, hostID, smartNICServerURL,
+			"", restURL, "managed", globals.NicRegIntvl*time.Second,
+			globals.NicUpdIntvl*time.Second, resolverClient)
+		if err != nil {
+			c.Fatalf("Error creating NMD. Err: %v", err)
+		}
+		it.nmds = append(it.nmds, nmd)
+	}
+
+	// verify NIC is admitted with CMD
+	for i := 0; i < it.numAgents; i++ {
+		hostID := fmt.Sprintf("44:44:44:44:%02x:%02x", i/256, i%256)
+		AssertEventually(c, func() (bool, interface{}) {
+			nm := it.nmds[i].GetNMD()
+
+			// validate the mode is managed
+			cfg := nm.GetNaplesConfig()
+			log.Infof("NaplesConfig: %v", cfg)
+			if cfg.Spec.Mode != nmdproto.NaplesMode_MANAGED_MODE {
+				log.Errorf("Failed to switch to managed mode")
+				return false, nil
+			}
+
+			// Fetch smartnic object
+			nic, err := nm.GetSmartNIC()
+			if nic == nil || err != nil {
+				log.Errorf("NIC not found in nicDB, mac:%s", hostID)
+				return false, nil
+			}
+
+			// Verify NIC is admitted
+			if nic.Spec.Phase != pencluster.SmartNICSpec_ADMITTED.String() {
+				log.Errorf("NIC is not admitted")
+				return false, nil
+			}
+
+			// Verify Update NIC task is running
+			if nm.GetUpdStatus() == false {
+				log.Errorf("Update NIC is not in progress")
+				return false, nil
+			}
+
+			// Verify REST server is not up
+			if nm.GetRestServerStatus() == true {
+				log.Errorf("REST server is still up")
+				return false, nil
+			}
+			return true, nil
+		}, "Failed to verify mode is in Managed Mode", string("10ms"), string("60s"))
+	}
 }
 
 func (it *veniceIntegSuite) SetUpSuite(c *C) {
@@ -240,6 +369,9 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	c.Assert(err, IsNil)
 	it.tsCtrler = tsCtrler
 
+	// start CMD server
+	it.launchCmd(c)
+
 	log.Infof("Creating %d/%d agents", it.numAgents, *numAgents)
 
 	// create agents
@@ -261,7 +393,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.tmpFiles = append(it.tmpFiles, n)
 
 		// Create netagent
-		agent, aerr := netagent.NewAgent(dp, n, fmt.Sprintf("dummy-uuid-%d", i), globals.Npm, rc, state.AgentMode_MANAGED)
+		agent, aerr := netagent.NewAgent(dp, n, fmt.Sprintf("uuid-44:44:44:44:00:%02d", i), globals.Npm, rc, state.AgentMode_MANAGED)
 		c.Assert(aerr, IsNil)
 
 		tsdp, aerr := tshal.NewHalDatapath("mock")
@@ -310,6 +442,25 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	it.apisrvClient = apicl
 	time.Sleep(time.Millisecond * 100)
 
+	// Create test cluster object
+	clRef := &pencluster.Cluster{
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+		Spec: pencluster.ClusterSpec{
+			AutoAdmitNICs: true,
+		},
+	}
+	_, err = it.apisrvClient.ClusterV1().Cluster().Create(context.Background(), clRef)
+	if err != nil {
+		fmt.Printf("Error creating Cluster object, %v", err)
+		os.Exit(-1)
+	}
+
+	// start NMD
+	it.startNmd(c)
+	time.Sleep(time.Millisecond * 100)
+
 	// create tpm
 	//rs := resolver.New(&resolver.Config{Name: globals.Tpm, Servers: []string{resolverServer.GetListenURL()}})
 	pm, err := tpm.NewPolicyManager(integTestTPMURL, rc)
@@ -342,8 +493,11 @@ func (it *veniceIntegSuite) TearDownTest(c *C) {
 
 func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	// stop the agents
-	for _, ag := range it.agents {
+	for i, ag := range it.agents {
 		ag.Stop()
+
+		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
+		os.Remove(dbPath)
 	}
 	for _, ag := range it.tsAgents {
 		ag.Stop()

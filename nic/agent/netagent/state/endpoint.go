@@ -307,6 +307,30 @@ func (na *Nagent) DeleteEndpoint(tn, namespace, name string) error {
 	return err
 }
 
+// FindEndpoint finds an endpoint by name
+func (na *Nagent) FindEndpoint(tn, namespace, name string) (*netproto.Endpoint, error) {
+	ep := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tn,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+
+	// check if we have the endpoint
+	key := na.Solver.ObjectKey(ep.ObjectMeta, ep.TypeMeta)
+	na.Lock()
+	eps, ok := na.EndpointDB[key]
+	na.Unlock()
+	if !ok {
+		log.Errorf("Endpoint %#v was not found", key)
+		return nil, ErrEndpointNotFound
+	}
+
+	return eps, nil
+}
+
 // ListEndpoint returns the list of endpoints
 func (na *Nagent) ListEndpoint() []*netproto.Endpoint {
 	var epList []*netproto.Endpoint

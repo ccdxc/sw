@@ -381,7 +381,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	if oper == apiserver.CreateOper || oper == apiserver.UpdateOper {
 		errs := m.requestType.Validate(i, singletonAPISrv.version, replaceStatus)
 		if errs != nil {
-			l.ErrorLog("msg", "request validation failed", "error", err, "replacestatus", replaceStatus)
+			l.Errorf("msg: request validation failed. Error: %v, replacestatus: %v", errs, replaceStatus)
 			str := []string{}
 			for _, err = range errs {
 				str = append(str, err.Error())

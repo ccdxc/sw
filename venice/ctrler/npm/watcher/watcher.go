@@ -29,17 +29,23 @@ type syncFlag struct {
 
 // Watcher watches api server for changes
 type Watcher struct {
-	waitGrp         sync.WaitGroup          // wait group to wait on all go routines to exit
-	statemgr        *statemgr.Statemgr      // reference to state manager
-	netWatcher      chan kvstore.WatchEvent // network object watcher
-	vmmEpWatcher    chan kvstore.WatchEvent // vmm endpoint watcher
-	sgWatcher       chan kvstore.WatchEvent // sg object watcher
-	sgPolicyWatcher chan kvstore.WatchEvent // sg object watcher
-	tenantWatcher   chan kvstore.WatchEvent // tenant object watcher
-	watchCtx        context.Context         // ctx for watchers
-	watchCancel     context.CancelFunc      // cancel for watchers
-	stopFlag        syncFlag                // boolean flag to exit the API watchers
-	debugStats      *debug.Stats            // debug Stats
+	waitGrp         sync.WaitGroup           // wait group to wait on all go routines to exit
+	statemgr        *statemgr.Statemgr       // reference to state manager
+	netWatcher      chan kvstore.WatchEvent  // network object watcher
+	vmmEpWatcher    chan kvstore.WatchEvent  // vmm endpoint watcher
+	sgWatcher       chan kvstore.WatchEvent  // sg object watcher
+	sgPolicyWatcher chan kvstore.WatchEvent  // sg object watcher
+	tenantWatcher   chan kvstore.WatchEvent  // tenant object watcher
+	hostWatcher     kvstore.Watcher          // host watcher
+	snicWatcher     kvstore.Watcher          // smart nic watcher
+	wrWatcher       kvstore.Watcher          // workload watcher
+	workloadHandler statemgr.WorkloadHandler // workload event handler
+	hostHandler     statemgr.HostHandler     // host event handler
+	snicHandler     statemgr.SmartNICHandler // smart nic event handler
+	watchCtx        context.Context          // ctx for watchers
+	watchCancel     context.CancelFunc       // cancel for watchers
+	stopFlag        syncFlag                 // boolean flag to exit the API watchers
+	debugStats      *debug.Stats             // debug Stats
 }
 
 // handleNetworkEvent handles network event
@@ -171,6 +177,93 @@ func (w *Watcher) handleTenantEvent(et kvstore.WatchEventType, tn *cluster.Tenan
 			return
 		}
 
+	}
+}
+
+// handleWorkloadEvent handles workload events from watcher
+func (w *Watcher) handleWorkloadEvent(evt *kvstore.WatchEvent) {
+	switch tp := evt.Object.(type) {
+	case *workload.Workload:
+		wrload := evt.Object.(*workload.Workload)
+
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Updated:
+			fallthrough
+		case kvstore.Created:
+			// Call the event reactor
+			err := w.workloadHandler.CreateWorkload(*wrload)
+			if err != nil {
+				log.Errorf("Error creating workload %+v. Err: %v", wrload, err)
+			}
+		case kvstore.Deleted:
+			// Call the event reactor
+			err := w.workloadHandler.DeleteWorkload(*wrload)
+			if err != nil {
+				log.Errorf("Error deleting workload %+v. Err: %v", wrload, err)
+			}
+		}
+	default:
+		log.Fatalf("API watcher Found object of invalid type: %v on workload watch channel", tp)
+		return
+	}
+}
+
+// handleHostEvent handles host events from watcher
+func (w *Watcher) handleHostEvent(evt *kvstore.WatchEvent) {
+	switch tp := evt.Object.(type) {
+	case *cluster.Host:
+		host := evt.Object.(*cluster.Host)
+
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Updated:
+			fallthrough
+		case kvstore.Created:
+			// Call the event reactor
+			err := w.hostHandler.CreateHost(*host)
+			if err != nil {
+				log.Errorf("Error creating host %+v. Err: %v", host, err)
+			}
+		case kvstore.Deleted:
+			// Call the event reactor
+			err := w.hostHandler.DeleteHost(*host)
+			if err != nil {
+				log.Errorf("Error deleting host %+v. Err: %v", host, err)
+			}
+		}
+	default:
+		log.Fatalf("API watcher Found object of invalid type: %v on host watch channel", tp)
+		return
+	}
+}
+
+// handleSnicEvent handles workload events from watcher
+func (w *Watcher) handleSnicEvent(evt *kvstore.WatchEvent) {
+	switch tp := evt.Object.(type) {
+	case *cluster.SmartNIC:
+		snic := evt.Object.(*cluster.SmartNIC)
+
+		// handle based on event type
+		switch evt.Type {
+		case kvstore.Updated:
+			fallthrough
+		case kvstore.Created:
+			// Call the event reactor
+			err := w.snicHandler.CreateSmartNIC(*snic)
+			if err != nil {
+				log.Errorf("Error creating smart nic %+v. Err: %v", snic, err)
+			}
+		case kvstore.Deleted:
+			// Call the event reactor
+			err := w.snicHandler.DeleteSmartNIC(*snic)
+			if err != nil {
+				log.Errorf("Error deleting smart nic %+v. Err: %v", snic, err)
+			}
+		}
+	default:
+		log.Fatalf("API watcher Found object of invalid type: %v on smart nic watch channel", tp)
+		return
 	}
 }
 
@@ -397,24 +490,25 @@ func (w *Watcher) Stop() {
 }
 
 // NewWatcher returns a new watcher object
-func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL string, resolver resolver.Interface, debugStats *debug.Stats) (*Watcher, error) {
+func NewWatcher(sm *statemgr.Statemgr, apisrvURL, vmmURL string, resolver resolver.Interface, debugStats *debug.Stats) (*Watcher, error) {
 	// create context and cancel
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	// create a watcher
 	watcher := &Watcher{
-		statemgr:        statemgr,
+		statemgr:        sm,
 		netWatcher:      make(chan kvstore.WatchEvent, watcherQueueLen),
 		vmmEpWatcher:    make(chan kvstore.WatchEvent, watcherQueueLen),
 		sgWatcher:       make(chan kvstore.WatchEvent, watcherQueueLen),
 		sgPolicyWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),
 		tenantWatcher:   make(chan kvstore.WatchEvent, watcherQueueLen),
+		workloadHandler: sm.WorkloadReactor(),
+		hostHandler:     sm.HostReactor(),
+		snicHandler:     sm.SmartNICReactor(),
 		watchCtx:        watchCtx,
 		watchCancel:     watchCancel,
 		debugStats:      debugStats,
-		stopFlag: syncFlag{
-			flag: false,
-		},
+		stopFlag:        syncFlag{flag: false},
 	}
 
 	// start a go routine to handle messages coming on watcher channel
@@ -703,5 +797,167 @@ func (w *Watcher) DeleteTenant(tenant string) error {
 	// inject the object into the tenant watcher
 	w.tenantWatcher <- evt
 
+	return nil
+}
+
+// CreateWorkload creates a workload
+func (w *Watcher) CreateWorkload(tenant, namespace, name, host, macAddr string, usegVlan, extVlan uint32) error {
+	// build workload object
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Tenant:    tenant,
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: host,
+			Interfaces: map[string]workload.WorkloadIntfSpec{
+				macAddr: workload.WorkloadIntfSpec{
+					MicroSegVlan: usegVlan,
+					ExternalVlan: extVlan,
+				},
+			},
+		},
+	}
+
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &wr,
+	}
+
+	// handle workload event
+	w.handleWorkloadEvent(&evt)
+
+	return nil
+}
+
+// DeleteWorkload deletes a workload
+func (w *Watcher) DeleteWorkload(tenant, namespace, name, host, macAddr string, usegVlan, extVlan uint32) error {
+	// create a dummy workload object
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Tenant:    tenant,
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: host,
+			Interfaces: map[string]workload.WorkloadIntfSpec{
+				macAddr: workload.WorkloadIntfSpec{
+					MicroSegVlan: usegVlan,
+					ExternalVlan: extVlan,
+				},
+			},
+		},
+	}
+
+	// create the watch event
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Deleted,
+		Object: &wr,
+	}
+	// ihandle workload event
+	w.handleWorkloadEvent(&evt)
+
+	return nil
+}
+
+// CreateHost creates a host and an associated smart nic
+func (w *Watcher) CreateHost(name, macAddr string) error {
+	// smartNic params
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name + "-NIC",
+			Namespace: "",
+			Tenant:    "default",
+		},
+		Spec: cluster.SmartNICSpec{
+			Phase: "ADMITTED",
+			Ports: []cluster.PortSpec{
+				{
+					MacAddress: macAddr,
+				},
+			},
+		},
+		Status: cluster.SmartNICStatus{
+			PrimaryMacAddress: macAddr,
+		},
+	}
+
+	snicEvt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &snic,
+	}
+
+	// handle snic event
+	w.handleSnicEvent(&snicEvt)
+
+	// build host object
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
+		Spec: cluster.HostSpec{
+			Interfaces: map[string]cluster.HostIntfSpec{
+				macAddr: cluster.HostIntfSpec{
+					MacAddrs: []string{macAddr},
+				},
+			},
+		},
+		Status: cluster.HostStatus{
+			Type: "HYPERVISOR",
+		},
+	}
+
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &host,
+	}
+
+	// handle host event
+	w.handleHostEvent(&evt)
+
+	return nil
+}
+
+// DeleteHost deletes a workload
+func (w *Watcher) DeleteHost(name string) error {
+	// create a dummy tenant object
+	wr := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
+	}
+
+	// create the watch event
+	evt := kvstore.WatchEvent{
+		Type:   kvstore.Deleted,
+		Object: &wr,
+	}
+	// ihandle host event
+	w.handleHostEvent(&evt)
+
+	// smartNic object
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name + "-NIC",
+			Namespace: "",
+			Tenant:    "default",
+		},
+	}
+
+	snicEvt := kvstore.WatchEvent{
+		Type:   kvstore.Created,
+		Object: &snic,
+	}
+
+	// handle snic event
+	w.handleSnicEvent(&snicEvt)
 	return nil
 }

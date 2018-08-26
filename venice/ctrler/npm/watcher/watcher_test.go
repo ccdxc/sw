@@ -448,3 +448,55 @@ func TestRestartWatchers(t *testing.T) {
 	w.Stop()
 
 }
+
+func TestWorkloadHandler(t *testing.T) {
+	// create network state manager
+	stateMgr, err := statemgr.NewStatemgr(&dummyWriter{})
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create watcher
+	watcher, err := NewWatcher(stateMgr, "", "", nil, debug.New(t.Name()).Build())
+	if err != nil {
+		t.Fatalf("Error creating api server watcher. Err: %v", err)
+		return
+	}
+
+	// create a host
+	err = watcher.CreateHost("testHost", "00:01:02:03:04:05")
+	AssertOk(t, err, "Error creating host")
+
+	// create a workload
+	err = watcher.CreateWorkload("testTenant", "default", "testWorkload", "testHost", "00:01:01:01:01:01", 100, 1)
+	AssertOk(t, err, "Error creating workload")
+
+	// verify endpoint got created
+	AssertEventually(t, func() (bool, interface{}) {
+		_, perr := stateMgr.FindObject("Endpoint", "testTenant", "testWorkload-00:01:01:01:01:01")
+		return (perr == nil), nil
+	}, "Endpoint not found in statemgr")
+	ep, err := stateMgr.FindObject("Endpoint", "testTenant", "testWorkload-00:01:01:01:01:01")
+	AssertOk(t, err, "endpoint not found")
+	Assert(t, (ep.GetObjectKind() == "Endpoint"), "Incorrect object kind", ep)
+	Assert(t, (ep.GetObjectMeta().Name == "testWorkload-00:01:01:01:01:01"), "Incorrect object params", ep.GetObjectMeta())
+
+	// delete the workload
+	err = watcher.DeleteWorkload("testTenant", "default", "testWorkload", "testHost", "00:01:01:01:01:01", 100, 1)
+	AssertOk(t, err, "Error deleting workload")
+
+	// delete host
+	err = watcher.DeleteHost("testHost")
+	AssertOk(t, err, "Error deleting host")
+
+	// verify endpoint got deleted
+	AssertEventually(t, func() (bool, interface{}) {
+		_, perr := stateMgr.FindObject("Endpoint", "testTenant", "testEndpoint")
+		return (perr != nil), nil
+	}, "Endpoint still found in statemgr")
+
+	// close the channels
+	watcher.Stop()
+	time.Sleep(time.Millisecond * 10)
+}

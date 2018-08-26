@@ -124,7 +124,9 @@ class Node:
 
 # Create the network by posting a message to apigw
 def createNetwork(nodeAddr, name, subnet, gw, vlanId):
-    postUrl = 'http://' + nodeAddr + ':' + APIGwRESTPort + '/v1/networks/default/networks'
+    postUrl = 'http://' + nodeAddr + ':' + APIGwRESTPort + '/configs/network/v1/tenant/default/networks'
+
+    print "Posting to URL: " + postUrl
 
     # network json parameters
     jdata = json.dumps({
@@ -266,7 +268,7 @@ try:
     # start vcsim
     vcsim = Node("pen-master", args.user, args.password, args.simbin)
     vcsim.startVcsim(",".join(hsims), ",".join(snics))
-    time.sleep(5)
+    time.sleep(25)
 
     print "################### Started Simulation agents #####################"
 
