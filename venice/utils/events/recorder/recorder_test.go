@@ -206,7 +206,8 @@ func TestEventRecorderInstantiation(t *testing.T) {
 	Assert(t, err != nil, "expected failure, event recorder instantiation succeeded")
 
 	// skip evts proxy
-	_, err = NewRecorder(&Config{Source: &evtsapi.EventSource{}, EvtTypes: []string{"DUMMY"}, EvtsProxyURL: testServerURL, SkipEvtsProxy: true})
+	_, err = NewRecorder(&Config{Source: &evtsapi.EventSource{}, EvtTypes: []string{"DUMMY"},
+		EvtsProxyURL: testServerURL, BackupDir: "/tmp", SkipEvtsProxy: true})
 	AssertOk(t, err, "expected success, event recorder instantiation failed")
 }
 
