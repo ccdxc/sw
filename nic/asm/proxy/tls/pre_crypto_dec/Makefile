@@ -31,7 +31,6 @@ SRC_FILES := \
     $(SRC_DIR)/tls-dec-queue-brq.s \
     $(SRC_DIR)/tls-dec-write-arq.s \
     $(SRC_DIR)/tls-dec-queue-brq-mpp.s
-#    $(SRC_DIR)/tls-dec-pre-crypto-stats.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

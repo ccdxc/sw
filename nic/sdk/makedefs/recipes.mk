@@ -37,6 +37,12 @@ $${${1}_MKTARGET}: $${${1}_OBJS} $${${1}_DEPS}
 	${AT}touch $$@
 endef
 
+define ADD_RECIPE_FOR_ASMBIN
+$${${1}_MKTARGET}: $${${1}_OBJS} $${${1}_DEPS}
+	${NAT}${AT}echo ${COMMON_ASMBIN_SHORT_NAME} $$(call CANPATH,$$@)
+	${AT}touch $$@
+endef
+
 define ADD_RECIPE
     $(call ADD_RECIPE_FOR_${${1}_RECIPE_TYPE},${1})
 endef

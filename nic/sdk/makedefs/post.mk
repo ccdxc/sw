@@ -6,6 +6,9 @@ endif
 ifeq "${MODULE_SRCS}" ""
     ifeq "$(suffix ${MODULE_TARGET})" ".p4bin"
         MODULE_SRCS = $(strip $(notdir $(wildcard ${MODULE_DIR}/*.p4)))
+    else ifeq "$(suffix ${MODULE_TARGET})" ".asmbin"
+        MODULE_SRCS = $(strip $(notdir $(wildcard ${MODULE_DIR}/*.asm)))
+        MODULE_SRCS += $(strip $(notdir $(wildcard ${MODULE_DIR}/*.s)))
     else
         MODULE_SRCS = $(strip $(notdir $(wildcard ${MODULE_DIR}/*.cc)))
     endif

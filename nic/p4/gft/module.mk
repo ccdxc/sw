@@ -8,6 +8,6 @@ MODULE_NCC_OPTS = --asm-out --gen-dir ${BLD_GEN_DIR} \
                   --phv-flits 12 --i2e-user --single-pipe \
                   --pipeline ${PIPELINE} \
                   --fe-flags="-I${TOPDIR}"
-MODULE_DEPS     = $(shell find ${MODULE_DIR}/ -name '*.p4' -o -name '*.h') \
+MODULE_DEPS     = $(shell find ${MODULE_DIR} -name '*.p4' -o -name '*.h') \
                   $(shell find ${MODULE_DIR}/../include -name '*')
 include ${MAKEDEFS}/post.mk

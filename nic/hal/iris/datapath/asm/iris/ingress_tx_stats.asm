@@ -44,7 +44,7 @@ ingress_tx_stats_overflow:
  * total per lif index = 8B
  */
 
-#include "tcp_options_fixup.asm"
+#include "tcp_options_fixup.h"
 
 /*****************************************************************************/
 /* error function                                                            */

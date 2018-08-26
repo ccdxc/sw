@@ -22,7 +22,7 @@ COMMON_AR_FLAGS         := rcs
 COMMON_ARLIB_FLAGS      := 
 COMMON_SOLIB_FLAGS      := -shared
 
-COMMON_DEPS             := $(wildcard ${MAKEDEFS}/*) ${TOP_MAKEFILE}
+COMMON_DEPS             := #$(wildcard ${MAKEDEFS}/*) ${TOP_MAKEFILE}
 COMMON_INCS__           := ${TOPDIR} ${SDKDIR}
 COMMON_INCS             := $(addprefix -I,${COMMON_INCS__})
 
@@ -45,7 +45,14 @@ COMMON_BIN_SHORT_NAME       := "[  BIN  ]"
 COMMON_SYMLINK_SHORT_NAME   := "[SYMLINK]"
 COMMON_NCC_SHORT_NAME       := "[  NCC  ]"
 COMMON_P4BIN_SHORT_NAME     := "[ P4BIN ]"
-COMMON_ASMBIN_SHORT_NAME    := "[  ASM  ]"
+COMMON_CAPAS_SHORT_NAME     := "[ CAPAS ]"
+COMMON_ASMBIN_SHORT_NAME    := "[ ASMBIN]"
 
 COMMON_CMD_NCC              := ${TOPDIR}/nic/tools/ncc/capri-ncc.py
-COMMON_NCC_OPTS             := 
+COMMON_NCC_OPTS             :=
+
+COMMON_CMD_CAPAS            := ${TOPDIR}/nic/asic/capri/model/capsim-gen/bin/capas
+COMMON_CAPAS_OPTS           := -t
+ifneq "${GCOV}" ""
+    COMMON_CAPAS_OPTS       += -C
+endif

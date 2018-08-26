@@ -10,7 +10,7 @@ include $(TOPDIR)/make/Make.inc
 PROJ = ipfix
 OBJ_DIR = ../../obj/p4plus_bin
 ASM_HDR_DIR = ../../gen/
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(TOPDIR)/include -I$(SWDIR)
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I$(TOPDIR)/include -I$(SWDIR) -I../../build/iris/gen/datapath/
 SRC_DIR = .
 
 

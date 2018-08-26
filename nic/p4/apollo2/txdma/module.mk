@@ -6,7 +6,7 @@ MODULE_PIPELINE = apollo2
 MODULE_NCC_OPTS = --asm-out --p4-plus --no-ohi --two-byte-profile \
                   --pd-gen --p4-plus-module txdma \
                   --gen-dir ${BLD_GEN_DIR} \
-                  --cfg-dir ${BLD_OBJ_DIR}/pgm_bin \
+                  --cfg-dir ${BLD_PGMBIN_DIR} \
                   --fe-flags="-I${TOPDIR}"
 MODULE_DEPS     = $(shell find ${MODULE_DIR}/ -name '*' -type f) \
                   $(shell find ${TOPDIR}/nic/p4/include -name '*')

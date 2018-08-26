@@ -441,7 +441,7 @@ nop:
   nop.e
   nop
 
-#include "p4plus_to_p4_1.asm"
+#include "p4plus_to_p4_1.h"
 
 /*****************************************************************************/
 /* error function                                                            */

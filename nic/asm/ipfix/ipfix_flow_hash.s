@@ -1,6 +1,6 @@
 #include "ipfix/asm_out/INGRESS_p.h"
 #include "ipfix/asm_out/ingress.h"
-#include "nic/build/iris/gen/datapath/p4/asm_out/ingress.h"
+#include "p4/asm_out/ingress.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
 struct ipfix_flow_hash_k k;

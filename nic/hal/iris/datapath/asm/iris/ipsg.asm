@@ -37,8 +37,8 @@ f_normalization:
   nop.e
   nop
 
-#include "icmp_normalization.asm"
-#include "tcp_stateless_normalization.asm"
+#include "icmp_normalization.h"
+#include "tcp_stateless_normalization.h"
 
 /*****************************************************************************/
 /* error function                                                            */

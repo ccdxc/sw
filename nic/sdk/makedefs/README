@@ -1,0 +1,20 @@
+Introduction:
+========================
+TBD
+
+Pre-set Variables available in module.mk:
+===========================================
+TOPDIR      : Points to the top-level 'sw' directory
+MODULE_DIR  : Directory of the 'module.mk'. 
+              NOTE: '.' always points to 'sw/nic' directory
+
+Variables available in module.mk:
+====================================
+
+MODULE_MK:
+----------
+
+MODULES_PREREQS:
+----------------
+This specifies the list of module.mk targets that need to be build as a pre-requisite to building this target. The main difference between this and MODULE_DEPS is that, MODULE_DEPS are regular files. The infra does not evaluate them in an special way, whereas MODULE_PREREQS are the 'MODULE_TARGET' values used in other module.mk files.
+

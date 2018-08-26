@@ -76,7 +76,8 @@ targets:
   venice: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make checks && make unit-test-cover; ret=$? ; make sanity_logs ; exit $ret" ]
   # iris-c gtests
   filter/gtest:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make gtests-iris-c && ./run.py --filter_gtest --classic && ./run.py --filter_gtest ; ret=$? ; make sanity_logs ; exit $ret" ]
-  newmake: ["sh", "-c", "cd /sw && make pull-assets && cd nic/sdk && make -j -f Makefile.nrmake && make ARCH=aarch64 -j -f Makefile.nrmake" ]
+  sdk/newmake: ["sh", "-c", "cd /sw && make pull-assets && cd nic/sdk && make -j -f Makefile.nrmake && make ARCH=aarch64 -j -f Makefile.nrmake" ]
+  nic/newmake: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make PIPELINE=iris -j8 -f Makefile.nrmake && make PIPELINE=gft -j8 -f Makefile.nrmake && make PIPELINE=apollo2 -j8 -f Makefile.nrmake" ]
 
 cache:
   name: "sw"
