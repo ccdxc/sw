@@ -268,8 +268,10 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
         ret = alg_sunrpc_exec(ctx, sfw_info, l4_sess);
     }
 
-    if (ret != HAL_RET_OK)
+    if (ret != HAL_RET_OK) {
+        ctx.set_feature_status(ret);
         return fte::PIPELINE_END;
+    }
 
     return fte::PIPELINE_CONTINUE;
 }

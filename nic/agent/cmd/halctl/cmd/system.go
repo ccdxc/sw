@@ -134,6 +134,12 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	for _, entry := range resp.GetStats().GetTableStats().TableStats {
 		systemTableStatsShowEntry(entry)
 	}
+
+	fmt.Println("FTE Stats:")
+	fteStatsShow(resp.GetStats())
+
+	fmt.Println("Session Summary Stats:")
+	sessionSummaryStatsShow(resp.GetStats())
 }
 
 func systemDropStatsShowHeader() {
@@ -283,4 +289,61 @@ func systemTableStatsShowEntry(entry *halproto.TableStatsEntry) {
 		entry.GetNumInsertErrors(),
 		entry.GetNumDeletes(),
 		entry.GetNumDeleteErrors())
+}
+
+func fteStatsShow(stats *halproto.Stats) {
+	var ftestats *halproto.FTEStats
+
+	ftestats = stats.GetFteStats()
+
+	fmt.Printf("\n%s%-15d\n", "Connection per-second		:", ftestats.GetConnPerSecond())
+	fmt.Printf("%s%-15d\n", "Flow-miss Packets		:", ftestats.GetFlowMissPkts())
+	fmt.Printf("%s%-15d\n", "Redir Packets			:", ftestats.GetRedirPkts())
+	fmt.Printf("%s%-15d\n", "Cflow Packets			:", ftestats.GetCflowPkts())
+	fmt.Printf("%s%-15d\n", "TCP Close Packets		:", ftestats.GetTcpClosePkts())
+	fmt.Printf("%s%-15d\n", "TLS Proxy Packets		:", ftestats.GetTlsProxyPkts())
+	fmt.Printf("%s%-15d\n", "Softq Reqs			:", ftestats.GetSoftqReqs())
+	fmt.Printf("%s%-15d\n", "Queued Tx Packets		:", ftestats.GetQueuedTxPkts())
+	fmt.Printf("\n%s\n", "FTE Error Count:")
+	hdrLine := strings.Repeat("-", 56)
+	fmt.Println(hdrLine)
+	fmt.Printf("%25s%25s\n", "Error Type", "Drop Count")
+	fmt.Println(hdrLine)
+	for _, fteerr := range ftestats.FteErrors {
+		if fteerr.GetCount() != 0 {
+			fmt.Printf("%-25s%-25d\n", fteerr.GetFteError(), fteerr.GetCount())
+		}
+	}
+
+	fmt.Printf("%s\n", "FTE Feature Stats:")
+	hdrLines := strings.Repeat("-", 100)
+	fmt.Println(hdrLines)
+	fmt.Printf("%25s%25s%25s%25s\n", "Feature Name", "Drop Count", "Drop Reason", "Drops per-reason")
+	fmt.Println(hdrLines)
+	for _, featurestats := range ftestats.FeatureStats {
+		fmt.Printf("%25s%25d", featurestats.GetFeatureName(), featurestats.GetDropPkts())
+		for _, fteerr := range featurestats.DropReason {
+			if fteerr.GetCount() != 0 {
+				fmt.Printf("%25s%25d\n", fteerr.GetFteError(), fteerr.GetCount())
+			}
+		}
+		fmt.Printf("\n")
+	}
+	fmt.Printf("\n")
+}
+
+func sessionSummaryStatsShow(stats *halproto.Stats) {
+	var sessstats *halproto.SessionSummaryStats
+
+	sessstats = stats.GetSessionStats()
+
+	hdrLine := strings.Repeat("-", 56)
+	fmt.Println(hdrLine)
+	fmt.Printf("%25s%25s\n", "Session Type", "Count")
+	fmt.Println(hdrLine)
+	fmt.Printf("%25s%25d\n", "L2", sessstats.GetL2Sessions())
+	fmt.Printf("%25s%25d\n", "TCP", sessstats.GetTcpSessions())
+	fmt.Printf("%25s%25d\n", "UDP", sessstats.GetUdpSessions())
+	fmt.Printf("%25s%25d\n", "ICMP", sessstats.GetIcmpSessions())
+	fmt.Printf("%25s%25d\n", "DROP", sessstats.GetDropSessions())
 }

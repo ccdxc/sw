@@ -48,7 +48,7 @@ hal_ret_t
 insert_expected_flow(expected_flow_t *entry)
 {
     HAL_TRACE_DEBUG("ALG::insert_expected_flow key={}", entry->key);
-    ref_init(&entry->ref_count, NULL);
+    ref_init(&entry->ref_count, [] (const acl::ref_t * ref_count) {});
     entry->deleting = false;
     entry->expected_flow_ht_ctxt.reset();
     return hal_sdk_ret_to_hal_ret(expected_flow_ht()->

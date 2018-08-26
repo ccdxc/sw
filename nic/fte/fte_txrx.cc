@@ -39,9 +39,10 @@ public:
     hal_ret_t softq_enqueue(softq_fn_t fn, void *data);
     uint8_t get_id() const {return id_;};
     ipc_logger *get_ipc_logger() const { return logger_; }
-    void incr_feature_drop_stats(uint16_t feature_id);
-    fte_stats_t get_stats() { return stats_; }
-
+    void incr_feature_stats (uint16_t feature_id, hal_ret_t rc, bool set_rc);
+    void incr_fte_error (hal_ret_t rc);
+    fte_stats_t get_stats(bool clear_on_read);
+    
 private:
     uint8_t                 id_;
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
@@ -62,7 +63,6 @@ private:
     void ctx_mem_init();
     void update_rx_stats(cpu_rxhdr_t *rxhdr, size_t pkt_len);
     void update_tx_stats(size_t pkt_len);
-    void compute_cps();
 };
 
 //------------------------------------------------------------------------------
@@ -74,13 +74,6 @@ static inst_t *g_inst_list[hal::MAX_FTE_THREADS];
 // FTE instance of current thread
 //------------------------------------------------------------------------------
 thread_local inst_t *t_inst;
-
-//-----------------------------------------------------------------------------
-// FTE thread local variables
-// ----------------------------------------------------------------------------
-thread_local timespec_t t_old_ts;
-thread_local timespec_t t_cur_ts;
-thread_local uint64_t t_rx_pkts;
 
 //------------------------------------------------------------------------------
 // FTE main pkt loop
@@ -257,7 +250,7 @@ inst_t::inst_t(uint8_t fte_id) :
 {
     hal_ret_t                 ret;
     hal::pd::pd_func_args_t   pd_func_args = {0};
-    uint16_t                  num_features;
+    uint16_t num_features;
 
     hal::pd::pd_cpupkt_register_rx_queue_args_t args;
     args.ctxt = arm_ctx_;
@@ -281,10 +274,8 @@ inst_t::inst_t(uint8_t fte_id) :
     // ret = cpupkt_register_tx_queue(arm_ctx_, types::WRING_TYPE_ASQ, fte_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 
+    feature_state_size(&num_features);
     bzero((void *)&stats_, sizeof(fte_stats_t));
-    feature_state_size_ = feature_state_size(&num_features);
-    stats_.feature_drop_pkts = (uint64_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE,
-                                                          feature_state_size_);
 }
 
 //------------------------------------------------------------------------------
@@ -417,7 +408,7 @@ void inst_t::process_softq()
     if (softq_->dequeue(&op, &data)) {
         //Increment stats
         stats_.softq_req++;
-        compute_cps();
+        stats_.cps++; 
 
         HAL_TRACE_DEBUG("fte: softq dequeue fn={:p} data={:p} softq_req={}", op, data, stats_.softq_req);
         (*(softq_fn_t)op)(data);
@@ -427,51 +418,45 @@ void inst_t::process_softq()
 //----------------------------------------------------------------------------
 // Increment feature drop counters
 //----------------------------------------------------------------------------
-void incr_inst_feature_drop(uint16_t feature_id)
+void incr_inst_feature_stats(uint16_t feature_id, hal_ret_t rc, bool set_rc)
 {
-    if (fte_disabled_) {
+    if (fte_disabled_ || t_inst == NULL) {
         return;
     }
 
-    HAL_ASSERT(t_inst != NULL);
-    t_inst->incr_feature_drop_stats(feature_id);
+    t_inst->incr_feature_stats(feature_id, rc, set_rc);
 }
 
 //----------------------------------------------------------------------------
 // Increment feature drop counters
 //----------------------------------------------------------------------------
-void inst_t::incr_feature_drop_stats(uint16_t feature_id)
+void inst_t::incr_feature_stats(uint16_t feature_id, hal_ret_t rc, bool set_rc)
 {
-    if (feature_id <= feature_state_size_)
-        stats_.feature_drop_pkts[feature_id]++;
+    if (feature_id <= num_features_) 
+        stats_.feature_stats[feature_id].drop_pkts++;
+
+    if (set_rc)
+        stats_.feature_stats[feature_id].drop_reason[rc]++;
 }
 
-//-----------------------------------------------------------------------------
-// Compute Connections per second
-//-----------------------------------------------------------------------------
-void inst_t::compute_cps(void)
+//----------------------------------------------------------------------------
+// Increment fte error stats
+//----------------------------------------------------------------------------
+void incr_inst_fte_error(hal_ret_t rc)
 {
-    sdk::timespec_t temp_ts;
-    uint64_t         time_diff;
-
-    // Get the current timestamp
-    clock_gettime(CLOCK_MONOTONIC, &t_cur_ts);
-
-    temp_ts = t_cur_ts;
-    sdk::timestamp_subtract(&temp_ts, &t_old_ts);
-    sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
-
-    if (time_diff > TIME_NSECS_PER_SEC) {
-        stats_.cps = t_rx_pkts;
-        t_old_ts = t_cur_ts;
-        t_rx_pkts = 1;
-    } else if (time_diff == TIME_NSECS_PER_SEC) {
-        stats_.cps = ++t_rx_pkts;
-        t_old_ts = t_cur_ts;
-    } else {
-        t_rx_pkts++;
+    if (fte_disabled_ || t_inst == NULL) {
+        return;
     }
 
+    t_inst->incr_fte_error(rc);
+}
+
+//----------------------------------------------------------------------------
+// Increment fte error counters
+//----------------------------------------------------------------------------
+void inst_t::incr_fte_error(hal_ret_t rc)
+{
+    stats_.fte_errors[rc]++;
 }
 
 //-----------------------------------------------------------------------------
@@ -481,23 +466,18 @@ void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
 {
     lifqid_t lifq = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
-    compute_cps();
+    stats_.cps++;
 
     if (lifq == FLOW_MISS_LIFQ) {
         stats_.flow_miss_pkts++;
-        stats_.flow_miss_bytes += pkt_len;
     } else if (lifq == NACL_REDIRECT_LIFQ) {
         stats_.redirect_pkts++;
-        stats_.redirect_bytes += pkt_len;
     } else if (lifq == ALG_CFLOW_LIFQ) {
         stats_.cflow_pkts++;
-        stats_.cflow_bytes += pkt_len;
     } else if (lifq == TCP_CLOSE_LIFQ) {
         stats_.tcp_close_pkts++;
-        stats_.tcp_close_bytes += pkt_len;
     } else if (lifq == TLS_PROXY_LIFQ) {
         stats_.tls_proxy_pkts++;
-        stats_.tls_proxy_bytes += pkt_len;
     }
 }
 
@@ -507,7 +487,6 @@ void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
 void inst_t::update_tx_stats(size_t pkt_len)
 {
     stats_.queued_tx_pkts++;
-    stats_.queued_tx_bytes += pkt_len;
 }
 
 //------------------------------------------------------------------------------
@@ -584,19 +563,62 @@ void inst_t::process_tls_pendq()
     hal::proxy::tls_poll_asym_pend_req_q();
 }
 
+//------------------------------------------------------------------------------
+// API to fetch FTE stats on any given thread
+//------------------------------------------------------------------------------
+fte_stats_t inst_t::get_stats(bool clear_on_read) 
+{
+    fte_stats_t stats = stats_;
+
+    if (clear_on_read)
+        bzero(&stats_, sizeof(fte_stats_t));
+
+    return stats;
+}
+
+//------------------------------------------------------------------------------
+// API to get stats per thread
+//------------------------------------------------------------------------------
 fte_stats_t
-fte_get_stats (uint8_t fte_id)
+fte_stats_get (uint8_t fte_id, bool clear_on_read)
 {
     struct fn_ctx_t {
         fte_stats_t fte_stats;
+        bool        clear_on_read;
     } fn_ctx;
+
+    if (fte_disabled_)
+        goto done; 
 
     fte_execute(fte_id, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
-            fn_ctx->fte_stats = t_inst->get_stats();
+            fn_ctx->fte_stats = t_inst->get_stats(fn_ctx->clear_on_read);
         }, &fn_ctx);
 
+done:
     return fn_ctx.fte_stats;
+}
+
+fte_stats_t& operator+=(fte_stats_t& val1, fte_stats_t& val2)
+{
+    val1.cps += val2.cps;
+    val1.flow_miss_pkts += val2.flow_miss_pkts;
+    val1.redirect_pkts += val2.redirect_pkts;
+    val1.cflow_pkts += val2.cflow_pkts;
+    val1.tcp_close_pkts += val2.tcp_close_pkts;
+    val1.softq_req += val2.softq_req;
+    val1.queued_tx_pkts += val2.queued_tx_pkts;
+    for (uint8_t idx=0; idx<HAL_RET_ERR; idx++)
+        val1.fte_errors[idx] += val2.fte_errors[idx];
+    for (uint8_t idx=0; idx<get_num_features(); idx++) {
+        val1.feature_stats[idx].drop_pkts += \
+                                           val2.feature_stats[idx].drop_pkts;
+        for (uint8_t rc=0; rc<HAL_RET_ERR; rc++)
+            val1.feature_stats[idx].drop_reason[rc] += \
+                                            val2.feature_stats[idx].drop_reason[rc];
+    }
+
+    return val1;
 }
 
 } //   namespace fte

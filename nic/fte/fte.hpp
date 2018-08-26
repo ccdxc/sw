@@ -86,10 +86,10 @@ hal_ret_t fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data);
 // ***Should be called from non FTE thread***
 hal_ret_t fte_execute(uint8_t fte_id, softq_fn_t fn, void *data);
 
-// API to increment per-instance drop stats per feature
-void incr_inst_feature_drop (uint16_t feature_id);
+// API to increment per-instance stats for fte errors
+void incr_inst_fte_error (hal_ret_t rc);
 
 // API to fetch per-instance FTE stats
-fte_stats_t fte_get_stats (uint8_t fte_id);
+fte_stats_t fte_stats_get (uint8_t fte_id, bool clear_on_read=false);
 
 } // namespace fte

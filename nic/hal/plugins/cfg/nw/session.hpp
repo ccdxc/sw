@@ -15,6 +15,7 @@
 #include "nic/gen/proto/hal/session.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
+#include "nic/gen/proto/hal/system.pb.h"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -42,6 +43,7 @@ using session::SessionDeleteRequest;
 using session::SessionDeleteResponse;
 using session::FlowTCPState;
 using types::IPProtocol;
+using sys::SystemResponse;
 
 namespace hal {
 
@@ -403,6 +405,14 @@ struct session_s {
     dllist_ctxt_t       feature_list_head;        // List of feature specific states
 } __PACK__;
 
+typedef struct session_stats_ {
+    uint64_t    l2_sessions;
+    uint64_t    tcp_sessions;
+    uint64_t    udp_sessions;
+    uint64_t    icmp_sessions;
+    uint64_t    drop_sessions;
+} session_stats_t;
+
 // max. number of session supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_SESSIONS                             524288
 #define HAL_MAX_FLOWS                                (HAL_MAX_SESSIONS << 1)
@@ -410,46 +420,47 @@ struct session_s {
 session_t *find_session_by_handle(hal_handle_t handle);
 //session_t *find_session_by_id(session_id_t session_id);
 
-extern void *session_get_key_func(void *entry);
-extern uint32_t session_compute_hash_func(void *key, uint32_t ht_size);
-extern bool session_compare_key_func(void *key1, void *key2);
-extern void *session_get_handle_key_func(void *entry);
-extern uint32_t session_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool session_compare_handle_key_func(void *key1, void *key2);
-extern void *session_get_iflow_key_func(void *entry);
-extern uint32_t session_compute_iflow_hash_func(void *key, uint32_t ht_size);
-extern bool session_compare_iflow_key_func(void *key1, void *key2);
-extern void *session_get_rflow_key_func(void *entry);
-extern uint32_t session_compute_rflow_hash_func(void *key, uint32_t ht_size);
-extern bool session_compare_rflow_key_func(void *key1, void *key2);
-extern void *flow_get_key_func(void *entry);
-extern uint32_t flow_compute_hash_func(void *key, uint32_t ht_size);
-extern bool flow_compare_key_func(void *key1, void *key2);
-extern hal_ret_t ep_get_from_flow_key(const flow_key_t* key,
+extern void *session_get_key_func (void *entry);
+extern uint32_t session_compute_hash_func (void *key, uint32_t ht_size);
+extern bool session_compare_key_func (void *key1, void *key2);
+extern void *session_get_handle_key_func (void *entry);
+extern uint32_t session_compute_handle_hash_func (void *key, uint32_t ht_size);
+extern bool session_compare_handle_key_func (void *key1, void *key2);
+extern void *session_get_iflow_key_func (void *entry);
+extern uint32_t session_compute_iflow_hash_func (void *key, uint32_t ht_size);
+extern bool session_compare_iflow_key_func (void *key1, void *key2);
+extern void *session_get_rflow_key_func (void *entry);
+extern uint32_t session_compute_rflow_hash_func (void *key, uint32_t ht_size);
+extern bool session_compare_rflow_key_func (void *key1, void *key2);
+extern void *flow_get_key_func (void *entry);
+extern uint32_t flow_compute_hash_func (void *key, uint32_t ht_size);
+extern bool flow_compare_key_func (void *key1, void *key2);
+extern hal_ret_t ep_get_from_flow_key (const flow_key_t* key,
                                       ep_t **sep, ep_t **dep);
-bool flow_needs_associate_flow(const flow_key_t *flow_key);
-extern hal_ret_t session_release(session_t *session);
-hal_ret_t extract_flow_key_from_spec(vrf_id_t tid,
+bool flow_needs_associate_flow (const flow_key_t *flow_key);
+extern hal_ret_t session_release (session_t *session);
+hal_ret_t extract_flow_key_from_spec (vrf_id_t tid,
                                      flow_key_t *flow_key,
                                      const FlowKey& flow_spec_key);
-hal_ret_t session_init(hal_cfg_t *hal_cfg);
-hal_ret_t
-session_create(const session_args_t *args, hal_handle_t *session_handle,
-               session_t **session_p);
-hal_ret_t session_update(const session_args_t *args, session_t *session);
-hal_ret_t session_delete(const session_args_t *args, session_t *session);
-hal::session_t *session_lookup(flow_key_t key, flow_role_t *role);
-hal_ret_t session_get(session::SessionGetRequest& spec,
+hal_ret_t session_init (hal_cfg_t *hal_cfg);
+hal_ret_t session_create (const session_args_t *args, hal_handle_t *session_handle,
+                          session_t **session_p);
+hal_ret_t session_update (const session_args_t *args, session_t *session);
+hal_ret_t session_delete (const session_args_t *args, session_t *session);
+hal::session_t *session_lookup (flow_key_t key, flow_role_t *role);
+hal_ret_t session_get (session::SessionGetRequest& spec,
                       session::SessionGetResponse *rsp);
-hal_ret_t schedule_tcp_close_timer(session_t *session);
-hal_ret_t schedule_tcp_half_closed_timer(session_t *session);
-hal_ret_t schedule_tcp_cxnsetup_timer(session_t *session);
-void session_set_tcp_state(session_t *session, hal::flow_role_t role,
+hal_ret_t schedule_tcp_close_timer (session_t *session);
+hal_ret_t schedule_tcp_half_closed_timer (session_t *session);
+hal_ret_t schedule_tcp_cxnsetup_timer (session_t *session);
+void session_set_tcp_state (session_t *session, hal::flow_role_t role,
                            FlowTCPState tcp_state);
-hal_ret_t session_get_all(session::SessionGetResponseMsg *rsp);
+hal_ret_t session_get_all (session::SessionGetResponseMsg *rsp);
 hal_ret_t session_delete_list (dllist_ctxt_t *session_list, bool async=false);
-hal_ret_t session_delete_all(session::SessionDeleteResponseMsg *rsp);
-hal_ret_t session_eval_matching_session(session_match_t *match);
+hal_ret_t session_delete_all (session::SessionDeleteResponseMsg *rsp);
+hal_ret_t session_eval_matching_session (session_match_t *match);
+hal_ret_t system_fte_stats_get (SystemResponse *rsp);
+hal_ret_t system_session_summary_get (SystemResponse *rsp);
 
 }    // namespace hal
 

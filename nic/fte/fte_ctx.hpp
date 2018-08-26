@@ -16,6 +16,8 @@
 
 using fwlog::FWEvent;
 
+#define MAX_FEATURES 255
+
 namespace fte {
 
 // FTE pipeline events
@@ -384,9 +386,11 @@ struct feature_state_t {
     completion_handler_t          completion_handler;
 };
 
-uint16_t feature_id(const std::string &name);
-size_t feature_state_size(uint16_t *num_features);
-void feature_state_init(feature_state_t *feature_state, uint16_t num_features);
+uint16_t feature_id (const std::string &name);
+size_t feature_state_size (uint16_t *num_features);
+void feature_state_init (feature_state_t *feature_state, uint16_t num_features);
+uint16_t get_num_features (void);
+const std::string& feature_id_to_name (uint16_t feature_id);
 
 // Callback definition for FTE to call per queued
 // packet for cleanup
@@ -415,33 +419,37 @@ typedef hal::pd::p4_to_p4plus_cpu_pkt_t cpu_rxhdr_t;
 // added to this data structure.
 // -----------------------------------------------------------------------
 typedef struct fte_flow_log_info_s {
-    uint64_t                 rule_id;
-    nwsec::SecurityAction    sfw_action;
-    nwsec::ALGName           alg;
-    hal_handle_t             parent_session_id;
+    uint64_t               rule_id;
+    nwsec::SecurityAction  sfw_action;
+    nwsec::ALGName         alg;
+    hal_handle_t           parent_session_id;
 } fte_flow_log_info_t;
+
+// API to increment per-instance stats per feature
+void incr_inst_feature_stats (uint16_t feature_id, hal_ret_t rc=HAL_RET_OK, 
+                              bool set_rc=false);
+
+typedef struct fte_feature_stats_s {
+    uint64_t        drop_pkts;                 // Number of packets dropped by the feature
+    uint64_t        drop_reason[HAL_RET_ERR];  // Number of drops seen per drop reason code
+} fte_feature_stats_t;
 
 //----------------------------------------------------------------------------------
 // FTE per-thread stats
 //----------------------------------------------------------------------------------
 typedef struct fte_stats_ {
-    uint64_t  cps;                // Number of connections per second processed by this FTE
-    uint64_t  flow_miss_pkts;     // Number of flow miss packets processed by this FTE
-    uint64_t  flow_miss_bytes;    // Number of flow miss bytes processed by this FTE
-    uint64_t  redirect_pkts;      // Number of NACL redirect packets processed by this FTE
-    uint64_t  redirect_bytes;     // Number of NACL redirect bytes processed by this FTE
-    uint64_t  cflow_pkts;         // Number of ALG control flow packets processed by this FTE
-    uint64_t  cflow_bytes;        // Number of bytes of ALG control flow processed by this FTE
-    uint64_t  tcp_close_pkts;     // Number of TCP close packets processed by this FTE
-    uint64_t  tcp_close_bytes;    // Number of bytes of TCP close processed by this FTE
-    uint64_t  tls_proxy_pkts;     // Number of TLS proxy packets processed by this FTE
-    uint64_t  tls_proxy_bytes;    // Number of bytes of TLS proxy processed by this FTE
-    uint64_t  softq_req;          // Number of softq requests processed by this FTE
-    uint64_t  queued_tx_pkts;     // Number of packets queued from this FTE to be transmitted
-    uint64_t  queued_tx_bytes;    // Number of bytes queued from this FTE to be transmitted
-    uint64_t  fte_errors;         // Number of FTE errors encountered -- TBD catagorize
-    uint64_t  *feature_drop_pkts; // Number of drops per feature
+    uint64_t              cps;                         // Number of connections per second processed by this FTE
+    uint64_t              flow_miss_pkts;              // Number of flow miss packets processed by this FTE
+    uint64_t              redirect_pkts;               // Number of NACL redirect packets processed by this FTE
+    uint64_t              cflow_pkts;                  // Number of ALG control flow packets processed by this FTE
+    uint64_t              tcp_close_pkts;              // Number of TCP close packets processed by this FTE
+    uint64_t              tls_proxy_pkts;              // Number of TLS proxy packets processed by this FTE
+    uint64_t              softq_req;                   // Number of softq requests processed by this FTE
+    uint64_t              queued_tx_pkts;              // Number of packets queued from this FTE to be transmitted
+    uint64_t              fte_errors[HAL_RET_ERR];     // Number of FTE errors encountered
+    fte_feature_stats_t   feature_stats[MAX_FEATURES]; // Number of drops per feature
 } fte_stats_t;
+fte_stats_t& operator+=(fte_stats_t& val1, fte_stats_t& val2);
 
 class flow_t;
 class ctx_t;
@@ -550,7 +558,12 @@ public:
 
     // return staus of the feature handler
     hal_ret_t feature_status() const { return feature_status_; }
-    void set_feature_status(hal_ret_t ret) { feature_status_ = ret; }
+    void set_feature_status(hal_ret_t ret) { 
+         if (ret != HAL_RET_OK)
+             incr_inst_feature_stats(feature_id_, ret, true);
+
+         feature_status_ = ret; 
+    }
 
     // completion handlere rgistrations, registered handlers are called at the end of the
     // packet processing (after updating the gft)

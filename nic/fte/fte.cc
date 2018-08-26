@@ -32,7 +32,6 @@ struct feature_s {
 
 static std::map<std::string, feature_t*> g_feature_map_;
 
-#define MAX_FEATURES 255
 static feature_t *g_feature_list_[MAX_FEATURES];
 static uint8_t g_num_features_;
 static size_t g_feature_state_size_; // Total size of all feature specific states
@@ -65,6 +64,14 @@ uint16_t feature_id(const std::string &name)
     return 0xFFFF;
 }
 
+const std::string&  feature_id_to_name(uint16_t feature_id)
+{
+    if (feature_id <= g_num_features_)
+        return g_feature_list_[feature_id]->name; 
+
+    return NULL;
+} 
+
 //------------------------------------------------------------------------------
 // Returns size of memory to store the feature ctx state and pointer to session
 // state of all the registered features
@@ -74,6 +81,14 @@ size_t feature_state_size(uint16_t *num_features)
     *num_features = g_num_features_;
 
     return (*num_features) * sizeof(feature_state_t) + g_feature_state_size_;
+}
+
+//------------------------------------------------------------------------------
+// Returns the num of features registered
+//------------------------------------------------------------------------------
+uint16_t get_num_features(void)
+{
+    return g_num_features_;
 }
 
 //------------------------------------------------------------------------------

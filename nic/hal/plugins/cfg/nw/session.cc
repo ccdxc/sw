@@ -2,6 +2,9 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+#include <string>
+#include <iostream>
+#include <sstream>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
@@ -24,6 +27,11 @@ using session::FlowKeyICMPInfo;
 using session::FlowData;
 using session::ConnTrackInfo;
 using session::FlowStats;
+using sys::FTEStats;
+using sys::FTEFeatureStats;
+using sys::FTEError;
+using sys::SystemResponse;
+using sys::SessionSummaryStats;
 
 using namespace sdk::lib;
 
@@ -31,7 +39,11 @@ using namespace sdk::lib;
 
 namespace hal {
 
-thread_local void *g_session_timer;
+thread_local void *t_session_timer;
+thread_local void *t_fte_stats_timer;
+fte::fte_stats_t g_fte_stats;
+session_stats_t  g_session_stats;
+
 
 #define SESSION_SW_DEFAULT_TIMEOUT                 (3600)
 #define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_MSECS_PER_SEC)
@@ -39,6 +51,8 @@ thread_local void *g_session_timer;
 #define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT    (15 * TIME_MSECS_PER_SEC)
 #define SESSION_DEFAULT_TCP_TICKLE_TIMEOUT         (2 * TIME_MSECS_PER_SEC)
 #define HAL_SESSION_AGE_SCAN_INTVL                 (5 * TIME_MSECS_PER_SEC)
+#define HAL_FTE_STATS_TIMER_INTVL                  (10 * TIME_MSECS_PER_SEC)
+#define HAL_FTE_STATS_TIMER_INTVL_SECS             (10)
 #define HAL_SESSION_BUCKETS_TO_SCAN_PER_INTVL       4
 #define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
 #define MAX_TCP_TICKLES                             3
@@ -649,6 +663,29 @@ flow_create_fte (const flow_cfg_t *cfg,
     return flow;
 }
 
+inline void
+update_global_session_stats (session_t *session, bool decr=false) 
+{
+    flow_key_t key = session->iflow->config.key;
+
+    if (session->iflow->pgm_attrs.drop) 
+        g_session_stats.drop_sessions += (decr)?(-1):1;  
+
+    if (key.flow_type == FLOW_TYPE_L2) {
+        g_session_stats.l2_sessions  += (decr)?(-1):1;
+    } else if (key.flow_type == FLOW_TYPE_V4 ||
+               key.flow_type == FLOW_TYPE_V6) {
+        if (key.proto == types::IPPROTO_TCP) {
+            g_session_stats.tcp_sessions  += (decr)?(-1):1;
+        } else if (key.proto == types::IPPROTO_UDP) {
+            g_session_stats.udp_sessions  += (decr)?(-1):1;
+        } else if (key.proto == types::IPPROTO_ICMP) {
+            g_session_stats.icmp_sessions  += (decr)?(-1):1;
+        }
+
+    }
+}
+
 hal_ret_t
 session_create (const session_args_t *args, hal_handle_t *session_handle,
                 session_t **session_p)
@@ -772,6 +809,8 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
         session_cleanup(session);
     }
 
+    update_global_session_stats(session);
+
     return ret;
 }
 
@@ -876,6 +915,8 @@ session_delete(const session_args_t *args, session_t *session)
     }
 
     del_session_from_db(args->sep, args->dep, session);
+
+    update_global_session_stats(session, true);
 
     session_cleanup(session);
 
@@ -1508,12 +1549,40 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 }
 
 //------------------------------------------------------------------------------
+// callback invoked by the HAL periodic thread for FTE CPS computation
+//------------------------------------------------------------------------------
+static void
+fte_stats_collect_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    uint64_t          cps = 0;
+    fte::fte_stats_t  stats;
+
+    for (uint32_t i = 0; i < hal::g_hal_cfg.num_data_threads; i++) {
+        stats = fte::fte_stats_get(i, true);
+        g_fte_stats += stats;
+        cps += stats.cps;    
+    }
+
+    // Compute cps from the cumulative # of packets received from 
+    // each FTE. We collect it every 10s and get an approximate
+    // value per second.
+    g_fte_stats.cps = (cps/HAL_FTE_STATS_TIMER_INTVL_SECS);
+
+    // store the bucket id to resume on next invocation
+    sdk::lib::timer_update(timer, NULL);
+}
+
+//------------------------------------------------------------------------------
 // initialize the session management module
 //------------------------------------------------------------------------------
 hal_ret_t
 session_init (hal_cfg_t *hal_cfg)
 {
     g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_threads);
+
+    // Initialize Global counters
+    bzero(&g_session_stats, sizeof(session_stats_t));
+    bzero(&g_fte_stats, sizeof(fte::fte_stats_t));
 
     // Disable aging when FTE is disabled
     if (getenv("DISABLE_AGING")) {
@@ -1524,16 +1593,27 @@ session_init (hal_cfg_t *hal_cfg)
     while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
-    g_session_timer =
+    t_session_timer =
         sdk::lib::timer_schedule(HAL_TIMER_ID_SESSION_AGEOUT,            // timer_id
                                       HAL_SESSION_AGE_SCAN_INTVL,
                                       (void *)0,    // ctxt
                                       session_age_walk_cb, true);
-    if (!g_session_timer) {
+    if (!t_session_timer) {
         return HAL_RET_ERR;
     }
     HAL_TRACE_DEBUG("Started session aging periodic timer with {}ms invl",
                     HAL_SESSION_AGE_SCAN_INTVL);
+
+    t_fte_stats_timer =
+        sdk::lib::timer_schedule(HAL_TIMER_ID_FTE_STATS,            // timer_id
+                                      HAL_FTE_STATS_TIMER_INTVL,
+                                      (void *)0,    // ctxt
+                                      fte_stats_collect_cb, true);
+    if (!t_fte_stats_timer) {
+        return HAL_RET_ERR;
+    }
+    HAL_TRACE_DEBUG("Started fte stats periodic timer with {}ms invl",
+                    HAL_FTE_STATS_TIMER_INTVL);
 
     return HAL_RET_OK;
 }
@@ -1948,6 +2028,67 @@ session_eval_matching_session (session_match_t  *match)
 
     HAL_TRACE_DEBUG("delete session");
     session_delete_list(&session_list, true /*async:true*/);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+system_fte_stats_get(SystemResponse *rsp)
+{
+    FTEStats *fte_stats = NULL;
+
+    fte_stats = rsp->mutable_stats()->mutable_fte_stats();
+ 
+    fte_stats->set_conn_per_second(g_fte_stats.cps);
+    fte_stats->set_flow_miss_pkts(g_fte_stats.flow_miss_pkts);
+    fte_stats->set_redir_pkts(g_fte_stats.redirect_pkts);
+    fte_stats->set_cflow_pkts(g_fte_stats.cflow_pkts);
+    fte_stats->set_tcp_close_pkts(g_fte_stats.tcp_close_pkts);
+    fte_stats->set_tls_proxy_pkts(g_fte_stats.tls_proxy_pkts);
+    fte_stats->set_softq_reqs(g_fte_stats.softq_req);
+    fte_stats->set_queued_tx_pkts(g_fte_stats.queued_tx_pkts);
+    
+    for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
+        hal_ret_t               ret = (hal_ret_t)idx;
+        std::ostringstream 	str;
+        FTEError                *fte_err = fte_stats->add_fte_errors();
+
+        str << std::cout.rdbuf() << ret; // std::ostream to std::ostringstream
+        fte_err->set_count(g_fte_stats.fte_errors[idx]);
+        fte_err->set_fte_error(str.str());
+    }
+ 
+    for (uint8_t feature=0; feature<fte::get_num_features(); feature++) {
+        FTEFeatureStats *feature_stat = fte_stats->add_feature_stats();
+        std::string      feature_name = fte::feature_id_to_name(feature);
+ 
+        feature_stat->set_feature_name(feature_name.substr(feature_name.find(":")+1)); 
+        feature_stat->set_drop_pkts(g_fte_stats.feature_stats[feature].drop_pkts);
+        for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
+            hal_ret_t               ret = (hal_ret_t)idx;
+            std::ostringstream      str;
+            FTEError *fte_err = feature_stat->add_drop_reason();
+         
+            str << std::cout.rdbuf() << ret; // std::ostream to std::ostringstream
+            fte_err->set_count(g_fte_stats.feature_stats[feature].drop_reason[idx]);
+            fte_err->set_fte_error(str.str());
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+system_session_summary_get(SystemResponse *rsp)
+{
+    SessionSummaryStats *session_stats = NULL;
+
+    session_stats = rsp->mutable_stats()->mutable_session_stats();
+    session_stats->set_l2_sessions(g_session_stats.l2_sessions);
+    session_stats->set_tcp_sessions(g_session_stats.tcp_sessions);
+    session_stats->set_udp_sessions(g_session_stats.udp_sessions);
+    session_stats->set_icmp_sessions(g_session_stats.icmp_sessions);
+    session_stats->set_drop_sessions(g_session_stats.drop_sessions);
+
     return HAL_RET_OK;
 }
 

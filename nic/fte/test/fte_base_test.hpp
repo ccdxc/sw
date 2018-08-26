@@ -309,9 +309,9 @@ private:
         fte::fte_stats_t stats;                                         \
         hal_ret_t   ret;                                                \
         uint16_t    sfw_feature;                                        \
-        stats = fte::fte_get_stats(FTE_ID);                             \
+        stats = fte::fte_stats_get(FTE_ID);                             \
         sfw_feature = fte::feature_id("pensando.io/sfw:sfw");           \
-        uint64_t sfw_drop = stats.feature_drop_pkts[sfw_feature];       \
+        uint64_t sfw_drop = stats.feature_stats[sfw_feature].drop_pkts; \
         Tins::TCP tcp = Tins::TCP(dst_port, src_port);                  \
         tcp.flags(Tins::TCP::SYN);                                      \
         tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));          \
@@ -321,8 +321,8 @@ private:
         EXPECT_EQ(ret, HAL_RET_OK) << msg;                              \
         EXPECT_TRUE(ctx_.drop()) << msg;                                \
         if (!ctx_.existing_session()) {                                 \
-            stats = fte::fte_get_stats(FTE_ID);                         \
-            EXPECT_EQ(stats.feature_drop_pkts[sfw_feature], sfw_drop+1);\
+            stats = fte::fte_stats_get(FTE_ID);                         \
+            EXPECT_EQ(stats.feature_stats[sfw_feature].drop_pkts, sfw_drop+1);\
         }                                                               \
         EXPECT_NE(ctx_.session(), nullptr) << msg;                      \
         EXPECT_NE(ctx_.session()->iflow, nullptr) << msg;               \
@@ -350,16 +350,16 @@ private:
         fte::fte_stats_t stats;                                                \
         hal_ret_t ret;                                                         \
         uint16_t    sfw_feature;                                               \
-        stats = fte::fte_get_stats(FTE_ID);                                    \
+        stats = fte::fte_stats_get(FTE_ID);                                    \
         sfw_feature = fte::feature_id("pensando.io/sfw:sfw");                  \
-        uint64_t sfw_drop = stats.feature_drop_pkts[sfw_feature];              \
+        uint64_t sfw_drop = stats.feature_stats[sfw_feature].drop_pkts;        \
         Tins::UDP pdu = Tins::UDP(dst_port, src_port);                         \
         ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep, pdu);             \
         EXPECT_EQ(ret, HAL_RET_OK) << msg;                                     \
         EXPECT_TRUE(ctx_.drop()) << msg;                                       \
         if (!ctx_.existing_session()) {                                        \
-            stats = fte::fte_get_stats(FTE_ID);                                \
-            EXPECT_EQ(stats.feature_drop_pkts[sfw_feature], sfw_drop+1);       \
+            stats = fte::fte_stats_get(FTE_ID);                                \
+            EXPECT_EQ(stats.feature_stats[sfw_feature].drop_pkts, sfw_drop+1); \
         }                                                                      \
         EXPECT_NE(ctx_.session(), nullptr) << msg;                             \
         EXPECT_NE(ctx_.session()->iflow, nullptr) << msg;                      \

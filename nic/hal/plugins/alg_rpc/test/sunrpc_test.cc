@@ -199,7 +199,7 @@ TEST_F(rpc_test, sunrpc_exp_flow_timeout) {
                                          &exp_flow_new, true, 5, true);
     ASSERT_EQ(exp_flow_old, exp_flow_new);
     ASSERT_EQ(exp_flow_new->entry.deleting, false); 
-    sleep(3);
+    sleep(20);
     ASSERT_EQ(dllist_count(&app_sess->exp_flow_lhead), 0);
 }
 

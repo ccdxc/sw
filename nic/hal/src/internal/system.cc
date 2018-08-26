@@ -9,6 +9,7 @@
 #include "nic/gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/src/internal/system.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
 
 namespace hal {
 
@@ -501,6 +502,22 @@ system_get (SystemResponse *rsp)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        goto end;
+    }
+
+    // FTE stats get
+    system_fte_stats_get(rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_ERR);
+        goto end;
+    }
+   
+    // Session Summary get
+    system_session_summary_get(rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get session summary get, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_ERR);
         goto end;
     }
 

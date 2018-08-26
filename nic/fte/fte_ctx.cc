@@ -1096,7 +1096,7 @@ ctx_t::update_flow(const flow_update_t& flowupd,
             //}
             // Increment the drop counter for the feature
             if (role == hal::FLOW_ROLE_INITIATOR)
-                incr_inst_feature_drop(feature_id_);
+                incr_inst_feature_stats(feature_id_);
         } else if (flowupd.action == session::FLOW_ACTION_ALLOW) {
             drop_ = false;
             drop_flow_ = false;
@@ -1435,6 +1435,9 @@ ctx_t::process()
     }
 
  end:
+    // Increment FTE error counter
+    incr_inst_fte_error(ret);
+
     // Invoke completion handlers
     invoke_completion_handlers((ret==HAL_RET_OK));
 

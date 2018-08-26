@@ -106,7 +106,7 @@ TEST_F(fte_session_test, fte_stats)
     const int num_flows = 10;
     uint64_t  softq_req = 0;
 
-    stats = fte::fte_get_stats(FTE_ID);
+    stats = fte::fte_stats_get(FTE_ID);
     softq_req = stats.softq_req;
     cout << "softq req: " << softq_req++ << endl;
 
@@ -125,7 +125,7 @@ TEST_F(fte_session_test, fte_stats)
             inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh1, l2segh, pkts);
         }
     }
-    stats = fte::fte_get_stats(FTE_ID);
+    stats = fte::fte_stats_get(FTE_ID);
     EXPECT_NE(stats.cps, 0);
     EXPECT_EQ(stats.softq_req, softq_req+50);
     cout << "CPS: " << stats.cps << endl;
