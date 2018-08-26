@@ -1,0 +1,41 @@
+{
+	"info": {
+		"name": "Login",
+		"_postman_id": "cbd6ca1c-1404-b614-86ca-636515ef721e",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "http://localhost:10001/v1/login/",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\": \"admin\",\n\t\"password\": \"password\",\n\t\"tenant\": \"default\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:10001/v1/login/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "10001",
+					"path": [
+						"v1",
+						"login",
+						""
+					]
+				},
+				"description": "Login by Admin"
+			},
+			"response": []
+		}
+	]
+}

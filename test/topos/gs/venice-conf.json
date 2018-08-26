@@ -21,7 +21,8 @@
                             "-resolver-urls",
                             "$RESOLVER_URLS",
                             "--skip=search,events",
-                            "--skipauth"
+                            "--skipauth",
+                            "--skipauthz"
                         ]
                     }
                 ],

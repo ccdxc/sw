@@ -1,6 +1,6 @@
 {
 	"info": {
-		"name": "Login",
+		"name": "Auth Bootstrap",
 		"_postman_id": "cbd6ca1c-1404-b614-86ca-636515ef721e",
 		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -18,7 +18,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"kind\": \"user\",\n\t\"meta\": {\n\t\t\"name\": \"Tara\",\n\t\t\"tenant\": \"default\"\n\t},\n\t\"spec\": {\n\t\t\"fullname\": \"Tara Fanders\",\n\t\t\"email\": \"tara@acme.com\",\n\t\t\"password\": \"password\",\n\t\t\"type\": \"LOCAL\"\n\t},\n\t\"status\": {}\n}"
+					"raw": "{\n\t\"kind\": \"user\",\n\t\"meta\": {\n\t\t\"name\": \"admin\",\n\t\t\"tenant\": \"default\"\n\t},\n\t\"spec\": {\n\t\t\"fullname\": \"Admin\",\n\t\t\"email\": \"tara@acme.com\",\n\t\t\"password\": \"password\",\n\t\t\"type\": \"LOCAL\"\n\t},\n\t\"status\": {}\n}"
 				},
 				"url": {
 					"raw": "http://localhost:10001/configs/auth/v1/tenant/default/users",
@@ -69,37 +69,6 @@
 					]
 				},
 				"description": "Create authentication policy with local auth enabled"
-			},
-			"response": []
-		},
-		{
-			"name": "http://localhost:10001/v1/login/",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"username\": \"Tara\",\n\t\"password\": \"password\",\n\t\"tenant\": \"default\"\n}"
-				},
-				"url": {
-					"raw": "http://localhost:10001/v1/login/",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "10001",
-					"path": [
-						"v1",
-						"login",
-						""
-					]
-				},
-				"description": "Login by Tara"
 			},
 			"response": []
 		}
