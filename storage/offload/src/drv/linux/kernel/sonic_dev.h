@@ -377,7 +377,8 @@ void sonic_q_free(struct lif *lif, struct queue *q);
 int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 unsigned int index, const char *base, unsigned int num_descs,
 		 size_t desc_size, unsigned int pid);
-void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa);
+void sonic_q_map(struct queue *q, unsigned int num_descs,
+		unsigned int desc_size, void *base, dma_addr_t base_pa);
 void sonic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		  void *cb_arg);
 void sonic_q_rewind(struct queue *q, struct desc_info *start);
