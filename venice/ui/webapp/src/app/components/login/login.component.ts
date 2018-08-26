@@ -7,6 +7,7 @@ import { Eventtypes } from '../../enum/eventtypes.enum';
 import { AuthService } from '../../services/auth.service';
 import { ControllerService } from '../../services/controller.service';
 import { Router } from '@angular/router';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 
 
@@ -32,6 +33,7 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
   constructor(
     private _authService: AuthService,
     private _controllerService: ControllerService,
+    private uiconfigService: UIConfigsService,
     private router: Router,
     private store$: Store<any>
   ) {
@@ -102,8 +104,12 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
     // and this component will be destroyed.
     this._controllerService.LoginUserInfo = (payload['body']) ? payload['body'] : payload;
     this._controllerService.LoginUserInfo[Utility.XSRF_NAME] = (payload.headers) ? payload.headers.get(Utility.XSRF_NAME) : '';
-    const redirect = this._authService.redirectUrl ? this._authService.redirectUrl : '/dashboard';
-    this.router.navigateByUrl(redirect);
+    const redirect = this._authService.redirectUrl;
+    if (redirect) {
+      this.router.navigateByUrl(redirect);
+    } else {
+      this.uiconfigService.navigateToHomepage();
+    }
   }
 
   private getErrorMessage(errPayload: any): string {

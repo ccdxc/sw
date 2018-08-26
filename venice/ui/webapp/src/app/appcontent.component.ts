@@ -18,6 +18,7 @@ import { Eventtypes } from './enum/eventtypes.enum';
 import { ControllerService } from './services/controller.service';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 /**
  * This is the entry point component of Pensando-Venice Web-Application
@@ -80,6 +81,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     private store: Store<any>,
     private idle: Idle,
     public dialog: MatDialog,
+    protected uiconfigsService: UIConfigsService
   ) {
     super();
   }
@@ -232,7 +234,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     } else if (payload['id'] === 'alertsevents') {
       this.navigate(['/monitoring', 'alertsevents']);
     } else {
-      this.navigate(['/dashboard']);
+      this.uiconfigsService.navigateToHomepage();
     }
   }
 

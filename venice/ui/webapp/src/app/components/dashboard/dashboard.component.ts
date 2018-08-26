@@ -64,13 +64,8 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   ngOnInit() {
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'DashboardComponent', 'state': Eventtypes.COMPONENT_INIT });
     this._controllerService.setToolbarData({
-      buttons: [
-        {
-          cssClass: 'global-button-primary dbsd-refresh-button',
-          text: 'Refresh',
-          callback: () => { this.getDefaultDashboardWidgets(); },
-        }],
-      breadcrumb: [{ label: 'Dashboard', url: '' }]
+      buttons: [],
+      breadcrumb: [{ label: 'Dashboard - Currently using mock data', url: '' }]
     });
 
     this.pinnedGridsterOptions = Object.assign({}, this.gridsterOptions);

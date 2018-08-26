@@ -7,13 +7,17 @@
                     <div class="app-shell-header-logo-div">
                         <img id="app-header-logo" class="navbar-btn app-header-logo" src="../../../assets/images/headers/pensando-header-logo.svg"
                         />
-                        <button mat-icon-button (click)="sidenav.toggle()" title="Show Or Hide Side Menu">
+                        <!-- Commenting out collapsed sidenav for August release
+                            The pin/unpin isn't completely smooth
+                            Menu expanded doesn't always cause the main content
+                            to flow correctly -->
+                        <!-- <button mat-icon-button (click)="sidenav.toggle()" title="Show Or Hide Side Menu">
                             <mat-icon svgIcon="menu-pin"></mat-icon>
                         </button>
                         <button mat-icon-button (click)="onSidebarCollapseClick($event);" title="Expand Or Collapse Side Menu" [style.visibility]="sidenav.opened ? 'visible' : 'hidden'">
                             <mat-icon svgIcon="menu-expand" *ngIf="!isSideNavExpanded"></mat-icon>
                             <mat-icon svgIcon="menu-collapse" *ngIf="isSideNavExpanded"></mat-icon>
-                        </button>
+                        </button> -->
                     </div>
                     
                     <div class="app-shell-header-search-div">
@@ -22,23 +26,25 @@
 
                     <span class="app-shell-spacer"></span>
                     <div class="app-shell-toolbar-icon-div">
-                        <button mat-button>Save</button>
-                        <button mat-icon-button (click)="onToolbarIconClick($event, 'notifications')">
+                        <!-- Commenting out for August release -->
+                        <!-- <button mat-button>Save</button> -->
+                        <!-- <button mat-icon-button (click)="onToolbarIconClick($event, 'notifications')">
                             <mat-icon>notifications </mat-icon>
                             <span class="app-notification-number" *ngIf="alertNumbers>0">{{alertNumbers}}</span>
-                        </button>
+                        </button> -->
                         <button mat-icon-button [matMenuTriggerFor]="toolbarUserMenu">
                             <mat-icon>person</mat-icon>
                         </button>
                         <mat-menu #toolbarUserMenu="matMenu">
                             <button mat-menu-item (click)="onLogoutClick()">
-                                <mat-icon>power_settings_new</mat-icon>
+                                <mat-icon style="color: black">power_settings_new</mat-icon>
                                 <span>Logout</span>
                             </button>
                         </mat-menu>
-                        <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')" class="hidden-sm-down">
+                        <!-- Commenting out for August release -->
+                        <!-- <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')" class="hidden-sm-down">
                             <mat-icon>settings</mat-icon>
-                        </button>
+                        </button> -->
                     </div>
                 </mat-toolbar-row>
 
@@ -80,9 +86,10 @@
                                         <span class="app-l-side-nav-item-label">NAPLES</span>
                                     </a>
                                 </li>
-                                <li>
+                                <!-- Commenting out for August release -->
+                                <!-- <li>
                                     <a class="app-sidenav-item" id="updates">Updates</a>
-                                </li>
+                                </li> -->
                             </ul>
                         </li>
                         <li routerLink="/workload" routerLinkActive="app-sidenav-selected">
@@ -103,13 +110,15 @@
                                         <span class="app-l-side-nav-item-label">Security Policy</span>
                                     </a>
                                 </li>
-                                <li>
+                                <!-- Commenting out for August release -->
+                                <!-- <li>
                                     <a class="app-sidenav-item" id="app">Apps</a>
-                                </li>
+                                </li> -->
                             </ul>
                         </li>
 
-                        <li>
+                        <!-- Commenting out for August release -->
+                        <!-- <li>
                             <a href="#networkSubmenu" data-toggle="collapse" aria-expanded="false">
                                 <i class="glyphicon app-l-side-nav-li app-l-side-nav-network"></i>
                                 <span class="app-l-side-nav-item-label">Network</span>
@@ -122,20 +131,24 @@
                                     </a>
                                 </li>
                             </ul>
-                        </li>
+                        </li> -->
                         <li>
                             <a href="#monitoringSubmenu" data-toggle="collapse" aria-expanded="false">
                                 <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring"></i>
                                 <span class="app-l-side-nav-item-label">Monitoring</span>
                             </a>
                             <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="monitoringSubmenu">
-                                <li>
+                                <!-- Commenting out for August release -->
+                                <!-- <li>
                                     <a class="app-sidenav-item" id="metrics">Metrics</a>
-                                </li>
+                                </li> -->
                                 <li>
-                                    <a class="app-sidenav-item" id="alertsevents">Alerts & Events</a>
+                                    <a class="app-sidenav-item" id="alertsevents">
+                                        <i class="material-icons">event_available</i>
+                                        <span class="app-l-side-nav-item-label">Alerts & Events</span>
+                                    </a>
                                 </li>
-                                <li>
+                                <!-- <li>
                                     <a class="app-sidenav-item" id="fwlogs">Firewall Logs</a>
 				                </li>
                                 <li>
@@ -143,7 +156,7 @@
 				                </li>
                                 <li>
                                     <a class="app-sidenav-item" id="troubleshooting">Troubleshooting</a>
-                                </li>
+                                </li> -->
                             </ul>
                         </li>
                     </ul>

@@ -10,6 +10,7 @@ import { ControllerService } from '../../services/controller.service';
 import { LoginComponent } from './login.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -29,7 +30,8 @@ describe('LoginComponent', () => {
         LogService,
         LogPublishersService,
         AuthService,
-        MatIconRegistry
+        MatIconRegistry,
+        UIConfigsService
       ]
     })
       .compileComponents();

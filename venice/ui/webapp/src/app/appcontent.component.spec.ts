@@ -42,6 +42,7 @@ import { GuidesearchComponent } from '@app/components/search/guidedsearch/guided
 import { AppcontentComponent } from '@app/appcontent.component';
 import { SearchService } from '@app/services/generated/search.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 
 describe('AppcontentComponent', () => {
@@ -78,6 +79,7 @@ describe('AppcontentComponent', () => {
         Store,
         SearchService,
         OverlayContainer,
+        UIConfigsService
       ],
     });
 

@@ -132,7 +132,9 @@ export class UIConfigsService {
   }
 
   navigateToHomepage() {
-    this.router.navigate(['dashboard']);
+    // Changing homepage for August release
+    // this.router.navigate(['dashboard']); 
+    this.router.navigate(['cluster-group', 'cluster']);
   }
 
   loadConfig() {
