@@ -23,6 +23,10 @@
 $table-headerheight: 55px;
 $table-headercontentheight: 25px;
 
+.workload-table {
+    height: 100%;
+}
+
 .workload-table-header {
     @include primary-font(18px, black);
     width: 100%;
@@ -39,8 +43,35 @@ $table-headercontentheight: 25px;
     opacity: 0.3;
 }
 
+.workload-column-values {
+    text-indent: 20px;
+    white-space: pre-wrap
+}
+
 .workload-table-headercontent {
     margin: 20px 15px 13px 0px;
+}
+
+.workload-column-name {
+    width: 15%;
+}
+
+.workload-column-date {
+    width: 10%;
+}
+
+.workload-column-labels {
+    width: 20%;
+}
+
+.workload-column-host-name {
+    width: 10%;
+}
+
+.workload-column-interfaces-data {
+    div {
+        height: 25px;
+    }
 }
 
 .workload-table-button {

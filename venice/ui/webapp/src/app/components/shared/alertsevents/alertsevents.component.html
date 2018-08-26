@@ -41,8 +41,8 @@
                   *ngIf="eventNumbers.INFO>0">{{ eventNumbers.INFO }}</div> -->
           </app-tableheader>
         </ng-template>
-        <!-- Table Header -->
-     <ng-template pTemplate="header" let-columns>
+      <!-- Table Header -->
+      <ng-template pTemplate="header" let-columns>
         <tr>
           <th *ngFor="let col of eventCols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
              {{col.header}}

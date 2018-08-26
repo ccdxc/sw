@@ -5,7 +5,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule, HTTP_INTERCEPTORS, HttpClientXsrfModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
-import { Location, LocationStrategy, HashLocationStrategy, DatePipe, DecimalPipe } from '@angular/common';
+import { LocationStrategy, HashLocationStrategy } from '@angular/common';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/toPromise';
 import 'rxjs/add/operator/catch';
@@ -29,7 +29,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { AbstractService } from '@app/services/abstract.service';
 import { AuthService } from '@app/services/auth.service';
 import { WorkloadService } from '@app/services/workload.service';
-// import { SearchService } from '@app/services/search.service';
+import { WorkloadService as WorkloadServiceGen } from '@app/services/generated/workload.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { VeniceUIHttpInterceptor } from '@app/inteceptors/httpinterceptor.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -39,8 +39,6 @@ import { AlerttableService } from '@app/services/alerttable.service';
 // Pensando UI components
 import { AppRoutingModule } from '@app/app.routing';
 import { AppComponent } from '@app/app.component';
-
-
 import { BaseComponent } from '@app/components/base/base.component';
 import { CommonComponent } from '@app/common.component';
 
@@ -142,6 +140,7 @@ import { EventsService } from '@app/services/events.service';
     ClusterService,
     MonitoringService,
     SecurityService,
+    WorkloadServiceGen,
     // Route Guards
     AuthGuard,
     RouteGuard,

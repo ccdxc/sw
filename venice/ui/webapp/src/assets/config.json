@@ -2,5 +2,8 @@
   "disabled-objects": [
     "Alerts",
     "AlertPolicies"
+  ],
+  "disabled-features" : [
+      "WorkloadWidgets"
   ]
 }

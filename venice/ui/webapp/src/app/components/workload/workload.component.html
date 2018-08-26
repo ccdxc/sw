@@ -1,15 +1,14 @@
 <app-pagebody [icon]="bodyicon" title="Workloads">
     <div fxFlex fxLayout="row" fxLayoutAlign="center center" pagebody-options>
       <div fxFlex></div>
-      <mat-icon (click)="toggleHeroStats()">expand_more</mat-icon>
+      <mat-icon *ngIf="!hideWorkloadWidgets" (click)="toggleHeroStats()">expand_more</mat-icon>
     </div>
-    <div fxLayout="row wrap" fxLayoutAlign="start" class="workload-widgetcontainer">
+    <div *ngIf="!hideWorkloadWidgets" fxLayout="row wrap" fxLayoutAlign="start" class="workload-widgetcontainer">
         <div *ngFor="let widget of widgets">
           <app-workloadwidget
                               [id]="widget"
                               [selected]="selectedWorkloadWidget"
                               [collapsedView]="!heroStatsToggled"
-                              (workloadWidgetClick)="workloadClickHandler($event)"
                               > 
           </app-workloadwidget>
         </div>
@@ -18,62 +17,51 @@
 </app-pagebody>
 
 <ng-template #DataTable>
-  <!-- Table Caption -->
-  <div fxLayout="row" class="workload-table-header">
-    <i fxFlex='nogrow' class="fa fa-table workload-table-icon"></i>
-    <div fxFlex='nogrow' class="workload-table-headercontent">
-        Total Workloads (Showing <strong>{{workloadtable?.totalRecords | number}}</strong> of {{workloadCount.total | number}})
-    </div>
-    <span fxFlex='none' [ngClass]="!hasWorkloadsSelected() ? 'global-button-disabled':''" (click)="workloadTableAddToGroup()" class="global-button-primary workload-button workload-table-button workload-table-button-addtogroup">ADD TO GROUP</span>
-    <span fxFlex='none' [ngClass]="!hasWorkloadsSelected() ? 'global-button-disabled':''" (click)="workloadTableAddLabel()" class="global-button-primary workload-button workload-table-button workload-table-button-addlabel">ADD LABEL</span>
-    <span fxFlex='none' [ngClass]="!hasWorkloadsSelected() ? 'global-button-disabled':''" (click)="workloadTableDeleteWorkload()" class="global-button-primary workload-button workload-table-button workload-table-button-deleteworkload">DELETE WORKLOADS</span>
-    <div fxFlex='none' [ngClass]="!hasWorkloadsSelected() ? 'global-button-disabled':''" (click)="workloadTableMoreActions()" class="workload-table-moreactions">
-      <span >More actions...</span>
-    </div>
-    <span fxFlex></span>
-    <mat-slide-toggle (change)="workloadTableToggleHandler($event)" fxFlex='nogrow' class="workload-table-toggle">Show Saved Changes</mat-slide-toggle>
-    <input fxFlex='nogrow' type="text" class="workload-table-filter" placeholder="Filter by..." (input)="workloadtable?.filterGlobal($event.target.value, 'contains')" id="myField" />
+  <div fxFlex class="workload-table">
+    <p-table #workloadTable class="global-primeng-table" [columns]="cols" 
+              dataKey="meta.name" [responsive]="true" [value]="workloads"
+              [loading]="tableLoading" [resizableColumns]="true">
+        <!-- Table Caption -->
+        <ng-template pTemplate="caption">
+          <app-tableheader title="Workloads" [count]="workloads.length" [total]="workloads.length" [icon]="tableIcon" width="250px">
+          </app-tableheader>
+        </ng-template>
+      <!-- Table Header -->
+      <ng-template pTemplate="header" let-columns>
+        <tr>
+          <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
+              {{col.header}}
+              <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+          </th>
+        </tr>
+      </ng-template>
+      <!-- Table Body -->
+      <ng-template pTemplate="body" let-rowData>
+        <tr (mouseover)="rowHover(rowData)" (mouseleave)="resetHover(rowData)">
+          <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
+            <div *ngSwitchCase="'meta.mod-time'" class="workload-date-row">
+              {{rowData.meta['mod-time'] | PrettyDate }}
+            </div>
+            <div *ngSwitchCase="'meta.creation-time'" class="workload-date-row">
+              {{rowData.meta['creation-time'] | PrettyDate }}
+            </div>
+            <div *ngSwitchCase="'spec.interfaces'" class="workload-column-interfaces-data">
+              <ng-container *ngFor="let mac of getKeys(rowData.spec.interfaces)">
+                <ng-container *ngIf="rowData.status != null && rowData.status.interfaces != null && rowData.status.interfaces[mac] != null">
+                  <div>{{mac}}  -  {{rowData.status.interfaces[mac]["ip-addrs"].join(', ')}}</div>
+                </ng-container>
+                <ng-container *ngIf="rowData.status == null || rowData.status.interfaces == null || rowData.status.interfaces[mac] == null">
+                 <div>{{mac}}</div>
+                </ng-container>
+                <div @fastSlideInOut *ngIf="rowHoverName === rowData.meta.name" class="workload-column-values">Micro-seg vlan: {{rowData.spec.interfaces[mac]["micro-seg-vlan"]}}        External vlan: {{rowData.spec.interfaces[mac]["external-vlan"]}}</div>
+              </ng-container>
+            </div>
+            <ng-container *ngSwitchDefault>
+              {{displayColumn(rowData, col)}}
+            </ng-container>
+          </td>
+        </tr>
+      </ng-template>
+      </p-table>
   </div>
-  <!-- PrimeNG Turbo Table -->
-  <p-table #workloadtable [value]="workloads" [(selection)]="selectedWorkloads" dataKey="name" [rows]="10" [paginator]="true"
-  class="workload-table global-primeng-table" [responsive]="true" [globalFilterFields]="globalFilterFields" [loading]="loading">
-    <!-- Table Header -->  
-    <ng-template pTemplate="header">
-      <tr>
-        <th style="width: 2.25em">
-          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-        </th>
-        <th *ngFor="let col of cols" [pSortableColumn]="col.field">
-            {{col.header}}
-            <p-sortIcon style="float: right;" [field]="col.field"></p-sortIcon>
-        </th>
-        <th class="workload-column-action">
-          Actions
-        </th>
-      </tr>
-    </ng-template>
-    <!-- Table Body -->
-    <ng-template pTemplate="body" let-rowData>
-      <tr [ngClass]="workloadTableRowStyle(rowData)" [pSelectableRow]="rowData">
-        <td>
-          <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
-        </td>
-        <td *ngFor="let col of cols">
-            {{rowData[col.field]}}
-        </td>
-        <td>
-          <div class="workloadtable-action-column-div">
-            <button type="button" class="btn btn-link workloadtable-action-column-icon" (click)="onWorkloadTableArchiveRecord($event, record)"
-              title="Archive">
-              <i class="fa fa-archive "></i>
-            </button>
-            <button type="button" class="btn btn-link workloadtable-action-column-icon" (click)="onWorkloadTableDeleteRecord($event, record)"
-              title="Delete">
-              <i class="fa fa-trash "></i>
-            </button>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
 </ng-template>

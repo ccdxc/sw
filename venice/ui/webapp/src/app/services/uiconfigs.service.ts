@@ -6,6 +6,7 @@ import { Subject } from 'rxjs/Subject';
 
 interface UIConfig {
   'disabled-objects': string[];
+  'disabled-features': string[];
 }
 
 interface PageRequirement {
@@ -16,6 +17,8 @@ interface PageRequirement {
 interface PageRequirementMap {
   [url: string]: PageRequirement;
 }
+
+const CONFIG_FILENAME = "config.json"
 
 @Injectable()
 export class UIConfigsService {
@@ -98,6 +101,11 @@ export class UIConfigsService {
     return true;
   }
 
+  /**
+   * If we don't have a config file, we by default
+   * allow all objects
+   * @param objName 
+   */
   isObjectDisabled(objName: string): boolean {
     if (this.configFile == null) {
       return false;
@@ -105,6 +113,21 @@ export class UIConfigsService {
     const disabledObjs: string[] = this.configFile['disabled-objects'];
     return disabledObjs.some((elem) => {
       return elem.toLowerCase() === objName.toLowerCase();
+    });
+  }
+
+  /**
+   * If we don't have a config file, we by default
+   * allow all features
+   * @param featureName 
+   */
+  isFeatureDisabled(featureName: string): boolean {
+    if (this.configFile == null) {
+      return false;
+    }
+    const disabledFeatures: string[] = this.configFile['disabled-features'];
+    return disabledFeatures.some((elem) => {
+      return elem.toLowerCase() === featureName.toLowerCase();
     });
   }
 
@@ -116,19 +139,26 @@ export class UIConfigsService {
     // Only want to do this once - if root page is revisited, it calls this again.
     if (this.configFile == null) {
       let baseUrl = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
-      baseUrl += '/assets/config.json';
+      baseUrl += '/assets/' + CONFIG_FILENAME;
       const observable = new Subject();
       this.http.get(baseUrl).subscribe(
         (configData: UIConfig) => {
           // set config data
           this.configFile = configData;
+          if (this.configFile == null) {
+            console.log('UI Configuration not specified');
+          }
           // Resolve the promise
           observable.next();
           observable.complete();
         },
         (error) => {
-          console.error('Failed to get user configurations', error);
-          observable.error(new Error('Failed to get user configurations'));
+          console.warn('Failed to get user configurations', error);
+          // Resolve the promise as normal
+          // If this file is missing we load the UI as if the
+          // user had everything enabled
+          observable.next();
+          observable.complete();
         }
       );
       return observable;

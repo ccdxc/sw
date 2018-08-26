@@ -1,13 +1,17 @@
-import { Component, OnChanges, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { MatDialog } from '@angular/material';
+import { Animations } from '@app/animations';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { Utility } from '@app/common/Utility';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { WorkloadService } from '@app/services/workload.service';
+import { WorkloadService } from '@app/services/generated/workload.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { IApiStatus } from '@sdk/v1/models/generated/workload';
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs/Subscription';
-
 import { BaseComponent } from '../base/base.component';
-import { WorkloadModalComponent } from '@app/components/workload/workloadmodal/workloadmodal.component';
-import { MatDialog } from '@angular/material';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
@@ -17,12 +21,16 @@ import { MatDialog } from '@angular/material';
   selector: 'app-workload',
   templateUrl: './workload.component.html',
   styleUrls: ['./workload.component.scss'],
+  animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class WorkloadComponent extends BaseComponent implements OnInit, OnDestroy, OnChanges {
-  @ViewChild('workloadtable') workloadTable: Table;
+export class WorkloadComponent extends BaseComponent implements OnInit, OnDestroy {
+  // Feature Flags
+  hideWorkloadWidgets: boolean = this.uiconfigsService.isFeatureDisabled('WorkloadWidgets');
 
-  private subscription: Subscription;
+  @ViewChild('workloadTable') workloadTable: Table;
+
+  subscriptions: Subscription[] = [];
   // Workload Widget vars
   heroStatsToggled = true;
 
@@ -44,40 +52,48 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     url: '/assets/images/icons/workload/icon-workloads.svg'
   };
 
-  // Workload table vars
-  globalFilterFields: string[] = ['name'];
-  items: any;
-  workloadCount: any = {
-    shown: 10,
-    total: 200
+  tableIcon: Icon = {
+    margin: {
+      top: '0px',
+      left: '0px',
+    },
+    matIcon: 'grid_on'
   };
-  idToFilter: any = {
-    newworkloads: 'neutral',
-    unprotectedworkloads: 'deleted',
-    workloadalerts: 'alert',
-    savedChangesToggle: 'changed',
-  };
-  selectedWorkloads: any[] = [];
-  loading = false;
 
+  // Workload table vars
+
+  // Holds all the workloads
   workloads: any;
+
+  // Used for the table - when true there is a loading icon displayed
+  tableLoading: boolean = false;
+
+  // Used for processing watch events
+  workloadEventUtility: HttpEventUtility;
+
   cols: any[] = [
-    { field: 'name', header: 'Workload Name' },
-    { field: 'labels', header: 'Labels' },
-    { field: 'securityGroups', header: 'Security groups' },
-    { field: 'orchestration', header: 'Orchestration' },
-    { field: 'loadBalancer', header: 'Load Balancer' },
-    { field: 'appId', header: 'App ID' },
+    { field: 'meta.name', header: 'Workload Name', class: 'workload-column-name', sortable: false },
+    { field: 'spec.host-name', header: 'Host name', class: 'workload-column-host-name', sortable: false },
+    { field: 'meta.labels', header: 'Labels', class: 'workload-column-labels', sortable: false },
+    { field: 'spec.interfaces', header: 'Interfaces', class: 'workload-column-interfaces', sortable: false },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'workload-column-date', sortable: false },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'workload-column-date', sortable: false },
   ];
+
+  // Name of the row we are hovering over
+  // When we hover over a row we expand it to show more interface data
+  rowHoverName: string;
 
   // Modal vars
   dialogRef: any;
   securityGroups: string[] = ['SG1', 'SG2'];
   labels: any = { 'Loc': ['NL', 'AMS'], 'Env': ['test', 'prod'] };
 
+
   constructor(
-    private _workloadService: WorkloadService,
+    private workloadService: WorkloadService,
     protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected dialog: MatDialog,
   ) {
     super(_controllerService);
@@ -90,45 +106,34 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     });
     // Setting the toolbar of the app
     this._controllerService.setToolbarData({
-      buttons: [
-        {
-          cssClass: 'global-button-primary workload-button',
-          text: 'NEW WORKLOAD',
-          callback: () => { this.buttoncallback('new workload'); }
-        },
-        {
-          cssClass: 'global-button-primary workload-button workload-toolbar-button',
-          text: 'COMMIT CHANGES',
-          callback: () => { this.buttoncallback('commit changes'); }
-        }],
+      buttons: [],
       breadcrumb: [{ label: 'Workloads Overview', url: '' }]
     });
     // Fetching workload items
-    this.getItems();
+    this.getWorkloads();
     // Default selected workloadwidget
     this.selectedWorkloadWidget = 'totalworkloads';
   }
 
-  buttoncallback(text) {
-    console.log(text);
-  }
-
-  generateModalAddToGroup() {
-    this.dialogRef = this.dialog.open(WorkloadModalComponent, {
-      panelClass: 'workload-modal',
-      width: '898px',
-      hasBackdrop: true,
-      data: {
-        securityGroups: this.securityGroups,
-        selectedWorkloads: this.selectedWorkloads,
-        labels: this.labels
-      }
-    });
-  }
+  // Commenting out as modal isn't part of August release
+  // generateModalAddToGroup() {
+  //   this.dialogRef = this.dialog.open(WorkloadModalComponent, {
+  //     panelClass: 'workload-modal',
+  //     width: '898px',
+  //     hasBackdrop: true,
+  //     data: {
+  //       securityGroups: this.securityGroups,
+  //       selectedWorkloads: this.selectedWorkloads,
+  //       labels: this.labels
+  //     }
+  //   });
+  // }
 
   ngOnDestroy() {
-    if (this.subscription != null) {
-      this.subscription.unsubscribe();
+    if (this.subscriptions != null) {
+      this.subscriptions.forEach(subscription => {
+        subscription.unsubscribe();
+      });
     }
     this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, {
       'component': 'WorkloadComponent', 'state':
@@ -136,22 +141,48 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     });
   }
 
-
-  ngOnChanges() {
+  formatLabels(labelObj) {
+    const labels = [];
+    Object.keys(labelObj).forEach((key) => {
+      labels.push(key + ': ' + labelObj[key]);
+    });
+    return labels.join(', ');
   }
 
-  hasWorkloadsSelected() {
-    return this.selectedWorkloads.length > 0;
+  formatInterfaces(interfacesObj) {
+    const interfaces = [];
+    Object.keys(interfacesObj).forEach((key) => {
+      let ret = key + '  -  ' + interfacesObj[key]['ip'].join(',    ') + ' \n'
+      const network = interfacesObj[key]['network'];
+      if (network != null) {
+        ret += '    Network: ' + network + '    ';
+      }
+      const microSegVlan = interfacesObj[key]['micro-seg-vlan'];
+      if (microSegVlan != null) {
+        ret += '    Micro-seg VLAN: ' + microSegVlan + '    ';
+      }
+      const externalVlan = interfacesObj[key]['external-vlan'];
+      if (microSegVlan != null) {
+        ret += '    External VLAN: ' + microSegVlan;
+      }
+      interfaces.push(ret);
+    });
+    return interfaces.join('\n');
   }
 
-  workloadTableRowStyle(rowData) {
-    const classMapping = {
-      neutral: 'workload-item-neutral ',
-      alert: 'workload-item-alert ',
-      deleted: 'workload-item-deleted',
-      changed: 'workload-item-changed'
-    };
-    return classMapping[rowData.state];
+
+  displayColumn(data, col): any {
+    const fields = col.field.split('.');
+    const value = Utility.getObjectValueByPropertyPath(data, fields);
+    const column = col.field;
+    switch (column) {
+      case "meta.labels":
+        return this.formatLabels(data.meta.labels);
+      case "spec.interfaces":
+        return this.formatInterfaces(data.spec.interfaces);
+      default:
+        return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
+    }
   }
 
   /**
@@ -162,68 +193,49 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     return this.constructor.name;
   }
 
-  getItems() {
-    this.subscription = this._workloadService.getItems().subscribe(data => {
-      this.workloads = data;
-      this.workloadCount.total = this.workloads.length;
-    });
+  /**
+   * Hook called by html when user mouses over a row
+   */
+  rowHover(rowData) {
+    this.rowHoverName = rowData.meta.name;
   }
 
-  workloadClickHandler(id) {
-    this.selectedWorkloadWidget = id;
-    this.applyFilterById(id);
-  }
-
-  workloadTableToggleHandler($event) {
-    if ($event.checked) {
-      this.workloadTable.filter(this.idToFilter['savedChangesToggle'], 'state', 'equals');
-    } else {
-      this.applyFilterById(this.selectedWorkloadWidget);
+  /**
+   * Hook called by html when user's mouse leaves a row
+   */
+  resetHover(rowData) {
+    // We check if the  row that we are leaving
+    // is the row that is saved so that if the rowhover
+    // fires for another row before this leave we don't unset it.
+    if (this.rowHoverName === rowData.meta.name) {
+      this.rowHoverName = null;
     }
   }
 
-  applyFilterById(id) {
-    this.workloadTable.filter(this.idToFilter[id], 'state', 'equals');
+  getWorkloads() {
+    this.workloadEventUtility = new HttpEventUtility();
+    this.workloads = this.workloadEventUtility.array;
+    const subscription = this.workloadService.WatchWorkload().subscribe(
+      (response) => {
+        const body: any = response.body;
+        this.workloadEventUtility.processEvents(body);
+      },
+      error => {
+        // TODO: Error handling
+        if (error.body instanceof Error) {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+        }
+      }
+    )
+    this.subscriptions.push(subscription);
   }
 
-  onWorkloadtableDeleteRecord($event, record) {
-    console.log('WorkloadComponent.onWorkloadtableDeleteRecord()', record);
+  /**
+   * Used by html to get an object's keys for iterating over.
+   */
+  getKeys(obj) {
+    return Object.keys(obj);
   }
-
-  workloadTableAddToGroup($event) {
-    if (this.selectedWorkloads.length !== 0) {
-      this.generateModalAddToGroup();
-    }
-  }
-
-  workloadTableAddLabel($event) {
-    if (this.selectedWorkloads.length !== 0) {
-      console.log('add label');
-    }
-  }
-
-  workloadTableDeleteWorkload($event) {
-    if (this.selectedWorkloads.length !== 0) {
-      console.log('add label');
-    }
-  }
-
-  workloadTableMoreActions($event) {
-    if (this.selectedWorkloads.length !== 0) {
-      console.log('more actions clicked', $event);
-    }
-  }
-
-  onWorkloadTableArchiveRecord($event) {
-    console.log('archive', $event);
-  }
-
-  onWorkloadTableDeleteRecord($event) {
-    console.log('delete', $event);
-  }
-
-  toggleHeroStats() {
-    this.heroStatsToggled = !this.heroStatsToggled;
-  }
-
 }

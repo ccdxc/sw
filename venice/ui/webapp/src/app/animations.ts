@@ -8,6 +8,7 @@ import {
 
 /* Taken from Angular Material expansion panel */
 export const EXPANSION_PANEL_ANIMATION_TIMING = '500ms cubic-bezier(0.4,0.0,0.2,1)';
+export const EXPANSION_PANEL_ANIMATION_TIMING_FAST = '250ms cubic-bezier(0.4,0.0,0.2,1)';
 
 export const Animations = [
   // spinner fading and content entering
@@ -40,6 +41,16 @@ export const Animations = [
     transition(':leave', [
       style({ height: '*', visibility: 'visible', overflow: 'hidden' }),
       animate(EXPANSION_PANEL_ANIMATION_TIMING, style({ height: '0px', visibility: 'hidden' })),
+    ]),
+  ]),
+  trigger('fastSlideInOut', [
+    transition(':enter', [
+      style({ height: '0px', visibility: 'hidden', overflow: 'hidden' }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ height: '*', visibility: 'visible' })),
+    ]),
+    transition(':leave', [
+      style({ height: '*', visibility: 'visible', overflow: 'hidden' }),
+      animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ height: '0px', visibility: 'hidden' })),
     ]),
   ]),
 ];
