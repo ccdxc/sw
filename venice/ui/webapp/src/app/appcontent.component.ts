@@ -228,9 +228,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     } else if (payload['id'] === 'troubleshooting') {
       this.navigate(['/monitoring', 'troubleshooting']);
     } else if (payload['id'] === 'cluster') {
-      this.navigate(['/cluster-group', 'cluster']);
+      this.navigate(['/cluster', 'cluster']);
     } else if (payload['id'] === 'naples') {
-      this.navigate(['/cluster-group', 'naples']);
+      this.navigate(['/cluster', 'naples']);
     } else if (payload['id'] === 'alertsevents') {
       this.navigate(['/monitoring', 'alertsevents']);
     } else {

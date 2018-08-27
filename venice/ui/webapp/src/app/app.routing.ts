@@ -65,7 +65,7 @@ export const routes: Routes = [
         loadChildren: '@components/network/network.module#NetworkModule',
       },
       {
-        path: 'cluster-group',
+        path: 'cluster',
         loadChildren: '@components/cluster-group/cluster-group.module#ClusterGroupModule',
       },
       {

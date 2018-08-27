@@ -1,3 +1,42 @@
-<p>
-  naples works!
-</p>
+<app-pagebody>
+  <ng-container *ngTemplateOutlet="DataTable" ></ng-container>
+</app-pagebody>
+
+<ng-template #DataTable>
+  <p-table #naplesTable [value]="naples" class="global-primeng-table" [columns]="cols" 
+    dataKey="meta.name" [responsive]="true" [resizableColumns]="true">
+    <!-- Table Caption -->
+    <ng-template pTemplate="caption">
+      <app-tableheader title="Naples" [total]="naples.length" [icon]="naplesIcon" width="250px">
+      </app-tableheader>
+    </ng-template>
+    <!-- Table Header -->
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+        <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
+            {{col.header}}
+            <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+        </th>
+      </tr>
+    </ng-template>
+    <!-- Table Body -->
+    <ng-template pTemplate="body" let-rowData>
+      <tr>
+        <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
+          <div *ngSwitchCase="'meta.mod-time'" class="naples-date-row">
+            {{rowData.meta['mod-time'] | PrettyDate }}
+          </div>
+          <div *ngSwitchCase="'meta.creation-time'" class="naples-date-row">
+            {{rowData.meta['creation-time'] | PrettyDate }}
+          </div>
+          <div *ngSwitchCase="'spec.phase'" class="naples-date-row">
+            {{ phaseUIHint[rowData.spec.phase] }}
+          </div>
+          <ng-container *ngSwitchDefault>
+            {{displayColumn(rowData, col)}}
+          </ng-container>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</ng-template>

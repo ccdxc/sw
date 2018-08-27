@@ -1,4 +1,4 @@
-<app-pagebody [icon]="bodyicon" title={{cluster?.meta.name}}>
+<app-pagebody [icon]="bodyicon" title="Cluster Overview">
   <!-- Since we are manually calculating table dimensions, whenever this panel changes
         state we need to recalculate the table -->
   <mat-expansion-panel fxFlex="nogrow" class="global-mat-expansion-panel" [expanded] = "true"
@@ -54,7 +54,7 @@
   <div fxLayout="row" class="cluster-details-nodes-table-header">
     <i fxFlex='nogrow' class="fa fa-table cluster-details-nodes-table-icon"></i>
     <div fxFlex='nogrow' class="cluster-details-nodes-table-headercontent">
-      Total Nodes ({{nodeCount}})
+      Total Nodes ({{nodes.length}})
     </div>
   </div>
   <!-- PrimeNG Turbo Table -->
@@ -62,9 +62,6 @@
     <!-- Table Header -->  
     <ng-template pTemplate="header">
       <tr>
-        <th style="width: 2.25em">
-          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-        </th>
         <th *ngFor="let col of cols" [pSortableColumn]="col.field">
           {{col.header}}
           <p-sortIcon style="float: right;" field="col.field"></p-sortIcon>
@@ -74,9 +71,6 @@
     <!-- Table Data -->
     <ng-template pTemplate="body" let-rowData let-node>
       <tr [pSelectableRow]="rowData">
-        <td>
-          <p-tableCheckbox [value]="node"></p-tableCheckbox>
-        </td>
         <td>{{node.meta.name}}</td>
         <td>{{(node.status.quorum === true) ? 'yes' : ''}}</td>
         <td>{{node.status.phase.charAt(0).toUpperCase() + node.status.phase.slice(1).toLowerCase()}}</td>

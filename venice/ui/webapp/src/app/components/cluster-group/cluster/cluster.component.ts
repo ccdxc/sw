@@ -1,10 +1,12 @@
-import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { AlertseventsComponent } from '@app/components/shared/alertsevents/alertsevents.component';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { BaseComponent } from '../../base/base.component';
+import { IApiStatus, IClusterCluster, IClusterNode } from '@sdk/v1/models/generated/cluster';
 import { Table } from 'primeng/table';
-import { IApiStatus, ClusterCluster, IClusterCluster, ClusterNode, IClusterNodeList, ClusterNodeList } from '@sdk/v1/models/generated/cluster';
-import { AlertseventsComponent } from '@app/components/shared/alertsevents/alertsevents.component';
+import { Subscription } from 'rxjs/Subscription';
+import { BaseComponent } from '@app/components/base/base.component';
 
 @Component({
   selector: 'app-cluster',
@@ -12,7 +14,7 @@ import { AlertseventsComponent } from '@app/components/shared/alertsevents/alert
   templateUrl: './cluster.component.html',
   styleUrls: ['./cluster.component.scss']
 })
-export class ClusterComponent extends BaseComponent implements OnInit {
+export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy {
   @ViewChild('nodestable') nodesTable: Table;
   @ViewChild(AlertseventsComponent) alertsEventsComponent: AlertseventsComponent;
 
@@ -23,14 +25,20 @@ export class ClusterComponent extends BaseComponent implements OnInit {
     },
     url: '/assets/images/icons/cluster/ico-cluster-black.svg'
   };
-  cluster: ClusterCluster;
-  nodes: ClusterNode[] = [];
-  nodeCount: Number = 0;
+  cluster: IClusterCluster;
+  // Used for processing the stream events
+  clusterEventUtility: HttpEventUtility;
+  nodeEventUtility: HttpEventUtility;
+
+  clusterArray: ReadonlyArray<IClusterCluster> = [];
+  nodes: ReadonlyArray<IClusterNode> = [];
+
   cols: any[] = [
     { field: 'name', header: 'Name' },
     { field: 'quorum', header: 'Quorum Member' },
     { field: 'phase', header: 'Phase' },
   ];
+  subscriptions: Subscription[] = [];
 
   constructor(
     private _clusterService: ClusterService,
@@ -44,22 +52,23 @@ export class ClusterComponent extends BaseComponent implements OnInit {
     this.getNodes();
 
     this._controllerService.setToolbarData({
-      buttons: [
-        {
-          cssClass: 'global-button-primary cluster-toolbar-button',
-          text: 'Refresh',
-          callback: () => { this.getCluster(); this.getNodes(); },
-        }],
+      buttons: [],
       breadcrumb: [{ label: 'Cluster', url: '' }, { label: 'Cluster', url: '' }]
     });
   }
 
   getCluster() {
-    this._clusterService.GetCluster().subscribe(
-      (data) => {
-        this.cluster = new ClusterCluster(<IClusterCluster>data.body);
+    this.clusterEventUtility = new HttpEventUtility();
+    this.clusterArray = this.clusterEventUtility.array as ReadonlyArray<IClusterCluster>;
+    const subscription = this._clusterService.WatchCluster().subscribe(
+      response => {
+        const body: any = response.body;
+        this.clusterEventUtility.processEvents(body);
+        if (this.clusterArray.length > 0) {
+          this.cluster = this.clusterArray[0];
+        }
       },
-      (error) => {
+      error => {
         // TODO: Error handling
         if (error.body instanceof Error) {
           console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
@@ -67,22 +76,33 @@ export class ClusterComponent extends BaseComponent implements OnInit {
           console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
       }
-    );
+    )
+    this.subscriptions.push(subscription);
   }
 
   getNodes() {
-    this._clusterService.ListNode().subscribe(
-      data => {
-        if (data.statusCode !== 200) {
-          console.log('Node service returned code: ' + data.statusCode + ' data: ' + <IApiStatus>data.body);
-          // TODO: Error handling
-          return;
+    this.nodeEventUtility = new HttpEventUtility();
+    this.nodes = this.nodeEventUtility.array;
+    const subscription = this._clusterService.WatchNode().subscribe(
+      response => {
+        const body: any = response.body;
+        this.nodeEventUtility.processEvents(body);
+      },
+      error => {
+        // TODO: Error handling
+        if (error.body instanceof Error) {
+          console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
-        const nodes: ClusterNodeList = new ClusterNodeList(<IClusterNodeList>data.body);
-
-        this.nodeCount = nodes.Items.length;
-        this.nodes = nodes.Items;
       }
-    );
+    )
+    this.subscriptions.push(subscription);
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(subscription => {
+      subscription.unsubscribe();
+    });
   }
 }

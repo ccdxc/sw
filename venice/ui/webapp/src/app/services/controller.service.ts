@@ -115,7 +115,7 @@ export class ControllerService {
     this.matIconRegistry.addSvgIcon('workloads', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/workload/icon-workloads.svg'));
 
     // Naple icons
-    this.matIconRegistry.addSvgIcon('naples', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/naples/ico-naples.svg'));
+    this.matIconRegistry.addSvgIcon('naples', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/naples/ico-naples-black.svg'));
 
 
     this.matIconRegistry.addSvgIcon('un-pin', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/dashboard/ico-unpinned.svg'));
