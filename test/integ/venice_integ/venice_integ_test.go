@@ -51,6 +51,7 @@ import (
 	"github.com/pensando/sw/venice/orch/simapi"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -152,6 +153,11 @@ func (it *veniceIntegSuite) launchCmd(c *C) {
 		c.Assert(err, IsNil)
 	}
 	it.rpcServer = rpcServer
+	cmdenv.CertMgr, err = certmgr.NewTestCertificateMgr("smartnic-test")
+	if err != nil {
+		fmt.Printf("Error creating CertMgr instance: %v", err)
+		c.Assert(err, IsNil)
+	}
 	cmdenv.UnauthRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
@@ -199,7 +205,7 @@ func (it *veniceIntegSuite) startNmd(c *C) {
 
 		// create the new NMD
 		nmd, err := nmd.NewAgent(pa, dbPath, hostName, hostID, smartNICServerURL,
-			"", restURL, "managed", globals.NicRegIntvl*time.Second,
+			"", restURL, "", "", "managed", globals.NicRegIntvl*time.Second,
 			globals.NicUpdIntvl*time.Second, resolverClient)
 		if err != nil {
 			c.Fatalf("Error creating NMD. Err: %v", err)
@@ -536,6 +542,10 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 		return nil, errors.New("Suite is being shutdown")
 	}
 	rpckit.SetTestModeDefaultTLSProvider(tlsProvider)
+	if cmdenv.CertMgr != nil {
+		cmdenv.CertMgr.Close()
+		cmdenv.CertMgr = nil
+	}
 	log.Infof("============================= TearDownSuite completed ==========================")
 }
 
