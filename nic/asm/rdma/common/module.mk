@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MAKEDEFS}/pre.mk
 MODULE_TARGET   = rdma_common.asmbin
-MODULE_PREREQS  = rdma.p4bin common_p4plus_rxdma.p4bin
+MODULE_PREREQS  = rdma.p4bin common_p4plus_rxdma.p4bin common_p4plus_txdma.p4bin
 MODULE_INCS     = ${BLD_GEN_DIR}/rdma_rxdma/asm_out \
                   ${BLD_GEN_DIR}/ \
                   ${MODULE_DIR}/../common/include \
