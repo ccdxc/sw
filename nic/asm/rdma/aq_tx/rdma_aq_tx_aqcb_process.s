@@ -49,7 +49,7 @@ rdma_aq_tx_aqcb_process:
         CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
         CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
 
-        //set dma_cmd_ptr in phv
+        //set       dma_cmd_ptr in phv
         TXDMA_DMA_CMD_PTR_SET(AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_START_FLIT_CMD_ID)     
         /* Setup for the next wqe stage */
 
@@ -60,7 +60,7 @@ rdma_aq_tx_aqcb_process:
         // Compute WQE address
         add         r3, d.phy_base_addr, AQ_C_INDEX_HX, AQ_WQE_T_LOG_SIZE_BYTES
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_wqe_process, r3)
-    
+
         /* increment the cindex */
         tblmincri   AQ_C_INDEX_HX, 16, 1
 
@@ -70,7 +70,9 @@ rdma_aq_tx_aqcb_process:
     .brend
     
 busy:
-drop: 
+drop:
+    CAPRI_SET_TABLE_0_VALID(0)
+
     phvwr       p.common.p4_intr_global_drop, 1
     nop.e       
     nop         //Exit Slot

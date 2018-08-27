@@ -50,13 +50,13 @@ rdma_aq_tx_feedback_process:
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
 
-    CAPRI_SET_TABLE_3_VALID(0)
+    CAPRI_SET_TABLE_0_VALID(0)
     nop.e
     nop
 
 bubble_to_next_stage:
 
-    CAPRI_GET_TABLE_3_K(aq_tx_phv_t, r7)
+    CAPRI_GET_TABLE_0_K(aq_tx_phv_t, r7)
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r0)
 
 exit:

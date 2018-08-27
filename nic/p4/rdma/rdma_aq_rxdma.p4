@@ -156,7 +156,8 @@ header_type aq_rx_to_stage_t {
         bth_se                           :    1;
         sqcb_base_addr_hi                :   24;
         rqcb_base_addr_hi                :   24;
-        pad                              :   51;
+        aqcb_addr                        :   28;
+        pad                              :   23;
     }
 }
 
@@ -393,6 +394,7 @@ action rdma_aq_rx_cqcb_process () {
     modify_field(to_s6_info_scr.cqcb_base_addr_hi, to_s6_info.cqcb_base_addr_hi);
     modify_field(to_s6_info_scr.log_num_cq_entries, to_s6_info.log_num_cq_entries);
     modify_field(to_s6_info_scr.bth_se, to_s6_info.bth_se);
+    modify_field(to_s6_info_scr.aqcb_addr, to_s6_info.aqcb_addr);    
     modify_field(to_s6_info_scr.pad, to_s6_info.pad);
 
     // stage to stage

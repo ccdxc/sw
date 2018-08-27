@@ -75,8 +75,8 @@ struct aq_rx_phv_t {
         wakeup_dpath_data   : 64;
     };
     struct cqe_t cqe;
-    busy     : 1;
-    pad6     : 191;
+    busy     : 8;
+    pad6     : 184;
     
     /* flit 0-5 */
     union {

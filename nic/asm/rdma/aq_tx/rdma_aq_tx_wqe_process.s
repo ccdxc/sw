@@ -375,7 +375,8 @@ q_key:
 
 prepare_feedback:
 
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_tx_feedback_process, r0)
+    CAPRI_RESET_TABLE_0_ARG()
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_tx_feedback_process, r0)
 
     nop.e
     nop         //Exit Slot

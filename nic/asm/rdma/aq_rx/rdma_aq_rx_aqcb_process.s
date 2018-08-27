@@ -9,6 +9,8 @@ struct common_p4plus_stage0_app_header_table_k k;
 
 #define AQCB_TO_CQ_P t2_s2s_aqcb_to_cq_info
 #define AQCB_TO_WQE_P t3_s2s_aqcb_to_wqe_info
+
+#define TO_S6_INFO to_s6_info
     
 #define K_OP k.{rdma_aq_feedback_op_sbit0_ebit6,rdma_aq_feedback_op_sbit7_ebit7}
 #define K_PD k.{rdma_aq_feedback_qp_pd_sbit0_ebit15,rdma_aq_feedback_qp_pd_sbit16_ebit31}
@@ -44,6 +46,7 @@ aq_feedback:
     #CQCB is loaded by req_rx and resp_rx flows in stage-5, table-2 for mutual
     #exclusive access. Do the same for aq_rx also
 
+    phvwr          p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID
     phvwrpair      p.cqe.status[7:0], k.rdma_aq_feedback_status, p.cqe.error, k.rdma_aq_feedback_error
     phvwr          CAPRI_PHV_FIELD(AQCB_TO_CQ_P, cq_id), d.cq_id
     
@@ -58,9 +61,11 @@ aq_feedback:
 
     //          populate LIF
     add            r1, r0, offsetof(struct phv_, common_global_global_data)    
-    phvwr CAPRI_PHV_FIELD(PHV_GLOBAL_COMMON_P, lif), CAPRI_RXDMA_INTRINSIC_LIF
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(AQCB_ADDR_SHIFT))
+    phvwr       CAPRI_PHV_FIELD(PHV_GLOBAL_COMMON_P, lif), CAPRI_RXDMA_INTRINSIC_LIF
 
+    mfspr       r2, spr_tbladdr
+    phvwr CAPRI_PHV_FIELD(TO_S6_INFO, aqcb_addr), r2[34:AQCB_ADDR_SHIFT]
+    
     //set dma_cmd_ptr in phv
     RXDMA_DMA_CMD_PTR_SET(AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_START_FLIT_CMD_ID) //Exit Slot
 

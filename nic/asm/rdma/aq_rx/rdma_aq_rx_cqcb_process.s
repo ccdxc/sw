@@ -1,5 +1,6 @@
 #include "aq_rx.h"
 #include "cqcb.h"
+#include "aqcb.h"    
 
 struct aq_rx_phv_t p;
 struct cqcb_t d;
@@ -27,6 +28,7 @@ struct aq_rx_s6_t2_k k;
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
+#define K_AQCB_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, aqcb_addr_sbit0_ebit2, aqcb_addr_sbit27_ebit27)
     
 %%
     .param      rdma_aq_rx_eqcb_process
@@ -60,6 +62,14 @@ cqcb_process:
     // set the color in cqe
     phvwr           p.cqe.color, CQ_COLOR
 
+    //set d.busy = 0
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_AQ_BUSY)
+    phvwr       p.busy, 0               
+    sll         r2, K_AQCB_ADDR, AQCB_ADDR_SHIFT
+    add         r2, r2, FIELD_OFFSET(aqcb_t, busy)
+    DMA_HBM_PHV2MEM_SETUP(r6, busy, busy, r2)
+    
+    
     sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size
     srlv            r3, CQ_PROXY_PINDEX, NUM_LOG_WQE
 
@@ -151,7 +161,7 @@ do_dma:
 
     DMA_CMD_STATIC_BASE_GET(r2, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_CQ)    
     DMA_PHV2MEM_SETUP(r2, c1, cqe, cqe, r1)    
-    
+
 incr_pindex: 
 
 eqcb_eval:
@@ -206,6 +216,7 @@ skip_eqcb:
     PREPARE_DOORBELL_INC_PINDEX(d.wakeup_lif, d.wakeup_qtype, d.wakeup_qid, d.wakeup_ring_id, r1, r2)
     phvwr          p.wakeup_dpath_data, r2.dx
     DMA_HBM_PHV2MEM_SETUP(r6, wakeup_dpath_data, wakeup_dpath_data, r1)
+
     DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, r6)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
     nop.e

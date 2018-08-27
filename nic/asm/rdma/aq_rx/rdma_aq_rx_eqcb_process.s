@@ -23,8 +23,6 @@ struct eqcb_t d;
 #define K_CQ_ID CAPRI_KEY_FIELD(IN_P, qid)    
 #define K_EQCB_ADDR CAPRI_KEY_RANGE(IN_P, eqcb_addr_sbit0_ebit23, eqcb_addr_sbit40_ebit63)
 
-#define K_AQCB_ADDR CAPRI_KEY_FIELD(phv_global_common, cb_addr)
-    
 %%
 
    .param RDMA_EQ_INTR_TABLE_BASE
@@ -50,11 +48,6 @@ rdma_aq_rx_eqcb_process:
     phvwri          p.int_assert_data, CAPRI_INT_ASSERT_DATA
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQ_INT_ASSERT_DATA_BEGIN, PHV_EQ_INT_ASSERT_DATA_END, d.int_assert_addr)
 
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_AQ_BUSY)
-
-    phvwr           p.busy, 0
-    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, busy, busy,
-    CAPRI_KEY_RANGE(phv_global_common, cb_addr_sbit0_ebit1, cb_addr_sbit26_ebit27))
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
     
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
