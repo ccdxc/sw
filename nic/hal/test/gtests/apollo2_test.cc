@@ -354,7 +354,8 @@ route_lpm_init (void) {
         capri_hbm_write_mem(lpm_hbm_addr+i, (uint8_t*)&data, 8);
     }
 
-    data = 0x00000A0A0000FFFF;
+    data  = 0x00000A0A0000FFFF;
+    data |= (((uint64_t)g_nexthop_index) << 48);
     capri_hbm_write_mem(lpm_hbm_addr+1020, (uint8_t*)&data, 8);
 }
 

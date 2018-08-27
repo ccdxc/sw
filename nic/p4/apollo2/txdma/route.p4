@@ -2,6 +2,8 @@
 /* Route lookup                                                              */
 /*****************************************************************************/
 
+#include "../include/lpm_defines.h"
+
 action route_lpm_s0(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                     ip8, ip9, ip10, ip11, ip12, ip13, ip14) {
 
@@ -27,32 +29,32 @@ action route_lpm_s0(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                 if (p4_to_txdma_header.lpm_dst >= ip14) {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 960); // 60 + ((15 * 15) * 4)
+                                 LPM_S0_B15_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 10620); // 60 + 960 + (15 * 704) - 960
+                                 LPM_S2_BLOCK15_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 900); // 60 + ((14 * 15) * 4)
+                                 LPM_S0_B14_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 9976); // 60 + 960 + (14 * 704) - 900
+                                 LPM_S2_BLOCK14_OFFSET);
                 }
             }
             else {
                 if (p4_to_txdma_header.lpm_dst >= ip12) {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 840); // 60 + ((13 * 15) * 4)
+                                 LPM_S0_B13_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 9332); // 60 + 960 + (13 * 704) - 840
+                                 LPM_S2_BLOCK13_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 780); // 60 + ((12 * 15) * 4)
+                                 LPM_S0_B12_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 8688); // 60 + 960 + (12 * 704) - 780
+                                 LPM_S2_BLOCK12_OFFSET);
                 }
             }
         }
@@ -61,32 +63,32 @@ action route_lpm_s0(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                 if (p4_to_txdma_header.lpm_dst >= ip10) {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 720); // 60 + ((11 * 15) * 4)
+                                 LPM_S0_B11_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 8044); // 60 + 960 + (11 * 704) - 720
+                                 LPM_S2_BLOCK11_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 660); // 60 + ((10 * 15) * 4)
+                                 LPM_S0_B10_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 7400); // 60 + 960 + (10 * 704) - 660
+                                 LPM_S2_BLOCK10_OFFSET);
                 }
             }
             else {
                 if (p4_to_txdma_header.lpm_dst >= ip8) {
                         modify_field(p4_to_txdma_header.lpm_addr,
                                      p4_to_txdma_header.lpm_addr +
-                                     600); // 60 + ((9 * 15) * 4)
+                                     LPM_S0_B9_OFFSET);
                         modify_field(txdma_control.lpm_s3_offset,
-                                     6756); // 60 + 960 + (9 * 704) - 600
+                                     LPM_S2_BLOCK9_OFFSET);
                 }
                 else {
                         modify_field(p4_to_txdma_header.lpm_addr,
                                      p4_to_txdma_header.lpm_addr +
-                                     540); // 60 + ((8 * 15) * 4)
+                                     LPM_S0_B8_OFFSET);
                         modify_field(txdma_control.lpm_s3_offset,
-                                     6112); // 60 + 960 + (8 * 704) - 540
+                                     LPM_S2_BLOCK8_OFFSET);
                 }
             }
         }
@@ -97,32 +99,32 @@ action route_lpm_s0(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                 if (p4_to_txdma_header.lpm_dst >= ip6) {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 480); // 60 + ((7 * 15) * 4)
+                                 LPM_S0_B7_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 5468); // 60 + 960 + (7 * 704) - 480
+                                 LPM_S2_BLOCK7_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 420); // 60 + ((6 * 15) * 4)
+                                 LPM_S0_B6_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 4824); // 60 + 960 + (6 * 704) - 420
+                                 LPM_S2_BLOCK6_OFFSET);
                 }
             }
             else {
                 if (p4_to_txdma_header.lpm_dst >= ip4) {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 360); // 60 + ((5 * 15) * 4)
+                                 LPM_S0_B5_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 4180); // 60 + 960 + (5 * 704) - 360
+                                 LPM_S2_BLOCK5_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 300); // 60 + ((4 * 15) * 4)
+                                 LPM_S0_B4_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 3536); // 60 + 960 + (4 * 704) - 300
+                                 LPM_S2_BLOCK4_OFFSET);
                 }
             }
         }
@@ -131,32 +133,32 @@ action route_lpm_s0(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                 if (p4_to_txdma_header.lpm_dst >= ip2) {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 240); // 60 + ((3 * 15) * 4)
+                                 LPM_S0_B3_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 2892); // 60 + 960 + (3 * 704) - 240
+                                 LPM_S2_BLOCK3_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 180); // 60 + ((2 * 15) * 4)
+                                 LPM_S0_B2_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 2248); // 60 + 960 + (2 * 704) - 180
+                                 LPM_S2_BLOCK2_OFFSET);
                 }
             }
             else {
                 if (p4_to_txdma_header.lpm_dst >= ip0) {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 120); // 60 + ((1 * 15) * 4)
+                                 LPM_S0_B1_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 1604); // 60 + 960 + (1 * 704) - 120
+                                 LPM_S2_BLOCK1_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
-                                 60); // 60 + ((0 * 15) * 4)
+                                 LPM_S0_B0_OFFSET);
                     modify_field(txdma_control.lpm_s3_offset,
-                                 960); // 60 + 960 + (0 * 704) - 60
+                                 LPM_S2_BLOCK0_OFFSET);
                 }
             }
         }
@@ -189,13 +191,13 @@ action route_lpm_s1(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 660); // (15 * 44)
+                                 LPM_S1_B15_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 616); // (14 * 44)
+                                 LPM_S1_B14_OFFSET);
                 }
             }
             else {
@@ -203,13 +205,13 @@ action route_lpm_s1(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 572); // (13 * 44)
+                                 LPM_S1_B13_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 528); // (12 * 44)
+                                 LPM_S1_B12_OFFSET);
                 }
             }
         }
@@ -219,13 +221,13 @@ action route_lpm_s1(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 484); // (11 * 44)
+                                 LPM_S1_B11_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 440); // (10 * 44)
+                                 LPM_S1_B10_OFFSET);
                 }
             }
             else {
@@ -233,13 +235,13 @@ action route_lpm_s1(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                         modify_field(p4_to_txdma_header.lpm_addr,
                                      p4_to_txdma_header.lpm_addr +
                                      txdma_control.lpm_s3_offset +
-                                     396); // (9 * 44)
+                                     LPM_S1_B9_OFFSET);
                 }
                 else {
                         modify_field(p4_to_txdma_header.lpm_addr,
                                      p4_to_txdma_header.lpm_addr +
                                      txdma_control.lpm_s3_offset +
-                                     352); // (8 * 44)
+                                     LPM_S1_B8_OFFSET);
                 }
             }
         }
@@ -251,13 +253,13 @@ action route_lpm_s1(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 308); // (7 * 44)
+                                 LPM_S1_B7_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 264); // (6 * 44)
+                                 LPM_S1_B6_OFFSET);
                 }
             }
             else {
@@ -265,13 +267,13 @@ action route_lpm_s1(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 220); // (5 * 44)
+                                 LPM_S1_B5_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 176); // (4 * 44)
+                                 LPM_S1_B4_OFFSET);
                 }
             }
         }
@@ -281,13 +283,13 @@ action route_lpm_s1(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 132); // (3 * 44)
+                                 LPM_S1_B3_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 88); // (2 * 44)
+                                 LPM_S1_B2_OFFSET);
                 }
             }
             else {
@@ -295,13 +297,13 @@ action route_lpm_s1(ip0, ip1, ip2, ip3, ip4, ip5, ip6, ip7,
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 44); // (1 * 44)
+                                 LPM_S1_B1_OFFSET);
                 }
                 else {
                     modify_field(p4_to_txdma_header.lpm_addr,
                                  p4_to_txdma_header.lpm_addr +
                                  txdma_control.lpm_s3_offset +
-                                 0); // (0 * 44)
+                                 LPM_S1_B0_OFFSET);
                 }
             }
         }

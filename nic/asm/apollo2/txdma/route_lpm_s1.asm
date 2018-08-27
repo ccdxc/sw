@@ -1,3 +1,4 @@
+#include "../../../p4/apollo2/include/lpm_defines.h"
 #include "apollo_txdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
@@ -26,24 +27,24 @@ route_lpm_s1:
     bcf      [c1],       lessthan14                //then goto lessthan14
 ge14:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           660         //r1 = r1 + (15 * 44)
+    add.e    r1,         r1,           LPM_S1_B15_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 11; 0 branch delay slot waste
 lessthan14:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           616         //r1 = r1 + (14 * 44)
+    add.e    r1,         r1,           LPM_S1_B14_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 12; 1 branch delay slot waste
 lessthan13:
     slt      c1,         key,          table.ip12  //if key < table[12]
     bcf      [c1],       lessthan12                //then goto lessthan12
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           572         //r1 = r1 + (13 * 44)
+    add.e    r1,         r1,           LPM_S1_B13_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 12; 1 branch delay slot waste
 lessthan12:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           528         //r1 = r1 + (12 * 44)
+    add.e    r1,         r1,           LPM_S1_B12_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 13; 2 branch delay slot waste
 lessthan11:
@@ -53,24 +54,24 @@ lessthan11:
     bcf      [c1],       lessthan10                //then goto lessthan10
 ge10:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           484         //r1 = r1 + (11 * 44)
+    add.e    r1,         r1,           LPM_S1_B11_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 12; 1 branch delay slot waste
 lessthan10:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           440         //r1 = r1 + (10 * 44)
+    add.e    r1,         r1,           LPM_S1_B10_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 13; 2 branch delay slot waste
 lessthan9:
     slt      c1,         key,          table.ip8   //if key < table[8]
     bcf      [c1],       lessthan8                 // if c1 goto lessthan9
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           396         //r1 = r1 + (9 * 44)
+    add.e    r1,         r1,           LPM_S1_B9_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 13; 2 branch delay slot waste
 lessthan8:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           352         //r1 = r1 + (8 * 44)
+    add.e    r1,         r1,           LPM_S1_B8_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 14; 3 branch delay slot waste
 lessthan7:
@@ -82,24 +83,24 @@ lessthan7:
     bcf      [c1],       lessthan6                 //then goto lessthan6
 ge6:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           308         //r1 = r1 + (7 * 44)
+    add.e    r1,         r1,           LPM_S1_B7_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 12; 1 branch delay slot waste
 lessthan6:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           264         //r1 = r1 + (6 * 44)
+    add.e    r1,         r1,           LPM_S1_B6_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 13; 2 branch delay slot waste
 lessthan5:
     slt      c1,         key,          table.ip4   //if key < table[4]
     bcf      [c1],       lessthan4                 //then goto lessthan4
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           220         //r1 = r1 + (5 * 44)
+    add.e    r1,         r1,           LPM_S1_B5_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 13; 2 branch delay slot waste
 lessthan4:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           176         //r1 = r1 + (4 * 44)
+    add.e    r1,         r1,           LPM_S1_B4_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 14; 3 branch delay slot waste
 lessthan3:
@@ -109,24 +110,24 @@ lessthan3:
     bcf      [c1],       lessthan2                 //then goto lessthan2
 ge2:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           132         //r1 = r1 + (3 * 44)
+    add.e    r1,         r1,           LPM_S1_B3_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 13; 2 branch delay slot waste
 lessthan2:
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           88          //r1 = r1 + (2 * 44)
+    add.e    r1,         r1,           LPM_S1_B2_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 14; 3 branch delay slot waste
 lessthan1:
     slt      c1,         key,          table.ip0   //if key < table[0]
     bcf      [c1],       lessthan0                 //then goto lessthan0
     add      r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-    add.e    r1,         r1,           44          //r1 = r1 + (1 * 44)
+    add.e    r1,         r1,           LPM_S1_B1_OFFSET
     phvwr    next_addr,  r1                        //next_addr = r1
     // Total 14; 3 branch delay slot waste
 lessthan0:
     add.e    r1,         curr_addr,    s3_offset   //r1 = curr_addr + s3_offset
-//    add.e  r1,         r1,           0           //r1 = r1 + (0 * 44)
+//    add.e  r1,         r1,           LPM_S1_B0_OFFSET
     phvwr    next_addr,  r1                        // next_addr = r1
     // Total 14; 4 branch delay slot waste
 
