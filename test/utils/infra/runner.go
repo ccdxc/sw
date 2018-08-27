@@ -15,7 +15,11 @@ import (
 
 const (
 	scriptPath = "/tmp/git/pensando/sw/test/ci_targets/run.sh "
-	jsonPath   = "/warmd.json"
+)
+
+var (
+	//can overidden by unittest
+	jsonPath = "/warmd.json"
 )
 
 func getSSHClient(ip net.IP) (*ssh.Client, error) {
@@ -32,6 +36,10 @@ func RunSSH(ip net.IP, command string) error {
 	if err != nil {
 		return err
 	}
+	return runSSHWithClient(sclient, command)
+}
+
+func runSSHWithClient(sclient *ssh.Client, command string) error {
 	sSession, err := sclient.NewSession()
 	if err != nil {
 		return err
@@ -54,6 +62,7 @@ func RunSSH(ip net.IP, command string) error {
 	}
 
 	return sSession.Wait()
+
 }
 
 func getVMIP() net.IP {
@@ -101,6 +110,10 @@ func CopyLogs(logs []string, destFolder string) error {
 		return err
 	}
 
+	return copyLogsWithSSHClient(sshC, logs, destFolder)
+}
+
+func copyLogsWithSSHClient(sshC *ssh.Client, logs []string, destFolder string) error {
 	sftpC, err := sftp.NewClient(sshC)
 	if err != nil {
 		logrus.Error(err)

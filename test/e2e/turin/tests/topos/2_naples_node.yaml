@@ -1,0 +1,26 @@
+nodes:
+    -
+        node:
+            name: node1
+            kind: datanode
+    -
+        node:
+            name: node2
+            kind: datanode
+apps:
+    - app:
+            name: app1-1
+            kind: container
+            parent: node1
+    - app:
+            name: app1-2
+            kind: container
+            parent: node1
+    - app:
+            name: app2-1
+            kind: container
+            parent: node2
+    - app:
+            name: app2-2
+            kind: container
+            parent: node2

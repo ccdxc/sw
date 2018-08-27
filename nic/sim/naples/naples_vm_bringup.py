@@ -269,7 +269,7 @@ def __run_bootstrap_naples(args):
 
 
 def __stop_bootstrap_naples():
-    kill_cmd = ["pkill", "-9" + "-f" + "naples-bootstrap"]
+    kill_cmd = ["pkill", "-9", "-f", "naples-bootstrap"]
     RunShellCmd(kill_cmd)
 
 

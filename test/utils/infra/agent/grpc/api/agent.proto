@@ -1,0 +1,152 @@
+syntax = "proto3";
+package agentproto;
+
+
+message PingMessage {
+  string message = 1;
+}
+
+enum ApiStatus {
+  API_STATUS_OK      = 0;     // success
+  API_STATUS_FAILED  = 1;     // success
+  API_STATUS_APP_NOT_FOUND  = 2;     // App not found
+}
+
+enum EntityType {
+    EntityNone          = 0;
+    EntityNaples        = 1;
+    EntityContainer     = 2;
+    EntityApp           = 3;
+    EntitySwitch        = 4;
+    EntityVM            = 5;
+}
+
+message Entity {
+    string name = 1;
+    EntityType type = 2;
+}
+
+message NodeConfig {
+    Entity entity = 1;
+    string config = 2;
+}
+
+message NodeConfigStatus {
+    ApiStatus  status      =  1;
+    string response  =  2;
+}
+
+service Agent {
+    /*
+  rpc Hello(PingMessage) returns (PingMessage) {
+  }
+
+  rpc RunCommand(Command) returns (CommandStatus) {
+
+  }
+
+  rpc ConfigureNode(NodeConfig) returns (NodeConfigStatus) {
+
+  }
+
+  rpc BringUp(Topology) returns {
+
+  }
+
+  rpc Teardown(Topology) returns {
+
+  }  */
+
+}
+
+message AppConfig {
+    string name     = 1;
+    string registry = 2;
+}
+
+message AppStatus {
+    ApiStatus  status      =  1;
+    string     response  =  2;
+}
+
+message Interface {
+    string app  = 1;
+    string name  = 2;
+    string macAddress = 3;
+    uint32 vlan = 4;
+    string ipAddress = 5;
+    uint32 prefixLen = 6;
+}
+
+message InterfaceStatus {
+    ApiStatus  status      =  1;
+    string     response  =  2;
+}
+
+message Command {
+    string app  = 1;
+    string cmd       = 2;
+    bool  background  = 3;
+    uint32 timeout  = 4;
+}
+
+message CommandStatus {
+    ApiStatus  status = 1;
+    int32  retCode    = 2;
+    string stdout     = 3;
+    string stderr     = 4;
+}
+
+service AppAgent {
+  rpc BringUp(AppConfig) returns (AppStatus) {
+  }
+
+  rpc Teardown(AppConfig) returns (AppStatus) {
+
+  }
+
+  rpc AttachInterface(Interface) returns (InterfaceStatus) {
+
+  }
+
+  rpc RunCommand(Command) returns (CommandStatus) {
+
+  }
+
+}
+
+message NaplesSimConfig {
+    string name              = 1;
+    uint32 nodeID            = 2;
+    string ctrlNwIpRange     = 3; //Control network
+    string tunnelIpStart     = 4;
+    string tunnelInterface   = 5; //Interface used on host to send/recv naples uplink traffic.
+    string tunnelIpAddress   = 6; //Ip Address
+}
+
+message NaplesStatus {
+    ApiStatus  status      =  1;
+    string     response  =  2;
+}
+
+message HntapConfig {
+    string  config  =  1;
+}
+
+
+service NaplesSim {
+    rpc BringUp(NaplesSimConfig) returns (NaplesStatus) {
+    }
+
+    rpc Teardown(NaplesSimConfig) returns (NaplesStatus) {
+    }
+
+    rpc ConfigureHntap(HntapConfig) returns (NaplesStatus) {
+
+    }
+
+    rpc RunCommand(Command) returns (CommandStatus) {
+
+    }
+
+}

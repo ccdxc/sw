@@ -21,6 +21,7 @@ references:
 #  - test/ci_targets/e2etelemetry
   - storage/offload
 dependencies:
+  test: nic
   dol: nic
   dol/test/networking : nic
   nic/agent: venice

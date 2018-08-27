@@ -15,6 +15,8 @@ type ConfigBuffer interface {
 	GenerateObject(kind string, numInsances int) ([]interface{}, error)
 
 	SaveObject(obj interface{}) error
+
+	GenerateConfig(kind string, numInstances int) error
 }
 
 type configBuffer struct {

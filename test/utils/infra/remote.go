@@ -1,7 +1,11 @@
 package infra
 
 import (
+	"context"
 	"fmt"
+	"io"
+	"log"
+	"os"
 	"regexp"
 	"time"
 )
@@ -11,6 +15,10 @@ type RemoteEntity interface {
 	Name() string
 
 	Dump() string
+
+	Kind() string
+
+	Parent() RemoteEntity
 
 	GetConnectivity() []Link
 
@@ -24,15 +32,21 @@ type RemoteEntity interface {
 
 	ScpFrom(src, dest string) error
 
+	GetIPAddress() (string, error)
+
 	Reset() error
 
-	Exec(cmd string) (retCode int, stdout, stderr []string)
+	Exec(cmd string, sudo, background bool) (retCode int, stdout, stderr []string)
 
 	GetHostingNode() (RemoteEntity, error)
 
 	Expect(re *regexp.Regexp, timeout time.Duration) (out string, match []string, err error)
 
 	Send(done chan interface{})
+
+	bringUp(ctx context.Context, err chan error)
+
+	teardown(ctx context.Context, err chan error)
 }
 
 // Remote Entity Kind (or type)
@@ -45,6 +59,11 @@ const (
 
 	CallbackEventRemoteEntityUnresponsive = 1
 	CallbackEventTestFailure              = 2
+)
+
+var (
+	//LogDir for infra
+	LogDir = "/var/log/turin/"
 )
 
 // Link describes one record that describes the topology
@@ -62,15 +81,26 @@ type CallbackEventType int
 
 // remoteEntity defines an abstracted remote entity such as naples, venice, host, app container, etc.
 type remoteEntity struct {
-	name      string        // name of the node, used for remote execution
-	kind      string        // could be venice, naples, workload, or switch
-	ipAddress string        // ip address of the node, or parent node
-	parent    *remoteEntity // parent remote entity e.g. host on which VM/container is running
+	name      string       // name of the node, used for remote execution
+	kind      string       // could be venice, naples, workload, or switch
+	ipAddress string       // ip address of the node, or parent node
+	parent    RemoteEntity // parent remote entity e.g. host on which VM/container is running
+	logger    *log.Logger  // Logger for each entity.
 }
 
 // Name returns the name of the remote entity
 func (re *remoteEntity) Name() string {
 	return re.name
+}
+
+// Kind returns the kind of the remote entity
+func (re *remoteEntity) Kind() string {
+	return re.kind
+}
+
+// Parent returns the parent of the remote entity
+func (re *remoteEntity) Parent() RemoteEntity {
+	return re.parent
 }
 
 // Dump returns debug information about a remote entity
@@ -123,7 +153,7 @@ func (re *remoteEntity) Reset() error {
 // Exec - executes a command on a remote entity, returns stdout/stderr
 // cmd - command string
 // stdout, stderr - return stdout/stderr values, limited to 10k lines
-func (re *remoteEntity) Exec(cmd string) (retCode int, stdout, stderr []string) {
+func (re *remoteEntity) Exec(cmd string, sudo, background bool) (retCode int, stdout, stderr []string) {
 	retCode = 0
 	stdout = []string{}
 	stderr = []string{}
@@ -133,8 +163,10 @@ func (re *remoteEntity) Exec(cmd string) (retCode int, stdout, stderr []string) 
 
 // GetHostingNode - returns reference to hosting node (e.g. VM/host of a container), if applicable
 func (re *remoteEntity) GetHostingNode() (RemoteEntity, error) {
-	newRe := &remoteEntity{}
-	return newRe, nil
+	if re.Parent() != nil {
+		return re.Parent(), nil
+	}
+	return nil, fmt.Errorf("No Hosting node")
 }
 
 // Expect - waits to match a given regex output for a command
@@ -144,4 +176,29 @@ func (re *remoteEntity) Expect(regex *regexp.Regexp, timeout time.Duration) (out
 
 // Send - sends a command over the pty to the remote entity
 func (re *remoteEntity) Send(done chan interface{}) {
+}
+
+func (re *remoteEntity) bringUp(ctx context.Context, err chan error) {
+
+}
+
+func (re *remoteEntity) GetIPAddress() (string, error) {
+	return "", nil
+}
+
+func (re *remoteEntity) teardown(ctx context.Context, err chan error) {
+
+}
+
+func (re *remoteEntity) log(msg interface{}) {
+
+	if re.logger == nil {
+		file, err := os.OpenFile(LogDir+"/"+re.Name()+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalln("Failed to open log file", "file.txt", ":", err)
+		}
+		multi := io.MultiWriter(file, os.Stdout)
+		re.logger = log.New(multi, re.Name()+"-"+re.ipAddress+":", log.Ldate|log.Ltime)
+	}
+	re.logger.Println(msg)
 }
