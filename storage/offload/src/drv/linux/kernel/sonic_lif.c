@@ -956,7 +956,7 @@ static int sonic_lif_seq_q_init(struct queue *q)
 			.enable = false,
 			.total_wrings = 1,
 			.host_wrings = 1,
-			.entry_size = q->desc_size,
+			.entry_size = ilog2(q->desc_size),
 			.wring_size = ilog2(q->num_descs),
 			.wring_base = (dma_addr_t)osal_hostpa_to_devpa((uint64_t)q->base_pa),
 		},
