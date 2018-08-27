@@ -11,7 +11,9 @@ import (
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
 
 // NMD is the Naples management daemon instance object
@@ -40,6 +42,11 @@ type NMD struct {
 	listener         net.Listener // socket listener
 	httpServer       *http.Server // HTTP server
 	isRestSrvRunning bool         // status of the REST server
+
+	certsListenURL string                            // URL where local processes can request certificates
+	remoteCertsURL string                            // URL where local process cert request are forwarder
+	certsProxy     *certsproxy.CertsProxy            // the CertsProxy instance
+	tlsProvider    *tlsproviders.KeyMgrBasedProvider // TLS provider holding cluster keys
 }
 
 // NaplesConfigResp is response to NaplesConfig request nmd.Naples

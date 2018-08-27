@@ -16,7 +16,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
@@ -55,9 +54,6 @@ func main() {
 
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
-
-	// Set the TLS provider for rpckit
-	rpckit.SetN4STLSProvider()
 
 	// read the mac address of the uplink interface
 	macAddr, err := netutils.GetIntfMac(*uplinkIf)

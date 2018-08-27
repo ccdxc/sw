@@ -19,16 +19,16 @@ import (
 )
 
 func verifyBundle(t *testing.T, bundle *grpc.CertMgrBundle, trustChain, trustRoots []*x509.Certificate) {
-	Assert(t, len(trustChain) == len(bundle.GetCaTrustChain()),
+	Assert(t, len(trustChain) == len(bundle.GetCaTrustChain().GetCertificates()),
 		fmt.Sprintf("Error verifying trust chain. Have: %d certificates, want: %d",
-			len(bundle.GetCaTrustChain()), len(trustChain)))
-	Assert(t, len(trustRoots) == len(bundle.GetTrustRoots()),
+			len(bundle.GetCaTrustChain().GetCertificates()), len(trustChain)))
+	Assert(t, len(trustRoots) == len(bundle.GetTrustRoots().GetCertificates()),
 		fmt.Sprintf("Error verifying trust roots. Have: %d certificates, want: %d",
-			len(bundle.GetTrustRoots()), len(trustRoots)))
-	for i, c := range bundle.GetCaTrustChain() {
+			len(bundle.GetTrustRoots().GetCertificates()), len(trustRoots)))
+	for i, c := range bundle.GetCaTrustChain().GetCertificates() {
 		Assert(t, bytes.Equal(c.Certificate, trustChain[i].Raw), "Error verifying trust chain, index: %d, Have %+v, Want: %+v", c, trustChain[i])
 	}
-	for i, c := range bundle.GetTrustRoots() {
+	for i, c := range bundle.GetTrustRoots().GetCertificates() {
 		Assert(t, bytes.Equal(c.Certificate, trustRoots[i].Raw), "Error verifying trust roots, index: %d, Have %+v, Want: %+v", c, trustRoots[i])
 	}
 }

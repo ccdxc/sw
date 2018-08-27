@@ -43,5 +43,5 @@ message CaTrustChain {
 }
 
 message TrustRoots {
-  repeated Certificate trustRoots = 1;
+  repeated Certificate certificates = 1;
 }

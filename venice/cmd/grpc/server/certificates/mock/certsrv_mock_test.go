@@ -49,7 +49,7 @@ func TestCertSrvMockRPC(t *testing.T) {
 	AssertOk(t, err, "Error retrieving trust roots from CertSrv endpoint")
 	fileRoot, err := certs.ReadCertificate(rootsPath)
 	AssertOk(t, err, "Error reading trust roots from file")
-	Assert(t, bytes.Equal(trustRootsResp.GetTrustRoots()[0].GetCertificate(), fileRoot.Raw), fmt.Sprintf("Trust roots do not match"))
+	Assert(t, bytes.Equal(trustRootsResp.GetCertificates()[0].GetCertificate(), fileRoot.Raw), fmt.Sprintf("Trust roots do not match"))
 
 	// retrieve trust chain. It should match {ca.cert.pem.crt, root.cert.pem}
 	trustChainResp, err := certsrv.GetCaTrustChain(context.Background(), &certapi.Empty{})

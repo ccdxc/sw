@@ -3,12 +3,13 @@
 package smartnic
 
 import (
-	"errors"
+	"crypto/x509"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
@@ -18,6 +19,8 @@ import (
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
+	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	perror "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -376,7 +379,33 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 		}
 	}
 
-	return &grpc.RegisterNICResponse{Phase: phase}, err
+	resp := &grpc.RegisterNICResponse{
+		Phase: phase,
+	}
+
+	if phase == cluster.SmartNICSpec_ADMITTED.String() {
+		csr, err := x509.ParseCertificateRequest(req.GetClusterCertSignRequest())
+		if err != nil {
+			log.Errorf("Received invalid certificate request, error: %v", err)
+			return nil, errors.Wrap(err, "Invalid certificate request")
+		}
+		err = csr.CheckSignature()
+		if err != nil {
+			log.Errorf("Received CSR with invalid signature, error: %v", err)
+			return nil, errors.Wrap(err, "Certificate request has invalid signature")
+		}
+		cert, err := env.CertMgr.Ca().Sign(csr)
+		if err != nil {
+			log.Errorf("Error signing CSR: %v", err)
+			return nil, errors.Wrap(err, "Error signing certificate request")
+		}
+		resp.ClusterCert = &certapi.CertificateSignResp{
+			Certificate: &certapi.Certificate{Certificate: cert.Raw},
+		}
+		resp.CaTrustChain = utils.GetCaTrustChain(env.CertMgr)
+		resp.TrustRoots = utils.GetTrustRoots(env.CertMgr)
+	}
+	return resp, err
 }
 
 // UpdateNIC handles the update to smartNIC object

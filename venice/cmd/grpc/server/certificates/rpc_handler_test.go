@@ -80,7 +80,7 @@ func TestCertificatesRPC(t *testing.T) {
 	AssertOk(t, err, "Error fetching trust roots")
 	cmTrustRoots := cm.Ca().TrustRoots()
 	trustRoots := x509.NewCertPool()
-	for i, r := range rootsResp.GetTrustRoots() {
+	for i, r := range rootsResp.GetCertificates() {
 		trustRoots.AddCert(cmTrustRoots[i])
 		if !reflect.DeepEqual(r.GetCertificate(), cmTrustRoots[i].Raw) {
 			t.Fatalf("TrustRoots() RPC response does not match CM trust roots.\nHave: %+v\nWant:%+v", r.GetCertificate(), cmTrustRoots[i].Raw)
@@ -92,7 +92,7 @@ func TestCertificatesRPC(t *testing.T) {
 	AssertOk(t, err, "Error fetching CA trust chain")
 	caCert := tcs.GetCertificates()[0].GetCertificate()
 	var found bool
-	for _, r := range rootsResp.GetTrustRoots() {
+	for _, r := range rootsResp.GetCertificates() {
 		if bytes.Equal(r.GetCertificate(), caCert) {
 			found = true
 			break

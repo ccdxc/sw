@@ -66,6 +66,7 @@ const (
 	CMDGRPCAuthPort                = "9009"
 	CMDResolverPort                = CMDGRPCAuthPort
 	CMDSmartNICUpdatesPort         = CMDGRPCAuthPort
+	CMDAuthCertAPIPort             = CMDGRPCAuthPort
 
 	// API Server
 	APIServerPort     = "9003"

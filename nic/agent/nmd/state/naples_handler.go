@@ -3,13 +3,16 @@
 package state
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
@@ -68,10 +71,15 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 
 // StartManagedMode starts the tasks required for managed mode
 func (n *NMD) StartManagedMode() error {
-
 	// Set Registration in progress flag
 	log.Infof("NIC in managed mode, mac: %v", n.config.Spec.PrimaryMac)
 	n.setRegStatus(true)
+
+	err := n.initTLSProvider()
+	if err != nil {
+		return fmt.Errorf("Error initializing TLS provider: %v", err)
+	}
+
 	for {
 		select {
 
@@ -179,6 +187,28 @@ func (n *NMD) StartManagedMode() error {
 					log.Infof("NIC admitted into cluster, mac: %s", mac)
 					n.setRegStatus(false)
 
+					err = n.setClusterCredentials(&resp)
+					if err != nil {
+						log.Errorf("Error processing cluster credentials: %v", err)
+					}
+
+					// start watching objects
+					go n.cmd.WatchSmartNICUpdates()
+
+					// Start certificates proxy
+					if n.certsListenURL != "" {
+						certsProxy, err := certsproxy.NewCertsProxy(n.certsListenURL, n.remoteCertsURL,
+							rpckit.WithTLSProvider(n.tlsProvider), rpckit.WithRemoteServerName(globals.Cmd))
+						if err != nil {
+							log.Errorf("Error starting certificates proxy at %s: %v", n.certsListenURL, err)
+							// still try to proceed
+						} else {
+							log.Infof("Started certificates proxy at %s, forwarding to: %s", n.certsListenURL, n.remoteCertsURL)
+						}
+						n.certsProxy = certsProxy
+						n.certsProxy.Start()
+					}
+
 					// Start goroutine to send periodic NIC updates
 					n.Add(1)
 					go func() {
@@ -247,7 +277,11 @@ func (n *NMD) SendNICUpdates() error {
 
 // StopManagedMode stop the ongoing tasks meant for managed mode
 func (n *NMD) StopManagedMode() error {
-
+	// stop accepting certificate requests
+	if n.certsProxy != nil {
+		n.certsProxy.Stop()
+		n.certsProxy = nil
+	}
 	// stop ongoing NIC registration, if any
 	close(n.stopNICReg)
 	// stop ongoing NIC updates, if any
@@ -256,6 +290,12 @@ func (n *NMD) StopManagedMode() error {
 	// Wait for goroutines launched in managed mode
 	// to complete
 	n.Wait()
+
+	// release TLS provider resources
+	if n.tlsProvider != nil {
+		n.tlsProvider.Close()
+		n.tlsProvider = nil
+	}
 
 	return nil
 }

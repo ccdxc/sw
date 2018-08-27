@@ -15,7 +15,6 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/ntsdb"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 var fwTable ntsdb.Table
@@ -34,8 +33,6 @@ func main() {
 		log.Errorf("Error %v parsing args", err)
 		os.Exit(1)
 	}
-	// Set the TLS provider for rpckit
-	rpckit.SetN4STLSProvider()
 
 	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
 	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))

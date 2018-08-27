@@ -37,6 +37,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -49,7 +50,7 @@ import (
 )
 
 const (
-	smartNICServerURL = "localhost:" + globals.CMDSmartNICRegistrationAPIPort
+	smartNICServerURL = "localhost:0"
 	resolverURLs      = ":" + globals.CMDResolverPort
 	minAgents         = 1
 	maxAgents         = 100
@@ -104,7 +105,6 @@ func getDBPath(index int) string {
 
 // launchCMDServer creates a smartNIC CMD server for SmartNIC service.
 func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpckit.RPCServer, error) {
-
 	// create an RPC server.
 	rpcServer, err := rpckit.NewRPCServer("smartNIC", url)
 	if err != nil {
@@ -132,12 +132,17 @@ func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 }
 
 // createCMD creates rpc server for SmartNIC service
-func createCMD(m *testing.M) *rpckit.RPCServer {
+func createCMD(m *testing.M) (*rpckit.RPCServer, error) {
+	var err error
 
 	// set cmd logger & quorum nodes
 	cmdenv.Logger = tInfo.l
 	cmdenv.QuorumNodes = []string{"localhost"}
 	cmdenv.StateMgr = cache.NewStatemgr()
+	cmdenv.CertMgr, err = certmgr.NewTestCertificateMgr("nic_config_test")
+	if err != nil {
+		return nil, fmt.Errorf("Error instantiating CertMgr: %v", err)
+	}
 
 	// Start CMD config watcher
 	l := mock.NewLeaderService("testMaster")
@@ -153,11 +158,11 @@ func createCMD(m *testing.M) *rpckit.RPCServer {
 	// start the rpc server
 	rpcServer, err := launchCMDServer(m, *cmdURL, "", "", "")
 	if err != nil {
-		fmt.Printf("Error connecting to grpc server. Err: %v", err)
-		return nil
+		return nil, fmt.Errorf("Error connecting to grpc server. Err: %v", err)
 	}
+	*cmdURL = rpcServer.GetListenURL()
 
-	return rpcServer
+	return rpcServer, nil
 }
 
 // Create NMD and Agent
@@ -178,6 +183,8 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 		*cmdURL,
 		"",
 		restURL,
+		"", // no local certs endpoint
+		"", // no remote certs endpoint
 		"classic",
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,
@@ -411,9 +418,9 @@ func Setup(m *testing.M) {
 	tInfo.apiClient = apiCl
 
 	// create CMD
-	tInfo.rpcServer = createCMD(m)
-	if tInfo.rpcServer == nil {
-		fmt.Printf("Err creating rpc server & client")
+	tInfo.rpcServer, err = createCMD(m)
+	if tInfo.rpcServer == nil || err != nil {
+		fmt.Printf("Err creating rpc server & client: %v", err)
 		os.Exit(-1)
 	}
 

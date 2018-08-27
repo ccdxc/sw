@@ -15,7 +15,6 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 // main (command source) for events proxy
@@ -52,9 +51,6 @@ func main() {
 	}
 
 	logger := log.SetConfig(config)
-
-	// Set the TLS provider for rpckit
-	rpckit.SetN4STLSProvider()
 
 	// create resolver client
 	resolverClient := resolver.New(&resolver.Config{

@@ -8,12 +8,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -73,9 +76,6 @@ func NewCmdClient(nmd state.NmdAPI, cmdRegistrationURL, cmdUpdatesURL string, re
 		return nil, err
 	}
 
-	// start watching objects
-	go client.runSmartNICWatcher(client.watchCtx)
-
 	return &client, nil
 }
 
@@ -86,7 +86,7 @@ func (client *CmdClient) initRegistrationRPC() error {
 
 	// initialize rpcClient
 	var err error
-	log.Infof("Initializing NIC registration RPC client ")
+	log.Infof("Initializing NIC registration RPC client URL: %v", client.cmdRegistrationURL)
 	client.registrationRPCClient, err = rpckit.NewRPCClient("nmd-nic-reg", client.cmdRegistrationURL, rpckit.WithTLSProvider(nil))
 	if err != nil {
 		log.Errorf("Error connecting to grpc server for NIC registration, URL: %v Err: %v", client.cmdRegistrationURL, err)
@@ -280,11 +280,21 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.Regist
 	}
 	defer client.closeRegistrationRPC()
 
+	kp, err := client.nmd.GenClusterKeyPair()
+	if err != nil {
+		return grpc.RegisterNICResponse{}, errors.Wrapf(err, "Error generating key pair")
+	}
+	csr, err := certs.CreateCSR(kp, nil, []string{globals.Nmd + "-" + nic.Name}, nil)
+	if err != nil {
+		return grpc.RegisterNICResponse{}, errors.Wrapf(err, "Error creating certificate signing request")
+	}
+
 	// make an RPC call to controller
 	nicRPCClient := grpc.NewSmartNICRegistrationClient(client.getRegistrationRPCClient().ClientConn)
 	req := grpc.RegisterNICRequest{
 		Nic:  *nic,
 		Cert: getFactoryCert(),
+		ClusterCertSignRequest: csr.Raw,
 	}
 	resp, err := nicRPCClient.RegisterNIC(context.Background(), &req)
 	if err != nil || resp == nil {
@@ -320,6 +330,11 @@ func (client *CmdClient) UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.Smar
 	}
 
 	return resp.GetNic(), err
+}
+
+// WatchSmartNICUpdates starts a CMD watchers to receive SmartNIC objects updates
+func (client *CmdClient) WatchSmartNICUpdates() {
+	go client.runSmartNICWatcher(client.watchCtx)
 }
 
 // getFactoryCert

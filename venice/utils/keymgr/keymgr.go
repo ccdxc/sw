@@ -94,14 +94,14 @@ func (km *KeyMgr) destroyCertificateBundle(id string) error {
 }
 
 func (km *KeyMgr) storeObject(obj Object) error {
+	id := obj.ID()
+	if km.objects[id] != nil {
+		return fmt.Errorf("Object with ID %v already present", id)
+	}
 	switch obj.Type() {
 	case ObjectTypeCertificateBundle:
 		return km.storeCertificateBundle(obj.(*CertificateBundle))
 	default:
-		id := obj.ID()
-		if km.objects[id] != nil {
-			return fmt.Errorf("Object with ID %v already present", id)
-		}
 		err := km.be.StoreObject(obj)
 		if err != nil {
 			return errors.Wrapf(err, "Error storing object in backend, ID: %s", id)
@@ -148,6 +148,18 @@ func (km *KeyMgr) destroyObject(id string, Type ObjectType) error {
 	}
 }
 
+func (km *KeyMgr) createKeyPair(id string, keytype KeyType) (*KeyPair, error) {
+	if km.objects[id] != nil {
+		return nil, fmt.Errorf("KeyPair with ID %v already exists", id)
+	}
+	kp, err := km.be.CreateKeyPair(id, keytype)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error generating KeyPair with ID %s", id)
+	}
+	km.objects[id] = kp
+	return kp, nil
+}
+
 // StoreObject stores an object in KeyMgr.
 // If backend is stateless, Object is not persistent.
 func (km *KeyMgr) StoreObject(obj Object) error {
@@ -160,6 +172,28 @@ func (km *KeyMgr) StoreObject(obj Object) error {
 	}
 	km.Lock()
 	defer km.Unlock()
+	return km.storeObject(obj)
+}
+
+// UpdateObject stores an object in KeyMgr.
+// If no object with given ID exists, one is created
+func (km *KeyMgr) UpdateObject(obj Object) error {
+	if obj == nil {
+		return fmt.Errorf("Object cannot be nil")
+	}
+	id := obj.ID()
+	if err := validateID(id); err != nil {
+		return errors.Wrapf(err, "ID validation error")
+	}
+	km.Lock()
+	defer km.Unlock()
+	oldObj, err := km.getObject(id, obj.Type())
+	if err != nil {
+		return err
+	}
+	if oldObj != nil {
+		err = km.destroyObject(oldObj.ID(), obj.Type())
+	}
 	return km.storeObject(obj)
 }
 
@@ -179,21 +213,35 @@ func (km *KeyMgr) DestroyObject(id string, Type ObjectType) error {
 }
 
 // CreateKeyPair generates a (public key, private key) of the specified type with the supplied ID
+// Returns an error if object already exists
 func (km *KeyMgr) CreateKeyPair(id string, keytype KeyType) (*KeyPair, error) {
 	if err := validateID(id); err != nil {
 		return nil, errors.Wrapf(err, "ID validation error")
 	}
 	km.Lock()
 	defer km.Unlock()
-	if km.objects[id] != nil {
-		return nil, fmt.Errorf("KeyPair with ID %v already exists", id)
+	return km.createKeyPair(id, keytype)
+}
+
+// UpdateKeyPair generates a (public key, private key) of the specified type with the supplied ID
+// Updates an existing object if it finds it, otherwise it creates a new one
+func (km *KeyMgr) UpdateKeyPair(id string, keytype KeyType) (*KeyPair, error) {
+	if err := validateID(id); err != nil {
+		return nil, errors.Wrapf(err, "ID validation error")
 	}
-	kp, err := km.be.CreateKeyPair(id, keytype)
+	km.Lock()
+	defer km.Unlock()
+	obj, err := km.getObject(id, ObjectTypeKeyPair)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error generating KeyPair with ID %s", id)
+		return nil, err
 	}
-	km.objects[id] = kp
-	return kp, nil
+	if obj != nil {
+		err = km.destroyObject(id, ObjectTypeKeyPair)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return km.createKeyPair(id, keytype)
 }
 
 // DeriveKey derives a symmetric key using Diffie-Hellman key agreement.

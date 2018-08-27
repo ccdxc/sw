@@ -4,6 +4,9 @@ package smartnic_test
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"fmt"
 	"os"
 	"strings"
@@ -33,6 +36,8 @@ import (
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/certmgr"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -80,11 +85,16 @@ var tInfo testInfo
 
 // runRPCServer creates a smartNIC server for SmartNIC service.
 func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, error) {
+	var err error
 
-	// set cmd logger, statemgr & quorum nodes
+	// set cmd logger, statemgr, certmgr & quorum nodes
 	cmdenv.Logger = tInfo.l
 	cmdenv.QuorumNodes = []string{"localhost"}
 	cmdenv.StateMgr = cache.NewStatemgr()
+	cmdenv.CertMgr, err = certmgr.NewTestCertificateMgr("smartnic-test")
+	if err != nil {
+		return nil, fmt.Errorf("Error creating CertMgr instance: %v", err)
+	}
 
 	// Start CMD config watcher
 	l := mock.NewLeaderService("testMaster")
@@ -168,6 +178,8 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 		smartNICServerURL,
 		smartNICServerURL,
 		restURL,
+		"", // no local certs endpoint
+		"", // no remote certs endpoint
 		"classic",
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,
@@ -300,6 +312,10 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 		AssertOk(t, err, "Error creating Host object")
 	}
 
+	// Create a single key for all testcases
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	AssertOk(t, err, "Error creating private key")
+
 	// Execute the testcases
 	for _, tc := range testCases {
 
@@ -336,9 +352,13 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				},
 			}
 
+			csr, err := certs.CreateCSR(key, nil, []string{tc.hostName}, nil)
+			AssertOk(t, err, "Error creating CSR")
+
 			req := &grpc.RegisterNICRequest{
 				Nic:  nic,
 				Cert: tc.cert,
+				ClusterCertSignRequest: csr.Raw,
 			}
 
 			// register NIC call
@@ -915,6 +935,11 @@ func testTeardown() {
 
 	// stop the apiServer
 	tInfo.apiServer.Stop()
+
+	// close the CMD certmgr
+	if cmdenv.CertMgr != nil {
+		cmdenv.CertMgr.Close()
+	}
 }
 
 func TestMain(m *testing.M) {

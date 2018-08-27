@@ -3,8 +3,8 @@
 package state
 
 import (
+	"crypto/x509"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -12,17 +12,22 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
 
 // NewNMD returns a new NMD instance
 func NewNMD(platform PlatformAPI,
-	dbPath, nodeUUID, macAddr, listenURL, mode string,
+	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, mode string,
 	regInterval, updInterval time.Duration) (*NMD, error) {
 
 	var emdb emstore.Emstore
@@ -95,6 +100,8 @@ func NewNMD(platform PlatformAPI,
 		isUpdOngoing:     false,
 		isRestSrvRunning: false,
 		listenURL:        listenURL,
+		certsListenURL:   certsListenURL,
+		remoteCertsURL:   remoteCertsURL,
 		stopNICReg:       make(chan bool, 1),
 		stopNICUpd:       make(chan bool, 1),
 		config:           config,
@@ -140,6 +147,14 @@ func (n *NMD) RegisterCMD(cmd CmdAPI) error {
 	n.cmd = cmd
 
 	return nil
+}
+
+// GenClusterKeyPair generates a (public key, private key) for this NMD instance
+// to authenticate itself to other entities in the Venice cluster.
+// When the instance is admitted to a cluster, it receives a corresponding
+// certificate signed by CMD
+func (n *NMD) GenClusterKeyPair() (*keymgr.KeyPair, error) {
+	return n.tlsProvider.CreateClientKeyPair(keymgr.ECDSA384)
 }
 
 // objectKey returns object key from object meta
@@ -284,4 +299,56 @@ func (n *NMD) StopRestServer(shutdown bool) error {
 // GetNMDUrl returns the REST URL
 func (n *NMD) GetNMDUrl() string {
 	return "http://" + n.GetListenURL() + ConfigURL
+}
+
+func (n *NMD) initTLSProvider() error {
+	// Instantiate a KeyMgr to store the cluster certificate and a TLS provider
+	// to use it to connect to other cluster components
+	tlsProvider, err := tlsproviders.NewDefaultKeyMgrBasedProvider(globals.Nmd + "-cluster")
+	if err != nil {
+		return errors.Wrapf(err, "Error instantiating tls provider")
+	}
+	n.tlsProvider = tlsProvider
+	return nil
+}
+
+func (n *NMD) setClusterCredentials(resp *grpc.RegisterNICResponse) error {
+	certMsg := resp.GetClusterCert()
+	if certMsg == nil {
+		return fmt.Errorf("No certificate found in registration response message")
+	}
+	cert, err := x509.ParseCertificate(certMsg.GetCertificate().Certificate)
+	if err != nil {
+		return fmt.Errorf("Error parsing cluster certificate: %v", err)
+	}
+	err = n.tlsProvider.SetClientCertificate(cert)
+	if err != nil {
+		return fmt.Errorf("Error storing cluster certificate: %v", err)
+	}
+	var caTrustChain []*x509.Certificate
+	if resp.GetCaTrustChain() != nil {
+		for i, c := range resp.GetCaTrustChain().GetCertificates() {
+			cert, err := x509.ParseCertificate(c.Certificate)
+			if err != nil {
+				log.Errorf("Error parsing CA trust chain certificate index %d: %v", i, err)
+				// continue anyway
+			}
+			caTrustChain = append(caTrustChain, cert)
+		}
+	}
+	n.tlsProvider.SetCaTrustChain(caTrustChain)
+
+	var trustRoots []*x509.Certificate
+	if resp.GetTrustRoots() != nil {
+		for i, c := range resp.GetTrustRoots().GetCertificates() {
+			cert, err := x509.ParseCertificate(c.Certificate)
+			if err != nil {
+				log.Errorf("Error parsing trust roots certificate index %d: %v", i, err)
+				// continue anyway
+			}
+			trustRoots = append(caTrustChain, cert)
+		}
+	}
+	n.tlsProvider.SetTrustRoots(trustRoots)
+	return nil
 }

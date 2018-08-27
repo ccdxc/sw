@@ -16,10 +16,16 @@ import (
 
 func TestCertMgrInit(t *testing.T) {
 	// NEGATIVE TEST-CASES
-
 	// empty dir
 	_, err := NewCertificateMgr(nil)
 	Assert(t, err != nil, "NewCertificateAuthority succeeded with nil KeyMgr instance")
+
+	// POSITIVE TEST-CASES
+	cm, err := NewTestCertificateMgr("certmgr_test")
+	AssertOk(t, err, "Error instantiating CertificateMgr")
+	Assert(t, cm != nil, "NewTestCertificateMgr returned nil instance")
+	Assert(t, cm.IsReady(), "CertificateMgr instance should be ready")
+	cm.Close()
 }
 
 func TestRestart(t *testing.T) {

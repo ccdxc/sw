@@ -7,6 +7,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -290,4 +291,22 @@ func NewGoCryptoCertificateMgr(dir string) (*CertificateMgr, error) {
 	}
 	log.Infof("Created CertificateMgr instance with Go Crypto backend, dir: %v", dir)
 	return cm, nil
+}
+
+// NewTestCertificateMgr creates an instance of CertMgr backed by a temporary directory
+// and starts the CA. Only meant to be used in tests.
+func NewTestCertificateMgr(id string) (*CertificateMgr, error) {
+	tmpDir, err := ioutil.TempDir("", id)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating temp directory: %v", err)
+	}
+	certmgr, err := NewGoCryptoCertificateMgr(tmpDir)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating CertMgr instance: %v", err)
+	}
+	err = certmgr.StartCa(true)
+	if err != nil {
+		return nil, fmt.Errorf("Error starting CertMgr CA: %v", err)
+	}
+	return certmgr, nil
 }

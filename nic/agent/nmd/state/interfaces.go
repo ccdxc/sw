@@ -5,6 +5,7 @@ package state
 import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/utils/keymgr"
 )
 
 //
@@ -23,11 +24,15 @@ type CmdAPI interface {
 
 	// SmartNIC update api
 	UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.SmartNIC, error)
+
+	// WatchSmartNICUpdates starts a CMD watchers to receive SmartNIC objects updates
+	WatchSmartNICUpdates()
 }
 
 // NmdAPI is the API provided by NMD to CMD
 type NmdAPI interface {
 	RegisterCMD(cmd CmdAPI) error
+	GenClusterKeyPair() (*keymgr.KeyPair, error)
 	GetAgentID() string
 	GetSmartNIC() (*cluster.SmartNIC, error)
 	SetSmartNIC(*cluster.SmartNIC) error

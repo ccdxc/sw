@@ -8,7 +8,9 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
 
+	"github.com/pensando/sw/venice/utils/certs"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -28,20 +30,43 @@ func TestParameterValidation(t *testing.T) {
 	AssertOk(t, err, "Error instantiating KeyMgr")
 
 	// NEGATIVE TEST-CASES
+
 	// Empty ID
 	_, err = keyMgr.CreateKeyPair("", ECDSA256)
 	Assert(t, err != nil, "CreateKeyPair succeeded with empty ID")
 	emptyIDObj := &Certificate{}
 	err = keyMgr.StoreObject(emptyIDObj)
 	Assert(t, err != nil, "StoreObject succeeded with empty ID")
+
 	// Name starting with -
 	_, err = keyMgr.CreateKeyPair("-ABCDE", ECDSA256)
 	Assert(t, err != nil, "CreateKeyPair succeeded with invalid ID")
 	err = keyMgr.StoreObject(NewCertificateBundleObject("-", nil))
 	Assert(t, err != nil, "StoreObject succeeded with invalid ID")
+
 	// Nil object
 	err = keyMgr.StoreObject(nil)
 	Assert(t, err != nil, "StoreObject succeeded with nil object")
+
+	// Object of different types with same ID
+	id := "id"
+	keyPairObj, err := keyMgr.CreateKeyPair(id, ECDSA256)
+	AssertOk(t, err, "Failed to create key pair")
+	cert, err := certs.SelfSign("host", keyPairObj, certs.WithValidityDays(1))
+	AssertOk(t, err, "Failed to create certificate")
+	certObj := NewCertificateObject(id, cert)
+	bundleObj := NewCertificateBundleObject(id, []*x509.Certificate{cert, cert, cert})
+	symKey := make([]byte, 16)
+	_, err = rand.Read(symKey)
+	AssertOk(t, err, "Failed to create symmetric key")
+	symmKeyObj := NewSymmetricKeyObject(id, AES128, symKey)
+
+	err = keyMgr.StoreObject(certObj)
+	Assert(t, err != nil, "Creation of certificate object with duplicate ID did not fail")
+	err = keyMgr.StoreObject(bundleObj)
+	Assert(t, err != nil, "Creation of certBundle object with duplicate ID did not fail")
+	err = keyMgr.StoreObject(symmKeyObj)
+	Assert(t, err != nil, "Creation of symmetric key object with duplicate ID did not fail")
 }
 
 // Tests invalid key param IDs

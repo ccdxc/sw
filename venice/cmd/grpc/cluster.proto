@@ -60,8 +60,8 @@ message QuorumConfig {
 // CA Bundle
 message CertMgrBundle {
 	bytes wrappedCaKey = 1;
-	repeated certapi.Certificate caTrustChain = 2;
-	repeated certapi.Certificate trustRoots = 3;
+	certapi.CaTrustChain caTrustChain = 2;
+	certapi.TrustRoots trustRoots = 3;
 }
 
 // Cluster Join request
@@ -118,6 +118,9 @@ message RegisterNICRequest {
 
 	// Factory Certificate
 	bytes Cert          = 2 [(gogoproto.jsontag) = "cert,omitempty"];
+
+	// Cluster Certificate Signing Request
+	bytes ClusterCertSignRequest = 3 [(gogoproto.jsontag) = "clusterCertSignRequest,omitempty"];
 }
 
 // Register NIC response
@@ -129,6 +132,17 @@ message RegisterNICResponse {
 	// Reason is an optional field. It is populated with reason
 	// when there is an Admisison failure
 	string Reason = 2 [(gogoproto.jsontag) = "reason,omitempty"];
+
+  // --- Cluster Keys and Certificates -- populated when NIC is admitted ---
+
+  // The certificate used to talk to other Venice and NAPLES components
+  certapi.CertificateSignResp ClusterCert    = 3 [(gogoproto.jsontag) = "clusterCert,omitempty"];
+
+  // The CA trust chain for the cluster certificate
+  certapi.CaTrustChain CaTrustChain = 4 [(gogoproto.jsontag) = "caTrustChain,omitempty"];
+
+  // Additional root certificates to trust
+  certapi.TrustRoots TrustRoots = 5 [(gogoproto.jsontag) = "trustRoots,omitempty"];
 }
 
 // Update NIC request

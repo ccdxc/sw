@@ -3,6 +3,9 @@
 package cmdif
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"net/http"
 	"testing"
 
@@ -16,6 +19,7 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -29,6 +33,7 @@ type mockAgent struct {
 	nicAdded   map[string]*cmd.SmartNIC
 	nicUpdated map[string]*cmd.SmartNIC
 	nicDeleted map[string]*cmd.SmartNIC
+	keyMgr     *keymgr.KeyMgr
 }
 
 func createMockAgent(name string) *mockAgent {
@@ -83,6 +88,11 @@ func (ag *mockAgent) SetSmartNIC(nic *cmd.SmartNIC) error {
 	defer ag.Unlock()
 	ag.nic = nic
 	return nil
+}
+
+func (ag *mockAgent) GenClusterKeyPair() (*keymgr.KeyPair, error) {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	return keymgr.NewKeyPairObject("mock-agent-key", key), err
 }
 
 type mockRPCServer struct {
@@ -246,6 +256,7 @@ func TestCmdClientWatch(t *testing.T) {
 	AssertOk(t, err, "Error creating CMD client")
 	Assert(t, (cl != nil), "Error creating CMD client")
 	defer cl.Stop()
+	cl.WatchSmartNICUpdates()
 
 	cl.nmd.SetSmartNIC(&nic)
 
@@ -298,6 +309,7 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	AssertOk(t, err, "Error creating cmd client")
 	log.Infof("Cmd client name: %s", cl.getAgentName())
 	defer cl.Stop()
+	cl.WatchSmartNICUpdates()
 
 	cl.nmd.SetSmartNIC(&nic)
 

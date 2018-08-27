@@ -365,7 +365,7 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 	if rpcClient.options.customTLSProvider == false {
 		tlsProvider, err := GetDefaultTLSProvider(mysvcName)
 		if err != nil {
-			log.Errorf("Failed to instantiate TLS provider. Server name: %s, Err %v", mysvcName, err)
+			log.Errorf("Failed to instantiate TLS provider. Service name: %s, remote URL: %v, Err: %v", mysvcName, remoteURL, err)
 			return nil, err
 		}
 		rpcClient.tlsProvider = tlsProvider

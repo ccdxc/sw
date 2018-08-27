@@ -127,7 +127,7 @@ func (c *CertSrv) GetTrustRoots(ctx context.Context, empty *certapi.Empty) (*cer
 		certs = append(certs, &certapi.Certificate{Certificate: c.Raw})
 	}
 	c.incrementRPCSuccess()
-	return &certapi.TrustRoots{TrustRoots: certs}, nil
+	return &certapi.TrustRoots{Certificates: certs}, nil
 }
 
 // GetCaTrustChain is the handler for the RPC method that returns the CA trust chain

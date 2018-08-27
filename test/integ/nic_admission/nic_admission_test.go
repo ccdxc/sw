@@ -41,6 +41,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
@@ -127,6 +128,10 @@ func launchCMDServer(m *testing.M, url string) (*rpckit.RPCServer, error) {
 		return nil, err
 	}
 	tInfo.rpcServer = rpcServer
+	cmdenv.CertMgr, err = certmgr.NewTestCertificateMgr("smartnic-test")
+	if err != nil {
+		return nil, fmt.Errorf("Error creating CertMgr instance: %v", err)
+	}
 	cmdenv.UnauthRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
@@ -191,6 +196,8 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmdInfo, error) {
 		*cmdURL,
 		"",
 		restURL,
+		"", // no local certs endpoint
+		"", // no remote certs endpoint
 		*mode,
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,

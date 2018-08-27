@@ -3,6 +3,10 @@
 package state
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"fmt"
 	"os"
 	"sync"
 	"testing"
@@ -13,8 +17,10 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -96,7 +102,35 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 	key := objectKey(nic.ObjectMeta)
 	m.nicDB[key] = nic
 	if nic.Name == nicKey1 {
-		return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_ADMITTED.String()}, nil
+		// we don't have the actual csr from the NIC request, so we just make up
+		// a certificate on the spot
+		key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			return grpc.RegisterNICResponse{}, fmt.Errorf("Error generating CA key: %v", err)
+		}
+		cert, err := certs.SelfSign("nmd_state_test_ca", key, certs.WithValidityDays(1))
+		if err != nil {
+			return grpc.RegisterNICResponse{}, fmt.Errorf("Error generating CA cert: %v", err)
+		}
+		resp := grpc.RegisterNICResponse{
+			Phase: cmd.SmartNICSpec_ADMITTED.String(),
+			ClusterCert: &certapi.CertificateSignResp{
+				Certificate: &certapi.Certificate{
+					Certificate: cert.Raw,
+				},
+			},
+			CaTrustChain: &certapi.CaTrustChain{
+				Certificates: []*certapi.Certificate{
+					&certapi.Certificate{Certificate: cert.Raw},
+				},
+			},
+			TrustRoots: &certapi.TrustRoots{
+				Certificates: []*certapi.Certificate{
+					&certapi.Certificate{Certificate: cert.Raw},
+				},
+			},
+		}
+		return resp, nil
 	}
 	if nic.Name == nicKey2 {
 		return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_PENDING.String()}, nil
@@ -111,6 +145,9 @@ func (m *mockCtrler) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error)
 	key := objectKey(nic.ObjectMeta)
 	m.nicDB[key] = nic
 	return nic, nil
+}
+
+func (m *mockCtrler) WatchSmartNICUpdates() {
 }
 
 // createNMD creates a NMD server
@@ -128,6 +165,8 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 		nodeID,
 		nodeID,
 		"localhost:0",
+		"", // no local certs endpoint
+		"", // no remote certs endpoint
 		mode,
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second)

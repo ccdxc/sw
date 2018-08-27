@@ -18,7 +18,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
@@ -30,6 +29,7 @@ func main() {
 		nmdDbPath          = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
 		cmdRegistrationURL = flag.String("cmdregistration", ":"+globals.CMDSmartNICRegistrationAPIPort, "NIC Registration API server URL(s)")
 		cmdUpdatesURL      = flag.String("cmdupdates", ":"+globals.CMDSmartNICUpdatesPort, "NIC Updates server URL(s)")
+		cmdCertsURL        = flag.String("cmdcerts", ":"+globals.CMDAuthCertAPIPort, "CMD Certificates API URL(s)")
 		regInterval        = flag.Int64("reginterval", globals.NicRegIntvl, "NIC registration interval in seconds")
 		updInterval        = flag.Int64("updinterval", globals.NicUpdIntvl, "NIC update interval in seconds")
 		res                = flag.String("resolver", ":"+globals.CMDResolverPort, "Resolver URL")
@@ -71,9 +71,6 @@ func main() {
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
 
-	// Set the TLS provider for rpckit
-	rpckit.SetN4STLSProvider()
-
 	// read the mac address of the host interface
 	macAddr, err := netutils.GetIntfMac(*hostIf)
 	if err != nil {
@@ -113,6 +110,8 @@ func main() {
 		*cmdRegistrationURL,
 		*cmdUpdatesURL,
 		":"+globals.NmdRESTPort,
+		":"+globals.CMDCertAPIPort,
+		*cmdCertsURL,
 		*mode,
 		time.Duration(*regInterval)*time.Second,
 		time.Duration(*updInterval)*time.Second,

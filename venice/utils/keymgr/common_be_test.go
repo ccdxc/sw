@@ -55,6 +55,13 @@ func testObjectStoreSerialAccess(t *testing.T, keyMgr *KeyMgr, prefix string) {
 	Assert(t, key3 == nil, "KeyPair object still available after destruction")
 	err = keyMgr.DestroyObject(keyID, ObjectTypeKeyPair)
 	Assert(t, err != nil, "Destroying non-existing keypair did not fail as expected")
+	// create and update
+	_, err = keyMgr.UpdateKeyPair(keyID, ECDSA256)
+	newKey, err := keyMgr.UpdateKeyPair(keyID, RSA1024)
+	AssertOk(t, err, "Error updating KeyPair object")
+	newKey2, err := keyMgr.GetObject(keyID, ObjectTypeKeyPair)
+	Assert(t, reflect.DeepEqual(newKey, newKey2), fmt.Sprintf("Looked-up object does not match stored one. Have: %+v, Want: %+v", newKey2, newKey))
+	defer keyMgr.DestroyObject(keyID, ObjectTypeKeyPair)
 
 	// Certificate object
 	err = keyMgr.StoreObject(NewCertificateObject(certID, cert))
@@ -72,6 +79,19 @@ func testObjectStoreSerialAccess(t *testing.T, keyMgr *KeyMgr, prefix string) {
 	Assert(t, cert3 == nil, "Certificate object still available after destruction")
 	err = keyMgr.DestroyObject(certID, ObjectTypeCertificate)
 	Assert(t, err != nil, "Destroying non-existing certificate did not fail as expected")
+	// create and update
+	err = keyMgr.StoreObject(NewCertificateObject(certID, cert))
+	AssertOk(t, err, "Error updating certificate object")
+	newCert, err := certs.SelfSign(certID, newKey, certs.WithValidityDays(1))
+	AssertOk(t, err, "Error generating self-signed certificate")
+	err = keyMgr.UpdateObject(NewCertificateObject(certID, newCert))
+	AssertOk(t, err, "Error updating certificate object")
+	newCertObj, err := keyMgr.GetObject(certID, ObjectTypeCertificate)
+	AssertOk(t, err, "Error retrieving certificate object")
+	newCert2 := newCertObj.(*Certificate)
+	Assert(t, reflect.DeepEqual(newCert, newCert2.Certificate), fmt.Sprintf("Looked-up object does not match stored one. Have: %+v, Want: %+v", newCert2.Certificate, newCert))
+	err = keyMgr.DestroyObject(certID, ObjectTypeCertificate)
+	AssertOk(t, err, "Error destroying certificate object")
 
 	// CertificateBundle object
 	signKeyID := "sign-" + keyID
@@ -99,6 +119,17 @@ func testObjectStoreSerialAccess(t *testing.T, keyMgr *KeyMgr, prefix string) {
 	Assert(t, bundle3Obj == nil, "CertificateBundle object still available after destruction")
 	err = keyMgr.DestroyObject(bundleID, ObjectTypeCertificate)
 	Assert(t, err != nil, "Destroying non-existing bundle did not fail as expected")
+	// create and update
+	err = keyMgr.StoreObject(NewCertificateBundleObject(bundleID, bundle))
+	AssertOk(t, err, "Error storing certificate bundle")
+	err = keyMgr.UpdateObject(NewCertificateBundleObject(bundleID, []*x509.Certificate{newCert}))
+	AssertOk(t, err, "Error storing certificate bundle")
+	newBundleObj, err := keyMgr.GetObject(bundleID, ObjectTypeCertificateBundle)
+	AssertOk(t, err, "Error retrieving certificate bundle")
+	newBundle := newBundleObj.(*CertificateBundle).Certificates
+	Assert(t, reflect.DeepEqual(newBundle[0], newCert), fmt.Sprintf("Looked-up object does not match stored one. Have: %+v, Want: %+v", newBundle[0], newCert))
+	err = keyMgr.DestroyObject(bundleID, ObjectTypeCertificateBundle)
+	AssertOk(t, err, "Error destroying certificate bundle")
 }
 
 func testSerialKeyOps(t *testing.T, keyMgr *KeyMgr, keyPrefix string) {

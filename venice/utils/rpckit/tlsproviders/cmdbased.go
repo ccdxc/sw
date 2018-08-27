@@ -198,7 +198,7 @@ func (p *CMDBasedProvider) fetchCaCertificates() error {
 		return errors.Wrap(err, "Error fetching trust roots")
 	}
 
-	for _, r := range rootsResp.GetTrustRoots() {
+	for _, r := range rootsResp.GetCertificates() {
 		c, err := x509.ParseCertificate(r.GetCertificate())
 		if err != nil {
 			return errors.Wrap(err, "Received malformed trust roots")

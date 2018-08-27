@@ -20,7 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
@@ -64,9 +63,6 @@ func main() {
 
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
-
-	// Set the TLS provider for rpckit
-	rpckit.SetN4STLSProvider()
 
 	macAddr, err := netutils.GetIntfMac(*hostIf)
 	if err != nil {

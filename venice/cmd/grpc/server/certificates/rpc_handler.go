@@ -54,8 +54,8 @@ func (h *RPCHandler) GetCaTrustChain(ctx context.Context, empty *certapi.Empty) 
 	if !h.CertMgr.IsReady() {
 		return &certapi.CaTrustChain{}, fmt.Errorf("CertMgr not ready")
 	}
-	certs := utils.GetCaTrustChain(h.CertMgr)
-	return &certapi.CaTrustChain{Certificates: certs}, nil
+	caTrustChain := utils.GetCaTrustChain(h.CertMgr)
+	return caTrustChain, nil
 }
 
 // GetTrustRoots returns the trust roots that should be used by client when verifying trust chains
@@ -63,8 +63,8 @@ func (h *RPCHandler) GetTrustRoots(ctx context.Context, empty *certapi.Empty) (*
 	if !h.CertMgr.IsReady() {
 		return &certapi.TrustRoots{}, fmt.Errorf("CertMgr not ready")
 	}
-	certs := utils.GetTrustRoots(h.CertMgr)
-	return &certapi.TrustRoots{TrustRoots: certs}, nil
+	trustRoots := utils.GetTrustRoots(h.CertMgr)
+	return trustRoots, nil
 }
 
 // NewRPCHandler returns a new handler for the RPC interface
