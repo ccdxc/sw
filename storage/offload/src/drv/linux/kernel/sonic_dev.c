@@ -376,19 +376,8 @@ void sonic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 	q->head->cb_arg = cb_arg;
 	q->head = q->head->next;
 
-	if (ring_doorbell) {
-		struct doorbell db = {
-			.qid_lo = q->qid,
-			.qid_hi = q->qid >> 8,
-			.ring = 0,
-			.p_index = q->head->index,
-		};
-
-		printk(KERN_ERR "sonic_q_post  ring doorbell name %s qid %d ring "
-			 "0 p_index %d db %p\n", q->name, q->qid,
-			 q->head->index, q->db);
-		writeq(*(u64 *)&db, q->db);
-	}
+	if (ring_doorbell)
+		sonic_q_ringdb(q, q->head->index);
 }
 
 void sonic_q_rewind(struct queue *q, struct desc_info *start)
@@ -452,9 +441,9 @@ void sonic_q_ringdb(struct queue *q, uint32_t index)
 		.p_index = index,
 	};
 
-	//printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring "
-	//	 "0 p_index %d db %p\n", q->name, q->qid,
-	//	 q->head->index, q->db);
+	printk(KERN_ERR "sonic_q_ringdb ring doorbell name %s qid %d ring "
+		 "0 p_index %d db %p\n", q->name, q->qid,
+		 q->head->index, q->db);
 	writeq(*(u64 *)&db, q->db);
 }
 
