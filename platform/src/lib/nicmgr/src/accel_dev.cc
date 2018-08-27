@@ -649,13 +649,16 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     admin_qstate.pid = cmd->pid;
     admin_qstate.enable = 1;
     admin_qstate.color = 1;
-    admin_qstate.host_queue = 1;
     admin_qstate.rsvd1 = 0x1f;
     admin_qstate.p_index0 = 0;
     admin_qstate.c_index0 = 0;
     admin_qstate.comp_index = 0;
     admin_qstate.ci_fetch = 0;
-    admin_qstate.ring_base = (1ULL << 63) | (info.hw_lif_id << 52) | cmd->ring_base;
+    admin_qstate.host_queue = ACCEL_PHYS_ADDR_HOST_GET(cmd->ring_base);
+    admin_qstate.ring_base = cmd->ring_base;
+    if (admin_qstate.host_queue && !ACCEL_PHYS_ADDR_LIF_GET(cmd->ring_base)) {
+        ACCEL_PHYS_ADDR_LIF_SET(admin_qstate.ring_base, info.hw_lif_id);
+    }
     admin_qstate.ring_size = cmd->ring_size;
     admin_qstate.cq_ring_base = roundup(admin_qstate.ring_base + (64 << cmd->ring_size), 4096);
     admin_qstate.intr_assert_addr = intr_assert_addr(spec->intr_base + cmd->intr_index);
@@ -687,11 +690,6 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     const char              *desc0_pgm_name = nullptr;
     const char              *desc1_pgm_name = nullptr;
     enum DevcmdStatus       status = DEVCMD_ERROR;
-
-    printf("[INFO] %s lif%lu: qid %u qgroup %d "
-           "wring_base 0x%lx wring_size %u entry_size %u\n",
-           __FUNCTION__, info.hw_lif_id, qid, cmd->qgroup, 
-           cmd->wring_base, cmd->wring_size, cmd->entry_size);
 
     switch (cmd->qgroup) {
 
@@ -736,7 +734,18 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     seq_qstate.c_ndx = 0;
     seq_qstate.enable = cmd->enable;
     seq_qstate.abort = 0;
-    seq_qstate.wring_base = htonll(cmd->wring_base);
+    seq_qstate.wring_base = cmd->wring_base;
+    if (ACCEL_PHYS_ADDR_HOST_GET(cmd->wring_base) && 
+        !ACCEL_PHYS_ADDR_LIF_GET(cmd->wring_base)) {
+        ACCEL_PHYS_ADDR_LIF_SET(seq_qstate.wring_base, info.hw_lif_id);
+    }
+
+    printf("[INFO] %s lif%lu: qid %u qgroup %d "
+           "wring_base 0x%lx wring_size %u entry_size %u\n",
+           __FUNCTION__, info.hw_lif_id, qid, cmd->qgroup, 
+           seq_qstate.wring_base, cmd->wring_size, cmd->entry_size);
+
+    seq_qstate.wring_base = htonll(seq_qstate.wring_base);
     seq_qstate.wring_size = htons(cmd->wring_size);
     seq_qstate.entry_size = htons(cmd->entry_size);
 
