@@ -13,8 +13,8 @@ hal_handle_t tftp_test::client_eph, tftp_test::server_eph;
 
 TEST_F(tftp_test, tftp_session)
 {
-    SessionGetRequest  req;
-    SessionGetResponse rsp;
+    SessionGetRequest       req;
+    SessionGetResponseMsg   rsp;
     hal_ret_t          ret;
     uint8_t            tftp_rrq[] = {0x00, 0x01, 0x72, 0x66, 0x63, 0x31, 0x33, 0x35,
                                      0x30, 0x2e, 0x74, 0x78, 0x74, 0x00, 0x6f, 0x63,
@@ -47,10 +47,10 @@ TEST_F(tftp_test, tftp_session)
     req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
     ret = hal::session_get(req, &rsp);
     EXPECT_EQ(ret, HAL_RET_OK);
-    EXPECT_EQ(rsp.status().alg(), nwsec::APP_SVC_TFTP);
-    EXPECT_TRUE(rsp.status().has_tftp_info());
-    EXPECT_EQ(rsp.status().tftp_info().parse_error(), 0);
-    EXPECT_EQ(rsp.status().tftp_info().unknown_opcode(), 1);
+    EXPECT_EQ(rsp.response(0).status().alg(), nwsec::APP_SVC_TFTP);
+    EXPECT_TRUE(rsp.response(0).status().has_tftp_info());
+    EXPECT_EQ(rsp.response(0).status().tftp_info().parse_error(), 0);
+    EXPECT_EQ(rsp.response(0).status().tftp_info().unknown_opcode(), 1);
 }
 
 TEST_F(tftp_test, app_sess_force_delete) {

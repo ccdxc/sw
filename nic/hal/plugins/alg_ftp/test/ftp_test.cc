@@ -14,8 +14,8 @@ hal_handle_t ftp_test::client_eph2, ftp_test::server_eph2;
 
 TEST_F(ftp_test, ftp_session)
 {
-    SessionGetRequest  req;
-    SessionGetResponse rsp;
+    SessionGetRequest       req;
+    SessionGetResponseMsg   rsp;
     hal_ret_t          ret;
     uint8_t            ftp_port[] = {0x50, 0x4f, 0x52, 0x54, 0x20, 0x31, 0x30, 0x2c, 
                                    0x30, 0x2c, 0x30, 0x2c, 0x31, 0x2c, 0x31, 0x34,
@@ -105,15 +105,15 @@ TEST_F(ftp_test, ftp_session)
     req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
     ret = hal::session_get(req, &rsp);
     EXPECT_EQ(ret, HAL_RET_OK);
-    EXPECT_EQ(rsp.status().alg(), nwsec::APP_SVC_FTP);
-    EXPECT_TRUE(rsp.status().has_ftp_info());
-    EXPECT_EQ(rsp.status().ftp_info().parse_error(), 0);
+    EXPECT_EQ(rsp.response(0).status().alg(), nwsec::APP_SVC_FTP);
+    EXPECT_TRUE(rsp.response(0).status().has_ftp_info());
+    EXPECT_EQ(rsp.response(0).status().ftp_info().parse_error(), 0);
 }
 
 TEST_F(ftp_test, ftp_session_allow_mismatch)
 {
-    SessionGetRequest  req;
-    SessionGetResponse rsp;
+    SessionGetRequest       req;
+    SessionGetResponseMsg   rsp;
     hal_ret_t          ret;
     uint8_t            ftp_port[] = {0x50, 0x4f, 0x52, 0x54, 0x20, 0x31, 0x30, 0x2c,
                                    0x30, 0x2c, 0x30, 0x2c, 0x31, 0x2c, 0x31, 0x34,
@@ -203,9 +203,9 @@ TEST_F(ftp_test, ftp_session_allow_mismatch)
     req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
     ret = hal::session_get(req, &rsp);
     EXPECT_EQ(ret, HAL_RET_OK);
-    EXPECT_EQ(rsp.status().alg(), nwsec::APP_SVC_FTP);
-    EXPECT_TRUE(rsp.status().has_ftp_info());
-    EXPECT_EQ(rsp.status().ftp_info().parse_error(), 0);
+    EXPECT_EQ(rsp.response(0).status().alg(), nwsec::APP_SVC_FTP);
+    EXPECT_TRUE(rsp.response(0).status().has_ftp_info());
+    EXPECT_EQ(rsp.response(0).status().ftp_info().parse_error(), 0);
 }
 
 TEST_F(ftp_test, ftp_session_not_allow_mismatch)

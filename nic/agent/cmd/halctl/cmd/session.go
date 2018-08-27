@@ -20,10 +20,22 @@ import (
 )
 
 var (
-	sessionVrfID        uint64
-	sessionHandle       uint64
-	sessionDetailVrfID  uint64
-	sessionDetailHandle uint64
+	sessionVrfID         uint64
+	sessionHandle        uint64
+	sessionSrcIP         string
+	sessionDstIP         string
+	sessionSrcPort       uint32
+	sessionDstPort       uint32
+	sessionIPProto       uint32
+	sessionL2SegID       uint32
+	sessionDetailVrfID   uint64
+	sessionDetailHandle  uint64
+	sessionDetailSrcIP   string
+	sessionDetailDstIP   string
+	sessionDetailSrcPort uint32
+	sessionDetailDstPort uint32
+	sessionDetailIPProto uint32
+	sessionDetailL2SegID uint32
 )
 
 var sessionShowCmd = &cobra.Command{
@@ -44,10 +56,22 @@ func init() {
 	showCmd.AddCommand(sessionShowCmd)
 	sessionShowCmd.AddCommand(sessionDetailShowCmd)
 
-	sessionShowCmd.Flags().Uint64Var(&sessionVrfID, "id", 1, "Specify vrf-id")
-	sessionShowCmd.Flags().Uint64Var(&sessionHandle, "handle", 2, "Specify session handle")
-	sessionDetailShowCmd.Flags().Uint64Var(&sessionDetailVrfID, "id", 1, "Specify vrf-id")
+	sessionShowCmd.Flags().Uint64Var(&sessionVrfID, "vrfid", 1, "Specify vrf-id")
+	sessionShowCmd.Flags().Uint64Var(&sessionHandle, "handle", 0, "Specify session handle")
+	sessionShowCmd.Flags().StringVar(&sessionSrcIP, "srcip", "0.0.0.0", "Specify session src ip")
+	sessionShowCmd.Flags().StringVar(&sessionDstIP, "dstip", "0.0.0.0", "Specify session dst ip")
+	sessionShowCmd.Flags().Uint32Var(&sessionSrcPort, "srcport", 0, "Specify session src port")
+	sessionShowCmd.Flags().Uint32Var(&sessionDstPort, "dstport", 0, "Specify session dst port")
+	sessionShowCmd.Flags().Uint32Var(&sessionIPProto, "ipproto", 0, "Specify session IP proto")
+	sessionShowCmd.Flags().Uint32Var(&sessionL2SegID, "l2segid", 0, "Specify session L2 Segment ID")
+	sessionDetailShowCmd.Flags().Uint64Var(&sessionDetailVrfID, "vrfid", 1, "Specify vrf-id")
 	sessionDetailShowCmd.Flags().Uint64Var(&sessionDetailHandle, "handle", 2, "Specify session handle")
+	sessionDetailShowCmd.Flags().StringVar(&sessionDetailSrcIP, "srcip", "0.0.0.0", "Specify session src ip")
+	sessionDetailShowCmd.Flags().StringVar(&sessionDetailDstIP, "dstip", "0.0.0.0", "Specify session dst ip")
+	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailSrcPort, "srcport", 0, "Specify session src port")
+	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailDstPort, "dstport", 0, "Specify session dst port")
+	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailIPProto, "ipproto", 0, "Specify session IP proto")
+	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailL2SegID, "l2segid", 0, "Specify session L2 Segment ID")
 }
 
 func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -62,13 +86,93 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	var sessionGetReqMsg *halproto.SessionGetRequestMsg
 
-	if cmd.Flags().Changed("id") && cmd.Flags().Changed("handle") {
+	if cmd.Flags().Changed("handle") {
 		var req *halproto.SessionGetRequest
 		req = &halproto.SessionGetRequest{
-			Meta: &halproto.ObjectMeta{
-				VrfId: sessionVrfID,
+			GetBy: &halproto.SessionGetRequest_SessionHandle{
+				SessionHandle: sessionHandle,
 			},
-			SessionHandle: sessionHandle,
+		}
+		sessionGetReqMsg = &halproto.SessionGetRequestMsg{
+			Request: []*halproto.SessionGetRequest{req},
+		}
+	} else if cmd.Flags().Changed("vrfid") || cmd.Flags().Changed("srcip") ||
+		cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
+		cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto") ||
+		cmd.Flags().Changed("l2segid") {
+		var req *halproto.SessionGetRequest
+		if cmd.Flags().Changed("srcip") && cmd.Flags().Changed("dstip") {
+			req = &halproto.SessionGetRequest{
+				GetBy: &halproto.SessionGetRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						SrcIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
+							},
+						},
+						DstIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionDstIP),
+							},
+						},
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
+					},
+				},
+			}
+		} else if cmd.Flags().Changed("srcip") {
+			req = &halproto.SessionGetRequest{
+				GetBy: &halproto.SessionGetRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						SrcIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
+							},
+						},
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
+					},
+				},
+			}
+		} else if cmd.Flags().Changed("dstip") {
+			req = &halproto.SessionGetRequest{
+				GetBy: &halproto.SessionGetRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						DstIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionDstIP),
+							},
+						},
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
+					},
+				},
+			}
+		} else {
+			req = &halproto.SessionGetRequest{
+				GetBy: &halproto.SessionGetRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
+					},
+				},
+			}
 		}
 		sessionGetReqMsg = &halproto.SessionGetRequestMsg{
 			Request: []*halproto.SessionGetRequest{req},
@@ -111,18 +215,96 @@ func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	var sessionGetReqMsg *halproto.SessionGetRequestMsg
 
-	if cmd.Flags().Changed("id") {
-		if cmd.Flags().Changed("handle") {
-			var req *halproto.SessionGetRequest
-			req = &halproto.SessionGetRequest{
-				Meta: &halproto.ObjectMeta{
-					VrfId: sessionDetailVrfID,
-				},
+	if cmd.Flags().Changed("handle") {
+		var req *halproto.SessionGetRequest
+		req = &halproto.SessionGetRequest{
+			GetBy: &halproto.SessionGetRequest_SessionHandle{
 				SessionHandle: sessionDetailHandle,
+			},
+		}
+		sessionGetReqMsg = &halproto.SessionGetRequestMsg{
+			Request: []*halproto.SessionGetRequest{req},
+		}
+	} else if cmd.Flags().Changed("vrfid") || cmd.Flags().Changed("srcip") ||
+		cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
+		cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto") ||
+		cmd.Flags().Changed("l2segid") {
+		var req *halproto.SessionGetRequest
+		if cmd.Flags().Changed("srcip") && cmd.Flags().Changed("dstip") {
+			req = &halproto.SessionGetRequest{
+				GetBy: &halproto.SessionGetRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						SrcIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionDetailSrcIP),
+							},
+						},
+						DstIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionDetailDstIP),
+							},
+						},
+						SrcPort:     sessionDetailSrcPort,
+						DstPort:     sessionDetailDstPort,
+						IpProto:     halproto.IPProtocol(sessionDetailIPProto),
+						VrfId:       sessionDetailVrfID,
+						L2SegmentId: sessionDetailL2SegID,
+					},
+				},
 			}
-			sessionGetReqMsg = &halproto.SessionGetRequestMsg{
-				Request: []*halproto.SessionGetRequest{req},
+		} else if cmd.Flags().Changed("srcip") {
+			req = &halproto.SessionGetRequest{
+				GetBy: &halproto.SessionGetRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						SrcIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionDetailSrcIP),
+							},
+						},
+						SrcPort:     sessionDetailSrcPort,
+						DstPort:     sessionDetailDstPort,
+						IpProto:     halproto.IPProtocol(sessionDetailIPProto),
+						VrfId:       sessionDetailVrfID,
+						L2SegmentId: sessionDetailL2SegID,
+					},
+				},
 			}
+		} else if cmd.Flags().Changed("dstip") {
+			req = &halproto.SessionGetRequest{
+				GetBy: &halproto.SessionGetRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						DstIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionDetailDstIP),
+							},
+						},
+						SrcPort:     sessionDetailSrcPort,
+						DstPort:     sessionDetailDstPort,
+						IpProto:     halproto.IPProtocol(sessionDetailIPProto),
+						VrfId:       sessionDetailVrfID,
+						L2SegmentId: sessionDetailL2SegID,
+					},
+				},
+			}
+		} else {
+			req = &halproto.SessionGetRequest{
+				GetBy: &halproto.SessionGetRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						SrcPort:     sessionDetailSrcPort,
+						DstPort:     sessionDetailDstPort,
+						IpProto:     halproto.IPProtocol(sessionDetailIPProto),
+						VrfId:       sessionDetailVrfID,
+						L2SegmentId: sessionDetailL2SegID,
+					},
+				},
+			}
+		}
+		sessionGetReqMsg = &halproto.SessionGetRequestMsg{
+			Request: []*halproto.SessionGetRequest{req},
 		}
 	} else {
 		// Get all Sessions
@@ -154,7 +336,7 @@ func sessionShowHeader(cmd *cobra.Command, args []string) {
 	hdrLine := strings.Repeat("-", 132)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-14s%-12s%-14s%-12s%-10s%-10s%-24s%-24s%-12s\n",
-		"SessionHandle", "FlowType", "FlowKeyType", "L2SegId", "SrcVrfID", "DstVrfID", "SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "Proto|EType")
+		"SessionHandle", "FlowType", "FlowKeyType", "L2SegID", "SrcVrfID", "DstVrfID", "SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "Proto|EType")
 	fmt.Println(hdrLine)
 }
 
@@ -331,4 +513,11 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 // Uint32IPAddrToStr converts uint32 IP address to string
 func Uint32IPAddrToStr(ip uint32) string {
 	return fmt.Sprintf("%d.%d.%d.%d", (ip>>24)&0xff, (ip>>16)&0xff, (ip>>8)&0xff, ip&0xff)
+}
+
+// IPAddrStrtoUint32 converts string IP address to uint32
+func IPAddrStrtoUint32(ip string) uint32 {
+	var addr [4]uint32
+	fmt.Sscanf(ip, "%d.%d.%d.%d", &addr[0], &addr[1], &addr[2], &addr[3])
+	return ((addr[0] << 24) + (addr[1] << 16) + (addr[2] << 8) + (addr[3]))
 }

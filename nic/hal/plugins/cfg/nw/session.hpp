@@ -30,6 +30,7 @@ using session::FlowSpec;
 using session::ConnTrackInfo;
 using session::SessionSpec;
 using session::SessionStatus;
+using session::SessionFilter;
 using session::SessionResponse;
 using session::SessionRequestMsg;
 using session::SessionResponseMsg;
@@ -417,6 +418,11 @@ typedef struct session_stats_ {
 #define HAL_MAX_SESSIONS                             524288
 #define HAL_MAX_FLOWS                                (HAL_MAX_SESSIONS << 1)
 
+typedef struct session_get_filter_s {
+    SessionFilter           *filter;
+    SessionGetResponseMsg   *response;
+} session_get_filter_t;
+
 session_t *find_session_by_handle(hal_handle_t handle);
 //session_t *find_session_by_id(session_id_t session_id);
 
@@ -449,7 +455,7 @@ hal_ret_t session_update (const session_args_t *args, session_t *session);
 hal_ret_t session_delete (const session_args_t *args, session_t *session);
 hal::session_t *session_lookup (flow_key_t key, flow_role_t *role);
 hal_ret_t session_get (session::SessionGetRequest& spec,
-                      session::SessionGetResponse *rsp);
+                      session::SessionGetResponseMsg *rsp);
 hal_ret_t schedule_tcp_close_timer (session_t *session);
 hal_ret_t schedule_tcp_half_closed_timer (session_t *session);
 hal_ret_t schedule_tcp_cxnsetup_timer (session_t *session);

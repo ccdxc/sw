@@ -13,8 +13,8 @@ hal_handle_t rpc_test::client_eph, rpc_test::server_eph;
 
 TEST_F(rpc_test, sunrpc_session)
 {
-    SessionGetRequest  req;
-    SessionGetResponse rsp;
+    SessionGetRequest       req;
+    SessionGetResponseMsg   rsp;
     hal_ret_t          ret;
     uint8_t            dump_call[] = {0x80, 0x00, 0x00, 0x28, 0xd0, 0x72, 0x28, 0x07, 
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
@@ -147,10 +147,10 @@ TEST_F(rpc_test, sunrpc_session)
     req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
     ret = hal::session_get(req, &rsp);
     EXPECT_EQ(ret, HAL_RET_OK);
-    EXPECT_EQ(rsp.status().alg(), nwsec::APP_SVC_SUN_RPC);
-    EXPECT_TRUE(rsp.status().has_rpc_info());
-    EXPECT_EQ(rsp.status().rpc_info().num_exp_flows(), 14);
-    EXPECT_EQ(rsp.status().rpc_info().num_data_sess(), 2);
+    EXPECT_EQ(rsp.response(0).status().alg(), nwsec::APP_SVC_SUN_RPC);
+    EXPECT_TRUE(rsp.response(0).status().has_rpc_info());
+    EXPECT_EQ(rsp.response(0).status().rpc_info().num_exp_flows(), 14);
+    EXPECT_EQ(rsp.response(0).status().rpc_info().num_data_sess(), 2);
 }
 
 TEST_F(rpc_test, sunrpc_exp_flow_timeout) {

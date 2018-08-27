@@ -301,11 +301,24 @@ message SessionDeleteResponseMsg {
   repeated SessionDeleteResponse response = 1;    // batched response
 }
 
+message SessionFilter {
+  types.IPAddress           src_ip          = 1;
+  types.IPAddress           dst_ip          = 2;
+  uint32                    src_port        = 3;
+  uint32                    dst_port        = 4;
+  types.IPProtocol          ip_proto        = 5;
+  fixed64                   vrf_id          = 6;
+  uint32                    l2_segment_id   = 7;
+}
+
 // SessionGetRequest  is used to get information about a session
 message SessionGetRequest {
   types.ObjectMeta    meta           = 1;    // object meta
   // session_handle is the handle of the session
-  fixed64             session_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  oneof get_by {
+      fixed64             session_handle = 2 [(gogoproto.moretags) = "venice:key"];
+      SessionFilter       session_filter  = 3;
+  }
 }
 
 // SessionGetRequestMsg  is batched get request

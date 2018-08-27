@@ -12,8 +12,8 @@ using namespace fte;
 
 TEST_F(rpc_test, msrpc_session)
 {
-    SessionGetRequest  req;
-    SessionGetResponse rsp;
+    SessionGetRequest       req;
+    SessionGetResponseMsg   rsp;
     hal_ret_t          ret;
     uint8_t bind_req[] = {0x05, 0x00, 0x0b, 0x03, 0x10, 0x00, 0x00, 0x00,
                           0x48, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
@@ -171,10 +171,10 @@ TEST_F(rpc_test, msrpc_session)
     req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
     ret = hal::session_get(req, &rsp);
     EXPECT_EQ(ret, HAL_RET_OK);
-    EXPECT_EQ(rsp.status().alg(), nwsec::APP_SVC_MSFT_RPC);
-    EXPECT_TRUE(rsp.status().has_rpc_info());
-    EXPECT_EQ(rsp.status().rpc_info().num_exp_flows(), 1);
-    EXPECT_EQ(rsp.status().rpc_info().num_data_sess(), 2);
+    EXPECT_EQ(rsp.response(0).status().alg(), nwsec::APP_SVC_MSFT_RPC);
+    EXPECT_TRUE(rsp.response(0).status().has_rpc_info());
+    EXPECT_EQ(rsp.response(0).status().rpc_info().num_exp_flows(), 1);
+    EXPECT_EQ(rsp.response(0).status().rpc_info().num_data_sess(), 2);
 }
 
 TEST_F(rpc_test, msrpc_exp_flow_timeout) {

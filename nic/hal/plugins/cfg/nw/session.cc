@@ -586,24 +586,143 @@ system_get_fill_rsp (session_t *session, SessionGetResponse *response)
     return ret;
 }
 
+static inline bool
+session_matches_filter (hal::session_t *session, SessionFilter *filter)
+{
+    ip_addr_t ip_addr, check_addr;
+    hal_ret_t ret;
+
+    check_addr.af = IP_AF_IPV4;
+
+    if (filter->vrf_id()) {
+        if ((session->iflow->config.key.svrf_id != filter->vrf_id()) &&
+            (session->iflow->config.key.dvrf_id != filter->vrf_id())) {
+            return false;
+        }
+    }
+
+    if (filter->l2_segment_id()) {
+        if (session->iflow->config.key.flow_type != FLOW_TYPE_L2) {
+            return false;
+        }
+        if (session->iflow->config.key.l2seg_id != filter->l2_segment_id()) {
+            if (!session->rflow ||
+                session->rflow->config.key.l2seg_id != filter->l2_segment_id()) {
+                return false;
+            }
+        }
+    }
+
+    if (session->iflow->config.key.flow_type != FLOW_TYPE_V4) {
+        return false;
+    }
+
+    if (session->rflow && session->rflow->config.key.flow_type != FLOW_TYPE_V4) {
+        return false;
+    }
+
+    if (filter->has_src_ip()) {
+        ret = ip_addr_spec_to_ip_addr(&ip_addr, filter->src_ip());
+        if (ret != HAL_RET_OK) {
+            return false;
+        }
+
+        memcpy(&check_addr.addr, &session->iflow->config.key.sip, sizeof(check_addr.addr));
+        if (!ip_addr_check_equal(&check_addr, &ip_addr)) {
+            if (!session->rflow) {
+                return false;
+            } else {
+                memcpy(&check_addr.addr, &session->rflow->config.key.sip, sizeof(check_addr.addr));
+                if (!ip_addr_check_equal(&check_addr, &ip_addr)) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    if (filter->has_dst_ip()) {
+        ret = ip_addr_spec_to_ip_addr(&ip_addr, filter->dst_ip());
+        if (ret != HAL_RET_OK) {
+            return false;
+        }
+
+        memcpy(&check_addr.addr, &session->iflow->config.key.dip, sizeof(check_addr.addr));
+        if (!ip_addr_check_equal(&check_addr, &ip_addr)) {
+            if (!session->rflow) {
+                return false;
+            } else {
+                memcpy(&check_addr.addr, &session->rflow->config.key.dip, sizeof(check_addr.addr));
+                if (!ip_addr_check_equal(&check_addr, &ip_addr)) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    if (filter->src_port()) {
+        if (session->iflow->config.key.sport != filter->src_port()) {
+            if (!session->rflow ||
+                session->rflow->config.key.sport != filter->src_port()) {
+                return false;
+            }
+        }
+    }
+
+    if (filter->dst_port()) {
+        if (session->iflow->config.key.dport != filter->dst_port()) {
+            if (!session->rflow ||
+                session->rflow->config.key.dport != filter->dst_port()) {
+                return false;
+            }
+        }
+    }
+
+    if (filter->ip_proto()) {
+        if (session->iflow->config.key.proto != filter->ip_proto()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static inline bool
+session_get_ht_cb (void *entry, void *ctxt)
+{
+    hal::session_t          *session = (session_t *)entry;
+    SessionGetResponseMsg   *rsp = (SessionGetResponseMsg *)(((session_get_filter_t *)ctxt)->response);
+    SessionFilter           *filter = (SessionFilter *)(((session_get_filter_t *)ctxt)->filter);
+
+    if (session_matches_filter(session, filter)) {
+        system_get_fill_rsp(session, rsp->add_response());
+    }
+
+    return false;
+}
+
 hal_ret_t
-session_get (SessionGetRequest& req, SessionGetResponse *response)
+session_get (SessionGetRequest& req, SessionGetResponseMsg *response)
 {
     session_t                   *session;
+    SessionGetResponse          *rsp;
 
-    if (!req.has_meta() ||
-        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
-        response->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
+    if (req.has_session_filter()) {
+        session_get_filter_t ctxt = {0};
+        ctxt.filter = req.mutable_session_filter();
+        ctxt.response = response;
+        g_hal_state->session_hal_handle_ht()->walk_safe(session_get_ht_cb, &ctxt);
+        return HAL_RET_OK;
+    } else if (req.session_handle()) {
+        rsp = response->add_response();
+        session = find_session_by_handle(req.session_handle());
+        if (session == NULL) {
+            rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+            return HAL_RET_SESSION_NOT_FOUND;
+        }
+        return system_get_fill_rsp(session, rsp);
+    } else {
+        return session_get_all(response);
     }
-
-    session = find_session_by_handle(req.session_handle());
-    if (session == NULL) {
-        response->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_SESSION_NOT_FOUND;
-    }
-
-    return system_get_fill_rsp(session, response);
 }
 
 //-----------------------------------------------------------------------------
