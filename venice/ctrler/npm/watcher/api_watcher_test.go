@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
@@ -59,6 +60,8 @@ func createAPIServer(url string) (apiserver.Server, apiserver.Config) {
 			Servers: []string{""},
 			Codec:   runtime.NewJSONCodec(sch),
 		},
+		GetOverlay: cache.GetOverlay,
+		IsDryRun:   cache.IsDryRun,
 	}
 	// create api server
 	apiSrv := apisrvpkg.MustGetAPIServer()

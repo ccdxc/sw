@@ -12,6 +12,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ctxutils"
 	hdr "github.com/pensando/sw/venice/utils/histogram"
@@ -47,14 +49,6 @@ const (
 	operDelete apiOper = "delete"
 )
 
-// Interface is the cache interface exposed by the cache implementation. It provides a few additional operations
-//   on top of standard KV Store operations.
-type Interface interface {
-	kvstore.Interface
-	Start() error
-	Clear()
-}
-
 // Config is the configuration passed in when initializing the cache.
 type Config struct {
 	// Config is the configuration for the KVStore backend for the cache.
@@ -64,6 +58,8 @@ type Config struct {
 	NumKvClients int
 	// Logger to log to
 	Logger log.Logger
+	// APIServer that the cache will be attached to
+	APIServer apiserver.Server
 }
 
 // filterFn returns true if the object passes the filter.
@@ -72,15 +68,16 @@ type filterFn func(obj, prev runtime.Object) bool
 // cache is an implementation of the cache.Interface
 type cache struct {
 	sync.RWMutex
-	active bool
-	store  Store
-	pool   *connPool
-	queues WatchedPrefixes
-	argus  *backendWatcher
-	ctx    context.Context
-	cancel context.CancelFunc
-	logger log.Logger
-	config Config
+	active    bool
+	store     Store
+	pool      *connPool
+	queues    WatchedPrefixes
+	argus     *backendWatcher
+	ctx       context.Context
+	cancel    context.CancelFunc
+	logger    log.Logger
+	config    Config
+	apiserver apiserver.Server
 }
 
 // watchServer provides a kvstore.Watcher interface for watches established
@@ -214,17 +211,18 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup) {
 				establishWatcher()
 			} else {
 				p.parent.logger.InfoLog("func", "kvwatcher", "path", p.path, "msg", "received event", "key", ev.Key, "oper", ev.Type)
+				evtype = ev.Type
 				if evtype == kvstore.WatcherError {
-					p.parent.logger.ErrorLog("func", "kvwatcher", "path", p.path, "msg", "watch error")
+					p.parent.logger.ErrorLog("func", "kvwatcher", "path", p.path, "msg", "received error event", "key", ev.Key, "error", ev.Object)
 					watchErrors.Add(1)
 					p.parent.store.Mark(p.path)
 
 					p.lastVer = "0"
 					establishWatcher()
 					sweepFunc(p.ctx)
+					restoreOverlays(p.parent)
 					continue
 				}
-				evtype = ev.Type
 				meta, ver := mustGetObjectMetaVersion(ev.Object)
 				upd, err := meta.ModTime.Time()
 				if err == nil {
@@ -287,13 +285,29 @@ func (a *backendWatcher) Stop() {
 }
 
 // txn is a wrapper for the kvstore.Txn object.
-type txn struct {
+
+type txnOp struct {
+	key  string
+	oper apiOper
+	obj  runtime.Object
+}
+type cacheTxn struct {
 	kvstore.Txn
+	sync.Mutex
 	parent *cache
+	ops    []txnOp
 }
 
 // Commit intercepts the commit response on a Txn to update the local cache.
-func (t *txn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
+func (t *cacheTxn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
+	// No known path of updating transaction from a non-txn cache operation.
+	//  It is safe to acquire the cache first without risking a deadlock.
+	defer t.parent.Unlock()
+	t.parent.Lock()
+	return t.commit(ctx)
+}
+
+func (t *cacheTxn) commit(ctx context.Context) (kvstore.TxnResponse, error) {
 	t.parent.logger.DebugLog("oper", "txnCommit", "msg", "called")
 	var evtype kvstore.WatchEventType
 	updatefn := func(key string, obj, prev runtime.Object) {
@@ -302,39 +316,74 @@ func (t *txn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
 			qs[i].Enqueue(evtype, obj, prev)
 		}
 	}
+	versioner := runtime.NewObjectVersioner()
+	defer t.Unlock()
+	t.Lock()
 	resp, err := t.Txn.Commit(ctx)
 	if err != nil {
+		// txn cannot be reused now
+		t.ops = nil
 		return resp, err
 	}
 	if resp.Succeeded {
+		ver := uint64(resp.Revision)
 		t.parent.logger.DebugLog("oper", "txnCommit", "msg", "txn success")
-		for _, v := range resp.Responses {
-
-			t.parent.logger.InfoLog("msg", "Got Txn response", "type", v.Oper)
-			if v.Obj == nil {
-				t.parent.logger.InfoLog("msg", "Got Txn response", "error", "Object is nil")
-				continue
-			}
-			_, ver := mustGetObjectMetaVersion(v.Obj)
-			switch v.Oper {
-			case kvstore.OperUpdate:
+		for _, v := range t.ops {
+			switch v.oper {
+			case operCreate:
+				evtype = kvstore.Created
+				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, updating cache")
+				versioner.SetVersion(v.obj, ver)
+				t.parent.store.Set(v.key, ver, v.obj, updatefn)
+			case operUpdate:
 				evtype = kvstore.Updated
 				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, updating cache")
-				t.parent.store.Set(v.Key, ver, v.Obj, updatefn)
-			case kvstore.OperDelete:
+				versioner.SetVersion(v.obj, ver)
+				t.parent.store.Set(v.key, ver, v.obj, updatefn)
+			case operDelete:
 				evtype = kvstore.Deleted
 				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, deleting from cache")
-				t.parent.store.Delete(v.Key, ver, updatefn)
+				versioner.SetVersion(v.obj, ver)
+				t.parent.store.Delete(v.key, ver, updatefn)
 			default:
 				continue
 			}
 		}
 	}
+	// txn cannot be reused now
+	t.ops = nil
 	return resp, err
 }
 
+// Create stages an object creation in a transaction.
+func (t *cacheTxn) Create(key string, obj runtime.Object) error {
+	defer t.Unlock()
+	t.Lock()
+	t.ops = append(t.ops, txnOp{key: key, obj: obj, oper: operCreate})
+	t.Txn.Create(key, obj)
+	return nil
+}
+
+// Delete stages an object deletion in a transaction.
+func (t *cacheTxn) Delete(key string, cs ...kvstore.Cmp) error {
+	defer t.Unlock()
+	t.Lock()
+	t.ops = append(t.ops, txnOp{key: key, obj: nil, oper: operDelete})
+	t.Txn.Delete(key, cs...)
+	return nil
+}
+
+// Update stages an object update in a transaction.
+func (t *cacheTxn) Update(key string, obj runtime.Object, cs ...kvstore.Cmp) error {
+	defer t.Unlock()
+	t.Lock()
+	t.ops = append(t.ops, txnOp{key: key, obj: obj, oper: operUpdate})
+	t.Txn.Update(key, obj, cs...)
+	return nil
+}
+
 // CreateNewCache creates a new cache instance with the config provided
-func CreateNewCache(config Config) (Interface, error) {
+func CreateNewCache(config Config) (apiintf.CacheInterface, error) {
 	ret := cache{
 		store:  NewStore(),
 		pool:   &connPool{},
@@ -405,7 +454,7 @@ func (c *cache) Clear() {
 
 // getCbFunc is a helper func used to generate SuccessCbFunc for use with cache
 //  operations. The returned function handles generating Watch events on cache update.
-func (c *cache) getCbFunc(evType kvstore.WatchEventType) SuccessCbFunc {
+func (c *cache) getCbFunc(evType kvstore.WatchEventType) apiintf.SuccessCbFunc {
 	return func(p string, obj, prev runtime.Object) {
 		qs := c.queues.Get(p)
 		for _, q := range qs {
@@ -721,7 +770,7 @@ func (c *cache) NewTxn() kvstore.Txn {
 	}
 	c.logger.DebugLog("oper", "newTxn", "msg", "called")
 	k := c.pool.GetFromPool().(kvstore.Interface)
-	return &txn{
+	return &cacheTxn{
 		Txn:    k.NewTxn(),
 		parent: c,
 	}
@@ -751,6 +800,14 @@ func (c *cache) Close() {
 		k.Close()
 		c.pool.DelFromPool(k)
 	}
+}
+
+func (c *cache) GetKvConn() kvstore.Interface {
+	r := c.pool.GetFromPool()
+	if r != nil {
+		return r.(kvstore.Interface)
+	}
+	return nil
 }
 
 func mustGetObjectMetaVersion(obj runtime.Object) (*api.ObjectMeta, uint64) {

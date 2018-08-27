@@ -65,6 +65,7 @@ type EndpointsAuthV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
+	bufferId string
 
 	AutoAddAuthenticationPolicyEndpoint    endpoint.Endpoint
 	AutoAddRoleEndpoint                    endpoint.Endpoint
@@ -1767,6 +1768,9 @@ func makeURIAuthV1AutoUpdateUserUpdateOper(in *User) string {
 // AutoAddUser CRUD method for User
 func (r *EndpointsAuthV1RestClient) AutoAddUser(ctx context.Context, in *User) (*User, error) {
 	path := makeURIAuthV1AutoAddUserCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -1785,6 +1789,9 @@ func (r *EndpointsAuthV1RestClient) AutoAddUser(ctx context.Context, in *User) (
 // AutoUpdateUser CRUD method for User
 func (r *EndpointsAuthV1RestClient) AutoUpdateUser(ctx context.Context, in *User) (*User, error) {
 	path := makeURIAuthV1AutoUpdateUserUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -1803,6 +1810,9 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateUser(ctx context.Context, in *User
 // AutoGetUser CRUD method for User
 func (r *EndpointsAuthV1RestClient) AutoGetUser(ctx context.Context, in *User) (*User, error) {
 	path := makeURIAuthV1AutoGetUserGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1821,6 +1831,9 @@ func (r *EndpointsAuthV1RestClient) AutoGetUser(ctx context.Context, in *User) (
 // AutoDeleteUser CRUD method for User
 func (r *EndpointsAuthV1RestClient) AutoDeleteUser(ctx context.Context, in *User) (*User, error) {
 	path := makeURIAuthV1AutoDeleteUserDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -1839,6 +1852,9 @@ func (r *EndpointsAuthV1RestClient) AutoDeleteUser(ctx context.Context, in *User
 // AutoListUser CRUD method for User
 func (r *EndpointsAuthV1RestClient) AutoListUser(ctx context.Context, options *api.ListWatchOptions) (*UserList, error) {
 	path := makeURIAuthV1AutoListUserListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1863,6 +1879,9 @@ func (r *EndpointsAuthV1RestClient) AutoWatchUser(ctx context.Context, stream Au
 // AutoAddAuthenticationPolicy CRUD method for AuthenticationPolicy
 func (r *EndpointsAuthV1RestClient) AutoAddAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
 	path := makeURIAuthV1AutoAddAuthenticationPolicyCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -1881,6 +1900,9 @@ func (r *EndpointsAuthV1RestClient) AutoAddAuthenticationPolicy(ctx context.Cont
 // AutoUpdateAuthenticationPolicy CRUD method for AuthenticationPolicy
 func (r *EndpointsAuthV1RestClient) AutoUpdateAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
 	path := makeURIAuthV1AutoUpdateAuthenticationPolicyUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -1899,6 +1921,9 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateAuthenticationPolicy(ctx context.C
 // AutoGetAuthenticationPolicy CRUD method for AuthenticationPolicy
 func (r *EndpointsAuthV1RestClient) AutoGetAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
 	path := makeURIAuthV1AutoGetAuthenticationPolicyGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1933,6 +1958,9 @@ func (r *EndpointsAuthV1RestClient) AutoWatchAuthenticationPolicy(ctx context.Co
 // AutoAddRole CRUD method for Role
 func (r *EndpointsAuthV1RestClient) AutoAddRole(ctx context.Context, in *Role) (*Role, error) {
 	path := makeURIAuthV1AutoAddRoleCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -1951,6 +1979,9 @@ func (r *EndpointsAuthV1RestClient) AutoAddRole(ctx context.Context, in *Role) (
 // AutoUpdateRole CRUD method for Role
 func (r *EndpointsAuthV1RestClient) AutoUpdateRole(ctx context.Context, in *Role) (*Role, error) {
 	path := makeURIAuthV1AutoUpdateRoleUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -1969,6 +2000,9 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateRole(ctx context.Context, in *Role
 // AutoGetRole CRUD method for Role
 func (r *EndpointsAuthV1RestClient) AutoGetRole(ctx context.Context, in *Role) (*Role, error) {
 	path := makeURIAuthV1AutoGetRoleGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1987,6 +2021,9 @@ func (r *EndpointsAuthV1RestClient) AutoGetRole(ctx context.Context, in *Role) (
 // AutoDeleteRole CRUD method for Role
 func (r *EndpointsAuthV1RestClient) AutoDeleteRole(ctx context.Context, in *Role) (*Role, error) {
 	path := makeURIAuthV1AutoDeleteRoleDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2005,6 +2042,9 @@ func (r *EndpointsAuthV1RestClient) AutoDeleteRole(ctx context.Context, in *Role
 // AutoListRole CRUD method for Role
 func (r *EndpointsAuthV1RestClient) AutoListRole(ctx context.Context, options *api.ListWatchOptions) (*RoleList, error) {
 	path := makeURIAuthV1AutoListRoleListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2029,6 +2069,9 @@ func (r *EndpointsAuthV1RestClient) AutoWatchRole(ctx context.Context, stream Au
 // AutoAddRoleBinding CRUD method for RoleBinding
 func (r *EndpointsAuthV1RestClient) AutoAddRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
 	path := makeURIAuthV1AutoAddRoleBindingCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2047,6 +2090,9 @@ func (r *EndpointsAuthV1RestClient) AutoAddRoleBinding(ctx context.Context, in *
 // AutoUpdateRoleBinding CRUD method for RoleBinding
 func (r *EndpointsAuthV1RestClient) AutoUpdateRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
 	path := makeURIAuthV1AutoUpdateRoleBindingUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2065,6 +2111,9 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateRoleBinding(ctx context.Context, i
 // AutoGetRoleBinding CRUD method for RoleBinding
 func (r *EndpointsAuthV1RestClient) AutoGetRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
 	path := makeURIAuthV1AutoGetRoleBindingGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2083,6 +2132,9 @@ func (r *EndpointsAuthV1RestClient) AutoGetRoleBinding(ctx context.Context, in *
 // AutoDeleteRoleBinding CRUD method for RoleBinding
 func (r *EndpointsAuthV1RestClient) AutoDeleteRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
 	path := makeURIAuthV1AutoDeleteRoleBindingDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2101,6 +2153,9 @@ func (r *EndpointsAuthV1RestClient) AutoDeleteRoleBinding(ctx context.Context, i
 // AutoListRoleBinding CRUD method for RoleBinding
 func (r *EndpointsAuthV1RestClient) AutoListRoleBinding(ctx context.Context, options *api.ListWatchOptions) (*RoleBindingList, error) {
 	path := makeURIAuthV1AutoListRoleBindingListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2133,4 +2188,17 @@ func MakeAuthV1RestClientEndpoints(instance string) (EndpointsAuthV1RestClient, 
 		client:   http.DefaultClient,
 	}, nil
 
+}
+
+// MakeAuthV1StagedRestClientEndpoints makes staged REST client endpoints
+func MakeAuthV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsAuthV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsAuthV1RestClient{
+		instance: instance,
+		bufferId: bufferId,
+		client:   http.DefaultClient,
+	}, nil
 }

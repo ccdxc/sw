@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	api "github.com/pensando/sw/api"
+	api_cache "github.com/pensando/sw/api/cache"
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	pencluster "github.com/pensando/sw/api/generated/cluster"
@@ -453,6 +454,8 @@ func Setup(m *testing.M) {
 			Servers: strings.Split(cluster.ClientURL(), ","),
 			Codec:   runtime.NewJSONCodec(scheme),
 		},
+		GetOverlay: api_cache.GetOverlay,
+		IsDryRun:   api_cache.IsDryRun,
 	}
 	grpclog.SetLogger(pl)
 	tInfo.apiServer = apiserverpkg.MustGetAPIServer()

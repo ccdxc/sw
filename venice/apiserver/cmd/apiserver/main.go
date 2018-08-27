@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	"github.com/pensando/sw/api/cache"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
@@ -93,6 +94,8 @@ func main() {
 		if !*usecache {
 			config.BypassCache = true
 		}
+		config.GetOverlay = cache.GetOverlay
+		config.IsDryRun = cache.IsDryRun
 	}
 	trace.Init(globals.APIServer)
 	if *devmode {

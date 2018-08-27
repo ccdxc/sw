@@ -46,6 +46,7 @@ type EndpointsEventsV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
+	bufferId string
 
 	AutoWatchSvcEventsV1Endpoint endpoint.Endpoint
 	GetEventEndpoint             endpoint.Endpoint
@@ -287,4 +288,17 @@ func MakeEventsV1RestClientEndpoints(instance string) (EndpointsEventsV1RestClie
 		client:   http.DefaultClient,
 	}, nil
 
+}
+
+// MakeEventsV1StagedRestClientEndpoints makes staged REST client endpoints
+func MakeEventsV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsEventsV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsEventsV1RestClient{
+		instance: instance,
+		bufferId: bufferId,
+		client:   http.DefaultClient,
+	}, nil
 }

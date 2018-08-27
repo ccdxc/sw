@@ -9,6 +9,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/auth"
 	loginctx "github.com/pensando/sw/api/login/context"
@@ -128,6 +129,8 @@ func StartAPIServer(serverAddr string, kvstoreConfig *store.Config, l log.Logger
 		KVPoolSize:     8,
 		Kvstore:        *kvstoreConfig,
 		DevMode:        true,
+		GetOverlay:     cache.GetOverlay,
+		IsDryRun:       cache.IsDryRun,
 	}
 
 	apiServer := apiserverpkg.MustGetAPIServer()

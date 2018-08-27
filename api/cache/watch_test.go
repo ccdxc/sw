@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	cachemocks "github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -97,7 +98,7 @@ func TestWatchEventQ(t *testing.T) {
 	}
 	wp := watchedPrefixes{
 		log:         log.GetNewLogger(log.GetDefaultConfig("cacheWatchTest")),
-		store:       &fakeStore{},
+		store:       &cachemocks.FakeStore{},
 		watchConfig: wconfig,
 	}
 	wp.init()

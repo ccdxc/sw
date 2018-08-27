@@ -107,6 +107,19 @@
       "x509.proto"
     ]
   },
+  "staging": {
+    "Svcs": {
+      "StagingV1": {
+        "Version": "v1",
+        "Messages": [
+          "Buffer"
+        ]
+      }
+    },
+    "Files": [
+      "svc_staging.proto"
+    ]
+  },
   "workload": {
     "Svcs": {
       "WorkloadV1": {

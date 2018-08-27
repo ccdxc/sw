@@ -90,6 +90,7 @@ type EndpointsMonitoringV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
+	bufferId string
 
 	AutoAddAlertEndpoint                     endpoint.Endpoint
 	AutoAddAlertDestinationEndpoint          endpoint.Endpoint
@@ -3752,6 +3753,9 @@ func makeURIMonitoringV1AutoUpdateTroubleshootingSessionUpdateOper(in *Troublesh
 // AutoAddEventPolicy CRUD method for EventPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoAddEventPolicy(ctx context.Context, in *EventPolicy) (*EventPolicy, error) {
 	path := makeURIMonitoringV1AutoAddEventPolicyCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -3770,6 +3774,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddEventPolicy(ctx context.Context
 // AutoUpdateEventPolicy CRUD method for EventPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateEventPolicy(ctx context.Context, in *EventPolicy) (*EventPolicy, error) {
 	path := makeURIMonitoringV1AutoUpdateEventPolicyUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -3788,6 +3795,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateEventPolicy(ctx context.Cont
 // AutoGetEventPolicy CRUD method for EventPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoGetEventPolicy(ctx context.Context, in *EventPolicy) (*EventPolicy, error) {
 	path := makeURIMonitoringV1AutoGetEventPolicyGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -3806,6 +3816,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetEventPolicy(ctx context.Context
 // AutoDeleteEventPolicy CRUD method for EventPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoDeleteEventPolicy(ctx context.Context, in *EventPolicy) (*EventPolicy, error) {
 	path := makeURIMonitoringV1AutoDeleteEventPolicyDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -3840,6 +3853,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddStatsPolicy(ctx context.Context
 // AutoUpdateStatsPolicy CRUD method for StatsPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
 	path := makeURIMonitoringV1AutoUpdateStatsPolicyUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -3858,6 +3874,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateStatsPolicy(ctx context.Cont
 // AutoGetStatsPolicy CRUD method for StatsPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoGetStatsPolicy(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error) {
 	path := makeURIMonitoringV1AutoGetStatsPolicyGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -3881,6 +3900,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteStatsPolicy(ctx context.Cont
 // AutoListStatsPolicy CRUD method for StatsPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoListStatsPolicy(ctx context.Context, options *api.ListWatchOptions) (*StatsPolicyList, error) {
 	path := makeURIMonitoringV1AutoListStatsPolicyListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -3910,6 +3932,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddFwlogPolicy(ctx context.Context
 // AutoUpdateFwlogPolicy CRUD method for FwlogPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
 	path := makeURIMonitoringV1AutoUpdateFwlogPolicyUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -3928,6 +3953,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateFwlogPolicy(ctx context.Cont
 // AutoGetFwlogPolicy CRUD method for FwlogPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoGetFwlogPolicy(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error) {
 	path := makeURIMonitoringV1AutoGetFwlogPolicyGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -3951,6 +3979,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteFwlogPolicy(ctx context.Cont
 // AutoListFwlogPolicy CRUD method for FwlogPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoListFwlogPolicy(ctx context.Context, options *api.ListWatchOptions) (*FwlogPolicyList, error) {
 	path := makeURIMonitoringV1AutoListFwlogPolicyListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -3975,6 +4006,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchFwlogPolicy(ctx context.Conte
 // AutoAddFlowExportPolicy CRUD method for FlowExportPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoAddFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
 	path := makeURIMonitoringV1AutoAddFlowExportPolicyCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -3993,6 +4027,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddFlowExportPolicy(ctx context.Co
 // AutoUpdateFlowExportPolicy CRUD method for FlowExportPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
 	path := makeURIMonitoringV1AutoUpdateFlowExportPolicyUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -4011,6 +4048,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateFlowExportPolicy(ctx context
 // AutoGetFlowExportPolicy CRUD method for FlowExportPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoGetFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
 	path := makeURIMonitoringV1AutoGetFlowExportPolicyGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4029,6 +4069,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetFlowExportPolicy(ctx context.Co
 // AutoDeleteFlowExportPolicy CRUD method for FlowExportPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoDeleteFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
 	path := makeURIMonitoringV1AutoDeleteFlowExportPolicyDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -4047,6 +4090,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteFlowExportPolicy(ctx context
 // AutoListFlowExportPolicy CRUD method for FlowExportPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoListFlowExportPolicy(ctx context.Context, options *api.ListWatchOptions) (*FlowExportPolicyList, error) {
 	path := makeURIMonitoringV1AutoListFlowExportPolicyListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4076,6 +4122,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddAlert(ctx context.Context, in *
 // AutoUpdateAlert CRUD method for Alert
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlert(ctx context.Context, in *Alert) (*Alert, error) {
 	path := makeURIMonitoringV1AutoUpdateAlertUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -4094,6 +4143,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlert(ctx context.Context, i
 // AutoGetAlert CRUD method for Alert
 func (r *EndpointsMonitoringV1RestClient) AutoGetAlert(ctx context.Context, in *Alert) (*Alert, error) {
 	path := makeURIMonitoringV1AutoGetAlertGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4117,6 +4169,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteAlert(ctx context.Context, i
 // AutoListAlert CRUD method for Alert
 func (r *EndpointsMonitoringV1RestClient) AutoListAlert(ctx context.Context, options *api.ListWatchOptions) (*AlertList, error) {
 	path := makeURIMonitoringV1AutoListAlertListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4141,6 +4196,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchAlert(ctx context.Context, st
 // AutoAddAlertPolicy CRUD method for AlertPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoAddAlertPolicy(ctx context.Context, in *AlertPolicy) (*AlertPolicy, error) {
 	path := makeURIMonitoringV1AutoAddAlertPolicyCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -4159,6 +4217,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddAlertPolicy(ctx context.Context
 // AutoUpdateAlertPolicy CRUD method for AlertPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlertPolicy(ctx context.Context, in *AlertPolicy) (*AlertPolicy, error) {
 	path := makeURIMonitoringV1AutoUpdateAlertPolicyUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -4177,6 +4238,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlertPolicy(ctx context.Cont
 // AutoGetAlertPolicy CRUD method for AlertPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoGetAlertPolicy(ctx context.Context, in *AlertPolicy) (*AlertPolicy, error) {
 	path := makeURIMonitoringV1AutoGetAlertPolicyGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4195,6 +4259,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetAlertPolicy(ctx context.Context
 // AutoDeleteAlertPolicy CRUD method for AlertPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoDeleteAlertPolicy(ctx context.Context, in *AlertPolicy) (*AlertPolicy, error) {
 	path := makeURIMonitoringV1AutoDeleteAlertPolicyDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -4213,6 +4280,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteAlertPolicy(ctx context.Cont
 // AutoListAlertPolicy CRUD method for AlertPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoListAlertPolicy(ctx context.Context, options *api.ListWatchOptions) (*AlertPolicyList, error) {
 	path := makeURIMonitoringV1AutoListAlertPolicyListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4237,6 +4307,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchAlertPolicy(ctx context.Conte
 // AutoAddAlertDestination CRUD method for AlertDestination
 func (r *EndpointsMonitoringV1RestClient) AutoAddAlertDestination(ctx context.Context, in *AlertDestination) (*AlertDestination, error) {
 	path := makeURIMonitoringV1AutoAddAlertDestinationCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -4255,6 +4328,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddAlertDestination(ctx context.Co
 // AutoUpdateAlertDestination CRUD method for AlertDestination
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlertDestination(ctx context.Context, in *AlertDestination) (*AlertDestination, error) {
 	path := makeURIMonitoringV1AutoUpdateAlertDestinationUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -4273,6 +4349,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlertDestination(ctx context
 // AutoGetAlertDestination CRUD method for AlertDestination
 func (r *EndpointsMonitoringV1RestClient) AutoGetAlertDestination(ctx context.Context, in *AlertDestination) (*AlertDestination, error) {
 	path := makeURIMonitoringV1AutoGetAlertDestinationGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4291,6 +4370,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetAlertDestination(ctx context.Co
 // AutoDeleteAlertDestination CRUD method for AlertDestination
 func (r *EndpointsMonitoringV1RestClient) AutoDeleteAlertDestination(ctx context.Context, in *AlertDestination) (*AlertDestination, error) {
 	path := makeURIMonitoringV1AutoDeleteAlertDestinationDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -4309,6 +4391,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteAlertDestination(ctx context
 // AutoListAlertDestination CRUD method for AlertDestination
 func (r *EndpointsMonitoringV1RestClient) AutoListAlertDestination(ctx context.Context, options *api.ListWatchOptions) (*AlertDestinationList, error) {
 	path := makeURIMonitoringV1AutoListAlertDestinationListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4333,6 +4418,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchAlertDestination(ctx context.
 // AutoAddMirrorSession CRUD method for MirrorSession
 func (r *EndpointsMonitoringV1RestClient) AutoAddMirrorSession(ctx context.Context, in *MirrorSession) (*MirrorSession, error) {
 	path := makeURIMonitoringV1AutoAddMirrorSessionCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -4351,6 +4439,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddMirrorSession(ctx context.Conte
 // AutoUpdateMirrorSession CRUD method for MirrorSession
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateMirrorSession(ctx context.Context, in *MirrorSession) (*MirrorSession, error) {
 	path := makeURIMonitoringV1AutoUpdateMirrorSessionUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -4369,6 +4460,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateMirrorSession(ctx context.Co
 // AutoGetMirrorSession CRUD method for MirrorSession
 func (r *EndpointsMonitoringV1RestClient) AutoGetMirrorSession(ctx context.Context, in *MirrorSession) (*MirrorSession, error) {
 	path := makeURIMonitoringV1AutoGetMirrorSessionGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4387,6 +4481,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetMirrorSession(ctx context.Conte
 // AutoDeleteMirrorSession CRUD method for MirrorSession
 func (r *EndpointsMonitoringV1RestClient) AutoDeleteMirrorSession(ctx context.Context, in *MirrorSession) (*MirrorSession, error) {
 	path := makeURIMonitoringV1AutoDeleteMirrorSessionDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -4405,6 +4502,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteMirrorSession(ctx context.Co
 // AutoListMirrorSession CRUD method for MirrorSession
 func (r *EndpointsMonitoringV1RestClient) AutoListMirrorSession(ctx context.Context, options *api.ListWatchOptions) (*MirrorSessionList, error) {
 	path := makeURIMonitoringV1AutoListMirrorSessionListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4429,6 +4529,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchMirrorSession(ctx context.Con
 // AutoAddTroubleshootingSession CRUD method for TroubleshootingSession
 func (r *EndpointsMonitoringV1RestClient) AutoAddTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
 	path := makeURIMonitoringV1AutoAddTroubleshootingSessionCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -4447,6 +4550,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddTroubleshootingSession(ctx cont
 // AutoUpdateTroubleshootingSession CRUD method for TroubleshootingSession
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
 	path := makeURIMonitoringV1AutoUpdateTroubleshootingSessionUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -4465,6 +4571,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateTroubleshootingSession(ctx c
 // AutoGetTroubleshootingSession CRUD method for TroubleshootingSession
 func (r *EndpointsMonitoringV1RestClient) AutoGetTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
 	path := makeURIMonitoringV1AutoGetTroubleshootingSessionGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4483,6 +4592,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetTroubleshootingSession(ctx cont
 // AutoDeleteTroubleshootingSession CRUD method for TroubleshootingSession
 func (r *EndpointsMonitoringV1RestClient) AutoDeleteTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
 	path := makeURIMonitoringV1AutoDeleteTroubleshootingSessionDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -4501,6 +4613,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteTroubleshootingSession(ctx c
 // AutoListTroubleshootingSession CRUD method for TroubleshootingSession
 func (r *EndpointsMonitoringV1RestClient) AutoListTroubleshootingSession(ctx context.Context, options *api.ListWatchOptions) (*TroubleshootingSessionList, error) {
 	path := makeURIMonitoringV1AutoListTroubleshootingSessionListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -4533,4 +4648,17 @@ func MakeMonitoringV1RestClientEndpoints(instance string) (EndpointsMonitoringV1
 		client:   http.DefaultClient,
 	}, nil
 
+}
+
+// MakeMonitoringV1StagedRestClientEndpoints makes staged REST client endpoints
+func MakeMonitoringV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsMonitoringV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsMonitoringV1RestClient{
+		instance: instance,
+		bufferId: bufferId,
+		client:   http.DefaultClient,
+	}, nil
 }

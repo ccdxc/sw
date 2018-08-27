@@ -241,10 +241,11 @@ func request_ClusterV1_AutoDeleteHost_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -257,6 +258,8 @@ func request_ClusterV1_AutoDeleteHost_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoDeleteHost_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -296,10 +299,11 @@ func request_ClusterV1_AutoDeleteNode_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -312,6 +316,8 @@ func request_ClusterV1_AutoDeleteNode_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoDeleteNode_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -351,10 +357,11 @@ func request_ClusterV1_AutoDeleteSmartNIC_0(ctx context.Context, marshaler runti
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -367,6 +374,8 @@ func request_ClusterV1_AutoDeleteSmartNIC_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoDeleteSmartNIC_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -406,10 +415,11 @@ func request_ClusterV1_AutoDeleteTenant_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -422,6 +432,8 @@ func request_ClusterV1_AutoDeleteTenant_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoDeleteTenant_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -498,10 +510,11 @@ func request_ClusterV1_AutoGetHost_0(ctx context.Context, marshaler runtime.Mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -514,6 +527,8 @@ func request_ClusterV1_AutoGetHost_0(ctx context.Context, marshaler runtime.Mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoGetHost_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -553,10 +568,11 @@ func request_ClusterV1_AutoGetNode_0(ctx context.Context, marshaler runtime.Mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -569,6 +585,8 @@ func request_ClusterV1_AutoGetNode_0(ctx context.Context, marshaler runtime.Mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoGetNode_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -608,10 +626,11 @@ func request_ClusterV1_AutoGetSmartNIC_0(ctx context.Context, marshaler runtime.
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -624,6 +643,8 @@ func request_ClusterV1_AutoGetSmartNIC_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoGetSmartNIC_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -663,10 +684,11 @@ func request_ClusterV1_AutoGetTenant_0(ctx context.Context, marshaler runtime.Ma
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -679,6 +701,8 @@ func request_ClusterV1_AutoGetTenant_0(ctx context.Context, marshaler runtime.Ma
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoGetTenant_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -891,10 +915,11 @@ func request_ClusterV1_AutoUpdateHost_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -907,6 +932,8 @@ func request_ClusterV1_AutoUpdateHost_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateHost(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -938,10 +965,11 @@ func request_ClusterV1_AutoUpdateNode_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -954,6 +982,8 @@ func request_ClusterV1_AutoUpdateNode_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateNode(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -985,10 +1015,11 @@ func request_ClusterV1_AutoUpdateSmartNIC_0(ctx context.Context, marshaler runti
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -1001,6 +1032,8 @@ func request_ClusterV1_AutoUpdateSmartNIC_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateSmartNIC(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -1032,10 +1065,11 @@ func request_ClusterV1_AutoUpdateTenant_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -1048,6 +1082,8 @@ func request_ClusterV1_AutoUpdateTenant_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateTenant(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err

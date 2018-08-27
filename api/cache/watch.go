@@ -264,7 +264,7 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 	objmeta := objm.GetObjectMeta()
 	v, err := strconv.ParseUint(objmeta.ResourceVersion, 10, 64)
 	if err != nil {
-		w.log.ErrorLog("oper", "WatchEventQEnqueue", "type", evType, "msg", "parse version failed", "error", err)
+		w.log.ErrorLog("oper", "WatchEventQEnqueue", "type", evType, "msg", "parse version failed", "error", err, "path", w.path)
 		return err
 	}
 	w.log.InfoLog("oper", "WatchEventQEnqueue", "type", evType, "path", w.path, "version", v)

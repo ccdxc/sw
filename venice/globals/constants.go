@@ -123,9 +123,11 @@ const (
 	ConfigRootPrefix = "/venice/config" // Root for config objects
 	ClusterKey       = "/venice/config/cluster/cluster"
 	NodesKey         = "/venice/config/cluster/nodes"
+	StagingBasePath  = "/venice/staged"
 
 	// API Infra constants
-	ConfigURIPrefix = "configs"
+	ConfigURIPrefix  = "configs"
+	StagingURIPrefix = "staging"
 
 	// Events manager
 	EvtsMgrRPCPort = "9010"

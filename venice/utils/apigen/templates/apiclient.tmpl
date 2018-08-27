@@ -77,3 +77,13 @@ func NewRestAPIClient(url string) (Services, error) {
         a{{$k}}: {{$pkgname}}Client.NewRestCrudClient{{$k}}(url), {{end}}{{end}}
     }, nil
 }
+
+// NewStagedRestAPIClient returns a REST client
+func NewStagedRestAPIClient(url string, bufferId string) (Services, error) {
+    return &apiRestServerClient{
+        url: url,
+        logger: log.WithContext("module", "RestAPIClient"),
+        {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
+        a{{$k}}: {{$pkgname}}Client.NewStagedRestCrudClient{{$k}}(url, bufferId), {{end}}{{end}}
+    }, nil
+}

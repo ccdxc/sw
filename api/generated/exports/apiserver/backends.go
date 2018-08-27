@@ -24,6 +24,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/search/grpc/server"
 	// blank import to pull in security service into api server
 	_ "github.com/pensando/sw/api/generated/security/grpc/server"
+	// blank import to pull in staging service into api server
+	_ "github.com/pensando/sw/api/generated/staging/grpc/server"
 	// blank import to pull in workload service into api server
 	_ "github.com/pensando/sw/api/generated/workload/grpc/server"
 )

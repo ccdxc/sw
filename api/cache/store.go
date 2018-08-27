@@ -11,6 +11,7 @@ import (
 	"github.com/tchap/go-patricia/patricia"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/interfaces"
 	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -28,18 +29,14 @@ type StoreStats struct {
 
 var storeID uint32
 
-// SuccessCbFunc is called when a Store operation succeeds. The call happens in
-// the critical path hence the function should the min needed.
-type SuccessCbFunc func(key string, obj, prev runtime.Object)
-
 // Store is the interface for the Local Object Store
 type Store interface {
-	Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error
+	Set(key string, rev uint64, obj runtime.Object, cb apiintf.SuccessCbFunc) error
 	Get(key string) (runtime.Object, error)
-	Delete(key string, rev uint64, cb SuccessCbFunc) (runtime.Object, error)
+	Delete(key string, rev uint64, cb apiintf.SuccessCbFunc) (runtime.Object, error)
 	List(key string, opts api.ListWatchOptions) ([]runtime.Object, error)
 	Mark(key string)
-	Sweep(key string, cb SuccessCbFunc)
+	Sweep(key string, cb apiintf.SuccessCbFunc)
 	PurgeDeleted(past time.Duration)
 	Clear()
 }
@@ -133,7 +130,7 @@ func (h *delPendingHeap) Peek() *cacheObj {
 // Set updates the cache for the key with obj while making sure revision moves
 //  only formward. Any updating with older version is rejected. the callback function
 //  is called if the operation succeeds
-func (s *store) Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) (err error) {
+func (s *store) Set(key string, rev uint64, obj runtime.Object, cb apiintf.SuccessCbFunc) (err error) {
 	start := time.Now()
 	success := true
 	var prev runtime.Object
@@ -209,7 +206,7 @@ func (s *store) Get(key string) (runtime.Object, error) {
 // Delete deletes an object from the cache. If 0 is specified as rev, then
 // the delete is unconditional, if rev is non-zero then entry is deleted only
 // if the rev matches the current rev of the cache object.
-func (s *store) Delete(key string, rev uint64, cb SuccessCbFunc) (obj runtime.Object, err error) {
+func (s *store) Delete(key string, rev uint64, cb apiintf.SuccessCbFunc) (obj runtime.Object, err error) {
 	prefix := patricia.Prefix(key)
 	start := time.Now()
 	defer func() {
@@ -278,7 +275,12 @@ func (s *store) List(key string, opts api.ListWatchOptions) ([]runtime.Object, e
 				return nil
 			}
 		}
-		ret = append(ret, v.obj)
+		it, err := v.obj.Clone(nil)
+		if err != nil {
+			fmt.Printf("Clone got error %s", err)
+			return err
+		}
+		ret = append(ret, it.(runtime.Object))
 		return nil
 	}
 	defer s.RUnlock()
@@ -311,7 +313,7 @@ func (s *store) Mark(key string) {
 }
 
 // Sweep clears the cache of the objects marked for deletion by Mark.
-func (s *store) Sweep(key string, cb SuccessCbFunc) {
+func (s *store) Sweep(key string, cb apiintf.SuccessCbFunc) {
 	visitfunc := func(prefix patricia.Prefix, item patricia.Item) error {
 		v := item.(*cacheObj)
 		if v.deleted {

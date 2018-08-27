@@ -73,7 +73,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 			r.Kind = "{{.Name}}"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.({{$pkgname}}.{{.Name}})
 			key := r.MakeKey(prefix)
 			r.Kind = "{{.Name}}"
@@ -84,17 +84,9 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else { {{if isSpecStatusMessage .}}
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*{{$pkgname}}.{{.Name}})
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil  {
 					into := &{{$pkgname}}.{{.Name}}{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else { {{end}}
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -169,9 +161,45 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object{
+			r := i.({{$pkgname}}.{{.Name}})
+			return &r
 		}){{$msgname := .Name}}{{with (index $validators.Map (derefStr .Name))}}.WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.({{$pkgname}}.{{$msgname}})
 			return r.Validate(ver, "", ignoreStatus)
+		}){{end}}{{if isSpecStatusMessage .}}.WithReplaceSpecFunction(func (i interface{}) kvstore.UpdateFunc {
+			var n *{{$pkgname}}.{{.Name}}
+			if v, ok := i.({{$pkgname}}.{{.Name}}); ok {
+				n = &v
+			} else if v, ok := i.(*{{$pkgname}}.{{.Name}}); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*{{$pkgname}}.{{.Name}}); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func (i interface{}) kvstore.UpdateFunc {
+			var n *{{$pkgname}}.{{.Name}}
+			if v, ok := i.({{$pkgname}}.{{.Name}}); ok {
+				n = &v
+			} else if v, ok := i.(*{{$pkgname}}.{{.Name}}); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*{{$pkgname}}.{{.Name}}); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}){{end}}{{$msgname := .Name}}{{with (index $storageTransformers.Map (derefStr .Name))}}{{if .HasTransformers}}.WithStorageTransformer(&{{$pkgname}}.Storage{{$msgname}}Transformer){{end}}{{end}},
 		{{else}}{{if isListHelper .}}.WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 			{{$objname := getListType . true}}
@@ -196,6 +224,9 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 				r.Items[i].SelfLink = r.Items[i].MakeURI("{{getFileCategory .}}", ver, prefix)
 			}
 			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object{
+			r := i.({{$pkgname}}.{{.Name}})
+			return &r
 		}){{end}},{{end}}{{end}}{{end}}
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions":                      apisrvpkg.NewMessage("api.ListWatchOptions"),
@@ -214,11 +245,11 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 func (s *s{{$pkgname}}{{$flname}}Backend) regSvcsFunc(ctx context.Context, logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) {
 	{{range .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}{{$svcver := $svcparams.Version}}{{$svcprefix := $svcparams.Prefix}}
 	{
-		srv := apisrvpkg.NewService("{{.Name}}")
+		srv := apisrvpkg.NewService("{{$pkgname}}.{{.Name}}")
 		s.endpoints{{$svcname}}.fnAutoWatchSvc{{$svcname}} = srv.WatchFromKv
 		{{range .Methods}}{{$methparams := (getMethodParams .)}}{{if (strEq $methparams.Oper "WatchOper")}}{{else}}
 		s.endpoints{{$svcname}}.fn{{.Name}} = srv.AddMethod("{{.Name}}",
-			apisrvpkg.NewMethod(pkgMessages["{{getInputType $pkgname . true}}"], pkgMessages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiserver.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["{{getInputType $pkgname . true}}"], pkgMessages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiserver.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
 			return i, false, nil
 		}){{end}}{{end}}.WithVersion("{{$svcver}}").WithMakeURI(func(i interface{}) (string, error) { {{if isRestExposed .}}{{$uri := getURIKey . $svcver false}}{{if $uri.Ref}}
 			in, ok := i.({{getInputType $pkgname . true}})
@@ -280,7 +311,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "{{$pkgname}}.{{.}}")

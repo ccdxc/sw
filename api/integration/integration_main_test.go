@@ -10,10 +10,11 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	"github.com/pensando/sw/api"
-	apicache "github.com/pensando/sw/api/cache"
+	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/auth"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -65,7 +66,7 @@ type tInfo struct {
 	l             log.Logger
 	apiserverport string
 	apigwport     string
-	cache         apicache.Interface
+	cache         apiintf.CacheInterface
 	esServer      *esmock.ElasticServer
 	certsrvurl    string
 	userCred      *auth.PasswordCredential
@@ -152,6 +153,8 @@ func TestMain(m *testing.M) {
 			Codec:   runtime.NewJSONCodec(scheme),
 			Servers: []string{"test-cluster"},
 		},
+		GetOverlay: cache.GetOverlay,
+		IsDryRun:   cache.IsDryRun,
 	}
 	grpclog.SetLogger(l)
 

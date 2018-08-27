@@ -98,7 +98,7 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/gogo/protobuf/protobuf \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
-        --pensando_out=plugins=grpc,logtostderr=false,log_dir=${curdir}/tmp,${PROTOSUBST}:${curdir}/generated/${pkg} \
+        --pensando_out=Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,plugins=grpc,logtostderr=false,log_dir=${curdir}/tmp,${PROTOSUBST}:${curdir}/generated/${pkg} \
         ${protofiles} || { echo "Protobuf generation failed" ; exit -1; }
         echo ++ Generating swagger for ${curdir}/generated/${pkg}/gateway
         tempdir=$(pwd)&& cd ${curdir}/generated/${pkg}/gateway && rice embed-go && go generate .

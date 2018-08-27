@@ -8,11 +8,35 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
+	cachemocks "github.com/pensando/sw/api/cache/mocks"
+	"github.com/pensando/sw/api/interfaces"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	compliance "github.com/pensando/sw/venice/utils/kvstore/compliance"
 )
+
+// setStagingBufferInGrpcMD sets the GRPC metadata with buffer ID
+func setStagingBufferInGrpcMD(ctx context.Context, id string) context.Context {
+	pair := metadata.Pairs(apisrv.RequestParamStagingBufferID, id)
+	inMd, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		nMd := metadata.Join(inMd, pair)
+		return metadata.NewIncomingContext(ctx, nMd)
+	}
+
+	return metadata.NewIncomingContext(ctx, pair)
+}
+
+var globFakeOverlay *cachemocks.FakeOverlay
+
+func fakeGetOverlay(tenant, id string) (apiintf.OverlayInterface, error) {
+	return globFakeOverlay, nil
+}
+
+func fakeIsDryRun(ctx context.Context) bool {
+	return false
+}
 
 // TestMethodWiths
 // Test registration of various hooks to method.
@@ -21,13 +45,18 @@ import (
 func TestMethodWiths(t *testing.T) {
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
+	singletonAPISrv.config.IsDryRun = fakeIsDryRun
+	singletonAPISrv.config.GetOverlay = fakeGetOverlay
+	fsvc := mocks.NewFakeService()
+
 	req := mocks.NewFakeMessage("TestType1", "TestType1", true).(*mocks.FakeMessage)
 	resp := mocks.NewFakeMessage("TestType2", "TestType2", true).(*mocks.FakeMessage)
 	f := mocks.NewFakeMethod(true).(*mocks.FakeMethod)
 	// Add a few Pres and Posts and skip KV for testing
-	m := NewMethod(req, resp, "testm", "TestMethodWiths").WithVersion("v1").WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc)
+	m := NewMethod(fsvc, req, resp, "testm", "TestMethodWiths").WithVersion("v1").WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc)
 	m = m.WithPostCommitHook(f.PostcommitfFunc).WithPostCommitHook(f.PostcommitfFunc).WithResponseWriter(f.RespWriterFunc).WithMakeURI(f.MakeURIFunc)
 	m = m.WithOper("POST").WithVersion("Vtest")
+
 	reqmsg := TestType1{}
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "GET")
@@ -80,6 +109,9 @@ func TestMethodWiths(t *testing.T) {
 	if m.GetPrefix() != "testm" {
 		t.Errorf("wrong prefix")
 	}
+	if m.GetService() != fsvc {
+		t.Errorf("could not retrieve sercvice")
+	}
 }
 
 // TestMethodKvWrite
@@ -87,10 +119,14 @@ func TestMethodWiths(t *testing.T) {
 func TestMethodKvWrite(t *testing.T) {
 	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
 	resp := mocks.NewFakeMessage("reqmsgB", "/responsmsg/A", true).(*mocks.FakeMessage)
+	fsvc := mocks.NewFakeService()
+
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
+	singletonAPISrv.config.IsDryRun = fakeIsDryRun
+	singletonAPISrv.config.GetOverlay = fakeGetOverlay
 
-	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
+	m := NewMethod(fsvc, req, resp, "testm", "TestMethodKvWrite")
 	reqmsg := TestType1{}
 
 	// Set the same version as the apiServer
@@ -133,6 +169,76 @@ func TestMethodKvWrite(t *testing.T) {
 	if req.Kvdels != 1 {
 		t.Errorf("Expecting [1] Kvdels but found [%v]", req.Kvdels)
 	}
+
+	// Test with staging set
+	req.Kvreads, req.Kvwrites, req.Kvdels = 0, 0, 0
+	globFakeOverlay = &cachemocks.FakeOverlay{}
+	// sctx := setStagingBufferInGrpcMD(ctx, "testBuffer")
+	md = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "GET",
+		apisrv.RequestParamStagingBufferID, "testBuffer")
+	sctx := metadata.NewIncomingContext(ctx, md)
+	if _, err := m.HandleInvocation(sctx, reqmsg); err != nil {
+		t.Errorf("Expecting to suceed but failed (%+v)", err)
+	}
+	if req.Kvreads != 1 {
+		t.Errorf("Expecting [1] read but found [%v]", req.Kvreads)
+	}
+
+	md = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "LIST",
+		apisrv.RequestParamStagingBufferID, "testBuffer")
+	sctx = metadata.NewIncomingContext(ctx, md)
+	lopst := api.ListWatchOptions{}
+	if _, err := m.HandleInvocation(sctx, lopst); err != nil {
+		t.Errorf("Expecting to suceed but failed (%+v)", err)
+	}
+	if req.Kvreads != 1 {
+		t.Errorf("Expecting [1] read but found [%v]", req.Kvreads)
+	}
+
+	md = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "POST",
+		apisrv.RequestParamStagingBufferID, "testBuffer")
+	sctx = metadata.NewIncomingContext(ctx, md)
+	if _, err := m.HandleInvocation(sctx, reqmsg); err != nil {
+		t.Errorf("Expecting to suceed but failed (%+v)", err)
+	}
+	if req.Kvwrites != 0 {
+		t.Errorf("Expecting [0] writes but found [%v]", req.Kvwrites)
+	}
+	if globFakeOverlay.CreatePrimaries != 1 {
+		t.Errorf("Expecting [1] writes but found [%v]", globFakeOverlay.CreatePrimaries)
+	}
+
+	md = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "PUT",
+		apisrv.RequestParamStagingBufferID, "testBuffer")
+	sctx = metadata.NewIncomingContext(ctx, md)
+	if _, err := m.HandleInvocation(sctx, reqmsg); err != nil {
+		t.Errorf("Expecting to suceed but failed (%+v)", err)
+	}
+	if req.Kvwrites != 0 {
+		t.Errorf("Expecting [0] writes but found [%v]", req.Kvwrites)
+	}
+	if globFakeOverlay.UpdatePrimaries != 1 {
+		t.Errorf("Expecting [1] writes but found [%v]", globFakeOverlay.UpdatePrimaries)
+	}
+
+	req.RuntimeObj = &reqmsg
+	md = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "DELETE",
+		apisrv.RequestParamStagingBufferID, "testBuffer")
+	sctx = metadata.NewIncomingContext(ctx, md)
+	if _, err := m.HandleInvocation(sctx, reqmsg); err != nil {
+		t.Errorf("Expecting to suceed but failed (%+v)", err)
+	}
+	if req.Kvdels != 0 {
+		t.Errorf("Expecting [0] deletes but found [%v]", req.Kvwrites)
+	}
+	if globFakeOverlay.DeletePrimaries != 1 {
+		t.Errorf("Expecting [1] deletes but found [%v]", globFakeOverlay.DeletePrimaries)
+	}
 }
 
 func TestMethodKvList(t *testing.T) {
@@ -141,7 +247,10 @@ func TestMethodKvList(t *testing.T) {
 
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
-	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
+	singletonAPISrv.config.IsDryRun = fakeIsDryRun
+	singletonAPISrv.config.GetOverlay = fakeGetOverlay
+
+	m := NewMethod(nil, req, resp, "testm", "TestMethodKvWrite")
 	reqmsg := api.ListWatchOptions{}
 
 	// Set the same version as the apiServer
@@ -162,7 +271,10 @@ func TestMapOper(t *testing.T) {
 
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
-	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
+	singletonAPISrv.config.IsDryRun = fakeIsDryRun
+	singletonAPISrv.config.GetOverlay = fakeGetOverlay
+
+	m := NewMethod(nil, req, resp, "testm", "TestMethodKvWrite")
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "GET")
 	// Test that the oper method is correct
@@ -197,7 +309,7 @@ var cmpVer int64
 
 func testTxnPreCommithook(ctx context.Context,
 	kv kvstore.Interface,
-	txn kvstore.Txn, key string, oper apisrv.APIOperType,
+	txn kvstore.Txn, key string, oper apisrv.APIOperType, dryrun bool,
 	i interface{}) (interface{}, bool, error) {
 	txn.AddComparator(kvstore.Compare(kvstore.WithVersion("/requestmsg/A/NotThere"), "=", cmpVer))
 	return i, true, nil
@@ -214,9 +326,11 @@ func TestTxn(t *testing.T) {
 
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
+	singletonAPISrv.config.IsDryRun = fakeIsDryRun
+	singletonAPISrv.config.GetOverlay = fakeGetOverlay
 
 	// Add a few Pres and Posts and skip KV for testing
-	m := NewMethod(req, resp, "testm", "TestMethodKvWrite").WithPreCommitHook(testTxnPreCommithook)
+	m := NewMethod(nil, req, resp, "testm", "TestMethodKvWrite").WithPreCommitHook(testTxnPreCommithook)
 	reqmsg := compliance.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "POST")
@@ -272,8 +386,11 @@ func TestTransforms(t *testing.T) {
 
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
+	singletonAPISrv.config.IsDryRun = fakeIsDryRun
+	singletonAPISrv.config.GetOverlay = fakeGetOverlay
+
 	singletonAPISrv.version = "v2"
-	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
+	m := NewMethod(nil, req, resp, "testm", "TestMethodKvWrite")
 	reqmsg := TestType1{}
 
 	// Disable method and invoke.

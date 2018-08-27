@@ -15,6 +15,8 @@ import (
 	networkClient "github.com/pensando/sw/api/generated/network/grpc/client"
 	security "github.com/pensando/sw/api/generated/security"
 	securityClient "github.com/pensando/sw/api/generated/security/grpc/client"
+	staging "github.com/pensando/sw/api/generated/staging"
+	stagingClient "github.com/pensando/sw/api/generated/staging/grpc/client"
 	workload "github.com/pensando/sw/api/generated/workload"
 	workloadClient "github.com/pensando/sw/api/generated/workload/grpc/client"
 	"github.com/pensando/sw/venice/utils/log"
@@ -37,6 +39,8 @@ type Services interface {
 	NetworkV1() network.NetworkV1Interface
 	// Package is security and len of messages is 5
 	SecurityV1() security.SecurityV1Interface
+	// Package is staging and len of messages is 1
+	StagingV1() staging.StagingV1Interface
 	// Package is workload and len of messages is 2
 	WorkloadV1() workload.WorkloadV1Interface
 }
@@ -52,6 +56,7 @@ type apiGrpcServerClient struct {
 	aMonitoringV1 monitoring.MonitoringV1Interface
 	aNetworkV1    network.NetworkV1Interface
 	aSecurityV1   security.SecurityV1Interface
+	aStagingV1    staging.StagingV1Interface
 	aWorkloadV1   workload.WorkloadV1Interface
 }
 
@@ -84,6 +89,10 @@ func (a *apiGrpcServerClient) SecurityV1() security.SecurityV1Interface {
 	return a.aSecurityV1
 }
 
+func (a *apiGrpcServerClient) StagingV1() staging.StagingV1Interface {
+	return a.aStagingV1
+}
+
 func (a *apiGrpcServerClient) WorkloadV1() workload.WorkloadV1Interface {
 	return a.aWorkloadV1
 }
@@ -106,6 +115,7 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 		aMonitoringV1: monitoringClient.NewGrpcCrudClientMonitoringV1(client.ClientConn, logger),
 		aNetworkV1:    networkClient.NewGrpcCrudClientNetworkV1(client.ClientConn, logger),
 		aSecurityV1:   securityClient.NewGrpcCrudClientSecurityV1(client.ClientConn, logger),
+		aStagingV1:    stagingClient.NewGrpcCrudClientStagingV1(client.ClientConn, logger),
 		aWorkloadV1:   workloadClient.NewGrpcCrudClientWorkloadV1(client.ClientConn, logger),
 	}, nil
 }
@@ -120,6 +130,7 @@ type apiRestServerClient struct {
 	aMonitoringV1 monitoring.MonitoringV1Interface
 	aNetworkV1    network.NetworkV1Interface
 	aSecurityV1   security.SecurityV1Interface
+	aStagingV1    staging.StagingV1Interface
 	aWorkloadV1   workload.WorkloadV1Interface
 }
 
@@ -152,6 +163,10 @@ func (a *apiRestServerClient) SecurityV1() security.SecurityV1Interface {
 	return a.aSecurityV1
 }
 
+func (a *apiRestServerClient) StagingV1() staging.StagingV1Interface {
+	return a.aStagingV1
+}
+
 func (a *apiRestServerClient) WorkloadV1() workload.WorkloadV1Interface {
 	return a.aWorkloadV1
 }
@@ -168,6 +183,24 @@ func NewRestAPIClient(url string) (Services, error) {
 		aMonitoringV1: monitoringClient.NewRestCrudClientMonitoringV1(url),
 		aNetworkV1:    networkClient.NewRestCrudClientNetworkV1(url),
 		aSecurityV1:   securityClient.NewRestCrudClientSecurityV1(url),
+		aStagingV1:    stagingClient.NewRestCrudClientStagingV1(url),
 		aWorkloadV1:   workloadClient.NewRestCrudClientWorkloadV1(url),
+	}, nil
+}
+
+// NewStagedRestAPIClient returns a REST client
+func NewStagedRestAPIClient(url string, bufferId string) (Services, error) {
+	return &apiRestServerClient{
+		url:    url,
+		logger: log.WithContext("module", "RestAPIClient"),
+
+		aAuthV1:       authClient.NewStagedRestCrudClientAuthV1(url, bufferId),
+		aBookstoreV1:  bookstoreClient.NewStagedRestCrudClientBookstoreV1(url, bufferId),
+		aClusterV1:    clusterClient.NewStagedRestCrudClientClusterV1(url, bufferId),
+		aMonitoringV1: monitoringClient.NewStagedRestCrudClientMonitoringV1(url, bufferId),
+		aNetworkV1:    networkClient.NewStagedRestCrudClientNetworkV1(url, bufferId),
+		aSecurityV1:   securityClient.NewStagedRestCrudClientSecurityV1(url, bufferId),
+		aStagingV1:    stagingClient.NewStagedRestCrudClientStagingV1(url, bufferId),
+		aWorkloadV1:   workloadClient.NewStagedRestCrudClientWorkloadV1(url, bufferId),
 	}, nil
 }

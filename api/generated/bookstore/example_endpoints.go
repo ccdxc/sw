@@ -79,6 +79,7 @@ type EndpointsBookstoreV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
+	bufferId string
 
 	AddOutageEndpoint               endpoint.Endpoint
 	ApplydiscountEndpoint           endpoint.Endpoint
@@ -2795,6 +2796,9 @@ func makeURIBookstoreV1RestockCreateOper(in *RestockRequest) string {
 // AutoAddOrder CRUD method for Order
 func (r *EndpointsBookstoreV1RestClient) AutoAddOrder(ctx context.Context, in *Order) (*Order, error) {
 	path := makeURIBookstoreV1AutoAddOrderCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2813,6 +2817,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoAddOrder(ctx context.Context, in *O
 // AutoUpdateOrder CRUD method for Order
 func (r *EndpointsBookstoreV1RestClient) AutoUpdateOrder(ctx context.Context, in *Order) (*Order, error) {
 	path := makeURIBookstoreV1AutoUpdateOrderUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2831,6 +2838,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateOrder(ctx context.Context, in
 // AutoGetOrder CRUD method for Order
 func (r *EndpointsBookstoreV1RestClient) AutoGetOrder(ctx context.Context, in *Order) (*Order, error) {
 	path := makeURIBookstoreV1AutoGetOrderGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2849,6 +2859,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoGetOrder(ctx context.Context, in *O
 // AutoDeleteOrder CRUD method for Order
 func (r *EndpointsBookstoreV1RestClient) AutoDeleteOrder(ctx context.Context, in *Order) (*Order, error) {
 	path := makeURIBookstoreV1AutoDeleteOrderDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2867,6 +2880,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoDeleteOrder(ctx context.Context, in
 // AutoListOrder CRUD method for Order
 func (r *EndpointsBookstoreV1RestClient) AutoListOrder(ctx context.Context, options *api.ListWatchOptions) (*OrderList, error) {
 	path := makeURIBookstoreV1AutoListOrderListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2889,6 +2905,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchOrder(ctx context.Context, str
 }
 
 func (r *EndpointsBookstoreV1RestClient) ApplydiscountOrder(ctx context.Context, in *ApplyDiscountReq) (*Order, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
 	path := makeURIBookstoreV1ApplydiscountCreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
@@ -2906,6 +2925,9 @@ func (r *EndpointsBookstoreV1RestClient) ApplydiscountOrder(ctx context.Context,
 }
 
 func (r *EndpointsBookstoreV1RestClient) CleardiscountOrder(ctx context.Context, in *ApplyDiscountReq) (*Order, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
 	path := makeURIBookstoreV1CleardiscountCreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
@@ -2930,6 +2952,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoAddBook(ctx context.Context, in *Bo
 // AutoUpdateBook CRUD method for Book
 func (r *EndpointsBookstoreV1RestClient) AutoUpdateBook(ctx context.Context, in *Book) (*Book, error) {
 	path := makeURIBookstoreV1AutoUpdateBookUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2948,6 +2973,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateBook(ctx context.Context, in 
 // AutoGetBook CRUD method for Book
 func (r *EndpointsBookstoreV1RestClient) AutoGetBook(ctx context.Context, in *Book) (*Book, error) {
 	path := makeURIBookstoreV1AutoGetBookGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2980,6 +3008,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchBook(ctx context.Context, stre
 }
 
 func (r *EndpointsBookstoreV1RestClient) RestockBook(ctx context.Context, in *RestockRequest) (*RestockResponse, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
 	path := makeURIBookstoreV1RestockCreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
@@ -3030,6 +3061,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchPublisher(ctx context.Context,
 // AutoAddStore CRUD method for Store
 func (r *EndpointsBookstoreV1RestClient) AutoAddStore(ctx context.Context, in *Store) (*Store, error) {
 	path := makeURIBookstoreV1AutoAddStoreCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -3048,6 +3082,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoAddStore(ctx context.Context, in *S
 // AutoUpdateStore CRUD method for Store
 func (r *EndpointsBookstoreV1RestClient) AutoUpdateStore(ctx context.Context, in *Store) (*Store, error) {
 	path := makeURIBookstoreV1AutoUpdateStoreUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -3066,6 +3103,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateStore(ctx context.Context, in
 // AutoGetStore CRUD method for Store
 func (r *EndpointsBookstoreV1RestClient) AutoGetStore(ctx context.Context, in *Store) (*Store, error) {
 	path := makeURIBookstoreV1AutoGetStoreGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -3084,6 +3124,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoGetStore(ctx context.Context, in *S
 // AutoDeleteStore CRUD method for Store
 func (r *EndpointsBookstoreV1RestClient) AutoDeleteStore(ctx context.Context, in *Store) (*Store, error) {
 	path := makeURIBookstoreV1AutoDeleteStoreDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -3111,6 +3154,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchStore(ctx context.Context, str
 }
 
 func (r *EndpointsBookstoreV1RestClient) AddOutageStore(ctx context.Context, in *OutageRequest) (*Store, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
 	path := makeURIBookstoreV1AddOutageCreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
@@ -3161,6 +3207,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchCoupon(ctx context.Context, st
 // AutoAddCustomer CRUD method for Customer
 func (r *EndpointsBookstoreV1RestClient) AutoAddCustomer(ctx context.Context, in *Customer) (*Customer, error) {
 	path := makeURIBookstoreV1AutoAddCustomerCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -3179,6 +3228,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoAddCustomer(ctx context.Context, in
 // AutoUpdateCustomer CRUD method for Customer
 func (r *EndpointsBookstoreV1RestClient) AutoUpdateCustomer(ctx context.Context, in *Customer) (*Customer, error) {
 	path := makeURIBookstoreV1AutoUpdateCustomerUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -3197,6 +3249,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateCustomer(ctx context.Context,
 // AutoGetCustomer CRUD method for Customer
 func (r *EndpointsBookstoreV1RestClient) AutoGetCustomer(ctx context.Context, in *Customer) (*Customer, error) {
 	path := makeURIBookstoreV1AutoGetCustomerGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -3215,6 +3270,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoGetCustomer(ctx context.Context, in
 // AutoDeleteCustomer CRUD method for Customer
 func (r *EndpointsBookstoreV1RestClient) AutoDeleteCustomer(ctx context.Context, in *Customer) (*Customer, error) {
 	path := makeURIBookstoreV1AutoDeleteCustomerDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -3233,6 +3291,9 @@ func (r *EndpointsBookstoreV1RestClient) AutoDeleteCustomer(ctx context.Context,
 // AutoListCustomer CRUD method for Customer
 func (r *EndpointsBookstoreV1RestClient) AutoListCustomer(ctx context.Context, options *api.ListWatchOptions) (*CustomerList, error) {
 	path := makeURIBookstoreV1AutoListCustomerListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -3265,4 +3326,17 @@ func MakeBookstoreV1RestClientEndpoints(instance string) (EndpointsBookstoreV1Re
 		client:   http.DefaultClient,
 	}, nil
 
+}
+
+// MakeBookstoreV1StagedRestClientEndpoints makes staged REST client endpoints
+func MakeBookstoreV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsBookstoreV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsBookstoreV1RestClient{
+		instance: instance,
+		bufferId: bufferId,
+		client:   http.DefaultClient,
+	}, nil
 }

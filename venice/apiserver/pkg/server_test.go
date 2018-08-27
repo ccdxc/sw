@@ -64,6 +64,7 @@ func (t *testAPISrvService) WatchFromKv(options *api.ListWatchOptions, stream gr
 }
 func (t *testAPISrvService) WithKvWatchFunc(fn apisrv.WatchSvcKvFunc) apisrv.Service { return t }
 func (t *testAPISrvService) WithCrudServices(msgs []apisrv.Message) apisrv.Service   { return t }
+func (t *testAPISrvService) Name() string                                            { return "" }
 
 func TestRegistration(t *testing.T) {
 	// Parallel is not needed since init happens in a single thread.

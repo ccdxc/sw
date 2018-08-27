@@ -24,7 +24,7 @@ const (
 	veniceMaxCollectorsPerSession = 2
 )
 
-func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	ms, ok := i.(monitoring.MirrorSession)
 	if !ok {
 		return i, false, fmt.Errorf("Invalid input type")

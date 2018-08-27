@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
@@ -53,7 +54,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Alert"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(monitoring.Alert)
 			key := r.MakeKey(prefix)
 			r.Kind = "Alert"
@@ -64,17 +65,9 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*monitoring.Alert)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &monitoring.Alert{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -149,9 +142,45 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(monitoring.Alert)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.Alert)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.Alert
+			if v, ok := i.(monitoring.Alert); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.Alert); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.Alert); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.Alert
+			if v, ok := i.(monitoring.Alert); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.Alert); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.Alert); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"monitoring.AlertDestination": apisrvpkg.NewMessage("monitoring.AlertDestination").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -166,7 +195,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "AlertDestination"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(monitoring.AlertDestination)
 			key := r.MakeKey(prefix)
 			r.Kind = "AlertDestination"
@@ -177,17 +206,9 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*monitoring.AlertDestination)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &monitoring.AlertDestination{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -262,9 +283,45 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(monitoring.AlertDestination)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.AlertDestination)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.AlertDestination
+			if v, ok := i.(monitoring.AlertDestination); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.AlertDestination); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.AlertDestination); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.AlertDestination
+			if v, ok := i.(monitoring.AlertDestination); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.AlertDestination); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.AlertDestination); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"monitoring.AlertDestinationSpec":   apisrvpkg.NewMessage("monitoring.AlertDestinationSpec"),
@@ -281,7 +338,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "AlertPolicy"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(monitoring.AlertPolicy)
 			key := r.MakeKey(prefix)
 			r.Kind = "AlertPolicy"
@@ -292,17 +349,9 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*monitoring.AlertPolicy)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &monitoring.AlertPolicy{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -377,9 +426,45 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(monitoring.AlertPolicy)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.AlertPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.AlertPolicy
+			if v, ok := i.(monitoring.AlertPolicy); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.AlertPolicy); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.AlertPolicy); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.AlertPolicy
+			if v, ok := i.(monitoring.AlertPolicy); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.AlertPolicy); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.AlertPolicy); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"monitoring.AlertPolicySpec":    apisrvpkg.NewMessage("monitoring.AlertPolicySpec"),

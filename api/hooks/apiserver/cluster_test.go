@@ -400,7 +400,7 @@ func TestCreateDefaultRoles(t *testing.T) {
 	}
 	for _, test := range tests {
 		txn := kvs.NewTxn()
-		out, ok, err := clusterHooks.createDefaultRoles(ctx, kvs, txn, "", test.oper, test.in)
+		out, ok, err := clusterHooks.createDefaultRoles(ctx, kvs, txn, "", test.oper, false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, test.err == (err != nil), fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
@@ -504,7 +504,7 @@ func TestDeleteDefaultRoles(t *testing.T) {
 	}
 	for _, test := range tests {
 		txn := kvs.NewTxn()
-		out, ok, err := clusterHooks.deleteDefaultRoles(ctx, kvs, txn, "", test.oper, test.in)
+		out, ok, err := clusterHooks.deleteDefaultRoles(ctx, kvs, txn, "", test.oper, false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, test.err == (err != nil), fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v], ", test.name, test.out, out))
@@ -680,7 +680,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 				t.Fatalf("[%s] test failed, unable to populate kvstore with cluster, Err: %v", test.name, err)
 			}
 		}
-		out, ok, err := clusterHooks.checkAuthBootstrapFlag(ctx, kvs, txn, clusterKey, test.oper, test.in)
+		out, ok, err := clusterHooks.checkAuthBootstrapFlag(ctx, kvs, txn, clusterKey, test.oper, false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
@@ -764,7 +764,7 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 				t.Fatalf("[%s] test failed, unable to populate kvstore with cluster, Err: %v", test.name, err)
 			}
 		}
-		out, ok, err := clusterHooks.setAuthBootstrapFlag(ctx, kvs, txn, clusterKey, "AuthBootstrapComplete", test.in)
+		out, ok, err := clusterHooks.setAuthBootstrapFlag(ctx, kvs, txn, clusterKey, "AuthBootstrapComplete", false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))

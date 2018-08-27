@@ -45,6 +45,7 @@ type EndpointsMetricsV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
+	bufferId string
 
 	AutoWatchSvcMetricsV1Endpoint endpoint.Endpoint
 	QueryEndpoint                 endpoint.Endpoint
@@ -217,4 +218,17 @@ func MakeMetricsV1RestClientEndpoints(instance string) (EndpointsMetricsV1RestCl
 		client:   http.DefaultClient,
 	}, nil
 
+}
+
+// MakeMetricsV1StagedRestClientEndpoints makes staged REST client endpoints
+func MakeMetricsV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsMetricsV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsMetricsV1RestClient{
+		instance: instance,
+		bufferId: bufferId,
+		client:   http.DefaultClient,
+	}, nil
 }

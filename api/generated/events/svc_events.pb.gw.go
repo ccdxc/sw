@@ -55,10 +55,11 @@ func request_EventsV1_GetEvent_0(ctx context.Context, marshaler runtime.Marshale
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["UUID"]
@@ -71,6 +72,8 @@ func request_EventsV1_GetEvent_0(ctx context.Context, marshaler runtime.Marshale
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.GetEvent(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err

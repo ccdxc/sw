@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
+	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
@@ -1251,4 +1252,583 @@ func TestSchemaValidation(t *testing.T) {
 			t.Fatalf("expecting [%v] got [%v] %s", c.exp, res, c.str)
 		}
 	}
+}
+
+func TestStaging(t *testing.T) {
+	ctx := context.Background()
+
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+
+	ctx, err = NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+
+	var (
+		bufName    = "TestBuffer"
+		tenantName = "default"
+	)
+	{ // Create a buffer
+		buf := staging.Buffer{}
+		buf.Name = bufName
+		buf.Tenant = tenantName
+		_, err := restcl.StagingV1().Buffer().Create(ctx, &buf)
+		if err != nil {
+			t.Fatalf("failed to create staging buffer %s", err)
+		}
+	}
+
+	// Staging Client
+	stagecl, err := apiclient.NewStagedRestAPIClient("http://localhost:"+tinfo.apigwport, bufName)
+	if err != nil {
+		t.Fatalf("cannot create Staged REST client")
+	}
+	defer stagecl.Close()
+
+	var customers []bookstore.Customer
+	{
+		customers = []bookstore.Customer{
+			{
+				ObjectMeta: api.ObjectMeta{
+					Name: "customer1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind: "Customer",
+				},
+				Spec: bookstore.CustomerSpec{
+					Address:  "1111 Wherewhich lane",
+					Password: []byte("Test123"),
+				},
+			},
+			{
+				ObjectMeta: api.ObjectMeta{
+					Name: "customer2",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind: "Customer",
+				},
+				Spec: bookstore.CustomerSpec{
+					Address:  "1112 Wherewhich lane",
+					Password: []byte("Test123"),
+				},
+			},
+			{
+				ObjectMeta: api.ObjectMeta{
+					Name: "customer3",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind: "Customer",
+				},
+				Spec: bookstore.CustomerSpec{
+					Address:  "1113 Wherewhich lane",
+					Password: []byte("Test123"),
+				},
+			},
+			{
+				ObjectMeta: api.ObjectMeta{
+					Name: "customer4",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind: "Customer",
+				},
+				Spec: bookstore.CustomerSpec{
+					Address:  "1114 Wherewhich lane",
+					Password: []byte("Test123"),
+				},
+			},
+		}
+
+	}
+	var custName string
+	{ // Stage an object
+		retcust, err := stagecl.BookstoreV1().Customer().Create(ctx, &customers[0])
+		if err != nil {
+			t.Fatalf("Create of customer failed (%s)", err)
+		}
+		custName = retcust.Name
+	}
+
+	{ // Get staged object from staging buffer
+		objectMeta := api.ObjectMeta{Name: custName}
+		_, err := stagecl.BookstoreV1().Customer().Get(ctx, &objectMeta)
+		if err != nil {
+			t.Fatalf("Get of Order from staged buffer failed (%s)", err)
+		}
+	}
+	{ // Get staged object without staging
+		objectMeta := api.ObjectMeta{Name: custName}
+		_, err := restcl.BookstoreV1().Customer().Get(ctx, &objectMeta)
+		if err == nil {
+			t.Fatalf("Get of Order unstaged cache succeeded ")
+		}
+	}
+	{ // get staging buffer
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+
+		buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 1 {
+			t.Fatalf("expecting [1] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v][%v]", len(buf.Status.Errors), buf.Status.Errors, buf.Status.Items)
+		}
+		obj := buf.Status.Items[0]
+		if obj.Method != "create" || obj.URI != "/configs/bookstore/v1/customers/"+custName {
+			t.Fatalf("object received does not match %+v", obj)
+		}
+	}
+	{ // Clear full buffer
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+		in := staging.ClearAction{}
+		in.Tenant = tenantName
+		in.Name = bufName
+		_, err := restcl.StagingV1().Buffer().Clear(ctx, &in)
+		if err != nil {
+			t.Fatalf("failed to Clear staging buffer %s", err)
+		}
+		buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 0 {
+			t.Fatalf("expecting [0] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+	}
+	{ // selective clear of objects
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+		names := []string{}
+		for i := 1; i < 4; i++ {
+			retcust, err := stagecl.BookstoreV1().Customer().Create(ctx, &customers[i])
+			if err != nil {
+				t.Fatalf("Create of Order failed (%s)", err)
+			}
+			names = append(names, retcust.Name)
+		}
+		buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 3 {
+			t.Fatalf("expecting [3] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		uris := []string{}
+		for _, v := range buf.Status.Items {
+			uris = append(uris, v.URI)
+			for nk, n := range names {
+				if strings.HasSuffix(v.URI, n) {
+					names[nk] = "SHOULDNOTEXIST###"
+				}
+			}
+		}
+		for _, n := range names {
+			if n != "SHOULDNOTEXIST###" {
+				t.Fatalf("Was not expecting object in returned buffer [%s]", n)
+			}
+		}
+
+		ca := staging.ClearAction{}
+		ca.Tenant = tenantName
+		ca.Name = bufName
+		ca.Spec.Items = []*staging.ItemId{
+			&staging.ItemId{
+				URI: uris[1],
+			},
+		}
+		_, err = restcl.StagingV1().Buffer().Clear(ctx, &ca)
+		if err != nil {
+			t.Fatalf("failed to clear specific items in buffer (%s)", err)
+		}
+		buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 2 {
+			t.Fatalf("expecting [2] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+	}
+	{ // commit the buffer and verify that it is accessible in unstaged path.
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+		buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 2 {
+			t.Fatalf("expecting [2] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		names := []string{}
+		for _, v := range buf.Status.Items {
+			ns := strings.Split(v.URI, "/")
+			names = append(names, ns[len(ns)-1])
+		}
+		ca := staging.CommitAction{}
+		ca.Name = bufName
+		ca.Tenant = tenantName
+		cresp, err := restcl.StagingV1().Buffer().Commit(ctx, &ca)
+		if err != nil {
+			t.Fatalf("failed to commit staging buffer (%s)", err)
+		}
+		if cresp.Status.Status != staging.CommitResponse_SUCCESS.String() {
+			t.Fatalf("commit operation failed %v", cresp.Status)
+		}
+		buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 0 {
+			t.Fatalf("expecting [0] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		// Get non-staged object
+		for _, v := range names {
+			objectMeta := api.ObjectMeta{Name: v}
+			_, err := restcl.BookstoreV1().Customer().Get(ctx, &objectMeta)
+			if err != nil {
+				t.Fatalf("Get of Order %s failed after commit (%s)", v, err)
+			}
+		}
+	}
+	{ // Modifying existing object via staging
+		lopts := api.ListWatchOptions{}
+		lst, err := restcl.BookstoreV1().Customer().List(ctx, &lopts)
+		if len(lst) != 2 {
+			t.Fatalf("expecting 2 objects in list, got %d", len(lst))
+		}
+		names := []string{}
+		for _, v := range lst {
+			v.Spec.Address = "not at " + v.Spec.Address
+			v.Spec.Password = []byte("Test123")
+			retcust, err := stagecl.BookstoreV1().Customer().Update(ctx, v)
+			if err != nil {
+				t.Fatalf("update of Order failed (%s)", err)
+			}
+			names = append(names, retcust.Name)
+		}
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+		buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != len(names) {
+			t.Fatalf("expecting [2] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		ca := staging.CommitAction{}
+		ca.Name = bufName
+		ca.Tenant = tenantName
+		cresp, err := restcl.StagingV1().Buffer().Commit(ctx, &ca)
+		if err != nil {
+			t.Fatalf("failed to commit staging buffer (%s)", err)
+		}
+		if cresp.Status.Status != staging.CommitResponse_SUCCESS.String() {
+			t.Fatalf("commit operation failed %v", cresp.Status)
+		}
+		buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 0 {
+			t.Fatalf("expecting [0] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		// Get non-staged object
+		for _, v := range names {
+			objectMeta := api.ObjectMeta{Name: v}
+			retObj, err := restcl.BookstoreV1().Customer().Get(ctx, &objectMeta)
+			if err != nil {
+				t.Fatalf("Get of Order %s failed after commit (%s)", v, err)
+			}
+			if !strings.Contains(retObj.Spec.Address, "not at") {
+				t.Fatalf("object not updated in kvstore [%s] [%+v]", v, retObj)
+			}
+		}
+	}
+	{ // delete existing objects via staging
+		lopts := api.ListWatchOptions{}
+		lst, err := restcl.BookstoreV1().Customer().List(ctx, &lopts)
+		if len(lst) != 2 {
+			t.Fatalf("expecting 2 objects in list, got %d", len(lst))
+		}
+		names := []string{}
+		for _, v := range lst {
+			meta := api.ObjectMeta{Name: v.Name}
+			retcust, err := stagecl.BookstoreV1().Customer().Delete(ctx, &meta)
+			if err != nil {
+				t.Fatalf("delete of Order failed (%s)", err)
+			}
+			names = append(names, retcust.Name)
+		}
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+		buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != len(names) {
+			t.Fatalf("expecting [2] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		ca := staging.CommitAction{}
+		ca.Name = bufName
+		ca.Tenant = tenantName
+		cresp, err := restcl.StagingV1().Buffer().Commit(ctx, &ca)
+		if err != nil {
+			t.Fatalf("failed to commit staging buffer (%s)", err)
+		}
+		if cresp.Status.Status != staging.CommitResponse_SUCCESS.String() {
+			t.Fatalf("commit operation failed %v", cresp.Status)
+		}
+		buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 0 {
+			t.Fatalf("expecting [0] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		lst, err = restcl.BookstoreV1().Customer().List(ctx, &lopts)
+		// Get non-staged object
+		for _, v := range names {
+			objectMeta := api.ObjectMeta{Name: v}
+			_, err := restcl.BookstoreV1().Customer().Get(ctx, &objectMeta)
+			if err == nil {
+				t.Fatalf("found object after deletion  %s", v)
+			}
+		}
+	}
+
+	{ // Staging request that should fail
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+		lopts := api.ListWatchOptions{}
+		names := []string{}
+		for i := 0; i < 4; i++ {
+			retcust, err := stagecl.BookstoreV1().Customer().Create(ctx, &customers[i])
+			if err != nil {
+				t.Fatalf("Create of Object failed (%s)", err)
+			}
+			names = append(names, retcust.Name)
+		}
+
+		buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 4 {
+			t.Fatalf("expecting [4] item found [%d]", len(buf.Status.Items))
+		}
+
+		// Create one of the objects directly without staging.
+		_, err = restcl.BookstoreV1().Customer().Create(ctx, &customers[1])
+		if err != nil {
+			t.Fatalf("Create of object directly failed (%s)", err)
+		}
+		// Now commit staged object
+		ca := staging.CommitAction{}
+		ca.Name = bufName
+		ca.Tenant = tenantName
+		cresp, err := restcl.StagingV1().Buffer().Commit(ctx, &ca)
+		if err != nil {
+			t.Fatalf("commit operation failed (%s)", err)
+		}
+		if cresp.Status.Status == staging.CommitResponse_SUCCESS.String() {
+			t.Fatalf("commit operation succeeded, expected to fail")
+		}
+		lst, err := restcl.BookstoreV1().Customer().List(ctx, &lopts)
+		if err != nil {
+			t.Fatalf("failed to retrieve list of objects")
+		}
+		if len(lst) != 1 {
+			t.Fatalf("expecting 1 objects, found %d", len(lst))
+		}
+		if lst[0].Name != customers[1].Name {
+			t.Fatalf("Expecting %v got %v object", lst[0].Name, customers[1].Name)
+		}
+	}
+
+	{ // Test consistent update
+		// Update status via grpc
+		copts := api.ObjectMeta{Name: "customer2"}
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+		cobj, err := restcl.BookstoreV1().Customer().Get(ctx, &copts)
+		if err != nil {
+			t.Fatalf("failed to get object (%s)", err)
+		}
+		cobj.Status.AccountStatus = "active"
+		cobj.Spec.Password = []byte("Test123")
+		_, err = apicl.BookstoreV1().Customer().Update(ctx, cobj)
+		if err != nil {
+			t.Fatalf("failed to update object (%s)", err)
+		}
+		customers[1].Spec.Address = "Updated New Address"
+		customers[1].Spec.Password = []byte("Test123")
+		_, err = stagecl.BookstoreV1().Customer().Update(ctx, &customers[1])
+		if err != nil {
+			t.Fatalf("failed to stage update operation *%s)", err)
+		}
+		buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 4 {
+			t.Fatalf("expecting [4] item found [%d]", len(buf.Status.Items))
+		}
+
+		// Now commit staged object
+		ca := staging.CommitAction{}
+		ca.Name = bufName
+		ca.Tenant = tenantName
+		cresp, err := restcl.StagingV1().Buffer().Commit(ctx, &ca)
+		if err != nil {
+			t.Fatalf("commit operation failed (%s)", err)
+		}
+		if cresp.Status.Status != staging.CommitResponse_SUCCESS.String() {
+			t.Fatalf("commit operation expected to succeeded got (%v)", cresp.Status)
+		}
+		cobj, err = restcl.BookstoreV1().Customer().Get(ctx, &copts)
+		if err != nil {
+			t.Fatalf("failed to get object (%s)", err)
+		}
+		if cobj.Spec.Address != "Updated New Address" || cobj.Status.AccountStatus != "active" {
+			t.Fatalf("consisten update failed [%v]", cobj)
+		}
+	}
+	{ // delete all objects
+		lopts := api.ListWatchOptions{}
+		lst, err := restcl.BookstoreV1().Customer().List(ctx, &lopts)
+		if len(lst) != 4 {
+			t.Fatalf("expecting 2 objects in list, got %d", len(lst))
+		}
+		names := []string{}
+		for _, v := range lst {
+			meta := api.ObjectMeta{Name: v.Name}
+			retcust, err := stagecl.BookstoreV1().Customer().Delete(ctx, &meta)
+			if err != nil {
+				t.Fatalf("delete of Order failed (%s)", err)
+			}
+			names = append(names, retcust.Name)
+		}
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+		buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != len(names) {
+			t.Fatalf("expecting [2] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		ca := staging.CommitAction{}
+		ca.Name = bufName
+		ca.Tenant = tenantName
+		cresp, err := restcl.StagingV1().Buffer().Commit(ctx, &ca)
+		if err != nil {
+			t.Fatalf("failed to commit staging buffer (%s)", err)
+		}
+		if cresp.Status.Status != staging.CommitResponse_SUCCESS.String() {
+			t.Fatalf("commit operation failed %v", cresp.Status)
+		}
+		buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 0 {
+			t.Fatalf("expecting [0] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		lst, err = restcl.BookstoreV1().Customer().List(ctx, &lopts)
+		// Get non-staged object
+		for _, v := range names {
+			objectMeta := api.ObjectMeta{Name: v}
+			_, err := restcl.BookstoreV1().Customer().Get(ctx, &objectMeta)
+			if err == nil {
+				t.Fatalf("found object after deletion  %s", v)
+			}
+		}
+	}
+	{ // Delete staging object
+		objMeta := api.ObjectMeta{}
+		objMeta.Name = bufName
+		objMeta.Tenant = tenantName
+		_, err := restcl.StagingV1().Buffer().Delete(ctx, &objMeta)
+		if err != nil {
+			t.Fatalf("failed to delete staging buffer %s", err)
+		}
+	}
+	{ // Get staged object from staging buffer
+		objectMeta := api.ObjectMeta{Name: customers[1].Name}
+		_, err := stagecl.BookstoreV1().Customer().Get(ctx, &objectMeta)
+		if err == nil {
+			t.Fatalf("Get of Order from staged buffer succeeded")
+		}
+	}
+	{ // try to stage object to nonexistent buffer
+		_, err := stagecl.BookstoreV1().Customer().Create(ctx, &customers[0])
+		if err == nil {
+			t.Fatalf("Create of Order into non-existent staging buffer succeeded")
+		}
+	}
+
 }

@@ -55,10 +55,11 @@ func request_NetworkV1_AutoAddLbPolicy_0(ctx context.Context, marshaler runtime.
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -71,6 +72,8 @@ func request_NetworkV1_AutoAddLbPolicy_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddLbPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -102,10 +105,11 @@ func request_NetworkV1_AutoAddNetwork_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -118,6 +122,8 @@ func request_NetworkV1_AutoAddNetwork_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddNetwork(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -149,10 +155,11 @@ func request_NetworkV1_AutoAddService_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -165,6 +172,8 @@ func request_NetworkV1_AutoAddService_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddService(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -200,10 +209,11 @@ func request_NetworkV1_AutoDeleteLbPolicy_0(ctx context.Context, marshaler runti
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -227,6 +237,8 @@ func request_NetworkV1_AutoDeleteLbPolicy_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteLbPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -266,10 +278,11 @@ func request_NetworkV1_AutoDeleteNetwork_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -293,6 +306,8 @@ func request_NetworkV1_AutoDeleteNetwork_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteNetwork_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -332,10 +347,11 @@ func request_NetworkV1_AutoDeleteService_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -359,6 +375,8 @@ func request_NetworkV1_AutoDeleteService_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteService_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -398,10 +416,11 @@ func request_NetworkV1_AutoGetLbPolicy_0(ctx context.Context, marshaler runtime.
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -425,6 +444,8 @@ func request_NetworkV1_AutoGetLbPolicy_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoGetLbPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -464,10 +485,11 @@ func request_NetworkV1_AutoGetNetwork_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -491,6 +513,8 @@ func request_NetworkV1_AutoGetNetwork_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoGetNetwork_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -530,10 +554,11 @@ func request_NetworkV1_AutoGetService_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -557,6 +582,8 @@ func request_NetworkV1_AutoGetService_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoGetService_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -596,10 +623,11 @@ func request_NetworkV1_AutoListLbPolicy_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -612,6 +640,8 @@ func request_NetworkV1_AutoListLbPolicy_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoListLbPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -651,10 +681,11 @@ func request_NetworkV1_AutoListNetwork_0(ctx context.Context, marshaler runtime.
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -667,6 +698,8 @@ func request_NetworkV1_AutoListNetwork_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoListNetwork_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -706,10 +739,11 @@ func request_NetworkV1_AutoListService_0(ctx context.Context, marshaler runtime.
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -722,6 +756,8 @@ func request_NetworkV1_AutoListService_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoListService_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -757,10 +793,11 @@ func request_NetworkV1_AutoUpdateLbPolicy_0(ctx context.Context, marshaler runti
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -784,6 +821,8 @@ func request_NetworkV1_AutoUpdateLbPolicy_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateLbPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -815,10 +854,11 @@ func request_NetworkV1_AutoUpdateNetwork_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -842,6 +882,8 @@ func request_NetworkV1_AutoUpdateNetwork_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateNetwork(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -873,10 +915,11 @@ func request_NetworkV1_AutoUpdateService_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -900,6 +943,8 @@ func request_NetworkV1_AutoUpdateService_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateService(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -935,10 +980,11 @@ func request_NetworkV1_AutoWatchLbPolicy_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -951,6 +997,8 @@ func request_NetworkV1_AutoWatchLbPolicy_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoWatchLbPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -998,10 +1046,11 @@ func request_NetworkV1_AutoWatchNetwork_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1014,6 +1063,8 @@ func request_NetworkV1_AutoWatchNetwork_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoWatchNetwork_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1061,10 +1112,11 @@ func request_NetworkV1_AutoWatchService_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1077,6 +1129,8 @@ func request_NetworkV1_AutoWatchService_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoWatchService_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)

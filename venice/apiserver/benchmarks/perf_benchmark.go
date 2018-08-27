@@ -25,6 +25,7 @@ import (
 	rl "github.com/juju/ratelimit"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
@@ -284,6 +285,8 @@ func setupAPIServer(kvtype string, cluster []string, pool int) {
 			Servers: cluster,
 		},
 		KVPoolSize: pool,
+		GetOverlay: cache.GetOverlay,
+		IsDryRun:   cache.IsDryRun,
 	}
 	if !tinfo.useCache {
 		srvconfig.BypassCache = true

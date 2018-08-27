@@ -14,6 +14,7 @@ import (
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	network "github.com/pensando/sw/api/generated/network"
 	security "github.com/pensando/sw/api/generated/security"
+	staging "github.com/pensando/sw/api/generated/staging"
 	workload "github.com/pensando/sw/api/generated/workload"
 )
 
@@ -122,6 +123,18 @@ func (_m *MockServices) SecurityV1() security.SecurityV1Interface {
 // SecurityV1 indicates an expected call of SecurityV1
 func (_mr *MockServicesMockRecorder) SecurityV1() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "SecurityV1", reflect.TypeOf((*MockServices)(nil).SecurityV1))
+}
+
+// StagingV1 mocks base method
+func (_m *MockServices) StagingV1() staging.StagingV1Interface {
+	ret := _m.ctrl.Call(_m, "StagingV1")
+	ret0, _ := ret[0].(staging.StagingV1Interface)
+	return ret0
+}
+
+// StagingV1 indicates an expected call of StagingV1
+func (_mr *MockServicesMockRecorder) StagingV1() *gomock.Call {
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "StagingV1", reflect.TypeOf((*MockServices)(nil).StagingV1))
 }
 
 // WorkloadV1 mocks base method

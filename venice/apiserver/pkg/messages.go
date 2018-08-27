@@ -15,6 +15,7 @@ import (
 
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 var (
@@ -60,6 +61,12 @@ type MessageHdlr struct {
 	selfLinkFunc apisrv.UpdateSelfLinkFunc
 	// functions to invoke before/after writing/reading to storage
 	storageTransformer []apisrv.ObjStorageTransformer
+	// updateSpecFn returns a function that returns a kvstore.UpdateFunc
+	updateSpecFn func(interface{}) kvstore.UpdateFunc
+	// updateStatusFn returns a function that returns a kvstore.UpdateFunc
+	updateStatusFn func(interface{}) kvstore.UpdateFunc
+	//getRuntimeObject returns the runtime.Object
+	getRuntimeObject func(interface{}) runtime.Object
 }
 
 // NewMessage creates a new message performing all initialization needed.
@@ -152,6 +159,24 @@ func (m *MessageHdlr) WithStorageTransformer(st apisrv.ObjStorageTransformer) ap
 	return m
 }
 
+// WithReplaceSpecFunction is a consistent update function for replacing the Spec
+func (m *MessageHdlr) WithReplaceSpecFunction(fn func(interface{}) kvstore.UpdateFunc) apisrv.Message {
+	m.updateSpecFn = fn
+	return m
+}
+
+// WithReplaceStatusFunction is a consistent update function for replacing the Status
+func (m *MessageHdlr) WithReplaceStatusFunction(fn func(interface{}) kvstore.UpdateFunc) apisrv.Message {
+	m.updateStatusFn = fn
+	return m
+}
+
+// WithGetRuntimeObject gets the runtime object
+func (m *MessageHdlr) WithGetRuntimeObject(fn func(interface{}) runtime.Object) apisrv.Message {
+	m.getRuntimeObject = fn
+	return m
+}
+
 // GetKind returns the Kind of the object.
 func (m *MessageHdlr) GetKind() string {
 	return m.Kind
@@ -175,9 +200,13 @@ func (m *MessageHdlr) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i inter
 }
 
 // WriteToKv is a wrapper around kvUpdateFunc to update the object in the KV store.
-func (m *MessageHdlr) WriteToKv(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, replaceStatus bool) (interface{}, error) {
+func (m *MessageHdlr) WriteToKv(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, updateSpec bool) (interface{}, error) {
 	if m.kvUpdateFunc != nil {
-		return m.kvUpdateFunc(ctx, kvs, i, prefix, create, replaceStatus)
+		var updateFn kvstore.UpdateFunc
+		if updateSpec {
+			updateFn = m.updateSpecFn(i)
+		}
+		return m.kvUpdateFunc(ctx, kvs, i, prefix, create, updateFn)
 	}
 	return nil, errNotImplemented
 }
@@ -380,4 +409,22 @@ func (m *MessageHdlr) TransformFromStorage(ctx context.Context, oper apisrv.APIO
 		}
 	}
 	return obj, nil
+}
+
+// GetUpdateSpecFunc returns the Update function for Spec update
+func (m *MessageHdlr) GetUpdateSpecFunc() func(interface{}) kvstore.UpdateFunc {
+	return m.updateSpecFn
+}
+
+// GetUpdateStatusFunc returns the Update function for Status update
+func (m *MessageHdlr) GetUpdateStatusFunc() func(interface{}) kvstore.UpdateFunc {
+	return m.updateStatusFn
+}
+
+// GetRuntimeObject retursn the runtime.Object
+func (m *MessageHdlr) GetRuntimeObject(i interface{}) runtime.Object {
+	if m.getRuntimeObject != nil {
+		return m.getRuntimeObject(i)
+	}
+	return nil
 }

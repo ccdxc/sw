@@ -8,15 +8,75 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/interfaces"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	compliance "github.com/pensando/sw/venice/utils/kvstore/compliance"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
+
+// FakeServer is a mock for a server
+type FakeServer struct {
+	SvcMap map[string]*FakeService
+}
+
+// Register is used by backends to register during init()
+func (f *FakeServer) Register(name string, svc apisrv.ServiceBackend) (apisrv.ServiceBackend, error) {
+	return nil, nil
+}
+
+// RegisterMessages registers messages defined in a backend.
+func (f *FakeServer) RegisterMessages(svc string, msgs map[string]apisrv.Message) {}
+
+// RegisterService registers a service with name in "name"
+func (f *FakeServer) RegisterService(name string, svc apisrv.Service) {}
+
+// RegisterHooksCb registers a callback to register hooks for the service svcName
+func (f *FakeServer) RegisterHooksCb(svcName string, fn apisrv.ServiceHookCb) {}
+
+// GetService returns a registered service given the name.
+func (f *FakeServer) GetService(name string) apisrv.Service {
+	return f.SvcMap[name]
+}
+
+// CreateOverlay creates a new overlay on top of API server cache
+func (f *FakeServer) CreateOverlay(tenant, name, basePath string) (apiintf.CacheInterface, error) {
+	return nil, nil
+}
+
+// Run starts the "eventloop" for the API server.
+func (f *FakeServer) Run(config apisrv.Config) {}
+
+// Stop sends a stop signal to the API server
+func (f *FakeServer) Stop() {}
+
+// WaitRunning blocks till the API server is completely initialized
+func (f *FakeServer) WaitRunning() {}
+
+// GetAddr returns the address at which the API server is listening
+//   returns error if the API server is not initialized
+func (f *FakeServer) GetAddr() (string, error) { return "", nil }
+
+// GetVersion returns the native version of the API server
+func (f *FakeServer) GetVersion() string {
+	return ""
+}
+
+// NewFakeServer returns a new FakeServer
+func NewFakeServer() *FakeServer {
+	return &FakeServer{SvcMap: make(map[string]*FakeService)}
+}
 
 // FakeService is a mock for Service
 type FakeService struct {
+	name      string
 	retMethod map[string]apisrv.Method
+}
+
+// Name returns the name for this service
+func (s *FakeService) Name() string {
+	return s.name
 }
 
 // Disable disables the Service
@@ -63,13 +123,15 @@ func NewFakeService() apisrv.Service {
 
 // FakeMethod is used as mock Method for testing.
 type FakeMethod struct {
-	Pres     int
-	Posts    int
-	MakeURIs int
-	Skipkv   bool
-	Enabled  bool
-	ReqMsg   apisrv.Message
-	RespMsg  apisrv.Message
+	Service      apisrv.Service
+	Pres         int
+	Posts        int
+	MakeURIs     int
+	Skipkv       bool
+	Enabled      bool
+	ReqMsg       apisrv.Message
+	RespMsg      apisrv.Message
+	HandleMethod func(context.Context, interface{}) (interface{}, error)
 }
 
 // Enable is a mock method for testing
@@ -77,6 +139,9 @@ func (m *FakeMethod) Enable() { m.Enabled = true }
 
 // Disable is a mock method for testing
 func (m *FakeMethod) Disable() { m.Enabled = false }
+
+// GetService returns the parent service
+func (m *FakeMethod) GetService() apisrv.Service { return m.Service }
 
 // WithRateLimiter is a mock method for testing
 func (m *FakeMethod) WithRateLimiter() apisrv.Method { return m }
@@ -114,6 +179,9 @@ func (m *FakeMethod) GetResponseType() apisrv.Message { return m.RespMsg }
 
 // HandleInvocation is a mock method for testing
 func (m *FakeMethod) HandleInvocation(ctx context.Context, i interface{}) (interface{}, error) {
+	if m.HandleMethod != nil {
+		return m.HandleMethod(ctx, i)
+	}
 	return nil, nil
 }
 
@@ -148,7 +216,7 @@ func SetFakeMethodRespType(msg apisrv.Message, method apisrv.Method) error {
 }
 
 // PrecommitFunc is a mock method for testing
-func (m *FakeMethod) PrecommitFunc(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apisrv.APIOperType, i interface{}) (interface{}, bool, error) {
+func (m *FakeMethod) PrecommitFunc(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apisrv.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	m.Pres++
 	if m.Skipkv {
 		return i, false, nil
@@ -157,12 +225,12 @@ func (m *FakeMethod) PrecommitFunc(ctx context.Context, kvs kvstore.Interface, t
 }
 
 // PostcommitfFunc is a mock method for testing
-func (m *FakeMethod) PostcommitfFunc(ctx context.Context, oper apisrv.APIOperType, i interface{}) {
+func (m *FakeMethod) PostcommitfFunc(ctx context.Context, oper apisrv.APIOperType, i interface{}, dryrun bool) {
 	m.Posts++
 }
 
 // RespWriterFunc is a mock method for testing
-func (m *FakeMethod) RespWriterFunc(ctx context.Context, kvs kvstore.Interface, prefix string, i interface{}, o interface{}, oper apisrv.APIOperType) (interface{}, error) {
+func (m *FakeMethod) RespWriterFunc(ctx context.Context, kvs kvstore.Interface, prefix string, i, o, resp interface{}, oper apisrv.APIOperType) (interface{}, error) {
 	return "TestResponse", nil
 }
 
@@ -174,23 +242,27 @@ func (m *FakeMethod) MakeURIFunc(i interface{}) (string, error) {
 
 // FakeMessage is used as a mock object for testing.
 type FakeMessage struct {
-	kind           string
-	CalledTxfms    []string
-	Kvpath         string
-	ValidateRslt   bool
-	ValidateCalled int
-	DefaultCalled  int
-	Kvwrites       int
-	Kvreads        int
-	Kvdels         int
-	Kvlists        int
-	Kvwatch        int
-	Txnwrites      int
-	Txngets        int
-	Txndels        int
-	Objverwrite    int
-	Uuidwrite      int
-	SelfLinkWrites int
+	kind             string
+	CalledTxfms      []string
+	Kvpath           string
+	ValidateRslt     bool
+	ValidateCalled   int
+	DefaultCalled    int
+	Kvwrites         int
+	Kvreads          int
+	Kvdels           int
+	Kvlists          int
+	Kvwatch          int
+	Txnwrites        int
+	Txngets          int
+	Txndels          int
+	Objverwrite      int
+	Uuidwrite        int
+	SelfLinkWrites   int
+	CreateTimeWrites int
+	ModTimeWrite     int
+	ObjVerWrites     int
+	RuntimeObj       runtime.Object
 
 	listFromKvFunc apisrv.ListFromKvFunc
 	getFromKvFunc  apisrv.GetFromKvFunc
@@ -263,11 +335,27 @@ func (m *FakeMessage) WithStorageTransformer(stx apisrv.ObjStorageTransformer) a
 	return m
 }
 
+// WithReplaceSpecFunction is a consistent update function for replacing the Spec
+func (m *FakeMessage) WithReplaceSpecFunction(fn func(interface{}) kvstore.UpdateFunc) apisrv.Message {
+	return m
+}
+
+// WithReplaceStatusFunction is a consistent update function for replacing the Status
+func (m *FakeMessage) WithReplaceStatusFunction(fn func(interface{}) kvstore.UpdateFunc) apisrv.Message {
+	return m
+}
+
+// WithGetRuntimeObject gets the runtime object
+func (m *FakeMessage) WithGetRuntimeObject(func(interface{}) runtime.Object) apisrv.Message { return m }
+
 // GetKind is a mock method for testing
 func (m *FakeMessage) GetKind() string { return m.kind }
 
 // WriteObjVersion is a mock method for testing
-func (m *FakeMessage) WriteObjVersion(i interface{}, version string) interface{} { return i }
+func (m *FakeMessage) WriteObjVersion(i interface{}, version string) interface{} {
+	m.ObjVerWrites++
+	return i
+}
 
 // ListFromKv is a mock method for testing
 func (m *FakeMessage) ListFromKv(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -382,7 +470,7 @@ func (m *FakeMessage) DefaultFunc(i interface{}) interface{} {
 }
 
 // KvUpdateFunc is a mock method for testing
-func (m *FakeMessage) KvUpdateFunc(ctx context.Context, kv kvstore.Interface, i interface{}, prefix string, create bool, ignstatus bool) (interface{}, error) {
+func (m *FakeMessage) KvUpdateFunc(ctx context.Context, kv kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 	m.Kvwrites++
 	return i, nil
 }
@@ -443,12 +531,40 @@ func (m *FakeMessage) CreateUUID(i interface{}) (interface{}, error) {
 
 // WriteCreationTime is a mock method for testing
 func (m *FakeMessage) WriteCreationTime(i interface{}) (interface{}, error) {
+	m.CreateTimeWrites++
 	return i, nil
 }
 
 // WriteModTime is a mock method for testing
 func (m *FakeMessage) WriteModTime(i interface{}) (interface{}, error) {
+	m.ModTimeWrite++
 	return i, nil
+}
+
+// GetUpdateSpecFunc returns the Update function for Spec update
+func (m *FakeMessage) GetUpdateSpecFunc() func(interface{}) kvstore.UpdateFunc {
+	return func(i interface{}) kvstore.UpdateFunc {
+		return func(old runtime.Object) (runtime.Object, error) {
+			return old, nil
+		}
+	}
+}
+
+// GetUpdateStatusFunc returns the Update function for Status update
+func (m *FakeMessage) GetUpdateStatusFunc() func(interface{}) kvstore.UpdateFunc {
+	return func(i interface{}) kvstore.UpdateFunc {
+		return func(old runtime.Object) (runtime.Object, error) {
+			return old, nil
+		}
+	}
+}
+
+// GetRuntimeObject retursn the runtime.Object
+func (m *FakeMessage) GetRuntimeObject(in interface{}) runtime.Object {
+	if in != nil {
+		return m.RuntimeObj
+	}
+	return nil
 }
 
 // NewFakeMessage create a new FakeMessage

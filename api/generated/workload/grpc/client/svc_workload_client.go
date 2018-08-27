@@ -629,6 +629,19 @@ func NewRestCrudClientWorkloadV1(url string) workload.WorkloadV1Interface {
 	}
 }
 
+// NewStagedRestCrudClientWorkloadV1 creates a REST client for the service.
+func NewStagedRestCrudClientWorkloadV1(url string, id string) workload.WorkloadV1Interface {
+	endpoints, err := workload.MakeWorkloadV1StagedRestClientEndpoints(url, id)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientWorkloadV1{
+
+		restEndpoint: &restObjWorkloadV1Endpoint{endpoints: endpoints, instance: url},
+		restWorkload: &restObjWorkloadV1Workload{endpoints: endpoints, instance: url},
+	}
+}
+
 func (a *crudRestClientWorkloadV1) Endpoint() workload.WorkloadV1EndpointInterface {
 	return a.restEndpoint
 }

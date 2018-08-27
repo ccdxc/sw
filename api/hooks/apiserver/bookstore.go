@@ -26,7 +26,7 @@ type bookstoreHooks struct {
 // ServiceHooks
 // Precommit hook to create a unique order ID when a order is created via a post.
 // The same hook can be used to perform other synchronous actions on receiving an API call.
-func (s *bookstoreHooks) createNeworderID(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (s *bookstoreHooks) createNeworderID(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.InfoLog("msg", "Got call to Create New orderID")
 	r, ok := i.(bookstore.Order)
 	if !ok {
@@ -36,6 +36,9 @@ func (s *bookstoreHooks) createNeworderID(ctx context.Context, kv kvstore.Interf
 	if oper == apiserver.CreateOper {
 		// Here we are just using a local ID. This might more typically be calling a distributed
 		// ID generator to reserve an ID.
+		if dryRun {
+			return r, true, nil
+		}
 		s.idMutex.Lock()
 		s.orderID++
 		id := s.orderID
@@ -66,7 +69,7 @@ func (s *bookstoreHooks) createNeworderID(ctx context.Context, kv kvstore.Interf
 // This hook is used to fixup Orders that already have pending orders for the book
 // that is being removed from the bookstore. This can potentially involve blocking
 // action to clean up and notifiy.
-func (s *bookstoreHooks) processDelBook(ctx context.Context, oper apiserver.APIOperType, i interface{}) {
+func (s *bookstoreHooks) processDelBook(ctx context.Context, oper apiserver.APIOperType, i interface{}, dryRun bool) {
 	// This will involve going through the API server cache to retrieve all orders with this bookstore
 	// and updating the order as unfulfillable. TBD for now.
 	if oper == apiserver.DeleteOper {
@@ -76,7 +79,7 @@ func (s *bookstoreHooks) processDelBook(ctx context.Context, oper apiserver.APIO
 	return
 }
 
-func (s *bookstoreHooks) processApplyDiscountAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (s *bookstoreHooks) processApplyDiscountAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.InfoLog("msg", "action routine called")
 	// This hook could act on the KV store (get/store) or make gRPC call etc.
 	obj, err := s.svc.GetCrudService("Order", apiserver.UpdateOper).GetRequestType().GetFromKv(ctx, kv, key)
@@ -90,7 +93,7 @@ func (s *bookstoreHooks) processApplyDiscountAction(ctx context.Context, kv kvst
 	return order, false, nil
 }
 
-func (s *bookstoreHooks) processClearDiscountAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (s *bookstoreHooks) processClearDiscountAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.InfoLog("msg", "action routine called")
 	// This hook could act on the KV store (get/store) or make gRPC call etc.
 	obj, err := s.svc.GetCrudService("Order", apiserver.UpdateOper).GetRequestType().GetFromKv(ctx, kv, key)
@@ -114,7 +117,7 @@ func (s *bookstoreHooks) validateOrder(i interface{}, ver string, ignStatus bool
 	return nil
 }
 
-func (s *bookstoreHooks) processAddOutageAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (s *bookstoreHooks) processAddOutageAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.InfoLog("msg", "action routine called")
 	// Would add a outage to store object. Returning a dummy object here
 	obj := bookstore.Store{}
@@ -122,7 +125,7 @@ func (s *bookstoreHooks) processAddOutageAction(ctx context.Context, kv kvstore.
 	return obj, false, nil
 }
 
-func (s *bookstoreHooks) processRestockAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (s *bookstoreHooks) processRestockAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.InfoLog("msg", "action routine called")
 	// Would add a outage to store object. Returning a dummy object here
 	obj := bookstore.RestockResponse{}

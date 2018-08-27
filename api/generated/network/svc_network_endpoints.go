@@ -59,6 +59,7 @@ type EndpointsNetworkV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
+	bufferId string
 
 	AutoAddLbPolicyEndpoint       endpoint.Endpoint
 	AutoAddNetworkEndpoint        endpoint.Endpoint
@@ -1374,6 +1375,9 @@ func makeURINetworkV1AutoUpdateServiceUpdateOper(in *Service) string {
 // AutoAddNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoAddNetwork(ctx context.Context, in *Network) (*Network, error) {
 	path := makeURINetworkV1AutoAddNetworkCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -1392,6 +1396,9 @@ func (r *EndpointsNetworkV1RestClient) AutoAddNetwork(ctx context.Context, in *N
 // AutoUpdateNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoUpdateNetwork(ctx context.Context, in *Network) (*Network, error) {
 	path := makeURINetworkV1AutoUpdateNetworkUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -1410,6 +1417,9 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateNetwork(ctx context.Context, in
 // AutoGetNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoGetNetwork(ctx context.Context, in *Network) (*Network, error) {
 	path := makeURINetworkV1AutoGetNetworkGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1428,6 +1438,9 @@ func (r *EndpointsNetworkV1RestClient) AutoGetNetwork(ctx context.Context, in *N
 // AutoDeleteNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoDeleteNetwork(ctx context.Context, in *Network) (*Network, error) {
 	path := makeURINetworkV1AutoDeleteNetworkDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -1446,6 +1459,9 @@ func (r *EndpointsNetworkV1RestClient) AutoDeleteNetwork(ctx context.Context, in
 // AutoListNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoListNetwork(ctx context.Context, options *api.ListWatchOptions) (*NetworkList, error) {
 	path := makeURINetworkV1AutoListNetworkListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1470,6 +1486,9 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchNetwork(ctx context.Context, str
 // AutoAddService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoAddService(ctx context.Context, in *Service) (*Service, error) {
 	path := makeURINetworkV1AutoAddServiceCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -1488,6 +1507,9 @@ func (r *EndpointsNetworkV1RestClient) AutoAddService(ctx context.Context, in *S
 // AutoUpdateService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoUpdateService(ctx context.Context, in *Service) (*Service, error) {
 	path := makeURINetworkV1AutoUpdateServiceUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -1506,6 +1528,9 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateService(ctx context.Context, in
 // AutoGetService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoGetService(ctx context.Context, in *Service) (*Service, error) {
 	path := makeURINetworkV1AutoGetServiceGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1524,6 +1549,9 @@ func (r *EndpointsNetworkV1RestClient) AutoGetService(ctx context.Context, in *S
 // AutoDeleteService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoDeleteService(ctx context.Context, in *Service) (*Service, error) {
 	path := makeURINetworkV1AutoDeleteServiceDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -1542,6 +1570,9 @@ func (r *EndpointsNetworkV1RestClient) AutoDeleteService(ctx context.Context, in
 // AutoListService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoListService(ctx context.Context, options *api.ListWatchOptions) (*ServiceList, error) {
 	path := makeURINetworkV1AutoListServiceListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1566,6 +1597,9 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchService(ctx context.Context, str
 // AutoAddLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoAddLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
 	path := makeURINetworkV1AutoAddLbPolicyCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -1584,6 +1618,9 @@ func (r *EndpointsNetworkV1RestClient) AutoAddLbPolicy(ctx context.Context, in *
 // AutoUpdateLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
 	path := makeURINetworkV1AutoUpdateLbPolicyUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -1602,6 +1639,9 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateLbPolicy(ctx context.Context, i
 // AutoGetLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoGetLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
 	path := makeURINetworkV1AutoGetLbPolicyGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1620,6 +1660,9 @@ func (r *EndpointsNetworkV1RestClient) AutoGetLbPolicy(ctx context.Context, in *
 // AutoDeleteLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
 	path := makeURINetworkV1AutoDeleteLbPolicyDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -1638,6 +1681,9 @@ func (r *EndpointsNetworkV1RestClient) AutoDeleteLbPolicy(ctx context.Context, i
 // AutoListLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoListLbPolicy(ctx context.Context, options *api.ListWatchOptions) (*LbPolicyList, error) {
 	path := makeURINetworkV1AutoListLbPolicyListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1670,4 +1716,17 @@ func MakeNetworkV1RestClientEndpoints(instance string) (EndpointsNetworkV1RestCl
 		client:   http.DefaultClient,
 	}, nil
 
+}
+
+// MakeNetworkV1StagedRestClientEndpoints makes staged REST client endpoints
+func MakeNetworkV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsNetworkV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsNetworkV1RestClient{
+		instance: instance,
+		bufferId: bufferId,
+		client:   http.DefaultClient,
+	}, nil
 }

@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	api "github.com/pensando/sw/api"
+	apisrvCache "github.com/pensando/sw/api/cache"
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
@@ -387,6 +388,8 @@ func Setup(m *testing.M) {
 			Type:  store.KVStoreTypeMemkv,
 			Codec: runtime.NewJSONCodec(scheme),
 		},
+		GetOverlay: apisrvCache.GetOverlay,
+		IsDryRun:   apisrvCache.IsDryRun,
 	}
 	grpclog.SetLogger(pl)
 	tInfo.apiServer = apiserverpkg.MustGetAPIServer()

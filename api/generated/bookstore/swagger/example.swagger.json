@@ -686,6 +686,12 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "Status.account-status",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -2607,7 +2613,12 @@
       }
     },
     "bookstoreCustomerStatus": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "account-status": {
+          "type": "string"
+        }
+      }
     },
     "bookstoreOrder": {
       "type": "object",

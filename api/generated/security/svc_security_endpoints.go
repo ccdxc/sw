@@ -70,6 +70,7 @@ type EndpointsSecurityV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
+	bufferId string
 
 	AutoAddAppEndpoint                        endpoint.Endpoint
 	AutoAddCertificateEndpoint                endpoint.Endpoint
@@ -2174,6 +2175,9 @@ func makeURISecurityV1AutoUpdateTrafficEncryptionPolicyUpdateOper(in *TrafficEnc
 // AutoAddSecurityGroup CRUD method for SecurityGroup
 func (r *EndpointsSecurityV1RestClient) AutoAddSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
 	path := makeURISecurityV1AutoAddSecurityGroupCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2192,6 +2196,9 @@ func (r *EndpointsSecurityV1RestClient) AutoAddSecurityGroup(ctx context.Context
 // AutoUpdateSecurityGroup CRUD method for SecurityGroup
 func (r *EndpointsSecurityV1RestClient) AutoUpdateSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
 	path := makeURISecurityV1AutoUpdateSecurityGroupUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2210,6 +2217,9 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateSecurityGroup(ctx context.Cont
 // AutoGetSecurityGroup CRUD method for SecurityGroup
 func (r *EndpointsSecurityV1RestClient) AutoGetSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
 	path := makeURISecurityV1AutoGetSecurityGroupGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2228,6 +2238,9 @@ func (r *EndpointsSecurityV1RestClient) AutoGetSecurityGroup(ctx context.Context
 // AutoDeleteSecurityGroup CRUD method for SecurityGroup
 func (r *EndpointsSecurityV1RestClient) AutoDeleteSecurityGroup(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error) {
 	path := makeURISecurityV1AutoDeleteSecurityGroupDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2246,6 +2259,9 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteSecurityGroup(ctx context.Cont
 // AutoListSecurityGroup CRUD method for SecurityGroup
 func (r *EndpointsSecurityV1RestClient) AutoListSecurityGroup(ctx context.Context, options *api.ListWatchOptions) (*SecurityGroupList, error) {
 	path := makeURISecurityV1AutoListSecurityGroupListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2270,6 +2286,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchSecurityGroup(ctx context.Conte
 // AutoAddSGPolicy CRUD method for SGPolicy
 func (r *EndpointsSecurityV1RestClient) AutoAddSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
 	path := makeURISecurityV1AutoAddSGPolicyCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2288,6 +2307,9 @@ func (r *EndpointsSecurityV1RestClient) AutoAddSGPolicy(ctx context.Context, in 
 // AutoUpdateSGPolicy CRUD method for SGPolicy
 func (r *EndpointsSecurityV1RestClient) AutoUpdateSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
 	path := makeURISecurityV1AutoUpdateSGPolicyUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2306,6 +2328,9 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateSGPolicy(ctx context.Context, 
 // AutoGetSGPolicy CRUD method for SGPolicy
 func (r *EndpointsSecurityV1RestClient) AutoGetSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
 	path := makeURISecurityV1AutoGetSGPolicyGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2324,6 +2349,9 @@ func (r *EndpointsSecurityV1RestClient) AutoGetSGPolicy(ctx context.Context, in 
 // AutoDeleteSGPolicy CRUD method for SGPolicy
 func (r *EndpointsSecurityV1RestClient) AutoDeleteSGPolicy(ctx context.Context, in *SGPolicy) (*SGPolicy, error) {
 	path := makeURISecurityV1AutoDeleteSGPolicyDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2342,6 +2370,9 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteSGPolicy(ctx context.Context, 
 // AutoListSGPolicy CRUD method for SGPolicy
 func (r *EndpointsSecurityV1RestClient) AutoListSGPolicy(ctx context.Context, options *api.ListWatchOptions) (*SGPolicyList, error) {
 	path := makeURISecurityV1AutoListSGPolicyListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2366,6 +2397,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchSGPolicy(ctx context.Context, s
 // AutoAddApp CRUD method for App
 func (r *EndpointsSecurityV1RestClient) AutoAddApp(ctx context.Context, in *App) (*App, error) {
 	path := makeURISecurityV1AutoAddAppCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2384,6 +2418,9 @@ func (r *EndpointsSecurityV1RestClient) AutoAddApp(ctx context.Context, in *App)
 // AutoUpdateApp CRUD method for App
 func (r *EndpointsSecurityV1RestClient) AutoUpdateApp(ctx context.Context, in *App) (*App, error) {
 	path := makeURISecurityV1AutoUpdateAppUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2402,6 +2439,9 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateApp(ctx context.Context, in *A
 // AutoGetApp CRUD method for App
 func (r *EndpointsSecurityV1RestClient) AutoGetApp(ctx context.Context, in *App) (*App, error) {
 	path := makeURISecurityV1AutoGetAppGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2420,6 +2460,9 @@ func (r *EndpointsSecurityV1RestClient) AutoGetApp(ctx context.Context, in *App)
 // AutoDeleteApp CRUD method for App
 func (r *EndpointsSecurityV1RestClient) AutoDeleteApp(ctx context.Context, in *App) (*App, error) {
 	path := makeURISecurityV1AutoDeleteAppDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2438,6 +2481,9 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteApp(ctx context.Context, in *A
 // AutoListApp CRUD method for App
 func (r *EndpointsSecurityV1RestClient) AutoListApp(ctx context.Context, options *api.ListWatchOptions) (*AppList, error) {
 	path := makeURISecurityV1AutoListAppListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2462,6 +2508,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchApp(ctx context.Context, stream
 // AutoAddCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoAddCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
 	path := makeURISecurityV1AutoAddCertificateCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2480,6 +2529,9 @@ func (r *EndpointsSecurityV1RestClient) AutoAddCertificate(ctx context.Context, 
 // AutoUpdateCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoUpdateCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
 	path := makeURISecurityV1AutoUpdateCertificateUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2498,6 +2550,9 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateCertificate(ctx context.Contex
 // AutoGetCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoGetCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
 	path := makeURISecurityV1AutoGetCertificateGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2516,6 +2571,9 @@ func (r *EndpointsSecurityV1RestClient) AutoGetCertificate(ctx context.Context, 
 // AutoDeleteCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoDeleteCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
 	path := makeURISecurityV1AutoDeleteCertificateDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2534,6 +2592,9 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteCertificate(ctx context.Contex
 // AutoListCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoListCertificate(ctx context.Context, options *api.ListWatchOptions) (*CertificateList, error) {
 	path := makeURISecurityV1AutoListCertificateListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2558,6 +2619,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchCertificate(ctx context.Context
 // AutoAddTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
 func (r *EndpointsSecurityV1RestClient) AutoAddTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error) {
 	path := makeURISecurityV1AutoAddTrafficEncryptionPolicyCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2576,6 +2640,9 @@ func (r *EndpointsSecurityV1RestClient) AutoAddTrafficEncryptionPolicy(ctx conte
 // AutoUpdateTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
 func (r *EndpointsSecurityV1RestClient) AutoUpdateTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error) {
 	path := makeURISecurityV1AutoUpdateTrafficEncryptionPolicyUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2594,6 +2661,9 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateTrafficEncryptionPolicy(ctx co
 // AutoGetTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
 func (r *EndpointsSecurityV1RestClient) AutoGetTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error) {
 	path := makeURISecurityV1AutoGetTrafficEncryptionPolicyGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2612,6 +2682,9 @@ func (r *EndpointsSecurityV1RestClient) AutoGetTrafficEncryptionPolicy(ctx conte
 // AutoDeleteTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
 func (r *EndpointsSecurityV1RestClient) AutoDeleteTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error) {
 	path := makeURISecurityV1AutoDeleteTrafficEncryptionPolicyDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2649,4 +2722,17 @@ func MakeSecurityV1RestClientEndpoints(instance string) (EndpointsSecurityV1Rest
 		client:   http.DefaultClient,
 	}, nil
 
+}
+
+// MakeSecurityV1StagedRestClientEndpoints makes staged REST client endpoints
+func MakeSecurityV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsSecurityV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsSecurityV1RestClient{
+		instance: instance,
+		bufferId: bufferId,
+		client:   http.DefaultClient,
+	}, nil
 }

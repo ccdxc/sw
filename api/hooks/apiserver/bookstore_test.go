@@ -78,7 +78,7 @@ func TestCreateNewOrderId(t *testing.T) {
 		t.Errorf("object creation should succeed in KV (%s)", err)
 	}
 
-	i, ok, err := s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, order)
+	i, ok, err := s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, false, order)
 	if !ok {
 		t.Errorf("hook failed, expecting pass")
 	}
@@ -90,12 +90,12 @@ func TestCreateNewOrderId(t *testing.T) {
 		t.Errorf("unexpected Status field [%s]", ret.Status.Status)
 	}
 
-	i, ok, err = s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, book)
+	i, ok, err = s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, false, book)
 	if ok {
 		t.Errorf("hook expected to fail due to wrong type")
 	}
 
-	i, ok, err = s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.UpdateOper, order)
+	i, ok, err = s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.UpdateOper, false, order)
 	if !ok {
 		t.Errorf("expecting to succeed but got error(%s)", err)
 	}
@@ -106,11 +106,11 @@ func TestCreateNewOrderId(t *testing.T) {
 		t.Errorf("object updation should succeed in KV (%s)", err)
 	}
 
-	i, ok, err = s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.UpdateOper, order)
+	i, ok, err = s.createNeworderID(ctx, kvs, txn, order.MakeKey(""), apiserver.UpdateOper, false, order)
 	if ok {
 		t.Errorf("expecting to fail")
 	}
-	s.processDelBook(ctx, apiserver.DeleteOper, book)
+	s.processDelBook(ctx, apiserver.DeleteOper, book, false)
 	errs := s.validateOrder(order, "v1", false)
 	if errs != nil {
 		t.Errorf("expecting validation to pass")
@@ -166,20 +166,20 @@ func TestActionFunction(t *testing.T) {
 		t.Errorf("object creation should succeed in KV (%s)", err)
 	}
 
-	_, ok, err := s.processApplyDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, order)
+	_, ok, err := s.processApplyDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, false, order)
 	if err != nil || ok {
 		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
 	}
 
-	_, ok, err = s.processClearDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, order)
+	_, ok, err = s.processClearDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, false, order)
 	if err != nil || ok {
 		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
 	}
-	_, ok, err = s.processRestockAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, order)
+	_, ok, err = s.processRestockAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, false, order)
 	if err != nil || ok {
 		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
 	}
-	_, ok, err = s.processAddOutageAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, order)
+	_, ok, err = s.processAddOutageAction(ctx, kvs, txn, order.MakeKey(""), apiserver.CreateOper, false, order)
 	if err != nil || ok {
 		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
 	}

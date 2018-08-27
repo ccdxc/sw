@@ -11,6 +11,7 @@ import (
 
 	"github.com/pensando/sw/api/cache"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/interfaces"
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -60,7 +61,7 @@ type apiSrv struct {
 	// config is the passed in config at Run.
 	config apiserver.Config
 	// apiChace is cache used by the server
-	apiCache cache.Interface
+	apiCache apiintf.CacheInterface
 }
 
 // addKvConnToPool is adds connections to the pool if there is space in the pool.
@@ -125,8 +126,14 @@ func MustGetAPIServer() apiserver.Server {
 
 // GetAPIServerCache is a utility function to retrieve the cache used by the
 //  singletonAPISrv. Usage is mostly retricted to test.
-func GetAPIServerCache() cache.Interface {
+func GetAPIServerCache() apiintf.CacheInterface {
 	return singletonAPISrv.apiCache
+}
+
+// SetAPIServerCache force sets the Cache for the singleton
+//  Usage RESTRICTED TO TEST
+func SetAPIServerCache(in apiintf.CacheInterface) {
+	singletonAPISrv.apiCache = in
 }
 
 // insertWatcher adds a new watcher context to the list of active Watchers
@@ -189,6 +196,14 @@ func (a *apiSrv) GetService(name string) apiserver.Service {
 	return a.services[name]
 }
 
+// CreateOverlay creates a new overlay on top of API server cache
+func (a *apiSrv) CreateOverlay(tenant, name, base string) (apiintf.CacheInterface, error) {
+	if a.apiCache != nil {
+		return cache.NewOverlay(tenant, name, base, a.apiCache, a)
+	}
+	return nil, errors.New("cache not found")
+}
+
 // Run is the eventloop for the API server. Registrations for all the registered services
 //  are completed and a grpc listerner is started to serve the registered services.
 func (a *apiSrv) Run(config apiserver.Config) {
@@ -215,6 +230,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	}
 	if config.BypassCache == false {
 		cachecfg := cache.Config{
+			APIServer:    a,
 			Config:       config.Kvstore,
 			NumKvClients: a.config.KVPoolSize,
 			Logger:       config.Logger,

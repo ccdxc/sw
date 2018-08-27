@@ -577,7 +577,6 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 	if err != nil {
 		return ret, err
 	}
-
 	// other checks based on the ops
 	for _, o := range t.ops {
 		switch o.t {
@@ -604,6 +603,7 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 	if f.revMode == ClusterRevision {
 		rev = f.cluster.getNextRevision()
 	}
+	ret.Revision = rev
 	for _, o := range t.ops {
 		switch o.t {
 		case tCreate:
@@ -631,11 +631,6 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 			ret.Responses = append(ret.Responses, opresp)
 		case tDelete:
 			v, ok := f.cluster.kvs[o.key]
-			if f.revMode == ClusterRevision {
-				v.revision = rev
-			} else {
-				v.revision++
-			}
 			if ok {
 				if f.revMode == ClusterRevision {
 					v.revision = rev

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
@@ -53,7 +54,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "AuthenticationPolicy"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(auth.AuthenticationPolicy)
 			key := r.MakeKey(prefix)
 			r.Kind = "AuthenticationPolicy"
@@ -64,17 +65,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*auth.AuthenticationPolicy)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &auth.AuthenticationPolicy{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -149,9 +142,45 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(auth.AuthenticationPolicy)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(auth.AuthenticationPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *auth.AuthenticationPolicy
+			if v, ok := i.(auth.AuthenticationPolicy); ok {
+				n = &v
+			} else if v, ok := i.(*auth.AuthenticationPolicy); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*auth.AuthenticationPolicy); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *auth.AuthenticationPolicy
+			if v, ok := i.(auth.AuthenticationPolicy); ok {
+				n = &v
+			} else if v, ok := i.(*auth.AuthenticationPolicy); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*auth.AuthenticationPolicy); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"auth.AuthenticationPolicySpec":   apisrvpkg.NewMessage("auth.AuthenticationPolicySpec"),
@@ -177,7 +206,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "Role"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(auth.Role)
 			key := r.MakeKey(prefix)
 			r.Kind = "Role"
@@ -188,17 +217,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*auth.Role)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &auth.Role{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -273,9 +294,45 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(auth.Role)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(auth.Role)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *auth.Role
+			if v, ok := i.(auth.Role); ok {
+				n = &v
+			} else if v, ok := i.(*auth.Role); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*auth.Role); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *auth.Role
+			if v, ok := i.(auth.Role); ok {
+				n = &v
+			} else if v, ok := i.(*auth.Role); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*auth.Role); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"auth.RoleBinding": apisrvpkg.NewMessage("auth.RoleBinding").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -290,7 +347,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "RoleBinding"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(auth.RoleBinding)
 			key := r.MakeKey(prefix)
 			r.Kind = "RoleBinding"
@@ -301,17 +358,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*auth.RoleBinding)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &auth.RoleBinding{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -386,9 +435,45 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(auth.RoleBinding)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(auth.RoleBinding)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *auth.RoleBinding
+			if v, ok := i.(auth.RoleBinding); ok {
+				n = &v
+			} else if v, ok := i.(*auth.RoleBinding); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*auth.RoleBinding); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *auth.RoleBinding
+			if v, ok := i.(auth.RoleBinding); ok {
+				n = &v
+			} else if v, ok := i.(*auth.RoleBinding); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*auth.RoleBinding); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"auth.RoleBindingSpec":   apisrvpkg.NewMessage("auth.RoleBindingSpec"),
@@ -408,7 +493,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "User"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(auth.User)
 			key := r.MakeKey(prefix)
 			r.Kind = "User"
@@ -419,17 +504,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*auth.User)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &auth.User{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -504,9 +581,45 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(auth.User)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(auth.User)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *auth.User
+			if v, ok := i.(auth.User); ok {
+				n = &v
+			} else if v, ok := i.(*auth.User); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*auth.User); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *auth.User
+			if v, ok := i.(auth.User); ok {
+				n = &v
+			} else if v, ok := i.(*auth.User); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*auth.User); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"auth.UserSpec":   apisrvpkg.NewMessage("auth.UserSpec"),

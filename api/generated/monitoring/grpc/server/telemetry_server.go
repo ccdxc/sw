@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
@@ -53,7 +54,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			r.Kind = "FlowExportPolicy"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(monitoring.FlowExportPolicy)
 			key := r.MakeKey(prefix)
 			r.Kind = "FlowExportPolicy"
@@ -64,17 +65,9 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*monitoring.FlowExportPolicy)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &monitoring.FlowExportPolicy{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -149,9 +142,45 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(monitoring.FlowExportPolicy)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.FlowExportPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.FlowExportPolicy
+			if v, ok := i.(monitoring.FlowExportPolicy); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.FlowExportPolicy); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.FlowExportPolicy); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.FlowExportPolicy
+			if v, ok := i.(monitoring.FlowExportPolicy); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.FlowExportPolicy); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.FlowExportPolicy); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"monitoring.FlowExportSpec":   apisrvpkg.NewMessage("monitoring.FlowExportSpec"),
@@ -170,7 +199,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			r.Kind = "FwlogPolicy"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(monitoring.FwlogPolicy)
 			key := r.MakeKey(prefix)
 			r.Kind = "FwlogPolicy"
@@ -181,17 +210,9 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*monitoring.FwlogPolicy)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &monitoring.FwlogPolicy{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -266,9 +287,45 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(monitoring.FwlogPolicy)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.FwlogPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.FwlogPolicy
+			if v, ok := i.(monitoring.FwlogPolicy); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.FwlogPolicy); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.FwlogPolicy); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.FwlogPolicy
+			if v, ok := i.(monitoring.FwlogPolicy); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.FwlogPolicy); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.FwlogPolicy); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"monitoring.FwlogSpec":   apisrvpkg.NewMessage("monitoring.FwlogSpec"),
@@ -285,7 +342,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			r.Kind = "StatsPolicy"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(monitoring.StatsPolicy)
 			key := r.MakeKey(prefix)
 			r.Kind = "StatsPolicy"
@@ -296,17 +353,9 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*monitoring.StatsPolicy)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &monitoring.StatsPolicy{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -381,9 +430,45 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(monitoring.StatsPolicy)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.StatsPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.StatsPolicy
+			if v, ok := i.(monitoring.StatsPolicy); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.StatsPolicy); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.StatsPolicy); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.StatsPolicy
+			if v, ok := i.(monitoring.StatsPolicy); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.StatsPolicy); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.StatsPolicy); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"monitoring.StatsSpec":   apisrvpkg.NewMessage("monitoring.StatsSpec"),

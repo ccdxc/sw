@@ -42,7 +42,7 @@ func TestSGPolicyCreateAtTenant(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	AssertOk(t, err, "failed to create sg policy. Error: %v", err)
 }
 
@@ -74,7 +74,7 @@ func TestSGPolicyCreateAtSGs(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	AssertOk(t, err, "failed to create sg policy. Error: %v", err)
 }
 
@@ -108,7 +108,7 @@ func TestAttachGroupsWithFromAddresses(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	AssertOk(t, err, "SG Policy attaching to the sgs with From Addresses must pass. Error: %v", err)
 }
 
@@ -143,7 +143,7 @@ func TestBothAttachmentPoints(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "sg policy creates specifying both tenant and sg level must fail")
 }
 
@@ -175,7 +175,7 @@ func TestMissingAttachmentPoint(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "sg policy creates with missing attachment points")
 }
 
@@ -208,7 +208,7 @@ func TestInvalidAppProto(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "sg policy creates with invalid app proto fail")
 }
 
@@ -241,7 +241,7 @@ func TestInvalidAppPortEmpty(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "sg policy creates with empty port must fail")
 }
 
@@ -274,7 +274,7 @@ func TestInvalidAppPortNonInteger(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "sg policy creates with non integer parsable port must fail")
 }
 
@@ -316,12 +316,12 @@ func TestInvalidAppPortInvalidPortRange(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "app ports outside 0 - 64K must fail")
 
 	sgp.Spec.Rules = rulesAboveRange
 
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "app ports outside 0 - 64K must fail")
 }
 
@@ -366,15 +366,15 @@ func TestAttachTenantWithMissingToAndFromAddresses(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy attaching to the tenant with missing To Addresses must fail. Error: %v", err)
 
 	sgp.Spec.Rules = rulesMissingFrom
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy attaching to the tenant with missing From Addresses must fail. Error: %v", err)
 
 	sgp.Spec.Rules = rulesMissingBoth
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy attaching to the tenant with missing To and From Addresses must fail. Error: %v", err)
 }
 
@@ -407,7 +407,7 @@ func TestInvalidIPAddressOctet(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy with invalid IP Address Octet must fail.  Error: %v", err)
 
 }
@@ -441,7 +441,7 @@ func TestInvalidIPAddressCIDR(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy with invalid CIDR block must fail.  Error: %v", err)
 }
 
@@ -482,11 +482,11 @@ func TestInvalidIPAddressRange(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy with invalid IP Range must fail.  Error: %v", err)
 
 	sgp.Spec.Rules = rulesInvalidRangeMultipleSep
-	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err = s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy with invalid IP Range must fail.  Error: %v", err)
 }
 
@@ -519,7 +519,7 @@ func TestInvalidKeyword(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy rules having non any keywords must fail.  Error: %v", err)
 }
 
@@ -552,7 +552,7 @@ func TestAttachGroupsWithInvalidIPAddresses(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy attaching to the sgs with invalid IP addresses must fail. Error: %v", err)
 }
 
@@ -585,7 +585,7 @@ func TestAppWithMultipleSeparators(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy with invalid app proto/port formats should fail. Error: %v", err)
 }
 
@@ -618,7 +618,7 @@ func TestAppWithInvalidProtocol(t *testing.T) {
 		},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, sgp)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, sgp)
 	Assert(t, err != nil, "SG Policy with invalid app proto/port formats should fail. Error: %v", err)
 }
 
@@ -640,6 +640,6 @@ func TestInvalidObjType(t *testing.T) {
 		Spec: security.AppSpec{},
 	}
 
-	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, app)
+	_, _, err := s.validateSGPolicy(context.Background(), nil, nil, "", apiserver.CreateOper, false, app)
 	Assert(t, err != nil, "Invalid object casts must fail.  Error: %v", err)
 }

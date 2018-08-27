@@ -55,10 +55,11 @@ func request_MonitoringV1_AutoAddAlertDestination_0(ctx context.Context, marshal
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -71,6 +72,8 @@ func request_MonitoringV1_AutoAddAlertDestination_0(ctx context.Context, marshal
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddAlertDestination(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -102,10 +105,11 @@ func request_MonitoringV1_AutoAddAlertPolicy_0(ctx context.Context, marshaler ru
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -118,6 +122,8 @@ func request_MonitoringV1_AutoAddAlertPolicy_0(ctx context.Context, marshaler ru
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddAlertPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -149,10 +155,11 @@ func request_MonitoringV1_AutoAddEventPolicy_0(ctx context.Context, marshaler ru
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -165,6 +172,8 @@ func request_MonitoringV1_AutoAddEventPolicy_0(ctx context.Context, marshaler ru
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddEventPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -196,10 +205,11 @@ func request_MonitoringV1_AutoAddFlowExportPolicy_0(ctx context.Context, marshal
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -212,6 +222,8 @@ func request_MonitoringV1_AutoAddFlowExportPolicy_0(ctx context.Context, marshal
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddFlowExportPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -243,10 +255,11 @@ func request_MonitoringV1_AutoAddMirrorSession_0(ctx context.Context, marshaler 
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -259,6 +272,8 @@ func request_MonitoringV1_AutoAddMirrorSession_0(ctx context.Context, marshaler 
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddMirrorSession(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -290,10 +305,11 @@ func request_MonitoringV1_AutoAddTroubleshootingSession_0(ctx context.Context, m
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -306,6 +322,8 @@ func request_MonitoringV1_AutoAddTroubleshootingSession_0(ctx context.Context, m
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddTroubleshootingSession(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -341,10 +359,11 @@ func request_MonitoringV1_AutoDeleteAlertDestination_0(ctx context.Context, mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -368,6 +387,8 @@ func request_MonitoringV1_AutoDeleteAlertDestination_0(ctx context.Context, mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoDeleteAlertDestination_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -407,10 +428,11 @@ func request_MonitoringV1_AutoDeleteAlertPolicy_0(ctx context.Context, marshaler
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -434,6 +456,8 @@ func request_MonitoringV1_AutoDeleteAlertPolicy_0(ctx context.Context, marshaler
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoDeleteAlertPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -473,10 +497,11 @@ func request_MonitoringV1_AutoDeleteEventPolicy_0(ctx context.Context, marshaler
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -500,6 +525,8 @@ func request_MonitoringV1_AutoDeleteEventPolicy_0(ctx context.Context, marshaler
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoDeleteEventPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -539,10 +566,11 @@ func request_MonitoringV1_AutoDeleteFlowExportPolicy_0(ctx context.Context, mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -566,6 +594,8 @@ func request_MonitoringV1_AutoDeleteFlowExportPolicy_0(ctx context.Context, mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoDeleteFlowExportPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -605,10 +635,11 @@ func request_MonitoringV1_AutoDeleteMirrorSession_0(ctx context.Context, marshal
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -632,6 +663,8 @@ func request_MonitoringV1_AutoDeleteMirrorSession_0(ctx context.Context, marshal
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoDeleteMirrorSession_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -671,10 +704,11 @@ func request_MonitoringV1_AutoDeleteTroubleshootingSession_0(ctx context.Context
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -698,6 +732,8 @@ func request_MonitoringV1_AutoDeleteTroubleshootingSession_0(ctx context.Context
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoDeleteTroubleshootingSession_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -737,10 +773,11 @@ func request_MonitoringV1_AutoGetAlert_0(ctx context.Context, marshaler runtime.
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -764,6 +801,8 @@ func request_MonitoringV1_AutoGetAlert_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetAlert_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -803,10 +842,11 @@ func request_MonitoringV1_AutoGetAlertDestination_0(ctx context.Context, marshal
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -830,6 +870,8 @@ func request_MonitoringV1_AutoGetAlertDestination_0(ctx context.Context, marshal
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetAlertDestination_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -869,10 +911,11 @@ func request_MonitoringV1_AutoGetAlertPolicy_0(ctx context.Context, marshaler ru
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -896,6 +939,8 @@ func request_MonitoringV1_AutoGetAlertPolicy_0(ctx context.Context, marshaler ru
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetAlertPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -935,10 +980,11 @@ func request_MonitoringV1_AutoGetEventPolicy_0(ctx context.Context, marshaler ru
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -962,6 +1008,8 @@ func request_MonitoringV1_AutoGetEventPolicy_0(ctx context.Context, marshaler ru
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetEventPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1001,10 +1049,11 @@ func request_MonitoringV1_AutoGetFlowExportPolicy_0(ctx context.Context, marshal
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1028,6 +1077,8 @@ func request_MonitoringV1_AutoGetFlowExportPolicy_0(ctx context.Context, marshal
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetFlowExportPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1067,10 +1118,11 @@ func request_MonitoringV1_AutoGetFwlogPolicy_0(ctx context.Context, marshaler ru
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1094,6 +1146,8 @@ func request_MonitoringV1_AutoGetFwlogPolicy_0(ctx context.Context, marshaler ru
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetFwlogPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1133,10 +1187,11 @@ func request_MonitoringV1_AutoGetMirrorSession_0(ctx context.Context, marshaler 
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1160,6 +1215,8 @@ func request_MonitoringV1_AutoGetMirrorSession_0(ctx context.Context, marshaler 
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetMirrorSession_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1199,10 +1256,11 @@ func request_MonitoringV1_AutoGetStatsPolicy_0(ctx context.Context, marshaler ru
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1226,6 +1284,8 @@ func request_MonitoringV1_AutoGetStatsPolicy_0(ctx context.Context, marshaler ru
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetStatsPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1265,10 +1325,11 @@ func request_MonitoringV1_AutoGetTroubleshootingSession_0(ctx context.Context, m
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1292,6 +1353,8 @@ func request_MonitoringV1_AutoGetTroubleshootingSession_0(ctx context.Context, m
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetTroubleshootingSession_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1331,10 +1394,11 @@ func request_MonitoringV1_AutoListAlert_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1347,6 +1411,8 @@ func request_MonitoringV1_AutoListAlert_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoListAlert_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1386,10 +1452,11 @@ func request_MonitoringV1_AutoListAlertDestination_0(ctx context.Context, marsha
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1402,6 +1469,8 @@ func request_MonitoringV1_AutoListAlertDestination_0(ctx context.Context, marsha
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoListAlertDestination_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1441,10 +1510,11 @@ func request_MonitoringV1_AutoListAlertPolicy_0(ctx context.Context, marshaler r
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1457,6 +1527,8 @@ func request_MonitoringV1_AutoListAlertPolicy_0(ctx context.Context, marshaler r
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoListAlertPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1496,10 +1568,11 @@ func request_MonitoringV1_AutoListFlowExportPolicy_0(ctx context.Context, marsha
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1512,6 +1585,8 @@ func request_MonitoringV1_AutoListFlowExportPolicy_0(ctx context.Context, marsha
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoListFlowExportPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1551,10 +1626,11 @@ func request_MonitoringV1_AutoListFwlogPolicy_0(ctx context.Context, marshaler r
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1567,6 +1643,8 @@ func request_MonitoringV1_AutoListFwlogPolicy_0(ctx context.Context, marshaler r
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoListFwlogPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1606,10 +1684,11 @@ func request_MonitoringV1_AutoListMirrorSession_0(ctx context.Context, marshaler
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1622,6 +1701,8 @@ func request_MonitoringV1_AutoListMirrorSession_0(ctx context.Context, marshaler
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoListMirrorSession_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1661,10 +1742,11 @@ func request_MonitoringV1_AutoListStatsPolicy_0(ctx context.Context, marshaler r
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1677,6 +1759,8 @@ func request_MonitoringV1_AutoListStatsPolicy_0(ctx context.Context, marshaler r
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoListStatsPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1716,10 +1800,11 @@ func request_MonitoringV1_AutoListTroubleshootingSession_0(ctx context.Context, 
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1732,6 +1817,8 @@ func request_MonitoringV1_AutoListTroubleshootingSession_0(ctx context.Context, 
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoListTroubleshootingSession_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1767,10 +1854,11 @@ func request_MonitoringV1_AutoUpdateAlert_0(ctx context.Context, marshaler runti
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1794,6 +1882,8 @@ func request_MonitoringV1_AutoUpdateAlert_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateAlert(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -1825,10 +1915,11 @@ func request_MonitoringV1_AutoUpdateAlertDestination_0(ctx context.Context, mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1852,6 +1943,8 @@ func request_MonitoringV1_AutoUpdateAlertDestination_0(ctx context.Context, mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateAlertDestination(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -1883,10 +1976,11 @@ func request_MonitoringV1_AutoUpdateAlertPolicy_0(ctx context.Context, marshaler
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1910,6 +2004,8 @@ func request_MonitoringV1_AutoUpdateAlertPolicy_0(ctx context.Context, marshaler
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateAlertPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -1941,10 +2037,11 @@ func request_MonitoringV1_AutoUpdateEventPolicy_0(ctx context.Context, marshaler
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1968,6 +2065,8 @@ func request_MonitoringV1_AutoUpdateEventPolicy_0(ctx context.Context, marshaler
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateEventPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -1999,10 +2098,11 @@ func request_MonitoringV1_AutoUpdateFlowExportPolicy_0(ctx context.Context, mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2026,6 +2126,8 @@ func request_MonitoringV1_AutoUpdateFlowExportPolicy_0(ctx context.Context, mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateFlowExportPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -2057,10 +2159,11 @@ func request_MonitoringV1_AutoUpdateFwlogPolicy_0(ctx context.Context, marshaler
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2084,6 +2187,8 @@ func request_MonitoringV1_AutoUpdateFwlogPolicy_0(ctx context.Context, marshaler
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateFwlogPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -2115,10 +2220,11 @@ func request_MonitoringV1_AutoUpdateMirrorSession_0(ctx context.Context, marshal
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2142,6 +2248,8 @@ func request_MonitoringV1_AutoUpdateMirrorSession_0(ctx context.Context, marshal
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateMirrorSession(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -2173,10 +2281,11 @@ func request_MonitoringV1_AutoUpdateStatsPolicy_0(ctx context.Context, marshaler
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2200,6 +2309,8 @@ func request_MonitoringV1_AutoUpdateStatsPolicy_0(ctx context.Context, marshaler
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -2231,10 +2342,11 @@ func request_MonitoringV1_AutoUpdateTroubleshootingSession_0(ctx context.Context
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2258,6 +2370,8 @@ func request_MonitoringV1_AutoUpdateTroubleshootingSession_0(ctx context.Context
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateTroubleshootingSession(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -2293,10 +2407,11 @@ func request_MonitoringV1_AutoWatchAlert_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2309,6 +2424,8 @@ func request_MonitoringV1_AutoWatchAlert_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchAlert_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -2356,10 +2473,11 @@ func request_MonitoringV1_AutoWatchAlertDestination_0(ctx context.Context, marsh
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2372,6 +2490,8 @@ func request_MonitoringV1_AutoWatchAlertDestination_0(ctx context.Context, marsh
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchAlertDestination_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -2419,10 +2539,11 @@ func request_MonitoringV1_AutoWatchAlertPolicy_0(ctx context.Context, marshaler 
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2435,6 +2556,8 @@ func request_MonitoringV1_AutoWatchAlertPolicy_0(ctx context.Context, marshaler 
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchAlertPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -2482,10 +2605,11 @@ func request_MonitoringV1_AutoWatchEventPolicy_0(ctx context.Context, marshaler 
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2498,6 +2622,8 @@ func request_MonitoringV1_AutoWatchEventPolicy_0(ctx context.Context, marshaler 
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchEventPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -2545,10 +2671,11 @@ func request_MonitoringV1_AutoWatchFlowExportPolicy_0(ctx context.Context, marsh
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2561,6 +2688,8 @@ func request_MonitoringV1_AutoWatchFlowExportPolicy_0(ctx context.Context, marsh
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchFlowExportPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -2608,10 +2737,11 @@ func request_MonitoringV1_AutoWatchFwlogPolicy_0(ctx context.Context, marshaler 
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2624,6 +2754,8 @@ func request_MonitoringV1_AutoWatchFwlogPolicy_0(ctx context.Context, marshaler 
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchFwlogPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -2671,10 +2803,11 @@ func request_MonitoringV1_AutoWatchMirrorSession_0(ctx context.Context, marshale
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2687,6 +2820,8 @@ func request_MonitoringV1_AutoWatchMirrorSession_0(ctx context.Context, marshale
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchMirrorSession_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -2734,10 +2869,11 @@ func request_MonitoringV1_AutoWatchStatsPolicy_0(ctx context.Context, marshaler 
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -2750,6 +2886,8 @@ func request_MonitoringV1_AutoWatchStatsPolicy_0(ctx context.Context, marshaler 
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchStatsPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)

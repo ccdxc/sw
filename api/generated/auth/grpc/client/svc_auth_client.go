@@ -1145,6 +1145,21 @@ func NewRestCrudClientAuthV1(url string) auth.AuthV1Interface {
 	}
 }
 
+// NewStagedRestCrudClientAuthV1 creates a REST client for the service.
+func NewStagedRestCrudClientAuthV1(url string, id string) auth.AuthV1Interface {
+	endpoints, err := auth.MakeAuthV1StagedRestClientEndpoints(url, id)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientAuthV1{
+
+		restUser:                 &restObjAuthV1User{endpoints: endpoints, instance: url},
+		restAuthenticationPolicy: &restObjAuthV1AuthenticationPolicy{endpoints: endpoints, instance: url},
+		restRole:                 &restObjAuthV1Role{endpoints: endpoints, instance: url},
+		restRoleBinding:          &restObjAuthV1RoleBinding{endpoints: endpoints, instance: url},
+	}
+}
+
 func (a *crudRestClientAuthV1) User() auth.AuthV1UserInterface {
 	return a.restUser
 }

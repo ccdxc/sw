@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/interfaces"
 
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -32,11 +33,15 @@ const (
 const (
 	// RequestParamVersion is passed in request metadata for version
 	RequestParamVersion = "req-version"
-	// RequestParamMethod is passed in request metadata for version
+	// RequestParamMethod is passed in request metadata for method
 	RequestParamMethod = "req-method"
+	// RequestParamTenant is the tenant pertaining to this request
+	RequestParamTenant = "req-tenant"
 	// RequestParamReplaceStatusField is passed in requests from APIGateway indicating only spec
 	//  in the request is to be honored.
 	RequestParamReplaceStatusField = "replace-status-field"
+	// RequestParamStagingBufferID carries the buffer Id if the request is staged
+	RequestParamStagingBufferID = "staging-buffer-id"
 )
 
 const (
@@ -74,6 +79,8 @@ type Server interface {
 	RegisterHooksCb(svcName string, fn ServiceHookCb)
 	// GetService returns a registered service given the name.
 	GetService(name string) Service
+	// CreateOverlay creates a new overlay on top of API server cache
+	CreateOverlay(tenant, name, basePath string) (apiintf.CacheInterface, error)
 	// Run starts the "eventloop" for the API server.
 	Run(config Config)
 	// Stop sends a stop signal to the API server
@@ -113,6 +120,9 @@ type Config struct {
 	// BypassCache being set causes the API server to access the KV store directly bypassing
 	//  the cache layer
 	BypassCache bool
+	// FunctionVectors are common utility functions
+	GetOverlay func(tenant, id string) (apiintf.OverlayInterface, error)
+	IsDryRun   func(ctx context.Context) bool
 }
 
 // TransformFunc is a function that tranforms a message from "from" version to the "to" version.
@@ -130,16 +140,16 @@ type ValidateFunc func(i interface{}, ver string, ignoreStatus bool) []error
 // are called. Any of the precommit functions can provide feedback to skip the KV operation by
 // returning False.
 // Returning an error aborts processing of this API call.
-type PreCommitFunc func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper APIOperType, i interface{}) (interface{}, bool, error)
+type PreCommitFunc func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper APIOperType, dryrun bool, i interface{}) (interface{}, bool, error)
 
 // PostCommitFunc are registered functions that will be invoked after the KV store operation. Multiple
 // functions could be registered and all registered functions are called.
-type PostCommitFunc func(ctx context.Context, oper APIOperType, i interface{})
+type PostCommitFunc func(ctx context.Context, oper APIOperType, i interface{}, dryrun bool)
 
 // ResponseWriterFunc is a function that is registered to provide a custom response to a API call.
 // The ResponseWriterFunc can return a completely different type than the passed in message.
 // In case of delete the "old" parameter contains the deleted object.
-type ResponseWriterFunc func(ctx context.Context, kvs kvstore.Interface, prefix string, i interface{}, old interface{}, oper APIOperType) (interface{}, error)
+type ResponseWriterFunc func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper APIOperType) (interface{}, error)
 
 // MakeURIFunc functions is registered to the method and generates the REST URI that can be used
 //  to invoke the method if the method is exposed via REST. If not it returns a non nil error.
@@ -152,7 +162,7 @@ type KeyGenFunc func(i interface{}, prefix string) string
 type SetObjectVersionFunc func(i interface{}, version string) interface{}
 
 // UpdateKvFunc is the function to Update the KV store. Usually registered by generated code.
-type UpdateKvFunc func(ctx context.Context, kvstore kvstore.Interface, i interface{}, prefix string, create, replaceStatus bool) (interface{}, error)
+type UpdateKvFunc func(ctx context.Context, kvstore kvstore.Interface, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) (interface{}, error)
 
 // UpdateKvTxnFunc is the function to Update the object in a transaction. The transaction itself is applied via a txn.Commit()
 // by the API server. Usually registered by generated code.
@@ -248,6 +258,12 @@ type MessageRegistration interface {
 	WithSelfLinkWriter(fn UpdateSelfLinkFunc) Message
 	// WithStorageTransformer registers Storage Transformers
 	WithStorageTransformer(stx ObjStorageTransformer) Message
+	// WithReplaceSpecFunction is a consistent update function for replacing the Spec
+	WithReplaceSpecFunction(fn func(interface{}) kvstore.UpdateFunc) Message
+	// WithReplaceStatusFunction is a consistent update function for replacing the Status
+	WithReplaceStatusFunction(fn func(interface{}) kvstore.UpdateFunc) Message
+	// WithGetRuntimeObject gets the runtime object
+	WithGetRuntimeObject(func(interface{}) runtime.Object) Message
 }
 
 // MessageAction is the set of the Actions possible on a Message.
@@ -260,7 +276,7 @@ type MessageAction interface {
 	WriteObjVersion(i interface{}, version string) interface{}
 	// WriteToKv writes the object to KV store. If create flag is set then the object
 	// must not exist for success.
-	WriteToKv(ctx context.Context, kvs kvstore.Interface, i interface{}, prerfix string, create, replaceStatus bool) (interface{}, error)
+	WriteToKv(ctx context.Context, kvs kvstore.Interface, i interface{}, prerfix string, create, updateSpec bool) (interface{}, error)
 	// WriteToKvTxn writes the object to the KV store Transaction. Actual applying of the transaction via
 	// a Commit() happens elsewhere.
 	WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prerfix string, create bool) error
@@ -292,6 +308,12 @@ type MessageAction interface {
 	TransformToStorage(ctx context.Context, oper APIOperType, i interface{}) (interface{}, error)
 	// TransformFromStorage transforms the object after reading from storage
 	TransformFromStorage(ctx context.Context, oper APIOperType, i interface{}) (interface{}, error)
+	// GetUpdateSpecFunc returns the Update function for Spec update
+	GetUpdateSpecFunc() func(interface{}) kvstore.UpdateFunc
+	// GetUpdateStatusFunc returns the Update function for Status update
+	GetUpdateStatusFunc() func(interface{}) kvstore.UpdateFunc
+	// GetRuntimeObject retursn the runtime.Object
+	GetRuntimeObject(interface{}) runtime.Object
 }
 
 // Method is the interface satisfied by the representation of the RPC Method in the API Server infra.
@@ -325,6 +347,8 @@ type MethodAction interface {
 	Enable()
 	// Disable disables the method from being invoked.
 	Disable()
+	// GetService returns the parent Service
+	GetService() Service
 	// GetPrefix returns the prefix
 	GetPrefix() string
 	// GetRequestType returns input type for the method.
@@ -339,6 +363,8 @@ type MethodAction interface {
 
 // Service interface is satisfied by all services registered with the API Server.
 type Service interface {
+	// Name returns the name for this service
+	Name() string
 	// Disable disables the Service
 	Disable()
 	// Enable enables the Service and all its methods.

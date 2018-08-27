@@ -29,7 +29,7 @@ type authHooks struct {
 }
 
 // hashPassword is pre-commit hook to hash password in User object when object is created or updated
-func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("msg", "AuthHook called to hash password")
 	r, ok := i.(auth.User)
 	if !ok {
@@ -108,7 +108,7 @@ func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignSt
 }
 
 // generateSecret is a pre-commmit hook to generate secret when authentication policy is created or updated
-func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("msg", "AuthHook called to generate JWT secret")
 	r, ok := i.(auth.AuthenticationPolicy)
 	if !ok {

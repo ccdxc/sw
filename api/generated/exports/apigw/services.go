@@ -23,6 +23,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/search/gateway"
 	// blank import to pull in security service into api gateway
 	_ "github.com/pensando/sw/api/generated/security/gateway"
+	// blank import to pull in staging service into api gateway
+	_ "github.com/pensando/sw/api/generated/staging/gateway"
 	// blank import to pull in workload service into api gateway
 	_ "github.com/pensando/sw/api/generated/workload/gateway"
 )

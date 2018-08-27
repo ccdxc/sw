@@ -887,6 +887,20 @@ func NewRestCrudClientNetworkV1(url string) network.NetworkV1Interface {
 	}
 }
 
+// NewStagedRestCrudClientNetworkV1 creates a REST client for the service.
+func NewStagedRestCrudClientNetworkV1(url string, id string) network.NetworkV1Interface {
+	endpoints, err := network.MakeNetworkV1StagedRestClientEndpoints(url, id)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientNetworkV1{
+
+		restNetwork:  &restObjNetworkV1Network{endpoints: endpoints, instance: url},
+		restService:  &restObjNetworkV1Service{endpoints: endpoints, instance: url},
+		restLbPolicy: &restObjNetworkV1LbPolicy{endpoints: endpoints, instance: url},
+	}
+}
+
 func (a *crudRestClientNetworkV1) Network() network.NetworkV1NetworkInterface {
 	return a.restNetwork
 }

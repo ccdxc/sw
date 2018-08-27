@@ -46,6 +46,7 @@ type EndpointsSearchV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
+	bufferId string
 
 	AutoWatchSvcSearchV1Endpoint endpoint.Endpoint
 	PolicyQueryEndpoint          endpoint.Endpoint
@@ -287,4 +288,17 @@ func MakeSearchV1RestClientEndpoints(instance string) (EndpointsSearchV1RestClie
 		client:   http.DefaultClient,
 	}, nil
 
+}
+
+// MakeSearchV1StagedRestClientEndpoints makes staged REST client endpoints
+func MakeSearchV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsSearchV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsSearchV1RestClient{
+		instance: instance,
+		bufferId: bufferId,
+		client:   http.DefaultClient,
+	}, nil
 }

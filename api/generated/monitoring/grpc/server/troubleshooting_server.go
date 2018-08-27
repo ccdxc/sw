@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
@@ -57,7 +58,7 @@ func (s *smonitoringTroubleshootingBackend) regMsgsFunc(l log.Logger, scheme *ru
 			r.Kind = "TroubleshootingSession"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(monitoring.TroubleshootingSession)
 			key := r.MakeKey(prefix)
 			r.Kind = "TroubleshootingSession"
@@ -68,17 +69,9 @@ func (s *smonitoringTroubleshootingBackend) regMsgsFunc(l log.Logger, scheme *ru
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*monitoring.TroubleshootingSession)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &monitoring.TroubleshootingSession{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -153,9 +146,45 @@ func (s *smonitoringTroubleshootingBackend) regMsgsFunc(l log.Logger, scheme *ru
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(monitoring.TroubleshootingSession)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.TroubleshootingSession)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.TroubleshootingSession
+			if v, ok := i.(monitoring.TroubleshootingSession); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.TroubleshootingSession); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.TroubleshootingSession); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *monitoring.TroubleshootingSession
+			if v, ok := i.(monitoring.TroubleshootingSession); ok {
+				n = &v
+			} else if v, ok := i.(*monitoring.TroubleshootingSession); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*monitoring.TroubleshootingSession); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"monitoring.TroubleshootingSessionSpec":   apisrvpkg.NewMessage("monitoring.TroubleshootingSessionSpec"),

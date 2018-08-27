@@ -93,6 +93,9 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(network.LbPolicyList)
+			return &r
 		}),
 		"network.NetworkList": apisrvpkg.NewMessage("network.NetworkList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -113,6 +116,9 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(network.NetworkList)
+			return &r
 		}),
 		"network.ServiceList": apisrvpkg.NewMessage("network.ServiceList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -133,6 +139,9 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(network.ServiceList)
+			return &r
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
@@ -151,11 +160,11 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) {
 
 	{
-		srv := apisrvpkg.NewService("NetworkV1")
+		srv := apisrvpkg.NewService("network.NetworkV1")
 		s.endpointsNetworkV1.fnAutoWatchSvcNetworkV1 = srv.WatchFromKv
 
 		s.endpointsNetworkV1.fnAutoAddLbPolicy = srv.AddMethod("AutoAddLbPolicy",
-			apisrvpkg.NewMethod(pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoAddLbPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoAddLbPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.LbPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -164,7 +173,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoAddNetwork = srv.AddMethod("AutoAddNetwork",
-			apisrvpkg.NewMethod(pkgMessages["network.Network"], pkgMessages["network.Network"], "network", "AutoAddNetwork")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.Network"], pkgMessages["network.Network"], "network", "AutoAddNetwork")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.Network)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -173,7 +182,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoAddService = srv.AddMethod("AutoAddService",
-			apisrvpkg.NewMethod(pkgMessages["network.Service"], pkgMessages["network.Service"], "network", "AutoAddService")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.Service"], pkgMessages["network.Service"], "network", "AutoAddService")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.Service)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -182,7 +191,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoDeleteLbPolicy = srv.AddMethod("AutoDeleteLbPolicy",
-			apisrvpkg.NewMethod(pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoDeleteLbPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoDeleteLbPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.LbPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -191,7 +200,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoDeleteNetwork = srv.AddMethod("AutoDeleteNetwork",
-			apisrvpkg.NewMethod(pkgMessages["network.Network"], pkgMessages["network.Network"], "network", "AutoDeleteNetwork")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.Network"], pkgMessages["network.Network"], "network", "AutoDeleteNetwork")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.Network)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -200,7 +209,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoDeleteService = srv.AddMethod("AutoDeleteService",
-			apisrvpkg.NewMethod(pkgMessages["network.Service"], pkgMessages["network.Service"], "network", "AutoDeleteService")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.Service"], pkgMessages["network.Service"], "network", "AutoDeleteService")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.Service)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -209,7 +218,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoGetLbPolicy = srv.AddMethod("AutoGetLbPolicy",
-			apisrvpkg.NewMethod(pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoGetLbPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoGetLbPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.LbPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -218,7 +227,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoGetNetwork = srv.AddMethod("AutoGetNetwork",
-			apisrvpkg.NewMethod(pkgMessages["network.Network"], pkgMessages["network.Network"], "network", "AutoGetNetwork")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.Network"], pkgMessages["network.Network"], "network", "AutoGetNetwork")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.Network)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -227,7 +236,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoGetService = srv.AddMethod("AutoGetService",
-			apisrvpkg.NewMethod(pkgMessages["network.Service"], pkgMessages["network.Service"], "network", "AutoGetService")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.Service"], pkgMessages["network.Service"], "network", "AutoGetService")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.Service)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -236,7 +245,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoListLbPolicy = srv.AddMethod("AutoListLbPolicy",
-			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["network.LbPolicyList"], "network", "AutoListLbPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["network.LbPolicyList"], "network", "AutoListLbPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -245,7 +254,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoListNetwork = srv.AddMethod("AutoListNetwork",
-			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["network.NetworkList"], "network", "AutoListNetwork")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["network.NetworkList"], "network", "AutoListNetwork")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -254,7 +263,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoListService = srv.AddMethod("AutoListService",
-			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["network.ServiceList"], "network", "AutoListService")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["network.ServiceList"], "network", "AutoListService")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -263,7 +272,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoUpdateLbPolicy = srv.AddMethod("AutoUpdateLbPolicy",
-			apisrvpkg.NewMethod(pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoUpdateLbPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.LbPolicy"], pkgMessages["network.LbPolicy"], "network", "AutoUpdateLbPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.LbPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -272,7 +281,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoUpdateNetwork = srv.AddMethod("AutoUpdateNetwork",
-			apisrvpkg.NewMethod(pkgMessages["network.Network"], pkgMessages["network.Network"], "network", "AutoUpdateNetwork")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.Network"], pkgMessages["network.Network"], "network", "AutoUpdateNetwork")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.Network)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -281,7 +290,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoUpdateService = srv.AddMethod("AutoUpdateService",
-			apisrvpkg.NewMethod(pkgMessages["network.Service"], pkgMessages["network.Service"], "network", "AutoUpdateService")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["network.Service"], pkgMessages["network.Service"], "network", "AutoUpdateService")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(network.Service)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -342,7 +351,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "network.Network")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "network.Network")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "network.Network")
@@ -433,7 +442,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "network.Service")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "network.Service")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "network.Service")
@@ -524,7 +533,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "network.LbPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "network.LbPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "network.LbPolicy")

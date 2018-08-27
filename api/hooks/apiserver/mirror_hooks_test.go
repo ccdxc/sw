@@ -480,7 +480,7 @@ func TestMirrorSessions(t *testing.T) {
 	}
 	txn := kvs.NewTxn()
 	for _, ms := range testBadMirrorSessions {
-		_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiserver.CreateOper, ms)
+		_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiserver.CreateOper, false, ms)
 		if ok {
 			t.Errorf("validation passed, expecting to fail for %v", ms.Name)
 			continue
@@ -488,7 +488,7 @@ func TestMirrorSessions(t *testing.T) {
 		l.Infof("Session %v : Error %v", ms.Name, err)
 	}
 	ms := &testGoodMirrorSession[0]
-	_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiserver.CreateOper, *ms)
+	_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiserver.CreateOper, false, *ms)
 	if !ok && err != nil {
 		t.Errorf("Failed to create a good mirror session")
 	}

@@ -130,7 +130,7 @@ func (t *txn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
 	if !resp.Succeeded {
 		return ret, kvstore.NewTxnFailedError()
 	}
-
+	ret.Revision = resp.Header.Revision
 	for _, obj := range t.objs {
 		t.store.objVersioner.SetVersion(obj, uint64(resp.Header.Revision))
 	}

@@ -336,6 +336,19 @@ func NewRestCrudClient{{$srvname}}(url string) {{$pkgname}}.{{$srvname}}Interfac
 		rest{{.}}: &restObj{{$srvname}}{{.}}{ endpoints: endpoints, instance: url},{{end}}
 	}
 }
+
+// NewStagedRestCrudClient{{$srvname}} creates a REST client for the service.
+func NewStagedRestCrudClient{{$srvname}}(url string, id string) {{$pkgname}}.{{$srvname}}Interface {
+	endpoints, err := {{$pkgname}}.Make{{$srvname}}StagedRestClientEndpoints(url, id)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClient{{$srvname}}{
+		{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+		rest{{.}}: &restObj{{$srvname}}{{.}}{ endpoints: endpoints, instance: url},{{end}}
+	}
+}
+
 {{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 func (a *crudRestClient{{$srvname}}) {{title .}}() {{$pkgname}}.{{$srvname}}{{.}}Interface {
 	return a.rest{{.}}

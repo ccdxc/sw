@@ -1403,6 +1403,22 @@ func NewRestCrudClientSecurityV1(url string) security.SecurityV1Interface {
 	}
 }
 
+// NewStagedRestCrudClientSecurityV1 creates a REST client for the service.
+func NewStagedRestCrudClientSecurityV1(url string, id string) security.SecurityV1Interface {
+	endpoints, err := security.MakeSecurityV1StagedRestClientEndpoints(url, id)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientSecurityV1{
+
+		restSecurityGroup:           &restObjSecurityV1SecurityGroup{endpoints: endpoints, instance: url},
+		restSGPolicy:                &restObjSecurityV1SGPolicy{endpoints: endpoints, instance: url},
+		restApp:                     &restObjSecurityV1App{endpoints: endpoints, instance: url},
+		restCertificate:             &restObjSecurityV1Certificate{endpoints: endpoints, instance: url},
+		restTrafficEncryptionPolicy: &restObjSecurityV1TrafficEncryptionPolicy{endpoints: endpoints, instance: url},
+	}
+}
+
 func (a *crudRestClientSecurityV1) SecurityGroup() security.SecurityV1SecurityGroupInterface {
 	return a.restSecurityGroup
 }

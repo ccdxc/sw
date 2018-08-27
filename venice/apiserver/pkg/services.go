@@ -17,7 +17,7 @@ import (
 type ServiceHdlr struct {
 	sync.Mutex
 	// Name is the name of the service
-	Name string
+	name string
 	// Methods is a container for the Methods defined in the service.
 	Methods map[string]apiserver.Method
 	// enabled is set to true when the service is enabled.
@@ -28,6 +28,11 @@ type ServiceHdlr struct {
 	crudMsgMap map[string]apiserver.Message
 	// prepMsgMap has a map of kind to message transform functions
 	prepMsgMap map[string]func(from, to string, i interface{}) (interface{}, error)
+}
+
+// Name returns the name of this service
+func (s *ServiceHdlr) Name() string {
+	return s.name
 }
 
 // Disable disables all futures requests on the service to be forbidden
@@ -131,7 +136,7 @@ func (s *ServiceHdlr) WithCrudServices(msgs []apiserver.Message) apiserver.Servi
 // NewService initializes and returns a new service object.
 func NewService(n string) apiserver.Service {
 	return &ServiceHdlr{
-		Name:       n,
+		name:       n,
 		Methods:    make(map[string]apiserver.Method),
 		crudMsgMap: make(map[string]apiserver.Message),
 		prepMsgMap: make(map[string]func(from, to string, i interface{}) (interface{}, error))}

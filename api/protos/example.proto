@@ -154,6 +154,7 @@ message CustomerSpec {
 }
 
 message CustomerStatus {
+  string AccountStatus = 1  [(gogoproto.jsontag) = "account-status"];
 }
 
 message Customer {

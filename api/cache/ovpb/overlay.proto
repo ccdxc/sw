@@ -1,0 +1,46 @@
+syntax = "proto3";
+// Service name
+package overlaypb;
+
+// Mandatory imports.
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "google/protobuf/any.proto";
+
+// BufferItem is used to persist contents of the staging buffer in KV store. 
+// This is sperate from the user visible staging Buffer. This is an internal
+// object used by the API Server
+message BufferItem {
+    api.TypeMeta T      = 1  [(gogoproto.embed) = true,
+                              (gogoproto.nullable) = false,
+                              (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2  [(gogoproto.embed) = true,
+                              (gogoproto.nullable) = false,
+                              (gogoproto.jsontag) = "meta,inline"];
+
+    message Id {
+        string Kind = 1;
+        string URI = 2;
+        string Operation = 3;
+        // the API server service for this operation
+        string Service = 4;
+        // the API server method for this operation
+        string Method = 5;
+    }
+    Id ItemId = 3;
+    google.protobuf.Any Object  = 4;
+}
+
+// BufferItemList is collection fo BufferItems
+message BufferItemList {
+    api.TypeMeta T      = 1  [(gogoproto.embed) = true,
+                              (gogoproto.nullable) = false,
+                              (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2  [(gogoproto.embed) = true,
+                              (gogoproto.nullable) = false,
+                              (gogoproto.jsontag) = "meta,inline"];
+
+    repeated BufferItem Items = 3;
+}

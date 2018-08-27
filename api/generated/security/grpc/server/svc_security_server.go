@@ -102,6 +102,9 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(security.AppList)
+			return &r
 		}),
 		"security.AutoMsgAppWatchHelper":                     apisrvpkg.NewMessage("security.AutoMsgAppWatchHelper"),
 		"security.AutoMsgCertificateWatchHelper":             apisrvpkg.NewMessage("security.AutoMsgCertificateWatchHelper"),
@@ -127,6 +130,9 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(security.CertificateList)
+			return &r
 		}),
 		"security.SGPolicyList": apisrvpkg.NewMessage("security.SGPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -147,6 +153,9 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(security.SGPolicyList)
+			return &r
 		}),
 		"security.SecurityGroupList": apisrvpkg.NewMessage("security.SecurityGroupList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -167,6 +176,9 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(security.SecurityGroupList)
+			return &r
 		}),
 		"security.TrafficEncryptionPolicyList": apisrvpkg.NewMessage("security.TrafficEncryptionPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -187,6 +199,9 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
 			}
 			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(security.TrafficEncryptionPolicyList)
+			return &r
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
@@ -205,11 +220,11 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger log.Logger, grpcserver *rpckit.RPCServer, scheme *runtime.Scheme) {
 
 	{
-		srv := apisrvpkg.NewService("SecurityV1")
+		srv := apisrvpkg.NewService("security.SecurityV1")
 		s.endpointsSecurityV1.fnAutoWatchSvcSecurityV1 = srv.WatchFromKv
 
 		s.endpointsSecurityV1.fnAutoAddApp = srv.AddMethod("AutoAddApp",
-			apisrvpkg.NewMethod(pkgMessages["security.App"], pkgMessages["security.App"], "security", "AutoAddApp")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.App"], pkgMessages["security.App"], "security", "AutoAddApp")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.App)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -218,7 +233,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddCertificate = srv.AddMethod("AutoAddCertificate",
-			apisrvpkg.NewMethod(pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoAddCertificate")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoAddCertificate")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.Certificate)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -227,7 +242,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddSGPolicy = srv.AddMethod("AutoAddSGPolicy",
-			apisrvpkg.NewMethod(pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoAddSGPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoAddSGPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.SGPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -236,7 +251,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddSecurityGroup = srv.AddMethod("AutoAddSecurityGroup",
-			apisrvpkg.NewMethod(pkgMessages["security.SecurityGroup"], pkgMessages["security.SecurityGroup"], "security", "AutoAddSecurityGroup")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.SecurityGroup"], pkgMessages["security.SecurityGroup"], "security", "AutoAddSecurityGroup")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.SecurityGroup)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -245,7 +260,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddTrafficEncryptionPolicy = srv.AddMethod("AutoAddTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoAddTrafficEncryptionPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoAddTrafficEncryptionPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.TrafficEncryptionPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -254,7 +269,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteApp = srv.AddMethod("AutoDeleteApp",
-			apisrvpkg.NewMethod(pkgMessages["security.App"], pkgMessages["security.App"], "security", "AutoDeleteApp")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.App"], pkgMessages["security.App"], "security", "AutoDeleteApp")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.App)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -263,7 +278,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteCertificate = srv.AddMethod("AutoDeleteCertificate",
-			apisrvpkg.NewMethod(pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoDeleteCertificate")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoDeleteCertificate")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.Certificate)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -272,7 +287,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteSGPolicy = srv.AddMethod("AutoDeleteSGPolicy",
-			apisrvpkg.NewMethod(pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoDeleteSGPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoDeleteSGPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.SGPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -281,7 +296,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteSecurityGroup = srv.AddMethod("AutoDeleteSecurityGroup",
-			apisrvpkg.NewMethod(pkgMessages["security.SecurityGroup"], pkgMessages["security.SecurityGroup"], "security", "AutoDeleteSecurityGroup")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.SecurityGroup"], pkgMessages["security.SecurityGroup"], "security", "AutoDeleteSecurityGroup")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.SecurityGroup)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -290,7 +305,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteTrafficEncryptionPolicy = srv.AddMethod("AutoDeleteTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoDeleteTrafficEncryptionPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoDeleteTrafficEncryptionPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.TrafficEncryptionPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -299,7 +314,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetApp = srv.AddMethod("AutoGetApp",
-			apisrvpkg.NewMethod(pkgMessages["security.App"], pkgMessages["security.App"], "security", "AutoGetApp")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.App"], pkgMessages["security.App"], "security", "AutoGetApp")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.App)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -308,7 +323,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetCertificate = srv.AddMethod("AutoGetCertificate",
-			apisrvpkg.NewMethod(pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoGetCertificate")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoGetCertificate")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.Certificate)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -317,7 +332,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetSGPolicy = srv.AddMethod("AutoGetSGPolicy",
-			apisrvpkg.NewMethod(pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoGetSGPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoGetSGPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.SGPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -326,7 +341,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetSecurityGroup = srv.AddMethod("AutoGetSecurityGroup",
-			apisrvpkg.NewMethod(pkgMessages["security.SecurityGroup"], pkgMessages["security.SecurityGroup"], "security", "AutoGetSecurityGroup")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.SecurityGroup"], pkgMessages["security.SecurityGroup"], "security", "AutoGetSecurityGroup")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.SecurityGroup)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -335,7 +350,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetTrafficEncryptionPolicy = srv.AddMethod("AutoGetTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoGetTrafficEncryptionPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoGetTrafficEncryptionPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.TrafficEncryptionPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -344,7 +359,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListApp = srv.AddMethod("AutoListApp",
-			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["security.AppList"], "security", "AutoListApp")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["security.AppList"], "security", "AutoListApp")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -353,7 +368,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListCertificate = srv.AddMethod("AutoListCertificate",
-			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["security.CertificateList"], "security", "AutoListCertificate")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["security.CertificateList"], "security", "AutoListCertificate")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -362,7 +377,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListSGPolicy = srv.AddMethod("AutoListSGPolicy",
-			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["security.SGPolicyList"], "security", "AutoListSGPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["security.SGPolicyList"], "security", "AutoListSGPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -371,7 +386,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListSecurityGroup = srv.AddMethod("AutoListSecurityGroup",
-			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["security.SecurityGroupList"], "security", "AutoListSecurityGroup")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["security.SecurityGroupList"], "security", "AutoListSecurityGroup")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -380,12 +395,12 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListTrafficEncryptionPolicy = srv.AddMethod("AutoListTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(pkgMessages["api.ListWatchOptions"], pkgMessages["security.TrafficEncryptionPolicyList"], "security", "AutoListTrafficEncryptionPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["security.TrafficEncryptionPolicyList"], "security", "AutoListTrafficEncryptionPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateApp = srv.AddMethod("AutoUpdateApp",
-			apisrvpkg.NewMethod(pkgMessages["security.App"], pkgMessages["security.App"], "security", "AutoUpdateApp")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.App"], pkgMessages["security.App"], "security", "AutoUpdateApp")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.App)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -394,7 +409,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateCertificate = srv.AddMethod("AutoUpdateCertificate",
-			apisrvpkg.NewMethod(pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoUpdateCertificate")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoUpdateCertificate")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.Certificate)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -403,7 +418,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateSGPolicy = srv.AddMethod("AutoUpdateSGPolicy",
-			apisrvpkg.NewMethod(pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoUpdateSGPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.SGPolicy"], pkgMessages["security.SGPolicy"], "security", "AutoUpdateSGPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.SGPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -412,7 +427,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateSecurityGroup = srv.AddMethod("AutoUpdateSecurityGroup",
-			apisrvpkg.NewMethod(pkgMessages["security.SecurityGroup"], pkgMessages["security.SecurityGroup"], "security", "AutoUpdateSecurityGroup")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.SecurityGroup"], pkgMessages["security.SecurityGroup"], "security", "AutoUpdateSecurityGroup")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.SecurityGroup)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -421,7 +436,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateTrafficEncryptionPolicy = srv.AddMethod("AutoUpdateTrafficEncryptionPolicy",
-			apisrvpkg.NewMethod(pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoUpdateTrafficEncryptionPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoUpdateTrafficEncryptionPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(security.TrafficEncryptionPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -486,7 +501,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.SecurityGroup")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.SecurityGroup")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.SecurityGroup")
@@ -577,7 +592,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.SGPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.SGPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.SGPolicy")
@@ -668,7 +683,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.App")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.App")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.App")
@@ -759,7 +774,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.Certificate")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.Certificate")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.Certificate")
@@ -850,7 +865,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if kvs == nil {
 				return fmt.Errorf("Nil KVS")
 			}
-			l.Infof("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")
 			watcher, err := kvs.WatchFiltered(nctx, key, *options)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "security.TrafficEncryptionPolicy")

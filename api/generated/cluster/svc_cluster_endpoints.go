@@ -71,6 +71,7 @@ type EndpointsClusterV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
+	bufferId string
 
 	AuthBootstrapCompleteEndpoint endpoint.Endpoint
 	AutoAddClusterEndpoint        endpoint.Endpoint
@@ -2245,6 +2246,9 @@ func (r *EndpointsClusterV1RestClient) AutoAddCluster(ctx context.Context, in *C
 // AutoUpdateCluster CRUD method for Cluster
 func (r *EndpointsClusterV1RestClient) AutoUpdateCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
 	path := makeURIClusterV1AutoUpdateClusterUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2263,6 +2267,9 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateCluster(ctx context.Context, in
 // AutoGetCluster CRUD method for Cluster
 func (r *EndpointsClusterV1RestClient) AutoGetCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
 	path := makeURIClusterV1AutoGetClusterGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2281,6 +2288,9 @@ func (r *EndpointsClusterV1RestClient) AutoGetCluster(ctx context.Context, in *C
 // AutoDeleteCluster CRUD method for Cluster
 func (r *EndpointsClusterV1RestClient) AutoDeleteCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
 	path := makeURIClusterV1AutoDeleteClusterDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2308,6 +2318,9 @@ func (r *EndpointsClusterV1RestClient) AutoWatchCluster(ctx context.Context, str
 }
 
 func (r *EndpointsClusterV1RestClient) AuthBootstrapCompleteCluster(ctx context.Context, in *ClusterAuthBootstrapRequest) (*Cluster, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
 	path := makeURIClusterV1AuthBootstrapCompleteCreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
@@ -2327,6 +2340,9 @@ func (r *EndpointsClusterV1RestClient) AuthBootstrapCompleteCluster(ctx context.
 // AutoAddNode CRUD method for Node
 func (r *EndpointsClusterV1RestClient) AutoAddNode(ctx context.Context, in *Node) (*Node, error) {
 	path := makeURIClusterV1AutoAddNodeCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2345,6 +2361,9 @@ func (r *EndpointsClusterV1RestClient) AutoAddNode(ctx context.Context, in *Node
 // AutoUpdateNode CRUD method for Node
 func (r *EndpointsClusterV1RestClient) AutoUpdateNode(ctx context.Context, in *Node) (*Node, error) {
 	path := makeURIClusterV1AutoUpdateNodeUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2363,6 +2382,9 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateNode(ctx context.Context, in *N
 // AutoGetNode CRUD method for Node
 func (r *EndpointsClusterV1RestClient) AutoGetNode(ctx context.Context, in *Node) (*Node, error) {
 	path := makeURIClusterV1AutoGetNodeGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2381,6 +2403,9 @@ func (r *EndpointsClusterV1RestClient) AutoGetNode(ctx context.Context, in *Node
 // AutoDeleteNode CRUD method for Node
 func (r *EndpointsClusterV1RestClient) AutoDeleteNode(ctx context.Context, in *Node) (*Node, error) {
 	path := makeURIClusterV1AutoDeleteNodeDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2399,6 +2424,9 @@ func (r *EndpointsClusterV1RestClient) AutoDeleteNode(ctx context.Context, in *N
 // AutoListNode CRUD method for Node
 func (r *EndpointsClusterV1RestClient) AutoListNode(ctx context.Context, options *api.ListWatchOptions) (*NodeList, error) {
 	path := makeURIClusterV1AutoListNodeListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2423,6 +2451,9 @@ func (r *EndpointsClusterV1RestClient) AutoWatchNode(ctx context.Context, stream
 // AutoAddHost CRUD method for Host
 func (r *EndpointsClusterV1RestClient) AutoAddHost(ctx context.Context, in *Host) (*Host, error) {
 	path := makeURIClusterV1AutoAddHostCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2441,6 +2472,9 @@ func (r *EndpointsClusterV1RestClient) AutoAddHost(ctx context.Context, in *Host
 // AutoUpdateHost CRUD method for Host
 func (r *EndpointsClusterV1RestClient) AutoUpdateHost(ctx context.Context, in *Host) (*Host, error) {
 	path := makeURIClusterV1AutoUpdateHostUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2459,6 +2493,9 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateHost(ctx context.Context, in *H
 // AutoGetHost CRUD method for Host
 func (r *EndpointsClusterV1RestClient) AutoGetHost(ctx context.Context, in *Host) (*Host, error) {
 	path := makeURIClusterV1AutoGetHostGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2477,6 +2514,9 @@ func (r *EndpointsClusterV1RestClient) AutoGetHost(ctx context.Context, in *Host
 // AutoDeleteHost CRUD method for Host
 func (r *EndpointsClusterV1RestClient) AutoDeleteHost(ctx context.Context, in *Host) (*Host, error) {
 	path := makeURIClusterV1AutoDeleteHostDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2495,6 +2535,9 @@ func (r *EndpointsClusterV1RestClient) AutoDeleteHost(ctx context.Context, in *H
 // AutoListHost CRUD method for Host
 func (r *EndpointsClusterV1RestClient) AutoListHost(ctx context.Context, options *api.ListWatchOptions) (*HostList, error) {
 	path := makeURIClusterV1AutoListHostListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2519,6 +2562,9 @@ func (r *EndpointsClusterV1RestClient) AutoWatchHost(ctx context.Context, stream
 // AutoAddSmartNIC CRUD method for SmartNIC
 func (r *EndpointsClusterV1RestClient) AutoAddSmartNIC(ctx context.Context, in *SmartNIC) (*SmartNIC, error) {
 	path := makeURIClusterV1AutoAddSmartNICCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2537,6 +2583,9 @@ func (r *EndpointsClusterV1RestClient) AutoAddSmartNIC(ctx context.Context, in *
 // AutoUpdateSmartNIC CRUD method for SmartNIC
 func (r *EndpointsClusterV1RestClient) AutoUpdateSmartNIC(ctx context.Context, in *SmartNIC) (*SmartNIC, error) {
 	path := makeURIClusterV1AutoUpdateSmartNICUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2555,6 +2604,9 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateSmartNIC(ctx context.Context, i
 // AutoGetSmartNIC CRUD method for SmartNIC
 func (r *EndpointsClusterV1RestClient) AutoGetSmartNIC(ctx context.Context, in *SmartNIC) (*SmartNIC, error) {
 	path := makeURIClusterV1AutoGetSmartNICGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2573,6 +2625,9 @@ func (r *EndpointsClusterV1RestClient) AutoGetSmartNIC(ctx context.Context, in *
 // AutoDeleteSmartNIC CRUD method for SmartNIC
 func (r *EndpointsClusterV1RestClient) AutoDeleteSmartNIC(ctx context.Context, in *SmartNIC) (*SmartNIC, error) {
 	path := makeURIClusterV1AutoDeleteSmartNICDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2591,6 +2646,9 @@ func (r *EndpointsClusterV1RestClient) AutoDeleteSmartNIC(ctx context.Context, i
 // AutoListSmartNIC CRUD method for SmartNIC
 func (r *EndpointsClusterV1RestClient) AutoListSmartNIC(ctx context.Context, options *api.ListWatchOptions) (*SmartNICList, error) {
 	path := makeURIClusterV1AutoListSmartNICListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2615,6 +2673,9 @@ func (r *EndpointsClusterV1RestClient) AutoWatchSmartNIC(ctx context.Context, st
 // AutoAddTenant CRUD method for Tenant
 func (r *EndpointsClusterV1RestClient) AutoAddTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
 	path := makeURIClusterV1AutoAddTenantCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -2633,6 +2694,9 @@ func (r *EndpointsClusterV1RestClient) AutoAddTenant(ctx context.Context, in *Te
 // AutoUpdateTenant CRUD method for Tenant
 func (r *EndpointsClusterV1RestClient) AutoUpdateTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
 	path := makeURIClusterV1AutoUpdateTenantUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -2651,6 +2715,9 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateTenant(ctx context.Context, in 
 // AutoGetTenant CRUD method for Tenant
 func (r *EndpointsClusterV1RestClient) AutoGetTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
 	path := makeURIClusterV1AutoGetTenantGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2669,6 +2736,9 @@ func (r *EndpointsClusterV1RestClient) AutoGetTenant(ctx context.Context, in *Te
 // AutoDeleteTenant CRUD method for Tenant
 func (r *EndpointsClusterV1RestClient) AutoDeleteTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
 	path := makeURIClusterV1AutoDeleteTenantDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -2687,6 +2757,9 @@ func (r *EndpointsClusterV1RestClient) AutoDeleteTenant(ctx context.Context, in 
 // AutoListTenant CRUD method for Tenant
 func (r *EndpointsClusterV1RestClient) AutoListTenant(ctx context.Context, options *api.ListWatchOptions) (*TenantList, error) {
 	path := makeURIClusterV1AutoListTenantListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -2719,4 +2792,17 @@ func MakeClusterV1RestClientEndpoints(instance string) (EndpointsClusterV1RestCl
 		client:   http.DefaultClient,
 	}, nil
 
+}
+
+// MakeClusterV1StagedRestClientEndpoints makes staged REST client endpoints
+func MakeClusterV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsClusterV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsClusterV1RestClient{
+		instance: instance,
+		bufferId: bufferId,
+		client:   http.DefaultClient,
+	}, nil
 }

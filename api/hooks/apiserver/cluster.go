@@ -106,7 +106,7 @@ func (cl *clusterHooks) validateClusterConfig(i interface{}, ver string, ignStat
 }
 
 // createDefaultRoles is a pre-commit hook for tenant create operation that creates default roles when a tenant is created
-func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Tenant)
 	if !ok {
 		cl.logger.Errorf("API server hook to create default roles called for invalid object type [%#v]", i)
@@ -142,7 +142,7 @@ func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Inter
 }
 
 // deleteDefaultRoles is a pre-commit hook for tenant delete operation that deletes default roles when a tenant is deleted
-func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Tenant)
 	if !ok {
 		cl.logger.Errorf("API server hook to delete default roles called for invalid object type [%#v]", i)
@@ -172,7 +172,7 @@ func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Inter
 }
 
 // checkAuthBootstrapFlag is a pre-commit hook for cluster create/update operation that makes sure that bootstrap flag is set to true only once for cluster update
-func (cl *clusterHooks) checkAuthBootstrapFlag(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (cl *clusterHooks) checkAuthBootstrapFlag(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Cluster)
 	if !ok {
 		cl.logger.Errorf("API server hook to check bootstrap flag called for invalid object type [%#v]", i)
@@ -208,7 +208,7 @@ func (cl *clusterHooks) checkAuthBootstrapFlag(ctx context.Context, kv kvstore.I
 }
 
 // setAuthBootstrapFlag is a pre-commit hook to set bootstrap flag
-func (cl *clusterHooks) setAuthBootstrapFlag(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (cl *clusterHooks) setAuthBootstrapFlag(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	_, ok := i.(cluster.ClusterAuthBootstrapRequest)
 	if !ok {
 		cl.logger.Errorf("API server hook to check bootstrap flag called for invalid object type [%#v]", i)

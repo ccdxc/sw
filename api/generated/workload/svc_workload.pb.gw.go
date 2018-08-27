@@ -55,10 +55,11 @@ func request_WorkloadV1_AutoAddEndpoint_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -71,6 +72,8 @@ func request_WorkloadV1_AutoAddEndpoint_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddEndpoint(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -102,10 +105,11 @@ func request_WorkloadV1_AutoAddWorkload_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -118,6 +122,8 @@ func request_WorkloadV1_AutoAddWorkload_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddWorkload(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -153,10 +159,11 @@ func request_WorkloadV1_AutoDeleteEndpoint_0(ctx context.Context, marshaler runt
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -180,6 +187,8 @@ func request_WorkloadV1_AutoDeleteEndpoint_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_WorkloadV1_AutoDeleteEndpoint_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -219,10 +228,11 @@ func request_WorkloadV1_AutoDeleteWorkload_0(ctx context.Context, marshaler runt
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -246,6 +256,8 @@ func request_WorkloadV1_AutoDeleteWorkload_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_WorkloadV1_AutoDeleteWorkload_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -285,10 +297,11 @@ func request_WorkloadV1_AutoGetEndpoint_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -312,6 +325,8 @@ func request_WorkloadV1_AutoGetEndpoint_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_WorkloadV1_AutoGetEndpoint_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -351,10 +366,11 @@ func request_WorkloadV1_AutoGetWorkload_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -378,6 +394,8 @@ func request_WorkloadV1_AutoGetWorkload_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_WorkloadV1_AutoGetWorkload_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -417,10 +435,11 @@ func request_WorkloadV1_AutoListEndpoint_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -433,6 +452,8 @@ func request_WorkloadV1_AutoListEndpoint_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_WorkloadV1_AutoListEndpoint_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -472,10 +493,11 @@ func request_WorkloadV1_AutoListWorkload_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -488,6 +510,8 @@ func request_WorkloadV1_AutoListWorkload_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_WorkloadV1_AutoListWorkload_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -523,10 +547,11 @@ func request_WorkloadV1_AutoUpdateEndpoint_0(ctx context.Context, marshaler runt
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -550,6 +575,8 @@ func request_WorkloadV1_AutoUpdateEndpoint_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateEndpoint(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -581,10 +608,11 @@ func request_WorkloadV1_AutoUpdateWorkload_0(ctx context.Context, marshaler runt
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -608,6 +636,8 @@ func request_WorkloadV1_AutoUpdateWorkload_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateWorkload(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -643,10 +673,11 @@ func request_WorkloadV1_AutoWatchEndpoint_0(ctx context.Context, marshaler runti
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -659,6 +690,8 @@ func request_WorkloadV1_AutoWatchEndpoint_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_WorkloadV1_AutoWatchEndpoint_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -706,10 +739,11 @@ func request_WorkloadV1_AutoWatchWorkload_0(ctx context.Context, marshaler runti
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -722,6 +756,8 @@ func request_WorkloadV1_AutoWatchWorkload_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_WorkloadV1_AutoWatchWorkload_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)

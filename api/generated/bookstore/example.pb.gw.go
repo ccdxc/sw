@@ -84,10 +84,11 @@ func request_BookstoreV1_Applydiscount_0(ctx context.Context, marshaler runtime.
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -100,6 +101,8 @@ func request_BookstoreV1_Applydiscount_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.Applydiscount(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -222,10 +225,11 @@ func request_BookstoreV1_AutoDeleteCustomer_0(ctx context.Context, marshaler run
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -238,6 +242,8 @@ func request_BookstoreV1_AutoDeleteCustomer_0(ctx context.Context, marshaler run
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_BookstoreV1_AutoDeleteCustomer_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -277,10 +283,11 @@ func request_BookstoreV1_AutoDeleteOrder_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -293,6 +300,8 @@ func request_BookstoreV1_AutoDeleteOrder_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_BookstoreV1_AutoDeleteOrder_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -369,10 +378,11 @@ func request_BookstoreV1_AutoGetBook_0(ctx context.Context, marshaler runtime.Ma
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -385,6 +395,8 @@ func request_BookstoreV1_AutoGetBook_0(ctx context.Context, marshaler runtime.Ma
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_BookstoreV1_AutoGetBook_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -424,10 +436,11 @@ func request_BookstoreV1_AutoGetCustomer_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -440,6 +453,8 @@ func request_BookstoreV1_AutoGetCustomer_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_BookstoreV1_AutoGetCustomer_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -479,10 +494,11 @@ func request_BookstoreV1_AutoGetOrder_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -495,6 +511,8 @@ func request_BookstoreV1_AutoGetOrder_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_BookstoreV1_AutoGetOrder_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -641,10 +659,11 @@ func request_BookstoreV1_AutoUpdateBook_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -657,6 +676,8 @@ func request_BookstoreV1_AutoUpdateBook_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateBook(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -688,10 +709,11 @@ func request_BookstoreV1_AutoUpdateCustomer_0(ctx context.Context, marshaler run
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -704,6 +726,8 @@ func request_BookstoreV1_AutoUpdateCustomer_0(ctx context.Context, marshaler run
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateCustomer(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -735,10 +759,11 @@ func request_BookstoreV1_AutoUpdateOrder_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -751,6 +776,8 @@ func request_BookstoreV1_AutoUpdateOrder_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateOrder(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -856,10 +883,11 @@ func request_BookstoreV1_Cleardiscount_0(ctx context.Context, marshaler runtime.
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -872,6 +900,8 @@ func request_BookstoreV1_Cleardiscount_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.Cleardiscount(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err

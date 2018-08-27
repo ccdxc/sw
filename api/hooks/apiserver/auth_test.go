@@ -40,7 +40,7 @@ func runPasswordHook(oper apiserver.APIOperType, userType auth.UserSpec_UserType
 		},
 	}
 
-	return r.hashPassword(context.Background(), nil, nil, "", oper, user)
+	return r.hashPassword(context.Background(), nil, nil, "", oper, false, user)
 }
 
 func TestWithCreateOperation(t *testing.T) {
@@ -109,7 +109,7 @@ func TestWithInvalidInputObject(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestAuthHooks")
 	r.logger = log.GetNewLogger(logConfig)
 
-	_, ok, err := r.hashPassword(context.Background(), nil, nil, "", apiserver.CreateOper, r)
+	_, ok, err := r.hashPassword(context.Background(), nil, nil, "", apiserver.CreateOper, false, r)
 	Assert(t, !ok, "hook to hash password succeeded for invalid input")
 	Assert(t, err != nil, "No error returned for invalid input")
 }
@@ -133,7 +133,7 @@ func TestWithUserTypeNotSpecified(t *testing.T) {
 		},
 	}
 
-	i, ok, err := r.hashPassword(context.Background(), nil, nil, "", apiserver.CreateOper, user)
+	i, ok, err := r.hashPassword(context.Background(), nil, nil, "", apiserver.CreateOper, false, user)
 	user = i.(auth.User)
 	Assert(t, ok, "hook to hash password failed when user type not specified")
 	Assert(t, user.Spec.Type == auth.UserSpec_LOCAL.String(), "user type should default to local")
@@ -291,7 +291,7 @@ func TestGenerateSecret(t *testing.T) {
 	r.logger = log.GetNewLogger(logConfig)
 
 	for _, test := range tests {
-		_, ok, err := r.generateSecret(context.Background(), nil, nil, "", apiserver.CreateOper, test.in)
+		_, ok, err := r.generateSecret(context.Background(), nil, nil, "", apiserver.CreateOper, false, test.in)
 		Assert(t, (test.ok == ok) && (test.err == (err != nil)), fmt.Sprintf("[%s] test failed", test.name))
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 	}

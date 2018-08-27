@@ -1,0 +1,36 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+// Configure and manage the Venice cluster.
+package staging;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "staging.proto";
+
+service StagingV1 {
+    option (venice.apiPrefix) = "staging";
+    option (venice.apiVersion) = "v1";
+
+    option (venice.apiGrpcCrudService) = "Buffer";
+
+    option (venice.apiRestService) = {
+        Object: "Buffer"
+        Method: [ "post", "list", "get", "delete" ]
+     };
+
+     option (venice.apiAction) = {
+       Object: "Buffer"
+       Action: "commit"
+       Request: "CommitAction"
+       Response: "CommitAction"
+     };
+     option (venice.apiAction) = {
+      Object: "Buffer"
+      Action: "clear"
+      Request: "ClearAction"
+      Response: "ClearAction"
+    };
+}

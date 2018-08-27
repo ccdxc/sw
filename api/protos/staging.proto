@@ -1,0 +1,133 @@
+syntax = "proto3";
+// Service name
+package staging;
+
+// Mandatory imports.
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+message ItemId {
+    string URI      = 2 [(gogoproto.jsontag) = "uri"];
+    string Method   = 3 [(gogoproto.jsontag) = "method"];
+}
+
+message Item {
+    ItemId Id                   = 1 [(gogoproto.embed) = true,
+                                     (gogoproto.nullable) = false,
+                                     (gogoproto.jsontag) = ",inline"];
+
+    api.Any Object              = 2 [(gogoproto.jsontag) = "object"];
+}
+
+message ValidationError {
+    ItemId Id               = 1 [(gogoproto.embed) = true,
+                                (gogoproto.nullable) = false,
+                                (gogoproto.jsontag) = ",inline"];;
+    repeated string Errors  = 2 [(gogoproto.jsontag) = "error"];
+}
+
+// ClearAction deletes objects from the staging buffer. A list of items to be cleared is specified
+//  in the Spec. If there are no items are specified then all items are deleted from the staging.
+//  buffer.
+message ClearAction {
+    option (venice.objectPrefix) = {Collection: "buffers"};
+    api.TypeMeta T              = 1  [(gogoproto.embed) = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O            = 2  [(gogoproto.embed) = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "meta,inline"];
+
+    ClearRequest Spec          = 3 [(gogoproto.jsontag) = "spec",
+                                    (gogoproto.nullable) = false];
+
+    ClearResponse Status       = 4 [(gogoproto.jsontag) = "status",
+                                    (gogoproto.nullable) = false];
+}
+
+message ClearRequest {
+    // Empty Items indicates everyting in the buffer
+    repeated ItemId Items = 1 [(gogoproto.jsontag) = "items"];
+}
+
+message ClearResponse {
+    enum ClearStatus {
+        SUCCESS = 0;
+        FAILED = 1;
+    }
+    string Status = 1 [(venice.check) = "StrEnum(ClearResponse.ClearStatus)",
+                       (gogoproto.jsontag) = "status"];
+
+    string Reason = 2 [(gogoproto.jsontag) = "reason"];
+}
+
+// CommitAction commits the changes in the staging buffer. All staged entries
+//  are verified and if verification is successful they are commited.
+message CommitAction {
+    option (venice.objectPrefix) = {Collection: "buffers"};
+    api.TypeMeta T              = 1  [(gogoproto.embed) = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O            = 2  [(gogoproto.embed) = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "meta,inline"];
+
+    CommitRequest Spec          = 3 [(gogoproto.jsontag) = "spec",
+                                    (gogoproto.nullable) = false];
+
+    CommitResponse Status       = 4 [(gogoproto.jsontag) = "status",
+                                    (gogoproto.nullable) = false];
+}
+
+message CommitRequest {
+}
+
+message CommitResponse {
+    enum CommitStatus {
+        SUCCESS = 0;
+        FAILED = 1;
+    }
+    string Status = 1 [(venice.check) = "StrEnum(CommitResponse.CommitStatus)",
+                       (gogoproto.jsontag) = "status"];
+
+    string Reason = 2 [(gogoproto.jsontag) = "reason"];
+}
+
+message BufferSpec {
+    string Contact = 1;
+}
+
+message BufferStatus {
+    enum ValidationStatus {
+        // ui-hint: Success
+        SUCCESS = 0;
+        // ui-hint: Failed
+        FAILED = 1;
+    }
+    string ValidationResult         = 1 [(venice.check) = "StrEnum(BufferStatus.ValidationStatus)",
+                                        (gogoproto.jsontag) = "validation-result"];
+
+    repeated ValidationError Errors = 2 [(gogoproto.jsontag) = "errors"];
+
+    repeated Item Items             = 3 [(gogoproto.jsontag) = "items"];
+}
+
+message Buffer {
+    option (venice.objectPrefix) = {Collection: "buffers", Path: "/{O.Tenant}"};
+
+    api.TypeMeta T = 1  [(gogoproto.embed) = true,
+                         (gogoproto.nullable) = false,
+                         (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O = 2  [(gogoproto.embed) = true,
+                           (gogoproto.nullable) = false,
+                           (gogoproto.jsontag) = "meta,inline"];
+
+    BufferSpec Spec = 3 [(gogoproto.nullable) = false,
+                         (gogoproto.jsontag) = "spec"];
+
+    BufferStatus Status = 4 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "status"];
+}

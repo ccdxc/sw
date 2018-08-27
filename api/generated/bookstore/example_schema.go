@@ -332,6 +332,7 @@ var typesMapExample = map[string]*api.Struct{
 			"Address":            api.CLIInfo{Path: "Spec.Address", Skip: false, Insert: "", Help: ""},
 			"CreditCardNumbers":  api.CLIInfo{Path: "Spec.CreditCardNumbers", Skip: false, Insert: "", Help: ""},
 			"Password":           api.CLIInfo{Path: "Spec.Password", Skip: false, Insert: "", Help: ""},
+			"account-status":     api.CLIInfo{Path: "Status.AccountStatus", Skip: false, Insert: "", Help: ""},
 			"api-version":        api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"kind":               api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":             api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
@@ -377,7 +378,9 @@ var typesMapExample = map[string]*api.Struct{
 	},
 	"bookstore.CustomerStatus": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerStatus{}) },
-		Fields:    map[string]api.Field{},
+		Fields: map[string]api.Field{
+			"AccountStatus": api.Field{Name: "AccountStatus", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "account-status", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
 	},
 	"bookstore.Order": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Order{}) },

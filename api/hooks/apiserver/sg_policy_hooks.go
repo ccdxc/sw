@@ -29,7 +29,7 @@ type sgPolicyHooks struct {
 // `ToIPAddress` should have individual IP Address, IP Mask or hyphen separated IP Range
 // Specifying `AttachTenant` should mandatorily have `FromIPAddress` and `ToIPAddresses`
 // For `FromIPAddresses` and `ToIPAddresses` cannot be empty. If the intent is to allow all. Enforce a mandatory `any` keyword.
-func (s *sgPolicyHooks) validateSGPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+func (s *sgPolicyHooks) validateSGPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	sgp, ok := i.(security.SGPolicy)
 	if !ok {
 		return i, false, fmt.Errorf("invalid input type")

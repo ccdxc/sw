@@ -118,6 +118,7 @@ func (g *generator) generate(file *descriptor.File) (string, error) {
 func testEqualStr(a, b string) bool {
 	return a == b
 }
+
 func contains(str, substr string) bool {
 	return strings.Contains(str, substr)
 }
@@ -128,6 +129,14 @@ func toUpper(str string) string {
 
 func toLower(str string) string {
 	return strings.ToLower(str)
+}
+
+func hasPrefix(str, prefix string) bool {
+	return strings.HasPrefix(str, prefix)
+}
+
+func trimPrefix(str, prefix string) string {
+	return strings.TrimPrefix(str, prefix)
 }
 
 func getFieldName(in string) string {

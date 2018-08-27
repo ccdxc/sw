@@ -5,9 +5,10 @@ import (
 	"reflect"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/pensando/sw/api"
+	cachemocks "github.com/pensando/sw/api/cache/mocks"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	memkv "github.com/pensando/sw/venice/utils/kvstore/memkv"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
@@ -77,212 +78,19 @@ func (t *testObjList) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
-type fakeKvStore struct {
-	creates, deletes               uint64
-	prefixdeletes, updates         uint64
-	consupdates, gets, lists       uint64
-	closes, watches, prefixwatches uint64
-	contests, leases, newtxns      uint64
-	watchfiltered, listfiltered    uint64
-	createfn                       func(ctx context.Context, key string, obj runtime.Object) error
-	deletefn                       func(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error
-	updatefn                       func(ctx context.Context, key string, obj runtime.Object) error
-	watchfn                        func(ctx context.Context, key string, fromVersion string) (kvstore.Watcher, error)
-	fwatchfn                       func(ctx context.Context, key string, opts api.ListWatchOptions) kvstore.Watcher
-	getfn                          func(ctx context.Context, key string, into runtime.Object) error
-	listfn                         func(ctx context.Context, prefix string, into runtime.Object) error
-}
-
-func (f *fakeKvStore) Create(ctx context.Context, key string, obj runtime.Object) error {
-	f.creates++
-	if f.createfn != nil {
-		return f.createfn(ctx, key, obj)
-	}
-	return nil
-}
-func (f *fakeKvStore) Delete(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error {
-	f.deletes++
-	if f.deletefn != nil {
-		return f.deletefn(ctx, key, into, cs...)
-	}
-	return nil
-}
-
-func (f *fakeKvStore) PrefixDelete(ctx context.Context, prefix string) error {
-	f.prefixdeletes++
-	return nil
-}
-
-func (f *fakeKvStore) Update(ctx context.Context, key string, obj runtime.Object, cs ...kvstore.Cmp) error {
-	f.updates++
-	if f.updatefn != nil {
-		return f.updatefn(ctx, key, obj)
-	}
-	return nil
-}
-
-func (f *fakeKvStore) ConsistentUpdate(ctx context.Context, key string, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
-	f.consupdates++
-	if f.updatefn != nil {
-		return f.updatefn(ctx, key, into)
-	}
-	return nil
-}
-
-func (f *fakeKvStore) Get(ctx context.Context, key string, into runtime.Object) error {
-	f.gets++
-	if f.getfn != nil {
-		return f.getfn(ctx, key, into)
-	}
-	return nil
-}
-
-func (f *fakeKvStore) List(ctx context.Context, prefix string, into runtime.Object) error {
-	f.lists++
-	if f.listfn != nil {
-		return f.listfn(ctx, prefix, into)
-	}
-	return nil
-}
-
-func (f *fakeKvStore) ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error {
-	return nil
-}
-
-func (f *fakeKvStore) Watch(ctx context.Context, key string, fromVersion string) (kvstore.Watcher, error) {
-	f.watches++
-	if f.watchfn != nil {
-		return f.watchfn(ctx, key, fromVersion)
-	}
-	return nil, nil
-}
-
-func (f *fakeKvStore) WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (kvstore.Watcher, error) {
-	f.watchfiltered++
-	if f.fwatchfn != nil {
-		return f.fwatchfn(ctx, key, opts), nil
-	}
-	return nil, nil
-}
-
-func (f *fakeKvStore) PrefixWatch(ctx context.Context, prefix string, fromVersion string) (kvstore.Watcher, error) {
-	f.prefixwatches++
-	if f.watchfn != nil {
-		return f.watchfn(ctx, prefix, fromVersion)
-	}
-	return nil, nil
-}
-
-func (f *fakeKvStore) Contest(ctx context.Context, name string, id string, ttl uint64) (kvstore.Election, error) {
-	f.contests++
-	return nil, nil
-}
-
-func (f *fakeKvStore) Lease(ctx context.Context, key string, obj runtime.Object, ttl uint64) (chan kvstore.LeaseEvent, error) {
-	f.leases++
-	ch := make(chan kvstore.LeaseEvent)
-	return ch, nil
-}
-func (f *fakeKvStore) NewTxn() kvstore.Txn {
-	f.newtxns++
-	return nil
-}
-func (f *fakeKvStore) Close() {
-	f.closes++
-}
-
-func (f *fakeKvStore) reset() {
-	f.creates = 0
-	f.deletes = 0
-	f.prefixdeletes = 0
-	f.updates = 0
-	f.consupdates = 0
-	f.gets = 0
-	f.lists = 0
-	f.watches = 0
-	f.prefixwatches = 0
-	f.contests = 0
-	f.leases = 0
-	f.newtxns = 0
-	f.closes = 0
-}
-
-type fakeStore struct {
-	sets, gets, deletes       uint64
-	lists, flushes            uint64
-	marks, sweeps, delDeleted uint64
-	setfn                     func(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error
-	getfn                     func(key string) (runtime.Object, error)
-	deletefn                  func(key string, rev uint64, cb SuccessCbFunc) (runtime.Object, error)
-	listfn                    func(key string, opts api.ListWatchOptions) []runtime.Object
-}
-
-func (f *fakeStore) Set(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error {
-	f.sets++
-	if f.setfn != nil {
-		return f.setfn(key, rev, obj, cb)
-	}
-	return nil
-}
-func (f *fakeStore) Get(key string) (runtime.Object, error) {
-	f.gets++
-	if f.getfn != nil {
-		return f.getfn(key)
-	}
-	return nil, nil
-}
-
-func (f *fakeStore) Delete(key string, rev uint64, cb SuccessCbFunc) (runtime.Object, error) {
-	f.deletes++
-	if f.deletefn != nil {
-		f.deletefn(key, rev, cb)
-	}
-	return nil, nil
-}
-
-func (f *fakeStore) List(key string, opts api.ListWatchOptions) ([]runtime.Object, error) {
-	f.lists++
-	if f.listfn != nil {
-		return f.listfn(key, opts), nil
-	}
-	var ret []runtime.Object
-	return ret, nil
-}
-
-func (f *fakeStore) Mark(key string) {
-	f.marks++
-}
-func (f *fakeStore) Sweep(key string, cb SuccessCbFunc) {
-	f.sweeps++
-}
-
-func (f *fakeStore) PurgeDeleted(past time.Duration) {
-	f.delDeleted++
-}
-func (f *fakeStore) Clear() {
-	f.flushes++
-}
-
-func (f *fakeStore) reset() {
-	f.sets = 0
-	f.gets = 0
-	f.deletes = 0
-	f.lists = 0
-	f.flushes = 0
-	f.marks = 0
-	f.sweeps = 0
-}
-
 type fakeWatchPrefixes struct {
+	sync.Mutex
 	qmap                     map[string]*fakeWatchEventQ
-	adds, dels, gets, getexs uint64
+	adds, dels, Gets, getexs uint64
 	addfn                    func(path string) WatchEventQ
 	delfn                    func(path string) WatchEventQ
-	getfn                    func(path string) []WatchEventQ
+	Getfn                    func(path string) []WatchEventQ
 	getexfn                  func(path string) WatchEventQ
 }
 
 func (f *fakeWatchPrefixes) Add(path, peer string) WatchEventQ {
+	defer f.Unlock()
+	f.Lock()
 	f.adds++
 	if f.addfn != nil {
 		return f.addfn(path)
@@ -291,6 +99,8 @@ func (f *fakeWatchPrefixes) Add(path, peer string) WatchEventQ {
 }
 
 func (f *fakeWatchPrefixes) Del(path, peer string) WatchEventQ {
+	defer f.Unlock()
+	f.Lock()
 	f.dels++
 	if f.delfn != nil {
 		return f.delfn(path)
@@ -299,14 +109,18 @@ func (f *fakeWatchPrefixes) Del(path, peer string) WatchEventQ {
 }
 
 func (f *fakeWatchPrefixes) Get(path string) []WatchEventQ {
-	f.gets++
-	if f.getfn != nil {
-		return f.getfn(path)
+	defer f.Unlock()
+	f.Lock()
+	f.Gets++
+	if f.Getfn != nil {
+		return f.Getfn(path)
 	}
 	return nil
 }
 
 func (f *fakeWatchPrefixes) GetExact(path string) WatchEventQ {
+	defer f.Unlock()
+	f.Lock()
 	f.getexs++
 	if f.getexfn != nil {
 		return f.getexfn(path)
@@ -315,51 +129,30 @@ func (f *fakeWatchPrefixes) GetExact(path string) WatchEventQ {
 }
 
 type fakeWatchEventQ struct {
+	sync.Mutex
 	enqueues, dequeues, stops uint64
 	dqCh                      chan error
 }
 
 func (f *fakeWatchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.Object) error {
+	defer f.Unlock()
+	f.Lock()
 	f.enqueues++
 	return nil
 }
 
 func (f *fakeWatchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandlerFn, cleanupfn func()) {
+	defer f.Unlock()
+	f.Lock()
 	close(f.dqCh)
 	f.dequeues++
 }
 
 func (f *fakeWatchEventQ) Stop() bool {
+	defer f.Unlock()
+	f.Lock()
 	f.stops++
 	return false
-}
-
-type fakeTxn struct {
-	commitfn func(ctx context.Context) (kvstore.TxnResponse, error)
-}
-
-func (f *fakeTxn) Create(key string, obj runtime.Object) error {
-	return nil
-}
-
-func (f *fakeTxn) Delete(key string, cs ...kvstore.Cmp) error {
-	return nil
-}
-
-func (f *fakeTxn) Update(key string, obj runtime.Object, cs ...kvstore.Cmp) error {
-	return nil
-}
-func (f *fakeTxn) IsEmpty() bool {
-	return false
-}
-
-func (f *fakeTxn) AddComparator(cs ...kvstore.Cmp) {}
-
-func (f *fakeTxn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
-	if f.commitfn != nil {
-		return f.commitfn(ctx)
-	}
-	return kvstore.TxnResponse{}, nil
 }
 
 func TestCreateCache(t *testing.T) {
@@ -403,7 +196,7 @@ func TestCacheOper(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create memkv")
 	}
-	str := &fakeStore{}
+	str := &cachemocks.FakeStore{}
 	c := cache{
 		store:  str,
 		pool:   &connPool{},
@@ -427,10 +220,10 @@ func TestCacheOper(t *testing.T) {
 	if err = kstr.Get(ctx, key, ret); err != nil {
 		t.Errorf("object not found in backend (%s)", err)
 	}
-	if str.sets != 1 {
-		t.Errorf("invalid create counts %d", str.sets)
+	if str.Sets != 1 {
+		t.Errorf("invalid create counts %d", str.Sets)
 	}
-	str.reset()
+	str.Reset()
 
 	t.Logf("  -> test create (failure)")
 	kvstr.SetErrorState(true)
@@ -438,10 +231,10 @@ func TestCacheOper(t *testing.T) {
 	if err == nil {
 		t.Errorf("expecting to fail")
 	}
-	if str.sets != 0 {
-		t.Errorf("invalid create counts %d", str.sets)
+	if str.Sets != 0 {
+		t.Errorf("invalid create counts %d", str.Sets)
 	}
-	str.reset()
+	str.Reset()
 
 	t.Logf("  -> test update (success)")
 	kvstr.SetErrorState(false)
@@ -449,8 +242,8 @@ func TestCacheOper(t *testing.T) {
 	if err != nil {
 		t.Errorf("expecting success")
 	}
-	if str.sets != 1 {
-		t.Errorf("invalid update counts %d", str.sets)
+	if str.Sets != 1 {
+		t.Errorf("invalid update counts %d", str.Sets)
 	}
 
 	t.Logf("  -> test update (failure)")
@@ -459,10 +252,10 @@ func TestCacheOper(t *testing.T) {
 	if err == nil {
 		t.Errorf("expecting failure")
 	}
-	if str.sets != 1 {
-		t.Errorf("invalid updates counts %d", str.sets)
+	if str.Sets != 1 {
+		t.Errorf("invalid updates counts %d", str.Sets)
 	}
-	str.reset()
+	str.Reset()
 
 	t.Logf("  -> test consistent update (success)")
 	consistenfn := func(in runtime.Object) (runtime.Object, error) {
@@ -473,8 +266,8 @@ func TestCacheOper(t *testing.T) {
 	if err != nil {
 		t.Errorf("expecting success")
 	}
-	if str.sets != 1 {
-		t.Errorf("invalid consistent update counts %d", str.sets)
+	if str.Sets != 1 {
+		t.Errorf("invalid consistent update counts %d", str.Sets)
 	}
 
 	t.Logf("  -> test consistent update (failure)")
@@ -483,10 +276,10 @@ func TestCacheOper(t *testing.T) {
 	if err == nil {
 		t.Errorf("expecting failure")
 	}
-	if str.sets != 1 {
-		t.Errorf("invalid consistent update counts %d", str.sets)
+	if str.Sets != 1 {
+		t.Errorf("invalid consistent update counts %d", str.Sets)
 	}
-	str.reset()
+	str.Reset()
 
 	t.Logf("  -> test contest")
 	kvstr.SetErrorState(false)
@@ -500,7 +293,7 @@ func TestCacheOper(t *testing.T) {
 	if err != nil {
 		t.Errorf("expecting success got (%s)", err)
 	}
-	str.reset()
+	str.Reset()
 
 	t.Logf("  -> test delete (failure)")
 	kvstr.SetErrorState(true)
@@ -508,10 +301,10 @@ func TestCacheOper(t *testing.T) {
 	if err == nil {
 		t.Errorf("expecting failure")
 	}
-	if str.deletes != 0 {
-		t.Errorf("invalid delete counts %d", str.deletes)
+	if str.Deletes != 0 {
+		t.Errorf("invalid delete counts %d", str.Deletes)
 	}
-	str.reset()
+	str.Reset()
 
 	t.Logf("  -> test delete (success)")
 	kvstr.SetErrorState(false)
@@ -523,10 +316,10 @@ func TestCacheOper(t *testing.T) {
 	if err = kstr.Get(ctx, key, ret); err == nil {
 		t.Errorf("object not expected to be found in backend")
 	}
-	if str.deletes != 1 {
-		t.Errorf("invalid delete counts %d", str.deletes)
+	if str.Deletes != 1 {
+		t.Errorf("invalid delete counts %d", str.Deletes)
 	}
-	str.reset()
+	str.Reset()
 	c.Close()
 
 }
@@ -539,7 +332,7 @@ func TestCacheGet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create memkv")
 	}
-	str := &fakeStore{}
+	str := &cachemocks.FakeStore{}
 	c := cache{
 		store:  str,
 		pool:   &connPool{},
@@ -559,13 +352,13 @@ func TestCacheGet(t *testing.T) {
 
 	t.Logf("  -> test get (success)")
 	err1 = nil
-	str.getfn = getfn
+	str.Getfn = getfn
 	err = c.Get(ctx, key, b)
 	if err != nil {
 		t.Errorf("expecting success")
 	}
-	if str.gets != 1 {
-		t.Errorf("invalid get counts %d", str.gets)
+	if str.Gets != 1 {
+		t.Errorf("invalid get counts %d", str.Gets)
 	}
 
 	t.Logf("  -> test get (failure)")
@@ -585,7 +378,7 @@ func TestCacheList(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create memkv")
 	}
-	str := &fakeStore{}
+	str := &cachemocks.FakeStore{}
 	c := cache{
 		store:  str,
 		pool:   &connPool{},
@@ -611,7 +404,7 @@ func TestCacheList(t *testing.T) {
 	listfn := func(key string, opts api.ListWatchOptions) []runtime.Object {
 		return expected
 	}
-	str.listfn = listfn
+	str.Listfn = listfn
 	into := &testObjList{}
 	c.List(ctx, key, into)
 	if len(into.Items) != 3 {
@@ -641,7 +434,7 @@ func TestCacheWatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create memkv")
 	}
-	str := &fakeStore{}
+	str := &cachemocks.FakeStore{}
 	fakeqs := &fakeWatchPrefixes{}
 	c := cache{
 		store:  str,
@@ -664,6 +457,8 @@ func TestCacheWatch(t *testing.T) {
 
 	c.Watch(ctx, key, "0")
 	<-fakeq.dqCh
+	defer fakeqs.Unlock()
+	fakeqs.Lock()
 	if fakeqs.adds != 1 || fakeq.dequeues != 1 {
 		t.Errorf("wrong counts %d/%d", fakeqs.adds, fakeq.dequeues)
 	}
@@ -671,8 +466,8 @@ func TestCacheWatch(t *testing.T) {
 }
 
 func TestPrefixWatcher(t *testing.T) {
-	kstr := &fakeKvStore{}
-	str := &fakeStore{}
+	kstr := &cachemocks.FakeKvStore{}
+	str := &cachemocks.FakeStore{}
 	fakeqs := &fakeWatchPrefixes{}
 	c := cache{
 		store:  str,
@@ -699,7 +494,7 @@ func TestPrefixWatcher(t *testing.T) {
 	watchfn := func(ctx context.Context, key string, fromVersion string) (kvstore.Watcher, error) {
 		return ws, nil
 	}
-	kstr.watchfn = watchfn
+	kstr.Watchfn = watchfn
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go pw.worker(ctx, &wg)
@@ -709,7 +504,7 @@ func TestPrefixWatcher(t *testing.T) {
 		pw.Lock()
 		return pw.running == true, nil
 	}, "running not set")
-	if kstr.prefixwatches != 1 {
+	if kstr.Prefixwatches != 1 {
 		t.Fatalf("Watch not established")
 	}
 	t.Logf("  -> test update event")
@@ -719,21 +514,21 @@ func TestPrefixWatcher(t *testing.T) {
 	}
 	ws.ch <- &ev
 	AssertEventually(t, func() (bool, interface{}) {
-		return str.sets == 1, nil
+		return str.Sets == 1, nil
 	}, "did not see cache set on Update event")
 
 	t.Logf("  -> test create event")
 	ev.Type = kvstore.Created
 	ws.ch <- &ev
 	AssertEventually(t, func() (bool, interface{}) {
-		return str.sets == 2, nil
+		return str.Sets == 2, nil
 	}, "did not see cache set on create event")
 
 	t.Logf("  -> test delete event")
 	ev.Type = kvstore.Deleted
 	ws.ch <- &ev
 	AssertEventually(t, func() (bool, interface{}) {
-		return str.deletes == 1, nil
+		return str.Deletes == 1, nil
 	}, "did not see cache delete on delete event")
 	t.Logf("  -> test WatcherError event")
 	ev.Type = kvstore.WatcherError
@@ -741,12 +536,14 @@ func TestPrefixWatcher(t *testing.T) {
 	t.Logf("  -> test exit")
 	cancel()
 	AssertEventually(t, func() (bool, interface{}) {
+		defer pw.Unlock()
+		pw.Lock()
 		return !pw.running, nil
 	}, "did not prefix watcher exit on close")
 }
 
 func TestCacheDelayedDelete(t *testing.T) {
-	kstr := &fakeKvStore{}
+	kstr := &cachemocks.FakeKvStore{}
 	str := NewStore()
 	fakeqs := &fakeWatchPrefixes{}
 	c := cache{
@@ -773,7 +570,7 @@ func TestCacheDelayedDelete(t *testing.T) {
 	getfn := func(path string) []WatchEventQ {
 		return []WatchEventQ{&fakeq}
 	}
-	fakeqs.getfn = getfn
+	fakeqs.Getfn = getfn
 	_, err := c.Watch(ctx, "/test/", "0")
 	if err != nil {
 		t.Fatalf("Watch  on cache failed (%s)", err)
@@ -811,7 +608,7 @@ func TestBackendWatcher(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create memkv")
 	}
-	str := &fakeStore{}
+	str := &cachemocks.FakeStore{}
 	fakeqs := &fakeWatchPrefixes{}
 	c := cache{
 		store:  str,
@@ -849,9 +646,12 @@ func TestBackendWatcher(t *testing.T) {
 	cancel()
 	AssertEventually(t, func() (bool, interface{}) {
 		for _, v := range bw.prefixes {
+			v.Lock()
 			if v.running {
+				v.Unlock()
 				return false, nil
 			}
+			v.Unlock()
 		}
 		return true, nil
 	}, "did not prefix watcher exit on close")
@@ -865,7 +665,8 @@ func TestTxnCommit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create memkv")
 	}
-	str := &fakeStore{}
+	kstr.(*memkv.MemKv).SetRevMode(memkv.ClusterRevision)
+	str := &cachemocks.FakeStore{}
 	fakeqs := &fakeWatchPrefixes{}
 	c := cache{
 		store:  str,
@@ -883,11 +684,19 @@ func TestTxnCommit(t *testing.T) {
 		t.Logf("get called")
 		return wqs
 	}
-	fakeqs.getfn = getfn
-	f := fakeTxn{}
+	fakeqs.Getfn = getfn
+	f := cachemocks.FakeTxn{}
 	b1 := &testObj{}
 	b1.ResourceVersion = "10"
 	b1.Name = "book 1"
+
+	tx := cacheTxn{
+		Txn:    &f,
+		parent: &c,
+	}
+	tx.Update("/key1", b1)
+	tx.Update("/key2", b1)
+	tx.Delete("/key3")
 	resps := []kvstore.TxnOpResponse{
 		{
 			Oper: kvstore.OperUpdate,
@@ -906,25 +715,21 @@ func TestTxnCommit(t *testing.T) {
 		Succeeded: true,
 		Responses: resps,
 	}
-	setfn := func(key string, rev uint64, obj runtime.Object, cb SuccessCbFunc) error {
+	setfn := func(key string, rev uint64, obj runtime.Object, cb apiintf.SuccessCbFunc) error {
 		cb(key, b1, nil)
 		return nil
 	}
-	str.setfn = setfn
-	delfn := func(key string, rev uint64, cb SuccessCbFunc) (runtime.Object, error) {
+	str.Setfn = setfn
+	delfn := func(key string, rev uint64, cb apiintf.SuccessCbFunc) (runtime.Object, error) {
 		cb(key, b1, nil)
 		return b1, nil
 	}
-	str.deletefn = delfn
+	str.Deletefn = delfn
 	commitfn := func(ctx context.Context) (kvstore.TxnResponse, error) {
-		t.Logf("commit called")
 		return resp, nil
 	}
-	f.commitfn = commitfn
-	tx := txn{
-		Txn:    &f,
-		parent: &c,
-	}
+	f.Commitfn = commitfn
+
 	tx.Commit(ctx)
 	if fakeq1.enqueues != 3 || fakeq2.enqueues != 3 {
 		t.Errorf("expecting 3 enqueues in 2 queueus got %d/%d", fakeq1.enqueues, fakeq2.enqueues)

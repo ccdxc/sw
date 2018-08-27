@@ -9,7 +9,7 @@ import (
 // Operation is the type of Kv Store operation.
 type Operation uint8
 
-// exported constatnts
+// exported constants
 const (
 	OperUnknown Operation = iota
 	OperUpdate
@@ -20,6 +20,7 @@ const (
 // TxnResponse is a response from a transaction.
 type TxnResponse struct {
 	Succeeded bool
+	Revision  int64
 	Responses []TxnOpResponse
 }
 

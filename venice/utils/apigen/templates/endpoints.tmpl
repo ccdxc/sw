@@ -45,6 +45,7 @@ type Endpoints{{$svcname}}RestClient struct {
 	logger log.Logger
 	client *http.Client
 	instance string
+	bufferId string
 
 	{{range .Methods}}{{$params := (getMethodParams .)}}
 	{{.Name}}Endpoint endpoint.Endpoint{{end}}
@@ -360,6 +361,9 @@ func makeURI{{$svcname}}{{.Name}}{{$methparams.Oper}}(in *{{getInputType $pkgnam
 // AutoAdd{{.}} CRUD method for {{.}}
 func (r *Endpoints{{$svcname}}RestClient) AutoAdd{{.}}(ctx context.Context, in *{{.}}) (*{{.}}, error) { {{if isRestMethod $svc "AutoAdd" .}}
 	path := makeURI{{$svcname}}AutoAdd{{.}}CreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/" + r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -380,6 +384,9 @@ func (r *Endpoints{{$svcname}}RestClient) AutoAdd{{.}}(ctx context.Context, in *
 // AutoUpdate{{.}} CRUD method for {{.}}
 func (r *Endpoints{{$svcname}}RestClient) AutoUpdate{{.}}(ctx context.Context, in *{{.}}) (*{{.}}, error) { {{if isRestMethod $svc "AutoUpdate" .}}
 	path := makeURI{{$svcname}}AutoUpdate{{.}}UpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/" + r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -400,6 +407,9 @@ func (r *Endpoints{{$svcname}}RestClient) AutoUpdate{{.}}(ctx context.Context, i
 // AutoGet{{.}} CRUD method for {{.}}
 func (r *Endpoints{{$svcname}}RestClient) AutoGet{{.}}(ctx context.Context, in *{{.}}) (*{{.}}, error) { {{if isRestMethod $svc "AutoGet" .}}
 	path := makeURI{{$svcname}}AutoGet{{.}}GetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/" + r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -420,6 +430,9 @@ func (r *Endpoints{{$svcname}}RestClient) AutoGet{{.}}(ctx context.Context, in *
 // AutoDelete{{.}} CRUD method for {{.}}
 func (r *Endpoints{{$svcname}}RestClient) AutoDelete{{.}}(ctx context.Context, in *{{.}}) (*{{.}}, error) { {{if isRestMethod $svc "AutoDelete" .}}
 	path := makeURI{{$svcname}}AutoDelete{{.}}DeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/" + r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -440,6 +453,9 @@ func (r *Endpoints{{$svcname}}RestClient) AutoDelete{{.}}(ctx context.Context, i
 // AutoList{{.}} CRUD method for {{.}}
 func (r *Endpoints{{$svcname}}RestClient) AutoList{{.}}(ctx context.Context, options *api.ListWatchOptions) (*{{.}}List, error) { {{if isRestMethod $svc "AutoList" .}}
 	path := makeURI{{$svcname}}AutoList{{.}}ListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/" + r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -464,6 +480,9 @@ func (r *Endpoints{{$svcname}}RestClient) AutoWatch{{.}}(ctx context.Context, st
 }
 {{$actions := getSvcActionEndpoints $svc .}}{{range $actions}}
 func (r *Endpoints{{$svcname}}RestClient) {{.Name}}{{$crudop}}(ctx context.Context, in *{{.Request}}) (*{{.Response}}, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
 	path := makeURI{{$svcname}}{{.Name}}CreateOper(in)
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
@@ -497,5 +516,18 @@ func Make{{$svcname}}RestClientEndpoints(instance string) (Endpoints{{$svcname}}
 		client: http.DefaultClient,
 	}, nil
 
+}
+
+// Make{{$svcname}}StagedRestClientEndpoints makes staged REST client endpoints
+func Make{{$svcname}}StagedRestClientEndpoints(instance string, bufferId string) (Endpoints{{$svcname}}RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return Endpoints{{$svcname}}RestClient {
+		instance: instance,
+		bufferId: bufferId,
+		client: http.DefaultClient,
+	}, nil
 }
 {{end}}

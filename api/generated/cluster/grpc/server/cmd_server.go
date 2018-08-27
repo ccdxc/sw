@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
@@ -53,7 +54,7 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "Cluster"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(cluster.Cluster)
 			key := r.MakeKey(prefix)
 			r.Kind = "Cluster"
@@ -64,17 +65,9 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*cluster.Cluster)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &cluster.Cluster{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -149,9 +142,45 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(cluster.Cluster)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.Cluster)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *cluster.Cluster
+			if v, ok := i.(cluster.Cluster); ok {
+				n = &v
+			} else if v, ok := i.(*cluster.Cluster); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*cluster.Cluster); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *cluster.Cluster
+			if v, ok := i.(cluster.Cluster); ok {
+				n = &v
+			} else if v, ok := i.(*cluster.Cluster); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*cluster.Cluster); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"cluster.ClusterAuthBootstrapRequest": apisrvpkg.NewMessage("cluster.ClusterAuthBootstrapRequest").WithKeyGenerator(func(i interface{}, prefix string) string {
@@ -166,7 +195,7 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "ClusterAuthBootstrapRequest"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(cluster.ClusterAuthBootstrapRequest)
 			key := r.MakeKey(prefix)
 			r.Kind = "ClusterAuthBootstrapRequest"
@@ -249,6 +278,9 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.ClusterAuthBootstrapRequest)
 			return r.Validate(ver, "", ignoreStatus)
@@ -268,7 +300,7 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "Host"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(cluster.Host)
 			key := r.MakeKey(prefix)
 			r.Kind = "Host"
@@ -279,17 +311,9 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*cluster.Host)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &cluster.Host{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -364,9 +388,45 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(cluster.Host)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.Host)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *cluster.Host
+			if v, ok := i.(cluster.Host); ok {
+				n = &v
+			} else if v, ok := i.(*cluster.Host); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*cluster.Host); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *cluster.Host
+			if v, ok := i.(cluster.Host); ok {
+				n = &v
+			} else if v, ok := i.(*cluster.Host); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*cluster.Host); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"cluster.HostIntfSpec":   apisrvpkg.NewMessage("cluster.HostIntfSpec"),
@@ -385,7 +445,7 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "Node"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(cluster.Node)
 			key := r.MakeKey(prefix)
 			r.Kind = "Node"
@@ -396,17 +456,9 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*cluster.Node)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &cluster.Node{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -481,9 +533,45 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(cluster.Node)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.Node)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *cluster.Node
+			if v, ok := i.(cluster.Node); ok {
+				n = &v
+			} else if v, ok := i.(*cluster.Node); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*cluster.Node); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *cluster.Node
+			if v, ok := i.(cluster.Node); ok {
+				n = &v
+			} else if v, ok := i.(*cluster.Node); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*cluster.Node); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"cluster.NodeCondition": apisrvpkg.NewMessage("cluster.NodeCondition"),
@@ -504,7 +592,7 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			r.Kind = "SmartNIC"
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
 			r := i.(cluster.SmartNIC)
 			key := r.MakeKey(prefix)
 			r.Kind = "SmartNIC"
@@ -515,17 +603,9 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
-				if ignoreStatus {
-					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
-						saved := obj.(*cluster.SmartNIC)
-						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
-							return nil, fmt.Errorf("Resource Version specified does not match Object version")
-						}
-						r.Status = saved.Status
-						return &r, nil
-					}
+				if updateFn != nil {
 					into := &cluster.SmartNIC{}
-					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
 				} else {
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
@@ -600,9 +680,45 @@ func (s *sclusterCmdBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "error", err)
 			}
 			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(cluster.SmartNIC)
+			return &r
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.SmartNIC)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *cluster.SmartNIC
+			if v, ok := i.(cluster.SmartNIC); ok {
+				n = &v
+			} else if v, ok := i.(*cluster.SmartNIC); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*cluster.SmartNIC); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *cluster.SmartNIC
+			if v, ok := i.(cluster.SmartNIC); ok {
+				n = &v
+			} else if v, ok := i.(*cluster.SmartNIC); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*cluster.SmartNIC); ok {
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
 		}),
 
 		"cluster.SmartNICCondition": apisrvpkg.NewMessage("cluster.SmartNICCondition"),

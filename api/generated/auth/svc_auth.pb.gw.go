@@ -84,10 +84,11 @@ func request_AuthV1_AutoAddRole_0(ctx context.Context, marshaler runtime.Marshal
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -100,6 +101,8 @@ func request_AuthV1_AutoAddRole_0(ctx context.Context, marshaler runtime.Marshal
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddRole(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -131,10 +134,11 @@ func request_AuthV1_AutoAddRoleBinding_0(ctx context.Context, marshaler runtime.
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -147,6 +151,8 @@ func request_AuthV1_AutoAddRoleBinding_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddRoleBinding(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -178,10 +184,11 @@ func request_AuthV1_AutoAddUser_0(ctx context.Context, marshaler runtime.Marshal
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -194,6 +201,8 @@ func request_AuthV1_AutoAddUser_0(ctx context.Context, marshaler runtime.Marshal
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddUser(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -229,10 +238,11 @@ func request_AuthV1_AutoDeleteRole_0(ctx context.Context, marshaler runtime.Mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -256,6 +266,8 @@ func request_AuthV1_AutoDeleteRole_0(ctx context.Context, marshaler runtime.Mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteRole_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -295,10 +307,11 @@ func request_AuthV1_AutoDeleteRoleBinding_0(ctx context.Context, marshaler runti
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -322,6 +335,8 @@ func request_AuthV1_AutoDeleteRoleBinding_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteRoleBinding_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -361,10 +376,11 @@ func request_AuthV1_AutoDeleteUser_0(ctx context.Context, marshaler runtime.Mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -388,6 +404,8 @@ func request_AuthV1_AutoDeleteUser_0(ctx context.Context, marshaler runtime.Mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoDeleteUser_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -464,10 +482,11 @@ func request_AuthV1_AutoGetRole_0(ctx context.Context, marshaler runtime.Marshal
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -491,6 +510,8 @@ func request_AuthV1_AutoGetRole_0(ctx context.Context, marshaler runtime.Marshal
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoGetRole_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -530,10 +551,11 @@ func request_AuthV1_AutoGetRoleBinding_0(ctx context.Context, marshaler runtime.
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -557,6 +579,8 @@ func request_AuthV1_AutoGetRoleBinding_0(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoGetRoleBinding_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -596,10 +620,11 @@ func request_AuthV1_AutoGetUser_0(ctx context.Context, marshaler runtime.Marshal
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -623,6 +648,8 @@ func request_AuthV1_AutoGetUser_0(ctx context.Context, marshaler runtime.Marshal
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoGetUser_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -662,10 +689,11 @@ func request_AuthV1_AutoListRole_0(ctx context.Context, marshaler runtime.Marsha
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -678,6 +706,8 @@ func request_AuthV1_AutoListRole_0(ctx context.Context, marshaler runtime.Marsha
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoListRole_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -717,10 +747,11 @@ func request_AuthV1_AutoListRoleBinding_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -733,6 +764,8 @@ func request_AuthV1_AutoListRoleBinding_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoListRoleBinding_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -772,10 +805,11 @@ func request_AuthV1_AutoListUser_0(ctx context.Context, marshaler runtime.Marsha
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -788,6 +822,8 @@ func request_AuthV1_AutoListUser_0(ctx context.Context, marshaler runtime.Marsha
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_AuthV1_AutoListUser_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -852,10 +888,11 @@ func request_AuthV1_AutoUpdateRole_0(ctx context.Context, marshaler runtime.Mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -879,6 +916,8 @@ func request_AuthV1_AutoUpdateRole_0(ctx context.Context, marshaler runtime.Mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateRole(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -910,10 +949,11 @@ func request_AuthV1_AutoUpdateRoleBinding_0(ctx context.Context, marshaler runti
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -937,6 +977,8 @@ func request_AuthV1_AutoUpdateRoleBinding_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateRoleBinding(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -968,10 +1010,11 @@ func request_AuthV1_AutoUpdateUser_0(ctx context.Context, marshaler runtime.Mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -995,6 +1038,8 @@ func request_AuthV1_AutoUpdateUser_0(ctx context.Context, marshaler runtime.Mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateUser(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err

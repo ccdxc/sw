@@ -1784,6 +1784,23 @@ func NewRestCrudClientBookstoreV1(url string) bookstore.BookstoreV1Interface {
 	}
 }
 
+// NewStagedRestCrudClientBookstoreV1 creates a REST client for the service.
+func NewStagedRestCrudClientBookstoreV1(url string, id string) bookstore.BookstoreV1Interface {
+	endpoints, err := bookstore.MakeBookstoreV1StagedRestClientEndpoints(url, id)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientBookstoreV1{
+
+		restOrder:     &restObjBookstoreV1Order{endpoints: endpoints, instance: url},
+		restBook:      &restObjBookstoreV1Book{endpoints: endpoints, instance: url},
+		restPublisher: &restObjBookstoreV1Publisher{endpoints: endpoints, instance: url},
+		restStore:     &restObjBookstoreV1Store{endpoints: endpoints, instance: url},
+		restCoupon:    &restObjBookstoreV1Coupon{endpoints: endpoints, instance: url},
+		restCustomer:  &restObjBookstoreV1Customer{endpoints: endpoints, instance: url},
+	}
+}
+
 func (a *crudRestClientBookstoreV1) Order() bookstore.BookstoreV1OrderInterface {
 	return a.restOrder
 }

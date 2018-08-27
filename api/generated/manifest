@@ -16,6 +16,7 @@ search.proto search true
 securitygroup.proto security true
 service.proto network true
 sgpolicy.proto security true
+staging.proto staging true
 svc_auth.proto auth true
 svc_cluster.proto cluster true
 svc_events.proto events false
@@ -24,6 +25,7 @@ svc_monitoring.proto monitoring true
 svc_network.proto network true
 svc_search.proto search false
 svc_security.proto security true
+svc_staging.proto staging true
 svc_workload.proto workload true
 telemetry.proto monitoring true
 tenant.proto cluster true

@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -12,6 +13,18 @@ import (
 	"github.com/pensando/grpc-gateway/utilities"
 	"google.golang.org/grpc/grpclog"
 )
+
+type ctxKeyVal struct{}
+
+// PopulateContextKV populates the Contexts with custom Key-Values
+func PopulateContextKV(ctx context.Context, kvs map[string]string) context.Context {
+	return context.WithValue(ctx, ctxKeyVal{}, kvs)
+}
+
+// GetKVFromContext retrieves the Key-Values stored via PopulateContextKV
+func GetKVFromContext(ctx context.Context) map[string]string {
+	return ctx.Value(ctxKeyVal{}).(map[string]string)
+}
 
 // PopulateQueryParameters populates "values" into "msg".
 // A value is ignored if its key starts with one of the elements in "filter".

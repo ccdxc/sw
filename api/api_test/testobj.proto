@@ -1,0 +1,32 @@
+syntax = "proto3";
+// Service name
+package apitest;
+
+// Mandatory imports.
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+message TestObj {
+    api.TypeMeta T      = 1  [(gogoproto.embed) = true,
+                              (gogoproto.nullable) = false,
+                              (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2  [(gogoproto.embed) = true,
+                              (gogoproto.nullable) = false,
+                              (gogoproto.jsontag) = "meta,inline"];
+
+    string Spec = 3;
+    string  Status  = 4;
+}
+
+message TestObjList {
+    api.TypeMeta T      = 1  [(gogoproto.embed) = true,
+                              (gogoproto.nullable) = false,
+                              (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2  [(gogoproto.embed) = true,
+                              (gogoproto.nullable) = false,
+                              (gogoproto.jsontag) = "meta,inline"];
+
+    repeated TestObj Items = 3;
+}

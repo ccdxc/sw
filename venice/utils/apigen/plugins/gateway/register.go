@@ -79,6 +79,9 @@ type ServiceParams struct {
 	// Version and Prefix and the catogory that is inherited from
 	//  the fileCategory options specified at the file level
 	URIPath string
+	// StagingPath is the URI path prefix for this service if it supports config
+	//  staging. If the service does not support staging then it is empty.
+	StagingPath string
 }
 
 // RestServiceOptions holds raw REST options data from .proto files
@@ -358,8 +361,14 @@ func getSvcParams(s *descriptor.Service) (ServiceParams, error) {
 	}
 	if params.Prefix == "" {
 		params.URIPath = "/" + category + "/" + params.Version
+		if category == globals.ConfigURIPrefix {
+			params.StagingPath = "/staging/{{TOCTX.BufferId}}/" + params.Version
+		}
 	} else {
 		params.URIPath = "/" + category + "/" + params.Prefix + "/" + params.Version
+		if category == globals.ConfigURIPrefix {
+			params.StagingPath = "/staging/{TOCTX.BufferId}/" + params.Prefix + "/" + params.Version
+		}
 	}
 	return params, nil
 }

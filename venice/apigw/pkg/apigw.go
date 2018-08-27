@@ -136,6 +136,12 @@ func (a *apiGw) GetService(name string) apigw.APIGatewayService {
 func (a *apiGw) extractHdrInfo(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// All URIs are of the form /<category>/<service>/<version>/<resource>
+		// If the URI is for staging, Ignore we will get back here for the recirced request
+		stagingPrefix := "/" + globals.StagingURIPrefix + "/"
+		if strings.HasPrefix(r.URL.Path, stagingPrefix) {
+			next.ServeHTTP(w, r)
+			return
+		}
 		p := strings.SplitN(r.URL.Path, "/", 5)
 		if len(p) > 3 && p[3] != "" {
 			r.Header.Set(apigw.GrpcMDRequestVersion, p[3])
@@ -313,6 +319,10 @@ func (a *apiGw) Run(config apigw.Config) {
 
 	// Register UI
 	m.Handle("/", http.FileServer(http.Dir("/dist")))
+
+	// Register Staging
+	stagingPrefix := "/" + globals.StagingURIPrefix + "/"
+	m.Handle(stagingPrefix, HandleStaging(m))
 
 	// Docs
 	m.Handle("/docs/", http.StripPrefix("/docs/", http.FileServer(http.Dir("/docs"))))

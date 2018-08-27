@@ -54,6 +54,7 @@ type EndpointsWorkloadV1RestClient struct {
 	logger   log.Logger
 	client   *http.Client
 	instance string
+	bufferId string
 
 	AutoAddEndpointEndpoint        endpoint.Endpoint
 	AutoAddWorkloadEndpoint        endpoint.Endpoint
@@ -972,6 +973,9 @@ func makeURIWorkloadV1AutoUpdateWorkloadUpdateOper(in *Workload) string {
 // AutoAddEndpoint CRUD method for Endpoint
 func (r *EndpointsWorkloadV1RestClient) AutoAddEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
 	path := makeURIWorkloadV1AutoAddEndpointCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -990,6 +994,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoAddEndpoint(ctx context.Context, in 
 // AutoUpdateEndpoint CRUD method for Endpoint
 func (r *EndpointsWorkloadV1RestClient) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
 	path := makeURIWorkloadV1AutoUpdateEndpointUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -1008,6 +1015,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoUpdateEndpoint(ctx context.Context, 
 // AutoGetEndpoint CRUD method for Endpoint
 func (r *EndpointsWorkloadV1RestClient) AutoGetEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
 	path := makeURIWorkloadV1AutoGetEndpointGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1026,6 +1036,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoGetEndpoint(ctx context.Context, in 
 // AutoDeleteEndpoint CRUD method for Endpoint
 func (r *EndpointsWorkloadV1RestClient) AutoDeleteEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
 	path := makeURIWorkloadV1AutoDeleteEndpointDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -1044,6 +1057,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoDeleteEndpoint(ctx context.Context, 
 // AutoListEndpoint CRUD method for Endpoint
 func (r *EndpointsWorkloadV1RestClient) AutoListEndpoint(ctx context.Context, options *api.ListWatchOptions) (*EndpointList, error) {
 	path := makeURIWorkloadV1AutoListEndpointListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1068,6 +1084,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoWatchEndpoint(ctx context.Context, s
 // AutoAddWorkload CRUD method for Workload
 func (r *EndpointsWorkloadV1RestClient) AutoAddWorkload(ctx context.Context, in *Workload) (*Workload, error) {
 	path := makeURIWorkloadV1AutoAddWorkloadCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "POST", path)
 	if err != nil {
 		return nil, err
@@ -1086,6 +1105,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoAddWorkload(ctx context.Context, in 
 // AutoUpdateWorkload CRUD method for Workload
 func (r *EndpointsWorkloadV1RestClient) AutoUpdateWorkload(ctx context.Context, in *Workload) (*Workload, error) {
 	path := makeURIWorkloadV1AutoUpdateWorkloadUpdateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
 	if err != nil {
 		return nil, err
@@ -1104,6 +1126,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoUpdateWorkload(ctx context.Context, 
 // AutoGetWorkload CRUD method for Workload
 func (r *EndpointsWorkloadV1RestClient) AutoGetWorkload(ctx context.Context, in *Workload) (*Workload, error) {
 	path := makeURIWorkloadV1AutoGetWorkloadGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1122,6 +1147,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoGetWorkload(ctx context.Context, in 
 // AutoDeleteWorkload CRUD method for Workload
 func (r *EndpointsWorkloadV1RestClient) AutoDeleteWorkload(ctx context.Context, in *Workload) (*Workload, error) {
 	path := makeURIWorkloadV1AutoDeleteWorkloadDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
 	if err != nil {
 		return nil, err
@@ -1140,6 +1168,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoDeleteWorkload(ctx context.Context, 
 // AutoListWorkload CRUD method for Workload
 func (r *EndpointsWorkloadV1RestClient) AutoListWorkload(ctx context.Context, options *api.ListWatchOptions) (*WorkloadList, error) {
 	path := makeURIWorkloadV1AutoListWorkloadListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
 	req, err := r.getHTTPRequest(ctx, options, "GET", path)
 	if err != nil {
 		return nil, err
@@ -1172,4 +1203,17 @@ func MakeWorkloadV1RestClientEndpoints(instance string) (EndpointsWorkloadV1Rest
 		client:   http.DefaultClient,
 	}, nil
 
+}
+
+// MakeWorkloadV1StagedRestClientEndpoints makes staged REST client endpoints
+func MakeWorkloadV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsWorkloadV1RestClient, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
+
+	return EndpointsWorkloadV1RestClient{
+		instance: instance,
+		bufferId: bufferId,
+		client:   http.DefaultClient,
+	}, nil
 }

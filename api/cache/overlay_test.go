@@ -8,76 +8,61 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/api_test"
+	cachemocks "github.com/pensando/sw/api/cache/mocks"
+	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-type fakeCache struct {
-	fakeKvStore
-	listFilteredFn func(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error
-}
-
-func (f *fakeCache) ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error {
-	if f.listFilteredFn != nil {
-		return f.listFilteredFn(ctx, prefix, into, opts)
-	}
-	return nil
-}
-
-func (f *fakeCache) WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, nil
-}
-
-func (f *fakeCache) Start() error {
-	return nil
-}
-
-func (f *fakeCache) Clear() {
-}
-
 func TestOverlayCRD(t *testing.T) {
 	// Get empty
-	_, err := GetOverlay("dummy")
+	_, err := GetOverlay("tenant1", "dummy")
 	Assert(t, err != nil, "found overlay in empty overlaySingleton")
 
 	// Create overlay
-	c := &fakeCache{fakeKvStore: fakeKvStore{}}
-	r1, err := NewOverlay("new1", c)
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
+	r1, err := NewOverlay("tenant1", "new1", "/base/", c, nil)
 	AssertOk(t, err, "could not create new overlay")
 
-	r2, err := NewOverlay("new2", c)
+	r2, err := NewOverlay("tenant1", "new2", "/base/", c, nil)
 	AssertOk(t, err, "could not create new overlay")
 	Assert(t, len(overlaysSingleton.ovMap) == 2, "number of overlays do not match, expecting 2 got %d", len(overlaysSingleton.ovMap))
 
 	// Get
-	x1, err := GetOverlay("new1")
+	x1, err := GetOverlay("tenant1", "new1")
 	AssertOk(t, err, "could not retrieve existing overlay")
 
-	x2, err := GetOverlay("new2")
+	x2, err := GetOverlay("tenant1", "new2")
 	AssertOk(t, err, "could not retrieve existing overlay")
 
 	Assert(t, x1 == r1 && x2 == r2, "did not get correct overlay")
 
-	_, err = GetOverlay("dummy")
+	x2, err = GetOverlay("tenant2", "new2")
+	Assert(t, err != nil, "found overlay with wrong tenant")
+
+	_, err = GetOverlay("tenant1", "dummy")
 	Assert(t, err != nil, "found non-existent overlay")
 
 	// Add Duplicate
-	_, err = NewOverlay("new1", c)
+	_, err = NewOverlay("tenant1", "new1", "/base/", c, nil)
 	if err == nil {
 		t.Fatalf("could add duplicate overlay")
 	}
 	// Delete
-	err = DelOverlay("dummy")
+	err = DelOverlay("tenant1", "dummy")
 	Assert(t, err != nil, "could delete non-existent overlay")
 
-	err = DelOverlay("new1")
+	err = DelOverlay("tenant1", "new1")
 	AssertOk(t, err, "could not delete overlay")
 
-	err = DelOverlay("new2")
+	err = DelOverlay("tenant1", "new2")
 	AssertOk(t, err, "could not delete overlay")
 
-	err = DelOverlay("new1")
+	err = DelOverlay("tenant1", "new1")
 	Assert(t, err != nil, "could delete already deleted overlay")
 
 	Assert(t, len(overlaysSingleton.ovMap) == 0,
@@ -85,79 +70,140 @@ func TestOverlayCRD(t *testing.T) {
 }
 
 func TestOverlayCreate(t *testing.T) {
-	c := &fakeCache{fakeKvStore: fakeKvStore{}}
-	o, _ := NewOverlay("testCreate", c)
-	defer DelOverlay("testCreate")
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
+	o, _ := NewOverlay("tenant1", "testCreate", "/base/", c, nil)
+	defer DelOverlay("tenant1", "testCreate")
 	ov := o.(*overlay)
 	ctx := context.TODO()
-	obj := &testObj{}
+	obj := &apitest.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}}
 	obj.Name = "testObj"
 	obj.Spec = "Spec 1"
+	orig := &apitest.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}}
+	orig.Name = "testObj"
+	orig.Spec = "Original Spec"
+
 	key := obj.MakeKey("overlay")
 	// Create empty
-	retObj := &testObj{}
-	c.fakeKvStore.getfn = func(ctx context.Context, key string, into runtime.Object) error {
+	retObj := &apitest.TestObj{}
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
 		return errors.New("NotFound")
 	}
 
 	err := ov.Get(ctx, key, retObj)
-	Assert(t, err != nil, "Getting failure on get of empty overlay and cache got [%+v]", retObj)
+	Assert(t, err != nil, "Expecting failure on get of empty overlay and cache got [%+v]", retObj)
 
+	// Secondary with (no cache, no overlay)
 	err = ov.Create(ctx, key, obj)
 	AssertOk(t, err, "failed to create in overlay")
-	Assert(t, c.fakeKvStore.creates == 0, "not expecting write to KV store got %d writes", c.fakeKvStore.creates)
+	Assert(t, c.FakeKvStore.Creates == 0, "not expecting write to KV store got %d writes", c.FakeKvStore.Creates)
 
 	err = ov.Get(ctx, key, retObj)
 	AssertOk(t, err, "could not find object in overlay")
 	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
 
-	// Create with existing in overlay
+	// Secondary with (no cache, in overlay)
 	obj.Spec = "Spec 2"
 	err = ov.Create(ctx, key, obj)
 	AssertOk(t, err, "failed to create in overlay")
-	Assert(t, c.fakeKvStore.creates == 0, "not expecting write to KV store got %d writes", c.fakeKvStore.creates)
+	Assert(t, c.FakeKvStore.Creates == 0, "not expecting write to KV store got %d writes", c.FakeKvStore.Creates)
 
 	err = ov.Get(ctx, key, retObj)
 	AssertOk(t, err, "could not find object in overlay")
 	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
 
-	// Create with existing KV
-	c.fakeKvStore.getfn = func(ctx context.Context, key string, into runtime.Object) error {
+	// Secondary with (in cache, no overlay)
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
 		into = retObj
 		return nil
 	}
+	delete(ov.overlay, key)
+
 	err = ov.Create(ctx, key, obj)
 	Assert(t, err != nil, "Expecting failure for create of existing key")
 
+	// primary with (no cache, no overlay)
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		return errors.New("NotFound")
+	}
+
+	err = ov.CreatePrimary(ctx, "svc", "method1", "/uri/aa", key, orig, obj)
+	AssertOk(t, err, "failed to create in overlay")
+	Assert(t, c.FakeKvStore.Creates == 0, "not expecting write to KV store got %d writes", c.FakeKvStore.Creates)
+
+	err = ov.Get(ctx, key, retObj)
+	AssertOk(t, err, "could not find object in overlay")
+	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
+
+	ovObj := ov.overlay[key]
+	Assert(t, ovObj.primary, "not marked primary")
+	Assert(t, ovObj.serviceName == "svc", "service does not match")
+	Assert(t, ovObj.methodName == "method1", "method does not match")
+	Assert(t, reflect.DeepEqual(orig, ovObj.orig), "stored original does not match")
+
+	// primary with (no cache, in overlay)
+	obj.Spec = "Spec 3"
+	err = ov.CreatePrimary(ctx, "svc", "method1", "/uri/aa", key, orig, obj)
+	Assert(t, err != nil, "Expecting failure for create of existing key")
+	Assert(t, c.FakeKvStore.Creates == 0, "not expecting write to KV store got %d writes", c.FakeKvStore.Creates)
+
+	err = ov.Get(ctx, key, retObj)
+	AssertOk(t, err, "could not find object in overlay")
+	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
+
+	Assert(t, ovObj.primary, "not marked primary")
+	Assert(t, ovObj.serviceName == "svc", "service does not match")
+	Assert(t, ovObj.methodName == "method1", "method does not match")
+	Assert(t, reflect.DeepEqual(orig, ovObj.orig), "stored original does not match")
+
+	// Primary (in cache, no overlay)
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		into = retObj
+		return nil
+	}
+	delete(ov.overlay, key)
+
+	err = ov.CreatePrimary(ctx, "svc", "method1", "/uri/aa", key, orig, obj)
+	Assert(t, err != nil, "Expecting failure for create of existing key")
+
 	// The KV store should not have been touched anytime for anykind of write
-	Assert(t, c.fakeKvStore.creates == 0 && c.fakeKvStore.updates == 0 && c.fakeKvStore.deletes == 0, "backend has been written to!")
+	Assert(t, c.FakeKvStore.Creates == 0 && c.FakeKvStore.Updates == 0 && c.FakeKvStore.Deletes == 0, "backend has been written to!")
 }
 
 func TestOverlayUpdate(t *testing.T) {
-	c := &fakeCache{fakeKvStore: fakeKvStore{}}
-	o, _ := NewOverlay("testUpdate", c)
-	defer DelOverlay("testUpdate")
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
+	o, _ := NewOverlay("tenant1", "testUpdate", "/base/", c, nil)
+	defer DelOverlay("tenant1", "testUpdate")
 	ov := o.(*overlay)
 	ctx := context.TODO()
-	obj := &testObj{}
+	obj := &apitest.TestObj{}
 	obj.Name = "testObj"
 	obj.Spec = "Spec 1"
+	orig := &apitest.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}}
+	orig.Name = "testObj"
+	orig.Spec = "Original Spec"
+	serviceName := "svcname"
+	methodName := "methname"
+	URI := "/uri/aaa"
 	key := obj.MakeKey("overlay")
-	retObj := &testObj{}
+	retObj := &apitest.TestObj{}
 	getObj := false
-	c.fakeKvStore.getfn = func(ctx context.Context, key string, into runtime.Object) error {
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
 		if getObj {
 			retObj.Clone(into)
 			return nil
 		}
-		return errors.New("NotFound")
+		return errors.New("Not Found")
 	}
 
-	// Update on empty
+	// secondary Update on (no cache, no overlay)
 	err := ov.Update(ctx, key, obj)
 	Assert(t, err != nil, "expecting update on empty to fail")
 
-	// update with cache entry
+	// primary Update on (no cache, no overlay)
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	Assert(t, err != nil, "expecting update on empty to fail")
+
+	// update secondary (in cache, no overlay)
 	getObj = true
 	err = ov.Update(ctx, key, obj)
 	AssertOk(t, err, "expecting update to succeed, got (%s)", err)
@@ -170,39 +216,12 @@ func TestOverlayUpdate(t *testing.T) {
 	}
 	cobj := ov.overlay[key]
 	Assert(t, cobj.oper == operUpdate, "expecting operation to be update")
+	Assert(t, cobj.primary == false, "primary on secondary update should be false")
 
-	// UPdate with existing update entry
-	obj.Spec = "Spec 2"
-	err = ov.Update(ctx, key, obj)
+	// update primary (in cache, no overlay)
+	delete(ov.overlay, key)
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
 	AssertOk(t, err, "expecting update to succeed, got (%s)", err)
-
-	err = ov.Get(ctx, key, retObj)
-	AssertOk(t, err, "could not find object in overlay")
-	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
-
-	cobj = ov.overlay[key]
-	Assert(t, cobj.oper == operUpdate, "expecting operation to be update")
-
-	// Update with existing Create entry
-	cobj = ov.overlay[key]
-	getObj = false
-	cobj.oper = operCreate
-	obj.Spec = "Spec 3"
-	err = ov.Update(ctx, key, obj)
-	AssertOk(t, err, "expecting update to succeed, got (%s)", err)
-
-	err = ov.Get(ctx, key, retObj)
-	AssertOk(t, err, "could not find object in overlay")
-
-	Assert(t, reflect.DeepEqual(obj, retObj), fmt.Sprintf("Returned object does not match expected [%v]/[]%v]", retObj, obj))
-
-	cobj = ov.overlay[key]
-	Assert(t, cobj.oper == operCreate, fmt.Sprintf("expecting operation to be create got %v", cobj.oper))
-
-	// with existing delete entry, and in API cache.
-	getObj = true
-	err = ov.Update(ctx, key, obj)
-	AssertOk(t, err, "expecting update to succeed")
 
 	err = ov.Get(ctx, key, retObj)
 	AssertOk(t, err, "could not find object in overlay")
@@ -211,9 +230,151 @@ func TestOverlayUpdate(t *testing.T) {
 		t.Errorf("Returned object does not match expected [%v]/[]%v]", retObj, obj)
 	}
 	cobj = ov.overlay[key]
-	Assert(t, cobj.oper == operUpdate, "expecting operation to be Update")
+	Assert(t, cobj.oper == operUpdate, "expecting operation to be update")
+	Assert(t, cobj.primary, "not marked primary")
+	Assert(t, cobj.serviceName == serviceName, "service does not match")
+	Assert(t, cobj.methodName == methodName, "method does not match")
+	Assert(t, reflect.DeepEqual(orig, cobj.orig), "stored original does not match")
 
-	// Consistent update test
+	// update primary (in cache, no overlay) with updatefunction
+	delete(ov.overlay, key)
+	updatefn := func(oldObj runtime.Object) (newObj runtime.Object, err error) {
+		return oldObj, nil
+	}
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, updatefn)
+	AssertOk(t, err, "expecting update to succeed, got (%s)", err)
+
+	err = ov.Get(ctx, key, retObj)
+	AssertOk(t, err, "could not find object in overlay")
+
+	if !reflect.DeepEqual(obj, retObj) {
+		t.Errorf("Returned object does not match expected [%v]/[]%v]", retObj, obj)
+	}
+	cobj = ov.overlay[key]
+	Assert(t, cobj.oper == operUpdate, "expecting operation to be update")
+	Assert(t, cobj.primary, "not marked primary")
+	Assert(t, cobj.serviceName == serviceName, "service does not match")
+	Assert(t, cobj.methodName == methodName, "method does not match")
+	Assert(t, reflect.DeepEqual(orig, cobj.orig), "stored original does not match")
+	Assert(t, cobj.updateFn != nil, "updatefn does not match")
+
+	// Updates with existing overlay entries, rules
+	//  - Primary always takes precedence. If there is already a primary object, then a secondary update is not allowed.
+	//  - Primary on top of secondary always turns the object to primary
+	//  - update on create -> create
+	//  - update on update  -> update
+	//  - update on delete  -> fail if no cache entry exists, update if cache entry exists
+
+	//secondary Update with existing primary entry
+	obj.Spec = "Spec 2"
+	err = ov.Update(ctx, key, obj)
+	Assert(t, err != nil, "expecting update on primary to fail")
+
+	// secondary update with existing secondary entry
+	cobj = ov.overlay[key]
+	cobj.primary = false
+	cobj.serviceName = ""
+	cobj.methodName = ""
+	cobj.updateFn = nil
+	cobj.orig = nil
+
+	err = ov.Update(ctx, key, obj)
+	AssertOk(t, err, "expecting update to succeed")
+
+	// secondary update with existing secondary entry in a dry run
+	dryRunCtx := setDryRun(ctx, 100)
+	err = ov.Update(dryRunCtx, key, obj)
+	AssertOk(t, err, "expecting update with existing update in dry run to succeed")
+
+	err = ov.Get(ctx, key, retObj)
+	AssertOk(t, err, "could not find object in overlay")
+	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
+
+	cobj = ov.overlay[key]
+	Assert(t, cobj.oper == operUpdate, "expecting operation to be update")
+	Assert(t, cobj.primary == false, "expecting primary to be false")
+
+	// Update with existing primary Create entry
+	cobj = ov.overlay[key]
+	getObj = false
+	cobj.oper = operCreate
+	cobj.primary = true
+	cobj.methodName = methodName
+	cobj.serviceName = serviceName
+	cobj.orig = orig
+
+	obj.Spec = "Spec 3"
+	err = ov.Update(ctx, key, obj)
+	Assert(t, err != nil, "expecting update with existing update to fail")
+
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	AssertOk(t, err, "expecting to pass")
+
+	err = ov.Get(ctx, key, retObj)
+	AssertOk(t, err, "could not find object in overlay")
+
+	Assert(t, reflect.DeepEqual(obj, retObj), fmt.Sprintf("Returned object does not match expected [%v]/[]%v]", retObj, obj))
+
+	cobj = ov.overlay[key]
+	Assert(t, cobj.oper == operCreate, fmt.Sprintf("expecting operation to be create got %v", cobj.oper))
+	Assert(t, cobj.primary, "not marked primary")
+	Assert(t, cobj.serviceName == serviceName, "service does not match")
+	Assert(t, cobj.methodName == methodName, "method does not match")
+	Assert(t, reflect.DeepEqual(orig, cobj.orig), "stored original does not match")
+	Assert(t, cobj.updateFn == nil, "updatefn does not match")
+
+	// primary update with existing update entry
+	getObj = true
+	cobj = ov.overlay[key]
+	cobj.oper = operUpdate
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	AssertOk(t, err, "expecting to pass")
+
+	err = ov.Get(ctx, key, retObj)
+	AssertOk(t, err, "could not find object in overlay")
+
+	Assert(t, reflect.DeepEqual(obj, retObj), fmt.Sprintf("Returned object does not match expected [%v]/[]%v]", retObj, obj))
+
+	cobj = ov.overlay[key]
+	Assert(t, cobj.oper == operUpdate, "expecting operation to be update got %s", cobj.oper)
+	Assert(t, cobj.primary, "not marked primary")
+	Assert(t, cobj.serviceName == serviceName, "service does not match")
+	Assert(t, cobj.methodName == methodName, "method does not match")
+	Assert(t, reflect.DeepEqual(orig, cobj.orig), "stored original does not match")
+	Assert(t, cobj.updateFn == nil, "updatefn does not match")
+
+	// with existing delete entry, and in API cache.
+	getObj = true
+	cobj = ov.overlay[key]
+	cobj.oper = operDelete
+
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	AssertOk(t, err, "expecting to pass")
+
+	err = ov.Get(ctx, key, retObj)
+	AssertOk(t, err, "could not find object in overlay")
+
+	Assert(t, reflect.DeepEqual(obj, retObj), fmt.Sprintf("Returned object does not match expected [%v]/[]%v]", retObj, obj))
+
+	cobj = ov.overlay[key]
+	Assert(t, cobj.oper == operUpdate, "expecting operation to be update")
+	Assert(t, cobj.primary, "not marked primary")
+	Assert(t, cobj.serviceName == serviceName, "service does not match")
+	Assert(t, cobj.methodName == methodName, "method does not match")
+	Assert(t, reflect.DeepEqual(orig, cobj.orig), "stored original does not match")
+	Assert(t, cobj.updateFn == nil, "updatefn does not match")
+
+	// existing delete without a cache entry
+	getObj = false
+	cobj = ov.overlay[key]
+	cobj.oper = operDelete
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	Assert(t, err != nil, "expecting update to fail")
+
+	// Consistent update test without cache or overlay objects
+	delete(ov.overlay, key)
+	getObj = false
+
 	updatefunc := func(oldObj runtime.Object) (newObj runtime.Object, err error) {
 		return oldObj, nil
 	}
@@ -221,32 +382,53 @@ func TestOverlayUpdate(t *testing.T) {
 		return oldObj, nil
 	}
 	err = ov.ConsistentUpdate(ctx, key, obj, updatefunc)
+	Assert(t, err != nil, "expecting update to fail")
+
+	// consistent update with cache object, no overlay
+	getObj = true
+	err = ov.ConsistentUpdate(ctx, key, obj, updatefunc)
+	AssertOk(t, err, "expecting consistent update to pass")
+
 	cobj = ov.overlay[key]
 	Assert(t, cobj.oper == operUpdate, "expecting operation to be Update")
 	Assert(t, reflect.ValueOf(cobj.updateFn).Pointer() == reflect.ValueOf(updatefunc).Pointer(), "did not find updatefunc populated")
 
-	// Overwrite update func
+	// Overwrite update func  without dry run
 	err = ov.ConsistentUpdate(ctx, key, obj, updatefunc1)
+	AssertOk(t, err, "expecting update to pass")
+
+	// Overwrite update func  with dry run
+	err = ov.ConsistentUpdate(dryRunCtx, key, obj, updatefunc1)
+	AssertOk(t, err, "expecting update to pass")
 	cobj = ov.overlay[key]
 	Assert(t, cobj.oper == operUpdate, "expecting operation to be Update")
 	Assert(t, reflect.ValueOf(cobj.updateFn).Pointer() == reflect.ValueOf(updatefunc1).Pointer(), "did not find updatefunc overwritten")
 
 	// The KV store should not have been touched anytime for anykind of write
-	Assert(t, c.fakeKvStore.creates == 0 && c.fakeKvStore.updates == 0 && c.fakeKvStore.deletes == 0, "backend has been written to!")
+	Assert(t, c.FakeKvStore.Creates == 0 && c.FakeKvStore.Updates == 0 && c.FakeKvStore.Deletes == 0, "backend has been written to!")
 }
+
 func TestOverlayDelete(t *testing.T) {
-	c := &fakeCache{fakeKvStore: fakeKvStore{}}
-	o, _ := NewOverlay("testDelete", c)
-	defer DelOverlay("testDelete")
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
+	o, _ := NewOverlay("tenant1", "testDelete", "/base/", c, nil)
+	defer DelOverlay("tenant1", "testDelete")
 	ov := o.(*overlay)
 	ctx := context.TODO()
-	obj := &testObj{}
+	obj := &apitest.TestObj{}
 	obj.Name = "testObj"
 	obj.Spec = "Spec 1"
 	key := obj.MakeKey("overlay")
-	retObj := &testObj{}
+
+	orig := &apitest.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}}
+	orig.Name = "testObj"
+	orig.Spec = "Original Spec"
+	serviceName := "svcname"
+	methodName := "methname"
+	URI := "/uri/aaa"
+
+	retObj := &apitest.TestObj{}
 	getObj := false
-	c.fakeKvStore.getfn = func(ctx context.Context, key string, into runtime.Object) error {
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
 		if getObj {
 			retObj.Clone(into)
 			return nil
@@ -260,52 +442,90 @@ func TestOverlayDelete(t *testing.T) {
 
 	// Delete in API cache
 	getObj = true
-	delObj := &testObj{}
+	delObj := &apitest.TestObj{}
 	err = ov.Delete(ctx, key, delObj)
 	AssertOk(t, err, fmt.Sprintf("expecting delete to succeed, got (%s)", err))
 
 	cobj := ov.overlay[key]
 	Assert(t, cobj.oper == operDelete, "expecting operation to be delete")
 
-	// Delete on an already staged object
+	// secondary Delete on an already staged object
 	err = ov.Delete(ctx, key, delObj)
+	AssertOk(t, err, "expecting delete to pass")
+
+	// delete already staged object in dry run
+	dryRunCtx := setDryRun(ctx, 100)
+	err = ov.Delete(dryRunCtx, key, delObj)
 	AssertOk(t, err, "expecting delete to succeed, got (%s)", err)
 
 	cobj = ov.overlay[key]
 	Assert(t, cobj.oper == operDelete, "expecting operation to be delete")
 
-	// Delete with Create/UPdate in overlay and object in cache
-	cobj.oper = operUpdate
-	err = ov.Delete(ctx, key, delObj)
-	AssertOk(t, err, "expecting delete to succeed, got (%s)", err)
-	Assert(t, cobj.oper == operDelete, "expecting operation to be delete")
+	// delete with a primary object in  overlay
+	delmeta := &apitest.TestObj{
+		TypeMeta:   api.TypeMeta{Kind: "TestObj"},
+		ObjectMeta: api.ObjectMeta{Name: "testObj"},
+	}
+	cobj.primary = true
+	err = ov.Delete(dryRunCtx, key, delObj)
+	Assert(t, err != nil, "expecting delete to fail")
+	cobj.primary = false
 
-	// Delete with create in overlay and no object in cache
-	cobj.oper = operCreate
+	// Primary delete with object only in cache
+	delete(ov.overlay, key)
+	getObj = true
+	err = ov.Get(ctx, key, retObj)
+	AssertOk(t, err, "could not find object in overlay")
+
+	err = ov.DeletePrimary(ctx, serviceName, methodName, URI, key, delmeta, delObj)
+	AssertOk(t, err, "expecting Delete to succeed")
+	cobj = ov.overlay[key]
+	Assert(t, cobj.methodName == methodName, "method name does not match")
+	Assert(t, cobj.serviceName == serviceName, "service name does not match")
+	Assert(t, cobj.primary, "not set to primary")
+	Assert(t, cobj.oper == operDelete, "expecting operation to be delete got %v", cobj.oper)
+	Assert(t, reflect.DeepEqual(delObj, retObj), "returned object does not match cache object")
+
+	// Primary delete with object in cache and in overlay
+	cobj = ov.overlay[key]
+	nobj := cobj.val.(*apitest.TestObj)
+	nobj.Spec = "modified spec"
+	err = ov.DeletePrimary(ctx, serviceName, methodName, URI, key, delmeta, delObj)
+	AssertOk(t, err, "expecting Delete to succeed")
+	Assert(t, cobj.methodName == methodName, "method name does not match")
+	Assert(t, cobj.serviceName == serviceName, "service name does not match")
+	Assert(t, cobj.primary, "not set to primary")
+	Assert(t, cobj.oper == operDelete, "expecting operation to be delete got %v", cobj.oper)
+	Assert(t, reflect.DeepEqual(delObj, nobj), "returned object does not match overlay object")
+
+	err = ov.Get(ctx, key, retObj)
+	Assert(t, err != nil, "should not find object in overlay")
+
+	// Primary delete with object only in overlay
 	getObj = false
-	err = ov.Delete(ctx, key, delObj)
-	AssertOk(t, err, "expecting delete to succeed, got (%s)", err)
-
-	cobj, ok := ov.overlay[key]
-	Assert(t, !ok, "expecting key to be deleted from overlay")
+	cobj.oper = operUpdate
+	err = ov.DeletePrimary(ctx, serviceName, methodName, URI, key, delmeta, delObj)
+	AssertOk(t, err, "expecting Delete to succeed")
+	cobj = ov.overlay[key]
+	Assert(t, cobj == nil, "expecting object to be deleted from overlay")
 
 	// The KV store should not have been touched anytime for anykind of write
-	Assert(t, c.fakeKvStore.creates == 0 && c.fakeKvStore.updates == 0 && c.fakeKvStore.deletes == 0, "backend has been written to!")
+	Assert(t, c.FakeKvStore.Creates == 0 && c.FakeKvStore.Updates == 0 && c.FakeKvStore.Deletes == 0, "backend has been written to!")
 }
 
 func TestOverlayGet(t *testing.T) {
-	c := &fakeCache{fakeKvStore: fakeKvStore{}}
-	o, _ := NewOverlay("testGet", c)
-	defer DelOverlay("testGet")
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil)
+	defer DelOverlay("tenant1", "testGet")
 	ov := o.(*overlay)
 	ctx := context.TODO()
-	retobj := &testObj{}
+	retobj := &apitest.TestObj{}
 	retobj.Name = "testObj"
 	retobj.Spec = "Spec 1"
 	key := retobj.MakeKey("overlay")
-	obj := &testObj{}
+	obj := &apitest.TestObj{}
 	getObj := false
-	c.fakeKvStore.getfn = func(ctx context.Context, key string, into runtime.Object) error {
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
 		if getObj {
 			retobj.Clone(into)
 			return nil
@@ -319,7 +539,7 @@ func TestOverlayGet(t *testing.T) {
 	}
 	// Get with Cache no overlay
 	getObj = true
-	obj = &testObj{}
+	obj = &apitest.TestObj{}
 	err = ov.Get(ctx, key, obj)
 	AssertOk(t, err, "expecting get to succeed, got (%s)", err)
 	Assert(t, reflect.DeepEqual(retobj, obj), "retrieved object does not match [%+v]\n[%+v]", retobj, obj)
@@ -329,7 +549,7 @@ func TestOverlayGet(t *testing.T) {
 	err = ov.Update(ctx, key, obj)
 	AssertOk(t, err, "expecting update to succeed, got (%s)", err)
 
-	obj1 := &testObj{}
+	obj1 := &apitest.TestObj{}
 	err = ov.Get(ctx, key, obj1)
 	AssertOk(t, err, "expecting get to succeed, got (%s)", err)
 	Assert(t, reflect.DeepEqual(obj, obj1), "retrieved object does not match [%+v]\n[%+v]", retobj, obj)
@@ -349,31 +569,31 @@ func TestOverlayGet(t *testing.T) {
 	Assert(t, reflect.DeepEqual(obj, obj1), "retrieved object does not match [%+v]\n[%+v]", retobj, obj)
 
 	// The KV store should not have been touched anytime for anykind of write
-	Assert(t, c.fakeKvStore.creates == 0 && c.fakeKvStore.updates == 0 && c.fakeKvStore.deletes == 0, "backend has been written to!")
+	Assert(t, c.FakeKvStore.Creates == 0 && c.FakeKvStore.Updates == 0 && c.FakeKvStore.Deletes == 0, "backend has been written to!")
 }
 
 func TestOverlayList(t *testing.T) {
-	c := &fakeCache{fakeKvStore: fakeKvStore{}}
-	o, _ := NewOverlay("testList", c)
-	defer DelOverlay("testList")
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
+	o, _ := NewOverlay("tenant1", "testList", "/base/", c, nil)
+	defer DelOverlay("tenant1", "testList")
 	ov := o.(*overlay)
 	ctx := context.TODO()
-	obj := &testObj{}
+	obj := &apitest.TestObj{}
 	key := obj.MakeKey("overlay")
 
-	retList := &testObjList{}
+	retList := &apitest.TestObjList{}
 
 	getObj := false
-	c.listFilteredFn = func(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error {
+	c.ListFilteredFn = func(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error {
 		if getObj {
-			out := into.(*testObjList)
+			out := into.(*apitest.TestObjList)
 			out.Items = retList.Items
 			return nil
 		}
 		return errors.New("NotFound")
 	}
 
-	validateList := func(got, exp *testObjList) (string, bool) {
+	validateList := func(got, exp *apitest.TestObjList) (string, bool) {
 		if len(got.Items) != len(exp.Items) {
 			g := ""
 			for _, x := range got.Items {
@@ -401,22 +621,22 @@ func TestOverlayList(t *testing.T) {
 		return "pass", true
 	}
 
-	tobjs := []*testObj{
-		&testObj{
+	tobjs := []*apitest.TestObj{
+		&apitest.TestObj{
 			ObjectMeta: api.ObjectMeta{
 				Tenant: "tenant1",
 				Name:   "test1",
 			},
 			Spec: "Cache1",
 		},
-		&testObj{
+		&apitest.TestObj{
 			ObjectMeta: api.ObjectMeta{
 				Tenant: "tenant2",
 				Name:   "test2",
 			},
 			Spec: "Cache2",
 		},
-		&testObj{
+		&apitest.TestObj{
 			ObjectMeta: api.ObjectMeta{
 				Tenant: "tenant1",
 				Name:   "test3",
@@ -425,15 +645,15 @@ func TestOverlayList(t *testing.T) {
 		},
 	}
 
-	modobjs := []*testObj{
-		&testObj{
+	modobjs := []*apitest.TestObj{
+		&apitest.TestObj{
 			ObjectMeta: api.ObjectMeta{
 				Tenant: "tenant2",
 				Name:   "testObj",
 			},
 			Spec: "overlay-Create",
 		},
-		&testObj{
+		&apitest.TestObj{
 			ObjectMeta: api.ObjectMeta{
 				Tenant: "tenant1",
 				Name:   "test1",
@@ -443,8 +663,8 @@ func TestOverlayList(t *testing.T) {
 	}
 
 	// List empty
-	getList := &testObjList{}
-	expList := &testObjList{}
+	getList := &apitest.TestObjList{}
+	expList := &apitest.TestObjList{}
 	err := ov.List(ctx, key, getList)
 	AssertOk(t, err, "List failed (%s)", err)
 
@@ -452,8 +672,8 @@ func TestOverlayList(t *testing.T) {
 		t.Errorf(" List did not match [%s]", e)
 	}
 	// List with empty overlay and Cache Objects
-	retList.Items = []*testObj{tobjs[0], tobjs[1], tobjs[2]}
-	expList.Items = []*testObj{tobjs[0], tobjs[1], tobjs[2]}
+	retList.Items = []*apitest.TestObj{tobjs[0], tobjs[1], tobjs[2]}
+	expList.Items = []*apitest.TestObj{tobjs[0], tobjs[1], tobjs[2]}
 
 	getObj = true
 	err = ov.List(ctx, key, getList)
@@ -464,8 +684,8 @@ func TestOverlayList(t *testing.T) {
 	}
 	// List with mixture of overlay and Cache objects
 	nkey := modobjs[0].MakeKey("overlay")
-	retObj := &testObj{}
-	c.fakeKvStore.getfn = func(ctx context.Context, key string, into runtime.Object) error {
+	retObj := &apitest.TestObj{}
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
 		return errors.New("NotFound")
 	}
 
@@ -477,15 +697,15 @@ func TestOverlayList(t *testing.T) {
 
 	// Create one like the one in cache
 	nkey = modobjs[1].MakeKey("overlay")
-	c.fakeKvStore.getfn = func(ctx context.Context, key string, into runtime.Object) error {
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
 		modobjs[1].Clone(into)
 		return nil
 	}
 	err = ov.Update(ctx, nkey, modobjs[1])
 	AssertOk(t, err, "failed to update in overlay (%s)", err)
 
-	retList.Items = []*testObj{tobjs[0], tobjs[1], tobjs[2]}
-	expList.Items = []*testObj{modobjs[1], tobjs[1], tobjs[2], modobjs[0]}
+	retList.Items = []*apitest.TestObj{tobjs[0], tobjs[1], tobjs[2]}
+	expList.Items = []*apitest.TestObj{modobjs[1], tobjs[1], tobjs[2], modobjs[0]}
 	getObj = true
 	err = ov.List(ctx, key, getList)
 	AssertOk(t, err, "List failed")
@@ -496,8 +716,8 @@ func TestOverlayList(t *testing.T) {
 	// List with mixture of overlay and Cache objects filtered - tenant specified
 	opts := api.ListWatchOptions{}
 	opts.Tenant = "tenant2"
-	retList.Items = []*testObj{tobjs[1]}
-	expList.Items = []*testObj{modobjs[0], tobjs[1]}
+	retList.Items = []*apitest.TestObj{tobjs[1]}
+	expList.Items = []*apitest.TestObj{modobjs[0], tobjs[1]}
 
 	err = ov.ListFiltered(ctx, key, getList, opts)
 	AssertOk(t, err, "List failed")
@@ -506,8 +726,8 @@ func TestOverlayList(t *testing.T) {
 	}
 
 	opts.Tenant = "tenant1"
-	retList.Items = []*testObj{tobjs[0], tobjs[2]}
-	expList.Items = []*testObj{modobjs[1], tobjs[2]}
+	retList.Items = []*apitest.TestObj{tobjs[0], tobjs[2]}
+	expList.Items = []*apitest.TestObj{modobjs[1], tobjs[2]}
 	err = ov.ListFiltered(ctx, key, getList, opts)
 	AssertOk(t, err, "List failed")
 	if e, ok := validateList(getList, expList); !ok {
@@ -515,8 +735,8 @@ func TestOverlayList(t *testing.T) {
 	}
 
 	opts.Tenant = "tenant3"
-	retList.Items = []*testObj{}
-	expList.Items = []*testObj{}
+	retList.Items = []*apitest.TestObj{}
+	expList.Items = []*apitest.TestObj{}
 	err = ov.ListFiltered(ctx, key, getList, opts)
 	AssertOk(t, err, "List failed")
 	if e, ok := validateList(getList, expList); !ok {
@@ -524,8 +744,8 @@ func TestOverlayList(t *testing.T) {
 	}
 
 	// with only overlay objects
-	retList.Items = []*testObj{}
-	expList.Items = []*testObj{modobjs[0], modobjs[1]}
+	retList.Items = []*apitest.TestObj{}
+	expList.Items = []*apitest.TestObj{modobjs[0], modobjs[1]}
 	getObj = true
 	err = ov.List(ctx, key, getList)
 	AssertOk(t, err, "List failed")
@@ -534,92 +754,317 @@ func TestOverlayList(t *testing.T) {
 	}
 }
 
-func TestMultiple(t *testing.T) {
-	c := &fakeCache{fakeKvStore: fakeKvStore{}}
-	o, _ := NewOverlay("testUpdate", c)
-	defer DelOverlay("testUpdate")
+func TestParseParsePath(t *testing.T) {
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
+	o, _ := NewOverlay("tenant1", "testUpdate", "/base", c, nil)
+	defer DelOverlay("tenant1", "testUpdate")
+	ov := o.(*overlay)
+
+	cases := []struct {
+		input, tenant, id string
+	}{
+		{"/base/tenant/xyz/buffer/buf1/aaa", "xyz", "buf1"},
+		{"/base/tenant/xyz-11/buffer/bufa-adad/aaa/aadadad/", "xyz-11", "bufa-adad"},
+		{"/base/tenant/xyz_11/buffer/bufa_adad/aaa/aadadad/aa", "xyz_11", "bufa_adad"},
+		{"/base/tenant/xyz.11/buffer/bufa.adad/aaa/aadadad/aa", "xyz.11", "bufa.adad"},
+	}
+	for _, v := range cases {
+		tn, i, err := ov.parseKey(v.input)
+		if err != nil {
+			t.Errorf("failed to parse key")
+		}
+		if tn != v.tenant || i != v.id {
+			t.Errorf("want [%v/%v] got [%v/%v]", v.tenant, v.id, tn, i)
+		}
+	}
+}
+
+type handlerResp struct {
+	err    error
+	obj    interface{}
+	callFn func(ctx context.Context) (interface{}, error)
+}
+
+func TestVerify(t *testing.T) {
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil)
+	defer DelOverlay("tenant1", "testGet")
 	ov := o.(*overlay)
 	ctx := context.TODO()
-	obj := &testObj{}
-	obj.Name = "testObj"
-	obj.Spec = "Spec 1"
-	key := obj.MakeKey("overlay")
-	retObj := &testObj{}
+	server := mocks.NewFakeServer()
+	service := mocks.NewFakeService().(*mocks.FakeService)
+	method := mocks.NewFakeMethod(false).(*mocks.FakeMethod)
+	service.AddMethod("TestMethod", method)
+	server.SvcMap["TestService"] = service
+	ov.server = server
+	var handleError error
+	obj1 := apitest.TestObj{}
+	obj1.Name = "testObj1"
+	obj1.Spec = "Spec 1"
+
+	retObj := &apitest.TestObj{}
+	retObj.Name = "testObj"
+	retObj.Spec = "return Object"
+	errorObjs := make(map[string]*handlerResp)
+	handleCount := 0
+	handleFunc := func(hctx context.Context, i interface{}) (interface{}, error) {
+		handleCount++
+		r := i.(apitest.TestObj)
+		t.Logf("handler got obj %s", r.Name)
+		if v := errorObjs[r.Name]; v != nil {
+			t.Logf("handler returning error for %s", r.Name)
+			if v.callFn != nil {
+				return v.callFn(hctx)
+			}
+			return v.obj, v.err
+		}
+		return retObj, handleError
+	}
+	method.HandleMethod = handleFunc
+
 	getObj := false
-	c.fakeKvStore.getfn = func(ctx context.Context, key string, into runtime.Object) error {
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
 		if getObj {
 			retObj.Clone(into)
 			return nil
 		}
-		return errors.New("NotFound")
+		return errors.New("Not Found")
 	}
 
-	// Test with empty API cache.
-	err := ov.Delete(ctx, key, nil)
-	Assert(t, err != nil, "expecting Delete on empty to fail")
+	// insert multiple primary and multiple secondary into overlay
+	key1 := "/test/key1"
+	key2 := "/test/key2"
+	key3 := "/test/key3"
+	key4 := "/test/key4"
+	obj2 := obj1
+	obj2.Name = "testObj2"
+	obj3 := obj1
+	obj3.Name = "testObj3"
+	obj4 := obj1
+	obj4.Name = "testObj4"
+	err := ov.CreatePrimary(ctx, "TestService", "TestMethod", "/testURI/testobj1", key1, &obj1, &obj1)
+	AssertOk(t, err, "expecting CreatePrimary to pass")
+	err = ov.CreatePrimary(ctx, "TestService", "TestMethod", "/testURI/testobj2", key2, &obj2, &obj2)
+	AssertOk(t, err, "expecting CreatePrimary to pass")
+	err = ov.Create(ctx, key3, &obj3)
+	AssertOk(t, err, "expecting Create to pass")
+	err = ov.Create(ctx, key4, &obj4)
+	AssertOk(t, err, "expecting Create to pass")
+	reslt, err := ov.Verify(ctx)
+	AssertOk(t, err, "expecting verify to pass")
+	Assert(t, len(reslt.Items) == 2, "expecting 2 objects in result, got %d", len(reslt.Items))
+	Assert(t, len(reslt.Failed) == 0, "expecting no failures")
+	Assert(t, handleCount == 2, "expecting 2 handle invocations, got %d", handleCount)
+	handleCount = 0
+	// Verify with Errors in Primary
+	errorObjs["testObj2"] = &handlerResp{
+		err: errors.New("testOBj2 error"),
+		obj: nil,
+	}
+	reslt, err = ov.Verify(ctx)
+	AssertOk(t, err, "expecting verify to pass")
+	Assert(t, len(reslt.Items) == 2, "expecting 2 objects in result, got %d", len(reslt.Items))
+	Assert(t, len(reslt.Failed) == 1, "expecting failures got %d [ %v]", len(reslt.Failed), reslt.Failed)
+	Assert(t, reslt.Failed[0].Errors[0].Error() == "testOBj2 error", "Not expected error")
+	Assert(t, handleCount == 2, "expecting 2 handle invocations, got %d", handleCount)
+	handleCount = 0
 
-	// Create on empty
-	err = ov.Create(ctx, key, obj)
-	AssertOk(t, err, "expecting Create on empty to succeed got (%s)", err)
-	cobj := ov.overlay[key]
-	Assert(t, cobj.oper == operCreate, "expecting operation to be create got [%s]", cobj.oper)
-	err = ov.Get(ctx, key, retObj)
-	AssertOk(t, err, "could not find object in overlay")
-	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
+	// Verify with Errors in secondary
+	delete(errorObjs, "testObj2")
+	errorObjs["testObj3"] = &handlerResp{
+		err: errors.New("testObj3 error"),
+		obj: nil,
+	}
+	reslt, err = ov.Verify(ctx)
+	AssertOk(t, err, "expecting verify to pass")
+	Assert(t, len(reslt.Items) == 2, "expecting 2 objects in result, got %d", len(reslt.Items))
+	Assert(t, len(reslt.Failed) == 0, "expecting failures got %d", len(reslt.Failed))
+	Assert(t, handleCount == 2, "expecting 2 handle invocations, got %d", handleCount)
+	handleCount = 0
+}
 
-	// Update on top of create
-	obj.Spec = "Spec 2"
-	err = ov.Update(ctx, key, obj)
-	AssertOk(t, err, "expecting update to succeed got (%s)", err)
-	cobj = ov.overlay[key]
-	Assert(t, cobj.oper == operCreate, "expecting operation to be create got [%s]", cobj.oper)
-	err = ov.Get(ctx, key, retObj)
-	AssertOk(t, err, "could not find object in overlay")
-	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
+func TestClearBuffer(t *testing.T) {
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil)
+	defer DelOverlay("tenant1", "testGet")
+	ov := o.(*overlay)
+	ctx := context.TODO()
+	getObj := false
+	retObj := &apitest.TestObj{}
+	retObj.Name = "testObj"
+	retObj.Spec = "return Object"
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		if getObj {
+			retObj.Clone(into)
+			return nil
+		}
+		return errors.New("Not Found")
+	}
 
-	// Delete
-	err = ov.Delete(ctx, key, retObj)
-	AssertOk(t, err, "expecting delete to succeed got (%s)", err)
-	cobj = ov.overlay[key]
-	Assert(t, cobj == nil, "expecting not to find object in overlay got [%+v]", cobj)
-	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
-	err = ov.Get(ctx, key, retObj)
-	Assert(t, err != nil, "not expecting to find object")
+	obj1 := apitest.TestObj{}
+	obj1.Name = "testObj1"
+	obj1.Spec = "Spec 1"
+	obj2 := obj1
+	obj2.Name = "testObj2"
+	obj3 := obj1
+	obj3.Name = "testObj3"
+	obj4 := obj1
+	obj4.Name = "testObj4"
+	key1 := "/test/key1"
+	key2 := "/test/key2"
+	key3 := "/test/key3"
+	key4 := "/test/key4"
+	uri1 := "/testURI/testobj1"
+	uri2 := "/testURI/testobj2"
+	err := ov.CreatePrimary(ctx, "TestService", "TestMethod", uri1, key1, &obj1, &obj1)
+	AssertOk(t, err, "expecting CreatePrimary to pass")
+	err = ov.CreatePrimary(ctx, "TestService", "TestMethod", uri2, key2, &obj2, &obj2)
+	AssertOk(t, err, "expecting CreatePrimary to pass")
+	err = ov.CreatePrimary(ctx, "TestService", "TestMethod", "/testURI/testobj3", key3, &obj3, &obj3)
+	AssertOk(t, err, "expecting CreatePrimary to pass")
+	err = ov.CreatePrimary(ctx, "TestService", "TestMethod", "/testURI/testobj4", key4, &obj4, &obj4)
+	Assert(t, len(ov.overlay) == 4, "expecting number of entries in overlay to be 4 got %d", len(ov.overlay))
 
-	// Test with object in Cache
-	getObj = true
-	// Test with empty API cache.
-	err = ov.Delete(ctx, key, nil)
-	AssertOk(t, err, "expecting Delete on empty to succeed got (%s)", err)
-	cobj = ov.overlay[key]
-	Assert(t, cobj.oper == operDelete, "expecting operation to be delete got [%s]", cobj.oper)
-	err = ov.Get(ctx, key, retObj)
-	Assert(t, err != nil, "expecting get to fail for deleted object")
+	// Delete some of the entries in the overlay
+	clear := []apiintf.OverlayKey{{URI: uri1}, {URI: uri2}}
+	err = ov.ClearBuffer(ctx, clear)
+	AssertOk(t, err, "expecting Clear to pass")
+	Assert(t, len(ov.overlay) == 2, "expecting number of entries in overlay to be 4 got %d", len(ov.overlay))
 
-	// Create on empty
-	err = ov.Create(ctx, key, obj)
-	Assert(t, err != nil, "expecting Create to fail")
-	cobj = ov.overlay[key]
-	Assert(t, cobj.oper == operDelete, "expecting operation to be delete got [%s]", cobj.oper)
-	err = ov.Get(ctx, key, retObj)
-	Assert(t, err != nil, "expecting get to fail for deleted object")
+	// Clear all entries
+	err = ov.ClearBuffer(ctx, nil)
+	AssertOk(t, err, "expecting Clear to pass")
+	Assert(t, len(ov.overlay) == 0, "expecting number of entries in overlay to be 4 got %d", len(ov.overlay))
+}
 
-	// Update on top of create
-	obj.Spec = "Spec 2"
-	err = ov.Update(ctx, key, obj)
-	AssertOk(t, err, "expecting update to succeed got (%s)", err)
-	cobj = ov.overlay[key]
-	Assert(t, cobj.oper == operUpdate, "expecting operation to be create got [%s]", cobj.oper)
-	err = ov.Get(ctx, key, retObj)
-	AssertOk(t, err, "could not find object in overlay")
-	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
+func TestCommit(t *testing.T) {
+	fkv := &cachemocks.FakeKvStore{}
+	str := &cachemocks.FakeStore{}
+	// c := &cachemocks.FakeCache{fakeKvStore: fakeKvStore{}, kvconn: fkv}
+	fakeqs := &fakeWatchPrefixes{}
+	c := &cache{
+		store:  str,
+		pool:   &connPool{},
+		queues: fakeqs,
+		logger: log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
+		active: true,
+	}
+	c.pool.AddToPool(fkv)
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil)
+	txn := &cachemocks.FakeTxn{}
+	fkv.Txn = txn
+	ov := o.(*overlay)
+	ctx := context.TODO()
+	server := mocks.NewFakeServer()
+	service := mocks.NewFakeService().(*mocks.FakeService)
+	method := mocks.NewFakeMethod(false).(*mocks.FakeMethod)
+	service.AddMethod("TestMethod", method)
+	server.SvcMap["TestService"] = service
+	ov.server = server
+	var handleError error
+	obj1 := apitest.TestObj{}
+	obj1.Name = "testObj1"
+	obj1.Spec = "Spec 1"
 
-	// Delete
-	err = ov.Delete(ctx, key, retObj)
-	AssertOk(t, err, "expecting delete to succeed got (%s)", err)
-	Assert(t, reflect.DeepEqual(obj, retObj), "Returned object does not match expected [%v]/[]%v]", retObj, obj)
-	cobj = ov.overlay[key]
-	Assert(t, cobj.oper == operDelete, "expecting operation to be delete got [%s]", cobj.oper)
-	err = ov.Get(ctx, key, retObj)
-	Assert(t, err != nil, "expecting get to fail for deleted object")
+	retObj := &apitest.TestObj{}
+	retObj.Name = "testObj"
+	retObj.Spec = "return Object"
+	errorObjs := make(map[string]*handlerResp)
+	name2key := make(map[string]string)
+	handleCount := 0
+	handleFunc := func(hctx context.Context, i interface{}) (interface{}, error) {
+		handleCount++
+		r := i.(apitest.TestObj)
+		t.Logf("handler got obj %s", r.Name)
+		var verVer int64
+		dm := getDryRun(hctx)
+		if dm != nil {
+			verVer = dm.verVer
+		}
+		if v, ok := name2key[r.Name]; ok {
+			ovobj := ov.overlay[v]
+			ovobj.verVer = verVer
+		}
+		if v := errorObjs[r.Name]; v != nil {
+			if v.callFn != nil {
+				t.Logf("handler calling function for %s", r.Name)
+				return v.callFn(hctx)
+			}
+			t.Logf("handler returning error for %s", r.Name)
+			return v.obj, v.err
+		}
+
+		return retObj, handleError
+	}
+	method.HandleMethod = handleFunc
+
+	getObj := false
+	fkv.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		if getObj {
+			retObj.Clone(into)
+			return nil
+		}
+		return errors.New("Not Found")
+	}
+
+	commitFn := func(ctx context.Context) (kvstore.TxnResponse, error) {
+		resp := kvstore.TxnResponse{}
+		resp.Succeeded = true
+		return resp, nil
+	}
+
+	getfn := func(key string) (runtime.Object, error) {
+		return nil, errors.New("Not Found")
+	}
+	str.Getfn = getfn
+	txn.Commitfn = commitFn
+	// insert multiple primary and multiple secondary into overlay
+	key1 := "/test/key1"
+	key2 := "/test/key2"
+	key3 := "/test/key3"
+	key4 := "/test/key4"
+	obj2 := obj1
+	obj2.Name = "testObj2"
+	obj3 := obj1
+	obj3.Name = "testObj3"
+	obj4 := obj1
+	obj4.Name = "testObj4"
+	name2key["testObj1"] = key1
+	name2key["testObj2"] = key2
+	name2key["testObj3"] = key3
+	name2key["testObj4"] = key4
+	obj3Hdlr := func(inctx context.Context) (interface{}, error) {
+		ov.Create(inctx, key3, &obj3)
+		return obj3, nil
+	}
+	errorObjs["testObj2"] = &handlerResp{
+		err:    nil,
+		obj:    obj3,
+		callFn: obj3Hdlr,
+	}
+	err := ov.CreatePrimary(ctx, "TestService", "TestMethod", "/testURI/testobj1", key1, &obj1, &obj1)
+	AssertOk(t, err, "expecting CreatePrimary to pass")
+	err = ov.CreatePrimary(ctx, "TestService", "TestMethod", "/testURI/testobj2", key2, &obj2, &obj2)
+	AssertOk(t, err, "expecting CreatePrimary to pass")
+	err = ov.Create(ctx, key3, &obj3)
+	AssertOk(t, err, "expecting Create to pass")
+	err = ov.Create(ctx, key4, &obj4)
+
+	// Verify Commit should pass
+	err = ov.Commit(ctx, nil)
+	AssertOk(t, err, "expecting Commit to pass")
+	Assert(t, len(ov.overlay) == 0, "expecting overlay to be cleaned up after commit")
+	Assert(t, len(txn.Ops) == 5, "expecgting 4 operations in the transaction")
+	// Verify all 4 objects are present in the transaction
+	baseKey := "/base/tenant/tenant1/buffer/testGet"
+	keyMap := map[string]bool{key1: false, key2: false, baseKey + key1: false, baseKey + key2: false, key3: false}
+	for _, v := range txn.Ops {
+		if _, ok := keyMap[v.Key]; !ok {
+			t.Fatalf("Did not find key [%s] in transaction", v.Key)
+		}
+		delete(keyMap, v.Key)
+	}
+	Assert(t, len(keyMap) == 0, "did not find following keys in transaction %v", keyMap)
+	DelOverlay("tenant1", "testGet")
+
 }

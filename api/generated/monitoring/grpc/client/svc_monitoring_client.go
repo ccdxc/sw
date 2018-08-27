@@ -2435,6 +2435,26 @@ func NewRestCrudClientMonitoringV1(url string) monitoring.MonitoringV1Interface 
 	}
 }
 
+// NewStagedRestCrudClientMonitoringV1 creates a REST client for the service.
+func NewStagedRestCrudClientMonitoringV1(url string, id string) monitoring.MonitoringV1Interface {
+	endpoints, err := monitoring.MakeMonitoringV1StagedRestClientEndpoints(url, id)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientMonitoringV1{
+
+		restEventPolicy:            &restObjMonitoringV1EventPolicy{endpoints: endpoints, instance: url},
+		restStatsPolicy:            &restObjMonitoringV1StatsPolicy{endpoints: endpoints, instance: url},
+		restFwlogPolicy:            &restObjMonitoringV1FwlogPolicy{endpoints: endpoints, instance: url},
+		restFlowExportPolicy:       &restObjMonitoringV1FlowExportPolicy{endpoints: endpoints, instance: url},
+		restAlert:                  &restObjMonitoringV1Alert{endpoints: endpoints, instance: url},
+		restAlertPolicy:            &restObjMonitoringV1AlertPolicy{endpoints: endpoints, instance: url},
+		restAlertDestination:       &restObjMonitoringV1AlertDestination{endpoints: endpoints, instance: url},
+		restMirrorSession:          &restObjMonitoringV1MirrorSession{endpoints: endpoints, instance: url},
+		restTroubleshootingSession: &restObjMonitoringV1TroubleshootingSession{endpoints: endpoints, instance: url},
+	}
+}
+
 func (a *crudRestClientMonitoringV1) EventPolicy() monitoring.MonitoringV1EventPolicyInterface {
 	return a.restEventPolicy
 }

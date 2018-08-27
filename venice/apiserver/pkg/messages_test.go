@@ -11,6 +11,7 @@ import (
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // TestPrepareMessage
@@ -67,8 +68,9 @@ func TestMessageWith(t *testing.T) {
 	m := NewMessage("TestType1").WithValidate(f.ValidateFunc).WithDefaulter(f.DefaultFunc)
 	m = m.WithKvUpdater(f.KvUpdateFunc).WithKvGetter(f.KvGetFunc).WithKvDelFunc(f.KvDelFunc).WithObjectVersionWriter(f.ObjverwriteFunc)
 	m = m.WithKvTxnUpdater(f.TxnUpdateFunc).WithKvTxnDelFunc(f.DelFromKvTxnFunc).WithSelfLinkWriter(f.SelfLinkWriterFunc)
-	m = m.WithKvWatchFunc(f.KvwatchFunc).WithKvListFunc(f.KvListFunc)
-	m = m.WithUUIDWriter(f.CreateUUID)
+	m = m.WithKvWatchFunc(f.KvwatchFunc).WithKvListFunc(f.KvListFunc).WithReplaceStatusFunction(f.GetUpdateSpecFunc())
+	m = m.WithUUIDWriter(f.CreateUUID).WithReplaceSpecFunction(f.GetUpdateSpecFunc()).WithGetRuntimeObject(f.GetRuntimeObject)
+	m = m.WithModTimeWriter(f.WriteModTime).WithCreationTimeWriter(f.WriteCreationTime).WithObjectVersionWriter(f.WriteObjVersion)
 	stx := mocks.ObjStorageTransformer{}
 	m = m.WithStorageTransformer(&stx)
 	singletonAPISrv.runstate.running = true
@@ -115,7 +117,32 @@ func TestMessageWith(t *testing.T) {
 		t.Errorf("Expecgting 1 call to UpdateSelfLink found %d", f.SelfLinkWrites)
 	}
 	ctx := context.TODO()
-
+	fn := m.GetUpdateSpecFunc()
+	if fn == nil {
+		t.Fatalf("UpdateSpecFunc returned nil")
+	}
+	fn = m.GetUpdateStatusFunc()
+	if fn == nil {
+		t.Fatalf("UpdateStatusFunc returned nil")
+	}
+	obj := TestType1{}
+	f.RuntimeObj = &obj
+	robj := m.GetRuntimeObject(obj)
+	if _, ok := robj.(runtime.Object); !ok {
+		t.Fatalf("failed to get runtime object")
+	}
+	m.WriteCreationTime(obj)
+	if f.CreateTimeWrites != 1 {
+		t.Errorf("WriteCreation time failed")
+	}
+	m.WriteModTime(obj)
+	if f.ModTimeWrite != 1 {
+		t.Errorf("WriteModTime time failed")
+	}
+	m.WriteObjVersion(obj, "123")
+	if f.ObjVerWrites != 1 {
+		t.Errorf("WriteObjVersion time failed got %d", f.Objverwrite)
+	}
 	m.TransformToStorage(ctx, apisrv.CreateOper, nil)
 	if stx.TransformToStorageCalled != 1 {
 		t.Errorf("Expecting 1 call to TransformToStorage, found %d", stx.TransformToStorageCalled)

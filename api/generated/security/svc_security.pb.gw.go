@@ -84,10 +84,11 @@ func request_SecurityV1_AutoAddCertificate_0(ctx context.Context, marshaler runt
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -100,6 +101,8 @@ func request_SecurityV1_AutoAddCertificate_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -131,10 +134,11 @@ func request_SecurityV1_AutoAddSGPolicy_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -147,6 +151,8 @@ func request_SecurityV1_AutoAddSGPolicy_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -178,10 +184,11 @@ func request_SecurityV1_AutoAddSecurityGroup_0(ctx context.Context, marshaler ru
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -194,6 +201,8 @@ func request_SecurityV1_AutoAddSecurityGroup_0(ctx context.Context, marshaler ru
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddSecurityGroup(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -225,10 +234,11 @@ func request_SecurityV1_AutoAddTrafficEncryptionPolicy_0(ctx context.Context, ma
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -241,6 +251,8 @@ func request_SecurityV1_AutoAddTrafficEncryptionPolicy_0(ctx context.Context, ma
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoAddTrafficEncryptionPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -276,10 +288,11 @@ func request_SecurityV1_AutoDeleteApp_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -292,6 +305,8 @@ func request_SecurityV1_AutoDeleteApp_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteApp_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -331,10 +346,11 @@ func request_SecurityV1_AutoDeleteCertificate_0(ctx context.Context, marshaler r
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -358,6 +374,8 @@ func request_SecurityV1_AutoDeleteCertificate_0(ctx context.Context, marshaler r
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteCertificate_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -397,10 +415,11 @@ func request_SecurityV1_AutoDeleteSGPolicy_0(ctx context.Context, marshaler runt
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -424,6 +443,8 @@ func request_SecurityV1_AutoDeleteSGPolicy_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteSGPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -463,10 +484,11 @@ func request_SecurityV1_AutoDeleteSecurityGroup_0(ctx context.Context, marshaler
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -490,6 +512,8 @@ func request_SecurityV1_AutoDeleteSecurityGroup_0(ctx context.Context, marshaler
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteSecurityGroup_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -529,10 +553,11 @@ func request_SecurityV1_AutoDeleteTrafficEncryptionPolicy_0(ctx context.Context,
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -556,6 +581,8 @@ func request_SecurityV1_AutoDeleteTrafficEncryptionPolicy_0(ctx context.Context,
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteTrafficEncryptionPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -595,10 +622,11 @@ func request_SecurityV1_AutoGetApp_0(ctx context.Context, marshaler runtime.Mars
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -611,6 +639,8 @@ func request_SecurityV1_AutoGetApp_0(ctx context.Context, marshaler runtime.Mars
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetApp_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -650,10 +680,11 @@ func request_SecurityV1_AutoGetCertificate_0(ctx context.Context, marshaler runt
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -677,6 +708,8 @@ func request_SecurityV1_AutoGetCertificate_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetCertificate_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -716,10 +749,11 @@ func request_SecurityV1_AutoGetSGPolicy_0(ctx context.Context, marshaler runtime
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -743,6 +777,8 @@ func request_SecurityV1_AutoGetSGPolicy_0(ctx context.Context, marshaler runtime
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetSGPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -782,10 +818,11 @@ func request_SecurityV1_AutoGetSecurityGroup_0(ctx context.Context, marshaler ru
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -809,6 +846,8 @@ func request_SecurityV1_AutoGetSecurityGroup_0(ctx context.Context, marshaler ru
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetSecurityGroup_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -848,10 +887,11 @@ func request_SecurityV1_AutoGetTrafficEncryptionPolicy_0(ctx context.Context, ma
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -875,6 +915,8 @@ func request_SecurityV1_AutoGetTrafficEncryptionPolicy_0(ctx context.Context, ma
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetTrafficEncryptionPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -951,10 +993,11 @@ func request_SecurityV1_AutoListCertificate_0(ctx context.Context, marshaler run
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -967,6 +1010,8 @@ func request_SecurityV1_AutoListCertificate_0(ctx context.Context, marshaler run
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListCertificate_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1006,10 +1051,11 @@ func request_SecurityV1_AutoListSGPolicy_0(ctx context.Context, marshaler runtim
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1022,6 +1068,8 @@ func request_SecurityV1_AutoListSGPolicy_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListSGPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1061,10 +1109,11 @@ func request_SecurityV1_AutoListSecurityGroup_0(ctx context.Context, marshaler r
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1077,6 +1126,8 @@ func request_SecurityV1_AutoListSecurityGroup_0(ctx context.Context, marshaler r
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListSecurityGroup_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1112,10 +1163,11 @@ func request_SecurityV1_AutoUpdateApp_0(ctx context.Context, marshaler runtime.M
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Name"]
@@ -1128,6 +1180,8 @@ func request_SecurityV1_AutoUpdateApp_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateApp(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -1159,10 +1213,11 @@ func request_SecurityV1_AutoUpdateCertificate_0(ctx context.Context, marshaler r
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1186,6 +1241,8 @@ func request_SecurityV1_AutoUpdateCertificate_0(ctx context.Context, marshaler r
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -1217,10 +1274,11 @@ func request_SecurityV1_AutoUpdateSGPolicy_0(ctx context.Context, marshaler runt
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1244,6 +1302,8 @@ func request_SecurityV1_AutoUpdateSGPolicy_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -1275,10 +1335,11 @@ func request_SecurityV1_AutoUpdateSecurityGroup_0(ctx context.Context, marshaler
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1302,6 +1363,8 @@ func request_SecurityV1_AutoUpdateSecurityGroup_0(ctx context.Context, marshaler
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateSecurityGroup(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -1333,10 +1396,11 @@ func request_SecurityV1_AutoUpdateTrafficEncryptionPolicy_0(ctx context.Context,
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1360,6 +1424,8 @@ func request_SecurityV1_AutoUpdateTrafficEncryptionPolicy_0(ctx context.Context,
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateTrafficEncryptionPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -1440,10 +1506,11 @@ func request_SecurityV1_AutoWatchCertificate_0(ctx context.Context, marshaler ru
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1456,6 +1523,8 @@ func request_SecurityV1_AutoWatchCertificate_0(ctx context.Context, marshaler ru
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchCertificate_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1503,10 +1572,11 @@ func request_SecurityV1_AutoWatchSGPolicy_0(ctx context.Context, marshaler runti
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1519,6 +1589,8 @@ func request_SecurityV1_AutoWatchSGPolicy_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchSGPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1566,10 +1638,11 @@ func request_SecurityV1_AutoWatchSecurityGroup_0(ctx context.Context, marshaler 
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1582,6 +1655,8 @@ func request_SecurityV1_AutoWatchSecurityGroup_0(ctx context.Context, marshaler 
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchSecurityGroup_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
@@ -1629,10 +1704,11 @@ func request_SecurityV1_AutoWatchTrafficEncryptionPolicy_0(ctx context.Context, 
 	}
 
 	var (
-		val string
-		ok  bool
-		err error
-		_   = err
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
 	)
 
 	val, ok = pathParams["O.Tenant"]
@@ -1645,6 +1721,8 @@ func request_SecurityV1_AutoWatchTrafficEncryptionPolicy_0(ctx context.Context, 
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchTrafficEncryptionPolicy_0); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)

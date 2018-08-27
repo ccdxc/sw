@@ -25,6 +25,7 @@ import { SecuritySGPolicy } from './security';
 import { SecurityApp } from './security';
 import { SecurityCertificate } from './security';
 import { SecurityTrafficEncryptionPolicy } from './security';
+import { StagingBuffer } from './staging';
 import { WorkloadEndpoint } from './workload';
 import { WorkloadWorkload } from './workload';
 
@@ -65,6 +66,9 @@ export const CategoryMapping  = {
     "App" : new SecurityApp(),
     "Certificate" : new SecurityCertificate(),
     "TrafficEncryptionPolicy" : new SecurityTrafficEncryptionPolicy(),
+  },
+  "Staging" : {
+    "Buffer" : new StagingBuffer(),
   },
   "Workload" : {
     "Endpoint" : new WorkloadEndpoint(),

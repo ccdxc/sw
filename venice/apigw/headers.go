@@ -8,7 +8,9 @@ const (
 	GrpcMDRequestVersion     = "Grpc-Metadata-Req-Version"
 	GrpcMDRequestURI         = "Grpc-Metadata-Req-Uri"
 	GrpcMDRequestMethod      = "Grpc-Metadata-Req-Method"
+	GrpcMDRequestTenant      = "Grpc-Metadata-Req-Tenant"
 	GrpcMDReplaceStatusField = "Grpc-Metadata-Replace-Status-Field"
+	GrpcMDStagingBufferID    = "Grpc-Metadata-Staging-Buffer-Id"
 )
 
 // Authentication related constants used by the API GW and Login service

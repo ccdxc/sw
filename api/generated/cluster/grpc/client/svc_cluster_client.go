@@ -1434,6 +1434,22 @@ func NewRestCrudClientClusterV1(url string) cluster.ClusterV1Interface {
 	}
 }
 
+// NewStagedRestCrudClientClusterV1 creates a REST client for the service.
+func NewStagedRestCrudClientClusterV1(url string, id string) cluster.ClusterV1Interface {
+	endpoints, err := cluster.MakeClusterV1StagedRestClientEndpoints(url, id)
+	if err != nil {
+		oldlog.Fatal("failed to create client")
+	}
+	return &crudRestClientClusterV1{
+
+		restCluster:  &restObjClusterV1Cluster{endpoints: endpoints, instance: url},
+		restNode:     &restObjClusterV1Node{endpoints: endpoints, instance: url},
+		restHost:     &restObjClusterV1Host{endpoints: endpoints, instance: url},
+		restSmartNIC: &restObjClusterV1SmartNIC{endpoints: endpoints, instance: url},
+		restTenant:   &restObjClusterV1Tenant{endpoints: endpoints, instance: url},
+	}
+}
+
 func (a *crudRestClientClusterV1) Cluster() cluster.ClusterV1ClusterInterface {
 	return a.restCluster
 }
