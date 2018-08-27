@@ -60,7 +60,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGINT:
     case SIGTERM:
         HAL_GCOV_FLUSH();
-        exit(0);
+        raise(SIGKILL);
         break;
 
     case SIGUSR1:

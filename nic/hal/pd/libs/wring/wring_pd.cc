@@ -357,7 +357,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
                     CAPRI_SEM_RAW_IS_PI_CI(meta->alloc_semaphore_addr)) {
         // Set CI = ring size
         uint32_t val32 = meta->num_slots;
-        HAL_TRACE_DEBUG("writing {} to semaphore {:#x}\n",
+        HAL_TRACE_DEBUG("writing {} to semaphore {:#x}",
                         val32, meta->alloc_semaphore_addr +
                         CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
         p4plus_reg_write(
@@ -370,7 +370,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         // FP.PI = AP.CI = meta->num_slots
         uint32_t val32 = meta->num_slots;
         p4plus_reg_write(meta->free_semaphore_addr, val32);
-        HAL_TRACE_DEBUG("writing {} to semaphore {:#x}\n",
+        HAL_TRACE_DEBUG("writing {} to semaphore {:#x}",
                         val32, meta->free_semaphore_addr);
 
         // FP.CI = FP.PI + 1 (this queue is initially full, until one object is
@@ -381,7 +381,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         val32++;
         p4plus_reg_write(meta->free_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
                                         val32);
-        HAL_TRACE_DEBUG("writing {} to semaphore {:#x}\n",
+        HAL_TRACE_DEBUG("writing {} to semaphore {:#x}",
                         val32, meta->free_semaphore_addr +
                         CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
     }
