@@ -178,7 +178,8 @@ struct sqcb1_t {
 
     bktrack_in_progress            : 8; // RW S3 (W0 S5 TXDMA)
     pd                             : 32; // RO
-    pad                            : 32;
+    rrq_spec_cindex                : 16;
+    pad                            : 16;
 };
 
 struct sqcb2_t {

@@ -234,6 +234,7 @@ header_type req_rx_to_stage_sqcb1_wb_info_t {
         remaining_payload_bytes          :   14;
         my_token_id                      :    8;
         error_disable_qp                 :    1;
+        error_drop_phv                   :    1;
     }
 }
 
@@ -309,8 +310,7 @@ header_type req_rx_sqcb1_write_back_info_t {
         tbl_id                           :    8;
         rexmit_psn                       :   24;
         msn                              :   24;
-        error_drop_phv                   :    1;
-        pad                              :   16;
+        pad                              :   17;
     }
 }
 
@@ -1305,6 +1305,7 @@ action req_rx_sqcb1_write_back_process () {
     modify_field(to_s4_sqcb1_wb_info_scr.remaining_payload_bytes, to_s4_sqcb1_wb_info.remaining_payload_bytes);
     modify_field(to_s4_sqcb1_wb_info_scr.my_token_id, to_s4_sqcb1_wb_info.my_token_id);
     modify_field(to_s4_sqcb1_wb_info_scr.error_disable_qp, to_s4_sqcb1_wb_info.error_disable_qp);
+    modify_field(to_s4_sqcb1_wb_info_scr.error_drop_phv, to_s4_sqcb1_wb_info.error_drop_phv);
 
     // stage to stage
     modify_field(t3_s2s_sqcb1_write_back_info_scr.cur_sge_offset, t3_s2s_sqcb1_write_back_info.cur_sge_offset);
@@ -1319,7 +1320,6 @@ action req_rx_sqcb1_write_back_process () {
     modify_field(t3_s2s_sqcb1_write_back_info_scr.tbl_id, t3_s2s_sqcb1_write_back_info.tbl_id);
     modify_field(t3_s2s_sqcb1_write_back_info_scr.rexmit_psn, t3_s2s_sqcb1_write_back_info.rexmit_psn);
     modify_field(t3_s2s_sqcb1_write_back_info_scr.msn, t3_s2s_sqcb1_write_back_info.msn);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.error_drop_phv, t3_s2s_sqcb1_write_back_info.error_drop_phv);
     modify_field(t3_s2s_sqcb1_write_back_info_scr.pad, t3_s2s_sqcb1_write_back_info.pad);
 
 }

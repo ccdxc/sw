@@ -37,7 +37,7 @@ req_rx_sqcb1_write_back_process:
     bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_exit
     nop            // Branch Delay Slot
 
-    bbeq           CAPRI_KEY_FIELD(IN_P, error_drop_phv), 1, drop_phv
+    bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, error_drop_phv), 1, drop_phv
 
     seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1 // BD-Slot
     tbladd.c1      d.nxt_to_go_token_id, 1
@@ -124,7 +124,7 @@ recirc_for_turn:
     bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, error_disable_qp), 1, recirc_error_disable_qp
     nop
 
-    phvwr          p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
+    phvwr          p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_DONE
 
     // fire an mpu only program to set table 0 valid bit to 1 prior to recirc
     phvwr          p.common.p4_intr_recirc, 1

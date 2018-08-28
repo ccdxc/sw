@@ -314,8 +314,8 @@ class RdmaSQstate(Packet):
         BitField("rsvd2", 0, 3),
         ByteField("sqcb1_bktrack_in_progress", 0),
         IntField("sqcb1_pd", 0),
-
-        BitField("pad1", 0, 32),
+        BitField("rrq_spec_cindex", 0, 16),
+        BitField("pad1", 0, 16),
 
         #SQCB2
         X3BytesField("dst_qp", 0),

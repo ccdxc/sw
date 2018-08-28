@@ -48,6 +48,11 @@ req_tx_bktrack_sqcb2_write_back_process:
      add            r2, FIELD_OFFSET(sqcb1_t, ring5), r1
      memwr.w        r2, 0        
 
+     // Clear rrq_spec_cindex
+     add            r2, FIELD_OFFSET(sqcb1_t, rrq_spec_cindex), r1
+     memwr.h        r2, 0          
+
+
      SQCB2_ADDR_GET(r1)            
      add            r2, FIELD_OFFSET(sqcb2_t, rrq_pindex), r1
      memwr.w        r2, 0        

@@ -232,9 +232,9 @@ post_msn_credits:
     PREPARE_DOORBELL_INC_PINDEX(CAPRI_RXDMA_INTRINSIC_LIF,
                                 CAPRI_RXDMA_INTRINSIC_QTYPE,
                                 CAPRI_RXDMA_INTRINSIC_QID,
-                                FC_RING_ID, r1, r2)
+                                FC_RING_ID, r3, r2)
     phvwr          p.db_data1, r2.dx
-    DMA_HBM_PHV2MEM_SETUP(r6, db_data1, db_data1, r1)
+    DMA_HBM_PHV2MEM_SETUP(r6, db_data1, db_data1, r3)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
 
 post_rexmit_psn:
@@ -267,19 +267,24 @@ set_arg:
     phvwr      CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, rrq_cindex), r2
 
     sll            r5, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
-    add            r5, r5, RRQ_C_INDEX, LOG_RRQ_WQE_SIZE
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqwqe_process, r5)
+    add            r5, r5, d.rrq_spec_cindex, LOG_RRQ_WQE_SIZE
 
-    nop.e
-    nop
+    // Increment spec-cindex for Read-Resp-Only/Read-Resp-Last/Atomic packets.
+    IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_ONLY| REQ_RX_FLAG_LAST| REQ_RX_FLAG_ATOMIC_AETH)
+    tblmincri.c2   d.rrq_spec_cindex, d.log_rrq_size, 1
 
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_rrqwqe_process, r5)
+
+recirc_work_done:
+    // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back.
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
+    
 unsolicited_ack:
     // if its unsolicted ack, just post credits, msn and exit, CQ posting not needed
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
+    phvwr          CAPRI_PHV_FIELD(TO_S4_P, error_drop_phv), 1
     // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back in stage3 to increment nxt-to-go-token-id and drop pvh.
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
 
 duplicate_read_resp_mid:
 duplicate_resp:
@@ -289,10 +294,9 @@ invalid_pyld_len:
 invalid_opcode:
 rrq_empty:
 exit:
+    phvwr          CAPRI_PHV_FIELD(TO_S4_P, error_drop_phv), 1
     // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back in stage3 to increment nxt-to-go-token-id and drop pvh.
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
 
 drop_feedback:
     CAPRI_SET_TABLE_0_VALID(0)
@@ -367,6 +371,9 @@ recirc_pkt:
     tblsub.c2      d.work_not_done_recirc_cnt, 1 //BD Slot
     seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_ERROR_DISABLE_QP
     bcf            [c2], process_recirc_error_disable_qp
+    seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_DONE // BD Slot
+    bcf            [c2], recirc_work_done
+
     nop //BD Slot
 
 drop_packet:
