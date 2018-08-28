@@ -13,6 +13,7 @@
 #include "nic/include/bitmap.hpp"
 #include "nic/gen/proto/hal/internal.pb.h"
 #include "nic/hal/src/internal/internal.hpp"
+#include "nic/gen/proto/hal/fwlog.pb.h"
 
 namespace hal {
 
@@ -27,6 +28,7 @@ void configurelif_bdf(const internal::LifBdfReq &req,
 
 hal_ret_t software_phv_get (internal::SoftwarePhvGetRequest &req, internal::SoftwarePhvGetResponseMsg *rsp);
 hal_ret_t software_phv_inject (internal::SoftwarePhvInject &req, internal::SoftwarePhvResponse *rsp);
+hal_ret_t log_flow (fwlog::FWEvent &req, internal::LogFlowResponse *rsp); 
 
 }    // namespace hal
 

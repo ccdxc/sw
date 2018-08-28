@@ -125,4 +125,9 @@ void configurelif_bdf(const internal::LifBdfReq &req,
     resp->set_status(ret);
 }
 
+// No HAL functionality
+hal_ret_t log_flow (fwlog::FWEvent &req, internal::LogFlowResponse *rsp) {
+    return HAL_RET_OK;
+}
+
 }    // namespace hal

@@ -31,7 +31,7 @@ import (
 var configFile string
 
 type teleSuite struct {
-	simClients []halproto.FWLogSimClient
+	simClients []halproto.InternalClient
 	conns      []*grpc.ClientConn
 	infClient  influx.Client
 	tt         *cinteg.TimeTable
@@ -141,8 +141,8 @@ func getInfluxURLs(cmdAddr string) []string {
 	return urls
 }
 
-func getSimClients(cfg *tbConfig) ([]halproto.FWLogSimClient, []*grpc.ClientConn, error) {
-	var sims []halproto.FWLogSimClient
+func getSimClients(cfg *tbConfig) ([]halproto.InternalClient, []*grpc.ClientConn, error) {
+	var sims []halproto.InternalClient
 	var conns []*grpc.ClientConn
 	var err error
 
@@ -161,7 +161,7 @@ func getSimClients(cfg *tbConfig) ([]halproto.FWLogSimClient, []*grpc.ClientConn
 		}
 
 		conns = append(conns, conn)
-		sims = append(sims, halproto.NewFWLogSimClient(conn))
+		sims = append(sims, halproto.NewInternalClient(conn))
 		return nil
 	}
 

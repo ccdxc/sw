@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "fwlog.proto";
 
 package internal;
 option go_package="halproto";
@@ -21,6 +22,8 @@ service Internal {
   rpc SoftwarePhvInject (SoftwarePhvInjectMsg) returns (SoftwarePhvResponseMsg) {}
   // Get software PHV injection status
   rpc SoftwarePhvGet (SoftwarePhvGetRequestMsg) returns (SoftwarePhvGetResponseMsg) {}
+  // Simulator service definition
+  rpc LogFlow (LogFlowRequestMsg) returns (LogFlowResponseMsg) {}
 }
 
 message ProgramAddressReq {
@@ -151,4 +154,16 @@ message SoftwarePhvInject {
 // SoftwarePhvInjectMsg is the inject message
 message SoftwarePhvInjectMsg {
   repeated SoftwarePhvInject  request = 1; // sw phv inject request
+}
+
+message LogFlowRequestMsg {
+  repeated fwlog.FWEvent request = 1;
+}
+
+message LogFlowResponseMsg {
+  repeated LogFlowResponse response = 1;
+}
+
+message LogFlowResponse {
+  types.ApiStatus api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
 }
