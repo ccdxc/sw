@@ -6,7 +6,7 @@ Vagrant.require_version ">=2.0.2"
 BOX_IMAGE = "turin/centos74"
 BOX_VERSION = "0.3"
 
-VENICE_VER = "v0.1"
+VENICE_VER = "v0.2"
 VENICE_DOCKER_IMAGE = "pensando/venice:#{VENICE_VER}"
 VENICE_IMAGE_FILE = "venice-sim.tar"
 VENICE_CPUS_PER_NODE = "4"

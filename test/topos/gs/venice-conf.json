@@ -1,5 +1,5 @@
 {
-    "DisabledModules": [ "pen-vchub", "pen-collector", "pen-tpm", "pen-spyglass", "pen-evtsmgr", "pen-tsm", "pen-evtsproxy", "pen-ntp", "pen-influx","pen-elastic", "pen-objstore","pen-filebeat", "pen-npm" ],
+    "DisabledModules": [ "pen-vchub", "pen-collector", "pen-tpm", "pen-spyglass", "pen-evtsmgr", "pen-tsm", "pen-evtsproxy", "pen-ntp", "pen-influx","pen-elastic", "pen-objstore","pen-filebeat", "pen-spyglass", "pen-aggregator", "pen-vos" ],
     "OverriddenModules" : {
         "pen-apigw": {
             "kind": "Module",
