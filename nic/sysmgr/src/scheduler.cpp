@@ -1,9 +1,9 @@
 #include <assert.h>
 #include <memory>
 
-#include "logger.h"
-#include "scheduler.h"
-#include "spec.h"
+#include "logger.hpp"
+#include "scheduler.hpp"
+#include "spec.hpp"
 
 using namespace std;
 
@@ -12,9 +12,21 @@ shared_ptr<Service> Scheduler::get_for_pid(pid_t pid)
     auto s = this->pids.find(pid);
     if (s == this->pids.end())
     {
-        ERROR("PID {} not found", pid);
+        ERR("PID {} not found", pid);
     }
     assert(s != this->pids.end());
+
+    return s->second;
+}
+
+shared_ptr<Service> Scheduler::get_for_name(const string &name)
+{
+    auto s = this->services.find(name);
+    if (s == this->services.end())
+    {
+        ERR("Name {} not found", name);
+    }
+    assert(s != this->services.end());
 
     return s->second;
 }
@@ -99,11 +111,18 @@ void Scheduler::service_launched(shared_ptr<Service> service, pid_t pid)
     assert(service->get_status() == READY);
 
     service->set_status(STARTING);
+    service->pid = pid;
     this->ready.erase(service);
     this->starting.insert(service);
 
     this->pids.insert(pair<pid_t, shared_ptr<Service>>(pid, service));
     INFO("{} -> launched with pid({})", service->get_name(), pid);
+}
+
+void Scheduler::service_started(const string &name)
+{
+    auto service = this->get_for_name(name);
+    this->service_started(service->pid);
 }
 
 void Scheduler::service_started(pid_t pid)

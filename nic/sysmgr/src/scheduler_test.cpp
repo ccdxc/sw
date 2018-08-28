@@ -4,9 +4,9 @@
 
 #include <sys/types.h>
 
-#include "service.h"
-#include "scheduler.h"
-#include "spec.h"
+#include "scheduler.hpp"
+#include "service.hpp"
+#include "spec.hpp"
 
 static pid_t launch_srv(Scheduler &sched, shared_ptr<Service> srv)
 {

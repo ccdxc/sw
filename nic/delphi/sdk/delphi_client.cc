@@ -8,7 +8,6 @@ namespace delphi {
 using namespace std;
 using namespace delphi::messanger;
 
-
 // DelphiClient constructor
 DelphiClient::DelphiClient() {
     // start the sync timer
@@ -33,18 +32,26 @@ error DelphiClient::Connect() {
     // create a messanger client
     this->mclient = make_shared<MessangerClient>(shared_from_this());
 
-    // connect to server
-    error err = mclient->Connect();
-    if (err.IsNotOK()) {
-        LogError("Error connecting to messanger server. Err: {}", err);
-        return err;
+    for (int i = 0; i < CONNECT_TRIES; i++)
+    {
+        // connect to server
+        error err = mclient->Connect();
+        if (err.IsNotOK()) {
+            if (i == CONNECT_TRIES)
+            {
+                LogError("Error({}) connecting to hub. Giving up", err);
+                return err;
+            }
+            LogInfo("Error({}) connecting to hub. Will try again", err);
+            std::this_thread::sleep_for(std::chrono::milliseconds(CONNECT_SLEEP_MS));
+        }
     }
 
     // mark ourselves as connected
     isConnected = true;
 
     // send mout request
-    err = mclient->SendMountReq(this->service->Name(), this->mounts);
+    error err = mclient->SendMountReq(this->service->Name(), this->mounts);
     if (err.IsNotOK()) {
         LogError("Error mounting. Err: {}", err);
         return err;

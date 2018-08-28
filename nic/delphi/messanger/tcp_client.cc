@@ -36,7 +36,7 @@ error TcpClient::Connect(char *hostName, int hostPort) {
     struct sockaddr_in my_addr;
 
     // create the socket
-    hsock = socket(AF_INET, SOCK_STREAM, 0);
+    hsock = socket(AF_INET, SOCK_STREAM  | SOCK_CLOEXEC, 0);
     if(hsock == -1){
             LogError("Error initializing socket {}",errno);
             exit(1);
@@ -51,8 +51,8 @@ error TcpClient::Connect(char *hostName, int hostPort) {
     // connect to the server
     if (connect(hsock, (struct sockaddr*)&my_addr, sizeof(my_addr)) == -1 ){
         if(errno != EINPROGRESS){
-                LogError("Error connecting socket {}", errno);
-                exit(1);
+            LogError("Error connecting socket {}", errno);
+            return error::New("Connection failed");
         }
     }
 

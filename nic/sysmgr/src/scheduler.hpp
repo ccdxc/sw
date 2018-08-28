@@ -6,8 +6,8 @@
 #include <memory>
 #include <set>
 
-#include "service.h"
-#include "spec.h"
+#include "service.hpp"
+#include "spec.hpp"
 
 enum action_type_t
 {
@@ -31,12 +31,14 @@ public:
   void debug();
   unique_ptr<Action> next_action();
   void service_launched(shared_ptr<Service> srv, pid_t pid);
+  void service_started(const string &name);
   void service_started(pid_t pid);
   void service_died(pid_t pid);
 
 private:
   void service_ready(shared_ptr<Service> srv);
   shared_ptr<Service> get_for_pid(pid_t pid);
+  shared_ptr<Service> get_for_name(const string &name);
   map<pid_t, shared_ptr<Service> > pids;
   map<string, shared_ptr<Service> > services;
   ServiceSet ready;

@@ -24,9 +24,11 @@ enum service_status
 class Service
 {
   public:
+    pid_t pid;
     Service(string name, string command) : name(name), command(command)
     {
         status = WAITING;
+        pid = 0;
     }
 
     int Compare(const Service &srv)
@@ -90,7 +92,6 @@ class Service
     set<weak_ptr<Service>, std::owner_less<std::weak_ptr<Service> > > dependencies;
     list<weak_ptr<Service> > dependees;
     enum service_status status;
-    pid_t pid;
 };
 
 struct ServiceCompare

@@ -19,7 +19,7 @@ Logger GetLogger();
 
 #define INFO(args...) GetLogger()->info(args)
 #define WARN(args...) GetLogger()->warn(args)
-#define ERROR(args...) GetLogger()->error(args)
+#define ERR(args...) GetLogger()->error(args)
 #define FATAL(args...) { GetLogger()->error(args); assert(0); }
 
 #endif

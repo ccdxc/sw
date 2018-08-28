@@ -33,6 +33,12 @@ using namespace delphi::messanger;
 // get a object handle from service id and object id
 #define OBJECT_HANDLE(svcID, objID) ((((uint64_t)svcID & MAX_SERVICE_ID) << 48) | (objID & MAX_OBJECT_HANDLE))
 
+// the number of tries we will try connecting to the hub before giving up
+#define CONNECT_TRIES 10
+
+// milliseconds that we will wait before trying to connect again
+#define CONNECT_SLEEP_MS 100
+
 // ObjectMutation keeps of an object that changed(keeps both old and new objects)
 class ObjectMutation {
 public:
