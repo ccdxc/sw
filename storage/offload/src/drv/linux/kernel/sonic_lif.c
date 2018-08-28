@@ -678,7 +678,7 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	err = sonic_lif_crypto_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
 	if (err)
 		goto done;
-	
+
 	res->initialized = true;
 done:
 	return err;
@@ -745,10 +745,10 @@ err_out_adminq_deinit:
 	return err;
 }
 
-/* 
+/*
  * Global variable to track the lif
- * Unlike network device driver, offload driver does not get lif handle 
- * as part of api. Tracking lif via global handle is a bit ugly but will make 
+ * Unlike network device driver, offload driver does not get lif handle
+ * as part of api. Tracking lif via global handle is a bit ugly but will make
  * upper level interfaces less clumsy
  */
 static struct lif *sonic_glif;
@@ -832,7 +832,7 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	//TODO: Replace MAX_NUM_CORES with varaible from sonic
 	spin_lock(&lif->res.lock);
 	free_res_id = find_first_zero_bit(lif->res.pc_res_bmp, lif->sonic->num_per_core_resources);
-	if(free_res_id == lif->sonic->num_per_core_resources) {
+	if (free_res_id == lif->sonic->num_per_core_resources) {
 		spin_unlock(&lif->res.lock);
 		OSAL_LOG_ERROR("Per core resource exhausted");
 		return err;
@@ -840,7 +840,7 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	set_bit(free_res_id, lif->res.pc_res_bmp);
 	spin_unlock(&lif->res.lock);
 	lif->res.core_to_res_map[core_id] = free_res_id;
-	return 0;	
+	return 0;
 }
 
 struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
@@ -850,11 +850,9 @@ struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
 	int core_id;
 
 	core_id = osal_get_coreid() % MAX_NUM_CORES;
-	if(lif->res.core_to_res_map[core_id] < 0)
-	{
+	if (lif->res.core_to_res_map[core_id] < 0) {
 		err = assign_per_core_res_id(lif, core_id);
-		if(err != 0) 
-		{
+		if (err != 0) {
 			OSAL_LOG_ERROR("assign_per_core_res_id failed with error %d", err);
 			return NULL;
 		}
@@ -871,24 +869,24 @@ int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 
 	*q = NULL;
 	pc_res = sonic_get_per_core_res(lif);
-	if(pc_res == NULL)
+	if (pc_res == NULL)
 		return err;
-	switch(sonic_qtype) {
-		case SONIC_QTYPE_CP_SQ:
-			*q = &pc_res->cp_seq_q;
-			break;
-		case SONIC_QTYPE_DC_SQ:
-			*q = &pc_res->dc_seq_q;
-			break;
-		case SONIC_QTYPE_CRYPTO_ENC_SQ:
-			*q = &pc_res->crypto_enc_seq_q;
-			break;
-		case SONIC_QTYPE_CRYPTO_DEC_SQ:
-			*q = &pc_res->crypto_dec_seq_q;
-			break;
-		default:
-			return err;
-			break;
+	switch (sonic_qtype) {
+	case SONIC_QTYPE_CP_SQ:
+		*q = &pc_res->cp_seq_q;
+		break;
+	case SONIC_QTYPE_DC_SQ:
+		*q = &pc_res->dc_seq_q;
+		break;
+	case SONIC_QTYPE_CRYPTO_ENC_SQ:
+		*q = &pc_res->crypto_enc_seq_q;
+		break;
+	case SONIC_QTYPE_CRYPTO_DEC_SQ:
+		*q = &pc_res->crypto_dec_seq_q;
+		break;
+	default:
+		return err;
+		break;
 	}
 	return 0;
 }
@@ -903,41 +901,41 @@ int alloc_cpdc_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype, s
 
 	*q = NULL;
 	pc_res = sonic_get_per_core_res(lif);
-	if(pc_res == NULL)
+	if (pc_res == NULL)
 		return err;
 	//TODO - Change MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES to actual value
-	switch(sonic_qtype) {
-		case SONIC_QTYPE_CPDC_STATUS:
-			bmp = pc_res->cpdc_seq_status_qs_bmp;
-			max = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
-			break;
-		case SONIC_QTYPE_CRYPTO_STATUS:
-			bmp = pc_res->crypto_seq_status_qs_bmp;
-			max = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
-			break;
-		default:
-			return err;
-			break;
+	switch (sonic_qtype) {
+	case SONIC_QTYPE_CPDC_STATUS:
+		bmp = pc_res->cpdc_seq_status_qs_bmp;
+		max = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
+		break;
+	case SONIC_QTYPE_CRYPTO_STATUS:
+		bmp = pc_res->crypto_seq_status_qs_bmp;
+		max = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
+		break;
+	default:
+		return err;
+		break;
 	}
 	free_qid = find_first_zero_bit(bmp, max);
-	if(free_qid == max)
+	if (free_qid == max)
 		return err;
 	set_bit(free_qid, bmp);
-	switch(sonic_qtype) {
-		case SONIC_QTYPE_CPDC_STATUS:
-			*q = &pc_res->cpdc_seq_status_qs[free_qid];
-			break;
-		case SONIC_QTYPE_CRYPTO_STATUS:
-			*q = &pc_res->crypto_seq_status_qs[free_qid];
-			break;
-		default:
-			return err;
-			break;
+	switch (sonic_qtype) {
+	case SONIC_QTYPE_CPDC_STATUS:
+		*q = &pc_res->cpdc_seq_status_qs[free_qid];
+		break;
+	case SONIC_QTYPE_CRYPTO_STATUS:
+		*q = &pc_res->crypto_seq_status_qs[free_qid];
+		break;
+	default:
+		return err;
+		break;
 	}
 	return 0;
 }
 
-struct lif* sonic_get_lif(void)
+struct lif *sonic_get_lif(void)
 {
 	return sonic_glif;
 }
@@ -966,7 +964,7 @@ static int sonic_lif_seq_q_init(struct queue *q)
 	dev_info(lif->sonic->dev, "seq_q_init.pid %d\n", ctx.cmd.seq_queue_init.pid);
 	dev_info(lif->sonic->dev, "seq_q_init.index %d\n", ctx.cmd.seq_queue_init.index);
 	dev_info(lif->sonic->dev, "seq_q_init.wring_base 0x%llx\n",
-	           ctx.cmd.seq_queue_init.wring_base);
+		   ctx.cmd.seq_queue_init.wring_base);
 	dev_info(lif->sonic->dev, "seq_q_init.wring_size %d\n",
 		   ctx.cmd.seq_queue_init.wring_size);
 
@@ -1163,7 +1161,7 @@ static int sonic_lif_hang_notify(struct lif *lif)
 
 	dev_info(lif->sonic->dev, "hang_notify query successful, status %u\n",
 		 ctx.comp.hang_notify.status);
-	err = ctx.comp.hang_notify.status ? -EFAULT: 0; /* TODO */
+	err = ctx.comp.hang_notify.status ? -EFAULT : 0; /* TODO */
 
 	return err;
 }

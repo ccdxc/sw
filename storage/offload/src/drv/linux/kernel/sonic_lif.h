@@ -146,7 +146,7 @@ int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type qtype,
 int alloc_seq_statusq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q);
 int free_seq_statusq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q);
 
-struct lif* sonic_get_lif(void);
+struct lif *sonic_get_lif(void);
 struct per_core_resource *sonic_get_per_core_res(struct lif *lif);
 
 #endif /* _SONIC_LIF_H_ */
