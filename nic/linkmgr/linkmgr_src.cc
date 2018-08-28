@@ -1160,6 +1160,9 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
     bool        enable        = false;
     bool        reset         = false;
     uint32_t    sbus_addr     = 0x0;
+    uint32_t    sbus_data     = 0x0;
+    uint8_t     reg_addr      = 0x0;
+    uint8_t     cmd           = 0x0;
     uint32_t    cable_type    = 0x0;
     int         eye_type      = 0;
     int         hard          = 0;
@@ -1389,7 +1392,8 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             sbus_addr = req.val1();
             HAL_TRACE_DEBUG("serdes_spico_upload sbus_addr: {}",
                             sbus_addr);
-            sdk::linkmgr::serdes_fns.serdes_spico_upload(sbus_addr, filename.c_str());
+            sdk::linkmgr::serdes_fns.serdes_spico_upload(
+                                        sbus_addr, filename.c_str());
             break;
 
         case 18:
@@ -1411,6 +1415,19 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
                             mac_inst, mac_ch, enable);
 
             // TODO
+            break;
+
+        case 20:
+            sbus_addr = req.val1();
+            reg_addr  = req.val2();
+            cmd       = req.val3();
+            sbus_data = req.val4();
+
+            HAL_TRACE_DEBUG("sbus_access sbus_addr: {}, reg_addr: {}, cmd: {},"
+                            " data: {}, ret: {}",
+                            sbus_addr, sbus_addr, cmd, sbus_data,
+                            sdk::linkmgr::sbus_access(
+                                        sbus_addr, reg_addr, cmd, &sbus_data));
             break;
 
         default:

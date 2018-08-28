@@ -5,6 +5,7 @@
 #include "port_serdes.hpp"
 #include "linkmgr_types.hpp"
 #include "linkmgr_internal.hpp"
+#include "include/sdk/asic/capri/cap_mx_api.h"
 #ifdef NRMAKE
 #include "third-party/avago/include/aapl/aapl.h"
 #else
@@ -144,10 +145,92 @@ serdes_spico_upload_default (uint32_t sbus_addr, const char* file_name)
 // HW methods
 //---------------------------------------------------------------------------
 
-uint32_t sbus_access (Aapl_t *aapl, uint32_t addr, unsigned char reg_addr,
-                      unsigned char command, uint *sbus_data)
+uint32_t
+sbus_access (uint32_t sbus_addr,
+             unsigned char reg_addr,
+             unsigned char command,
+             uint *sbus_data)
 {
-    return 0;
+    uint32_t chip_id     = 0;
+    uint32_t status      = 0;
+    uint32_t ring_number = ((sbus_addr >> 8 ) & 0x0f); 
+    uint32_t sbus_id     = (sbus_addr         & 0xff);
+
+    //Required commands are:
+    //1: write
+    //2: read
+    //0: reset
+    //sbus_data: Pointer to the SBus data to write. Results of SBus read operations will be placed here.
+
+    switch (command) {
+    case 0x1:   // sbus write
+        SDK_TRACE_DEBUG("sbus_write."
+                " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
+                " ring: 0x%x, sbus_id: 0x%x",
+                sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
+
+        if(ring_number == 0) {
+            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            // cap_pp_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
+        } else {
+            cap_ms_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
+        }
+        status = 1;
+        break;
+
+    case 0x2:   // sbus read
+        if(ring_number == 0) {
+            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            // *sbus_data = cap_pp_sbus_read(chip_id, sbus_id, reg_addr);
+        } else {
+            *sbus_data = cap_ms_sbus_read(chip_id, sbus_id, reg_addr);
+        }
+
+        SDK_TRACE_DEBUG("sbus_read."
+                " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
+                " ring: 0x%x, sbus_id: 0x%x, sbus:data: 0x%x",
+                sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id,
+                *sbus_data);
+
+        status = 1;
+        break;
+
+    case 0x0:   // sbus reset
+        SDK_TRACE_DEBUG("sbus_reset."
+                " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
+                " ring: 0x%x, sbus_id: 0x%x",
+                sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
+
+        if(ring_number == 0) {
+            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            // cap_pp_sbus_reset(chip_id, sbus_id);
+        } else {
+            // cap_ms_sbus_reset(chip_id, sbus_id);
+        }
+        status = 1;
+        break;
+
+    default:
+        SDK_TRACE_DEBUG("Invalid cmd."
+                " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
+                " ring: 0x%x, sbus_id: 0x%x",
+                sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
+
+        status = 0;
+        break;
+    }
+
+    return status;
+}
+
+uint32_t
+aapl_sbus_access (Aapl_t *aapl,
+                  uint32_t sbus_addr,
+                  unsigned char reg_addr,
+                  unsigned char command,
+                  uint *sbus_data)
+{
+    return sbus_access(sbus_addr, reg_addr, command, sbus_data);
 }
 
 uint32_t spico_int (Aapl_t *aapl, uint32_t addr, int int_code, int int_data)
@@ -189,7 +272,7 @@ serdes_global_init_hw(void)
         aapl->aacs  = aacs_connect;
     } else {
         // register access methods
-        aapl_register_sbus_fn(aapl, sbus_access, NULL, NULL);
+        aapl_register_sbus_fn(aapl, aapl_sbus_access, NULL, NULL);
         aapl_register_spico_int_fn(aapl, spico_int);
     }
 

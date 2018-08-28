@@ -28,6 +28,12 @@ extern serdes_fn_t serdes_fns;
 
 sdk_ret_t port_serdes_fn_init(linkmgr_cfg_t *cfg);
 
+uint32_t
+sbus_access (uint32_t sbus_addr,
+             unsigned char reg_addr,
+             unsigned char command,
+             uint *sbus_data);
+
 }    // namespace linkmgr
 }    // namespace sdk
 

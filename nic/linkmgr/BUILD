@@ -54,8 +54,6 @@ cc_library(
         "//nic:libprotobuf",
         "//nic/utils/trace:trace",
         "//nic:google_includes",
-        "//nic:libaapl",
-        "@sdk//obj:sdk_linkmgr",
         "@sdk//obj:sdk_twheel",
     ],
     copts = sdk_copts,
@@ -92,6 +90,7 @@ cc_library(
         "pknobs.cc",
         "cap_mx_api.cc",
         "cap_bx_api.cc",
+        "cap_sbus_api.cc",
         "pknobs.hpp",
     ],
     deps = [

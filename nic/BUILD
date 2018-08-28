@@ -18,6 +18,8 @@ cc_library(
 cc_library(
     name = "linkmgr_capricsr_int",
     srcs = [
+        "asic/capri/model/cap_top/cap_top_csr_defines.h",
+        "asic/capri/model/cap_top/csr_defines/cap_ms_c_hdr.h",
         "asic/capri/model/cap_bx/cap_bx_csr.cc",
         "asic/capri/model/cap_bx/cap_bx_csr.h",
         "asic/capri/verif/apis/cap_bx_api.h",
@@ -55,6 +57,8 @@ cc_library(
         "asic/ip/verif/pcpp/pknobs_reader.h",
     ],
     includes = [
+        "asic/capri/model/cap_top",
+        "asic/capri/model/cap_top/csr_defines",
         "asic/capri/model/utils",
         "asic/capri/model/cap_mx",
         "asic/capri/model/cap_bx",
