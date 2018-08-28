@@ -1,6 +1,3 @@
-#define LPM_KEY_SIZE             (4)
-#define LPM_DATA_SIZE            (2)
-
 #define LPM_S0_KEYS_PER_TABLE    (15)
 #define LPM_S1_KEYS_PER_TABLE    (15)
 #define LPM_S2_KEYS_PER_TABLE    (7)
