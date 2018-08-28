@@ -19,10 +19,10 @@
 
 /*
  * TODO:
- *	- revisit chain() when handling multiple services in one request
  *	- add additional UTs for read/write status/result, as needed
- *	- reuse/common code
- *	- skip partial/status data mismatch in cp/chksum/hash and its UTs
+ *	- reuse/common code (write_result, read_status, etc.)
+ *	- u64 vs uint64_t
+ *	- move validation routines from services to higher layer
  *
  * TODO-cp:
  *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
@@ -41,11 +41,6 @@
  *	- see embedded ones
  *
  */
-#ifdef NDEBUG
-#define CPDC_PPRINT_STATUS_DESC(d)
-#else
-#define CPDC_PPRINT_STATUS_DESC(d)	cpdc_pprint_status_desc(d)
-#endif
 
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
@@ -116,16 +111,16 @@ pprint_sgl(uint64_t sgl_pa)
 	if (!sgl)
 		return;
 
-	OSAL_LOG_INFO("%30s: %llx", "cs_addr_0", sgl->cs_addr_0);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cs_addr_0", sgl->cs_addr_0);
 	OSAL_LOG_INFO("%30s: %d", "cs_len_0", sgl->cs_len_0);
 
-	OSAL_LOG_INFO("%30s: %llx", "cs_addr_1", sgl->cs_addr_1);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cs_addr_1", sgl->cs_addr_1);
 	OSAL_LOG_INFO("%30s: %d", "cs_len_1", sgl->cs_len_1);
 
-	OSAL_LOG_INFO("%30s: %llx", "cs_addr_2", sgl->cs_addr_2);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cs_addr_2", sgl->cs_addr_2);
 	OSAL_LOG_INFO("%30s: %d", "cs_len_2", sgl->cs_len_2);
 
-	OSAL_LOG_INFO("%30s: %llx", "cs_next", sgl->cs_next);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cs_next", sgl->cs_next);
 }
 
 static void __attribute__((unused))
@@ -162,11 +157,10 @@ cpdc_pprint_desc(const struct cpdc_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%.*s", 30, "=========================================");
 	OSAL_LOG_INFO("%30s: 0x%llx", "cpdc_desc", (u64) desc);
 
-	OSAL_LOG_INFO("%30s: %llx", "cd_src", desc->cd_src);
-	OSAL_LOG_INFO("%30s: %llx", "cd_dst", desc->cd_dst);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cd_src", desc->cd_src);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cd_dst", desc->cd_dst);
 
 	OSAL_LOG_INFO("%30s:", "=== cpdc_cmd");
 	pprint_cpdc_cmd(&desc->u.cd_bits);
@@ -175,25 +169,24 @@ cpdc_pprint_desc(const struct cpdc_desc *desc)
 	OSAL_LOG_INFO("%30s: %d", "cd_extended_len", desc->cd_extended_len);
 	OSAL_LOG_INFO("%30s: %d", "cd_threshold_len", desc->cd_threshold_len);
 
-	OSAL_LOG_INFO("%30s: %llx", "cd_status_addr", desc->cd_status_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cd_status_addr", desc->cd_status_addr);
 
-	OSAL_LOG_INFO("%30s: %llx", "cd_db_addr", desc->cd_db_addr);
-	OSAL_LOG_INFO("%30s: %llx", "cd_db_data", desc->cd_db_data);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cd_db_addr", desc->cd_db_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cd_db_data", desc->cd_db_data);
 
-	OSAL_LOG_INFO("%30s: %llx", "cd_otag_addr", desc->cd_otag_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cd_otag_addr", desc->cd_otag_addr);
 	OSAL_LOG_INFO("%30s: %d", "cd_otag_data", desc->cd_otag_data);
 
 	OSAL_LOG_INFO("%32s: %d", "cd_status_data", desc->cd_status_data);
 
 	if (desc->u.cd_bits.cc_src_is_list) {
-		OSAL_LOG_INFO("%30s: %llx", "=== src_sgl", desc->cd_src);
+		OSAL_LOG_INFO("%30s: 0x%llx", "=== src_sgl", desc->cd_src);
 		pprint_sgl(desc->cd_src);
 	}
 	if (desc->u.cd_bits.cc_dst_is_list) {
-		OSAL_LOG_INFO("%30s: %llx", "=== dst_sgl", desc->cd_dst);
+		OSAL_LOG_INFO("%30s: 0x%llx", "=== dst_sgl", desc->cd_dst);
 		pprint_sgl(desc->cd_dst);
 	}
-	OSAL_LOG_INFO("%.*s", 30, "=========================================");
 }
 
 void __attribute__((unused))
@@ -363,6 +356,72 @@ convert_buffer_list_to_sgl(const struct pnso_buffer_list *buf_list)
 	return populate_sgl(buf_list);
 }
 
+uint32_t
+cpdc_get_desc_size(void)
+{
+	uint32_t pad_size;
+
+	pad_size = mpool_get_pad_size(sizeof(struct cpdc_desc),
+			PNSO_MEM_ALIGN_DESC);
+	return sizeof(struct cpdc_desc) + pad_size;
+}
+
+uint32_t
+cpdc_get_status_desc_size(void)
+{
+	uint32_t pad_size;
+
+	pad_size = mpool_get_pad_size(sizeof(struct cpdc_status_desc),
+			PNSO_MEM_ALIGN_DESC);
+	return sizeof(struct cpdc_status_desc) + pad_size;
+}
+
+uint32_t
+cpdc_get_sgl_size(void)
+{
+	uint32_t pad_size;
+
+	pad_size = mpool_get_pad_size(sizeof(struct cpdc_sgl),
+			PNSO_MEM_ALIGN_DESC);
+	return sizeof(struct cpdc_sgl) + pad_size;
+}
+
+static struct cpdc_desc *
+get_next_desc(struct cpdc_desc *desc, uint32_t object_size)
+{
+	char *obj;
+
+	obj = (char *) desc;
+	obj += object_size;
+	desc = (struct cpdc_desc *) obj;
+
+	return desc;
+}
+
+struct cpdc_status_desc *
+cpdc_get_next_status_desc(struct cpdc_status_desc *desc, uint32_t object_size)
+{
+	char *obj;
+
+	obj = (char *) desc;
+	obj += object_size;
+	desc = (struct cpdc_status_desc *) obj;
+
+	return desc;
+}
+
+static struct cpdc_sgl *
+get_next_sgl(struct cpdc_sgl *sgl, uint32_t object_size)
+{
+	char *obj;
+
+	obj = (char *) sgl;
+	obj += object_size;
+	sgl = (struct cpdc_sgl *) obj;
+
+	return sgl;
+}
+
 struct cpdc_desc *
 cpdc_get_desc(struct per_core_resource *pc_res, bool per_block)
 {
@@ -432,7 +491,6 @@ cpdc_put_sgl(struct per_core_resource *pc_res, bool per_block,
 	return mpool_put_object(mpool, sgl);
 }
 
-/* TODO-cpdc: revisit */
 pnso_error_t
 cpdc_update_service_info_sgl(struct service_info *svc_info,
 		const struct service_params *svc_params)
@@ -452,48 +510,11 @@ out:
 	return err;
 }
 
-void
-cpdc_get_desc_size(uint32_t *object_size, uint32_t *pad_size)
-{
-	*pad_size = mpool_get_pad_size(sizeof(struct cpdc_desc),
-			PNSO_MEM_ALIGN_DESC);
-
-	*object_size = sizeof(struct cpdc_desc) + *pad_size;
-}
-
-void
-cpdc_get_status_desc_size(uint32_t *object_size, uint32_t *pad_size)
-{
-	*pad_size = mpool_get_pad_size(sizeof(struct cpdc_status_desc),
-			PNSO_MEM_ALIGN_DESC);
-	*object_size = sizeof(struct cpdc_status_desc) + *pad_size;
-}
-
-static struct cpdc_desc *
-get_next_desc(struct cpdc_desc *desc, uint32_t object_size)
-{
-	char *obj;
-
-	obj = (char *) desc;
-	obj += object_size;
-	desc = (struct cpdc_desc *) obj;
-
-	return desc;
-}
-
-static struct cpdc_status_desc *
-get_next_status_desc(struct cpdc_status_desc *desc,
-		uint32_t object_size)
-{
-	char *obj;
-
-	obj = (char *) desc;
-	obj += object_size;
-	desc = (struct cpdc_status_desc *) obj;
-
-	return desc;
-}
-
+/*
+ * TODO-cpdc:
+ * 	retire this to use _ex() version when per-block lone chksum is needed
+ *
+ */
 uint32_t
 cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		uint32_t src_buf_len, struct cpdc_sgl *src_sgl,
@@ -503,12 +524,12 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 	struct cpdc_desc *pb_desc;
 	struct cpdc_status_desc *pb_status_desc;
 	struct pnso_flat_buffer flat_buf;
-	uint32_t desc_object_size, status_object_size, pad_size;
-	uint32_t i, len, block_cnt, buf_len;
+	uint32_t desc_object_size, status_object_size;
+	uint32_t len, block_cnt, buf_len, i = 0;
 	char *buf;
 
 	/*
-	 * per-block support assumes the input buffer will be mapped to a 
+	 * per-block support assumes the input buffer will be mapped to a
 	 * flat buffer and for 8-blocks max.  Memory for this flat buffer
 	 * should come from HBM memory.
 	 *
@@ -524,8 +545,8 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 			block_cnt, block_size, src_buf_len, flat_buf.buf,
 			(u64) desc, (u64) status_desc);
 
-	cpdc_get_desc_size(&desc_object_size, &pad_size);
-	cpdc_get_status_desc_size(&status_object_size, &pad_size);
+	desc_object_size = cpdc_get_desc_size();
+	status_object_size = cpdc_get_status_desc_size();
 
 	buf_len = src_buf_len;
 	for (i = 0; buf_len && (i < block_cnt); i++) {
@@ -541,11 +562,77 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 
 		pb_desc = get_next_desc(pb_desc, desc_object_size);
 
-		pb_status_desc = get_next_status_desc(pb_status_desc,
+		pb_status_desc = cpdc_get_next_status_desc(pb_status_desc,
 				status_object_size);
 	}
 
-	return block_cnt;
+	OSAL_LOG_INFO("per-block src_buf_len: %d num_tags: %d", src_buf_len, i);
+	return i;
+}
+
+uint32_t
+cpdc_fill_per_block_desc_ex(uint32_t algo_type, uint32_t block_size,
+		uint32_t src_buf_len, struct pnso_buffer_list *src_blist,
+		struct cpdc_sgl *sgl, struct cpdc_desc *desc,
+		struct cpdc_status_desc *status_desc,
+		fill_desc_fn_t fill_desc_fn)
+{
+	struct cpdc_desc *pb_desc;
+	struct cpdc_status_desc *pb_status_desc;
+	struct cpdc_sgl *pb_sgl;
+	struct pnso_flat_buffer flat_buf;
+	uint32_t desc_object_size, status_object_size, sgl_object_size;
+	uint32_t len, block_cnt, buf_len, i = 0;
+	char *buf;
+
+	/*
+	 * per-block support assumes the input buffer will be mapped to a
+	 * flat buffer and for 8-blocks max.  Memory for this flat buffer
+	 * should come from HBM memory.
+	 *
+	 */
+	flat_buf.len = src_buf_len;
+	flat_buf.buf = (uint64_t) osal_phy_to_virt(src_blist->buffers[0].buf);
+
+	block_cnt = pbuf_get_flat_buffer_block_count(&flat_buf, block_size);
+	pb_desc = desc;
+	pb_status_desc = status_desc;
+	pb_sgl = sgl;
+
+	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x%llx desc: 0x%llx status_desc: 0x%llx",
+			block_cnt, block_size, src_buf_len, flat_buf.buf,
+			(u64) desc, (u64) status_desc);
+
+	desc_object_size = cpdc_get_desc_size();
+	status_object_size = cpdc_get_status_desc_size();
+	sgl_object_size = cpdc_get_sgl_size();
+
+	buf_len = src_buf_len;
+	for (i = 0; buf_len && (i < block_cnt); i++) {
+		buf = (char *) flat_buf.buf + (i * block_size);
+		len = buf_len > block_size ? block_size : buf_len;
+
+		memset(pb_sgl, 0, sizeof(struct cpdc_sgl));
+		pb_sgl->cs_addr_0 = osal_virt_to_phy(buf);
+		pb_sgl->cs_len_0 = len;
+
+		OSAL_LOG_INFO("blk_num: %d buf: 0x%llx, len: %d desc: 0x%llx status_desc: 0x%llx sgl: 0x%llx",
+			i, (u64) buf, len,
+			(u64) pb_desc, (u64) pb_status_desc, (u64) pb_sgl);
+
+		fill_desc_fn(algo_type, len, false,
+				pb_sgl, pb_desc, pb_status_desc);
+		buf_len -= len;
+
+		pb_desc = get_next_desc(pb_desc, desc_object_size);
+
+		pb_status_desc = cpdc_get_next_status_desc(pb_status_desc,
+				status_object_size);
+
+		pb_sgl = get_next_sgl(pb_sgl, sgl_object_size);
+	}
+
+	return i;
 }
 
 pnso_error_t
@@ -579,13 +666,6 @@ out:
 	return err;
 }
 
-void
-cpdc_populate_buffer_list(struct cpdc_sgl *sgl,
-		struct pnso_buffer_list *buf_list)
-{
-	/* TODO-chain: EOPNOTSUPP */
-}
-
 pnso_error_t
 cpdc_convert_desc_error(int error)
 {
@@ -616,4 +696,21 @@ cpdc_convert_desc_error(int error)
 		OSAL_ASSERT(0);	/* unreachable code */
 		return EOPNOTSUPP;
 	}
+}
+
+struct service_deps *
+cpdc_get_service_deps(const struct service_info *svc_info)
+{
+	struct service_chain *chead;
+	struct chain_entry *centry;
+	struct service_deps *svc_deps;
+
+	if (!svc_info->si_centry)
+		return NULL;
+
+	centry = svc_info->si_centry;
+	chead = centry->ce_chain_head;
+	svc_deps = &chead->sc_svc_deps;
+
+	return svc_deps;
 }

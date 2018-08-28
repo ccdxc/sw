@@ -62,6 +62,8 @@
 extern "C" {
 #endif
 
+#include "pnso_chain_params.h"
+
 /* service flags */
 #define CHAIN_SFLAG_LONE_SERVICE	(1 << 0)
 #define CHAIN_SFLAG_FIRST_SERVICE	(1 << 1)
@@ -122,6 +124,16 @@ struct sequencer_info {
 	uint8_t sqi_batch_mode;
 	uint16_t sqi_batch_size;
 	void *sqi_desc;      /* sequencer descriptor */
+	uint8_t *sqi_status_desc;
+};
+
+/* TODO-chain:
+ *	revisit to generalize this struct/members and to share among all
+ *	other future services
+ *
+ */
+struct service_deps {
+	uint32_t sd_dst_data_len;	/* for compressed output buffer len */
 };
 
 struct service_info {
@@ -138,11 +150,12 @@ struct service_info {
 	struct cpdc_sgl	*si_src_sgl;	/* src input buffer converted to sgl */
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
 
-	struct cpdc_sgl	*si_p4_sgl;	/* for per block hash */
+	struct cpdc_sgl	*si_p4_sgl;	/* for per-block hash/checksum */
 
 	struct sequencer_info si_seq_info;
 
 	struct per_core_resource *si_pc_res;	/* to access lif/pool/etc. */
+	struct chain_entry *si_centry;	/* back pointer to chain entry */
 
 	struct service_ops si_ops;
 	struct pnso_service_status *si_svc_status;
@@ -161,6 +174,8 @@ struct service_chain {
 	struct pnso_service_result *sc_res;	/* caller supplied result */
 
 	struct per_core_resource *sc_pc_res;	/* to access pool/etc. */
+	struct cpdc_chain_params sc_chain_params; /* to interface with P4+ */
+	struct service_deps sc_svc_deps;	/* to share dependent params */
 
 	completion_cb_t	sc_req_cb;	/* caller supplied call-back */
 	void *sc_req_cb_ctx;		/* caller supplied cb context */

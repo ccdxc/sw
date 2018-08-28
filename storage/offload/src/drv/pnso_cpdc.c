@@ -34,7 +34,7 @@ alloc_pad_buffer(void)
 				err);
 		goto out;
 	}
-	/* TODO-chain: uncomment when rmem virt/phy addr is fixed */
+	/* TODO-chain: include rmem calloc/set fix that is in-flight */
 	// memset((void *) pad_buffer, 0, PNSO_MEM_ALIGN_PAGE);
 
 	err = PNSO_OK;

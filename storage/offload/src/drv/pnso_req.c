@@ -176,22 +176,13 @@ pprint_hash_tags(const struct pnso_hash_tag *tags, uint32_t num_tags)
 static void __attribute__((unused))
 pprint_chksum_tags(const struct pnso_chksum_tag *tags, uint32_t num_tags)
 {
-	uint32_t i, idx;
+	uint32_t i;
 
 	if (!tags || (num_tags > MAX_NUM_TAGS))
 		return;
 
-	for (i = 0, idx = 0; i < num_tags; i++) {
-		OSAL_LOG_INFO("%30s: %*phN", "checksum", 8, tags[idx].chksum);
-		/*
-		 * TODO-chksum:
-		 *	No access to algo_type to determine the size to skip
-		 *	the bytes and use pnso_get_chksum_algo_size(), but
-		 *	stay with this for now!
-		 *
-		 */
-		idx += PNSO_CHKSUM_TAG_LEN;
-	}
+	for (i = 0; i < num_tags; i++)
+		OSAL_LOG_INFO("%30s: %*phN", "checksum", 8, tags[i].chksum);
 }
 
 void __attribute__((unused))

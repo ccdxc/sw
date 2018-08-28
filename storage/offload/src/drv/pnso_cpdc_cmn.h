@@ -28,6 +28,19 @@ struct pnso_compression_header {
 #define CPDC_HASH_STATUS_DATA		3456
 #define CPDC_CHKSUM_STATUS_DATA		4567
 
+#ifdef NDEBUG
+#define CPDC_PPRINT_DESC(d)
+#define CPDC_PPRINT_STATUS_DESC(d)
+#else
+#define CPDC_PPRINT_DESC(d)						       \
+	do {								\
+		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		cpdc_pprint_desc(d);					\
+		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+	} while (0)
+#define CPDC_PPRINT_STATUS_DESC(d)	cpdc_pprint_status_desc(d)
+#endif
+
 /* CPDC common/utility functions */
 pnso_error_t cpdc_common_chain(struct chain_entry *centry);
 
@@ -45,9 +58,6 @@ pnso_error_t cpdc_update_service_info_sgl(struct service_info *svc_info,
 
 pnso_error_t cpdc_update_service_info_sgls(struct service_info *svc_info,
 		const struct service_params *svc_params);
-
-void cpdc_populate_buffer_list(struct cpdc_sgl *sgl,
-		struct pnso_buffer_list *buf_list);
 
 void cpdc_release_sgl(struct cpdc_sgl *sgl);
 
@@ -68,9 +78,14 @@ struct cpdc_sgl *cpdc_get_sgl(struct per_core_resource *pc_res, bool per_block);
 pnso_error_t cpdc_put_sgl(struct per_core_resource *pc_res, bool per_block,
 		struct cpdc_sgl *sgl);
 
-void cpdc_get_desc_size(uint32_t *object_size, uint32_t *pad_size);
+uint32_t cpdc_get_desc_size(void);
 
-void cpdc_get_status_desc_size(uint32_t *object_size, uint32_t *pad_size);
+uint32_t cpdc_get_status_desc_size(void);
+
+uint32_t cpdc_get_sgl_size(void);
+
+struct cpdc_status_desc *cpdc_get_next_status_desc(
+		struct cpdc_status_desc *desc, uint32_t object_size);
 
 typedef void (*fill_desc_fn_t) (uint32_t algo_type,
 		uint32_t buf_len, bool flat_buf, void *src_buf,
@@ -80,6 +95,14 @@ uint32_t cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		uint32_t src_buf_len, struct cpdc_sgl *src_sgl,
 		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc,
 		fill_desc_fn_t fill_desc_fn);
+
+uint32_t cpdc_fill_per_block_desc_ex(uint32_t algo_type, uint32_t block_size,
+		uint32_t src_buf_len, struct pnso_buffer_list *src_blist,
+		struct cpdc_sgl *sgl, struct cpdc_desc *desc,
+		struct cpdc_status_desc *status_desc,
+		fill_desc_fn_t fill_desc_fn);
+
+struct service_deps *cpdc_get_service_deps(const struct service_info *svc_info);
 
 pnso_error_t cpdc_convert_desc_error(int error);
 

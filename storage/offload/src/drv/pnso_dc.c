@@ -15,9 +15,7 @@
 
 #ifdef NDEBUG
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	PNSO_OK
-#define CPDC_PPRINT_DESC(d)
 #else
-#define CPDC_PPRINT_DESC(d)		cpdc_pprint_desc(d)
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	validate_setup_input(i, p)
 #endif
 

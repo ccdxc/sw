@@ -11,9 +11,20 @@
 #include "pnso_api.h"
 #include "pnso_pbuf.h"
 
+/**
+ * NOTE/TODO-sonic:
+ * 	- this test utitliy may be used only until pencake arrives; thereby,
+ * 	almost all the tests are used to only to verify the bring-up.  Revisit
+ * 	error checks/bailout, and error reporting, etc. if this utility
+ * 	needs to be used for long-term.
+ * 	- thread count, block count, etc. are kept at its minimal limits for
+ * 	bring up purposes.
+ *
+ */
+
 /* Input data defaults */
 #define PNSO_TEST_BLOCK_SIZE	4096
-#define PNSO_TEST_BLOCK_COUNT	2
+#define PNSO_TEST_BLOCK_COUNT	12
 #define PNSO_TEST_DATA_SIZE (PNSO_TEST_BLOCK_SIZE * PNSO_TEST_BLOCK_COUNT)
 
 /* Compression defaults */
@@ -83,12 +94,6 @@ comp_cb(void *arg1, struct pnso_service_result *svc_res)
 		OSAL_LOG_ERROR("IO: ERROR: worker thread running on wrong core.");
 	}
 
-#if 0
-	OSAL_LOG_INFO("IO: Final svc status is %u", svc_res->svc[2].err);
-	OSAL_LOG_INFO("IO: Final length is %d",
-			svc_res->svc[2].u.dst.data_len);
-#endif
-
 	osal_atomic_fetch_add(&rstate->req_done, 1);
 }
 
@@ -102,13 +107,19 @@ init_buflist(struct pnso_multi_buflist *mbuf, char fill_byte)
 	for (i = 0; i < mbuf->buflist->count; i++) {
 		memset((void *) mbuf->buflist->buffers[i].buf,
 				fill_byte, PNSO_TEST_BLOCK_SIZE);
-		fill_byte++;
+		 fill_byte++;
 	}
 	pbuf_pprint_buffer_list(mbuf->buflist);
 	pbuf_convert_buffer_list_v2p(mbuf->buflist);
 
 	/* TODO: 'bufs' not in-use */
 	memset(mbuf->data, fill_byte, PNSO_TEST_DATA_SIZE);
+}
+
+static void
+deinit_buflist(struct pnso_multi_buflist *mbuf)
+{
+	pbuf_free_buffer_list(mbuf->buflist);
 }
 
 /* Fill in service defaults */
@@ -157,7 +168,7 @@ init_svc_desc(struct pnso_service *svc, uint16_t svc_type)
 static pnso_error_t
 submit_requests(struct thread_state *tstate)
 {
-	int rc;
+	int err;
 	size_t batch_id;
 	struct req_state *rstate = NULL;
 	struct pnso_service_request *svc_req = NULL;
@@ -168,16 +179,370 @@ submit_requests(struct thread_state *tstate)
 		svc_req = &rstate->req.req;
 		svc_res = &rstate->res.res;
 
-		rc = pnso_submit_request(svc_req, svc_res, comp_cb, rstate,
+		err = pnso_submit_request(svc_req, svc_res, comp_cb, rstate,
 					 NULL, NULL);
-		if (rc != 0) {
+		if (err != 0) {
 			OSAL_LOG_ERROR("pnso_submit_request(svc %u) failed with %d",
-				 svc_req->svc[0].svc_type, rc);
-			return rc;
+				 svc_req->svc[0].svc_type, err);
+			return err;
 		}
 	}
 
 	return 0;
+}
+
+static int
+verify_cp_dc_result(void)
+{
+	int i, err = 0;
+	size_t tid, bid, count;
+	struct thread_state *tstate;
+	struct req_state *rstate;
+	bool cmp_success;
+
+	OSAL_LOG_INFO("verify cp & dc ...");
+
+	osal_yield();
+	count = 0;
+	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
+		tstate = &osal_test_threads[tid];
+		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
+			rstate = &tstate->reqs[bid];
+
+			pbuf_convert_buffer_list_p2v(rstate->buflists[0].buflist);
+			pbuf_convert_buffer_list_p2v(rstate->buflists[1].buflist);
+			pbuf_convert_buffer_list_p2v(rstate->buflists[2].buflist);
+
+			pbuf_pprint_buffer_list(rstate->buflists[0].buflist);
+			pbuf_pprint_buffer_list(rstate->buflists[1].buflist);
+			pbuf_pprint_buffer_list(rstate->buflists[2].buflist);
+
+			cmp_success = true;
+			for (i = 0; cmp_success && i < PNSO_TEST_BLOCK_COUNT; i++) {
+				if (memcmp((void *)rstate->buflists[0].buflist->buffers[i].buf,
+					   (void *)rstate->buflists[2].buflist->buffers[i].buf,
+					   rstate->buflists[0].buflist->buffers[i].len)) {
+					cmp_success = false;
+					break;
+				}
+			}
+			if (cmp_success)
+				count++;
+		}
+	}
+
+	osal_yield();
+	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
+		OSAL_LOG_INFO("IO: Final memcmp passed");
+	} else {
+		OSAL_LOG_ERROR("IO: Final memcmp failed");
+		err = EINVAL;
+	}
+	osal_atomic_fetch_add(&tstate->test_done, 1);
+
+	return err;
+}
+
+static int
+verify_hash_result(void)
+{
+	int err = 0;
+	size_t tid, bid, count;
+	struct thread_state *tstate;
+	struct req_state *rstate;
+	struct pnso_service_result *svc_res = NULL;
+
+	OSAL_LOG_INFO("verify hash ...");
+
+	osal_yield();
+	count = 0;
+	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
+		tstate = &osal_test_threads[tid];
+		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
+			rstate = &tstate->reqs[bid];
+
+			svc_res = &rstate->res.res;
+			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_HASH) {
+				if (svc_res->svc[0].u.hash.num_tags) {
+					count++;
+					OSAL_LOG_INFO("IO: Hash done!  num_tags: %d count: %lu",
+						    svc_res->svc[0].u.hash.num_tags, count);
+				}
+			}
+
+			// deinit_buflist(&rstate->buflists[0]);
+		}
+	}
+
+	osal_yield();
+	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
+		OSAL_LOG_INFO("IO: Final hash passed");
+	} else {
+		OSAL_LOG_ERROR("IO: Final hash failed");
+		err = EINVAL;
+	}
+	osal_atomic_fetch_add(&tstate->test_done, 1);
+
+	return err;
+}
+
+static int
+verify_hash_per_block_result(void)
+{
+	int err = 0;
+	size_t tid, bid, count;
+	struct thread_state *tstate;
+	struct req_state *rstate;
+	struct pnso_service_result *svc_res = NULL;
+
+	OSAL_LOG_INFO("verify hash ...");
+
+	osal_yield();
+	count = 0;
+	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
+		tstate = &osal_test_threads[tid];
+		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
+			rstate = &tstate->reqs[bid];
+
+			svc_res = &rstate->res.res;
+			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_HASH) {
+				if (svc_res->svc[0].u.hash.num_tags >= 1) {
+					count++;
+					OSAL_LOG_INFO("IO: Hash done!  num_tags: %d count: %lu",
+						    svc_res->svc[0].u.hash.num_tags, count);
+				}
+			}
+
+			// deinit_buflist(&rstate->buflists[0]);
+		}
+	}
+
+	osal_yield();
+	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
+		OSAL_LOG_INFO("IO: Final hash passed");
+	} else {
+		OSAL_LOG_ERROR("IO: Final hash failed");
+		err = EINVAL;
+	}
+	osal_atomic_fetch_add(&tstate->test_done, 1);
+
+	return err;
+}
+
+static int
+verify_chksum_result(void)
+{
+	int err = 0;
+	size_t tid, bid, count;
+	struct thread_state *tstate;
+	struct req_state *rstate;
+	struct pnso_service_result *svc_res = NULL;
+
+	OSAL_LOG_INFO("verify checksum ...");
+
+	osal_yield();
+	count = 0;
+	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
+		tstate = &osal_test_threads[tid];
+		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
+			rstate = &tstate->reqs[bid];
+
+			svc_res = &rstate->res.res;
+			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_CHKSUM) {
+				if (svc_res->svc[0].u.chksum.num_tags) {
+					count++;
+					OSAL_LOG_INFO("IO: Checksum done!  num_tags: %d count: %lu",
+						    svc_res->svc[0].u.chksum.num_tags, count);
+				}
+			}
+
+			// deinit_buflist(&rstate->buflists[0]);
+		}
+	}
+
+	osal_yield();
+	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
+		OSAL_LOG_INFO("IO: Final checksum passed");
+	} else {
+		OSAL_LOG_ERROR("IO: Final checksum failed");
+		err = EINVAL;
+	}
+	osal_atomic_fetch_add(&tstate->test_done, 1);
+
+	return err;
+}
+
+static int
+verify_chksum_per_block_result(void)
+{
+	int err = 0;
+	size_t tid, bid, count;
+	struct thread_state *tstate;
+	struct req_state *rstate;
+	struct pnso_service_result *svc_res = NULL;
+
+	OSAL_LOG_INFO("verify checksum ...");
+
+	osal_yield();
+	count = 0;
+	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
+		tstate = &osal_test_threads[tid];
+		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
+			rstate = &tstate->reqs[bid];
+
+			svc_res = &rstate->res.res;
+			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_CHKSUM) {
+				if (svc_res->svc[0].u.chksum.num_tags >= 1) {
+					count++;
+					OSAL_LOG_INFO("IO: Checksum done!  num_tags: %d count: %lu",
+						    svc_res->svc[0].u.chksum.num_tags, count);
+				}
+			}
+
+			// deinit_buflist(&rstate->buflists[0]);
+		}
+	}
+
+	osal_yield();
+	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
+		OSAL_LOG_INFO("IO: Final checksum passed");
+	} else {
+		OSAL_LOG_ERROR("IO: Final checksum failed");
+		err = EINVAL;
+	}
+	osal_atomic_fetch_add(&tstate->test_done, 1);
+
+	return err;
+}
+
+static int
+verify_cp_hash_result(void)
+{
+	int err = 0;
+	size_t tid, bid, count;
+	struct thread_state *tstate;
+	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
+	struct pnso_service_result *svc_res = NULL;
+	uint32_t src_len;
+
+	OSAL_LOG_INFO("verify CP/Hash ...");
+
+	osal_yield();
+	count = 0;
+	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
+		tstate = &osal_test_threads[tid];
+		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
+			rstate = &tstate->reqs[bid];
+
+			svc_res = &rstate->res.res;
+			if (svc_res->err) {
+				OSAL_LOG_INFO("IO: CP/Hash failed! err: %d",
+						svc_res->err);
+				goto out;
+			}
+
+			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_COMPRESS) {
+				svc_req = &rstate->req.req;
+				src_len = pbuf_get_buffer_list_len(svc_req->sgl);
+				if (svc_res->svc[0].u.dst.data_len < src_len) {
+					count++;
+					OSAL_LOG_INFO("IO: CP done! src_len: %d dst_len: %d",
+							src_len, svc_res->svc[0].u.dst.data_len);
+					goto out;
+				}
+			}
+
+			if (svc_res->svc[1].svc_type == PNSO_SVC_TYPE_HASH) {
+				if (svc_res->svc[1].u.hash.num_tags) {
+					count++;
+					OSAL_LOG_INFO("IO: Hash done!  num_tags: %d count: %lu",
+						    svc_res->svc[0].u.hash.num_tags, count);
+				} else
+					goto out;
+			}
+
+			// deinit_buflist(&rstate->buflists[0]);
+			// deinit_buflist(&rstate->buflists[1]);
+		}
+	}
+
+out:
+	osal_yield();
+	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
+		OSAL_LOG_INFO("IO: Final CP/Hash passed");
+	} else {
+		OSAL_LOG_ERROR("IO: Final CP/Hash failed");
+		err = EINVAL;
+	}
+	osal_atomic_fetch_add(&tstate->test_done, 1);
+
+	return err;
+}
+
+static int
+verify_cp_hash_per_block_result(void)
+{
+	int err = 0;
+	size_t tid, bid, count;
+	struct thread_state *tstate;
+	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
+	struct pnso_service_result *svc_res = NULL;
+	uint32_t src_len;
+
+	OSAL_LOG_INFO("verify CP/Hash (per-block) ...");
+
+	osal_yield();
+	count = 0;
+	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
+		tstate = &osal_test_threads[tid];
+		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
+			rstate = &tstate->reqs[bid];
+
+			svc_res = &rstate->res.res;
+			if (svc_res->err) {
+				OSAL_LOG_INFO("IO: CP/Hash failed! err: %d",
+						svc_res->err);
+				goto out;
+			}
+
+			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_COMPRESS) {
+				svc_req = &rstate->req.req;
+				src_len = pbuf_get_buffer_list_len(svc_req->sgl);
+				if (svc_res->svc[0].u.dst.data_len < src_len) {
+					count++;
+					OSAL_LOG_INFO("IO: CP done! src_len: %d dst_len: %d",
+							src_len, svc_res->svc[0].u.dst.data_len);
+					goto out;
+				}
+			}
+
+			if (svc_res->svc[1].svc_type == PNSO_SVC_TYPE_HASH) {
+				if (svc_res->svc[1].u.hash.num_tags >= 1) {
+					count++;
+					OSAL_LOG_INFO("IO: Hash done!  num_tags: %d count: %lu",
+						    svc_res->svc[0].u.hash.num_tags, count);
+				} else
+					goto out;
+			}
+
+			deinit_buflist(&rstate->buflists[0]);
+			deinit_buflist(&rstate->buflists[1]);
+		}
+	}
+
+out:
+	osal_yield();
+	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
+		OSAL_LOG_INFO("IO: Final CP/Hash passed");
+	} else {
+		OSAL_LOG_ERROR("IO: Final CP/Hash failed");
+		err = EINVAL;
+	}
+	osal_atomic_fetch_add(&tstate->test_done, 1);
+
+	return err;
 }
 
 static int
@@ -211,7 +576,7 @@ exec_cp_req(struct thread_state *tstate)
 	return submit_requests(tstate);
 }
 
-void
+static void
 fixup_dc_buffer(struct pnso_buffer_list *blist, size_t len)
 {
 	uint32_t i;
@@ -268,105 +633,6 @@ exec_dc_req(struct thread_state *tstate)
 }
 
 static int
-verify_cp_dc_result(void)
-{
-	int i, rv = 0;
-	size_t tid, bid, count;
-	struct thread_state *tstate;
-	struct req_state *rstate;
-	bool cmp_success;
-
-	OSAL_LOG_INFO("verify cp & dc ...");
-
-	osal_yield();
-	count = 0;
-	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
-		tstate = &osal_test_threads[tid];
-		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
-			rstate = &tstate->reqs[bid];
-
-			pbuf_convert_buffer_list_p2v(rstate->buflists[0].buflist);
-			pbuf_convert_buffer_list_p2v(rstate->buflists[1].buflist);
-			pbuf_convert_buffer_list_p2v(rstate->buflists[2].buflist);
-
-			pbuf_pprint_buffer_list(rstate->buflists[0].buflist);
-			pbuf_pprint_buffer_list(rstate->buflists[1].buflist);
-			pbuf_pprint_buffer_list(rstate->buflists[2].buflist);
-
-			cmp_success = true;
-			for (i = 0; cmp_success && i < PNSO_TEST_BLOCK_COUNT; i++) {
-				OSAL_LOG_ERROR("---- DELETE: %d %d", i,
-						rstate->buflists[0].buflist->buffers[i].len);
-				if (memcmp((void *)rstate->buflists[0].buflist->buffers[i].buf,
-					   (void *)rstate->buflists[2].buflist->buffers[i].buf,
-					   rstate->buflists[0].buflist->buffers[i].len)) {
-					cmp_success = false;
-					break;
-				}
-			}
-			if (cmp_success)
-				count++;
-			OSAL_LOG_ERROR("---- DELETE:count: %lu cmp_success: %d",
-					count, cmp_success);
-		}
-	}
-
-	osal_yield();
-	OSAL_LOG_ERROR("---- DELETE: count: %lu xyz: %d",
-					count, (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT));
-	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
-		OSAL_LOG_INFO("IO: Final memcmp passed");
-	} else {
-		OSAL_LOG_ERROR("IO: Final memcmp failed");
-		rv = EINVAL;
-	}
-	osal_atomic_fetch_add(&tstate->test_done, 1);
-
-	return rv;
-}
-
-static int
-verify_hash_result(void)
-{
-	int rv = 0;
-	size_t tid, bid, count;
-	struct thread_state *tstate;
-	struct req_state *rstate;
-	struct pnso_service_result *svc_res = NULL;
-
-	OSAL_LOG_INFO("verify hash ...");
-
-	osal_yield();
-	count = 0;
-	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
-		tstate = &osal_test_threads[tid];
-		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
-			rstate = &tstate->reqs[bid];
-
-			svc_res = &rstate->res.res;
-			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_HASH) {
-				if (svc_res->svc[0].u.hash.num_tags) {
-					count++;
-					OSAL_LOG_INFO("IO: Hash done!  num_tags: %d count: %lu",
-						    svc_res->svc[0].u.hash.num_tags, count);
-				}
-			}
-		}
-	}
-
-	osal_yield();
-	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
-		OSAL_LOG_INFO("IO: Final hash passed");
-	} else {
-		OSAL_LOG_ERROR("IO: Final hash failed");
-		rv = EINVAL;
-	}
-	osal_atomic_fetch_add(&tstate->test_done, 1);
-
-	return rv;
-}
-
-static int
 exec_hash_req(struct thread_state *tstate)
 {
 	size_t batch_id;
@@ -384,7 +650,7 @@ exec_hash_req(struct thread_state *tstate)
 		svc_req->sgl = rstate->buflists[0].buflist;
 		svc_req->num_services = 1;
 		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_HASH);
-		// svc_req->svc[0].u.hash_desc.flags = 0;	/* reset per block */
+		svc_req->svc[0].u.hash_desc.flags = 0;	/* reset per block */
 
 		svc_res = &rstate->res.res;
 		memset(svc_res, 0, sizeof(*svc_res));
@@ -399,44 +665,34 @@ exec_hash_req(struct thread_state *tstate)
 }
 
 static int
-verify_chksum_result(void)
+exec_hash_per_block_req(struct thread_state *tstate)
 {
-	int rv = 0;
-	size_t tid, bid, count;
-	struct thread_state *tstate;
+	size_t batch_id;
 	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
 	struct pnso_service_result *svc_res = NULL;
 
-	OSAL_LOG_INFO("verify checksum ...");
+	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
+		rstate = &tstate->reqs[batch_id];
+		init_buflist(&rstate->buflists[0], 'A');
 
-	osal_yield();
-	count = 0;
-	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
-		tstate = &osal_test_threads[tid];
-		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
-			rstate = &tstate->reqs[bid];
+		svc_req = &rstate->req.req;
+		memset(svc_req, 0, sizeof(*svc_req));
 
-			svc_res = &rstate->res.res;
-			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_CHKSUM) {
-				if (svc_res->svc[0].u.chksum.num_tags) {
-					count++;
-					OSAL_LOG_INFO("IO: Checksum done!  num_tags: %d count: %lu",
-						    svc_res->svc[0].u.chksum.num_tags, count);
-				}
-			}
-		}
+		svc_req->sgl = rstate->buflists[0].buflist;
+		svc_req->num_services = 1;
+		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_HASH);
+
+		svc_res = &rstate->res.res;
+		memset(svc_res, 0, sizeof(*svc_res));
+
+		svc_res->num_services = 1;
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_HASH;
+		svc_res->svc[0].u.hash.tags = rstate->hash_tags;
 	}
 
-	osal_yield();
-	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
-		OSAL_LOG_INFO("IO: Final checksum passed");
-	} else {
-		OSAL_LOG_ERROR("IO: Final checksum failed");
-		rv = EINVAL;
-	}
-	osal_atomic_fetch_add(&tstate->test_done, 1);
-
-	return rv;
+	return submit_requests(tstate);
 }
 
 static int
@@ -457,7 +713,7 @@ exec_chksum_req(struct thread_state *tstate)
 		svc_req->sgl = rstate->buflists[0].buflist;
 		svc_req->num_services = 1;
 		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_CHKSUM);
-		// svc_req->svc[0].u.chksum_desc.flags = 0; /* reset per block */
+		svc_req->svc[0].u.chksum_desc.flags = 0; /* reset per block */
 
 		svc_res = &rstate->res.res;
 		memset(svc_res, 0, sizeof(*svc_res));
@@ -466,6 +722,116 @@ exec_chksum_req(struct thread_state *tstate)
 		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_CHKSUM;
 		svc_res->svc[0].u.chksum.tags = rstate->chksum_tag;
+	}
+
+	return submit_requests(tstate);
+}
+
+static int
+exec_chksum_per_block_req(struct thread_state *tstate)
+{
+	size_t batch_id;
+	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
+	struct pnso_service_result *svc_res = NULL;
+
+	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
+		rstate = &tstate->reqs[batch_id];
+		init_buflist(&rstate->buflists[0], 'A');
+
+		svc_req = &rstate->req.req;
+		memset(svc_req, 0, sizeof(*svc_req));
+
+		svc_req->sgl = rstate->buflists[0].buflist;
+		svc_req->num_services = 1;
+		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_CHKSUM);
+
+		svc_res = &rstate->res.res;
+		memset(svc_res, 0, sizeof(*svc_res));
+
+		svc_res->num_services = 1;
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_CHKSUM;
+		svc_res->svc[0].u.chksum.tags = rstate->chksum_tag;
+	}
+
+	return submit_requests(tstate);
+}
+
+static int
+exec_cp_hash_req(struct thread_state *tstate)
+{
+	size_t batch_id;
+	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
+	struct pnso_service_result *svc_res = NULL;
+
+	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
+		rstate = &tstate->reqs[batch_id];
+
+		init_buflist(&rstate->buflists[0], 'A');
+		init_buflist(&rstate->buflists[1], 'B');
+
+		svc_req = &rstate->req.req;
+		memset(svc_req, 0, sizeof(*svc_req));
+	
+		svc_res = &rstate->res.res;
+		memset(svc_res, 0, sizeof(*svc_res));
+
+		svc_req->num_services = 2;
+		svc_res->num_services = 2;
+
+		svc_req->sgl = rstate->buflists[0].buflist;
+
+		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_COMPRESS);
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
+		svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
+
+		init_svc_desc(&svc_req->svc[1], PNSO_SVC_TYPE_HASH);
+		svc_req->svc[1].u.hash_desc.flags = 0;	/* reset per block */
+		memset(&svc_res->svc[1], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
+		svc_res->svc[1].u.hash.tags = rstate->hash_tags;
+	}
+
+	return submit_requests(tstate);
+}
+
+static int
+exec_cp_hash_per_block_req(struct thread_state *tstate)
+{
+	size_t batch_id;
+	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
+	struct pnso_service_result *svc_res = NULL;
+
+	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
+		rstate = &tstate->reqs[batch_id];
+
+		init_buflist(&rstate->buflists[0], 'A');
+		init_buflist(&rstate->buflists[1], 'B');
+
+		svc_req = &rstate->req.req;
+		memset(svc_req, 0, sizeof(*svc_req));
+
+		svc_res = &rstate->res.res;
+		memset(svc_res, 0, sizeof(*svc_res));
+
+		svc_req->num_services = 2;
+		svc_res->num_services = 2;
+
+		svc_req->sgl = rstate->buflists[0].buflist;
+
+		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_COMPRESS);
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
+		svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
+
+		init_svc_desc(&svc_req->svc[1], PNSO_SVC_TYPE_HASH);
+		memset(&svc_res->svc[1], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
+		svc_res->svc[1].u.hash.tags = rstate->hash_tags;
 	}
 
 	return submit_requests(tstate);
@@ -503,7 +869,7 @@ exec_req_and_wait(struct thread_state *tstate)
 static int __attribute__((unused))
 exec_cp_dc_test(void *arg)
 {
-	int rc;
+	int err;
 	struct thread_state *tstate = (struct thread_state *) arg;
 	int local_core_id = osal_get_coreid();
 
@@ -511,8 +877,8 @@ exec_cp_dc_test(void *arg)
 		 osal_get_coreid());
 
 	/* Submit compression requests */
-	rc = exec_cp_req(tstate);
-	if (rc != 0) {
+	err = exec_cp_req(tstate);
+	if (err != 0) {
 		OSAL_LOG_ERROR("PNSO: Compression request submit FAILED");
 		goto error;
 	}
@@ -524,7 +890,7 @@ exec_cp_dc_test(void *arg)
 	osal_yield();
 	if (osal_get_coreid() != local_core_id) {
 		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
-		rc = EINVAL;
+		err = EINVAL;
 		goto error;
 	}
 
@@ -533,8 +899,8 @@ exec_cp_dc_test(void *arg)
 			&tstate->reqs[PNSO_TEST_BATCH_DEPTH-1].req_done, 1);
 
 	/* Submit decompression requests */
-	rc = exec_dc_req(tstate);
-	if (rc != 0) {
+	err = exec_dc_req(tstate);
+	if (err != 0) {
 		OSAL_LOG_ERROR("PNSO: Decompression request submit FAILED");
 		goto error;
 	}
@@ -546,12 +912,12 @@ exec_cp_dc_test(void *arg)
 	osal_yield();
 	if (osal_get_coreid() != local_core_id) {
 		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
-		rc = EINVAL;
+		err = EINVAL;
 		goto error;
 	}
 
-	rc = verify_cp_dc_result();
-	if (rc)
+	err = verify_cp_dc_result();
+	if (err)
 		goto error;
 
 	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d",
@@ -561,21 +927,21 @@ exec_cp_dc_test(void *arg)
 error:
 	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
 		       local_core_id, osal_get_coreid());
-	return rc;
+	return err;
 }
 
 static int __attribute__((unused))
 exec_hash_test(void *arg)
 {
-	int rc;
+	int err;
 	struct thread_state *tstate = (struct thread_state *) arg;
 	int local_core_id = osal_get_coreid();
 
 	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
 		 osal_get_coreid());
 
-	rc = exec_hash_req(tstate);
-	if (rc != 0) {
+	err = exec_hash_req(tstate);
+	if (err != 0) {
 		OSAL_LOG_ERROR("PNSO: Hash request submit FAILED");
 		goto error;
 	}
@@ -587,12 +953,12 @@ exec_hash_test(void *arg)
 	osal_yield();
 	if (osal_get_coreid() != local_core_id) {
 		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
-		rc = EINVAL;
+		err = EINVAL;
 		goto error;
 	}
 
-	rc = verify_hash_result();
-	if (rc)
+	err = verify_hash_result();
+	if (err)
 		goto error;
 
 	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d", osal_get_coreid());
@@ -601,21 +967,61 @@ exec_hash_test(void *arg)
 error:
 	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
 		       local_core_id, osal_get_coreid());
-	return rc;
+	return err;
 }
 
 static int __attribute__((unused))
-exec_chksum_test(void *arg)
+exec_hash_per_block_test(void *arg)
 {
-	int rc;
+	int err;
 	struct thread_state *tstate = (struct thread_state *) arg;
 	int local_core_id = osal_get_coreid();
 
 	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
 		 osal_get_coreid());
 
-	rc = exec_chksum_req(tstate);
-	if (rc != 0) {
+	err = exec_hash_per_block_req(tstate);
+	if (err != 0) {
+		OSAL_LOG_ERROR("PNSO: Hash request submit FAILED");
+		goto error;
+	}
+
+	exec_req_and_wait(tstate);
+	OSAL_LOG_INFO("PNSO: Hash requests done, core %d",
+		 osal_get_coreid());
+
+	osal_yield();
+	if (osal_get_coreid() != local_core_id) {
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
+		err = EINVAL;
+		goto error;
+	}
+
+	err = verify_hash_per_block_result();
+	if (err)
+		goto error;
+
+	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d", osal_get_coreid());
+	return 0;
+
+error:
+	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
+		       local_core_id, osal_get_coreid());
+	return err;
+}
+
+static int __attribute__((unused))
+exec_chksum_test(void *arg)
+{
+	int err;
+	struct thread_state *tstate = (struct thread_state *) arg;
+	int local_core_id = osal_get_coreid();
+
+	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
+		 osal_get_coreid());
+
+	err = exec_chksum_req(tstate);
+	if (err != 0) {
 		OSAL_LOG_ERROR("PNSO: Checksum request submit FAILED");
 		goto error;
 	}
@@ -627,12 +1033,12 @@ exec_chksum_test(void *arg)
 	osal_yield();
 	if (osal_get_coreid() != local_core_id) {
 		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
-		rc = EINVAL;
+		err = EINVAL;
 		goto error;
 	}
 
-	rc = verify_chksum_result();
-	if (rc)
+	err = verify_chksum_result();
+	if (err)
 		goto error;
 
 	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d",
@@ -642,19 +1048,141 @@ exec_chksum_test(void *arg)
 error:
 	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
 		       local_core_id, osal_get_coreid());
-	return rc;
+	return err;
+}
+
+static int __attribute__((unused))
+exec_chksum_per_block_test(void *arg)
+{
+	int err;
+	struct thread_state *tstate = (struct thread_state *) arg;
+	int local_core_id = osal_get_coreid();
+
+	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
+		 osal_get_coreid());
+
+	err = exec_chksum_per_block_req(tstate);
+	if (err != 0) {
+		OSAL_LOG_ERROR("PNSO: Checksum request submit FAILED");
+		goto error;
+	}
+
+	exec_req_and_wait(tstate);
+	OSAL_LOG_INFO("PNSO: Checksum requests done, core %d",
+		 osal_get_coreid());
+
+	osal_yield();
+	if (osal_get_coreid() != local_core_id) {
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
+		err = EINVAL;
+		goto error;
+	}
+
+	err = verify_chksum_per_block_result();
+	if (err)
+		goto error;
+
+	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d",
+			osal_get_coreid());
+	return 0;
+
+error:
+	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
+		       local_core_id, osal_get_coreid());
+	return err;
+}
+static int __attribute__((unused))
+exec_cp_hash_test(void *arg)
+{
+	int err;
+	struct thread_state *tstate = (struct thread_state *) arg;
+	int local_core_id = osal_get_coreid();
+
+	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
+		 osal_get_coreid());
+
+	err = exec_cp_hash_req(tstate);
+	if (err != 0) {
+		OSAL_LOG_ERROR("PNSO: CP/Hash request submit FAILED");
+		goto error;
+	}
+
+	exec_req_and_wait(tstate);
+	OSAL_LOG_INFO("PNSO: CP/Hash request done, core %d",
+		 osal_get_coreid());
+
+	osal_yield();
+	if (osal_get_coreid() != local_core_id) {
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
+		err = EINVAL;
+		goto error;
+	}
+
+	err = verify_cp_hash_result();
+	if (err)
+		goto error;
+
+	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d",
+			osal_get_coreid());
+	return 0;
+
+error:
+	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
+		       local_core_id, osal_get_coreid());
+	return err;
+}
+
+static int __attribute__((unused))
+exec_cp_hash_per_block_test(void *arg)
+{
+	int err;
+	struct thread_state *tstate = (struct thread_state *) arg;
+	int local_core_id = osal_get_coreid();
+
+	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
+		 osal_get_coreid());
+
+	err = exec_cp_hash_per_block_req(tstate);
+	if (err != 0) {
+		OSAL_LOG_ERROR("PNSO: CP/Hash request submit FAILED");
+		goto error;
+	}
+
+	exec_req_and_wait(tstate);
+	OSAL_LOG_INFO("PNSO: CP/Hash request done, core %d",
+		 osal_get_coreid());
+
+	osal_yield();
+	if (osal_get_coreid() != local_core_id) {
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
+		err = EINVAL;
+		goto error;
+	}
+
+	err = verify_cp_hash_per_block_result();
+	if (err)
+		goto error;
+
+	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d",
+			osal_get_coreid());
+	return 0;
+
+error:
+	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
+		       local_core_id, osal_get_coreid());
+	return err;
 }
 
 static pnso_error_t
 init_crypto(void)
 {
 #ifndef ENABLE_PNSO_SONIC_TEST
-	pnso_error_t rc;
+	pnso_error_t err;
 	char key1[32] = "abcdefghijklmnopqrstuvwxyz78901";
 
-	if ((rc = pnso_set_key_desc_idx(key1, key1, 32,
+	if ((err = pnso_set_key_desc_idx(key1, key1, 32,
 					PNSO_TEST_CRYPTO_KEY_IDX)) != 0) {
-		return rc;
+		return err;
 	}
 #endif
 	return PNSO_OK;
@@ -663,17 +1191,17 @@ init_crypto(void)
 static pnso_error_t
 init_cp_hdr_fmt(void)
 {
-	pnso_error_t rc;
+	pnso_error_t err;
 	struct pnso_compression_header_format cp_hdr_fmt = { 3, {
 		{PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM, 0, 4, 0},
 		{PNSO_HDR_FIELD_TYPE_OUTDATA_LENGTH, 4, 2, 0},
 		{PNSO_HDR_FIELD_TYPE_ALGO, 6, 2, 0}
 	} };
 
-	rc = pnso_register_compression_header_format(&cp_hdr_fmt,
+	err = pnso_register_compression_header_format(&cp_hdr_fmt,
 						     PNSO_TEST_CP_HDR_FMT_IDX);
-	if (rc)
-		return rc;
+	if (err)
+		return err;
 
 	return pnso_add_compression_algo_mapping(PNSO_COMPRESSION_TYPE_LZRW1A,
 						 PNSO_TEST_CP_HDR_ALGO_VER);
@@ -683,30 +1211,34 @@ typedef int (*exec_test_fn_t)(void *arg);
 
 static exec_test_fn_t exec_test_fn[] = {
 	// exec_cp_dc_test,
-	exec_hash_test,
+	// exec_hash_test,
+	// exec_hash_per_block_test,
 	// exec_chksum_test,
+	// exec_chksum_per_block_test,
+	// exec_cp_hash_test,
+	exec_cp_hash_per_block_test,
 };
 
 static int
 exec_test(struct thread_state *tstate, size_t tid, uint32_t test_id)
 {
-	int rv;
+	int err;
 	int test_done;
 	osal_atomic_int_t *addr;
 	exec_test_fn_t test_fn = exec_test_fn[test_id];
 
-	rv = osal_thread_create(&tstate->wafl_thread, test_fn, tstate);
-	if (rv)
-		return rv;
+	err = osal_thread_create(&tstate->wafl_thread, test_fn, tstate);
+	if (err)
+		return err;
 	
-	rv = osal_thread_bind(&tstate->wafl_thread,
+	err = osal_thread_bind(&tstate->wafl_thread,
 			tid % osal_get_core_count());
-	if (rv)
-		return rv;
+	if (err)
+		return err;
 
-	rv = osal_thread_start(&tstate->wafl_thread);
-	if (rv)
-		return rv;
+	err = osal_thread_start(&tstate->wafl_thread);
+	if (err)
+		return err;
 
 	addr = &tstate->test_done;
 	while (1) {
@@ -719,14 +1251,14 @@ exec_test(struct thread_state *tstate, size_t tid, uint32_t test_id)
 		osal_yield();
 	}
 
-	return rv;
+	return err;
 }
 
 int __attribute__((unused))
 body(void)
 {
 	size_t tid, count, prev_count;
-	int rv, test_id, num_tests;
+	int err, test_id, num_tests;
 	struct thread_state *tstate;
 	struct req_state *rstate;
 	struct pnso_init_params init_params;
@@ -736,12 +1268,12 @@ body(void)
 	init_params.per_core_qdepth = 16;
 	init_params.block_size = PNSO_TEST_BLOCK_SIZE;
 
-	if ((rv = init_crypto()) != 0) {
+	if ((err = init_crypto()) != 0) {
 		OSAL_LOG_ERROR("PNSO: init_crypto failed");
 		goto finit;
 	}
 
-	if ((rv = init_cp_hdr_fmt()) != 0) {
+	if ((err = init_cp_hdr_fmt()) != 0) {
 		OSAL_LOG_ERROR("PNSO: init_cp_hdr_fmt failed");
 		goto finit;
 	}
@@ -757,8 +1289,8 @@ body(void)
 		init_tstate(tstate);
 	
 		for (test_id = 0 ; test_id < num_tests; test_id++) {
-			rv = exec_test(tstate, tid, test_id);
-			if (rv) {
+			err = exec_test(tstate, tid, test_id);
+			if (err) {
 				OSAL_LOG_ERROR("PNSO: FAILED to start thread %d",
 						(int) tid);
 				goto finit;
@@ -799,23 +1331,23 @@ body(void)
 	OSAL_LOG_INFO("IO: Completed all tests");
 
 finit:
-	OSAL_LOG_INFO("PNSO: Osal test complete!! rv:%d", rv);
+	OSAL_LOG_INFO("PNSO: Osal test complete!! err:%d", err);
 	osal_yield(); /* flush logs */
-	return rv;
+	return err;
 }
 
 static int
 test_init(void)
 {
-	int rv;
+	int err;
 
 #ifndef __KERNEL__
-	rv = osal_log_init(OSAL_LOG_LEVEL_DEBUG);
+	err = osal_log_init(OSAL_LOG_LEVEL_DEBUG);
 #else
-	rv = osal_log_init(OSAL_LOG_LEVEL_NONE);
+	err = osal_log_init(OSAL_LOG_LEVEL_NONE);
 #endif
 
-	return rv;
+	return err;
 }
 
 static int

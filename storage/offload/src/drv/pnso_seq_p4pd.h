@@ -40,7 +40,7 @@
 	int ret = p4pd_storage_seq_entry_pack(table_id, action_id,             \
 					      (void *)&actiondata, dst_p);     \
 	if (ret) {                                                             \
-	    printf("ERROR: table_id %u action_id %u actiondata pack "          \
+	    OSAL_LOG_ERROR("table_id %u action_id %u actiondata pack "          \
 		   "failed: %d",  table_id, action_id, ret);                   \
 	}                                                                      \
     } while (false)

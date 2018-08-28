@@ -14,46 +14,50 @@
 #include "osal.h"
 #include "pnso_api.h"
 
+#include "storage_seq_p4pd.h"
+#include "pnso_seq_p4pd.h"
+#include "pnso_chain_params.h"
 #include "pnso_seq_ops.h"
+#include "pnso_cpdc.h"
 
 /**
- * struct sequencer_desc: represents the descriptor of the sequencer
- * @sd_desc_addr: specifies the accelerator descriptor address
- * @sd_pndx_addr: specifies the accelerator producer index register address
- * @sd_pndx_shadow_addr: specifies the accelerator producer index shadow
- * register address
- * @sd_ring_address: specifies the accelerator ring address
- * @sd_desc_size: specifies the size of the descriptor in
- * log2(accelerator descriptor size)
- * @sd_pndx_size: specifies the accelerator producer index size in
- * log2(accelerator producer index size)
- * @sd_ring_size: specifies the accelerator ring size in
- * log2(accelerator ring size)
- * @sd_batch_mode: specifies the 1st descriptor (i.e. sd_desc_addr) of a batch
- * @sd_batch_size: number of batch descriptors
- * @sd_filler_1: TODO-seq
- * @sd_filler_2:
+ * TODO-seq:
+ *	- although chaining can be done generically for compression
+ *	related chains, focus for now is comp+hash bring-up.
+ *	- revisit layer violations
  *
  */
-struct sequencer_desc {
-	uint64_t sd_desc_addr;
-	uint64_t sd_pndx_addr;
-	uint64_t sd_pndx_shadow_addr;
-	uint64_t sd_ring_addr;
-	uint8_t sd_desc_size;
-	uint8_t sd_pndx_size;
-	uint8_t sd_ring_size;
-	uint8_t sd_batch_mode;
-	uint16_t sd_batch_size;
-	uint16_t sd_filler_0;
-	uint64_t sd_filler_1[3];
-} __attribute__((packed));
-
 #ifdef NDEBUG
 #define PPRINT_SEQUENCER_DESC(d)
+#define PPRINT_SEQUENCER_INFO(sqi)
+#define PPRINT_CPDC_CHAIN_PARAMS(cp)
+#define PPRINT_XTS_CHAIN_PARAMS(cp)
 #else
 #define PPRINT_SEQUENCER_DESC(d)	pprint_seq_desc(d)
+#define PPRINT_SEQUENCER_INFO(sqi)					\
+	do {								\
+		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		pprint_seq_info(sqi);					\
+	} while (0)
+#define PPRINT_CPDC_CHAIN_PARAMS(cp)					\
+	do {								\
+		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		pprint_cpdc_chain_params(cp);				\
+	} while (0)
+#define PPRINT_XTS_CHAIN_PARAMS(cp)					\
+	do {								\
+		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		pprint_xts_chain_params(cp);				\
+	} while (0)
 #endif
+
+#define kDbAddrCapri	(0x8800000)
+#define kDbAddrUpdate	(0xB)
+#define kDbUpdateShift	(17)
+#define kDbLifShift	(6)
+#define kDbTypeShift	(3)
+
+extern uint64_t pad_buffer;
 
 static void __attribute__((unused))
 pprint_seq_desc(const struct sequencer_desc *desc)
@@ -76,6 +80,473 @@ pprint_seq_desc(const struct sequencer_desc *desc)
 	OSAL_LOG_INFO("%30s: %d", "sd_ring_size", desc->sd_ring_size);
 	OSAL_LOG_INFO("%30s: %d", "sd_batch_mode", desc->sd_batch_mode);
 	OSAL_LOG_INFO("%30s: %d", "sd_batch_size", desc->sd_batch_size);
+}
+
+static void __attribute__((unused))
+pprint_seq_info(const struct sequencer_info *seq_info)
+{
+	if (!seq_info)
+		return;
+
+	OSAL_LOG_INFO("%30s: %d", "sqi_ring_id", seq_info->sqi_ring_id);
+	OSAL_LOG_INFO("%30s: %d", "sqi_qtype", seq_info->sqi_qtype);
+	OSAL_LOG_INFO("%30s: %d", "sqi_index", seq_info->sqi_index);
+	OSAL_LOG_INFO("%30s: %d", "sqi_batch_mode", seq_info->sqi_batch_mode);
+	OSAL_LOG_INFO("%30s: %d", "sqi_batch_size", seq_info->sqi_batch_size);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqi_sqi_desc", (u64) seq_info->sqi_desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqi_status_desc",
+			(u64) seq_info->sqi_status_desc);
+}
+
+static void __attribute__((unused))
+pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
+{
+	const struct sequencer_spec *spec;
+	const struct barco_spec *barco_spec;
+	const struct cpdc_chain_params_command *cmd;
+
+	if (!chain_params)
+		return;
+
+	OSAL_LOG_INFO("%30s: 0x%llx", "cpdc_chain_params",
+			(uint64_t) chain_params);
+
+	spec = &chain_params->ccp_seq_spec;
+	OSAL_LOG_INFO("%30s: 0x%llx", "sequencer_spec", (uint64_t) spec);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_q",
+			spec->sqs_seq_q);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_status_q",
+			spec->sqs_seq_status_q);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_next_q",
+			spec->sqs_seq_next_q);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_next_status_q",
+			spec->sqs_seq_next_status_q);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_ret_doorbell_addr",
+			spec->sqs_ret_doorbell_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_ret_doorbell_data",
+			spec->sqs_ret_doorbell_data);
+	OSAL_LOG_INFO("%30s: %d", "sqs_ret_seq_status_index",
+			spec->sqs_ret_seq_status_index);
+
+	barco_spec = &chain_params->ccp_barco_spec;
+	OSAL_LOG_INFO("%30s: 0x%llx", "barco_spec", (uint64_t) barco_spec);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bs_ring_addr",
+			barco_spec->bs_ring_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bs_pndx_addr",
+			barco_spec->bs_pndx_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bs_pndx_shadow_addr",
+			barco_spec->bs_pndx_shadow_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bs_desc_addr",
+			barco_spec->bs_desc_addr);
+	OSAL_LOG_INFO("%30s: %d", "bs_desc_size",
+			barco_spec->bs_desc_size);
+	OSAL_LOG_INFO("%30s: %d", "bs_pndx_size",
+			barco_spec->bs_pndx_size);
+	OSAL_LOG_INFO("%30s: %d", "bs_ring_size",
+			barco_spec->bs_ring_size);
+	OSAL_LOG_INFO("%30s: %d", "bs_num_descs",
+			barco_spec->bs_num_descs);
+
+	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_status_addr_0",
+			chain_params->ccp_status_addr_0);
+	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_status_addr_1",
+			chain_params->ccp_status_addr_1);
+	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_comp_buf_addr",
+			chain_params->ccp_comp_buf_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_alt_buf_addr",
+			chain_params->ccp_alt_buf_addr);
+
+	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_aol_src_vec_addr",
+			chain_params->ccp_aol_src_vec_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_aol_dst_vec_addr",
+			chain_params->ccp_aol_dst_vec_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_sgl_vec_addr",
+			chain_params->ccp_sgl_vec_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_pad_buf_addr",
+			chain_params->ccp_pad_buf_addr);
+
+	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_intr_addr",
+			chain_params->ccp_intr_addr);
+	OSAL_LOG_INFO("%30s: %d", "ccp_intr_data",
+			chain_params->ccp_intr_data);
+	OSAL_LOG_INFO("%30s: %d", "ccp_status_len",
+			chain_params->ccp_status_len);
+	OSAL_LOG_INFO("%30s: %d", "ccp_data_len",
+			chain_params->ccp_data_len);
+
+	OSAL_LOG_INFO("%30s: %d", "ccp_status_offset_0",
+			chain_params->ccp_status_offset_0);
+	OSAL_LOG_INFO("%30s: %d", "ccp_pad_boundary_shift",
+			chain_params->ccp_pad_boundary_shift);
+
+	cmd = &chain_params->ccp_cmd;
+	OSAL_LOG_INFO("%30s: %d", "ccpc_data_len_from_desc",
+			cmd->ccpc_data_len_from_desc);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_status_dma_en",
+			cmd->ccpc_status_dma_en);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_next_doorbell_en",
+			cmd->ccpc_next_doorbell_en);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_intr_en",
+			cmd->ccpc_intr_en);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_next_db_action_barco_push",
+			cmd->ccpc_next_db_action_barco_push);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_stop_chain_on_error",
+			cmd->ccpc_stop_chain_on_error);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_chain_alt_desc_on_error",
+			cmd->ccpc_chain_alt_desc_on_error);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_aol_pad_en",
+			cmd->ccpc_aol_pad_en);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_sgl_pad_en",
+			cmd->ccpc_sgl_pad_en);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_sgl_sparse_format_en",
+			cmd->ccpc_sgl_sparse_format_en);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_sgl_pdma_en",
+			cmd->ccpc_sgl_pdma_en);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_sgl_pdma_pad_only",
+			cmd->ccpc_sgl_pdma_pad_only);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_sgl_pdma_alt_src_on_error",
+			cmd->ccpc_sgl_pdma_alt_src_on_error);
+	OSAL_LOG_INFO("%30s: %d", "ccpc_desc_vec_push_en",
+			cmd->ccpc_desc_vec_push_en);
+}
+
+static void __attribute__((unused))
+pprint_xts_chain_params(const struct xts_chain_params *chain_params)
+{
+	const struct sequencer_spec *spec;
+	const struct barco_spec *barco_spec;
+	const struct xts_chain_params_command *cmd;
+
+	if (!chain_params)
+		return;
+
+	OSAL_LOG_INFO("%30s: 0x%llx", "xts_chain_params",
+			(uint64_t) chain_params);
+
+	spec = &chain_params->xcp_seq_spec;
+	OSAL_LOG_INFO("%30s: 0x%llx", "sequencer_spec", (uint64_t) spec);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_q",
+			spec->sqs_seq_q);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_status_q",
+			spec->sqs_seq_status_q);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_next_q",
+			spec->sqs_seq_next_q);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_next_status_q",
+			spec->sqs_seq_next_status_q);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_ret_doorbell_addr",
+			spec->sqs_ret_doorbell_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_ret_doorbell_data",
+			spec->sqs_ret_doorbell_data);
+	OSAL_LOG_INFO("%30s: %d", "sqs_ret_seq_status_index",
+			spec->sqs_ret_seq_status_index);
+
+	barco_spec = &chain_params->xcp_barco_spec;
+	OSAL_LOG_INFO("%30s: 0x%llx", "barco_spec", (uint64_t) barco_spec);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bs_ring_addr",
+			barco_spec->bs_ring_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bs_pndx_addr",
+			barco_spec->bs_pndx_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bs_pndx_shadow_addr",
+			barco_spec->bs_pndx_shadow_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "bs_desc_addr",
+			barco_spec->bs_desc_addr);
+	OSAL_LOG_INFO("%30s: %d", "bs_desc_size",
+			barco_spec->bs_desc_size);
+	OSAL_LOG_INFO("%30s: %d", "bs_pndx_size",
+			barco_spec->bs_pndx_size);
+	OSAL_LOG_INFO("%30s: %d", "bs_ring_size",
+			barco_spec->bs_ring_size);
+	OSAL_LOG_INFO("%30s: %d", "bs_num_descs",
+			barco_spec->bs_num_descs);
+
+	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_status_addr_0",
+			chain_params->xcp_status_addr_0);
+	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_status_addr_1",
+			chain_params->xcp_status_addr_1);
+	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_decr_buf_addr",
+			chain_params->xcp_decr_buf_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_comp_sgl_src_addr",
+			chain_params->xcp_comp_sgl_src_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_sgl_pdma_dst_addr",
+			chain_params->xcp_sgl_pdma_dst_addr);
+
+	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_intr_addr",
+			chain_params->xcp_intr_addr);
+	OSAL_LOG_INFO("%30s: %d", "xcp_intr_data",
+			chain_params->xcp_intr_data);
+
+	OSAL_LOG_INFO("%30s: %d", "xcp_status_offset_0",
+			chain_params->xcp_status_offset_0);
+	OSAL_LOG_INFO("%30s: %d", "xcp_blk_boundary_shift",
+			chain_params->xcp_blk_boundary_shift);
+
+	cmd = &chain_params->xcp_cmd;
+	OSAL_LOG_INFO("%30s: %d", "xcpc_status_dma_en",
+			cmd->xcpc_status_dma_en);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_next_doorbell_en",
+			cmd->xcpc_next_doorbell_en);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_intr_en",
+			cmd->xcpc_intr_en);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_next_db_action_barco_push",
+			cmd->xcpc_next_db_action_barco_push);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_stop_chain_on_error",
+			cmd->xcpc_stop_chain_on_error);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_comp_len_update_en",
+			cmd->xcpc_comp_len_update_en);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_comp_sgl_src_en",
+			cmd->xcpc_comp_sgl_src_en);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_comp_sgl_src_vec_en",
+			cmd->xcpc_comp_sgl_src_vec_en);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_sgl_sparse_format_en",
+			cmd->xcpc_sgl_sparse_format_en);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_sgl_pdma_en",
+			cmd->xcpc_sgl_pdma_en);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_sgl_pdma_len_from_desc",
+			cmd->xcpc_sgl_pdma_len_from_desc);
+	OSAL_LOG_INFO("%30s: %d", "xcpc_desc_vec_push_en",
+			cmd->xcpc_desc_vec_push_en);
+}
+
+static struct queue *
+get_seq_q(const struct service_info *svc_info, bool status_q)
+{
+	struct queue *q = NULL;
+	struct per_core_resource *pc_res;
+
+	/* TODO-seq: remove using hard-coded 0th status queue */
+	pc_res = svc_info->si_pc_res;
+
+	switch (svc_info->si_type) {
+	case PNSO_SVC_TYPE_ENCRYPT:
+		q = status_q ? &pc_res->crypto_seq_status_qs[0] :
+			&pc_res->crypto_enc_seq_q;
+		break;
+	case PNSO_SVC_TYPE_DECRYPT:
+		q = status_q ? &pc_res->crypto_seq_status_qs[0] :
+			&pc_res->crypto_dec_seq_q;
+		break;
+	case PNSO_SVC_TYPE_COMPRESS:
+	case PNSO_SVC_TYPE_HASH:
+	case PNSO_SVC_TYPE_CHKSUM:
+		q = status_q ? &pc_res->cpdc_seq_status_qs[0] :
+			&pc_res->cp_seq_q;
+		break;
+	case PNSO_SVC_TYPE_DECOMPRESS:
+		q = status_q ? &pc_res->cpdc_seq_status_qs[0] :
+			&pc_res->dc_seq_q;
+		break;
+	case PNSO_SVC_TYPE_DECOMPACT:
+	default:
+		OSAL_ASSERT(0);
+		break;
+	}
+
+	return q;
+}
+
+static void
+fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
+		uint8_t *seq_status_desc)
+{
+	STORAGE_SEQ_CS_DESC0_DEFINE(desc0_action) = { 0 };
+	STORAGE_SEQ_CS_DESC1_DEFINE(desc1_action) = { 0 };
+	struct next_db_spec *next_db_spec;
+	struct barco_spec *barco_spec;
+	struct cpdc_chain_params_command *cmd;
+
+	barco_spec = &chain_params->ccp_barco_spec;
+	next_db_spec = &chain_params->ccp_next_db_spec;
+	cmd = &chain_params->ccp_cmd;
+
+	memset(seq_status_desc, 0, SONIC_SEQ_STATUS_Q_DESC_SIZE);
+	// desc bytes 0-63
+	if (cmd->ccpc_next_db_action_barco_push) {
+		STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_addr,
+					       barco_spec->bs_ring_addr);
+		STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_data,
+					       barco_spec->bs_desc_addr);
+		STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, barco_pndx_addr,
+					       barco_spec->bs_pndx_addr);
+		STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action,
+				barco_pndx_shadow_addr,
+				barco_spec->bs_pndx_shadow_addr);
+
+		STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, barco_desc_size,
+						barco_spec->bs_desc_size);
+		STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, barco_pndx_size,
+						barco_spec->bs_pndx_size);
+		STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, barco_ring_size,
+						barco_spec->bs_ring_size);
+		STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, barco_num_descs,
+						barco_spec->bs_num_descs);
+	} else {
+		STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_addr,
+				next_db_spec->nds_addr);
+		STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_data,
+				next_db_spec->nds_data);
+	}
+
+	STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, status_addr0,
+			chain_params->ccp_status_addr_0);
+	STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, status_addr1,
+			chain_params->ccp_status_addr_1);
+
+	STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, intr_addr,
+			chain_params->ccp_intr_addr);
+	STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, intr_data,
+			chain_params->ccp_intr_data);
+
+	STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, status_len,
+			chain_params->ccp_status_len);
+	STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, status_offset0,
+			chain_params->ccp_status_offset_0);
+
+	STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, status_dma_en,
+			cmd->ccpc_status_dma_en);
+	STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, next_db_en,
+			cmd->ccpc_next_doorbell_en);
+	STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, intr_en,
+			cmd->ccpc_intr_en);
+	STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, next_db_action_barco_push,
+			cmd->ccpc_next_db_action_barco_push);
+	STORAGE_SEQ_CS_DESC0_PACK(seq_status_desc, desc0_action);
+
+	// desc bytes 64-127
+	STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, comp_buf_addr,
+			chain_params->ccp_comp_buf_addr);
+	STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, aol_src_vec_addr,
+			chain_params->ccp_aol_src_vec_addr);
+	STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, aol_dst_vec_addr,
+			chain_params->ccp_aol_dst_vec_addr);
+	STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, sgl_vec_addr,
+			chain_params->ccp_sgl_vec_addr);
+	STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, pad_buf_addr,
+			chain_params->ccp_pad_buf_addr);
+	STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, alt_buf_addr,
+			chain_params->ccp_alt_buf_addr);
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, data_len,
+			chain_params->ccp_data_len);
+
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, pad_boundary_shift,
+			chain_params->ccp_pad_boundary_shift);
+
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, stop_chain_on_error,
+			cmd->ccpc_stop_chain_on_error);
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, data_len_from_desc,
+			cmd->ccpc_data_len_from_desc);
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, aol_pad_en,
+			cmd->ccpc_aol_pad_en);
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_pad_en,
+			cmd->ccpc_sgl_pad_en);
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_sparse_format_en,
+			cmd->ccpc_sgl_sparse_format_en);
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_en,
+			cmd->ccpc_sgl_pdma_en);
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_pad_only,
+			cmd->ccpc_sgl_pdma_pad_only);
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_alt_src_on_error,
+			cmd->ccpc_sgl_pdma_alt_src_on_error);
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, desc_vec_push_en,
+			cmd->ccpc_desc_vec_push_en);
+	STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, chain_alt_desc_on_error,
+			cmd->ccpc_chain_alt_desc_on_error);
+	STORAGE_SEQ_CS_DESC1_PACK(seq_status_desc +
+			STORAGE_SEQ_P4PD_TABLE_BYTE_WIDTH_DFLT, desc1_action);
+}
+
+static void __attribute__((unused))
+fill_xts_seq_status(struct xts_chain_params *chain_params,
+		uint8_t *seq_status_desc)
+{
+	STORAGE_SEQ_XS_DESC0_DEFINE(desc0_action) = {0};
+	STORAGE_SEQ_XS_DESC1_DEFINE(desc1_action) = {0};
+	struct next_db_spec *next_db_spec;
+	struct barco_spec *barco_spec;
+	struct xts_chain_params_command *cmd;
+
+	barco_spec = &chain_params->xcp_barco_spec;
+	next_db_spec = &chain_params->xcp_next_db_spec;
+	cmd = &chain_params->xcp_cmd;
+
+	memset(seq_status_desc, 0, SONIC_SEQ_STATUS_Q_DESC_SIZE);
+	// desc bytes 0-63
+	if (cmd->xcpc_next_db_action_barco_push) {
+		STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_addr,
+				barco_spec->bs_ring_addr);
+		STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_data,
+				barco_spec->bs_desc_addr);
+		STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, barco_pndx_addr,
+				barco_spec->bs_pndx_addr);
+		STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action,
+				barco_pndx_shadow_addr,
+				barco_spec->bs_pndx_shadow_addr);
+
+		STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, barco_desc_size,
+				barco_spec->bs_desc_size);
+		STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, barco_pndx_size,
+				barco_spec->bs_pndx_size);
+		STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, barco_ring_size,
+				barco_spec->bs_ring_size);
+		STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, barco_num_descs,
+				barco_spec->bs_num_descs);
+	} else {
+		STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_addr,
+				next_db_spec->nds_addr);
+		STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_data,
+				next_db_spec->nds_data);
+	}
+
+	STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, status_addr0,
+			chain_params->xcp_status_addr_0);
+	STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, status_addr1,
+			chain_params->xcp_status_addr_1);
+	STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, intr_addr,
+			chain_params->xcp_intr_addr);
+	STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, intr_data,
+			chain_params->xcp_intr_data);
+	STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, status_len,
+			chain_params->xcp_status_len);
+	STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, status_offset0,
+			chain_params->xcp_status_offset_0);
+	STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, status_dma_en,
+			cmd->xcpc_status_dma_en);
+	STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, next_db_en,
+			cmd->xcpc_next_doorbell_en);
+	STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, intr_en,
+			cmd->xcpc_intr_en);
+	STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, next_db_action_barco_push,
+			cmd->xcpc_next_db_action_barco_push);
+	STORAGE_SEQ_XS_DESC0_PACK(seq_status_desc, desc0_action);
+
+	// desc bytes 64-127
+	STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, comp_sgl_src_addr,
+				 chain_params->xcp_comp_sgl_src_addr);
+	STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, sgl_pdma_dst_addr,
+				 chain_params->xcp_sgl_pdma_dst_addr);
+	STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, decr_buf_addr,
+				 chain_params->xcp_decr_buf_addr);
+	STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, data_len,
+				  chain_params->xcp_data_len);
+	STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, blk_boundary_shift,
+				  chain_params->xcp_blk_boundary_shift);
+	STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, stop_chain_on_error,
+				  cmd->xcpc_stop_chain_on_error);
+	STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_len_update_en,
+				  cmd->xcpc_comp_len_update_en);
+	STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_sgl_src_en,
+				  cmd->xcpc_comp_sgl_src_en);
+	STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_sgl_src_vec_en,
+				  cmd->xcpc_comp_sgl_src_vec_en);
+	STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_sparse_format_en,
+				  cmd->xcpc_sgl_sparse_format_en);
+	STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_en,
+				  cmd->xcpc_sgl_pdma_en);
+	STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_len_from_desc,
+				  cmd->xcpc_sgl_pdma_len_from_desc);
+	STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, desc_vec_push_en,
+				  cmd->xcpc_desc_vec_push_en);
+	STORAGE_SEQ_XS_DESC1_PACK(seq_status_desc +
+			STORAGE_SEQ_P4PD_TABLE_BYTE_WIDTH_DFLT, desc1_action);
 }
 
 static void *
@@ -150,43 +621,6 @@ out:
 	return NULL;
 }
 
-static struct queue *
-get_seq_q(const struct service_info *svc_info, bool status_q)
-{
-	struct queue *q = NULL;
-	struct per_core_resource *pc_res;
-
-	/* TODO-seq: remove using hard-coded 0th status queue */
-	pc_res = svc_info->si_pc_res;
-
-	switch (svc_info->si_type) {
-	case PNSO_SVC_TYPE_ENCRYPT:
-		q = status_q ? &pc_res->crypto_seq_status_qs[0] :
-			&pc_res->crypto_enc_seq_q;
-		break;
-	case PNSO_SVC_TYPE_DECRYPT:
-		q = status_q ? &pc_res->crypto_seq_status_qs[0] :
-			&pc_res->crypto_dec_seq_q;
-		break;
-	case PNSO_SVC_TYPE_COMPRESS:
-	case PNSO_SVC_TYPE_HASH:
-	case PNSO_SVC_TYPE_CHKSUM:
-		q = status_q ? &pc_res->cpdc_seq_status_qs[0] :
-			&pc_res->cp_seq_q;
-		break;
-	case PNSO_SVC_TYPE_DECOMPRESS:
-		q = status_q ? &pc_res->cpdc_seq_status_qs[0] :
-			&pc_res->dc_seq_q;
-		break;
-	case PNSO_SVC_TYPE_DECOMPACT:
-	default:
-		OSAL_ASSERT(0);
-		break;
-	}
-
-	return q;
-}
-
 static void
 hw_ring_db(const struct service_info *svc_info)
 {
@@ -209,7 +643,213 @@ out:
 	OSAL_LOG_DEBUG("exit!");
 }
 
+static pnso_error_t
+hw_setup_cp_chain_params(struct chain_entry *centry,
+		struct service_info *svc_info,
+		struct cpdc_desc *cp_desc,
+		struct cpdc_status_desc *status_desc)
+{
+	pnso_error_t err = EINVAL;
+	struct service_chain *svc_chain;
+	struct cpdc_chain_params *chain_params;
+	struct sequencer_info *seq_info;
+	struct sequencer_spec *seq_spec;
+	uint32_t ring_id, index;
+	uint16_t qtype;
+	uint8_t *seq_status_desc;
+
+	struct accel_ring *ring;
+	struct lif *lif;
+	struct queue *q, *status_q;
+	uint16_t lif_id;
+
+	OSAL_LOG_INFO("enter ...");
+
+	svc_chain = centry->ce_chain_head;
+	chain_params = &svc_chain->sc_chain_params;
+	seq_spec = &chain_params->ccp_seq_spec;
+
+	seq_info = &svc_info->si_seq_info;
+	ring_id = seq_info->sqi_ring_id;
+	qtype = seq_info->sqi_qtype;
+	seq_info->sqi_index = 0;
+	PPRINT_SEQUENCER_INFO(seq_info);
+
+	ring = sonic_get_accel_ring(ring_id);
+	if (!ring) {
+		OSAL_ASSERT(ring);
+		goto out;
+	}
+
+	lif = sonic_get_lif();
+	if (!lif) {
+		OSAL_ASSERT(lif);
+		goto out;
+	}
+	lif_id = sonic_get_lif_id();
+
+	err = sonic_get_seq_sq(lif, qtype, &q);
+	if (err) {
+		OSAL_ASSERT(err);
+		goto out;
+	}
+
+	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS, &status_q);
+	if (err) {
+		OSAL_ASSERT(err);
+		goto out;
+	}
+
+	seq_status_desc = (uint8_t *) sonic_q_consume_entry(status_q, &index);
+	if (!seq_status_desc) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("failed to obtain sequencer statusq desc! err: %d",
+				err);
+		OSAL_ASSERT(seq_status_desc);
+		goto out;
+	}
+	seq_info->sqi_status_desc = seq_status_desc;
+
+	seq_spec->sqs_seq_q = (uint64_t) q;
+	seq_spec->sqs_seq_status_q = (uint64_t) status_q;
+	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for comp+hash */
+
+	cp_desc->cd_db_addr = kDbAddrCapri |
+		((uint64_t) kDbAddrUpdate << kDbUpdateShift) |
+		((uint64_t) lif_id << kDbLifShift) |
+		((uint64_t) status_q->qtype << kDbTypeShift);
+
+	cp_desc->cd_db_data = sonic_q_ringdb_data(status_q, index);
+	cp_desc->u.cd_bits.cc_db_on = 1;
+
+	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
+	chain_params->ccp_cmd.ccpc_next_db_action_barco_push = 1;
+	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
+	chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
+
+	chain_params->ccp_status_addr_0 =
+		osal_virt_to_phy((void *) status_desc);
+	chain_params->ccp_pad_buf_addr =
+		(uint64_t) osal_virt_to_phy((void *) pad_buffer);
+	chain_params->ccp_pad_boundary_shift =
+		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
+
+	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
+
+	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x%llx status_desc: 0x%llx",
+			ring_id, index, (u64) cp_desc, (u64) status_desc);
+
+	PPRINT_SEQUENCER_INFO(seq_info);
+
+	err = PNSO_OK;
+	OSAL_LOG_INFO("exit!");
+	return err;
+
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
+}
+
+static pnso_error_t
+hw_setup_hash_chain_params(struct chain_entry *centry,
+		struct service_info *svc_info,
+		struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl,
+		uint32_t num_hash_blks)
+{
+	pnso_error_t err = EINVAL;
+	struct accel_ring *ring;
+	uint32_t ring_id;
+
+	struct service_chain *svc_chain;
+	struct cpdc_chain_params *chain_params;
+	struct sequencer_info *seq_info;
+	struct barco_spec *barco_spec;
+
+	OSAL_LOG_INFO("enter ...");
+
+	svc_chain = centry->ce_chain_head;
+	chain_params = &svc_chain->sc_chain_params;
+	barco_spec = &chain_params->ccp_barco_spec;
+
+	seq_info = &svc_info->si_seq_info;
+	ring_id = seq_info->sqi_ring_id;
+
+	ring = sonic_get_accel_ring(ring_id);
+	if (!ring) {
+		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	barco_spec->bs_ring_addr = ring->ring_base_pa;
+	barco_spec->bs_pndx_addr = ring->ring_pndx_pa;
+	barco_spec->bs_pndx_shadow_addr = ring->ring_shadow_pndx_pa;
+	barco_spec->bs_desc_addr = osal_virt_to_phy((void *) hash_desc);
+	barco_spec->bs_desc_size = (uint8_t) ilog2(ring->ring_desc_size);
+	barco_spec->bs_pndx_size = (uint8_t) ilog2(ring->ring_pndx_size);
+	barco_spec->bs_ring_size = (uint8_t) ilog2(ring->ring_size);
+	barco_spec->bs_num_descs = num_hash_blks;
+
+	chain_params->ccp_sgl_vec_addr = osal_virt_to_phy((void *) sgl);
+	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
+	chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
+	/*
+	 * hash executes multiple requests, one per block; hence, indicate to
+	 * P4+ to push a vector of descriptors
+	 */
+	chain_params->ccp_cmd.ccpc_desc_vec_push_en = 1;
+
+	PPRINT_SEQUENCER_INFO(seq_info);
+
+	err = PNSO_OK;
+	OSAL_LOG_INFO("exit!");
+	return err;
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
+}
+
+static void *
+hw_setup_cpdc_chain_desc(struct chain_entry *centry,
+		struct service_info *svc_info,
+		const void *src_desc, size_t desc_size)
+{
+	pnso_error_t err = EINVAL;
+	struct service_chain *svc_chain;
+	struct cpdc_chain_params *chain_params;
+	struct sequencer_info *seq_info;
+	struct sequencer_desc *seq_desc;
+
+	OSAL_LOG_INFO("enter ...");
+
+	svc_chain = centry->ce_chain_head;
+	chain_params = &svc_chain->sc_chain_params;
+	seq_info = &svc_info->si_seq_info;
+	PPRINT_SEQUENCER_INFO(seq_info);
+
+	fill_cpdc_seq_status_desc(chain_params, seq_info->sqi_status_desc);
+	PPRINT_CPDC_CHAIN_PARAMS(chain_params);
+
+	seq_desc = hw_setup_desc(svc_info, src_desc, desc_size);
+	if (!seq_desc) {
+		OSAL_ASSERT(seq_desc);
+		OSAL_LOG_ERROR("failed to setup seq desc! err: %d", err);
+		goto out;
+	}
+
+	PPRINT_SEQUENCER_INFO(seq_info);
+
+	OSAL_LOG_INFO("exit!");
+	return seq_desc;
+
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return NULL;
+}
+
 const struct sequencer_ops hw_seq_ops = {
 	.setup_desc = hw_setup_desc,
 	.ring_db = hw_ring_db,
+	.setup_cp_chain_params = hw_setup_cp_chain_params,
+	.setup_hash_chain_params = hw_setup_hash_chain_params,
+	.setup_cpdc_chain_desc = hw_setup_cpdc_chain_desc,
 };
