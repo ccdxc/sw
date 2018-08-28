@@ -412,6 +412,7 @@ struct txq_init_comp {
 enum txq_desc_opcode {
 	TXQ_DESC_OPCODE_CALC_NO_CSUM = 0,
 	TXQ_DESC_OPCODE_CALC_CSUM,
+	TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP,
 	TXQ_DESC_OPCODE_TSO,
 };
 
@@ -529,11 +530,14 @@ struct txq_desc {
 	union {
 		struct {
 			u16 mss:14;
-			u16 rsvd3:2;
+			u16 S:1;
+			u16 E:1;
 		};
 		struct {
 			u16 csum_offset:14;
-			u16 rsvd4:2;
+			//u16 rsvd4:2;
+			u8 l3_csum:1;
+			u8 l4_csum:1;
 		};
 	};
 };
@@ -672,13 +676,13 @@ struct rxq_desc {
 enum rxq_comp_rss_type {
 	RXQ_COMP_RSS_TYPE_NONE = 0,
 	RXQ_COMP_RSS_TYPE_IPV4,
-	RXQ_COMP_RSS_TYPE_IPV6,
-	RXQ_COMP_RSS_TYPE_IPV6_EX,
 	RXQ_COMP_RSS_TYPE_IPV4_TCP,
-	RXQ_COMP_RSS_TYPE_IPV6_TCP,
-	RXQ_COMP_RSS_TYPE_IPV6_TCP_EX,
 	RXQ_COMP_RSS_TYPE_IPV4_UDP,
+	RXQ_COMP_RSS_TYPE_IPV6,
+	RXQ_COMP_RSS_TYPE_IPV6_TCP,
 	RXQ_COMP_RSS_TYPE_IPV6_UDP,
+	RXQ_COMP_RSS_TYPE_IPV6_EX,
+	RXQ_COMP_RSS_TYPE_IPV6_TCP_EX,
 	RXQ_COMP_RSS_TYPE_IPV6_UDP_EX,
 };
 
@@ -698,13 +702,13 @@ enum rxq_comp_rss_type {
  * @rss_type:     RSS type for @rss_hash:
  *                   0 = RSS hash not calcuated
  *                   1 = L3 IPv4
- *                   2 = L3 IPv6
- *                   3 = L3 IPv6 w/ extensions
- *                   4 = L4 IPv4/TCP
+ *                   2 = L4 IPv4/TCP
+ *                   3 = L4 IPv4/UDP
+ *                   4 = L3 IPv6
  *                   5 = L4 IPv6/TCP
- *                   6 = L4 IPv6/TCP w/ extensions
- *                   7 = L4 IPv4/UDP
- *                   8 = L4 IPv6/UDP
+ *                   6 = L4 IPv6/UDP
+ *                   7 = L3 IPv6 w/ extensions
+ *                   8 = L4 IPv6/TCP w/ extensions
  *                   9 = L4 IPv6/UDP w/ extensions
  * @csum_tcp_ok:  The TCP checksum calculated by the device
  *                matched the checksum in the receive packet's
@@ -1027,13 +1031,13 @@ union stats_dump {
 #define RSS_HASH_KEY_SIZE	40
 
 enum rss_hash_types {
-	//RSS_TYPE_IPV4		= BIT(0),
+	RSS_TYPE_IPV4		= BIT(0),
 	RSS_TYPE_IPV4_TCP	= BIT(1),
 	RSS_TYPE_IPV4_UDP	= BIT(2),
-	//RSS_TYPE_IPV6		= BIT(3),
+	RSS_TYPE_IPV6		= BIT(3),
 	RSS_TYPE_IPV6_TCP	= BIT(4),
 	RSS_TYPE_IPV6_UDP	= BIT(5),
-	//RSS_TYPE_IPV6_EX	= BIT(6),
+	RSS_TYPE_IPV6_EX	= BIT(6),
 	RSS_TYPE_IPV6_TCP_EX	= BIT(7),
 	RSS_TYPE_IPV6_UDP_EX	= BIT(8),
 };

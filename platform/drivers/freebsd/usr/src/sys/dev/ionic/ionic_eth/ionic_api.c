@@ -255,15 +255,17 @@ err_out:
 	int err;
 
 	spin_lock(&lif->adminq_lock);
-
+#ifdef DEBUG
 	netdev_dbg(lif->netdev, "post admin dev command:\n");
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->cmd, sizeof(ctx->cmd), true);
+#endif
 
 	if (ctx->side_data) {
+#ifdef DEBUG
 		print_hex_dump_debug("data ", DUMP_PREFIX_OFFSET, 16, 1,
 				     ctx->side_data, ctx->side_data_len, true);
-
+#endif
 		err = SBD_put(idev, ctx->side_data, ctx->side_data_len);
 		if (err)
 			goto err_out;
@@ -284,9 +286,11 @@ err_out:
 			goto err_out;
 	}
 
+#ifdef DEBUG
 	netdev_dbg(lif->netdev, "comp admin dev command:\n");
 	print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->comp, sizeof(ctx->comp), true);
+#endif
 
 err_out:
 	spin_unlock(&lif->adminq_lock);

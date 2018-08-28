@@ -23,7 +23,7 @@
 #include <linux/slab.h>
 
 #include "ionic_dev.h"
-
+#include "ionic.h"
 /* BAR0 resources
  */
 
@@ -392,6 +392,25 @@ void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa)
 		cur->sg_desc = base + (i * q->sg_desc_size);
 }
 
+
+
+void ionic_ring_doorbell(struct doorbell *db_addr, uint32_t qid, uint16_t p_index)
+{
+
+	struct doorbell db_data = {
+		.qid_lo = qid,
+		.qid_hi = qid >> 8,
+		.ring = 0,
+		.p_index = p_index,
+	};
+
+	IONIC_DEBUG_PRINT("qid: %d ring-doorbell p_index %d db %p, value : 0x%lx\n", qid, p_index, db_addr, *(u64 *)&db_data);
+
+	writeq(*(u64 *)&db_data, db_addr);
+	
+}
+
+
 void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		  void *cb_arg)
 {
@@ -399,19 +418,22 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 	q->head->cb_arg = cb_arg;
 	q->head = q->head->next;
 
-	if (ring_doorbell) {
-		struct doorbell db = {
-			.qid_lo = q->qid,
-			.qid_hi = q->qid >> 8,
-			.ring = 0,
-			.p_index = q->head->index,
-		};
+	if (!ring_doorbell)
+		return;
+	
+	struct doorbell db = {
+		.qid_lo = q->qid,
+		.qid_hi = q->qid >> 8,
+		.ring = 0,
+		.p_index = q->head->index,
+	};
 
-		//printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring "
-		//	 "0 p_index %d db %p\n", q->name, q->qid,
-		//	 q->head->index, q->db);
-		writeq(*(u64 *)&db, q->db);
-	}
+//	IONIC_NETDEV_QINFO(q,"ring doorbell p_index %d db %p, value : 0x%lx\n", 
+//		q->name, q->qid, q->head->index, q->db, *(u64 *)&db);
+		
+	
+	writeq(*(u64 *)&db, q->db);
+	
 }
 
 void ionic_q_rewind(struct queue *q, struct desc_info *start)

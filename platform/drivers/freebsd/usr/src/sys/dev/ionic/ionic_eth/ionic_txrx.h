@@ -26,14 +26,17 @@
 #endif
 struct napi_struct;
 
-#define sk_buff mbuf
-
-void ionic_rx_refill(struct queue *q);
-void ionic_rx_fill(struct queue *q);
-void ionic_rx_empty(struct queue *q);
-void ionic_rx_flush(struct cq *cq);
 void ionic_tx_napi(struct napi_struct *napi);
-void ionic_rx_napi(struct napi_struct *napi);
-int ionic_start_xmit(struct net_device *netdev, struct sk_buff *skb);
 
+int ionic_start_xmit(struct net_device *netdev, struct mbuf *m);
+int ionic_lif_netdev_alloc(struct lif* lif, int ndescs);
+void ionic_lif_netdev_free(struct lif* lifs);
+
+int ionic_set_os_features(struct ifnet* ifp, uint32_t hw_features);
+void ionic_setup_sysctls(struct lif *lif);
+int ionic_lif_rss_setup(struct lif *lif);
+void ionic_lif_rss_teardown(struct lif *lif);
+
+void ionic_down_link(struct net_device *netdev);
+void ionic_up_link(struct net_device *netdev);
 #endif /* _IONIC_TXRX_H_ */

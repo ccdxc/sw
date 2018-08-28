@@ -20,6 +20,8 @@
 #include <linux/netdevice.h>
 #include <linux/pci.h>
 
+
+
 #include "ionic.h"
 #include "ionic_lif.h"
 #include "ionic_bus.h"
@@ -56,10 +58,11 @@ int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)
 	int avail, ret;
 
 	avail = pci_msix_count(ionic->pdev->dev.bsddev);
-	dev_err(ionic->dev, "count nintrs %u avail %u\n", nintrs, avail);
-	if (avail < nintrs)
-		return -EINVAL;
 
+	if (avail < nintrs) {
+		dev_err(ionic->dev, "Device need %d interrupts, MSI/X available %u\n", nintrs, avail);
+		return -EINVAL;
+	}
 	avail = nintrs;
 
 	ret = -pci_alloc_msix(ionic->pdev->dev.bsddev, &avail);

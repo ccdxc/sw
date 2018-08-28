@@ -315,12 +315,17 @@ struct queue {
 };
 
 #define INTR_INDEX_NOT_ASSIGNED		(-1)
-#define INTR_NAME_MAX_SZ		(32)
+
+//#define INTR_NAME_MAX_SZ		(32)
+/* Interrupt name can't be longer than MAXCOMLEN */
+#define INTR_NAME_MAX_SZ		(MAXCOMLEN)
 
 struct intr {
 	char name[INTR_NAME_MAX_SZ];
 	unsigned int index;
 	unsigned int vector;
+	/* Interrupt related respurces for completion Q */
+	struct resource *irq_res;
 	struct intr_ctrl __iomem *ctrl;
 };
 
@@ -383,5 +388,7 @@ unsigned int ionic_q_space_avail(struct queue *q);
 bool ionic_q_has_space(struct queue *q, unsigned int want);
 void ionic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index);
+
+void ionic_ring_doorbell(struct doorbell *db_addr, uint32_t qid, uint16_t p_index);
 
 #endif /* _IONIC_DEV_H_ */

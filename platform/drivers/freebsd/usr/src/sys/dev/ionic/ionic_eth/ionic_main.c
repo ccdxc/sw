@@ -70,7 +70,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 		while ((++cmd)->cmd)
 			if (cmd->cmd == ctx->cmd.cmd.opcode)
 				name = cmd->name;
-		netdev_err(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
+		IONIC_NETDEV_ERROR(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
 			   name, ctx->comp.comp.status);
 		return -EIO;
 	}
@@ -128,7 +128,11 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		if (done)
 			return 0;
 
+#ifdef FREEBSD
+		pause("ionic devcmd", HZ / 10);
+#else
 		schedule_timeout_uninterruptible(HZ / 10);
+#endif
 
 	} while (time_after(time, jiffies));
 
