@@ -58,4 +58,9 @@ void cap_bx_set_ch_enable(int chip_id, int inst_id, int value);
 void cap_bx_set_soft_reset(int chip_id, int inst_id, int value);
 int cap_bx_check_sync(int chip_id, int inst_id);
 
+void cap_pp_sbus_write(int chip_id, int rcvr_addr, int data_addr, int data);
+int  cap_pp_sbus_read(int chip_id, int rcvr_addr, int data_addr);
+void cap_ms_sbus_write(int chip_id, int rcvr_addr, int data_addr, int data);
+int  cap_ms_sbus_read(int chip_id, int rcvr_addr, int data_addr);
+
 #endif // __SDK_LINKMGR_CAP_MX_API_H__

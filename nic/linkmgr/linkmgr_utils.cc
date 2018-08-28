@@ -180,4 +180,25 @@ sdk_port_oper_st_to_port_oper_st_spec(port_oper_status_t oper_st)
     return ::port::PORT_OPER_STATUS_NONE;
 }
 
+::port::PortBreakoutMode
+sdk_port_breakout_mode_to_port_breakout_mode_spec(
+                            port_breakout_mode_t breakout_mode)
+{
+    switch(breakout_mode) {
+    case port_breakout_mode_t::BREAKOUT_MODE_4x25G:
+        return ::port::PORT_BREAKOUT_MODE_4x25G;
+
+    case port_breakout_mode_t::BREAKOUT_MODE_4x10G:
+        return ::port::PORT_BREAKOUT_MODE_4x10G;
+
+    case port_breakout_mode_t::BREAKOUT_MODE_2x50G:
+        return ::port::PORT_BREAKOUT_MODE_2x50G;
+
+    default:
+        return ::port::PORT_BREAKOUT_MODE_NONE;
+    }
+
+    return ::port::PORT_BREAKOUT_MODE_NONE;
+}
+
 } // namespace linkmgr

@@ -299,14 +299,15 @@ public:
                     std::cout
                       << "Port Info Get succeeded for port "
                       << port_id << std::endl
-                      << " Port speed: "
-                      << rsp_msg.response(i).spec().port_speed() << std::endl
-                      << " MAC ID: "
-                      << rsp_msg.response(i).spec().mac_id() << std::endl
-                      << " MAC channel: "
-                      << rsp_msg.response(i).spec().mac_ch() << std::endl
-                      << " Num lanes: "
-                      << rsp_msg.response(i).spec().num_lanes() << std::endl;
+                      << " Num Lanes: "
+                      << rsp_msg.response(i).spec().num_lanes() << std::endl
+                      << " Breakout Modes: " << std::endl;
+                     for (int j = 0;
+                          j < rsp_msg.response(i).spec().breakout_modes_size();
+                          ++j) {
+                         std::cout << rsp_msg.response(i).spec().breakout_modes(j)
+                                   << std::endl;
+                     }
                 }
                 else {
                     break;

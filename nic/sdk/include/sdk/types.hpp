@@ -21,6 +21,13 @@ typedef enum cable_type_e {
     CABLE_TYPE_MAX
 } cable_type_t;
 
+typedef enum port_breakout_mode_e {
+    BREAKOUT_MODE_NONE,
+    BREAKOUT_MODE_4x25G,
+    BREAKOUT_MODE_4x10G,
+    BREAKOUT_MODE_2x50G
+} port_breakout_mode_t;
+
 enum class port_speed_t {
     PORT_SPEED_NONE    = 0,
     PORT_SPEED_1G      = 1,
@@ -75,6 +82,7 @@ using sdk::types::port_oper_status_t;
 using sdk::types::platform_type_t;
 using sdk::types::port_fec_type_t;
 using sdk::types::port_event_t;
+using sdk::types::port_breakout_mode_t;
 
 #endif    // __SDK_TYPES_HPP__
 

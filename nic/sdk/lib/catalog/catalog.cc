@@ -89,6 +89,50 @@ catalog::catalog_type_to_port_type(std::string type)
     return port_type_t::PORT_TYPE_NONE;
 }
 
+port_breakout_mode_t
+catalog::parse_breakout_mode(std::string breakout_mode)
+{
+    if (breakout_mode == "4x25G") {
+        return port_breakout_mode_t::BREAKOUT_MODE_4x25G;
+    } else if (breakout_mode == "4x10G") {
+        return port_breakout_mode_t::BREAKOUT_MODE_4x10G;
+    } else if (breakout_mode == "2x50G") {
+        return port_breakout_mode_t::BREAKOUT_MODE_2x50G;
+    }
+
+    return port_breakout_mode_t::BREAKOUT_MODE_NONE;
+}
+
+sdk_ret_t
+catalog::populate_fp_port(ptree::value_type &fp_port,
+                          catalog_fp_port_t *fp_port_p)
+{
+    fp_port_p->num_lanes = fp_port.second.get<uint32_t>("num_lanes", 0);
+
+    for (ptree::value_type &breakout_mode :
+                            fp_port.second.get_child("breakout_modes")) {
+        port_breakout_mode_t mode = parse_breakout_mode(
+                        breakout_mode.second.get_value<std::string>());
+        fp_port_p->breakout_modes |= (1 << static_cast<uint32_t>(mode));
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+catalog::populate_fp_ports(ptree &prop_tree)
+{
+    for (ptree::value_type &fp_port : prop_tree.get_child("fp_ports")) {
+        catalog_fp_port_t *fp_port_p =
+                            &catalog_db_.fp_ports[
+                            fp_port.second.get<uint32_t>("port_num", 0) - 1];
+
+        populate_fp_port(fp_port, fp_port_p);
+    }
+
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 catalog::populate_uplink_port(ptree::value_type &uplink_port,
                               catalog_uplink_port_t *uplink_port_p)
@@ -298,6 +342,8 @@ catalog::populate_serdes(ptree &prop_tree)
         uint8_t  cable_type  = 0;
         uint32_t port_speed  = 0;
 
+        std::string slip = "";
+
         std::string cable_type_str =
                     serdes.second.get<std::string>("cable_type", "CU");
         std::string speed_str = serdes.second.get<std::string>("speed", "10G");
@@ -313,11 +359,13 @@ catalog::populate_serdes(ptree &prop_tree)
         serdes_info->sbus_divider =
                             serdes.second.get<uint32_t>("sbus_divider", 0);
 
-        serdes_info->tx_slip_value =
-                            serdes.second.get<uint32_t>("tx_slip_value", 0);
+        slip = serdes.second.get<std::string>("tx_slip_value", "");
 
-        serdes_info->rx_slip_value =
-                            serdes.second.get<uint32_t>("rx_slip_value", 0);
+        serdes_info->tx_slip_value = strtoul(slip.c_str(), NULL, 16);
+
+        slip = serdes.second.get<std::string>("rx_slip_value", "");
+
+        serdes_info->rx_slip_value = strtoul(slip.c_str(), NULL, 16);
 
         serdes_info->width = serdes.second.get<uint32_t>("width", 0);
 
@@ -375,7 +423,13 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
     catalog_db_.num_asics = prop_tree.get<uint32_t>("num_asics", 0);
     catalog_db_.num_uplink_ports =
                             prop_tree.get<uint32_t>("num_uplink_ports", 0);
+
+    catalog_db_.num_fp_ports = prop_tree.get<uint32_t>("num_fp_ports", 0);
+
     populate_asics(prop_tree);
+
+    populate_fp_ports(prop_tree);
+
     populate_uplink_ports(prop_tree);
 
     populate_mgmt_mac_profiles(prop_tree);
@@ -508,6 +562,18 @@ catalog::port_speed(uint32_t port)
 {
     // TODO: do out of bound error check here !!
     return catalog_db_.uplink_ports[port-1].speed;
+}
+
+uint32_t
+catalog::num_fp_lanes(uint32_t port)
+{
+    return catalog_db_.fp_ports[port-1].num_lanes;
+}
+
+uint32_t
+catalog::breakout_modes(uint32_t port)
+{
+    return catalog_db_.fp_ports[port-1].breakout_modes;
 }
 
 uint32_t

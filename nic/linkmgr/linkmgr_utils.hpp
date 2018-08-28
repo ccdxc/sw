@@ -31,6 +31,10 @@ port_fec_type_spec_to_sdk_port_fec_type(::port::PortFecType fec_type);
 ::port::PortOperStatus
 sdk_port_oper_st_to_port_oper_st_spec(port_oper_status_t oper_st);
 
+::port::PortBreakoutMode
+sdk_port_breakout_mode_to_port_breakout_mode_spec(
+                            port_breakout_mode_t breakout_mode);
+
 }    // namespace linkmgr
 
 #endif    // __LINKMGR_LINKMGR_UTILS_HPP__

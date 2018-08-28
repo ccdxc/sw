@@ -16,10 +16,12 @@ using boost::property_tree::ptree;
 #define MAX_ASICS          1
 #define MAX_ASIC_PORTS     9
 #define MAX_UPLINK_PORTS   MAX_ASIC_PORTS
+#define MAX_FP_PORTS       2
 #define MAX_PORT_LANES     4
 #define MAX_SERDES         9
 #define SERDES_SBUS_START  34
 #define MAX_PORT_SPEEDS    7
+#define MAX_BO_MODES       4
 
 typedef enum mac_mode_e {
     MAC_MODE_1x100g,
@@ -44,7 +46,6 @@ typedef struct serdes_info_s {
     uint8_t  rx_pol;
 } serdes_info_t;
 
-
 typedef struct ch_profile_ {
    uint32_t ch_mode;
    uint32_t speed;
@@ -66,6 +67,11 @@ typedef struct catalog_uplink_port_s {
     port_speed_t      speed;
     port_type_t       type;
 } catalog_uplink_port_t;
+
+typedef struct catalog_fp_port_s {
+    uint32_t  breakout_modes;   // bitmap of breakout modes
+    uint32_t  num_lanes;
+} catalog_fp_port_t;
 
 typedef struct catalog_asic_port_s {
     uint32_t    mac_id;
@@ -96,10 +102,12 @@ typedef struct catalog_s {
     uint64_t                 cores_mask;                        // mask of all control/data cores
     uint32_t                 num_asics;                         // number of asics on the board
     uint32_t                 num_uplink_ports;                  // number of uplinks in the board
+    uint32_t                 num_fp_ports;                      // number of front panel ports in the board
     platform_type_t          platform_type;                     // platform type
     bool                     access_mock_mode;                  // do not access HW, dump only reads/writes
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
+    catalog_fp_port_t        fp_ports[MAX_FP_PORTS];            // per port information
     qos_profile_t            qos_profile;                       // qos asic profile
     mac_profile_t            mac_profiles[MAC_MODE_MAX];        // MAC profiles
     mac_profile_t            mgmt_mac_profiles[MAC_MODE_MAX];   // MGMT MAC profiles
@@ -125,6 +133,7 @@ public:
 
     catalog_t *catalog_db(void) { return &catalog_db_; }
     uint32_t num_uplink_ports(void) const { return catalog_db_.num_uplink_ports; }
+    uint32_t num_fp_ports(void) const { return catalog_db_.num_fp_ports; }
     platform_type_t platform_type(void) const { return catalog_db_.platform_type; }
     bool access_mock_mode(void) { return catalog_db_.access_mock_mode; }
     uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane);
@@ -142,6 +151,9 @@ public:
 
     uint32_t     glbl_mode_mgmt (mac_mode_t mac_mode);
     uint32_t     ch_mode_mgmt   (mac_mode_t mac_mode, uint32_t ch);
+
+    uint32_t     num_fp_lanes (uint32_t port);
+    uint32_t     breakout_modes (uint32_t port);
 
     serdes_info_t* serdes_info_get(uint32_t sbus_addr,
                                    uint32_t port_speed,
@@ -193,6 +205,15 @@ private:
 
     // populate config for all uplink ports
     sdk_ret_t populate_uplink_ports(ptree &prop_tree);
+
+    // populate fp port level config
+    sdk_ret_t populate_fp_port(ptree::value_type &fp_port,
+                               catalog_fp_port_t *fp_port_p);
+
+    // populate config for all fp ports
+    sdk_ret_t populate_fp_ports(ptree &prop_tree);
+
+    port_breakout_mode_t parse_breakout_mode(std::string);
 
     catalog_uplink_port_t *uplink_port(uint32_t port);
 

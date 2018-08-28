@@ -21,6 +21,14 @@ service Port {
   rpc PortInfoGet (PortInfoGetRequestMsg) returns (PortInfoGetResponseMsg) {}
 }
 
+// Port breakout modes
+enum PortBreakoutMode {
+    PORT_BREAKOUT_MODE_NONE  = 0;
+    PORT_BREAKOUT_MODE_4x25G = 1;
+    PORT_BREAKOUT_MODE_4x10G = 2;
+    PORT_BREAKOUT_MODE_2x50G = 3;
+}
+
 // PortOperStatus reflects the current status of the port
 enum PortOperStatus {
   PORT_OPER_STATUS_NONE  = 0;
@@ -271,14 +279,13 @@ message PortInfoGetRequestMsg {
 }
 
 message PortInfoSpec {
-  types.ObjectMeta  meta             = 1;    // common object meta
+  types.ObjectMeta          meta           = 1;    // common object meta
 
   // key_or_handle is the port number
-  kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
-  PortSpeed         port_speed       = 3;    // speed of the port
-  uint32            mac_id           = 4 [(gogoproto.moretags) = "venice:immutable"];    // mac associated with the port
-  uint32            mac_ch           = 5 [(gogoproto.moretags) = "venice:immutable"];    // mac channel associated with the port
-  uint32            num_lanes        = 6 [(gogoproto.moretags) = "venice:immutable"];    // number of lanes for the port
+  kh.PortKeyHandle          key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
+
+  uint32                    num_lanes      = 3;    // number of lanes for port
+  repeated PortBreakoutMode breakout_modes = 4;    // breakout modes supported with this port
 }
 
 message PortInfoGetResponse {

@@ -37,39 +37,27 @@ catalog (void)
 }
 
 static uint32_t
+num_fp_lanes (uint32_t port)
+{
+    return catalog()->num_fp_lanes(port);
+}
+
+static uint32_t
+breakout_modes (uint32_t port)
+{
+    return catalog()->breakout_modes(port);
+}
+
+static uint32_t
 sbus_addr (uint32_t port, uint32_t lane)
 {
     return catalog()->sbus_addr(port, lane);
 }
 
 static uint32_t
-num_uplink_ports (void)
+num_fp_ports (void)
 {
-    return catalog()->num_uplink_ports();
-}
-
-static port_speed_t
-port_speed (uint32_t port)
-{
-    return catalog()->port_speed(port);
-}
-
-static uint32_t
-num_lanes (uint32_t port)
-{
-    return catalog()->num_lanes(port);
-}
-
-static uint32_t
-mac_id (uint32_t port, uint32_t lane)
-{
-    return catalog()->mac_id(port, lane);
-}
-
-static uint32_t
-mac_ch (uint32_t port, uint32_t lane)
-{
-    return catalog()->mac_ch(port, lane);
+    return catalog()->num_fp_ports();
 }
 
 hal_ret_t
@@ -1090,30 +1078,41 @@ port_get (PortGetRequest& req, PortGetResponseMsg *rsp)
 }
 
 hal_ret_t
-populate_port_info(uint32_t uplink_port, PortInfoGetResponse *response)
+populate_port_info(uint32_t fp_port, PortInfoGetResponse *response)
 {
-    response->mutable_spec()->mutable_key_or_handle()->set_port_id(uplink_port);
-    response->mutable_spec()->set_port_speed(
-            linkmgr::sdk_port_speed_to_port_speed_spec(port_speed(uplink_port)));
-    response->mutable_spec()->set_mac_id(mac_id(uplink_port, 0));
-    response->mutable_spec()->set_mac_ch(mac_ch(uplink_port, 0));
-    response->mutable_spec()->set_num_lanes(num_lanes(uplink_port));
+    response->mutable_spec()->mutable_key_or_handle()->set_port_id(fp_port);
+    response->mutable_spec()->set_num_lanes(num_fp_lanes(fp_port));
+
+    uint32_t breakout_mask = breakout_modes(fp_port);
+
+    while (breakout_mask != 0) {
+        // find the position (0 based) of the first set bit
+        uint32_t             bit  = ffs(breakout_mask) - 1;
+
+        port_breakout_mode_t mode = static_cast<port_breakout_mode_t>(bit);
+
+        response->mutable_spec()->add_breakout_modes(
+                sdk_port_breakout_mode_to_port_breakout_mode_spec(mode));
+
+        // clear the bit
+        breakout_mask = breakout_mask & ~(1 << bit);
+    }
 
     return HAL_RET_OK;
 }
 
 hal_ret_t
-populate_port_info_response(uint32_t uplink_port,
+populate_port_info_response(uint32_t fp_port,
                             PortInfoGetResponseMsg *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
 
     PortInfoGetResponse *response = rsp->add_response();
 
-    ret = populate_port_info(uplink_port, response);
+    ret = populate_port_info(fp_port, response);
 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error getting port info {}", uplink_port);
+        HAL_TRACE_ERR("Error getting port info {}", fp_port);
         response->set_api_status(types::API_STATUS_NOT_FOUND);
     } else {
         response->set_api_status(types::API_STATUS_OK);
@@ -1125,21 +1124,21 @@ populate_port_info_response(uint32_t uplink_port,
 hal_ret_t
 port_info_get (PortInfoGetRequest& req, PortInfoGetResponseMsg *rsp)
 {
-    uint32_t  uplink_port = 0;
+    uint32_t  fp_port = 0;
     hal_ret_t ret         = HAL_RET_OK;
 
     if (!req.has_key_or_handle()) {
-        for (uplink_port = 1; uplink_port <= num_uplink_ports();
-                              ++uplink_port) {
-            populate_port_info_response(uplink_port, rsp);
+        for (fp_port = 1; fp_port <= num_fp_ports();
+                              ++fp_port) {
+            populate_port_info_response(fp_port, rsp);
         }
         return ret;
     }
 
     // TODO handle case?
-    uplink_port = req.key_or_handle().port_id();
+    fp_port = req.key_or_handle().port_id();
 
-    populate_port_info_response(uplink_port, rsp);
+    populate_port_info_response(fp_port, rsp);
 
     return ret;
 }
