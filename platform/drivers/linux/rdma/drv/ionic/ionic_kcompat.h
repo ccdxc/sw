@@ -35,7 +35,7 @@
 
 #include <linux/version.h>
 
-#if (LINUX_VERSION_CODE <= KERNEL_VERSION(4,16,3))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,17,0))
 #define ionic_add_gid(...) \
 	ionic_add_gid(struct ib_device *ibdev, u8 port,		\
 		      unsigned int index,			\
@@ -45,6 +45,13 @@
 #define ionic_del_gid(...) \
 	ionic_del_gid(struct ib_device *ibdev, u8 port,		\
 		      unsigned int index, void **context)
+#endif
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
+#define ud_wr(wr) ud_wr((struct ib_send_wr *)(wr))
+#define rdma_wr(wr) rdma_wr((struct ib_send_wr *)(wr))
+#define atomic_wr(wr) atomic_wr((struct ib_send_wr *)(wr))
+#define reg_wr(wr) reg_wr((struct ib_send_wr *)(wr))
 #endif
 
 #endif
