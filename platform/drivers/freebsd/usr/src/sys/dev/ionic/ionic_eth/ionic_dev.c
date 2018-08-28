@@ -155,29 +155,6 @@ void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
-void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
-			       unsigned int index, unsigned int lif_index,
-			       unsigned int intr_index)
-{
-	union dev_cmd cmd = {
-		.adminq_init.opcode = CMD_OPCODE_ADMINQ_INIT,
-		.adminq_init.index = adminq->index,
-		.adminq_init.pid = adminq->pid,
-		.adminq_init.intr_index = intr_index,
-		.adminq_init.lif_index = lif_index,
-		.adminq_init.ring_size = ilog2(adminq->num_descs),
-		.adminq_init.ring_base = adminq->base_pa,
-	};
-
-	//printk(KERN_ERR "adminq_init.pid %d\n", cmd.adminq_init.pid);
-	//printk(KERN_ERR "adminq_init.index %d\n", cmd.adminq_init.index);
-	//printk(KERN_ERR "adminq_init.ring_base %llx\n",
-	//       cmd.adminq_init.ring_base);
-	//printk(KERN_ERR "adminq_init.ring_size %d\n",
-	//       cmd.adminq_init.ring_size);
-	ionic_dev_cmd_go(idev, &cmd);
-}
-
 char *ionic_dev_asic_name(u8 asic_type)
 {
 	switch (asic_type) {
@@ -188,15 +165,6 @@ char *ionic_dev_asic_name(u8 asic_type)
 	}
 }
 
-struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q)
-{
-	struct doorbell __iomem *db;
-
-	db = (void *)idev->db_pages + (q->pid * PAGE_SIZE);
-	db += q->qtype;
-
-	return db;
-}
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index)
@@ -252,147 +220,6 @@ void ionic_intr_coal_set(struct intr *intr, u32 intr_coal)
 	(void)ioread32(intr_to_coal(intr->ctrl)); /* flush write */
 }
 
-int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
-		  unsigned int num_descs, size_t desc_size)
-{
-	struct cq_info *cur;
-	unsigned int ring_size;
-	unsigned int i;
-
-	if (desc_size == 0 || !is_power_of_2(num_descs))
-		return -EINVAL;
-
-	ring_size = ilog2(num_descs);
-	if (ring_size < 2 || ring_size > 16)
-		return -EINVAL;
-
-	cq->lif = lif;
-	cq->bound_intr = intr;
-	cq->num_descs = num_descs;
-	cq->desc_size = desc_size;
-	cq->tail = cq->info;
-	cq->done_color = 1;
-
-	cur = cq->info;
-
-	for (i = 0; i < num_descs; i++) {
-		if (i + 1 == num_descs) {
-			cur->next = cq->info;
-			cur->last = true;
-		} else {
-			cur->next = cur + 1;
-		}
-		cur->index = i;
-		cur++;
-	}
-
-	return 0;
-}
-
-void ionic_cq_map(struct cq *cq, void *base, dma_addr_t base_pa)
-{
-	struct cq_info *cur;
-	unsigned int i;
-
-	cq->base = base;
-	cq->base_pa = base_pa;
-
-	for (i = 0, cur = cq->info; i < cq->num_descs; i++, cur++)
-		cur->cq_desc = base + (i * cq->desc_size);
-}
-
-void ionic_cq_bind(struct cq *cq, struct queue *q)
-{
-	// TODO support many:1 bindings using qid as index into bound_q array
-	cq->bound_q = q;
-}
-
-unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
-			      ionic_cq_cb cb, void *cb_arg)
-{
-	unsigned int work_done = 0;
-
-	if (work_to_do == 0)
-		return 0;
-
-	while (cb(cq, cq->tail, cb_arg)) {
-		if (cq->tail->last)
-			cq->done_color = !cq->done_color;
-		cq->tail = cq->tail->next;
-		if (++work_done == work_to_do)
-			break;
-	}
-
-	return work_done;
-}
-
-int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
-		 unsigned int index, const char *base, unsigned int num_descs,
-		 size_t desc_size, size_t sg_desc_size, unsigned int pid)
-{
-	struct desc_info *cur;
-	unsigned int ring_size;
-	unsigned int i;
-
-	if (desc_size == 0 || !is_power_of_2(num_descs))
-		return -EINVAL;
-
-	ring_size = ilog2(num_descs);
-	if (ring_size < 2 || ring_size > 16)
-		return -EINVAL;
-
-	q->lif = lif;
-	q->idev = idev;
-	q->index = index;
-	q->num_descs = num_descs;
-	q->desc_size = desc_size;
-	q->sg_desc_size = sg_desc_size;
-	q->head = q->tail = q->info;
-	q->pid = pid;
-
-	snprintf(q->name, sizeof(q->name), "%s%u", base, index);
-
-	cur = q->info;
-
-	for (i = 0; i < num_descs; i++) {
-		if (i + 1 == num_descs)
-			cur->next = q->info;
-		else
-			cur->next = cur + 1;
-		cur->index = i;
-		cur->left = num_descs - i;
-		cur++;
-	}
-
-	return 0;
-}
-
-void ionic_q_map(struct queue *q, void *base, dma_addr_t base_pa)
-{
-	struct desc_info *cur;
-	unsigned int i;
-
-	q->base = base;
-	q->base_pa = base_pa;
-
-	for (i = 0, cur = q->info; i < q->num_descs; i++, cur++)
-		cur->desc = base + (i * q->desc_size);
-}
-
-void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa)
-{
-	struct desc_info *cur;
-	unsigned int i;
-
-	q->sg_base = base;
-	q->sg_base_pa = base_pa;
-
-	for (i = 0, cur = q->info; i < q->num_descs; i++, cur++)
-		cur->sg_desc = base + (i * q->sg_desc_size);
-}
-
-
-
 void ionic_ring_doorbell(struct doorbell *db_addr, uint32_t qid, uint16_t p_index)
 {
 
@@ -408,44 +235,6 @@ void ionic_ring_doorbell(struct doorbell *db_addr, uint32_t qid, uint16_t p_inde
 	writeq(*(u64 *)&db_data, db_addr);
 }
 
-
-void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
-		  void *cb_arg)
-{
-	q->head->cb = cb;
-	q->head->cb_arg = cb_arg;
-	q->head = q->head->next;
-
-	if (!ring_doorbell)
-		return;
-
-	struct doorbell db = {
-		.qid_lo = q->qid,
-		.qid_hi = q->qid >> 8,
-		.ring = 0,
-		.p_index = q->head->index,
-	};
-
-//	IONIC_NETDEV_QINFO(q,"ring doorbell p_index %d db %p, value : 0x%lx\n",
-//		q->name, q->qid, q->head->index, q->db, *(u64 *)&db);
-	writeq(*(u64 *)&db, q->db);
-
-}
-
-void ionic_q_rewind(struct queue *q, struct desc_info *start)
-{
-	struct desc_info *cur = start;
-
-	while (cur != q->head) {
-		if (cur->cb)
-			cur->cb(q, cur, NULL, cur->cb_arg);
-		cur = cur->next;
-	}
-
-	q->head = start;
-}
-
-
 int ionic_desc_avail(int ndescs, int head, int tail) 
 {
 	int avail = tail;
@@ -456,36 +245,4 @@ int ionic_desc_avail(int ndescs, int head, int tail)
 		avail -= head + 1;
 
 	return avail;
-}
-
-
-unsigned int ionic_q_space_avail(struct queue *q)
-{
-	unsigned int avail = q->tail->index;
-
-	if (q->head->index >= avail)
-		avail += q->head->left - 1;
-	else
-		avail -= q->head->index + 1;
-
-	return avail;
-}
-
-bool ionic_q_has_space(struct queue *q, unsigned int want)
-{
-	return ionic_q_space_avail(q) >= want;
-}
-
-void ionic_q_service(struct queue *q, struct cq_info *cq_info,
-		     unsigned int stop_index)
-{
-	struct desc_info *desc_info;
-
-	do {
-		desc_info = q->tail;
-		if (desc_info->cb)
-			desc_info->cb(q, desc_info, cq_info,
-				      desc_info->cb_arg);
-		q->tail = q->tail->next;
-	} while (desc_info->index != stop_index);
 }

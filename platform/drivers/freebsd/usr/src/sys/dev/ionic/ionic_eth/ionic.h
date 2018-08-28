@@ -23,7 +23,7 @@
 #include "ionic_api.h"
 
 //#define ADMINQ
-//#define IONIC_DEBUG
+#define IONIC_DEBUG
 
 #define	IONIC_DEBUG_PRINT(fmt, ...)			printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
 
@@ -123,8 +123,10 @@ struct ionic {
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
+#if 0
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	       void *cb_arg);
+#endif
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
 int ionic_set_dma_mask(struct ionic *ionic);
 int ionic_setup(struct ionic *ionic);

@@ -439,34 +439,6 @@ ionic_get_header_size(struct tx_stats *stats, struct mbuf *mb, uint16_t *eth_typ
 }
 
 
-#if 0
-static int ionic_tx_map(struct tx_qcq *txqcq, int index, struct mbuf *m)
-{
-	bus_dma_segment_t  seg[1];
-	struct ionic_tx_buf *txbuf;
-	struct tx_stats *stats = &txqcq->stats;
-	int nsegs, error, len;
-
-	txbuf = &txqcq->txbuf[index];
-	len = m->m_len;
-
-	error = bus_dmamap_load_mbuf_sg(txqcq->buf_tag, txbuf->dma_map, m, seg, &nsegs, BUS_DMA_NOWAIT);
-	if (error) {
-		IONIC_NETDEV_QERR(txqcq, "failed to map xmit, error: %d\n", error);
-		stats->dma_map_err++;
-		return (error);
-	}
-
-	bus_dmamap_sync(txqcq->buf_tag, txbuf->dma_map, BUS_DMASYNC_PREWRITE);
-	txbuf->pa_addr = seg[0].ds_addr;
-	IONIC_NETDEV_QINFO(txqcq, "VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%lx\n", m, txbuf->pa_addr, nsegs, seg[0].ds_len);
-
-	return (0);
-}
-#endif
-
-
-
 static int ionic_tx_setup(struct tx_qcq *txqcq, struct mbuf *m)
 {
 	struct txq_desc *desc;

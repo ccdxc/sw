@@ -135,29 +135,71 @@ static int ionic_stop(struct net_device *netdev)
 	return 0;
 }
 
-static bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info,
-				 void *cb_arg)
+static irqreturn_t ionic_adminq_isr(int irq, void *data)
 {
-	struct admin_comp *comp = cq_info->cq_desc;
+	struct adminq* adminq = data;
 
-	if (comp->color != cq->done_color)
-		return 0;
+	ionic_intr_mask(&adminq->intr, true);
 
-	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
+	napi_schedule_irqoff(&adminq->napi);
 
-	return true;
+	return IRQ_HANDLED;
 }
 
 static void ionic_adminq_napi(struct napi_struct *napi)
 {
+	struct admin_comp *comp;
+	struct admin_cmd *cmd;
+	int comp_index, cmd_index, processed, cmd_stop_index;
 	int budget = NAPI_POLL_WEIGHT;
-	int work_done;
+	struct adminq* adminq = container_of(napi, struct adminq, napi);
 
-	work_done = ionic_napi(napi, budget, ionic_adminq_service, NULL);
+	mtx_lock(&adminq->mtx);
 
-	if (work_done == budget)
-		napi_schedule(napi);
+	for ( processed = 0 ; processed < budget ; ) {
+		comp_index = adminq->comp_index;
+		comp = &adminq->comp_ring[comp_index];
+		/* Sync every time descriptors. */
+		bus_dmamap_sync(adminq->cmd_dma.dma_tag, adminq->cmd_dma.dma_map,
+			BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
+
+		cmd_stop_index = comp->comp_index;
+		cmd_index = adminq->cmd_tail_index;
+		cmd = &adminq->cmd_ring[cmd_index];
+
+		if (comp->color != adminq->done_color)
+			break;
+
+		IONIC_NETDEV_QINFO(adminq, "comp :%d cmd start: %d cmd stop: %d comp->color %d done_color %d\n",
+			comp_index, cmd_index, cmd_stop_index, comp->color, adminq->done_color);
+		IONIC_NETDEV_QINFO(adminq, "buf[%d] opcode:%d\n", cmd_index, cmd->opcode);
+
+		for ( ; cmd_index == cmd_stop_index; cmd_index++, processed++ ) {
+			/* XXX: loop to do???? */
+			cmd = &adminq->cmd_ring[cmd_index];
+		}
+
+		adminq->comp_index = (adminq->comp_index + 1) % adminq->num_descs;
+		adminq->cmd_tail_index = (adminq->cmd_tail_index + 1) % adminq->num_descs;
+		/* Roll over condition, flip color. */
+		if (adminq->comp_index == 0) {
+			adminq->done_color = !adminq->done_color;
+		}
+	}
+
+	IONIC_NETDEV_QINFO(adminq, "ionic_adminq_napi processed %d\n", processed);
+
+	if (processed == budget)
+		napi_schedule(&adminq->napi);
+
+	ionic_intr_return_credits(&adminq->intr, processed, 0, true);
+
+	// Enable interrupt.
+	ionic_intr_mask(&adminq->intr, false);
+	mtx_unlock(&adminq->mtx);
 }
+
+
 
 static int _ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 {
@@ -433,14 +475,7 @@ static int ionic_vlan_rx_kill_vid(struct net_device *netdev,
 	return ionic_vlan_rx_filter(netdev, false, proto, vid);
 }
 
-static irqreturn_t ionic_isr(int irq, void *data)
-{
-	struct napi_struct *napi = data;
 
-	napi_schedule_irqoff(napi);
-
-	return IRQ_HANDLED;
-}
 
 int ionic_intr_alloc(struct lif *lif, struct intr *intr)
 {
@@ -462,103 +497,88 @@ void ionic_intr_free(struct lif *lif, struct intr *intr)
 		clear_bit(intr->index, lif->ionic->intrs);
 }
 
-static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
-			   const char *base, unsigned int flags,
-			   unsigned int num_descs, unsigned int desc_size,
-			   unsigned int cq_desc_size,
-			   unsigned int sg_desc_size,
-			   unsigned int pid, struct qcq **qcq)
+static int ionic_adminq_alloc(struct lif *lif, unsigned int qnum,
+			unsigned int num_descs, unsigned int pid,
+			struct adminq **padminq)
 {
-	struct ionic_dev *idev = &lif->ionic->idev;
-	struct device *dev = lif->ionic->dev;
-	struct qcq *new;
-	unsigned int q_size = num_descs * desc_size;
-	unsigned int cq_size = num_descs * cq_desc_size;
-	unsigned int sg_size = num_descs * sg_desc_size;
-	unsigned int total_size = ALIGN(q_size, PAGE_SIZE) +
-				  ALIGN(cq_size, PAGE_SIZE) +
-				  ALIGN(sg_size, PAGE_SIZE);
-	void *q_base, *cq_base, *sg_base;
-	dma_addr_t q_base_pa, cq_base_pa, sg_base_pa;
-	int err;
+	struct adminq *adminq;
+	int irq, error = ENOMEM; 
+	uint32_t cmd_ring_size, comp_ring_size, total_size;
 
-	*qcq = NULL;
+	*padminq = NULL;
 
-	total_size = ALIGN(q_size, PAGE_SIZE) + ALIGN(cq_size, PAGE_SIZE);
-	if (flags & QCQ_F_SG)
-		total_size += ALIGN(sg_size, PAGE_SIZE);
-
-	new = kzalloc(sizeof(*new), GFP_KERNEL);
-	if (!new)
-		return -ENOMEM;
-
-	new->flags = flags;
-
-	new->q.info = kzalloc(sizeof(*new->q.info) * num_descs, GFP_KERNEL);
-	if (!new->q.info)
-		return -ENOMEM;
-
-	err = ionic_q_init(lif, idev, &new->q, index, base, num_descs,
-			   desc_size, sg_desc_size, pid);
-	if (err)
-		return err;
-
-	if (flags & QCQ_F_INTR) {
-		err = ionic_intr_alloc(lif, &new->intr);
-		if (err)
-			return err;
-		err = ionic_bus_get_irq(lif->ionic, new->intr.index);
-		if (err < 0)
-			goto err_out_free_intr;
-		new->intr.vector = err;
-		ionic_intr_mask_on_assertion(&new->intr);
-	} else {
-		new->intr.index = INTR_INDEX_NOT_ASSIGNED;
+	adminq = malloc(sizeof(*adminq), M_IONIC, M_NOWAIT | M_ZERO);
+	if(adminq == NULL) {
+		IONIC_NETDEV_ERROR(lif->netdev, "failed to allocate rxq%d\n", qnum);
+		return (error);
 	}
 
-	new->cq.info = kzalloc(sizeof(*new->cq.info) * num_descs, GFP_KERNEL);
-	if (!new->cq.info)
-		return -ENOMEM;
+	snprintf(adminq->name, sizeof(adminq->name) - 1, "Adq%d", qnum);
+	adminq->lif = lif;
+	adminq->index = qnum;
+	adminq->num_descs = num_descs;
+	adminq->pid = pid;
+	adminq->done_color = 1;
 
-	err = ionic_cq_init(lif, &new->cq, &new->intr,
-			    num_descs, cq_desc_size);
-	if (err)
-		goto err_out_free_intr;
+	mtx_init(&adminq->mtx, adminq->name, NULL, MTX_DEF);
 
-	new->base = dma_zalloc_coherent(dev, total_size, &new->base_pa,
-					GFP_KERNEL);
-	if (!new->base) {
-		err = -ENOMEM;
-		goto err_out_free_intr;
+	adminq->cmd_head_index = adminq->cmd_tail_index = 0;
+	adminq->comp_index = 0;
+
+	/* Allocate DMA for command and completion rings. They must be consecutive. */
+	cmd_ring_size = sizeof(*adminq->cmd_ring) * num_descs;
+	comp_ring_size = sizeof(*adminq->comp_ring) * num_descs;
+	total_size = ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(cmd_ring_size, PAGE_SIZE);
+
+	if ((error = ionic_dma_alloc(adminq->lif->ionic, total_size, &adminq->cmd_dma, BUS_DMA_NOWAIT))) {
+		IONIC_NETDEV_QERR(adminq, "failed to allocated DMA cmd ring, err: %d\n", error);
+		goto failed_alloc;
 	}
 
-	new->total_size = total_size;
+	adminq->cmd_ring_pa = adminq->cmd_dma.dma_paddr;
+	adminq->cmd_ring = (struct admin_cmd *)adminq->cmd_dma.dma_vaddr;
+	IONIC_NETDEV_QINFO(adminq, "cmd base pa: 0x%lx size: 0x%x comp size: 0x%x total size: 0x%x\n",
+		adminq->cmd_ring_pa, cmd_ring_size, comp_ring_size, total_size);
+	/*
+	 * We assume that competion ring is next to command ring.
+	 */
+	adminq->comp_ring = (struct admin_comp *)(adminq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE));
 
-	q_base = new->base;
-	q_base_pa = new->base_pa;
+	bzero((void *)adminq->cmd_ring, total_size);
 
-	cq_base = (void *)ALIGN((uintptr_t)q_base + q_size, PAGE_SIZE);
-	cq_base_pa = ALIGN(q_base_pa + q_size, PAGE_SIZE);
-
-	if (flags & QCQ_F_SG) {
-		sg_base = (void *)ALIGN((uintptr_t)cq_base + cq_size,
-					PAGE_SIZE);
-		sg_base_pa = ALIGN(cq_base_pa + cq_size, PAGE_SIZE);
-		ionic_q_sg_map(&new->q, sg_base, sg_base_pa);
+	/* Setup interrupt */
+	error = ionic_intr_alloc(lif, &adminq->intr);
+	if (error) {
+		IONIC_NETDEV_QERR(adminq, "no available interrupt, error: %d\n", error);
+		goto failed_alloc;
 	}
 
-	ionic_q_map(&new->q, q_base, q_base_pa);
-	ionic_cq_map(&new->cq, cq_base, cq_base_pa);
-	ionic_cq_bind(&new->cq, &new->q);
+	irq = ionic_bus_get_irq(lif->ionic, adminq->intr.index);
+	if (irq < 0) {
+		IONIC_NETDEV_QERR(adminq, "no available IRQ, error: %d\n", error);
+		goto free_intr;
+	}
 
-	*qcq = new;
-
+	adminq->intr.vector = irq;
+	ionic_intr_mask_on_assertion(&adminq->intr);
+ 
+	*padminq = adminq;
 	return 0;
 
-err_out_free_intr:
-	ionic_intr_free(lif, &new->intr);
+free_intr:
+	ionic_intr_free(lif, &adminq->intr);
 
-	return err;
+failed_alloc:
+	if (adminq->cmd_ring) {
+		/* completion ring is part of command ring allocation. */
+		ionic_dma_free(adminq->lif->ionic, &adminq->cmd_dma);
+		adminq->cmd_ring = NULL;
+		adminq->comp_ring = NULL;
+	}
+
+	free(adminq, M_IONIC);
+
+	return (error);
 }
 
 static int ionic_rx_qcq_alloc(struct lif *lif, unsigned int qnum,
@@ -873,15 +893,22 @@ static void ionic_txqcq_free(struct lif *lif, struct tx_qcq *txqcq)
 	mtx_destroy(&txqcq->mtx);
 }
 
-static void ionic_qcq_free(struct lif *lif, struct qcq *qcq)
+static void ionic_adminq_free(struct lif *lif, struct adminq *adminq)
 {
-	if (!qcq)
-		return;
 
-	dma_free_coherent(lif->ionic->dev, qcq->total_size, qcq->base,
-			  qcq->base_pa);
-	ionic_intr_free(lif, &qcq->intr);
+	mtx_lock(&adminq->mtx);
+	if (adminq->cmd_ring) {
+		/* completion ring is part of command ring allocation. */
+		ionic_dma_free(adminq->lif->ionic, &adminq->cmd_dma);
+		adminq->cmd_ring = NULL;
+		adminq->comp_ring = NULL;
+	}
+
+	ionic_intr_free(lif, &adminq->intr);
+	mtx_unlock(&adminq->mtx);
+	mtx_destroy(&adminq->mtx);
 }
+
 
 static unsigned int ionic_pid_get(struct lif *lif, unsigned int page)
 {
@@ -894,7 +921,6 @@ static unsigned int ionic_pid_get(struct lif *lif, unsigned int page)
 
 static int ionic_qcqs_alloc(struct lif *lif)
 {
-	unsigned int flags;
 	unsigned int pid;
 	unsigned int i;
 	int err = -ENOMEM;
@@ -908,23 +934,19 @@ static int ionic_qcqs_alloc(struct lif *lif)
 		return -ENOMEM;
 
 	pid = ionic_pid_get(lif, 0);
-	flags = QCQ_F_INTR;
+
 	/* XXX: we are tight on name description */
-	err = ionic_qcq_alloc(lif, 0, "adq", flags, 1 << 4,
-			      sizeof(struct admin_cmd),
-			      sizeof(struct admin_comp),
-			      0, pid, &lif->adminqcq);
+	err = ionic_adminq_alloc(lif, 0, 1 << 4, pid, &lif->adminqcq);
 	if (err)
 		return err;
 
-	pid = ionic_pid_get(lif, 0);
+
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		err = ionic_tx_qcq_alloc(lif, i, ntxq_descs, pid, &lif->txqcqs[i]);
 		if (err)
 			goto err_out_free_adminqcq;
 	}
 
-	pid = ionic_pid_get(lif, 0);
 	for (i = 0; i < lif->nrxqcqs; i++) {
 		err = ionic_rx_qcq_alloc(lif, i, nrxq_descs, pid, &lif->rxqcqs[i]);
 		if (err)
@@ -937,7 +959,7 @@ err_out_free_txqcqs:
 	for (i = 0; i < lif->ntxqcqs; i++)
 		ionic_txqcq_free(lif, lif->txqcqs[i]);
 err_out_free_adminqcq:
-	ionic_qcq_free(lif, lif->adminqcq);
+	ionic_adminq_free(lif, lif->adminqcq);
 
 	return err;
 }
@@ -953,7 +975,7 @@ static void ionic_qcqs_free(struct lif *lif)
 	for (i = 0; i < lif->ntxqcqs; i++)
 		ionic_txqcq_free(lif, lif->txqcqs[i]);
 
-	ionic_qcq_free(lif, lif->adminqcq);
+	ionic_adminq_free(lif, lif->adminqcq);
 
 }
 
@@ -1148,14 +1170,11 @@ int ionic_rss_hash_key_set(struct lif *lif, const u8 *key, uint16_t rss_types)
 
 
 
-static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
+static void ionic_lif_adminq_deinit(struct lif *lif, struct adminq *adminq)
 {
-	if (!(qcq->flags & QCQ_F_INITED))
-		return;
-	ionic_intr_mask(&qcq->intr, true);
-	free_irq(qcq->intr.vector, &qcq->napi);
-	netif_napi_del(&qcq->napi);
-	qcq->flags &= ~QCQ_F_INITED;
+	ionic_intr_mask(&adminq->intr, true);
+	free_irq(adminq->intr.vector, &adminq->napi);
+	netif_napi_del(&adminq->napi);
 }
 
 
@@ -1185,9 +1204,6 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 	struct rx_qcq* rxqcq;
 
 	for (i = 0; i < lif->nrxqcqs; i++) {
-#ifdef IONIC_NAPI
-		ionic_lif_qcq_deinit(lif, lif->rxqcqs[i]);
-#else
 		rxqcq = lif->rxqcqs[i];
 
 		mtx_lock(&rxqcq->mtx);
@@ -1200,14 +1216,13 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 			taskqueue_free(rxqcq->taskq);
 
 		mtx_unlock(&rxqcq->mtx);
-#endif
 	}
 }
 
 static void ionic_lif_deinit(struct lif *lif)
 {
 	ether_ifdetach(lif->netdev);
-	ionic_lif_qcq_deinit(lif, lif->adminqcq);
+	ionic_lif_adminq_deinit(lif, lif->adminqcq);
 	ionic_lif_txqs_deinit(lif);
 	ionic_lif_rxqs_deinit(lif);
 }
@@ -1223,57 +1238,64 @@ void ionic_lifs_deinit(struct ionic *ionic)
 	}
 }
 
-static int ionic_request_irq(struct lif *lif, struct qcq *qcq)
-{
-	struct intr *intr = &qcq->intr;
-	struct queue *q = &qcq->q;
-	struct napi_struct *napi = &qcq->napi;
-
-	/* XXX: FreeBSD bug, name is not used in request_irq. */
-	/*
-	 * Device name is already part of description, just put Q name.
-	 *
-	 */
-	snprintf(intr->name, sizeof(intr->name),
-		 "%s", q->name);
-		//"%s-%s-%s", DRV_NAME, lif->name, q->name);
-	IONIC_NETDEV_INFO(lif->netdev, "Intr name:%s\n", intr->name);
-	return request_irq(intr->vector, ionic_isr,
-			   0, intr->name, napi);
-}
-
 static int ionic_lif_adminq_init(struct lif *lif)
 {
+	struct adminq *adminq = lif->adminqcq;
 	struct ionic_dev *idev = &lif->ionic->idev;
-	struct qcq *qcq = lif->adminqcq;
-	struct queue *q = &qcq->q;
-	struct napi_struct *napi = &qcq->napi;
+	struct napi_struct *napi = &adminq->napi;
 	struct adminq_init_comp comp;
-	int err;
+	int err = 0;
 
-	ionic_dev_cmd_adminq_init(idev, q, 0, lif->index, 0);
+	union dev_cmd cmd = {
+		.adminq_init.opcode = CMD_OPCODE_ADMINQ_INIT,
+		.adminq_init.index = adminq->index,
+		.adminq_init.pid = adminq->pid,
+		.adminq_init.intr_index = 0,//intr_index,
+		.adminq_init.lif_index = lif->index,
+		.adminq_init.ring_size = ilog2(adminq->num_descs),
+		.adminq_init.ring_base = adminq->cmd_ring_pa,
+	};
+
+	//printk(KERN_ERR "adminq_init.pid %d\n", cmd.adminq_init.pid);
+	//printk(KERN_ERR "adminq_init.index %d\n", cmd.adminq_init.index);
+	//printk(KERN_ERR "adminq_init.ring_base %llx\n",
+	//       cmd.adminq_init.ring_base);
+	//printk(KERN_ERR "adminq_init.ring_size %d\n",
+	//       cmd.adminq_init.ring_size);
+	ionic_dev_cmd_go(idev, &cmd);
+
 	err = ionic_dev_cmd_wait_check(idev, IONIC_DEVCMD_TIMEOUT);
 	if (err)
 		return err;
 
 	ionic_dev_cmd_comp(idev, &comp);
-	q->qid = comp.qid;
-	q->qtype = comp.qtype;
-	q->db = ionic_db_map(idev, q);
 
-	netif_napi_add(lif->netdev, napi, ionic_adminq_napi,
+	IONIC_NETDEV_QINFO(adminq, "qid %d pid %d index %d ring_base 0x%lx ring_size %d\n",
+		comp.qid, cmd.adminq_init.pid, cmd.adminq_init.index, cmd.adminq_init.ring_base,
+		cmd.adminq_init.ring_size);
+
+	adminq->qid = comp.qid;
+	adminq->qtype = comp.qtype;
+	adminq->db  = (void *)adminq->lif->ionic->idev.db_pages + (adminq->pid * PAGE_SIZE);
+	adminq->db += adminq->qtype;
+
+	snprintf(adminq->intr.name, sizeof(adminq->intr.name), "%s", adminq->name);
+
+	netif_napi_add(lif->netdev, &adminq->napi, ionic_adminq_napi,
 		       NAPI_POLL_WEIGHT);
 
-	err = ionic_request_irq(lif, qcq);
+	err = request_irq(adminq->intr.vector, ionic_adminq_isr, 0, adminq->intr.name, adminq);
 	if (err) {
 		netif_napi_del(napi);
 		return err;
 	}
 
-	qcq->flags |= QCQ_F_INITED;
+	IONIC_NETDEV_QINFO(adminq, "qid: %d qtype: %d db: %pd\n",
+		adminq->qid, adminq->qtype, adminq->db);
 
 	return 0;
 }
+
 
 int ionic_tx_clean(struct tx_qcq* txqcq , int tx_limit)
 {
@@ -1394,14 +1416,6 @@ static int ionic_lif_txq_init(struct lif *lif, struct tx_qcq *txqcq)
 	};
 	int err, bind_cpu;
 
-#if 0
-	IONIC_NETDEV_INFO(lif->netdev, "txq_init.pid %d\n", ctx.cmd.txq_init.pid);
-	IONIC_NETDEV_INFO(lif->netdev, "txq_init.index %d\n", ctx.cmd.txq_init.index);
-	IONIC_NETDEV_INFO(lif->netdev, "txq_init.ring_base 0x%lx\n",
-	           ctx.cmd.txq_init.ring_base);
-	IONIC_NETDEV_INFO(lif->netdev, "txq_init.ring_size %d\n",
-		   ctx.cmd.txq_init.ring_size);
-#endif
 	IONIC_NETDEV_QINFO(txqcq, "qid %d pid %d index %d ring_base 0x%lx ring_size %d\n",
 		ctx.comp.txq_init.qid, ctx.cmd.txq_init.pid, ctx.cmd.txq_init.index, ctx.cmd.txq_init.ring_base, ctx.cmd.txq_init.ring_size);
 

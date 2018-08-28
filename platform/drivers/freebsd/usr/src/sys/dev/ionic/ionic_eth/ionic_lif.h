@@ -108,6 +108,7 @@ struct ionic_tx_buf {
 };
 
 
+#define QUEUE_NAME_MAX_SZ		(32)
 
 /* Top level Rx Q mgmt. */
 struct rx_qcq {
@@ -204,29 +205,51 @@ struct tx_qcq {
 	struct buf_ring		*br;
 };
 
-struct qcq {
-	void *base;
-	dma_addr_t base_pa;
-	unsigned int total_size;
-	//struct task task;
-	///struct taskqueue *taskq;
-	//struct lro_ctrl	lro;
-	struct queue q;
-	struct cq cq;
-	struct intr intr;
-	struct napi_struct napi;
-	//union {
-	//	struct tx_stats tx;
-	//	struct rx_stats rx;
-	//} stats;
-	unsigned int flags;
-};
 
-//#define q_to_qcq(q)		container_of(q, struct qcq, q)
-//#define q_to_tx_stats(q)	(&q_to_qcq(q)->stats.tx)
-//#define q_to_rx_stats(q)	(&q_to_qcq(q)->stats.rx)
-#define napi_to_qcq(napi)	container_of(napi, struct qcq, napi)
-#define napi_to_cq(napi)	(&napi_to_qcq(napi)->cq)
+/* Top level admin Q mgmt. */
+struct adminq {
+	char name[QUEUE_NAME_MAX_SZ];
+
+	struct lif *lif;
+	unsigned int num_descs;
+	unsigned int index;	/* Queue number. */
+	unsigned int pid;
+	unsigned int qid;
+	unsigned int qtype;
+
+	/* S/w rx buffer descriptors. */
+//	struct ionic_tx_buf *txbuf;
+	bus_dma_tag_t buf_tag;
+
+	/* DMA ring for command and completion h/w rings. */
+	struct ionic_dma_info cmd_dma;
+	/*
+	 * H/w command and completion descriptor rings.
+	 * Points to area allocated by DMA.
+	 */
+	struct admin_cmd *cmd_ring;
+	struct admin_comp *comp_ring;
+
+	struct doorbell __iomem *db;
+	/* Cache DMA address */
+	dma_addr_t cmd_ring_pa;
+
+	struct mtx mtx;
+
+	/* Index for buffer and command descriptors. */
+	int cmd_head_index;
+	int cmd_tail_index;
+
+	/* Index for completion descriptors. */
+	int comp_index;
+	int done_color; /* Expected comletion color status. */
+	
+	struct intr intr;
+
+	struct napi_struct napi;
+	//struct task task;
+	//struct taskqueue *taskq;
+};
 
 #define LIF_NAME_MAX_SZ			(32)
 
@@ -240,14 +263,14 @@ struct lif {
 	unsigned int index;
 	struct workqueue_struct *adminq_wq;
 	spinlock_t adminq_lock;
-	struct qcq *adminqcq;
+	struct adminq *adminqcq;
 	struct tx_qcq **txqcqs;
 	struct rx_qcq **rxqcqs;
 	unsigned int neqs;
 	unsigned int ntxqcqs;
 	unsigned int nrxqcqs;
 	unsigned int rx_mode;
-	int buf_len;	// mbuf buffer length.
+	int buf_len;	// rx mbuf buffer length.
 	u32 hw_features;
 	union stats_dump *stats_dump;
 	dma_addr_t stats_dump_pa;
@@ -261,9 +284,6 @@ struct lif {
 	struct sysctl_ctx_list sysctl_ctx;
 	struct mtx mtx;
 };
-
-//#define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)
-//#define lif_to_rxq(lif, i)	(&lif->rxqcqs[i]->q)
 
 
 static bool ionic_tx_avail(struct tx_qcq *txqcq, int want)

@@ -27,7 +27,7 @@
 
 
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
-MODULE_AUTHOR("Scott Feldman <sfeldma@gmail.com>");
+MODULE_AUTHOR("Anish Gupta anish@pensando.io");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(ionic, 1);
 
@@ -90,23 +90,6 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	wait_for_completion(&ctx->work);
 
 	return ionic_adminq_check_err(lif, ctx);
-}
-
-int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
-	       void *cb_arg)
-{
-	struct cq *cq = napi_to_cq(napi);
-	unsigned int work_done;
-
-	work_done = ionic_cq_service(cq, budget, cb, cb_arg);
-
-	if (work_done > 0)
-		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
-
-	if ((work_done < budget) && napi_complete_done(napi, work_done))
-		ionic_intr_mask(cq->bound_intr, false);
-
-	return work_done;
 }
 
 
