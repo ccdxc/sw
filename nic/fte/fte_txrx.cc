@@ -1,4 +1,5 @@
 #include "nic/fte/fte.hpp"
+#include "nic/fte/fte_impl.hpp"
 #include "nic/fte/fte_softq.hpp"
 #include "nic/fte/fte_flow.hpp"
 #include <string>
@@ -59,7 +60,6 @@ private:
 
     void process_arq();
     void process_softq();
-    void process_tls_pendq();
     void ctx_mem_init();
     void update_rx_stats(cpu_rxhdr_t *rxhdr, size_t pkt_len);
     void update_tx_stats(size_t pkt_len);
@@ -221,25 +221,13 @@ std::string hex_str(const uint8_t *buf, size_t sz)
     return result.str();
 }
 
-hal::pd::cpupkt_ctxt_t *
-fte_cpupkt_ctxt_alloc_init()
-{
-    hal::pd::pd_cpupkt_ctxt_alloc_init_args_t args;
-    hal::pd::pd_func_args_t          pd_func_args = {0};
-
-
-    pd_func_args.pd_cpupkt_ctxt_alloc_init = &args;
-    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, &pd_func_args);
-
-    return args.ctxt;
-}
 
 //------------------------------------------------------------------------------
 // FTE instance constructor
 //------------------------------------------------------------------------------
 inst_t::inst_t(uint8_t fte_id) :
     id_(fte_id),
-    arm_ctx_(fte_cpupkt_ctxt_alloc_init()),
+    arm_ctx_(fte::impl::cpupkt_ctxt_alloc_init(fte_id)),
     softq_(mpscq_t::alloc(MAX_SOFTQ_SLOTS)),
     ctx_(NULL),
     feature_state_(NULL),
@@ -248,33 +236,6 @@ inst_t::inst_t(uint8_t fte_id) :
     iflow_(NULL),
     rflow_(NULL)
 {
-    hal_ret_t                 ret;
-    hal::pd::pd_func_args_t   pd_func_args = {0};
-    uint16_t num_features;
-
-    hal::pd::pd_cpupkt_register_rx_queue_args_t args;
-    args.ctxt = arm_ctx_;
-    args.type = types::WRING_TYPE_ARQRX;
-    args.queue_id = fte_id;
-    pd_func_args.pd_cpupkt_register_rx_queue = &args;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, &pd_func_args);
-    // ret = cpupkt_register_rx_queue(arm_ctx_, types::WRING_TYPE_ARQRX, fte_id);
-    HAL_ASSERT(ret == HAL_RET_OK);
-
-    args.type = types::WRING_TYPE_ASCQ;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, &pd_func_args);
-    HAL_ASSERT(ret == HAL_RET_OK);
-
-    hal::pd::pd_cpupkt_register_tx_queue_args_t tx_args;
-    tx_args.ctxt = arm_ctx_;
-    tx_args.type = types::WRING_TYPE_ASQ;
-    tx_args.queue_id = fte_id;
-    pd_func_args.pd_cpupkt_register_tx_queue = &tx_args;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, &pd_func_args);
-    // ret = cpupkt_register_tx_queue(arm_ctx_, types::WRING_TYPE_ASQ, fte_id);
-    HAL_ASSERT(ret == HAL_RET_OK);
-
-    feature_state_size(&num_features);
     bzero((void *)&stats_, sizeof(fte_stats_t));
 }
 
@@ -339,7 +300,7 @@ void inst_t::start(sdk::lib::thread *curr_thread)
         }
         process_arq();
         process_softq();
-        process_tls_pendq();
+        fte::impl::process_pending_queues();
         curr_thread->punch_heartbeat();
     }
 }
@@ -353,28 +314,7 @@ inst_t::asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
                  uint8_t* pkt, size_t pkt_len)
 {
     HAL_TRACE_DEBUG("fte: sending pkt to id: {}", id_);
-    hal::pd::pd_cpupkt_send_args_t args;
-    hal::pd::pd_func_args_t pd_func_args = {0};
-    args.ctxt = arm_ctx_;
-    args.type = types::WRING_TYPE_ASQ;
-    args.queue_id = id_;
-    args.cpu_header = cpu_header;
-    args.p4_header = p4plus_header;
-    args.data = pkt;
-    args.data_len = pkt_len;
-    args.dest_lif = hal::SERVICE_LIF_CPU;
-    args.qtype = CPU_ASQ_QTYPE;
-    args.qid = id_;
-    args.ring_number = CPU_SCHED_RING_ASQ;
-
-    pd_func_args.pd_cpupkt_send = &args;
-    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, &pd_func_args);
-#if 0
-    return hal::pd::cpupkt_send(arm_ctx_, types::WRING_TYPE_ASQ, id_,
-                                cpu_header, p4plus_header, pkt, pkt_len,
-                                hal::SERVICE_LIF_CPU, CPU_ASQ_QTYPE,
-                                id_, CPU_SCHED_RING_ASQ);
-#endif
+    return fte::impl::cpupkt_send(arm_ctx_, id_, cpu_header, p4plus_header, pkt, pkt_len);
 }
 
 //------------------------------------------------------------------------------
@@ -500,15 +440,7 @@ void inst_t::process_arq()
     size_t pkt_len;
 
     // read the packet
-    hal::pd::pd_cpupkt_poll_receive_args_t args;
-    hal::pd::pd_func_args_t pd_func_args = {0};
-    args.ctxt = arm_ctx_;
-    args.flow_miss_hdr = &cpu_rxhdr;
-    args.data = &pkt;
-    args.data_len = &pkt_len;
-    pd_func_args.pd_cpupkt_poll_receive = &args;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_POLL_REC, &pd_func_args);
-    // ret = hal::pd::cpupkt_poll_receive(arm_ctx_, &cpu_rxhdr, &pkt, &pkt_len);
+    ret = fte::impl::cpupkt_poll_receive(arm_ctx_, &cpu_rxhdr, &pkt, &pkt_len);
     if (ret == HAL_RET_RETRY) {
         return;
     }
@@ -519,7 +451,7 @@ void inst_t::process_arq()
     }
 
     // Process pkt with db open
-    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    fte::impl::cfg_db_open();
 
     do {
 
@@ -551,16 +483,7 @@ void inst_t::process_arq()
         }
     } while(false);
 
-    hal::hal_cfg_db_close();
-}
-//------------------------------------------------------------------------------
-// Process a pkt from TLS asym pending request queue
-//------------------------------------------------------------------------------
-void inst_t::process_tls_pendq()
-{
-    // TBD: Move the poll here to this can be
-    // accounted towards the CPS calculations
-    hal::proxy::tls_poll_asym_pend_req_q();
+    fte::impl::cfg_db_close();
 }
 
 //------------------------------------------------------------------------------

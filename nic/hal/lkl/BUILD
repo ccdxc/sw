@@ -88,5 +88,6 @@ cc_library(
         "//nic/utils/print",
         "//nic/utils/agent_api",
         "//nic/fte",
+        "//nic/fte/iris:fte_iris",
     ],
 )

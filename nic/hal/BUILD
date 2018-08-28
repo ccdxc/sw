@@ -24,6 +24,7 @@ cc_binary(
             ":hal_src",
             # PI
             "//nic/fte",
+            "//nic/fte/iris:fte_iris",
             "//nic:hal_svc_gen",
             "//nic/hal/svc:hal_svc",
             "//nic/utils/print",
@@ -207,6 +208,7 @@ cc_binary(
             ":hal_src",
             # PI
             "//nic/fte",
+            "//nic/fte/iris:fte_iris",
             "//nic:hal_svc_gen",
             "//nic/hal/svc:hal_svc",
             "//nic/utils/print",

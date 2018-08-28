@@ -14,6 +14,7 @@ bazel-bin/_solib_aarch64-linux/libnic_Se2etests_Slibe2etest-lib.so              
 bazel-bin/_solib_aarch64-linux/libnic_Shal_Ssvc_Slibhal_Usvc.so                   /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Shal_Splugins_Slibplugins.so                /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Sfte_Slibfte.so                             /nic/lib/
+bazel-bin/_solib_aarch64-linux/libnic_Sfte_Siris_Slibfte_Uiris.so                 /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Slibhal_Usvc_Ugen.so                        /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Shal_Splugins_Sproxy_Slibproxyplugin.so     /nic/lib/
 bazel-bin/_solib_aarch64-linux/libnic_Sutils_Shost_Umem_Slibhost_Umem_Usrc.so     /nic/lib/
