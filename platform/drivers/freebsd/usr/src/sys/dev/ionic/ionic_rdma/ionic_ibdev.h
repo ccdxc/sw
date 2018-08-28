@@ -7,7 +7,7 @@
 #include <rdma/ib_verbs.h>
 #include <rdma/ib_pack.h>
 
-#include <rdma/ionic-abi.h>
+//#include <rdma/ionic-abi.h>
 #include <ionic_api.h>
 
 #include "ionic_fw.h"
