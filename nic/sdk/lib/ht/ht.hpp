@@ -150,7 +150,6 @@ private:
     uint32_t                  num_removals_;         // no. of remove operations so far
     uint32_t                  num_removal_err_;      // no. of remove errors
     uint32_t                  num_lookups_;          // no. of lookup operations so far
-    uint32_t                  num_collisions_;       // no. of collisions seen so far
 
 private:
     ht() { }

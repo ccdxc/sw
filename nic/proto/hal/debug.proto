@@ -24,6 +24,7 @@ service Debug {
 
   rpc MemTrackGet(MemTrackGetRequestMsg) returns (MemTrackGetResponseMsg) {}
   rpc SlabGet(SlabGetRequestMsg) returns (SlabGetResponseMsg){}
+  rpc HashTableGet(types.Empty) returns (HashTableGetResponseMsg){}
   rpc TraceUpdate(TraceRequestMsg) returns (TraceResponseMsg){}
   rpc TraceGet(types.Empty) returns (TraceResponseMsg) {}
 
@@ -243,6 +244,40 @@ message SlabGetResponse {
 // SlabGetResponseMsg is batched response for GET operation
 message SlabGetResponseMsg {
   repeated SlabGetResponse     response = 1;    // batched get response
+}
+
+// HashTableSpec identifies a hash table
+message HashTableSpec {
+  string name             = 1;    // name of the hash table
+  uint32 num_buckets      = 2;    // number of buckets
+  bool   thread_safe      = 3;    // thread safe or not
+  uint32 max_bucket_depth = 4;    // max. bucket depth
+  uint32 avg_bucket_depth = 5;    // avg. bucket depth
+}
+
+// operational status of slab, if any
+message HashTableStatus {
+}
+
+// per hash table statisitics
+message HashTableStats {
+  uint32 num_entries       = 1;    // total no. of entries in the table
+  uint32 num_inserts       = 2;    // no. of insert operations so far
+  uint32 num_insert_errors = 3;    // no. of insert errors
+  uint32 num_deletes       = 4;    // no. of delete operations so far
+  uint32 num_delete_errors = 5;    // no. of delete errors
+  uint32 num_lookups       = 6;    // no. of lookup operations
+}
+
+message HashTableGetResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  HashTableSpec      spec       = 2;    // hash table attributes
+  HashTableStatus    status     = 3;    // operational status of the table
+  HashTableStats     stats      = 4;    // stats of the table
+}
+
+message HashTableGetResponseMsg {
+  repeated HashTableGetResponse    response = 1;    // backend get response
 }
 
 enum TraceLevel {

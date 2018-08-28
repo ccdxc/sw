@@ -35,7 +35,6 @@ ht::init(uint32_t ht_size, ht_get_key_func_t get_key_func,
     num_removals_ = 0;
     num_removal_err_ = 0;
     num_lookups_ = 0;
-    num_collisions_ = 0;
 
     for (i = 0; i < ht_size; i++) {
         if (mmgr) {
