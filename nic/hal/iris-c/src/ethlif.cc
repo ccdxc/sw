@@ -18,27 +18,29 @@ EthLifMap EthLif::ethlif_db;
 
 
 EthLif *
-EthLif::Factory(uint32_t hw_lif_id, Uplink *pinned_uplink,
-                bool is_mgmt_lif)
+EthLif::Factory(lif_info_t *info)
 {
     api_trace("EthLif Create");
 
-    if (ethlif_db.find(hw_lif_id) != ethlif_db.end()) {
+    if (ethlif_db.find(info->hw_lif_id) != ethlif_db.end()) {
         HAL_TRACE_WARN("Duplicate Create of EthLif with id: {}",
-                       hw_lif_id);
+                       info->hw_lif_id);
         return NULL;
     }
 
-    EthLif *eth_lif = new EthLif(hw_lif_id,
-                                 pinned_uplink,
-                                 is_mgmt_lif);
+    EthLif *eth_lif = new EthLif(info);
 
     // Store in DB for disruptive upgrade
-    ethlif_db[hw_lif_id] = eth_lif;
+    ethlif_db[info->hw_lif_id] = eth_lif;
 
     // Create Enic for every Lif in Classic Mode
     if (hal->GetMode() == FWD_MODE_CLASSIC) {
-        eth_lif->enic = Enic::Factory(eth_lif);
+        eth_lif->enic_ = Enic::Factory(eth_lif);
+    } else {
+        // If its promiscuos. send (Lif, *, *) filter to HAL
+        if (info->receive_promiscuous) {
+            eth_lif->CreateMacVlanFilter(0, 0);
+        }
     }
 
     return eth_lif;
@@ -53,25 +55,27 @@ EthLif::Destroy(EthLif *eth_lif)
     ethlif_db.erase(eth_lif->GetHwLifId());
 
     if (eth_lif) {
+        // Remove promiscuous filter if its present
+        if (hal->GetMode() != FWD_MODE_CLASSIC &&
+            eth_lif->GetIsPromiscuous()) {
+            eth_lif->DeleteMacVlanFilter(0, 0);
+        }
         eth_lif->~EthLif();
     }
 }
 
-EthLif::EthLif(uint32_t hw_lif_id, Uplink *pinned_uplink,
-               bool is_mgmt_lif)
+EthLif::EthLif(lif_info_t *info)
 {
-    this->is_mgmt_lif = is_mgmt_lif;
-    this->uplink = pinned_uplink;
-    this->hw_lif_id = hw_lif_id;
+    memcpy(&info_, info, sizeof(lif_info_t));
 
-    lif = Lif::Factory(hw_lif_id, pinned_uplink);
+    lif_ = Lif::Factory(this);
 }
 
 EthLif::~EthLif()
 {
-    mac_table.clear();
-    vlan_table.clear();
-    mac_vlan_table.clear();
+    mac_table_.clear();
+    vlan_table_.clear();
+    mac_vlan_table_.clear();
     mac_vlan_filter_table.clear();
 }
 
@@ -83,7 +87,7 @@ EthLif::AddMac(mac_t mac)
     api_trace("Adding Mac Filter");
     HAL_TRACE_DEBUG("Adding Mac filter: {}", macaddr2str(mac));
 
-    if (mac_table.find(mac) == mac_table.end()) {
+    if (mac_table_.find(mac) == mac_table_.end()) {
         /*
          * Classic:
          *      - Walk through Vlans and create (Mac,Vlan) filters
@@ -92,10 +96,10 @@ EthLif::AddMac(mac_t mac)
          */
         if (hal->GetMode() == FWD_MODE_CLASSIC) {
             // Register new mac across all existing vlans
-            for (auto vlan_it = vlan_table.cbegin(); vlan_it != vlan_table.cend(); vlan_it++) {
+            for (auto vlan_it = vlan_table_.cbegin(); vlan_it != vlan_table_.cend(); vlan_it++) {
                 // Check if (MacVlan) filter is already present
                 mac_vlan = make_tuple(mac, *vlan_it);
-                if (mac_vlan_table.find(mac_vlan) == mac_vlan_table.end()) {
+                if (mac_vlan_table_.find(mac_vlan) == mac_vlan_table_.end()) {
                     // No (MacVlan) filter. Creating (Mac, Vlan)
                     CreateMacVlanFilter(mac, *vlan_it);
                 } else {
@@ -107,7 +111,7 @@ EthLif::AddMac(mac_t mac)
         }
 
         // Store mac filter
-        mac_table.insert(mac);
+        mac_table_.insert(mac);
     } else {
         HAL_TRACE_WARN("Mac already registered: {}", mac);
     }
@@ -122,13 +126,13 @@ EthLif::DelMac(mac_t mac)
     HAL_TRACE_DEBUG("Deleting Mac filter: {}", macaddr2str(mac));
 
     mac_key = make_tuple(mac, 0);
-    if (mac_table.find(mac) != mac_table.end()) {
+    if (mac_table_.find(mac) != mac_table_.end()) {
         if (hal->GetMode() == FWD_MODE_CLASSIC) {
-            for (auto vlan_it = vlan_table.cbegin(); vlan_it != vlan_table.cend(); vlan_it++) {
+            for (auto vlan_it = vlan_table_.cbegin(); vlan_it != vlan_table_.cend(); vlan_it++) {
                 vlan_key = make_tuple(0, *vlan_it);
                 mac_vlan_key = make_tuple(mac, *vlan_it);
-                if (vlan_table.find(*vlan_it) != vlan_table.end() &&
-                    mac_vlan_table.find(mac_vlan_key) == mac_vlan_table.end()) {
+                if (vlan_table_.find(*vlan_it) != vlan_table_.end() &&
+                    mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
                     HAL_TRACE_DEBUG("Mac Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
                     // Mac, Vlan are present and (Mac,Vlan) is not
                     DeleteMacVlanFilter(mac, *vlan_it);
@@ -144,7 +148,7 @@ EthLif::DelMac(mac_t mac)
         }
 
         // Erase mac filter
-        mac_table.erase(mac);
+        mac_table_.erase(mac);
     } else {
         HAL_TRACE_ERR("Mac not registered: {}", mac);
     }
@@ -158,7 +162,7 @@ EthLif::AddVlan(vlan_t vlan)
     api_trace("Adding Vlan Filter");
     HAL_TRACE_DEBUG("Adding Vlan filter: {}", vlan);
 
-    if (vlan_table.find(vlan) == vlan_table.end()) {
+    if (vlan_table_.find(vlan) == vlan_table_.end()) {
         /*
          * Classic:
          *      - Walk through Vlans and create (Mac,Vlan) filters
@@ -167,10 +171,10 @@ EthLif::AddVlan(vlan_t vlan)
          */
         if (hal->GetMode() == FWD_MODE_CLASSIC) {
             // Register new mac across all existing vlans
-            for (auto it = mac_table.cbegin(); it != mac_table.cend(); it++) {
+            for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
                 // Check if (MacVlan) filter is already present
                 mac_vlan = make_tuple(*it, vlan);
-                if (mac_vlan_table.find(mac_vlan) == mac_vlan_table.end()) {
+                if (mac_vlan_table_.find(mac_vlan) == mac_vlan_table_.end()) {
                     // No (MacVlan) filter. Creating (Mac, Vlan)
                     CreateMacVlanFilter(*it, vlan);
                 } else {
@@ -182,7 +186,7 @@ EthLif::AddVlan(vlan_t vlan)
         }
 
         // Store vlan filter
-        vlan_table.insert(vlan);
+        vlan_table_.insert(vlan);
     } else {
         HAL_TRACE_WARN("Vlan already registered: {}", vlan);
     }
@@ -196,12 +200,12 @@ EthLif::DelVlan(vlan_t vlan)
     api_trace("Deleting Vlan Filter");
     HAL_TRACE_DEBUG("Deleting Vlan filter: {}", vlan);
 
-    if (vlan_table.find(vlan) != vlan_table.end()) {
+    if (vlan_table_.find(vlan) != vlan_table_.end()) {
         if (hal->GetMode() == FWD_MODE_CLASSIC) {
-            for (auto it = mac_table.cbegin(); it != mac_table.cend(); it++) {
+            for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
                 mac_vlan_key = make_tuple(*it, vlan);
-                if (mac_table.find(*it) != mac_table.end() &&
-                    mac_vlan_table.find(mac_vlan_key) == mac_vlan_table.end()) {
+                if (mac_table_.find(*it) != mac_table_.end() &&
+                    mac_vlan_table_.find(mac_vlan_key) == mac_vlan_table_.end()) {
                     HAL_TRACE_DEBUG("Vlan Delete: Mac, Vlan are present but (Mac,Vlan) is not. Remove (Mac,Vlan) entity");
                     // Mac, Vlan are present and (Mac,Vlan) is not
                     DeleteMacVlanFilter(*it, vlan);
@@ -217,7 +221,7 @@ EthLif::DelVlan(vlan_t vlan)
         }
 
         // Erase mac filter
-        vlan_table.erase(vlan);
+        vlan_table_.erase(vlan);
     } else {
         HAL_TRACE_ERR("Vlan not registered: {}", vlan);
     }
@@ -231,11 +235,11 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
     api_trace("Adding (Mac,Vlan) Filter");
     HAL_TRACE_DEBUG("Adding (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
-    if (mac_vlan_table.find(key) == mac_vlan_table.end()) {
+    if (mac_vlan_table_.find(key) == mac_vlan_table_.end()) {
         if (hal->GetMode() == FWD_MODE_CLASSIC) {
             // Check if mac filter and vlan filter is present
-            if (mac_table.find(mac) == mac_table.end() ||
-                vlan_table.find(vlan) == vlan_table.end()) {
+            if (mac_table_.find(mac) == mac_table_.end() ||
+                vlan_table_.find(vlan) == vlan_table_.end()) {
                 CreateMacVlanFilter(mac, vlan);
             } else {
                 HAL_TRACE_DEBUG("Mac filter and Vlan filter preset. "
@@ -246,7 +250,7 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
         }
 
         // Store mac-vlan filter
-        mac_vlan_table.insert(key);
+        mac_vlan_table_.insert(key);
     } else {
         HAL_TRACE_WARN("Mac-Vlan already registered: {}", mac);
     }
@@ -261,10 +265,10 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
     HAL_TRACE_DEBUG("Deleting (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
     mac_vlan_key = make_tuple(mac, vlan);
-    if (mac_vlan_table.find(mac_vlan_key) != mac_vlan_table.end()) {
+    if (mac_vlan_table_.find(mac_vlan_key) != mac_vlan_table_.end()) {
         if (hal->GetMode() == FWD_MODE_CLASSIC) {
-            if (mac_table.find(mac) == mac_table.end() ||
-                 vlan_table.find(vlan) == vlan_table.end()) {
+            if (mac_table_.find(mac) == mac_table_.end() ||
+                 vlan_table_.find(vlan) == vlan_table_.end()) {
                 // One of Mac or Vlan is not present.
                 // (Mac,Vlan) entity was created only by (Mac,Vlan) filter
                 DeleteMacVlanFilter(mac, vlan);
@@ -277,7 +281,7 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
             DeleteMacVlanFilter(mac, vlan);
         }
         // Erase mac-vlan filter
-        mac_vlan_table.erase(mac_vlan_key);
+        mac_vlan_table_.erase(mac_vlan_key);
     } else {
         HAL_TRACE_ERR("(Mac,Vlan) already not registered: mac: {}, vlan: {}",
                       mac, vlan);
@@ -285,19 +289,154 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
 }
 
 void
+EthLif::UpdateReceivePromiscuous(bool receive_promiscuous)
+{
+    api_trace("Promiscuous Flag change");
+    if (receive_promiscuous == info_.receive_promiscuous) {
+        HAL_TRACE_WARN("Prom flag: {}. No change in promiscuous flag. Nop",
+                       receive_promiscuous);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+                    lif_->GetId(), info_.receive_promiscuous,
+                    receive_promiscuous);
+
+    info_.receive_promiscuous = receive_promiscuous;
+
+    if (hal->GetMode() == FWD_MODE_CLASSIC) {
+    } else {
+        if (receive_promiscuous) {
+            CreateMacVlanFilter(0, 0);
+        } else {
+            DeleteMacVlanFilter(0, 0);
+        }
+    }
+
+    // Update Lif to Hal
+    lif_->TriggerHalUpdate();
+end:
+    return;
+}
+
+void
+EthLif::UpdateReceiveBroadcast(bool receive_broadcast)
+{
+    api_trace("Broadcast change");
+    if (receive_broadcast == info_.receive_broadcast) {
+        HAL_TRACE_WARN("Prom flag: {}. No change in broadcast flag. Nop",
+                       receive_broadcast);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+                    lif_->GetId(), info_.receive_broadcast,
+                    receive_broadcast);
+
+    info_.receive_broadcast = receive_broadcast;
+
+    // Update Lif to Hal
+    lif_->TriggerHalUpdate();
+end:
+    return;
+}
+
+void
+EthLif::UpdateReceiveAllMulticast(bool receive_all_multicast)
+{
+    api_trace("AllMulticast change");
+    if (receive_all_multicast == info_.receive_all_multicast) {
+        HAL_TRACE_WARN("Prom flag: {}. No change in all_multicast flag. Nop",
+                       receive_all_multicast);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+                    lif_->GetId(), info_.receive_all_multicast,
+                    receive_all_multicast);
+
+    info_.receive_all_multicast = receive_all_multicast;
+
+    // Update Lif to Hal
+    lif_->TriggerHalUpdate();
+end:
+    return;
+}
+
+void
+EthLif::UpdateVlanStripEn(bool vlan_strip_en)
+{
+    api_trace("Vlan Strip change");
+    if (vlan_strip_en == info_.vlan_strip_en) {
+        HAL_TRACE_WARN("Prom flag: {}. No change in broadcast flag. Nop",
+                       vlan_strip_en);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+                    lif_->GetId(), info_.vlan_strip_en,
+                    vlan_strip_en);
+
+    info_.vlan_strip_en = vlan_strip_en;
+
+    // Update Lif to Hal
+    lif_->TriggerHalUpdate();
+end:
+    return;
+}
+
+void
+EthLif::UpdateVlanInsertEn(bool vlan_insert_en)
+{
+    api_trace("Vlan Strip change");
+    if (vlan_insert_en == info_.vlan_insert_en) {
+        HAL_TRACE_WARN("Prom flag: {}. No change in broadcast flag. Nop",
+                       vlan_insert_en);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Lif: {}. Prom. flag change {} -> {}",
+                    lif_->GetId(), info_.vlan_insert_en,
+                    vlan_insert_en);
+
+    info_.vlan_insert_en = vlan_insert_en;
+
+    // Update Lif to Hal
+    lif_->TriggerHalUpdate();
+end:
+    return;
+}
+
+void
 EthLif::CreateMacVlanFilter(mac_t mac, vlan_t vlan)
 {
-    mac_vlan_filter_t key(kh::FILTER_LIF_MAC_VLAN, mac, vlan);
+    mac_vlan_filter_t key;
+    filter_type_t type;
 
-    mac_vlan_filter_table[key] = MacVlanFilter::Factory(this, mac, vlan);
+    if (!mac && !vlan) {
+        type = kh::FILTER_LIF;
+    } else {
+        type = kh::FILTER_LIF_MAC_VLAN;
+    }
+
+    key = make_tuple(type, mac, vlan);
+    mac_vlan_filter_table[key] = MacVlanFilter::Factory(this, mac, vlan, type);
 }
 
 void
 EthLif::DeleteMacVlanFilter(mac_t mac, vlan_t vlan)
 {
     std::map<mac_vlan_filter_t, MacVlanFilter*>::iterator it;
-    mac_vlan_filter_t key(kh::FILTER_LIF_MAC_VLAN, mac, vlan);
+    mac_vlan_filter_t key;
+    filter_type_t type;
 
+    if (!mac && !vlan) {
+        type = kh::FILTER_LIF;
+    } else {
+        type = kh::FILTER_LIF_MAC_VLAN;
+    }
+
+    key = make_tuple(type, mac, vlan);
     it = mac_vlan_filter_table.find(key);
     MacVlanFilter *filter = it->second;
 
@@ -355,23 +494,42 @@ EthLif::DeleteVlanFilter(vlan_t vlan)
 Lif *
 EthLif::GetLif()
 {
-    return lif;
+    return lif_;
 }
 
 Uplink *
 EthLif::GetUplink()
 {
-    return uplink;
+    return info_.pinned_uplink;;
 }
 
 Enic *
 EthLif::GetEnic()
 {
-    return enic;
+    return enic_;
+}
+
+void
+EthLif::SetEnic(Enic *enic)
+{
+    enic_ = enic;
 }
 
 uint32_t
 EthLif::GetHwLifId()
 {
-    return hw_lif_id;
+    return info_.hw_lif_id;
 }
+
+bool
+EthLif::GetIsPromiscuous()
+{
+    return info_.receive_promiscuous;
+}
+
+lif_info_t *
+EthLif::GetLifInfo()
+{
+    return &info_;
+}
+

@@ -21,6 +21,19 @@ typedef std::tuple<filter_type_t, mac_t, vlan_t> mac_vlan_filter_t;
 /**
  * Ethernet Lifs
  */
+class Uplink;
+typedef struct lif_info_s {
+    uint32_t hw_lif_id;
+    Uplink *pinned_uplink;
+    bool is_management;
+    bool vlan_strip_en;
+    bool vlan_insert_en;
+    bool receive_broadcast;
+    bool receive_all_multicast;
+    bool receive_promiscuous;
+} lif_info_t;
+
+
 
 enum EthQtype {
     ETH_QTYPE_RX = 0,
