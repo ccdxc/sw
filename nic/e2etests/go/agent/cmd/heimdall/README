@@ -1,0 +1,47 @@
+##Haps Init
+
+Once you have untared tar file, use following command to load all the required processes
+
+/nic/tools/sysinit.sh smart-host-pinned
+
+##HAPS Configuration
+
+Heimdall is packaged as part of haps debug image and executable is present in /nic/bin/heimdall
+
+To push a golden networking configuration to agent
+
+/nic/bin/heimdall  run --device-file /platform/etc/nicmgrd/eth-smart.json --config-file /nic/conf/golden_cfg.yml
+
+You should see, nampespaces, networks, endpoints and other networking configuration being pushed to agent.
+
+##Traffic Setup on Host
+1. Once HAPS is loaded with configuration and NIC manager is started, need to restart host.
+2. Load Ionic driver on host : insmod ionic/ionic.ko.
+3. Bring interface(interfaces) discovered by the driver.
+4. Heimdall(Testdriver) will be built for linux and host can be setup for traffic testing
+  Following command will do setup for EPs.
+  ./heimdall traffic --device-file eth-smart.json   --config-file configs/golden/golden_cfg.yml --ep-setup
+  This command will do the following
+  a. Create namespaces for each Endpoint that was pushed to agent in haps system
+  b. Assign IP address for the each endpoint
+  c. Maps endpoint to right interface/lif on the host
+  d. Assigns right useg vlan for each endpoint.
+
+  eth-smart.json  specifies host interfaces to lif mapping
+  Press Ctrl-C to clean up the after testing. This will clean up all namespaces and interfaces
+
+
+  ##Traffic Setup on Network
+    Heimdall(Testdriver) will be built for linux and host can be setup for traffic testing
+
+    Following command will do setup for EPs on remote machines which is connected to haps uplink iterfaces
+    ./heimdall traffic --uplink-map uplink-map.json   --config-file configs/golden/golden_cfg.yml --ep-setup
+    This command will do the following
+    a. Create namespaces for each Remote Endpoint that was pushed to agent in haps system
+    b. Assign IP address for the each endpoint
+    c. Assigns right network vlan for each endpoint.
+    d. If there are more than one EP which maps to same interface and network vlan, namespace creation will be skipped
+
+    uplink-map.json specifies mapping for Remote server interfaces connection to HAPS interfaces.
+
+  Press Ctrl-C to clean up the after testing. This will clean up all namespaces and interfaces

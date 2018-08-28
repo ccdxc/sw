@@ -51,7 +51,7 @@ func EpsReachable(ep *netproto.Endpoint, otherEp *netproto.Endpoint) bool {
 	return false
 }
 
-func EpMatchingTrafficType(ep *netproto.Endpoint, otherEp *netproto.Endpoint, trafficType int) bool {
+func EpPairMatchingTrafficType(ep *netproto.Endpoint, otherEp *netproto.Endpoint, trafficType int) bool {
 	switch trafficType {
 	case TrafficUplinkToUplink:
 		if ep.Spec.InterfaceType == UplinkIntefaceName && otherEp.Spec.InterfaceType == UplinkIntefaceName {
@@ -61,6 +61,11 @@ func EpMatchingTrafficType(ep *netproto.Endpoint, otherEp *netproto.Endpoint, tr
 		if ep.Spec.InterfaceType == LifIntefaceName && otherEp.Spec.InterfaceType == LifIntefaceName {
 			return true
 		}
+	case TrafficUplinkToHost:
+		if (ep.Spec.InterfaceType == LifIntefaceName && otherEp.Spec.InterfaceType == UplinkIntefaceName) ||
+			(ep.Spec.InterfaceType == UplinkIntefaceName && otherEp.Spec.InterfaceType == LifIntefaceName) {
+			return true
+		}
 	default:
 		log.Fatalln("Invalid traffic type!")
 
@@ -68,17 +73,50 @@ func EpMatchingTrafficType(ep *netproto.Endpoint, otherEp *netproto.Endpoint, tr
 	return false
 }
 
-func getEps(agentCfg *pkg.AgentConfig, trafficType int, maxTrafficPair int) []TestApi.EpPair {
+func EpMatchingTrafficType(ep *netproto.Endpoint, trafficType int) bool {
+	switch trafficType {
+	case TrafficUplinkToUplink:
+		if ep.Spec.InterfaceType == UplinkIntefaceName {
+			return true
+		}
+	case TrafficHostToHost:
+		if ep.Spec.InterfaceType == LifIntefaceName {
+			return true
+		}
+	default:
+		log.Fatalln("Invalid traffic type!")
+
+	}
+	return false
+}
+
+func getEpPairs(agentCfg *pkg.AgentConfig, trafficType int, maxTrafficPair int) []TestApi.EpPair {
 	eps := []TestApi.EpPair{}
 	trafficPair := 0
 	for _, srcEp := range agentCfg.Endpoints {
 		for _, dstEp := range agentCfg.Endpoints {
-			if EpsReachable(&srcEp, &dstEp) && EpMatchingTrafficType(&srcEp, &dstEp, trafficType) {
+			if EpsReachable(&srcEp, &dstEp) && EpPairMatchingTrafficType(&srcEp, &dstEp, trafficType) {
 				eps = append(eps, TestApi.EpPair{Src: srcEp, Dst: dstEp})
 				trafficPair++
 				if maxTrafficPair != 0 && trafficPair == maxTrafficPair {
 					goto out
 				}
+			}
+		}
+	}
+out:
+	return eps
+}
+
+func getEps(agentCfg *pkg.AgentConfig, trafficType int, maxEps int) []netproto.Endpoint {
+	eps := []netproto.Endpoint{}
+	epCnt := 0
+	for _, ep := range agentCfg.Endpoints {
+		if EpMatchingTrafficType(&ep, trafficType) {
+			eps = append(eps, ep)
+			epCnt++
+			if maxEps != 0 && epCnt == maxEps {
+				goto out
 			}
 		}
 	}
@@ -109,7 +147,7 @@ func (*suite) runModule(module string, trafficHelper TrafficHelper, agentCfg *pk
 	maxTrafficPair int) error {
 
 	for _, test := range Tests.GetTestManager().GetInstances(module) {
-		epPairs := getEps(agentCfg, trafficHelper.getTrafficType(), maxTrafficPair)
+		epPairs := getEpPairs(agentCfg, trafficHelper.getTrafficType(), maxTrafficPair)
 		epPairs = test.FilterEpPairs(epPairs, agentCfg)
 		for _, epPair := range epPairs {
 
@@ -144,8 +182,8 @@ func (*suite) runModule(module string, trafficHelper TrafficHelper, agentCfg *pk
 			}
 			fmt.Println("Test Passed :", testname)
 			deleteRoute(srcEphandle, dstEphandle)
-			srcEphandle.Delete()
-			dstEphandle.Delete()
+			deleteEp(srcEphandle)
+			deleteEp(dstEphandle)
 		}
 
 	}

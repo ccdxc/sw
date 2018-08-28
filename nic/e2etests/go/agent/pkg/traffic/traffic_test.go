@@ -10,9 +10,6 @@ import (
 
 func TestUplinkToUplinkTraffic(t *testing.T) {
 
-	if true {
-		return
-	}
 	fmt.Println("Generating configs...")
 	configs, err := Pkg.GetObjectsFromManifest("../../configs/golden/golden_cfg.yml")
 	TestUtils.Assert(t, err == nil, "Generate failed")
@@ -42,6 +39,27 @@ func TestHostToHostTraffic(t *testing.T) {
 	}
 
 	trafficHelper, err1 := GetTrafficHelper(TrafficHostToHost, "./utest/sim_device.json")
+	TestUtils.Assert(t, err1 == nil, "Get Traffic helper failed")
+	err = RunTests("utest", "sanity", trafficHelper, agentCfg)
+	TestUtils.Assert(t, err == nil, "Environment or suite not present")
+}
+
+func TestUplinkToHostTraffic(t *testing.T) {
+
+	fmt.Println("Generating configs...")
+	configs, err := Pkg.GetObjectsFromManifest("../../configs/golden/golden_cfg.yml")
+	TestUtils.Assert(t, err == nil, "Generate failed")
+
+	agentCfg, err := Pkg.GetAgentConfig(configs, "../../configs/golden/golden_cfg.yml")
+	fmt.Println(err)
+	TestUtils.Assert(t, err == nil, "Get Config failed")
+
+	getIntfMatchingMac = func(macaddr string) string {
+		return "eth0"
+	}
+
+	trafficHelper, err1 := GetTrafficHelper(TrafficUplinkToHost, "./utest/sim_device.json", "./utest/uplink_map.cfg")
+	fmt.Println(err1)
 	TestUtils.Assert(t, err1 == nil, "Get Traffic helper failed")
 	err = RunTests("utest", "sanity", trafficHelper, agentCfg)
 	TestUtils.Assert(t, err == nil, "Environment or suite not present")

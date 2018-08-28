@@ -393,7 +393,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 
 		if i%o.Count < 16 {
 			ifType = "uplink"
-			ifName = fmt.Sprintf("uplink%d", (i%UPLINK_COUNT)+UPLINK_START)
+			ifName = fmt.Sprintf("uplink%d", ((i/networkRef.Count)%UPLINK_COUNT)+UPLINK_START)
 			nodeUUID = "GWUUID" // This will ensure that the EP is remote
 		} else {
 			ifType = "lif"
@@ -485,9 +485,6 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 
 		local := fmt.Sprintf("%s-%d", endpointRef.Name, (localEpOffset+epOffsetIncrements*i)%endpointRef.Count)
 		remote := fmt.Sprintf("%s-%d", endpointRef.Name, (remoteEpOffset+epOffsetIncrements*i)%endpointRef.Count)
-
-		fmt.Println("LOCAL ", local)
-		fmt.Println("REMOTE ", remote)
 
 		// Look up EP's IP Address
 		localEP := endpointCache[local]

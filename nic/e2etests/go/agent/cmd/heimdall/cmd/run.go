@@ -12,12 +12,12 @@ import (
 )
 
 var (
-	VLANOffset                                               int
-	ConfigManifest, uplinkMapFile, configFile, TrafficTest   string
-	TestEnv, TestSuite, DeviceJsonFile                       string
-	ForceGen, EnableSim, SkipConfig, SimMode, trafficVerbose bool
-	configs                                                  *pkg.Config
-	err                                                      error
+	VLANOffset                                                        int
+	ConfigManifest, uplinkMapFile, configFile, TrafficTest            string
+	TestEnv, TestSuite, DeviceJsonFile                                string
+	ForceGen, EnableSim, SkipConfig, SimMode, EpSetup, trafficVerbose bool
+	configs                                                           *pkg.Config
+	err                                                               error
 )
 
 var runCmd = &cobra.Command{
@@ -36,6 +36,7 @@ var runCmd = &cobra.Command{
 				return errors.New("Error reading device json file")
 			}
 			stationDevices = sDevices
+			ForceGen = true
 		}
 
 		configs, err = pkg.GenerateObjectsFromManifest(ConfigManifest, stationDevices, VLANOffset, ForceGen)
@@ -92,13 +93,17 @@ var trafficCmd = &cobra.Command{
 		}
 
 		var trafficType int
-		var configFile string
-		if len(DeviceJsonFile) != 0 {
+		configFiles := []string{}
+		if len(DeviceJsonFile) != 0 && len(uplinkMapFile) != 0 {
+			trafficType = traffic.TrafficUplinkToHost
+			configFiles = append(configFiles, DeviceJsonFile)
+			configFiles = append(configFiles, uplinkMapFile)
+		} else if len(DeviceJsonFile) != 0 {
 			trafficType = traffic.TrafficHostToHost
-			configFile = DeviceJsonFile
+			configFiles = append(configFiles, DeviceJsonFile)
 		} else if len(uplinkMapFile) != 0 {
 			trafficType = traffic.TrafficUplinkToUplink
-			configFile = uplinkMapFile
+			configFiles = append(configFiles, uplinkMapFile)
 		} else {
 			return errors.New("Uplink map file or device json file not provided")
 		}
@@ -108,11 +113,14 @@ var trafficCmd = &cobra.Command{
 			}
 		}
 
-		trafficHelper, err1 := traffic.GetTrafficHelper(trafficType, configFile)
+		trafficHelper, err1 := traffic.GetTrafficHelper(trafficType, configFiles[:]...)
 		if err1 != nil {
 			return errors.Wrap(err1, "Error in setting up traffic helper")
 		}
 
+		if EpSetup {
+			return traffic.SetUpEPs(trafficHelper, agentCfg)
+		}
 		/* For now just uplink to uplink traffic is supported */
 		return traffic.RunTests(TestEnv, TestSuite, trafficHelper, agentCfg)
 	},
@@ -131,4 +139,5 @@ func init() {
 	trafficCmd.Flags().StringVarP(&TestEnv, "test-env", "t", "sim", "Test Environment")
 	trafficCmd.Flags().StringVarP(&TestSuite, "test-suite", "s", "sanity", "Test Suite")
 	trafficCmd.Flags().BoolVarP(&SimMode, "sim-mode", "", false, "Running in sim mode")
+	trafficCmd.Flags().BoolVarP(&EpSetup, "ep-setup", "", false, "Setup EPs, no traffic")
 }

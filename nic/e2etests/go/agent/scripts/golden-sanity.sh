@@ -40,7 +40,7 @@ fi
 echo "Starting Host-Host Traffic tests.."
 
 echo "Pushing golden config..."
-go run $HEIMDALL_RUN run --device-file $SIM_DEVICE_JSON --config-file $HEIMDALL_GOLDEN_CONFIG --enable-sim --force-gen
+go run $HEIMDALL_RUN run --device-file $SIM_DEVICE_JSON --config-file $HEIMDALL_GOLDEN_CONFIG --enable-sim
 
 OUT=$?
 if [ $OUT -ne 0 ];then
@@ -54,6 +54,14 @@ go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON --config-file $HEIMD
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Host-Host traffic test failed"
+   exit $OUT
+fi
+
+go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON  --uplink-map $UPLINK_MAP_JSON --config-file $HEIMDALL_GOLDEN_CONFIG --sim-mode
+
+OUT=$?
+if [ $OUT -ne 0 ];then
+   echo "Host-Network traffic test failed"
    exit $OUT
 fi
 
