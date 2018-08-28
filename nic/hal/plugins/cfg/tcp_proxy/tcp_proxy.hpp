@@ -318,7 +318,10 @@ tcp_proxy_cfg_rule_action_spec_extract (const tcp_proxy::TcpProxyAction& spec,
 {
     hal_ret_t ret = HAL_RET_OK;
     action->tcp_proxy_action = spec.tcp_proxy_action_type();
-    if (spec.proxy_type() == types::PROXY_TYPE_TLS) {
+    if (spec.proxy_type() == types::PROXY_TYPE_TCP) {
+        HAL_TRACE_DEBUG("PROXY_TYPE_TCP: Policy")
+    } else if (spec.proxy_type() == types::PROXY_TYPE_TLS) {
+        HAL_TRACE_DEBUG("PROXY_TYPE_TLS: Policy")
         action->u.tls_cfg.asym_key_type = spec.tls().asym_key_type();
         action->u.tls_cfg.cert_id = spec.tls().cert_id();
         action->u.tls_cfg.trust_root_id = spec.tls().trust_root_id();
@@ -329,12 +332,14 @@ tcp_proxy_cfg_rule_action_spec_extract (const tcp_proxy::TcpProxyAction& spec,
             case types::CRYPTO_ASYM_KEY_TYPE_ECDSA:
                 action->u.tls_cfg.u.ecdsa_key.sign_key_idx =
                     spec.tls().ecdsa_key().sign_key_idx();
+                HAL_TRACE_DEBUG("PROXY_TYPE_TLS: Setup: Key Type ECDSA: Sign Key IDX: {}", action->u.tls_cfg.u.ecdsa_key.sign_key_idx); 
                 break;
             case types::CRYPTO_ASYM_KEY_TYPE_RSA:
                 action->u.tls_cfg.u.rsa_key.sign_key_idx = 
                     spec.tls().rsa_key().sign_key_idx();
-                action->u.tls_cfg.u.rsa_key.sign_key_idx = 
-                    spec.tls().rsa_key().sign_key_idx();
+                action->u.tls_cfg.u.rsa_key.decrypt_key_idx= 
+                    spec.tls().rsa_key().decrypt_key_idx();
+                HAL_TRACE_DEBUG("PROXY_TYPE_TLS: Setup: Key Type RSA: Sign Key IDX: {}, Decrypt Key IDX: {}", action->u.tls_cfg.u.ecdsa_key.sign_key_idx, action->u.tls_cfg.u.rsa_key.decrypt_key_idx); 
                 break;
             default:
                 HAL_TRACE_ERR("Unknown key type: {}", spec.tls().asym_key_type());

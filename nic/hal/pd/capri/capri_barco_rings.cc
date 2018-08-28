@@ -1016,6 +1016,7 @@ hal_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring)
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
     hal_ret_t                           ret = HAL_RET_OK;
+    uint32_t                            gcm0_pi, gcm0_ci;
 
 
     ret = capri_barco_ring_common_init(barco_ring);
@@ -1043,8 +1044,10 @@ hal_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.gcm0_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
     hens.dhs_crypto_ctl.gcm0_opa_tag_addr_w1.write();
 
-    hens.dhs_crypto_ctl.gcm0_producer_idx.fld(barco_ring->producer_idx);
-    hens.dhs_crypto_ctl.gcm0_producer_idx.write();
+    gcm0_pi = hens.dhs_crypto_ctl.gcm0_producer_idx.fld().convert_to<uint32_t>();
+    gcm0_ci = hens.dhs_crypto_ctl.gcm0_consumer_idx.fld().convert_to<uint32_t>();
+
+    assert((gcm0_pi == 0) && (gcm0_ci == 0));
 
     return capri_barco_gcm0_key_array_init();
 }
@@ -1174,6 +1177,7 @@ hal_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring)
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
     hal_ret_t                           ret = HAL_RET_OK;
+    uint32_t                            gcm1_pi, gcm1_ci;
 
 
     ret = capri_barco_ring_common_init(barco_ring);
@@ -1201,8 +1205,11 @@ hal_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.gcm1_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
     hens.dhs_crypto_ctl.gcm1_opa_tag_addr_w1.write();
 
-    hens.dhs_crypto_ctl.gcm1_producer_idx.fld(barco_ring->producer_idx);
-    hens.dhs_crypto_ctl.gcm1_producer_idx.write();
+    gcm1_pi = hens.dhs_crypto_ctl.gcm1_producer_idx.fld().convert_to<uint32_t>();
+    gcm1_ci = hens.dhs_crypto_ctl.gcm1_consumer_idx.fld().convert_to<uint32_t>();
+
+    assert((gcm1_pi == 0) && (gcm1_ci == 0));
+
 
     return capri_barco_gcm1_key_array_init();
 }

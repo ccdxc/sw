@@ -1,6 +1,8 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <thread>
+#include <iostream>
+#include <fstream>
 #include <math.h>
 #include <grpc++/grpc++.h>
 #include "nic/gen/proto/hal/types.grpc.pb.h"
@@ -21,6 +23,12 @@
 #include "sdk/types.hpp"
 #include "nic/gen/proto/hal/proxy.grpc.pb.h"
 #include "nic/gen/proto/hal/tcp_proxy_cb.grpc.pb.h"
+#include "nic/gen/proto/hal/crypto_apis.grpc.pb.h"
+#include "nic/gen/proto/hal/tcp_proxy.grpc.pb.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -216,6 +224,21 @@ using tcpcb::TcpCbGetResponse;
 using tcpcb::TcpCbStats;
 using tcpcb::TcpCbSpec;
 
+using cryptoapis::CryptoApiType;
+using cryptoapis::CryptoApis;
+using cryptoapis::CryptoApiRequestMsg;
+using cryptoapis::CryptoApiRequest;
+using cryptoapis::CryptoApiResponseMsg;
+using cryptoapis::CryptoApiResponse;
+using grpc::ClientContext;
+
+
+using tcp_proxy::TcpProxy;
+using tcp_proxy::TcpProxyRuleRequestMsg;
+using tcp_proxy::TcpProxyRuleSpec;
+using tcp_proxy::TcpProxyRuleResponseMsg;
+using tcp_proxy::TcpProxyRuleMatchSpec;
+using types::IPAddressObj;
 
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
@@ -243,7 +266,9 @@ public:
     ep_stub_(Endpoint::NewStub(channel)), session_stub_(Session::NewStub(channel)),
     telemetry_stub_(Telemetry::NewStub(channel)),
     proxy_stub_(Proxy::NewStub(channel)),
-    tcpcb_stub_(TcpCb::NewStub(channel)) {}
+    tcpcb_stub_(TcpCb::NewStub(channel)),
+    crypto_apis_stub_(CryptoApis::NewStub(channel)),
+    tcp_proxy_stub_(TcpProxy::NewStub(channel)) {}
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -1900,6 +1925,429 @@ public:
         }
     }
 
+    std::string read_file_contents(const char *filename)
+    {
+        std::ifstream in((const char *)filename, std::ios::in | std::ios::binary);
+        if (in)
+        {
+            std::string contents;
+            in.seekg(0, std::ios::end);
+            contents.resize(in.tellg());
+            in.seekg(0, std::ios::beg);
+            in.read(&contents[0], contents.size());
+            in.close();
+            return(contents);
+        }
+        throw(errno);
+    }
+
+    int tcp_tls_proxy_ecdsa_key_add(const char * filename, uint32_t *sign_key_idx) {
+        CryptoApiRequestMsg     req_msg;
+        CryptoApiRequest        *req;
+        CryptoApiResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->set_api_type(cryptoapis::ASYMAPI_SETUP_PRIV_KEY);
+        req->mutable_setup_priv_key()->set_key(read_file_contents(filename));
+        status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).setup_priv_key().key_type() ==
+                    types::CRYPTO_ASYM_KEY_TYPE_ECDSA);
+            *sign_key_idx =
+                rsp_msg.response(0).setup_priv_key().ecdsa_key_info().sign_key_idx();
+            std::cout << "Setup key(" << filename << "): ID:" << *sign_key_idx << std::endl;
+        }
+        else {
+            std::cout << "Setup key(" << filename << "): Failed" << std::endl;
+            return -1;
+        }
+        return 0;
+    }
+
+    int tcp_tls_proxy_rsa_key_add(const char * filename,
+            uint32_t *sign_key_idx, uint32_t *decrypt_key_idx) {
+        CryptoApiRequestMsg     req_msg;
+        CryptoApiRequest        *req;
+        CryptoApiResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->set_api_type(cryptoapis::ASYMAPI_SETUP_PRIV_KEY);
+        req->mutable_setup_priv_key()->set_key(read_file_contents(filename));
+        status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).setup_priv_key().key_type() ==
+                    types::CRYPTO_ASYM_KEY_TYPE_RSA);
+            *sign_key_idx =
+                rsp_msg.response(0).setup_priv_key().rsa_key_info().sign_key_idx();
+            *decrypt_key_idx = 
+            rsp_msg.response(0).setup_priv_key().rsa_key_info().decrypt_key_idx();
+        }
+        else {
+            return -1;
+        }
+        return 0;
+    }
+
+    int tcp_tls_proxy_cert_add(const char * filename, uint32_t cert_id,
+            uint32_t next_cert_id)
+    {
+        CryptoApiRequestMsg     req_msg;
+        CryptoApiRequest        *req;
+        CryptoApiResponseMsg    rsp_msg;
+        ClientContext           context;
+        Status                  status;
+
+        req = req_msg.add_request();
+        req->set_api_type(cryptoapis::ASYMAPI_SETUP_CERT);
+        req->mutable_setup_cert()->set_update_type(cryptoapis::ADD_UPDATE);
+        req->mutable_setup_cert()->set_cert_id(cert_id);
+        req->mutable_setup_cert()->set_body(read_file_contents(filename));
+        status = crypto_apis_stub_->CryptoApiInvoke(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            std::cout << "Setup cert(" << filename << "): ID:" << cert_id << std::endl;
+        }
+        else {
+            std::cout << "Setup cert(" << filename << "): ID:" << cert_id << " Failed" << std::endl;
+            return -1;
+        }
+        return 0;
+    }
+
+
+
+    int tcp_proxy_policy_rule_match_setup(
+            TcpProxyRuleSpec *req,
+            TcpProxyRuleMatchSpec **rule_match_spec,
+            uint64_t vrf_id,
+            in_addr_t src_address_start,
+            in_addr_t src_address_end,
+            in_addr_t dst_address_start,
+            in_addr_t dst_address_end)
+    {
+
+        TcpProxyRuleMatchSpec       *rm_spec;
+
+        /* TcpProxyRuleSpec setup */
+        req->mutable_key_or_handle()->mutable_rule_key()->set_tcp_proxy_rule_id(1);
+        req->mutable_key_or_handle()->mutable_rule_key()->mutable_vrf_key_or_handle()->set_vrf_id(vrf_id);
+        req->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+
+        /* TcpProxyRuleSpec->TcpProxyRuleMatchSpec Setup */
+        rm_spec = req->add_rules();
+        rm_spec->set_rule_id(1); /* TBD define */
+
+
+        /* TcpProxyRuleMatchSpec: RuleMatch */
+        IPAddressObj                *src_addr;
+        IPAddressObj                *dst_addr;
+
+        /* SRC Address Range */
+        src_addr = rm_spec->mutable_match()->add_src_address();
+        src_addr->set_type(types::IP_ADDRESS_IPV4_ANY);
+        src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_ip_af(types::IP_AF_INET);
+        src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_v4_addr(src_address_start);
+        src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_ip_af(types::IP_AF_INET);
+        src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_v4_addr(src_address_end);
+
+        /* DST Address Range */
+        dst_addr = rm_spec->mutable_match()->add_dst_address();
+        dst_addr->set_type(types::IP_ADDRESS_IPV4_ANY);
+        dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_ip_af(types::IP_AF_INET);
+        dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_v4_addr(dst_address_start);
+        dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_ip_af(types::IP_AF_INET);
+        dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_v4_addr(dst_address_end);
+
+        *rule_match_spec = rm_spec;
+        return 0;
+    }
+
+
+
+    int tcp_proxy_policy_add(
+            uint64_t vrf_id,
+            in_addr_t src_address_start,
+            in_addr_t src_address_end,
+            in_addr_t dst_address_start,
+            in_addr_t dst_address_end)
+    {
+        TcpProxyRuleRequestMsg      req_msg;
+        TcpProxyRuleSpec            *req;
+        TcpProxyRuleMatchSpec       *rule_match_spec;
+        TcpProxyRuleResponseMsg     rsp_msg;
+        ClientContext               context;
+        Status                      status;
+
+        req = req_msg.add_request();
+
+        if (tcp_proxy_policy_rule_match_setup(req, &rule_match_spec, vrf_id, src_address_start, src_address_end, dst_address_start, dst_address_end)) {
+            std::cout << "Policy rule match setup failed" << std::endl;
+            return -1;
+        }
+
+        /* TcpProxyRuleMatchSpec: TcpProxyAction - TCP only proxy */
+        rule_match_spec->mutable_tcp_proxy_action()->set_tcp_proxy_action_type(tcp_proxy::TCP_PROXY_ACTION_TYPE_ENABLE);
+        rule_match_spec->mutable_tcp_proxy_action()->set_proxy_type(types::PROXY_TYPE_TCP);
+
+        status = tcp_proxy_stub_->TcpProxyRuleCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            std::cout << "Setup Proxy Policy Succeeded" << std::endl;
+        }
+        else {
+            std::cout << "Setup Proxy Policy Failed" << std::endl;
+            return -1;
+        }
+        return 0;
+    }
+
+    int tcp_proxy_tls_policy_add(
+            types::CryptoAsymKeyType    key_type,
+            uint64_t                    vrf_id,
+            in_addr_t                   src_address_start,
+            in_addr_t                   src_address_end,
+            in_addr_t                   dst_address_start,
+            in_addr_t                   dst_address_end,
+            uint32_t                    sign_key_idx,
+            uint32_t                    decrypt_key_idx,
+            uint32_t                    cert_idx)
+    {
+        TcpProxyRuleRequestMsg      req_msg;
+        TcpProxyRuleSpec            *req;
+        TcpProxyRuleMatchSpec       *rule_match_spec;
+        TcpProxyRuleResponseMsg     rsp_msg;
+        ClientContext               context;
+        Status                      status;
+
+        req = req_msg.add_request();
+
+        if (tcp_proxy_policy_rule_match_setup(req, &rule_match_spec, vrf_id, src_address_start, src_address_end, dst_address_start, dst_address_end)) {
+            std::cout << "Policy rule match setup failed" << std::endl;
+            return -1;
+        }
+
+        /* TcpProxyRuleMatchSpec: TcpProxyAction - TCP only proxy */
+        rule_match_spec->mutable_tcp_proxy_action()->set_tcp_proxy_action_type(tcp_proxy::TCP_PROXY_ACTION_TYPE_ENABLE);
+        rule_match_spec->mutable_tcp_proxy_action()->set_proxy_type(types::PROXY_TYPE_TLS);
+
+        if (key_type == types::CRYPTO_ASYM_KEY_TYPE_ECDSA) {
+            /* TLS ECDSA specific policy configuration */
+            rule_match_spec->mutable_tcp_proxy_action()->mutable_tls()->set_asym_key_type(key_type);
+            rule_match_spec->mutable_tcp_proxy_action()->mutable_tls()->set_cert_id(cert_idx);
+            rule_match_spec->mutable_tcp_proxy_action()->mutable_tls()->mutable_ecdsa_key()->set_sign_key_idx(sign_key_idx);
+        }
+        else if (key_type == types::CRYPTO_ASYM_KEY_TYPE_RSA) {
+            /* TLS RSA specific policy configuration */
+            rule_match_spec->mutable_tcp_proxy_action()->mutable_tls()->set_asym_key_type(key_type);
+            rule_match_spec->mutable_tcp_proxy_action()->mutable_tls()->set_cert_id(cert_idx);
+            rule_match_spec->mutable_tcp_proxy_action()->mutable_tls()->mutable_rsa_key()->set_sign_key_idx(sign_key_idx);
+            rule_match_spec->mutable_tcp_proxy_action()->mutable_tls()->mutable_rsa_key()->set_decrypt_key_idx(decrypt_key_idx);
+        }
+
+        status = tcp_proxy_stub_->TcpProxyRuleCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            std::cout << "Setup Proxy Policy Succeeded" << std::endl;
+        }
+        else {
+            std::cout << "Setup Proxy Policy Failed" << std::endl;
+            return -1;
+        }
+        return 0;
+    }
+
+    int tcp_proxy_flow_setup(
+            uint64_t vrf_id, 
+            in_addr_t src_range_start,
+            in_addr_t src_range_end,
+            in_addr_t dst_range_start,
+            in_addr_t dst_range_end)
+    {
+        if (tcp_proxy_policy_add(
+                vrf_id,
+                src_range_start,
+                src_range_end,
+                dst_range_start,
+                dst_range_end)) {
+            std::cout << "Failed to setup Proxy Policy";
+            return -1;
+        }
+        return 0;
+    }
+                
+
+
+    int tcp_tls_proxy_client_ecdsa_flow_setup(
+            uint64_t vrf_id, 
+            in_addr_t src_range_start,
+            in_addr_t src_range_end,
+            in_addr_t dst_range_start,
+            in_addr_t dst_range_end)
+    {
+        uint32_t        sign_key_idx;
+        uint32_t        cert_idx = 1;
+
+        if (tcp_tls_proxy_ecdsa_key_add(
+                    "/sw/nic/conf/openssl/certs/ecdsa/client.key",
+                    &sign_key_idx))
+        {
+            std::cout << "Failed to setup Client ECDSA Key";
+            return -1;
+        }
+
+        if (tcp_tls_proxy_cert_add(
+                    "/sw/nic/conf/openssl/certs/ecdsa/client.crt",
+                    cert_idx,
+                    0))
+        {
+            std::cout << "Failed to setup Client ECDSA Cert";
+            return -1;
+        }
+
+        if (tcp_proxy_tls_policy_add(
+                types::CRYPTO_ASYM_KEY_TYPE_ECDSA,
+                vrf_id,
+                src_range_start,
+                src_range_end,
+                dst_range_start,
+                dst_range_end,
+                sign_key_idx,
+                0,
+                cert_idx)) {
+            std::cout << "Failed to setup Proxy Policy";
+            return -1;
+        }
+        return 0;
+    }
+
+    int tcp_tls_proxy_server_ecdsa_flow_setup(
+            uint64_t vrf_id, 
+            in_addr_t src_range_start,
+            in_addr_t src_range_end,
+            in_addr_t dst_range_start,
+            in_addr_t dst_range_end)
+    {
+        uint32_t        sign_key_idx;
+        uint32_t        cert_idx = 1;
+
+        if (tcp_tls_proxy_ecdsa_key_add(
+                    "/nic/conf/openssl/certs/ecdsa/server.key",
+                    &sign_key_idx))
+        {
+            std::cout << "Failed to setup Server ECDSA Key";
+            return -1;
+        }
+        if (tcp_tls_proxy_cert_add(
+                    "/sw/nic/conf/openssl/certs/ecdsa/server.crt",
+                    cert_idx,
+                    0))
+        {
+            std::cout << "Failed to setup Server ECDSA Cert";
+            return -1;
+        }
+
+        if (tcp_proxy_tls_policy_add(
+                types::CRYPTO_ASYM_KEY_TYPE_ECDSA,
+                vrf_id,
+                src_range_start,
+                src_range_end,
+                dst_range_start,
+                dst_range_end,
+                sign_key_idx,
+                0,
+                cert_idx)) {
+            std::cout << "Failed to setup Proxy Policy";
+            return -1;
+        }
+        return 0;
+    }
+
+    int tcp_tls_proxy_client_rsa_flow_setup(
+            uint64_t vrf_id, 
+            in_addr_t src_range_start,
+            in_addr_t src_range_end,
+            in_addr_t dst_range_start,
+            in_addr_t dst_range_end)
+    {
+        uint32_t        sign_key_idx;
+        uint32_t        decrypt_key_idx;
+        uint32_t        cert_idx = 1;
+
+        if (tcp_tls_proxy_rsa_key_add(
+                    "/nic/conf/openssl/certs/rsa/client.key",
+                    &sign_key_idx, &decrypt_key_idx))
+        {
+            std::cout << "Failed to setup Client RSA Key";
+            return -1;
+        }
+
+        if (tcp_tls_proxy_cert_add(
+                    "/sw/nic/conf/openssl/certs/rsa/client.crt",
+                    cert_idx,
+                    0))
+        {
+            std::cout << "Failed to setup Client RSA Cert";
+            return -1;
+        }
+        if (tcp_proxy_tls_policy_add(
+                types::CRYPTO_ASYM_KEY_TYPE_RSA,
+                vrf_id,
+                src_range_start,
+                src_range_end,
+                dst_range_start,
+                dst_range_end,
+                sign_key_idx,
+                decrypt_key_idx,
+                cert_idx)) {
+            std::cout << "Failed to setup Proxy Policy";
+            return -1;
+        }
+        return 0;
+    }
+
+    int tcp_tls_proxy_server_rsa_flow_setup(
+            uint64_t vrf_id, 
+            in_addr_t src_range_start,
+            in_addr_t src_range_end,
+            in_addr_t dst_range_start,
+            in_addr_t dst_range_end)
+    {
+        uint32_t        sign_key_idx;
+        uint32_t        decrypt_key_idx;
+        uint32_t        cert_idx = 1;
+
+        if (tcp_tls_proxy_rsa_key_add("/nic/conf/openssl/certs/rsa/server.key",
+                    &sign_key_idx, &decrypt_key_idx))
+        {
+            std::cout << "Failed to setup Server RSA Key";
+            return -1;
+        }
+
+        if (tcp_tls_proxy_cert_add(
+                    "/sw/nic/conf/openssl/certs/rsa/server.crt",
+                    cert_idx,
+                    0))
+        {
+            std::cout << "Failed to setup Server RSA Cert";
+            return -1;
+        }
+        if (tcp_proxy_tls_policy_add(
+                types::CRYPTO_ASYM_KEY_TYPE_RSA,
+                vrf_id,
+                src_range_start,
+                src_range_end,
+                dst_range_start,
+                dst_range_end,
+                sign_key_idx,
+                decrypt_key_idx,
+                cert_idx)) {
+            std::cout << "Failed to setup Proxy Policy";
+            return -1;
+        }
+        return 0;
+    }
+
 private:
     std::unique_ptr<Vrf::Stub> vrf_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
@@ -1915,6 +2363,8 @@ private:
     std::unique_ptr<Telemetry::Stub> telemetry_stub_;
     std::unique_ptr<Proxy::Stub> proxy_stub_;
     std::unique_ptr<TcpCb::Stub> tcpcb_stub_;
+    std::unique_ptr<CryptoApis::Stub> crypto_apis_stub_;
+    std::unique_ptr<TcpProxy::Stub> tcp_proxy_stub_;
 };
 
 int port_enable(hal_client *hclient, int vrf_id, int port)
@@ -2353,6 +2803,51 @@ gft_proto_size_check (void)
               << std::endl;
 }
 
+int proxy_parse_args(int argc, char** argv, 
+        uint64_t *vrf_id, 
+        in_addr_t *src_range_start,
+        in_addr_t *src_range_end,
+        in_addr_t *dst_range_start,
+        in_addr_t *dst_range_end)
+{
+    if (argc!= 7) {
+        std::cout << "Usage:" <<  argv[0]  << " <VRF id> <SRC IP Address Range Start> <SRC IP Address Range End> <DST IP Address Range Start> <DST IP Address Range End>" << std::endl;
+        return -1;
+    }
+
+    *vrf_id = strtoll(argv[2], NULL, 10);
+    errno = 0;
+    if (errno) {
+        std::cout << "Failed to extract VRF ID from the parameters, Err:" << errno << std::endl;
+        return -1;
+    }
+
+    *src_range_start = inet_addr(argv[3]);
+    if (*src_range_start == INADDR_NONE) {
+        std::cout << "Failed to extract SRC Range Start from the parameters" << std::endl;
+        return -1;
+    }
+
+    *src_range_end = inet_addr(argv[4]);
+    if (*src_range_start == INADDR_NONE) {
+        std::cout << "Failed to extract SRC Range End from the parameters" << std::endl;
+        return -1;
+    }
+
+    *dst_range_start = inet_addr(argv[5]);
+    if (*dst_range_start == INADDR_NONE) {
+        std::cout << "Failed to extract DST Range Start from the parameters" << std::endl;
+        return -1;
+    }
+
+    *dst_range_end = inet_addr(argv[6]);
+    if (*dst_range_end == INADDR_NONE) {
+        std::cout << "Failed to extract DST Range End from the parameters" << std::endl;
+        return -1;
+    }
+    return 0;
+}
+
 // main test driver
 int
 main (int argc, char** argv)
@@ -2382,6 +2877,10 @@ main (int argc, char** argv)
     bool         tcpcb_get = false;
     int          tcpcb_id = 0;
     bool         bypass_tls = false;
+    bool         proxy_agent_if = false;
+    bool         proxy_srv = true;
+    types::ProxyType            proxy_type = types::PROXY_TYPE_TCP;
+    types::CryptoAsymKeyType    key_type = types::CRYPTO_ASYM_KEY_TYPE_ECDSA;
 
     uint64_t num_l2segments = 1;
     uint64_t encap_value    = 100;
@@ -2398,6 +2897,11 @@ main (int argc, char** argv)
     uint32_t policer_lif_id = 0;
     uint64_t policer_rate = 0;
     uint64_t policer_burst = 0;
+    uint64_t  proxy_vrf_id;
+    in_addr_t src_range_start;
+    in_addr_t src_range_end;
+    in_addr_t dst_range_start;
+    in_addr_t dst_range_end;
 
     sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK);
 
@@ -2466,6 +2970,46 @@ main (int argc, char** argv)
             bypass_tls = true;
         } else if (!strcmp(argv[1], "config")) {
             config = true;
+        } else if (!strcmp(argv[1], "tcp-proxy")) {
+            proxy_agent_if = true;
+            proxy_type = types::PROXY_TYPE_TCP;
+            if (proxy_parse_args(argc, argv, 
+                        &proxy_vrf_id, 
+                        &src_range_start,
+                        &src_range_end,
+                        &dst_range_start,
+                        &dst_range_end))
+            {
+                return -1;
+            }
+        } else if (!strcmp(argv[1], "tcp-tls-proxy-server-ecdsa")) {
+            proxy_agent_if = true;
+            proxy_type = types::PROXY_TYPE_TLS;
+            proxy_srv = true;
+            key_type = types::CRYPTO_ASYM_KEY_TYPE_ECDSA;
+            if (proxy_parse_args(argc, argv, 
+                        &proxy_vrf_id, 
+                        &src_range_start,
+                        &src_range_end,
+                        &dst_range_start,
+                        &dst_range_end))
+            {
+                return -1;
+            }
+        } else if (!strcmp(argv[1], "tcp-tls-proxy-client-ecdsa")) {
+            proxy_agent_if = true;
+            proxy_type = types::PROXY_TYPE_TLS;
+            proxy_srv = false;
+            key_type = types::CRYPTO_ASYM_KEY_TYPE_ECDSA;
+            if (proxy_parse_args(argc, argv, 
+                        &proxy_vrf_id, 
+                        &src_range_start,
+                        &src_range_end,
+                        &dst_range_start,
+                        &dst_range_end))
+            {
+                return -1;
+            }
         }
     } else {
         std::cout << "Usage: <pgm> config" << std::endl;
@@ -2591,6 +3135,39 @@ main (int argc, char** argv)
     } else if (policer_update) {
         hclient.lif_policer_update(policer_lif_id, pps, policer_rate, policer_burst);
         return 0;
+    } else if (proxy_agent_if == true) {
+#if 1
+        /* FIXME: remove this */
+        vrf_handle = hclient.vrf_create(proxy_vrf_id);
+        (void) vrf_handle;
+#endif
+
+        if (proxy_type == types::PROXY_TYPE_TCP) {
+            if (hclient.tcp_proxy_flow_setup(
+                    vrf_id, 
+                    src_range_start,
+                    src_range_end,
+                    dst_range_start,
+                    dst_range_end)) {
+                return -1;
+            }
+        }
+        else if (proxy_type == types::PROXY_TYPE_TLS) {
+            if (proxy_srv == true) {
+            }
+            else {
+                if (key_type == types::CRYPTO_ASYM_KEY_TYPE_ECDSA) {
+                    if (hclient.tcp_tls_proxy_client_ecdsa_flow_setup(proxy_vrf_id,
+                            src_range_start,
+                            src_range_end,
+                            dst_range_start,
+                            dst_range_end
+                            )) {
+                        return -1;
+                    }
+                }
+            }
+        }
     } else if (config == false) {
         std::cout << "Usage: <pgm> config" << std::endl;
         return 0;
