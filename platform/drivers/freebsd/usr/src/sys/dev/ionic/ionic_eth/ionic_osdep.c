@@ -1,10 +1,12 @@
-
 #include <sys/types.h>
 #include <sys/bus.h>
 
 #include <dev/pci/pcivar.h>
 
 #include <machine/bus.h>
+
+#include <linux/types.h> // for types u8, u16 etc.
+#include <linux/bitops.h>
 
 #include "ionic_osdep.h"
 #include "ionic.h"

@@ -25,6 +25,7 @@
 #include "ionic_bus.h"
 #include "ionic_lif.h"
 
+
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
 MODULE_AUTHOR("Scott Feldman <sfeldma@gmail.com>");
 MODULE_LICENSE("GPL");
@@ -107,6 +108,7 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 
 	return work_done;
 }
+
 
 static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 {

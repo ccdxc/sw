@@ -514,7 +514,7 @@ static int ionic_tx_xmit(struct tx_qcq *txqcq, struct mbuf *m)
 	return 0;
 }
 
-#ifdef notyet
+#ifdef IONIC_TSO
 static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
 			      struct mbuf *m, unsigned int hdrlen,
 			      unsigned int mss, u16 vlan_tci, bool has_vlan,
@@ -619,52 +619,24 @@ err_out_abort:
 	return -ENOMEM;
 }
 #endif
-
-
-
-int ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
+static int ionic_xmit(struct tx_qcq* txqcq, struct mbuf **head)
 {
-	struct lif *lif = netdev_priv(netdev);
-	struct ifnet* ifp = lif->netdev;
-	struct tx_qcq* txqcq; 
 	struct tx_stats *stats;
-//	bool ring_db = 1;
-	int err, qid = 0, ndescs;
-	int bucket;
+	int err, ndescs;
+	struct mbuf* m;
 
-	if (M_HASHTYPE_GET(m) != M_HASHTYPE_NONE) {
-#ifdef RSS
-		if (rss_hash2bucket(m->m_pkthdr.flowid,
-	  	  M_HASHTYPE_GET(m), &bucket) == 0) 
-			qid = bucket % lif->ntxqcqs;	
-	 	else 
-#endif
-		qid = (m->m_pkthdr.flowid % 128) % lif->ntxqcqs;
-	}
-
-	txqcq = lif->txqcqs[qid];
 	stats = &txqcq->stats;
-#if 0
-	IONIC_NETDEV_QINFO(txqcq, "offload flag: 0x%lx csum_offset: %d\n",
-		m->m_pkthdr.csum_flags, m->m_pkthdr.csum_data);
-#endif
-	IONIC_NETDEV_QINFO(txqcq, "head: %d tail: %d\n",
-		 txqcq->cmd_head_index, txqcq->cmd_tail_index);
-
+	m = *head;
 
 	ndescs = 1; /* XXX: TSO? */
 	if (txqcq->cmd_head_index + ndescs == txqcq->cmd_tail_index) {
-//	if (!ionic_q_has_space(q, 1)) {
 		stats->stop++;
 		/* This is a hard error, log it */
 		IONIC_NETDEV_QERR(txqcq, "BUG! Tx ring full when queue awake!\n");
 		return ENOBUFS;
 	}
-
-	if (ifp != NULL && ifp->if_bpf != NULL)
-		ETHER_BPF_MTAP(ifp, m);
-
-#ifdef notyet
+	
+#ifdef IONIC_TSO
 	if (m->m_pkthdr.csum_flags & CSUM_TSO)
 		err = ionic_tx_tso_xmit(q, m);
 	else
@@ -691,6 +663,78 @@ err_out_drop:
 	m_freem(m);
 	return 0;
 }
+
+
+int ionic_start_xmit_locked(struct ifnet* ifp, 	struct tx_qcq* txqcq)
+{
+	struct mbuf *m;
+	int err;
+	int processed = 0;
+
+	IONIC_NETDEV_QINFO(txqcq, "head: %d tail: %d\n",
+		 txqcq->cmd_head_index, txqcq->cmd_tail_index);
+
+	if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
+	    return (ENETDOWN);
+
+
+	while ((m = drbr_peek(ifp, txqcq->br)) != NULL) {
+		processed++;
+		if ((err = ionic_xmit(txqcq, &m)) != 0) {
+			if (m == NULL)
+				drbr_advance(ifp, txqcq->br);
+			else
+				drbr_putback(ifp, txqcq->br, m);
+			break;
+		}
+		drbr_advance(ifp, txqcq->br);
+		/* Send a copy of the frame to the BPF listener */
+		ETHER_BPF_MTAP(ifp, m);
+		if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
+			break;
+	}
+
+	if (processed > 8)
+		ionic_tx_clean(txqcq, 100);
+
+	return (err);
+}
+
+
+
+int ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
+{
+	struct lif *lif = netdev_priv(netdev);
+	struct ifnet* ifp = lif->netdev;
+	struct tx_qcq* txqcq; 
+	int err, qid = 0;
+	int bucket;
+
+	if (M_HASHTYPE_GET(m) != M_HASHTYPE_NONE) {
+#ifdef RSS
+		if (rss_hash2bucket(m->m_pkthdr.flowid,
+	  	  M_HASHTYPE_GET(m), &bucket) == 0) 
+			qid = bucket % lif->ntxqcqs;	
+	 	else 
+#endif
+		qid = (m->m_pkthdr.flowid % 128) % lif->ntxqcqs;
+	}
+
+	txqcq = lif->txqcqs[qid];
+
+	err = drbr_enqueue(ifp, txqcq->br, m);
+	if (err)
+		return (err);
+
+	if (mtx_trylock(&txqcq->mtx)) {
+		ionic_start_xmit_locked(ifp, txqcq);
+		mtx_unlock(&txqcq->mtx);
+	} else
+		taskqueue_enqueue(txqcq->taskq, &txqcq->task);
+
+	return (0);
+}
+
 
 static uint64_t
 ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
@@ -1049,33 +1093,33 @@ ionic_set_rss_type(void)
 	uint16_t rss_types = 0;
 
 	if (rss_hash_config & RSS_HASHTYPE_RSS_IPV4)
-		rss_types |= RSS_TYPE_IPV4;
+		rss_types |= IONIC_RSS_TYPE_IPV4;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_TCP_IPV4)
-		rss_types |= RSS_TYPE_IPV4_TCP;
+		rss_types |= IONIC_RSS_TYPE_IPV4_TCP;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_UDP_IPV4)
-		rss_types |= RSS_TYPE_IPV4_UDP;
+		rss_types |= IONIC_RSS_TYPE_IPV4_UDP;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_IPV6)
-		rss_types |= RSS_TYPE_IPV6;
+		rss_types |= IONIC_RSS_TYPE_IPV6;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_TCP_IPV6)
-		rss_types |= RSS_TYPE_IPV6_TCP;
+		rss_types |= IONIC_RSS_TYPE_IPV6_TCP;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_UDP_IPV6)
-		rss_types |= RSS_TYPE_IPV6_UDP;
+		rss_types |= IONIC_RSS_TYPE_IPV6_UDP;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_IPV6_EX)
-		rss_types |= RSS_TYPE_IPV6_EX;
+		rss_types |= IONIC_RSS_TYPE_IPV6_EX;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_TCP_IPV6_EX)
-		rss_types |= RSS_TYPE_IPV6_TCP_EX;
+		rss_types |= IONIC_RSS_TYPE_IPV6_TCP_EX;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_UDP_IPV4_EX)
-		rss_types |= RSS_TYPE_IPV6_UDP_EX;
+		rss_types |= IONIC_RSS_TYPE_IPV6_UDP_EX;
 #else
-	uint16_t rss_types = RSS_TYPE_IPV4
-			       | RSS_TYPE_IPV4_TCP
-			       | RSS_TYPE_IPV4_UDP
-			       | RSS_TYPE_IPV6
-			       | RSS_TYPE_IPV6_TCP
-			       | RSS_TYPE_IPV6_UDP
-			       | RSS_TYPE_IPV6_EX
-			       | RSS_TYPE_IPV6_TCP_EX
-			       | RSS_TYPE_IPV6_UDP_EX;
+	uint16_t rss_types = IONIC_RSS_TYPE_IPV4
+			       | IONIC_RSS_TYPE_IPV4_TCP
+			       | IONIC_RSS_TYPE_IPV4_UDP
+			       | IONIC_RSS_TYPE_IPV6
+			       | IONIC_RSS_TYPE_IPV6_TCP
+			       | IONIC_RSS_TYPE_IPV6_UDP
+			       | IONIC_RSS_TYPE_IPV6_EX
+			       | IONIC_RSS_TYPE_IPV6_TCP_EX
+			       | IONIC_RSS_TYPE_IPV6_UDP_EX;
 #endif
 
 	return (rss_types);

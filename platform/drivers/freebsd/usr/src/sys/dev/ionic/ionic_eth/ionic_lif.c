@@ -16,6 +16,7 @@
  *
  */
 
+
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
 #include <linux/interrupt.h>
@@ -753,6 +754,13 @@ static int ionic_tx_qcq_alloc(struct lif *lif, unsigned int qnum,
 
 	bzero((void *)txqcq->cmd_ring, total_size);
 
+	/* Allocate buffere ring. */
+	txqcq->br = buf_ring_alloc(4096, M_IONIC, M_WAITOK, &txqcq->mtx);
+	if (txqcq->br == NULL) {
+		IONIC_NETDEV_QERR(txqcq, "failed to allocated buffer ring\n");
+		goto failed_alloc;
+	}
+
 	/* Setup interrupt */
 	error = ionic_intr_alloc(lif, &txqcq->intr);
 	if (error) {
@@ -811,6 +819,11 @@ free_intr:
 	ionic_intr_free(lif, &txqcq->intr);
 
 failed_alloc:
+	if (txqcq->br) {
+		buf_ring_free(txqcq->br, M_IONIC);
+		txqcq->br = NULL;
+	}
+
 	if (txqcq->cmd_ring) {
 		/* completion ring is part of command ring allocation. */
 		ionic_dma_free(txqcq->lif->ionic, &txqcq->cmd_dma);
@@ -1160,10 +1173,9 @@ static void ionic_lif_txqs_deinit(struct lif *lif)
 		ionic_intr_mask(&txqcq->intr, true);
 		free_irq(txqcq->intr.vector, txqcq);
 
-#ifdef notyet
 		if (txqcq->taskq)
 			taskqueue_free(txqcq->taskq);
-#endif		
+		
 		mtx_unlock(&txqcq->mtx);
 	}
 }
@@ -1264,7 +1276,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	return 0;
 }
 
-static int ionic_tx_process(struct tx_qcq* txqcq , int tx_limit)
+int ionic_tx_clean(struct tx_qcq* txqcq , int tx_limit)
 {
 	struct txq_comp *comp;
 	struct txq_desc *cmd;
@@ -1307,10 +1319,10 @@ static int ionic_tx_process(struct tx_qcq* txqcq , int tx_limit)
 		}
 	}
 
-	IONIC_NETDEV_QINFO(txqcq, "ionic_tx_process processed %d\n", processed);
+	IONIC_NETDEV_QINFO(txqcq, "ionic_tx_clean processed %d\n", processed);
 
-	//if (comp->color == txqcq->done_color)
-	//	taskqueue_enqueue(txqcq->taskq, &txqcq->task);
+	if (comp->color == txqcq->done_color)
+		taskqueue_enqueue(txqcq->taskq, &txqcq->task);
 
 
 	return (processed);
@@ -1329,7 +1341,7 @@ static irqreturn_t ionic_tx_isr(int irq, void *data)
 
 	ionic_intr_mask(&txqcq->intr, true);
  
-	work_done = ionic_tx_process(txqcq, 256/* XXX: tunable */);
+	work_done = ionic_tx_clean(txqcq, 256/* XXX: tunable */);
 	
 	ionic_intr_return_credits(&txqcq->intr, work_done, 0, true);
 
@@ -1338,6 +1350,26 @@ static irqreturn_t ionic_tx_isr(int irq, void *data)
 	mtx_unlock(&txqcq->mtx);
 
 	return IRQ_HANDLED;
+}
+
+static void
+ionic_tx_task_handler(void *arg, int pendindg)
+{
+
+	struct tx_qcq* txqcq = arg;
+	int err;
+
+	KASSERT((txqcq == NULL), ("task handler called with txqcq == NULL"));
+
+	if (drbr_empty(txqcq->lif->netdev, txqcq->br))
+		return;
+
+	mtx_lock(&txqcq->mtx);
+	/* 
+	 * Process all Tx frames.
+	 */
+	err = ionic_start_xmit_locked(txqcq->lif->netdev, txqcq);
+	mtx_unlock(&txqcq->mtx);
 }
 
 static int ionic_lif_txq_init(struct lif *lif, struct tx_qcq *txqcq)
@@ -1383,7 +1415,9 @@ static int ionic_lif_txq_init(struct lif *lif, struct tx_qcq *txqcq)
 
 	request_irq(txqcq->intr.vector, ionic_tx_isr, 0, txqcq->intr.name, txqcq);
 
-	/* XXX: ass taskqueue. */
+	TASK_INIT(&txqcq->task, 0, ionic_tx_task_handler, txqcq);
+    txqcq->taskq = taskqueue_create_fast(txqcq->name, M_NOWAIT,
+	    taskqueue_thread_enqueue, &txqcq->taskq);
 
 #ifdef RSS
 	bind_cpu = rss_getcpu(txqcq->index % rss_getnumbuckets());
@@ -1393,6 +1427,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct tx_qcq *txqcq)
 	err = bind_irq_to_cpu(txqcq->intr.vector, bind_cpu);
 	if (err) {
 		IONIC_NETDEV_QWARN(txqcq, "failed to bind to cpu%d\n", bind_cpu);
+		
 	}
 	IONIC_NETDEV_QINFO(txqcq, "bound to cpu%d\n", bind_cpu);
 
@@ -1417,7 +1452,7 @@ static int ionic_lif_txqs_init(struct lif *lif)
 }
 
 /* XXX rx_limit/pending handling. */
-static int ionic_rx_process(struct rx_qcq* rxqcq , int rx_limit)
+static int ionic_rx_clean(struct rx_qcq* rxqcq , int rx_limit)
 {
 	struct rxq_comp *comp;
 	struct rxq_desc *cmd;
@@ -1458,7 +1493,7 @@ static int ionic_rx_process(struct rx_qcq* rxqcq , int rx_limit)
 		}
 	}
 
-	IONIC_NETDEV_QINFO(rxqcq, "ionic_rx_process processed %d\n", processed);
+	IONIC_NETDEV_QINFO(rxqcq, "ionic_rx_clean processed %d\n", processed);
 
 	if (comp->color == rxqcq->done_color)
 		taskqueue_enqueue(rxqcq->taskq, &rxqcq->task);
@@ -1487,7 +1522,7 @@ ionic_rx_task_handler(void *arg, int pendindg)
 	/* 
 	 * Process all Rx frames.
 	 */
-	processed = ionic_rx_process(rxqcq, -1);
+	processed = ionic_rx_clean(rxqcq, -1);
 	mtx_unlock(&rxqcq->mtx);
 }
 
@@ -1497,7 +1532,7 @@ void ionic_rx_flush(struct rx_qcq *rxqcq)
 
 	IONIC_NETDEV_QINFO(rxqcq, "\n");
 
-	work_done = ionic_rx_process(rxqcq, -1);
+	work_done = ionic_rx_clean(rxqcq, -1);
 
 	if (work_done > 0)
 		ionic_intr_return_credits(&rxqcq->intr, work_done, 0, true);
@@ -1516,7 +1551,7 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 
 	ionic_intr_mask(&rxqcq->intr, true);
  
-	work_done = ionic_rx_process(rxqcq, 256/* XXX: tunable */);
+	work_done = ionic_rx_clean(rxqcq, 256/* XXX: tunable */);
 	
 	ionic_intr_return_credits(&rxqcq->intr, work_done, 0, true);
 
@@ -1526,6 +1561,7 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 
 	return IRQ_HANDLED;
 }
+
 
 
 

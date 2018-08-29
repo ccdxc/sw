@@ -96,6 +96,7 @@ MALLOC_DECLARE(M_IONIC);
 #define napi_struct work_struct
 #endif
 struct napi_struct;
+struct ionic_dev;
 
 extern const char *ionic_module_dname;
 

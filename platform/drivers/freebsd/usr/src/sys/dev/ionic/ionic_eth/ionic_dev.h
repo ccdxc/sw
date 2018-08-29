@@ -185,6 +185,10 @@ struct intr_status {
 
 #pragma pack(pop)
 
+#ifndef BUILD_BUG_ON
+#define BUILD_BUG_ON(x)	 CTASSERT(!(x))
+#endif
+
 static inline void ionic_struct_size_checks(void)
 {
 	BUILD_BUG_ON(sizeof(struct doorbell) != 8);

@@ -107,6 +107,8 @@ struct ionic_tx_buf {
 	uint64_t pa_addr; /* cache address to avoid access to command ring. */
 };
 
+
+
 /* Top level Rx Q mgmt. */
 struct rx_qcq {
 	char name[QUEUE_NAME_MAX_SZ];
@@ -200,8 +202,9 @@ struct tx_qcq {
 	struct tx_stats stats;
 	struct intr intr;
 
-//	struct task task;
-//	struct taskqueue *taskq;
+	struct task task;
+	struct taskqueue *taskq;
+	struct buf_ring		*br;
 };
 
 struct qcq {
@@ -293,6 +296,7 @@ void ionic_rx_flush(struct rx_qcq *rxqcq);
 void ionic_rx_napi(struct napi_struct *napi);
 #endif
 
+int ionic_tx_clean(struct tx_qcq* txqcq , int tx_limit);
 void ionic_rx_input(struct rx_qcq *rxqcq, struct ionic_rx_buf *buf,
 			   struct rxq_comp *comp, 	struct rxq_desc *desc);
 #endif /* _IONIC_LIF_H_ */

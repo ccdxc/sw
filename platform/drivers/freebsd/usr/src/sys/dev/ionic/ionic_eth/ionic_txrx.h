@@ -29,6 +29,8 @@ struct napi_struct;
 void ionic_tx_napi(struct napi_struct *napi);
 
 int ionic_start_xmit(struct net_device *netdev, struct mbuf *m);
+int ionic_start_xmit_locked(struct ifnet* ifp, 	struct tx_qcq* txqcq);
+
 int ionic_lif_netdev_alloc(struct lif* lif, int ndescs);
 void ionic_lif_netdev_free(struct lif* lifs);
 
