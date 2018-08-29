@@ -193,16 +193,10 @@ public:
                uint16_t access_flags, uint32_t l_key, uint32_t r_key,
                uint32_t page_size, uint64_t *pt_table, uint32_t pt_size);
 
-  int CreateCQ(uint64_t lif_id, uint32_t cq_num, uint16_t cq_wqe_size,
-               uint16_t num_cq_wqes, uint32_t host_pg_size,
+  int CreateCQ(uint32_t lif_id,
+               uint32_t cq_num, uint16_t cq_wqe_size, uint16_t num_cq_wqes,
+               uint32_t host_page_size,
                uint64_t *pt_table, uint32_t pt_size);
-
-  #if 0
-  int CreateCQ(uint64_t lif_id, uint32_t cq_num, uint16_t cq_wqe_size,
-               uint16_t num_cq_wqes, uint64_t va, uint64_t length,
-               uint32_t l_key, uint32_t page_size, uint64_t *pt_table,
-               uint32_t pt_size, uint32_t eq_id);
-  #endif
 
   int CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
                uint16_t rq_wqe_size, uint16_t num_sq_wqes,
@@ -219,6 +213,19 @@ public:
                uint32_t e_psn, uint32_t sq_psn,
                uint32_t header_template_ah_id, uint32_t header_template_size,
                unsigned char *header);
+
+  int RDMACreateEQ(uint64_t lif_id, uint32_t eq_num,
+                   uint32_t num_eq_wqes, uint32_t eq_wqe_size,
+                   uint32_t eqe_base_addr_pa, uint32_t int_num);
+
+  int RDMACreateCQ(uint64_t lif_id,
+                   uint32_t cq_num, uint16_t cq_wqe_size, uint16_t num_cq_wqes,
+                   uint32_t host_pg_size,
+                   uint64_t pa, uint32_t eq_num);
+
+  int RDMACreateAdminQ(uint64_t lif_id, uint32_t aq_num,
+                       uint32_t log_num_wqes, uint32_t log_wqe_size,
+                       uint64_t va, uint32_t cq_num);
 
   /* Filter APIs */
   int FilterAdd(uint64_t lif_id, uint64_t mac, uint32_t vlan);
@@ -254,11 +261,12 @@ private:
   std::unique_ptr<Rdma::Stub> rdma_stub_;
 };
 
-#define 	IB_QP_AV		       (1 << 7)
+#define   IB_QP_QKEY         (1 << 6)
+#define   IB_QP_AV           (1 << 7)
 #define   IB_QP_DEST_QPN     (1 << 20)
-#define   IB_QP_RQ_PSN	     (1 << 12)
-#define   IB_QP_SQ_PSN	     (1 << 16)
-
+#define   IB_QP_RQ_PSN       (1 << 12)
+#define   IB_QP_SQ_PSN       (1 << 16)
+ 
 #define   AC_LOCAL_WRITE       0x1
 #define   AC_REMOTE_WRITE      0x2
 #define   AC_REMOTE_READ       0x4

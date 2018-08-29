@@ -435,34 +435,34 @@ Eth::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_RDMA_CREATE_EQ:
-        printf("[INFO] lif%lu: CMD_OPCODE_RDMA_CREATE_EQ\n", info.hw_lif_id);
+        status = this->_CmdRDMACreateEQ(req, req_data, resp, resp_data);
         status = DEVCMD_SUCCESS;
         break;
 
     case CMD_OPCODE_RDMA_CREATE_CQ:
-        printf("[INFO] lif%lu: CMD_OPCODE_RDMA_CREATE_CQ\n", info.hw_lif_id);
+        status = this->_CmdRDMACreateCQ(req, req_data, resp, resp_data);
         status = DEVCMD_SUCCESS;
         break;
 
     case CMD_OPCODE_RDMA_CREATE_ADMINQ:
-        printf("[INFO] lif%lu: CMD_OPCODE_RDMA_CREATE_ADMINQ\n", info.hw_lif_id);
+        status = this->_CmdRDMACreateAdminQ(req, req_data, resp, resp_data);
         status = DEVCMD_SUCCESS;
         break;
 
     case CMD_OPCODE_V0_RDMA_CREATE_MR:
-        status = this->_CmdRDMACreateMR(req, req_data, resp, resp_data);
+        status = this->_CmdCreateMR(req, req_data, resp, resp_data);
         break;
         
     case CMD_OPCODE_V0_RDMA_CREATE_CQ:
-        status = this->_CmdRDMACreateCQ(req, req_data, resp, resp_data);
+        status = this->_CmdCreateCQ(req, req_data, resp, resp_data);
         break;
         
     case CMD_OPCODE_V0_RDMA_CREATE_QP:
-        status = this->_CmdRDMACreateQP(req, req_data, resp, resp_data);
+        status = this->_CmdCreateQP(req, req_data, resp, resp_data);
         break;
         
     case CMD_OPCODE_V0_RDMA_MODIFY_QP:
-        status = this->_CmdRDMAModifyQP(req, req_data, resp, resp_data);
+        status = this->_CmdModifyQP(req, req_data, resp, resp_data);
         break;
 
     default:
@@ -1364,8 +1364,12 @@ Eth::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
     return (DEVCMD_SUCCESS);
 }
 
+/**
+ * CMD_OPCODE_V0_RDMA_* ops
+ */
+
 enum DevcmdStatus
-Eth::_CmdRDMACreateMR(void *req, void *req_data, void *resp, void *resp_data)
+Eth::_CmdCreateMR(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct create_mr_cmd  *cmd = (struct create_mr_cmd *) req;
 
@@ -1373,39 +1377,36 @@ Eth::_CmdRDMACreateMR(void *req, void *req_data, void *resp, void *resp_data)
             " pd_num %u start %lx len %lu access_flags %x"
             " lkey %u rkey %u "
             " page_size %u pt_size %u\n",
-            info.hw_lif_id,
+            info.hw_lif_id + cmd->lif,
             cmd->pd_num, cmd->start, cmd->length, cmd->access_flags,
             cmd->lkey, cmd->rkey,
             cmd->page_size, cmd->nchunks);
 
-    hal->CreateMR(info.hw_lif_id, cmd->pd_num, cmd->start, cmd->length, cmd->access_flags, cmd->lkey, cmd->rkey, cmd->page_size, (uint64_t *)devcmd->data, cmd->nchunks);
+    hal->CreateMR(info.hw_lif_id + cmd->lif,
+            cmd->pd_num, cmd->start, cmd->length, cmd->access_flags,
+            cmd->lkey, cmd->rkey, cmd->page_size,
+            (uint64_t *)devcmd->data, cmd->nchunks);
 
     return (DEVCMD_SUCCESS);
 }
 
 enum DevcmdStatus
-Eth::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
+Eth::_CmdCreateCQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct create_cq_cmd  *cmd = (struct create_cq_cmd  *) req;
-    uint64_t *pt_table = (uint64_t *)&devcmd->data;
 
-    printf("[INFO] lif%lu: CMD_OPCODE_V0_CREATE_CQ:"
-            " cq_num %u cq_wqe_size %u num_cq_wqes %u"
-            " host_pg_size %x pt_size %u\n",
-            info.hw_lif_id,
+    printf("lif%lu: CMD_OPCODE_V0_CREATE_CQ\n", info.hw_lif_id + cmd->lif_id);
+
+    hal->CreateCQ(info.hw_lif_id + cmd->lif_id,
             cmd->cq_num, cmd->cq_wqe_size, cmd->num_cq_wqes,
-            cmd->host_pg_size, cmd->pt_size);
-
-    hal->CreateCQ(info.hw_lif_id,
-        cmd->cq_num, cmd->cq_wqe_size, cmd->num_cq_wqes,
-        cmd->host_pg_size,
-        pt_table, cmd->pt_size);
+            cmd->host_pg_size,
+            (uint64_t *)devcmd->data, cmd->pt_size);
 
     return (DEVCMD_SUCCESS);
-    
 }
+
 enum DevcmdStatus
-Eth::_CmdRDMACreateQP(void *req, void *req_data, void *resp, void *resp_data)
+Eth::_CmdCreateQP(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct create_qp_cmd  *cmd = (struct create_qp_cmd  *) req;
     uint64_t *pt_table = (uint64_t *)&devcmd->data;
@@ -1417,7 +1418,7 @@ Eth::_CmdRDMACreateQP(void *req, void *req_data, void *resp, void *resp_data)
             " num_rrq_wqes %u pd %u"
             " sq_cq_num %u rq_cq_num %u page_size %u"
             " pmtu %u service %d sq_pt_size %u pt_size %u\n",
-            info.hw_lif_id,
+            info.hw_lif_id + cmd->lif_id,
             cmd->qp_num, cmd->sq_wqe_size,
             cmd->rq_wqe_size, cmd->num_sq_wqes,
             cmd->num_rq_wqes, cmd->num_rsq_wqes,
@@ -1425,7 +1426,8 @@ Eth::_CmdRDMACreateQP(void *req, void *req_data, void *resp, void *resp_data)
             cmd->sq_cq_num, cmd->rq_cq_num, cmd->host_pg_size,
             cmd->pmtu, cmd->service, cmd->sq_pt_size, cmd->pt_size);
 
-    hal->CreateQP(info.hw_lif_id, cmd->qp_num, cmd->sq_wqe_size,
+    hal->CreateQP(info.hw_lif_id + cmd->lif_id,
+                  cmd->qp_num, cmd->sq_wqe_size,
                   cmd->rq_wqe_size, cmd->num_sq_wqes,
                   cmd->num_rq_wqes, cmd->num_rsq_wqes,
                   cmd->num_rrq_wqes, cmd->pd,
@@ -1437,7 +1439,7 @@ Eth::_CmdRDMACreateQP(void *req, void *req_data, void *resp, void *resp_data)
 }
 
 enum DevcmdStatus
-Eth::_CmdRDMAModifyQP(void *req, void *req_data, void *resp, void *resp_data)
+Eth::_CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct modify_qp_cmd  *cmd = (struct modify_qp_cmd  *) req;
     unsigned char *header = (unsigned char *)&devcmd->data;
@@ -1452,13 +1454,61 @@ Eth::_CmdRDMAModifyQP(void *req, void *req_data, void *resp, void *resp_data)
           cmd->e_psn, cmd->sq_psn,
           cmd->header_template_ah_id, cmd->header_template_size);
 
-    hal->ModifyQP(info.hw_lif_id,
+    hal->ModifyQP(info.hw_lif_id + cmd->lif_id,
                   cmd->qp_num, cmd->attr_mask,
                   cmd->dest_qp_num, cmd->q_key,
                   cmd->e_psn, cmd->sq_psn,
                   cmd->header_template_ah_id, cmd->header_template_size,
                   header);
 
+    return (DEVCMD_SUCCESS);
+}
+
+/*
+ * CMD_OPCODE_RDMA_* ops
+ */
+enum DevcmdStatus
+Eth::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct rdma_queue_cmd  *cmd = (struct rdma_queue_cmd  *) req;
+
+    printf("lif%lu: CMD_OPCODE_RDMA_CREATE_EQ\n", info.hw_lif_id);
+
+    hal->RDMACreateEQ(info.hw_lif_id + cmd->lif_id,
+                        cmd->qid_ver,
+                        1u << cmd->depth_log2, 1u << cmd->stride_log2,
+                        cmd->dma_addr, cmd->cid);
+    
+    return (DEVCMD_SUCCESS);
+}
+
+enum DevcmdStatus
+Eth::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct rdma_queue_cmd *cmd = (struct rdma_queue_cmd *) req;
+
+    printf("[INFO] lif%lu: CMD_OPCODE_RDMA_CREATE_CQ\n", info.hw_lif_id + cmd->lif_id);
+
+    hal->RDMACreateCQ(info.hw_lif_id + cmd->lif_id,
+                     cmd->qid_ver, 1u << cmd->stride_log2, 1u << cmd->depth_log2,
+                     1ull << (cmd->stride_log2 + cmd->depth_log2),
+                     cmd->dma_addr, cmd->cid);
+
+    return (DEVCMD_SUCCESS);
+    
+}
+
+enum DevcmdStatus
+Eth::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct rdma_queue_cmd  *cmd = (struct rdma_queue_cmd  *) req;
+
+    printf("lif%lu: CMD_OPCODE_RDMA_CREATE_ADMINQ\n", info.hw_lif_id);
+
+    hal->RDMACreateAdminQ(info.hw_lif_id + cmd->lif_id,
+        cmd->qid_ver, cmd->depth_log2, cmd->stride_log2,
+        cmd->dma_addr, cmd->cid);
+    
     return (DEVCMD_SUCCESS);
 }
 

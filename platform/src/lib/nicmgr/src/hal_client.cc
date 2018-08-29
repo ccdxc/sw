@@ -1667,38 +1667,39 @@ int HalClient::CreateMR(uint64_t lif_id, uint32_t pd, uint64_t va, uint64_t leng
     return 0;
 }
 
-int HalClient::CreateCQ(uint64_t lif_id, uint32_t cq_num, uint16_t cq_wqe_size,
-                        uint16_t num_cq_wqes, uint32_t host_pg_size,
+int HalClient::CreateCQ(uint32_t lif_id,
+                        uint32_t cq_num, uint16_t cq_wqe_size, uint16_t num_cq_wqes,
+                        uint32_t host_page_size,
                         uint64_t *pt_table, uint32_t pt_size)
 {
-    Status status;
     ClientContext context;
-    RdmaCqRequestMsg cq_request;
-    RdmaCqResponseMsg cq_response;
+    RdmaCqRequestMsg request;
+    RdmaCqResponseMsg response;
 
-    RdmaCqSpec *cq_spec = cq_request.add_request();
+    RdmaCqSpec *spec = request.add_request();
 
-    cq_spec->set_cq_num(cq_num);
-    cq_spec->set_hw_lif_id(lif_id);
-    cq_spec->set_cq_wqe_size(cq_wqe_size);
-    cq_spec->set_num_cq_wqes(num_cq_wqes);
-    cq_spec->set_hostmem_pg_size(host_pg_size);
+    spec->set_cq_num(cq_num);
+    spec->set_hw_lif_id(lif_id);
+    spec->set_cq_wqe_size(cq_wqe_size);
+    spec->set_num_cq_wqes(num_cq_wqes);
+    spec->set_hostmem_pg_size(host_page_size);
 
+    //Set the va to pa translations.
     for (int i = 0; i < (int)pt_size; i++) {
-        cq_spec->add_cq_va_pages_phy_addr(pt_table[i] | (1ULL << 63) | ((uint64_t)lif_id << 52));
+        spec->add_cq_va_pages_phy_addr(pt_table[i] | (1ULL << 63) | ((uint64_t)lif_id << 52));
     }
-
-    status = rdma_stub_->RdmaCqCreate(&context, cq_request, &cq_response);
+    
+    Status status = rdma_stub_->RdmaCqCreate(&context, request, &response);
     if (status.ok()) {
-        RdmaCqResponse rsp = cq_response.response(0);
+        auto rsp = response.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << "Status = " << rsp.api_status() << endl;
             return -1;
         } else {
             cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
         }
     } else {
-        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
+        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << "Status = " << status.error_code() << ": " << status.error_message() << endl;
         return -1;
     }
 
@@ -1876,7 +1877,142 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
             return -1;
         }
     }
-    
+
+    if (attr_mask & IB_QP_QKEY) {
+        ClientContext context;
+        RdmaQpUpdateRequestMsg request;
+        RdmaQpUpdateResponseMsg response;
+
+        RdmaQpUpdateSpec *spec = request.add_request();
+
+        spec->set_qp_num(qp_num);
+        spec->set_hw_lif_id(lif_id);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_Q_KEY);
+        spec->set_q_key(q_key);
+
+        Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
+        if (status.ok()) {
+            RdmaQpUpdateResponse rsp = response.response(0);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
+                return -1;
+            } else {
+                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS" << endl;
+            }
+        } else {
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int
+HalClient::RDMACreateEQ(uint64_t lif_id, uint32_t eq_num,
+                        uint32_t num_eq_wqes, uint32_t eq_wqe_size,
+                        uint32_t base_addr, uint32_t int_num)
+{
+    ClientContext context;
+    RdmaEqRequestMsg request;
+    RdmaEqResponseMsg response;
+
+    RdmaEqSpec *spec = request.add_request();
+    spec->set_eq_id(eq_num);
+    spec->set_hw_lif_id(lif_id);
+    spec->set_num_eq_wqes(num_eq_wqes);
+    spec->set_eq_wqe_size(eq_wqe_size);
+    spec->set_eqe_base_addr_phy(base_addr);
+    spec->set_int_num(int_num);
+
+    Status status = rdma_stub_->RdmaEqCreate(&context, request, &response);
+    if (status.ok()) {
+        RdmaEqResponse rsp = response.response(0);
+        if (rsp.api_status() != types::API_STATUS_OK) {
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
+            return -1;
+        } else {
+            cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+        }
+    } else {
+        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+int
+HalClient::RDMACreateCQ(uint64_t lif_id,
+                        uint32_t cq_num, uint16_t cq_wqe_size, uint16_t num_cq_wqes,
+                        uint32_t host_pg_size,
+                        uint64_t pa, uint32_t eq_num)
+{
+    Status status;
+    ClientContext context;
+    RdmaCqRequestMsg cq_request;
+    RdmaCqResponseMsg cq_response;
+
+    RdmaCqSpec *cq_spec = cq_request.add_request();
+
+    cq_spec->set_cq_num(cq_num);
+    cq_spec->set_hw_lif_id(lif_id);
+    cq_spec->set_cq_wqe_size(cq_wqe_size);
+    cq_spec->set_num_cq_wqes(num_cq_wqes);
+    cq_spec->set_hostmem_pg_size(host_pg_size);
+    cq_spec->set_cq_lkey(0);
+    cq_spec->set_eq_id(eq_num);
+    cq_spec->add_cq_va_pages_phy_addr(pa);
+
+    status = rdma_stub_->RdmaCqCreate(&context, cq_request, &cq_response);
+    if (status.ok()) {
+        RdmaCqResponse rsp = cq_response.response(0);
+        if (rsp.api_status() != types::API_STATUS_OK) {
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
+            return -1;
+        } else {
+            cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+        }
+    } else {
+        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+int
+HalClient::RDMACreateAdminQ(uint64_t lif_id, uint32_t aq_num,
+                            uint32_t log_num_wqes, uint32_t log_wqe_size,
+                            uint64_t pa, uint32_t cq_num)
+{
+    ClientContext context;
+    RdmaAqRequestMsg request;
+    RdmaAqResponseMsg response;
+
+    RdmaAqSpec *spec = request.add_request();
+
+    spec->set_aq_num(aq_num);
+    spec->set_hw_lif_id(lif_id);
+    spec->set_log_num_wqes(log_num_wqes);
+    spec->set_log_wqe_size(log_wqe_size);
+    spec->set_phy_base_addr(pa);
+    spec->set_cq_num(cq_num);
+
+    Status status = rdma_stub_->RdmaAqCreate(&context, request, &response);
+    if (status.ok()) {
+        auto rsp = response.response(0);
+        if (rsp.api_status() != types::API_STATUS_OK) {
+            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
+            return -1;
+        } else {
+            cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+        }
+    } else {
+        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
+        return -1;
+    }
+
     return 0;
 }
 

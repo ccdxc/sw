@@ -174,10 +174,17 @@ private:
     enum DevcmdStatus _CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdRDMACreateQP(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdRDMAModifyQP(void *req, void *req_data, void *resp, void *resp_data);
+    
+    /* RDMA Command handlers */
+    enum DevcmdStatus _CmdCreateMR(void *req, void *req_data, void *resp, void *resp_data);
+    enum DevcmdStatus _CmdCreateCQ(void *req, void *req_data, void *resp, void *resp_data);
+    enum DevcmdStatus _CmdCreateQP(void *req, void *req_data, void *resp, void *resp_data);
+    enum DevcmdStatus _CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data);
+
+    enum DevcmdStatus _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdRDMACreateMR(void *req, void *req_data, void *resp, void *resp_data);    
+    enum DevcmdStatus _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);
+
 
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
 
