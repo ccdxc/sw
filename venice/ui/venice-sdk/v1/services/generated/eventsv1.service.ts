@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs/Observable';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IEventsEvent,IEventsEventList } from '../../models/generated/events';
+import { IEventsEventList,IEventsEvent } from '../../models/generated/events';
 
 @Injectable()
 export class Eventsv1Service extends AbstractService {
@@ -19,13 +19,6 @@ export class Eventsv1Service extends AbstractService {
     return this.constructor.name;
   }
 
-  /** http://<...>/events/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345") */
-  public GetGetEvent(UUID):Observable<{body: IEventsEvent | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/events/v1/event/{UUID}';
-    url = url.replace('{UUID}', UUID);
-    return this.invokeAJAXGetCall(url, 'GetGetEvent') as Observable<{body: IEventsEvent | Error, statusCode: number}>;
-  }
-  
   /** http://<...>/events/v1/events */
   public GetGetEvents():Observable<{body: IEventsEventList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events';
@@ -36,6 +29,13 @@ export class Eventsv1Service extends AbstractService {
   public PostGetEvents(body: any):Observable<{body: IEventsEventList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events';
     return this.invokeAJAXPostCall(url, body.getValues(), 'PostGetEvents') as Observable<{body: IEventsEventList | Error, statusCode: number}>;
+  }
+  
+  /** http://<...>/events/v1/events/12345 will be translated to a gRPC query - GetEvent(uuid:"12345") */
+  public GetGetEvent(UUID):Observable<{body: IEventsEvent | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/events/v1/events/{UUID}';
+    url = url.replace('{UUID}', UUID);
+    return this.invokeAJAXGetCall(url, 'GetGetEvent') as Observable<{body: IEventsEvent | Error, statusCode: number}>;
   }
   
 }

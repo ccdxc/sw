@@ -278,7 +278,7 @@ func RegisterEventsV1HandlerWithClient(ctx context.Context, mux *runtime.ServeMu
 }
 
 var (
-	pattern_EventsV1_GetEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"event", "UUID"}, ""))
+	pattern_EventsV1_GetEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"events", "UUID"}, ""))
 
 	pattern_EventsV1_GetEvents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"events"}, ""))
 

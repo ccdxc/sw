@@ -321,10 +321,10 @@ func TestEventsMgrRestart(t *testing.T) {
 	ti.assertElasticTotalEvents(t, query, true, totalEventsSent, "10s")
 }
 
-// TestEventsRESTEndpoints tests GET /events and /event/{UUID} endpoint
+// TestEventsRESTEndpoints tests GET /events and /events/{UUID} endpoint
 // 1. test GET /events endpoint with varying requests
-// 2. fetch few UUIDs from the /events response to test /event/{UUID}
-// 3. test /event/{UUID} endpoint
+// 2. fetch few UUIDs from the /events response to test /events/{UUID}
+// 3. test /events/{UUID} endpoint
 func TestEventsRESTEndpoints(t *testing.T) {
 	timeNow := time.Now()
 
@@ -409,7 +409,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	}()
 
 	// total number of event by UUID requests to execute; UUIDs will be captured while executing
-	// any of the /events requests and /event/{UUID} testcase is added accordingly.
+	// any of the /events requests and /events/{UUID} testcase is added accordingly.
 	totalEventByUUIDRequests := make([]bool, 0, 3)
 
 	// define TCs (request and responses)
@@ -739,7 +739,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 		},
 	}
 
-	// add room for /event/{UUID} test cases
+	// add room for /events/{UUID} test cases
 	for i := 0; i < cap(totalEventByUUIDRequests); i++ {
 		validTCs = append(validTCs, &tc{})
 	}
@@ -748,7 +748,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	for _, rr := range validTCs {
 		log.Infof("executing TC: %v, %v", rr.requestURI, rr.requestBody)
 		switch {
-		case regexp.MustCompile("events").MatchString(rr.requestURI):
+		case "events" == rr.requestURI: // */events/
 			url := fmt.Sprintf("http://%s/events/v1/%s", apiGwAddr, rr.requestURI)
 			resp := evtsapi.EventList{}
 			httpClient := netutils.NewHTTPClient()
@@ -783,14 +783,14 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					Assert(t, err == nil && statusCode == http.StatusOK, "failed to get the event using self-link: %v, status: %v, err: %v", selfLink, statusCode, err)
 					Assert(t, evt.GetUUID() == obtainedEvt.GetUUID(), "obtained: %v, expected: %v", evt.GetUUID(), obtainedEvt.GetUUID())
 
-					// update the TC's request to test /event/{UUID}
+					// update the TC's request to test /events/{UUID}
 					if len(totalEventByUUIDRequests) < cap(totalEventByUUIDRequests) {
-						validTCs[len(validTCs)-len(totalEventByUUIDRequests)-1].requestURI = fmt.Sprintf("event/%s", obtainedEvt.GetUUID())
+						validTCs[len(validTCs)-len(totalEventByUUIDRequests)-1].requestURI = fmt.Sprintf("events/%s", obtainedEvt.GetUUID())
 						totalEventByUUIDRequests = append(totalEventByUUIDRequests, true)
 					}
 				}
 			}
-		case regexp.MustCompile("event/*").MatchString(rr.requestURI):
+		case regexp.MustCompile("events/*").MatchString(rr.requestURI): // */events/{uuid}
 			url := fmt.Sprintf("http://%s/events/v1/%s", apiGwAddr, rr.requestURI)
 			resp := evtsapi.Event{}
 			httpClient := netutils.NewHTTPClient()

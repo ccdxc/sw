@@ -178,7 +178,7 @@ func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, m
 		},
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
-		SelfLink:  fmt.Sprintf("/events/v1/event/%s", uuid),
+		SelfLink:  fmt.Sprintf("/events/v1/events/%s", uuid),
 		Labels:    map[string]string{"_category": globals.Kind2Category["Event"]},
 	}
 

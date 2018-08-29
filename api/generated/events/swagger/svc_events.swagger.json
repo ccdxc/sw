@@ -16,31 +16,6 @@
     "application/json"
   ],
   "paths": {
-    "/events/v1/event/{UUID}": {
-      "get": {
-        "summary": "http://\u003c...\u003e/events/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:\"12345\")",
-        "operationId": "GetGetEvent",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/eventsEvent"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "UUID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "events/v1"
-        ]
-      }
-    },
     "/events/v1/events": {
       "get": {
         "summary": "http://\u003c...\u003e/events/v1/events",
@@ -168,6 +143,31 @@
             }
           }
         },
+        "tags": [
+          "events/v1"
+        ]
+      }
+    },
+    "/events/v1/events/{UUID}": {
+      "get": {
+        "summary": "http://\u003c...\u003e/events/v1/events/12345 will be translated to a gRPC query - GetEvent(uuid:\"12345\")",
+        "operationId": "GetGetEvent",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/eventsEvent"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "UUID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "tags": [
           "events/v1"
         ]

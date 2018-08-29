@@ -46,10 +46,10 @@ service EventsV1 {
       };
     }
 
-    // http://<...>/events/v1/event/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
+    // http://<...>/events/v1/events/12345 will be translated to a gRPC query - GetEvent(uuid:"12345")
     rpc GetEvent (GetEventRequest) returns (Event) {
       option (google.api.http) = {
-        get: "/event/{UUID}"
+        get: "/events/{UUID}"
       };
     }
 
