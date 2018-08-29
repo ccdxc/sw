@@ -20,6 +20,7 @@
                         "Args": [
                             "-resolver-urls",
                             "$RESOLVER_URLS",
+                            "--skip=monitoring,metrics_query",
                             "--skipauth",
                             "--skipauthz"
                         ]
