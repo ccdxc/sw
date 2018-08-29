@@ -26,7 +26,8 @@ cc_library(
            glob(["debug/*.cc"]) +
            glob(["firewall/*.cc"]) +
            glob(["dos/*.cc"]) +
-           glob(["telemetry/*.cc"]),
+           glob(["telemetry/*.cc"]) +
+           glob(["event/*.cc"]),
     hdrs = [] + glob(["*.hpp"]) + glob(["*.h"]) +
            glob(["aclqos/*.hpp"]) +
            glob(["internal/*.hpp"]) +
@@ -39,7 +40,8 @@ cc_library(
            glob(["debug/*.hpp"]) +
            glob(["firewall/*.hpp"]) +
            glob(["dos/*.hpp"]) +
-           glob(["telemetry/*.hpp"]),
+           glob(["telemetry/*.hpp"]) +
+           glob(["event/*.hpp"]),
     copts = sdk_copts,
     deps = [
         # PD Cleanup Only

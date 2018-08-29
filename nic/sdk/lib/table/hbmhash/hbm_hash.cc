@@ -43,7 +43,8 @@ HbmHash::factory(std::string table_name, uint32_t table_id,
                  uint32_t num_hints_per_entry,
                  HbmHash::HashPoly hash_poly,
                  uint32_t mtrack_id,
-                 bool entry_trace_en)
+                 bool entry_trace_en,
+                 table_health_monitor_func_t health_monitor_func)
 {
     void    *mem = NULL;
     HbmHash *hbmhash = NULL;
@@ -58,7 +59,8 @@ HbmHash::factory(std::string table_name, uint32_t table_id,
                                 collision_table_id, hash_capacity,
                                 coll_capacity, key_len,
                                 data_len, num_hints_per_entry,
-                                hash_poly, entry_trace_en);
+                                hash_poly, entry_trace_en,
+                                health_monitor_func);
 
     ret = hbmhash->init();
     if (ret != SDK_RET_OK) {
@@ -111,7 +113,8 @@ HbmHash::HbmHash(std::string table_name,
                  uint32_t data_len,
                  uint32_t num_hints_per_entry,
                  HbmHash::HashPoly hash_poly,
-                 bool entry_trace_en)
+                 bool entry_trace_en,
+                 table_health_monitor_func_t health_monitor_func)
 {
     table_name_                 = table_name;
     table_id_                   = table_id;
@@ -124,6 +127,7 @@ HbmHash::HbmHash(std::string table_name,
     hash_capacity_              = 0;
     hash_poly_                  = hash_poly;
     entry_trace_en_             = entry_trace_en;
+    health_monitor_func_        = health_monitor_func;
 
     pre_process_sizes_(hash_capacity, coll_capacity);
 
@@ -278,10 +282,24 @@ HbmHash::calc_hash_(void *key, void *data)
 }
 
 // ---------------------------------------------------------------------------
+// Trigger Health monitor.
+// ---------------------------------------------------------------------------
+void
+HbmHash::trigger_health_monitor()
+{
+    if (health_monitor_func_) {
+        health_monitor_func_(collision_table_id_, (char *)table_name_.c_str(), health_state_,
+                             coll_capacity_,
+                             coll_table_num_entries_in_use(),
+                             &health_state_);
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Insert
 // ---------------------------------------------------------------------------
 sdk_ret_t
-HbmHash::insert(void *key, void *data, uint32_t *index)
+HbmHash::insert (void *key, void *data, uint32_t *index)
 {
     sdk_ret_t                       rs = SDK_RET_OK;
     sdk_ret_t                       rs1 = SDK_RET_OK;
@@ -368,8 +386,10 @@ end:
     // print_hbm_hash();
     //SDK_TRACE_DEBUG("ret:{}\n", rs);
     stats_update(INSERT, rs);
+    trigger_health_monitor();
     return rs;
 }
+
 
 // ---------------------------------------------------------------------------
 // Insert with Hash
@@ -458,6 +478,7 @@ end:
     // print_flow();
     //SDK_TRACE_DEBUG("ret:%d", rs);
     stats_update(INSERT, rs);
+    trigger_health_monitor();
     return rs;
 }
 
@@ -533,6 +554,7 @@ HbmHash::remove(uint32_t index)
 
     //print_hbm_hash();
     stats_update(REMOVE, rs);
+    trigger_health_monitor();
     return rs;
 }
 
@@ -730,13 +752,13 @@ HbmHash::free_collision_index(uint32_t idx)
 #define HBM_HASH_DATA_MORE_HASHS_LEN 1
 // #define HBM_HASH_DATA_MORE_HINTS_LEN 2
 sdk_ret_t
-HbmHash::hbm_hash_action_data_offsets (void *action_data,
-                                       uint8_t **action_id,
-                                       uint8_t **entry_valid,
-                                       void **data,
-                                       void **first_hash_hint,
-                                       uint8_t **more_hashs,
-                                       void **more_hints)
+HbmHash::hbm_hash_action_data_offsets(void *action_data,
+                                      uint8_t **action_id,
+                                      uint8_t **entry_valid,
+                                      void **data,
+                                      void **first_hash_hint,
+                                      uint8_t **more_hashs,
+                                      void **more_hints)
 {
     sdk_ret_t   ret = SDK_RET_OK;
     uint8_t     *seek = NULL;

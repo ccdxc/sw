@@ -292,7 +292,8 @@ route_create (RouteSpec& spec, RouteResponse *rsp)
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: route create ");
+    hal_api_trace(" API Begin: Route create ");
+    proto_msg_dump(spec);
 
     auto kh = spec.key_or_handle();
 
@@ -551,7 +552,8 @@ route_update (RouteSpec& spec, RouteResponse *rsp)
     dhl_entry_t                     dhl_entry = { 0 };
     route_update_app_ctxt_t         app_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: route update ");
+    hal_api_trace(" API Begin: Route update ");
+    proto_msg_dump(spec);
 
     auto kh = spec.key_or_handle();
 
@@ -830,7 +832,8 @@ route_delete (RouteDeleteRequest& req, RouteDeleteResponse *rsp)
     cfg_op_ctxt_t       cfg_ctxt = { 0 };
     dhl_entry_t         dhl_entry = { 0 };
 
-    hal_api_trace(" API Begin: route delete ");
+    hal_api_trace(" API Begin: Route delete ");
+    proto_msg_dump(req);
 
     auto kh = req.key_or_handle();
 
@@ -927,22 +930,6 @@ route_to_str (route_t *route)
                  route->nh_handle);
     }
     return buf;
-}
-
-//-----------------------------------------------------------------------------
-// dump route spec
-//-----------------------------------------------------------------------------
-static inline void
-route_spec_dump (RouteSpec& spec)
-{
-    std::string    route_cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &route_cfg);
-    HAL_TRACE_DEBUG("Route configuration:");
-    HAL_TRACE_DEBUG("{}", route_cfg.c_str());
 }
 
 hal_ret_t

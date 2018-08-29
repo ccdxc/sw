@@ -15,8 +15,11 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "sdk/indexer.hpp"
+#include "include/sdk/table_monitor.hpp"
 
 using sdk::lib::indexer;
+using sdk::table::table_health_state_t;
+using sdk::table::table_health_monitor_func_t;
 
 namespace hal {
 namespace pd {
@@ -51,12 +54,14 @@ public:
 
 private:
 
-    std::string     table_name_;             // table name
-    uint32_t        table_id_;               // table id
-    uint32_t        repl_table_capacity_;    // size of repl table
-    uint32_t        max_num_repls_per_entry_;// repl entries per table entry
-    uint32_t        repl_entry_data_len_;    // repl entry data len
-    indexer         *repl_table_indexer_;    // repl table indexer
+    std::string                 table_name_;             // table name
+    uint32_t                    table_id_;               // table id
+    uint32_t                    repl_table_capacity_;    // size of repl table
+    uint32_t                    max_num_repls_per_entry_;// repl entries per table entry
+    uint32_t                    repl_entry_data_len_;    // repl entry data len
+    indexer                     *repl_table_indexer_;    // repl table indexer
+    table_health_state_t        health_state_;  // health state
+    table_health_monitor_func_t health_monitor_func_;   // health mon. cb
 
     ReplListMap     repl_list_map_;
 
@@ -73,17 +78,20 @@ private:
         ITERATE
     };
     void stats_update(api ap, hal_ret_t rs);
+    void trigger_health_monitor();
 
     Met(std::string table_name, uint32_t table_id,
         uint32_t repl_table_capacity, uint32_t num_repl_entries,
-        uint32_t repl_entry_data_len);
+        uint32_t repl_entry_data_len,
+        table_health_monitor_func_t health_monitor_func = NULL);
     ~Met();
 
 public:
     static Met *factory(std::string table_name, uint32_t table_id,
                         uint32_t repl_table_capacity, uint32_t num_repl_entries,
                         uint32_t repl_entry_data_len,
-                        uint32_t mtrack_id = HAL_MEM_ALLOC_MET);
+                        uint32_t mtrack_id = HAL_MEM_ALLOC_MET,
+                        table_health_monitor_func_t health_monitor_func = NULL);
     static void destroy(Met *met,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_MET);
 

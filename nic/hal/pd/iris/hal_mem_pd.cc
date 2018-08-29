@@ -47,6 +47,7 @@
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
+#include "nic/hal/pd/iris/event/hal_event_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -507,7 +508,7 @@ hal_state_pd::init(void)
 
     p4plus_txdma_dm_tables_ = NULL;
     cpu_bypass_flowid_ = 0;
-    
+
 
     return true;
 }
@@ -817,7 +818,9 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
     met_table_ = Met::factory(P4_REPL_TABLE_NAME, P4_REPL_TABLE_ID,
                               P4_REPL_TABLE_DEPTH,
                               CAPRI_REPL_NUM_P4_ENTRIES_PER_NODE,
-                              P4_REPL_ENTRY_WIDTH);
+                              P4_REPL_ENTRY_WIDTH,
+                              HAL_MEM_ALLOC_MET,
+                              table_health_monitor);
     HAL_ASSERT(met_table_ != NULL);
 
     // for debugging
@@ -838,7 +841,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                               tinfo.key_struct_size,
                               tinfo.actiondata_struct_size,
                               static_cast<sdk_hash::HashPoly>(tinfo.hash_type),
-                              ENTRY_TRACE_EN);
+                              ENTRY_TRACE_EN, table_health_monitor);
             HAL_ASSERT(hash_tcam_tables_[tid - P4TBL_ID_HASH_OTCAM_MIN] != NULL);
             break;
 
@@ -859,7 +862,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
                         tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                       tinfo.key_struct_size, tinfo.actiondata_struct_size, true,
-                                      ENTRY_TRACE_EN);
+                                      ENTRY_TRACE_EN, table_health_monitor);
                     HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
                 }
             } else {
@@ -867,7 +870,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
                         tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                       tinfo.key_struct_size, tinfo.actiondata_struct_size, false,
-                                      ENTRY_TRACE_EN);
+                                      ENTRY_TRACE_EN, table_health_monitor);
                     HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
                 }
             }
@@ -879,12 +882,12 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
                     directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                        tinfo.actiondata_struct_size, true,
-                                       ENTRY_TRACE_EN);
+                                       ENTRY_TRACE_EN, table_health_monitor);
             } else {
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
                     directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                        tinfo.actiondata_struct_size, false,
-                                       ENTRY_TRACE_EN);
+                                       ENTRY_TRACE_EN, table_health_monitor);
             }
             HAL_ASSERT(dm_tables_[tid - P4TBL_ID_INDEX_MIN] != NULL);
             break;
@@ -903,7 +906,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                               tinfo.key_struct_size,
                               sizeof(p4pd_flow_hash_data_t), P4_FLOW_NUM_HINTS_PER_ENTRY,
                               static_cast<HbmHash::HashPoly>(tinfo.hash_type),
-                              HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN);
+                              HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN, table_health_monitor);
             HAL_ASSERT(flow_table_ != NULL);
             break;
 
@@ -960,7 +963,7 @@ hal_state_pd::p4plus_rxdma_init_tables(pd_mem_init_args_t *args)
         case P4_TBL_TYPE_INDEX:
             p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
                 directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
-                                   false, ENTRY_TRACE_EN);
+                                   false, ENTRY_TRACE_EN, table_health_monitor);
             HAL_ASSERT(p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
             break;
 
@@ -1017,7 +1020,7 @@ hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
         case P4_TBL_TYPE_INDEX:
             p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
                 directmap::factory(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size,
-                                   false, ENTRY_TRACE_EN);
+                                   false, ENTRY_TRACE_EN, table_health_monitor);
             HAL_ASSERT(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
             break;
 

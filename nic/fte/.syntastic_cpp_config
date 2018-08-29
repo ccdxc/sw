@@ -1,16 +1,6 @@
--I ../gen
--I ../build/iris/gen/datapath/p4/include
--I ../hal/pd/iris
--I ../gen/protobuf
--I ../gen/common_rxdma_actions/include
--I ../third-party/crc32
--I ../hal/third-party/spdlog/include
--I ../hal/svc
--I ../hal/src
--I ../p4/iris/include
--I ../utils
--I ../hal/pd/common
--I ../include
 -I ../..
--I ../../nic/sdk/include
+-I ../sdk
+-I ../sdk/include
+-I ../hal/third-party/spdlog/include
+-I ../bazel-sw/external/com_github_google_protobuf
 -std=c++11

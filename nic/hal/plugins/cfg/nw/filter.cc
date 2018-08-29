@@ -58,7 +58,7 @@ filter_create(FilterSpec& spec, FilterResponse *rsp)
     filter_create_app_ctxt_t    app_ctxt  = { 0 };
 
 
-    hal_api_trace(" API Begin: Filter Create ");
+    hal_api_trace(" API Begin: Filter create ");
     proto_msg_dump(spec);
 
     memset(&key, 0, sizeof(key));
@@ -166,7 +166,7 @@ filter_delete (FilterDeleteRequest& req, FilterDeleteResponse *rsp)
     const FilterKeyHandle &kh = req.key_or_handle();
     filter_delete_app_ctxt_t    app_ctxt  = { 0 };
 
-    hal_api_trace(" API Begin: Filter Delete ");
+    hal_api_trace(" API Begin: Filter delete ");
     proto_msg_dump(req);
 
     // validate the request message

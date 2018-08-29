@@ -291,23 +291,6 @@ nat_pool_del_from_db (nat_pool_t *pool)
 }
 
 //-----------------------------------------------------------------------------
-// dump natpool spec
-//-----------------------------------------------------------------------------
-static inline void
-nat_pool_spec_dump (NatPoolSpec& spec)
-{
-    std::string    pool_cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &pool_cfg);
-    HAL_TRACE_DEBUG("NAT pool configuration:");
-    HAL_TRACE_DEBUG("{}", pool_cfg.c_str());
-    return;
-}
-
-//-----------------------------------------------------------------------------
 // validate NAT pool configuration
 //-----------------------------------------------------------------------------
 static inline hal_ret_t
@@ -477,8 +460,8 @@ nat_pool_create (NatPoolSpec& spec, NatPoolResponse *rsp)
     dhl_entry_t      dhl_entry = { 0 };
     cfg_op_ctxt_t    cfg_ctxt  = { 0 };
 
-    // dump the received config
-    nat_pool_spec_dump(spec);
+    hal_api_trace(" API Begin: Nat Pool create ");
+    proto_msg_dump(spec);
 
     auto pool_key = spec.key_or_handle().pool_key();
     // validate the request message
@@ -568,6 +551,8 @@ end:
 hal_ret_t
 nat_pool_update (NatPoolSpec& spec, NatPoolResponse *rsp)
 {
+    hal_api_trace(" API Begin: Nat Pool update ");
+    proto_msg_dump(spec);
     HAL_TRACE_ERR("NAT pool update operation not supported");
     return HAL_RET_INVALID_OP;
 }
@@ -686,6 +671,9 @@ nat_pool_delete (NatPoolDeleteRequest& req, NatPoolDeleteResponse *rsp)
     nat_pool_t       *pool;
     cfg_op_ctxt_t    cfg_ctxt = { 0 };
     dhl_entry_t      dhl_entry = { 0 };
+
+    hal_api_trace(" API Begin: Nat Pool delete ");
+    proto_msg_dump(req);
 
     // validate the request message
     ret = validate_nat_pool_delete_req(req, rsp);
@@ -813,7 +801,9 @@ nat_policy_create (NatPolicySpec& spec, NatPolicyResponse *rsp)
     hal_ret_t ret;
     nat_cfg_pol_t *pol = NULL;
 
-    nat_cfg_pol_dump(spec);
+    hal_api_trace(" API Begin: Nat Policy create ");
+    proto_msg_dump(spec);
+
     if ((ret = nat_cfg_pol_create_cfg_handle(spec, &pol)) != HAL_RET_OK)
         goto end;
 
@@ -829,6 +819,8 @@ end:
 hal_ret_t
 nat_policy_update (NatPolicySpec& spec, NatPolicyResponse *rsp)
 {
+    hal_api_trace(" API Begin: Nat Policy update ");
+    proto_msg_dump(spec);
     return HAL_RET_OK;
 }
 
@@ -837,6 +829,9 @@ nat_policy_delete (NatPolicyDeleteRequest& req, NatPolicyDeleteResponse *rsp)
 {
     hal_ret_t ret;
     nat_cfg_pol_t *pol;
+
+    hal_api_trace(" API Begin: Nat Policy delete ");
+    proto_msg_dump(req);
 
     if ((pol = nat_cfg_pol_key_or_handle_lookup(req.key_or_handle())) == NULL) {
         ret = HAL_RET_NAT_POLICY_NOT_FOUND;

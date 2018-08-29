@@ -314,7 +314,8 @@ nexthop_create (NexthopSpec& spec, NexthopResponse *rsp)
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: nexthop create ");
+    hal_api_trace(" API Begin: Nexthop create ");
+    proto_msg_dump(spec);
 
     auto kh = spec.key_or_handle();
 
@@ -584,7 +585,8 @@ nexthop_update (NexthopSpec& spec, NexthopResponse *rsp)
     dhl_entry_t                     dhl_entry = { 0 };
     nexthop_update_app_ctxt_t       app_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: nexthop update ");
+    hal_api_trace(" API Begin: Nexthop update ");
+    proto_msg_dump(spec);
 
     auto kh = spec.key_or_handle();
 
@@ -842,7 +844,8 @@ nexthop_delete (NexthopDeleteRequest& req, NexthopDeleteResponse *rsp)
     cfg_op_ctxt_t       cfg_ctxt = { 0 };
     dhl_entry_t         dhl_entry = { 0 };
 
-    hal_api_trace(" API Begin: nexthop delete ");
+    hal_api_trace(" API Begin: Nexthop delete ");
+    proto_msg_dump(req);
 
     auto kh = req.key_or_handle();
 

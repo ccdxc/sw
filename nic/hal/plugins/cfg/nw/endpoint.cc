@@ -945,7 +945,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
     L2SegmentKeyHandle              l2seg_key_handle;
 
-    hal_api_trace(" API Begin: Endpoint Create ");
+    hal_api_trace(" API Begin: Endpoint create ");
 
     // dump incoming request
     proto_msg_dump(spec);
@@ -1881,7 +1881,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     dhl_entry_t             dhl_entry     = { 0 };
     ep_update_app_ctxt_t    app_ctxt      = { 0 };
 
-    hal_api_trace(" API Begin: Endpoint Update ");
+    hal_api_trace(" API Begin: Endpoint update ");
 
     // dump incoming request
     proto_msg_dump(req);
@@ -2145,7 +2145,7 @@ endpoint_delete (EndpointDeleteRequest& req,
     dhl_entry_t      dhl_entry = { 0 };
     ApiStatus        api_status;
 
-    hal_api_trace(" API Begin: Endpoint Delete ");
+    hal_api_trace(" API Begin: Endpoint delete ");
 
     // dump proto message
     proto_msg_dump(req);

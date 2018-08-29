@@ -18,10 +18,13 @@
 #include "include/sdk/mem.hpp"
 #include "include/sdk/base.hpp"
 #include "include/sdk/indexer.hpp"
+#include "include/sdk/table_monitor.hpp"
 #include "include/sdk/ht.hpp"
 
 using sdk::lib::indexer;
 using sdk::lib::ht;
+using sdk::table::table_health_state_t;
+using sdk::table::table_health_monitor_func_t;
 
 namespace sdk {
 namespace table {
@@ -74,19 +77,21 @@ private:
         ITERATE
     };
 
-    char            *name_;                 // table name
-    uint32_t        id_;                    // table id
-    uint32_t        capacity_;              // size of tcam table
-    uint32_t        swkey_len_;             // sw key len
-    uint32_t        swdata_len_;            // sw data len
-    bool            allow_dup_insert_;      // allow uplicate insert
-    uint32_t        hwkey_len_;             // hw key len
-    uint32_t        hwkeymask_len_;         // hw key mask len
-    uint32_t        hwdata_len_;            // hw data len
-    ht              *entry_ht_;             // hash table to store entries
-    indexer         *indexer_;              // tcam entry indices
-    uint64_t        *stats_;                // statistics
-    bool            entry_trace_en_;        // enable entry tracing
+    char                        *name_;                 // table name
+    uint32_t                    id_;                    // table id
+    uint32_t                    capacity_;              // size of tcam table
+    uint32_t                    swkey_len_;             // sw key len
+    uint32_t                    swdata_len_;            // sw data len
+    bool                        allow_dup_insert_;      // allow uplicate insert
+    uint32_t                    hwkey_len_;             // hw key len
+    uint32_t                    hwkeymask_len_;         // hw key mask len
+    uint32_t                    hwdata_len_;            // hw data len
+    ht                          *entry_ht_;             // hash table to store entries
+    indexer                     *indexer_;              // tcam entry indices
+    uint64_t                    *stats_;                // statistics
+    bool                        entry_trace_en_;        // enable entry tracing
+    table_health_state_t        health_state_;          // health state
+    table_health_monitor_func_t health_monitor_func_;   // health mon. cb
 
     sdk_ret_t alloc_index_(uint32_t *idx, bool lowest);
     sdk_ret_t alloc_index_withid_(uint32_t idx);
@@ -99,9 +104,11 @@ private:
     void stats_decr_(stats stat);
     void stats_update_(api ap, sdk_ret_t rs);
     sdk_ret_t entry_trace_(tcam_entry_t *te);
+    void trigger_health_monitor();
     tcam(uint32_t id, uint32_t capacity,
          uint32_t swkey_len, uint32_t swdata_len,
-         bool allow_dup_insert = false, bool entry_trace_en = false);
+         bool allow_dup_insert = false, bool entry_trace_en = false,
+         table_health_monitor_func_t health_monitor_func = NULL);
     ~tcam();
 
 public:
@@ -109,7 +116,8 @@ public:
     static tcam *factory(char *name, uint32_t id,
                          uint32_t tcam_capacity, uint32_t swkey_len,
                          uint32_t swdata_len, bool allow_dup_insert = false,
-                         bool entry_trace_en = false);
+                         bool entry_trace_en = false,
+                         table_health_monitor_func_t health_monitor_func = NULL);
     static void destroy(tcam *tcam);
 
     // get methods

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "include/sdk/directmap.hpp"
 #include "include/sdk/base.hpp"
+#include "include/sdk/table_monitor.hpp"
 
 
 using sdk::table::directmap;
@@ -130,6 +131,19 @@ typedef struct __attribute__((__packed__)) __twice_nat_actiondata {
     twice_nat_action_union_t twice_nat_action_u;
 } twice_nat_actiondata;
 
+void
+table_health_monitor(uint32_t table_id, char *name,
+                     sdk::table::table_health_state_t curr_state,
+                     uint32_t capacity,
+                     uint32_t usage,
+                     sdk::table::table_health_state_t *new_state)
+{
+    *new_state  = (sdk::table::table_health_state_t)(int(curr_state) + 1);
+    SDK_TRACE_DEBUG("tableid:%d, table_name:%s, capacity:%d, num_in_use:%d, "
+                    "curr_state: %d, new_state: %d",
+                    table_id, name, capacity, usage, curr_state, *new_state);
+}
+
 
 /* -----------------------------------------------------------------------------
  *
@@ -144,14 +158,17 @@ TEST_F(dm_test, test1) {
     std::string table_name = "Output_Mapping";
     char * table_str = const_cast<char*> (table_name.c_str());
     directmap *test_dm = directmap::factory(table_str, P4TBL_ID_OUTPUT_MAPPING, 100,
-            sizeof(output_mapping_actiondata));
+            sizeof(output_mapping_actiondata), false, false, table_health_monitor);
 
     output_mapping_actiondata dm;
     uint32_t index = 0;
     dm.actionid = 1;
 
     sdk_ret_t rt;
-    rt = test_dm->insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index);
+    ASSERT_TRUE(rt == SDK_RET_OK);
+
+    rt = test_dm->insert(&dm, &index);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
 }
@@ -177,7 +194,7 @@ TEST_F(dm_test, test2) {
 
     sdk_ret_t rt;
     for (uint32_t i = 0; i < 101; i++) {
-        rt = test_dm->insert(&dm, &index); 
+        rt = test_dm->insert(&dm, &index);
         if (i < 100) {
             ASSERT_TRUE(rt == SDK_RET_OK);
         } else {
@@ -186,7 +203,7 @@ TEST_F(dm_test, test2) {
             rt = test_dm->remove(99);
             ASSERT_TRUE(rt == SDK_RET_OK);
 
-            rt = test_dm->insert(&dm, &index); 
+            rt = test_dm->insert(&dm, &index);
             ASSERT_TRUE(rt == SDK_RET_OK);
         }
     }
@@ -214,16 +231,16 @@ TEST_F(dm_test, test3) {
     dm.actionid = 1;
 
     sdk_ret_t rt;
-    rt = test_dm->insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->update(index, &dm); 
+    rt = test_dm->update(index, &dm);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->update(index + 1, &dm); 
+    rt = test_dm->update(index + 1, &dm);
     ASSERT_TRUE(rt == SDK_RET_ENTRY_NOT_FOUND);
-	
-    rt = test_dm->update(index + 1000, &dm); 
+
+    rt = test_dm->update(index + 1000, &dm);
     ASSERT_TRUE(rt == SDK_RET_INVALID_ARG);
 
     rt = test_dm->fetch_stats(&stats);
@@ -263,15 +280,15 @@ TEST_F(dm_test, test4) {
     dm.actionid = 1;
 
     sdk_ret_t rt;
-    rt = test_dm->insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->update(index, &dm); 
+    rt = test_dm->update(index, &dm);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
     rt = test_dm->remove(index + 1);
     ASSERT_TRUE(rt == SDK_RET_ENTRY_NOT_FOUND);
-	
+
     rt = test_dm->remove(index + 1000);
     ASSERT_TRUE(rt == SDK_RET_INVALID_ARG);
 
@@ -303,15 +320,15 @@ TEST_F(dm_test, test5) {
     dm.actionid = 1;
 
     sdk_ret_t rt;
-    rt = test_dm->insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->update(index, &dm); 
+    rt = test_dm->update(index, &dm);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
     rt = test_dm->retrieve(index + 1, &retr_dm);
     ASSERT_TRUE(rt == SDK_RET_ENTRY_NOT_FOUND);
-	
+
     rt = test_dm->retrieve(index + 1000, &retr_dm);
     ASSERT_TRUE(rt == SDK_RET_INVALID_ARG);
 
@@ -343,7 +360,7 @@ TEST_F(dm_test, test6) {
     dm.actionid = 1;
 
     sdk_ret_t rt;
-    rt = test_dm->insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
 	rt = test_dm->iterate(print_fn, NULL);
@@ -373,19 +390,19 @@ TEST_F(dm_test, test7) {
 
     sdk_ret_t rt;
     for (uint32_t i = 0; i < 25; i++) {
-        rt = test_dm->insert(&dm, &index[i]); 
+        rt = test_dm->insert(&dm, &index[i]);
 		ASSERT_TRUE(rt == SDK_RET_OK);
     }
     for (uint32_t i = 0; i < 25; i++) {
-        rt = test_dm->remove(index[i]); 
+        rt = test_dm->remove(index[i]);
 		ASSERT_TRUE(rt == SDK_RET_OK);
     }
     for (uint32_t i = 0; i < 25; i++) {
-        rt = test_dm->insert(&dm, &index[i]); 
+        rt = test_dm->insert(&dm, &index[i]);
 		ASSERT_TRUE(rt == SDK_RET_OK);
     }
     for (uint32_t i = 0; i < 25; i++) {
-        rt = test_dm->remove(index[i]); 
+        rt = test_dm->remove(index[i]);
 		ASSERT_TRUE(rt == SDK_RET_OK);
     }
 
@@ -412,22 +429,22 @@ TEST_F(dm_test, test8) {
     dm.actionid = 1;
 
     sdk_ret_t rt;
-    rt = test_dm->insert(&dm, &index); 
+    rt = test_dm->insert(&dm, &index);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->insert_withid(&dm, index+1); 
+    rt = test_dm->insert_withid(&dm, index+1);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->insert_withid(&dm, index+1); 
+    rt = test_dm->insert_withid(&dm, index+1);
     ASSERT_TRUE(rt == SDK_RET_DUPLICATE_INS);
 
-    rt = test_dm->remove(index); 
+    rt = test_dm->remove(index);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->remove(index+1); 
+    rt = test_dm->remove(index+1);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->insert_withid(&dm, 100); 
+    rt = test_dm->insert_withid(&dm, 100);
     ASSERT_TRUE(rt == SDK_RET_OOB);
 }
 
@@ -451,7 +468,7 @@ TEST_F(dm_test, test9) {
 
     sdk_ret_t rt;
     for (uint32_t i = 0; i < 101; i++) {
-        rt = test_dm->insert(&dm, &index); 
+        rt = test_dm->insert(&dm, &index);
         if (i < 100) {
             ASSERT_TRUE(rt == SDK_RET_OK);
         } else {
@@ -465,36 +482,36 @@ TEST_F(dm_test, test9) {
     ASSERT_TRUE(stats[directmap::STATS_INS_FAIL_NO_RES] == 1);
 
 
-    rt = test_dm->remove(index); 
+    rt = test_dm->remove(index);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->insert_withid(&dm, index); 
+    rt = test_dm->insert_withid(&dm, index);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->insert_withid(&dm, index); 
+    rt = test_dm->insert_withid(&dm, index);
     ASSERT_TRUE(rt == SDK_RET_DUPLICATE_INS);
 
-    rt = test_dm->insert_withid(&dm, 1000); 
+    rt = test_dm->insert_withid(&dm, 1000);
     ASSERT_TRUE(rt == SDK_RET_OOB);
 
 
-    rt = test_dm->update(index, &dm); 
-    ASSERT_TRUE(rt == SDK_RET_OK);
-    
-    rt = test_dm->remove(index); 
+    rt = test_dm->update(index, &dm);
     ASSERT_TRUE(rt == SDK_RET_OK);
 
-    rt = test_dm->update(1000, &dm); 
+    rt = test_dm->remove(index);
+    ASSERT_TRUE(rt == SDK_RET_OK);
+
+    rt = test_dm->update(1000, &dm);
     ASSERT_TRUE(rt == SDK_RET_INVALID_ARG);
 
-    rt = test_dm->update(index, &dm); 
+    rt = test_dm->update(index, &dm);
     ASSERT_TRUE(rt == SDK_RET_ENTRY_NOT_FOUND);
 
 
-    rt = test_dm->remove(1000); 
+    rt = test_dm->remove(1000);
     ASSERT_TRUE(rt == SDK_RET_INVALID_ARG);
 
-    rt = test_dm->remove(index); 
+    rt = test_dm->remove(index);
     ASSERT_TRUE(rt == SDK_RET_ENTRY_NOT_FOUND);
 
     ASSERT_TRUE(stats[directmap::STATS_INS_SUCCESS] == 100);

@@ -157,7 +157,6 @@ l2seg_t *l2seg_lookup_by_handle(hal_handle_t handle);
 l2seg_t *l2seg_lookup_key_or_handle(const L2SegmentKeyHandle& kh);
 const char *l2seg_spec_keyhandle_to_str(const L2SegmentKeyHandle& key_handle);
 const char *l2seg_keyhandle_to_str(l2seg_t *l2seg);
-void l2seg_spec_dump(L2SegmentSpec& spec);
 
 // SVC CRUD APIs
 hal_ret_t l2segment_create(L2SegmentSpec& spec,

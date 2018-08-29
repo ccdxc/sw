@@ -29,7 +29,7 @@ session_create_in_fte (SessionSpec& spec, SessionResponse *rsp)
         HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
         goto end;
     }
-    
+
     ret = ctx.process();
 
  end:
@@ -55,9 +55,8 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         hal_ret_t ret;
     } fn_ctx = { spec, rsp, HAL_RET_OK };
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("fte::{}: Session id {} Create in Vrf id {}", __FUNCTION__, 
-                    spec.session_id(), spec.meta().vrf_id());
+    hal::hal_api_trace(" API Begin: Session create ");
+    hal::proto_msg_dump(spec);
 
     fte_execute(0, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *)data;
@@ -88,11 +87,11 @@ session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
         HAL_TRACE_DEBUG("Invalid session handle {}", session_handle);
         return  HAL_RET_HANDLE_INVALID;
     }
-    
-    HAL_TRACE_DEBUG("fte::{}: Received session Delete for session id {} in Vrf id {}",
-                    __FUNCTION__, session->hal_handle, 
+
+    HAL_TRACE_DEBUG("fte:: Received session Delete for session id {} in Vrf id {}",
+                    session->hal_handle,
                     (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id);
-    
+
     HAL_TRACE_DEBUG("num features: {} feature state size: {}", num_features, fstate_size);
 
     feature_state = (feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
@@ -157,7 +156,7 @@ session_delete (hal::session_t *session, bool force_delete)
         hal_handle_t session_handle;
         bool force_delete;
         hal_ret_t ret;
-    } fn_ctx = { session->hal_handle, force_delete, HAL_RET_OK}; 
+    } fn_ctx = { session->hal_handle, force_delete, HAL_RET_OK};
 
     fte_execute(session->fte_id, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
@@ -173,9 +172,8 @@ session_delete (SessionDeleteRequest& spec, SessionDeleteResponse *rsp)
     hal_ret_t        ret;
     hal::session_t  *session = NULL;
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("fte::{}: Session handle {} Delete in Vrf id {}", __FUNCTION__,
-                    spec.session_handle(), spec.meta().vrf_id());
+    hal::hal_api_trace(" API Begin: Session delete ");
+    hal::proto_msg_dump(spec);
 
     session = hal::find_session_by_handle(spec.session_handle());
     if (session == NULL) {
@@ -203,8 +201,8 @@ session_get (hal::session_t *session, SessionGetResponse *response)
     flow_t           iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("fte::{}: Session handle {} Get in Vrf id {}", __FUNCTION__,
-                     session->hal_handle, 
+    HAL_TRACE_DEBUG("fte:: Session handle {} Get in Vrf id {}",
+                     session->hal_handle,
                      (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id);
 
     feature_state = (feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);

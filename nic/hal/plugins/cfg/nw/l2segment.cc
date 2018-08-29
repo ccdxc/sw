@@ -420,22 +420,6 @@ l2seg_cleanup_oiflists (l2seg_t *l2seg)
     return ret;
 }
 
-//-----------------------------------------------------------------------------
-// dump l2segment spec
-//-----------------------------------------------------------------------------
-static inline void
-l2segment_dump (L2SegmentSpec& spec)
-{
-    std::string    l2seg_cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &l2seg_cfg);
-    HAL_TRACE_DEBUG("L2 segment configuration:");
-    HAL_TRACE_DEBUG("{}", l2seg_cfg.c_str());
-}
-
 //------------------------------------------------------------------------------
 // validate an incoming L2 segment create request
 // TODO:
@@ -1169,9 +1153,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     l2seg_t                     *existing_l2seg = NULL;
     bool                        is_same   = false;
 
-    HAL_TRACE_DEBUG("L2seg create of : {}",
-                    spec.key_or_handle().segment_id());
-    l2segment_dump(spec);
+    hal_api_trace(" API Begin: L2seg create ");
+    proto_msg_dump(spec);
 
     // validate the request message
     ret = validate_l2segment_create(spec, rsp, app_ctxt);
@@ -1775,7 +1758,7 @@ end:
 // Init update app ctxt
 //------------------------------------------------------------------------------
 hal_ret_t
-l2seg_update_app_ctxt_init(l2seg_update_app_ctxt_t *app_ctxt)
+l2seg_update_app_ctxt_init (l2seg_update_app_ctxt_t *app_ctxt)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -1812,9 +1795,8 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     const L2SegmentKeyHandle    &kh = spec.key_or_handle();
     l2seg_update_app_ctxt_t     app_ctxt = { 0 };
 
-    HAL_TRACE_DEBUG("L2seg Update of : {}",
-                    l2seg_spec_keyhandle_to_str(spec.key_or_handle()));
-    l2segment_dump(spec);
+    hal_api_trace(" API Begin: L2seg update ");
+    proto_msg_dump(spec);
 
     // validate the request message
     ret = validate_l2seg_update(spec, rsp);
@@ -2154,7 +2136,8 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponse* rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     const L2SegmentKeyHandle    &kh = req.key_or_handle();
 
-    HAL_TRACE_DEBUG("Received L2seg Delete");
+    hal_api_trace(" API Begin: L2seg delete ");
+    proto_msg_dump(req);
 
     // validate the request message
     ret = validate_l2seg_delete_req(req, rsp);
@@ -2744,19 +2727,4 @@ l2seg_keyhandle_to_str (l2seg_t *l2seg)
     return buf;
 }
 
-//-----------------------------------------------------------------------------
-// print l2seg spec
-//-----------------------------------------------------------------------------
-void
-l2seg_spec_dump (L2SegmentSpec& spec)
-{
-    std::string    l2seg_cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &l2seg_cfg);
-    HAL_TRACE_DEBUG("L2Seg configuration:");
-    HAL_TRACE_DEBUG("{}", l2seg_cfg.c_str());
-}
 }    // namespace hal

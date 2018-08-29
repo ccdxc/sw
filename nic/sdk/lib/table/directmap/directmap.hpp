@@ -14,10 +14,13 @@
 #include "include/sdk/mem.hpp"
 #include "include/sdk/base.hpp"
 #include "include/sdk/indexer.hpp"
+#include "include/sdk/table_monitor.hpp"
 #include "lib/table/directmap/directmap_entry.hpp"
 
 using sdk::lib::ht;
 using sdk::lib::indexer;
+using sdk::table::table_health_state_t;
+using sdk::table::table_health_monitor_func_t;
 
 namespace sdk {
 namespace table {
@@ -65,16 +68,18 @@ private:
         ITERATE
     };
 
-    char            *name_;          // table name
-    uint32_t        id_;            // table id
-    uint32_t        capacity_;      // size of table
-    indexer         *indexer_;      // entry indices
-    uint32_t        swdata_len_;    // sw data len
-    uint32_t        hwdata_len_;    // hw data len
-    ht              *entry_ht_;     // hash table to store entries
-    uint64_t        *stats_;        // statistics
-    bool            sharing_en_;    // enable sharing
-    bool            entry_trace_en_;// enable entry trace
+    char                        *name_;         // table name
+    uint32_t                    id_;            // table id
+    uint32_t                    capacity_;      // size of table
+    indexer                     *indexer_;      // entry indices
+    uint32_t                    swdata_len_;    // sw data len
+    uint32_t                    hwdata_len_;    // hw data len
+    ht                          *entry_ht_;     // hash table to store entries
+    uint64_t                    *stats_;        // statistics
+    bool                        sharing_en_;    // enable sharing
+    bool                        entry_trace_en_;// enable entry trace
+    table_health_state_t        health_state_;  // health state
+    table_health_monitor_func_t health_monitor_func_;   // health mon. cb
 
     // private methods
     sdk_ret_t alloc_index_(uint32_t *idx);
@@ -92,10 +97,12 @@ private:
     sdk_ret_t add_directmap_entry_to_db(directmap_entry_t *dme);
     void *del_directmap_entry_from_db(directmap_entry_t *dme);
     directmap_entry_t *find_directmap_entry(directmap_entry_t *key);
+    void trigger_health_monitor();
 
     directmap(char *name, uint32_t id, uint32_t capacity,
               uint32_t swdata_len, bool sharing_en = false,
-              bool entry_trace_en = false);
+              bool entry_trace_en = false,
+              table_health_monitor_func_t health_monitor_func = NULL);
     ~directmap();
 
 public:
@@ -103,7 +110,8 @@ public:
     static directmap *factory(char *name, uint32_t id,
                               uint32_t capacity, uint32_t swdata_len,
                               bool sharing_en = false,
-                              bool entry_trace_en = false);
+                              bool entry_trace_en = false,
+                              table_health_monitor_func_t health_monitor_func = NULL);
     static void destroy(directmap *dm);
 
     // debug methods

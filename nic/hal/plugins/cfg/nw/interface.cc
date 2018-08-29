@@ -316,22 +316,6 @@ if_lookup_key_or_handle (const InterfaceKeyHandle& key_handle)
 
 }
 
-//-----------------------------------------------------------------------------
-// dump interface spec
-//-----------------------------------------------------------------------------
-static inline void
-interface_dump (InterfaceSpec& spec)
-{
-    std::string    if_cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &if_cfg);
-    HAL_TRACE_DEBUG("Interface configuration:");
-    HAL_TRACE_DEBUG("{}", if_cfg.c_str());
-}
-
 //------------------------------------------------------------------------------
 // validate an incoming interface create request
 //------------------------------------------------------------------------------
@@ -966,15 +950,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
     hal_handle_t                pinned_uplink_handle = HAL_HANDLE_INVALID;
 
-    hal_api_trace(" API Begin: Interface Create ");
-
-    HAL_TRACE_DEBUG("if create for id {} type : {} enictype : {}",
-                    spec.key_or_handle().interface_id(),
-                    IfType_Name(spec.type()),
-                    IfEnicType_Name(spec.if_enic_info().enic_type()));
-
-    // dump incoming config
-    interface_dump(spec);
+    hal_api_trace(" API Begin: Interface create ");
+    proto_msg_dump(spec);
 
     // do basic validations on interface
     ret = validate_interface_create(spec, rsp);
@@ -2019,10 +1996,8 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
     if_update_app_ctxt_t        app_ctxt = { 0 };
     bool                        has_changed = false;
 
-    hal_api_trace(" API Begin: Interface Update ");
-
-    // dump incoming config
-    interface_dump(spec);
+    hal_api_trace(" API Begin: Interface update ");
+    proto_msg_dump(spec);
 
     // validate the request message
     ret = validate_if_update(spec, rsp);
@@ -3536,7 +3511,8 @@ interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     const InterfaceKeyHandle    &kh = req.key_or_handle();
 
-    hal_api_trace(" API Begin: Interface Delete ");
+    hal_api_trace(" API Begin: Interface delete ");
+    proto_msg_dump(req);
 
     // validate the request message
     ret = validate_if_delete_req(req, rsp);
@@ -4734,22 +4710,6 @@ if_keyhandle_to_str (if_t *hal_if)
                  hal_if->if_id, hal_if->hal_handle);
     }
     return buf;
-}
-
-//-----------------------------------------------------------------------------
-// print if spec
-//-----------------------------------------------------------------------------
-void
-if_spec_dump (InterfaceSpec& spec)
-{
-    std::string    if_cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &if_cfg);
-    HAL_TRACE_DEBUG("Interface configuration:");
-    HAL_TRACE_DEBUG("{}", if_cfg.c_str());
 }
 
 }    // namespace hal

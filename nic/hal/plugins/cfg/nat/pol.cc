@@ -112,7 +112,7 @@ nat_cfg_pol_acl_build (nat_cfg_pol_t *pol, const acl_ctx_t **out_acl_ctx)
                                  &nat_ip_acl_config_glbl)) == NULL)
         return ret;
 
-    if ((ret = nat_cfg_pol_rule_acl_build(pol, &acl_ctx)) != HAL_RET_OK) 
+    if ((ret = nat_cfg_pol_rule_acl_build(pol, &acl_ctx)) != HAL_RET_OK)
         return ret;
 
     *out_acl_ctx = acl_ctx;
@@ -209,19 +209,6 @@ nat_cfg_pol_delete_db_handle (nat_cfg_pol_key_t *key)
 //-----------------------------------------------------------------------------
 // CREATE configuration handling
 //-----------------------------------------------------------------------------
-
-void
-nat_cfg_pol_dump (nat::NatPolicySpec& spec)
-{
-    std::string pol_str;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug)
-        return;
-
-    google::protobuf::util::MessageToJsonString(spec, &pol_str);
-    HAL_TRACE_DEBUG("NAT policy configuration:");
-    HAL_TRACE_DEBUG("{}", pol_str.c_str());
-}
 
 static inline hal_ret_t
 nat_cfg_pol_rule_spec_extract (nat::NatPolicySpec& spec, nat_cfg_pol_t *pol)
@@ -493,7 +480,7 @@ nat_cfg_pol_get_cfg_handle (NatPolicyGetRequest& req,
 
     auto kh = req.key_or_handle();
     auto response = rsp->add_response();
-    if ((pol = nat_cfg_pol_key_or_handle_lookup(kh)) == NULL) { 
+    if ((pol = nat_cfg_pol_key_or_handle_lookup(kh)) == NULL) {
         response->set_api_status(types::API_STATUS_NOT_FOUND);
         HAL_API_STATS_INC(HAL_API_NAT_POLICY_GET_FAIL);
         return HAL_RET_NAT_POLICY_NOT_FOUND;

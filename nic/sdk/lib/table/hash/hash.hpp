@@ -14,9 +14,12 @@
 #include <boost/crc.hpp>
 #include "include/sdk/mem.hpp"
 #include "include/sdk/base.hpp"
+#include "include/sdk/table_monitor.hpp"
 #include "lib/table/hash/hash_entry.hpp"
 
 using namespace std;
+using sdk::table::table_health_state_t;
+using sdk::table::table_health_monitor_func_t;
 
 // global forward declarations
 namespace sdk::table {
@@ -84,18 +87,20 @@ public:
     };
 private:
 
-    char            *name_;             // table name
-    uint32_t        id_;                // table id
-    uint32_t        dleft_capacity_;    // size of dleft table
-    uint32_t        swkey_len_;         // sw key len
-    uint32_t        swdata_len_;        // sw data len
-    HashPoly        hash_poly_;         // hash polynomial
-    uint32_t        hwkey_len_;         // hw key len
-    uint32_t        hwdata_len_;        // hw data len
-    tcam            *otcam_;            // overflow tcam
-    // HashEntryMap    hash_entry_map_;    // hash map
-    ht              *entry_ht_;         // hash table to store entries
-    bool            entry_trace_en_;    // entry trace enable
+    char                        *name_;             // table name
+    uint32_t                    id_;                // table id
+    uint32_t                    dleft_capacity_;    // size of dleft table
+    uint32_t                    swkey_len_;         // sw key len
+    uint32_t                    swdata_len_;        // sw data len
+    HashPoly                    hash_poly_;         // hash polynomial
+    uint32_t                    hwkey_len_;         // hw key len
+    uint32_t                    hwdata_len_;        // hw data len
+    tcam                        *otcam_;            // overflow tcam
+    // HashEntryMap             hash_entry_map_;    // hash map
+    ht                          *entry_ht_;         // hash table to store entries
+    bool                        entry_trace_en_;    // entry trace enable
+    table_health_state_t        health_state_;  // health state
+    table_health_monitor_func_t health_monitor_func_;   // health mon. cb
 
     // Static Declarations
     static const uint8_t otcam_bit_ = 28;    // Dleft or OTcam ?
@@ -134,18 +139,21 @@ private:
     void stats_update(api ap, sdk_ret_t rs);
     // Entry Trace
     sdk_ret_t entry_trace_(hash_entry_t *he);
+    void trigger_health_monitor();
 
     hash(char *name, uint32_t dleft_table_id,
          uint32_t otcam_table_id, uint32_t dleft_capacity,
          uint32_t otcam_capacity, uint32_t swkey_len, uint32_t swdata_len,
-         hash::HashPoly hash_poly = HASH_POLY0, bool entry_trace_en = false);
+         hash::HashPoly hash_poly = HASH_POLY0, bool entry_trace_en = false,
+         table_health_monitor_func_t health_monitor_func = NULL);
     ~hash();
 public:
     static hash *factory(char *name, uint32_t dleft_table_id,
                          uint32_t otcam_table_id, uint32_t dleft_capacity,
                          uint32_t otcam_capacity, uint32_t swkey_len,
                          uint32_t swdata_len, hash::HashPoly hash_poly = HASH_POLY0,
-                         bool entry_trace_en = false);
+                         bool entry_trace_en = false,
+                         table_health_monitor_func_t health_monitor_func = NULL);
     static void destroy(hash *hash);
 
     // Debug Info

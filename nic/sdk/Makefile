@@ -73,7 +73,7 @@ lib:
 
 test: lib build-test
 	@echo Running tests ...
-	@find bazel-bin/test -name *.runfiles_manifest* | sed 's/\.runfiles_manifest$$//1' | while read i; do printf "\nRunning $$i\n" && $$i; done
+	@find bazel-bin/test -name *.runfiles_manifest* | sed 's/\.runfiles_manifest$$//1' | while read i; do printf "\nRunning $$i\n"; if $$i; then echo "Succeeded"; else exit 1; fi; done
 
 build-test:
 	@echo $(BUILD_OPTS)

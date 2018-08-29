@@ -514,10 +514,8 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt  = { 0 };
 
-    hal_api_trace(" API Begin: Vrf Create ");
-
-    // dump spec
-    vrf_spec_dump(spec);
+    hal_api_trace(" API Begin: Vrf create ");
+    proto_msg_dump(spec);
 
     // validate the request message
     ret = validate_vrf_create(spec, rsp);
@@ -951,10 +949,10 @@ vrf_update (VrfSpec& spec, VrfResponse *rsp)
     const VrfKeyHandle       &kh       = spec.key_or_handle();
     vrf_update_app_ctxt_t    app_ctxt  = { 0 };
 
-    hal_api_trace(" API Begin: Vrf Update ");
+    hal_api_trace(" API Begin: Vrf update ");
 
     // dump spec
-    vrf_spec_dump(spec);
+    proto_msg_dump(spec);
 
     // validate the request message
     ret = validate_vrf_update(spec, rsp);
@@ -1319,8 +1317,7 @@ vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
     dhl_entry_t           dhl_entry = { 0 };
     const VrfKeyHandle    &kh = req.key_or_handle();
 
-    hal_api_trace(" API Begin: Vrf Delete ");
-
+    hal_api_trace(" API Begin: Vrf delete ");
     proto_msg_dump(req);
 
     // validate the request message
@@ -1716,20 +1713,5 @@ vrf_keyhandle_to_str (vrf_t *vrf)
 }
 
 using google::protobuf::Message;
-//-----------------------------------------------------------------------------
-// print vrf spec
-//-----------------------------------------------------------------------------
-void
-vrf_spec_dump (VrfSpec& spec)
-{
-    std::string    vrf_cfg;
-
-    if (hal::utils::hal_trace_level() < hal::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &vrf_cfg);
-    HAL_TRACE_DEBUG("VRF configuration:");
-    HAL_TRACE_DEBUG("{}", vrf_cfg.c_str());
-}
 
 }    // namespace hal

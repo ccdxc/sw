@@ -53,11 +53,14 @@
 #include "include/sdk/indexer.hpp"
 #include "include/sdk/mem.hpp"
 #include "include/sdk/crc_fast.hpp"
+#include "include/sdk/table_monitor.hpp"
 #include "hbm_hash_mem_types.hpp"
 
 using namespace std;
 using sdk::lib::indexer;
 using sdk::utils::crcFast;
+using sdk::table::table_health_state_t;
+using sdk::table::table_health_monitor_func_t;
 
 namespace sdk {
 namespace table {
@@ -123,6 +126,10 @@ private:
     bool                enable_delayed_del_;        // enable delayed del
     bool                entry_trace_en_;            // enable entry tracing
 
+
+    table_health_state_t        health_state_;      // health state of collision table
+    table_health_monitor_func_t health_monitor_func_;   // health mon. cb
+
     // Flat array with (21 bit key) => HBM Hash Table Entry
     HbmHashTableEntry   **hbm_hash_table_;
     uint32_t            hbm_hash_table_count_;
@@ -166,7 +173,8 @@ private:
             // uint32_t hbm_hash_table_entry_len,          // 512
             uint32_t num_hints_per_entry = 6,
             HbmHash::HashPoly hash_poly = HASH_POLY0,
-            bool entry_trace_en = false);
+            bool entry_trace_en = false,
+            table_health_monitor_func_t health_monitor_func = NULL);
     ~HbmHash();
     sdk_ret_t init();
 
@@ -179,6 +187,7 @@ private:
     HbmHashEntry *remove_entry(uint32_t index);
     HbmHashEntry *retrieve_entry(uint32_t index) { return entry_map_[index]; }
     uint32_t entry_count() { return entry_count_; }
+    void trigger_health_monitor();
 public:
     static HbmHash *factory(std::string table_name, uint32_t table_id,
                             uint32_t collision_table_id, uint32_t hash_capacity,
@@ -186,7 +195,8 @@ public:
                             uint32_t data_len, uint32_t num_hints_per_entry = 6,
                             HbmHash::HashPoly hash_poly = HASH_POLY0,
                             uint32_t mtrack_id = SDK_MEM_ALLOC_FLOW,
-                            bool entry_trace_en = false);
+                            bool entry_trace_en = false,
+                            table_health_monitor_func_t health_monitor_func = NULL);
     static void destroy(HbmHash *hbmhash,
                         uint32_t mtrack_id = SDK_MEM_ALLOC_FLOW);
 
@@ -210,7 +220,7 @@ public:
     uint32_t calc_hash_(void *key, void *data);
     sdk_ret_t update(uint32_t index, void *data);
     sdk_ret_t remove(uint32_t index);
-    
+
 
     /*
     Hash::ReturnStatus retrieve(uint32_t index, void **key, uint32_t *key_len,

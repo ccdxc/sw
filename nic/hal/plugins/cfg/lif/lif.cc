@@ -675,12 +675,8 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     pd::pd_func_args_t          pd_func_args = {0};
     lif_hal_info_t             proto_hal_info = {0};
 
-
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("{}:lif create for id {}", __FUNCTION__,
-                    spec.key_or_handle().lif_id());
-
-	lif_spec_dump(spec);
+    hal_api_trace(" API Begin: Lif Create ");
+	proto_msg_dump(spec);
 
     // validate the request message
     ret = validate_lif_create(spec, rsp);
@@ -1244,9 +1240,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     hal_handle_t          hal_handle   = 0;
     uint64_t              hw_lif_id    = 0;
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-
-	lif_spec_dump(spec);
+    hal_api_trace(" API Begin: Lif Update ");
+    proto_msg_dump(spec);
 
     // validate the request message
     ret = validate_lif_update(spec, rsp);
@@ -1520,7 +1515,8 @@ lif_delete (LifDeleteRequest& req, LifDeleteResponse *rsp)
     dhl_entry_t   dhl_entry    = { 0 };
     const         LifKeyHandle &kh = req .key_or_handle ();
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    hal_api_trace(" API Begin: Lif Delete ");
+	proto_msg_dump(req);
 
     // validate the request message
     ret = validate_lif_delete_req(req, rsp);
@@ -1999,63 +1995,5 @@ lif_spec_keyhandle_to_str (const LifKeyHandle& key_handle)
 
 	return buf;
 }
-
-//-----------------------------------------------------------------------------
-// Print lif spec
-//-----------------------------------------------------------------------------
-void
-lif_spec_dump (LifSpec& spec)
-{
-    std::string    lif_cfg;
-
-     if (hal::utils::hal_trace_level() < hal::utils::trace_debug)  {
-         return;
-     }
-     google::protobuf::util::MessageToJsonString(spec, &lif_cfg);
-     HAL_TRACE_DEBUG("Lif configuration:");
-     HAL_TRACE_DEBUG("{}", lif_cfg.c_str());
-     return;
-
-#if 0
-    hal_ret_t           ret = HAL_RET_OK;
-    fmt::MemoryWriter   buf;
-
-    buf.write("Lif Spec: ");
-    if (spec.has_key_or_handle()) {
-        auto kh = spec.key_or_handle();
-        if (kh.key_or_handle_case() == LifKeyHandle::kLifId) {
-            buf.write("lif_id:{}, ", kh.lif_id());
-        } else if (kh.key_or_handle_case() == LifKeyHandle::kLifHandle) {
-            buf.write("lif_hdl:{}, ", kh.lif_handle());
-        }
-    } else {
-        buf.write("lif_id_hdl:NULL, ");
-    }
-
-    if (spec.has_pinned_uplink_if_key_handle()) {
-        auto kh = spec.pinned_uplink_if_key_handle();
-        if (kh.key_or_handle_case() == kh::InterfaceKeyHandle::kInterfaceId) {
-            buf.write("pinned_uplinkif_id:{}, ", kh.interface_id());
-        } else if (kh.key_or_handle_case() == kh::InterfaceKeyHandle::kIfHandle) {
-            buf.write("pinned_uplinkif_hdl:{}, ", kh.if_handle());
-        }
-    } else {
-        buf.write("sec_pro_id_hdl:NULL, ");
-    }
-
-    buf.write("vlan_strip_en:{}, vlan_insert_en:{}, ",
-              spec.vlan_strip_en(), spec.vlan_insert_en());
-
-    buf.write("packet_filters:rec_bcast:{}, rec_prom:{}, rec_mcast:{}",
-              spec.packet_filter().receive_broadcast(),
-              spec.packet_filter().receive_promiscuous(),
-              spec.packet_filter().receive_all_multicast());
-
-    HAL_TRACE_DEBUG("{}", buf.c_str());
-    return ret;
-#endif
-}
-
-
 
 }    // namespace hal

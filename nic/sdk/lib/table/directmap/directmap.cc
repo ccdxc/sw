@@ -18,7 +18,8 @@ namespace table {
 directmap *
 directmap::factory(char *name, uint32_t id,
                    uint32_t capacity, uint32_t swdata_len, bool sharing_en,
-                   bool entry_trace_en)
+                    bool entry_trace_en,
+                    table_health_monitor_func_t health_monitor_func)
 {
     void      *mem = NULL;
     directmap *dm  = NULL;
@@ -29,7 +30,7 @@ directmap::factory(char *name, uint32_t id,
     }
 
     dm = new (mem) directmap(name, id, capacity, swdata_len, sharing_en,
-                             entry_trace_en);
+                             entry_trace_en, health_monitor_func);
 
     dm->indexer_ = indexer::factory(capacity, false, false);
 
@@ -74,16 +75,18 @@ directmap::destroy(directmap *dm)
 // ----------------------------------------------------------------------------
 directmap::directmap(char *name, uint32_t id,
                      uint32_t capacity, uint32_t swdata_len, bool sharing_en,
-                     bool entry_trace_en)
+                     bool entry_trace_en,
+                     table_health_monitor_func_t health_monitor_func)
 {
     uint32_t hwkey_len, hwkeymask_len;
 
-    name_           = name;
-    id_             = id;
-    capacity_       = capacity;
-    swdata_len_     = swdata_len;
-    sharing_en_     = sharing_en;
-    entry_trace_en_ = entry_trace_en;
+    name_                = name;
+    id_                  = id;
+    capacity_            = capacity;
+    swdata_len_          = swdata_len;
+    sharing_en_          = sharing_en;
+    entry_trace_en_      = entry_trace_en;
+    health_monitor_func_ = health_monitor_func;
 
     hwdata_len_   = 0;
     hwkey_len     = 0;
@@ -103,6 +106,17 @@ directmap::directmap(char *name, uint32_t id,
 // ----------------------------------------------------------------------------
 directmap::~directmap()
 {
+}
+
+
+void
+directmap::trigger_health_monitor()
+{
+    if (health_monitor_func_) {
+        health_monitor_func_(id_, name_, health_state_, capacity_,
+                             num_entries_in_use(),
+                             &health_state_);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -233,6 +247,7 @@ directmap::insert(void *data, uint32_t *index)
 
 end:
     stats_update(INSERT, rs);
+    trigger_health_monitor();
     return rs;
 }
 
@@ -320,6 +335,7 @@ directmap::insert_withid(void *data, uint32_t index, void* data_mask)
 
 end:
     stats_update(INSERT_WITHID, rs);
+    trigger_health_monitor();
     return rs;
 }
 
@@ -479,6 +495,7 @@ end:
     if (tmp_data) SDK_FREE(SDK_MEM_ALLOC_DIRECT_MAP_SW_DATA, tmp_data);
 
     stats_update(REMOVE, rs);
+    trigger_health_monitor();
     return rs;
 }
 

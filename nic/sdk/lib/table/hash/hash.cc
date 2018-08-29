@@ -23,7 +23,8 @@ hash::factory(char *name, uint32_t dleft_table_id,
               uint32_t otcam_table_id, uint32_t dleft_capacity,
               uint32_t otcam_capacity, uint32_t swkey_len,
               uint32_t swdata_len, hash::HashPoly hash_poly,
-              bool entry_trace_en)
+              bool entry_trace_en,
+              table_health_monitor_func_t health_monitor_func)
 {
     void   *mem = NULL;
     hash   *h   = NULL;
@@ -35,7 +36,8 @@ hash::factory(char *name, uint32_t dleft_table_id,
 
     h = new (mem) hash(name, dleft_table_id, otcam_table_id,
                        dleft_capacity, otcam_capacity, swkey_len,
-                       swdata_len, hash_poly, entry_trace_en);
+                       swdata_len, hash_poly, entry_trace_en,
+                       health_monitor_func);
 
     h->entry_ht_ = ht::factory(dleft_capacity,
                                hash_entry_get_key_func,
@@ -70,21 +72,32 @@ hash::destroy(hash *hash)
     }
 }
 
+void
+hash::trigger_health_monitor()
+{
+    if (health_monitor_func_) {
+        health_monitor_func_(id_, name_, health_state_, dleft_capacity_,
+                             num_entries_in_use(),
+                             &health_state_);
+    }
+}
 //---------------------------------------------------------------------------
 // constructor - hash
 //---------------------------------------------------------------------------
 hash::hash(char *name, uint32_t dleft_table_id, uint32_t otcam_table_id,
            uint32_t dleft_capacity, uint32_t otcam_capacity,
            uint32_t swkey_len, uint32_t swdata_len,
-           hash::HashPoly hash_poly, bool entry_trace_en)
+           hash::HashPoly hash_poly, bool entry_trace_en,
+           table_health_monitor_func_t health_monitor_func)
 {
-    name_           = name;
-    id_             = dleft_table_id;
-    dleft_capacity_ = dleft_capacity;
-    swkey_len_      = swkey_len;
-    swdata_len_     = swdata_len;
-    hash_poly_      = hash_poly;
-    entry_trace_en_ = entry_trace_en;
+    name_                = name;
+    id_                  = dleft_table_id;
+    dleft_capacity_      = dleft_capacity;
+    swkey_len_           = swkey_len;
+    swdata_len_          = swdata_len;
+    hash_poly_           = hash_poly;
+    entry_trace_en_      = entry_trace_en;
+    health_monitor_func_ = health_monitor_func;
 
 
     // Initialize the Overflow tcam
@@ -224,6 +237,7 @@ end:
     }
 
     stats_update(INSERT, rs);
+    trigger_health_monitor();
     return rs;
 }
 
@@ -319,6 +333,7 @@ end:
         SDK_FREE(SDK_MEM_ALLOC_HASH_HW_KEY_INS, hwkey);
     }
     stats_update(INSERT, rs);
+    trigger_health_monitor();
     return rs;
 
 }
@@ -456,6 +471,7 @@ hash::remove(uint32_t hash_idx)
 
 end:
     stats_update(REMOVE, rs);
+    trigger_health_monitor();
     return rs;
 }
 

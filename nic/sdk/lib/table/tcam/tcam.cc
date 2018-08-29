@@ -24,7 +24,8 @@ typedef struct tcam_iter_cb_s {
 tcam *
 tcam::factory(char *name, uint32_t id,
               uint32_t capacity, uint32_t swkey_len,
-              uint32_t swdata_len, bool allow_dup_insert, bool entry_trace_en)
+              uint32_t swdata_len, bool allow_dup_insert, bool entry_trace_en,
+              table_health_monitor_func_t health_monitor_func)
 {
     void *mem  = NULL;
     tcam *t = NULL;
@@ -35,7 +36,7 @@ tcam::factory(char *name, uint32_t id,
     }
 
     t = new (mem) tcam(id, capacity, swkey_len, swdata_len, allow_dup_insert,
-                       entry_trace_en);
+                       entry_trace_en, health_monitor_func);
 
     t->indexer_ = indexer::factory(t->capacity_, false, false);
 
@@ -77,14 +78,16 @@ tcam::destroy(tcam *te)
 // tcam constructor
 //---------------------------------------------------------------------------
 tcam::tcam(uint32_t id, uint32_t capacity, uint32_t swkey_len,
-           uint32_t swdata_len, bool allow_dup_insert, bool entry_trace_en)
+           uint32_t swdata_len, bool allow_dup_insert, bool entry_trace_en,
+           table_health_monitor_func_t health_monitor_func)
 {
-    id_               = id;
-    capacity_         = capacity;
-    swkey_len_        = swkey_len;
-    swdata_len_       = swdata_len;
-    allow_dup_insert_ = allow_dup_insert;
-    entry_trace_en_   = entry_trace_en;
+    id_                  = id;
+    capacity_            = capacity;
+    swkey_len_           = swkey_len;
+    swdata_len_          = swdata_len;
+    allow_dup_insert_    = allow_dup_insert;
+    entry_trace_en_      = entry_trace_en;
+    health_monitor_func_ = health_monitor_func;
 
     hwkey_len_ = 0;
     hwkeymask_len_ = 0;
@@ -103,6 +106,16 @@ tcam::tcam(uint32_t id, uint32_t capacity, uint32_t swkey_len,
 //---------------------------------------------------------------------------
 tcam::~tcam()
 {
+}
+
+void
+tcam::trigger_health_monitor()
+{
+    if (health_monitor_func_) {
+        health_monitor_func_(id_, name_, health_state_, capacity_,
+                             num_entries_in_use(),
+                             &health_state_);
+    }
 }
 
 //---------------------------------------------------------------------------
@@ -155,6 +168,7 @@ tcam::insert(void *key, void *key_mask, void *data,
 
 end:
     stats_update_(INSERT, rs);
+    trigger_health_monitor();
     return rs;
 }
 
@@ -207,6 +221,7 @@ tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
 end:
 
     stats_update_(INSERT_WITHID, rs);
+    trigger_health_monitor();
     return rs;
 }
 
@@ -318,6 +333,7 @@ tcam::remove(uint32_t tcam_idx)
 end:
 
     stats_update_(REMOVE, rs);
+    trigger_health_monitor();
     return rs;
 }
 
@@ -460,7 +476,7 @@ bool tcam_entry_walk_cb(void *entry, void *ctxt)
 //---------------------------------------------------------------------------
 bool
 tcam::entry_exists_(void *key, void *key_mask, uint32_t key_len,
-					tcam_entry_t **te)
+                    tcam_entry_t **te)
 {
     tcam_entry_t    tmp_te = {0};
     tcam_entry_cb_t te_cb  = {0};
@@ -868,7 +884,7 @@ tcam::entry_trace_(tcam_entry_t *te)
 // ----------------------------------------------------------------------------
 sdk_ret_t
 tcam::entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
-                   char *buff, uint32_t buff_size)
+                    char *buff, uint32_t buff_size)
 {
     p4pd_error_t    p4_err;
 

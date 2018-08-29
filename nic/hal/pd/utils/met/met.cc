@@ -10,7 +10,8 @@ using hal::pd::utils::ReplList;
 Met *
 Met::factory(std::string table_name, uint32_t table_id,
              uint32_t repl_table_capacity, uint32_t num_repl_entries,
-             uint32_t repl_entry_data_len, uint32_t mtrack_id)
+             uint32_t repl_entry_data_len, uint32_t mtrack_id,
+             table_health_monitor_func_t health_monitor_func)
 {
     void        *mem = NULL;
     Met   *met = NULL;
@@ -21,7 +22,7 @@ Met::factory(std::string table_name, uint32_t table_id,
     }
 
     met = new (mem) Met(table_name, table_id, repl_table_capacity,
-                        num_repl_entries, repl_entry_data_len);
+                        num_repl_entries, repl_entry_data_len, health_monitor_func);
 
     HAL_TRACE_DEBUG("met: table_name: {}, tableid: {}, repl_table_capacity:{}"
                     "num_repl_entries:{}, repl_entry_data_len:{}",
@@ -48,7 +49,8 @@ Met::destroy(Met *met, uint32_t mtrack_id)
 // ----------------------------------------------------------------------------
 Met::Met(std::string table_name, uint32_t table_id,
          uint32_t repl_table_capacity, uint32_t max_num_repls_per_entry,
-         uint32_t repl_entry_data_len)
+         uint32_t repl_entry_data_len,
+         table_health_monitor_func_t health_monitor_func)
 {
     table_name_                 = table_name;
     table_id_                   = table_id;
@@ -83,6 +85,18 @@ Met::~Met()
     HAL_FREE(HAL_MEM_ALLOC_MET_STATS, stats_);
 }
 
+void
+Met::trigger_health_monitor()
+{
+    if (health_monitor_func_) {
+        health_monitor_func_(table_id_, (char *)table_name_.c_str(), health_state_,
+                             repl_table_capacity_,
+                             table_num_entries_in_use(),
+                             &health_state_);
+    }
+}
+
+
 // ----------------------------------------------------------------------------
 // Create a Replication List
 // ----------------------------------------------------------------------------
@@ -109,6 +123,7 @@ Met::create_repl_list(uint32_t *repl_list_idx)
     trace_met();
 end:
     stats_update(INSERT, rs);
+    trigger_health_monitor();
     return rs;
 }
 
@@ -139,7 +154,8 @@ Met::create_repl_list_with_id(uint32_t repl_list_idx)
 
     // TODO: Only for debugging
     trace_met();
-    end:
+end:
+    trigger_health_monitor();
     return rs;
 }
 
@@ -173,6 +189,7 @@ Met::create_repl_list_block(uint32_t *repl_list_idx, uint32_t size)
     // TODO: Only for debugging
     trace_met();
 end:
+    trigger_health_monitor();
     return rs;
 }
 
@@ -206,6 +223,7 @@ Met::delete_repl_list(uint32_t repl_list_idx)
     trace_met();
 end:
     stats_update(REMOVE, rs);
+    trigger_health_monitor();
     return rs;
 
 }
@@ -228,6 +246,7 @@ Met::delete_repl_list_block(uint32_t repl_list_idx, uint32_t size)
     }
 
 end:
+    trigger_health_monitor();
     return rs;
 }
 // ----------------------------------------------------------------------------
@@ -364,6 +383,7 @@ Met::add_replication(uint32_t repl_list_idx, void *data)
     // TODO: Only for debugging
     trace_met();
 end:
+    trigger_health_monitor();
     return rs;
 }
 
@@ -391,6 +411,7 @@ Met::del_replication(uint32_t repl_list_idx, void *data)
     // TODO: Only for debugging
     trace_met();
 end:
+    trigger_health_monitor();
     return rs;
 }
 

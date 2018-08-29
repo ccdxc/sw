@@ -133,7 +133,7 @@ stage0_DEV: irisp4 p4 gen_proto capsim-master utils
 stage0: stage0_DEV csrlite agent_proto
 
 # lib building stage
-stage1_DEV: iris_asm asm capmodel build_proto sdk
+stage1_DEV: iris_asm asm capmodel build_proto sdk linkmgr
 stage1: stage1_DEV third-party agent delphi linkmgr
 
 # app building stage
