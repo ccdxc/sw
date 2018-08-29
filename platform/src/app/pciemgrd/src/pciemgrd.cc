@@ -244,7 +244,7 @@ cmd_add(int argc, char *argv[])
 {
     pciehdev_t *pdev;
     pciehdevice_resources_t r;
-    int opt;
+    int opt, bi;
     char *type, *name;
 
     if (argc < 2) {
@@ -258,10 +258,18 @@ cmd_add(int argc, char *argv[])
     r.devcmdpa = 0x13e000000;   /* XXX */
     r.devcmddbpa = r.devcmdpa + 0x1000; /* XXX */
     name = NULL;
+    bi = 0;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "c:C:d:D:I:L:i:n:p:P:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:B:c:C:d:D:I:L:i:n:p:P:")) != -1) {
         switch (opt) {
+        case 'b':
+            r.debugbar[bi].barpa = strtoull(optarg, NULL, 0);
+            break;
+        case 'B':
+            r.debugbar[bi].barsz = strtoull(optarg, NULL, 0);
+            bi++;       /* -B barsz comes last per bar */
+            break;
         case 'c':
             r.cmbsz = strtoull(optarg, NULL, 0);
             break;

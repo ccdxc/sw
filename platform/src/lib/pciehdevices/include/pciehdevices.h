@@ -28,6 +28,10 @@ typedef struct pciehdevice_resources_s {
     u_int64_t devcmddbpa;       /* devcmd doorbell physical address */
     u_int32_t cmbsz;            /* controller memory buffer bar size */
     u_int64_t cmbpa;            /* controller memory buffer physical address */
+    struct {
+        u_int64_t barpa;        /* bar physical address */
+        u_int64_t barsz;        /* bar size */
+    } debugbar[3];              /* debug vnic bar config */
 } pciehdevice_resources_t;
 
 pciehdev_t *pciehdev_eth_new(const char *name,

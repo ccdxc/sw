@@ -18,15 +18,13 @@
 static void
 init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 {
-    struct { u_int64_t sz, pa; } defaults[3] = {
-        [0] = { 64 * 1024 * 1024, 0x80000000 },
-    };
     int i;
 
     /*
-     * Take bar config from env:
-     *     DEBUG_BAR0_SZ
-     *     DEBUG_BAR0_PA
+     * Default bar config from pres->debugbar[],
+     * Can override from these in env:
+     *     DEBUG_BARx_SZ
+     *     DEBUG_BARx_PA
      */
 
     for (i = 0; i < 3; i++) {
@@ -35,9 +33,10 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
         char *env;
         u_int64_t sz, pa;
 
-        sz = defaults[i].sz;
-        pa = defaults[i].pa;
+        sz = pres->debugbar[i].barsz;
+        pa = pres->debugbar[i].barpa;
 
+        /* could override bar params from $env */
         env_sz[9] = '0' + i;
         env_pa[9] = '0' + i;
         if ((env = getenv(env_sz)) != NULL) {
