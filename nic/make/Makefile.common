@@ -217,34 +217,34 @@ post-make:
 	find $(TOPDIR)/obj -name '*.cano'  -type f  | xargs -i mv {} $(TOPDIR)/obj/cano 2>/dev/null || :
 
 halctl:
+	$(eval AGENT_BIN_DIR = $(TOPDIR)/obj/$(ARCH)/agent)
+	@mkdir -p $(AGENT_BIN_DIR)
     ifeq ($(ARCH),aarch64)
-	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
-	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(TOPDIR)/obj/agent/halctl github.com/pensando/sw/nic/agent/cmd/halctl
+	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(AGENT_BIN_DIR)/halctl github.com/pensando/sw/nic/agent/cmd/halctl
     else
-	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
-	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(TOPDIR)/obj/agent/halctl github.com/pensando/sw/nic/agent/cmd/halctl
-	@cp $(TOPDIR)/obj/agent/halctl ${GOPATH}/bin/
+	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(AGENT_BIN_DIR)/halctl github.com/pensando/sw/nic/agent/cmd/halctl
+	@cp $(AGENT_BIN_DIR)/halctl ${GOPATH}/bin/
     endif
 
 pd_stub:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/pd/pd_stub
 
 agent:
+	$(eval AGENT_BIN_DIR = $(TOPDIR)/obj/$(ARCH)/agent)
+	@mkdir -p $(AGENT_BIN_DIR)
     ifeq ($(ARCH),aarch64)
-	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
-	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(TOPDIR)/obj/agent/netagent github.com/pensando/sw/nic/agent/cmd/netagent
+	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(AGENT_BIN_DIR)/netagent github.com/pensando/sw/nic/agent/cmd/netagent
     else
-	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
-	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(TOPDIR)/obj/agent/netagent github.com/pensando/sw/nic/agent/cmd/netagent
+	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(AGENT_BIN_DIR)/netagent github.com/pensando/sw/nic/agent/cmd/netagent
     endif
 
 heimdall:
+	$(eval AGENT_BIN_DIR = $(TOPDIR)/obj/$(ARCH)/agent)
+	@mkdir -p $(AGENT_BIN_DIR)
     ifeq ($(ARCH),aarch64)
-	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
-	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(TOPDIR)/obj/agent/heimdall github.com/pensando/sw/nic/e2etests/go/agent/cmd/heimdall
+	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(AGENT_BIN_DIR)/heimdall github.com/pensando/sw/nic/e2etests/go/agent/cmd/heimdall
     else
-	@cd $(TOPDIR)/../ && mkdir -p $(TOPDIR)/obj/agent
-	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(TOPDIR)/obj/agent/heimdall github.com/pensando/sw/nic/e2etests/go/agent/cmd/heimdall
+	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(AGENT_BIN_DIR)/heimdall github.com/pensando/sw/nic/e2etests/go/agent/cmd/heimdall
     endif
 
 gen_clean:

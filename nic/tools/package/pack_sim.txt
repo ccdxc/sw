@@ -23,8 +23,8 @@ bazel-bin/nic/e2etests/nic_infra_hntap                           /nic/bin/
 nic/model_sim/libs/*.so                                          /nic/lib/
 nic/hal/third-party/zmq/x86_64/libzmq.so                         /nic/lib/
 nic/build/iris/gen/datapath/p4/dbg_out/model_debug.json          /nic/conf/
-nic/obj/agent/netagent                                           /nic/bin/
-nic/obj/halctl                                                   /nic/bin/
+nic/obj/x86_64/agent/netagent                                    /nic/bin/
+nic/obj/x86_64/agent/halctl                                      /nic/bin/
 bazel-bin/nic/hal/test/nic_mgr_app                               /nic/bin/
 nic/sim/naples/hntap-cfg.json                                    /nic/conf
 nic/sim/naples/hntap-with-qemu-cfg.json                          /nic/conf
@@ -32,5 +32,5 @@ platform/gen/x86_64/bin                                          /platform/bin/
 platform/gen/x86_64/lib                                          /platform/lib/
 /lib64/libedit.so*                                               /platform/lib/
 platform/tools/setup_pcie.sh                                     /platform/bin/
-nic/obj/heimdall                                                 /nic/bin/
+nic/obj/x86_64/agent/heimdall                                    /nic/bin/
 nic/e2etests/go/agent/configs/golden/golden_cfg.yml              /nic/tools/

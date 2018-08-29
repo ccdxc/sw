@@ -1,14 +1,15 @@
 # hal objects CLI
-nic/obj/agent/halctl                                       	      	/nic/bin/
+nic/obj/aarch64/agent/halctl                          /nic/bin/
 
-bazel-bin/nic/hal/test/nic_mgr_app                               	/nic/bin
-bazel-bin/nic/hal/test/hal_scale_test                            	/nic/bin/
+bazel-bin/nic/hal/test/nic_mgr_app                    /nic/bin/
+bazel-bin/nic/hal/test/hal_scale_test                 /nic/bin/
 
 # push configs to agent
-nic/obj/agent/heimdall                                           	/nic/bin/
-nic/e2etests/go/agent/configs/golden/golden_cfg.yml              	/nic/conf/
-nic/e2etests/go/agent/configs/golden/generated   			/nic/conf/generated/
-nic/obj/test-driver                                              	/nic/bin
-nic/e2etests/go/naples_cfg/e2e.cfg                               	/nic/conf/test_driver/
-nic/e2etests/go/naples_cfg/scale.topo                            	/nic/conf/test_driver/
-nic/e2etests/go/agent/configs/scale.yml                          	/nic/conf/test_driver/
+nic/obj/aarch64/agent/heimdall                        /nic/bin/
+nic/obj/x86_64/agent/heimdall                         /nic/x86_64/bin/
+nic/e2etests/go/agent/configs/golden/golden_cfg.yml   /nic/conf/
+nic/e2etests/go/agent/configs/golden/generated        /nic/conf/generated/
+nic/obj/test-driver                                   /nic/bin
+nic/e2etests/go/naples_cfg/e2e.cfg                    /nic/conf/test_driver/
+nic/e2etests/go/naples_cfg/scale.topo                 /nic/conf/test_driver/
+nic/e2etests/go/agent/configs/scale.yml               /nic/conf/test_driver/

@@ -56,6 +56,7 @@ ifeq ($(ARCH), aarch64)
     PATH_OPTS   = PATH=$(TOOLCHAIN_PATH)/bin:$$PATH
     BUILD_OPTS  = BUILD_ARCHES=aarch64
 else
+    ARCH=x86_64
     BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) $(COMPILER_FLAGS) $(BAZEL_CUSTOM_FLAGS)
 endif
 
