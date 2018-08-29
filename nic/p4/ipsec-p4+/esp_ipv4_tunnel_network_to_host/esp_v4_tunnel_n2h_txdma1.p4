@@ -153,13 +153,6 @@ metadata dma_cmd_phv2mem_t dma_cmd_post_barco_ring;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex; 
 
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t ipsec_int_update_pad_l4_proto;
-
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t doorbell_cmd; 
-
-
 @pragma scratch_metadata
 metadata ipsec_txdma1_global_t txdma1_global_scratch;
 
