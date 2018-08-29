@@ -74,6 +74,7 @@ default:
 	$(MAKE) build
 	$(MAKE) unit-test-cover
 	$(MAKE) container-compile
+	$(MAKE) fixtures
 
 # ws-tools installs all the binaries needed to generate, lint and build go sources
 ws-tools:
@@ -159,12 +160,14 @@ install:
 
 deploy:
 	$(MAKE) container-compile
+	$(MAKE) fixtures
 	$(MAKE) install
 	$(MAKE) c-start
 
 cluster:
 	$(MAKE) build
 	$(MAKE) container-compile
+	$(MAKE) fixtures
 	$(MAKE) install
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}
 	tools/scripts/startSim.py
@@ -201,32 +204,38 @@ ui-container-helper:
 container-compile:
 	@mkdir -p ${PWD}/bin/cbin
 	@mkdir -p ${PWD}/bin/pkg
-	@if [ ! -z ${UI_FRAMEWORK} ]; then \
-		echo "+++ populating node_modules from cache for ui-framework";\
-		echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
-		docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
-		cd venice/ui/web-app-framework && tar zxf ../../../bin/web-app-framework-node-modules.tgz ;\
-		docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make  ui-framework; \
+	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
+		echo "+++ building go sources"; echo docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ; \
+		docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ; \
+	else \
+		echo "+++ rebuilding all go sources"; echo docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ;\
+		docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ;\
 	fi
-	@if [ ! -f bin/webapp-node-modules.tgz ]; then \
-		echo "+++ populating node_modules from cache for ui";\
-		echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
-		docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
-		cd venice/ui/webapp && tar zxf ../../../bin/webapp-node-modules.tgz ;\
-		cd ../venice-sdk && tar zxf ../../../bin/venice-sdk-node-modules.tgz ;\
-	fi
+
+fixtures:
 	@if [ -z ${BYPASS_UI} ]; then \
+		if [ ! -z ${UI_FRAMEWORK} ]; then \
+			echo "+++ populating node_modules from cache for ui-framework";\
+			echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
+			docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
+			cd venice/ui/web-app-framework && tar zxf ../../../bin/web-app-framework-node-modules.tgz ;\
+			docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make  ui-framework; \
+			cd ../../.. ;\
+		fi; \
+		if [ ! -f bin/webapp-node-modules.tgz ]; then \
+			echo "+++ populating node_modules from cache for ui";\
+			echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+			docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+			cd venice/ui/webapp && tar zxf ../../../bin/webapp-node-modules.tgz ;\
+			cd ../venice-sdk && tar zxf ../../../bin/venice-sdk-node-modules.tgz ;\
+			cd ../../.. ;\
+		fi ; \
 	    echo "+++ building ui sources" ; \
 		echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
 		docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
 		echo cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 		cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 	fi
-	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
-		echo "+++ building go sources"; docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ; \
-	else \
-		echo "+++ rebuilding all go sources"; docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" -e "GOCACHE=/import/src/github.com/pensando/sw/.cache" --rm -e "VENICE_CCOMPILE_FORCE=1" -v${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -v${PWD}/bin/pkg:/import/pkg${CACHEMOUNT} -v${PWD}/bin/cbin:/import/bin${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${BUILD_CONTAINER} ${BUILD_CMD} ;\
-	fi; \
 	echo "++ generating documentation"; \
 	tools/scripts/gendocs.sh "${REGISTRY_URL}/${UI_BUILD_CONTAINER}"
 
@@ -334,6 +343,7 @@ pull-assets:
 dind-cluster:
 	$(MAKE) dind-cluster-stop
 	$(MAKE) container-compile
+	$(MAKE) fixtures
 	$(MAKE) install
 	./test/e2e/dind/do.py -configFile ${E2E_CONFIG}
 
@@ -357,6 +367,7 @@ e2e-ui:
 # Target to run venice e2e a dind environment. Uses real HAL as Agent Datapath and starts HAL with model
 e2e-sanities:
 	$(MAKE) container-compile
+	$(MAKE) fixtures
 	$(MAKE) install
 	$(MAKE) -C nic e2e-sanity-build
 	./test/e2e/dind/do.py -configFile test/e2e/cluster/tb_config_sanities.json
@@ -368,6 +379,7 @@ e2e-sanities:
 # Target to run telemetry e2e test cases
 e2e-telemetry:
 	$(MAKE) container-compile
+	$(MAKE) fixtures
 	$(MAKE) install
 	$(MAKE) -C nic e2e-sanity-build
 	@echo "Setting up cluster..."
