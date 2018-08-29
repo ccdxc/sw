@@ -744,7 +744,7 @@ func TestNpmClientWatch(t *testing.T) {
 	Assert(t, (cl != nil), "Error creating npm client")
 
 	// create http REST server
-	restSrv, err := restapi.NewRestServer(ag, nil, ":0")
+	restSrv, err := restapi.NewRestServer(ag, nil, nil, ":0")
 	AssertOk(t, err, "Error creating the rest server")
 
 	// verify client got the network & ep

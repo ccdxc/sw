@@ -82,7 +82,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}
-	restServer, err := restapi.NewRestServer(ag.NetworkAgent, nil, ":"+globals.AgentRESTPort)
+	restServer, err := restapi.NewRestServer(ag.NetworkAgent, nil, nil, ":"+globals.AgentRESTPort)
 	ag.RestServer = restServer
 	log.Printf("%s {%+v} is running", globals.Netagent, ag)
 

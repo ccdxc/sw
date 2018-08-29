@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 syntax = "proto3";
-package protos;
+package tpmprotos;
 
 // Mandatory imports.
 import "google/api/annotations.proto";
@@ -47,7 +47,6 @@ service StatsPolicyApi {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "StatsPolicy",
-        Method: ["list", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
     };
 
@@ -86,7 +85,6 @@ service FwlogPolicyApi {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "FwlogPolicy",
-        Method: ["list", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
     };
 
@@ -123,8 +121,8 @@ service FlowExportPolicyApi {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "FlowExportPolicy",
-        Method: ["list", "post", "delete", "put"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+        Method: ["get", "list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
     rpc WatchFlowExportPolicy (api.ObjectMeta) returns (stream FlowExportPolicyEvent) {};

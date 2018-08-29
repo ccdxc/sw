@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	tpa "github.com/pensando/sw/nic/agent/tpa/state/types"
 	troubleshooting "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
@@ -22,6 +23,7 @@ type RestServer struct {
 	listenURL  string                     // URL where http server is listening
 	agent      types.CtrlerIntf           // net Agent API
 	TsAgent    troubleshooting.CtrlerIntf //Troubleshooting agent
+	TpAgent    tpa.CtrlerIntf             // telemetry policy agent
 	listener   net.Listener               // socket listener
 	httpServer *http.Server               // HTTP server
 }
@@ -36,12 +38,13 @@ type Response struct {
 type routeAddFunc func(*mux.Router, *RestServer)
 
 // NewRestServer creates a new HTTP server servicg REST api
-func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, listenURL string) (*RestServer, error) {
+func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, tpAgent tpa.CtrlerIntf, listenURL string) (*RestServer, error) {
 	// create server instance
 	srv := RestServer{
 		listenURL: listenURL,
 		agent:     agent,
 		TsAgent:   tsagent,
+		TpAgent:   tpAgent,
 	}
 
 	// if no URL was specified, just return (used during unit/integ tests)
@@ -52,23 +55,24 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, l
 	// setup the top level routes
 	router := mux.NewRouter()
 	prefixRoutes := map[string]routeAddFunc{
-		"/api/networks/":          addNetworkAPIRoutes,
-		"/api/endpoints/":         addEndpointAPIRoutes,
-		"/api/sgs/":               addSecurityGroupAPIRoutes,
-		"/api/tenants/":           addTenantAPIRoutes,
-		"/api/interfaces/":        addInterfaceAPIRoutes,
-		"/api/namespaces/":        addNamespaceAPIRoutes,
-		"/api/nat/pools/":         addNatPoolAPIRoutes,
-		"/api/nat/policies/":      addNatPolicyAPIRoutes,
-		"/api/routes/":            addRouteAPIRoutes,
-		"/api/nat/bindings/":      addNatBindingAPIRoutes,
-		"/api/ipsec/policies/":    addIPSecPolicyAPIRoutes,
-		"/api/ipsec/encryption/":  addIPSecSAEncryptAPIRoutes,
-		"/api/ipsec/decryption/":  addIPSecSADecryptAPIRoutes,
-		"/api/security/policies/": addSGPolicyAPIRoutes,
-		"/api/mirror/sessions/":   addMirrorSessionAPIRoutes,
-		"/api/tunnels/":           addTunnelAPIRoutes,
-		"/api/tcp/proxies/":       addTCPProxyPolicyAPIRoutes,
+		"/api/networks/":              addNetworkAPIRoutes,
+		"/api/endpoints/":             addEndpointAPIRoutes,
+		"/api/sgs/":                   addSecurityGroupAPIRoutes,
+		"/api/tenants/":               addTenantAPIRoutes,
+		"/api/interfaces/":            addInterfaceAPIRoutes,
+		"/api/namespaces/":            addNamespaceAPIRoutes,
+		"/api/nat/pools/":             addNatPoolAPIRoutes,
+		"/api/nat/policies/":          addNatPolicyAPIRoutes,
+		"/api/routes/":                addRouteAPIRoutes,
+		"/api/nat/bindings/":          addNatBindingAPIRoutes,
+		"/api/ipsec/policies/":        addIPSecPolicyAPIRoutes,
+		"/api/ipsec/encryption/":      addIPSecSAEncryptAPIRoutes,
+		"/api/ipsec/decryption/":      addIPSecSADecryptAPIRoutes,
+		"/api/security/policies/":     addSGPolicyAPIRoutes,
+		"/api/mirror/sessions/":       addMirrorSessionAPIRoutes,
+		"/api/tunnels/":               addTunnelAPIRoutes,
+		"/api/tcp/proxies/":           addTCPProxyPolicyAPIRoutes,
+		"/api/telemetry/flowexports/": addFlowExportPolicyAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

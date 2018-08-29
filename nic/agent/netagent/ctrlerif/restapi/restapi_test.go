@@ -11,6 +11,8 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/state"
+	tpdatapath "github.com/pensando/sw/nic/agent/tpa/datapath"
+	tpstate "github.com/pensando/sw/nic/agent/tpa/state"
 	tsdatapath "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	tsstate "github.com/pensando/sw/nic/agent/troubleshooting/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
@@ -71,7 +73,13 @@ func setup() (*RestServer, error) {
 		return nil, err
 	}
 
-	return NewRestServer(nagent, tsagent, agentRestURL)
+	tpa, err := tpstate.NewTpAgent("", nagent, tpdatapath.MockHal())
+	if err != nil {
+		log.Fatalf("Error creating telemetry policy agent. Err: %v", err)
+	}
+	log.Printf("telemetry policy agent {%+v} instantiated", tpa)
+
+	return NewRestServer(nagent, tsagent, tpa, agentRestURL)
 
 }
 
@@ -492,7 +500,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 func TestRestServerStartStop(t *testing.T) {
 	t.Parallel()
 	// Don't need agent
-	restSrv, err := NewRestServer(nil, nil, ":0")
+	restSrv, err := NewRestServer(nil, nil, nil, ":0")
 	if err != nil {
 		t.Errorf("Could not start REST Server. Error: %v", err)
 	}
@@ -510,13 +518,13 @@ func TestRestServerStartStop(t *testing.T) {
 
 func TestRestServerListenFailures(t *testing.T) {
 	t.Parallel()
-	restSrv, err := NewRestServer(nil, nil, "")
+	restSrv, err := NewRestServer(nil, nil, nil, "")
 	if err != nil {
 		t.Errorf("Could not start RestServer")
 	}
 	restSrv.Stop()
 
-	_, err = NewRestServer(nil, nil, ":65536")
+	_, err = NewRestServer(nil, nil, nil, ":65536")
 	if err == nil {
 		t.Errorf("Should see listener errors for the invalid port: %v", err)
 	}

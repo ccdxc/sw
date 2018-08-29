@@ -55,7 +55,7 @@ func CreateAgent(kind datapath.Kind, nodeUUID, srvURL string, resolver resolver.
 		return nil, err
 	}
 
-	restServer, err := restapi.NewRestServer(nagent.NetworkAgent, nil, "")
+	restServer, err := restapi.NewRestServer(nagent.NetworkAgent, nil, nil, "")
 	nagent.RestServer = restServer
 
 	// create an agent instance

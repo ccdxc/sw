@@ -29,6 +29,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	nmdproto "github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	testutils "github.com/pensando/sw/test/utils"
@@ -419,9 +420,22 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 			c.Fatalf("cannot create troubleshooting agent. Err: %v", err)
 		}
 		log.Infof("created troubleshooting subagent")
+		tmpfile, err2 = ioutil.TempFile("", "tpagent_db")
+		c.Assert(err2, IsNil)
+		n = tmpfile.Name()
+		tmpfile.Close()
+		it.tmpFiles = append(it.tmpFiles, n)
+
+		log.Infof("creating telemetry policy agent")
+		tpa, aerr := tpa.NewPolicyAgent(fmt.Sprintf("dummy-uuid-%d", i), n, globals.Tpm, rc, state.AgentMode_MANAGED, "mock", agent.NetworkAgent)
+		c.Assert(aerr, IsNil)
+		if tsa == nil {
+			c.Fatalf("cannot create telemetry policy agent. Err: %v", err)
+		}
+		log.Infof("created telemetry policy agent")
 
 		// create new RestServer instance. Not started yet.
-		restServer, err := restapi.NewRestServer(agent.NetworkAgent, tsa.TroubleShootingAgent, "")
+		restServer, err := restapi.NewRestServer(agent.NetworkAgent, tsa.TroubleShootingAgent, tpa.TpState, "")
 		c.Assert(err, IsNil)
 		if restServer == nil {
 			c.Fatalf("cannot create REST server . Err: %v", err)

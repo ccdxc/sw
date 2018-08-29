@@ -13,6 +13,7 @@ import (
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	tstypes "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
@@ -133,8 +134,15 @@ func main() {
 	}
 	log.Printf("TroubleShooting Agent {%+v} instantiated", tsa)
 
+	// telemetry policy agent
+	tpa, err := tpa.NewPolicyAgent(macAddr.String(), "", *npmURL, resolverClient, agMode, *datapath, ag.NetworkAgent)
+	if err != nil {
+		log.Fatalf("Error creating telemetry policy agent, Err: %v", err)
+	}
+	log.Printf("telemetry policy agent {%+v} instantiated", tpa)
+
 	// create REST api server
-	restServer, err := restapi.NewRestServer(ag.NetworkAgent, tsa.TroubleShootingAgent, *restURL)
+	restServer, err := restapi.NewRestServer(ag.NetworkAgent, tsa.TroubleShootingAgent, tpa.TpState, *restURL)
 	if err != nil {
 		log.Errorf("Error creating the rest API server. Err: %v", err)
 	}
