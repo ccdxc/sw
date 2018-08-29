@@ -721,7 +721,6 @@ static int ionic_tx_qcq_alloc(struct lif *lif, unsigned int qnum,
 
 	/* rx buffer and command are in tendom */
 	txqcq->cmd_head_index = txqcq->cmd_tail_index = 0;
-	txqcq->sg_head_index = txqcq->sg_tail_index = 0;
 	txqcq->comp_index = 0;
 
 	/* Setup command ring. */
@@ -1282,7 +1281,10 @@ int ionic_tx_clean(struct tx_qcq* txqcq , int tx_limit)
 	struct txq_desc *cmd;
 	struct ionic_tx_buf *txbuf;
 	int comp_index, cmd_index, processed, cmd_stop_index;
+	struct tx_stats * stats = &txqcq->stats;
 
+	stats->clean++;
+	
 	for ( processed = 0 ; processed < tx_limit ; ) {
 		comp_index = txqcq->comp_index;
 		comp = &txqcq->comp_ring[comp_index];
@@ -1364,6 +1366,7 @@ ionic_tx_task_handler(void *arg, int pendindg)
 	if (drbr_empty(txqcq->lif->netdev, txqcq->br))
 		return;
 
+	IONIC_NETDEV_QINFO(txqcq, "ionic_tx_task\n");
 	mtx_lock(&txqcq->mtx);
 	/* 
 	 * Process all Tx frames.
@@ -1781,15 +1784,7 @@ static int ionic_set_hw_feature(struct lif *lif, uint16_t set_feature)
 			.opcode = CMD_OPCODE_FEATURES,
 			.set = FEATURE_SET_ETH_HW_FEATURES,
 			.wanted = set_feature,
-#if 0			
-			.wanted = ETH_HW_VLAN_TX_TAG
-				| ETH_HW_VLAN_RX_STRIP
-				| ETH_HW_VLAN_RX_FILTER
-				| ETH_HW_RX_HASH
-				| ETH_HW_TX_SG
-				| ETH_HW_TX_CSUM     
-				| ETH_HW_RX_CSUM,
-#endif				
+			
 		},
 	};
 	int err;
@@ -1909,7 +1904,9 @@ static int ionic_lif_register(struct lif *lif)
 				| ETH_HW_RX_HASH 
 				| ETH_HW_TX_SG 
 				| ETH_HW_TX_CSUM
-				| ETH_HW_RX_CSUM);
+				| ETH_HW_RX_CSUM
+				| ETH_HW_TSO);
+
 	if (err)
 		return err;
 

@@ -297,10 +297,6 @@ void ionic_rx_fill(struct rx_qcq *rxqcq)
 	struct ionic_rx_buf *rxbuf;
 	int error, i, index;
 
-
-	IONIC_NETDEV_QINFO(rxqcq, "rx_fill producer: %d consumer :%d num_descs: %d\n", 
-		rxqcq->cmd_head_index, rxqcq->cmd_tail_index, rxqcq->num_descs);
-
 	for ( i = 0 ; i < rxqcq->num_descs ; i++) {
 		index = rxqcq->cmd_head_index;
 		rxbuf = &rxqcq->rxbuf[index];
@@ -327,7 +323,8 @@ void ionic_rx_fill(struct rx_qcq *rxqcq)
 		rxqcq->cmd_head_index = (rxqcq->cmd_head_index + 1) % rxqcq->num_descs;
 	 }
 	 
-	IONIC_NETDEV_QINFO(rxqcq, "filled %d rxbufs\n", i);
+	IONIC_NETDEV_QINFO(rxqcq, "rx_fill head: %d tail: %d descs: %d filled %d\n",  
+		rxqcq->cmd_head_index, rxqcq->cmd_tail_index, rxqcq->num_descs, i);
 }
 
 /* XXX: where is the doorbell ping for refill ? */
@@ -383,7 +380,6 @@ void ionic_rx_empty(struct rx_qcq *rxqcq)
 }
 
 
-#ifdef notyet
 static int
 ionic_get_header_size(struct tx_stats *stats, struct mbuf *mb, uint16_t *eth_type, int *proto, int *hlen)
 {
@@ -443,8 +439,9 @@ ionic_get_header_size(struct tx_stats *stats, struct mbuf *mb, uint16_t *eth_typ
 	*hlen = eth_hdr_len;
 	return (0);
 }
-#endif
 
+
+#if 0
 static int ionic_tx_map(struct tx_qcq *txqcq, int index, struct mbuf *m)
 {
 	bus_dma_segment_t  seg[1];
@@ -468,22 +465,62 @@ static int ionic_tx_map(struct tx_qcq *txqcq, int index, struct mbuf *m)
 
 	return (0);
 }
+#endif
+
+static bool ionic_tx_avail(struct tx_qcq *txqcq, int ndescs)
+{	
+	int diff;
+
+	 diff = txqcq->cmd_tail_index - txqcq->cmd_head_index;
+	 if (diff == 1 ) /* Q full */
+	 	return (false);
+
+	IONIC_NETDEV_QINFO(txqcq, "diff %d\n", diff);
+	/* Wrap around condition. */
+	if (diff < 0)
+		diff = txqcq->num_descs + diff;
 
 
-static int ionic_tx_xmit(struct tx_qcq *txqcq, struct mbuf *m)
+	if (diff > ndescs)
+		return (true);
+
+	return true;
+//	return (false);
+}
+
+static int ionic_tx_setup(struct tx_qcq *txqcq, struct mbuf *m)
 {
 	struct txq_desc *desc;
 	struct tx_stats *stats = &txqcq->stats;
+	struct ionic_tx_buf *txbuf;
 	bool offload = false;
-	int error, index;
+	int error, index, len, nsegs;
+	bus_dma_segment_t  seg[1];
 
 	index = txqcq->cmd_head_index;
 	desc = &txqcq->cmd_ring[index];
-	error = ionic_tx_map(txqcq, index, m);
+	txbuf = &txqcq->txbuf[index];
+	len = m->m_len;
+
+	error = bus_dmamap_load_mbuf_sg(txqcq->buf_tag, txbuf->dma_map, m, seg, &nsegs, BUS_DMA_NOWAIT);
 	if (error) {
+		IONIC_NETDEV_QERR(txqcq, "failed to map xmit, error: %d\n", error);
 		stats->dma_map_err++;
 		return (error);
 	}
+
+	if (!ionic_tx_avail(txqcq, nsegs)) {
+		stats->no_descs++;
+		bus_dmamap_unload(txqcq->buf_tag, txbuf->dma_map);
+		/* This is a hard error, log it */
+		IONIC_NETDEV_QERR(txqcq, "BUG! Tx ring full when queue awake!\n");
+		return (ENOBUFS);
+	}
+
+	bus_dmamap_sync(txqcq->buf_tag, txbuf->dma_map, BUS_DMASYNC_PREWRITE);
+	txbuf->pa_addr = seg[0].ds_addr;
+	txbuf->m = m;
+	IONIC_NETDEV_QINFO(txqcq, "VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%lx\n", m, txbuf->pa_addr, nsegs, seg[0].ds_len);
 
 	if (m->m_pkthdr.csum_flags & CSUM_IP) {
 		desc->l3_csum = 1;
@@ -496,7 +533,7 @@ static int ionic_tx_xmit(struct tx_qcq *txqcq, struct mbuf *m)
 	desc->opcode = offload ? TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP : TXQ_DESC_OPCODE_CALC_NO_CSUM;
 	desc->num_sg_elems = 0;
 	desc->len = m->m_len;
-	desc->addr = txqcq->txbuf[index].pa_addr;
+	desc->addr = txbuf->pa_addr;
 	desc->vlan_tci = 0;
 	desc->hdr_len = 0;
 	desc->csum_offset = 0;
@@ -514,56 +551,26 @@ static int ionic_tx_xmit(struct tx_qcq *txqcq, struct mbuf *m)
 	return 0;
 }
 
-#ifdef IONIC_TSO
-static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
-			      struct mbuf *m, unsigned int hdrlen,
-			      unsigned int mss, u16 vlan_tci, bool has_vlan,
-			      bool outer_csum, bool start, bool done)
-{
-	desc->opcode = TXQ_DESC_OPCODE_TSO;
-	desc->vlan_tci = vlan_tci;
-	desc->hdr_len = hdrlen;
-	desc->V = has_vlan;
-	desc->C = 1;
-	desc->O = outer_csum;
-	desc->S = start;
-	desc->E = done;
-	desc->mss = mss;
 
-//	skb_tx_timestamp(skb);
-
-	if (done)
-		ionic_q_post(q, done /* !skb->xmit_more */, ionic_tx_clean, m);
-	else
-		ionic_q_post(q, false, ionic_tx_clean, NULL);
-}
-
-
-static struct txq_desc *ionic_tx_tso_next(struct queue *q,
-					  struct txq_sg_elem **elem)
-{
-	struct txq_desc *desc = q->head->desc;
-	struct txq_sg_desc *sg_desc = q->head->sg_desc;
-
-	*elem = sg_desc->elems;
-	return desc;
-}
-
-static int ionic_tx_tso_xmit(struct queue *q, struct mbuf *m)
+/*
+ * TSO
+ */
+static int ionic_tx_tso_setup(struct tx_qcq *txqcq, struct mbuf *m)
 {
 	uint32_t mss = m->m_pkthdr.tso_segsz;
-	struct tx_stats *stats = q_to_tx_stats(q);
+	struct tx_stats *stats = &txqcq->stats;
+#ifdef notyet
 	struct desc_info *abort = q->head;
 	struct desc_info *rewind = abort;
-	struct ifnet* ifp = q->lif->netdev;
+#endif
+	struct ifnet* ifp = txqcq->lif->netdev;
+	struct ionic_tx_buf *txbuf;
 	struct txq_desc *desc;
-	struct txq_sg_elem *elem;
-	uint32_t payload_len;
+	struct txq_sg_desc *sg;
 	uint16_t eth_type;
-	int len, hdr_len, proto, error, nfrags, seglen, left, frag_left, offset = 0;
-	bool start, done;
+	int i, index, hdr_len, proto, error, nsegs;
 
-
+	bus_dma_segment_t  seg[IONIC_TX_MAX_SG_ELEMS + 1]; /* Extra for the first segment. */
 
 	if ((error = ionic_get_header_size(stats, m, &eth_type, &proto, &hdr_len))) {
 		IONIC_NETDEV_ERROR(ifp, "mbuf packet disacarded\n");
@@ -575,80 +582,97 @@ static int ionic_tx_tso_xmit(struct queue *q, struct mbuf *m)
 		return (EINVAL);
 	}
 
-	payload_len = m->m_pkthdr.len - hdr_len;
-	if (payload_len == 0)
-		nfrags = 1;
-	else
-		nfrags = DIV_ROUND_UP(payload_len, mss);
-	
-	seglen = hdr_len + mss;
-	left = m->m_len;
+	index = txqcq->cmd_head_index;
+	desc = &txqcq->cmd_ring[index];
+	txbuf = &txqcq->txbuf[index];
+	sg = &txqcq->sg_ring[index];
 
-	desc = ionic_tx_tso_next(q, &elem);
-	start = true;
+	txbuf->m = m;
 
-	while (left < 0) {
-		len = min(seglen, left);
-		frag_left = seglen - len;
-		desc->addr = ionic_tx_map_single(q, m->m_data + offset, len);
-		if (!desc->addr)
-			goto err_out_abort;
-		desc->len = len;
-		desc->num_sg_elems = 0;
-		left -= len;
-		offset += len;
-		if (nfrags > 0 && frag_left > 0)
-			continue;
-		done = (nfrags == 0 && left == 0);
-		ionic_tx_tso_post(q, desc, m, hdr_len, mss, 0, false, 0, start, done);
-		desc = ionic_tx_tso_next(q, &elem);
-		start =false;
-		seglen = mss;
+	error = bus_dmamap_load_mbuf_sg(txqcq->buf_tag, txbuf->dma_map, m, seg, &nsegs, BUS_DMA_NOWAIT);
+	if (error) {
+		IONIC_NETDEV_QERR(txqcq, "failed to map TSO xmit, error: %d\n", error);
+		stats->dma_map_err++;
+		return (error);
 	}
 
-	
+	if (nsegs > IONIC_TX_MAX_SG_ELEMS +1) {
+		bus_dmamap_unload(txqcq->buf_tag, txbuf->dma_map);
+		IONIC_NETDEV_QERR(txqcq, "too many fragments: %d\n", nsegs);
+//		stats->tso_map_err++;
+		return (EFBIG);
+	}
+
+	if (!ionic_tx_avail(txqcq, nsegs)) {
+		stats->no_descs++;
+		/* This is a hard error, log it */
+		bus_dmamap_unload(txqcq->buf_tag, txbuf->dma_map);
+		IONIC_NETDEV_QERR(txqcq, "BUG! Tx ring full when queue awake!\n");
+		return (ENOBUFS);
+	}
+
+	bus_dmamap_sync(txqcq->buf_tag, txbuf->dma_map, BUS_DMASYNC_PREWRITE);
+
+	desc->opcode = TXQ_DESC_OPCODE_TSO;
+//	desc->vlan_tci = vlan_tci;
+	desc->hdr_len = hdr_len;
+//	desc->V = has_vlan;
+	desc->C = 1;
+//	desc->O = outer_csum;
+	desc->S = 1;
+	desc->E = (nsegs == 1) ? 1 : 0;
+	desc->mss = mss;
+
+	desc->num_sg_elems = nsegs;
+	desc->len = seg[0].ds_len;
+	desc->addr = txbuf->pa_addr = seg[0].ds_addr;
+
+	IONIC_NETDEV_QINFO(txqcq, "TSO: VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%x\n",
+		m, txbuf->pa_addr, nsegs, m->m_pkthdr.len);
+	IONIC_NETDEV_QINFO(txqcq, "sg[0] pa: 0x%lx length: 0x%hx\n",  sg->elems[0].addr, sg->elems[0].len);
+	/* Now populate SG list, past the first fragment. */
+	for ( i = 0 ; i < nsegs -1 ; i++) {
+		sg->elems[i].addr = seg[i + 1].ds_addr;
+		sg->elems[i].len = seg[i + 1].ds_len;
+		IONIC_NETDEV_QINFO(txqcq, "sg[%d] pa: 0x%lx length: 0x%hx\n", i, sg->elems[i].addr, sg->elems[i].len);
+	}
+
+	txqcq->cmd_head_index = (txqcq->cmd_head_index + 1) % txqcq->num_descs;
+
 	return 0;
 
-err_out_abort:
+//err_out_abort:
+#ifdef notyet
 	while (rewind->desc != q->head->desc) {
 		ionic_tx_clean(q, rewind, NULL, NULL);
 		rewind = rewind->next;
 	}
 	q->head = abort;
+#endif
 
 	return -ENOMEM;
 }
-#endif
+
+
 static int ionic_xmit(struct tx_qcq* txqcq, struct mbuf **head)
 {
 	struct tx_stats *stats;
-	int err, ndescs;
+	int err;
 	struct mbuf* m;
 
 	stats = &txqcq->stats;
 	m = *head;
-
-	ndescs = 1; /* XXX: TSO? */
-	if (txqcq->cmd_head_index + ndescs == txqcq->cmd_tail_index) {
-		stats->stop++;
-		/* This is a hard error, log it */
-		IONIC_NETDEV_QERR(txqcq, "BUG! Tx ring full when queue awake!\n");
-		return ENOBUFS;
-	}
 	
-#ifdef IONIC_TSO
 	if (m->m_pkthdr.csum_flags & CSUM_TSO)
-		err = ionic_tx_tso_xmit(q, m);
+		err = ionic_tx_tso_setup(txqcq, m);
 	else
-#endif
-		err = ionic_tx_xmit(txqcq, m);
+		err = ionic_tx_setup(txqcq, m);
 
 	if (err)
 		goto err_out_drop;
 
 	stats->pkts++;
 	stats->bytes += m->m_len;
-
 
 	/* XXX ping doorbell on 4 rx submission. */
 	ionic_ring_doorbell(txqcq->db, txqcq->qid, txqcq->cmd_head_index);
@@ -892,11 +916,18 @@ ionic_lif_add_txtstat(struct sysctl_ctx_list *ctx,
         &txstat->tso_ipv4, "TSO for IPv4");
     SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_ipv6", CTLFLAG_RD,
         &txstat->tso_ipv6, "TSO for IPv6");
-
-#if 0	
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "dma_map_error", CTLFLAG_RD,
+        &txstat->dma_map_err, "DMA mapping error");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tx_clean", CTLFLAG_RD,
+        &txstat->clean, "Tx clean");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "pkts_drop", CTLFLAG_RD,
+        &txstat->drop, "Packets were dropped");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "no_descs", CTLFLAG_RD,
+        &txstat->no_descs, "Descriptors not available");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "linearize", CTLFLAG_RD,
+        &txstat->linearize, "Linearize  mbuf");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "bad_ethtype", CTLFLAG_RD,
         &txstat->bad_ethtype, "Tx malformed Ethernet");
-#endif
 }
 
 static void
@@ -984,6 +1015,11 @@ ionic_set_os_features(struct ifnet* ifp, uint32_t hw_features)
 	if (hw_features & ETH_HW_RX_CSUM)
 		ifp->if_capabilities |=  IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6;
 
+	if (hw_features & ETH_HW_TSO)
+		ifp->if_capabilities |=  IFCAP_TSO4;
+
+	if (hw_features & ETH_HW_TSO_IPV6)
+		ifp->if_capabilities |=  IFCAP_TSO6;
 	/* XXX: add more capabilities. */
 
 	ifp->if_capenable = ifp->if_capabilities;

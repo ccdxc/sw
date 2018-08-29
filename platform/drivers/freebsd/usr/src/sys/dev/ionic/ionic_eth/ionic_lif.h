@@ -56,7 +56,7 @@ struct tx_stats {
 	u64 clean;
 	u64 drop;
 	u64 linearize;
-	u64 stop;
+	u64 no_descs;
 	u64 no_csum_offload;
 	u64 csum_offload;
 	//u64 crc32_csum;
@@ -192,8 +192,8 @@ struct tx_qcq {
 	int cmd_head_index;
 	int cmd_tail_index;
 
-	int sg_head_index;
-	int sg_tail_index;
+//	int sg_head_index;
+//	int sg_tail_index;
 	/* Index for completion descriptors. */
 	int comp_index;
 
