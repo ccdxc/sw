@@ -571,7 +571,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 					err = json.Unmarshal([]byte(databytes), eObj)
 					if err != nil {
 						fdr.logger.Errorf("Error unmarshalling json data to search result event entry : %+v", err)
+						continue
 					}
+					delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
 					fdr.logger.Debugf("Search hits result - event entry: %d {%+v}", i, eObj)
 					robj = eObj
 					obj, err := types.MarshalAny(robj.(proto.Message))
@@ -590,7 +592,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 					err = json.Unmarshal([]byte(databytes), &aObj)
 					if err != nil {
 						fdr.logger.Errorf("Error unmarshalling json data to search result alert entry : %+v", err)
+						continue
 					}
+					delete(aObj.ObjectMeta.Labels, globals.CategoryLabel)
 					fdr.logger.Debugf("Search hits result - alert entry: %d {%+v}", i, aObj)
 					robj = aObj
 					obj, err := types.MarshalAny(robj.(proto.Message))
@@ -608,7 +612,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 					err = json.Unmarshal([]byte(databytes), &cObj)
 					if err != nil {
 						fdr.logger.Errorf("Error unmarshalling json data to search result config entry : %+v", err)
+						continue
 					}
+					delete(cObj.ObjectMeta.Labels, globals.CategoryLabel)
 					fdr.logger.Debugf("Search hits result - config entry: %d {%+v}", i, cObj)
 					robj = cObj
 					obj, err := types.MarshalAny(robj.(proto.Message))
@@ -705,7 +711,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 												err = json.Unmarshal([]byte(databytes), eObj)
 												if err != nil {
 													fdr.logger.Errorf("Error unmarshalling json data to search result event entry : %+v", err)
+													continue
 												}
+												delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
 												fdr.logger.Debugf("Search hits result - event entry: %d {%+v}", i, eObj)
 												robj = eObj
 												obj, err := types.MarshalAny(robj.(proto.Message))
@@ -724,7 +732,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 												err = json.Unmarshal([]byte(databytes), &aObj)
 												if err != nil {
 													fdr.logger.Errorf("Error unmarshalling json data to search result alert entry : %+v", err)
+													continue
 												}
+												delete(aObj.ObjectMeta.Labels, globals.CategoryLabel)
 												fdr.logger.Debugf("Search hits result - alert entry: %d {%+v}", i, aObj)
 												robj = aObj
 												obj, err := types.MarshalAny(robj.(proto.Message))
@@ -743,7 +753,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 												err = json.Unmarshal([]byte(databytes), &cObj)
 												if err != nil {
 													fdr.logger.Errorf("Error unmarshalling json data to search result config entry : %+v", err)
+													continue
 												}
+												delete(cObj.ObjectMeta.Labels, globals.CategoryLabel)
 												fdr.logger.Debugf("Search hits result - config entry: %d {%+v}", i, cObj)
 												robj = cObj
 												obj, err := types.MarshalAny(robj.(proto.Message))

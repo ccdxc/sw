@@ -607,7 +607,7 @@ func (infraCtx *infraCtx) verifyVMConnectivity() error {
 			infraCtx.logger.Println(stdout)
 			if ret != 0 {
 				dumpIfconfig()
-				return errors.Errorf("Ping to destination %s failed from :", nextIP, vm.Name())
+				return errors.Errorf("Ping to destination %s failed from %s", nextIP, vm.Name())
 			}
 		}
 	}

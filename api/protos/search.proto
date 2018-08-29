@@ -96,7 +96,7 @@ message Kind {
         Tenant                  = 4;
         Endpoint                = 5;
         SecurityGroup           = 6;
-        Sgpolicy                = 7;
+        SGPolicy                = 7;
         App                     = 8;
         AppUser                 = 9;
         AppUserGrp              = 10;
@@ -119,6 +119,7 @@ message Kind {
         FwlogPolicy             = 27;
         MirrorSession           = 28;
         Workload                = 29;
+        Host                    = 30;
     }
 }
 

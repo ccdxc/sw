@@ -406,7 +406,7 @@ func (idr *Indexer) startWriter(id int) {
 			if ometa.Labels == nil {
 				ometa.Labels = make(map[string]string)
 			}
-			ometa.Labels["_category"] = category
+			ometa.Labels[globals.CategoryLabel] = category
 
 			// If the tenant is empty, add a default value to enable
 			// aggregation by tenants. Elastic skips objects that have

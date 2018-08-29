@@ -50,7 +50,7 @@ export enum SearchSearchQuery_kinds {
     'Tenant' = "Tenant",
     'Endpoint' = "Endpoint",
     'SecurityGroup' = "SecurityGroup",
-    'Sgpolicy' = "Sgpolicy",
+    'SGPolicy' = "SGPolicy",
     'App' = "App",
     'AppUser' = "AppUser",
     'AppUserGrp' = "AppUserGrp",
@@ -73,6 +73,7 @@ export enum SearchSearchQuery_kinds {
     'FwlogPolicy' = "FwlogPolicy",
     'MirrorSession' = "MirrorSession",
     'Workload' = "Workload",
+    'Host' = "Host",
 }
 
 export enum SearchSearchRequest_mode {

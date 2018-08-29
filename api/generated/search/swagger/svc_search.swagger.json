@@ -762,7 +762,7 @@
             "Tenant",
             "Endpoint",
             "SecurityGroup",
-            "Sgpolicy",
+            "SGPolicy",
             "App",
             "AppUser",
             "AppUserGrp",
@@ -784,7 +784,8 @@
             "FlowExportPolicy",
             "FwlogPolicy",
             "MirrorSession",
-            "Workload"
+            "Workload",
+            "Host"
           ],
           "default": "Cluster",
           "maxLength": 64,
