@@ -5831,10 +5831,8 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev, int eqid)
 	INIT_WORK(&eq->work, ionic_poll_eq_work);
 
 	rc = ionic_api_get_intr(dev->lif, &eq->irq);
-	if (rc < 0) {
-		rc = eq->intr;
+	if (rc < 0)
 		goto err_intr;
-	}
 
 	eq->intr = rc;
 
