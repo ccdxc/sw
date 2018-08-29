@@ -192,10 +192,12 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
    */
   displayLabels(entry): string {
     const list = [];
-    const keys = Object.keys(entry.object.meta.labels);
-    keys.forEach(key => {
-      list.push(key + ' = ' + entry.object.meta.labels[key]);
-    });
+    if (entry.object.meta.labels != null) {
+      const keys = Object.keys(entry.object.meta.labels);
+      keys.forEach(key => {
+        list.push(key + ' = ' + entry.object.meta.labels[key]);
+      });
+    }
     return list.toString();
   }
 

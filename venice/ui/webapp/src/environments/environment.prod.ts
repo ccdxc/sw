@@ -2,6 +2,8 @@ export const environment = {
   production: true,
   isRESTAPIReady: true,
 
+  disableFocusTests: true,
+
   log_format: 'JSON',
   log_level: 0,
   logger_console: true,

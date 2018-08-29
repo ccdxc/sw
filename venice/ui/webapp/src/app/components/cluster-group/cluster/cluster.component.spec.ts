@@ -25,6 +25,7 @@ import { EventsService } from '@app/services/events.service';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchService } from '@app/services/generated/search.service';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 @Component({
   template: ''
@@ -82,7 +83,7 @@ describe('ClusterComponent', () => {
     const clusterDe: DebugElement = fixture.debugElement;
     const clusterHe: HTMLElement = clusterDe.nativeElement;
     expect(clusterDe.queryAll(By.css('.pagebody-icon')).length).toBe(1);
-    expect(clusterHe.querySelector('div.pagebody-headercontent').textContent).toContain('testCluster');
+    expect(clusterHe.querySelector('div.pagebody-headercontent').textContent).toContain('Cluster Overview');
     expect(clusterHe.querySelector('div.cluster-details-panel-leader-value').textContent).toContain('node1');
     expect(clusterHe.querySelector('div.cluster-details-panel-last-leader-transition-time').textContent).toContain('06-13-2018');
     expect(clusterHe.querySelector('div.cluster-details-panel-quorum-nodes').textContent).toContain('node1, node2, node3');
@@ -92,12 +93,29 @@ describe('ClusterComponent', () => {
   });
 
   it('nodes should have right values', () => {
+    const events = [];
     const node1 = new ClusterNode({ 'kind': 'Node', 'api-version': 'v1', 'meta': { 'name': 'node1', 'tenant': 'default', 'namespace': 'default', 'resource-version': '5', 'uuid': '6a000b60-949b-4338-bd7e-8e750a9a8edb', 'creation-time': '2018-06-13T17:50:29.117624431Z', 'mod-time': '2018-06-13T17:50:29.117624431Z', 'self-link': '/v1/cluster/nodes/node1' }, 'spec': {}, 'status': { 'phase': 'JOINED', 'quorum': true } });
+    events.push({ Type: "Created", Object: node1 });
     const node2 = new ClusterNode({ 'kind': 'Node', 'api-version': 'v1', 'meta': { 'name': 'node2', 'tenant': 'default', 'namespace': 'default', 'resource-version': '5', 'uuid': '1d96fc5c-7701-4d8d-ada8-3ec160a50138', 'creation-time': '2018-06-13T17:50:29.117702613Z', 'mod-time': '2018-06-13T17:50:29.117702613Z', 'self-link': '/v1/cluster/nodes/node2' }, 'spec': {}, 'status': { 'phase': 'JOINED', 'quorum': true } });
+    events.push({ Type: "Created", Object: node2 });
     const node3 = new ClusterNode({ 'kind': 'Node', 'api-version': 'v1', 'meta': { 'name': 'node3', 'tenant': 'default', 'namespace': 'default', 'resource-version': '5', 'uuid': 'cdf2c24c-3afb-417f-a615-6a4cbd77f2c4', 'creation-time': '2018-06-13T17:50:29.117712981Z', 'mod-time': '2018-06-13T17:50:29.117712981Z', 'self-link': '/v1/cluster/nodes/node3' }, 'spec': {}, 'status': { 'phase': 'JOINED', 'quorum': true } });
+    events.push({ Type: "Created", Object: node3 });
     const node4 = new ClusterNode({ 'kind': 'Node', 'api-version': 'v1', 'meta': { 'name': 'node4', 'tenant': 'default', 'resource-version': '6918', 'uuid': 'ae07bb01-b50c-4941-9be8-133766b3725e', 'creation-time': '2018-06-13T18:22:28.189909722Z', 'mod-time': '2018-06-13T18:22:28.25393029Z', 'self-link': '/v1/cluster/nodes/node4' }, 'spec': {}, 'status': { 'phase': 'JOINED' } });
+    events.push({ Type: "Created", Object: node4 });
     const node5 = new ClusterNode({ 'kind': 'Node', 'api-version': 'v1', 'meta': { 'name': 'node5', 'tenant': 'default', 'resource-version': '6957', 'uuid': '199e7e27-a191-4332-9e28-e3c1f4445ddf', 'creation-time': '2018-06-13T18:22:30.542580696Z', 'mod-time': '2018-06-13T18:22:30.607773739Z', 'self-link': '/v1/cluster/nodes/node5' }, 'spec': {}, 'status': { 'phase': 'JOINED' } });
-    component.nodes = [node1, node2, node3, node4, node5];
+    events.push({ Type: "Created", Object: node5 });
+    const service = TestBed.get(ClusterService);
+    const ret = {
+      body: {
+        result: {
+          Events: events
+        }
+      }
+    }
+    spyOn(service, 'WatchNode').and.returnValue(
+      new BehaviorSubject(ret)
+    )
+    // component.nodes = [node1, node2, node3, node4, node5];
     fixture.detectChanges();
     const nodesDe: DebugElement = fixture.debugElement;
     const nodesHe: HTMLElement = nodesDe.nativeElement;
@@ -108,14 +126,14 @@ describe('ClusterComponent', () => {
     expect(rows.length).toBe(5);
     for (let i = 0; i < 5; i++) {
       const cols = rows[i].querySelectorAll('td');
-      expect(cols.length).toBe(4);
-      expect(cols[1].textContent).toContain('node' + (i + 1));
+      expect(cols.length).toBe(3);
+      expect(cols[0].textContent).toContain('node' + (i + 1));
       if (i < 3) {
-        expect(cols[2].textContent).toContain('yes');
+        expect(cols[1].textContent).toContain('yes');
       } else {
-        expect(cols[2].textContent).toBe('');
+        expect(cols[1].textContent).toBe('');
       }
-      expect(cols[3].textContent).toContain('Joined');
+      expect(cols[2].textContent).toContain('Joined');
     }
   });
 });

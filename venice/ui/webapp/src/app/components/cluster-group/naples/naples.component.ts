@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewEncapsulation, ViewChild, OnDestroy } from '@angular/core';
 import { Table } from 'primeng/table';
-import { IClusterSmartNIC, ClusterSmartNICSpec, IApiStatus } from '@sdk/v1/models/generated/cluster';
+import { ClusterSmartNICSpec, IApiStatus, ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Subscription } from 'rxjs/Subscription';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -17,7 +17,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 export class NaplesComponent implements OnInit, OnDestroy {
   @ViewChild('naplesTable') naplesTurboTable: Table;
 
-  naples: ReadonlyArray<IClusterSmartNIC> = [];
+  naples: ReadonlyArray<ClusterSmartNIC> = [];
   // Used for processing the stream events
   naplesEventUtility: HttpEventUtility;
 
@@ -30,8 +30,6 @@ export class NaplesComponent implements OnInit, OnDestroy {
     { field: 'meta.creation-time', header: 'Creation Time', class: 'naples-column-date', sortable: false },
   ];
   subscriptions: Subscription[] = [];
-
-  phaseUIHint = ClusterSmartNICSpec.propInfo.phase.enum;
 
   naplesIcon: Icon = {
     margin: {
@@ -55,8 +53,8 @@ export class NaplesComponent implements OnInit, OnDestroy {
   }
 
   getNaples() {
-    this.naplesEventUtility = new HttpEventUtility();
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<IClusterSmartNIC>;
+    this.naplesEventUtility = new HttpEventUtility(ClusterSmartNIC);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
     const subscription = this.clusterService.WatchSmartNIC().subscribe(
       response => {
         const body: any = response.body;

@@ -27,6 +27,10 @@ import { SecurityService } from 'app/services/generated/security.service';
 import { BehaviorSubject } from 'rxjs';
 import { SgpolicyComponent } from './sgpolicy.component';
 
+/**
+ * We don't use the verify table in TestingUtility as we need to skip the
+ * first field index
+ */
 function verifyTable(data: any[], columns: any[], tableElem: DebugElement) {
   const rows = tableElem.queryAll(By.css('tr'));
   expect(rows.length).toBe(data.length, 'Data did not match number of entries in the table');

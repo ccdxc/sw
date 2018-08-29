@@ -11,7 +11,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
-import { IApiStatus, ISecuritySGPolicy, ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
+import { IApiStatus, ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
 import { SearchUtil } from '@app/components/search/SearchUtil';
 
@@ -58,7 +58,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
 
   cols: any[];
   // Holds all policy objects, for initial use case, there will only be one object
-  sgPolicies: ReadonlyArray<ISecuritySGPolicy> = [];
+  sgPolicies: ReadonlyArray<SecuritySGPolicy> = [];
   sgPoliciesEventUtility: HttpEventUtility;
 
   // Used for the table - when true there is a loading icon displayed
@@ -81,7 +81,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   };
 
   // Current policy that is being displayed
-  selectedPolicy: ISecuritySGPolicy;
+  selectedPolicy: SecuritySGPolicy;
 
   // TODO: Update with actual creator
   creator = 'pensando';
@@ -293,7 +293,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   }
 
   getSGPolicies() {
-    this.sgPoliciesEventUtility = new HttpEventUtility();
+    this.sgPoliciesEventUtility = new HttpEventUtility(SecuritySGPolicy);
     this.sgPolicies = this.sgPoliciesEventUtility.array;
     const subscription = this.securityService.WatchSGPolicy().subscribe(
       response => {

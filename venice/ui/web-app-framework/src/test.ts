@@ -11,6 +11,7 @@ import {
   BrowserDynamicTestingModule,
   platformBrowserDynamicTesting
 } from '@angular/platform-browser-dynamic/testing';
+import { environment } from '@env/environment';
 
 // Unfortunately there's no typing for the `__karma__` variable. Just declare it as any.
 declare const __karma__: any;
@@ -26,6 +27,26 @@ getTestBed().initTestEnvironment(
 );
 // Then we find all the tests.
 const context = require.context('./', true, /\.spec\.ts$/);
+
+if (environment.disableFocusTests) {
+  // Disabling focus tests
+  const localGlobal = global as any;
+  const fdescribe = localGlobal.fdescribe;
+  const fit = localGlobal.fit;
+  localGlobal.fdescribe = (description, testFn) => {
+    fdescribe(description, () => {
+      it('', () => {
+        fail("fdescribe and fit tests are not allowed to be checked in");
+      })
+    })
+  };
+  localGlobal.fit = (description, testFn) => {
+    fit(description, () => {
+      fail("fdescribe and fit tests are not allowed to be checked in");
+    })
+  }
+}
+
 // And load the modules.
 context.keys().map(context);
 // Finally, start Karma to run the tests.

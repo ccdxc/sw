@@ -13,7 +13,7 @@ module.exports = function(config) {
       require('@angular/cli/plugins/karma')
     ],
     files: [
-      'https://code.jquery.com/jquery-3.2.1.slim.min.js'
+      "node_modules/jquery/dist/jquery.min.js",
     ],
     client: {
       clearContext: false // leave Jasmine Spec Runner output visible in browser

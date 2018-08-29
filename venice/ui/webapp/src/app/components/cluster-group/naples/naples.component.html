@@ -29,9 +29,6 @@
           <div *ngSwitchCase="'meta.creation-time'" class="naples-date-row">
             {{rowData.meta['creation-time'] | PrettyDate }}
           </div>
-          <div *ngSwitchCase="'spec.phase'" class="naples-date-row">
-            {{ phaseUIHint[rowData.spec.phase] }}
-          </div>
           <ng-container *ngSwitchDefault>
             {{displayColumn(rowData, col)}}
           </ng-container>

@@ -614,11 +614,34 @@ export class Utility {
 
   /**
    * This API traverse object TREE to fetch value
+   * Unless specified, will automatically apply return the ui hints
+   * version of the value if possible
    */
-  public static getObjectValueByPropertyPath(inputObject: any, fields: any): any {
+  public static getObjectValueByPropertyPath(inputObject: any, fields: any, useUIHints: boolean = true): any {
     let value = inputObject;
+    let propHelper;
+    let uiHintMap;
+    if (useUIHints && inputObject.getPropInfo != null) {
+      // We have an object from venice-sdk, so we can find its property info
+      propHelper = inputObject;
+    }
     for (let i = 0; i < fields.length; i++) {
+      if (propHelper != null) {
+        if (i === fields.length - 1) {
+          // We are the last value, so we are potentially just before a leaf
+          // We check the prop info at this level.
+          if (propHelper.getPropInfo != null && propHelper.getPropInfo(fields[i]).enum) {
+            uiHintMap = propHelper.getPropInfo(fields[i]).enum;
+          }
+        } else {
+          propHelper = inputObject[fields[i]];
+        }
+      }
       value = value[fields[i]];
+    }
+
+    if (uiHintMap != null) {
+      value = uiHintMap[value];
     }
     return value;
   }

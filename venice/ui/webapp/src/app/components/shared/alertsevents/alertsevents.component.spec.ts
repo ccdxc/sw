@@ -32,6 +32,7 @@ import { Utility } from '@app/common/Utility';
 import { EventsEvent, EventsEventAttributes_severity_uihint } from '@sdk/v1/models/generated/events';
 import { Eventsv1Service } from '@sdk/v1/services/generated/eventsv1.service';
 import { By } from '@angular/platform-browser';
+import { TestingUtility } from '@app/common/TestingUtility';
 
 
 @Component({
@@ -51,53 +52,6 @@ function genEvent(modTime, creationTime, severity, type, message, source, count)
     'message': message,
     'source': source,
     'count': count
-  });
-}
-
-function verifyTable(data: any[], columns: any[], tableElem: DebugElement) {
-  const rows = tableElem.queryAll(By.css('tr'));
-  expect(rows.length).toBe(data.length, 'Data did not match number of entries in the table');
-  rows.forEach((row, rowIndex) => {
-    const rowData = data[rowIndex];
-    row.children.forEach((field, fieldIndex) => {
-      const colData = columns[fieldIndex];
-      switch (colData.field) {
-        case 'meta.mod-time':
-          expect(field.nativeElement.textContent)
-            .toContain(
-              new PrettyDatePipe('en-US').transform(rowData.meta['mod-time']),
-              'mod time did not match');
-          break;
-
-        case 'meta.creation-time':
-          expect(field.nativeElement.textContent)
-            .toContain(
-              new PrettyDatePipe('en-US').transform(rowData.meta['creation-time']),
-              'creation time did not match');
-          break;
-
-        case 'severity':
-          expect(field.children.length).toBe(2);
-          if (rowData.severity === 'INFO') {
-            expect(field.children[0].nativeElement.textContent).toContain('notifications');
-          } else {
-            expect(field.children[0].nativeElement.textContent).toContain('error');
-          }
-          expect(field.children[1].nativeElement.textContent)
-            .toContain(EventsEventAttributes_severity_uihint[rowData.severity],
-              'severity column did not match');
-          break;
-
-        case 'source':
-          expect(field.nativeElement.textContent).toContain(
-            rowData.source['node-name'] + '  :  ' + rowData.source.component, 'source column did not match');
-          break;
-
-        default:
-          const fieldData = Utility.getObjectValueByPropertyPath(data[rowIndex], colData.field.split('.'));
-          expect(field.nativeElement.textContent).toContain(fieldData, colData.header + ' did not match');
-      }
-    });
   });
 }
 
@@ -173,7 +127,7 @@ describe('AlertseventsComponent', () => {
     const title = eventsContainer.query(By.css('.tableheader-title'));
     expect(title.nativeElement.textContent).toContain('Events (0)');
 
-    // Checking table headersk
+    // Checking table header
     const headers = eventsContainer.query(By.css('thead tr'));
     headers.children.forEach((col, index) => {
       expect(col.nativeElement.textContent).toContain(component.eventCols[index].header);
@@ -190,6 +144,23 @@ describe('AlertseventsComponent', () => {
     // Checking that the table entry is there
     tableBody = eventsContainer.query(By.css('.ui-table-scrollable-body-table tbody'));
     expect(tableBody.children.length).toBe(1);
-    verifyTable(poll1, component.eventCols, tableBody);
+    const caseMap = {
+      'severity': (field, rowData, rowIndex) => {
+        expect(field.children.length).toBe(2);
+        if (rowData.severity === 'INFO') {
+          expect(field.children[0].nativeElement.textContent).toContain('notifications');
+        } else {
+          expect(field.children[0].nativeElement.textContent).toContain('error');
+        }
+        expect(field.children[1].nativeElement.textContent)
+          .toContain(EventsEventAttributes_severity_uihint[rowData.severity],
+            'severity column did not match');
+      },
+      'source': (field, rowData, rowIndex) => {
+        expect(field.nativeElement.textContent).toContain(
+          rowData.source['node-name'] + '  :  ' + rowData.source.component, 'source column did not match');
+      }
+    }
+    TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
   });
 });

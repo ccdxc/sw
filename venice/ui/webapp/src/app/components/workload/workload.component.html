@@ -47,10 +47,10 @@
             </div>
             <div *ngSwitchCase="'spec.interfaces'" class="workload-column-interfaces-data">
               <ng-container *ngFor="let mac of getKeys(rowData.spec.interfaces)">
-                <ng-container *ngIf="rowData.status != null && rowData.status.interfaces != null && rowData.status.interfaces[mac] != null">
-                  <div>{{mac}}  -  {{rowData.status.interfaces[mac]["ip-addrs"].join(', ')}}</div>
+                <ng-container *ngIf="rowData.status != null && rowData.status.interfaces != null && rowData.status.interfaces[mac] != null && rowData.status.interfaces[mac]['ip-addresses'] != null">
+                  <div>{{mac}}  -  {{rowData.status.interfaces[mac]["ip-addresses"].join(', ')}}</div>
                 </ng-container>
-                <ng-container *ngIf="rowData.status == null || rowData.status.interfaces == null || rowData.status.interfaces[mac] == null">
+                <ng-container *ngIf="rowData.status == null || rowData.status.interfaces == null || rowData.status.interfaces[mac] == null || rowData.status.interfaces[mac]['ip-addresses'] == null">
                  <div>{{mac}}</div>
                 </ng-container>
                 <div @fastSlideInOut *ngIf="rowHoverName === rowData.meta.name" class="workload-column-values">Micro-seg vlan: {{rowData.spec.interfaces[mac]["micro-seg-vlan"]}}        External vlan: {{rowData.spec.interfaces[mac]["external-vlan"]}}</div>

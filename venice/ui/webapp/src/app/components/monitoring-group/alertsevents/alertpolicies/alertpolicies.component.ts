@@ -54,17 +54,17 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
   }
 
   getAlertPolicies() {
-    this.eventPoliciesEventUtility = new HttpEventUtility(
+    this.eventPoliciesEventUtility = new HttpEventUtility(null, false,
       (policy) => {
         return policy.spec.resource === 'Event';
       }
     );
-    this.metricPoliciesEventUtility = new HttpEventUtility(
+    this.metricPoliciesEventUtility = new HttpEventUtility(null, false,
       (policy) => {
         return policy.spec.resource === 'EndpointMetrics';
       }
     );
-    this.objectPoliciesEventUtility = new HttpEventUtility(
+    this.objectPoliciesEventUtility = new HttpEventUtility(null, false,
       (policy) => {
         return policy.spec.resource !== 'EndpointMetrics' &&
           policy.spec.resource !== 'Event';

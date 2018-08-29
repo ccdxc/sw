@@ -8,7 +8,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { IApiStatus } from '@sdk/v1/models/generated/workload';
+import { IApiStatus, WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs/Subscription';
 import { BaseComponent } from '../base/base.component';
@@ -63,7 +63,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   // Workload table vars
 
   // Holds all the workloads
-  workloads: any;
+  workloads: ReadonlyArray<WorkloadWorkload>;
 
   // Used for the table - when true there is a loading icon displayed
   tableLoading: boolean = false;
@@ -143,9 +143,11 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
 
   formatLabels(labelObj) {
     const labels = [];
-    Object.keys(labelObj).forEach((key) => {
-      labels.push(key + ': ' + labelObj[key]);
-    });
+    if (labelObj != null) {
+      Object.keys(labelObj).forEach((key) => {
+        labels.push(key + ': ' + labelObj[key]);
+      });
+    }
     return labels.join(', ');
   }
 
@@ -178,8 +180,6 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     switch (column) {
       case "meta.labels":
         return this.formatLabels(data.meta.labels);
-      case "spec.interfaces":
-        return this.formatInterfaces(data.spec.interfaces);
       default:
         return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
     }
@@ -213,7 +213,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   }
 
   getWorkloads() {
-    this.workloadEventUtility = new HttpEventUtility();
+    this.workloadEventUtility = new HttpEventUtility(WorkloadWorkload);
     this.workloads = this.workloadEventUtility.array;
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
@@ -236,6 +236,10 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
    * Used by html to get an object's keys for iterating over.
    */
   getKeys(obj) {
-    return Object.keys(obj);
+    if (obj != null) {
+      return Object.keys(obj);
+    } else {
+      return [];
+    }
   }
 }
