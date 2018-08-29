@@ -714,11 +714,6 @@ static void ionic_admin_poll_locked(struct ionic_ibdev *dev)
 			goto cq_next;
 		}
 
-		dev_dbg(dev->hwdev, "poll cqe prod %u\n", cq->q.prod);
-		print_hex_dump_debug("cqe ", DUMP_PREFIX_OFFSET, 16, 1,
-				     ionic_queue_at_prod(&cq->q),
-				     BIT(cq->q.stride_log2), true);
-
 		wr = aq->q_wr[aq->q.cons];
 		if (wr) {
 			aq->q_wr[aq->q.cons] = NULL;
@@ -767,7 +762,7 @@ cq_next:
 
 		*wqe = wr->wqe;
 
-		dev_dbg(dev->hwdev, "post wqe prod %u\n", aq->q.prod);
+		dev_dbg(&dev->ibdev.dev, "post admin prod %u\n", aq->q.prod);
 		print_hex_dump_debug("wqe ", DUMP_PREFIX_OFFSET, 16, 1,
 				     ionic_queue_at_prod(&aq->q),
 				     BIT(aq->q.stride_log2), true);
