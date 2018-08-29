@@ -108,7 +108,32 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   }
 
   ngOnDestroy(): void {
+    Object.keys(this.subscriptions).forEach((item) => {
+      if (this.subscriptions[item]) {
+        this.subscriptions[item].unsubscribe();
+      }
+    });
+  }
 
+  /**
+   * This API serves html template. It invokes a SEARCH_SET_SEARCHSTRING_REQUEST message.  Global search box will response to it.
+   * @param $event
+   */
+  searchWithGrammarClick($event) {
+    const payload = {
+      text: 'in:Cluster is:Node'
+    };
+    this._controllerService.publish(Eventtypes.SEARCH_SET_SEARCHSTRING_REQUEST, payload);
+    return false;
+  }
+
+  /**
+   * This API serves html template. It invokes a SEARCH_OPEN_GUIDEDSERCH_REQUEST message.  Global search box will response to it.
+   * @param $event
+   */
+  advanceSearchClick($event) {
+    this._controllerService.publish(Eventtypes.SEARCH_OPEN_GUIDEDSERCH_REQUEST, {});
+    return false;
   }
 
   getCategoryTitle(category) {

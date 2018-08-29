@@ -3,7 +3,9 @@
         <li *ngFor="let option of suggestions; let idx = index" class="searchsuggestion-option-li" tabindex="-1"
              (mouseenter)="highlightOption=option" 
             (click)="onOptionClick($event, option)"  
-            [ngClass]="{'searchsuggestion-ui-state-highlight':(highlightOption==option)}">
+            [ngClass]="{'searchsuggestion-ui-state-highlight':(highlightOption==option)}"
+            title = "right-arrow key to select"
+            >
             <div class="searchsuggestion-option-div" >
                 <span >
                     <span class="searchbox-select-panel-template-item-options-item-init searchbox-select-panel-template-item-options-item-init-name">{{option.name}}</span> 

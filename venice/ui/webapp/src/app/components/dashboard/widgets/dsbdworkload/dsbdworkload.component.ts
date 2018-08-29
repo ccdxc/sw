@@ -63,7 +63,7 @@ export class DsbdworkloadComponent implements OnInit, OnDestroy, OnChanges {
     const endpointPercent = data.endpointPercent;
     const endpointPercentCompliment = data.endpointPercentCompliment;
     this.data = {
-      labels: ['Week1', 'Week2', 'Weak3'],
+      labels: ['Week1', 'Week2', 'Week3'],
       datasets: [
         {
           type: 'line',

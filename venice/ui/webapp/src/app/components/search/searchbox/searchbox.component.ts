@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewEncapsulation, OnDestroy } from '@angular/core';
 import { SearchComponent } from '@app/components/search/search/search.component';
 
 import { CommonComponent } from '@app/common.component';
@@ -73,13 +73,13 @@ import { SearchSearchResponse, SearchSearchRequest } from '@sdk/v1/models/genera
   styleUrls: ['./searchbox.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class SearchboxComponent extends CommonComponent implements OnInit {
+export class SearchboxComponent extends CommonComponent implements OnInit, OnDestroy {
 
   // widget properties
   searchVeniceApplication: any;
   noSearchSuggestion: String = 'no search suggestion';
   searchSuggestions: SearchSuggestion[] = [];
-
+  subscriptions = {};
   @ViewChild('search') _searchwidget: SearchComponent;
 
   constructor(
@@ -95,6 +95,42 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
   }
 
   ngOnInit() {
+    // set up subscriptions
+    this.subscriptions[Eventtypes.SEARCH_SET_SEARCHSTRING_REQUEST] = this._controllerService.subscribe(Eventtypes.SEARCH_SET_SEARCHSTRING_REQUEST, (payload) => {
+      this.onSetSearchStringRequest(payload);
+    });
+
+    this.subscriptions[Eventtypes.SEARCH_OPEN_GUIDEDSERCH_REQUEST] = this._controllerService.subscribe(Eventtypes.SEARCH_OPEN_GUIDEDSERCH_REQUEST, (payload) => {
+      this.onOpenGuidedSearchRequest(payload);
+    });
+  }
+
+  ngOnDestroy(): void {
+    Object.keys(this.subscriptions).forEach((item) => {
+      if (this.subscriptions[item]) {
+        this.subscriptions[item].unsubscribe();
+      }
+    });
+  }
+
+  /**
+   * This API responses to subcrition
+   * @param payload
+   */
+  onSetSearchStringRequest(payload: any) {
+    if (this._searchwidget && payload && payload.text) {
+      this._searchwidget.setInputText(payload.text);
+    }
+  }
+
+  /**
+   * This API responses to subcrition
+   * @param payload
+   */
+  onOpenGuidedSearchRequest(payload: any) {
+    if (this._searchwidget && payload) {
+      this._searchwidget.showGuidedSearch(null);
+    }
   }
 
   /**
@@ -140,10 +176,14 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
 
   private buildSearchSuggestions(value) {
     if (!this.searchSuggestions || this.searchSuggestions.length === 0) {
-      this.buildInitSuggestions();
+      if (Utility.isEmpty(this.getSearchInputString())) {
+        this.buildInitSuggestions();
+      }
     } else {
       if (Utility.isEmpty(this.getSearchInputString())) {
         this.buildInitSuggestions();
+      } else {
+        this.getVeniceApplicationSearchSuggestions(this.getSearchInputString());
       }
     }
     this.displaySuggestionPanelVisible(true);
@@ -160,6 +200,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
   */
   protected getVeniceApplicationSearchSuggestions(inputSearchString: any) {
     const searchGrammarGroup = this.parseInput(inputSearchString);  // parse search-string to see if it contains search-grammar keywords (in:, is:, etc)
+
     let payload = null;
     if (searchGrammarGroup.length === 0) {
       payload = this.buildTextSearchPayload(inputSearchString);
@@ -262,6 +303,14 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
       this.errorMessage = 'Failed to retrieve data! ' + err;
       this.error(err);
       this._searchwidget.loading = false;
+      if (!this._searchwidget.isInGuidedSearchMode) {
+        this.searchSuggestions.length = 0;
+        this.displaySuggestionPanelVisible(true);
+      } else {
+        this._searchwidget.isInGuidedSearchMode = false; // close guided-search overlay panel
+        this._controllerService.publish(Eventtypes.SEARCH_RESULT_LOAD_REQUEST, {id: 'searchresult'});
+        this.displaySuggestionPanelVisible(false);
+      }
     });
   }
 
@@ -327,14 +376,28 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     const output = [];
     const values = obj.value.split(',');
     for (let i = 0; i < values.length; i++) {
-      const exprStr = values[i];
-      output.push(Utility.makeFirstLetterUppercase(exprStr));
+      let exprStrCategory = values[i];
+      exprStrCategory = Utility.makeFirstLetterUppercase(exprStrCategory.toLowerCase());
+      if (SearchUtil.isValidCategory(exprStrCategory)) {
+        output.push(exprStrCategory);
+      }
     }
     return output;
   }
+
   private buildKindsPayload(obj): any {
-    return this.buildCategoriesPayload(obj);
+    const output = [];
+    const values = obj.value.split(',');
+    for (let i = 0; i < values.length; i++) {
+      let exprStrKind = values[i];
+      exprStrKind = Utility.makeFirstLetterUppercase(exprStrKind.toLowerCase());
+      if (SearchUtil.isValidKind(exprStrKind)) {
+        output.push(exprStrKind);
+      }
+    }
+    return output;
   }
+
   private buildFieldsPayload(obj): any {
     return this.buildFieldsLabelsPayloadHelper(obj, true);
   }
@@ -389,7 +452,8 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     // Due to PR5959 change, we have to process data.entries to get to the JSON object level
     const objects = data.entries;
     const entries = [];
-    if (!objects ) {
+    if (!objects) {
+      this.searchSuggestions.length = 0; // search retrun no data. So we clear out the suggestions.
       return entries;
     }
     for (let k = 0; k < objects.length; k++) {
@@ -506,24 +570,22 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     }
     this.searchVeniceApplication.length = 0;
     const type = (selection.name);
+    const preFix = SearchUtil.getSearchInitPrefix(selection);
+    this.setSearchInputString(this.getSearchInputString() + ' ' + preFix);
     switch (type) {
       case 'category':
-        this.setSearchInputString(this.getSearchInputString() + ' ' + 'in:');
+        // TODO: figure out how to display overlay
         this.buildCategorySuggestions();
         this.displaySuggestionPanelVisible(true);
-        this._searchwidget.show();
         break;
       case 'kind':
-        this.setSearchInputString(this.getSearchInputString() + ' ' + 'is:');
         this.buildKindSuggestions();
         this.displaySuggestionPanelVisible(true);
         break;
       case 'field':
-        this.setSearchInputString(this.getSearchInputString() + ' ' + 'has:');
         this.searchSuggestions.length = 0;
         break;
       case 'label':
-        this.setSearchInputString(this.getSearchInputString() + ' ' + 'tag:');
         this.searchSuggestions.length = 0;
         break;
       default:
@@ -590,8 +652,10 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    */
   protected handleSelectDefaults(selection: any) {
     if (selection.name) {
-      this.updateSearchInputString(SearchsuggestionTypes.OP_IS, selection);
-      return this.searchByKind(selection);
+      // Invoke get search result
+      this.setSearchInputString(SearchsuggestionTypes.OP_IS + ':' + selection.name);
+      this.searchByKind(selection, false);
+      this.displaySuggestionPanelVisible(false);
     } else {
       return;
     }
@@ -601,11 +665,11 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    * Search by KIND
    * @param selection : SearchSuggestion
    */
-  protected searchByKind(selection: SearchSuggestion) {
+  protected searchByKind(selection: SearchSuggestion, suggestionMode: boolean = true) {
     this.searchByHelper(selection, SearchsuggestionTypes.KINDS);
   }
 
-  protected searchByCategory(selection: SearchSuggestion) {
+  protected searchByCategory(selection: SearchSuggestion, suggestionMode: boolean = true) {
     this.searchByHelper(selection, SearchsuggestionTypes.CATEGORIES);
   }
 
@@ -615,11 +679,11 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    *
    * searchBy is 'KIND'
    */
-  protected searchByHelper(selection: SearchSuggestion, searchBy: string) {
+  protected searchByHelper(selection: SearchSuggestion, searchBy: string, suggestionMode: boolean = true) {
     const searchname = selection.name;
     const payload = this.buildSearchPayloadWithSuggestion(searchname, selection, searchBy);
     const payloadJSON = JSON.stringify(payload);
-    this._callSearchRESTAPI(payloadJSON, searchname);
+    this._callSearchRESTAPI(payloadJSON, searchname, suggestionMode);
   }
 
   protected buildSearchPayloadWithSuggestion(search: any, selection: SearchSuggestion, querytype: string): any {
@@ -736,12 +800,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
    * Then we run invoke Search REST API to get search-result
    */
   onInvokeGuidedSearch(guidedSearchCriteria: GuidedSearchCriteria) {
-    const inStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IN].length > 0) ? SearchsuggestionTypes.OP_IN + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IN].join(',') : '';
-    const isStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IS].length > 0) ? SearchsuggestionTypes.OP_IS + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IS].join(',') : '';
-    const hasStr = this.getHasStringFromGuidedSearchSpec(guidedSearchCriteria);
-    const tagStr = this.getTagStringFromGuidedSearchSpec(guidedSearchCriteria);
-    const list = [inStr, isStr, hasStr, tagStr];
-    const searchInputString = list.join(' ').trim();
+    const searchInputString = this.getSearchInputStringFromGuidedSearchCriteria(guidedSearchCriteria);
     if (Utility.isEmpty(searchInputString)) {
       return;
     }
@@ -752,6 +811,16 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     this._callSearchRESTAPI(payloadJSON, searchInputString, false);
   }
 
+  private getSearchInputStringFromGuidedSearchCriteria(guidedSearchCriteria: GuidedSearchCriteria): string {
+    const inStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IN] && guidedSearchCriteria[SearchsuggestionTypes.OP_IN].length > 0) ? SearchsuggestionTypes.OP_IN + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IN].join(',') : '';
+    const isStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IS] && guidedSearchCriteria[SearchsuggestionTypes.OP_IS].length > 0) ? SearchsuggestionTypes.OP_IS + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IS].join(',') : '';
+    const hasStr = this.getHasStringFromGuidedSearchSpec(guidedSearchCriteria);
+    const tagStr = this.getTagStringFromGuidedSearchSpec(guidedSearchCriteria);
+    const list = [inStr, isStr, hasStr, tagStr];
+    const searchInputString = list.join(' ').trim();
+    return searchInputString;
+  }
+
   /**
    * extract out the 'has' configs
    */
@@ -759,6 +828,9 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     const list = [];
     const type = SearchsuggestionTypes.OP_HAS;
     const hasSpecList = guidedsearchCriteria[type];
+    if (!hasSpecList) {
+      return '';
+    }
     hasSpecList.filter((repeaterValueItem) => {
       if (!Utility.isEmpty(repeaterValueItem.keyFormControl) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
         const str = repeaterValueItem.keyFormControl + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
@@ -775,6 +847,9 @@ export class SearchboxComponent extends CommonComponent implements OnInit {
     const list = [];
     const type = SearchsuggestionTypes.OP_TAG;
     const tagSpecList = guidedsearchCriteria[type];
+    if (!tagSpecList) {
+      return '';
+    }
     tagSpecList.filter((repeaterValueItem) => {
       if (!Utility.isEmpty(repeaterValueItem.keytextFormName) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
         const str = repeaterValueItem.keytextFormName + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;

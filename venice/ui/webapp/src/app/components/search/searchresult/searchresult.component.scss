@@ -29,9 +29,6 @@
   margin: 10px;
 }
 
-.searchresult-button-category-kind-entry-link {
-  cursor: pointer;
-}
 
 .searchresult-button-category-kind-entry-kind {
   font-size: 14px;
@@ -43,12 +40,13 @@
 
 .searchresult-button-category-kind-entry-link {
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 400;
   font-style: normal;
   line-height: normal;
   letter-spacing: normal;
   color: #598cde;
   margin: 10px 5px;
+  cursor: pointer;
 }
 
 .searchresult-button-category-kind-entry-content, .searchresult-button-category-kind-entry-label {
@@ -128,4 +126,8 @@
 
 .searchresult-empty-items-label-tryagain {
   margin-bottom :10px;
+}
+
+.searchresult-empty-items-label-link {
+  cursor: pointer;
 }

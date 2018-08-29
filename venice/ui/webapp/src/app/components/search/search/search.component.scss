@@ -88,12 +88,18 @@ span.searchwidget-select-panel-template-item-options-item:hover{
     font-size: 16px;
     border-radius: 3px;
     color: #383838;
+    margin-top:1px;
 }
 
 .searchwidget  .searchwidget-search-keyword-button-icon {
     font-size: 13px;
     margin-top: 2px;
 
+}
+
+.searchwidget_keyword_no_suggestion {
+    font-size: 16px;
+    color: #383838;
 }
 
 .searchwidget .ui-autocomplete-token-icon-icon-btn {

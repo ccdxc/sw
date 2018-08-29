@@ -93,6 +93,33 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     ];
   }
 
+  populateHelper_Kind(isValues: string): any {
+    const list = isValues.split(',');
+    const output = [];
+    list.filter( (kind) => {
+      if (SearchUtil.isValidKind(kind)) {
+        output.push(kind);
+      }
+    });
+    return output;
+  }
+
+  populateHelper_Category(inValues: string): any {
+    const list = inValues.split(',');
+    const output = [];
+    list.filter( (kind) => {
+      if (SearchUtil.isValidCategory(kind)) {
+        output.push(kind);
+      }
+    });
+    return output;
+  }
+
+
+
+  /**
+   * Populate guided-search panel
+   */
   protected populate(inputConfig: SearchSpec) {
     const inValues = inputConfig.in;
     const isValues = inputConfig.is;
@@ -100,10 +127,10 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     const tagValues = this.parseExpressionList(inputConfig.tag, false);
 
     if (inValues) {
-      this.selectedCategories = inValues.split(',');
+      this.selectedCategories = this.populateHelper_Category(inValues); // inValues.split(',');
     }
     if (isValues) {
-      this.selectedKinds = isValues.split(',');
+      this.selectedKinds = this.populateHelper_Kind(isValues); // isValues.split(',');
     }
 
     if (hasValues.length > 0) {

@@ -10,6 +10,7 @@ import { Utility } from '@app/common/Utility';
 
 import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
 import { SearchUtil } from '@app/components/search/SearchUtil';
+import { SearchsuggestionTypes } from '@app/components/search/';
 import { GuidesearchComponent } from '@components/search/guidedsearch/guidedsearch.component';
 
 /**
@@ -137,11 +138,41 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
    * @param isSuggestionMode
    */
   onInvokeSearch($event, isSuggestionMode: boolean = true) {
+    let currentText = this.getInputText();
+    if (this.overlayVisible === true && !this.isInGuidedSearchMode && this._suggestionWidget && this._suggestionWidget.highlightOption) {
+      if (this._suggestionWidget.highlightOption.searchType === SearchsuggestionTypes.INIT) {
+        if (Utility.isEmpty(currentText)) {
+          this.setInputText(SearchUtil.getSearchInitPrefix(this._suggestionWidget.highlightOption)); // If we are in the init stage, we want to wait for user input
+          return;
+        }
+      } else {
+        // Say current search input text is "is:Node" and user hightlight suggestion "Cluster". If user invoke search (hit ENTER), we make up search string as is:Node,Cluster
+        const suggestion = this._suggestionWidget.highlightOption.name;  // suggustion looks like {name: "Alert", searchType: "is"}
+        const hasHightLight = (this._suggestionWidget.findOptionIndex(this._suggestionWidget.highlightOption) > -1);  // check whether user pick a suggestion
+        if (suggestion && this._suggestionWidget.highlightOption.searchType && hasHightLight) {  // make sure we are of "in" and "is"
+          if (Utility.isEmpty(currentText)) {
+            currentText = suggestion;
+          } else {
+            if (currentText.endsWith(':')) {
+              currentText = currentText + suggestion;  // from "is:" to "is:Node"
+            } else {
+              if (!currentText.endsWith(suggestion)) {
+                currentText = currentText + ',' + suggestion; // "is:Node" to "is:Node,Cluster"
+              }
+            }
+          }
+          this.setInputText(currentText);
+        }
+      }
+    }
     this.invokeSearch.emit({
       text: this.getInputText(),
       mode: isSuggestionMode
     }
     );
+    if (!isSuggestionMode) {
+      this.overlayVisible = false;
+    }
   }
 
   /**
@@ -212,7 +243,7 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
     switch (event.which) {
       case SearchUtil.EVENT_KEY_ENTER:
         const query = this.getInputText();
-        this.onInvokeSearch(event, true);  // invoke search to get get search suggestions. (2nd parameter is true)
+        this.onInvokeSearch(event, false);  // invoke search to get search-result. (2nd parameter is true)
         break;
       case SearchUtil.EVENT_KEY_LEFT:
       case SearchUtil.EVENT_KEY_UP:
@@ -221,7 +252,7 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
         this._suggestionWidget.onKeydown(event);
         break;
       case SearchUtil.EVENT_KEY_TAB:
-        this.onInvokeSearch(event, true);
+        this.onInvokeSearch(event, true); // invoke search to get search-suggestions. (2nd parameter is false)
         break;
       default:
         super.onKeydown(event);
@@ -344,12 +375,12 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
     this.isInGuidedSearchMode = !this.isInGuidedSearchMode;
     this.overlayVisible = this.isInGuidedSearchMode;
     this.loading = false;
-    if (this.isInGuidedSearchMode === true ) {
+    if (this.isInGuidedSearchMode === true) {
       const inputStr = this.getInputText();
       if (!Utility.isEmpty(inputStr)) {
         // We are openning up guieded-search panel. But a "SearchSpec" for guided-search widget
-        const typevalueList =  SearchUtil.parseSearchStringToObjectList(inputStr);
-        this.guidesearchInput  = SearchUtil.convertToSearchSpec(typevalueList);
+        const typevalueList = SearchUtil.parseSearchStringToObjectList(inputStr);
+        this.guidesearchInput = SearchUtil.convertToSearchSpec(typevalueList);
       }
     }
   }

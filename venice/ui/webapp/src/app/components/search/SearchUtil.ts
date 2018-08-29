@@ -1,7 +1,7 @@
-import { SearchSearchQuery_categories, SearchSearchQuery_kinds } from '@sdk/v1/models/generated/search';
 import { SearchInputTypeValue, SearchSpec, SearchExpression, SearchModelField } from '@app/components/search';
 import { Utility } from '@app/common/Utility';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
+import { SearchSuggestion } from './';
 
 export class SearchUtil {
   public static LAST_SEARCH_DATA = 'last_search_data';
@@ -78,6 +78,22 @@ export class SearchUtil {
     }
   };
 
+  public static getSearchInitPrefix(selection: SearchSuggestion): string {
+  const type = (selection.name);
+    switch (type) {
+      case 'category':
+       return 'in:';
+      case 'kind':
+        return 'is:';
+      case 'field':
+        return 'has:';
+      case 'label':
+        return 'tag:';
+      default:
+        return '';
+    }
+  }
+
   public static getKinds(): any[] {
     const cats = this.getCategories();
     let kinds = [];
@@ -93,6 +109,14 @@ export class SearchUtil {
     let cats =  Object.keys(CategoryMapping);
     cats = cats.sort();
     return cats;
+  }
+
+  public static  isValidKind(kind: string): boolean {
+    return (SearchUtil.getKinds().indexOf(kind) > -1);
+  }
+
+  public static  isValidCategory(kind: string): boolean {
+    return (SearchUtil.getCategories().indexOf(kind) > -1);
   }
 
   /**

@@ -43,6 +43,7 @@
                     </div>
                 </li>
             </ul>
+            <div class="searchwidget_keyword_no_suggestion" *ngIf="!searchsuggestions ||searchsuggestions.length === 0 ">No result or invalid search input</div>
              <app-searchsuggestions #suggestionWidget [suggestions]="searchsuggestions" (suggestionItemClick)="onSearchSuggestionItemSelect($event)" ></app-searchsuggestions>
         </div>
         <app-guidedsearch *ngIf="isInGuidedSearchMode" #guidesearchWidget  (proceedGuidedSearch)="onGuidedSearchRequest($event)" [inputConfig]="guidesearchInput"></app-guidedsearch>

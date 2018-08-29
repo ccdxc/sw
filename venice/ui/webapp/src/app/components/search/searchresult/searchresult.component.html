@@ -6,11 +6,11 @@
             <div class="searchresult-empty-items-message-div">    
                 <span class="searchresult-empty-items-label">No search result. Please try again.</span>            
                 <br/>
-                <span class="searchresult-empty-items-label">To search with grammar - in:xxx is:yyy has:fieldname=zzz tag:labelname=www </span>
+                <span class="searchresult-empty-items-label"><a class="searchresult-empty-items-label-link" (click)="searchWithGrammarClick($event)" title="Show sample search text">To search with grammar  </a>- in:xxx is:yyy has:fieldname=zzz tag:labelname=www </span>
                 <span class="searchresult-empty-items-label">For example: in:Cluster is:Node has:meta.name=node1 tag:meta.labels.os=esx,storage=ssd </span>
                 <br/>
                 <span class="searchresult-empty-items-label">You can also use free form search. (input search string, then hit tab key and enter key.) </span>
-                <span class="searchresult-empty-items-label">You may want to use Advance Search.  </span>
+                <span class="searchresult-empty-items-label">You may want to use <a class="searchresult-empty-items-label-link" (click)="advanceSearchClick($event)" title="Open advance search panel">Advance Search</a>.  </span>
             </div>
         </div>
     </div>
