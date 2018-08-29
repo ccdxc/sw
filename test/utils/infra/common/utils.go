@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -99,7 +100,7 @@ func DisableDhcpOnInterface(intfName string) error {
 	config := `TYPE=Ethernet
 PROXY_METHOD=none
 BROWSER_ONLY=no
-BOOTPROTO=none
+BOOTPROTO=static
 DEFROUTE=yes
 IPV4_FAILURE_FATAL=no
 IPV6INIT=yes
@@ -114,6 +115,7 @@ ONBOOT=no` + fmt.Sprintf("\nNAME=%s\nDEVICE=%s\n", intfName, intfName)
 		return err
 	}
 
+	time.Sleep(1 * time.Second)
 	cmd := []string{"service", "network", "restart"}
 	if _, stdout, err := Run(cmd, 0, false, true, nil); err != nil {
 		return errors.Wrap(err, stdout)
