@@ -41,8 +41,8 @@ var l2segPiShowCmd = &cobra.Command{
 
 var l2segPdShowCmd = &cobra.Command{
 	Use:   "pd",
-	Short: "pd",
-	Long:  "shows l2seg pd",
+	Short: "show L2 segment's PD information",
+	Long:  "show L2 segment's PD information",
 	Run:   l2segPdShowCmdHandler,
 }
 
@@ -203,22 +203,25 @@ func l2segDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func l2segShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n")
-	fmt.Printf("Id:     L2seg's ID                              Handle:   L2seg Handle\n")
-	fmt.Printf("vrfId:  L2segs's VRF Id                         weT:      Wire encap type\n")
-	fmt.Printf("weV:    Wire encap value                        teT:      Tunnel encap type\n")
-	fmt.Printf("teV:    Tunnel encap value                      MFP:      Multicast fwd. policy\n")
-	fmt.Printf("BFP:    Broadcast fwd. policy                   #EPs:     Num. of EPs in L2seg\n")
-	fmt.Printf("IFs:    Member Interfaces\n")
-	hdrLine := strings.Repeat("-", 120)
+	fmt.Printf("Id:            L2seg's ID                            Handle:      L2seg Handle\n")
+	fmt.Printf("vrfId:         L2segs's VRF Id                       WireEncap:   Wire encap type/value\n")
+	fmt.Printf("TunnelEncap:   Tunnel encap type/value               MFP:         Multicast fwd. policy\n")
+	fmt.Printf("BFP:           Broadcast fwd. policy                 #EPs:        Num. of EPs in L2seg\n")
+	fmt.Printf("IFs:           Member Interfaces\n")
+	hdrLine := strings.Repeat("-", 110)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-20s\n",
-		"Id", "Handle", "vrfId", "weT", "weV", "teT", "teV", "MFP", "BFP", "#EPs", "IFs")
+	fmt.Printf("%-10s%-10s%-10s%-15s%-15s%-10s%-10s%-10s%-20s\n",
+		"Id", "Handle", "vrfId", "WireEncap", "TunnelEncap", "MFP", "BFP", "#EPs", "IFs")
 	fmt.Println(hdrLine)
 }
 
 func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	ifList := resp.GetSpec().GetIfKeyHandle()
 	ifStr := ""
+	weStr := ""
+	teStr := ""
+	encapType := ""
+
 	if len(ifList) > 0 {
 		for i := 0; i < len(ifList); i++ {
 			ifStr += fmt.Sprintf("%d ", ifList[i].GetIfHandle())
@@ -227,14 +230,29 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		ifStr += "None"
 	}
 
-	fmt.Printf("%-10d%-10d%-10d%-10s%-10d%-10s%-10d%-10s%-10s%-10d%-20s\n",
+	encapType = encapTypeToStr(resp.GetSpec().GetWireEncap().GetEncapType())
+	if encapType == "Invalid" {
+		weStr = "None"
+	} else {
+		weStr = fmt.Sprintf("%s/%d",
+			encapType,
+			resp.GetSpec().GetWireEncap().GetEncapValue())
+	}
+
+	encapType = encapTypeToStr(resp.GetSpec().GetTunnelEncap().GetEncapType())
+	if encapType == "Invalid" {
+		teStr = "None"
+	} else {
+		teStr = fmt.Sprintf("%s/%d",
+			encapType,
+			resp.GetSpec().GetTunnelEncap().GetEncapValue())
+	}
+
+	fmt.Printf("%-10d%-10d%-10d%-15s%-15s%-10s%-10s%-10d%-20s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		resp.GetStatus().GetL2SegmentHandle(),
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
-		encapTypeToStr(resp.GetSpec().GetWireEncap().GetEncapType()),
-		resp.GetSpec().GetWireEncap().GetEncapValue(),
-		encapTypeToStr(resp.GetSpec().GetTunnelEncap().GetEncapType()),
-		resp.GetSpec().GetTunnelEncap().GetEncapValue(),
+		weStr, teStr,
 		mcastFwdPolToStr(resp.GetSpec().GetMcastFwdPolicy()),
 		bcastFwdPolToStr(resp.GetSpec().GetBcastFwdPolicy()),
 		resp.GetStats().GetNumEndpoints(),
@@ -249,9 +267,9 @@ func l2segPdShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("LookupId:   L2seg's Lookup Id                CPUVlan:    Pkt's Vlan from CPU on this L2seg\n")
 	fmt.Printf("InpPropCPU: Input Prop. table idx from CPU   InpProp.1q: Inp. Prop table indices for IFs\n")
 	fmt.Printf("InpPropPr:  Inp. Prop table indices for IFs\n")
-	hdrLine := strings.Repeat("-", 100)
+	hdrLine := strings.Repeat("-", 110)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-12s%-12s%-12s\n",
+	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-12s%-20s%-20s\n",
 		"Id", "Handle", "vrfId", "HwId", "LookupId", "CPUVlan", "InpPropCPU", "InpProp.1q", "InpPropPr")
 	fmt.Println(hdrLine)
 }
@@ -269,32 +287,37 @@ func l2segEPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	inpPropIdxStr := ""
 	inpPropIdxPrTagStr := ""
 
-	/*
-		inpPropIdx := epdStatus.GetInpPropIdx()
-		inpPropIdxPrTag := epdStatus.GetInpPropIdxPrTag()
-		first := true
+	inpPropIdx := epdStatus.GetInpPropIdx()
+	inpPropIdxPrTag := epdStatus.GetInpPropIdxPrTag()
+	first := true
 
-		for idx := range inpPropIdx {
-			if first == true {
-				first = false
-				inpPropIdxStr += fmt.Sprintf("%d", idx)
-			} else {
-				inpPropIdxStr += fmt.Sprintf(", %d", idx)
-			}
+	for idx := range inpPropIdx {
+		if first == true {
+			first = false
+			inpPropIdxStr += fmt.Sprintf("%d", idx)
+		} else {
+			inpPropIdxStr += fmt.Sprintf(",%d", idx)
 		}
+	}
 
-		first = true
-		for idx := range inpPropIdxPrTag {
-			if first == true {
-				first = false
-				inpPropIdxPrTagStr += fmt.Sprintf("%d", idx)
-			} else {
-				inpPropIdxPrTagStr += fmt.Sprintf(", %d", idx)
-			}
+	if first == true {
+		inpPropIdxStr = "None"
+	}
+	first = true
+	for idx := range inpPropIdxPrTag {
+		if first == true {
+			first = false
+			inpPropIdxPrTagStr += fmt.Sprintf("%d", idx)
+		} else {
+			inpPropIdxPrTagStr += fmt.Sprintf(",%d", idx)
 		}
-	*/
+	}
 
-	fmt.Printf("%-10d%-10d%-10d%-10d%-10d%-10d%-12d%-12s%-12s\n",
+	if first == true {
+		inpPropIdxPrTagStr = "None"
+	}
+
+	fmt.Printf("%-10d%-10d%-10d%-10d%-10d%-10d%-12d%-20s%-20s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		resp.GetStatus().GetL2SegmentHandle(),
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
