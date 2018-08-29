@@ -69,7 +69,7 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define PHYS_STATE_DOWN 3
 
 /* XXX remove this section for release */
-static bool ionic_xxx_haps = true;
+static bool ionic_xxx_haps = false;
 module_param_named(xxx_haps, ionic_xxx_haps, bool, 0444);
 MODULE_PARM_DESC(xxx_haps, "XXX Misc workarounds for HAPS.");
 static bool ionic_xxx_limits = false;
@@ -1327,14 +1327,6 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	for (i = 0; i < 7; ++i)
 		resp.admin_opcodes[i] = ident->dev.rdma_qp_opcodes[i];
 
-	if (ionic_xxx_haps) {
-		resp.version = 0;
-		for (i = 0; i < 7; ++i)
-			resp.qp_opcodes[i] = 0;
-		for (i = 0; i < 7; ++i)
-			resp.admin_opcodes[i] = 0;
-	}
-
 	resp.sq_qtype = dev->sq_qtype;
 	resp.rq_qtype = dev->rq_qtype;
 	resp.cq_qtype = dev->cq_qtype;
@@ -1703,13 +1695,11 @@ static int ionic_v0_create_ah_cmd(struct ionic_ibdev *dev,
 
 	admin.cmd.create_ah.hdr_info = hdr_dma;
 
-	/* XXX for HAPS: side-data */
-	if (ionic_xxx_haps) {
 #ifndef ADMINQ
-		admin.side_data = hdr_buf;
-		admin.side_data_len = round_up(hdr_len, sizeof(u32));
+	/* XXX for nicmgr: side-data */
+	admin.side_data = hdr_buf;
+	admin.side_data_len = round_up(hdr_len, sizeof(u32));
 #endif
-	}
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
@@ -1994,13 +1984,11 @@ static int ionic_v0_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 	};
 	int rc;
 
-	/* XXX for HAPS: side-data */
-	if (ionic_xxx_haps) {
 #ifndef ADMINQ
-		admin.side_data = mr->buf.tbl_buf;
-		admin.side_data_len = mr->buf.tbl_size;
+	/* XXX for nicmgr: side-data */
+	admin.side_data = mr->buf.tbl_buf;
+	admin.side_data_len = mr->buf.tbl_size;
 #endif
-	}
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
@@ -2480,13 +2468,11 @@ static int ionic_v0_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	};
 	int rc;
 
-	/* XXX for HAPS: side-data */
-	if (ionic_xxx_haps) {
 #ifndef ADMINQ
-		admin.side_data = buf->tbl_buf;
-		admin.side_data_len = buf->tbl_size;
+	/* XXX for nicmgr: side-data */
+	admin.side_data = buf->tbl_buf;
+	admin.side_data_len = buf->tbl_size;
 #endif
-	}
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
@@ -3422,13 +3408,11 @@ static int ionic_v0_create_qp_cmd(struct ionic_ibdev *dev,
 	admin.cmd.create_qp.pt_base_addr = pagedma;
 	admin.cmd.create_qp.pt_size = npages;
 
-	/* XXX for HAPS: side-data */
-	if (ionic_xxx_haps) {
 #ifndef ADMINQ
-		admin.side_data = pagedir;
-		admin.side_data_len = pagedir_size;
+	/* XXX for nicmgr: side-data */
+	admin.side_data = pagedir;
+	admin.side_data_len = pagedir_size;
 #endif
-	}
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
 	if (rc)
@@ -3584,13 +3568,11 @@ static int ionic_v0_modify_qp_cmd(struct ionic_ibdev *dev,
 		admin.cmd.modify_qp.header_template_size = hdr_len;
 		admin.cmd.modify_qp.header_template_ah_id = qp->ahid;
 
-		/* XXX for HAPS: side-data */
-		if (ionic_xxx_haps) {
 #ifndef ADMINQ
-			admin.side_data = hdr_buf;
-			admin.side_data_len = round_up(hdr_len, sizeof(u32));
+		/* XXX for nicmgr: side-data */
+		admin.side_data = hdr_buf;
+		admin.side_data_len = round_up(hdr_len, sizeof(u32));
 #endif
-		}
 	}
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
@@ -6207,9 +6189,6 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 
 	version = le16_to_cpu(ident->dev.rdma_version);
 
-	if (ionic_xxx_haps)
-		version = 0;
-
 	/* XXX workaround, this check is disabled because identify is saying zero adminqs per lif */
 	if (0 && le16_to_cpu(ident->dev.nadminqs_per_lif) <= IONIC_ADMINQ_RDMA) {
 		netdev_dbg(ndev, "ionic_rdma: No RDMA Admin Queue\n");
@@ -6269,11 +6248,6 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->rdma_compat = compat;
 	dev->qp_opcodes = ident->dev.rdma_qp_opcodes[compat];
 	dev->admin_opcodes = ident->dev.rdma_admin_opcodes[compat];
-
-	if (ionic_xxx_haps) {
-		dev->qp_opcodes = 0;
-		dev->admin_opcodes = 0;
-	}
 
 	/* XXX hardcode values, should come from identify */
 	dev->admin_qtype = 2;
