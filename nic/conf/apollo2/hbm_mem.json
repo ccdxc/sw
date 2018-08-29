@@ -81,6 +81,10 @@
             "size_kb": 64
         },
         {
+            "name": "qos-hbm-fifo",
+            "size_kb": 262144
+        },
+        {
             "_comment": "hash depth = 1024",
             "_comment1": "data space = 1024 * 16 * 64 = 1024K",
             "_comment1": "key space = 1024 * 64 = 64K",
