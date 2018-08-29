@@ -17,18 +17,19 @@ objects:
   count: 32
   rest-endpoint: "/api/endpoints/"
   spec-file: "generated/endpoints.json"
-- kind: Tunnel
-  name: scale-gre-tunnel
-  count: 8
-  rest-endpoint: "/api/tunnels/"
-  spec-file: "generated/tunnels.json"
-- kind: MirrorSession
-  name: scale-mirror
-  rest-endpoint: "/api/mirror/sessions/"
-  count: 8
-  spec-file: "generated/mirrors.json"
 - kind: SGPolicy
   name: scale-sg-policy
   count: 1
   rest-endpoint: "/api/security/policies/"
   spec-file: "generated/16_rules.json"
+# TODO Uncomment this section while validating mirror sessions and tunnels in dev
+#- kind: Tunnel
+#  name: scale-gre-tunnel
+#  count: 8
+#  rest-endpoint: "/api/tunnels/"
+#  spec-file: "generated/tunnels.json"
+#- kind: MirrorSession
+#  name: scale-mirror
+#  rest-endpoint: "/api/mirror/sessions/"
+#  count: 8
+#  spec-file: "generated/mirrors.json"

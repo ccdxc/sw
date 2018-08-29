@@ -959,17 +959,15 @@ func buildMirrorTrafficCollectorProtoObj(mirrorSession *tsproto.MirrorSession, m
 	return veniceCollectors, erspanCollectors
 }
 
-func getVrfID(mirrorSession *tsproto.MirrorSession) (uint64, error) {
-	// Map Tenant-Name to Vrf
-	var vrfID uint64
-	tenantObj, err := nAgent.FindTenant(mirrorSession.Tenant)
+func getVrfID(mirrorSession *tsproto.MirrorSession) (vrfID uint64, err error) {
+	// Map Namespace-Name to Vrf
+	nsObj, err := nAgent.FindNamespace(mirrorSession.Tenant, mirrorSession.Namespace)
 	if err == nil {
-		vrfID = uint64(tenantObj.Status.TenantID)
-	} else {
-		log.Errorf("mirror session tenant %s not found", mirrorSession.Tenant)
-		return 0, err
+		vrfID = nsObj.Status.NamespaceID
+		return
 	}
-	return vrfID, nil
+	log.Errorf("mirror session tenant %s not found", mirrorSession.Tenant)
+	return
 }
 
 func (tsa *Tagent) createHALMirrorSessionProtoObj(mirrorSession *tsproto.MirrorSession, sessID uint64) (*halproto.MirrorSessionRequestMsg, error) {
@@ -991,17 +989,20 @@ func (tsa *Tagent) createHALMirrorSessionProtoObj(mirrorSession *tsproto.MirrorS
 		log.Errorf("mirror session tenant is invalid")
 		return nil, ErrInvalidMirrorSpec
 	}
-	mirrorSpec := halproto.MirrorSessionSpec{
-		Meta: &halproto.ObjectMeta{
+	vrfKey := &halproto.VrfKeyHandle{
+		KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 			VrfId: vrfID,
 		},
+	}
+	mirrorSpec := halproto.MirrorSessionSpec{
 		KeyOrHandle: &halproto.MirrorSessionKeyHandle{
 			KeyOrHandle: &halproto.MirrorSessionKeyHandle_MirrorsessionId{
 				MirrorsessionId: sessID,
 			},
 		},
-		Snaplen:     mirrorSession.Spec.PacketSize,
-		Destination: erspanCollectors[0], // HAL accepts only one collector per mirrorSessionSpec. TODO
+		VrfKeyHandle: vrfKey,
+		Snaplen:      mirrorSession.Spec.PacketSize,
+		Destination:  erspanCollectors[0], // HAL accepts only one collector per mirrorSessionSpec. TODO
 	}
 	ReqMsg := halproto.MirrorSessionRequestMsg{
 		Request: []*halproto.MirrorSessionSpec{&mirrorSpec},

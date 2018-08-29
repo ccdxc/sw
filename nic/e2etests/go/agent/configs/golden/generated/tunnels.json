@@ -4,7 +4,7 @@
     "meta": {
       "name": "scale-gre-tunnel-0",
       "tenant": "default",
-      "namespace": "infra",
+      "namespace": "scale-vrf-0",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -12,7 +12,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "42.42.42.2"
+      "destination": "177.75.132.2"
     },
     "status": {}
   },
@@ -21,7 +21,7 @@
     "meta": {
       "name": "scale-gre-tunnel-1",
       "tenant": "default",
-      "namespace": "infra",
+      "namespace": "scale-vrf-1",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -29,7 +29,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "42.42.42.3"
+      "destination": "223.97.165.2"
     },
     "status": {}
   },
@@ -38,7 +38,7 @@
     "meta": {
       "name": "scale-gre-tunnel-2",
       "tenant": "default",
-      "namespace": "infra",
+      "namespace": "scale-vrf-2",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -46,7 +46,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "42.42.42.4"
+      "destination": "112.211.249.2"
     },
     "status": {}
   },
@@ -55,7 +55,7 @@
     "meta": {
       "name": "scale-gre-tunnel-3",
       "tenant": "default",
-      "namespace": "infra",
+      "namespace": "scale-vrf-3",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -63,7 +63,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "42.42.42.5"
+      "destination": "4.121.175.2"
     },
     "status": {}
   },
@@ -72,7 +72,7 @@
     "meta": {
       "name": "scale-gre-tunnel-4",
       "tenant": "default",
-      "namespace": "infra",
+      "namespace": "scale-vrf-0",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -80,7 +80,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "42.42.42.6"
+      "destination": "170.22.196.2"
     },
     "status": {}
   },
@@ -89,7 +89,7 @@
     "meta": {
       "name": "scale-gre-tunnel-5",
       "tenant": "default",
-      "namespace": "infra",
+      "namespace": "scale-vrf-1",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -97,7 +97,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "42.42.42.7"
+      "destination": "16.45.218.2"
     },
     "status": {}
   },
@@ -106,7 +106,7 @@
     "meta": {
       "name": "scale-gre-tunnel-6",
       "tenant": "default",
-      "namespace": "infra",
+      "namespace": "scale-vrf-2",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -114,7 +114,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "42.42.42.8"
+      "destination": "91.39.142.2"
     },
     "status": {}
   },
@@ -123,7 +123,7 @@
     "meta": {
       "name": "scale-gre-tunnel-7",
       "tenant": "default",
-      "namespace": "infra",
+      "namespace": "scale-vrf-3",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -131,7 +131,7 @@
       "type": "GRE",
       "admin-status": "UP",
       "source": "100.100.100.100",
-      "destination": "42.42.42.9"
+      "destination": "54.199.28.2"
     },
     "status": {}
   }

@@ -16,7 +16,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "42.42.42.2",
+            "destination": "177.75.132.2",
             "transport": "TCP/8000"
           },
           "pcap-dir-name": ""
@@ -70,7 +70,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "42.42.42.3",
+            "destination": "223.97.165.2",
             "transport": "TCP/8001"
           },
           "pcap-dir-name": ""
@@ -124,7 +124,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "42.42.42.4",
+            "destination": "112.211.249.2",
             "transport": "TCP/8002"
           },
           "pcap-dir-name": ""
@@ -178,7 +178,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "42.42.42.5",
+            "destination": "4.121.175.2",
             "transport": "TCP/8003"
           },
           "pcap-dir-name": ""
@@ -232,7 +232,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "42.42.42.6",
+            "destination": "170.22.196.2",
             "transport": "TCP/8004"
           },
           "pcap-dir-name": ""
@@ -286,7 +286,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "42.42.42.7",
+            "destination": "16.45.218.2",
             "transport": "TCP/8005"
           },
           "pcap-dir-name": ""
@@ -340,7 +340,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "42.42.42.8",
+            "destination": "91.39.142.2",
             "transport": "TCP/8006"
           },
           "pcap-dir-name": ""
@@ -394,7 +394,7 @@
         {
           "type": "ERSPAN",
           "export-config": {
-            "destination": "42.42.42.9",
+            "destination": "54.199.28.2",
             "transport": "TCP/8007"
           },
           "pcap-dir-name": ""

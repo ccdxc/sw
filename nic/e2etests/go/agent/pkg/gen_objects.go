@@ -626,17 +626,19 @@ func (c *Config) generateTunnels(o *Object, manifestFile string) (*Object, error
 	if !genRequired(o) {
 		return o, nil
 	}
+	endpointRef := objCache["Endpoint"]
+	namespaceRef := objCache["Namespace"]
 
 	// generate gre tunnels to distribute evenly across namespaces.
 	for i := 0; i < o.Count; i++ {
 		name := fmt.Sprintf("%s-%d", o.Name, i)
-		endpoint := fmt.Sprintf("infra-ep-%d", i%INFRA_EP_COUNT)
+		endpoint := fmt.Sprintf("%s-%d", endpointRef.Name, i%endpointRef.Count)
 		endpointIP := endpointCache[endpoint]
 		tun := netproto.Tunnel{
 			TypeMeta: api.TypeMeta{Kind: "Tunnel"},
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
-				Namespace: "infra",
+				Namespace: fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count),
 				Name:      name,
 			},
 			Spec: netproto.TunnelSpec{
