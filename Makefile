@@ -409,13 +409,13 @@ ui-autogen:
 	echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
 	docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
 
-VENICE_RELEASE_TAG := v0.1
+VENICE_RELEASE_TAG := v0.2
 venice-release:
 	docker pull ${REGISTRY_URL}/${DIND_CONTAINER}
 	docker save -o bin/pen-dind.tar ${REGISTRY_URL}/${DIND_CONTAINER}
 	docker pull ${REGISTRY_URL}/${E2E_CONTAINER}
 	docker save -o bin/pen-e2e.tar ${REGISTRY_URL}/${E2E_CONTAINER}
-	cd nic/sim/naples && tar -cvf venice-sim.tar venice-bootstrap.sh  -C ../../../test/e2e dind -C ../../../bin venice.tgz pen-dind.tar pen-e2e.tar
+	cd nic/sim/naples && tar -cvf venice-sim.tar venice-bootstrap.sh  -C ../../../test/e2e dind -C ../../bin venice.tgz pen-dind.tar pen-e2e.tar
 	ln -f nic/sim/naples/venice-sim.tar tools/docker-files/venice/venice-sim.tar
 	cp test/topos/gs/venice-conf.json nic/sim/naples/venice-conf.json
 	cd tools/docker-files/venice/ && docker build -t pensando/venice:${VENICE_RELEASE_TAG} .

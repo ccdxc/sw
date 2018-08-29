@@ -8,6 +8,7 @@ mkdir -p venice
 
 cd venice
 tar zxvf /home/vagrant/venice/venice.tgz
+docker load -i /home/vagrant/venice/venice/tars/pen-netagent.tar
 
 cd  -
 # ./dind/do.py -configFile tb_config_2.json -nettype macvlan -venice_image_dir /home/vagrant/venice/venice

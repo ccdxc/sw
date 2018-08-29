@@ -1,5 +1,5 @@
 {
-    "DisabledModules": [ "pen-vchub", "pen-collector", "pen-tpm", "pen-spyglass", "pen-evtsmgr", "pen-tsm", "pen-evtsproxy", "pen-ntp", "pen-influx","pen-elastic", "pen-objstore","pen-filebeat", "pen-spyglass", "pen-aggregator", "pen-vos" ],
+    "DisabledModules": [ "pen-vchub", "pen-collector", "pen-tpm", "pen-tsm", "pen-ntp", "pen-influx", "pen-objstore","pen-filebeat", "pen-aggregator", "pen-vos", "pen-citadel" ],
     "OverriddenModules" : {
         "pen-apigw": {
             "kind": "Module",
@@ -20,7 +20,6 @@
                         "Args": [
                             "-resolver-urls",
                             "$RESOLVER_URLS",
-                            "--skip=search,events",
                             "--skipauth",
                             "--skipauthz"
                         ]

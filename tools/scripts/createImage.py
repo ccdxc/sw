@@ -96,6 +96,8 @@ for i in dynamic_images:
     if old_images != "":
         ExecuteCommand('''docker rmi -f ''' + old_images)
 
+ExecuteCommand("docker save -o bin/tars/pen-netagent.tar pen-netagent:latest")
+
 # the datastructure that will be written to the file
 imageConfig = {}
 imageConfig['imageMap'] = imageMap

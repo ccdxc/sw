@@ -31,7 +31,7 @@ Password: <docker-password>
 
 - Run the following container, it will untar some files in the current directory
 ```
-docker run --rm -it -v `pwd`:/import pensando/gs-install:v0.1
+docker run --rm -it -v `pwd`:/import pensando/gs-install:v0.2
 ```
 
 - After executing the above command directory content should look like following
@@ -71,26 +71,32 @@ characters appropriately. For Example a password `$ecRe7&P@ssword!` need to be s
 ```
 - Examining Node(s) from simulator VM
 ```
-[vagrant@venice venice]$ docker ps
+[vagrant@venice ~]$ docker ps
 CONTAINER ID        IMAGE                                           COMMAND             CREATED             STATUS              PORTS                                                                      NAMES
-397df2dcc61d        registry.test.pensando.io:5000/pens-e2e:v0.3    "/bin/sh"           3 hours ago         Up 3 hours          0.0.0.0:10000->9000/tcp, 0.0.0.0:10200->9200/tcp                           node0
-0fd767acb784        registry.test.pensando.io:5000/pens-dind:v0.3   "/usr/sbin/init"    3 hours ago         Up 3 hours          0.0.0.0:8080->8080/tcp, 0.0.0.0:10001->9000/tcp, 0.0.0.0:10201->9200/tcp   node1
-[vagrant@venice venice]$ docker exec -it node1 /bin/bash
+5aa5eb166be0        registry.test.pensando.io:5000/pens-e2e:v0.3    "/bin/sh"           45 minutes ago      Up 45 minutes       0.0.0.0:10000->9000/tcp, 0.0.0.0:10200->9200/tcp                           node0
+4d6e529b37c5        registry.test.pensando.io:5000/pens-dind:v0.3   "/usr/sbin/init"    About an hour ago   Up About an hour    0.0.0.0:8080->8080/tcp, 0.0.0.0:10001->9000/tcp, 0.0.0.0:10201->9200/tcp   node1
+ebb059e60608        pen-netagent                                    "/bin/sh"           About an hour ago   Up About an hour                                                                               naples1
 ```
 - Examining Services from simulator VM
 ```
-[vagrant@venice venice]$ kubectl get pods
-kubectl get pods
+[vagrant@venice ~]$ docker exec -it node0 bash
+bash-4.4# kubectl get pods
 NAME                            READY     STATUS    RESTARTS   AGE
-pen-apigw-dk7dh                 1/1       Running   0          3h
-pen-apiserver-788690896-lpkqn   1/1       Running   0          3h
-[vagrant@venice venice]$ kubectl describe pod pen-apigw-dk7dh
+pen-apigw-9zpsq                 1/1       Running   0          21s
+pen-apiserver-426838463-fr2cl   1/1       Running   0          21s
+pen-elastic-l2gpv               1/1       Running   0          20s
+pen-evtsmgr-2hx7p               1/1       Running   0          20s
+pen-evtsproxy-422j9             1/1       Running   0          21s
+pen-npm-2915052316-zj8fx        1/1       Running   0          21s
+pen-spyglass-367829588-d1ht4    1/1       Running   0          21s
+bash-4.4# kubectl describe pod pen-apigw-9zpsq
 ...
 ```
 
-### Configuring Venice
+### Using Venice
 
 - REST Endpoints: Venice REST APIs can be accessed on port 10001
+- GUI: Venice GUI is available on port 10001 
 - API documentation and samples: Turin VM exposes following URL on the host where it started: `http://localhost:10001/docs`
 - Sample configuration: provided in various postman files `postman_collection.json`
 - All APIs can be curled from outside Turin VM on the URL paths shown by the API Browser
@@ -122,7 +128,7 @@ Delete any leftover VMs using virtualbox's vboxmanage command
 [vagrant@venice venice]$ pwd
 /home/vagrant/venice
 [vagrant@venice venice]$ docker rm -f $(docker ps -aq)
-[vagrant@venice venice]$ ./dind/do.py -configFile testbed.json -custom_config_file /vagrant/venice-conf.json -venice_image_dir /home/vagrant/venice/venice
+[vagrant@venice venice]$ ./dind/do.py -configFile /vagrant/testbed.json -custom_config_file /vagrant/venice-conf.json -venice_image_dir /home/vagrant/venice/venice
 ```
 - Service logs can be found at `/var/log/pensando/...`
 
