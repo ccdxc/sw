@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -156,7 +157,7 @@ func l2segPdShowCmdHandler(cmd *cobra.Command, args []string) {
 	c.Close()
 }
 
-func l2segDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+func handlel2segDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -165,7 +166,7 @@ func l2segDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewL2SegmentClient(c.ClientConn)
 
 	var req *halproto.L2SegmentGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		req = &halproto.L2SegmentGetRequest{
 			KeyOrHandle: &halproto.L2SegmentKeyHandle{
 				KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
@@ -195,10 +196,21 @@ func l2segDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				log.Errorf("Failed to write to file %s, err : %v",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
 	}
 	c.Close()
+}
+
+func l2segDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	handlel2segDetailShowCmd(cmd, nil)
 }
 
 func l2segShowHeader(cmd *cobra.Command, args []string) {

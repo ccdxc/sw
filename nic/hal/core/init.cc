@@ -153,6 +153,26 @@ hal_thread_start (uint32_t thread_id, void *ctxt)
 }
 
 //------------------------------------------------------------------------------
+// add given thread to thread store
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_thread_add (sdk::lib::thread *hal_thread)
+{
+    uint32_t    tid;
+
+    if (hal_thread == NULL) {
+        return HAL_RET_INVALID_ARG;
+    }
+    tid = hal_thread->thread_id();
+    if ((tid >= HAL_THREAD_ID_MAX) || g_hal_threads[tid]) {
+        return HAL_RET_INVALID_ARG;
+    }
+    g_hal_threads[tid] = hal_thread;
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // wrapper API to create HAL threads
 //------------------------------------------------------------------------------
 sdk::lib::thread *

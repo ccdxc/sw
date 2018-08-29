@@ -33,17 +33,17 @@ var getVrfCmdValidShort = []string{"show", "vrf", "pi"}
 
 var getL2SegmentCmdValidShort = []string{"show", "l2seg", "pi"}
 
-var getIfCmdValidShort = []string{"show", "if"}
+var getIfCmdValidShort = []string{"show", "interface"}
 
-var getIfUplinkCmdValidShort = []string{"show", "if", "uplink"}
+var getIfUplinkCmdValidShort = []string{"show", "interface", "uplink"}
 
-var getIfUplinkPcCmdValidShort = []string{"show", "if", "uplink-pc"}
+var getIfUplinkPcCmdValidShort = []string{"show", "interface", "uplink-pc"}
 
-var getIfEnicCmdValidShort = []string{"show", "if", "enic"}
+var getIfEnicCmdValidShort = []string{"show", "interface", "enic"}
 
-var getIfTunnelCmdValidShort = []string{"show", "if", "tunnel"}
+var getIfTunnelCmdValidShort = []string{"show", "interface", "tunnel"}
 
-var getIfCPUCmdValidShort = []string{"show", "if", "cpu"}
+var getIfCPUCmdValidShort = []string{"show", "interface", "cpu"}
 
 // veniceIntegSuite is the state of integ test
 type halCtlSuite struct {

@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -24,7 +25,7 @@ var (
 )
 
 var ifShowCmd = &cobra.Command{
-	Use:   "if",
+	Use:   "interface",
 	Short: "show interface information",
 	Long:  "show interface object information",
 	Run:   ifShowCmdHandler,
@@ -91,7 +92,7 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	c.Close()
 }
 
-func ifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+func handleIfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -100,7 +101,7 @@ func ifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewInterfaceClient(c.ClientConn)
 
 	var req *halproto.InterfaceGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific if
 		req = &halproto.InterfaceGetRequest{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
@@ -131,10 +132,21 @@ func ifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				log.Errorf("Failed to write to file %s, err : %v",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
 	}
 	c.Close()
+}
+
+func ifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleIfDetailShowCmd(cmd, nil)
 }
 
 func ifShowHeader(cmd *cobra.Command, args []string) {

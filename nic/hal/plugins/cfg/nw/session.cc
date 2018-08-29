@@ -783,12 +783,12 @@ flow_create_fte (const flow_cfg_t *cfg,
 }
 
 inline void
-update_global_session_stats (session_t *session, bool decr=false) 
+update_global_session_stats (session_t *session, bool decr=false)
 {
     flow_key_t key = session->iflow->config.key;
 
-    if (session->iflow->pgm_attrs.drop) 
-        g_session_stats.drop_sessions += (decr)?(-1):1;  
+    if (session->iflow->pgm_attrs.drop)
+        g_session_stats.drop_sessions += (decr)?(-1):1;
 
     if (key.flow_type == FLOW_TYPE_L2) {
         g_session_stats.l2_sessions  += (decr)?(-1):1;
@@ -1485,7 +1485,7 @@ struct session_age_cb_args_t {
     uint8_t           *num_ctx;
     uint8_t           *num_del_sess;
     timer_ctx_list    *tctx_list;
-    timer_handle_list *session_list;        
+    timer_handle_list *session_list;
 };
 
 bool
@@ -1538,7 +1538,7 @@ session_age_cb (void *entry, void *ctxt)
             if (args->num_ctx[session->fte_id] == HAL_MAX_SESSION_PER_ENQ) {
 
                 ret = fte::fte_softq_enqueue(session->fte_id,
-                                    process_hal_periodic_tkle, 
+                                    process_hal_periodic_tkle,
                                     (void *)args->tctx_list[session->fte_id]);
                 // If the tickle is successfully queued then
                 // return otherwise go ahead and cleanup
@@ -1553,7 +1553,7 @@ session_age_cb (void *entry, void *ctxt)
                 args->num_ctx[session->fte_id] = 0;
             }
         } else {
-            HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:p}", 
+            HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:p}",
                      session->hal_handle, args->num_del_sess[session->fte_id],
                      (void *)args->session_list[session->fte_id]);
             // time to clean up the session, add handle to session list
@@ -1562,10 +1562,10 @@ session_age_cb (void *entry, void *ctxt)
 
             if (args->num_del_sess[session->fte_id] == HAL_MAX_SESSION_PER_ENQ) {
                 ret = fte::fte_softq_enqueue(session->fte_id,
-                                    process_hal_periodic_sess_delete, 
+                                    process_hal_periodic_sess_delete,
                                     (void *)args->session_list[session->fte_id]);
                 HAL_ASSERT(ret == HAL_RET_OK);
-                HAL_TRACE_DEBUG("Enqueued session_list: {:p}", 
+                HAL_TRACE_DEBUG("Enqueued session_list: {:p}",
                                 (void *)args->session_list[session->fte_id]);
 
                 args->session_list[session->fte_id] = (hal_handle_t *)HAL_CALLOC(
@@ -1641,17 +1641,17 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
             //HAL_TRACE_DEBUG("Enqueuing tickles for fte: {}", fte_id);
             ret = fte::fte_softq_enqueue(fte_id,
-                                  process_hal_periodic_tkle, 
+                                  process_hal_periodic_tkle,
                                   (void *)args.tctx_list[fte_id]);
             HAL_ASSERT(ret == HAL_RET_OK);
         }
 
         if (args.num_del_sess[fte_id]) {
-            // We should never end up in a case where num_del_sess is set but 
+            // We should never end up in a case where num_del_sess is set but
             // session list is null
             HAL_ASSERT(args.session_list[fte_id] != NULL);
             ret = fte::fte_softq_enqueue(fte_id,
-                                  process_hal_periodic_sess_delete, 
+                                  process_hal_periodic_sess_delete,
                                   (void *)args.session_list[fte_id]);
             HAL_ASSERT(ret == HAL_RET_OK);
 
@@ -1679,10 +1679,10 @@ fte_stats_collect_cb (void *timer, uint32_t timer_id, void *ctxt)
     for (uint32_t i = 0; i < hal::g_hal_cfg.num_data_threads; i++) {
         stats = fte::fte_stats_get(i, true);
         g_fte_stats += stats;
-        cps += stats.cps;    
+        cps += stats.cps;
     }
 
-    // Compute cps from the cumulative # of packets received from 
+    // Compute cps from the cumulative # of packets received from
     // each FTE. We collect it every 10s and get an approximate
     // value per second.
     g_fte_stats.cps = (cps/HAL_FTE_STATS_TIMER_INTVL_SECS);
@@ -2156,7 +2156,7 @@ system_fte_stats_get(SystemResponse *rsp)
     FTEStats *fte_stats = NULL;
 
     fte_stats = rsp->mutable_stats()->mutable_fte_stats();
- 
+
     fte_stats->set_conn_per_second(g_fte_stats.cps);
     fte_stats->set_flow_miss_pkts(g_fte_stats.flow_miss_pkts);
     fte_stats->set_redir_pkts(g_fte_stats.redirect_pkts);
@@ -2165,7 +2165,7 @@ system_fte_stats_get(SystemResponse *rsp)
     fte_stats->set_tls_proxy_pkts(g_fte_stats.tls_proxy_pkts);
     fte_stats->set_softq_reqs(g_fte_stats.softq_req);
     fte_stats->set_queued_tx_pkts(g_fte_stats.queued_tx_pkts);
-    
+
     for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
         hal_ret_t               ret = (hal_ret_t)idx;
         std::ostringstream 	str;
@@ -2175,18 +2175,18 @@ system_fte_stats_get(SystemResponse *rsp)
         fte_err->set_count(g_fte_stats.fte_errors[idx]);
         fte_err->set_fte_error(str.str());
     }
- 
+
     for (uint8_t feature=0; feature<fte::get_num_features(); feature++) {
         FTEFeatureStats *feature_stat = fte_stats->add_feature_stats();
         std::string      feature_name = fte::feature_id_to_name(feature);
- 
-        feature_stat->set_feature_name(feature_name.substr(feature_name.find(":")+1)); 
+
+        feature_stat->set_feature_name(feature_name.substr(feature_name.find(":")+1));
         feature_stat->set_drop_pkts(g_fte_stats.feature_stats[feature].drop_pkts);
         for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
             hal_ret_t               ret = (hal_ret_t)idx;
             std::ostringstream      str;
             FTEError *fte_err = feature_stat->add_drop_reason();
-         
+
             str << std::cout.rdbuf() << ret; // std::ostream to std::ostringstream
             fte_err->set_count(g_fte_stats.feature_stats[feature].drop_reason[idx]);
             fte_err->set_fte_error(str.str());

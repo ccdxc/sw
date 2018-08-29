@@ -43,7 +43,7 @@ public:
     void incr_feature_stats (uint16_t feature_id, hal_ret_t rc, bool set_rc);
     void incr_fte_error (hal_ret_t rc);
     fte_stats_t get_stats(bool clear_on_read);
-    
+
 private:
     uint8_t                 id_;
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
@@ -348,7 +348,7 @@ void inst_t::process_softq()
     if (softq_->dequeue(&op, &data)) {
         //Increment stats
         stats_.softq_req++;
-        stats_.cps++; 
+        stats_.cps++;
 
         HAL_TRACE_DEBUG("fte: softq dequeue fn={:p} data={:p} softq_req={}", op, data, stats_.softq_req);
         (*(softq_fn_t)op)(data);
@@ -372,7 +372,7 @@ void incr_inst_feature_stats(uint16_t feature_id, hal_ret_t rc, bool set_rc)
 //----------------------------------------------------------------------------
 void inst_t::incr_feature_stats(uint16_t feature_id, hal_ret_t rc, bool set_rc)
 {
-    if (feature_id <= num_features_) 
+    if (feature_id <= num_features_)
         stats_.feature_stats[feature_id].drop_pkts++;
 
     if (set_rc)
@@ -489,7 +489,7 @@ void inst_t::process_arq()
 //------------------------------------------------------------------------------
 // API to fetch FTE stats on any given thread
 //------------------------------------------------------------------------------
-fte_stats_t inst_t::get_stats(bool clear_on_read) 
+fte_stats_t inst_t::get_stats(bool clear_on_read)
 {
     fte_stats_t stats = stats_;
 
@@ -511,7 +511,7 @@ fte_stats_get (uint8_t fte_id, bool clear_on_read)
     } fn_ctx;
 
     if (fte_disabled_)
-        goto done; 
+        goto done;
 
     fte_execute(fte_id, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;

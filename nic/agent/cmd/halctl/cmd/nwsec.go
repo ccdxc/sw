@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/spf13/cobra"
@@ -53,7 +54,7 @@ func init() {
 	nwsecPolicyShowCmd.Flags().Uint64Var(&nwsecPolicyID, "policy-id", 1, "Specify security policy ID")
 }
 
-func nwsecProfShowCmdHandler(cmd *cobra.Command, args []string) {
+func handleNwsecProfShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -63,7 +64,7 @@ func nwsecProfShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewNwSecurityClient(c.ClientConn)
 
 	var req *halproto.SecurityProfileGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		req = &halproto.SecurityProfileGetRequest{
 			KeyOrHandle: &halproto.SecurityProfileKeyHandle{
 				KeyOrHandle: &halproto.SecurityProfileKeyHandle_ProfileId{
@@ -93,12 +94,23 @@ func nwsecProfShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				log.Errorf("Failed to write to file %s, err : %v",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
 	}
 }
 
-func nwsecPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
+func nwsecProfShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleNwsecProfShowCmd(cmd, nil)
+}
+
+func handleNwsecPolicyShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -108,7 +120,7 @@ func nwsecPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewNwSecurityClient(c.ClientConn)
 
 	var req *halproto.SecurityPolicyGetRequest
-	if cmd.Flags().Changed("vrf-id") && cmd.Flags().Changed("policy-id") {
+	if cmd != nil && cmd.Flags().Changed("vrf-id") && cmd.Flags().Changed("policy-id") {
 		req = &halproto.SecurityPolicyGetRequest{
 			KeyOrHandle: &halproto.SecurityPolicyKeyHandle{
 				PolicyKeyOrHandle: &halproto.SecurityPolicyKeyHandle_SecurityPolicyKey{
@@ -147,7 +159,18 @@ func nwsecPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				log.Errorf("Failed to write to file %s, err : %v",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
 	}
+}
+
+func nwsecPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleNwsecPolicyShowCmd(cmd, nil)
 }

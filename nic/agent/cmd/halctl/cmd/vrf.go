@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -157,7 +158,7 @@ func vrfPdShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func vrfDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+func handleVrfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -167,7 +168,7 @@ func vrfDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewVrfClient(c.ClientConn)
 
 	var req *halproto.VrfGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		req = &halproto.VrfGetRequest{
 			KeyOrHandle: &halproto.VrfKeyHandle{
 				KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
@@ -196,9 +197,20 @@ func vrfDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				log.Errorf("Failed to write to file %s, err : %v",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
 	}
+}
+
+func vrfDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleVrfDetailShowCmd(cmd, nil)
 }
 
 func vrfShowHeader() {

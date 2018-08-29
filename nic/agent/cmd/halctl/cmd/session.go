@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -203,7 +204,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -215,7 +216,7 @@ func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	var sessionGetReqMsg *halproto.SessionGetRequestMsg
 
-	if cmd.Flags().Changed("handle") {
+	if cmd != nil && cmd.Flags().Changed("handle") {
 		var req *halproto.SessionGetRequest
 		req = &halproto.SessionGetRequest{
 			GetBy: &halproto.SessionGetRequest_SessionHandle{
@@ -225,10 +226,10 @@ func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		sessionGetReqMsg = &halproto.SessionGetRequestMsg{
 			Request: []*halproto.SessionGetRequest{req},
 		}
-	} else if cmd.Flags().Changed("vrfid") || cmd.Flags().Changed("srcip") ||
+	} else if cmd != nil && (cmd.Flags().Changed("vrfid") || cmd.Flags().Changed("srcip") ||
 		cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
 		cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto") ||
-		cmd.Flags().Changed("l2segid") {
+		cmd.Flags().Changed("l2segid")) {
 		var req *halproto.SessionGetRequest
 		if cmd.Flags().Changed("srcip") && cmd.Flags().Changed("dstip") {
 			req = &halproto.SessionGetRequest{
@@ -254,7 +255,7 @@ func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 					},
 				},
 			}
-		} else if cmd.Flags().Changed("srcip") {
+		} else if cmd != nil && cmd.Flags().Changed("srcip") {
 			req = &halproto.SessionGetRequest{
 				GetBy: &halproto.SessionGetRequest_SessionFilter{
 					SessionFilter: &halproto.SessionFilter{
@@ -272,7 +273,7 @@ func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 					},
 				},
 			}
-		} else if cmd.Flags().Changed("dstip") {
+		} else if cmd != nil && cmd.Flags().Changed("dstip") {
 			req = &halproto.SessionGetRequest{
 				GetBy: &halproto.SessionGetRequest_SessionFilter{
 					SessionFilter: &halproto.SessionFilter{
@@ -327,9 +328,20 @@ func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				log.Errorf("Failed to write to file %s, err : %v",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
 	}
+}
+
+func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleSessionDetailShowCmd(cmd, nil)
 }
 
 func sessionShowHeader(cmd *cobra.Command, args []string) {

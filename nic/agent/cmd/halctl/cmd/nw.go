@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -71,7 +72,7 @@ func nwShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func nwDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+func handleNwDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -100,9 +101,20 @@ func nwDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b)); err != nil {
+				log.Errorf("Failed to write to file %s, err : %v",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
 	}
+}
+
+func nwDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleNwDetailShowCmd(cmd, nil)
 }
 
 func nwShowHeader() {

@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -91,7 +92,7 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 	c.Close()
 }
 
-func lifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+func handlelifDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -100,7 +101,7 @@ func lifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewInterfaceClient(c.ClientConn)
 
 	var req *halproto.LifGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific lif
 		req = &halproto.LifGetRequest{
 			KeyOrHandle: &halproto.LifKeyHandle{
@@ -122,7 +123,6 @@ func lifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Errorf("Getting Lif failed. %v", err)
 	}
-	fmt.Printf("Received %v of responses. err: %v\n", len(respMsg.Response), err)
 
 	// Print LIFs
 	for _, resp := range respMsg.Response {
@@ -132,10 +132,20 @@ func lifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				log.Errorf("Failed to write to file %s, err : %v",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
 	}
 	c.Close()
+}
+
+func lifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 func lifShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n")

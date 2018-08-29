@@ -69,13 +69,13 @@ init (hal_cfg_t *hal_cfg)
 extern "C" void
 nw_thread_init (int tid)
 {
-    // Periodic cleanup needs to be inited only 
+    // Periodic cleanup needs to be inited only
     // for config thread
     if (tid != HAL_THREAD_ID_PERIODIC)
         return;
 
     // Init periodic timer for session garbage collection
-    if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) && 
+    if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
         (hal::g_hal_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC))
         HAL_ABORT(hal::session_init(&hal::g_hal_cfg) == HAL_RET_OK);
 
