@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2017, Pensando Systems Inc.
+# Copyright (c) 2017-2018, Pensando Systems Inc.
 #
 
 SUBDIRS = \
@@ -8,6 +8,7 @@ SUBDIRS = \
 	capview \
 	cpmem \
 	example \
+	memtun \
 	pciemgrd \
 	pcieutil \
 	regio \
