@@ -502,6 +502,8 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	for i, ag := range it.agents {
 		ag.Stop()
 
+		// stop nmd
+		it.nmds[i].Stop()
 		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
 		os.Remove(dbPath)
 	}
@@ -535,6 +537,13 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	it.vcHub.TearDown()
 	it.resolverClient.Stop()
 	it.resolverSrv.Stop()
+
+	// stop the CMD smartnic RPC server
+	it.rpcServer.Stop()
+
+	// stop resolver server
+	it.resolverServer.Stop()
+
 	it.apisrvClient.Close()
 	it.eps.RPCServer.Stop()
 
@@ -546,6 +555,8 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 		cmdenv.CertMgr.Close()
 		cmdenv.CertMgr = nil
 	}
+
+	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 	log.Infof("============================= TearDownSuite completed ==========================")
 }
 

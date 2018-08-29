@@ -61,14 +61,14 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	for i, ag := range it.agents {
 		go func(ag *netagent.Agent, dp *datapath.Datapath) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return (dp.GetEndpointCount() == it.numAgents), nil
+				return ((dp.GetEndpointCount() == it.numAgents) && (len(ag.NetworkAgent.ListEndpoint()) == it.numAgents)), nil
 			}, "10ms", "10s")
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
 				return
 			}
 			foundLocal := false
-			for i, ag := range it.agents {
+			for i := range it.agents {
 				epname := fmt.Sprintf("testWorkload%d-00:01:02:03:04:%02d", i, i)
 				eps, perr := dp.FindEndpoint(fmt.Sprintf("%s|%s", "default", epname))
 				if perr != nil || len(eps.Request) != 1 {
@@ -77,7 +77,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 				}
 				sep, perr := ag.NetworkAgent.FindEndpoint("default", "default", epname)
 				if perr != nil {
-					waitCh <- fmt.Errorf("Endpoint %s not found in netagent, err=%v", epname, perr)
+					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, ag.NetworkAgent.NodeUUID, perr, ag.NetworkAgent.EndpointDB)
 					return
 				}
 				if sep.Spec.NodeUUID == ag.NetworkAgent.NodeUUID {
@@ -122,4 +122,8 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	for i := 0; i < it.numAgents; i++ {
 		AssertOk(c, <-waitCh, "Endpoint delete error")
 	}
+
+	// delete the network
+	_, err = it.deleteNetwork("default", "Vlan-1")
+	AssertOk(c, err, "Error deleting network")
 }
