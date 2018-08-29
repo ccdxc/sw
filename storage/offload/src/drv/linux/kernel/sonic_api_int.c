@@ -94,11 +94,11 @@ static identity_t* sonic_get_identity(void)
 	return lif->sonic->ident;
 }
 
-#define DBG_CHK_RING_ID(accel_ring_id, ret) \
-do {\
-	if(accel_ring_id >= ACCEL_RING_ID_MAX) \
-		return ret; \
-} while(0)
+#define DBG_CHK_RING_ID(accel_ring_id, ret)				\
+	do {								\
+		if (accel_ring_id >= ACCEL_RING_ID_MAX) 		\
+			return ret;					\
+	} while(0)
 
 accel_ring_t* sonic_get_accel_ring(uint32_t accel_ring_id)
 {
