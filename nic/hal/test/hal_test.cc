@@ -1633,7 +1633,7 @@ public:
         ClientContext               context;
 
         spec = req_msg.add_request();
-        spec->mutable_meta()->set_vrf_id(vrf_id);
+        spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
         spec->mutable_key_or_handle()->set_mirrorsession_id(session_id);
         spec->mutable_erspan_spec()->mutable_dest_ip()->set_ip_af(::types::IP_AF_INET);
         spec->mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(sip);
@@ -1661,7 +1661,7 @@ public:
         ClientContext           context;
 
         spec = req_msg.add_request();
-        spec->mutable_meta()->set_vrf_id(vrf_id);
+        spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
         spec->mutable_key_or_handle()->set_collector_id(export_ctrl_id);
         if (vlan_encap) {
             spec->mutable_encap()->set_encap_type(::types::ENCAP_TYPE_DOT1Q);

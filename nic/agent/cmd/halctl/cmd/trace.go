@@ -82,6 +82,10 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 	var traceReqMsg *halproto.TraceRequestMsg
 
 	if cmd.Flags().Changed("level") {
+		if isTraceLevelValid(traceLevel) != true {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
 		var req *halproto.TraceSpec
 		// Set Trace
 		req = &halproto.TraceSpec{
@@ -90,6 +94,9 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 		traceReqMsg = &halproto.TraceRequestMsg{
 			Request: []*halproto.TraceSpec{req},
 		}
+	} else {
+		fmt.Printf("Argument required. Set level using '--level ...' flag\n")
+		return
 	}
 
 	// HAL call
@@ -105,6 +112,19 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 			continue
 		}
 		traceShowResp(resp)
+	}
+}
+
+func isTraceLevelValid(level string) bool {
+	switch level {
+	case "none":
+		return true
+	case "error":
+		return true
+	case "debug":
+		return true
+	default:
+		return false
 	}
 }
 
@@ -134,6 +154,5 @@ func traceLevelToStr(level halproto.TraceLevel) string {
 	}
 }
 func traceShowResp(resp *halproto.TraceResponse) {
-
 	fmt.Printf("Trace level set to %-12s\n", resp.GetTraceLevel())
 }

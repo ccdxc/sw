@@ -1433,7 +1433,7 @@ main (int argc, char** argv)
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":sm:n:b:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":sm:n:b:d", longopts, NULL)) != -1) {
         switch (oc) {
         case 's':
             system_get = true;

@@ -12,6 +12,9 @@ def CollectorPreCreateCb(data, req_spec, resp_spec):
     if req_spec.request[0].src_ip.ip_af == types_pb2.IP_AF_INET6:
         GrpcReqRspMsg.generate_ip_address(req_spec.request[0].src_ip, types_pb2.IP_AF_INET)
 
+    while len(endpoint.ep_vrf_ids) < 1:
+        endpoint.CreateEndpoint()
+
     req_spec.request[0].vrf_key_handle.vrf_id = random.choice(endpoint.ep_vrf_ids)
     idx = endpoint.ep_vrf_ids.index(req_spec.request[0].vrf_key_handle.vrf_id)
     req_spec.request[0].dest_ip.ip_af = types_pb2.IP_AF_INET

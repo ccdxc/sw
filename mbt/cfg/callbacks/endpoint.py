@@ -1,4 +1,7 @@
 import types_pb2
+import kh_pb2
+import utils
+import config_mgr
 from grpc_meta.msg import GrpcReqRspMsg
 
 ep_ipv4_addrs = []
@@ -25,3 +28,12 @@ def PostCreateCb(data, req_spec, resp_spec):
     if req_spec.request[0].endpoint_attrs.ip_address[0].ip_af == types_pb2.IP_AF_INET:
         ep_ipv4_addrs.append(req_spec.request[0].endpoint_attrs.ip_address[0].v4_addr)
         ep_vrf_ids.append(req_spec.request[0].vrf_key_handle.vrf_id)
+
+def CreateEndpoint():
+    if (utils.mbt_v2()):
+        constraints = None
+        ext_refs = {}
+        return utils.create_config_from_kh('EndpointKeyHandle', constraints, ext_refs)
+    else:
+        ep_key_type = getattr(kh_pb2, 'EndpointKeyHandle')
+        return config_mgr.CreateConfigFromKeyType(ep_key_type)
