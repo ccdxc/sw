@@ -881,7 +881,7 @@ static int ionic_v1_noop_cmd(struct ionic_ibdev *dev)
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "noop error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		dev_dbg(&dev->ibdev.dev, "noop success\n");
@@ -935,7 +935,7 @@ static int ionic_v1_stats_cmd(struct ionic_ibdev *dev,
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		rc = 0;
@@ -1822,7 +1822,7 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		rc = 0;
@@ -1882,7 +1882,7 @@ static int ionic_v1_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid)
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		rc = 0;
@@ -2057,7 +2057,7 @@ static int ionic_v1_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		rc = 0;
@@ -2106,7 +2106,7 @@ static int ionic_v1_destroy_mr_cmd(struct ionic_ibdev *dev, u32 mrid)
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		rc = 0;
@@ -2545,7 +2545,7 @@ static int ionic_v1_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		rc = 0;
@@ -2576,7 +2576,7 @@ static int ionic_v1_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		rc = 0;
@@ -2956,7 +2956,7 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		wc->qp = &cqe_qp->ibqp;
 
 	if (ionic_v1_cqe_error(cqe)) {
-		wc->vendor_err = le32_to_cpu(cqe->status_length);
+		wc->vendor_err = be32_to_cpu(cqe->status_length);
 		wc->status = ionic_to_ib_status(wc->vendor_err);
 
 		cqe_qp->rq_flush = !qp->is_srq;
@@ -2996,7 +2996,7 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		wc->ex.invalidate_rkey = be32_to_cpu(cqe->recv.imm_data_rkey);
 	}
 
-	wc->byte_len = le32_to_cpu(cqe->status_length);
+	wc->byte_len = be32_to_cpu(cqe->status_length);
 	wc->byte_len = meta->len; /* XXX byte_len must come from cqe */
 	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
 	wc->pkey_index = be16_to_cpu(cqe->recv.pkey_index);
@@ -3104,7 +3104,7 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 
 	if (ionic_v1_cqe_error(cqe)) {
 		meta = &qp->sq_meta[cqe_idx];
-		meta->len = le32_to_cpu(cqe->status_length);
+		meta->len = be32_to_cpu(cqe->status_length);
 		meta->ibsts = ionic_to_ib_status(meta->len);
 		meta->remote = false;
 	}
@@ -3138,7 +3138,7 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 
 	if (ionic_v1_cqe_error(cqe)) {
 		meta = &qp->sq_meta[cqe_idx];
-		meta->len = le32_to_cpu(cqe->status_length);
+		meta->len = be32_to_cpu(cqe->status_length);
 		meta->ibsts = ionic_to_ib_status(meta->len);
 		meta->remote = false;
 	}
@@ -3517,7 +3517,7 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		rc = 0;
@@ -3711,7 +3711,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		rc = 0;
@@ -3752,7 +3752,7 @@ static int ionic_v1_destroy_qp_cmd(struct ionic_ibdev *dev, u32 qpid)
 		rc = 0;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 le32_to_cpu(wr.cqe.status_length));
+			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
 		rc = 0;

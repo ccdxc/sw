@@ -265,7 +265,7 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	wc->qp_num = cqe_qp->qpid;
 
 	if (ionic_v1_cqe_error(cqe)) {
-		wc->vendor_err = le32toh(cqe->status_length);
+		wc->vendor_err = be32toh(cqe->status_length);
 		wc->status = ionic_to_ibv_status(wc->vendor_err);
 
 		cqe_qp->rq_flush = !qp->is_srq;
@@ -307,7 +307,7 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 		wc->invalidated_rkey = be32toh(cqe->recv.imm_data_rkey);
 	}
 
-	wc->byte_len = le32toh(cqe->status_length);
+	wc->byte_len = be32toh(cqe->status_length);
 	wc->byte_len = meta->len; /* XXX byte_len must come from cqe */
 	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
 	wc->pkey_index = be16toh(cqe->recv.pkey_index);
@@ -414,7 +414,7 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 
 	if (ionic_v1_cqe_error(cqe)) {
 		meta = &qp->sq_meta[cqe_idx];
-		meta->len = le32toh(cqe->status_length);
+		meta->len = be32toh(cqe->status_length);
 		meta->ibsts = ionic_to_ibv_status(meta->len);
 		meta->remote = false;
 	}
@@ -448,7 +448,7 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 
 	if (ionic_v1_cqe_error(cqe)) {
 		meta = &qp->sq_meta[cqe_idx];
-		meta->len = le32toh(cqe->status_length);
+		meta->len = be32toh(cqe->status_length);
 		meta->ibsts = ionic_to_ibv_status(meta->len);
 		meta->remote = false;
 	}

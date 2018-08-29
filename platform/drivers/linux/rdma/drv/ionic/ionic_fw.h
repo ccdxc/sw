@@ -233,7 +233,7 @@ struct ionic_v1_cqe {
 			__u64		npg_wqe_id;
 		} send;
 	};
-	__le32				status_length;
+	__be32				status_length;
 	__be32				qid_type_flags;
 };
 
