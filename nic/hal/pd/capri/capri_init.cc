@@ -169,7 +169,7 @@ capri_p4_asm_init (capri_cfg_t *cfg)
     p4_prm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
     HAL_TRACE_DEBUG("base addr {:#x}", p4_prm_base_addr);
     capri_load_mpu_programs(cfg->pgm_name.c_str(), (char *)full_path.c_str(),
-                            p4_prm_base_addr, NULL, 0);
+                            p4_prm_base_addr, NULL, 0, NULL);
 
     return ret;
 }
@@ -892,7 +892,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);
     HAL_TRACE_DEBUG("base addr {:#x}", p4plus_prm_base_addr);
     capri_load_mpu_programs("p4plus", (char *)full_path.c_str(),
-                            p4plus_prm_base_addr, symbols, i);
+                            p4plus_prm_base_addr, symbols, i, NULL);
 
     HAL_FREE(hal::HAL_MEM_ALLOC_PD, symbols);
 

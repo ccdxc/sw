@@ -1442,7 +1442,7 @@ TEST_F(gft_test, test1) {
 
     asm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
     ret = capri_load_mpu_programs("gft", (char *)"obj/gft/asm_bin",
-                                  asm_base_addr, NULL, 0);
+                                  asm_base_addr, NULL, 0, NULL);
     ASSERT_NE(ret, -1);
     std::ifstream json_cfg(hal_conf_file);
     ptree pt;

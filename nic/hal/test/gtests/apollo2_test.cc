@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <map>
 #include <iostream>
 #include <gtest/gtest.h>
 
@@ -112,6 +113,47 @@ uint16_t g_tep_index = 100;
 uint32_t g_gw_slot_id = 200;
 uint32_t g_gw_dip = 0x0C0C0101;
 uint64_t g_gw_dmac = 0x001234567890;
+
+class sort_mpu_programs_compare {
+  public:
+    bool operator() (std::string p1, std::string p2) {
+        std::map <std::string, p4pd_table_properties_t>::iterator it1, it2;
+        it1 = tbl_map.find(p1);
+        it2 = tbl_map.find(p2);
+        if ((it1 == tbl_map.end()) || (it2 == tbl_map.end())) {
+            return (p1 < p2);
+        }
+        p4pd_table_properties_t tbl_ctx1 = it1->second;
+        p4pd_table_properties_t tbl_ctx2 = it2->second;
+        if (tbl_ctx1.gress != tbl_ctx2.gress) {
+            return (tbl_ctx1.gress < tbl_ctx2.gress);
+        }
+        if (tbl_ctx1.stage != tbl_ctx2.stage) {
+            return (tbl_ctx1.stage < tbl_ctx2.stage);
+        }
+        return (tbl_ctx1.stage_tableid < tbl_ctx2.stage_tableid);
+    }
+    void add_table(std::string tbl_name, p4pd_table_properties_t tbl_ctx) {
+        std::pair <std::string, p4pd_table_properties_t> key_value;
+        key_value = std::make_pair(tbl_name.append(".bin"), tbl_ctx);
+        tbl_map.insert(key_value);
+    }
+  private:
+    std::map <std::string, p4pd_table_properties_t> tbl_map;
+};
+
+static void
+sort_mpu_programs(std::vector <std::string> &programs) {
+    sort_mpu_programs_compare sort_compare;
+    for (uint32_t tableid = p4pd_tableid_min_get();
+         tableid < p4pd_tableid_max_get(); tableid++) {
+        p4pd_table_properties_t tbl_ctx;
+        if (p4pd_table_properties_get(tableid, &tbl_ctx) != P4PD_FAIL) {
+            sort_compare.add_table(std::string(tbl_ctx.tablename), tbl_ctx);
+        }
+    }
+    sort(programs.begin(), programs.end(), sort_compare);
+}
 
 static void
 init_service_lif() {
@@ -419,29 +461,31 @@ TEST_F(apollo_test, test1) {
     ret = capri_hbm_parse(&cfg);
     ASSERT_NE(ret, -1);
 
+    ret = p4pd_init(&p4pd_cfg);
+    ASSERT_NE(ret, -1);
+
     printf("Loading Programs\n");
     asm_base_addr = (uint64_t)get_start_offset((char *)JP4_PRGM);
     ret = capri_load_mpu_programs("apollo2_p4",
                                   (char *)"obj/apollo2_p4/asm_bin",
-                                  asm_base_addr, NULL, 0);
+                                  asm_base_addr, NULL, 0, sort_mpu_programs);
     ASSERT_NE(ret, -1);
     asm_base_addr = (uint64_t)get_start_offset((char *)JRXDMA_PRGM);
     ret = capri_load_mpu_programs("apollo2_rxdma",
                                   (char *)"obj/apollo2_rxdma/asm_bin",
-                                  asm_base_addr, NULL, 0);
+                                  asm_base_addr, NULL, 0, NULL);
     ASSERT_NE(ret, -1);
     asm_base_addr = (uint64_t)get_start_offset((char *)JTXDMA_PRGM);
     ret = capri_load_mpu_programs("apollo2_txdma",
                                   (char *)"obj/apollo2_txdma/asm_bin",
-                                  asm_base_addr, NULL, 0);
+                                  asm_base_addr, NULL, 0, NULL);
     ASSERT_NE(ret, -1);
 
     std::ifstream json_cfg(hal_conf_file);
     ptree pt;
     read_json(json_cfg, pt);
     capri_list_program_addr(pt.get<std::string>("asic.loader_info_file").c_str());
-    ret = p4pd_init(&p4pd_cfg);
-    ASSERT_NE(ret, -1);
+
     ret = capri_table_rw_init();
     ASSERT_NE(ret, -1);
     ret = capri_hbm_cache_init(NULL);
@@ -525,7 +569,7 @@ TEST_F(apollo_test, test1) {
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(opkt == epkt);
             }
-            testcase_end(i, i+1);
+            testcase_end(tcid, i+1);
         }
     }
 

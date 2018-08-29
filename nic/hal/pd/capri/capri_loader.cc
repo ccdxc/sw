@@ -28,7 +28,7 @@ boost::unordered_map<std::string, capri_loader_ctx_t *> loader_instances;
  * Return: 0 on success, < 0 on failure
  */
 static int
-read_programs(const char *handle, char *pathname)
+read_programs(const char *handle, char *pathname, mpu_pgm_sort_t sort_func)
 {
     DIR *dir;
     struct dirent *ent;
@@ -57,9 +57,14 @@ read_programs(const char *handle, char *pathname)
 
     ctx->program_info = new capri_program_info_t[program_names.size()];
 
-    std::sort(program_names.begin(), program_names.end());
+    // sort the mpu program names
+    if (sort_func) {
+        sort_func(program_names);
+    } else {
+        std::sort(program_names.begin(), program_names.end());
+    }
+
     for (auto it = program_names.cbegin(); it != program_names.cend(); it++) {
-        // assert(i < MAX_PROGRAMS);
         ctx->program_info[i].name = *it;
         i++;
     }
@@ -140,7 +145,7 @@ int
 capri_load_mpu_programs (const char *handle,
                          char *pathname, uint64_t hbm_base_addr,
                          capri_prog_param_info_t *prog_param_info,
-                         int num_prog_params)
+                         int num_prog_params, mpu_pgm_sort_t sort_func)
 {
     int i, j, prog_index;
     capri_loader_ctx_t *ctx;
@@ -176,7 +181,7 @@ capri_load_mpu_programs (const char *handle,
     loader_instances[handle] = ctx;
 
     /* Read all program names */
-    if ((ctx->num_programs = read_programs(handle, pathname)) < 0) {
+    if ((ctx->num_programs = read_programs(handle, pathname, sort_func)) < 0) {
         HAL_TRACE_ERR("Cannot read programs");
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }

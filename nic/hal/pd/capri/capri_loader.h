@@ -66,6 +66,8 @@ typedef struct {
     int num_programs;
 } capri_loader_ctx_t;
 
+typedef void (*mpu_pgm_sort_t)(std::vector <std::string> &);
+
 /**
  * capri_load_mpu_programs: Load all MPU programs in a given directory. Resolve
  *                          the parameters defined in the programs using an
@@ -88,7 +90,7 @@ typedef struct {
 int capri_load_mpu_programs(const char *handle,
                             char *pathname, uint64_t hbm_base_addr,
                             capri_prog_param_info_t *prog_param_info,
-                            int num_prog_params);
+                            int num_prog_params, mpu_pgm_sort_t sort_func);
 
 /**
  * capri_program_label_to_offset: Resolve a programs, label to its relative
