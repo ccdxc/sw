@@ -42,6 +42,16 @@ static void start_ready(Scheduler &sched)
     }
 }
 
+static void launch_ready(Scheduler &sched)
+{
+    auto action = sched.next_action();
+
+    for (auto s : action->launch_list)
+    {
+        launch_srv(sched, s);
+    }
+}
+
 static void next_action_is(Scheduler &sched, action_type_t action_type, set<string> should)
 {
     auto act = sched.next_action();
@@ -49,14 +59,29 @@ static void next_action_is(Scheduler &sched, action_type_t action_type, set<stri
     ASSERT_EQ(act->launch_list.size(), should.size());
     for (auto r : act->launch_list)
     {
-        ASSERT_EQ(should.count(r->get_name()), 1);
+        // make sure r is in the "should" set
+        ASSERT_EQ(should.count(r->name), 1);
     }
+}
+
+static void start_all(Scheduler &sched)
+{
+    const int max_cycles = 99;
+    for (int i = 0; i < max_cycles; i++)
+    {
+        auto act = sched.next_action();
+        if (act->type == WAIT) {
+            return;
+        }
+        start_ready(sched);
+    }
+    FAIL() << "max_cycles exceeded";
 }
 
 TEST(Scheduler, ServiceCompare)
 {
     auto s = ServiceSet();
-    auto srv = make_shared<Service>("nicmgr", "/bin/ls -l");
+    auto srv = make_shared<Service>("nicmgr", "/bin/ls -l", true);
     auto srv2 = srv;
     s.insert(srv);
     s.insert(srv2);
@@ -103,6 +128,76 @@ TEST(Scheduler, CircularDependencies)
 
     auto action = sched.next_action();
     ASSERT_EQ(action->type, REBOOT);
+}
+
+TEST(Scheduler, RestartableProcessDeath)
+{
+    const vector<Spec> specs = {
+        Spec("delphi", NON_RESTARTABLE, "/bin/ls -l", {}),
+        Spec("agent1", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+        Spec("hal", NON_RESTARTABLE, "/bin/ls -l", {"delphi"}),
+        Spec("nicmgr", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal"}),
+        Spec("agent2", RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+    };
+
+    auto sched = Scheduler(specs);
+    start_all(sched);
+
+    // Test 1: Process dies while its in "started" state
+    sched.service_died("agent2");
+    auto action = sched.next_action();
+    next_action_is(sched, LAUNCH, {"agent2"});
+
+    launch_ready(sched);
+    next_action_is(sched, WAIT, {});
+
+    // Test 2: Process dies while its in "launched" state
+    sched.service_died("agent2");
+    action = sched.next_action();
+    next_action_is(sched, LAUNCH, {"agent2"});
+}
+
+TEST(Scheduler, NonRestartableStartedProcessDeath)
+{
+    const vector<Spec> specs = {
+        Spec("delphi", NON_RESTARTABLE, "/bin/ls -l", {}),
+        Spec("agent1", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+        Spec("hal", NON_RESTARTABLE, "/bin/ls -l", {"delphi"}),
+        Spec("nicmgr", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal"}),
+        Spec("agent2", RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+    };
+
+    auto sched = Scheduler(specs);
+    start_all(sched);
+
+    sched.service_died("agent1");
+    auto action = sched.next_action();
+    next_action_is(sched, REBOOT, {});
+}
+
+TEST(Scheduler, NonRestartableStartingProcessDeath)
+{
+    const vector<Spec> specs = {
+        Spec("delphi", NON_RESTARTABLE, "/bin/ls -l", {}),
+        Spec("agent1", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+        Spec("hal", NON_RESTARTABLE, "/bin/ls -l", {"delphi"}),
+        Spec("nicmgr", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal"}),
+        Spec("agent2", RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+    };
+
+    auto sched = Scheduler(specs);
+    // starts delphi
+    start_ready(sched);
+    // starts hal
+    start_ready(sched);
+    // starts nicmgr
+    start_ready(sched);
+    // launches agent1 and agent 2
+    launch_ready(sched);
+
+    sched.service_died("agent1");
+    auto action = sched.next_action();
+    next_action_is(sched, REBOOT, {});
 }
 
 TEST(Specs, NoDuplicateNames)

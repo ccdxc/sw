@@ -25,25 +25,14 @@ class Service
 {
   public:
     pid_t pid;
-    Service(string name, string command) : name(name), command(command)
+    const string name;
+    const string command;
+    const bool is_restartable;
+
+    Service(string name, string command, bool restartable) : name(name), command(command), is_restartable(restartable)
     {
         status = WAITING;
         pid = 0;
-    }
-
-    int Compare(const Service &srv)
-    {
-        return this->name.compare(srv.name);
-    }
-
-    string get_name()
-    {
-        return this->name;
-    }
-
-    string get_command()
-    {
-        return this->command;
     }
 
     void set_status(enum service_status status)
@@ -87,20 +76,9 @@ class Service
     }
 
   private:
-    const string name;
-    const string command;
     set<weak_ptr<Service>, std::owner_less<std::weak_ptr<Service> > > dependencies;
     list<weak_ptr<Service> > dependees;
     enum service_status status;
-};
-
-struct ServiceCompare
-{
-    int operator()(const shared_ptr<Service> &lhs,
-                   const shared_ptr<Service> &rhs) const
-    {
-        return lhs->get_name().compare(rhs->get_name());
-    }
 };
 
 typedef set<shared_ptr<Service>, std::owner_less<std::shared_ptr<Service> > > ServiceSet;

@@ -36,9 +36,9 @@ Scheduler::Scheduler(vector<Spec> specs)
     // Populate the services map based on the spec
     for (auto &sp : specs)
     {
-        auto service = make_shared<Service>(sp.name, sp.command);
-        this->services.insert(pair<const string &, shared_ptr<Service>>(service->get_name(), service));
-        INFO("Added service {}", service->get_name());
+        auto service = make_shared<Service>(sp.name, sp.command, sp.restartability == RESTARTABLE);
+        this->services.insert(pair<const string &, shared_ptr<Service>>(service->name, service));
+        INFO("Added service {}", service->name);
     }
 
     // Populate the dependencies of the services or add them to the read list if they have no dependencies
@@ -57,7 +57,7 @@ Scheduler::Scheduler(vector<Spec> specs)
                 shared_ptr<Service> &dependency = services.find(dependency_name)->second;
                 dependee->add_depenency(dependency);
                 dependency->add_dependee(dependee);
-                INFO("{} depends on {}", dependee->get_name(), dependency->get_name());
+                INFO("{} depends on {}", dependee->name, dependency->name);
 
                 dependee->set_status(WAITING);
                 this->waiting.insert(dependee);
@@ -66,33 +66,72 @@ Scheduler::Scheduler(vector<Spec> specs)
     }
 }
 
-unique_ptr<Action> Scheduler::next_action()
+list<shared_ptr<Service> > Scheduler::next_launch()
 {
-    INFO("Waiting: {}, Starting: {}, Ready: {}, Running: {}, Dead: {}",
-        this->waiting.size(), this->starting.size(), this->ready.size(),
-        this->running.size(), this->dead.size());
+    auto launch_list = list<shared_ptr<Service> >();
+
+    if (this->dead.size() > 0)
+    {
+        for (auto s : this->dead)
+        {
+            if (s->is_restartable)
+            {
+                launch_list.push_back(s);
+            }
+        }
+    }
     if (this->ready.size() > 0)
     {
         auto action = unique_ptr<Action>(new Action(LAUNCH));
 
         for (auto s : this->ready)
         {
-            action->launch_list.push_back(s);
+            launch_list.push_back(s);
         }
+    }
+    return launch_list;
+}
 
-        return action;
-    }
-    else // no service in ready list
+bool Scheduler::deadlocked()
+{
+    // we have processes waiting for other dependency resolution but no more 
+    // processes to launch and no processes waiting to come up; deadlock
+    return ((this->waiting.size() != 0) && (this->starting.size() == 0));
+}
+
+bool Scheduler::should_reboot()
+{
+    if (deadlocked())
     {
-        // The waiting list is not empty, but we are not waiting on any more
-        // services to run and the ready list is empty. This means we have a 
-        // loop in dependencies. This should be caught by unit-tests run during
-        // build time.
-        if ((this->starting.size() == 0) && (this->waiting.size() > 0))
+        return true;
+    }
+    for (auto s: this->dead)
+    {
+        if (s->is_restartable == false)
         {
-            return unique_ptr<Action>(new Action(REBOOT));
+            return true;
         }
     }
+    return false;
+}
+
+unique_ptr<Action> Scheduler::next_action()
+{
+    INFO("Waiting: {}, Starting: {}, Ready: {}, Running: {}, Dead: {}",
+        this->waiting.size(), this->starting.size(), this->ready.size(),
+        this->running.size(), this->dead.size());
+
+    auto launch_list = next_launch();
+    if (launch_list.size() > 0)
+    {
+        return unique_ptr<Action>(new Action(LAUNCH, launch_list));
+    }
+    
+    if (should_reboot())
+    {
+        return unique_ptr<Action>(new Action(REBOOT));
+    }
+    
     return unique_ptr<Action>(new Action(WAIT));
 }
 
@@ -103,20 +142,21 @@ void Scheduler::service_ready(shared_ptr<Service> service)
     service->set_status(READY);
     this->waiting.erase(service);
     this->ready.insert(service);
-    INFO("{} -> ready", service->get_name());
+    INFO("{} -> ready", service->name);
 }
 
 void Scheduler::service_launched(shared_ptr<Service> service, pid_t pid)
 {
-    assert(service->get_status() == READY);
+    assert((service->get_status() == READY) || (service->get_status() == DIED));
 
     service->set_status(STARTING);
     service->pid = pid;
     this->ready.erase(service);
+    this->dead.erase(service);
     this->starting.insert(service);
 
     this->pids.insert(pair<pid_t, shared_ptr<Service>>(pid, service));
-    INFO("{} -> launched with pid({})", service->get_name(), pid);
+    INFO("{} -> launched with pid({})", service->name, pid);
 }
 
 void Scheduler::service_started(const string &name)
@@ -133,7 +173,7 @@ void Scheduler::service_started(pid_t pid)
     service->set_status(RUNNING);
     this->starting.erase(service);
     this->running.insert(service);
-    INFO("{} -> started", service->get_name());
+    INFO("{} -> started", service->name);
 
     // Remove it from all dependencies. If a dependee has no more dependencies, move it to ready.
     for (auto dependee : service->get_dependees())
@@ -147,28 +187,34 @@ void Scheduler::service_started(pid_t pid)
     }
 }
 
+void Scheduler::service_died(const string &name)
+{
+    auto service = this->get_for_name(name);
+    this->service_died(service->pid);
+}
+
 void Scheduler::service_died(pid_t pid)
 {
     auto service = this->get_for_pid(pid);
-    assert(service->get_status() == RUNNING);
+    assert((service->get_status() == RUNNING) || (service->get_status() == STARTING));
 
     service->set_status(DIED);
     this->pids.erase(pid);
     this->running.erase(service);
     this->starting.erase(service);
     this->dead.insert(service);
-    INFO("{} -> died", service->get_name());
+    INFO("{} -> died", service->name);
 }
 
 void Scheduler::debug()
 {
-    INFO("- Debug -");
+    INFO("- Debug start -");
     INFO("Ready list:");
     for (auto kv : this->services)
     {
         if (auto srv = kv.second)
         {
-            INFO("{}: {}", srv->get_name().c_str(), srv->get_status());
+            INFO("{}: {}", srv->name.c_str(), srv->get_status());
         }
     }
     INFO("- Debug end -");

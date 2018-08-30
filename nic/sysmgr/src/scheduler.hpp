@@ -19,7 +19,9 @@ enum action_type_t
 class Action
 {
 public:
-  Action(action_type_t type) : type(type){};
+  Action(action_type_t type, 
+    list<shared_ptr<Service> > launch_list=list<shared_ptr<Service> >()):
+    type(type), launch_list(launch_list) {};
   const action_type_t type;
   list<shared_ptr<Service> > launch_list;
 };
@@ -33,6 +35,7 @@ public:
   void service_launched(shared_ptr<Service> srv, pid_t pid);
   void service_started(const string &name);
   void service_started(pid_t pid);
+  void service_died(const string &name);
   void service_died(pid_t pid);
 
 private:
@@ -46,6 +49,10 @@ private:
   ServiceSet waiting;
   ServiceSet running;
   ServiceSet dead;
+
+  list<shared_ptr<Service> > next_launch();
+  bool deadlocked();
+  bool should_reboot();
 };
 
 #endif

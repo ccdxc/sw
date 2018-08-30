@@ -166,6 +166,7 @@ void wait_for_events(Scheduler &scheduler, int epollfd)
                 else if (msg == TEST_COMPLETE)
                 {
                     INFO("Test complete");
+                    kill(-getpid(), SIGQUIT);
                     exit(0);
                 }
                 else
@@ -216,7 +217,7 @@ void loop(Scheduler &scheduler)
             INFO("Launching services");
             for (auto service : action->launch_list)
             {
-                pid_t pid = launch(service->get_name(), service->get_command());
+                pid_t pid = launch(service->name, service->command);
                 scheduler.service_launched(service, pid);
             }
         }
@@ -228,7 +229,9 @@ void loop(Scheduler &scheduler)
         else if (action->type == REBOOT)
         {
             INFO("Rebooting");
-            break;
+            // kills all children "-pid" means all process in this process group
+            kill(-getpid(), SIGQUIT);
+            exit(0);
         }
     }
 }
