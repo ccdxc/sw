@@ -67,10 +67,10 @@ uint16_t feature_id(const std::string &name)
 const std::string&  feature_id_to_name(uint16_t feature_id)
 {
     if (feature_id <= g_num_features_)
-        return g_feature_list_[feature_id]->name; 
+        return g_feature_list_[feature_id]->name;
 
     return NULL;
-} 
+}
 
 //------------------------------------------------------------------------------
 // Returns size of memory to store the feature ctx state and pointer to session

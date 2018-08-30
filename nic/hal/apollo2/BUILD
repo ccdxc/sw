@@ -47,12 +47,15 @@ cc_library(
         "@sdk//obj:sdk_catalog",
         "@sdk//obj:sdk_utils",
         "@sdk//obj:sdk_periodic",
+        "@sdk//obj:sdk_ht",
         "//nic:spdlog",
         "//nic/include:common_includes",
         "//nic/hal/apollo2:hal_includes",
         "//nic/fte:fte_core_includes",
         "//nic/hal/core:core",
         "//nic/fte:fte",
+        "//nic/fte/oci:fte_oci",
+        "//nic/utils/print",
 
         # linkmgr dependencies
         "//nic/linkmgr:linkmgr_includes",

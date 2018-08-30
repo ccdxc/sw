@@ -1,6 +1,5 @@
 #include "nic/fte/fte.hpp"
 #include "nic/fte/fte_impl.hpp"
-#include "nic/p4/iris/include/defines.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
@@ -32,7 +31,6 @@ hal_ret_t cpupkt_poll_receive(hal::pd::cpupkt_ctxt_t *ctx,
 
 void process_pending_queues()
 {
-    
 }
 
 hal_ret_t cpupkt_send(hal::pd::cpupkt_ctxt_t *ctx,
