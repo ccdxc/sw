@@ -235,18 +235,20 @@ message SIPALGInfo {
 
 // FTPInfo captures the operational status of FTP ALG session
 message FTPALGInfo {
-  bool                 iscontrol      = 1; // Is this flow control/data TFTP flow
+  bool                 iscontrol      = 1; // Is this flow control/data FTP flow
   uint32               parse_error    = 2; // Number of parse errors recorded for this session
 }
 
 // RTSPALGInfo captures the operational status of RTSP ALG session
 message RTSPALGInfo {
-  bool                 iscontrol      = 1; // Is this flow control/data TFTP flow
+  bool                 iscontrol      = 1; // Is this flow control/data RTSP flow
 }
 
 // DNSALGInfo captures the operational status of DNS ALG session
 message DNSALGInfo {
-  bool                 iscontrol      = 1; // Is this flow control/data TFTP flow
+  uint32               parse_errors   = 1; // Number of parse errors recorded for this session
+  uint32               dns_id         = 2; // DNS id of seen by this session
+  uint32               time_remaining = 3; // Remaining time to timer expiry for session cleanup
 }
 
 // SessionStatus captures the operational status of the session

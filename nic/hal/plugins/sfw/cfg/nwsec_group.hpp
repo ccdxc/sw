@@ -316,6 +316,7 @@ typedef struct alg_options {
             uint32_t  drop_long_label_packets;
             uint32_t  drop_multizone_packets;
             uint32_t  max_msg_length;
+            uint32_t  query_response_timeout;
         } dns_opts;
 
         struct msrpc_options {

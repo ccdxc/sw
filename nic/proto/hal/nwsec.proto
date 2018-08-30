@@ -535,6 +535,7 @@ message AppData {
     uint32    drop_long_label_packets           = 3; // drop if label length > 63
     uint32    drop_multizone_packets            = 4; // (DDNS) drop if number of zones > 1
     uint32    max_msg_length                    = 5; // default 512 (max. 8192) bytes
+    uint32    query_response_timeout            = 6; // default 60 secs
   }
   message MSRPCOptions {
     uint32 map_entry_timeout             = 1;

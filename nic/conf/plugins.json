@@ -365,7 +365,8 @@
                 "pensando.io/alg_ftp:alg_ftp",
                 "pensando.io/alg_tftp:alg_tftp",
                 "pensando.io/alg_rpc:alg_rpc",
-                "pensando.io/alg_rtsp:alg_rtsp"
+                "pensando.io/alg_rtsp:alg_rtsp",
+                "pensando.io/alg_dns:alg_dns"
             ]
         },
         {

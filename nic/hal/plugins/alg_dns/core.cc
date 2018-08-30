@@ -5,6 +5,14 @@
 #include "core.hpp"
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/hal/plugins/alg_utils/core.hpp"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
+
+#define MAX_DNS_DOMAINNAME_LEN 256
+#define MAX_DNS_LABEL_LEN      63
+#define DNS_ALG_SESS_TIMER_ID  0x1FF
+#define DNS_ALG_RFLOW_TIMEOUT  (30 * TIME_MSECS_PER_MIN) // 30 mins
+#define DNS_HEADER_LENGTH      12 // bytes
+#define DNS_OPCODE_SHIFT       3
 
 namespace hal {
 namespace plugins {
@@ -12,6 +20,13 @@ namespace alg_dns {
 
 using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::sfw;
+
+// Holds the information for a dns question.
+typedef struct dns_question {
+    char     name[MAX_DNS_DOMAINNAME_LEN];
+    uint16_t type;
+    uint16_t cls;
+} dns_question;
 
 static void incr_parse_error (l4_alg_status_t *sess)
 {
@@ -28,36 +43,295 @@ void dnsinfo_cleanup_hdlr (l4_alg_status_t *l4_sess)
 }
 
 /*
+ *  APP Session delete handler
+ */
+fte::pipeline_action_t alg_dns_session_delete_cb(fte::ctx_t &ctx) {
+    fte::feature_session_state_t  *alg_state = NULL;
+    l4_alg_status_t               *l4_sess = NULL;
+
+    if (!ctx.sess_get_resp() || ctx.role() != hal::FLOW_ROLE_INITIATOR)
+        return fte::PIPELINE_CONTINUE;
+
+    alg_state = ctx.feature_session_state();
+    if (alg_state == NULL)
+        return fte::PIPELINE_CONTINUE;
+
+    l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+    if (l4_sess == NULL || l4_sess->alg != nwsec::APP_SVC_DNS)
+        return fte::PIPELINE_CONTINUE;
+
+    /*
+     * Cleanup ALG state. No concept of control vs data here
+     * so cleanup everything.
+     */
+    g_dns_state->cleanup_app_session(l4_sess->app_session);
+    
+
+    return fte::PIPELINE_CONTINUE;
+}
+
+/*
+ * APP Session get handler
+ */
+fte::pipeline_action_t alg_dns_session_get_cb(fte::ctx_t &ctx) {
+    fte::feature_session_state_t  *alg_state = NULL;
+    SessionGetResponse            *sess_resp = ctx.sess_get_resp();
+    l4_alg_status_t               *l4_sess = NULL;
+
+    if (!ctx.sess_get_resp() || ctx.role() != hal::FLOW_ROLE_INITIATOR)
+        return fte::PIPELINE_CONTINUE;
+
+    alg_state = ctx.feature_session_state();
+    if (alg_state == NULL)
+        return fte::PIPELINE_CONTINUE;
+
+    l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+    if (l4_sess == NULL || l4_sess->alg != nwsec::APP_SVC_DNS)
+        return fte::PIPELINE_CONTINUE;
+
+    sess_resp->mutable_status()->set_alg(nwsec::APP_SVC_DNS);
+
+    dns_info_t *info = ((dns_info_t *)l4_sess->info);
+    if (info) {
+        sess_resp->mutable_status()->mutable_dns_info()->\
+          set_parse_errors(info->parse_errors);
+        sess_resp->mutable_status()->mutable_dns_info()->\
+          set_time_remaining(sdk::lib::get_timeout_remaining(info->timer));
+        sess_resp->mutable_status()->mutable_dns_info()->\
+          set_dns_id(info->dnsid);
+    }
+
+    return fte::PIPELINE_CONTINUE;
+}
+
+/*
+ * DNS ALG timer expiry callback -- if this is fired means we didnt receive
+ * a DNS response hence we have to cleanup the HAL session and all ALG 
+ * resources pertaining to it.
+ */
+void dns_rflow_timeout_cb (void *timer, uint32_t timer_id, void *ctxt) {
+    hal_handle_t sess_hdl = (hal_handle_t)ctxt;
+
+    /* Post a force delete on timer expiry */
+    session_delete_in_fte(sess_hdl, true);
+}
+
+/*
  * DNS ALG completion handler - invoked when the session creation is done.
  */
 static void dns_completion_hdlr (fte::ctx_t& ctx, bool status) {
-    /* Nothing to be done for now */
+    l4_alg_status_t     *l4_sess = (l4_alg_status_t *)alg_status(\
+                             ctx.feature_session_state(FTE_FEATURE_ALG_DNS));
+    dns_info_t          *dns_info = (dns_info_t *)l4_sess->info;
+
+    HAL_ASSERT(l4_sess != NULL);
+
+    if (!status) {
+        if (l4_sess)
+            g_dns_state->cleanup_app_session(l4_sess->app_session);
+    } else {
+        HAL_TRACE_DEBUG("In DNS Completion handler ctrl");
+        l4_sess->sess_hdl = ctx.session()->hal_handle;
+
+        dns_info->timer = sdk::lib::timer_schedule(DNS_ALG_SESS_TIMER_ID, 
+                                  DNS_ALG_RFLOW_TIMEOUT, (void *)l4_sess->sess_hdl, 
+                                  dns_rflow_timeout_cb, false);
+        if (!dns_info->timer) {
+            HAL_TRACE_ERR("Failed to start timer for dns session with key: {}"\
+                          " and dns id: {}", ctx.key(), dns_info->dnsid);
+        }
+    } 
     return;
 }
 
-bool check_dnsid_exists (dns_info_t *head, uint16_t dnsid, dns_info_t **out)
-{
-    dllist_ctxt_t   *next, *entry;
+static hal_ret_t read_rr_name(const uint8_t * packet, uint32_t * packet_p, 
+                       uint32_t id_pos, uint32_t len, char *name) {
+    uint32_t i, next, pos=*packet_p;
+    uint32_t end_pos = 0;
+    uint32_t name_len=0;
+    uint32_t steps = 0;
 
-    HAL_TRACE_DEBUG("DNS ALG - Iterating through the linked list");
-    dllist_for_each_safe(entry, next, &head->lentry)
-    {
-        dns_info_t *dentry = dllist_entry(entry, dns_info_t, lentry);
-        HAL_TRACE_DEBUG("DNS ALG - Got DNS id: {}", dentry->dnsid);
-        if (dentry->dnsid == dnsid) {
-            *out = dentry;
-            return (TRUE);
+    // Scan through the name, one character at a time. We need to look at 
+    // each character to look for values we can't print in order to allocate
+    // extra space for escaping them.  'next' is the next position to look
+    // for a compression jump or name end.
+    // It's possible that there are endless loops in the name. Our protection
+    // against this is to make sure we don't read more bytes in this process
+    // than twice the length of the data.  Names that take that many steps to 
+    // read in should be impossible.
+    next = pos;
+    while (pos < len && !(next == pos && packet[pos] == 0)
+           && steps < len*2) {
+        uint8_t c = packet[pos];
+        steps++;
+        if (next == pos) {
+            // Handle message compression.  
+            // If the length byte starts with the bits 11, then the rest of
+            // this byte and the next form the offset from the dns proto start
+            // to the start of the remainder of the name.
+            if ((c & 0xc0) == 0xc0) {
+                if (pos + 1 >= len) return HAL_RET_INVALID_ARG;
+                if (end_pos == 0) end_pos = pos + 1;
+                pos = id_pos + ((c & 0x3f) << 8) + packet[pos+1];
+                next = pos;
+            } else {
+                name_len++;
+                pos++;
+                next = next + c + 1; 
+            }
+        } else {
+            if (c >= '!' && c <= 'z' && c != '\\') name_len++;
+            else name_len += 4;
+            pos++;
         }
     }
-    return (FALSE);
+    if (end_pos == 0) end_pos = pos;
+
+    // Due to the nature of DNS name compression, it's possible to get a
+    // name that is infinitely long. Return an error in that case.
+    // We use the len of the packet as the limit, because it shouldn't 
+    // be possible for the name to be that long.
+    if (steps >= 2*len || pos >= len) return HAL_RET_INVALID_ARG;
+
+    name_len++;
+
+    if (name_len > MAX_DNS_DOMAINNAME_LEN) {
+        return HAL_RET_NOT_SUPPORTED;
+    }
+    pos = *packet_p;
+
+    //Now actually assemble the name.
+    //We've already made sure that we don't exceed the packet length, so
+    // we don't need to make those checks anymore.
+    // Non-printable and whitespace characters are replaced with a question
+    // mark. They shouldn't be allowed under any circumstances anyway.
+    // Other non-allowed characters are kept as is, as they appear sometimes
+    // regardless.
+    // This shouldn't interfere with IDNA (international
+    // domain names), as those are ascii encoded.
+    next = pos;
+    i = 0;
+    while (next != pos || packet[pos] != 0) {
+        if (pos == next) {
+            if ((packet[pos] & 0xc0) == 0xc0) {
+                pos = id_pos + ((packet[pos] & 0x3f) << 8) + packet[pos+1];
+                next = pos;
+            } else {
+                // Add a period except for the first time.
+                if (i != 0) name[i++] = '.';
+                next = pos + packet[pos] + 1;
+                pos++;
+            }
+        } else {
+            uint8_t c = packet[pos];
+            if (c >= '!' && c <= '~' && c != '\\') {
+                name[i] = packet[pos];
+                i++; pos++;
+            } else {
+                name[i] = '\\';
+                name[i+1] = 'x';
+                name[i+2] = c/16 + 0x30;
+                name[i+3] = c%16 + 0x30;
+                if (name[i+2] > 0x39) name[i+2] += 0x27;
+                if (name[i+3] > 0x39) name[i+3] += 0x27;
+                i+=4; 
+                pos++;
+            }
+        }
+    }
+    name[i] = 0;
+
+    *packet_p = end_pos + 1;
+
+    return HAL_RET_OK;
 }
 
-hal_ret_t get_dnsid_pkt (fte::ctx_t& ctx, l4_alg_status_t *sess,
-                         uint16_t *dnsid)
+static hal_ret_t parse_dns_questions(sfw_info_t *sfw_info, uint8_t *pkt, 
+                              uint16_t count, uint32_t *offset, 
+                              uint32_t start_offset, uint32_t len) {
+    dns_question current;
+    uint16_t     i;
+    char        *label = NULL;
+    hal_ret_t    ret = HAL_RET_OK;
+    char        *name = NULL;
+
+    for (i=0; i < count; i++) {
+        name = current.name;
+        ret = read_rr_name(pkt, offset, start_offset, len, name);
+        if (ret != HAL_RET_OK) {
+            if (sfw_info->alg_opts.opt.dns_opts.drop_large_domain_name_packets)
+                HAL_TRACE_ERR("Domain name > 255 bytes -- dropping packet");
+
+            return ret;
+        }
+        label = std::strtok(name,".");
+        while (label != NULL)
+        {
+            if (std::strlen(label) > MAX_DNS_LABEL_LEN && 
+                sfw_info->alg_opts.opt.dns_opts.drop_long_label_packets) {
+                HAL_TRACE_ERR("Label len > 63 bytes -- dropping packet");
+                return HAL_RET_NOT_SUPPORTED;
+            } 
+            label = std::strtok(NULL, ".");
+        } 
+    }
+
+    return ret;
+}
+
+static hal_ret_t parse_dns_packet (fte::ctx_t& ctx, uint16_t *dns_id)
 {
-    hal_ret_t               ret = HAL_RET_OK;
+    const uint8_t *pkt = ctx.pkt();
+    uint32_t       offset = 0, ques_offset = 0;
+    sfw_info_t    *sfw_info = sfw::sfw_feature_state(ctx);
+    uint32_t       payload_offset = ctx.cpu_rxhdr()->payload_offset;
+    uint8_t        opcode = 0;
+
+    // Payload offset from CPU header
+    offset = payload_offset;
+    if (ctx.pkt_len() < (offset + DNS_HEADER_LENGTH)) {
+        HAL_TRACE_ERR("Packet len: {} is less than DNS header size: {}", \
+                      ctx.pkt_len(),  (offset+12));
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if ((ctx.pkt_len()-offset) > 
+        sfw_info->alg_opts.opt.dns_opts.max_msg_length) {
+        HAL_TRACE_ERR("DNS Message len: {} is greater than configured "\
+                      "message length: {}",
+                      (ctx.pkt_len()-offset),
+                      sfw_info->alg_opts.opt.dns_opts.max_msg_length);
+        // Increment errors
+        return HAL_RET_NOT_SUPPORTED;
+    }
+
+    *dns_id = __pack_uint16(pkt, &offset);
+    opcode = (pkt[offset]>>DNS_OPCODE_SHIFT);
+    if (opcode) { // Not a query packet 
+        HAL_TRACE_ERR("Not a Query packet -- dropping");
+        // Increment errors
+        return HAL_RET_NOT_SUPPORTED;
+    }
+
+    // Check for number of questions
+    if (pkt[offset+2] > 1 && 
+        sfw_info->alg_opts.opt.dns_opts.drop_multi_question_packets) {
+        HAL_TRACE_ERR("Question count more than 1 -- dropping");
+        // Increment errors
+        return HAL_RET_NOT_SUPPORTED;
+    }
+
+    ques_offset = payload_offset + 12;
+    return (parse_dns_questions(sfw_info, ctx.pkt(), pkt[offset+2], &ques_offset, 
+                              payload_offset, ctx.pkt_len()));
+}
+
+void get_dnsid_pkt (fte::ctx_t& ctx, l4_alg_status_t *sess)
+{
     const uint8_t          *pkt = ctx.pkt();
     uint32_t                offset = 0;
+    dns_info_t             *dns_info = (dns_info_t *)sess->info;
+    uint16_t                dnsid = 0;
 
     // Payload offset from CPU header
     offset = ctx.cpu_rxhdr()->payload_offset;
@@ -65,16 +339,18 @@ hal_ret_t get_dnsid_pkt (fte::ctx_t& ctx, l4_alg_status_t *sess,
         HAL_TRACE_ERR("Packet len: {} is less than payload offset: {}", \
                       ctx.pkt_len(),  offset);
         incr_parse_error(sess);
-        return HAL_RET_INVALID_ARG;
+        return;
     }
     // Fetch 2-byte opcode
-    *dnsid = __pack_uint16(pkt, &offset);
-    HAL_TRACE_DEBUG("Received DNS id:{}", *dnsid);
-    // Rflow is set to invalid so that flow miss happens for the DNS response
-    // coming in the reverse direction
-    // TODO: Change reverse flow to redirect entry instead
-    ctx.set_valid_rflow(false);
-    return ret;
+    dnsid = __pack_uint16(pkt, &offset);
+    HAL_TRACE_DEBUG("Received DNS id:{}", dnsid);
+    if (dns_info->dnsid != dnsid) {
+        HAL_TRACE_ERR("DNS ID received {} doesnt match the query {}", \
+                      dnsid, dns_info->dnsid);
+        incr_parse_error(sess);
+    }
+
+    return;
 }
 
 /*
@@ -85,18 +361,15 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
     hal_ret_t                       ret = HAL_RET_OK;
     app_session_t                   *app_sess = NULL;
     l4_alg_status_t                 *l4_sess = NULL;
-    dns_info_t                      *dns_info = NULL, *dns_out = NULL;
+    dns_info_t                      *dns_info = NULL;
     uint16_t                        dnsid = 0;
     sfw_info_t                      *sfw_info;
     fte::feature_session_state_t    *alg_state = NULL;
-    dllist_ctxt_t                   *head = NULL;
+    fte::flow_update_t               flowupd;
 
     sfw_info = sfw::sfw_feature_state(ctx);
     if (ctx.protobuf_request() ||
         ctx.role() == hal::FLOW_ROLE_RESPONDER) {
-        return fte::PIPELINE_CONTINUE;
-    }
-    if (sfw_info->alg_proto != nwsec::APP_SVC_DNS) {
         return fte::PIPELINE_CONTINUE;
     }
 
@@ -115,27 +388,18 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
         HAL_TRACE_DEBUG("DNS ALG - Session exists");
         dns_info = (dns_info_t *)l4_sess->info;
         HAL_ASSERT(dns_info);
+
         /* Get the DNS id in the packet */
-        ret = get_dnsid_pkt(ctx, l4_sess, &dnsid);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("DNS ALG - Failed to get DNS id from pkt");
-            return fte::PIPELINE_CONTINUE;
-        }
-        /* Check if the dns-id is present in the list */
-        if (check_dnsid_exists(dns_info, dnsid, &dns_out)) {
-            /* We got a DNS response for this (session, dnsid). Remove ent */
-            dllist_del(&dns_out->lentry);
-            /* Delete node from the slab */
-            g_dns_state->alg_info_slab()->free(dns_out);
-            /* If there are no more dnsids associated with this session then
-             * it can be cleaned up*/
-            if (dllist_empty(&dns_info->lentry)) {
-                /* TODO: Cleanup session upon timer expiry */
-                HAL_TRACE_DEBUG("DNS ALG - No more DNSids. Cleanup session!");
-                g_dns_state->cleanup_app_session(l4_sess->app_session);
-            }
-        }
-    } else {
+        get_dnsid_pkt(ctx, l4_sess);
+
+        if (dns_info->timer)
+            sdk::lib::timer_delete(dns_info->timer);
+
+        dns_info->response_rcvd = false;
+
+        /* Now that we have seen a DNS response cleanup the session */
+        session_delete_in_fte(ctx.session()->hal_handle);
+    } else if (sfw_info->alg_proto == nwsec::APP_SVC_DNS) {
         /* New DNS session */
         /* Alloc APP session */
         HAL_TRACE_DEBUG("DNS ALG - Got new session");
@@ -148,25 +412,31 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
         /* Allocate dns info to store the dllist head */
         dns_info = (dns_info_t *)g_dns_state->alg_info_slab()->alloc();
         HAL_ASSERT_RETURN((dns_info != NULL), fte::PIPELINE_CONTINUE);
-        /* Get DNS id in the packet */
-        ret = get_dnsid_pkt(ctx, l4_sess, &dnsid);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("DNS ALG - Failed to get DNS id from pkt");
-            return fte::PIPELINE_CONTINUE;
-        }
-        dllist_reset(&dns_info->lentry);
         /* Store the head node in L4 session info */
         l4_sess->info = (void *)dns_info;
-        head = &dns_info->lentry;
 
-        /* Allocate dns info to store the next node */
-        dns_info = (dns_info_t *)g_dns_state->alg_info_slab()->alloc();
-        HAL_ASSERT_RETURN((dns_info != NULL), fte::PIPELINE_CONTINUE);
-        dllist_reset(&dns_info->lentry);
+        /* Parse DNS packet and get dns id */
+        ret = parse_dns_packet(ctx, &dnsid);
+        if (ret == HAL_RET_NOT_SUPPORTED) {
+            ctx.set_drop();
+            HAL_TRACE_ERR("Dropping DNS ALG packet");
+            return fte::PIPELINE_END;
+        } else if (ret == HAL_RET_INVALID_ARG) {
+            HAL_TRACE_ERR("Parsing errors found");
+            incr_parse_error(l4_sess);
+            return fte::PIPELINE_CONTINUE;
+        }
+
         dns_info->dnsid = dnsid;
-        /* Add node to the linked list */
-        /* TODO: Start a timer for every DNS session */
-        dllist_add(head, &dns_info->lentry);
+        dns_info->response_rcvd = false;
+
+        /* Update the flow to receive Mcast copy */
+        flowupd.type = fte::FLOWUPD_MCAST_COPY;
+        flowupd.mcast_info.mcast_en = 1;
+        flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
+        flowupd.mcast_info.proxy_mcast_ptr = 0;
+        ret = ctx.update_flow(flowupd);
+
         /*
          * Register Feature session state & completion handler
          */

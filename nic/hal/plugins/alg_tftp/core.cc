@@ -35,26 +35,30 @@ fte::pipeline_action_t alg_tftp_session_get_cb(fte::ctx_t &ctx) {
 
     if (!ctx.sess_get_resp() || ctx.role() != hal::FLOW_ROLE_INITIATOR)
         return fte::PIPELINE_CONTINUE;
-
+    
     alg_state = ctx.feature_session_state();
-    if (alg_state != NULL) {
-        l4_sess = (l4_alg_status_t *)alg_status(alg_state);
-        sess_resp->mutable_status()->set_alg(nwsec::APP_SVC_TFTP);
+    if (alg_state == NULL) 
+        return fte::PIPELINE_CONTINUE;
+
+    l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+    if (l4_sess == NULL || l4_sess->alg != nwsec::APP_SVC_TFTP)
+        return fte::PIPELINE_CONTINUE;
+
+    sess_resp->mutable_status()->set_alg(nwsec::APP_SVC_TFTP);
         
-        if (l4_sess->isCtrl == TRUE) {
-            tftp_info_t *info = ((tftp_info_t *)l4_sess->info);
-            if (info) {
-                sess_resp->mutable_status()->mutable_tftp_info()->\
-                                 set_parse_error(info->parse_errors);
-                sess_resp->mutable_status()->mutable_tftp_info()->\
-                                set_unknown_opcode(info->unknown_opcode);
-            }
+    if (l4_sess->isCtrl == TRUE) {
+        tftp_info_t *info = ((tftp_info_t *)l4_sess->info);
+        if (info) {
             sess_resp->mutable_status()->mutable_tftp_info()->\
-                                set_iscontrol(true);
-        } else {
+                                set_parse_error(info->parse_errors);
             sess_resp->mutable_status()->mutable_tftp_info()->\
-                                set_iscontrol(false);
+                              set_unknown_opcode(info->unknown_opcode);
         }
+        sess_resp->mutable_status()->mutable_tftp_info()->\
+                                set_iscontrol(true);
+    } else {
+        sess_resp->mutable_status()->mutable_tftp_info()->\
+                                set_iscontrol(false);
     }
 
     return fte::PIPELINE_CONTINUE;
@@ -68,46 +72,53 @@ fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
     l4_alg_status_t               *l4_sess =  NULL;
     app_session_t                 *app_sess = NULL;
 
+    if (ctx.role() != hal::FLOW_ROLE_INITIATOR)
+        return fte::PIPELINE_CONTINUE;
+
     alg_state = ctx.feature_session_state();
-    if (alg_state != NULL) {
-        l4_sess = (l4_alg_status_t *)alg_status(alg_state);
-        app_sess = l4_sess->app_session;
-        if (l4_sess->isCtrl == TRUE) {
-            if (ctx.force_delete() || (dllist_empty(&app_sess->exp_flow_lhead)\
-                && dllist_count(&app_sess->l4_sess_lhead) == 1 &&
-                ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
-                                 l4_alg_status_t, l4_sess_lentry)) == l4_sess)) {
-                /*
-                 * Clean up app session if (a) its a force delete or
-                 * (b) if there are no expected flows or L4 data sessions
-                 * hanging off of this ctrl session.
-                 */
-                 g_tftp_state->cleanup_app_session(l4_sess->app_session);
-                 return fte::PIPELINE_CONTINUE;
-            } else {
-                 /*
-                  * Dont cleanup if control session is timed out
-                  * we need to keep it around until the data session
-                  * goes away
-                  */
-                return fte::PIPELINE_END;
-            }
-        }
-        /*
-         * Cleanup the data session that is getting timed out
-         */
-        g_tftp_state->cleanup_l4_sess(l4_sess);
-        if (dllist_empty(&app_sess->exp_flow_lhead) &&
-            dllist_count(&app_sess->l4_sess_lhead) == 1 &&
+    if (alg_state == NULL)
+        return fte::PIPELINE_CONTINUE;
+
+    l4_sess = (l4_alg_status_t *)alg_status(alg_state);
+    if (l4_sess == NULL || l4_sess->alg != nwsec::APP_SVC_TFTP)
+        return fte::PIPELINE_CONTINUE;
+
+    app_sess = l4_sess->app_session;
+    if (l4_sess->isCtrl == TRUE) {
+        if (ctx.force_delete() || (dllist_empty(&app_sess->exp_flow_lhead)\
+              && dllist_count(&app_sess->l4_sess_lhead) == 1 &&
             ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
-                      l4_alg_status_t, l4_sess_lentry))->sess_hdl == HAL_HANDLE_INVALID) {
+                               l4_alg_status_t, l4_sess_lentry)) == l4_sess)) {
             /*
-             * If this was the last session hanging and there is no
-             * HAL session for control session. This is the right time
-             * to clean it
+             * Clean up app session if (a) its a force delete or
+             * (b) if there are no expected flows or L4 data sessions
+             * hanging off of this ctrl session.
              */
-            g_tftp_state->cleanup_app_session(l4_sess->app_session);
+             g_tftp_state->cleanup_app_session(l4_sess->app_session);
+             return fte::PIPELINE_CONTINUE;
+        } else {
+             /*
+              * Dont cleanup if control session is timed out
+              * we need to keep it around until the data session
+              * goes away
+              */
+             return fte::PIPELINE_END;
         }
+    }
+    /*
+     * Cleanup the data session that is getting timed out
+     */
+    g_tftp_state->cleanup_l4_sess(l4_sess);
+    if (dllist_empty(&app_sess->exp_flow_lhead) &&
+        dllist_count(&app_sess->l4_sess_lhead) == 1 &&
+        ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
+                   l4_alg_status_t, l4_sess_lentry))->sess_hdl == HAL_HANDLE_INVALID) {
+        /*
+         * If this was the last session hanging and there is no
+         * HAL session for control session. This is the right time
+         * to clean it
+         */
+        g_tftp_state->cleanup_app_session(l4_sess->app_session);
     }
 
     return fte::PIPELINE_CONTINUE;

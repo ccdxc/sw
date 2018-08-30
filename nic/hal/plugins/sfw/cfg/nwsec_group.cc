@@ -997,6 +997,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
         opt->dns_opts.drop_long_label_packets = app.dns_option_info().drop_long_label_packets();
         opt->dns_opts.drop_multizone_packets = app.dns_option_info().drop_multizone_packets();
         opt->dns_opts.max_msg_length = app.dns_option_info().max_msg_length();
+        opt->dns_opts.query_response_timeout = app.dns_option_info().query_response_timeout();
     } else if (app.AppOptions_case() == AppData::kMsrpcOptionInfo) {
         opt->msrpc_opts.map_entry_timeout = app.msrpc_option_info().map_entry_timeout();
     } else if (app.AppOptions_case() == AppData::kSunRpcOptionInfo) {

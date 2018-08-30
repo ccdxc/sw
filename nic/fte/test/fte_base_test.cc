@@ -223,7 +223,16 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
                     app_data->mutable_msrpc_option_info()->set_map_entry_timeout(\
                                       rule.app.alg_opt.opt.msrpc_opts.map_entry_timeout);
                 } else if (rule.app.alg == nwsec::APP_SVC_DNS) {
- 
+                    app_data->mutable_dns_option_info()->set_drop_multi_question_packets(\
+                                      rule.app.alg_opt.opt.dns_opts.drop_multi_question_packets);
+                    app_data->mutable_dns_option_info()->set_drop_large_domain_name_packets(\
+                                      rule.app.alg_opt.opt.dns_opts.drop_large_domain_name_packets);
+                    app_data->mutable_dns_option_info()->set_drop_long_label_packets(\
+                                      rule.app.alg_opt.opt.dns_opts.drop_long_label_packets);
+                    app_data->mutable_dns_option_info()->set_drop_multizone_packets(\
+                                      rule.app.alg_opt.opt.dns_opts.drop_multizone_packets);
+                    app_data->mutable_dns_option_info()->set_max_msg_length(\
+                                      rule.app.alg_opt.opt.dns_opts.max_msg_length);
                 }
             }
         }

@@ -27,7 +27,7 @@ const std::string FTE_FEATURE_ALG_DNS("pensando.io/alg_dns:alg_dns");
 /*
  * Forward declarations
  */
-typedef union dns_info_ dns_info_t;
+typedef struct dns_info_ dns_info_t;
 
 /*
  * Function prototypes
@@ -37,14 +37,17 @@ typedef union dns_info_ dns_info_t;
 fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx);
 void dnsinfo_cleanup_hdlr (l4_alg_status_t *l4_sess);
 typedef hal_ret_t (*dns_cb_t) (fte::ctx_t& ctx, l4_alg_status_t *exp_flow);
+fte::pipeline_action_t alg_dns_session_delete_cb(fte::ctx_t &ctx);
+fte::pipeline_action_t alg_dns_session_get_cb(fte::ctx_t &ctx);
 
 /*
  * Data Structures
  */
-typedef union dns_info_ {
+typedef struct dns_info_ {
     uint16_t        dnsid;
-    dllist_ctxt_t   lentry;
-    uint32_t parse_errors;
+    uint32_t        parse_errors;
+    void           *timer;
+    bool            response_rcvd;
 } __PACK__ dns_info_t;
 
 }  // namespace alg_dns
