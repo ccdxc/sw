@@ -10,6 +10,20 @@
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 
+#define LOG_SIZE(ev) ev.ByteSizeLong()
+#define TYPE_TO_LG_SZ(type, sz_) {                                    \
+    if (type == IPC_LOG_TYPE_FW) {                                    \
+       fwlog::FWEvent ev; sz_ = (LOG_SIZE(ev) + IPC_HDR_SIZE);        \
+    } else {                                                          \
+       sz_ = IPC_BUF_SIZE;                                            \
+    }                                                                 \
+}
+
+//-------------------------------------------------------
+// Thread local protospec to update FTE Flow logging info
+// ------------------------------------------------------
+thread_local fwlog::FWEvent t_fwlg;
+
 namespace fte {
 //------------------------------------------------------------------------------
 // extract flow key from packet
@@ -358,6 +372,53 @@ ctx_t::create_session()
 
     return HAL_RET_OK;
 }
+
+// fw_log reports a firewall event to the agent
+static inline void fw_log(ipc_logger *logger, fwlog::FWEvent ev)
+{
+    uint8_t *buf = logger->get_buffer(LOG_SIZE(ev));
+    if (buf == NULL) {
+        return;
+    }
+
+    if (!ev.SerializeToArray(buf, LOG_SIZE(ev))) {
+        return;
+    }
+
+    int size = ev.ByteSizeLong();
+    logger->write_buffer(buf, size);
+}
+
+//------------------------------------------------------------------------------
+// Add FTE Flow logging information in logging infra
+//------------------------------------------------------------------------------
+void
+ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
+                         fte_flow_log_info_t *log) {
+    t_fwlg.Clear();
+
+    t_fwlg.set_source_vrf(key.svrf_id);
+    t_fwlg.set_dest_vrf(key.dvrf_id);
+    if (key.flow_type == hal::FLOW_TYPE_V4) {
+        t_fwlg.set_sipv4(key.sip.v4_addr);
+        t_fwlg.set_dipv4(key.dip.v4_addr);
+    }
+    t_fwlg.set_sport(key.sport);
+    t_fwlg.set_dport(key.dport);
+    t_fwlg.set_ipprot(key.proto);
+    t_fwlg.set_direction(key.dir);
+    if (pipeline_event() == FTE_SESSION_DELETE)
+        t_fwlg.set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_DELETE);
+    t_fwlg.set_session_id(sess_hdl);
+    t_fwlg.set_alg(log->alg);
+    t_fwlg.set_fwaction(log->sfw_action);
+    t_fwlg.set_parent_session_id(log->parent_session_id);
+    t_fwlg.set_rule_id(log->rule_id);
+
+    if (logger_ != NULL)
+        fw_log(logger_, t_fwlg);
+}
+
 
 //------------------------------------------------------------------------------
 // Create/update session and flow table entries in hardware

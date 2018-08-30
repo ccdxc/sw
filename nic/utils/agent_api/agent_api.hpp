@@ -2,12 +2,6 @@
 #define __AGENT_API_HPP__
 
 #include "nic/utils/agent_api/ipc.hpp"
-#include "nic/gen/proto/hal/fwlog.pb.h"
-
-enum ipc_log_type_t {
-    IPC_LOG_TYPE_FW  = 0,
-    IPC_LOG_TYPE_MAX = 1,
-};
 
 // ipc_logger supports reporting fw events to the agent.
 // Multiple instances can be created using the factory method after init.
@@ -21,9 +15,8 @@ public:
     static void deinit(void);
     static ipc_logger *factory(void);
     // destroy is not supported. deinit can be used to free all instances.
-
-    // per instance member functions
-    void fw_log(fwlog::FWEvent ev);
+    uint8_t *get_buffer (int size);
+    int write_buffer (uint8_t *buf, int size);
 
 private:
     // ipc_logger private state

@@ -9,6 +9,15 @@ using fwlog::FWEvent;
 ipc_logger *iLogger[3];
 std::mutex mtx;           // mutex for critical section
 
+#define LOG_SIZE(ev) ev.ByteSizeLong()
+#define TYPE_TO_LG_SZ(type, sz_) {                                    \
+    if (type == IPC_LOG_TYPE_FW) {                                    \
+       fwlog::FWEvent ev; sz_ = (LOG_SIZE(ev) + IPC_HDR_SIZE);        \
+    } else {                                                          \
+       sz_ = IPC_BUF_SIZE;                                            \
+    }                                                                 \
+}
+
 void run_server(std::string &addr) {
     FWLogSimServiceImpl service{};
 
@@ -54,6 +63,17 @@ void log_firew_event(const FWEvent& fwe)
     std::cout << "log_firew_event.." << fwe.fwaction() << std::endl;
     mtx.lock();
     channel = (channel + 1) % IPC_INSTANCES;
-    iLogger[channel]->fw_log(fwe);
+    uint8_t *buf = iLogger[channel]->get_buffer(LOG_SIZE(fwe));
+    if (buf == NULL) {
+        return;
+    }
+
+    if (!fwe.SerializeToArray(buf, LOG_SIZE(fwe))) {
+        return;
+    }
+
+    int size = fwe.ByteSizeLong();
+    iLogger[channel]->write_buffer(buf, size);
+
     mtx.unlock();
 }

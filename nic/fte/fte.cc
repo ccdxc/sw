@@ -319,6 +319,34 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
     return rc;
 }
 
+/*
+ * CPU queue name to Qid conversion
+ */
+static bool CpucbId_Parse(const std::string& queue, uint32_t *qid)
+{
+    if (queue == "CPUCB_ID_FLOWMISS") {
+        *qid = 0; 
+        return true;
+    } else if (queue == "CPUCB_ID_TCP_CLOSE") {
+        *qid = 1;
+        return true;  
+    } else if (queue == "CPUCB_ID_RELIABLE_COPY") {
+        *qid = 2;
+        return true;
+    } else if (queue == "CPUCB_ID_NACL_REDIRECT") {
+        *qid = 3;
+        return true;
+    } else if (queue == "CPUCB_ID_QUIESCE") {
+        *qid = 4;
+        return true;
+    } else if (queue == "CPUCB_ID_NACL_LOG") {
+        *qid = 5;
+        return true; 
+    } else {
+        return false;
+    }
+}
+
 hal_ret_t
 register_pipeline(const std::string& name, lifqid_t& lifq,
                   const std::string& lif, const std::string& qid,
@@ -331,8 +359,8 @@ register_pipeline(const std::string& name, lifqid_t& lifq,
     lifq.lif = hal::parse_service_lif(lif.c_str());
     if (!qid.empty()) {
         if (lifq.lif == hal::SERVICE_LIF_CPU) {
-            types::CpucbId id;
-            if (types::CpucbId_Parse(qid, &id) == false) {
+            uint32_t id;
+            if (CpucbId_Parse(qid, &id) == false) {
                 HAL_TRACE_ERR("plugins::parse_pipeline invalid qid {}", qid);
                 return HAL_RET_ERR;
             }

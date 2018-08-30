@@ -21,6 +21,15 @@
 #define TEST_QSIZE 7
 #define TEST_FW_SHM_SIZE 64*1024
 
+#define LOG_SIZE(ev) ev.ByteSizeLong()
+#define TYPE_TO_LG_SZ(type, sz_) {                                    \
+    if (type == IPC_LOG_TYPE_FW) {                                    \
+       fwlog::FWEvent ev; sz_ = (LOG_SIZE(ev) + IPC_HDR_SIZE);        \
+    } else {                                                          \
+       sz_ = IPC_BUF_SIZE;                                            \
+    }                                                                 \
+}
+
 typedef struct testInfo_ {
     ipc *ipcUT;
     int bufCount;
@@ -213,7 +222,15 @@ TEST_F(ipc_test, fw_log_api) {
         fk.set_dport(12018);
         fk.set_ipprot(types::IPProtocol::IPPROTO_TCP);
         fk.set_fwaction(nwsec::SECURITY_RULE_ACTION_DENY);
-        il->fw_log(fk);
+        uint8_t *buf = il->get_buffer(LOG_SIZE(fk));
+        if (buf != NULL) { 
+            if (!fk.SerializeToArray(buf, LOG_SIZE(fk))) {
+                return;
+            }
+
+            int size = fk.ByteSizeLong();
+            il->write_buffer(buf, size);
+        }
     }
 }
 

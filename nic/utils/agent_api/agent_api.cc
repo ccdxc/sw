@@ -3,24 +3,6 @@
 #define IPv4_LEN 4
 #define IPv6_LEN 16
 #define L4PORT_LEN 2
-#define LOG_SIZE(ev) ev.ByteSizeLong()
-#define TYPE_TO_LG_SZ(type, sz_) {                                    \
-    if (type == IPC_LOG_TYPE_FW) {                                    \
-       fwlog::FWEvent ev; sz_ = (LOG_SIZE(ev) + IPC_HDR_SIZE);        \
-    } else {                                                          \
-       sz_ = IPC_BUF_SIZE;                                            \
-    }                                                                 \
-}
-
-void ipc_logger::set_ipc_buf_sz (void)
-{
-    // Get max buffer size
-    for (int type = 0; type < IPC_LOG_TYPE_MAX; type++) {
-        int sz_;
-        TYPE_TO_LG_SZ(type, sz_);
-        IPC_BUF_SIZE = (sz_ > IPC_BUF_SIZE)?sz_:IPC_BUF_SIZE;
-    }
-}
 
 void ipc_logger::set_ipc_instances (int numInst) 
 {
@@ -50,8 +32,8 @@ ipc_logger *ipc_logger::factory (void)
     ipc *ipc_inst;
 
     ipc_inst = ipc::factory();
-    if (ipc_inst == NULL) {
-        return NULL;
+    if (!ipc_inst) {
+        return nullptr;
     }
 
     ipc_logger *il = new(ipc_logger);
@@ -60,18 +42,12 @@ ipc_logger *ipc_logger::factory (void)
     return il;
 }
 
-// fw_log reports a firewall event to the agent
-void ipc_logger::fw_log (fwlog::FWEvent ev)
+uint8_t *ipc_logger::get_buffer(int size)
 {
-    uint8_t *buf = pipe_->get_buffer(LOG_SIZE(ev));
-    if (buf == NULL) {
-        return;
-    }
+    return (pipe_->get_buffer(size));
+}
 
-    if (!ev.SerializeToArray(buf, LOG_SIZE(ev))) {
-        return;
-    }
-
-    int size = ev.ByteSizeLong();
-    pipe_->put_buffer(buf, size);
+int ipc_logger::write_buffer(uint8_t *buf, int size)
+{
+    return (pipe_->put_buffer(buf, size));
 }

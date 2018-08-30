@@ -104,6 +104,15 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     return HAL_RET_ERR;
 }
 
+//------------------------------------------------------------------------------
+// Add IPC based flow logging 
+//------------------------------------------------------------------------------
+void ctx_t::add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl,
+                          fte_flow_log_info_t *fwlog) 
+{
+
+}
+
 }
 
 namespace hal {

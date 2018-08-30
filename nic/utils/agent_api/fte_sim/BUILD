@@ -31,6 +31,8 @@ cc_binary(
         "//nic:grpc",
         "//nic/utils/agent_api:agent_api",
         "//nic/utils/mtrack:mtrack",
+        "//nic:libprotobuf",
+        "//nic:halproto",
     ],
     linkopts = [
         "-lzmq",
