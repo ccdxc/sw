@@ -67,8 +67,8 @@ struct tx_stats {
 };
 
 struct rx_stats {
-	u64 dma_map_err; 
-	u64 alloc_err;	
+	u64 dma_map_err;
+	u64 alloc_err;
 	u64 pkts;
 	u64 bytes;
 	u64 checksum_ip_ok;
@@ -117,8 +117,8 @@ struct rx_qcq {
 	unsigned int num_descs;
 	unsigned int index;	/* Queue number. */
 	unsigned int pid;
-	unsigned int qid; 
-	unsigned int qtype; 
+	unsigned int qid;
+	unsigned int qtype;
 
 	/* S/w rx buffer descriptors. */
 	struct ionic_rx_buf *rxbuf;
@@ -126,10 +126,10 @@ struct rx_qcq {
 
 	/* DMA ring for command and completion h/w rings. */
 	struct ionic_dma_info cmd_dma;
-	/* 
-	 * H/w command and completion descriptor rings. 
+	/*
+	 * H/w command and completion descriptor rings.
 	 * Points to area allocated by DMA.
-	 */	
+	 */
 	struct rxq_desc *cmd_ring;
 	struct rxq_comp *comp_ring;
 
@@ -146,8 +146,8 @@ struct rx_qcq {
 	/* Index for completion descriptors. */
 	int comp_index;
 
-	int done_color;
-		
+	int done_color; /* Expected comletion color status. */
+
 	struct rx_stats stats;
 	struct intr intr;
 
@@ -165,8 +165,8 @@ struct tx_qcq {
 	unsigned int num_descs;
 	unsigned int index;	/* Queue number. */
 	unsigned int pid;
-	unsigned int qid; 
-	unsigned int qtype; 
+	unsigned int qid;
+	unsigned int qtype;
 
 	/* S/w rx buffer descriptors. */
 	struct ionic_tx_buf *txbuf;
@@ -174,10 +174,10 @@ struct tx_qcq {
 
 	/* DMA ring for command and completion h/w rings. */
 	struct ionic_dma_info cmd_dma;
-	/* 
-	 * H/w command and completion descriptor rings. 
+	/*
+	 * H/w command and completion descriptor rings.
 	 * Points to area allocated by DMA.
-	 */	
+	 */
 	struct txq_desc *cmd_ring;
 	struct txq_comp *comp_ring;
 	struct txq_sg_desc *sg_ring;	/* SG descriptors. */
@@ -192,13 +192,10 @@ struct tx_qcq {
 	int cmd_head_index;
 	int cmd_tail_index;
 
-//	int sg_head_index;
-//	int sg_tail_index;
 	/* Index for completion descriptors. */
 	int comp_index;
-
-	int done_color;
-		
+	int done_color; /* Expected comletion color status. */
+	
 	struct tx_stats stats;
 	struct intr intr;
 

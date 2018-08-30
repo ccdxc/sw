@@ -23,13 +23,13 @@
 #include "ionic_api.h"
 
 //#define ADMINQ
-#define IONIC_DEBUG
+//#define IONIC_DEBUG
 
-#define	IONIC_DEBUG_PRINT(fmt, ...)			printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__); 	
+#define	IONIC_DEBUG_PRINT(fmt, ...)			printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
 
 /* Device related */
 #define	IONIC_DEV_DEBUG(dev, fmt, ...)							\
-		device_printf((dev)->bsddev, fmt, ##__VA_ARGS__); 	
+		device_printf((dev)->bsddev, fmt, ##__VA_ARGS__);
 
 #define IONIC_DEV_TRACE(d, f, args...) \
 	IONIC_DEV_DEBUG(d, "%s:%d - " f, __func__, __LINE__, ## args)

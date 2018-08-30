@@ -62,7 +62,7 @@ int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)
 	avail = pci_msix_count(ionic->pdev->dev.bsddev);
 
 	if (avail < nintrs) {
-		dev_err(ionic->dev, "Device need %d interrupts, MSI/X available %u\n", nintrs, avail);
+		dev_err(ionic->dev, "Device need %d interrupts, available MSI/X vectors %u\n", nintrs, avail);
 		return -EINVAL;
 	}
 	avail = nintrs;

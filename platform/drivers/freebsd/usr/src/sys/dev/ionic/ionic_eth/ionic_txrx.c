@@ -69,13 +69,11 @@ static void ionic_rx_recycle(struct queue *q, struct desc_info *desc_info,
 
 	ionic_q_post(q, true, ionic_rx_input, m);
 }
-
 #endif
+
 /* Update mbuf with correct checksum etc. */
 static void ionic_rx_checksum(struct mbuf *m, struct rxq_comp *comp, struct rx_stats *stats)
 {
-
-	
 
 	m->m_pkthdr.csum_flags = 0;
 	if (comp->csum_ip_ok) {
@@ -212,12 +210,12 @@ void ionic_rx_input(struct rx_qcq *rxqcq, struct ionic_rx_buf *rxbuf,
 
 	/* Update the checksum if h/w has calculated. */
 	ionic_rx_checksum(m, comp, stats);
-	
+
 	/* Populate mbuf with h/w RSS hash, type etc. */
 	use_lro = ionic_rx_rss(m, comp, rxqcq->index, stats);
 
-	/* 
-	 * Use h/w RSS engine of L4 checksum to determine if its TCP packet. 
+	/*
+	 * Use h/w RSS engine of L4 checksum to determine if its TCP packet.
 	 * XXX: add more cases of LRO.
 	 * XXX: Looks like BSD 11.0 LRO is broken
 	 */
@@ -267,10 +265,10 @@ static int ionic_rx_mbuf_alloc(struct rx_qcq *rxqcq, int index, int len)
 		stats->alloc_err++;
 		return (ENOMEM);
 	}
-		
+
 	m->m_pkthdr.len = m->m_len = len;
 	rxbuf->m = m;
-		
+
 	error = bus_dmamap_load_mbuf_sg(rxqcq->buf_tag, rxbuf->dma_map, m, seg, &nsegs, BUS_DMA_NOWAIT);
 	if (error) {
 		stats->dma_map_err++;
@@ -285,7 +283,7 @@ static int ionic_rx_mbuf_alloc(struct rx_qcq *rxqcq, int index, int len)
 
 static void ionic_rx_mbuf_free(struct rx_qcq *rxqcq, struct ionic_rx_buf *rxbuf)
 {
-	bus_dmamap_sync(rxqcq->buf_tag, rxbuf->dma_map, BUS_DMASYNC_POSTREAD);	
+	bus_dmamap_sync(rxqcq->buf_tag, rxbuf->dma_map, BUS_DMASYNC_POSTREAD);
 	m_freem(rxbuf->m);
 
 	rxbuf->m = NULL;
@@ -293,7 +291,7 @@ static void ionic_rx_mbuf_free(struct rx_qcq *rxqcq, struct ionic_rx_buf *rxbuf)
 
 void ionic_rx_fill(struct rx_qcq *rxqcq)
 {
-	struct rxq_desc *desc;	
+	struct rxq_desc *desc;
 	struct ionic_rx_buf *rxbuf;
 	int error, i, index;
 
@@ -325,6 +323,7 @@ void ionic_rx_fill(struct rx_qcq *rxqcq)
 	 
 	IONIC_NETDEV_QINFO(rxqcq, "rx_fill head: %d tail: %d descs: %d filled %d\n",  
 		rxqcq->cmd_head_index, rxqcq->cmd_tail_index, rxqcq->num_descs, i);
+
 }
 
 /* XXX: where is the doorbell ping for refill ? */
@@ -334,7 +333,7 @@ void ionic_rx_refill(struct rx_qcq *rxqcq)
 	int error, i, index;
 
 
-	IONIC_NETDEV_QINFO(rxqcq, "rx_refill producer: %d consumer :%d num_descs: %d\n", 
+	IONIC_NETDEV_QINFO(rxqcq, "rx_refill producer: %d consumer :%d num_descs: %d\n",
 		rxqcq->cmd_head_index, rxqcq->cmd_tail_index, rxqcq->num_descs);
 
 	for ( i = 0 ; i < rxqcq->num_descs && rxqcq->cmd_head_index != rxqcq->cmd_tail_index ; i++) {
@@ -355,7 +354,7 @@ void ionic_rx_refill(struct rx_qcq *rxqcq)
 
 		rxqcq->cmd_tail_index = (rxqcq->cmd_tail_index + 1) % rxqcq->num_descs;
 	 }
-	 
+
 	IONIC_NETDEV_QINFO(rxqcq, "filled  %d rxbufs\n", i);
 }
 
@@ -408,7 +407,7 @@ ionic_get_header_size(struct tx_stats *stats, struct mbuf *mb, uint16_t *eth_typ
 		ip = (struct ip *)(mb->m_data + eth_hdr_len);
 		if (mb->m_len < eth_hdr_len + sizeof(*ip))
 			return (EINVAL);
-		*proto = ip->ip_p; 
+		*proto = ip->ip_p;
 		ip_hlen = ip->ip_hl << 2;
 		eth_hdr_len += ip_hlen;
 		stats->tso_ipv4++;
@@ -425,7 +424,6 @@ ionic_get_header_size(struct tx_stats *stats, struct mbuf *mb, uint16_t *eth_typ
 		break;
 #endif
 	default:
-	
 		return (EINVAL);
 	}
 	if (mb->m_len < eth_hdr_len + sizeof(*th))
@@ -662,7 +660,7 @@ static int ionic_xmit(struct tx_qcq* txqcq, struct mbuf **head)
 
 	stats = &txqcq->stats;
 	m = *head;
-	
+
 	if (m->m_pkthdr.csum_flags & CSUM_TSO)
 		err = ionic_tx_tso_setup(txqcq, m);
 	else
@@ -737,9 +735,9 @@ int ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
 	if (M_HASHTYPE_GET(m) != M_HASHTYPE_NONE) {
 #ifdef RSS
 		if (rss_hash2bucket(m->m_pkthdr.flowid,
-	  	  M_HASHTYPE_GET(m), &bucket) == 0) 
-			qid = bucket % lif->ntxqcqs;	
-	 	else 
+			M_HASHTYPE_GET(m), &bucket) == 0)
+			qid = bucket % lif->ntxqcqs;
+	 	else
 #endif
 		qid = (m->m_pkthdr.flowid % 128) % lif->ntxqcqs;
 	}
@@ -878,25 +876,25 @@ ionic_lif_add_rxtstat(struct rx_qcq *rxqcq, struct sysctl_ctx_list *ctx,
 
 		/* RSS related. */
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_ip4", CTLFLAG_RD,
-        	&rxstat->rss_ip4, "RSS IPv4 packets");
+			&rxstat->rss_ip4, "RSS IPv4 packets");
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_tcp_ip4", CTLFLAG_RD,
-        	&rxstat->rss_tcp_ip4, "RSS TCP/IPv4 packets");
+			&rxstat->rss_tcp_ip4, "RSS TCP/IPv4 packets");
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_udp_ip4", CTLFLAG_RD,
-        	&rxstat->rss_udp_ip4, "RSS UDP/IPv4 packets");
-		
+			&rxstat->rss_udp_ip4, "RSS UDP/IPv4 packets");
+
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_ip6", CTLFLAG_RD,
-        	&rxstat->rss_ip6, "RSS IPv6 packets");
+			&rxstat->rss_ip6, "RSS IPv6 packets");
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_tcp_ip6", CTLFLAG_RD,
-        	&rxstat->rss_tcp_ip6, "RSS TCP/IPv6 packets");
+			&rxstat->rss_tcp_ip6, "RSS TCP/IPv6 packets");
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_udp_ip6", CTLFLAG_RD,
-        	&rxstat->rss_udp_ip6, "RSS UDP/IPv6 packets");
+			&rxstat->rss_udp_ip6, "RSS UDP/IPv6 packets");
 
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_ip6_ex", CTLFLAG_RD,
-        	&rxstat->rss_ip6_ex, "RSS IPv6 extension packets");
+			&rxstat->rss_ip6_ex, "RSS IPv6 extension packets");
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_tcp_ip6_ex", CTLFLAG_RD,
-        	&rxstat->rss_tcp_ip6_ex, "RSS TCP/IPv6 extension packets");
+			&rxstat->rss_tcp_ip6_ex, "RSS TCP/IPv6 extension packets");
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_udp_ip6_ex", CTLFLAG_RD,
-        	&rxstat->rss_udp_ip6_ex, "RSS UDP/IPv6 extension packets");
+			&rxstat->rss_udp_ip6_ex, "RSS UDP/IPv6 extension packets");
 }
 
 static void
@@ -1004,9 +1002,9 @@ ionic_setup_sysctls(struct lif *lif)
 int
 ionic_set_os_features(struct ifnet* ifp, uint32_t hw_features)
 {
-    /* 
+    /*
 	 * Set software only capabilities.
-	 * XXX: read counters from h/w using stats_dump 
+	 * XXX: read counters from h/w using stats_dump
 	 */
 	ifp->if_capabilities = IFCAP_HWSTATS | IFCAP_LRO;
 	if (hw_features & ETH_HW_TX_CSUM)
@@ -1069,7 +1067,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 			IONIC_NETDEV_INFO(ifp, "Nothing to do\n");
 			break;
 		}
-		
+
 		hw_features = lif->hw_features;
 
 		if (mask & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6)) {
@@ -1077,7 +1075,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		//	ifp->if_capenable ^= IFCAP_RXCSUM_IPV6;
 			hw_features ^= ETH_HW_RX_CSUM;
 		}
-		
+
 		if (mask & (IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6)) {
 		//	ifp->if_capenable ^= IFCAP_TXCSUM;
 		//	ifp->if_capenable ^= IFCAP_TXCSUM_IPV6;
@@ -1105,12 +1103,12 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 				IONIC_NETDEV_ERROR(lif->netdev, "Failed to set capbilities, err: %d\n\n", error);
 			}
 			ionic_reinit_unlock(ifp);
-			mtx_unlock(&lif->mtx);	
+			mtx_unlock(&lif->mtx);
 	//	}
 	//	VLAN_CAPABILITIES(ifp);
 		break;
 	}
-	
+
 	default:
 			error = ether_ioctl(ifp, command, data);
 			break;
@@ -1204,8 +1202,6 @@ int ionic_lif_rss_setup(struct lif *lif)
 	err = ionic_rss_ind_tbl_set(lif, NULL);
 	if (err)
 		goto err_out_free;
-
-		
 
 	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key, ionic_set_rss_type());
 	if (err)

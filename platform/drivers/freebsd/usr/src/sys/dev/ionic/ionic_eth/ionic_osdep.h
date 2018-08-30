@@ -29,12 +29,12 @@ int ionic_dma_alloc(struct ionic* ionic, bus_size_t size, /* XXX: alignment?? */
 void ionic_dma_free(struct ionic* ionic, struct ionic_dma_info *dma);
 
 #ifdef notyet
-extern uint32_t ionic_read_reg(struct ionic* ionic, uint32_t offset); 
-extern uint8_t ionic_read_reg_byte(struct ionic* ionic, uint32_t offset); 
-extern void ionic_write_reg(struct ionic* ionic, uint32_t offset, uint32_t val); 
+extern uint32_t ionic_read_reg(struct ionic* ionic, uint32_t offset);
+extern uint8_t ionic_read_reg_byte(struct ionic* ionic, uint32_t offset);
+extern void ionic_write_reg(struct ionic* ionic, uint32_t offset, uint32_t val);
 
 void
 ionic_write_doorbell(struct ionic* ionic,int pid, int qid,  uint32_t val);
-
 #endif
-#endif /* _IONIC_OS_H_ */ 
+
+#endif /* _IONIC_OS_H_ */

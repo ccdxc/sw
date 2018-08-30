@@ -406,7 +406,6 @@ void ionic_ring_doorbell(struct doorbell *db_addr, uint32_t qid, uint16_t p_inde
 	//IONIC_DEBUG_PRINT("qid: %d ring-doorbell p_index %d db %p, value : 0x%lx\n", qid, p_index, db_addr, *(u64 *)&db_data);
 
 	writeq(*(u64 *)&db_data, db_addr);
-	
 }
 
 
@@ -419,7 +418,7 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 
 	if (!ring_doorbell)
 		return;
-	
+
 	struct doorbell db = {
 		.qid_lo = q->qid,
 		.qid_hi = q->qid >> 8,
@@ -427,12 +426,10 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		.p_index = q->head->index,
 	};
 
-//	IONIC_NETDEV_QINFO(q,"ring doorbell p_index %d db %p, value : 0x%lx\n", 
+//	IONIC_NETDEV_QINFO(q,"ring doorbell p_index %d db %p, value : 0x%lx\n",
 //		q->name, q->qid, q->head->index, q->db, *(u64 *)&db);
-		
-	
 	writeq(*(u64 *)&db, q->db);
-	
+
 }
 
 void ionic_q_rewind(struct queue *q, struct desc_info *start)

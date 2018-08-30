@@ -43,7 +43,7 @@ ionic_read_reg(struct ionic* ionic, uint32_t offset)
 inline void
 ionic_write_reg(struct ionic* ionic, uint32_t offset, uint32_t val)
 {
-#ifdef IONIC_DBG_REG	
+#ifdef IONIC_DBG_REG
 	device_printf(ionic->dev, "[REG_WRITE] offset: 0x%lx 0x%x @ 0x%x\n", ionic->ctrl_reg_handle, val, offset);
 #endif
 	bus_space_write_4(ionic->ctrl_reg_tag, ionic->ctrl_reg_handle, offset, val);
@@ -51,9 +51,9 @@ ionic_write_reg(struct ionic* ionic, uint32_t offset, uint32_t val)
 
 /*
  * Write to doorbell register in BAR1
- */ 
+ */
 void
-ionic_write_doorbell(struct ionic* ionic,int pid, int qid,  uint32_t val) 
+ionic_write_doorbell(struct ionic* ionic,int pid, int qid,  uint32_t val)
 {
 	uint32_t offset = pid * PAGE_SIZE;
 
@@ -78,7 +78,7 @@ ionic_dmamap_cb(void *arg, bus_dma_segment_t *segs, int nsegs, int error)
 }
 
 int
-ionic_dma_alloc(struct ionic* ionic, bus_size_t size, 
+ionic_dma_alloc(struct ionic* ionic, bus_size_t size,
 		struct ionic_dma_info *dma, int mapflags)
 {
 	device_t dev = ionic->dev->bsddev;
