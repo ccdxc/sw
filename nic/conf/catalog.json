@@ -347,42 +347,42 @@
                     {
                         "key_or_handle" : { "qos_group" : "DEFAULT" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "CONTROL" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "SPAN" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "INTERNAL_RX_PROXY_NO_DROP" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "INTERNAL_RX_PROXY_DROP" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "INTERNAL_TX_PROXY_NO_DROP" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "INTERNAL_TX_PROXY_DROP" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "INTERNAL_CPU_COPY" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     }
                 ]
             },

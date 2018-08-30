@@ -575,7 +575,8 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                     case ${pg}:
                         {
                             /* Update the MTU in the MTU register */
-                            pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(iq_params->mtu);
+                            pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(
+                                bytes_to_cells(iq_params->mtu) - 1);
                             break;
                         }
 //::        #endfor
@@ -611,7 +612,7 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                     // So subtract it from the payload occupancy threshold
 
                     xoff_threshold = iq_params->xoff_threshold;
-                    if (payload_occupancy_bytes > xoff_threshold) {
+                    if (xoff_threshold && (payload_occupancy_bytes > xoff_threshold)) {
                         xoff_threshold = payload_occupancy_bytes - xoff_threshold;
                     } else {
                         xoff_threshold = 0;
@@ -794,9 +795,9 @@ capri_tm_uplink_oq_update(tm_port_t port,
                 pbc_csr.port_${p}.cfg_mac_xoff.read();
                 xoff_enable_val = pbc_csr.port_${p}.cfg_mac_xoff.enable().convert_to<uint32_t>();
                 if (xoff_enable) {
-                    xoff_enable_val &= ~(1<<xoff_cos);
-                } else {
                     xoff_enable_val |= 1<<xoff_cos;
+                } else {
+                    xoff_enable_val &= ~(1<<xoff_cos);
                 }
                 pbc_csr.port_${p}.cfg_mac_xoff.enable(xoff_enable_val);
 
@@ -890,7 +891,7 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
             return HAL_RET_ERR;
     }
 
-    pbc_csr.cfg_sched.enable_wrr(1);
+    pbc_csr.cfg_sched.read();
     pbc_csr.cfg_sched.dhs_selection( ${level}*2 );
     if (tm_sw_cfg_write_enabled()) {
         pbc_csr.cfg_sched.write();
@@ -901,8 +902,18 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
         pbc_csr.cfg_dhs_mem.write();
     }
 
+    uint64_t scheduler_rate;
+    if (node_params->sched_type == TM_SCHED_TYPE_STRICT) {
+        scheduler_rate = (uint64_t)HAL_TM_SCHEDULER_RATE_REFRESH_INTERVAL_US*node_params->strict.rate;
+        scheduler_rate /= 1000000;
+        if (scheduler_rate >= (1ull << 32)) {
+            // This should never happen it's in 80 Tbps range
+            HAL_ASSERT(0);
+        }
+    }
+
     uint32_t quota = (node_params->sched_type == TM_SCHED_TYPE_STRICT ?
-                      node_params->strict.rate : node_params->dwrr.weight);
+                      scheduler_rate : node_params->dwrr.weight);
 
     pbc_csr.dhs_sched.entry[0].command(1);   //1: overwrite quota and credits
     pbc_csr.dhs_sched.entry[0].current_credit(quota);
@@ -2117,6 +2128,7 @@ capri_tm_global_init (void)
     // needs more cells
     uint32_t min_cells[] = { 0, 4096};
     uint32_t max_row[] = {4095, 2559};
+    uint32_t sched_timer; 
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
@@ -2173,6 +2185,11 @@ capri_tm_global_init (void)
     pbc_csr.cfg_tail_drop.cpu_threshold(tm_asic_profile()->cpu_copy_tail_drop_threshold);
     pbc_csr.cfg_tail_drop.span_threshold(tm_asic_profile()->span_tail_drop_threshold);
 
+    sched_timer = HAL_TM_CLOCK_SPEED_MHZ * HAL_TM_SCHEDULER_RATE_REFRESH_INTERVAL_US;
+    pbc_csr.cfg_sched.read();
+    pbc_csr.cfg_sched.enable_wrr(1);
+    pbc_csr.cfg_sched.timer(sched_timer);
+
     // Write all the registers
     if (tm_sw_init_enabled()) {
         pbc_csr.cfg_fc_mgr_0.show();
@@ -2186,6 +2203,7 @@ capri_tm_global_init (void)
         pbc_csr.cfg_fc_mgr_1.write();
         pbc_csr.cfg_island_control.write();
         pbc_csr.cfg_rc.write();
+        pbc_csr.cfg_sched.write();
         HAL_TRACE_DEBUG("TM global init done");
     }
     return HAL_RET_OK;

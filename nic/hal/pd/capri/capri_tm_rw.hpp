@@ -32,6 +32,9 @@
 
 #define HAL_TM_INVALID_Q            -1
 
+#define HAL_TM_SCHEDULER_RATE_REFRESH_INTERVAL_US   4000 // 4000us
+#define HAL_TM_CLOCK_SPEED_MHZ                      833 // 833MHz
+
 // There are 32 queues at both P4-ig and P4-eg. The idea is to 
 // maintain the same queue when pkt goes through the pipeline in P4-ig and
 // P4-eg. However, hardware imposes few restrictions on the queue usage:

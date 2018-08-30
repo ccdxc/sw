@@ -19,6 +19,7 @@
 #include "nic/gen/proto/hal/session.grpc.pb.h"
 #include "nic/gen/proto/hal/gft.grpc.pb.h"
 #include "nic/gen/proto/hal/telemetry.grpc.pb.h"
+#include "nic/gen/proto/hal/qos.grpc.pb.h"
 #include "sdk/pal.hpp"
 #include "sdk/types.hpp"
 #include "nic/gen/proto/hal/proxy.grpc.pb.h"
@@ -115,6 +116,14 @@ using intf::LifRequestMsg;
 using intf::LifResponseMsg;
 using intf::LifQStateMapEntry;
 using intf::QStateSetReq;
+
+using qos::QOS;
+using qos::QosClassSpec;
+using qos::QosClassGetRequestMsg;
+using qos::QosClassGetResponseMsg;
+using qos::QosClassRequestMsg;
+using qos::QosClassResponseMsg;
+using kh::QosGroup;
 
 using port::Port;
 using port::PortSpec;
@@ -268,7 +277,8 @@ public:
     proxy_stub_(Proxy::NewStub(channel)),
     tcpcb_stub_(TcpCb::NewStub(channel)),
     crypto_apis_stub_(CryptoApis::NewStub(channel)),
-    tcp_proxy_stub_(TcpProxy::NewStub(channel)) {}
+    tcp_proxy_stub_(TcpProxy::NewStub(channel)),
+    qos_stub_(QOS::NewStub(channel)) {}
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -2348,6 +2358,44 @@ public:
         return 0;
     }
 
+    void qos_class_create(uint32_t qos_group, uint32_t pcp, 
+                          uint32_t dscp, uint32_t strict, uint32_t rate_or_dwrr) {
+        QosClassSpec        *spec;
+        QosClassRequestMsg  req_msg;
+        QosClassResponseMsg rsp_msg;
+        ClientContext       context;
+        Status              status;
+        
+        std::cout << "Qos class create with " 
+                  << qos_group << " "
+                  << pcp << " "
+                  << dscp << " "
+                  << strict << " "
+                  << rate_or_dwrr
+                  << std::endl;
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->set_qos_group(static_cast<kh::QosGroup>(qos_group));
+        spec->set_mtu(9216);
+        spec->mutable_uplink_class_map()->set_dot1q_pcp(pcp);
+        spec->mutable_uplink_class_map()->add_ip_dscp(dscp);
+        if (strict) {
+            spec->mutable_sched()->mutable_strict()->set_bps(rate_or_dwrr);
+        } else {
+            spec->mutable_sched()->mutable_dwrr()->set_bw_percentage(rate_or_dwrr);
+        }
+        std::cout << "6" << std::endl;
+
+        status = qos_stub_->QosClassCreate(&context, req_msg, &rsp_msg);
+        std::cout << "7" << std::endl;
+        if (status.ok()) {
+            std::cout << "QosClass create succeeded"
+                      << std::endl;
+        } else {
+            std::cout << "QosClass create failed"
+                << std::endl;
+        }
+    }
+
 private:
     std::unique_ptr<Vrf::Stub> vrf_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
@@ -2365,6 +2413,7 @@ private:
     std::unique_ptr<TcpCb::Stub> tcpcb_stub_;
     std::unique_ptr<CryptoApis::Stub> crypto_apis_stub_;
     std::unique_ptr<TcpProxy::Stub> tcp_proxy_stub_;
+    std::unique_ptr<QOS::Stub> qos_stub_;
 };
 
 int port_enable(hal_client *hclient, int vrf_id, int port)
@@ -2903,6 +2952,13 @@ main (int argc, char** argv)
     in_addr_t dst_range_start;
     in_addr_t dst_range_end;
 
+    bool qos_class_create = false;
+    uint32_t qos_group = 1;
+    uint32_t pcp = 1;
+    uint32_t dscp = 0;
+    uint32_t strict = 0;
+    uint32_t rate_or_dwrr = 0;
+
     sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK);
 
     if (argc > 1) {
@@ -2948,6 +3004,13 @@ main (int argc, char** argv)
             pps = atoi(argv[3]);
             policer_rate = atoi(argv[4]);
             policer_burst = atoi(argv[5]);
+        } else if (!strcmp(argv[1], "qos_class_create")) {
+            qos_class_create = true;
+            qos_group = atoi(argv[2]);
+            pcp = atoi(argv[3]);
+            dscp = atoi(argv[4]);
+            strict = atoi(argv[5]);
+            rate_or_dwrr = atoi(argv[6]);
         } else if (!strcmp(argv[1], "proxy")) {
             proxy_create = true;
         } else if (!strcmp(argv[1], "tcpcb_get")) {
@@ -3168,6 +3231,9 @@ main (int argc, char** argv)
                 }
             }
         }
+    } else if (qos_class_create) {
+        hclient.qos_class_create(qos_group, pcp, dscp, strict, rate_or_dwrr);
+        return 0;
     } else if (config == false) {
         std::cout << "Usage: <pgm> config" << std::endl;
         return 0;

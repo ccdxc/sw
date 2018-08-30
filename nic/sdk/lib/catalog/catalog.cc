@@ -187,7 +187,7 @@ catalog::populate_qos_profile(ptree &prop_tree)
     qos_profile_t &qos_profile = catalog_db_.qos_profile;
 
     qos_profile.sw_init_enable = prop_tree.get<bool>("qos.profile.sw_init_enable", false);
-    qos_profile.sw_cfg_write_enable = prop_tree.get<bool>("qos.profile.sw_cfg_write_neable", false);
+    qos_profile.sw_cfg_write_enable = prop_tree.get<bool>("qos.profile.sw_cfg_write_enable", false);
     qos_profile.jumbo_mtu = prop_tree.get<uint32_t>("qos.profile.jumbo_mtu", 0);
     qos_profile.num_uplink_qs = prop_tree.get<uint32_t>("qos.profile.num_uplink_qs", 0);
     qos_profile.num_p4ig_qs = prop_tree.get<uint32_t>("qos.profile.num_p4ig_qs", 0);

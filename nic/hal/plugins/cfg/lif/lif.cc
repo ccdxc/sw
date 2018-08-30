@@ -1643,6 +1643,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     qos_policer_to_spec(&lif->qos_info.tx_policer, spec->mutable_tx_policer());
     spec->mutable_rss()->set_type(lif->rss.type);
     spec->mutable_rss()->set_key(lif->rss.key, sizeof(lif->rss.key));
+    spec->mutable_rss()->set_indir(lif->rss.indir, sizeof(lif->rss.indir));
 
     rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
     rsp->mutable_status()->set_lif_handle(lif->hal_handle);

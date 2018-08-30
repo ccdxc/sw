@@ -86,7 +86,7 @@ pd_lif_update (pd_func_args_t *pd_func_args)
     pd_lif_t            *pd_lif = (pd_lif_t *)args->lif->pd_lif;
 
     if (args->rx_policer_changed) {
-        ret = lif_pd_rx_policer_program_hw(pd_lif, true);
+        ret = lif_pd_rx_policer_program_hw((pd_lif_t *)lif_clone->pd_lif, true);
         if (ret != HAL_RET_OK) {
             goto end;
         }
