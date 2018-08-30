@@ -3,13 +3,14 @@
 package state
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
-	"net"
+	"strconv"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
+
+	"regexp"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
@@ -22,6 +23,8 @@ var ErrEndpointNotFound = errors.New("endpoint not found")
 
 // EndpointType holds either local or remote endpoint type
 type EndpointType int
+
+var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 
 const (
 	// Local Endpoints where NodeUUID on endpoint spec matches the NAPLES NodeUUID
@@ -347,23 +350,18 @@ func (na *Nagent) ListEndpoint() []*netproto.Endpoint {
 	return epList
 }
 
-func (na *Nagent) findAvailableInterface(count uint64, IPAddress, intfType string) (string, error) {
+func (na *Nagent) findAvailableInterface(count uint64, epMAC string, intfType string) (string, error) {
 	// convert the ip address to int
-	var ifIdx int
+	var ifIdx uint64
 	lifs := na.getLifs()
 	uplinks := na.getUplinks()
-	ip, _, err := net.ParseCIDR(IPAddress)
+
+	mac, err := na.macTouint64(epMAC)
 	if err != nil {
-		log.Errorf("Error parsing the IP Address. Err: %v", err)
-		return "", err
+		log.Errorf("could not parse mac address from %v", epMAC)
+		return "", fmt.Errorf("could not parse mac address from %v", epMAC)
 	}
-	if len(IPAddress) == 16 {
-		intIP := binary.BigEndian.Uint32(ip[12:16])
-		ifIdx = int(uint64(intIP) % count)
-	} else {
-		intIP := binary.BigEndian.Uint32(ip)
-		ifIdx = int(uint64(intIP) % count)
-	}
+	ifIdx = mac % count
 
 	switch strings.ToLower(intfType) {
 	case "uplink":
@@ -430,7 +428,7 @@ func (na *Nagent) findIntfID(ep *netproto.Endpoint, epType EndpointType) (uint64
 			log.Errorf("could not enumerate lifs. Err: %v", err)
 			return 0, fmt.Errorf("could not enumerate lifs. Err: %v", err)
 		}
-		epLIF, err := na.findAvailableInterface(lifCount, ep.Spec.IPv4Address, "lif")
+		epLIF, err := na.findAvailableInterface(lifCount, ep.Spec.MacAddress, "lif")
 		if err != nil {
 			log.Errorf("could not find an available lif. Err: %v", err)
 			return 0, fmt.Errorf("could not find an available lif. Err: %v", err)
@@ -449,7 +447,7 @@ func (na *Nagent) findIntfID(ep *netproto.Endpoint, epType EndpointType) (uint64
 			log.Errorf("could not enumerate uplinks. Err: %v", err)
 			return 0, fmt.Errorf("could not enumerate uplinks. Err: %v", err)
 		}
-		epUplink, err := na.findAvailableInterface(uplinkCount, ep.Spec.IPv4Address, "uplink")
+		epUplink, err := na.findAvailableInterface(uplinkCount, ep.Spec.MacAddress, "uplink")
 		if err != nil {
 			log.Errorf("could not find an available uplink. Err: %v", err)
 			return 0, fmt.Errorf("could not find an available uplink. Err: %v", err)
@@ -486,4 +484,9 @@ func (na *Nagent) findIntfID(ep *netproto.Endpoint, epType EndpointType) (uint64
 	}
 	log.Errorf("invalid endpoint create spec. {%v} ", ep)
 	return 0, fmt.Errorf("ep create should either be remote or local. Remote EPs should point to either a valid uplink or a tunnel")
+}
+
+func (na *Nagent) macTouint64(mac string) (uint64, error) {
+	hex := macStripRegexp.ReplaceAllLiteralString(mac, "")
+	return strconv.ParseUint(hex, 16, 64)
 }

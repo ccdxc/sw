@@ -46,7 +46,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-			IPv4Address:  "10.0.0.1/16",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -79,7 +79,6 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "invalid",
-			IPv4Address:  "10.0.0.1/16",
 		},
 	}
 	_, _, err = ag.EndpointCreateReq(ep2)
@@ -101,7 +100,6 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			EndpointUUID: "testEndpointUUID2",
 			WorkloadUUID: "testWorkloadUUID2",
 			NetworkName:  "default",
-			IPv4Address:  "10.0.0.1/16",
 		},
 	}
 	_, _, err = ag.EndpointCreateReq(&depinfo)
@@ -157,8 +155,8 @@ func TestLocalEndpointUpdate(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-			IPv4Address:  "10.0.0.1/16",
 			NodeUUID:     ag.NodeUUID,
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -207,7 +205,7 @@ func TestEndpointUpdate(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-			IPv4Address:  "10.0.0.1/24",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -300,7 +298,7 @@ func TestEndpointConcurrency(t *testing.T) {
 					EndpointUUID: "testEndpointUUID",
 					WorkloadUUID: "testWorkloadUUID",
 					NetworkName:  "default",
-					IPv4Address:  "10.0.0.1/24",
+					MacAddress:   "42:42:42:42:42:42",
 				},
 			}
 
@@ -369,8 +367,8 @@ func TestLocalEndpointPointingToAnyLif(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-			IPv4Address:  "10.0.0.1/16",
 			NodeUUID:     ag.NodeUUID,
+			MacAddress:   "42:42:42:42:42:42",
 		}}
 
 	// create the endpoint
@@ -416,8 +414,8 @@ func TestLocalEndpointPointingToPredefinedLIF(t *testing.T) {
 			NetworkName:   "default",
 			InterfaceType: "lif",
 			Interface:     "lif1",
-			IPv4Address:   "10.0.0.1/16",
 			NodeUUID:      ag.NodeUUID,
+			MacAddress:    "42:42:42:42:42:42",
 		},
 	}
 
@@ -462,8 +460,8 @@ func TestRemoteEndpointPointingToAnyUplink(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-			IPv4Address:  "10.0.0.1/16",
 			NodeUUID:     "different-uuid-than-agent",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -510,8 +508,8 @@ func TestRemoteEndpointPointingToPredefinedUplink(t *testing.T) {
 			NetworkName:   "default",
 			InterfaceType: "uplink",
 			Interface:     "uplink1",
-			IPv4Address:   "10.0.0.1/16",
 			NodeUUID:      "some-different-uuid-than-agent",
+			MacAddress:    "42:42:42:42:42:42",
 		},
 	}
 
@@ -577,8 +575,8 @@ func TestRemoteEndpointPointingToLocalTunnel(t *testing.T) {
 			NetworkName:   "default",
 			InterfaceType: "tunnel",
 			Interface:     "public-tunnel",
-			IPv4Address:   "10.0.0.1/16",
 			NodeUUID:      "remote",
+			MacAddress:    "42:42:42:42:42:42",
 		},
 	}
 
@@ -655,8 +653,8 @@ func TestRemoteEndpointPointingToRemoteTunnel(t *testing.T) {
 			NetworkName:   "default",
 			Interface:     "public-ns/public-tunnel",
 			InterfaceType: "tunnel",
-			IPv4Address:   "10.0.0.1/16",
 			NodeUUID:      "remote",
+			MacAddress:    "42:42:42:42:42:42",
 		},
 	}
 
@@ -703,104 +701,13 @@ func TestEndpointCreateOnNonExistentNamespace(t *testing.T) {
 			EndpointUUID: "testEndpointUUID",
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
-			IPv4Address:  "10.0.0.1/16",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
 	// create the endpoint
 	_, _, err = ag.EndpointCreateReq(epinfo)
 	Assert(t, err != nil, "Creating an endpoint on non-existent Namespace should fail.")
-}
-
-func TestLocalEndpointDatapathCreateFailure(t *testing.T) {
-	// create netagent
-	ag, _, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-
-	// network message
-	nt := netproto.Network{
-		TypeMeta: api.TypeMeta{Kind: "Network"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "default",
-			Namespace: "default",
-		},
-		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-		},
-	}
-
-	// make create network call
-	err := ag.CreateNetwork(&nt)
-	AssertOk(t, err, "Error creating network")
-
-	// endpoint message
-	epinfo := &netproto.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "testEndpoint",
-			Namespace: "default",
-		},
-		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			IPv4Address:  "BadIPAddress",
-		},
-	}
-
-	// create the endpoint
-	_, _, err = ag.EndpointCreateReq(epinfo)
-	Assert(t, err != nil, "Creating an endpoint with invalid IPAddress CIDR format should fail.")
-}
-
-func TestRemoteEndpointDatapathCreateFailure(t *testing.T) {
-	// create netagent
-	ag, _, _ := createNetAgent(t)
-	Assert(t, ag != nil, "Failed to create agent %#v", ag)
-	defer ag.Stop()
-
-	// network message
-	nt := netproto.Network{
-		TypeMeta: api.TypeMeta{Kind: "Network"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "default",
-			Namespace: "default",
-		},
-		Spec: netproto.NetworkSpec{
-			IPv4Subnet:  "10.1.1.0/24",
-			IPv4Gateway: "10.1.1.254",
-		},
-	}
-
-	// make create network call
-	err := ag.CreateNetwork(&nt)
-	AssertOk(t, err, "Error creating network")
-
-	// endpoint message
-	epinfo := &netproto.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Name:      "testEndpoint",
-			Namespace: "default",
-		},
-		Spec: netproto.EndpointSpec{
-			EndpointUUID: "testEndpointUUID",
-			WorkloadUUID: "testWorkloadUUID",
-			NetworkName:  "default",
-			IPv4Address:  "BadIPAddress",
-			NodeUUID:     "remote",
-		},
-	}
-
-	// create the endpoint
-	_, err = ag.CreateEndpoint(epinfo)
-	Assert(t, err != nil, "Creating an endpoint with invalid IPAddress CIDR format should fail.")
 }
 
 func TestRemoteEndpointOnNonExistentInterface(t *testing.T) {
@@ -840,8 +747,8 @@ func TestRemoteEndpointOnNonExistentInterface(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 			Interface:    "bad-interface",
-			IPv4Address:  "10.0.0.1/16",
 			NodeUUID:     "remote",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -887,8 +794,8 @@ func TestNonExistentEndpointUpdate(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 			Interface:    "bad-interface",
-			IPv4Address:  "10.0.0.1/16",
 			NodeUUID:     ag.NodeUUID,
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 
@@ -934,8 +841,8 @@ func TestRemoteEndpointOnNonExistentRemoteTunnel(t *testing.T) {
 			WorkloadUUID: "testWorkloadUUID",
 			NetworkName:  "default",
 			Interface:    "remoteNS/nonExistentRemoteNatPool",
-			IPv4Address:  "10.0.0.1/16",
 			NodeUUID:     "remote",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 

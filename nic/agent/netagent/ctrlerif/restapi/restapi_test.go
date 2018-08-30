@@ -115,6 +115,7 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 			NetworkName:  "preCreatedNetwork",
 			NodeUUID:     "dummy-node-uuid",
 			IPv4Address:  "10.1.1.0/24",
+			MacAddress:   "42:42:42:42:42:42",
 		},
 	}
 	_, err = nagent.CreateEndpoint(&ep)

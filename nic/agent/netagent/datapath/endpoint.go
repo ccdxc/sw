@@ -18,20 +18,27 @@ import (
 
 // CreateLocalEndpoint creates a local endpoint in the datapath
 func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, ns *netproto.Namespace) (*types.IntfInfo, error) {
+	var halIPAddresses []*halproto.IPAddress
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
-	ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
-	if err != nil {
-		return nil, fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
-	}
-	// convert v4 address
-	v4Addr := halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(ipaddr),
-		},
+
+	if len(ep.Spec.IPv4Address) > 0 {
+		ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
+		if err != nil {
+			return nil, fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
+		}
+		// convert v4 address
+		v4Addr := &halproto.IPAddress{
+			IpAf: halproto.IPAddressFamily_IP_AF_INET,
+			V4OrV6: &halproto.IPAddress_V4Addr{
+				V4Addr: ipv4Touint32(ipaddr),
+			},
+		}
+
+		halIPAddresses = append(halIPAddresses, v4Addr)
+
 	}
 
 	vrfKey := halproto.VrfKeyHandle{
@@ -66,7 +73,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	epAttrs := halproto.EndpointAttributes{
 		InterfaceKeyHandle: &ifKey,
 		UsegVlan:           ep.Spec.UsegVlan,
-		IpAddress:          []*halproto.IPAddress{&v4Addr},
+		IpAddress:          halIPAddresses,
 		SgKeyHandle:        sgHandles,
 	}
 
@@ -177,23 +184,23 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 
 // UpdateLocalEndpoint updates the endpoint
 func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+	var halIPAddresses []*halproto.IPAddress
 	// convert mac address
-	ipaddr, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
+	if len(ep.Spec.IPv4Address) > 0 {
+		ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
+		if err != nil {
+			return fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
+		}
+		// convert v4 address
+		v4Addr := &halproto.IPAddress{
+			IpAf: halproto.IPAddressFamily_IP_AF_INET,
+			V4OrV6: &halproto.IPAddress_V4Addr{
+				V4Addr: ipv4Touint32(ipaddr),
+			},
+		}
 
-	// convert v4 address
-	v4Addr := halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(ipaddr),
-		},
-	}
+		halIPAddresses = append(halIPAddresses, v4Addr)
 
-	// convert v6 address
-	v6Addr := halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
-		V4OrV6: &halproto.IPAddress_V6Addr{
-			V6Addr: []byte(net.ParseIP(ep.Spec.IPv6Address)),
-		},
 	}
 
 	// get sg ids
@@ -222,7 +229,7 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	epAttrs := halproto.EndpointAttributes{
 		InterfaceKeyHandle: &ifKeyHandle, //FIXME
 		UsegVlan:           ep.Spec.UsegVlan,
-		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
+		IpAddress:          halIPAddresses,
 		SgKeyHandle:        sgHandles,
 	}
 
@@ -366,24 +373,28 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 
 // CreateRemoteEndpoint creates remote endpoint
 func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, uplinkID uint64, ns *netproto.Namespace) error {
+	var halIPAddresses []*halproto.IPAddress
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Spec.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
-	ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
 
-	if err != nil {
-		return fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
+	if len(ep.Spec.IPv4Address) > 0 {
+		ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
+		if err != nil {
+			return fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
+		}
+		// convert v4 address
+		v4Addr := &halproto.IPAddress{
+			IpAf: halproto.IPAddressFamily_IP_AF_INET,
+			V4OrV6: &halproto.IPAddress_V4Addr{
+				V4Addr: ipv4Touint32(ipaddr),
+			},
+		}
+
+		halIPAddresses = append(halIPAddresses, v4Addr)
+
 	}
-
-	// convert v4 address
-	v4Addr := halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(ipaddr),
-		},
-	}
-
 	// get sg ids
 	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
@@ -410,7 +421,7 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	epAttrs := halproto.EndpointAttributes{
 		InterfaceKeyHandle: &ifKey,
 		UsegVlan:           ep.Spec.UsegVlan,
-		IpAddress:          []*halproto.IPAddress{&v4Addr},
+		IpAddress:          halIPAddresses,
 		SgKeyHandle:        sgHandles,
 	}
 
@@ -471,25 +482,24 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 
 // UpdateRemoteEndpoint updates an existing endpoint
 func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+	var halIPAddresses []*halproto.IPAddress
 	// convert mac address
-	ipaddr, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
+	if len(ep.Spec.IPv4Address) > 0 {
+		ipaddr, _, err := net.ParseCIDR(ep.Spec.IPv4Address)
+		if err != nil {
+			return fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
+		}
+		// convert v4 address
+		v4Addr := &halproto.IPAddress{
+			IpAf: halproto.IPAddressFamily_IP_AF_INET,
+			V4OrV6: &halproto.IPAddress_V4Addr{
+				V4Addr: ipv4Touint32(ipaddr),
+			},
+		}
 
-	// convert v4 address
-	v4Addr := halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET,
-		V4OrV6: &halproto.IPAddress_V4Addr{
-			V4Addr: ipv4Touint32(ipaddr),
-		},
+		halIPAddresses = append(halIPAddresses, v4Addr)
+
 	}
-
-	// convert v6 address
-	v6Addr := halproto.IPAddress{
-		IpAf: halproto.IPAddressFamily_IP_AF_INET6,
-		V4OrV6: &halproto.IPAddress_V6Addr{
-			V6Addr: []byte(net.ParseIP(ep.Spec.IPv6Address)),
-		},
-	}
-
 	// get sg ids
 	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
@@ -516,7 +526,7 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	epAttrs := halproto.EndpointAttributes{
 		InterfaceKeyHandle: &ifKeyHandle, //FIXME
 		UsegVlan:           ep.Spec.UsegVlan,
-		IpAddress:          []*halproto.IPAddress{&v4Addr, &v6Addr},
+		IpAddress:          halIPAddresses,
 		SgKeyHandle:        sgHandles,
 	}
 
