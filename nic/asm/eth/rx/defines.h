@@ -35,7 +35,7 @@
     or          _r_addr, d.addr_lo, d.addr_hi, sizeof(d.addr_lo); \
     add         _r_addr, r0, _r_addr.dx; \
     or          _r_addr, _r_addr[63:16], _r_addr[11:8], sizeof(d.addr_lo); \
-    DMA_HOST_PKT2MEM(_r_ptr, !c0, _r_addr, _gs_len);
+    DMA_PKT2MEM(_r_ptr, !c0, k.eth_rx_global_host_queue, _r_addr, _gs_len);
 
 #define DEBUG_DESCR_FLD(name) \
     add         r7, r0, d.##name
