@@ -98,9 +98,10 @@ set_slab_response (slab *s, debug::SlabGetResponseMsg *rsp)
 hal_ret_t
 slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
 {
-#if 0
     hal_slab_t  slab_id;
     hal_ret_t   ret = HAL_RET_OK;
+    pd::pd_func_args_t  pd_func_args = {0};
+    pd::pd_get_slab_args_t args;
     uint32_t i = 0;
     slab *s;
 
@@ -110,16 +111,26 @@ slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
         s = hal::g_hal_state->get_slab(slab_id);
         ret = set_slab_response(s, rsp);
     } else if (slab_id < HAL_SLAB_PD_MAX) {
-        s = hal::pd::g_hal_state_pd->get_slab(slab_id);
-        ret = set_slab_response(s, rsp);
+        args.slab_id = slab_id;
+        pd_func_args.pd_get_slab = &args;
+        ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_SLAB, &pd_func_args);
+        if (ret == HAL_RET_OK) {
+            s = args.slab;
+            ret = set_slab_response(s, rsp);
+        }
     } else if (slab_id == HAL_SLAB_ALL) {
         for (i = (uint32_t) HAL_SLAB_PI_MIN; i < (uint32_t) HAL_SLAB_PI_MAX; i ++) {
             s = hal::g_hal_state->get_slab((hal_slab_t) i);
             ret = set_slab_response (s, rsp);
         }
         for (i = (uint32_t) HAL_SLAB_PD_MIN; i < (uint32_t) HAL_SLAB_PD_MAX; i ++) {
-            s = hal::pd::g_hal_state_pd->get_slab((hal_slab_t) i);
-            ret = set_slab_response(s, rsp);
+            args.slab_id = (hal_slab_t) i;
+            pd_func_args.pd_get_slab = &args;
+            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_SLAB, &pd_func_args);
+            if (ret == HAL_RET_OK) {
+                s = args.slab;
+                ret = set_slab_response(s, rsp);
+            }
         }
     } else {
         HAL_TRACE_ERR("Unexpected slab id {}", slab_id);
@@ -130,7 +141,6 @@ slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
         HAL_TRACE_ERR("Failed to get slab for slab id {}", i ? i : slab_id);
         return ret;
     }
-#endif
 
     return HAL_RET_OK;
 }
