@@ -22,67 +22,16 @@ var systemShowCmd = &cobra.Command{
 	Long:  "show system information",
 }
 
-var apiStatsShowCmd = &cobra.Command{
-	Use:   "api-stats",
-	Short: "show system api-stats",
-	Long:  "show system api-stats",
-	Run:   apiStatsShowCmdHandler,
-}
-
 var systemStatsShowCmd = &cobra.Command{
-	Use:   "stats",
-	Short: "show system stats",
-	Long:  "show system stats",
+	Use:   "statistics",
+	Short: "show system statistics [ingress-drop | egress-drop | fte | table | api | all] (Default: all)",
+	Long:  "show system statistics [ingress-drop | egress-drop | fte | table | api | all] (Default: all)",
 	Run:   systemStatsShowCmdHandler,
 }
 
 func init() {
 	showCmd.AddCommand(systemShowCmd)
-	systemShowCmd.AddCommand(apiStatsShowCmd)
 	systemShowCmd.AddCommand(systemStatsShowCmd)
-}
-
-func apiStatsShowCmdHandler(cmd *cobra.Command, args []string) {
-	// Connect to HAL
-	c, err := utils.CreateNewGRPCClient()
-	defer c.Close()
-	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
-	}
-	client := halproto.NewSystemClient(c.ClientConn)
-
-	var empty *halproto.Empty
-
-	// HAL call
-	respMsg, err := client.ApiStatsGet(context.Background(), empty)
-	if err != nil {
-		log.Errorf("Getting API Stats failed. %v", err)
-		return
-	}
-
-	// Print Header
-	apiStatsShowHeader()
-
-	// Print API Stats
-	for _, entry := range respMsg.ApiEntries {
-		apiStatsEntryShow(entry)
-	}
-}
-
-func apiStatsShowHeader() {
-	hdrLine := strings.Repeat("-", 100)
-	fmt.Println(hdrLine)
-	fmt.Printf("%-55s%-12s%-12s%-12s\n",
-		"API", "Num Calls", "Num Success", "Num Fail")
-	fmt.Println(hdrLine)
-}
-
-func apiStatsEntryShow(entry *halproto.ApiStatsEntry) {
-	fmt.Printf("%-55s%-12d%-12d%-12d\n",
-		entry.GetApiType().String(),
-		entry.GetNumApiCall(),
-		entry.GetNumApiSuccess(),
-		entry.GetNumApiFail())
 }
 
 func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -94,9 +43,44 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewSystemClient(c.ClientConn)
 
-	var empty *halproto.Empty
+	// Check the args
+	ingressDrop := false
+	egressDrop := false
+	table := false
+	fte := false
+	api := false
+
+	if len(args) > 0 {
+		if strings.Compare(args[0], "ingress-drop") == 0 {
+			ingressDrop = true
+		} else if strings.Compare(args[0], "egress-drop") == 0 {
+			egressDrop = true
+		} else if strings.Compare(args[0], "table") == 0 {
+			table = true
+		} else if strings.Compare(args[0], "fte") == 0 {
+			fte = true
+		} else if strings.Compare(args[0], "api") == 0 {
+			api = true
+		} else if strings.Compare(args[0], "all") == 0 {
+			ingressDrop = true
+			egressDrop = true
+			table = true
+			fte = true
+			api = true
+		} else {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	} else {
+		ingressDrop = true
+		egressDrop = true
+		table = true
+		fte = true
+		api = true
+	}
 
 	// HAL call
+	var empty *halproto.Empty
 	resp, err := client.SystemGet(context.Background(), empty)
 	if err != nil {
 		log.Errorf("Getting System Stats failed. %v", err)
@@ -108,38 +92,62 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Print Header
-	fmt.Println("System Drop Stats:")
-	systemDropStatsShowHeader()
+	if ingressDrop {
+		// Print Header
+		fmt.Println("\nSystem Drop Stats:")
+		systemDropStatsShowHeader()
 
-	// Print System Drop Stats
-	for _, entry := range resp.GetStats().GetDropStats().DropEntries {
-		systemDropStatsShowEntry(entry)
+		// Print System Drop Stats
+		for _, entry := range resp.GetStats().GetDropStats().DropEntries {
+			systemDropStatsShowEntry(entry)
+		}
 	}
 
-	// Print Header
-	fmt.Println("System Egress Drop Stats:")
-	systemDropStatsShowHeader()
+	if egressDrop {
+		// Print Header
+		fmt.Println("\nSystem Egress Drop Stats:")
+		systemDropStatsShowHeader()
 
-	// Print System Egress Drop Stats
-	for _, entry := range resp.GetStats().GetEgressDropStats().DropEntries {
-		systemEgressDropStatsShowEntry(entry)
+		// Print System Egress Drop Stats
+		for _, entry := range resp.GetStats().GetEgressDropStats().DropEntries {
+			systemEgressDropStatsShowEntry(entry)
+		}
 	}
 
-	// Print Header
-	fmt.Println("System Table Stats:")
-	systemTableStatsShowHeader()
+	if table {
+		// Print Header
+		fmt.Println("\nSystem Table Stats:")
+		systemTableStatsShowHeader()
 
-	// Print Table Stats
-	for _, entry := range resp.GetStats().GetTableStats().TableStats {
-		systemTableStatsShowEntry(entry)
+		// Print Table Stats
+		for _, entry := range resp.GetStats().GetTableStats().TableStats {
+			systemTableStatsShowEntry(entry)
+		}
 	}
 
-	fmt.Println("FTE Stats:")
-	fteStatsShow(resp.GetStats())
+	if api {
+		respMsg, err := client.ApiStatsGet(context.Background(), empty)
+		if err != nil {
+			log.Errorf("Getting API Stats failed. %v", err)
+			return
+		}
 
-	fmt.Println("Session Summary Stats:")
-	sessionSummaryStatsShow(resp.GetStats())
+		// Print Header
+		apiStatsShowHeader()
+
+		// Print API Stats
+		for _, entry := range respMsg.ApiEntries {
+			apiStatsEntryShow(entry)
+		}
+	}
+
+	if fte {
+		fmt.Println("\nFTE Stats:")
+		fteStatsShow(resp.GetStats())
+
+		fmt.Println("\nSession Summary Stats:")
+		sessionSummaryStatsShow(resp.GetStats())
+	}
 }
 
 func systemDropStatsShowHeader() {
@@ -346,4 +354,20 @@ func sessionSummaryStatsShow(stats *halproto.Stats) {
 	fmt.Printf("%25s%25d\n", "UDP", sessstats.GetUdpSessions())
 	fmt.Printf("%25s%25d\n", "ICMP", sessstats.GetIcmpSessions())
 	fmt.Printf("%25s%25d\n", "DROP", sessstats.GetDropSessions())
+}
+
+func apiStatsShowHeader() {
+	hdrLine := strings.Repeat("-", 100)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-55s%-12s%-12s%-12s\n",
+		"API", "Num Calls", "Num Success", "Num Fail")
+	fmt.Println(hdrLine)
+}
+
+func apiStatsEntryShow(entry *halproto.ApiStatsEntry) {
+	fmt.Printf("%-55s%-12d%-12d%-12d\n",
+		entry.GetApiType().String(),
+		entry.GetNumApiCall(),
+		entry.GetNumApiSuccess(),
+		entry.GetNumApiFail())
 }
