@@ -72,6 +72,9 @@ MODULE_LICENSE("Dual BSD/GPL");
 static bool ionic_xxx_haps = false;
 module_param_named(xxx_haps, ionic_xxx_haps, bool, 0444);
 MODULE_PARM_DESC(xxx_haps, "XXX Misc workarounds for HAPS.");
+static bool ionic_xxx_pgtbl = false;
+module_param_named(xxx_pgtbl, ionic_xxx_pgtbl, bool, 0444);
+MODULE_PARM_DESC(xxx_pgtbl, "XXX Allocate pgtbl even for contiguous buffers that don't need it.");
 static bool ionic_xxx_limits = false;
 module_param_named(xxx_limits, ionic_xxx_limits, bool, 0444);
 MODULE_PARM_DESC(xxx_limits, "XXX Hardcode resource limits.");
@@ -546,12 +549,13 @@ static int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ionic_tbl_res *res,
 	buf->tbl_buf = NULL;
 	buf->page_size_log2 = 0;
 
-	/* XXX alloc tbl even for contiguous */
-	if (1 || res->tbl_order) {
+	if (ionic_xxx_pgtbl || res->tbl_order) {
 		rc = ionic_get_pgtbl(dev, &res->tbl_pos, res->tbl_order);
 		if (rc)
 			goto err_res;
+	}
 
+	if (res->tbl_order) {
 		buf->tbl_size = buf->tbl_limit * sizeof(*buf->tbl_buf);
 		buf->tbl_buf = kmalloc(buf->tbl_size, GFP_KERNEL);
 		if (!buf->tbl_buf) {
@@ -577,22 +581,24 @@ static int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ionic_tbl_res *res,
 
 		/* XXX want to use page_size=zero for phys-contiguous,
 		 * until hal supports it, only up to 8MB contiguous */
-		buf->page_size_log2 = 23;
+		if (ionic_xxx_pgtbl)
+			buf->page_size_log2 = 23;
 	}
 
 	return 0;
 
 err_umem:
-	/* XXX alloc tbl even for contiguous */
-	if (1 || res->tbl_order) {
+	if (buf->tbl_buf) {
 		dma_unmap_single(dev->hwdev, buf->tbl_dma, buf->tbl_size,
 				 DMA_FROM_DEVICE);
 err_dma:
 		kfree(buf->tbl_buf);
-err_buf:
-		ionic_put_pgtbl(dev, res->tbl_pos, res->tbl_order);
 	}
+err_buf:
+	if (ionic_xxx_pgtbl || res->tbl_order)
+		ionic_put_pgtbl(dev, res->tbl_pos, res->tbl_order);
 err_res:
+	buf->tbl_buf = NULL;
 	buf->tbl_limit = 0;
 	buf->tbl_pages = 0;
 	return rc;
@@ -601,13 +607,13 @@ err_res:
 static void ionic_pgtbl_unbuf(struct ionic_ibdev *dev,
 			      struct ionic_tbl_buf *buf)
 {
-	/* XXX alloc tbl even for contiguous */
-	if (buf->tbl_limit > 0) {
+	if (buf->tbl_buf) {
 		dma_unmap_single(dev->hwdev, buf->tbl_dma, buf->tbl_size,
 				 DMA_FROM_DEVICE);
 		kfree(buf->tbl_buf);
 	}
 
+	buf->tbl_buf = NULL;
 	buf->tbl_limit = 0;
 	buf->tbl_pages = 0;
 }
@@ -615,8 +621,7 @@ static void ionic_pgtbl_unbuf(struct ionic_ibdev *dev,
 static void ionic_pgtbl_unres(struct ionic_ibdev *dev,
 			      struct ionic_tbl_res *res)
 {
-	/* XXX alloc tbl even for contiguous */
-	if (1 || res->tbl_order)
+	if (ionic_xxx_pgtbl || res->tbl_order)
 		ionic_put_pgtbl(dev, res->tbl_pos, res->tbl_order);
 }
 
@@ -1986,8 +1991,13 @@ static int ionic_v0_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 
 #ifndef ADMINQ
 	/* XXX for nicmgr: side-data */
-	admin.side_data = mr->buf.tbl_buf;
-	admin.side_data_len = mr->buf.tbl_size;
+	if (mr->buf.tbl_buf) {
+		admin.side_data = mr->buf.tbl_buf;
+		admin.side_data_len = mr->buf.tbl_size;
+	} else {
+		admin.side_data = &mr->buf.tbl_dma;
+		admin.side_data_len = sizeof(mr->buf.tbl_dma);
+	}
 #endif
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
@@ -2373,13 +2383,15 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 
 	mr->buf.tbl_pages = 0;
 
-	dma_sync_single_for_cpu(dev->hwdev, mr->buf.tbl_dma,
-				mr->buf.tbl_size, DMA_TO_DEVICE);
+	if (mr->buf.tbl_buf)
+		dma_sync_single_for_cpu(dev->hwdev, mr->buf.tbl_dma,
+					mr->buf.tbl_size, DMA_TO_DEVICE);
 
 	rc = ib_sg_to_pages(ibmr, sg, sg_nents, sg_offset, ionic_map_mr_page);
 
-	dma_sync_single_for_device(dev->hwdev, mr->buf.tbl_dma,
-				   mr->buf.tbl_size, DMA_TO_DEVICE);
+	if (mr->buf.tbl_buf)
+		dma_sync_single_for_device(dev->hwdev, mr->buf.tbl_dma,
+					   mr->buf.tbl_size, DMA_TO_DEVICE);
 
 	return rc;
 }
@@ -2470,8 +2482,13 @@ static int ionic_v0_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 
 #ifndef ADMINQ
 	/* XXX for nicmgr: side-data */
-	admin.side_data = buf->tbl_buf;
-	admin.side_data_len = buf->tbl_size;
+	if (buf->tbl_buf) {
+		admin.side_data = buf->tbl_buf;
+		admin.side_data_len = buf->tbl_size;
+	} else {
+		admin.side_data = &buf->tbl_dma;
+		admin.side_data_len = sizeof(buf->tbl_dma);
+	}
 #endif
 
 	rc = ionic_api_adminq_post(dev->lif, &admin);
@@ -4992,8 +5009,15 @@ static int ionic_v1_prep_reg(struct ionic_qp *qp,
 	wqe->base.length_key = cpu_to_be32(mr->ibmr.lkey);
 	wqe->reg_mr.va = cpu_to_be64(mr->ibmr.iova);
 	wqe->reg_mr.length = cpu_to_be32(mr->ibmr.length);
-	wqe->reg_mr.offset = cpu_to_be32(mr->ibmr.iova & (mr->ibmr.page_size - 1));
-	wqe->reg_mr.dma_addr = cpu_to_be64(mr->buf.tbl_dma);
+	wqe->reg_mr.offset =
+		cpu_to_be32(mr->ibmr.iova & (mr->ibmr.page_size - 1));
+
+	if (mr->buf.tbl_pages == 1 && mr->buf.tbl_buf)
+		wqe->reg_mr.dma_addr = mr->buf.tbl_buf[0];
+	else
+		wqe->reg_mr.dma_addr = cpu_to_le64(mr->buf.tbl_dma);
+
+	wqe->reg_mr.map_count = cpu_to_be32(mr->buf.tbl_pages);
 	wqe->reg_mr.flags = cpu_to_be16(flags);
 	wqe->reg_mr.dir_size_log2 = 0;
 	wqe->reg_mr.page_size_log2 = order_base_2(mr->ibmr.page_size);
