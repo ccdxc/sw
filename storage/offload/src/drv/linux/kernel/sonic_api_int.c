@@ -111,54 +111,6 @@ accel_ring_t* sonic_get_accel_ring(uint32_t accel_ring_id)
 	return &ident->dev.accel_ring_tbl[accel_ring_id];
 }
 
-int sonic_get_accel_ring_base_pa(uint32_t accel_ring_id, uint64_t *ring_base)
-{
-	identity_t *ident = sonic_get_identity();
-
-	if(NULL == ident)
-		return -EINVAL;
-	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
-	
-	*ring_base = ident->dev.accel_ring_tbl[accel_ring_id].ring_base_pa;
-	return 0;
-}
-
-int sonic_get_accel_ring_pndx_pa(uint32_t accel_ring_id, uint64_t *ring_pndx)
-{
-	identity_t *ident = sonic_get_identity();
-
-	if(NULL == ident)
-		return -EINVAL;
-	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
-	
-	*ring_pndx = ident->dev.accel_ring_tbl[accel_ring_id].ring_pndx_pa;
-	return 0;
-}
-
-int sonic_get_accel_ring_shadow_pndx_pa(uint32_t accel_ring_id, uint64_t *shadow_pndx)
-{
-	identity_t *ident = sonic_get_identity();
-
-	if(NULL == ident)
-		return -EINVAL;
-	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
-	
-	*shadow_pndx = ident->dev.accel_ring_tbl[accel_ring_id].ring_shadow_pndx_pa;
-	return 0;
-}
-
-int sonic_get_accel_ring_size(uint32_t accel_ring_id, uint32_t *ring_size)
-{
-	identity_t *ident = sonic_get_identity();
-
-	if(NULL == ident)
-		return -EINVAL;
-	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
-	
-	*ring_size = ident->dev.accel_ring_tbl[accel_ring_id].ring_size;
-	return 0;
-}
-
 uint64_t sonic_hostpa_to_devpa(uint64_t hostpa)
 {
 	identity_t *ident = sonic_get_identity();
