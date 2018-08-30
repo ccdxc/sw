@@ -1304,6 +1304,7 @@ struct resp_bt_info_t {
 
 //Define all stat types requested by the driver
 #define AQ_STATS_DUMP_TYPE_QP   0
+#define AQ_STATS_DUMP_TYPE_CQ   1
 
 struct aqwqe_t {
 	op: 8;

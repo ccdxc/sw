@@ -52,11 +52,10 @@
 #define tx_table_s1_t0_action aq_tx_aqwqe_process
 
 #define tx_table_s2_t0_action aq_tx_modify_qp_2_process
-#define tx_table_s2_t3_action aq_tx_feedback_process_s2
 
-#define tx_table_s3_t3_action aq_tx_feedback_process_s3
-#define tx_table_s4_t3_action aq_tx_feedback_process_s4
-#define tx_table_s5_t3_action aq_tx_feedback_process_s5
+#define tx_table_s3_t0_action aq_tx_feedback_process_s3
+#define tx_table_s4_t0_action aq_tx_feedback_process_s4
+#define tx_table_s5_t0_action aq_tx_feedback_process_s5
 
 #include "../common-p4+/common_txdma.p4"
 #include "./rdma_txdma_headers.p4"
@@ -89,8 +88,9 @@ header_type phv_global_common_t {
 header_type aq_tx_to_stage_wqe_info_t {
     fields {
         cqcb_base_addr_hi                :   24;
-        sqcb_base_addr_hi                :   24;        
-        pad                              :   80;
+        sqcb_base_addr_hi                :   24;
+        rqcb_base_addr_hi                :   24;
+        pad                              :   56;
     }
 }
 
@@ -172,6 +172,7 @@ action aq_tx_aqwqe_process () {
     // to stage
     modify_field(to_s1_info_scr.cqcb_base_addr_hi, to_s1_info.cqcb_base_addr_hi);
     modify_field(to_s1_info_scr.sqcb_base_addr_hi, to_s1_info.sqcb_base_addr_hi);
+    modify_field(to_s1_info_scr.rqcb_base_addr_hi, to_s1_info.rqcb_base_addr_hi);
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
     
     // stage to stage
@@ -187,15 +188,6 @@ action aq_tx_modify_qp_2_process () {
     modify_field(to_s2_info_scr.rsq_base_addr_page_id, to_s2_info.rsq_base_addr_page_id);
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
-    // stage to stage
-}
-
-action aq_tx_feedback_process_s2 () {
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // to stage
-
     // stage to stage
 }
 

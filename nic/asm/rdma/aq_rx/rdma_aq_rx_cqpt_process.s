@@ -53,7 +53,7 @@ rdma_aq_rx_cqpt_process:
 
 fire_eqcb:    
 
-    bbne        CAPRI_KEY_FIELD(IN_P, fire_eqcb), 1, cqpt_exit
+    bbeq        CAPRI_KEY_FIELD(IN_P, fire_eqcb), 1, cqpt_exit
     nop
 
     DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, r2)

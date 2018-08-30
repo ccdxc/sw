@@ -25,7 +25,7 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param      rdma_aq_rx_cqcb_process
     .param      rdma_aq_rx_wqe_process
     .param      rdma_resp_rx_stage0
-    .param      dummy
+    .param      tx_dummy
 .align
 rdma_aq_rx_aqcb_process:
 
@@ -107,7 +107,7 @@ create_qp:
     
     //populate the PC in RQCB0, RQCB1
     addi        r4, r0, rdma_resp_rx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
-    addi        r3, r0, dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    addi        r3, r0, tx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     sub         r4, r4, r3
     phvwr       p.rqcb0.intrinsic.pc, r4
     phvwr       p.rqcb1.pc, r4

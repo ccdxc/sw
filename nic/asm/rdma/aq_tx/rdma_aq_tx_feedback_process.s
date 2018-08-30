@@ -6,7 +6,7 @@
 #include "types.h"
 
 struct aq_tx_phv_t p;
-struct aq_tx_s5_t3_k k;
+struct aq_tx_s5_t0_k k;
 
 #define IN_TO_S_P to_s5_info
     

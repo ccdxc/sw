@@ -1790,6 +1790,22 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     return (HAL_RET_OK);
 }
 
+/*
+ * TODO: Need to remove this hardcoded values. They will go away 
+ * anyway once we move the code out to nicmgr.
+ */
+#define CAP_ADDR_BASE_INTR_INTR_OFFSET 0x6000000
+#define CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET 0x68000
+#define INTR_BASE               CAP_ADDR_BASE_INTR_INTR_OFFSET
+#define INTR_ASSERT_OFFSET      CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET
+#define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
+#define INTR_ASSERT_STRIDE      0x4
+
+static u_int64_t
+intr_assert_addr(const int intr)
+{
+    return INTR_ASSERT_BASE + (intr * INTR_ASSERT_STRIDE);
+}
 
 hal_ret_t
 rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
@@ -1834,8 +1850,10 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
     pd::hal_pd_call(pd::PD_FUNC_ID_GET_START_OFFSET, &pd_func_args);
     hbm_eq_intr_table_base = off_args.offset;
     HAL_ASSERT(hbm_eq_intr_table_base > 0);
-    eqcb.int_assert_addr = hbm_eq_intr_table_base + spec.int_num() * sizeof(uint8_t);
+    //eqcb.int_assert_addr = hbm_eq_intr_table_base + spec.int_num() * sizeof(uint8_t);
 
+    eqcb.int_assert_addr = intr_assert_addr(spec.int_num());
+    
     rsp->set_eq_intr_tbl_addr(eqcb.int_assert_addr);
 
     // write to hardware

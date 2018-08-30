@@ -1,17 +1,24 @@
 SRC_DIR = .
 TOPDIR = ../../..
 P4_DIR = $(TOPDIR)/p4/rdma
+PROJ=aq_tx
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
+SYM_DIR = $(TOPDIR)/sym/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
+ALT_ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/alt_asm_out/
 
 include $(TOPDIR)/make/Make.inc
 
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
-INC_DIR = -I ../common/include -I ./include -I ../../common-p4+/include -I$(TOPDIR)/include -I $(GEN_DIR)/rdma_aq_rxdma/asm_out -I$(TOPDIR)/p4/include
+INC_DIR = -I ../common/include -I ./include -I ../../common-p4+/include -I$(TOPDIR)/include -I $(GEN_DIR)/rdma_aq_rxdma/asm_out -I$(TOPDIR)/p4/include -I$(ALT_ASM_HDR_DIR)
 
 src = $(wildcard *.s)
 bin = $(src:.s=.bin)
+
+FILES = $(basename $(notdir $(BIN_FILES)))
+COMP_BIN_FILES = $(FILES:%=$(OBJ_DIR)/%.bin)
+COMP_SYM_FILES = $(FILES:%=$(SYM_DIR)/%.sym)
 
 LDFLAGS =
 CFLAGS = -g
@@ -22,10 +29,12 @@ asm: $(bin)
 
 .PHONY: clean
 clean:
+	@rm -fR $(COMP_BIN_FILES)
+	@rm -fR $(COMP_SYM_FILES)
 	@rm -fR $(OBJ_DIR)/*.bin
 
 %.bin: %.s
-	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIR) $(AS_DEFINES) $< -o $(OBJ_DIR)/$@
+	$(CAPAS_BIN) -t $(CAPAS_COV) $(INC_DIR) $(AS_DEFINES) $< -o $(OBJ_DIR)/$@ > $(SYM_DIR)/$(patsubst %.bin,%.sym,$(shell basename $(OBJ_DIR)/$@))
 
 TEST_FILES := \
 

@@ -49,7 +49,7 @@
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
 .align
-dummy:
+tx_dummy:
    nop.e
    nop
 

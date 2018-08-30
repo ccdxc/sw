@@ -24,7 +24,7 @@
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
 .align
-dummy:
+tx_dummy_ext:
    nop.e
    nop
 
@@ -61,14 +61,14 @@ eth_tx_stage0:
 //Do not change the order of this entry
 //This has to align with the rxdma_stage0.s program
 .align
-rdma_cq_tx_stage0:
+rdma_cq_tx_stage0_ext:
     nop.e
     nop
 
 //Do not change the order of this entry
 //This has to align with the rxdma_stage0.s program
 .align
-rdma_aq_tx_stage0:
+rdma_aq_tx_stage0_ext:
     nop.e
     nop
 

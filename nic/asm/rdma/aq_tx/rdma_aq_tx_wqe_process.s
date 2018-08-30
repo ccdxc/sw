@@ -13,10 +13,11 @@ struct aq_tx_s1_t0_k k;
     
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_SQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, sqcb_base_addr_hi) 
-
+#define K_RQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, rqcb_base_addr_hi)
+    
 %%
 
-    .param      dummy
+    .param      tx_dummy
     .param      rdma_cq_tx_stage0
     .param      rdma_req_tx_stage0    
     .param      rdma_aq_tx_feedback_process
@@ -87,10 +88,12 @@ reg_mr:
     srl         r1, d.mr.lkey, 8
     // XXX: Use KEY_USER_KEY_GET if KEY_INDEX_GET is deprecated after lkey format update
     and         r2, d.mr.lkey, 0xFF
+    
     phvwrpair   p.key.user_key, r2, p.key.state, KEY_STATE_VALID
     phvwrpair   p.key.type, MR_TYPE_MR, p.key.acc_ctrl, d.mr.access_flags[7:0]
     phvwrpair   p.key.log_page_size, d.mr.page_size_log2, p.key.len, d.mr.length[31:0]
-    phvwrpair   p.key.base_va, d.mr.va, p.key.pt_base, d.mr.tbl_index
+    add         r2, d.{mr.tbl_index}.wx, r0
+    phvwrpair   p.key.base_va, d.mr.va, p.key.pt_base, r2
     phvwrpair   p.key.pd, d.mr.pd_id, p.key.flags, 0x0B
     phvwrpair   p.key.mr_l_key, 0, p.key.mr_cookie, 0
 
@@ -101,8 +104,8 @@ reg_mr:
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_KT_UPDATE)
     DMA_PHV2MEM_SETUP(r6, c2, key, key, r4)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_PT_SRC_HOST)
-    add         r3, r0, d.mr.map_count, CAPRI_LOG_SIZEOF_U64
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r3, d.mr.dma_addr)
+    add         r3, r0, d.{mr.map_count}.wx, CAPRI_LOG_SIZEOF_U64
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r3, d.{mr.dma_addr}.dx)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_PT_DST_HBM)
 
     // pt_seg_size = HBM_NUM_PT_ENTRIES_PER_CACHE_LINE * lkey->hostmem_page_size
@@ -113,7 +116,7 @@ reg_mr:
 
     // hbm_add = (pt_seg_offset + lkey->pt_base) * 8 + (pt_base_addr)
     PT_BASE_ADDR_GET2(r2)
-    add         r4, r4, d.mr.tbl_index
+    add         r4, r4, d.{mr.tbl_index}.wx
     add         r5, r2, r4, CAPRI_LOG_SIZEOF_U64
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r3, r5)
 
@@ -127,36 +130,43 @@ create_cq:
     // r3 will have the pt_base_address where pt translations
     // should be copied to
     PT_BASE_ADDR_GET2(r4) 
-    add         r3, r4, d.cq.tbl_index, CAPRI_LOG_SIZEOF_U64
-    phvwrpair   p.cqcb.pt_base_addr, r3, p.cqcb.log_cq_page_size, d.cq.page_size_log2[4:0]
+    add         r3, r4, d.{cq.tbl_index}.wx, CAPRI_LOG_SIZEOF_U64
+    srl         r5, r3, CAPRI_LOG_SIZEOF_U64
+    phvwrpair   p.cqcb.pt_base_addr, r5, p.cqcb.log_cq_page_size, d.cq.page_size_log2[4:0]
     phvwrpair   p.cqcb.log_wqe_size, d.cq.stride_log2[4:0], p.cqcb.log_num_wqes, d.cq.depth_log2[4:0]
-    phvwrpair   p.cqcb.cq_id, d.id_ver[23:0], p.cqcb.eq_id, d.cq.eq_id[23:0]
+    add         r2, r0, d.{id_ver}.wx  //TODO: Need to optimize
+    phvwr       p.cqcb.cq_id, r2[23:0]
+    phvwr       p.cqcb.eq_id, d.cq.eq_id[23:0]
+    phvwrpair   p.cqcb.pt_pg_index, 0x1ff, p.cqcb.pt_next_pg_index, 0x1ff
     
     //Setup DMA to copy PT translations from host to HBM
-    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_PT)    
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_PT_SRC)    
 
-    add         r4, r0, d.cq.map_count, CAPRI_LOG_SIZEOF_U64
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.cq.dma_addr)
+    add         r4, r0, d.{cq.map_count}.wx, CAPRI_LOG_SIZEOF_U64
+   /*
+    * TODO: Need    to do lif encoding also in each host address else haps
+    * would fail.
+    */
+    or          r2, d.{cq.dma_addr}.dx, 0x1, 63
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, r2)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_PT_DST)        
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r3)
 
     // log_num_pages in r2
     add         r2, d.cq.depth_log2, d.cq.stride_log2
     sub         r2, r2, d.cq.page_size_log2
 
-    add         r1, r0, r0
-    mincr       r1, r2, 1
-    phvwr       p.cqcb.pt_next_pg_index, r1
-
     //compute the offset of the label of CQ program
     addi        r4, r0, rdma_cq_tx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
-    addi        r3, r0, dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    addi        r3, r0, tx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     sub         r4, r4, r3
     phvwr       p.cqcb.intrinsic.pc, r4
 
     //          setup the DMA for CQCB
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_CB)        
     CAPRI_GET_TABLE_0_K(aq_tx_phv_t, r7)
-    AQ_TX_CQCB_ADDR_GET(r1, d.id_ver[23:0], K_CQCB_BASE_ADDR_HI)
+    add         r2, r0, d.{id_ver}.wx  //TODO: Need to optimize
+    AQ_TX_CQCB_ADDR_GET(r1, r2[23:0], K_CQCB_BASE_ADDR_HI)
 
     DMA_PHV2MEM_SETUP(r6, c1, cqcb, cqcb, r1)
 
@@ -185,7 +195,7 @@ create_qp:
     
     //compute the offset of the label of CQ program
     addi        r4, r0, rdma_req_tx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
-    addi        r3, r0, dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    addi        r3, r0, tx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     sub         r4, r4, r3              
     phvwr       p.sqcb0.intrinsic.pc, r4
     
@@ -215,7 +225,7 @@ create_qp:
     
     //populate the PC in SQCB0, SQCB1
     addi        r4, r0, rdma_req_tx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
-    addi        r3, r0, dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    addi        r3, r0, tx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     sub         r4, r4, r3
     phvwr       p.sqcb0.intrinsic.pc, r4
     phvwr       p.sqcb1.pc, r4
@@ -223,28 +233,31 @@ create_qp:
     //Setup     DMA for SQ PT
 
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_QP_SQPT)
-    add         r4, r0, d.qp.sq_map_count, CAPRI_LOG_SIZEOF_U64
+    add         r4, r0, d.{qp.sq_map_count}.wx, CAPRI_LOG_SIZEOF_U64
 
     PT_BASE_ADDR_GET2(r4) 
-    add         r3, r4, d.qp.sq_tbl_index_xrcd_id, CAPRI_LOG_SIZEOF_U64
+    add         r3, r4, d.{qp.sq_tbl_index_xrcd_id}.wx, CAPRI_LOG_SIZEOF_U64
     phvwr       p.sqcb0.pt_base_addr, r3
 
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.qp.sq_dma_addr)
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.{qp.sq_dma_addr}.dx)
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r3)
 
     // setup DMA for SQCB
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_QP_CB)        
 
     CAPRI_GET_TABLE_0_K(aq_tx_phv_t, r7)
-    SQCB_ADDR_GET(r1, d.id_ver[23:0], K_SQCB_BASE_ADDR_HI)
+    add         r2, r0, d.{id_ver}.wx  //TODO: Need to optimize
+    SQCB_ADDR_GET(r1, r2[23:0], K_SQCB_BASE_ADDR_HI)
 
     DMA_PHV2MEM_SETUP(r6, c1, sqcb0, sqcb2, r1)
 
     phvwrpair   p.rdma_feedback.aq_completion.op, AQ_OP_TYPE_CREATE_QP, p.rdma_feedback.create_qp.rq_cq_id, d.qp.rq_cq_id[23:0]
     phvwrpair   p.rdma_feedback.create_qp.rq_depth_log2, d.qp.rq_depth_log2, p.rdma_feedback.create_qp.rq_stride_log2, d.qp.rq_stride_log2
     phvwrpair  p.rdma_feedback.create_qp.rq_page_size_log2, d.qp.rq_page_size_log2, p.rdma_feedback.create_qp.pd, d.qp.pd_id   
-    phvwr       p.p4_to_p4plus.create_qp_ext.rq_dma_addr, d.qp.rq_dma_addr
-    phvwrpair     p.rdma_feedback.create_qp.rq_type_state, d.type_state, p.rdma_feedback.create_qp.rq_id, d.id_ver[23:0]
+    phvwr       p.p4_to_p4plus.create_qp_ext.rq_dma_addr, d.{qp.rq_dma_addr}.dx
+    phvwr       p.rdma_feedback.create_qp.rq_type_state, d.type_state
+    add         r2, r0, d.{id_ver}.wx  //TODO: Need to optimize
+    phvwr p.rdma_feedback.create_qp.rq_id, r2[23:0]
 
     b           prepare_feedback
     nop
@@ -261,7 +274,9 @@ stats_dump:
         b           qp_dump
         nop
 
-    .brcase     1
+    .brcase     AQ_STATS_DUMP_TYPE_CQ
+        b           cq_dump
+        nop
     .brcase     2
     .brcase     3
     .brcase     4
@@ -281,25 +296,44 @@ stats_dump:
     .brend
 
 qp_dump:
-    //SQCB_ADDR_GET(r1, d.id_ver[55:32], K_SQCB_BASE_ADDR_HI)
-    //RQCB_ADDR_GET(r2, d.id_ver[55:32], K_RQCB_BASE_ADDR_HI)
 
+    add         r3, r0, d.{id_ver}.wx  //TODO: Need to optimize 
+    SQCB_ADDR_GET(r1, r3[23:0], K_SQCB_BASE_ADDR_HI)
+    RQCB_ADDR_GET(r2, r3[23:0], K_RQCB_BASE_ADDR_HI)
+
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
     DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB3_OFFSET_BYTES, r1)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
-    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB3_OFFSET_BYTES, d.stats.dma_addr)
+    or          r3, d.{stats.dma_addr}.dx, 0x1, 63 
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB3_OFFSET_BYTES, r3) 
+
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_3)
     DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB3_OFFSET_BYTES, r2)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_4)
-    add         r3, d.stats.dma_addr, CB3_OFFSET_BYTES
+    add         r3, r3, CB3_OFFSET_BYTES
     DMA_HOST_MEM2MEM_DST_SETUP(r6, CB3_OFFSET_BYTES, r3)
 
     b           prepare_feedback
     nop
 
+cq_dump:
+
+    add         r3, r0, d.{id_ver}.wx  //TODO: Need to optimize
+    CQCB_ADDR_GET(r1, r3[23:0], K_CQCB_BASE_ADDR_HI)
+
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB_UNIT_SIZE_BYTES, r1)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
+    or r2, d.{stats.dma_addr}.dx, 0x1, 63
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB_UNIT_SIZE_BYTES, r2)
+    
+    b           prepare_feedback
+    nop
+    
 modify_qp:
 
-    //SQCB_ADDR_GET(r1, d.id_ver[55:32], K_SQCB_BASE_ADDR_HI)
-    //RQCB_ADDR_GET(r2, d.id_ver[55:32], K_RQCB_BASE_ADDR_HI)
+    //SQCB_ADDR_GET(r1, d.{id_ver[23:0]}.wx, K_SQCB_BASE_ADDR_HI)
+    //RQCB_ADDR_GET(r2, d.{id_ver[23:0]}.wx, K_RQCB_BASE_ADDR_HI)
 
     add         r3, r0, d.dbid
 

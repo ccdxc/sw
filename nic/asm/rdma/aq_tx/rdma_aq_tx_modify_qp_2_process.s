@@ -78,7 +78,8 @@ rrq_base:
     andi        r6, r3, RDMA_UPDATE_QP_OPER_SET_DEST_RD_ATM // BD slot
 
     add         r7, r0, K_RRQ_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT
-    add         r7, r7, d.id_ver[23:0], LOG_RRQ_QP_SIZE
+    add         r4, r0, d.{id_ver}.wx  //TODO: Need to optimize
+    add         r7, r7, r4[23:0], LOG_RRQ_QP_SIZE
 
     //Invode sqcb1
     add         r4, r1, (CB_UNIT_SIZE_BYTES)
@@ -97,7 +98,8 @@ rrq_base:
 rsq_base:
     beq         r6, r0, done
     add         r7, r0, K_RSQ_BASE_ADDR_PAGE_ID, HBM_PAGE_SIZE_SHIFT // BD slot
-    add         r7, r7, d.id_ver[23:0], LOG_RSQ_QP_SIZE
+    add         r4, r0, d.{id_ver}.wx  //TODO: Need to optimize
+    add         r7, r7, r4[23:0], LOG_RSQ_QP_SIZE
 
     //Invoke rqcb0
     add         r4, r2, r0

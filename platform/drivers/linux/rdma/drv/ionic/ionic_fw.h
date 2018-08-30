@@ -573,15 +573,15 @@ struct ionic_v1_admin_query_qp {
 /* admin queue v1 opcodes */
 enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_NOOP,
-
+	IONIC_V1_ADMIN_CREATE_CQ = 1,
+    IONIC_V1_ADMIN_DEBUG = 12,
+    
 	/* TODO: move ops up as they are assigned opcode numbers in fw */
 	IONIC_V1_ADMIN_IMPL_BY_DRIVER = 50,
-	IONIC_V1_ADMIN_DEBUG,
 	IONIC_V1_ADMIN_STATS_HDRS,
 	IONIC_V1_ADMIN_STATS_VALS,
 	IONIC_V1_ADMIN_CREATE_MR,
 	IONIC_V1_ADMIN_DESTROY_MR,
-	IONIC_V1_ADMIN_CREATE_CQ,
 	IONIC_V1_ADMIN_DESTROY_CQ,
 	IONIC_V1_ADMIN_CREATE_QP,
 	IONIC_V1_ADMIN_MODIFY_QP,

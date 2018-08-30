@@ -16,7 +16,7 @@ struct aq_rx_s1_t3_k k;
 
 %%
 
-    .param      dummy
+    .param      tx_dummy
     .param      rdma_rq_tx_stage0
     
 .align
