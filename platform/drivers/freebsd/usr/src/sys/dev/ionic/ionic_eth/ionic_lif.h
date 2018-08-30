@@ -265,6 +265,16 @@ struct lif {
 //#define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)
 //#define lif_to_rxq(lif, i)	(&lif->rxqcqs[i]->q)
 
+
+static bool ionic_tx_avail(struct tx_qcq *txqcq, int want)
+{	
+	int avail;
+
+	avail = ionic_desc_avail(txqcq->num_descs, txqcq->cmd_head_index, txqcq->cmd_tail_index);
+
+	return (avail > want);
+}
+
 void ionic_open(void *arg);
 
 int ionic_lifs_alloc(struct ionic *ionic);

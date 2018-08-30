@@ -393,6 +393,7 @@ bool ionic_q_has_space(struct queue *q, unsigned int want);
 void ionic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index);
 
+int ionic_desc_avail(int ndescs, int head, int tail);
 void ionic_ring_doorbell(struct doorbell *db_addr, uint32_t qid, uint16_t p_index);
 
 #endif /* _IONIC_DEV_H_ */

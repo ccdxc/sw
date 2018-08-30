@@ -218,7 +218,7 @@ static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 
 	memcpy(&ctx->comp, comp, sizeof(*comp));
 
-	netdev_dbg(lif->netdev, "comp admin queue command:\n");
+	//IONIC_NETDEV_DEBUG(lif->netdev, "comp admin queue command:\n");
 	print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->comp, sizeof(ctx->comp), true);
 
@@ -230,7 +230,7 @@ int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 #ifdef ADMINQ
 	struct queue *adminq = &lif->adminqcq->q;
-	int err;
+	int err = 0;
 
 	spin_lock(&lif->adminq_lock);
 	if (!ionic_q_has_space(adminq, 1)) {
@@ -240,7 +240,7 @@ int ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 
 	memcpy(adminq->head->desc, &ctx->cmd, sizeof(ctx->cmd));
 
-	netdev_dbg(lif->netdev, "post admin queue command:\n");
+	//netdev_dbg(lif->netdev, "post admin queue command:\n");
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->cmd, sizeof(ctx->cmd), true);
 

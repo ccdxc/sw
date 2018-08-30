@@ -465,26 +465,7 @@ static int ionic_tx_map(struct tx_qcq *txqcq, int index, struct mbuf *m)
 }
 #endif
 
-static bool ionic_tx_avail(struct tx_qcq *txqcq, int ndescs)
-{	
-	int diff;
 
-	 diff = txqcq->cmd_tail_index - txqcq->cmd_head_index;
-	 if (diff == 1 ) /* Q full */
-	 	return (false);
-
-	IONIC_NETDEV_QINFO(txqcq, "diff %d\n", diff);
-	/* Wrap around condition. */
-	if (diff < 0)
-		diff = txqcq->num_descs + diff;
-
-
-	if (diff > ndescs)
-		return (true);
-
-	return true;
-//	return (false);
-}
 
 static int ionic_tx_setup(struct tx_qcq *txqcq, struct mbuf *m)
 {

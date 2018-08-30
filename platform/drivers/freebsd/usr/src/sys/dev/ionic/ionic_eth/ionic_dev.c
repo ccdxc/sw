@@ -445,6 +445,20 @@ void ionic_q_rewind(struct queue *q, struct desc_info *start)
 	q->head = start;
 }
 
+
+int ionic_desc_avail(int ndescs, int head, int tail) 
+{
+	int avail = tail;
+
+	if (head >= tail)
+		avail += ndescs - head - 1;
+	else
+		avail -= head + 1;
+
+	return avail;
+}
+
+
 unsigned int ionic_q_space_avail(struct queue *q)
 {
 	unsigned int avail = q->tail->index;
