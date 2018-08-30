@@ -454,7 +454,7 @@ public static convertOperatorString(opStr: string): string {
         return metaORspec + '.' + inputString.trim();
       }
     } else {
-      if (!inputString.startsWith('meta.labels')) {
+      if (inputString.startsWith('meta.labels')) {
         return inputString.trim();
       } else  {
         return 'meta.labels.' + inputString.trim();

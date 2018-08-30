@@ -31,7 +31,7 @@
 
 
 .searchresult-button-category-kind-entry-kind {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
   font-style: italic;
   color: #676763;
@@ -62,7 +62,9 @@
 
 .searchresult-button-category-kind-entry-label-text {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 500;
+  display: inline-block;
+  min-width: 120px;
 }
 
 .searchresult-kind-template {

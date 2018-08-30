@@ -139,11 +139,10 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    */
   filterVeniceApplicationSearchSuggestions(event: any) {
     const searchstring = event.query;
-    const formattedString = SearchUtil.formatInputString(searchstring);
-    if (formattedString !== searchstring) {
-      this.setSearchInputString(formattedString);
-    }
+    let formattedString = SearchUtil.formatInputString(searchstring);
+    // We don't want to change user search input while user is typing. But we want to buidl suggestion using valid criteria in order to avoid search REST API error.
     if (formattedString.length > 2) {
+      formattedString = this.cleanupInputstring(formattedString);
       this.getVeniceApplicationSearchSuggestions(formattedString);
     }
     this._searchwidget.loading = false;
@@ -308,7 +307,9 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
         this.displaySuggestionPanelVisible(true);
       } else {
         this._searchwidget.isInGuidedSearchMode = false; // close guided-search overlay panel
-        this._controllerService.publish(Eventtypes.SEARCH_RESULT_LOAD_REQUEST, {id: 'searchresult'});
+        const payload = { id: 'searchresult' }; // empty payload
+        this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA] = payload;
+        this._controllerService.publish(Eventtypes.SEARCH_RESULT_LOAD_REQUEST, payload);
         this.displaySuggestionPanelVisible(false);
       }
     });
@@ -377,7 +378,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     const values = obj.value.split(',');
     for (let i = 0; i < values.length; i++) {
       let exprStrCategory = values[i];
-      exprStrCategory = Utility.makeFirstLetterUppercase(exprStrCategory.toLowerCase());
+      exprStrCategory = Utility.makeFirstLetterUppercase(exprStrCategory);
       if (SearchUtil.isValidCategory(exprStrCategory)) {
         output.push(exprStrCategory);
       }
@@ -390,7 +391,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     const values = obj.value.split(',');
     for (let i = 0; i < values.length; i++) {
       let exprStrKind = values[i];
-      exprStrKind = Utility.makeFirstLetterUppercase(exprStrKind.toLowerCase());
+      exprStrKind = Utility.makeFirstLetterUppercase(exprStrKind);
       if (SearchUtil.isValidKind(exprStrKind)) {
         output.push(exprStrKind);
       }
@@ -503,10 +504,81 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     if (this.shouldRunTextSearch(searched)) {
       payload = this.buildTextSearchPayload(searched);
     } else {
-      payload = this.buildComplexSearchPayload(grammarList, searched);
+      const cleangrammarList = this.cleanupSearchInput(grammarList);
+      payload = this.buildComplexSearchPayload(cleangrammarList, searched);
+      const newSearchInput = this.cleangrammarListToString(cleangrammarList);
+      if (!Utility.isEmpty(newSearchInput)) {
+       this.setSearchInputString(newSearchInput);
+      } else {
+        // input can be "in:abc" - where abc is not a valid category
+        payload = this.buildTextSearchPayload(searched);
+      }
     }
     const payloadJSON = JSON.stringify(payload);
     this._callSearchRESTAPI(payloadJSON, searched, mode);
+  }
+
+  private cleangrammarListToString(cleangrammarList: any, isAllowEmpty: boolean = false) {
+    const strlist = [];
+    cleangrammarList.filter(obj => {
+      if (!Utility.isEmpty(obj.value)) {
+        strlist.push(obj.type + ':' + obj.value);
+      } else {
+        if (isAllowEmpty) {
+          strlist.push(obj.type + ':' + obj.value);
+        }
+      }
+    });
+    const newSearchInput = strlist.join(' ');
+    return newSearchInput;
+  }
+
+  /**
+   * Clean up input-string
+   * @param inputString
+   */
+  private cleanupInputstring(inputString: string): string {
+    let outputString = inputString;
+    if (Utility.isEmpty(inputString)) {
+      return outputString; // do nothing
+    }
+    const grammarList = this.parseInput(inputString);
+    if (this.shouldRunTextSearch(inputString)) {
+      return outputString;
+    } else {
+      const cleangrammarList = this.cleanupSearchInput(grammarList);
+      const cleanString = this.cleangrammarListToString(cleangrammarList, true);
+      if (! Utility.isEmpty(cleanString)) {
+        outputString = cleanString;  // prevent input such as "is:,ahello " to mess up.
+      }
+    }
+    // This is for debug - // console.log (this.getClassName() + '.cleanupInputstring()', inputString, outputString);
+    return outputString;
+  }
+
+  /**
+   * This API clean up input string to ensure searched kind and category are valid.
+   * For example
+   * Input as in:Cluster,abc is:Node,world has:meta.name=node1,namespace=default tag:_category=Cluster  (abc, world are not valid)
+   * to
+   * in:Cluster is:Node has:meta.name=node1,namespace=default tag:_category=Cluster
+   */
+  private cleanupSearchInput(inputlist: any[]): any {
+    const list = Utility.getLodash().cloneDeep(inputlist);
+    for (let i = 0; i < list.length; i++) {
+      const obj = list[i];
+      switch (obj.type) {
+        case SearchsuggestionTypes.OP_IN:
+          obj['value'] = this.buildCategoriesPayload(obj).join(',');
+          break;
+        case SearchsuggestionTypes.OP_IS:
+          obj['value'] = this.buildKindsPayload(obj).join(',');
+          break;
+        default:
+          break;
+      }
+    }
+    return list;
   }
 
   /**

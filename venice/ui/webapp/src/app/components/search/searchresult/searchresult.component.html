@@ -40,7 +40,17 @@
                                 </div>
                                 <div class="searchresult-button-category-kind-entry-content">{{entry.object.meta.name}} {{entry.object.meta.uuid}} </div>
                                 <div class="searchresult-button-category-kind-entry-label">
-                                    <span class="searchresult-button-category-kind-entry-label-text">Labels: </span> {{displayLabels(entry)}} </div>
+                                    <span class="searchresult-button-category-kind-entry-label-text">Labels: </span> {{displayLabels(entry)}}
+                                 </div>
+                                 <!-- in case it is an Event object, we display more information -->
+                                <div *ngIf="entry.object.kind=='Event'">
+                                    <div *ngFor="let eventKey of getEventKeys(entry)">
+                                        <div class="searchresult-button-category-kind-entry-label">
+                                            <span class="searchresult-button-category-kind-entry-label-text">{{eventKey}}: </span> 
+                                            {{displayEventValue(entry.object[eventKey])}} 
+                                        </div>
+                                    </div>
+                                </div>
                                 <hr/>
                             </div>
                         </div>

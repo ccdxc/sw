@@ -184,6 +184,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     this.sourceIpFormControl.setValue('');
     this.destIpFormControl.setValue('');
     this.portFormControl.setValue('');
+    this.errorMessage = '';
     if (this.selectedRuleIndex != null) {
       this.selectedRuleIndex = null;
       // scroll back to top

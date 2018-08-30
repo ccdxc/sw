@@ -58,13 +58,13 @@
                 <input matInput (keyup)="keyUpInput($event)"  [formControl]="portFormControl" placeholder="Protocol / Port" maxlength="15" autocomplete="off">
               </mat-form-field>
               <mat-icon fxFlex="none" class="sgpolicy-search-button"
-                        (click)="invokePolicySearch()"
+                        (click)="invokePolicySearch()" (keydown)="($event.which ==13)? invokePolicySearch() : return " tabindex="0"
                         *ngIf="showSearchButton()" >
                 search
               </mat-icon>
               <mat-icon fxFlex="none" class="sgpolicy-search-clear-button"
-                        (click)="clearSearch()"
-                        *ngIf="showSearchButton()" >
+                        (click)="clearSearch()"   (keydown)="($event.which ==13)? clearSearch() : return " tabindex="0"
+                        *ngIf="showSearchButton()"  tabindex="0" >
                close 
               </mat-icon>
               <div class="sgpolicy-search-error" fxFlex="none" fxLayoutAlign="start center" *ngIf="searchErrorMessage !== null && searchErrorMessage !== ''">

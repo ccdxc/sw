@@ -243,7 +243,7 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
     switch (event.which) {
       case SearchUtil.EVENT_KEY_ENTER:
         const query = this.getInputText();
-        this.onInvokeSearch(event, false);  // invoke search to get search-result. (2nd parameter is true)
+        this.onInvokeSearch(event, false);  // invoke search to get get search result. (2nd parameter is false)
         break;
       case SearchUtil.EVENT_KEY_LEFT:
       case SearchUtil.EVENT_KEY_UP:

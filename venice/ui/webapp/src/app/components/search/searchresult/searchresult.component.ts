@@ -218,11 +218,42 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   displayLabels(entry): string {
     const list = [];
     if (entry.object.meta.labels != null) {
-      const keys = Object.keys(entry.object.meta.labels);
-      keys.forEach(key => {
-        list.push(key + ' = ' + entry.object.meta.labels[key]);
-      });
+      return this.getObjectValues(entry.object.meta.labels);
     }
+    return list.toString();
+  }
+
+  /**
+   * This API serves html template.
+   * Get displayable key for Event object
+   * @param entry
+   */
+  getEventKeys(entry): string [] {
+    const wantedKeys = [];
+    Object.keys(entry.object).filter(key => {
+      if (key !== 'meta' && key !== 'kind') {
+       wantedKeys.push(key);
+      }
+    });
+    return wantedKeys;
+  }
+
+  displayEventValue(eventValue): string {
+    if (typeof eventValue === 'string' ) {
+      return eventValue;
+    }
+    if ( eventValue instanceof Object) {
+      return this.getObjectValues(eventValue);
+    }
+    return JSON.stringify(eventValue);
+  }
+
+  private getObjectValues(eventValue: any): string {
+    const list = [];
+    const keys = Object.keys(eventValue);
+    keys.forEach(key => {
+      list.push(key + ' = ' + eventValue[key]);
+    });
     return list.toString();
   }
 
