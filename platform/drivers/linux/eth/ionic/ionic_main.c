@@ -16,6 +16,8 @@
  *
  */
 
+//#define DEBUG
+
 #include <linux/module.h>
 #include <linux/version.h>
 #include <linux/netdevice.h>
@@ -31,8 +33,8 @@ MODULE_AUTHOR("Scott Feldman <sfeldma@gmail.com>");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION);
 
-unsigned int ntxq_descs = 1024;
-unsigned int nrxq_descs = 1024;
+unsigned int ntxq_descs = 64;
+unsigned int nrxq_descs = 64;
 module_param(ntxq_descs, uint, 0);
 module_param(nrxq_descs, uint, 0);
 MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");
@@ -46,9 +48,10 @@ MODULE_PARM_DESC(ntxqs, "Hard set the number of Tx queues per LIF");
 MODULE_PARM_DESC(nrxqs, "Hard set the number of Rx queues per LIF");
 
 unsigned int devcmd_timeout = 30;
+#ifdef HAPS
 module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
-
+#endif
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
@@ -83,6 +86,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 				name = cmd->name;
 		netdev_err(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
 			   name, ctx->comp.comp.status);
+        dbg_printk(__FILE__, __FUNCTION__, __LINE__, -EIO);
 		return -EIO;
 	}
 
@@ -93,11 +97,17 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	int err;
 
+    //printk("Calling ionic_api_adminq_post\n");
 	err = ionic_api_adminq_post(lif, ctx);
 	if (err)
+    {
+        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		return err;
+    }
 
+    //printk("%s: Waiting for completion...\n\n\n", __FUNCTION__);
 	wait_for_completion(&ctx->work);
+    //printk ("got completion!!!\n");
 
 	return ionic_adminq_check_err(lif, ctx);
 }
@@ -108,14 +118,17 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	struct cq *cq = napi_to_cq(napi);
 	unsigned int work_done;
 
+    trace_msg("%s: \n", __FUNCTION__)
 	work_done = ionic_cq_service(cq, budget, cb, cb_arg);
 
 	if (work_done > 0)
 		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
 
+    trace_msg("%s: \n", __FUNCTION__)
 	if ((work_done < budget) && napi_complete_done(napi, work_done))
 		ionic_intr_mask(cq->bound_intr, false);
 
+    //printk("%s:%d:%s : returning work_done = %d, budget = %d", __FILE__, __LINE__, __FUNCTION__, work_done, budget);
 	return work_done;
 }
 
@@ -159,6 +172,7 @@ static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
 	u8 status;
 
 	status = ionic_dev_cmd_status(idev);
+
 	switch (status) {
 	case 0:
 		return 0;
@@ -171,6 +185,9 @@ int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 {
 	int err;
 
+#ifdef DPS_FASTMODEL
+    return 0;
+#endif
 	err = ionic_dev_cmd_wait(idev, max_wait);
 	if (err)
 		return err;
@@ -250,13 +267,14 @@ static int SBD_put(struct ionic_dev *idev, void *src, size_t len)
 	return 0;
 }
 
-static void ionic_dev_cmd_work(struct work_struct *work)
+void ionic_dev_cmd_work(struct work_struct *work)
 {
 	struct ionic *ionic = container_of(work, struct ionic, cmd_work);
 	struct ionic_admin_ctx *ctx;
 	unsigned long irqflags;
 	int err = 0;
 
+    trace_print(__FILE__, __FUNCTION__, __LINE__, "starting work");
 	spin_lock_irqsave(&ionic->cmd_lock, irqflags);
 	if (list_empty(&ionic->cmd_list)) {
 		spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
@@ -268,12 +286,14 @@ static void ionic_dev_cmd_work(struct work_struct *work)
 	list_del(&ctx->list);
 	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
 
+    trace_print(__FILE__, __FUNCTION__, __LINE__, "post adming dev command");
+
 	dev_dbg(ionic->dev, "post admin dev command:\n");
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->cmd, sizeof(ctx->cmd), true);
 
 	if (ctx->side_data) {
-		dynamic_hex_dump("data ", DUMP_PREFIX_OFFSET, 16, 1,
+		print_hex_dump_debug("data ", DUMP_PREFIX_OFFSET, 16, 1,
 				 ctx->side_data, ctx->side_data_len, true);
 
 		err = SBD_put(&ionic->idev, ctx->side_data, ctx->side_data_len);
@@ -281,13 +301,23 @@ static void ionic_dev_cmd_work(struct work_struct *work)
 			goto err_out;
 	}
 
+    trace_print(__FILE__, __FUNCTION__, __LINE__, "calling ionic_dev_cmd_go");
 	ionic_dev_cmd_go(&ionic->idev, (void *)&ctx->cmd);
+    trace_print(__FILE__, __FUNCTION__, __LINE__, "ionic_dev_cmd_go finished!!!");
 
+    trace_print(__FILE__, __FUNCTION__, __LINE__, "calling ionic_dev_cmd_wait_check");
 	err = ionic_dev_cmd_wait_check(&ionic->idev, HZ * devcmd_timeout);
 	if (err)
+    {
+        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		goto err_out;
-
+    }
+    
+    trace_print(__FILE__, __FUNCTION__, __LINE__, "ionic_dev_cmd_wait_check finished!!!");
+    
+    trace_print(__FILE__, __FUNCTION__, __LINE__, "calling ionic_dev_cmd_comp");
 	ionic_dev_cmd_comp(&ionic->idev, &ctx->comp);
+    trace_print(__FILE__, __FUNCTION__, __LINE__, "ionic_dev_cmd_comp finished!!!");
 
 	if (ctx->side_data) {
 		err = SBD_get(&ionic->idev, ctx->side_data, ctx->side_data_len);
@@ -303,7 +333,9 @@ err_out:
 	if (WARN_ON(err))
 		memset(&ctx->comp, 0xAB, sizeof(ctx->comp));
 
+    trace_print(__FILE__, __FUNCTION__, __LINE__, "calling complete_all");
 	complete_all(&ctx->work);
+    trace_print(__FILE__, __FUNCTION__, __LINE__, "complete_all finished");
 
 	schedule_work(&ionic->cmd_work);
 }

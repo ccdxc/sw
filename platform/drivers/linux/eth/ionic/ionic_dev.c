@@ -21,13 +21,17 @@
 #include <linux/errno.h>
 #include <linux/io.h>
 #include <linux/slab.h>
-
+#include <linux/dma-mapping.h>
+#include <linux/netdevice.h>
+#include <linux/etherdevice.h>
+#
 #include "ionic_dev.h"
+#include "ionic_lif.h"
+#include "ionic.h"
 
 /* BAR0 resources
  */
 
-#define BAR0_SIZE			0x8000
 
 #define BAR0_DEV_CMD_REGS_OFFSET	0x0000
 #define BAR0_DEV_CMD_DB_OFFSET		0x1000
@@ -404,6 +408,7 @@ void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa)
 void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		  void *cb_arg)
 {
+    //unsigned int mem_sz = 0;
 	q->head->cb = cb;
 	q->head->cb_arg = cb_arg;
 	q->head = q->head->next;
@@ -415,6 +420,12 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 			.ring = 0,
 			.p_index = q->head->index,
 		};
+#if 0
+        printk("Flushing the cache before ringing doorbell\n");
+
+        mem_sz = ALIGN((q->num_descs*q->desc_size), PAGE_SIZE);
+        dma_sync_single_for_device(q->lif->ionic->dev, q->base_pa, mem_sz, DMA_TO_DEVICE);
+#endif
 
 		//printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring "
 		//	 "0 p_index %d db %p\n", q->name, q->qid,

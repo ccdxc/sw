@@ -21,8 +21,25 @@
 
 #include "ionic_if.h"
 
+//#define DPS_FASTMODEL   1
+
+#ifndef DPS_FASTMODEL
+#define HAPS 1
+#endif //DPS_FASTMODEL
+
 #define IONIC_MIN_MTU		ETH_MIN_MTU
 #define IONIC_MAX_MTU		9200
+
+#define BAR0_SIZE			0x8000
+
+#define dbg_printk(file, func, line, err) printk("ERROR: %s:%d:%s err: %d\n", file, line, func, err)
+
+//#define trace_msg(format, ...) {printk("TRACE: %s:%d: ", __FILE__, __LINE__); printk(format, ##__VA_ARGS__);}
+#define trace_msg(format, ...) 
+//#define trace_msg(file, func, line) printk("TRACE: %s:%d:%s: \n", file, line, func)
+
+//#define trace_print(file, func, line, msg) printk("TRACE: %s:%d:%s: message: %s\n", file, line, func, msg)
+#define trace_print(file, func, line, msg) 
 
 #pragma pack(push, 1)
 
