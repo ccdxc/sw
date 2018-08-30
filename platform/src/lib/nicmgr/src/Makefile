@@ -3,7 +3,7 @@
 #
 
 LIBRARY = libnicmgr.so
-SOURCES = hal_client.cc dev.cc eth_dev.cc accel_dev.cc
+SOURCES = hal_client.cc dev.cc eth_dev.cc accel_dev.cc logger.cc
 
 
 LCFLAGS = \

@@ -18,14 +18,14 @@ else
     ARGS="-c $NICMGR_CONFIG_PATH/device.json"
 fi
 
-LD_LIBRARY_PATH=$NICMGR_LIBRARY_PATH $PLATFORM_DIR/bin/nicmgrd $ARGS > /nicmgr.log 2>&1 &
+LD_LIBRARY_PATH=$NICMGR_LIBRARY_PATH $PLATFORM_DIR/bin/nicmgrd $ARGS &
 [[ $? -ne 0 ]] && echo "Failed to start NICMGR!" && exit 1
 
 echo "NICMGR WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
 
 while [ 1 ]
 do
-    OUTPUT="$(tail /nicmgr.log 2>&1 | grep "Polling enabled")"
+    OUTPUT="$(tail $NICMGR_LOG_FILE 2>&1 | grep "Polling enabled")"
     if [[  ! -z "$OUTPUT" ]]; then
 	break
     fi

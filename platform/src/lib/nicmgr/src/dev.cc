@@ -16,6 +16,7 @@
 #include "dev.hpp"
 #include "eth_dev.hpp"
 #include "accel_dev.hpp"
+#include "logger.hpp"
 #include "sdk/pal.hpp"
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
@@ -72,6 +73,8 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
 {
     hal = new HalClient(fwd_mode);
 
+    utils::logger::init();
+
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
 #elif __aarch64__
@@ -111,16 +114,16 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
     // Init QState
     uint64_t hbm_base = NICMGR_BASE;
     uint8_t tmp[sizeof(struct nicmgr_req_desc)] = { 0 };
-    printf("[INFO] nicmgr hbm 0x%lx\n", hbm_base);
+    NIC_LOG_INFO("nicmgr hbm {:#x}", hbm_base);
 
     ring_size = 4096;
     req_ring_base = hbm_base;
     resp_ring_base = hbm_base + (sizeof(struct nicmgr_req_desc) * ring_size);
 
-    printf("[INFO] nicmgr req qstate address 0x%lx\n", info.qstate_addr[NICMGR_QTYPE_REQ]);
-    printf("[INFO] nicmgr resp qstate address 0x%lx\n", info.qstate_addr[NICMGR_QTYPE_RESP]);
-    printf("[INFO] nicmgr req queue address 0x%lx\n", req_ring_base);
-    printf("[INFO] nicmgr resp queue address 0x%lx\n", resp_ring_base);
+    NIC_LOG_INFO("nicmgr req qstate address {:#x}", info.qstate_addr[NICMGR_QTYPE_REQ]);
+    NIC_LOG_INFO("nicmgr resp qstate address {:#x}", info.qstate_addr[NICMGR_QTYPE_RESP]);
+    NIC_LOG_INFO("nicmgr req queue address {:#x}", req_ring_base);
+    NIC_LOG_INFO("nicmgr resp queue address {:#x}", resp_ring_base);
 
     req_head = ring_size - 1;
     req_tail = 0;
@@ -197,16 +200,13 @@ DeviceManager::LoadConfig(string path)
 
     // Create Network
     if (spec.get_child_optional("network")) {
-        // cout << "network" << endl;
         // Create VRFs
         if (spec.get_child_optional("network.vrf")) {
-            // cout << "network.vrf" << endl;
             for (const auto &node : spec.get_child("network.vrf")) {
-                // cout << "foreach(network.vrf)" << endl;
                 auto val = node.second;
                 auto vrf_handle = hal->VrfCreate(val.get<uint32_t>("id"));
                 if (vrf_handle == 0) {
-                    cerr << "[ERROR] " << "Failed to create vrf" << endl;
+                    NIC_LOG_ERR("Failed to create vrf");
                     return -1;
                 }
             } // foreach vrf
@@ -214,15 +214,13 @@ DeviceManager::LoadConfig(string path)
 
         // Create L2Segments
         if (spec.get_child_optional("network.l2seg")) {
-            // cout << "network.l2seg" << endl;
             for (const auto &node : spec.get_child("network.l2seg")) {
-                // cout << "foreach(network.l2seg)" << endl;
                 auto val = node.second;
                 auto l2seg_handle = hal->L2SegmentCreate(val.get<uint64_t>("vrf"),
                                                     val.get<uint64_t>("id"),
                                                     val.get<uint16_t>("vlan"));
                 if (l2seg_handle == 0) {
-                    cerr << "Failed to create l2segment for vlan" << endl;
+                    NIC_LOG_ERR("Failed to create l2segment for vlan");
                     return -1;
                 }
             } // foreach l2seg
@@ -230,34 +228,30 @@ DeviceManager::LoadConfig(string path)
 
         // Create Uplinks
         if (spec.get_child_optional("network.uplink")) {
-            // cout << "network.uplink" << endl;
             for (const auto &node : spec.get_child("network.uplink")) {
-                // cout << "foreach(network.uplink)" << endl;
                 auto val = node.second;
                 auto uplink_handle = hal->UplinkCreate(val.get<uint64_t>("id"),
                                                 val.get<uint64_t>("port"),
                                                 val.get<uint64_t>("native_l2seg", 0));
                 if (uplink_handle == 0) {
-                    cerr << "Failed to create uplink interface" << endl;
+                    NIC_LOG_ERR("Failed to create uplink interface");
                     return -1;
                 }
 
                 // Add native l2segment on uplink
                 if (hal->AddL2SegmentOnUplink(val.get<uint64_t>("id"),
                     val.get<uint64_t>("native_l2seg", 0))) {
-                    cerr << "Failed to add vlan on uplink" << endl;
+                    NIC_LOG_ERR("Failed to add vlan on uplink");
                     // TODO: Currently hal returns incorrect status, when
                     // vl2seg is already added on uplink.
                 }
 
                 // Add vlans to uplink
                 if (val.get_optional<string>("nonnative_l2seg")) {
-                    // cout << "network.uplink.nonnative_l2seg" << endl;
                     for (const auto &l2seg : val.get_child("nonnative_l2seg")) {
-                        // cout << "foreach(network.uplink.nonnative_l2seg)" << endl;
                         if (hal->AddL2SegmentOnUplink(val.get<uint64_t>("id"),
                             boost::lexical_cast<uint64_t>(l2seg.second.data()))) {
-                            cerr << "Failed to add vlan on uplink" << endl;
+                            NIC_LOG_ERR("Failed to add vlan on uplink");
                             // TODO: Currently hal returns incorrect status, when
                             // vl2seg is already added on uplink.
                         }
@@ -280,7 +274,7 @@ DeviceManager::LoadConfig(string path)
             // TODO: For now interrupts must be 256 aligned. The allocator does not support
             //       aligning resource ids, so allocate 256.
             if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
-                printf("[ERROR] lif%lu: Failed to allocate interrupts\n", info.hw_lif_id);
+                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
                 return -1;
             }
 
@@ -295,7 +289,7 @@ DeviceManager::LoadConfig(string path)
             eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
             if (eth_spec->lif_id == 0) {
                 if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
-                    printf("[ERROR] Failed to allocate lif\n");
+                    NIC_LOG_ERR("Failed to allocate lif");
                     return -1;
                 }
                 eth_spec->lif_id = LIF_ID_BASE + lif_id;
@@ -310,7 +304,7 @@ DeviceManager::LoadConfig(string path)
             eth_spec->enic_id = val.get<uint64_t>("network.enic", 0);
             if (eth_spec->enic_id == 0) {
                 if (enic_allocator->alloc(&enic_id) != sdk::lib::indexer::SUCCESS) {
-                    printf("[ERROR] Failed to allocate enic\n");
+                    NIC_LOG_ERR("Failed to allocate enic");
                     return -1;
                 }
                 eth_spec->enic_id = ENIC_ID_BASE + enic_id;
@@ -333,7 +327,7 @@ DeviceManager::LoadConfig(string path)
             // TODO: For now interrupts must be 256 aligned. The allocator does not support
             //       aligning resource ids, so allocate 256.
             if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
-                printf("[ERROR] lif%lu: Failed to allocate interrupts\n", info.hw_lif_id);
+                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
                 return -1;
             }
 
@@ -360,7 +354,7 @@ DeviceManager::LoadConfig(string path)
             eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
             if (eth_spec->lif_id == 0) {
                 if (lif_allocator->alloc(&lif_id) != sdk::lib::indexer::SUCCESS) {
-                    printf("[ERROR] Failed to allocate lif\n");
+                    NIC_LOG_ERR("Failed to allocate lif");
                     return -1;
                 }
                 eth_spec->lif_id = LIF_ID_BASE + lif_id;
@@ -375,7 +369,7 @@ DeviceManager::LoadConfig(string path)
             eth_spec->enic_id = val.get<uint64_t>("network.enic", 0);
             if (eth_spec->enic_id == 0) {
                 if (enic_allocator->alloc(&enic_id) != sdk::lib::indexer::SUCCESS) {
-                    printf("[ERROR] Failed to allocate enic\n");
+                    NIC_LOG_ERR("Failed to allocate enic");
                     return -1;
                 }
                 eth_spec->enic_id = ENIC_ID_BASE + enic_id;
@@ -399,7 +393,7 @@ DeviceManager::LoadConfig(string path)
             // TODO: For now interrupts must be 256 aligned. The allocator does not support
             //       aligning resource ids, so allocate 256.
             if (intr_allocator->alloc_block(&intr_base, 256) != sdk::lib::indexer::SUCCESS) {
-                printf("[ERROR] lif%lu: Failed to allocate interrupts\n", info.hw_lif_id);
+                NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
                 return -1;
             }
 
@@ -425,10 +419,10 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 
     switch (type) {
     case MNIC:
-        cerr << "[ERROR] : Unsupported Device Type MNIC" << endl;
+        NIC_LOG_ERR("Unsupported Device Type MNIC");
         return NULL;
     case DEBUG:
-        cerr << "[ERROR] : Unsupported Device Type DEBUG" << endl;
+        NIC_LOG_ERR("Unsupported Device Type DEBUG");
         return NULL;
     case ETH:
         eth_dev = new Eth(hal, dev_spec);
@@ -439,10 +433,10 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         devices[accel_dev->info.hw_lif_id] = (Device *)accel_dev;
         return (Device *)accel_dev;
     case NVME:
-        cerr << "[ERROR] : Unsupported Device Type NVME" << endl;
+        NIC_LOG_ERR("Unsupported Device Type NVME");
         return NULL;
     case VIRTIO:
-        cerr << "[ERROR] : Unsupported Device Type VIRTIO" << endl;
+        NIC_LOG_ERR("Unsupported Device Type VIRTIO");
         return NULL;
     default:
         return NULL;
@@ -511,21 +505,15 @@ DeviceManager::AdminQPoll()
 
     if (req_tail != c_index0) {
 
-        printf("[INFO] request: PRE: p_index0 %d, c_index0 %d, head %d, tail %d\n",
+        NIC_LOG_INFO("request: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, req_head, req_tail);
 
         // Read nicmgr request descriptor
         req_desc_addr = req_ring_base + (sizeof(req_desc) * req_tail);
         READ_MEM(req_desc_addr, (uint8_t *)&req_desc, sizeof(req_desc));
 
-        // printf("[DEBUG] request:");
-        // for (uint32_t i = 0; i < sizeof(req_desc); i++) {
-        //     printf(" %02x", ((uint8_t *)&req_desc)[i]);
-        // }
-        // printf("\n");
-
-        printf("[INFO] request: lif %u qtype %u qid %u comp_index %u"
-               " adminq_qstate_addr 0x%lx desc_addr 0x%lx\n",
+        NIC_LOG_INFO("request: lif {} qtype {} qid {} comp_index {}"
+               " adminq_qstate_addr {:#x} desc_addr {:#x}",
                req_desc.lif, req_desc.qtype, req_desc.qid,
                req_desc.comp_index, req_desc.adminq_qstate_addr,
                req_desc_addr);
@@ -533,7 +521,7 @@ DeviceManager::AdminQPoll()
         // Process devcmd
         Device *dev = (Device *)devices[req_desc.lif];
         if (dev == NULL) {
-            printf("[ERROR] Invalid AdminQ request for lif %u!\n", req_desc.lif);
+            NIC_LOG_ERR("Invalid AdminQ request for lif {}!", req_desc.lif);
         } else {
             dev->CmdHandler(&req_desc.cmd, (void *)&req_data,
                 &resp_desc.comp, (void *)&resp_data);
@@ -543,7 +531,7 @@ DeviceManager::AdminQPoll()
         req_head = (req_head + 1) & (ring_size - 1);
         req_tail = (req_tail + 1) & (ring_size - 1);
         req_db_data = req_head;
-        printf("[INFO] req_db_addr %lx req_db_data %lx\n", req_db_addr, req_db_data);
+        NIC_LOG_INFO("req_db_addr {:#x} req_db_data {:#x}", req_db_addr, req_db_data);
         WRITE_DB64(req_db_addr, req_db_data);
 
         invalidate_txdma_cacheline(req_qstate_addr);
@@ -554,7 +542,7 @@ DeviceManager::AdminQPoll()
         READ_MEM(req_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
                  (uint8_t *)&c_index0, sizeof(c_index0));
 
-        printf("[INFO] request: POST: p_index0 %d, c_index0 %d, head %d, tail %d\n",
+        NIC_LOG_INFO("request: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, req_head, req_tail);
 
         // Write nicmgr response descriptor
@@ -566,7 +554,7 @@ DeviceManager::AdminQPoll()
         READ_MEM(resp_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
                  (uint8_t *)&c_index0, sizeof(c_index0));
 
-        printf("[INFO] response: PRE: p_index0 %d, c_index0 %d, head %d, tail %d\n",
+        NIC_LOG_INFO("response: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, resp_head, resp_tail);
 
         resp_desc_addr = resp_ring_base + (sizeof(resp_desc) * resp_tail);
@@ -577,14 +565,8 @@ DeviceManager::AdminQPoll()
         resp_desc.comp_index = req_desc.comp_index;
         resp_desc.adminq_qstate_addr = req_desc.adminq_qstate_addr;
 
-        // printf("[DEBUG] response:");
-        // for (uint32_t i = 0; i < sizeof(resp_desc); i++) {
-        //     printf(" %02x", ((uint8_t *)&resp_desc)[i]);
-        // }
-        // printf("\n");
-
-        printf("[INFO] response: lif %u qtype %u qid %u comp_index %u"
-               " adminq_qstate_addr 0x%lx desc_addr 0x%lx\n",
+        NIC_LOG_INFO("response: lif {} qtype {} qid {} comp_index {}"
+               " adminq_qstate_addr {:#x} desc_addr {:#x}",
                resp_desc.lif, resp_desc.qtype, resp_desc.qid,
                resp_desc.comp_index, resp_desc.adminq_qstate_addr,
                resp_desc_addr);
@@ -594,7 +576,7 @@ DeviceManager::AdminQPoll()
         // Ring doorbell to update the PI and run nicmgr response program
         resp_tail = (resp_tail + 1) & (ring_size - 1);
         resp_db_data = resp_tail;
-        printf("[INFO] resp_db_addr %lx resp_db_data %lx\n", resp_db_addr, resp_db_data);
+        NIC_LOG_INFO("resp_db_addr {:#x} resp_db_data {:#x}", resp_db_addr, resp_db_data);
         WRITE_DB64(resp_db_addr, resp_db_data);
 
         invalidate_txdma_cacheline(resp_qstate_addr);
@@ -605,7 +587,7 @@ DeviceManager::AdminQPoll()
         READ_MEM(resp_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
                  (uint8_t *)&c_index0, sizeof(c_index0));
 
-        printf("[INFO] response: POST: p_index0 %d, c_index0 %d, head %d, tail %d\n",
+        NIC_LOG_INFO("response: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, resp_head, resp_tail);
     }
 }

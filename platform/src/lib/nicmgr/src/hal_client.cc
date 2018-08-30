@@ -12,6 +12,7 @@
 #include <map>
 #include <thread>
 #include <chrono>
+#include <sstream>
 #include <grpc++/grpc++.h>
 
 #include "types.grpc.pb.h"
@@ -22,6 +23,7 @@
 #include "multicast.grpc.pb.h"
 #include "rdma.grpc.pb.h"
 
+#include "logger.hpp"
 #include "hal_client.hpp"
 
 using namespace kh;
@@ -41,16 +43,15 @@ HalClient::HalClient(enum ForwardingMode fwd_mode)
         url = string("localhost:") + getenv("HAL_GRPC_PORT");
     }
 
-    cout << "[INFO] Connecting to HAL @ " << url << endl;
+    NIC_LOG_INFO("Connecting to HAL @ {}", url);
     channel = CreateChannel(url, InsecureChannelCredentials());
 
-    cout << "[INFO] Waiting for HAL to be ready ..." << endl;
+    NIC_LOG_INFO("Waiting for HAL to be ready ...");
     auto state = channel->GetState(true);
     while (state != GRPC_CHANNEL_READY) {
         // Wait for State change or deadline
         channel->WaitForStateChange(state, gpr_time_from_seconds(1, GPR_TIMESPAN));
         state = channel->GetState(true);
-        // cout << "[INFO] Connecting to HAL, channel status = " << channel->GetState(true) << endl;
     }
 
     vrf_stub_ = Vrf::NewStub(channel);
@@ -75,34 +76,35 @@ HalClient::VrfProbe()
     VrfGetResponseMsg   rsp_msg;
     ClientContext       context;
     Status              status;
+    int err = 0;
 
     req = req_msg.add_request();
     status = vrf_stub_->VrfGet(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            } else {
-                cout << "[INFO] Discovered Vrf"
-                     << " handle " << rsp.status().vrf_handle()
-                     << " id " << rsp.spec().key_or_handle().vrf_id()
-                     << endl;
+            if (rsp.api_status() == types::API_STATUS_OK) {
+                NIC_FUNC_INFO("Discovered, id {} handle {}",
+                    rsp.spec().key_or_handle().vrf_id(),
+                    rsp.status().vrf_handle());
                 vrf_id2handle[rsp.spec().key_or_handle().vrf_id()] = rsp.status().vrf_handle();
+            } else {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                err = -1;
             }
         }
+        return err;
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
+    return -1;
 }
 
 uint64_t
 HalClient::VrfGet(uint64_t vrf_id)
 {
-    /*
+
     VrfGetRequest       *req __attribute__((unused));
     VrfGetResponse      rsp;
     VrfGetRequestMsg    req_msg;
@@ -119,24 +121,22 @@ HalClient::VrfGet(uint64_t vrf_id)
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            } else {
+            if (rsp.api_status() == types::API_STATUS_OK) {
                 vrf_handle = rsp.status().vrf_handle();
                 assert(rsp.spec().key_or_handle().vrf_id() == vrf_id);
-                cout << "[INFO] Got Vrf"
-                     << " handle " << vrf_handle << " id " << vrf_id
-                     << endl;
+                NIC_FUNC_INFO("API status {}, id {} handle {}",
+                    rsp.api_status(), vrf_id, vrf_handle);
                 vrf_id2handle[vrf_id] = vrf_handle;
+                return vrf_handle;
+            } else {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
             }
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        return 0;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
-    */
 
-    return vrf_id2handle[vrf_id];
+    return 0;
 }
 
 uint64_t
@@ -151,7 +151,7 @@ HalClient::VrfCreate(uint64_t vrf_id)
 
     // if vrf exists then don't try to create it
     if (vrf_id2handle.find(vrf_id) != vrf_id2handle.end()) {
-        return VrfGet(vrf_id);
+        return vrf_id2handle[vrf_id];
     }
 
     spec = req_msg.add_request();
@@ -162,17 +162,15 @@ HalClient::VrfCreate(uint64_t vrf_id)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            cout << "[INFO] VRF create succeeded, handle = "
-                 << rsp.vrf_status().vrf_handle()
-                 << endl;
+            NIC_FUNC_INFO("API status {}, id {} handle {}", vrf_id,
+                rsp.api_status(), rsp.vrf_status().vrf_handle());
             vrf_id2handle[vrf_id] = rsp.vrf_status().vrf_handle();
             return rsp.vrf_status().vrf_handle();
         } else {
-            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            NIC_FUNC_ERR("API status {}, id {}", rsp.api_status(), vrf_id);
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return 0;
@@ -182,13 +180,7 @@ HalClient::VrfCreate(uint64_t vrf_id)
  * Uplink APIs
  */
 uint64_t
-HalClient::UplinkGet(uint64_t port_num)
-{
-    return uplink2id[port_num];
-}
-
-uint64_t
-HalClient::UplinkCreate(uint64_t uplink_if_id, uint64_t port_num, uint64_t native_l2seg_id)
+HalClient::UplinkCreate(uint64_t uplink_id, uint64_t port_num, uint64_t native_l2seg_id)
 {
     InterfaceSpec           *spec;
     InterfaceResponse       rsp;
@@ -198,11 +190,11 @@ HalClient::UplinkCreate(uint64_t uplink_if_id, uint64_t port_num, uint64_t nativ
     Status                  status;
 
     if (uplink2id.find(port_num) != uplink2id.end()) {
-        return UplinkGet(port_num);
+        return uplink2id[port_num];
     }
 
     spec = req_msg.add_request();
-    spec->mutable_key_or_handle()->set_interface_id(uplink_if_id);
+    spec->mutable_key_or_handle()->set_interface_id(uplink_id);
     spec->set_type(::intf::IfType::IF_TYPE_UPLINK);
     spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
     spec->mutable_if_uplink_info()->set_port_num(port_num);
@@ -213,31 +205,29 @@ HalClient::UplinkCreate(uint64_t uplink_if_id, uint64_t port_num, uint64_t nativ
     status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-        } else {
-            cout << "[INFO] Uplink create succeeded, handle = "
-                 << rsp.status().if_handle()
-                 << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("API status {}, id {} handle {}",
+                rsp.api_status(), uplink_id, rsp.status().if_handle());
             uplink2id[port_num] = rsp.status().if_handle();
             return rsp.status().if_handle();
+        } else {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return 0;
 }
 
 int
-HalClient::UplinkDelete(uint64_t uplink_if_id)
+HalClient::UplinkDelete(uint64_t uplink_id)
 {
     if (fwd_mode == FWD_MODE_SMART_NIC) {
         return 0;
     }
 
-    return InterfaceDelete(uplink_if_id);
+    return InterfaceDelete(uplink_id);
 }
 
 /**
@@ -254,35 +244,35 @@ HalClient::L2SegmentProbe()
     Status                      status;
     uint64_t                    l2seg_handle, l2seg_id;
     uint32_t                    vlan_id;
+    int err = 0;
 
     req = req_msg.add_request();
     status = l2seg_stub_->L2SegmentGet(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            } else {
+            if (rsp.api_status() == types::API_STATUS_OK) {
                 if (rsp.spec().wire_encap().encap_type() == ENCAP_TYPE_DOT1Q) {
                     l2seg_handle = rsp.status().l2segment_handle();
                     l2seg_id = rsp.spec().key_or_handle().segment_id();
                     vlan_id = rsp.spec().wire_encap().encap_value();
-                    cout << "[INFO] Discovered L2Segment"
-                         << " handle " << l2seg_handle
-                         << " id " << l2seg_id
-                         << " VLAN " << vlan_id << endl;
+                    NIC_FUNC_INFO("Discovered, id {} handle {} vlan {}",
+                         l2seg_id, l2seg_handle, vlan_id);
                     l2seg_id2handle[l2seg_id] = l2seg_handle;
                     vlan2seg[vlan_id] = l2seg_id;
                     seg2vlan[l2seg_id] = vlan_id;
                 }
+            } else {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                err = -1;
             }
         }
+        return err;
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
+    return -1;
 }
 
 uint64_t
@@ -302,26 +292,24 @@ HalClient::L2SegmentGet(uint64_t l2seg_id)
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            } else {
+            if (rsp.api_status() == types::API_STATUS_OK) {
                 if (rsp.spec().wire_encap().encap_type() == ENCAP_TYPE_DOT1Q) {
                     l2seg_handle = rsp.status().l2segment_handle();
                     l2seg_id = rsp.spec().key_or_handle().segment_id();
                     vlan_id = rsp.spec().wire_encap().encap_value();
-                    cout << "[INFO] Discovered L2Segment"
-                         << " handle " << l2seg_handle
-                         << " id " << l2seg_id
-                         << " VLAN " << vlan_id << endl;
+                    NIC_FUNC_INFO("Discovered, id {} handle {} vlan {}",
+                        l2seg_id, l2seg_handle, vlan_id);
                     l2seg_id2handle[l2seg_id] = l2seg_handle;
                     vlan2seg[vlan_id] = l2seg_id;
                     seg2vlan[l2seg_id] = vlan_id;
                     return l2seg_handle;
                 }
+            } else {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
             }
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return -1;
@@ -354,20 +342,19 @@ HalClient::L2SegmentCreate(uint64_t vrf_id, uint64_t l2seg_id, uint16_t vlan_id)
     status = l2seg_stub_->L2SegmentCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-        } else {
+        if (rsp.api_status() == types::API_STATUS_OK) {
             l2seg_handle = rsp.l2segment_status().l2segment_handle();
-            cout << "[INFO] L2 segment create succeeded, handle = "
-                  << l2seg_handle
-                  << endl;
+            NIC_FUNC_INFO("API status {}, id {} handle {}",
+                rsp.api_status(), l2seg_id, l2seg_handle);
             l2seg_id2handle[l2seg_id] = l2seg_handle;
             vlan2seg[vlan_id] = l2seg_id;
             seg2vlan[l2seg_id] = vlan_id;
             return l2seg_handle;
+        } else {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
         return -1;
     }
 
@@ -375,7 +362,7 @@ HalClient::L2SegmentCreate(uint64_t vrf_id, uint64_t l2seg_id, uint16_t vlan_id)
 }
 
 int
-HalClient::AddL2SegmentOnUplink(uint64_t uplink_if_id, uint64_t l2seg_id)
+HalClient::AddL2SegmentOnUplink(uint64_t uplink_id, uint64_t l2seg_id)
 {
     InterfaceL2SegmentSpec           *spec __attribute__((unused));
     InterfaceL2SegmentResponse       rsp;
@@ -386,28 +373,25 @@ HalClient::AddL2SegmentOnUplink(uint64_t uplink_if_id, uint64_t l2seg_id)
 
     spec = req_msg.add_request();
     spec->mutable_l2segment_key_or_handle()->set_segment_id(l2seg_id);
-    spec->mutable_if_key_handle()->set_interface_id(uplink_if_id);
+    spec->mutable_if_key_handle()->set_interface_id(uplink_id);
 
     status = intf_stub_->AddL2SegmentOnUplink(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            cout << "[INFO] L2 Segment id = " << l2seg_id
-                        << " add to uplink id = " << uplink_if_id
-                        << " succeeded"
-                        << endl;
+            NIC_FUNC_INFO("API status {}, l2seg id {} uplink id {}",
+                rsp.api_status(), l2seg_id, uplink_id);
         } else if (rsp.api_status() == types::API_STATUS_EXISTS_ALREADY) {
-            cout << "[INFO] L2 Segment id = " << l2seg_id
-                        << " already added to uplink id = " << uplink_if_id
-                        << endl;
+            NIC_FUNC_WARN("API status {}, l2seg id {} uplink id {}",
+                rsp.api_status(), l2seg_id, uplink_id);
         } else {
-            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
             return -1;
         }
 
         return 0;
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
         return -1;
     }
 
@@ -452,19 +436,18 @@ HalClient::EnicCreate(uint64_t enic_id,
     status = HalClient::intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-        } else {
-            cout << "[INFO] ENIC create succeeded, handle = "
-                 << rsp.status().if_handle()
-                 << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("API status {}, id {} handle {}",
+                rsp.api_status(), enic_id, rsp.status().if_handle());
             lif2enic_map[lif_id] = enic_id;
             enic_map[enic_id] = *spec;
             enic_id2handle[enic_id] = rsp.status().if_handle();
             return rsp.status().if_handle();
+        } else {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return 0;
@@ -492,28 +475,31 @@ HalClient::EndpointProbe()
     EndpointGetResponseMsg      rsp_msg;
     ClientContext               context;
     Status                      status;
+    int err = 0;
 
     req_msg.add_request();
     status = HalClient::ep_stub_->EndpointGet(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            } else {
+            if (rsp.api_status() == types::API_STATUS_OK) {
                 enic_id = rsp.spec().endpoint_attrs().interface_key_handle().interface_id();
-                cout << "[INFO] Discovered Endpoint handle = " << rsp.status().endpoint_handle()
-                     << " enic id " << enic_id << endl;
+                NIC_FUNC_INFO("Discovered, handle {} enic id {} mac {:#x} l2seg id {}",
+                    rsp.status().endpoint_handle(), enic_id,
+                    rsp.spec().key_or_handle().endpoint_key().l2_key().mac_address(),
+                    rsp.spec().key_or_handle().endpoint_key().l2_key().l2segment_key_handle().segment_id());
                 enic2ep_map[enic_id].push_back(rsp.status().endpoint_handle());
+            } else {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                err = -1;
             }
         }
-
+        return err;
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
+    return -1;
 }
 
 uint64_t
@@ -540,23 +526,23 @@ HalClient::EndpointCreate(uint64_t vrf_id, uint64_t l2seg_id,
     status = HalClient::ep_stub_->EndpointCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-        } else {
-            cout << "[INFO] Endpoint create succeeded, handle = "
-                 << rsp.endpoint_status().endpoint_handle()
-                 << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("succeeded, enic {} mac {:#x} l2seg id {} handle {}",
+                mac_addr, l2seg_id, rsp.endpoint_status().endpoint_handle());
             return rsp.endpoint_status().endpoint_handle();
+        } else {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return 0;
 }
 
 int
-HalClient::EndpointDelete(uint64_t vrf_id, uint64_t handle)
+HalClient::EndpointDelete(uint64_t vrf_id, uint64_t l2seg_id,
+                          uint64_t enic_id, uint64_t mac_addr)
 {
     EndpointDeleteRequest           *req;
     EndpointDeleteResponse          rsp;
@@ -571,24 +557,21 @@ HalClient::EndpointDelete(uint64_t vrf_id, uint64_t handle)
 
     req = req_msg.add_request();
     req->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
-    req->mutable_key_or_handle()->set_endpoint_handle(handle);
+    req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
+    req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac_addr);
+
     status = HalClient::ep_stub_->EndpointDelete(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Handle = " << handle
-                 << ", Status = " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] Endpoint delete succeeded, handle = " << handle << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("succeeded, enic {} mac {:#x} l2seg id {}",
+                enic_id, mac_addr, l2seg_id);
             return 0;
+        } else {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Handle = " << handle
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return -1;
@@ -606,40 +589,41 @@ HalClient::InterfaceProbe()
     InterfaceGetResponse        rsp;
     InterfaceGetRequestMsg      req_msg;
     InterfaceGetResponseMsg     rsp_msg;
+    int err = 0;
 
     req = req_msg.add_request();
     status = intf_stub_->InterfaceGet(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            } else {
+            if (rsp.api_status() == types::API_STATUS_OK) {
                 if (rsp.spec().type() == IF_TYPE_UPLINK) {
-                    cout << "[INFO] Discovered Uplink Interface"
-                         << " handle = " << rsp.status().if_handle()
-                         << " id = " << rsp.spec().key_or_handle().interface_id()
-                         << " port = " << rsp.spec().if_uplink_info().port_num() << endl;
+                    NIC_FUNC_INFO("Discovered, id {} handle {} port {}",
+                        rsp.spec().key_or_handle().interface_id(),
+                        rsp.status().if_handle(),
+                        rsp.spec().if_uplink_info().port_num());
                     uplink2id[rsp.spec().if_uplink_info().port_num()] = rsp.status().if_handle();
                 }
                 if (rsp.spec().type() == IF_TYPE_ENIC) {
-                    cout << "[INFO] Discovered Enic Interface"
-                         << " handle = " << rsp.status().if_handle()
-                         << " id = " << rsp.spec().key_or_handle().interface_id()
-                         << " lif = " << rsp.spec().if_enic_info().lif_key_or_handle().lif_id() << endl;
-
+                    NIC_FUNC_INFO("Discovered, id {} handle {} lif {}",
+                        rsp.spec().key_or_handle().interface_id(),
+                        rsp.status().if_handle(),
+                        rsp.spec().if_enic_info().lif_key_or_handle().lif_id());
                     lif2enic_map[rsp.spec().if_enic_info().lif_key_or_handle().lif_id()] = rsp.spec().key_or_handle().interface_id();
                     enic_map[rsp.spec().key_or_handle().interface_id()] = rsp.spec();
                     enic_id2handle[rsp.spec().key_or_handle().interface_id()] = rsp.status().if_handle();
                 }
+            } else {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                err = -1;
             }
         }
+        return err;
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
+    return -1;
 }
 
 int
@@ -657,13 +641,8 @@ HalClient::InterfaceDelete(uint64_t if_id)
     status = HalClient::intf_stub_->InterfaceDelete(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << if_id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] Interface delete succeeded, id = " << if_id << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("succeeded, id {}", if_id);
             // Update State
             for (map<uint64_t, uint64_t>::iterator it = lif2enic_map.begin();
                     it != lif2enic_map.end(); it++) {
@@ -676,12 +655,11 @@ HalClient::InterfaceDelete(uint64_t if_id)
             enic2ep_map.erase(if_id);
             enic_id2handle.erase(if_id);
             return 0;
+        } else {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Id = " << if_id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return -1;
@@ -699,25 +677,27 @@ HalClient::LifProbe()
     LifGetResponseMsg rsp_msg;
     ClientContext context;
     Status status;
+    int err = 0;
 
     req = req_msg.add_request();
     status = intf_stub_->LifGet(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            } else {
-                cout << "[INFO] Discovered Lif id = " << rsp.spec().key_or_handle().lif_id() << endl;
+            if (rsp.api_status() == types::API_STATUS_OK) {
+                NIC_FUNC_INFO("Discovered, id {}", rsp.spec().key_or_handle().lif_id());
                 lif_map[rsp.spec().key_or_handle().lif_id()] = LifSpec(rsp.spec());
+            } else {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                err = -1;
             }
         }
+        return err;
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
+    return -1;
 }
 
 uint64_t
@@ -734,35 +714,28 @@ HalClient::LifGet(uint64_t lif_id, struct lif_info *lif_info)
     req->mutable_key_or_handle()->set_lif_id(lif_id);
     status = intf_stub_->LifGet(&context, req_msg, &rsp_msg);
     if (status.ok()) {
-        for (int i = 0; i < rsp_msg.response().size(); i++) {
-            rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__
-                     << ": Id = " << lif_id
-                     << ", Status = " << rsp.api_status()
-                     << endl;
-            } else {
-                cout << "[INFO] Get Lif " << rsp.spec().key_or_handle().lif_id() << endl;
+        rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("API status {}, lif {} hw_lif_id {}",
+                rsp.api_status(), rsp.spec().key_or_handle().lif_id(),
+                rsp.status().hw_lif_id());
 
-                lif_info->hw_lif_id = rsp.status().hw_lif_id();
-                for (int i = 0; i < rsp.qstate().size(); i++) {
-                    auto & qstate = rsp.qstate()[i];
-                    cout << "[INFO] lif " << rsp.status().hw_lif_id()
-                         << " qtype " << qstate.type_num()
-                         << " qstate 0x" << hex << qstate.addr() << resetiosflags(ios::hex)
-                         << endl;
-                    lif_info->qstate_addr[qstate.type_num()] = qstate.addr();
-                }
-                lif_map[rsp.spec().key_or_handle().lif_id()] = LifSpec(rsp.spec());
-
-                return rsp.spec().key_or_handle().lif_id();
+            lif_info->hw_lif_id = rsp.status().hw_lif_id();
+            for (int i = 0; i < rsp.qstate().size(); i++) {
+                auto & qstate = rsp.qstate()[i];
+                NIC_FUNC_INFO("lif {} hw_lif_id {} qtype {} qstate_base {:#x}",
+                    rsp.spec().key_or_handle().lif_id(), rsp.status().hw_lif_id(),
+                    qstate.type_num(), qstate.addr());
+                lif_info->qstate_addr[qstate.type_num()] = qstate.addr();
             }
+            lif_map[rsp.spec().key_or_handle().lif_id()] = LifSpec(rsp.spec());
+
+            return rsp.spec().key_or_handle().lif_id();
+        } else {
+            NIC_FUNC_ERR("API status {}, lif {}", rsp.api_status(), lif_id);
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Id = " << lif_id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return 0;
@@ -822,36 +795,28 @@ HalClient::LifCreate(uint64_t lif_id,
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            cout << "[INFO] Lif create succeeded, id = "
-                 << lif_id
-                 << ", hw_lif_id = "
-                 << rsp.status().hw_lif_id()
-                 << endl;
+            NIC_FUNC_INFO("API status {}, lif {} hw_lif_id {}",
+                rsp.api_status(), lif_id, rsp.status().hw_lif_id());
 
             lif_info->hw_lif_id = rsp.status().hw_lif_id();
             for (int i = 0; i < rsp.qstate().size(); i++) {
                 auto & qstate = rsp.qstate()[i];
-                cout << "[INFO] lif " << rsp.status().hw_lif_id()
-                     << " qtype " << qstate.type_num()
-                     << " qstate 0x" << hex << qstate.addr() << resetiosflags(ios::hex)
-                     << endl;
+                NIC_FUNC_INFO("lif {} hw_lif_id {} qtype {} qstate_base {:#x}",
+                    lif_id, rsp.status().hw_lif_id(), qstate.type_num(), qstate.addr());
                 lif_info->qstate_addr[qstate.type_num()] = qstate.addr();
             }
+
             lif_map[lif_id] = LifSpec(*spec);
             return rsp.status().lif_handle();
         } else if (rsp.api_status() == types::API_STATUS_EXISTS_ALREADY) {
+            NIC_FUNC_INFO("API status {}, lif {} hw_lif_id {}",
+                rsp.api_status(), lif_id, rsp.status().hw_lif_id());
             return LifGet(lif_id, lif_info);
         } else {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << lif_id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Id = " << lif_id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return 0;
@@ -872,28 +837,22 @@ HalClient::LifDelete(uint64_t lif_id)
     status = intf_stub_->LifDelete(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << lif_id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] Lif delete succeeded, id = " << lif_id << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("API status {}, lif {}", rsp.api_status(), lif_id);
             lif_map.erase(lif_id);
             return 0;
+        } else {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Id = " << lif_id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return -1;
 }
 
 int
-HalClient::LifSetVlanStrip(uint64_t lif_id, bool enable)
+HalClient::LifSetVlanOffload(uint64_t lif_id, bool strip, bool insert)
 {
     ClientContext context;
     Status status;
@@ -903,81 +862,35 @@ HalClient::LifSetVlanStrip(uint64_t lif_id, bool enable)
     LifResponseMsg rsp_msg;
 
     if (lif_map.find(lif_id) == lif_map.end()) {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
-        cout << *this << endl;
+        NIC_FUNC_ERR("Invalid lif id {}", lif_id);
         return (-1);
     }
+
     lif_spec = req_msg.add_request();
     lif_spec->CopyFrom(lif_map[lif_id]);
     lif_spec->mutable_key_or_handle()->set_lif_id(lif_id);
-    lif_spec->set_vlan_strip_en(enable);
+    lif_spec->set_vlan_strip_en(strip);
+    lif_spec->set_vlan_insert_en(insert);
+
     status = intf_stub_->LifUpdate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << lif_id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] " << __FUNCTION__ << " succeeded, id =" << lif_id << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("API status {}, lif {}", rsp.api_status(), lif_id);
             lif_map[lif_id] = *lif_spec;
             return 0;
+        } else {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Id = " << lif_id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return -1;
 }
 
 int
-HalClient::LifSetVlanInsert(uint64_t lif_id, bool enable)
-{
-    ClientContext context;
-    Status status;
-    LifSpec *lif_spec;
-    LifResponse rsp;
-    LifRequestMsg req_msg;
-    LifResponseMsg rsp_msg;
-
-    if (lif_map.find(lif_id) == lif_map.end()) {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
-        cout << *this << endl;
-        return (-1);
-    }
-    lif_spec = req_msg.add_request();
-    lif_spec->CopyFrom(lif_map[lif_id]);
-    lif_spec->mutable_key_or_handle()->set_lif_id(lif_id);
-    lif_spec->set_vlan_insert_en(enable);
-    status = intf_stub_->LifUpdate(&context, req_msg, &rsp_msg);
-    if (status.ok()) {
-        rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << lif_id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] " << __FUNCTION__ << " succeeded, id =" << lif_id << endl;
-            lif_map[lif_id] = *lif_spec;
-            return 0;
-        }
-    } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Id = " << lif_id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
-    }
-
-    return -1;
-}
-
-int
-HalClient::LifSetBroadcast(uint64_t lif_id, bool enable)
+HalClient::LifSetFilterMode(uint64_t lif_id, bool bcast, bool all_mc, bool promisc)
 {
     ClientContext context;
     Status status;
@@ -991,120 +904,29 @@ HalClient::LifSetBroadcast(uint64_t lif_id, bool enable)
     }
 
     if (lif_map.find(lif_id) == lif_map.end()) {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
-        cout << *this << endl;
+        NIC_FUNC_ERR("Invalid lif id {}", lif_id);
         return -1;
     }
+
     lif_spec = req_msg.add_request();
     lif_spec->CopyFrom(lif_map[lif_id]);
     lif_spec->mutable_key_or_handle()->set_lif_id(lif_id);
-    lif_spec->mutable_packet_filter()->set_receive_broadcast(enable);
+    lif_spec->mutable_packet_filter()->set_receive_broadcast(bcast);
+    lif_spec->mutable_packet_filter()->set_receive_all_multicast(all_mc);
+    lif_spec->mutable_packet_filter()->set_receive_promiscuous(promisc);
+
     status = intf_stub_->LifUpdate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << lif_id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         } else {
-            cout << "[INFO] " << __FUNCTION__ << " succeeded, id = " << lif_id << endl;
+            NIC_FUNC_INFO("API status {}, lif {}", rsp.api_status(), lif_id);
             lif_map[lif_id] = *lif_spec;
             return 0;
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Id = " << lif_id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
-    }
-
-    return -1;
-}
-
-int
-HalClient::LifSetAllMulticast(uint64_t lif_id, bool enable)
-{
-    ClientContext context;
-    Status status;
-    LifSpec *lif_spec;
-    LifResponse rsp;
-    LifRequestMsg req_msg;
-    LifResponseMsg rsp_msg;
-
-    if (fwd_mode == FWD_MODE_SMART_NIC) {
-        return 0;
-    }
-
-    if (lif_map.find(lif_id) == lif_map.end()) {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
-        cout << *this << endl;
-        return -1;
-    }
-    lif_spec = req_msg.add_request();
-    lif_spec->CopyFrom(lif_map[lif_id]);
-    lif_spec->mutable_key_or_handle()->set_lif_id(lif_id);
-    lif_spec->mutable_packet_filter()->set_receive_all_multicast(enable);
-    status = intf_stub_->LifUpdate(&context, req_msg, &rsp_msg);
-    if (status.ok()) {
-        rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << lif_id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] " << __FUNCTION__ << " succeeded, id = " << lif_id << endl;
-            lif_map[lif_id] = *lif_spec;
-            return 0;
-        }
-    } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Id = " << lif_id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
-    }
-
-    return -1;
-}
-
-int
-HalClient::LifSetPromiscuous(uint64_t lif_id, bool enable)
-{
-    ClientContext context;
-    Status status;
-    LifSpec *lif_spec;
-    LifResponse rsp;
-    LifRequestMsg req_msg;
-    LifResponseMsg rsp_msg;
-
-    if (lif_map.find(lif_id) == lif_map.end()) {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
-        cout << *this << endl;
-        return (-1);
-    }
-    lif_spec = req_msg.add_request();
-    lif_spec->CopyFrom(lif_map[lif_id]);
-    lif_spec->mutable_key_or_handle()->set_lif_id(lif_id);
-    lif_spec->mutable_packet_filter()->set_receive_promiscuous(enable);
-    status = intf_stub_->LifUpdate(&context, req_msg, &rsp_msg);
-    if (status.ok()) {
-        rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << lif_id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] " << __FUNCTION__ << " succeeded, id = " << lif_id << endl;
-            lif_map[lif_id] = *lif_spec;
-            return 0;
-        }
-    } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Id = " << lif_id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return -1;
@@ -1121,8 +943,7 @@ HalClient::LifSetRssConfig(uint64_t lif_id, LifRssType type, string key, string 
     LifResponseMsg rsp_msg;
 
     if (lif_map.find(lif_id) == lif_map.end()) {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Invalid Lif id " << lif_id << endl;
-        cout << *this << endl;
+        NIC_FUNC_ERR("Invalid lif id {}", lif_id);
         return -1;
     }
     lif_spec = req_msg.add_request();
@@ -1134,21 +955,15 @@ HalClient::LifSetRssConfig(uint64_t lif_id, LifRssType type, string key, string 
     status = intf_stub_->LifUpdate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": Id = " << lif_id
-                 << ", Status = " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] " << __FUNCTION__ << " succeeded, id = " << lif_id << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("API status {}, id {}", rsp.api_status(), lif_id);
             lif_map[lif_id] = *lif_spec;
             return 0;
+        } else {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": Id = " << lif_id
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return -1;
@@ -1168,40 +983,36 @@ HalClient::MulticastProbe()
     MulticastEntryGetRequestMsg req_msg;
     MulticastEntryGetResponseMsg rsp_msg;
     uint64_t vrf_id = 1, l2seg_id, group;
+    stringbuf buf;
+    ostream os(&buf);
+    int err = 0;
 
     req = req_msg.add_request();
     status = multicast_stub_->MulticastEntryGet(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__
-                     << " status " << rsp.api_status()
-                     << endl;
-            } else {
+            if (rsp.api_status() == types::API_STATUS_OK) {
                 group = rsp.spec().key_or_handle().key().mac().group();
                 l2seg_id = rsp.spec().key_or_handle().key().l2segment_key_handle().segment_id();
-                cout << "[INFO] Discovered"
-                     << " group " << hex << group << resetiosflags(ios::hex)
-                     << " vrf_id " <<  vrf_id
-                     << " l2seg_id " << l2seg_id
-                     << endl;
+
                 for (auto it = rsp.spec().oif_key_handles().cbegin();
                         it != rsp.spec().oif_key_handles().cend(); it++) {
-                    cout << "[INFO] Discovered"
-                         << " group " << hex << group << resetiosflags(ios::hex)
-                         << " vrf_id " <<  vrf_id
-                         << " l2seg_id " << l2seg_id
-                         << " if_id " << it->interface_id()
-                         << endl;
+                    os << it->interface_id() << " ";
                     tuple<uint64_t, uint64_t, uint64_t> key(vrf_id, l2seg_id, group);
                     mcast_groups[key].push_back(it->interface_id());
                 }
+
+                NIC_FUNC_INFO("Discovered, vrf_id {} l2seg_id {} group {:#x} oif_ids {}",
+                    vrf_id, l2seg_id, group, buf.str());
+            } else {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                err = -1;
             }
         }
-        return 0;
+        return err;
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return -1;
@@ -1219,45 +1030,36 @@ HalClient::MulticastGroupGet(uint64_t group,
     MulticastEntryGetRequestMsg req_msg;
     MulticastEntryGetResponseMsg rsp_msg;
     tuple<uint64_t, uint64_t, uint64_t> key;
+    stringbuf buf;
+    ostream os(&buf);
 
     req = req_msg.add_request();
     req->mutable_meta()->set_vrf_id(vrf_id);
     req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
     req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
+
     status = multicast_stub_->MulticastEntryGet(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             rsp = rsp_msg.response(i);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cerr << "[ERROR] " << __FUNCTION__
-                     << ": group " << hex << group << resetiosflags(ios::hex)
-                     << " vrf_id " << vrf_id
-                     << " l2seg_id " << l2seg_id
-                     << " status " << rsp.api_status()
-                     << endl;
-            } else {
-                cout << "[INFO] Discovered"
-                     << " group " << hex << group << resetiosflags(ios::hex)
-                     << " vrf_id " <<  vrf_id
-                     << " l2seg_id " << l2seg_id
-                     << endl;
-
+            if (rsp.api_status() == types::API_STATUS_OK) {
                 for (auto it = rsp.spec().oif_key_handles().cbegin();
                         it != rsp.spec().oif_key_handles().cend(); it++) {
-                    cout << "[INFO] Discovered"
-                         << " group " << hex << group << resetiosflags(ios::hex)
-                         << " vrf_id " <<  vrf_id
-                         << " l2seg_id " << l2seg_id
-                         << " if_id " << it->interface_id()
-                         << endl;
+                    os << it->interface_id() << " ";
                     tuple<uint64_t, uint64_t, uint64_t> key(vrf_id, l2seg_id, group);
                     mcast_groups[key].push_back(it->interface_id());
                 }
+
+                NIC_FUNC_INFO("Discovered, vrf_id {} l2seg_id {} group {:#x} oif_ids {}",
+                    vrf_id, l2seg_id, group, buf.str());
                 return 0;
+            } else {
+                NIC_FUNC_ERR("API status {}, vrf_id {} l2seg_id {} group {:#x}",
+                    rsp.api_status(), vrf_id, l2seg_id, group);
             }
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return -1;
@@ -1282,12 +1084,8 @@ HalClient::MulticastGroupCreate(uint64_t group,
 
     // Do we know if this group exists?
     if (mcast_groups.find(key) != mcast_groups.end()) {
-        cout << "[INFO] " << __FUNCTION__
-             << ": group " << hex << group << resetiosflags(ios::hex)
-             << " vrf_id " << vrf_id
-             << " l2seg_id " << l2seg_id
-             << " already exists!"
-             << endl;
+        NIC_FUNC_INFO("Already exists, vrf_id {} l2seg_id {} group {:#x}",
+            vrf_id, l2seg_id, group);
         return 0;
     }
 
@@ -1299,30 +1097,66 @@ HalClient::MulticastGroupCreate(uint64_t group,
     status = multicast_stub_->MulticastEntryCreate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": group " << hex << group << resetiosflags(ios::hex)
-                 << " vrf_id " << vrf_id
-                 << " l2seg_id " << l2seg_id
-                 << ", API Status " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] " << __FUNCTION__
-                 << " succeeded,"
-                 << " group " << hex << group << resetiosflags(ios::hex)
-                 << " vrf_id " << vrf_id
-                 << " l2seg_id " << l2seg_id
-                 << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("API status {}, vrf_id {} l2seg_id {} group {:#x}",
+                rsp.api_status(), vrf_id, l2seg_id, group);
             mcast_groups[key] = vector<uint64_t>();
             return 0;
+        } else {
+            NIC_FUNC_ERR("API status {}, vrf_id {} l2seg_id {} group {:#x}",
+                rsp.api_status(), vrf_id, l2seg_id, group);
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": group " << hex << group << resetiosflags(ios::hex)
-             << " vrf_id " << vrf_id
-             << " l2seg_id " << l2seg_id
-             << ", Status " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}, vrf_id {} l2seg_id {} group {:#x}",
+            status.error_code(), status.error_message(), vrf_id, l2seg_id, group);
+    }
+
+    return -1;
+}
+
+int
+HalClient::MulticastGroupDelete(uint64_t group,
+                                uint64_t vrf_id,
+                                uint64_t l2seg_id)
+{
+    ClientContext context;
+    Status status;
+    MulticastEntryDeleteRequest *req;
+    MulticastEntryDeleteResponse rsp;
+    MulticastEntryDeleteRequestMsg req_msg;
+    MulticastEntryDeleteResponseMsg rsp_msg;
+    tuple<uint64_t, uint64_t, uint64_t> key(vrf_id, l2seg_id, group);
+
+    if (fwd_mode == FWD_MODE_SMART_NIC) {
+        return 0;
+    }
+
+    // Group does not exist!
+    if (mcast_groups.find(key) == mcast_groups.end()) {
+        NIC_FUNC_INFO("does not exist, vrf_id {} l2seg_id {} group {:#x}",
+            vrf_id, l2seg_id, group);
+        return 0;
+    }
+
+    req = req_msg.add_request();
+    req->mutable_meta()->set_vrf_id(vrf_id);
+    req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
+    req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
+    status = multicast_stub_->MulticastEntryDelete(&context, req_msg, &rsp_msg);
+    if (status.ok()) {
+        rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("API status {}, vrf_id {} l2seg_id {} group {:#x}",
+                rsp.api_status(), vrf_id, l2seg_id, group);
+            mcast_groups.erase(key);
+            return 0;
+        } else {
+            NIC_FUNC_ERR("API status {}, vrf_id {} l2seg_id {} group {:#x}",
+                rsp.api_status(), vrf_id, l2seg_id, group);
+        }
+    } else {
+        NIC_FUNC_ERR("GRPC status {} {}, vrf_id {} l2seg_id {} group {:#x}",
+            status.error_code(), status.error_message(), vrf_id, l2seg_id, group);
     }
 
     return -1;
@@ -1341,6 +1175,8 @@ HalClient::MulticastGroupUpdate(uint64_t group,
     MulticastEntryRequestMsg req_msg;
     MulticastEntryResponseMsg rsp_msg;
     tuple<uint64_t, uint64_t, uint64_t> key(vrf_id, l2seg_id, group);
+    stringbuf buf;
+    ostream os(&buf);
 
     if (fwd_mode == FWD_MODE_SMART_NIC) {
         return 0;
@@ -1352,42 +1188,23 @@ HalClient::MulticastGroupUpdate(uint64_t group,
     spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
     for (auto it = oifs_list.cbegin(); it != oifs_list.cend(); it++) {
         spec->add_oif_key_handles()->set_interface_id(*it);
+        os << *it << " ";
     }
+
     status = multicast_stub_->MulticastEntryUpdate(&context, req_msg, &rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": group " << hex << group << resetiosflags(ios::hex)
-                 << " vrf_id " << vrf_id
-                 << " l2seg_id " << l2seg_id
-                 << " oif_ids ";
-            for (auto it = oifs_list.cbegin(); it != oifs_list.cend(); it++)
-                cout << *it << ' ';
-            cout << ", API Status " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] " << __FUNCTION__
-                 << " succeeded,"
-                 << " group " << hex << group << resetiosflags(ios::hex)
-                 << " vrf_id " << vrf_id
-                 << " l2seg_id " << l2seg_id
-                 << " oif_ids ";
-            for (auto it = oifs_list.cbegin(); it != oifs_list.cend(); it++)
-                cout << *it << ' ';
-            cout << endl;
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_FUNC_INFO("API status {}, vrf_id {} l2seg_id {} group {:#x} oif_ids {}",
+                rsp.api_status(), vrf_id, l2seg_id, group, buf.str());
             return 0;
+        } else {
+            NIC_FUNC_ERR("API status {}, vrf_id {} l2seg_id {} group {:#x} oif_ids {}",
+                rsp.api_status(), vrf_id, l2seg_id, group, buf.str());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": group " << hex << group << resetiosflags(ios::hex)
-             << " vrf_id " << vrf_id
-             << " l2seg_id " << l2seg_id
-             << " oif_ids ";
-        for (auto it = oifs_list.cbegin(); it != oifs_list.cend(); it++)
-            cout << *it << ' ';
-        cout << ", Status " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}, vrf_id {} l2seg_id {} group {:#x} oif_ids {}",
+            status.error_code(), status.error_message(), vrf_id, l2seg_id, group, buf.str());
     }
 
     return -1;
@@ -1405,28 +1222,18 @@ HalClient::MulticastGroupJoin(uint64_t group,
         return 0;
     }
 
-    cout << "[INFO] " << __FUNCTION__
-         << ": group " << hex << group << resetiosflags(ios::hex)
-         << " vrf_id " << vrf_id
-         << " l2seg_id " << l2seg_id
-         << " enic_id " << enic_id
-         << endl;
-
     // If we know about this group then add the enic_id to the oif_list
     // and update the MulticastGroup
     if (mcast_groups.find(key) != mcast_groups.end()) {
         auto it = find(mcast_groups[key].cbegin(), mcast_groups[key].cend(), enic_id);
         if (it != mcast_groups[key].cend()) {
             // enic is in the group's oif list. nop!
-            cout << "[INFO] " << __FUNCTION__
-                 << ": group " << hex << group << resetiosflags(ios::hex)
-                 << " vrf_id " << vrf_id
-                 << " l2seg_id " << l2seg_id
-                 << " enic_id " << enic_id
-                 << " already exists! "
-                 << endl;
+            NIC_FUNC_WARN("Already exists, vrf_id {} l2seg_id {} group {:#x} enic_id {}",
+                vrf_id, l2seg_id, group, enic_id);
             return 0;
         } else {
+            NIC_FUNC_INFO("vrf_id {} l2seg_id {} group {:#x} enic_id {}",
+                vrf_id, l2seg_id, group, enic_id);
             // enic is not in the group's oif list. add it!
             mcast_groups[key].push_back(enic_id);
         }
@@ -1438,15 +1245,12 @@ HalClient::MulticastGroupJoin(uint64_t group,
             auto it = find(mcast_groups[key].cbegin(), mcast_groups[key].cend(), enic_id);
             if (it != mcast_groups[key].cend()) {
                 // enic is in the group's oif list. nop!
-                cout << "[INFO] " << __FUNCTION__
-                     << ": group " << hex << group << resetiosflags(ios::hex)
-                     << " vrf_id " << vrf_id
-                     << " l2seg_id " << l2seg_id
-                     << " enic_id " << enic_id
-                     << " already exists! "
-                     << endl;
+                NIC_FUNC_WARN("Already exists, vrf_id {} l2seg_id {} group {:#x} enic_id {}",
+                    vrf_id, l2seg_id, group, enic_id);
                 return 0;
             } else {
+                NIC_FUNC_INFO("vrf_id {} l2seg_id {} group {:#x} enic_id {}",
+                    vrf_id, l2seg_id, group, enic_id);
                 // enic is not in the group's oif list. add it!
                 mcast_groups[key].push_back(enic_id);
             }
@@ -1471,29 +1275,19 @@ HalClient::MulticastGroupLeave(uint64_t group,
         return 0;
     }
 
-    cout << "[INFO] " << __FUNCTION__
-         << ": group " << hex << group << resetiosflags(ios::hex)
-         << " vrf_id " << vrf_id
-         << " l2seg_id " << l2seg_id
-         << " enic_id " << enic_id
-         << endl;
-
     // If we know about this group then remove the enic_id from the oif_list
     // and update the MulticastGroup
     if (mcast_groups.find(key) != mcast_groups.end()) {
         auto it = find(mcast_groups[key].cbegin(), mcast_groups[key].cend(), enic_id);
         if (it != mcast_groups[key].cend()) {
             // enic is in the group's oif list. remove it!
+            NIC_FUNC_INFO("vrf_id {} l2seg_id {} group {:#x} enic_id {}",
+                vrf_id, l2seg_id, group, enic_id);
             mcast_groups[key].erase(it);
         } else {
             // enic is not in the group's oif list. nop!
-            cout << "[INFO] " << __FUNCTION__
-                 << ": group " << hex << group << resetiosflags(ios::hex)
-                 << " vrf_id " << vrf_id
-                 << " l2seg_id " << l2seg_id
-                 << " enic_id " << enic_id
-                 << " does not exist! "
-                 << endl;
+            NIC_FUNC_WARN("Does not exist, vrf_id {} l2seg_id {} group {:#x} enic_id {}",
+                vrf_id, l2seg_id, group, enic_id);
             return 0;
         }
     } else {
@@ -1504,16 +1298,13 @@ HalClient::MulticastGroupLeave(uint64_t group,
             auto it = find(mcast_groups[key].cbegin(), mcast_groups[key].cend(), enic_id);
             if (it != mcast_groups[key].cend()) {
                 // enic is in the group's oif list. remove it!
+                NIC_FUNC_INFO("vrf_id {} l2seg_id {} group {:#x} enic_id {}",
+                    vrf_id, l2seg_id, group, enic_id);
                 mcast_groups[key].erase(it);
             } else {
                 // enic is not in the group's oif list. nop!
-                cout << "[INFO] " << __FUNCTION__
-                     << ": HAL group " << hex << group << resetiosflags(ios::hex)
-                     << " vrf_id " << vrf_id
-                     << " l2seg_id " << l2seg_id
-                     << " enic_id " << enic_id
-                     << " does not exist! "
-                     << endl;
+                NIC_FUNC_WARN("Does not exist, vrf_id {} l2seg_id {} group {:#x} enic_id {}",
+                    vrf_id, l2seg_id, group, enic_id);
                 return 0;
             }
         } else {
@@ -1524,60 +1315,6 @@ HalClient::MulticastGroupLeave(uint64_t group,
     // Update the group
     return MulticastGroupUpdate(group, vrf_id, l2seg_id, mcast_groups[key]);
 }
-
-int
-HalClient::MulticastGroupDelete(uint64_t group,
-                                uint64_t vrf_id,
-                                uint64_t l2seg_id)
-{
-    ClientContext context;
-    Status status;
-    MulticastEntryDeleteRequest *req;
-    MulticastEntryDeleteResponse rsp;
-    MulticastEntryDeleteRequestMsg req_msg;
-    MulticastEntryDeleteResponseMsg rsp_msg;
-    tuple<uint64_t, uint64_t, uint64_t> key(vrf_id, l2seg_id, group);
-
-    if (fwd_mode == FWD_MODE_SMART_NIC) {
-        return 0;
-    }
-
-    req = req_msg.add_request();
-    req->mutable_meta()->set_vrf_id(vrf_id);
-    req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
-    req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
-    status = multicast_stub_->MulticastEntryDelete(&context, req_msg, &rsp_msg);
-    if (status.ok()) {
-        rsp = rsp_msg.response(0);
-        if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << ": group " << hex << group << resetiosflags(ios::hex)
-                 << " vrf_id " << vrf_id
-                 << " l2seg_id " << l2seg_id
-                 << ", API Status " << rsp.api_status()
-                 << endl;
-        } else {
-            cout << "[INFO] " << __FUNCTION__
-                 << " succeeded,"
-                 << " group " << hex << group << resetiosflags(ios::hex)
-                 << " vrf_id " << vrf_id
-                 << " l2seg_id " << l2seg_id
-                 << endl;
-            mcast_groups.erase(key);
-            return 0;
-        }
-    } else {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": group " << hex << group << resetiosflags(ios::hex)
-             << " vrf_id " << vrf_id
-             << " l2seg_id " << l2seg_id
-             << ", Status " << status.error_code() << ":" << status.error_message()
-             << endl;
-    }
-
-    return -1;
-}
-
 
 /*
  * DEBUG
@@ -1625,6 +1362,9 @@ ostream &operator<<(ostream& os, const HalClient& obj) {
     return os;
 }
 
+/*
+ * RDMA
+ */
 int HalClient::CreateMR(uint64_t lif_id, uint32_t pd, uint64_t va, uint64_t length,
                         uint16_t access_flags, uint32_t l_key, uint32_t r_key,
                         uint32_t page_size, uint64_t *pt_table, uint32_t pt_size)
@@ -1652,19 +1392,18 @@ int HalClient::CreateMR(uint64_t lif_id, uint32_t pd, uint64_t va, uint64_t leng
 
     Status status = rdma_stub_->RdmaMemReg(&context, request, &response);
     if (status.ok()) {
-            RdmaMemRegResponse rsp = response.response(0);
-            if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
-                return -1;
-            } else {
-                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
-            }
+        RdmaMemRegResponse rsp = response.response(0);
+        if (rsp.api_status() != types::API_STATUS_OK) {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
+        } else {
+            NIC_FUNC_INFO("API status {}", rsp.api_status());
+            return 0;
+        }
     } else {
-        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
+    return -1;
 }
 
 int HalClient::CreateCQ(uint32_t lif_id,
@@ -1693,17 +1432,16 @@ int HalClient::CreateCQ(uint32_t lif_id,
     if (status.ok()) {
         auto rsp = response.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << "Status = " << rsp.api_status() << endl;
-            return -1;
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         } else {
-            cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+            NIC_FUNC_INFO("API status {}", rsp.api_status());
+            return 0;
         }
     } else {
-        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << "Status = " << status.error_code() << ": " << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
+    return -1;
 }
 
 int HalClient::CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
@@ -1747,18 +1485,16 @@ int HalClient::CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
     if (status.ok()) {
         RdmaQpResponse rsp = response.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
-            return -1;
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         } else {
-            cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+            NIC_FUNC_INFO("API status {}", rsp.api_status());
+            return 0;
         }
     } else {
-        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
-    
+    return -1;
 }
 
 int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
@@ -1781,18 +1517,17 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
         spec->set_header_template(header, header_template_size);
         spec->set_ahid(header_template_ah_id);
 
-        cout << __FILE__ << ":" << __FUNCTION__ << " set AV:" << endl;
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
         if (status.ok()) {
             RdmaQpUpdateResponse rsp = response.response(0);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
                 return -1;
             } else {
-                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
             }
         } else {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
             return -1;
         }
     }
@@ -1813,13 +1548,13 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
         if (status.ok()) {
             RdmaQpUpdateResponse rsp = response.response(0);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
                 return -1;
             } else {
-                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
             }
         } else {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
             return -1;
         }
     }
@@ -1840,13 +1575,13 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
         if (status.ok()) {
             RdmaQpUpdateResponse rsp = response.response(0);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
                 return -1;
             } else {
-                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
             }
         } else {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
             return -1;
         }
     }
@@ -1867,13 +1602,13 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
         if (status.ok()) {
             RdmaQpUpdateResponse rsp = response.response(0);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
                 return -1;
             } else {
-                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS" << endl;
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
             }
         } else {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
             return -1;
         }
     }
@@ -1894,13 +1629,13 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
         if (status.ok()) {
             RdmaQpUpdateResponse rsp = response.response(0);
             if (rsp.api_status() != types::API_STATUS_OK) {
-                cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
                 return -1;
             } else {
-                cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ <<  " SUCCESS" << endl;
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
             }
         } else {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
             return -1;
         }
     }
@@ -1929,17 +1664,16 @@ HalClient::RDMACreateEQ(uint64_t lif_id, uint32_t eq_num,
     if (status.ok()) {
         RdmaEqResponse rsp = response.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
-            return -1;
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         } else {
-            cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+            NIC_FUNC_INFO("API status {}", rsp.api_status());
+            return 0;
         }
     } else {
-        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
+    return -1;
 }
 
 int
@@ -1968,17 +1702,16 @@ HalClient::RDMACreateCQ(uint64_t lif_id,
     if (status.ok()) {
         RdmaCqResponse rsp = cq_response.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
-            return -1;
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         } else {
-            cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+            NIC_FUNC_INFO("API status {}", rsp.api_status());
+            return 0;
         }
     } else {
-        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
+    return -1;
 }
 
 int
@@ -2003,17 +1736,16 @@ HalClient::RDMACreateAdminQ(uint64_t lif_id, uint32_t aq_num,
     if (status.ok()) {
         auto rsp = response.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << rsp.api_status() << endl;
-            return -1;
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         } else {
-            cout << "[INFO] " << __FILE__ << ":" << __FUNCTION__ << " SUCCESS" << endl;
+            NIC_FUNC_INFO("API status {}", rsp.api_status());
+            return 0;
         }
     } else {
-        cout << "[ERROR] " << __FILE__ << ":" << __FUNCTION__ << " Status = " << status.error_code() << ": " << status.error_message() << endl;
-        return -1;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
-    return 0;
+    return -1;
 }
 
 int HalClient::PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr)
@@ -2029,10 +1761,7 @@ int HalClient::PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr)
 
     auto status = internal_stub_->GetProgramAddress(&context, req_msg, &resp_msg);
     if (!status.ok()) {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": prog_name = " << prog_name
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
         return -1;
     }
 
@@ -2051,10 +1780,7 @@ int HalClient::AllocHbmAddress(const char *handle, uint64_t *addr, uint32_t *siz
 
     auto status = internal_stub_->AllocHbmAddress(&context, req_msg, &resp_msg);
     if (!status.ok()) {
-        cerr << "[ERROR] " << __FUNCTION__
-             << ": handle = " << handle
-             << ", Status = " << status.error_code() << ":" << status.error_message()
-             << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
         return -1;
     }
 
@@ -2088,6 +1814,7 @@ HalClient::FilterAdd(uint64_t lif_id, uint64_t mac, uint32_t vlan)
     } else {
         type = FILTER_NONE;
     }
+
     req->mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
     req->mutable_key_or_handle()->mutable_filter_key()->set_type(type);
     req->mutable_key_or_handle()->mutable_filter_key()->set_mac_address(mac);
@@ -2097,20 +1824,18 @@ HalClient::FilterAdd(uint64_t lif_id, uint64_t mac, uint32_t vlan)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            cout << "[INFO] Filter create succeeded, handle = "
-                 << rsp.filter_status().filter_handle()
-                 << endl;
+            NIC_FUNC_INFO("API status {}, lif id {} type {} mac {} vlan {} handle {}",
+                rsp.api_status(), lif_id, type, mac, vlan, rsp.filter_status().filter_handle());
             return rsp.filter_status().filter_handle();
         } else if (rsp.api_status() == types::API_STATUS_EXISTS_ALREADY) {
-            cout << "[INFO] Filter already exists, handle = "
-                 << rsp.filter_status().filter_handle()
-                 << endl;
+            NIC_FUNC_WARN("API status {}, lif id {} type {} mac {} vlan {} handle {}",
+                rsp.api_status(), lif_id, type, mac, vlan, rsp.filter_status().filter_handle());
             return rsp.filter_status().filter_handle();
         } else {
-            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return 0;
@@ -2141,6 +1866,7 @@ HalClient::FilterDel(uint64_t lif_id, uint64_t mac, uint32_t vlan)
     } else {
         type = FILTER_NONE;
     }
+
     req->mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
     req->mutable_key_or_handle()->mutable_filter_key()->set_type(type);
     req->mutable_key_or_handle()->mutable_filter_key()->set_mac_address(mac);
@@ -2150,15 +1876,16 @@ HalClient::FilterDel(uint64_t lif_id, uint64_t mac, uint32_t vlan)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            cout << "[INFO] Filter delete succeeded" << endl;
+            NIC_FUNC_INFO("API status {}, lif id {} type {} mac {} vlan {}",
+                rsp.api_status(), lif_id, type, mac, vlan);
             return 0;
         } else {
             // TODO: Handle API_STATUS_NOT_EXISTS instead of returning success here
-            cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            return 0;
+            NIC_FUNC_ERR("API status {}, lif id {} type {} mac {} vlan {}",
+                rsp.api_status(), lif_id, type, mac, vlan);
         }
     } else {
-        cerr << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
     }
 
     return -1;

@@ -15,6 +15,7 @@
 #define ACCEL_DEV_CMD_ENUMERATE  1
 
 #include "base.hpp"
+#include "logger.hpp"
 #include "intrutils.h"
 #include "accel_dev.hpp"
 #include "hal_client.hpp"
@@ -253,7 +254,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     // Locate HBM region dedicated to STORAGE_SEQ_HBM_HANDLE
     memset(&pci_resources, 0, sizeof(pci_resources));
     if (hal->AllocHbmAddress(STORAGE_SEQ_HBM_HANDLE, &hbm_addr, &hbm_size)) {
-        printf("[ERROR] Failed to get HBM base for %s\n", STORAGE_SEQ_HBM_HANDLE);
+        NIC_LOG_ERR("Failed to get HBM base for {}", STORAGE_SEQ_HBM_HANDLE);
         return;
     }
 
@@ -273,12 +274,11 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     pci_resources.cmbpa = hbm_addr;
     pci_resources.cmbsz = hbm_size;
-    printf("[INFO] %s HBM address %lx size %u bytes\n", __FUNCTION__,
-           pci_resources.cmbpa, pci_resources.cmbsz);
+    NIC_LOG_INFO("HBM address {:#x} size {} bytes", pci_resources.cmbpa, pci_resources.cmbsz);
 
     // Find devcmd/devcmddb/rings shadow pndx, etc., area
     if (hal->AllocHbmAddress(ACCEL_DEVCMD_HBM_HANDLE, &hbm_addr, &hbm_size)) {
-        printf("[ERROR] Failed to get HBM base for %s\n", ACCEL_DEVCMD_HBM_HANDLE);
+        NIC_LOG_ERR("Failed to get HBM base for {}", ACCEL_DEVCMD_HBM_HANDLE);
         return;
     }
 
@@ -312,22 +312,21 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     spec->seq_created_count = 1 << qinfo[STORAGE_SEQ_QTYPE_SQ].entries;
     if (hal->lif_map.find(spec->lif_id) != hal->lif_map.end()) {
         if (hal->LifDelete(spec->lif_id)) {
-            printf("[ERROR] %s Failed to delete LIF, id = %lu\n",
-                   __FUNCTION__, spec->lif_id);
+            NIC_LOG_ERR("Failed to delete LIF, id = {}", spec->lif_id);
             return;
         }
     }
 
     lif_handle = hal->LifCreate(spec->lif_id, qinfo, &info, false, 0, 0);
     if (lif_handle == 0) {
-        printf("[ERROR] %s Failed to create LIF\n", __FUNCTION__);
+        NIC_LOG_ERR("Failed to create LIF");
         return;
     }
 
-    printf("[INFO] %s lif%lu: %u sequencer queues created\n", __FUNCTION__,
+    NIC_LOG_INFO("lif{}: {} sequencer queues created",
            info.hw_lif_id, spec->seq_created_count);
 
-    name = string_format("accel%d", spec->lif_id);
+    name = string_format("accel{}", spec->lif_id);
 
     // Configure PCI resources
     pci_resources.lif_valid = 1;
@@ -342,23 +341,20 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     devcmd->signature = DEV_CMD_SIGNATURE;
     WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd));
 
-    printf("[INFO] %s lif%lu: Devcmd PA 0x%lx DevcmdDB PA 0x%lx\n", 
-           __FUNCTION__, info.hw_lif_id, pci_resources.devcmdpa,
-           pci_resources.devcmddbpa);
+    NIC_LOG_INFO("lif{}: Devcmd PA {:#lx} DevcmdDB PA {:#lx}", info.hw_lif_id,
+        pci_resources.devcmdpa, pci_resources.devcmddbpa);
 
     if (spec->pcie_port == 0xff) {
-        printf("[INFO] %s lif%lu: Skipped creating PCI device, pcie_port %d\n",
-               __FUNCTION__, info.hw_lif_id, spec->pcie_port);
+        NIC_LOG_INFO("lif{}: Skipped creating PCI device, pcie_port {}", info.hw_lif_id,
+            spec->pcie_port);
         return;
     }
 
     // Create PCI device
-    printf("[INFO] %s lif%lu: creating Accel_PF PCI device\n",
-            __FUNCTION__, info.hw_lif_id);
+    NIC_LOG_INFO("lif{}: creating Accel_PF PCI device", info.hw_lif_id);
     pdev = pciehdev_accel_new(name.c_str(), &pci_resources);
     if (pdev == NULL) {
-        printf("[ERROR] %s lif%lu: Failed to create Accel_PF PCI device\n",
-                __FUNCTION__, info.hw_lif_id);
+        NIC_LOG_ERR("lif{}: Failed to create Accel_PF PCI device", info.hw_lif_id);
         return;
     }
     pciehdev_set_priv(pdev, (void *)this);
@@ -366,8 +362,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     // Add device to PCI topology
     int ret = pciehdev_add(pdev);
     if (ret != 0) {
-        printf("[ERROR] %s lif%lu: Failed to add Accel_PF PCI device to topology\n",
-                __FUNCTION__, info.hw_lif_id);
+        NIC_LOG_ERR("lif{}: Failed to add Accel_PF PCI device to topology", info.hw_lif_id);
         return;
     }
 }
@@ -397,7 +392,7 @@ Accel_PF::DevcmdPoll()
     db.v = 0;
     READ_MEM(pci_resources.devcmddbpa, (uint8_t *)&db, sizeof(db));
     if (db.v) {
-        printf("[INFO] %s lif%lu active\n", __FUNCTION__, info.hw_lif_id);
+        NIC_LOG_INFO("lif{} active", info.hw_lif_id);
         DevcmdHandler();
         WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)&db_clear, sizeof(db_clear));
     }
@@ -413,14 +408,14 @@ Accel_PF::DevcmdHandler()
     READ_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(dev_cmd_regs_t));
 
     if (devcmd->done) {
-        printf("[ERROR] lif%lu: Devcmd done is set before processing command, opcode = %d\n",
-               info.hw_lif_id, devcmd->cmd.cmd.opcode);
+        NIC_LOG_ERR("lif{}: Devcmd done is set before processing command, opcode = {}",
+            info.hw_lif_id, devcmd->cmd.cmd.opcode);
         status = DEVCMD_ERROR;
     }
 
     if (devcmd->signature != DEV_CMD_SIGNATURE) {
-        printf("[ERROR] lif%lu: Devcmd signature mismatch, opcode = %d\n",
-               info.hw_lif_id, devcmd->cmd.cmd.opcode);
+        NIC_LOG_ERR("lif{}: Devcmd signature mismatch, opcode = {}", info.hw_lif_id,
+            devcmd->cmd.cmd.opcode);
         status = DEVCMD_ERROR;
     }
 
@@ -448,7 +443,7 @@ Accel_PF::CmdHandler(void *req, void *req_data,
     switch (cmd->cmd.opcode) {
 
     case CMD_OPCODE_NOP:
-        printf("[INFO] lif%lu: CMD_OPCODE_NOP\n", info.hw_lif_id);
+        NIC_LOG_INFO("lif{}: CMD_OPCODE_NOP", info.hw_lif_id);
         status = DEVCMD_SUCCESS;
         break;
 
@@ -473,7 +468,7 @@ Accel_PF::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_HANG_NOTIFY:
-        printf("[INFO] lif%lu: CMD_OPCODE_HANG_NOTIFY\n", info.hw_lif_id);
+        NIC_LOG_INFO("lif{}: CMD_OPCODE_HANG_NOTIFY", info.hw_lif_id);
         status = DEVCMD_SUCCESS;
         break;
 
@@ -486,13 +481,12 @@ Accel_PF::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_SEQ_QUEUE_DUMP:
-        printf("[INFO] lif%lu: CMD_OPCODE_SEQ_QUEUE_DUMP\n", info.hw_lif_id);
+        NIC_LOG_INFO("lif{}: CMD_OPCODE_SEQ_QUEUE_DUMP", info.hw_lif_id);
         status = DEVCMD_SUCCESS;
         break;
 
     default:
-        printf("[ERROR] lif%lu: Unknown Opcode %d\n", info.hw_lif_id,
-               cmd->cmd.opcode);
+        NIC_LOG_ERR("lif{}: Unknown Opcode {}", info.hw_lif_id, cmd->cmd.opcode);
         status = DEVCMD_UNKNOWN;
         break;
     }
@@ -527,8 +521,7 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     identity_t      *rsp = (identity_t *)resp_data;
     identify_cpl_t  *cpl = (identify_cpl_t *)resp;
 
-    printf("[INFO] %s lif%lu identity_dev size %d\n", __FUNCTION__,
-           info.hw_lif_id, (int)sizeof(rsp->dev));
+    NIC_LOG_INFO("lif{} identity_dev size {}", info.hw_lif_id, (int)sizeof(rsp->dev));
     memset(&devcmd->data[0], 0, sizeof(devcmd->data));
 
     // TODO: Get these from hw
@@ -558,7 +551,8 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
     uint64_t    qstate_addr;
     uint8_t     enable = 0;
     uint8_t     abort = 1;
-    printf("[INFO] %s lif%lu:\n", __FUNCTION__, info.hw_lif_id);
+
+    NIC_LOG_INFO("lif{}:", info.hw_lif_id);
 
     // Disable all sequencer queues
     for (uint32_t qid = 0; qid < spec->seq_created_count; qid++) {
@@ -591,8 +585,8 @@ Accel_PF::_DevcmdLifInit(void *req, void *req_data,
                          void *resp, void *resp_data)
 {
     lif_init_cmd_t  *cmd = (lif_init_cmd_t *)req;
-    printf("[INFO] %s lif%lu: lif_index %u\n", __FUNCTION__,
-           info.hw_lif_id, cmd->index);
+
+    NIC_LOG_INFO("lif{}: lif_index {}", info.hw_lif_id, cmd->index);
 
     return (DEVCMD_SUCCESS);
 }
@@ -606,25 +600,22 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     storage_seq_admin_qstate_t  admin_qstate;
     uint64_t                    addr;
 
-    printf("[INFO] %s lif%lu: queue_index %u ring_base 0x%lx "
-           "ring_size %u intr_index %u\n", __FUNCTION__, 
-           info.hw_lif_id, cmd->index, cmd->ring_base,cmd->ring_size, cmd->intr_index);
+    NIC_LOG_INFO("lif{}: queue_index {} ring_base {:#lx} ring_size {} intr_index {}",
+        info.hw_lif_id, cmd->index, cmd->ring_base,cmd->ring_size, cmd->intr_index);
 
     if (cmd->index >= spec->adminq_count) {
-        printf("[ERROR] %s lif%lu: bad qid %d\n", __FUNCTION__,
+        NIC_LOG_ERR("lif{}: bad qid {}",
                info.hw_lif_id, cmd->index);
         return (DEVCMD_ERROR);
     }
 
     if (cmd->intr_index >= spec->intr_count) {
-        printf("[ERROR] %s lif%lu: bad intr %d\n", __FUNCTION__,
-               info.hw_lif_id, cmd->intr_index);
+        NIC_LOG_ERR("lif{}: bad intr {}", info.hw_lif_id, cmd->intr_index);
         return (DEVCMD_ERROR);
     }
 
     if (cmd->ring_size < 2 || cmd->ring_size > 16) {
-        printf("[ERROR] %s lif%lu: bad ring size %d\n", __FUNCTION__,
-               info.hw_lif_id, cmd->ring_size);
+        NIC_LOG_ERR("lif{}: bad ring size {}", info.hw_lif_id, cmd->ring_size);
         return (DEVCMD_ERROR);
     }
 
@@ -654,8 +645,8 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     admin_qstate.intr_assert_addr = intr_assert_addr(spec->intr_base + cmd->intr_index);
     if (nicmgr_lif_info) {
         admin_qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
-        printf("[INFO] %s lif%lu: nicmgr_qstate_addr RX 0x%lx\n", __FUNCTION__,
-               info.hw_lif_id, admin_qstate.nicmgr_qstate_addr);
+        NIC_LOG_INFO("lif{}: nicmgr_qstate_addr RX {:#lx}", info.hw_lif_id,
+            admin_qstate.nicmgr_qstate_addr);
     }
     WRITE_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate));
 
@@ -706,9 +697,8 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     }
 
     if (cmd->index >= spec->seq_created_count) {
-        printf("[ERROR] %s lif%lu: qgroup %d index %d exceeds max %d\n",
-               __FUNCTION__, info.hw_lif_id, cmd->qgroup, cmd->index,
-               spec->seq_created_count);
+        NIC_LOG_ERR("lif{}: qgroup {} index {} exceeds max {}", info.hw_lif_id,
+            cmd->qgroup, cmd->index, spec->seq_created_count);
         goto devcmd_done;
     }
 
@@ -730,17 +720,16 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
         ACCEL_PHYS_ADDR_LIF_SET(seq_qstate.wring_base, info.hw_lif_id);
     }
 
-    printf("[INFO] %s lif%lu: qid %u qgroup %d "
-           "wring_base 0x%lx wring_size %u entry_size %u\n",
-           __FUNCTION__, info.hw_lif_id, qid, cmd->qgroup, 
-           seq_qstate.wring_base, cmd->wring_size, cmd->entry_size);
+    NIC_LOG_INFO("lif{}: qid {} qgroup {} wring_base {:#lx} wring_size {} entry_size {}",
+           info.hw_lif_id, qid, cmd->qgroup, seq_qstate.wring_base, cmd->wring_size,
+           cmd->entry_size);
 
     seq_qstate.wring_base = htonll(seq_qstate.wring_base);
     seq_qstate.wring_size = htons(cmd->wring_size);
     seq_qstate.entry_size = htons(cmd->entry_size);
 
     if (hal->PgmBaseAddrGet(desc0_pgm_name, &next_pc_addr)) {
-        printf("[ERROR] Failed to get base for program %s\n", desc0_pgm_name);
+        NIC_LOG_ERR("Failed to get base for program {}", desc0_pgm_name);
         goto devcmd_done;
     }
     seq_qstate.desc0_next_pc = htonl(next_pc_addr >> 6);
@@ -749,7 +738,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
 
     if (desc1_pgm_name) {
         if (hal->PgmBaseAddrGet(desc1_pgm_name, &next_pc_addr)) {
-            printf("[ERROR] Failed to get base for program %s\n", desc1_pgm_name);
+            NIC_LOG_ERR("Failed to get base for program {}", desc1_pgm_name);
             goto devcmd_done;
         }
         seq_qstate.desc1_next_pc = htonl(next_pc_addr >> 6);
@@ -784,21 +773,19 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
     uint8_t                 value;
 
     if (cmd->qtype >= STORAGE_SEQ_QTYPE_MAX) {
-        printf("[ERROR] %s lif%lu: bad qtype %d\n",
-               __FUNCTION__, info.hw_lif_id, cmd->qtype);
+        NIC_LOG_ERR("lif{}: bad qtype {}", info.hw_lif_id, cmd->qtype);
         return (DEVCMD_ERROR);
     }
 
-    printf("[INFO] %s  lif%lu: qtype %d qid %d enable %u\n",
-           __FUNCTION__, info.hw_lif_id, cmd->qtype, cmd->qid, enable);
+    NIC_LOG_INFO(" lif{}: qtype {} qid {} enable {}", info.hw_lif_id,
+        cmd->qtype, cmd->qid, enable);
 
     value = enable;
     switch (cmd->qtype) {
     case STORAGE_SEQ_QTYPE_SQ:
         if (cmd->qid >= spec->seq_created_count) {
-            printf("[ERROR] %s lif%lu: qtype %d qid %d exceeds count %u\n",
-                   __FUNCTION__, info.hw_lif_id, cmd->qtype, cmd->qid,
-                   spec->seq_created_count);
+            NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}", info.hw_lif_id,
+                cmd->qtype, cmd->qid, spec->seq_created_count);
             return (DEVCMD_ERROR);
         }
         qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
@@ -808,9 +795,8 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
         break;
     case STORAGE_SEQ_QTYPE_ADMIN:
         if (cmd->qid >= spec->adminq_count) {
-            printf("[ERROR] %s lif%lu: qtype %d qid %d exceeds count %u\n",
-                   __FUNCTION__, info.hw_lif_id, cmd->qtype, cmd->qid,
-                   spec->adminq_count);
+            NIC_LOG_ERR("lif{}: qtype {} qid {} exceeds count {}", info.hw_lif_id,
+                cmd->qtype, cmd->qid, spec->adminq_count);
             return (DEVCMD_ERROR);
         }
         qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
@@ -876,9 +862,9 @@ Accel_PF::accel_ring_info_get_all(void)
                 accel_ring->ring_size = csr->ring_size_mask + 1;
             }
         }
-        printf("%s ring %s ring_base_pa 0x%lx ring_pndx_pa 0x%lx "
-               "ring_shadow_pndx_pa 0x%lx ring_opaque_tag_pa 0x%lx "
-               "ring_size %u\n", __FUNCTION__,
+        NIC_LOG_INFO("ring {} ring_base_pa {:#lx} ring_pndx_pa {:#lx} "
+               "ring_shadow_pndx_pa {:#lx} ring_opaque_tag_pa {:#lx} "
+               "ring_size {}",
                csr->ring_name, accel_ring->ring_base_pa,
                accel_ring->ring_pndx_pa, accel_ring->ring_shadow_pndx_pa,
                accel_ring->ring_opaque_tag_pa, accel_ring->ring_size);
@@ -903,7 +889,7 @@ Accel_PF::accel_ring_reset_all(void)
          id++, accel_ring++, csr++) {
 
         if (csr->reset_addr_offs != ACCEL_CSR_OFFS_VOID) {
-            printf("%s ring %s\n", __FUNCTION__, csr->ring_name);
+            NIC_LOG_INFO("ring {}", csr->ring_name);
 
             csr_val = accel_csr_get32(csr->reset_addr_offs);
             accel_csr_set32(csr->reset_addr_offs,
@@ -921,8 +907,7 @@ Accel_PF::accel_ring_reset_all(void)
         }
     }
 
-    printf("%s clearing %u shadow_pndx_page_addr bytes\n", __FUNCTION__,
-           shadow_pndx_bytes_used);
+    NIC_LOG_INFO("clearing {} shadow_pndx_page_addr bytes", shadow_pndx_bytes_used);
     WRITE_MEM(shadow_pndx_page_addr, (uint8_t *)blank_page, shadow_pndx_bytes_used);
 }
 
@@ -942,7 +927,7 @@ Accel_PF::accel_engine_enable_all(void)
          id++, accel_ring++, csr++) {
 
         if (csr->engine_en_addr_offs != ACCEL_CSR_OFFS_VOID) {
-            printf("%s ring %s\n", __FUNCTION__, csr->ring_name);
+            NIC_LOG_INFO("ring {}", csr->ring_name);
 
             csr_val = accel_csr_get32(csr->engine_en_addr_offs);
             accel_csr_set32(csr->engine_en_addr_offs,
@@ -967,7 +952,7 @@ Accel_PF::accel_ring_enable_all(void)
          id++, accel_ring++, csr++) {
 
         if (csr->ring_en_addr_offs != ACCEL_CSR_OFFS_VOID) {
-            printf("%s ring %s\n", __FUNCTION__, csr->ring_name);
+            NIC_LOG_INFO("ring {}", csr->ring_name);
 
             csr_val = accel_csr_get32(csr->ring_en_addr_offs);
             accel_csr_set32(csr->ring_en_addr_offs,

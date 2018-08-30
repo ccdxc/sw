@@ -79,7 +79,7 @@ public:
                            uint64_t l2seg_id,
                            uint16_t vlan_id);
 
-  int AddL2SegmentOnUplink(uint64_t uplink_if_id,
+  int AddL2SegmentOnUplink(uint64_t uplink_id,
                            uint64_t l2seg_id);
 
   /* VRF APIs */
@@ -92,13 +92,11 @@ public:
   /* Uplink APIs */
   int UplinkProbe();
 
-  uint64_t UplinkGet(uint64_t port_num);
-
-  uint64_t UplinkCreate(uint64_t uplink_if_id,
+  uint64_t UplinkCreate(uint64_t uplink_id,
                         uint64_t port_num,
                         uint64_t native_l2seg_id);
 
-  int UplinkDelete(uint64_t uplink_if_id);
+  int UplinkDelete(uint64_t uplink_id);
 
   /* Endpoint NIC APIs */
   uint64_t EnicCreate(uint64_t enic_id,
@@ -117,7 +115,10 @@ public:
                           uint64_t enic_id,
                           uint64_t mac_addr);
 
-  int EndpointDelete(uint64_t vrf_id, uint64_t handle);
+  int EndpointDelete(uint64_t vrf_id,
+                     uint64_t l2seg_id,
+                     uint64_t enic_id,
+                     uint64_t mac_addr);
 
   /* Interface APIs */
   int InterfaceProbe();
@@ -138,15 +139,9 @@ public:
 
   int LifDelete(uint64_t lif_id);
 
-  int LifSetVlanStrip(uint64_t lif_id, bool enable);
+  int LifSetVlanOffload(uint64_t lif_id, bool strip, bool insert);
 
-  int LifSetVlanInsert(uint64_t lif_id, bool enable);
-
-  int LifSetBroadcast(uint64_t lif_id, bool enable);
-
-  int LifSetAllMulticast(uint64_t lif_id, bool enable);
-
-  int LifSetPromiscuous(uint64_t lif_id, bool enable);
+  int LifSetFilterMode(uint64_t lif_id, bool bcast, bool all_mc, bool promisc);
 
   int LifSetRssConfig(uint64_t lif_id, LifRssType type, string key, string table);
 
