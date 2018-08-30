@@ -15,7 +15,6 @@ import { MonitoringAlert } from './monitoring';
 import { MonitoringAlertPolicy } from './monitoring';
 import { MonitoringAlertDestination } from './monitoring';
 import { MonitoringMirrorSession } from './monitoring';
-import { MonitoringTroubleshootingSession } from './monitoring';
 import { EventsEvent } from './events';
 import { NetworkNetwork } from './network';
 import { NetworkService } from './network';
@@ -25,7 +24,6 @@ import { SecuritySGPolicy } from './security';
 import { SecurityApp } from './security';
 import { SecurityCertificate } from './security';
 import { SecurityTrafficEncryptionPolicy } from './security';
-import { StagingBuffer } from './staging';
 import { WorkloadEndpoint } from './workload';
 import { WorkloadWorkload } from './workload';
 
@@ -52,8 +50,7 @@ export const CategoryMapping  = {
     "AlertPolicy" : new MonitoringAlertPolicy(),
     "AlertDestination" : new MonitoringAlertDestination(),
     "MirrorSession" : new MonitoringMirrorSession(),
-    "TroubleshootingSession" : new MonitoringTroubleshootingSession(),
-    "Events" : new EventsEvent(),
+    "Event" : new EventsEvent(),
   },
   "Network" : {
     "Network" : new NetworkNetwork(),
@@ -66,9 +63,6 @@ export const CategoryMapping  = {
     "App" : new SecurityApp(),
     "Certificate" : new SecurityCertificate(),
     "TrafficEncryptionPolicy" : new SecurityTrafficEncryptionPolicy(),
-  },
-  "Staging" : {
-    "Buffer" : new StagingBuffer(),
   },
   "Workload" : {
     "Endpoint" : new WorkloadEndpoint(),

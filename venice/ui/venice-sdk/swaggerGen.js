@@ -59,6 +59,10 @@ Object.keys(manifest).forEach( (category) => {
     // Skipping the bookstore exampe
     return;
   }
+  if (category === "staging") {
+    // Skipping the staging category
+    return;
+  }
   const internalServices = manifest[category]["Svcs"];
   // We assume only one internal service
   const serviceData = internalServices[Object.keys(internalServices)[0]];
@@ -71,6 +75,9 @@ Object.keys(manifest).forEach( (category) => {
   }
   const catObj = data[version][_.upperFirst(category)];
   serviceData.Messages.forEach( (kind) => {
+    if (kind === "TroubleshootingSession") {
+      return;
+    }
     catObj[kind] = {
       // File will be placed in {Version}/models/generated/
       "importPath": "./" + category,
@@ -78,7 +85,7 @@ Object.keys(manifest).forEach( (category) => {
     }
   });
   if (category === "monitoring") {
-    catObj["Events"] = {
+    catObj["Event"] = {
       "importPath": "./events",
       "importName": "EventsEvent",
     }

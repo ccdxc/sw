@@ -299,19 +299,21 @@ describe('SgpolicyComponent', () => {
       }
     }
 
-    const sgPolicyWatch = spyOn(securityService, 'WatchSGPolicy').and.returnValue(
-      new BehaviorSubject({
-        body: {
-          result: {
-            Events: [
-              {
-                Type: "Created",
-                Object: sgPolicy
-              }
-            ]
-          }
+    const sgPolicyObserver = new BehaviorSubject({
+      body: {
+        result: {
+          Events: [
+            {
+              Type: "Created",
+              Object: sgPolicy
+            }
+          ]
         }
-      })
+      }
+    });
+
+    const sgPolicyWatch = spyOn(securityService, 'WatchSGPolicy').and.returnValue(
+      sgPolicyObserver
     );
 
     fixture.detectChanges();
@@ -324,7 +326,7 @@ describe('SgpolicyComponent', () => {
     // Mod time
     const formattedModTime = new PrettyDatePipe('en-US').transform(sgPolicy.meta["mod-time"]);
     expect(fields[2].nativeElement.textContent).toContain(formattedModTime);
-    const tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body-table tbody'));
+    let tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body-table tbody'));
     verifyTable(sgPolicy.spec.rules, component.cols, tableBody);
 
 
@@ -464,6 +466,22 @@ describe('SgpolicyComponent', () => {
       }
       ));
 
+    // Test deleting the sgpolicy clears the table
+    sgPolicyObserver.next({
+      body: {
+        result: {
+          Events: [
+            {
+              Type: "Deleted",
+              Object: sgPolicy
+            }
+          ]
+        }
+      }
+    });
+    fixture.detectChanges();
+    tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body-table tbody'));
+    verifyTable([], component.cols, tableBody);
   });
 
 });

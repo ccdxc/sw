@@ -246,7 +246,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
         // const body = data.body as ISearchPolicySearchResponse;
         const body = data.body as any;
         if (body.status === "MATCH") {
-          if (body.results[this.selectedPolicy.meta.name] == null) {
+          if (this.selectedPolicy == null || body.results[this.selectedPolicy.meta.name] == null) {
             this.searchErrorMessage = "No Matching Rule"
           } else {
             this.searchErrorMessage = '';
@@ -304,6 +304,9 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
           // Set sgpolicyrules
           this.selectedPolicy = new SecuritySGPolicy(this.sgPolicies[0]);
           this.sgPolicyRules = this.addOrderRanking(this.selectedPolicy.spec.rules);
+        } else {
+          this.selectedPolicy = null;
+          this.sgPolicyRules = [];
         }
       },
       error => {
