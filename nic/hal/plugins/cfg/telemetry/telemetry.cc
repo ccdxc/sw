@@ -165,13 +165,13 @@ mirror_session_process_get (MirrorSessionGetRequest &req,
     hal_ret_t ret = HAL_RET_OK;
     pd::pd_func_args_t pd_func_args = {0};
 
-    HAL_TRACE_DEBUG("{}: Mirror Session ID {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("Mirror Session ID {}",
             req.key_or_handle().mirrorsession_id());
     memset(args->session, 0, sizeof(mirror_session_t));
     pd_func_args.pd_mirror_session_get = args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: PD API failed {}", __FUNCTION__, ret);
+        HAL_TRACE_ERR("PD API failed {}", ret);
         return ret;
     }
     return ret;
@@ -239,7 +239,7 @@ mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteRespo
     mirror_session_t session;
     hal_ret_t ret;
 
-    HAL_TRACE_DEBUG("{}: Delete Mirror Session ID {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("Delete Mirror Session ID {}",
             req.key_or_handle().mirrorsession_id());
     memset(&session, 0, sizeof(session));
     session.id = req.key_or_handle().mirrorsession_id();
@@ -247,7 +247,7 @@ mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteRespo
     pd_func_args.pd_mirror_session_delete = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: PD API failed {}", __FUNCTION__, ret);
+        HAL_TRACE_ERR("PD API failed {}", ret);
         rsp->set_api_status(types::API_STATUS_OK);
         rsp->mutable_key_or_handle()->set_mirrorsession_id(session.id);
     }
@@ -262,8 +262,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     pd::pd_func_args_t pd_func_args = {0};
     hal_ret_t ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("{}: ExportID {}", __FUNCTION__,
-            spec.key_or_handle().collector_id());
+    HAL_TRACE_DEBUG("ExportID {}", spec.key_or_handle().collector_id());
     collector_spec_dump(spec);
 
     cfg.collector_id = spec.key_or_handle().collector_id();
@@ -271,7 +270,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     ip_addr_spec_to_ip_addr(&cfg.dst_ip, spec.dest_ip());
     auto ep = find_ep_by_v4_key(spec.vrf_key_handle().vrf_id(), cfg.dst_ip.addr.v4_addr);
     if (ep == NULL) {
-        HAL_TRACE_ERR("PI-Collector:{}: Unknown endpoint {} : {}", __FUNCTION__,
+        HAL_TRACE_ERR("PI-Collector: Unknown endpoint {} : {}",
             spec.vrf_key_handle().vrf_id(), ipaddr2str(&cfg.dst_ip));
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
@@ -283,10 +282,14 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
             cfg.format = EXPORT_FORMAT_IPFIX;
             break;
         case telemetry::ExportFormat::NETFLOWV9:
-            cfg.format = EXPORT_FORMAT_NETFLOW9;
+            HAL_TRACE_ERR("PI-Collector: Netflow-v9 format type is not supported {}",
+                           spec.format());
             break;
+            // TODO: Need to remove netflow from mbt and add these lines back
+            //rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            //return HAL_RET_INVALID_ARG;
         default:
-            HAL_TRACE_DEBUG("PI-Collector:{}: Unknown format type {}", __FUNCTION__, spec.format());
+            HAL_TRACE_ERR("PI-Collector: Unknown format type {}", spec.format());
             rsp->set_api_status(types::API_STATUS_INVALID_ARG);
             return HAL_RET_INVALID_ARG;
     }
@@ -296,19 +299,19 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     if (encap.encap_type() == types::ENCAP_TYPE_DOT1Q) {
         cfg.vlan = encap.encap_value();
     } else {
-        HAL_TRACE_DEBUG("PI-Collector:{}: Unsupport Encap {}", __FUNCTION__, encap.encap_type());
+        HAL_TRACE_ERR("PI-Collector: Unsupport Encap {}", encap.encap_type());
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
     cfg.l2seg = l2seg_lookup_key_or_handle(spec.l2seg_key_handle());
     if (cfg.l2seg == NULL) {
-        HAL_TRACE_DEBUG("PI-Collector:{}: Could not retrieve L2 segment", __FUNCTION__);
+        HAL_TRACE_ERR("PI-Collector: Could not retrieve L2 segment");
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
     auto dmac = l2seg_get_rtr_mac(cfg.l2seg);
     if (dmac == NULL) {
-        HAL_TRACE_DEBUG("PI-Collector:{}: Could not retrieve L2 segment source mac", __FUNCTION__);
+        HAL_TRACE_DEBUG("PI-Collector: Could not retrieve L2 segment source mac");
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
@@ -318,10 +321,10 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_OK);
-        HAL_TRACE_ERR("PI-Collector:{}: PD API failed {}", __FUNCTION__, ret);
+        HAL_TRACE_ERR("PI-Collector: PD API failed {}", ret);
         return ret;
     }
-    HAL_TRACE_DEBUG("{}: SUCCESS: ExportID {}, dest {}, source {},  port {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("SUCCESS: ExportID {}, dest {}, source {},  port {}",
             spec.key_or_handle().collector_id(), ipaddr2str(&cfg.dst_ip),
             ipaddr2str(&cfg.src_ip), cfg.dport);
     rsp->set_api_status(types::API_STATUS_OK);
@@ -344,7 +347,7 @@ collector_delete (CollectorDeleteRequest &req, CollectorDeleteResponse *rsp)
     pd::pd_func_args_t              pd_func_args = {0};
     pd::pd_collector_delete_args_t  args;
 
-    HAL_TRACE_DEBUG("{}: Collector ID {}", __FUNCTION__,
+    HAL_TRACE_DEBUG("Collector ID {}",
             req.key_or_handle().collector_id());
     args.cfg = &cfg;
     pd_func_args.pd_collector_delete = &args;
@@ -367,8 +370,7 @@ collector_process_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp,
     hal_ret_t ret = HAL_RET_OK;
     pd::pd_func_args_t pd_func_args = {0};
 
-    HAL_TRACE_DEBUG("{}: Collector ID {}", __FUNCTION__,
-            req.key_or_handle().collector_id());
+    HAL_TRACE_DEBUG("Collector ID {}", req.key_or_handle().collector_id());
     memset(args->cfg, 0, sizeof(collector_config_t));
     pd_func_args.pd_collector_get = args;
     auto response = rsp->add_response();
@@ -431,16 +433,39 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
         return ret;
     }
     if (spec.has_action()) {
-        int n = spec.action().ms_key_handle_size();
-        for (int i = 0; i < n; i++) {
-            rule->action.mirror_destinations[i] = spec.action().ms_key_handle(i).mirrorsession_id();
+        if ((spec.action().action(0) == telemetry::MIRROR) ||
+            (spec.action().action(0) == telemetry::MIRROR_TO_CPU)) {
+            /* Mirror action */
+            int n = spec.action().ms_key_handle_size();
+            for (int i = 0; i < n; i++) {
+                rule->action.mirror_destinations[i] = spec.action().ms_key_handle(i).mirrorsession_id();
+            }
+            rule->action.num_mirror_dest = n;
+            n = spec.action().action_size();
+            if (n != 0) {
+                // Only one action for mirroring
+                rule->action.mirror_to_cpu = (spec.action().action(0) ==
+                                           telemetry::MIRROR_TO_CPU) ? true : false;
+            }
         }
-        rule->action.num_mirror_dest = n;
-        n = spec.action().action_size();
-        if (n != 0) {
-            // Only one action for mirroring
-            rule->action.mirror_to_cpu = (spec.action().action(0) ==
-                                       telemetry::MIRROR_TO_CPU) ? true : false;
+        if (spec.action().action(0) == telemetry::COLLECT_FLOW_STATS) {
+            /* Netflow or IPFIX action */
+            if (spec.action().agg_scheme(0) != telemetry::NONE) {
+                /* Aggregation scheme not supported */
+                HAL_TRACE_ERR("Aggregation is not supported {}", spec.action().agg_scheme(0));
+                return HAL_RET_INVALID_ARG;
+            }
+            /* Get collector info */
+            int n = spec.collector_key_handle_size();
+            if (n == 0) {
+                /* No collectors configured! */
+                HAL_TRACE_ERR("Action is collect, but no collectors specified");
+                return HAL_RET_INVALID_ARG;
+            }
+            for (int i = 0; i < n; i++) {
+                rule->action.collectors[i] = spec.collector_key_handle(i).collector_id();
+            }
+            rule->action.num_collector = n;
         }
     }
     return ret;

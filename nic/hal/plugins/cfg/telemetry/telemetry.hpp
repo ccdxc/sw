@@ -168,9 +168,10 @@ typedef struct drop_monitor_rule_s {
 } __PACK__ drop_monitor_rule_t;
 
 typedef struct flow_monitor_rule_action_s {
-    uint8_t     num_mirror_dest;
-    uint8_t     mirror_destinations[MAX_MIRROR_SESSION_DEST];
-    bool        collect_flow_action; // Is it a collect action ?
+    uint8_t     num_mirror_dest;    // Num of mirror sessions
+    uint8_t     num_collector;  // Number of collectors
+    uint8_t     collectors[MAX_COLLECTORS]; // Collector ids
+    uint8_t     mirror_destinations[MAX_MIRROR_SESSION_DEST];   // Mirror session ids
     bool        mirror_to_cpu;       // Mirror to cpu - additional mirror dest
 } __PACK__ flow_monitor_rule_action_t;
 
