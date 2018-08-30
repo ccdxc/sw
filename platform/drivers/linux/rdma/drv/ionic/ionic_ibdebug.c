@@ -90,6 +90,34 @@ static void ionic_q_dump(struct seq_file *s, struct ionic_queue *q)
 	seq_hex_dump(s, "", DUMP_PREFIX_OFFSET, 16, 1, q->ptr, q->size, true);
 }
 
+static void ionic_tbl_res_show(struct seq_file *s, const char *w,
+			       struct ionic_tbl_res *res)
+{
+	seq_printf(s, "%stbl_order:\t%u\n", w, res->tbl_order);
+	seq_printf(s, "%stbl_pos:\t%#x\n", w, res->tbl_pos);
+}
+
+static void ionic_tbl_buf_show(struct seq_file *s, const char *w,
+			       struct ionic_tbl_buf *buf)
+{
+	seq_printf(s, "%stbl_limit:\t%u\n", w, buf->tbl_limit);
+	seq_printf(s, "%stbl_pages:\t%u\n", w, buf->tbl_pages);
+	seq_printf(s, "%stbl_size:\t%zu\n", w, buf->tbl_size);
+	seq_printf(s, "%stbl_dma:\t%#llx\n", w, buf->tbl_dma);
+	seq_printf(s, "%spage_size_log2:\t%u\n", w, buf->page_size_log2);
+}
+
+static void ionic_tbl_buf_dump(struct seq_file *s, struct ionic_tbl_buf *buf)
+{
+	int page_i;
+
+	if (!buf->tbl_buf)
+		return;
+
+	for (page_i = 0; page_i < buf->tbl_pages; ++page_i)
+		seq_printf(s, "%llx\n", buf->tbl_buf[page_i]);
+}
+
 static int ionic_dev_info_show(struct seq_file *s, void *v)
 {
 	struct ionic_ibdev *dev = s->private;
@@ -329,6 +357,9 @@ static int ionic_mr_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "lkey:\t%u\n", mr->ibmr.lkey);
 	seq_printf(s, "rkey:\t%u\n", mr->ibmr.rkey);
 
+	ionic_tbl_res_show(s, "", &mr->res);
+	ionic_tbl_buf_show(s, "", &mr->buf);
+
 	if (mr->umem)
 		ionic_umem_show(s, "", mr->umem);
 
@@ -368,6 +399,27 @@ static const struct file_operations ionic_mr_umem_fops = {
 	.release = seq_release,
 };
 
+static int ionic_mr_tbl_buf_show(struct seq_file *s, void *v)
+{
+	struct ionic_mr *mr = s->private;
+
+	ionic_tbl_buf_dump(s, &mr->buf);
+
+	return 0;
+}
+
+static int ionic_mr_tbl_buf_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, ionic_mr_tbl_buf_show, inode->i_private);
+}
+
+static const struct file_operations ionic_mr_tbl_buf_fops = {
+	.open = ionic_mr_tbl_buf_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release,
+};
+
 void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 {
 	char name[8];
@@ -391,6 +443,10 @@ void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 	if (mr->umem)
 		debugfs_create_file("umem", 0220, mr->debug, mr,
 				    &ionic_mr_umem_fops);
+
+	if (mr->buf.tbl_buf)
+		debugfs_create_file("buf", 0220, mr->debug, mr,
+				    &ionic_mr_tbl_buf_fops);
 }
 
 void ionic_dbgfs_rm_mr(struct ionic_mr *mr)
@@ -407,8 +463,8 @@ static int ionic_cq_info_show(struct seq_file *s, void *v)
 
 	seq_printf(s, "cqid:\t%u\n", cq->cqid);
 	seq_printf(s, "eqid:\t%u\n", cq->eqid);
-	seq_printf(s, "tbl_pos:\t%u\n", cq->res.tbl_pos);
-	seq_printf(s, "tbl_order:\t%d\n", cq->res.tbl_order);
+
+	ionic_tbl_res_show(s, "", &cq->res);
 
 	if (cq->q.ptr)
 		ionic_q_show(s, "", &cq->q);
@@ -862,6 +918,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 		if (qp->sq_umem)
 			ionic_umem_show(s, "sq.", qp->sq_umem);
 
+		ionic_tbl_res_show(s, "sq.", &qp->sq_res);
+
 		seq_printf(s, "sq_is_hbm:\t%d\n", qp->sq_is_hbm);
 		if (qp->sq_is_hbm) {
 			seq_printf(s, "sq_hbm_order:\t%d\n", qp->sq_hbm_order);
@@ -876,6 +934,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 
 		if (qp->rq_umem)
 			ionic_umem_show(s, "rq.", qp->rq_umem);
+
+		ionic_tbl_res_show(s, "rq.", &qp->rq_res);
 	}
 
 	return 0;
