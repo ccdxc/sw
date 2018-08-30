@@ -51,10 +51,9 @@ resp_rx_cqpt_process:
     memwr.h         CQCB_PA_INDEX, K_PA_NEXT_INDEX
 
     bcf             [c2], fire_eqcb
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_CQ) //BD slot    
 
         // CQE_P = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
-    add             CQE_P, PAGE_ADDR_P, CAPRI_KEY_FIELD(IN_P, page_offset)
+    add             CQE_P, PAGE_ADDR_P, CAPRI_KEY_FIELD(IN_P, page_offset) //BD Slot
 
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqe, cqe, CQE_P)
 

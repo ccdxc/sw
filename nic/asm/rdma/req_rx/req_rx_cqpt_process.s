@@ -44,10 +44,9 @@ req_rx_cqpt_process:
     memwr.h         CQCB_PA_INDEX, K_PA_NEXT_INDEX
 
     bcf             [c2], fire_eqcb
-    DMA_CMD_STATIC_BASE_GET(r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ) //BD Slot
     
     // cqe_p = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
-    add             r1, r1, K_PAGE_OFFSET
+    add             r1, r1, K_PAGE_OFFSET //BD Slot
 
     DMA_PHV2MEM_SETUP(r2, c1, cqe, cqe, r1)
 

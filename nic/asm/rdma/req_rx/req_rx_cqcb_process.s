@@ -5,18 +5,23 @@ struct req_rx_phv_t p;
 struct req_rx_s6_t2_k k;
 struct cqcb_t d;
 
-#define NUM_LOG_WQE         r2
-#define PAGE_INDEX          r3
-#define PT_PINDEX           r1
-#define PAGE_OFFSET         r1
-#define PAGE_SEG_OFFSET     r4
-#define CQCB_ADDR           r4
-#define ARG_P               r5
-#define NUM_LOG_PAGES       r6
-    
 #define IN_P t2_s2s_rrqwqe_to_cq_info
 #define IN_TO_S_P to_s6_cq_info
 
+#define PAGE_INDEX          r3
+#define CQE_P               r3
+#define R_CQ_PROXY_PINDEX   r1
+#define PAGE_SEG_OFFSET     r4
+#define CQCB_ADDR           r6
+
+#define DMA_CMD_BASE        r6
+#define NUM_LOG_PAGES       r6    
+#define PT_PINDEX           r7
+#define DB_ADDR             r7
+#define PAGE_OFFSET         r7
+#define DB_DATA             r2
+#define NUM_LOG_WQE         r2    
+ 
 #define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
 #define CQ_EQ_INFO_P    t1_s2s_cqcb_to_eq_info
 
@@ -39,163 +44,148 @@ req_rx_cqcb_process:
     mfspr            r1, spr_mpuid
     seq              c1, r1[4:2], STAGE_6
     bcf              [!c1], bubble_to_next_stage
-    seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX
-
-    bbeq             d.cq_full, 1, error_disable_qp_using_recirc
     seq              c1, CQ_PROXY_PINDEX, 0 //BD Slot
 
+    bbeq             d.cq_full, 1, error_disable_qp_using_recirc
+
     #check for CQ full
-    #seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX
+    seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX //BD Slot
     bbeq.c5          d.cq_full_hint, 1, report_cqfull_error
 
-    #Initialize c3(no_dma) to False
-    setcf            c3, [!c0] //BD Slot
+    add             R_CQ_PROXY_PINDEX, CQ_PROXY_PINDEX, 0 //BD Slot
 
-    tblwr            d.cq_full_hint, 0
-    #seq             c1, CQ_PROXY_PINDEX, 0
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
 
-    // set the color in cqe
-    phvwrpair       p.cqe.type, K_CQE_TYPE, p.cqe.color, CQ_COLOR
+    // increment p_index
+    tblmincri       CQ_PROXY_PINDEX, d.log_num_wqes, 1
 
+    // check incremented p_index for cq_full_hint
+    seq             c5, CQ_PROXY_PINDEX, CQ_C_INDEX
+    tblwr.c5        d.cq_full_hint, 1
+    tblwr.!c5       d.cq_full_hint, 0
+
+    crestore        [c7], K_BTH_SE, 0x1
+
+    tblwr.c7        CQ_PROXY_S_PINDEX, R_CQ_PROXY_PINDEX
+
+    //if (wakeup_dpath == 1) or ((arm == 0) && (sarm == 0)), do not fire_eqcb
+    seq             c4, d.wakeup_dpath, 1
+    seq.!c4         c4, d.{arm...sarm}, 0x0
+
+    /* get the page index corresponding to p_index */
     sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size
-    srlv            r3, CQ_PROXY_PINDEX, NUM_LOG_WQE
-
-    add             r1, d.pt_pg_index, 0
-    beq             r1, r3, no_translate_dma
-    add             r1, CQ_PROXY_PINDEX, 0  //BD slot
-
-    //Compute the number of pages of CQ
-    add             NUM_LOG_PAGES, d.log_num_wqes, d.log_wqe_size
-    sub             NUM_LOG_PAGES, NUM_LOG_PAGES, d.log_cq_page_size
+    srlv            PAGE_INDEX, R_CQ_PROXY_PINDEX, NUM_LOG_WQE
     
-    add             r1, d.pt_next_pg_index, 0
-    beq             r1, r3, translate_next 
-    add             PT_PINDEX, r0, d.pt_next_pg_index //Branch delay slot    
-    b               fire_cqpt
-    add             PT_PINDEX, r0, CQ_PROXY_PINDEX //Branch delay slot    
+    add             PT_PINDEX, d.pt_pg_index, 0
+    beq             PT_PINDEX, PAGE_INDEX, no_translate_dma
+    #Initialize c3(no_dma) to False
+    setcf            c3, [!c0] //BD Slot
+
+
+    add             PT_PINDEX, d.pt_next_pg_index, 0   
+    bne             PT_PINDEX, PAGE_INDEX, fire_cqpt
+    CAPRI_RESET_TABLE_2_ARG() //BD SLot
 
 translate_next:
 
     tblwr          d.pt_pa, d.pt_next_pa
-    tblwr          d.pt_pg_index, d.pt_next_pg_index
+    tblwr.c4.f     d.pt_pg_index, d.pt_next_pg_index
+    tblwr.!c4      d.pt_pg_index, d.pt_next_pg_index
 
-    mincr          PT_PINDEX, NUM_LOG_PAGES, 1
-    sll            PT_PINDEX, PT_PINDEX, NUM_LOG_WQE
-
+    //Compute the number of pages of CQ
+    add            NUM_LOG_PAGES, d.log_num_wqes, d.log_wqe_size
+    sub            NUM_LOG_PAGES, NUM_LOG_PAGES, d.log_cq_page_size
+    
+    mincr          PAGE_INDEX, NUM_LOG_PAGES, 1
     setcf          c3, [c0]
+    phvwr          CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_dma), 1
     
 fire_cqpt:
-    
-    // page_index = p_index >> (log_rq_page_size - log_wqe_size)
-    add             r1, r0, PT_PINDEX
-    srlv            r3, r1, NUM_LOG_WQE
 
-    CAPRI_RESET_TABLE_2_ARG()
-    mfspr       CQCB_ADDR, spr_tbladdr
-    phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, cqcb_addr), CQCB_ADDR, \
-              CAPRI_PHV_FIELD(CQ_PT_INFO_P, pt_next_pg_index), r3
+    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_translate), 0, \
+                CAPRI_PHV_FIELD(CQ_PT_INFO_P, pt_next_pg_index), PAGE_INDEX
     
     // page_offset = p_index & ((1 << (log_cq_page_size - log_wqe_size))-1) << log_wqe_size
-    mincr           r1, NUM_LOG_WQE, r0
-    sll             r1, r1, d.log_wqe_size
+    add             r7, R_CQ_PROXY_PINDEX, r0
+    mincr           r7, NUM_LOG_WQE, r0
+    sll             PAGE_OFFSET, r7, d.log_wqe_size
 
-    // r3 has page_index, r1 has page_offset by now
+    // r3 has page_index, r7 has page_offset by now
 
     // page_seg_offset = page_index & 0x7
-    and     r4, r1, CAPRI_SEG_PAGE_MASK
+    and     PAGE_SEG_OFFSET, PAGE_INDEX, CAPRI_SEG_PAGE_MASK
     // page_index = page_index & ~0x7
-    sub     r3, r3, r4
+    sub     PAGE_INDEX, PAGE_INDEX, PAGE_SEG_OFFSET
     // page_index = page_index * sizeof(u64)
-    sll     r3, r3, CAPRI_LOG_SIZEOF_U64
+    sll     PAGE_INDEX, PAGE_INDEX, CAPRI_LOG_SIZEOF_U64
     // page_index += cqcb_p->pt_base_addr
-    add     r3, r3, d.pt_base_addr, PT_BASE_ADDR_SHIFT
+    add     PAGE_INDEX, PAGE_INDEX, d.pt_base_addr, PT_BASE_ADDR_SHIFT
     // now r3 has page_p to load
-    
-    phvwr     CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_seg_offset), r4
-    phvwrpair CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_offset), r1, \
-              CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_translate), 0
-    phvwr.c3  CAPRI_PHV_FIELD(CQ_PT_INFO_P, no_dma), 1
 
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_cqpt_process, r3)
+    mfspr       CQCB_ADDR, spr_tbladdr
+    phvwr       CAPRI_PHV_FIELD(CQ_PT_INFO_P, cqcb_addr), CQCB_ADDR
 
-    bcf     [!c3], incr_pindex
-    nop
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_cqpt_process, PAGE_INDEX)
+
+    bcf     [!c3], cq_done 
+    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_offset), PAGE_OFFSET, \
+                CAPRI_PHV_FIELD(CQ_PT_INFO_P, page_seg_offset), PAGE_SEG_OFFSET //BD Slot
     b       do_dma
-    add             r1, r0, CQ_PROXY_PINDEX
+    nop
     
 no_translate_dma:
-
-    CAPRI_RESET_TABLE_2_ARG()
-    phvwr     CAPRI_PHV_RANGE(CQ_PT_INFO_P, no_translate, no_dma), 0x3
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqpt_process, r0)
     
+    //dummy table write to flush
+    tblwr.c4.f        d.pt_pa, d.pt_pa
+    CAPRI_SET_TABLE_2_VALID(0);
+    
+    // page_offset = p_index & ((1 << (log_cq_page_size - log_wqe_size))-1) << log_wqe_size
+    add             r6, R_CQ_PROXY_PINDEX, r0
+    mincr           r6, NUM_LOG_WQE, r0
+    sll             PAGE_OFFSET, r6, d.log_wqe_size
+
 do_dma:
 
-    // page_offset = p_index & ((1 << (log_cq_page_size - log_wqe_size))-1) << log_wqe_size
-    //r1 has CQ_PROXY_PINDEX by the time we reach here
-    mincr           r1, NUM_LOG_WQE, r0
-    sll             r1, r1, d.log_wqe_size
+    // CQE_P = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
+    add             CQE_P, d.pt_pa, PAGE_OFFSET
 
-    // cqe_p = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
-    add             r1, d.pt_pa, r1
-
-    DMA_CMD_STATIC_BASE_GET(r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)    
-    DMA_PHV2MEM_SETUP(r2, c1, cqe, cqe, r1)    
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
+    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqe, cqe, CQE_P)
     
-incr_pindex: 
-
+cq_done:
 eqcb_eval:
 
-    //if (wakeup_dpath == 1), do not fire_eqcb
-    bbeq            d.wakeup_dpath, 1, skip_eqcb
-
-    #c6 is used to specify whether to fire eqcb or not(1: fire, 0: no)
-    setcf           c6, [!c0] //BD Slot
+    // set the color in cqe
+    phvwrpair       p.cqe.type, K_CQE_TYPE, p.cqe.color, CQ_COLOR
 
     #c2 - arm
     #c1 - sarm
+    #c7 - bth_se
     crestore        [c2, c1], d.{arm...sarm}, 0x3
-
-    //if (arm = 1), fire_eqcb
-    bcf             [c2], eqcb_setup
-    setcf.c2        c6, [c0] //BD Slot
-
-    //if (sarm == 1) && (arm = 0) && (bth_se == 1), fire_eqcb
-    bbeq.c1         K_BTH_SE, 1, eqcb_setup
-    setcf           c6, [c0] //BD Slot
-
-    setcf           c6, [!c0]
+    bbeq            d.wakeup_dpath, 1, skip_eqcb
+    setcf           c1, [c1 & c7]
+    bcf             ![c2 | c1], skip_eqcb
 
 eqcb_setup:
-    bcf             [!c6], skip_eqcb
     REQ_RX_EQCB_ADDR_GET(r5, r2, d.eq_id, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES) // BD Slot
-    phvwr           CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
-    tblwr           CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
+    phvwr       CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
+    tblwr       CQ_PROXY_S_PINDEX, R_CQ_PROXY_PINDEX
+    tblwr       d.{arm...sarm}, 0
 
     phvwrpair   p.eqwqe.code, EQE_CODE_CQ_NOTIFY, p.eqwqe.type, EQE_TYPE_CQ
     phvwr       p.eqwqe.qid, d.cq_id
 
     CAPRI_RESET_TABLE_1_ARG()
-
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) 
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) //Exit Slot
 
 skip_eqcb:
-   
-    // increment p_index
-    tblmincri       CQ_PROXY_PINDEX, d.log_num_wqes, 1
-    crestore        [c1], CAPRI_KEY_FIELD(IN_TO_S_P, bth_se), 0x1
-    tblwr.c1        CQ_PROXY_S_PINDEX, CQ_PROXY_PINDEX
-
-    seq             c5, CQ_PROXY_PINDEX, CQ_C_INDEX
-    tblwr.c5        d.cq_full_hint, 1
+eval_wakeup:
 
     bbne        d.wakeup_dpath, 1, skip_wakeup
-    tblwr.c6    d.{arm...sarm}, 0 //Branch Delay Slot
+    nop
 
-
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_WAKEUP_DPATH)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_WAKEUP_DPATH) //BD Slot
     PREPARE_DOORBELL_INC_PINDEX(d.wakeup_lif, d.wakeup_qtype, d.wakeup_qid, d.wakeup_ring_id, r1, r2)
     phvwr          p.wakeup_dpath_data, r2.dx
     DMA_HBM_PHV2MEM_SETUP(r6, wakeup_dpath_data, wakeup_dpath_data, r1)
@@ -203,6 +193,13 @@ skip_eqcb:
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
     nop.e
     nop
+
+skip_wakeup:
+    //DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
+    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
+    nop.e
+    nop
+
 
 bubble_to_next_stage:
     seq         c1, r1[4:2], STAGE_5
@@ -229,12 +226,6 @@ report_async:
     CAPRI_SET_TABLE_2_VALID(0)
     CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) //Exit Slot
 
-skip_wakeup:
-exit:
-    nop.e
-    nop
-
-
 error_disable_qp_using_recirc:
 
     //clear the completion flag in GLOBAL_FLAGS, so it won't invoke cqcb_process again on recirc
@@ -255,3 +246,6 @@ error_disable_qp_using_recirc:
     b           report_async
     phvwr       p.eqwqe.qid, K_GLOBAL_QID //BD Slot
 
+exit:
+    nop.e
+    nop
