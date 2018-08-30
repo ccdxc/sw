@@ -94,20 +94,31 @@ static identity_t* sonic_get_identity(void)
 	return lif->sonic->ident;
 }
 
-#define DBG_CHK_RING_ID(accel_ring_id, ret)				\
-	do {								\
-		if (accel_ring_id >= ACCEL_RING_ID_MAX) 		\
-			return ret;					\
-	} while(0)
+#ifdef NDEBUG
+#define DBG_CHK_RING_ID(r)	PNSO_OK
+#else
+#define DBG_CHK_RING_ID(r)	dbg_check_ring_id(r)
+#endif
+
+static inline int
+dbg_check_ring_id(uint32_t accel_ring_id)
+{
+	return (accel_ring_id >= ACCEL_RING_ID_MAX) ? -EINVAL : PNSO_OK;
+}
 
 accel_ring_t* sonic_get_accel_ring(uint32_t accel_ring_id)
 {
-	identity_t *ident = sonic_get_identity();
+	int err;
+	identity_t *ident;
 
-	if(NULL == ident)
+	err = DBG_CHK_RING_ID(accel_ring_id);
+	if (err)
 		return NULL;
-	DBG_CHK_RING_ID(accel_ring_id, NULL);
 	
+	ident = sonic_get_identity();
+	if(!ident)
+		return NULL;
+
 	return &ident->dev.accel_ring_tbl[accel_ring_id];
 }
 
