@@ -878,7 +878,7 @@ static int ionic_v1_noop_cmd(struct ionic_ibdev *dev)
 		rc = -ENODEV;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "noop killed\n");
-		rc = 0;
+		rc = -ENODEV;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "noop error %u\n",
 			 be32_to_cpu(wr.cqe.status_length));
@@ -932,7 +932,7 @@ static int ionic_v1_stats_cmd(struct ionic_ibdev *dev,
 		rc = -ENODEV;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "killed\n");
-		rc = 0;
+		rc = -ENODEV;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "error %u\n",
 			 be32_to_cpu(wr.cqe.status_length));
@@ -1809,7 +1809,7 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 		rc = -ENODEV;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "killed\n");
-		rc = 0;
+		rc = -ENODEV;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "error %u\n",
 			 be32_to_cpu(wr.cqe.status_length));
@@ -1866,7 +1866,7 @@ static int ionic_v1_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid)
 		ionic_admin_cancel(dev, &wr);
 	} else if (wr.status == IONIC_ADMIN_FAILED) {
 		dev_warn(&dev->ibdev.dev, "failed\n");
-		rc = -ENODEV;
+		rc = 0;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "killed\n");
 		rc = 0;
@@ -2047,7 +2047,7 @@ static int ionic_v1_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 		rc = -ENODEV;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "killed\n");
-		rc = 0;
+		rc = -ENODEV;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
 			 be32_to_cpu(wr.cqe.status_length));
@@ -2093,7 +2093,7 @@ static int ionic_v1_destroy_mr_cmd(struct ionic_ibdev *dev, u32 mrid)
 	wait_for_completion(&wr.work);
 	if (wr.status == IONIC_ADMIN_FAILED) {
 		dev_warn(&dev->ibdev.dev, "failed\n");
-		rc = -ENODEV;
+		rc = 0;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "killed\n");
 		rc = 0;
@@ -2540,7 +2540,7 @@ static int ionic_v1_create_cq_cmd(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		rc = -ENODEV;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "killed\n");
-		rc = 0;
+		rc = -ENODEV;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
 			 be32_to_cpu(wr.cqe.status_length));
@@ -2568,7 +2568,7 @@ static int ionic_v1_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
 	wait_for_completion(&wr.work);
 	if (wr.status == IONIC_ADMIN_FAILED) {
 		dev_warn(&dev->ibdev.dev, "failed\n");
-		rc = -ENODEV;
+		rc = 0;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "killed\n");
 		rc = 0;
@@ -2726,7 +2726,7 @@ err_cq:
 	return ERR_PTR(rc);
 }
 
-static void __ionic_rm_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
+static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
 	mutex_lock(&dev->tbl_lock);
 	tbl_free_node(&dev->cq_tbl);
@@ -2736,11 +2736,6 @@ static void __ionic_rm_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	synchronize_rcu();
 
 	ionic_dbgfs_rm_cq(cq);
-}
-
-static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
-{
-	__ionic_rm_cq(dev, cq);
 
 	ionic_pgtbl_unres(dev, &cq->res);
 
@@ -2793,16 +2788,12 @@ static int ionic_destroy_cq(struct ib_cq *ibcq)
 	int rc;
 
 	rc = ionic_destroy_cq_cmd(dev, cq->cqid);
-	if (!rc)
-		__ionic_destroy_cq(dev, cq);
+	if (rc)
+		return rc;
 
-	if (rc == -ENODEV) {
-		dev_err(&dev->ibdev.dev, "leaking cq resources\n");
-		__ionic_rm_cq(dev, cq);
-		rc = 0;
-	}
+	__ionic_destroy_cq(dev, cq);
 
-	return rc;
+	return 0;
 }
 
 static int ionic_resize_cq(struct ib_cq *ibcq, int cqe,
@@ -3510,7 +3501,7 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 		rc = -ENODEV;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "killed\n");
-		rc = 0;
+		rc = -ENODEV;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
 			 be32_to_cpu(wr.cqe.status_length));
@@ -3702,7 +3693,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 		rc = -ENODEV;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "killed\n");
-		rc = 0;
+		rc = -ENODEV;
 	} else if (ionic_v1_cqe_error(&wr.cqe)) {
 		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
 			 be32_to_cpu(wr.cqe.status_length));
@@ -3740,7 +3731,7 @@ static int ionic_v1_destroy_qp_cmd(struct ionic_ibdev *dev, u32 qpid)
 	wait_for_completion(&wr.work);
 	if (wr.status == IONIC_ADMIN_FAILED) {
 		dev_warn(&dev->ibdev.dev, "failed\n");
-		rc = -ENODEV;
+		rc = 0;
 	} else if (wr.status == IONIC_ADMIN_KILLED) {
 		dev_warn(&dev->ibdev.dev, "killed\n");
 		rc = 0;
@@ -6121,7 +6112,10 @@ static void ionic_kill_rdma_admin(struct ionic_ibdev *dev)
 		/* success: device will no longer access host resources */
 		dev->admin_state = IONIC_ADMIN_KILLED;
 	else
-		/* failure: leak host resources to avoid corruption */
+		/* failure: state of the device is unknown.  allow host
+		 * resources to be freed anyway.  rely on iommu to protect the
+		 * host from further access by the device.
+		 */
 		dev->admin_state = IONIC_ADMIN_FAILED;
 	/* final poll will flush the admin queue */
 	ionic_admin_poll_locked(dev);
@@ -6133,21 +6127,6 @@ static void ionic_kill_rdma_admin(struct ionic_ibdev *dev)
 static void ionic_destroy_rdma_admin(struct ionic_ibdev *dev)
 {
 	struct ionic_eq *eq;
-	int eq_i;
-
-	if (dev->admin_state == IONIC_ADMIN_FAILED) {
-		if (dev->eq_vec) {
-			for (eq_i = 0; eq_i < dev->eq_count; ++eq_i) {
-				eq = dev->eq_vec[eq_i];
-
-				eq->enable = false;
-				flush_work(&eq->work);
-				free_irq(eq->irq, eq);
-			}
-			kfree(dev->eq_vec);
-		}
-		return;
-	}
 
 	if (dev->adminq)
 		__ionic_destroy_rdma_adminq(dev, dev->adminq);
