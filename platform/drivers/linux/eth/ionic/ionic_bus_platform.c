@@ -66,7 +66,6 @@ u_int64_t intr_fwcfg_addr(const int intr)
 		return (u_int64_t)((uint8_t*)fwcfg_base_addr + (intr * INTR_FWCFG_STRIDE));
 }
 
-
 void intr_fwcfg(const int intr)
 {
 	u_int64_t pa = intr_fwcfg_addr(intr);
@@ -83,11 +82,6 @@ void intr_msixcfg(const int intr, const u_int64_t msgaddr, const u_int32_t msgda
 	writeq(msgaddr, (volatile void*)(pa + offsetof(intr_msixcfg_t, msgaddr)));
 	writel(msgdata, (volatile void*)(pa + offsetof(intr_msixcfg_t, msgdata)));
 	writel(vctrl, (volatile void*)(pa + offsetof(intr_msixcfg_t, vector_ctrl)));
-}
-
-void print_remove_hack_message(int line, char* message)
-{
-	printk("HAPS REMOVE HACK @%d => %s \n", line, message);
 }
 
 int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
