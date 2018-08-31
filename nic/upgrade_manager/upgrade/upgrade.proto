@@ -119,3 +119,16 @@ message UpgApp {
     delphi.ObjectMeta      Meta              = 1;
     string                 Key               = 2;
 }
+
+message UpgradeMetrics {
+    uint32               Key                      = 1;
+    delphi.Counter       IsUpgPossible            = 2;
+    delphi.Counter       DisruptiveUpg            = 3;
+    delphi.Counter       NonDisruptiveUpg         = 4;
+    delphi.Counter       SuccessfulUpg            = 5;
+    delphi.Counter       FailedUpg                = 6;
+    delphi.Counter       AbortedUpg               = 7;
+    delphi.Gauge         NumRegApps               = 8;
+    delphi.Counter       UpgPossible              = 9;
+    delphi.Counter       UpgNotPossible           = 10;
+}

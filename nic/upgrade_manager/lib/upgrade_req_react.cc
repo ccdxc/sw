@@ -18,9 +18,11 @@ UpgCtx ctx;
 UpgStateMachine *StateMachine;
 
 void UpgReqReact::RegNewApp(string name) {
+    CreateUpgradeMetrics();
     if (appRegMap_[name] == false) {
         UPG_LOG_DEBUG("App not registered. Registering {} now.", name);
         appRegMap_[name] = true;
+        upgMetric_->NumRegApps()->Set(appRegMap_.size());
     } else {
         UPG_LOG_DEBUG("App {} already registered.", name);
     }
@@ -32,6 +34,7 @@ UpgReqStateType UpgReqReact::GetNextState(void) {
     reqType = reqStatus->upgreqstate();
     if (GetAppRespFail() && (reqType != UpgStateFailed) && (reqType != UpgStateCleanup)) {
         UPG_LOG_DEBUG("Some application(s) responded with failure");
+        upgMetric_->FailedUpg()->Incr();
         if (upgReqType_ == IsUpgPossible) {
             UPG_LOG_DEBUG("Going to respond back to IsUpgPossible");
             return UpgStateTerminal;
@@ -187,12 +190,22 @@ delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
         if (upgReqType_ == IsUpgPossible) {
             UPG_LOG_DEBUG("Upg Req of type IsUpgPossible");
             respType = UpgRespUpgPossible;
+            if (GetAppRespFail()) {
+                upgMetric_->UpgNotPossible()->Incr();
+            } else {
+                upgMetric_->UpgPossible()->Incr();
+            }
         } else {
             UPG_LOG_DEBUG("Upg Req not of type IsUpgPossible");
             if (GetAppRespFail())
                 respType = UpgRespFail;
-            if (upgPassed_ && !upgAborted_)
+            if (upgPassed_ && !upgAborted_) {
                 respType = UpgRespPass;
+                upgMetric_->SuccessfulUpg()->Incr();
+            }
+            if (upgAborted_) {
+                upgMetric_->AbortedUpg()->Incr();
+            }
         }
         upgMgrResp_->UpgradeFinish(respType, appRespFailStrList_);
         if (appRespFailStrList_.empty()) {
@@ -210,6 +223,7 @@ delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
 // OnUpgReqCreate gets called when UpgReq object is created
 delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     UPG_LOG_DEBUG("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
+    CreateUpgradeMetrics();
     GetUpgCtxFromMeta(ctx);
     ctx.upgType = req->upgreqtype();
     UpgReqStateType type = UpgStateCompatCheck;
@@ -218,11 +232,15 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
         StateMachine = CanUpgradeStateMachine;
         upgReqType_ = IsUpgPossible;
         type = UpgStateUpgPossible;
+        upgMetric_->IsUpgPossible()->Incr();
     } else {
         UPG_LOG_INFO("StartUpgrade request received");
-        StateMachine = NonDisruptiveUpgradeStateMachine;
         if (ctx.upgType == UpgTypeDisruptive) {
             StateMachine = DisruptiveUpgradeStateMachine;
+            upgMetric_->DisruptiveUpg()->Incr();
+        } else {
+            StateMachine = NonDisruptiveUpgradeStateMachine;
+            upgMetric_->NonDisruptiveUpg()->Incr();
         }
         upgReqType_ = UpgStart;
         type = UpgStateCompatCheck;
@@ -334,4 +352,13 @@ delphi::objects::UpgReqPtr UpgReqReact::findUpgReq() {
     return delphi::objects::UpgReq::FindObject(sdk_);
 }
 
+void UpgReqReact::CreateUpgradeMetrics(void) {
+    if (upgMetric_ != NULL) {
+        UPG_LOG_DEBUG("UpgradeMetrics object already exists");
+        return;
+    }
+    upgMetric_ = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    assert(upgMetric_ != NULL);
+    UPG_LOG_DEBUG("UpgradeMetrics object created");
+}
 } // namespace upgrade

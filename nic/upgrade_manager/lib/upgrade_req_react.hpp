@@ -13,15 +13,16 @@ using namespace std;
 
 // UpgReqReact is the reactor for the UpgReq object
 class UpgReqReact : public delphi::objects::UpgReqReactor {
-    delphi::SdkPtr                 sdk_;
-    UpgMgrRespPtr                  upgMgrResp_;
+    delphi::SdkPtr                         sdk_;
+    UpgMgrRespPtr                          upgMgrResp_;
 
-    vector<string>                 appRespFailStrList_;
-    unordered_map<string, bool>    appRegMap_;
-    bool                           appRespFail_;
-    bool                           upgAborted_;
-    bool                           upgPassed_;
-    UpgReqType                     upgReqType_;
+    vector<string>                         appRespFailStrList_;
+    unordered_map<string, bool>            appRegMap_;
+    bool                                   appRespFail_;
+    bool                                   upgAborted_;
+    bool                                   upgPassed_;
+    UpgReqType                             upgReqType_;
+    delphi::objects::UpgradeMetricsPtr     upgMetric_;
 
     bool InvokePostStateHandler(UpgReqStateType reqType);
     bool InvokePreStateHandler(UpgReqStateType reqType);
@@ -33,6 +34,7 @@ public:
         upgPassed_   = false;
         upgMgrResp_  = make_shared<UpgMgrResp>(sk);
         appRegMap_.clear();
+        upgMetric_ = NULL;
     }
 
     // OnUpgReqCreate gets called when UpgReq object is created
@@ -77,6 +79,7 @@ public:
     delphi::error StartUpgrade();
     delphi::error AbortUpgrade();
     void RegNewApp(string name);
+    void CreateUpgradeMetrics(void);
 };
 typedef std::shared_ptr<UpgReqReact> UpgReqReactPtr;
 
