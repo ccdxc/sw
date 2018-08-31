@@ -22,11 +22,14 @@ public:
     virtual void UpgStateCompatCheckCompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateProcessQuiesceCompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateLinkDownCompletionHandler(HdlrResp &resp, string svcName);
+    virtual void UpgStateLinkUpCompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStatePostBinRestartCompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateDataplaneDowntimePhase1CompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateDataplaneDowntimePhase2CompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateDataplaneDowntimePhase3CompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateDataplaneDowntimePhase4CompletionHandler(HdlrResp &resp, string svcName);
+    virtual void UpgStateDataplaneDowntimeStartCompletionHandler(HdlrResp &resp, string svcName);
+    virtual void UpgStateIsSystemReadyCompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateCleanupCompletionHandler(HdlrResp &resp, string svcName);
     virtual void UpgStateAbortedCompletionHandler(HdlrResp &resp, string svcName);
 

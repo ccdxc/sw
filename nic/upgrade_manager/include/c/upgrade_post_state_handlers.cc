@@ -31,6 +31,16 @@ bool UpgPostStateHandler::PostUpgStateLinkDownHandler(UpgCtx &ctx) {
     return true;
 }
 
+bool UpgPostStateHandler::PostUpgStateLinkUpHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostUpgStateLinkUpHandler returning");
+    return true;
+}
+
+bool UpgPostStateHandler::PostUpgStateDataplaneDowntimeStartHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostUpgStateDataplaneDowntimeStartHandler returning");
+    return true;
+}
+
 bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase1 returning");
     return true;
@@ -48,6 +58,11 @@ bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase3Handler(UpgCtx &ctx
 
 bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase4 returning");
+    return true;
+}
+
+bool UpgPostStateHandler::PostUpgStateIsSystemReadyHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostUpgStateIsSystemReadyHandler returning");
     return true;
 }
 

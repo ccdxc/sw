@@ -32,8 +32,11 @@ enum UpgReqStateType {
     UpgStateAbort                             = 10;
     UpgStateUpgPossible                       = 11;
     UpgStateLinkDown                          = 12;
+    UpgStateLinkUp                            = 13;
+    UpgStateDataplaneDowntimeStart            = 14;
+    UpgStateIsSystemReady                     = 15;
     //Always to be last
-    UpgStateTerminal                          = 13;
+    UpgStateTerminal                          = 16;
 }
 
 // Upgrade State Response Status
@@ -64,6 +67,12 @@ enum UpgStateRespType {
     UpgStateUpgPossibleRespFail                       = 23;
     UpgStateLinkDownRespPass                          = 24;
     UpgStateLinkDownRespFail                          = 25;
+    UpgStateLinkUpRespPass                            = 26;
+    UpgStateLinkUpRespFail                            = 27;
+    UpgStateDataplaneDowntimeStartRespPass            = 28;
+    UpgStateDataplaneDowntimeStartRespFail            = 29;
+    UpgStateIsSystemReadyRespPass                     = 30;
+    UpgStateIsSystemReadyRespFail                     = 31;
 }
 
 enum UpgType {

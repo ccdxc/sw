@@ -25,6 +25,18 @@ void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
             UPG_LOG_DEBUG("Upgrade: Post-binary restart");
             hdlrResp = upgHdlrPtr_->HandleUpgStatePostBinRestart(ctx);
             break;
+        case UpgStateLinkUp:
+            UPG_LOG_DEBUG("Upgrade: Link Up");
+            hdlrResp = upgHdlrPtr_->HandleUpgStateLinkUp(ctx);
+            break;
+        case UpgStateDataplaneDowntimeStart:
+            UPG_LOG_DEBUG("Upgrade: Dataplane Downtime Start");
+            hdlrResp = upgHdlrPtr_->HandleUpgStateDataplaneDowntimeStart(ctx);
+            break;
+        case UpgStateIsSystemReady:
+            UPG_LOG_DEBUG("Upgrade: Is System Ready");
+            hdlrResp = upgHdlrPtr_->HandleUpgStateIsSystemReady(ctx);
+            break;
         case UpgStateProcessQuiesce:
             UPG_LOG_DEBUG("Upgrade: Processes Quiesced");
             hdlrResp = upgHdlrPtr_->HandleUpgStateProcessQuiesce(ctx);

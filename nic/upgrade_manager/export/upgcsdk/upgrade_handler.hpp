@@ -24,13 +24,27 @@ public:
      */
     virtual HdlrResp HandleUpgStateProcessQuiesce(UpgCtx& upgCtx);
     /*
-     * NicMgr is expected to bring link-down for disruptive upgrade
+     * LinkMgr is expected to bring link-down for disruptive upgrade
      */
     virtual HdlrResp HandleUpgStateLinkDown(UpgCtx& upgCtx);
+    /*
+     * LinkMgr is expected to bring link-up for disruptive upgrade
+     */
+    virtual HdlrResp HandleUpgStateLinkUp(UpgCtx& upgCtx);
     /*
      * Applications are expected to do any post-binary restart handling here.
      */
     virtual HdlrResp HandleUpgStatePostBinRestart(UpgCtx& upgCtx);
+    /*
+     * At this stage, for disruptive upgrade,
+     *   NicMgr and HAL together are expected to bring the dataplane down
+     */
+    virtual HdlrResp HandleUpgStateDataplaneDowntimeStart(UpgCtx& upgCtx);
+    /*
+     * At this stage, for disruptive upgrade,
+     *   NicMgr and HAL together are expected to do post-link-up processing
+     */
+    virtual HdlrResp HandleUpgStateIsSystemReady(UpgCtx& upgCtx);
     /*
      * At this stage, following is expected:
      * 1. FTE is supposed to disable flow-miss

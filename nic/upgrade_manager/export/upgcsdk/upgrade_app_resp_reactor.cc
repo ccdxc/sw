@@ -42,6 +42,9 @@ void UpgAppRespReact::GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &
         case UpgStateDataplaneDowntimePhase4RespPass:
         case UpgStateCleanupRespPass:
         case UpgStateAbortRespPass:
+        case UpgStateLinkUpRespPass:
+        case UpgStateDataplaneDowntimeStartRespPass:
+        case UpgStateIsSystemReadyRespPass:
             SetAppRespSuccess(hdlrResp);
             break;
         case UpgStateCompatCheckRespFail:
@@ -54,6 +57,9 @@ void UpgAppRespReact::GetAppResp(delphi::objects::UpgAppRespPtr resp, HdlrResp &
         case UpgStateDataplaneDowntimePhase4RespFail:
         case UpgStateCleanupRespFail:
         case UpgStateAbortRespFail:
+        case UpgStateLinkUpRespFail:
+        case UpgStateDataplaneDowntimeStartRespFail:
+        case UpgStateIsSystemReadyRespFail:
             SetAppRespFail(hdlrResp, GetAppRespStr(resp, upgType));
             break;
         default:
@@ -104,6 +110,18 @@ void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp, Up
         case UpgStateLinkDownRespPass:
         case UpgStateLinkDownRespFail:
             upgAgentHandler_->UpgStateLinkDownCompletionHandler(hdlrResp, resp->key());
+            break;
+        case UpgStateLinkUpRespPass:
+        case UpgStateLinkUpRespFail:
+            upgAgentHandler_->UpgStateLinkUpCompletionHandler(hdlrResp, resp->key());
+            break;
+        case UpgStateDataplaneDowntimeStartRespPass:
+        case UpgStateDataplaneDowntimeStartRespFail:
+            upgAgentHandler_->UpgStateDataplaneDowntimeStartCompletionHandler(hdlrResp, resp->key());
+            break;
+        case UpgStateIsSystemReadyRespPass:
+        case UpgStateIsSystemReadyRespFail:
+            upgAgentHandler_->UpgStateIsSystemReadyCompletionHandler(hdlrResp, resp->key());
             break;
         default:
             break;

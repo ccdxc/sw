@@ -79,4 +79,22 @@ void UpgHandler::HandleUpgStateAbort(UpgCtx& upgCtx) {
     return;
 }
 
+HdlrResp UpgHandler::HandleUpgStateLinkUp(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    UPG_LOG_DEBUG("UpgHandler HandleUpgStateLinkUp not implemented by service");
+    return resp;
+}
+
+HdlrResp UpgHandler::HandleUpgStateDataplaneDowntimeStart(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    UPG_LOG_DEBUG("UpgHandler HandleUpgStateDataplaneDowntimeStart not implemented by service");
+    return resp;
+}
+
+HdlrResp UpgHandler::HandleUpgStateIsSystemReady(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    UPG_LOG_DEBUG("UpgHandler HandleUpgStateIsSystemReady not implemented by service");
+    return resp;
+}
+
 } // namespace upgrade

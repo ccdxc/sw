@@ -32,12 +32,13 @@ bool UpgPreStateHandler::PreUpgStateLinkDownHandler(UpgCtx &ctx) {
     return true;
 }
 
+bool UpgPreStateHandler::PreUpgStateLinkUpHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler Link Up returning");
+    return true;
+}
+
 bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
     //TODO move to goto PostDataplaneDowntimePhase1
-    if (ctx.upgType == UpgTypeDisruptive) {
-        UPG_LOG_DEBUG("No need to plan for UpgTypeDisruptive");
-        return true;
-    }
     if (planner::plan_and_move("/sw/nic/move_planner/hal_mem.json",
                                "/sw/nic/move_planner/hal_mem_after.json",
                                true) != planner::PLAN_SUCCESS) {
@@ -60,6 +61,16 @@ bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase3Handler(UpgCtx &ctx) 
 
 bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreDataplaneDowntimePhase4 returning");
+    return true;
+}
+
+bool UpgPreStateHandler::PreUpgStateDataplaneDowntimeStartHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PreUpgStateDataplaneDowntimeStartHandler returning");
+    return true;
+}
+
+bool UpgPreStateHandler::PreUpgStateIsSystemReadyHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PreUpgStateIsSystemReadyHandler returning");
     return true;
 }
 

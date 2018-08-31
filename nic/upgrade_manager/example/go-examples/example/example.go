@@ -55,6 +55,25 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateLinkDown(upgCtx *upggosdk
 	return hdlrResp
 }
 
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateLinkUp(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	hdlrResp.ErrStr = ""
+	log.Infof("HandleUpgStateLinkUp called")
+	return hdlrResp
+}
+
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimeStart(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	//hdlrResp.Resp = upggosdk.InProgress
+	hdlrResp.ErrStr = ""
+	//hdlrResp.Resp = upggosdk.Fail
+	//hdlrResp.ErrStr = "TATATA"
+	log.Infof("HandleUpgStateDataplaneDowntimeStart called")
+	return hdlrResp
+}
+
 func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase1(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
@@ -87,6 +106,14 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateDataplaneDowntimePhase4(u
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("HandleUpgStateDataplaneDowntimePhase4 called")
+	return hdlrResp
+}
+
+func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateIsSystemReady(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	hdlrResp.ErrStr = ""
+	log.Infof("HandleUpgStateIsSystemReady called")
 	return hdlrResp
 }
 

@@ -25,6 +25,9 @@ public:
     bool PostUpgStateFailedHandler(UpgCtx &ctx);
     bool PostUpgStateAbortHandler(UpgCtx &ctx);
     bool PostUpgStateLinkDownHandler(UpgCtx &ctx);
+    bool PostUpgStateLinkUpHandler(UpgCtx &ctx);
+    bool PostUpgStateDataplaneDowntimeStartHandler(UpgCtx &ctx);
+    bool PostUpgStateIsSystemReadyHandler(UpgCtx &ctx);
 };
 typedef std::shared_ptr<UpgPostStateHandler> UpgPostStateHandlerPtr;
 
