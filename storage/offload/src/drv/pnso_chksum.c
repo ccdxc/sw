@@ -281,9 +281,9 @@ chksum_setup(struct service_info *svc_info,
 
 	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
-		svc_info->si_seq_info.si_desc = seq_setup_desc(svc_info,
+		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
 				chksum_desc, sizeof(*chksum_desc));
-		if (!svc_info->si_seq_info.si_desc) {
+		if (!svc_info->si_seq_info.sqi_desc) {
 			err = EINVAL;
 			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
 			goto out_status_desc;
@@ -350,7 +350,7 @@ chksum_schedule(const struct service_info *svc_info)
 		OSAL_LOG_INFO("ring door bell <===");
 
 		seq_info = &svc_info->si_seq_info;
-		seq_ring_db(svc_info, seq_info->si_index);
+		seq_ring_db(svc_info, seq_info->sqi_index);
 
 		err = PNSO_OK;
 	}

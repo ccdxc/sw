@@ -14,8 +14,8 @@ extern "C" {
 #endif
 
 struct sequencer_ops {
-	void * (*setup_desc)(uint32_t ring_id, uint16_t *index,
-			void *src_desc, size_t desc_size);
+	void * (*setup_desc)(struct service_info *svc_info,
+			const void *src_desc, size_t desc_size);
 
 	void (*ring_db)(const struct service_info *svc_info, uint16_t index);
 };

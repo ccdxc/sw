@@ -13,11 +13,10 @@ const struct sequencer_ops *g_sequencer_ops = &hw_seq_ops;
 #endif
 
 void *
-seq_setup_desc(uint32_t ring_id, uint16_t *index,
-		void *src_desc, size_t desc_size)
+seq_setup_desc(struct service_info *svc_info, const void *src_desc,
+		size_t desc_size)
 {
-	return g_sequencer_ops->setup_desc(ring_id, index,
-			src_desc, desc_size);
+	return g_sequencer_ops->setup_desc(svc_info, src_desc, desc_size);
 }
 
 void

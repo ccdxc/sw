@@ -9,8 +9,8 @@
 #include "pnso_seq_ops.h"
 
 static void *
-model_setup_desc(uint32_t ring_id, uint16_t *index,
-		void *src_desc, size_t desc_size)
+model_setup_desc(struct service_info *svc_info, const void *src_desc,
+		size_t desc_size)
 {
 	return NULL;	/* EOPNOTSUPP */
 }

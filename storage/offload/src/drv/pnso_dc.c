@@ -136,16 +136,6 @@ fill_dc_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
 	CPDC_PPRINT_DESC(desc);
 }
 
-static inline void
-setup_sequencer_desc(struct service_info *svc_info, struct cpdc_desc *desc)
-{
-    if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
-		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE))
-	svc_info->si_seq_info.si_desc =
-		seq_setup_desc(svc_info->si_seq_info.si_ring_id,
-			&svc_info->si_seq_info.si_index, desc, sizeof(*desc));
-}
-
 static pnso_error_t
 decompress_setup(struct service_info *svc_info,
 		const struct service_params *svc_params)
@@ -224,7 +214,16 @@ decompress_setup(struct service_info *svc_info,
 	svc_info->si_desc = dc_desc;
 	svc_info->si_status_desc = status_desc;
 
-	setup_sequencer_desc(svc_info, dc_desc);
+	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
+		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
+				dc_desc, sizeof(*dc_desc));
+		if (!svc_info->si_seq_info.sqi_desc) {
+			err = EINVAL;
+			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+			goto out_status_desc;
+		}
+	}
 
 	err = PNSO_OK;
 	OSAL_LOG_INFO("exit! service initialized!");
@@ -286,7 +285,7 @@ decompress_schedule(const struct service_info *svc_info)
 		OSAL_LOG_INFO("ring door bell <===");
 
 		seq_info = &svc_info->si_seq_info;
-		seq_ring_db(svc_info, seq_info->si_index);
+		seq_ring_db(svc_info, seq_info->sqi_index);
 
 		err = PNSO_OK;
 	}

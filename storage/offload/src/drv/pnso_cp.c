@@ -127,7 +127,8 @@ validate_setup_input(const struct service_info *svc_info,
 
 	if (!svc_params->sp_src_blist || !svc_params->sp_dst_blist) {
 		OSAL_LOG_ERROR("invalid src/dst buffers specified! sp_src_blist: %p sp_dst_blist: %p err: %d",
-				svc_params->sp_src_blist, svc_params->sp_dst_blist, err);
+				svc_params->sp_src_blist,
+				svc_params->sp_dst_blist, err);
 		return err;
 	}
 
@@ -167,20 +168,11 @@ fill_cp_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
 	desc->cd_datain_len =
 		(src_buf_len == MAX_CPDC_SRC_BUF_LEN) ? 0 : src_buf_len;
 	desc->cd_threshold_len = threshold_len;
+
 	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_CP_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
-}
-
-static inline void
-setup_sequencer_desc(struct service_info *svc_info, struct cpdc_desc *desc)
-{
-    if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
-		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE))
-	svc_info->si_seq_info.si_desc =
-		seq_setup_desc(svc_info->si_seq_info.si_ring_id,
-			&svc_info->si_seq_info.si_index, desc, sizeof(*desc));
 }
 
 static pnso_error_t
@@ -255,8 +247,18 @@ compress_setup(struct service_info *svc_info,
 	svc_info->si_desc = cp_desc;
 	svc_info->si_status_desc = status_desc;
 
-	setup_sequencer_desc(svc_info, cp_desc);
-
+	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
+		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
+				cp_desc, sizeof(*cp_desc));
+		if (!svc_info->si_seq_info.sqi_desc) {
+			err = EINVAL;
+			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
+					err);
+			goto out_status_desc;
+		}
+	}
+	
 	err = PNSO_OK;
 	OSAL_LOG_INFO("exit! service initialized!");
 	return err;
@@ -317,7 +319,7 @@ compress_schedule(const struct service_info *svc_info)
 		OSAL_LOG_INFO("ring door bell <===");
 
 		seq_info = &svc_info->si_seq_info;
-		seq_ring_db(svc_info, seq_info->si_index);
+		seq_ring_db(svc_info, seq_info->sqi_index);
 
 		err = PNSO_OK;
 	}

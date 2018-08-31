@@ -62,6 +62,8 @@ pprint_seq_desc(const struct sequencer_desc *desc)
 		return;
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "seq_desc", (uint64_t) desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "seq_desc_pa",
+			osal_virt_to_phy((void *) desc));
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "sd_desc_addr", desc->sd_desc_addr);
 	OSAL_LOG_INFO("%30s: 0x%llx", "sd_pndx_addr", desc->sd_pndx_addr);
@@ -77,40 +79,53 @@ pprint_seq_desc(const struct sequencer_desc *desc)
 }
 
 static void *
-hw_setup_desc(uint32_t ring_id, uint16_t *index,
-		void *src_desc, size_t desc_size)
+hw_setup_desc(struct service_info *svc_info, const void *src_desc,
+		size_t desc_size)
 {
 	pnso_error_t err = EINVAL;
 	struct accel_ring *ring;
 	struct lif *lif;
 	struct queue *q;
 	struct sequencer_desc *seq_desc;
-	uint32_t idx;
+	uint32_t ring_id, index;
+	uint16_t qtype;
 
 	OSAL_LOG_INFO("enter ...");
 
+	ring_id = svc_info->si_seq_info.sqi_ring_id;
+	qtype = svc_info->si_seq_info.sqi_qtype;
+	svc_info->si_seq_info.sqi_index = 0;
+
 	ring = sonic_get_accel_ring(ring_id);
-	if (!ring)
+	if (!ring) {
+		OSAL_ASSERT(ring);
 		goto out;
+	}
 
 	lif = sonic_get_lif();
-	OSAL_ASSERT(lif);
-
-	err = get_seq_subq(lif, SONIC_QTYPE_CP_SUB, &q);
-	if (err)
+	if (!lif) {
+		OSAL_ASSERT(lif);
 		goto out;
+	}
 
-	seq_desc = (struct sequencer_desc *) sonic_q_consume_entry(q, &idx);
+	err = sonic_get_seq_sq(lif, qtype, &q);
+	if (err) {
+		OSAL_ASSERT(err);
+		goto out;
+	}
+
+	seq_desc = (struct sequencer_desc *) sonic_q_consume_entry(q, &index);
 	if (!seq_desc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("failed to obtain sequencer desc! err: %d", err);
 		OSAL_ASSERT(seq_desc);
 		goto out;
 	}
-	*index = idx;
+	svc_info->si_seq_info.sqi_index = index;
 
 	memset(seq_desc, 0, sizeof(*seq_desc));
-	seq_desc->sd_desc_addr = cpu_to_be64(osal_virt_to_phy(src_desc));
+	seq_desc->sd_desc_addr =
+		cpu_to_be64(osal_virt_to_phy((void *) src_desc));
 	seq_desc->sd_pndx_addr = cpu_to_be64(ring->ring_pndx_pa);
 	seq_desc->sd_pndx_shadow_addr = cpu_to_be64(ring->ring_shadow_pndx_pa);
 	seq_desc->sd_ring_addr = cpu_to_be64(ring->ring_base_pa);
@@ -119,7 +134,7 @@ hw_setup_desc(uint32_t ring_id, uint16_t *index,
 	seq_desc->sd_ring_size = (uint8_t) ilog2(ring->ring_size);
 
 	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x%llx  desc_size: %lu",
-			ring_id, *index, (u64) src_desc, desc_size);
+			ring_id, index, (u64) src_desc, desc_size);
 	PPRINT_SEQUENCER_DESC(seq_desc);
 
 	OSAL_LOG_INFO("exit!");
@@ -130,20 +145,15 @@ out:
 	return NULL;
 }
 
-
 static struct queue *
 get_seq_q(const struct service_info *svc_info, bool status_q)
 {
-	struct queue *q;
+	struct queue *q = NULL;
 	struct per_core_resource *pc_res;
 
-	/* TODO-seq:
-	 * 	- ideally this utility routine should be tucked into
-	 * 	device layer; earlier added this for status_qs.
-	 * 	- remove using hard-coded 0th status queue
-	 *
-	 */
+	/* TODO-seq: remove using hard-coded 0th status queue */
 	pc_res = svc_info->si_pc_res;
+
 	switch (svc_info->si_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 		q = status_q ? &pc_res->crypto_seq_status_qs[0] :
@@ -164,14 +174,11 @@ get_seq_q(const struct service_info *svc_info, bool status_q)
 			&pc_res->dc_seq_q;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
-		/* TODO-seq: what queues for these known services? */
 	default:
 		OSAL_ASSERT(0);
 		break;
 	}
 
-	OSAL_LOG_INFO("seq_q: 0x%llx", (u64) q);
-	OSAL_ASSERT(q);
 	return q;
 }
 
@@ -183,8 +190,15 @@ hw_ring_db(const struct service_info *svc_info, uint16_t index)
 	OSAL_LOG_INFO("enter ... ");
 
 	seq_q = get_seq_q(svc_info, false);
+	if (!seq_q) {
+		OSAL_LOG_ERROR("failed to get sequencer q!");
+		OSAL_ASSERT(seq_q);
+		goto out;
+	}
+
 	sonic_q_ringdb(seq_q, index);
 
+out:
 	OSAL_LOG_INFO("exit!");
 }
 
