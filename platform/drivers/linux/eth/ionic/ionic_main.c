@@ -170,9 +170,6 @@ int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 {
 	int err;
 
-#ifdef DPS_FASTMODEL
-    return 0;
-#endif
 	err = ionic_dev_cmd_wait(idev, max_wait);
 	if (err)
 		return err;
@@ -269,7 +266,6 @@ void ionic_dev_cmd_work(struct work_struct *work)
 			       struct ionic_admin_ctx, list);
 	list_del(&ctx->list);
 	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
-
 
 	dev_dbg(ionic->dev, "post admin dev command:\n");
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,

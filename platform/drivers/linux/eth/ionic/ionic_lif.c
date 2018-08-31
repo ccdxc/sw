@@ -505,7 +505,6 @@ static const struct net_device_ops ionic_netdev_ops = {
 irqreturn_t ionic_isr(int irq, void *data)
 {
 	struct napi_struct *napi = data;
-	
 
 	napi_schedule_irqoff(napi);
 
@@ -582,7 +581,6 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
         err = ionic_bus_get_irq(lif->ionic, new->intr.index);
 		if (err < 0)
 			goto err_out_free_intr;
-		
         new->intr.vector = err;
 		ionic_intr_mask_on_assertion(&new->intr);
 	} else {
@@ -907,7 +905,6 @@ static int ionic_lif_rss_setup(struct lif *lif)
 	err = ionic_rss_ind_tbl_set(lif, NULL);
 	if (err)
 		goto err_out_free;
-	
     err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key);
 	if (err)
 		goto err_out_free;
@@ -992,7 +989,6 @@ static int ionic_request_irq(struct lif *lif, struct qcq *qcq)
 
 	snprintf(intr->name, sizeof(intr->name),
 		 "%s-%s-%s", DRV_NAME, lif->name, q->name);
-	
 	
 	return devm_request_irq(dev, intr->vector, ionic_isr,
 				0, intr->name, napi);
@@ -1375,9 +1371,7 @@ static int ionic_lif_init(struct lif *lif)
 
 	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
-	{
 		goto err_out_rss_teardown;
-	}
 
 	ionic_set_rx_mode(lif->netdev);
 
@@ -1584,10 +1578,8 @@ try_again:
 	err = ionic_bus_alloc_irq_vectors(ionic, nintrs);
 	if (err < 0 && err != -ENOSPC)
 		return err;
-	
     if (err == -ENOSPC)
 		goto try_fewer;
-
 	if (err != nintrs) {
 		ionic_bus_free_irq_vectors(ionic);
 		goto try_fewer;
@@ -1613,6 +1605,5 @@ try_fewer:
 		--nrxqs_per_lif;
 		goto try_again;
 	}
-
 	return -ENOSPC;
 }

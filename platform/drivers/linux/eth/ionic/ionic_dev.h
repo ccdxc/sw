@@ -21,12 +21,6 @@
 
 #include "ionic_if.h"
 
-//#define DPS_FASTMODEL   1
-
-#ifndef DPS_FASTMODEL
-#define HAPS 1
-#endif //DPS_FASTMODEL
-
 #define IONIC_MIN_MTU		ETH_MIN_MTU
 #define IONIC_MAX_MTU		9200
 

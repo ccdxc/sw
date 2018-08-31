@@ -333,7 +333,6 @@ static int ionic_remove(struct platform_device *pfdev)
 	struct ionic *ionic = platform_get_drvdata(pfdev);
 
 	if (ionic) {
-
 		ionic_debugfs_del_dev(ionic);
 		ionic_lifs_unregister(ionic);
 		ionic_lifs_deinit(ionic);
