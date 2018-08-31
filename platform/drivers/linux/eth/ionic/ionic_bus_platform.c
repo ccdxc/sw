@@ -33,24 +33,24 @@
 extern void ionic_dev_cmd_work(struct work_struct *work);
 
 typedef union intr_fwcfg_u {
-    struct {
-        u_int32_t function_mask:1;
-        u_int32_t rsrv:31;
-        u_int32_t lif:11;
-        u_int32_t port_id:3;
-        u_int32_t local_int:1;
-        u_int32_t legacy:1;
-        u_int32_t int_pin:2;
-        u_int32_t rsrv2:14;
-    } __attribute__((packed));
-    u_int32_t w[2];
+	struct {
+		u_int32_t function_mask:1;
+		u_int32_t rsrv:31;
+		u_int32_t lif:11;
+		u_int32_t port_id:3;
+		u_int32_t local_int:1;
+		u_int32_t legacy:1;
+		u_int32_t int_pin:2;
+		u_int32_t rsrv2:14;
+	} __attribute__((packed));
+	u_int32_t w[2];
 } intr_fwcfg_t;
 
 
 typedef struct intr_msixcfg_s {
-    u_int64_t msgaddr;
-    u_int32_t msgdata;
-    u_int32_t vector_ctrl;
+	u_int64_t msgaddr;
+	u_int32_t msgdata;
+	u_int32_t vector_ctrl;
 } __attribute__((packed)) intr_msixcfg_t;
 
 uint64_t *msix_cfg_base_addr = NULL;
@@ -58,59 +58,59 @@ uint64_t *fwcfg_base_addr = NULL;
 
 u_int64_t intr_msixcfg_addr(const int intr)
 {
-        return (u_int64_t)((uint8_t*)msix_cfg_base_addr + (intr * INTR_MSIXCFG_STRIDE));
+		return (u_int64_t)((uint8_t*)msix_cfg_base_addr + (intr * INTR_MSIXCFG_STRIDE));
 }
 
 u_int64_t intr_fwcfg_addr(const int intr)
 {
-        return (u_int64_t)((uint8_t*)fwcfg_base_addr + (intr * INTR_FWCFG_STRIDE));
+		return (u_int64_t)((uint8_t*)fwcfg_base_addr + (intr * INTR_FWCFG_STRIDE));
 }
 
 
 void intr_fwcfg(const int intr)
 {
-    u_int64_t pa = intr_fwcfg_addr(intr);
-    uint64_t data = 0;
+	u_int64_t pa = intr_fwcfg_addr(intr);
+	uint64_t data = 0;
 
-    data = (uint64_t)((uint64_t)1 << 46)/*local_int=1*/ | ((uint64_t)4 << 32)/*lif=4*/;
-    writeq(data, (volatile void*)(pa));
+	data = (uint64_t)((uint64_t)1 << 46)/*local_int=1*/ | ((uint64_t)4 << 32)/*lif=4*/;
+	writeq(data, (volatile void*)(pa));
 }
 
 void intr_msixcfg(const int intr, const u_int64_t msgaddr, const u_int32_t msgdata, const int vctrl)
 {
-    u_int64_t pa = intr_msixcfg_addr(intr);
+	u_int64_t pa = intr_msixcfg_addr(intr);
 
-    writeq(msgaddr, (volatile void*)(pa + offsetof(intr_msixcfg_t, msgaddr)));
-    writel(msgdata, (volatile void*)(pa + offsetof(intr_msixcfg_t, msgdata)));
-    writel(vctrl, (volatile void*)(pa + offsetof(intr_msixcfg_t, vector_ctrl)));
+	writeq(msgaddr, (volatile void*)(pa + offsetof(intr_msixcfg_t, msgaddr)));
+	writel(msgdata, (volatile void*)(pa + offsetof(intr_msixcfg_t, msgdata)));
+	writel(vctrl, (volatile void*)(pa + offsetof(intr_msixcfg_t, vector_ctrl)));
 }
 
 void print_remove_hack_message(int line, char* message)
 {
-    printk("HAPS REMOVE HACK @%d => %s \n", line, message);
+	printk("HAPS REMOVE HACK @%d => %s \n", line, message);
 }
 
 int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
 {
-    struct msi_desc *desc;
-    int i = 0;
+	struct msi_desc *desc;
+	int i = 0;
 
-    for_each_msi_entry(desc, ionic->dev) {
-        if(i == num)
-        {
-            printk(KERN_INFO "[i = %d] msi_entry: %d.%d\n",
-                i, desc->platform.msi_index,
-                desc->irq);
+	for_each_msi_entry(desc, ionic->dev) {
+		if(i == num)
+		{
+			printk(KERN_INFO "[i = %d] msi_entry: %d.%d\n",
+				i, desc->platform.msi_index,
+				desc->irq);
 
-            return desc->irq;
-        }
+			return desc->irq;
+		}
 
-        i++;
-    }
+		i++;
+	}
 
-    //return platform_get_irq(ionic->pfdev, num);
+	//return platform_get_irq(ionic->pfdev, num);
 
-    return -1; //send actual error
+	return -1; //send actual error
 }
 
 const char *ionic_bus_info(struct ionic *ionic)
@@ -120,64 +120,64 @@ const char *ionic_bus_info(struct ionic *ionic)
 
 static void mnic_set_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
 {
-    printk("[%d] %x:%x %x\n", desc->platform.msi_index,
-                                msg->address_hi, msg->address_lo, msg->data);
+	printk("[%d] %x:%x %x\n", desc->platform.msi_index,
+								msg->address_hi, msg->address_lo, msg->data);
 
-    intr_msixcfg(desc->platform.msi_index, (((uint64_t)msg->address_hi << 32) | msg->address_lo), msg->data, 0/*vctrl*/);
-    intr_fwcfg(desc->platform.msi_index);
+	intr_msixcfg(desc->platform.msi_index, (((uint64_t)msg->address_hi << 32) | msg->address_lo), msg->data, 0/*vctrl*/);
+	intr_fwcfg(desc->platform.msi_index);
 }
 
 int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)
 {
 
-    int err = 0;
+	int err = 0;
 
 	err =  platform_msi_domain_alloc_irqs(ionic->dev, nintrs, mnic_set_msi_msg);
-    if (err)
-        return err;
+	if (err)
+		return err;
 
-    return nintrs;
+	return nintrs;
 }
 
 void ionic_bus_free_irq_vectors(struct ionic *ionic)
 {
-    platform_msi_domain_free_irqs(ionic->dev);
+	platform_msi_domain_free_irqs(ionic->dev);
 }
 
 int ionic_mnic_dev_setup(struct ionic *ionic)
 {
-    struct ionic_dev *idev = &ionic->idev;
-    unsigned int num_bars = ionic->num_bars;
-    struct msi_desc *desc;
-    u32 sig;
-    unsigned int ret = 0;
+	struct ionic_dev *idev = &ionic->idev;
+	unsigned int num_bars = ionic->num_bars;
+	struct msi_desc *desc;
+	u32 sig;
+	unsigned int ret = 0;
 
-    if (num_bars < 5) 
-        return -EFAULT;
+	if (num_bars < 5) 
+		return -EFAULT;
 
-    idev->dev_cmd = ionic->bars[0].vaddr;
-    idev->dev_cmd_db = ionic->bars[1].vaddr;
-    idev->intr_ctrl = ionic->bars[2].vaddr;
-    fwcfg_base_addr = ionic->bars[2].vaddr;
-    msix_cfg_base_addr = ionic->bars[3].vaddr;
+	idev->dev_cmd = ionic->bars[0].vaddr;
+	idev->dev_cmd_db = ionic->bars[1].vaddr;
+	idev->intr_ctrl = ionic->bars[2].vaddr;
+	fwcfg_base_addr = ionic->bars[2].vaddr;
+	msix_cfg_base_addr = ionic->bars[3].vaddr;
 
 #ifdef HAPS
-    idev->ident = ionic->bars[0].vaddr + 0x800;
+	idev->ident = ionic->bars[0].vaddr + 0x800;
 #endif
 
 #ifdef HAPS
-    sig = ioread32(&idev->dev_cmd->signature);
-    if (sig != DEV_CMD_SIGNATURE)
-        return -EFAULT;
+	sig = ioread32(&idev->dev_cmd->signature);
+	if (sig != DEV_CMD_SIGNATURE)
+		return -EFAULT;
 #endif
 
-    idev->db_pages = ionic->bars[4].vaddr;
-    idev->phy_db_pages = ionic->bars[4].bus_addr;
+	idev->db_pages = ionic->bars[4].vaddr;
+	idev->phy_db_pages = ionic->bars[4].bus_addr;
 
 #ifndef ADMINQ
 	spin_lock_init(&ionic->cmd_lock);
 	INIT_LIST_HEAD(&ionic->cmd_list);
-    INIT_WORK(&ionic->cmd_work, ionic_dev_cmd_work);
+	INIT_WORK(&ionic->cmd_work, ionic_dev_cmd_work);
 #endif
 
 	return ionic_debugfs_add_dev_cmd(ionic);
@@ -227,9 +227,9 @@ static int ionic_probe(struct platform_device *pfdev)
 {
 	struct device *dev = &pfdev->dev;
 	struct ionic *ionic;
-    struct msi_desc *desc;
+	struct msi_desc *desc;
 	int err;
-    unsigned int ret = 0;
+	unsigned int ret = 0;
 
 	ionic = devm_kzalloc(dev, sizeof(*ionic), GFP_KERNEL);
 	if (!ionic)
@@ -267,7 +267,7 @@ static int ionic_probe(struct platform_device *pfdev)
 		goto err_out_unmap_bars;
 	}
 
-    err = ionic_reset(ionic);
+	err = ionic_reset(ionic);
 	if (err) {
 		dev_err(dev, "Cannot reset device, aborting\n");
 		goto err_out_unmap_bars;
@@ -346,8 +346,8 @@ static int ionic_remove(struct platform_device *pfdev)
 }
 
 static struct of_device_id mnic_of_match[] = {
-        {.compatible = "pensando,ionic-mnic"},
-            {/* end of table */}
+		{.compatible = "pensando,ionic-mnic"},
+			{/* end of table */}
 };
 
 static struct platform_driver ionic_driver = {
@@ -355,8 +355,8 @@ static struct platform_driver ionic_driver = {
 	.remove = ionic_remove,
 	.driver = {
 		.name = "ionic-mnic",
-        .owner = THIS_MODULE,
-        .of_match_table = mnic_of_match,
+		.owner = THIS_MODULE,
+		.of_match_table = mnic_of_match,
 	},
 };
 

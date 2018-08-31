@@ -573,15 +573,15 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 	if (err)
 		return err;
 	
-    if (flags & QCQ_F_INTR) {
+	if (flags & QCQ_F_INTR) {
 		err = ionic_intr_alloc(lif, &new->intr);
-        if (err)
+		if (err)
 			return err;
 		
-        err = ionic_bus_get_irq(lif->ionic, new->intr.index);
+		err = ionic_bus_get_irq(lif->ionic, new->intr.index);
 		if (err < 0)
 			goto err_out_free_intr;
-        new->intr.vector = err;
+		new->intr.vector = err;
 		ionic_intr_mask_on_assertion(&new->intr);
 	} else {
 		new->intr.index = INTR_INDEX_NOT_ASSIGNED;
@@ -597,7 +597,7 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 	if (err)
 		goto err_out_free_intr;
 	
-    new->base = dma_alloc_coherent(dev, total_size, &new->base_pa,
+	new->base = dma_alloc_coherent(dev, total_size, &new->base_pa,
 				       GFP_KERNEL);
 	if (!new->base) {
 		err = -ENOMEM;
@@ -679,7 +679,7 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	if (err)
 		return err;
 	
-    pid = ionic_pid_get(lif, 0);
+	pid = ionic_pid_get(lif, 0);
 	flags = QCQ_F_TX_STATS | QCQ_F_INTR | QCQ_F_SG;
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		err = ionic_qcq_alloc(lif, i, "tx", flags, ntxq_descs,
@@ -905,7 +905,7 @@ static int ionic_lif_rss_setup(struct lif *lif)
 	err = ionic_rss_ind_tbl_set(lif, NULL);
 	if (err)
 		goto err_out_free;
-    err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key);
+	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key);
 	if (err)
 		goto err_out_free;
 
@@ -1250,7 +1250,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 	if (err)
 		return err;
 	
-    q->qid = ctx.comp.rxq_init.qid;
+	q->qid = ctx.comp.rxq_init.qid;
 	q->qtype = ctx.comp.rxq_init.qtype;
 	q->db = ionic_db_map(q->idev, q);
 
@@ -1354,7 +1354,7 @@ static int ionic_lif_init(struct lif *lif)
 	if (err)
 		goto err_out_rxqs_deinit;
 	
-    err = ionic_station_set(lif);
+	err = ionic_station_set(lif);
 	if (err)
 		goto err_out_rx_filter_deinit;
 
@@ -1578,7 +1578,7 @@ try_again:
 	err = ionic_bus_alloc_irq_vectors(ionic, nintrs);
 	if (err < 0 && err != -ENOSPC)
 		return err;
-    if (err == -ENOSPC)
+	if (err == -ENOSPC)
 		goto try_fewer;
 	if (err != nintrs) {
 		ionic_bus_free_irq_vectors(ionic);

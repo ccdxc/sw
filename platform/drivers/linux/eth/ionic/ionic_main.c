@@ -285,7 +285,7 @@ void ionic_dev_cmd_work(struct work_struct *work)
 	err = ionic_dev_cmd_wait_check(&ionic->idev, HZ * devcmd_timeout);
 	if (err)
 		goto err_out;
-    
+	
 	ionic_dev_cmd_comp(&ionic->idev, &ctx->comp);
 
 	if (ctx->side_data) {

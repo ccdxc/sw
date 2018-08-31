@@ -405,7 +405,6 @@ void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa)
 void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		  void *cb_arg)
 {
-    //unsigned int mem_sz = 0;
 	q->head->cb = cb;
 	q->head->cb_arg = cb_arg;
 	q->head = q->head->next;
@@ -418,7 +417,7 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 			.p_index = q->head->index,
 		};
 
-        //printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring "
+		//printk(KERN_ERR "XXXX  ring doorbell name %s qid %d ring "
 		//	 "0 p_index %d db %p\n", q->name, q->qid,
 		//	 q->head->index, q->db);
 		writeq(*(u64 *)&db, q->db);
