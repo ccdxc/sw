@@ -68,6 +68,8 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define PHYS_STATE_UP 5
 #define PHYS_STATE_DOWN 3
 
+#define ionic_set_ecn(tos) (((tos) | 2u) & ~1u)
+
 /* XXX remove this section for release */
 static bool ionic_xxx_haps = false;
 module_param_named(xxx_haps, ionic_xxx_haps, bool, 0444);
@@ -1517,14 +1519,14 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 
 	if (net == RDMA_NETWORK_IPV4) {
 		hdr->eth.type = cpu_to_be16(ETH_P_IP);
-		hdr->ip4.tos = grh->traffic_class;
+		hdr->ip4.tos = ionic_set_ecn(grh->traffic_class);
 		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
 		hdr->ip4.ttl = grh->hop_limit;
 		hdr->ip4.saddr = *(const __be32 *)(sgid.raw + 12);
 		hdr->ip4.daddr = *(const __be32 *)(grh->dgid.raw + 12);
 	} else {
 		hdr->eth.type = cpu_to_be16(ETH_P_IPV6);
-		hdr->grh.traffic_class = grh->traffic_class;
+		hdr->grh.traffic_class = ionic_set_ecn(grh->traffic_class);
 		hdr->grh.flow_label = cpu_to_be32(grh->flow_label);
 		hdr->grh.hop_limit = grh->hop_limit;
 		hdr->grh.source_gid = sgid;
@@ -1580,14 +1582,14 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 
 	if (net == RDMA_NETWORK_IPV4) {
 		hdr->eth.type = cpu_to_be16(ETH_P_IP);
-		hdr->ip4.tos = grh->traffic_class;
+		hdr->ip4.tos = ionic_set_ecn(grh->traffic_class);
 		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
 		hdr->ip4.ttl = grh->hop_limit;
 		hdr->ip4.saddr = *(const __be32 *)(grh->sgid_attr->gid.raw + 12);
 		hdr->ip4.daddr = *(const __be32 *)(grh->dgid.raw + 12);
 	} else {
 		hdr->eth.type = cpu_to_be16(ETH_P_IPV6);
-		hdr->grh.traffic_class = grh->traffic_class;
+		hdr->grh.traffic_class = ionic_set_ecn(grh->traffic_class);
 		hdr->grh.flow_label = cpu_to_be32(grh->flow_label);
 		hdr->grh.hop_limit = grh->hop_limit;
 		hdr->grh.source_gid = grh->sgid_attr->gid;
