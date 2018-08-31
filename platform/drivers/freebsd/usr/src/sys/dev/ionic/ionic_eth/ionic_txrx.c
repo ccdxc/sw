@@ -67,12 +67,12 @@ TUNABLE_INT("hw.ionic.adminq_descs", &adminq_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, adminq_descs, CTLFLAG_RDTUN,
     &adminq_descs, 0, "Number of Admin descriptors");
 
-int ntxq_descs = 128;
+int ntxq_descs = 1024;
 TUNABLE_INT("hw.ionic.tx_descs", &ntxq_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, tx_descs, CTLFLAG_RDTUN,
     &ntxq_descs, 0, "Number of Tx descriptors");
 
-int nrxq_descs = 128;
+int nrxq_descs = 1024;
 TUNABLE_INT("hw.ionic.rx_descs", &nrxq_descs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_descs, CTLFLAG_RDTUN,
     &nrxq_descs, 0, "Number of Rx descriptors");
@@ -691,8 +691,8 @@ int ionic_start_xmit_locked(struct ifnet* ifp, 	struct tx_qcq* txqcq)
 			break;
 	}
 
-	if (processed > 8)
-		ionic_tx_clean(txqcq, 100);
+	IONIC_NETDEV_TX_TRACE(txqcq, "transmitted %d packets\n",
+		 processed);
 
 	return (err);
 }

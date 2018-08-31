@@ -1295,57 +1295,55 @@ static int ionic_lif_adminq_init(struct lif *lif)
 int ionic_tx_clean(struct tx_qcq* txqcq , int tx_limit)
 {
 	struct txq_comp *comp;
-	struct txq_desc *cmd;
 	struct ionic_tx_buf *txbuf;
 	int comp_index, cmd_index, processed, cmd_stop_index;
 	struct tx_stats * stats = &txqcq->stats;
 
 	stats->clean++;
 	
-	for ( processed = 0 ; processed < tx_limit ; ) {
+	/* Sync every time descriptors. */
+	bus_dmamap_sync(txqcq->cmd_dma.dma_tag, txqcq->cmd_dma.dma_map,
+		BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
+	
+	for ( processed = 0 ; processed < tx_limit ; processed++) {
 		comp_index = txqcq->comp_index;
-		comp = &txqcq->comp_ring[comp_index];
-		/* Sync every time descriptors. */
-		bus_dmamap_sync(txqcq->cmd_dma.dma_tag, txqcq->cmd_dma.dma_map,
-			BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
-
-		cmd_stop_index = comp->comp_index;
 		cmd_index = txqcq->cmd_tail_index;
-		txbuf = &txqcq->txbuf[cmd_index];
-		cmd = &txqcq->cmd_ring[cmd_index];
+
+		comp = &txqcq->comp_ring[comp_index];
+		cmd_stop_index = comp->comp_index;
 
 		IONIC_NETDEV_TX_TRACE(txqcq, "comp :%d cmd start: %d cmd stop: %d comp->color %d done_color %d\n",
 			comp_index, cmd_index, cmd_stop_index, comp->color, txqcq->done_color);
-		IONIC_NETDEV_TX_TRACE(txqcq, "buf[%d] opcode:%d addr:0%lx len:0x%x\n",
-			cmd_index, cmd->opcode, cmd->addr, cmd->len);
 
 		if (comp->color != txqcq->done_color)
 			break;
 
-		for ( ; cmd_index == cmd_stop_index; cmd_index++, processed++ ) {
+		do {
 			txbuf = &txqcq->txbuf[cmd_index];
-			cmd = &txqcq->cmd_ring[cmd_index];
-			bus_dmamap_sync(txqcq->buf_tag, txbuf->dma_map, BUS_DMASYNC_POSTWRITE);
-			bus_dmamap_unload(txqcq->buf_tag, txbuf->dma_map);
-			m_freem(txbuf->m);
-		} 
+			/* TSO last buffer only points to valid mbuf. */
+			if (txbuf->m != NULL) {
+				bus_dmamap_sync(txqcq->buf_tag, txbuf->dma_map, BUS_DMASYNC_POSTWRITE);
+				bus_dmamap_unload(txqcq->buf_tag, txbuf->dma_map);
+				m_freem(txbuf->m);
+			}
+			cmd_index = (cmd_index + 1) % txqcq->num_descs;
+		} while(cmd_index != cmd_stop_index);
 
 		txqcq->comp_index = (txqcq->comp_index + 1) % txqcq->num_descs;
-		txqcq->cmd_tail_index = (txqcq->cmd_tail_index + 1) % txqcq->num_descs;
+		/* XXX: should we comp stop index to jump for TSO. */
+		txqcq->cmd_tail_index = cmd_index;
 		/* Roll over condition, flip color. */
 		if (txqcq->comp_index == 0) {
 			txqcq->done_color = !txqcq->done_color;
 		}
 	}
 
-	IONIC_NETDEV_TX_TRACE(txqcq, "ionic_tx_clean processed %d\n", processed);
+//	IONIC_NETDEV_TX_TRACE(txqcq, "ionic_tx_clean processed %d\n", processed);
 
 	if (comp->color == txqcq->done_color)
 		taskqueue_enqueue(txqcq->taskq, &txqcq->task);
 
-
 	return (processed);
-
 }
 
 
@@ -1361,6 +1359,7 @@ static irqreturn_t ionic_tx_isr(int irq, void *data)
 	ionic_intr_mask(&txqcq->intr, true);
  
 	work_done = ionic_tx_clean(txqcq, 256/* XXX: tunable */);
+	IONIC_NETDEV_TX_TRACE(txqcq, "ionic_tx_is processed %d descriptors\n", work_done);
 	
 	ionic_intr_return_credits(&txqcq->intr, work_done, 0, true);
 
@@ -1442,7 +1441,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct tx_qcq *txqcq)
 	}
 	IONIC_NETDEV_QINFO(txqcq, "bound to cpu%d\n", bind_cpu);
 
-	IONIC_NETDEV_QINFO(txqcq, "qid: %d qtype: %d db: %pd\n",
+	IONIC_NETDEV_QINFO(txqcq, "qid: %d qtype: %d db: %p\n",
 		txqcq->qid, txqcq->qtype, txqcq->db);
 
 	return 0;
@@ -1907,8 +1906,8 @@ static int ionic_lif_register(struct lif *lif)
 				| ETH_HW_RX_HASH
 				| ETH_HW_TX_SG
 				| ETH_HW_TX_CSUM
-				| ETH_HW_RX_CSUM
-				| ETH_HW_TSO);
+				| ETH_HW_RX_CSUM );
+//				| ETH_HW_TSO | ETH_HW_TSO_IPV6);
 
 	if (err)
 		return err;
@@ -1957,7 +1956,7 @@ int ionic_lifs_size(struct ionic *ionic)
 	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
 	int err;
 
-	if (ionic_max_queues)
+	if (ionic_max_queues && (nqs < ionic_max_queues))
 		nqs = ionic_max_queues;
 
 	dev_info(ionic->dev, "dev_nintrs %u\n", dev_nintrs);
