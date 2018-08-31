@@ -207,6 +207,7 @@ message SlabSpec {
   bool   grow_on_demand       = 6;    // grow the slab on demand, if TRUE
   bool   delay_delete         = 7;    // delay delete each element, if TRUE, instead of freeing immediately
   bool   zero_on_allocation   = 8;    // zero allocated mem. if TRUE
+  uint32 raw_block_size       = 9;    // raw block size
 }
 
 // operational status of slab, if any

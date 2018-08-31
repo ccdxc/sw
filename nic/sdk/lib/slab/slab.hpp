@@ -62,6 +62,7 @@ public:
     const char *name(void) const { return name_; }
     uint32_t elem_sz(void) const { return elem_sz_; }
     uint32_t elems_per_block(void) const { return elems_per_block_; }
+    uint32_t raw_block_sz(void) const {return raw_block_sz_; }
     bool thread_safe(void) const { return thread_safe_; }
     bool grow_on_demand(void) const { return grow_on_demand_; }
     bool zero_on_alloc(void) const { return zero_on_alloc_; }

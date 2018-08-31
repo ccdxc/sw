@@ -85,7 +85,7 @@ set_slab_response (slab *s, debug::SlabGetResponseMsg *rsp)
     response->mutable_spec()->set_grow_on_demand(s->grow_on_demand());
     //response->mutable_spec()->set_delay_delete(s->delay_delete());
     response->mutable_spec()->set_zero_on_allocation(s->zero_on_alloc());
-
+    response->mutable_spec()->set_raw_block_size(s->raw_block_sz());
     response->mutable_stats()->set_num_elements_in_use(s->num_in_use());
     response->mutable_stats()->set_num_allocs(s->num_allocs());
     response->mutable_stats()->set_num_frees(s->num_frees());

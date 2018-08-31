@@ -1,0 +1,564 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
+package cmd
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"reflect"
+	"strings"
+
+	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
+
+	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/venice/utils/log"
+)
+
+var (
+	slabID       uint32
+	slabDetailID uint32
+)
+
+var memShowCmd = &cobra.Command{
+	Use:   "memory",
+	Short: "Show system memory information",
+	Long:  "Show system memory information",
+}
+
+var slabShowCmd = &cobra.Command{
+	Use:   "slab",
+	Short: "Show slab information",
+	Long:  "Show slab information",
+	Run:   slabShowCmdHandler,
+}
+
+var slabDetailShowCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "Show slab detail information",
+	Long:  "Show slab detail information",
+	Run:   slabDetailShowCmdHandler,
+}
+
+var mtrackShowCmd = &cobra.Command{
+	Use:   "mtrack",
+	Short: "Show mtrack information",
+	Long:  "Show mtrack information",
+	Run:   mtrackShowCmdHandler,
+}
+
+var mtrackDetailShowCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "Show mtrack detail information",
+	Long:  "Show mtrack detail information",
+	Run:   mtrackDetailShowCmdHandler,
+}
+
+var summaryShowCmd = &cobra.Command{
+	Use:   "summary",
+	Short: "show memory summary",
+	Long:  "show memory summary",
+	Run:   summaryShowCmdHandler,
+}
+
+/*
+var hashShowCmd = &cobra.Command{
+	Use:   "hash",
+	Short: "Show hash information",
+	Long:  "Show hash information",
+	Run:   hashShowCmdHandler,
+}
+
+var hashDetailShowCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "Show hash detail information",
+	Long:  "Show hash detail information",
+	Run:   hashDetailShowCmdHandler,
+}
+*/
+
+func init() {
+	slabShowCmd.AddCommand(slabDetailShowCmd)
+	memShowCmd.AddCommand(slabShowCmd)
+	systemShowCmd.AddCommand(memShowCmd)
+
+	mtrackShowCmd.AddCommand(mtrackDetailShowCmd)
+	memShowCmd.AddCommand(mtrackShowCmd)
+
+	memShowCmd.AddCommand(summaryShowCmd)
+
+	//hashShowCmd.AddCommand(hashDetailShowCmd)
+	//memShowCmd.AddCommand(hashShowCmd)
+
+	slabShowCmd.Flags().Uint32Var(&slabID, "id", 0, "Specify slab id")
+	slabShowCmd.Flags().MarkHidden("id")
+	slabDetailShowCmd.Flags().Uint32Var(&slabDetailID, "id", 0, "Specify slab id")
+	slabDetailShowCmd.Flags().MarkHidden("id")
+}
+
+func slabShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	all := false
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var slabGetReqMsg *halproto.SlabGetRequestMsg
+
+	if cmd.Flags().Changed("id") {
+		var req *halproto.SlabGetRequest
+		req = &halproto.SlabGetRequest{
+			Id: slabID,
+		}
+		slabGetReqMsg = &halproto.SlabGetRequestMsg{
+			Request: []*halproto.SlabGetRequest{req},
+		}
+	} else {
+		// Get all Slabs
+		all = true
+		var req *halproto.SlabGetRequest
+		req = &halproto.SlabGetRequest{
+			Id: 4294967295,
+		}
+		slabGetReqMsg = &halproto.SlabGetRequestMsg{
+			Request: []*halproto.SlabGetRequest{req},
+		}
+	}
+
+	// HAL call
+	respMsg, err := client.SlabGet(context.Background(), slabGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting slab failed. %v", err)
+	}
+
+	// Print header
+	slabShowHeader()
+
+	// Print slab
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			if all == false {
+				log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			}
+			continue
+		}
+		slabShowResp(resp)
+	}
+}
+
+func slabShowHeader() {
+	hdrLine := strings.Repeat("-", 175)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-20s%-8s%-10s%-16s%-14s%-14s%-12s%-14s%-16s%-10s%-10s%-12s%-10s%-12s\n",
+		"Name", "ID", "ElemSize", "NumElem/Block", "ThreadSafe",
+		"GrowDemand", "DelayDel", "ZeroAlloc", "NumElems",
+		"NumAlloc", "NumFree", "NumAllocErr", "NumBlocks",
+		"RawBlockSz")
+	fmt.Println(hdrLine)
+}
+
+func slabShowResp(resp *halproto.SlabGetResponse) {
+	spec := resp.GetSpec()
+	stats := resp.GetStats()
+
+	fmt.Printf("%-20s%-8d%-10d%-16d%-14t%-14t%-12t%-14t%-16d%-10d%-10d%-12d%-10d%-12d\n",
+		spec.GetName(), spec.GetId(), spec.GetElementSize(),
+		spec.GetElementsPerBlock(), spec.GetThreadSafe(),
+		spec.GetGrowOnDemand(), spec.GetDelayDelete(),
+		spec.GetZeroOnAllocation(), stats.GetNumElementsInUse(),
+		stats.GetNumAllocs(), stats.GetNumFrees(),
+		stats.GetNumAllocErrors(), stats.GetNumBlocks(),
+		spec.GetRawBlockSize())
+}
+
+func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	all := false
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var slabGetReqMsg *halproto.SlabGetRequestMsg
+
+	if cmd.Flags().Changed("id") {
+		var req *halproto.SlabGetRequest
+		req = &halproto.SlabGetRequest{
+			Id: slabDetailID,
+		}
+		slabGetReqMsg = &halproto.SlabGetRequestMsg{
+			Request: []*halproto.SlabGetRequest{req},
+		}
+	} else {
+		// Get all Slabs
+		all = true
+		var req *halproto.SlabGetRequest
+		req = &halproto.SlabGetRequest{
+			Id: 4294967295,
+		}
+		slabGetReqMsg = &halproto.SlabGetRequestMsg{
+			Request: []*halproto.SlabGetRequest{req},
+		}
+	}
+
+	// HAL call
+	respMsg, err := client.SlabGet(context.Background(), slabGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting slab failed. %v", err)
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			if all == false {
+				log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			}
+			continue
+		}
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	}
+}
+
+func mtrackShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var mtrackGetReqMsg *halproto.MemTrackGetRequestMsg
+
+	// Get all allocationIDs
+	var req *halproto.MemTrackGetRequest
+	req = &halproto.MemTrackGetRequest{
+		Spec: &halproto.MemTrackSpec{
+			AllocId: 4294967295,
+		},
+	}
+	mtrackGetReqMsg = &halproto.MemTrackGetRequestMsg{
+		Request: []*halproto.MemTrackGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.MemTrackGet(context.Background(), mtrackGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting mtrack failed. %v", err)
+	}
+
+	// Print header
+	mtrackShowHeader()
+
+	// Print mtrack
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		mtrackShowResp(resp)
+	}
+}
+
+func mtrackShowHeader() {
+	hdrLine := strings.Repeat("-", 35)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-10s%-10s\n",
+		"AllocID", "NumAlloc", "NumFree")
+	fmt.Println(hdrLine)
+}
+
+func mtrackShowResp(resp *halproto.MemTrackGetResponse) {
+	spec := resp.GetSpec()
+	stats := resp.GetStats()
+
+	fmt.Printf("%-10d%-10d%-10d\n",
+		spec.GetAllocId(),
+		stats.GetNumAllocs(),
+		stats.GetNumFrees())
+}
+
+func mtrackDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var mtrackGetReqMsg *halproto.MemTrackGetRequestMsg
+
+	// Get all allocationIDs
+	var req *halproto.MemTrackGetRequest
+	req = &halproto.MemTrackGetRequest{
+		Spec: &halproto.MemTrackSpec{
+			AllocId: 4294967295,
+		},
+	}
+	mtrackGetReqMsg = &halproto.MemTrackGetRequestMsg{
+		Request: []*halproto.MemTrackGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.MemTrackGet(context.Background(), mtrackGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting mtrack failed. %v", err)
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	}
+}
+
+/*
+func hashShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var empty *halproto.Empty
+
+	// HAL call
+	respMsg, err := client.HashTableGet(context.Background(), empty)
+	if err != nil {
+		log.Errorf("Getting mtrack failed. %v", err)
+	}
+
+	// Print header
+	hashShowHeader()
+
+	// Print hash
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		hashShowResp(resp)
+	}
+}
+
+func hashShowHeader() {
+	hdrLine := strings.Repeat("-", 150)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-20s%-12s%-12s%-12s%-12s%-12s%-12s%-14s%-12s%-12s%-12s\n",
+		"Name", "NumBuckets", "ThreadSafe", "MaxDepth",
+		"AvgDepth", "NumEntries", "NumInsert", "NumInsertErr",
+		"NumDel", "NumDelErr", "NumLookup")
+	fmt.Println(hdrLine)
+}
+
+func hashShowResp(resp *halproto.HashTableGetResponse) {
+	spec := resp.GetSpec()
+	stats := resp.GetStats()
+
+	fmt.Printf("%-20s%-12d%-12t%-12d%-12d%-12d%-12d%-14d%-12d%-12d%-12d\n",
+		spec.GetName(), spec.GetNumBuckets(), spec.GetThreadSafe(),
+		spec.GetMaxBucketDepth(), spec.GetAvgBucketDepth(),
+		stats.GetNumEntries(), stats.GetNumInserts(), stats.GetNumInsertErrors(),
+		stats.GetNumDeletes(), stats.GetNumDeleteErrors(), stats.GetNumLookups())
+}
+
+func hashDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var empty *halproto.Empty
+
+	// HAL call
+	respMsg, err := client.HashTableGet(context.Background(), empty)
+	if err != nil {
+		log.Errorf("Getting hash table failed. %v", err)
+	}
+
+	// Print hash table
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	}
+}
+*/
+
+func allMemoryShowHandler(ofile *os.File) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	// Get all Slabs
+	var slabGetReqMsg *halproto.SlabGetRequestMsg
+	var sreq *halproto.SlabGetRequest
+
+	sreq = &halproto.SlabGetRequest{
+		Id: 4294967295,
+	}
+	slabGetReqMsg = &halproto.SlabGetRequestMsg{
+		Request: []*halproto.SlabGetRequest{sreq},
+	}
+
+	// HAL call
+	sRespMsg, err := client.SlabGet(context.Background(), slabGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting slab failed. %v", err)
+	}
+
+	for _, sResp := range sRespMsg.Response {
+		if sResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", sResp.ApiStatus)
+			continue
+		}
+		respType := reflect.ValueOf(sResp)
+		b, _ := yaml.Marshal(respType.Interface())
+		if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+			log.Errorf("Failed to write to file %s, err : %v",
+				ofile.Name(), err)
+		}
+	}
+
+	// Get all allocationIDs
+	var mtrackGetReqMsg *halproto.MemTrackGetRequestMsg
+	var mreq *halproto.MemTrackGetRequest
+	mreq = &halproto.MemTrackGetRequest{
+		Spec: &halproto.MemTrackSpec{
+			AllocId: 4294967295,
+		},
+	}
+	mtrackGetReqMsg = &halproto.MemTrackGetRequestMsg{
+		Request: []*halproto.MemTrackGetRequest{mreq},
+	}
+
+	// HAL call
+	mRespMsg, err := client.MemTrackGet(context.Background(), mtrackGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting mtrack failed. %v", err)
+	}
+
+	for _, mResp := range mRespMsg.Response {
+		if mResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", mResp.ApiStatus)
+			continue
+		}
+		respType := reflect.ValueOf(mResp)
+		b, _ := yaml.Marshal(respType.Interface())
+		if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+			log.Errorf("Failed to write to file %s, err : %v",
+				ofile.Name(), err)
+		}
+	}
+
+	/*
+		// Get hash table
+		var empty *halproto.Empty
+
+		// HAL call
+		hRespMsg, err := client.HashTableGet(context.Background(), empty)
+		if err != nil {
+			log.Errorf("Getting hash table failed. %v", err)
+		}
+
+		// Print hash table
+		for _, hResp := range hRespMsg.Response {
+			if hResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				log.Errorf("HAL Returned non OK status. %v", hResp.ApiStatus)
+				continue
+			}
+			respType := reflect.ValueOf(hResp)
+			b, _ := yaml.Marshal(respType.Interface())
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				log.Errorf("Failed to write to file %s, err : %v",
+					ofile.Name(), err)
+			}
+		}
+	*/
+}
+
+func summaryShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	// Get all Slabs
+	var slabGetReqMsg *halproto.SlabGetRequestMsg
+	var sreq *halproto.SlabGetRequest
+
+	sreq = &halproto.SlabGetRequest{
+		Id: 4294967295,
+	}
+	slabGetReqMsg = &halproto.SlabGetRequestMsg{
+		Request: []*halproto.SlabGetRequest{sreq},
+	}
+
+	// HAL call
+	sRespMsg, err := client.SlabGet(context.Background(), slabGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting slab failed. %v", err)
+	}
+
+	var memSlabHeld uint32
+	var memSlabUsed uint32
+	var spec *halproto.SlabSpec
+	var stats *halproto.SlabStats
+
+	memSlabHeld = 0
+	memSlabUsed = 0
+
+	for _, sResp := range sRespMsg.Response {
+		if sResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			continue
+		}
+		spec = sResp.GetSpec()
+		stats = sResp.GetStats()
+		memSlabHeld += (spec.GetRawBlockSize() * stats.GetNumBlocks())
+		memSlabUsed += (stats.GetNumElementsInUse() * spec.GetElementSize())
+	}
+
+	fmt.Printf("Slab Memory Held: %d bytes, Slab Memory in Use: %d bytes\n", memSlabHeld, memSlabUsed)
+}
