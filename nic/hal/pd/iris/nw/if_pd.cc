@@ -403,6 +403,12 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
     uint8_t is_tagged;
     uint16_t vlan_id;
 
+    // pi_if is supposed to be a pinned if. In smart switch mode, there may not
+    // be a pinned interface for enic.
+    if (!pi_if) {
+        return HAL_RET_OK;
+    }
+
     HAL_ASSERT_RETURN(pi_if && pi_l2seg && data, HAL_RET_INVALID_ARG);
 
     data->lport = if_get_lport_id(pi_if);

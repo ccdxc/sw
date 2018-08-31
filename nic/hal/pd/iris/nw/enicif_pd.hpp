@@ -127,6 +127,8 @@ hal_ret_t
 pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
                               uint32_t upd_flags,
                               nwsec_profile_t *nwsec_prof,
+                              pd_if_update_args_t *args,
+                              pd_if_lif_update_args_t *lif_args,
                               input_properties_mac_vlan_actiondata &data,
                               bool host_entry);
 hal_ret_t pd_enicif_lif_update(pd_if_lif_update_args_t *args);
@@ -177,6 +179,9 @@ hal_ret_t pd_enicif_make_clone(pd_if_make_clone_args_t *args);
 hal_ret_t pd_enicif_mem_free(pd_if_mem_free_args_t *args);
 hal_ret_t pd_enicif_upd_egress_en_change (pd_if_update_args_t *args);
 hal_ret_t pd_enicif_upd_pinned_uplink_change (pd_if_update_args_t *args);
+if_t *pd_enicif_get_pinned_uplink_for_inp_props(if_t *hal_if,
+                                                pd_if_update_args_t *if_args,
+                                                pd_if_lif_update_args_t *lif_args);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_PD_ENICIF_HPP__

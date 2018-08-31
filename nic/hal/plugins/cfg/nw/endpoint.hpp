@@ -106,7 +106,7 @@ typedef struct ep_s {
     hal_handle_t         l2seg_handle;         // L2 segment this endpoint belongs to
     hal_handle_t         if_handle;            // interface endpoint is attached to
     hal_handle_t         gre_if_handle;        // Set if there is a GRE tunnel destined to this EP.
-    hal_handle_t         pinned_if_handle;     // interface endpoint is attached to
+    // hal_handle_t         pinned_if_handle;     // interface endpoint is attached to
     hal_handle_t         vrf_handle;           // vrf handle
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint
     uint64_t             ep_flags;             // endpoint flags
@@ -216,6 +216,7 @@ ep_t* find_ep_by_v4_key_in_l2segment(uint32_t v4_addr,
 ep_t* find_ep_by_v6_key_in_l2segment(const ip_addr_t *ip_addr,
         const hal::l2seg_t *l2seg);
 hal_ret_t find_ep(EndpointKeyHandle kh, ep_t **ep, ::types::ApiStatus *api_status);
+if_t *ep_get_pinned_uplink(ep_t *ep);
 
 // Debug APIs
 void ep_print_ips(ep_t *ep);

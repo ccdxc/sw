@@ -1465,6 +1465,8 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
         val = 0;
         HAL_TRACE_DEBUG("Nic forwarding mode SMART");
     }
+    HAL_TRACE_DEBUG("Nic specific forwarding mode: {}",
+                    p4pd_def_cfg->hal_cfg->forwarding_mode);
     val = htobe64(val);
     capri_table_constant_write(val, tbl_ctx.stage, tbl_ctx.stage_tableid,
                                (tbl_ctx.gress == P4_GRESS_INGRESS));

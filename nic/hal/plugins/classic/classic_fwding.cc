@@ -33,6 +33,7 @@ update_fwding_info(fte::ctx_t&ctx)
 {
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
     hal::if_t *dif = ctx.dif();
+    hal::if_t *pinned_if;
 
     if (dif && dif->if_type == intf::IF_TYPE_ENIC) {
         hal::lif_t *lif = if_get_lif(dif);
@@ -43,10 +44,17 @@ update_fwding_info(fte::ctx_t&ctx)
         flowupd.fwding.qtype = lif_get_qtype(lif, intf::LIF_QUEUE_PURPOSE_RX);
         flowupd.fwding.qid_en = 1;
         flowupd.fwding.qid = 0;
-    } else if (ctx.sep() && ctx.sep()->pinned_if_handle != HAL_HANDLE_INVALID) {
-        flowupd.fwding.dif = hal::find_if_by_handle(ctx.sep()->pinned_if_handle);
-        flowupd.fwding.dl2seg = ctx.sl2seg();
-        HAL_ASSERT_RETURN(dif, HAL_RET_IF_NOT_FOUND);
+    } else if (ctx.sep()) {
+        // else if (ctx.sep() && ctx.sep()->pinned_if_handle != HAL_HANDLE_INVALID)
+        // flowupd.fwding.dif = ep_get_pinned_uplink(ctx.sep());
+        // flowupd.fwding.dif = hal::find_if_by_handle(ctx.sep()->pinned_if_handle);
+        // HAL_ASSERT_RETURN(dif, HAL_RET_IF_NOT_FOUND);
+
+        pinned_if = ep_get_pinned_uplink(ctx.sep());
+        if (pinned_if) {
+            flowupd.fwding.dif = pinned_if;
+            flowupd.fwding.dl2seg = ctx.sl2seg();
+        }
     }
 
     if (flowupd.fwding.dif == NULL) {

@@ -823,10 +823,6 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         rsp->mutable_rdma_data()->set_at_base_addr(rdma_lif_at_base_addr(hw_lif_id));
     }
 
-    HAL_TRACE_DEBUG("Lif Created:");
-    HAL_TRACE_DEBUG("------------");
-    lif_print(lif);
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
 
@@ -959,7 +955,8 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                       __FUNCTION__, ret);
     }
 
-    if (app_ctxt->vlan_strip_en_changed || app_ctxt->vlan_insert_en_changed) {
+    if (app_ctxt->vlan_strip_en_changed || app_ctxt->vlan_insert_en_changed
+        || app_ctxt->pinned_uplink_changed) {
         // Triggers reprogramming of output mapping table for enicifs and uplinks
         ret = lif_update_trigger_if(lif, app_ctxt->vlan_strip_en_changed,
                                     app_ctxt->vlan_strip_en,

@@ -768,16 +768,22 @@ ep_prepare_rsp (EndpointResponse *rsp, hal_ret_t ret,
     return HAL_RET_OK;
 }
 
+#if 0
 //------------------------------------------------------------------------------
 // Host Pinning Mode:
 // If this mode is enabled, then this routine will pin the endpoint to an
 // uplink port/port-channel.
 //-- Applies only to Local endpoints. NOP for Remote EPs.
+// Priority:
+//      - Enic If
+//      - Lif
 //------------------------------------------------------------------------------
 static hal_ret_t
 pin_endpoint (ep_t *ep)
 {
+    hal_ret_t   ret     = HAL_RET_OK;
     if_t        *hal_if = NULL;
+    if_t        *uplink_if = NULL;
 
     ep->pinned_if_handle = HAL_HANDLE_INVALID;
     if (is_forwarding_mode_host_pinned() == FALSE || is_ep_management(ep)) {
@@ -795,10 +801,62 @@ pin_endpoint (ep_t *ep)
         HAL_TRACE_ERR("Interface {} not found for if handle", ep->if_handle);
         return HAL_RET_IF_NOT_FOUND;
     }
-    ep->pinned_if_handle = hal_if->pinned_uplink;
-    HAL_TRACE_DEBUG("Pinning EP to IF Id:{}", find_if_by_handle(hal_if->pinned_uplink)->if_id);
 
-    return HAL_RET_OK;
+    ret = if_enicif_get_pinned_if (hal_if, &uplink_if);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to get pinned uplink for EP. ret: {}", ret);
+        goto end;
+    }
+    ep->pinned_if_handle = uplink_if->hal_handle;
+    HAL_TRACE_DEBUG("EP Pinning to UplinkId:{}",
+                    uplink_if->if_id);
+
+end:
+    return ret;
+}
+
+if_t *
+ep_get_pinned_uplink(ep_t *ep)
+{
+    if_t        *hal_if = NULL;
+
+    if (ep->pinned_if_handle != HAL_HANDLE_INVALID) {
+        hal_if = find_if_by_handle(ep->pinned_if_handle);
+    }
+
+    return hal_if;
+}
+#endif
+
+if_t *
+ep_get_pinned_uplink(ep_t *ep)
+{
+    hal_ret_t   ret     = HAL_RET_OK;
+    if_t        *hal_if = NULL;
+    if_t        *uplink_if = NULL;
+
+    if (ep->ep_flags & EP_FLAGS_REMOTE) {
+        HAL_TRACE_DEBUG("EP {} is Remote. No pinned uplink",
+                        ep_l2_key_to_str(ep));
+        goto end;
+    }
+
+    hal_if = find_if_by_handle(ep->if_handle);
+    if (hal_if == NULL) {
+        HAL_TRACE_ERR("Interface {} not found for if handle", ep->if_handle);
+        goto end;
+    }
+
+    ret = if_enicif_get_pinned_if (hal_if, &uplink_if);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to get pinned uplink for EP. ret: {}", ret);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("EP Pinning to UplinkId:{}",
+                    uplink_if->if_id);
+end:
+    return uplink_if;
 }
 
 //------------------------------------------------------------------------------
@@ -851,11 +909,14 @@ ep_init_from_spec (ep_t *ep, const EndpointSpec& spec, bool create)
         HAL_TRACE_DEBUG("Setting remote flag in EP {}", ep->ep_flags);
     }
 
+    // Dynamically get pinned uplink from ep_get_pinned_uplink()
+#if 0
     // Process Host pinning mode, if enabled.
     ret = pin_endpoint(ep);
     if (ret != HAL_RET_OK) {
         goto end;
     }
+#endif
 
     // allocate memory for each IP entry in the EP
     num_ips = spec.endpoint_attrs().ip_address_size();

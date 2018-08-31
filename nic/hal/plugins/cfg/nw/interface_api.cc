@@ -168,6 +168,7 @@ if_get_mac_addr (if_t *pi_if)
 uint32_t
 if_enicif_get_host_pinned_uplink (if_t *pi_if)
 {
+
     if (g_num_uplink_ifs) {
         uint8_t hashval = (sdk::lib::hash_algo::fnv_hash(if_get_mac_addr(pi_if), ETH_ADDR_LEN) % g_num_uplink_ifs);
         return g_uplink_if_ids[hashval];

@@ -50,11 +50,13 @@ update_src_if(fte::ctx_t&ctx)
     }
 
     // no check needed if src is local or no pinned intf for dep
-    if (src_local || ctx.dep()->pinned_if_handle == HAL_HANDLE_INVALID) {
+    // if (src_local || ctx.dep()->pinned_if_handle == HAL_HANDLE_INVALID) {
+    if (src_local || ep_get_pinned_uplink(ctx.dep()) == NULL) {
         return HAL_RET_OK;
     }
 
-    sif = hal::find_if_by_handle(ctx.dep()->pinned_if_handle);
+    // sif = hal::find_if_by_handle(ctx.dep()->pinned_if_handle);
+    sif = ep_get_pinned_uplink(ctx.dep());
     HAL_ASSERT_RETURN(sif, HAL_RET_IF_NOT_FOUND);
 
     // Drop the packet if the pkt src_if is not the expected if

@@ -2870,10 +2870,26 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
         // Check filters to egress en
         ret = filter_check_enic(lif, hal_if, &hal_if->egress_en);
 
-        if (hal_if->pinned_uplink == HAL_HANDLE_INVALID) {
-            if_t *pin_if = find_if_by_id(if_enicif_get_host_pinned_uplink(hal_if));
-            if (pin_if) {
-                hal_if->pinned_uplink = pin_if->hal_handle;
+        /*
+         * In host-pin mode:
+         * - Every Enic should have a pinned uplink.
+         * Case 1:
+         *   Enic -> Lif -> pinned_uplink
+         * Case 2:
+         *   Enic -> pinned_uplink
+         * Case 3:
+         *   Enic -> pinned_uplink (dynamically allocated. Only for DOL)
+         */
+        if (is_forwarding_mode_host_pinned()) {
+            if_t *uplink = NULL;
+            // If either enic or lif doesnt have a pinned uplink, pick from uplinks.
+            if_enicif_get_pinned_if(hal_if, &uplink);
+            if (!uplink) {
+                uplink = find_if_by_id(if_enicif_get_host_pinned_uplink(hal_if));
+                if (uplink) {
+                    HAL_TRACE_DEBUG("Dynamically picked pinned uplink: {}", uplink->if_id);
+                    hal_if->pinned_uplink = uplink->hal_handle;
+                }
             }
         }
 
