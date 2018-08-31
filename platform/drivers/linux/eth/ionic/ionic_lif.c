@@ -505,7 +505,7 @@ static const struct net_device_ops ionic_netdev_ops = {
 irqreturn_t ionic_isr(int irq, void *data)
 {
 	struct napi_struct *napi = data;
-    
+	
 
 	napi_schedule_irqoff(napi);
 
@@ -572,24 +572,18 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 	err = ionic_q_init(lif, idev, &new->q, index, base, num_descs,
 			   desc_size, sg_desc_size, pid);
 	if (err)
-    {
-        //printk("ionic_q_init failed with err: %d\n", err);
 		return err;
-    }
-	if (flags & QCQ_F_INTR) {
+	
+    if (flags & QCQ_F_INTR) {
 		err = ionic_intr_alloc(lif, &new->intr);
-		if (err)
-        {
-            //printk("ionic_intr_alloc failed with err: %d\n", err);
+        if (err)
 			return err;
-        }
-		err = ionic_bus_get_irq(lif->ionic, new->intr.index);
+		
+        err = ionic_bus_get_irq(lif->ionic, new->intr.index);
 		if (err < 0)
-        {
-            //printk("ionic_bus_get_irq failed with err: %d\n", err);
 			goto err_out_free_intr;
-        }
-		new->intr.vector = err;
+		
+        new->intr.vector = err;
 		ionic_intr_mask_on_assertion(&new->intr);
 	} else {
 		new->intr.index = INTR_INDEX_NOT_ASSIGNED;
@@ -603,20 +597,15 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 	err = ionic_cq_init(lif, &new->cq, &new->intr,
 			    num_descs, cq_desc_size);
 	if (err)
-    {
-        //printk("ionic_cq_init failed with err: %d\n", err);
 		goto err_out_free_intr;
-    }
-    //printk("allocating DMA memory, total_size = %d bytes\n", total_size);
-	new->base = dma_alloc_coherent(dev, total_size, &new->base_pa,
+	
+    new->base = dma_alloc_coherent(dev, total_size, &new->base_pa,
 				       GFP_KERNEL);
 	if (!new->base) {
-        //printk("dma_alloc_coherent failed!!!\n");
 		err = -ENOMEM;
 		goto err_out_free_intr;
 	}
 
-    //printk("dma_alloc_coherent succeeded! new->base = %p , new->base_pa = %llx \n", new->base, new->base_pa);
 	new->total_size = total_size;
 
 	q_base = new->base;
@@ -690,11 +679,9 @@ static int ionic_qcqs_alloc(struct lif *lif)
 			      sizeof(struct admin_comp),
 			      0, pid, &lif->adminqcq);
 	if (err)
-    {
-        //printk("ionic_qcq_alloc failed for Adminq with err: %d\n", err);
 		return err;
-    }
-	pid = ionic_pid_get(lif, 0);
+	
+    pid = ionic_pid_get(lif, 0);
 	flags = QCQ_F_TX_STATS | QCQ_F_INTR | QCQ_F_SG;
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		err = ionic_qcq_alloc(lif, i, "tx", flags, ntxq_descs,
@@ -703,10 +690,7 @@ static int ionic_qcqs_alloc(struct lif *lif)
 				      sizeof(struct txq_sg_desc),
 				      pid, &lif->txqcqs[i]);
 		if (err)
-        {
-            //printk("ionic_qcq_alloc failed for Txq with err: %d\n", err);
 			goto err_out_free_adminqcq;
-        }
 	}
 
 	pid = ionic_pid_get(lif, 0);
@@ -717,10 +701,7 @@ static int ionic_qcqs_alloc(struct lif *lif)
 				      sizeof(struct rxq_comp),
 				      0, pid, &lif->rxqcqs[i]);
 		if (err)
-        {
-            //printk("ionic_qcq_alloc failed for Rxq with err: %d\n", err);
 			goto err_out_free_txqcqs;
-        }
 	}
 
 	return 0;
@@ -825,9 +806,7 @@ void ionic_lifs_free(struct ionic *ionic)
 	list_for_each_safe(cur, tmp, &ionic->lifs) {
 		lif = list_entry(cur, struct lif, list);
 		list_del(&lif->list);
-        //printk("DBG: Flushing the scheduled work...\n");
 		flush_scheduled_work();
-        //printk("DBG: Flushing Done!!!\n");
 		ionic_qcqs_free(lif);
 		free_netdev(lif->netdev);
 	}
@@ -927,14 +906,14 @@ static int ionic_lif_rss_setup(struct lif *lif)
 
 	err = ionic_rss_ind_tbl_set(lif, NULL);
 	if (err)
-    {
+	{
 		goto err_out_free;
-    }
+	}
 	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key);
 	if (err)
-    {
+	{
 		goto err_out_free;
-    }
+	}
 
 	return 0;
 
@@ -1016,9 +995,9 @@ static int ionic_request_irq(struct lif *lif, struct qcq *qcq)
 
 	snprintf(intr->name, sizeof(intr->name),
 		 "%s-%s-%s", DRV_NAME, lif->name, q->name);
-    
 	
-    return devm_request_irq(dev, intr->vector, ionic_isr,
+	
+	return devm_request_irq(dev, intr->vector, ionic_isr,
 				0, intr->name, napi);
 }
 
@@ -1034,9 +1013,9 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	ionic_dev_cmd_adminq_init(idev, q, 0, lif->index, 0);
 	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 	if (err)
-    {
+	{
 		return err;
-    }
+	}
 
 	ionic_dev_cmd_comp(idev, &comp);
 	q->qid = comp.qid;
@@ -1045,8 +1024,6 @@ static int ionic_lif_adminq_init(struct lif *lif)
 
 	netif_napi_add(lif->netdev, napi, ionic_adminq_napi,
 		       NAPI_POLL_WEIGHT);
-
-    //printk("Requesting irq for adminq\n");
 
 	err = ionic_request_irq(lif, qcq);
 	if (err) {
@@ -1128,13 +1105,9 @@ static int ionic_set_features(struct lif *lif)
 	struct net_device *netdev = lif->netdev;
 	int err;
 
-    //printk("Calling ionic_get_features\n");
 	err = ionic_get_features(lif);
 	if (err)
-    {
 		return err;
-    }
-    //printk("Finished ionic_get_features\n");
 
 	netdev->features |= NETIF_F_HIGHDMA;
 
@@ -1210,9 +1183,9 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
-    {
+	{
 		return err;
-    }
+	}
 
 	q->qid = ctx.comp.txq_init.qid;
 	q->qtype = ctx.comp.txq_init.qtype;
@@ -1286,9 +1259,9 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
-    {
+	{
 		return err;
-    }
+	}
 	q->qid = ctx.comp.rxq_init.qid;
 	q->qtype = ctx.comp.rxq_init.qtype;
 	q->db = ionic_db_map(q->idev, q);
@@ -1372,63 +1345,58 @@ static int ionic_lif_init(struct lif *lif)
 
 	err = ionic_lif_adminq_init(lif);
 	if (err)
-    {
+	{
 		return err;
-    }
+	}
 
-    //printk("Adminq init success!!!\n");
 	/* Enabling interrupts on adminq from here on... */
 	ionic_intr_mask(&lif->adminqcq->intr, false);
-    //printk("ionic_intr_mask success!!!\n");
 
 	err = ionic_set_features(lif);
 	if (err)
-    {
+	{
 		goto err_out_mask_adminq;
-    }
-    //printk("ionic_set_features success!!!\n");
+	}
 	
-    err = ionic_lif_txqs_init(lif);
+	err = ionic_lif_txqs_init(lif);
 	if (err)
-    {
+	{
 		goto err_out_mask_adminq;
-    }
-    //printk("Txq init success!!!\n");
+	}
 
 	err = ionic_lif_rxqs_init(lif);
 	if (err)
-    {
+	{
 		goto err_out_txqs_deinit;
-    }
-    //printk("Rxq init success!!!\n");
+	}
 
 	err = ionic_rx_filters_init(lif);
 	if (err)
-    {
+	{
 		goto err_out_rxqs_deinit;
-    }
+	}
 	err = ionic_station_set(lif);
 	if (err)
-    {
+	{
 		goto err_out_rx_filter_deinit;
-    }
+	}
 
-    //printk("DPG: Skipping RSS setup as of now...\n");
+	printk("DPS: Skipping RSS setup as of now...\n");
 #if 0
 	if (lif->netdev->features & NETIF_F_RXHASH) {
 		err = ionic_lif_rss_setup(lif);
 		if (err)
-        {
+		{
 			goto err_out_rx_filter_deinit;
-        }
+		}
 	}
 #endif
 
 	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
-    {
+	{
 		goto err_out_rss_teardown;
-    }
+	}
 
 	ionic_set_rx_mode(lif->netdev);
 
@@ -1630,28 +1598,21 @@ try_again:
 			  1 /* adminq */);
 
 #ifdef DPS_FASTMODEL
-    nintrs = 3;
-    dev_nintrs = 3;
+	nintrs = 3;
+	dev_nintrs = 3;
 #endif
 
 	if (nintrs > dev_nintrs)
 		goto try_fewer;
 
 	err = ionic_bus_alloc_irq_vectors(ionic, nintrs);
-    //printk("ionic_bus_alloc_irq_vectors returned err: %d\n", err);
 	if (err < 0 && err != -ENOSPC)
-    {
-        //printk("returning due to error in ionic_bus_alloc_irq_vectors\n");
 		return err;
-    }
-	if (err == -ENOSPC)
-    {
-        //printk("err is -ENOSPC\n");
+	
+    if (err == -ENOSPC)
 		goto try_fewer;
-    }
 
 	if (err != nintrs) {
-        //printk("err != nints so trying fewer!\n");
 		ionic_bus_free_irq_vectors(ionic);
 		goto try_fewer;
 	}
@@ -1661,7 +1622,6 @@ try_again:
 	ionic->nrxqs_per_lif = nrxqs_per_lif;
 	ionic->nintrs = nintrs;
 
-    //printk("adding debugfs entry\n");
 	return ionic_debugfs_add_sizes(ionic);
 
 try_fewer:
@@ -1677,8 +1637,6 @@ try_fewer:
 		--nrxqs_per_lif;
 		goto try_again;
 	}
-
-    //printk("returning -ENOSPC");
 
 	return -ENOSPC;
 }
