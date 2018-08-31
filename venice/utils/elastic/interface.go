@@ -31,6 +31,10 @@ type ESClient interface {
 	// FlushIndex flushes the given index. This ensures all the writes are flushed to the shard.
 	FlushIndex(ctx context.Context, index string) error
 
+	// GetIndexSettings returns a map of index name and its associated settings
+	// for the given list of indices or a index patterns provided as input argument.
+	GetIndexSettings(ctx context.Context, indices []string) (map[string]SettingsResponse, error)
+
 	// Index indexes the single document (obj) on the given `index` and
 	// type `iType` with the given ID.
 	Index(ctx context.Context, index, iType, ID string, obj interface{}) error

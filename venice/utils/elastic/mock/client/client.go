@@ -90,6 +90,11 @@ func (e *mockClient) FlushIndex(ctx context.Context, index string) error {
 	return nil
 }
 
+// GetIndexSettings mock implementation of getIndices operation
+func (e *mockClient) GetIndexSettings(ctx context.Context, indices []string) (map[string]elastic.SettingsResponse, error) {
+	return nil, nil
+}
+
 //Index indexes the given mockObj using mockClient
 func (e *mockClient) Index(ctx context.Context, index, iType, ID string, obj interface{}) error {
 	if _, ok := e.indexes[index]; !ok {

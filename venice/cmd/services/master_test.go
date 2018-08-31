@@ -8,6 +8,8 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/utils/elastic/curator"
+	esMock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/testutils"
 )
@@ -16,9 +18,13 @@ func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock
 	l := mock.NewLeaderService(t.Name())
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := mock.CfgWatcherService{}
-	m := NewMasterService(WithLeaderSvcMasterOption(l), WithSystemdSvcMasterOption(s), WithConfigsMasterOption(&mock.Configs{}),
-		WithCfgWatcherMasterOption(&cw), WithK8sSvcMasterOption(&mock.K8sService{}),
-		WithResolverSvcMasterOption(mock.NewResolverService()))
+	m := NewMasterService(WithLeaderSvcMasterOption(l),
+		WithSystemdSvcMasterOption(s),
+		WithConfigsMasterOption(&mock.Configs{}),
+		WithCfgWatcherMasterOption(&cw),
+		WithK8sSvcMasterOption(&mock.K8sService{}),
+		WithResolverSvcMasterOption(mock.NewResolverService()),
+		WithElasticCuratorSvcrOption(esMock.NewMockCurator(&curator.Config{})))
 
 	return l, s, &cw, m
 }

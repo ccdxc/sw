@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -328,6 +329,79 @@ func (e *Client) FlushIndex(ctx context.Context, index string) error {
 		}
 
 		return rErr
+	}
+}
+
+// GetIndexSettings returns the index-features for the list of indices provided
+// indices is list of indices that needs to be queried
+func (e *Client) GetIndexSettings(ctx context.Context, indices []string) (map[string]SettingsResponse, error) {
+	retryCount := 0
+	retryInterval := initialRetryInterval
+
+	var rResp interface{}
+	var rErr error
+	var retry bool
+	response := make(map[string]SettingsResponse)
+	for {
+		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			indexResp, err := es.NewIndicesGetService(e.esClient).Index(indices...).Do(context.TODO())
+			if err != nil {
+				e.logger.Errorf("get indices failed {%v} resp: %+v err: %+v",
+					indices, indexResp, err)
+				return nil, err
+			}
+			for index, iResp := range indexResp {
+				var sresp SettingsResponse
+				var err error
+				for k1, v1 := range iResp.Settings["index"].(map[string]interface{}) {
+					switch k1 {
+					case "codec":
+						sresp.Codec = v1.(string)
+					case "number_of_shards":
+						sresp.NumberOfShards, err = strconv.ParseUint(v1.(string), 10, 64)
+					case "provided_name":
+						sresp.ProvidedName = v1.(string)
+					case "max_inner_result_window":
+						sresp.MaxInnerResultWindow, err = strconv.ParseUint(v1.(string), 10, 64)
+					case "creation_date":
+						// Parse millisecs to Time
+						var msInt int64
+						msInt, err = strconv.ParseInt(v1.(string), 10, 64)
+						if err == nil {
+							sresp.CreationDate = time.Unix(0, msInt*int64(time.Millisecond))
+						}
+					case "number_of_replicas":
+						sresp.NumberOfShards, _ = strconv.ParseUint(v1.(string), 10, 64)
+					case "version":
+						for k2, v2 := range v1.(map[string]interface{}) {
+							switch k2 {
+							case "created":
+								sresp.Version.Created = v2.(string)
+							}
+						}
+					}
+					if err != nil {
+						e.logger.Errorf("@@@ Error parsing attribute: %s err: %v", k1, err)
+					}
+				}
+				response[index] = sresp
+			}
+			return response, nil
+		}, retryCount, rResp, rErr)
+
+		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+			retryCount++
+			continue
+		}
+
+		return rResp.(map[string]SettingsResponse), rErr
 	}
 }
 

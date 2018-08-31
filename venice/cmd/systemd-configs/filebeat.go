@@ -65,7 +65,7 @@ output.elasticsearch:
   #protocol: "https"
   #username: "elastic"
   #password: "changeme"
-  index: "{{.ElasticIndex}}.%{+YYYY.MM.dd}"
+  index: "{{.ElasticIndex}}.%{+YYYY-MM-dd}"
 
 setup.template.name: "{{.ElasticIndex}}"
 setup.template.pattern: "{{.ElasticIndex}}.*"

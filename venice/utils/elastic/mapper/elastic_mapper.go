@@ -1,19 +1,15 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
 package ref
 
 import (
-	"encoding/json"
 	"errors"
 	"reflect"
 	"strings"
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
-
 	"github.com/pensando/sw/venice/utils/log"
-)
-
-const (
-	indentation = "    "
 )
 
 // Elastic mapper options
@@ -27,51 +23,6 @@ type options struct {
 
 // Option fills the optional params for Mapper
 type Option func(opt *options)
-
-// ElasticConfig contains the settings and mappings
-// definition for an Elastic Index.
-type ElasticConfig struct {
-	// IndexPatterns contains elastic index patterns for the template
-	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
-	IndexPatterns string `json:"index_patterns,omitempty"`
-
-	// Settings contains elastic index settings
-	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html#create-index-settings
-	Settings Settings `json:"settings"`
-
-	// Mappings contains data mapping types for document type
-	// https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html
-	Mappings ElasticMapping `json:"mappings"`
-}
-
-// ElasticMapping is generic container for json key:value pairs
-// and can be used recursively to define nested definitions
-type ElasticMapping map[string]interface{}
-
-// Settings contains shards and replicas settings
-// And more settings if required should be added here.
-type Settings struct {
-
-	// Shards is count of Shards needed
-	Shards uint `json:"number_of_shards"`
-
-	// Replicas is count of secondary replicas
-	Replicas uint `json:"number_of_replicas"`
-
-	// Codec compression config
-	Codec string `json:"codec"`
-
-	// Max number of inner results with Aggregation, default is 100.
-	MaxInnerResults uint `json:"max_inner_result_window"`
-}
-
-// Properties contains the mapping of all fields in
-// a specific go struct
-type Properties struct {
-
-	// ElasticMapping is map of key-value pairs
-	ElasticMapping `json:"properties"`
-}
 
 // fieldOrTypeOverride is map of special types per docType
 // based on our usecase to support aggregations and mapping
@@ -203,7 +154,7 @@ func GetElasticType(kind reflect.Kind) string {
 //  	str, err = config.JSONString()
 //              (or)
 //  	str, err = config.JSONPrettyString()
-func ElasticMapper(obj interface{}, docType string, opts ...Option) (ElasticConfig, error) {
+func ElasticMapper(obj interface{}, docType string, opts ...Option) (elastic.Config, error) {
 
 	options := *defaultOptions()
 
@@ -220,11 +171,11 @@ func ElasticMapper(obj interface{}, docType string, opts ...Option) (ElasticConf
 	// Value of object has to be valid
 	val := reflect.ValueOf(obj)
 	if val.IsValid() == false {
-		return ElasticConfig{}, errors.New("Invalid object")
+		return elastic.Config{}, errors.New("Invalid object")
 	}
 
 	// Fill in index settings
-	settings := Settings{
+	settings := elastic.SettingsConfig{
 		Shards:          options.shards,
 		Replicas:        options.replicas,
 		Codec:           options.codec,
@@ -232,15 +183,15 @@ func ElasticMapper(obj interface{}, docType string, opts ...Option) (ElasticConf
 	}
 
 	// Generate mappings for Object
-	configs := ElasticMapping{}
+	configs := elastic.Mapping{}
 	mapper(docType, val.Type().String(), val, configs, "--", true, true)
 
 	// Fill in mappings for docType
-	mappings := ElasticMapping{}
+	mappings := elastic.Mapping{}
 	mappings[docType] = configs
 
 	// Fill in complete index mapping
-	indexMapping := ElasticConfig{
+	indexMapping := elastic.Config{
 		IndexPatterns: options.indexPatterns,
 		Settings:      settings,
 		Mappings:      mappings,
@@ -265,7 +216,7 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 			kwMap := make(map[string]interface{})
 			kwMap[string("type")] = "keyword"
 			kwMap[string("ignore_above")] = 256
-			kw := ElasticMapping{
+			kw := elastic.Mapping{
 				"keyword": kwMap,
 			}
 
@@ -275,7 +226,7 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 			config[key] = cMap
 
 		} else {
-			eType := ElasticMapping{
+			eType := elastic.Mapping{
 				"type": kind,
 			}
 			config[key] = eType
@@ -285,7 +236,7 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 
 	// check for override by type
 	if kind, ok := fieldOrTypeOverride[docType][val.Type().Name()]; ok {
-		eType := ElasticMapping{
+		eType := elastic.Mapping{
 			"type": kind,
 		}
 		config[key] = eType
@@ -337,7 +288,7 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 			}
 		} else {
 			// include struct name with properties nested
-			properties := ElasticMapping{
+			properties := elastic.Mapping{
 				"properties": sMap,
 			}
 			config[key] = properties
@@ -356,20 +307,20 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 		mMap := make(map[string]interface{})
 
 		// Key field and type
-		keyType := ElasticMapping{
+		keyType := elastic.Mapping{
 			"type": GetElasticType(mapKey.Kind()),
 		}
 		mMap[string("key")] = keyType
 		log.Debugf("%s %s: %s", indent, mapKey.String(), mMap[mapKey.String()])
 
 		// Value field and type
-		eType := ElasticMapping{
+		eType := elastic.Mapping{
 			"type": GetElasticType(mapElem.Kind()),
 		}
 		mMap[string("value")] = eType
 		log.Debugf("%s %s: %s", indent, "value", mMap[mapElem.String()])
 
-		properties := ElasticMapping{
+		properties := elastic.Mapping{
 			"properties": mMap,
 		}
 		config[key] = properties
@@ -406,7 +357,7 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 		fallthrough
 	case reflect.Uint64:
 		log.Debugf("%s %s: %s", indent, key, GetElasticType(val.Kind()))
-		eType := ElasticMapping{
+		eType := elastic.Mapping{
 			"type": GetElasticType(val.Kind()),
 		}
 		config[key] = eType
@@ -429,26 +380,4 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 	}
 
 	log.Debugf("%s mapper configmap: %v", indent, config)
-}
-
-// JSONString generates the JSON string for the object
-func (e ElasticConfig) JSONString() (string, error) {
-
-	jd, err := json.Marshal(e)
-	if err != nil {
-		log.Errorf("Failed to marshal: %v into json, err: %v", e, err)
-		return "", err
-	}
-	return string(jd), nil
-}
-
-// JSONPrettyString generates the JSON string in pretty string for the object
-func (e ElasticConfig) JSONPrettyString() (string, error) {
-
-	jd, err := json.MarshalIndent(e, "", indentation)
-	if err != nil {
-		log.Errorf("Failed to marshal: %v into json, err: %v", e, err)
-		return "", err
-	}
-	return string(jd), nil
 }

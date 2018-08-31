@@ -21,6 +21,7 @@ import (
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/elastic/curator"
 	mapper "github.com/pensando/sw/venice/utils/elastic/mapper"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -81,7 +82,6 @@ func (e *elasticsearchTestSuite) TestElastic(c *C) {
 
 	//context must be passed for each elastic call
 	ctx := context.Background()
-	logConfig.Debug = true
 
 	setup(c, elasticsearchName)
 	defer teardown(ctx, esClient, c, elasticsearchName)
@@ -138,6 +138,35 @@ func (e *elasticsearchTestSuite) TestElastic(c *C) {
 
 	// perform bulk request with update and delete operations
 	updateEventsThroughBulk(ctx, esClient, c)
+
+	// get index settings test
+	AssertEventually(c,
+		func() (bool, interface{}) {
+			indices := []string{"venice.external.ford.events.*"}
+			var err error
+			var resp map[string]elastic.SettingsResponse
+			if resp, err = esClient.GetIndexSettings(ctx, indices); err != nil {
+				log.Errorf("Failed to get index settings, err: %v", err)
+				return false, err
+			}
+			for index, settings := range resp {
+				if strings.Contains(index, "venice.external.ford.events") == false {
+					log.Errorf("Index name mismatch, exp: %s actual: %s",
+						"venice.external.ford.events", index)
+					return false, err
+				}
+				if strings.Contains(settings.ProvidedName, "venice.external.ford.events") == false {
+					log.Errorf("Index provided name mismatch, exp: %s actual: %s",
+						"venice.external.ford.events", index)
+					return false, err
+				}
+			}
+			return true, nil
+
+		}, "failed to get indices", "20ms", "2s")
+
+	// curator test events
+	testCurator(ctx, esClient, c)
 
 	// delete index template
 	if err := esClient.DeleteIndexTemplate(ctx, eventsTemplateName); err != nil {
@@ -441,6 +470,58 @@ func indexEventsBulk(ctx context.Context, client elastic.ESClient, c *C) {
 		fmt.Sprintf("requests failed - expected: %v, got: %v", 0, len(bulkResp.Failed())))
 
 	log.Infof("total time taken for bulk indexing: %v\n", time.Since(start))
+}
+
+// testCurator tests the index retention and cleanup functionality
+func testCurator(ctx context.Context, client elastic.ESClient, c *C) {
+
+	indices := []string{"testindex.1", "testindex.2"}
+	log.Infof("creating indices: %v", indices)
+
+	for _, index := range indices {
+		Assert(c, client.CreateIndex(ctx, index, "") == nil,
+			"Create index operation failed")
+	}
+	// Initialize curator service
+	config := curator.Config{
+		IndexName:       "testindex.*",
+		RetentionPeriod: 15 * time.Second,
+		ScanInterval:    2 * time.Second,
+		Logger:          log.GetNewLogger(logConfig),
+		Resolver:        nil,
+		ElasticAddr:     elasticAddr,
+	}
+	log.Infof("creating curator: %v", config)
+	curatorSvc, err := curator.NewCurator(&config)
+	Assert(c, err == nil, "Failed to create curator service")
+
+	// Start curator service
+	curatorSvc.Start()
+
+	// Verify older indices are deleted
+	AssertEventually(c,
+		func() (bool, interface{}) {
+			indices := []string{"testindex.*"}
+			var err error
+			var resp map[string]elastic.SettingsResponse
+			if resp, err = client.GetIndexSettings(ctx, indices); err != nil {
+				log.Errorf("Failed to get index settings, err: %v", err)
+				return false, err
+			}
+
+			// Verify there are no matching older indices found
+			if len(resp) != 0 {
+				log.Errorf("Indices not deleted yet, found old indices, resp: %+v", resp)
+				return false, err
+			}
+			return true, nil
+
+		}, "failed to get indices", "100ms", "90s")
+
+	log.Infof("Indices deletion verfied: %v", indices)
+
+	// Stop curator service
+	curatorSvc.Stop()
 }
 
 // indexEventsSequential indexs events in a sequential manner

@@ -45,6 +45,16 @@ const (
 
 	// delay between retries
 	retryDelay = 2 * time.Second
+
+	// LogIndexRetentionPeriod is retention period
+	// for venice and naples system logs - 60 days
+	// TODO: Adjust the retention period based on
+	// elastic disk quota and usage estimates.
+	LogIndexRetentionPeriod = 60 * 24 * time.Hour
+
+	// LogIndexScanInterval is scan interval
+	// for system logs - 24hr interval
+	LogIndexScanInterval = 24 * time.Hour
 )
 
 // GetIndex returns the Elastic Index based on the data type & tenant name

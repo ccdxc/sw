@@ -21,9 +21,12 @@ import (
 	"github.com/pensando/sw/venice/cmd/types"
 	k8stypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/elastic/curator"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // Services that run on node that wins the Leader election.
@@ -47,6 +50,7 @@ type masterService struct {
 	resolverSvc         types.ResolverService
 	resolverSvcObserver *resolverServiceObserver
 	cfgWatcherSvc       types.CfgWatcherService
+	esCuratorSvc        curator.Interface
 	isLeader            bool
 	enabled             bool
 	configs             configs.Interface
@@ -104,6 +108,13 @@ func WithResolverSvcMasterOption(resolverSvc types.ResolverService) MasterOption
 	}
 }
 
+// WithElasticCuratorSvcrOption to pass a specifc types.K8sService implementation
+func WithElasticCuratorSvcrOption(curSvc curator.Interface) MasterOption {
+	return func(m *masterService) {
+		m.esCuratorSvc = curSvc
+	}
+}
+
 // resolver observer that observes service instances and creates event accordingly.
 type resolverServiceObserver struct{}
 
@@ -148,6 +159,25 @@ func NewMasterService(options ...MasterOption) types.MasterService {
 	}
 	if m.resolverSvc == nil {
 		m.resolverSvc = NewResolverService(m.k8sSvc)
+	}
+
+	// Initialize curator service
+	if m.esCuratorSvc == nil {
+		var err error
+		config := curator.Config{
+			IndexName:       elastic.LogIndexPrefix,
+			RetentionPeriod: elastic.LogIndexRetentionPeriod,
+			ScanInterval:    elastic.LogIndexScanInterval,
+			Logger:          env.Logger.WithContext("submodule", "curator"),
+		}
+		if env.ResolverClient != nil {
+			config.Resolver = env.ResolverClient.(resolver.Interface)
+		}
+		if m.esCuratorSvc, err = curator.NewCurator(&config); err != nil {
+			log.Errorf("Error starting curator service cfg: %v err: %v", config, err)
+		} else {
+			log.Infof("Created curator service cfg: %v", config)
+		}
 	}
 
 	m.leaderSvc.Register(&m)
@@ -203,6 +233,12 @@ func (m *masterService) startLeaderServices() error {
 	// observe pod events and record events accordingly
 	m.resolverSvc.Register(m.resolverSvcObserver)
 
+	// Start elastic curator service
+	if m.esCuratorSvc != nil {
+		log.Infof("Starting curator service")
+		m.esCuratorSvc.Start()
+	}
+
 	return nil
 }
 
@@ -215,6 +251,13 @@ func (m *masterService) Stop() {
 	m.stopLeaderServices()
 	m.k8sSvc.Stop()
 	m.resolverSvc.Stop()
+
+	// Stop elastic curator service
+	if m.esCuratorSvc != nil {
+		log.Infof("Stopping curator service")
+		m.esCuratorSvc.Stop()
+	}
+
 	close(m.updateCh)
 	<-m.closeCh
 }

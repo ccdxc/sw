@@ -129,6 +129,12 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	}
 	env.QuorumNodes = req.QuorumNodes
 
+	servers := make([]string, 0)
+	for _, jj := range env.QuorumNodes {
+		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDResolverPort))
+	}
+	env.ResolverClient = resolver.New(&resolver.Config{Name: req.NodeId, Servers: servers})
+
 	// Check if quorum node.
 	if req.QuorumConfig != nil {
 		kvServers := make([]string, 0)
@@ -284,11 +290,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.ServiceTracker = services.NewServiceTracker(nil)
 	}
 
-	servers := make([]string, 0)
-	for _, jj := range env.QuorumNodes {
-		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDResolverPort))
-	}
-	env.ResolverClient = resolver.New(&resolver.Config{Name: req.NodeId, Servers: servers})
 	env.NodeService = services.NewNodeService(req.NodeId)
 	// Start node services. Currently we are running Node services on Quorum nodes also
 	if err := env.NodeService.Start(); err != nil {
