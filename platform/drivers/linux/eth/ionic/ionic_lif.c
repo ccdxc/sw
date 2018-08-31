@@ -1358,8 +1358,6 @@ static int ionic_lif_init(struct lif *lif)
 	if (err)
 		goto err_out_rx_filter_deinit;
 
-	printk("DPS: Skipping RSS setup as of now...\n");
-#if 0
 	if (lif->netdev->features & NETIF_F_RXHASH) {
 		err = ionic_lif_rss_setup(lif);
 		if (err)
@@ -1367,7 +1365,6 @@ static int ionic_lif_init(struct lif *lif)
 			goto err_out_rx_filter_deinit;
 		}
 	}
-#endif
 
 	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)

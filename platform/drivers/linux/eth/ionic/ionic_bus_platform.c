@@ -148,9 +148,7 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	unsigned int num_bars = ionic->num_bars;
-	struct msi_desc *desc;
 	u32 sig;
-	unsigned int ret = 0;
 
 	if (num_bars < 5) 
 		return -EFAULT;
@@ -227,9 +225,7 @@ static int ionic_probe(struct platform_device *pfdev)
 {
 	struct device *dev = &pfdev->dev;
 	struct ionic *ionic;
-	struct msi_desc *desc;
 	int err;
-	unsigned int ret = 0;
 
 	ionic = devm_kzalloc(dev, sizeof(*ionic), GFP_KERNEL);
 	if (!ionic)
