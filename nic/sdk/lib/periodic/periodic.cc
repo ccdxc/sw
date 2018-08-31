@@ -57,7 +57,7 @@ periodic_thread_init (void *ctxt)
     }
     g_twheel_is_running = true;
 
-    return NULL;
+    return g_twheel;
 }
 
 //------------------------------------------------------------------------------

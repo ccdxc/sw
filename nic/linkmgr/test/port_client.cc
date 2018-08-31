@@ -64,9 +64,9 @@ typedef struct debug_info_s {
 port_info_t  port_info;
 debug_info_t debug_info;
 uint64_t     vrf_id = 1;
-bool         invoke_debug = false;
-bool         port_id_set  = false;
-std::string  linkmgr_svc_endpoint_ = "localhost:50053";
+bool         invoke_debug  = false;
+bool         port_id_set   = false;
+std::string  svc_endpoint_ = "localhost:50054";
 
 port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE;
 port::PortType       port_type        = port::PORT_TYPE_NONE;
@@ -466,29 +466,30 @@ parse_options(int argc, char **argv)
 {
     int oc = 0;
 	struct option longopts[] = {
-	   { "port",        required_argument, NULL, 'p' },
-	   { "create",      optional_argument, NULL, 'c' },
-	   { "get",         optional_argument, NULL, 'r' },
-	   { "update",      optional_argument, NULL, 'u' },
-	   { "delete",      optional_argument, NULL, 'd' },
-	   { "speed",       optional_argument, NULL, 's' },
-	   { "admin_state", optional_argument, NULL, 'e' },
-	   { "fec_type",    optional_argument, NULL, 'f' },
-	   { "db_time",     optional_argument, NULL, 'b' },
-	   { "an_enable",   optional_argument, NULL, 'a' },
-	   { "num_lanes",   optional_argument, NULL, 'n' },
-	   { "dry_run",     optional_argument, NULL, 't' },
-	   { "debug_op",    optional_argument, NULL, 'o' },
-	   { "debug_val1",  optional_argument, NULL, 'w' },
-	   { "debug_val2",  optional_argument, NULL, 'x' },
-	   { "debug_val3",  optional_argument, NULL, 'y' },
-	   { "debug_val4",  optional_argument, NULL, 'z' },
-	   { "help",        optional_argument, NULL, 'h' },
-	   { 0,             0,                 0,     0 }
+	   { "port",         required_argument, NULL, 'p' },
+	   { "create",       optional_argument, NULL, 'c' },
+	   { "get",          optional_argument, NULL, 'r' },
+	   { "update",       optional_argument, NULL, 'u' },
+	   { "delete",       optional_argument, NULL, 'd' },
+	   { "speed",        optional_argument, NULL, 's' },
+	   { "admin_state",  optional_argument, NULL, 'e' },
+	   { "fec_type",     optional_argument, NULL, 'f' },
+	   { "db_time",      optional_argument, NULL, 'b' },
+	   { "an_enable",    optional_argument, NULL, 'a' },
+	   { "num_lanes",    optional_argument, NULL, 'n' },
+	   { "dry_run",      optional_argument, NULL, 't' },
+	   { "debug_op",     optional_argument, NULL, 'o' },
+	   { "debug_val1",   optional_argument, NULL, 'w' },
+	   { "debug_val2",   optional_argument, NULL, 'x' },
+	   { "debug_val3",   optional_argument, NULL, 'y' },
+	   { "debug_val4",   optional_argument, NULL, 'z' },
+	   { "svc_endpoint", optional_argument, NULL, 'g' },
+	   { "help",         optional_argument, NULL, 'h' },
+	   { 0,              0,                 0,     0 }
 	};
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":p:cruds:e:f:b:a:n:to:w:x:y:z:hW;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":p:cruds:e:f:b:a:n:to:w:x:y:z:g:hW;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'p':
             if (optarg) {
@@ -634,6 +635,16 @@ parse_options(int argc, char **argv)
             }
             break;
 
+        case 'g':
+            if (optarg) {
+                svc_endpoint_ = optarg;
+            } else {
+                fprintf(stderr, "svc endpoint not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
         case 'h':
             print_usage(argv);
             exit(0);
@@ -665,7 +676,7 @@ main (int argc, char** argv)
 {
     parse_options(argc, argv);
 
-    std::string svc_endpoint = linkmgr_svc_endpoint_;
+    std::string svc_endpoint = svc_endpoint_;
 
     port_client pClient(
         grpc::CreateChannel(svc_endpoint, grpc::InsecureChannelCredentials()));

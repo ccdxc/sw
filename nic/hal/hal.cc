@@ -138,6 +138,29 @@ end:
     return HAL_RET_OK;
 }
 
+// TODO remove duplicate in asic_pd
+static platform_type_t
+hal_platform_mode_to_sdk_platform_type (hal_platform_mode_t platform_mode)
+{
+    switch(platform_mode) {
+    case HAL_PLATFORM_MODE_SIM:
+    case HAL_PLATFORM_MODE_RTL:
+        return sdk::types::platform_type_t::PLATFORM_TYPE_SIM;
+
+    case HAL_PLATFORM_MODE_HW:
+    case HAL_PLATFORM_MODE_HAPS:
+        return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
+
+    case HAL_PLATFORM_MODE_MOCK:
+        return sdk::types::platform_type_t::PLATFORM_TYPE_MOCK;
+
+    default:
+        break;
+    }
+
+    return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
+}
+
 //------------------------------------------------------------------------------
 // init function for HAL
 //------------------------------------------------------------------------------
@@ -234,16 +257,18 @@ hal_init (hal_cfg_t *hal_cfg)
     // install default HAL configuration
     HAL_ABORT(hal_default_cfg_init(hal_cfg) == HAL_RET_OK);
 
-    sdk_cfg.platform_type = platform_type_t::PLATFORM_TYPE_MOCK;
-    sdk_cfg.cfg_path = hal_cfg->cfg_path.c_str();
-    sdk_cfg.catalog  = catalog;
+    sdk_cfg.platform_type  =
+            hal_platform_mode_to_sdk_platform_type(hal_cfg->platform_mode);
+    sdk_cfg.cfg_path       = hal_cfg->cfg_path.c_str();
+    sdk_cfg.catalog        = catalog;
+    sdk_cfg.server_builder = hal_cfg->server_builder;
 
-    // ret = linkmgr::linkmgr_init(&sdk_cfg);
-    (void)sdk_cfg;
+    ret = linkmgr::linkmgr_init(&sdk_cfg);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("linkmgr init failed");
         return HAL_RET_ERR;
     }
+    sdk::linkmgr::linkmgr_event_wait();
 
     // start monitoring HAL heartbeat
     hal::hb::heartbeat_init();
@@ -301,6 +326,18 @@ hal_handle_cfg_db_lock (bool readlock, bool lock)
             g_hal_state->cfg_db()->wunlock();
         }
     }
+}
+
+void
+cfg_db_open(cfg_op_t cfg_op)
+{
+    g_hal_state->cfg_db()->db_open(cfg_op);
+}
+
+void
+cfg_db_close(void)
+{
+    g_hal_state->cfg_db()->db_close();
 }
 
 }    // namespace hal

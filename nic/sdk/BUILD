@@ -32,3 +32,26 @@ cc_library(
     hdrs = glob(["include/sdk/asic/capri/*.hpp"])
          + glob(["include/sdk/asic/capri/*.h"]),
 )
+
+cc_library(
+    name = "aapl_includes",
+    hdrs = glob(["third-party/avago/include/aapl/*.h"])
+)
+
+cc_library(
+    name = "libaapl",
+    srcs = select ({
+        "//conditions:default" : [
+            "third-party/avago/x86_64/lib/aapl/C/libAAPL.so",
+        ],
+        ":aarch64_mode" : [
+            "third-party/avago/aarch64/lib/aapl/C/libAAPL.so",
+        ],
+    }),
+)
+
+config_setting(
+    name = "aarch64_mode",
+    values = { "cpu": "aarch64-linux" }
+)
+

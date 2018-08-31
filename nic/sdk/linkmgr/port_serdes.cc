@@ -6,11 +6,7 @@
 #include "linkmgr_types.hpp"
 #include "linkmgr_internal.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
-#ifdef NRMAKE
 #include "third-party/avago/include/aapl/aapl.h"
-#else
-#include "aapl.h"
-#endif
 
 namespace sdk {
 namespace linkmgr {
@@ -136,6 +132,36 @@ serdes_rx_lpbk_default(uint32_t sbus_addr, bool enable)
 }
 
 int
+serdes_spico_status_default(uint32_t sbus_addr)
+{
+    return 0;
+}
+
+int
+serdes_get_rev_default(uint32_t sbus_addr)
+{
+    return 0;
+}
+
+uint32_t
+serdes_get_eng_id_default(uint32_t sbus_addr)
+{
+    return 0;
+}
+
+int
+serdes_get_build_id_default(uint32_t sbus_addr)
+{
+    return 0;
+}
+
+bool
+serdes_spico_crc_default(uint32_t sbus_addr)
+{
+    return true;
+}
+
+int
 serdes_spico_upload_default (uint32_t sbus_addr, const char* file_name)
 {
     return 0;
@@ -238,23 +264,31 @@ uint32_t spico_int (Aapl_t *aapl, uint32_t addr, int int_code, int int_data)
     return 0;
 }
 
+void
+serdes_get_ip_info(int chip_reset)
+{
+    if (aapl != NULL) {
+        /* Gather information about the device and place into AAPL struct */
+        aapl_get_ip_info(aapl, chip_reset);
+    }
+}
+
 Aapl_t*
-serdes_global_init_hw(void)
+serdes_global_init_hw(uint32_t     jtag_id,
+                      int          num_sbus_rings,
+                      bool         aacs_server_en,
+                      bool         aacs_connect,
+                      int          port,
+                      std::string& ip)
 {
     Aapl_comm_method_t comm_method = AVAGO_SBUS;
 
     // TODO CLI
     int         verbose        = 1;
     int         debug          = 8;
-    bool        aacs_server_en = false; // start aacs server
-    bool        aacs_connect   = true;  // connect to aacs server
-    int         port           = 90;    // aacs server port
-    std::string ip             = "192.168.75.125"; //aacs server ip
 
     // TODO read from catalog
-    uint32_t jtag_idcode    = 0x9b1657f;
     int      num_chips      = 1;
-    int      num_sbus_rings = 1;
 
     (void)aacs_server_en;
 
@@ -262,7 +296,7 @@ serdes_global_init_hw(void)
 
     // set the appl init params
     aapl->communication_method = comm_method;
-    aapl->jtag_idcode[0]       = jtag_idcode;
+    aapl->jtag_idcode[0]       = jtag_id;
     aapl->sbus_rings           = num_sbus_rings;
     aapl->chips                = num_chips;
     aapl->debug                = debug;
@@ -273,19 +307,11 @@ serdes_global_init_hw(void)
     } else {
         // register access methods
         aapl_register_sbus_fn(aapl, aapl_sbus_access, NULL, NULL);
-        aapl_register_spico_int_fn(aapl, spico_int);
+        // aapl_register_spico_int_fn(aapl, spico_int);
     }
 
     // Make a connection to the device
     aapl_connect(aapl, ip.c_str(), port);
-
-    if(aapl->return_code < 0) {
-        aapl_destruct(aapl);
-        return NULL;
-    }
-
-    /* Gather information about the device and place into AAPL struct */
-    aapl_get_ip_info(aapl, 1 /* chip reset */);
 
     if(aapl->return_code < 0) {
         aapl_destruct(aapl);
@@ -351,12 +377,15 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     cfg->tx_width   = width;
     cfg->rx_width   = width;
 
+    // Disable signal_ok and tx_output
     cfg->signal_ok_en = 0;
+    cfg->tx_output_en = 0;
 
     // Tx/Rx enable
     cfg->init_tx = 1;
     cfg->init_rx = 1;
 
+    // resets
     cfg->sbus_reset  = 1;
     cfg->spico_reset = 1;
 
@@ -371,13 +400,14 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 
     if (tx_slip != 0) {
         // Tx slip value
-        // TODO int_check?
-        avago_spico_int(aapl, sbus_addr, 0xd, tx_slip);
+        avago_spico_int_check(aapl, __func__, __LINE__,
+                              sbus_addr, 0xd, tx_slip);
     }
 
     if (rx_slip != 0) {
         // Rx slip value
-        avago_spico_int(aapl, sbus_addr, 0xe, rx_slip);
+        avago_spico_int_check(aapl, __func__, __LINE__,
+                              sbus_addr, 0xe, rx_slip);
     }
 
     avago_serdes_init_config_destruct(aapl, cfg);
@@ -576,48 +606,103 @@ serdes_rx_lpbk_hw(uint32_t sbus_addr, bool enable)
     return 0;
 }
 
+int
+serdes_spico_status_hw(uint32_t sbus_addr)
+{
+    Avago_spico_status_t state;
+    memset(&state, 0, sizeof(Avago_spico_status_t));
+
+    avago_spico_status(aapl, sbus_addr, false /*no cache*/, &state);
+
+    SDK_TRACE_DEBUG("rev: 0x%x, build: 0x%x, pc: 0x%x, en: %d, state: %d,"
+                    " clk: %d",
+                    state.revision, state.build, state.pc, state.enabled,
+                    state.state, state.clk);
+    return 0;
+}
+
+int
+serdes_get_rev_hw(uint32_t sbus_addr)
+{
+    return aapl_get_firmware_rev(aapl, sbus_addr);
+}
+
+uint32_t
+serdes_get_eng_id_hw(uint32_t sbus_addr)
+{
+    return avago_firmware_get_engineering_id(aapl, sbus_addr);
+}
+
+int
+serdes_get_build_id_hw(uint32_t sbus_addr)
+{
+    return aapl_get_firmware_build(aapl, sbus_addr);
+}
+
+bool
+serdes_spico_crc_hw(uint32_t sbus_addr)
+{
+    return avago_spico_crc(aapl, sbus_addr);
+}
+
 sdk_ret_t
-port_serdes_fn_init(linkmgr_cfg_t *cfg)
+port_serdes_fn_init(platform_type_t platform_type,
+                    uint32_t        jtag_id,
+                    int             num_sbus_rings,
+                    bool            aacs_server_en,
+                    bool            aacs_connect,
+                    int             port,
+                    std::string     ip)
 {
     serdes_fn_t        *serdes_fn = &serdes_fns;
-    platform_type_t    platform_type = cfg->platform_type;
 
-    serdes_fn->serdes_cfg = &serdes_cfg_default;
+    serdes_fn->serdes_cfg           = &serdes_cfg_default;
     serdes_fn->serdes_signal_detect = &serdes_signal_detect_default;
-    serdes_fn->serdes_rdy = &serdes_rdy_default;
+    serdes_fn->serdes_rdy           = &serdes_rdy_default;
     serdes_fn->serdes_output_enable = &serdes_output_enable_default;
-    serdes_fn->serdes_tx_rx_enable = &serdes_tx_rx_enable_default;
-    serdes_fn->serdes_sbus_reset = &serdes_sbus_reset_default;
-    serdes_fn->serdes_spico_reset = &serdes_spico_reset_default;
-    serdes_fn->serdes_eye_get = &serdes_eye_get_default;
-    serdes_fn->serdes_ical_start = &serdes_ical_start_default;
-    serdes_fn->serdes_pcal_start = &serdes_pcal_start_default;
+    serdes_fn->serdes_tx_rx_enable  = &serdes_tx_rx_enable_default;
+    serdes_fn->serdes_sbus_reset    = &serdes_sbus_reset_default;
+    serdes_fn->serdes_spico_reset   = &serdes_spico_reset_default;
+    serdes_fn->serdes_eye_get       = &serdes_eye_get_default;
+    serdes_fn->serdes_ical_start    = &serdes_ical_start_default;
+    serdes_fn->serdes_pcal_start    = &serdes_pcal_start_default;
     serdes_fn->serdes_pcal_continuous_start =
                             &serdes_pcal_continuous_start_default;
-    serdes_fn->serdes_dfe_status = &serdes_dfe_status_default;
-    serdes_fn->serdes_rx_lpbk = &serdes_rx_lpbk_default;
-    serdes_fn->serdes_spico_upload = &serdes_spico_upload_default;
+    serdes_fn->serdes_dfe_status    = &serdes_dfe_status_default;
+    serdes_fn->serdes_rx_lpbk       = &serdes_rx_lpbk_default;
+    serdes_fn->serdes_spico_upload  = &serdes_spico_upload_default;
+    serdes_fn->serdes_spico_status  = &serdes_spico_status_default;
+    serdes_fn->serdes_get_rev       = &serdes_get_rev_default;
+    serdes_fn->serdes_get_eng_id    = &serdes_get_eng_id_default;
+    serdes_fn->serdes_get_build_id  = &serdes_get_build_id_default;
+    serdes_fn->serdes_spico_crc     = &serdes_spico_crc_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HW:
-        serdes_fn->serdes_cfg = &serdes_cfg_hw;
+        serdes_fn->serdes_cfg           = &serdes_cfg_hw;
         serdes_fn->serdes_signal_detect = &serdes_signal_detect_hw;
-        serdes_fn->serdes_rdy = &serdes_rdy_hw;
+        serdes_fn->serdes_rdy           = &serdes_rdy_hw;
         serdes_fn->serdes_output_enable = &serdes_output_enable_hw;
-        serdes_fn->serdes_tx_rx_enable = &serdes_tx_rx_enable_hw;
-        serdes_fn->serdes_sbus_reset = &serdes_sbus_reset_hw;
-        serdes_fn->serdes_spico_reset = &serdes_spico_reset_hw;
-        serdes_fn->serdes_eye_get = &serdes_eye_get_hw;
-        serdes_fn->serdes_ical_start = &serdes_ical_start_hw;
-        serdes_fn->serdes_pcal_start = &serdes_pcal_start_hw;
+        serdes_fn->serdes_tx_rx_enable  = &serdes_tx_rx_enable_hw;
+        serdes_fn->serdes_sbus_reset    = &serdes_sbus_reset_hw;
+        serdes_fn->serdes_spico_reset   = &serdes_spico_reset_hw;
+        serdes_fn->serdes_eye_get       = &serdes_eye_get_hw;
+        serdes_fn->serdes_ical_start    = &serdes_ical_start_hw;
+        serdes_fn->serdes_pcal_start    = &serdes_pcal_start_hw;
         serdes_fn->serdes_pcal_continuous_start =
                                 &serdes_pcal_continuous_start_hw;
-        serdes_fn->serdes_dfe_status = &serdes_dfe_status_hw;
-        serdes_fn->serdes_rx_lpbk = &serdes_rx_lpbk_hw;
-        serdes_fn->serdes_spico_upload = &serdes_spico_upload_hw;
+        serdes_fn->serdes_dfe_status    = &serdes_dfe_status_hw;
+        serdes_fn->serdes_rx_lpbk       = &serdes_rx_lpbk_hw;
+        serdes_fn->serdes_spico_upload  = &serdes_spico_upload_hw;
+        serdes_fn->serdes_spico_status  = &serdes_spico_status_hw;
+        serdes_fn->serdes_get_rev       = &serdes_get_rev_hw;
+        serdes_fn->serdes_get_eng_id    = &serdes_get_eng_id_hw;
+        serdes_fn->serdes_get_build_id  = &serdes_get_build_id_hw;
+        serdes_fn->serdes_spico_crc     = &serdes_spico_crc_hw;
 
         // serdes global init
-        aapl = serdes_global_init_hw();
+        aapl = serdes_global_init_hw(jtag_id, num_sbus_rings,
+                                     aacs_server_en, aacs_connect, port, ip);
         break;
 
     default:

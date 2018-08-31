@@ -95,6 +95,13 @@ typedef struct qos_profile_s {
     uint32_t num_dma_qs;
 } qos_profile_t;
 
+typedef struct aacs_info_s {
+    uint8_t                  server_en;                         // enable aacs server
+    uint8_t                  connect;                           // connect to aacs server
+    std::string              server_ip;                         // aacs server ip
+    uint32_t                 server_port;                       // aacs server port
+} aacs_info_t;
+
 typedef struct catalog_s {
     uint32_t                 card_index;                        // card index for the board
     uint32_t                 max_mpu_per_stage;                 // max MPU per pipeline stage
@@ -113,6 +120,9 @@ typedef struct catalog_s {
     mac_profile_t            mgmt_mac_profiles[MAC_MODE_MAX];   // MGMT MAC profiles
 
     // serdes parameters
+    aacs_info_t              aacs_info;                         // avago aacs info
+    uint32_t                 serdes_jtag_id;                    // jtag for serdes
+    uint8_t                  num_sbus_rings;                    // number of sbus rings on chip
     serdes_info_t            serdes[MAX_SERDES]
                                    [MAX_PORT_SPEEDS]
                                    [sdk::types::CABLE_TYPE_MAX];
@@ -138,6 +148,14 @@ public:
     bool access_mock_mode(void) { return catalog_db_.access_mock_mode; }
     uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane);
 
+    uint32_t num_asic_ports(uint32_t asic) {
+        return catalog_db_.asics[asic].max_ports;
+    }
+
+    uint32_t sbus_addr_asic_port(uint32_t asic, uint32_t asic_port) {
+        return catalog_db_.asics[asic].ports[asic_port].sbus_addr;
+    }
+
     port_speed_t port_speed(uint32_t port);
     uint32_t     num_lanes (uint32_t port);
     port_type_t  port_type (uint32_t port);
@@ -154,6 +172,19 @@ public:
 
     uint32_t     num_fp_lanes (uint32_t port);
     uint32_t     breakout_modes (uint32_t port);
+
+    uint32_t     jtag_id(void)        { return catalog_db_.serdes_jtag_id; }
+    uint32_t     num_sbus_rings(void) { return catalog_db_.num_sbus_rings; }
+    uint8_t aacs_server_en(void) { return catalog_db_.aacs_info.server_en; }
+    uint8_t aacs_connect(void)   { return catalog_db_.aacs_info.connect; }
+
+    std::string  aacs_server_ip(void) {
+        return catalog_db_.aacs_info.server_ip;
+    }
+
+    uint32_t aacs_server_port(void) {
+        return catalog_db_.aacs_info.server_port;
+    }
 
     serdes_info_t* serdes_info_get(uint32_t sbus_addr,
                                    uint32_t port_speed,
@@ -233,8 +264,9 @@ private:
 
     static sdk_ret_t get_ptree_(std::string& catalog_file, ptree& prop_tree);
 
-    sdk_ret_t serdes_init(std::string& serdes_file);
-    sdk_ret_t populate_serdes(ptree &prop_tree);
+    sdk_ret_t populate_serdes(char *dir_name, ptree &prop_tree);
+    sdk_ret_t parse_serdes_file(std::string& serdes_file);
+    sdk_ret_t parse_serdes(ptree &prop_tree);
     uint32_t  serdes_index_get(uint32_t sbus_addr);
     uint8_t   cable_type_get(std::string cable_type_str);
 };

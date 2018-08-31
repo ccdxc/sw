@@ -10,7 +10,6 @@ namespace sdk {
 namespace linkmgr {
 
 #define CONTROL_CORE_ID          0
-#define LINKMGR_THREAD_ID_MAX    3
 #define LINKMGR_CONTROL_Q_SIZE   128
 #define LINKMGR_LINK_POLL_TIME   10000 // 10000 msecs = 10 secs
 #define MAX_LINK_BRINGUP_TIMEOUT 10000 // 10000 msecs = 10 secs
@@ -30,11 +29,11 @@ namespace linkmgr {
 #define MDIO_DATA_WR_OFFSET_HAPS 0x508
 #define MDIO_DATA_RD_OFFSET_HAPS 0x50c
 
-#define LINKMGR_CALLOC(var, ID, type, ...)  {  \
-    void  *mem   = NULL;                       \
-    mem = SDK_CALLOC(ID, sizeof(type));        \
-    SDK_ABORT(mem != NULL);                    \
-    var = new (mem) type(__VA_ARGS__);         \
+#define SDK_LINKMGR_CALLOC(var, ID, type, ...)  {  \
+    void  *mem   = NULL;                           \
+    mem = SDK_CALLOC(ID, sizeof(type));            \
+    SDK_ABORT(mem != NULL);                        \
+    var = new (mem) type(__VA_ARGS__);             \
 }
 
 enum class port_link_sm_t {
@@ -57,12 +56,6 @@ enum class port_link_sm_t {
     PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR,
     PORT_LINK_SM_UP
 };
-
-typedef enum linkmgr_thread_id_e {
-    LINKMGR_THREAD_ID_CTRL,
-    LINKMGR_THREAD_ID_PERIODIC,
-    LINKMGR_THREAD_ID_CFG
-} linkmgr_thread_id_t;
 
 typedef enum linkmgr_opn_e {
     LINKMGR_OPERATION_PORT_ENABLE,

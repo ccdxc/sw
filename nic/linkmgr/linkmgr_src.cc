@@ -15,10 +15,10 @@ using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
 using sdk::lib::dllist_add;
 using sdk::lib::dllist_reset;
-using sdk::types::platform_type_t;
 using sdk::linkmgr::port_args_t;
 using sdk::SDK_RET_OK;
 using sdk::linkmgr::mac_info_t;
+using grpc::ServerBuilder;
 
 namespace linkmgr {
 
@@ -60,6 +60,46 @@ num_fp_ports (void)
     return catalog()->num_fp_ports();
 }
 
+#define LINKMGR_CALLOC(var, ID, type, ...)  {  \
+    void  *mem   = NULL;                       \
+    mem = HAL_CALLOC(ID, sizeof(type));        \
+    SDK_ABORT(mem != NULL);                    \
+    var = new (mem) type(__VA_ARGS__);         \
+}
+
+static hal_ret_t
+svc_reg(ServerBuilder *server_builder,
+        bool process_mode)
+{
+    // register all services
+    PortServiceImpl  *port_svc  = NULL;
+    DebugServiceImpl *debug_svc = NULL;
+
+    if (NULL == server_builder) {
+        return HAL_RET_ERR;
+    }
+
+    LINKMGR_CALLOC(port_svc, hal::HAL_MEM_ALLOC_LINKMGR, PortServiceImpl);
+
+    if (port_svc != NULL) {
+        server_builder->RegisterService(port_svc);
+    } else {
+        HAL_TRACE_ERR("port_svc NULL");
+    }
+
+    if (process_mode == true) {
+        LINKMGR_CALLOC(debug_svc, hal::HAL_MEM_ALLOC_LINKMGR, DebugServiceImpl);
+
+        if (debug_svc != NULL) {
+            server_builder->RegisterService(debug_svc);
+        } else {
+            HAL_TRACE_ERR("debug_svc NULL");
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
 {
@@ -77,6 +117,9 @@ linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
         HAL_TRACE_ERR("linkmgr init failed");
         return HAL_RET_ERR;
     }
+
+    svc_reg((ServerBuilder *)sdk_cfg->server_builder,
+            sdk_cfg->process_mode);
 
     return ret_hal;
 }
@@ -1428,6 +1471,44 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
                             sbus_addr, sbus_addr, cmd, sbus_data,
                             sdk::linkmgr::sbus_access(
                                         sbus_addr, reg_addr, cmd, &sbus_data));
+            break;
+
+        case 21:
+            sbus_addr = req.val1();
+            HAL_TRACE_DEBUG("spico_status sbus_addr: {}", sbus_addr);
+            sdk::linkmgr::serdes_fns.serdes_spico_status(sbus_addr);
+            break;
+
+        case 22:
+            sbus_addr = req.val1();
+            HAL_TRACE_DEBUG(
+                    "serdes_rev sbus_addr: {}, rev: {}",
+                    sbus_addr,
+                    sdk::linkmgr::serdes_fns.serdes_get_rev(sbus_addr));
+            break;
+
+        case 23:
+            sbus_addr = req.val1();
+            HAL_TRACE_DEBUG(
+                    "serdes_build_id sbus_addr: {}, build_id: {}",
+                    sbus_addr,
+                    sdk::linkmgr::serdes_fns.serdes_get_build_id(sbus_addr));
+            break;
+
+        case 24:
+            sbus_addr = req.val1();
+            HAL_TRACE_DEBUG(
+                    "serdes_spico_crc sbus_addr: {}, spico_crc: {}",
+                    sbus_addr,
+                    sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
+            break;
+
+        case 25:
+            sbus_addr = req.val1();
+            HAL_TRACE_DEBUG(
+                    "serdes_get_eng_id sbus_addr: {}, eng_id: {}",
+                    sbus_addr,
+                    sdk::linkmgr::serdes_fns.serdes_get_eng_id(sbus_addr));
             break;
 
         default:

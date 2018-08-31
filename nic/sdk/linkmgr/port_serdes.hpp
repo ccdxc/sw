@@ -7,26 +7,40 @@ namespace sdk {
 namespace linkmgr {
 
 typedef struct serdes_fn_s_ {
-    int (*serdes_cfg) (uint32_t sbus_addr, serdes_info_t *serdes_info);
-    int (*serdes_tx_rx_enable) (uint32_t sbus_addr, bool enable);
-    int (*serdes_output_enable) (uint32_t sbus_addr, bool enable);
-    int (*serdes_reset) (uint32_t sbus_addr, bool reset);
-    bool (*serdes_signal_detect) (uint32_t sbus_addr);
-    bool (*serdes_rdy) (uint32_t sbus_addr);
-    int (*serdes_ical_start)(uint32_t sbus_addr);
-    int (*serdes_pcal_start)(uint32_t sbus_addr);
-    int (*serdes_pcal_continuous_start)(uint32_t sbus_addr);
-    int (*serdes_dfe_status)(uint32_t sbus_addr);
-    int (*serdes_eye_get) (uint32_t sbus_addr, int eye_type);
-    int (*serdes_rx_lpbk) (uint32_t sbus_addr, bool enable);
-    int (*serdes_spico_reset) (uint32_t sbus_addr);
-    int (*serdes_sbus_reset) (uint32_t sbus_addr, int hard);
-    int (*serdes_spico_upload) (uint32_t sbus_addr, const char*);
+    int (*serdes_cfg)          (uint32_t sbus_addr, serdes_info_t *serdes_info);
+    int (*serdes_tx_rx_enable)      (uint32_t sbus_addr, bool enable);
+    int (*serdes_output_enable)     (uint32_t sbus_addr, bool enable);
+    int (*serdes_reset)             (uint32_t sbus_addr, bool reset);
+    bool (*serdes_signal_detect)    (uint32_t sbus_addr);
+    bool (*serdes_rdy)              (uint32_t sbus_addr);
+    int (*serdes_ical_start)        (uint32_t sbus_addr);
+    int (*serdes_pcal_start)        (uint32_t sbus_addr);
+    int (*serdes_dfe_status)        (uint32_t sbus_addr);
+    int (*serdes_eye_get)           (uint32_t sbus_addr, int eye_type);
+    int (*serdes_rx_lpbk)           (uint32_t sbus_addr, bool enable);
+    int (*serdes_spico_reset)       (uint32_t sbus_addr);
+    int (*serdes_sbus_reset)        (uint32_t sbus_addr, int hard);
+    int (*serdes_spico_upload)      (uint32_t sbus_addr, const char*);
+    int (*serdes_spico_status)      (uint32_t sbus_addr);
+    int (*serdes_get_rev)           (uint32_t sbus_addr);
+    int (*serdes_get_build_id)      (uint32_t sbus_addr);
+    bool (*serdes_spico_crc)        (uint32_t sbus_addr);
+    uint32_t (*serdes_get_eng_id)   (uint32_t sbus_addr);
+    int (*serdes_pcal_continuous_start) (uint32_t sbus_addr);
 } serdes_fn_t;
 
 extern serdes_fn_t serdes_fns;
 
-sdk_ret_t port_serdes_fn_init(linkmgr_cfg_t *cfg);
+sdk_ret_t
+port_serdes_fn_init(platform_type_t platform_type,
+                    uint32_t        jtag_id,
+                    int             num_sbus_rings,
+                    bool            aacs_server_en,
+                    bool            aacs_connect,
+                    int             port,
+                    std::string     ip);
+
+void serdes_get_ip_info(int chip_reset);
 
 uint32_t
 sbus_access (uint32_t sbus_addr,

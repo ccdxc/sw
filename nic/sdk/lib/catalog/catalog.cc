@@ -331,7 +331,7 @@ catalog::cable_type_get(std::string cable_type_str)
 }
 
 sdk_ret_t
-catalog::populate_serdes(ptree &prop_tree)
+catalog::parse_serdes(ptree &prop_tree)
 {
     for (ptree::value_type &serdes : prop_tree.get_child("")) {
 
@@ -387,7 +387,7 @@ catalog::populate_serdes(ptree &prop_tree)
 }
 
 sdk_ret_t
-catalog::serdes_init(std::string& serdes_file)
+catalog::parse_serdes_file(std::string& serdes_file)
 {
     sdk_ret_t ret;
     ptree prop_tree;
@@ -397,7 +397,33 @@ catalog::serdes_init(std::string& serdes_file)
         return ret;
     }
 
-    return populate_serdes(prop_tree);
+    return parse_serdes(prop_tree);
+}
+
+sdk_ret_t
+catalog::populate_serdes(char *dir_name, ptree &prop_tree)
+{
+    std::string jtag_id = prop_tree.get<std::string>("serdes.jtag_id", "");
+
+    catalog_db_.serdes_jtag_id = strtoul(jtag_id.c_str(), NULL, 16);
+
+    catalog_db_.num_sbus_rings =
+                        prop_tree.get<std::uint8_t>("serdes.num_sbus_rings", 0);
+    catalog_db_.aacs_info.server_en   =
+                        prop_tree.get<std::uint8_t>("serdes.aacs_server", 0);
+    catalog_db_.aacs_info.connect     =
+                        prop_tree.get<std::uint8_t>("serdes.aacs_connect", 0);
+    catalog_db_.aacs_info.server_ip   =
+                        prop_tree.get<std::string>("serdes.ip", "");
+    catalog_db_.aacs_info.server_port =
+                        prop_tree.get<std::uint32_t>("serdes.port", 0);
+
+    std::string serdes_file =
+                        prop_tree.get<std::string>("serdes.serdes_file", "");
+
+    serdes_file = std::string(dir_name) + "/" + serdes_file;
+
+    return parse_serdes_file(serdes_file);
 }
 
 sdk_ret_t
@@ -436,12 +462,7 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
 
     populate_mac_profiles(prop_tree);
 
-    std::string serdes_file = prop_tree.get<std::string>("serdes_file", "");
-
-    char *dir_name = dirname((char*)catalog_file.c_str());
-    serdes_file = std::string(dir_name) + "/" + serdes_file;
-
-    serdes_init(serdes_file);
+    populate_serdes(dirname((char*)catalog_file.c_str()), prop_tree);
 
     populate_qos_profile(prop_tree);
 

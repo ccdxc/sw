@@ -29,7 +29,7 @@ linkmgr_state::factory(void)
 {
     linkmgr_state *state = NULL;
 
-    LINKMGR_CALLOC(state, SDK_MEM_ALLOC_ID_LINKMGR, linkmgr_state);
+    SDK_LINKMGR_CALLOC(state, SDK_MEM_ALLOC_ID_LINKMGR, linkmgr_state);
 
     if (state->init() != SDK_RET_OK) {
         SDK_FREE(SDK_MEM_ALLOC_ID_LINKMGR, state);

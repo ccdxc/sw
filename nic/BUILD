@@ -622,12 +622,7 @@ cc_library(
 
 cc_library(
     name = "libaapl",
-    deps = ["@third_party//:libaapl"],
-)
-
-cc_library(
-    name = "aapl_includes",
-    deps = ["@third_party//:aapl_includes"],
+    deps = ["@sdk//:libaapl"],
 )
 
 cc_library(

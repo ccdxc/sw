@@ -14,6 +14,6 @@ cc_library(
         "//lib/twheel:twheel",
         "//lib/catalog:catalog",
         "//:csr_includes",
-        "@third_party//:aapl_includes",
+        "//:aapl_includes",
     ],
 )

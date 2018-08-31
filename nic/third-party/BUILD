@@ -36,27 +36,9 @@ cc_library(
         ],
     })
 )
+
 cc_library(
     name = "libev_includes",
     hdrs = glob(["libev/include/*.h"]),
     includes = ["libev/include"],
 )
-
-cc_library(
-    name = "aapl_includes",
-    hdrs = glob(["avago/x86_64/include/aapl/*.h"]),
-    includes = ["avago/x86_64/include/aapl"],
-)
-
-cc_library(
-    name = "libaapl",
-    srcs = select ({
-        "//conditions:default" : [
-            "avago/x86_64/lib/aapl/C/libAAPL.so",
-        ],
-        ":aarch64_mode" : [
-            "avago/aarch64/lib/aapl/C/libAAPL.so",
-        ],
-    }),
-)
-

@@ -3,10 +3,10 @@
 #include "port.hpp"
 #include "port_mac.hpp"
 #include "port_serdes.hpp"
-#include "linkmgr_periodic.hpp"
 #include "linkmgr_internal.hpp"
 #include "linkmgr_types.hpp"
 #include "timer_cb.hpp"
+#include "include/sdk/periodic.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
 
 namespace sdk {
@@ -403,7 +403,7 @@ port::port_link_sm_dfe_process(void)
                 SDK_TRACE_DEBUG("bringup timer: %d", timeout);
 
                 this->link_bring_up_timer_ =
-                    linkmgr_timer_schedule(
+                    sdk::lib::timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
@@ -440,7 +440,7 @@ port::port_link_sm_dfe_process(void)
                 this->bringup_timer_val_ += timeout;
 
                 this->link_bring_up_timer_ =
-                    linkmgr_timer_schedule(
+                    sdk::lib::timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
@@ -482,12 +482,12 @@ port::port_link_sm_process(void)
             // reset timers
 
             if (this->link_bring_up_timer_ != NULL) {
-                linkmgr_timer_delete(this->link_bring_up_timer_);
+                sdk::lib::timer_delete(this->link_bring_up_timer_);
                 this->link_bring_up_timer_ = NULL;
             }
 
             if (this->link_debounce_timer_ != NULL) {
-                linkmgr_timer_delete(this->link_debounce_timer_);
+                sdk::lib::timer_delete(this->link_debounce_timer_);
                 this->link_debounce_timer_ = NULL;
             }
 
@@ -542,7 +542,7 @@ port::port_link_sm_process(void)
                 this->bringup_timer_val_ += timeout;
 
                 this->link_bring_up_timer_ =
-                    linkmgr_timer_schedule(
+                    sdk::lib::timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
@@ -582,7 +582,7 @@ port::port_link_sm_process(void)
                 this->bringup_timer_val_ += timeout;
 
                 this->link_bring_up_timer_ =
-                    linkmgr_timer_schedule(
+                    sdk::lib::timer_schedule(
                             0, timeout, this,
                             (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                             false);
@@ -614,7 +614,7 @@ port::port_link_sm_process(void)
                 this->bringup_timer_val_ += timeout;
 
                 this->link_bring_up_timer_ =
-                    linkmgr_timer_schedule(
+                    sdk::lib::timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
@@ -635,7 +635,7 @@ port::port_link_sm_process(void)
                 this->bringup_timer_val_ += timeout;
 
                 this->link_bring_up_timer_ =
-                    linkmgr_timer_schedule(
+                    sdk::lib::timer_schedule(
                         0, timeout, this,
                         (sdk::lib::twheel_cb_t)link_bring_up_timer_cb,
                         false);
@@ -731,7 +731,7 @@ port::port_link_dn_handler(void)
     // start the debounce timer
     if (this->debounce_time_ != 0) {
         this->link_debounce_timer_ =
-            linkmgr_timer_schedule(
+            sdk::lib::timer_schedule(
                 0, this->debounce_time_, this,
                 (sdk::lib::twheel_cb_t)link_debounce_timer_cb,
                 false);
@@ -756,7 +756,10 @@ port::bringup_timer_expired(void)
 sdk_ret_t
 port::port_init(linkmgr_cfg_t *cfg)
 {
-    sdk_ret_t rc = SDK_RET_OK;
+    sdk_ret_t   rc        = SDK_RET_OK;
+    char        *cfg_path = std::getenv("HAL_CONFIG_PATH");
+    std::string cfg_file  = "fw/serdes.rom";
+
 
     linkmgr_csr_init();
 
@@ -765,10 +768,37 @@ port::port_init(linkmgr_cfg_t *cfg)
         SDK_TRACE_ERR("port mac init failed");
     }
 
-    rc = port_serdes_fn_init(cfg);
+    if (cfg_path) {
+        cfg_file = std::string(cfg_path) + "/" + cfg_file;
+    }
+
+    rc = port_serdes_fn_init(cfg->platform_type,
+                             jtag_id(),
+                             num_sbus_rings(),
+                             aacs_server_en(),
+                             aacs_connect(),
+                             aacs_server_port(),
+                             aacs_server_ip());
     if (rc != SDK_RET_OK) {
         SDK_TRACE_ERR("port mac init failed");
     }
+
+#if 0
+    // TODO
+    for (uint32_t asic_port = 0; asic_port < num_asic_ports(0); ++asic_port) {
+        uint32_t sbus_addr = sbus_addr_asic_port(0, asic_port);
+
+        sdk::linkmgr::serdes_fns.serdes_spico_upload(sbus_addr, cfg_file.c_str());
+
+        sdk::linkmgr::serdes_fns.serdes_spico_status(sbus_addr);
+
+        SDK_TRACE_DEBUG("sbus_addr: 0x%x, spico_crc: %d",
+                        sbus_addr,
+                        sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
+    }
+#endif
+
+    serdes_get_ip_info(1);
 
     return rc;
 }

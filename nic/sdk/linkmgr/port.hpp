@@ -244,7 +244,7 @@ private:
     mac_fn_t              *mac_fns_;                  // mac functions
     serdes_fn_t           *serdes_fns_;               // serdes functions
 
-    sdk::types::cable_type_t cable_type_;                // cable type
+    sdk::types::cable_type_t cable_type_;             // cable type
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);

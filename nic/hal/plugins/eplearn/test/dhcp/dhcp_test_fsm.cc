@@ -386,7 +386,7 @@ static void setup_basic_dhcp_session(hal_handle_t ep_handle,
 
     options.clear();
     const char *ip_addr = ip_address;
-    uint32_t actual_lease_time = 100;
+    uint32_t actual_lease_time = 20;
     std::vector<uint8_t> lease_time = {0, 0, 0, 0};
     lease_time[3] = (uint8_t)actual_lease_time;
     DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
@@ -675,7 +675,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew) {
               0);
     options.clear();
     const char *renew_ip_address = "192.168.1.16";
-    uint32_t actual_lease_time = 100;
+    uint32_t actual_lease_time = 20;
     std::vector<uint8_t> lease_time = {0, 0, 0, 0};
     lease_time[3] = (uint8_t)actual_lease_time;
     DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
@@ -781,7 +781,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_nack) {
               0);
     options.clear();
     const char *renew_ip_addr = "192.168.1.10";
-    uint32_t actual_lease_time = 100;
+    uint32_t actual_lease_time = 20;
     std::vector<uint8_t> lease_time = {0, 0, 0, 0};
     lease_time[3] = (uint8_t)actual_lease_time;
     DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
@@ -832,7 +832,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_bound_timeout) {
     ASSERT_TRUE(trans != NULL);
 
     sleep(1);
-    sdk::lib::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
+    sleep(trans->get_ctx()->lease_time_);
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
@@ -888,7 +888,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_after_rebind) {
                      server_identifier.size()), 0);
     options.clear();
     const char *renew_ip_address = "192.168.1.16";
-    uint32_t actual_lease_time = 100;
+    uint32_t actual_lease_time = 20;
     std::vector<uint8_t> lease_time = {0, 0, 0, 0};
     lease_time[3] = (uint8_t)actual_lease_time;
     DHCP::option lease_time_opt(DHCP::DHCP_LEASE_TIME, lease_time.begin(),
@@ -993,7 +993,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_rebind_lease_timeout) {
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()), 0);
     sleep(1);
-    sdk::lib::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
+    sleep(trans->get_ctx()->lease_time_ );
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));
@@ -1046,7 +1046,7 @@ TEST_F(dhcp_fsm_test, dhcp_basic_offer_renew_lease_timeout) {
     ASSERT_EQ(memcmp(&ctx->server_identifer_, &server_identifier[0],
                      server_identifier.size()), 0);
     sleep(1);
-    sdk::lib::g_twheel->tick(trans->get_ctx()->lease_time_ * TIME_MSECS_PER_SEC + 100);
+    sleep(trans->get_ctx()->lease_time_ );
     sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         dhcp_trans_t::dhcplearn_key_ht()->lookup(&key));

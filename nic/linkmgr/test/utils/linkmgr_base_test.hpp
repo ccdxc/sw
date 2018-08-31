@@ -13,6 +13,12 @@ using sdk::SDK_RET_OK;
 using boost::property_tree::ptree;
 using sdk::types::platform_type_t;
 
+namespace linkmgr {
+    extern hal_ret_t linkmgr_parse_cfg(const char *cfgfile,
+                                       linkmgr::linkmgr_cfg_t *linkmgr_cfg);
+    extern hal_ret_t linkmgr_thread_init (void);
+}
+
 int
 sdk_error_logger (const char *format, ...)
 {
@@ -41,42 +47,6 @@ sdk_debug_logger (const char *format, ...)
     return 0;
 }
 
-hal_ret_t
-linkmgr_parse_cfg (const char *cfgfile, linkmgr::linkmgr_cfg_t *linkmgr_cfg)
-{
-    ptree             pt;
-    std::string       sparam;
-
-    if (!cfgfile) {
-        return HAL_RET_INVALID_ARG;
-    }
-
-    HAL_TRACE_DEBUG("cfg file {}",  cfgfile);
-
-    std::ifstream json_cfg(cfgfile);
-
-    read_json(json_cfg, pt);
-
-    try {
-		std::string platform_type = pt.get<std::string>("platform_type");
-
-        linkmgr_cfg->platform_type =
-            sdk::lib::catalog::catalog_platform_type_to_platform_type(platform_type);
-
-        linkmgr_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
-
-        if (getenv("HAL_GRPC_PORT")) {
-            linkmgr_cfg->grpc_port = getenv("HAL_GRPC_PORT");
-            HAL_TRACE_DEBUG("Overriding GRPC Port to {}", linkmgr_cfg->grpc_port);
-        }
-    } catch (std::exception const& e) {
-        std::cerr << e.what() << std::endl;
-        return HAL_RET_INVALID_ARG;
-    }
-
-    return HAL_RET_OK;
-}
-
 void
 linkmgr_initialize (const char c_file[])
 {
@@ -87,6 +57,13 @@ linkmgr_initialize (const char c_file[])
     sdk::linkmgr::linkmgr_cfg_t  sdk_cfg;
     linkmgr::linkmgr_cfg_t       linkmgr_cfg;
 
+    // Initialize the logger
+    hal::utils::trace_init("linkmgr", sdk::lib::thread::control_cores_mask(),
+                           true, "linkmgr.log", hal::utils::trace_debug);
+    sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
+
+    sdk::lib::thread::control_cores_mask_set(0x1);
+
     // makeup the full file path
     cfg_path = std::getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
@@ -95,7 +72,7 @@ linkmgr_initialize (const char c_file[])
         HAL_ASSERT(FALSE);
     }
 
-    linkmgr_parse_cfg(cfg_file.c_str(), &linkmgr_cfg);
+    linkmgr::linkmgr_parse_cfg(cfg_file.c_str(), &linkmgr_cfg);
 
     catalog =
         sdk::lib::catalog::factory(std::string(cfg_path) + "/catalog.json");
@@ -104,6 +81,10 @@ linkmgr_initialize (const char c_file[])
         HAL_TRACE_ERR("pal init failed");
         return;
     }
+
+    linkmgr::linkmgr_thread_init();
+
+    memset(&sdk_cfg, 0, sizeof(sdk::linkmgr::linkmgr_cfg_t));
 
     sdk_cfg.platform_type = linkmgr_cfg.platform_type;
     sdk_cfg.cfg_path = cfg_path;

@@ -131,6 +131,7 @@ void trace_init(const char *name, uint64_t cpu_mask,
                 bool sync_mode, const char *trace_file,
                 trace_level_e trace_level);
 
+void trace_deinit(void);
 extern log *g_trace_logger;
 extern log *g_syslog_logger;
 

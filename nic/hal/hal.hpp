@@ -79,6 +79,14 @@ extern hal_obj_meta *g_obj_meta[HAL_OBJ_ID_MAX];
 //------------------------------------------------------------------------------
 hal_ret_t hal_state_init(hal_cfg_t *hal_cfg);
 
+// hal_state APIs
+slab *hal_handle_slab(void);
+slab *hal_handle_ht_entry_slab(void);
+ht *hal_handle_id_ht(void);
+void hal_handle_cfg_db_lock(bool readlock, bool lock);
+void cfg_db_open(cfg_op_t cfg_op);
+void cfg_db_close();
+
 }    // namespace hal
 
 #endif    // __HAL_HPP__

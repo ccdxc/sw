@@ -124,7 +124,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     SystemServiceImpl        system_svc;
     SoftwarePhvServiceImpl   swphv_svc;
     L4LbServiceImpl          l4lb_svc;
-    DosServiceImpl           dos_svc; 
+    DosServiceImpl           dos_svc;
 
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
     // register all services

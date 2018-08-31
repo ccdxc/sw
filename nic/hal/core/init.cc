@@ -105,6 +105,9 @@ hal_thread_destroy (void)
 {
     HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);
     g_hal_threads[HAL_THREAD_ID_PERIODIC]->stop();
+
+    hal::utils::trace_deinit();
+
     return HAL_RET_OK;
 }
 

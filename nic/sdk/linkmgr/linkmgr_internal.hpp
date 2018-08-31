@@ -29,11 +29,17 @@ uint32_t ch_mode_mgmt (mac_mode_t mac_mode, uint32_t ch);
 uint32_t glbl_mode (mac_mode_t mac_mode);
 uint32_t ch_mode (mac_mode_t mac_mode, uint32_t ch);
 
-serdes_info_t*
-serdes_info_get(uint32_t sbus_addr,
-                uint32_t port_speed,
-                uint32_t cable_type);
-
+uint32_t       num_asic_ports(uint32_t asic);
+uint32_t       sbus_addr_asic_port(uint32_t asic, uint32_t asic_port);
+uint32_t       jtag_id(void);
+uint8_t        num_sbus_rings(void);
+bool           aacs_server_en  (void);
+bool           aacs_connect    (void);
+uint32_t       aacs_server_port(void);
+std::string    aacs_server_ip  (void);
+serdes_info_t* serdes_info_get(uint32_t sbus_addr,
+                               uint32_t port_speed,
+                               uint32_t cable_type);
 }    // namespace linkmgr
 }    // namespace sdk
 

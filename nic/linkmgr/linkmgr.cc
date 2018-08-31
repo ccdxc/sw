@@ -10,15 +10,16 @@
 #include "linkmgr_state.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "linkmgr_utils.hpp"
+#include "sdk/periodic.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::Status;
 using boost::property_tree::ptree;
-using sdk::types::platform_type_t;
+using sdk::linkmgr::linkmgr_thread_id_t;
 
 namespace linkmgr {
+
+sdk::lib::thread *g_linkmgr_threads[linkmgr_thread_id_t::LINKMGR_THREAD_ID_MAX];
 
 // TODO required?
 extern class linkmgr_state *g_linkmgr_state;
@@ -118,24 +119,10 @@ linkmgr_uplinks_create()
 }
 
 static void
-svc_reg (const std::string& server_addr)
+svc_wait (ServerBuilder *server_builder)
 {
-    PortServiceImpl   port_svc;
-    DebugServiceImpl  debug_svc;
-    ServerBuilder     server_builder;
-
-    // listen on the given address (no authentication)
-    server_builder.AddListeningPort(server_addr,
-                                    grpc::InsecureServerCredentials());
-
-    // register all services
-    server_builder.RegisterService(&port_svc);
-    server_builder.RegisterService(&debug_svc);
-
-    HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
-
     // assemble the server
-    std::unique_ptr<Server> server(server_builder.BuildAndStart());
+    std::unique_ptr<Server> server(server_builder->BuildAndStart());
 
     hal::utils::hal_logger()->flush();
 
@@ -183,6 +170,66 @@ linkmgr_parse_cfg (const char *cfgfile, linkmgr_cfg_t *linkmgr_cfg)
     return HAL_RET_OK;
 }
 
+static void*
+linkmgr_periodic_start (void* ctxt)
+{
+    if (sdk::lib::periodic_thread_init(ctxt) == NULL) {
+        SDK_TRACE_ERR("Failed to init timer");
+    }
+
+    sdk::lib::periodic_thread_run(ctxt);
+
+    return NULL;
+}
+
+hal_ret_t
+linkmgr_thread_init (void)
+{
+    int    thread_prio = 0, thread_id = 0;
+
+    thread_prio = sched_get_priority_max(SCHED_OTHER);
+    if (thread_prio < 0) {
+        return HAL_RET_ERR;
+    }
+
+    // spawn periodic thread that does background tasks
+    thread_id = linkmgr_thread_id_t::LINKMGR_THREAD_ID_PERIODIC;
+    g_linkmgr_threads[thread_id] =
+        sdk::lib::thread::factory(
+                        std::string("linkmgr-periodic").c_str(),
+                        thread_id,
+                        sdk::lib::THREAD_ROLE_CONTROL,
+                        0x0 /* use all control cores */,
+                        linkmgr_periodic_start,
+                        thread_prio - 1,
+                        SCHED_OTHER,
+                        true);
+    if (g_linkmgr_threads[thread_id] == NULL) {
+        SDK_TRACE_ERR("Failed to create linkmgr periodic thread");
+        return HAL_RET_ERR;
+    }
+
+    // start the periodic thread
+    g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
+
+    // create a thread object for CFG thread
+    thread_id = linkmgr_thread_id_t::LINKMGR_THREAD_ID_CFG;
+    g_linkmgr_threads[thread_id] =
+        sdk::lib::thread::factory(std::string("linkmgr-cfg").c_str(),
+                                  thread_id,
+                                  sdk::lib::THREAD_ROLE_CONTROL,
+                                  0x0 /* use all control cores */,
+                                  sdk::lib::thread::dummy_entry_func,
+                                  thread_prio -1,
+                                  SCHED_OTHER,
+                                  true);
+    g_linkmgr_threads[thread_id]->set_data(g_linkmgr_threads[thread_id]);
+    g_linkmgr_threads[thread_id]->set_pthread_id(pthread_self());
+    g_linkmgr_threads[thread_id]->set_running(true);
+
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
 {
@@ -191,6 +238,7 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
     std::string        catalog_file  = linkmgr_cfg->catalog_file;
     char               *cfg_path     = NULL;
     sdk::lib::catalog  *catalog      = NULL;
+    ServerBuilder      server_builder;
 
     sdk::linkmgr::linkmgr_cfg_t sdk_cfg;
 
@@ -210,14 +258,25 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
 
     HAL_ASSERT_RETURN((catalog != NULL), HAL_RET_ERR);
 
-    if (sdk::lib::pal_init(linkmgr_cfg->platform_type) != sdk::lib::PAL_RET_OK) {
+    if (sdk::lib::pal_init(linkmgr_cfg->platform_type) !=
+                                            sdk::lib::PAL_RET_OK) {
         HAL_TRACE_ERR("pal init failed");
         return HAL_RET_ERR;
     }
 
-    sdk_cfg.platform_type = linkmgr_cfg->platform_type;
-    sdk_cfg.cfg_path = cfg_path;
-    sdk_cfg.catalog  = catalog;
+    // listen on the given address (no authentication)
+    std::string server_addr = std::string("0.0.0.0:") + linkmgr_cfg->grpc_port;
+
+    server_builder.AddListeningPort(server_addr,
+                                    grpc::InsecureServerCredentials());
+
+    linkmgr_thread_init();
+
+    sdk_cfg.platform_type  = linkmgr_cfg->platform_type;
+    sdk_cfg.cfg_path       = cfg_path;
+    sdk_cfg.catalog        = catalog;
+    sdk_cfg.server_builder = &server_builder;
+    sdk_cfg.process_mode   = true;
 
     ret_hal = linkmgr::linkmgr_init(&sdk_cfg);
     if (ret_hal != HAL_RET_OK) {
@@ -236,7 +295,8 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
     sdk::linkmgr::linkmgr_event_wait();
 
     // register for all gRPC services
-    svc_reg(std::string("localhost:") + linkmgr_cfg->grpc_port);
+    HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
+    svc_wait(&server_builder);
 
     return ret_hal;
 }

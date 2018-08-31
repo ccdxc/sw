@@ -225,5 +225,17 @@ trace_init (const char *name, uint64_t cores_mask, bool sync_mode,
                                   false, trace_file, trace_debug, log_none);
 }
 
+void
+trace_deinit (void)
+{
+    if (g_trace_logger) {
+        // TODO destory spdlog instance in g_trace_logger?
+        log::destroy(g_trace_logger);
+    }
+
+    g_trace_logger = NULL;
+    return;
+}
+
 }    // utils
 }    // namespace hal

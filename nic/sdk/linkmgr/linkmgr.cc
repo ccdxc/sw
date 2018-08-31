@@ -1,9 +1,9 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "include/sdk/linkmgr.hpp"
 #include "include/sdk/thread.hpp"
+#include "include/sdk/periodic.hpp"
+#include "linkmgr.hpp"
 #include "linkmgr_state.hpp"
-#include "linkmgr_periodic.hpp"
 #include "port.hpp"
 #include "timer_cb.hpp"
 
@@ -50,6 +50,64 @@ ch_mode (mac_mode_t mac_mode, uint32_t ch)
     return g_linkmgr_cfg.catalog->ch_mode(mac_mode, ch);
 }
 
+uint32_t
+num_asic_ports(uint32_t asic)
+{
+    return g_linkmgr_cfg.catalog->num_asic_ports(asic);
+}
+
+uint32_t
+sbus_addr_asic_port(uint32_t asic, uint32_t asic_port)
+{
+    return g_linkmgr_cfg.catalog->sbus_addr_asic_port(asic, asic_port);
+}
+
+uint32_t
+jtag_id(void)
+{
+    return g_linkmgr_cfg.catalog->jtag_id();
+}
+
+uint8_t
+num_sbus_rings(void)
+{
+    return g_linkmgr_cfg.catalog->num_sbus_rings();
+}
+
+bool
+aacs_server_en(void)
+{
+    uint8_t en = g_linkmgr_cfg.catalog->aacs_server_en();
+    if (en == 1) {
+        return true;
+    }
+
+    return false;
+}
+
+bool
+aacs_connect(void)
+{
+    uint8_t connect = g_linkmgr_cfg.catalog->aacs_connect();
+    if (connect == 1) {
+        return true;
+    }
+
+    return false;
+}
+
+uint32_t
+aacs_server_port(void)
+{
+    return g_linkmgr_cfg.catalog->aacs_server_port();
+}
+
+std::string
+aacs_server_ip(void)
+{
+    return g_linkmgr_cfg.catalog->aacs_server_ip();
+}
+
 serdes_info_t*
 serdes_info_get(uint32_t sbus_addr,
                 uint32_t port_speed,
@@ -88,8 +146,13 @@ is_linkmgr_ctrl_thread()
     sdk::lib::thread *curr_thread = current_thread();
     sdk::lib::thread *ctrl_thread = g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL];
 
+    // TODO assert once the thread store is fixed
+    if (curr_thread == NULL) {
+        return true;
+    }
+
     // if curr_thread/ctrl_thread is NULL, then init has failed or not invoked
-    if (curr_thread == NULL || ctrl_thread == NULL) {
+    if (ctrl_thread == NULL) {
         assert(0);
     }
 
@@ -227,7 +290,7 @@ port_link_poll_timer(linkmgr_entry_data_t *data)
 
     // reschedule the poll timer
     port_link_poll_timer_handle =
-        linkmgr_timer_schedule(
+        sdk::lib::timer_schedule(
             0, LINKMGR_LINK_POLL_TIME, NULL,
             (sdk::lib::twheel_cb_t)port_link_poll_timer_cb,
             false);
@@ -322,34 +385,14 @@ thread_init (void)
         return SDK_RET_ERR;
     }
 
-    if (linkmgr_timer_init() != SDK_RET_OK) {
-        SDK_TRACE_ERR("Failed to init timer");
-        return SDK_RET_ERR;
+    // wait until the periodic thread is ready
+    while (!sdk::lib::periodic_thread_is_running()) {
+        pthread_yield();
     }
-
-    // spawn periodic thread that does background tasks
-    thread_id = LINKMGR_THREAD_ID_PERIODIC;
-    g_linkmgr_threads[thread_id] =
-        sdk::lib::thread::factory(
-                        std::string("linkmgr-periodic").c_str(),
-                        thread_id,
-                        sdk::lib::THREAD_ROLE_CONTROL,
-                        0x0 /* use all control cores */,
-                        linkmgr_periodic_thread_start,
-                        thread_prio - 1,
-                        SCHED_OTHER,
-                        true);
-    if (g_linkmgr_threads[thread_id] == NULL) {
-        SDK_TRACE_ERR("Failed to create linkmgr periodic thread");
-        return SDK_RET_ERR;
-    }
-
-    // start the periodic thread
-    g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);
 
     // start the poll timer
     port_link_poll_timer_handle =
-        linkmgr_timer_schedule(
+        sdk::lib::timer_schedule(
             0, LINKMGR_LINK_POLL_TIME, NULL,
             (sdk::lib::twheel_cb_t)port_link_poll_timer_cb,
             false);
@@ -365,22 +408,6 @@ thread_init (void)
                                   thread_prio -1,
                                   SCHED_OTHER,
                                   true);
-
-    // create a thread object for CFG thread
-    thread_id = LINKMGR_THREAD_ID_CFG;
-    g_linkmgr_threads[thread_id] =
-        sdk::lib::thread::factory(std::string("linkmgr-cfg").c_str(),
-                                  thread_id,
-                                  sdk::lib::THREAD_ROLE_CONTROL,
-                                  0x0 /* use all control cores */,
-                                  sdk::lib::thread::dummy_entry_func,
-                                  thread_prio -1,
-                                  SCHED_OTHER,
-                                  true);
-    g_linkmgr_threads[thread_id]->set_data(g_linkmgr_threads[thread_id]);
-    g_linkmgr_threads[thread_id]->set_pthread_id(pthread_self());
-    g_linkmgr_threads[thread_id]->set_running(true);
-
     return SDK_RET_OK;
 }
 
@@ -398,6 +425,8 @@ linkmgr_init (linkmgr_cfg_t *cfg)
 {
     sdk_ret_t    ret = SDK_RET_OK;
 
+    g_linkmgr_cfg = *cfg;
+
     linkmgr_workq_init();
 
     if ((ret = thread_init()) != SDK_RET_OK) {
@@ -413,8 +442,6 @@ linkmgr_init (linkmgr_cfg_t *cfg)
 
     // initialize the port mac and serdes functions
     port::port_init(cfg);
-
-    g_linkmgr_cfg = *cfg;
 
     return SDK_RET_OK;
 }

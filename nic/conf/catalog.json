@@ -7,29 +7,37 @@
 
     "cores_mask": "0x3",
 
-    "serdes_file": "serdes.json",
-
     "num_asics" : "1",
     "asics" :
     [
         {
             "name"      : "capri",
             "num"       : "0",
-            "max_ports" : "8",
+            "max_ports" : "9",
             "ports"     :
             [
                 { "port_num" : "0", "mac_id" : "0", "mac_ch" : "0", "sbus_addr" : "0" },
                 { "port_num" : "1", "mac_id" : "0", "mac_ch" : "1", "sbus_addr" : "0" },
                 { "port_num" : "2", "mac_id" : "0", "mac_ch" : "2", "sbus_addr" : "0" },
                 { "port_num" : "3", "mac_id" : "0", "mac_ch" : "3", "sbus_addr" : "0" },
-                { "port_num" : "4", "mac_id" : "1", "mac_ch" : "0", "sbus_addr" : "1" },
-                { "port_num" : "5", "mac_id" : "1", "mac_ch" : "1", "sbus_addr" : "1" },
-                { "port_num" : "6", "mac_id" : "1", "mac_ch" : "2", "sbus_addr" : "1" },
-                { "port_num" : "7", "mac_id" : "1", "mac_ch" : "3", "sbus_addr" : "1" },
-                { "port_num" : "8", "mac_id" : "0", "mac_ch" : "0", "sbus_addr" : "2" }
+                { "port_num" : "4", "mac_id" : "1", "mac_ch" : "0", "sbus_addr" : "0" },
+                { "port_num" : "5", "mac_id" : "1", "mac_ch" : "1", "sbus_addr" : "0" },
+                { "port_num" : "6", "mac_id" : "1", "mac_ch" : "2", "sbus_addr" : "0" },
+                { "port_num" : "7", "mac_id" : "1", "mac_ch" : "3", "sbus_addr" : "0" },
+                { "port_num" : "8", "mac_id" : "0", "mac_ch" : "0", "sbus_addr" : "0" }
             ]
         }
     ],
+
+    "serdes" : {
+        "serdes_file"    : "serdes.json",
+        "jtag_id"        : "0xA2BF8001",
+        "num_sbus_rings" : "2",
+        "aacs_server"    : "0",
+        "aacs_connect"   : "0",
+        "ip"             : "",
+        "port"           : "90"
+    },
 
     "num_fp_ports": "2",
     "fp_ports" :

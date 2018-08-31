@@ -6,6 +6,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/trace.hpp"
+#include "nic/include/hal.hpp"
 
 #include "linkmgr_svc.hpp"
 #include "linkmgr_src.hpp"
@@ -23,13 +24,16 @@ PortServiceImpl::PortCreate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
-    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+    hal::cfg_db_open(hal::CFG_OP_WRITE);
+
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         linkmgr::port_create(spec, response);
     }
-    linkmgr::g_linkmgr_state->cfg_db_close();
+
+    hal::cfg_db_close();
+
     return Status::OK;
 }
 
@@ -46,13 +50,16 @@ PortServiceImpl::PortUpdate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
-    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+    hal::cfg_db_open(hal::CFG_OP_WRITE);
+
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         linkmgr::port_update(spec, response);
     }
-    linkmgr::g_linkmgr_state->cfg_db_close();
+
+    hal::cfg_db_close();
+
     return Status::OK;
 }
 
@@ -69,12 +76,15 @@ PortServiceImpl::PortDelete(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
-    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+    hal::cfg_db_open(hal::CFG_OP_WRITE);
+
     for (i = 0; i < nreqs; i++) {
         auto spec = req->request(i);
         linkmgr::port_delete(spec, rsp);
     }
-    linkmgr::g_linkmgr_state->cfg_db_close();
+
+    hal::cfg_db_close();
+
     return Status::OK;
 }
 
@@ -90,12 +100,15 @@ PortServiceImpl::PortGet(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
-    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_READ);
+    hal::cfg_db_open(hal::CFG_OP_READ);
+
     for (i = 0; i < nreqs; i++) {
         auto request = req->request(i);
         linkmgr::port_get(request, rsp);
     }
-    linkmgr::g_linkmgr_state->cfg_db_close();
+
+    hal::cfg_db_close();
+
     return Status::OK;
 }
 
@@ -112,11 +125,14 @@ PortServiceImpl::PortInfoGet(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
-    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_READ);
+    hal::cfg_db_open(hal::CFG_OP_READ);
+
     for (i = 0; i < nreqs; i++) {
         auto request = req->request(i);
         linkmgr::port_info_get(request, rsp);
     }
-    linkmgr::g_linkmgr_state->cfg_db_close();
+
+    hal::cfg_db_close();
+
     return Status::OK;
 }

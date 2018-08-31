@@ -12,6 +12,18 @@ thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 bool gl_super_user = false;
 
 void
+cfg_db_open(cfg_op_t cfg_op)
+{
+    linkmgr::g_linkmgr_state->cfg_db_open(cfg_op);
+}
+
+void
+cfg_db_close(void)
+{
+    linkmgr::g_linkmgr_state->cfg_db_close();
+}
+
+void
 hal_handle_cfg_db_lock(bool readlock, bool lock)
 {
     if (readlock == true) {
