@@ -1296,7 +1296,7 @@ int ionic_tx_clean(struct tx_qcq* txqcq , int tx_limit)
 {
 	struct txq_comp *comp;
 	struct ionic_tx_buf *txbuf;
-	int comp_index, cmd_index, processed, cmd_stop_index;
+	int comp_index, processed, cmd_stop_index;
 	struct tx_stats * stats = &txqcq->stats;
 
 	stats->clean++;
@@ -1307,31 +1307,29 @@ int ionic_tx_clean(struct tx_qcq* txqcq , int tx_limit)
 	
 	for ( processed = 0 ; processed < tx_limit ; processed++) {
 		comp_index = txqcq->comp_index;
-		cmd_index = txqcq->cmd_tail_index;
+	//	cmd_index = txqcq->cmd_tail_index;
 
 		comp = &txqcq->comp_ring[comp_index];
 		cmd_stop_index = comp->comp_index;
 
-		IONIC_NETDEV_TX_TRACE(txqcq, "comp :%d cmd start: %d cmd stop: %d comp->color %d done_color %d\n",
-			comp_index, cmd_index, cmd_stop_index, comp->color, txqcq->done_color);
-
 		if (comp->color != txqcq->done_color)
 			break;
 
-		do {
-			txbuf = &txqcq->txbuf[cmd_index];
-			/* TSO last buffer only points to valid mbuf. */
-			if (txbuf->m != NULL) {
-				bus_dmamap_sync(txqcq->buf_tag, txbuf->dma_map, BUS_DMASYNC_POSTWRITE);
-				bus_dmamap_unload(txqcq->buf_tag, txbuf->dma_map);
-				m_freem(txbuf->m);
-			}
-			cmd_index = (cmd_index + 1) % txqcq->num_descs;
-		} while(cmd_index != cmd_stop_index);
+		IONIC_NETDEV_TX_TRACE(txqcq, "comp @ %d for desc @ %d comp->color %d done_color %d\n",
+			comp_index, cmd_stop_index, comp->color, txqcq->done_color);
+
+		txbuf = &txqcq->txbuf[cmd_stop_index];
+		/* TSO last buffer only points to valid mbuf. */
+		if (txbuf->m != NULL) {
+			IONIC_NETDEV_TX_TRACE(txqcq, "free txbuf @:%d\n", cmd_stop_index);
+			bus_dmamap_sync(txqcq->buf_tag, txbuf->dma_map, BUS_DMASYNC_POSTWRITE);
+			bus_dmamap_unload(txqcq->buf_tag, txbuf->dma_map);
+			m_freem(txbuf->m);
+		}
 
 		txqcq->comp_index = (txqcq->comp_index + 1) % txqcq->num_descs;
 		/* XXX: should we comp stop index to jump for TSO. */
-		txqcq->cmd_tail_index = cmd_index;
+		txqcq->cmd_tail_index = (cmd_stop_index + 1) % txqcq->num_descs;
 		/* Roll over condition, flip color. */
 		if (txqcq->comp_index == 0) {
 			txqcq->done_color = !txqcq->done_color;
