@@ -32,7 +32,7 @@ swig-cli-gft: swig-cli-gft-clean
 plugins:
 	$(BAZEL_BUILD) --build_tag_filters=-gtests //nic/hal/plugins/...
 
-gft: platform capsim-master
+gft: platform
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C $(TOPDIR)/p4 msft_gft
 	$(MAKE) -C $(TOPDIR)/asm msft_gft AS_DEFINES="-DGFT -DCAPRI_IGNORE_TIMESTAMP"

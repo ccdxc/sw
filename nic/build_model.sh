@@ -29,4 +29,5 @@ else
     exit
 fi
 $NIC_DIR/model_sim/cp_asic_bins.sh
-
+make capsim-master
+make ARCH=aarch64 capsim-master

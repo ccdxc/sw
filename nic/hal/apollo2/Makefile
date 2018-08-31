@@ -19,7 +19,7 @@ plugins:
 #################### Oracle ########################
 ####################################################
 
-apollo2: capsim-master
+apollo2:
 	$(MAKE) capmodel
 	$(MAKE) -j4 -C $(TOPDIR)/p4 apollo2_p4
 	$(MAKE) -C $(TOPDIR)/asm/apollo2

@@ -129,7 +129,7 @@ iris-c:
 	install -m 755 $(TOPDIR)/../bazel-bin/nic/hal/iris-c/libiris-c.so $(TOPDIR)/hal/obj
 
 # code generation stage
-stage0_DEV: irisp4 p4 gen_proto capsim-master utils
+stage0_DEV: irisp4 p4 gen_proto utils
 stage0: stage0_DEV csrlite agent_proto
 
 # lib building stage
@@ -178,7 +178,7 @@ all: stages
 	$(MAKE) package-tests
 	$(MAKE) package-sim
 
-clean: platform-clean capsim-master-clean
+clean: platform-clean
 	bazel clean --expunge
 	rm -rf $(VALGRIND_DIR)
 	rm -rf $(GEN_TEST_RESULTS_DIR)
