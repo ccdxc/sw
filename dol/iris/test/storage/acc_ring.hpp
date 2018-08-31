@@ -89,6 +89,12 @@ public:
     }
 
 private:
+
+    uint8_t *ring_cache_desc_fill(const void *src_desc,
+                                  bool *ring_wrapped);
+    void seq_desc_fill(dp_mem_t *seq_desc_container,
+                       uint8_t *cache_desc);
+
     const char      *ring_name;
     uint64_t        cfg_ring_pd_idx;
     dp_mem_t        *shadow_pd_idx_mem;
