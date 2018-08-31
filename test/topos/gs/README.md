@@ -100,10 +100,23 @@ bash-4.4# kubectl describe pod pen-apigw-9zpsq
 - API documentation and samples: Turin VM exposes following URL on the host where it started: `http://localhost:10001/docs`
 - Sample configuration: provided in various postman files `postman_collection.json`
 - All APIs can be curled from outside Turin VM on the URL paths shown by the API Browser
-- Utilities like `newman` and `curl` are included in the VM e.g.
+- Login as user `admin` and save cookie to a file
+```
+[vagrant@venice venice]$ curl -d '{"username":"admin", "password":"password", "tenant":"default"}' -c cookie.jar -H "Content-Type: application/json" -X POST http://localhost:10001/v1/login/
+```
+- Use cookie to call  REST APIs
+```
+[vagrant@venice venice]$ curl -b cookie.jar http://localhost:10001/configs/auth/v1/tenant/default/users
+[vagrant@venice venice]$ curl -b cookie.jar http://localhost:10001/configs/cluster/v1/cluster
+```
+- You can also extract JWT token from cookie name `sid` and set it in `Authorization` header as `Bearer <jwt token>` while calling REST APIs
+```
+[vagrant@venice venice]$ curl -H "Authorization: Bearer eyJjc3JmIjoid3UwdG9kMVVGVms0cjZSWjRldnlFQW1GRS1MRHpISjFsN2R0MG9ycDlsND0iLCJleHAiOjE1MzQ4MDA2NzksImlhdCI6MTUzNDI4MjI3OSwiaXNzIjoidmVuaWNlIiwicm9sZXMiOm51bGwsInN1YiI6ImFkbWluIiwidGVuYW50IjoiZGVmYXVsdCJ9.J00lcpOdWpTZjsnyufh5U4Sh5xpEA3EKIUBgKYHQX9juSHdg1m7larOy2BTpXYAzjVHEF2zVN_NpMzo3EETOLw" http://localhost:10001/configs/auth/v1/authn-policy
+```
+- Utilities like `newman` and `curl` are included in the VM.
+- Run postman collection
 ```
 [vagrant@venice venice]$ newman run /vagrant/postman_collection.json -e /vagrant/postman_env.json
-[vagrant@venice venice]$ curl http://localhost:10001/configs/cluster/v1/cluster
 ```
 
 ### Restarting and Destroying the VM
@@ -131,22 +144,3 @@ Delete any leftover VMs using virtualbox's vboxmanage command
 [vagrant@venice venice]$ ./dind/do.py -configFile /vagrant/testbed.json -custom_config_file /vagrant/venice-conf.json -venice_image_dir /home/vagrant/venice/venice
 ```
 - Service logs can be found at `/var/log/pensando/...`
-
-### Enabling Local Authentication
-- Modify /vagrant/venice-conf.json to change `--skipauth` to `--skipauth=false` and follow instructions in Advanced section to re-create the Venice cluster
-- Create an user `admin` and an authentication policy by running
-```
-[vagrant@venice venice]$ newman run /vagrant/authbootstrap_postman_collection.json
-```
-- Login as user `admin` and save cookie to a file
-```
-[vagrant@venice venice]$ curl -d '{"username":"admin", "password":"password", "tenant":"default"}' -c cookie.jar -H "Content-Type: application/json" -X POST http://localhost:10001/v1/login/
-```
-- Use cookie to call  REST APIs
-```
-[vagrant@venice venice]$  curl -b cookie.jar http://localhost:10001/configs/auth/v1/tenant/default/users
-```
-- You can also extract JWT token from cookie name `sid` and set it in `Authorization` header as `Bearer <jwt token>` while calling REST APIs
-```
-[vagrant@venice venice]$ curl -H "Authorization: Bearer eyJjc3JmIjoid3UwdG9kMVVGVms0cjZSWjRldnlFQW1GRS1MRHpISjFsN2R0MG9ycDlsND0iLCJleHAiOjE1MzQ4MDA2NzksImlhdCI6MTUzNDI4MjI3OSwiaXNzIjoidmVuaWNlIiwicm9sZXMiOm51bGwsInN1YiI6ImFkbWluIiwidGVuYW50IjoiZGVmYXVsdCJ9.J00lcpOdWpTZjsnyufh5U4Sh5xpEA3EKIUBgKYHQX9juSHdg1m7larOy2BTpXYAzjVHEF2zVN_NpMzo3EETOLw" http://localhost:10001/configs/auth/v1/authn-policy
-```

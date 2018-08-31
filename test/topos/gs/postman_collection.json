@@ -7,6 +7,42 @@
 	},
 	"item": [
 		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "http://localhost:10001/v1/login/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\": \"admin\",\n\t\"password\": \"password\",\n\t\"tenant\": \"default\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:10001/v1/login/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "10001",
+							"path": [
+								"v1",
+								"login",
+								""
+							]
+						},
+						"description": "Login by Admin"
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Host_Workload_CRUDs",
 			"description": "",
 			"item": [
@@ -15,14 +51,6 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{
-								"key": "Origin",
-								"value": "http://localhost:10001"
-							},
-							{
-								"key": "Grpc-Metadata-Csrf-Token",
-								"value": "-KE69g7wrn96gLcvQQakbpEfk0FA41bqJf6qgD6VCqI="
-							},
 							{
 								"key": "Content-Type",
 								"value": "application/json"
@@ -52,14 +80,6 @@
 					"request": {
 						"method": "PUT",
 						"header": [
-							{
-								"key": "Origin",
-								"value": "http://localhost:10001"
-							},
-							{
-								"key": "Grpc-Metadata-Csrf-Token",
-								"value": "-KE69g7wrn96gLcvQQakbpEfk0FA41bqJf6qgD6VCqI="
-							},
 							{
 								"key": "Content-Type",
 								"value": "application/json"
@@ -138,16 +158,7 @@
 					"name": "Delete Host",
 					"request": {
 						"method": "DELETE",
-						"header": [
-							{
-								"key": "Origin",
-								"value": "http://localhost:10001"
-							},
-							{
-								"key": "Grpc-Metadata-Csrf-Token",
-								"value": "-KE69g7wrn96gLcvQQakbpEfk0FA41bqJf6qgD6VCqI="
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": ""
@@ -173,14 +184,6 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{
-								"key": "Origin",
-								"value": "http://localhost:10001"
-							},
-							{
-								"key": "Grpc-Metadata-Csrf-Token",
-								"value": "-KE69g7wrn96gLcvQQakbpEfk0FA41bqJf6qgD6VCqI="
-							},
 							{
 								"key": "Content-Type",
 								"value": "application/json"
@@ -212,14 +215,6 @@
 					"request": {
 						"method": "PUT",
 						"header": [
-							{
-								"key": "Origin",
-								"value": "http://localhost:10001"
-							},
-							{
-								"key": "Grpc-Metadata-Csrf-Token",
-								"value": "-KE69g7wrn96gLcvQQakbpEfk0FA41bqJf6qgD6VCqI="
-							},
 							{
 								"key": "Content-Type",
 								"value": "application/json"
@@ -304,16 +299,7 @@
 					"name": "Delete Workload",
 					"request": {
 						"method": "DELETE",
-						"header": [
-							{
-								"key": "Origin",
-								"value": "http://localhost:10001"
-							},
-							{
-								"key": "Grpc-Metadata-Csrf-Token",
-								"value": "-KE69g7wrn96gLcvQQakbpEfk0FA41bqJf6qgD6VCqI="
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": ""
