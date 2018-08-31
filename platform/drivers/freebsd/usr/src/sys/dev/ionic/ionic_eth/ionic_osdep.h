@@ -18,9 +18,7 @@ struct ionic_dma_info {
 	caddr_t				dma_vaddr;
 	bus_dma_tag_t		dma_tag;
 	bus_dmamap_t		dma_map;
-	//bus_dma_segment_t	dma_seg;
 	bus_size_t			dma_size;
-	//int					dma_nseg;
 };
 
 /* DMA related. */

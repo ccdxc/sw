@@ -56,8 +56,12 @@
 
 #ifdef IONIC_DEBUG
 #define IONIC_NETDEV_QINFO(q, fmt, ...)	 IONIC_NETDEV_QDEBUG(q, "info:" fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_TX_TRACE(q, fmt, ...)	 IONIC_NETDEV_QDEBUG(q, "info:" fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_RX_TRACE(q, fmt, ...)
 #else
 #define IONIC_NETDEV_QINFO(q, fmt, ...)
+#define IONIC_NETDEV_TX_TRACE(q, fmt, ...)
+#define IONIC_NETDEV_RX_TRACE(q, fmt, ...)
 #endif
 #define IONIC_NETDEV_QWARN(q, fmt, ...)	IONIC_NETDEV_QDEBUG(q, "WARN:" fmt, ##__VA_ARGS__)
 #define IONIC_NETDEV_QERR(q, fmt, ...)	IONIC_NETDEV_QDEBUG(q, "ERROR:" fmt, ##__VA_ARGS__)
@@ -100,8 +104,10 @@ struct ionic_dev;
 
 extern const char *ionic_module_dname;
 
+extern int ionic_max_queues;
 extern int ntxq_descs;
 extern int nrxq_descs;
+extern int adminq_descs;
 
 struct ionic {
 	struct pci_dev *pdev;

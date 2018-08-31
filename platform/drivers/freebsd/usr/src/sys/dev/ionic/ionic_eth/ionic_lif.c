@@ -199,8 +199,6 @@ static void ionic_adminq_napi(struct napi_struct *napi)
 	mtx_unlock(&adminq->mtx);
 }
 
-
-
 static int _ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 {
 	struct ionic_admin_ctx ctx = {
@@ -474,8 +472,6 @@ static int ionic_vlan_rx_kill_vid(struct net_device *netdev,
 
 	return ionic_vlan_rx_filter(netdev, false, proto, vid);
 }
-
-
 
 int ionic_intr_alloc(struct lif *lif, struct intr *intr)
 {
@@ -936,7 +932,7 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	pid = ionic_pid_get(lif, 0);
 
 	/* XXX: we are tight on name description */
-	err = ionic_adminq_alloc(lif, 0, 1 << 4, pid, &lif->adminqcq);
+	err = ionic_adminq_alloc(lif, 0, adminq_descs, pid, &lif->adminqcq);
 	if (err)
 		return err;
 
@@ -991,7 +987,6 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		dev_err(dev, "Cannot allocate lif, aborting\n");
 		return -ENOMEM;
 	}
-
 
 	snprintf(lif->name, sizeof(lif->name), "ionic%u", index);
 	lif->ionic = ionic;
@@ -1318,14 +1313,14 @@ int ionic_tx_clean(struct tx_qcq* txqcq , int tx_limit)
 		cmd_index = txqcq->cmd_tail_index;
 		txbuf = &txqcq->txbuf[cmd_index];
 		cmd = &txqcq->cmd_ring[cmd_index];
-	
+
+		IONIC_NETDEV_TX_TRACE(txqcq, "comp :%d cmd start: %d cmd stop: %d comp->color %d done_color %d\n",
+			comp_index, cmd_index, cmd_stop_index, comp->color, txqcq->done_color);
+		IONIC_NETDEV_TX_TRACE(txqcq, "buf[%d] opcode:%d addr:0%lx len:0x%x\n",
+			cmd_index, cmd->opcode, cmd->addr, cmd->len);
+
 		if (comp->color != txqcq->done_color)
 			break;
-
-		IONIC_NETDEV_QINFO(txqcq, "comp :%d cmd start: %d cmd stop: %d comp->color %d done_color %d\n",
-			comp_index, cmd_index, cmd_stop_index, comp->color, txqcq->done_color);
-		IONIC_NETDEV_QINFO(txqcq, "buf[%d] opcode:%d addr:0%lx len:0x%x\n",
-			cmd_index, cmd->opcode, cmd->addr, cmd->len);
 
 		for ( ; cmd_index == cmd_stop_index; cmd_index++, processed++ ) {
 			txbuf = &txqcq->txbuf[cmd_index];
@@ -1343,7 +1338,7 @@ int ionic_tx_clean(struct tx_qcq* txqcq , int tx_limit)
 		}
 	}
 
-	IONIC_NETDEV_QINFO(txqcq, "ionic_tx_clean processed %d\n", processed);
+	IONIC_NETDEV_TX_TRACE(txqcq, "ionic_tx_clean processed %d\n", processed);
 
 	if (comp->color == txqcq->done_color)
 		taskqueue_enqueue(txqcq->taskq, &txqcq->task);
@@ -1388,7 +1383,7 @@ ionic_tx_task_handler(void *arg, int pendindg)
 	if (drbr_empty(txqcq->lif->netdev, txqcq->br))
 		return;
 
-	IONIC_NETDEV_QINFO(txqcq, "ionic_tx_task\n");
+	IONIC_NETDEV_TX_TRACE(txqcq, "ionic_tx_task\n");
 	mtx_lock(&txqcq->mtx);
 	/*
 	 * Process all Tx frames.
@@ -1490,9 +1485,9 @@ static int ionic_rx_clean(struct rx_qcq* rxqcq , int rx_limit)
 		if (comp->color != rxqcq->done_color)
 			break;
 
-		IONIC_NETDEV_QINFO(rxqcq, "comp :%d cmd start: %d cmd stop: %d comp->color %d done_color %d\n",
+		IONIC_NETDEV_RX_TRACE(rxqcq, "comp :%d cmd start: %d cmd stop: %d comp->color %d done_color %d\n",
 			comp_index, cmd_index, cmd_stop_index, comp->color, rxqcq->done_color);
-		IONIC_NETDEV_QINFO(rxqcq, "buf[%d] opcode:%d addr:0%lx len:0x%x\n",
+		IONIC_NETDEV_RX_TRACE(rxqcq, "buf[%d] opcode:%d addr:0%lx len:0x%x\n",
 			cmd_index, cmd->opcode, cmd->addr, cmd->len);
 
 		for ( ; cmd_index == cmd_stop_index; cmd_index++, processed++ ) {
@@ -1509,7 +1504,7 @@ static int ionic_rx_clean(struct rx_qcq* rxqcq , int rx_limit)
 		}
 	}
 
-	IONIC_NETDEV_QINFO(rxqcq, "ionic_rx_clean processed %d\n", processed);
+	IONIC_NETDEV_RX_TRACE(rxqcq, "ionic_rx_clean processed %d\n", processed);
 
 	if (comp->color == rxqcq->done_color)
 		taskqueue_enqueue(rxqcq->taskq, &rxqcq->task);
@@ -1546,7 +1541,7 @@ void ionic_rx_flush(struct rx_qcq *rxqcq)
 {
 	unsigned int work_done;
 
-	IONIC_NETDEV_QINFO(rxqcq, "\n");
+	IONIC_NETDEV_RX_TRACE(rxqcq, "\n");
 
 	work_done = ionic_rx_clean(rxqcq, -1);
 
@@ -1962,8 +1957,10 @@ int ionic_lifs_size(struct ionic *ionic)
 	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
 	int err;
 
-	dev_info(ionic->dev, "dev_nintrs %u\n", dev_nintrs);
+	if (ionic_max_queues)
+		nqs = ionic_max_queues;
 
+	dev_info(ionic->dev, "dev_nintrs %u\n", dev_nintrs);
 try_again:
 #ifdef RSS
 	/*
@@ -2000,6 +1997,8 @@ try_again:
 	ionic->nintrs = nintrs;
 
 	dev_info(ionic->dev, "dev_nintrs %d Tx/Rx Qs: %d\n", dev_nintrs, nqs);
+	ionic_max_queues = nqs;
+
 	return 0;
 try_fewer:
 	if (neqs > 1) {

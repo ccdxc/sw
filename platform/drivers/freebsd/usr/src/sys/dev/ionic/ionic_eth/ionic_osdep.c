@@ -53,13 +53,14 @@ ionic_write_reg(struct ionic* ionic, uint32_t offset, uint32_t val)
  * Write to doorbell register in BAR1
  */
 void
-ionic_write_doorbell(struct ionic* ionic,int pid, int qid,  uint32_t val)
+ionic_write_doorbell(struct ionic* ionic,int pid, int qid,  uint64_t val)
 {
 	uint32_t offset = pid * PAGE_SIZE;
 
 	/* Jump to Interrupt control block area. */
 	offset += qid * sizeof(struct doorbell);
-	dev_info(ionic->dev, "[DOORBELL_WRITE] pid: %d qis: %d offset: 0x%x val: 0x%x\n", pid, qid, offset, val);
+	dev_info(ionic->dev, "[DOORBELL_WRITE] pid: %d qis: %d offset: 0x%x val: 0x%x\n",
+		pid, qid, offset, val);
 
 	ionic_write_reg(ionic, offset, val);
 	bus_space_write_8(ionic->doorbells_tag, ionic->doorbells_handle, offset, val);

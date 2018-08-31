@@ -50,10 +50,33 @@
 #include <netinet/in_rss.h>
 #endif
 
-
 MALLOC_DEFINE(M_IONIC, "ionic", "Pensando IONIC Ethernet adapter");
 static int
 ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data);
+
+static SYSCTL_NODE(_hw, OID_AUTO, ionic, CTLFLAG_RD, 0,
+                   "Pensando Ethernet parameters");
+
+int ionic_max_queues = 0;
+TUNABLE_INT("hw.ionic.max_queues", &ionic_max_queues);
+SYSCTL_INT(_hw_ionic, OID_AUTO, max_queues, CTLFLAG_RDTUN,
+    &ionic_max_queues, 0, "Number of Queues");
+
+int adminq_descs = 16;
+TUNABLE_INT("hw.ionic.adminq_descs", &adminq_descs);
+SYSCTL_INT(_hw_ionic, OID_AUTO, adminq_descs, CTLFLAG_RDTUN,
+    &adminq_descs, 0, "Number of Admin descriptors");
+
+int ntxq_descs = 128;
+TUNABLE_INT("hw.ionic.tx_descs", &ntxq_descs);
+SYSCTL_INT(_hw_ionic, OID_AUTO, tx_descs, CTLFLAG_RDTUN,
+    &ntxq_descs, 0, "Number of Tx descriptors");
+
+int nrxq_descs = 128;
+TUNABLE_INT("hw.ionic.rx_descs", &nrxq_descs);
+SYSCTL_INT(_hw_ionic, OID_AUTO, rx_descs, CTLFLAG_RDTUN,
+    &nrxq_descs, 0, "Number of Rx descriptors");
+
 
 #ifdef notyet //Why do we need to recycle?
 static void ionic_rx_recycle(struct queue *q, struct desc_info *desc_info,
@@ -222,7 +245,7 @@ void ionic_rx_input(struct rx_qcq *rxqcq, struct ionic_rx_buf *rxbuf,
 	if ((rxqcq->lro.ifp != NULL) && (use_lro || comp->csum_tcp_ok)) {
 		if (rxqcq->lro.lro_cnt != 0) {
 			if ((error = tcp_lro_rx(&rxqcq->lro, m, 0)) == 0) {/* third arg -Checksum?? */
-				IONIC_NETDEV_QINFO(rxqcq, "sending to lro\n");
+				IONIC_NETDEV_RX_TRACE(rxqcq, "sending to lro\n");
 				return;
 			}
 			IONIC_NETDEV_QWARN(rxqcq, "lro failed, error: %d\n", error);
@@ -321,7 +344,7 @@ void ionic_rx_fill(struct rx_qcq *rxqcq)
 		rxqcq->cmd_head_index = (rxqcq->cmd_head_index + 1) % rxqcq->num_descs;
 	 }
 	 
-	IONIC_NETDEV_QINFO(rxqcq, "rx_fill head: %d tail: %d descs: %d filled %d\n",  
+	IONIC_NETDEV_RX_TRACE(rxqcq, "rx_fill head: %d tail: %d descs: %d filled %d\n",  
 		rxqcq->cmd_head_index, rxqcq->cmd_tail_index, rxqcq->num_descs, i);
 
 }
@@ -332,8 +355,7 @@ void ionic_rx_refill(struct rx_qcq *rxqcq)
 	struct ionic_rx_buf *rxbuf;
 	int error, i, index;
 
-
-	IONIC_NETDEV_QINFO(rxqcq, "rx_refill producer: %d consumer :%d num_descs: %d\n",
+	IONIC_NETDEV_RX_TRACE(rxqcq, "rx_refill producer: %d consumer :%d num_descs: %d\n",
 		rxqcq->cmd_head_index, rxqcq->cmd_tail_index, rxqcq->num_descs);
 
 	for ( i = 0 ; i < rxqcq->num_descs && rxqcq->cmd_head_index != rxqcq->cmd_tail_index ; i++) {
@@ -350,12 +372,12 @@ void ionic_rx_refill(struct rx_qcq *rxqcq)
 			break;
 		}
 
-		IONIC_NETDEV_QINFO(rxqcq, "rx_refill index :%d mbuf pa: 0x%lx \n", index, rxbuf->pa_addr);
+		IONIC_NETDEV_RX_TRACE(rxqcq, "rx_refill index :%d mbuf pa: 0x%lx \n", index, rxbuf->pa_addr);
 
 		rxqcq->cmd_tail_index = (rxqcq->cmd_tail_index + 1) % rxqcq->num_descs;
 	 }
 
-	IONIC_NETDEV_QINFO(rxqcq, "filled  %d rxbufs\n", i);
+	IONIC_NETDEV_RX_TRACE(rxqcq, "filled  %d rxbufs\n", i);
 }
 
 
@@ -364,7 +386,7 @@ void ionic_rx_empty(struct rx_qcq *rxqcq)
 	struct ionic_rx_buf *rxbuf;
 	int i, index;
 
-	IONIC_NETDEV_QINFO(rxqcq, "\n");
+	IONIC_NETDEV_RX_TRACE(rxqcq, "\n");
 
 	 for (i = 0 ; i < rxqcq->num_descs && (rxqcq->cmd_head_index != rxqcq->cmd_tail_index) ; i++) {
 		index = rxqcq->cmd_tail_index;
@@ -471,7 +493,7 @@ static int ionic_tx_setup(struct tx_qcq *txqcq, struct mbuf *m)
 	bus_dmamap_sync(txqcq->buf_tag, txbuf->dma_map, BUS_DMASYNC_PREWRITE);
 	txbuf->pa_addr = seg[0].ds_addr;
 	txbuf->m = m;
-	IONIC_NETDEV_QINFO(txqcq, "VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%lx\n", m, txbuf->pa_addr, nsegs, seg[0].ds_len);
+	IONIC_NETDEV_TX_TRACE(txqcq, "VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%lx\n", m, txbuf->pa_addr, nsegs, seg[0].ds_len);
 
 	if (m->m_pkthdr.csum_flags & CSUM_IP) {
 		desc->l3_csum = 1;
@@ -578,14 +600,14 @@ static int ionic_tx_tso_setup(struct tx_qcq *txqcq, struct mbuf *m)
 	desc->len = seg[0].ds_len;
 	desc->addr = txbuf->pa_addr = seg[0].ds_addr;
 
-	IONIC_NETDEV_QINFO(txqcq, "TSO: VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%x\n",
+	IONIC_NETDEV_TX_TRACE(txqcq, "TSO: VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%x\n",
 		m, txbuf->pa_addr, nsegs, m->m_pkthdr.len);
-	IONIC_NETDEV_QINFO(txqcq, "sg[0] pa: 0x%lx length: 0x%hx\n",  sg->elems[0].addr, sg->elems[0].len);
+	IONIC_NETDEV_TX_TRACE(txqcq, "sg[0] pa: 0x%lx length: 0x%hx\n",  sg->elems[0].addr, sg->elems[0].len);
 	/* Now populate SG list, past the first fragment. */
 	for ( i = 0 ; i < nsegs -1 ; i++) {
 		sg->elems[i].addr = seg[i + 1].ds_addr;
 		sg->elems[i].len = seg[i + 1].ds_len;
-		IONIC_NETDEV_QINFO(txqcq, "sg[%d] pa: 0x%lx length: 0x%hx\n", i, sg->elems[i].addr, sg->elems[i].len);
+		IONIC_NETDEV_TX_TRACE(txqcq, "sg[%d] pa: 0x%lx length: 0x%hx\n", i, sg->elems[i].addr, sg->elems[i].len);
 	}
 
 	txqcq->cmd_head_index = (txqcq->cmd_head_index + 1) % txqcq->num_descs;
@@ -627,7 +649,7 @@ static int ionic_xmit(struct tx_qcq* txqcq, struct mbuf **head)
 
 	/* XXX ping doorbell on 4 rx submission. */
 	ionic_ring_doorbell(txqcq->db, txqcq->qid, txqcq->cmd_head_index);
-	IONIC_NETDEV_QINFO(txqcq, "db: %p Qid: %d index: %d\n",
+	IONIC_NETDEV_TX_TRACE(txqcq, "db: %p Qid: %d index: %d\n",
 		 txqcq->db, txqcq->qid, txqcq->cmd_head_index);
 
 	txqcq->cmd_head_index = (txqcq->cmd_head_index + 1) % txqcq->num_descs;
@@ -646,7 +668,7 @@ int ionic_start_xmit_locked(struct ifnet* ifp, 	struct tx_qcq* txqcq)
 	int err;
 	int processed = 0;
 
-	IONIC_NETDEV_QINFO(txqcq, "head: %d tail: %d\n",
+	IONIC_NETDEV_TX_TRACE(txqcq, "head: %d tail: %d\n",
 		 txqcq->cmd_head_index, txqcq->cmd_tail_index);
 
 	if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
@@ -674,8 +696,6 @@ int ionic_start_xmit_locked(struct ifnet* ifp, 	struct tx_qcq* txqcq)
 
 	return (err);
 }
-
-
 
 int ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
 {
@@ -789,22 +809,22 @@ static void
 ionic_lif_add_rxtstat(struct rx_qcq *rxqcq, struct sysctl_ctx_list *ctx,
     struct sysctl_oid_list *queue_list)
 {
-		struct lro_ctrl* lro = &rxqcq->lro;
-		struct rx_stats* rxstat = &rxqcq->stats;
+	struct lro_ctrl* lro = &rxqcq->lro;
+	struct rx_stats* rxstat = &rxqcq->stats;
 
-
-       SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "head", CTLFLAG_RD,
+    SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "head", CTLFLAG_RD,
             &rxqcq->cmd_head_index, 0, "Head index");
        SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "tail", CTLFLAG_RD,
             &rxqcq->cmd_tail_index, 0, "Tail index");
        SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
             &rxqcq->comp_index, 0, "Completion index");
+    	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
+        	&rxqcq->num_descs, 0, "Number of descriptors");
 
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "dma_setup_error", CTLFLAG_RD,
             &rxstat->dma_map_err,"DMA map setup error");
 		SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "alloc_error", CTLFLAG_RD,
             &rxstat->alloc_err, "Buffer allocation error");
-
 
         SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "pkts", CTLFLAG_RD,
             &rxstat->pkts, "Rx Packets");
@@ -851,9 +871,32 @@ ionic_lif_add_rxtstat(struct rx_qcq *rxqcq, struct sysctl_ctx_list *ctx,
 }
 
 static void
-ionic_lif_add_txtstat(struct sysctl_ctx_list *ctx,
-    struct sysctl_oid_list *list, struct tx_stats* txstat)
+ionic_lif_add_txtstat(struct tx_qcq* txqcq, struct sysctl_ctx_list *ctx,
+    struct sysctl_oid_list *list)
 {
+	struct tx_stats* txstat = &txqcq->stats;
+
+	SYSCTL_ADD_UINT(ctx, list, OID_AUTO, "head", CTLFLAG_RD,
+        &txqcq->cmd_head_index, 0, "Head index");
+    SYSCTL_ADD_UINT(ctx, list, OID_AUTO, "tail", CTLFLAG_RD,
+        &txqcq->cmd_tail_index, 0, "Tail index");
+    SYSCTL_ADD_UINT(ctx, list, OID_AUTO, "comp_index", CTLFLAG_RD,
+        &txqcq->comp_index, 0, "Completion index");
+    SYSCTL_ADD_UINT(ctx, list, OID_AUTO, "num_descs", CTLFLAG_RD,
+        &txqcq->num_descs, 0, "Number of descriptors");
+
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "dma_map_error", CTLFLAG_RD,
+        &txstat->dma_map_err, "DMA mapping error");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tx_clean", CTLFLAG_RD,
+        &txstat->clean, "Tx clean");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "pkts_drop", CTLFLAG_RD,
+        &txstat->drop, "Packets were dropped");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "no_descs", CTLFLAG_RD,
+        &txstat->no_descs, "Descriptors not available");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "linearize", CTLFLAG_RD,
+        &txstat->linearize, "Linearize  mbuf");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "bad_ethtype", CTLFLAG_RD,
+        &txstat->bad_ethtype, "Tx malformed Ethernet");
 
     SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "pkts", CTLFLAG_RD,
         &txstat->pkts, "Tx Packets");
@@ -867,18 +910,7 @@ ionic_lif_add_txtstat(struct sysctl_ctx_list *ctx,
         &txstat->tso_ipv4, "TSO for IPv4");
     SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_ipv6", CTLFLAG_RD,
         &txstat->tso_ipv6, "TSO for IPv6");
-	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "dma_map_error", CTLFLAG_RD,
-        &txstat->dma_map_err, "DMA mapping error");
-	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tx_clean", CTLFLAG_RD,
-        &txstat->clean, "Tx clean");
-	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "pkts_drop", CTLFLAG_RD,
-        &txstat->drop, "Packets were dropped");
-	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "no_descs", CTLFLAG_RD,
-        &txstat->no_descs, "Descriptors not available");
-	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "linearize", CTLFLAG_RD,
-        &txstat->linearize, "Linearize  mbuf");
-	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "bad_ethtype", CTLFLAG_RD,
-        &txstat->bad_ethtype, "Tx malformed Ethernet");
+
 }
 
 static void
@@ -891,17 +923,29 @@ ionic_setup_device_stats(struct lif *lif)
 
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
+	struct adminq* adminq = lif->adminqcq;
 	int i;
 
 #define QUEUE_NAME_LEN 32
 	char namebuf[QUEUE_NAME_LEN];
 
-#if 0
-	/* Driver Statistics */
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "dropped",
-			CTLFLAG_RD, &lif->dropped_pkts,
-			"Driver dropped packets");
-#endif
+	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "numq", CTLFLAG_RD,
+       &lif->ntxqcqs, 0, "Number of Tx/Rx queue pairs");
+
+	snprintf(namebuf, QUEUE_NAME_LEN, "adq");
+	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
+					    CTLFLAG_RD, NULL, "Queue Name");
+	queue_list = SYSCTL_CHILDREN(queue_node);
+
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
+       &adminq->num_descs, 0, "Number of descriptors");
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "head", CTLFLAG_RD,
+        &adminq->cmd_head_index, 0, "Head index");
+	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "tail", CTLFLAG_RD,
+        &adminq->cmd_tail_index, 0, "Tail index");
+    SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
+        &adminq->comp_index, 0, "Completion index");
+
 
 	for (i = 0; i < lif->nrxqcqs; i++) {
 		snprintf(namebuf, QUEUE_NAME_LEN, "rxq%d", i);
@@ -917,7 +961,7 @@ ionic_setup_device_stats(struct lif *lif)
 					    CTLFLAG_RD, NULL, "Queue Name");
 		queue_list = SYSCTL_CHILDREN(queue_node);
 
-		ionic_lif_add_txtstat(ctx, queue_list, &lif->txqcqs[i]->stats);
+		ionic_lif_add_txtstat(lif->txqcqs[i], ctx, queue_list);
     }
 }
 
