@@ -284,10 +284,8 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         case telemetry::ExportFormat::NETFLOWV9:
             HAL_TRACE_ERR("PI-Collector: Netflow-v9 format type is not supported {}",
                            spec.format());
-            break;
-            // TODO: Need to remove netflow from mbt and add these lines back
-            //rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-            //return HAL_RET_INVALID_ARG;
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            return HAL_RET_INVALID_ARG;
         default:
             HAL_TRACE_ERR("PI-Collector: Unknown format type {}", spec.format());
             rsp->set_api_status(types::API_STATUS_INVALID_ARG);
@@ -460,6 +458,11 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
             if (n == 0) {
                 /* No collectors configured! */
                 HAL_TRACE_ERR("Action is collect, but no collectors specified");
+                return HAL_RET_INVALID_ARG;
+            }
+            if (n > MAX_COLLECTORS_PER_FLOW) {
+                HAL_TRACE_ERR("Only {} collectors allowed per FlowMon rule",
+                               MAX_COLLECTORS_PER_FLOW);
                 return HAL_RET_INVALID_ARG;
             }
             for (int i = 0; i < n; i++) {

@@ -17,13 +17,16 @@ namespace telemetry {
 static inline hal_ret_t
 update_flow_from_telemetry_rules (fte::ctx_t& ctx)
 {
-    fte::flow_update_t flowupd = {type: fte::FLOWUPD_MIRROR_INFO};
+    fte::flow_update_t                  mirror_flowupd;
+    fte::flow_update_t                  export_flowupd;
     hal::ipv4_tuple                     acl_key = {};
     hal_ret_t                           ret = HAL_RET_OK;
     const hal::flow_monitor_rule_t      *frule = NULL;
     const hal::ipv4_rule_t              *rule = NULL;
     const acl::acl_ctx_t                *acl_ctx = NULL;
 
+    mirror_flowupd.mirror_info.mirror_en = 0;
+    export_flowupd.export_info.export_en = 0;
     const char *ctx_name = flowmon_acl_ctx_name(ctx.get_key().svrf_id);
     acl_ctx = acl::acl_get(ctx_name);
     if (acl_ctx == NULL) {
@@ -80,18 +83,53 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx)
         rc = (acl::ref_t *) rule->data.userdata;
         frule = (const hal::flow_monitor_rule_t *) RULE_MATCH_USER_DATA(rc, hal::flow_monitor_rule_t, ref_count);
         if (frule->action.num_mirror_dest > 0) {
-            flowupd.mirror_info.mirror_en = true;
-            flowupd.mirror_info.ing_mirror_session = 0;
+            mirror_flowupd.type = fte::FLOWUPD_MIRROR_INFO;
+            mirror_flowupd.mirror_info.mirror_en = true;
+            mirror_flowupd.mirror_info.ing_mirror_session = 0;
             for (int i = 0; i < frule->action.num_mirror_dest; i++) {
-                flowupd.mirror_info.ing_mirror_session |= (1 << frule->action.mirror_destinations[i]);
+                mirror_flowupd.mirror_info.ing_mirror_session |= (1 << frule->action.mirror_destinations[i]);
+            }
+        }
+        if (frule->action.num_collector > 0) {
+            export_flowupd.type = fte::FLOWUPD_EXPORT_INFO;
+            int n = frule->action.num_collector;
+            export_flowupd.export_info.export_en = 0;
+            if (n >= 1) {
+                export_flowupd.export_info.export_en |= (1 << 0);
+                export_flowupd.export_info.export_id1 = frule->action.collectors[0];
+            }
+            if (n >= 2) {
+                export_flowupd.export_info.export_en |= (1 << 1);
+                export_flowupd.export_info.export_id2 = frule->action.collectors[1];
+            }
+            if (n >= 3) {
+                export_flowupd.export_info.export_en |= (1 << 2);
+                export_flowupd.export_info.export_id3 = frule->action.collectors[2];
+            }
+            if (n == 4) {
+                export_flowupd.export_info.export_en |= (1 << 3);
+                export_flowupd.export_info.export_id4 = frule->action.collectors[3];
             }
         }
     }
 
+    if (mirror_flowupd.mirror_info.mirror_en) {
+        ret = ctx.update_flow(mirror_flowupd);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error updating mirror info");
+            return ret;
+        }
+    }
+    if (export_flowupd.export_info.export_en) {
+        ret = ctx.update_flow(export_flowupd);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error updating export info");
+            return ret;
+        }
+    }
 end:
     HAL_TRACE_DEBUG("continue to process telemetry");
-
-    return ctx.update_flow(flowupd);
+    return ret;
 }
 
 /*

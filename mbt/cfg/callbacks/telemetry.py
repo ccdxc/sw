@@ -1,4 +1,5 @@
 import types_pb2
+import telemetry_pb2
 from grpc_meta.msg import GrpcReqRspMsg
 import cfg.callbacks.endpoint as endpoint
 import random
@@ -21,6 +22,7 @@ def CollectorPreCreateCb(data, req_spec, resp_spec):
     req_spec.request[0].dest_ip.v4_addr = endpoint.ep_ipv4_addrs[idx]
 
     req_spec.request[0].encap.encap_type = types_pb2.ENCAP_TYPE_DOT1Q
+    req_spec.request[0].format = telemetry_pb2.IPFIX
 
 def FlowMatchPreCreateCb(data, req_spec, resp_spec):
     if req_spec.request[0].match.src_address[0].address.WhichOneof("Address") == "range":
@@ -44,3 +46,4 @@ def FlowMatchPreCreateCb(data, req_spec, resp_spec):
             req_spec.request[0].match.dst_address[0].address.range.ipv4_range.low_ipaddr.v4_addr = tmp
     else:
         req_spec.request[0].match.dst_address[0].address.prefix.ipv4_subnet.prefix_len = GrpcReqRspMsg.generate_ip_address(req_spec.request[0].match.dst_address[0].address.prefix.ipv4_subnet.address, types_pb2.IP_AF_INET)
+    req_spec.request[0].action.agg_scheme[0] = telemetry_pb2.NONE

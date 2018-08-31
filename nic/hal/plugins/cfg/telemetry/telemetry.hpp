@@ -100,6 +100,7 @@ DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
 #define MAX_MIRROR_SESSION_DEST     8
 #define MAX_DROP_REASON             128
 #define MAX_COLLECTORS              16
+#define MAX_COLLECTORS_PER_FLOW     4
 
 
 // New reason codes must be added here and in the corresponding PD
@@ -170,7 +171,7 @@ typedef struct drop_monitor_rule_s {
 typedef struct flow_monitor_rule_action_s {
     uint8_t     num_mirror_dest;    // Num of mirror sessions
     uint8_t     num_collector;  // Number of collectors
-    uint8_t     collectors[MAX_COLLECTORS]; // Collector ids
+    uint8_t     collectors[MAX_COLLECTORS_PER_FLOW]; // Collector ids
     uint8_t     mirror_destinations[MAX_MIRROR_SESSION_DEST];   // Mirror session ids
     bool        mirror_to_cpu;       // Mirror to cpu - additional mirror dest
 } __PACK__ flow_monitor_rule_action_t;
