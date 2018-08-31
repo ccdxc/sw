@@ -188,6 +188,36 @@ void pbuf_convert_buffer_list_v2p(struct pnso_buffer_list *buf_list);
 void pbuf_convert_flat_buffer_v2p(struct pnso_flat_buffer *flat_buf);
 
 /**
+ * pbuf_convert_buffer_list_p2v() - converts physical address of the buffer
+ * within each of one of the flat buffers to its virtual address.
+ * @buf_list:	[in]	specifies the pointer to a pnso_buffer_list.
+ *
+ * This function walks through the list of flat buffers, and converts physical
+ * address of the buffers to virtual address.  This function assumes the input
+ * members of pnso_buffer_list is valid.
+ *
+ * Return Value:
+ *	None
+ *
+ */
+void pbuf_convert_buffer_list_p2v(struct pnso_buffer_list *buf_list);
+
+/**
+ * pbuf_convert_flat_buffer_p2v() - converts physical address of a flat buffer
+ * within pnso_flat_buf to its virtual address.
+ * @flat_buf:	[in]	specifies the pointer to a pnso_flat_buffer.
+ *
+ * This function converts the physical address of the flat buffer to virtual
+ * address.  This function assumes the input members of pnso_flat_buffer is
+ * valid.
+ *
+ * Return Value:
+ *	None
+ *
+ */
+void pbuf_convert_flat_buffer_p2v(struct pnso_flat_buffer *flat_buf);
+
+/**
  * pbuf_get_flat_buffer_block_count() - returns the number of blocks in a flat
  * buffer, based on total length of the flat buffer.
  * @flat_buf:	[in]	specifies the pointer to a pnso_flat_buffer.
