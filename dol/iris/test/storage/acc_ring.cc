@@ -108,58 +108,49 @@ acc_ring_t::push(const void *src_desc,
                  acc_ring_push_t push_type,
                  uint32_t seq_qid)
 {
-    uint8_t             *dst_desc;
+    uint8_t             *cache_desc;
     dp_mem_t            *seq_desc_container;
-    queues::seq_desc_t  *seq_desc;
     bool                update_seq_desc;
-    uint32_t            pd_idx;
+    bool                ring_wrapped;
 
     switch (push_type) {
 
     case ACC_RING_PUSH_SEQUENCER:
-    case ACC_RING_PUSH_SEQUENCER_BATCH:
-        pd_idx = curr_pd_idx;
-        curr_pd_idx = (curr_pd_idx + 1) % ring_size;
-
-        dst_desc = &ring_base_mem[pd_idx * desc_size];
-        memcpy(dst_desc, src_desc, desc_size);
+        cache_desc = ring_cache_desc_fill(src_desc, &ring_wrapped);
+        queues::seq_sq_batch_consume_end(seq_qid);
+        seq_desc_container = queues::seq_sq_consume_entry(seq_qid,
+                                                          &curr_seq_pd_idx);
+        seq_desc_fill(seq_desc_container, cache_desc);
+        seq_desc_container->write_thru();
+        test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE,
+                           seq_qid, 0, curr_seq_pd_idx);
         curr_seq_qid = seq_qid;
+        curr_push_type = ACC_RING_PUSH_INVALID;
+        break;
 
-        if (push_type == ACC_RING_PUSH_SEQUENCER_BATCH) {
-            seq_desc_container = queues::seq_sq_batch_consume_entry(curr_seq_qid,
-                                         ring_base_mem_pa, &curr_seq_pd_idx,
-                                         &update_seq_desc, acc_ring_batch_end_notify,
-                                         (void *)this);
-        } else {
-            queues::seq_sq_batch_consume_end(curr_seq_qid);
-            seq_desc_container = queues::seq_sq_consume_entry(curr_seq_qid,
-                                                              &curr_seq_pd_idx);
-            update_seq_desc = true;
-        }
-
+    case ACC_RING_PUSH_SEQUENCER_BATCH:
+        cache_desc = ring_cache_desc_fill(src_desc, &ring_wrapped);
+        seq_desc_container = queues::seq_sq_batch_consume_entry(seq_qid,
+                                     ring_base_mem_pa, &curr_seq_pd_idx,
+                                     &update_seq_desc, acc_ring_batch_end_notify,
+                                     (void *)this);
         if (update_seq_desc) {
-            seq_desc_container->clear();
-            seq_desc = (queues::seq_desc_t *)seq_desc_container->read();
-            seq_desc->acc_desc_addr = htonll(host_mem_v2p(dst_desc));
-            seq_desc->acc_pndx_addr = htonll(cfg_ring_pd_idx);
-            seq_desc->acc_pndx_shadow_addr = htonll(shadow_pd_idx_mem->pa());
-            seq_desc->acc_ring_addr = htonll(ring_base_mem_pa);
-            seq_desc->acc_desc_size = (uint8_t)log2(desc_size);
-            seq_desc->acc_pndx_size = (uint8_t)log2(pi_size);
-            seq_desc->acc_ring_size = (uint8_t)log2(ring_size);
+            seq_desc_fill(seq_desc_container, cache_desc);
         }
 
-        if (push_type == ACC_RING_PUSH_SEQUENCER) {
-            seq_desc_container->write_thru();
-            test_ring_doorbell(queues::get_seq_lif(), SQ_TYPE,
-                               curr_seq_qid, 0, curr_seq_pd_idx);
-            curr_push_type = ACC_RING_PUSH_INVALID;
-            break;
+        /*
+         * If intermediate descriptor cache index wraps, end the current batch
+         * since P4+ doesn't know the cache base and wouldn't know how to
+         * break up the source portion of the transfer. 
+         */
+        if (ring_wrapped) {
+            queues::seq_sq_batch_consume_end(seq_qid);
         }
 
         /*
          * Defer until caller calls post_push()
          */
+        curr_seq_qid = seq_qid;
         curr_push_type = push_type;
         break;
 
@@ -297,6 +288,47 @@ acc_ring_t::post_push(uint32_t push_amount)
         curr_push_type = ACC_RING_PUSH_INVALID;
         break;
     }
+}
+
+/*
+ * Utility to fill an intermediate descriptor in the 
+ * ring_base_mem cache.
+ */
+uint8_t *
+acc_ring_t::ring_cache_desc_fill(const void *src_desc,
+                                 bool *ring_wrapped)
+{
+    uint8_t     *cache_desc;
+    uint32_t    pd_idx;
+
+    pd_idx = curr_pd_idx;
+    curr_pd_idx = (curr_pd_idx + 1) % ring_size;
+
+    cache_desc = &ring_base_mem[pd_idx * desc_size];
+    memcpy(cache_desc, src_desc, desc_size);
+
+    *ring_wrapped = curr_pd_idx < pd_idx;
+    return cache_desc;
+}
+
+/*
+ * Utility to fill an sequencer descriptor.
+ */
+void
+acc_ring_t::seq_desc_fill(dp_mem_t *seq_desc_container,
+                          uint8_t *cache_desc)
+{
+    queues::seq_desc_t  *seq_desc;
+
+    seq_desc_container->clear();
+    seq_desc = (queues::seq_desc_t *)seq_desc_container->read();
+    seq_desc->acc_desc_addr = htonll(host_mem_v2p(cache_desc));
+    seq_desc->acc_pndx_addr = htonll(cfg_ring_pd_idx);
+    seq_desc->acc_pndx_shadow_addr = htonll(shadow_pd_idx_mem->pa());
+    seq_desc->acc_ring_addr = htonll(ring_base_mem_pa);
+    seq_desc->acc_desc_size = (uint8_t)log2(desc_size);
+    seq_desc->acc_pndx_size = (uint8_t)log2(pi_size);
+    seq_desc->acc_ring_size = (uint8_t)log2(ring_size);
 }
 
 }  // namespace tests
