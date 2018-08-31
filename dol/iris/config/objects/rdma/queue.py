@@ -147,8 +147,10 @@ class RdmaRQstate(Packet):
         ByteField("rqcb2_rsvd0", 0),
         X3BytesField("ack_nak_psn", 0),
 
-        ByteField("aeth_syndrome", 0),
         X3BytesField("aeth_msn", 0),
+        ByteField("syndrome", 0),
+        BitField("credits", 0, 5),
+        BitField("rqcb2_rsvd1", 0, 3),
 
         BitField("bt_read_or_atomic", 0, 1),
         BitField("bt_rsvd0", 0, 7),
@@ -158,11 +160,11 @@ class RdmaRQstate(Packet):
         IntField("bt_len", 0),
 
         BitField("rnr_timeout", 0, 5),
-        BitField("rqcb2_rsvd1", 0, 3),
+        BitField("rqcb2_rsvd2", 0, 3),
 
         IntField("pd", 0),
 
-        BitField("rqcb2_pad", 0, 248),
+        BitField("rqcb2_pad", 0, 240),
 
         # RQCB3
         LongField("wrid", 0),

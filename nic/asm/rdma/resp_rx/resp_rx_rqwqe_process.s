@@ -201,34 +201,19 @@ write_done:
 
 loop_exit:
 
-    bcf         [!c5], skip_inv_rkey
     seq         c2, K_GLOBAL_FLAG(_inv_rkey), 1 // BD Slot
-
-    .csbegin
-    cswitch     [c2]
-    nop
-
-    .cscase 0
-
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_inv_rkey_validate_process, r0)
-    b           inv_rkey_done
-    nop // BD Slot
-
-    .cscase 1
+    // skip_inv_rkey if remaining_payload_bytes > 0
+    // or if NOT send with invalidate
+    bcf         [!c5 | !c2], skip_inv_rkey
 
     // if invalidate rkey is present, invoke it by loading appopriate
     // key entry, else load the same program as MPU only.
-    KT_BASE_ADDR_GET2(KT_BASE_ADDR, TMP)
+    KT_BASE_ADDR_GET2(KT_BASE_ADDR, TMP) // BD Slot
     add         TMP, r0, CAPRI_KEY_FIELD(IN_TO_S_P, inv_r_key)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, TMP)
 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_validate_process, KEY_ADDR)
-    b           inv_rkey_done
-    nop // BD Slot
 
-    .csend
-
-inv_rkey_done:
 skip_inv_rkey:
     CAPRI_SET_TABLE_0_VALID(1)
     CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)

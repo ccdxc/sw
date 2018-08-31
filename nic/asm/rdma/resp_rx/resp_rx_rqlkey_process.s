@@ -160,26 +160,16 @@ exit:
 error_completion:
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
 
-    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
 
     // set error disable flag 
     // if it is send and error is encourntered, even first/middle packets
     // should generate completion queue error.
-    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION
-    
+    // turn on ACK req bit when error disabling QP
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_ACK_REQ
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
 
-    RQCB2_ADDR_GET(RQCB2_ADDR)
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
-
-    // prepare for NAK
-    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB2_ADDR, TMP, \
-                                   K_GLOBAL_LIF,
-                                   K_GLOBAL_QTYPE,
-                                   K_GLOBAL_QID,
-                                   DB_ADDR, DB_DATA)
-    
     //Generate DMA command to skip to payload end
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)

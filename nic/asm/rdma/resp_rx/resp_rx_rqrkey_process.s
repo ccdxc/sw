@@ -13,15 +13,9 @@ struct key_entry_aligned_t d;
 #define PT_OFFSET r3
 
 #define DMA_CMD_BASE r1
-#define TMP r3
-#define DB_ADDR r4
-#define DB_DATA r5
 #define GLOBAL_FLAGS r6
-#define RQCB2_ADDR r7
-#define RQCB1_ADDR r7
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r6
-#define T2_ARG r5
 #define ABS_VA r4
 
 #define RKEY_TO_PT_INFO_T   struct resp_rx_lkey_to_pt_info_t
@@ -197,27 +191,22 @@ error_completion:
     phvwrpair.!c1 p.s1.eqwqe.code, EQE_CODE_QP_ERR_ACCESS, p.s1.eqwqe.type, EQE_TYPE_QP
     phvwr.!c1   p.s1.eqwqe.qid, K_GLOBAL_QID
 
-    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
 
     // set error disable flag 
-    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP
+    // turn on ACK req bit when error disabling QP
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_ACK_REQ
 
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
 
-    RQCB2_ADDR_GET(RQCB2_ADDR)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c2)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c2)
 
-    // prepare for NAK
-    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB2_ADDR, TMP, \
-                                   K_GLOBAL_LIF,
-                                   K_GLOBAL_QTYPE,
-                                   K_GLOBAL_QID,
-                                   DB_ADDR, DB_DATA)
-    
     //Generate DMA command to skip to payload end
-    DMA_NEXT_CMD_I_BASE_GET(DMA_CMD_BASE, 1)
+    // move dma cmd base by 2 to accomodate ACK info 
+    // and doorbell ringing
+    DMA_NEXT_CMD_I_BASE_GET(DMA_CMD_BASE, 2)
     DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
 
     b       write_back

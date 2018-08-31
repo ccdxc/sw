@@ -213,7 +213,10 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=2
             aeth:
-                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=8
+                # we ACK the last packet after incrementing proxy_rq_c_index
+                # in writeback. so the number of rqwqe's for credit
+                # calculation is one lesser.
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=7
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data

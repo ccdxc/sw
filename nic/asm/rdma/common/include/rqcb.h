@@ -179,19 +179,24 @@ struct rqcb1_t {
 struct rqcb2_t {
     rsvd0: 8;                    //1B
     ack_nak_psn: 24;            //3B
-    struct rdma_aeth_t aeth;    //4B
+    msn         : 24;           //3B
+    // used for NAK
+    syndrome    : 8;            //1B
+    // used for ACK and read responses
+    credits     : 5;
+    rsvd1       : 3;
 
     //backtrack info
-    struct resp_bt_info_t  bt_info;
+    struct resp_bt_info_t  bt_info; //20B
 
     // rnr
     rnr_timeout: 5;
-    rsvd1: 3;
+    rsvd2: 3;
 
     // protection domain - moved from rqcb0_t    
-    pd: 32;
+    pd: 32; //4B
 
-    pad: 248;   //35B
+    pad: 240;   //30B
 };
 
 // Multi-packet write fields used in resp_rx

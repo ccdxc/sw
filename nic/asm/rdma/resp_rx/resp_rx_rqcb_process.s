@@ -27,12 +27,10 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define RSQWQE_P r2
 #define DMA_CMD_BASE r1
 #define TOKEN_ID r1
-#define TMP r3
 #define IMM_DATA r2
 #define DB_ADDR r4
 #define DB_DATA r5
 #define NEW_RSQ_P_INDEX r6
-#define RQCB2_ADDR r6
 
 #define WORK_NOT_DONE_RECIRC_CNT_MAX    3
 
@@ -201,13 +199,7 @@ process_send_write_fml:
     sne         c7, r1, REM_PYLD_BYTES
     bcf.c7      [c1|c2], inv_req_nak
     
-    // populate ack info
-    RQ_CREDITS_GET(r1, r2, c7)  //BD Slot
-    AETH_ACK_SYNDROME_GET(r2, r1)
-
-    phvwrpair   p.s1.ack_info.psn, d.e_psn, \
-                p.s1.ack_info.aeth.syndrome, r2
-
+    phvwr       p.s1.ack_info.psn, d.e_psn
     // increment e_psn
     tblmincri   d.e_psn, 24, 1
 
@@ -341,15 +333,8 @@ process_only_rd_atomic:
     // for read and atomic, start DMA commands from flit 9 instead of 8
     RXDMA_DMA_CMD_PTR_SET_C(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, 0, !c1) //BD Slot
 
-    // populate ack info
-    RQ_CREDITS_GET(r1, r2, c1)
-    AETH_ACK_SYNDROME_GET(r2, r1)
-
-    phvwrpair   p.s1.ack_info.psn, d.e_psn, \
-                p.s1.ack_info.aeth.syndrome, r2
-
-    bcf     [c6 | c5 | c3], process_read_atomic
-    phvwr       p.s1.ack_info.aeth.syndrome, r2    //BD Slot
+    bcf         [c6 | c5 | c3], process_read_atomic
+    phvwr       p.s1.ack_info.psn, d.e_psn // BD Slot
 
     // increment e_psn
     tblmincri   d.e_psn, 24, 1
@@ -500,6 +485,10 @@ wr_only_zero_len_no_imm_data:
 
 /****** Logic for READ/ATOMIC packets ******/
 process_read_atomic:
+    // turn off ACK req bit for read/atomic
+    // so that ACK doorbell is not rung
+    and         r7, r7, ~(RESP_RX_FLAG_ACK_REQ)
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
     // populate PD in rkey's to_stage
     CAPRI_SET_FIELD2(TO_S_RKEY_P, pd, d.pd)
     // wqe_p = (void *)(hbm_addr_get(rqcb_p->rsq_base_addr) +    
@@ -629,11 +618,7 @@ duplicate_wr_send:
         populating the AETH header in rqcb2_t here.
     */
     sub         r2, d.e_psn, 1 // since d.e_psn is a 24-bit value, sub can be used to decrement
-
-    phvwrpair   p.s1.ack_info.psn, r2, p.s1.ack_info.aeth.msn, d.msn
-    RQ_CREDITS_GET(r1, r2, c7)
-    AETH_ACK_SYNDROME_GET(r2, r1)
-    phvwr       p.s1.ack_info.aeth.syndrome, r2
+    phvwr       p.s1.ack_info.psn, r2
 
 generate_ack:
     // forcefully turn on ACK req bit and invoke writeback with incr_nxt_to_go_token_id
@@ -715,26 +700,26 @@ inv_req_nak:
                 CAPRI_PHV_FIELD(TO_S_WB1_P, async_event_or_error), 1
 
     bbeq        d.nak_prune, 1, skip_nak
-   //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD) // BD Slot
+    // turn off ACK req bit here. if nak needs to be sent, we will turn it on below
+    and         r7, r7, ~(RESP_RX_FLAG_ACK_REQ) // BD Slot
 
-    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)
     //TODO: async affiliated error
     
     //Set c5 to TRUE to signify ASYNC path
     setcf       c5, [c0]
     b           nak
-    CAPRI_SET_FIELD2(phv_global_common, _error_disable_qp, 1)
+    or          r7, r7, RESP_RX_FLAG_ERR_DIS_QP // BD Slot
 
 seq_err_nak:
     b           nak_prune
-    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR) // BD Slot
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR) // BD Slot
 
 process_rnr:
     //revert the e_psn
     sub         r1, 0, 1 
     tblmincr    d.e_psn, 24, r1
-    phvwr       p.s1.ack_info.aeth.syndrome, AETH_RNR_SYNDROME_INLINE_GET(RNR_NAK_TIMEOUT)    
+    phvwr       p.s1.ack_info.syndrome, AETH_RNR_SYNDROME_INLINE_GET(RNR_NAK_TIMEOUT)    
 
 nak_prune:
     /* only seq_err_nak and RNR
@@ -747,29 +732,22 @@ nak_prune:
     bbne        d.nak_prune, 1, nak
     tblwr       d.nak_prune, 1 // BD Slot
 
-    CAPRI_SET_FIELD2(TO_S_LKEY_P, nak_prune, 1)
     b           skip_nak
-    //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD) // BD Slot
+    // turn off ACK req bit when skipping nak
+    and         r7, r7, ~(RESP_RX_FLAG_ACK_REQ) // BD Slot
 
 nak: 
-    phvwrpair   p.s1.ack_info.psn, d.e_psn, p.s1.ack_info.aeth.msn, d.msn
+    phvwr       p.s1.ack_info.psn, d.e_psn
+    // forcefully turn on ACK req bit and invoke writeback with incr_nxt_to_go_token_id
+    or          r7, r7, RESP_RX_FLAG_ACK_REQ
  
-    add         RQCB2_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
-    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
-    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c2)
-    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c2)
-
-    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB2_ADDR, TMP, \
-                                   CAPRI_RXDMA_INTRINSIC_LIF, \
-                                   CAPRI_RXDMA_INTRINSIC_QTYPE, \
-                                   CAPRI_RXDMA_INTRINSIC_QID, \
-                                   DB_ADDR, DB_DATA)
+skip_nak:
+    // common to both nak and skip_nak
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
 
     //Generate DMA command to skip to payload end
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
 
-skip_nak:
     //For ASYNC cases, only set SKIP_TO_EOP and not CMD_EOP. CMD_EOP is set by eqcb_process
     DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c5)
     DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, c5)

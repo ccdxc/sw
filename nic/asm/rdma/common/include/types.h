@@ -176,6 +176,9 @@ struct rdma_atomiceth_t {
 #define AETH_ACK_SYNDROME_GET(_dst, _credits) \
     AETH_SYNDROME_GET(_dst, AETH_CODE_ACK, _credits)
 
+#define AETH_ACK_SYNDROME_GET_C(_dst, _credits, _c) \
+    AETH_SYNDROME_GET_C(_dst, AETH_CODE_ACK, _credits, _c)
+
 #define AETH_RNR_SYNDROME_GET(_dst, _t) \
     AETH_SYNDROME_GET(_dst, AETH_CODE_RNR, _t)
 
@@ -485,7 +488,10 @@ union roce_opcode_flags_t {
 
 struct ack_info_t {
     psn: 24;
-    struct rdma_aeth_t  aeth;
+    msn: 24;
+    syndrome: 8; // used for NAK
+    credits: 5; // used for ACK
+    rsvd: 3;
 };
 
 #define SGE_T struct sge_t

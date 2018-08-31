@@ -23,47 +23,11 @@ struct key_entry_aligned_t d;
 
 .align
 resp_rx_inv_rkey_validate_process:
-    // handle ack generation
-    // Since this program is always called and also has 
-    // less instructions, enqueuing ACK DMA instructions in this stage.
 
-    add             GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
-    crestore        [c7, c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_RX_FLAG_UD | RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_ERR_DIS_QP)
-    //c7: ud c6: ack c5: inv_rkey c4: cswap c3: fna c2: read c1: err_dis_qp
-    
-    // skip ack generation for UD
-    // skip ack generation if qp is in err_disabled state as
-    // lkey_process in prev stage would have generated NAK
-    bcf             [c7 | c1], check_invalidate
-    RQCB2_ADDR_GET(RQCB2_ADDR)      //BD Slot
-
-    // if nak_prune is set to 1, do not copy ack_info
-    bbeq        CAPRI_KEY_FIELD(IN_TO_S_P, nak_prune), 1, check_invalidate
-    setcf       c1, [c4 | c3 | c2]  //BD Slot
-    // c1 : atomic_or_read
-
-    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c1)
-    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c1)
-
-    // prepare for acknowledgement
-    RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(DMA_CMD_BASE, RQCB2_ADDR, TMP)
-    // for read/atomic operations, do not ring doorbell
-    // also if ack req bit is not set, even then do not ring doorbell
-    // also if send with invalidate, defer ringing ACK doorbell until after rkey's state/PD/QP checks
-    bcf         [c1 | !c6 | c5], check_invalidate
-    nop // BD Slot
-
-    RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
-                                   K_GLOBAL_LIF,
-                                   K_GLOBAL_QTYPE,
-                                   K_GLOBAL_QID,
-                                   DB_ADDR, DB_DATA)
-check_invalidate:
-
-    bcf         [!c5], exit 
-    nop //BD Slot
+    // this program is loaded only for send with invalidate
 
     bbeq        CAPRI_KEY_FIELD(IN_TO_S_P, rsvd_key_err), 1, error_completion
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS // BD Slot
 
     /*  check if MR is eligible for invalidation
      *  check if state is invalid (same for MR and MW)
@@ -110,14 +74,6 @@ update_state:
     // if key type is not MR, must be MW, update stats
     CAPRI_SET_FIELD2_C(TO_S_STATS_P, incr_mem_window_inv, 1, !c1)
 
-    // ring ACK/NAK doorbell only if ACK req bit is set
-    bcf         [!c6], exit
-    RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
-                                   K_GLOBAL_LIF,
-                                   K_GLOBAL_QTYPE,
-                                   K_GLOBAL_QID,
-                                   DB_ADDR, DB_DATA) // BD Slot
-
 exit:
     CAPRI_SET_TABLE_3_VALID_CE(c0, 0)
     nop // Exit Slot
@@ -136,6 +92,8 @@ error_completion:
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
     // set error disable flag
     or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP
+        // turn off ACK req bit when skipping nak
+    and         GLOBAL_FLAGS, GLOBAL_FLAGS, ~(RESP_RX_FLAG_ACK_REQ)
 
     CAPRI_SET_TABLE_3_VALID_CE(c0, 0)
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS) // Exit Slot

@@ -18,8 +18,9 @@ struct resp_tx_s1_t0_k k;
 
 resp_tx_rqcb2_process:
 
+    AETH_ACK_SYNDROME_GET(r6, d.credits)
     // prepare aeth
-    phvwrpair   p.aeth.syndrome, d.aeth.syndrome, p.aeth.msn, d.aeth.msn
+    phvwrpair   p.aeth.syndrome, r6, p.aeth.msn, d.msn
 
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2(RSQWQE_INFO_P, curr_read_rsp_psn, read_rsp_in_progress, CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, read_rsp_in_progress)) 

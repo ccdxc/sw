@@ -7,15 +7,10 @@ struct resp_rx_phv_t p;
 struct resp_rx_s4_t0_k k;
 struct key_entry_aligned_t d;
 
-#define TO_S_WB1_P   to_s5_wb1_info
 #define IN_TO_S_P    to_s4_lkey_info
 
 #define GLOBAL_FLAGS r6
 #define DMA_CMD_BASE r1
-#define TMP r3
-#define RQCB2_ADDR r7
-#define DB_ADDR r4
-#define DB_DATA r5
 
 #define K_MW_COOKIE CAPRI_KEY_FIELD(IN_TO_S_P, mw_cookie)
 
@@ -56,7 +51,7 @@ error_completion:
     IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION)
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
 
-    phvwr       p.s1.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
 
     // set error disable flag 
@@ -64,19 +59,13 @@ error_completion:
 
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
 
-    RQCB2_ADDR_GET(RQCB2_ADDR)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c2)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c2)
 
-    // prepare for NAK
-    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB2_ADDR, TMP, \
-                                   K_GLOBAL_LIF,
-                                   K_GLOBAL_QTYPE,
-                                   K_GLOBAL_QID,
-                                   DB_ADDR, DB_DATA)
-
     //Generate DMA command to skip to payload end
-    DMA_NEXT_CMD_I_BASE_GET(DMA_CMD_BASE, 1)
+    // move dma cmd base by 2 to accomodate ACK info 
+    // and doorbell ringing
+    DMA_NEXT_CMD_I_BASE_GET(DMA_CMD_BASE, 2)
     DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, c1)
     CAPRI_SET_TABLE_0_VALID_CE(c0, 0) 
     DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c1) // Exit Slot

@@ -79,12 +79,12 @@
 // of DMA operations
 #define RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID 8
 
-//TODO: put ack_info.aeth, ack_info.psn adjacent to each other in PHV and also
-//      adjacent to each other in rqcb1, in right order. This will eliminate
-//      one DMA instruction
+// psn, msn, syndrome, credits and rsvd are the fields that are copied to rqcb2
+// phv_start is psn, phv_end is rsvd, because DMA instructions work at a byte
+// boundary
 #define RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(_dma_base_r, _rqcb2_addr_r, _tmp_r) \
     add         _tmp_r, _rqcb2_addr_r, FIELD_OFFSET(rqcb2_t, ack_nak_psn); \
-    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, s1.ack_info.psn, s1.ack_info.aeth.msn, _tmp_r); \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, s1.ack_info.psn, s1.ack_info.rsvd, _tmp_r); \
 
 #define RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(_dma_base_r, \
                                        _lif, _qtype, _qid, \
@@ -154,14 +154,15 @@ struct resp_rx_dma_cmds_flit_t {
 };
 
 
-// 7+4+4+8 = 23B
+// 8+4+3+8 = 23B
 struct resp_rx_phv_s1_t {
-    struct ack_info_t ack_info;     //7B
+    struct ack_info_t ack_info;     //8B
     struct eqwqe_t eqwqe;           //4B
-    int_assert_data: 32;            //4B
+    rsvd: 24;                       //3B
     union {
         immdt_as_dbell_data: 64;    //8B
         atomic_release_byte: 8;     //1B
+        int_assert_data: 32;        //4B
     };
 };
 

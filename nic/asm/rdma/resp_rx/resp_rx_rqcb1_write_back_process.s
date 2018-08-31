@@ -11,12 +11,13 @@ struct rqcb1_t d;
 #define IN_TO_S_P   to_s5_wb1_info
 #define IN_P        t2_s2s_rqcb1_write_back_info
 
+#define ACK_CREDITS  r1
 #define DMA_CMD_BASE r1
 #define GLOBAL_FLAGS r2
 #define TMP r3
 #define DB_ADDR r4
 #define DB_DATA r5
-#define RQCB1_ADDR r6
+#define RQCB2_ADDR r6
 #define T2_ARG r7
 
 #define CQCB_ADDR r6
@@ -55,9 +56,8 @@ resp_rx_rqcb1_write_back_process:
     crestore        [c2, c1], CAPRI_KEY_RANGE(IN_TO_S_P, incr_nxt_to_go_token_id, incr_c_index), 0x3 // BD Slot
     # c2 - incr_nxt_to_go_token_id, c1 - incr_c_index
     
-
     // check if we need to put QP to error disable state
-    // if any of the previous states have encountered fatal error, they will
+    // if any of the previous stages have encountered fatal error, they will
     // assert error_disable_qp flag to 1.
 
     bbeq            K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_qp
@@ -71,13 +71,8 @@ resp_rx_rqcb1_write_back_process:
     // soft_nak means we don't need to move the qp to error disable state upon
     // encountering this soft error. for soft nak or dup we shouldn't be
     // incrementing msn etc.
-    // TODO dup packets will end up loading inv_rkey for remote invalidate. fix this
-    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, soft_nak_or_dup), 1, invoke_stats
-    // copy msn info for soft_nak_or_dup case.
-    //TODO: avoid copying msn 2 times for fast path. optimize later, 
-    phvwr           p.s1.ack_info.aeth.msn, d.msn   //BD Slot
-
-    tblmincri.c1    PROXY_RQ_C_INDEX, d.log_num_wqes, 1
+    bbeq            CAPRI_KEY_FIELD(IN_TO_S_P, soft_nak_or_dup), 1, check_ack_nak
+    tblmincri.c1    PROXY_RQ_C_INDEX, d.log_num_wqes, 1 // BD Slot
 
     // increment msn for successful atomic/read/last/only msgs
     setcf           c1, [c7 | c6 | c5 | c4 | c3]
@@ -87,10 +82,6 @@ resp_rx_rqcb1_write_back_process:
     // added this instruction so that d.msn is not immediately used after
     // previous instruction update
     setcf           c1, [c7 | c6]
-
-    // eventually we need to move the ack logic into writeback.
-    // for now only msn update is moved here.
-    phvwr           p.s1.ack_info.aeth.msn, d.msn
 
     bcf             [c4], skip_updates_for_only
     tblwr           d.in_progress, CAPRI_KEY_FIELD(IN_TO_S_P, in_progress)   //BD Slot
@@ -114,27 +105,61 @@ check_completion:
     
     // load cqcb only if completion flag is set OR async_event_or_error posting is needed
     crestore [c1], K_ASYNC_EVENT_OR_ERROR, 0x1
-    bbeq.!c1 K_GLOBAL_FLAG(_completion), 0, invoke_stats
+    // if completion is not set, inv_rkey is not set either
+    bbeq.!c1 K_GLOBAL_FLAG(_completion), 0, check_ack_nak
     RESP_RX_CQCB_ADDR_GET(CQCB_ADDR, d.cq_id) //BD Slot
 
     phvwr      CAPRI_PHV_FIELD(TO_S_CQCB_P, qp_state), d.state
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqcb_process, CQCB_ADDR)
 
-invoke_stats:
+check_inv_rkey:
     // if inv_rkey flag is set, invoke inv_rkey_process 
     // by loading appopriate key entry
-    bbne    CAPRI_KEY_FIELD(IN_TO_S_P, inv_rkey), 1, skip_inv_rkey
-    KT_BASE_ADDR_GET2(KT_BASE_ADDR, TMP) // BD slot
+    bbne    CAPRI_KEY_FIELD(IN_TO_S_P, inv_rkey), 1, check_ack_nak
+    KT_BASE_ADDR_GET2(KT_BASE_ADDR, TMP) // BD Slot
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, K_INV_RKEY)
 
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_process, KEY_ADDR)
 
-skip_inv_rkey:
+check_ack_nak:
+    crestore    [c3, c2, c1], K_GLOBAL_FLAGS, (RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_ERR_DIS_QP)
+    // c3: ack_req, c2: completion, c1: err_disable_qp
+
+    // populate ack info
+    RQ_CREDITS_GET(ACK_CREDITS, TMP, c4)
+    phvwrpair   p.s1.ack_info.msn, d.msn, \
+                p.s1.ack_info.credits, ACK_CREDITS
+                
+    // ACK/NAK generation
+    RQCB2_ADDR_GET(RQCB2_ADDR)
+    setcf       c4, [c7 | c6 | c5]
+    // c4: read or atomic
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c4)
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c4)
+
+    // prepare for acknowledgement
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(DMA_CMD_BASE, RQCB2_ADDR, TMP)
+    /*  if nak_prune, ACK req bit is turned off
+     *  if nak, ACK req bit is turned on
+     *  if atomic RNR. ACK req bit is turned on
+     *  if dup, ACK req bit is turned on
+     *  if ACK req bit is not set, do not ring doorbell
+     */
+    bcf         [!c3], invoke_stats
+    nop // BD Slot
+
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
+                                   K_GLOBAL_LIF,
+                                   K_GLOBAL_QTYPE,
+                                   K_GLOBAL_QID,
+                                   DB_ADDR, DB_DATA)
+
+invoke_stats:
     // invoke stats as mpu only
     CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_stats_process, r0)
 
 recirc:
-    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_DONE   //BD Slot
+    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_DONE
     phvwr   p.common.p4_intr_recirc, 1  
 
     // fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
@@ -152,13 +177,7 @@ error_disable_qp:
     // flag.
     // TODO: we need to handle affiliated and unaffiliated async errors as well
 
-    // eventually we need to move the nak logic into writeback.
-    // for now only msn update is moved here.
-    phvwr       p.s1.ack_info.aeth.msn, d.msn
-    // fall thru
-
 // currently there is only one type of feedback phv which takes qp to error disable.
 process_feedback:
     b           check_completion
     tblwr       d.state, QP_STATE_ERR   //BD Slot
-
