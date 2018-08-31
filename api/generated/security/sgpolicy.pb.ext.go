@@ -187,7 +187,7 @@ func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sRules[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sRules[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

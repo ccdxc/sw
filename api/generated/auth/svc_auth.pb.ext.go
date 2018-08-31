@@ -347,7 +347,7 @@ func (m *AuthenticationPolicyList) Validate(ver, path string, ignoreStatus bool)
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -362,7 +362,7 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper) Validate(ver, path string, igno
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -402,7 +402,7 @@ func (m *AutoMsgRoleWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -432,7 +432,7 @@ func (m *AutoMsgUserWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -467,7 +467,7 @@ func (m *RoleList) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -482,7 +482,7 @@ func (m *UserList) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

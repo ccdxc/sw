@@ -554,7 +554,7 @@ func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []e
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sResults[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sResults[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -602,7 +602,7 @@ func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sTexts[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sTexts[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

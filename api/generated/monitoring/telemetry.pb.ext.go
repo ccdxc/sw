@@ -353,7 +353,7 @@ func (m *FlowExportSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sTargets[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sTargets[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -423,7 +423,7 @@ func (m *FwlogSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sExports[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sExports[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

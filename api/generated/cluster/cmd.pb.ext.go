@@ -689,7 +689,7 @@ func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sConditions[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -740,7 +740,7 @@ func (m *PortStatus) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sConditions[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -816,7 +816,7 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sConditions[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -826,7 +826,7 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sPorts[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sPorts[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

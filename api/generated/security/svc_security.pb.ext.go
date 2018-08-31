@@ -441,7 +441,7 @@ func (m *AutoMsgCertificateWatchHelper) Validate(ver, path string, ignoreStatus 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -471,7 +471,7 @@ func (m *AutoMsgSGPolicyWatchHelper) Validate(ver, path string, ignoreStatus boo
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -501,7 +501,7 @@ func (m *AutoMsgSecurityGroupWatchHelper) Validate(ver, path string, ignoreStatu
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -541,7 +541,7 @@ func (m *CertificateList) Validate(ver, path string, ignoreStatus bool) []error 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -556,7 +556,7 @@ func (m *SGPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -571,7 +571,7 @@ func (m *SecurityGroupList) Validate(ver, path string, ignoreStatus bool) []erro
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

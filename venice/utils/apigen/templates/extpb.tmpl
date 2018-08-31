@@ -117,7 +117,7 @@ func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%s{{$fldk}}[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%s{{$fldk}}[%v]", path, dlmtr, k)
 		 if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			 ret = append(ret, errs...)
 		 }

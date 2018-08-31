@@ -698,7 +698,7 @@ func (m *Radius) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sServers[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sServers[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -760,7 +760,7 @@ func (m *RoleSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sPermissions[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sPermissions[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

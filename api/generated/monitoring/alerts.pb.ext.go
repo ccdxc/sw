@@ -502,7 +502,7 @@ func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []e
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sSNMPTrapServers[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sSNMPTrapServers[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -536,7 +536,7 @@ func (m *AlertPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sRequirements[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sRequirements[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -569,7 +569,7 @@ func (m *AlertReason) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sMatchedRequirements[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sMatchedRequirements[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

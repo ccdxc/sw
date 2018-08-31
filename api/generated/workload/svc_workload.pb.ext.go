@@ -199,7 +199,7 @@ func (m *AutoMsgWorkloadWatchHelper) Validate(ver, path string, ignoreStatus boo
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -234,7 +234,7 @@ func (m *WorkloadList) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

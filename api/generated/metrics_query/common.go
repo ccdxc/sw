@@ -120,11 +120,11 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 }
 
 func errorDecoder(r *http.Response) error {
-	var w errorWrapper
+	var w api.Status
 	if err := json.NewDecoder(r.Body).Decode(&w); err != nil {
 		return fmt.Errorf("Status:(%v) Reason:(%s)", r.StatusCode, r.Status)
 	}
-	return fmt.Errorf("Status:(%v) Reason:(%s)", r.StatusCode, w.Error)
+	return fmt.Errorf("Status:(%v) Result:(%v) Reason(%v)", r.StatusCode, w.Result, w.Message)
 }
 
 type errorWrapper struct {

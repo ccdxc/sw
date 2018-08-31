@@ -356,7 +356,7 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []erro
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sCollectors[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sCollectors[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -366,7 +366,7 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []erro
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sMatchRules[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sMatchRules[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

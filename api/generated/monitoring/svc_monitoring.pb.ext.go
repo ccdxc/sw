@@ -742,7 +742,7 @@ func (m *AlertDestinationList) Validate(ver, path string, ignoreStatus bool) []e
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -757,7 +757,7 @@ func (m *AlertList) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -772,7 +772,7 @@ func (m *AlertPolicyList) Validate(ver, path string, ignoreStatus bool) []error 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -787,7 +787,7 @@ func (m *AutoMsgAlertDestinationWatchHelper) Validate(ver, path string, ignoreSt
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -817,7 +817,7 @@ func (m *AutoMsgAlertPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -847,7 +847,7 @@ func (m *AutoMsgAlertWatchHelper) Validate(ver, path string, ignoreStatus bool) 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -877,7 +877,7 @@ func (m *AutoMsgEventPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -907,7 +907,7 @@ func (m *AutoMsgFlowExportPolicyWatchHelper) Validate(ver, path string, ignoreSt
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -937,7 +937,7 @@ func (m *AutoMsgFwlogPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -967,7 +967,7 @@ func (m *AutoMsgMirrorSessionWatchHelper) Validate(ver, path string, ignoreStatu
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -1007,7 +1007,7 @@ func (m *AutoMsgTroubleshootingSessionWatchHelper) Validate(ver, path string, ig
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sEvents[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -1037,7 +1037,7 @@ func (m *EventPolicyList) Validate(ver, path string, ignoreStatus bool) []error 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -1052,7 +1052,7 @@ func (m *FlowExportPolicyList) Validate(ver, path string, ignoreStatus bool) []e
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -1067,7 +1067,7 @@ func (m *FwlogPolicyList) Validate(ver, path string, ignoreStatus bool) []error 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -1082,7 +1082,7 @@ func (m *MirrorSessionList) Validate(ver, path string, ignoreStatus bool) []erro
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -1102,7 +1102,7 @@ func (m *TroubleshootingSessionList) Validate(ver, path string, ignoreStatus boo
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

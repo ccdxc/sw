@@ -166,7 +166,7 @@ func (m *EventList) Validate(ver, path string, ignoreStatus bool) []error {
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sItems[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}

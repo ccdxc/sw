@@ -189,7 +189,7 @@ func (m *EventPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sExports[%d]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sExports[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
