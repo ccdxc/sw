@@ -271,18 +271,6 @@ struct ionic_v1_atomic_bdy {
 	struct ionic_sge		sge;
 };
 
-/* v1 reg mr wqe body */
-struct ionic_v1_reg_mr_bdy {
-	__be64				va;
-	__be64				length;
-	__be64				offset;
-	__be64				dma_addr;
-	__be16				flags;
-	__u8				dir_size_log2;
-	__u8				page_size_log2;
-	__u8				rsvd[12];
-};
-
 /* v1 bind mw wqe body */
 struct ionic_v1_bind_mw_bdy {
 	__be64				va;
@@ -292,7 +280,6 @@ struct ionic_v1_bind_mw_bdy {
 	__u8				rsvd[26];
 };
 
-
 /* v1 send/recv wqe */
 struct ionic_v1_wqe {
 	struct ionic_v1_base_hdr	base;
@@ -300,7 +287,6 @@ struct ionic_v1_wqe {
 		struct ionic_v1_recv_bdy	recv;
 		struct ionic_v1_common_bdy	common;
 		struct ionic_v1_atomic_bdy	atomic;
-		struct ionic_v1_reg_mr_bdy	reg_mr;
 		struct ionic_v1_bind_mw_bdy	bind_mw;
 	};
 };
