@@ -167,6 +167,12 @@ serdes_spico_upload_default (uint32_t sbus_addr, const char* file_name)
     return 0;
 }
 
+void
+serdes_aacs_start_default(int port)
+{
+    return;
+}
+
 //---------------------------------------------------------------------------
 // HW methods
 //---------------------------------------------------------------------------
@@ -645,6 +651,13 @@ serdes_spico_crc_hw(uint32_t sbus_addr)
     return avago_spico_crc(aapl, sbus_addr);
 }
 
+void
+serdes_aacs_start_hw(int port)
+{
+    // blocking call. waits for incoming connections
+    avago_aacs_server(aapl, port);;
+}
+
 sdk_ret_t
 port_serdes_fn_init(platform_type_t platform_type,
                     uint32_t        jtag_id,
@@ -676,6 +689,7 @@ port_serdes_fn_init(platform_type_t platform_type,
     serdes_fn->serdes_get_eng_id    = &serdes_get_eng_id_default;
     serdes_fn->serdes_get_build_id  = &serdes_get_build_id_default;
     serdes_fn->serdes_spico_crc     = &serdes_spico_crc_default;
+    serdes_fn->serdes_aacs_start    = &serdes_aacs_start_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HW:
@@ -699,6 +713,7 @@ port_serdes_fn_init(platform_type_t platform_type,
         serdes_fn->serdes_get_eng_id    = &serdes_get_eng_id_hw;
         serdes_fn->serdes_get_build_id  = &serdes_get_build_id_hw;
         serdes_fn->serdes_spico_crc     = &serdes_spico_crc_hw;
+        serdes_fn->serdes_aacs_start    = &serdes_aacs_start_hw;
 
         // serdes global init
         aapl = serdes_global_init_hw(jtag_id, num_sbus_rings,

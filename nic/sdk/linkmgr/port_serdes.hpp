@@ -26,6 +26,7 @@ typedef struct serdes_fn_s_ {
     int (*serdes_get_build_id)      (uint32_t sbus_addr);
     bool (*serdes_spico_crc)        (uint32_t sbus_addr);
     uint32_t (*serdes_get_eng_id)   (uint32_t sbus_addr);
+    void (*serdes_aacs_start)       (int port);
     int (*serdes_pcal_continuous_start) (uint32_t sbus_addr);
 } serdes_fn_t;
 

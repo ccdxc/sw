@@ -14,6 +14,7 @@ typedef enum linkmgr_thread_id_e {
     LINKMGR_THREAD_ID_CTRL,
     LINKMGR_THREAD_ID_PERIODIC,
     LINKMGR_THREAD_ID_CFG,
+    LINKMGR_THREAD_ID_AACS_SERVER,
     LINKMGR_THREAD_ID_MAX
 } linkmgr_thread_id_t;
 
