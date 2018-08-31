@@ -127,9 +127,8 @@ static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info,
 	
 
 	printk(KERN_ERR "color: ionic_rx_service comp[%d]->color %d cq->done_color %d\n", comp->comp_index, comp->color, cq->done_color);
-	if (comp->color != cq->done_color) {
+	if (comp->color != cq->done_color) 
 		return false;
-	}
 
 	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
 
