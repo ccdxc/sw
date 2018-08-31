@@ -335,9 +335,12 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 	q->idev = idev;
 	q->index = index;
 	q->num_descs = num_descs;
-	q->desc_size = desc_size;
+	q->desc_size = ilog2(desc_size);
 	q->head = q->tail = q->info;
 	q->pid = pid;
+
+	printk(KERN_ERR "sonic_q_init q: %llx q->head %llx index %d",
+			(u64) q, (u64) q->head, index);
 
 	snprintf(q->name, sizeof(q->name), "%s%u", base, index);
 
@@ -364,6 +367,9 @@ void sonic_q_map(struct queue *q, unsigned int num_descs,
 
 	q->base = base;
 	q->base_pa = base_pa;
+
+	printk(KERN_ERR "sonic_q_map base %llx base_pa %llx",
+			(u64) base, (u64) base_pa);
 
 	for (i = 0, cur = q->info; i < num_descs; i++, cur++)
 		cur->desc = base + (i * desc_size);
@@ -442,8 +448,8 @@ void sonic_q_ringdb(struct queue *q, uint32_t index)
 	};
 
 	printk(KERN_ERR "sonic_q_ringdb ring doorbell name %s qid %d ring "
-		 "0 p_index %d db %p\n", q->name, q->qid,
-		 q->head->index, q->db);
+		 "0 p_index %d db 0x%llx\n", q->name, q->qid,
+		 q->head->index, (u64) q->db);
 	writeq(*(u64 *)&db, q->db);
 }
 

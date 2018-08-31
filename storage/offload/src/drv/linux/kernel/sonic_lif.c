@@ -849,7 +849,7 @@ struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
 	int pc_res_idx = -1;
 	int core_id;
 
-	core_id = osal_get_coreid();
+	core_id = osal_get_coreid() % MAX_NUM_CORES;
 	if(lif->res.core_to_res_map[core_id] < 0)
 	{
 		err = assign_per_core_res_id(lif, core_id);
@@ -986,7 +986,7 @@ static int sonic_lif_seq_q_init(struct queue *q)
 
 	dev_info(lif->sonic->dev, "seq_q->qid %d\n", q->qid);
 	dev_info(lif->sonic->dev, "seq_q->qtype %d\n", q->qtype);
-	dev_info(lif->sonic->dev, "seq_q->db %p\n", q->db);
+	dev_info(lif->sonic->dev, "seq_q->db %llx\n", (u64) q->db);
 
 	// err = sonic_debugfs_add_q(lif, q);
 	return err;
