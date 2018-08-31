@@ -353,7 +353,7 @@ struct ionic_v1_reg_mr_bdy {
 	__be16				flags;
 	__u8				dir_size_log2;
 	__u8				page_size_log2;
-	__u8				rsvd[12];
+	__u8				rsvd[8];
 };
 
 /* v1 bind mw wqe body */
