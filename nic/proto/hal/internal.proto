@@ -24,6 +24,11 @@ service Internal {
   rpc SoftwarePhvGet (SoftwarePhvGetRequestMsg) returns (SoftwarePhvGetResponseMsg) {}
   // Simulator service definition
   rpc LogFlow (LogFlowRequestMsg) returns (LogFlowResponseMsg) {}
+
+  // Quiesce RPCs
+  rpc QuiesceMsgSnd (EmptyRequest) returns (EmptyResponse) {}
+  rpc QuiesceStart (EmptyRequest) returns (EmptyResponse) {}
+  rpc QuiesceStop (EmptyRequest) returns (EmptyResponse) {}
 }
 
 message ProgramAddressReq {
@@ -166,4 +171,14 @@ message LogFlowResponseMsg {
 
 message LogFlowResponse {
   types.ApiStatus api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
+
+// Codegen forms the Request and Response messages using the package name "internal"
+// This is to calm the autogenerator
+message EmptyRequest{
+  repeated types.Empty request = 1;
+}
+
+message EmptyResponse{
+  repeated types.Empty response = 1;
 }

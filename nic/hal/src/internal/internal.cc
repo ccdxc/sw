@@ -11,6 +11,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
+#include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 
 using intf::Interface;
 using intf::LifSpec;
@@ -128,6 +129,34 @@ void configurelif_bdf(const internal::LifBdfReq &req,
 // No HAL functionality
 hal_ret_t log_flow (fwlog::FWEvent &req, internal::LogFlowResponse *rsp) {
     return HAL_RET_OK;
+}
+
+hal_ret_t quiesce_msg_snd(const types::Empty &request,
+                          types::Empty* rsp) 
+{
+    HAL_TRACE_DEBUG("QuiesceMsgSnd Request");
+    hal::proxy::quiesce_message_tx();    
+    return HAL_RET_OK;
+}
+
+hal_ret_t quiesce_start(const types::Empty &request,
+                        types::Empty* rsp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    hal::pd::pd_func_args_t args = {0};
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_START, &args);
+    return ret;
+}
+
+hal_ret_t quiesce_stop(const types::Empty &request,
+                       types::Empty* rsp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    hal::pd::pd_func_args_t args = {0};
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_STOP, &args);
+    return ret;
 }
 
 }    // namespace hal

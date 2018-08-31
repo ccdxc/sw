@@ -5,7 +5,7 @@ import copy
 import iris.test.tcp_tls_proxy.tcp_proxy as tcp_proxy
 import iris.test.tcp_tls_proxy.tcp_tls_proxy as tcp_tls_proxy
 import iris.config.hal.api           as halapi
-import quiesce_pb2              as quiesce_pb2
+import internal_pb2              as internal_pb2
 import types_pb2                as types_pb2
 
 from iris.config.store import Store
@@ -18,7 +18,7 @@ from infra.common.glopts import GlobalOptions
 from infra.common.logging import logger as logger
 
 def quience_msg_send():
-    stub = quiesce_pb2.QuiesceStub(halapi.HalChannel)
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
     print("Invoking QuiesceMsgSnd API");
     req = types_pb2.Empty()
     stub.QuiesceMsgSnd(req)

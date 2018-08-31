@@ -10,18 +10,20 @@ from infra.common.glopts        import GlobalOptions
 import infra.config.base        as base
 import iris.config.hal.defs          as haldefs
 import iris.config.hal.api           as halapi
-import quiesce_pb2              as quiesce_pb2
+import internal_pb2              as internal_pb2
 
 def quiesce_start():
-    stub = quiesce_pb2.QuiesceStub(halapi.HalChannel)
-    req_msg = types_pb2.Empty()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.EmptyRequest()
+    req_msg.request.extend([types_pb2.Empty()])
     print("Invoking Quiesce API: QuiesceStart");
     stub.QuiesceStart(req_msg)
     return True
 
 def quiesce_stop():
-    stub = quiesce_pb2.QuiesceStub(halapi.HalChannel)
-    req_msg = types_pb2.Empty()
+    stub = internal_pb2.InternalStub(halapi.HalChannel)
+    req_msg = internal_pb2.EmptyRequest()
+    req_msg.request.extend([types_pb2.Empty()])
     print("Invoking Quiesce API: QuiesceStop");
     stub.QuiesceStop(req_msg)
     return True

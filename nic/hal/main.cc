@@ -32,7 +32,6 @@
 #include "nic/hal/svc/wring_svc.hpp"
 #include "nic/hal/svc/rawrcb_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
-#include "nic/hal/svc/quiesce_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/hal/svc/barco_rings_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
@@ -117,7 +116,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     TcpProxyServiceImpl      tcp_proxy_svc;
     CryptoApisServiceImpl    crypto_apis_svc;
     EventServiceImpl         event_svc;
-    QuiesceServiceImpl       quiesce_svc;
     BarcoRingsServiceImpl    barco_rings_svc;
     MulticastServiceImpl     multicast_svc;
     GftServiceImpl           gft_svc;
@@ -150,7 +148,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&tls_proxy_cb_svc);
         server_builder->RegisterService(&crypto_apis_svc);
         server_builder->RegisterService(&event_svc);
-        server_builder->RegisterService(&quiesce_svc);
         server_builder->RegisterService(&barco_rings_svc);
         server_builder->RegisterService(&system_svc);
         server_builder->RegisterService(&swphv_svc);
