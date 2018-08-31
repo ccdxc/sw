@@ -86,7 +86,6 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 				name = cmd->name;
 		netdev_err(netdev, "(%d) %s failed: %d\n", ctx->cmd.cmd.opcode,
 			   name, ctx->comp.comp.status);
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, -EIO);
 		return -EIO;
 	}
 
@@ -101,7 +100,6 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	err = ionic_api_adminq_post(lif, ctx);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		return err;
     }
 
@@ -118,13 +116,11 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	struct cq *cq = napi_to_cq(napi);
 	unsigned int work_done;
 
-    trace_msg("%s: \n", __FUNCTION__)
 	work_done = ionic_cq_service(cq, budget, cb, cb_arg);
 
 	if (work_done > 0)
 		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
 
-    trace_msg("%s: \n", __FUNCTION__)
 	if ((work_done < budget) && napi_complete_done(napi, work_done))
 		ionic_intr_mask(cq->bound_intr, false);
 
@@ -274,7 +270,6 @@ void ionic_dev_cmd_work(struct work_struct *work)
 	unsigned long irqflags;
 	int err = 0;
 
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "starting work");
 	spin_lock_irqsave(&ionic->cmd_lock, irqflags);
 	if (list_empty(&ionic->cmd_list)) {
 		spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
@@ -286,7 +281,6 @@ void ionic_dev_cmd_work(struct work_struct *work)
 	list_del(&ctx->list);
 	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
 
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "post adming dev command");
 
 	dev_dbg(ionic->dev, "post admin dev command:\n");
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
@@ -301,23 +295,16 @@ void ionic_dev_cmd_work(struct work_struct *work)
 			goto err_out;
 	}
 
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "calling ionic_dev_cmd_go");
 	ionic_dev_cmd_go(&ionic->idev, (void *)&ctx->cmd);
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "ionic_dev_cmd_go finished!!!");
 
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "calling ionic_dev_cmd_wait_check");
 	err = ionic_dev_cmd_wait_check(&ionic->idev, HZ * devcmd_timeout);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		goto err_out;
     }
     
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "ionic_dev_cmd_wait_check finished!!!");
     
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "calling ionic_dev_cmd_comp");
 	ionic_dev_cmd_comp(&ionic->idev, &ctx->comp);
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "ionic_dev_cmd_comp finished!!!");
 
 	if (ctx->side_data) {
 		err = SBD_get(&ionic->idev, ctx->side_data, ctx->side_data_len);
@@ -333,9 +320,7 @@ err_out:
 	if (WARN_ON(err))
 		memset(&ctx->comp, 0xAB, sizeof(ctx->comp));
 
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "calling complete_all");
 	complete_all(&ctx->work);
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "complete_all finished");
 
 	schedule_work(&ionic->cmd_work);
 }

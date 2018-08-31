@@ -211,11 +211,9 @@ err_out:
 	list_add(&ctx->list, &ionic->cmd_list);
 	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
 
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "before calling schedule_work");
         /* schedule on a buddy cpu, in case this cpu needs to busy-wait */
 	schedule_work(&ionic->cmd_work);
     //schedule_work_on(raw_smp_processor_id()^1, &ionic->cmd_work);
-    trace_print(__FILE__, __FUNCTION__, __LINE__, "after calling schedule_work");
 
 	return 0;
 #endif

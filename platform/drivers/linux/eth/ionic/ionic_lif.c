@@ -92,7 +92,6 @@ static int ionic_qcq_enable(struct qcq *qcq)
 	if (err)
 		return err;
 
-    trace_msg("enabling NAPI for qcq\n");
 	napi_enable(&qcq->napi);
 	ionic_intr_mask(&qcq->intr, false);
 
@@ -191,7 +190,6 @@ static bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 
 static int ionic_adminq_napi(struct napi_struct *napi, int budget)
 {
-    trace_msg("%s: \n", __FUNCTION__)
 	return ionic_napi(napi, budget, ionic_adminq_service, NULL);
 }
 
@@ -508,7 +506,6 @@ irqreturn_t ionic_isr(int irq, void *data)
 {
 	struct napi_struct *napi = data;
     
-    trace_msg("%s: \n", __FUNCTION__)
 
 	napi_schedule_irqoff(napi);
 
@@ -920,7 +917,6 @@ static int ionic_lif_rss_setup(struct lif *lif)
 
 	if (!lif->rss_ind_tbl) {
 		netdev_err(netdev, "%s OOM\n", __func__);
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		return -ENOMEM;
 	}
 
@@ -932,13 +928,11 @@ static int ionic_lif_rss_setup(struct lif *lif)
 	err = ionic_rss_ind_tbl_set(lif, NULL);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		goto err_out_free;
     }
 	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		goto err_out_free;
     }
 
@@ -1023,7 +1017,6 @@ static int ionic_request_irq(struct lif *lif, struct qcq *qcq)
 	snprintf(intr->name, sizeof(intr->name),
 		 "%s-%s-%s", DRV_NAME, lif->name, q->name);
     
-    trace_msg("%s: \n", __FUNCTION__)
 	
     return devm_request_irq(dev, intr->vector, ionic_isr,
 				0, intr->name, napi);
@@ -1042,7 +1035,6 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		return err;
     }
 
@@ -1051,7 +1043,6 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	q->qtype = comp.qtype;
 	q->db = ionic_db_map(idev, q);
 
-    trace_msg("%s: \n", __FUNCTION__)
 	netif_napi_add(lif->netdev, napi, ionic_adminq_napi,
 		       NAPI_POLL_WEIGHT);
 
@@ -1059,7 +1050,6 @@ static int ionic_lif_adminq_init(struct lif *lif)
 
 	err = ionic_request_irq(lif, qcq);
 	if (err) {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		netif_napi_del(napi);
 		return err;
 	}
@@ -1142,7 +1132,6 @@ static int ionic_set_features(struct lif *lif)
 	err = ionic_get_features(lif);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		return err;
     }
     //printk("Finished ionic_get_features\n");
@@ -1222,7 +1211,6 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		return err;
     }
 
@@ -1235,7 +1223,6 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 
 	err = ionic_request_irq(lif, qcq);
 	if (err) {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		netif_napi_del(napi);
 		return err;
 	}
@@ -1300,7 +1287,6 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		return err;
     }
 	q->qid = ctx.comp.rxq_init.qid;
@@ -1312,7 +1298,6 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 
 	err = ionic_request_irq(lif, qcq);
 	if (err) {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		netif_napi_del(napi);
 		return err;
 	}
@@ -1388,7 +1373,6 @@ static int ionic_lif_init(struct lif *lif)
 	err = ionic_lif_adminq_init(lif);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		return err;
     }
 
@@ -1400,7 +1384,6 @@ static int ionic_lif_init(struct lif *lif)
 	err = ionic_set_features(lif);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		goto err_out_mask_adminq;
     }
     //printk("ionic_set_features success!!!\n");
@@ -1408,7 +1391,6 @@ static int ionic_lif_init(struct lif *lif)
     err = ionic_lif_txqs_init(lif);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		goto err_out_mask_adminq;
     }
     //printk("Txq init success!!!\n");
@@ -1416,7 +1398,6 @@ static int ionic_lif_init(struct lif *lif)
 	err = ionic_lif_rxqs_init(lif);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		goto err_out_txqs_deinit;
     }
     //printk("Rxq init success!!!\n");
@@ -1424,13 +1405,11 @@ static int ionic_lif_init(struct lif *lif)
 	err = ionic_rx_filters_init(lif);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		goto err_out_rxqs_deinit;
     }
 	err = ionic_station_set(lif);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		goto err_out_rx_filter_deinit;
     }
 
@@ -1440,7 +1419,6 @@ static int ionic_lif_init(struct lif *lif)
 		err = ionic_lif_rss_setup(lif);
 		if (err)
         {
-            dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 			goto err_out_rx_filter_deinit;
         }
 	}
@@ -1449,7 +1427,6 @@ static int ionic_lif_init(struct lif *lif)
 	err = ionic_lif_stats_dump_start(lif, STATS_DUMP_VERSION_1);
 	if (err)
     {
-        dbg_printk(__FILE__, __FUNCTION__, __LINE__, err);
 		goto err_out_rss_teardown;
     }
 

@@ -129,7 +129,6 @@ static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info,
 {
 	struct rxq_comp *comp = cq_info->cq_desc;
     
-    trace_msg("%s: \n", __FUNCTION__)
 
 	if (comp->color != cq->done_color) {
         printk(KERN_ERR "color mismatch: ionic_rx_service comp[%d]->color %d cq->done_color %d\n", comp->comp_index, comp->color, cq->done_color);
@@ -268,7 +267,6 @@ int ionic_rx_napi(struct napi_struct *napi, int budget)
 	struct cq *cq = napi_to_cq(napi);
 	unsigned int work_done;
 
-    trace_msg("%s: \n", __FUNCTION__)
 	work_done = ionic_napi(napi, budget, ionic_rx_service, NULL);
 
 	ionic_rx_fill(cq->bound_q);
@@ -351,7 +349,6 @@ static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info,
 
 int ionic_tx_napi(struct napi_struct *napi, int budget)
 {
-    trace_msg("%s: budget = %d\n", __FUNCTION__, budget);
 	return ionic_napi(napi, budget, ionic_tx_service, NULL);
 }
 
