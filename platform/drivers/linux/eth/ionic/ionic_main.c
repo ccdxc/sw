@@ -16,8 +16,6 @@
  *
  */
 
-//#define DEBUG
-
 #include <linux/module.h>
 #include <linux/version.h>
 #include <linux/netdevice.h>
@@ -33,8 +31,8 @@ MODULE_AUTHOR("Scott Feldman <sfeldma@gmail.com>");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION);
 
-unsigned int ntxq_descs = 64;
-unsigned int nrxq_descs = 64;
+unsigned int ntxq_descs = 1024;
+unsigned int nrxq_descs = 1024;
 module_param(ntxq_descs, uint, 0);
 module_param(nrxq_descs, uint, 0);
 MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");
@@ -48,10 +46,8 @@ MODULE_PARM_DESC(ntxqs, "Hard set the number of Tx queues per LIF");
 MODULE_PARM_DESC(nrxqs, "Hard set the number of Rx queues per LIF");
 
 unsigned int devcmd_timeout = 30;
-#ifdef HAPS
 module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
-#endif
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
@@ -96,16 +92,11 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	int err;
 
-    //printk("Calling ionic_api_adminq_post\n");
 	err = ionic_api_adminq_post(lif, ctx);
 	if (err)
-    {
 		return err;
-    }
 
-    //printk("%s: Waiting for completion...\n\n\n", __FUNCTION__);
 	wait_for_completion(&ctx->work);
-    //printk ("got completion!!!\n");
 
 	return ionic_adminq_check_err(lif, ctx);
 }
@@ -124,7 +115,6 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	if ((work_done < budget) && napi_complete_done(napi, work_done))
 		ionic_intr_mask(cq->bound_intr, false);
 
-    //printk("%s:%d:%s : returning work_done = %d, budget = %d", __FILE__, __LINE__, __FUNCTION__, work_done, budget);
 	return work_done;
 }
 
@@ -168,7 +158,6 @@ static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
 	u8 status;
 
 	status = ionic_dev_cmd_status(idev);
-
 	switch (status) {
 	case 0:
 		return 0;
@@ -299,10 +288,7 @@ void ionic_dev_cmd_work(struct work_struct *work)
 
 	err = ionic_dev_cmd_wait_check(&ionic->idev, HZ * devcmd_timeout);
 	if (err)
-    {
 		goto err_out;
-    }
-    
     
 	ionic_dev_cmd_comp(&ionic->idev, &ctx->comp);
 

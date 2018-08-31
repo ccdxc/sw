@@ -20,7 +20,6 @@
 #include <linux/ipv6.h>
 #include <linux/if_vlan.h>
 #include <net/ip6_checksum.h>
-#include <linux/dma-mapping.h>
 
 #include "ionic.h"
 #include "ionic_lif.h"
@@ -73,9 +72,6 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	stats->bytes += comp->len;
 
 	// TODO add copybreak to avoid allocating a new skb for small receive
-
-    //print_hex_dump(KERN_ALERT, "pkt: ", DUMP_PREFIX_ADDRESS,
-                            //16, 1, skb->data, 128, 0); //as of now just print 128 bytes
 
 	dma_addr = (dma_addr_t)desc->addr;
 	dma_unmap_single(dev, dma_addr, desc->len, DMA_FROM_DEVICE);
@@ -130,8 +126,8 @@ static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info,
 	struct rxq_comp *comp = cq_info->cq_desc;
     
 
+    printk(KERN_ERR "color: ionic_rx_service comp[%d]->color %d cq->done_color %d\n", comp->comp_index, comp->color, cq->done_color);
 	if (comp->color != cq->done_color) {
-        printk(KERN_ERR "color mismatch: ionic_rx_service comp[%d]->color %d cq->done_color %d\n", comp->comp_index, comp->color, cq->done_color);
 		return false;
     }
 
@@ -167,10 +163,6 @@ static struct sk_buff *ionic_rx_skb_alloc(struct queue *q, unsigned int len,
 		return NULL;
 	}
    
-    memset(skb->data, 0, len);
-
-    //printk("%s: memset 0 rx buffer @ va: %p pa:%llx \n", __FUNCTION__, skb->data, *dma_addr);
-
 	return skb;
 }
 

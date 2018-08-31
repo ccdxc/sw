@@ -906,14 +906,11 @@ static int ionic_lif_rss_setup(struct lif *lif)
 
 	err = ionic_rss_ind_tbl_set(lif, NULL);
 	if (err)
-	{
 		goto err_out_free;
-	}
-	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key);
+	
+    err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key);
 	if (err)
-	{
 		goto err_out_free;
-	}
 
 	return 0;
 
@@ -1013,9 +1010,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	ionic_dev_cmd_adminq_init(idev, q, 0, lif->index, 0);
 	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 	if (err)
-	{
 		return err;
-	}
 
 	ionic_dev_cmd_comp(idev, &comp);
 	q->qid = comp.qid;
@@ -1183,9 +1178,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
-	{
 		return err;
-	}
 
 	q->qid = ctx.comp.txq_init.qid;
 	q->qtype = ctx.comp.txq_init.qtype;
@@ -1259,10 +1252,9 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
-	{
 		return err;
-	}
-	q->qid = ctx.comp.rxq_init.qid;
+	
+    q->qid = ctx.comp.rxq_init.qid;
 	q->qtype = ctx.comp.rxq_init.qtype;
 	q->db = ionic_db_map(q->idev, q);
 
@@ -1345,41 +1337,30 @@ static int ionic_lif_init(struct lif *lif)
 
 	err = ionic_lif_adminq_init(lif);
 	if (err)
-	{
 		return err;
-	}
 
 	/* Enabling interrupts on adminq from here on... */
 	ionic_intr_mask(&lif->adminqcq->intr, false);
 
 	err = ionic_set_features(lif);
 	if (err)
-	{
 		goto err_out_mask_adminq;
-	}
 	
 	err = ionic_lif_txqs_init(lif);
 	if (err)
-	{
 		goto err_out_mask_adminq;
-	}
 
 	err = ionic_lif_rxqs_init(lif);
 	if (err)
-	{
 		goto err_out_txqs_deinit;
-	}
 
 	err = ionic_rx_filters_init(lif);
 	if (err)
-	{
 		goto err_out_rxqs_deinit;
-	}
-	err = ionic_station_set(lif);
+	
+    err = ionic_station_set(lif);
 	if (err)
-	{
 		goto err_out_rx_filter_deinit;
-	}
 
 	printk("DPS: Skipping RSS setup as of now...\n");
 #if 0
@@ -1596,11 +1577,6 @@ try_again:
 			  ntxqs_per_lif +
 			  nrxqs_per_lif +
 			  1 /* adminq */);
-
-#ifdef DPS_FASTMODEL
-	nintrs = 3;
-	dev_nintrs = 3;
-#endif
 
 	if (nintrs > dev_nintrs)
 		goto try_fewer;
