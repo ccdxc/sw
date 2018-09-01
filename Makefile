@@ -23,7 +23,7 @@ venice/ctrler/evtsmgr/rpcserver/evtsmgrproto \
 venice/evtsproxy/rpcserver/evtsproxyproto \
 nic/agent/nmd/protos nic/agent/netagent/protos \
 venice/utils/authn/radius                      \
-venice/utils/objstore/client/mock 
+venice/utils/objstore/client/mock
 
 # Lists all the vendored packages that need to be installed prior to the build.
 TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway \
@@ -350,6 +350,9 @@ dind-cluster:
 dind-cluster-stop:
 	./test/e2e/dind/do.py -delete
 
+dind-cluster-restart:
+	./test/e2e/dind/do.py -restart -configFile=./${E2E_CONFIG}
+
 # Target to run venice e2e on mac using a dind environment. Uses Agent with its datapath mocked
 e2e:
 	$(MAKE) dind-cluster
@@ -419,4 +422,3 @@ venice-release:
 	ln -f nic/sim/naples/venice-sim.tar tools/docker-files/venice/venice-sim.tar
 	cp test/topos/gs/venice-conf.json nic/sim/naples/venice-conf.json
 	cd tools/docker-files/venice/ && docker build -t pensando/venice:${VENICE_RELEASE_TAG} .
-

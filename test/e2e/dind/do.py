@@ -117,6 +117,7 @@ class Node:
         self.runCmd("systemctl stop pen-kubelet")
         self.runCmd(r"bash -c 'for i in $(/usr/bin/systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o kube.*\.slice );do echo $i; systemctl stop $i ; done' ")
         self.runCmd("""bash -c 'if [ "$(docker ps -qa)" != "" ] ; then docker stop -t 2 $(docker ps -qa); docker rm $(docker ps -qa); fi' """)
+        self.runCmd("""bash -c 'for i in $(cat /proc/mounts | grep kubelet | cut -d " " -f 2); do umount $i; done' """)
         self.runCmd("bash -c 'rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*  /var/lib/cni/ /var/lib/kubelet/* /etc/cni/' ")
         self.runCmd("bash -c 'ip addr flush label *pens' ")
         self.runCmd("""bash -c 'if [ "$(docker ps -qa)" != "" ] ; then docker stop -t 2 $(docker ps -qa); docker rm -f $(docker ps -qa); fi' """)
@@ -161,8 +162,8 @@ class NaplesNode(Node):
             runCommand("""docker exec {}  bash -c "mount -o bind /sw /go/src/github.com/pensando/sw" """.format(self.name))
 
     def stopCluster(self):
-        self.runCmd("""killall -q netagent""")
-        self.runCmd("""killall -q nmd""")
+        self.runCmd("""killall -q netagent""", ignore_error=True)
+        self.runCmd("""killall -q nmd""", ignore_error=True)
         pass
     def restartCluster(self):
         self.stopCluster()
