@@ -289,6 +289,27 @@ func (hd *Datapath) convertIPs(addresses []string) ([]*halproto.IPAddressObj, er
 				return nil, err
 			}
 			halAddresses = append(halAddresses, halAddr)
+		} else if a == "any" {
+			// Interpret it as 0.0.0.0/0
+			halAddr := &halproto.IPAddressObj{
+				Formats: &halproto.IPAddressObj_Address{
+					Address: &halproto.Address{
+						Address: &halproto.Address_Prefix{
+							Prefix: &halproto.IPSubnet{
+								Subnet: &halproto.IPSubnet_Ipv4Subnet{
+									Ipv4Subnet: &halproto.IPPrefix{
+										Address: &halproto.IPAddress{
+											IpAf:   halproto.IPAddressFamily_IP_AF_INET,
+											V4OrV6: &halproto.IPAddress_V4Addr{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			halAddresses = append(halAddresses, halAddr)
 		} else {
 			// give up
 			return nil, fmt.Errorf("invalid IP Address format {%v}. Should either be in an octet, CIDR or hyphen separated IP Range", a)

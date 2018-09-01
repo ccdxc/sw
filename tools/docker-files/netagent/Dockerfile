@@ -5,4 +5,4 @@ RUN apk add libpcap-dev
 COPY netagent /
 COPY nmd /
 COPY nevtsproxy /
-CMD /netagent -npm pen-npm -resolver-urls pen-master:9002 -hostif s0 -datapath mock -mode managed"
+CMD /netagent -npm pen-npm -resolver-urls pen-master:9002 -hostif s0 -datapath mock -mode managed -disabletsa"

@@ -31,6 +31,8 @@ func main() {
 		hostIf          = flag.String("hostif", "ntrunk0", "Host facing interface")
 		agentDbPath     = flag.String("agentdb", "/tmp/naples-netagent.db", "Agent Database file")
 		npmURL          = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
+		tpmURL          = flag.String("tpm", "master.local:"+globals.TpmRPCPort, "TPM RPC server URL")
+		disableTSA      = flag.Bool("disabletsa", false, " Disable Telemetry and Troubleshooting agents")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		logToFile       = flag.String("logtofile", "/var/log/pensando/naples-netagent.log", "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
@@ -128,25 +130,37 @@ func main() {
 		}
 		tsdp = mockDp
 	}
-	tsa, err := troubleshooting.NewTsAgent(tsdp, "/tmp/naples-TsAgent.db", macAddr.String(), *npmURL, resolverClient, agMode, ag.NetworkAgent)
-	if err != nil {
-		log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
-	}
-	log.Printf("TroubleShooting Agent {%+v} instantiated", tsa)
 
-	// telemetry policy agent
-	tpa, err := tpa.NewPolicyAgent(macAddr.String(), "", *npmURL, resolverClient, agMode, *datapath, ag.NetworkAgent)
-	if err != nil {
-		log.Fatalf("Error creating telemetry policy agent, Err: %v", err)
-	}
-	log.Printf("telemetry policy agent {%+v} instantiated", tpa)
+	// TODO remove the command line switch
+	if *disableTSA {
+		restServer, err := restapi.NewRestServer(ag.NetworkAgent, nil, nil, *restURL)
+		if err != nil {
+			log.Errorf("Error creating the rest API server. Err: %v", err)
+		}
+		ag.RestServer = restServer
+	} else {
 
-	// create REST api server
-	restServer, err := restapi.NewRestServer(ag.NetworkAgent, tsa.TroubleShootingAgent, tpa.TpState, *restURL)
-	if err != nil {
-		log.Errorf("Error creating the rest API server. Err: %v", err)
+		tsa, err := troubleshooting.NewTsAgent(tsdp, "/tmp/naples-TsAgent.db", macAddr.String(), *tpmURL, resolverClient, agMode, ag.NetworkAgent)
+		if err != nil {
+			log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
+		}
+		log.Printf("TroubleShooting Agent {%+v} instantiated", tsa)
+
+		// telemetry policy agent
+		tpa, err := tpa.NewPolicyAgent(macAddr.String(), "", *npmURL, resolverClient, agMode, *datapath, ag.NetworkAgent)
+		if err != nil {
+			log.Fatalf("Error creating telemetry policy agent, Err: %v", err)
+		}
+		log.Printf("telemetry policy agent {%+v} instantiated", tpa)
+
+		// create REST api server
+		restServer, err := restapi.NewRestServer(ag.NetworkAgent, tsa.TroubleShootingAgent, tpa.TpState, *restURL)
+		if err != nil {
+			log.Errorf("Error creating the rest API server. Err: %v", err)
+		}
+		ag.RestServer = restServer
 	}
-	ag.RestServer = restServer
+
 	log.Infof("%s is running {%+v}", globals.Netagent, ag)
 
 	// wait forever
