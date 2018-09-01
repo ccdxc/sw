@@ -196,6 +196,9 @@ mac_datapath_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
 }
 
 static int
+mac_cfg_haps (const char *cfg_path) __attribute__ ((unused));
+
+static int
 mac_cfg_haps (const char *cfg_path)
 {
     std::string haps_mac_cfg = "haps_mac_cfg";
@@ -865,7 +868,8 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HAPS:
-        mac_cfg_haps(cfg->cfg_path);
+        // TODO needs sequencing from hal
+        // mac_cfg_haps(cfg->cfg_path);
         break;
 
     case platform_type_t::PLATFORM_TYPE_MOCK:
