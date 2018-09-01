@@ -12,6 +12,7 @@ export interface IApiListWatchOptions {
     'name'?: string;
     'tenant'?: string;
     'namespace'?: string;
+    'generation-id'?: string;
     'resource-version'?: string;
     'uuid'?: string;
     'labels'?: object;
@@ -30,6 +31,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'name': string = null;
     'tenant': string = null;
     'namespace': string = null;
+    'generation-id': string = null;
     'resource-version': string = null;
     'uuid': string = null;
     'labels': object = null;
@@ -52,6 +54,9 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             type: 'string'
         },
         'namespace': {
+            type: 'string'
+        },
+        'generation-id': {
             type: 'string'
         },
         'resource-version': {
@@ -135,6 +140,11 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
         } else if (ApiListWatchOptions.hasDefaultValue('namespace')) {
             this['namespace'] = ApiListWatchOptions.propInfo['namespace'].default;
         }
+        if (values && values['generation-id'] != null) {
+            this['generation-id'] = values['generation-id'];
+        } else if (ApiListWatchOptions.hasDefaultValue('generation-id')) {
+            this['generation-id'] = ApiListWatchOptions.propInfo['generation-id'].default;
+        }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
         } else if (ApiListWatchOptions.hasDefaultValue('resource-version')) {
@@ -199,6 +209,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
                 'name': new FormControl(this['name']),
                 'tenant': new FormControl(this['tenant']),
                 'namespace': new FormControl(this['namespace']),
+                'generation-id': new FormControl(this['generation-id']),
                 'resource-version': new FormControl(this['resource-version']),
                 'uuid': new FormControl(this['uuid']),
                 'labels': new FormControl(this['labels']),
@@ -222,6 +233,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             this._formGroup.controls['name'].setValue(this['name']);
             this._formGroup.controls['tenant'].setValue(this['tenant']);
             this._formGroup.controls['namespace'].setValue(this['namespace']);
+            this._formGroup.controls['generation-id'].setValue(this['generation-id']);
             this._formGroup.controls['resource-version'].setValue(this['resource-version']);
             this._formGroup.controls['uuid'].setValue(this['uuid']);
             this._formGroup.controls['labels'].setValue(this['labels']);

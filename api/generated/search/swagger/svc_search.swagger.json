@@ -244,6 +244,9 @@
         "namespace": {
           "type": "string"
         },
+        "generation-id": {
+          "type": "string"
+        },
         "resource-version": {
           "type": "string"
         },
@@ -309,13 +312,17 @@
           "type": "string",
           "description": "Namespace of the object, for scoped objects."
         },
+        "generation-id": {
+          "type": "string",
+          "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user."
+        },
         "resource-version": {
           "type": "string",
-          "description": "Resource version in the object store. This can only be set by the server."
+          "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user."
         },
         "uuid": {
           "type": "string",
-          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+          "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user."
         },
         "labels": {
           "type": "object",
@@ -327,16 +334,16 @@
         "creation-time": {
           "type": "string",
           "format": "date-time",
-          "title": "CreationTime is the creation time of Object"
+          "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user."
         },
         "mod-time": {
           "type": "string",
           "format": "date-time",
-          "title": "ModTime is the Last Modification time of Object"
+          "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user."
         },
         "self-link": {
           "type": "string",
-          "description": "SelfLink is a link to accessing this object. When stored in the KV store this is\n the key in the kvstore and when the object is served from the API-GW it is the\n URI path. Examples\n   - \"/venice/tenants/tenants/tenant2\" in the kvstore\n   - \"/v1/tenants/tenants/tenant2\" when served by API Gateway."
+          "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user."
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."

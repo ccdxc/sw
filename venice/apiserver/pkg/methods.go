@@ -269,7 +269,7 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 }
 
 // updateKvStore handles updating the KV store either via a transaction or without as needed.
-func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apiserver.APIOperType, kvs kvstore.Interface, txn kvstore.Txn, replaceStatus bool) (interface{}, error) {
+func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apiserver.APIOperType, kvs kvstore.Interface, txn kvstore.Txn, updateSpec bool) (interface{}, error) {
 	if !singletonAPISrv.getRunState() {
 		return nil, errShuttingDown.makeError(nil, []string{}, "")
 	}
@@ -282,7 +282,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 	nonTxn := txn.IsEmpty()
 	kvOp := kvstore.OperUnknown
 	// Update the KV if desired.
-	l.InfoLog("msg", "kvstore operation", "key", key, "oper", oper)
+	l.InfoLog("msg", "kvstore operation", "key", key, "oper", oper, "txn", nonTxn)
 
 	var (
 		resp interface{}
@@ -295,13 +295,13 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 			return nil, errInternalError.makeError(i, []string{"Unable to update self link"}, "")
 		}
 		if nonTxn {
-			resp, err = m.requestType.WriteToKv(ctx, kvs, i, m.svcPrefix, true, replaceStatus)
+			resp, err = m.requestType.WriteToKv(ctx, kvs, i, m.svcPrefix, true, updateSpec)
 			if err != nil {
 				l.ErrorLog("msg", "failed KV store operation", "oper", "Create", "error", err)
 				return nil, errKVStoreOperation.makeError(i, []string{err.Error()}, "")
 			}
 		} else {
-			err = m.requestType.WriteToKvTxn(ctx, txn, i, m.svcPrefix, true)
+			err = m.requestType.WriteToKvTxn(ctx, kvs, txn, i, m.svcPrefix, true, updateSpec)
 			if err != nil {
 				l.ErrorLog("msg", "failed KV store txn operation", "oper", "Create", "error", err)
 				return nil, errKVStoreOperation.makeError(i, []string{err.Error()}, "")
@@ -316,13 +316,13 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 			return nil, errInternalError.makeError(i, []string{"Unable to update self link"}, "")
 		}
 		if nonTxn {
-			resp, err = m.requestType.WriteToKv(ctx, kvs, i, m.svcPrefix, false, replaceStatus)
+			resp, err = m.requestType.WriteToKv(ctx, kvs, i, m.svcPrefix, false, updateSpec)
 			if err != nil {
 				l.ErrorLog("msg", "failed KV store operation", "oper", "Update", "error", err)
 				return nil, errKVStoreOperation.makeError(i, []string{err.Error()}, "")
 			}
 		} else {
-			err = m.requestType.WriteToKvTxn(ctx, txn, i, m.svcPrefix, false)
+			err = m.requestType.WriteToKvTxn(ctx, kvs, txn, i, m.svcPrefix, false, updateSpec)
 			if err != nil {
 				l.ErrorLog("msg", "failed KV store txn operation", "oper", "Update", "error", err)
 				return nil, errKVStoreOperation.makeError(i, []string{err.Error()}, "")
@@ -420,7 +420,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		err             error
 		ver             string
 		key             string
-		replaceStatus   bool
+		updateSpec      bool
 	)
 	l := singletonAPISrv.Logger
 
@@ -441,7 +441,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	}
 
 	if _, ok := md[apiserver.RequestParamReplaceStatusField]; ok {
-		replaceStatus = true
+		updateSpec = true
 	}
 	var bufid string
 	if bufids, ok := md[apiserver.RequestParamStagingBufferID]; ok && len(bufids) == 1 {
@@ -468,7 +468,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 
 	// mapOper handles HTTP and gRPC oper types.
 	oper := m.mapOper(md)
-	l.DebugLog("version", ver, "operation", oper, "methodOper", m.oper, "replaceStatus", replaceStatus)
+	l.DebugLog("version", ver, "operation", oper, "methodOper", m.oper, "updateSpec", updateSpec)
 
 	if bufid != "" {
 		orig = i
@@ -508,9 +508,9 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 
 	// Validate the request.
 	if oper == apiserver.CreateOper || oper == apiserver.UpdateOper {
-		errs := m.requestType.Validate(i, singletonAPISrv.version, replaceStatus)
+		errs := m.requestType.Validate(i, singletonAPISrv.version, updateSpec)
 		if errs != nil {
-			l.Errorf("msg: request validation failed. Error: %v, replacestatus: %v", errs, replaceStatus)
+			l.Errorf("msg: request validation failed. Error: %v, updateSpec: %v", errs, updateSpec)
 			str := []string{}
 			for _, err = range errs {
 				str = append(str, err.Error())
@@ -600,13 +600,13 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			}
 		}
 		if bufid == "" {
-			resp, err = m.updateKvStore(ctx, i, oper, kv, txn, replaceStatus)
+			resp, err = m.updateKvStore(ctx, i, oper, kv, txn, updateSpec)
 			if err != nil {
 				// already in makeError() format
 				return nil, err
 			}
 		} else {
-			resp, err = m.updateStagingBuffer(ctx, tenant, bufid, orig, i, oper, replaceStatus)
+			resp, err = m.updateStagingBuffer(ctx, tenant, bufid, orig, i, oper, updateSpec)
 			if err != nil {
 				return nil, err
 			}

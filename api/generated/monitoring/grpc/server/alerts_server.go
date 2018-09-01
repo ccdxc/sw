@@ -9,6 +9,7 @@ package monitoringApiServer
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -60,6 +61,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Alert"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -68,7 +70,19 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				if updateFn != nil {
 					into := &monitoring.Alert{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
+					if err != nil {
+						l.ErrorLog("msg", "Consistent update failed", "error", err)
+					}
+					r = *into
 				} else {
+					var cur monitoring.Alert
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return nil, err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -82,16 +96,49 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(monitoring.Alert)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur monitoring.Alert
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*monitoring.Alert)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur monitoring.Alert
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -159,7 +206,14 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*monitoring.Alert); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels = n.Name, n.Tenant, n.Namespace, n.Labels
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+					}
 					ret.Spec = n.Spec
 					return ret, nil
 				}
@@ -201,6 +255,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "AlertDestination"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -209,7 +264,19 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				if updateFn != nil {
 					into := &monitoring.AlertDestination{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
+					if err != nil {
+						l.ErrorLog("msg", "Consistent update failed", "error", err)
+					}
+					r = *into
 				} else {
+					var cur monitoring.AlertDestination
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return nil, err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -223,16 +290,49 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(monitoring.AlertDestination)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur monitoring.AlertDestination
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*monitoring.AlertDestination)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur monitoring.AlertDestination
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -300,7 +400,14 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*monitoring.AlertDestination); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels = n.Name, n.Tenant, n.Namespace, n.Labels
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+					}
 					ret.Spec = n.Spec
 					return ret, nil
 				}
@@ -344,6 +451,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "AlertPolicy"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -352,7 +460,19 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				if updateFn != nil {
 					into := &monitoring.AlertPolicy{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
+					if err != nil {
+						l.ErrorLog("msg", "Consistent update failed", "error", err)
+					}
+					r = *into
 				} else {
+					var cur monitoring.AlertPolicy
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return nil, err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -366,16 +486,49 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(monitoring.AlertPolicy)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur monitoring.AlertPolicy
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*monitoring.AlertPolicy)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur monitoring.AlertPolicy
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -443,7 +596,14 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*monitoring.AlertPolicy); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels = n.Name, n.Tenant, n.Namespace, n.Labels
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+					}
 					ret.Spec = n.Spec
 					return ret, nil
 				}

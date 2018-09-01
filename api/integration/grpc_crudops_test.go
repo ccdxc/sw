@@ -374,6 +374,9 @@ func TestCrudOps(t *testing.T) {
 		if !reflect.DeepEqual(retorder.Spec, order1.Spec) {
 			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", order1.Spec, retorder.Spec)
 		}
+		if retorder.GenerationID != "1" {
+			t.Fatalf("returned generation id is not 1, got %s", retorder.GenerationID)
+		}
 		evp := order1
 		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Created)
 	}
@@ -393,6 +396,9 @@ func TestCrudOps(t *testing.T) {
 		// The Status message should have been overwritten by the API gateway hooks
 		if retorder.Status.Message != "Message filled by hook" {
 			t.Errorf("API gateway post hook not called [%+v]", retorder)
+		}
+		if retorder.GenerationID != "1" {
+			t.Fatalf("returned generation id is not 1, got %s", retorder.GenerationID)
 		}
 		evp := order2
 		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Created)
@@ -446,10 +452,53 @@ func TestCrudOps(t *testing.T) {
 		if !validateObjectSpec(retorder, order2mod) {
 			t.Fatalf("updated object [Update] does not match \n\t[%+v]\n\t[%+v]", retorder, order2)
 		}
+		if retorder.GenerationID != "2" {
+			t.Fatalf("returned generation id is not 2, got [%s]", retorder.GenerationID)
+		}
 		evp := order2mod
 		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Updated)
 	}
 
+	{ // put object with invalid Gen ID and overwriting parts of the meta data that are not updatable
+		order2mod.GenerationID = "33"
+		order2mod.ResourceVersion = "aasdasdada"
+		order2mod.UUID = "InvalidUUID"
+		order2mod.SelfLink = "/invalid/link"
+		objectMeta := api.ObjectMeta{Name: "order-2"}
+		oldObj, err := restcl.BookstoreV1().Order().Get(ctx, &objectMeta)
+		if err != nil {
+			t.Fatalf("failed to get object Order via REST (%s)", err)
+		}
+		retorder, err := restcl.BookstoreV1().Order().Update(ctx, &order2mod)
+		if err != nil {
+			t.Fatalf("failed to update object Order via REST (%s)", err)
+		}
+		if !validateObjectSpec(retorder, order2mod) {
+			t.Fatalf("updated object [Update] does not match \n\t[%+v]\n\t[%+v]", retorder, order2)
+		}
+		if retorder.GenerationID != "3" {
+			t.Fatalf("returned generation id is not 3, got [%s]", retorder.GenerationID)
+		}
+		if retorder.SelfLink != oldObj.SelfLink || retorder.CreationTime != oldObj.CreationTime || retorder.UUID != oldObj.UUID || retorder.ResourceVersion == "aasdasdada" {
+			t.Fatalf("parts of the object that should not updatable were updated [%+v][%+v]", retorder.ObjectMeta, oldObj.ObjectMeta)
+		}
+		evp := order2mod
+		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Updated)
+	}
+
+	{ // update via gRPC with invalid SpecGeneration ID
+		order2mod.GenerationID = "invalidId"
+		order2mod.Status.Status = "PROCESSING"
+		retorder, err := apicl.BookstoreV1().Order().Update(ctx, &order2mod)
+		if err != nil {
+			t.Fatalf("failed to update oder (%s)", err)
+		}
+		if retorder.GenerationID != "3" {
+			t.Fatalf("returned generation id is not 3, got [%s]", retorder.GenerationID)
+		}
+		evp := order2mod
+		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Updated)
+	}
 	{ // ---  DELETE objects via REST --- //
 		objectMeta := api.ObjectMeta{Name: "order-1"}
 		retorder, err := restcl.BookstoreV1().Order().Delete(ctx, &objectMeta)
@@ -467,7 +516,8 @@ func TestCrudOps(t *testing.T) {
 	{
 		book1 = bookstore.Book{
 			ObjectMeta: api.ObjectMeta{
-				Name: "book1",
+				Name:         "book1",
+				GenerationID: "1",
 			},
 			TypeMeta: api.TypeMeta{
 				Kind: "book",
@@ -480,7 +530,8 @@ func TestCrudOps(t *testing.T) {
 		}
 		book1mod = bookstore.Book{
 			ObjectMeta: api.ObjectMeta{
-				Name: "book1",
+				Name:         "book1",
+				GenerationID: "1",
 			},
 			TypeMeta: api.TypeMeta{
 				Kind: "book",

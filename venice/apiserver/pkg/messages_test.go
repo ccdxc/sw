@@ -94,7 +94,7 @@ func TestMessageWith(t *testing.T) {
 		t.Errorf("Expecting 1 call to KV Write found %d", f.Kvwrites)
 	}
 
-	m.WriteToKvTxn(context.TODO(), nil, nil, "testprefix", true)
+	m.WriteToKvTxn(context.TODO(), nil, nil, nil, "testprefix", true, false)
 	if f.Txnwrites != 1 {
 		t.Errorf("Expecting 1 call to Txn write found %d", f.Txnwrites)
 	}

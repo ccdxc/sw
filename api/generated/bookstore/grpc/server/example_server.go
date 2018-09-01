@@ -9,6 +9,7 @@ package bookstoreApiServer
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -113,11 +114,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "ApplyDiscountReq"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
+				var cur bookstore.ApplyDiscountReq
+				err = kvs.Get(ctx, key, &cur)
+				if err != nil {
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					return nil, err
+				}
+				r.UUID = cur.UUID
+				r.CreationTime = cur.CreationTime
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
 					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -130,16 +140,49 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(bookstore.ApplyDiscountReq)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur bookstore.ApplyDiscountReq
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*bookstore.ApplyDiscountReq)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur bookstore.ApplyDiscountReq
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -222,6 +265,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Book"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -230,7 +274,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				if updateFn != nil {
 					into := &bookstore.Book{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
+					if err != nil {
+						l.ErrorLog("msg", "Consistent update failed", "error", err)
+					}
+					r = *into
 				} else {
+					var cur bookstore.Book
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return nil, err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -244,16 +300,49 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(bookstore.Book)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur bookstore.Book
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*bookstore.Book)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur bookstore.Book
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -321,7 +410,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Book); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels = n.Name, n.Tenant, n.Namespace, n.Labels
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+					}
 					ret.Spec = n.Spec
 					return ret, nil
 				}
@@ -390,11 +486,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Coupon"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
+				var cur bookstore.Coupon
+				err = kvs.Get(ctx, key, &cur)
+				if err != nil {
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					return nil, err
+				}
+				r.UUID = cur.UUID
+				r.CreationTime = cur.CreationTime
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
 					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -407,16 +512,49 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(bookstore.Coupon)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur bookstore.Coupon
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*bookstore.Coupon)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur bookstore.Coupon
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -516,6 +654,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Customer"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -524,7 +663,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				if updateFn != nil {
 					into := &bookstore.Customer{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
+					if err != nil {
+						l.ErrorLog("msg", "Consistent update failed", "error", err)
+					}
+					r = *into
 				} else {
+					var cur bookstore.Customer
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return nil, err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -538,16 +689,49 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(bookstore.Customer)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur bookstore.Customer
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*bookstore.Customer)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur bookstore.Customer
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -615,7 +799,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Customer); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels = n.Name, n.Tenant, n.Namespace, n.Labels
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+					}
 					ret.Spec = n.Spec
 					return ret, nil
 				}
@@ -687,6 +878,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Order"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -695,7 +887,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				if updateFn != nil {
 					into := &bookstore.Order{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
+					if err != nil {
+						l.ErrorLog("msg", "Consistent update failed", "error", err)
+					}
+					r = *into
 				} else {
+					var cur bookstore.Order
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return nil, err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -709,16 +913,49 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(bookstore.Order)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur bookstore.Order
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*bookstore.Order)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur bookstore.Order
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -786,7 +1023,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Order); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels = n.Name, n.Tenant, n.Namespace, n.Labels
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+					}
 					ret.Spec = n.Spec
 					return ret, nil
 				}
@@ -854,11 +1098,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "OutageRequest"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
+				var cur bookstore.OutageRequest
+				err = kvs.Get(ctx, key, &cur)
+				if err != nil {
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					return nil, err
+				}
+				r.UUID = cur.UUID
+				r.CreationTime = cur.CreationTime
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
 					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -871,16 +1124,49 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(bookstore.OutageRequest)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur bookstore.OutageRequest
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*bookstore.OutageRequest)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur bookstore.OutageRequest
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -957,6 +1243,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Publisher"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -965,7 +1252,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				if updateFn != nil {
 					into := &bookstore.Publisher{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
+					if err != nil {
+						l.ErrorLog("msg", "Consistent update failed", "error", err)
+					}
+					r = *into
 				} else {
+					var cur bookstore.Publisher
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return nil, err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -979,16 +1278,49 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(bookstore.Publisher)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur bookstore.Publisher
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*bookstore.Publisher)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur bookstore.Publisher
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -1056,7 +1388,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Publisher); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels = n.Name, n.Tenant, n.Namespace, n.Labels
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+					}
 					ret.Spec = n.Spec
 					return ret, nil
 				}
@@ -1123,11 +1462,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "RestockRequest"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
+				var cur bookstore.RestockRequest
+				err = kvs.Get(ctx, key, &cur)
+				if err != nil {
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					return nil, err
+				}
+				r.UUID = cur.UUID
+				r.CreationTime = cur.CreationTime
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
 					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -1140,16 +1488,49 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(bookstore.RestockRequest)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur bookstore.RestockRequest
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*bookstore.RestockRequest)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur bookstore.RestockRequest
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -1226,11 +1607,20 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "RestockResponse"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
 				}
 			} else {
+				var cur bookstore.RestockResponse
+				err = kvs.Get(ctx, key, &cur)
+				if err != nil {
+					l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+					return nil, err
+				}
+				r.UUID = cur.UUID
+				r.CreationTime = cur.CreationTime
 				if r.ResourceVersion != "" {
 					l.Infof("resource version is specified %s\n", r.ResourceVersion)
 					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -1243,16 +1633,49 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(bookstore.RestockResponse)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur bookstore.RestockResponse
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*bookstore.RestockResponse)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur bookstore.RestockResponse
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -1329,6 +1752,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			r.Kind = "Store"
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = kvs.Create(ctx, key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV create failed", "key", key, "error", err)
@@ -1337,7 +1761,19 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				if updateFn != nil {
 					into := &bookstore.Store{}
 					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
+					if err != nil {
+						l.ErrorLog("msg", "Consistent update failed", "error", err)
+					}
+					r = *into
 				} else {
+					var cur bookstore.Store
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return nil, err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
 					if r.ResourceVersion != "" {
 						l.Infof("resource version is specified %s\n", r.ResourceVersion)
 						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
@@ -1351,16 +1787,49 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 
 			}
 			return r, err
-		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 			r := i.(bookstore.Store)
 			key := r.MakeKey(prefix)
 			var err error
 			if create {
+				r.GenerationID = "1"
 				err = txn.Create(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction create failed", "key", key, "error", err)
 				}
 			} else {
+				if updatefn != nil {
+					var cur bookstore.Store
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "error", err)
+						return err
+					}
+					r = *robj.(*bookstore.Store)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur bookstore.Store
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "error", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
 				err = txn.Update(key, &r)
 				if err != nil {
 					l.ErrorLog("msg", "KV transaction update failed", "key", key, "error", err)
@@ -1428,7 +1897,14 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Store); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels = n.Name, n.Tenant, n.Namespace, n.Labels
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+					}
 					ret.Spec = n.Spec
 					return ret, nil
 				}

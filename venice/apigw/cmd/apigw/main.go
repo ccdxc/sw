@@ -57,6 +57,7 @@ func main() {
 		skip            = flag.String("skip", "", "comma seperated list of services to skip initializing eg: 'search,events'")
 		skipauth        = flag.Bool("skipauth", false, "skip authentication")
 		skipauthz       = flag.Bool("skipauthz", false, "skip authorization")
+		disableEvents   = flag.Bool("no-events", false, "disable events proxy")
 	)
 
 	flag.Parse()
@@ -91,7 +92,7 @@ func main() {
 	// create events recorder
 	if _, err := recorder.NewRecorder(&recorder.Config{
 		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIGw},
-		EvtTypes: evtsapi.GetEventTypes()}); err != nil {
+		EvtTypes: evtsapi.GetEventTypes(), SkipEvtsProxy: *disableEvents}); err != nil {
 		pl.Fatalf("failed to create events recorder, err: %v", err)
 	}
 

@@ -14,10 +14,10 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/runtime"
 
 	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/transformers/storage"
 )
 

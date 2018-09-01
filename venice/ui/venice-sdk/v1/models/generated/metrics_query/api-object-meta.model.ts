@@ -12,6 +12,7 @@ export interface IApiObjectMeta {
     'name'?: string;
     'tenant'?: string;
     'namespace'?: string;
+    'generation-id'?: string;
     'resource-version'?: string;
     'uuid'?: string;
     'labels'?: object;
@@ -29,19 +30,28 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     'tenant': string = null;
     /** Namespace of the object, for scoped objects. */
     'namespace': string = null;
-    /** Resource version in the object store. This can only be set by the server. */
+    /** GenerationID is the generation Id for the object. This is incremented anytime there
+     is an update to the user intent, including Spec update and any update to ObjectMeta.
+     System generated and updated, not updatable by user. */
+    'generation-id': string = null;
+    /** Resource version in the object store. This is updated anytime there is any change to the object.
+     System generated and updated, not updatable by user. */
     'resource-version': string = null;
-    /** UUID is the unique identifier for the object. This can only be set by the server. */
+    /** UUID is the unique identifier for the object. This is generated on creation of the object.
+    System generated, not updatable by user. */
     'uuid': string = null;
     /** Labels are arbitrary (key,value) pairs associated with any object. */
     'labels': object = null;
+    /** CreationTime is the creation time of the object
+     System generated and updated, not updatable by user. */
     'creation-time': Date = null;
+    /** ModTime is the Last Modification time of the object
+     System generated and updated, not updatable by user. */
     'mod-time': Date = null;
-    /** SelfLink is a link to accessing this object. When stored in the KV store this is
-     the key in the kvstore and when the object is served from the API-GW it is the
-     URI path. Examples
-       - "/venice/tenants/tenants/tenant2" in the kvstore
-       - "/v1/tenants/tenants/tenant2" when served by API Gateway. */
+    /** SelfLink is a link for accessing this object. When the object is served from the API-GW it is the
+     URI path. Example:
+       - "/v1/tenants/tenants/tenant2" 
+     System generated and updated, not updatable by user. */
     'self-link': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
@@ -56,12 +66,16 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
             description:  'Namespace of the object, for scoped objects.',
             type: 'string'
         },
+        'generation-id': {
+            description:  'GenerationID is the generation Id for the object. This is incremented anytime there  is an update to the user intent, including Spec update and any update to ObjectMeta.  System generated and updated, not updatable by user.',
+            type: 'string'
+        },
         'resource-version': {
-            description:  'Resource version in the object store. This can only be set by the server.',
+            description:  'Resource version in the object store. This is updated anytime there is any change to the object.  System generated and updated, not updatable by user.',
             type: 'string'
         },
         'uuid': {
-            description:  'UUID is the unique identifier for the object. This can only be set by the server.',
+            description:  'UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.',
             type: 'string'
         },
         'labels': {
@@ -69,13 +83,15 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
             type: 'object'
         },
         'creation-time': {
+            description:  'CreationTime is the creation time of the object  System generated and updated, not updatable by user.',
             type: 'Date'
         },
         'mod-time': {
+            description:  'ModTime is the Last Modification time of the object  System generated and updated, not updatable by user.',
             type: 'Date'
         },
         'self-link': {
-            description:  'SelfLink is a link to accessing this object. When stored in the KV store this is  the key in the kvstore and when the object is served from the API-GW it is the  URI path. Examples    - &quot;/venice/tenants/tenants/tenant2&quot; in the kvstore    - &quot;/v1/tenants/tenants/tenant2&quot; when served by API Gateway.',
+            description:  'SelfLink is a link for accessing this object. When the object is served from the API-GW it is the  URI path. Example:    - &quot;/v1/tenants/tenants/tenant2&quot;   System generated and updated, not updatable by user.',
             type: 'string'
         },
     }
@@ -122,6 +138,11 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
         } else if (ApiObjectMeta.hasDefaultValue('namespace')) {
             this['namespace'] = ApiObjectMeta.propInfo['namespace'].default;
         }
+        if (values && values['generation-id'] != null) {
+            this['generation-id'] = values['generation-id'];
+        } else if (ApiObjectMeta.hasDefaultValue('generation-id')) {
+            this['generation-id'] = ApiObjectMeta.propInfo['generation-id'].default;
+        }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
         } else if (ApiObjectMeta.hasDefaultValue('resource-version')) {
@@ -163,6 +184,7 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
                 'name': new FormControl(this['name']),
                 'tenant': new FormControl(this['tenant']),
                 'namespace': new FormControl(this['namespace']),
+                'generation-id': new FormControl(this['generation-id']),
                 'resource-version': new FormControl(this['resource-version']),
                 'uuid': new FormControl(this['uuid']),
                 'labels': new FormControl(this['labels']),
@@ -179,6 +201,7 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
             this._formGroup.controls['name'].setValue(this['name']);
             this._formGroup.controls['tenant'].setValue(this['tenant']);
             this._formGroup.controls['namespace'].setValue(this['namespace']);
+            this._formGroup.controls['generation-id'].setValue(this['generation-id']);
             this._formGroup.controls['resource-version'].setValue(this['resource-version']);
             this._formGroup.controls['uuid'].setValue(this['uuid']);
             this._formGroup.controls['labels'].setValue(this['labels']);

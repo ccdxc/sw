@@ -35,6 +35,7 @@ func main() {
 		poolsize        = flag.Int("kvpoolsize", apisrv.DefaultKvPoolSize, "size of KV Store connection pool")
 		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
 		usecache        = flag.Bool("use-cache", true, "Use cache between API server and KV Store")
+		disableEvents   = flag.Bool("no-events", false, "disable events proxy")
 	)
 
 	flag.Parse()
@@ -72,7 +73,7 @@ func main() {
 
 	if _, err = recorder.NewRecorder(&recorder.Config{
 		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIServer},
-		EvtTypes: evtsapi.GetEventTypes()}); err != nil {
+		EvtTypes: evtsapi.GetEventTypes(), SkipEvtsProxy: *disableEvents}); err != nil {
 		pl.Fatalf("failed to create events recorder, err: %v", err)
 	}
 

@@ -242,9 +242,8 @@ func main() {
 		fmt.Printf("Put took %s\n", elapsed)
 		return
 	}
-	var order1, order2 bookstore.Order
-	{
-		order1 = bookstore.Order{
+	var orders = []bookstore.Order{
+		{
 			ObjectMeta: api.ObjectMeta{
 				Name: "test for pre-commit hook to generate new Order id - will be overwritten to order-<x> for POST",
 			},
@@ -260,8 +259,8 @@ func main() {
 					},
 				},
 			},
-		}
-		order2 = bookstore.Order{
+		},
+		{
 			ObjectMeta: api.ObjectMeta{
 				Name: "test for pre-commit hook to generate new Order id - will be overwritten to order-<x> for POST",
 			},
@@ -277,37 +276,41 @@ func main() {
 					},
 				},
 			},
-		}
+		},
 	}
-
+	var names []string
 	{ // ---  POST of the object via REST --- //
-		retorder, err := restcl.BookstoreV1().Order().Create(ctx, &order1)
+		retorder, err := restcl.BookstoreV1().Order().Create(ctx, &orders[0])
 		if err != nil {
 			log.Fatalf("Create of Order failed (%s)", err)
 		}
-		if !reflect.DeepEqual(retorder.Spec, order1.Spec) {
-			log.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", order1.Spec, retorder.Spec)
+		orders[0].Spec.Id = retorder.Name
+		if !reflect.DeepEqual(retorder.Spec, orders[0].Spec) {
+			log.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", orders[0].Spec, retorder.Spec)
 		}
+		names = append(names, retorder.Name)
 	}
 
 	{ // ---  POST second  object via REST --- //
-		retorder, err := restcl.BookstoreV1().Order().Create(ctx, &order2)
+		retorder, err := restcl.BookstoreV1().Order().Create(ctx, &orders[1])
 		if err != nil {
 			log.Fatalf("Create of Order failed (%s)", err)
 		}
-		if !reflect.DeepEqual(retorder.Spec, order2.Spec) {
-			log.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", order1.Spec, retorder.Spec)
+		orders[1].Spec.Id = retorder.Name
+		if !reflect.DeepEqual(retorder.Spec, orders[1].Spec) {
+			log.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", orders[1].Spec, retorder.Spec)
 		}
+		names = append(names, retorder.Name)
 	}
 
 	{ // ---  Get  object via REST --- //
-		objectMeta := api.ObjectMeta{Name: "order-2"}
+		objectMeta := api.ObjectMeta{Name: names[1]}
 		retorder, err := restcl.BookstoreV1().Order().Get(ctx, &objectMeta)
 		if err != nil {
 			log.Fatalf("failed to get object Order via REST (%s)", err)
 		}
-		if !validateObject(retorder, order2) {
-			log.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]", retorder, order2)
+		if !validateObject(retorder, orders[1]) {
+			log.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]", retorder, orders[1])
 		}
 	}
 
@@ -321,28 +324,36 @@ func main() {
 			log.Fatalf("List expecting [2] elements got [%d]", len(retlist))
 		}
 	}
-
+	fmt.Printf("press enter to update object")
+	bufio.NewReader(os.Stdin).ReadBytes('\n')
 	{ // ---  PUT objects via REST --- //
-		order2.Name = "order-2"
-		order2.Spec.Order[0].ISBNId = "XXYY"
-		order2.Spec.Order[0].Quantity = 33
-		retorder, err := restcl.BookstoreV1().Order().Update(ctx, &order2)
+		orders[1].Name = names[1]
+		orders[1].Spec.Order[0].ISBNId = "XXYY"
+		orders[1].Spec.Order[0].Quantity = 3
+		retorder, err := restcl.BookstoreV1().Order().Update(ctx, &orders[1])
 		if err != nil {
 			log.Fatalf("failed to update object Order via REST (%s)", err)
 		}
-		if !validateObject(retorder, order2) {
-			log.Fatalf("updated object [Update] does not match \n\t[%+v]\n\t[%+v]", retorder, order2)
+		if !validateObject(retorder, orders[1]) {
+			log.Fatalf("updated object [Update] does not match \n\t[%+v]\n\t[%+v]", retorder, orders[1])
 		}
+		fmt.Printf("update object is [%+v]\n", retorder)
 	}
 
+	fmt.Printf("press enter to delete objects")
+	bufio.NewReader(os.Stdin).ReadBytes('\n')
+
 	{ // ---  DELETE objects via REST --- //
-		objectMeta := api.ObjectMeta{Name: "order-1"}
-		retorder, err := restcl.BookstoreV1().Order().Delete(ctx, &objectMeta)
-		if err != nil {
-			log.Fatalf("failed to delete object Order via REST (%s)", err)
-		}
-		if !validateObject(retorder, order1) {
-			log.Fatalf("updated object [Delete] does not match \n\t[%+v]\n\t[%+v]", retorder, order1)
+		for k, n := range names {
+			objectMeta := api.ObjectMeta{Name: n}
+			retorder, err := restcl.BookstoreV1().Order().Delete(ctx, &objectMeta)
+			if err != nil {
+				log.Fatalf("failed to delete object Order via REST (%s)", err)
+			}
+
+			if !validateObject(retorder, orders[k]) {
+				log.Fatalf("updated object [Delete] does not match \n\t[%+v]\n\t[%+v]", retorder, orders[k])
+			}
 		}
 	}
 }

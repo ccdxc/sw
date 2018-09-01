@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	eventTemplateMapping       = `{"index_patterns":"*.events.*","settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression","max_inner_result_window":8192},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uri":{"type":"text"}}},"severity":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"source":{"properties":{"component":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"node-name":{"type":"text"}}},"type":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"}}}}}`
+	eventTemplateMapping       = `{"index_patterns":"*.events.*","settings":{"number_of_shards":1,"number_of_replicas":0,"codec":"best_compression","max_inner_result_window":8192},"mappings":{"events":{"properties":{"api-version":{"type":"text"},"count":{"type":"integer"},"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"message":{"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"generation-id":{"type":"text"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uuid":{"type":"text"}}},"object-ref":{"properties":{"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uri":{"type":"text"}}},"severity":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"source":{"properties":{"component":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"node-name":{"type":"text"}}},"type":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"}}}}}`
 	eventTemplateMappingPretty = `{
     "index_patterns": "*.events.*",
     "settings": {
@@ -50,6 +50,9 @@ const (
                     "properties": {
                         "creation-time": {
                             "type": "date"
+                        },
+                        "generation-id": {
+                            "type": "text"
                         },
                         "labels": {
                             "properties": {
@@ -172,7 +175,7 @@ const (
     }
 }`
 
-	searchMapping       = `{"settings":{"number_of_shards":3,"number_of_replicas":2,"codec":"best_compression","max_inner_result_window":256},"mappings":{"configs":{"properties":{"api-version":{"type":"text"},"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uuid":{"type":"text"}}}}}}}`
+	searchMapping       = `{"settings":{"number_of_shards":3,"number_of_replicas":2,"codec":"best_compression","max_inner_result_window":256},"mappings":{"configs":{"properties":{"api-version":{"type":"text"},"kind":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"meta":{"properties":{"creation-time":{"type":"date"},"generation-id":{"type":"text"},"labels":{"properties":{"key":{"type":"text"},"value":{"type":"text"}}},"mod-time":{"type":"date"},"name":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"namespace":{"type":"text"},"resource-version":{"type":"text"},"self-link":{"type":"text"},"tenant":{"fields":{"keyword":{"ignore_above":256,"type":"keyword"}},"type":"text"},"uuid":{"type":"text"}}}}}}}`
 	searchMappingPretty = `{
     "settings": {
         "number_of_shards": 3,
@@ -199,6 +202,9 @@ const (
                     "properties": {
                         "creation-time": {
                             "type": "date"
+                        },
+                        "generation-id": {
+                            "type": "text"
                         },
                         "labels": {
                             "properties": {

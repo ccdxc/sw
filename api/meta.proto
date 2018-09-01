@@ -40,22 +40,29 @@ message ObjectMeta {
   string Tenant               = 2 [(gogoproto.jsontag) = "tenant,omitempty"];
   // Namespace of the object, for scoped objects.
   string Namespace            = 3 [(gogoproto.jsontag) = "namespace,omitempty"];
-  // Resource version in the object store. This can only be set by the server.
-  string ResourceVersion      = 4 [(gogoproto.jsontag) = "resource-version,omitempty"];
-  // UUID is the unique identifier for the object. This can only be set by the server.
-  string UUID                 = 5 [(gogoproto.jsontag) = "uuid,omitempty"];
+  // GenerationID is the generation Id for the object. This is incremented anytime there
+  //  is an update to the user intent, including Spec update and any update to ObjectMeta.
+  //  System generated and updated, not updatable by user.
+  string GenerationID     = 4 [(gogoproto.jsontag) = "generation-id"];
+  // Resource version in the object store. This is updated anytime there is any change to the object.
+  //  System generated and updated, not updatable by user.
+  string ResourceVersion      = 5[(gogoproto.jsontag) = "resource-version,omitempty"];
+  // UUID is the unique identifier for the object. This is generated on creation of the object.
+  // System generated, not updatable by user.
+  string UUID                 = 6 [(gogoproto.jsontag) = "uuid,omitempty"];
   // Labels are arbitrary (key,value) pairs associated with any object.
-  map <string, string> Labels = 6 [(gogoproto.jsontag) = "labels,omitempty"];
-  // CreationTime is the creation time of Object
-  Timestamp CreationTime      = 7 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "creation-time,omitempty"];
-  // ModTime is the Last Modification time of Object
-  Timestamp ModTime           = 8 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "mod-time,omitempty"];
-  // SelfLink is a link to accessing this object. When stored in the KV store this is
-  //  the key in the kvstore and when the object is served from the API-GW it is the
-  //  URI path. Examples
-  //    - "/venice/tenants/tenants/tenant2" in the kvstore
-  //    - "/v1/tenants/tenants/tenant2" when served by API Gateway.
-  string SelfLink           = 9 [(gogoproto.jsontag) = "self-link,omitempty"];
+  map <string, string> Labels = 7 [(gogoproto.jsontag) = "labels,omitempty"];
+  // CreationTime is the creation time of the object
+  //  System generated and updated, not updatable by user.
+  Timestamp CreationTime      = 8 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "creation-time,omitempty"];
+  // ModTime is the Last Modification time of the object
+  //  System generated and updated, not updatable by user.
+  Timestamp ModTime           = 9 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "mod-time,omitempty"];
+  // SelfLink is a link for accessing this object. When the object is served from the API-GW it is the
+  //  URI path. Example:
+  //    - "/v1/tenants/tenants/tenant2" 
+  //  System generated and updated, not updatable by user.
+  string SelfLink             = 10 [(gogoproto.jsontag) = "self-link,omitempty"];
 }
 
 // ObjectRef contains identifying information about an object.

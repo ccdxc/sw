@@ -325,6 +325,16 @@ func (t *cacheTxn) commit(ctx context.Context) (kvstore.TxnResponse, error) {
 		t.ops = nil
 		return resp, err
 	}
+	// the kvstore returns the current object only in the case of delete. for create and update,
+	//  rely on the cache for the current object.
+	respOps := []kvstore.TxnOpResponse{}
+	if resp.Succeeded {
+		for _, v := range resp.Responses {
+			if v.Oper == kvstore.OperDelete {
+				respOps = append(respOps, v)
+			}
+		}
+	}
 	if resp.Succeeded {
 		ver := uint64(resp.Revision)
 		t.parent.logger.DebugLog("oper", "txnCommit", "msg", "txn success")
@@ -335,11 +345,13 @@ func (t *cacheTxn) commit(ctx context.Context) (kvstore.TxnResponse, error) {
 				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, updating cache")
 				versioner.SetVersion(v.obj, ver)
 				t.parent.store.Set(v.key, ver, v.obj, updatefn)
+				respOps = append(respOps, kvstore.TxnOpResponse{Oper: kvstore.OperUpdate, Key: v.key, Obj: v.obj})
 			case operUpdate:
 				evtype = kvstore.Updated
 				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, updating cache")
 				versioner.SetVersion(v.obj, ver)
 				t.parent.store.Set(v.key, ver, v.obj, updatefn)
+				respOps = append(respOps, kvstore.TxnOpResponse{Oper: kvstore.OperUpdate, Key: v.key, Obj: v.obj})
 			case operDelete:
 				evtype = kvstore.Deleted
 				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, deleting from cache")
@@ -349,6 +361,7 @@ func (t *cacheTxn) commit(ctx context.Context) (kvstore.TxnResponse, error) {
 				continue
 			}
 		}
+		resp.Responses = respOps
 	}
 	// txn cannot be reused now
 	t.ops = nil

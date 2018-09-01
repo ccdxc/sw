@@ -386,7 +386,7 @@ func (m *FakeMessage) DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key str
 }
 
 // WriteToKvTxn is a mock method for testing
-func (m *FakeMessage) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prerfix string, create bool) error {
+func (m *FakeMessage) WriteToKvTxn(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prerfix string, create, updateSpec bool) error {
 	m.Txnwrites++
 	msg := i.(compliance.TestObj)
 	if create {
@@ -476,7 +476,7 @@ func (m *FakeMessage) KvUpdateFunc(ctx context.Context, kv kvstore.Interface, i 
 }
 
 // TxnUpdateFunc is a mock method for testing
-func (m *FakeMessage) TxnUpdateFunc(ctx context.Context, kvstore kvstore.Txn, i interface{}, prefix string, create bool) error {
+func (m *FakeMessage) TxnUpdateFunc(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
 	m.Txnwrites++
 	return nil
 }

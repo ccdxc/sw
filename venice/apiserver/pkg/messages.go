@@ -192,9 +192,13 @@ func (m *MessageHdlr) GetKVKey(i interface{}, prefix string) (string, error) {
 }
 
 // WriteToKvTxn is a wrapper around txnUpdateFunc to update the object in the KV store via a transaction.
-func (m *MessageHdlr) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
+func (m *MessageHdlr) WriteToKvTxn(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updateSpec bool) error {
 	if m.txnUpdateFunc != nil {
-		return m.txnUpdateFunc(ctx, txn, i, prefix, create)
+		var updateFn kvstore.UpdateFunc
+		if updateSpec {
+			updateFn = m.updateSpecFn(i)
+		}
+		return m.txnUpdateFunc(ctx, kvs, txn, i, prefix, create, updateFn)
 	}
 	return errNotImplemented
 }

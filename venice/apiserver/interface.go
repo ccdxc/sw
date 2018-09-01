@@ -166,7 +166,7 @@ type UpdateKvFunc func(ctx context.Context, kvstore kvstore.Interface, i interfa
 
 // UpdateKvTxnFunc is the function to Update the object in a transaction. The transaction itself is applied via a txn.Commit()
 // by the API server. Usually registered by generated code.
-type UpdateKvTxnFunc func(ctx context.Context, kvstore kvstore.Txn, i interface{}, prefix string, create bool) error
+type UpdateKvTxnFunc func(ctx context.Context, kvstore kvstore.Interface, kvtxn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error
 
 // GetFromKvFunc is the function registered to retrieve from the KV store.
 // Usually registered by generated code.
@@ -279,7 +279,7 @@ type MessageAction interface {
 	WriteToKv(ctx context.Context, kvs kvstore.Interface, i interface{}, prerfix string, create, updateSpec bool) (interface{}, error)
 	// WriteToKvTxn writes the object to the KV store Transaction. Actual applying of the transaction via
 	// a Commit() happens elsewhere.
-	WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prerfix string, create bool) error
+	WriteToKvTxn(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prerfix string, create, replaceSpec bool) error
 	// GetFromKv retrieves an object from the KV Store.
 	GetFromKv(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error)
 	// DelFromKv deletes an object from the KV store.
