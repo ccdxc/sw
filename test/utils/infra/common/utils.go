@@ -107,6 +107,7 @@ IPV6INIT=yes
 IPV6_AUTOCONF=yes
 IPV6_DEFROUTE=yes
 IPV6_FAILURE_FATAL=no
+NM_CONTROLLED=no
 IPV6_ADDR_GEN_MODE=stable-privacy
 ONBOOT=no` + fmt.Sprintf("\nNAME=%s\nDEVICE=%s\n", intfName, intfName)
 
@@ -117,6 +118,10 @@ ONBOOT=no` + fmt.Sprintf("\nNAME=%s\nDEVICE=%s\n", intfName, intfName)
 
 	time.Sleep(1 * time.Second)
 	cmd := []string{"service", "network", "restart"}
+	if _, stdout, err := Run(cmd, 0, false, true, nil); err != nil {
+		return errors.Wrap(err, stdout)
+	}
+	cmd = []string{"ifconfig", intfName, "up"}
 	if _, stdout, err := Run(cmd, 0, false, true, nil); err != nil {
 		return errors.Wrap(err, stdout)
 	}
