@@ -111,7 +111,7 @@ struct ionic_tx_buf {
 #define QUEUE_NAME_MAX_SZ		(32)
 
 /* Top level Rx Q mgmt. */
-struct rx_qcq {
+struct rxque {
 	char name[QUEUE_NAME_MAX_SZ];
 
 	struct lif *lif;
@@ -159,7 +159,7 @@ struct rx_qcq {
 };
 
 /* Top level Tx Q mgmt. */
-struct tx_qcq {
+struct txque {
 	char name[QUEUE_NAME_MAX_SZ];
 
 	struct lif *lif;
@@ -264,11 +264,11 @@ struct lif {
 	struct workqueue_struct *adminq_wq;
 	spinlock_t adminq_lock;
 	struct adminq *adminqcq;
-	struct tx_qcq **txqcqs;
-	struct rx_qcq **rxqcqs;
+	struct txque **txqs;
+	struct rxque **rxqs;
 	unsigned int neqs;
-	unsigned int ntxqcqs;
-	unsigned int nrxqcqs;
+	unsigned int ntxqs;
+	unsigned int nrxqs;
 	unsigned int rx_mode;
 	int buf_len;	// rx mbuf buffer length.
 	u32 hw_features;
@@ -286,11 +286,11 @@ struct lif {
 };
 
 
-static bool ionic_tx_avail(struct tx_qcq *txqcq, int want)
+static bool ionic_tx_avail(struct txque *txq, int want)
 {	
 	int avail;
 
-	avail = ionic_desc_avail(txqcq->num_descs, txqcq->cmd_head_index, txqcq->cmd_tail_index);
+	avail = ionic_desc_avail(txq->num_descs, txq->cmd_head_index, txq->cmd_tail_index);
 
 	return (avail > want);
 }
@@ -314,16 +314,15 @@ int ionic_set_features(struct lif *lif, uint16_t set_feature);
 int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir);
 int ionic_rss_hash_key_set(struct lif *lif, const u8 *key, uint16_t rss_types);
 
-void ionic_rx_fill(struct rx_qcq *rxqcq);
-void ionic_rx_refill(struct rx_qcq *rxqcq);
+void ionic_rx_fill(struct rxque *rxq);
+void ionic_rx_refill(struct rxque *rxq);
 
-void ionic_rx_empty(struct rx_qcq *rxqcq);
-void ionic_rx_flush(struct rx_qcq *rxqcq);
+void ionic_rx_empty(struct rxque *rxq);
+void ionic_rx_flush(struct rxque *rxq);
 #ifdef IONIC_NAPI
 void ionic_rx_napi(struct napi_struct *napi);
 #endif
-
-int ionic_tx_clean(struct tx_qcq* txqcq , int tx_limit);
-void ionic_rx_input(struct rx_qcq *rxqcq, struct ionic_rx_buf *buf,
+int ionic_tx_clean(struct txque* txq , int tx_limit);
+void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *buf,
 			   struct rxq_comp *comp, 	struct rxq_desc *desc);
 #endif /* _IONIC_LIF_H_ */
