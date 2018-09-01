@@ -38,16 +38,21 @@
                                 <div>
                                     <a class="searchresult-button-category-kind-entry-link" (click)="onSearchResultEntryClick($event,category, entry)">{{entry.object.meta['self-link']}}</a>
                                 </div>
-                                <div class="searchresult-button-category-kind-entry-content">{{entry.object.meta.name}} {{entry.object.meta.uuid}} </div>
+                                <div class="searchresult-button-category-kind-entry-content">
+                                        <span class="searchresult-button-category-kind-entry-label-text">name: </span>  {{entry.object.meta.name}} 
+                                </div>
+                                <div class="searchresult-button-category-kind-entry-content">
+                                        <span class="searchresult-button-category-kind-entry-label-text">UUID: </span>  {{entry.object.meta.uuid}} 
+                                </div>
                                 <div class="searchresult-button-category-kind-entry-label">
-                                    <span class="searchresult-button-category-kind-entry-label-text">Labels: </span> {{displayLabels(entry)}}
+                                    <span class="searchresult-button-category-kind-entry-label-text">labels: </span> {{displayLabels(entry)}}
                                  </div>
                                  <!-- in case it is an Event object, we display more information -->
                                 <div *ngIf="entry.object.kind=='Event'">
                                     <div *ngFor="let eventKey of getEventKeys(entry)">
                                         <div class="searchresult-button-category-kind-entry-label">
                                             <span class="searchresult-button-category-kind-entry-label-text">{{eventKey}}: </span> 
-                                            {{displayEventValue(entry.object[eventKey])}} 
+                                            {{displayEventValue(entry.object, eventKey)}} 
                                         </div>
                                     </div>
                                 </div>

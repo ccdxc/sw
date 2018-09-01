@@ -7,6 +7,7 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 
 
 import { SearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { EventsEvent } from '@sdk/v1/models/generated/events';
 
 /**
  * SearchResult is a component hosted in VenicUI app main page.
@@ -228,33 +229,34 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
    * Get displayable key for Event object
    * @param entry
    */
-  getEventKeys(entry): string [] {
+  getEventKeys(entry): string[] {
     const wantedKeys = [];
     Object.keys(entry.object).filter(key => {
       if (key !== 'meta' && key !== 'kind') {
-       wantedKeys.push(key);
+        wantedKeys.push(key);
       }
     });
     return wantedKeys;
   }
 
-  displayEventValue(eventValue): string {
-    if (typeof eventValue === 'string' ) {
-      return eventValue;
+  displayEventValue(event, eventValue): string {
+    const value = Utility.getObjectValueByPropertyPath(new EventsEvent(event), eventValue);
+    if (typeof value === 'string') {
+      return value
     }
-    if ( eventValue instanceof Object) {
-      return this.getObjectValues(eventValue);
+    if (value instanceof Object) {
+      return this.getObjectValues(new EventsEvent(event)[eventValue]);
     }
-    return JSON.stringify(eventValue);
+    return JSON.stringify(value);
   }
 
   private getObjectValues(eventValue: any): string {
     const list = [];
     const keys = Object.keys(eventValue);
     keys.forEach(key => {
-      list.push(key + ' = ' + eventValue[key]);
+      list.push(key + ' = ' + Utility.getObjectValueByPropertyPath(eventValue, [key]));
     });
-    return list.toString();
+    return list.join(', ');
   }
 
 }

@@ -617,7 +617,13 @@ export class Utility {
    * Unless specified, will automatically apply return the ui hints
    * version of the value if possible
    */
-  public static getObjectValueByPropertyPath(inputObject: any, fields: any, useUIHints: boolean = true): any {
+  public static getObjectValueByPropertyPath(inputObject: any, fields: string | Array<string>, useUIHints: boolean = true): any {
+    if (fields == null) {
+      return null;
+    }
+    if (typeof fields === 'string') {
+      fields = fields.split('.');
+    }
     let value = inputObject;
     let propHelper;
     let uiHintMap;
@@ -630,7 +636,7 @@ export class Utility {
         if (i === fields.length - 1) {
           // We are the last value, so we are potentially just before a leaf
           // We check the prop info at this level.
-          if (propHelper.getPropInfo != null && propHelper.getPropInfo(fields[i]).enum) {
+          if (propHelper.getPropInfo != null && propHelper.getPropInfo(fields[i]) != null && propHelper.getPropInfo(fields[i]).enum) {
             uiHintMap = propHelper.getPropInfo(fields[i]).enum;
           }
         } else {
