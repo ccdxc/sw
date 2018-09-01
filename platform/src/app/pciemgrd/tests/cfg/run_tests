@@ -2,9 +2,11 @@
 
 npass=0
 nfail=0
-for tc in testcases/*.dec; do
-    tb=`echo $tc | sed -e 's/\.dec$//'`
-    ./pcietlp.gen -d $tc > $tb.out
+for tc in testcases/*.in; do
+    tb=`echo $tc | sed -e 's/\.in$//'`
+    rm -f $HOME/.palreg-*
+    ./genrun pciemgrd < $tc > /dev/null
+    ./genrun lspci -vvvxxxx > $tb.out
     if ! cmp -s $tb.exp $tb.out; then
 	printf "%-30s FAILED ***\n" $tc
 	diff $tb.exp $tb.out

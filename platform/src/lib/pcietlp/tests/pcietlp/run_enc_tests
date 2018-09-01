@@ -4,12 +4,13 @@ npass=0
 nfail=0
 for tc in testcases/*.enc; do
     tb=`echo $tc | sed -e 's/\.enc$//'`
-    pcietlp.gen -e $tc > $tb.out
-    if ! cmp -s $tb.out $tb.exp; then
-	echo $tc FAILED ===
+    ./pcietlp.gen -e $tc > $tb.out
+    if ! cmp -s $tb.exp $tb.out; then
+	printf "%-30s FAILED ***\n" $tc
+	diff $tb.exp $tb.out
 	nfail=`expr $nfail + 1`
     else
-	echo $tc passed
+	printf "%-30s passed\n" $tc
 	rm $tb.out
 	npass=`expr $npass + 1`
     fi

@@ -1,5 +1,5 @@
 *.log
-gen
+gen/
 src/third-party/lib/edit/
 src/third-party/lib/gmp/
 src/third-party/lib/ncurses/

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+TOPDIR=../../../../..
+GENLIB=$TOPDIR/gen/x86_64/lib
+export LD_LIBRARY_PATH=$GENLIB
+
+PROG=$TOPDIR/gen/x86_64/bin/$1
+shift
+
+$PROG $*
