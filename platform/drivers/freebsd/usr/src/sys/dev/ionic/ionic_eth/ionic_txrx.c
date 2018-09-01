@@ -334,7 +334,7 @@ void ionic_rx_fill(struct rxque *rxq)
 		desc->opcode = RXQ_DESC_OPCODE_SIMPLE;
 
 		/* XXX ping doorbell on 4 rx submission. */
-		ionic_ring_doorbell(rxq->db, rxq->qid, rxq->cmd_head_index);
+		ionic_ring_doorbell(rxq->db, rxq->qid, rxq->cmd_head_index - 1);
 
 		//IONIC_NETDEV_QINFO(rxq, "rx_fill index :%d mbuf pa: 0x%lx \n", index, rxbuf->pa_addr);
 		/* Q full condition. */
@@ -593,7 +593,7 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 	desc->C = 1;
 //	desc->O = outer_csum;
 	desc->S = 1;
-	desc->E = (nsegs == 1) ? 1 : 0;
+	desc->E = 1;//(nsegs == 1) ? 1 : 0;
 	desc->mss = mss;
 
 	desc->num_sg_elems = nsegs;
@@ -602,7 +602,7 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 
 	IONIC_NETDEV_TX_TRACE(txq, "TSO: VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%x\n",
 		m, txbuf->pa_addr, nsegs, m->m_pkthdr.len);
-	IONIC_NETDEV_TX_TRACE(txq, "sg[0] pa: 0x%lx length: 0x%hx\n",  sg->elems[0].addr, sg->elems[0].len);
+	IONIC_NETDEV_TX_TRACE(txq, "sg[0] pa: 0x%lx length: 0x%hx\n",  seg[0].ds_addr, seg[0].ds_len);
 	/* Now populate SG list, past the first fragment. */
 	for ( i = 0 ; i < nsegs -1 ; i++) {
 		sg->elems[i].addr = seg[i + 1].ds_addr;
@@ -648,7 +648,7 @@ static int ionic_xmit(struct txque* txq, struct mbuf **head)
 	stats->bytes += m->m_len;
 
 	/* XXX ping doorbell on 4 rx submission. */
-	ionic_ring_doorbell(txq->db, txq->qid, txq->cmd_head_index);
+	ionic_ring_doorbell(txq->db, txq->qid, txq->cmd_head_index -1 );
 	IONIC_NETDEV_TX_TRACE(txq, "db: %p Qid: %d index: %d\n",
 		 txq->db, txq->qid, txq->cmd_head_index);
 
@@ -813,6 +813,10 @@ ionic_lif_netdev_alloc(struct lif* lif, int ndescs)
 	//ifp->if_snd.ifq_maxlen = ndescs;
 	if_setgetcounterfn(ifp, ionic_get_counter);
 	/* Capabilities are set later on. */
+
+	ifp->if_hw_tsomax = 65518;
+	ifp->if_hw_tsomaxsegcount = IONIC_TX_MAX_SG_ELEMS;
+	ifp->if_hw_tsomaxsegsize = ETHERMTU - 100;
 
 	/* Connect lif to ifnet. */
 	lif->netdev = ifp;

@@ -120,9 +120,8 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 
 	} while (time_after(time, jiffies));
 
-#ifdef HAPS
-	printk(KERN_ERR "DEVCMD timeout after %ld secs\n", max_wait/HZ);
-#endif
+	IONIC_ERROR("DEVCMD timeout after %ld secs\n", max_wait/HZ);
+
 	return -ETIMEDOUT;
 }
 
@@ -131,12 +130,13 @@ static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
 	u8 status;
 
 	status = ionic_dev_cmd_status(idev);
-	switch (status) {
-	case 0:
-		return 0;
+
+	if (status) {
+		IONIC_ERROR("DEVCMD failed, status: 0x%x\n", status);
+		return (EIO);
 	}
 
-	return -EIO;
+	return status;
 }
 
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)

@@ -25,7 +25,8 @@
 //#define ADMINQ
 #define IONIC_DEBUG
 
-#define	IONIC_DEBUG_PRINT(fmt, ...)			printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
+#define	IONIC_ERROR(fmt, ...)			printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
+#define	IONIC_DEBUG_PRINT(fmt, ...)		printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
 
 /* Device related */
 #define	IONIC_DEV_DEBUG(dev, fmt, ...)							\
@@ -90,11 +91,9 @@
 /* XXX: should go to linux/notifier.h */
 #define notifier_from_errno(v) NOTIFY_DONE
 
-
 /* END */
 
 MALLOC_DECLARE(M_IONIC);
-
 
 #ifndef napi_struct
 #define napi_struct work_struct
@@ -129,10 +128,7 @@ struct ionic {
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
-#if 0
-int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
-	       void *cb_arg);
-#endif
+
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
 int ionic_set_dma_mask(struct ionic *ionic);
 int ionic_setup(struct ionic *ionic);
