@@ -195,6 +195,22 @@ sbus_access (uint32_t sbus_addr,
     //sbus_data: Pointer to the SBus data to write. Results of SBus read operations will be placed here.
 
     switch (command) {
+    case 0x0:   // sbus reset
+        SDK_TRACE_DEBUG("sbus_reset."
+                " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
+                " ring: 0x%x, sbus_id: 0x%x",
+                sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
+
+        if(ring_number == 0) {
+            cap_pp_sbus_reset(chip_id, sbus_id);
+        } else {
+            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            // cap_ms_sbus_reset(chip_id, sbus_id);
+        }
+        status = 1;
+        break;
+
+
     case 0x1:   // sbus write
         SDK_TRACE_DEBUG("sbus_write."
                 " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
@@ -202,20 +218,20 @@ sbus_access (uint32_t sbus_addr,
                 sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
 
         if(ring_number == 0) {
-            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
-            // cap_pp_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
+            cap_pp_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
         } else {
-            cap_ms_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
+            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            // cap_ms_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
         }
         status = 1;
         break;
 
     case 0x2:   // sbus read
         if(ring_number == 0) {
-            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
-            // *sbus_data = cap_pp_sbus_read(chip_id, sbus_id, reg_addr);
+            *sbus_data = cap_pp_sbus_read(chip_id, sbus_id, reg_addr);
         } else {
-            *sbus_data = cap_ms_sbus_read(chip_id, sbus_id, reg_addr);
+            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            // *sbus_data = cap_ms_sbus_read(chip_id, sbus_id, reg_addr);
         }
 
         SDK_TRACE_DEBUG("sbus_read."
@@ -224,21 +240,6 @@ sbus_access (uint32_t sbus_addr,
                 sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id,
                 *sbus_data);
 
-        status = 1;
-        break;
-
-    case 0x0:   // sbus reset
-        SDK_TRACE_DEBUG("sbus_reset."
-                " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
-                " ring: 0x%x, sbus_id: 0x%x",
-                sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
-
-        if(ring_number == 0) {
-            SDK_TRACE_ERR("NO-OP for ring: %d", ring_number);
-            // cap_pp_sbus_reset(chip_id, sbus_id);
-        } else {
-            // cap_ms_sbus_reset(chip_id, sbus_id);
-        }
         status = 1;
         break;
 

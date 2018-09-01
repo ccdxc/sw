@@ -92,7 +92,10 @@ cc_library(
         "cap_bx_api.cc",
         "cap_sbus_api.cc",
         "pknobs.hpp",
+        "cap_sw_glue.h",
+        "cap_sbus_api.h"
     ],
+
     deps = [
         "@sdk//:csr_includes",
         "//nic/linkmgr:linkmgrcsr_helpers",
@@ -100,7 +103,9 @@ cc_library(
     ],
 
     # csr related copts because of cap_mx_api.cc
-    copts = csr_copts + csr_defines_copts,
+    copts = [
+        "-DCAPRI_SW",
+    ] + csr_copts + csr_defines_copts,
 
     alwayslink = 1,
 )

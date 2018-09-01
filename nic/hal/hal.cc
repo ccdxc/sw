@@ -263,12 +263,13 @@ hal_init (hal_cfg_t *hal_cfg)
     sdk_cfg.catalog        = catalog;
     sdk_cfg.server_builder = hal_cfg->server_builder;
 
-    ret = linkmgr::linkmgr_init(&sdk_cfg);
+    // ret = linkmgr::linkmgr_init(&sdk_cfg);
+    (void)sdk_cfg;
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("linkmgr init failed");
         return HAL_RET_ERR;
     }
-    sdk::linkmgr::linkmgr_event_wait();
+    // sdk::linkmgr::linkmgr_event_wait();
 
     // start monitoring HAL heartbeat
     hal::hb::heartbeat_init();
