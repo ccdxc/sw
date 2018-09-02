@@ -1904,7 +1904,7 @@ static int ionic_lif_register(struct lif *lif)
 				| ETH_HW_RX_HASH
 				| ETH_HW_TX_SG
 				| ETH_HW_TX_CSUM
-				| ETH_HW_RX_CSUM 
+				| ETH_HW_RX_CSUM
 				| ETH_HW_TSO
 				| ETH_HW_TSO_IPV6);
 

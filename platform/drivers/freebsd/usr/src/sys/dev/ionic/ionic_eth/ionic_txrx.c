@@ -602,7 +602,7 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 
 	IONIC_NETDEV_TX_TRACE(txq, "TSO: VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%x\n",
 		m, txbuf->pa_addr, nsegs, m->m_pkthdr.len);
-	IONIC_NETDEV_TX_TRACE(txq, "sg[0] pa: 0x%lx length: 0x%hx\n",  seg[0].ds_addr, seg[0].ds_len);
+	IONIC_NETDEV_TX_TRACE(txq, "sg[0] pa: 0x%lx length: 0x%lx\n",  seg[0].ds_addr, seg[0].ds_len);
 	/* Now populate SG list, past the first fragment. */
 	for ( i = 0 ; i < nsegs -1 ; i++) {
 		sg->elems[i].addr = seg[i + 1].ds_addr;
@@ -648,7 +648,7 @@ static int ionic_xmit(struct txque* txq, struct mbuf **head)
 	stats->bytes += m->m_len;
 
 	/* XXX ping doorbell on 4 rx submission. */
-	ionic_ring_doorbell(txq->db, txq->qid, txq->cmd_head_index -1 );
+	ionic_ring_doorbell(txq->db, txq->qid, txq->cmd_head_index);
 	IONIC_NETDEV_TX_TRACE(txq, "db: %p Qid: %d index: %d\n",
 		 txq->db, txq->qid, txq->cmd_head_index);
 
