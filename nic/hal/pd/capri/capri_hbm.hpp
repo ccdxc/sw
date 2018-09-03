@@ -235,4 +235,8 @@ capri_hbm_cache_init(capri_cfg_t *cfg);
 
 extern hal_ret_t
 capri_hbm_cache_regions_init();
+
+extern capri_hbm_region_t*
+get_hbm_region_by_address(uint64_t addr);
+
 #endif    // __CAPRI_HPP__

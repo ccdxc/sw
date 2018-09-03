@@ -164,6 +164,30 @@ get_hbm_region (char *reg_name)
     return NULL;
 }
 
+capri_hbm_region_t *
+get_hbm_region_by_address (uint64_t addr)
+{
+    capri_hbm_region_t      *reg;
+
+    for (int i = 0; i < num_hbm_regions_; i++) {
+        reg = &hbm_regions_[i];
+
+        /*
+        HAL_TRACE_DEBUG("Region: {}, Size_KB: {}, Start:{:#x} End:{:#x}, addr: {:#x}",
+                        reg->mem_reg_name, reg->size_kb,
+                        HBM_OFFSET(reg->start_offset),
+                        HBM_OFFSET(reg->start_offset + reg->size_kb * 1024), addr);
+        */
+
+        if ((addr >= HBM_OFFSET(reg->start_offset)) &&
+            (addr < HBM_OFFSET(reg->start_offset + (reg->size_kb * 1024)))) {
+            return reg;
+        }
+    }
+    return NULL;
+}
+
+
 int32_t
 capri_hbm_read_mem (uint64_t addr, uint8_t *buf, uint32_t size)
 {

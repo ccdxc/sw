@@ -162,6 +162,7 @@ class RdmaSessionObject(base.ConfigObjectBase):
 class RdmaSessionObjectHelper:
     def __init__(self):
         self.rdma_sessions = []
+        self.rdma_ud_sessions = []
         self.nw_sessions = []
         self.used_qps = []
         self.v4_non_vxlan_count = 0
@@ -359,6 +360,7 @@ class RdmaSessionObjectHelper:
                     rdma_s = RdmaSessionObject()
                     rdma_s.Init(nw_s, lqp, rqp, vxlan, self.ahid, 0)
                     self.rdma_sessions.append(rdma_s)
+                    self.rdma_ud_sessions.append(rdma_s)
 
                     self.ahid += 1
                     break
@@ -381,8 +383,10 @@ class RdmaSessionObjectHelper:
         if GlobalOptions.agent:
             return
         for rdma_s in self.rdma_sessions:
+            logger.info('Walking RDMA Session: %s ' % 
+                        (rdma_s.GID()))
             rdma_s.Configure()
-        halapi.ConfigureAhs(self.rdma_sessions)
+        halapi.ConfigureAhs(self.rdma_ud_sessions)
 
     def main(self):
         self.Generate()
