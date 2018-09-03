@@ -188,10 +188,10 @@ typedef enum key_state_e {
     KEY_STATE_VALID,
 } key_state_t;
 
-#define KEY_INDEX_MASK      0x00ffffff
-#define KEY_INDEX_SHIFT     0
-#define KEY_USER_KEY_MASK   0xff000000
-#define KEY_USER_KEY_SHIFT  24
+#define KEY_INDEX_MASK      0xffffff00
+#define KEY_INDEX_SHIFT     8
+#define KEY_USER_KEY_MASK   0x000000ff
+#define KEY_USER_KEY_SHIFT  0
 
 typedef enum mr_type_s {
     MR_TYPE_MR = 0,

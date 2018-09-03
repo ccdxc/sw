@@ -109,7 +109,7 @@ sge_loop:
     crestore.c6    [c6], K_PRIV_OPER_ENABLE, 0x1
 
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+
-    //                     ((sge_p->lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
+    //                     ((sge_p->lkey >> KEY_INDEX_MASK) * sizeof(key_entry_t));
     KEY_ENTRY_ADDR_GET(r6, r6, r4)
 
     // r4 = sge_p->len

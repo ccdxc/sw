@@ -19,7 +19,7 @@ class KeyObject(base.ConfigObjectBase):
         super().__init__()
         self.Clone(Store.templates.Get('RDMA_KEY'))
         self.pd = pd
-        self.lkey = pd.ep.intf.lif.GetMrKey()
+        self.lkey = pd.ep.intf.lif.GetMrKey() << 8
         self.rkey = self.lkey
         self.GID('KEY-%s' %(self.lkey))
         self.remote_access = remote_access

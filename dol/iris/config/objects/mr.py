@@ -22,7 +22,7 @@ class MrObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('RDMA_MR'))
         self.pd = pd
         self.slab = slab
-        self.lkey = pd.ep.intf.lif.GetMrKey()
+        self.lkey = pd.ep.intf.lif.GetMrKey() << 8
         #self.rkey = self.lkey + 4096
         self.rkey = self.lkey
         self.id = slab.id

@@ -33,7 +33,7 @@ class RdmaKeyTableEntry(Packet):
 class RdmaKeyTableEntryObject(object):
     def __init__(self, lif, key):
         self.size = len(RdmaKeyTableEntry())
-        self.addr = lif.rdma_kt_base_addr + key * self.size
+        self.addr = lif.rdma_kt_base_addr + (key >> 8) * self.size
         self.Read()
 
     def Write(self):

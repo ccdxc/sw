@@ -871,13 +871,10 @@ struct rsqwqe_t {
 #define KEY_STATE_FREE      1
 #define KEY_STATE_VALID     2
 
-#define KEY_INDEX_MASK      0x00ffffff
-
-#define KEY_INDEX_GET(_r) _r[23:0]
-
-#define KEY_INDEX_SHIFT     0
-#define KEY_USER_KEY_MASK   0xff000000
-#define KEY_USER_KEY_SHIFT  24
+#define KEY_INDEX_MASK      0xffffff00
+#define KEY_INDEX_SHIFT     8
+#define KEY_USER_KEY_MASK   0x000000ff
+#define KEY_USER_KEY_SHIFT  0
 
 //MR_TYPE
 #define MR_TYPE_MR             0
@@ -902,9 +899,13 @@ struct rsqwqe_t {
 #define LOG_SIZEOF_KEY_ENTRY_T  6   // 2^6 = 64 bytes
 #define LOG_SIZEOF_KEY_ENTRY_T_BITS (LOG_SIZEOF_KEY_ENTRY_T + LOG_BITS_PER_BYTE)
 
-// entry_addr = base_addr + ((index & INDEX_MASK) * sizeof(key_entry_t))
+// index = lkey >> KEY_INDEX_SHIFT
+#define KEY_INDEX_GET(_key_index_r, _key_r) \
+    srl     _key_index_r, _key_r, KEY_INDEX_SHIFT
+
+// entry_addr = base_addr + (index * sizeof(key_entry_t))
 #define KEY_ENTRY_ADDR_GET(_entry_addr_r, _kt_base_r, _key_index_r) \
-    add     _entry_addr_r, _kt_base_r, KEY_INDEX_GET(_key_index_r), LOG_SIZEOF_KEY_ENTRY_T;
+    add     _entry_addr_r, _kt_base_r, _key_index_r[31:8], LOG_SIZEOF_KEY_ENTRY_T;
 
 // aligned_entry_addr =  entry_addr & ~HBM_CACHE_LINE_MASK;
 #define KEY_ENTRY_ALIGNED_ADDR_GET(_aligned_entry_addr_r, _entry_addr_r) \

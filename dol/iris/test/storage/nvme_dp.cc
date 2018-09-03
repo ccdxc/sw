@@ -216,7 +216,7 @@ int setup_one_io_buffer(int index) {
   // Register IO Buffer with ROCE using identity mapping. 
   // No remote access => only LKey (based on base value + offset).
   RdmaMemRegister(io_buf_base_addr->pa(), io_buf_base_addr->pa(), kIOBufEntrySize,
-                  send_lkey, write_back_rkey, true);
+                  send_lkey << 8, write_back_rkey << 8, true);
 
 
   // Fill the write wqe
@@ -239,7 +239,7 @@ int setup_one_io_buffer(int index) {
   // Form the SGE
   io_buf_base_addr->write_bit_fields(roce_write_wqe_base+256, 64,  data_offset_pa); // SGE-va, same as pa
   io_buf_base_addr->write_bit_fields(roce_write_wqe_base+256+64, 32, data_len);
-  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+256+64+32, 32, send_lkey);
+  io_buf_base_addr->write_bit_fields(roce_write_wqe_base+256+64+32, 32, send_lkey << 8);
 
 
   // Fill the read wqe
@@ -262,7 +262,7 @@ int setup_one_io_buffer(int index) {
   // Form the SGE
   io_buf_base_addr->write_bit_fields(roce_read_wqe_base+256, 64,  data_offset_pa); // SGE-va, same as pa
   io_buf_base_addr->write_bit_fields(roce_read_wqe_base+256+64, 32, data_len);
-  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+256+64+32, 32, send_lkey);
+  io_buf_base_addr->write_bit_fields(roce_read_wqe_base+256+64+32, 32, send_lkey << 8);
 
   // Pre-form the (RDMA) write descriptor to point to the data buffer
   uint32_t write_back_wqe_base = IO_BUF_WRITE_REQ_OFFSET * 8;
@@ -290,7 +290,7 @@ int setup_one_io_buffer(int index) {
 #endif
   io_buf_base_addr->write_bit_fields(write_back_wqe_base+128, 64, data_offset_pa); // va == pa
   io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64, 32, (uint32_t) data_len); // len
-  io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64+32, 32, write_back_rkey); // rkey
+  io_buf_base_addr->write_bit_fields(write_back_wqe_base+128+64+32, 32, write_back_rkey << 8); // rkey
 
   // Form the R2N sequencer doorbell
   uint32_t base_db_bit = (IO_BUF_SEQ_DB_OFFSET + IO_BUF_SEQ_R2N_DB_OFFSET) * 8;

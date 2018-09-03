@@ -254,7 +254,7 @@ atomic:
     #phvwr          p.cqe.op_type, d.atomic.op_type
     KT_BASE_ADDR_GET2(r3, r2)
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+
-    //                     ((sge_p->lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
+    //                     ((sge_p->lkey >> KEY_INDEX_SHIFT) * sizeof(key_entry_t));
     add            r2, d.atomic.sge.l_key, r0
     KEY_ENTRY_ADDR_GET(r3, r3, r2)
 

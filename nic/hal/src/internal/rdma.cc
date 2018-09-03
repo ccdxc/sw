@@ -487,7 +487,7 @@ rdma_key_entry_read (uint16_t lif, uint32_t key, key_entry_t *entry_p)
                        (uint8_t*)entry_p, sizeof(key_entry_t));
 #endif
     pd::pd_capri_hbm_read_mem_args_t args = {0};
-    args.addr = (uint64_t)(((key_entry_t *) key_table_base_addr) + key);
+    args.addr = (uint64_t)(((key_entry_t *) key_table_base_addr) + (key >> KEY_INDEX_SHIFT));
     args.buf = (uint8_t*)entry_p;
     args.size = sizeof(key_entry_t);
     pd_func_args.pd_capri_hbm_read_mem = &args;
@@ -517,7 +517,7 @@ rdma_key_entry_write (uint16_t lif, uint32_t key, key_entry_t *entry_p)
 #endif
     pd::pd_capri_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
-    args.addr = (uint64_t)(((key_entry_t *) key_table_base_addr) + key);
+    args.addr = (uint64_t)(((key_entry_t *) key_table_base_addr) + (key >> KEY_INDEX_SHIFT));
     args.buf = (uint8_t*)&tmp_key_entry;
     args.size = sizeof(key_entry_t);
     pd_func_args.pd_capri_hbm_write_mem = &args;

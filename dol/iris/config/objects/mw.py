@@ -21,7 +21,7 @@ class MwObject(base.ConfigObjectBase):
         super().__init__()
         self.Clone(Store.templates.Get('RDMA_MW'))
         self.pd = pd
-        self.rkey = pd.ep.intf.lif.GetMrKey()
+        self.rkey = pd.ep.intf.lif.GetMrKey() << 8
         if not mw_type:
             self.GID('MW-TYPE1_2-%s' %(self.rkey))
         else :
