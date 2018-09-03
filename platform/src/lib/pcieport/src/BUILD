@@ -14,10 +14,11 @@ cc_library(
         "serdes.c",
         "cap_pcie_api.c",
         "cap_sbus_api.c",
+	# XXX figure out how to compile this!
         #"sbus_pcie_rom.s",
     ],
     data = [
-        #"sbus_pcie_rom.bin",
+        "sbus_pcie_rom.bin",
     ],
     hdrs = [
         "events.h",
@@ -38,8 +39,6 @@ cc_library(
         "-Inic/asic/capri/design/common",
         "-Inic/asic/capri/model/cap_top",
         "-Inic/asic/capri/model/cap_top/csr_defines",
-        #"-Ibazel-out/k8-fastbuild/genfiles/platform/src/lib/pcieport/src",
-        #"-I$(location sbus_pcie_rom.bin)",
     ],
     deps = [
         "//platform/src/lib/misc/include:libmisc_hdrs",

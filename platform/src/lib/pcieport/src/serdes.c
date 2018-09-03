@@ -3,6 +3,7 @@
  */
 
 #include <stdlib.h>
+#include <assert.h>
 
 #include "cap_sw_glue.h"
 #include "cap_pcie_api.h"
@@ -100,5 +101,9 @@ pcieport_serdes_init(void)
     pal_reg_trace("================ cap_pcie_serdes_setup start\n");
     cap_pcie_serdes_setup(0, 0, gen == 1, &ctx);
     pal_reg_trace("================ cap_pcie_serdes_setup end\n");
+#else
+    pciehsys_error("pcieport_serdes_init: missing serdes rom!!!\n");
+    assert(0);
+    if (0) pcieport_serdes_fw_gen();
 #endif
 }
