@@ -783,10 +783,15 @@ port::port_init(linkmgr_cfg_t *cfg)
         SDK_TRACE_ERR("port mac init failed");
     }
 
-#if 0
-    // TODO
+    // TODO move back to serdes_fn_init
+    serdes_get_ip_info(1);
+
     for (uint32_t asic_port = 0; asic_port < num_asic_ports(0); ++asic_port) {
         uint32_t sbus_addr = sbus_addr_asic_port(0, asic_port);
+
+        if (sbus_addr == 0) {
+            continue;
+        }
 
         sdk::linkmgr::serdes_fns.serdes_spico_upload(sbus_addr, cfg_file.c_str());
 
@@ -796,9 +801,6 @@ port::port_init(linkmgr_cfg_t *cfg)
                         sbus_addr,
                         sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
     }
-#endif
-
-    serdes_get_ip_info(1);
 
     return rc;
 }
