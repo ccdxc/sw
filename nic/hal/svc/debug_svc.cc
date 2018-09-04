@@ -336,3 +336,16 @@ DebugServiceImpl::GenericOpn(ServerContext *context,
     return Status::OK;
 }
 
+Status
+DebugServiceImpl::FlushLogs(ServerContext *context,
+                            const Empty *req,
+                            FlushLogsResponseMsg *rsp)
+{
+    FlushLogsResponse    *response;
+
+    HAL_TRACE_DEBUG("Received flush logs");
+    response = rsp->add_response();
+    hal::flush_logs(response);
+    return Status::OK;
+}
+

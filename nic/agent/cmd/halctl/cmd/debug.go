@@ -19,6 +19,12 @@ var (
 	traceLevel string
 )
 
+var debugCmd = &cobra.Command{
+	Use:   "debug",
+	Short: "Set debug options",
+	Long:  `Set debug options`,
+}
+
 var traceDebugCmd = &cobra.Command{
 	Use:   "trace",
 	Short: "Set debug trace level",
@@ -33,8 +39,17 @@ var traceShowCmd = &cobra.Command{
 	Run:   traceShowCmdHandler,
 }
 
+var flushLogsDebugCmd = &cobra.Command{
+	Use:   "flush-logs",
+	Short: "Flush logs",
+	Long:  "Flush logs",
+	Run:   flushLogsDebugCmdHandler,
+}
+
 func init() {
+	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
+	debugCmd.AddCommand(flushLogsDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
 
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level")
@@ -153,6 +168,35 @@ func traceLevelToStr(level halproto.TraceLevel) string {
 		return "Invalid"
 	}
 }
+
 func traceShowResp(resp *halproto.TraceResponse) {
 	fmt.Printf("Trace level set to %-12s\n", resp.GetTraceLevel())
+}
+
+func flushLogsDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var empty *halproto.Empty
+
+	// HAL call
+	respMsg, err := client.FlushLogs(context.Background(), empty)
+	if err != nil {
+		log.Errorf("Flushing logs failed. %v", err)
+	}
+
+	// Print Response
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		log.Println("Flushing logs succeeded")
+	}
 }

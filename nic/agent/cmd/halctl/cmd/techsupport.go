@@ -47,7 +47,9 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to create output file %s, err : %v", outFile, err)
 	}
 
-	ofile.WriteString("Capturing techsupport informaiton\n\n")
+	ofile.WriteString("Capturing techsupport information\n\n")
+	ofile.WriteString("Flush HAL logs\n\n")
+	flushLogsDebugCmdHandler(nil, nil)
 	ofile.WriteString("Lif information\n\n")
 	handlelifDetailShowCmd(nil, ofile)
 	ofile.WriteString("Interface information\n\n")
@@ -68,5 +70,7 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleSessionDetailShowCmd(nil, ofile)
 	ofile.WriteString("Memory information\n\n")
 	allMemoryShowHandler(ofile)
+	ofile.WriteString("Flush HAL logs\n\n")
+	flushLogsDebugCmdHandler(nil, nil)
 	ofile.Close()
 }

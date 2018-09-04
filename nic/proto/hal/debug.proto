@@ -28,6 +28,8 @@ service Debug {
   rpc TraceUpdate(TraceRequestMsg) returns (TraceResponseMsg){}
   rpc TraceGet(types.Empty) returns (TraceResponseMsg) {}
 
+  rpc FlushLogs(types.Empty) returns (FlushLogsResponseMsg) {}
+
   // generic debug operations
   // used only for linkmgr
   rpc GenericOpn(GenericOpnRequestMsg) returns (GenericOpnResponseMsg) {}
@@ -353,3 +355,12 @@ message MpuTraceResponseMsg {
   repeated MpuTraceResponse    response = 1;
 }
 
+// Flush logs response
+message FlushLogsResponse {
+  types.ApiStatus  api_status  = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+// Flush logs response message
+message FlushLogsResponseMsg {
+  repeated FlushLogsResponse    response = 1;
+}

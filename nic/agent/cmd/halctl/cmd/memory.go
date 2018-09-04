@@ -447,7 +447,6 @@ func allMemoryShowHandler(ofile *os.File) {
 
 	for _, sResp := range sRespMsg.Response {
 		if sResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", sResp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(sResp)

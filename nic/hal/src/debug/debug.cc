@@ -281,4 +281,20 @@ trace_get (TraceResponseMsg *rsp)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// process a flush_logs request
+//------------------------------------------------------------------------------
+hal_ret_t
+flush_logs (FlushLogsResponse *rsp)
+{
+    if (hal::utils::hal_logger()) {
+        hal::utils::hal_logger()->flush();
+        rsp->set_api_status(types::API_STATUS_OK);
+    } else {
+        rsp->set_api_status(types::API_STATUS_ERR);
+    }
+
+    return HAL_RET_OK;
+}
+
 }    // namespace hal

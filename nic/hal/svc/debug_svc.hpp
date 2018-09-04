@@ -41,7 +41,7 @@ using debug::MemoryRawUpdateRequestMsg;
 using debug::MemoryRawUpdateRequest;
 using debug::MemoryRawUpdateResponseMsg;
 using debug::MemoryRawUpdateResponse;
-
+using debug::FlushLogsResponseMsg;
 using debug::GenericOpnRequest;
 using debug::GenericOpnResponse;
 using debug::GenericOpnRequestMsg;
@@ -85,6 +85,9 @@ public:
     Status GenericOpn(ServerContext *context,
                       const GenericOpnRequestMsg *req_msg,
                       GenericOpnResponseMsg *rsp_msg);
+    Status FlushLogs(ServerContext *context,
+                     const Empty *req,
+                     FlushLogsResponseMsg *rsp) override;
 };
 
 #endif  // __DEBUG_SVC_HPP__
