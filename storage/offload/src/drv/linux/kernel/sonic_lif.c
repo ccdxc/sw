@@ -913,18 +913,22 @@ int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 	return 0;
 }
 
-int alloc_cpdc_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype, struct queue **q)
+int
+sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
+		struct queue **q)
 {
 	int err = -EPERM;
 	unsigned long free_qid = -1;
 	unsigned long *bmp;
-	int max = 0;
 	struct per_core_resource *pc_res = NULL;
+	int max = 0;
 
 	*q = NULL;
+
 	pc_res = sonic_get_per_core_res(lif);
 	if (pc_res == NULL)
 		return err;
+
 	//TODO - Change MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES to actual value
 	switch (sonic_qtype) {
 	case SONIC_QTYPE_CPDC_STATUS:
@@ -939,10 +943,12 @@ int alloc_cpdc_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype, s
 		return err;
 		break;
 	}
+
 	free_qid = find_first_zero_bit(bmp, max);
 	if (free_qid == max)
 		return err;
 	set_bit(free_qid, bmp);
+
 	switch (sonic_qtype) {
 	case SONIC_QTYPE_CPDC_STATUS:
 		*q = &pc_res->cpdc_seq_status_qs[free_qid];
@@ -954,6 +960,7 @@ int alloc_cpdc_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype, s
 		return err;
 		break;
 	}
+
 	return 0;
 }
 

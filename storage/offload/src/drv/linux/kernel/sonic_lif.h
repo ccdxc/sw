@@ -143,8 +143,11 @@ int sonic_lif_crypto_seq_qs_control(struct per_core_resource *res, uint16_t opco
 
 int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type qtype,
 		struct queue **q);
-int alloc_seq_statusq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q);
-int free_seq_statusq(struct lif *lif, enum sonic_queue_type qtype, struct queue **q);
+
+int sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type qtype,
+		struct queue **q);
+int sonic_put_seq_statusq(struct lif *lif, enum sonic_queue_type qtype,
+		struct queue *q);
 
 struct lif *sonic_get_lif(void);
 struct sonic_dev *sonic_get_idev(void);
