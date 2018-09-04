@@ -20,13 +20,9 @@
 #include <linux/netdevice.h>
 #include <linux/pci.h>
 
-
-
 #include "ionic.h"
 #include "ionic_lif.h"
 #include "ionic_bus.h"
-
-
 
 // TODO move PCI_VENDOR_ID_PENSANDO to include/linux/pci_ids.h
 #define PCI_VENDOR_ID_PENSANDO			0x1dd8
