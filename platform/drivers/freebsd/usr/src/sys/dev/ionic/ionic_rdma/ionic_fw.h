@@ -3,10 +3,6 @@
 
 #include <linux/kernel.h>
 
-#ifndef BIT_ULL
-#define BIT_ULL(a) (1ULL << (a))
-#endif
-
 /* completion queue v1 cqe */
 struct ionic_v1_cqe {
 	union {
@@ -750,11 +746,9 @@ static inline enum ib_wc_opcode ionic_to_ib_wc_opcd(uint8_t ionic_opcd)
 	case OP_TYPE_LOCAL_INV:
 		ib_opcd = IB_WC_LOCAL_INV;
 		break;
-#if 0 /* XXX: commented out to fix compilation */
 	case OP_TYPE_REG_MR:
 		ib_opcd = IB_WC_REG_MR;
 		break;
-#endif
 	default:
 		ib_opcd = 0;
 	}
