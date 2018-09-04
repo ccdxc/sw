@@ -9,7 +9,8 @@
 namespace hal {
 
 enum {
-    HAL_THREAD_ID_CFG        = 0,
+    HAL_THREAD_ID_MIN        = 0,
+    HAL_THREAD_ID_CFG        = HAL_THREAD_ID_MIN,
     HAL_THREAD_ID_PERIODIC   = 1,
     HAL_THREAD_ID_FTE_MIN    = 2,
     HAL_THREAD_ID_FTE_MAX    = 4,

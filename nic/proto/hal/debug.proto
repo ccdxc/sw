@@ -27,6 +27,7 @@ service Debug {
   rpc HashTableGet(types.Empty) returns (HashTableGetResponseMsg){}
   rpc TraceUpdate(TraceRequestMsg) returns (TraceResponseMsg){}
   rpc TraceGet(types.Empty) returns (TraceResponseMsg) {}
+  rpc ThreadGet(types.Empty) returns (ThreadResponseMsg) {}
 
   rpc FlushLogs(types.Empty) returns (FlushLogsResponseMsg) {}
 
@@ -281,6 +282,37 @@ message HashTableGetResponse {
 
 message HashTableGetResponseMsg {
   repeated HashTableGetResponse    response = 1;    // backend get response
+}
+
+message ThreadSpec {
+  string    name         = 1;    // thread name
+  uint32    id           = 2;    // HAL thread id
+  uint32    pthread_id   = 3;    // pthread id
+  int32     prio         = 4;    // thread priority
+  string    sched_policy = 5;    // scheduling policy (SCHED_FIFO| SCHED_RR | SCHED_OTHER)
+  bool      running      = 6;    // true if thread is in running state
+  string    role         = 7;    // "control" or "data" thread
+  uint64    core_mask    = 8;    // core ids this thread is allowed to run on
+}
+
+message ThreadStatus {
+  uint64  last_hb = 1;    // nanoseconds since last heart beat
+}
+
+message ThreadStats {
+}
+
+message ThreadResponse {
+  types.ApiStatus    api_status         = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  uint64             control_core_mask  = 2;    // control core mask for the system
+  uint64             data_core_mask     = 3;    // data core mask for the system
+  ThreadSpec         spec               = 4;    // thread attributes
+  ThreadStatus       status             = 5;    // operational status of the thread
+  ThreadStats        stats              = 6;    // stats of the thread
+}
+
+message ThreadResponseMsg {
+  repeated ThreadResponse    response = 1;
 }
 
 enum TraceLevel {

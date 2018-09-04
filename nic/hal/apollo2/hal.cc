@@ -142,6 +142,7 @@ hal_init (hal_cfg_t *hal_cfg)
     // install signal handlers
     hal_sig_init(hal_sig_handler);
 
+    HAL_TRACE_INFO("HAL initialization completed ...");
     return ret;
 }
 

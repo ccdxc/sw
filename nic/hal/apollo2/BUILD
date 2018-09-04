@@ -56,11 +56,12 @@ cc_library(
         "//nic/fte:fte",
         "//nic/fte/oci:fte_oci",
         "//nic/utils/print",
+        "//nic/utils/trace",
 
         # linkmgr dependencies
         "//nic/linkmgr:linkmgr_includes",
-        "//nic:liblinkmgr",
-        "@sdk//obj:sdk_linkmgr",
-        "//nic:libaapl",
+        #"//nic:liblinkmgr",
+        #"@sdk//obj:sdk_linkmgr",
+        #"//nic:libaapl",
     ],
 )
