@@ -280,10 +280,14 @@ pcieport_rx_credit_bfr(const int port, const int base, const int limit)
     }
 
     pal_reg_wr32w(RX_CREDIT_BFR_ADDR, r.w, 6);
+#if 0
+    /* XXX on HAPS this causes credit buffer change to get lost? */
+    pal_reg_rd32w(RX_CREDIT_BFR_ADDR, r.w, 6); /* read back to flush */
 
     /* clear update bit */
     memset(&r, 0, sizeof(r));
     pal_reg_wr32w(RX_CREDIT_BFR_ADDR, r.w, 6);
+#endif
 }
 
 u_int16_t
