@@ -453,6 +453,8 @@ ionic_get_header_size(struct tx_stats *stats, struct mbuf *mb, uint16_t *eth_typ
 	th = (struct tcphdr *)(mb->m_data + eth_hdr_len);
 	tcp_hlen = th->th_off << 2;
 	eth_hdr_len += tcp_hlen;
+
+	IONIC_DEBUG_PRINT("TCP sequence: %d\n", th->th_seq);
 	if (mb->m_len < eth_hdr_len)
 		return (EINVAL);
 
@@ -474,6 +476,8 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
 	desc = &txq->cmd_ring[index];
 	txbuf = &txq->txbuf[index];
 	len = m->m_len;
+	stats->pkts++;
+	stats->bytes += m->m_len;
 
 	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, m, seg, &nsegs, BUS_DMA_NOWAIT);
 	if (error) {
@@ -521,6 +525,12 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
 	else
 		stats->no_csum_offload++;
 
+	/* XXX ping doorbell on 4 rx submission. */
+	ionic_ring_doorbell(txq->db, txq->qid, txq->cmd_head_index);
+	IONIC_NETDEV_TX_TRACE(txq, "db: %p Qid: %d index: %d\n",
+		 txq->db, txq->qid, txq->cmd_head_index);
+
+	txq->cmd_head_index = (txq->cmd_head_index + 1) % txq->num_descs;
 	return 0;
 }
 
@@ -541,7 +551,8 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 	struct txq_desc *desc;
 	struct txq_sg_desc *sg;
 	uint16_t eth_type;
-	int i, index, hdr_len, proto, error, nsegs;
+	int i, j, index, hdr_len, proto, error, nsegs;
+	int frag_offset, desc_len, remain_len, frag_remain_len;
 
 	bus_dma_segment_t  seg[IONIC_TX_MAX_SG_ELEMS + 1]; /* Extra for the first segment. */
 
@@ -556,10 +567,7 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 	}
 
 	index = txq->cmd_head_index;
-	desc = &txq->cmd_ring[index];
 	txbuf = &txq->txbuf[index];
-	sg = &txq->sg_ring[index];
-
 	txbuf->m = m;
 
 	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, m, seg, &nsegs, BUS_DMA_NOWAIT);
@@ -572,58 +580,108 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 	if (nsegs > IONIC_TX_MAX_SG_ELEMS +1) {
 		bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
 		IONIC_NETDEV_QERR(txq, "too many fragments: %d\n", nsegs);
-//		stats->tso_map_err++;
 		return (EFBIG);
 	}
 
 	if (!ionic_tx_avail(txq, nsegs)) {
 		stats->no_descs++;
 		/* This is a hard error, log it */
-		bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
 		IONIC_NETDEV_QERR(txq, "BUG! Tx ring full when queue awake!\n");
 		return (ENOBUFS);
 	}
 
 	bus_dmamap_sync(txq->buf_tag, txbuf->dma_map, BUS_DMASYNC_PREWRITE);
 
-	desc->opcode = TXQ_DESC_OPCODE_TSO;
-//	desc->vlan_tci = vlan_tci;
-	desc->hdr_len = hdr_len;
-//	desc->V = has_vlan;
-	desc->C = 1;
-//	desc->O = outer_csum;
-	desc->S = 1;
-	desc->E = 1;//(nsegs == 1) ? 1 : 0;
-	desc->mss = mss;
+ 	txbuf->pa_addr = seg[0].ds_addr;
 
-	desc->num_sg_elems = nsegs;
-	desc->len = seg[0].ds_len;
-	desc->addr = txbuf->pa_addr = seg[0].ds_addr;
-
-	IONIC_NETDEV_TX_TRACE(txq, "TSO: VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%x\n",
+	IONIC_NETDEV_TX_TRACE(txq, "TSO: VA: %p DMA addr: 0x%lx nsegs: %d length: %d\n",
 		m, txbuf->pa_addr, nsegs, m->m_pkthdr.len);
-	IONIC_NETDEV_TX_TRACE(txq, "sg[0] pa: 0x%lx length: 0x%lx\n",  seg[0].ds_addr, seg[0].ds_len);
-	/* Now populate SG list, past the first fragment. */
-	for ( i = 0 ; i < nsegs -1 ; i++) {
-		sg->elems[i].addr = seg[i + 1].ds_addr;
-		sg->elems[i].len = seg[i + 1].ds_len;
-		IONIC_NETDEV_TX_TRACE(txq, "sg[%d] pa: 0x%lx length: 0x%hx\n", i, sg->elems[i].addr, sg->elems[i].len);
+	
+#ifdef IONIC_DEBUG
+	for ( i = 0 ; i < nsegs ; i++) {
+		IONIC_NETDEV_TX_TRACE(txq, "seg[%d] pa: 0x%lx len:%ld\n",
+			i, seg[i].ds_addr, seg[i].ds_len);
 	}
-
-	txq->cmd_head_index = (txq->cmd_head_index + 1) % txq->num_descs;
-
-	return 0;
-
-//err_out_abort:
-#ifdef notyet
-	while (rewind->desc != q->head->desc) {
-		ionic_tx_clean(q, rewind, NULL, NULL);
-		rewind = rewind->next;
-	}
-	q->head = abort;
 #endif
 
-	return -ENOMEM;
+	remain_len = m->m_pkthdr.len;	
+	index = txq->cmd_head_index;
+	frag_offset = 0;
+	frag_remain_len = seg[0].ds_len;
+	/* Loop for each mss. */
+	for ( i = 0 ; i < nsegs  && remain_len >= 0; )
+	{
+		desc = &txq->cmd_ring[index];
+		sg = &txq->sg_ring[index];
+		
+		desc->opcode = TXQ_DESC_OPCODE_TSO;
+	//	desc->vlan_tci = vlan_tci;
+		desc->hdr_len = hdr_len;
+	//	desc->V = has_vlan;
+		desc->S = (i == 0) ? 1 : 0;
+		/* We want completion for every tx since the first tx buffer points to head mbuf. */
+		desc->C = 1;
+		desc->E = (remain_len < mss) ? 1 : 0;
+		desc->mss = mss;
+
+		desc->len = min(mss, frag_remain_len);
+		desc->addr = seg[i].ds_addr + frag_offset;
+
+		desc_len = desc->len;
+		frag_remain_len -= desc_len;
+		frag_offset += desc_len;
+
+		if (frag_remain_len <= 0) {
+			i++;
+			frag_remain_len = seg[i].ds_len;
+			frag_offset = 0;
+		}
+		if (i >= nsegs)
+			break;
+
+		IONIC_NETDEV_TX_TRACE(txq, "TSO frag index: %d frag_oofset: %d frag_remain_len: %d\n",
+			i, frag_offset, frag_remain_len);
+
+		/* Now populate SG list, past the first fragment. */
+		for ( j = 0 ; j < IONIC_TX_MAX_SG_ELEMS && (i < nsegs) && desc_len < mss; j++) {
+			sg->elems[j].addr = seg[i].ds_addr + frag_offset;
+			sg->elems[j].len = min(frag_remain_len, (mss - desc_len));
+			frag_remain_len -= sg->elems[j].len;
+			frag_offset += sg->elems[j].len;
+			desc_len += sg->elems[j].len;
+			/* End of fragment, jump to next one */
+			if (frag_remain_len <= 0) {
+				i++;
+				frag_offset = 0;
+				frag_remain_len = seg[i].ds_len;
+			}
+		}
+
+		desc->num_sg_elems = j;
+		remain_len -= desc_len;
+
+		stats->pkts++;
+		stats->bytes += desc_len;
+
+		ionic_ring_doorbell(txq->db, txq->qid, index);
+		index = (index + 1) % txq->num_descs;
+	}
+
+#ifdef IONIC_DEBUG
+	for ( i = txq->cmd_head_index ; i <= index; i++ ) {
+		desc = &txq->cmd_ring[i];
+		sg = &txq->sg_ring[i];
+		IONIC_NETDEV_TX_TRACE(txq, "TSO Dump desc[%d] pa: 0x%lx length: %d S:%d E:%d C:%d mss:%d hdr_len:%d\n",
+			i, desc->addr, desc->len, desc->S, desc->E, desc->C, desc->mss, desc->hdr_len);	
+		for ( j = 0; j < desc->num_sg_elems; j++ ) {
+			IONIC_NETDEV_TX_TRACE(txq, "sg[%d] pa: 0x%lx length: %d\n",
+				j, sg->elems[j].addr, sg->elems[j].len);
+		}
+	}
+#endif
+
+	txq->cmd_head_index = index;
+	return 0;
 }
 
 
@@ -644,15 +702,6 @@ static int ionic_xmit(struct txque* txq, struct mbuf **head)
 	if (err)
 		goto err_out_drop;
 
-	stats->pkts++;
-	stats->bytes += m->m_len;
-
-	/* XXX ping doorbell on 4 rx submission. */
-	ionic_ring_doorbell(txq->db, txq->qid, txq->cmd_head_index);
-	IONIC_NETDEV_TX_TRACE(txq, "db: %p Qid: %d index: %d\n",
-		 txq->db, txq->qid, txq->cmd_head_index);
-
-	txq->cmd_head_index = (txq->cmd_head_index + 1) % txq->num_descs;
 	return 0;
 
 err_out_drop:
