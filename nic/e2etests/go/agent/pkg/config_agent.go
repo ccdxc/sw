@@ -38,6 +38,7 @@ type AgentConfig struct {
 	NatBindings       []netproto.NatBinding
 	NatPolicies       []netproto.NatPolicy
 	Tunnels           []netproto.Tunnel
+	TCPProxies        []netproto.TCPProxyPolicy
 	restApiMap        map[reflect.Type]string
 }
 
@@ -79,6 +80,7 @@ func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig)
 		"NatBinding":     &agentCfg.NatBindings,
 		"NatPolicy":      &agentCfg.NatPolicies,
 		"Tunnel":         &agentCfg.Tunnels,
+		"TCPProxyPolicy": &agentCfg.TCPProxies,
 	}
 
 	err = json.Unmarshal(dat, kindMap[o.Kind])
@@ -173,6 +175,12 @@ func (agentCfg *AgentConfig) push() error {
 		doConfig(ms, restURL)
 	}
 
+	fmt.Printf("Configuring %d TCP Proxies...\n", len(agentCfg.TCPProxies))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.TCPProxies)])
+	for _, tcp := range agentCfg.TCPProxies {
+		doConfig(tcp, restURL)
+	}
 	return nil
 }
 
