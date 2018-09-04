@@ -707,7 +707,8 @@ static int ionic_xmit(struct txque* txq, struct mbuf **head)
 err_out_drop:
 	stats->drop++;
 	m_freem(m);
-	return 0;
+
+	return (EIO);
 }
 
 
@@ -784,19 +785,41 @@ static uint64_t
 ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 {
 	struct lif* lif = if_getsoftc(ifp);
-	/* XXX : fix for all Qs. */
-	struct tx_stats* txstat = &lif->txqs[0]->stats;
-	struct rx_stats* rxstat = &lif->rxqs[0]->stats;
+	uint64_t val = 0;
+	int i;
+
+	struct tx_stats* txstat;
+	struct rx_stats* rxstat;
 
 	switch (cnt) {
 	case IFCOUNTER_IPACKETS:
-		return (rxstat->pkts);
+		for ( i = 0 ; i < lif->nrxqs; i++) {
+			rxstat = &lif->rxqs[i]->stats;
+			val += rxstat->pkts;
+		}
+		return (val);
+
 	case IFCOUNTER_OPACKETS:
-		return (txstat->pkts);
+		for ( i = 0 ; i < lif->ntxqs; i++) {
+			txstat = &lif->txqs[i]->stats;
+			val += txstat->pkts;
+		}
+		return (val);
+
 	case IFCOUNTER_IBYTES:
-		return (rxstat->bytes);
-	case IFCOUNTER_OBYTES:
-		return (txstat->bytes);
+		for ( i = 0 ; i < lif->nrxqs; i++) {
+			rxstat = &lif->rxqs[i]->stats;
+			val += rxstat->bytes;
+		}
+		return (val);
+
+	case IFCOUNTER_OBYTES:		
+		for ( i = 0 ; i < lif->ntxqs; i++) {
+			txstat = &lif->txqs[i]->stats;
+			val += txstat->bytes;
+		}
+		return (val);
+
 #ifdef notyet
 	case IFCOUNTER_IMCASTS:
 		return (ionic->imcasts);
@@ -804,14 +827,23 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 		return (ionic->omcasts);
 	case IFCOUNTER_COLLISIONS:
 		return (0);
+
 	case IFCOUNTER_IQDROPS:
+		for ( i = 0 ; i < lif->nrxqs; i++) {
+			rxstat = &lif->rxqs[i]->stats;
+			val += rxstat->bytes;
+		}
+		return (val);
 		return (rxstat->drop);
+#endif
 	case IFCOUNTER_OQDROPS:
-		rv = 0;
-		txr = ionic->tx_rings;
-		for (int i = 0; i < ionic->num_queues; i++, txr++)
-			rv += txr->br->br_drops;
-		return (rv);
+		for ( i = 0 ; i < lif->ntxqs; i++) {
+			txstat = &lif->txqs[i]->stats;
+			val += lif->txqs[i]->br->br_drops;
+		}
+		return (val);
+
+#ifdef notyet
 	case IFCOUNTER_IERRORS:
 		return (ionic->ierrors);
 #endif
