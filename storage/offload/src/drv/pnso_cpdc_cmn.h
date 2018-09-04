@@ -10,6 +10,7 @@ struct pnso_compression_header {
 };
 
 #define MAX_CPDC_SRC_BUF_LEN	(1 << 16)
+#define MAX_CPDC_DST_BUF_LEN	MAX_CPDC_SRC_BUF_LEN
 
 /* status reported by hardware */
 #define CP_STATUS_SUCCESS		0

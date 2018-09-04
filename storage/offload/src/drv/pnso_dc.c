@@ -92,6 +92,13 @@ validate_setup_input(const struct service_info *svc_info,
 		return err;
 	}
 
+	len = pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
+	if (len == 0 || len > MAX_CPDC_DST_BUF_LEN) {
+		OSAL_LOG_ERROR("invalid dst buf len specified! len: %zu err: %d",
+				len, err);
+		return err;
+	}
+
 	if (!svc_params->u.sp_dc_desc) {
 		OSAL_LOG_ERROR("invalid desc specified! sp_desc: %p err: %d",
 				svc_params->u.sp_dc_desc, err);
@@ -103,7 +110,8 @@ validate_setup_input(const struct service_info *svc_info,
 
 static void
 fill_dc_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
-		struct cpdc_status_desc *status_desc, uint32_t src_buf_len)
+		struct cpdc_status_desc *status_desc,
+		uint32_t src_buf_len, uint32_t dst_buf_len)
 {
 	memset(desc, 0, sizeof(*desc));
 	memset(status_desc, 0, sizeof(*status_desc));
@@ -119,6 +127,9 @@ fill_dc_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
 
 	desc->cd_datain_len =
 		(src_buf_len == MAX_CPDC_SRC_BUF_LEN) ? 0 : src_buf_len;
+	desc->cd_threshold_len =
+		(dst_buf_len == MAX_CPDC_DST_BUF_LEN) ? 0 : dst_buf_len;
+
 	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_DC_STATUS_DATA;
 
@@ -145,7 +156,7 @@ decompress_setup(struct service_info *svc_info,
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pc_res;
 	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
-	size_t src_buf_len;
+	size_t src_buf_len, dst_buf_len;
 	uint16_t flags;
 
 	OSAL_LOG_INFO("enter ...");
@@ -167,6 +178,13 @@ decompress_setup(struct service_info *svc_info,
 	if (src_buf_len == 0 || src_buf_len > MAX_CPDC_SRC_BUF_LEN) {
 		OSAL_LOG_ERROR("invalid src buf len specified! src_buf_len: %zu err: %d",
 				src_buf_len, err);
+		goto out;
+	}
+
+	dst_buf_len = pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
+	if (dst_buf_len == 0) {
+		OSAL_LOG_ERROR("invalid dst  buf len specified! dst_buf_len: %zu err: %d",
+				dst_buf_len, err);
 		goto out;
 	}
 
@@ -197,8 +215,8 @@ decompress_setup(struct service_info *svc_info,
 		goto out_status_desc;
 	}
 
-	fill_dc_desc(dc_desc, svc_info->si_src_sgl,
-			svc_info->si_dst_sgl, status_desc, src_buf_len);
+	fill_dc_desc(dc_desc, svc_info->si_src_sgl, svc_info->si_dst_sgl,
+			status_desc, src_buf_len, dst_buf_len);
 	clear_dc_header_present(flags, dc_desc);
 
 	svc_info->si_type = PNSO_SVC_TYPE_DECOMPRESS;
