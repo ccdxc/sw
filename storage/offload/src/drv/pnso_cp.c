@@ -147,15 +147,15 @@ validate_setup_input(const struct service_info *svc_info,
 }
 
 static void
-fill_cp_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
-		struct cpdc_status_desc *status_desc, uint32_t src_buf_len,
-		uint16_t threshold_len)
+fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
+		struct cpdc_sgl *dst_sgl, struct cpdc_status_desc *status_desc,
+		uint32_t src_buf_len, uint16_t threshold_len)
 {
 	memset(desc, 0, sizeof(*desc));
 	memset(status_desc, 0, sizeof(*status_desc));
 
-	desc->cd_src = (uint64_t) osal_virt_to_phy(src_buf);
-	desc->cd_dst = (uint64_t) osal_virt_to_phy(dst_buf);
+	desc->cd_src = (uint64_t) osal_virt_to_phy(src_sgl);
+	desc->cd_dst = (uint64_t) osal_virt_to_phy(dst_sgl);
 
 	desc->u.cd_bits.cc_enabled = 1;
 	desc->u.cd_bits.cc_insert_header = 1;
