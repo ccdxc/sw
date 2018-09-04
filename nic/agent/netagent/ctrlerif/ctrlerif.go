@@ -5,6 +5,7 @@ package ctrlerif
 import (
 	"context"
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 )
 
 const netEvChanLength = 2000
+const maxOpretry = 10
 
 // NpmClient is the network policy mgr client
 type NpmClient struct {
@@ -87,10 +89,10 @@ func (client *NpmClient) getAgentName() string {
 	return "netagent-" + client.agent.GetAgentID()
 }
 
-func (client *NpmClient) processNetworkEvent(evChan <-chan *netproto.NetworkEvent) {
+// processNetworkEvent handles network event
+func (client *NpmClient) processNetworkEvent(evt netproto.NetworkEvent) {
 	var err error
-	for {
-		evt := <-evChan
+	for iter := 0; iter < maxOpretry; iter++ {
 		switch evt.EventType {
 		case api.EventType_CreateEvent:
 			// create the network
@@ -114,6 +116,132 @@ func (client *NpmClient) processNetworkEvent(evChan <-chan *netproto.NetworkEven
 				log.Errorf("Error deleting the network {%+v}. Err: %v", evt, err)
 			}
 		}
+
+		// return if there is no error
+		if err == nil {
+			return
+		}
+
+		// else, retry after some time, with exponential backoff
+		time.Sleep(time.Second * time.Duration(math.Exp2(float64(iter))))
+	}
+}
+
+// processEndpointEvent handles endpoint event.
+// it retries the operation till it suceeds
+func (client *NpmClient) processEndpointEvent(epevt netproto.EndpointEvent) {
+	var err error
+	for iter := 0; iter < maxOpretry; iter++ {
+		switch epevt.EventType {
+		case api.EventType_CreateEvent:
+			// if we got a watch event for an endpoint thats pending response, ignore it
+			client.Lock()
+			_, ok := client.pendingEpCreate[objectKey(epevt.Endpoint.ObjectMeta)]
+			client.Unlock()
+			if !ok {
+				// create the endpoint
+				_, err = client.agent.CreateEndpoint(&epevt.Endpoint)
+				if err != nil {
+					log.Errorf("Error creating the endpoint {%+v}. Err: %v", epevt, err)
+				}
+			}
+		case api.EventType_UpdateEvent:
+			// create the endpoint
+			err = client.agent.UpdateEndpoint(&epevt.Endpoint)
+			if err != nil {
+				log.Errorf("Error updating the endpoint {%+v}. Err: %v", epevt, err)
+			}
+		case api.EventType_DeleteEvent:
+			// if we got a watch event for an endpoint thats pending response, ignore it
+			client.Lock()
+			_, ok := client.pendingEpDelete[epevt.Endpoint.Name]
+			client.Unlock()
+			if !ok {
+				// delete the endpoint
+				err = client.agent.DeleteEndpoint(epevt.Endpoint.Tenant, epevt.Endpoint.Namespace, epevt.Endpoint.Name)
+				if err != nil {
+					log.Errorf("Error deleting the endpoint {%+v}. Err: %v", epevt, err)
+				}
+			}
+		}
+
+		// return if there is no error
+		if err == nil {
+			return
+		}
+
+		// else, retry after some time, with exponential backoff
+		time.Sleep(time.Second * time.Duration(math.Exp2(float64(iter))))
+	}
+}
+
+// processSecurityGroupEvent handles security group event
+func (client *NpmClient) processSecurityGroupEvent(evt netproto.SecurityGroupEvent) {
+	var err error
+	for iter := 0; iter < maxOpretry; iter++ {
+		switch evt.EventType {
+		case api.EventType_CreateEvent:
+			// create the security group
+			err = client.agent.CreateSecurityGroup(&evt.SecurityGroup)
+			if err != nil {
+				log.Errorf("Error creating the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
+			}
+		case api.EventType_UpdateEvent:
+			// update the sg
+			err = client.agent.UpdateSecurityGroup(&evt.SecurityGroup)
+			if err != nil {
+				log.Errorf("Error updating the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
+			}
+		case api.EventType_DeleteEvent:
+			// delete the sg
+			err = client.agent.DeleteSecurityGroup(evt.SecurityGroup.Tenant, evt.SecurityGroup.Namespace, evt.SecurityGroup.Name)
+			if err != nil {
+				log.Errorf("Error deleting the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
+			}
+		}
+
+		// return if there is no error
+		if err == nil {
+			return
+		}
+
+		// else, retry after some time, with exponential backoff
+		time.Sleep(time.Second * time.Duration(math.Exp2(float64(iter))))
+	}
+}
+
+// processSecurityPolicyEvent handles security policy event
+func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) {
+	var err error
+	for iter := 0; iter < maxOpretry; iter++ {
+		switch evt.EventType {
+		case api.EventType_CreateEvent:
+			// create the security policy
+			err = client.agent.CreateSGPolicy(&evt.SGPolicy)
+			if err != nil {
+				log.Errorf("Error creating the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
+			}
+		case api.EventType_UpdateEvent:
+			// update the sg policy
+			err = client.agent.UpdateSGPolicy(&evt.SGPolicy)
+			if err != nil {
+				log.Errorf("Error updating the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
+			}
+		case api.EventType_DeleteEvent:
+			// delete the sg
+			err = client.agent.DeleteSGPolicy(evt.SGPolicy.Tenant, evt.SGPolicy.Namespace, evt.SGPolicy.Name)
+			if err != nil {
+				log.Errorf("Error deleting the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
+			}
+		}
+
+		// return if there is no error
+		if err == nil {
+			return
+		}
+
+		// else, retry after some time, with exponential backoff
+		time.Sleep(time.Second * time.Duration(math.Exp2(float64(iter))))
 	}
 }
 
@@ -122,9 +250,6 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 	// setup wait group
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
-
-	evChan := make(chan *netproto.NetworkEvent, netEvChanLength)
-	go client.processNetworkEvent(evChan)
 
 	for {
 		// create a grpc client
@@ -179,8 +304,10 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context) {
 					}
 				}
 			}
+
+			// process the event
 			for _, evt := range evtList.NetworkEvents {
-				evChan <- evt
+				go client.processNetworkEvent(*evt)
 			}
 		}
 
@@ -240,40 +367,8 @@ func (client *NpmClient) runEndpointWatcher(ctx context.Context) {
 
 			log.Infof("Ctrlerif: agent %s got Endpoint watch event: {%+v}", client.getAgentName(), evt)
 
-			go func() {
-				switch evt.EventType {
-				case api.EventType_CreateEvent:
-					// if we got a watch event for an endpoint thats pending response, ignore it
-					client.Lock()
-					_, ok := client.pendingEpCreate[objectKey(evt.Endpoint.ObjectMeta)]
-					client.Unlock()
-					if !ok {
-						// create the endpoint
-						_, err = client.agent.CreateEndpoint(&evt.Endpoint)
-						if err != nil {
-							log.Errorf("Error creating the endpoint {%+v}. Err: %v", evt, err)
-						}
-					}
-				case api.EventType_UpdateEvent:
-					// create the endpoint
-					err = client.agent.UpdateEndpoint(&evt.Endpoint)
-					if err != nil {
-						log.Errorf("Error updating the endpoint {%+v}. Err: %v", evt, err)
-					}
-				case api.EventType_DeleteEvent:
-					// if we got a watch event for an endpoint thats pending response, ignore it
-					client.Lock()
-					_, ok := client.pendingEpDelete[evt.Endpoint.Name]
-					client.Unlock()
-					if !ok {
-						// delete the endpoint
-						err = client.agent.DeleteEndpoint(evt.Endpoint.Tenant, evt.Endpoint.Namespace, evt.Endpoint.Name)
-						if err != nil {
-							log.Errorf("Error deleting the endpoint {%+v}. Err: %v", evt, err)
-						}
-					}
-				}
-			}()
+			// process the endpoint event
+			go client.processEndpointEvent(*evt)
 		}
 		rpcClient.Close()
 	}
@@ -333,28 +428,7 @@ func (client *NpmClient) runSecurityGroupWatcher(ctx context.Context) {
 
 			log.Infof("Ctrlerif: agent %s got Security group watch event: Type: {%+v} sg:{%+v}", client.getAgentName(), evt.EventType, evt.SecurityGroup.ObjectMeta)
 
-			go func() {
-				switch evt.EventType {
-				case api.EventType_CreateEvent:
-					// create the security group
-					err = client.agent.CreateSecurityGroup(&evt.SecurityGroup)
-					if err != nil {
-						log.Errorf("Error creating the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
-					}
-				case api.EventType_UpdateEvent:
-					// update the sg
-					err = client.agent.UpdateSecurityGroup(&evt.SecurityGroup)
-					if err != nil {
-						log.Errorf("Error updating the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
-					}
-				case api.EventType_DeleteEvent:
-					// delete the sg
-					err = client.agent.DeleteSecurityGroup(evt.SecurityGroup.Tenant, evt.SecurityGroup.Namespace, evt.SecurityGroup.Name)
-					if err != nil {
-						log.Errorf("Error deleting the sg {%+v}. Err: %v", evt.SecurityGroup.ObjectMeta, err)
-					}
-				}
-			}()
+			go client.processSecurityGroupEvent(*evt)
 		}
 		rpcClient.Close()
 	}
@@ -414,28 +488,7 @@ func (client *NpmClient) runSecurityPolicyWatcher(ctx context.Context) {
 
 			log.Infof("Ctrlerif: agent %s got Security policy watch event: Type: {%+v} sg:{%+v}", client.getAgentName(), evt.EventType, evt.SGPolicy.ObjectMeta)
 
-			go func() {
-				switch evt.EventType {
-				case api.EventType_CreateEvent:
-					// create the security policy
-					err = client.agent.CreateSGPolicy(&evt.SGPolicy)
-					if err != nil {
-						log.Errorf("Error creating the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
-					}
-				case api.EventType_UpdateEvent:
-					// update the sg policy
-					err = client.agent.UpdateSGPolicy(&evt.SGPolicy)
-					if err != nil {
-						log.Errorf("Error updating the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
-					}
-				case api.EventType_DeleteEvent:
-					// delete the sg
-					err = client.agent.DeleteSGPolicy(evt.SGPolicy.Tenant, evt.SGPolicy.Namespace, evt.SGPolicy.Name)
-					if err != nil {
-						log.Errorf("Error deleting the sg policy {%+v}. Err: %v", evt.SGPolicy.ObjectMeta, err)
-					}
-				}
-			}()
+			go client.processSecurityPolicyEvent(*evt)
 		}
 		rpcClient.Close()
 	}

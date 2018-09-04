@@ -191,7 +191,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"gs-vm-1\"\n  },\n  \"spec\": {\n    \"host-name\": \"esx-host1.local\",\n    \"interfaces\": {\n      \"00:50:56:00:00:03\": {\n        \"micro-seg-vlan\": 103,\n        \"external-vlan\": 1003\n      },\n      \"00:50:56:00:00:04\": {\n        \"micro-seg-vlan\": 104,\n        \"external-vlan\": 1004\n      }\n    }\n  }\n}"
+							"raw": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"gs-vm-1\",\n    \"namespace\": \"default\"\n  },\n  \"spec\": {\n    \"host-name\": \"naples1-host\",\n    \"interfaces\": {\n      \"00:50:56:00:00:03\": {\n        \"micro-seg-vlan\": 103,\n        \"external-vlan\": 1003\n      },\n      \"00:50:56:00:00:04\": {\n        \"micro-seg-vlan\": 104,\n        \"external-vlan\": 1004\n      }\n    }\n  }\n}"
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/workload/v1/tenant/default/workloads",
@@ -222,7 +222,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"gs-vm-1\",\n    \"labels\": {\n      \"Location\": \"us-west-A\"\n    }\n  },\n  \"spec\": {\n    \"host-name\": \"esx-host1.local\",\n    \"interfaces\": {\n      \"00:50:56:00:00:03\": {\n        \"micro-seg-vlan\": 103,\n        \"external-vlan\": 1003\n      },\n      \"00:50:56:00:00:04\": {\n        \"micro-seg-vlan\": 104,\n        \"external-vlan\": 1004\n      }\n    }\n  }\n}"
+							"raw": "{\n  \"api-version\": \"v1\",\n  \"meta\": {\n    \"name\": \"gs-vm-1\",\n    \"namespace\": \"default\",\n    \"labels\": {\n      \"Location\": \"us-west-A\"\n    }\n  },\n  \"spec\": {\n    \"host-name\": \"naples1-host\",\n    \"interfaces\": {\n      \"00:50:56:00:00:03\": {\n        \"micro-seg-vlan\": 103,\n        \"external-vlan\": 1003\n      },\n      \"00:50:56:00:00:04\": {\n        \"micro-seg-vlan\": 104,\n        \"external-vlan\": 1004\n      }\n    }\n  }\n}"
 						},
 						"url": {
 							"raw": "{{apigw-node1}}/configs/workload/v1/tenant/default/workloads/gs-vm-1",

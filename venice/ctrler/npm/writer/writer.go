@@ -4,6 +4,7 @@ package writer
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -82,6 +83,11 @@ func (wr *APISrvWriter) WriteNetwork(nw *network.Network) error {
 
 	// write it
 	_, err = apicl.NetworkV1().Network().Update(context.Background(), nw)
+	if (err != nil) && (strings.Contains(err.Error(), "Object store error")) {
+		// retry create
+		_, err = apicl.NetworkV1().Network().Create(context.Background(), nw)
+	}
+
 	return err
 }
 
