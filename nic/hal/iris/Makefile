@@ -11,6 +11,10 @@ export ASMOPTS := "-DCAPRI_IGNORE_TIMESTAMP -DRTL"
 BZL_BLD_OPT := $(BZL_BLD_OPT) --linkopt=-L/usr/local/lib
 endif
 
+ifeq ($(PLATFORM),haps)
+export ASMOPTS := "-DHAPS"
+endif
+
 export BZL_BUILD := "bazel $(BZL_OPT) build $(BZL_BLD_OPT)"
 
 %/.dir:

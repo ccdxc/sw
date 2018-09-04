@@ -40,7 +40,9 @@ rnr_timeout:
     // Ignore expiry event if retransmit time has not reached
     // TODO comment out this check for now as in model cur_timestamp
     // is not populated in r4
-    //blt            r1, r2, restart_timer
+#ifdef HAPS
+    blt            r1, r2, restart_timer
+#endif
  
     // Infinite retries if retry_ctr is set to 7
     seq            c1, d.rnr_retry_ctr, 7 // Branch Delay Slot
@@ -62,11 +64,13 @@ local_ack_timeout:
     // Minimum local_ack_timeout that can be supported in capri is 2 (> 10usec)
     // local_ack_timeout in sqcb2 is programmed to include multiplication factor
     // of 4096 as well
-    sll            r2, 1, d.local_ack_timeout
+    sll            r2, 4096, d.local_ack_timeout
     // Ignore expiry event if retransmit time has not reached
     // TODO comment out this check for now as in model cur_timestamp
     // is not populated in r4
-    //blt            r1, r2, restart_timer
+#ifdef HAPS
+    blt            r1, r2, restart_timer
+#endif
 
     // Infinite retries if retry_ctr is set to 7
     seq            c1, d.err_retry_ctr, 7 // Branch Delay Slot

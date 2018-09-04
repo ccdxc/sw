@@ -65,7 +65,7 @@ req_tx_bktrack_sqcb2_process:
     bcf.!c2        [c1],  bktrack_sqpt
     phvwr CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), d.tx_psn // Branch Delay Slot
 
-    bcf            [c2 & !c1], wqe_bktrack
+    bcf            [!c1], wqe_bktrack
     add            r2, r0, K_WQE_ADDR // Branch Delay Slot
     
     sll            r2, K_SQ_C_INDEX, CAPRI_KEY_FIELD(IN_TO_S_P, log_wqe_size)

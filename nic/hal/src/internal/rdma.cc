@@ -1257,11 +1257,10 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     //                                    P4PLUS_TO_P4_UPDATE_IP_LEN);
     sqcb_p->sqcb0.pd = spec.pd();
     sqcb_p->sqcb1.pd = spec.pd();
-    // 4.096 * (2 ^ local_ack_timeout) usec or 2 ^ (12 + local_ack_timeout) nsec
-    // Program local_ack_timeout including the multiplication factor of 4096
-    // to avoid MPU from doing the computation
+
+    // set local_ack_timeout to 20, which is 4096 * 2^20 = ~8 sec
     if (sqcb_p->sqcb0.service == RDMA_SERV_TYPE_RC)
-        sqcb_p->sqcb2.local_ack_timeout = 12 + 2;
+        sqcb_p->sqcb2.local_ack_timeout = 20;
     sqcb_p->sqcb2.exp_rsp_psn = (sqcb_p->sqcb2.tx_psn - 1);
 
     stage0_req_rx_prog_addr(&offset);
