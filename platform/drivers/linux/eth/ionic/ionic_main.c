@@ -268,11 +268,11 @@ void ionic_dev_cmd_work(struct work_struct *work)
 	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
 
 	dev_dbg(ionic->dev, "post admin dev command:\n");
-	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+	dynamic_hex_dump("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->cmd, sizeof(ctx->cmd), true);
 
 	if (ctx->side_data) {
-		print_hex_dump_debug("data ", DUMP_PREFIX_OFFSET, 16, 1,
+		dynamic_hex_dump("data ", DUMP_PREFIX_OFFSET, 16, 1,
 				 ctx->side_data, ctx->side_data_len, true);
 
 		err = SBD_put(&ionic->idev, ctx->side_data, ctx->side_data_len);
@@ -295,7 +295,7 @@ void ionic_dev_cmd_work(struct work_struct *work)
 	}
 
 	dev_dbg(ionic->dev, "comp admin dev command:\n");
-	print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
+	dynamic_hex_dump("comp ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->comp, sizeof(ctx->comp), true);
 
 err_out:
