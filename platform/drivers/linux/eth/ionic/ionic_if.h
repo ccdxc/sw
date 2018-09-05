@@ -21,6 +21,9 @@
 
 #define DEV_CMD_SIGNATURE               0x44455643      /* 'DEVC' */
 
+#define IONIC_ADMINQ_ETH        0
+#define IONIC_ADMINQ_RDMA        1
+
 enum cmd_opcode {
 	CMD_OPCODE_NOP				= 0,
 	CMD_OPCODE_RESET			= 1,
