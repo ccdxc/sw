@@ -42,6 +42,7 @@ using debug::MemoryRawUpdateRequest;
 using debug::MemoryRawUpdateResponseMsg;
 using debug::MemoryRawUpdateResponse;
 using debug::FlushLogsResponseMsg;
+using debug::ThreadResponseMsg;
 using debug::GenericOpnRequest;
 using debug::GenericOpnResponse;
 using debug::GenericOpnRequestMsg;
@@ -88,6 +89,9 @@ public:
     Status FlushLogs(ServerContext *context,
                      const Empty *req,
                      FlushLogsResponseMsg *rsp) override;
+    Status ThreadGet(ServerContext *context,
+                     const Empty *req,
+                     ThreadResponseMsg *rsp) override;
 };
 
 #endif  // __DEBUG_SVC_HPP__

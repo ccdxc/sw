@@ -51,6 +51,7 @@ public:
     const char *name(void) const { return name_; }
     uint32_t thread_id(void) const { return thread_id_; }
     uint32_t priority(void) const { return prio_; }
+    uint32_t sched_policy(void) const {return sched_policy_; };
     void set_pthread_id(pthread_t pthread_id) { pthread_id_ = pthread_id; }
     pthread_t pthread_id(void) const { return pthread_id_; }
     void punch_heartbeat(void);    // punch heart-beat

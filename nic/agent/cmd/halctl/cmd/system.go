@@ -7,9 +7,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
@@ -29,9 +32,25 @@ var systemStatsShowCmd = &cobra.Command{
 	Run:   systemStatsShowCmdHandler,
 }
 
+var threadShowCmd = &cobra.Command{
+	Use:   "thread",
+	Short: "show system threads",
+	Long:  "show system threads",
+	Run:   threadShowCmdHandler,
+}
+
+var threadDetailShowCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "show system threads information",
+	Long:  "show system threads information",
+	Run:   threadDetailShowCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(systemShowCmd)
 	systemShowCmd.AddCommand(systemStatsShowCmd)
+	systemShowCmd.AddCommand(threadShowCmd)
+	threadShowCmd.AddCommand(threadDetailShowCmd)
 }
 
 func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -370,4 +389,94 @@ func apiStatsEntryShow(entry *halproto.ApiStatsEntry) {
 		entry.GetNumApiCall(),
 		entry.GetNumApiSuccess(),
 		entry.GetNumApiFail())
+}
+
+func threadShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var empty *halproto.Empty
+
+	// HAL call
+	respMsg, err := client.ThreadGet(context.Background(), empty)
+	if err != nil {
+		log.Errorf("Thread get failed. %v", err)
+	}
+
+	threadShowHeader()
+
+	// Print Response
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		threadShowEntry(resp)
+	}
+}
+
+func threadShowHeader() {
+	hdrLine := strings.Repeat("-", 150)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-20s%-10s%-12s%-14s%-14s%-10s%-20s%-10s%-21s%-10s%-12s\n",
+		"Name", "Id", "PThreadId", "CtrlCoreMask", "DataCoreMask", "Prio", "SchedPolicy", "Running", "Role", "CoreMask", "LastHb(ms)")
+	fmt.Println(hdrLine)
+}
+
+func threadShowEntry(resp *halproto.ThreadResponse) {
+	spec := resp.GetSpec()
+	status := resp.GetStatus()
+
+	fmt.Printf("%-20s%-10d%-12d%-#14x%-#14x%-10d%-20s%-10t%-21s%-#10x%-12d\n",
+		spec.GetName(), spec.GetId(), spec.GetPthreadId(),
+		resp.GetControlCoreMask(), resp.GetDataCoreMask(),
+		spec.GetPrio(), spec.GetSchedPolicy().String(),
+		spec.GetRunning(), spec.GetRole().String(),
+		spec.GetCoreMask(), status.GetLastHb()/1000)
+}
+
+func threadDetailShow(ofile *os.File) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var empty *halproto.Empty
+
+	// HAL call
+	respMsg, err := client.ThreadGet(context.Background(), empty)
+	if err != nil {
+		log.Errorf("Thread get failed. %v", err)
+	}
+
+	// Print Response
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				log.Errorf("Failed to write to file %s, err : %v",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
+	}
+}
+
+func threadDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	threadDetailShow(nil)
 }

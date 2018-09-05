@@ -284,15 +284,26 @@ message HashTableGetResponseMsg {
   repeated HashTableGetResponse    response = 1;    // backend get response
 }
 
+enum SchedPolicy {
+  SCHED_POLICY_OTHER   = 0;
+  SCHED_POLICY_FIFO    = 1;
+  SCHED_POLICY_RR      = 2;
+}
+
+enum ThreadRole {
+  THREAD_ROLE_CONTROL   = 0;
+  THREAD_ROLE_DATA      = 1;
+}
+
 message ThreadSpec {
-  string    name         = 1;    // thread name
-  uint32    id           = 2;    // HAL thread id
-  uint32    pthread_id   = 3;    // pthread id
-  int32     prio         = 4;    // thread priority
-  string    sched_policy = 5;    // scheduling policy (SCHED_FIFO| SCHED_RR | SCHED_OTHER)
-  bool      running      = 6;    // true if thread is in running state
-  string    role         = 7;    // "control" or "data" thread
-  uint64    core_mask    = 8;    // core ids this thread is allowed to run on
+  string        name         = 1;    // thread name
+  uint32        id           = 2;    // HAL thread id
+  uint32        pthread_id   = 3;    // pthread id
+  int32         prio         = 4;    // thread priority
+  SchedPolicy   sched_policy = 5;    // scheduling policy (SCHED_FIFO| SCHED_RR | SCHED_OTHER)
+  bool          running      = 6;    // true if thread is in running state
+  ThreadRole    role         = 7;    // "control" or "data" thread
+  uint64        core_mask    = 8;    // core ids this thread is allowed to run on
 }
 
 message ThreadStatus {

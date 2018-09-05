@@ -349,3 +349,12 @@ DebugServiceImpl::FlushLogs(ServerContext *context,
     return Status::OK;
 }
 
+Status
+DebugServiceImpl::ThreadGet(ServerContext *context,
+                            const Empty *req,
+                            ThreadResponseMsg *rsp)
+{
+    HAL_TRACE_DEBUG("Received thread get");
+    hal::thread_get(rsp);
+    return Status::OK;
+}

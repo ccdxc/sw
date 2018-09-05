@@ -9,6 +9,7 @@
 #include "sdk/catalog.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
+#include "sdk/timestamp.hpp"
 
 using sdk::lib::slab;
 
@@ -292,6 +293,68 @@ flush_logs (FlushLogsResponse *rsp)
         rsp->set_api_status(types::API_STATUS_OK);
     } else {
         rsp->set_api_status(types::API_STATUS_ERR);
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// process a flush_logs request
+//------------------------------------------------------------------------------
+hal_ret_t
+thread_get (ThreadResponseMsg *response)
+{
+    timespec_t          curr_ts, ts_diff, hb_ts;
+    sdk::lib::thread    *hal_thread;
+    ThreadResponse      *rsp;
+    uint64_t            diff_ns;
+
+    clock_gettime(CLOCK_MONOTONIC, &curr_ts);
+    for (uint32_t tid = HAL_THREAD_ID_CFG + 1; tid < HAL_THREAD_ID_MAX; tid++) {
+        if ((hal_thread = hal_thread_get(tid)) != NULL) {
+            rsp = response->add_response();
+            rsp->set_control_core_mask(hal_thread->control_cores_mask());
+            rsp->set_data_core_mask(hal_thread->data_cores_mask());
+            rsp->mutable_spec()->set_name(hal_thread->name());
+            rsp->mutable_spec()->set_id(hal_thread->thread_id());
+            rsp->mutable_spec()->set_pthread_id(hal_thread->pthread_id());
+            rsp->mutable_spec()->set_prio(hal_thread->priority());
+
+            switch (hal_thread->sched_policy()) {
+            case SCHED_OTHER:
+                rsp->mutable_spec()->set_sched_policy(debug::SCHED_POLICY_OTHER);
+                break;
+            case SCHED_FIFO:
+                rsp->mutable_spec()->set_sched_policy(debug::SCHED_POLICY_FIFO);
+                break;
+            case SCHED_RR:
+                rsp->mutable_spec()->set_sched_policy(debug::SCHED_POLICY_RR);
+                break;
+            default:
+                break;
+            }
+
+            switch (hal_thread->thread_role()) {
+            case sdk::lib::THREAD_ROLE_CONTROL:
+                rsp->mutable_spec()->set_role(debug::THREAD_ROLE_CONTROL);
+                break;
+            case sdk::lib::THREAD_ROLE_DATA:
+                rsp->mutable_spec()->set_role(debug::THREAD_ROLE_DATA);
+                break;
+            default:
+                break;
+            }
+
+            rsp->mutable_spec()->set_running(hal_thread->is_running());
+            rsp->mutable_spec()->set_core_mask(hal_thread->cores_mask());
+
+            hb_ts = hal_thread->heartbeat_ts();
+            ts_diff = sdk::timestamp_diff(&curr_ts, &hb_ts);
+            sdk::timestamp_to_nsecs(&ts_diff, &diff_ns);
+            rsp->mutable_status()->set_last_hb(diff_ns);
+            
+            rsp->set_api_status(types::API_STATUS_OK);
+        }
     }
 
     return HAL_RET_OK;
