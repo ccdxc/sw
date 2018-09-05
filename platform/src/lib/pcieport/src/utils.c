@@ -236,6 +236,20 @@ pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq)
     pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
 }
 
+/*
+ * The interface to this register group has special considerations.
+ * When the "update" field is set the hw sets its internal buffer pointers
+ * to be within [base,base+limit).  This update happens when the update
+ * field transitions 0->1.  We want to do a read-modify-write to update
+ * port parameters here, but we want to have update=1 only for the port
+ * with new parameters.  We'll follow the protocol that we read current
+ * settings, set update=0 for all ports, set update=1 along with the new
+ * port params, then set update=0 again to leave the register group sane.
+ *
+ * Also, even when update=0 the base/limit params are used by hw to
+ * verify the port buffer limits during operation so base/limit must
+ * remain set correctly even when update=0.
+ */
 void
 pcieport_rx_credit_bfr(const int port, const int base, const int limit)
 {
@@ -258,36 +272,51 @@ pcieport_rx_credit_bfr(const int port, const int base, const int limit)
 
     pal_reg_rd32w(RX_CREDIT_BFR_ADDR, r.w, 6);
 
-#define UPD_FIELDS(P, base, limit) \
+    /* clear all updateX fields, in case someone left one set */
+    r.update0 = 0; r.update1 = 0; r.update2 = 0; r.update3 = 0;
+    r.update4 = 0; r.update5 = 0; r.update6 = 0; r.update7 = 0;
+
+#define UPD_FIELDS(P, base, limit, upd) \
     do { \
         r.adr_base##P = base; \
         r.adr_limit##P = limit; \
-        r.update##P = 1; \
+        r.update##P = upd; \
         r.rst_rxfifo##P = 0; \
     } while (0)
 
     /* set correct fields and update bit */
     switch (port) {
-    case 0: UPD_FIELDS(0, base, limit); break;
-    case 1: UPD_FIELDS(1, base, limit); break;
-    case 2: UPD_FIELDS(2, base, limit); break;
-    case 3: UPD_FIELDS(3, base, limit); break;
-    case 4: UPD_FIELDS(4, base, limit); break;
-    case 5: UPD_FIELDS(5, base, limit); break;
-    case 6: UPD_FIELDS(6, base, limit); break;
-    case 7: UPD_FIELDS(7, base, limit); break;
+    case 0: UPD_FIELDS(0, base, limit, 1); break;
+    case 1: UPD_FIELDS(1, base, limit, 1); break;
+    case 2: UPD_FIELDS(2, base, limit, 1); break;
+    case 3: UPD_FIELDS(3, base, limit, 1); break;
+    case 4: UPD_FIELDS(4, base, limit, 1); break;
+    case 5: UPD_FIELDS(5, base, limit, 1); break;
+    case 6: UPD_FIELDS(6, base, limit, 1); break;
+    case 7: UPD_FIELDS(7, base, limit, 1); break;
     default: break;
     }
 
+    /* write new config */
     pal_reg_wr32w(RX_CREDIT_BFR_ADDR, r.w, 6);
-#if 0
-    /* XXX on HAPS this causes credit buffer change to get lost? */
-    pal_reg_rd32w(RX_CREDIT_BFR_ADDR, r.w, 6); /* read back to flush */
+    /* read back to flush */
+    pal_reg_rd32w(RX_CREDIT_BFR_ADDR, r.w, 6);
 
-    /* clear update bit */
-    memset(&r, 0, sizeof(r));
+    /* set correct fields and clear update bit */
+    switch (port) {
+    case 0: UPD_FIELDS(0, base, limit, 0); break;
+    case 1: UPD_FIELDS(1, base, limit, 0); break;
+    case 2: UPD_FIELDS(2, base, limit, 0); break;
+    case 3: UPD_FIELDS(3, base, limit, 0); break;
+    case 4: UPD_FIELDS(4, base, limit, 0); break;
+    case 5: UPD_FIELDS(5, base, limit, 0); break;
+    case 6: UPD_FIELDS(6, base, limit, 0); break;
+    case 7: UPD_FIELDS(7, base, limit, 0); break;
+    default: break;
+    }
+
+    /* write config with update=0 */
     pal_reg_wr32w(RX_CREDIT_BFR_ADDR, r.w, 6);
-#endif
 }
 
 u_int16_t
