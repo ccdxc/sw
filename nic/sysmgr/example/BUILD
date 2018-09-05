@@ -6,7 +6,7 @@ cc_binary(
         "example.cc"
     ],
     deps = [
-        "//nic/sysmgr/proto:sysmgr_gen",
+        "//nic/sysmgr/lib",
         "//nic/delphi/sdk",
         "@third_party//:libev",
         "@third_party//:libev_includes",
@@ -23,7 +23,7 @@ cc_binary(
         "test_complete.cc"
     ],
     deps = [
-        "//nic/sysmgr/proto:sysmgr_gen",
+        "//nic/sysmgr/lib",
         "//nic/delphi/sdk",
         "@third_party//:libev",
         "@third_party//:libev_includes",

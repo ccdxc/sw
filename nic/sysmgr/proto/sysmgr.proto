@@ -4,6 +4,19 @@ package sysmgr;
 
 import "nic/delphi/proto/delphi/delphi.proto";
 
+message SysmgrShutdownReq {
+    option (delphi.update_event) = true;
+    option (delphi.singleton)    = true;
+    delphi.ObjectMeta      Meta  = 1;
+}
+
+message SysmgrShutdownStatus {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta      Meta  = 1;
+    string                 Key   = 2;
+    int32                  Pid   = 3;
+}
+
 message SysmgrRebootReq {
     option (delphi.update_event) = true;
     delphi.ObjectMeta      Meta  = 1;

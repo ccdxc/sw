@@ -8,31 +8,27 @@
 
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/sysmgr/proto/sysmgr.delphi.hpp"
+#include "nic/sysmgr/lib/sysmgr_client.hpp"
 
 using namespace std;
 
 class ExampleService : public delphi::Service, public enable_shared_from_this<ExampleService>
 {
   private:
-    delphi::SdkPtr sdk;
+    delphi::SdkPtr delphi;
     string name;
+    sysmgr::Client sysmgr;
 
   public:
-    ExampleService(delphi::SdkPtr sdk, string name)
+    ExampleService(delphi::SdkPtr delphi, string name): sysmgr(delphi, name)
     {
-        this->sdk = sdk;
+        this->delphi = delphi;
         this->name = name;
-
-        delphi::objects::SysmgrServiceStatus::Mount(this->sdk, delphi::ReadWriteMode);
     }
 
     virtual void OnMountComplete()
     {
-        auto obj = make_shared<delphi::objects::SysmgrServiceStatus>();
-
-        obj->set_key("example");
-        obj->set_pid(getpid());
-        sdk->SetObject(obj);
+        this->sysmgr.init_done();
     }
 };
 
