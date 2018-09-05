@@ -409,6 +409,30 @@ cpdc_put_status_desc(struct per_core_resource *pc_res, bool per_block,
 	return mpool_put_object(mpool, desc);
 }
 
+struct cpdc_sgl *
+cpdc_get_sgl(struct per_core_resource *pc_res, bool per_block)
+{
+	struct mem_pool *mpool;
+
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR] :
+		pc_res->mpools[MPOOL_TYPE_CPDC_SGL];
+
+	return (struct cpdc_sgl *) mpool_get_object(mpool);
+}
+
+pnso_error_t
+cpdc_put_sgl(struct per_core_resource *pc_res, bool per_block,
+		struct cpdc_sgl *sgl)
+{
+	struct mem_pool *mpool;
+
+	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR] :
+		pc_res->mpools[MPOOL_TYPE_CPDC_SGL];
+
+	return mpool_put_object(mpool, sgl);
+}
+
+/* TODO-cpdc: revisit */
 pnso_error_t
 cpdc_update_service_info_sgl(struct service_info *svc_info,
 		const struct service_params *svc_params)

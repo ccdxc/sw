@@ -51,19 +51,22 @@ void cpdc_populate_buffer_list(struct cpdc_sgl *sgl,
 
 void cpdc_release_sgl(struct cpdc_sgl *sgl);
 
-struct cpdc_desc *
-cpdc_get_desc(struct per_core_resource *pc_res, bool per_block);
+struct cpdc_desc *cpdc_get_desc(struct per_core_resource *pc_res,
+		bool per_block);
 
-pnso_error_t
-cpdc_put_desc(struct per_core_resource *pc_res, bool per_block,
+pnso_error_t cpdc_put_desc(struct per_core_resource *pc_res, bool per_block,
 		struct cpdc_desc *desc);
 
-struct cpdc_status_desc *
-cpdc_get_status_desc(struct per_core_resource *pc_res, bool per_block);
+struct cpdc_status_desc *cpdc_get_status_desc(struct per_core_resource *pc_res,
+		bool per_block);
 
-pnso_error_t
-cpdc_put_status_desc(struct per_core_resource *pc_res, bool per_block,
-		struct cpdc_status_desc *desc);
+pnso_error_t cpdc_put_status_desc(struct per_core_resource *pc_res,
+		bool per_block, struct cpdc_status_desc *desc);
+
+struct cpdc_sgl *cpdc_get_sgl(struct per_core_resource *pc_res, bool per_block);
+
+pnso_error_t cpdc_put_sgl(struct per_core_resource *pc_res, bool per_block,
+		struct cpdc_sgl *sgl);
 
 void cpdc_get_desc_size(uint32_t *object_size, uint32_t *pad_size);
 

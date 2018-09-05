@@ -54,6 +54,8 @@ pprint_service_info(const struct service_info *svc_info)
 			(u64) svc_info->si_src_sgl);
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_dst_sgl",
 			(u64) svc_info->si_dst_sgl);
+	OSAL_LOG_INFO("%30s: %llx", "=== si_p4_sgl",
+			(u64) svc_info->si_p4_sgl);
 
 	/* TODO-chain: include service status and other members */
 }

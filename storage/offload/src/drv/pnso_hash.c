@@ -149,6 +149,7 @@ hash_setup(struct service_info *svc_info,
 	struct pnso_hash_desc *pnso_hash_desc;
 	struct cpdc_desc *hash_desc;
 	struct cpdc_status_desc *status_desc;
+	struct cpdc_sgl *sgl;
 	struct per_core_resource *pc_res;
 	size_t src_blist_len;
 	bool per_block;
@@ -179,12 +180,21 @@ hash_setup(struct service_info *svc_info,
 		goto out;
 	}
 
+	/* needed for p4 sequencer */
+	sgl = cpdc_get_sgl(pc_res, per_block);
+	if (err) {
+		err = ENOMEM;
+		OSAL_LOG_ERROR("cannot obtain hash sgl from pool! err: %d",
+					err);
+		goto out_hash_desc;
+	}
+
 	status_desc = cpdc_get_status_desc(pc_res, per_block);
 	if (!status_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain hash status desc from pool! err: %d",
 				err);
-		goto out_hash_desc;
+		goto out_sgl_desc;
 	}
 
 	err = cpdc_update_service_info_sgl(svc_info, svc_params);
@@ -212,6 +222,7 @@ hash_setup(struct service_info *svc_info,
 	svc_info->si_desc = hash_desc;
 	svc_info->si_status_desc = status_desc;
 	svc_info->si_num_tags = num_tags;
+	svc_info->si_p4_sgl = sgl;
 
 	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
@@ -236,6 +247,13 @@ out_status_desc:
 	err = cpdc_put_status_desc(pc_res, per_block, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
+				err);
+		OSAL_ASSERT(0);
+	}
+out_sgl_desc:
+	err = cpdc_put_sgl(pc_res, per_block, sgl);
+	if (err) {
+		OSAL_LOG_ERROR("failed to return hash sgl to pool! err: %d",
 				err);
 		OSAL_ASSERT(0);
 	}
@@ -535,6 +553,7 @@ hash_teardown(const struct service_info *svc_info)
 	pnso_error_t err;
 	struct cpdc_desc *hash_desc;
 	struct cpdc_status_desc *status_desc;
+	struct cpdc_sgl *sgl;
 	struct per_core_resource *pc_res;
 	bool per_block;
 
@@ -556,6 +575,14 @@ hash_teardown(const struct service_info *svc_info)
 	err = cpdc_put_status_desc(pc_res, per_block, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
+				err);
+		OSAL_ASSERT(0);
+	}
+
+	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
+	err = cpdc_put_sgl(pc_res, per_block, sgl);
+	if (err) {
+		OSAL_LOG_ERROR("failed to return hash sgl to pool! err: %d",
 				err);
 		OSAL_ASSERT(0);
 	}

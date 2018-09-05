@@ -138,6 +138,8 @@ struct service_info {
 	struct cpdc_sgl	*si_src_sgl;	/* src input buffer converted to sgl */
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
 
+	struct cpdc_sgl	*si_p4_sgl;	/* for per block hash */
+
 	struct sequencer_info si_seq_info;
 
 	struct per_core_resource *si_pc_res;	/* to access lif/pool/etc. */
