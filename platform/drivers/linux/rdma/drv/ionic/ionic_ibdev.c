@@ -83,7 +83,7 @@ MODULE_PARM_DESC(xxx_limits, "XXX Hardcode resource limits.");
 static bool ionic_xxx_kdbid = false;
 module_param_named(xxx_kdbid, ionic_xxx_kdbid, bool, 0444);
 MODULE_PARM_DESC(xxx_kdbid, "XXX Kernel doorbell id in user space.");
-static bool ionic_xxx_mrid = false;
+static bool ionic_xxx_mrid = true;
 module_param_named(xxx_mrid, ionic_xxx_mrid, bool, 0444);
 MODULE_PARM_DESC(xxx_mrid, "XXX key should be low byte, index high bytes, we have just key==index.");
 static bool ionic_xxx_udp = true;
