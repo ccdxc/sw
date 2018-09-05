@@ -157,11 +157,9 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 	idev->ident = ionic->bars[0].vaddr + 0x800;
 #endif
 
-#ifdef HAPS
 	sig = ioread32(&idev->dev_cmd->signature);
 	if (sig != DEV_CMD_SIGNATURE)
 		return -EFAULT;
-#endif
 
 	idev->db_pages = ionic->bars[4].vaddr;
 	idev->phy_db_pages = ionic->bars[4].bus_addr;
