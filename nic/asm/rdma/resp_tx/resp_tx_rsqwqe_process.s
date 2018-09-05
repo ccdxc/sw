@@ -75,7 +75,7 @@ process_atomic:
     // invoke MPU only dcqcn in table 1.
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r0)
 
-    nop.e
+    phvwr.e     CAPRI_PHV_FIELD(phv_global_common, _atomic_resp), 1
     // invalidate table 0
     CAPRI_SET_TABLE_0_VALID(0)  //Exit slot
 
@@ -121,6 +121,9 @@ process_read:
     CAPRI_SET_FIELD2(RKEY_INFO_P, transfer_bytes, PMTU)
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_PAD_ICRC)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, icrc, icrc)
+    phvwrpair   CAPRI_PHV_FIELD(phv_global_common, _middle), 1, \
+                CAPRI_PHV_FIELD(phv_global_common, _read_resp), 1
+
     b           next
     or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_MID //BD Slot
 
@@ -132,6 +135,8 @@ process_read:
                 CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), PMTU //BD Slot
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_PAD_ICRC)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, icrc, icrc)
+    phvwrpair   CAPRI_PHV_FIELD(phv_global_common, _first), 1, \
+                CAPRI_PHV_FIELD(phv_global_common, _read_resp), 1
     b           next
     or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_FIRST //BD Slot
 
@@ -147,6 +152,8 @@ process_read:
     DMA_PHV2PKT_END_LEN_SETUP(DMA_CMD_BASE, r7, icrc, PAD)
     phvwrpair   CAPRI_PHV_RANGE(RKEY_INFO_P, send_aeth, last_or_only), (1<<1)|1, \
                 CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), XFER_BYTES
+    phvwrpair   CAPRI_PHV_FIELD(phv_global_common, _last), 1, \
+                CAPRI_PHV_FIELD(phv_global_common, _read_resp), 1
     b           next
     or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_LAST //BD Slot
 
@@ -162,6 +169,8 @@ process_read:
     DMA_PHV2PKT_END_LEN_SETUP(DMA_CMD_BASE, r7, icrc, PAD)
     phvwrpair   CAPRI_PHV_RANGE(RKEY_INFO_P, send_aeth, last_or_only), (1<<1)|1, \
                 CAPRI_PHV_FIELD(RKEY_INFO_P, transfer_bytes), XFER_BYTES
+    phvwrpair   CAPRI_PHV_FIELD(phv_global_common, _only), 1, \
+                CAPRI_PHV_FIELD(phv_global_common, _read_resp), 1
     b           next
     or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_ONLY //BD Slot
     

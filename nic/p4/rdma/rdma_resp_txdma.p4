@@ -74,6 +74,8 @@
 
 #define tx_table_s5_t1_action   resp_tx_rqcb0_write_back_process
 
+#define tx_table_s7_t3_action   resp_tx_stats_process
+
 #include "../common-p4+/common_txdma.p4"
 #include "./rdma_txdma_headers.p4"
 
@@ -87,7 +89,15 @@
     modify_field(phv_global_common_scr.pt_base_addr_page_id, phv_global_common.pt_base_addr_page_id);\
     modify_field(phv_global_common_scr.log_num_pt_entries, phv_global_common.log_num_pt_entries);\
     modify_field(phv_global_common_scr.pad, phv_global_common.pad);\
-    modify_field(phv_global_common_scr.error_disable_qp, phv_global_common.error_disable_qp);\
+    modify_field(phv_global_common_scr._error_disable_qp, phv_global_common._error_disable_qp);\
+    modify_field(phv_global_common_scr._only, phv_global_common._only);\
+    modify_field(phv_global_common_scr._first, phv_global_common._first);\
+    modify_field(phv_global_common_scr._middle, phv_global_common._middle);\
+    modify_field(phv_global_common_scr._last, phv_global_common._last);\
+    modify_field(phv_global_common_scr._read_resp, phv_global_common._read_resp);\
+    modify_field(phv_global_common_scr._atomic_resp, phv_global_common._atomic_resp);\
+    modify_field(phv_global_common_scr._ack, phv_global_common._ack);\
+    modify_field(phv_global_common_scr._rsvd_flags, phv_global_common._rsvd_flags);
 
 /**** header definitions ****/
 
@@ -134,7 +144,15 @@ header_type phv_global_common_t {
         pt_base_addr_page_id             :   22;
         log_num_pt_entries               :    5;
         pad                              :   22;
-        error_disable_qp                 :    1;
+        _error_disable_qp                :    1;
+        _only                            :    1;
+        _first                           :    1;
+        _middle                          :    1;
+        _last                            :    1;
+        _read_resp                       :    1;
+        _atomic_resp                     :    1;
+        _ack                             :    1;
+        _rsvd_flags                      :    8;
     }
 }
 
@@ -308,6 +326,18 @@ header_type resp_tx_s7_info_t {
     }
 }
 
+header_type resp_tx_to_stage_stats_info_t {
+    fields {
+        pyld_bytes                       :   16;
+        pad                              :  112;
+    }
+}
+
+header_type resp_tx_stats_info_t {
+    fields {
+        rsvd                             :  160;
+    }
+}
 
 /**** header unions and scratch ****/
 
@@ -369,6 +399,11 @@ metadata resp_tx_to_stage_rqcb1_wb_info_t to_s5_rqcb1_wb_info;
 @pragma scratch_metadata
 metadata resp_tx_to_stage_rqcb1_wb_info_t to_s5_rqcb1_wb_info_scr;
 
+@pragma pa_header_union ingress to_stage_7
+metadata resp_tx_to_stage_stats_info_t to_s7_stats_info;
+@pragma scratch_metadata
+metadata resp_tx_to_stage_stats_info_t to_s7_stats_info_scr;
+
 /**** stage to stage header unions ****/
 
 @pragma pa_header_union ingress common_t0_s2s
@@ -420,6 +455,11 @@ metadata resp_tx_bt_info_t t0_s2s_bt_info_scr;
 metadata resp_tx_rsqrkey_to_rkey_cookie_info_t t2_s2s_rsqrkey_to_rkey_cookie_info;
 @pragma scratch_metadata
 metadata resp_tx_rsqrkey_to_rkey_cookie_info_t t2_s2s_rsqrkey_to_rkey_cookie_info_scr;
+
+@pragma pa_header_union ingress common_t3_s2s
+metadata resp_tx_stats_info_t t3_s2s_stats_info;
+@pragma scratch_metadata
+metadata resp_tx_stats_info_t t3_s2s_stats_info_scr;
 
 
 /*
@@ -736,3 +776,15 @@ action resp_tx_rsqwqe_bt_process () {
     modify_field(t0_s2s_bt_info_scr.len, t0_s2s_bt_info.len);
 }
 
+action resp_tx_stats_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s7_stats_info_scr.pyld_bytes, to_s7_stats_info.pyld_bytes);
+    modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
+
+    // stage to stage
+    modify_field(t3_s2s_stats_info_scr.rsvd, t3_s2s_stats_info.rsvd);
+
+}

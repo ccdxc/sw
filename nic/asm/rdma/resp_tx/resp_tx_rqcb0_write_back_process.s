@@ -18,7 +18,13 @@ struct rqcb0_t d;
 
 %%
 
+    .param  resp_tx_stats_process
+
+.align
 resp_tx_rqcb0_write_back_process:
+
+    // invoke stats as mpu only
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_stats_process, r0)
 
     bbeq       CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, dcqcn_rl_failure
     CAPRI_SET_TABLE_1_VALID(0) // BD slot

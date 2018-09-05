@@ -34,6 +34,8 @@ process_ack:
     phvwrpair   p.aeth.syndrome, r6, p.aeth.msn, d.msn
     phvwr       p.bth.psn, d.ack_nak_psn
 
+    phvwr       CAPRI_PHV_FIELD(phv_global_common, _ack), 1
+
     // invoke MPU only dcqcn in table 1.
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r0)
  

@@ -181,7 +181,15 @@ class RdmaRQstate(Packet):
         BitField("rqcb3_pad", 0, 224),
 
         #RQCB4 - RESP_TX stats
-        BitField("rqcb4", 0, 512),
+        LongField("tx_num_bytes", 0),
+        IntField("tx_num_pkts", 0),
+        IntField("tx_num_read_resp_pkts", 0),
+        IntField("tx_num_acks", 0),
+        ShortField("tx_num_read_resp_msgs", 0),
+        ShortField("tx_num_atomic_resp_msgs", 0),
+        ShortField("tx_num_pkts_in_cur_msg", 0),
+        ShortField("tx_max_pkts_in_any_msg", 0),
+        BitField("rqcb4", 0, 288),
 
         #RQCB5 - RESP_RX stats
         LongField("num_bytes", 0),

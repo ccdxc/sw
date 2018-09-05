@@ -419,10 +419,25 @@ struct req_tx_flags_t {
 #define REQ_TX_FLAG_UD_SERVICE          0x4000
 
 struct resp_tx_flags_t {
-    error_disable_qp: 1;
+    _error_disable_qp: 1;
+    _only:1;
+    _first:1;
+    _middle:1;
+    _last:1;
+    _read_resp:1;
+    _atomic_resp:1;
+    _ack:1;
+    _rsvd_flags:8;
 };
 
-#define RESP_TX_FLAG_ERR_DIS_QP         0x0001
+#define RESP_TX_FLAG_ACK                0x0100
+#define RESP_TX_FLAG_ATOMIC_RESP        0x0200
+#define RESP_TX_FLAG_READ_RESP          0x0400
+#define RESP_TX_FLAG_LAST               0x0800
+#define RESP_TX_FLAG_MIDDLE             0x1000
+#define RESP_TX_FLAG_FIRST              0x2000
+#define RESP_TX_FLAG_ONLY               0x4000
+#define RESP_TX_FLAG_ERR_DIS_QP         0x8000
 
 
 #define ARE_ALL_FLAGS_SET(_c, _flags_r, _flags_test) \

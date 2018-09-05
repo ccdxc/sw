@@ -218,7 +218,15 @@ struct rqcb3_t {
 //resp_tx stats
 struct rqcb4_t {
     //TBD
-    pad: 512;
+    num_bytes: 64;
+    num_pkts: 32;
+    num_read_resp_pkts: 32;
+    num_acks: 32;
+    num_read_resp_msgs: 16;
+    num_atomic_resp_msgs: 16;
+    num_pkts_in_cur_msg: 16;
+    max_pkts_in_any_msg: 16;
+    pad: 288;
 };
 
 // resp_rx stats
