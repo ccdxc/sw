@@ -387,14 +387,20 @@ rewrite_init (void) {
 }
 
 static void
-route_lpm_init (void) {
+lpm_mem_init (void) {
 #define ROUTE_LPM_MEM_SIZE  (12 * 1024)
-    uint64_t    data = 0xFFFFFFFFFFFFFFFF;
-    uint64_t    lpm_hbm_addr = get_start_offset(JLPMBASE);
+    uint64_t data = 0xFFFFFFFFFFFFFFFF;
+    uint64_t lpm_hbm_addr = get_start_offset(JLPMBASE);
 
-    for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i+=8) {
-        capri_hbm_write_mem(lpm_hbm_addr+i, (uint8_t*)&data, 8);
+    for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i += sizeof(data)) {
+        capri_hbm_write_mem(lpm_hbm_addr+i, (uint8_t*)&data, sizeof(data));
     }
+}
+
+static void
+route_lpm_init (void) {
+    uint64_t data = 0xFFFFFFFFFFFFFFFF;
+    uint64_t lpm_hbm_addr = get_start_offset(JLPMBASE);
 
     data  = 0x00000A0A0000FFFF;
     data |= (((uint64_t)g_nexthop_index) << 48);
@@ -524,6 +530,8 @@ TEST_F(apollo_test, test1) {
 
     ret = capri_tm_init(catalog);
     ASSERT_NE(ret, -1);
+
+    lpm_mem_init ();
 
     config_done();
 
