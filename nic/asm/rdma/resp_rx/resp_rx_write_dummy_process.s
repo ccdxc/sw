@@ -36,17 +36,32 @@ resp_rx_write_dummy_process:
 
     cmov    r1, c1, d.va, K_VA
     CAPRI_SET_FIELD2(RKEY_INFO_P, va, r1)
-    add     r1, r1, K_REM_PYLD_BYTES
-    tblwr   d.va, r1
+    // r1: va
 
-    cmov    r1, c1, d.len, K_LEN
+    cmov    r3, c1, d.len, K_LEN
     CAPRI_SET_FIELD2(RKEY_INFO_P, len, K_REM_PYLD_BYTES)
-    sub     r1, r1, K_REM_PYLD_BYTES
-    tblwr   d.len, r1
+    // r3: len
 
     cmov    R_KEY, c1, d.r_key, CAPRI_KEY_FIELD(IN_P, r_key)
-    tblwr   d.r_key, R_KEY
 
+    IS_ANY_FLAG_SET(c7, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
+    bcf     [c7], last_or_only
+
+    add     r1, r1, K_REM_PYLD_BYTES // BD Slot
+    tblwr   d.va, r1
+
+    sub     r3, r3, K_REM_PYLD_BYTES
+    tblwr   d.len, r3
+ 
+    b       done
+    tblwr.f d.r_key, R_KEY // BD Slot
+
+last_or_only:
+    tblwr    d.va, 0
+    tblwr    d.r_key, 0
+    tblwr.f  d.len, 0
+
+done:
     seq     c5, R_KEY, RDMA_RESERVED_LKEY_ID
     phvwr.c5    CAPRI_PHV_FIELD(RKEY_INFO_P, rsvd_key_err), 1
 
@@ -63,13 +78,4 @@ resp_rx_write_dummy_process:
                 CAPRI_PHV_FIELD(TO_S_WB1_P, incr_c_index), CAPRI_KEY_FIELD(IN_P, incr_c_index)
 
     // invoke rqrkey 
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_process, KEY_ADDR)
-    
-    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
-    tblwr.c1    d.va, 0
-    tblwr.c1    d.r_key, 0
-    tblwr.c1    d.len, 0
-
-exit:
-    nop.e
-    nop // Exit Slot
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_process, KEY_ADDR)

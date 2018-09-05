@@ -502,8 +502,6 @@ process_read_atomic:
     // DMA for RSQWQE
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
     
-    tblwr       d.rsq_pindex, NEW_RSQ_P_INDEX
-
     // common params for both read/atomic
     CAPRI_RESET_TABLE_1_ARG()
     phvwrpair   p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY, p.rsqwqe.read.va, CAPRI_RXDMA_RETH_VA
@@ -533,16 +531,25 @@ process_read:
     sle.c6         c6, r3, r0
     tblmincri.!c6  d.e_psn, 24, 1
     
+    // flush the last tblwr in this path
+    tblwr.f        d.rsq_pindex, NEW_RSQ_P_INDEX
+
     // do a MPU-only lookup
-    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, resp_rx_read_mpu_only_process, r0)
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_read_mpu_only_process, r0)
 
 process_atomic:
+    tblwr           d.rsq_pindex, NEW_RSQ_P_INDEX
+
     /* Only atomic requests update the busy bit
        Set busy bit so that other requests
        don't end up modifying e_psn, RSQ pindex etc
        before atomic errors out in stage 1
      */ 
     tblwr           d.busy, 1
+    // increment e_psn
+    // flush the last tblwr in this path
+    tblmincri.f     d.e_psn, 24, 1
+
     CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, read_or_atomic, RSQ_OP_TYPE_ATOMIC)
     CAPRI_SET_FIELD2(TO_S_ATOMIC_INFO_P, rsqwqe_ptr, RSQWQE_P)
 
@@ -552,11 +559,8 @@ process_atomic:
     // load 32 Bytes (256-bits) of atomic resource
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_atomic_resource_process, r3)
     
-    phvwr           p.rsqwqe.read_or_atomic, RSQ_OP_TYPE_ATOMIC
-
     bcf             [c6], process_cswap
-    // increment e_psn
-    tblmincri.f     d.e_psn, 24, 1      //BD Slot
+    phvwr           p.rsqwqe.read_or_atomic, RSQ_OP_TYPE_ATOMIC // BD Slot
 
 process_fna:
     //c5:fna
@@ -651,7 +655,7 @@ duplicate_rd_atomic:
     tblsub          d.token_id, 1
     seq             c1, d.bt_in_progress, 1
     bcf             [c1], drop_duplicate_rd_atomic
-    tblwr.!c1       d.bt_in_progress, 1 //BD Slot
+    tblwr.!c1.f     d.bt_in_progress, 1 //BD Slot
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_START)
 
@@ -687,7 +691,8 @@ drop_duplicate_rd_atomic:
 wr_only_zero_len_inv_req_nak:
     //revert the e_psn
     sub         r1, 0, 1
-    tblmincr    d.e_psn, 24, r1
+    // flush the last tblwr in this path
+    tblmincr.f  d.e_psn, 24, r1
     //fall thru to inv_req_nak
 
 inv_req_nak:
@@ -730,7 +735,8 @@ nak_prune:
     phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
                 CAPRI_PHV_FIELD(TO_S_WB1_P, soft_nak_or_dup), 1
     bbne        d.nak_prune, 1, nak
-    tblwr       d.nak_prune, 1 // BD Slot
+    // no further tblwr's in either path. so add .f
+    tblwr.f     d.nak_prune, 1 // BD Slot
 
     b           skip_nak
     // turn off ACK req bit when skipping nak
@@ -807,7 +813,8 @@ rc_checkout:
     add         r1, r0, SPEC_RQ_C_INDEX
 
     bbne        d.rq_in_hbm, 1, pt_process
-    tblmincri   SPEC_RQ_C_INDEX, d.log_num_wqes, 1 //BD Slot
+    // flush the last tblwr in this path
+    tblmincri.f SPEC_RQ_C_INDEX, d.log_num_wqes, 1 //BD Slot
 
     sll         r2, r1, d.log_wqe_size
     add         r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT

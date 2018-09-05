@@ -99,10 +99,11 @@ resp_rx_rqcb1_write_back_process:
     tblwr.c3    d.curr_wqe_ptr, K_CURR_WQE_PTR
     tblwr.c2    d.num_sges, CAPRI_KEY_FIELD(IN_TO_S_P, num_sges)
 
-    
 skip_updates_for_only:
 check_completion:
-    
+    // dummy tblwr to flush
+    tblwr.f     d.busy, d.busy
+
     // load cqcb only if completion flag is set OR async_event_or_error posting is needed
     crestore [c1], K_ASYNC_EVENT_OR_ERROR, 0x1
     // if completion is not set, inv_rkey is not set either
@@ -122,18 +123,21 @@ check_inv_rkey:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_process, KEY_ADDR)
 
 check_ack_nak:
-    crestore    [c3, c2, c1], K_GLOBAL_FLAGS, (RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_ERR_DIS_QP)
-    // c3: ack_req, c2: completion, c1: err_disable_qp
+    seq         c3, K_GLOBAL_FLAG(_ack_req), 1
+    // c3: ack_req
+    setcf       c4, [c7 | c6 | c5]
+    // c4: read or atomic
 
+    // skip_ack_nak only if ack_req bit is not set
+    // and it is not read or atomic
+    bcf         [!c3 & !c4], invoke_stats
     // populate ack info
-    RQ_CREDITS_GET(ACK_CREDITS, TMP, c4)
+    RQ_CREDITS_GET(ACK_CREDITS, TMP, c2) // BD Slot
     phvwrpair   p.s1.ack_info.msn, d.msn, \
                 p.s1.ack_info.credits, ACK_CREDITS
                 
     // ACK/NAK generation
     RQCB2_ADDR_GET(RQCB2_ADDR)
-    setcf       c4, [c7 | c6 | c5]
-    // c4: read or atomic
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, !c4)
     DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_ACK, c4)
 

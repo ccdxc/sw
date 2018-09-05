@@ -212,7 +212,7 @@ loop_exit:
     add         TMP, r0, CAPRI_KEY_FIELD(IN_TO_S_P, inv_r_key)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, TMP)
 
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_validate_process, KEY_ADDR)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_validate_process, KEY_ADDR)
 
 skip_inv_rkey:
     CAPRI_SET_TABLE_0_VALID(1)
