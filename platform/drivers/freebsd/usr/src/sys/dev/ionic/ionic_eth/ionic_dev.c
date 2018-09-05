@@ -230,8 +230,6 @@ void ionic_ring_doorbell(struct doorbell *db_addr, uint32_t qid, uint16_t p_inde
 		.p_index = p_index,
 	};
 
-	//IONIC_DEBUG_PRINT("qid: %d ring-doorbell p_index %d db %p, value : 0x%lx\n", qid, p_index, db_addr, *(u64 *)&db_data);
-
 	writeq(*(u64 *)&db_data, db_addr);
 }
 

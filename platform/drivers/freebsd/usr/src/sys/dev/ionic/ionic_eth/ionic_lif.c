@@ -1307,16 +1307,15 @@ int ionic_tx_clean(struct txque* txq , int tx_limit)
 	
 	for ( processed = 0 ; processed < tx_limit ; processed++) {
 		comp_index = txq->comp_index;
-	//	cmd_index = txq->cmd_tail_index;
 
 		comp = &txq->comp_ring[comp_index];
 		cmd_stop_index = comp->comp_index;
 
-		if (comp->color != txq->done_color)
-			break;
-
 		IONIC_NETDEV_TX_TRACE(txq, "comp @ %d for desc @ %d comp->color %d done_color %d\n",
 			comp_index, cmd_stop_index, comp->color, txq->done_color);
+		
+		if (comp->color != txq->done_color)
+			break;
 
 		txbuf = &txq->txbuf[cmd_stop_index];
 		/* TSO last buffer only points to valid mbuf. */
@@ -1336,7 +1335,7 @@ int ionic_tx_clean(struct txque* txq , int tx_limit)
 		}
 	}
 
-//	IONIC_NETDEV_TX_TRACE(txq, "ionic_tx_clean processed %d\n", processed);
+	IONIC_NETDEV_TX_TRACE(txq, "ionic_tx_clean processed %d\n", processed);
 
 	if (comp->color == txq->done_color)
 		taskqueue_enqueue(txq->taskq, &txq->task);

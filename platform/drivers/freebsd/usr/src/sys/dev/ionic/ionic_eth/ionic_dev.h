@@ -23,13 +23,13 @@
 
 #include "ionic_if.h"
 
-#define IONIC_MIN_MTU		ETH_MIN_MTU
-#define IONIC_MAX_MTU		9200
+#define IONIC_MIN_MTU ETH_MIN_MTU
+#define IONIC_MAX_MTU 9200
 
 #ifdef HAPS
-#define IONIC_DEVCMD_TIMEOUT	(HZ * 10)
+#define IONIC_DEVCMD_TIMEOUT (HZ * 10)
 #else
-#define IONIC_DEVCMD_TIMEOUT	(HZ * 2)
+#define IONIC_DEVCMD_TIMEOUT (HZ * 2)
 #endif
 
 #pragma pack(push, 1)
@@ -55,20 +55,23 @@ union dev_cmd_comp {
 	struct adminq_init_comp adminq_init;
 };
 
-struct dev_cmd_regs {
+struct dev_cmd_regs
+{
 	u32 signature;
 	u32 done;
 	union dev_cmd cmd;
 	union dev_cmd_comp comp;
 };
 
-struct dev_cmd_db {
+struct dev_cmd_db
+{
 	u32 v;
 };
 
-#define IONIC_BARS_MAX		6
+#define IONIC_BARS_MAX 6
 
-struct ionic_dev_bar {
+struct ionic_dev_bar
+{
 	void __iomem *vaddr;
 	dma_addr_t bus_addr;
 	unsigned long len;
@@ -86,17 +89,18 @@ struct ionic_dev_bar {
  * @qid:     The queue id selects the queue destination for the
  *           producer index and flags.
  */
-struct doorbell {
+struct doorbell
+{
 	u16 p_index;
-	u8 ring:3;
-	u8 rsvd:5;
+	u8 ring : 3;
+	u8 rsvd : 5;
 	u8 qid_lo;
 	u16 qid_hi;
 	u16 rsvd2;
 };
 
-#define INTR_CTRL_REGS_MAX	64
-#define INTR_CTRL_COAL_MAX	0x3F
+#define INTR_CTRL_REGS_MAX 64
+#define INTR_CTRL_COAL_MAX 0x3F
 
 /**
  * struct intr_ctrl - Interrupt control register
@@ -158,35 +162,37 @@ struct doorbell {
  *                    sent, otherwise an interrupt will be sent
  *                    on the next interrupt assertion event.
  */
-struct intr_ctrl {
-	u32 coalescing_init:6;
-	u32 rsvd:26;
-	u32 mask:1;
-	u32 rsvd2:31;
-	u32 int_credits:16;
-	u32 unmask:1;
-	u32 coal_timer_reset:1;
-	u32 rsvd3:14;
-	u32 mask_on_assert:1;
-	u32 rsvd4:31;
-	u32 coalescing_curr:6;
-	u32 rsvd5:26;
+struct intr_ctrl
+{
+	u32 coalescing_init : 6;
+	u32 rsvd : 26;
+	u32 mask : 1;
+	u32 rsvd2 : 31;
+	u32 int_credits : 16;
+	u32 unmask : 1;
+	u32 coal_timer_reset : 1;
+	u32 rsvd3 : 14;
+	u32 mask_on_assert : 1;
+	u32 rsvd4 : 31;
+	u32 coalescing_curr : 6;
+	u32 rsvd5 : 26;
 	u32 rsvd6[3];
 };
 
-#define intr_to_coal(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 0)
-#define intr_to_mask(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl)		(void *)((u8 *)(intr_ctrl) + 8)
-#define intr_to_mask_on_assert(intr_ctrl)	(void *)((u8 *)(intr_ctrl) + 12)
+#define intr_to_coal(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 0)
+#define intr_to_mask(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 4)
+#define intr_to_credits(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 8)
+#define intr_to_mask_on_assert(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 12)
 
-struct intr_status {
+struct intr_status
+{
 	u32 status[2];
 };
 
 #pragma pack(pop)
 
 #ifndef BUILD_BUG_ON
-#define BUILD_BUG_ON(x)	 CTASSERT(!(x))
+#define BUILD_BUG_ON(x) CTASSERT(!(x))
 #endif
 
 static inline void ionic_struct_size_checks(void)
@@ -255,7 +261,8 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(union adminq_comp) != 16);
 }
 
-struct ionic_dev {
+struct ionic_dev
+{
 	struct dev_cmd_regs __iomem *dev_cmd;
 	struct dev_cmd_db __iomem *dev_cmd_db;
 	struct doorbell __iomem *db_pages;
@@ -271,13 +278,17 @@ struct ionic_dev {
 #endif
 };
 
-#define INTR_INDEX_NOT_ASSIGNED		(-1)
+#define INTR_INDEX_NOT_ASSIGNED (-1)
 
-//#define INTR_NAME_MAX_SZ		(32)
+#ifndef FREEBSD
+#define INTR_NAME_MAX_SZ (32)
+#else
 /* Interrupt name can't be longer than MAXCOMLEN */
-#define INTR_NAME_MAX_SZ		(MAXCOMLEN)
+#define INTR_NAME_MAX_SZ (MAXCOMLEN)
+#endif
 
-struct intr {
+struct intr
+{
 	char name[INTR_NAME_MAX_SZ];
 	unsigned int index;
 	unsigned int vector;
@@ -287,7 +298,7 @@ struct intr {
 };
 
 int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
-		    unsigned int num_bars);
+					unsigned int num_bars);
 
 union dev_cmd; //Need to remove it
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
@@ -301,10 +312,10 @@ void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index);
 char *ionic_dev_asic_name(u8 asic_type);
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
-		    unsigned long index);
+					unsigned long index);
 void ionic_intr_mask_on_assertion(struct intr *intr);
 void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
-			       bool unmask, bool reset_timer);
+							   bool unmask, bool reset_timer);
 void ionic_intr_mask(struct intr *intr, bool mask);
 void ionic_intr_coal_set(struct intr *intr, u32 coal_usecs);
 

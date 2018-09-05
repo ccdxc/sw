@@ -62,7 +62,6 @@ ionic_write_doorbell(struct ionic* ionic,int pid, int qid,  uint64_t val)
 	dev_info(ionic->dev, "[DOORBELL_WRITE] pid: %d qis: %d offset: 0x%x val: 0x%x\n",
 		pid, qid, offset, val);
 
-	ionic_write_reg(ionic, offset, val);
 	bus_space_write_8(ionic->doorbells_tag, ionic->doorbells_handle, offset, val);
 }
 #endif
@@ -71,11 +70,9 @@ ionic_write_doorbell(struct ionic* ionic,int pid, int qid,  uint64_t val)
 static void
 ionic_dmamap_cb(void *arg, bus_dma_segment_t *segs, int nsegs, int error)
 {
-	if (error)
-		return;
 
-	*(bus_addr_t *)arg = segs->ds_addr;
-	return;
+	if (error == 0)
+		*(bus_addr_t *)arg = segs->ds_addr;
 }
 
 int
