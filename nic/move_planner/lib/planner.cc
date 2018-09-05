@@ -39,11 +39,11 @@ build_dependency_graph(planner::planner_t& plan) {
         for(uint32_t j = 0; j < plan.input_map.size(); j++) {
         /* Check if the current input_map element's old address
          * falls within the address of new allocations.  */
-            UPG_LOG_INFO("I : {}\t I : {}", i, j);
-            UPG_LOG_INFO("INP START {} INP END {}",
+            UPG_LOG_DEBUG("I : {}\t I : {}", i, j);
+            UPG_LOG_DEBUG("INP START {} INP END {}",
                           plan.input_map[i].start_address - sizeof(region_t),
                           plan.input_map[i].start_address + plan.input_map[i].size);
-            UPG_LOG_INFO("PLAN START {} PLAN END {}",
+            UPG_LOG_DEBUG("PLAN START {} PLAN END {}",
                           plan.start_address[j], 
                           plan.end_address[j]);
 
@@ -87,7 +87,7 @@ get_added_regions(planner::planner_t &plan) {
         }
 
         if(!found) {
-            UPG_LOG_INFO("\nNEW REGION : {} REGION_NAME : {}",
+            UPG_LOG_DEBUG("\nNEW REGION : {} REGION_NAME : {}",
                          it->first.c_str(),
                          plan.expected_map[it->first.c_str()].region_name);
 
@@ -201,7 +201,7 @@ move_regions(planner::planner_t &plan) {
         ch.entry_size = cur_meta_it->second.entry_size;
 	    ch.size = cur_meta_it->second.size;
 
-        UPG_LOG_INFO("Bottom up move entry[{}] FROM : {} TO : {}, ENTRY SIZE : {} TOTAL SIZE : {}",
+        UPG_LOG_DEBUG("Bottom up move entry[{}] FROM : {} TO : {}, ENTRY SIZE : {} TOTAL SIZE : {}",
                       plan.input_map[cur_index].region_name,
                       from - base_address,
                       to - base_address,
@@ -281,14 +281,14 @@ determine_moves(planner::planner_t &plan) {
             plan.end_address.push_back(cur_address_start);
             /* Don't move if the region is to be deleted */
             plan.free_space += (*it).size + sizeof(region_t);
-            UPG_LOG_INFO("--- JUST DELETED : {}", (*it).region_name);
+            UPG_LOG_DEBUG("--- JUST DELETED : {}", (*it).region_name);
         } else {
             plan.start_address.push_back(cur_address_start - plan.free_space);
             plan.end_address.push_back(plan.start_address[index]
             + plan.expected_map[(*it).region_name].size
             + sizeof(region_t));
 
-            UPG_LOG_INFO("NAME : {} FREE SPACE : {}",
+            UPG_LOG_DEBUG("NAME : {} FREE SPACE : {}",
                          (*it).region_name,
                          plan.free_space);
             /* A negative value of free_space indicates that moveable region
@@ -359,25 +359,25 @@ validate_region_move(string target_json) {
 
     raw_expected_map = metadata_read_region_map(target_json);
 
-    UPG_LOG_INFO("TEST 1 : Count of alloced region is as expected.");
+    UPG_LOG_DEBUG("TEST 1 : Count of alloced region is as expected.");
     if(raw_expected_map.size() != new_input_map.size()) {
         UPG_LOG_ERROR("Expected region count[{}] and alloced region count[{}] don't match.",
                        raw_expected_map.size(), new_input_map.size());
         return PLAN_CATASTROPHIC;
     }
 
-    UPG_LOG_INFO("TEST 2 : Ensure all requested regions have correct size.");
+    UPG_LOG_DEBUG("TEST 2 : Ensure all requested regions have correct size.");
     for(vector<region_metadata_t>::iterator it = raw_expected_map.begin();
         it != raw_expected_map.end();
         it++) {
         bool found = false;
-        UPG_LOG_INFO("Searching JSON region [{}] SIZE [{}] in PAL.",
+        UPG_LOG_DEBUG("Searching JSON region [{}] SIZE [{}] in PAL.",
                      it->name, it->size_kb);
 
         for(vector<region_t>::iterator it_inp = new_input_map.begin();
             it_inp != new_input_map.end();
             it_inp++) {
-            UPG_LOG_INFO("PAL Region [{}] SIZE [{}]",
+            UPG_LOG_DEBUG("PAL Region [{}] SIZE [{}]",
                          it_inp->region_name, it_inp->size);
 
             if(strcmp(it->name, it_inp->region_name) == 0) {
@@ -421,35 +421,35 @@ plan_and_move(string current_json,
 	return PLAN_FAIL;
     }
 
-    UPG_LOG_INFO("<<<<<< STAGE 1 >>>>>>");
+    UPG_LOG_DEBUG("<<<<<< STAGE 1 >>>>>>");
     check_upgrade(plan);
  
-    UPG_LOG_INFO("<<<<<< STAGE 2 >>>>>>");
+    UPG_LOG_DEBUG("<<<<<< STAGE 2 >>>>>>");
 /*
     if(get_added_regions(plan) != PLAN_SUCCESS) {
         cout << "\nCannot get added regions"<<endl;
         return PLAN_FAIL;
     }
 */
-    UPG_LOG_INFO("<<<<<< STAGE 3 >>>>>>");
+    UPG_LOG_DEBUG("<<<<<< STAGE 3 >>>>>>");
     /* Negative free_space would mean, that additional space is required. */
     if(plan.free_space < 0) {
         pal_moveable_sbrk((-1) * plan.free_space);
     } 
 
-    UPG_LOG_INFO("<<<<<< STAGE 4 >>>>>>");
+    UPG_LOG_DEBUG("<<<<<< STAGE 4 >>>>>>");
     if(move_regions(plan) != PLAN_SUCCESS) {
         UPG_LOG_ERROR("Cannot move regions");
 	return PLAN_CATASTROPHIC;
     }
 
-    UPG_LOG_INFO("<<<<<< STAGE 5 >>>>>>");
+    UPG_LOG_DEBUG("<<<<<< STAGE 5 >>>>>>");
     /* Positive free_space would mean, we must return memory back. */
     if(plan.free_space > 0) {
         pal_moveable_sbrk((-1) * plan.free_space);
     }
 
-    UPG_LOG_INFO("<<<<<< STAGE 6 >>>>>>");
+    UPG_LOG_DEBUG("<<<<<< STAGE 6 >>>>>>");
     if(alloc_added_regions(plan)!= PLAN_SUCCESS) {
         UPG_LOG_ERROR("Cannot alloc added regions");
         return PLAN_CATASTROPHIC;
