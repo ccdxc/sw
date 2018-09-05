@@ -341,7 +341,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     devcmd->signature = DEV_CMD_SIGNATURE;
     WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd));
 
-    NIC_LOG_INFO("lif{}: Devcmd PA {:#lx} DevcmdDB PA {:#lx}", info.hw_lif_id,
+    NIC_LOG_INFO("lif{}: Devcmd PA {:#x} DevcmdDB PA {:#x}", info.hw_lif_id,
         pci_resources.devcmdpa, pci_resources.devcmddbpa);
 
     if (spec->pcie_port == 0xff) {
@@ -600,7 +600,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     storage_seq_admin_qstate_t  admin_qstate;
     uint64_t                    addr;
 
-    NIC_LOG_INFO("lif{}: queue_index {} ring_base {:#lx} ring_size {} intr_index {}",
+    NIC_LOG_INFO("lif{}: queue_index {} ring_base {:#x} ring_size {} intr_index {}",
         info.hw_lif_id, cmd->index, cmd->ring_base,cmd->ring_size, cmd->intr_index);
 
     if (cmd->index >= spec->adminq_count) {
@@ -645,7 +645,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     admin_qstate.intr_assert_addr = intr_assert_addr(spec->intr_base + cmd->intr_index);
     if (nicmgr_lif_info) {
         admin_qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
-        NIC_LOG_INFO("lif{}: nicmgr_qstate_addr RX {:#lx}", info.hw_lif_id,
+        NIC_LOG_INFO("lif{}: nicmgr_qstate_addr RX {:#x}", info.hw_lif_id,
             admin_qstate.nicmgr_qstate_addr);
     }
     WRITE_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate));
@@ -720,7 +720,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
         ACCEL_PHYS_ADDR_LIF_SET(seq_qstate.wring_base, info.hw_lif_id);
     }
 
-    NIC_LOG_INFO("lif{}: qid {} qgroup {} wring_base {:#lx} wring_size {} entry_size {}",
+    NIC_LOG_INFO("lif{}: qid {} qgroup {} wring_base {:#x} wring_size {} entry_size {}",
            info.hw_lif_id, qid, cmd->qgroup, seq_qstate.wring_base, cmd->wring_size,
            cmd->entry_size);
 
@@ -862,8 +862,8 @@ Accel_PF::accel_ring_info_get_all(void)
                 accel_ring->ring_size = csr->ring_size_mask + 1;
             }
         }
-        NIC_LOG_INFO("ring {} ring_base_pa {:#lx} ring_pndx_pa {:#lx} "
-               "ring_shadow_pndx_pa {:#lx} ring_opaque_tag_pa {:#lx} "
+        NIC_LOG_INFO("ring {} ring_base_pa {:#x} ring_pndx_pa {:#x} "
+               "ring_shadow_pndx_pa {:#x} ring_opaque_tag_pa {:#x} "
                "ring_size {}",
                csr->ring_name, accel_ring->ring_base_pa,
                accel_ring->ring_pndx_pa, accel_ring->ring_shadow_pndx_pa,

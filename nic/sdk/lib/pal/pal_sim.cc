@@ -67,8 +67,12 @@ pal_sim_virtual_addr_to_physical_addr(uint64_t virtual_addr,
 pal_ret_t
 pal_sim_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words)
 {
-    if (!(*gl_sim_vecs.read_reg)(addr, *data)) {
-        return PAL_RET_NOK;
+    while (num_words--) {
+        if (!(*gl_sim_vecs.read_reg)(addr, *data)) {
+            return PAL_RET_NOK;
+        }
+        addr += sizeof(uint32_t);
+        data++;
     }
     return PAL_RET_OK;
 }
@@ -76,8 +80,12 @@ pal_sim_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words)
 pal_ret_t
 pal_sim_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words)
 {
-    if (!(*gl_sim_vecs.write_reg)(addr, *data)) {
-        return PAL_RET_NOK;
+    while (num_words--) {
+        if (!(*gl_sim_vecs.write_reg)(addr, *data)) {
+            return PAL_RET_NOK;
+        }
+        addr += sizeof(uint32_t);
+        data++;
     }
     return PAL_RET_OK;
 }
