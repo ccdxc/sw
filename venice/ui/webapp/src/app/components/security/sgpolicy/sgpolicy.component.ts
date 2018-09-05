@@ -199,11 +199,24 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
       destIP = this.destIpFormControl.value;
       port = this.portFormControl.value;
     }
-    if (!IPUtility.isValidIP(sourceIP) && !IPUtility.isValidIP(destIP)) {
-      // Set error states
-      this.searchErrorMessage = "Invalid IP"
+    // If there is text entered but it isn't a valid IP, we dont invoke search.
+    if (sourceIP != null && sourceIP.length !== 0 && !IPUtility.isValidIP(sourceIP)) {
+      this.searchErrorMessage = "Invalid IP";
       return false;
     }
+    // If there is text entered but it isn't a valid IP, we dont invoke search.
+    if (destIP != null && destIP.length !== 0 && !IPUtility.isValidIP(destIP)) {
+      this.searchErrorMessage = "Invalid IP";
+      return false;
+    }
+
+    // If all fields are blank we retun
+    if ((destIP == null || destIP.length === 0) &&
+      (sourceIP == null || sourceIP.length === 0) &&
+      (port == null || port.length === 0)) {
+      return;
+    }
+
     this.searchErrorMessage = '';
 
     const req = new SearchPolicySearchRequest();

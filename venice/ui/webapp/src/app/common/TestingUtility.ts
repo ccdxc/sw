@@ -29,7 +29,6 @@ export class TestingUtility {
   sendClick(elem: DebugElement) {
     const elemNative = elem.nativeElement;
     elemNative.click();
-    elemNative.dispatchEvent(new Event('click'));
     this.fixture.detectChanges();
     return this.fixture.whenStable();
   }

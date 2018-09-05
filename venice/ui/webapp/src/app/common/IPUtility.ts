@@ -32,7 +32,7 @@ export class IPUtility {
    * Returns true if the ip is valid
    */
   public static isValidIP(ip) {
-    if (ip === null) {
+    if (ip === null || ip.length === 0) {
       return false;
     }
     // Can't end in a dot

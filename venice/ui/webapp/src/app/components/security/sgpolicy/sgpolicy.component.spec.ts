@@ -24,7 +24,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
 import { SecurityService } from 'app/services/generated/security.service';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { SgpolicyComponent } from './sgpolicy.component';
 
 /**
@@ -195,7 +195,13 @@ describe('SgpolicyComponent', () => {
 
     const invokePolicySearchSpy = spyOn(component, 'invokePolicySearch').and.callThrough();
     const service = TestBed.get(SearchService);
-    spyOn(service, 'PostPolicyQuery');
+    const querySpy = spyOn(service, 'PostPolicyQuery').and.returnValue(
+      new BehaviorSubject<any>({
+        body: {
+          status: 'MISS'
+        }
+      }
+      ));
 
     // No inputs have text, so search and clear buttons are undefined
     // There should be no error message
@@ -209,7 +215,7 @@ describe('SgpolicyComponent', () => {
     // Putting in text into source IP
     const inputs = fixture.debugElement.queryAll(By.css('mat-form-field'));
     const sourceIPInput = inputs[0].query(By.css('input'));
-    // console.log(sourceIPInput);
+    const portInput = inputs[2].query(By.css('input'));
     testingUtility.setText(sourceIPInput, '192');
 
 
@@ -222,6 +228,7 @@ describe('SgpolicyComponent', () => {
     // Click the search button should invoke a search
     testingUtility.sendClick(searchButton);
     expect(component.invokePolicySearch).toHaveBeenCalled();
+    expect(service.PostPolicyQuery).toHaveBeenCalledTimes(0)
 
     // There should be an invalid IP message
     errorMessageDiv = fixture.debugElement.query(By.css('.sgpolicy-search-error'));
@@ -241,9 +248,22 @@ describe('SgpolicyComponent', () => {
 
     // Clicking clear button should empty out the results, but not reset the scroll
     // since we don't have a match
-    // TODO: CHECK SCROLL
+    // TODO: Find a way to check scroll
     testingUtility.sendClick(searchClearButton)
     expect(sourceIPInput.nativeElement.value).toBe('');
+
+    // Should allow port only search
+    testingUtility.setText(sourceIPInput, '');
+    testingUtility.setText(portInput, 'tcp/88');
+    searchButton = fixture.debugElement.query(By.css('.sgpolicy-search-button'));
+    expect(searchButton).toBeTruthy();
+    // Click the search button should invoke a search
+    testingUtility.sendClick(searchButton);
+    expect(service.PostPolicyQuery).toHaveBeenCalledTimes(1)
+    const req = querySpy.calls.first().args[0];
+    expect(req['from-ip-address']).toBe('any');
+    expect(req['to-ip-address']).toBe('any');
+    expect(req.app).toBe('tcp/88');
   });
 
   it('should display sgpolicy meta/rules and highlight matching row or display there is none on search', () => {
