@@ -171,7 +171,7 @@ eqcb_setup:
     REQ_RX_EQCB_ADDR_GET(r5, r2, d.eq_id, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES) // BD Slot
     phvwr       CAPRI_PHV_FIELD(CQ_PT_INFO_P, fire_eqcb), 1
     tblwr       CQ_PROXY_S_PINDEX, R_CQ_PROXY_PINDEX
-    tblwr       d.{arm...sarm}, 0
+    tblwr.f     d.{arm...sarm}, 0
 
     phvwrpair   p.eqwqe.code, EQE_CODE_CQ_NOTIFY, p.eqwqe.type, EQE_TYPE_CQ
     phvwr       p.eqwqe.qid, d.cq_id
@@ -196,9 +196,8 @@ eval_wakeup:
 
 skip_wakeup:
     //DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
-    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
-    nop.e
-    nop
+    DMA_SET_END_OF_CMDS_E(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
+    nop //Exit Slot
 
 
 bubble_to_next_stage:
@@ -215,7 +214,7 @@ report_cqfull_error:
     phvwrpair   p.eqwqe.code, EQE_CODE_CQ_ERR_FULL, p.eqwqe.type, EQE_TYPE_CQ
     phvwr       p.eqwqe.qid, d.cq_id
 
-    tblwr       d.cq_full, 1
+    tblwr.f     d.cq_full, 1
 
 report_async:
     //PHV->eq_info is filled with appropriate error type and code by this time
