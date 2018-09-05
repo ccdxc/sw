@@ -284,13 +284,13 @@
 /*****************************************************************************/
 /* Classic NIC header flags                                                  */
 /*****************************************************************************/
-#define CLASSIC_NIC_RSS_FLAGS_NONE     0x000
-#define CLASSIC_NIC_RSS_FLAGS_IPV4     0x001
-#define CLASSIC_NIC_RSS_FLAGS_IPV4_TCP 0x003
-#define CLASSIC_NIC_RSS_FLAGS_IPV4_UDP 0x005
-#define CLASSIC_NIC_RSS_FLAGS_IPV6     0x008
-#define CLASSIC_NIC_RSS_FLAGS_IPV6_TCP 0x018
-#define CLASSIC_NIC_RSS_FLAGS_IPV6_UDP 0x028
+#define CLASSIC_NIC_PKT_TYPE_NON_IP     0x000
+#define CLASSIC_NIC_PKT_TYPE_IPV4       0x001
+#define CLASSIC_NIC_PKT_TYPE_IPV4_TCP   0x003
+#define CLASSIC_NIC_PKT_TYPE_IPV4_UDP   0x005
+#define CLASSIC_NIC_PKT_TYPE_IPV6       0x008
+#define CLASSIC_NIC_PKT_TYPE_IPV6_TCP   0x018
+#define CLASSIC_NIC_PKT_TYPE_IPV6_UDP   0x028
 
 /*****************************************************************************/
 /* TCP OPTIONS                                                               */

@@ -24,8 +24,10 @@ eth_rx_app_header:
   phvwr           p.eth_rx_t0_s2s_packet_len, k.p4_to_p4plus_packet_len
 
   // Build completion entry in the PHV
-  xor             r1, k.p4_to_p4plus_csum, -1
-  phvwr           p.eth_rx_cq_desc_csum, r1
+  sne             c1, k.p4_to_p4plus_pkt_type, PKT_TYPE_NON_IP
+  phvwr.c1        p.eth_rx_cq_desc_csum_calc, 1
+  xor.c1          r1, k.p4_to_p4plus_csum, -1
+  phvwr.c1        p.eth_rx_cq_desc_csum, r1
   phvwr           p.{eth_rx_cq_desc_csum_ip_bad...eth_rx_cq_desc_csum_tcp_ok}, k.{p4_to_p4plus_csum_ip_bad...p4_to_p4plus_csum_tcp_ok}
   phvwr           p.eth_rx_cq_desc_vlan_strip, k.p4_to_p4plus_vlan_valid
   phvwr           p.eth_rx_cq_desc_vlan_tci, k.{p4_to_p4plus_vlan_pcp...p4_to_p4plus_vlan_vid_sbit4_ebit11}.hx
@@ -34,12 +36,8 @@ eth_rx_app_header:
 
 // Write RSS input to PHV
 eth_rx_rss_input:
-  and             r1, d.{rss_type}.hx, k.p4_to_p4plus_rss_flags
+  and             r1, d.{rss_type}.hx, k.p4_to_p4plus_pkt_type
 
-  // Map RSS type flags (sparse number-space) to RSS enum (contiguous number-space)
-  // Driver sets RSS type flags based on the packet types it wants to do RSS on.
-  // Driver expects the RX completion entry to contain the RSS enum applicable
-  // to a particular packet.
   indexb          r7, r1, [RSS_IPV4_UDP, RSS_IPV4_TCP, RSS_IPV4, RSS_NONE], 0
   indexb          r7, r1, [RSS_IPV6_UDP, RSS_IPV6_TCP, RSS_IPV6], 1
 

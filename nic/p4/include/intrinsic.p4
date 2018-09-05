@@ -168,7 +168,7 @@ header_type p4_to_p4plus_classic_nic_header_t {
         csum_tcp_ok         : 1;
         vlan_valid          : 1;
         pad                 : 3;
-        rss_flags           : 6;
+        pkt_type            : 6;
         l4_sport            : 16;
         l4_dport            : 16;
     }

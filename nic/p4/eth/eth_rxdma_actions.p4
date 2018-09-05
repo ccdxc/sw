@@ -58,7 +58,7 @@ action eth_rx_app_header(
     modify_field(p4_to_p4plus_scratch.csum_tcp_bad, p4_to_p4plus.csum_tcp_bad);
     modify_field(p4_to_p4plus_scratch.csum_tcp_ok, p4_to_p4plus.csum_tcp_ok);
 
-    modify_field(p4_to_p4plus_scratch.rss_flags, p4_to_p4plus.rss_flags);
+    modify_field(p4_to_p4plus_scratch.pkt_type, p4_to_p4plus.pkt_type);
     modify_field(p4_to_p4plus_scratch.l4_sport, p4_to_p4plus.l4_sport);
     modify_field(p4_to_p4plus_scratch.l4_dport, p4_to_p4plus.l4_dport);
     modify_field(p4_to_p4plus_scratch.ip_sa, p4_to_p4plus.ip_sa);

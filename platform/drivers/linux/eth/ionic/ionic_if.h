@@ -702,6 +702,7 @@ enum rxq_comp_rss_type {
  * @vlan_tci:     VLAN tag stripped from the packet.  Valid if @V is
  *                set.  Includes .1p and .1q tags.
  * @len:          Received packet length, in bytes.  Excludes FCS.
+ * @csum_calc     L2 payload checksum is computed or not
  * @rss_type:     RSS type for @rss_hash:
  *                   0 = RSS hash not calcuated
  *                   1 = L3 IPv4
@@ -750,7 +751,8 @@ struct rxq_comp {
 	u32 len:14;
 	u32 rsvd2:2;
 	u32 rss_type:4;
-	u32 rsvd3:4;
+	u32 csum_calc:1;
+	u32 rsvd3:3;
 	u32 csum_tcp_ok:1;
 	u32 csum_tcp_bad:1;
 	u32 csum_udp_ok:1;

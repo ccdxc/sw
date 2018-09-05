@@ -102,7 +102,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 		}
 	}
 
-	if (netdev->features & NETIF_F_RXCSUM) {
+	if (netdev->features & NETIF_F_RXCSUM && desc->csum_calc) {
 		skb->ip_summed = CHECKSUM_COMPLETE;
 		skb->csum = comp->csum;
 #ifdef HAPS

@@ -14,7 +14,7 @@ struct eth_rx_rss_params_eth_rx_rss_params_d d;
 .align
 eth_rx_rss_params:
 
-  and               r1, d.rss_type, k.p4_to_p4plus_rss_flags
+  and               r1, d.rss_type, k.p4_to_p4plus_pkt_type
   beq               r1, r0, eth_rx_rss_params_skip
   nop
 

@@ -50,7 +50,7 @@ p4plus_app_classic_nic_native_ipv4_tcp:
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4_TCP
+  phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV4_TCP
 
 p4plus_app_classic_nic_native_ipv4_udp:
   seq         c1, k.udp_valid, TRUE
@@ -61,7 +61,7 @@ p4plus_app_classic_nic_native_ipv4_udp:
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{udp_srcPort,udp_dstPort}
-  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4_UDP
+  phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV4_UDP
 
 p4plus_app_classic_nic_native_ipv6_tcp:
   seq         c1, k.tcp_valid, TRUE
@@ -71,7 +71,7 @@ p4plus_app_classic_nic_native_ipv6_tcp:
   phvwr       p.{p4_to_p4plus_classic_nic_csum_tcp_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6_TCP
+  phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV6_TCP
 
 p4plus_app_classic_nic_native_ipv6_udp:
   seq         c1, k.udp_valid, TRUE
@@ -81,7 +81,7 @@ p4plus_app_classic_nic_native_ipv6_udp:
   phvwr       p.{p4_to_p4plus_classic_nic_csum_udp_bad,p4_to_p4plus_classic_nic_csum_udp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{udp_srcPort,udp_dstPort}
-  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6_UDP
+  phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV6_UDP
 
 p4plus_app_classic_nic_tunneled:
   bcf         [c1], p4plus_app_classic_nic_tunneled_ipv4_tcp
@@ -103,7 +103,7 @@ p4plus_app_classic_nic_tunneled_ipv4_tcp:
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4_TCP
+  phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV4_TCP
 
 p4plus_app_classic_nic_tunneled_ipv4_udp:
   seq         c1, k.inner_udp_valid, TRUE
@@ -114,7 +114,7 @@ p4plus_app_classic_nic_tunneled_ipv4_udp:
   bcf         [!c1], p4plus_app_classic_nic_ipv4
   phvwr.c1.e  p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{inner_udp_srcPort,inner_udp_dstPort}
-  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4_UDP
+  phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV4_UDP
 
 p4plus_app_classic_nic_tunneled_ipv6_tcp:
   seq         c7, k.control_metadata_checksum_results[csum_hdr_ipv4], TRUE
@@ -127,7 +127,7 @@ p4plus_app_classic_nic_tunneled_ipv6_tcp:
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{tcp_srcPort,tcp_dstPort}
-  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6_TCP
+  phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV6_TCP
 
 p4plus_app_classic_nic_tunneled_ipv6_udp:
   seq         c1, k.inner_udp_valid, TRUE
@@ -138,15 +138,15 @@ p4plus_app_classic_nic_tunneled_ipv6_udp:
   phvwr       p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
   phvwr.e     p.{p4_to_p4plus_classic_nic_l4_sport, \
                  p4_to_p4plus_classic_nic_l4_dport}, k.{inner_udp_srcPort,inner_udp_dstPort}
-  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6_UDP
+  phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV6_UDP
 
 p4plus_app_classic_nic_ipv4:
   phvwr.e     p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
-  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV4
+  phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV4
 
 p4plus_app_classic_nic_ipv6:
   phvwr.e     p.{p4_to_p4plus_classic_nic_csum_ip_bad...p4_to_p4plus_classic_nic_csum_tcp_ok}, r7
-  phvwr.f     p.p4_to_p4plus_classic_nic_rss_flags, CLASSIC_NIC_RSS_FLAGS_IPV6
+  phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV6
 
 p4plus_app_non_classic:
   sne         c1, k.control_metadata_checksum_results, r0

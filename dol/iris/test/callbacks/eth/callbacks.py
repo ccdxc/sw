@@ -141,9 +141,17 @@ def GetTxOpcodeCalcCsumTcpUdp(tc, obj, args=None):
     return TxOpcodeEnum['TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP']
 
 
+def GetL2ChecksumCalc(tc, obj, args=None):
+    spktobj = tc.packets.db['EXP_PKT'].spktobj
+    pkt = spktobj.spkt
+    return 1 if GetIsIP(tc, obj, args) else 0
+
+
 def GetL2Checksum(tc, obj, args=None):
     spktobj = tc.packets.db['EXP_PKT'].spktobj
     pkt = spktobj.spkt
+    if not GetIsIP(tc, obj, args):
+        return 0
     if pkt.haslayer(Dot1Q):
         chksum = (checksum(bytes(pkt[Dot1Q].payload)) ^ -1) & 0xffff
     else:
@@ -166,6 +174,7 @@ def GetIsTCP(tc, obj, args=None):
 def GetIsUDP(tc, obj, args=None):
     return tc.config.flow.IsUDP()
 
+
 def GetIsICMP(tc, obj, args=None):
     return tc.config.flow.IsICMP() or tc.config.flow.IsICMPV6()
 
@@ -173,6 +182,10 @@ def GetIsICMP(tc, obj, args=None):
 def GetIsTCPUDPICMP(tc, obj, args=None):
     return 1 if GetIsTCP(tc, obj, args) or GetIsUDP(tc, obj, args=None) or \
             GetIsICMP(tc, obj, args=None) else 0
+
+
+def GetIsIP(tc, obj, args):
+    return tc.config.flow.IsIP()
 
 
 def InitEthTxSgDescriptor(tc, obj, args=None):

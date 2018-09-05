@@ -106,7 +106,8 @@ descriptors:
         fields:
             _buf    : ref://testcase/buffers/id=BUF2
             status  : 0x0
-            csum    : callback://eth/callbacks/GetL2Checksum
+            csum_calc   : callback://eth/callbacks/GetL2ChecksumCalc
+            csum        : callback://eth/callbacks/GetL2Checksum
 
 trigger:
     descriptors:

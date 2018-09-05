@@ -1128,7 +1128,7 @@ header_type p4_to_p4plus_classic_nic_header_ext_t {
         csum_tcp_ok         : 1;
         vlan_valid          : 1;
         pad                 : 3;
-        rss_flags           : 6;
+        pkt_type            : 6;
         l4_sport            : 16;
         l4_dport            : 16;
         ip_sa               : 128;
@@ -1154,7 +1154,7 @@ action eth_rx_rss_params(rss_type, rss_key)
     modify_field(p4_to_p4plus_scratch.table2_valid, p4_to_p4plus.table2_valid);
     modify_field(p4_to_p4plus_scratch.table3_valid, p4_to_p4plus.table3_valid);
 
-    modify_field(p4_to_p4plus_scratch.rss_flags, p4_to_p4plus.rss_flags);
+    modify_field(p4_to_p4plus_scratch.pkt_type, p4_to_p4plus.pkt_type);
 
     // --- D-struct generation
     modify_field(eth_rx_rss_params_scratch.rss_type, rss_type);
