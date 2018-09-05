@@ -994,6 +994,119 @@ TEST_F(enicif_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 }
+
+// ----------------------------------------------------------------------------
+// Create enic with lif
+// ----------------------------------------------------------------------------
+TEST_F(enicif_test, test7)
+{
+    hal_ret_t                ret;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
+    InterfaceSpec            if_spec;
+    InterfaceResponse        if_rsp;
+    LifSpec                  lif_spec;
+    LifResponse              lif_rsp;
+    L2SegmentSpec            l2seg_spec;
+    L2SegmentResponse        l2seg_rsp;
+
+    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(7);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create Uplink If
+    if_spec.set_type(intf::IF_TYPE_UPLINK);
+    if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 70);
+    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create Uplink If -2
+    if_spec.Clear();
+    if_spec.set_type(intf::IF_TYPE_UPLINK);
+    if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 71);
+    if_spec.mutable_if_uplink_info()->set_port_num(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create a lif
+    lif_spec.mutable_key_or_handle()->set_lif_id(71);
+    lif_spec.mutable_pinned_uplink_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 70);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    lif_spec.mutable_key_or_handle()->set_lif_id(72);
+    lif_spec.mutable_pinned_uplink_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 71);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create l2segment
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(7);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(701);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(701);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create micro seg enic
+    if_spec.Clear();
+    if_spec.set_type(intf::IF_TYPE_ENIC);
+    // if_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(71);
+    if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 71);
+    if_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(701);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x0000DEADBEEF);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(70);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update enic
+    if_spec.Clear();
+    if_spec.set_type(intf::IF_TYPE_ENIC);
+    if_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(71);
+    if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 71);
+    if_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(701);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x0000DEADBEEF);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(70);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_update(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update enic
+    if_spec.Clear();
+    if_spec.set_type(intf::IF_TYPE_ENIC);
+    if_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(72);
+    if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 71);
+    if_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(701);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x0000DEADBEEF);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(70);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_update(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

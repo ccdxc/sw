@@ -23,13 +23,14 @@ service Nic {
 enum DeviceMode {
   DEVICE_MODE_NONE             = 0;
   DEVICE_MODE_MANAGED_SWITCH   = 1;    // Managed NIC mode
-  DEVICE_MODE_MANAGED_HOST_PIN = 2;    // Managed NIC mode 
+  DEVICE_MODE_MANAGED_HOST_PIN = 2;    // Managed NIC mode
   DEVICE_MODE_STANDALONE       = 3;    // flow based forwarding mode
 }
 
 // Global config object for NIC
 message DeviceSpec {
-  DeviceMode        device_mode = 1;    // one of the operating modes
+  DeviceMode        device_mode = 1;            // one of the operating modes
+  bool              allow_dynamic_pinning = 2;  // Allows HAL to dynamic pin Enics to uplinks in host-pin mode
 }
 
 message DeviceRequest {

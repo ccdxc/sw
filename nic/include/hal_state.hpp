@@ -265,6 +265,14 @@ public:
     bool allow_local_switch_for_promiscuous(void) const {
         return allow_local_switch_for_promiscuous_;
     }
+
+    void set_allow_dynamic_pinning(bool allow) {
+        allow_dynamic_pinning_ = allow;
+    }
+
+    bool allow_dynamic_pinning(void) const {
+        return allow_dynamic_pinning_;
+    }
     void set_max_data_threads (uint8_t val) { max_data_threads_ = val; }
     uint8_t max_data_threads (void) const { return max_data_threads_; }
 
@@ -330,6 +338,13 @@ private:
     //    0: Don't send this packet to promiscous lifs.
     //    1: Send this packet to promiscous lifs.
     bool                    allow_local_switch_for_promiscuous_;
+
+    // Host-pin Mode:
+    // - Allows Hal to dynamically pin Enics
+    //   0: Pinning is always taken through config in lif or enic.
+    //   1: If there is no pin config in lif or enic, HAL will
+    //      dynamically pin enic to one of the uplinks. Only being used in HAL.
+    bool                    allow_dynamic_pinning_;
 
     // following comes from linux process virtual memory
     shmmgr       *mmgr_;
@@ -564,6 +579,14 @@ public:
 
     bool allow_local_switch_for_promiscuous(void) const {
         return oper_db_->allow_local_switch_for_promiscuous();
+    }
+
+    void set_allow_dynamic_pinning(bool allow) {
+        oper_db_->set_allow_dynamic_pinning(allow);
+    }
+
+    bool allow_dynamic_pinning(void) const {
+        return oper_db_->allow_dynamic_pinning();
     }
 
     eventmgr *event_mgr(void) const { return oper_db_->event_mgr(); }

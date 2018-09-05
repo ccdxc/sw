@@ -1741,6 +1741,11 @@ lif_del_if (lif_t *lif, if_t *hal_if)
     hal_handle_id_list_entry_t *entry = NULL;
     dllist_ctxt_t              *curr  = NULL, *next = NULL;
 
+    if (!lif || !hal_if) {
+        HAL_TRACE_WARN("lif:{:#x}, hal_if:{:#x} is NULL.",
+                       (uint64_t)lif, (uint64_t)hal_if);
+        goto end;
+    }
 
     lif_lock(lif, __FILENAME__, __LINE__, __func__);      // lock
     dllist_for_each_safe(curr, next, &lif->if_list_head) {
@@ -1755,8 +1760,10 @@ lif_del_if (lif_t *lif, if_t *hal_if)
     }
     lif_unlock(lif, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-if:{}: add lif =/=> if, {} =/=> {}, ret:{}",
+    HAL_TRACE_DEBUG("pi-if:{}: del lif =/=> if, {} =/=> {}, ret:{}",
                     __FUNCTION__, lif->lif_id, hal_if->if_id, ret);
+
+end:
     return ret;
 }
 

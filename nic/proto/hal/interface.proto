@@ -398,7 +398,7 @@ message EnicClassicInfo {
 // mandatory attributes expected if interface type is IF_TYPE_ENIC
 message IfEnicInfo {
   IfEnicType            enic_type                   = 1 [(gogoproto.moretags) = "venice:mandatory"]; // type of enic interface
-  kh.LifKeyHandle       lif_key_or_handle           = 2 [(gogoproto.moretags) = "venice:ref,venice:immutable"]; // LIF identifier for this interface
+  kh.LifKeyHandle       lif_key_or_handle           = 2 [(gogoproto.moretags) = "venice:ref"]; // LIF identifier for this interface
   kh.InterfaceKeyHandle pinned_uplink_if_key_handle = 3 [(gogoproto.moretags) = "venice:ref"]; // uplink this enic is pinned to
   oneof enic_type_info {
       EnicInfo          enic_info                   = 4 [(gogoproto.moretags) = "venice:constraints={intf.IfEnicInfo.enic_type==interface_pb2.IF_ENIC_TYPE_USEG}"]; // enic info for non-classic types

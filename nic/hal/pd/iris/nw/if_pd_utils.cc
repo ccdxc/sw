@@ -73,10 +73,31 @@ pd_lif_get_lport_id (pd_func_args_t *pd_func_args)
     HAL_ASSERT(pi_lif != NULL);
 
     pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
-    HAL_ASSERT(pi_lif != NULL);
+    HAL_ASSERT(pd_lif != NULL);
 
     args->lport_id =  pd_lif->lif_lport_id;
 
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// Given a PI LIf, get its hw lif id
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_get_hw_lif_id(lif_t *lif, uint32_t *hw_lif_id)
+{
+    pd_lif_t        *pd_lif = NULL;
+
+    if (!lif) {
+        goto end;
+    }
+
+    pd_lif = (pd_lif_t *)lif_get_pd_lif(lif);
+    HAL_ASSERT(pd_lif != NULL);
+
+    *hw_lif_id = pd_lif->hw_lif_id;
+
+end:
     return HAL_RET_OK;
 }
 

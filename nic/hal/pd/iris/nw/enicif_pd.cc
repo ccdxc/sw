@@ -1,6 +1,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "nic/hal/plugins/cfg/lif/lif_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
@@ -76,12 +77,55 @@ end:
 hal_ret_t
 pd_enicif_update (pd_if_update_args_t *args)
 {
-    hal_ret_t           ret = HAL_RET_OK;
+    hal_ret_t       ret = HAL_RET_OK;
+    pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
+    if_t            *hal_if = args->intf;
 
+    if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+        if (args->l2seg_clsc_change) {
+            ret = pd_enicif_upd_l2seg_clsc_change(args);
+        }
+        if (args->native_l2seg_clsc_change) {
+            ret = pd_enicif_upd_native_l2seg_clsc_change(args);
+        }
+    } else {
+        // Host-Pin or Switch mode
+        if (args->egress_en_change || args->lif_change) {
+            ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, args, NULL,
+                                                      TABLE_OPER_UPDATE);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to repgm output mapping table. ret:{}", ret);
+                goto end;
+            }
+        }
+
+        if (args->lif_change) {
+            ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, args, NULL,
+                                                      TABLE_OPER_UPDATE);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to repgm inp. prop. mac vlan table. ret:{}", ret);
+                goto end;
+            }
+        }
+
+        // TODO Deprecated: Pinning on ENICs for classic is moved to Lifs.
+        if (args->pinned_uplink_change) {
+            ret = pd_enicif_upd_pinned_uplink_change(args);
+        }
+    }
+
+#if 0
     if (args->l2seg_clsc_change) {
         ret = pd_enicif_upd_l2seg_clsc_change(args);
-    } else if (args->egress_en_change) {
-        ret = pd_enicif_upd_egress_en_change(args);
+    } else if (args->egress_en_change ||
+               args->lif_change) {
+        ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, args, NULL,
+                                                  TABLE_OPER_UPDATE);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to repgm output mapping table. ret:{}", ret);
+            goto end;
+        }
+        // ret = pd_enicif_upd_egress_en_change(args);
     } else {
         if (args->native_l2seg_clsc_change) {
             ret = pd_enicif_upd_native_l2seg_clsc_change(args);
@@ -90,8 +134,9 @@ pd_enicif_update (pd_if_update_args_t *args)
             ret = pd_enicif_upd_pinned_uplink_change(args);
         }
     }
+#endif
 
-
+end:
     return ret;
 }
 
@@ -145,6 +190,8 @@ pd_enicif_get (pd_if_get_args_t *args)
     return ret;
 }
 
+// TODO: Deprecated. Cleanup
+#if 0
 // ----------------------------------------------------------------------------
 // Enicif Update: Handling egress enable change
 // ----------------------------------------------------------------------------
@@ -165,6 +212,7 @@ pd_enicif_upd_egress_en_change (pd_if_update_args_t *args)
 end:
     return ret;
 }
+#endif
 
 
 
@@ -562,7 +610,7 @@ pd_enicif_depgm_inp_prop_mac_vlan_entry(uint32_t *idx)
                       "at: {}", *idx);
         goto end;
     } else {
-        HAL_TRACE_ERR("deprogrammed inp mac vlan table at:{} ", *idx);
+        HAL_TRACE_DEBUG("deprogrammed inp mac vlan table at:{} ", *idx);
         *idx = INVALID_INDEXER_INDEX;
     }
 
@@ -627,7 +675,7 @@ pd_enicif_pd_depgm_output_mapping_tbl (pd_enicif_t *pd_enicif)
         HAL_TRACE_ERR("unable to deprogram omapping table at {}",
                       pd_enicif->enic_lport_id);
     } else {
-        HAL_TRACE_ERR("deprogrammed omapping table at {}",
+        HAL_TRACE_DEBUG("deprogrammed omapping table at {}",
                       pd_enicif->enic_lport_id);
     }
 
@@ -665,12 +713,12 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
 #endif
     if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
         // Program Input Properties Mac Vlan
-        ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, NULL,
+        ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, NULL, NULL,
                                                   TABLE_OPER_INSERT);
     }
 
     // Program Output Mapping
-    ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL,
+    ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL, NULL,
                                               TABLE_OPER_INSERT);
 
     // Check if classic
@@ -877,6 +925,8 @@ pd_enicif_get_pinned_uplink_for_inp_props(if_t *hal_if,
         } else {
             ret = if_enicif_get_pinned_if(hal_if, &uplink);
         }
+    } else if (if_args && if_args->lif_change) {
+        ret = lif_get_pinned_if(if_args->new_lif, &uplink);
     } else if (lif_args && lif_args->pinned_uplink_changed &&
                lif_args->pinned_uplink != HAL_HANDLE_INVALID){
         // LIF's changed to valid uplink
@@ -1260,14 +1310,14 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
 
         if (args->vlan_insert_en_changed || args->pinned_uplink_changed) {
             // Program Input Properties Mac Vlan
-            ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, args,
+            ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, NULL, args,
                                                       TABLE_OPER_UPDATE);
         }
     }
 
     if (args->vlan_strip_en_changed) {
         // Program Output Mapping
-        ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, args,
+        ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL, args,
                                                   TABLE_OPER_UPDATE);
     }
 
@@ -1301,6 +1351,7 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
 #define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
 hal_ret_t
 pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
+                                    pd_if_update_args_t *args,
                                     pd_if_lif_update_args_t *lif_upd,
                                     table_oper_t oper)
 {
@@ -1313,20 +1364,40 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     pd_lif_t                    *pd_lif             = NULL;
     uint32_t                    access_vlan_classic = 0;
     if_t                        *hal_if = (if_t *)pd_enicif->pi_if;
+    bool                        set_drop            = false;
+    bool                        egress_en           = false;
 
     memset(&data, 0, sizeof(data));
 
-    pd_lif = pd_enicif_get_pd_lif(pd_enicif);
+    if (args && args->lif_change && args->new_lif) {
+        pd_lif = (pd_lif_t *)lif_get_pd_lif(args->new_lif);
+    } else {
+        pd_lif = pd_enicif_get_pd_lif(pd_enicif);
+    }
+
+    if (args && args->egress_en_change) {
+        egress_en = args->egress_en;
+    } else {
+        egress_en = (hal_if->enic_type == intf::IF_ENIC_TYPE_USEG ||
+                     hal_if->enic_type == intf::IF_ENIC_TYPE_PVLAN) &&
+                     hal_if->egress_en;
+    }
+
+    if (!pd_lif || !egress_en) {
+        HAL_TRACE_DEBUG("Setting DROP: lif_exists:{}, egress_en:{}",
+                        (pd_lif != NULL), egress_en);
+        set_drop = true;
+    }
+
     if_enicif_get_native_l2seg_clsc_vlan((if_t *)pd_enicif->pi_if,
                                          &access_vlan_classic);
 
     tm_oport = TM_PORT_DMA;
     p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
 
+
     // Enable it once DOL pushes filters
-    if (false && (hal_if->enic_type == intf::IF_ENIC_TYPE_USEG ||
-        hal_if->enic_type == intf::IF_ENIC_TYPE_PVLAN) &&
-        !hal_if->egress_en) {
+    if (false && set_drop) {
         // ENIC is USEG or PVLAN type:
         //    - Allow traffic only when egress is enabled on ENIC and EP.
         //    - EP and ENIC are one-to-one.
@@ -1394,6 +1465,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
 #define inp_prop_mac_vlan_data data.input_properties_mac_vlan_action_u.input_properties_mac_vlan_input_properties_mac_vlan
 hal_ret_t
 pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
+                                    pd_if_update_args_t *args,
                                     pd_if_lif_update_args_t *lif_args,
                                     table_oper_t oper)
 {
@@ -1415,8 +1487,11 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
     memset(&data, 0, sizeof(data));
 
     // Get the lif
-    lif = if_get_lif(hal_if);
-    HAL_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
+    if (args && args->lif_change) {
+        lif = args->new_lif;
+    } else {
+        lif = if_get_lif(hal_if);
+    }
 
     // 2 Entries. 1. Host Side Entry 2. Uplink Entry
     // Entry 1: Host Side Entry
@@ -1425,7 +1500,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
     if (lif_args && lif_args->vlan_insert_en_changed) {
         vlan_insert_en = lif_args->vlan_insert_en;
         key_changed = true;
-    } else {
+    } else if (lif) {
         vlan_insert_en = lif->vlan_insert_en;
     }
     if (vlan_insert_en) {
@@ -1447,7 +1522,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
     memset(mask.ethernet_srcAddr_mask, ~0, sizeof(mask.ethernet_srcAddr_mask));
 
     // form data
-    pd_enicif_inp_prop_form_data(pd_enicif, ENICIF_UPD_FLAGS_NONE, NULL, NULL, lif_args,
+    pd_enicif_inp_prop_form_data(pd_enicif, lif, ENICIF_UPD_FLAGS_NONE, NULL, args, lif_args,
                                  data, true);
 
     HAL_TRACE_DEBUG("pinned uplink's lport: {}", inp_prop_mac_vlan_data.dst_lport);
@@ -1513,7 +1588,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
             return HAL_RET_OK;
         }
 
-        pd_enicif_inp_prop_form_data(pd_enicif, ENICIF_UPD_FLAGS_NONE, NULL, NULL, lif_args,
+        pd_enicif_inp_prop_form_data(pd_enicif, lif, ENICIF_UPD_FLAGS_NONE, NULL, NULL, lif_args,
                                      data, false);
 #if 0
         // Data. Only srclif as this will make the pkt drop
@@ -1536,6 +1611,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
 
 hal_ret_t
 pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
+                              lif_t *lif,
                               uint32_t upd_flags,
                               nwsec_profile_t *nwsec_prof,
                               pd_if_update_args_t *args,
@@ -1606,8 +1682,11 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
         }
 #endif
     } else {
+        uint32_t hw_lif_id = 0;
         inp_prop_mac_vlan_data.src_lif_check_en = 1;
-        inp_prop_mac_vlan_data.src_lif = if_get_hw_lif_id((if_t*)pd_enicif->pi_if);
+        pd_lif_get_hw_lif_id(lif, &hw_lif_id);
+        inp_prop_mac_vlan_data.src_lif = hw_lif_id;
+        // inp_prop_mac_vlan_data.src_lif = if_get_hw_lif_id((if_t*)pd_enicif->pi_if);
     }
 
     return ret;
@@ -1620,14 +1699,19 @@ pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif,
 {
     hal_ret_t                                   ret = HAL_RET_OK;
     sdk_ret_t                                   sdk_ret;
+    lif_t                                       *lif = NULL;
+    if_t                                        *hal_if =
+                                                (if_t *)pd_enicif->pi_if;
     input_properties_mac_vlan_actiondata        data;
     tcam                                        *inp_prop_mac_vlan_tbl = NULL;
+
+    lif = if_get_lif(hal_if);
 
     inp_prop_mac_vlan_tbl = g_hal_state_pd->tcam_table(
                             P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
     HAL_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
 
-    pd_enicif_inp_prop_form_data(pd_enicif, upd_flags, nwsec_prof, NULL, NULL,
+    pd_enicif_inp_prop_form_data(pd_enicif, lif, upd_flags, nwsec_prof, NULL, NULL,
                                  data, true);
 
     sdk_ret = inp_prop_mac_vlan_tbl->update(pd_enicif->inp_prop_mac_vlan_idx_host, &data);
@@ -1714,11 +1798,15 @@ pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif)
     HAL_ASSERT_RETURN(pi_if != NULL, 0);
 
     pi_lif = if_get_lif(pi_if);
-    HAL_ASSERT(pi_lif != NULL);
+    // Enic may not have lif
+    if (!pi_lif) {
+        goto end;
+    }
 
     pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
     HAL_ASSERT(pi_lif != NULL);
 
+end:
     return pd_lif;
 }
 

@@ -231,6 +231,10 @@ typedef struct if_update_app_ctxt_s {
             dllist_ctxt_t   *add_l2segclsclist;
             dllist_ctxt_t   *del_l2segclsclist;
             // dllist_ctxt_t   *aggr_l2segclsclist;
+
+            // host-pin: lif change
+            bool            lif_change;
+            lif_t           *lif;
         } __PACK__;
     } __PACK__;
 
@@ -342,6 +346,8 @@ hal_ret_t if_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
 uint32_t if_restore_cb(void *obj, uint32_t len);
 
 hal_ret_t enicif_update_egress_en(if_t *hal_if, bool egress_en);
+hal_ret_t get_lif_handle_from_spec (const InterfaceSpec& spec,
+                                    hal_handle_t *lif_handle);
 
 }    // namespace hal
 

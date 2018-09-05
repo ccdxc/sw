@@ -914,6 +914,11 @@ filter_check_enic (lif_t *lif, if_t *hal_if, bool *egress_en)
 
     *egress_en = false;
 
+    if (!lif) {
+        HAL_TRACE_DEBUG("lif not preset, egress_en is false.");
+        return ret;
+    }
+
     memset(&enic_key_mac_vlan, 0, sizeof(filter_key_t));
     memset(&enic_key_mac, 0, sizeof(filter_key_t));
     memset(&enic_key_vlan, 0, sizeof(filter_key_t));

@@ -18,8 +18,9 @@ class NicObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('NIC'))
         return
 
-    def Init(self, mode):
+    def Init(self, mode, allow_dyn_pin):
         self.device_mode = mode
+        self.allow_dyn_pin = allow_dyn_pin
         self.GID("Nic01")
         self.Show()
         return
@@ -30,6 +31,7 @@ class NicObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.device.device_mode = self.device_mode
+        req_spec.device.allow_dynamic_pinning = self.allow_dyn_pin
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -69,15 +71,23 @@ class NicObjectHelper:
 
     def Generate(self):
         nic = NicObject()
-        nic.Init(haldefs.nic.DeviceMode.Value('DEVICE_MODE_MANAGED_SWITCH'))
+        if GlobalOptions.hostpin:
+            nic.Init(haldefs.nic.DeviceMode.Value('DEVICE_MODE_MANAGED_HOST_PIN'), True)
+        elif GlobalOptions.classic:
+            nic.Init(haldefs.nic.DeviceMode.Value('DEVICE_MODE_STANDALONE'), False)
+        else:
+            nic.Init(haldefs.nic.DeviceMode.Value('DEVICE_MODE_MANAGED_SWITCH'), False)
+
         self.nics.append(nic)
         logger.info("Creating Device Object")
         return
 
     def main(self):
-        if not (GlobalOptions.hostpin or GlobalOptions.classic):
-            self.Generate()
-            self.Configure()
+        self.Generate()
+        self.Configure()
+        #if not (GlobalOptions.hostpin or GlobalOptions.classic):
+        #    self.Generate()
+        #    self.Configure()
         return
 
 NicHelper = NicObjectHelper()

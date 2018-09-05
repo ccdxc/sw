@@ -57,11 +57,16 @@ device_create (DeviceRequest *req, DeviceResponseMsg *rsp)
 {
     auto response = rsp->mutable_response();
 
-    HAL_TRACE_DEBUG("Device Mode changed from {} to {}", g_hal_state->forwarding_mode(),
-                    device_mode_to_hal_fwd_mode(req->device().device_mode()));
+    HAL_TRACE_DEBUG("Device Create: Mode change {} -> {}, "
+                    "allow_dynamic_pinning: {} -> {}",
+                    g_hal_state->forwarding_mode(),
+                    device_mode_to_hal_fwd_mode(req->device().device_mode()),
+                    g_hal_state->allow_dynamic_pinning(),
+                    req->device().allow_dynamic_pinning());
 
     g_hal_state->set_forwarding_mode(
             device_mode_to_hal_fwd_mode(req->device().device_mode()));
+    g_hal_state->set_allow_dynamic_pinning(req->device().allow_dynamic_pinning());
 
     response->set_api_status(types::API_STATUS_OK);
 
@@ -76,15 +81,20 @@ device_update (DeviceRequest *req, DeviceResponseMsg *rsp)
 {
     auto response = rsp->mutable_response();
 
-    HAL_TRACE_DEBUG("Device Mode changed from {} to {}", g_hal_state->forwarding_mode(),
-                    device_mode_to_hal_fwd_mode(req->device().device_mode()));
-    
+    HAL_TRACE_DEBUG("Device Create: Mode change {} -> {}, "
+                    "allow_dynamic_pinning: {} -> {}",
+                    g_hal_state->forwarding_mode(),
+                    device_mode_to_hal_fwd_mode(req->device().device_mode()),
+                    g_hal_state->allow_dynamic_pinning(),
+                    req->device().allow_dynamic_pinning());
+
     g_hal_state->set_forwarding_mode(
             device_mode_to_hal_fwd_mode(req->device().device_mode()));
+    g_hal_state->set_allow_dynamic_pinning(req->device().allow_dynamic_pinning());
 
     response->set_api_status(types::API_STATUS_OK);
 
-    return HAL_RET_OK;                   
+    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -96,7 +106,7 @@ device_get (DeviceGetRequest *req, DeviceGetResponseMsg *rsp)
             hal_fwd_mode_to_device_mode(g_hal_state->forwarding_mode()));
 
     response->set_api_status(types::API_STATUS_OK);
- 
+
     return HAL_RET_OK;
 }
 

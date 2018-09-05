@@ -357,15 +357,15 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             return HAL_RET_INVALID_ARG;
         }
 
-        // check if lif is provided
-        if (!spec.if_enic_info().has_lif_key_or_handle()) {
-            HAL_TRACE_ERR("no lif for enic. err : {} ",
-                          HAL_RET_INVALID_ARG);
-            rsp->set_api_status(types::API_STATUS_IF_ENIC_INFO_INVALID);
-            return HAL_RET_INVALID_ARG;
-        }
-        // if classic
+        // For Classic Enics, lif has to be present when enic gets created.
         if (spec.if_enic_info().enic_type() == intf::IF_ENIC_TYPE_CLASSIC) {
+            // check if lif is provided
+            if (!spec.if_enic_info().has_lif_key_or_handle()) {
+                HAL_TRACE_ERR("no lif for enic. err : {} ",
+                              HAL_RET_INVALID_ARG);
+                rsp->set_api_status(types::API_STATUS_IF_ENIC_INFO_INVALID);
+                return HAL_RET_INVALID_ARG;
+            }
             // enic type info has to be classic
             if (spec.if_enic_info().enic_type_info_case() !=
                     IfEnicInfo::ENIC_TYPE_INFO_NOT_SET &&
@@ -551,7 +551,10 @@ if_update_oif_lists(if_t *hal_if, bool add)
     // If its enic, add to l2seg and lif
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
         lif_t *lif = find_lif_by_handle(hal_if->lif_handle);
-        HAL_ASSERT(lif);
+        if (!lif) {
+            HAL_TRACE_DEBUG("No lif. skipping adding to mcast oiflists");
+            goto end;
+        }
         if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
             l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
             // Add classic nic/RxQ to bcast list only when RDMA is not enabled for this LIF
@@ -594,7 +597,6 @@ if_update_oif_lists(if_t *hal_if, bool add)
 //    }
 
 end:
-
     return ret;
 }
 
@@ -630,8 +632,10 @@ if_add_to_db_and_refs (if_t *hal_if)
             HAL_ABORT(ret == HAL_RET_OK);
 
             // add to lif
-            ret = lif_add_if(lif, hal_if);
-            HAL_ABORT(ret == HAL_RET_OK);
+            if (lif) {
+                ret = lif_add_if(lif, hal_if);
+                HAL_ABORT(ret == HAL_RET_OK);
+            }
         } else {
             // add to lif
             ret = lif_add_if(lif, hal_if);
@@ -882,8 +886,6 @@ if_init_from_spec(if_t *hal_if, const InterfaceSpec& spec)
         if (ret != HAL_RET_OK) {
             goto end;
         }
-        // lif = find_lif_by_handle(hal_if->lif_handle);
-        // HAL_ASSERT(lif != NULL);
         break;
 
     case intf::IF_TYPE_UPLINK:
@@ -1113,6 +1115,7 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                                    bool *has_changed)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    hal_handle_t    lif_handle = HAL_HANDLE_INVALID;
     hal_handle_t    spec_pinned_uplink = HAL_HANDLE_INVALID;
 
     auto if_enic_info = spec.if_enic_info();
@@ -1191,10 +1194,22 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
         if (app_ctxt->l2segclsclist_change) {
             *has_changed = true;
         }
+    } else {
+        ret = get_lif_handle_from_spec(spec, &lif_handle);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to find lif. ret: {}", ret);
+            goto end;
+        }
+        if (hal_if->lif_handle != lif_handle) {
+            app_ctxt->lif_change = true;
+            app_ctxt->lif = find_lif_by_handle(lif_handle);
+            *has_changed = true;
+            HAL_TRACE_DEBUG("updating lif hdl from {} -> {}",
+                            hal_if->lif_handle, lif_handle);
+        }
     }
 
 end:
-
     return ret;
 }
 
@@ -1447,6 +1462,8 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_if_args.l2seg_clsc_change = app_ctxt->l2segclsclist_change;
         pd_if_args.add_l2seg_clsclist = app_ctxt->add_l2segclsclist;
         pd_if_args.del_l2seg_clsclist = app_ctxt->del_l2segclsclist;
+        pd_if_args.lif_change = app_ctxt->lif_change;
+        pd_if_args.new_lif = app_ctxt->lif;
         break;
     case intf::IF_TYPE_UPLINK:
     case intf::IF_TYPE_UPLINK_PC:
@@ -1759,6 +1776,7 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_t                     *old_nat_l2seg = NULL, *new_nat_l2seg = NULL;
     uint32_t                    seg_id         = HAL_L2SEGMENT_ID_INVALID;
     pd::pd_func_args_t          pd_func_args = {0};
+    lif_t                       *old_lif       = NULL;
 
 
     if (cfg_ctxt == NULL) {
@@ -1836,6 +1854,25 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
             if (app_ctxt->l2segclsclist_change) {
                 ret = enicif_update_pi_with_l2seg_list(intf_clone, app_ctxt);
+            }
+
+            if (app_ctxt->lif_change) {
+                intf_clone->lif_handle = app_ctxt->lif ? app_ctxt->lif->hal_handle :
+                    HAL_HANDLE_INVALID;
+
+                // Remove from older lif
+                old_lif = find_lif_by_handle(intf->lif_handle);
+
+                if (old_lif) {
+                    ret = lif_del_if(old_lif, intf);
+                    HAL_ABORT(ret == HAL_RET_OK);
+                }
+
+                // Add to new lif
+                if (app_ctxt->lif) {
+                    ret = lif_add_if(app_ctxt->lif, intf_clone);
+                    HAL_ABORT(ret == HAL_RET_OK);
+                }
             }
             break;
 
@@ -2880,7 +2917,10 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
          * Case 3:
          *   Enic -> pinned_uplink (dynamically allocated. Only for DOL)
          */
-        if (is_forwarding_mode_host_pinned()) {
+        HAL_TRACE_DEBUG("Host_pin: {}, allow_dyn_pin: {}",
+                        is_forwarding_mode_host_pinned(),
+                        g_hal_state->allow_dynamic_pinning());
+        if (is_forwarding_mode_host_pinned() && g_hal_state->allow_dynamic_pinning()) {
             if_t *uplink = NULL;
             // If either enic or lif doesnt have a pinned uplink, pick from uplinks.
             if_enicif_get_pinned_if(hal_if, &uplink);
@@ -2893,10 +2933,10 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
             }
         }
 
-        HAL_TRACE_DEBUG("l2_seg_id : {}, encap : {}, mac : {}, lif_id : {}, egress_en: {}",
+        HAL_TRACE_DEBUG("l2_seg_id : {}, encap : {}, mac : {}, egress_en: {}",
                         l2seg->seg_id,
                         hal_if->encap_vlan, macaddr2str(hal_if->mac_addr),
-                        lif->lif_id, hal_if->egress_en);
+                        hal_if->egress_en);
 
     } else if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
         auto clsc_enic_info = if_enic_info.mutable_classic_enic_info();
@@ -2935,8 +2975,7 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
 
         MAC_UINT64_TO_ADDR(hal_if->mac_addr,
                 if_enic_info.mutable_enic_info()->mac_address());
-        HAL_TRACE_DEBUG("mac : {}, lif_id : {}", macaddr2str(hal_if->mac_addr),
-                        lif->lif_id);
+        HAL_TRACE_DEBUG("mac : {}", macaddr2str(hal_if->mac_addr));
 
     } else {
         HAL_TRACE_ERR("invalid enic type : {}",
@@ -3576,6 +3615,44 @@ end:
 }
 
 //------------------------------------------------------------------------------
+// Get lif handle from spec
+//------------------------------------------------------------------------------
+hal_ret_t
+get_lif_handle_from_spec (const InterfaceSpec& spec, hal_handle_t *lif_handle)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    lif_id_t            lif_id = 0;
+    lif_t               *lif = NULL;
+
+    *lif_handle = HAL_HANDLE_INVALID;
+
+    // fetch the lif associated with this interface
+    auto lif_kh = spec.if_enic_info().lif_key_or_handle();
+    if (lif_kh.key_or_handle_case() == LifKeyHandle::kLifId) {
+        lif_id = lif_kh.lif_id();
+        lif = find_lif_by_id(lif_id);
+    } else if (lif_kh.key_or_handle_case() == LifKeyHandle::kLifHandle) {
+        *lif_handle = lif_kh.lif_handle();
+        lif = find_lif_by_handle(*lif_handle);
+    } else {
+        HAL_TRACE_DEBUG("lif not provided.");
+        goto end;
+    }
+
+    if (lif == NULL) {
+        HAL_TRACE_ERR("lif handle not found for id : {} hdl : {}",
+                      lif_id, *lif_handle);
+        *lif_handle = HAL_HANDLE_INVALID;
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    *lif_handle = lif->hal_handle;
+end:
+    return ret;
+}
+
+//------------------------------------------------------------------------------
 // Get lif handle
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -3591,15 +3668,17 @@ get_lif_handle_for_enic_if (const InterfaceSpec& spec, if_t *hal_if)
     if (lif_kh.key_or_handle_case() == LifKeyHandle::kLifId) {
         lif_id = lif_kh.lif_id();
         lif = find_lif_by_id(lif_id);
-    } else {
+    } else if (lif_kh.key_or_handle_case() == LifKeyHandle::kLifHandle) {
         lif_handle = lif_kh.lif_handle();
         lif = find_lif_by_handle(lif_handle);
+    } else {
+        HAL_TRACE_DEBUG("lif not provided.");
+        goto end;
     }
 
     if (lif == NULL) {
         HAL_TRACE_ERR("lif handle not found for id : {} hdl : {}",
                       lif_id, lif_handle);
-        // rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         ret = HAL_RET_LIF_NOT_FOUND;
         goto end;
     } else {
@@ -3607,7 +3686,6 @@ get_lif_handle_for_enic_if (const InterfaceSpec& spec, if_t *hal_if)
     }
 
 end:
-
     return ret;
 }
 

@@ -113,10 +113,12 @@ void link_pi_pd(pd_enicif_t *pd_upif, if_t *pi_if);
 void unlink_pi_pd(pd_enicif_t *pd_upif, if_t *pi_if);
 hal_ret_t
 pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
+                                    pd_if_update_args_t *args,
                                     pd_if_lif_update_args_t *lif_args,
                                     table_oper_t oper);
 hal_ret_t
 pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
+                                    pd_if_update_args_t *args,
                                     pd_if_lif_update_args_t *lif_upd,
                                     table_oper_t oper);
 hal_ret_t pd_enicif_cleanup(pd_enicif_t *pd_enicif);
@@ -125,6 +127,7 @@ uint32_t pd_enicif_get_l4_prof_idx(pd_enicif_t *pd_enicif);
 pd_lif_t *pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif);
 hal_ret_t
 pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
+                              lif_t *lif,
                               uint32_t upd_flags,
                               nwsec_profile_t *nwsec_prof,
                               pd_if_update_args_t *args,

@@ -27,6 +27,9 @@ vrf_t *if_get_pi_vrf(if_t *pi_if);
 if_t *if_get_if_from_ep(ep_t *ep);
 int tunnelif_get_rw_idx(pd_tunnelif_t *pd_tif);
 
+// Lif APIs
+hal_ret_t pd_lif_get_hw_lif_id(lif_t *lif, uint32_t *hw_lif_id);
+
 // L2Seg APIs
 vrf_t *l2seg_get_pi_vrf(l2seg_t *pi_l2seg);
 
