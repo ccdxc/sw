@@ -36,6 +36,10 @@ public:
     void UpdateReceiveAllMulticast(bool receive_all_multicast);
     void UpdateReceivePromiscuous(bool receive_promiscuous);
 
+    void remove_mac_filters();
+    void remove_vlan_filters();
+    void remove_mac_vlan_filters();
+
     Lif *GetLif();
     Uplink *GetUplink();
     Enic *GetEnic();

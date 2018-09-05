@@ -35,7 +35,7 @@ EthLif::Factory(lif_info_t *info)
 
     // Create Enic for every Lif in Classic Mode
     if (hal->GetMode() == FWD_MODE_CLASSIC) {
-        eth_lif->enic_ = Enic::Factory(eth_lif);
+        eth_lif->SetEnic(Enic::Factory(eth_lif));
     } else {
         // If its promiscuos. send (Lif, *, *) filter to HAL
         if (info->receive_promiscuous) {
@@ -55,11 +55,20 @@ EthLif::Destroy(EthLif *eth_lif)
     ethlif_db.erase(eth_lif->GetHwLifId());
 
     if (eth_lif) {
-        // Remove promiscuous filter if its present
-        if (hal->GetMode() != FWD_MODE_CLASSIC &&
-            eth_lif->GetIsPromiscuous()) {
-            eth_lif->DeleteMacVlanFilter(0, 0);
+
+        eth_lif->remove_mac_filters();
+        eth_lif->remove_vlan_filters();
+        eth_lif->remove_mac_vlan_filters();
+
+
+        if (hal->GetMode() == FWD_MODE_CLASSIC) {
+            Enic::Destroy(eth_lif->GetEnic());
+        } else {
+            if (eth_lif->GetIsPromiscuous()) {
+                eth_lif->DeleteMacVlanFilter(0, 0);
+            }
         }
+
         eth_lif->~EthLif();
     }
 }
@@ -77,7 +86,39 @@ EthLif::~EthLif()
     vlan_table_.clear();
     mac_vlan_table_.clear();
     mac_vlan_filter_table.clear();
+
+    // Delete Lif
+    Lif::Destroy(lif_);
 }
+
+void
+EthLif::remove_mac_filters()
+{
+    // Remove mac filters
+    for (auto it = mac_table_.begin(); it != mac_table_.end(); it++) {
+        DelMac(*it);
+    }
+
+}
+
+void
+EthLif::remove_vlan_filters()
+{
+    // Remove vlan filters
+    for (auto it = vlan_table_.begin(); it != vlan_table_.end(); it++) {
+        DelVlan(*it);
+    }
+}
+
+void
+EthLif::remove_mac_vlan_filters()
+{
+    // Remove (mac,vlan) filters
+    for (auto it = mac_vlan_table_.begin(); it != mac_vlan_table_.end(); it++) {
+        DelMacVlan(std::get<0>(*it), std::get<1>(*it));
+    }
+}
+
 
 void
 EthLif::AddMac(mac_t mac)
