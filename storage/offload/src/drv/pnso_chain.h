@@ -81,7 +81,6 @@ struct chain_entry;
 struct service_params {
 	struct pnso_buffer_list *sp_src_blist;
 	struct pnso_buffer_list *sp_dst_blist;
-	struct pnso_flat_buffer *sp_interm_fbuf;
 	union {
 		struct pnso_crypto_desc *sp_crypto_desc;
 		struct pnso_compression_desc *sp_cp_desc;
@@ -132,8 +131,6 @@ struct service_info {
 
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */
 	void *si_status_desc;		/* status desc of cp/dc/encrypt/etc. */
-
-	struct pnso_flat_buffer *si_interm_fbuf; /* flat buffer in HBM */
 
 	struct cpdc_sgl	*si_src_sgl;	/* src input buffer converted to sgl */
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */

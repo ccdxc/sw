@@ -150,22 +150,34 @@ fill_chksum_desc(enum pnso_chksum_type algo_type, uint32_t buf_len,
 static void
 fill_chksum_desc_per_block(enum pnso_chksum_type algo_type,
 		uint32_t block_size, uint32_t src_buf_len,
-		const struct pnso_flat_buffer *interm_fbuf,
+		struct cpdc_sgl *src_sgl,
 		struct cpdc_desc *chksum_desc,
 		struct cpdc_status_desc *status_desc)
 {
 	struct cpdc_desc *desc;
 	struct cpdc_status_desc *st_desc;
+	struct pnso_flat_buffer interm_fbuf;
 	char *buf, *obj;
 	uint32_t desc_object_size, status_object_size, pad_size;
 	uint32_t i, len, block_cnt, buf_len;
 
-	block_cnt = pbuf_get_flat_buffer_block_count(interm_fbuf, block_size);
+	/*
+	 * TODO-chksum:
+	 *
+	 * per-block support assumes the input be mapped to flat buffer
+	 * and for 8-blocks max.  Memory for this flat buffer should
+	 * come from HBM memory.
+	 *
+	 */
+	interm_fbuf.len = src_sgl->cs_len_0;
+	interm_fbuf.buf = (uint64_t) osal_phy_to_virt(src_sgl->cs_addr_0);
+
+	block_cnt = pbuf_get_flat_buffer_block_count(&interm_fbuf, block_size);
 	desc = chksum_desc;
 	st_desc = status_desc;
 
 	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: %llx chksum_desc: %p status_desc: %p",
-			block_cnt, block_size, src_buf_len, interm_fbuf->buf,
+			block_cnt, block_size, src_buf_len, interm_fbuf.buf,
 			chksum_desc, status_desc);
 
 	pad_size = mpool_get_pad_size(sizeof(struct cpdc_desc),
@@ -178,7 +190,7 @@ fill_chksum_desc_per_block(enum pnso_chksum_type algo_type,
 
 	buf_len = src_buf_len;
 	for (i = 0; buf_len && (i < block_cnt); i++) {
-		buf = (char *) interm_fbuf->buf + (i * block_size);
+		buf = (char *) interm_fbuf.buf + (i * block_size);
 		len = buf_len > block_size ? block_size : buf_len;
 
 		OSAL_LOG_DEBUG("blk_num: %d buf: %p, len: %d chksum_desc: %p status_desc: %p",
@@ -213,7 +225,6 @@ chksum_setup(struct service_info *svc_info,
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	/* TODO-chksum: validate interm_fbuf */
 	err = CPDC_VALIDATE_SETUP_INPUT(svc_info, svc_params);
 	if (err)
 		goto out;
@@ -244,32 +255,23 @@ chksum_setup(struct service_info *svc_info,
 		goto out_chksum_desc;
 	}
 
-	if (per_block) {
-		err = cpdc_update_service_info_sgls(svc_info, svc_params);
-		if (err) {
-			OSAL_LOG_ERROR("cannot obtain chksum src/dst sgl from pool! err: %d",
-					err);
-			goto out_status_desc;
-		}
+	err = cpdc_update_service_info_sgl(svc_info, svc_params);
+	if (err) {
+		OSAL_LOG_ERROR("cannot obtain chksum src sgl from pool! err: %d",
+				err);
+		goto out_status_desc;
+	}
+	src_blist_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
 
-		src_blist_len = svc_params->sp_interm_fbuf->len;
+	if (per_block)
 		fill_chksum_desc_per_block(pnso_chksum_desc->algo_type,
 				svc_info->si_block_size, src_blist_len,
-				svc_info->si_interm_fbuf,
+				svc_info->si_src_sgl,
 				chksum_desc, status_desc);
-	} else {
-		err = cpdc_update_service_info_sgl(svc_info, svc_params);
-		if (err) {
-			OSAL_LOG_ERROR("cannot obtain chksum src sgl from pool! err: %d",
-					err);
-			goto out_status_desc;
-		}
-		src_blist_len =
-			pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+	else
 		fill_chksum_desc(pnso_chksum_desc->algo_type, src_blist_len,
 				false, svc_info->si_src_sgl,
 				chksum_desc, status_desc);
-	}
 
 	svc_info->si_type = PNSO_SVC_TYPE_CHKSUM;
 	svc_info->si_desc_flags = flags;

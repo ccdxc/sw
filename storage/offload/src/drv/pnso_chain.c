@@ -49,9 +49,6 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_INFO("%30s: 0x%llx", "si_status_desc",
 			(u64) svc_info->si_status_desc);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "si_interm_fbuf",
-			(u64) svc_info->si_interm_fbuf);
-
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_src_sgl",
 			(u64) svc_info->si_src_sgl);
 	OSAL_LOG_INFO("%30s: %llx", "=== si_dst_sgl",
@@ -116,7 +113,6 @@ init_service_params(const struct pnso_service_request *svc_req,
 
 	svc_params->sp_src_blist = svc_req->sgl;
 	svc_params->sp_dst_blist = svc_status->u.dst.sgl;
-	svc_params->sp_interm_fbuf = NULL;
 
 	switch (pnso_svc->svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
