@@ -164,5 +164,5 @@ gtests-iris-c:
 #################### LINKMGR ####################
 #################################################
 linkmgr-tests:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) linkmgr/test:port_client
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/linkmgr/test:port_client
 

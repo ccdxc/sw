@@ -1,7 +1,10 @@
 nic/conf                                                          /nic/conf/
 
 bazel-bin/nic/hal/hal                                             /nic/bin/
-# bazel-bin/nic/linkmgr/linkmgr                                   /nic/bin/
+bazel-bin/nic/linkmgr/linkmgr                                     /nic/bin/
+
+# linkmgr debug CLIs
+bazel-bin/nic/linkmgr/test/port_client                            /nic/bin
 
 bazel-bin/nic/hal/third-party/isc-dhcp/libisc-dhcp.so             /nic/lib/
 

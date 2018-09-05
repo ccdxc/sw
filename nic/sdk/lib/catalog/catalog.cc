@@ -356,9 +356,11 @@ catalog::parse_serdes(ptree &prop_tree)
         serdes_info_t *serdes_info =
                     &catalog_db_.serdes[serdes_lane][port_speed][cable_type];
 
+        // sbus speed divider
         serdes_info->sbus_divider =
                             serdes.second.get<uint32_t>("sbus_divider", 0);
 
+        // Tx/Rx slip values
         slip = serdes.second.get<std::string>("tx_slip_value", "");
 
         serdes_info->tx_slip_value = strtoul(slip.c_str(), NULL, 16);
@@ -368,6 +370,18 @@ catalog::parse_serdes(ptree &prop_tree)
         serdes_info->rx_slip_value = strtoul(slip.c_str(), NULL, 16);
 
         serdes_info->width = serdes.second.get<uint32_t>("width", 0);
+
+        // Tx/Rx polatiry
+        serdes_info->tx_pol = serdes.second.get<uint8_t>("tx_pol", 0);
+        serdes_info->rx_pol = serdes.second.get<uint8_t>("rx_pol", 0);
+
+        // Rx termination
+        serdes_info->rx_term = serdes.second.get<uint8_t>("rx_termination", 0);
+
+        // DFE Tx params
+        serdes_info->amp = serdes.second.get<uint32_t>("main", 0);
+        serdes_info->pre = serdes.second.get<uint32_t>("pre1", 0);
+        serdes_info->post = serdes.second.get<uint32_t>("post", 0);
 
         uint32_t asic = 0;
         uint32_t asic_port = 0;

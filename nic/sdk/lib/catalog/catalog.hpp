@@ -44,6 +44,10 @@ typedef struct serdes_info_s {
     uint32_t width;
     uint8_t  tx_pol;
     uint8_t  rx_pol;
+    uint8_t  rx_term;
+    uint32_t amp;
+    uint32_t pre;
+    uint32_t post;
 } serdes_info_t;
 
 typedef struct ch_profile_ {

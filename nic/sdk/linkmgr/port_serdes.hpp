@@ -8,26 +8,32 @@ namespace linkmgr {
 
 typedef struct serdes_fn_s_ {
     int (*serdes_cfg)          (uint32_t sbus_addr, serdes_info_t *serdes_info);
-    int (*serdes_tx_rx_enable)      (uint32_t sbus_addr, bool enable);
-    int (*serdes_output_enable)     (uint32_t sbus_addr, bool enable);
-    int (*serdes_reset)             (uint32_t sbus_addr, bool reset);
-    bool (*serdes_signal_detect)    (uint32_t sbus_addr);
-    bool (*serdes_rdy)              (uint32_t sbus_addr);
-    int (*serdes_ical_start)        (uint32_t sbus_addr);
-    int (*serdes_pcal_start)        (uint32_t sbus_addr);
-    int (*serdes_dfe_status)        (uint32_t sbus_addr);
-    int (*serdes_eye_get)           (uint32_t sbus_addr, int eye_type);
-    int (*serdes_rx_lpbk)           (uint32_t sbus_addr, bool enable);
-    int (*serdes_spico_reset)       (uint32_t sbus_addr);
-    int (*serdes_sbus_reset)        (uint32_t sbus_addr, int hard);
-    int (*serdes_spico_upload)      (uint32_t sbus_addr, const char*);
-    int (*serdes_spico_status)      (uint32_t sbus_addr);
-    int (*serdes_get_rev)           (uint32_t sbus_addr);
-    int (*serdes_get_build_id)      (uint32_t sbus_addr);
-    bool (*serdes_spico_crc)        (uint32_t sbus_addr);
-    uint32_t (*serdes_get_eng_id)   (uint32_t sbus_addr);
-    void (*serdes_aacs_start)       (int port);
+    int (*serdes_tx_rx_enable)     (uint32_t sbus_addr, bool enable);
+    int (*serdes_output_enable)    (uint32_t sbus_addr, bool enable);
+    int (*serdes_reset)            (uint32_t sbus_addr, bool reset);
+    bool (*serdes_signal_detect)   (uint32_t sbus_addr);
+    bool (*serdes_rdy)             (uint32_t sbus_addr);
+    int (*serdes_ical_start)       (uint32_t sbus_addr);
+    int (*serdes_pcal_start)       (uint32_t sbus_addr);
+    int (*serdes_dfe_status)       (uint32_t sbus_addr);
+    int (*serdes_eye_get)          (uint32_t sbus_addr, int eye_type);
+    int (*serdes_rx_lpbk)          (uint32_t sbus_addr, bool enable);
+    int (*serdes_spico_reset)      (uint32_t sbus_addr);
+    int (*serdes_sbus_reset)       (uint32_t sbus_addr, int hard);
+    int (*serdes_spico_upload)     (uint32_t sbus_addr, const char*);
+    int (*serdes_spico_status)     (uint32_t sbus_addr);
+    int (*serdes_get_rev)          (uint32_t sbus_addr);
+    int (*serdes_get_build_id)     (uint32_t sbus_addr);
+    bool (*serdes_spico_crc)       (uint32_t sbus_addr);
+    uint32_t (*serdes_get_eng_id)  (uint32_t sbus_addr);
+    void (*serdes_aacs_start)      (int port);
     int (*serdes_pcal_continuous_start) (uint32_t sbus_addr);
+    int (*serdes_set_tx_eq)        (uint32_t sbus_addr, uint32_t amp,
+                                    uint32_t pre, uint32_t post);
+    int (*serdes_set_rx_term)      (uint32_t sbus_addr, uint8_t val);
+    bool (*serdes_spico_int)       (uint32_t sbus_addr,
+                                    int int_code, int int_data);
+    uint32_t (*serdes_get_errors)  (uint32_t sbus_addr, bool clear);
 } serdes_fn_t;
 
 extern serdes_fn_t serdes_fns;

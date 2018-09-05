@@ -13,12 +13,15 @@ cc_test(
         "//nic:gen_proto_includes",
         "//nic:halproto",
         "//nic:grpc",
+        "//nic:grpc_includes",
+        "//nic:google_includes",
         "//nic:libprotobuf",
     ],
     linkopts = [
         "-lpthread",
         "-pthread",
         "-lz",
+        "-lm",
     ],
     copts = sdk_copts,
 )

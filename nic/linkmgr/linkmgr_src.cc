@@ -1261,6 +1261,8 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
     int         hard          = 0;
     int         mac_inst      = 0;
     int         mac_ch        = 0;
+    int         int_code      = 0;
+    int         int_data      = 0;
     int         aacs_server_port = 0;
 
     sdk::linkmgr::port_args_init(&port_args);
@@ -1571,6 +1573,32 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
         case 27:
             stop_aacs_server();
             HAL_TRACE_DEBUG("AACS server stopped");
+            break;
+
+        case 28:
+            sbus_addr = req.val1();
+            int_code  = req.val2();
+            int_data  = req.val3();
+
+            HAL_TRACE_DEBUG("spico_int sbus_addr: {}, int_code: {},"
+                            " int_data: {}, result: {}",
+                            sbus_addr, int_code, int_data,
+                            sdk::linkmgr::serdes_fns.serdes_spico_int(
+                                    sbus_addr, int_code, int_data));
+            break;
+
+        case 29:
+            sbus_addr = req.val1();
+
+            if (req.val2() == 1) {
+                reset = true;
+            }
+
+            HAL_TRACE_DEBUG("serdes_get_errors sbus_addr: {}, clear: {},"
+                            " result: {}",
+                            sbus_addr, reset,
+                            sdk::linkmgr::serdes_fns.serdes_get_errors(
+                                sbus_addr, reset));
             break;
 
         default:
