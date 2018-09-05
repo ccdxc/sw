@@ -58,12 +58,6 @@ characters appropriately. For Example a password `$ecRe7&P@ssword!` need to be s
 ... <this takes about 5-10 minutes depending on the download speeds>
 ```
 
-- Environment variables can be unset if needed now
-```
-[Mac/Linux] $ unset DOCKER_USERNAME
-[Mac/Linux] $ unset DOCKER_PASSWORD
-```
-
 #### Examining the system
 - Getting into the simulator VM
 ```
