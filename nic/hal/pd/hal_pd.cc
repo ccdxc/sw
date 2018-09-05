@@ -542,6 +542,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     hal_pd_module_init(hal_cfg);
 
     mem_init_args.cfg_path = hal_cfg->cfg_path.c_str();
+    mem_init_args.hal_cfg = hal_cfg;
     pd_func_args.pd_mem_init = &mem_init_args;
     ret = hal_pd_call(PD_FUNC_ID_MEM_INIT, &pd_func_args);
     if (ret != HAL_RET_OK) {

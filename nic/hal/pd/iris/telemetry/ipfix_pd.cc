@@ -2,7 +2,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_state.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
@@ -11,6 +11,8 @@
 #include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/iris/datapath/p4/include/table_sizes.h"
+#include "nic/hal/pd/cpupkt_api.hpp"
 #include "sdk/periodic.hpp"
 
 namespace hal {
@@ -141,13 +143,15 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
 hal_ret_t
 ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
            uint16_t payload_size) {
-    lif_id_t lif_id = SERVICE_LIF_IPFIX;
-    uint32_t qid = export_id;
+    int             ret;
+    uint8_t         pgm_offset = 0;
+    uint32_t        qid = export_id;
+    lif_id_t        lif_id = SERVICE_LIF_IPFIX;
+    hal_cfg_t       *hal_cfg = NULL;
+    ipfix_qstate_t  qstate = { 0 };
 
-    ipfix_qstate_t qstate = { 0 };
-    uint8_t pgm_offset = 0;
-    int ret = lif_manager()->GetPCOffset("p4plus", "txdma_stage0.bin",
-                                         "ipfix_tx_stage0", &pgm_offset);
+    ret = lif_manager()->GetPCOffset("p4plus", "txdma_stage0.bin",
+                                     "ipfix_tx_stage0", &pgm_offset);
     HAL_ABORT(ret == 0);
     qstate.pc = pgm_offset;
     qstate.total_rings = 1;
@@ -157,13 +161,28 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
     qstate.pktsize = (payload_size > 1500) ? 1500 : payload_size;
     qstate.ipfix_hdr_offset = payload_start;
     qstate.next_record_offset = qstate.ipfix_hdr_offset + 16;
-    qstate.flow_hash_index_next = (100 * qid) + 100;
-    qstate.flow_hash_index_max = (100 * qid) + 111;
 
-    // TODO: install flow table entries for testing (to be removed)
-    ipfix_test_init(qstate.flow_hash_index_next, qstate.flow_hash_index_max,
-                    export_id);
+    hal_cfg = g_hal_state_pd->hal_cfg();
+    HAL_ASSERT(hal_cfg);
+    if (hal_cfg->platform_mode == HAL_PLATFORM_MODE_HW) {
+        // For HW mode, we need to walk the full flow hash table
+        qstate.flow_hash_index_next = 0;
+        qstate.flow_hash_index_max = FLOW_HASH_TABLE_SIZE - 1;
+        qstate.flow_hash_overflow_index_max = FLOW_HASH_OVERFLOW_TABLE_SIZE - 1;
+    } else {
+        // For SIM, HAPS and RTL mode we need to use a smaller range for the
+        // flow hash table walk
+        qstate.flow_hash_index_next = (100 * qid) + 100;
+        qstate.flow_hash_index_max = (100 * qid) + 111;
+    }
 
+    if (hal_cfg->platform_mode != HAL_PLATFORM_MODE_HW) {
+        // For SIM, HAPS and RTL mode we need to install fake flow entries
+        // TODO: Ideally this should be removed and test environment should
+        // drive the flow hash table entries
+        ipfix_test_init(qstate.flow_hash_index_next, qstate.flow_hash_index_max,
+                        export_id);
+    }
     lif_manager()->WriteQState(lif_id, 0, qid,
                                (uint8_t *)&qstate, sizeof(qstate));
     lif_manager()->WriteQState(lif_id, 0, qid + 16,
@@ -174,9 +193,20 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
 //------------------------------------------------------------------------------
 // timer callback to ring doorbell to trigger ipfix p4+ program
 //------------------------------------------------------------------------------
-static void
+void
 ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
+    uint64_t address, data, qid;
+    uint64_t upd = 3;
+    uint64_t qtype = 0, pid = 0, ring_id = 0, p_index = 0;
+    
+    // qid is equal to the exporter id which is encoded in the timer_id
+    qid = timer_id - HAL_TIMER_ID_IPFIX_MIN;
+    address = DB_ADDR_BASE + (upd << DB_UPD_SHFT) + (SERVICE_LIF_IPFIX << DB_LIF_SHFT) + (qtype << DB_TYPE_SHFT);
+    data = (pid << DB_PID_SHFT) | (qid << DB_QID_SHFT) | (ring_id << DB_RING_SHFT) | p_index;
+    HAL_TRACE_DEBUG("cpupkt: ringing Doorbell with addr: {:#x} data: {:#x}",
+                    address, data);
+    hal::pd::asic_ring_doorbell(address, data);
     return;
 }
 
@@ -197,7 +227,7 @@ ipfix_module_init (hal_cfg_t *hal_cfg)
     }
 
     t_ipfix_doorbell_timer =
-        sdk::lib::timer_schedule(HAL_TIMER_ID_IPFIX,
+        sdk::lib::timer_schedule(HAL_TIMER_ID_IPFIX_MIN,
                                  HAL_IPFIX_DOORBELL_TIMER_INTVL,
                                  (void *)0,    // ctxt
                                  ipfix_doorbell_ring_cb,

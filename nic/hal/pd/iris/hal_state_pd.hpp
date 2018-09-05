@@ -204,6 +204,9 @@ public:
     void set_cpu_bypass_flowid(uint32_t flowid) { cpu_bypass_flowid_ = flowid; }
     uint32_t cpu_bypass_flowid(void) { return cpu_bypass_flowid_; }
 
+    void set_hal_cfg(hal_cfg_t *hal_cfg) { hal_cfg_ = hal_cfg; }
+    hal_cfg_t *hal_cfg(void) { return hal_cfg_; }
+
 private:
     bool init(void);
     hal_state_pd();
@@ -337,6 +340,7 @@ private:
     directmap               **p4plus_txdma_dm_tables_;
     uint64_t                clock_delta_;    // hw sw clock delta in nanoseconds
     hal_clock_delta_op_t    clock_delta_op_; // hw sw clock delta op
+    hal_cfg_t               *hal_cfg_;
 };
 
 hal_ret_t delay_delete_to_slab(hal_slab_t slab_id, void *elem);

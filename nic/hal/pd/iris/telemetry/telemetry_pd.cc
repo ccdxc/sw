@@ -172,11 +172,11 @@ pd_mirror_session_get(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-telemetry_export_dest_init(telemetry_export_dest_t *d, uint16_t id)
+telemetry_export_dest_init(telemetry_export_dest_t *d)
 {
-    HAL_TRACE_DEBUG("{}: Export Destination Init {}", __FUNCTION__, id);
+    HAL_TRACE_DEBUG("{}: Export Destination Init {}", __FUNCTION__, d->id);
     uint64_t hbm_start = get_start_offset(JP4_IPFIX);
-    d->base_addr = hbm_start + (id * TELEMETRY_IPFIX_BUFSIZE);
+    d->base_addr = hbm_start + (d->id * TELEMETRY_IPFIX_BUFSIZE);
     d->buf_hdr.packet_start = sizeof(telemetry_pd_export_buf_header_t);
     d->buf_hdr.payload_start = sizeof(telemetry_pd_export_buf_header_t) + sizeof(telemetry_pd_ipfix_header_t);
     d->buf_hdr.payload_length = TELEMETRY_IPFIX_BUFSIZE - d->buf_hdr.payload_start;
@@ -187,9 +187,9 @@ telemetry_export_dest_init(telemetry_export_dest_t *d, uint16_t id)
     d->ipfix_hdr.iphdr.version = 4;
     d->ipfix_hdr.iphdr.ihl = 5;
     d->ipfix_hdr.iphdr.protocol = 17;
-    ipfix_init(id, d->base_addr + d->buf_hdr.packet_start,
+    ipfix_init(d->id, d->base_addr + d->buf_hdr.packet_start,
                sizeof(telemetry_pd_ipfix_header_t), d->buf_hdr.payload_length);
-    HAL_TRACE_DEBUG("{}: Export Destination Init Done {}", __FUNCTION__, id);
+    HAL_TRACE_DEBUG("{}: Export Destination Init Done {}", __FUNCTION__, d->id);
     return HAL_RET_OK;
 }
 
@@ -303,7 +303,8 @@ pd_collector_create(pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR(" Already exists Id {}", cfg->collector_id );
         return HAL_RET_INVALID_ARG;
     }
-    telemetry_export_dest_init(d, cfg->collector_id);
+    d->id = cfg->collector_id;
+    telemetry_export_dest_init(d);
 
     args.l2seg = cfg->l2seg;
     args.vid = &cfg->vlan;
@@ -328,9 +329,23 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     telemetry_export_dest_set_mac(d, cfg->src_mac, true);
     telemetry_export_dest_set_mac(d, cfg->dest_mac, false);
     telemetry_export_dest_commit(d);
-    // TODO: Start timer based on export interval to ring doorbell to trigger
-    // packet export
-
+    // TODO: Enable timer after fixing the dol tests
+#if 0
+    // Start timer for the collector
+    d->db_timer = 
+        sdk::lib::timer_schedule((HAL_TIMER_ID_IPFIX_MIN + d->id),
+                                 (d->export_intvl * TIME_MSECS_PER_SEC),
+                                 (void *) 0,
+                                 ipfix_doorbell_ring_cb,
+                                 true);
+    if (!d->db_timer) {
+        HAL_TRACE_ERR("Failed to start periodic doorbell ring timer");
+        return HAL_RET_ERR;
+    }
+    HAL_TRACE_DEBUG("Started periodic doorbell ring timer with "
+                    "{} ms interval", (d->export_intvl * TIME_MSECS_PER_SEC));
+#endif
+    
     return HAL_RET_OK;
 }
 

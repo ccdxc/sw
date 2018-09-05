@@ -1051,6 +1051,7 @@ pd_mem_init (pd_func_args_t *pd_func_args)
     if (ret != HAL_RET_OK) {
         delete g_hal_state_pd;
     }
+    g_hal_state_pd->set_hal_cfg(args->hal_cfg);
 
     HAL_TRACE_DEBUG("Initializing p4plus asic lib tables ...");
     ret = g_hal_state_pd->p4plus_rxdma_init_tables(args);

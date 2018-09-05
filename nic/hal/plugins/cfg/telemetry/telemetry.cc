@@ -277,6 +277,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     }
     memcpy(cfg.dest_mac, ep->l2_key.mac_addr, sizeof(cfg.dest_mac));
     cfg.template_id = spec.template_id();
+    cfg.export_intvl = spec.export_interval();
     switch (spec.format()) {
         case telemetry::ExportFormat::IPFIX:
             cfg.format = EXPORT_FORMAT_IPFIX;

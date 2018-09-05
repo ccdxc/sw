@@ -40,6 +40,7 @@ struct telemetry_export_dest_s {
     uint64_t                         base_addr;
     uint32_t                         template_id;
     uint32_t                         export_intvl;
+    void                             *db_timer;
     telemetry_pd_export_buf_header_t buf_hdr;
     // IPFix Header defined and maintained
     telemetry_pd_ipfix_header_t      ipfix_hdr;
