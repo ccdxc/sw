@@ -255,8 +255,6 @@ validate_req_compression_service(struct pnso_service *svc)
 		goto out;
 	}
 
-	/* TODO-req: validate threshold len, hdr format index */
-
 	err = PNSO_OK;
 out:
 	return err;
@@ -282,8 +280,6 @@ validate_req_decompression_service(struct pnso_service *svc)
 		OSAL_ASSERT(0);
 		goto out;
 	}
-
-	/* TODO-req: validate threshold len, hdr format index */
 
 	err = PNSO_OK;
 out:
@@ -359,53 +355,6 @@ static validate_req_service_fn_t validate_req_service_fn[PNSO_SVC_TYPE_MAX] = {
 	[PNSO_SVC_TYPE_CHKSUM] = validate_req_chksum_service,
 	[PNSO_SVC_TYPE_DECOMPACT] = validate_req_decompaction_service,
 };
-
-static bool __attribute__ ((unused))
-is_service_type_valid(enum pnso_service_type svc_type)
-{
-	switch (svc_type) {
-	case PNSO_SVC_TYPE_ENCRYPT:
-	case PNSO_SVC_TYPE_DECRYPT:
-	case PNSO_SVC_TYPE_COMPRESS:
-	case PNSO_SVC_TYPE_DECOMPRESS:
-	case PNSO_SVC_TYPE_HASH:
-	case PNSO_SVC_TYPE_CHKSUM:
-	case PNSO_SVC_TYPE_DECOMPACT:
-		return true;
-	default:
-		OSAL_ASSERT(0);
-		break;
-	}
-
-	return false;
-}
-
-static pnso_error_t __attribute__ ((unused))
-validate_res_service(struct pnso_service_status *status)
-{
-	pnso_error_t err;
-
-	if (!status) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid status! status: 0x%llx err: %d",
-				(u64) status, err);
-		OSAL_ASSERT(0);
-		goto out;
-	}
-
-	if (!is_service_type_valid(status->svc_type)) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service type specified! status: 0x%llx svc_type: %d err: %d",
-				(u64) status, status->svc_type, err);
-		OSAL_ASSERT(0);
-		goto out;
-	}
-
-	err = PNSO_OK;
-
-out:
-	return err;
-}
 
 static pnso_error_t
 validate_res_dummy_service(struct pnso_service_status *status)
@@ -531,20 +480,33 @@ validate_service_request(struct pnso_service_request *svc_req)
 	enum pnso_service_type svc_type;
 	uint32_t num_services, i;
 
-	if (!svc_req)
-		return EINVAL;
+	OSAL_LOG_INFO("enter ...");
+
+	if (!svc_req) {
+		OSAL_LOG_ERROR("invalid service request specified! req: 0x%llx err: %d",
+				(u64) svc_req, err);
+		goto out;
+	}
+
+	if (!svc_req->sgl) {
+		OSAL_LOG_ERROR("invalid sgl in service request specified! sgl: 0x%llx err: %d",
+				(u64) svc_req->sgl, err);
+		goto out;
+	}
 
 	num_services = svc_req->num_services;
-	if (num_services <= PNSO_SVC_TYPE_NONE ||
-	    num_services >= PNSO_SVC_TYPE_MAX)
-		return EINVAL;
-
-	if (!svc_req->sgl)
-		return EINVAL;
+	if (num_services < 1) {
+		OSAL_LOG_ERROR("invalid # of services in req specified! num_services: %d err: %d",
+				svc_req->num_services, err);
+		goto out;
+	}
 
 	/* sgl here means buffer list ... */
-	if (svc_req->sgl->count < 1)
-		return EINVAL;
+	if (svc_req->sgl->count < 1) {
+		OSAL_LOG_ERROR("invalid # of buffers in req sgl specified! count: %d err: %d",
+				svc_req->sgl->count, err);
+		goto out;
+	}
 
 	for (i = 0; i < num_services; i++) {
 		svc_type = svc_req->svc[i].svc_type;
@@ -559,10 +521,12 @@ validate_service_request(struct pnso_service_request *svc_req)
 
 		err = validate_req_service_fn[svc_type](&svc_req->svc[i]);
 		if (err)
-			return err;
+			goto out;
 	}
 
+	OSAL_LOG_INFO("exit!");
 out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -573,6 +537,8 @@ validate_service_result(struct pnso_service_result *svc_res)
 	enum pnso_service_type svc_type;
 	uint32_t num_services, i;
 
+	OSAL_LOG_INFO("enter ...");
+
 	if (!svc_res) {
 		OSAL_LOG_ERROR("invalid service result specified! res: 0x%llx err: %d",
 				(u64) svc_res, err);
@@ -580,8 +546,9 @@ validate_service_result(struct pnso_service_result *svc_res)
 	}
 
 	num_services = svc_res->num_services;
-	if (num_services <= PNSO_SVC_TYPE_NONE ||
-	    num_services >= PNSO_SVC_TYPE_MAX) {
+	if (num_services < 1) {
+		OSAL_LOG_ERROR("invalid # of services in res specified! num_services: %d err: %d",
+				svc_res->num_services, err);
 		goto out;
 	}
 
@@ -599,10 +566,12 @@ validate_service_result(struct pnso_service_result *svc_res)
 
 		err = validate_res_service_fn[svc_type](&svc_res->svc[i]);
 		if (err)
-			return err;
+			goto out;
 	}
 
+	OSAL_LOG_INFO("exit!");
 out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -636,8 +605,12 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 		return err;
 	}
 
-	if (svc_req->num_services != svc_res->num_services)
-		return EINVAL;
+	if (svc_req->num_services != svc_res->num_services) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("mismatch in # of services listed in request/result! req: %d res: %d err: %d",
+				svc_req->num_services, svc_res->num_services, err);
+		return err;
+	}
 
 	/* TODO-req:
 	 *      sanitize cb, cb_ctx, etc. here and bail out from this layer
