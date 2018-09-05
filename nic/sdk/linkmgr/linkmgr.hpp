@@ -44,14 +44,13 @@ typedef struct port_args_s {
     uint32_t              sbus_addr[MAX_PORT_LANES];  // set the sbus addr for each lane
 } __PACK__ port_args_t;
 
-sdk_ret_t linkmgr_init(linkmgr_cfg_t *cfg);
-void *port_create(port_args_t *port_args);
-sdk_ret_t port_update(void *port, port_args_t *port_args);
-sdk_ret_t port_delete(void *port);
-sdk_ret_t port_get(void *port, port_args_t *port_args);
-
-void
-linkmgr_event_wait (void);
+sdk_ret_t linkmgr_init  (linkmgr_cfg_t *cfg);
+void      *port_create  (port_args_t *port_args);
+sdk_ret_t port_update   (void *port, port_args_t *port_args);
+sdk_ret_t port_delete   (void *port);
+sdk_ret_t port_get      (void *port, port_args_t *port_args);
+void linkmgr_event_wait (void);
+void linkmgr_set_link_poll_enable (bool enable);
 
 static inline void
 port_args_init (port_args_t *args)

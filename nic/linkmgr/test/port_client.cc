@@ -259,7 +259,9 @@ public:
                       << " MAC channel: "
                       << rsp_msg.response(i).spec().mac_ch() << std::endl
                       << " Num lanes: "
-                      << rsp_msg.response(i).spec().num_lanes() << std::endl;
+                      << rsp_msg.response(i).spec().num_lanes() << std::endl
+                      << " Fec Type: "
+                      << rsp_msg.response(i).spec().fec_type() << std::endl;
                 }
                 else {
                     break;

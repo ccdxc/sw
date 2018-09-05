@@ -1064,6 +1064,7 @@ port_populate_get_response (port_t *pi_p, PortGetResponse *response)
         spec->set_mac_id    (port_args.mac_id);
         spec->set_mac_ch    (port_args.mac_ch);
         spec->set_num_lanes (port_args.num_lanes);
+        spec->set_mtu       (port_args.mtu);
         spec->set_auto_neg_enable (port_args.auto_neg_enable);
         spec->set_debounce_time   (port_args.debounce_time);
     }
@@ -1336,21 +1337,55 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             break;
 
         case 2:
-            mac_port_num = req.val1();
-            speed        = req.val2();
-            num_lanes    = req.val3();
+            port_id = req.val1();
 
-            HAL_TRACE_DEBUG("mac_cfg mac_port: {}, speed: {}, num_lanes: {}",
-                            mac_port_num, speed, num_lanes);
+            if (req.val2() == 1) {
+                enable = true;
+            }
+
+            key_handle.set_port_id(port_id);
+
+            pi_p = port_lookup_key_or_handle(key_handle);
+            if (!pi_p) {
+                HAL_TRACE_ERR("failed to find port id {}",
+                               port_id);
+                return HAL_RET_PORT_NOT_FOUND;
+            }
+
+            port_args_t args;
+            memset(&args, 0, sizeof(port_args_t));
+
+            if (sdk::linkmgr::port_get(pi_p->pd_p, &args) != SDK_RET_OK) {
+                HAL_TRACE_ERR("Failed to get port info for port {}i", port_id);
+                return HAL_RET_ERR;
+            }
 
             mac_info_t mac_info;
             memset(&mac_info, 0, sizeof(mac_info_t));
 
-            // TODO
-            mac_info.mac_id    = mac_port_num / 4;
-            mac_info.mac_ch    = mac_port_num % 4;
-            mac_info.speed     = speed;
-            mac_info.num_lanes = num_lanes;
+            mac_info.mac_id    = args.mac_id;
+            mac_info.mac_ch    = args.mac_ch;
+            mac_info.speed     = static_cast<uint32_t>(args.port_speed);
+
+            mac_info.mtu       = args.mtu;
+            mac_info.num_lanes = args.num_lanes;
+
+            // 0: disable fec, 1: enable fec
+            // TODO current FEC type is determined by global mode in mx api
+            mac_info.fec       = static_cast<uint32_t>(args.fec_type);
+
+            // Enable Tx padding. Disable Rx padding
+            mac_info.tx_pad_enable = 1;
+            mac_info.rx_pad_enable = 0;
+
+            mac_info.force_global_init = enable;
+
+            HAL_TRACE_DEBUG("mac_cfg mac_id: {}, mac_ch: {}, speed: {},"
+                            " mtu: {}, num_lanes: {}, fec: {},"
+                            " force_global_init: {}",
+                            mac_info.mac_id, mac_info.mac_ch, mac_info.speed,
+                            mac_info.mtu, mac_info.num_lanes, mac_info.fec,
+                            mac_info.force_global_init);
 
             sdk::linkmgr::mac_fns.mac_cfg(&mac_info);
             break;
@@ -1359,7 +1394,10 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             mac_port_num = req.val1();
             speed        = req.val2();
             num_lanes    = req.val3();
-            enable       = req.val4();
+
+            if (req.val4() == 1) {
+                enable = true;
+            }
 
             HAL_TRACE_DEBUG("mac_enable mac_port: {}, speed: {}, num_lanes: {}"
                             ", enable: {}",
@@ -1373,7 +1411,10 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             mac_port_num = req.val1();
             speed        = req.val2();
             num_lanes    = req.val3();
-            reset        = req.val4();
+
+            if (req.val4() == 1) {
+                reset = true;
+            }
 
             HAL_TRACE_DEBUG("mac_reset mac_port: {}, speed: {}, num_lanes: {}"
                             ", reset: {}",
@@ -1412,7 +1453,10 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
 
         case 8:
             sbus_addr = req.val1();
-            enable    = req.val2();
+
+            if (req.val2() == 1) {
+                enable = true;
+            }
 
             HAL_TRACE_DEBUG("serdes_output_enable sbus_addr: {}, enable: {}",
                             sbus_addr, enable);
@@ -1463,7 +1507,11 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
 
         case 14:
             sbus_addr = req.val1();
-            enable    = req.val2();
+
+            if (req.val2() == 1) {
+                enable = true;
+            }
+
             HAL_TRACE_DEBUG("serdes_rx_lpbk sbus_addr: {}, enable: {}",
                             sbus_addr, enable);
             sdk::linkmgr::serdes_fns.serdes_rx_lpbk(sbus_addr, enable);
@@ -1505,7 +1553,10 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
         case 19:
             mac_inst = req.val1();
             mac_ch   = req.val2();
-            enable   = req.val3();
+
+            if (req.val3() == 1) {
+                enable = true;
+            }
 
             HAL_TRACE_DEBUG("mac_lpbk mac_inst: {}, mac_ch: {}, enable: {}",
                             mac_inst, mac_ch, enable);
@@ -1599,6 +1650,16 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
                             sbus_addr, reset,
                             sdk::linkmgr::serdes_fns.serdes_get_errors(
                                 sbus_addr, reset));
+            break;
+
+        case 30:
+            if (req.val1() == 1) {
+                enable = true;
+            }
+
+            HAL_TRACE_DEBUG("port_link_poll {}", enable);
+
+            sdk::linkmgr::linkmgr_set_link_poll_enable(enable);
             break;
 
         default:

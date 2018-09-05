@@ -242,7 +242,6 @@ void cap_pp_sbus_write(int chip_id, int rcvr_addr, int data_addr, int data) {
 	(CAP_SBUS_SBUS_WR << CAP_PP_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
   cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_CFG_SBUS_INDIR_BYTE_ADDRESS, val);
   cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_DHS_SBUS_INDIR_BYTE_ADDRESS, data);
-  cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_CFG_SBUS_RESULT_BYTE_ADDRESS, 0);
 }
 
 int cap_pp_sbus_read(int chip_id, int rcvr_addr, int data_addr) {
@@ -271,7 +270,6 @@ int cap_pp_sbus_read(int chip_id, int rcvr_addr, int data_addr) {
 	(data_addr << CAP_PP_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
 	(CAP_SBUS_SBUS_RD << CAP_PP_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
   cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_CFG_SBUS_INDIR_BYTE_ADDRESS, val);
-  cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_CFG_SBUS_RESULT_BYTE_ADDRESS, 0);
   rd_data = cap_sbus_reg_read((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_DHS_SBUS_INDIR_ENTRY_BYTE_ADDRESS);
 
   return rd_data;

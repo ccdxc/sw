@@ -498,7 +498,7 @@ mac_cfg_hw (mac_info_t *mac_info)
     mx[inst_id].speed      [start_lane] = mx_api_speed;
     mx[inst_id].port_enable[start_lane] = 1;
 
-    if (mac_global_init(inst_id) != 1) {
+    if (mac_global_init(inst_id) != 1 || mac_info->force_global_init == true) {
         cap_mx_load_from_cfg_glbl1(chip_id, inst_id, &ch_enable_vec);
 
         cap_mx_set_tx_padding(chip_id, inst_id, mac_info->tx_pad_enable);

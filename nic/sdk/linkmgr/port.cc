@@ -109,6 +109,8 @@ port::port_mac_cfg(void)
     mac_info.tx_pad_enable = 1;
     mac_info.rx_pad_enable = 0;
 
+    mac_info.force_global_init = false;
+
     mac_fns()->mac_cfg(&mac_info);
 
     return SDK_RET_OK;
@@ -307,7 +309,9 @@ port::port_dfe_tuning_enabled(void)
     switch (this->port_speed_) {
         case port_speed_t::PORT_SPEED_100G:
         case port_speed_t::PORT_SPEED_50G:
+        case port_speed_t::PORT_SPEED_40G:
         case port_speed_t::PORT_SPEED_25G:
+        case port_speed_t::PORT_SPEED_10G:
             return true;
 
         default:
@@ -448,17 +452,6 @@ port::port_link_sm_dfe_process(void)
                 ret = false;
                 break;
             }
-
-            // transition to pcal continuous
-            set_port_link_dfe_sm(
-                    port_link_sm_t::PORT_LINK_SM_DFE_PCAL_CONTINUOUS);
-
-        case port_link_sm_t::PORT_LINK_SM_DFE_PCAL_CONTINUOUS:
-            SDK_PORT_TRACE(this, "PCAL continuous");
-
-            port_serdes_pcal_continuous_start();
-
-            break;
 
         default:
             break;
@@ -646,6 +639,10 @@ port::port_link_sm_process(void)
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_UP);
 
         case port_link_sm_t::PORT_LINK_SM_UP:
+
+            SDK_PORT_TRACE(this, "PCAL continuous");
+
+            port_serdes_pcal_continuous_start();
 
             SDK_PORT_TRACE(this, "Link UP");
 

@@ -99,6 +99,8 @@ public:
         this->link_debounce_timer_ = link_debounce_timer;
     }
 
+    uint32_t mtu(void) { return this->mtu_; }
+
     void set_mtu(uint32_t mtu) { this->mtu_ = mtu; }
 
     void set_mac_fns(mac_fn_t *mac_fns) { this->mac_fns_ = mac_fns; }

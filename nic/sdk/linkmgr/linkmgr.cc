@@ -26,6 +26,21 @@ port *link_poll_timer_list[MAX_UPLINK_PORTS];
 // per producer request queues
 linkmgr_queue_t g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
 
+// Global setting for link status poll. Default is enabled.
+bool port_link_poll_en = true;
+
+bool
+port_link_poll_enabled(void)
+{
+    return port_link_poll_en;
+}
+
+void
+linkmgr_set_link_poll_enable (bool enable)
+{
+    port_link_poll_en = enable;
+}
+
 uint32_t
 glbl_mode_mgmt (mac_mode_t mac_mode)
 {
@@ -277,14 +292,16 @@ port_debounce_timer (linkmgr_entry_data_t *data)
 sdk_ret_t
 port_link_poll_timer(linkmgr_entry_data_t *data)
 {
-    for (int i = 0; i < MAX_UPLINK_PORTS; ++i) {
-        port *port_p = link_poll_timer_list[i];
+    if (port_link_poll_enabled() == true) {
+        for (int i = 0; i < MAX_UPLINK_PORTS; ++i) {
+            port *port_p = link_poll_timer_list[i];
 
-        if (port_p != NULL) {
-            if(port_p->port_link_status() == false) {
-                port_p->port_link_dn_handler();
+            if (port_p != NULL) {
+                if(port_p->port_link_status() == false) {
+                    port_p->port_link_dn_handler();
+                }
+                SDK_TRACE_DEBUG("%d: Link still UP", port_p->port_num());
             }
-            SDK_TRACE_DEBUG("%d: Link still UP", port_p->port_num());
         }
     }
 
@@ -594,6 +611,7 @@ port_get (void *pd_p, port_args_t *args)
     args->num_lanes   = port_p->num_lanes();
     args->oper_status = port_p->oper_status();
     args->fec_type    = port_p->fec_type();
+    args->mtu         = port_p->mtu();
     args->debounce_time = port_p->debounce_time();
     args->auto_neg_enable = port_p->auto_neg_enable();
 
