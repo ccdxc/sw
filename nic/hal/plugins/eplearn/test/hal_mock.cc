@@ -7,6 +7,8 @@ class phv_t;
 hal::ep_t *temp_ep;
 hal::vrf_t *temp_ten;
 hal::ep_t *temp_dep;
+ipvx_addr_t            sip;          // source IP address
+ipvx_addr_t            dip;
 hal_ret_t fte::ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
                            flow_t iflow[], flow_t rflow[],
                            feature_state_t feature_state[], uint16_t num_features) {
@@ -22,24 +24,33 @@ hal_ret_t fte::ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     this->svrf_ = this->dvrf_ = temp_ten;
     this->vlan_tag_valid_ = false;
     this->num_features_ = 100;
+    this->key_.dip = dip;
+    this->key_.sip = sip;
+    //this->arm_lifq_ = FLOW_MISS_LIFQ; //hardcoding for flow miss in test
     this->feature_state_ = feature_state; //(feature_state_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(feature_state_t));
     return HAL_RET_OK;
 }
 
 void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
-        hal::ep_t *dep, fte::cpu_rxhdr_t *cpu_rxhdr,
+        hal::ep_t *dep, ip_addr_t *souce_ip, ip_addr_t *dest_ip, fte::cpu_rxhdr_t *cpu_rxhdr,
         uint8_t *pkt, size_t pkt_len,
         fte::flow_t iflow[], fte::flow_t rflow[], fte::feature_state_t feature_state[])
 {
     temp_ep = ep;
     temp_ten = ten;
     temp_dep = dep;
+    if (souce_ip) {
+        sip = souce_ip->addr;
+    }
+    if (dest_ip) {
+        dip = dest_ip->addr;
+    }
     ctx.init(cpu_rxhdr, pkt, pkt_len, iflow, rflow, feature_state, 0);
 }
 
 hal_ret_t fte::ctx_t::process()
 {
-    this->invoke_completion_handlers(false);
+    this->invoke_completion_handlers(true);
     return HAL_RET_OK;
 }
 

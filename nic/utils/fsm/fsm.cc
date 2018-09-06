@@ -21,12 +21,14 @@ fsm_transition_t::fsm_transition_t(uint32_t event, fsm_transition_func function,
  */
 fsm_state_machine_t::fsm_state_machine_t(get_sm_func sm_func, uint32_t init_state,
                                      uint32_t end_state, uint32_t timeout_event,
+                                     uint32_t remove_event,
                                      fsm_state_ctx ctx, get_timer_func timer_func) {
     this->sm_get_func_ = sm_func;
     this->current_state_ = init_state;
     this->init_state_ = init_state;
     this->end_state_ = end_state;
     this->timeout_event_ = timeout_event;
+    this->remove_event_ = remove_event;
     this->timeout_ = 0;
     this->cur_state_time_ctx_ = nullptr;
     this->timer_get_func_ = timer_func;
@@ -148,6 +150,8 @@ void fsm_state_machine_t::set_current_state_timeout(uint32_t timeout) {
 uint32_t fsm_state_machine_t::get_current_state_timeout() { return this->timeout_; }
 
 uint32_t fsm_state_machine_t::get_timeout_event() { return this->timeout_event_; }
+
+uint32_t fsm_state_machine_t::get_remove_event() { return this->remove_event_; }
 
 void fsm_state_machine_t::throw_event(uint32_t event, fsm_event_data data) {
     assert(!this->_next_event_set());

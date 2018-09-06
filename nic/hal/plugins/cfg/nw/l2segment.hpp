@@ -51,10 +51,15 @@ typedef struct eplearn_dhcp_cfg_s {
     block_list *trusted_servers_list;
 } __PACK__  eplearn_dhcp_cfg_t;
 
+typedef struct eplearn_fmiss_cfg_s {
+    bool     enabled;
+} __PACK__ eplearn_fmiss_cfg_t;
+
 typedef struct eplearn_cfg_s {
     EpLearnType          learn_type;
     eplearn_dhcp_cfg_t   dhcp_cfg;
     eplearn_arp_cfg_t    arp_cfg;
+    eplearn_fmiss_cfg_t  fmiss_cfg;
 } __PACK__  eplearn_cfg_t;
 
 

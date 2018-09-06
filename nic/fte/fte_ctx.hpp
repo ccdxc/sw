@@ -576,6 +576,10 @@ public:
         return HAL_RET_OK;
     }
 
+    bool completion_handler_registered() {
+        return feature_state_[feature_id_].completion_handler != nullptr;
+    }
+
     bool flow_miss() const { return (arm_lifq_== FLOW_MISS_LIFQ); }
     bool app_redir_pipeline() const { return (arm_lifq_.lif == APP_REDIR_LIFQ.lif); }
     bool tcp_proxy_pipeline() const { return (arm_lifq_.lif == TCP_PROXY_LIFQ.lif); }

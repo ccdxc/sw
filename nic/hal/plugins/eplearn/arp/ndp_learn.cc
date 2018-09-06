@@ -106,10 +106,11 @@ ndp_process_entry(const unsigned char *ether_pkt,
     memcpy(&ip_addr.addr.v6_addr, ipv6_header->saddr, IP6_ADDR8_LEN);
 
     arp_trans_t::init_arp_trans_key(hw_address,
-                                    ctx.sep(), ARP_TRANS_IPV6, &trans_key);
+                                    ctx.sep(), ARP_TRANS_IPV6, &ip_addr,
+                                    &trans_key);
     trans = arp_trans_t::find_arptrans_by_id(trans_key);
     if (trans == NULL) {
-        trans = new arp_trans_t(hw_address, ARP_TRANS_IPV6, ctx);
+        trans = new arp_trans_t(&trans_key, ctx);
     }
     event_data.ip_addr = ip_addr;
     event_data.fte_ctx = &ctx;

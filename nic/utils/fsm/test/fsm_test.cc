@@ -25,6 +25,7 @@ using sdk::lib::twheel;
 
 
 #define TIMEOUT_EVENT 255
+#define REMOVE_EVENT 254
 
 class fsm_test : public ::testing::Test {
  protected:
@@ -78,7 +79,7 @@ TEST_F(fsm_test, fsm_init) {
         FSM_SM_END
     // clang-format on
         global_sm = &my_sm;
-        fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 2, TIMEOUT_EVENT);
+        fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 2, TIMEOUT_EVENT, REMOVE_EVENT);
         ASSERT_EQ(my_sm.size(), 2);
         ASSERT_EQ(sm.get_state(), STATE_ID_1);
         ASSERT_EQ(sm.get_def(), &my_sm);
@@ -100,7 +101,7 @@ TEST_F(fsm_test, fsm_one_transition) {
         FSM_SM_END
     // clang-format on
         global_sm = &my_sm;
-        fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 2, TIMEOUT_EVENT);
+        fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 2, TIMEOUT_EVENT, REMOVE_EVENT);
         sm.process_event(1, NULL);
         ASSERT_EQ(sm.get_state(), STATE_ID_2);
         EXPECT_EQ(results, std::vector<string>({"E1", "s1", "E2", "E3"}));
@@ -119,7 +120,7 @@ TEST_F(fsm_test, fsm_one_transition_fail) {
             FSM_STATE_END
         FSM_SM_END
         global_sm = &my_sm;
-        fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 3, TIMEOUT_EVENT);
+        fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 3, TIMEOUT_EVENT, REMOVE_EVENT);
         sm.process_event(1, NULL);
         ASSERT_EQ(sm.get_state(), STATE_ID_1);
         EXPECT_EQ(results, std::vector<string>({"s1"}));
@@ -137,7 +138,7 @@ TEST_F(fsm_test, fsm_one_transition_end) {
         FSM_SM_END
     // clang-format on
         global_sm = &my_sm;
-        fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 2, TIMEOUT_EVENT);
+        fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 2, TIMEOUT_EVENT, REMOVE_EVENT);
         sm.process_event(1, NULL);
         ASSERT_EQ(sm.get_state(), STATE_ID_2);
         EXPECT_EQ(results, std::vector<string>({"s1"}));
@@ -167,7 +168,7 @@ TEST_F(fsm_test, fsm_multiple_transitions) {
             // clang-format on
         global_sm = &my_sm;
         fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 4,
-                TIMEOUT_EVENT);
+                TIMEOUT_EVENT, REMOVE_EVENT);
         sm.process_event(1, NULL);
         sm.process_event(2, NULL);
         sm.process_event(3, NULL);
@@ -197,7 +198,7 @@ TEST_F(fsm_test, fsm_one_transition_with_throw) {
           // clang-format on
             global_sm = &my_sm;
         fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 2,
-                TIMEOUT_EVENT);
+                TIMEOUT_EVENT, REMOVE_EVENT);
           sm.process_event(1, NULL);
           ASSERT_EQ(sm.get_state(), STATE_ID_2);
           EXPECT_EQ(results, std::vector<string>({"E1", "s1", "E2", "E3"}));
@@ -301,7 +302,7 @@ class fsm_test_app : public ::testing::Test {
             this->sm = nullptr;
             // this->sm_def = NULL;
             this->sm = new fsm_state_machine_t(get_sm_func, STATE_ID_1,
-                    STATE_ID_4, TIMEOUT_EVENT, (fsm_state_ctx)this);
+                    STATE_ID_4, TIMEOUT_EVENT, REMOVE_EVENT, (fsm_state_ctx)this);
         }
 
 
@@ -416,7 +417,7 @@ TEST_F(fsm_test, fsm_test_timeout) {
         global_sm = &my_sm;
         global_timer = timer;
         fsm_state_machine_t sm = fsm_state_machine_t(get_sm_func, 1, 2,
-                TIMEOUT_EVENT, NULL, get_timer_func);
+                TIMEOUT_EVENT, REMOVE_EVENT, NULL, get_timer_func);
         sleep(1);
         timer->tick(1000 + 100);
         ASSERT_EQ(sm.get_state(), STATE_ID_2);

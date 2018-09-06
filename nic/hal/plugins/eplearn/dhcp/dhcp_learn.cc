@@ -6,6 +6,7 @@
 // clang-format off
 #include "dhcp_trans.hpp"
 #include "dhcp_packet.hpp"
+#include "nic/hal/plugins/eplearn/eplearn.hpp"
 #include "nic/include/pd_api.hpp"
 // clang-format on
 
@@ -17,17 +18,22 @@ namespace eplearn {
 static hal_ret_t get_dhcp_status(vrf_id_t vrf_id,
         ip_addr_t *ip_addr, DhcpStatus *dhcp_status);
 
-void dhcp_init()
-{
+static hal_ret_t
+dhcp_ip_move_handler(hal_handle_t ep_handle, const ip_addr_t *ip_addr) {
+    return dhcp_process_ip_move(ep_handle, ip_addr);
+}
+
+
+void dhcp_init() {
     dhcp_lib_init();
     register_dhcp_ep_status_callback(get_dhcp_status);
+    register_ip_move_check_handler(dhcp_ip_move_handler, DHCP_LEARN);
 }
 
 /*
  * Check whether we have to do DHCP based EP learning.
  */
-static bool is_dhcp_learning_required(fte::ctx_t &ctx)
-{
+static bool is_dhcp_learning_required(fte::ctx_t &ctx) {
     const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
     hal::pd::pd_get_object_from_flow_lkupid_args_t args;
     pd::pd_func_args_t pd_func_args = {0};
@@ -78,7 +84,6 @@ static hal_ret_t dhcp_process_request_internal(struct packet *decoded_packet,
     dhcp_trans_key_t trans_key;
     dhcp_event_data event_data;
 
-
     if (IS_CLIENT_EVENT(event) && !is_dhcp_learning_required(ctx)) {
         HAL_TRACE_INFO("Skipping DHCP EP learning.");
         goto out;
@@ -104,7 +109,7 @@ static hal_ret_t dhcp_process_request_internal(struct packet *decoded_packet,
     event_data.fte_ctx = &ctx;
     event_data.in_fte_pipeline = true;
     event_data.event = event;
-    dhcp_trans_t::process_transaction(trans, event,
+    dhcp_trans_t::process_learning_transaction(trans, ctx, event,
                                          (fsm_event_data)(&event_data));
 out:
     return HAL_RET_OK;

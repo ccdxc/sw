@@ -64,6 +64,7 @@ typedef struct arp_trans_key_s {
     vrf_id_t         vrf_id;    //tenant id
     l2seg_id_t       l2_segid;  // L2 segment id
     mac_addr_t       mac_addr;  // MAC address of the endpoint
+    ip_addr_t        ip_addr;  // IP address of the endpoint
     arp_trans_type_t type;      // IPv4 or IPv6 trans type
 
 } __PACK__ arp_trans_key_t;
@@ -72,7 +73,6 @@ struct arp_event_data_t {
     fte::ctx_t        *fte_ctx;
     hal_handle_t      ep_handle;
     ip_addr_t         ip_addr;
-    uint32_t          event;
     bool              in_fte_pipeline;
 };
 
@@ -160,7 +160,6 @@ private:
     }
     static fsm_timer_t *get_timer_func() { return arp_timer_; }
     void process_event(arp_fsm_event_t event, fsm_event_data data);
-    ep_t* get_ep_entry();
     void start_arp_timer();
     void stop_arp_timer();
 
@@ -169,7 +168,10 @@ private:
     void set_up_ip_entry_key(const ip_addr_t *ip_addr);
     bool protocol_address_match(const ip_addr_t *ip_addr);
     static void init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,
-                                   arp_trans_type_t type, arp_trans_key_t *trans_key);
+                                   arp_trans_type_t type, ip_addr_t *ip_addr,
+                                   arp_trans_key_t *trans_key);
+    ep_t* get_ep_entry();
+    static ht* get_ip_ht() { return arplearn_ip_entry_ht_;}
 
 
     static inline arp_trans_t *find_arptrans_by_id(arp_trans_key_t id) {
@@ -188,8 +190,7 @@ private:
 
     void *operator new(size_t size);
     void operator delete(void *p);
-    explicit arp_trans_t(const uint8_t *hw_address, arp_trans_type_t type,
-            fte::ctx_t &ctx);
+    explicit arp_trans_t(arp_trans_key_t *trans_key, fte::ctx_t &ctx);
     arp_fsm_state_t get_state();
     void reset();
 
@@ -222,6 +223,8 @@ bool arptrans_compare_key_func(void *key1, void *key2);
 void *arptrans_get_handle_key_func(void *entry);
 uint32_t arptrans_compute_handle_hash_func(void *key, uint32_t ht_size);
 bool arptrans_compare_handle_key_func(void *key1, void *key2);
+
+hal_ret_t arp_process_ip_move(hal_handle_t ep_handle, const ip_addr_t *ip_addr);
 
 }  // namespace eplearn
 }  // namespace hal

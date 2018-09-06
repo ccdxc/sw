@@ -58,7 +58,8 @@ hal_handle_t *dhcp_server_ep = &ep_handles[MAX_ENDPOINTS - 1];
 hal::pd::l2seg_hw_id_t lkup_vrf;
 
 void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
-        hal::ep_t *dep, fte::cpu_rxhdr_t *cpu_rxhdr,
+        hal::ep_t *dep, ip_addr_t *souce_ip, ip_addr_t *dest_ip,
+        fte::cpu_rxhdr_t *cpu_rxhdr,
         uint8_t *pkt, size_t pkt_len,
         fte::flow_t iflow[], fte::flow_t rflow[], fte::feature_state_t feature_state[]);
 
@@ -324,7 +325,8 @@ void dhcp_packet_send(hal_handle_t ep_handle,
     memset(&feature_state, 0, sizeof(feature_state));
     feature_state[fte::feature_id(FTE_FEATURE_EP_LEARN)].ctx_state = &info;
     fte_ctx_init(ctx, dummy_ten,
-            dummy_ep, dummy_ep, &cpu_hdr, &buffer[0], buffer.size(), NULL, NULL, feature_state);
+            dummy_ep, dummy_ep, NULL, NULL,
+            &cpu_hdr, &buffer[0], buffer.size(), NULL, NULL, feature_state);
     ctx.set_feature_name(FTE_FEATURE_EP_LEARN.c_str());
     hal_ret_t ret = dhcp_process_packet(ctx);
     ASSERT_EQ(ret, HAL_RET_OK);

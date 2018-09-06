@@ -21,6 +21,8 @@ namespace hal {
 
 dhcp_status_func_t dhcp_status_func = nullptr;
 arp_status_func_t arp_status_func = nullptr;
+/* For now just 1 cb */
+sessions_empty_cb_t sessions_empty_cb = nullptr;
 
 //-----------------------------------------------------------------------------
 // hash table l2key => ht_entry
@@ -1600,15 +1602,11 @@ endpoint_update_ip_op (ep_t *ep, ip_addr_t *ip_addr,
     ep_ipe = (ep_ip_entry_t *)g_hal_state->ep_ip_entry_slab()->alloc();
     HAL_ABORT(ep_ipe != NULL);
     memcpy(&ep_ipe->ip_addr, ip_addr, sizeof(ip_addr_t));
-    /*
-     * TODO: We have to check the source flags correctly.
-     * For instance, we can't just update the learn src flag blindly
-     * if we learn't if from config.
-     */
-    ep_ipe->ip_flags = learn_src_flag;
     sdk::lib::dllist_reset(&ep_ipe->ep_ip_lentry);
+
     if (op == IP_UPDATE_OP_ADD) {
         sdk::lib::dllist_add(add_iplist, &ep_ipe->ep_ip_lentry);
+        ep_ipe->ip_flags |= learn_src_flag;
         ep_ipe->pd = NULL;
     } else if (op == IP_UPDATE_OP_DELETE) {
         sdk::lib::dllist_add(del_iplist, &ep_ipe->ep_ip_lentry);
@@ -1619,6 +1617,12 @@ endpoint_update_ip_op (ep_t *ep, ip_addr_t *ip_addr,
                     /* If learn source is different, don't delete it */
                     goto out;
                 }
+                if ((pi_ip_entry->ip_flags & ~learn_src_flag))  {
+                    /* Not all flags are cleared, just clear this src flag and exit */
+                    pi_ip_entry->ip_flags =  pi_ip_entry->ip_flags & ~learn_src_flag;
+                    goto out;
+                }
+                ep_ipe->ip_flags = pi_ip_entry->ip_flags & ~learn_src_flag;
                 ep_ipe->pd = pi_ip_entry->pd;
                 break;
             }
@@ -2554,6 +2558,12 @@ ep_del_session (ep_t *ep, session_t *session)
                     "hdls: {} => {}, ret:{}",
                     ep_l2_key_to_str(ep), session->config.session_id,
                     ep->hal_handle, session->hal_handle, ret);
+    /* For now calling empty callback only if all sessions are deleted
+     * Might not be the case as some IPs sessions might be cleared up earlier.
+     */
+    if (dllist_empty(&ep->session_list_head)) {
+        sessions_empty_cb(ep);
+    }
     return ret;
 }
 
@@ -2567,6 +2577,16 @@ register_dhcp_ep_status_callback (dhcp_status_func_t func)
 void
 register_arp_ep_status_callback (arp_status_func_t func)
 {
+    arp_status_func = func;
+}
+
+void
+register_sessions_empty_callback(sessions_empty_cb_t func) {
+    sessions_empty_cb = func;
+}
+
+void
+register_session_clear_callback (arp_status_func_t func) {
     arp_status_func = func;
 }
 

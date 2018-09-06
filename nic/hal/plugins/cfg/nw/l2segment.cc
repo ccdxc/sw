@@ -2551,6 +2551,13 @@ l2seg_ep_learning_update (l2seg_t *l2seg, const L2SegmentSpec& spec)
                 l2seg->eplearn_cfg.dhcp_cfg.enabled = true;
             }
         }
+        if (spec.eplearn_cfg().has_fmiss()) {
+            if (spec.eplearn_cfg().fmiss().enabled()) {
+                l2seg->eplearn_cfg.fmiss_cfg.enabled = true;
+            } else {
+                l2seg->eplearn_cfg.fmiss_cfg.enabled = true;
+            }
+        }
     }
 }
 

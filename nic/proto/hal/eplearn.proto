@@ -23,11 +23,18 @@ message EplearnArpCfg {
     uint32  entry_timeout        = 1;  // how long arp entry is valid.
 }
 
+
+// Arp/Ndp Cfg
+message EplearnFlowMissCfg {
+    bool   enabled       = 1;  // Learn from flow miss packets.
+}
+
 message EplearnCfg {
   EpLearnType                  learn_type              = 1; // Eplearn type
   bool                         drop_on_static_misatch  = 2; // Drop if static IP mismatch.
   EplearnArpCfg                arp                     = 3;
   EplearnDhcpCfg               dhcp                    = 4;
+  EplearnFlowMissCfg		   fmiss				   = 5;
 }
 
 message ArpStats {

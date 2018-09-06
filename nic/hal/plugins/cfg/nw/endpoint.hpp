@@ -56,6 +56,7 @@ namespace hal {
 #define EP_FLAGS_LEARN_SRC_ARP                       0x8
 #define EP_FLAGS_LEARN_SRC_RARP                      0x10
 #define EP_FLAGS_LEARN_SRC_CFG                       0x20
+#define EP_FLAGS_LEARN_SRC_FLOW_MISS                 0x40
 
 #define MAX_SG_PER_ARRAY                             0x10 //16
 
@@ -80,6 +81,7 @@ typedef struct ep_l3_key_s {
 typedef struct ep_ip_entry_s {
     ip_addr_t            ip_addr;             // IP address of the endpoint
     uint64_t             ip_flags;            // IP flags
+    uint64_t             cur_ip_flags;        // IP flags which are active now.
 
     // PD state
     pd::pd_ep_ip_entry_t *pd;                 // all PD specific state
@@ -180,6 +182,7 @@ ep_unlock (ep_t *ep, const char *fname,
     HAL_SPINLOCK_UNLOCK(&ep->slock);
 }
 
+typedef void (*sessions_empty_cb_t)(const ep_t *ep);
 extern void *ep_get_l2_key_func(void *entry);
 extern uint32_t ep_compute_l2_hash_func(void *key, uint32_t ht_size);
 extern bool ep_compare_l2_key_func(void *key1, void *key2);
@@ -234,6 +237,7 @@ uint32_t ep_restore_cb(void *obj, uint32_t len);
 
 void register_dhcp_ep_status_callback(dhcp_status_func_t func);
 void register_arp_ep_status_callback(arp_status_func_t func);
+void register_sessions_empty_callback(sessions_empty_cb_t func);
 
 
 // Filter APIs

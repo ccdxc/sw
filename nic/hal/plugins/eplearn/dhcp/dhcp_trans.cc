@@ -67,14 +67,14 @@ ht *dhcp_trans_t::dhcplearn_ip_entry_ht_ =
 #define SELECTING_TIMEOUT   120 * TIME_MSECS_PER_SEC
 #define REQUESTING_TIMEOUT  120 * TIME_MSECS_PER_SEC
 
-#define ADD_COMPLETION_HANDLER(__trans, __event, __ep_handle, __new_ip_addr)           \
-    uint32_t __trans_cnt = eplearn_info->trans_ctx_cnt;                                \
-    eplearn_info->trans_ctx[__trans_cnt].trans = __trans;                              \
-    eplearn_info->trans_ctx[__trans_cnt].dhcp_data.event = __event;                    \
-    eplearn_info->trans_ctx[__trans_cnt].dhcp_data.ep_handle = (__ep_handle);          \
-    eplearn_info->trans_ctx[__trans_cnt].dhcp_data.new_ip_addr =  (__new_ip_addr);     \
-    eplearn_info->trans_ctx_cnt++;                                                     \
-    fte_ctx->register_completion_handler(dhcp_completion_hdlr);
+#define ADD_COMPLETION_HANDLER(__trans, __event, __ep_handle, __new_ip_addr)                 \
+    uint32_t __trans_cnt = eplearn_info->trans_ctx_cnt;                                      \
+    eplearn_info->trans_ctx[__trans_cnt].trans = __trans;                                    \
+    eplearn_info->trans_ctx[__trans_cnt].event = __event;                                    \
+    eplearn_info->trans_ctx[__trans_cnt].event_data.dhcp_data.ep_handle = (__ep_handle);     \
+    eplearn_info->trans_ctx[__trans_cnt].event_data.dhcp_data.new_ip_addr =  (__new_ip_addr); \
+    eplearn_info->trans_ctx_cnt++;                                                             \
+    fte_ctx->register_completion_handler(trans_t::trans_completion_handler);
 
 
 // clang-format off
@@ -126,6 +126,7 @@ void dhcp_trans_t::dhcp_fsm_t::_init_state_machine() {
             FSM_TRANSITION(DHCP_REBIND, NULL, DHCP_REBINDING)
             FSM_TRANSITION(DHCP_INFORM, SM_FUNC(process_dhcp_inform), DHCP_BOUND)
             FSM_TRANSITION(DHCP_IP_ADD, SM_FUNC(add_ip_entry), DHCP_BOUND)
+            FSM_TRANSITION(DHCP_ERROR, SM_FUNC(process_dhcp_end), DHCP_DONE)
             FSM_TRANSITION(DHCP_DECLINE, SM_FUNC(process_dhcp_end), DHCP_DONE)
             FSM_TRANSITION(DHCP_RELEASE, SM_FUNC(process_dhcp_end), DHCP_DONE)
             FSM_TRANSITION(DHCP_INVALID_PACKET, SM_FUNC(process_dhcp_end), DHCP_DONE)
@@ -145,28 +146,6 @@ static void lease_timeout_handler(void *timer, uint32_t timer_id, void *ctxt) {
     trans_t* trans =
         reinterpret_cast<trans_t*>(sm_->get_ctx());
     trans_t::process_transaction(trans, DHCP_LEASE_TIMEOUT, NULL);
-}
-
-static void dhcp_completion_hdlr (fte::ctx_t& ctx, bool status) {
-    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
-                ctx.feature_state(FTE_FEATURE_EP_LEARN);
-
-    dhcp_event_data event_data = { 0 };
-
-    for (uint32_t i = 0; i < eplearn_info->trans_ctx_cnt; i++) {
-        event_data.fte_ctx = &ctx;
-        event_data.ep_handle =
-                eplearn_info->trans_ctx[i].dhcp_data.ep_handle;
-        event_data.in_fte_pipeline = false;
-        event_data.decoded_packet =
-                eplearn_info->trans_ctx[i].dhcp_data.decoded_packet;
-        event_data.new_ip_addr = eplearn_info->trans_ctx[i].dhcp_data.new_ip_addr;
-
-        eplearn_info->trans_ctx[i].trans->log_info("Executing completion handler ");
-        dhcp_trans_t::process_transaction(eplearn_info->trans_ctx[i].trans,
-                eplearn_info->trans_ctx[i].dhcp_data.event,
-                (fsm_event_data)(&event_data));
-    }
 }
 
 static hal_ret_t
@@ -191,14 +170,6 @@ update_flow_fwding(fte::ctx_t *fte_ctx)
         goto out;
     }
 
-#if 0
-#if 0
-    dl2seg =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
-#endif
-    args.hwid = cpu_rxhdr_->lkp_vrf;
-    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_FIND_L2SEG_BY_HWID, (void *)&args);
-    dl2seg = args.l2seg;
-#endif
     args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
@@ -380,15 +351,18 @@ out:
 bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_end(fsm_state_ctx ctx,
                                                 fsm_event_data fsm_data) {
     dhcp_event_data *data = reinterpret_cast<dhcp_event_data*>(fsm_data);
-    fte::ctx_t *fte_ctx = data->fte_ctx;
+    fte::ctx_t *fte_ctx;
     dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
-    ep_t *ep_entry = fte_ctx->sep();
-    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
-                fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
+    ep_t *ep_entry;
+    eplearn_info_t *eplearn_info;
     ip_addr_t ip_addr = {0};
     bool rc = true;
 
     if (data->in_fte_pipeline) {
+        fte_ctx = data->fte_ctx;
+        ep_entry = fte_ctx->sep();
+        eplearn_info = (eplearn_info_t*)\
+                        fte_ctx->feature_state(FTE_FEATURE_EP_LEARN);
         ADD_COMPLETION_HANDLER(dhcp_trans, data->event,
                 ep_entry->hal_handle, ip_addr);
         rc = false;
@@ -495,16 +469,25 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_offer(fsm_state_ctx ctx,
 }
 
 bool dhcp_trans_t::dhcp_fsm_t::add_ip_entry(fsm_state_ctx ctx,
-                                          fsm_event_data fsm_data)
-{
+                                          fsm_event_data fsm_data) {
     dhcp_trans_t *dhcp_trans = reinterpret_cast<dhcp_trans_t *>(ctx);
     dhcp_event_data *data = reinterpret_cast<dhcp_event_data*>(fsm_data);
-    ep_t *ep_entry = find_ep_by_handle(data->ep_handle);
     hal_ret_t ret;
     bool rc = true;
     ip_addr_t zero_ip = { 0 };
 
 
+    ret = eplearn_ip_move_process(data->ep_handle,
+            &dhcp_trans->ip_entry_key_ptr()->ip_addr, DHCP_LEARN);
+
+    if (ret != HAL_RET_OK) {
+        dhcp_trans->log_error("IP move process failed, skipping IP add.");
+        dhcp_trans->sm_->throw_event(DHCP_ERROR, NULL);
+       return false;
+    }
+
+    /* Do a re-lookup as EP entry would have changed */
+    ep_t *ep_entry = find_ep_by_handle(data->ep_handle);
     if ((memcmp(&(dhcp_trans->ip_entry_key_ptr()->ip_addr),
             &zero_ip, sizeof(ip_addr_t))) &&
         (memcmp(&(dhcp_trans->ip_entry_key_ptr()->ip_addr),
@@ -687,8 +670,8 @@ void dhcp_trans_t::dhcp_fsm_t::bound_entry_func(fsm_state_ctx ctx) {
 dhcp_trans_t::dhcp_trans_t(struct packet *dhcp_packet, fte::ctx_t &ctx) {
     this->ctx_.init(dhcp_packet);
     this->sm_ = new fsm_state_machine_t(get_sm_def_func, DHCP_INIT, DHCP_DONE,
-                                      DHCP_TIMEOUT, (fsm_state_ctx)this,
-                                      get_timer_func);
+                                      DHCP_TIMEOUT, DHCP_REMOVE,
+                                      (fsm_state_ctx)this, get_timer_func);
     init_dhcp_trans_key(dhcp_packet->raw->chaddr, this->ctx_.xid_,
                         ctx.sep(), &this->trans_key_);
 }
@@ -716,6 +699,14 @@ dhcp_trans_t::~dhcp_trans_t() {
     this->reset();
     delete this->sm_;
 }
+
+hal_ret_t
+dhcp_process_ip_move(hal_handle_t ep_handle, const ip_addr_t *ip_addr) {
+
+    return dhcp_trans_t::process_ip_move(ep_handle, ip_addr,
+            dhcp_trans_t::get_ip_ht());
+}
+
 
 }  // namespace eplearn
 }  // namespace hal

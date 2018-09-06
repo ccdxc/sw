@@ -20,6 +20,8 @@ using namespace hal;
 namespace hal {
 namespace eplearn {
 
+#define TRANS_NOP_EVENT UINT32_MAX
+
 typedef struct trans_ip_entry_key_s {
     vrf_id_t vrf_id;    // VRF id
     ip_addr_t ip_addr;  // IP address of the endpoint
@@ -105,6 +107,44 @@ public:
         }
         HAL_SPINLOCK_UNLOCK(&trans->slock_);
     }
+
+    static void process_learning_transaction(trans_t *trans, fte::ctx_t &ctx, uint32_t event,
+                fsm_event_data data);
+    static void trans_completion_handler(fte::ctx_t& ctx, bool status);
+
+    static hal_ret_t process_ip_move(hal_handle_t ep_handle, const ip_addr_t *ip_addr,
+             ht *ip_ht) {
+
+        ip_addr_t ep_ip_addr = {0};
+        vrf_t *vrf;
+        ep_t *ep_entry = find_ep_by_handle(ep_handle);
+        trans_ip_entry_key_t ip_entry_key;
+
+        if (ep_entry == nullptr) {
+            return HAL_RET_EP_NOT_FOUND;
+        }
+
+        vrf = vrf_lookup_by_handle(ep_entry->vrf_handle);
+        if (vrf == NULL) {
+            HAL_ABORT(0);
+        }
+
+        memcpy(&ep_ip_addr, ip_addr, sizeof(ip_addr_t));
+        init_ip_entry_key(ip_addr, vrf->vrf_id, &ip_entry_key);
+
+        trans_t *other_trans = reinterpret_cast<trans_t *>(ip_ht->lookup(&ip_entry_key));
+
+
+        /* Initiate delete of the transaction only if EP is different */
+        if (other_trans != nullptr && (other_trans->get_ep_entry() != ep_entry)) {
+            other_trans->log_error("Initiating transaction delete as part of IP move.");
+            process_transaction(other_trans, other_trans->sm_->get_remove_event(), NULL);
+        }
+
+        return HAL_RET_OK;
+    }
+
+
     bool transaction_completed() { return sm_->state_machine_competed(); }
 
     uint32_t get_current_state_timeout() {
@@ -151,6 +191,10 @@ public:
         *ip_entry_key = {0};
         memcpy(&ip_entry_key->ip_addr, ip_addr, sizeof(ip_addr_t));
         ip_entry_key->vrf_id = vrf_id;
+    }
+
+    bool trans_marked_for_delete() {
+        return this->marked_for_delete_;
     }
 
 };

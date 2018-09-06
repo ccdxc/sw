@@ -4,7 +4,7 @@ feature:
     sub      : e2e_dhcp
     package  : test.e2e_learn.dhcp
     module   : dhcp_ignore
-    runorder : 2
+    runorder : 3
     enable   : True
     ignore   : False
     rtl      : False

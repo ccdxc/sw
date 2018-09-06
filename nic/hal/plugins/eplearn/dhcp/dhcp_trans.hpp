@@ -86,8 +86,9 @@ static std::map<dhcp_fsm_state_t, DhcpTransactionState> dhcp_trans_state_map = {
     ENTRY(DHCP_ERROR,          11, "DHCP_ERROR")            \
     ENTRY(DHCP_TIMEOUT,        12, "DHCP_TIMEOUT")          \
     ENTRY(DHCP_IP_ADD,         13, "DHCP_IP_ADD")           \
-    ENTRY(DHCP_REMOVE,         14, "DHCP_REMOVE")           \
-    ENTRY(DHCP_LEASE_TIMEOUT,  15, "DHCP_LEASE_TIMEOUT")    \
+    ENTRY(DHCP_NOP,            14,  "DHCP_NOP")             \
+    ENTRY(DHCP_REMOVE,         15, "DHCP_REMOVE")           \
+    ENTRY(DHCP_LEASE_TIMEOUT,  16, "DHCP_LEASE_TIMEOUT")    \
 
 DEFINE_ENUM(dhcp_fsm_event_t, DHCP_FSM_EVENT_ENTRIES)
 
@@ -114,8 +115,8 @@ struct dhcp_event_data {
     const struct packet *decoded_packet;
     fte::ctx_t          *fte_ctx;
     hal_handle_t         ep_handle;
-    uint32_t             event;
     ip_addr_t            new_ip_addr;
+    uint32_t             event;
     bool                 in_fte_pipeline;
 };
 
@@ -205,6 +206,7 @@ private:
     void operator delete(void* p) { dhcp_trans_free((dhcp_trans_t*)p); }
     void reset();
     dhcp_ctx* get_dhcp_ctx(void) { return &this->ctx_ ; };
+    static ht* get_ip_ht() { return dhcplearn_ip_entry_ht_;}
 
     void start_lease_timer();
     void stop_lease_timer();
@@ -262,6 +264,8 @@ bool dhcptrans_compare_key_func(void* key1, void* key2);
 void* dhcptrans_get_handle_key_func(void* entry);
 uint32_t dhcptrans_compute_handle_hash_func(void* key, uint32_t ht_size);
 bool dhcptrans_compare_handle_key_func(void* key1, void* key2);
+
+hal_ret_t dhcp_process_ip_move(hal_handle_t ep_handle, const ip_addr_t *ip_addr);
 
 }  // namespace eplearn
 }  // namespace hal

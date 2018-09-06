@@ -5,11 +5,20 @@
 #ifndef HAL_PLUGINS_EPLEARN_EPLEARN_HPP_
 #define HAL_PLUGINS_EPLEARN_EPLEARN_HPP_
 #include "common/trans.hpp"
+#include "flow_miss/fmiss_learn_trans.hpp"
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_trans.hpp"
 #include "nic/hal/plugins/eplearn/arp/arp_trans.hpp"
 
 namespace hal {
 namespace eplearn {
+
+
+enum ep_learn_type_t {
+    ARP_LEARN,
+    DHCP_LEARN,
+    FMISS_LEARN,
+    EP_LEARN_MAX,
+};
 
 #define EPLEARN_TRANS_CTX_MAX 2
 
@@ -17,10 +26,12 @@ const std::string FTE_FEATURE_EP_LEARN("pensando.io/eplearn:eplearn");
 
 typedef struct eplearn_trans_ctx_s {
     trans_t       *trans; /* Transaction that has to be processed */
+    uint32_t       event;
     union {
         dhcp_event_data  dhcp_data;
         arp_event_data_t arp_data;
-    };
+        fmiss_learn_event_data_t fmiss_learn_data;
+    }event_data;
 } eplearn_trans_ctx_t;
 
 typedef struct eplearn_info_s {
@@ -39,6 +50,16 @@ is_broadcast(fte::ctx_t &ctx) {
     }
     return true;
 }
+
+/* Callback type registered by each ep learning type to check whether to delete learn't IP */
+typedef hal_ret_t (*ip_move_check_handler)(hal_handle_t ep_handle, const ip_addr_t *ip_addr);
+
+void register_ip_move_check_handler(ip_move_check_handler handler, ep_learn_type_t type);
+
+hal_ret_t
+eplearn_ip_move_process(hal_handle_t ep_handle, const ip_addr_t *ip_addr,
+        ep_learn_type_t type);
+
 
 }
 }

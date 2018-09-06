@@ -80,6 +80,8 @@ void arp_trans_t::arp_fsm_t::_init_state_machine() {
                            ARP_BOUND)
             FSM_TRANSITION(ARP_IP_ADD, SM_FUNC(add_ip_entry), ARP_BOUND)
             FSM_TRANSITION(ARP_TIMEOUT, SM_FUNC(process_arp_timeout), ARP_DONE)
+            FSM_TRANSITION(ARP_ERROR, NULL, ARP_DONE)
+            FSM_TRANSITION(ARP_DUPLICATE, NULL, ARP_DONE)
             FSM_TRANSITION(ARP_REMOVE, NULL, ARP_DONE)
         FSM_STATE_END
         FSM_STATE_BEGIN(ARP_DONE, 0, NULL, NULL)
@@ -99,33 +101,15 @@ static void arp_timeout_handler(void *timer, uint32_t timer_id, void *ctxt) {
     trans_t::process_transaction(trans, ARP_TIMEOUT, NULL);
 }
 
-#define ADD_COMPLETION_HANDLER(__trans, __event, __ep_handle, __ip_addr)     \
-    uint32_t __trans_cnt = eplearn_info->trans_ctx_cnt;                      \
-    eplearn_info->trans_ctx[__trans_cnt].trans = __trans;                    \
-    eplearn_info->trans_ctx[__trans_cnt].arp_data.event = __event;           \
-    eplearn_info->trans_ctx[__trans_cnt].arp_data.ep_handle = (__ep_handle); \
-    eplearn_info->trans_ctx[__trans_cnt].arp_data.ip_addr =  (__ip_addr);    \
-    eplearn_info->trans_ctx_cnt++;                                           \
-    fte_ctx->register_completion_handler(arp_completion_hdlr);
-
-static void arp_completion_hdlr (fte::ctx_t& ctx, bool status) {
-    eplearn_info_t *eplearn_info = (eplearn_info_t*)\
-                ctx.feature_state(FTE_FEATURE_EP_LEARN);
-
-    arp_event_data_t event_data = { 0 };
-
-    for (uint32_t i = 0; i < eplearn_info->trans_ctx_cnt; i++) {
-        event_data.fte_ctx = &ctx;
-        event_data.ep_handle = eplearn_info->trans_ctx[i].arp_data.ep_handle;
-        event_data.in_fte_pipeline = false;
-        event_data.ip_addr = eplearn_info->trans_ctx[i].arp_data.ip_addr;
-
-        eplearn_info->trans_ctx[i].trans->log_info("Executing completion handler ");
-        arp_trans_t::process_transaction(eplearn_info->trans_ctx[i].trans,
-                eplearn_info->trans_ctx[i].arp_data.event,
-                (fsm_event_data)(&event_data));
-    }
-}
+#define ADD_COMPLETION_HANDLER(__trans, __event, __ep_handle, __ip_addr)               \
+    uint32_t __trans_cnt = eplearn_info->trans_ctx_cnt;                                \
+    eplearn_info->trans_ctx[__trans_cnt].trans = __trans;                              \
+    eplearn_info->trans_ctx[__trans_cnt].event = __event;                              \
+    eplearn_info->trans_ctx[__trans_cnt].event_data.arp_data.ep_handle = (__ep_handle); \
+    eplearn_info->trans_ctx[__trans_cnt].event_data.arp_data.ip_addr =  (__ip_addr);    \
+    eplearn_info->trans_ctx[__trans_cnt].event_data.arp_data.in_fte_pipeline = false;   \
+    eplearn_info->trans_ctx_cnt++;                                                      \
+    fte_ctx->register_completion_handler(trans_t::trans_completion_handler);
 
 ep_t* arp_trans_t::get_ep_entry() {
     ep_t *other_ep_entry = NULL;
@@ -146,8 +130,17 @@ bool arp_trans_t::arp_fsm_t::add_ip_entry(fsm_state_ctx ctx,
     arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
     arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
     hal_ret_t ret;
-    ep_t *ep_entry = find_ep_by_handle(data->ep_handle);
 
+    ret = eplearn_ip_move_process(data->ep_handle,
+            &trans->ip_entry_key_ptr()->ip_addr, ARP_LEARN);
+
+    if (ret != HAL_RET_OK) {
+       trans->log_error("IP move process failed, skipping IP add.");
+       trans->sm_->throw_event(ARP_ERROR, NULL);
+       return false;
+    }
+
+    ep_t *ep_entry = find_ep_by_handle(data->ep_handle);
     trans->log_info("Trying to add IP to EP entry.");
     ret = endpoint_update_ip_add(ep_entry,
             &trans->ip_entry_key_ptr()->ip_addr, EP_FLAGS_LEARN_SRC_ARP);
@@ -372,13 +365,13 @@ void arp_trans_t::operator delete(void *p) {
     arp_trans_free(trans);
 }
 
-arp_trans_t::arp_trans_t(const uint8_t *hw_address,
-        arp_trans_type_t type, fte::ctx_t &ctx) {
-    memcpy(this->hw_addr_, hw_address, sizeof(this->hw_addr_));
-    init_arp_trans_key(hw_address, ctx.sep(), type, &this->trans_key_);
+arp_trans_t::arp_trans_t(arp_trans_key_t *trans_key, fte::ctx_t &ctx) {
+    memcpy(&this->trans_key_, trans_key, sizeof(arp_trans_key_t));
     this->sm_ = new fsm_state_machine_t(get_sm_def_func, ARP_INIT, ARP_DONE,
-                                        ARP_TIMEOUT, (fsm_state_ctx)this,
+                                        ARP_TIMEOUT, ARP_REMOVE,
+                                        (fsm_state_ctx)this,
                                         get_timer_func);
+    this->arp_timer_ctx = nullptr;
     this->ht_ctxt_.reset();
     this->ip_entry_ht_ctxt_.reset();
 }
@@ -448,7 +441,8 @@ void arp_trans_t::stop_arp_timer() {
 }
 
 void arp_trans_t::init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,
-                                     arp_trans_type_t type, arp_trans_key_t *trans_key) {
+                                     arp_trans_type_t type, ip_addr_t *ip_addr,
+                                     arp_trans_key_t *trans_key) {
     for (uint32_t i = 0; i < ETHER_ADDR_LEN; ++i) {
         trans_key->mac_addr[i] = (uint8_t)hw_addr[i];
     }
@@ -458,11 +452,20 @@ void arp_trans_t::init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,
         HAL_ABORT(0);
     }
     trans_key->vrf_id = vrf->vrf_id;
+    trans_key->ip_addr = *ip_addr;
     trans_key->type = type;
 }
 
 arp_fsm_state_t arp_trans_t::get_state() {
     return (arp_fsm_state_t)this->sm_->get_state();
+}
+
+
+hal_ret_t
+arp_process_ip_move(hal_handle_t ep_handle, const ip_addr_t *ip_addr) {
+
+    return arp_trans_t::process_ip_move(ep_handle, ip_addr,
+            arp_trans_t::get_ip_ht());
 }
 
 }  // namespace eplearn

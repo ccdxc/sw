@@ -4,6 +4,8 @@
 
 #include "nic/fte/fte.hpp"
 #include "nic/hal/plugins/eplearn/eplearn.hpp"
+
+#include "flow_miss/fmiss_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/arp_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/ndp_learn.hpp"
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_learn.hpp"
@@ -12,12 +14,27 @@
 namespace hal {
 namespace eplearn {
 
+
+
+ip_move_check_handler ip_move_handlers[EP_LEARN_MAX];
+
 static bool
 is_arp_ep_learning_enabled(fte::ctx_t &ctx)
 {
     hal::l2seg_t *src_l2seg = ctx.sl2seg();
 
     if (src_l2seg != nullptr && src_l2seg->eplearn_cfg.arp_cfg.enabled) {
+        return true;
+    }
+    return false;
+}
+
+static bool
+is_fmiss_ep_learning_enabled(fte::ctx_t &ctx)
+{
+    hal::l2seg_t *src_l2seg = ctx.sl2seg();
+
+    if (src_l2seg != nullptr && src_l2seg->eplearn_cfg.fmiss_cfg.enabled) {
         return true;
     }
     return false;
@@ -35,11 +52,10 @@ is_dhcp_ep_learning_enabled(fte::ctx_t &ctx)
     return false;
 }
 
-
 /*
- * Check whether we have to do ARP based EP learning.
+ * Check whether packet is host originated for learing based on ARP and flow miss
  */
-static bool is_arp_learning_required(fte::ctx_t &ctx)
+static bool is_host_originated_packet(fte::ctx_t &ctx)
 {
     const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
     hal::pd::pd_get_object_from_flow_lkupid_args_t args;
@@ -113,7 +129,8 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
                 return fte::PIPELINE_END;
             }
     } else if (is_arp_flow(&ctx.key())) {
-        if (is_arp_learning_required(ctx)) {
+        if (is_host_originated_packet(ctx) &&
+                is_arp_ep_learning_enabled(ctx)) {
             HAL_TRACE_INFO("EP_LEARN : ARP packet processing...");
             ret = arp_process_packet(ctx);
             if (ret != HAL_RET_OK) {
@@ -124,7 +141,7 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
         }
         ctx.set_valid_rflow(false);
     } else if (is_neighbor_discovery_flow(&ctx.key()) &&
-            is_arp_learning_required(ctx)) {
+            is_arp_ep_learning_enabled(ctx)) {
         HAL_TRACE_INFO("EP_LEARN : NDP packet processing...");
         ret = neighbor_disc_process_packet(ctx);
         if (ret != HAL_RET_OK) {
@@ -132,9 +149,44 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
             ctx.set_feature_status(ret);
             ctx.update_flow(flowupd, FLOW_ROLE_INITIATOR);
         }
+    } else if (is_host_originated_packet(ctx) &&
+            is_fmiss_ep_learning_enabled(ctx) &&
+            flow_miss_learning_required(ctx)) {
+            HAL_TRACE_INFO("EP_LEARN : Flow miss packet processing...");
+        ret = flow_miss_process_packet(ctx);
+        if (ret != HAL_RET_OK) {
+            ctx.set_feature_status(ret);
+            HAL_TRACE_ERR("Error in processing flow miss packet.")
+        }
     }
 
     return fte::PIPELINE_CONTINUE;
+}
+
+
+void
+register_ip_move_check_handler(ip_move_check_handler handler,
+        ep_learn_type_t type) {
+    ip_move_handlers[type] = handler;
+}
+
+hal_ret_t
+eplearn_ip_move_process(hal_handle_t ep_handle, const ip_addr_t *ip_addr,
+        ep_learn_type_t type) {
+
+    hal_ret_t ret;
+
+    for (int i = 0; i < EP_LEARN_MAX; i++) {
+        if (i != type && ip_move_handlers[i] != nullptr) {
+            ret = ip_move_handlers[i](ep_handle, ip_addr);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("IP move handler failed!");
+                return ret;
+            }
+        }
+    }
+
+    return HAL_RET_OK;
 }
 
 }

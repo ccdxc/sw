@@ -1,0 +1,23 @@
+# Feature Test Modules List
+feature:
+    id       : e2e_learn
+    sub      : e2e_flow_miss_learn
+    package  : test.e2e_learn.flow_miss_learn
+    module   : flow_miss_learn
+    runorder : 1
+    enable   : False
+    ignore   : False
+    rtl      : False
+    args     :
+
+modules:
+    - module:
+        name    : FLOW_MISS_LEARN_LOCAL_LOCAL
+        spec    : flow_miss_learn_ping.testspec
+        selectors :
+              src_endpoints :
+                    type : filter://remote=False
+                    max  : 1
+              dst_endpoints : 
+                    type : filter://remote=False
+                    max  : 1                                                                       
