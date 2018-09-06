@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
 
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -19,11 +20,13 @@ var rootCmd = &cobra.Command{
 	Short:             "Pensando CLIs",
 	Long:              "\n--------------------------\n Pensando Management CLIs \n--------------------------\n",
 	PersistentPreRunE: pickNetwork,
+	DisableAutoGenTag: true,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	genDocs()
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -52,4 +55,36 @@ func init() {
 // NewPenctlCommand exports the rootCmd for bash-completion
 func NewPenctlCommand() *cobra.Command {
 	return rootCmd
+}
+
+func genMarkdownDocs() {
+	err := doc.GenMarkdownTree(rootCmd, "./docs/markdown/")
+	if err != nil && verbose {
+		fmt.Println(err)
+	}
+}
+
+func genRestTreeDocs() {
+	err := doc.GenReSTTree(rootCmd, "./docs/rest/")
+	if err != nil && verbose {
+		fmt.Println(err)
+	}
+}
+
+func genManTreeDocs() {
+	header := &doc.GenManHeader{
+		Title:   "MINE",
+		Section: "3",
+	}
+	err := doc.GenManTree(rootCmd, header, "./docs/man/")
+
+	if err != nil && verbose {
+		fmt.Println(err)
+	}
+}
+
+func genDocs() {
+	genManTreeDocs()
+	genMarkdownDocs()
+	genRestTreeDocs()
 }

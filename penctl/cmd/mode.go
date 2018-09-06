@@ -110,9 +110,8 @@ func modeManagedCmdHandler(cmd *cobra.Command, args []string) {
 				fmt.Println("success")
 			}
 		} else {
-			if verbose {
-				fmt.Println("failed")
-			}
+			fmt.Println("Unable to set mode.")
+			fmt.Println("Error:", err.Error())
 		}
 	}
 }
