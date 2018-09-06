@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -28,7 +29,7 @@ var modeManagedCmd = &cobra.Command{
 var modeManagedShowCmd = &cobra.Command{
 	Use:   "detail",
 	Short: "Show mode of operation of Naples",
-	Long:  "Show mode of operation of Naples - host-managed vs venice-managed",
+	Long:  "\n-------------------------------------------------------------------\n Show mode of operation of Naples - host-managed vs venice-managed \n-------------------------------------------------------------------\n",
 	Run:   modeManagedShowCmdHandler,
 }
 
@@ -117,4 +118,17 @@ func modeManagedCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func modeManagedShowCmdHandler(cmd *cobra.Command, args []string) {
+	resp, err := restGet(9008, "api/v1/naples/")
+
+	if err != nil {
+		if verbose {
+			fmt.Println(err.Error())
+		}
+	}
+	naplesCfg := nmd.Naples{}
+	json.Unmarshal(resp, &naplesCfg)
+	fmt.Println("Mode:", nmd.NaplesMode_name[int32(naplesCfg.Spec.Mode)])
+	if verbose {
+		fmt.Printf("%+v\n", naplesCfg)
+	}
 }
