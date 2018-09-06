@@ -207,7 +207,7 @@ Eth::Eth(HalClient *hal_client, void *dev_spec)
     devcmd->signature = DEV_CMD_SIGNATURE;
     WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd));
 
-    NIC_LOG_INFO("lif{}: Devcmd PA {} DevcmdDB PA {}", info.hw_lif_id,
+    NIC_LOG_INFO("lif{}: Devcmd PA {:#x} DevcmdDB PA {:#x}", info.hw_lif_id,
            pci_resources.devcmdpa, pci_resources.devcmddbpa);
 
     if (spec->host_dev) {

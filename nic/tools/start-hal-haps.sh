@@ -27,7 +27,7 @@ while [ 1 ]
 do
     OUTPUT="$(tail $HAL_LOG_FILE 2>&1 | grep "gRPC server listening on")"
     if [[ ! -z "$OUTPUT" ]]; then
-	break
+        break
     fi
     sleep 3
 done
