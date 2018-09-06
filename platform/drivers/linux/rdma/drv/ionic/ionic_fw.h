@@ -667,8 +667,8 @@ static inline u32 ionic_v1_eqe_evt_qid(u32 evt)
 
 /* XXX to end of file: makeshift, will be removed */
 
-#define IONIC_NUM_RSQ_WQE         4
-#define IONIC_NUM_RRQ_WQE         4
+#define IONIC_NUM_RSQ_WQE         256
+#define IONIC_NUM_RRQ_WQE         256
 
 #define OP_TYPE_RDMA_OPER_WITH_IMM	16
 #define OP_TYPE_SEND_RCVD		17
