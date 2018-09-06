@@ -193,11 +193,13 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	err = ionic_lifs_register(ionic);
 	if (err) {
 		dev_err(dev, "Cannot register LIFs, aborting\n");
-		goto err_out_deinit_lifs;
+		goto err_out_unregister_lifs;
 	}
 
 	return 0;
 
+err_out_unregister_lifs:
+	ionic_lifs_unregister(ionic);
 err_out_deinit_lifs:
 	ionic_lifs_deinit(ionic);
 err_out_free_lifs:
