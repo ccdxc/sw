@@ -7,20 +7,17 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authn"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
@@ -35,6 +32,8 @@ const (
 )
 
 var (
+	logger = log.WithContext("Pkg", "authnmgr_test")
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "authnmgr_test"},
@@ -60,18 +59,14 @@ func TestMain(m *testing.M) {
 }
 
 func setup() {
-	// api server
-	apiSrv = createAPIServer(apisrvURL)
-	if apiSrv == nil {
-		panic("Unable to create API Server")
-	}
 	var err error
-	apiSrvAddr, err = apiSrv.GetAddr()
+	// api server
+	apiSrv, apiSrvAddr, err = serviceutils.StartAPIServer(apisrvURL, logger)
 	if err != nil {
-		panic("Unable to get API Server address")
+		panic("Unable to start API Server")
 	}
+
 	// api server client
-	logger := log.WithContext("Pkg", "authnmgr_test")
 	apicl, err = apiclient.NewGrpcAPIClient("authnmgr_test", apiSrvAddr, logger)
 	if err != nil {
 		panic("Error creating api client")
@@ -101,32 +96,6 @@ func shutdown() {
 	apiSrv.Stop()
 	// un-initialize authentication manager
 	authnmgr.Uninitialize()
-}
-
-func createAPIServer(url string) apiserver.Server {
-	logger := log.WithContext("Pkg", "authnmgr_test")
-
-	// api server config
-	sch := runtime.GetDefaultScheme()
-	apisrvConfig := apiserver.Config{
-		GrpcServerPort: url,
-		Logger:         logger,
-		Version:        "v1",
-		Scheme:         sch,
-		Kvstore: store.Config{
-			Type:    store.KVStoreTypeMemkv,
-			Servers: []string{""},
-			Codec:   runtime.NewJSONCodec(sch),
-		},
-		GetOverlay: cache.GetOverlay,
-		IsDryRun:   cache.IsDryRun,
-	}
-	// create api server
-	apiSrv := apisrvpkg.MustGetAPIServer()
-	go apiSrv.Run(apisrvConfig)
-	apiSrv.WaitRunning()
-
-	return apiSrv
 }
 
 // authenticationPoliciesData returns policies configured with Local and LDAP authenticators in different order

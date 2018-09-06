@@ -7,19 +7,15 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
-	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
@@ -30,6 +26,8 @@ const (
 )
 
 var (
+	logger = log.WithContext("Pkg", "authz_watcher_test")
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "authz_rbac_watcher_test"},
@@ -37,41 +35,6 @@ var (
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true})
 )
-
-func createAPIServer(url string) (apiserver.Server, string) {
-	logger := log.WithContext("Pkg", "authz_watcher_test")
-
-	// api server config
-	sch := runtime.GetDefaultScheme()
-	apisrvConfig := apiserver.Config{
-		GrpcServerPort: url,
-		Logger:         logger,
-		Version:        "v1",
-		Scheme:         sch,
-		Kvstore: store.Config{
-			Type:    store.KVStoreTypeMemkv,
-			Servers: []string{""},
-			Codec:   runtime.NewJSONCodec(sch),
-		},
-		GetOverlay: cache.GetOverlay,
-		IsDryRun:   cache.IsDryRun,
-	}
-	// create api server
-	apiSrv := apisrvpkg.MustGetAPIServer()
-	go apiSrv.Run(apisrvConfig)
-	apiSrv.WaitRunning()
-
-	if apiSrv == nil {
-		panic("Unable to create API Server")
-	}
-	var err error
-	apiSrvAddr, err := apiSrv.GetAddr()
-	if err != nil {
-		panic("Unable to get API Server address")
-	}
-
-	return apiSrv, apiSrvAddr
-}
 
 func createWatcher(cache *userPermissionsCache, name, apiSrvAddr string) *watcher {
 
@@ -91,7 +54,8 @@ func createAPIClient(apiSrvAddr string) apiclient.Services {
 }
 
 func TestWatcher(t *testing.T) {
-	apiSrv, apiSrvAddr := createAPIServer(apisrvURL)
+	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	AssertOk(t, err, "failed to create API server")
 	watcher := createWatcher(&userPermissionsCache{}, "watcher_test", apiSrvAddr)
 	apicl := createAPIClient(apiSrvAddr)
 
@@ -108,7 +72,7 @@ func TestWatcher(t *testing.T) {
 			Name:   "testTenant",
 		},
 	}
-	_, err := apicl.ClusterV1().Tenant().Create(context.Background(), &tenant)
+	_, err = apicl.ClusterV1().Tenant().Create(context.Background(), &tenant)
 	AssertOk(t, err, "failed to create tenant")
 
 	// verify the tenant cache got created
@@ -231,7 +195,8 @@ func TestWatcherWithApiServerDown(t *testing.T) {
 	_, ok := testCache.roles[role.GetTenant()][getKey(role.GetTenant(), role.GetName())]
 	Assert(t, ok, "role didn't get added to the cache")
 
-	apiSrv, apiSrvAddr := createAPIServer(apisrvURL)
+	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	AssertOk(t, err, "failed to start API server")
 	watcher := createWatcher(testCache, "watcher_test", apiSrvAddr)
 	Assert(t, !watcher.stopped(), "watcher shouldn't be in stopped state")
 	// verify cache resets when watcher starts

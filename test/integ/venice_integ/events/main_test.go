@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
+	"github.com/pensando/sw/venice/apiserver"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/evtsproxy"
@@ -25,6 +26,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 )
 
 var (
@@ -49,6 +51,8 @@ type tInfo struct {
 	esClient            elastic.ESClient             // elastic client to verify the results
 	elasticsearchAddr   string                       // elastic address
 	elasticsearchName   string                       // name of the elasticsearch server name; used to stop the server
+	apiServer           apiserver.Server             // venice API server
+	apiServerAddr       string                       // API server address
 	evtsMgr             *evtsmgr.EventsManager       // events manager to write events to elastic
 	evtsProxy           *evtsproxy.EventsProxy       // events proxy to receive and distribute events
 	proxyEventsStoreDir string                       // local events store directory
@@ -75,6 +79,14 @@ func (t *tInfo) setup() error {
 		log.Errorf("failed to create elasticsearch client, err: %v", err)
 		return err
 	}
+
+	// start API server
+	t.apiServer, t.apiServerAddr, err = serviceutils.StartAPIServer(testURL, t.logger)
+	if err != nil {
+		log.Errorf("failed to start API server, err: %v", err)
+		return err
+	}
+	t.updateResolver(globals.APIServer, t.apiServerAddr)
 
 	// start events manager
 	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(testURL, t.mockResolver, t.logger)
@@ -108,6 +120,7 @@ func (t *tInfo) teardown() {
 
 	t.evtsMgr.RPCServer.Stop()
 	t.evtsProxy.RPCServer.Stop()
+	t.apiServer.Stop()
 
 	// remove the local persisitent events store
 	log.Infof("removing events store %s", t.proxyEventsStoreDir)

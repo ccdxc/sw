@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
@@ -18,8 +17,6 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
@@ -28,15 +25,16 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/events/recorder"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 )
 
 var (
+	logger = log.GetNewLogger(log.GetDefaultConfig("api_watcher_test"))
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "api_watcher_test"},
@@ -44,32 +42,6 @@ var (
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true})
 )
-
-func createAPIServer(url string) (apiserver.Server, apiserver.Config) {
-	logger := log.GetNewLogger(log.GetDefaultConfig("api_watcher_test"))
-
-	// api server config
-	sch := runtime.GetDefaultScheme()
-	apisrvConfig := apiserver.Config{
-		GrpcServerPort: url,
-		Logger:         logger,
-		Version:        "v1",
-		Scheme:         sch,
-		Kvstore: store.Config{
-			Type:    store.KVStoreTypeMemkv,
-			Servers: []string{""},
-			Codec:   runtime.NewJSONCodec(sch),
-		},
-		GetOverlay: cache.GetOverlay,
-		IsDryRun:   cache.IsDryRun,
-	}
-	// create api server
-	apiSrv := apisrvpkg.MustGetAPIServer()
-	go apiSrv.Run(apisrvConfig)
-	time.Sleep(time.Millisecond * 100)
-
-	return apiSrv, apisrvConfig
-}
 
 func TestApiWatcher(t *testing.T) {
 	// create network state manager
@@ -79,17 +51,9 @@ func TestApiWatcher(t *testing.T) {
 		return
 	}
 
-	// generate an available port for api server to use.
-	apiSrvListener := netutils.TestListenAddr{}
-	err = apiSrvListener.GetAvailablePort()
-	if err != nil {
-		t.Errorf("could not find an available port for the api server")
-	}
-	apisrvURL := apiSrvListener.ListenURL.String()
-
 	// create api server
-	apiSrv, _ := createAPIServer(apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server", apiSrv)
+	apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", logger)
+	AssertOk(t, err, "Error starting api server")
 
 	// create memkvstore
 	kvs, err := vchstore.Init("vchub", kvs.KVStoreTypeMemkv)
@@ -283,17 +247,9 @@ func TestAPIServerRestarts(t *testing.T) {
 		return
 	}
 
-	// generate an available port for api server to use.
-	apiSrvListener := netutils.TestListenAddr{}
-	err = apiSrvListener.GetAvailablePort()
-	if err != nil {
-		t.Errorf("could not find an available port for the api server")
-	}
-	apisrvURL := apiSrvListener.ListenURL.String()
-
 	// create api server
-	apiSrv, _ := createAPIServer(apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server", apiSrv)
+	apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", logger)
+	AssertOk(t, err, "Error starting api server")
 
 	// create memkvstore
 	kvs, err := vchstore.Init("vchub", kvs.KVStoreTypeMemkv)
@@ -532,9 +488,8 @@ func TestAPIServerRestarts(t *testing.T) {
 	apicl.Close()
 
 	// restart api server and watchers
-	apiSrv, _ = createAPIServer(apisrvURL)
-	Assert(t, (apiSrv != nil), "Error restarting api server", apiSrv)
-	time.Sleep(time.Millisecond * 100)
+	apiSrv, apisrvURL, err = serviceutils.StartAPIServer(apisrvURL, logger)
+	AssertOk(t, err, "Error restarting api server")
 	apicl, err = apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, l)
 	AssertOk(t, err, "Error restarting api server client")
 	watcher, err = NewWatcher(stateMgr, apisrvURL, vmmURL, nil, debug.New(t.Name()).Build())
@@ -594,16 +549,9 @@ func TestAPIServerRestarts(t *testing.T) {
 func TestApiServerClient(t *testing.T) {
 	testCount := 5
 	for i := 0; i < testCount; i++ {
-		// generate an available port for api server to use.
-		apiSrvListener := netutils.TestListenAddr{}
-		err := apiSrvListener.GetAvailablePort()
-		if err != nil {
-			t.Errorf("could not find an available port for the api server")
-		}
-		apisrvURL := apiSrvListener.ListenURL.String()
 		// create api server
-		apiSrv, _ := createAPIServer(apisrvURL)
-		Assert(t, (apiSrv != nil), "Error creating api server", apiSrv)
+		apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", logger)
+		AssertOk(t, err, "Error starting api server")
 
 		// create an api server client
 		l := log.GetNewLogger(log.GetDefaultConfig("NpmApiWatcher"))
@@ -677,17 +625,10 @@ func TestWorkloadWatcher(t *testing.T) {
 		return
 	}
 
-	// generate an available port for api server to use.
-	apiSrvListener := netutils.TestListenAddr{}
-	err = apiSrvListener.GetAvailablePort()
-	if err != nil {
-		t.Errorf("could not find an available port for the api server")
-	}
-	apisrvURL := apiSrvListener.ListenURL.String()
-
 	// create api server
-	apiSrv, _ := createAPIServer(apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server", apiSrv)
+	apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", logger)
+	AssertOk(t, err, "Error starting api server", apiSrv)
+	defer apiSrv.Stop()
 
 	// create watcher on api server
 	watcher, err := NewWatcher(stateMgr, apisrvURL, "", nil, debug.New(t.Name()).Build())

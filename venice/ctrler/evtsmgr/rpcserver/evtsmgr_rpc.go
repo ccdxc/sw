@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
@@ -24,13 +25,15 @@ var (
 
 // EvtsMgrRPCHandler handles all event RPC calls
 type EvtsMgrRPCHandler struct {
-	esClient elastic.ESClient
+	esClient    elastic.ESClient
+	alertEngine alertengine.Interface
 }
 
 // NewEvtsMgrRPCHandler returns a events RPC handler
-func NewEvtsMgrRPCHandler(client elastic.ESClient) (*EvtsMgrRPCHandler, error) {
+func NewEvtsMgrRPCHandler(client elastic.ESClient, alertEngine alertengine.Interface) (*EvtsMgrRPCHandler, error) {
 	evtsMgrRPCHandler := &EvtsMgrRPCHandler{
-		esClient: client,
+		esClient:    client,
+		alertEngine: alertEngine,
 	}
 
 	return evtsMgrRPCHandler, nil
@@ -76,6 +79,9 @@ func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *evtsapi.E
 			return nil, errors.New("bulk operation failed on elastic")
 		}
 	}
+
+	// send events to alert engine for processing
+	e.alertEngine.ProcessEvents(eventList)
 
 	return &api.Empty{}, nil
 }

@@ -5,6 +5,7 @@ package rpcserver
 import (
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine"
 	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -24,7 +25,9 @@ func (rs *RPCServer) Done() <-chan error {
 
 // Stop stops the RPC server
 func (rs *RPCServer) Stop() error {
-	return rs.server.Stop()
+	sErr := rs.server.Stop() // this will stop accepting further requests
+	rs.handler.alertEngine.Stop()
+	return sErr
 }
 
 // GetListenURL returns the listen URL for the server.
@@ -33,8 +36,8 @@ func (rs *RPCServer) GetListenURL() string {
 }
 
 // NewRPCServer creates a new instance of events RPC server
-func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient) (*RPCServer, error) {
-	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) || esclient == nil {
+func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient, alertEngine alertengine.Interface) (*RPCServer, error) {
+	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) || esclient == nil || alertEngine == nil {
 		return nil, errors.New("all parameters are required")
 	}
 
@@ -45,7 +48,7 @@ func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient) (*RPC
 	}
 
 	// instantiate events handlers which carries the implementation of the service
-	eh, err := NewEvtsMgrRPCHandler(esclient)
+	eh, err := NewEvtsMgrRPCHandler(esclient, alertEngine)
 	if err != nil {
 		return nil, errors.Wrap(err, "error certificates rpc server")
 	}

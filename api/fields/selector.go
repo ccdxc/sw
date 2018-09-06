@@ -106,6 +106,58 @@ func (r *Requirement) MatchesObj(obj runtime.Object) bool {
 	}
 }
 
+// MatchesObjWithObservedValue behaves the same as MatchesObj. Along with bool response,
+// it also returns the observed value for this requirement.
+func (r *Requirement) MatchesObjWithObservedValue(obj runtime.Object) (bool, string) {
+	vals, err := ref.FieldValues(reflect.ValueOf(obj), r.Key)
+	if err != nil || len(vals) == 0 {
+		return false, ""
+	}
+
+	switch Operator(Operator_value[r.Operator]) {
+	case Operator_equals:
+		if r.hasValue(vals[0]) {
+			return true, vals[0]
+		}
+		return false, ""
+
+	case Operator_notEquals:
+		if !r.hasValue(vals[0]) {
+			return true, vals[0]
+		}
+		return false, ""
+
+	case Operator_in:
+		for ii := range vals {
+			if r.hasValue(vals[ii]) {
+				return true, vals[ii]
+			}
+		}
+		return false, ""
+
+	case Operator_notIn:
+		for ii := range vals {
+			if r.hasValue(vals[ii]) {
+				return false, ""
+			}
+		}
+		return true, ""
+
+	case Operator_lt, Operator_lte, Operator_gt, Operator_gte:
+		keyType, err := ref.GetScalarFieldType(obj.GetObjectKind(), r.Key)
+		if err != nil || keyType == "TYPE_STRING" || keyType == "TYPE_BOOL" {
+			return false, ""
+		}
+		if r.hasRelation(keyType, vals[0]) {
+			return true, vals[0]
+		}
+		return false, ""
+
+	default:
+		return false, ""
+	}
+}
+
 // helper function to handle relational operators
 func (r *Requirement) hasRelation(keyType, value string) bool {
 	if len(r.Values) != 1 {

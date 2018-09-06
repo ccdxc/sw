@@ -4,12 +4,9 @@ package writer
 
 import (
 	"context"
-	"net"
 	"testing"
-	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
@@ -19,16 +16,12 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/runtime"
-
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 )
 
 const (
@@ -36,6 +29,8 @@ const (
 )
 
 var (
+	logger = log.WithContext("Pkg", "writer_test")
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "npm_writer_test"},
@@ -44,42 +39,10 @@ var (
 		SkipEvtsProxy: true})
 )
 
-func createAPIServer(t *testing.T, url string) (apiserver.Server, string) {
-	logger := log.WithContext("Pkg", "writer_test")
-
-	// api server config
-	sch := runtime.GetDefaultScheme()
-	apisrvConfig := apiserver.Config{
-		GrpcServerPort: url,
-		Logger:         logger,
-		Version:        "v1",
-		Scheme:         sch,
-		Kvstore: store.Config{
-			Type:    store.KVStoreTypeMemkv,
-			Servers: []string{""},
-			Codec:   runtime.NewJSONCodec(sch),
-		},
-		GetOverlay: cache.GetOverlay,
-		IsDryRun:   cache.IsDryRun,
-	}
-	// create api server
-	apiSrv := apisrvpkg.MustGetAPIServer()
-	go apiSrv.Run(apisrvConfig)
-	time.Sleep(time.Millisecond * 100)
-	addr, err := apiSrv.GetAddr()
-	AssertOk(t, err, "error getting address for API server")
-
-	_, port, err := net.SplitHostPort(addr)
-	AssertOk(t, err, "error getting port for API server")
-
-	returl := "localhost:" + port
-	return apiSrv, returl
-}
-
 func TestNetworkWriter(t *testing.T) {
 	// api server
-	apiSrv, url := createAPIServer(t, apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server")
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	AssertOk(t, err, "Error starting api server")
 
 	// create network state manager
 	wr, err := NewAPISrvWriter(url, nil)
@@ -126,8 +89,8 @@ func TestNetworkWriter(t *testing.T) {
 
 func TestEndpointWriter(t *testing.T) {
 	// api server
-	apiSrv, url := createAPIServer(t, apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server")
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	AssertOk(t, err, "Error starting api server")
 
 	// create network state manager
 	wr, err := NewAPISrvWriter(url, nil)
@@ -177,8 +140,8 @@ func TestEndpointWriter(t *testing.T) {
 
 func TestSgWriter(t *testing.T) {
 	// api server
-	apiSrv, url := createAPIServer(t, apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server")
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	AssertOk(t, err, "Error starting api server")
 
 	// create network state manager
 	wr, err := NewAPISrvWriter(url, nil)
@@ -224,8 +187,8 @@ func TestSgWriter(t *testing.T) {
 
 func TestSgPolicyWriter(t *testing.T) {
 	// api server
-	apiSrv, url := createAPIServer(t, apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server")
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	AssertOk(t, err, "Error starting api server")
 
 	// create network state manager
 	wr, err := NewAPISrvWriter(url, nil)
@@ -278,8 +241,8 @@ func TestSgPolicyWriter(t *testing.T) {
 
 func TestTenantWriter(t *testing.T) {
 	// api server
-	apiSrv, url := createAPIServer(t, apisrvURL)
-	Assert(t, (apiSrv != nil), "Error creating api server")
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	AssertOk(t, err, "Error starting api server")
 
 	// create network state manager
 	wr, err := NewAPISrvWriter(url, nil)

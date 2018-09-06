@@ -20,13 +20,12 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/events/recorder"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
-	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/testenv"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 	"github.com/pensando/sw/venice/utils/trace"
 )
 
@@ -67,7 +66,7 @@ type tInfo struct {
 
 var tinfo tInfo
 
-func (tInfo *tInfo) setup(kvstoreConfig *store.Config) error {
+func (tInfo *tInfo) setup() error {
 	var err error
 
 	// start certificate server
@@ -113,7 +112,7 @@ func (tInfo *tInfo) setup(kvstoreConfig *store.Config) error {
 
 	// start API server
 	trace.Init("ApiServer")
-	tInfo.apiServer, tInfo.apiServerAddr, err = testutils.StartAPIServer(":0", kvstoreConfig, tInfo.l)
+	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", tInfo.l)
 	if err != nil {
 		return err
 	}
@@ -161,11 +160,7 @@ func TestMain(m *testing.M) {
 	tinfo.mockResolver = mockresolver.New()
 	grpclog.SetLogger(l)
 
-	if err := tinfo.setup(&store.Config{
-		Type:    store.KVStoreTypeMemkv,
-		Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme()),
-		Servers: []string{"test-cluster"},
-	}); err != nil {
+	if err := tinfo.setup(); err != nil {
 		log.Fatalf("failed to setup test, err: %v", err)
 	}
 

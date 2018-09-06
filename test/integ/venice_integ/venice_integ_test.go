@@ -54,14 +54,13 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/events/recorder"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
-	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/testenv"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
@@ -354,11 +353,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	logConf.Filter = log.AllowAllFilter
 	l = log.GetNewLogger(logConf)
 	// start API server
-	it.apiSrv, it.apiSrvAddr, err = testutils.StartAPIServer(integTestApisrvURL, &store.Config{
-		Type:    store.KVStoreTypeMemkv,
-		Servers: []string{n},
-		Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme()),
-	}, l)
+	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, l)
 	c.Assert(err, IsNil)
 
 	l = log.GetNewLogger(log.GetDefaultConfig("api-gw"))

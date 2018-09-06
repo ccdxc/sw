@@ -144,7 +144,7 @@ func NewRecorder(config *Config) (events.Recorder, error) {
 // Event sources will call this to record an event.
 func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, message string, objRef interface{}) {
 	if err := r.validate(eventType, severity); err != nil {
-		log.Fatalf("validation failed, err: %v", err)
+		log.Fatalf("validation failed [%s, %s], err: %v", eventType, severity, err)
 	}
 
 	var objRefMeta *api.ObjectMeta
@@ -184,7 +184,7 @@ func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, m
 
 	// create event object
 	event := &evtsapi.Event{
-		TypeMeta:   api.TypeMeta{Kind: "Event"},
+		TypeMeta:   api.TypeMeta{Kind: "events.Event"},
 		ObjectMeta: meta,
 		EventAttributes: evtsapi.EventAttributes{
 			Type:     eventType,

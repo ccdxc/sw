@@ -8,12 +8,96 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/cluster"
+	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/globals"
 )
+
+// CreateAlertObj helper function to create alert obj
+func CreateAlertObj(tenant, namespace, name, state, message string, alertPolicy *monitoring.AlertPolicy,
+	evt *evtsapi.Event, matchedRequirements []*monitoring.MatchedRequirement) *monitoring.Alert {
+	creationTime, _ := types.TimestampProto(time.Now())
+
+	alert := &monitoring.Alert{
+		TypeMeta: api.TypeMeta{Kind: "Alert"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			UUID:      name,
+			Tenant:    tenant,
+			Namespace: namespace,
+			CreationTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+		},
+		Spec: monitoring.AlertSpec{
+			State: state,
+		},
+		Status: monitoring.AlertStatus{
+			Message: message,
+		},
+	}
+
+	if matchedRequirements != nil {
+		alert.Status.Reason = monitoring.AlertReason{
+			MatchedRequirements: matchedRequirements,
+		}
+	}
+
+	if alertPolicy != nil {
+		alert.Status.Severity = alertPolicy.Spec.GetSeverity()
+		alert.Status.Reason.PolicyID = alertPolicy.GetUUID()
+	}
+
+	if evt != nil {
+		alert.Status.Source = &monitoring.AlertSource{
+			Component: evt.GetSource().GetComponent(),
+			NodeName:  evt.GetSource().GetNodeName(),
+		}
+		alert.Status.EventURI = evt.GetSelfLink()
+		alert.Status.ObjectRef = evt.GetObjectRef()
+	}
+
+	return alert
+}
+
+// CreateAlertPolicyObj helper function to create alert policy object with the given params.
+func CreateAlertPolicyObj(tenant, namespace, name, resource string, severity evtsapi.SeverityLevel, message string, requirements []*fields.Requirement) *monitoring.AlertPolicy {
+	creationTime, _ := types.TimestampProto(time.Now())
+
+	return &monitoring.AlertPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind:       "AlertPolicy",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:            name,
+			Tenant:          tenant,
+			Namespace:       namespace,
+			ResourceVersion: fmt.Sprintf("%d", rand.Intn(10000)),
+			CreationTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+		},
+		Spec: monitoring.AlertPolicySpec{
+			Resource:     resource,
+			Severity:     evtsapi.SeverityLevel_name[int32(severity)],
+			Message:      message,
+			Requirements: requirements,
+			Enable:       true,
+			// TODO: add other parameters(persisstence duration, clear duration, destionations, etc.) when required
+		},
+	}
+}
 
 // CreateSmartNIC helper function to create smart NIC object with the given params.
 func CreateSmartNIC(mac, phase, node string, condition *cluster.SmartNICCondition) *cluster.SmartNIC {
@@ -28,7 +112,6 @@ func CreateSmartNIC(mac, phase, node string, condition *cluster.SmartNICConditio
 			Name:            mac,
 			Tenant:          globals.DefaultTenant,
 			Namespace:       globals.DefaultNamespace,
-			UUID:            uuid.NewV4().String(),
 			ResourceVersion: fmt.Sprintf("%d", rand.Intn(10000)),
 			CreationTime: api.Timestamp{
 				Timestamp: *creationTime,

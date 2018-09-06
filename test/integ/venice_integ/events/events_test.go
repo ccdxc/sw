@@ -3,6 +3,7 @@
 package events
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -16,23 +17,31 @@ import (
 	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/client"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
-	_ "github.com/pensando/sw/api/generated/exports/apigw"
-	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	_ "github.com/pensando/sw/api/hooks/apiserver"
 	testutils "github.com/pensando/sw/test/utils"
-	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/utils/events/recorder"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
+	// import gateway services
+	_ "github.com/pensando/sw/api/generated/auth/gateway"
+	_ "github.com/pensando/sw/api/generated/events/gateway"
+	_ "github.com/pensando/sw/api/generated/monitoring/gateway"
+	_ "github.com/pensando/sw/api/generated/search/gateway"
+	_ "github.com/pensando/sw/venice/apigw/svc"
+	// import API server services
+	_ "github.com/pensando/sw/api/generated/auth/grpc/server"
+	_ "github.com/pensando/sw/api/generated/events/grpc/server"
+	_ "github.com/pensando/sw/api/generated/monitoring/grpc/server"
+	_ "github.com/pensando/sw/api/generated/search/grpc/server"
+	_ "github.com/pensando/sw/api/hooks/apiserver"
 )
 
 // This test tests the complete flow of an event from the recorder to elasticsearch
@@ -42,9 +51,9 @@ import (
 // events recorder -> events proxy (dispatcher, writer) -> events manager -> elasticsearch
 
 var (
-	eventType1     = "EVENT-TYPE1"
-	eventType2     = "EVENT-TYPE2"
-	eventType3     = "EVENT-TYPE3"
+	eventType1     = "DUMMYEVENT-1"
+	eventType2     = "DUMMYEVENT-2"
+	eventType3     = "DUMMYEVENT-3"
 	testEventTypes = []string{eventType1, eventType2, eventType3}
 )
 
@@ -220,8 +229,8 @@ func TestEventsProxyRestart(t *testing.T) {
 	// total number of events received at elastic should match the total events sent
 	// query all the events received from this source.component
 	query := es.NewRegexpQuery("source.component.keyword", fmt.Sprintf("%v-.*", componentID))
-	ti.assertElasticUniqueEvents(t, query, false, 3*numRecorders, "6s") // mininum of (3 event types * numRecorders = unique events)
-	ti.assertElasticTotalEvents(t, query, false, totalEventsSent, "6s") // there can be duplicates because of proxy restarts; so check for received >= sent
+	ti.assertElasticUniqueEvents(t, query, false, 3*numRecorders, "60s") // mininum of (3 event types * numRecorders = unique events)
+	ti.assertElasticTotalEvents(t, query, false, totalEventsSent, "60s") // there can be duplicates because of proxy restarts; so check for received >= sent
 }
 
 // TestEventsMgrRestart tests the events flow with events manager restart
@@ -317,8 +326,8 @@ func TestEventsMgrRestart(t *testing.T) {
 	// total number of events received at elastic should match the total events sent
 	// query all the events received from this source.component
 	query := es.NewRegexpQuery("source.component.keyword", fmt.Sprintf("%v-.*", componentID))
-	ti.assertElasticUniqueEvents(t, query, true, 3*numRecorders, "10s")
-	ti.assertElasticTotalEvents(t, query, true, totalEventsSent, "10s")
+	ti.assertElasticUniqueEvents(t, query, true, 3*numRecorders, "60s")
+	ti.assertElasticTotalEvents(t, query, true, totalEventsSent, "60s")
 }
 
 // TestEventsRESTEndpoints tests GET /events and /events/{UUID} endpoint
@@ -339,24 +348,15 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	fdr := fdrTemp.(finder.Interface)
 	defer fdr.Stop()
 
-	// API server, is needed for the authentication service
-	apiServer, apiServerAddr, err := testutils.StartAPIServer(":0", &store.Config{
-		Type:    store.KVStoreTypeMemkv,
-		Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme()),
-		Servers: []string{"test-cluster"},
-	}, ti.logger)
-	AssertOk(t, err, "failed to start API server")
-	defer apiServer.Stop()
-
 	// API gateway
 	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0",
-		map[string]string{globals.APIServer: apiServerAddr, globals.Spyglass: fdrAddr}, []string{}, []string{}, ti.logger)
+		map[string]string{globals.APIServer: ti.apiServerAddr, globals.Spyglass: fdrAddr}, []string{}, []string{}, ti.logger)
 	AssertOk(t, err, "failed to start API gateway")
 	defer apiGw.Stop()
 
 	// setup authn and get authz token
 	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
-	err = testutils.SetupAuth(apiServerAddr, true, false, userCreds, ti.logger)
+	err = testutils.SetupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
 	AssertOk(t, err, "failed to setup authN service")
 	authzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, userCreds)
 	AssertOk(t, err, "failed to get authZ header")
@@ -819,4 +819,221 @@ func TestEventsRESTEndpoints(t *testing.T) {
 
 	// wait for the recorder to complete
 	wg.Wait()
+}
+
+// TestEventsAlertEngine tests alert generation from events. And, ensures the
+// respective alert policy is updated accordingly.
+func TestEventsAlertEngine(t *testing.T) {
+	// setup events pipeline to record and distribute events
+	ti := tInfo{}
+	AssertOk(t, ti.setup(), "failed to setup test")
+	defer ti.teardown()
+
+	// create API server client
+	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
+	AssertOk(t, err, "failed to create API server client, err: %v", err)
+	defer apiClient.Close()
+
+	// add event based alert policies
+	// policy - 1
+	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events", []*fields.Requirement{
+		&fields.Requirement{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
+		&fields.Requirement{Key: "count", Operator: "gt", Values: []string{"10"}},
+		&fields.Requirement{Key: "count", Operator: "lt", Values: []string{"16"}},
+		&fields.Requirement{Key: "source.node-name", Operator: "equals", Values: []string{"test-node"}},
+	})
+
+	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
+	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+
+	// policy - 2
+	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_WARNING, "alerts from events", []*fields.Requirement{
+		&fields.Requirement{Key: "count", Operator: "lt", Values: []string{"7"}},
+		&fields.Requirement{Key: "severity", Operator: "equals", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)]}},
+		&fields.Requirement{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
+	})
+
+	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
+	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+
+	// generate events
+	// define list of events to be recorded
+	dummyObjRef := &cluster.Node{
+		TypeMeta: api.TypeMeta{
+			Kind: "Node",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+		},
+	}
+	recordEvents := []*struct {
+		eventType string
+		severity  evtsapi.SeverityLevel
+		message   string
+		objRef    interface{}
+		repeat    int // number of times to repeat the event
+	}{
+		{eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), *dummyObjRef, 5}, // this should generate an alert (alertPolicy2)
+		{eventType1, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), *dummyObjRef, 10},
+		{eventType1, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), *dummyObjRef, 15}, // this should generate an alert (alertPolicy1)
+
+		{eventType2, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO), *dummyObjRef, 5}, // this should generate an alert (alertPolicy2)
+		{eventType2, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), *dummyObjRef, 10},
+		{eventType2, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), *dummyObjRef, 15}, // this should generate an alert (alertPolicy1)
+
+		{eventType3, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), *dummyObjRef, 5}, // this should generate an alert (alertPolicy2)
+		{eventType3, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), *dummyObjRef, 10},
+		{eventType3, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), *dummyObjRef, 15}, // this should generate an alert (alertPolicy1)
+
+		{eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), nil, 5}, // this should generate an alert (alertPolicy2)
+		{eventType2, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), nil, 10},
+		{eventType3, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), nil, 15}, // this should generate an alert (alertPolicy1)
+	}
+
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
+
+	// start recorder
+	recorderEventsDir, err := ioutil.TempDir("", "")
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+	testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: uuid.NewV4().String()}
+	go func() {
+		defer wg.Done()
+
+		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+			Source:       testEventSource,
+			EvtTypes:     testEventTypes,
+			EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir})
+		if err != nil {
+			log.Errorf("failed to create recorder, err: %v", err)
+			return
+		}
+
+		// record events
+		for i := range recordEvents {
+			if objRef, ok := recordEvents[i].objRef.(cluster.Node); ok {
+				objRef.ObjectMeta.Name = CreateAlphabetString(5)
+				recordEvents[i].objRef = &objRef
+			}
+			for j := 0; j < recordEvents[i].repeat; j++ {
+				evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].severity, recordEvents[i].message, recordEvents[i].objRef)
+			}
+		}
+
+		// wait for the batch inteval
+		time.Sleep(100 * time.Millisecond)
+		// if objRef!=nil, this shhould increase the hits but not recreate the alerts.
+		// it will recreate alerts otherwise.
+		for i := range recordEvents {
+			evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].severity, recordEvents[i].message, recordEvents[i].objRef)
+		}
+	}()
+
+	// list of alerts to be generated by the alert engine
+	tests := []struct {
+		selector   string
+		expSuccess bool
+	}{
+		// TODO: change selector to use json tags once API server is fixed
+		{
+			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+				alertPolicy1.GetUUID(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			expSuccess: true,
+		},
+		{
+			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+				alertPolicy1.GetUUID(), fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			expSuccess: true,
+		},
+		{
+			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+				alertPolicy1.GetUUID(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			expSuccess: true,
+		},
+		{
+			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			expSuccess: true,
+		},
+		{
+			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			expSuccess: true,
+		},
+		{
+			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			expSuccess: true,
+		},
+		{
+			selector: fmt.Sprintf("Status.Reason.PolicyID=%s,Status.Message=%s,Status.Severity=%s,Status.ObjectRef.Kind=%s",
+				alertPolicy2.GetUUID(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), "invalid"),
+			expSuccess: false,
+		},
+		{
+			selector:   fmt.Sprintf("Status.ObjectRef.Kind=invalid"),
+			expSuccess: false,
+		},
+	}
+
+	// test if the expected alerts are generated
+	go func() {
+		defer wg.Done()
+		for _, test := range tests {
+			AssertEventually(t, func() (bool, interface{}) {
+				alerts, err := apiClient.MonitoringV1().Alert().List(context.Background(),
+					&api.ListWatchOptions{
+						ObjectMeta:    api.ObjectMeta{Tenant: globals.DefaultTenant},
+						FieldSelector: test.selector})
+				if err != nil {
+					return false, fmt.Sprintf("%v failed, err: %v", test.selector, err)
+				}
+
+				if test.expSuccess && len(alerts) != 1 {
+					return false, fmt.Sprintf("expected: %v, obtained: %v", test.selector, alerts)
+				}
+
+				return true, nil
+			}, "did not receive the expected alert", string("20ms"), string("10s"))
+		}
+	}()
+
+	wg.Wait()
+
+	// make sure the policy status got updated
+	expectedAlertStatus := []struct {
+		policyMeta         *api.ObjectMeta
+		totalHits          int32
+		openAlerts         int32
+		acknowledgedAlerts int32
+	}{
+		{policyMeta: alertPolicy1.GetObjectMeta(), totalHits: 8, openAlerts: 8, acknowledgedAlerts: 0},
+		{policyMeta: alertPolicy2.GetObjectMeta(), totalHits: 8, openAlerts: 5, acknowledgedAlerts: 0},
+	}
+	for _, as := range expectedAlertStatus {
+		AssertEventually(t, func() (bool, interface{}) {
+			res, err := apiClient.MonitoringV1().AlertPolicy().Get(context.Background(),
+				&api.ObjectMeta{Name: as.policyMeta.GetName(), Tenant: as.policyMeta.GetTenant(), Namespace: as.policyMeta.GetNamespace(), UUID: as.policyMeta.GetUUID()})
+			if err != nil {
+				return false, fmt.Sprintf(":%v, err: %v", as.policyMeta.GetName(), err)
+			}
+
+			if res.Status.GetTotalHits() != as.totalHits {
+				return false, fmt.Sprintf("total hits on policy %v expected: %v, obtained: %v", res.GetObjectMeta().GetName(), as.totalHits, res.Status.GetTotalHits())
+			}
+
+			if as.openAlerts != res.Status.GetOpenAlerts() {
+				return false, fmt.Sprintf("open alerts on policy %v expected: %v, obtained: %v", res.GetObjectMeta().GetName(), as.openAlerts, res.Status.GetOpenAlerts())
+			}
+
+			if as.acknowledgedAlerts != res.Status.GetAcknowledgedAlerts() {
+				return false, fmt.Sprintf("acknowledged alerts on policy %v expected: %v, obtained: %v", res.GetObjectMeta().GetName(), as.acknowledgedAlerts, res.Status.GetAcknowledgedAlerts())
+			}
+
+			return true, nil
+		}, "alert status does not match the expected", string("20ms"), string("10s"))
+	}
 }

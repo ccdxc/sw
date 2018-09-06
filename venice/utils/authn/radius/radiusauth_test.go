@@ -4,18 +4,17 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
-	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
@@ -32,9 +31,19 @@ const (
 	testGroup    = "NetworkAdmin"
 )
 
-var apicl apiclient.Services
-var apiSrv apiserver.Server
-var apiSrvAddr string
+var (
+	apicl      apiclient.Services
+	apiSrv     apiserver.Server
+	apiSrvAddr string
+	logger     = log.WithContext("Pkg", "radius_test")
+
+	// create events recorder
+	_, _ = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "radiusauth_test"},
+		EvtTypes:      evtsapi.GetEventTypes(),
+		BackupDir:     "/tmp",
+		SkipEvtsProxy: true})
+)
 
 func TestMain(m *testing.M) {
 	// run RADIUS tests only if RUN_RADIUS_TESTS env variable is set to true
@@ -48,18 +57,12 @@ func TestMain(m *testing.M) {
 }
 
 func setup() {
-	// api server
-	apiSrv = createAPIServer(apisrvURL)
-	if apiSrv == nil {
-		panic("Unable to create API Server")
-	}
 	var err error
-	apiSrvAddr, err = apiSrv.GetAddr()
+	// api server
+	apiSrv, apiSrvAddr, err = serviceutils.StartAPIServer(apisrvURL, logger)
 	if err != nil {
-		panic("Unable to get API Server address")
+		panic("Unable to start API Server")
 	}
-	// api server client
-	logger := log.WithContext("Pkg", "radius_test")
 	apicl, err = apiclient.NewGrpcAPIClient("radius_test", apiSrvAddr, logger)
 	if err != nil {
 		panic("Error creating api client")
@@ -69,32 +72,6 @@ func setup() {
 func shutdown() {
 	//stop api server
 	apiSrv.Stop()
-}
-
-func createAPIServer(url string) apiserver.Server {
-	logger := log.WithContext("Pkg", "radius_test")
-
-	// api server config
-	sch := runtime.GetDefaultScheme()
-	apisrvConfig := apiserver.Config{
-		GrpcServerPort: url,
-		Logger:         logger,
-		Version:        "v1",
-		Scheme:         sch,
-		Kvstore: store.Config{
-			Type:    store.KVStoreTypeMemkv,
-			Servers: []string{""},
-			Codec:   runtime.NewJSONCodec(sch),
-		},
-		GetOverlay: cache.GetOverlay,
-		IsDryRun:   cache.IsDryRun,
-	}
-	// create api server
-	apiSrv := apisrvpkg.MustGetAPIServer()
-	go apiSrv.Run(apisrvConfig)
-	time.Sleep(time.Millisecond * 100)
-
-	return apiSrv
 }
 
 func createAuthenticationPolicy(radiusConf *auth.Radius) (*auth.AuthenticationPolicy, error) {

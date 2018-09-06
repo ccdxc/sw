@@ -9,14 +9,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/auth"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
-	"github.com/pensando/sw/venice/apiserver"
-	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
@@ -24,10 +21,8 @@ import (
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
-	"github.com/pensando/sw/venice/utils/runtime"
 
 	// for registering services and hooks
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
@@ -111,44 +106,6 @@ func GetAuthorizationHeader(apiGwAddr string, creds *auth.PasswordCredential) (s
 	}
 
 	return authzHeader, nil
-}
-
-// StartAPIServer helper function to start API server
-func StartAPIServer(serverAddr string, kvstoreConfig *store.Config, l log.Logger) (apiserver.Server, string, error) {
-	log.Infof("starting API server ...")
-
-	// Create api server
-	apiServerAddress := serverAddr
-	scheme := runtime.GetDefaultScheme()
-	srvConfig := apiserver.Config{
-		GrpcServerPort: apiServerAddress,
-		DebugMode:      false,
-		Logger:         l,
-		Version:        "v1",
-		Scheme:         scheme,
-		KVPoolSize:     8,
-		Kvstore:        *kvstoreConfig,
-		DevMode:        true,
-		GetOverlay:     cache.GetOverlay,
-		IsDryRun:       cache.IsDryRun,
-	}
-
-	apiServer := apiserverpkg.MustGetAPIServer()
-	go apiServer.Run(srvConfig)
-	apiServer.WaitRunning()
-
-	apiServerAddr, err := apiServer.GetAddr()
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to get API server addr, err: %v", err)
-	}
-	port, err := getPortFromAddr(apiServerAddr)
-	if err != nil {
-		return nil, "", err
-	}
-
-	localAddr := fmt.Sprintf("localhost:%s", port)
-	log.Infof("API server running on %v", localAddr)
-	return apiServer, localAddr, nil
 }
 
 // StartAPIGateway helper function to start API gateway.

@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"net/url"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -43,8 +42,6 @@ import (
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
-	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
@@ -53,6 +50,7 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/testenv"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 )
 
 const (
@@ -110,7 +108,7 @@ type testInfo struct {
 
 var tInfo testInfo
 
-func (tInfo *testInfo) setup(kvstoreConfig *store.Config) error {
+func (tInfo *testInfo) setup() error {
 	var err error
 
 	// start elasticsearch
@@ -138,10 +136,11 @@ func (tInfo *testInfo) setup(kvstoreConfig *store.Config) error {
 	tInfo.fdrAddr = fdrAddr
 
 	// start API server
-	tInfo.apiServer, tInfo.apiServerAddr, err = testutils.StartAPIServer(":0", kvstoreConfig, tInfo.l)
+	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", tInfo.l)
 	if err != nil {
 		return err
 	}
+	tInfo.updateResolver(globals.APIServer, tInfo.apiServerAddr)
 
 	// start API gateway
 	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0",
@@ -284,15 +283,7 @@ func TestSpyglass(t *testing.T) {
 	logConfig := log.GetDefaultConfig("spyglass_integ_test")
 	tInfo.l = log.GetNewLogger(logConfig)
 
-	// cluster bind mounts in local directory. certain filesystems (like vboxsf, nfs) dont support unix binds.
-	os.Chdir("/tmp")
-	cluster := integration.NewClusterV3(t) //create etcd/memkv cluster
-
-	AssertOk(t, tInfo.setup(&store.Config{
-		Type:    store.KVStoreTypeEtcd,
-		Servers: strings.Split(cluster.ClientURL(), ","),
-		Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme())}),
-		"failed to setup test")
+	AssertOk(t, tInfo.setup(), "failed to setup test")
 	defer tInfo.teardown()
 
 	ctx := context.Background()
@@ -992,7 +983,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 		},
 		{ // search events
 			search.SearchRequest{
-				QueryString: "kind:Event",
+				QueryString: "kind:events.Event",
 				From:        from,
 				MaxResults:  maxResults * 2,
 			},
@@ -1002,7 +993,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			map[string]map[string]map[string]int64{
 				"default": {
 					"Monitoring": {
-						"Event": eventCount,
+						"events.Event": eventCount,
 					},
 				},
 			},

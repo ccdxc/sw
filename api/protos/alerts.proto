@@ -95,7 +95,7 @@ message AlertStatus {
                                        (gogoproto.jsontag) = "event-uri, omitempty"];
 
   // Affected object
-  api.ObjectRef ObjectRef         = 4 [(gogoproto.nullable) = false,
+  api.ObjectRef ObjectRef         = 4 [(gogoproto.nullable) = true,
                                        (gogoproto.jsontag) = "object-ref, omitempty"];
 
   // Message from the alert rule that triggered the alert

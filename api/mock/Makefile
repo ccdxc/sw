@@ -1,10 +1,10 @@
 .PHONY : default clean
 
-TARGET := mock_telemetry.go mock_apiclient.go mock_network.go mock_cluster.go
+TARGET := mock_monitoring.go mock_apiclient.go mock_network.go mock_cluster.go
 
 default: ${TARGET}
 
-mock_telemetry.go:../generated/monitoring/svc_monitoring_crudinterface.go Makefile
+mock_monitoring.go:../generated/monitoring/svc_monitoring_crudinterface.go Makefile
 	mockgen -destination=$@ -package=mock --source $<
 	# telemetry package
 	sed -i.bak_ -e 's/\*FlowExportPolicy/\*monitoring.FlowExportPolicy/g' $@
