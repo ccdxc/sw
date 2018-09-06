@@ -8,6 +8,22 @@
 #include "sonic_api_int.h"
 #include "osal_logger.h"
 
+/*
+ * Physical host address bit manipulation
+ */
+#define SONIC_PHYS_ADDR_HOST_POS        63
+#define SONIC_PHYS_ADDR_HOST_MASK       0x1
+#define SONIC_PHYS_ADDR_LIF_POS         52
+#define SONIC_PHYS_ADDR_LIF_MASK        0x7ff
+
+#define SONIC_PHYS_ADDR_FIELD_VAL(pos, mask, val)	\
+	(((uint64_t)((val) & (mask))) << (pos))
+    
+#define SONIC_PHYS_ADDR_HOST_VAL()   \
+	SONIC_PHYS_ADDR_FIELD_VAL(SONIC_PHYS_ADDR_HOST_POS, SONIC_PHYS_ADDR_HOST_MASK, 1)
+#define SONIC_PHYS_ADDR_LIF_VAL(lif) \
+	SONIC_PHYS_ADDR_FIELD_VAL(SONIC_PHYS_ADDR_LIF_POS, SONIC_PHYS_ADDR_LIF_MASK, lif)
+    
 static int sonic_api_get_rmem(struct lif *lif, uint32_t *pgid, uint64_t *pgaddr, int order)
 {
 	struct sonic_dev *idev = &lif->sonic->idev;
@@ -80,7 +96,7 @@ static identity_t* sonic_get_identity(void)
 
 #define DBG_CHK_RING_ID(accel_ring_id, ret) \
 do {\
-	if(accel_ring_id == ACCEL_RING_ID_FIRST || accel_ring_id >= ACCEL_RING_ID_MAX) \
+	if(accel_ring_id >= ACCEL_RING_ID_MAX) \
 		return ret; \
 } while(0)
 
@@ -141,4 +157,16 @@ int sonic_get_accel_ring_size(uint32_t accel_ring_id, uint32_t *ring_size)
 	
 	*ring_size = ident->dev.accel_ring_tbl[accel_ring_id].ring_size;
 	return 0;
+}
+
+uint64_t sonic_hostpa_to_devpa(uint64_t hostpa)
+{
+	identity_t *ident = sonic_get_identity();
+
+	return hostpa | SONIC_PHYS_ADDR_HOST_VAL() | SONIC_PHYS_ADDR_LIF_VAL(ident->dev.hw_lif_id_tbl[0]);
+}
+
+uint64_t sonic_devpa_to_hostpa(uint64_t devpa)
+{
+	return devpa & ~(SONIC_PHYS_ADDR_HOST_VAL() | SONIC_PHYS_ADDR_LIF_VAL(SONIC_PHYS_ADDR_LIF_MASK));
 }

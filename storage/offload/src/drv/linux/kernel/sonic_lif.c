@@ -761,10 +761,10 @@ int sonic_lifs_init(struct sonic *sonic)
 
 	list_for_each(cur, &sonic->lifs) {
 		lif = list_entry(cur, struct lif, list);
+		sonic_glif = lif;
 		err = sonic_lif_init(lif);
 		if (err)
 			return err;
-		sonic_glif = lif;
 	}
 
 	return 0;

@@ -13,5 +13,7 @@ int sonic_get_accel_ring_base_pa(uint32_t accel_ring_id, uint64_t *ring_base);
 int sonic_get_accel_ring_pndx_pa(uint32_t accel_ring_id, uint64_t *ring_pndx);
 int sonic_get_accel_ring_shadow_pndx_pa(uint32_t accel_ring_id, uint64_t *shadow_pndx);
 int sonic_get_accel_ring_size(uint32_t accel_ring_id, uint32_t *ring_size);
+uint64_t sonic_hostpa_to_devpa(uint64_t hostpa);
+uint64_t sonic_devpa_to_hostpa(uint64_t devpa);
 
 #endif /* SONIC_API_INT_H */
