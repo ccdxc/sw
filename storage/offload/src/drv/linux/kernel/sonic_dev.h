@@ -392,5 +392,6 @@ void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index);
 void *sonic_q_consume_entry(struct queue *q, uint32_t *index);
 void sonic_q_ringdb(struct queue *q, uint32_t index);
+u64 sonic_q_ringdb_data(struct queue *q, uint32_t index);
 
 #endif /* _SONIC_DEV_H_ */
