@@ -57,20 +57,28 @@ void osal_rmem_free(uint64_t ptr, size_t size)
 
 uint64_t osal_virt_to_phy(void *ptr)
 {
-	return (uint64_t) virt_to_phys(ptr);	
+	uint64_t pa;
+
+	pa = virt_to_phys(ptr);
+
+	return osal_hostpa_to_devpa(pa);
 }
 
 void *osal_phy_to_virt(uint64_t phy)
 {
-	return phys_to_virt((phys_addr_t)phy);
+	uint64_t pa;
+
+	pa = osal_devpa_to_hostpa(phy);
+
+	return phys_to_virt((phys_addr_t) pa);
 }
 
 uint64_t osal_hostpa_to_devpa(uint64_t hostpa)
 {
-	return (1ull << 63) | hostpa;
+	return sonic_hostpa_to_devpa(hostpa);
 }
 
 uint64_t osal_devpa_to_hostpa(uint64_t devpa)
 {
-	return ~(1ull << 63) & devpa;
+	return sonic_devpa_to_hostpa(devpa);
 }
