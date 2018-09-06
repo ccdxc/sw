@@ -445,9 +445,11 @@ vrf_init_from_spec (vrf_t *vrf, const VrfSpec& spec)
     } else if (ret == HAL_RET_KEY_HANDLE_NOT_SPECIFIED) {
         HAL_TRACE_DEBUG("No nwsec prof passed, "
                         "using default security profile");
-        vrf->nwsec_profile_handle = HAL_HANDLE_INVALID;
+        vrf->nwsec_profile_handle = 
+                    g_hal_state->oper_db()->default_security_profile_hdl();
     } else {
         // either invalid key or handle
+        HAL_TRACE_ERR("Security Profile not found handle invalid"); 
         return HAL_RET_SECURITY_PROFILE_NOT_FOUND;
     }
 
@@ -543,14 +545,13 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
 
     // initialize vrf attrs from its spec
     ret = vrf_init_from_spec(vrf, spec);
-    if ((ret != HAL_RET_OK) &&
-        (vrf->nwsec_profile_handle == HAL_HANDLE_INVALID)) {
+    if (ret != HAL_RET_OK)  {
         HAL_TRACE_ERR("Failed to create vrf {}, security profile not found",
                       vrf->vrf_id);
         goto end;
-    } else if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
-        sec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
     }
+
+    sec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
 
     // allocate hal handle id
     vrf->hal_handle = hal_handle_alloc(HAL_OBJ_ID_VRF);

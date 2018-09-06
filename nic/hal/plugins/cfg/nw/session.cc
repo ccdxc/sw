@@ -1056,40 +1056,45 @@ session_aging_timeout (session_t *session,
     nwsec_profile_t    *nwsec_prof = NULL;
 
     vrf = vrf_lookup_by_handle(session->vrf_handle);
-    if (vrf != NULL) {
+    if (vrf != NULL && vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
         nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
-        if (nwsec_prof != NULL) {
-            switch (iflow->config.key.proto) {
-                case IPPROTO_TCP:
-                    if (iflow->pgm_attrs.drop) {
-                        timeout = nwsec_prof->tcp_drop_timeout;
-                    } else {
-                        timeout = nwsec_prof->tcp_timeout;
-                    }
-                    break;
+    } else {
+        // Get the default security profile
+        nwsec_prof = find_nwsec_profile_by_handle(
+                        g_hal_state->oper_db()->default_security_profile_hdl());
+    }
 
-                case IPPROTO_UDP:
-                    if (iflow->pgm_attrs.drop) {
-                        timeout = nwsec_prof->udp_drop_timeout;
-                    } else {
-                        timeout = nwsec_prof->udp_timeout;
-                    }
-                    break;
+    if (nwsec_prof != NULL) {
+        switch (iflow->config.key.proto) {
+            case IPPROTO_TCP:
+                if (iflow->pgm_attrs.drop) {
+                    timeout = nwsec_prof->tcp_drop_timeout;
+                } else {
+                    timeout = nwsec_prof->tcp_timeout;
+                }
+                break;
 
-                case IPPROTO_ICMP:
-                    if (iflow->pgm_attrs.drop) {
-                        timeout = nwsec_prof->icmp_drop_timeout;
-                    } else {
-                        timeout = nwsec_prof->icmp_timeout;
-                    }
-                    break;
-                default:
-                    if (iflow->pgm_attrs.drop) {
-                        timeout = nwsec_prof->drop_timeout;
-                    } else {
-                        timeout = nwsec_prof->session_idle_timeout;
-                    }
-            }
+            case IPPROTO_UDP:
+                if (iflow->pgm_attrs.drop) {
+                    timeout = nwsec_prof->udp_drop_timeout;
+                } else {
+                    timeout = nwsec_prof->udp_timeout;
+                }
+                break;
+
+            case IPPROTO_ICMP:
+                if (iflow->pgm_attrs.drop) {
+                    timeout = nwsec_prof->icmp_drop_timeout;
+                } else {
+                    timeout = nwsec_prof->icmp_timeout;
+                }
+                break;
+            default:
+                if (iflow->pgm_attrs.drop) {
+                    timeout = nwsec_prof->drop_timeout;
+                 } else {
+                    timeout = nwsec_prof->session_idle_timeout;
+                 }
         }
     }
 

@@ -895,9 +895,13 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     sdk_hash                    *inp_prop_tbl = NULL;
     input_properties_swkey_t    key           = { 0 };
     input_properties_actiondata data          = { 0 };
+    l2seg_t                     *l2seg        = (l2seg_t *)l2seg_pd->l2seg;
+    nwsec_profile_t             *nwsec_prof   = NULL;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+
+    nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)l2seg);
 
     key.capri_intrinsic_lif = SERVICE_LIF_CPU;
     inp_prop.dir       = FLOW_DIR_FROM_UPLINK;
@@ -906,7 +910,8 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     key.vlan_tag_vid   = l2seg_pd->cpu_l2seg_id;
 
     inp_prop.vrf              = l2seg_pd->l2seg_fl_lkup_id;
-    inp_prop.l4_profile_idx   = 0;
+    inp_prop.l4_profile_idx   = nwsec_prof ?
+        nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
     inp_prop.ipsg_enable      = 0;
     inp_prop.src_lport        = 0;
     inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy((l2seg_t*)

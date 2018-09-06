@@ -69,7 +69,7 @@ targets:
   proto-sync: ["sh", "-c", "cd /sw && make pull-assets && cd $GOPATH/src/github.com/pensando/sw/nic/agent/netagent/datapath/halproto && make proto-sync" ]
   hal-rtl/parser:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make RTL=1 && ./run.py  --topo parser --feature parser ; ret=$? ; make sanity_logs ; exit $ret" ]
   naples-sim:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && bazel build //nic/hal/test:nic_mgr_app && make package-sim && make release && rm -f nic.tar && ./tools/validate-naples-docker.sh; ret=$? ; make sanity_logs ; exit $ret" ]
-  agent/up2up:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./tools/run-agent-sanity.sh --topo agentup2up --feature agentup2up ; ret=$? ; make sanity_logs ; exit $ret" ]
+#  agent/up2up:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make sanity-tests && ./tools/run-agent-sanity.sh --topo agentup2up --feature agentup2up ; ret=$? ; make sanity_logs ; exit $ret" ]
   upgmgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all ; ret=$? ; exit $ret" ]
   delphi:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/delphi/...  && cd $GOPATH/src/github.com/pensando/sw && go test -v ./nic/delphi/...; ret=$? ; exit $ret" ]
   sysmgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/delphi/... && bazel build //nic/sysmgr/... && cd /sw/nic/sysmgr/test && ./test.sh; ret=$? ; exit $ret" ]

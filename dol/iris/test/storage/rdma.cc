@@ -18,6 +18,7 @@
 #include "nic/gen/proto/hal/endpoint.grpc.pb.h"
 #include "nic/gen/proto/hal/session.grpc.pb.h"
 #include "nic/gen/proto/hal/rdma.grpc.pb.h"
+#include "nic/gen/proto/hal/nwsec.grpc.pb.h"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/asic/capri/design/common/cap_addr_define.h"
@@ -32,6 +33,7 @@ using l2segment::L2Segment;
 using endpoint::Endpoint;
 using session::Session;
 using rdma::Rdma;
+using nwsec::NwSecurity;
 
 extern std::shared_ptr<Channel> hal_channel;
 
@@ -43,6 +45,7 @@ std::unique_ptr<L2Segment::Stub> l2segment_stub;
 std::unique_ptr<Endpoint::Stub> endpoint_stub;
 std::unique_ptr<Session::Stub> session_stub;
 std::unique_ptr<Rdma::Stub> rdma_stub;
+std::unique_ptr<NwSecurity::Stub> nwsec_stub;
 
 const uint32_t	kRoceEntrySize	 = 6; // Default is 64 bytes
 const uint32_t	kRoceCQEntrySize	 = 5; // Default is 32 bytes
@@ -83,6 +86,7 @@ uint32_t g_rdma_pvm_roce_init_cq;
 uint32_t g_rdma_pvm_roce_tgt_sq;
 uint32_t g_rdma_pvm_roce_tgt_cq;
 bool nvme_dp_init = false;
+uint64_t g_secprof_hdl;
 
 
 }  // anonymous namespace
@@ -108,6 +112,7 @@ void CreateStubs() {
   endpoint_stub = std::move(Endpoint::NewStub(hal_channel));
   session_stub = std::move(Session::NewStub(hal_channel));
   rdma_stub = std::move(Rdma::NewStub(hal_channel));
+  nwsec_stub = std::move(NwSecurity::NewStub(hal_channel));
 }
 
 int CreateRDMALIF(uint32_t sw_lif_id) {
@@ -149,13 +154,31 @@ int CreateRDMALIF(uint32_t sw_lif_id) {
   return hal_if::create_lif(&params, &g_rdma_hw_lif_id);
 }
 
-int CreateVrf(uint32_t ten_id) {
+int CreateSecurityProfile(uint64_t *handle) {
+  grpc::ClientContext context;
+  nwsec::SecurityProfileRequestMsg req_msg;
+  nwsec::SecurityProfileResponseMsg rsp_msg;
+
+  auto req = req_msg.add_request();
+  req->mutable_key_or_handle()->set_profile_id(2);
+
+  auto status =  nwsec_stub->SecurityProfileCreate(&context, req_msg, &rsp_msg);
+  if (!status.ok()) return -1;
+
+  auto resp = rsp_msg.response(0);
+  *handle = resp.mutable_profile_status()->profile_handle();
+
+  return 0; 
+}
+
+int CreateVrf(uint32_t ten_id, uint64_t secprof_hdl) {
   grpc::ClientContext context;
   vrf::VrfRequestMsg req_msg;
   vrf::VrfResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
   req->mutable_key_or_handle()->set_vrf_id(ten_id);
+  req->mutable_security_key_handle()->set_profile_handle(secprof_hdl);
 
   auto status = vrf_stub->VrfCreate(&context, req_msg, &resp_msg);
   if (!status.ok()) return -1;
@@ -267,7 +290,9 @@ int rdma_p4_init() {
   CreateStubs();
   if (CreateRDMALIF(kLifID) < 0) return -1;
   printf("RDMA LIF created\n");
-  if (CreateVrf(kVrfID) < 0) return -1;
+  if (CreateSecurityProfile(&g_secprof_hdl) < 0) return -1;
+  printf("Security Profile created\n");
+  if (CreateVrf(kVrfID, g_secprof_hdl) < 0) return -1;
   printf("Vrf created\n");
   if (CreateL2Segment(kVrfID, kL2SegmentID, &g_l2seg_handle) < 0) return -1;
   printf("L2 segment created\n");

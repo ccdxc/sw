@@ -12,7 +12,7 @@ segments:
 tunnels:
     - spec  : ref://store/specs/id=TUNNEL_VXLAN
 
-security_profile: None
+security_profile: ref://store/objects/id=SEC_PROF_NOOP
 
 sessions:
     unidest:

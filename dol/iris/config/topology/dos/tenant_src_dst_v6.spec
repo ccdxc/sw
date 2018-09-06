@@ -10,7 +10,7 @@ segments:
     - spec  : ref://store/specs/id=SEGMENT_DOS_SRC_DST
       count : 1
 
-security_profile: None
+security_profile: ref://store/objects/id=SEC_PROF_NOOP
 
 dos: ref://store/specs/id=DOS_SRC_DST
 

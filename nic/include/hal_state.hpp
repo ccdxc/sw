@@ -277,6 +277,9 @@ public:
     void set_max_data_threads (uint8_t val) { max_data_threads_ = val; }
     uint8_t max_data_threads (void) const { return max_data_threads_; }
 
+    void set_default_security_profile (hal_handle_t hdl) { default_securityprof_hdl_ = hdl; }
+    hal_handle_t default_security_profile_hdl (void) const { return default_securityprof_hdl_; }
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -333,6 +336,7 @@ private:
     hal_forwarding_mode_t   forwarding_mode_;
     if_id_t                 app_redir_if_id_;
     uint8_t                 max_data_threads_;
+    hal_handle_t            default_securityprof_hdl_;
 
     // Classic Mode:
     //  - Ucast packet from host, registered mac will be a MISS.

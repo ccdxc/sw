@@ -46,7 +46,7 @@ uplinkpc:
 
 acls: None
 
-security_profiles: None
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 
 tenants:
     -   spec    : ref://store/specs/id=TENANT_RDMA

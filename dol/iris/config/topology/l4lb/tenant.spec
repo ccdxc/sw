@@ -18,7 +18,7 @@ segments:
 # - All the segments will be enabled on these Enics              
 nfveps: 0
 
-security_profile: None
+security_profile: ref://store/objects/id=SEC_PROF_NOOP
 
 l4lb: ref://store/specs/id=L4LB
 

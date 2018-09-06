@@ -84,7 +84,7 @@ TEST_F(nwsec_prof_upgrade_test, test1)
     // shared_memory_object::remove("h3s");
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(2);
     sp_spec.set_ipsg_en(true);
     sp_spec.set_ip_normalization_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -100,8 +100,15 @@ TEST_F(nwsec_prof_upgrade_test, test1)
     // Preserve hal state
     hal::test::hal_test_preserve_state();
 
-    // Delete nwsec
+    // Delete default nwsec 
     del_req.mutable_key_or_handle()->set_profile_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    // Delete nwsec
+    del_req.mutable_key_or_handle()->set_profile_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();

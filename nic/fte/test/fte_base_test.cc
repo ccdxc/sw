@@ -42,11 +42,22 @@ static fte_base_test::v4_rule_t *v4_test_rule_alloc() {
 
 hal_handle_t fte_base_test::add_vrf()
 {
-    hal_ret_t ret;
-    vrf::VrfSpec  spec;
-    vrf::VrfResponse resp;
+    hal_ret_t                   ret;
+    vrf::VrfSpec                spec;
+    vrf::VrfResponse            resp;
+    nwsec::SecurityProfileSpec  sp_spec;
+    nwsec::SecurityProfileResponse  sp_rsp;
+
+    // Create security profile
+    sp_spec.mutable_key_or_handle()->set_profile_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     spec.mutable_key_or_handle()->set_vrf_id(++fte_base_test::vrf_id_);
+    spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(spec, &resp);
     hal::hal_cfg_db_close();

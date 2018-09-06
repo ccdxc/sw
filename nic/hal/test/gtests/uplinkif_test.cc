@@ -170,7 +170,7 @@ TEST_F(uplinkif_test, test3)
     NetworkKeyHandle                *nkh = NULL;
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(2);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_create(sp_spec, &sp_rsp);
