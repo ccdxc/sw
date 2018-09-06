@@ -9,9 +9,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
-func restPost(v interface{}, url string) error {
+func restPost(v interface{}, port int, url string) error {
 	payloadBytes, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
@@ -27,6 +28,10 @@ func restPost(v interface{}, url string) error {
 	}
 	body := bytes.NewReader(payloadBytes)
 
+	url = "http://" + naplesIP + ":" + strconv.Itoa(port) + "/" + url
+	if verbose {
+		fmt.Println("URL: ", url)
+	}
 	postReq, err := http.NewRequest("POST", url, body)
 	if err != nil {
 		return err

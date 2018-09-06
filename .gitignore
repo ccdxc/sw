@@ -55,3 +55,6 @@ venice/ui/linux_signing_key.pub
 
 # Remove go 1.10 cache dir
 .cache
+
+# Remove penctl autocompletion file
+penctl.sh

@@ -5,19 +5,22 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
 var modeManagedCmd = &cobra.Command{
 	Use:   "mode",
 	Short: "Set Naples to Managed mode",
-	Long:  "Set Naples to Venice Managed mode",
+	Long:  "\n-----------------------------------\n Set Naples to Venice Managed mode \n-----------------------------------\n",
 	Run:   modeManagedCmdHandler,
 	Args:  modeManagedCmdArgsValidator,
 }
@@ -53,6 +56,30 @@ func init() {
 }
 
 func modeManagedCmdArgsValidator(cmd *cobra.Command, args []string) error {
+	for _, cluster := range clusters {
+		ep := strings.Split(cluster, ":")
+		if impl.HostAddr(ep[0]) != true {
+			str := "Not valid hostaddr: " + ep[0]
+			return errors.New(str)
+		}
+		if _, err := strconv.Atoi(ep[1]); err != nil {
+			str := "Not valid port number: " + ep[1]
+			return errors.New(str)
+		}
+	}
+	if strings.Compare(mode, "managed") != 0 && strings.Compare(mode, "unmanaged") != 0 {
+		str := "Not valid mode: " + mode
+		return errors.New(str)
+	}
+	if !impl.IPAddr(mgmtIP) {
+		return errors.New("Not valid management-ip")
+	}
+	if !impl.HostAddr(hostName) {
+		return errors.New("Not valid host name")
+	}
+	if !impl.MacAddr(priMac) {
+		return errors.New("Not valid mac address")
+	}
 	return nil
 }
 
@@ -75,7 +102,7 @@ func modeManagedCmdHandler(cmd *cobra.Command, args []string) {
 		},
 	}
 
-	err := restPost(naplesCfg, "http://192.168.30.12:9008/api/v1/naples/")
+	err := restPost(naplesCfg, 9008, "api/v1/naples/")
 	if err != nil {
 		if strings.Contains(err.Error(), "EOF") {
 			if verbose {
