@@ -12,7 +12,6 @@ export interface IClusterClusterSpec {
     'quorum-nodes'?: Array<string>;
     'virtual-ip'?: string;
     'ntp-servers'?: Array<string>;
-    'dns-subdomain'?: string;
     'auto-admit-nics'?: boolean;
 }
 
@@ -26,8 +25,6 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     'virtual-ip': string = null;
     /** NTPServers contains the list of NTP servers for the cluster. */
     'ntp-servers': Array<string> = null;
-    /** DNSSubDomain is the DNS subdomain for the default tenant. */
-    'dns-subdomain': string = null;
     /** AutoAdmitNICs when enabled auto-admits NICs that are validated
     into Venice Cluster. When it is disabled, NICs validated by CMD are
     set to Pending state and it requires Manual approval to be admitted
@@ -45,10 +42,6 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
         'ntp-servers': {
             description:  'NTPServers contains the list of NTP servers for the cluster.',
             type: 'Array<string>'
-        },
-        'dns-subdomain': {
-            description:  'DNSSubDomain is the DNS subdomain for the default tenant.',
-            type: 'string'
         },
         'auto-admit-nics': {
             description:  'AutoAdmitNICs when enabled auto-admits NICs that are validated into Venice Cluster. When it is disabled, NICs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster.',
@@ -96,11 +89,6 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
         if (values) {
             this.fillModelArray<string>(this, 'ntp-servers', values['ntp-servers']);
         }
-        if (values && values['dns-subdomain'] != null) {
-            this['dns-subdomain'] = values['dns-subdomain'];
-        } else if (ClusterClusterSpec.hasDefaultValue('dns-subdomain')) {
-            this['dns-subdomain'] = ClusterClusterSpec.propInfo['dns-subdomain'].default;
-        }
         if (values && values['auto-admit-nics'] != null) {
             this['auto-admit-nics'] = values['auto-admit-nics'];
         } else if (ClusterClusterSpec.hasDefaultValue('auto-admit-nics')) {
@@ -117,7 +105,6 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
                 'quorum-nodes': new FormArray([]),
                 'virtual-ip': new FormControl(this['virtual-ip']),
                 'ntp-servers': new FormArray([]),
-                'dns-subdomain': new FormControl(this['dns-subdomain']),
                 'auto-admit-nics': new FormControl(this['auto-admit-nics']),
             });
             // generate FormArray control elements
@@ -133,7 +120,6 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
             this.fillModelArray<string>(this, 'quorum-nodes', this['quorum-nodes']);
             this._formGroup.controls['virtual-ip'].setValue(this['virtual-ip']);
             this.fillModelArray<string>(this, 'ntp-servers', this['ntp-servers']);
-            this._formGroup.controls['dns-subdomain'].setValue(this['dns-subdomain']);
             this._formGroup.controls['auto-admit-nics'].setValue(this['auto-admit-nics']);
         }
     }

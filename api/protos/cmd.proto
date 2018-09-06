@@ -62,14 +62,11 @@ message ClusterSpec {
     // NTPServers contains the list of NTP servers for the cluster.
     repeated string NTPServers  = 3 [(gogoproto.jsontag) = "ntp-servers,omitempty"];
 
-    // DNSSubDomain is the DNS subdomain for the default tenant.
-    string DNSSubDomain         = 4 [(gogoproto.jsontag) = "dns-subdomain,omitempty"];
-
     // AutoAdmitNICs when enabled auto-admits NICs that are validated
     // into Venice Cluster. When it is disabled, NICs validated by CMD are
     // set to Pending state and it requires Manual approval to be admitted
     // into the cluster.
-    bool AutoAdmitNICs          = 5 [(gogoproto.jsontag) = "auto-admit-nics,omitempty"];
+    bool AutoAdmitNICs          = 4 [(gogoproto.jsontag) = "auto-admit-nics,omitempty"];
 }
 
 // ClusterStatus contains the current state of the Cluster.

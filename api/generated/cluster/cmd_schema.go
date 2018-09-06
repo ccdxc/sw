@@ -37,7 +37,6 @@ var typesMapCmd = map[string]*api.Struct{
 			"auto-admit-nics":   api.CLIInfo{Path: "Spec.AutoAdmitNICs", Skip: false, Insert: "", Help: ""},
 			"build-date":        api.CLIInfo{Path: "Status.BuildDate", Skip: false, Insert: "", Help: ""},
 			"build-version":     api.CLIInfo{Path: "Status.BuildVersion", Skip: false, Insert: "", Help: ""},
-			"dns-subdomain":     api.CLIInfo{Path: "Spec.DNSSubDomain", Skip: false, Insert: "", Help: ""},
 			"kind":              api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"leader":            api.CLIInfo{Path: "Status.Leader", Skip: false, Insert: "", Help: ""},
 			"ntp-servers":       api.CLIInfo{Path: "Spec.NTPServers", Skip: false, Insert: "", Help: ""},
@@ -66,8 +65,6 @@ var typesMapCmd = map[string]*api.Struct{
 			"VirtualIP": api.Field{Name: "VirtualIP", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "virtual-ip", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"NTPServers": api.Field{Name: "NTPServers", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ntp-servers", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
-			"DNSSubDomain": api.Field{Name: "DNSSubDomain", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dns-subdomain", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"AutoAdmitNICs": api.Field{Name: "AutoAdmitNICs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auto-admit-nics", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},

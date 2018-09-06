@@ -172,13 +172,6 @@
             }
           },
           {
-            "name": "spec.dns-subdomain",
-            "description": "DNSSubDomain is the DNS subdomain for the default tenant.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
             "name": "spec.auto-admit-nics",
             "description": "AutoAdmitNICs when enabled auto-admits NICs that are validated\ninto Venice Cluster. When it is disabled, NICs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster.",
             "in": "query",
@@ -3648,10 +3641,6 @@
             "type": "string"
           },
           "description": "NTPServers contains the list of NTP servers for the cluster."
-        },
-        "dns-subdomain": {
-          "type": "string",
-          "description": "DNSSubDomain is the DNS subdomain for the default tenant."
         },
         "auto-admit-nics": {
           "type": "boolean",

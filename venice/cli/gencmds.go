@@ -985,10 +985,6 @@ var CreateClusterFlags = []cli.Flag{
 		Name: "auto-admit-nics",
 	},
 
-	cli.StringFlag{
-		Name: "dns-subdomain",
-	},
-
 	cli.StringSliceFlag{
 		Name: "ntp-servers",
 	},
