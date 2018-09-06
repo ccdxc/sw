@@ -1704,7 +1704,7 @@ class capri_gress_pa:
                     cf.is_predicate = True
                     flit.add_cfield(cf)
                     bits_used += cf.width
-                    if cf.is_parser_extracted:
+                    if cf.is_parser_extracted or cf.is_i2e_meta:
                         alignment = 8
                         justify = JUSTIFY_RIGHT
                     else:
