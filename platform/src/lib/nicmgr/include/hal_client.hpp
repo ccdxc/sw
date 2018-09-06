@@ -135,7 +135,8 @@ public:
                      struct lif_info *lif_info,
                      bool enable_rdma,
                      uint32_t max_pt_entries,
-                     uint32_t max_keys);
+                     uint32_t max_keys,
+                     uint32_t max_ahs);
 
   int LifDelete(uint64_t lif_id);
 

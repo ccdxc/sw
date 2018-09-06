@@ -747,7 +747,8 @@ HalClient::LifCreate(uint64_t lif_id,
                      struct lif_info *lif_info,
                      bool enable_rdma,
                      uint32_t max_pt_entries,
-                     uint32_t max_keys)
+                     uint32_t max_keys,
+                     uint32_t max_ahs)
 {
     LifSpec              *spec;
     LifResponse          rsp;
@@ -769,6 +770,7 @@ HalClient::LifCreate(uint64_t lif_id,
     spec->set_enable_rdma(enable_rdma);
     spec->set_rdma_max_pt_entries(max_pt_entries);
     spec->set_rdma_max_keys(max_keys);
+    spec->set_rdma_max_ahs(max_ahs);
 
     for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
         auto & qinfo = queue_info[i];

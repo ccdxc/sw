@@ -158,7 +158,7 @@ Eth::Eth(HalClient *hal_client, void *dev_spec)
     }
 
     lif_handle = hal->LifCreate(spec->lif_id, qinfo, &info,
-                                spec->enable_rdma, spec->pte_count, spec->key_count);
+                                spec->enable_rdma, spec->pte_count, spec->key_count, spec->ah_count);
     if (lif_handle == 0) {
         NIC_LOG_ERR("Failed to create LIF");
         return;

@@ -317,7 +317,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         }
     }
 
-    lif_handle = hal->LifCreate(spec->lif_id, qinfo, &info, false, 0, 0);
+    lif_handle = hal->LifCreate(spec->lif_id, qinfo, &info, false, 0, 0, 0);
     if (lif_handle == 0) {
         NIC_LOG_ERR("Failed to create LIF");
         return;

@@ -156,6 +156,7 @@ struct eth_devspec {
     bool     enable_rdma;
     uint32_t pte_count;
     uint32_t key_count;
+    uint32_t ah_count;
     uint32_t rdma_sq_count;
     uint32_t rdma_rq_count;
     uint32_t rdma_cq_count;

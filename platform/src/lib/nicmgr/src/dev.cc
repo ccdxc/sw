@@ -106,7 +106,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
         },
     };
 
-    lif_handle = hal->LifCreate(1, qinfo, &info, false, 0, 0);
+    lif_handle = hal->LifCreate(1, qinfo, &info, false, 0, 0, 0);
     if (lif_handle == 0) {
         throw runtime_error("Failed to create nicmgr lif!");
     }
@@ -349,6 +349,7 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->rdma_pid_count = val.get<uint64_t>("rdma.pid_count");
                 eth_spec->key_count = val.get<uint64_t>("rdma.key_count");
                 eth_spec->pte_count = val.get<uint64_t>("rdma.pte_count");
+                eth_spec->ah_count = val.get<uint64_t>("rdma.ah_count");
             }
 
             eth_spec->lif_id = val.get<uint64_t>("lif_id", 0);
