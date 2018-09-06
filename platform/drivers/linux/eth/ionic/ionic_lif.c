@@ -1423,11 +1423,98 @@ int ionic_lif_register(struct lif *lif)
 	return 0;
 }
 
+static void ionic_lif_notify_work(struct work_struct *ws)
+{
+}
+
+static int ionic_lif_changeupper(struct ionic *ionic, struct lif *lif,
+				 struct netdev_notifier_changeupper_info *info)
+{
+	struct netdev_lag_upper_info *upper_info;
+
+	dev_dbg(ionic->dev, "lif %d is lag port %d\n",
+		lif->index, netif_is_lag_port(lif->netdev));
+	dev_dbg(ionic->dev, "lif %d upper %s is lag master %d\n",
+		lif->index, info->upper_dev->name,
+		netif_is_lag_master(info->upper_dev));
+	dev_dbg(ionic->dev, "lif %d has upper info %d\n",
+		lif->index, !!info->upper_info);
+
+	if (!netif_is_lag_port(lif->netdev) ||
+	    !netif_is_lag_master(info->upper_dev) ||
+	    !info->upper_info)
+		return 0;
+
+	upper_info = info->upper_info;
+
+	dev_dbg(ionic->dev, "upper tx type %d\n",
+		upper_info->tx_type);
+
+	return 0;
+}
+
+static int ionic_lif_changelowerstate(struct ionic *ionic, struct lif *lif,
+				      struct netdev_notifier_changelowerstate_info *info)
+{
+	struct netdev_lag_lower_state_info *lower_info;
+
+	dev_dbg(ionic->dev, "lif %d is lag port %d\n",
+		lif->index, netif_is_lag_port(lif->netdev));
+	dev_dbg(ionic->dev, "lif %d has lower info %d\n",
+		lif->index, !!info->lower_state_info);
+
+	if (!netif_is_lag_port(lif->netdev) ||
+	    !info->lower_state_info)
+		return 0;
+
+	lower_info = info->lower_state_info;
+
+	dev_dbg(ionic->dev, "link up %d enable %d\n",
+		lower_info->link_up, lower_info->tx_enabled);
+
+	return 0;
+}
+
+static int ionic_lif_notify(struct notifier_block *nb,
+			    unsigned long event, void *info)
+{
+	struct ionic *ionic = container_of(nb, struct ionic, nb);
+	struct net_device *ndev = netdev_notifier_info_to_dev(info);
+	struct lif *lif = get_netdev_ionic_lif(ndev, IONIC_API_VERSION);
+	int err;
+
+	if (!lif || lif->ionic != ionic)
+		return NOTIFY_DONE;
+
+	switch (event) {
+	case NETDEV_CHANGEUPPER:
+		err = ionic_lif_changeupper(ionic, lif, info);
+		break;
+	case NETDEV_CHANGELOWERSTATE:
+		err = ionic_lif_changelowerstate(ionic, lif, info);
+		break;
+	default:
+		return NOTIFY_DONE;
+	}
+
+	(void)err;
+
+	return NOTIFY_DONE;
+}
+
 int ionic_lifs_register(struct ionic *ionic)
 {
 	struct list_head *cur;
 	struct lif *lif;
 	int err;
+
+	INIT_WORK(&ionic->nb_work, ionic_lif_notify_work);
+
+	ionic->nb.notifier_call = ionic_lif_notify;
+
+	err = register_netdevice_notifier(&ionic->nb);
+	if (err)
+		ionic->nb.notifier_call = NULL;
 
 	list_for_each(cur, &ionic->lifs) {
 		lif = list_entry(cur, struct lif, list);
@@ -1450,6 +1537,11 @@ void ionic_lifs_unregister(struct ionic *ionic)
 			unregister_netdev(lif->netdev);
 			lif->registered = false;
 		}
+	}
+
+	if (ionic->nb.notifier_call) {
+		unregister_netdevice_notifier(&ionic->nb);
+		cancel_work_sync(&ionic->nb_work);
 	}
 }
 

@@ -63,6 +63,8 @@ struct ionic {
 	struct list_head cmd_list;
 	struct work_struct cmd_work;
 #endif
+	struct work_struct nb_work;
+	struct notifier_block nb;
 };
 
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx);
