@@ -23,4 +23,5 @@ Pensando CLIs
 
 ### SEE ALSO
 * [penctl mode](penctl_mode.md)	 - Set Naples to Managed mode
+* [penctl ssh](penctl_ssh.md)	 - SSH Commands to Naples
 

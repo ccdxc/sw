@@ -14,9 +14,11 @@ import (
 )
 
 var naplesIP string
+var naplesSSHIP string
 
 func pickNetwork(cmd *cobra.Command, args []string) error {
 	naplesIP = "192.168.30.12"
+	naplesSSHIP = "192.168.68.155"
 	if !impl.IPAddr(naplesIP) {
 		panic(errors.New("Not valid Naples IP"))
 	}
@@ -24,4 +26,14 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 		fmt.Println("TODO: Namespace stuff here")
 	}
 	return nil
+}
+
+//TODO: Fix the username
+func getNaplesUser() string {
+	return "penctltestuser"
+}
+
+//TODO: Fix the password
+func getNaplesPwd() string {
+	return "Pen%Ctl%Test%Pwd"
 }

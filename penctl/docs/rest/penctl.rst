@@ -30,4 +30,5 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl mode <penctl_mode.rst>`_ 	 - Set Naples to Managed mode
+* `penctl ssh <penctl_ssh.rst>`_ 	 - SSH Commands to Naples
 
