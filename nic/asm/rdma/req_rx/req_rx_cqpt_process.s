@@ -4,9 +4,11 @@
 struct req_rx_phv_t p;
 struct req_rx_s7_t2_k k;
 
-#define CQCB_PA_ADDR    r2
-#define CQCB_PA_INDEX   r2
 #define PAGE_ADDR_P     r1
+#define CQE_P           r1
+#define DMA_CMD_BASE    r2
+#define CQCB_PA_ADDR    r4
+#define CQCB_PA_INDEX   r4
     
 #define IN_P t2_s2s_cqcb_to_pt_info
 
@@ -28,7 +30,7 @@ req_rx_cqpt_process:
     crestore [c3, c2], CAPRI_KEY_RANGE(IN_P, no_translate, no_dma), 0x3 //BD Slot
 
     bcf             [c2 & c3], fire_eqcb
-    DMA_CMD_STATIC_BASE_GET(r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
     
     //page_addr_p = (u64 *) (d_p + sizeof(u64) * cqcb_to_pt_info_p->page_seg_offset);
     sub             PAGE_ADDR_P, (HBM_NUM_PT_ENTRIES_PER_CACHE_LINE-1), K_PAGE_SEG_OFFSET
@@ -46,16 +48,16 @@ req_rx_cqpt_process:
     bcf             [c2], fire_eqcb
     
     // cqe_p = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
-    add             r1, r1, K_PAGE_OFFSET //BD Slot
+    add             CQE_P, PAGE_ADDR_P, K_PAGE_OFFSET //BD Slot
 
-    DMA_PHV2MEM_SETUP(r2, c1, cqe, cqe, r1)
+    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqe, cqe, CQE_P)
 
 fire_eqcb:    
 
     bbeq  CAPRI_KEY_FIELD(IN_P, fire_eqcb), 1, cqpt_exit
     nop // BD Slot
 
-    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, r2)
+    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, DMA_CMD_BASE)
 
 cqpt_exit:
     CAPRI_SET_TABLE_2_VALID_CE(c0, 0)
