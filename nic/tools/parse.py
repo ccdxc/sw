@@ -4,6 +4,7 @@ import os
 import sys
 import argparse
 import re
+import json
 
 # Globals
 if len(sys.argv) > 1:
@@ -18,6 +19,8 @@ if nic_dir is None:
 
 model_log = nic_dir + "/model.log"
 model1_log = nic_dir + "/model1.log"
+model_csv = nic_dir+"/model.log.csv"
+model_json = nic_dir+"/model.json"
 inscount_log = nic_dir + "/inscount.log"
 inscount_sort_log = nic_dir + "/inscount_sort.log"
 sym_log = nic_dir + "/gen/capri_loader.conf"
@@ -109,10 +112,141 @@ def parse_logs():
     inscount_sort_file.close()
     return
 
+# csv parse
+
+levelIregex=[\
+ "^INFO \:\: WA-MODEL\: RING DOORBELL"\
+,"^INFO \:\: PBC-MODEL\: RECEIVE PACKET ON PORT"\
+,"^INFO \:\: PBC-MODEL\: SENDING PACKET ON PORT"\
+];
+
+levelIIregex= [\
+ ".*LAUNCH TABLE ID"\
+,".*Setting PC to"\
+,"^INFO \:\: PBC-MODEL\: dump packet \:"\
+,".*Sending request to MPU\:"\
+];
+
+levelIIIregex= [\
+# "^MSG \:\: STAGE"\
+"^MSG \:\: stg \: flit\: "\
+,"^INFO \:\:\s*\d"\
+,"^DBG_DECODE \>\>\>         FULL_KEY\:\d\:"\
+,"^INFO \:\: PICT\: "\
+,"^\[\s+\d+\]\:"\
+,".*mpu_req_itf_t"\
+];
+
+levelIIIIregex= [\
+"^DBG_DECODE \>\>\>                BYTE\:"\
+,"^\# "\
+];
+def parse_csv():
+    print "* Starting CSV Parse....."
+    modelfile  = open(model1_log, "r")
+    os.remove(model_csv) if os.path.exists(model_csv) else None
+    modelcsv  = open(model_csv, "a+")
+    combinedLevelIregex = "(" + ")|(".join(levelIregex) + ")"
+    combinedLevelIIregex = "(" + ")|(".join(levelIIregex) + ")"
+    combinedLevelIIIregex = "(" + ")|(".join(levelIIIregex) + ")"
+    line = "Level I, Level II, Level III,,,,,,,,\"DATA";
+    modelcsv.write(line)
+    firstLevelFound=0;
+    for linenum, line in enumerate(modelfile):
+        if re.match(combinedLevelIregex, line, re.I):
+            firstLevelFound=1
+	    line = "\"\n"+line.rstrip() + ",.,.,,,,,,,,\"\n"   
+        elif re.match(combinedLevelIIregex, line, re.I): 
+            line = "\"\n.,"+line.rstrip() + ",.,,,,,,,,\"\n" 
+        elif re.match(combinedLevelIIIregex, line, re.I):
+            line = "\"\n.,.,"+line.rstrip() + ",,,,,,,,\"\n"
+        if firstLevelFound==1:        
+            modelcsv.write(line)
+    modelfile.close()
+    modelcsv.close()
+    # prepare sorted inscount file
+    return
+
+# jsoncsv parse
+
+def parse_json():
+    print "* Starting JSON Parse....."
+    modelfile  = open(model1_log, "r")
+    os.remove(model_json) if os.path.exists(model_json) else None
+    modeljson  = open(model_json, "a+")
+    combinedLevelIregex = "(" + ")|(".join(levelIregex) + ")"
+    combinedLevelIIregex = "(" + ")|(".join(levelIIregex) + ")"
+    combinedLevelIIIregex = "(" + ")|(".join(levelIIIregex) + ")"
+    combinedLevelIIIIregex = "(" + ")|(".join(levelIIIIregex) + ")"
+    firstLevelFound=0;
+    rawLevel0={}
+    rawLevel0["name"]="All stages"
+    rawLevel0["line"]="0"
+    rawLevel0["children"]=[]
+
+    rawLevelI={}
+    rawLevelII={}
+    rawLevelIII={}
+    rawLevelIIII={}
+    for linenum, line in enumerate(modelfile):
+        if re.match(combinedLevelIregex, line, re.I):
+            if rawLevelI!={} :
+                rawLevel0["children"].append(rawLevelI);
+                rawLevelII={}
+                rawLevelIII={}
+                rawLevelI={}
+            rawLevelI["name"]=line
+            rawLevelI["line"]=linenum
+        elif re.match(combinedLevelIIregex, line, re.I):
+            if rawLevelII!={} :
+                if "children" not in rawLevelI :
+                    rawLevelI["children"]=[] 
+                rawLevelI["children"].append(rawLevelII);
+                rawLevelII={}
+                rawLevelIII={}
+            rawLevelII["name"]=line
+            rawLevelII["line"]=linenum
+        elif re.match(combinedLevelIIIregex, line, re.I):
+            if rawLevelIII!={} :
+                if rawLevelII!={} :
+                    if "children" not in rawLevelII :
+                        rawLevelII["children"]=[]
+                    rawLevelII["children"].append(rawLevelIII);
+                else :
+                    if "children" not in rawLevelI :
+                        rawLevelI["children"]=[]
+                    rawLevelI["children"].append(rawLevelIII);
+                rawLevelIII={}
+            rawLevelIII["name"]=line
+            rawLevelIII["line"]=linenum
+        elif re.match(combinedLevelIIIIregex, line, re.I):
+            if rawLevelIIII!={} :
+                if rawLevelIII!={} :
+                    if "children" not in rawLevelIII :
+                        rawLevelIII["children"]=[]
+                    rawLevelIII["children"].append(rawLevelIIII);
+                else :
+                    if rawLevelI["children"] is None :
+                        rawLevelI["children"]=[]
+                    rawLevelI["children"].append(rawLevelIIII);
+                rawLevelIIII={}
+            rawLevelIIII["name"]=line
+            rawLevelIIII["line"]=linenum
+           # rawLevelIIII["children"]=[]
+    line =json.dumps(rawLevel0, ensure_ascii=False) 
+    modeljson.write(line)
+    modeljson.close()
+    modelfile.close()
+    # prepare sorted inscount file
+    print "To enable HTTP server for parser analyser please run\n   python -m SimpleHTTPServer 8000 & \n\nThen open broswer with the IP of this server\nFor example\n\"http://192.168.68.12:8000/\""
+    return
+
 # main()
 def main():
     build_symbols()
     parse_logs()
-
+#    parse_csv()
+    parse_json()
+    
 if __name__ == "__main__":
     main()

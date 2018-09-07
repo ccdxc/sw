@@ -20,6 +20,7 @@ _DOCKER_API_CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
 
 AGENT_PORT = 9007
+SIM_PORT =   777
 NAPLES_DATA_DIR = "/var/run/naples/"
 NAPLES_OVERLAY_CONFIG_DIR = "/home/vagrant/configs/config_vxlan_overlay"
 NAPLES_IPSEC_CONFIG_DIR = "/home/vagrant/configs/config_ipsec"
@@ -31,7 +32,8 @@ NAPLES_VOLUME_MOUNTS = {
 }
 
 NAPLES_PORT_MAPS = {
-    str(AGENT_PORT) + '/tcp': AGENT_PORT
+    str(AGENT_PORT) + '/tcp': AGENT_PORT,
+    str(SIM_PORT) + '/tcp':SIM_PORT
 }
 
 # Move it out to a configu
