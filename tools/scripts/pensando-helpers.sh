@@ -222,7 +222,7 @@ start_model_eth() {
     start_model_how type=eth,bdf=03:00.0,lif=4,intr_base=0,devcmd_pa=0x13809f000,devcmddb_pa=0x1380a0000
 }
 
-start_hal() {
+start_hal_hostpin() {
     if [[ `basename $PWD` != 'nic' ]]; then
         echo "Run this command from nic directory"
         return -1 
@@ -230,6 +230,7 @@ start_hal() {
 
     killall hal
 
+    cp conf/hal_hostpin.ini conf/hal.ini
     # export GDB="gdb -ex run -e ~/.gdbinit --args"
     ZMQ_SOC_DIR="$PWD" ./tools/start-hal.sh
 }
@@ -396,6 +397,28 @@ start_qemu_rxe() {
 
 ssh_qemu_rxe() {
     ssh -p $QEMU_SSH_PORT_RXE $QEMU_USER@127.0.0.1 "$@"
+}
+
+start_agent() {
+
+    if [[ `basename $PWD` != 'nic' ]]; then
+        echo "Run this command from nic directory"
+        return -1
+    fi
+
+    ./obj/x86_64/agent/netagent -datapath hal -logtofile agent.log -hostif lo -agentdb $PWD/agent.db
+}
+
+start_heimdall() {
+
+    if [[ `basename $PWD` != 'sw' ]]; then
+        echo "Run this command from sw directory"
+        return -1
+    fi
+
+    nic/obj/agent/heimdall  run \
+        --device-file  platform/src/app/nicmgrd/etc/eth-smart.json \
+        --config-file  nic/e2etests/go/agent/configs/golden/golden_cfg.yml
 }
 
 # source config file at end, so user can override any command

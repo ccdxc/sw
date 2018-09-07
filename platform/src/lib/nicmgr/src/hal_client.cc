@@ -404,7 +404,6 @@ HalClient::AddL2SegmentOnUplink(uint64_t uplink_id, uint64_t l2seg_id)
 uint64_t
 HalClient::EnicCreate(uint64_t enic_id,
                       uint64_t lif_id,
-                      uint64_t uplink_id,
                       uint64_t native_l2seg_id,
                       vector<uint64_t> &nonnative_l2seg_ids)
 {
@@ -425,7 +424,6 @@ HalClient::EnicCreate(uint64_t enic_id,
     spec->set_type(::intf::IfType::IF_TYPE_ENIC);
     spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
     spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
-    spec->mutable_if_enic_info()->mutable_pinned_uplink_if_key_handle()->set_interface_id(uplink_id);
     spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
     spec->mutable_if_enic_info()->mutable_classic_enic_info()->set_native_l2segment_handle(l2seg_id2handle[native_l2seg_id]);
     for (auto it = nonnative_l2seg_ids.cbegin(); it != nonnative_l2seg_ids.cend(); it++) {
@@ -745,6 +743,7 @@ uint64_t
 HalClient::LifCreate(uint64_t lif_id,
                      struct queue_info *queue_info,
                      struct lif_info *lif_info,
+                     uint64_t uplink_id,
                      bool enable_rdma,
                      uint32_t max_pt_entries,
                      uint32_t max_keys,
@@ -766,6 +765,8 @@ HalClient::LifCreate(uint64_t lif_id,
 
     spec = req_msg.add_request();
     spec->mutable_key_or_handle()->set_lif_id(lif_id);
+    if (uplink_id)
+        spec->mutable_pinned_uplink_if_key_handle()->set_interface_id(uplink_id);
     spec->set_admin_status(::intf::IF_STATUS_UP);
     spec->set_enable_rdma(enable_rdma);
     spec->set_rdma_max_pt_entries(max_pt_entries);

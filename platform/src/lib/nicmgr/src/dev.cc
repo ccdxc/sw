@@ -106,7 +106,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
         },
     };
 
-    lif_handle = hal->LifCreate(1, qinfo, &info, false, 0, 0, 0);
+    lif_handle = hal->LifCreate(1, qinfo, &info, 0, false, 0, 0, 0);
     if (lif_handle == 0) {
         throw runtime_error("Failed to create nicmgr lif!");
     }
@@ -361,11 +361,9 @@ DeviceManager::LoadConfig(string path)
                 eth_spec->lif_id = LIF_ID_BASE + lif_id;
             }
 
-            if (val.get_optional<string>("network")) {
-                eth_spec->vrf_id = val.get<uint64_t>("network.vrf");
-                eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
-                eth_spec->native_l2seg_id = val.get<uint32_t>("network.native_l2seg");
-            }
+            eth_spec->vrf_id = val.get<uint64_t>("network.vrf", 0);
+            eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
+            eth_spec->native_l2seg_id = val.get<uint32_t>("network.native_l2seg", 0);
 
             eth_spec->enic_id = val.get<uint64_t>("network.enic", 0);
             if (eth_spec->enic_id == 0) {

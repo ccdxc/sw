@@ -101,7 +101,6 @@ public:
   /* Endpoint NIC APIs */
   uint64_t EnicCreate(uint64_t enic_id,
                       uint64_t lif_id,
-                      uint64_t uplink_id,
                       uint64_t native_l2seg_id,
                       vector<uint64_t>& nonnative_l2seg_id);
 
@@ -133,6 +132,7 @@ public:
   uint64_t LifCreate(uint64_t lif_id,
                      struct queue_info* queue_info,
                      struct lif_info *lif_info,
+                     uint64_t uplink_id,
                      bool enable_rdma,
                      uint32_t max_pt_entries,
                      uint32_t max_keys,

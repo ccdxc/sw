@@ -30,6 +30,9 @@
                 "pte_count" : 131072,
                 "key_count" : 32768,
                 "ah_count"  : 1024
+            },
+            "network" : {
+                "uplink" : 128
             }
         }
     ]

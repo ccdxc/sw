@@ -158,7 +158,9 @@ Eth::Eth(HalClient *hal_client, void *dev_spec)
     }
 
     lif_handle = hal->LifCreate(spec->lif_id, qinfo, &info,
-                                spec->enable_rdma, spec->pte_count, spec->key_count, spec->ah_count);
+                                spec->uplink_id,
+                                spec->enable_rdma, spec->pte_count,
+                                spec->key_count, spec->ah_count);
     if (lif_handle == 0) {
         NIC_LOG_ERR("Failed to create LIF");
         return;
@@ -169,7 +171,6 @@ Eth::Eth(HalClient *hal_client, void *dev_spec)
     // Create a classic ENIC
     enic_handle = hal->EnicCreate(spec->enic_id,
                                   spec->lif_id,
-                                  spec->uplink_id,
                                   spec->native_l2seg_id,
                                   l2seg_ids);
     if (enic_handle == 0) {
@@ -1366,10 +1367,17 @@ Eth::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
     //struct rss_indir_set_cmd *cmd = (struct rss_indir_set_cmd *)req;
     //rss_indir_set_comp *comp = (struct rss_indir_set_comp *)resp;
 
-    rss_indir = string((const char *)devcmd->data, 128);
-
+    rss_indir = string((const char *)req_data, 128);
     NIC_LOG_INFO("lif{}: CMD_OPCODE_RSS_INDIR_SET: type {:#x} key {} table {}",
         info.hw_lif_id, rss_type, rss_key.c_str(), rss_indir.c_str());
+
+    for (int i = 0; i < 128; i++) {
+        if (((uint8_t *)req_data)[i] > spec->rxq_count) {
+            NIC_LOG_ERR("lif{}: Invalid indirection table entry index %d qid %d",
+                i, ((uint8_t *)req_data)[i]);
+            return (DEVCMD_ERROR);
+        }
+    }
 
     hal->LifSetRssConfig(spec->lif_id, (LifRssType)rss_type, rss_key, rss_indir);
     return (DEVCMD_SUCCESS);
