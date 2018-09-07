@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/libs"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
@@ -169,6 +170,12 @@ func (c *Config) generateObjs(manifestFile string, sdevices []StationDevice, vla
 			c.Objects[i] = *genObj
 		case "NatPolicy":
 			genObj, err := c.generateNatPolicy(&o, manifestFile)
+			if err != nil {
+				return err
+			}
+			c.Objects[i] = *genObj
+		case "FlowExportPolicy":
+			genObj, err := c.generateFlowExportPolicy(&o, manifestFile)
 			if err != nil {
 				return err
 			}
@@ -557,6 +564,84 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 	o.SpecFile = specFile
 	return o, nil
 }
+
+func (c *Config) generateFlowExportPolicy(o *Object, manifestFile string) (*Object, error) {
+	var fePolicies []monitoring.FlowExportPolicy
+	specFile := "generated/flow_export_policies.json"
+	if !genRequired(o) {
+		return o, nil
+	}
+
+	// Mirror sessions need to refer to Namespaces
+	namespaceRef := objCache["Namespace"]
+
+	// Mirror sessions also need EP IP Addresses
+	endpointRef := objCache["Endpoint"]
+
+	// generate networks distributed evenly across
+	for i := 0; i < o.Count; i++ {
+		name := fmt.Sprintf("%s-%d", o.Name, i)
+		namespace := fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
+
+		remoteEpOffset := 8
+		epOffsetIncrements := 1
+
+		remote := fmt.Sprintf("%s-%d", endpointRef.Name, (remoteEpOffset+epOffsetIncrements*i)%endpointRef.Count)
+		fmt.Println("BALERION: ", remote)
+
+		// Look up EP's IP Address
+		remoteEP := endpointCache[remote]
+		fe := monitoring.FlowExportPolicy{
+			TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: namespace,
+				Name:      name,
+			},
+			Spec: monitoring.FlowExportSpec{
+				Targets: []monitoring.FlowExportTarget{
+					{
+						Interval: "15s",
+						Format:   "IPFIX",
+						Exports: []api.ExportConfig{
+							{
+								Destination: remoteEP,
+								Transport:   "UDP/2055",
+							},
+						},
+					},
+				},
+			},
+		}
+		fePolicies = append(fePolicies, fe)
+	}
+	out, err := json.MarshalIndent(&fePolicies, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	// Automatically interpret the the base dir of the manifest file as the config dir to dump all the generated files
+	configDir, _ := filepath.Split(manifestFile)
+
+	fileName := fmt.Sprintf("%s%s", configDir, specFile)
+
+	// create a generated dir in the config directory to dump the json
+	genDir, _ := filepath.Split(fileName)
+	if _, err := os.Stat(genDir); os.IsNotExist(err) {
+		err = os.MkdirAll(genDir, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("creating the generated directory failed. Err: %v", err)
+		}
+	}
+
+	err = ioutil.WriteFile(fileName, out, 0644)
+	if err != nil {
+		return nil, err
+	}
+	o.SpecFile = specFile
+	return o, nil
+}
+
 func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error) {
 	var natPools []netproto.NatPool
 	specFile := "generated/nat_pools.json"

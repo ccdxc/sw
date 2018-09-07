@@ -1,0 +1,210 @@
+[
+  {
+    "kind": "FlowExportPolicy",
+    "meta": {
+      "name": "scale-flow-export-ipfix-0",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "targets": [
+        {
+          "interval": "15s",
+          "format": "IPFIX",
+          "exports": [
+            {
+              "destination": "177.75.132.3",
+              "transport": "UDP/2055"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "FlowExportPolicy",
+    "meta": {
+      "name": "scale-flow-export-ipfix-1",
+      "tenant": "default",
+      "namespace": "scale-vrf-1",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "targets": [
+        {
+          "interval": "15s",
+          "format": "IPFIX",
+          "exports": [
+            {
+              "destination": "223.97.165.3",
+              "transport": "UDP/2055"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "FlowExportPolicy",
+    "meta": {
+      "name": "scale-flow-export-ipfix-2",
+      "tenant": "default",
+      "namespace": "scale-vrf-2",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "targets": [
+        {
+          "interval": "15s",
+          "format": "IPFIX",
+          "exports": [
+            {
+              "destination": "112.211.249.3",
+              "transport": "UDP/2055"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "FlowExportPolicy",
+    "meta": {
+      "name": "scale-flow-export-ipfix-3",
+      "tenant": "default",
+      "namespace": "scale-vrf-3",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "targets": [
+        {
+          "interval": "15s",
+          "format": "IPFIX",
+          "exports": [
+            {
+              "destination": "4.121.175.3",
+              "transport": "UDP/2055"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "FlowExportPolicy",
+    "meta": {
+      "name": "scale-flow-export-ipfix-4",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "targets": [
+        {
+          "interval": "15s",
+          "format": "IPFIX",
+          "exports": [
+            {
+              "destination": "170.22.196.3",
+              "transport": "UDP/2055"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "FlowExportPolicy",
+    "meta": {
+      "name": "scale-flow-export-ipfix-5",
+      "tenant": "default",
+      "namespace": "scale-vrf-1",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "targets": [
+        {
+          "interval": "15s",
+          "format": "IPFIX",
+          "exports": [
+            {
+              "destination": "16.45.218.3",
+              "transport": "UDP/2055"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "FlowExportPolicy",
+    "meta": {
+      "name": "scale-flow-export-ipfix-6",
+      "tenant": "default",
+      "namespace": "scale-vrf-2",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "targets": [
+        {
+          "interval": "15s",
+          "format": "IPFIX",
+          "exports": [
+            {
+              "destination": "91.39.142.3",
+              "transport": "UDP/2055"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "FlowExportPolicy",
+    "meta": {
+      "name": "scale-flow-export-ipfix-7",
+      "tenant": "default",
+      "namespace": "scale-vrf-3",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "targets": [
+        {
+          "interval": "15s",
+          "format": "IPFIX",
+          "exports": [
+            {
+              "destination": "54.199.28.3",
+              "transport": "UDP/2055"
+            }
+          ]
+        }
+      ]
+    },
+    "status": {}
+  }
+]

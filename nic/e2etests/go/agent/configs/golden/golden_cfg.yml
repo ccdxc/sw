@@ -23,6 +23,11 @@ objects:
   rest-endpoint: "/api/security/policies/"
   spec-file: "generated/16_rules.json"
 # TODO Uncomment this section while validating mirror sessions and tunnels in dev
+#- kind: FlowExportPolicy
+#  name: scale-flow-export-ipfix
+#  count: 8
+#  rest-endpoint: "/api/telemetry/flowexports/"
+#  spec-file: "generated/flow_export_policies.json"
 #- kind: Tunnel
 #  name: scale-gre-tunnel
 #  count: 8

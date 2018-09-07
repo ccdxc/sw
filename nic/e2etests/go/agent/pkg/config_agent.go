@@ -9,6 +9,7 @@ import (
 
 	"path/filepath"
 
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
@@ -26,20 +27,21 @@ func ConfigAgent(c *Config, manifestFile string) error {
 }
 
 type AgentConfig struct {
-	Namespaces        []netproto.Namespace
-	Networks          []netproto.Network
-	Endpoints         []netproto.Endpoint
-	SgPolicies        []netproto.SGPolicy
-	IPSecSAEncryption []netproto.IPSecSAEncrypt
-	IPSecSADecryption []netproto.IPSecSADecrypt
-	IPSecPolicies     []netproto.IPSecPolicy
-	MirrorSessions    []tsproto.MirrorSession
-	NatPools          []netproto.NatPool
-	NatBindings       []netproto.NatBinding
-	NatPolicies       []netproto.NatPolicy
-	Tunnels           []netproto.Tunnel
-	TCPProxies        []netproto.TCPProxyPolicy
-	restApiMap        map[reflect.Type]string
+	Namespaces         []netproto.Namespace
+	Networks           []netproto.Network
+	Endpoints          []netproto.Endpoint
+	SgPolicies         []netproto.SGPolicy
+	IPSecSAEncryption  []netproto.IPSecSAEncrypt
+	IPSecSADecryption  []netproto.IPSecSADecrypt
+	IPSecPolicies      []netproto.IPSecPolicy
+	MirrorSessions     []tsproto.MirrorSession
+	NatPools           []netproto.NatPool
+	NatBindings        []netproto.NatBinding
+	NatPolicies        []netproto.NatPolicy
+	Tunnels            []netproto.Tunnel
+	TCPProxies         []netproto.TCPProxyPolicy
+	FlowExportPolicies []monitoring.FlowExportPolicy
+	restApiMap         map[reflect.Type]string
 }
 
 //GetAgentConfig Get Configuration in agent Format to be consumed by traffic gen.
@@ -68,19 +70,20 @@ func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig)
 	}
 
 	kindMap := map[string]interface{}{
-		"Namespace":      &agentCfg.Namespaces,
-		"Network":        &agentCfg.Networks,
-		"Endpoint":       &agentCfg.Endpoints,
-		"SGPolicy":       &agentCfg.SgPolicies,
-		"MirrorSession":  &agentCfg.MirrorSessions,
-		"IPSecSAEncrypt": &agentCfg.IPSecSAEncryption,
-		"IPSecSADecrypt": &agentCfg.IPSecSADecryption,
-		"IPSecPolicy":    &agentCfg.IPSecPolicies,
-		"NatPool":        &agentCfg.NatPools,
-		"NatBinding":     &agentCfg.NatBindings,
-		"NatPolicy":      &agentCfg.NatPolicies,
-		"Tunnel":         &agentCfg.Tunnels,
-		"TCPProxyPolicy": &agentCfg.TCPProxies,
+		"Namespace":        &agentCfg.Namespaces,
+		"Network":          &agentCfg.Networks,
+		"Endpoint":         &agentCfg.Endpoints,
+		"SGPolicy":         &agentCfg.SgPolicies,
+		"MirrorSession":    &agentCfg.MirrorSessions,
+		"IPSecSAEncrypt":   &agentCfg.IPSecSAEncryption,
+		"IPSecSADecrypt":   &agentCfg.IPSecSADecryption,
+		"IPSecPolicy":      &agentCfg.IPSecPolicies,
+		"NatPool":          &agentCfg.NatPools,
+		"NatBinding":       &agentCfg.NatBindings,
+		"NatPolicy":        &agentCfg.NatPolicies,
+		"Tunnel":           &agentCfg.Tunnels,
+		"TCPProxyPolicy":   &agentCfg.TCPProxies,
+		"FlowExportPolicy": &agentCfg.FlowExportPolicies,
 	}
 
 	err = json.Unmarshal(dat, kindMap[o.Kind])
@@ -164,15 +167,22 @@ func (agentCfg *AgentConfig) push() error {
 	fmt.Printf("Configuring %d IPSec Policies...\n", len(agentCfg.IPSecPolicies))
 	restURL = fmt.Sprintf("%s%s", AGENT_URL,
 		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.IPSecPolicies)])
-	for _, ms := range agentCfg.IPSecPolicies {
-		doConfig(ms, restURL)
+	for _, ipSec := range agentCfg.IPSecPolicies {
+		doConfig(ipSec, restURL)
 	}
 
 	fmt.Printf("Configuring %d Nat Pools...\n", len(agentCfg.NatPools))
 	restURL = fmt.Sprintf("%s%s", AGENT_URL,
 		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.NatPools)])
-	for _, ms := range agentCfg.NatPools {
-		doConfig(ms, restURL)
+	for _, np := range agentCfg.NatPools {
+		doConfig(np, restURL)
+	}
+
+	fmt.Printf("Configuring %d Flow Export Policies...\n", len(agentCfg.FlowExportPolicies))
+	restURL = fmt.Sprintf("%s%s", AGENT_URL,
+		agentCfg.restApiMap[reflect.TypeOf(&agentCfg.FlowExportPolicies)])
+	for _, fe := range agentCfg.FlowExportPolicies {
+		doConfig(fe, restURL)
 	}
 
 	fmt.Printf("Configuring %d TCP Proxies...\n", len(agentCfg.TCPProxies))
