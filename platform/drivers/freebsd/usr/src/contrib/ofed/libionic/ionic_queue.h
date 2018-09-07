@@ -1,3 +1,35 @@
+/*
+ * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ *
+ * This software is available to you under a choice of one of two
+ * licenses.  You may choose to be licensed under the terms of the GNU
+ * General Public License (GPL) Version 2, available from the file
+ * COPYING in the main directory of this source tree, or the
+ * OpenIB.org BSD license below:
+ *
+ *     Redistribution and use in source and binary forms, with or
+ *     without modification, are permitted provided that the following
+ *     conditions are met:
+ *
+ *      - Redistributions of source code must retain the above
+ *        copyright notice, this list of conditions and the following
+ *        disclaimer.
+ *
+ *      - Redistributions in binary form must reproduce the above
+ *        copyright notice, this list of conditions and the following
+ *        disclaimer in the documentation and/or other materials
+ *        provided with the distribution.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #ifndef IONIC_QUEUE_H
 #define IONIC_QUEUE_H
 
@@ -36,40 +68,6 @@ static inline void mmio_memcpy_x64(void *dst, void *src, size_t size)
 #define IONIC_DBELL_QID_SHIFT	24
 #define IONIC_DBELL_RING_ARM	(1ull << 16)
 #define IONIC_DBELL_RING_SONLY	(1ull << 17)
-
-/** ionic_u16_mask - Round uint16_t up to power of two minus one.
- * @val:	Value to round up.
- *
- * This uses cumulative shift to get the next greater or equal power of two
- * minus one.  If val is already a power of two minus one, the result will be
- * the same value.
- *
- * Return: power of two minus one.
- */
-static inline uint16_t ionic_u16_mask(uint16_t val)
-{
-	val |= val >> 1;
-	val |= val >> 2;
-	val |= val >> 4;
-	val |= val >> 8;
-
-	return val;
-}
-
-/** ionic_u16_power - Round uint16_t up to power of two.
- * @val:	Value to round up.
- *
- * Get the next greater or equal power of two.  If val is already a power of
- * two, the result will be the same value.
- *
- * The value may round "up" to zero, which means (2^16).
- *
- * Return: power of two.
- */
-static inline uint16_t ionic_u16_power(uint16_t val)
-{
-	return ionic_u16_mask(val - 1u) + 1u;
-}
 
 /** struct ionic_queue - Ring buffer used between device and driver.
  * @ptr:	Buffer virtual address.
@@ -227,6 +225,17 @@ static inline void *ionic_queue_at_cons(struct ionic_queue *q)
 	return ionic_queue_at(q, q->cons);
 }
 
+/** ionic_queue_next - Compute the next index.
+ * @q:		Queue structure.
+ * @idx:	Index.
+ *
+ * Return: next index after idx.
+ */
+static inline uint16_t ionic_queue_next(struct ionic_queue *q, uint16_t idx)
+{
+	return (idx + 1) & q->mask;
+}
+
 /** ionic_queue_produce - Increase the producer index.
  * @q:		Queue structure.
  *
@@ -234,7 +243,7 @@ static inline void *ionic_queue_at_cons(struct ionic_queue *q)
  */
 static inline void ionic_queue_produce(struct ionic_queue *q)
 {
-	q->prod = (q->prod + 1) & q->mask;
+	q->prod = ionic_queue_next(q, q->prod);
 }
 
 /** ionic_queue_consume - Increase the consumer index.
@@ -246,7 +255,7 @@ static inline void ionic_queue_produce(struct ionic_queue *q)
  */
 static inline void ionic_queue_consume(struct ionic_queue *q)
 {
-	q->cons = (q->cons + 1) & q->mask;
+	q->cons = ionic_queue_next(q, q->cons);
 }
 
 /** ionic_queue_dbell_init - Initialize doorbell bits for queue id.

@@ -1,3 +1,35 @@
+/*
+ * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ *
+ * This software is available to you under a choice of one of two
+ * licenses.  You may choose to be licensed under the terms of the GNU
+ * General Public License (GPL) Version 2, available from the file
+ * COPYING in the main directory of this source tree, or the
+ * OpenIB.org BSD license below:
+ *
+ *     Redistribution and use in source and binary forms, with or
+ *     without modification, are permitted provided that the following
+ *     conditions are met:
+ *
+ *      - Redistributions of source code must retain the above
+ *        copyright notice, this list of conditions and the following
+ *        disclaimer.
+ *
+ *      - Redistributions in binary form must reproduce the above
+ *        copyright notice, this list of conditions and the following
+ *        disclaimer in the documentation and/or other materials
+ *        provided with the distribution.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include "ionic.h"
 
 int fallback_query_device(struct ibv_context *ibctx,
@@ -89,6 +121,21 @@ err_cmd:
 err_mr:
 	errno = rc;
 	return NULL;
+}
+
+int fallback_rereg_mr(struct ibv_mr *ibmr, int flags, struct ibv_pd *pd,
+		      void *addr, size_t length, int access)
+{
+	struct ibv_rereg_mr cmd;
+	struct ibv_rereg_mr_resp resp;
+
+	if (flags & IBV_REREG_MR_KEEP_VALID)
+		return ENOTSUP;
+
+	return ibv_cmd_rereg_mr(ibmr, flags, addr, length,
+				(uintptr_t)addr, access, pd,
+				&cmd, sizeof(cmd),
+				&resp, sizeof(resp));
 }
 
 int fallback_dereg_mr(struct ibv_mr *ibmr)
@@ -408,12 +455,56 @@ static int fallback_destroy_ah(struct ibv_ah *ibah)
 	return 0;
 }
 
+static struct ibv_mw *fallback_alloc_mw(struct ibv_pd *ibpd,
+					enum ibv_mw_type type)
+{
+	struct ibv_mw *ibmw;
+	struct ibv_alloc_mw cmd;
+	struct ibv_alloc_mw_resp resp;
+	int rc;
+
+	ibmw = calloc(1, sizeof(*ibmw));
+	if (!ibmw) {
+		rc = errno;
+		goto err_mw;
+	}
+
+	rc = ibv_cmd_alloc_mw(ibpd, type, ibmw,
+			      &cmd, sizeof(cmd),
+			      &resp, sizeof(resp));
+	if (rc)
+		goto err_cmd;
+
+	return ibmw;
+
+err_cmd:
+	free(ibmw);
+err_mw:
+	errno = rc;
+	return NULL;
+}
+
+static int fallback_dealloc_mw(struct ibv_mw *ibmw)
+{
+	struct ibv_dealloc_mw cmd;
+	int rc;
+
+	rc = ibv_cmd_dealloc_mw(ibmw, &cmd, sizeof(cmd));
+	if (rc)
+		return rc;
+
+	free(ibmw);
+
+	return 0;
+}
+
 static const struct ibv_context_ops fallback_ctx_ops = {
 	.query_device		= fallback_query_device,
 	.query_port		= fallback_query_port,
 	.alloc_pd		= fallback_alloc_pd,
 	.dealloc_pd		= fallback_free_pd,
 	.reg_mr			= fallback_reg_mr,
+	.rereg_mr		= fallback_rereg_mr,
 	.dereg_mr		= fallback_dereg_mr,
 	.create_cq		= fallback_create_cq,
 	.poll_cq		= fallback_poll_cq,
@@ -432,7 +523,9 @@ static const struct ibv_context_ops fallback_ctx_ops = {
 	.post_send		= fallback_post_send,
 	.post_recv		= fallback_post_recv,
 	.create_ah		= fallback_create_ah,
-	.destroy_ah		= fallback_destroy_ah
+	.destroy_ah		= fallback_destroy_ah,
+	.alloc_mw		= fallback_alloc_mw,
+	.dealloc_mw		= fallback_dealloc_mw,
 };
 
 void ionic_set_fallback_ops(struct ibv_context *ibctx)
