@@ -126,7 +126,7 @@ static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info,
 	struct rxq_comp *comp = cq_info->cq_desc;
 
 	//printk(KERN_ERR "ionic_rx_service comp->color %d cq->done_color %d\n", comp->color, cq->done_color);
-	if (comp->color != cq->done_color) 
+	if (comp->color != cq->done_color)
 		return false;
 
 	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
@@ -160,7 +160,7 @@ static struct sk_buff *ionic_rx_skb_alloc(struct queue *q, unsigned int len,
 		stats->dma_map_err++;
 		return NULL;
 	}
-   
+
 	return skb;
 }
 

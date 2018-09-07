@@ -20,6 +20,7 @@
 #include <linux/netdevice.h>
 #include <linux/io.h>
 #include <linux/platform_device.h>
+#include <linux/of.h>
 #include <linux/msi.h>
 #include <linux/interrupt.h>
 
@@ -56,32 +57,31 @@ typedef struct intr_msixcfg_s {
 uint64_t *msix_cfg_base_addr = NULL;
 uint64_t *fwcfg_base_addr = NULL;
 
-u_int64_t intr_msixcfg_addr(const int intr)
+void* intr_msixcfg_addr(const int intr)
 {
-		return (u_int64_t)((uint8_t*)msix_cfg_base_addr + (intr * INTR_MSIXCFG_STRIDE));
+	return ((uint8_t*)msix_cfg_base_addr + (intr * INTR_MSIXCFG_STRIDE));
 }
 
-u_int64_t intr_fwcfg_addr(const int intr)
+void* intr_fwcfg_addr(const int intr)
 {
-		return (u_int64_t)((uint8_t*)fwcfg_base_addr + (intr * INTR_FWCFG_STRIDE));
+	return ((uint8_t*)fwcfg_base_addr + (intr * INTR_FWCFG_STRIDE));
 }
 
-void intr_fwcfg(const int intr)
+void intr_fwcfg(const int intr, uint32_t lif)
 {
-	u_int64_t pa = intr_fwcfg_addr(intr);
-	uint64_t data = 0;
+	volatile void* pa = intr_fwcfg_addr(intr);
+	uint64_t data = (uint64_t)((uint64_t)1 << 46)/*local_int=1*/ | ((uint64_t)4 << 32)/*lif=4*/;
 
-	data = (uint64_t)((uint64_t)1 << 46)/*local_int=1*/ | ((uint64_t)4 << 32)/*lif=4*/;
-	writeq(data, (volatile void*)(pa));
+	writeq(data, pa);
 }
 
 void intr_msixcfg(const int intr, const u_int64_t msgaddr, const u_int32_t msgdata, const int vctrl)
 {
-	u_int64_t pa = intr_msixcfg_addr(intr);
+	volatile void* pa = intr_msixcfg_addr(intr);
 
-	writeq(msgaddr, (volatile void*)(pa + offsetof(intr_msixcfg_t, msgaddr)));
-	writel(msgdata, (volatile void*)(pa + offsetof(intr_msixcfg_t, msgdata)));
-	writel(vctrl, (volatile void*)(pa + offsetof(intr_msixcfg_t, vector_ctrl)));
+	writeq(msgaddr, (pa + offsetof(intr_msixcfg_t, msgaddr)));
+	writel(msgdata, (pa + offsetof(intr_msixcfg_t, msgdata)));
+	writel(vctrl, (pa + offsetof(intr_msixcfg_t, vector_ctrl)));
 }
 
 int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
@@ -90,21 +90,17 @@ int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
 	int i = 0;
 
 	for_each_msi_entry(desc, ionic->dev) {
-		if(i == num)
-		{
+		if(i == num) {
 			printk(KERN_INFO "[i = %d] msi_entry: %d.%d\n",
 				i, desc->platform.msi_index,
 				desc->irq);
 
 			return desc->irq;
 		}
-
 		i++;
 	}
 
-	//return platform_get_irq(ionic->pfdev, num);
-
-	return -1; //send actual error
+	return -1; //return error if user is asking more irqs than allocated
 }
 
 const char *ionic_bus_info(struct ionic *ionic)
@@ -114,11 +110,27 @@ const char *ionic_bus_info(struct ionic *ionic)
 
 static void mnic_set_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
 {
+	uint32_t lif;
+	int ret;
+	struct device_node* mnic_node = NULL;
+
 	printk("[%d] %x:%x %x\n", desc->platform.msi_index,
 								msg->address_hi, msg->address_lo, msg->data);
 
-	intr_msixcfg(desc->platform.msi_index, (((uint64_t)msg->address_hi << 32) | msg->address_lo), msg->data, 0/*vctrl*/);
-	intr_fwcfg(desc->platform.msi_index);
+	intr_msixcfg(desc->platform.msi_index,
+			(((uint64_t)msg->address_hi << 32) | msg->address_lo), msg->data, 0/*vctrl*/);
+
+	mnic_node = of_find_node_by_name(NULL, "mnic");
+	if(!mnic_node)
+		printk(KERN_ERR "Can't find device node \"mnic\" in device tree!\
+				Can not configure interrupts\n");
+
+	ret = of_property_read_u32_index(mnic_node, "lif", 0, &lif);
+	if(ret)
+		printk(KERN_ERR "Failed to get lif property for \"mnic\"!\
+				Can not configure interrupts\n");
+
+	intr_fwcfg(desc->platform.msi_index, lif);
 }
 
 int ionic_bus_alloc_irq_vectors(struct ionic *ionic, unsigned int nintrs)

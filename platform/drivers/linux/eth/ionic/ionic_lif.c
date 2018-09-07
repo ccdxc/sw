@@ -572,7 +572,7 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 			   desc_size, sg_desc_size, pid);
 	if (err)
 		return err;
-	
+
 	if (flags & QCQ_F_INTR) {
 		err = ionic_intr_alloc(lif, &new->intr);
 		if (err)
@@ -596,7 +596,7 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 			    num_descs, cq_desc_size);
 	if (err)
 		goto err_out_free_intr;
-	
+
 	new->base = dma_alloc_coherent(dev, total_size, &new->base_pa,
 				       GFP_KERNEL);
 	if (!new->base) {
@@ -678,7 +678,7 @@ static int ionic_qcqs_alloc(struct lif *lif)
 			      0, pid, &lif->adminqcq);
 	if (err)
 		return err;
-	
+
 	pid = ionic_pid_get(lif, 0);
 	flags = QCQ_F_TX_STATS | QCQ_F_INTR | QCQ_F_SG;
 	for (i = 0; i < lif->ntxqcqs; i++) {
@@ -1249,7 +1249,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
-	
+
 	q->qid = ctx.comp.rxq_init.qid;
 	q->qtype = ctx.comp.rxq_init.qtype;
 	q->db = ionic_db_map(q->idev, q);
@@ -1341,7 +1341,7 @@ static int ionic_lif_init(struct lif *lif)
 	err = ionic_set_features(lif);
 	if (err)
 		goto err_out_mask_adminq;
-	
+
 	err = ionic_lif_txqs_init(lif);
 	if (err)
 		goto err_out_mask_adminq;
@@ -1353,7 +1353,7 @@ static int ionic_lif_init(struct lif *lif)
 	err = ionic_rx_filters_init(lif);
 	if (err)
 		goto err_out_rxqs_deinit;
-	
+
 	err = ionic_station_set(lif);
 	if (err)
 		goto err_out_rx_filter_deinit;
