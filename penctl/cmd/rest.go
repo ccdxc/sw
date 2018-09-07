@@ -11,6 +11,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+
+	"github.com/ghodss/yaml"
 )
 
 func restPost(v interface{}, port int, url string) error {
@@ -76,13 +78,19 @@ func restGet(port int, url string) ([]byte, error) {
 	}
 	bodyBytes, _ := ioutil.ReadAll(getResp.Body)
 
-	if verbose {
-		var prettyJSON bytes.Buffer
-		error := json.Indent(&prettyJSON, bodyBytes, "", "\t")
-		if error != nil {
-			return nil, err
-		}
+	var prettyJSON bytes.Buffer
+	error := json.Indent(&prettyJSON, bodyBytes, "", "\t")
+	if error != nil {
+		return nil, err
+	}
+	b, err := yaml.JSONToYAML(bodyBytes)
+	if err != nil {
+		return nil, err
+	}
+	if jsonFormat {
 		fmt.Println(string(prettyJSON.Bytes()))
+	} else if yamlFormat {
+		fmt.Println(string(b))
 	}
 	return bodyBytes, nil
 }

@@ -126,8 +126,10 @@ func modeManagedShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	naplesCfg := nmd.Naples{}
 	json.Unmarshal(resp, &naplesCfg)
-	fmt.Println("Mode:", nmd.NaplesMode_name[int32(naplesCfg.Spec.Mode)])
-	if verbose {
+	if tabularFormat {
+		fmt.Println("Mode:", nmd.NaplesMode_name[int32(naplesCfg.Spec.Mode)])
+	}
+	if verbose && tabularFormat {
 		fmt.Printf("%+v\n", naplesCfg)
 	}
 }

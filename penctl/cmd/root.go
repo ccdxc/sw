@@ -19,7 +19,7 @@ var rootCmd = &cobra.Command{
 	Use:               "penctl",
 	Short:             "Pensando CLIs",
 	Long:              "\n--------------------------\n Pensando Management CLIs \n--------------------------\n",
-	PersistentPreRunE: pickNetwork,
+	PersistentPreRunE: cliPreRunInit,
 	DisableAutoGenTag: true,
 }
 
@@ -34,6 +34,9 @@ func Execute() {
 }
 
 var verbose bool
+var yamlFormat bool
+var jsonFormat bool
+var tabularFormat bool
 
 func init() {
 	// Fill logger config params
@@ -48,6 +51,9 @@ func init() {
 	log.SetConfig(logConfig)
 
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml json")
+	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", true, "display in json format")
+	rootCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", false, "display in tabular format")
 
 	rootCmd.GenBashCompletionFile("penctl.sh")
 }
@@ -87,4 +93,22 @@ func genDocs() {
 	genManTreeDocs()
 	genMarkdownDocs()
 	genRestTreeDocs()
+}
+
+func cliPreRunInit(cmd *cobra.Command, args []string) error {
+	err := pickNetwork(cmd, args)
+	if err != nil {
+		return err
+	}
+	processFlags(cmd, args)
+	return nil
+}
+
+func processFlags(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") || cmd.Flags().Changed("tabular") {
+		jsonFormat = false
+	}
+	if verbose {
+		fmt.Printf("jsonFormat: %t, yamlFormat: %t, tabularFormat: %t\n", jsonFormat, yamlFormat, tabularFormat)
+	}
 }

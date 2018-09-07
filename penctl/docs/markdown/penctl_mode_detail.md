@@ -24,7 +24,10 @@ penctl mode detail [flags]
 ### Options inherited from parent commands
 
 ```
+  -j, --json      display in json format (default true)
+  -t, --tabular   display in tabular format
   -v, --verbose   verbose output
+  -y, --yaml      display in yaml json
 ```
 
 ### SEE ALSO
