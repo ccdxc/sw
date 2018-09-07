@@ -2,7 +2,53 @@
   {
     "kind": "IPSecSAEncrypt",
     "meta": {
-      "name": "ipsec-encrypt-sa",
+      "name": "ipsec-encrypt-sa1",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "encryption-algorithm": "AES_GCM_256",
+      "encryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "local-gateway-ip": "112.211.249.2",
+      "remote-gateway-ip": "112.211.249.3",
+      "spi": 1,
+      "tep-namespace": "scale-vrf-2"
+    },
+    "status": {}
+  },
+  {
+    "kind": "IPSecSAEncrypt",
+    "meta": {
+      "name": "ipsec-encrypt-sa2",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+      "encryption-algorithm": "AES_GCM_256",
+      "encryption-key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+      "local-gateway-ip": "112.211.249.2",
+      "remote-gateway-ip": "112.211.249.3",
+      "spi": 2,
+      "tep-namespace": "scale-vrf-2"
+    },
+    "status": {}
+  },
+  {
+    "kind": "IPSecSAEncrypt",
+    "meta": {
+      "name": "ipsec-encrypt-sa3",
       "tenant": "default",
       "namespace": "scale-vrf-0",
       "creation-time": "1970-01-01T00:00:00Z",
@@ -15,9 +61,32 @@
       "authentication-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
       "encryption-algorithm": "AES_GCM_256",
       "encryption-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-      "local-gateway-ip": "112.211.249.100",
-      "remote-gateway-ip": "112.211.249.101",
-      "spi": 1,
+      "local-gateway-ip": "112.211.249.2",
+      "remote-gateway-ip": "112.211.249.3",
+      "spi": 3,
+      "tep-namespace": "scale-vrf-2"
+    },
+    "status": {}
+  },
+  {
+    "kind": "IPSecSAEncrypt",
+    "meta": {
+      "name": "ipsec-encrypt-sa4",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "protocol": "ESP",
+      "authentication-algorithm": "AES_GCM",
+      "authentication-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+      "encryption-algorithm": "AES_GCM_256",
+      "encryption-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+      "local-gateway-ip": "112.211.249.2",
+      "remote-gateway-ip": "112.211.249.3",
+      "spi": 4,
       "tep-namespace": "scale-vrf-2"
     },
     "status": {}

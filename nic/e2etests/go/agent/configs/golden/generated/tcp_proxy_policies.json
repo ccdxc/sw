@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "TCPProxyPolicy",
+    "meta": {
+      "name": "tcp-proxy-rules",
+      "tenant": "default",
+      "namespace": "scale-vrf-0",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "rules": [
+        {
+          "source": {
+            "addresses": [
+              "177.0.0.0 - 177.255.255.255"
+            ]
+          },
+          "action": "ENABLE"
+        }
+      ]
+    },
+    "status": {}
+  }
+]
