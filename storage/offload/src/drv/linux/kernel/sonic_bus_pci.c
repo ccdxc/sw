@@ -218,6 +218,7 @@ static void sonic_remove(struct pci_dev *pdev)
 	struct sonic *sonic = pci_get_drvdata(pdev);
 
 	if (sonic) {
+		sonic_reset(sonic);
 		sonic_debugfs_del_dev(sonic);
 		sonic_lifs_unregister(sonic);
 		sonic_lifs_deinit(sonic);

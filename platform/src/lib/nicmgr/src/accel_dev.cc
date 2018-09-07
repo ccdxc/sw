@@ -10,6 +10,7 @@
 #include <cmath>
 #include <endian.h>
 #include <sstream>
+#include <sys/time.h>
 
 // Tell accel_dev.hpp to emumerate definitions of all devcmds
 #define ACCEL_DEV_CMD_ENUMERATE  1
@@ -27,8 +28,19 @@
 #define BARCO_CRYPTO_RINGS_CFG_VAL_ONLY  1
 #include "capri_barco_rings.hpp"
 
+// Amount of time to wait for sequencer queues to be quiesced
+#define ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US    5000000
+#define ACCEL_DEV_RING_OP_QUIESCE_TIME_US       1000000
+#define ACCEL_DEV_ALL_RINGS_MAX_QUIESCE_TIME_US (10 * ACCEL_DEV_RING_OP_QUIESCE_TIME_US)
 
+// Invoke a function for each and every HW ring
+#define ACCEL_DEV_FOR_EACH_RING_INVOKE(csr, func, arg)      \
+    for (csr = &accel_csr_tbl[0];                           \
+         csr < &accel_csr_tbl[ACCEL_RING_ID_MAX];           \
+         csr++) func(csr, arg)
+         
 static uint32_t log_2(uint32_t x);
+static uint64_t timestamp(void);
 
 template<typename ... Args>
 string string_format( const std::string& format, Args ... args )
@@ -82,8 +94,10 @@ struct queue_info Accel_PF::qinfo [NUM_QUEUE_TYPES] = {
 
 typedef struct accel_csr {
     const char  *ring_name;
+    accel_ring_id_t ring_id;
     uint32_t    base_addr_offs;
     uint32_t    pndx_addr_offs;
+    uint32_t    cndx_addr_offs;
     uint32_t    opa_tag_addr_offs;
     uint32_t    reset_addr_offs;
     uint32_t    reset_data;
@@ -98,14 +112,17 @@ typedef struct accel_csr {
     uint32_t    ring_pndx_size;
 } accel_csr_t;
 
-#define ACCEL_RING_ID_NAME(id)  #id
+#define ACCEL_RING_ID_NAME(id)  \
+        .ring_name = #id,       \
+        .ring_id = id
 
 static const accel_csr_t    accel_csr_tbl[ACCEL_RING_ID_MAX] = {
 
     [ACCEL_RING_CP] = {
-        .ring_name = ACCEL_RING_ID_NAME(ACCEL_RING_CP),
+        ACCEL_RING_ID_NAME(ACCEL_RING_CP),
         .base_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS,
         .pndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_PD_IDX_BYTE_ADDRESS,
+        .cndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_Q_CP_IDX_BYTE_ADDRESS,
         .opa_tag_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_OPAQUE_TAG_ADR_W0_BYTE_ADDRESS,
         .reset_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_GLB_BYTE_ADDRESS,
         .reset_data = BARCO_CRYPTO_CP_CFG_GLB_SOFT_RESET,
@@ -120,9 +137,10 @@ static const accel_csr_t    accel_csr_tbl[ACCEL_RING_ID_MAX] = {
         .ring_pndx_size = sizeof(uint32_t),
     },
     [ACCEL_RING_CP_HOT] = {
-        .ring_name = ACCEL_RING_ID_NAME(ACCEL_RING_CP_HOT),
+        ACCEL_RING_ID_NAME(ACCEL_RING_CP_HOT),
         .base_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS,
         .pndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_PD_IDX_BYTE_ADDRESS,
+        .cndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_HOTQ_CP_IDX_BYTE_ADDRESS,
         .opa_tag_addr_offs = ACCEL_CSR_OFFS_VOID,
         .reset_addr_offs = ACCEL_CSR_OFFS_VOID,
         .reset_data = 0,
@@ -137,9 +155,10 @@ static const accel_csr_t    accel_csr_tbl[ACCEL_RING_ID_MAX] = {
         .ring_pndx_size = sizeof(uint32_t),
     },
     [ACCEL_RING_DC] = {
-        .ring_name = ACCEL_RING_ID_NAME(ACCEL_RING_DC),
+        ACCEL_RING_ID_NAME(ACCEL_RING_DC),
         .base_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS,
         .pndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_PD_IDX_BYTE_ADDRESS,
+        .cndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_Q_CP_IDX_BYTE_ADDRESS,
         .opa_tag_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_OPAQUE_TAG_ADR_W0_BYTE_ADDRESS,
         .reset_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_GLB_BYTE_ADDRESS,
         .reset_data = BARCO_CRYPTO_DC_CFG_GLB_SOFT_RESET,
@@ -154,9 +173,10 @@ static const accel_csr_t    accel_csr_tbl[ACCEL_RING_ID_MAX] = {
         .ring_pndx_size = sizeof(uint32_t),
     },
     [ACCEL_RING_DC_HOT] = {
-        .ring_name = ACCEL_RING_ID_NAME(ACCEL_RING_DC_HOT),
+        ACCEL_RING_ID_NAME(ACCEL_RING_DC_HOT),
         .base_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS,
         .pndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_PD_IDX_BYTE_ADDRESS,
+        .cndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_HOTQ_CP_IDX_BYTE_ADDRESS,
         .opa_tag_addr_offs = ACCEL_CSR_OFFS_VOID,
         .reset_addr_offs = ACCEL_CSR_OFFS_VOID,
         .reset_data = 0,
@@ -171,9 +191,10 @@ static const accel_csr_t    accel_csr_tbl[ACCEL_RING_ID_MAX] = {
         .ring_pndx_size = sizeof(uint32_t),
     },
     [ACCEL_RING_XTS0] = {
-        .ring_name = ACCEL_RING_ID_NAME(ACCEL_RING_XTS0),
+        ACCEL_RING_ID_NAME(ACCEL_RING_XTS0),
         .base_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_ENC_RING_BASE_W0_BYTE_ADDRESS,
         .pndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_ENC_PRODUCER_IDX_BYTE_ADDRESS,
+        .cndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_ENC_CONSUMER_IDX_BYTE_ADDRESS,
         .opa_tag_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_ENC_OPA_TAG_ADDR_W0_BYTE_ADDRESS,
         .reset_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_ENC_SOFT_RST_BYTE_ADDRESS,
         .reset_data = 0xffffffff,
@@ -188,9 +209,10 @@ static const accel_csr_t    accel_csr_tbl[ACCEL_RING_ID_MAX] = {
         .ring_pndx_size = sizeof(uint32_t),
     },
     [ACCEL_RING_XTS1] = {
-        .ring_name = ACCEL_RING_ID_NAME(ACCEL_RING_XTS1),
+        ACCEL_RING_ID_NAME(ACCEL_RING_XTS1),
         .base_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_RING_BASE_W0_BYTE_ADDRESS,
         .pndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_PRODUCER_IDX_BYTE_ADDRESS,
+        .cndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_CONSUMER_IDX_BYTE_ADDRESS,
         .opa_tag_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_OPA_TAG_ADDR_W0_BYTE_ADDRESS,
         .reset_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_XTS_SOFT_RST_BYTE_ADDRESS,
         .reset_data = 0xffffffff,
@@ -205,9 +227,10 @@ static const accel_csr_t    accel_csr_tbl[ACCEL_RING_ID_MAX] = {
         .ring_pndx_size = sizeof(uint32_t),
     },
     [ACCEL_RING_GCM0] = {
-        .ring_name = ACCEL_RING_ID_NAME(ACCEL_RING_GCM0),
+        ACCEL_RING_ID_NAME(ACCEL_RING_GCM0),
         .base_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM0_RING_BASE_W0_BYTE_ADDRESS,
         .pndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM0_PRODUCER_IDX_BYTE_ADDRESS,
+        .cndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM0_CONSUMER_IDX_BYTE_ADDRESS,
         .opa_tag_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM0_OPA_TAG_ADDR_W0_BYTE_ADDRESS,
         .reset_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM0_SOFT_RST_BYTE_ADDRESS,
         .reset_data = 0xffffffff,
@@ -222,9 +245,10 @@ static const accel_csr_t    accel_csr_tbl[ACCEL_RING_ID_MAX] = {
         .ring_pndx_size = sizeof(uint32_t),
     },
     [ACCEL_RING_GCM1] = {
-        .ring_name = ACCEL_RING_ID_NAME(ACCEL_RING_GCM1),
+        ACCEL_RING_ID_NAME(ACCEL_RING_GCM1),
         .base_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM1_RING_BASE_W0_BYTE_ADDRESS,
         .pndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM1_PRODUCER_IDX_BYTE_ADDRESS,
+        .cndx_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM1_CONSUMER_IDX_BYTE_ADDRESS,
         .opa_tag_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM1_OPA_TAG_ADDR_W0_BYTE_ADDRESS,
         .reset_addr_offs = CAP_HENS_CSR_DHS_CRYPTO_CTL_GCM1_SOFT_RST_BYTE_ADDRESS,
         .reset_data = 0xffffffff,
@@ -242,6 +266,7 @@ static const accel_csr_t    accel_csr_tbl[ACCEL_RING_ID_MAX] = {
 
 Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                    const struct lif_info *nicmgr_lif_info) :
+    seq_qid_init_high(0),
     nicmgr_lif_info(nicmgr_lif_info)
 {
     uint64_t    lif_handle;
@@ -548,14 +573,15 @@ enum DevcmdStatus
 Accel_PF::_DevcmdReset(void *req, void *req_data,
                        void *resp, void *resp_data)
 {
-    uint64_t    qstate_addr;
-    uint8_t     enable = 0;
-    uint8_t     abort = 1;
+    uint64_t                qstate_addr;
+    uint32_t                qid;
+    uint8_t                 enable = 0;
+    uint8_t                 abort = 1;
 
     NIC_LOG_INFO("lif{}:", info.hw_lif_id);
 
     // Disable all sequencer queues
-    for (uint32_t qid = 0; qid < spec->seq_created_count; qid++) {
+    for (qid = 0; qid < spec->seq_created_count; qid++) {
         qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, abort),
                   (uint8_t *)&abort, sizeof(abort));
@@ -564,7 +590,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
         invalidate_txdma_cacheline(qstate_addr);
     }
 
-    for (uint32_t qid = 0; qid < spec->adminq_count; qid++) {
+    for (qid = 0; qid < spec->adminq_count; qid++) {
         qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_ADMIN, qid);
         WRITE_MEM(qstate_addr + offsetof(eth_admin_qstate_t, p_index0),
                   (uint8_t *)blank_qstate + offsetof(eth_admin_qstate_t, p_index0),
@@ -572,11 +598,43 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
         invalidate_txdma_cacheline(qstate_addr);
     }
 
+    // Wait for P4+ to quiesce all sequencer queues
+    static_assert((offsetof(storage_seq_qstate_t, c_ndx) - 
+                  offsetof(storage_seq_qstate_t, p_ndx)) > 0);
+    static_assert((offsetof(storage_seq_qstate_t, abort) - 
+                  offsetof(storage_seq_qstate_t, p_ndx)) > 0);
+
+    auto seq_queues_quiesce_check = [this, &qid] () -> int
+    {
+        uint64_t                qstate_addr;
+        storage_seq_qstate_t    seq_qstate;
+
+        while (seq_qid_init_high && (qid <= seq_qid_init_high)) {
+            qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
+            READ_MEM(qstate_addr + offsetof(storage_seq_qstate_t, p_ndx),
+                     (uint8_t *)&seq_qstate.p_ndx,
+                     (offsetof(storage_seq_qstate_t, abort) - 
+                      offsetof(storage_seq_qstate_t, p_ndx) +
+                      sizeof(seq_qstate.abort)));
+
+            // As part of abort, P4+ would set c_ndx = p_ndx
+            if (seq_qstate.c_ndx != seq_qstate.p_ndx) {
+                return -1;
+            }
+            qid++;
+        }
+        return 0;
+    };
+
+    qid = 0;
+    Poller poll(ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US);
+    poll(seq_queues_quiesce_check);
+
+    NIC_LOG_INFO("[lif{}: last qid quiesced: {} seq_qid_init_high: {}", 
+                 info.hw_lif_id, qid, seq_qid_init_high);
+
     // Reset and reenable accelerator rings
     accel_ring_reset_all();
-    accel_engine_enable_all();
-    accel_ring_enable_all();
-    
     return (DEVCMD_SUCCESS);
 }
 
@@ -703,6 +761,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     }
 
     qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
+    seq_qid_init_high = std::max(seq_qid_init_high, qid);
     READ_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate));
 
     seq_qstate.cosA = cmd->cos;
@@ -820,25 +879,14 @@ Accel_PF::accel_ring_info_get_all(void)
     accel_ring_t        *accel_ring;
     const accel_csr_t   *csr;
     uint64_t            shadow_addr;
-    uint32_t            reset;
-    accel_ring_id_t     id;
-
-    /*
-     * Temporary workaround for not having cap_top_init take the MD block
-     * out of reset for us.
-     */
-    reset = accel_csr_get32(CAP_HENS_CSR_CFG_HE_CTL_BYTE_ADDRESS);
-    if (reset & 0xff) {
-        accel_csr_set32(CAP_HENS_CSR_CFG_HE_CTL_BYTE_ADDRESS, reset & ~0xff);
-    }
 
     assert(shadow_pndx_page_addr);
     shadow_addr = shadow_pndx_page_addr;
-    for (id = ACCEL_RING_ID_FIRST, accel_ring = &spec->accel_ring_tbl[0], csr = &accel_csr_tbl[0];
-         id < ACCEL_RING_ID_MAX;
-         id++, accel_ring++, csr++) {
+    for (csr = &accel_csr_tbl[0], accel_ring = &spec->accel_ring_tbl[0];
+         csr < &accel_csr_tbl[ACCEL_RING_ID_MAX];
+         csr++, accel_ring++) {
 
-        accel_ring->ring_id = id;
+        accel_ring->ring_id = csr->ring_id;
         accel_ring->ring_base_pa = accel_csr_get64(csr->base_addr_offs);
         accel_ring->ring_pndx_pa = CAP_ADDR_BASE_MD_HENS_OFFSET + csr->pndx_addr_offs;
         accel_ring->ring_shadow_pndx_pa = shadow_addr;
@@ -879,86 +927,215 @@ Accel_PF::accel_ring_info_get_all(void)
 void
 Accel_PF::accel_ring_reset_all(void)
 {
-    accel_ring_t        *accel_ring;
     const accel_csr_t   *csr;
-    accel_ring_id_t     id;
-    uint32_t            csr_val;
 
-    for (id = ACCEL_RING_ID_FIRST, accel_ring = &spec->accel_ring_tbl[0], csr = &accel_csr_tbl[0];
-         id < ACCEL_RING_ID_MAX;
-         id++, accel_ring++, csr++) {
+    /*
+     * Reset requires rings to be disabled which helps with convergence
+     * to the quiesce state. For those rings that do not support disablement
+     * (such as XTS/GCM rings), we'll wait for them to go empty. The expectation
+     * here is that the Accel driver has already stopped submitting I/O requests
+     * prior to asking for rings to be reset.
+     */
+    ACCEL_DEV_FOR_EACH_RING_INVOKE(csr, accel_ring_enable_csr_set, false);
+    accel_ring_wait_quiesce_all();
+    usleep(ACCEL_DEV_RING_OP_QUIESCE_TIME_US);
+    ACCEL_DEV_FOR_EACH_RING_INVOKE(csr, accel_ring_reset_csr_set, true);
 
-        if (csr->reset_addr_offs != ACCEL_CSR_OFFS_VOID) {
-            NIC_LOG_INFO("ring {}", csr->ring_name);
+    /*
+     * Reset would have cleared cndx but would not have touched any
+     * other registers. Here we clear pndx to match.
+     */
+    ACCEL_DEV_FOR_EACH_RING_INVOKE(csr, accel_ring_pndx_csr_set, 0);
 
-            csr_val = accel_csr_get32(csr->reset_addr_offs);
-            accel_csr_set32(csr->reset_addr_offs,
-                            csr_val | csr->reset_data);
-            /*
-             * Bring out of reset
-             */
-            accel_csr_set32(csr->reset_addr_offs,
-                            csr_val & ~csr->reset_data);
-            /*
-             * Reset would have cleared cndx but would not have touched any
-             * other registers. Here we clear pndx to match.
-             */
-            accel_csr_set32(csr->pndx_addr_offs, 0);
-        }
-    }
+    /*
+     * Bring out of reset
+     */
+    ACCEL_DEV_FOR_EACH_RING_INVOKE(csr, accel_ring_reset_csr_set, false);
 
-    NIC_LOG_INFO("clearing {} shadow_pndx_page_addr bytes", shadow_pndx_bytes_used);
-    WRITE_MEM(shadow_pndx_page_addr, (uint8_t *)blank_page, shadow_pndx_bytes_used);
+    /*
+     * Reenable rings
+     */
+    ACCEL_DEV_FOR_EACH_RING_INVOKE(csr, accel_ring_enable_csr_set, true);
 }
 
 /*
- * Enable all HW ring engines in accel_ring_tbl
+ * Reset/Un-reset a HW ring
  */
 void
-Accel_PF::accel_engine_enable_all(void)
+Accel_PF::accel_ring_reset_csr_set(const accel_csr_t *csr,
+                                   bool enable)
 {
-    accel_ring_t        *accel_ring;
-    const accel_csr_t   *csr;
-    accel_ring_id_t     id;
-    uint32_t            csr_val;
+    uint32_t    csr_val;
 
-    for (id = ACCEL_RING_ID_FIRST, accel_ring = &spec->accel_ring_tbl[0], csr = &accel_csr_tbl[0];
-         id < ACCEL_RING_ID_MAX;
-         id++, accel_ring++, csr++) {
-
-        if (csr->engine_en_addr_offs != ACCEL_CSR_OFFS_VOID) {
-            NIC_LOG_INFO("ring {}", csr->ring_name);
-
-            csr_val = accel_csr_get32(csr->engine_en_addr_offs);
-            accel_csr_set32(csr->engine_en_addr_offs,
-                            csr_val | csr->engine_en_data);
-        }
+    if (csr->reset_addr_offs != ACCEL_CSR_OFFS_VOID) {
+        csr_val = accel_csr_get32(csr->reset_addr_offs);
+        csr_val = enable ? (csr_val | csr->reset_data) :
+                           (csr_val & ~csr->reset_data);
+        NIC_LOG_INFO("ring {} reset_addr_offs {:#x} csr_val {:#x}",
+                     csr->ring_name, csr->reset_addr_offs, csr_val);
+        accel_csr_set32(csr->reset_addr_offs, csr_val);
     }
 }
 
 /*
- * Enable all HW queues in accel_ring_tbl
+ * Enable/disable a HW ring
  */
 void
-Accel_PF::accel_ring_enable_all(void)
+Accel_PF::accel_ring_enable_csr_set(const accel_csr_t *csr,
+                                    bool enable)
 {
-    accel_ring_t        *accel_ring;
-    const accel_csr_t   *csr;
-    accel_ring_id_t     id;
-    uint32_t            csr_val;
+    uint32_t    csr_val;
 
-    for (id = ACCEL_RING_ID_FIRST, accel_ring = &spec->accel_ring_tbl[0], csr = &accel_csr_tbl[0];
-         id < ACCEL_RING_ID_MAX;
-         id++, accel_ring++, csr++) {
+    if (csr->ring_en_addr_offs != ACCEL_CSR_OFFS_VOID) {
+        csr_val = accel_csr_get32(csr->ring_en_addr_offs);
+        csr_val = enable ? (csr_val | csr->ring_en_data) :
+                           (csr_val & ~csr->ring_en_data);
+        NIC_LOG_INFO("ring {} ring_en_addr_offs {:#x} csr_val {:#x}",
+                     csr->ring_name, csr->ring_en_addr_offs, csr_val);
+        accel_csr_set32(csr->ring_en_addr_offs, csr_val);
+    }
+}
 
+/*
+ * Enable/disable a HW engine
+ */
+void
+Accel_PF::accel_engine_enable_csr_set(const accel_csr_t *csr,
+                                      bool enable)
+{
+    uint32_t    csr_val;
+
+    if (csr->engine_en_addr_offs != ACCEL_CSR_OFFS_VOID) {
+        csr_val = accel_csr_get32(csr->engine_en_addr_offs);
+        csr_val = enable ? (csr_val | csr->engine_en_data) :
+                           (csr_val & ~csr->engine_en_data);
+        NIC_LOG_INFO("ring {} ring_en_addr_offs {:#x} csr_val {:#x}",
+                     csr->ring_name, csr->engine_en_addr_offs, csr_val);
+        accel_csr_set32(csr->engine_en_addr_offs, csr_val);
+    }
+}
+
+/*
+ * Set producer index for a HW ring
+ */
+void
+Accel_PF::accel_ring_pndx_csr_set(const accel_csr_t *csr,
+                                  uint32_t val)
+{
+    /*
+     * Note that model does not have support for ring disablement
+     * or reset, i.e., cndx would not get cleared as we would expect.
+     * Consequently, pndx should never be overwritten (particularly once 
+     * the ring has been active). To avoid any issues, we only
+     * write pndx for real HW and HAPS.
+     */
+#ifdef __aarch64__
+    assert(csr->ring_id < ACCEL_RING_ID_MAX);
+    accel_ring_t *accel_ring = &spec->accel_ring_tbl[csr->ring_id];
+
+    NIC_LOG_INFO("ring {} pndx_addr_offs {:#x} csr_val {:#x}",
+                 csr->ring_name, csr->pndx_addr_offs, val);
+    accel_csr_set32(csr->pndx_addr_offs, val);
+    WRITE_MEM(accel_ring->ring_shadow_pndx_pa, (uint8_t *)&val,
+              csr->ring_pndx_size);
+#endif
+}
+
+/*
+ * Return number of requests outstanding on a HW ring.
+ * If ring is empty, add its ID to the given bitmap.
+ */
+uint32_t
+Accel_PF::accel_ring_num_pendings_get(const accel_csr_t *csr,
+                                      accel_ring_id_map_t& ring_empty_map)
+{
+    accel_ring_t    *accel_ring;
+    uint32_t        pndx = 0;
+    uint32_t        cndx = 0;
+    uint32_t        num_pendings = 0;
+
+    assert(csr->ring_id < ACCEL_RING_ID_MAX);
+    accel_ring = &spec->accel_ring_tbl[csr->ring_id];
+    if (accel_ring->ring_size) {
+        pndx = accel_csr_get32(csr->pndx_addr_offs) % accel_ring->ring_size;
+        cndx = accel_csr_get32(csr->cndx_addr_offs) % accel_ring->ring_size;
+        num_pendings = pndx < cndx ?
+                       (pndx + accel_ring->ring_size) - cndx :
+                       pndx - cndx;
+
+        /*
+         * If ring has disablement capability and it is currently disabled,
+         * we can consider the ring as empty.
+         */ 
         if (csr->ring_en_addr_offs != ACCEL_CSR_OFFS_VOID) {
-            NIC_LOG_INFO("ring {}", csr->ring_name);
-
-            csr_val = accel_csr_get32(csr->ring_en_addr_offs);
-            accel_csr_set32(csr->ring_en_addr_offs,
-                            csr_val | csr->ring_en_data);
+            if ((accel_csr_get32(csr->ring_en_addr_offs) & 
+                                 csr->ring_en_data) != csr->ring_en_data) {
+                num_pendings = 0;
+            }
         }
     }
+
+    if (num_pendings == 0) {
+        NIC_LOG_INFO("ring {} pndx {} cndx {}",
+                     csr->ring_name, pndx, cndx);
+        accel_ring_id_map_set(ring_empty_map, csr->ring_id);
+    }
+    return num_pendings;
+}
+
+/*
+ * Calculate the largest number of requests outstanding--
+ * intended to be called in a loop for each available ring.
+ */
+void
+Accel_PF::accel_ring_max_pendings_get(const accel_csr_t *csr,
+                                       uint32_t& max_pendings)
+{
+    accel_ring_id_map_t dummy_empty_map;
+    uint32_t            num_pendings;
+
+    accel_ring_id_map_init(dummy_empty_map);
+    num_pendings = accel_ring_num_pendings_get(csr, dummy_empty_map);
+    max_pendings = std::max(max_pendings, num_pendings);
+}
+
+/*
+ * Wait for all HW rings to quiesce
+ */
+void
+Accel_PF::accel_ring_wait_quiesce_all(void)
+{
+    const accel_csr_t   *csr;
+    uint64_t            timeout_us;
+    uint32_t            max_pendings = 0;
+
+    /*
+     * Return 0 if all rings have quiesced
+     */
+    auto quiesce_check = [this] () -> int
+    {
+        const accel_csr_t   *csr;
+        accel_ring_id_map_t ring_empty_map;
+
+        accel_ring_id_map_init(ring_empty_map);
+        ACCEL_DEV_FOR_EACH_RING_INVOKE(csr, accel_ring_num_pendings_get,
+                                       ring_empty_map);
+        if (accel_ring_id_map_bitcount(ring_empty_map) >= ACCEL_RING_ID_MAX) {
+            NIC_LOG_INFO("lif{}: all rings quiesced", info.hw_lif_id);
+            return 0;
+        }
+        return -1;
+    };
+
+    ACCEL_DEV_FOR_EACH_RING_INVOKE(csr, accel_ring_max_pendings_get,
+                                   max_pendings);
+    NIC_LOG_INFO("lif{}: max requests pending {}", info.hw_lif_id, max_pendings);
+    timeout_us = max_pendings ? 
+                 (uint64_t)max_pendings * ACCEL_DEV_RING_OP_QUIESCE_TIME_US :
+                 ACCEL_DEV_RING_OP_QUIESCE_TIME_US;
+    Poller poll(std::min(timeout_us,
+                         (uint64_t)ACCEL_DEV_ALL_RINGS_MAX_QUIESCE_TIME_US));
+    poll(quiesce_check);
 }
 
 /*
@@ -1022,6 +1199,39 @@ log_2(uint32_t x)
       log++;
   }
   return log;
+}
+
+static uint64_t
+timestamp(void)
+{
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000000 + tv.tv_usec);
+}
+
+/*
+ * Poll with timeout
+ */
+int
+Poller::operator()(std::function<int(void)> poll_func)
+{
+    uint64_t    tm_start;
+    uint64_t    tm_stop;
+    int         ret;
+
+    tm_start = tm_stop = timestamp();
+    while ((tm_stop - tm_start) < timeout_us) {
+        ret = poll_func();
+        if (ret == 0) {
+            return ret;
+        }
+        usleep(5000);
+        tm_stop = timestamp();
+    }
+
+    NIC_LOG_INFO("Polling timeout_us {} exceeded - Giving up!", timeout_us);
+    return -1;
 }
 
 ostream &operator<<(ostream& os, const Accel_PF& obj) {

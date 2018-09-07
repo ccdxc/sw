@@ -383,6 +383,7 @@ static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 {
 	int i;
 
+	sonic_lif_qcq_deinit(lif, lif->adminqcq);
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
 		sonic_cpdc_qs_deinit(lif->res.pc_res[i]);
 		sonic_crypto_qs_deinit(lif->res.pc_res[i]);
