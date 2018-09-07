@@ -10,6 +10,7 @@ struct cqcb_t d;
 
 #define PAGE_INDEX          r3
 #define CQE_P               r3
+#define SQCB5_ADDR          r3
 #define R_CQ_PROXY_PINDEX   r1
 #define PAGE_SEG_OFFSET     r4
 #define CQCB_ADDR           r6
@@ -37,6 +38,7 @@ struct cqcb_t d;
     .param  req_rx_cqpt_process
     .param  req_rx_eqcb_process
     .param  req_rx_recirc_mpu_only_process
+    .param  req_rx_stats_process
 
 .align
 req_rx_cqcb_process:
@@ -156,6 +158,9 @@ do_dma:
     
 cq_done:
 eqcb_eval:
+
+    SQCB5_ADDR_GET(SQCB5_ADDR)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_stats_process, SQCB5_ADDR)
 
     // set the color in cqe
     phvwrpair       p.cqe.type, K_CQE_TYPE, p.cqe.color, CQ_COLOR

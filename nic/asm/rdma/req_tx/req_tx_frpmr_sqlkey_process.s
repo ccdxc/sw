@@ -96,7 +96,7 @@ error_completion:
                    p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
     b              load_frpmr_wb
     // Set error-disable-qp. 
-    phvwr         CAPRI_PHV_FIELD(phv_global_common, error_disable_qp),  1 //BD-slot
+    phvwr         CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1 //BD-slot
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3

@@ -346,11 +346,10 @@ struct cq_rx_flags_t {
 
 struct req_rx_flags_t {
     _feedback: 1;
-    _rsvd: 4;
+    _rsvd: 5;
     _atomic_aeth:1;
     _aeth:1;
     _completion:1;
-    _atomic_ack:1;
     _ack:1;
     _read_resp:1;
     _only:1;
@@ -367,10 +366,9 @@ struct req_rx_flags_t {
 #define REQ_RX_FLAG_ONLY               0x0010
 #define REQ_RX_FLAG_READ_RESP          0x0020
 #define REQ_RX_FLAG_ACK                0x0040
-#define REQ_RX_FLAG_ATOMIC_ACK         0x0080
-#define REQ_RX_FLAG_COMPLETION         0x0100
-#define REQ_RX_FLAG_AETH               0x0200
-#define REQ_RX_FLAG_ATOMIC_AETH        0x0400
+#define REQ_RX_FLAG_COMPLETION         0x0080
+#define REQ_RX_FLAG_AETH               0x0100
+#define REQ_RX_FLAG_ATOMIC_AETH        0x0200
 
 #define REQ_RX_FLAG_RDMA_FEEDBACK      0x8000
 
@@ -411,13 +409,41 @@ struct resp_rx_flags_t {
 #define RESP_RX_FLAG_UD                 0x8000
 
 struct req_tx_flags_t {
-    error_disable_qp: 1;
-    ud_service: 1;
-    rsvd_flags: 14;
+    _ud:1;
+    _rsvd3:1;
+    _rsvd2:1;
+    _rsvd1:1;
+    _inv_rkey:1;
+    _immdt:1;
+    _atomic_cswap:1;
+    _atomic_fna:1;
+    _write:1;
+    _read_req:1;
+    _send:1;
+    _only:1;
+    _last:1;
+    _middle:1;
+    _first:1;
+    _error_disable_qp:1;
 };
 
-#define REQ_TX_FLAG_ERR_DIS_QP          0x8000
-#define REQ_TX_FLAG_UD_SERVICE          0x4000
+#define REQ_TX_FLAG_ERR_DIS_QP         0x0001
+#define REQ_TX_FLAG_FIRST              0x0002
+#define REQ_TX_FLAG_MIDDLE             0x0004
+#define REQ_TX_FLAG_LAST               0x0008
+#define REQ_TX_FLAG_ONLY               0x0010
+#define REQ_TX_FLAG_SEND               0x0020
+#define REQ_TX_FLAG_READ_REQ           0x0040
+#define REQ_TX_FLAG_WRITE              0x0080
+#define REQ_TX_FLAG_ATOMIC_FNA         0x0100
+#define REQ_TX_FLAG_ATOMIC_CSWAP       0x0200
+#define REQ_TX_FLAG_IMMDT              0x0400
+#define REQ_TX_FLAG_INV_RKEY           0x0800
+#define REQ_TX_FLAG_RSVD1              0x1000
+#define REQ_TX_FLAG_RSVD2              0x2000
+#define REQ_TX_FLAG_RSVD3              0x4000
+#define REQ_TX_FLAG_UD                 0x8000
+
 
 struct resp_tx_flags_t {
     _error_disable_qp: 1;

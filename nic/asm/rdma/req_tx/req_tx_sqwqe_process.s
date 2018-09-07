@@ -137,7 +137,7 @@ set_write_reth:
 send_or_write:
     seq            c3, d.base.num_sges, 0
     // If UD, add DETH hdr
-    seq            c1, CAPRI_KEY_FIELD(phv_global_common, ud_service), 1
+    seq            c1, CAPRI_KEY_FIELD(phv_global_common, _ud), 1
     bcf            [!c1], set_sge_arg
     seq            c2, d.base.inline_data_vld, 1 // Branch Delay Slot
 

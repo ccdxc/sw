@@ -79,10 +79,9 @@ typedef struct rdma_xrceth_s {
 #define REQ_RX_FLAG_ONLY               0x0010
 #define REQ_RX_FLAG_READ_RESP          0x0020
 #define REQ_RX_FLAG_ACK                0x0040
-#define REQ_RX_FLAG_ATOMIC_ACK         0x0080
-#define REQ_RX_FLAG_COMPLETION         0x0100
-#define REQ_RX_FLAG_AETH               0x0200
-#define REQ_RX_FLAG_ATOMIC_AETH        0x0400
+#define REQ_RX_FLAG_COMPLETION         0x0080
+#define REQ_RX_FLAG_AETH               0x0100
+#define REQ_RX_FLAG_ATOMIC_AETH        0x0200
 
 
 #define RESP_RX_FLAG_ERR_DIS_QP         0x0001

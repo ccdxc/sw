@@ -18,6 +18,7 @@ struct req_tx_s3_t0_k k;
 #define TO_S3_SQSGE_P to_s3_sqsge_info
 #define TO_S4_DCQCN_BIND_MW_P to_s4_dcqcn_bind_mw_info
 #define TO_S6_ADD_HDR2_P to_s6_add_hdr2_info
+#define TO_S7_STATS_P to_s7_stats_info
 
 #define K_CURRENT_SGE_ID CAPRI_KEY_RANGE(IN_P, current_sge_id_sbit0_ebit1, current_sge_id_sbit2_ebit7)
 #define K_CURRENT_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit1, current_sge_offset_sbit26_ebit31)
@@ -138,9 +139,10 @@ sge_loop:
     // sge_index = 1, if looping
     setcf.c4       c7, [!c0] // branch delay slot
 
-    // Pass packet_len to dcqcn_enforce and to add_headers_2 for padding
+    // Pass packet_len to dcqcn_enforce and to add_headers_2 for padding and to stats_process
     phvwr          CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, packet_len), r5
     phvwr          CAPRI_PHV_FIELD(TO_S6_ADD_HDR2_P, packet_len), r5
+    phvwr          CAPRI_PHV_FIELD(TO_S7_STATS_P, pyld_bytes), r5
 
     // if (index == num_valid_sges)
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS

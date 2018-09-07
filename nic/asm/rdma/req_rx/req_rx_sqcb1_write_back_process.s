@@ -20,6 +20,7 @@ struct sqcb1_t d;
 
 %%
     .param req_rx_recirc_mpu_only_process
+    .param req_rx_stats_process
 
 .align
 req_rx_sqcb1_write_back_process:
@@ -50,6 +51,9 @@ req_rx_sqcb1_write_back_process:
     tblwr          d.rexmit_psn, K_REXMIT_PSN
     tblwr          d.msn, K_MSN
     phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), d.state
+
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_stats_process, r0)
+
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1
     bcf            [!c1], check_bktrack
     SQCB2_ADDR_GET(r5) //BD-slot

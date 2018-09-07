@@ -8,6 +8,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define TO_S1_P to_s1_rrqwqe_info
 #define TO_S4_P to_s4_sqcb1_wb_info
 #define TO_S6_P to_s6_cq_info
+#define TO_S7_P to_s7_stats_info
 
 %%
 
@@ -40,6 +41,7 @@ req_rx_sqcb1_process_ext:
 
 to_stage_arg:
     phvwr       CAPRI_PHV_FIELD(TO_S4_P, remaining_payload_bytes), r1
+    phvwr       CAPRI_PHV_FIELD(TO_S7_P, pyld_bytes), r1
 
     phvwrpair.e CAPRI_PHV_FIELD(TO_S1_P, aeth_msn), CAPRI_APP_DATA_AETH_MSN, \
                 CAPRI_PHV_FIELD(TO_S1_P, bth_psn), CAPRI_APP_DATA_BTH_PSN

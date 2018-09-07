@@ -14,6 +14,8 @@ struct req_tx_s6_t3_k k;
 #define K_PACKET_LEN_BITS_0_1 CAPRI_KEY_FIELD(IN_TO_S_P, packet_len_sbit8_ebit13)[1:0]
 %%
 
+    .param  req_tx_stats_process
+
 .align
 req_tx_add_headers_2_process:
     // get DMA cmd entry based on dma_cmd_index
@@ -157,6 +159,10 @@ skip_roce_udp_options:
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
 
 exit:
+    //invoke stats process from here - for packet generating case
+    SQCB4_ADDR_GET(r5)
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_stats_process, r5)
+
     // This gets executed in both UD and non-UD cases
     // In case of UD, EOC set for Feedback command, otherwise set for ICRC_PAD command
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)

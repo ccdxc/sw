@@ -608,37 +608,32 @@ metadata resp_rx_to_stage_stats_info_t to_s7_stats_info_scr;
 
 /**** stage to stage header unions ****/
 
-@pragma pa_header_union ingress common_t0_s2s
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_rqcb_to_rqcb1_info t0_s2s_rsq_backtrack_info t0_s2s_rqcb_to_wqe_info t0_s2s_rqcb_to_pt_info t0_s2s_rsq_backtrack_adjust_info t0_s2s_lkey_to_pt_info
 metadata resp_rx_rqcb_to_rqcb1_info_t t0_s2s_rqcb_to_rqcb1_info;
 @pragma scratch_metadata
 metadata resp_rx_rqcb_to_rqcb1_info_t t0_s2s_rqcb_to_rqcb1_info_scr;
 
-@pragma pa_header_union ingress common_t0_s2s
 metadata resp_rx_rsq_backtrack_info_t t0_s2s_rsq_backtrack_info;
 @pragma scratch_metadata
 metadata resp_rx_rsq_backtrack_info_t t0_s2s_rsq_backtrack_info_scr;
 
-@pragma pa_header_union ingress common_t0_s2s
 metadata resp_rx_rqcb_to_wqe_info_t t0_s2s_rqcb_to_wqe_info;
 @pragma scratch_metadata
 metadata resp_rx_rqcb_to_wqe_info_t t0_s2s_rqcb_to_wqe_info_scr;
 
-@pragma pa_header_union ingress common_t0_s2s
 metadata resp_rx_rqcb_to_pt_info_t t0_s2s_rqcb_to_pt_info;
 @pragma scratch_metadata
 metadata resp_rx_rqcb_to_pt_info_t t0_s2s_rqcb_to_pt_info_scr;
 
-@pragma pa_header_union ingress common_t0_s2s
 metadata resp_rx_rsq_backtrack_adjust_info_t t0_s2s_rsq_backtrack_adjust_info;
 @pragma scratch_metadata
 metadata resp_rx_rsq_backtrack_adjust_info_t t0_s2s_rsq_backtrack_adjust_info_scr;
 
-@pragma pa_header_union ingress common_t0_s2s
 metadata resp_rx_lkey_to_pt_info_t t0_s2s_lkey_to_pt_info;
 @pragma scratch_metadata
 metadata resp_rx_lkey_to_pt_info_t t0_s2s_lkey_to_pt_info_scr;
 
-@pragma pa_header_union ingress common_t1_s2s t1_s2s_rqcb_to_write_rkey_info t1_s2s_rqcb_to_read_atomic_rkey_info t1_s2s_key_info t1_s2s_rkey_info
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_rqcb_to_write_rkey_info t1_s2s_rqcb_to_read_atomic_rkey_info t1_s2s_key_info t1_s2s_rkey_info t1_s2s_cqcb_to_eq_info
 
 metadata resp_rx_rqcb_to_write_rkey_info_t t1_s2s_rqcb_to_write_rkey_info;
 @pragma scratch_metadata
@@ -656,42 +651,36 @@ metadata resp_rx_rkey_info_t t1_s2s_rkey_info;
 @pragma scratch_metadata
 metadata resp_rx_rkey_info_t t1_s2s_rkey_info_scr;
 
-@pragma pa_header_union ingress common_t2_s2s
-metadata resp_rx_ecn_info_t t2_s2s_ecn_info;
-@pragma scratch_metadata
-metadata resp_rx_ecn_info_t t2_s2s_ecn_info_scr;
-
-@pragma pa_header_union ingress common_t2_s2s
-metadata resp_rx_rqcb1_write_back_info_t t2_s2s_rqcb1_write_back_info;
-@pragma scratch_metadata
-metadata resp_rx_rqcb1_write_back_info_t t2_s2s_rqcb1_write_back_info_scr;
-
-@pragma pa_header_union ingress common_t2_s2s
-metadata resp_rx_rqcb_to_cq_info_t t2_s2s_rqcb_to_cq_info;
-@pragma scratch_metadata
-metadata resp_rx_rqcb_to_cq_info_t t2_s2s_rqcb_to_cq_info_scr;
-
-@pragma pa_header_union ingress common_t2_s2s
-metadata resp_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info;
-@pragma scratch_metadata
-metadata resp_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info_scr;
-
-@pragma pa_header_union ingress common_t1_s2s
 metadata resp_rx_cqcb_to_eq_info_t t1_s2s_cqcb_to_eq_info;
 @pragma scratch_metadata
 metadata resp_rx_cqcb_to_eq_info_t t1_s2s_cqcb_to_eq_info_scr;
 
-@pragma pa_header_union ingress common_t3_s2s
+@pragma pa_header_union ingress common_t2_s2s t2_s2s_ecn_info t2_s2s_rqcb1_write_back_info t2_s2s_rqcb_to_cq_info t2_s2s_cqcb_to_pt_info
+metadata resp_rx_ecn_info_t t2_s2s_ecn_info;
+@pragma scratch_metadata
+metadata resp_rx_ecn_info_t t2_s2s_ecn_info_scr;
+
+metadata resp_rx_rqcb1_write_back_info_t t2_s2s_rqcb1_write_back_info;
+@pragma scratch_metadata
+metadata resp_rx_rqcb1_write_back_info_t t2_s2s_rqcb1_write_back_info_scr;
+
+metadata resp_rx_rqcb_to_cq_info_t t2_s2s_rqcb_to_cq_info;
+@pragma scratch_metadata
+metadata resp_rx_rqcb_to_cq_info_t t2_s2s_rqcb_to_cq_info_scr;
+
+metadata resp_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info;
+@pragma scratch_metadata
+metadata resp_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info_scr;
+
+@pragma pa_header_union ingress common_t3_s2s t3_s2s_ecn_info t3_s2s_inv_rkey_info t3_s2s_stats_info
 metadata resp_rx_ecn_info_t t3_s2s_ecn_info;
 @pragma scratch_metadata
 metadata resp_rx_ecn_info_t t3_s2s_ecn_info_scr;
 
-@pragma pa_header_union ingress common_t3_s2s
 metadata resp_rx_inv_rkey_info_t t3_s2s_inv_rkey_info;
 @pragma scratch_metadata
 metadata resp_rx_inv_rkey_info_t t3_s2s_inv_rkey_info_scr;
 
-@pragma pa_header_union ingress common_t3_s2s
 metadata resp_rx_stats_info_t t3_s2s_stats_info;
 @pragma scratch_metadata
 metadata resp_rx_stats_info_t t3_s2s_stats_info_scr;

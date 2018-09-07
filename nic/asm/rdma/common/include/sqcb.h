@@ -238,9 +238,49 @@ struct sqcb2_t {
     pad                            : 8;
 };
 
+struct sqcb3_t {
+    pad: 512;
+};
+
+// req_tx stats
+struct sqcb4_t {
+    num_bytes: 64;
+    num_pkts: 32;
+    num_send_msgs: 16;
+    num_write_msgs: 16;
+    num_read_req_msgs: 16;
+    num_atomic_fna_msgs: 16;
+    num_atomic_cswap_msgs: 16;
+    num_send_msgs_inv_rkey: 16;
+    num_send_msgs_imm_data: 16;
+    num_write_msgs_imm_data: 16;
+    num_pkts_in_cur_msg: 16;
+    max_pkts_in_any_msg : 16;
+    num_npg_req: 32;
+    num_npg_bindmw_t1_req:16;
+    num_npg_bindmw_t2_req:16;
+    pad: 192;
+};
+
+struct sqcb5_t {
+    num_bytes: 64;
+    num_pkts: 32;
+    num_read_resp_pkts:32;
+    num_read_resp_msgs:16;
+    num_feedback:16;
+    num_ack:16;
+    num_atomic_ack:16;
+    num_pkts_in_cur_msg: 16;
+    max_pkts_in_any_msg : 16;
+    pad: 288;
+};
+
 struct sqcb_t {
     struct sqcb0_t sqcb0;
     struct sqcb1_t sqcb1;
     struct sqcb2_t sqcb2;
+    struct sqcb3_t sqcb3;
+    struct sqcb4_t sqcb4;
+    struct sqcb5_t sqcb5;
 };
 #endif //__SQCB_H

@@ -1102,11 +1102,51 @@ typedef struct sqcb2_s {
     uint32_t dst_qp:24;      //tx
 } PACKED sqcb2_t;
 
+typedef struct sqcb3_s {
+    uint8_t pad[64];
+} sqcb3_t;
+
+// req_tx stats
+typedef struct sqcb4_s {
+    uint8_t pad[24];
+    uint16_t num_npg_bindmw_t2_req;
+    uint16_t num_npg_bindmw_t1_req;
+    uint32_t num_npg_req;
+    uint16_t max_pkts_in_any_msg;
+    uint16_t num_pkts_in_cur_msg;
+    uint16_t num_write_msgs_imm_data;
+    uint16_t num_send_msgs_imm_data;
+    uint16_t num_send_msgs_inv_rkey;
+    uint16_t num_atomic_cswap_msgs;
+    uint16_t num_atomic_fna_msgs;
+    uint16_t num_read_req_msgs;
+    uint16_t num_write_msgs;
+    uint16_t num_send_msgs;
+    uint32_t num_pkts;
+    uint64_t num_bytes;
+} sqcb4_t;
+
+// req_rx stats
+typedef struct sqcb5_s {
+    uint8_t pad[36];
+    uint16_t max_pkts_in_any_msg;
+    uint16_t num_pkts_in_cur_msg;
+    uint16_t num_atomic_ack;
+    uint16_t num_ack;
+    uint16_t num_feedback;
+    uint16_t num_read_resp_msgs;
+    uint32_t num_read_resp_pkts;
+    uint32_t num_pkts;
+    uint64_t num_bytes;
+} sqcb5_t;
 
 typedef struct sqcb_s {
     sqcb0_t sqcb0; // 0-63 bytes
     sqcb1_t sqcb1; // 63-127 bytes
     sqcb2_t sqcb2; // 128-191 bytes
+    sqcb3_t sqcb3; // 192-255 bytes
+    sqcb4_t sqcb4; // 256-319 bytes
+    sqcb5_t sqcb5; // 320-383 bytes
 } PACKED sqcb_t;
 
 typedef struct header_template_v4_s {
@@ -1277,7 +1317,15 @@ typedef struct rqcb3_s {
 } PACKED rqcb3_t;
 
 typedef struct rqcb4_s {
-    uint8_t     pad[64];
+    uint8_t     pad[36];
+    uint16_t    max_pkts_in_any_msg;
+    uint16_t    num_pkts_in_cur_msg;
+    uint16_t    num_atomic_resp_msgs;
+    uint16_t    num_read_resp_msgs;
+    uint32_t    num_acks;
+    uint32_t    num_read_resp_pkts;
+    uint32_t    num_pkts;
+    uint64_t    num_bytes;
 } rqcb4_t;
 
 typedef struct rqcb5_s {

@@ -128,5 +128,5 @@ error_completion:
     add          r1, K_SGE_INDEX, r0
     CAPRI_SET_TABLE_I_VALID(r1, 0)
 
-    phvwr.e        CAPRI_PHV_FIELD(phv_global_common, error_disable_qp),  1
+    phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1
     nop

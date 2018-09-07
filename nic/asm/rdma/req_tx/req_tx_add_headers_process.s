@@ -58,7 +58,7 @@ req_tx_add_headers_process:
     bbeq           CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, rate_enforce_fail
     seq            c2, CAPRI_KEY_FIELD(IN_P, first), 1 // Branch Delay Slot
 
-    bbeq           K_GLOBAL_FLAG(error_disable_qp), 1, error_disable_exit
+    bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_exit
     nop
 
     bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence
@@ -85,11 +85,15 @@ req_tx_add_headers_process:
         cswitch [c2, c1]
         nop
         .brcase RDMA_PKT_MIDDLE
+            phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _send),  1, \
+                           CAPRI_PHV_FIELD(phv_global_common, _middle),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
 
         .brcase RDMA_PKT_LAST
             phvwr          BTH_ACK_REQ, 1
+            phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _send),  1, \
+                           CAPRI_PHV_FIELD(phv_global_common, _last),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
 
@@ -97,6 +101,8 @@ req_tx_add_headers_process:
             // check_credits = TRUE
             setcf          c5, [c0]
 
+            phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _send),  1, \
+                           CAPRI_PHV_FIELD(phv_global_common, _first),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
 
@@ -110,15 +116,20 @@ req_tx_add_headers_process:
             phvwr.!c3      BTH_ACK_REQ, 1
 
             DMA_PHV2PKT_SETUP_CMDSIZE_C(r6, 2, c3)
+            phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _send),  1, \
+                           CAPRI_PHV_FIELD(phv_global_common, _only),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         .csend
 
     .brcase OP_TYPE_SEND_INV
+        phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _inv_rkey),  1, \
+                       CAPRI_PHV_FIELD(phv_global_common, _send),  1
         .csbegin
         cswitch [c2, c1]
         tblwr.c2       d.inv_key, K_INV_KEY // Branch Delay Slot
         .brcase RDMA_PKT_MIDDLE
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _middle),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         .brcase RDMA_PKT_LAST
@@ -129,12 +140,14 @@ req_tx_add_headers_process:
             DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, ieth, ieth, 1)
 
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _last),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_LAST_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         .brcase RDMA_PKT_FIRST
             // check_credits = TRUE
             setcf          c5, [c0]
 
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _first),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         .brcase RDMA_PKT_ONLY
@@ -147,16 +160,20 @@ req_tx_add_headers_process:
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, ieth, ieth, 1)
             phvwr          IETH_R_KEY, K_INV_KEY
 
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _only),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         .csend
 
     .brcase OP_TYPE_SEND_IMM
+        phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _immdt),  1, \
+                       CAPRI_PHV_FIELD(phv_global_common, _send),  1
         .csbegin
         cswitch [c2, c1]
         tblwr.c2       d.imm_data, K_IMM_DATA  // Branch Delay Slot
         
         .brcase RDMA_PKT_MIDDLE
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _middle),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
@@ -166,6 +183,7 @@ req_tx_add_headers_process:
             DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, immeth, immeth, 1)
             phvwr          IMMDT_DATA, d.imm_data
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _last),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         
@@ -173,6 +191,7 @@ req_tx_add_headers_process:
             // check_credits = TRUE
             setcf          c5, [c0]
 
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _first),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         
@@ -191,6 +210,7 @@ req_tx_add_headers_process:
 
             phvwr          IMMDT_DATA, K_IMM_DATA
 
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _only),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         .csend
@@ -213,6 +233,7 @@ req_tx_add_headers_process:
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
+        phvwr          CAPRI_PHV_FIELD(phv_global_common, _read_req),  1
         b              op_type_end
         add            r2, RDMA_PKT_OPC_RDMA_READ_REQ, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
 
@@ -221,6 +242,8 @@ req_tx_add_headers_process:
         cswitch [c2, c1]
         nop
         .brcase RDMA_PKT_MIDDLE
+            phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _write),  1, \
+                           CAPRI_PHV_FIELD(phv_global_common, _middle),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
@@ -229,6 +252,8 @@ req_tx_add_headers_process:
             // check_credits = TRUE; inc_lsn = TRUE
             crestore       [c5, c4], 0x30, 0x30
 
+            phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _write),  1, \
+                           CAPRI_PHV_FIELD(phv_global_common, _last),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
@@ -237,6 +262,8 @@ req_tx_add_headers_process:
             DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
 
+            phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _write),  1, \
+                           CAPRI_PHV_FIELD(phv_global_common, _first),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         
@@ -249,16 +276,21 @@ req_tx_add_headers_process:
             DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
 
+            phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _write),  1, \
+                           CAPRI_PHV_FIELD(phv_global_common, _only),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         .csend
 
   
     .brcase OP_TYPE_WRITE_IMM
+        phvwrpair      CAPRI_PHV_FIELD(phv_global_common, _immdt),  1, \
+                       CAPRI_PHV_FIELD(phv_global_common, _write),  1
         .csbegin
         cswitch [c2, c1]
         tblwr.c2       d.imm_data, K_IMM_DATA  // Branch Delay Slot
         .brcase RDMA_PKT_MIDDLE
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _middle),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
@@ -272,6 +304,7 @@ req_tx_add_headers_process:
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, immeth, immeth, 1)
             phvwr          IMMDT_DATA, d.imm_data
 
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _last),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
@@ -279,6 +312,7 @@ req_tx_add_headers_process:
             // dma_cmd[2] - RETH hdr, num addrs 2 (bth, reth)
             DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _first),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
@@ -295,6 +329,7 @@ req_tx_add_headers_process:
             DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, immeth, immeth, 2)
             phvwr          IMMDT_DATA, K_IMM_DATA
 
+            phvwr          CAPRI_PHV_FIELD(phv_global_common, _only),  1
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         .csend
@@ -318,6 +353,7 @@ req_tx_add_headers_process:
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
+        phvwr          CAPRI_PHV_FIELD(phv_global_common, _atomic_cswap),  1
         b              op_type_end
         add            r2, RDMA_PKT_OPC_CMP_SWAP, d.service, RDMA_OPC_SERV_TYPE_SHIFT
    
@@ -340,6 +376,7 @@ req_tx_add_headers_process:
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
+        phvwr          CAPRI_PHV_FIELD(phv_global_common, _atomic_fna),  1
         b              op_type_end
         add            r2, RDMA_PKT_OPC_FETCH_ADD, d.service, RDMA_OPC_SERV_TYPE_SHIFT
     .brend

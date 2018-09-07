@@ -36,7 +36,7 @@ req_tx_write_back_process:
     bbeq          CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail
     nop           // Branch Delay Slot
 
-    bbeq          K_GLOBAL_FLAG(error_disable_qp), 1, error_disable_exit
+    bbeq          K_GLOBAL_FLAG(_error_disable_qp), 1, error_disable_exit
     nop
 
     bbeq          CAPRI_KEY_FIELD(IN_TO_S_P, fence), 1, fence

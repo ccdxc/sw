@@ -374,7 +374,40 @@ class RdmaSQstate(Packet):
         ShortField("timestamp", 0),
         ShortField("timestamp_echo", 0),
         ShortField("mss", 0),
-        ByteField("pad3", 0)
+        ByteField("pad3", 0),
+
+        #SQCB3
+        BitField("sqcb3", 0, 512),
+
+        #SQCB4 - REQ_TX stats
+        LongField("tx_num_bytes", 0),
+        IntField("tx_num_pkts", 0),
+        ShortField("tx_num_send_msgs", 0),
+        ShortField("tx_num_write_msgs", 0),
+        ShortField("tx_num_read_req_msgs", 0),
+        ShortField("tx_num_atomic_fna_msgs", 0),
+        ShortField("tx_num_atomic_cswap_msgs", 0),
+        ShortField("tx_num_send_msgs_inv_rkey", 0),
+        ShortField("tx_num_send_msgs_imm_data", 0),
+        ShortField("tx_num_write_msgs_imm_data", 0),
+        ShortField("tx_num_pkts_in_cur_msg", 0),
+        ShortField("tx_max_pkts_in_any_msg", 0),
+        IntField("tx_num_npg_requests", 0),
+        ShortField("tx_num_npg_bindmw_t1_req", 0),
+        ShortField("tx_num_npg_bindmw_t2_req", 0),
+        BitField("sqcb4", 0, 192),
+
+        #SQCB5
+        LongField("rx_num_bytes", 0),
+        IntField("rx_num_pkts", 0),
+        IntField("rx_num_read_resp_pkts", 0),
+        ShortField("rx_num_read_resp_msgs", 0),
+        ShortField("rx_num_feedback", 0),
+        ShortField("rx_num_ack", 0),
+        ShortField("rx_num_atomic_ack", 0),
+        ShortField("rx_num_pkts_in_cur_msg", 0),
+        ShortField("rx_num_pkts_in_any_msg", 0),
+        BitField("sqcb5", 0, 288),
     ]
 
 class RdmaCQstate(Packet):

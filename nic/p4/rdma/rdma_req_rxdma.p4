@@ -98,6 +98,8 @@
 
 #define rx_table_s7_t1_action req_rx_eqcb_process
 
+#define rx_table_s7_t3_action req_rx_stats_process
+
 #include "../common-p4+/common_rxdma.p4"
 #include "./rdma_rxdma_headers.p4"
 
@@ -120,7 +122,6 @@
     modify_field(phv_global_common_scr._aeth, phv_global_common._aeth);\
     modify_field(phv_global_common_scr._completion, phv_global_common._completion);\
     modify_field(phv_global_common_scr._atomic_ack, phv_global_common._atomic_ack);\
-    modify_field(phv_global_common_scr._ack, phv_global_common._ack);\
     modify_field(phv_global_common_scr._read_resp, phv_global_common._read_resp);\
     modify_field(phv_global_common_scr._only, phv_global_common._only);\
     modify_field(phv_global_common_scr._last, phv_global_common._last);\
@@ -186,11 +187,11 @@ header_type phv_global_common_t {
         _rsvd1                           :    1;
         _rsvd2                           :    1;
         _rsvd3                           :    1;
+        _rsvd4                           :    1;
         _atomic_aeth                     :    1;
         _aeth                            :    1;
         _completion                      :    1;
         _atomic_ack                      :    1;
-        _ack                             :    1;
         _read_resp                       :    1;
         _only                            :    1;
         _last                            :    1;
@@ -236,6 +237,13 @@ header_type req_rx_to_stage_sqcb1_wb_info_t {
         my_token_id                      :    8;
         error_disable_qp                 :    1;
         error_drop_phv                   :    1;
+    }
+}
+
+header_type req_rx_to_stage_stats_info_t {
+    fields {
+        pyld_bytes                       :   16;
+        pad                              :  112;
     }
 }
 
@@ -340,6 +348,12 @@ header_type req_rx_sqcb1_to_timer_expiry_info_t {
 header_type req_rx_sqcb1_to_compl_feedback_info_t {
     fields {
         status                           : 8;
+    }
+}
+
+header_type req_rx_stats_info_t {
+    fields {
+        pad                              :  160;
     }
 }
 
@@ -465,6 +479,11 @@ metadata req_rx_to_stage_cq_info_t to_s6_cq_info;
 @pragma scratch_metadata
 metadata req_rx_to_stage_cq_info_t to_s6_cq_info_scr;
 
+@pragma pa_header_union ingress to_stage_7
+metadata req_rx_to_stage_stats_info_t to_s7_stats_info;
+@pragma scratch_metadata
+metadata req_rx_to_stage_stats_info_t to_s7_stats_info_scr;
+
 /**** stage to stage header unions ****/
 
 //Table-0
@@ -515,7 +534,7 @@ metadata req_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info_scr;
 
 //Table-3
 
-@pragma pa_header_union ingress common_t3_s2s t3_s2s_ecn_info t3_s2s_sqcb1_write_back_info t3_s2s_sqcb1_to_timer_expiry_info t3_s2s_sqcb1_to_compl_feedback_info
+@pragma pa_header_union ingress common_t3_s2s t3_s2s_ecn_info t3_s2s_sqcb1_write_back_info t3_s2s_sqcb1_to_timer_expiry_info t3_s2s_sqcb1_to_compl_feedback_info t3_s2s_stats_info
 
 metadata req_rx_ecn_info_t t3_s2s_ecn_info;
 @pragma scratch_metadata
@@ -532,6 +551,12 @@ metadata req_rx_sqcb1_to_timer_expiry_info_t t3_s2s_sqcb1_to_timer_expiry_info_s
 metadata req_rx_sqcb1_to_compl_feedback_info_t t3_s2s_sqcb1_to_compl_feedback_info;
 @pragma scratch_metadata
 metadata req_rx_sqcb1_to_compl_feedback_info_t t3_s2s_sqcb1_to_compl_feedback_info_scr;
+
+metadata req_rx_stats_info_t t3_s2s_stats_info;
+@pragma scratch_metadata
+metadata req_rx_stats_info_t t3_s2s_stats_info_scr;
+
+
 /*
  * Stage 0 table 0 recirc action
  */
@@ -1348,3 +1373,17 @@ action req_rx_completion_feedback_process () {
     modify_field(t3_s2s_sqcb1_to_compl_feedback_info_scr.status, t3_s2s_sqcb1_to_compl_feedback_info.status);
 
 }
+
+action req_rx_stats_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s7_stats_info_scr.pyld_bytes, to_s7_stats_info.pyld_bytes);
+    modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
+
+    // stage to stage
+    modify_field(t3_s2s_stats_info_scr.pad, t3_s2s_stats_info.pad);
+
+}
+

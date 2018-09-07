@@ -16,8 +16,14 @@ struct sqcb2_t d;
 
 %%
 
+    .param  req_tx_stats_process
+
 .align
 req_tx_sqcb2_write_back_process:
+
+    //invoke stats_process for NPG case here
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
+
     // if speculative cindex matches cindex, then this wqe is being
     // processed in the right order and state update is allowed. Otherwise
     // discard and continue with speculation until speculative cindex
@@ -25,7 +31,7 @@ req_tx_sqcb2_write_back_process:
     // doesn't allow this packet
     seq            c1, K_SPEC_CINDEX, d.sq_cindex
     bcf            [!c1], spec_fail
-    CAPRI_SET_TABLE_3_VALID(0) // BD-slot
+    nop
 
     bbeq           CAPRI_KEY_FIELD(IN_P, poll_failed), 1, poll_fail
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1 // Branch Delay Slot
@@ -33,7 +39,7 @@ req_tx_sqcb2_write_back_process:
     bbeq           CAPRI_KEY_FIELD(IN_P, rate_enforce_failed), 1, rate_enforce_fail
     seq            c2, CAPRI_KEY_FIELD(IN_P, first), 1 // Branch Delay Slot
 
-    bbeq           K_GLOBAL_FLAG(error_disable_qp), 1, error_exit
+    bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_exit
     nop  // BD-slot
 
     bbeq           CAPRI_KEY_FIELD(IN_P, set_li_fence), 1, li_fence

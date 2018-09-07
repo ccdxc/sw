@@ -217,7 +217,6 @@ struct rqcb3_t {
 
 //resp_tx stats
 struct rqcb4_t {
-    //TBD
     num_bytes: 64;
     num_pkts: 32;
     num_read_resp_pkts: 32;

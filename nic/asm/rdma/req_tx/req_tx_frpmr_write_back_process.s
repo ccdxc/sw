@@ -32,7 +32,7 @@ req_tx_frpmr_write_back_process:
     CAPRI_SET_TABLE_2_VALID(0) // BD-slot
     
     // Generate error-completion on FRPMR failure.
-    bbeq           K_GLOBAL_FLAG(error_disable_qp), 1, error_exit
+    bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_exit
 
     /*
      * Prepare FRPMR DMA commands.

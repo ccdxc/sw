@@ -9,6 +9,8 @@ struct key_entry_aligned_t d;
 #define IN_P t0_s2s_sqlkey_to_rkey_mw_info
 #define IN_TO_S_P to_s4_dcqcn_bind_mw_info
 
+#define TO_S7_STATS_P to_s7_stats_info
+
 #define K_ACC_CTRL         CAPRI_KEY_FIELD(IN_P, acc_ctrl)
 #define K_VA               CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit56_ebit63)
 #define K_LEN              CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
@@ -52,7 +54,8 @@ type1_mw_bind:
 
     seq            c1, K_ZBVA, 1 // Branch Delay Slot
     bcf            [c1], invalid_zbva
-    nop            // Branch Delay Slot
+    phvwrpair.!c1  CAPRI_PHV_FIELD(TO_S7_STATS_P, npg), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, npg_bindmw_t1), 1 //BD Slot
     
     tblwr          d.type, MR_TYPE_MW_TYPE_1
     b              update_key
@@ -69,7 +72,8 @@ type2_mw_bind:
     // type 2 mw bind cannot be performed with zero length to unbind the MW
     seq            c1, K_LEN, 0 // Branch Delay Slot
     bcf            [c1], invalid_len
-    nop            // Branch Delay Slot
+    phvwrpair.!c1  CAPRI_PHV_FIELD(TO_S7_STATS_P, npg), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, npg_bindmw_t2), 1 //BD Slot
 
     tblwr          d.type, MR_TYPE_MW_TYPE_2
     // Type2 MW can be invalidated by local/remote invalidate so set MR_FLAG_INV
@@ -109,5 +113,5 @@ pd_check_failure:
     phvwrpair      p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK, \
                    p.{rdma_feedback.completion.status...rdma_feedback.completion.error}, \
                    (CQ_STATUS_MEM_MGMT_OPER_ERR << 1 | 1)
-    phvwr.e          CAPRI_PHV_FIELD(phv_global_common, error_disable_qp),  1
+    phvwr.e          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1
     CAPRI_SET_TABLE_0_VALID(0)

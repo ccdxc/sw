@@ -116,6 +116,8 @@
 #define tx_table_s7_t0_action3 req_tx_bktrack_write_back_process_s7
 #define tx_table_s7_t1_action4 req_tx_bktrack_sqcb2_write_back_process
 
+#define tx_table_s7_t3_action  req_tx_stats_process
+
 #include "../common-p4+/common_txdma.p4"
 #include "./rdma_txdma_headers.p4"
 
@@ -129,8 +131,23 @@
     modify_field(phv_global_common_scr.pt_base_addr_page_id, phv_global_common.pt_base_addr_page_id);\
     modify_field(phv_global_common_scr.log_num_pt_entries, phv_global_common.log_num_pt_entries);\
     modify_field(phv_global_common_scr.pad, phv_global_common.pad);\
-    modify_field(phv_global_common_scr.error_disable_qp, phv_global_common.error_disable_qp);\
-    modify_field(phv_global_common_scr.ud_service, phv_global_common.ud_service);\
+    modify_field(phv_global_common_scr._ud, phv_global_common._ud);\
+    modify_field(phv_global_common_scr._inline, phv_global_common._inline);\
+    modify_field(phv_global_common_scr._ack_req, phv_global_common._ack_req);\
+    modify_field(phv_global_common_scr._completion, phv_global_common._completion);\
+    modify_field(phv_global_common_scr._inv_rkey, phv_global_common._inv_rkey);\
+    modify_field(phv_global_common_scr._immdt, phv_global_common._immdt);\
+    modify_field(phv_global_common_scr._atomic_cswap, phv_global_common._atomic_cswap);\
+    modify_field(phv_global_common_scr._atomic_fna, phv_global_common._atomic_fna);\
+    modify_field(phv_global_common_scr._write, phv_global_common._write);\
+    modify_field(phv_global_common_scr._read_req, phv_global_common._read_req);\
+    modify_field(phv_global_common_scr._send, phv_global_common._send);\
+    modify_field(phv_global_common_scr._only, phv_global_common._only);\
+    modify_field(phv_global_common_scr._last, phv_global_common._last);\
+    modify_field(phv_global_common_scr._middle, phv_global_common._middle);\
+    modify_field(phv_global_common_scr._first, phv_global_common._first);\
+    modify_field(phv_global_common_scr._error_disable_qp, phv_global_common._error_disable_qp);\
+
 
 /**** header definitions ****/
 
@@ -150,8 +167,22 @@ header_type phv_global_common_t {
         pt_base_addr_page_id             :   22;
         log_num_pt_entries               :    5;
         pad                              :   22;
-        error_disable_qp                 :    1;
-        ud_service                       :    1;
+        _ud                              :    1;
+        _inline                          :    1;
+        _ack_req                         :    1;
+        _completion                      :    1;
+        _inv_rkey                        :    1;
+        _immdt                           :    1;
+        _atomic_cswap                    :    1;
+        _atomic_fna                      :    1;
+        _write                           :    1;
+        _read_req                        :    1;
+        _send                            :    1;
+        _only                            :    1;
+        _last                            :    1;
+        _middle                          :    1;
+        _first                           :    1;
+        _error_disable_qp                :    1;
     }
 }
 
@@ -207,6 +238,17 @@ header_type req_tx_to_stage_bt_info_t {
         pad                              :   20;
     }
 }
+
+header_type req_tx_to_stage_stats_info_t {
+    fields {
+        pyld_bytes                       :   16;
+        npg                              :    1;
+        npg_bindmw_t1                    :    1;
+        npg_bindmw_t2                    :    1;
+        pad                              :  109;
+    }
+}
+
 
 header_type req_tx_wqe_to_sge_info_t {
     fields {
@@ -589,6 +631,12 @@ header_type req_tx_sqlkey_to_rkey_mw_info_t {
     }
 }
 
+header_type req_tx_stats_info_t {
+    fields {
+        pad                              :  160;
+    }
+}
+
 /**** header unions and scratch ****/
 
 @pragma pa_header_union ingress app_header rdma_recirc
@@ -697,11 +745,15 @@ metadata req_tx_to_stage_add_hdr2_info_t to_s6_add_hdr2_info;
 metadata req_tx_to_stage_add_hdr2_info_t to_s6_add_hdr2_info_scr;
 
 //To-Stage-7
-@pragma pa_header_union ingress to_stage_7 to_s7_bt_info
+@pragma pa_header_union ingress to_stage_7 to_s7_bt_info to_s7_stats_info
 
 metadata req_tx_to_stage_bt_info_t to_s7_bt_info;
 @pragma scratch_metadata
 metadata req_tx_to_stage_bt_info_t to_s7_bt_info_scr;
+
+metadata req_tx_to_stage_stats_info_t to_s7_stats_info;
+@pragma scratch_metadata
+metadata req_tx_to_stage_stats_info_t to_s7_stats_info_scr;
 
 /**** stage to stage header unions ****/
 
@@ -813,7 +865,7 @@ metadata req_tx_frpmr_lkey_to_wb_info_t t2_s2s_frpmr_write_back_info_scr;
 
 
 //Table-3
-@pragma pa_header_union ingress common_t3_s2s t3_s2s_sqcb_write_back_info_rd t3_s2s_sqcb_write_back_info_send_wr t3_s2s_add_hdr_info 
+@pragma pa_header_union ingress common_t3_s2s t3_s2s_sqcb_write_back_info_rd t3_s2s_sqcb_write_back_info_send_wr t3_s2s_add_hdr_info t3_s2s_stats_info
 
 metadata req_tx_sqcb_write_back_info_rd_t t3_s2s_sqcb_write_back_info_rd;
 @pragma scratch_metadata
@@ -826,6 +878,10 @@ metadata req_tx_sqcb_write_back_info_send_wr_t t3_s2s_sqcb_write_back_info_send_
 metadata req_tx_add_hdr_info_t t3_s2s_add_hdr_info;
 @pragma scratch_metadata
 metadata req_tx_add_hdr_info_t t3_s2s_add_hdr_info_scr;
+
+metadata req_tx_stats_info_t t3_s2s_stats_info;
+@pragma scratch_metadata
+metadata req_tx_stats_info_t t3_s2s_stats_info_scr;
 
 /*
  * Stage 0 table 0 recirc action
@@ -2252,3 +2308,17 @@ action req_tx_sqcb2_fence_process () {
     // stage to stage
 }
 
+action req_tx_stats_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s7_stats_info_scr.pyld_bytes, to_s7_stats_info.pyld_bytes);
+    modify_field(to_s7_stats_info_scr.npg, to_s7_stats_info.npg);
+    modify_field(to_s7_stats_info_scr.npg_bindmw_t1, to_s7_stats_info.npg_bindmw_t1);
+    modify_field(to_s7_stats_info_scr.npg_bindmw_t2, to_s7_stats_info.npg_bindmw_t2);
+
+    // stage to stage
+    modify_field(t3_s2s_stats_info_scr.pad, t3_s2s_stats_info.pad);
+
+}
