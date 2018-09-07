@@ -70,7 +70,7 @@ void* intr_fwcfg_addr(const int intr)
 void intr_fwcfg(const int intr, uint32_t lif)
 {
 	volatile void* pa = intr_fwcfg_addr(intr);
-	uint64_t data = (uint64_t)((uint64_t)1 << 46)/*local_int=1*/ | ((uint64_t)4 << 32)/*lif=4*/;
+	uint64_t data = (uint64_t)((uint64_t)1 << 46)/*local_int=1*/ | ((uint64_t)lif << 32);
 
 	writeq(data, pa);
 }
