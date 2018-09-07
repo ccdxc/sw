@@ -82,8 +82,10 @@
 #define IONIC_NETDEV_RX_TRACE(q, fmt, ...)
 #endif
 
+#ifndef print_hex_dump_debug
 #define print_hex_dump_debug(...) 			\
 		print_hex_dump(NULL, __VA_ARGS__);
+#endif
 
 #define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION	"Pensando Ethernet NIC Driver"

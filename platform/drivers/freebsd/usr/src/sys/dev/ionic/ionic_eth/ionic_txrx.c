@@ -764,7 +764,9 @@ int ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
 	struct ifnet* ifp = lif->netdev;
 	struct txque* txq; 
 	int err, qid = 0;
+#ifdef RSS
 	int bucket;
+#endif
 
 	if (M_HASHTYPE_GET(m) != M_HASHTYPE_NONE) {
 #ifdef RSS

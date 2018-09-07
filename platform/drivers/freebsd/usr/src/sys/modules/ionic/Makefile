@@ -13,7 +13,7 @@ ionic_osdep.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
         opt_inet.h opt_inet6.h opt_rss.h
 
-CFLAGS+= -DFREEBSD
+CFLAGS+= -DFREEBSD -DHAPS
 CFLAGS+= -I${SRCTOP}/sys/ofed/include
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include
 
