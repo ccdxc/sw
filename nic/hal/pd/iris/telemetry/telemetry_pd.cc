@@ -285,6 +285,7 @@ pd_collector_create(pd_func_args_t *pd_func_args)
 {
     pd_collector_create_args_t          *c_args;
     collector_config_t                  *cfg;
+    hal_cfg_t                           *hal_cfg = NULL;
     pd_l2seg_get_fromcpu_vlanid_args_t  args;
     pd_func_args_t                      pd_func_args1 = {0};
     telemetry_export_dest_t             *d;
@@ -329,22 +330,23 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     telemetry_export_dest_set_mac(d, cfg->src_mac, true);
     telemetry_export_dest_set_mac(d, cfg->dest_mac, false);
     telemetry_export_dest_commit(d);
-    // TODO: Enable timer after fixing the dol tests
-#if 0
-    // Start timer for the collector
-    d->db_timer = 
-        sdk::lib::timer_schedule((HAL_TIMER_ID_IPFIX_MIN + d->id),
-                                 (d->export_intvl * TIME_MSECS_PER_SEC),
-                                 (void *) 0,
-                                 ipfix_doorbell_ring_cb,
-                                 true);
-    if (!d->db_timer) {
-        HAL_TRACE_ERR("Failed to start periodic doorbell ring timer");
-        return HAL_RET_ERR;
+    hal_cfg = g_hal_state_pd->hal_cfg();
+    HAL_ASSERT(hal_cfg);
+    if (hal_cfg->platform_mode == HAL_PLATFORM_MODE_HW) {
+        // Start timer for the collector, only in HW mode
+        d->db_timer = 
+            sdk::lib::timer_schedule((HAL_TIMER_ID_IPFIX_MIN + d->id),
+                                     (d->export_intvl * TIME_MSECS_PER_SEC),
+                                     (void *) 0,
+                                     ipfix_doorbell_ring_cb,
+                                     true);
+        if (!d->db_timer) {
+            HAL_TRACE_ERR("Failed to start periodic doorbell ring timer");
+            return HAL_RET_ERR;
+        }
+        HAL_TRACE_DEBUG("Started periodic doorbell ring timer with "
+                        "{} ms interval", (d->export_intvl * TIME_MSECS_PER_SEC));
     }
-    HAL_TRACE_DEBUG("Started periodic doorbell ring timer with "
-                    "{} ms interval", (d->export_intvl * TIME_MSECS_PER_SEC));
-#endif
     
     return HAL_RET_OK;
 }
@@ -352,9 +354,10 @@ pd_collector_create(pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_collector_delete(pd_func_args_t *pd_func_args)
 {
-    pd_collector_delete_args_t          *c_args;
+    hal_cfg_t                           *hal_cfg = NULL;
     collector_config_t                  *cfg;
     telemetry_export_dest_t             *d;
+    pd_collector_delete_args_t          *c_args;
 
     c_args = pd_func_args->pd_collector_delete;
     cfg = c_args->cfg;
@@ -364,14 +367,26 @@ pd_collector_delete(pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR(" invalid Id {}", cfg->collector_id );
         return HAL_RET_INVALID_ARG;
     }
+    hal_cfg = g_hal_state_pd->hal_cfg();
+    HAL_ASSERT(hal_cfg);
     d = &export_destinations[cfg->collector_id];
     if (!d->valid) {
-        HAL_TRACE_ERR("Collector does not exist: Id {}", cfg->collector_id);
+        HAL_TRACE_ERR("Collector does not exist, id {}", cfg->collector_id);
         return HAL_RET_INVALID_ARG;
     } else {
-        // TODO: Stop the timer to ring the doorbell for export
+        // Delete the timer which rings the doorbell for export
         // No other cleanup is required. New collector will overwrite the
         // deleted collector based on the valid flag
+        if (hal_cfg->platform_mode == HAL_PLATFORM_MODE_HW) {
+            // Start timer for the collector, only in HW mode
+            if (!d->db_timer) {
+                HAL_TRACE_ERR("Timer doesnt exist for this collector id {}", d->id);
+                return HAL_RET_ERR;
+            }
+            sdk::lib::timer_delete(d->db_timer);
+            HAL_TRACE_DEBUG("Deleting periodic doorbell ring timer for id {}",
+                             d->id);
+        }
         d->valid = false;
     }
     return HAL_RET_OK;
