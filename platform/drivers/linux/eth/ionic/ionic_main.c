@@ -141,9 +141,14 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		if (done)
 			return 0;
 
+#ifdef ADMINQ
 		wait = schedule_timeout_interruptible(HZ / 10);
 		if (wait > 0)
 			return -EINTR;
+#else
+		(void)wait;
+		mdelay(100);
+#endif
 
 	} while (time_after(time, jiffies));
 
