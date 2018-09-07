@@ -496,18 +496,6 @@ p4pd_add_flow_info_table_entries (pd_session_create_args_t *args)
     hal_ret_t       ret;
     pd_session_t    *session_pd = (pd_session_t *)args->session->pd;
 
-    ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->iflow, FLOW_ROLE_INITIATOR, false);
-    if (ret != HAL_RET_OK) {
-        return ret;
-    }
-
-    if (session_pd->iflow_aug_valid) {
-        ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->iflow_aug, FLOW_ROLE_INITIATOR, true);
-        if (ret != HAL_RET_OK) {
-            return ret;
-        }
-    }
-
     // program flow_info table entry for rflow
     if (session_pd->rflow_valid) {
         ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->rflow, FLOW_ROLE_RESPONDER, false);
@@ -520,6 +508,18 @@ p4pd_add_flow_info_table_entries (pd_session_create_args_t *args)
             if (ret != HAL_RET_OK) {
                 return ret;
             }
+        }
+    }
+
+    ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->iflow, FLOW_ROLE_INITIATOR, false);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    if (session_pd->iflow_aug_valid) {
+        ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->iflow_aug, FLOW_ROLE_INITIATOR, true);
+        if (ret != HAL_RET_OK) {
+            return ret;
         }
     }
 
@@ -652,6 +652,56 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
     session_t               *session = (session_t *)session_pd->session;
     uint32_t                flow_hash = 0;
 
+    if (session_pd->rflow_valid && \
+        !session_pd->rflow.flow_hash_hw_id) {
+        ret = p4pd_add_flow_hash_table_entry(&session->rflow->config.key,
+                                             session->rflow->pgm_attrs.vrf_hwid,
+                                             session->rflow->pgm_attrs.lkp_inst,
+                                             &session_pd->rflow,
+                                             0,
+                                             session->rflow->pgm_attrs.export_en,
+                                             &flow_hash);
+
+        if (args->rsp) {
+            args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
+        }
+        if (ret == HAL_RET_COLL) {
+            if (args->rsp) {
+                args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
+            }
+            HAL_TRACE_DEBUG("RFlow Collision!");
+            ret = HAL_RET_OK;
+        }
+        if (ret != HAL_RET_OK) {
+            return ret; 
+        }
+        if (session_pd->rflow_aug_valid && \
+            !session_pd->rflow_aug.flow_hash_hw_id) {
+            // TODO: key has to involve service done? populate in flow_attrs
+            ret = p4pd_add_flow_hash_table_entry(&session->rflow->assoc_flow->config.key,
+                                                 session->rflow->assoc_flow->pgm_attrs.vrf_hwid,
+                                                 session->rflow->assoc_flow->pgm_attrs.lkp_inst,
+                                                 &session_pd->rflow_aug,
+                                                 0,
+                                                 session->rflow->assoc_flow->pgm_attrs.export_en,
+                                                 &flow_hash);
+            if (args->rsp) {
+                args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
+            }
+            if (ret == HAL_RET_COLL) {
+                if (args->rsp) {
+                    args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
+                }
+                HAL_TRACE_DEBUG("RFlow Collision!");
+                ret = HAL_RET_OK;
+            }
+            if (ret != HAL_RET_OK) {
+                p4pd_del_flow_hash_table_entry(session_pd->rflow.flow_hash_hw_id); 
+                return ret;
+            }
+        }
+    }
+
     if (!session_pd->iflow.flow_hash_hw_id && args->update_iflow) {
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->config.key,
                                              session->iflow->pgm_attrs.vrf_hwid,
@@ -670,10 +720,13 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             HAL_TRACE_DEBUG("IFlow Collision!");
             ret = HAL_RET_OK;
         }
-    }
-
-    if (ret != HAL_RET_OK) {
-        return ret;
+        if (ret != HAL_RET_OK) {
+            if (session_pd->rflow_valid) {
+                p4pd_del_flow_hash_table_entry(session_pd->rflow.flow_hash_hw_id);
+                if (session_pd->rflow_aug_valid) 
+                    p4pd_del_flow_hash_table_entry(session_pd->rflow_aug.flow_hash_hw_id);
+            }
+        }
     }
 
     if (args->update_iflow && \
@@ -697,54 +750,11 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             ret = HAL_RET_OK;
         }
         if (ret != HAL_RET_OK) {
-            return ret;
-        }
-    }
-    if (session_pd->rflow_valid && \
-        !session_pd->rflow.flow_hash_hw_id) {
-        ret = p4pd_add_flow_hash_table_entry(&session->rflow->config.key,
-                                             session->rflow->pgm_attrs.vrf_hwid,
-                                             session->rflow->pgm_attrs.lkp_inst,
-                                             &session_pd->rflow,
-                                             0,
-                                             session->rflow->pgm_attrs.export_en,
-                                             &flow_hash);
-
-        if (args->rsp) {
-            args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
-        }
-        if (ret == HAL_RET_COLL) {
-            if (args->rsp) {
-                args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
-            }
-            HAL_TRACE_DEBUG("RFlow Collision!");
-            ret = HAL_RET_OK;
-        }
-        if (ret != HAL_RET_OK) {
             p4pd_del_flow_hash_table_entry(session_pd->iflow.flow_hash_hw_id);
-        }
-        if (session_pd->rflow_aug_valid && \
-            !session_pd->rflow_aug.flow_hash_hw_id) {
-            // TODO: key has to involve service done? populate in flow_attrs
-            ret = p4pd_add_flow_hash_table_entry(&session->rflow->assoc_flow->config.key,
-                                                 session->rflow->assoc_flow->pgm_attrs.vrf_hwid,
-                                                 session->rflow->assoc_flow->pgm_attrs.lkp_inst,
-                                                 &session_pd->rflow_aug,
-                                                 0,
-                                                 session->rflow->assoc_flow->pgm_attrs.export_en,
-                                                 &flow_hash);
-            if (args->rsp) {
-                args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
-            }
-            if (ret == HAL_RET_COLL) {
-                if (args->rsp) {
-                    args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
-                }
-                HAL_TRACE_DEBUG("RFlow Collision!");
-                ret = HAL_RET_OK;
-            }
-            if (ret != HAL_RET_OK) {
-                p4pd_del_flow_hash_table_entry(session_pd->iflow.flow_hash_hw_id);
+            if (session_pd->rflow_valid) {
+                p4pd_del_flow_hash_table_entry(session_pd->rflow.flow_hash_hw_id);
+                if (session_pd->rflow_aug_valid)
+                    p4pd_del_flow_hash_table_entry(session_pd->rflow_aug.flow_hash_hw_id);
             }
         }
     }

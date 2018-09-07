@@ -832,7 +832,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     } else {
         pkt_info->cpu_header.src_lif = cpu_rxhdr_->src_lif;
         // change lif/vlan for uplink pkts
-        if (key_.dir == hal::FLOW_DIR_FROM_UPLINK) {
+        if (cpu_rxhdr_->lkp_dir == hal::FLOW_DIR_FROM_UPLINK) {
      	    HAL_TRACE_DEBUG("fte: setting defaults for uplink -> host direction");
             pkt_info->cpu_header.src_lif = hal::SERVICE_LIF_CPU;
             if (use_vrf_) {

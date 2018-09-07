@@ -1762,6 +1762,8 @@ tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
     HAL_TRACE_DEBUG("TCP close timer callback -- deleting session with id {}",
                     session->iflow->config.key);
 
+    session->tcp_cxntrack_timer = NULL;
+
     // time to clean up the session
     ret = fte::session_delete(session);
     if (ret != HAL_RET_OK) {
