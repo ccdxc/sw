@@ -605,6 +605,21 @@ mac_sync_get_hw (uint32_t port_num)
     return cap_mx_check_ch_sync(chip_id, inst_id, start_lane) == 1;
 }
 
+static int
+mac_flush_set_hw (uint32_t port_num, bool enable)
+{
+    int      val        = 0;
+    uint32_t chip_id    = 0;
+    uint32_t inst_id    = mac_get_inst_from_port(port_num);
+    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+
+    if (enable == true) {
+        val = 1;
+    }
+
+    return cap_mx_flush_set(chip_id, inst_id, start_lane, val);
+}
+
 //----------------------------------------------------------------------------
 // MGMT MAC methods
 //----------------------------------------------------------------------------
@@ -614,7 +629,7 @@ mac_mgmt_cfg_hw (mac_info_t *mac_info)
 {
     int          chip_id       = 0;
     int          mac_ch_en     = 0;
-    uint32_t     inst_id       = mac_info->mac_id;
+    uint32_t     inst_id       = 0; // bx inst is 0
     uint32_t     start_lane    = mac_info->mac_ch;
     uint32_t     bx_api_speed  = 0;
     port_speed_t port_speed    = (port_speed_t) mac_info->speed;
@@ -699,7 +714,7 @@ mac_mgmt_enable_hw (uint32_t port_num, uint32_t speed,
 {
     uint32_t chip_id    = 0;
     int      value      = 0;
-    uint32_t inst_id    = mac_get_inst_from_port(port_num);
+    uint32_t inst_id    = 0;
     uint32_t start_lane = mac_get_lane_from_port(port_num);;
     uint32_t max_lanes  = start_lane + num_lanes;
 
@@ -722,7 +737,7 @@ mac_mgmt_soft_reset_hw (uint32_t port_num, uint32_t speed,
 {
     uint32_t chip_id    = 0;
     int      value      = 0;
-    uint32_t inst_id    = mac_get_inst_from_port(port_num);
+    uint32_t inst_id    = 0;
     uint32_t start_lane = mac_get_lane_from_port(port_num);;
     uint32_t max_lanes  = start_lane + 1;
 
@@ -749,9 +764,15 @@ static bool
 mac_mgmt_sync_get_hw (uint32_t port_num)
 {
     uint32_t chip_id    = 0;
-    uint32_t inst_id    = mac_get_inst_from_port(port_num);
+    uint32_t inst_id    = 0;
 
     return cap_bx_check_sync(chip_id, inst_id) == 1;
+}
+
+static int
+mac_mgmt_flush_set_hw (uint32_t port_num, bool enable)
+{
+    return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -841,6 +862,12 @@ mac_sync_get_default (uint32_t port_num)
     return true;
 }
 
+static int
+mac_flush_set_default (uint32_t port_num, bool enable)
+{
+    return 0;
+}
+
 sdk_ret_t
 port_mac_fn_init(linkmgr_cfg_t *cfg)
 {
@@ -856,6 +883,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_fn->mac_intr_enable = &mac_intr_enable_default;
     mac_fn->mac_faults_get  = &mac_faults_get_default;
     mac_fn->mac_sync_get    = &mac_sync_get_default;
+    mac_fn->mac_flush_set   = &mac_flush_set_default;
 
     mac_mgmt_fn->mac_cfg         = &mac_cfg_default;
     mac_mgmt_fn->mac_enable      = &mac_enable_default;
@@ -865,6 +893,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_mgmt_fn->mac_intr_enable = &mac_intr_enable_default;
     mac_mgmt_fn->mac_faults_get  = &mac_faults_get_default;
     mac_mgmt_fn->mac_sync_get    = &mac_sync_get_default;
+    mac_mgmt_fn->mac_flush_set   = &mac_flush_set_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HAPS:
@@ -881,12 +910,14 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_intr_clear  = &mac_intr_clear_hw;
         mac_fn->mac_intr_enable = &mac_intr_enable_hw;
         mac_fn->mac_sync_get    = &mac_sync_get_mock;
+        mac_fn->mac_flush_set   = &mac_flush_set_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
         mac_mgmt_fn->mac_soft_reset  = &mac_mgmt_soft_reset_hw;
         mac_mgmt_fn->mac_faults_get  = &mac_mgmt_faults_get_hw;
         mac_mgmt_fn->mac_sync_get    = &mac_sync_get_mock;
+        mac_mgmt_fn->mac_flush_set   = &mac_mgmt_flush_set_hw;
         break;
 
     case platform_type_t::PLATFORM_TYPE_SIM:
@@ -900,12 +931,14 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_intr_enable = &mac_intr_enable_hw;
         mac_fn->mac_faults_get  = &mac_faults_get_hw;
         mac_fn->mac_sync_get    = &mac_sync_get_hw;
+        mac_fn->mac_flush_set   = &mac_flush_set_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
         mac_mgmt_fn->mac_soft_reset  = &mac_mgmt_soft_reset_hw;
         mac_mgmt_fn->mac_faults_get  = &mac_mgmt_faults_get_hw;
         mac_mgmt_fn->mac_sync_get    = &mac_mgmt_sync_get_hw;
+        mac_mgmt_fn->mac_flush_set   = &mac_mgmt_flush_set_hw;
         break;
 
     default:

@@ -24,7 +24,7 @@
                 { "port_num" : "5", "mac_id" : "1", "mac_ch" : "1", "sbus_addr" : "0" },
                 { "port_num" : "6", "mac_id" : "1", "mac_ch" : "2", "sbus_addr" : "0" },
                 { "port_num" : "7", "mac_id" : "1", "mac_ch" : "3", "sbus_addr" : "0" },
-                { "port_num" : "8", "mac_id" : "0", "mac_ch" : "0", "sbus_addr" : "0" }
+                { "port_num" : "8", "mac_id" : "2", "mac_ch" : "0", "sbus_addr" : "0" }
             ]
         }
     ],

@@ -24,7 +24,7 @@
                 { "port_num" : "5", "mac_id" : "1", "mac_ch" : "1", "sbus_addr" : "0" },
                 { "port_num" : "6", "mac_id" : "1", "mac_ch" : "2", "sbus_addr" : "0" },
                 { "port_num" : "7", "mac_id" : "1", "mac_ch" : "3", "sbus_addr" : "0" },
-                { "port_num" : "8", "mac_id" : "0", "mac_ch" : "0", "sbus_addr" : "0" }
+                { "port_num" : "8", "mac_id" : "2", "mac_ch" : "0", "sbus_addr" : "0" }
             ]
         }
     ],
@@ -58,6 +58,29 @@
     [
         {"port_num" : "1", "asic" : "0", "asic_port" : "0" , "speed" : "25G", "num_lanes" : "1", "type" : "eth", "enabled": "true" }
     ],
+
+    "bx" : {
+       "mode_4x1g" : {
+          "glbl_mode" : "0x3",
+          "channel"   : "0xf",
+          "0" : {
+             "speed"   : "1",
+             "ch_mode" : "0xc"
+          },
+          "1" : {
+             "speed"   : "1",
+             "ch_mode" : "0xc"
+          },
+          "2" : {
+             "speed"   : "1",
+             "ch_mode" : "0xc"
+          },
+          "3" : {
+             "speed"   : "1",
+             "ch_mode" : "0xc"
+          }
+       }
+    },
 
     "mx" : {
        "mode_1x100g" : {
@@ -324,42 +347,42 @@
                     {
                         "key_or_handle" : { "qos_group" : "DEFAULT" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "CONTROL" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "SPAN" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "INTERNAL_RX_PROXY_NO_DROP" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "INTERNAL_RX_PROXY_DROP" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "INTERNAL_TX_PROXY_NO_DROP" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "INTERNAL_TX_PROXY_DROP" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     },
                     {
                         "key_or_handle" : { "qos_group" : "INTERNAL_CPU_COPY" },
                         "mtu" : 9216,
-                        "sched" : { "strict" : { "bps" : 10000 } }
+                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
                     }
                 ]
             },

@@ -1554,14 +1554,12 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             mac_inst = req.val1();
             mac_ch   = req.val2();
 
-            if (req.val3() == 1) {
-                enable = true;
-            }
+            HAL_TRACE_DEBUG("mac_serdes_lpbk mac_inst: {}, mac_ch: {},"
+                            " enable: {}",
+                            mac_inst, mac_ch, req.val3());
 
-            HAL_TRACE_DEBUG("mac_lpbk mac_inst: {}, mac_ch: {}, enable: {}",
-                            mac_inst, mac_ch, enable);
+            cap_mx_serdes_lpbk_set(0 /*chip_id*/, mac_inst, mac_ch, req.val3());
 
-            // TODO
             break;
 
         case 20:

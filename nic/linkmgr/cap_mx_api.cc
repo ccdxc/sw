@@ -55,6 +55,30 @@ void cap_mx_apb_write(int chip_id, int inst_id, int addr, int data) {
     mx_csr.dhs_apb.entry[addr].show();
 }
 
+int
+cap_mx_serdes_lpbk_get (int chip_id, int inst_id, int ch)
+{
+    int addr = 0x1901;
+    int data = cap_mx_apb_read(chip_id, inst_id, addr);
+    return (data & (1 << ch)) >> ch;
+}
+
+void
+cap_mx_serdes_lpbk_set (int chip_id, int inst_id, int ch, int value)
+{
+    int addr = 0x1901;
+    int data = cap_mx_apb_read(chip_id, inst_id, addr);
+    int mask = (1 << ch) & 0xf;
+    data = (data & ~mask) | ( (value & 0x1) << ch);
+    cap_mx_apb_write(chip_id, inst_id, addr, data);
+}
+
+int
+cap_mx_flush_set (int chip_id, int inst_id, int ch, int value)
+{
+    return 0;
+}
+
 void cap_mx_set_ch_enable(int chip_id, int inst_id, int ch, int value) { 
     // channel enable: {ch3, ch2, ch1, ch0}
     int rdata = cap_mx_apb_read(chip_id, inst_id, 0x4);

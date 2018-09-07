@@ -127,6 +127,8 @@ public:
 
     bool bringup_timer_expired(void);
 
+    sdk_ret_t port_flush_set(bool);
+
     // ----------------------------------------------------
     // mac methods
     // ----------------------------------------------------

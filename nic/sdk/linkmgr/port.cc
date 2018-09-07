@@ -201,6 +201,16 @@ port::port_mac_sync_get(void)
     return mac_fns()->mac_sync_get(mac_port_num);
 }
 
+sdk_ret_t
+port::port_flush_set (bool enable)
+{
+    uint32_t mac_port_num = port_mac_port_num_calc();
+
+    mac_fns()->mac_flush_set(mac_port_num, enable);
+
+    return SDK_RET_OK;
+}
+
 uint32_t
 port::port_sbus_addr(uint32_t lane)
 {
@@ -552,6 +562,9 @@ port::port_link_sm_process(void)
             // configure the mac
             port_mac_cfg();
 
+            // put port in flush
+            port_flush_set(true);
+
             // bring MAC out of reset and enable
             port_mac_stats_reset(false);
             port_mac_enable(true);
@@ -648,6 +661,9 @@ port::port_link_sm_process(void)
 
             // enable mac interrupts
             port_mac_intr_en(true);
+
+            // bring port out of flush
+            port_flush_set(false);
 
             // set operational status as up
             this->set_oper_status(port_oper_status_t::PORT_OPER_STATUS_UP);
