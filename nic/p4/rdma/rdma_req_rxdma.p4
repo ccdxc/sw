@@ -226,6 +226,7 @@ header_type req_rx_to_stage_cq_info_t {
         cqcb_base_addr_hi                :   24;
         log_num_cq_entries               :    4;
         bth_se                           :    1;
+        state                            :    3;
     }
 }
 
@@ -1105,6 +1106,7 @@ action req_rx_cqcb_process_s5 () {
     modify_field(to_s5_cq_info_scr.cqcb_base_addr_hi, to_s5_cq_info.cqcb_base_addr_hi);
     modify_field(to_s5_cq_info_scr.log_num_cq_entries, to_s5_cq_info.log_num_cq_entries);
     modify_field(to_s5_cq_info_scr.bth_se, to_s5_cq_info.bth_se);
+    modify_field(to_s5_cq_info_scr.state, to_s5_cq_info.state);
 
     // stage to stage
     modify_field(t2_s2s_rrqwqe_to_cq_info_scr.cq_id, t2_s2s_rrqwqe_to_cq_info.cq_id);
@@ -1120,6 +1122,7 @@ action req_rx_cqcb_process_s6 () {
     modify_field(to_s6_cq_info_scr.cqcb_base_addr_hi, to_s6_cq_info.cqcb_base_addr_hi);
     modify_field(to_s6_cq_info_scr.log_num_cq_entries, to_s6_cq_info.log_num_cq_entries);
     modify_field(to_s6_cq_info_scr.bth_se, to_s6_cq_info.bth_se);
+    modify_field(to_s6_cq_info_scr.state, to_s6_cq_info.state);
 
     // stage to stage
     modify_field(t2_s2s_rrqwqe_to_cq_info_scr.cq_id, t2_s2s_rrqwqe_to_cq_info.cq_id);

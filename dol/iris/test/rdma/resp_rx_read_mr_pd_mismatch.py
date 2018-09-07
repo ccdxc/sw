@@ -13,16 +13,9 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
+    PopulatePreQStates(tc)
+
     rs = tc.config.rdmasession
-
-    # Read RQ pre state
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
-
-    # Read CQ pre state
-    rs.lqp.rq_cq.qstate.Read()
-    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
-
     tc.pvtdata.slab = rs.lqp.pd.ep.GetNewSlab()
     tc.pvtdata.mr = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab.GID())
     tc.pvtdata.r_key = tc.pvtdata.mr.rkey
@@ -42,9 +35,9 @@ def TestCaseTrigger(tc):
 def TestCaseVerify(tc):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
+    PopulatePostQStates(tc)
+
     rs = tc.config.rdmasession
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
     ############     RQ VALIDATIONS #################
     # verify that e_psn is incremented by 1
@@ -70,7 +63,7 @@ def TestCaseVerify(tc):
         return False
 
     # verify that state is now moved to ERR (2)
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 2):
+    if not VerifyErrQState(tc):
         return False
 
     ############     RQ STATS VALIDATIONS #################
@@ -87,18 +80,16 @@ def TestCaseVerify(tc):
         return False
 
    ############     CQ VALIDATIONS #################
-    if not ValidateNoCQChanges(tc):
+    if not ValidateCQCompletions(tc, 1, 0):
+        return False
+
+    ############     ASYNC EQ VALIDATIONS #################
+    if not ValidateAsyncEQChecks(tc):
         return False
 
     return True
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
-    rs = tc.config.rdmasession
-    logger.info("Setting proxy_cindex/spec_cindex equal to p_index0\n")
-    rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.spec_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 6;
-    rs.lqp.rq.qstate.data.token_id = rs.lqp.rq.qstate.data.nxt_to_go_token_id;
-    rs.lqp.rq.qstate.WriteWithDelay();
+    ResetErrQState(tc)
     return

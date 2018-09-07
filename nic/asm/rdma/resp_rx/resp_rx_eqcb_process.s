@@ -11,6 +11,7 @@ struct eqcb_t d;
 #define EQWQE_P r1
 #define DMA_CMD_BASE r4
 #define TMP r5
+#define GLOBAL_FLAGS r7
 
 #define PHV_EQWQE_START s1.eqwqe.qid
 #define PHV_EQWQE_END   s1.eqwqe.color
@@ -27,6 +28,8 @@ struct eqcb_t d;
 .align
 resp_rx_eqcb_process:
 
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
+    IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
     seq             c1, EQ_P_INDEX, 0
     // flip the color if cq is wrap around
     tblmincri.c1    EQ_COLOR, 1, 1     
@@ -36,11 +39,13 @@ resp_rx_eqcb_process:
     sllv            r1, EQ_P_INDEX, d.log_wqe_size
     add             EQWQE_P, d.eqe_base_addr, r1
 
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_EQ)
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_EQ, !c2)
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RD_ATOMIC_EQ, c2)
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQWQE_START, PHV_EQWQE_END, EQWQE_P)
 
     //Writing Interrupt unconditionally... if needed, add a flag for this purpose
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_EQ_INT)
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_EQ_INT, !c2)
+    DMA_CMD_STATIC_BASE_GET_C(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_RD_ATOMIC_EQ_INT, c2)
     phvwri          p.s1.int_assert_data, CAPRI_INT_ASSERT_DATA
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, PHV_EQ_INT_ASSERT_DATA_BEGIN, PHV_EQ_INT_ASSERT_DATA_END, d.int_assert_addr)
 

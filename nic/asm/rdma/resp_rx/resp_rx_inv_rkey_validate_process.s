@@ -79,10 +79,12 @@ exit:
     nop // Exit Slot
 
 error_completion:
-    // As per standard, NAK is NOT generated when an
+    // As per standard, NAK is NOT required to be generated when an
     // incoming Send with Invalidate contains an invalid R_Key, 
     // or the R_Key contained in the IETH cannot be invalidated
-    // However, RQ should be moved to ERROR state
+    // However, RQ should be moved to ERROR state.
+    // But it may be better to anyway generate a NAK if we can, 
+    // as moving silently to error disable state is not a good thing anyway.
 
     // Generate DMA command to skip to payload end
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
@@ -90,10 +92,9 @@ error_completion:
 
     // update cqe status and error in phv so that completion with error is generated
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_ACC_ERR, p.cqe.error, 1
-    // set error disable flag
-    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP
-        // turn off ACK req bit when skipping nak
-    and         GLOBAL_FLAGS, GLOBAL_FLAGS, ~(RESP_RX_FLAG_ACK_REQ)
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
+    // set error disable flag and ACK flag
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, (RESP_RX_FLAG_ERR_DIS_QP|RESP_RX_FLAG_ACK_REQ)
 
     CAPRI_SET_TABLE_3_VALID_CE(c0, 0)
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS) // Exit Slot

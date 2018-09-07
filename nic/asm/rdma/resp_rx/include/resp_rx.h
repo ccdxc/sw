@@ -59,6 +59,9 @@
 #define RESP_RX_DMA_CMD_RELEASE_ATOMIC_RESOURCE     7
 #define RESP_RX_DMA_CMD_RSQ_DB                      8
 
+#define RESP_RX_DMA_CMD_RD_ATOMIC_EQ                3
+#define RESP_RX_DMA_CMD_RD_ATOMIC_EQ_INT            4
+
 #define RESP_RX_DMA_CMD_PYLD_BASE_END 14
 
 #define RESP_RX_DMA_CMD_START       0

@@ -13,17 +13,11 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
+    PopulatePreQStates(tc)
+
     rs = tc.config.rdmasession
     tc.pvtdata.imm_data = random.randrange(0, 0xffffffff)
-
-    # Read RQ pre state
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
     tc.pvtdata.r_key = rs.lqp.pd.mrs.Get('MR-SLAB0000').rkey
-
-    # Read CQ pre state
-    rs.lqp.rq_cq.qstate.Read()
-    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
 
     return
 
@@ -47,10 +41,10 @@ def TestCaseTrigger(tc):
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
+    PopulatePostQStates(tc)
+
     rs = tc.config.rdmasession
-    rs.lqp.rq.qstate.Read()
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
-    tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
     if step.step_id == 1:
     
@@ -76,7 +70,7 @@ def TestCaseStepVerify(tc, step):
             return False
         
         ############     CQ VALIDATIONS #################
-        if not ValidateRespRxCQChecks(tc):
+        if not ValidateCQCompletions(tc, 1, 1):
             return False
 
     elif step.step_id == 2:

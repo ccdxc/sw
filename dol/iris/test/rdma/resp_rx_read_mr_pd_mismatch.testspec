@@ -109,6 +109,27 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
+descriptors:
+    - descriptor:
+        id      : EXP_SQ_FLUSH_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
+        fields:
+            wrid   : 0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
+            error  : 1
+            type   : 3 #CQE_TYPE_SEND_NPG
+
+    - descriptor:
+        id      : EXP_EQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_EQ
+        fields:
+            qid    : ref://testcase/config/rdmasession/lqp/id
+            type   : callback://rdma/rdma/GetEQEtypeQP
+            code   : callback://rdma/rdma/GetEQEcodeQPErrAccess
+            color  : callback://rdma/rdma/GetAsyncEQExpColor
+            
 buffers:
 
 trigger:
@@ -118,6 +139,14 @@ trigger:
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
 expect:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_EQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/async_eq/rings/id=EQ
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_SQ_FLUSH_CQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
     packets:
         - packet:
             object  : ref://testcase/packets/id=EXP_PKT

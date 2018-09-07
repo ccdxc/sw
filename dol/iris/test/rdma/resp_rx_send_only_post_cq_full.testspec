@@ -93,7 +93,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
             aeth:
-                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=3 #NAK_CODE_REM_OP_ERR
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
@@ -147,13 +147,22 @@ descriptors:
                   l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
 
     - descriptor:
-        id      : EXP_EQ_DESC
+        id      : EXP_RQ_EQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_EQ
         fields:
             qid    : ref://testcase/config/rdmasession/lqp/id
             type   : callback://rdma/rdma/GetEQEtypeQP
             code   : callback://rdma/rdma/GetEQEcodeQPErr
-            color  : callback://rdma/rdma/GetAsyncEQExpColor
+            color  : callback://rdma/rdma/GetAsyncEQExpColor/entries=1
+
+    - descriptor:
+        id      : EXP_SQ_EQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_EQ
+        fields:
+            qid    : ref://testcase/config/rdmasession/lqp/id
+            type   : callback://rdma/rdma/GetEQEtypeQP
+            code   : callback://rdma/rdma/GetEQEcodeQPErr
+            color  : callback://rdma/rdma/GetAsyncEQExpColor/entries=2
 
 session:
     - step:
@@ -180,12 +189,14 @@ session:
                     object  : ref://testcase/descriptors/id=EXP_RQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_EQ_DESC
+                    object  : ref://testcase/descriptors/id=EXP_RQ_EQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/async_eq/rings/id=EQ
+                    #ring    : ref://testcase/config/rdmasession/lqp/eq/rings/id=EQ
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_SQ_EQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/async_eq/rings/id=EQ
                     #ring    : ref://testcase/config/rdmasession/lqp/eq/rings/id=EQ
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=EXP_PKT
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
-
-

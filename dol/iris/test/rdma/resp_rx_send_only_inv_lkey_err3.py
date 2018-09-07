@@ -11,17 +11,11 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
-    rs = tc.config.rdmasession
+    PopulatePreQStates(tc)
 
-    # Read RQ pre state
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
+    rs = tc.config.rdmasession
     tc.pvtdata.send_first_psn = tc.pvtdata.rq_pre_qstate.e_psn
     tc.pvtdata.send_last_psn = tc.pvtdata.rq_pre_qstate.e_psn + 1
-
-    # Read CQ pre state
-    rs.lqp.rq_cq.qstate.Read()
-    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
 
     return
 
@@ -32,10 +26,10 @@ def TestCaseTrigger(tc):
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
+    PopulatePostQStates(tc)
+
     rs = tc.config.rdmasession
-    rs.lqp.rq.qstate.Read()
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
-    tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
     if step.step_id == 0:
     
@@ -58,9 +52,8 @@ def TestCaseStepVerify(tc, step):
             return False
     
         # verify that state is now moved to ERR (2)
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 2):
+        if not VerifyErrQState(tc):
             return False
-
 
     elif step.step_id == 1:
 
@@ -73,10 +66,5 @@ def TestCaseStepVerify(tc, step):
 def TestCaseTeardown(tc):
     if (GlobalOptions.dryrun): return
     logger.info("RDMA TestCaseTeardown() Implementation.")
-    rs = tc.config.rdmasession
-    rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.spec_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 4;
-    rs.lqp.rq.qstate.data.token_id = rs.lqp.rq.qstate.data.nxt_to_go_token_id;
-    rs.lqp.rq.qstate.WriteWithDelay();
+    ResetErrQState(tc)
     return

@@ -167,8 +167,6 @@ class LifObject(base.ConfigObjectBase):
         self.obj_helper_q.Configure()
 
     def ConfigureAsyncEQ(self):
-        if GlobalOptions.dryrun:
-            return 0
         if self.enable_rdma:
             # EQID 0 on LIF is used for Async events/errors across all PDs
             self.async_eq = self.GetQ('RDMA_EQ', 0)

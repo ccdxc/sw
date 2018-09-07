@@ -150,6 +150,7 @@ struct rdma_atomiceth_t {
 #define NAK_CODE_REM_ACC_ERR    2
 #define NAK_CODE_REM_OP_ERR     3
 #define NAK_CODE_INV_RD_REQ     4
+#define NAK_CODE_FLUSH_RQ       0x1f    //vendor specific code
 #define NAK_CODE_MASK           0x1f
 
 #define AETH_CODE_ACK   0

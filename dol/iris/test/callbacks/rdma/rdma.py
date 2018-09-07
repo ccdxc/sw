@@ -120,10 +120,30 @@ def GetEQExpColor (tc, desc, args = None):
        return (tc.pvtdata.eq_pre_qstate.color)
 
 def GetAsyncEQExpColor (tc, desc, args = None):
-    if tc.pvtdata.async_eq_pre_qstate.p_index0 == 0:
+    if args is None:
+        entries = 1
+    else:
+        entries = args.entries
+
+    pre_val = tc.pvtdata.async_eq_pre_qstate.p_index0
+    log_num_eq_wqes = getattr(tc.pvtdata.async_eq_pre_qstate, 'log_num_wqes')
+    mask = (2 ** log_num_eq_wqes) - 1
+
+    logger.info("pre_val: %d entries: %d mask: %d" % (pre_val, entries, mask))
+    if pre_val is 0:
+        color_change = True
+    elif ((pre_val + entries) & mask) is 0:
+        color_change = False
+    elif pre_val > ((pre_val + entries) & mask):
+        color_change = True
+    else:
+        color_change = False
+       
+    if color_change:
        return (not tc.pvtdata.async_eq_pre_qstate.color)
     else:
        return (tc.pvtdata.async_eq_pre_qstate.color)
+
 
 def GetEQEtypeCQ (tc, desc, args = None):
     return 0

@@ -173,6 +173,11 @@ phv_drop:
     phvwr.e     p.common.p4_intr_global_drop, 1
     CAPRI_SET_TABLE_2_VALID(0)  //Exit slot
 
+// currently there is only one type of feedback phv which takes qp to error disable.
+process_feedback:
+    // reset the conditional flags to 0.
+    crestore    [c7,c6,c5,c4,c3,c2,c1], 0, 0x7f
+
 recirc_error_disable_qp:
 error_disable_qp:
     // move the state to error and then check for completion.
@@ -181,7 +186,5 @@ error_disable_qp:
     // flag.
     // TODO: we need to handle affiliated and unaffiliated async errors as well
 
-// currently there is only one type of feedback phv which takes qp to error disable.
-process_feedback:
     b           check_completion
     tblwr       d.state, QP_STATE_ERR   //BD Slot

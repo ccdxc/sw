@@ -31,6 +31,7 @@ struct cqcb_t d;
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
 #define K_ASYNC_EVENT_OR_ERROR CAPRI_KEY_FIELD(IN_TO_S_P, async_event_or_error)
 #define K_QP_STATE CAPRI_KEY_RANGE(IN_TO_S_P, qp_state_sbit0_ebit1, qp_state_sbit2_ebit2)
+#define K_FEEDBACK CAPRI_KEY_FIELD(IN_TO_S_P, feedback)
 
     #c1 : CQ_PROXY_PINDEX == 0
     #c2 : d.arm == 1
@@ -237,6 +238,12 @@ error_disable_qp_using_recirc:
 
 skip_recirc_error_disable:
 
+    // If an ACK was getting generated for this packet, make it a NAK as CQ is full and QP is 
+    // going to get error disabled
+    seq         c1, K_FEEDBACK, 1
+
+    // do not overwrite nak code if it is a feedback phv
+    phvwr.!c1   p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
     //fill the eqwqe
     phvwrpair   p.s1.eqwqe.code, EQE_CODE_QP_ERR, p.s1.eqwqe.type, EQE_TYPE_QP
     //post ASYCN EQ error on QP

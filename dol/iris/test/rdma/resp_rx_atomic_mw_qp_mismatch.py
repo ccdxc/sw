@@ -17,10 +17,9 @@ def Teardown(infra, module):
         
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
-    rs = tc.config.rdmasession
+    PopulatePreQStates(tc)
 
-    rs.lqp.sq.qstate.Read()
-    tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
+    rs = tc.config.rdmasession
     tc.pvtdata.dst_qp = tc.config.rdmasession.rqp.id
     tc.pvtdata.wrid = 0x0905
 
@@ -30,13 +29,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.r_key = rs.lqp.pd.GetNewType2MW().rkey
 
     tc.pvtdata.user_key = 132
-    # Read CQ pre state
-    rs.lqp.sq_cq.qstate.Read()
-    tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
      
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
- 
     if (GlobalOptions.dryrun):
         tc.pvtdata.mw_va = 0
         return True
@@ -56,13 +49,10 @@ def TestCaseVerify(tc):
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
-    rs = tc.config.rdmasession
-    rs.lqp.sq.qstate.Read()
-    tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
-    
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
+    PopulatePostQStates(tc)
 
+    rs = tc.config.rdmasession
+    
     if step.step_id == 0:
         kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.r_key)
         # change the qp of MW, so that it doesn't match the QP handling the request
@@ -97,6 +87,10 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_bytes', 0):
             return False
 
+        # verify that state is now moved to ERR (2)
+        if not VerifyErrQState(tc):
+            return False
+
         # TODO check this
         # verify that num_atomic_fna_msgs is incremented by 1
         #if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_atomic_fna_msgs', 1):
@@ -109,6 +103,8 @@ def TestCaseStepVerify(tc, step):
         # verify that max_pkts_in_any_msg is 1
         #if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'max_pkts_in_any_msg', max([1, tc.pvtdata.rq_pre_qstate.max_pkts_in_any_msg])):
         #    return False
+
+    PostToPreCopyQStates(tc)
 
     logger.info("RDMA TestCaseVerify(): Rkey is bound for hw_lif %d qp %s rkey %d" %
                 (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.r_key))

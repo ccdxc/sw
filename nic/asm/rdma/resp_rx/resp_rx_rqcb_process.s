@@ -709,7 +709,6 @@ inv_req_nak:
     and         r7, r7, ~(RESP_RX_FLAG_ACK_REQ) // BD Slot
 
     phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)
-    //TODO: async affiliated error
     
     //Set c5 to TRUE to signify ASYNC path
     setcf       c5, [c0]
@@ -927,8 +926,15 @@ process_feedback:
     // set error_disable_qp only for those feedback phvs which are of type error.
     // can't combine both the phvwr's as they span beyond 512b.
     phvwr       CAPRI_PHV_RANGE(phv_global_common, _ud, _error_disable_qp), \
-                (RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION)
+                (RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_ACK_REQ)
     phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, feedback), 1
+    phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_P, feedback), 1
+
+    // when resp_rx generates the flush wqe, it is communicated to resp_tx side using a vendor
+    // specific nak code. This NAK code is only used for internal purpose. i.e., resp_tx
+    // wouldn't generate any NAK frame on wire with this error code. It is simply an indication
+    // to the resp_tx that it should move its state to ERR. 
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_FLUSH_RQ)
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID, 0) //BD Slot
     phvwrpair   p.cqe.status, CQ_STATUS_WQE_FLUSHED_ERR, p.cqe.error, 1
     phvwrpair   p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID, p.cqe.type, CQE_TYPE_RECV //BD Slot

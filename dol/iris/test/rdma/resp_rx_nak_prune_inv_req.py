@@ -12,20 +12,7 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
-    rs = tc.config.rdmasession
-
-    # Read RQ pre state
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
-
-    # Read CQ pre state
-    rs.lqp.rq_cq.qstate.Read()
-    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
-
-    # Read ASYNC_EQ pre state
-    rs.lqp.pd.ep.intf.lif.async_eq.qstate.Read()
-    tc.pvtdata.async_eq_pre_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
-
+    PopulatePreQStates(tc)
     return
 
 def TestCaseTrigger(tc):
@@ -46,13 +33,10 @@ def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseStepVerify() Implementation.")
     logger.info("step id: %d" %(step.step_id))
+    PopulatePostQStates(tc)
 
     rs = tc.config.rdmasession
-    rs.lqp.rq.qstate.Read()
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
-
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
     if step.step_id == 0 or step.step_id == 1:
         ############     RQ VALIDATIONS #################
@@ -119,10 +103,7 @@ def TestCaseStepVerify(tc, step):
         if not ValidatePostSyncCQChecks(tc):
             return False 
 
-    # update current as pre_qstate ... so next step_id can use it as pre_qstate
-    tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
-    tc.pvtdata.rq_cq_pre_qstate = copy.deepcopy(rs.lqp.rq_cq.qstate.data)
-
+    PostToPreCopyQStates(tc)
     return True
 
 def TestCaseTeardown(tc):

@@ -393,7 +393,8 @@ header_type resp_rx_to_stage_cqcb_info_t {
         bth_se                           :    1;
         async_event_or_error             :    1;
         qp_state                         :    3;
-        pad                              :   95;
+        feedback                         :    1;
+        pad                              :   94;
     }
 }
 
@@ -1563,6 +1564,7 @@ action resp_rx_cqcb_process () {
     modify_field(to_s6_cqcb_info_scr.bth_se, to_s6_cqcb_info.bth_se);
     modify_field(to_s6_cqcb_info_scr.async_event_or_error, to_s6_cqcb_info.async_event_or_error);
     modify_field(to_s6_cqcb_info_scr.qp_state, to_s6_cqcb_info.qp_state);
+    modify_field(to_s6_cqcb_info_scr.feedback, to_s6_cqcb_info.feedback);
     modify_field(to_s6_cqcb_info_scr.pad, to_s6_cqcb_info.pad);
 
 

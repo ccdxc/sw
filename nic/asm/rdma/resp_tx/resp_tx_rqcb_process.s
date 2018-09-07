@@ -29,6 +29,11 @@ struct rdma_stage0_table_k k;
 
 resp_tx_rqcb_process:
 
+    // are we in a state to process received packets ?
+    slt             c1, d.state, QP_STATE_RTR
+    bcf             [c1], state_fail
+    nop             //BD Slot
+
     .brbegin
     brpri           r7[MAX_RQ_RINGS-1:0], [DCQCN_TIMER_PRI, DCQCN_RATE_COMPUTE_PRI, BT_PRI, ACK_NAK_PRI, RSQ_PRI, RQ_PRI]
     nop
@@ -239,3 +244,12 @@ start_drain:
 exit:
     phvwr.e     p.common.p4_intr_global_drop, 1
     nop
+
+state_fail:
+    // Disable scheduler bit until modify_qp updates the state to RTR
+    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(CAPRI_TXDMA_INTRINSIC_LIF, \
+                                         CAPRI_TXDMA_INTRINSIC_QTYPE, \
+                                         CAPRI_TXDMA_INTRINSIC_QID, \
+                                         RQ_RING_ID, r1, r2)
+    phvwr.e     p.common.p4_intr_global_drop, 1
+    nop         //Exit Slot

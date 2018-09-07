@@ -128,10 +128,20 @@ descriptors:
             qid: ref://testcase/config/rdmasession/lqp/id
             op_type: 17 #OP_TYPE_SEND_RCVD
             status : 7  #CQ_STATUS_LOCAL_ACC_ERR
-            color  : callback://rdma/rdma/GetCQExpColor
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
             error  : 1
             smac: callback://rdma/rdma/GetZeroMAC
 
+    - descriptor:
+        id      : EXP_SQ_FLUSH_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
+        fields:
+            wrid   : 0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
+            color  : callback://rdma/rdma/GetCQExpColor/entries=2
+            error  : 1
+            type   : 3 #CQE_TYPE_SEND_NPG
 session:
     - step:
         trigger:
@@ -160,6 +170,10 @@ session:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
         
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_SQ_FLUSH_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+
     #set CI for CQ ring to that of proxy CI in DB data
     - step:
 

@@ -105,7 +105,8 @@ header_type resp_tx_to_stage_rqcb1_wb_info_t {
     fields {
         new_c_index                      :   16;
         ack_nak_process                  :    1;
-        rsvd                             :  111;
+        flush_rq                         :    1;
+        rsvd                             :  110;
     }
 }
 
@@ -587,6 +588,7 @@ action resp_tx_rqcb0_write_back_process () {
     // to stage
     modify_field(to_s5_rqcb1_wb_info_scr.new_c_index, to_s5_rqcb1_wb_info.new_c_index);
     modify_field(to_s5_rqcb1_wb_info_scr.ack_nak_process, to_s5_rqcb1_wb_info.ack_nak_process);
+    modify_field(to_s5_rqcb1_wb_info_scr.flush_rq, to_s5_rqcb1_wb_info.flush_rq);
     modify_field(to_s5_rqcb1_wb_info_scr.rsvd, to_s5_rqcb1_wb_info.rsvd);
 
     // stage to stage

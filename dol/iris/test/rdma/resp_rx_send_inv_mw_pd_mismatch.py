@@ -17,12 +17,11 @@ def Teardown(infra, module):
         
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
-    rs = tc.config.rdmasession
+    PopulatePreQStates(tc)
 
+    rs = tc.config.rdmasession
     tc.pvtdata.num_total_bytes = 1000
 
-    rs.lqp.sq.qstate.Read()
-    tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.dst_qp = tc.config.rdmasession.rqp.id
     tc.pvtdata.wrid = 0x0905
 
@@ -32,17 +31,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.r_key = rs.lqp.pd.GetNewType2MW().rkey
 
     tc.pvtdata.user_key = 132
-    # Read SQ CQ pre state
-    rs.lqp.sq_cq.qstate.Read()
-    tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
-     
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
  
-    # Read RQ CQ pre state
-    rs.lqp.rq_cq.qstate.Read()
-    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
-
     if (GlobalOptions.dryrun):
         tc.pvtdata.mw_va = 0
         return True
@@ -62,12 +51,9 @@ def TestCaseVerify(tc):
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
+    PopulatePostQStates(tc)
+
     rs = tc.config.rdmasession
-    rs.lqp.sq.qstate.Read()
-    tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
-    
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
     if step.step_id == 0:
         kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.r_key)
@@ -93,7 +79,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that state is now moved to ERR (2)
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 2):
+        if not VerifyErrQState(tc):
             return False
 
         ############     RQ STATS VALIDATIONS #################
@@ -120,11 +106,5 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
-    rs = tc.config.rdmasession
-    logger.info("Setting proxy_cindex/spec_cindex equal to p_index0\n")
-    rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.spec_cindex = tc.pvtdata.rq_post_qstate.p_index0;
-    rs.lqp.rq.qstate.data.cb0_state = rs.lqp.rq.qstate.data.cb1_state = 6;
-    rs.lqp.rq.qstate.data.token_id = rs.lqp.rq.qstate.data.nxt_to_go_token_id;
-    rs.lqp.rq.qstate.WriteWithDelay();
+    ResetErrQState(tc)
     return

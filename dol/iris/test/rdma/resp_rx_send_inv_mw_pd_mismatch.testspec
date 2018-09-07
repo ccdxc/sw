@@ -55,6 +55,42 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
+   - packet:
+        id          : EXP_PKT    # Expected Nak packet
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 17 # ACK
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+            aeth:
+                syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=2 #NAK_CODE_REM_ACC_ERR
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
 buffers:
     - buffer:
         id      : RQ_BUF
@@ -93,7 +129,7 @@ descriptors:
             qid    : ref://testcase/config/rdmasession/lqp/id
             #op_type: 10  # OP_TYPE_BIND_MW
             status : 0  # CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
             error  : 0
             type   : 3 #CQE_TYPE_SEND_NPG
 
@@ -118,9 +154,20 @@ descriptors:
             qid: ref://testcase/config/rdmasession/lqp/id
             op_type: 17 #OP_TYPE_SEND_RCVD
             status : 7  #CQ_STATUS_LOCAL_ACC_ERR
-            color  : callback://rdma/rdma/GetCQExpColor
+            color  : callback://rdma/rdma/GetCQExpColor/entries=2
             error  : 1
             smac: callback://rdma/rdma/GetZeroMAC
+
+    - descriptor:
+        id      : EXP_SQ_FLUSH_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
+        fields:
+            wrid   : 0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
+            color  : callback://rdma/rdma/GetCQExpColor/entries=3
+            error  : 1
+            type   : 3 #CQE_TYPE_SEND_NPG
 
 session:
     - step:
@@ -159,11 +206,19 @@ session:
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
         expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC_ERR
                     ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
 
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_SQ_FLUSH_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
     #set CI for CQ ring to that of proxy CI in DB data
     - step:
 

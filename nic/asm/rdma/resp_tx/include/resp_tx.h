@@ -18,7 +18,9 @@
 #define RESP_TX_DMA_CMD_AETH            5
 #define RESP_TX_DMA_CMD_CNP_RSVD        5 // CNP packets do not have AETH header. Re-using index.
 #define RESP_TX_DMA_CMD_ATOMICAETH      6 
+#define RESP_TX_DMA_CMD_ACK_ICRC        6
 #define RESP_TX_DMA_CMD_PYLD_BASE       6 // consumes 3 DMA commands
+#define RESP_TX_DMA_CMD_RDMA_ERR_FEEDBACK   10
 #define RESP_TX_DMA_CMD_PAD_ICRC       (RESP_TX_MAX_DMA_CMDS - 2)
 #define RESP_TX_DMA_CMD_UDP_OPTIONS    (RESP_TX_MAX_DMA_CMDS - 1)
 
@@ -53,25 +55,28 @@ struct resp_tx_phv_t {
     dma_cmd3 : 128;                               // 16B
 
     /* flit 7 */
-    pad      :  24;                               //  3B
-    //***NOTE: Keep 4 bytes after pad with in this flit, so that can be copied as ICRC data into phv
-    //ICRC data does not need to be given as zero as Capri overtites icrc after computation
-    icrc     :  32;                              //  4B
-    rsq_c_index   : 16;                          //  2B
-    rsvd2    : 280;                              // 37B
-    struct p4plus_to_p4_header_t p4plus_to_p4;   // 20B
+    struct phv_intr_global_t p4_intr_global;        // 17B
+    struct phv_intr_p4_t p4_intr;                   // 5B
+    struct phv_intr_rxdma_t p4_intr_rxdma;          // 10B
+    struct p4_to_p4plus_roce_header_t p4_to_p4plus; // 20B
+    struct rdma_feedback_t rdma_feedback;           // 11B
+    rsvd2    : 8;                                   // 1B
+
 
     /* flit 6 */
-    rsvd1   : 16;                                //  2B
-    db_data1: 64;                                //  8B
-    db_data2: 64;                                //  8B
     struct rdma_atomicaeth_t atomicaeth;         //  8B
     union {                                      // 16B
-        struct rdma_cnp_rsvd_t cnp_rsvd;                 // 16B
-        struct rdma_aeth_t aeth;                         //  4B
+        struct rdma_cnp_rsvd_t cnp_rsvd;         // 16B
+        struct rdma_aeth_t aeth;                 //  4B
     }; // CNP packets do not have aeth header.
-    struct rdma_bth_t bth;                       // 12B
-    rsvd3   : 80;                                // 10B
+    struct rdma_bth_t bth;                      // 12B
+    struct p4plus_to_p4_header_t p4plus_to_p4;  // 20B
+    rsvd1    :   8;                              // 1B
+    pad      :  24;                             //  3B
+    icrc     :  32;                             //  4B
+
+    //***NOTE: Keep 4 bytes after pad with in this flit, so that can be copied as ICRC data into phv
+    //ICRC data does not need to be given as zero as Capri overtites icrc after computation
 
     // common tx (flit 0 - 5)
     struct phv_ common;

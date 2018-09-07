@@ -63,6 +63,42 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
 
+   - packet:
+        id          : EXP_PKT    # Expected Nak packet
+        payloadsize : 0
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
+        icrc        : True
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 17 # ACK
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+            aeth:
+                syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=2 #NAK_CODE_REM_ACC_ERR
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
 buffers:
     - buffer:
         id      : RQ_BUF1
@@ -134,12 +170,23 @@ descriptors:
             qid: ref://testcase/config/rdmasession/lqp/id
             op_type     : 17 # OP_TYPE_SEND_RCVD
             status      : 7  #CQ_STATUS_LOCAL_ACC_ERR
-            color  : callback://rdma/rdma/GetCQExpColor
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
             error  : 1
 #           r_key       : ref://testcase/pvtdata/inv_r_key
 #           rkey_inv_vld: 1
             smac: callback://rdma/rdma/GetZeroMAC
             
+    - descriptor:
+        id      : EXP_SQ_FLUSH_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
+        fields:
+            wrid   : 0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
+            color  : callback://rdma/rdma/GetCQExpColor/entries=2
+            error  : 1
+            type   : 3 #CQE_TYPE_SEND_NPG
+
 session:
     - step:
         trigger:
@@ -160,18 +207,27 @@ session:
         
         expect:
             descriptors:
-                - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_RQ_DESC
-                    ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+                # when inv_rkey_validate detects an error, it sets ERR_DIS_QP flag in phv.
+                # This flag is inspected by ptseg_process and avoids enqueuing any DMA cmds
+                # for payload xfer. Below validation on payload xfer might be passing 
+                # due to 0xff payload, but we shouldn't be setting any expectation in the first
+                # place, hence commented out.
+#                - descriptor:
+#                    object  : ref://testcase/descriptors/id=EXP_RQ_DESC
+#                    ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
-#       
-#           packets:
-#               - packet:
-#                   object  : ref://testcase/packets/id=EXP_PKT
-#                   port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
-#       
+
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_SQ_FLUSH_CQ_DESC
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+      
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+       
         
     #set CI for CQ ring to that of proxy CI in DB data
     - step:

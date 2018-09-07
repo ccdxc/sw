@@ -1082,6 +1082,9 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 #define DMA_SET_END_OF_CMDS_C(_cmd_t, _base_r, _cf)                                  \
     phvwrp._cf _base_r, offsetof(_cmd_t, cmdeop), sizeof(_cmd_t.cmdeop), 1
 
+#define DMA_SET_END_OF_CMDS_CE(_cmd_t, _base_r, _cf)                                  \
+    phvwrp._cf.e    _base_r, offsetof(_cmd_t, cmdeop), sizeof(_cmd_t.cmdeop), 1
+
 #define DMA_SET_END_OF_PKT(_cmd_t, _base_r)                                  \
     phvwrp     _base_r, offsetof(_cmd_t, pkteop), sizeof(_cmd_t.pkteop), 1
 

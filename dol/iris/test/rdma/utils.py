@@ -38,11 +38,19 @@ def VerifyFieldsEqual(tc, state1, field_name1, state2, field_name2):
     return cmp
 
 def VerifyErrQState(tc):
-    #sq
-    #TODO: 
+    # verify that sqcb0 state is now moved to ERR (2)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'state', 2):
+        return False
 
-    #rq
-    # verify that rqcb1 state is moved to ERR (2)
+    # verify that sqcb1 state is now moved to ERR (2)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'sqcb1_state', 2):
+        return False
+
+    # verify that rqcb0 state is now moved to ERR (2)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb0_state', 2):
+        return False
+
+    # verify that rqcb1 state is now moved to ERR (2)
     if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'cb1_state', 2):
         return False
 
@@ -63,6 +71,9 @@ def PopulatePreQStates(tc):
     #rq_cq
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
+    #async eq
+    rs.lqp.pd.ep.intf.lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_pre_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
     return
 
 def PopulatePostQStates(tc):
@@ -80,6 +91,9 @@ def PopulatePostQStates(tc):
     #rq_cq
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
+    #async eq
+    rs.lqp.pd.ep.intf.lif.async_eq.qstate.Read()
+    tc.pvtdata.async_eq_post_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
     return
 
 def PostToPreCopyQStates(tc):
@@ -88,6 +102,7 @@ def PostToPreCopyQStates(tc):
     tc.pvtdata.rq_pre_qstate = copy.deepcopy(rs.lqp.rq.qstate.data)
     tc.pvtdata.sq_cq_pre_qstate = copy.deepcopy(rs.lqp.sq_cq.qstate.data)
     tc.pvtdata.rq_cq_pre_qstate = copy.deepcopy(rs.lqp.rq_cq.qstate.data)
+    tc.pvtdata.async_eq_pre_qstate = copy.deepcopy(rs.lqp.pd.ep.intf.lif.async_eq.qstate.data)
     return
 
 def ResetErrQState(tc):

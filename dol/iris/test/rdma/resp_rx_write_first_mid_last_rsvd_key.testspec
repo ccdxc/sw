@@ -210,6 +210,16 @@ buffers:
 
 
 descriptors:
+    - descriptor:
+        id      : EXP_SQ_FLUSH_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
+        fields:
+            wrid   : 0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
+            error  : 1
+            type   : 3 #CQE_TYPE_SEND_NPG
 
 trigger:
     packets:
@@ -224,10 +234,13 @@ trigger:
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
 expect:
-#   descriptors:
+    descriptors:
 #       - descriptor:
 #           object : ref://testcase/buffers/id=EXP_BUF
 #           ring   : ref://testcase/buffers/id=XFER_BUF
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_SQ_FLUSH_CQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
     packets:
         - packet:
             object  : ref://testcase/packets/id=EXP_PKT

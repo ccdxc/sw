@@ -1,5 +1,6 @@
 SRC_DIR = .
 TOPDIR = ../../..
+SWDIR = $(TOPDIR)/../
 P4_DIR = $(TOPDIR)/p4/rdma
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
 PROJ=resp_tx
@@ -11,7 +12,7 @@ ALT_ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/alt_asm_out/
 include $(TOPDIR)/make/Make.inc
 
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
-INC_DIR = -I ../common/include -I$(TOPDIR) -I ./include -I $(GEN_DIR)/rdma_resp_txdma/asm_out -I $(TOPDIR)/include -I$(ALT_ASM_HDR_DIR)
+INC_DIR = -I ../common/include -I$(SWDIR) -I$(TOPDIR) -I ./include -I $(GEN_DIR)/rdma_resp_txdma/asm_out -I $(TOPDIR)/include -I$(TOPDIR)/p4/include -I$(ALT_ASM_HDR_DIR)
 
 src = $(wildcard *.s)
 bin = $(src:.s=.bin)

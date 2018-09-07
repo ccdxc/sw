@@ -8,6 +8,7 @@ struct sqcb1_t d;
 #define IN_P t3_s2s_sqcb1_to_compl_feedback_info
 
 #define K_STATUS CAPRI_KEY_FIELD(IN_P, status)
+#define TO_S6_P to_s6_cq_info
 
 %%
 
@@ -41,6 +42,7 @@ err_completion:
     seq            c1, d.msn, r1
     cmov           r1, c1, QP_STATE_ERR, QP_STATE_SQD_ON_ERR
     tblwr          d.state, r1
+    phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), r1
     add            r1, r1, 1, SQCB0_FLUSH_RQ_BIT_OFFSET
     phvwrpair      p.service, d.service, p.{flush_rq...state}, r1
     DMA_CMD_STATIC_BASE_GET(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
@@ -76,7 +78,7 @@ flush_completion:
     SQCB0_ADDR_GET(r1)
     add            r1, FIELD_OFFSET(sqcb0_t, state), r1
     DMA_HBM_PHV2MEM_SETUP(r7, service, state, r1)
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r7)
+    phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), QP_STATE_ERR
     tblwr.e        d.state, QP_STATE_ERR
     phvwrpair      p.service, d.service, p.{flush_rq...state}, QP_STATE_ERR
 

@@ -7,6 +7,7 @@ struct sqcb1_t d;
 
 #define IN_P t3_s2s_sqcb1_write_back_info
 #define IN_TO_S_P to_s4_sqcb1_wb_info
+#define TO_S6_P to_s6_cq_info
 
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit24_ebit31)
@@ -48,6 +49,7 @@ req_rx_sqcb1_write_back_process:
     tblwr          d.e_rsp_psn, K_E_RSP_PSN
     tblwr          d.rexmit_psn, K_REXMIT_PSN
     tblwr          d.msn, K_MSN
+    phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), d.state
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1
     bcf            [!c1], check_bktrack
     SQCB2_ADDR_GET(r5) //BD-slot
@@ -144,6 +146,7 @@ error_disable_exit:
     // flush feedback to error disable RQ.
     tblwr          d.state, QP_STATE_ERR
 
+    phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), QP_STATE_ERR
     phvwrpair      p.service, d.service, p.{flush_rq...state}, \
                    (1<<SQCB0_FLUSH_RQ_BIT_OFFSET | QP_STATE_ERR)
     DMA_CMD_STATIC_BASE_GET(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)

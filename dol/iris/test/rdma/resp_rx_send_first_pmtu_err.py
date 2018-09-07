@@ -11,21 +11,12 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     logger.info("RDMA TestCaseSetup() Implementation.")
-    rs = tc.config.rdmasession
+    PopulatePreQStates(tc)
 
-    # Read RQ pre state
-    rs.lqp.rq.qstate.Read()
-    tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
+    rs = tc.config.rdmasession
     tc.pvtdata.send_first_psn = tc.pvtdata.rq_pre_qstate.e_psn
     tc.pvtdata.send_last_psn = tc.pvtdata.rq_pre_qstate.e_psn + 1
 
-    # Read CQ pre state
-    rs.lqp.rq_cq.qstate.Read()
-    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
-
-    # Read ASYNC_EQ pre state
-    rs.lqp.pd.ep.intf.lif.async_eq.qstate.Read()
-    tc.pvtdata.async_eq_pre_qstate = rs.lqp.pd.ep.intf.lif.async_eq.qstate.data
     return
 
 def TestCaseTrigger(tc):
@@ -35,10 +26,10 @@ def TestCaseTrigger(tc):
 def TestCaseVerify(tc):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
+    PopulatePostQStates(tc)
+
     rs = tc.config.rdmasession
-    rs.lqp.rq.qstate.Read()
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
-    tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
     ############     RQ VALIDATIONS #################
     # verify that e_psn is NOT incremented by 1
