@@ -1,3 +1,35 @@
+/*
+ * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ *
+ * This software is available to you under a choice of one of two
+ * licenses.  You may choose to be licensed under the terms of the GNU
+ * General Public License (GPL) Version 2, available from the file
+ * COPYING in the main directory of this source tree, or the
+ * OpenIB.org BSD license below:
+ *
+ *     Redistribution and use in source and binary forms, with or
+ *     without modification, are permitted provided that the following
+ *     conditions are met:
+ *
+ *      - Redistributions of source code must retain the above
+ *        copyright notice, this list of conditions and the following
+ *        disclaimer.
+ *
+ *      - Redistributions in binary form must reproduce the above
+ *        copyright notice, this list of conditions and the following
+ *        disclaimer in the documentation and/or other materials
+ *        provided with the distribution.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #ifndef IONIC_IBDEV_H
 #define IONIC_IBDEV_H
 
@@ -21,6 +53,9 @@
 #define IONIC_MAX_MRID		0xffffff
 #define IONIC_MAX_QPID		0xffffff
 #define IONIC_MAX_HBM_ORDER	15
+
+#define IONIC_META_LAST ((void *)1ul)
+#define IONIC_META_POSTED ((void *)2ul)
 
 struct ionic_aq;
 struct ionic_cq;
@@ -60,6 +95,7 @@ struct ionic_ibdev {
 	u32			dbid;
 
 	u16			rdma_version;
+	u8			rdma_compat;
 	u8			qp_opcodes;
 	u8			admin_opcodes;
 
@@ -69,13 +105,15 @@ struct ionic_ibdev {
 	u8			cq_qtype;
 	u8			eq_qtype;
 
+	u8			max_stride;
+
 	struct mutex		tbl_lock; /* for modify cq_tbl, qp_tbl */
 	rwlock_t		tbl_rcu; /* instead of synchronize_rcu() */
 
 	struct tbl_root		qp_tbl;
 	struct tbl_root		cq_tbl;
 
-	struct mutex		inuse_lock; /* for id reservation */
+	spinlock_t		inuse_lock; /* for id reservation */
 
 	unsigned long		*inuse_pdid;
 	u32			size_pdid;
@@ -88,11 +126,7 @@ struct ionic_ibdev {
 	unsigned long		*inuse_mrid;
 	u32			size_mrid;
 	u32			next_mrid;
-	u8			next_rkey_key;
-
-	unsigned long		*inuse_eqid;
-	u32			size_eqid;
-	u32			next_eqid;
+	u8			next_mrkey;
 
 	unsigned long		*inuse_cqid;
 	u32			size_cqid;
@@ -116,6 +150,22 @@ struct ionic_ibdev {
 
 	struct ionic_eq		**eq_vec;
 	int			eq_count;
+
+	int			stats_count;
+	size_t			stats_size;
+	char			*stats_buf;
+	const char		**stats_hdrs;
+
+	struct dentry		*debug;
+	struct dentry		*debug_ah;
+	struct dentry		*debug_aq;
+	struct dentry		*debug_cq;
+	struct dentry		*debug_eq;
+	struct dentry		*debug_mr;
+	struct dentry		*debug_mw;
+	struct dentry		*debug_pd;
+	struct dentry		*debug_qp;
+	struct dentry		*debug_srq;
 };
 
 struct ionic_eq {
@@ -131,8 +181,6 @@ struct ionic_eq {
 
 	struct work_struct	work;
 
-	int			vec;
-	int			cpu;
 	int			irq;
 	char			name[32];
 };
@@ -172,6 +220,20 @@ struct ionic_ctx {
 	struct ionic_mmap_info	mmap_dbell;
 };
 
+struct ionic_tbl_res {
+	int			tbl_order;
+	int			tbl_pos;
+};
+
+struct ionic_tbl_buf {
+	u32			tbl_limit;
+	u32			tbl_pages;
+	size_t			tbl_size;
+	__le64			*tbl_buf;
+	dma_addr_t		tbl_dma;
+	u8			page_size_log2;
+};
+
 struct ionic_pd {
 	struct ib_pd		ibpd;
 
@@ -185,30 +247,32 @@ struct ionic_cq {
 	u32			eqid;
 
 	spinlock_t		lock; /* for polling */
-	struct list_head	qp_poll;
+	struct list_head	poll_sq;
+	struct list_head	flush_sq;
+	struct list_head	flush_rq;
 	struct ionic_queue	q;
+	u16			arm_any_prod;
+	u16			arm_sol_prod;
 
 	/* infrequently accessed, keep at end */
 	struct ib_umem		*umem;
-	u32			tbl_pos;
-	int			tbl_order;
+	struct ionic_tbl_res	res;
 
-	/* XXX cleanup */
-	u32			lkey;
-	struct delayed_work	notify_work;
+	u8			compat;
 };
 
 struct ionic_sq_meta {
 	u64			wrid;
 	u32			len;
 	u16			seq;
-	u8			op;
-	u8			status;
+	u8			ibop;
+	u8			ibsts;
 	bool			remote;
 	bool			signal;
 };
 
 struct ionic_rq_meta {
+	struct ionic_rq_meta	*next;
 	u64			wrid;
 	u32			len; /* XXX byte_len must come from cqe */
 };
@@ -218,6 +282,7 @@ struct ionic_qp {
 		struct ib_qp	ibqp;
 		struct ib_srq	ibsrq;
 	};
+	enum ib_qp_state	state;
 
 	u32			qpid;
 	u32			ahid;
@@ -229,9 +294,12 @@ struct ionic_qp {
 
 	bool			sig_all;
 
-	struct list_head	cq_poll_ent;
+	struct list_head	cq_poll_sq;
+	struct list_head	cq_flush_sq;
+	struct list_head	cq_flush_rq;
 
 	spinlock_t		sq_lock; /* for posting and polling */
+	bool			sq_flush;
 	struct ionic_queue	sq;
 	struct ionic_sq_meta	*sq_meta;
 	u16			*sq_msn_idx;
@@ -243,8 +311,10 @@ struct ionic_qp {
 	u16			sq_hbm_prod;
 
 	spinlock_t		rq_lock; /* for posting and polling */
+	bool			rq_flush;
 	struct ionic_queue	rq;
-	struct ionic_rq_meta	*rq_meta; /* XXX this rq_meta will go away */
+	struct ionic_rq_meta	*rq_meta;
+	struct ionic_rq_meta	*rq_meta_head;
 
 	/* infrequently accessed, keep at end */
 	bool			sq_is_hbm;
@@ -254,16 +324,12 @@ struct ionic_qp {
 	struct ionic_mmap_info	sq_hbm_mmap;
 
 	struct ib_umem		*sq_umem;
-	int			sq_tbl_order;
-	u32			sq_tbl_pos;
+	struct ionic_tbl_res	sq_res;
 
 	struct ib_umem		*rq_umem;
-	int			rq_tbl_order;
-	u32			rq_tbl_pos;
+	struct ionic_tbl_res	rq_res;
 
-	/* XXX cleanup */
-	u32			sq_lkey;
-	u32			rq_lkey;
+	u8			compat;
 };
 
 struct ionic_ah {
@@ -272,12 +338,17 @@ struct ionic_ah {
 };
 
 struct ionic_mr {
-	struct ib_mr		ibmr;
+	union {
+		struct ib_mr	ibmr;
+		struct ib_mw	ibmw;
+	};
+
+	u32			mrid;
+	int			flags;
 
 	struct ib_umem		*umem;
-
-	u32			tbl_pos;
-	int			tbl_order;
+	struct ionic_tbl_res	res;
+	struct ionic_tbl_buf	buf;
 };
 
 static inline struct ionic_ibdev *to_ionic_ibdev(struct ib_device *ibdev)
@@ -330,6 +401,11 @@ static inline struct ionic_mr *to_ionic_mr(struct ib_mr *ibmr)
 	return container_of(ibmr, struct ionic_mr, ibmr);
 }
 
+static inline struct ionic_mr *to_ionic_mw(struct ib_mw *ibmw)
+{
+	return container_of(ibmw, struct ionic_mr, ibmw);
+}
+
 static inline struct ionic_cq *to_ionic_cq(struct ib_cq *ibcq)
 {
 	return container_of(ibcq, struct ionic_cq, ibcq);
@@ -359,11 +435,6 @@ static inline u32 ionic_dbid(struct ionic_ibdev *dev,
 		return dev->dbid;
 
 	return ctx->dbid;
-}
-
-static inline u32 ionic_idver(struct ionic_ibdev *dev, u32 id)
-{
-	return id | (dev->rdma_version << 24);
 }
 
 enum ionic_intr_bits {
@@ -419,5 +490,13 @@ static inline void ionic_intr_mask_assert(struct ionic_ibdev *dev,
 
 	iowrite32(mask, &dev->intr_ctrl[intr]);
 }
+
+static inline bool ionic_ibop_is_local(enum ib_wr_opcode op)
+{
+	return op == IB_WR_LOCAL_INV || op == IB_WR_REG_MR;
+}
+
+void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
+void ionic_admin_cancel(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
 
 #endif /* IONIC_IBDEV_H */

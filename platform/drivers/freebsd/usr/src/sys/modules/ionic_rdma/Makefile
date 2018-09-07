@@ -14,6 +14,7 @@ CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include
 CFLAGS+= -I${SRCTOP}/sys/dev/ionic/ionic_eth
 CFLAGS+= -DCONFIG_INFINIBAND_USER_MEM
 CFLAGS+= -DINET -DINET6
+CFLAGS+= -DFREEBSD -DHAPS
 
 .include <bsd.kmod.mk>
 

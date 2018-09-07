@@ -1,3 +1,35 @@
+/*
+ * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ *
+ * This software is available to you under a choice of one of two
+ * licenses.  You may choose to be licensed under the terms of the GNU
+ * General Public License (GPL) Version 2, available from the file
+ * COPYING in the main directory of this source tree, or the
+ * OpenIB.org BSD license below:
+ *
+ *     Redistribution and use in source and binary forms, with or
+ *     without modification, are permitted provided that the following
+ *     conditions are met:
+ *
+ *      - Redistributions of source code must retain the above
+ *        copyright notice, this list of conditions and the following
+ *        disclaimer.
+ *
+ *      - Redistributions in binary form must reproduce the above
+ *        copyright notice, this list of conditions and the following
+ *        disclaimer in the documentation and/or other materials
+ *        provided with the distribution.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #ifndef IONIC_QUEUE_H
 #define IONIC_QUEUE_H
 
@@ -168,6 +200,17 @@ static inline void *ionic_queue_at_cons(struct ionic_queue *q)
 	return ionic_queue_at(q, q->cons);
 }
 
+/** ionic_queue_next - Compute the next index.
+ * @q:		Queue structure.
+ * @idx:	Index.
+ *
+ * Return: next index after idx.
+ */
+static inline u16 ionic_queue_next(struct ionic_queue *q, u16 idx)
+{
+	return (idx + 1) & q->mask;
+}
+
 /** ionic_queue_produce - Increase the producer index.
  * @q:		Queue structure.
  *
@@ -175,7 +218,7 @@ static inline void *ionic_queue_at_cons(struct ionic_queue *q)
  */
 static inline void ionic_queue_produce(struct ionic_queue *q)
 {
-	q->prod = (q->prod + 1) & q->mask;
+	q->prod = ionic_queue_next(q, q->prod);
 }
 
 /** ionic_queue_consume - Increase the consumer index.
@@ -187,7 +230,7 @@ static inline void ionic_queue_produce(struct ionic_queue *q)
  */
 static inline void ionic_queue_consume(struct ionic_queue *q)
 {
-	q->cons = (q->cons + 1) & q->mask;
+	q->cons = ionic_queue_next(q, q->cons);
 }
 
 /** ionic_queue_dbell_init - Initialize doorbell bits for queue id.
