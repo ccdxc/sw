@@ -212,7 +212,12 @@ err_out:
 	spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
 
 	/* schedule on a buddy cpu, in case this cpu needs to busy-wait */
+
+#ifdef PENSANDO_MNIC
+	schedule_work(&ionic->cmd_work);
+#else
 	schedule_work_on(raw_smp_processor_id()^1, &ionic->cmd_work);
+#endif //PENSANDO_MNIC
 
 	return 0;
 #endif
