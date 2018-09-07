@@ -49,6 +49,8 @@ void cap_mx_set_fec(int chip_id, int inst_id, int ch, int value);
 void cap_mx_set_tx_padding(int chip_id, int inst_id, int enable);
 void cap_mx_set_rx_padding(int chip_id, int inst_id, int ch, bool enable);
 void cap_mx_set_mtu(int chip_id, int inst_id, int ch, int speed, int max_value);
+void cap_mx_apb_write(int chip_id, int inst_id, int addr, int data);
+int  cap_mx_apb_read(int chip_id, int inst_id, int addr);
 
 void cap_bx_set_glbl_mode(int chip_id, int inst_id, int value);
 void cap_bx_apb_write(int chip_id, int inst_id, int addr, int data);

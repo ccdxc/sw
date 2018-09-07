@@ -196,6 +196,12 @@ serdes_get_errors_default (uint32_t sbus_addr, bool clear)
     return 0;
 }
 
+int
+serdes_prbs_start_default (uint32_t sbus_addr, serdes_info_t *serdes_info)
+{
+    return 0;
+}
+
 //---------------------------------------------------------------------------
 // HW methods
 //---------------------------------------------------------------------------
@@ -356,6 +362,20 @@ serdes_global_init_hw(uint32_t     jtag_id,
 bool
 serdes_signal_detect_hw (uint32_t sbus_addr)
 {
+    int64_t data[4] = {0};
+
+    avago_serdes_get_rx_data(aapl, sbus_addr, data);
+
+    SDK_TRACE_DEBUG("Rx Data: 0x%x 0x%x 0x%x 0x%x",
+                    data[0], data[1], data[2], data[3]);
+
+    if (data[0] == 0xfffff || data[0] == 0x0 ||
+        data[1] == 0xfffff || data[1] == 0x0 ||
+        data[2] == 0xfffff || data[2] == 0x0 ||
+        data[3] == 0xfffff || data[3] == 0x0) {
+        return false;
+    }
+
     return true;
 }
 
@@ -667,6 +687,65 @@ serdes_get_errors_hw (uint32_t sbus_addr, bool clear)
 }
 
 int
+serdes_prbs_start_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
+{
+    uint32_t divider = serdes_info->sbus_divider;
+    uint32_t width   = serdes_info->width;
+    uint32_t tx_slip = serdes_info->tx_slip_value;
+    uint32_t rx_slip = serdes_info->rx_slip_value;
+    uint8_t  rx_term = serdes_info->rx_term;
+    uint32_t amp     = serdes_info->amp;
+    uint32_t pre     = serdes_info->pre;
+    uint32_t post    = serdes_info->post;
+
+    SDK_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u, tx_slip: 0x%x,"
+                    " rx_slip: 0x%x, rx_term: %d, amp: 0x%x, pre: 0x%x,"
+                    " post: 0x%x",
+                    sbus_addr, divider, width, tx_slip, rx_slip, rx_term,
+                    amp, pre, post);
+
+    Avago_serdes_init_config_t *cfg = avago_serdes_init_config_construct(aapl);
+    if (NULL == cfg) {
+        SDK_TRACE_ERR("Failed to construct avago config");
+        return -1;
+    }
+
+    cfg->init_mode = Avago_serdes_init_mode_t::AVAGO_PRBS31_ILB;
+
+    // divider and width
+    cfg->tx_divider = divider;
+    cfg->rx_divider = divider;
+    cfg->tx_width   = width;
+    cfg->rx_width   = width;
+
+    // Disable signal_ok
+    cfg->signal_ok_en = 0;
+
+    // set tx_ouput_en for prbs
+    cfg->tx_output_en = 1;
+
+    // Tx/Rx enable
+    cfg->init_tx = 1;
+    cfg->init_rx = 1;
+
+    // resets
+    cfg->sbus_reset  = 1;
+    cfg->spico_reset = 1;
+
+    // reset the earlier error code
+    aapl->return_code = 0;
+
+    avago_serdes_init(aapl, sbus_addr, cfg);
+
+    if(aapl->return_code) {
+        SDK_TRACE_ERR("Failed to initialize SerDes\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+int
 serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 {
     uint32_t divider = serdes_info->sbus_divider;
@@ -681,16 +760,17 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
     SDK_TRACE_DEBUG("sbus_addr: %u, divider: %u, width: %u, tx_slip: 0x%x,"
                     " rx_slip: 0x%x, rx_term: %d, amp: 0x%x, pre: 0x%x,"
                     " post: 0x%x",
-                    sbus_addr, divider, width, tx_slip, tx_slip, rx_term,
+                    sbus_addr, divider, width, tx_slip, rx_slip, rx_term,
                     amp, pre, post);
 
     Avago_serdes_init_config_t *cfg = avago_serdes_init_config_construct(aapl);
     if (NULL == cfg) {
         SDK_TRACE_ERR("Failed to construct avago config");
-        return SDK_RET_ERR;
+        return -1;
     }
 
-    cfg->init_mode = Avago_serdes_init_mode_t::AVAGO_INIT_ONLY;
+    // cfg->init_mode = Avago_serdes_init_mode_t::AVAGO_INIT_ONLY;
+    cfg->init_mode = Avago_serdes_init_mode_t::AVAGO_CORE_DATA_ELB;
 
     // divider and width
     cfg->tx_divider = divider;
@@ -717,6 +797,7 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 
     if(aapl->return_code) {
         SDK_TRACE_ERR("Failed to initialize SerDes\n");
+        return -1;
     }
 
     // Tx/Rx slip values
@@ -736,7 +817,7 @@ serdes_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 
     avago_serdes_init_config_destruct(aapl, cfg);
 
-    return SDK_RET_OK;
+    return 0;
 }
 
 void
@@ -782,6 +863,7 @@ port_serdes_fn_init(platform_type_t platform_type,
     serdes_fn->serdes_set_rx_term   = &serdes_set_rx_term_default;
     serdes_fn->serdes_spico_int     = &serdes_spico_int_default;
     serdes_fn->serdes_get_errors    = &serdes_get_errors_default;
+    serdes_fn->serdes_prbs_start    = &serdes_prbs_start_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HW:
@@ -813,6 +895,7 @@ port_serdes_fn_init(platform_type_t platform_type,
         serdes_fn->serdes_set_rx_term   = &serdes_set_rx_term_hw;
         serdes_fn->serdes_spico_int     = &serdes_spico_int_hw;
         serdes_fn->serdes_get_errors    = &serdes_get_errors_hw;
+        serdes_fn->serdes_prbs_start    = &serdes_prbs_start_hw;
 
         // serdes global init
         aapl = serdes_global_init_hw(jtag_id, num_sbus_rings,

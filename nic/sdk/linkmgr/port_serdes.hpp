@@ -34,6 +34,7 @@ typedef struct serdes_fn_s_ {
     bool (*serdes_spico_int)       (uint32_t sbus_addr,
                                     int int_code, int int_data);
     uint32_t (*serdes_get_errors)  (uint32_t sbus_addr, bool clear);
+    int (*serdes_prbs_start)   (uint32_t sbus_addr, serdes_info_t *serdes_info);
 } serdes_fn_t;
 
 extern serdes_fn_t serdes_fns;

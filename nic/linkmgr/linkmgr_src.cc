@@ -1662,6 +1662,51 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             sdk::linkmgr::linkmgr_set_link_poll_enable(enable);
             break;
 
+        case 31:
+            sbus_addr = req.val1();
+
+            HAL_TRACE_DEBUG("serdes signal detect sbus_addr: {}, signal: {}",
+                            sbus_addr,
+                            sdk::linkmgr::serdes_fns.serdes_signal_detect(
+                                                            sbus_addr));
+            break;
+
+        case 32:
+            sbus_addr  = req.val1();
+            speed      = req.val2();
+            cable_type = req.val3();
+
+            serdes_info =
+                    catalog()->serdes_info_get(sbus_addr, speed, cable_type);
+
+            HAL_TRACE_DEBUG("serdes_prbs31 sbus_addr: {}, speed: {}, cable: {}",
+                            sbus_addr, speed, cable_type);
+
+            sdk::linkmgr::serdes_fns.serdes_prbs_start(sbus_addr, serdes_info);
+
+            break;
+
+        case 33:
+            mac_inst  = req.val2();
+            sbus_addr = req.val3(); // mac reg addr
+            sbus_data = req.val4(); // mac reg data
+
+            if (req.val1() == 0) {
+                // READ
+                HAL_TRACE_DEBUG (
+                        "mac_read mac_inst: {}, addr: {}, data: {}",
+                        mac_inst, sbus_addr,
+                        cap_mx_apb_read(0 /* chip_id */, mac_inst, sbus_addr));
+            } else {
+                // WRITE
+                HAL_TRACE_DEBUG ("mac_write mac_inst: {}, addr: {}, data: {}",
+                                 mac_inst, sbus_addr, sbus_data);
+                cap_mx_apb_write(0 /* chip_id */, mac_inst,
+                                 sbus_addr, sbus_data);
+            }
+
+            break;
+
         default:
             break;
     }

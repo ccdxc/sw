@@ -9,7 +9,7 @@ nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14         /nic/lib/
 nic/hal/third-party/sknobs/aarch64/lib/libsknobs.so              /nic/lib/
 nic/hal/third-party/judy/aarch64/lib/libJudy.so.1                /nic/lib/
 nic/sdk/third-party/avago/aarch64/lib/aapl/C/libAAPL.so          /nic/lib/
-nic/sdk/third-party/avago/fw/serdes.0x108C_2347.rom              /nic/conf/fw/
+nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom              /nic/conf/fw/
 platform/gen/aarch64/lib                                         /platform/lib/
 nic/tools/start-hal-haps.sh                                      /nic/tools/
 nic/tools/sysinit.sh                                             /nic/tools/

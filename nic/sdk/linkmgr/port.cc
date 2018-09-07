@@ -755,8 +755,7 @@ port::port_init(linkmgr_cfg_t *cfg)
 {
     sdk_ret_t   rc        = SDK_RET_OK;
     char        *cfg_path = std::getenv("HAL_CONFIG_PATH");
-    std::string cfg_file  = "fw/serdes.rom";
-
+    std::string cfg_file  = "fw/serdes.0x1087_244D.rom";    // TODO read from catalog
 
     linkmgr_csr_init();
 
