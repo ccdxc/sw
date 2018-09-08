@@ -206,7 +206,7 @@ func (s *ssecuritySecuritygroupBackend) regMsgsFunc(l log.Logger, scheme *runtim
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*security.SecurityGroup); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels = n.Name, n.Tenant, n.Namespace, n.Labels
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
 					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 					if err != nil {
 						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)

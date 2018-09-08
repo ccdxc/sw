@@ -86,6 +86,7 @@ func (m *AuthenticationPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AuthenticationPolicy) Defaults(ver string) bool {
 	m.Kind = "AuthenticationPolicy"
+	m.Tenant, m.Namespace = "", ""
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -376,6 +377,7 @@ func (m *Role) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Role) Defaults(ver string) bool {
 	m.Kind = "Role"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -400,6 +402,7 @@ func (m *RoleBinding) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *RoleBinding) Defaults(ver string) bool {
 	m.Kind = "RoleBinding"
+	m.Tenant, m.Namespace = "default", "default"
 	return false
 }
 
@@ -532,6 +535,7 @@ func (m *User) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *User) Defaults(ver string) bool {
 	m.Kind = "User"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -589,6 +593,16 @@ func (m *UserStatus) Defaults(ver string) bool {
 
 func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for AuthenticationPolicy"))
+	}
 
 	dlmtr := "."
 	if path == "" {
@@ -726,6 +740,13 @@ func (m *RadiusServer) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 
 	dlmtr := "."
 	if path == "" {
@@ -740,6 +761,13 @@ func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 	return ret
 }
 
@@ -780,6 +808,13 @@ func (m *TLSOptions) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 
 	dlmtr := "."
 	if path == "" {

@@ -671,6 +671,7 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.methodProfile", parseStringOptions)
 	reg.RegisterOptionParser("venice.methodOper", parseStringOptions)
 	reg.RegisterOptionParser("venice.methodAutoGen", parseBoolOptions)
+	reg.RegisterOptionParser("venice.methodTenantDefault", parseBoolOptions)
 	reg.RegisterOptionParser("venice.objectIdentifier", parseStringOptions)
 	reg.RegisterOptionParser("venice.objectAutoGen", parseStringOptions)
 	reg.RegisterOptionParser("venice.objectPrefix", parseObjectPrefix)

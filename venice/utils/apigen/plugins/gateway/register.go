@@ -97,6 +97,8 @@ type MethodParams struct {
 	GrpcOnly bool
 	// Oper specifies the type of CRUD operation, valid with GrpcOnly flag.
 	Oper string
+	// TenantDefault marks that this method has a flavor with inferred tenant default.
+	TenantDefault bool
 }
 
 // KeyComponent is a component of the key path, derived from the objectPrefix option.
@@ -402,6 +404,9 @@ func getMethodParams(m *descriptor.Method) (MethodParams, error) {
 	if err != nil {
 		glog.V(1).Infof("GrpcOnly but no Method specified(%s)", *m.Name)
 		return params, nil
+	}
+	if d, err := reg.GetExtension("venice.methodTenantDefault", m); err == nil {
+		params.TenantDefault = d.(bool)
 	}
 	if params.Oper, ok = i.(string); !ok {
 		return params, errInvalidOption
@@ -1202,6 +1207,19 @@ func getListType(msg *descriptor.Message, fq bool) (string, error) {
 	return "", errors.New("list item not found")
 }
 
+func getListTypeMsg(msg *descriptor.Message) (*descriptor.Message, error) {
+	for _, f := range msg.Fields {
+		if *f.Name == "Items" {
+			ret, err := msg.File.Reg.LookupMsg("", f.GetTypeName())
+			if err == nil {
+				return ret, nil
+			}
+			return nil, err
+		}
+	}
+	return nil, errors.New("list item not found")
+}
+
 func getWatchType(msg *descriptor.Message, fq bool) (string, error) {
 	for _, f := range msg.Fields {
 		if *f.Name == "Events" {
@@ -1221,6 +1239,27 @@ func getWatchType(msg *descriptor.Message, fq bool) (string, error) {
 		}
 	}
 	return "", errors.New("Object item not found")
+}
+
+func getWatchTypeMsg(msg *descriptor.Message) (*descriptor.Message, error) {
+	for _, f := range msg.Fields {
+		if *f.Name == "Events" {
+			nmsg, err := msg.File.Reg.LookupMsg("", f.GetTypeName())
+			if err != nil {
+				return nil, errors.New("Object type not found")
+			}
+			for _, nf := range nmsg.Fields {
+				if *nf.Name == "Object" {
+					ret, err := msg.File.Reg.LookupMsg("", nf.GetTypeName())
+					if err == nil {
+						return ret, nil
+					}
+					return nil, err
+				}
+			}
+		}
+	}
+	return nil, errors.New("Object item not found")
 }
 
 func isListHelper(msg *descriptor.Message) bool {
@@ -1931,6 +1970,28 @@ func getWatchHelperName(in string) string {
 	return "AutoMsg" + in + "WatchHelper"
 }
 
+func isTenanted(msg *descriptor.Message) (bool, error) {
+	dbk, err := getDbKey(msg)
+	if err != nil {
+		return false, err
+	}
+	for _, c := range dbk {
+		if c.Type == "field" && c.Val == "Tenant" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func isObjTenanted(file *descriptor.File, obj string) (bool, error) {
+	name := "." + file.GoPkg.Name + "." + obj
+	msg, err := file.Reg.LookupMsg("", name)
+	if err != nil {
+		return false, err
+	}
+	return isTenanted(msg)
+}
+
 func init() {
 	cliTagRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
 
@@ -1958,7 +2019,9 @@ func init() {
 	reg.RegisterFunc("getInputType", getInputType)
 	reg.RegisterFunc("getOutputType", getOutputType)
 	reg.RegisterFunc("getListType", getListType)
+	reg.RegisterFunc("getListTypeMsg", getListTypeMsg)
 	reg.RegisterFunc("getWatchType", getWatchType)
+	reg.RegisterFunc("getWatchTypeMsg", getWatchTypeMsg)
 	reg.RegisterFunc("isAutoWatch", isAutoWatch)
 	reg.RegisterFunc("isAutoList", isAutoList)
 	reg.RegisterFunc("isWatchHelper", isWatchHelper)
@@ -1997,6 +2060,8 @@ func init() {
 	reg.RegisterFunc("getWatchHelperName", getWatchHelperName)
 	reg.RegisterFunc("isStreaming", isStreaming)
 	reg.RegisterFunc("isClientStreaming", isClientStreaming)
+	reg.RegisterFunc("isTenanted", isTenanted)
+	reg.RegisterFunc("isObjTenanted", isObjTenanted)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

@@ -263,6 +263,10 @@ func (a adapterNetworkV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.Lis
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "LbPolicyList", t.Tenant, t.Namespace, "network", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -286,6 +290,10 @@ func (a adapterNetworkV1) AutoListNetwork(oldctx oldcontext.Context, t *api.List
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "NetworkList", t.Tenant, t.Namespace, "network", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -308,6 +316,10 @@ func (a adapterNetworkV1) AutoListService(oldctx oldcontext.Context, t *api.List
 	prof, err := a.gwSvc.GetServiceProfile("AutoListService")
 	if err != nil {
 		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
 	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "ServiceList", t.Tenant, t.Namespace, "network", ""
 
@@ -420,6 +432,7 @@ func (a adapterNetworkV1) AutoWatchNetwork(oldctx oldcontext.Context, in *api.Li
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Network", in.Tenant, in.Namespace, "network"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -440,6 +453,7 @@ func (a adapterNetworkV1) AutoWatchService(oldctx oldcontext.Context, in *api.Li
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Service", in.Tenant, in.Namespace, "network"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -460,6 +474,7 @@ func (a adapterNetworkV1) AutoWatchLbPolicy(oldctx oldcontext.Context, in *api.L
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "LbPolicy", in.Tenant, in.Namespace, "network"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

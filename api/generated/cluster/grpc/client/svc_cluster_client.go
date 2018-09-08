@@ -581,6 +581,7 @@ func (a *restObjClusterV1Cluster) List(ctx context.Context, options *api.ListWat
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListCluster(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -763,6 +764,7 @@ func (a *restObjClusterV1Node) List(ctx context.Context, options *api.ListWatchO
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListNode(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -938,6 +940,7 @@ func (a *restObjClusterV1Host) List(ctx context.Context, options *api.ListWatchO
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListHost(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1113,6 +1116,7 @@ func (a *restObjClusterV1SmartNIC) List(ctx context.Context, options *api.ListWa
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListSmartNIC(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1288,6 +1292,7 @@ func (a *restObjClusterV1Tenant) List(ctx context.Context, options *api.ListWatc
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListTenant(ctx, options)
 	if err == nil {
 		return r.Items, nil

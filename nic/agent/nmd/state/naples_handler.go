@@ -115,9 +115,7 @@ func (n *NMD) StartManagedMode() error {
 				nicObj = &cmd.SmartNIC{
 					TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 					ObjectMeta: api.ObjectMeta{
-						Name:      mac,
-						Tenant:    globals.DefaultTenant,
-						Namespace: globals.DefaultNamespace,
+						Name: mac,
 					},
 					Spec: cmd.SmartNICSpec{
 						Phase:  cmd.SmartNICSpec_REGISTERING.String(),

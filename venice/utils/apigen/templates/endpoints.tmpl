@@ -211,7 +211,7 @@ func (m logging{{$svcname}}MiddlewareClient) {{.Name}}(ctx context.Context, in *
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "{{.Name}}", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "{{.Name}}", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.{{.Name}}(ctx, in)
 	return
@@ -225,7 +225,7 @@ func (m logging{{$svcname}}MiddlewareClient) AutoWatchSvc{{$svcname}}(ctx contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "AutoWatchSvc{{$svcname}}", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "AutoWatchSvc{{$svcname}}", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSvc{{$svcname}}(ctx, in)
 	return
@@ -239,7 +239,7 @@ func (m logging{{$svcname}}MiddlewareClient) AutoWatch{{.}}(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "AutoWatch{{.}}", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "AutoWatch{{.}}", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatch{{.}}(ctx, in)
 	return
@@ -257,7 +257,7 @@ func (m logging{{$svcname}}MiddlewareClient) {{.Name}}(ctx context.Context) (res
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "{{.Name}}", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "{{.Name}}", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.{{.Name}}(ctx)
 	return
@@ -270,7 +270,7 @@ func (m logging{{$svcname}}MiddlewareClient) {{.Name}}(ctx context.Context, in *
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "{{.Name}}", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "{{$svcname}}", "method", "{{.Name}}", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.{{.Name}}(ctx, in)
 	return

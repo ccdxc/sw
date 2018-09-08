@@ -15,6 +15,7 @@ import (
 	workload "github.com/pensando/sw/api/generated/workload"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -332,6 +333,10 @@ func (a *restObjWorkloadV1Endpoint) List(ctx context.Context, options *api.ListW
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListEndpoint(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -506,6 +511,10 @@ func (a *restObjWorkloadV1Workload) Delete(ctx context.Context, objMeta *api.Obj
 func (a *restObjWorkloadV1Workload) List(ctx context.Context, options *api.ListWatchOptions) ([]*workload.Workload, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
 	}
 	r, err := a.endpoints.AutoListWorkload(ctx, options)
 	if err == nil {

@@ -424,7 +424,7 @@ func (m loggingStagingV1MiddlewareClient) AutoAddBuffer(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoAddBuffer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoAddBuffer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddBuffer(ctx, in)
 	return
@@ -437,7 +437,7 @@ func (m loggingStagingV1MiddlewareClient) AutoDeleteBuffer(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoDeleteBuffer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoDeleteBuffer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteBuffer(ctx, in)
 	return
@@ -450,7 +450,7 @@ func (m loggingStagingV1MiddlewareClient) AutoGetBuffer(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoGetBuffer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoGetBuffer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetBuffer(ctx, in)
 	return
@@ -463,7 +463,7 @@ func (m loggingStagingV1MiddlewareClient) AutoListBuffer(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoListBuffer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoListBuffer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListBuffer(ctx, in)
 	return
@@ -476,7 +476,7 @@ func (m loggingStagingV1MiddlewareClient) AutoUpdateBuffer(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoUpdateBuffer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoUpdateBuffer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateBuffer(ctx, in)
 	return
@@ -489,7 +489,7 @@ func (m loggingStagingV1MiddlewareClient) Clear(ctx context.Context, in *ClearAc
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "StagingV1", "method", "Clear", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "Clear", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.Clear(ctx, in)
 	return
@@ -502,7 +502,7 @@ func (m loggingStagingV1MiddlewareClient) Commit(ctx context.Context, in *Commit
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "StagingV1", "method", "Commit", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "Commit", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.Commit(ctx, in)
 	return
@@ -516,7 +516,7 @@ func (m loggingStagingV1MiddlewareClient) AutoWatchSvcStagingV1(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoWatchSvcStagingV1", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoWatchSvcStagingV1", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSvcStagingV1(ctx, in)
 	return
@@ -530,7 +530,7 @@ func (m loggingStagingV1MiddlewareClient) AutoWatchBuffer(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoWatchBuffer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoWatchBuffer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchBuffer(ctx, in)
 	return

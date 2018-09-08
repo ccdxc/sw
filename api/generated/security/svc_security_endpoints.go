@@ -1228,7 +1228,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoAddApp(ctx context.Context, in *A
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddApp", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddApp", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddApp(ctx, in)
 	return
@@ -1241,7 +1241,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoAddCertificate(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddCertificate", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddCertificate", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddCertificate(ctx, in)
 	return
@@ -1254,7 +1254,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoAddSGPolicy(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddSGPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddSGPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddSGPolicy(ctx, in)
 	return
@@ -1267,7 +1267,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoAddSecurityGroup(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddSecurityGroup", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddSecurityGroup", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddSecurityGroup(ctx, in)
 	return
@@ -1280,7 +1280,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoAddTrafficEncryptionPolicy(ctx co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoAddTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddTrafficEncryptionPolicy(ctx, in)
 	return
@@ -1293,7 +1293,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoDeleteApp(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteApp", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteApp", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteApp(ctx, in)
 	return
@@ -1306,7 +1306,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoDeleteCertificate(ctx context.Con
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteCertificate", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteCertificate", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteCertificate(ctx, in)
 	return
@@ -1319,7 +1319,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoDeleteSGPolicy(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteSGPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteSGPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteSGPolicy(ctx, in)
 	return
@@ -1332,7 +1332,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoDeleteSecurityGroup(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteSecurityGroup", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteSecurityGroup", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteSecurityGroup(ctx, in)
 	return
@@ -1345,7 +1345,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoDeleteTrafficEncryptionPolicy(ctx
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoDeleteTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteTrafficEncryptionPolicy(ctx, in)
 	return
@@ -1358,7 +1358,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoGetApp(ctx context.Context, in *A
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetApp", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetApp", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetApp(ctx, in)
 	return
@@ -1371,7 +1371,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoGetCertificate(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetCertificate", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetCertificate", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetCertificate(ctx, in)
 	return
@@ -1384,7 +1384,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoGetSGPolicy(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetSGPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetSGPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetSGPolicy(ctx, in)
 	return
@@ -1397,7 +1397,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoGetSecurityGroup(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetSecurityGroup", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetSecurityGroup", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetSecurityGroup(ctx, in)
 	return
@@ -1410,7 +1410,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoGetTrafficEncryptionPolicy(ctx co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetTrafficEncryptionPolicy(ctx, in)
 	return
@@ -1423,7 +1423,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoListApp(ctx context.Context, in *
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListApp", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListApp", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListApp(ctx, in)
 	return
@@ -1436,7 +1436,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoListCertificate(ctx context.Conte
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListCertificate", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListCertificate", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListCertificate(ctx, in)
 	return
@@ -1449,7 +1449,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoListSGPolicy(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListSGPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListSGPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListSGPolicy(ctx, in)
 	return
@@ -1462,7 +1462,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoListSecurityGroup(ctx context.Con
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListSecurityGroup", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListSecurityGroup", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListSecurityGroup(ctx, in)
 	return
@@ -1475,7 +1475,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoListTrafficEncryptionPolicy(ctx c
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoListTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListTrafficEncryptionPolicy(ctx, in)
 	return
@@ -1488,7 +1488,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoUpdateApp(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateApp", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateApp", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateApp(ctx, in)
 	return
@@ -1501,7 +1501,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoUpdateCertificate(ctx context.Con
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateCertificate", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateCertificate", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateCertificate(ctx, in)
 	return
@@ -1514,7 +1514,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoUpdateSGPolicy(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateSGPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateSGPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateSGPolicy(ctx, in)
 	return
@@ -1527,7 +1527,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoUpdateSecurityGroup(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateSecurityGroup", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateSecurityGroup", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateSecurityGroup(ctx, in)
 	return
@@ -1540,7 +1540,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoUpdateTrafficEncryptionPolicy(ctx
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoUpdateTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTrafficEncryptionPolicy(ctx, in)
 	return
@@ -1554,7 +1554,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoWatchSvcSecurityV1(ctx context.Co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchSvcSecurityV1", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchSvcSecurityV1", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSvcSecurityV1(ctx, in)
 	return
@@ -1568,7 +1568,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoWatchSecurityGroup(ctx context.Co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchSecurityGroup", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchSecurityGroup", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSecurityGroup(ctx, in)
 	return
@@ -1581,7 +1581,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoWatchSGPolicy(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchSGPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchSGPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSGPolicy(ctx, in)
 	return
@@ -1594,7 +1594,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoWatchApp(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchApp", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchApp", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchApp(ctx, in)
 	return
@@ -1607,7 +1607,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoWatchCertificate(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchCertificate", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchCertificate", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchCertificate(ctx, in)
 	return
@@ -1620,7 +1620,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoWatchTrafficEncryptionPolicy(ctx 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoWatchTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchTrafficEncryptionPolicy(ctx, in)
 	return

@@ -88,6 +88,8 @@ extend google.protobuf.MethodOptions {
   string methodOper = 51270;
   // methodAutoGen is for internal use only
   bool methodAutoGen = 51271;
+  // methodTenantDefault marks that this method has a flavor with a default tenant
+  bool methodTenantDefault = 51272;
 };
 
 // Venice Option extensions applicable to messages

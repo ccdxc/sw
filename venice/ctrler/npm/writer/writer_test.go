@@ -257,8 +257,7 @@ func TestTenantWriter(t *testing.T) {
 	tn := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testPostTenant",
-			Name:   "testPostTenant",
+			Name: "testPostTenant",
 		},
 	}
 

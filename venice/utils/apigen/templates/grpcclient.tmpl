@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/globals"
 	api "github.com/pensando/sw/api"
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -212,6 +213,10 @@ func (a *restObj{{$srvname}}{{.}}) List(ctx context.Context, options *api.ListWa
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+	{{if (isObjTenanted $svc.File  .)}}
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}{{end}}
 	r, err := a.endpoints.AutoList{{.}}(ctx, options)
 	if err == nil {
 		return r.Items, nil

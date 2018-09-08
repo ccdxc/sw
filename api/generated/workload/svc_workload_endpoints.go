@@ -564,7 +564,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoAddEndpoint(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoAddEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoAddEndpoint", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddEndpoint(ctx, in)
 	return
@@ -577,7 +577,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoAddWorkload(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoAddWorkload", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoAddWorkload", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddWorkload(ctx, in)
 	return
@@ -590,7 +590,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoDeleteEndpoint(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoDeleteEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoDeleteEndpoint", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteEndpoint(ctx, in)
 	return
@@ -603,7 +603,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoDeleteWorkload(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoDeleteWorkload", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoDeleteWorkload", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteWorkload(ctx, in)
 	return
@@ -616,7 +616,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoGetEndpoint(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoGetEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoGetEndpoint", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetEndpoint(ctx, in)
 	return
@@ -629,7 +629,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoGetWorkload(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoGetWorkload", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoGetWorkload", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetWorkload(ctx, in)
 	return
@@ -642,7 +642,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoListEndpoint(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoListEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoListEndpoint", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListEndpoint(ctx, in)
 	return
@@ -655,7 +655,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoListWorkload(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoListWorkload", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoListWorkload", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListWorkload(ctx, in)
 	return
@@ -668,7 +668,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoUpdateEndpoint(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoUpdateEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoUpdateEndpoint", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateEndpoint(ctx, in)
 	return
@@ -681,7 +681,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoUpdateWorkload(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoUpdateWorkload", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoUpdateWorkload", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateWorkload(ctx, in)
 	return
@@ -695,7 +695,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoWatchSvcWorkloadV1(ctx context.Co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoWatchSvcWorkloadV1", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoWatchSvcWorkloadV1", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSvcWorkloadV1(ctx, in)
 	return
@@ -709,7 +709,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoWatchEndpoint(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoWatchEndpoint", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoWatchEndpoint", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchEndpoint(ctx, in)
 	return
@@ -722,7 +722,7 @@ func (m loggingWorkloadV1MiddlewareClient) AutoWatchWorkload(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoWatchWorkload", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoWatchWorkload", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchWorkload(ctx, in)
 	return

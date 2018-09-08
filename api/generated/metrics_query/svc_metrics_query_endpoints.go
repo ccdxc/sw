@@ -155,7 +155,7 @@ func (m loggingMetricsV1MiddlewareClient) Query(ctx context.Context, in *QuerySp
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MetricsV1", "method", "Query", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MetricsV1", "method", "Query", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.Query(ctx, in)
 	return

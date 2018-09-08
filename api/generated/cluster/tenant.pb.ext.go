@@ -7,6 +7,7 @@ Input file: tenant.proto
 package cluster
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -51,6 +52,7 @@ func (m *Tenant) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Tenant) Defaults(ver string) bool {
 	m.Kind = "Tenant"
+	m.Tenant, m.Namespace = "", ""
 	return false
 }
 
@@ -100,6 +102,16 @@ func (m *TenantStatus) Defaults(ver string) bool {
 
 func (m *Tenant) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Tenant"))
+	}
 	return ret
 }
 

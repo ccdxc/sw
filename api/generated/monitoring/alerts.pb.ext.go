@@ -78,6 +78,7 @@ func (m *Alert) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Alert) Defaults(ver string) bool {
 	m.Kind = "Alert"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
@@ -103,6 +104,7 @@ func (m *AlertDestination) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AlertDestination) Defaults(ver string) bool {
 	m.Kind = "AlertDestination"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -176,6 +178,7 @@ func (m *AlertPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AlertPolicy) Defaults(ver string) bool {
 	m.Kind = "AlertPolicy"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -458,6 +461,13 @@ func (m *SNMPTrapServer) Defaults(ver string) bool {
 
 func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 
 	dlmtr := "."
 	if path == "" {
@@ -483,6 +493,13 @@ func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 
 	dlmtr := "."
 	if path == "" {
@@ -517,6 +534,13 @@ func (m *AlertDestinationStatus) Validate(ver, path string, ignoreStatus bool) [
 
 func (m *AlertPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 
 	dlmtr := "."
 	if path == "" {

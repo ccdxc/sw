@@ -493,6 +493,7 @@ func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, re
 	// Correctness of svcIdx and methIdx depends on 'services' containing the services in the same order as the 'file.Service' array.
 	for svcIdx, svc := range services {
 		for methIdx, meth := range svc.Methods {
+			bindCount := 0
 			for _, b := range meth.Bindings {
 				// Iterate over all the swagger parameters
 				parameters := SwaggerParametersObject{}
@@ -573,9 +574,13 @@ func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, re
 				if meth.GetServerStreaming() {
 					desc += "(streaming responses)"
 				}
+				operID := fmt.Sprintf("%s", meth.GetName())
+				if bindCount != 0 {
+					operID = fmt.Sprintf("%s-%d", meth.GetName(), bindCount)
+				}
 				operationObject := &SwaggerOperationObject{
 					Tags:        []string{svc.GetName()},
-					OperationID: fmt.Sprintf("%s", meth.GetName()),
+					OperationID: operID,
 					Parameters:  parameters,
 					Responses: SwaggerResponsesObject{
 						"200": SwaggerResponseObject{
@@ -588,6 +593,7 @@ func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, re
 						},
 					},
 				}
+				bindCount++
 				methComments := protoComments(reg, svc.File, nil, "Service", int32(svcIdx), methProtoPath, int32(methIdx))
 				if err := updateSwaggerDataFromComments(operationObject, methComments); err != nil {
 					panic(err)

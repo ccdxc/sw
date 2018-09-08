@@ -59,6 +59,11 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	} {{if isAutoGenMethod .}}{{if isAutoList .}}
+	{{if isTenanted (getListTypeMsg .ResponseType)}}
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}{{else}}
+	t.Tenant, t.Namespace = "", ""{{end}}
 	oper, kind, tenant, namespace, group, name:= apiserver.ListOper, "{{getOutputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", ""
 	{{else}}
 	oper, kind, tenant, namespace, group, name := apiserver.{{$params.Oper}}, "{{getInputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
@@ -98,13 +103,15 @@ func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context,
 	}
 	return ret.({{$pkgname}}.{{$svcname}}_AutoWatchSvc{{$svcname}}Client), err
 }
-{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$svc := .}}{{range $cruds}}
 func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_AutoWatch{{.}}Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatch{{.}}")
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+	{{if isObjTenanted $svc.File . }}{{else}}
+	in.Tenant, in.Namespace = "", ""{{end}}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "{{.}}", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

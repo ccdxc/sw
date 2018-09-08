@@ -195,7 +195,7 @@ func (m loggingSearchV1MiddlewareClient) PolicyQuery(ctx context.Context, in *Po
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SearchV1", "method", "PolicyQuery", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SearchV1", "method", "PolicyQuery", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.PolicyQuery(ctx, in)
 	return
@@ -208,7 +208,7 @@ func (m loggingSearchV1MiddlewareClient) Query(ctx context.Context, in *SearchRe
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "SearchV1", "method", "Query", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "SearchV1", "method", "Query", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.Query(ctx, in)
 	return

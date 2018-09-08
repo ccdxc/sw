@@ -2112,7 +2112,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddAlert(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddAlert", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddAlert", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddAlert(ctx, in)
 	return
@@ -2125,7 +2125,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddAlertDestination(ctx context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddAlertDestination", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddAlertDestination", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddAlertDestination(ctx, in)
 	return
@@ -2138,7 +2138,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddAlertPolicy(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddAlertPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddAlertPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddAlertPolicy(ctx, in)
 	return
@@ -2151,7 +2151,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddEventPolicy(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddEventPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddEventPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddEventPolicy(ctx, in)
 	return
@@ -2164,7 +2164,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddFlowExportPolicy(ctx context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddFlowExportPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddFlowExportPolicy(ctx, in)
 	return
@@ -2177,7 +2177,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddFwlogPolicy(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddFwlogPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddFwlogPolicy(ctx, in)
 	return
@@ -2190,7 +2190,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddMirrorSession(ctx context.Co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddMirrorSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddMirrorSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddMirrorSession(ctx, in)
 	return
@@ -2203,7 +2203,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddStatsPolicy(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddStatsPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddStatsPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddStatsPolicy(ctx, in)
 	return
@@ -2216,7 +2216,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoAddTroubleshootingSession(ctx c
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoAddTroubleshootingSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddTroubleshootingSession(ctx, in)
 	return
@@ -2229,7 +2229,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteAlert(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteAlert", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteAlert", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteAlert(ctx, in)
 	return
@@ -2242,7 +2242,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteAlertDestination(ctx cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteAlertDestination", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteAlertDestination", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteAlertDestination(ctx, in)
 	return
@@ -2255,7 +2255,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteAlertPolicy(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteAlertPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteAlertPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteAlertPolicy(ctx, in)
 	return
@@ -2268,7 +2268,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteEventPolicy(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteEventPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteEventPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteEventPolicy(ctx, in)
 	return
@@ -2281,7 +2281,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteFlowExportPolicy(ctx cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteFlowExportPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteFlowExportPolicy(ctx, in)
 	return
@@ -2294,7 +2294,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteFwlogPolicy(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteFwlogPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteFwlogPolicy(ctx, in)
 	return
@@ -2307,7 +2307,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteMirrorSession(ctx context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteMirrorSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteMirrorSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteMirrorSession(ctx, in)
 	return
@@ -2320,7 +2320,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteStatsPolicy(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteStatsPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteStatsPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteStatsPolicy(ctx, in)
 	return
@@ -2333,7 +2333,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoDeleteTroubleshootingSession(ct
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoDeleteTroubleshootingSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteTroubleshootingSession(ctx, in)
 	return
@@ -2346,7 +2346,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetAlert(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetAlert", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetAlert", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetAlert(ctx, in)
 	return
@@ -2359,7 +2359,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetAlertDestination(ctx context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetAlertDestination", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetAlertDestination", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetAlertDestination(ctx, in)
 	return
@@ -2372,7 +2372,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetAlertPolicy(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetAlertPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetAlertPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetAlertPolicy(ctx, in)
 	return
@@ -2385,7 +2385,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetEventPolicy(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetEventPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetEventPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetEventPolicy(ctx, in)
 	return
@@ -2398,7 +2398,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetFlowExportPolicy(ctx context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetFlowExportPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetFlowExportPolicy(ctx, in)
 	return
@@ -2411,7 +2411,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetFwlogPolicy(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetFwlogPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetFwlogPolicy(ctx, in)
 	return
@@ -2424,7 +2424,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetMirrorSession(ctx context.Co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetMirrorSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetMirrorSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetMirrorSession(ctx, in)
 	return
@@ -2437,7 +2437,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetStatsPolicy(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetStatsPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetStatsPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetStatsPolicy(ctx, in)
 	return
@@ -2450,7 +2450,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetTroubleshootingSession(ctx c
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetTroubleshootingSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetTroubleshootingSession(ctx, in)
 	return
@@ -2463,7 +2463,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListAlert(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListAlert", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListAlert", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListAlert(ctx, in)
 	return
@@ -2476,7 +2476,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListAlertDestination(ctx contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListAlertDestination", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListAlertDestination", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListAlertDestination(ctx, in)
 	return
@@ -2489,7 +2489,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListAlertPolicy(ctx context.Con
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListAlertPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListAlertPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListAlertPolicy(ctx, in)
 	return
@@ -2502,7 +2502,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListEventPolicy(ctx context.Con
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListEventPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListEventPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListEventPolicy(ctx, in)
 	return
@@ -2515,7 +2515,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListFlowExportPolicy(ctx contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListFlowExportPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListFlowExportPolicy(ctx, in)
 	return
@@ -2528,7 +2528,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListFwlogPolicy(ctx context.Con
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListFwlogPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListFwlogPolicy(ctx, in)
 	return
@@ -2541,7 +2541,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListMirrorSession(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListMirrorSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListMirrorSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListMirrorSession(ctx, in)
 	return
@@ -2554,7 +2554,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListStatsPolicy(ctx context.Con
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListStatsPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListStatsPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListStatsPolicy(ctx, in)
 	return
@@ -2567,7 +2567,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoListTroubleshootingSession(ctx 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoListTroubleshootingSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListTroubleshootingSession(ctx, in)
 	return
@@ -2580,7 +2580,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateAlert(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateAlert", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateAlert", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateAlert(ctx, in)
 	return
@@ -2593,7 +2593,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateAlertDestination(ctx cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateAlertDestination", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateAlertDestination", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateAlertDestination(ctx, in)
 	return
@@ -2606,7 +2606,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateAlertPolicy(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateAlertPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateAlertPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateAlertPolicy(ctx, in)
 	return
@@ -2619,7 +2619,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateEventPolicy(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateEventPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateEventPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateEventPolicy(ctx, in)
 	return
@@ -2632,7 +2632,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateFlowExportPolicy(ctx cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateFlowExportPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateFlowExportPolicy(ctx, in)
 	return
@@ -2645,7 +2645,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateFwlogPolicy(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateFwlogPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateFwlogPolicy(ctx, in)
 	return
@@ -2658,7 +2658,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateMirrorSession(ctx context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateMirrorSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateMirrorSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateMirrorSession(ctx, in)
 	return
@@ -2671,7 +2671,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateStatsPolicy(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateStatsPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateStatsPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateStatsPolicy(ctx, in)
 	return
@@ -2684,7 +2684,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoUpdateTroubleshootingSession(ct
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoUpdateTroubleshootingSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTroubleshootingSession(ctx, in)
 	return
@@ -2698,7 +2698,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchSvcMonitoringV1(ctx contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchSvcMonitoringV1", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchSvcMonitoringV1", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSvcMonitoringV1(ctx, in)
 	return
@@ -2712,7 +2712,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchEventPolicy(ctx context.Co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchEventPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchEventPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchEventPolicy(ctx, in)
 	return
@@ -2725,7 +2725,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchStatsPolicy(ctx context.Co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchStatsPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchStatsPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchStatsPolicy(ctx, in)
 	return
@@ -2738,7 +2738,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchFwlogPolicy(ctx context.Co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchFwlogPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchFwlogPolicy(ctx, in)
 	return
@@ -2751,7 +2751,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchFlowExportPolicy(ctx conte
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchFlowExportPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchFlowExportPolicy(ctx, in)
 	return
@@ -2764,7 +2764,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchAlert(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchAlert", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchAlert", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchAlert(ctx, in)
 	return
@@ -2777,7 +2777,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchAlertPolicy(ctx context.Co
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchAlertPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchAlertPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchAlertPolicy(ctx, in)
 	return
@@ -2790,7 +2790,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchAlertDestination(ctx conte
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchAlertDestination", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchAlertDestination", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchAlertDestination(ctx, in)
 	return
@@ -2803,7 +2803,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchMirrorSession(ctx context.
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchMirrorSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchMirrorSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchMirrorSession(ctx, in)
 	return
@@ -2816,7 +2816,7 @@ func (m loggingMonitoringV1MiddlewareClient) AutoWatchTroubleshootingSession(ctx
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoWatchTroubleshootingSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchTroubleshootingSession(ctx, in)
 	return

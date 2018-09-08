@@ -1268,7 +1268,7 @@ func (m loggingClusterV1MiddlewareClient) AuthBootstrapComplete(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AuthBootstrapComplete", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AuthBootstrapComplete", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AuthBootstrapComplete(ctx, in)
 	return
@@ -1281,7 +1281,7 @@ func (m loggingClusterV1MiddlewareClient) AutoAddCluster(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddCluster", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddCluster", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddCluster(ctx, in)
 	return
@@ -1294,7 +1294,7 @@ func (m loggingClusterV1MiddlewareClient) AutoAddHost(ctx context.Context, in *H
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddHost", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddHost", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddHost(ctx, in)
 	return
@@ -1307,7 +1307,7 @@ func (m loggingClusterV1MiddlewareClient) AutoAddNode(ctx context.Context, in *N
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddNode", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddNode", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddNode(ctx, in)
 	return
@@ -1320,7 +1320,7 @@ func (m loggingClusterV1MiddlewareClient) AutoAddSmartNIC(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddSmartNIC", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddSmartNIC", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddSmartNIC(ctx, in)
 	return
@@ -1333,7 +1333,7 @@ func (m loggingClusterV1MiddlewareClient) AutoAddTenant(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddTenant", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddTenant(ctx, in)
 	return
@@ -1346,7 +1346,7 @@ func (m loggingClusterV1MiddlewareClient) AutoDeleteCluster(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteCluster", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteCluster", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteCluster(ctx, in)
 	return
@@ -1359,7 +1359,7 @@ func (m loggingClusterV1MiddlewareClient) AutoDeleteHost(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteHost", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteHost", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteHost(ctx, in)
 	return
@@ -1372,7 +1372,7 @@ func (m loggingClusterV1MiddlewareClient) AutoDeleteNode(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteNode", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteNode", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteNode(ctx, in)
 	return
@@ -1385,7 +1385,7 @@ func (m loggingClusterV1MiddlewareClient) AutoDeleteSmartNIC(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteSmartNIC", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteSmartNIC", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteSmartNIC(ctx, in)
 	return
@@ -1398,7 +1398,7 @@ func (m loggingClusterV1MiddlewareClient) AutoDeleteTenant(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteTenant", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteTenant(ctx, in)
 	return
@@ -1411,7 +1411,7 @@ func (m loggingClusterV1MiddlewareClient) AutoGetCluster(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetCluster", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetCluster", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetCluster(ctx, in)
 	return
@@ -1424,7 +1424,7 @@ func (m loggingClusterV1MiddlewareClient) AutoGetHost(ctx context.Context, in *H
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetHost", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetHost", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetHost(ctx, in)
 	return
@@ -1437,7 +1437,7 @@ func (m loggingClusterV1MiddlewareClient) AutoGetNode(ctx context.Context, in *N
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetNode", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetNode", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetNode(ctx, in)
 	return
@@ -1450,7 +1450,7 @@ func (m loggingClusterV1MiddlewareClient) AutoGetSmartNIC(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetSmartNIC", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetSmartNIC", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetSmartNIC(ctx, in)
 	return
@@ -1463,7 +1463,7 @@ func (m loggingClusterV1MiddlewareClient) AutoGetTenant(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetTenant", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetTenant(ctx, in)
 	return
@@ -1476,7 +1476,7 @@ func (m loggingClusterV1MiddlewareClient) AutoListCluster(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListCluster", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListCluster", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListCluster(ctx, in)
 	return
@@ -1489,7 +1489,7 @@ func (m loggingClusterV1MiddlewareClient) AutoListHost(ctx context.Context, in *
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListHost", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListHost", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListHost(ctx, in)
 	return
@@ -1502,7 +1502,7 @@ func (m loggingClusterV1MiddlewareClient) AutoListNode(ctx context.Context, in *
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListNode", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListNode", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListNode(ctx, in)
 	return
@@ -1515,7 +1515,7 @@ func (m loggingClusterV1MiddlewareClient) AutoListSmartNIC(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListSmartNIC", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListSmartNIC", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListSmartNIC(ctx, in)
 	return
@@ -1528,7 +1528,7 @@ func (m loggingClusterV1MiddlewareClient) AutoListTenant(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListTenant", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListTenant(ctx, in)
 	return
@@ -1541,7 +1541,7 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateCluster(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateCluster", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateCluster", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateCluster(ctx, in)
 	return
@@ -1554,7 +1554,7 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateHost(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateHost", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateHost", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateHost(ctx, in)
 	return
@@ -1567,7 +1567,7 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateNode(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateNode", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateNode", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateNode(ctx, in)
 	return
@@ -1580,7 +1580,7 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateSmartNIC(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateSmartNIC", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateSmartNIC", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateSmartNIC(ctx, in)
 	return
@@ -1593,7 +1593,7 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateTenant(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTenant(ctx, in)
 	return
@@ -1607,7 +1607,7 @@ func (m loggingClusterV1MiddlewareClient) AutoWatchSvcClusterV1(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchSvcClusterV1", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchSvcClusterV1", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSvcClusterV1(ctx, in)
 	return
@@ -1621,7 +1621,7 @@ func (m loggingClusterV1MiddlewareClient) AutoWatchCluster(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchCluster", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchCluster", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchCluster(ctx, in)
 	return
@@ -1634,7 +1634,7 @@ func (m loggingClusterV1MiddlewareClient) AutoWatchNode(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchNode", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchNode", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchNode(ctx, in)
 	return
@@ -1647,7 +1647,7 @@ func (m loggingClusterV1MiddlewareClient) AutoWatchHost(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchHost", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchHost", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchHost(ctx, in)
 	return
@@ -1660,7 +1660,7 @@ func (m loggingClusterV1MiddlewareClient) AutoWatchSmartNIC(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchSmartNIC", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchSmartNIC", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSmartNIC(ctx, in)
 	return
@@ -1673,7 +1673,7 @@ func (m loggingClusterV1MiddlewareClient) AutoWatchTenant(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchTenant", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchTenant", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchTenant(ctx, in)
 	return

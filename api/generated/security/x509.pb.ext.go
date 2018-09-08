@@ -57,6 +57,7 @@ func (m *Certificate) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Certificate) Defaults(ver string) bool {
 	m.Kind = "Certificate"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
@@ -123,6 +124,13 @@ func (m *CertificateStatus) Defaults(ver string) bool {
 
 func (m *Certificate) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 
 	dlmtr := "."
 	if path == "" {

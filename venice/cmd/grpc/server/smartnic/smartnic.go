@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/cluster"
 	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
@@ -367,7 +368,8 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 
 		_, err = s.UpdateSmartNIC(&nic)
 		if err != nil {
-			log.Errorf("Error updating smartNIC object: %+v err: %v", nic, err)
+			status := apierrors.FromError(err)
+			log.Errorf("Error updating smartNIC object: %+v err: %v status: %v", nic, err, status)
 			return &grpc.RegisterNICResponse{Phase: phase}, err
 		}
 

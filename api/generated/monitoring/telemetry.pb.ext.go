@@ -77,6 +77,7 @@ func (m *FlowExportPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *FlowExportPolicy) Defaults(ver string) bool {
 	m.Kind = "FlowExportPolicy"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -205,6 +206,7 @@ func (m *FwlogPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *FwlogPolicy) Defaults(ver string) bool {
 	m.Kind = "FwlogPolicy"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -285,6 +287,7 @@ func (m *StatsPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *StatsPolicy) Defaults(ver string) bool {
 	m.Kind = "StatsPolicy"
+	m.Tenant, m.Namespace = "default", "default"
 	return false
 }
 
@@ -334,6 +337,13 @@ func (m *StatsStatus) Defaults(ver string) bool {
 
 func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 
 	dlmtr := "."
 	if path == "" {
@@ -404,6 +414,13 @@ func (m *FwlogExport) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 
 	dlmtr := "."
 	if path == "" {
@@ -451,6 +468,13 @@ func (m *FwlogStatus) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 	return ret
 }
 

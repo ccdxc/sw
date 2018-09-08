@@ -1007,7 +1007,7 @@ func (m loggingAuthV1MiddlewareClient) AutoAddAuthenticationPolicy(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddAuthenticationPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddAuthenticationPolicy(ctx, in)
 	return
@@ -1020,7 +1020,7 @@ func (m loggingAuthV1MiddlewareClient) AutoAddRole(ctx context.Context, in *Role
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddRole", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddRole", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddRole(ctx, in)
 	return
@@ -1033,7 +1033,7 @@ func (m loggingAuthV1MiddlewareClient) AutoAddRoleBinding(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddRoleBinding", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddRoleBinding", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddRoleBinding(ctx, in)
 	return
@@ -1046,7 +1046,7 @@ func (m loggingAuthV1MiddlewareClient) AutoAddUser(ctx context.Context, in *User
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddUser", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoAddUser", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddUser(ctx, in)
 	return
@@ -1059,7 +1059,7 @@ func (m loggingAuthV1MiddlewareClient) AutoDeleteAuthenticationPolicy(ctx contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteAuthenticationPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteAuthenticationPolicy(ctx, in)
 	return
@@ -1072,7 +1072,7 @@ func (m loggingAuthV1MiddlewareClient) AutoDeleteRole(ctx context.Context, in *R
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteRole", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteRole", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteRole(ctx, in)
 	return
@@ -1085,7 +1085,7 @@ func (m loggingAuthV1MiddlewareClient) AutoDeleteRoleBinding(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteRoleBinding", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteRoleBinding", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteRoleBinding(ctx, in)
 	return
@@ -1098,7 +1098,7 @@ func (m loggingAuthV1MiddlewareClient) AutoDeleteUser(ctx context.Context, in *U
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteUser", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoDeleteUser", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteUser(ctx, in)
 	return
@@ -1111,7 +1111,7 @@ func (m loggingAuthV1MiddlewareClient) AutoGetAuthenticationPolicy(ctx context.C
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetAuthenticationPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetAuthenticationPolicy(ctx, in)
 	return
@@ -1124,7 +1124,7 @@ func (m loggingAuthV1MiddlewareClient) AutoGetRole(ctx context.Context, in *Role
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetRole", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetRole", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetRole(ctx, in)
 	return
@@ -1137,7 +1137,7 @@ func (m loggingAuthV1MiddlewareClient) AutoGetRoleBinding(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetRoleBinding", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetRoleBinding", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetRoleBinding(ctx, in)
 	return
@@ -1150,7 +1150,7 @@ func (m loggingAuthV1MiddlewareClient) AutoGetUser(ctx context.Context, in *User
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetUser", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetUser", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetUser(ctx, in)
 	return
@@ -1163,7 +1163,7 @@ func (m loggingAuthV1MiddlewareClient) AutoListAuthenticationPolicy(ctx context.
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListAuthenticationPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListAuthenticationPolicy(ctx, in)
 	return
@@ -1176,7 +1176,7 @@ func (m loggingAuthV1MiddlewareClient) AutoListRole(ctx context.Context, in *api
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListRole", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListRole", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListRole(ctx, in)
 	return
@@ -1189,7 +1189,7 @@ func (m loggingAuthV1MiddlewareClient) AutoListRoleBinding(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListRoleBinding", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListRoleBinding", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListRoleBinding(ctx, in)
 	return
@@ -1202,7 +1202,7 @@ func (m loggingAuthV1MiddlewareClient) AutoListUser(ctx context.Context, in *api
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListUser", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoListUser", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListUser(ctx, in)
 	return
@@ -1215,7 +1215,7 @@ func (m loggingAuthV1MiddlewareClient) AutoUpdateAuthenticationPolicy(ctx contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateAuthenticationPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateAuthenticationPolicy(ctx, in)
 	return
@@ -1228,7 +1228,7 @@ func (m loggingAuthV1MiddlewareClient) AutoUpdateRole(ctx context.Context, in *R
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateRole", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateRole", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateRole(ctx, in)
 	return
@@ -1241,7 +1241,7 @@ func (m loggingAuthV1MiddlewareClient) AutoUpdateRoleBinding(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateRoleBinding", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateRoleBinding", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateRoleBinding(ctx, in)
 	return
@@ -1254,7 +1254,7 @@ func (m loggingAuthV1MiddlewareClient) AutoUpdateUser(ctx context.Context, in *U
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateUser", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateUser", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateUser(ctx, in)
 	return
@@ -1268,7 +1268,7 @@ func (m loggingAuthV1MiddlewareClient) AutoWatchSvcAuthV1(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchSvcAuthV1", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchSvcAuthV1", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSvcAuthV1(ctx, in)
 	return
@@ -1282,7 +1282,7 @@ func (m loggingAuthV1MiddlewareClient) AutoWatchUser(ctx context.Context, in *ap
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchUser", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchUser", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchUser(ctx, in)
 	return
@@ -1295,7 +1295,7 @@ func (m loggingAuthV1MiddlewareClient) AutoWatchAuthenticationPolicy(ctx context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchAuthenticationPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchAuthenticationPolicy(ctx, in)
 	return
@@ -1308,7 +1308,7 @@ func (m loggingAuthV1MiddlewareClient) AutoWatchRole(ctx context.Context, in *ap
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchRole", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchRole", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchRole(ctx, in)
 	return
@@ -1321,7 +1321,7 @@ func (m loggingAuthV1MiddlewareClient) AutoWatchRoleBinding(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchRoleBinding", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoWatchRoleBinding", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchRoleBinding(ctx, in)
 	return

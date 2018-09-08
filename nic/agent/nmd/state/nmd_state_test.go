@@ -211,8 +211,7 @@ func TestSmartNICCreateUpdateDelete(t *testing.T) {
 	nic := cmd.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   nicKey1,
+			Name: nicKey1,
 		},
 	}
 

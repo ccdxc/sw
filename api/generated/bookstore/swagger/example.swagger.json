@@ -149,14 +149,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -376,21 +376,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -617,14 +617,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -897,21 +897,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1138,14 +1138,14 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1545,21 +1545,21 @@
           },
           {
             "name": "meta.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1915,21 +1915,21 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.",
+            "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.",
+            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2106,15 +2106,15 @@
       "properties": {
         "name": {
           "type": "string",
-          "description": "Name of the object, unique within a Namespace for scoped objects."
+          "title": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nminimum length is 2 and maximum length is 64 characters"
         },
         "tenant": {
           "type": "string",
-          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+          "title": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters"
         },
         "namespace": {
           "type": "string",
-          "description": "Namespace of the object, for scoped objects."
+          "title": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumner or ._-: characters\nmaximum length is 64 characters"
         },
         "generation-id": {
           "type": "string",

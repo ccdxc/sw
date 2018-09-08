@@ -295,7 +295,7 @@ func TestCrudOps(t *testing.T) {
 	{
 		order1 = bookstore.Order{
 			ObjectMeta: api.ObjectMeta{
-				Name: "test for pre-commit hook to generate new Order id - will be overwritten to order-<x> for POST",
+				Name: "tesForPre-commithookToGenerateNewOrdeId",
 			},
 			TypeMeta: api.TypeMeta{
 				Kind: "Order",
@@ -312,7 +312,7 @@ func TestCrudOps(t *testing.T) {
 		}
 		order2 = bookstore.Order{
 			ObjectMeta: api.ObjectMeta{
-				Name: "test for pre-commit hook to generate new Order id - will be overwritten to order-<x> for POST",
+				Name: "tesForPre-commithookToGenerateNewOrdeId",
 			},
 			TypeMeta: api.TypeMeta{
 				Kind: "Order",
@@ -597,6 +597,7 @@ func TestCrudOps(t *testing.T) {
 	// ===== Test Operations on Singleton Object ===== //
 	{ // Create via the gRPC
 		storeObj := bookstore.Store{}
+		storeObj.Name = "TestStore"
 		storeObj.Spec.Contact = "Test Store"
 		_, err := apicl.BookstoreV1().Store().Create(ctx, &storeObj)
 		if err != nil {
@@ -608,7 +609,8 @@ func TestCrudOps(t *testing.T) {
 
 	{ // Create Duplicate via the gRPC
 		storeObj := bookstore.Store{}
-		storeObj.Spec.Contact = "Test Store2"
+		storeObj.Name = "TestStore"
+		storeObj.Spec.Contact = "TestStore2"
 		_, err := apicl.BookstoreV1().Store().Create(ctx, &storeObj)
 		if err == nil {
 			t.Fatalf("gRPC create of duplicate singleton succeded")
@@ -616,7 +618,7 @@ func TestCrudOps(t *testing.T) {
 	}
 
 	{ // Get via the gRPC
-		objectMeta := api.ObjectMeta{Name: "Dummy Store"}
+		objectMeta := api.ObjectMeta{Name: "DummyStore"}
 		ret, err := apicl.BookstoreV1().Store().Get(ctx, &objectMeta)
 		if err != nil {
 			t.Fatalf("gRPC Get of singleton failed")
@@ -627,6 +629,7 @@ func TestCrudOps(t *testing.T) {
 	}
 	{ // Create via the gRPC
 		storeObj := bookstore.Store{}
+		storeObj.Name = "TestStore"
 		storeObj.Spec.Contact = "Test Store2"
 		_, err := apicl.BookstoreV1().Store().Update(ctx, &storeObj)
 		if err != nil {
@@ -668,6 +671,7 @@ func TestCrudOps(t *testing.T) {
 	// ===== Test Operations on Singleton object via REST ===== //
 	{ // Create via the gRPC
 		storeObj := bookstore.Store{}
+		storeObj.Name = "TestStore"
 		storeObj.Spec.Contact = "Test Store"
 		_, err := restcl.BookstoreV1().Store().Create(ctx, &storeObj)
 		if err != nil {
@@ -679,6 +683,7 @@ func TestCrudOps(t *testing.T) {
 
 	{ // Create Duplicate via the gRPC
 		storeObj := bookstore.Store{}
+		storeObj.Name = "TestStore"
 		storeObj.Spec.Contact = "Test Store2"
 		_, err := restcl.BookstoreV1().Store().Create(ctx, &storeObj)
 		if err == nil {
@@ -698,6 +703,7 @@ func TestCrudOps(t *testing.T) {
 	}
 	{ // Create via the gRPC
 		storeObj := bookstore.Store{}
+		storeObj.Name = "TestStore"
 		storeObj.Spec.Contact = "Test Store2"
 		_, err := restcl.BookstoreV1().Store().Update(ctx, &storeObj)
 		if err != nil {

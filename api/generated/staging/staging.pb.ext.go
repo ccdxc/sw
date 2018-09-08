@@ -40,22 +40,22 @@ func (m *Buffer) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *ClearAction) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "buffers/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "buffers/", m.Tenant, "/", m.Name)
 }
 
 func (m *ClearAction) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/buffers/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/buffers/", in.Name)
 }
 
 // MakeKey generates a KV store key for the object
 func (m *CommitAction) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "buffers/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "buffers/", m.Tenant, "/", m.Name)
 }
 
 func (m *CommitAction) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/buffers/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/buffers/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -77,6 +77,7 @@ func (m *Buffer) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Buffer) Defaults(ver string) bool {
 	m.Kind = "Buffer"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -149,6 +150,7 @@ func (m *ClearAction) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *ClearAction) Defaults(ver string) bool {
 	m.Kind = "ClearAction"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -221,6 +223,7 @@ func (m *CommitAction) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *CommitAction) Defaults(ver string) bool {
 	m.Kind = "CommitAction"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -341,6 +344,13 @@ func (m *ValidationError) Defaults(ver string) bool {
 
 func (m *Buffer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -380,6 +390,13 @@ func (m *BufferStatus) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *ClearAction) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -419,6 +436,13 @@ func (m *ClearResponse) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *CommitAction) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 	if !ignoreStatus {
 
 		dlmtr := "."

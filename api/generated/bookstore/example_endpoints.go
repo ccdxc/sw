@@ -1609,7 +1609,7 @@ func (m loggingBookstoreV1MiddlewareClient) AddOutage(ctx context.Context, in *O
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AddOutage", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AddOutage", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AddOutage(ctx, in)
 	return
@@ -1622,7 +1622,7 @@ func (m loggingBookstoreV1MiddlewareClient) Applydiscount(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "Applydiscount", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "Applydiscount", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.Applydiscount(ctx, in)
 	return
@@ -1635,7 +1635,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoAddBook(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddBook", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddBook", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddBook(ctx, in)
 	return
@@ -1648,7 +1648,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoAddCoupon(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddCoupon", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddCoupon", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddCoupon(ctx, in)
 	return
@@ -1661,7 +1661,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoAddCustomer(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddCustomer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddCustomer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddCustomer(ctx, in)
 	return
@@ -1674,7 +1674,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoAddOrder(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddOrder", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddOrder", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddOrder(ctx, in)
 	return
@@ -1687,7 +1687,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoAddPublisher(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddPublisher", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddPublisher", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddPublisher(ctx, in)
 	return
@@ -1700,7 +1700,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoAddStore(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddStore", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoAddStore", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddStore(ctx, in)
 	return
@@ -1713,7 +1713,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoDeleteBook(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteBook", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteBook", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteBook(ctx, in)
 	return
@@ -1726,7 +1726,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoDeleteCoupon(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteCoupon", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteCoupon", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteCoupon(ctx, in)
 	return
@@ -1739,7 +1739,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoDeleteCustomer(ctx context.Conte
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteCustomer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteCustomer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteCustomer(ctx, in)
 	return
@@ -1752,7 +1752,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoDeleteOrder(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteOrder", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteOrder", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteOrder(ctx, in)
 	return
@@ -1765,7 +1765,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoDeletePublisher(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeletePublisher", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeletePublisher", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeletePublisher(ctx, in)
 	return
@@ -1778,7 +1778,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoDeleteStore(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteStore", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoDeleteStore", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteStore(ctx, in)
 	return
@@ -1791,7 +1791,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoGetBook(ctx context.Context, in 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetBook", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetBook", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetBook(ctx, in)
 	return
@@ -1804,7 +1804,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoGetCoupon(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetCoupon", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetCoupon", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetCoupon(ctx, in)
 	return
@@ -1817,7 +1817,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoGetCustomer(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetCustomer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetCustomer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetCustomer(ctx, in)
 	return
@@ -1830,7 +1830,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoGetOrder(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetOrder", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetOrder", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetOrder(ctx, in)
 	return
@@ -1843,7 +1843,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoGetPublisher(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetPublisher", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetPublisher", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetPublisher(ctx, in)
 	return
@@ -1856,7 +1856,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoGetStore(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetStore", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetStore", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetStore(ctx, in)
 	return
@@ -1869,7 +1869,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoListBook(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListBook", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListBook", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListBook(ctx, in)
 	return
@@ -1882,7 +1882,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoListCoupon(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListCoupon", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListCoupon", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListCoupon(ctx, in)
 	return
@@ -1895,7 +1895,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoListCustomer(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListCustomer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListCustomer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListCustomer(ctx, in)
 	return
@@ -1908,7 +1908,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoListOrder(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListOrder", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListOrder", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListOrder(ctx, in)
 	return
@@ -1921,7 +1921,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoListPublisher(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListPublisher", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListPublisher", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListPublisher(ctx, in)
 	return
@@ -1934,7 +1934,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoListStore(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListStore", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoListStore", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListStore(ctx, in)
 	return
@@ -1947,7 +1947,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoUpdateBook(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateBook", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateBook", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateBook(ctx, in)
 	return
@@ -1960,7 +1960,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoUpdateCoupon(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateCoupon", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateCoupon", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateCoupon(ctx, in)
 	return
@@ -1973,7 +1973,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoUpdateCustomer(ctx context.Conte
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateCustomer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateCustomer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateCustomer(ctx, in)
 	return
@@ -1986,7 +1986,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoUpdateOrder(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateOrder", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateOrder", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateOrder(ctx, in)
 	return
@@ -1999,7 +1999,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoUpdatePublisher(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdatePublisher", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdatePublisher", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdatePublisher(ctx, in)
 	return
@@ -2012,7 +2012,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoUpdateStore(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateStore", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoUpdateStore", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateStore(ctx, in)
 	return
@@ -2025,7 +2025,7 @@ func (m loggingBookstoreV1MiddlewareClient) Cleardiscount(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "Cleardiscount", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "Cleardiscount", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.Cleardiscount(ctx, in)
 	return
@@ -2038,7 +2038,7 @@ func (m loggingBookstoreV1MiddlewareClient) Restock(ctx context.Context, in *Res
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "Restock", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "Restock", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.Restock(ctx, in)
 	return
@@ -2052,7 +2052,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoWatchSvcBookstoreV1(ctx context.
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchSvcBookstoreV1", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchSvcBookstoreV1", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSvcBookstoreV1(ctx, in)
 	return
@@ -2066,7 +2066,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoWatchOrder(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchOrder", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchOrder", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchOrder(ctx, in)
 	return
@@ -2079,7 +2079,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoWatchBook(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchBook", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchBook", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchBook(ctx, in)
 	return
@@ -2092,7 +2092,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoWatchPublisher(ctx context.Conte
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchPublisher", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchPublisher", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchPublisher(ctx, in)
 	return
@@ -2105,7 +2105,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoWatchStore(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchStore", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchStore", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchStore(ctx, in)
 	return
@@ -2118,7 +2118,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoWatchCoupon(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchCoupon", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchCoupon", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchCoupon(ctx, in)
 	return
@@ -2131,7 +2131,7 @@ func (m loggingBookstoreV1MiddlewareClient) AutoWatchCustomer(ctx context.Contex
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchCustomer", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoWatchCustomer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchCustomer(ctx, in)
 	return

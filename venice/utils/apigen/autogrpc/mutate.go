@@ -313,20 +313,25 @@ func fixupJSONTag(file *descriptor.FileDescriptorProto) {
 	}
 }
 
-func insertMethod(svc *descriptor.ServiceDescriptorProto, name, intype, outtype, oper string, watch bool, restopt *googapi.HttpRule) error {
+func insertMethod(svc *descriptor.ServiceDescriptorProto, name, intype, outtype, oper string, watch, defTenant bool, restopt *googapi.HttpRule) error {
 	operDesc, err := getExtensionDesc(&descriptor.MethodOptions{}, "venice.methodOper")
 	if err != nil {
-		glog.V(1).Infof("Get methodOper desc failed (%s)\n", err)
+		glog.V(1).Infof("Get methodOper desc failed (%s)", err)
+		return err
+	}
+	defTenantDesc, err := getExtensionDesc(&descriptor.MethodOptions{}, "venice.methodTenantDefault")
+	if err != nil {
+		glog.V(1).Infof("Get methodTenantDefault desc failed (%s)", err)
 		return err
 	}
 	autoDesc, err := getExtensionDesc(&descriptor.MethodOptions{}, "venice.methodAutoGen")
 	if err != nil {
-		glog.V(1).Infof("Get methodAutoGen desc failed (%s)\n", err)
+		glog.V(1).Infof("Get methodAutoGen desc failed (%s)", err)
 		return err
 	}
 	httpOpt, err := getExtensionDesc(&descriptor.MethodOptions{}, "google.api.http")
 	if err != nil {
-		glog.V(1).Infof("Get google.api.http desc failed (%s)\n", err)
+		glog.V(1).Infof("Get google.api.http desc failed (%s)", err)
 		return err
 	}
 	autogen := true
@@ -343,16 +348,20 @@ func insertMethod(svc *descriptor.ServiceDescriptorProto, name, intype, outtype,
 	}
 
 	if err = proto.SetExtension(m.GetOptions(), operDesc, &oper); err != nil {
-		glog.V(1).Infof("Failed to set Extension (%s)\n", err)
+		glog.V(1).Infof("Failed to set Extension (%s)", err)
+		return err
+	}
+	if err = proto.SetExtension(m.GetOptions(), defTenantDesc, &defTenant); err != nil {
+		glog.V(1).Infof("Failed to set Extension (%s)", err)
 		return err
 	}
 	if err = proto.SetExtension(m.GetOptions(), autoDesc, &autogen); err != nil {
-		glog.V(1).Infof("Failed to set Extension (%s)\n", err)
+		glog.V(1).Infof("Failed to set Extension (%s)", err)
 		return err
 	}
 	if restopt != nil {
 		if err = proto.SetExtension(m.GetOptions(), httpOpt, restopt); err != nil {
-			glog.V(1).Infof("Failed to set Rest Extension (%s)\n", err)
+			glog.V(1).Infof("Failed to set Rest Extension (%s)", err)
 		}
 	}
 	svc.Method = append(svc.Method, &m)
@@ -364,9 +373,15 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 
 	glog.V(1).Infof("adding Grpc CRUD endpoints for %s [ %+v ]", m, resteps)
 	// Add method
+	var defTenant bool
 	if v, ok := resteps["post"]; ok {
 		opt := googapi.HttpRule_Post{Post: v}
 		restopt = &googapi.HttpRule{Pattern: &opt, Body: "*"}
+		if v1, ok := resteps["post_defTenant"]; ok {
+			dopt := googapi.HttpRule_Post{Post: v1}
+			restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt, Body: "*"})
+			defTenant = true
+		}
 	} else {
 		restopt = nil
 	}
@@ -374,7 +389,8 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoAdd%s", m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
-		"create", false, restopt)
+		"create", false, defTenant, restopt)
+	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoAdd%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Create %s object", m),
 	}
@@ -382,6 +398,11 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 	if v, ok := resteps["put"]; ok {
 		opt := googapi.HttpRule_Put{Put: v}
 		restopt = &googapi.HttpRule{Pattern: &opt, Body: "*"}
+		if v1, ok := resteps["put_defTenant"]; ok {
+			dopt := googapi.HttpRule_Put{Put: v1}
+			restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt, Body: "*"})
+			defTenant = true
+		}
 	} else {
 		restopt = nil
 	}
@@ -389,7 +410,8 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoUpdate%s", m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
-		"update", false, restopt)
+		"update", false, defTenant, restopt)
+	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoUpdate%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Update %s object", m),
 	}
@@ -397,6 +419,11 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 	if v, ok := resteps["get"]; ok {
 		opt := googapi.HttpRule_Get{Get: v}
 		restopt = &googapi.HttpRule{Pattern: &opt}
+		if v1, ok := resteps["get_defTenant"]; ok {
+			dopt := googapi.HttpRule_Get{Get: v1}
+			restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt})
+			defTenant = true
+		}
 	} else {
 		restopt = nil
 	}
@@ -404,7 +431,8 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoGet%s", m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
-		"get", false, restopt)
+		"get", false, defTenant, restopt)
+	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoGet%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Get %s object", m),
 	}
@@ -412,6 +440,11 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 	if v, ok := resteps["delete"]; ok {
 		opt := googapi.HttpRule_Delete{Delete: v}
 		restopt = &googapi.HttpRule{Pattern: &opt}
+		if v1, ok := resteps["delete_defTenant"]; ok {
+			dopt := googapi.HttpRule_Delete{Delete: v1}
+			restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt})
+			defTenant = true
+		}
 	} else {
 		restopt = nil
 	}
@@ -419,7 +452,8 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoDelete%s", m),
 		fmt.Sprintf(".%s.%s", pkg, m),
 		fmt.Sprintf(".%s.%s", pkg, m),
-		"delete", false, restopt)
+		"delete", false, defTenant, restopt)
+	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoDelete%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Delete %s object", m),
 	}
@@ -427,6 +461,11 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 	if v, ok := resteps["list"]; ok {
 		opt := googapi.HttpRule_Get{Get: v}
 		restopt = &googapi.HttpRule{Pattern: &opt}
+		if v1, ok := resteps["list_defTenant"]; ok {
+			dopt := googapi.HttpRule_Get{Get: v1}
+			restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt})
+			defTenant = true
+		}
 	} else {
 		restopt = nil
 	}
@@ -434,7 +473,8 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoList%s", m),
 		".api.ListWatchOptions",
 		fmt.Sprintf(".%s.%sList", pkg, m),
-		"list", false, restopt)
+		"list", false, defTenant, restopt)
+	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoList%s", m)] = codeInfo{
 		comments: fmt.Sprintf("List %s objects", m),
 	}
@@ -443,6 +483,11 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 	if v, ok := resteps["watch"]; ok {
 		opt := googapi.HttpRule_Get{Get: v}
 		restopt = &googapi.HttpRule{Pattern: &opt}
+		if v1, ok := resteps["watch_defTenant"]; ok {
+			dopt := googapi.HttpRule_Get{Get: v1}
+			restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt})
+			defTenant = true
+		}
 	} else {
 		restopt = nil
 	}
@@ -450,7 +495,8 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 		fmt.Sprintf("AutoWatch%s", m),
 		".api.ListWatchOptions",
 		fmt.Sprintf(".%s.AutoMsg%sWatchHelper", pkg, m),
-		"watch", true, restopt)
+		"watch", true, defTenant, restopt)
+	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoWatch%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Watch %s objects", m),
 	}
@@ -720,7 +766,14 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 			restopt := &googapi.HttpRule{Pattern: &opt, Body: "*"}
 			reqType := "." + *f.Package + "." + r.Request
 			respType := "." + *f.Package + "." + r.Response
-			insertMethod(s, name, reqType, respType, "create", false, restopt)
+			defTenant := false
+			if strings.Contains(path, "tenant/{O.Tenant}") {
+				npath := strings.Replace(path, "tenant/{O.Tenant}/", "", 1)
+				dopt := googapi.HttpRule_Post{Post: npath}
+				restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt})
+				defTenant = true
+			}
+			insertMethod(s, name, reqType, respType, "create", false, defTenant, restopt)
 		}
 	}
 }
@@ -730,7 +783,7 @@ func addServiceWatcherMsg(f *descriptor.FileDescriptorProto, s *descriptor.Servi
 		fmt.Sprintf("AutoWatchSvc%s", *s.Name),
 		".api.ListWatchOptions",
 		".api.WatchEventList",
-		"watch", true, nil)
+		"watch", true, false, nil)
 }
 
 // AddAutoGrpcEndpoints adds gRPC endpoints and types to the generation request
@@ -830,18 +883,30 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 											glog.Fatalf("Could not evaluate URI for [%s](%s)", r.Object, err)
 										}
 										resteps[r.Object][meth] = path
+										if strings.Contains(path, "tenant/{O.Tenant}") {
+											npath := strings.Replace(path, "tenant/{O.Tenant}/", "", 1)
+											resteps[r.Object][meth+"_defTenant"] = npath
+										}
 									case "watch":
 										path, err := getMessageURIPrefix(m)
 										if err != nil {
 											glog.Fatalf("Could not evaluate URI for [%s](%s)", r.Object, err)
 										}
 										resteps[r.Object][meth] = "/watch" + path
+										if strings.Contains(path, "tenant/{O.Tenant}") {
+											npath := "/watch" + strings.Replace(path, "tenant/{O.Tenant}/", "", 1)
+											resteps[r.Object][meth+"_defTenant"] = npath
+										}
 									case "put", "get", "delete":
 										path, err := GetMessageURI(m)
 										if err != nil {
 											glog.Fatalf("Could not evaluate URI for [%s](%s)", r.Object, err)
 										}
 										resteps[r.Object][meth] = path
+										if strings.Contains(path, "tenant/{O.Tenant}") {
+											npath := strings.Replace(path, "tenant/{O.Tenant}/", "", 1)
+											resteps[r.Object][meth+"_defTenant"] = npath
+										}
 									}
 								}
 							}

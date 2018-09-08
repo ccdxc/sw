@@ -762,7 +762,6 @@ func (w *Watcher) CreateTenant(tenant, namespace string) error {
 	tn := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    tenant,
 			Namespace: namespace,
 			Name:      tenant,
 		},

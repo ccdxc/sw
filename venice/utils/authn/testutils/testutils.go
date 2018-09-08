@@ -205,8 +205,7 @@ func CreateTenant(apicl apiclient.Services, name string) (*cluster.Tenant, error
 	tenant := &cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: auth.Permission_Tenant.String()},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: name,
-			Name:   name,
+			Name: name,
 		},
 		Spec: cluster.TenantSpec{},
 	}

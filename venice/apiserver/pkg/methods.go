@@ -282,7 +282,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 	nonTxn := txn.IsEmpty()
 	kvOp := kvstore.OperUnknown
 	// Update the KV if desired.
-	l.InfoLog("msg", "kvstore operation", "key", key, "oper", oper, "txn", nonTxn)
+	l.InfoLog("msg", "kvstore operation", "key", key, "oper", oper, "txn", !nonTxn)
 
 	var (
 		resp interface{}

@@ -68,8 +68,7 @@ func TestWatcher(t *testing.T) {
 	tenant := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testTenant",
-			Name:   "testTenant",
+			Name: "testTenant",
 		},
 	}
 	_, err = apicl.ClusterV1().Tenant().Create(context.Background(), &tenant)

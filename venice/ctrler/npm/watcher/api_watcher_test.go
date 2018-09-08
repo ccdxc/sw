@@ -88,8 +88,7 @@ func TestApiWatcher(t *testing.T) {
 	tenant := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testTenant",
-			Name:   "testTenant",
+			Name: "testTenant",
 		},
 	}
 
@@ -284,8 +283,7 @@ func TestAPIServerRestarts(t *testing.T) {
 	tenant := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testTenant",
-			Name:   "testTenant",
+			Name: "testTenant",
 		},
 	}
 
@@ -403,7 +401,6 @@ func TestAPIServerRestarts(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testSmartNIC",
 			Namespace: "",
-			Tenant:    "testTenant",
 		},
 		Spec: cluster.SmartNICSpec{
 			Phase: "ADMITTED",
@@ -458,7 +455,7 @@ func TestAPIServerRestarts(t *testing.T) {
 
 	// verify snic got created
 	AssertEventually(t, func() (bool, interface{}) {
-		_, nerr := stateMgr.FindSmartNIC("testTenant", "testSmartNIC")
+		_, nerr := stateMgr.FindSmartNIC("", "testSmartNIC")
 		return (nerr == nil), nil
 	}, "SmartNIC not found in statemgr")
 
@@ -647,7 +644,6 @@ func TestWorkloadWatcher(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name:      "testSmartNIC",
 			Namespace: "",
-			Tenant:    "default",
 		},
 		Spec: cluster.SmartNICSpec{
 			Phase: "ADMITTED",
@@ -702,7 +698,7 @@ func TestWorkloadWatcher(t *testing.T) {
 
 	// verify snic got created
 	AssertEventually(t, func() (bool, interface{}) {
-		_, nerr := stateMgr.FindSmartNIC("default", "testSmartNIC")
+		_, nerr := stateMgr.FindSmartNIC("", "testSmartNIC")
 		return (nerr == nil), nil
 	}, "SmartNIC not found in statemgr")
 
@@ -755,7 +751,7 @@ func TestWorkloadWatcher(t *testing.T) {
 
 	// verify snic got deleted
 	AssertEventually(t, func() (bool, interface{}) {
-		_, nerr := stateMgr.FindSmartNIC("default", "testSmartNIC")
+		_, nerr := stateMgr.FindSmartNIC("", "testSmartNIC")
 		return (nerr != nil), nil
 	}, "SmartNIC still found in statemgr")
 }

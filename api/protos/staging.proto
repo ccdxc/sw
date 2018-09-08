@@ -30,7 +30,7 @@ message ValidationError {
 //  in the Spec. If there are no items are specified then all items are deleted from the staging.
 //  buffer.
 message ClearAction {
-    option (venice.objectPrefix) = {Collection: "buffers"};
+    option (venice.objectPrefix) = {Collection: "buffers", Path: "/{O.Tenant}"};
     api.TypeMeta T              = 1  [(gogoproto.embed) = true,
                                       (gogoproto.nullable) = false,
                                       (gogoproto.jsontag) = ",inline"];
@@ -65,7 +65,7 @@ message ClearResponse {
 // CommitAction commits the changes in the staging buffer. All staged entries
 //  are verified and if verification is successful they are commited.
 message CommitAction {
-    option (venice.objectPrefix) = {Collection: "buffers"};
+    option (venice.objectPrefix) = {Collection: "buffers", Path: "/{O.Tenant}"};
     api.TypeMeta T              = 1  [(gogoproto.embed) = true,
                                       (gogoproto.nullable) = false,
                                       (gogoproto.jsontag) = ",inline"];

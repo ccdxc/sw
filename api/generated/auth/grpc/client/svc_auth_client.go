@@ -15,6 +15,7 @@ import (
 	auth "github.com/pensando/sw/api/generated/auth"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -482,6 +483,10 @@ func (a *restObjAuthV1User) List(ctx context.Context, options *api.ListWatchOpti
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListUser(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -657,6 +662,7 @@ func (a *restObjAuthV1AuthenticationPolicy) List(ctx context.Context, options *a
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListAuthenticationPolicy(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -832,6 +838,10 @@ func (a *restObjAuthV1Role) List(ctx context.Context, options *api.ListWatchOpti
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListRole(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1006,6 +1016,10 @@ func (a *restObjAuthV1RoleBinding) Delete(ctx context.Context, objMeta *api.Obje
 func (a *restObjAuthV1RoleBinding) List(ctx context.Context, options *api.ListWatchOptions) ([]*auth.RoleBinding, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
 	}
 	r, err := a.endpoints.AutoListRoleBinding(ctx, options)
 	if err == nil {

@@ -152,7 +152,7 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "staging/v1/buffers/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "staging/v1/tenant/", in.Tenant, "/buffers/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsStagingV1.fnCommit = srv.AddMethod("Commit",
@@ -161,7 +161,7 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "staging/v1/buffers/", in.Name), nil
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "staging/v1/tenant/", in.Tenant, "/buffers/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsStagingV1.fnAutoWatchBuffer = pkgMessages["staging.Buffer"].WatchFromKv

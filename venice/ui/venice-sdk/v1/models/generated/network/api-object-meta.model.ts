@@ -23,12 +23,8 @@ export interface IApiObjectMeta {
 
 
 export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
-    /** Name of the object, unique within a Namespace for scoped objects. */
     'name': string = null;
-    /** Tenant is global namespace isolation for various objects. This can be automatically
-    filled in many cases based on the tenant a user, who created the object, belongs go. */
     'tenant': string = null;
-    /** Namespace of the object, for scoped objects. */
     'namespace': string = null;
     /** GenerationID is the generation Id for the object. This is incremented anytime there
      is an update to the user intent, including Spec update and any update to ObjectMeta.
@@ -55,15 +51,12 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     'self-link': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
-            description:  'Name of the object, unique within a Namespace for scoped objects.',
             type: 'string'
         },
         'tenant': {
-            description:  'Tenant is global namespace isolation for various objects. This can be automatically filled in many cases based on the tenant a user, who created the object, belongs go.',
             type: 'string'
         },
         'namespace': {
-            description:  'Namespace of the object, for scoped objects.',
             type: 'string'
         },
         'generation-id': {

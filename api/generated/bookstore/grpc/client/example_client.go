@@ -710,6 +710,7 @@ func (a *restObjBookstoreV1Order) List(ctx context.Context, options *api.ListWat
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListOrder(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -907,6 +908,7 @@ func (a *restObjBookstoreV1Book) List(ctx context.Context, options *api.ListWatc
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListBook(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1089,6 +1091,7 @@ func (a *restObjBookstoreV1Publisher) List(ctx context.Context, options *api.Lis
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListPublisher(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1273,6 +1276,7 @@ func (a *restObjBookstoreV1Store) List(ctx context.Context, options *api.ListWat
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListStore(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1455,6 +1459,7 @@ func (a *restObjBookstoreV1Coupon) List(ctx context.Context, options *api.ListWa
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListCoupon(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1630,6 +1635,7 @@ func (a *restObjBookstoreV1Customer) List(ctx context.Context, options *api.List
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListCustomer(ctx, options)
 	if err == nil {
 		return r.Items, nil

@@ -27,7 +27,7 @@ const (
 var testMirrorSessions = []monitoring.MirrorSession{
 	{
 		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 1",
+			Name:   "Test-Mirror-Session-1",
 			Tenant: "default",
 		},
 		TypeMeta: api.TypeMeta{
@@ -74,7 +74,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 	},
 	{
 		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 2",
+			Name:   "Test-Mirror-Session-2",
 			Tenant: "default",
 		},
 		TypeMeta: api.TypeMeta{

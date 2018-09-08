@@ -62,7 +62,7 @@ func TestNetworkWatcher(t *testing.T) {
 	}
 
 	// create a tenant
-	err = watcher.CreateTenant("testTenant", "testTenant")
+	err = watcher.CreateTenant("testTenant", "")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -118,7 +118,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	}
 
 	// create a tenant
-	err = watcher.CreateTenant("testTenant", "testTenant")
+	err = watcher.CreateTenant("testTenant", "")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -190,7 +190,7 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	}
 
 	// create a tenant
-	err = watcher.CreateTenant("testTenant", "testTenant")
+	err = watcher.CreateTenant("testTenant", "")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -245,7 +245,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 		return
 	}
 	// create a tenant
-	err = watcher.CreateTenant("testTenant", "testTenant")
+	err = watcher.CreateTenant("testTenant", "")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -319,7 +319,7 @@ func TestTenantWatcher(t *testing.T) {
 	}
 
 	// create a tenant
-	err = watcher.CreateTenant("testTenant", "testTenant")
+	err = watcher.CreateTenant("testTenant", "")
 	AssertOk(t, err, "Error creating tenant")
 
 	// verify tenant got created
@@ -371,7 +371,7 @@ func TestRestartWatchers(t *testing.T) {
 
 	// Ensure object creates go through.
 	// create a tenant
-	err = w.CreateTenant("testTenant", "testTenant")
+	err = w.CreateTenant("testTenant", "")
 	AssertOk(t, err, "Error creating tenant")
 	// verify tenant got created
 	AssertEventually(t, func() (bool, interface{}) {

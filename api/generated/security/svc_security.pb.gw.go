@@ -109,6 +109,35 @@ func request_SecurityV1_AutoAddCertificate_0(ctx context.Context, marshaler runt
 
 }
 
+func request_SecurityV1_AutoAddCertificate_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Certificate{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	msg, err := client.AutoAddCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 func request_SecurityV1_AutoAddSGPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &SGPolicy{}
 	var smetadata runtime.ServerMetadata
@@ -153,6 +182,35 @@ func request_SecurityV1_AutoAddSGPolicy_0(ctx context.Context, marshaler runtime
 	}
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoAddSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_SecurityV1_AutoAddSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &SGPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	msg, err := client.AutoAddSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -209,6 +267,35 @@ func request_SecurityV1_AutoAddSecurityGroup_0(ctx context.Context, marshaler ru
 
 }
 
+func request_SecurityV1_AutoAddSecurityGroup_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &SecurityGroup{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	msg, err := client.AutoAddSecurityGroup(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 func request_SecurityV1_AutoAddTrafficEncryptionPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &TrafficEncryptionPolicy{}
 	var smetadata runtime.ServerMetadata
@@ -253,6 +340,35 @@ func request_SecurityV1_AutoAddTrafficEncryptionPolicy_0(ctx context.Context, ma
 	}
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoAddTrafficEncryptionPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_SecurityV1_AutoAddTrafficEncryptionPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &TrafficEncryptionPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	msg, err := client.AutoAddTrafficEncryptionPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -387,6 +503,64 @@ func request_SecurityV1_AutoDeleteCertificate_0(ctx context.Context, marshaler r
 }
 
 var (
+	filter_SecurityV1_AutoDeleteCertificate_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoDeleteCertificate_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Certificate{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteCertificate_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_SecurityV1_AutoDeleteSGPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
@@ -447,6 +621,64 @@ func request_SecurityV1_AutoDeleteSGPolicy_0(ctx context.Context, marshaler runt
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteSGPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoDeleteSGPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoDeleteSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &SGPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteSGPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -525,6 +757,64 @@ func request_SecurityV1_AutoDeleteSecurityGroup_0(ctx context.Context, marshaler
 }
 
 var (
+	filter_SecurityV1_AutoDeleteSecurityGroup_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoDeleteSecurityGroup_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &SecurityGroup{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteSecurityGroup_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteSecurityGroup(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_SecurityV1_AutoDeleteTrafficEncryptionPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
@@ -585,6 +875,64 @@ func request_SecurityV1_AutoDeleteTrafficEncryptionPolicy_0(ctx context.Context,
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteTrafficEncryptionPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteTrafficEncryptionPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoDeleteTrafficEncryptionPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoDeleteTrafficEncryptionPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &TrafficEncryptionPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoDeleteTrafficEncryptionPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -721,6 +1069,64 @@ func request_SecurityV1_AutoGetCertificate_0(ctx context.Context, marshaler runt
 }
 
 var (
+	filter_SecurityV1_AutoGetCertificate_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoGetCertificate_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Certificate{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetCertificate_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_SecurityV1_AutoGetSGPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
@@ -781,6 +1187,64 @@ func request_SecurityV1_AutoGetSGPolicy_0(ctx context.Context, marshaler runtime
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetSGPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoGetSGPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoGetSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &SGPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetSGPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -859,6 +1323,64 @@ func request_SecurityV1_AutoGetSecurityGroup_0(ctx context.Context, marshaler ru
 }
 
 var (
+	filter_SecurityV1_AutoGetSecurityGroup_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoGetSecurityGroup_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &SecurityGroup{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetSecurityGroup_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetSecurityGroup(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_SecurityV1_AutoGetTrafficEncryptionPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
@@ -919,6 +1441,64 @@ func request_SecurityV1_AutoGetTrafficEncryptionPolicy_0(ctx context.Context, ma
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetTrafficEncryptionPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetTrafficEncryptionPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoGetTrafficEncryptionPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_SecurityV1_AutoGetTrafficEncryptionPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &TrafficEncryptionPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoGetTrafficEncryptionPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1023,6 +1603,43 @@ func request_SecurityV1_AutoListCertificate_0(ctx context.Context, marshaler run
 }
 
 var (
+	filter_SecurityV1_AutoListCertificate_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoListCertificate_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListCertificate_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_SecurityV1_AutoListSGPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -1081,6 +1698,43 @@ func request_SecurityV1_AutoListSGPolicy_0(ctx context.Context, marshaler runtim
 }
 
 var (
+	filter_SecurityV1_AutoListSGPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoListSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListSGPolicy_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_SecurityV1_AutoListSecurityGroup_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -1130,6 +1784,43 @@ func request_SecurityV1_AutoListSecurityGroup_0(ctx context.Context, marshaler r
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListSecurityGroup_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListSecurityGroup(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_SecurityV1_AutoListSecurityGroup_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoListSecurityGroup_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoListSecurityGroup_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1249,6 +1940,56 @@ func request_SecurityV1_AutoUpdateCertificate_0(ctx context.Context, marshaler r
 
 }
 
+func request_SecurityV1_AutoUpdateCertificate_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Certificate{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateCertificate(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 func request_SecurityV1_AutoUpdateSGPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &SGPolicy{}
 	var smetadata runtime.ServerMetadata
@@ -1291,6 +2032,56 @@ func request_SecurityV1_AutoUpdateSGPolicy_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateSGPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_SecurityV1_AutoUpdateSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &SGPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
@@ -1371,6 +2162,56 @@ func request_SecurityV1_AutoUpdateSecurityGroup_0(ctx context.Context, marshaler
 
 }
 
+func request_SecurityV1_AutoUpdateSecurityGroup_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &SecurityGroup{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateSecurityGroup(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 func request_SecurityV1_AutoUpdateTrafficEncryptionPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &TrafficEncryptionPolicy{}
 	var smetadata runtime.ServerMetadata
@@ -1413,6 +2254,56 @@ func request_SecurityV1_AutoUpdateTrafficEncryptionPolicy_0(ctx context.Context,
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateTrafficEncryptionPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_SecurityV1_AutoUpdateTrafficEncryptionPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &TrafficEncryptionPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
@@ -1544,6 +2435,51 @@ func request_SecurityV1_AutoWatchCertificate_0(ctx context.Context, marshaler ru
 }
 
 var (
+	filter_SecurityV1_AutoWatchCertificate_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoWatchCertificate_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchCertificateClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchCertificate_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchCertificate(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
 	filter_SecurityV1_AutoWatchSGPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -1593,6 +2529,51 @@ func request_SecurityV1_AutoWatchSGPolicy_0(ctx context.Context, marshaler runti
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchSGPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchSGPolicy(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_SecurityV1_AutoWatchSGPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoWatchSGPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchSGPolicyClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchSGPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1676,6 +2657,51 @@ func request_SecurityV1_AutoWatchSecurityGroup_0(ctx context.Context, marshaler 
 }
 
 var (
+	filter_SecurityV1_AutoWatchSecurityGroup_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoWatchSecurityGroup_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchSecurityGroupClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchSecurityGroup_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchSecurityGroup(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
 	filter_SecurityV1_AutoWatchTrafficEncryptionPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -1725,6 +2751,51 @@ func request_SecurityV1_AutoWatchTrafficEncryptionPolicy_0(ctx context.Context, 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchTrafficEncryptionPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchTrafficEncryptionPolicy(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_SecurityV1_AutoWatchTrafficEncryptionPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_SecurityV1_AutoWatchTrafficEncryptionPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client SecurityV1Client, req *http.Request, pathParams map[string]string) (SecurityV1_AutoWatchTrafficEncryptionPolicyClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_SecurityV1_AutoWatchTrafficEncryptionPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1833,6 +2904,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("POST", pattern_SecurityV1_AutoAddCertificate_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoAddCertificate_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoAddCertificate_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_SecurityV1_AutoAddSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1858,6 +2957,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoAddSGPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_SecurityV1_AutoAddSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoAddSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoAddSGPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1889,6 +3016,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("POST", pattern_SecurityV1_AutoAddSecurityGroup_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoAddSecurityGroup_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoAddSecurityGroup_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_SecurityV1_AutoAddTrafficEncryptionPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1914,6 +3069,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoAddTrafficEncryptionPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_SecurityV1_AutoAddTrafficEncryptionPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoAddTrafficEncryptionPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoAddTrafficEncryptionPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1973,6 +3156,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteCertificate_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoDeleteCertificate_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoDeleteCertificate_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1998,6 +3209,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoDeleteSGPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoDeleteSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoDeleteSGPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2029,6 +3268,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteSecurityGroup_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoDeleteSecurityGroup_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoDeleteSecurityGroup_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteTrafficEncryptionPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2054,6 +3321,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoDeleteTrafficEncryptionPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_SecurityV1_AutoDeleteTrafficEncryptionPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoDeleteTrafficEncryptionPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoDeleteTrafficEncryptionPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2113,6 +3408,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_SecurityV1_AutoGetCertificate_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoGetCertificate_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoGetCertificate_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_SecurityV1_AutoGetSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2138,6 +3461,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoGetSGPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SecurityV1_AutoGetSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoGetSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoGetSGPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2169,6 +3520,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_SecurityV1_AutoGetSecurityGroup_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoGetSecurityGroup_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoGetSecurityGroup_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_SecurityV1_AutoGetTrafficEncryptionPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2194,6 +3573,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoGetTrafficEncryptionPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SecurityV1_AutoGetTrafficEncryptionPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoGetTrafficEncryptionPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoGetTrafficEncryptionPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2253,6 +3660,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_SecurityV1_AutoListCertificate_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoListCertificate_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoListCertificate_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_SecurityV1_AutoListSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2281,6 +3716,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_SecurityV1_AutoListSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoListSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoListSGPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_SecurityV1_AutoListSecurityGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2306,6 +3769,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoListSecurityGroup_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SecurityV1_AutoListSecurityGroup_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoListSecurityGroup_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoListSecurityGroup_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2365,6 +3856,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateCertificate_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoUpdateCertificate_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoUpdateCertificate_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2390,6 +3909,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoUpdateSGPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoUpdateSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoUpdateSGPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2421,6 +3968,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateSecurityGroup_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoUpdateSecurityGroup_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoUpdateSecurityGroup_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateTrafficEncryptionPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2446,6 +4021,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoUpdateTrafficEncryptionPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_SecurityV1_AutoUpdateTrafficEncryptionPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoUpdateTrafficEncryptionPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoUpdateTrafficEncryptionPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2505,6 +4108,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_SecurityV1_AutoWatchCertificate_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoWatchCertificate_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoWatchCertificate_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_SecurityV1_AutoWatchSGPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2530,6 +4161,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_SecurityV1_AutoWatchSGPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SecurityV1_AutoWatchSGPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoWatchSGPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoWatchSGPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2561,6 +4220,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_SecurityV1_AutoWatchSecurityGroup_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoWatchSecurityGroup_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoWatchSecurityGroup_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_SecurityV1_AutoWatchTrafficEncryptionPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2589,6 +4276,34 @@ func RegisterSecurityV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_SecurityV1_AutoWatchTrafficEncryptionPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_SecurityV1_AutoWatchTrafficEncryptionPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SecurityV1_AutoWatchTrafficEncryptionPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -2597,59 +4312,105 @@ var (
 
 	pattern_SecurityV1_AutoAddCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "certificates"}, ""))
 
+	pattern_SecurityV1_AutoAddCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"certificates"}, ""))
+
 	pattern_SecurityV1_AutoAddSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "sgpolicies"}, ""))
+
+	pattern_SecurityV1_AutoAddSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"sgpolicies"}, ""))
 
 	pattern_SecurityV1_AutoAddSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "security-groups"}, ""))
 
+	pattern_SecurityV1_AutoAddSecurityGroup_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"security-groups"}, ""))
+
 	pattern_SecurityV1_AutoAddTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "trafficEncryptionPolicy"}, ""))
+
+	pattern_SecurityV1_AutoAddTrafficEncryptionPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"trafficEncryptionPolicy"}, ""))
 
 	pattern_SecurityV1_AutoDeleteApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoDeleteCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "certificates", "O.Name"}, ""))
 
+	pattern_SecurityV1_AutoDeleteCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"certificates", "O.Name"}, ""))
+
 	pattern_SecurityV1_AutoDeleteSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoDeleteSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"sgpolicies", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoDeleteSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "security-groups", "O.Name"}, ""))
 
+	pattern_SecurityV1_AutoDeleteSecurityGroup_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"security-groups", "O.Name"}, ""))
+
 	pattern_SecurityV1_AutoDeleteTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "trafficEncryptionPolicy", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoDeleteTrafficEncryptionPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"trafficEncryptionPolicy", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoGetApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoGetCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "certificates", "O.Name"}, ""))
 
+	pattern_SecurityV1_AutoGetCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"certificates", "O.Name"}, ""))
+
 	pattern_SecurityV1_AutoGetSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoGetSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"sgpolicies", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoGetSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "security-groups", "O.Name"}, ""))
 
+	pattern_SecurityV1_AutoGetSecurityGroup_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"security-groups", "O.Name"}, ""))
+
 	pattern_SecurityV1_AutoGetTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "trafficEncryptionPolicy", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoGetTrafficEncryptionPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"trafficEncryptionPolicy", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoListApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"apps"}, ""))
 
 	pattern_SecurityV1_AutoListCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "certificates"}, ""))
 
+	pattern_SecurityV1_AutoListCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"certificates"}, ""))
+
 	pattern_SecurityV1_AutoListSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "sgpolicies"}, ""))
 
+	pattern_SecurityV1_AutoListSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"sgpolicies"}, ""))
+
 	pattern_SecurityV1_AutoListSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "security-groups"}, ""))
+
+	pattern_SecurityV1_AutoListSecurityGroup_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"security-groups"}, ""))
 
 	pattern_SecurityV1_AutoUpdateApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"apps", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoUpdateCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "certificates", "O.Name"}, ""))
 
+	pattern_SecurityV1_AutoUpdateCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"certificates", "O.Name"}, ""))
+
 	pattern_SecurityV1_AutoUpdateSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "sgpolicies", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoUpdateSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"sgpolicies", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoUpdateSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "security-groups", "O.Name"}, ""))
 
+	pattern_SecurityV1_AutoUpdateSecurityGroup_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"security-groups", "O.Name"}, ""))
+
 	pattern_SecurityV1_AutoUpdateTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "trafficEncryptionPolicy", "O.Name"}, ""))
+
+	pattern_SecurityV1_AutoUpdateTrafficEncryptionPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"trafficEncryptionPolicy", "O.Name"}, ""))
 
 	pattern_SecurityV1_AutoWatchApp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "apps"}, ""))
 
 	pattern_SecurityV1_AutoWatchCertificate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "certificates"}, ""))
 
+	pattern_SecurityV1_AutoWatchCertificate_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "certificates"}, ""))
+
 	pattern_SecurityV1_AutoWatchSGPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "sgpolicies"}, ""))
+
+	pattern_SecurityV1_AutoWatchSGPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "sgpolicies"}, ""))
 
 	pattern_SecurityV1_AutoWatchSecurityGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "security-groups"}, ""))
 
+	pattern_SecurityV1_AutoWatchSecurityGroup_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "security-groups"}, ""))
+
 	pattern_SecurityV1_AutoWatchTrafficEncryptionPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "trafficEncryptionPolicy"}, ""))
+
+	pattern_SecurityV1_AutoWatchTrafficEncryptionPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "trafficEncryptionPolicy"}, ""))
 )
 
 var (
@@ -2657,57 +4418,103 @@ var (
 
 	forward_SecurityV1_AutoAddCertificate_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoAddCertificate_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoAddSGPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoAddSGPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoAddSecurityGroup_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoAddSecurityGroup_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoAddTrafficEncryptionPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoAddTrafficEncryptionPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoDeleteApp_0 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoDeleteCertificate_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoDeleteCertificate_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoDeleteSGPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoDeleteSGPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoDeleteSecurityGroup_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoDeleteSecurityGroup_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoDeleteTrafficEncryptionPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoDeleteTrafficEncryptionPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoGetApp_0 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoGetCertificate_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoGetCertificate_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoGetSGPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoGetSGPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoGetSecurityGroup_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoGetSecurityGroup_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoGetTrafficEncryptionPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoGetTrafficEncryptionPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoListApp_0 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoListCertificate_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoListCertificate_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoListSGPolicy_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoListSGPolicy_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoListSecurityGroup_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoListSecurityGroup_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoUpdateApp_0 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoUpdateCertificate_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoUpdateCertificate_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoUpdateSGPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoUpdateSGPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoUpdateSecurityGroup_0 = runtime.ForwardResponseMessage
 
+	forward_SecurityV1_AutoUpdateSecurityGroup_1 = runtime.ForwardResponseMessage
+
 	forward_SecurityV1_AutoUpdateTrafficEncryptionPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_SecurityV1_AutoUpdateTrafficEncryptionPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_SecurityV1_AutoWatchApp_0 = runtime.ForwardResponseStream
 
 	forward_SecurityV1_AutoWatchCertificate_0 = runtime.ForwardResponseStream
 
+	forward_SecurityV1_AutoWatchCertificate_1 = runtime.ForwardResponseStream
+
 	forward_SecurityV1_AutoWatchSGPolicy_0 = runtime.ForwardResponseStream
+
+	forward_SecurityV1_AutoWatchSGPolicy_1 = runtime.ForwardResponseStream
 
 	forward_SecurityV1_AutoWatchSecurityGroup_0 = runtime.ForwardResponseStream
 
+	forward_SecurityV1_AutoWatchSecurityGroup_1 = runtime.ForwardResponseStream
+
 	forward_SecurityV1_AutoWatchTrafficEncryptionPolicy_0 = runtime.ForwardResponseStream
+
+	forward_SecurityV1_AutoWatchTrafficEncryptionPolicy_1 = runtime.ForwardResponseStream
 )

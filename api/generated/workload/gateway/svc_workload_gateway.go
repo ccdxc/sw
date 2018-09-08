@@ -194,6 +194,10 @@ func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.Li
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "EndpointList", t.Tenant, t.Namespace, "workload", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -216,6 +220,10 @@ func (a adapterWorkloadV1) AutoListWorkload(oldctx oldcontext.Context, t *api.Li
 	prof, err := a.gwSvc.GetServiceProfile("AutoListWorkload")
 	if err != nil {
 		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
 	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "WorkloadList", t.Tenant, t.Namespace, "workload", ""
 
@@ -305,6 +313,7 @@ func (a adapterWorkloadV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Endpoint", in.Tenant, in.Namespace, "workload"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -325,6 +334,7 @@ func (a adapterWorkloadV1) AutoWatchWorkload(oldctx oldcontext.Context, in *api.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Workload", in.Tenant, in.Namespace, "workload"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

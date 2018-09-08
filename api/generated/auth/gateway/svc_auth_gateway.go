@@ -332,6 +332,8 @@ func (a adapterAuthV1) AutoListAuthenticationPolicy(oldctx oldcontext.Context, t
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
+	t.Tenant, t.Namespace = "", ""
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AuthenticationPolicyList", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -354,6 +356,10 @@ func (a adapterAuthV1) AutoListRole(oldctx oldcontext.Context, t *api.ListWatchO
 	prof, err := a.gwSvc.GetServiceProfile("AutoListRole")
 	if err != nil {
 		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
 	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "RoleList", t.Tenant, t.Namespace, "auth", ""
 
@@ -378,6 +384,10 @@ func (a adapterAuthV1) AutoListRoleBinding(oldctx oldcontext.Context, t *api.Lis
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "RoleBindingList", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -400,6 +410,10 @@ func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchO
 	prof, err := a.gwSvc.GetServiceProfile("AutoListUser")
 	if err != nil {
 		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
 	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "UserList", t.Tenant, t.Namespace, "auth", ""
 
@@ -535,6 +549,7 @@ func (a adapterAuthV1) AutoWatchUser(oldctx oldcontext.Context, in *api.ListWatc
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "User", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -555,6 +570,8 @@ func (a adapterAuthV1) AutoWatchAuthenticationPolicy(oldctx oldcontext.Context, 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
+	in.Tenant, in.Namespace = "", ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "AuthenticationPolicy", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -575,6 +592,7 @@ func (a adapterAuthV1) AutoWatchRole(oldctx oldcontext.Context, in *api.ListWatc
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Role", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -595,6 +613,7 @@ func (a adapterAuthV1) AutoWatchRoleBinding(oldctx oldcontext.Context, in *api.L
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "RoleBinding", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

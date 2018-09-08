@@ -80,6 +80,35 @@ func request_NetworkV1_AutoAddLbPolicy_0(ctx context.Context, marshaler runtime.
 
 }
 
+func request_NetworkV1_AutoAddLbPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &LbPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	msg, err := client.AutoAddLbPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 func request_NetworkV1_AutoAddNetwork_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Network{}
 	var smetadata runtime.ServerMetadata
@@ -130,6 +159,35 @@ func request_NetworkV1_AutoAddNetwork_0(ctx context.Context, marshaler runtime.M
 
 }
 
+func request_NetworkV1_AutoAddNetwork_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Network{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	msg, err := client.AutoAddNetwork(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 func request_NetworkV1_AutoAddService_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Service{}
 	var smetadata runtime.ServerMetadata
@@ -174,6 +232,35 @@ func request_NetworkV1_AutoAddService_0(ctx context.Context, marshaler runtime.M
 	}
 
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoAddService(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_NetworkV1_AutoAddService_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Service{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
 
 	msg, err := client.AutoAddService(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
@@ -241,6 +328,64 @@ func request_NetworkV1_AutoDeleteLbPolicy_0(ctx context.Context, marshaler runti
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteLbPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteLbPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_NetworkV1_AutoDeleteLbPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_NetworkV1_AutoDeleteLbPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &LbPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteLbPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -319,6 +464,64 @@ func request_NetworkV1_AutoDeleteNetwork_0(ctx context.Context, marshaler runtim
 }
 
 var (
+	filter_NetworkV1_AutoDeleteNetwork_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_NetworkV1_AutoDeleteNetwork_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Network{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteNetwork_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteNetwork(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_NetworkV1_AutoDeleteService_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
@@ -379,6 +582,64 @@ func request_NetworkV1_AutoDeleteService_0(ctx context.Context, marshaler runtim
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteService_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteService(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_NetworkV1_AutoDeleteService_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_NetworkV1_AutoDeleteService_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Service{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoDeleteService_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -457,6 +718,64 @@ func request_NetworkV1_AutoGetLbPolicy_0(ctx context.Context, marshaler runtime.
 }
 
 var (
+	filter_NetworkV1_AutoGetLbPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_NetworkV1_AutoGetLbPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &LbPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoGetLbPolicy_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetLbPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_NetworkV1_AutoGetNetwork_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
 )
 
@@ -517,6 +836,64 @@ func request_NetworkV1_AutoGetNetwork_0(ctx context.Context, marshaler runtime.M
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoGetNetwork_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetNetwork(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_NetworkV1_AutoGetNetwork_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_NetworkV1_AutoGetNetwork_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Network{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoGetNetwork_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -595,6 +972,64 @@ func request_NetworkV1_AutoGetService_0(ctx context.Context, marshaler runtime.M
 }
 
 var (
+	filter_NetworkV1_AutoGetService_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_NetworkV1_AutoGetService_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Service{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoGetService_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetService(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_NetworkV1_AutoListLbPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -644,6 +1079,43 @@ func request_NetworkV1_AutoListLbPolicy_0(ctx context.Context, marshaler runtime
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoListLbPolicy_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListLbPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_NetworkV1_AutoListLbPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_NetworkV1_AutoListLbPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoListLbPolicy_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -711,6 +1183,43 @@ func request_NetworkV1_AutoListNetwork_0(ctx context.Context, marshaler runtime.
 }
 
 var (
+	filter_NetworkV1_AutoListNetwork_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_NetworkV1_AutoListNetwork_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoListNetwork_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListNetwork(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_NetworkV1_AutoListService_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -768,6 +1277,43 @@ func request_NetworkV1_AutoListService_0(ctx context.Context, marshaler runtime.
 
 }
 
+var (
+	filter_NetworkV1_AutoListService_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_NetworkV1_AutoListService_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoListService_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListService(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 func request_NetworkV1_AutoUpdateLbPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &LbPolicy{}
 	var smetadata runtime.ServerMetadata
@@ -810,6 +1356,56 @@ func request_NetworkV1_AutoUpdateLbPolicy_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateLbPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_NetworkV1_AutoUpdateLbPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &LbPolicy{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
@@ -890,6 +1486,56 @@ func request_NetworkV1_AutoUpdateNetwork_0(ctx context.Context, marshaler runtim
 
 }
 
+func request_NetworkV1_AutoUpdateNetwork_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Network{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateNetwork(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 func request_NetworkV1_AutoUpdateService_0(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Service{}
 	var smetadata runtime.ServerMetadata
@@ -932,6 +1578,56 @@ func request_NetworkV1_AutoUpdateService_0(ctx context.Context, marshaler runtim
 	if err != nil {
 		return nil, smetadata, err
 	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateService(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_NetworkV1_AutoUpdateService_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &Service{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
 
 	val, ok = pathParams["O.Name"]
 	if !ok {
@@ -1018,6 +1714,51 @@ func request_NetworkV1_AutoWatchLbPolicy_0(ctx context.Context, marshaler runtim
 }
 
 var (
+	filter_NetworkV1_AutoWatchLbPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_NetworkV1_AutoWatchLbPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (NetworkV1_AutoWatchLbPolicyClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoWatchLbPolicy_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchLbPolicy(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
 	filter_NetworkV1_AutoWatchNetwork_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -1067,6 +1808,51 @@ func request_NetworkV1_AutoWatchNetwork_0(ctx context.Context, marshaler runtime
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoWatchNetwork_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchNetwork(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_NetworkV1_AutoWatchNetwork_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_NetworkV1_AutoWatchNetwork_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (NetworkV1_AutoWatchNetworkClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoWatchNetwork_1); err != nil {
 		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1149,6 +1935,51 @@ func request_NetworkV1_AutoWatchService_0(ctx context.Context, marshaler runtime
 
 }
 
+var (
+	filter_NetworkV1_AutoWatchService_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_NetworkV1_AutoWatchService_1(ctx context.Context, marshaler runtime.Marshaler, client NetworkV1Client, req *http.Request, pathParams map[string]string) (NetworkV1_AutoWatchServiceClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_NetworkV1_AutoWatchService_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchService(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
 // RegisterNetworkV1HandlerFromEndpoint is same as RegisterNetworkV1Handler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
 func RegisterNetworkV1HandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
@@ -1213,6 +2044,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("POST", pattern_NetworkV1_AutoAddLbPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoAddLbPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoAddLbPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_NetworkV1_AutoAddNetwork_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1238,6 +2097,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_NetworkV1_AutoAddNetwork_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_NetworkV1_AutoAddNetwork_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoAddNetwork_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoAddNetwork_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1269,6 +2156,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("POST", pattern_NetworkV1_AutoAddService_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoAddService_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoAddService_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("DELETE", pattern_NetworkV1_AutoDeleteLbPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1294,6 +2209,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_NetworkV1_AutoDeleteLbPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_NetworkV1_AutoDeleteLbPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoDeleteLbPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoDeleteLbPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1325,6 +2268,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("DELETE", pattern_NetworkV1_AutoDeleteNetwork_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoDeleteNetwork_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoDeleteNetwork_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("DELETE", pattern_NetworkV1_AutoDeleteService_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1350,6 +2321,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_NetworkV1_AutoDeleteService_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_NetworkV1_AutoDeleteService_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoDeleteService_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoDeleteService_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1381,6 +2380,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("GET", pattern_NetworkV1_AutoGetLbPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoGetLbPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoGetLbPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_NetworkV1_AutoGetNetwork_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1406,6 +2433,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_NetworkV1_AutoGetNetwork_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_NetworkV1_AutoGetNetwork_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoGetNetwork_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoGetNetwork_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1437,6 +2492,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("GET", pattern_NetworkV1_AutoGetService_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoGetService_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoGetService_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_NetworkV1_AutoListLbPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1462,6 +2545,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_NetworkV1_AutoListLbPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_NetworkV1_AutoListLbPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoListLbPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoListLbPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1493,6 +2604,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("GET", pattern_NetworkV1_AutoListNetwork_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoListNetwork_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoListNetwork_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_NetworkV1_AutoListService_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1518,6 +2657,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_NetworkV1_AutoListService_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_NetworkV1_AutoListService_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoListService_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoListService_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1549,6 +2716,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("PUT", pattern_NetworkV1_AutoUpdateLbPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoUpdateLbPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoUpdateLbPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_NetworkV1_AutoUpdateNetwork_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1574,6 +2769,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_NetworkV1_AutoUpdateNetwork_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_NetworkV1_AutoUpdateNetwork_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoUpdateNetwork_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoUpdateNetwork_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1605,6 +2828,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("PUT", pattern_NetworkV1_AutoUpdateService_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoUpdateService_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoUpdateService_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_NetworkV1_AutoWatchLbPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1630,6 +2881,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_NetworkV1_AutoWatchLbPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_NetworkV1_AutoWatchLbPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoWatchLbPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoWatchLbPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1661,6 +2940,34 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("GET", pattern_NetworkV1_AutoWatchNetwork_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoWatchNetwork_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoWatchNetwork_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_NetworkV1_AutoWatchService_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1689,81 +2996,181 @@ func RegisterNetworkV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("GET", pattern_NetworkV1_AutoWatchService_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_NetworkV1_AutoWatchService_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_NetworkV1_AutoWatchService_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
 var (
 	pattern_NetworkV1_AutoAddLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "lb-policy"}, ""))
 
+	pattern_NetworkV1_AutoAddLbPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"lb-policy"}, ""))
+
 	pattern_NetworkV1_AutoAddNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "networks"}, ""))
+
+	pattern_NetworkV1_AutoAddNetwork_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"networks"}, ""))
 
 	pattern_NetworkV1_AutoAddService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "services"}, ""))
 
+	pattern_NetworkV1_AutoAddService_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"services"}, ""))
+
 	pattern_NetworkV1_AutoDeleteLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "lb-policy", "O.Name"}, ""))
+
+	pattern_NetworkV1_AutoDeleteLbPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"lb-policy", "O.Name"}, ""))
 
 	pattern_NetworkV1_AutoDeleteNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "networks", "O.Name"}, ""))
 
+	pattern_NetworkV1_AutoDeleteNetwork_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"networks", "O.Name"}, ""))
+
 	pattern_NetworkV1_AutoDeleteService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "services", "O.Name"}, ""))
+
+	pattern_NetworkV1_AutoDeleteService_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"services", "O.Name"}, ""))
 
 	pattern_NetworkV1_AutoGetLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "lb-policy", "O.Name"}, ""))
 
+	pattern_NetworkV1_AutoGetLbPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"lb-policy", "O.Name"}, ""))
+
 	pattern_NetworkV1_AutoGetNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "networks", "O.Name"}, ""))
+
+	pattern_NetworkV1_AutoGetNetwork_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"networks", "O.Name"}, ""))
 
 	pattern_NetworkV1_AutoGetService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "services", "O.Name"}, ""))
 
+	pattern_NetworkV1_AutoGetService_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"services", "O.Name"}, ""))
+
 	pattern_NetworkV1_AutoListLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "lb-policy"}, ""))
+
+	pattern_NetworkV1_AutoListLbPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"lb-policy"}, ""))
 
 	pattern_NetworkV1_AutoListNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "networks"}, ""))
 
+	pattern_NetworkV1_AutoListNetwork_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"networks"}, ""))
+
 	pattern_NetworkV1_AutoListService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "services"}, ""))
+
+	pattern_NetworkV1_AutoListService_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"services"}, ""))
 
 	pattern_NetworkV1_AutoUpdateLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "lb-policy", "O.Name"}, ""))
 
+	pattern_NetworkV1_AutoUpdateLbPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"lb-policy", "O.Name"}, ""))
+
 	pattern_NetworkV1_AutoUpdateNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "networks", "O.Name"}, ""))
+
+	pattern_NetworkV1_AutoUpdateNetwork_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"networks", "O.Name"}, ""))
 
 	pattern_NetworkV1_AutoUpdateService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "services", "O.Name"}, ""))
 
+	pattern_NetworkV1_AutoUpdateService_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"services", "O.Name"}, ""))
+
 	pattern_NetworkV1_AutoWatchLbPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "lb-policy"}, ""))
+
+	pattern_NetworkV1_AutoWatchLbPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "lb-policy"}, ""))
 
 	pattern_NetworkV1_AutoWatchNetwork_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "networks"}, ""))
 
+	pattern_NetworkV1_AutoWatchNetwork_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "networks"}, ""))
+
 	pattern_NetworkV1_AutoWatchService_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "services"}, ""))
+
+	pattern_NetworkV1_AutoWatchService_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "services"}, ""))
 )
 
 var (
 	forward_NetworkV1_AutoAddLbPolicy_0 = runtime.ForwardResponseMessage
 
+	forward_NetworkV1_AutoAddLbPolicy_1 = runtime.ForwardResponseMessage
+
 	forward_NetworkV1_AutoAddNetwork_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoAddNetwork_1 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoAddService_0 = runtime.ForwardResponseMessage
 
+	forward_NetworkV1_AutoAddService_1 = runtime.ForwardResponseMessage
+
 	forward_NetworkV1_AutoDeleteLbPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoDeleteLbPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoDeleteNetwork_0 = runtime.ForwardResponseMessage
 
+	forward_NetworkV1_AutoDeleteNetwork_1 = runtime.ForwardResponseMessage
+
 	forward_NetworkV1_AutoDeleteService_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoDeleteService_1 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoGetLbPolicy_0 = runtime.ForwardResponseMessage
 
+	forward_NetworkV1_AutoGetLbPolicy_1 = runtime.ForwardResponseMessage
+
 	forward_NetworkV1_AutoGetNetwork_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoGetNetwork_1 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoGetService_0 = runtime.ForwardResponseMessage
 
+	forward_NetworkV1_AutoGetService_1 = runtime.ForwardResponseMessage
+
 	forward_NetworkV1_AutoListLbPolicy_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoListLbPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoListNetwork_0 = runtime.ForwardResponseMessage
 
+	forward_NetworkV1_AutoListNetwork_1 = runtime.ForwardResponseMessage
+
 	forward_NetworkV1_AutoListService_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoListService_1 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoUpdateLbPolicy_0 = runtime.ForwardResponseMessage
 
+	forward_NetworkV1_AutoUpdateLbPolicy_1 = runtime.ForwardResponseMessage
+
 	forward_NetworkV1_AutoUpdateNetwork_0 = runtime.ForwardResponseMessage
+
+	forward_NetworkV1_AutoUpdateNetwork_1 = runtime.ForwardResponseMessage
 
 	forward_NetworkV1_AutoUpdateService_0 = runtime.ForwardResponseMessage
 
+	forward_NetworkV1_AutoUpdateService_1 = runtime.ForwardResponseMessage
+
 	forward_NetworkV1_AutoWatchLbPolicy_0 = runtime.ForwardResponseStream
+
+	forward_NetworkV1_AutoWatchLbPolicy_1 = runtime.ForwardResponseStream
 
 	forward_NetworkV1_AutoWatchNetwork_0 = runtime.ForwardResponseStream
 
+	forward_NetworkV1_AutoWatchNetwork_1 = runtime.ForwardResponseStream
+
 	forward_NetworkV1_AutoWatchService_0 = runtime.ForwardResponseStream
+
+	forward_NetworkV1_AutoWatchService_1 = runtime.ForwardResponseStream
 )

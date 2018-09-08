@@ -7,6 +7,7 @@ Input file: app.proto
 package security
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -72,6 +73,7 @@ func (m *App) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *App) Defaults(ver string) bool {
 	m.Kind = "App"
+	m.Tenant, m.Namespace = "", ""
 	return false
 }
 
@@ -273,6 +275,16 @@ func (m *ALG) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for App"))
+	}
 	return ret
 }
 

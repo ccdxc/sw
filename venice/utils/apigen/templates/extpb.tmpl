@@ -9,6 +9,8 @@ package {{.GoPkg.Name}}{{$validators := getValidatorManifest .}}{{$defaults := g
 import (
 	"context"
 	fmt "fmt"
+	"errors"
+
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -76,7 +78,9 @@ func (m *{{getStr 0}}) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *{{getStr 0}}) Defaults(ver string) bool { {{if isSpecStatusMessage .}}
-	m.Kind = "{{.Name}}" {{end}}{{with index $defaults.Map (getStr 0)}}{{if eq (len .Fields) 0}}
+	m.Kind = "{{.Name}}" {{if isTenanted .}}
+	m.Tenant, m.Namespace = "default", "default" {{else}}
+	m.Tenant, m.Namespace = "", "" {{end}}{{end}}{{with index $defaults.Map (getStr 0)}}{{if eq (len .Fields) 0}}
 	return false {{else}}
 	var ret bool {{range $fldk, $defval := .Fields}}{{if $defval.Nested}}{{if $defval.Repeated}}
 	for k := range m.{{$fldk}} { {{if $defval.Pointer}}
@@ -112,7 +116,17 @@ func (m *{{getStr 0}}) Defaults(ver string) bool { {{if isSpecStatusMessage .}}
 // Validators
 {{range .Messages}}{{/*<0-1>*/}}{{if isMapEntry .}}{{/*<0>*/}}{{else}}{{/*<0>*/}}{{$x := saveStr (derefStr .Name) 0}}{{if isNestedMessage .}}{{/*<x>*/}}{{$x := saveStr (getNestedMsgName .) 0}}{{end}}{{/*<x>*/}}{{$msg := .}}{{$msgname := (getStr 0)}}
 func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error {{with (index $validators.Map $msgname)}}{{/*<1>*/}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{/*<2>*/}}{{if eq 0 (len $fldv.Validators)}}{{/*<3>*/}}{{if $fldv.Repeated}}{{/*<4>*/}}
+	var ret []error {{if isSpecStatusMessage $msg}}
+	{
+	dlmtr := "."	
+	if path == "" {
+		dlmtr = ""
+	}
+	ret = m.ObjectMeta.Validate(ver, path + dlmtr + "ObjectMeta", ignoreStatus)
+	}{{if isTenanted $msg}}{{else}}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for {{$msgname}}"))
+	}{{end}}{{end}}{{with (index $validators.Map $msgname)}}{{/*<1>*/}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{/*<2>*/}}{{if eq 0 (len $fldv.Validators)}}{{/*<3>*/}}{{if $fldv.Repeated}}{{/*<4>*/}}
 	for k, v := range m.{{$fldk}} {
 		dlmtr := "."
 		if path == "" {

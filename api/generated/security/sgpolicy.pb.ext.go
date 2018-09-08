@@ -57,6 +57,7 @@ func (m *SGPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *SGPolicy) Defaults(ver string) bool {
 	m.Kind = "SGPolicy"
+	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -163,6 +164,13 @@ func (m *SGRule) Defaults(ver string) bool {
 
 func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 
 	dlmtr := "."
 	if path == "" {

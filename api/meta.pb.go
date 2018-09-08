@@ -134,11 +134,17 @@ func (m *ListWatchOptions) GetMaxResults() int32 {
 // ObjectMeta contains metadata that all objects stored in kvstore must have.
 type ObjectMeta struct {
 	// Name of the object, unique within a Namespace for scoped objects.
+	// Should start and end in an alphanumeric character and can contain alphanumner or ._-: characters
+	// minimum length is 2 and maximum length is 64 characters
 	Name string `protobuf:"bytes,1,opt,name=Name,json=name,proto3" json:"name"`
 	// Tenant is global namespace isolation for various objects. This can be automatically
 	// filled in many cases based on the tenant a user, who created the object, belongs go.
+	// Should start and end in an alphanumeric character and can contain alphanumner or ._-: characters
+	// maximum length is 64 characters
 	Tenant string `protobuf:"bytes,2,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
 	// Namespace of the object, for scoped objects.
+	// Should start and end in an alphanumeric character and can contain alphanumner or ._-: characters
+	// maximum length is 64 characters
 	Namespace string `protobuf:"bytes,3,opt,name=Namespace,json=namespace,omitempty,proto3" json:"namespace,omitempty"`
 	// GenerationID is the generation Id for the object. This is incremented anytime there
 	//  is an update to the user intent, including Spec update and any update to ObjectMeta.

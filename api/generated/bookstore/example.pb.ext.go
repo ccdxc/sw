@@ -546,6 +546,7 @@ func (m *Book) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Book) Defaults(ver string) bool {
 	m.Kind = "Book"
+	m.Tenant, m.Namespace = "", ""
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -746,6 +747,7 @@ func (m *Customer) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Customer) Defaults(ver string) bool {
 	m.Kind = "Customer"
+	m.Tenant, m.Namespace = "", ""
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -862,6 +864,7 @@ func (m *Order) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Order) Defaults(ver string) bool {
 	m.Kind = "Order"
+	m.Tenant, m.Namespace = "", ""
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
@@ -1024,6 +1027,7 @@ func (m *Publisher) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Publisher) Defaults(ver string) bool {
 	m.Kind = "Publisher"
+	m.Tenant, m.Namespace = "", ""
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	return ret
@@ -1161,6 +1165,7 @@ func (m *Store) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Store) Defaults(ver string) bool {
 	m.Kind = "Store"
+	m.Tenant, m.Namespace = "", ""
 	return false
 }
 
@@ -1376,6 +1381,16 @@ func (m *AutoMsgStoreWatchHelper_WatchEvent) Validate(ver, path string, ignoreSt
 
 func (m *Book) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Book"))
+	}
 
 	dlmtr := "."
 	if path == "" {
@@ -1471,6 +1486,16 @@ func (m *CouponList) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *Customer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Customer"))
+	}
 
 	dlmtr := "."
 	if path == "" {
@@ -1528,6 +1553,16 @@ func (m *CustomerStatus) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *Order) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Order"))
+	}
 
 	dlmtr := "."
 	if path == "" {
@@ -1634,6 +1669,16 @@ func (m *OutageRequest) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *Publisher) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Publisher"))
+	}
 
 	dlmtr := "."
 	if path == "" {
@@ -1696,6 +1741,16 @@ func (m *RestockResponse) Validate(ver, path string, ignoreStatus bool) []error 
 
 func (m *Store) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Store"))
+	}
 	return ret
 }
 

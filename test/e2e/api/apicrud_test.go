@@ -105,8 +105,7 @@ var _ = Describe("API Crud tests", func() {
 						APIVersion: "v1",
 					},
 					ObjectMeta: api.ObjectMeta{
-						Tenant: "e2eTenant",
-						Name:   "e2eTenant",
+						Name: "e2eTenant",
 					},
 					Spec: cluster.TenantSpec{
 						AdminUser: "admin",

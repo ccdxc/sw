@@ -15,6 +15,7 @@ import (
 	security "github.com/pensando/sw/api/generated/security"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -557,6 +558,10 @@ func (a *restObjSecurityV1SecurityGroup) List(ctx context.Context, options *api.
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListSecurityGroup(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -731,6 +736,10 @@ func (a *restObjSecurityV1SGPolicy) Delete(ctx context.Context, objMeta *api.Obj
 func (a *restObjSecurityV1SGPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.SGPolicy, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
 	}
 	r, err := a.endpoints.AutoListSGPolicy(ctx, options)
 	if err == nil {
@@ -907,6 +916,7 @@ func (a *restObjSecurityV1App) List(ctx context.Context, options *api.ListWatchO
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
 	r, err := a.endpoints.AutoListApp(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1082,6 +1092,10 @@ func (a *restObjSecurityV1Certificate) List(ctx context.Context, options *api.Li
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListCertificate(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1256,6 +1270,10 @@ func (a *restObjSecurityV1TrafficEncryptionPolicy) Delete(ctx context.Context, o
 func (a *restObjSecurityV1TrafficEncryptionPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*security.TrafficEncryptionPolicy, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
 	}
 	r, err := a.endpoints.AutoListTrafficEncryptionPolicy(ctx, options)
 	if err == nil {

@@ -93,6 +93,7 @@ func (m *TrafficEncryptionPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *TrafficEncryptionPolicy) Defaults(ver string) bool {
 	m.Kind = "TrafficEncryptionPolicy"
+	m.Tenant, m.Namespace = "default", "default"
 	return false
 }
 
@@ -152,6 +153,13 @@ func (m *TLSProtocolSpec) Validate(ver, path string, ignoreStatus bool) []error 
 
 func (m *TrafficEncryptionPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 	return ret
 }
 

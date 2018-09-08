@@ -51,6 +51,7 @@ func (m *SecurityGroup) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *SecurityGroup) Defaults(ver string) bool {
 	m.Kind = "SecurityGroup"
+	m.Tenant, m.Namespace = "default", "default"
 	return false
 }
 
@@ -100,6 +101,13 @@ func (m *SecurityGroupStatus) Defaults(ver string) bool {
 
 func (m *SecurityGroup) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 
 	dlmtr := "."
 	if path == "" {

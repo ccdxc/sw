@@ -20,12 +20,6 @@ export class Eventsv1Service extends AbstractService {
   }
 
   /** http://<...>/events/v1/events */
-  public GetGetEvents():Observable<{body: IEventsEventList | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/events/v1/events';
-    return this.invokeAJAXGetCall(url, 'GetGetEvents') as Observable<{body: IEventsEventList | Error, statusCode: number}>;
-  }
-  
-  /** http://<...>/events/v1/events */
   public PostGetEvents(body: any):Observable<{body: IEventsEventList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events';
     return this.invokeAJAXPostCall(url, body.getValues(), 'PostGetEvents') as Observable<{body: IEventsEventList | Error, statusCode: number}>;

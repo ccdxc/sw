@@ -42,6 +42,8 @@ const (
 	RequestParamReplaceStatusField = "replace-status-field"
 	// RequestParamStagingBufferID carries the buffer Id if the request is staged
 	RequestParamStagingBufferID = "staging-buffer-id"
+	// RequestParamsRequestURI carries the URI for the request
+	RequestParamsRequestURI = "req-uri"
 )
 
 const (

@@ -64,8 +64,7 @@ func createTenant(stateMgr *Statemgr, tenant string) error {
 	tn := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: tenant,
-			Name:   tenant,
+			Name: tenant,
 		},
 	}
 

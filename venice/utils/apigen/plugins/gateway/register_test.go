@@ -1463,7 +1463,17 @@ func TestGetAutoTypes(t *testing.T) {
 			t.Errorf("list type expected [example.Nest1] got [%s]", str)
 		}
 	}
-
+	lmsgType, err := r.LookupMsg("", ".example.Nest1")
+	if err != nil {
+		t.Errorf("error finding nes1 message")
+	}
+	lmsgt, err := getListTypeMsg(lmsg)
+	if err != nil {
+		t.Errorf("failed to retrieve list type")
+	}
+	if lmsgt != lmsgType {
+		t.Errorf("returned message type did not match")
+	}
 	wmsg, err := r.LookupMsg("", ".example.Auto_WatchNest1")
 	if err != nil {
 		t.Errorf("error finding WatchNest1 auto message")
@@ -1487,6 +1497,17 @@ func TestGetAutoTypes(t *testing.T) {
 		if str != "example.Nest1" {
 			t.Errorf("watch type expected [example.Nest1] got [%s]", str)
 		}
+	}
+	wmsgType, err := r.LookupMsg("", ".example.Nest1")
+	if err != nil {
+		t.Errorf("error finding nes1 message")
+	}
+	wmsgt, err := getWatchTypeMsg(wmsg)
+	if err != nil {
+		t.Errorf("failed to retrieve watch type")
+	}
+	if wmsgt != wmsgType {
+		t.Errorf("returned message type did not match")
 	}
 	t.Logf("Test map_entry message")
 	testmsg, err := r.LookupMsg("", ".example.MapMessage")
@@ -2819,6 +2840,98 @@ func TestStreaming(t *testing.T) {
 			}
 		} else {
 			t.Errorf("unknown method %v", m.GetName())
+		}
+	}
+}
+
+func TestIsTenanted(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+			name: 'example.proto'
+			package: 'example'
+			syntax: 'proto3'
+			message_type <
+				name: 'msg1'
+				field <
+					name: 'leaf_field'
+					label: LABEL_OPTIONAL
+					type: TYPE_STRING
+					number: 1
+				>
+				field <
+					name: 'O'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.oMeta'
+					number: 2
+					options:<[gogoproto.embed]:true>
+				>
+				options:<[venice.objectPrefix]:{Collection: "prefix", Path:"{O.Tenant}/{leaf_field}"}>
+			>
+			message_type <
+				name: 'msg2'
+				field <
+					name: 'leaf_field'
+					label: LABEL_OPTIONAL
+					type: TYPE_STRING
+					number: 1
+				>
+				field <
+					name: 'nest2_field'
+					label: LABEL_OPTIONAL
+					type: TYPE_STRING
+					number: 2
+				>
+				options:<[venice.objectPrefix]:{Collection: "prefix", Path:"{nest2_field}/{leaf_field}"}>
+			>
+			message_type <
+			name: 'msg3'
+			field <
+				name: 'nest1_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest2'
+				number: 1
+				>
+			>
+			message_type <
+			name: 'oMeta'
+			field <
+				name: 'Tenant'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+				>
+			>
+			`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	cases := []struct {
+		msg string
+		val bool
+	}{
+		{"example.msg1", true},
+		{"example.msg2", false},
+		{"example.msg3", false},
+	}
+	for _, c := range cases {
+		msg, err := r.LookupMsg("", c.msg)
+		if err != nil {
+			t.Fatalf("could not find message [%v](%s)", c.msg, err)
+		}
+		if v, err := isTenanted(msg); err != nil || v != c.val {
+			t.Fatalf("did not get [%v] for message [%v](%v)", c.val, c.msg, err)
 		}
 	}
 }

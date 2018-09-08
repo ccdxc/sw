@@ -72,6 +72,7 @@ func (m *LbPolicy) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *LbPolicy) Defaults(ver string) bool {
 	m.Kind = "LbPolicy"
+	m.Tenant, m.Namespace = "default", "default"
 	return false
 }
 
@@ -126,6 +127,13 @@ func (m *HealthCheckSpec) Validate(ver, path string, ignoreStatus bool) []error 
 
 func (m *LbPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
 	return ret
 }
 

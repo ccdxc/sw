@@ -95,6 +95,7 @@ func (m *Cluster) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Cluster) Defaults(ver string) bool {
 	m.Kind = "Cluster"
+	m.Tenant, m.Namespace = "", ""
 	return false
 }
 
@@ -180,6 +181,7 @@ func (m *Host) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Host) Defaults(ver string) bool {
 	m.Kind = "Host"
+	m.Tenant, m.Namespace = "", ""
 	var ret bool
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -294,6 +296,7 @@ func (m *Node) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Node) Defaults(ver string) bool {
 	m.Kind = "Node"
+	m.Tenant, m.Namespace = "", ""
 	var ret bool
 	ret = m.Status.Defaults(ver) || ret
 	return ret
@@ -477,6 +480,7 @@ func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *SmartNIC) Defaults(ver string) bool {
 	m.Kind = "SmartNIC"
+	m.Tenant, m.Namespace = "", ""
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
 	ret = m.Status.Defaults(ver) || ret
@@ -576,6 +580,16 @@ func (m *SmartNICStatus) Defaults(ver string) bool {
 
 func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Cluster"))
+	}
 	return ret
 }
 
@@ -596,6 +610,16 @@ func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Host"))
+	}
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -645,6 +669,16 @@ func (m *HostStatus) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Node"))
+	}
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -750,6 +784,16 @@ func (m *PortStatus) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
+	}
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for SmartNIC"))
+	}
 
 	dlmtr := "."
 	if path == "" {

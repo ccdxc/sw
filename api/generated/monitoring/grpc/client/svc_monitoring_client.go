@@ -15,6 +15,7 @@ import (
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -857,6 +858,10 @@ func (a *restObjMonitoringV1EventPolicy) List(ctx context.Context, options *api.
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListEventPolicy(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1031,6 +1036,10 @@ func (a *restObjMonitoringV1StatsPolicy) Delete(ctx context.Context, objMeta *ap
 func (a *restObjMonitoringV1StatsPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.StatsPolicy, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
 	}
 	r, err := a.endpoints.AutoListStatsPolicy(ctx, options)
 	if err == nil {
@@ -1207,6 +1216,10 @@ func (a *restObjMonitoringV1FwlogPolicy) List(ctx context.Context, options *api.
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListFwlogPolicy(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1381,6 +1394,10 @@ func (a *restObjMonitoringV1FlowExportPolicy) Delete(ctx context.Context, objMet
 func (a *restObjMonitoringV1FlowExportPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.FlowExportPolicy, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
 	}
 	r, err := a.endpoints.AutoListFlowExportPolicy(ctx, options)
 	if err == nil {
@@ -1557,6 +1574,10 @@ func (a *restObjMonitoringV1Alert) List(ctx context.Context, options *api.ListWa
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListAlert(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -1731,6 +1752,10 @@ func (a *restObjMonitoringV1AlertPolicy) Delete(ctx context.Context, objMeta *ap
 func (a *restObjMonitoringV1AlertPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.AlertPolicy, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
 	}
 	r, err := a.endpoints.AutoListAlertPolicy(ctx, options)
 	if err == nil {
@@ -1907,6 +1932,10 @@ func (a *restObjMonitoringV1AlertDestination) List(ctx context.Context, options 
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListAlertDestination(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -2082,6 +2111,10 @@ func (a *restObjMonitoringV1MirrorSession) List(ctx context.Context, options *ap
 	if options == nil {
 		return nil, errors.New("invalid input")
 	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
 	r, err := a.endpoints.AutoListMirrorSession(ctx, options)
 	if err == nil {
 		return r.Items, nil
@@ -2256,6 +2289,10 @@ func (a *restObjMonitoringV1TroubleshootingSession) Delete(ctx context.Context, 
 func (a *restObjMonitoringV1TroubleshootingSession) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.TroubleshootingSession, error) {
 	if options == nil {
 		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
 	}
 	r, err := a.endpoints.AutoListTroubleshootingSession(ctx, options)
 	if err == nil {

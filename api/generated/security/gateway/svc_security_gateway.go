@@ -401,6 +401,8 @@ func (a adapterSecurityV1) AutoListApp(oldctx oldcontext.Context, t *api.ListWat
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
+	t.Tenant, t.Namespace = "", ""
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AppList", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -423,6 +425,10 @@ func (a adapterSecurityV1) AutoListCertificate(oldctx oldcontext.Context, t *api
 	prof, err := a.gwSvc.GetServiceProfile("AutoListCertificate")
 	if err != nil {
 		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
 	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "CertificateList", t.Tenant, t.Namespace, "security", ""
 
@@ -447,6 +453,10 @@ func (a adapterSecurityV1) AutoListSGPolicy(oldctx oldcontext.Context, t *api.Li
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "SGPolicyList", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -470,6 +480,10 @@ func (a adapterSecurityV1) AutoListSecurityGroup(oldctx oldcontext.Context, t *a
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "SecurityGroupList", t.Tenant, t.Namespace, "security", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -492,6 +506,10 @@ func (a adapterSecurityV1) AutoListTrafficEncryptionPolicy(oldctx oldcontext.Con
 	prof, err := a.gwSvc.GetServiceProfile("AutoListTrafficEncryptionPolicy")
 	if err != nil {
 		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
 	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "TrafficEncryptionPolicyList", t.Tenant, t.Namespace, "security", ""
 
@@ -650,6 +668,7 @@ func (a adapterSecurityV1) AutoWatchSecurityGroup(oldctx oldcontext.Context, in 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "SecurityGroup", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -670,6 +689,7 @@ func (a adapterSecurityV1) AutoWatchSGPolicy(oldctx oldcontext.Context, in *api.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "SGPolicy", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -690,6 +710,8 @@ func (a adapterSecurityV1) AutoWatchApp(oldctx oldcontext.Context, in *api.ListW
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
+	in.Tenant, in.Namespace = "", ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "App", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -710,6 +732,7 @@ func (a adapterSecurityV1) AutoWatchCertificate(oldctx oldcontext.Context, in *a
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Certificate", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -730,6 +753,7 @@ func (a adapterSecurityV1) AutoWatchTrafficEncryptionPolicy(oldctx oldcontext.Co
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
+
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "TrafficEncryptionPolicy", in.Tenant, in.Namespace, "security"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

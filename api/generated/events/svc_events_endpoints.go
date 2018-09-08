@@ -195,7 +195,7 @@ func (m loggingEventsV1MiddlewareClient) GetEvent(ctx context.Context, in *GetEv
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "EventsV1", "method", "GetEvent", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "EventsV1", "method", "GetEvent", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.GetEvent(ctx, in)
 	return
@@ -208,7 +208,7 @@ func (m loggingEventsV1MiddlewareClient) GetEvents(ctx context.Context, in *api.
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "EventsV1", "method", "GetEvents", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "EventsV1", "method", "GetEvents", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.GetEvents(ctx, in)
 	return

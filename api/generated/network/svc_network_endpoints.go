@@ -785,7 +785,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoAddLbPolicy(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddLbPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddLbPolicy(ctx, in)
 	return
@@ -798,7 +798,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoAddNetwork(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddNetwork", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddNetwork", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddNetwork(ctx, in)
 	return
@@ -811,7 +811,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoAddService(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddService", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoAddService", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoAddService(ctx, in)
 	return
@@ -824,7 +824,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoDeleteLbPolicy(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteLbPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteLbPolicy(ctx, in)
 	return
@@ -837,7 +837,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoDeleteNetwork(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteNetwork", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteNetwork", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteNetwork(ctx, in)
 	return
@@ -850,7 +850,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoDeleteService(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteService", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoDeleteService", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteService(ctx, in)
 	return
@@ -863,7 +863,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoGetLbPolicy(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetLbPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetLbPolicy(ctx, in)
 	return
@@ -876,7 +876,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoGetNetwork(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetNetwork", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetNetwork", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetNetwork(ctx, in)
 	return
@@ -889,7 +889,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoGetService(ctx context.Context, in
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetService", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetService", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetService(ctx, in)
 	return
@@ -902,7 +902,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoListLbPolicy(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListLbPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListLbPolicy(ctx, in)
 	return
@@ -915,7 +915,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoListNetwork(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListNetwork", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListNetwork", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListNetwork(ctx, in)
 	return
@@ -928,7 +928,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoListService(ctx context.Context, i
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListService", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoListService", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoListService(ctx, in)
 	return
@@ -941,7 +941,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoUpdateLbPolicy(ctx context.Context
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateLbPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateLbPolicy(ctx, in)
 	return
@@ -954,7 +954,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoUpdateNetwork(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetwork", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateNetwork", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateNetwork(ctx, in)
 	return
@@ -967,7 +967,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoUpdateService(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateService", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoUpdateService", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateService(ctx, in)
 	return
@@ -981,7 +981,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoWatchSvcNetworkV1(ctx context.Cont
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchSvcNetworkV1", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchSvcNetworkV1", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchSvcNetworkV1(ctx, in)
 	return
@@ -995,7 +995,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoWatchNetwork(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchNetwork", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchNetwork", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchNetwork(ctx, in)
 	return
@@ -1008,7 +1008,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoWatchService(ctx context.Context, 
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchService", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchService", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchService(ctx, in)
 	return
@@ -1021,7 +1021,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoWatchLbPolicy(ctx context.Context,
 		} else {
 			rslt = err.Error()
 		}
-		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchLbPolicy", "result", rslt, "duration", time.Since(begin))
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoWatchLbPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoWatchLbPolicy(ctx, in)
 	return

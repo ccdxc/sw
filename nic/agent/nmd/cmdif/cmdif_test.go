@@ -196,8 +196,7 @@ func TestCmdClient(t *testing.T) {
 	nic := cmd.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "1111.1111.1111",
+			Name: "1111.1111.1111",
 		},
 	}
 	srv.nicdb["1111.1111.1111"] = &nic
@@ -242,8 +241,7 @@ func TestCmdClientWatch(t *testing.T) {
 	nic := cmd.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "1111.1111.1111",
+			Name: "1111.1111.1111",
 		},
 	}
 	srv.nicdb["1111.1111.1111"] = &nic
@@ -295,8 +293,7 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	nic := cmd.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "1111.1111.1111",
+			Name: "1111.1111.1111",
 		},
 	}
 	srv.nicdb["1111.1111.1111"] = &nic

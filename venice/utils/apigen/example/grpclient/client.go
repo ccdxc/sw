@@ -177,8 +177,7 @@ func main() {
 			APIVersion: "v1",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "tenant2",
-			Name:   "tenant2",
+			Name: "tenant2",
 		},
 		Spec: cluster.TenantSpec{
 			AdminUser: "admin",

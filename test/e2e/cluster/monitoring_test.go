@@ -19,7 +19,7 @@ var _ = Describe("MirrorSession Tests", func() {
 		var testMirrorSessions = []monitoring.MirrorSession{
 			{
 				ObjectMeta: api.ObjectMeta{
-					Name:   "Test Mirror Session 1",
+					Name:   "TestMirrorSession1",
 					Tenant: "default",
 				},
 				TypeMeta: api.TypeMeta{

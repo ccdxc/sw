@@ -2,8 +2,17 @@ package api
 
 import (
 	"fmt"
+	"regexp"
 
 	golangproto "github.com/golang/protobuf/proto"
+)
+
+var nameRe = regexp.MustCompile(`^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`)
+var resVerRe = regexp.MustCompile(`[0-9]*`)
+
+const (
+	// MaxNameLen is the max number of characters allowed in a naming property.
+	MaxNameLen = 64
 )
 
 // GetObjectKind returns the kind of an object.
@@ -52,6 +61,100 @@ func (m *Status) Clone(into interface{}) (interface{}, error) {
 // Defaults applies defaults to the object
 func (m *ListWatchOptions) Defaults(ver string) bool {
 	return false
+}
+
+// Validate validates the object
+func (t *TypeMeta) Validate(ver, path string, ignoreStatus bool) []error {
+	return nil
+}
+
+// Validate validates the object
+func (l *ListMeta) Validate(ver, path string, ignoreStatus bool) []error {
+	return nil
+}
+
+// Validate validates the object
+func (o *ObjectMeta) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if len(o.Name) > MaxNameLen {
+		ret = append(ret, fmt.Errorf("%s.Name too long(max 64 chars)", path))
+	}
+	if !nameRe.Match([]byte(o.Name)) {
+		ret = append(ret, fmt.Errorf("%s.Name does not meet naming requirements", path))
+	}
+	if len(o.Tenant) > MaxNameLen {
+		ret = append(ret, fmt.Errorf("%s.Tenant too long(max 64 chars)", path))
+	}
+	if len(o.Tenant) > 0 {
+		if !nameRe.Match([]byte(o.Tenant)) {
+			ret = append(ret, fmt.Errorf("%s.Tenant does not meet naming requirements", path))
+		}
+	}
+	if len(o.Namespace) > MaxNameLen {
+		ret = append(ret, fmt.Errorf("%s.Namespace too long(max 64 chars)", path))
+	}
+	if len(o.Namespace) > 0 {
+		if !nameRe.Match([]byte(o.Namespace)) {
+			ret = append(ret, fmt.Errorf("%s.Namespace does not meet naming requirements", path))
+		}
+	}
+	if !resVerRe.Match([]byte(o.ResourceVersion)) {
+		ret = append(ret, fmt.Errorf("%s.ResourceVersion is invalid", path))
+	}
+	return ret
+}
+
+// Validate validates the object
+func (m *ObjectRef) Validate(ver, path string, ignoreStatus bool) []error {
+	return nil
+}
+
+// Validate validates the object
+func (m *ListWatchOptions) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if len(m.ObjectMeta.Name) > MaxNameLen {
+		ret = append(ret, fmt.Errorf("%s.Name too long(max 64)", path))
+	}
+	if len(m.ObjectMeta.Name) > 0 {
+		if !nameRe.Match([]byte(m.ObjectMeta.Name)) {
+			ret = append(ret, fmt.Errorf("%s.Name does not meet naming requirements", path))
+		}
+	}
+	if len(m.ObjectMeta.Tenant) > MaxNameLen {
+		ret = append(ret, fmt.Errorf("%s.Tenant too long(max 64)", path))
+	}
+	if len(m.ObjectMeta.Tenant) > 0 {
+		if !nameRe.Match([]byte(m.ObjectMeta.Tenant)) {
+			ret = append(ret, fmt.Errorf("%s.Tenant does not meet naming requirements", path))
+		}
+	}
+	if len(m.ObjectMeta.Namespace) > MaxNameLen {
+		ret = append(ret, fmt.Errorf("%s.Namespace too long(max 64)", path))
+	}
+	if len(m.ObjectMeta.Tenant) > 0 {
+		if !nameRe.Match([]byte(m.ObjectMeta.Namespace)) {
+			ret = append(ret, fmt.Errorf("%s.Namespace does not meet naming requirements", path))
+		}
+	}
+	if !resVerRe.Match([]byte(m.ObjectMeta.ResourceVersion)) {
+		ret = append(ret, fmt.Errorf("%s.ResourceVersion is invalid", path))
+	}
+	return ret
+}
+
+// Validate validates the object
+func (m *WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	return nil
+}
+
+// Validate validates the object
+func (m *WatchEventList) Validate(ver, path string, ignoreStatus bool) []error {
+	return nil
+}
+
+// Validate validates the object
+func (m *Status) Validate(ver, path string, ignoreStatus bool) []error {
+	return nil
 }
 
 func init() {

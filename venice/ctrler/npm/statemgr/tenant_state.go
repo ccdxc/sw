@@ -29,7 +29,7 @@ func newTenantState(tn *cluster.Tenant, stateMgr *Statemgr) (*TenantState, error
 
 // CreateTenant creates a tenant based on watch event
 func (sm *Statemgr) CreateTenant(tn *cluster.Tenant) error {
-	oldTn, err := sm.FindObject("Tenant", tn.ObjectMeta.Tenant, tn.ObjectMeta.Name)
+	oldTn, err := sm.FindObject("Tenant", "", tn.ObjectMeta.Name)
 	if err == nil {
 		// FIXME: how do we handle an existing tenant object changing?
 		log.Errorf("Can not change existing tenant {%+v}. New state: {%+v}", oldTn, tn)
@@ -57,7 +57,7 @@ func (sm *Statemgr) DeleteTenant(tenant string) error {
 		return ErrDefaultTenantDeleteNotPermitted
 	}
 	// see if we already have it
-	tso, err := sm.FindObject("Tenant", tenant, tenant)
+	tso, err := sm.FindObject("Tenant", "", tenant)
 	if err != nil {
 		log.Errorf("Can not find the tenant %s", tenant)
 		return ErrTenantNotFound
@@ -81,7 +81,7 @@ func (sm *Statemgr) DeleteTenant(tenant string) error {
 // FindTenant finds a tenant
 func (sm *Statemgr) FindTenant(tenant string) (*TenantState, error) {
 	// find the object
-	obj, err := sm.FindObject("Tenant", tenant, tenant)
+	obj, err := sm.FindObject("Tenant", "", tenant)
 	if err != nil {
 		return nil, err
 	}
