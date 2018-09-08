@@ -20,7 +20,7 @@ p4pd_utils_copy_into_hwentry(uint8_t *dest,
     (void)p4pd_utils_copy_into_hwentry;
 
     uint8_t src_byte, dest_byte, dest_byte_mask;
-    uint8_t bits_in_src_byte1, bits_in_src_byte2;
+    uint8_t bits_in_src_byte1, bits_in_src_byte2 = 0;
 
     if (!num_bits || src == NULL || num_bits > 8) {
         return;
@@ -37,10 +37,13 @@ p4pd_utils_copy_into_hwentry(uint8_t *dest,
      */
     if (num_bits == 8) {
         // copying a byte from source to destination
-        bits_in_src_byte1 = (*src >> src_start_bit % 8);
-        bits_in_src_byte2 = (*(src + 1)  & ((1 << (src_start_bit % 8)) - 1 ));
-        bits_in_src_byte2 = bits_in_src_byte2  << (8 - src_start_bit % 8);
-        src_byte = bits_in_src_byte2 | bits_in_src_byte1;
+        if (src_start_bit) {
+            bits_in_src_byte1 = (*src << (7 - src_start_bit % 8));
+            bits_in_src_byte2 = (*(src - 1)  >> ((src_start_bit % 8) + 1));
+        } else {
+            bits_in_src_byte1 = (*src >> src_start_bit % 8);
+        }
+        src_byte = bits_in_src_byte1 | bits_in_src_byte2;
         if (dest_start_bit % 8) {
             assert(0);
             // the following code can be enabled if we hit the assert later
@@ -204,7 +207,7 @@ p4pd_utils_copy_be_src_to_le_dest(uint8_t *dest,
     for (int k = 0; k < num_bits; k++) {
         uint8_t *_src = src + ((src_start_bit + k) / 8);
         // Copy into Msbit in destination
-        uint8_t *_dest = dest + ((dest_start_bit + k) / 8);
+        uint8_t *_dest = dest - ((dest_start_bit + k) / 8);
         p4pd_utils_copy_single_bit(_dest,
                              (dest_start_bit + num_bits - 1 - k) % 8,
                              _src,

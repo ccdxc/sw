@@ -1089,7 +1089,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                            else:
                    &(swkey->${p4fldname}[${kbyte}]),
 //::                            #endif
-                   (${p4fldwidth} - ${kbit}) % 8, /* Start bit in source field */
+                   (${p4fldwidth} - 1 - ${kbit}) % 8, /* Start bit in source field */
                    ${width});
     key_len += ${width};
 //::                        #endfor
@@ -1133,7 +1133,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                                else:
                    &(swkey->${ustr}${p4fldname}[${kbyte}]),
 //::                                #endif
-                   (${p4fldwidth} - ${kbit}) % 8, /* Start bit in source field */
+                   (${p4fldwidth} - 1 - ${kbit}) % 8, /* Start bit in source field */
                    ${width});
     key_len += ${width};
 //::                            #endfor
@@ -1179,7 +1179,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                                else:
                    &(swkey->${ustr}${p4fldname}[${kbyte}]),
 //::                                #endif
-                   (${p4fldwidth} - ${kbit}) % 8, /* Start bit in source field */
+                   (${p4fldwidth} - 1 - ${kbit}) % 8, /* Start bit in source field */
                    ${width});
     key_len += ${width};
 //::                            #endfor
