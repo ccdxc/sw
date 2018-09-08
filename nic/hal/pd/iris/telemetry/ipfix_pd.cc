@@ -164,24 +164,21 @@ ipfix_init(uint16_t export_id, uint64_t pktaddr, uint16_t payload_start,
 
     hal_cfg = g_hal_state_pd->hal_cfg();
     HAL_ASSERT(hal_cfg);
-    if (hal_cfg->platform_mode == HAL_PLATFORM_MODE_HW) {
+    if (hal_cfg->platform_mode != HAL_PLATFORM_MODE_HW) {
+        // For SIM, HAPS and RTL mode we need to use a smaller range since
+        // the full flow hash table walk takes too long. Also install fake flow
+        // entries within that range
+        // TODO: Ideally this should be removed and test environment should
+        // drive the flow hash table entries
+        qstate.flow_hash_index_next = (100 * qid) + 100;
+        qstate.flow_hash_index_max = (100 * qid) + 111;
+        ipfix_test_init(qstate.flow_hash_index_next, qstate.flow_hash_index_max,
+                        export_id);
+    } else {
         // For HW mode, we need to walk the full flow hash table
         qstate.flow_hash_index_next = 0;
         qstate.flow_hash_index_max = FLOW_HASH_TABLE_SIZE - 1;
         qstate.flow_hash_overflow_index_max = FLOW_HASH_OVERFLOW_TABLE_SIZE - 1;
-    } else {
-        // For SIM, HAPS and RTL mode we need to use a smaller range for the
-        // flow hash table walk
-        qstate.flow_hash_index_next = (100 * qid) + 100;
-        qstate.flow_hash_index_max = (100 * qid) + 111;
-    }
-
-    if (hal_cfg->platform_mode != HAL_PLATFORM_MODE_HW) {
-        // For SIM, HAPS and RTL mode we need to install fake flow entries
-        // TODO: Ideally this should be removed and test environment should
-        // drive the flow hash table entries
-        ipfix_test_init(qstate.flow_hash_index_next, qstate.flow_hash_index_max,
-                        export_id);
     }
     lif_manager()->WriteQState(lif_id, 0, qid,
                                (uint8_t *)&qstate, sizeof(qstate));

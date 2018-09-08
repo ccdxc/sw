@@ -40,6 +40,7 @@ class CollectorObject(base.ConfigObjectBase):
         self.src_ep = None
         self.dst_ep = None
         self.sess_spec = None
+        self.export_interval = 86400
         return
 
     def Show(self):
@@ -51,6 +52,7 @@ class CollectorObject(base.ConfigObjectBase):
         logger.info("- Port          : %s" % self.dport)
         logger.info("- Format        : %s" % self.format)
         logger.info("- Template ID   : %s" % self.template_id)
+        logger.info("- Export Intvl  : %s" % self.export_interval)
         return
 
     def Update(self, encap, dest, src, protocol, dport, format, template_id):
@@ -81,6 +83,7 @@ class CollectorObject(base.ConfigObjectBase):
         reqspec.dest_port = self.dport
         reqspec.format = self.format
         reqspec.template_id = self.template_id
+        reqspec.export_interval = self.export_interval
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -124,6 +127,7 @@ class CollectorObjectHelper:
             collector.dport = 4739
             collector.format = telemetry_pb2.ExportFormat.Value("IPFIX")
             collector.template_id = 1
+            collector.export_interval = 86400
             # add the sessions.
             collector.sess_spec =  spec.session
             collector.dst_ep = ep
