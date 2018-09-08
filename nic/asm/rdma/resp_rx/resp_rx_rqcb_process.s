@@ -101,7 +101,6 @@ skip_roce_opt_parsing:
     // every fresh packet gets a unique token id 
     tbladd    d.token_id, 1 
 
-start_recirc_packet:
     // recirc if busy==1 or work_not_done_recirc_cnt !=0
     bbeq    d.busy, 1, recirc_wait_for_turn
     seq     c1, d.work_not_done_recirc_cnt, 0 // BD Slot
@@ -111,6 +110,7 @@ start_recirc_packet:
 #   CAPRI_GET_STAGE_7_ARG(resp_rx_phv_t, r4)
 #   CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
+start_recirc_packet:
     # subtract the pad bytes from the payload length.
     sub     REM_PYLD_BYTES, CAPRI_APP_DATA_PAYLOAD_LEN, CAPRI_APP_DATA_BTH_PAD // BD Slot in straight path
 
