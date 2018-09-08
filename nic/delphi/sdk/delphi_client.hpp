@@ -7,7 +7,7 @@
 #include <memory.h>
 #include <ev++.h>
 #include <cxxabi.h>
-#include<pthread.h>
+#include <pthread.h>
 
 #include "base_object.hpp"
 #include "delphi_service.hpp"
@@ -20,6 +20,9 @@ using namespace delphi::messanger;
 
 // sync interval for syncing to delphi hub
 #define CLIENT_SYNC_PERIOD 0.005
+
+// heartbeat interval in seconds for updating the client status
+#define CLIENT_HEARTBEAT_PERIOD 5
 
 // max service id
 #define MAX_SERVICE_ID (0xFFFF)
@@ -87,12 +90,14 @@ public:
     error HandleMountResp(uint16_t svcID, string status, vector<ObjectData *> objlist);
 
 protected:
-    void syncTimerHandler(ev::timer &watcher, int revents);   // sync object updates to delphi hub
-    void eventTimerHandler(ev::timer &watcher, int revents);  // handle pending events
-    void msgqTimerHandler(ev::timer &watcher, int revents);   // handle updates from other threads
-    error allocHandle(BaseObjectPtr objinfo);                 // allocate a object handle
-    error freeHandle(BaseObjectPtr objinfo);                  // free object handle
-    ObjSubtreePtr getSubtree(string kind);                    // get subtree of objects (use for testing only)
+    void syncTimerHandler(ev::timer &watcher, int revents);      // sync object updates to delphi hub
+    void eventTimerHandler(ev::timer &watcher, int revents);     // handle pending events
+    void msgqTimerHandler(ev::timer &watcher, int revents);      // handle updates from other threads
+    void heartbeatTimerHandler(ev::timer &watcher, int revents); // publish client status
+    error allocHandle(BaseObjectPtr objinfo);                    // allocate a object handle
+    error freeHandle(BaseObjectPtr objinfo);                     // free object handle
+    ObjSubtreePtr getSubtree(string kind);                       // get subtree of objects (use for testing only)
+    void MountClientStatus();                                    // Mounts the DelphiClientStatus message as ReadWrite for self
 
 private:
     MessangerClientPtr             mclient;        // messanger
@@ -111,8 +116,9 @@ private:
     ev::timer                      syncTimer;      // timer to sync to hub
     ev::timer                      eventTimer;     // timer to trigger pending events
     ev::timer                      msgqTimer;      // timer to handle message queue updates
+    ev::timer                      heartbeatTimer; // timer to handle message queue updates
     uint64_t                       currObjectID;   // running counter of object handle
-    vector<BaseReactorPtr>         mountWatchers; // reactors watching mount complete
+    vector<BaseReactorPtr>         mountWatchers;  // reactors watching mount complete
 };
 typedef std::shared_ptr<DelphiClient> DelphiClientPtr;
 

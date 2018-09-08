@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package delphi_client;
+
+import "nic/delphi/proto/delphi/delphi.proto";
+
+message DelphiClientStatus {
+    option (delphi.update_event)          = true;
+    delphi.ObjectMeta      Meta           = 1;
+    string                 Key            = 2;
+    int32                  ServiceId      = 3;
+    int32                  Pid            = 4;
+    uint64                 LastSeen       = 5; // Unix-epoch in seconds
+}

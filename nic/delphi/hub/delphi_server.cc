@@ -415,7 +415,7 @@ error DelphiServer::HandleChangeReq(int sockCtx, vector<ObjectData *> req, vecto
         }
 
         // queue it for sync
-        this->syncQueue[key] = newObj;
+        this->syncQueue[(*iter)->meta().path()] = newObj;
     }
 
     return error::OK();

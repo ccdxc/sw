@@ -35,6 +35,6 @@ def delphi_compile(name, srcs, ):
         name = name,
         srcs = genfiles,
         deps = [
-            "//nic/delphi/sdk",
+            "//nic/delphi/sdk:headers",
         ],
     )

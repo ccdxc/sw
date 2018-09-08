@@ -7,6 +7,7 @@
 #include "nic/delphi/utils/log.hpp"
 #include "nic/delphi/hub/delphi_server.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
+#include "nic/delphi/sdk/proto/client.delphi.hpp"
 
 namespace {
 using namespace std;
@@ -259,6 +260,13 @@ TEST_F(DelphiHubTest, BasicServerTest) {
         for (vector<BaseObjectPtr>::iterator iter=db.begin(); iter!=db.end(); ++iter) {
             TestObjectPtr tobj = static_pointer_cast<TestObject>(*iter);
             ASSERT_EQ(tobj->testdata1(), "Test Data") << "client has invalid objects";
+        }
+
+        ASSERT_EQ(clients[i]->ListKind("DelphiClientStatus").size(), NUM_CLIENTS);
+        db = clients[i]->ListKind("DelphiClientStatus");
+        for (vector<BaseObjectPtr>::iterator iter=db.begin(); iter!=db.end(); ++iter) {
+            objects::DelphiClientStatusPtr tobj = static_pointer_cast<objects::DelphiClientStatus>(*iter);
+            ASSERT_EQ(tobj->pid(), getpid()) << "client pid is invalid";
         }
     }
 

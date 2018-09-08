@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "delphi_client.hpp"
+#include "nic/delphi/sdk/proto/client.delphi.hpp"
 
 namespace delphi {
 
@@ -15,6 +16,7 @@ DelphiClient::DelphiClient() {
     this->syncTimer.start(CLIENT_SYNC_PERIOD, CLIENT_SYNC_PERIOD);
     this->eventTimer.set<DelphiClient, &DelphiClient::eventTimerHandler>(this);
     this->msgqTimer.set<DelphiClient, &DelphiClient::msgqTimerHandler>(this);
+    this->heartbeatTimer.set<DelphiClient, &DelphiClient::heartbeatTimerHandler>(this);
     pthread_mutex_init(&msgQlock, NULL);
     this->isConnected = false;
     this->isMountComplete = false;
@@ -44,7 +46,9 @@ error DelphiClient::Connect() {
             }
             LogInfo("Error({}) connecting to hub. Will try again", err);
             std::this_thread::sleep_for(std::chrono::milliseconds(CONNECT_SLEEP_MS));
+            continue;
         }
+        break;
     }
 
     // mark ourselves as connected
@@ -116,10 +120,19 @@ ReactorListPtr DelphiClient::GetReactorList(string kind) {
     return nullptr;
 }
 
+void DelphiClient::MountClientStatus() {
+    auto obj = make_shared<delphi::objects::DelphiClientStatus>();
+    obj->set_key(this->service->Name());
+    this->MountKey(obj->GetDescriptor()->name(), obj->GetKey(), delphi::ReadWriteMode);
+}
+
 // RegisterService registers a service
 error DelphiClient::RegisterService(ServicePtr svc) {
     assert(this->service == NULL);
     this->service = svc;
+
+    this->MountClientStatus();
+
     return error::OK();
 }
 
@@ -246,6 +259,9 @@ error DelphiClient::HandleMountResp(uint16_t svcID, string status, vector<Object
     for (vector<BaseReactorPtr>::iterator rc = mountWatchers.begin(); rc != mountWatchers.end(); ++rc) {
         (*rc)->OnMountComplete();
     }
+
+    // finally start the heartbeat
+    this->heartbeatTimer.start(0, CLIENT_HEARTBEAT_PERIOD);
 
     return error::OK();
 }
@@ -484,6 +500,7 @@ map<string, BaseObjectPtr> DelphiClient::GetSubtree(string kind) {
 // Close stops the client and closes connection to delphi hub
 error DelphiClient::Close() {
     this->syncTimer.stop();
+    this->heartbeatTimer.stop();
     this->isConnected = true;
     this->myServiceID = 0;
     this->isMountComplete = false;
@@ -660,6 +677,18 @@ void DelphiClient::msgqTimerHandler(ev::timer &watcher, int revents) {
     // unlock message queue
     pthread_mutex_unlock(&msgQlock);
 }
+
+// heartbeatTimerHandler handles msg queue events
+void DelphiClient::heartbeatTimerHandler(ev::timer &watcher, int revents) {
+    auto status = make_shared<delphi::objects::DelphiClientStatus>();
+    status->set_key(this->service->Name());
+    status->set_serviceid(this->myServiceID);
+    status->set_pid(getpid());
+    status->set_lastseen(time(NULL));
+    
+    this->SetObject(status);
+}
+
 
 // MockConnect simulates a connection to delphi hub
 error DelphiClient::MockConnect(uint16_t mySvcId) {
