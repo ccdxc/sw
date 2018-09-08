@@ -76,70 +76,22 @@ void cap_ms_sbus_write(int chip_id, int rcvr_addr, int data_addr, int data) {
 
   uint32_t val;
 
-#ifndef CAPRI_SW
-  //cap_ms_csr_t & ms_csr = CAP_BLK_REG_MODEL_ACCESS(cap_ms_csr_t, chip_id, 0);
-#endif
-  //PLOG_MSG("KCM:cap_ms_sbus_write: " << hex << rcvr_addr << " data_addr: 0x" << hex << data_addr << dec << endl);
-
   val = rcvr_addr |
-	(data_addr << CAP_MS_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
-	(CAP_SBUS_SBUS_WR << CAP_MS_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
+    (data_addr << CAP_MS_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
+    (CAP_SBUS_SBUS_WR << CAP_MS_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
   cap_sbus_reg_write((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_CFG_SBUS_INDIR_BYTE_ADDRESS, val);
-	
-
-/*
-  ms_csr.cfg_sbus_indir.rcvr_addr(rcvr_addr);
-  ms_csr.cfg_sbus_indir.data_addr(data_addr);
-  ms_csr.cfg_sbus_indir.command(CAP_SBUS_SBUS_WR);
-  ms_csr.cfg_sbus_indir.write();
-*/
-
-  // clock divie, 2^n, set n=1
-  // write data = 1 
-  /*
- *ms_csr.dhs_sbus_indir.entry.data(data);
-  ms_csr.dhs_sbus_indir.entry.write();
-  */
   cap_sbus_reg_write((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_DHS_SBUS_INDIR_BYTE_ADDRESS, data);
-
-
-  /* 
- *ms_csr.cfg_sbus_result.mode(0);
-  ms_csr.cfg_sbus_result.write();
-  */
-  cap_sbus_reg_write((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_CFG_SBUS_RESULT_BYTE_ADDRESS, 0);
 }
 
 int cap_ms_sbus_read(int chip_id, int rcvr_addr, int data_addr) {
 
   int rd_data;
   uint32_t val;
-#ifndef CAPRI_SW
-  //cap_ms_csr_t & ms_csr = CAP_BLK_REG_MODEL_ACCESS(cap_ms_csr_t, chip_id, 0);
-#endif
-  //PLOG_MSG("KCM:cap_ms_sbus_read: " << hex << rcvr_addr << " data_addr: 0x" << hex << data_addr << dec << endl);
-
-  /*
-  ms_csr.cfg_sbus_indir.rcvr_addr(rcvr_addr);
-  ms_csr.cfg_sbus_indir.data_addr(data_addr);
-  ms_csr.cfg_sbus_indir.command(CAP_SBUS_SBUS_RD);
-  ms_csr.cfg_sbus_indir.write();
-
-  ms_csr.cfg_sbus_result.mode(0);
-  ms_csr.cfg_sbus_result.write();
-  */
-
   val = rcvr_addr |
-	(data_addr << CAP_MS_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
-	(CAP_SBUS_SBUS_RD << CAP_MS_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
+    (data_addr << CAP_MS_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
+    (CAP_SBUS_SBUS_RD << CAP_MS_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
   cap_sbus_reg_write((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_CFG_SBUS_INDIR_BYTE_ADDRESS, val);
-  cap_sbus_reg_write((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_CFG_SBUS_RESULT_BYTE_ADDRESS, 0);
-
-/*
-  ms_csr.dhs_sbus_indir.entry.read();
-  rd_data = ms_csr.dhs_sbus_indir.entry.data().convert_to<int>();
-*/
-  rd_data = cap_sbus_reg_read((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_DHS_SBUS_INDIR_ENTRY_BYTE_ADDRESS);
+  rd_data = cap_sbus_reg_read((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_DHS_SBUS_INDIR_BYTE_ADDRESS);
 
   return rd_data;
 }
@@ -149,30 +101,11 @@ void cap_ms_sbus_reset(int chip_id, int rcvr_addr) {
 
   uint32_t val;
   uint32_t data_addr=0;
-#ifndef CAPRI_SW
-  //cap_ms_csr_t & ms_csr = CAP_BLK_REG_MODEL_ACCESS(cap_ms_csr_t, chip_id, 0);
-#endif
-
-/*
-  ms_csr.cfg_sbus_indir.rcvr_addr(rcvr_addr);
-  ms_csr.cfg_sbus_indir.data_addr(data_addr);
-  ms_csr.cfg_sbus_indir.command(CAP_SBUS_SBUS_WR);
-  ms_csr.cfg_sbus_indir.write();
-
-  // clock divie, 2^n, set n=1
-  // write data = 1 
-  ms_csr.dhs_sbus_indir.entry.data(data);
-  ms_csr.dhs_sbus_indir.entry.write();
-
-  ms_csr.cfg_sbus_result.mode(0);
-  ms_csr.cfg_sbus_result.write();
-*/
   val = rcvr_addr |
-	(data_addr << CAP_MS_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
-	(CAP_SBUS_SBUS_RST << CAP_MS_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
+    (data_addr << CAP_MS_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
+    (CAP_SBUS_SBUS_RST << CAP_MS_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
   cap_sbus_reg_write((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_CFG_SBUS_INDIR_BYTE_ADDRESS, val);
-  //cap_sbus_reg_write((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_DHS_SBUS_INDIR_BYTE_ADDRESS, 0);
-  cap_sbus_reg_write((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_CFG_SBUS_RESULT_BYTE_ADDRESS, 0);
+  cap_sbus_reg_write((CAP_ADDR_BASE_MS_MS_OFFSET) + CAP_MS_CSR_DHS_SBUS_INDIR_BYTE_ADDRESS, 0);
 }
 
 
@@ -189,57 +122,23 @@ void cap_pp_sbus_reset(int chip_id, int rcvr_addr) {
 
   uint32_t val;
   uint32_t data_addr=0;
-#ifndef CAPRI_SW
-  //cap_pp_csr_t & pp_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pp_csr_t, chip_id, 0);
-#endif
 
-/*
-  pp_csr.cfg_sbus_indir.rcvr_addr(rcvr_addr);
-  pp_csr.cfg_sbus_indir.data_addr(data_addr);
-  pp_csr.cfg_sbus_indir.command(CAP_SBUS_SBUS_WR);
-  pp_csr.cfg_sbus_indir.write();
-
-  // clock divie, 2^n, set n=1
-  // write data = 1 
-  pp_csr.dhs_sbus_indir.entry.data(data);
-  pp_csr.dhs_sbus_indir.entry.write();
-
-  pp_csr.cfg_sbus_result.mode(0);
-  pp_csr.cfg_sbus_result.write();
-*/
   val = rcvr_addr |
-	(data_addr << CAP_PP_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
-	(CAP_SBUS_SBUS_RST << CAP_PP_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
+    (data_addr << CAP_PP_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
+    (CAP_SBUS_SBUS_RST << CAP_PP_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
   cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_CFG_SBUS_INDIR_BYTE_ADDRESS, val);
-  //cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_DHS_SBUS_INDIR_BYTE_ADDRESS, 0);
-  cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_CFG_SBUS_RESULT_BYTE_ADDRESS, 0);
+  cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_DHS_SBUS_INDIR_BYTE_ADDRESS, 0);
+  PLOG_MSG("KCM:cap_pp_sbus_reset:0x" << hex << rcvr_addr << dec << endl);
 }
 
 void cap_pp_sbus_write(int chip_id, int rcvr_addr, int data_addr, int data) {
 
   uint32_t val;
-#ifndef CAPRI_SW
-  //cap_pp_csr_t & pp_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pp_csr_t, chip_id, 0);
-#endif
 
-/*
-  pp_csr.cfg_sbus_indir.rcvr_addr(rcvr_addr);
-  pp_csr.cfg_sbus_indir.data_addr(data_addr);
-  pp_csr.cfg_sbus_indir.command(CAP_SBUS_SBUS_WR);
-  pp_csr.cfg_sbus_indir.write();
-
-  // clock divie, 2^n, set n=1
-  // write data = 1 
-  pp_csr.dhs_sbus_indir.entry.data(data);
-  pp_csr.dhs_sbus_indir.entry.write();
-
-  pp_csr.cfg_sbus_result.mode(0);
-  pp_csr.cfg_sbus_result.write();
-*/
-  //PLOG_MSG("KCM:cap_pp_sbus_write: " << hex << rcvr_addr << " data_addr: 0x" << hex << data_addr << " data:0x" << data << dec << endl);
+  PLOG_MSG("cap_pp_sbus_write:0x" << hex << rcvr_addr << " data_addr: 0x" << hex << data_addr << " data:0x" << data << dec << endl);
   val = rcvr_addr |
-	(data_addr << CAP_PP_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
-	(CAP_SBUS_SBUS_WR << CAP_PP_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
+    (data_addr << CAP_PP_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
+    (CAP_SBUS_SBUS_WR << CAP_PP_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
   cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_CFG_SBUS_INDIR_BYTE_ADDRESS, val);
   cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_DHS_SBUS_INDIR_BYTE_ADDRESS, data);
 }
@@ -248,29 +147,13 @@ int cap_pp_sbus_read(int chip_id, int rcvr_addr, int data_addr) {
 
   int rd_data;
   uint32_t val;
-#ifndef CAPRI_SW
-  //cap_pp_csr_t & pp_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pp_csr_t, chip_id, 0);
-#endif
-  //PLOG_MSG("KCM:cap_pp_sbus_read: " << hex << rcvr_addr << " data_addr: 0x" << hex << data_addr << dec << endl);
-
-/*
-  pp_csr.cfg_sbus_indir.rcvr_addr(rcvr_addr);
-  pp_csr.cfg_sbus_indir.data_addr(data_addr);
-  pp_csr.cfg_sbus_indir.command(CAP_SBUS_SBUS_RD);
-  pp_csr.cfg_sbus_indir.write();
-
-  pp_csr.cfg_sbus_result.mode(0);
-  pp_csr.cfg_sbus_result.write();
-
-  pp_csr.dhs_sbus_indir.entry.read();
-  rd_data = pp_csr.dhs_sbus_indir.entry.data().convert_to<int>();
-*/
+  PLOG_MSG("cap_pp_sbus_read:0x" << hex << rcvr_addr << " data_addr: 0x" << hex << data_addr << dec << endl);
 
   val = rcvr_addr |
-	(data_addr << CAP_PP_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
-	(CAP_SBUS_SBUS_RD << CAP_PP_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
+    (data_addr << CAP_PP_CSR_CFG_SBUS_INDIR_DATA_ADDR_LSB) |
+    (CAP_SBUS_SBUS_RD << CAP_PP_CSR_CFG_SBUS_INDIR_COMMAND_LSB) ;
   cap_sbus_reg_write((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_CFG_SBUS_INDIR_BYTE_ADDRESS, val);
-  rd_data = cap_sbus_reg_read((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_DHS_SBUS_INDIR_ENTRY_BYTE_ADDRESS);
+  rd_data = cap_sbus_reg_read((CAP_ADDR_BASE_PP_PP_OFFSET) + CAP_PP_CSR_DHS_SBUS_INDIR_BYTE_ADDRESS);
 
   return rd_data;
 }
@@ -346,38 +229,38 @@ void upload_sbus_master_firmware(int chip_id, int sbus_ring_ms, int device_addr,
        valid = romfile_read(ctx, &imem_data);
        PLOG_MSG( "DEBUG: 1 Spico valid: 0x" << hex << valid << " imem_data: 0x" << imem_data << dec << endl);
        if (valid  > 0) {
-	 sbus_data = imem_data & 0x3ff;
-	 word_count++;
-	 valid = romfile_read(ctx, &imem_data);
-	 PLOG_MSG( "DEBUG: 2 Spico valid: 0x" << hex << valid << " imem_data: 0x" << imem_data << dec << endl);
+     sbus_data = imem_data & 0x3ff;
+     word_count++;
+     valid = romfile_read(ctx, &imem_data);
+     PLOG_MSG( "DEBUG: 2 Spico valid: 0x" << hex << valid << " imem_data: 0x" << imem_data << dec << endl);
        }
        
        // data word 2
        if (valid  > 0) {
-	 sbus_data = sbus_data | ((imem_data & 0x3ff) << 10);
-	 word_count++;
-	 valid = romfile_read(ctx, &imem_data);
-	 PLOG_MSG( "DEBUG: 3 Spico valid: 0x" << hex << valid << " imem_data: 0x" << imem_data << dec << endl);
+     sbus_data = sbus_data | ((imem_data & 0x3ff) << 10);
+     word_count++;
+     valid = romfile_read(ctx, &imem_data);
+     PLOG_MSG( "DEBUG: 3 Spico valid: 0x" << hex << valid << " imem_data: 0x" << imem_data << dec << endl);
        }
        
        // data word 3
        if (valid  > 0) {
-	 sbus_data = sbus_data | ((imem_data & 0x3ff) << 20);
-	 word_count++;
+     sbus_data = sbus_data | ((imem_data & 0x3ff) << 20);
+     word_count++;
        }
        
        // Word count
        if (word_count  > 0) {
-	 sbus_data = sbus_data | (word_count << 30);
-	 
-	 // Send the instruction burst
-	 PLOG_MSG( "DEBUG: Spico upload addr: 0x" << hex << addr << " data: 0x" << sbus_data << dec << endl);
-	 if (sbus_ring_ms) {
-	   cap_ms_sbus_write(chip_id, device_addr, 0x14, sbus_data);
-	 } else {
-	   cap_pp_sbus_write(chip_id, device_addr, 0xa, sbus_data);
-	 }
-	 addr += word_count;
+     sbus_data = sbus_data | (word_count << 30);
+     
+     // Send the instruction burst
+     PLOG_MSG( "DEBUG: Spico upload addr: 0x" << hex << addr << " data: 0x" << sbus_data << dec << endl);
+     if (sbus_ring_ms) {
+       cap_ms_sbus_write(chip_id, device_addr, 0x14, sbus_data);
+     } else {
+       cap_pp_sbus_write(chip_id, device_addr, 0xa, sbus_data);
+     }
+     addr += word_count;
        }
      }
 
@@ -393,20 +276,20 @@ void upload_sbus_master_firmware(int chip_id, int sbus_ring_ms, int device_addr,
    else {
      if (sbus_ring_ms) {
 #ifdef _CSV_INCLUDED_    
-	  svScope old_scope = svGetScope();
-	  svScope new_scope = svGetScopeFromName("top_tb");
-	  svSetScope(new_scope); 
+      svScope old_scope = svGetScope();
+      svScope new_scope = svGetScopeFromName("top_tb");
+      svSetScope(new_scope); 
 #ifndef NX_MS_NWL_TB 
 #ifndef NX_MS_TB 
-	  hbm_download_serdes_code("default");
+      hbm_download_serdes_code("default");
 #endif
 #endif
-	  svSetScope(old_scope);
-	  PLOG_MSG("HBM backdoor firmware download completed" << endl);
+      svSetScope(old_scope);
+      PLOG_MSG("HBM backdoor firmware download completed" << endl);
 #else
-	  PLOG_ERR("HBM backdoor firmware download only supported in _CSV_INCLUDED_ (verilog) mode" << endl);
+      PLOG_ERR("HBM backdoor firmware download only supported in _CSV_INCLUDED_ (verilog) mode" << endl);
 #endif
-	  PLOG_MSG("HBM frontdoor firmware download completed" << endl);
+      PLOG_MSG("HBM frontdoor firmware download completed" << endl);
      }
      else {
        PLOG_ERR("backdoor firmware load only supported for HBM for now" << endl);
@@ -421,7 +304,7 @@ void upload_sbus_master_firmware(int chip_id, int sbus_ring_ms, int device_addr,
      cap_ms_sbus_write(chip_id, device_addr, 0x14, 0xc0000000); // Pad with 0's
      // SBusMaster16_Spec: Table 10 
      cap_ms_sbus_write(0, device_addr, 0x1, 0x40);  // Place SPICO into Reset and Enable off
-     cap_ms_sbus_write(0, device_addr, 0x1, 0x140); // Remove Reset, Enable off, IMEM_CNTL_EN on	  
+     cap_ms_sbus_write(0, device_addr, 0x1, 0x140); // Remove Reset, Enable off, IMEM_CNTL_EN on      
 
      PLOG_MSG("MS read to flush all writes, this will cause firmware download completed" << endl);
      data = cap_ms_sbus_read(chip_id, 1, 0xff);
