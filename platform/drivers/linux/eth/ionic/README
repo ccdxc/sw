@@ -57,7 +57,7 @@ The driver module is built outside of the kernel tree using the -C option to
 the kernel's make.  The resultant driver module will be named ionic.ko.
 
   $ cd <driver directory>
-  $ CONFIG_IONIC=m make -C <path to net-next kernel tree> M=$PWD modules
+  $ make -C <path to net-next kernel tree> M=$PWD CONFIG_IONIC=m modules
 
 Should build ionic.ko driver module.
 
@@ -66,7 +66,7 @@ Cleaning
 --------
 
   $ cd <driver directory>
-  $ CONFIG_IONIC=m make -C <path to kernel tree> M=$PWD clean
+  $ make -C <path to kernel tree> M=$PWD CONFIG_IONIC=m clean
 
 
 Loading Driver
