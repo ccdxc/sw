@@ -135,6 +135,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_EP_CREATE, pd_ep_create);
     PD_FUNC_LOAD(PD_FUNC_ID_EP_DELETE, pd_ep_delete);
     PD_FUNC_LOAD(PD_FUNC_ID_EP_UPDATE, pd_ep_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_EP_IF_UPDATE, pd_ep_if_update);
     PD_FUNC_LOAD(PD_FUNC_ID_EP_MEM_FREE, pd_ep_mem_free);
     PD_FUNC_LOAD(PD_FUNC_ID_EP_MAKE_CLONE, pd_ep_make_clone);
     PD_FUNC_LOAD(PD_FUNC_ID_EP_GET, pd_ep_get);

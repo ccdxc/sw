@@ -1428,6 +1428,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret        = HAL_RET_OK;
     pd::pd_if_update_args_t     pd_if_args = { 0 };
+    pd::pd_ep_if_update_args_t  pd_ep_if_args = {0};
     dllist_ctxt_t               *lnode     = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *hal_if    = NULL, *hal_if_clone = NULL;
@@ -1435,6 +1436,8 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_func_args_t          pd_func_args = {0};
     l2seg_t                     *native_l2seg_old;
     oif_t                       oif = {};
+    hal_handle_t                *p_hdl = NULL;
+    ep_t                        *ep = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1497,6 +1500,30 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("Failed to update if pd, err  : {}", ret);
     }
 
+    // If lif changes on enic, we should trigger EP to reprogram ipsg entries.
+    if (pd_if_args.lif_change && hal_if->if_type == intf::IF_TYPE_ENIC) {
+        pd_ep_if_args.lif_change = pd_if_args.lif_change;
+        pd_ep_if_args.new_lif = pd_if_args.new_lif;
+        for (const void *ptr : *(hal_if->ep_list)) {
+            p_hdl = (hal_handle_t *)ptr;
+            ep = find_ep_by_handle(*p_hdl);
+            if (!ep) {
+                HAL_TRACE_ERR("Unable to find ep with handle  : {}",
+                              *p_hdl);
+                continue;
+            }
+            HAL_TRACE_DEBUG("Updating EP {} b'coz of lif_change",
+                            ep_l2_key_to_str(ep));
+            pd_ep_if_args.ep = ep;
+            pd_func_args.pd_ep_if_update = &pd_ep_if_args;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_IF_UPDATE, &pd_func_args);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to update EP with if update, err  : {}",
+                              ret);
+            }
+        }
+    }
+
     // Change Flood replication entry for change of native l2seg
     if (is_forwarding_mode_smart_nic() && pd_if_args.native_l2seg_change) {
         // Remove and add replication entry
@@ -1553,7 +1580,6 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
 end:
-
     return ret;
 }
 

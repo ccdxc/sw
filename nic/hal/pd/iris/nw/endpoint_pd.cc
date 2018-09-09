@@ -97,6 +97,27 @@ pd_ep_update (pd_func_args_t *pd_func_args)
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// EP Update for IF update
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_ep_if_update (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    pd_ep_if_update_args_t  *if_upd_args = pd_func_args->pd_ep_if_update;
+    pd_ep_t                 *ep_pd = (pd_ep_t *)if_upd_args->ep->pd;;
+
+    if (if_upd_args->lif_change) {
+        ret = ep_pd_pgm_ipsg_tbl(ep_pd,
+                                 false,
+                                 if_upd_args,
+                                 TABLE_OPER_UPDATE);
+
+    }
+
+    return ret;
+}
+
 //-----------------------------------------------------------------------------
 // PD Endpoint Delete
 //-----------------------------------------------------------------------------
@@ -319,7 +340,10 @@ pd_ep_upd_iplist_change (pd_ep_update_args_t *pd_ep_upd_args)
 
     // Program IPSG entries for new IPs
     ret = ep_pd_pgm_ipsg_tbl_ip_entries(pd_ep_upd_args->ep,
-                                        pd_ep_upd_args->add_iplist);
+                                        pd_ep_upd_args->add_iplist,
+                                        false,
+                                        NULL,
+                                        TABLE_OPER_INSERT);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(" failed to pgm IPSG"
                 "for new ip. ret:{}", ret);
@@ -521,7 +545,10 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
     ep_t                 *pi_ep = (ep_t *)pd_ep->pi_ep;
 
     // Program IPSG Table
-    ret = ep_pd_pgm_ipsg_tbl(pd_ep, is_upgrade);
+    ret = ep_pd_pgm_ipsg_tbl(pd_ep,
+                             is_upgrade,
+                             NULL,
+                             TABLE_OPER_INSERT);
 
     // Classic mode or if its behind MNIC or management NIC:
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
@@ -533,7 +560,10 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
 }
 
 hal_ret_t
-ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list, bool is_upgrade)
+ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list,
+                              bool is_upgrade,
+                              pd_ep_if_update_args_t *if_args,
+                              table_oper_t oper)
 {
     hal_ret_t           ret = HAL_RET_OK;
     dllist_ctxt_t       *lnode = NULL;
@@ -545,7 +575,10 @@ ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list, bool is_up
         pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
         pd_ip_entry = pi_ip_entry->pd;
 
-        ret = ep_pd_pgm_ipsg_tble_per_ip(pi_ep->pd, pd_ip_entry, is_upgrade);
+        ret = ep_pd_pgm_ipsg_tble_per_ip(pi_ep->pd, pd_ip_entry,
+                                         is_upgrade,
+                                         if_args,
+                                         oper);
         if (ret != HAL_RET_OK) {
             goto end;
         }
@@ -560,7 +593,9 @@ end:
 // Program IPSG table for every IP entry
 // ----------------------------------------------------------------------------
 hal_ret_t
-ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep, bool is_upgrade)
+ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep, bool is_upgrade,
+                    pd_ep_if_update_args_t *if_args,
+                    table_oper_t oper)
 {
     hal_ret_t           ret = HAL_RET_OK;
     // dllist_ctxt_t       *lnode = NULL;
@@ -568,26 +603,14 @@ ep_pd_pgm_ipsg_tbl (pd_ep_t *pd_ep, bool is_upgrade)
     // ep_ip_entry_t       *pi_ip_entry = NULL;
     // pd_ep_ip_entry_t    *pd_ip_entry = NULL;
 
-    ret = ep_pd_pgm_ipsg_tbl_ip_entries(pi_ep, &(pi_ep->ip_list_head), is_upgrade);
+    ret = ep_pd_pgm_ipsg_tbl_ip_entries(pi_ep, &(pi_ep->ip_list_head),
+                                        is_upgrade,
+                                        if_args,
+                                        oper);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program IPSG entries");
         goto end;
     }
-
-    // TODO: Clean up
-#if 0
-    // Walk through ip entries
-    dllist_for_each(lnode, &(pi_ep->ip_list_head)) {
-        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode -
-            offsetof(ep_ip_entry_t, ep_ip_lentry));
-        pd_ip_entry = pi_ip_entry->pd;
-
-        ret = ep_pd_pgm_ipsg_tble_per_ip(pd_ep, pd_ip_entry);
-        if (ret != HAL_RET_OK) {
-            goto end;
-        }
-    }
-#endif
 
 end:
     return ret;
@@ -668,7 +691,11 @@ end:
 // Program IPSG table for IP entry
 // ----------------------------------------------------------------------------
 hal_ret_t
-ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry, bool is_upgrade)
+ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep,
+                           pd_ep_ip_entry_t *pd_ip_entry,
+                           bool is_upgrade,
+                           pd_ep_if_update_args_t *if_args,
+                           table_oper_t oper)
 {
     hal_ret_t           ret = HAL_RET_OK;
     sdk_ret_t           sdk_ret;
@@ -721,7 +748,20 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry, bool i
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_IF_NOT_FOUND);
     data.actionid = IPSG_IPSG_HIT_ID;
     // data.ipsg_action_u.ipsg_ipsg_hit.src_lport = if_get_lport_id(pi_if);
-    data.ipsg_action_u.ipsg_ipsg_hit.src_lif = if_get_hw_lif_id(pi_if);
+    if (if_args && if_args->lif_change) {
+        if (if_args->new_lif) {
+            uint32_t src_lif = 0;
+            ret = pd_lif_get_hw_lif_id(if_args->new_lif, &src_lif);
+            data.ipsg_action_u.ipsg_ipsg_hit.src_lif = src_lif;
+            HAL_TRACE_DEBUG("Lif change on Enic. IPSG src_lif: {}",
+                            data.ipsg_action_u.ipsg_ipsg_hit.src_lif);
+        } else {
+            HAL_TRACE_DEBUG("Lif removal on Enic. IPSG src_lif: {}",
+                            data.ipsg_action_u.ipsg_ipsg_hit.src_lif);
+        }
+    } else {
+        data.ipsg_action_u.ipsg_ipsg_hit.src_lif = if_get_hw_lif_id(pi_if);
+    }
     mac = ep_get_mac_addr(pi_ep);
     // mac_int = MAC_TO_UINT64(*mac); // TODO: Cleanup May be you dont need this ?
     memcpy(data.ipsg_action_u.ipsg_ipsg_hit.mac, *mac, 6);
@@ -729,30 +769,41 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry, bool i
     if_l2seg_get_encap(pi_if, l2seg, &data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
             &data.ipsg_action_u.ipsg_ipsg_hit.vlan_id);
 
-    if (is_upgrade) {
-        sdk_ret = ipsg_tbl->insert_withid(&key, &key_mask, &data,
-                            pd_ip_entry->ipsg_tbl_idx);
+    if (oper == TABLE_OPER_INSERT) {
+        if (is_upgrade) {
+            sdk_ret = ipsg_tbl->insert_withid(&key, &key_mask, &data,
+                                              pd_ip_entry->ipsg_tbl_idx);
+        } else {
+            sdk_ret = ipsg_tbl->insert(&key, &key_mask, &data,
+                                       &(pd_ip_entry->ipsg_tbl_idx));
+        }
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to program IPSG for: {}",
+                          ipaddr2str(&(pi_ip_entry->ip_addr)));
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("Programmed IPSG for: at: {} "
+                            "(vrf:{}, ip:{}) => "
+                            "act_id:{}, lif:{}, vlan_v:{}, vlan_vid:{}, mac:{}",
+                            pd_ip_entry->ipsg_tbl_idx,
+                            key.flow_lkp_metadata_lkp_vrf,
+                            ipaddr2str(&(pi_ip_entry->ip_addr)),
+                            data.actionid,
+                            data.ipsg_action_u.ipsg_ipsg_hit.src_lif,
+                            data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
+                            data.ipsg_action_u.ipsg_ipsg_hit.vlan_id,
+                            macaddr2str(*mac));
+        }
     } else {
-        sdk_ret = ipsg_tbl->insert(&key, &key_mask, &data,
-                            &(pd_ip_entry->ipsg_tbl_idx));
-    }
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to program IPSG for: {}",
-                       ipaddr2str(&(pi_ip_entry->ip_addr)));
-        goto end;
-    } else {
-        HAL_TRACE_DEBUG("Programmed IPSG for: at: {} "
-                        "(vrf:{}, ip:{}) => "
-                        "act_id:{}, lif:{}, vlan_v:{}, vlan_vid:{}, mac:{}",
-                        pd_ip_entry->ipsg_tbl_idx,
-                        key.flow_lkp_metadata_lkp_vrf,
-                        ipaddr2str(&(pi_ip_entry->ip_addr)),
-                        data.actionid,
-                        data.ipsg_action_u.ipsg_ipsg_hit.src_lif,
-                        data.ipsg_action_u.ipsg_ipsg_hit.vlan_valid,
-                        data.ipsg_action_u.ipsg_ipsg_hit.vlan_id,
-                        macaddr2str(*mac));
+        sdk_ret = ipsg_tbl->update(pd_ip_entry->ipsg_tbl_idx, &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to update IPSG at: {}", pd_ip_entry->ipsg_tbl_idx);
+            goto end;
+        } else {
+            HAL_TRACE_ERR("Updated IPSG at: {}", pd_ip_entry->ipsg_tbl_idx);
+        }
     }
 
 end:

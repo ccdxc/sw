@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -33,6 +34,8 @@ using nw::NetworkSpec;
 using nw::NetworkResponse;
 using device::DeviceRequest;
 using device::DeviceResponseMsg;
+using endpoint::EndpointSpec;
+using endpoint::EndpointResponse;
 
 
 class enicif_test : public hal_base_test {
@@ -1009,6 +1012,10 @@ TEST_F(enicif_test, test7)
     LifResponse              lif_rsp;
     L2SegmentSpec            l2seg_spec;
     L2SegmentResponse        l2seg_rsp;
+    EndpointSpec             ep_spec;
+    EndpointResponse         ep_rsp;
+    ::google::protobuf::uint32  ip1 = 0x0a000003;
+    ::google::protobuf::uint32  ip2 = 0x0a000004;
 
     hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
 
@@ -1077,6 +1084,19 @@ TEST_F(enicif_test, test7)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // Create Endpoint
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(7);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(701);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(IF_ID_OFFSET + 71);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x0001DEADBEEF);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec, &ep_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
     // Update enic
     if_spec.Clear();
     if_spec.set_type(intf::IF_TYPE_ENIC);
@@ -1102,6 +1122,20 @@ TEST_F(enicif_test, test7)
     if_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(70);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_update(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create EP
+    // Create Endpoint
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(7);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(701);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(IF_ID_OFFSET + 71);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x0000DEADBEEF);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 }

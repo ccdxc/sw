@@ -189,11 +189,17 @@ end:
 uint32_t
 if_get_hw_lif_id(if_t *pi_if)
 {
+    hal_ret_t ret = HAL_RET_OK;
     pd_func_args_t pd_func_args = {0};
     pd_if_get_hw_lif_id_args_t args;
+
     args.pi_if = pi_if;
     pd_func_args.pd_if_get_hw_lif_id = &args;
-    pd_if_get_hw_lif_id(&pd_func_args);
+    ret = pd_if_get_hw_lif_id(&pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("No lif Enic: {}", pi_if->if_id);
+        args.hw_lif_id = 0;
+    }
     return args.hw_lif_id;
 }
 
@@ -212,20 +218,25 @@ pd_if_get_hw_lif_id(pd_func_args_t *pd_func_args)
     intf::IfType    if_type;
     // uint32_t        hw_lif_id = 0;
     if_t *pi_if = args->pi_if;
+    hal_ret_t       ret = HAL_RET_OK;
 
     HAL_ASSERT(pi_if != NULL);
+
+    args->hw_lif_id = INVALID_INDEXER_INDEX;
 
     if_type = intf_get_if_type(pi_if);
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
             pi_lif = if_get_lif(pi_if);
-            HAL_ASSERT(pi_lif != NULL);
+            if (!pi_lif) {
+                ret = HAL_RET_LIF_NOT_FOUND;
+                goto end;
+            }
 
             pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
             if (!pd_lif) {
                 args->hw_lif_id = INVALID_INDEXER_INDEX;
             }
-            HAL_ASSERT(pi_lif != NULL);
 
             args->hw_lif_id =  pd_lif->hw_lif_id;
             break;
@@ -256,7 +267,8 @@ pd_if_get_hw_lif_id(pd_func_args_t *pd_func_args)
             HAL_ASSERT(0);
     }
 
-    return HAL_RET_OK;
+end:
+    return ret;
 }
 
 #if 0

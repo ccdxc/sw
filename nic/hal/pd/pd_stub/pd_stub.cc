@@ -102,6 +102,7 @@ PD_FUNC_STUB(pd_if_restore);
 // ep calls
 PD_FUNC_STUB(pd_ep_create);
 PD_FUNC_STUB(pd_ep_update);
+PD_FUNC_STUB(pd_ep_if_update);
 PD_FUNC_STUB(pd_ep_delete);
 PD_FUNC_STUB(pd_ep_mem_free);
 PD_FUNC_STUB(pd_ep_make_clone);

@@ -751,6 +751,12 @@ pd_ep_update_args_init (pd_ep_update_args_t *args)
     return;
 }
 
+typedef struct pd_ep_if_update_args_s {
+    ep_t            *ep;
+    bool            lif_change;
+    lif_t           *new_lif;
+} __PACK__ pd_ep_if_update_args_t;
+
 typedef struct pd_ep_mem_free_args_s {
     vrf_t        *vrf;
     l2seg_t         *l2seg;
@@ -3021,7 +3027,8 @@ typedef struct pd_quiesce_stop_args_s {
     ENTRY(PD_FUNC_ID_TLS_PROXY_CB_GET,         259, "PD_FUNC_ID_TLSCB_GET")        \
     ENTRY(PD_FUNC_ID_COLLECTOR_DELETE,         260, "PD_FUNC_ID_COLLECTOR_DELETE")\
     ENTRY(PD_FUNC_ID_COLLECTOR_GET,            261, "PD_FUNC_ID_COLLECTOR_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      262, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_EP_IF_UPDATE,             262, "PD_FUNC_ID_EP_IF_UPDATE")      \
+    ENTRY(PD_FUNC_ID_MAX,                      263, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3098,6 +3105,7 @@ typedef struct pd_func_args_s {
         // ep calls
         PD_UNION_ARGS_FIELD(pd_ep_create);
         PD_UNION_ARGS_FIELD(pd_ep_update);
+        PD_UNION_ARGS_FIELD(pd_ep_if_update);
         PD_UNION_ARGS_FIELD(pd_ep_delete);
         PD_UNION_ARGS_FIELD(pd_ep_mem_free);
         PD_UNION_ARGS_FIELD(pd_ep_make_clone);
@@ -3481,6 +3489,7 @@ PD_FUNCP_TYPEDEF(pd_if_restore);
 // ep calls
 PD_FUNCP_TYPEDEF(pd_ep_create);
 PD_FUNCP_TYPEDEF(pd_ep_update);
+PD_FUNCP_TYPEDEF(pd_ep_if_update);
 PD_FUNCP_TYPEDEF(pd_ep_delete);
 PD_FUNCP_TYPEDEF(pd_ep_mem_free);
 PD_FUNCP_TYPEDEF(pd_ep_make_clone);
@@ -4274,6 +4283,7 @@ typedef struct pd_call_s {
         // ep calls
         PD_UNION_FIELD(pd_ep_create);
         PD_UNION_FIELD(pd_ep_update);
+        PD_UNION_FIELD(pd_ep_if_update);
         PD_UNION_FIELD(pd_ep_delete);
         PD_UNION_FIELD(pd_ep_mem_free);
         PD_UNION_FIELD(pd_ep_make_clone);

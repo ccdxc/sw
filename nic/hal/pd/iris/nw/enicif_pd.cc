@@ -906,6 +906,24 @@ end:
     return ret;
 }
 
+bool
+pd_enicif_has_lif(if_t *hal_if,
+                  pd_if_update_args_t *if_args)
+{
+    bool has_lif = false;
+
+    if (if_args && if_args->lif_change) {
+        if (if_args->new_lif) {
+            has_lif = true;
+        }
+    }
+
+    if (hal_if->lif_handle != HAL_HANDLE_INVALID) {
+        has_lif = true;
+    }
+
+    return has_lif;
+}
 
 if_t *
 pd_enicif_get_pinned_uplink_for_inp_props(if_t *hal_if,
@@ -1623,6 +1641,7 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
     hal_ret_t       ret       = HAL_RET_OK;
     if_t            *hal_if = (if_t *)pd_enicif->pi_if;
     if_t            *uplink = NULL;
+    uint8_t         ipsg_en = 0;
 
     memset(&data, 0, sizeof(data));
 
@@ -1661,11 +1680,16 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
             nwsec_prof = (nwsec_profile_t *)if_enicif_get_pi_nwsec((if_t *)pd_enicif->pi_if);
         }
 
+
+        if (pd_enicif_has_lif(hal_if, args)) {
+            ipsg_en = nwsec_prof ? nwsec_prof->ipsg_en : 0;
+        }
+
         data.actionid = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
         inp_prop_mac_vlan_data.vrf = pd_l2seg->l2seg_fl_lkup_id;
         inp_prop_mac_vlan_data.dir = FLOW_DIR_FROM_DMA;
         // inp_prop_mac_vlan_data.ipsg_enable = if_enicif_get_ipsg_en((if_t *)pd_enicif->pi_if);
-        inp_prop_mac_vlan_data.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;
+        inp_prop_mac_vlan_data.ipsg_enable = ipsg_en;
         inp_prop_mac_vlan_data.src_lif_check_en = 0; // Enabled only for Deja-vu entry
         inp_prop_mac_vlan_data.src_lif = 0;
         // inp_prop_mac_vlan_data.l4_profile_idx = pd_enicif_get_l4_prof_idx(pd_enicif);
