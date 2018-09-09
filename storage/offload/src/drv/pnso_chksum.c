@@ -15,11 +15,9 @@
 
 #ifdef NDEBUG
 #define CPDC_PPRINT_DESC(d)
-#define CPDC_PPRINT_STATUS_DESC(d)
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	PNSO_OK
 #else
 #define CPDC_PPRINT_DESC(d)		cpdc_pprint_desc(d)
-#define CPDC_PPRINT_STATUS_DESC(d)	cpdc_pprint_status_desc(d)
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	validate_setup_input(i, p)
 #endif
 
@@ -387,46 +385,21 @@ chksum_read_status_per_block(const struct service_info *svc_info)
 static pnso_error_t
 chksum_read_status_buffer(const struct service_info *svc_info)
 {
-	pnso_error_t err = EINVAL;
+	pnso_error_t err;
 	struct cpdc_desc *chksum_desc;
 	struct cpdc_status_desc *status_desc;
 
 	OSAL_LOG_INFO("enter ...");
 
+	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	if (!status_desc) {
-		OSAL_LOG_ERROR("invalid chksum status desc! err: %d", err);
-		goto out;
-	}
-	CPDC_PPRINT_STATUS_DESC(status_desc);
 
-	if (!status_desc->csd_valid) {
-		OSAL_LOG_ERROR("valid bit not set! err: %d", err);
+	err = cpdc_common_read_status(chksum_desc, status_desc);
+	if (err)
 		goto out;
-	}
-
-	chksum_desc = svc_info->si_desc;
-	if (!chksum_desc) {
-		OSAL_LOG_ERROR("invalid chksum desc! err: %d", err);
-		goto out;
-	}
-
-	if (status_desc->csd_partial_data != chksum_desc->cd_status_data) {
-		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u",
-				chksum_desc->cd_status_data,
-				status_desc->csd_partial_data);
-	}
-
-	if (status_desc->csd_err) {
-		err = status_desc->csd_err;
-		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
-				status_desc->csd_err, err);
-		goto out;
-	}
 
 	/* TODO-chksum: verify checksum/tags, etc.  */
 
-	err = PNSO_OK;
 	OSAL_LOG_INFO("exit! status verification success!");
 	return err;
 

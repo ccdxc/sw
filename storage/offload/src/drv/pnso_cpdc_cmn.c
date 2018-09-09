@@ -21,10 +21,8 @@
  * TODO:
  *	- revisit chain() when handling multiple services in one request
  *	- add additional UTs for read/write status/result, as needed
- *	- move/retire common routines/macros
  *	- reuse/common code
  *	- skip partial/status data mismatch in cp/chksum/hash and its UTs
- *	- once HW plugged-in, extend UTs with content checks
  *
  * TODO-cp:
  *	- handle PNSO_CP_DFLAG_ZERO_PAD, PNSO_CP_DFLAG_BYPASS_ONFAIL fully
@@ -43,6 +41,12 @@
  *	- see embedded ones
  *
  */
+#ifdef NDEBUG
+#define CPDC_PPRINT_STATUS_DESC(d)
+#else
+#define CPDC_PPRINT_STATUS_DESC(d)	cpdc_pprint_status_desc(d)
+#endif
+
 pnso_error_t
 cpdc_common_chain(struct chain_entry *centry)
 {
@@ -53,6 +57,53 @@ void
 cpdc_common_teardown(void *desc)
 {
 	/* TODO-chain: EOPNOTSUPP */
+}
+
+pnso_error_t
+cpdc_common_read_status(struct cpdc_desc *desc,
+		struct cpdc_status_desc *status_desc)
+{
+	pnso_error_t err = EINVAL;
+
+	OSAL_LOG_INFO("enter ...");
+
+	OSAL_ASSERT(desc);
+	OSAL_ASSERT(status_desc);
+
+	if (!status_desc) {
+		OSAL_LOG_ERROR("invalid status desc! err: %d", err);
+		goto out;
+	}
+	CPDC_PPRINT_STATUS_DESC(status_desc);
+
+	if (!status_desc->csd_valid) {
+		OSAL_LOG_ERROR("valid bit not set! err: %d", err);
+		goto out;
+	}
+
+	if (!desc) {
+		OSAL_LOG_ERROR("invalid desc! err: %d", err);
+		goto out;
+	}
+
+	if (status_desc->csd_partial_data != desc->cd_status_data) {
+		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u err: %d",
+				desc->cd_status_data,
+				status_desc->csd_partial_data, err);
+	}
+
+	if (status_desc->csd_err) {
+		err = status_desc->csd_err;
+		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
+				status_desc->csd_err, err);
+		goto out;
+	}
+
+	err = PNSO_OK;
+
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
 }
 
 static void __attribute__((unused))
