@@ -20,7 +20,7 @@ seq_setup_desc(struct service_info *svc_info, const void *src_desc,
 }
 
 void
-seq_ring_db(const struct service_info *svc_info, uint16_t index)
+seq_ring_db(const struct service_info *svc_info)
 {
-	g_sequencer_ops->ring_db(svc_info, index);
+	g_sequencer_ops->ring_db(svc_info);
 }

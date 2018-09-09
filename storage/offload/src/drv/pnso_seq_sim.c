@@ -16,7 +16,7 @@ sim_setup_desc(uint32_t ring_id, uint16_t *index,
 }
 
 static void
-sim_ring_db(const struct service_info *svc_info, uint16_t index)
+sim_ring_db(const struct service_info *svc_info)
 {
 	/* EOPNOTSUPP */
 }

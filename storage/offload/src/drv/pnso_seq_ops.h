@@ -17,7 +17,7 @@ struct sequencer_ops {
 	void * (*setup_desc)(struct service_info *svc_info,
 			const void *src_desc, size_t desc_size);
 
-	void (*ring_db)(const struct service_info *svc_info, uint16_t index);
+	void (*ring_db)(const struct service_info *svc_info);
 };
 
 extern const struct sequencer_ops model_seq_ops;

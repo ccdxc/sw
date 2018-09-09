@@ -16,7 +16,7 @@ ut_setup_desc(struct service_info *svc_info, const void *src_desc,
 }
 
 static void
-ut_ring_db(const struct service_info *svc_info, uint16_t index)
+ut_ring_db(const struct service_info *svc_info)
 {
 	/* EOPNOTSUPP */
 }

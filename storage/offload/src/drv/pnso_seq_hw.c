@@ -188,9 +188,10 @@ get_seq_q(const struct service_info *svc_info, bool status_q)
 }
 
 static void
-hw_ring_db(const struct service_info *svc_info, uint16_t index)
+hw_ring_db(const struct service_info *svc_info)
 {
 	struct queue *seq_q;
+	uint16_t index;
 
 	OSAL_LOG_DEBUG("enter ... ");
 
@@ -201,6 +202,7 @@ hw_ring_db(const struct service_info *svc_info, uint16_t index)
 		goto out;
 	}
 
+	index = svc_info->si_seq_info.sqi_index;
 	sonic_q_ringdb(seq_q, index);
 
 out:

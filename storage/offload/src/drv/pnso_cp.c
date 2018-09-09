@@ -317,7 +317,7 @@ compress_schedule(const struct service_info *svc_info)
 		OSAL_LOG_INFO("ring door bell <===");
 
 		seq_info = &svc_info->si_seq_info;
-		seq_ring_db(svc_info, seq_info->sqi_index);
+		seq_ring_db(svc_info);
 
 		err = PNSO_OK;
 	}
