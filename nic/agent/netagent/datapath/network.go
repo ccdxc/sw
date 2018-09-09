@@ -115,6 +115,9 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		bcastPolicy = halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD
 	}
 
+	// TODO Remove uplink pinning prior to FCS. This is needed temporarily to enable bring up.
+	pinnedUplinkIdx := nw.Status.NetworkID % uint64(len(uplinks))
+
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
 		Meta: &halproto.ObjectMeta{},
@@ -129,6 +132,11 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		VrfKeyHandle:   vrfKey,
 		NetworkKeyHandle: []*halproto.NetworkKeyHandle{
 			&nwKey,
+		},
+		PinnedUplinkIfKeyHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uplinks[pinnedUplinkIdx].Status.InterfaceID,
+			},
 		},
 	}
 	segReq := halproto.L2SegmentRequestMsg{
