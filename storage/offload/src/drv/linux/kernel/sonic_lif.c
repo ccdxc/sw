@@ -102,7 +102,6 @@ int sonic_q_alloc(struct lif *lif, struct queue *q,
 			sonic_q_free(lif, q);
 			return -ENOMEM;
 		}
-		sonic_q_map(q, num_descs, desc_size, q->base, q->base_pa);
 	}
 
 	return 0;
@@ -180,7 +179,7 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
 	cq_base = (void *)ALIGN((uintptr_t)q_base + q_size, PAGE_SIZE);
 	cq_base_pa = ALIGN(q_base_pa + q_size, PAGE_SIZE);
 
-	sonic_q_map(&new->q, num_descs, desc_size, q_base, q_base_pa);
+	sonic_q_map(&new->q, q_base, q_base_pa);
 	sonic_cq_map(&new->cq, cq_base, cq_base_pa);
 	sonic_cq_bind(&new->cq, &new->q);
 
@@ -479,6 +478,7 @@ static int sonic_cpdc_q_init(struct per_core_resource *res, struct queue *q,
 	q->pc_res = res;
 	q->qtype = STORAGE_SEQ_QTYPE_SQ;
 	q->qgroup = qgroup;
+	sonic_q_map(q, q->base, q->base_pa);
 
 	return err;
 }
@@ -595,6 +595,7 @@ static int sonic_crypto_q_init(struct per_core_resource *res,
 	q->pc_res = res;
 	q->qtype = STORAGE_SEQ_QTYPE_SQ;
 	q->qgroup = qgroup;
+	sonic_q_map(q, q->base, q->base_pa);
 
 	return err;
 }

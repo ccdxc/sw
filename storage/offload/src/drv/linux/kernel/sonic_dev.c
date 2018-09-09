@@ -359,8 +359,7 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 	return 0;
 }
 
-void sonic_q_map(struct queue *q, unsigned int num_descs,
-		unsigned int desc_size, void *base, dma_addr_t base_pa)
+void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa)
 {
 	struct desc_info *cur;
 	unsigned int i;
@@ -371,8 +370,8 @@ void sonic_q_map(struct queue *q, unsigned int num_descs,
 	printk(KERN_ERR "sonic_q_map base %llx base_pa %llx",
 			(u64) base, (u64) base_pa);
 
-	for (i = 0, cur = q->info; i < num_descs; i++, cur++)
-		cur->desc = base + (i * desc_size);
+	for (i = 0, cur = q->info; i < q->num_descs; i++, cur++)
+		cur->desc = base + (i * q->desc_size);
 }
 
 void sonic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
