@@ -608,16 +608,19 @@ mac_sync_get_hw (uint32_t port_num)
 static int
 mac_flush_set_hw (uint32_t port_num, bool enable)
 {
-    int      val        = 0;
+    int      val        = 0x1;
     uint32_t chip_id    = 0;
     uint32_t inst_id    = mac_get_inst_from_port(port_num);
     uint32_t start_lane = mac_get_lane_from_port(port_num);;
 
+    // if flush is true, reset Tx/Rx
     if (enable == true) {
-        val = 1;
+        val = 0x0;
     }
 
-    return cap_mx_flush_set(chip_id, inst_id, start_lane, val);
+    cap_mx_cfg_ch_en(chip_id, inst_id, start_lane, val);
+
+    return 0;
 }
 
 //----------------------------------------------------------------------------

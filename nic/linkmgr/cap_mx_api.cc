@@ -73,12 +73,6 @@ cap_mx_serdes_lpbk_set (int chip_id, int inst_id, int ch, int value)
     cap_mx_apb_write(chip_id, inst_id, addr, data);
 }
 
-int
-cap_mx_flush_set (int chip_id, int inst_id, int ch, int value)
-{
-    return 0;
-}
-
 void cap_mx_set_ch_enable(int chip_id, int inst_id, int ch, int value) { 
     // channel enable: {ch3, ch2, ch1, ch0}
     int rdata = cap_mx_apb_read(chip_id, inst_id, 0x4);

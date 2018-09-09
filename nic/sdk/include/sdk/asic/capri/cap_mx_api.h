@@ -63,7 +63,6 @@ int cap_bx_check_sync(int chip_id, int inst_id);
 void cap_pp_sbus_write(int chip_id, int rcvr_addr, int data_addr, int data);
 int  cap_pp_sbus_read (int chip_id, int rcvr_addr, int data_addr);
 int  cap_pp_sbus_reset(int chip_id, int rcvr_addr);
-int  cap_mx_flush_set (int chip_id, int inst_id, int ch, int value);
 int  cap_mx_serdes_lpbk_get (int chip_id, int inst_id, int ch);
 void cap_mx_serdes_lpbk_set (int chip_id, int inst_id, int ch, int value);
 
