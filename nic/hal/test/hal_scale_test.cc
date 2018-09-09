@@ -1422,18 +1422,20 @@ main (int argc, char** argv)
     uint64_t     num_uplinks    = 8;
     uint32_t     session_count = 0, batch_count = 0;
     int          oc;
+    bool         dup_session = false;
 
     struct option longopts[] = {
-       { "system-get",    no_argument,        NULL, 's' },
-       { "mode",          required_argument,  NULL, 'm' },
-       { "num-sessions",  required_argument,  NULL, 'n' },
-       { "batch-size",    required_argument,  NULL, 'b' },
-       { "no-delete",     no_argument,        NULL, 'd' },
-       { 0,               0,                  0,    0 }
+       { "system-get",          no_argument,        NULL, 's' },
+       { "duplicate-sessions",  no_argument,        NULL, 'u' },
+       { "mode",                required_argument,  NULL, 'm' },
+       { "num-sessions",        required_argument,  NULL, 'n' },
+       { "batch-size",          required_argument,  NULL, 'b' },
+       { "no-delete",           no_argument,        NULL, 'd' },
+       { 0,                     0,                  0,    0 }
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":sm:n:b:d", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":sum:n:b:d", longopts, NULL)) != -1) {
         switch (oc) {
         case 's':
             system_get = true;
@@ -1447,6 +1449,9 @@ main (int argc, char** argv)
             break;
         case 'n':
             num_sessions = atoi(optarg);
+            break;
+        case 'u':
+            dup_session = true;
             break;
         case 'b':
             batch_size = atoi(optarg);
@@ -1578,24 +1583,36 @@ main (int argc, char** argv)
     SessionRequestMsg req_msg;
     clock_gettime(CLOCK_MONOTONIC, &start_ts);
     sdk::timestamp_to_nsecs(&start_ts, &start_ns);
-    for (int src_port = 5024; src_port < 7035; src_port ++) {
-        for (int dst_port = 7050; dst_port < 9051; dst_port ++) {
-            for (int i = 0; i < 14; i ++) {        // src EPs
-                for (int j = 0; j < 14; j ++) {    // dst EPs
-                    batch_count++;
-                    if (batch_count == batch_size) {
-                        send = true;
-                        batch_count = 0;
-                    }
-                    session_count++;
-                    hclient.session_create(req_msg, session_count, vrf_id,
-                                           src_ip[i], dst_ip[j],
-                                           ::types::IPProtocol::IPPROTO_UDP,
-                                           src_port, dst_port,
-                                           ::session::FlowAction::FLOW_ACTION_ALLOW,
-                                           send);
-                    if (session_count == num_sessions) {
-                        goto done;
+    if (dup_session) {
+        send = true;
+        for (int i = 0; i < 2; i ++) {
+            hclient.session_create(req_msg, session_count, vrf_id,
+                                   src_ip[1], dst_ip[1],
+                                   ::types::IPProtocol::IPPROTO_UDP,
+                                   5024, 7050,
+                                   ::session::FlowAction::FLOW_ACTION_ALLOW,
+                                   send);
+        }
+    } else {
+        for (int src_port = 5024; src_port < 7035; src_port ++) {
+            for (int dst_port = 7050; dst_port < 9051; dst_port ++) {
+                for (int i = 0; i < 14; i ++) {        // src EPs
+                    for (int j = 0; j < 14; j ++) {    // dst EPs
+                        batch_count++;
+                        if (batch_count == batch_size) {
+                            send = true;
+                            batch_count = 0;
+                        }
+                        session_count++;
+                        hclient.session_create(req_msg, session_count, vrf_id,
+                                               src_ip[i], dst_ip[j],
+                                               ::types::IPProtocol::IPPROTO_UDP,
+                                               src_port, dst_port,
+                                               ::session::FlowAction::FLOW_ACTION_ALLOW,
+                                               send);
+                        if (session_count == num_sessions) {
+                            goto done;
+                        }
                     }
                 }
             }
