@@ -19,6 +19,7 @@ import (
 // CreateLocalEndpoint creates a local endpoint in the datapath
 func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup, lifID, enicID uint64, ns *netproto.Namespace) (*types.IntfInfo, error) {
 	var halIPAddresses []*halproto.IPAddress
+	var lifHandle *halproto.LifKeyHandle
 
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
@@ -91,6 +92,14 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 		},
 	}
 
+	if lifID != 0 {
+		lifHandle = &halproto.LifKeyHandle{
+			KeyOrHandle: &halproto.LifKeyHandle_LifId{
+				LifId: lifID,
+			},
+		}
+	}
+
 	// build enic message
 	enicSpec := &halproto.InterfaceSpec{
 		KeyOrHandle: &halproto.InterfaceKeyHandle{
@@ -102,12 +111,8 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 		// associate the lif id
 		IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
 			IfEnicInfo: &halproto.IfEnicInfo{
-				EnicType: halproto.IfEnicType_IF_ENIC_TYPE_USEG,
-				LifKeyOrHandle: &halproto.LifKeyHandle{
-					KeyOrHandle: &halproto.LifKeyHandle_LifId{
-						LifId: lifID,
-					},
-				},
+				EnicType:       halproto.IfEnicType_IF_ENIC_TYPE_USEG,
+				LifKeyOrHandle: lifHandle,
 				EnicTypeInfo: &halproto.IfEnicInfo_EnicInfo{
 					EnicInfo: &halproto.EnicInfo{
 						L2SegmentKeyHandle: &l2Key,

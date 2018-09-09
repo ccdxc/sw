@@ -421,25 +421,9 @@ func (na *Nagent) findIntfID(ep *netproto.Endpoint, epType EndpointType) (uint64
 	}
 
 	switch {
-	// Local EP Create, interface types unspecified by user. Associate available lif
+	// Local EP Create, interface types unspecified by user. Don't associate any LIFs
 	case epType == Local && len(ep.Spec.InterfaceType) == 0 && len(ep.Spec.Interface) == 0:
-		lifCount, err := na.countIntfs("LIF")
-		if err != nil {
-			log.Errorf("could not enumerate lifs. Err: %v", err)
-			return 0, fmt.Errorf("could not enumerate lifs. Err: %v", err)
-		}
-		epLIF, err := na.findAvailableInterface(lifCount, ep.Spec.MacAddress, "lif")
-		if err != nil {
-			log.Errorf("could not find an available lif. Err: %v", err)
-			return 0, fmt.Errorf("could not find an available lif. Err: %v", err)
-		}
-		lif, ok := na.findIntfByName(epLIF)
-		if !ok {
-			log.Errorf("could not find lif %v in state", epLIF)
-			return 0, fmt.Errorf("could not find lif %v in state", epLIF)
-		}
-		return lif.Status.InterfaceID, nil
-
+		return 0, nil
 		// Remote EP Create, interface types unspecified by user. Associate available uplink
 	case epType == Remote && len(ep.Spec.InterfaceType) == 0 && len(ep.Spec.Interface) == 0:
 		uplinkCount, err := na.countIntfs("UPLINK")
