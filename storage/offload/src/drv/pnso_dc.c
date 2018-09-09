@@ -350,11 +350,14 @@ decompress_read_status(const struct service_info *svc_info)
 
 	if (status_desc->csd_err) {
 		err = status_desc->csd_err;
-		OSAL_LOG_ERROR("no hw error reported! csd_err: %d err: %d",
+		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
 				status_desc->csd_err, err);
 		goto out;
 	}
+
 	err = PNSO_OK;
+	OSAL_LOG_INFO("exit! status verification success!");
+	return err;
 
 out:
 	OSAL_LOG_ERROR("exit! err:%d", err);

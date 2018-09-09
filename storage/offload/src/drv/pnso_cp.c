@@ -373,17 +373,6 @@ compress_read_status(const struct service_info *svc_info)
 		goto out;
 	}
 
-	/* bail on success */
-	if (!status_desc->csd_err) {
-		err = PNSO_OK;
-		OSAL_LOG_ERROR("no hw error reported! csd_err: %d err: %d",
-				status_desc->csd_err, err);
-		goto out;
-	}
-	err = status_desc->csd_err;
-
-	/* TODO-cp: handle bypass on fail flag */
-
 	cp_desc = svc_info->si_desc;
 	if (!cp_desc) {
 		OSAL_LOG_ERROR("invalid cp desc! err: %d", err);
@@ -394,6 +383,13 @@ compress_read_status(const struct service_info *svc_info)
 		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u err: %d",
 				cp_desc->cd_status_data,
 				status_desc->csd_partial_data, err);
+	}
+
+	/* TODO-cp: handle bypass on fail flag */
+	if (status_desc->csd_err) {
+		err = status_desc->csd_err;
+		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
+				status_desc->csd_err, err);
 		goto out;
 	}
 
@@ -431,6 +427,8 @@ compress_read_status(const struct service_info *svc_info)
 			goto out;
 		}
 	}
+
+	err = PNSO_OK;
 
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);

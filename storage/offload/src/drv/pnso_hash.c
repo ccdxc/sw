@@ -397,13 +397,6 @@ hash_read_status_buffer(const struct service_info *svc_info)
 		goto out;
 	}
 
-	if (status_desc->csd_err) {
-		err = status_desc->csd_err;
-		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
-				status_desc->csd_err, err);
-		goto out;
-	}
-
 	hash_desc = svc_info->si_desc;
 	if (!hash_desc) {
 		OSAL_LOG_ERROR("invalid hash desc! err: %d", err);
@@ -411,9 +404,15 @@ hash_read_status_buffer(const struct service_info *svc_info)
 	}
 
 	if (status_desc->csd_partial_data != hash_desc->cd_status_data) {
-		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u err: %d",
+		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u",
 				hash_desc->cd_status_data,
-				status_desc->csd_partial_data, err);
+				status_desc->csd_partial_data);
+	}
+
+	if (status_desc->csd_err) {
+		err = status_desc->csd_err;
+		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
+				status_desc->csd_err, err);
 		goto out;
 	}
 

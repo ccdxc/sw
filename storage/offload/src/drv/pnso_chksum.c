@@ -405,13 +405,6 @@ chksum_read_status_buffer(const struct service_info *svc_info)
 		goto out;
 	}
 
-	if (status_desc->csd_err) {
-		err = status_desc->csd_err;
-		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
-				status_desc->csd_err, err);
-		goto out;
-	}
-
 	chksum_desc = svc_info->si_desc;
 	if (!chksum_desc) {
 		OSAL_LOG_ERROR("invalid chksum desc! err: %d", err);
@@ -419,9 +412,15 @@ chksum_read_status_buffer(const struct service_info *svc_info)
 	}
 
 	if (status_desc->csd_partial_data != chksum_desc->cd_status_data) {
-		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u err: %d",
+		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u",
 				chksum_desc->cd_status_data,
-				status_desc->csd_partial_data, err);
+				status_desc->csd_partial_data);
+	}
+
+	if (status_desc->csd_err) {
+		err = status_desc->csd_err;
+		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
+				status_desc->csd_err, err);
 		goto out;
 	}
 
