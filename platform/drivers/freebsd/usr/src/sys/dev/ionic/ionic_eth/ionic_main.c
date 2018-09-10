@@ -106,14 +106,16 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		done = ionic_dev_cmd_done(idev);
 #ifdef HAPS
 		if (done)
-			printk(KERN_ERR "DEVCMD done took %ld secs (%ld jiffies)\n",
+			IONIC_DEBUG_PRINT("DEVCMD done took %ld secs (%ld jiffies)\n",
 			       (jiffies + max_wait - time)/HZ, jiffies + max_wait - time);
 #endif
 		if (done)
 			return 0;
 
 #ifdef FREEBSD
-		pause("ionic devcmd", HZ / 10);
+		// Need adminq lock for msleep
+		//msleep("ionic devcmd", HZ / 10);
+		DELAY(100000);
 #else
 		schedule_timeout_uninterruptible(HZ / 10);
 #endif

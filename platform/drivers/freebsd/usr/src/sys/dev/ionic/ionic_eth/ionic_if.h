@@ -19,8 +19,10 @@
 #ifndef _IONIC_IF_H_
 #define _IONIC_IF_H_
 
-
 #define DEV_CMD_SIGNATURE               0x44455643      /* 'DEVC' */
+
+#define IONIC_ADMINQ_ETH		0
+#define IONIC_ADMINQ_RDMA		1
 
 enum cmd_opcode {
 	CMD_OPCODE_NOP				= 0,
@@ -31,6 +33,7 @@ enum cmd_opcode {
 	CMD_OPCODE_TXQ_INIT			= 5,
 	CMD_OPCODE_RXQ_INIT			= 6,
 	CMD_OPCODE_FEATURES			= 7,
+	CMD_OPCODE_HANG_NOTIFY			= 8,
 
 	CMD_OPCODE_Q_ENABLE			= 9,
 	CMD_OPCODE_Q_DISABLE			= 10,
@@ -181,7 +184,8 @@ enum os_type {
 	OS_TYPE_WIN     = 2,
 	OS_TYPE_DPDK    = 3,
 	OS_TYPE_FREEBSD = 4,
-	OS_TYPE_IXPE    = 5,
+	OS_TYPE_IPXE    = 5,
+	OS_TYPE_ESXI    = 6,
 };
 
 /**
@@ -536,7 +540,6 @@ struct txq_desc {
 		};
 		struct {
 			u16 csum_offset:14;
-			//u16 rsvd4:2;
 			u8 l3_csum:1;
 			u8 l4_csum:1;
 		};
@@ -815,6 +818,26 @@ struct features_comp {
 };
 
 /**
+ * struct hang_notify_cmd - Hang notify command
+ * @opcode:     opcode = 8
+ */
+struct hang_notify_cmd {
+	u16 opcode;
+	u16 rsvd[31];
+};
+
+/**
+ * struct hang_notify_comp - Hang notify command completion
+ * @status: The status of the command.  Values for status are:
+ *             0 = Successful completion
+ */
+struct hang_notify_comp {
+	u32 status:8;
+	u32 rsvd:24;
+	u32 rsvd2[3];
+};
+
+/**
  * struct q_enable_cmd - Queue enable command
  * @opcode:     opcode = 9
  * @qid:        Queue ID
@@ -927,28 +950,38 @@ enum rx_filter_match_type {
 };
 
 /**
- * struct rx_filter_cmd - Add/delete LIF's Rx filter command
- * @opcode:     opcode = 18 (add), 19 (delete)
+ * struct rx_filter_add_cmd - Add LIF Rx filter command
+ * @opcode:     opcode = 18
  * @match:      Rx filter match type.  (See RX_FILTER_MATCH_xxx)
+ * @vlan:       VLAN ID
+ * @addr:       MAC address (network-byte order)
  * @qid:        Queue ID
  * @qtype:      Queue type
- * @vlan:       VLAN ID
- * @addr:       MAC Address (network-byte order)
  */
-struct rx_filter_cmd {
+struct rx_filter_add_cmd {
 	u16 opcode;
 	u16 match;
-	u32 qid:24;
-	u32 qtype:8;
-	u16 vlan;
-	u8 addr[6];
-	u8 rsvd[2];
-	u16 rsvd2[23];
+	union {
+		struct {
+			u16 vlan;
+			u16 rsvd[29];
+		} vlan;
+		struct {
+			u8 addr[6];
+			u8 rsvd[2];
+			u16 rsvd2[26];
+		} mac;
+		struct {
+			u16 vlan;
+			u8 addr[6];
+			u8 rsvd[2];
+			u16 rsvd3[25];
+		} mac_vlan;
+	};
 };
 
 /**
- * struct rx_filter_comp - Add/delete LIF's Rx filter command
- *                         completion
+ * struct rx_filter_add_comp - Add LIF Rx filter command completion
  * @status:     The status of the command.  Values for status are:
  *                 0 = Successful completion
  * @comp_index: The index in the descriptor ring for which this
@@ -956,7 +989,7 @@ struct rx_filter_cmd {
  * @filter_id:  Filter ID
  * @color:      Color bit.
  */
-struct rx_filter_comp {
+struct rx_filter_add_comp {
 	u32 status:8;
 	u32 rsvd:8;
 	u32 comp_index:16;
@@ -965,6 +998,19 @@ struct rx_filter_comp {
 	u32 rsvd3:31;
 	u32 color:1;
 };
+
+/**
+ * struct rx_filter_del_cmd - Delete LIF Rx filter command
+ * @opcode:     opcode = 19
+ * @filter_id:  Filter ID
+ */
+struct rx_filter_del_cmd {
+	u16 opcode;
+	u32 filter_id;
+	u16 rsvd[29];
+};
+
+typedef struct admin_comp rx_filter_del_comp;
 
 #define STATS_DUMP_VERSION_1		1
 
@@ -1032,6 +1078,18 @@ union stats_dump {
 #define RSS_HASH_KEY_SIZE	40
 
 enum rss_hash_types {
+/* Conflicts with FreeBSD rss definitions. */
+#ifndef FREEBSD
+	RSS_TYPE_IPV4		= BIT(0),
+	RSS_TYPE_IPV4_TCP	= BIT(1),
+	RSS_TYPE_IPV4_UDP	= BIT(2),
+	RSS_TYPE_IPV6		= BIT(3),
+	RSS_TYPE_IPV6_TCP	= BIT(4),
+	RSS_TYPE_IPV6_UDP	= BIT(5),
+	RSS_TYPE_IPV6_EX	= BIT(6),
+	RSS_TYPE_IPV6_TCP_EX	= BIT(7),
+	RSS_TYPE_IPV6_UDP_EX	= BIT(8),
+#else
 	IONIC_RSS_TYPE_IPV4		= BIT(0),
 	IONIC_RSS_TYPE_IPV4_TCP	= BIT(1),
 	IONIC_RSS_TYPE_IPV4_UDP	= BIT(2),
@@ -1041,6 +1099,7 @@ enum rss_hash_types {
 	IONIC_RSS_TYPE_IPV6_EX	= BIT(6),
 	IONIC_RSS_TYPE_IPV6_TCP_EX	= BIT(7),
 	IONIC_RSS_TYPE_IPV6_UDP_EX	= BIT(8),
+#endif
 };
 
 /**
@@ -1436,7 +1495,8 @@ union adminq_cmd {
 	struct station_mac_addr_get_cmd station_mac_addr_get;
 	struct mtu_set_cmd mtu_set;
 	struct rx_mode_set_cmd rx_mode_set;
-	struct rx_filter_cmd rx_filter;
+	struct rx_filter_add_cmd rx_filter_add;
+	struct rx_filter_del_cmd rx_filter_del;
 	struct stats_dump_cmd stats_dump;
 	struct rss_hash_set_cmd rss_hash_set;
 	struct rss_indir_set_cmd rss_indir_set;
@@ -1457,7 +1517,7 @@ union adminq_comp {
 	struct rxq_init_comp rxq_init;
 	struct features_comp features;
 	struct station_mac_addr_get_comp station_mac_addr_get;
-	struct rx_filter_comp rx_filter;
+	struct rx_filter_add_comp rx_filter_add;
 	struct stats_dump_comp stats_dump;
 	struct debug_q_dump_comp debug_q_dump;
 	struct create_ah_comp create_ah;
@@ -1466,5 +1526,4 @@ union adminq_comp {
 	struct create_qp_comp create_qp;
 	struct modify_qp_comp modify_qp;
 };
-
 #endif /* _IONIC_IF_H_ */

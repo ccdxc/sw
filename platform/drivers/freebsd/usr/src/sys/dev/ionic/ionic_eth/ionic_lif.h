@@ -127,18 +127,12 @@ struct rxque {
 
 	/* DMA ring for command and completion h/w rings. */
 	struct ionic_dma_info cmd_dma;
-	/*
-	 * H/w command and completion descriptor rings.
-	 * Points to area allocated by DMA.
-	 */
-	struct rxq_desc *cmd_ring;
-	struct rxq_comp *comp_ring;
 
 	struct doorbell __iomem *db;
 	/* Cache DMA address */
 	dma_addr_t cmd_ring_pa;
 
-	struct mtx mtx;
+	struct mtx rx_mtx;
 
 	/* Index for buffer and command descriptors. */
 	int cmd_head_index;
@@ -156,6 +150,12 @@ struct rxque {
 	struct taskqueue *taskq;
 
 	struct lro_ctrl	lro;
+	/*
+	 * H/w command and completion descriptor rings.
+	 * Points to area allocated by DMA.
+	 */
+	struct rxq_desc *cmd_ring;
+	struct rxq_comp *comp_ring;
 };
 
 /* Top level Tx Q mgmt. */
@@ -187,7 +187,7 @@ struct txque {
 	/* Cache DMA address */
 	dma_addr_t cmd_ring_pa;
 
-	struct mtx mtx;
+	struct mtx tx_mtx;
 
 	/* Index for buffer and command descriptors. */
 	int cmd_head_index;
@@ -262,7 +262,7 @@ struct lif {
 	bool registered;
 	unsigned int index;
 	struct workqueue_struct *adminq_wq;
-	spinlock_t adminq_lock;
+	struct mtx adminq_lock;
 	struct adminq *adminqcq;
 	struct txque **txqs;
 	struct rxque **rxqs;
@@ -270,7 +270,8 @@ struct lif {
 	unsigned int ntxqs;
 	unsigned int nrxqs;
 	unsigned int rx_mode;
-	int buf_len;	// rx mbuf buffer length.
+	int rx_mbuf_size;		/* Rx mbuf size pool. */
+	uint16_t max_frame_size; /* MTU size. */
 	u32 hw_features;
 	union stats_dump *stats_dump;
 	dma_addr_t stats_dump_pa;
@@ -285,6 +286,55 @@ struct lif {
 	struct mtx mtx;
 };
 
+#if 0
+#undef KASSERT
+/* Override KASSERT for debug only. */
+#define KASSERT(c, msg)	do {													\
+							if (!(c)) {										\
+								printf("PANIC[%s:%d]",  __func__, __LINE__); \
+								printf msg;									\
+								printf("\n");								\
+							}												\
+} while(0)
+#endif
+
+/* lif lock. */
+#define IONIC_CORE_LOCK(x)		mtx_lock(&(x)->mtx)
+#define IONIC_CORE_UNLOCK(x)	mtx_unlock(&(x)->mtx)
+
+#define IONIC_ADMIN_LOCK_INIT(x) mtx_init(&(x)->adminq_lock, "adminq", NULL, MTX_SPIN)
+#define IONIC_ADMIN_LOCK(x)	do { 							\
+	IONIC_DEBUG_PRINT("adminq locked\n");	\
+	mtx_lock_spin(&(x)->adminq_lock);						\
+} while (0)
+
+#define IONIC_ADMIN_UNLOCK(x)	do { 							\
+	IONIC_DEBUG_PRINT("adminq unlocked\n");	\
+	mtx_unlock_spin(&(x)->adminq_lock);						\
+} while (0)
+
+#define IONIC_TX_INIT(x)	mtx_init(&(x)->tx_mtx, (x)->name, NULL, MTX_DEF)
+#define IONIC_TX_LOCK(x)	mtx_lock(&(x)->tx_mtx)
+#define IONIC_TX_TRYLOCK(x)	mtx_trylock(&(x)->tx_mtx)
+#define IONIC_TX_UNLOCK(x)	mtx_unlock(&(x)->tx_mtx)
+#define IONIC_TX_LOCKED(x)	mtx_owned(&(x)->tx_mtx)
+#define IONIC_TX_DESTROY(x)	mtx_destroy(&(x)->tx_mtx)
+
+#define IONIC_RX_INIT(x)	mtx_init(&(x)->rx_mtx, (x)->name, NULL, MTX_DEF)
+#define IONIC_RX_LOCK(x)	do {							\
+				struct mtx* mtx = &(x)->rx_mtx;				\
+				IONIC_DEBUG_PRINT("%s locked\n",(x)->name);	\
+				mtx_lock(mtx);								\
+	} while(0)
+
+#define IONIC_RX_UNLOCK(x)	do {								\
+				struct mtx* mtx = &(x)->rx_mtx;					\
+				IONIC_DEBUG_PRINT("%s unlocked\n",(x)->name);	\
+				mtx_unlock(mtx);								\
+	} while(0)
+
+#define IONIC_RX_LOCKED(x)	mtx_owned(&(x)->rx_mtx)
+#define IONIC_RX_DESTROY(x)	mtx_destroy(&(x)->rx_mtx)
 
 static bool ionic_tx_avail(struct txque *txq, int want)
 {	
@@ -308,7 +358,7 @@ int ionic_lifs_size(struct ionic *ionic);
 int ionic_intr_alloc(struct lif *lif, struct intr *intr);
 void ionic_intr_free(struct lif *lif, struct intr *intr);
 
-int ionic_reinit_unlock(struct net_device *netdev);
+int ionic_reinit_locked(struct net_device *netdev);
 int ionic_set_features(struct lif *lif, uint16_t set_feature);
 
 int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir);
@@ -325,4 +375,6 @@ void ionic_rx_napi(struct napi_struct *napi);
 int ionic_tx_clean(struct txque* txq , int tx_limit);
 void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *buf,
 			   struct rxq_comp *comp, 	struct rxq_desc *desc);
+
+int ionic_change_mtu(struct net_device *netdev, int new_mtu);
 #endif /* _IONIC_LIF_H_ */

@@ -23,10 +23,15 @@
 #include "ionic_api.h"
 
 //#define ADMINQ
-//#define IONIC_DEBUG
 
 #define	IONIC_ERROR(fmt, ...)			printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
+
+/* Init time debug. */
+#ifdef IONIC_DEBUG
 #define	IONIC_DEBUG_PRINT(fmt, ...)		printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
+#else
+#define	IONIC_DEBUG_PRINT(fmt, ...)
+#endif
 
 /* Device related */
 #define	IONIC_DEV_DEBUG(dev, fmt, ...)							\
@@ -46,6 +51,7 @@
 #else
 #define IONIC_NETDEV_INFO(dev, fmt, ...)
 #endif
+
 #define IONIC_NETDEV_WARN(dev, fmt, ...) IONIC_NETDEV_DEBUG(dev, "WARN:" fmt, ##__VA_ARGS__)
 #define IONIC_NETDEV_ERROR(dev, fmt, ...) IONIC_NETDEV_DEBUG(dev, "ERROR:" fmt, ##__VA_ARGS__)
 
@@ -57,16 +63,24 @@
 
 #ifdef IONIC_DEBUG
 #define IONIC_NETDEV_QINFO(q, fmt, ...)	 IONIC_NETDEV_QDEBUG(q, "info:" fmt, ##__VA_ARGS__)
-#define IONIC_NETDEV_TX_TRACE(q, fmt, ...)	 IONIC_NETDEV_QDEBUG(q, "info:" fmt, ##__VA_ARGS__)
-#define IONIC_NETDEV_RX_TRACE(q, fmt, ...)
 #else
 #define IONIC_NETDEV_QINFO(q, fmt, ...)
-#define IONIC_NETDEV_TX_TRACE(q, fmt, ...)
-#define IONIC_NETDEV_RX_TRACE(q, fmt, ...)
 #endif
+
 #define IONIC_NETDEV_QWARN(q, fmt, ...)	IONIC_NETDEV_QDEBUG(q, "WARN:" fmt, ##__VA_ARGS__)
 #define IONIC_NETDEV_QERR(q, fmt, ...)	IONIC_NETDEV_QDEBUG(q, "ERROR:" fmt, ##__VA_ARGS__)
 
+#if defined(IONIC_DEBUG_TX) && defined(IONIC_DEBUG)
+#define IONIC_NETDEV_TX_TRACE(q, fmt, ...)	IONIC_NETDEV_QDEBUG(q, "info:" fmt, ##__VA_ARGS__)
+#else
+#define IONIC_NETDEV_TX_TRACE(q, fmt, ...)
+#endif
+
+#if defined(IONIC_DEBUG_RX) && defined(IONIC_DEBUG)
+#define IONIC_NETDEV_RX_TRACE(q, fmt, ...)	IONIC_NETDEV_QDEBUG(q, "info:" fmt, ##__VA_ARGS__)
+#else
+#define IONIC_NETDEV_RX_TRACE(q, fmt, ...)
+#endif
 
 #define print_hex_dump_debug(...) 			\
 		print_hex_dump(NULL, __VA_ARGS__);

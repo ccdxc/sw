@@ -254,22 +254,24 @@ err_out:
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err;
 
-	spin_lock(&lif->adminq_lock);
-#ifdef DEBUG
-	netdev_dbg(lif->netdev, "post admin dev command:\n");
+	IONIC_ADMIN_LOCK(lif);
+#ifdef IONIC_DEBUG
+	IONIC_NETDEV_INFO(lif->netdev, "post admin dev command:\n");
 	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->cmd, sizeof(ctx->cmd), true);
 #endif
 
 	if (ctx->side_data) {
-#ifdef DEBUG
+#ifdef IONIC_DEBUG
 		print_hex_dump_debug("data ", DUMP_PREFIX_OFFSET, 16, 1,
 				     ctx->side_data, ctx->side_data_len, true);
 #endif
 		err = SBD_put(idev, ctx->side_data, ctx->side_data_len);
-		if (err)
+		if (err) {
+			IONIC_NETDEV_ERROR(lif->netdev, "SBD_put failed, error: %d\n", err);
 			goto err_out;
-        }
+		}
+    }
 
 	ionic_dev_cmd_go(idev, (void *)&ctx->cmd);
 
@@ -282,18 +284,24 @@ err_out:
 
 	if (ctx->side_data) {
 		err = SBD_get(idev, ctx->side_data, ctx->side_data_len);
-		if (err)
+		if (err) {
+			IONIC_NETDEV_ERROR(lif->netdev, "SBD_get failed, error: %d\n", err);
 			goto err_out;
+		}
+#ifdef IONIC_DEBUG
+		print_hex_dump_debug("data readback ", DUMP_PREFIX_OFFSET, 16, 1,
+				     ctx->side_data, ctx->side_data_len, true);
+#endif
 	}
 
-#ifdef DEBUG
-	netdev_dbg(lif->netdev, "comp admin dev command:\n");
+#ifdef IONIC_DEBUG
+	IONIC_NETDEV_INFO(lif->netdev, "comp admin dev command:\n");
 	print_hex_dump_debug("comp ", DUMP_PREFIX_OFFSET, 16, 1,
 			     &ctx->comp, sizeof(ctx->comp), true);
 #endif
 
 err_out:
-	spin_unlock(&lif->adminq_lock);
+	IONIC_ADMIN_UNLOCK(lif);
 
 	if (!err) {
 		complete_all(&ctx->work);

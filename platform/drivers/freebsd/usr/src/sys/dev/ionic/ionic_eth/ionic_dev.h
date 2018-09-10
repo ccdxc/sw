@@ -206,6 +206,8 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(struct nop_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct reset_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct reset_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct hang_notify_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct hang_notify_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct identify_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct identify_comp) != 16);
 	BUILD_BUG_ON(sizeof(union identity) != 4096);
@@ -234,8 +236,10 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(rx_mode_set_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct mtu_set_cmd) != 64);
 	BUILD_BUG_ON(sizeof(mtu_set_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct rx_filter_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct rx_filter_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct rx_filter_add_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct rx_filter_add_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct rx_filter_del_cmd) != 64);
+	BUILD_BUG_ON(sizeof(rx_filter_del_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct stats_dump_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct stats_dump_comp) != 16);
 	BUILD_BUG_ON(sizeof(union stats_dump) != 4096);
