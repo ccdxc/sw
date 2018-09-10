@@ -3530,7 +3530,9 @@ static int ionic_v0_modify_qp_cmd(struct ionic_ibdev *dev,
 			.dest_qp_num = attr->dest_qp_num,
 			.e_psn = attr->rq_psn,
 			.sq_psn = attr->sq_psn,
-			/* XXX path mtu */
+			.path_mtu = ib_mtu_enum_to_int(attr->path_mtu),
+			.rsq_depth = attr->max_dest_rd_atomic,
+			.rrq_depth = attr->max_rd_atomic,
 		},
 	};
 	struct ib_ud_header *hdr = NULL;
