@@ -16,7 +16,7 @@ action local_ip_mapping_info(entry_valid, vcn_id, vcn_id_valid, xlate_index,
         }
 
         if (control_metadata.direction == RX_FROM_SWITCH) {
-            if ((mpls[1].valid == FALSE) and (ip_type == IP_TYPE_PUBLIC)) {
+            if ((mpls[0].valid == TRUE) and (ip_type == IP_TYPE_PUBLIC)) {
                 modify_field(p4i_apollo_i2e.dnat_required, TRUE);
             }
         }

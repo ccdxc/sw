@@ -85,9 +85,9 @@ parser start {
 }
 
 parser parse_uplink {
-    return select(capri_intrinsic.lif) {
-        HOSTPORT_LIF : parse_packet_from_host;
-        SWITCHPORT_LIF : parse_packet_from_switch;
+    return select(capri_intrinsic.tm_iport) {
+        TM_PORT_UPLINK_0 : parse_packet_from_host;
+        TM_PORT_UPLINK_1 : parse_packet_from_switch;
         default : parse_packet;
     }
 }

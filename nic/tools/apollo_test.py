@@ -31,3 +31,19 @@ rpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
 
 dump_pkt(pkt)
 dump_pkt(rpkt)
+
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+pkt = Ether(dst='00:AA:BB:CC:DD:EE', src='00:12:34:56:78:90') / \
+        IP(dst='100.101.102.103', src='12.12.1.1', id=0, ttl=64) / \
+        GRE(proto=0x8847) / MPLS(label=0x12345, s=1) / \
+        IP(dst='11.11.1.1', src='10.10.1.1') / \
+        TCP(sport=0x5678, dport=0x1234) / payload
+
+rpkt = Ether(dst='00:C1:C2:C3:C4:C5', src='00:01:02:03:04:05') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='11.11.1.1', src='10.10.1.1') / \
+        TCP(sport=0x5678, dport=0x1234) / payload
+
+dump_pkt(pkt)
+dump_pkt(rpkt)

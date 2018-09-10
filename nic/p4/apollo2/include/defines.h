@@ -22,8 +22,6 @@
 /*****************************************************************************/
 /* Lifs                                                                      */
 /*****************************************************************************/
-#define HOSTPORT_LIF                    0
-#define SWITCHPORT_LIF                  1
 #define APOLLO_SERVICE_LIF              1020
 
 /*****************************************************************************/
@@ -51,8 +49,10 @@
 #define DROP_SRC_MAC_MISMATCH           1
 #define DROP_SRC_DST_CHECK_FAIL         2
 #define DROP_FLOW_HIT                   3
-#define DROP_TEP_RX_IP_MISMATCH         4
-#define DROP_RVPATH_VCN_MISMATCH        5
+#define DROP_TEP_RX_SRC_IP_MISMATCH     4
+#define DROP_TEP_RX_DST_IP_MISMATCH     5
+#define DROP_DST_SLOT_ID_MISS           6
+#define DROP_RVPATH_VCN_MISMATCH        7
 
 /*****************************************************************************/
 /* flow role                                                                 */

@@ -79,7 +79,7 @@ local_ip_mapping_hit:
     seq         c1, d.local_ip_mapping_info_d.vcn_id_valid, TRUE
     phvwr.c1    p.vnic_metadata_vcn_id, d.local_ip_mapping_info_d.vcn_id
     seq         c2, k.control_metadata_direction, RX_FROM_SWITCH
-    seq.c2      c2, k.mpls_1_valid, TRUE
+    seq.c2      c2, k.mpls_0_valid, TRUE
     seq.c2      c2, d.local_ip_mapping_info_d.ip_type, IP_TYPE_PUBLIC
     phvwr.c2    p.p4i_apollo_i2e_dnat_required, TRUE
     or          r1, d.local_ip_mapping_info_d.xlate_index_sbit14_ebit16, \

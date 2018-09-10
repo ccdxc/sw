@@ -8,7 +8,9 @@ struct phv_ p;
 %%
 
 egress_to_uplink:
-    phvwr       p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_1
+    seq         c1, k.control_metadata_direction, RX_FROM_SWITCH
+    phvwr.c1    p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_0
+    phvwr.!c1   p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_1
     phvwr       p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
     phvwr       p.capri_txdma_intrinsic_valid, FALSE
     phvwr       p.predicate_header_valid, FALSE

@@ -29,7 +29,7 @@ table remote_vnic_mapping_rx {
 action tep_rx(tep_ip) {
     if (ipv4_1.srcAddr != tep_ip) {
         modify_field(control_metadata.p4i_drop_reason,
-                     1 << DROP_TEP_RX_IP_MISMATCH);
+                     1 << DROP_TEP_RX_SRC_IP_MISMATCH);
         drop_packet();
     }
     modify_field(scratch_metadata.ipv4_src, tep_ip);

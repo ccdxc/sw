@@ -98,7 +98,45 @@ uint8_t g_rcv_pkt1[] = {
     0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
 };
 
+uint8_t g_snd_pkt2[] = {
+    0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x00, 0x12,
+    0x34, 0x56, 0x78, 0x90, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x78, 0x00, 0x00, 0x00, 0x00, 0x40, 0x2F,
+    0xA2, 0x7E, 0x0C, 0x0C, 0x01, 0x01, 0x64, 0x65,
+    0x66, 0x67, 0x00, 0x00, 0x88, 0x47, 0x12, 0x34,
+    0x51, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
+    0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0A, 0x0A,
+    0x01, 0x01, 0x0B, 0x0B, 0x01, 0x01, 0x56, 0x78,
+    0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2, 0xB4,
+    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
+    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
+    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
+    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
+    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
+    0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
+    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+};
+
+uint8_t g_rcv_pkt2[] = {
+    0x00, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0x00, 0x01,
+    0x02, 0x03, 0x04, 0x05, 0x81, 0x00, 0x00, 0x64,
+    0x08, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
+    0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0A, 0x0A,
+    0x01, 0x01, 0x0B, 0x0B, 0x01, 0x01, 0x56, 0x78,
+    0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2, 0xB4,
+    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
+    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
+    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
+    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
+    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
+    0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
+    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+};
+
 uint64_t g_layer1_smac = 0x00C1C2C3C4C5ULL;
+uint64_t g_layer1_dmac = 0x000102030405ULL;
 uint32_t g_layer1_sip = 0x0B0B0101;
 uint32_t g_layer1_dip = 0x0A0A0101;
 uint8_t  g_layer1_proto = 0x6;
@@ -107,6 +145,7 @@ uint16_t g_layer1_dport = 0x5678;
 
 uint16_t g_ctag1_vid = 100;
 uint16_t g_local_vnic_tag = 100;
+uint32_t g_local_slot_id = 0x12345;
 uint32_t g_flow_index = 0x31;
 
 uint16_t g_nexthop_index = 0;
@@ -196,12 +235,8 @@ entry_write(uint32_t tbl_id, uint32_t index, void *key, void *mask,
         uint8_t  *hwmask = NULL;
         p4pd_hwentry_query(tbl_id, &hwkey_len, &hwmask_len,
                            &hwdata_len);
-        if (hash_table) {
-            hwkey_len = 64;
-        } else {
-            hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
-            hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
-        }
+        hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
+        hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
         hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
         hwkey = new uint8_t[hwkey_len];
         hwmask = new uint8_t[hwmask_len];
@@ -209,7 +244,7 @@ entry_write(uint32_t tbl_id, uint32_t index, void *key, void *mask,
         memset(hwmask, 0, hwmask_len);
         p4pd_hwkey_hwmask_build(tbl_id, key, mask, hwkey, hwmask);
         if (hash_table) {
-            index = generate_hash_(hwkey, 64, 0);
+            index = generate_hash_(hwkey, hwkey_len, 0);
             index &= table_size - 1;
         }
         p4pd_entry_write(tbl_id, index, hwkey, hwmask, data);
@@ -256,7 +291,7 @@ key_tunneled_init(void) {
 
     index = 0;
     data.actionid = KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID;
-    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
+    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_MPLS_L3VPN;
     mask.tunnel_metadata_tunnel_type_mask = 0xff;
     key.ipv4_2_valid = 1;
     mask.ipv4_2_valid_mask = 1;
@@ -265,7 +300,7 @@ key_tunneled_init(void) {
 }
 
 static void
-vnic_init(void) {
+vnic_tx_init() {
     local_vnic_by_vlan_tx_actiondata data;
     local_vnic_by_vlan_tx_local_vnic_info_tx_t *local_vnic_info =
         &data.local_vnic_by_vlan_tx_action_u.local_vnic_by_vlan_tx_local_vnic_info_tx;
@@ -292,6 +327,56 @@ vnic_init(void) {
            sizeof(local_vnic_info->lpm_addr_2));
 
     entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
+}
+
+static void
+vnic_rx_init() {
+    local_vnic_by_slot_rx_swkey_t key;
+    local_vnic_by_slot_rx_actiondata data;
+    local_vnic_by_slot_rx_local_vnic_info_rx_t *local_vnic_info =
+        &data.local_vnic_by_slot_rx_action_u.local_vnic_by_slot_rx_local_vnic_info_rx;
+    uint64_t slacl_hbm_addr;
+    uint32_t tbl_id = P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.mpls_0_label = g_local_slot_id;
+    data.actionid = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
+    local_vnic_info->local_vnic_tag = g_local_vnic_tag;
+    local_vnic_info->skip_src_dst_check = true;
+    slacl_hbm_addr = get_start_offset(JSLACLBASE);
+    memcpy(local_vnic_info->slacl_addr_1, &slacl_hbm_addr,
+           sizeof(local_vnic_info->slacl_addr_1));
+    memcpy(local_vnic_info->slacl_addr_2, &slacl_hbm_addr,
+           sizeof(local_vnic_info->slacl_addr_2));
+
+    entry_write(tbl_id, 0, &key, NULL, &data, true,
+                LOCAL_VNIC_BY_SLOT_TABLE_SIZE);
+}
+
+static void
+egress_vnic_info_init() {
+    egress_local_vnic_info_rx_actiondata data;
+    egress_local_vnic_info_rx_egress_local_vnic_info_rx_t *local_vnic_info =
+        &data.egress_local_vnic_info_rx_action_u.egress_local_vnic_info_rx_egress_local_vnic_info_rx;
+    uint32_t tbl_id = P4TBL_ID_EGRESS_LOCAL_VNIC_INFO_RX;
+    uint32_t index;
+
+    memset(&data, 0, sizeof(data));
+    index = g_local_vnic_tag;
+    data.actionid = EGRESS_LOCAL_VNIC_INFO_RX_EGRESS_LOCAL_VNIC_INFO_RX_ID;
+    local_vnic_info->overlay_vlan_id = g_ctag1_vid;
+    memcpy(local_vnic_info->vr_mac, &g_layer1_dmac, 6);
+    memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);
+
+    entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
+}
+
+static void
+vnic_init(void) {
+    vnic_tx_init();
+    vnic_rx_init();
+    egress_vnic_info_init();
 }
 
 static void
@@ -403,7 +488,8 @@ rewrite_init (void) {
     uint64_t mytep_mac = 0x00AABBCCDDEE;
 
     // Program the table constants
-    hal::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX, mytep_ip);
+    hal::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
+                                           mytep_ip);
     hal::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX, mytep_ip);
     hal::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX, mytep_mac);
 
@@ -588,8 +674,8 @@ TEST_F(apollo_test, test1) {
         tcscale = atoi(getenv("TCSCALE"));
     }
 
-    if (getenv("APOLLO2_TCID")) {
-        tcid_filter = atoi(getenv("APOLLO2_TCID"));
+    if (getenv("TCID")) {
+        tcid_filter = atoi(getenv("TCID"));
     }
 
     tcid++;
@@ -601,10 +687,30 @@ TEST_F(apollo_test, test1) {
         std::cout << "Testing Host to Switch" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i+1);
-            step_network_pkt(ipkt, port);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i+1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt2));
+        memcpy(ipkt.data(), g_snd_pkt2, sizeof(g_snd_pkt2));
+        epkt.resize(sizeof(g_rcv_pkt2));
+        memcpy(epkt.data(), g_rcv_pkt2, sizeof(g_rcv_pkt2));
+        std::cout << "Testing Switch to Host" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i+1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_1);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_0);
             }
             testcase_end(tcid, i+1);
         }

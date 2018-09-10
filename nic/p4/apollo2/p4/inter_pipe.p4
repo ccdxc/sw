@@ -48,7 +48,11 @@ control ingress_to_rxdma {
 /* Egress pipeline to uplink                                                 */
 /*****************************************************************************/
 action egress_to_uplink() {
-    modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_1);
+    if (control_metadata.direction == RX_FROM_SWITCH) {
+        modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_0);
+    } else {
+        modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_1);
+    }
     modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
     remove_header(capri_txdma_intrinsic);
     remove_header(predicate_header);

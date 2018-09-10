@@ -9,31 +9,36 @@ struct phv_                     p;
 %%
 
 egress_local_vnic_info_rx:
-    .assert(offsetof(p, ipv4_1_valid) - offsetof(p, ethernet_1_valid) == 3)
-    phvwr       p.{ipv6_1_valid...ethernet_1_valid}, 0
-    phvwr       p.gre_1_valid, FALSE
+    .assert(offsetof(p, gre_1_valid) - offsetof(p, ethernet_1_valid) == 4)
+    phvwr       p.{gre_1_valid...ethernet_1_valid}, 0
     phvwr       p.{mpls_1_valid...mpls_0_valid}, 0
 
-
-    .assert(offsetof(p, ctag_0_valid) - offsetof(p, ethernet_0_valid) == 1)
-    phvwr       p.{ctag_0_valid, ethernet_0_valid}, 0x3
-
     phvwr       p.ethernet_0_dstAddr, d.egress_local_vnic_info_rx_d.overlay_mac
-    crestore    [c7-c4], 0, 0xf
-    seq         c4, d.egress_local_vnic_info_rx_d.subnet_id, k.p4e_apollo_i2e_rvpath_subnet_id
-    seq.c4      c5, k.p4e_apollo_i2e_rvpath_overlay_mac, 0
-    phvwr.!c5   p.ethernet_0_srcAddr, k.p4e_apollo_i2e_rvpath_overlay_mac
-    phvwr.c5    p.ethernet_0_srcAddr, d.egress_local_vnic_info_rx_d.vr_mac
+    seq         c1, d.egress_local_vnic_info_rx_d.subnet_id, \
+                    k.p4e_apollo_i2e_rvpath_subnet_id
+    sne.c1      c1, k.p4e_apollo_i2e_rvpath_overlay_mac, 0
+    phvwr.c1    p.ethernet_0_srcAddr, k.p4e_apollo_i2e_rvpath_overlay_mac
+    phvwr.!c1   p.ethernet_0_srcAddr, d.egress_local_vnic_info_rx_d.vr_mac
 
+    seq         c1, d.egress_local_vnic_info_rx_d.overlay_vlan_id, r0
+    bcf         [c1], egress_local_vnic_native
+
+egress_local_vnic_vlan_tag:
+    .assert(offsetof(p, ctag_0_valid) - offsetof(p, ethernet_0_valid) == 1)
+    phvwr.!c1   p.{ctag_0_valid, ethernet_0_valid}, 0x3
     phvwr       p.ethernet_0_etherType, ETHERTYPE_CTAG
     phvwr       p.ctag_0_vid, d.egress_local_vnic_info_rx_d.overlay_vlan_id
+    seq         c1, k.ipv4_2_valid, 1
+    phvwr.c1    p.ctag_0_etherType, ETHERTYPE_IPV4
+    seq.e       c1, k.ipv6_2_valid, 1
+    phvwr.c1    p.ctag_0_etherType, ETHERTYPE_IPV6
 
-    seq         c5, k.ipv4_2_valid, 1
-    phvwr.c5    p.ctag_0_etherType, ETHERTYPE_IPV4
-    seq.!c5     c6, k.ipv6_2_valid, 1
-    phvwr.c6    p.ctag_0_etherType, ETHERTYPE_IPV6
-    nop.e
-    nop
+egress_local_vnic_native:
+    phvwr       p.ethernet_0_valid, 0x1
+    seq         c1, k.ipv4_2_valid, 1
+    phvwr.c1    p.ethernet_0_etherType, ETHERTYPE_IPV4
+    seq.e       c1, k.ipv6_2_valid, 1
+    phvwr.c1    p.ethernet_0_etherType, ETHERTYPE_IPV6
 
 /*****************************************************************************/
 /* error function                                                            */
