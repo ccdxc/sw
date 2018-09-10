@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <grpc++/grpc++.h>
 #include <memory>
+#include <math.h>
 #include "dol/iris/test/storage/hal_if.hpp"
 #include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/queues.hpp"
@@ -59,6 +60,7 @@ const uint32_t kR2NDataBufOffset = 4096;
 const uint32_t kMaxRDMAKeys = 512;
 const uint32_t kMaxRDMAAhs = 64;
 const uint32_t kMaxRDMAPTEntries = 1024;
+const uint32_t kRDMAQStateSize = 4096;
 const uint32_t kSQType = 3;
 const uint32_t kRQType = 4;
 const uint32_t kCQType = 5;
@@ -121,24 +123,24 @@ int CreateRDMALIF(uint32_t sw_lif_id) {
   params.sw_lif_id = sw_lif_id;
   // RDMA SQ
   params.type[kSQType].valid = true;
-  params.type[kSQType].queue_size = 12;  // 4096
+  params.type[kSQType].queue_size = (uint16_t)log2(kRDMAQStateSize);
   params.type[kSQType].num_queues = 1;   // 2, 0-initiator 1-target
   params.type[kSQType].queue_purpose = intf::LIF_QUEUE_PURPOSE_RDMA_SEND;
 
   // RDMA RQ
   params.type[kRQType].valid = true;
-  params.type[kRQType].queue_size = 12;  // 4096
+  params.type[kRQType].queue_size = (uint16_t)log2(kRDMAQStateSize);
   params.type[kRQType].num_queues = 1;   // 2, 0-initiator 1-target
   params.type[kRQType].queue_purpose = intf::LIF_QUEUE_PURPOSE_RDMA_RECV;
 
   // Fill not-needed types with a single QPCB of 4K size
   // to avoid the assert in LIF manager (till fixed).
   params.type[0].valid = true;
-  params.type[0].queue_size = 12;  // 4096
+  params.type[0].queue_size = (uint16_t)log2(kRDMAQStateSize);
   params.type[1].valid = true;
-  params.type[1].queue_size = 12;  // 4096
+  params.type[1].queue_size = (uint16_t)log2(kRDMAQStateSize);
   params.type[2].valid = true;
-  params.type[2].queue_size = 12;  // 4096
+  params.type[2].queue_size = (uint16_t)log2(kRDMAQStateSize);
 
   // RDMA CQ
   params.type[kCQType].valid = true;
@@ -1194,9 +1196,9 @@ int set_rtl_qstate_cmp_ignore(int src_lif, int src_qtype, int src_qid) {
   // Storage/RDMA P4+ running operating in model is known to be able to 
   // consolidate certain processing, resulting in fewer RDMA acks than RTL.
   // This would lead to EOS miscompares on RDMA qstate. The call below
-  // sets ignore range for CB up to 192 bytes in length.
-  printf("eos_ignore_addr RDMA qstate 0x%lx\n", qaddr);
-  eos_ignore_addr(qaddr, 64 * 3);
+  // sets ignore range for CB up to 4KB in length.
+  printf("eos_ignore_addr RDMA qstate 0x%lx size %u\n", qaddr, kRDMAQStateSize);
+  eos_ignore_addr(qaddr, kRDMAQStateSize);
 	return 0;
 }
 
@@ -1336,6 +1338,10 @@ int rdma_pvm_qs_init() {
 	rc = set_rtl_qstate_cmp_ignore(g_rdma_hw_lif_id, kCQType, 0);
 	if(rc < 0) return rc;
 	rc = set_rtl_qstate_cmp_ignore(g_rdma_hw_lif_id, kCQType, 1);
+	if(rc < 0) return rc;
+	rc = set_rtl_qstate_cmp_ignore(g_rdma_hw_lif_id, kRQType, 0);
+	if(rc < 0) return rc;
+	rc = set_rtl_qstate_cmp_ignore(g_rdma_hw_lif_id, kRQType, 1);
 	if(rc < 0) return rc;
 
   // Target SQ Xlate
