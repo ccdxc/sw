@@ -16,6 +16,7 @@ UPGREQ_REACTOR_TEST(UpgradeReactorTest, UpgReqReact);
 
 TEST_F(UpgradeReactorTest, BasicTest) {
     // create an upgrade request spec object
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
@@ -26,6 +27,7 @@ TEST_F(UpgradeReactorTest, BasicTest) {
 
     // verify corresponding status object got created
     ASSERT_EQ_EVENTUALLY(sdk_->ListKind("UpgStateReq").size(), 0) << "Upgrade request status object was not created";
+    upgmetptr->Delete();
 }
 
 
@@ -36,10 +38,23 @@ DELPHI_SERVICE_TEST(UpgradeTest, UpgradeService);
 TEST_F(UpgradeTest, UpgStateReqCreateTest) {
     usleep(1000);
 
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
+
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -48,6 +63,7 @@ TEST_F(UpgradeTest, UpgStateReqCreateTest) {
     sdk_->QueueUpdate(req);
 
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify spec object is in the db
     ASSERT_EQ(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade Request spec object was not created";
@@ -57,15 +73,29 @@ TEST_F(UpgradeTest, UpgStateReqCreateTest) {
 
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, UpgTypeNonDisruptiveTest) {
     usleep(1000);
 
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
+
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -74,6 +104,7 @@ TEST_F(UpgradeTest, UpgTypeNonDisruptiveTest) {
     sdk_->QueueUpdate(req);
 
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify spec object is in the db
     ASSERT_EQ(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade Request spec object was not created";
@@ -85,15 +116,29 @@ TEST_F(UpgradeTest, UpgTypeNonDisruptiveTest) {
                         UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqtype(),
                         UpgTypeNonDisruptive) << "Upgrade Request status object does not have UpgTypeNonDisruptive";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, UpgTypeDisruptiveTest) {
     usleep(1000);
 
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
+
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -102,6 +147,7 @@ TEST_F(UpgradeTest, UpgTypeDisruptiveTest) {
     sdk_->QueueUpdate(req);
 
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify spec object is in the db
     ASSERT_EQ(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade Request spec object was not created";
@@ -113,15 +159,29 @@ TEST_F(UpgradeTest, UpgTypeDisruptiveTest) {
                         UpgStateCompatCheck) << "Upgrade Request status object has wrong oper state";
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqtype(),
                         UpgTypeDisruptive) << "Upgrade Request status object does not have UpgTypeDisruptive";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
     usleep(1000);
 
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
+
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -129,6 +189,7 @@ TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
@@ -151,11 +212,23 @@ TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
 
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateProcessQuiesce) << "Upgrade Request status object does not have UpgStateProcessQuiesce state";
-
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
     usleep(1000);
+
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -163,6 +236,7 @@ TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 0) << "UpgApp object was not created";
@@ -180,15 +254,28 @@ TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
     string testStr = "No app registered for upgrade";
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_)->upgrespfailstr(0),
                         testStr) << "Upgrade response str not set to No app registered for upgrade";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, UpgradeNonDisruptiveStateMachineTest) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -196,6 +283,7 @@ TEST_F(UpgradeTest, UpgradeNonDisruptiveStateMachineTest) {
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
@@ -278,15 +366,29 @@ TEST_F(UpgradeTest, UpgradeNonDisruptiveStateMachineTest) {
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, UpgradeDisruptiveStateMachineTest) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -294,6 +396,7 @@ TEST_F(UpgradeTest, UpgradeDisruptiveStateMachineTest) {
     req->set_upgreqtype(UpgTypeDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
@@ -369,15 +472,29 @@ TEST_F(UpgradeTest, UpgradeDisruptiveStateMachineTest) {
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, UpgradePossibleStateMachineTest) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -385,6 +502,7 @@ TEST_F(UpgradeTest, UpgradePossibleStateMachineTest) {
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
@@ -404,20 +522,35 @@ TEST_F(UpgradeTest, UpgradePossibleStateMachineTest) {
     appresp->set_upgapprespval(UpgStateUpgPossibleRespPass);
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 1) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, UpgradePossibleFailStateMachineTest) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -426,6 +559,7 @@ TEST_F(UpgradeTest, UpgradePossibleFailStateMachineTest) {
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 1) << "invalid default value for counter";
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
 
@@ -445,6 +579,8 @@ TEST_F(UpgradeTest, UpgradePossibleFailStateMachineTest) {
     appresp->set_upgapprespstr("BABA");
     sdk_->QueueUpdate(appresp);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 1) << "invalid default value for counter";
 
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgStateReq::FindObject(sdk_)->upgreqstate(),
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
@@ -453,10 +589,22 @@ TEST_F(UpgradeTest, UpgradePossibleFailStateMachineTest) {
     string testStr = "App app1 returned failure: BABA";
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgResp::FindObject(sdk_)->upgrespfailstr(0),
                         testStr) << "Upgrade response str not set to BABA";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app1 = make_shared<delphi::objects::UpgApp>();
     app1->set_key("app1");
@@ -465,6 +613,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
     app2->set_key("app2");
     sdk_->QueueUpdate(app2);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 2) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -472,6 +621,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 2) << "UpgApp object was not created";
@@ -603,10 +753,23 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, StateMachineTestWithTwoAppsDisruptive) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app1 = make_shared<delphi::objects::UpgApp>();
     app1->set_key("app1");
@@ -615,6 +778,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoAppsDisruptive) {
     app2->set_key("app2");
     sdk_->QueueUpdate(app2);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 2) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -622,6 +786,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoAppsDisruptive) {
     req->set_upgreqtype(UpgTypeDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 2) << "UpgApp object was not created";
@@ -746,15 +911,29 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoAppsDisruptive) {
                         UpgStateTerminal) << "Upgrade Request status object does not have UpgStateTerminal state";
 
     ASSERT_EQ(sdk_->ListKind("UpgResp").size(), 1) << "UpgResp object was not created";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -762,6 +941,7 @@ TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
@@ -853,15 +1033,30 @@ TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
 
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 0) << "UpgStateReq status object was not deleted";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, StateMachineAbortTest) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
+
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -869,6 +1064,7 @@ TEST_F(UpgradeTest, StateMachineAbortTest) {
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
@@ -923,15 +1119,29 @@ TEST_F(UpgradeTest, StateMachineAbortTest) {
 
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 0) << "UpgReq status object was not deleted";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, StateMachineAbortTestDisruptive) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -939,6 +1149,7 @@ TEST_F(UpgradeTest, StateMachineAbortTestDisruptive) {
     req->set_upgreqtype(UpgTypeDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
@@ -986,15 +1197,29 @@ TEST_F(UpgradeTest, StateMachineAbortTestDisruptive) {
 
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 0) << "UpgReq status object was not deleted";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, StateMachineAppFailTest) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -1002,6 +1227,7 @@ TEST_F(UpgradeTest, StateMachineAppFailTest) {
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
@@ -1063,15 +1289,29 @@ TEST_F(UpgradeTest, StateMachineAppFailTest) {
 
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 0) << "UpgReq status object was not deleted";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, StateMachineAppFailTestDisruptive) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -1079,6 +1319,7 @@ TEST_F(UpgradeTest, StateMachineAppFailTestDisruptive) {
     req->set_upgreqtype(UpgTypeDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
@@ -1133,15 +1374,28 @@ TEST_F(UpgradeTest, StateMachineAppFailTestDisruptive) {
 
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 0) << "UpgReq status object was not deleted";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
     app->set_key("app1");
     sdk_->QueueUpdate(app);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 1) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -1149,6 +1403,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 1) << "UpgApp object was not created";
@@ -1218,10 +1473,23 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
 
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 0) << "UpgReq status object was not deleted";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app1 = make_shared<delphi::objects::UpgApp>();
     app1->set_key("app1");
@@ -1231,6 +1499,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
     app2->set_key("app2");
     sdk_->QueueUpdate(app2);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 2) << "invalid default value for counter";
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -1238,6 +1507,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
     req->set_upgreqtype(UpgTypeNonDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 2) << "UpgApp object was not created";
@@ -1339,10 +1609,23 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
 
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 0) << "UpgReq status object was not deleted";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoAppsDisruptive) {
     usleep(1000);
+    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
+    ASSERT_TRUE(upgmetptr != NULL) << "Failed to create upgmetptr";
+    ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->SuccessfulUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->AbortedUpg()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgPossible()->Get(), 0) << "invalid default value for counter";
+    ASSERT_EQ(upgmetptr->UpgNotPossible()->Get(), 0) << "invalid default value for counter";
 
     delphi::objects::UpgAppPtr app1 = make_shared<delphi::objects::UpgApp>();
     app1->set_key("app1");
@@ -1352,6 +1635,8 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoAppsDisruptive) {
     app2->set_key("app2");
     sdk_->QueueUpdate(app2);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->NumRegApps()->Get(), 2) << "invalid default value for counter";
+
 
     // create an upgrade request spec object
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
@@ -1359,6 +1644,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoAppsDisruptive) {
     req->set_upgreqtype(UpgTypeDisruptive);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
+    ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
 
     // verify app obj 
     ASSERT_EQ(sdk_->ListKind("UpgApp").size(), 2) << "UpgApp object was not created";
@@ -1448,6 +1734,8 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoAppsDisruptive) {
 
     // verify corresponding status object got created
     ASSERT_EQ(sdk_->ListKind("UpgStateReq").size(), 0) << "UpgReq status object was not deleted";
+    ASSERT_EQ(upgmetptr->FailedUpg()->Get(), 1) << "invalid default value for counter";
+    upgmetptr->Delete();
 }
 
 } // namespace

@@ -34,7 +34,6 @@ UpgReqStateType UpgReqReact::GetNextState(void) {
     reqType = reqStatus->upgreqstate();
     if (GetAppRespFail() && (reqType != UpgStateFailed) && (reqType != UpgStateCleanup)) {
         UPG_LOG_DEBUG("Some application(s) responded with failure");
-        upgMetric_->FailedUpg()->Incr();
         if (upgReqType_ == IsUpgPossible) {
             UPG_LOG_DEBUG("Going to respond back to IsUpgPossible");
             return UpgStateTerminal;
@@ -197,8 +196,10 @@ delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
             }
         } else {
             UPG_LOG_DEBUG("Upg Req not of type IsUpgPossible");
-            if (GetAppRespFail())
+            if (GetAppRespFail()) {
                 respType = UpgRespFail;
+                upgMetric_->FailedUpg()->Incr();
+            }
             if (upgPassed_ && !upgAborted_) {
                 respType = UpgRespPass;
                 upgMetric_->SuccessfulUpg()->Incr();
