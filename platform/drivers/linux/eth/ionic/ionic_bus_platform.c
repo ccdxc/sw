@@ -31,8 +31,6 @@
 #define INTR_MSIXCFG_STRIDE     0x10
 #define INTR_FWCFG_STRIDE       0x8
 
-extern void ionic_dev_cmd_work(struct work_struct *work);
-
 typedef union intr_fwcfg_u {
 	struct {
 		u_int32_t function_mask:1;

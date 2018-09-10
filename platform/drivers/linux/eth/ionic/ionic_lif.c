@@ -502,7 +502,7 @@ static const struct net_device_ops ionic_netdev_ops = {
 	.ndo_vlan_rx_kill_vid	= ionic_vlan_rx_kill_vid,
 };
 
-irqreturn_t ionic_isr(int irq, void *data)
+static irqreturn_t ionic_isr(int irq, void *data)
 {
 	struct napi_struct *napi = data;
 

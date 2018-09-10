@@ -384,5 +384,6 @@ unsigned int ionic_q_space_avail(struct queue *q);
 bool ionic_q_has_space(struct queue *q, unsigned int want);
 void ionic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index);
+void ionic_dev_cmd_work(struct work_struct *work);
 
 #endif /* _IONIC_DEV_H_ */
