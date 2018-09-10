@@ -364,7 +364,9 @@ recirc_pkt:
     /****** Logic to handle already recirculated packets ******/
 
     // clear recirc bit and process the packet based on recirc reason
-    phvwr          p.common.p4_intr_recirc, 0
+    // TODO Revert recirc count back to 1 to have inifinite recircs without
+    // modifying hw config registers for recirc
+    phvwrpair      p.common.p4_intr_recirc_count, 1, p.common.p4_intr_recirc, 0
 
     seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE 
     bcf            [c2], process_recirc_work_not_done
