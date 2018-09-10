@@ -52,17 +52,17 @@ typedef struct intr_msixcfg_s {
 	u_int32_t vector_ctrl;
 } __attribute__((packed)) intr_msixcfg_t;
 
-uint64_t *msix_cfg_base_addr = NULL;
-uint64_t *fwcfg_base_addr = NULL;
+uint8_t *msix_cfg_base_addr = NULL;
+uint8_t *fwcfg_base_addr = NULL;
 
 void* intr_msixcfg_addr(const int intr)
 {
-	return ((uint8_t*)msix_cfg_base_addr + (intr * INTR_MSIXCFG_STRIDE));
+	return (msix_cfg_base_addr + (intr * INTR_MSIXCFG_STRIDE));
 }
 
 void* intr_fwcfg_addr(const int intr)
 {
-	return ((uint8_t*)fwcfg_base_addr + (intr * INTR_FWCFG_STRIDE));
+	return (fwcfg_base_addr + (intr * INTR_FWCFG_STRIDE));
 }
 
 void intr_fwcfg(const int intr, uint32_t lif)
@@ -88,7 +88,7 @@ int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
 	int i = 0;
 
 	for_each_msi_entry(desc, ionic->dev) {
-		if(i == num) {
+		if (i == num) {
 			printk(KERN_INFO "[i = %d] msi_entry: %d.%d\n",
 				i, desc->platform.msi_index,
 				desc->irq);
@@ -119,12 +119,12 @@ static void mnic_set_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
 			(((uint64_t)msg->address_hi << 32) | msg->address_lo), msg->data, 0/*vctrl*/);
 
 	mnic_node = of_find_node_by_name(NULL, "mnic");
-	if(!mnic_node)
+	if (!mnic_node)
 		printk(KERN_ERR "Can't find device node \"mnic\" in device tree!\
 				Can not configure interrupts\n");
 
 	ret = of_property_read_u32_index(mnic_node, "lif", 0, &lif);
-	if(ret)
+	if (ret)
 		printk(KERN_ERR "Failed to get lif property for \"mnic\"!\
 				Can not configure interrupts\n");
 
@@ -159,7 +159,6 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 
 	idev->dev_cmd = ionic->bars[0].vaddr;
 	idev->dev_cmd_db = ionic->bars[1].vaddr;
-	idev->intr_ctrl = ionic->bars[2].vaddr;
 	fwcfg_base_addr = ionic->bars[2].vaddr;
 	msix_cfg_base_addr = ionic->bars[3].vaddr;
 
@@ -276,10 +275,12 @@ static int ionic_probe(struct platform_device *pfdev)
 		dev_err(dev, "Cannot identify device, aborting\n");
 		goto err_out_unmap_bars;
 	}
-	dev_info(dev, "ASIC %s rev 0x%X serial num %s fw version %s txqs = %d rxqs = %d adminqs = %d nintrs = %d\n",
-		 ionic_dev_asic_name(ionic->ident->dev.asic_type),
-		 ionic->ident->dev.asic_rev, ionic->ident->dev.serial_num,
-		 ionic->ident->dev.fw_version, ionic->ident->dev.ntxqs_per_lif, ionic->ident->dev.nrxqs_per_lif, ionic->ident->dev.nadminqs_per_lif, ionic->ident->dev.nintrs);
+	dev_info(dev, "ASIC %s rev 0x%X serial num %s fw version %s txqs = %d \
+            rxqs = %d adminqs = %d nintrs = %d\n", 
+			ionic_dev_asic_name(ionic->ident->dev.asic_type), ionic->ident->dev.asic_rev,
+			ionic->ident->dev.serial_num, ionic->ident->dev.fw_version,
+			ionic->ident->dev.ntxqs_per_lif, ionic->ident->dev.nrxqs_per_lif,
+			ionic->ident->dev.nadminqs_per_lif, ionic->ident->dev.nintrs);
 
 	/* Allocate and init LIFs, creating a netdev per LIF
 	 */
