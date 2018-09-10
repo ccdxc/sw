@@ -276,7 +276,7 @@ static int ionic_probe(struct platform_device *pfdev)
 		goto err_out_unmap_bars;
 	}
 	dev_info(dev, "ASIC %s rev 0x%X serial num %s fw version %s txqs = %d "
-            "rxqs = %d adminqs = %d nintrs = %d\n", 
+			"rxqs = %d adminqs = %d nintrs = %d\n", 
 			ionic_dev_asic_name(ionic->ident->dev.asic_type), ionic->ident->dev.asic_rev,
 			ionic->ident->dev.serial_num, ionic->ident->dev.fw_version,
 			ionic->ident->dev.ntxqs_per_lif, ionic->ident->dev.nrxqs_per_lif,
