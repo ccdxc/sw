@@ -18,13 +18,14 @@
 
 #define SONIC_PHYS_ADDR_FIELD_VAL(pos, mask, val)	\
 	(((uint64_t)((val) & (mask))) << (pos))
-    
+
 #define SONIC_PHYS_ADDR_HOST_VAL()   \
 	SONIC_PHYS_ADDR_FIELD_VAL(SONIC_PHYS_ADDR_HOST_POS, SONIC_PHYS_ADDR_HOST_MASK, 1)
 #define SONIC_PHYS_ADDR_LIF_VAL(lif) \
 	SONIC_PHYS_ADDR_FIELD_VAL(SONIC_PHYS_ADDR_LIF_POS, SONIC_PHYS_ADDR_LIF_MASK, lif)
-    
-static int sonic_api_get_rmem(struct lif *lif, uint32_t *pgid, uint64_t *pgaddr, int order)
+
+static int sonic_api_get_rmem(struct lif *lif, uint32_t *pgid,
+		uint64_t *pgaddr, int order)
 {
 	struct sonic_dev *idev = &lif->sonic->idev;
 	int ret;
@@ -34,9 +35,9 @@ static int sonic_api_get_rmem(struct lif *lif, uint32_t *pgid, uint64_t *pgaddr,
 	ret = bitmap_find_free_region(idev->hbm_inuse, idev->hbm_npages, order);
 	spin_unlock(&idev->hbm_inuse_lock);
 
-	if (ret < 0)
-	{
-		OSAL_LOG_ERROR("rmem bitmap_find_free_region failed ret: %d", ret);
+	if (ret < 0) {
+		OSAL_LOG_ERROR("rmem bitmap_find_free_region failed ret: %d",
+				ret);
 		return ret;
 	}
 
@@ -52,11 +53,10 @@ uint64_t sonic_rmem_alloc(size_t size)
 	int order = size/PAGE_SIZE;
 	uint32_t pgid;
 	uint64_t addr = 0;
-	struct lif* lif = sonic_get_lif();
+	struct lif *lif = sonic_get_lif();
 
 	ret = sonic_api_get_rmem(lif, &pgid, &addr, order);
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		OSAL_LOG_ERROR("sonic_api_get_rmem failed ret: %d", ret);
 		return 0;
 	}
@@ -76,97 +76,62 @@ static void sonic_api_put_rmem(struct lif *lif, uint32_t pgid, int order)
 void sonic_rmem_free(uint64_t ptr, size_t size)
 {
 	uint32_t pgid;
-	struct lif* lif = sonic_get_lif();
+	struct lif *lif = sonic_get_lif();
 	int order = 0;
 	uint64_t cm_base_pa = lif->sonic->ident->dev.cm_base_pa;
 
 	pgid = (ptr - cm_base_pa)/PAGE_SIZE;
-	order = size/PAGE_SIZE; 
+	order = size/PAGE_SIZE;
 	sonic_api_put_rmem(lif, pgid, order);
 }
 
-static identity_t* sonic_get_identity(void)
+static identity_t *sonic_get_identity(void)
 {
-	struct lif* lif = sonic_get_lif();
+	struct lif *lif = sonic_get_lif();
 
-	if(NULL == lif)
+	if (lif == NULL)
 		return NULL;
 	return lif->sonic->ident;
 }
 
-#define DBG_CHK_RING_ID(accel_ring_id, ret) \
-do {\
-	if(accel_ring_id >= ACCEL_RING_ID_MAX) \
-		return ret; \
-} while(0)
+#ifdef NDEBUG
+#define DBG_CHK_RING_ID(r)	PNSO_OK
+#else
+#define DBG_CHK_RING_ID(r)	dbg_check_ring_id(r)
+#endif
 
-accel_ring_t* sonic_get_accel_ring(uint32_t accel_ring_id)
+static inline int
+dbg_check_ring_id(uint32_t accel_ring_id)
 {
-	identity_t *ident = sonic_get_identity();
+	return (accel_ring_id >= ACCEL_RING_ID_MAX) ? -EINVAL : PNSO_OK;
+}
 
-	if(NULL == ident)
+accel_ring_t *sonic_get_accel_ring(uint32_t accel_ring_id)
+{
+	int err;
+	identity_t *ident;
+
+	err = DBG_CHK_RING_ID(accel_ring_id);
+	if (err)
 		return NULL;
-	DBG_CHK_RING_ID(accel_ring_id, NULL);
-	
+
+	ident = sonic_get_identity();
+	if (!ident)
+		return NULL;
+
 	return &ident->dev.accel_ring_tbl[accel_ring_id];
-}
-
-int sonic_get_accel_ring_base_pa(uint32_t accel_ring_id, uint64_t *ring_base)
-{
-	identity_t *ident = sonic_get_identity();
-
-	if(NULL == ident)
-		return -EINVAL;
-	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
-	
-	*ring_base = ident->dev.accel_ring_tbl[accel_ring_id].ring_base_pa;
-	return 0;
-}
-
-int sonic_get_accel_ring_pndx_pa(uint32_t accel_ring_id, uint64_t *ring_pndx)
-{
-	identity_t *ident = sonic_get_identity();
-
-	if(NULL == ident)
-		return -EINVAL;
-	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
-	
-	*ring_pndx = ident->dev.accel_ring_tbl[accel_ring_id].ring_pndx_pa;
-	return 0;
-}
-
-int sonic_get_accel_ring_shadow_pndx_pa(uint32_t accel_ring_id, uint64_t *shadow_pndx)
-{
-	identity_t *ident = sonic_get_identity();
-
-	if(NULL == ident)
-		return -EINVAL;
-	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
-	
-	*shadow_pndx = ident->dev.accel_ring_tbl[accel_ring_id].ring_shadow_pndx_pa;
-	return 0;
-}
-
-int sonic_get_accel_ring_size(uint32_t accel_ring_id, uint32_t *ring_size)
-{
-	identity_t *ident = sonic_get_identity();
-
-	if(NULL == ident)
-		return -EINVAL;
-	DBG_CHK_RING_ID(accel_ring_id, -EINVAL);
-	
-	*ring_size = ident->dev.accel_ring_tbl[accel_ring_id].ring_size;
-	return 0;
 }
 
 uint64_t sonic_hostpa_to_devpa(uint64_t hostpa)
 {
 	identity_t *ident = sonic_get_identity();
 
-	return hostpa | SONIC_PHYS_ADDR_HOST_VAL() | SONIC_PHYS_ADDR_LIF_VAL(ident->dev.hw_lif_id_tbl[0]);
+	return hostpa | SONIC_PHYS_ADDR_HOST_VAL() |
+		SONIC_PHYS_ADDR_LIF_VAL(ident->dev.hw_lif_id_tbl[0]);
 }
 
 uint64_t sonic_devpa_to_hostpa(uint64_t devpa)
 {
-	return devpa & ~(SONIC_PHYS_ADDR_HOST_VAL() | SONIC_PHYS_ADDR_LIF_VAL(SONIC_PHYS_ADDR_LIF_MASK));
+	return devpa & ~(SONIC_PHYS_ADDR_HOST_VAL() |
+			SONIC_PHYS_ADDR_LIF_VAL(SONIC_PHYS_ADDR_LIF_MASK));
 }

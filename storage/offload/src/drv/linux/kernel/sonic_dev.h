@@ -377,7 +377,8 @@ void sonic_q_free(struct lif *lif, struct queue *q);
 int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 unsigned int index, const char *base, unsigned int num_descs,
 		 size_t desc_size, unsigned int pid);
-void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa);
+void sonic_q_map(struct queue *q, unsigned int num_descs,
+		unsigned int desc_size, void *base, dma_addr_t base_pa);
 void sonic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		  void *cb_arg);
 void sonic_q_rewind(struct queue *q, struct desc_info *start);
@@ -385,7 +386,7 @@ unsigned int sonic_q_space_avail(struct queue *q);
 bool sonic_q_has_space(struct queue *q, unsigned int want);
 void sonic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index);
-void* sonic_q_consume_entry(struct queue *q, uint32_t *index);
+void *sonic_q_consume_entry(struct queue *q, uint32_t *index);
 void sonic_q_ringdb(struct queue *q, uint32_t index);
 
 #endif /* _SONIC_DEV_H_ */
