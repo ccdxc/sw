@@ -32,7 +32,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define DB_DATA r5
 #define NEW_RSQ_P_INDEX r6
 
-#define WORK_NOT_DONE_RECIRC_CNT_MAX    3
+#define WORK_NOT_DONE_RECIRC_CNT_MAX    8
 
 %%
     .param    resp_rx_rqpt_process
@@ -880,7 +880,9 @@ recirc_wait_for_turn:
 recirc_pkt:
     // turn off recirc, if this thread needs recirc again, respective
     // code would enable recirc flag there.
-    phvwr   p.common.p4_intr_recirc, 0 
+    // set the recirc count to 1 for every recirc packet
+    phvwrpair   p.common.p4_intr_recirc_count, 1, \
+                p.common.p4_intr_recirc, 0
 
     seq     c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_SGE_WORK_PENDING
     bcf     [c2], recirc_sge_work_pending
