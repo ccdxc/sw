@@ -159,7 +159,8 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 
 	idev->dev_cmd = ionic->bars[0].vaddr;
 	idev->dev_cmd_db = ionic->bars[1].vaddr;
-	fwcfg_base_addr = ionic->bars[2].vaddr;
+	idev->intr_ctrl = ionic->bars[2].vaddr;
+	fwcfg_base_addr = dev->intr_ctrl;
 	msix_cfg_base_addr = ionic->bars[3].vaddr;
 
 #ifdef HAPS
