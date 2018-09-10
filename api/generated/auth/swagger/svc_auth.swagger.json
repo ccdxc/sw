@@ -383,12 +383,48 @@
     "/configs/auth/v1/role-bindings": {
       "get": {
         "summary": "List RoleBinding objects",
-        "operationId": "AutoListRoleBinding-1",
+        "operationId": "ListRoleBinding_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleBindingList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -500,17 +536,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       },
       "post": {
         "summary": "Create RoleBinding object",
-        "operationId": "AutoAddRoleBinding-1",
+        "operationId": "AddRoleBinding_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleBinding"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -525,19 +597,55 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       }
     },
     "/configs/auth/v1/role-bindings/{O.Name}": {
       "get": {
         "summary": "Get RoleBinding object",
-        "operationId": "AutoGetRoleBinding-1",
+        "operationId": "GetRoleBinding_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleBinding"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -646,17 +754,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       },
       "delete": {
         "summary": "Delete RoleBinding object",
-        "operationId": "AutoDeleteRoleBinding-1",
+        "operationId": "DeleteRoleBinding_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleBinding"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -669,17 +813,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       },
       "put": {
         "summary": "Update RoleBinding object",
-        "operationId": "AutoUpdateRoleBinding-1",
+        "operationId": "UpdateRoleBinding_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleBinding"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -700,19 +880,55 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       }
     },
     "/configs/auth/v1/roles": {
       "get": {
         "summary": "List Role objects",
-        "operationId": "AutoListRole-1",
+        "operationId": "ListRole_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRoleList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -824,17 +1040,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       },
       "post": {
         "summary": "Create Role object",
-        "operationId": "AutoAddRole-1",
+        "operationId": "AddRole_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRole"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -849,19 +1101,55 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       }
     },
     "/configs/auth/v1/roles/{O.Name}": {
       "get": {
         "summary": "Get Role object",
-        "operationId": "AutoGetRole-1",
+        "operationId": "GetRole_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRole"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -946,17 +1234,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       },
       "delete": {
         "summary": "Delete Role object",
-        "operationId": "AutoDeleteRole-1",
+        "operationId": "DeleteRole_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRole"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -969,17 +1293,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       },
       "put": {
         "summary": "Update Role object",
-        "operationId": "AutoUpdateRole-1",
+        "operationId": "UpdateRole_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authRole"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1000,7 +1360,7 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       }
     },
@@ -2568,12 +2928,48 @@
     "/configs/auth/v1/users": {
       "get": {
         "summary": "List User objects",
-        "operationId": "AutoListUser-1",
+        "operationId": "ListUser_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authUserList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -2685,17 +3081,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       },
       "post": {
         "summary": "Create User object",
-        "operationId": "AutoAddUser-1",
+        "operationId": "AddUser_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -2710,19 +3142,55 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       }
     },
     "/configs/auth/v1/users/{O.Name}": {
       "get": {
         "summary": "Get User object",
-        "operationId": "AutoGetUser-1",
+        "operationId": "GetUser_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -2856,17 +3324,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       },
       "delete": {
         "summary": "Delete User object",
-        "operationId": "AutoDeleteUser-1",
+        "operationId": "DeleteUser_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -2879,17 +3383,53 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       },
       "put": {
         "summary": "Update User object",
-        "operationId": "AutoUpdateUser-1",
+        "operationId": "UpdateUser_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -2910,7 +3450,7 @@
           }
         ],
         "tags": [
-          "AuthV1"
+          "auth/v1"
         ]
       }
     }

@@ -547,12 +547,48 @@
     "/configs/security/v1/certificates": {
       "get": {
         "summary": "List Certificate objects",
-        "operationId": "AutoListCertificate-1",
+        "operationId": "ListCertificate_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityCertificateList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -664,17 +700,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "post": {
         "summary": "Create Certificate object",
-        "operationId": "AutoAddCertificate-1",
+        "operationId": "AddCertificate_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityCertificate"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -689,19 +761,55 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/certificates/{O.Name}": {
       "get": {
         "summary": "Get Certificate object",
-        "operationId": "AutoGetCertificate-1",
+        "operationId": "GetCertificate_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityCertificate"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -834,17 +942,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "delete": {
         "summary": "Delete Certificate object",
-        "operationId": "AutoDeleteCertificate-1",
+        "operationId": "DeleteCertificate_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityCertificate"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -857,17 +1001,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "put": {
         "summary": "Update Certificate object",
-        "operationId": "AutoUpdateCertificate-1",
+        "operationId": "UpdateCertificate_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityCertificate"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -888,19 +1068,55 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/security-groups": {
       "get": {
         "summary": "List SecurityGroup objects",
-        "operationId": "AutoListSecurityGroup-1",
+        "operationId": "ListSecurityGroup_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySecurityGroupList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1012,17 +1228,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "post": {
         "summary": "Create SecurityGroup object",
-        "operationId": "AutoAddSecurityGroup-1",
+        "operationId": "AddSecurityGroup_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySecurityGroup"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1037,19 +1289,55 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/security-groups/{O.Name}": {
       "get": {
         "summary": "Get SecurityGroup object",
-        "operationId": "AutoGetSecurityGroup-1",
+        "operationId": "GetSecurityGroup_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySecurityGroup"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1174,17 +1462,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "delete": {
         "summary": "Delete SecurityGroup object",
-        "operationId": "AutoDeleteSecurityGroup-1",
+        "operationId": "DeleteSecurityGroup_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySecurityGroup"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1197,17 +1521,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "put": {
         "summary": "Update SecurityGroup object",
-        "operationId": "AutoUpdateSecurityGroup-1",
+        "operationId": "UpdateSecurityGroup_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySecurityGroup"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1228,19 +1588,55 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/sgpolicies": {
       "get": {
         "summary": "List SGPolicy objects",
-        "operationId": "AutoListSGPolicy-1",
+        "operationId": "ListSGPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySGPolicyList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1352,17 +1748,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "post": {
         "summary": "Create SGPolicy object",
-        "operationId": "AutoAddSGPolicy-1",
+        "operationId": "AddSGPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySGPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1377,19 +1809,55 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/sgpolicies/{O.Name}": {
       "get": {
         "summary": "Get SGPolicy object",
-        "operationId": "AutoGetSGPolicy-1",
+        "operationId": "GetSGPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySGPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1532,17 +2000,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "delete": {
         "summary": "Delete SGPolicy object",
-        "operationId": "AutoDeleteSGPolicy-1",
+        "operationId": "DeleteSGPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySGPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1555,17 +2059,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "put": {
         "summary": "Update SGPolicy object",
-        "operationId": "AutoUpdateSGPolicy-1",
+        "operationId": "UpdateSGPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securitySGPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1586,7 +2126,7 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
@@ -3609,12 +4149,48 @@
     "/configs/security/v1/trafficEncryptionPolicy": {
       "post": {
         "summary": "Create TrafficEncryptionPolicy object",
-        "operationId": "AutoAddTrafficEncryptionPolicy-1",
+        "operationId": "AddTrafficEncryptionPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityTrafficEncryptionPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -3629,19 +4205,55 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/trafficEncryptionPolicy/{O.Name}": {
       "get": {
         "summary": "Get TrafficEncryptionPolicy object",
-        "operationId": "AutoGetTrafficEncryptionPolicy-1",
+        "operationId": "GetTrafficEncryptionPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityTrafficEncryptionPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -3769,17 +4381,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "delete": {
         "summary": "Delete TrafficEncryptionPolicy object",
-        "operationId": "AutoDeleteTrafficEncryptionPolicy-1",
+        "operationId": "DeleteTrafficEncryptionPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityTrafficEncryptionPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -3792,17 +4440,53 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       },
       "put": {
         "summary": "Update TrafficEncryptionPolicy object",
-        "operationId": "AutoUpdateTrafficEncryptionPolicy-1",
+        "operationId": "UpdateTrafficEncryptionPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/securityTrafficEncryptionPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -3823,7 +4507,7 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
@@ -3990,13 +4674,49 @@
     "/configs/security/v1/watch/certificates": {
       "get": {
         "summary": "Watch Certificate objects",
-        "operationId": "AutoWatchCertificate-1",
+        "operationId": "WatchCertificate_1",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/securityAutoMsgCertificateWatchHelper"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -4107,20 +4827,56 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/watch/security-groups": {
       "get": {
         "summary": "Watch SecurityGroup objects",
-        "operationId": "AutoWatchSecurityGroup-1",
+        "operationId": "WatchSecurityGroup_1",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/securityAutoMsgSecurityGroupWatchHelper"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -4231,19 +4987,55 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
     "/configs/security/v1/watch/sgpolicies": {
       "get": {
         "summary": "Watch SGPolicy objects",
-        "operationId": "AutoWatchSGPolicy-1",
+        "operationId": "WatchSGPolicy_1",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/securityAutoMsgSGPolicyWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -4355,7 +5147,7 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     },
@@ -4998,12 +5790,48 @@
     "/configs/security/v1/watch/trafficEncryptionPolicy": {
       "get": {
         "summary": "Watch TrafficEncryptionPolicy objects",
-        "operationId": "AutoWatchTrafficEncryptionPolicy-1",
+        "operationId": "WatchTrafficEncryptionPolicy_1",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/securityAutoMsgTrafficEncryptionPolicyWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -5115,7 +5943,7 @@
           }
         ],
         "tags": [
-          "SecurityV1"
+          "security/v1"
         ]
       }
     }

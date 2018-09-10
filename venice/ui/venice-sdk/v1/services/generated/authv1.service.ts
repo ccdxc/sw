@@ -38,6 +38,72 @@ export class Authv1Service extends AbstractService {
   }
   
   /** List RoleBinding objects */
+  public ListRoleBinding_1():Observable<{body: IAuthRoleBindingList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings';
+    return this.invokeAJAXGetCall(url, 'ListRoleBinding_1') as Observable<{body: IAuthRoleBindingList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create RoleBinding object */
+  public AddRoleBinding_1(body: AuthRoleBinding):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings';
+    return this.invokeAJAXPostCall(url, body.getValues(), 'AddRoleBinding_1') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get RoleBinding object */
+  public GetRoleBinding_1(O_Name):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXGetCall(url, 'GetRoleBinding_1') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete RoleBinding object */
+  public DeleteRoleBinding_1(O_Name):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXDeleteCall(url, 'DeleteRoleBinding_1') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update RoleBinding object */
+  public UpdateRoleBinding_1(O_Name, body: AuthRoleBinding):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateRoleBinding_1') as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List Role objects */
+  public ListRole_1():Observable<{body: IAuthRoleList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles';
+    return this.invokeAJAXGetCall(url, 'ListRole_1') as Observable<{body: IAuthRoleList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create Role object */
+  public AddRole_1(body: AuthRole):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles';
+    return this.invokeAJAXPostCall(url, body.getValues(), 'AddRole_1') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get Role object */
+  public GetRole_1(O_Name):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXGetCall(url, 'GetRole_1') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete Role object */
+  public DeleteRole_1(O_Name):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXDeleteCall(url, 'DeleteRole_1') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update Role object */
+  public UpdateRole_1(O_Name, body: AuthRole):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateRole_1') as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List RoleBinding objects */
   public ListRoleBinding():Observable<{body: IAuthRoleBindingList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/role-bindings';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
@@ -149,6 +215,39 @@ export class Authv1Service extends AbstractService {
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
     return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateUser') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List User objects */
+  public ListUser_1():Observable<{body: IAuthUserList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/users';
+    return this.invokeAJAXGetCall(url, 'ListUser_1') as Observable<{body: IAuthUserList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create User object */
+  public AddUser_1(body: AuthUser):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/users';
+    return this.invokeAJAXPostCall(url, body.getValues(), 'AddUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get User object */
+  public GetUser_1(O_Name):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXGetCall(url, 'GetUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete User object */
+  public DeleteUser_1(O_Name):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXDeleteCall(url, 'DeleteUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update User object */
+  public UpdateUser_1(O_Name, body: AuthUser):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
 }

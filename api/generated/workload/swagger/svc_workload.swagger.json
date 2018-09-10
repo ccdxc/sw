@@ -19,12 +19,48 @@
     "/configs/workload/v1/endpoints": {
       "get": {
         "summary": "List Endpoint objects",
-        "operationId": "AutoListEndpoint-1",
+        "operationId": "ListEndpoint_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadEndpointList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -136,17 +172,53 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       },
       "post": {
         "summary": "Create Endpoint object",
-        "operationId": "AutoAddEndpoint-1",
+        "operationId": "AddEndpoint_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadEndpoint"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -161,19 +233,55 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       }
     },
     "/configs/workload/v1/endpoints/{O.Name}": {
       "get": {
         "summary": "Get Endpoint object",
-        "operationId": "AutoGetEndpoint-1",
+        "operationId": "GetEndpoint_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadEndpoint"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -367,17 +475,53 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       },
       "delete": {
         "summary": "Delete Endpoint object",
-        "operationId": "AutoDeleteEndpoint-1",
+        "operationId": "DeleteEndpoint_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadEndpoint"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -390,17 +534,53 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       },
       "put": {
         "summary": "Update Endpoint object",
-        "operationId": "AutoUpdateEndpoint-1",
+        "operationId": "UpdateEndpoint_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadEndpoint"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -421,7 +601,7 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       }
     },
@@ -1536,12 +1716,48 @@
     "/configs/workload/v1/watch/endpoints": {
       "get": {
         "summary": "Watch Endpoint objects",
-        "operationId": "AutoWatchEndpoint-1",
+        "operationId": "WatchEndpoint_1",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/workloadAutoMsgEndpointWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1653,7 +1869,7 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       }
     },
@@ -1978,13 +2194,49 @@
     "/configs/workload/v1/watch/workloads": {
       "get": {
         "summary": "Watch Workload objects",
-        "operationId": "AutoWatchWorkload-1",
+        "operationId": "WatchWorkload_1",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/workloadAutoMsgWorkloadWatchHelper"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -2095,19 +2347,55 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       }
     },
     "/configs/workload/v1/workloads": {
       "get": {
         "summary": "List Workload objects",
-        "operationId": "AutoListWorkload-1",
+        "operationId": "ListWorkload_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadWorkloadList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -2219,17 +2507,53 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       },
       "post": {
         "summary": "Create Workload object",
-        "operationId": "AutoAddWorkload-1",
+        "operationId": "AddWorkload_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -2244,19 +2568,55 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       }
     },
     "/configs/workload/v1/workloads/{O.Name}": {
       "get": {
         "summary": "Get Workload object",
-        "operationId": "AutoGetWorkload-1",
+        "operationId": "GetWorkload_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -2348,17 +2708,53 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       },
       "delete": {
         "summary": "Delete Workload object",
-        "operationId": "AutoDeleteWorkload-1",
+        "operationId": "DeleteWorkload_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -2371,17 +2767,53 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       },
       "put": {
         "summary": "Update Workload object",
-        "operationId": "AutoUpdateWorkload-1",
+        "operationId": "UpdateWorkload_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -2402,7 +2834,7 @@
           }
         ],
         "tags": [
-          "WorkloadV1"
+          "workload/v1"
         ]
       }
     }

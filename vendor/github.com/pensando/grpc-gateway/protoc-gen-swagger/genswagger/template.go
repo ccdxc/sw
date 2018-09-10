@@ -576,7 +576,7 @@ func renderServices(services []*descriptor.Service, paths SwaggerPathsObject, re
 				}
 				operID := fmt.Sprintf("%s", meth.GetName())
 				if bindCount != 0 {
-					operID = fmt.Sprintf("%s-%d", meth.GetName(), bindCount)
+					operID = fmt.Sprintf("%s_%d", meth.GetName(), bindCount)
 				}
 				operationObject := &SwaggerOperationObject{
 					Tags:        []string{svc.GetName()},

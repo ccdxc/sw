@@ -19,7 +19,7 @@
     "/events/v1/events": {
       "get": {
         "summary": "http://\u003c...\u003e/events/v1/events",
-        "operationId": "GetEvents-1",
+        "operationId": "GetGetEvents_1",
         "responses": {
           "200": {
             "description": "",
@@ -136,7 +136,7 @@
           }
         ],
         "tags": [
-          "EventsV1"
+          "events/v1"
         ]
       },
       "post": {

@@ -19,12 +19,48 @@
     "/configs/staging/v1/buffers": {
       "get": {
         "summary": "List Buffer objects",
-        "operationId": "AutoListBuffer-1",
+        "operationId": "ListBuffer_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/stagingBufferList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -136,17 +172,53 @@
           }
         ],
         "tags": [
-          "StagingV1"
+          "staging/v1"
         ]
       },
       "post": {
         "summary": "Create Buffer object",
-        "operationId": "AutoAddBuffer-1",
+        "operationId": "AddBuffer_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/stagingBuffer"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -161,19 +233,55 @@
           }
         ],
         "tags": [
-          "StagingV1"
+          "staging/v1"
         ]
       }
     },
     "/configs/staging/v1/buffers/{O.Name}": {
       "get": {
         "summary": "Get Buffer object",
-        "operationId": "AutoGetBuffer-1",
+        "operationId": "GetBuffer_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/stagingBuffer"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -270,18 +378,54 @@
           }
         ],
         "tags": [
-          "StagingV1"
+          "staging/v1"
         ]
       },
       "delete": {
         "summary": "Delete Buffer object",
-        "operationId": "AutoDeleteBuffer-1",
+        "operationId": "DeleteBuffer_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/stagingBuffer"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -293,42 +437,54 @@
           }
         ],
         "tags": [
-          "StagingV1"
+          "staging/v1"
         ]
       }
     },
     "/configs/staging/v1/buffers/{O.Name}/clear": {
       "post": {
-        "operationId": "Clear-1",
+        "operationId": "Clear_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/stagingClearAction"
             }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "StagingV1"
-        ]
-      }
-    },
-    "/configs/staging/v1/buffers/{O.Name}/commit": {
-      "post": {
-        "operationId": "Commit-1",
-        "responses": {
-          "200": {
-            "description": "",
+          },
+          "400": {
+            "description": "Bad request parameters",
             "schema": {
-              "$ref": "#/definitions/stagingCommitAction"
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -341,7 +497,67 @@
           }
         ],
         "tags": [
-          "StagingV1"
+          "staging/v1"
+        ]
+      }
+    },
+    "/configs/staging/v1/buffers/{O.Name}/commit": {
+      "post": {
+        "operationId": "Commit_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/stagingCommitAction"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "staging/v1"
         ]
       }
     },

@@ -19,7 +19,7 @@
     "/search/v1/policy-query": {
       "get": {
         "summary": "Security Policy Query",
-        "operationId": "PolicyQuery-1",
+        "operationId": "GetPolicyQuery_1",
         "responses": {
           "200": {
             "description": "",
@@ -87,7 +87,7 @@
           }
         ],
         "tags": [
-          "SearchV1"
+          "search/v1"
         ]
       },
       "post": {
@@ -119,7 +119,7 @@
     "/search/v1/query": {
       "get": {
         "summary": "In the example below a query like\n   http://\u003c...\u003e/venice/v1/search/query?QueryString=XXXXX\u0026MaxResults=100\n generates a RPC call Query with the parameter as\n SearchRequest{ QueryString: \"XXXXX\", MaxResults:100}",
-        "operationId": "Query-1",
+        "operationId": "GetQuery_1",
         "responses": {
           "200": {
             "description": "",
@@ -188,7 +188,7 @@
           }
         ],
         "tags": [
-          "SearchV1"
+          "search/v1"
         ]
       },
       "post": {

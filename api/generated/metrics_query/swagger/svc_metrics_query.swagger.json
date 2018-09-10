@@ -19,7 +19,7 @@
     "/configs/metrics/v1/metrics": {
       "get": {
         "summary": "In the example below a query like\n   http://\u003c...\u003e/venice/v1/metrics/query\n generates a RPC call Query",
-        "operationId": "Query-1",
+        "operationId": "GetQuery_1",
         "responses": {
           "200": {
             "description": "",
@@ -113,7 +113,7 @@
           }
         ],
         "tags": [
-          "MetricsV1"
+          "metrics/v1"
         ]
       },
       "post": {

@@ -19,12 +19,48 @@
     "/configs/network/v1/lb-policy": {
       "get": {
         "summary": "List LbPolicy objects",
-        "operationId": "AutoListLbPolicy-1",
+        "operationId": "ListLbPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkLbPolicyList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -136,17 +172,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       },
       "post": {
         "summary": "Create LbPolicy object",
-        "operationId": "AutoAddLbPolicy-1",
+        "operationId": "AddLbPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkLbPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -161,19 +233,55 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       }
     },
     "/configs/network/v1/lb-policy/{O.Name}": {
       "get": {
         "summary": "Get LbPolicy object",
-        "operationId": "AutoGetLbPolicy-1",
+        "operationId": "GetLbPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkLbPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -328,17 +436,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       },
       "delete": {
         "summary": "Delete LbPolicy object",
-        "operationId": "AutoDeleteLbPolicy-1",
+        "operationId": "DeleteLbPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkLbPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -351,17 +495,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       },
       "put": {
         "summary": "Update LbPolicy object",
-        "operationId": "AutoUpdateLbPolicy-1",
+        "operationId": "UpdateLbPolicy_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkLbPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -382,19 +562,55 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       }
     },
     "/configs/network/v1/networks": {
       "get": {
         "summary": "List Network objects",
-        "operationId": "AutoListNetwork-1",
+        "operationId": "ListNetwork_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkNetworkList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -506,17 +722,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       },
       "post": {
         "summary": "Create Network object",
-        "operationId": "AutoAddNetwork-1",
+        "operationId": "AddNetwork_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkNetwork"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -531,19 +783,55 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       }
     },
     "/configs/network/v1/networks/{O.Name}": {
       "get": {
         "summary": "Get Network object",
-        "operationId": "AutoGetNetwork-1",
+        "operationId": "GetNetwork_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkNetwork"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -697,17 +985,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       },
       "delete": {
         "summary": "Delete Network object",
-        "operationId": "AutoDeleteNetwork-1",
+        "operationId": "DeleteNetwork_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkNetwork"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -720,17 +1044,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       },
       "put": {
         "summary": "Update Network object",
-        "operationId": "AutoUpdateNetwork-1",
+        "operationId": "UpdateNetwork_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkNetwork"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -751,19 +1111,55 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       }
     },
     "/configs/network/v1/services": {
       "get": {
         "summary": "List Service objects",
-        "operationId": "AutoListService-1",
+        "operationId": "ListService_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkServiceList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -875,17 +1271,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       },
       "post": {
         "summary": "Create Service object",
-        "operationId": "AutoAddService-1",
+        "operationId": "AddService_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkService"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -900,19 +1332,55 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       }
     },
     "/configs/network/v1/services/{O.Name}": {
       "get": {
         "summary": "Get Service object",
-        "operationId": "AutoGetService-1",
+        "operationId": "GetService_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkService"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1095,17 +1563,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       },
       "delete": {
         "summary": "Delete Service object",
-        "operationId": "AutoDeleteService-1",
+        "operationId": "DeleteService_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkService"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1118,17 +1622,53 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       },
       "put": {
         "summary": "Update Service object",
-        "operationId": "AutoUpdateService-1",
+        "operationId": "UpdateService_1",
         "responses": {
           "200": {
             "description": "",
             "schema": {
               "$ref": "#/definitions/networkService"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -1149,7 +1689,7 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       }
     },
@@ -2881,13 +3421,49 @@
     "/configs/network/v1/watch/lb-policy": {
       "get": {
         "summary": "Watch LbPolicy objects",
-        "operationId": "AutoWatchLbPolicy-1",
+        "operationId": "WatchLbPolicy_1",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/networkAutoMsgLbPolicyWatchHelper"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -2998,20 +3574,56 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       }
     },
     "/configs/network/v1/watch/networks": {
       "get": {
         "summary": "Watch Network objects",
-        "operationId": "AutoWatchNetwork-1",
+        "operationId": "WatchNetwork_1",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/networkAutoMsgNetworkWatchHelper"
             }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
           }
         },
         "parameters": [
@@ -3122,19 +3734,55 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       }
     },
     "/configs/network/v1/watch/services": {
       "get": {
         "summary": "Watch Service objects",
-        "operationId": "AutoWatchService-1",
+        "operationId": "WatchService_1",
         "responses": {
           "200": {
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/networkAutoMsgServiceWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
             }
           }
         },
@@ -3246,7 +3894,7 @@
           }
         ],
         "tags": [
-          "NetworkV1"
+          "network/v1"
         ]
       }
     },

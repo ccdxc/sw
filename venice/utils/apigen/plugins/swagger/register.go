@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -334,51 +335,52 @@ func methFinalizer(obj *genswagger.SwaggerPathItemObject, path *string, method *
 	if svcPrefix == "" {
 		tag = method.Service.File.GoPkg.Name + "/" + version
 	}
+	re := regexp.MustCompile(fmt.Sprintf("^%s(_[\\d]+)*$", method.GetName()))
 	if obj != nil {
 		if common.IsAutoGenMethod(method) {
-			if obj.Get != nil && obj.Get.OperationID == method.GetName() {
+			if obj.Get != nil && re.Match([]byte(obj.Get.OperationID)) {
 				obj.Get.OperationID = strings.TrimPrefix(obj.Get.OperationID, "Auto")
 				obj.Get.Tags[0] = tag
 				addErrors(obj.Get)
 			}
-			if obj.Post != nil && obj.Post.OperationID == method.GetName() {
+			if obj.Post != nil && re.Match([]byte(obj.Post.OperationID)) {
 				obj.Post.OperationID = strings.TrimPrefix(obj.Post.OperationID, "Auto")
 				obj.Post.Tags[0] = tag
 				addErrors(obj.Post)
 			}
-			if obj.Put != nil && obj.Put.OperationID == method.GetName() {
+			if obj.Put != nil && re.Match([]byte(obj.Put.OperationID)) {
 				obj.Put.OperationID = strings.TrimPrefix(obj.Put.OperationID, "Auto")
 				obj.Put.Tags[0] = tag
 				addErrors(obj.Put)
 			}
-			if obj.Delete != nil && obj.Delete.OperationID == method.GetName() {
+			if obj.Delete != nil && re.Match([]byte(obj.Delete.OperationID)) {
 				obj.Delete.OperationID = strings.TrimPrefix(obj.Delete.OperationID, "Auto")
 				obj.Delete.Tags[0] = tag
 				addErrors(obj.Delete)
 			}
-			if obj.Patch != nil && obj.Patch.OperationID == method.GetName() {
+			if obj.Patch != nil && re.Match([]byte(obj.Patch.OperationID)) {
 				obj.Patch.OperationID = strings.TrimPrefix(obj.Patch.OperationID, "Auto")
 				obj.Patch.Tags[0] = tag
 				addErrors(obj.Patch)
 			}
 		} else {
-			if obj.Get != nil && obj.Get.OperationID == method.GetName() {
+			if obj.Get != nil && re.Match([]byte(obj.Get.OperationID)) {
 				obj.Get.OperationID = "Get" + obj.Get.OperationID
 				obj.Get.Tags[0] = tag
 			}
-			if obj.Post != nil && obj.Post.OperationID == method.GetName() {
+			if obj.Post != nil && re.Match([]byte(obj.Post.OperationID)) {
 				obj.Post.OperationID = "Post" + obj.Post.OperationID
 				obj.Post.Tags[0] = tag
 			}
-			if obj.Put != nil && obj.Put.OperationID == method.GetName() {
+			if obj.Put != nil && re.Match([]byte(obj.Put.OperationID)) {
 				obj.Put.OperationID = "Put" + obj.Put.OperationID
 				obj.Put.Tags[0] = tag
 			}
-			if obj.Delete != nil && obj.Delete.OperationID == method.GetName() {
+			if obj.Delete != nil && re.Match([]byte(obj.Delete.OperationID)) {
 				obj.Post.OperationID = "Delete" + obj.Delete.OperationID
 				obj.Delete.Tags[0] = tag
 			}
-			if obj.Patch != nil && obj.Patch.OperationID == method.GetName() {
+			if obj.Patch != nil && re.Match([]byte(obj.Patch.OperationID)) {
 				obj.Patch.OperationID = "Patch" + obj.Patch.OperationID
 				obj.Patch.Tags[0] = tag
 			}
