@@ -14,7 +14,8 @@ flow_hash:
     ori         r2, r0, 0x80000000
     bcf         [c1], label_flow_hit
     // Check hash1 and hint1
-    seq         c1, r1[31:24], d.flow_hash_d.hash1
+    or          r7, d.flow_hash_d.hash1_sbit7_ebit7, d.flow_hash_d.hash1_sbit0_ebit6, 1
+    seq         c1, r1[31:24], r7
     sne         c2, d.flow_hash_d.hint1, r0
     bcf         [c1&c2], label_flow_hash_hit
     add         r2, r2, d.flow_hash_d.hint1

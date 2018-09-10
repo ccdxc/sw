@@ -12,12 +12,12 @@
         {
             "name": "rxdma_program",
             "size_kb": 1024,
-            "cache": "p4plus-all"
+            "cache": "p4plus-rxdma"
         },
         {
             "name": "txdma_program",
             "size_kb": 1024,
-            "cache": "p4plus-all"
+            "cache": "p4plus-txdma"
         },
         {
             "name": "rxdma_to_txdma_buf",
@@ -30,11 +30,15 @@
         },
         {
             "name": "flow",
-            "size_kb": 16777216
+            "size_kb": 1048576
         },
         {
             "name": "flow_info",
-            "size_kb": 8388608
+            "size_kb": 524288
+        },
+        {
+            "name": "flow_stats",
+            "size_kb": 524288
         },
         {
             "name": "remote_vnic_mapping_tx",

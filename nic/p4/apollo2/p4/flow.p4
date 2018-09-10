@@ -1,13 +1,14 @@
 /*****************************************************************************/
 /* Policy                                                                    */
 /*****************************************************************************/
-action flow_hash(entry_valid, flow_index,
+action flow_hash(entry_valid, flow_index, flow_role,
                  hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
                  hash5, hint5, more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(service_header.flow_done, TRUE);
         modify_field(control_metadata.flow_index, flow_index);
+        modify_field(control_metadata.flow_role, flow_role);
 
         // if hardware register indicates miss, compare hints and setup
         // to perform lookup in overflow table
@@ -31,19 +32,6 @@ action flow_hash(entry_valid, flow_index,
     modify_field(scratch_metadata.flow_hint, hint5);
     modify_field(scratch_metadata.flag, more_hashes);
     modify_field(scratch_metadata.flow_hint, more_hints);
-}
-
-action flow_info(permit_packets, permit_bytes, deny_packets, deny_bytes, drop) {
-    modify_field(scratch_metadata.flag, drop);
-    if (drop == FALSE) {
-        add(scratch_metadata.in_packets, permit_packets, 1);
-        add(scratch_metadata.in_bytes, permit_bytes, capri_p4_intrinsic.packet_len);
-    } else {
-        modify_field(control_metadata.p4i_drop_reason, 1 << DROP_FLOW_HIT);
-        add(scratch_metadata.in_packets, deny_packets, 1);
-        add(scratch_metadata.in_bytes, deny_bytes, capri_p4_intrinsic.packet_len);
-        drop_packet();
-    }
 }
 
 @pragma stage 2
@@ -75,6 +63,25 @@ table flow_ohash {
         flow_hash;
     }
     size : FLOW_OHASH_TABLE_SIZE;
+}
+
+action flow_info(drop, iflow_tcp_state, rflow_tcp_state, flow_stats_addr) {
+    modify_field(scratch_metadata.flow_stats_addr, flow_stats_addr);
+    modify_field(scratch_metadata.flag, drop);
+    modify_field(scratch_metadata.in_bytes, capri_p4_intrinsic.packet_len);
+    if (drop == TRUE) {
+        modify_field(control_metadata.p4i_drop_reason, 1 << DROP_FLOW_HIT);
+        drop_packet();
+    }
+
+    if (tcp.valid == TRUE) {
+        modify_field(scratch_metadata.tcp_flags, tcp.flags);
+        if (control_metadata.flow_role == TCP_FLOW_INITIATOR) {
+            modify_field(scratch_metadata.tcp_state, iflow_tcp_state);
+        } else {
+            modify_field(scratch_metadata.tcp_state, rflow_tcp_state);
+        }
+    }
 }
 
 @pragma stage 4

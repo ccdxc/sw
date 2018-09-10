@@ -47,6 +47,7 @@ header_type control_metadata_t {
         skip_flow_lkp                   : 1;
         flow_ohash_lkp                  : 1;
         flow_index                      : 23;
+        flow_role                       : 1;
         span_copy                       : 1;
         direction                       : 1;
         p4i_drop_reason                 : 32;
@@ -106,6 +107,9 @@ header_type scratch_metadata_t {
         overlay_mac         : 48;
         drop_stats_pad      : 88;
         drop_stats_pkts     : 40;
+        tcp_state           : 4;
+        tcp_flags           : 8;
+        flow_stats_addr     : 34;
 
         subnet_id           : 16;
         snat                : 1;

@@ -28,12 +28,13 @@
 hal_ret_t capri_default_config_init(capri_cfg_t *cfg);
 using boost::property_tree::ptree;
 
-#define JRXDMA_PRGM "rxdma_program"
-#define JTXDMA_PRGM "txdma_program"
-#define JLIFQSTATE  "lif2qstate_map"
-#define JPKTBUFFER  "rxdma_to_txdma_buf"
-#define JSLACLBASE  "slacl"
-#define JLPMBASE    "lpm"
+#define JRXDMA_PRGM     "rxdma_program"
+#define JTXDMA_PRGM     "txdma_program"
+#define JLIFQSTATE      "lif2qstate_map"
+#define JPKTBUFFER      "rxdma_to_txdma_buf"
+#define JSLACLBASE      "slacl"
+#define JLPMBASE        "lpm"
+#define JFLOWSTATSBASE  "flow_stats"
 
 typedef struct __attribute__((__packed__)) lif_qstate_  {
     uint64_t pc : 8;
@@ -312,7 +313,7 @@ mappings_init(void) {
 }
 
 static void
-flow_init(void) {
+flow_hash_init() {
     flow_swkey_t key;
     flow_actiondata data;
     flow_flow_hash_t *flow_hash_info = &data.flow_action_u.flow_flow_hash;
@@ -332,6 +333,30 @@ flow_init(void) {
     flow_hash_info->flow_index = g_flow_index;
 
     entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+}
+
+static void
+flow_info_init() {
+    flow_info_actiondata data;
+    flow_info_flow_info_t *flow_info =
+        &data.flow_info_action_u.flow_info_flow_info;
+    uint32_t tbl_id = P4TBL_ID_FLOW_INFO;
+    uint64_t flow_stats_addr;
+
+    memset(&data, 0, sizeof(data));
+    data.actionid = FLOW_INFO_FLOW_INFO_ID;
+    flow_stats_addr = get_start_offset(JFLOWSTATSBASE) + g_flow_index * 64;
+    flow_stats_addr -= ((uint64_t)1 << 31);
+    memcpy(flow_info->flow_stats_addr, &flow_stats_addr,
+           sizeof(flow_info->flow_stats_addr));
+
+    entry_write(tbl_id, g_flow_index, NULL, NULL, &data, false, 0);
+}
+
+static void
+flow_init(void) {
+    flow_hash_init();
+    flow_info_init();
 }
 
 static void
@@ -461,8 +486,12 @@ TEST_F(apollo_test, test1) {
     ASSERT_NE(ret, -1);
     ret = capri_load_config((char *)"obj/apollo2_txdma/pgm_bin");
     ASSERT_NE(ret, -1);
+
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     cfg.pgm_name = "apollo2";
+    cfg.llc_cache = true;
+    cfg.p4_cache = true;
+    cfg.p4plus_cache = true;
     printf("Parsing HBM config\n");
     ret = capri_hbm_parse(&cfg);
     ASSERT_NE(ret, -1);
@@ -494,7 +523,7 @@ TEST_F(apollo_test, test1) {
 
     ret = capri_table_rw_init();
     ASSERT_NE(ret, -1);
-    ret = capri_hbm_cache_init(NULL);
+    ret = capri_hbm_cache_init(&cfg);
     ASSERT_NE(ret, -1);
     ret = capri_hbm_cache_regions_init();
     ASSERT_NE(ret, -1);
