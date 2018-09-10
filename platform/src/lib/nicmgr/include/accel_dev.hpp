@@ -137,6 +137,56 @@ typedef struct dev_cmd_regs {
 
 #endif /* ACCEL_DEV_CMD_ENUMERATE */
 
+/*
+ * Very simple bitmap implementation for ring IDs
+ */
+typedef uint32_t    accel_ring_id_map_t;
+
+static inline void
+accel_ring_id_map_init(accel_ring_id_map_t& map)
+{
+    map = 0;
+}
+
+static inline void
+accel_ring_id_map_set(accel_ring_id_map_t& map,
+                      accel_ring_id_t id)
+{
+    map |= 1 << id;
+}
+
+static inline uint32_t
+accel_ring_id_map_bitcount(accel_ring_id_map_t map)
+{
+    uint32_t    bitcount = 0;
+
+    while (map) {
+        if (map & 1) {
+            bitcount++;
+        }
+        map >>= 1;
+    }
+    return bitcount;
+}
+
+/*
+ * Poll with timeout
+ */
+class Poller {
+
+public:
+  Poller(uint64_t timeout_us) : timeout_us(timeout_us) {}
+  int operator()(std::function<int(void)> poll_func);
+
+private:
+  uint64_t  timeout_us;
+};
+
+/*
+ * Forward declarations
+ */
+typedef struct accel_csr    accel_csr_t;
+
 /**
  * Accelerator PF Device
  */
@@ -171,6 +221,7 @@ private:
     // Oher states
     uint64_t                    shadow_pndx_page_addr;
     uint32_t                    shadow_pndx_bytes_used;
+    uint32_t                    seq_qid_init_high;  // highest seq qid initialized
 
     const struct lif_info       *nicmgr_lif_info;
 
@@ -194,8 +245,19 @@ private:
 
     void accel_ring_info_get_all(void);
     void accel_ring_reset_all(void);
-    void accel_engine_enable_all(void);
-    void accel_ring_enable_all(void);
+    void accel_ring_reset_csr_set(const accel_csr_t *csr,
+                                  bool enable);
+    void accel_ring_enable_csr_set(const accel_csr_t *csr,
+                                   bool enable);
+    void accel_engine_enable_csr_set(const accel_csr_t *csr,
+                                     bool enable);
+    void accel_ring_pndx_csr_set(const accel_csr_t *csr,
+                                 uint32_t val);
+    uint32_t accel_ring_num_pendings_get(const accel_csr_t *csr,
+                                         accel_ring_id_map_t& ring_empty_map);
+    void accel_ring_max_pendings_get(const accel_csr_t *csr,
+                                      uint32_t& max_pendings);
+    void accel_ring_wait_quiesce_all(void);
 
     friend ostream &operator<<(ostream&, const Accel_PF&);
 };

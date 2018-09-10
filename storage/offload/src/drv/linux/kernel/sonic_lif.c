@@ -391,6 +391,7 @@ static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 
 static void sonic_lif_deinit(struct lif *lif)
 {
+	sonic_lif_qcq_deinit(lif, lif->adminqcq);
 	sonic_lif_per_core_resources_deinit(lif);
 }
 
