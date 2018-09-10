@@ -35,17 +35,17 @@ cc_library(
 
 cc_library(
     name = "aapl_includes",
-    hdrs = glob(["third-party/avago/include/aapl/*.h"])
+    hdrs = glob(["third-party/avago/build/include/aapl/*.h"])
 )
 
 cc_library(
     name = "libaapl",
     srcs = select ({
         "//conditions:default" : [
-            "third-party/avago/x86_64/lib/aapl/C/libAAPL.so",
+            "third-party/avago/build/x86_64/lib/aapl/C/libAAPL.so",
         ],
         ":aarch64_mode" : [
-            "third-party/avago/aarch64/lib/aapl/C/libAAPL.so",
+            "third-party/avago/build/aarch64/lib/aapl/C/libAAPL.so",
         ],
     }),
 )

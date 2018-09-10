@@ -8,7 +8,7 @@ nic/asic/capri/model/capsim-master/gen/x86_64/lib/libisa.so      /nic/lib/
 nic/hal/third-party/openssl/x86_64/lib/libssl.so.1.1             /nic/lib/
 nic/hal/third-party/openssl/x86_64/lib/libcrypto.so.1.1          /nic/lib/
 nic/hal/third-party/google/x86_64/lib/libprotobuf.so.14          /nic/lib/
-nic/sdk/third-party/avago/x86_64/lib/aapl/C/libAAPL.so           /nic/lib/
+nic/sdk/third-party/avago/build/x86_64/lib/aapl/C/libAAPL.so     /nic/lib/
 nic/sim/naples/start-naples.sh                                   /nic/tools/
 nic/sim/naples/stop-naples.sh                                    /nic/tools/
 nic/sim/naples/health-check.sh                                   /nic/tools/

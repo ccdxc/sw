@@ -6,7 +6,7 @@
 #include "linkmgr_types.hpp"
 #include "linkmgr_internal.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
-#include "third-party/avago/include/aapl/aapl.h"
+#include "third-party/avago/build/include/aapl/aapl.h"
 
 namespace sdk {
 namespace linkmgr {
