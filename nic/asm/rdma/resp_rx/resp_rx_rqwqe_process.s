@@ -22,14 +22,13 @@ struct rqwqe_base_t d;
 #define REM_PYLD_BYTES  r5
 #define CURR_SGE_OFFSET r1[31:0]
 
-#define T2_ARG          r6
-#define RECIRC_ARG      r6
-
 #define F_FIRST_PASS  c7
 
 #define TMP r3
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r6
+#define DMA_CMD_BASE r6
+#define GLOBAL_FLAGS r6
 
 #define IN_P    t0_s2s_rqcb_to_wqe_info
 #define K_CURR_WQE_PTR CAPRI_KEY_RANGE(IN_P,curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63)
@@ -41,6 +40,7 @@ struct rqwqe_base_t d;
     .param  resp_rx_inv_rkey_process
     .param  resp_rx_rqlkey_rsvd_lkey_process
     .param  resp_rx_recirc_mpu_only_process
+    .param  resp_rx_rqcb1_write_back_mpu_only_process
 
 .align
 resp_rx_rqwqe_process:
@@ -71,7 +71,7 @@ resp_rx_rqwqe_process:
     RQCB3_WRID_ADDR_GET(r6)
     memwr.d.!c1 r6, d.wrid
 
-    cmov        r7, c1, offsetof(struct rqwqe_base_t, rsvd2), offsetof(struct rqwqe_base_t, rsvd)
+    cmov        r7, c1, offsetof(struct rqwqe_base_t, rsvd2), offsetof(struct rqwqe_base_t, rsvd) // BD Slot
 
     add         REM_PYLD_BYTES, r0, CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
    
@@ -205,10 +205,11 @@ loop_exit:
     // skip_inv_rkey if remaining_payload_bytes > 0
     // or if NOT send with invalidate
     bcf         [!c5 | !c2], skip_inv_rkey
+    nop // BD Slot
 
     // if invalidate rkey is present, invoke it by loading appopriate
     // key entry, else load the same program as MPU only.
-    KT_BASE_ADDR_GET2(KT_BASE_ADDR, TMP) // BD Slot
+    KT_BASE_ADDR_GET2(KT_BASE_ADDR, TMP)
     add         TMP, r0, CAPRI_KEY_FIELD(IN_TO_S_P, inv_r_key)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, TMP)
 
@@ -270,16 +271,22 @@ non_first_or_recirc_pkt:
     .csend
 
 recirc:
-    //TODO: check if there are anymore sges left.
-    //      if not, generate NAK
-
     // we are recircing means, we would have consumed 2 lkey's worth of DMA commands
+
+    // if num_sges is <=2, we would have consumed all of them in this pass
+    // and if payload_bytes > 0,
+    // there are no sges left. generate NAK
+    sle     c6, NUM_VALID_SGES, 2
+    bcf     [c6], nak
+    phvwrpair.c6   p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1 // BD Slot
+
     add     r2, CAPRI_KEY_FIELD(IN_P, dma_cmd_index), (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
 
     // if we reached to the max number of pyld DMA commands and still
     // pkt transfer is not complete, generate NAK 
     seq     c1, r2, RESP_RX_DMA_CMD_PYLD_BASE_END
     bcf     [c1], nak
+    phvwrpair.c1   p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1 // BD Slot
 
     // store recirc info so that stage 1 program upon recirculation
     // can access this info
@@ -297,6 +304,22 @@ recirc:
     phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_SGE_WORK_PENDING //Exit Slot
 
 nak:
-    //TODO: generate nak. for now, drop
-    phvwr.e   p.common.p4_intr_global_drop, 1
-    CAPRI_SET_ALL_TABLES_VALID(0)  //Exit Slot
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
+    // turn on ACK req bit
+    // set err_dis_qp and completion flags
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_ACK_REQ
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
+
+    //Generate DMA command to skip to payload end
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
+    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
+
+    // if we encounter an error here, we don't need to load
+    // rqlkey and ptseg. we just need to load writeback
+    CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_SET_TABLE_1_VALID(0)
+
+    phvwr          p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
+
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)

@@ -34,7 +34,8 @@ def TestCaseSetup(tc):
         tc.pvtdata.mw_va = 0
         return True
     else:
-        tc.pvtdata.mw_va = tc.pvtdata.slab.address + 1089
+        # va of an atomic req should be 8-byte aligned
+        tc.pvtdata.mw_va = tc.pvtdata.slab.address + 1088
 
     return  
 

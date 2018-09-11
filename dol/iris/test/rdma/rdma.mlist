@@ -868,6 +868,23 @@ modules:
         spec    : resp_rx_send_first_mid_last_inv_4sges_rsvd_rkey.testspec
         ignore  : False
 
+    # SGE NAK testcases
+    - module:
+        name    : RDMA_RX_SEND_ONLY_5SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_5sges
+        spec    : resp_rx_send_only_5sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_SEND_ONLY_INSUFFICIENT_SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_insufficient_sges
+        spec    : resp_rx_send_only_insufficient_sges.testspec
+        ignore  : False
+ 
     # RNR testcases
     - module:
         name    : RDMA_RX_SEND_ONLY_RNR

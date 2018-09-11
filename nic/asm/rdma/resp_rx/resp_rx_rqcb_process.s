@@ -538,7 +538,13 @@ process_read:
     CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_read_mpu_only_process, r0)
 
 process_atomic:
-    tblwr           d.rsq_pindex, NEW_RSQ_P_INDEX
+    // if VA in atomic req is not aligned to an 8-byte boundary,
+    // generate invalid req NAK
+    // Lower order 3 bits should be 0 for 8-byte alignment
+    // va & 0x7 != 0, error
+    smneb          c1, CAPRI_RXDMA_RETH_VA, 0x7, 0
+    bcf            [c1], inv_req_nak
+    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, read_or_atomic, RSQ_OP_TYPE_ATOMIC) // BD Slot
 
     /* Only atomic requests update the busy bit
        Set busy bit so that other requests
@@ -546,11 +552,11 @@ process_atomic:
        before atomic errors out in stage 1
      */ 
     tblwr           d.busy, 1
+    tblwr           d.rsq_pindex, NEW_RSQ_P_INDEX
     // increment e_psn
     // flush the last tblwr in this path
     tblmincri.f     d.e_psn, 24, 1
 
-    CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, read_or_atomic, RSQ_OP_TYPE_ATOMIC)
     CAPRI_SET_FIELD2(TO_S_ATOMIC_INFO_P, rsqwqe_ptr, RSQWQE_P)
 
     // do a MPU-only lookup

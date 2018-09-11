@@ -827,6 +827,14 @@ modules:
         module  : resp_rx_duplicate_atomic_rkey_mismatch
         spec    : resp_rx_duplicate_atomic_rkey_mismatch.testspec
         ignore  : False
+
+    - module:
+        name    : RDMA_RX_ATOMIC_UNALIGNED_VA
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_atomic_unaligned_va
+        spec    : resp_rx_atomic_unaligned_va.testspec
+        ignore  : False
     
     - module:
         name    : RDMA_RESP_RX_SEND_ONLY_ICRC_ERR
@@ -1134,3 +1142,4 @@ modules:
         module  : resp_rx_send_inv_mw_cnt
         spec    : resp_rx_send_inv_mw_cnt.testspec
         ignore  : False
+
