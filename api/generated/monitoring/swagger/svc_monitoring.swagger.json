@@ -5763,14 +5763,6 @@
             "type": "string"
           },
           {
-            "name": "spec.default",
-            "description": "If set, this will be the default notification option for the alert policies unless otherwise\nsomething else is mentioned.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
             "name": "spec.email-list",
             "description": "Email notification.",
             "in": "query",
