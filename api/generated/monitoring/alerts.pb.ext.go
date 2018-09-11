@@ -135,6 +135,12 @@ func (m *AlertDestinationSpec) Defaults(ver string) bool {
 			ret = i.Defaults(ver) || ret
 		}
 	}
+	for k := range m.SyslogServers {
+		if m.SyslogServers[k] != nil {
+			i := m.SyslogServers[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
 	return ret
 }
 
@@ -206,6 +212,7 @@ func (m *AlertPolicySpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
+		m.Enable = true
 		m.Severity = "INFO"
 	}
 	return ret
@@ -452,7 +459,35 @@ func (m *SNMPTrapServer) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
+		m.Port = "162"
 		m.Version = "V2C"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *SyslogExport) Clone(into interface{}) (interface{}, error) {
+	var out *SyslogExport
+	var ok bool
+	if into == nil {
+		out = &SyslogExport{}
+	} else {
+		out, ok = into.(*SyslogExport)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SyslogExport) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Format = "SYSLOG_BSD"
 	}
 	return ret
 }
@@ -520,6 +555,16 @@ func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []e
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sSNMPTrapServers[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	for k, v := range m.SyslogServers {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sSyslogServers[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -745,6 +790,24 @@ func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SyslogExport) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if vs, ok := validatorMapAlerts["SyslogExport"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapAlerts["SyslogExport"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
 // Transformers
 
 func init() {
@@ -813,6 +876,16 @@ func init() {
 
 		if _, ok := SNMPTrapServer_SNMPVersions_value[m.Version]; !ok {
 			return errors.New("SNMPTrapServer.Version did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapAlerts["SyslogExport"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["SyslogExport"]["all"] = append(validatorMapAlerts["SyslogExport"]["all"], func(path string, i interface{}) error {
+		m := i.(*SyslogExport)
+
+		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
+			return errors.New("SyslogExport.Format did not match allowed strings")
 		}
 		return nil
 	})

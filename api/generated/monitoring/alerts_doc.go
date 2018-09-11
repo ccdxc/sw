@@ -23,6 +23,7 @@ The following Messages are defined.
   MatchedRequirement
   PrivacyConfig
   SNMPTrapServer
+  SyslogExport
 
 The following Services and Methods are defined.
 

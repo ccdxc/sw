@@ -1499,14 +1499,6 @@
             "type": "string"
           },
           {
-            "name": "spec.default",
-            "description": "If set, this will be the default notification option for the alert policies unless otherwise\nsomething else is mentioned.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
             "name": "spec.email-list",
             "description": "Email notification.",
             "in": "query",
@@ -11593,11 +11585,6 @@
     "monitoringAlertDestinationSpec": {
       "type": "object",
       "properties": {
-        "default": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "If set, this will be the default notification option for the alert policies unless otherwise\nsomething else is mentioned."
-        },
         "email-list": {
           "type": "array",
           "items": {
@@ -11611,6 +11598,12 @@
             "$ref": "#/definitions/monitoringSNMPTrapServer"
           },
           "title": "SNMP trap destination(s)"
+        },
+        "syslog-servers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringSyslogExport"
+          }
         }
       }
     },
@@ -11733,6 +11726,7 @@
         "enable": {
           "type": "boolean",
           "format": "boolean",
+          "default": "true",
           "description": "User can disable the policy by setting this field.\nDisabled policies will not generate any more alerts but the outstanding ones will remain as is."
         },
         "auto-resolve": {
@@ -12712,6 +12706,7 @@
         },
         "port": {
           "type": "string",
+          "default": "162",
           "description": "Port on the Host where the trap needs to be sent, default is 162."
         },
         "version": {
@@ -12802,6 +12797,29 @@
       "type": "object",
       "description": "=========================================================================================\n stats policy\n=========================================================================================",
       "title": "telemetry policies:\n-------------------------------------------------------------------------------\npolicy name         |  intended for        |     description                 |\n-------------------------------------------------------------------------------\nstats               |  sys admins          |    for all stats other than     |\n                    |                      |    fwlog/netflow.               |\n                    |                      |    includes retention,compaction|\n-------------------------------------------------------------------------------\nfwlog               |  security admins     |    firewall log policy          |\n                    |                      |    includes retention,          |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------\n                    |                      |                                 |\nflowexport          |  network admins      |    netflow export policy        |\n                    |                      |    includes interval,           |\n                    |                      |    export parameters            |\n-------------------------------------------------------------------------------"
+    },
+    "monitoringSyslogExport": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "SYSLOG_BSD",
+            "SYSLOG_RFC5424"
+          ],
+          "default": "SYSLOG_BSD",
+          "title": "event export format, SYSLOG_BSD default"
+        },
+        "target": {
+          "$ref": "#/definitions/apiExportConfig",
+          "title": "export target ip/port/protocol"
+        },
+        "config": {
+          "$ref": "#/definitions/apiSyslogExportConfig",
+          "title": "syslog specific configuration"
+        }
+      },
+      "title": "Syslog export configuration"
     },
     "monitoringTimeWindow": {
       "type": "object",

@@ -68,6 +68,7 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
             type: 'string'
         },
         'enable': {
+            default: 'true',
             description:  'User can disable the policy by setting this field. Disabled policies will not generate any more alerts but the outstanding ones will remain as is.',
             type: 'boolean'
         },

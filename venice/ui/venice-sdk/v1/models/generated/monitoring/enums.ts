@@ -109,6 +109,11 @@ export enum MonitoringSNMPTrapServer_version {
     'V3' = "V3",
 }
 
+export enum MonitoringSyslogExport_format {
+    'SYSLOG_BSD' = "SYSLOG_BSD",
+    'SYSLOG_RFC5424' = "SYSLOG_RFC5424",
+}
+
 export enum MonitoringTroubleshootingSessionStatus_state {
     'TS_RUNNING' = "TS_RUNNING",
     'TS_STOPPED' = "TS_STOPPED",
@@ -238,6 +243,7 @@ export class AllEnums {
     MonitoringMirrorSessionStatus_oper_state = MonitoringMirrorSessionStatus_oper_state;
     MonitoringPrivacyConfig_algo = MonitoringPrivacyConfig_algo;
     MonitoringSNMPTrapServer_version = MonitoringSNMPTrapServer_version;
+    MonitoringSyslogExport_format = MonitoringSyslogExport_format;
     MonitoringTroubleshootingSessionStatus_state = MonitoringTroubleshootingSessionStatus_state;
 
     FieldsRequirement_operator_uihint = FieldsRequirement_operator_uihint;

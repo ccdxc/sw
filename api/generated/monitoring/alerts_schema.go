@@ -68,8 +68,8 @@ var typesMapAlerts = map[string]*api.Struct{
 			"algo":              api.CLIInfo{Path: "Spec.SNMPTrapServers[].PrivacyConfig.Algo", Skip: false, Insert: "", Help: ""},
 			"api-version":       api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"community-or-user": api.CLIInfo{Path: "Spec.SNMPTrapServers[].CommunityOrUser", Skip: false, Insert: "", Help: ""},
-			"default":           api.CLIInfo{Path: "Spec.Default", Skip: false, Insert: "", Help: ""},
 			"email-list":        api.CLIInfo{Path: "Spec.EmailList", Skip: false, Insert: "", Help: ""},
+			"format":            api.CLIInfo{Path: "Spec.SyslogServers[].Format", Skip: false, Insert: "", Help: ""},
 			"host":              api.CLIInfo{Path: "Spec.SNMPTrapServers[].Host", Skip: false, Insert: "", Help: ""},
 			"kind":              api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"password":          api.CLIInfo{Path: "Spec.SNMPTrapServers[].PrivacyConfig.Password", Skip: false, Insert: "", Help: ""},
@@ -81,11 +81,11 @@ var typesMapAlerts = map[string]*api.Struct{
 	"monitoring.AlertDestinationSpec": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertDestinationSpec{}) },
 		Fields: map[string]api.Field{
-			"Default": api.Field{Name: "Default", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "default", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-
 			"EmailList": api.Field{Name: "EmailList", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "email-list", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"SNMPTrapServers": api.Field{Name: "SNMPTrapServers", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "snmp-trap-servers", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SNMPTrapServer"},
+
+			"SyslogServers": api.Field{Name: "SyslogServers", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "syslog-servers", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SyslogExport"},
 		},
 	},
 	"monitoring.AlertDestinationStatus": &api.Struct{
@@ -252,6 +252,16 @@ var typesMapAlerts = map[string]*api.Struct{
 			"AuthConfig": api.Field{Name: "AuthConfig", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AuthConfig"},
 
 			"PrivacyConfig": api.Field{Name: "PrivacyConfig", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "privacy-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.PrivacyConfig"},
+		},
+	},
+	"monitoring.SyslogExport": &api.Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SyslogExport{}) },
+		Fields: map[string]api.Field{
+			"Format": api.Field{Name: "Format", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Target": api.Field{Name: "Target", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "target", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ExportConfig"},
+
+			"Config": api.Field{Name: "Config", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.SyslogExportConfig"},
 		},
 	},
 }

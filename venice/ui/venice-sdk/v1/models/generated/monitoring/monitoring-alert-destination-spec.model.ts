@@ -8,29 +8,27 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringSNMPTrapServer, IMonitoringSNMPTrapServer } from './monitoring-snmp-trap-server.model';
+import { MonitoringSyslogExport, IMonitoringSyslogExport } from './monitoring-syslog-export.model';
 
 export interface IMonitoringAlertDestinationSpec {
-    'default'?: boolean;
     'email-list'?: Array<string>;
     'snmp-trap-servers'?: Array<IMonitoringSNMPTrapServer>;
+    'syslog-servers'?: Array<IMonitoringSyslogExport>;
 }
 
 
 export class MonitoringAlertDestinationSpec extends BaseModel implements IMonitoringAlertDestinationSpec {
-    /** If set, this will be the default notification option for the alert policies unless otherwise
-    something else is mentioned. */
-    'default': boolean = null;
     'email-list': Array<string> = null;
     'snmp-trap-servers': Array<MonitoringSNMPTrapServer> = null;
+    'syslog-servers': Array<MonitoringSyslogExport> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'default': {
-            description:  'If set, this will be the default notification option for the alert policies unless otherwise something else is mentioned.',
-            type: 'boolean'
-        },
         'email-list': {
             type: 'Array<string>'
         },
         'snmp-trap-servers': {
+            type: 'object'
+        },
+        'syslog-servers': {
             type: 'object'
         },
     }
@@ -56,6 +54,7 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
         super();
         this['email-list'] = new Array<string>();
         this['snmp-trap-servers'] = new Array<MonitoringSNMPTrapServer>();
+        this['syslog-servers'] = new Array<MonitoringSyslogExport>();
         this.setValues(values);
     }
 
@@ -64,16 +63,14 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values && values['default'] != null) {
-            this['default'] = values['default'];
-        } else if (MonitoringAlertDestinationSpec.hasDefaultValue('default')) {
-            this['default'] = MonitoringAlertDestinationSpec.propInfo['default'].default;
-        }
         if (values) {
             this.fillModelArray<string>(this, 'email-list', values['email-list']);
         }
         if (values) {
             this.fillModelArray<MonitoringSNMPTrapServer>(this, 'snmp-trap-servers', values['snmp-trap-servers'], MonitoringSNMPTrapServer);
+        }
+        if (values) {
+            this.fillModelArray<MonitoringSyslogExport>(this, 'syslog-servers', values['syslog-servers'], MonitoringSyslogExport);
         }
     }
 
@@ -83,23 +80,25 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'default': new FormControl(this['default']),
                 'email-list': new FormArray([]),
                 'snmp-trap-servers': new FormArray([]),
+                'syslog-servers': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<string>('email-list', this['email-list']);
             // generate FormArray control elements
             this.fillFormArray<MonitoringSNMPTrapServer>('snmp-trap-servers', this['snmp-trap-servers'], MonitoringSNMPTrapServer);
+            // generate FormArray control elements
+            this.fillFormArray<MonitoringSyslogExport>('syslog-servers', this['syslog-servers'], MonitoringSyslogExport);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['default'].setValue(this['default']);
             this.fillModelArray<string>(this, 'email-list', this['email-list']);
             this.fillModelArray<MonitoringSNMPTrapServer>(this, 'snmp-trap-servers', this['snmp-trap-servers'], MonitoringSNMPTrapServer);
+            this.fillModelArray<MonitoringSyslogExport>(this, 'syslog-servers', this['syslog-servers'], MonitoringSyslogExport);
         }
     }
 }

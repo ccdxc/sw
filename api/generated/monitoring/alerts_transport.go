@@ -560,3 +560,37 @@ func EncodeGrpcRespSNMPTrapServer(ctx context.Context, response interface{}) (in
 func DecodeGrpcRespSNMPTrapServer(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPSyslogExport(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSyslogExport(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SyslogExport
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSyslogExport encodes GRPC request
+func EncodeGrpcReqSyslogExport(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SyslogExport)
+	return req, nil
+}
+
+// DecodeGrpcReqSyslogExport decodes GRPC request
+func DecodeGrpcReqSyslogExport(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SyslogExport)
+	return req, nil
+}
+
+// EncodeGrpcRespSyslogExport encodes GRC response
+func EncodeGrpcRespSyslogExport(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSyslogExport decodes GRPC response
+func DecodeGrpcRespSyslogExport(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

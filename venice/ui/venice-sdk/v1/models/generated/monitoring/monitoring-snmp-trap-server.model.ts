@@ -39,6 +39,7 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
             type: 'string'
         },
         'port': {
+            default: '162',
             description:  'Port on the Host where the trap needs to be sent, default is 162.',
             type: 'string'
         },

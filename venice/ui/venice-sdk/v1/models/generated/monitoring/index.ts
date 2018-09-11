@@ -88,6 +88,7 @@ export * from './monitoring-stats-policy.model';
 export * from './monitoring-stats-policy-list.model';
 export * from './monitoring-stats-spec.model';
 export * from './monitoring-stats-status.model';
+export * from './monitoring-syslog-export.model';
 export * from './monitoring-time-window.model';
 export * from './monitoring-troubleshooting-session.model';
 export * from './monitoring-troubleshooting-session-list.model';
