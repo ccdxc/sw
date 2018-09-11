@@ -24,6 +24,7 @@
 #define REQ_RX_DMA_CMD_BKTRACK_DB          4
 #define REQ_RX_DMA_CMD_RNR_TIMEOUT         5
 #define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 4
+#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_END   16
 #define REQ_RX_DMA_CMD_SKIP_TO_EOP         (REQ_RX_MAX_DMA_CMDS - 4)
 #define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 3)
 #define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 2)

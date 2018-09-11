@@ -686,6 +686,8 @@ table rx_table_s4_t2 {
     }
     actions {
         rx_table_s4_t2_action;
+        rx_table_s4_t2_action1;
+        rx_table_s4_t2_action2;
         rx_table_s4_t2_cfg_action;
     }
 }

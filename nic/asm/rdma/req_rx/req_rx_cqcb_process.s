@@ -31,7 +31,7 @@ struct cqcb_t d;
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
 #define K_QP_STATE CAPRI_KEY_FIELD(IN_TO_S_P, state)
 
-#define K_CQ_ID CAPRI_KEY_FIELD(IN_P, cq_id)
+#define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit8_ebit23)
 #define K_CQE_TYPE CAPRI_KEY_FIELD(IN_P, cqe_type)
     
 %%

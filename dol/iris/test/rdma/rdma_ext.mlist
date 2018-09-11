@@ -211,11 +211,27 @@ modules:
         ignore  : False
   
     - module:
+        name    : RDMA_REQ_RX_READ_ONLY_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only_4sges
+        spec    : req_rx_read_only_4sges.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_REQ_RX_READ_FML_EXACT
         enable  : True
         package : test.rdma
         module  : req_rx_read_fml_exact
         spec    : req_rx_read_fml_exact.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_FML_4SGES
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_fml_4sges
+        spec    : req_rx_read_fml_4sges.testspec
         ignore  : False
 
     - module:

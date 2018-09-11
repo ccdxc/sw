@@ -5,27 +5,26 @@ struct req_rx_phv_t p;
 struct req_rx_s2_t0_k k;
 
 #define RRQSGE_TO_LKEY_T struct req_rx_rrqsge_to_lkey_info_t
-#define SQCB1_WRITE_BACK_P t3_s2s_sqcb1_write_back_info
+#define SQCB1_WRITE_BACK_P t2_s2s_sqcb1_write_back_info
 
 #define IN_P t0_s2s_rrqwqe_to_sge_info
 #define IN_TO_S_P to_s2_rrqsge_info
 
-#define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_sbit0_ebit7, e_rsp_psn_sbit16_ebit23)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit15, cur_sge_offset_sbit16_ebit31)
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit13)
-#define K_RRQ_CINDEX CAPRI_KEY_RANGE(IN_P, rrq_cindex_sbit0_ebit0, rrq_cindex_sbit1_ebit7)
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index)
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit16_ebit23)
 #define K_NUM_VALID_SGES CAPRI_KEY_FIELD(IN_P, num_valid_sges)
-#define K_REXMIT_PSN_MSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit0, msn_sbit17_ebit23)
 
+#define TO_S1_RECIRC_P to_s1_recirc_info
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 
 %%
     .param    req_rx_rrqlkey_process
     .param    req_rx_rrqlkey_rsvd_lkey_process
     .param    req_rx_sqcb1_write_back_process
+    .param    req_rx_recirc_mpu_only_process
 
 .align
 req_rx_rrqsge_process:
@@ -144,6 +143,8 @@ sge_loop:
 
     //if (REQ_RX_FLAG_IS_SET(last) || (REQ_RX_FLAG_ONLY(only)))
     add             r7, r0, K_GLOBAL_FLAGS
+
+    bcf             [!c2 & !c1], recirc
     IS_ANY_FLAG_SET(c5, r7, REQ_RX_FLAG_LAST|REQ_RX_FLAG_ONLY)
 
     bcf            [!c5], set_arg
@@ -154,25 +155,37 @@ sge_loop:
     // currrent_sge_offset = 0
     add             r2, r0, r0
 
-    // RING_C_INDEX_INCREMENT(rrq_ring_id) TODO Need to do via DMA and Fence it
-    //SQCB0_ADDR_GET(r5)
-    //add            r6, r5, RRQ_C_INDEX_OFFSET
-    //memwr.hx       r6, K_RRQ_CINDEX
-
 set_arg:
-
-    CAPRI_RESET_TABLE_3_ARG()
-
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_id), r1, \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rrq_in_progress), r4
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_offset), r2, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, e_rsp_psn), K_E_RSP_PSN
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1, \
-              CAPRI_PHV_RANGE(SQCB1_WRITE_BACK_P, rexmit_psn, msn), K_REXMIT_PSN_MSN
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
     phvwr.c5  CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, last_pkt), 1
 
     SQCB1_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
  
     nop.e
     nop
+
+recirc:
+    // increment dma_cmd_start_index by num of DMA cmds consumed for 2 SGES per pass
+    add            r4, K_DMA_CMD_START_INDEX, (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
+    // Error if there are no dma cmd space to compose
+    beqi           r4, REQ_RX_RDMA_PAYLOAD_DMA_CMDS_END, err_no_dma_cmds
+
+    phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, cur_sge_offset), r2, \
+              CAPRI_PHV_FIELD(TO_S1_RECIRC_P, cur_sge_id), r1
+    phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, num_sges), K_NUM_VALID_SGES, \
+              CAPRI_PHV_FIELD(TO_S1_RECIRC_P, remaining_payload_bytes), r3
+    phvwr     CAPRI_PHV_FIELD(TO_S1_RECIRC_P, dma_cmd_eop), CAPRI_KEY_FIELD(IN_P, dma_cmd_eop)
+
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
+
+    phvwr.e p.common.p4_intr_recirc, 1
+    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_SGE_WORK_PENDING
+
+err_no_dma_cmds:
+    // Error disable QP
+    phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    CAPRI_SET_TABLE_0_VALID(0)

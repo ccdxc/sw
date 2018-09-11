@@ -8,9 +8,9 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define SQCB1_TO_RRQWQE_P t0_s2s_sqcb1_to_rrqwqe_info
 #define ECN_INFO_P t3_s2s_ecn_info
 #define RRQWQE_TO_CQ_P t2_s2s_rrqwqe_to_cq_info
-#define SQCB1_TO_TIMER_EXPIRY_P t3_s2s_sqcb1_to_timer_expiry_info
-#define SQCB1_WRITE_BACK_P t3_s2s_sqcb1_write_back_info
-#define SQCB1_TO_COMPL_FEEDBACK_P t3_s2s_sqcb1_to_compl_feedback_info
+#define SQCB1_TO_TIMER_EXPIRY_P t2_s2s_sqcb1_to_timer_expiry_info
+#define SQCB1_TO_COMPL_FEEDBACK_P t2_s2s_sqcb1_to_compl_feedback_info
+#define SQCB1_TO_SGE_RECIRC_P t0_s2s_sqcb1_to_sge_recirc_info
 
 #define TO_S4_P to_s4_sqcb1_wb_info
 #define TO_S3_P to_s3_rrqlkey_info
@@ -27,6 +27,7 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    req_rx_timer_expiry_process
     .param    req_rx_dummy_sqcb1_write_back_process
     .param    req_rx_completion_feedback_process
+    .param    req_rx_sqcb1_recirc_sge_process
 
 .align
 req_rx_sqcb1_process:
@@ -312,27 +313,23 @@ process_feedback:
     bcf            [!c1], drop_feedback
 
 completion_feedback:
-    seq            c1, CAPRI_COMPLETION_FEEDBACK_STATUS, CQ_STATUS_SUCCESS // Branch Delay Slot
+    CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_RESET_TABLE_2_ARG()
+
+    CAPRI_COMPLETION_FEEDBACK_WRID(r7) // Branch Delay Slot
+    phvwr          p.cqe.send.wrid, r7
+    seq            c1, CAPRI_COMPLETION_FEEDBACK_STATUS, CQ_STATUS_SUCCESS
     bcf            [c1], set_cqcb_arg
     phvwrpair      p.cqe.status[7:0], CAPRI_COMPLETION_FEEDBACK_STATUS, p.cqe.error, CAPRI_COMPLETION_FEEDBACK_ERROR
 
 process_err_feedback:
     phvwr          CAPRI_PHV_FIELD(SQCB1_TO_COMPL_FEEDBACK_P, status), CAPRI_COMPLETION_FEEDBACK_STATUS
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_completion_feedback_process, r0)
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_completion_feedback_process, r0)
 
 set_cqcb_arg:
-    CAPRI_COMPLETION_FEEDBACK_WRID(r7)
-    phvwr          p.cqe.send.wrid, r7
-
-    CAPRI_RESET_TABLE_2_ARG()
-    CAPRI_SET_TABLE_0_VALID(0)
-
     phvwrpair      CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cq_id), d.cq_id, \
                    CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cqe_type), CQE_TYPE_SEND_NPG
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
-
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
 
 timer_expiry:
     // It is ok to update max_tx_psn/max_ssn while bktrack is in progress
@@ -349,7 +346,7 @@ timer_expiry:
     CAPRI_RESET_TABLE_3_ARG()
     phvwr     CAPRI_PHV_FIELD(SQCB1_TO_TIMER_EXPIRY_P, rexmit_psn), CAPRI_TIMER_EXPIRY_FEEDBACK_REXMIT_PSN
 
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_timer_expiry_process, r0)
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_timer_expiry_process, r0)
     CAPRI_SET_TABLE_0_VALID(0)
 
     nop.e
@@ -375,8 +372,9 @@ recirc_pkt:
     bcf            [c2], process_recirc_error_disable_qp
     seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_DONE // BD Slot
     bcf            [c2], recirc_work_done
-
-    nop //BD Slot
+    seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_SGE_WORK_PENDING // BD Slot
+    bcf            [c2], process_recirc_sge_work_pending
+    nop
 
 drop_packet:
     // Drop if not a known recirc reason
@@ -404,3 +402,9 @@ check_state:
     CAPRI_SET_TABLE_0_VALID(0)
     phvwr.e        p.common.p4_intr_global_drop, 1
     nop
+
+process_recirc_sge_work_pending:
+    CAPRI_RESET_TABLE_0_ARG()
+    phvwr          CAPRI_PHV_FIELD(SQCB1_TO_SGE_RECIRC_P, rrq_in_progress), d.rrq_in_progress
+
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_recirc_sge_process, r0)

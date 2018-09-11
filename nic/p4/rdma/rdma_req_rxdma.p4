@@ -77,6 +77,7 @@
 #define rx_table_s0_t0_action req_rx_sqcb1_process
 
 #define rx_table_s1_t0_action req_rx_rrqwqe_process
+#define rx_table_s1_t0_action1 req_rx_sqcb1_recirc_process
 #define rx_table_s1_t3_action req_rx_dcqcn_ecn_process
 
 #define rx_table_s2_t0_action req_rx_rrqsge_process
@@ -87,9 +88,9 @@
 
 #define rx_table_s4_t0_action req_rx_rrqptseg_process_t0
 #define rx_table_s4_t1_action req_rx_rrqptseg_process_t1
-#define rx_table_s4_t3_action req_rx_sqcb1_write_back_process
-#define rx_table_s4_t3_action1 req_rx_timer_expiry_process
-#define rx_table_s4_t3_action2 req_rx_completion_feedback_process
+#define rx_table_s4_t2_action req_rx_sqcb1_write_back_process
+#define rx_table_s4_t2_action1 req_rx_timer_expiry_process
+#define rx_table_s4_t2_action2 req_rx_completion_feedback_process
 
 #define rx_table_s5_t2_action req_rx_cqcb_process_s5
 #define rx_table_s6_t2_action req_rx_cqcb_process_s6
@@ -210,6 +211,12 @@ header_type req_rx_to_stage_rrqwqe_info_t {
     }
 }
 
+header_type req_rx_sqcb1_to_sge_recirc_info_t {
+    fields {
+        rrq_in_progress                  :  1;
+    }
+}
+
 header_type req_rx_to_stage_rrqsge_info_t {
     fields {
         priv_oper_enable                 :    1;
@@ -247,21 +254,29 @@ header_type req_rx_to_stage_stats_info_t {
     }
 }
 
+header_type req_rx_to_stage_recirc_info_t {
+    fields {
+        rrqwqe_sge_list_addr             : 64;
+        cur_sge_offset                   : 32;
+        cur_sge_id                       : 8;
+        num_sges                         : 8;
+        remaining_payload_bytes          : 14;
+        dma_cmd_eop                      : 1;
+    }
+}
+
 header_type req_rx_rrqwqe_to_sge_info_t {
     fields {
         remaining_payload_bytes          :   14;
-        pad1                             :    2;
+        pad1                             :    1;
+        post_cq                          :    1;
         cur_sge_offset                   :   32;
         cur_sge_id                       :    8;
-        e_rsp_psn                        :   24;
         num_valid_sges                   :    8;
         rrq_in_progress                  :    1;
         is_atomic                        :    1;
         dma_cmd_eop                      :    1;
         dma_cmd_start_index              :    4;
-        rrq_cindex                       :    8;
-        rexmit_psn                       :   24;
-        msn                              :   24;
     }
 }
 
@@ -313,7 +328,7 @@ header_type req_rx_sqcb1_write_back_info_t {
         rrq_in_progress                  :    1;
         incr_nxt_to_go_token_id          :    1;
         post_bktrack                     :    1;
-        dma_cmd_eop                      :    1;
+        post_cq                          :    1;
         last_pkt                         :    1;
         num_sges                         :    8;
         tbl_id                           :    8;
@@ -449,10 +464,14 @@ metadata phv_global_common_t phv_global_common_scr;
 
 /**** to stage header unions ****/
 
-@pragma pa_header_union ingress to_stage_1
+@pragma pa_header_union ingress to_stage_1 to_s1_rrqwqe_info to_s1_recirc_info
 metadata req_rx_to_stage_rrqwqe_info_t to_s1_rrqwqe_info;
 @pragma scratch_metadata
 metadata req_rx_to_stage_rrqwqe_info_t to_s1_rrqwqe_info_scr;
+
+metadata req_rx_to_stage_recirc_info_t to_s1_recirc_info;
+@pragma scratch_metadata
+metadata req_rx_to_stage_recirc_info_t to_s1_recirc_info_scr;
 
 @pragma pa_header_union ingress to_stage_2
 metadata req_rx_to_stage_rrqsge_info_t to_s2_rrqsge_info;
@@ -488,10 +507,15 @@ metadata req_rx_to_stage_stats_info_t to_s7_stats_info_scr;
 
 //Table-0
 
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb1_to_rrqwqe_info t0_s2s_rrqwqe_to_sge_info t0_s2s_rrqsge_to_lkey_info t0_s2s_rrqlkey_to_ptseg_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb1_to_rrqwqe_info t0_s2s_rrqwqe_to_sge_info t0_s2s_rrqsge_to_lkey_info t0_s2s_rrqlkey_to_ptseg_info t0_s2s_sqcb1_to_sge_recirc_info
+
 metadata req_rx_sqcb1_to_rrqwqe_info_t t0_s2s_sqcb1_to_rrqwqe_info;
 @pragma scratch_metadata
 metadata req_rx_sqcb1_to_rrqwqe_info_t t0_s2s_sqcb1_to_rrqwqe_info_scr;
+
+metadata req_rx_sqcb1_to_sge_recirc_info_t t0_s2s_sqcb1_to_sge_recirc_info;
+@pragma scratch_metadata
+metadata req_rx_sqcb1_to_sge_recirc_info_t t0_s2s_sqcb1_to_sge_recirc_info_scr;
 
 metadata req_rx_rrqwqe_to_sge_info_t t0_s2s_rrqwqe_to_sge_info;
 @pragma scratch_metadata
@@ -522,40 +546,39 @@ metadata req_rx_cqcb_to_eq_info_t t1_s2s_cqcb_to_eq_info_scr;
 
 //Table-2
 
-@pragma pa_header_union ingress common_t2_s2s t2_s2s_rrqwqe_to_cq_info t2_s2s_cqcb_to_pt_info
+@pragma pa_header_union ingress common_t2_s2s t2_s2s_rrqwqe_to_cq_info t2_s2s_sqcb1_write_back_info t2_s2s_sqcb1_to_timer_expiry_info t2_s2s_cqcb_to_pt_info t2_s2s_sqcb1_to_compl_feedback_info
 
 metadata req_rx_rrqwqe_to_cq_info_t t2_s2s_rrqwqe_to_cq_info;
 @pragma scratch_metadata
 metadata req_rx_rrqwqe_to_cq_info_t t2_s2s_rrqwqe_to_cq_info_scr;
 
+metadata req_rx_sqcb1_write_back_info_t t2_s2s_sqcb1_write_back_info;
+@pragma scratch_metadata
+metadata req_rx_sqcb1_write_back_info_t t2_s2s_sqcb1_write_back_info_scr;
+
+metadata req_rx_sqcb1_to_timer_expiry_info_t t2_s2s_sqcb1_to_timer_expiry_info;
+@pragma scratch_metadata
+metadata req_rx_sqcb1_to_timer_expiry_info_t t2_s2s_sqcb1_to_timer_expiry_info_scr;
+
 metadata req_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info;
 @pragma scratch_metadata
 metadata req_rx_cqcb_to_pt_info_t t2_s2s_cqcb_to_pt_info_scr;
 
+metadata req_rx_sqcb1_to_compl_feedback_info_t t2_s2s_sqcb1_to_compl_feedback_info;
+@pragma scratch_metadata
+metadata req_rx_sqcb1_to_compl_feedback_info_t t2_s2s_sqcb1_to_compl_feedback_info_scr;
+
 //Table-3
 
-@pragma pa_header_union ingress common_t3_s2s t3_s2s_ecn_info t3_s2s_sqcb1_write_back_info t3_s2s_sqcb1_to_timer_expiry_info t3_s2s_sqcb1_to_compl_feedback_info t3_s2s_stats_info
+@pragma pa_header_union ingress common_t3_s2s t3_s2s_ecn_info t3_s2s_stats_info
 
 metadata req_rx_ecn_info_t t3_s2s_ecn_info;
 @pragma scratch_metadata
 metadata req_rx_ecn_info_t t3_s2s_ecn_info_scr;
 
-metadata req_rx_sqcb1_write_back_info_t t3_s2s_sqcb1_write_back_info;
-@pragma scratch_metadata
-metadata req_rx_sqcb1_write_back_info_t t3_s2s_sqcb1_write_back_info_scr;
-
-metadata req_rx_sqcb1_to_timer_expiry_info_t t3_s2s_sqcb1_to_timer_expiry_info;
-@pragma scratch_metadata
-metadata req_rx_sqcb1_to_timer_expiry_info_t t3_s2s_sqcb1_to_timer_expiry_info_scr;
-
-metadata req_rx_sqcb1_to_compl_feedback_info_t t3_s2s_sqcb1_to_compl_feedback_info;
-@pragma scratch_metadata
-metadata req_rx_sqcb1_to_compl_feedback_info_t t3_s2s_sqcb1_to_compl_feedback_info_scr;
-
 metadata req_rx_stats_info_t t3_s2s_stats_info;
 @pragma scratch_metadata
 metadata req_rx_stats_info_t t3_s2s_stats_info_scr;
-
 
 /*
  * Stage 0 table 0 recirc action
@@ -1281,15 +1304,12 @@ action req_rx_rrqsge_process () {
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.remaining_payload_bytes, t0_s2s_rrqwqe_to_sge_info.remaining_payload_bytes);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.cur_sge_offset, t0_s2s_rrqwqe_to_sge_info.cur_sge_offset);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.cur_sge_id, t0_s2s_rrqwqe_to_sge_info.cur_sge_id);
-    modify_field(t0_s2s_rrqwqe_to_sge_info_scr.e_rsp_psn, t0_s2s_rrqwqe_to_sge_info.e_rsp_psn);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.num_valid_sges, t0_s2s_rrqwqe_to_sge_info.num_valid_sges);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.rrq_in_progress, t0_s2s_rrqwqe_to_sge_info.rrq_in_progress);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.is_atomic, t0_s2s_rrqwqe_to_sge_info.is_atomic);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.dma_cmd_eop, t0_s2s_rrqwqe_to_sge_info.dma_cmd_eop);
     modify_field(t0_s2s_rrqwqe_to_sge_info_scr.dma_cmd_start_index, t0_s2s_rrqwqe_to_sge_info.dma_cmd_start_index);
-    modify_field(t0_s2s_rrqwqe_to_sge_info_scr.rrq_cindex, t0_s2s_rrqwqe_to_sge_info.rrq_cindex);
-    modify_field(t0_s2s_rrqwqe_to_sge_info_scr.rexmit_psn, t0_s2s_rrqwqe_to_sge_info.rexmit_psn);
-    modify_field(t0_s2s_rrqwqe_to_sge_info_scr.msn, t0_s2s_rrqwqe_to_sge_info.msn);
+    modify_field(t0_s2s_rrqwqe_to_sge_info_scr.post_cq, t0_s2s_rrqwqe_to_sge_info.post_cq);
 
 }
 action req_rx_rrqwqe_process () {
@@ -1316,6 +1336,21 @@ action req_rx_rrqwqe_process () {
     modify_field(t0_s2s_sqcb1_to_rrqwqe_info_scr.rexmit_psn, t0_s2s_sqcb1_to_rrqwqe_info.rexmit_psn);
 
 }
+
+action req_rx_sqcb1_recirc_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    modify_field(to_s1_recirc_info_scr.rrqwqe_sge_list_addr, to_s1_recirc_info.rrqwqe_sge_list_addr);
+    modify_field(to_s1_recirc_info_scr.cur_sge_offset, to_s1_recirc_info.cur_sge_offset);
+    modify_field(to_s1_recirc_info_scr.cur_sge_id, to_s1_recirc_info.cur_sge_id);
+    modify_field(to_s1_recirc_info_scr.remaining_payload_bytes, to_s1_recirc_info.remaining_payload_bytes);
+    modify_field(to_s1_recirc_info_scr.num_sges, to_s1_recirc_info.num_sges);
+    modify_field(to_s1_recirc_info_scr.dma_cmd_eop, to_s1_recirc_info.dma_cmd_eop);
+
+    modify_field(t0_s2s_sqcb1_to_sge_recirc_info_scr.rrq_in_progress, t0_s2s_sqcb1_to_sge_recirc_info.rrq_in_progress);
+}
+
 action req_rx_sqcb1_process () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -1336,20 +1371,19 @@ action req_rx_sqcb1_write_back_process () {
     modify_field(to_s4_sqcb1_wb_info_scr.error_drop_phv, to_s4_sqcb1_wb_info.error_drop_phv);
 
     // stage to stage
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.cur_sge_offset, t3_s2s_sqcb1_write_back_info.cur_sge_offset);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.e_rsp_psn, t3_s2s_sqcb1_write_back_info.e_rsp_psn);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.cur_sge_id, t3_s2s_sqcb1_write_back_info.cur_sge_id);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.rrq_in_progress, t3_s2s_sqcb1_write_back_info.rrq_in_progress);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.incr_nxt_to_go_token_id, t3_s2s_sqcb1_write_back_info.incr_nxt_to_go_token_id);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.post_bktrack, t3_s2s_sqcb1_write_back_info.post_bktrack);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.dma_cmd_eop, t3_s2s_sqcb1_write_back_info.dma_cmd_eop);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.last_pkt, t3_s2s_sqcb1_write_back_info.last_pkt);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.num_sges, t3_s2s_sqcb1_write_back_info.num_sges);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.tbl_id, t3_s2s_sqcb1_write_back_info.tbl_id);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.rexmit_psn, t3_s2s_sqcb1_write_back_info.rexmit_psn);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.msn, t3_s2s_sqcb1_write_back_info.msn);
-    modify_field(t3_s2s_sqcb1_write_back_info_scr.pad, t3_s2s_sqcb1_write_back_info.pad);
-
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.cur_sge_offset, t2_s2s_sqcb1_write_back_info.cur_sge_offset);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.e_rsp_psn, t2_s2s_sqcb1_write_back_info.e_rsp_psn);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.cur_sge_id, t2_s2s_sqcb1_write_back_info.cur_sge_id);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.rrq_in_progress, t2_s2s_sqcb1_write_back_info.rrq_in_progress);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.incr_nxt_to_go_token_id, t2_s2s_sqcb1_write_back_info.incr_nxt_to_go_token_id);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.post_bktrack, t2_s2s_sqcb1_write_back_info.post_bktrack);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.last_pkt, t2_s2s_sqcb1_write_back_info.last_pkt);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.num_sges, t2_s2s_sqcb1_write_back_info.num_sges);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.tbl_id, t2_s2s_sqcb1_write_back_info.tbl_id);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.rexmit_psn, t2_s2s_sqcb1_write_back_info.rexmit_psn);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.msn, t2_s2s_sqcb1_write_back_info.msn);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.post_cq, t2_s2s_sqcb1_write_back_info.post_cq);
+    modify_field(t2_s2s_sqcb1_write_back_info_scr.pad, t2_s2s_sqcb1_write_back_info.pad);
 }
 
 action req_rx_timer_expiry_process () {
@@ -1359,7 +1393,7 @@ action req_rx_timer_expiry_process () {
     // to stage
 
     // stage to stage
-    modify_field(t3_s2s_sqcb1_to_timer_expiry_info_scr.rexmit_psn, t3_s2s_sqcb1_to_timer_expiry_info.rexmit_psn);
+    modify_field(t2_s2s_sqcb1_to_timer_expiry_info_scr.rexmit_psn, t2_s2s_sqcb1_to_timer_expiry_info.rexmit_psn);
 
 }
 
@@ -1370,7 +1404,7 @@ action req_rx_completion_feedback_process () {
     // to stage
 
     // stage to stage
-    modify_field(t3_s2s_sqcb1_to_compl_feedback_info_scr.status, t3_s2s_sqcb1_to_compl_feedback_info.status);
+    modify_field(t2_s2s_sqcb1_to_compl_feedback_info_scr.status, t2_s2s_sqcb1_to_compl_feedback_info.status);
 
 }
 

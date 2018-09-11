@@ -2,12 +2,12 @@
 #include "sqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s4_t3_k k;
+struct req_rx_s4_t2_k k;
 struct sqcb1_t d;
 
-#define IN_P t3_s2s_sqcb1_to_timer_expiry_info
+#define IN_P t2_s2s_sqcb1_to_timer_expiry_info
 
-#define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit7, rexmit_psn_sbit16_ebit23)
+#define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit7, rexmit_psn_sbit8_ebit23)
 %%
 
 .align
@@ -44,7 +44,7 @@ post_bktrack_ring:
     tblwr          d.bktrack_in_progress, 1
 
 end:
-     CAPRI_SET_TABLE_3_VALID(0)
+     CAPRI_SET_TABLE_2_VALID(0)
 
      nop.e
      nop
@@ -53,7 +53,7 @@ bubble_to_next_stage:
      seq           c1, r1[4:2], STAGE_3
      bcf           [!c1], exit
      SQCB1_ADDR_GET(r1)
-     CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)
+     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
      CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
 
 exit:
@@ -62,4 +62,4 @@ exit:
 
 drop_feedback:
      phvwr.e       p.common.p4_intr_global_drop, 1
-     CAPRI_SET_TABLE_3_VALID(0)
+     CAPRI_SET_TABLE_2_VALID(0)

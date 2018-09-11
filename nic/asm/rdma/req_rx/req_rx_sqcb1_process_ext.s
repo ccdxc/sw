@@ -40,6 +40,10 @@ req_rx_sqcb1_process_ext:
     DMA_SKIP_CMD_SETUP(r2, 0 /* CMD_EOP */, 1 /* SKIP_TO_EOP */)
 
 to_stage_arg:
+    seq         c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
+    bcf         [!c1], exit
+    nop         // Branch Delay Slot
+
     phvwr       CAPRI_PHV_FIELD(TO_S4_P, remaining_payload_bytes), r1
     phvwr       CAPRI_PHV_FIELD(TO_S7_P, pyld_bytes), r1
 
@@ -48,3 +52,6 @@ to_stage_arg:
     phvwrpair   CAPRI_PHV_FIELD(TO_S1_P, aeth_syndrome), CAPRI_APP_DATA_AETH_SYNDROME, \
                 CAPRI_PHV_FIELD(TO_S1_P, remaining_payload_bytes), r1
 
+exit:
+    nop.e
+    nop

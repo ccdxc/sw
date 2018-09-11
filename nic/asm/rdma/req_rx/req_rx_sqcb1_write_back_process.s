@@ -2,34 +2,36 @@
 #include "sqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s4_t3_k k;
+struct req_rx_s4_t2_k k;
 struct sqcb1_t d;
 
-#define IN_P t3_s2s_sqcb1_write_back_info
+#define RRQWQE_TO_CQ_P t2_s2s_rrqwqe_to_cq_info
+#define IN_P t2_s2s_sqcb1_write_back_info
 #define IN_TO_S_P to_s4_sqcb1_wb_info
 #define TO_S6_P to_s6_cq_info
 
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit24_ebit31)
-#define K_E_RSP_PSN CAPRI_KEY_FIELD(IN_P, e_rsp_psn)
+#define K_E_RSP_PSN CAPRI_KEY_RANGE(IN_P, e_rsp_psn_sbit0_ebit15, e_rsp_psn_sbit16_ebit23)
 #define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit2, rexmit_psn_sbit19_ebit23)
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit2, msn_sbit19_ebit23)
 
 #define K_MY_TOKEN_ID CAPRI_KEY_RANGE(IN_TO_S_P, my_token_id_sbit0_ebit1, my_token_id_sbit2_ebit7)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit13)
+#define K_POST_CQ CAPRI_KEY_FIELD(IN_P, post_cq)
 
 %%
     .param req_rx_recirc_mpu_only_process
     .param req_rx_stats_process
+    .param req_rx_cqcb_process
 
 .align
 req_rx_sqcb1_write_back_process:
     mfspr          r1, spr_mpuid
     seq            c1, r1[4:2], STAGE_4
     bcf            [!c1], bubble_to_next_stage
-    CAPRI_SET_TABLE_3_VALID_C(c1, 0) // Branch Delay Slot
 
-    seq            c1, K_MY_TOKEN_ID, d.nxt_to_go_token_id
+    seq            c1, K_MY_TOKEN_ID, d.nxt_to_go_token_id // Branch Delay Slot
     bcf            [!c1], recirc_for_turn
 
     seq            c1, d.bktrack_in_progress, 1 // BD-Slot
@@ -55,7 +57,7 @@ req_rx_sqcb1_write_back_process:
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_stats_process, r0)
 
     seq            c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1
-    bcf            [!c1], check_bktrack
+    bcf            [!c1], post_cq
     SQCB2_ADDR_GET(r5) //BD-slot
     tblmincri      RRQ_C_INDEX, d.log_rrq_size, 1 
 
@@ -66,6 +68,29 @@ req_rx_sqcb1_write_back_process:
      */
     add            r6, FIELD_OFFSET(sqcb2_t, rrq_cindex), r5
     memwr.h        r6, RRQ_C_INDEX
+
+post_cq:
+    bbne           K_POST_CQ, 1, check_bktrack
+    CAPRI_SET_TABLE_2_VALID(0) // Branch Delay Slot
+
+    // Re-load err_retry, rnr_retry counter and set rnr_timeout to 0 if
+    // outstanding request is cleared. Otherwise, keep decrementing the
+    // err_retry_count upon retrans timer expiry or NAK (seq_err) or
+    // implicit NAK, or rnr_retry_count upon rnr timer expiry
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_REXMIT_PSN) // Branch Delay Slot
+    DMA_HBM_PHV2MEM_PHV_END_SETUP(r6, rnr_retry_ctr)
+
+    SQCB2_ADDR_GET(r1)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RNR_TIMEOUT)
+    add            r2, r1, SQCB2_RNR_TIMEOUT_OFFSET
+    DMA_HBM_PHV2MEM_SETUP(r6, rnr_timeout, rnr_timeout, r2)
+
+    // Hardcode table id 2 for CQCB process
+    CAPRI_RESET_TABLE_2_ARG()
+
+    phvwrpair      CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cq_id), d.cq_id, \
+                   CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cqe_type), CQE_TYPE_SEND_MSN
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
 
 check_bktrack:
     bbne           CAPRI_KEY_FIELD(IN_P, post_bktrack), 1, check_sq_drain
@@ -79,7 +104,7 @@ post_bktrack_ring:
     phvwr          p.db_data2, r2.dx
     DMA_HBM_PHV2MEM_SETUP(r6, db_data2, db_data2, r1)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
-    seq            c1, CAPRI_KEY_FIELD(IN_P, dma_cmd_eop), 1
+    seq            c1, CAPRI_KEY_FIELD(IN_P, post_cq), 0
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c1)
     tblwr          d.bktrack_in_progress, 1
 
@@ -108,7 +133,7 @@ bubble_to_next_stage:
      seq           c1, r1[4:2], STAGE_3
      bcf           [!c1], exit
      SQCB1_ADDR_GET(r1)
-     CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)
+     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
      CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
 
 exit:

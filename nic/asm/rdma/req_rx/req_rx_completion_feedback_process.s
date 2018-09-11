@@ -2,15 +2,18 @@
 #include "sqcb.h"
 
 struct req_rx_phv_t p;
-struct req_rx_s4_t3_k k;
+struct req_rx_s4_t2_k k;
 struct sqcb1_t d;
 
-#define IN_P t3_s2s_sqcb1_to_compl_feedback_info
+#define RRQWQE_TO_CQ_P t2_s2s_rrqwqe_to_cq_info
+
+#define IN_P t2_s2s_sqcb1_to_compl_feedback_info
 
 #define K_STATUS CAPRI_KEY_FIELD(IN_P, status)
 #define TO_S6_P to_s6_cq_info
 
 %%
+    .param req_rx_cqcb_process
 
 .align
 req_rx_completion_feedback_process:
@@ -27,7 +30,13 @@ req_rx_completion_feedback_process:
     // RQ is sending flush feedback multiple times.
     seq            c1, d.state, QP_STATE_ERR
     bcf            [c1], exit
-    CAPRI_SET_TABLE_3_VALID(0) // Branch Delay Slot
+    CAPRI_SET_TABLE_2_VALID(0) // Branch Delay Slot
+
+    CAPRI_RESET_TABLE_2_ARG()
+    phvwrpair      CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cq_id), d.cq_id, \
+                   CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cqe_type), CQE_TYPE_SEND_NPG
+
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
 
     seq            c1, K_STATUS, CQ_STATUS_WQE_FLUSHED_ERR
     bcf            [c1], flush_completion
@@ -86,7 +95,7 @@ bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3
     bcf           [!c1], exit
     SQCB1_ADDR_GET(r1)
-    CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)
+    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r1)
 
 exit:
