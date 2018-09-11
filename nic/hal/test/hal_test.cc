@@ -767,7 +767,7 @@ public:
         }
     }
 
-    void lif_policer_update(uint32_t lif_id, bool pps, uint64_t rate, uint64_t burst)
+    void lif_policer_update(uint32_t lif_id, bool is_rx, bool pps, uint64_t rate, uint64_t burst)
     {
         LifSpec           *spec;
         LifGetRequestMsg  get_req_msg;
@@ -779,6 +779,7 @@ public:
         Status            status;
 
         std::cout << "Policer update lif " << lif_id
+                                    << "is_rx" << is_rx
                                     << "pps " << pps
                                     << "rate " << rate
                                     << "burst " << burst
@@ -786,7 +787,7 @@ public:
 
         get_req_msg.add_request()->mutable_key_or_handle()->set_lif_id(lif_id);
         status = intf_stub_->LifGet(&get_context, get_req_msg, &get_rsp_msg);
-        if (!status.ok() || (get_rsp_msg.response_size() != 1)) {
+        if (!status.ok() || (get_rsp_msg.response_size() != 1) || (get_rsp_msg.response(0).api_status() != types::API_STATUS_OK)) {
             std::cout << "Lif Get Failed" << std::endl;
             return;
         }
@@ -799,11 +800,21 @@ public:
         *spec = get_rsp.spec();
 
         if (pps) {
-            spec->mutable_rx_policer()->mutable_pps_policer()->set_packets_per_sec(rate);
-            spec->mutable_rx_policer()->mutable_pps_policer()->set_burst_packets(burst);
+            if (is_rx) {
+                spec->mutable_rx_policer()->mutable_pps_policer()->set_packets_per_sec(rate);
+                spec->mutable_rx_policer()->mutable_pps_policer()->set_burst_packets(burst);
+            } else {
+                spec->mutable_tx_policer()->mutable_pps_policer()->set_packets_per_sec(rate);
+                spec->mutable_tx_policer()->mutable_pps_policer()->set_burst_packets(burst);
+            }        
         } else {
-            spec->mutable_rx_policer()->mutable_bps_policer()->set_bytes_per_sec(rate);
-            spec->mutable_rx_policer()->mutable_bps_policer()->set_burst_bytes(burst);
+            if (is_rx) {
+                spec->mutable_rx_policer()->mutable_bps_policer()->set_bytes_per_sec(rate);
+                spec->mutable_rx_policer()->mutable_bps_policer()->set_burst_bytes(burst);
+            } else {
+                spec->mutable_tx_policer()->mutable_bps_policer()->set_bytes_per_sec(rate);
+                spec->mutable_tx_policer()->mutable_bps_policer()->set_burst_bytes(burst);
+            }
         }
 
         std::cout << "Calling lif update" << std::endl;
@@ -2943,6 +2954,7 @@ main (int argc, char** argv)
 
     bool policer_update = false;
     bool pps = false;
+    bool is_rx = false;
     uint32_t policer_lif_id = 0;
     uint64_t policer_rate = 0;
     uint64_t policer_burst = 0;
@@ -3000,10 +3012,11 @@ main (int argc, char** argv)
             session_create_cache_test = true;
         } else if (!strcmp(argv[1], "policer_update")) {
             policer_update = true;
-            policer_lif_id = atoi(argv[2]);
-            pps = atoi(argv[3]);
-            policer_rate = atoi(argv[4]);
-            policer_burst = atoi(argv[5]);
+            is_rx = atoi(argv[2]); // 0 = TX, 1 = RX
+            policer_lif_id = atoi(argv[3]);
+            pps = atoi(argv[4]);
+            policer_rate = atoi(argv[5]);
+            policer_burst = atoi(argv[6]);
         } else if (!strcmp(argv[1], "qos_class_create")) {
             qos_class_create = true;
             qos_group = atoi(argv[2]);
@@ -3196,7 +3209,7 @@ main (int argc, char** argv)
                                ::session::FlowAction::FLOW_ACTION_ALLOW,
                                0);
     } else if (policer_update) {
-        hclient.lif_policer_update(policer_lif_id, pps, policer_rate, policer_burst);
+        hclient.lif_policer_update(policer_lif_id, is_rx, pps, policer_rate, policer_burst);
         return 0;
     } else if (proxy_agent_if == true) {
 #if 1

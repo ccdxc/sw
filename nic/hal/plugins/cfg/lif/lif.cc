@@ -1312,8 +1312,10 @@ lif_update (LifSpec& spec, LifResponse *rsp)
 end:
     lif_prepare_rsp(rsp, ret, hal_handle);
 
-    hw_lif_id = lif_hw_lif_id_get(lif);
-    rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
+    if (ret == HAL_RET_OK) {
+       hw_lif_id = lif_hw_lif_id_get(lif);
+       rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
+     }
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;

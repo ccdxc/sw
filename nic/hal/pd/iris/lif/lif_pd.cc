@@ -137,7 +137,7 @@ pd_lif_update (pd_func_args_t *pd_func_args)
     if (args->tx_policer_changed || args->qstate_map_init_set) {
         HAL_TRACE_DEBUG("pd-lif:{}: tx policer changed ", __FUNCTION__);
 
-        ret = lif_pd_tx_policer_program_hw(pd_lif, true);
+        ret = lif_pd_tx_policer_program_hw((pd_lif_t *)lif_clone->pd_lif, true);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pd-lif:{}:unable to program hw for tx policer", __FUNCTION__);
             goto end;
@@ -509,6 +509,7 @@ lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
         TX_POLICER_ACTION(d, entry_valid) = 1;
         TX_POLICER_ACTION(d, pkt_rate) =
             pi_lif->qos_info.tx_policer.type == POLICER_TYPE_PPS ? 1 : 0;
+        TX_POLICER_ACTION(d, rlimit_en) = 1;
 
         ret = policer_to_token_rate(&pi_lif->qos_info.tx_policer,
                                     refresh_interval_us,

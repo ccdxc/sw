@@ -652,7 +652,8 @@ table tx_table_s6_t0 {
 // stage 5
 
 @pragma stage 5
-@pragma policer_table two_color enable_rate_limit
+@pragma policer_table two_color 
+@pragma enable_rate_limit
 table tx_table_s5_t4_lif_rate_limiter_table {
     reads {
         p4_intr_global.lif : exact;

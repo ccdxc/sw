@@ -74,25 +74,25 @@ eth_tx_prep:
 eth_tx_prep4:
   BUILD_APP_HEADER(3, r6, r7)
   addi            _r_num_desc, _r_num_desc, 1
-  add             _r_tx_pktlen, _r_tx_pktlen, d.len3
+  add             _r_tx_pktlen, _r_tx_pktlen, d.{len3}.hx
   phvwr           p.to_stage_6_to_stage_data, d[127:0]
 
 eth_tx_prep3:
   BUILD_APP_HEADER(2, r6, r7)
   addi            _r_num_desc, _r_num_desc, 1
-  add             _r_tx_pktlen, _r_tx_pktlen, d.len2
+  add             _r_tx_pktlen, _r_tx_pktlen, d.{len2}.hx
   phvwr           p.to_stage_5_to_stage_data, d[255:128]
 
 eth_tx_prep2:
   BUILD_APP_HEADER(1, r6, r7)
   addi            _r_num_desc, _r_num_desc, 1
-  add             _r_tx_pktlen, _r_tx_pktlen, d.len1
+  add             _r_tx_pktlen, _r_tx_pktlen, d.{len1}.hx
   phvwr           p.to_stage_4_to_stage_data, d[383:256]
 
 eth_tx_prep1:
   BUILD_APP_HEADER(0, r6, r7)
   addi            _r_num_desc, _r_num_desc, 1
-  add             _r_tx_pktlen, _r_tx_pktlen, d.len0
+  add             _r_tx_pktlen, _r_tx_pktlen, d.{len0}.hx
   phvwr           p.to_stage_3_to_stage_data, d[511:384]
 
 eth_tx_prep_done:
