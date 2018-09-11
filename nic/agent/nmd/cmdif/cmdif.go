@@ -211,7 +211,7 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 				break
 			}
 
-			log.Infof("++++ CMDIF: Got nic watch event: {%+v} type: %v", evt.Nic, evt.EventType)
+			log.Infof("CMDIF: Got nic watch event: {%+v} type: %v", evt.Nic, evt.EventType)
 
 			// Ignore events for non-local NIC
 			// In managed mode, client.nmd.nic holds the initial configuration obtained

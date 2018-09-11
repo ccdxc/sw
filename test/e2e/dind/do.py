@@ -142,6 +142,8 @@ class NaplesNode(Node):
         self.startNode()
         self.startCluster()
     def startNode(self):
+        # expose Naples-REST port (9008) for naples instances on 15000+offset ...
+        ports_exposed = """ -p {}:9008 """.format(exposedPortBase + 5000 + self.containerIndex)
         if self.testMode == "TELEMETRY":
             self.setupCommon()
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/tmagent" """.format(self.name))
@@ -150,7 +152,7 @@ class NaplesNode(Node):
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/netagent" """.format(self.name))
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/nmd" """.format(self.name))
         else:
-            runCommand("""docker run -td -P -l pens --network pen-dind-net --ip {}  --rm --name {} -h {} pen-netagent /bin/sh """.format(self.ipaddress, self.name, self.name, self.name))
+            runCommand("""docker run -td {} -P -l pens --network pen-dind-net --ip {}  --rm --name {} -h {} pen-netagent /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name, self.name))
         runCommand("""docker exec {}  mkdir -p /var/log/pensando """.format(self.name))
         runCommand("""docker exec {}  mkdir -p /var/lib/pensando """.format(self.name))
         runCommand("""docker network connect pen-dind-hnet {}""".format(self.name))

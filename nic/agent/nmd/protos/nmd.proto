@@ -33,12 +33,18 @@ message Naples {
                             (gogoproto.jsontag) = "status,omitempty"];
 }
 
+// Operational mode of a Naples
+enum NaplesMode {
+    CLASSIC_MODE     = 0; // Unmanaged mode
+    MANAGED_MODE     = 1; // Managed mode
+}
+
 // NaplesSpec contains initial bootstrap configuration of the Naples I/O subsystem
 message NaplesSpec {
 
     // Operational mode of the NIC
     NaplesMode Mode                 = 1 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "mode,omitempty"];
+                                        (gogoproto.jsontag) = "mode"];
 
     // List of IP/hostname:Port address of Venice quorum nodes in comma separated format
     // For eg: IP1:port1,IP2:port2,IP3:port3
@@ -64,10 +70,4 @@ message NaplesStatus {
     // Current phase of the NIC adapter in the system
     cluster.SmartNICSpec.SmartNICPhase Phase = 1 [(gogoproto.nullable) = true,
                                              (gogoproto.jsontag) = "phase,omitempty"];
-}
-
-// Operational mode of a Naples
-enum NaplesMode {
-    CLASSIC_MODE     = 0; // Classic mode (Unmanaged mode)
-    MANAGED_MODE     = 1; // Managed mode
 }

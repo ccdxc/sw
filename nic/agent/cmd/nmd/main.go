@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"strings"
 	"time"
 
@@ -37,7 +38,7 @@ func main() {
 		hostName           = flag.String("hostname", "", "Hostname of Naples Host")
 		debugflag          = flag.Bool("debug", false, "Enable debug mode")
 		logToStdoutFlag    = flag.Bool("logtostdout", false, "enable logging to stdout")
-		logToFile          = flag.String("logtofile", "/tmp/nmd.log", "Redirect logs to file")
+		logToFile          = flag.String("log-to-file", fmt.Sprintf("/var/log/pensando/%s.log", globals.Nmd), "Path of the log file")
 	)
 	flag.Parse()
 

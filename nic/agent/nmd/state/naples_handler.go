@@ -54,6 +54,18 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 			n.StartClassicMode()
 
 		case nmd.NaplesMode_MANAGED_MODE:
+
+			// TODO : We need to stop rest server only
+			// after NIC registration succeeds. (either
+			// ADMITTED or PENDING for manual approval)
+			// Also some tests needs to be refactored
+			// before stopping the classic mode with
+			// flag=true to stop rest server, since the
+			// tests use the REST api to change mode from
+			// managed -> classic. Managed to classic mode
+			// change should be done by update SmartNIC object
+			// on Venice and NMD should react to it via watcher
+			// update.
 			n.StopClassicMode(false)
 
 			n.Add(1)
@@ -130,7 +142,7 @@ func (n *NMD) StartManagedMode() error {
 			}
 
 			// Send NIC register request to CMD
-			log.Infof("++++ Registering NIC with CMD : %+v", nicObj)
+			log.Infof("Registering NIC with CMD : %+v", nicObj)
 			resp, err := n.RegisterSmartNICReq(nicObj)
 
 			// Cache it in nicDB
@@ -262,7 +274,7 @@ func (n *NMD) SendNICUpdates() error {
 			}
 
 			// Send nic status
-			log.Info("++++ Sending NIC health update: %+v", nicObj)
+			log.Info("Sending NIC health update: %+v", nicObj)
 			_, err := n.UpdateSmartNICReq(nicObj)
 			if err != nil {
 				log.Errorf("Error updating nic, name:%s  err: %+v",
