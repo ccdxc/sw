@@ -1221,45 +1221,21 @@ struct rdma_queue_cmd {
 /* to be removed when device supports rdma adminq */
 
 
-/* XXX to be replaced by header template */
-struct rdma_create_ah_data {
-	u8 smac[8];
-	u8 dmac[8];
-	u32 ethtype;
-	u32 vlan; // special value 0xffff disables 802.1q header
-	u32 vlan_pri;
-	u32 vlan_cfi;
-	u32 ip_ver;
-	u32 ip_tos;
-	u32 ip_ttl;
-	union {
-		struct {
-			u32 saddr;
-			u32 daddr;
-		} v4;
-		struct {
-			u8 saddr[16];
-			u8 daddr[16];
-		} v6;
-	} ip;
-	u32 udp_sport;
-	u32 udp_dport;
-};
-
 /**
  * struct rdma_create_ah_cmd - Create Address Handle command
  * @opcode:        opcode = 63
  * @pd_id:	protection domain id
- * @hdr_info:	dma addr of rdma_create_ah_data buffer
- *		(XXX replace ah data with header template)
+ * @header_template: header tempalte
+ * @header_template_size: header template size
  **/
 struct create_ah_cmd {
 	u16 opcode;
 	u8 rsvd[6];
 	u32 ah_id;
 	u32 pd_id;
-	u64 hdr_info;
-	u8 rsvd2[40];
+	u64 header_template;
+	u32 header_template_size;
+	u8 rsvd2[36];
 };
 
 /**
