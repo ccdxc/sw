@@ -410,7 +410,7 @@ struct resp_rx_flags_t {
 
 struct req_tx_flags_t {
     _ud:1;
-    _rsvd3:1;
+    _inline:1;
     _rsvd2:1;
     _rsvd1:1;
     _inv_rkey:1;
@@ -441,7 +441,7 @@ struct req_tx_flags_t {
 #define REQ_TX_FLAG_INV_RKEY           0x0800
 #define REQ_TX_FLAG_RSVD1              0x1000
 #define REQ_TX_FLAG_RSVD2              0x2000
-#define REQ_TX_FLAG_RSVD3              0x4000
+#define REQ_TX_FLAG_INLINE             0x4000
 #define REQ_TX_FLAG_UD                 0x8000
 
 

@@ -31,6 +31,9 @@ req_tx_stats_process:
     bbeq             CAPRI_KEY_FIELD(IN_P, npg), 1, handle_npg_stats
     crestore         [c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_TX_FLAG_INV_RKEY | REQ_TX_FLAG_ATOMIC_FNA | REQ_TX_FLAG_ATOMIC_CSWAP | REQ_TX_FLAG_READ_REQ) //BD Slot
 
+    bbeq             CAPRI_KEY_FIELD(IN_P, timeout), 1, handle_timeout_stats
+    nop
+
     tbladd           d.num_bytes, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes)
     tblmincri        d.num_pkts, MASK_32, 1
 
@@ -47,7 +50,8 @@ req_tx_stats_process:
     tblmincri.c6     d.num_write_msgs_imm_data, MASK_16, 1
 
     //send messages without inv_rkey and imm_data
-    crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_TX_FLAG_INV_RKEY | REQ_TX_FLAG_IMMDT | REQ_TX_FLAG_WRITE | REQ_TX_FLAG_SEND | REQ_TX_FLAG_MIDDLE | REQ_TX_FLAG_FIRST)
+    crestore         [c7, c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_TX_FLAG_INLINE | REQ_TX_FLAG_INV_RKEY | REQ_TX_FLAG_IMMDT | REQ_TX_FLAG_WRITE | REQ_TX_FLAG_SEND | REQ_TX_FLAG_MIDDLE | REQ_TX_FLAG_FIRST)
+    tblmincri.c7     d.num_inline_req, MASK_16, 1
     //send & !inv_rkey & !imm_data & !middle & !first 
     setcf            c7, [!c6 & !c5 & c3 & !c2 & !c1]
     tblmincri.c7     d.num_send_msgs, MASK_16, 1
@@ -72,13 +76,20 @@ done:
     nop
 
 handle_npg_stats:
-    crestore      [c3, c2, c1], CAPRI_KEY_RANGE(IN_P, npg, npg_bindmw_t2), 0x7
-    tblmincri.c3  d.num_npg_req, MASK_32, 1
-    tblmincri.c2  d.num_npg_bindmw_t1_req, MASK_16, 1
-    tblmincri.c1  d.num_npg_bindmw_t2_req, MASK_16, 1
-    nop.e
+    crestore      [c4, c3, c2, c1], CAPRI_KEY_RANGE(IN_P, npg, npg_frpmr), 0xF
+    tblmincri.c3  d.num_npg_bindmw_t1_req, MASK_16, 1
+    tblmincri.c2  d.num_npg_bindmw_t2_req, MASK_16, 1
+    tblmincri.c1  d.num_npg_frpmr_req, MASK_16, 1
+    tblmincri.e   d.num_npg_req, MASK_32, 1
     nop
-    
+ 
+handle_timeout_stats:
+    crestore      [c3, c2, c1], CAPRI_KEY_RANGE(IN_P, timeout, timeout_rnr), 0x7
+    tblmincri.c2  d.num_timeout_local_ack, MASK_16, 1
+    tblmincri.c1  d.num_timeout_rnr, MASK_16, 1
+    nop.e
+    nop   
+
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_6
     bcf           [!c1], exit

@@ -6,11 +6,10 @@ struct req_tx_phv_t p;
 struct req_tx_s5_t3_k k;
 struct sqcb2_t d;
 
+#define TO_S7_STATS_P         to_s7_stats_info
+
 %%
-    .param req_tx_bktrack_sqwqe_process
-    .param req_tx_bktrack_sqpt_process
-    .param req_tx_bktrack_write_back_process
-    .param req_tx_bktrack_sqcb1_write_back_process
+    .param req_tx_stats_process
 
 .align
 req_tx_timer_expiry_process:
@@ -51,12 +50,13 @@ rnr_timeout:
     // Check rnr_retry_ctr for RNR
     seq            c1, d.rnr_retry_ctr, 0 // Branch Delay Slot
     bcf            [c1], err_completion
-    nop            // Branch Delay Slot
+    phvwrpair.!c1  CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout_rnr), 1 //BD Slot
 
     b              process_expiry
  
 check_local_ack_timeout:
-    seq            c1, d.local_ack_timeout, 0
+    seq            c1, d.local_ack_timeout, 0 //BD Slot
     bcf            [c1], spurious_expiry
 
 local_ack_timeout:
@@ -79,6 +79,8 @@ local_ack_timeout:
     // Check err_retry_ctr for retransmit timeout
     seq            c1, d.err_retry_ctr, 0 // Branch Delay Slot
     bcf            [c1], err_completion
+    phvwrpair.!c1  CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout_local_ack), 1 //BD Slot
 
 process_expiry:
     // send timer_expiry feedback msg to RxDMA so that RxDMA can
@@ -113,10 +115,12 @@ process_expiry:
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
   
+    //invoke stats_process for Timeout case here
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
+
 restart_timer:
     CAPRI_START_SLOW_TIMER(r1, r2, K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, TIMER_RING_ID, 10)
     //phvwr.e   p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_3_VALID(0)
     nop.e
     nop
 

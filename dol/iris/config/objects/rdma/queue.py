@@ -395,7 +395,11 @@ class RdmaSQstate(Packet):
         IntField("tx_num_npg_requests", 0),
         ShortField("tx_num_npg_bindmw_t1_req", 0),
         ShortField("tx_num_npg_bindmw_t2_req", 0),
-        BitField("sqcb4", 0, 192),
+        ShortField("tx_num_npg_frpmr_req", 0),
+        ShortField("tx_num_inline_req", 0),
+        ShortField("tx_num_timeout_local_ack", 0),
+        ShortField("tx_num_timeout_rnr", 0),
+        BitField("sqcb4", 0, 128),
 
         #SQCB5
         LongField("rx_num_bytes", 0),

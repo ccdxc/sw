@@ -24,6 +24,8 @@ struct req_tx_s2_t0_k k;
 #define TO_S4_FRPMR_LKEY_P    to_s4_frpmr_sqlkey_info
 #define TO_S5_SQCB_WB_P       to_s5_sqcb_wb_info
 #define TO_S5_FRPMR_WB_P      to_s5_frpmr_sqcb_wb_info
+#define TO_S7_STATS_P         to_s7_stats_info
+
 
 #define K_LOG_PMTU CAPRI_KEY_FIELD(IN_P, log_pmtu)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit0, remaining_payload_bytes_sbit9_ebit15)
@@ -229,6 +231,7 @@ atomic:
 
 inline_data:
     phvwr          p.inline_data, d.inline_data
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _inline),  1
     DMA_CMD_STATIC_BASE_GET(r4, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_PYLD_BASE)
     DMA_PHV2PKT_START_LEN_SETUP(r4, r5, inline_data, d.send.length)
     // NOTE: it should be noted that invoke_add_headers will directly invoke
@@ -382,6 +385,9 @@ load_frpmr_sqlkey:
     CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, req_tx_frpmr_sqlkey_process, r6)
 
 frpmr_second_pass:
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, npg), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, npg_frpmr), 1
+
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, sge_index), 0, CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T0, lkey_state_update), 1
     b              load_frpmr_sqlkey             
     phvwrpair      CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, sge_index), 1, CAPRI_PHV_FIELD(WQE_TO_FRPMR_LKEY_T1, lkey_state_update), 1 //BD-slot

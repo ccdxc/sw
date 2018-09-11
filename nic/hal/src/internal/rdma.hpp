@@ -1108,7 +1108,11 @@ typedef struct sqcb3_s {
 
 // req_tx stats
 typedef struct sqcb4_s {
-    uint8_t pad[24];
+    uint8_t pad[16];
+    uint16_t num_timeout_rnr;
+    uint16_t num_timeout_local_ack;
+    uint16_t num_inline_req;
+    uint16_t num_npg_frpmr_req;
     uint16_t num_npg_bindmw_t2_req;
     uint16_t num_npg_bindmw_t1_req;
     uint32_t num_npg_req;

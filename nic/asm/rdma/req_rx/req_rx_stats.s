@@ -40,10 +40,10 @@ req_rx_stats_process:
     tblmincri.c4     d.num_ack, MASK_16, 1
 
     bcf              [c5 | c4], done
-    setcf            c6, [c3 & c2 & c1] //BD Slot
+    setcf.c3         c3, [c2 | c1] //BD Slot
 
     tblmincri.c2     d.num_read_resp_pkts, MASK_32, 1
-    tblmincri.c6     d.num_read_resp_msgs, MASK_16, 1
+    tblmincri.c3     d.num_read_resp_msgs, MASK_16, 1
 
     //ignoring this update for ACK and ATOMIC_ACK and tracking only for read responses
     IS_ANY_FLAG_SET(c6, GLOBAL_FLAGS, REQ_RX_FLAG_ONLY | REQ_RX_FLAG_FIRST)

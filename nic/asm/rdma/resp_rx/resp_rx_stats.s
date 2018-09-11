@@ -34,13 +34,13 @@ resp_rx_stats_process:
     seq              c7, CAPRI_KEY_FIELD(to_s7_stats_info, incr_recirc_drop), 1
     tblmincri.c7     d.num_recirc_drop_pkts, MASK_16, 1
 
-    crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_RX_FLAG_RING_DBELL | RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_READ_REQ)
+    crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_RX_FLAG_RING_DBELL | RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_READ_REQ)
 
     tblmincri.c6     d.num_ring_dbell, MASK_16, 1
     tblmincri.c5     d.num_ack_requested, MASK_16, 1
     tblmincri.c4     d.num_send_msgs_inv_rkey, MASK_16, 1
-    tblmincri.c3     d.num_atomic_fna_msgs, MASK_16, 1
-    tblmincri.c2     d.num_atomic_cswap_msgs, MASK_16, 1
+    tblmincri.c3     d.num_atomic_cswap_msgs, MASK_16, 1
+    tblmincri.c2     d.num_atomic_fna_msgs, MASK_16, 1
     tblmincri.c1     d.num_read_req_msgs, MASK_16, 1
 
     // incr number of memory window invalidations

@@ -133,8 +133,8 @@
     modify_field(phv_global_common_scr.pad, phv_global_common.pad);\
     modify_field(phv_global_common_scr._ud, phv_global_common._ud);\
     modify_field(phv_global_common_scr._inline, phv_global_common._inline);\
-    modify_field(phv_global_common_scr._ack_req, phv_global_common._ack_req);\
-    modify_field(phv_global_common_scr._completion, phv_global_common._completion);\
+    modify_field(phv_global_common_scr._rsvd2, phv_global_common._rsvd2);\
+    modify_field(phv_global_common_scr._rsvd1, phv_global_common._rsvd1);\
     modify_field(phv_global_common_scr._inv_rkey, phv_global_common._inv_rkey);\
     modify_field(phv_global_common_scr._immdt, phv_global_common._immdt);\
     modify_field(phv_global_common_scr._atomic_cswap, phv_global_common._atomic_cswap);\
@@ -169,8 +169,8 @@ header_type phv_global_common_t {
         pad                              :   22;
         _ud                              :    1;
         _inline                          :    1;
-        _ack_req                         :    1;
-        _completion                      :    1;
+        _rsvd2                           :    1;
+        _rsvd1                           :    1;
         _inv_rkey                        :    1;
         _immdt                           :    1;
         _atomic_cswap                    :    1;
@@ -245,7 +245,11 @@ header_type req_tx_to_stage_stats_info_t {
         npg                              :    1;
         npg_bindmw_t1                    :    1;
         npg_bindmw_t2                    :    1;
-        pad                              :  109;
+        npg_frpmr                        :    1;
+        timeout                          :    1;
+        timeout_local_ack                :    1;
+        timeout_rnr                      :    1;
+        pad                              :  105;
     }
 }
 
@@ -2317,6 +2321,10 @@ action req_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.npg, to_s7_stats_info.npg);
     modify_field(to_s7_stats_info_scr.npg_bindmw_t1, to_s7_stats_info.npg_bindmw_t1);
     modify_field(to_s7_stats_info_scr.npg_bindmw_t2, to_s7_stats_info.npg_bindmw_t2);
+    modify_field(to_s7_stats_info_scr.npg_frpmr, to_s7_stats_info.npg_frpmr);
+    modify_field(to_s7_stats_info_scr.timeout, to_s7_stats_info.timeout);
+    modify_field(to_s7_stats_info_scr.timeout_local_ack, to_s7_stats_info.timeout_local_ack);
+    modify_field(to_s7_stats_info_scr.timeout_rnr, to_s7_stats_info.timeout_rnr);
 
     // stage to stage
     modify_field(t3_s2s_stats_info_scr.pad, t3_s2s_stats_info.pad);

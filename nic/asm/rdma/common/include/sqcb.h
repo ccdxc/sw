@@ -259,7 +259,11 @@ struct sqcb4_t {
     num_npg_req: 32;
     num_npg_bindmw_t1_req:16;
     num_npg_bindmw_t2_req:16;
-    pad: 192;
+    num_npg_frpmr_req:16;
+    num_inline_req:16;
+    num_timeout_local_ack:16;
+    num_timeout_rnr:16;
+    pad: 128;
 };
 
 struct sqcb5_t {
