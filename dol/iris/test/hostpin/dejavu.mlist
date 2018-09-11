@@ -1,0 +1,18 @@
+# Feature Test Modules List
+feature:
+    id          : hostpin
+    sub         : dejavu
+    package     : test.hostpin
+    module      : hostpin
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : DEJA_VU_DROP
+        spec    : dejavu.testspec
+        ignore  : False
+        iterate:
+            - id        : NEIGHBOR_SOLICITATION
+              flow      : filter://type=IPV6,proto=ICMPV6
+              segment   : filter://native=False

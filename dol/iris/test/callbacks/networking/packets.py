@@ -225,6 +225,9 @@ def GetVlanId(testcase, packet):
         return testcase.config.src.endpoint.intf.vlan_id
     return testcase.config.src.segment.vlan_id
 
+def GetVlanIdForDejaVu(testcase, packet):
+    return testcase.config.src.segment.vlan_id
+
 def GetInfraVlanId(testcase, packet):
     segs = Store.objects.GetAllByClass(Segment.SegmentObject)
     for seg in segs:

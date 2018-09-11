@@ -267,6 +267,7 @@ hal_eplearn_acl_config_init (void)
         ip_selector->mutable_icmp_selector()->set_icmp_code_mask(0xff);
         ip_selector->mutable_icmp_selector()->set_icmp_type(ICMP_NEIGHBOR_SOLICITATION);
         ip_selector->mutable_icmp_selector()->set_icmp_type_mask(0xff);
+        match->mutable_internal_key()->set_no_drop(true);
         match->mutable_internal_key()->set_flow_miss(true);
         match->mutable_internal_mask()->set_flow_miss(true);
 
