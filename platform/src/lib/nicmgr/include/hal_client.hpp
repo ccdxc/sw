@@ -208,7 +208,7 @@ public:
                uint32_t dest_qp_num, uint32_t q_key,
                uint32_t e_psn, uint32_t sq_psn,
                uint32_t header_template_ah_id, uint32_t header_template_size,
-               unsigned char *header);
+               unsigned char *header, uint32_t pmtu);
 
   int RDMACreateEQ(uint64_t lif_id, uint32_t eq_num,
                    uint32_t num_eq_wqes, uint32_t eq_wqe_size,
@@ -259,6 +259,7 @@ private:
 
 #define   IB_QP_QKEY         (1 << 6)
 #define   IB_QP_AV           (1 << 7)
+#define   IB_QP_PATH_MTU     (1 << 8)
 #define   IB_QP_DEST_QPN     (1 << 20)
 #define   IB_QP_RQ_PSN       (1 << 12)
 #define   IB_QP_SQ_PSN       (1 << 16)

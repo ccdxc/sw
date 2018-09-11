@@ -112,6 +112,7 @@ enum RdmaQpUpdateOper {
     RDMA_UPDATE_QP_OPER_SET_TX_PSN = 4; // TX_PSN
     RDMA_UPDATE_QP_OPER_SET_RD_ATM = 5; // RRQ_DEPTH
     RDMA_UPDATE_QP_OPER_SET_DEST_RD_ATM = 6; // RSQ_DEPTH
+    RDMA_UPDATE_QP_OPER_SET_PMTU = 7; // PATH MTU
 }
  
 //****************   Update Queue Pair  ********************************//
@@ -127,6 +128,7 @@ message RdmaQpUpdateSpec {
   uint32                   e_psn           = 8;
   uint32                   tx_psn          = 9;
   uint32                   ahid            = 10;
+  uint32                   pmtu            = 11;
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs

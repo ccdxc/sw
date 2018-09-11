@@ -1504,7 +1504,7 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
                         uint32_t dest_qp_num, uint32_t q_key,
                         uint32_t e_psn, uint32_t sq_psn,
                         uint32_t header_template_ah_id, uint32_t header_template_size,
-                        unsigned char *header)
+                        unsigned char *header, uint32_t pmtu)
 {
     if (attr_mask & IB_QP_AV) {
         ClientContext context;
@@ -1627,6 +1627,33 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
         spec->set_hw_lif_id(lif_id);
         spec->set_oper(RDMA_UPDATE_QP_OPER_SET_Q_KEY);
         spec->set_q_key(q_key);
+
+        Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
+        if (status.ok()) {
+            RdmaQpUpdateResponse rsp = response.response(0);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                return -1;
+            } else {
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
+            }
+        } else {
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
+            return -1;
+        }
+    }
+
+    if (attr_mask & IB_QP_PATH_MTU) {
+        ClientContext context;
+        RdmaQpUpdateRequestMsg request;
+        RdmaQpUpdateResponseMsg response;
+
+        RdmaQpUpdateSpec *spec = request.add_request();
+
+        spec->set_qp_num(qp_num);
+        spec->set_hw_lif_id(lif_id);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_PMTU);
+        spec->set_pmtu(pmtu);
 
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
         if (status.ok()) {

@@ -1579,6 +1579,8 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
                     spec.e_psn());
     HAL_TRACE_DEBUG("{}: Inputs: tx_psn: {}", __FUNCTION__,
                     spec.tx_psn());
+    HAL_TRACE_DEBUG("{}: Inputs: path_mtu: {}", __FUNCTION__,
+                    spec.pmtu());
 
     // Read sqcb from HW
     memset(sqcb_p, 0, sizeof(sqcb_t));
@@ -1625,6 +1627,16 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             sqcb_p->sqcb2.q_key = spec.q_key();
             HAL_TRACE_DEBUG("{}: Update: Setting q_key to: {}", __FUNCTION__,
                             spec.q_key());
+            break;
+
+        case rdma::RDMA_UPDATE_QP_OPER_SET_PMTU:
+            sqcb_p->sqcb0.log_pmtu = log2(spec.pmtu());
+            sqcb_p->sqcb1.log_pmtu = sqcb_p->sqcb0.log_pmtu;
+
+            rqcb.rqcb0.log_pmtu = log2(spec.pmtu());
+            rqcb.rqcb1.log_pmtu = rqcb.rqcb0.log_pmtu;
+            HAL_TRACE_DEBUG("{}: Update: Setting path_mtu to: {}", __FUNCTION__,
+                            spec.pmtu());
             break;
 
         case rdma::RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
