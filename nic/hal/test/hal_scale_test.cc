@@ -1451,6 +1451,7 @@ main (int argc, char** argv)
             num_sessions = atoi(optarg);
             break;
         case 'u':
+            std::cout << "setting dup session to true" << std::endl;
             dup_session = true;
             break;
         case 'b':
@@ -1584,8 +1585,8 @@ main (int argc, char** argv)
     clock_gettime(CLOCK_MONOTONIC, &start_ts);
     sdk::timestamp_to_nsecs(&start_ts, &start_ns);
     if (dup_session) {
-        send = true;
         for (int i = 0; i < 2; i ++) {
+            send = true;
             hclient.session_create(req_msg, session_count, vrf_id,
                                    src_ip[1], dst_ip[1],
                                    ::types::IPProtocol::IPPROTO_UDP,

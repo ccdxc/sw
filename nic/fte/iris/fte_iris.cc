@@ -433,6 +433,7 @@ ctx_t::update_flow_table()
     hal::pd::pd_tunnelif_get_rw_idx_args_t t_args;
     hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
     hal::pd::pd_func_args_t          pd_func_args = {0};
+    std::string      update_type = "create";
 
     session_args.session = &session_cfg;
     if (protobuf_request()) {
@@ -630,11 +631,13 @@ ctx_t::update_flow_table()
     if (hal_cleanup() == true) {
         // Cleanup session if hal_cleanup is set
         if (session_) {
+            update_type = "delete";
             ret = hal::session_delete(&session_args, session_);
         }
     } else if (session_) {
         if (update_session_) {
             HAL_TRACE_DEBUG("Updating Session");
+            update_type = "update";
             // Update session if it already exists
             ret = hal::session_update(&session_args, session_);
         }
@@ -654,7 +657,11 @@ ctx_t::update_flow_table()
         }
     }
 
-    HAL_ASSERT(ret == HAL_RET_OK);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Session {} failed, ret = {}", update_type, ret);
+    } else {
+        HAL_TRACE_DEBUG("Session {} successful", update_type);
+    }
 
     uint8_t istage = 0, rstage = 0;
     add_flow_logging(key_, session_handle, &iflow_log_[istage]);

@@ -1765,7 +1765,8 @@ tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
     session->tcp_cxntrack_timer = NULL;
 
     // time to clean up the session
-    ret = fte::session_delete(session);
+    // Delete asynchronously so we dont hold the periodic thread
+    ret = fte::session_delete_async(session);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delte aged session {}",
                       session->hal_handle);
@@ -1972,11 +1973,13 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
     if (session->rflow)
         session->rflow->state = state.rflow_state.state;
 
+    session->tcp_cxntrack_timer = NULL;
+
     if (state.iflow_state.state != session::FLOW_TCP_STATE_ESTABLISHED ||
         state.rflow_state.state != session::FLOW_TCP_STATE_ESTABLISHED) {
         // session is not in established state yet.
         // Cleanup the session
-        ret = fte::session_delete(session);
+        ret = fte::session_delete_async(session);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to delete session {}",
                           session->hal_handle);

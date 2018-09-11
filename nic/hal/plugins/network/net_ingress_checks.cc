@@ -45,7 +45,7 @@ update_src_if(fte::ctx_t&ctx)
     if (!src_local &&  !dst_local) {
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
         flowupd.action = session::FLOW_ACTION_DROP;
-        HAL_TRACE_DEBUG("Dropping packet for remote to remote");
+        HAL_TRACE_ERR("Dropping packet for remote to remote");
         return ctx.update_flow(flowupd);
     }
 
