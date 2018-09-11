@@ -284,6 +284,7 @@ func (m *PolicySearchRequest) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
+		m.Namespace = "default"
 		m.Tenant = "default"
 	}
 	return ret

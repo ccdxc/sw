@@ -673,6 +673,7 @@
         },
         "namespace": {
           "type": "string",
+          "default": "default",
           "description": "Namespace is optional. If provided policy-search will\nbe limited to the specified namespace."
         },
         "sg-policy": {

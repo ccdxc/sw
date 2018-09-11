@@ -437,6 +437,7 @@ message PolicySearchRequest {
     // Namespace is optional. If provided policy-search will
     // be limited to the specified namespace.
     string Namespace            = 2 [(gogoproto.nullable) = true,
+                                     (venice.default) = "default",
                                      (gogoproto.jsontag) = "namespace,omitempty"];
 
     // SGPolicy name is optional. If provided policy-search will

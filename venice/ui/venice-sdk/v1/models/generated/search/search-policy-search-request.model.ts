@@ -44,6 +44,7 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
             type: 'string'
         },
         'namespace': {
+            default: 'default',
             description:  'Namespace is optional. If provided policy-search will be limited to the specified namespace.',
             type: 'string'
         },
