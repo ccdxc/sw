@@ -107,4 +107,8 @@ def TestCaseVerify(tc):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
+    rs = tc.config.rdmasession
+    rs.lqp.rq.qstate.Read()
+    rs.lqp.rq.qstate.data.congestion_mgmt_enable = 0;
+    rs.lqp.rq.qstate.WriteWithDelay()
     return

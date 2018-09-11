@@ -14,7 +14,6 @@ selectors:
     rdmasession     :
         lqp         : filter://svc=0
         rqp         : filter://svc=0
-        session     : filter://IsIPV6=0
 #    maxflows    : 1
 #    maxrdmasessions     : 1
 
@@ -83,12 +82,12 @@ packets:
                  src     : ref://testcase/config/rdmasession/session/responder/addr
                  dst     : ref://testcase/config/rdmasession/session/initiator/addr
                  ttl     : 64
-                 tos     : 192 # Setting ECN bits in TOS to 11 indicating congestion.
+                 tos     : 3 # Setting ECN bits in TOS to 11 indicating congestion.
              ipv6:
                  src     : ref://testcase/config/rdmasession/session/responder/addr
                  dst     : ref://testcase/config/rdmasession/session/initiator/addr
                  hlim    : 64
-                 tc      : 192 # Setting ECN bits in TOS to 11 indicating congestion.
+                 tc      : 3 # Setting ECN bits in TOS to 11 indicating congestion.
              udp:
                  sport   : ref://testcase/config/rdmasession/session/iflow/sport
                  dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -135,6 +134,7 @@ packets:
                 psn     : 0
                 se      : 0
                 m       : 0
+                b_r     : 1
                 p_key   : 65535 # Same p_key as READ_RESP
             payload: # CNP packet has 16 bytes reserved. Set to zero.
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO16/data

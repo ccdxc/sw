@@ -19,6 +19,9 @@ req_tx_sqcb2_cnp_process:
     
     // Update dst_qp of the packet.
     phvwr       p.bth.dst_qp, d.dst_qp
+    // Mellanox expects BECN to be set in CNP packet though RoceV2-Annex doesn't mandate. 
+    // Set BECN bit for now for interop with Mellanox.
+    phvwr       p.bth.b, 1
 
 add_headers:
 

@@ -186,9 +186,9 @@ p4plus_app_raw_redir:
 .align
 p4plus_app_rdma:
   seq           c1, k.ipv4_valid, TRUE
-  phvwr.c1      p.p4_to_p4plus_roce_ecn, k.ipv4_diffserv[7:6]
+  phvwr.c1      p.p4_to_p4plus_roce_ecn, k.ipv4_diffserv[1:0]
   seq           c1, k.ipv6_valid, TRUE
-  phvwr.c1      p.p4_to_p4plus_roce_ecn, k.ipv6_trafficClass_sbit0_ebit3[3:2]
+  phvwr.c1      p.p4_to_p4plus_roce_ecn, k.ipv6_trafficClass_sbit4_ebit7[1:0]
   phvwr         p.p4_to_p4plus_roce_p4plus_app_id, k.control_metadata_p4plus_app_id
   seq           c1, k.udp_opt_ocs_valid, FALSE
   seq           c2, k.capri_intrinsic_csum_err[csum_hdr_udp_opt_ocs], 0
