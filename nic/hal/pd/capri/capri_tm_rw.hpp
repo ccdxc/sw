@@ -275,4 +275,56 @@ capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats);
 hal_ret_t
 capri_tm_periodic_stats_update(void);
 
+typedef struct tm_pb_debug_buffer_drop_stats_s {
+  uint32_t intrinsic_drop_count;            // Pkts dropped due to intrinsic drop bit being set
+  uint32_t discarded_count;                 // Pkts dropped due to error
+  uint32_t admitted_count;                  // Errored pkts admitted to buffering
+  uint32_t out_of_cells_drop_count;         // Pkts dropped due to cell exhaustion (first cell)
+  uint32_t out_of_cells_drop_count_2;       // Pkts dropped due to cell exhaustion (subsequent cell)
+  uint32_t out_of_credit_drop_count;        // Pkts dropped due to cell-credits exhaustion
+  uint32_t truncation_drop_count;           // Pkts dropped due to size bigger than the configured MTU
+  uint32_t port_disabled_drop_count;        // Pkts dropped due to port disable
+  uint32_t copy_to_cpu_tail_drop_count;     // Copy-to-cpu pkts tail dropped
+  uint32_t span_tail_drop_count;            // Span pkts tail dropped
+  uint32_t min_size_violation_drop_count;   // Pkts dropped due to lesser than min size
+  uint32_t enqueue_error_drop_count;        // Pkts dropped due to enqueue to reserved queues
+  uint32_t invalid_port_drop_count;         // Pkts dropped due to destined to invalid ports
+  uint32_t invalid_output_queue_drop_count; // Pkts dropped due to destined to invalid output queues
+} tm_pb_debug_buffer_drop_stats_t;
+
+typedef struct tm_pb_debug_buffer_stats_s {
+  uint32_t          sop_count_in;              // Count of start-of-packets in
+  uint32_t          eop_count_in;              // Count of end-of-packets in
+  uint32_t          sop_count_out;             // Count of start-of-packets out
+  uint32_t          eop_count_out;             // Count of end-of-packets out
+  tm_pb_debug_buffer_drop_stats_t drop_counts; // Drop counts
+} tm_pb_debug_buffer_stats_t;
+
+typedef struct oflow_fifo_drop_stats_s {
+  uint32_t occupancy_drop_count;                // Pkts dropped due to fifo full
+  uint32_t emergency_stop_drop_count;           // Pkts dropped due to emergency condition hit due to slow oflow memory to write-buffer communication
+  uint32_t write_buffer_ack_fill_up_drop_count; // Pkts dropped due to write buffer's ack fifo filling up
+  uint32_t write_buffer_ack_full_drop_count;    // Pkts dropped due to write buffer's ack fifo full
+  uint32_t write_buffer_full_drop_count;        // Pkts dropped due to write buffer filling up
+  uint32_t control_fifo_full_drop_count;        // Pkts dropped due to control fifo full
+} tm_pb_debug_oflow_fifo_drop_stats_t;
+
+typedef struct oflow_fifo_stats_s {
+  uint32_t                            sop_count_in;  // Count of start-of-packets in
+  uint32_t                            eop_count_in;  // Count of end-of-packets in
+  uint32_t                            sop_count_out; // Count of start-of-packets out
+  uint32_t                            eop_count_out; // Count of end-of-packets out
+  tm_pb_debug_oflow_fifo_drop_stats_t drop_counts;   // Drop counts
+} tm_pb_debug_oflow_fifo_stats_t;
+
+typedef struct tm_pb_debug_stats_s {
+    tm_pb_debug_buffer_stats_t      buffer_stats;
+    tm_pb_debug_oflow_fifo_stats_t  oflow_fifo_stats;
+} tm_pb_debug_stats_t;
+
+hal_ret_t
+capri_tm_get_pb_debug_stats(tm_port_t port, 
+                            tm_pb_debug_stats_t *debug_stats, 
+                            bool reset);
+
 #endif

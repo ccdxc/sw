@@ -2244,6 +2244,10 @@ typedef struct pd_egress_drop_stats_get_args_s {
     pd_system_args_t *pd_sys_args;
 } __PACK__ pd_egress_drop_stats_get_args_t;
 
+typedef struct pd_pb_stats_get_args_s {
+    pd_system_args_t *pd_sys_args;
+} __PACK__ pd_pb_stats_get_args_t;
+
 // oiflist
 typedef struct pd_oif_list_create_args_s {
     oif_list_id_t *list;
@@ -3028,7 +3032,8 @@ typedef struct pd_quiesce_stop_args_s {
     ENTRY(PD_FUNC_ID_COLLECTOR_DELETE,         260, "PD_FUNC_ID_COLLECTOR_DELETE")\
     ENTRY(PD_FUNC_ID_COLLECTOR_GET,            261, "PD_FUNC_ID_COLLECTOR_GET")\
     ENTRY(PD_FUNC_ID_EP_IF_UPDATE,             262, "PD_FUNC_ID_EP_IF_UPDATE")      \
-    ENTRY(PD_FUNC_ID_MAX,                      263, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_PB_STATS_GET,             263, "PD_FUNC_ID_PB_STATS_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      264, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3410,9 +3415,12 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_swphv_inject);
         PD_UNION_ARGS_FIELD(pd_swphv_get_state);
 
-	// quiesce
-	PD_UNION_ARGS_FIELD(pd_quiesce_start);
-	PD_UNION_ARGS_FIELD(pd_quiesce_stop);
+        // quiesce
+        PD_UNION_ARGS_FIELD(pd_quiesce_start);
+        PD_UNION_ARGS_FIELD(pd_quiesce_stop);
+
+        // pb
+        PD_UNION_ARGS_FIELD(pd_pb_stats_get);
     };
 } pd_func_args_t;
 typedef hal_ret_t (* pd_func_t)(pd_func_args_t *args);
@@ -3811,6 +3819,9 @@ PD_FUNCP_TYPEDEF(pd_swphv_get_state);
 // quiesce
 PD_FUNCP_TYPEDEF(pd_quiesce_start);
 PD_FUNCP_TYPEDEF(pd_quiesce_stop);
+
+// pb
+PD_FUNCP_TYPEDEF(pd_pb_stats_get);
 
 #if 0
 #define PD_FUNCP_TYPEDEF(NAME)                                              \
@@ -4211,6 +4222,8 @@ PD_FUNCP_TYPEDEF(pd_swphv_get_state);
 PD_FUNCP_TYPEDEF(pd_quiesce_start);
 PD_FUNCP_TYPEDEF(pd_quiesce_stop);
 
+// pb
+PD_FUNCP_TYPEDEF(pd_pb_stats_get);
 
 typedef struct pd_call_s {
     union {
@@ -4588,6 +4601,9 @@ typedef struct pd_call_s {
         // quiesce
         PD_UNION_FIELD(pd_quiesce_start);
         PD_UNION_FIELD(pd_quiesce_stop);
+
+        // pb
+        PD_UNION_ARGS_FIELD(pd_pb_stats_get);
     };
 
 } pd_call_t;

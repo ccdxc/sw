@@ -2128,7 +2128,7 @@ capri_tm_global_init (void)
     // needs more cells
     uint32_t min_cells[] = { 0, 4096};
     uint32_t max_row[] = {4095, 2559};
-    uint32_t sched_timer; 
+    uint32_t sched_timer;
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
@@ -2686,3 +2686,100 @@ capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+capri_tm_get_pb_debug_stats(tm_port_t port, 
+                            tm_pb_debug_stats_t *debug_stats, 
+                            bool reset)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    if (!capri_tm_is_valid_port(port)) {
+        HAL_TRACE_ERR("{} is not a valid TM port",
+                      port);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    memset(debug_stats, 0, sizeof(tm_pb_debug_stats_t));
+
+    pbc_csr.cnt_flits[port].read();
+    pbc_csr.sat_write_error[port].read();
+
+    debug_stats->buffer_stats.sop_count_in = pbc_csr.cnt_flits[port].sop_in().convert_to<uint32_t>();
+    debug_stats->buffer_stats.eop_count_in = pbc_csr.cnt_flits[port].eop_in().convert_to<uint32_t>();
+    debug_stats->buffer_stats.sop_count_out = pbc_csr.cnt_flits[port].sop_out().convert_to<uint32_t>();
+    debug_stats->buffer_stats.eop_count_out = pbc_csr.cnt_flits[port].eop_out().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.intrinsic_drop_count = pbc_csr.sat_write_error[port].intrinsic_drop().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.discarded_count = pbc_csr.sat_write_error[port].discarded().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.admitted_count = pbc_csr.sat_write_error[port].admitted().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.out_of_cells_drop_count = pbc_csr.sat_write_error[port].out_of_cells().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.out_of_cells_drop_count_2 = pbc_csr.sat_write_error[port].out_of_cells1().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.out_of_credit_drop_count = pbc_csr.sat_write_error[port].out_of_credit().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.truncation_drop_count = pbc_csr.sat_write_error[port].truncation().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.port_disabled_drop_count = pbc_csr.sat_write_error[port].port_disabled().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.copy_to_cpu_tail_drop_count = pbc_csr.sat_write_error[port].tail_drop_cpu().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.span_tail_drop_count = pbc_csr.sat_write_error[port].tail_drop_span().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.min_size_violation_drop_count = pbc_csr.sat_write_error[port].min_size_viol().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.enqueue_error_drop_count = pbc_csr.sat_write_error[port].enqueue().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.invalid_port_drop_count = pbc_csr.sat_write_error[port].port_range().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts.invalid_output_queue_drop_count = pbc_csr.sat_write_error[port].oq_range().convert_to<uint32_t>();
+
+    if (reset) {
+        pbc_csr.cnt_flits[port].all(0);
+        pbc_csr.sat_write_error[port].all(0);
+
+        pbc_csr.cnt_flits[port].write();
+        pbc_csr.sat_write_error[port].write();
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.hbm.hbm_port_${p}.cnt_hbm.read();
+                pbc_csr.hbm.cnt_hbm${p}_emergency_stop.read();
+                pbc_csr.hbm.cnt_hbm${p}_write_ack_filling_up.read();
+                pbc_csr.hbm.cnt_hbm${p}_write_ack_full.read();
+                pbc_csr.hbm.cnt_hbm${p}_truncate.read();
+                pbc_csr.hbm.sat_hbm${p}_ctrl_full.read();
+
+                debug_stats->oflow_fifo_stats.sop_count_in = pbc_csr.hbm.hbm_port_${p}.cnt_hbm.flits_sop_in().convert_to<uint32_t>();
+                debug_stats->oflow_fifo_stats.eop_count_in = pbc_csr.hbm.hbm_port_${p}.cnt_hbm.flits_eop_in().convert_to<uint32_t>();
+                debug_stats->oflow_fifo_stats.sop_count_out = pbc_csr.hbm.hbm_port_${p}.cnt_hbm.flits_sop_out().convert_to<uint32_t>();
+                debug_stats->oflow_fifo_stats.eop_count_out = pbc_csr.hbm.hbm_port_${p}.cnt_hbm.flits_eop_out().convert_to<uint32_t>();
+
+                debug_stats->oflow_fifo_stats.drop_counts.occupancy_drop_count = pbc_csr.hbm.hbm_port_${p}.cnt_hbm.occupancy_drop().convert_to<uint32_t>();
+                debug_stats->oflow_fifo_stats.drop_counts.emergency_stop_drop_count = pbc_csr.hbm.cnt_hbm${p}_emergency_stop.drop().convert_to<uint32_t>();
+                debug_stats->oflow_fifo_stats.drop_counts.write_buffer_ack_fill_up_drop_count = pbc_csr.hbm.cnt_hbm${p}_write_ack_filling_up.drop().convert_to<uint32_t>();
+                debug_stats->oflow_fifo_stats.drop_counts.write_buffer_ack_full_drop_count = pbc_csr.hbm.cnt_hbm${p}_write_ack_full.drop().convert_to<uint32_t>();
+                debug_stats->oflow_fifo_stats.drop_counts.write_buffer_full_drop_count = pbc_csr.hbm.cnt_hbm${p}_truncate.drop().convert_to<uint32_t>();
+                debug_stats->oflow_fifo_stats.drop_counts.control_fifo_full_drop_count = pbc_csr.hbm.sat_hbm${p}_ctrl_full.drop().convert_to<uint32_t>();
+
+                if (reset) {
+                    pbc_csr.hbm.hbm_port_${p}.cnt_hbm.all(0);
+                    pbc_csr.hbm.cnt_hbm${p}_emergency_stop.all(0);
+                    pbc_csr.hbm.cnt_hbm${p}_write_ack_filling_up.all(0);
+                    pbc_csr.hbm.cnt_hbm${p}_write_ack_full.all(0);
+                    pbc_csr.hbm.cnt_hbm${p}_truncate.all(0);
+                    pbc_csr.hbm.sat_hbm${p}_ctrl_full.all(0);
+
+                    pbc_csr.hbm.hbm_port_${p}.cnt_hbm.write();
+                    pbc_csr.hbm.cnt_hbm${p}_emergency_stop.write();
+                    pbc_csr.hbm.cnt_hbm${p}_write_ack_filling_up.write();
+                    pbc_csr.hbm.cnt_hbm${p}_write_ack_full.write();
+                    pbc_csr.hbm.cnt_hbm${p}_truncate.write();
+                    pbc_csr.hbm.sat_hbm${p}_ctrl_full.write();
+                }
+
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            break;
+    }
+
+    return HAL_RET_OK;
+}

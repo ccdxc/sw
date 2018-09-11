@@ -165,6 +165,26 @@ policer_to_token_rate (policer_t *policer, uint64_t refresh_interval_us,
     return HAL_RET_OK;
 }
 
+static inline void
+qos_class_pd_port_to_packet_buffer_port (tm_port_t port, qos::PacketBufferPort *buf_port)
+{
+    if ((port >= TM_UPLINK_PORT_BEGIN) && (port <= TM_UPLINK_PORT_END)) {
+        buf_port->set_port_type(qos::PACKET_BUFFER_PORT_TYPE_UPLINK);
+        buf_port->set_port_num(port-TM_UPLINK_PORT_BEGIN);
+    } else if ((port >= TM_DMA_PORT_BEGIN) && (port <= TM_DMA_PORT_END)) {
+        buf_port->set_port_type(qos::PACKET_BUFFER_PORT_TYPE_DMA);
+        buf_port->set_port_num(0);
+    } else if (port == TM_PORT_INGRESS) {
+        buf_port->set_port_type(qos::PACKET_BUFFER_PORT_TYPE_P4IG);
+        buf_port->set_port_num(0);
+    } else if (port == TM_PORT_EGRESS) {
+        buf_port->set_port_type(qos::PACKET_BUFFER_PORT_TYPE_P4EG);
+        buf_port->set_port_num(0);
+    } else {
+        HAL_ASSERT(0);
+    }
+}
+
 }   // namespace pd
 }   // namespace hal
 

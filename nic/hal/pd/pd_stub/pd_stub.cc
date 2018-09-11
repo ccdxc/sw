@@ -400,7 +400,8 @@ PD_FUNC_STUB(pd_get_slab);
 PD_FUNC_STUB(pd_quiesce_start);
 PD_FUNC_STUB(pd_quiesce_stop);
 
-
+// pb
+PD_FUNC_STUB(pd_pb_stats_get);
 }   // namespace pd
 }   // namespace hal
 

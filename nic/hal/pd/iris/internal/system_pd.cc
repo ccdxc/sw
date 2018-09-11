@@ -8,6 +8,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
+#include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -612,6 +613,72 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
         return HAL_RET_ERR;
     }
     return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_pb_stats_get (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t              first_err_ret = HAL_RET_OK;
+    hal_ret_t              ret = HAL_RET_OK;
+    pd_pb_stats_get_args_t *args = pd_func_args->pd_pb_stats_get;
+    pd_system_args_t       *pd_sys_args = args->pd_sys_args;
+    SystemResponse         *rsp = pd_sys_args->rsp;
+    sys::PacketBufferStats *pb_stats;
+    tm_pb_debug_stats_t    debug_stats = {};
+    unsigned               port;
+    // TODO: Hook up the reset flag to API call
+    bool                   reset = false;
+
+    HAL_TRACE_DEBUG("Querying PB stats");
+    pb_stats = rsp->mutable_stats()->mutable_packet_buffer_stats();
+
+    for (port = 0; port < TM_NUM_PORTS; port++) {
+        ret = capri_tm_get_pb_debug_stats(port, &debug_stats, reset);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get pb debug stats for port {} ret {}",
+                          port, ret);
+            // Continue
+            if (first_err_ret != HAL_RET_OK) {
+                first_err_ret = ret;
+            }
+        }
+
+        auto port_stats = pb_stats->add_port_stats();
+        qos_class_pd_port_to_packet_buffer_port(port, port_stats->mutable_packet_buffer_port());
+        port_stats->mutable_buffer_stats()->set_sop_count_in(debug_stats.buffer_stats.sop_count_in);
+        port_stats->mutable_buffer_stats()->set_eop_count_in(debug_stats.buffer_stats.eop_count_in);
+        port_stats->mutable_buffer_stats()->set_sop_count_out(debug_stats.buffer_stats.sop_count_out);
+        port_stats->mutable_buffer_stats()->set_eop_count_out(debug_stats.buffer_stats.eop_count_out);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_intrinsic_drop_count(debug_stats.buffer_stats.drop_counts.intrinsic_drop_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_discarded_count(debug_stats.buffer_stats.drop_counts.discarded_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_admitted_count(debug_stats.buffer_stats.drop_counts.admitted_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_out_of_cells_drop_count(debug_stats.buffer_stats.drop_counts.out_of_cells_drop_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_out_of_cells_drop_count_2(debug_stats.buffer_stats.drop_counts.out_of_cells_drop_count_2);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_out_of_credit_drop_count(debug_stats.buffer_stats.drop_counts.out_of_credit_drop_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_truncation_drop_count(debug_stats.buffer_stats.drop_counts.truncation_drop_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_port_disabled_drop_count(debug_stats.buffer_stats.drop_counts.port_disabled_drop_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_copy_to_cpu_tail_drop_count(debug_stats.buffer_stats.drop_counts.copy_to_cpu_tail_drop_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_span_tail_drop_count(debug_stats.buffer_stats.drop_counts.span_tail_drop_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_min_size_violation_drop_count(debug_stats.buffer_stats.drop_counts.min_size_violation_drop_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_enqueue_error_drop_count(debug_stats.buffer_stats.drop_counts.enqueue_error_drop_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_invalid_port_drop_count(debug_stats.buffer_stats.drop_counts.invalid_port_drop_count);
+        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_invalid_output_queue_drop_count(debug_stats.buffer_stats.drop_counts.invalid_output_queue_drop_count);
+
+        port_stats->mutable_oflow_fifo_stats()->set_sop_count_in(debug_stats.oflow_fifo_stats.sop_count_in);
+        port_stats->mutable_oflow_fifo_stats()->set_eop_count_in(debug_stats.oflow_fifo_stats.eop_count_in);
+        port_stats->mutable_oflow_fifo_stats()->set_sop_count_out(debug_stats.oflow_fifo_stats.sop_count_out);
+        port_stats->mutable_oflow_fifo_stats()->set_eop_count_out(debug_stats.oflow_fifo_stats.eop_count_out);
+
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_occupancy_drop_count(debug_stats.oflow_fifo_stats.drop_counts.occupancy_drop_count);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_emergency_stop_drop_count(debug_stats.oflow_fifo_stats.drop_counts.emergency_stop_drop_count);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_write_buffer_ack_fill_up_drop_count(debug_stats.oflow_fifo_stats.drop_counts.write_buffer_ack_fill_up_drop_count);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_write_buffer_ack_full_drop_count(debug_stats.oflow_fifo_stats.drop_counts.write_buffer_ack_full_drop_count);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_write_buffer_full_drop_count(debug_stats.oflow_fifo_stats.drop_counts.write_buffer_full_drop_count);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_control_fifo_full_drop_count(debug_stats.oflow_fifo_stats.drop_counts.control_fifo_full_drop_count);
+
+    }
+
+    return ret;
 }
 
 }    // namespace pd

@@ -442,6 +442,8 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_QUIESCE_START, pd_quiesce_start);
     PD_FUNC_LOAD(PD_FUNC_ID_QUIESCE_STOP, pd_quiesce_stop);
 
+    // pb
+    PD_FUNC_LOAD(PD_FUNC_ID_PB_STATS_GET, pd_pb_stats_get);
     return ret;
 }
 

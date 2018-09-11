@@ -505,6 +505,13 @@ system_get (SystemResponse *rsp)
         goto end;
     }
 
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_PB_STATS_GET, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get packet buffer stats, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        goto end;
+    }
+
     // FTE stats get
     system_fte_stats_get(rsp);
     if (ret != HAL_RET_OK) {
