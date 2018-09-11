@@ -52,8 +52,8 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml json")
-	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", true, "display in json format")
-	rootCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", false, "display in tabular format")
+	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", false, "display in json format")
+	rootCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", true, "display in tabular format")
 
 	rootCmd.GenBashCompletionFile("penctl.sh")
 }
@@ -105,8 +105,8 @@ func cliPreRunInit(cmd *cobra.Command, args []string) error {
 }
 
 func processFlags(cmd *cobra.Command, args []string) {
-	if cmd.Flags().Changed("yaml") || cmd.Flags().Changed("tabular") {
-		jsonFormat = false
+	if cmd.Flags().Changed("yaml") || cmd.Flags().Changed("json") {
+		tabularFormat = false
 	}
 	if verbose {
 		fmt.Printf("jsonFormat: %t, yamlFormat: %t, tabularFormat: %t\n", jsonFormat, yamlFormat, tabularFormat)
