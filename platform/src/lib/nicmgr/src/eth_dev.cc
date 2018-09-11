@@ -497,8 +497,8 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     rsp->dev.ntxqs_per_lif = spec->txq_count;
     rsp->dev.nrxqs_per_lif = spec->rxq_count;
     rsp->dev.nintrs = spec->intr_count;
-    rsp->dev.nucasts_per_lif = 0;
-    rsp->dev.nmcasts_per_lif = 0;
+    rsp->dev.nucasts_per_lif = 32;
+    rsp->dev.nmcasts_per_lif = 32;
     // TODO: Split these into ethernet & rdma
     rsp->dev.nadminqs_per_lif = spec->adminq_count + spec->rdma_adminq_count;
     rsp->dev.neqs_per_lif = spec->eq_count + spec->rdma_eq_count;
