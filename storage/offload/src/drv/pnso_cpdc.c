@@ -20,6 +20,36 @@
 #define PNSO_NUM_OBJECTS		8
 #define PNSO_NUM_OBJECTS_IN_OBJECT	16
 
+uint64_t pad_buffer;
+
+static pnso_error_t
+alloc_pad_buffer(void)
+{
+	pnso_error_t err = EINVAL;
+
+	pad_buffer = osal_rmem_aligned_alloc(PNSO_MEM_ALIGN_PAGE,
+			PNSO_MEM_ALIGN_PAGE);
+	if (pad_buffer <= 0) {
+		OSAL_LOG_ERROR("failed to allocate static pad buffer! err: %d",
+				err);
+		goto out;
+	}
+	/* TODO-chain: uncomment when rmem virt/phy addr is fixed */
+	// memset((void *) pad_buffer, 0, PNSO_MEM_ALIGN_PAGE);
+
+	err = PNSO_OK;
+	OSAL_LOG_ERROR("aligned pad buffer allocated and initialized! pad_buffer: 0x%llx",
+			pad_buffer);
+out:
+	return err;
+}
+
+static inline void
+free_pad_buffer(uint64_t pad_buffer)
+{
+	osal_rmem_free(pad_buffer, PNSO_MEM_ALIGN_PAGE);
+}
+
 static void
 deinit_mpools(struct per_core_resource *pc_res)
 {
@@ -154,6 +184,10 @@ cpdc_init_accelerator(const struct cpdc_init_params *init_params,
 	if (err)
 		goto out_mpools;
 
+	err = alloc_pad_buffer();
+	if (err)
+		goto out_mpools;
+
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 
@@ -170,6 +204,8 @@ cpdc_deinit_accelerator(struct per_core_resource *pc_res)
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(pc_res);
+
+	free_pad_buffer(pad_buffer);
 
 	deinit_mpools(pc_res);
 
