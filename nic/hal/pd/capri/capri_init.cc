@@ -1205,9 +1205,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     }
 
     if (ret == HAL_RET_OK) {
-        if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) {
-            ret = hal::pd::capri_barco_crypto_init();
-        }
+        ret = hal::pd::capri_barco_crypto_init();
     }
 
     if (ret == HAL_RET_OK) {
