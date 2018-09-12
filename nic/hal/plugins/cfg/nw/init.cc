@@ -7,7 +7,10 @@
 #include "nic/gen/hal/svc/endpoint_svc_gen.hpp"
 #include "nic/hal/svc/session_svc.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/hal_state.hpp"
+#include "nic/include/hal_cfg.hpp"
 #include "nic/hal/hal.hpp"
 
 using grpc::Server;
@@ -51,10 +54,42 @@ svc_reg (ServerBuilder *server_builder, hal::hal_feature_set_t feature_set)
     return;
 }
 
+//------------------------------------------------------------------------------
+// create CPU interface, this will be used by FTEs to receive packets from
+// dataplane and to inject packets into the dataplane
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+hal_cpu_if_create (uint32_t lif_id)
+{
+    InterfaceSpec      spec;
+    InterfaceResponse  response;
+    hal_ret_t          ret;
+
+    spec.mutable_key_or_handle()->set_interface_id(IF_ID_CPU);
+    spec.set_type(::intf::IfType::IF_TYPE_CPU);
+    spec.set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+    spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = interface_create(spec, &response);
+    if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
+        HAL_TRACE_DEBUG("CPU interface {} create success, handle {}",
+                        IF_ID_CPU, response.status().if_handle());
+    } else {
+        HAL_TRACE_ERR("CPU interface {} create failed, err : {}",
+                      IF_ID_CPU, ret);
+    }
+    hal::hal_cfg_db_close();
+
+    return HAL_RET_OK;
+}
+
 // initialization routine for network module
 extern "C" hal_ret_t
 init (hal_cfg_t *hal_cfg)
 {
+    hal_ret_t ret = HAL_RET_OK;
+
     svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
 
     // set the forwarding mode
@@ -62,6 +97,10 @@ init (hal_cfg_t *hal_cfg)
 
     // default set to local switch prom. for DOLs to pass
     g_hal_state->set_allow_local_switch_for_promiscuous(true);
+
+    // create cpu interface
+    ret = hal_cpu_if_create(SERVICE_LIF_CPU);
+    HAL_ABORT(ret == HAL_RET_OK);
 
     return HAL_RET_OK;
 }

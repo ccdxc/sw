@@ -249,11 +249,6 @@ hal_init (hal_cfg_t *hal_cfg)
         fte::disable_fte();
     }
 
-    // do proxy init
-    if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {
-        hal_proxy_svc_init();
-    }
-
     // install default HAL configuration
     HAL_ABORT(hal_default_cfg_init(hal_cfg) == HAL_RET_OK);
 

@@ -33,36 +33,6 @@ hal_cfg_db_close (void)
     return g_hal_state->cfg_db()->db_close();
 }
 
-//------------------------------------------------------------------------------
-// create CPU interface, this will be used by FTEs to receive packets from
-// dataplane and to inject packets into the dataplane
-//------------------------------------------------------------------------------
-static hal_ret_t inline
-hal_cpu_if_create (uint32_t lif_id)
-{
-    InterfaceSpec      spec;
-    InterfaceResponse  response;
-    hal_ret_t          ret;
-
-    spec.mutable_key_or_handle()->set_interface_id(IF_ID_CPU);
-    spec.set_type(::intf::IfType::IF_TYPE_CPU);
-    spec.set_admin_status(::intf::IfStatus::IF_STATUS_UP);
-    spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = interface_create(spec, &response);
-    if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
-        HAL_TRACE_DEBUG("CPU interface {} create success, handle {}",
-                        IF_ID_CPU, response.status().if_handle());
-    } else {
-        HAL_TRACE_ERR("CPU interface {} create failed, err : {}",
-                      IF_ID_CPU, ret);
-    }
-    hal::hal_cfg_db_close();
-
-    return HAL_RET_OK;
-}
-
 static hal_ret_t inline
 hal_uplink_if_create (uint64_t if_id, uint32_t port_num)
 {
@@ -412,10 +382,6 @@ hal_ret_t
 hal_default_cfg_init (hal_cfg_t *hal_cfg)
 {
     hal_ret_t    ret;
-
-    // create cpu interface
-    ret = hal_cpu_if_create(SERVICE_LIF_CPU);
-    HAL_ABORT(ret == HAL_RET_OK);
 
     // do QoS initialization
     ret = hal_qos_config_init(hal_cfg);

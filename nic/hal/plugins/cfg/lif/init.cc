@@ -3,6 +3,7 @@
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
+#include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/hal_cfg.hpp"
 
 using grpc::Server;
@@ -31,6 +32,11 @@ lif_init (hal_cfg_t *hal_cfg)
     // Allocate LIF 0, so that we don't use it later
     int32_t hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
     HAL_TRACE_DEBUG("Allocated hw_lif_id:{}", hw_lif_id);
+
+    // Proxy Init
+    if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {
+        hal_proxy_svc_init();
+    }
 
     return HAL_RET_OK;
 }

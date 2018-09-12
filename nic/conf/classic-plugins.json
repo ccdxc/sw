@@ -11,10 +11,19 @@
             "features"  : ["fwding"]
         },
         {
+            "name"      : "lif",
+            "provider"  : "pensando.io",
+            "lib"       : "lif/liblif.so",
+            "init_func" : "lif_init",
+            "exit_func" : "lif_exit",
+            "auto_load" : "true"
+        },
+        {
             "name"      : "nw",
             "provider"  : "pensando.io",
             "lib"       : "nw/libnw.so",
-            "auto_load" : "true"
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/lif"]
         },
         {
             "name"      : "mcast",
@@ -22,15 +31,6 @@
             "lib"       : "mcast/libmcast.so",
             "init_func" : "mcast_init",
             "exit_func" : "mcast_exit",
-            "auto_load" : "true",
-            "deps"      : ["pensando.io/nw"]
-        },
-        {
-            "name"      : "lif",
-            "provider"  : "pensando.io",
-            "lib"       : "lif/liblif.so",
-            "init_func" : "lif_init",
-            "exit_func" : "lif_exit",
             "auto_load" : "true",
             "deps"      : ["pensando.io/nw"]
         }
