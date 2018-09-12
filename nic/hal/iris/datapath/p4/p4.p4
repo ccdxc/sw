@@ -4,6 +4,7 @@
 #include "include/i2e_metadata.p4"
 #include "include/table_sizes.h"
 #include "nic/p4/include/intrinsic.p4"
+#include "nic/p4/include/app_headers.p4"
 #include "nic/p4/include/common_defines.h"
 #include "l4.p4"
 #include "nat.p4"

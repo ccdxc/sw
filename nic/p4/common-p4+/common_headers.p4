@@ -1,4 +1,6 @@
 #include "../../p4/include/intrinsic.p4"
+#include "../../p4/include/app_headers.p4"
+
 #include "capri_dma_cmd.p4"
 #include "capri_doorbell.p4"
 
