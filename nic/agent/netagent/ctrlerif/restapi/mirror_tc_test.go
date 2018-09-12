@@ -307,6 +307,7 @@ func prepareMirrorSessionDropTestCases() []mirrorSessionCreateUpdateDeleteProto 
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize:    128,
+			Enable:        true,
 			PacketFilters: []string{"ALL_DROPS"},
 			CaptureAt:     0,
 			Collectors: []tsproto.MirrorCollector{
@@ -323,6 +324,7 @@ func prepareMirrorSessionDropTestCases() []mirrorSessionCreateUpdateDeleteProto 
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize:    256, //Modified
+			Enable:        true,
 			PacketFilters: []string{"ALL_DROPS"},
 			CaptureAt:     1, // Modified
 			Collectors: []tsproto.MirrorCollector{
@@ -349,6 +351,7 @@ func prepareMirrorSessionDropTestCases() []mirrorSessionCreateUpdateDeleteProto 
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize:    128,
+			Enable:        true,
 			PacketFilters: []string{"NETWORK_POLICY_DROP"},
 			CaptureAt:     0,
 			Collectors: []tsproto.MirrorCollector{
@@ -365,6 +368,7 @@ func prepareMirrorSessionDropTestCases() []mirrorSessionCreateUpdateDeleteProto 
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize:    256, //Modified
+			Enable:        true,
 			PacketFilters: []string{"NETWORK_POLICY_DROP"},
 			CaptureAt:     1, // Modified
 			Collectors: []tsproto.MirrorCollector{
@@ -391,6 +395,7 @@ func prepareMirrorSessionDropTestCases() []mirrorSessionCreateUpdateDeleteProto 
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize:    128,
+			Enable:        true,
 			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
 			CaptureAt:     0,
 			Collectors: []tsproto.MirrorCollector{
@@ -407,6 +412,7 @@ func prepareMirrorSessionDropTestCases() []mirrorSessionCreateUpdateDeleteProto 
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize:    256, //Modified
+			Enable:        true,
 			PacketFilters: []string{"FIREWALL_POLICY_DROP"},
 			CaptureAt:     1, // Modified
 			Collectors: []tsproto.MirrorCollector{
@@ -442,6 +448,7 @@ func prepareMirrorSessionFlowRuleIPAddrTestCases() []mirrorSessionCreateUpdateDe
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -481,7 +488,8 @@ func prepareMirrorSessionFlowRuleIPAddrTestCases() []mirrorSessionCreateUpdateDe
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -530,6 +538,7 @@ func prepareMirrorSessionFlowRuleIPAddrTestCases() []mirrorSessionCreateUpdateDe
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -569,7 +578,8 @@ func prepareMirrorSessionFlowRuleIPAddrTestCases() []mirrorSessionCreateUpdateDe
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -608,6 +618,7 @@ func prepareMirrorSessionFlowRuleIPAddrTestCases() []mirrorSessionCreateUpdateDe
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -636,7 +647,8 @@ func prepareMirrorSessionFlowRuleIPAddrTestCases() []mirrorSessionCreateUpdateDe
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -676,6 +688,77 @@ func prepareMirrorSessionFlowRuleIPAddrTestCases() []mirrorSessionCreateUpdateDe
 		},
 	}
 	testCases = append(testCases, tc)
+	// case2.4: destIPaddr, ipProto, L4port, 1 rules for matching, one more rule added during modification
+	tc.cProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_*sip_dip_proto_l4port_1_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 128,
+			Enable:     true,
+			CaptureAt:  0,
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"10.1.1.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+			},
+		},
+	}
+	tc.uProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_*sip_dip_proto_l4port_1_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 256, //Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"192.1.1.2"}, // modified
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+				// rule added
+				{
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1010"},
+					},
+				},
+			},
+		},
+	}
+	tc.dProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_*sip_dip_proto_l4port_1_rule_added",
+		},
+	}
+	testCases = append(testCases, tc)
 
 	return testCases
 }
@@ -696,6 +779,7 @@ func prepareMirrorSessionFlowRuleIPSubnetTestCases() []mirrorSessionCreateUpdate
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -735,7 +819,8 @@ func prepareMirrorSessionFlowRuleIPSubnetTestCases() []mirrorSessionCreateUpdate
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -785,6 +870,7 @@ func prepareMirrorSessionFlowRuleIPSubnetTestCases() []mirrorSessionCreateUpdate
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -824,7 +910,8 @@ func prepareMirrorSessionFlowRuleIPSubnetTestCases() []mirrorSessionCreateUpdate
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -864,6 +951,7 @@ func prepareMirrorSessionFlowRuleIPSubnetTestCases() []mirrorSessionCreateUpdate
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -892,7 +980,8 @@ func prepareMirrorSessionFlowRuleIPSubnetTestCases() []mirrorSessionCreateUpdate
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -952,6 +1041,7 @@ func prepareMirrorSessionFlowRuleDipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -991,7 +1081,8 @@ func prepareMirrorSessionFlowRuleDipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -1041,6 +1132,7 @@ func prepareMirrorSessionFlowRuleDipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -1080,7 +1172,8 @@ func prepareMirrorSessionFlowRuleDipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -1120,6 +1213,7 @@ func prepareMirrorSessionFlowRuleDipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -1148,7 +1242,8 @@ func prepareMirrorSessionFlowRuleDipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -1208,6 +1303,7 @@ func prepareMirrorSessionFlowRuleSipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -1247,7 +1343,8 @@ func prepareMirrorSessionFlowRuleSipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -1297,6 +1394,7 @@ func prepareMirrorSessionFlowRuleSipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -1336,7 +1434,8 @@ func prepareMirrorSessionFlowRuleSipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -1376,6 +1475,7 @@ func prepareMirrorSessionFlowRuleSipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -1404,7 +1504,8 @@ func prepareMirrorSessionFlowRuleSipSubnetTestCases() []mirrorSessionCreateUpdat
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -1464,6 +1565,7 @@ func prepareMirrorSessionFlowRuleEPTestCases() []mirrorSessionCreateUpdateDelete
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -1503,7 +1605,8 @@ func prepareMirrorSessionFlowRuleEPTestCases() []mirrorSessionCreateUpdateDelete
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -1552,6 +1655,7 @@ func prepareMirrorSessionFlowRuleEPTestCases() []mirrorSessionCreateUpdateDelete
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -1591,7 +1695,8 @@ func prepareMirrorSessionFlowRuleEPTestCases() []mirrorSessionCreateUpdateDelete
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
@@ -1630,6 +1735,7 @@ func prepareMirrorSessionFlowRuleEPTestCases() []mirrorSessionCreateUpdateDelete
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 128,
+			Enable:     true,
 			CaptureAt:  0,
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
@@ -1658,7 +1764,8 @@ func prepareMirrorSessionFlowRuleEPTestCases() []mirrorSessionCreateUpdateDelete
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize: 256, //Modified
-			CaptureAt:  1,   // Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
 			Collectors: []tsproto.MirrorCollector{
 				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},

@@ -36,6 +36,7 @@ func TestMirrorSessionPost(t *testing.T) {
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize:    128,
+			Enable:        true,
 			PacketFilters: []string{"ALL_DROPS"},
 			CaptureAt:     0,
 			Collectors: []tsproto.MirrorCollector{
@@ -69,6 +70,7 @@ func TestMirrorSessionUpdate(t *testing.T) {
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize:    128,
+			Enable:        true,
 			PacketFilters: []string{"ALL_DROPS"},
 			CaptureAt:     0,
 			Collectors: []tsproto.MirrorCollector{
@@ -90,6 +92,7 @@ func TestMirrorSessionUpdate(t *testing.T) {
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize:    256,
+			Enable:        true,
 			PacketFilters: []string{"ALL_DROPS"},
 			CaptureAt:     1,
 			Collectors: []tsproto.MirrorCollector{
@@ -121,6 +124,7 @@ func TestMirrorSessionDelete(t *testing.T) {
 		},
 		Spec: tsproto.MirrorSessionSpec{
 			PacketSize:    128,
+			Enable:        true,
 			PacketFilters: []string{"ALL_DROPS"},
 			CaptureAt:     0,
 			Collectors: []tsproto.MirrorCollector{

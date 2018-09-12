@@ -657,6 +657,9 @@ func expandCompositeMatchRule(mirrorSession *tsproto.MirrorSession, rule *tsprot
 				srcMACs = append(srcMACs, binary.BigEndian.Uint64(hwMac))
 			}
 		}
+	} else {
+		srcIPs = append(srcIPs, buildIPAddrDetails("0/0"))
+		srcIPStrings = append(srcIPStrings, "0/0")
 	}
 	if destSelectors != nil {
 		if len(destSelectors.Endpoints) > 0 {
@@ -672,12 +675,12 @@ func expandCompositeMatchRule(mirrorSession *tsproto.MirrorSession, rule *tsprot
 				nAgent.Unlock()
 				if ok {
 					if epObj.Spec.IPv4Address != "" {
-						srcIPs = append(srcIPs, buildIPAddrDetails(epObj.Spec.IPv4Address))
-						srcIPStrings = append(srcIPStrings, epObj.Spec.IPv4Address)
+						destIPs = append(destIPs, buildIPAddrDetails(epObj.Spec.IPv4Address))
+						destIPStrings = append(destIPStrings, epObj.Spec.IPv4Address)
 					}
 					if epObj.Spec.IPv6Address != "" {
-						srcIPs = append(srcIPs, buildIPAddrDetails(epObj.Spec.IPv6Address))
-						srcIPStrings = append(srcIPStrings, epObj.Spec.IPv6Address)
+						destIPs = append(destIPs, buildIPAddrDetails(epObj.Spec.IPv6Address))
+						destIPStrings = append(destIPStrings, epObj.Spec.IPv6Address)
 					}
 				}
 			}
@@ -692,6 +695,9 @@ func expandCompositeMatchRule(mirrorSession *tsproto.MirrorSession, rule *tsprot
 				destMACs = append(destMACs, binary.BigEndian.Uint64(hwMac))
 			}
 		}
+	} else {
+		destIPs = append(destIPs, buildIPAddrDetails("0/0"))
+		destIPStrings = append(destIPStrings, "0/0")
 	}
 	if appSelectors != nil {
 		if len(appSelectors.Ports) > 0 {
@@ -1914,15 +1920,30 @@ func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSes
 	if err == nil {
 		key := objectKey(pcSession.ObjectMeta, pcSession.TypeMeta)
 		if update {
-			// Program datapath with updated packet capture session. Updated spec can drop match rules. Modify/Delete
-			// match rules if update spec is programmed on datapath. Upaate/delete of prior/old ruleIDs that are
-			// associated with mirrorSession are done after datapath is programmed successfully.
+			// mirror session update moved from disable --> enable
+			// create all match selectors and drop rules in both DB and HAL.
+			// There is no purge list to process.
+			// mirror session update moved from enable --> disable
+			// Delete all match selector rules in both DB and HAL. Keep Mirror Obj
+
+			// Enabled mirrorSession updated with spec changes in enable mode again.
+			// Program datapath with updated packet capture session.
+			// Updated spec can drop match rules. Modify/Delete
+			// match rules if update spec is programmed on datapath.
+			// Upaate/delete of prior/old ruleIDs that are
+			// associated with mirrorSession are done after datapath is
+			// programmed successfully.
 			purgedFlowRuleIDs, purgedDropRuleIDs, err := tsa.Datapath.UpdatePacketCaptureSession(key, vrfID, &tsa.DB,
 				mirrorProtoObjs.MirrorSessionProtoObjs, mirrorProtoObjs.FlowRuleProtoObjs, mirrorProtoObjs.DropRuleProtoObjs)
 			if err == nil {
-				deleteFmRuleIDs, deleteDropRuleIDs, err = tsa.deleteModifyMirrorSessionRules(pcSession, purgedFlowRuleIDs, purgedDropRuleIDs)
+				deleteFmRuleIDs, deleteDropRuleIDs, err = tsa.deleteModifyMirrorSessionRules(pcSession,
+					purgedFlowRuleIDs, purgedDropRuleIDs)
 			}
 		} else {
+			// create with  enable
+			// create with  disable
+			//      Just create mirrorSession Obj in DB
+			//      Do not create rules/collectorSpec in both DB and HAL
 			err = tsa.Datapath.CreatePacketCaptureSession(key, vrfID, &tsa.DB, mirrorProtoObjs.MirrorSessionProtoObjs,
 				mirrorProtoObjs.FlowRuleProtoObjs, mirrorProtoObjs.DropRuleProtoObjs)
 		}
@@ -2049,7 +2070,15 @@ func (tsa *Tagent) CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 		log.Info("Received duplicate mirror session create {%+v}", pcSession.Name)
 		return nil
 	}
-
+	if !pcSession.Spec.Enable {
+		// Session created in disable mode. Just store the mirrorSession in DB
+		// At later time, update mirrorsession will trigger setting up mirror
+		// session in HW. Update mirrorSession object will also carry required
+		// drop/monitor rules.
+		key := objectKey(pcSession.ObjectMeta, pcSession.TypeMeta)
+		tsa.DB.MirrorSessionDB[key] = pcSession
+		return nil
+	}
 	return tsa.createUpdatePacketCaptureSession(pcSession, false)
 }
 
@@ -2070,7 +2099,10 @@ func (tsa *Tagent) UpdatePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 		log.Errorf("MirrorSession %v does not exist to update", pcSession.Name)
 		return ErrInvalidMirrorSpec
 	}
-	return tsa.createUpdatePacketCaptureSession(pcSession, true)
+	if pcSession.Spec.Enable {
+		return tsa.createUpdatePacketCaptureSession(pcSession, true)
+	}
+	return nil
 }
 
 // DeletePacketCaptureSession deletes packet capture session.
