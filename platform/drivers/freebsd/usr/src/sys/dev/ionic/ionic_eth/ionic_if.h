@@ -1466,8 +1466,10 @@ struct modify_qp_cmd {
 	u64 header_template;
 	u32 header_template_size;
 	u32 header_template_ah_id;
-	
-	u32 rsvd2[5];
+	u32 path_mtu;
+	u8 rrq_depth;
+	u8 rsq_depth;
+	u8 rsvd[14];
 };
 
 /**
