@@ -9,6 +9,8 @@ import (
 
 	"net"
 
+	"runtime"
+
 	mock "github.com/pensando/sw/venice/utils/syslog/mock"
 	tu "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -91,16 +93,22 @@ func TestAppName(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	sockPath := "/dev/log"
+	var sockPath string
+
+	if runtime.GOOS == "darwin" {
+		sockPath = "/var/run/syslog"
+	} else {
+		sockPath = "/dev/log"
+	}
 
 	if _, err := os.Stat(sockPath); err != nil {
 		if os.IsNotExist(err) != true {
-			fmt.Printf("+++failed to access syslog socket, err: %s \n", err)
+			fmt.Printf("failed to access syslog socket, err: %s \n", err)
 			os.Exit(2)
 		}
 		ln, err := net.Listen("unix", sockPath)
 		if err != nil {
-			fmt.Printf("+++failed to setup syslog socket, err: %s \n", err)
+			fmt.Printf("failed to setup syslog socket, err: %s \n", err)
 			os.Exit(2)
 		}
 		defer ln.Close()
