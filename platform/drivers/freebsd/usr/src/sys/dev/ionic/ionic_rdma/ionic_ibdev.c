@@ -1563,8 +1563,7 @@ static int ionic_v0_create_ah_cmd(struct ionic_ibdev *dev,
 		},
 	};
 	struct ib_ud_header *hdr;
-	//void *hdr_buf;
-	struct rdma_create_ah_data *hdr_buf;
+	void *hdr_buf;
 	dma_addr_t hdr_dma = 0;
 	int rc, hdr_len = 0;
 
@@ -1578,59 +1577,23 @@ static int ionic_v0_create_ah_cmd(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_buf;
 
-	/* XXX create ah should take header template */
-	//hdr_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
-	hdr_buf = kmalloc(sizeof(*hdr_buf), GFP_ATOMIC);
+	hdr_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
 	if (!hdr_buf) {
 		rc = -ENOMEM;
 		goto err_buf;
 	}
 
-	/* XXX create ah should take header template */
-	//hdr_len = ib_ud_header_pack(hdr, hdr_buf);
-	//hdr_len -= IB_BTH_BYTES;
-	//hdr_len -= IB_DETH_BYTES;
-	//hdr_len -= IB_UDP_BYTES;
-	//
-	//if (ionic_xxx_udp)
-	//	hdr_len += IB_UDP_BYTES;
-	//
-	//dev_dbg(&dev->ibdev.dev, "roce packet header template\n");
-	//print_hex_dump_debug("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
-	//		     hdr_buf, hdr_len, true);
+	hdr_len = ib_ud_header_pack(hdr, hdr_buf);
+	hdr_len -= IB_BTH_BYTES;
+	hdr_len -= IB_DETH_BYTES;
+	hdr_len -= IB_UDP_BYTES;
 
-	/* XXX create ah should take header template (delete code below) */
+	if (ionic_xxx_udp)
+		hdr_len += IB_UDP_BYTES;
 
-	ether_addr_copy(hdr_buf->smac, hdr->eth.smac_h);
-	ether_addr_copy(hdr_buf->dmac, hdr->eth.dmac_h);
-
-	if (hdr->vlan_present) {
-		hdr_buf->vlan = 0xffff;
-		hdr_buf->vlan_cfi = 0;
-		hdr_buf->vlan_pri = 0;
-	} else {
-		hdr_buf->vlan = (__force int)hdr->vlan.tag & 0xfff;
-		hdr_buf->vlan_cfi = ((__force int)hdr->vlan.tag >> 12) & 1;
-		hdr_buf->vlan_pri = ((__force int)hdr->vlan.tag >> 13) & 7;
-	}
-
-	if (hdr->ipv4_present) {
-		hdr_buf->ip_ver = 4;
-		hdr_buf->ip_tos = hdr->ip4.tos;
-		hdr_buf->ip_ttl = hdr->ip4.ttl;
-		hdr_buf->ip.v4.saddr = (__force unsigned)hdr->ip4.saddr;
-		hdr_buf->ip.v4.daddr = (__force unsigned)hdr->ip4.daddr;
-	} else {
-		hdr_buf->ip_ver = 6;
-		hdr_buf->ip_tos = hdr->grh.traffic_class;
-		hdr_buf->ip_ttl = hdr->grh.hop_limit;
-		memcpy(hdr_buf->ip.v6.saddr, &hdr->grh.source_gid, 16);
-		memcpy(hdr_buf->ip.v6.daddr, &hdr->grh.destination_gid, 16);
-	}
-
-	hdr_len = sizeof(*hdr_buf);
-
-	/* XXX create ah should take header template (delete code above) */
+	dev_dbg(&dev->ibdev.dev, "roce packet header template\n");
+	print_hex_dump_debug("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
+			     hdr_buf, hdr_len, true);
 
 	hdr_dma = dma_map_single(dev->hwdev, hdr_buf, hdr_len,
 				 DMA_TO_DEVICE);
@@ -1639,7 +1602,8 @@ static int ionic_v0_create_ah_cmd(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_dma;
 
-	admin.cmd.create_ah.hdr_info = hdr_dma;
+	admin.cmd.create_ah.header_template = hdr_dma;
+	admin.cmd.create_ah.header_template_size = hdr_len;
 
 #ifndef ADMINQ
 	/* XXX for nicmgr: side-data */
