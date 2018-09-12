@@ -34,7 +34,7 @@ from factory.objects.rdma.descriptor import RdmaSge
 from infra.common.glopts import GlobalOptions
 
 class QpObject(base.ConfigObjectBase):
-    def __init__(self, pd, qp_id, spec):
+    def __init__(self, pd, qp_id, spec, sges):
         super().__init__()
         self.Clone(Store.templates.Get('QPAIR_RDMA'))
         self.pd = pd
@@ -52,11 +52,16 @@ class QpObject(base.ConfigObjectBase):
         self.sq_in_nic = spec.sq_in_nic
         self.rq_in_nic = spec.rq_in_nic
 
-        self.num_sq_sges = spec.num_sq_sges
+        # we can use this tiny attribute to filter testcases
+        self.tiny = False
+        if sges <= 2:
+            self.tiny = True
+
+        self.num_sq_sges = sges
         self.num_sq_wqes = self.__roundup_to_pow_2(spec.num_sq_wqes)
         self.num_rrq_wqes = self.__roundup_to_pow_2(spec.num_rrq_wqes)
 
-        self.num_rq_sges = spec.num_rq_sges
+        self.num_rq_sges = sges
         self.num_rq_wqes = self.__roundup_to_pow_2(spec.num_rq_wqes)
         self.num_rsq_wqes = self.__roundup_to_pow_2(spec.num_rsq_wqes)
 
@@ -430,7 +435,9 @@ class QpObjectHelper:
                        (count, rc_spec.svc_name, pd.GID()))
         for i in range(count):
             qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
-            qp = QpObject(pd, qp_id, rc_spec)
+            sges = 2 << i
+            logger.info("RC: qp_id: %d sges: %d" %(qp_id, sges))
+            qp = QpObject(pd, qp_id, rc_spec, sges)
             self.qps.append(qp)
             j += 1
 
@@ -441,7 +448,9 @@ class QpObjectHelper:
                        (count, rc_spec.svc_name, pd.GID()))
         for i in range(count):
             qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
-            qp = QpObject(pd, qp_id, rc_spec)
+            sges = 2 << i
+            logger.info("PerfRC: qp_id: %d sges: %d" %(qp_id, sges))
+            qp = QpObject(pd, qp_id, rc_spec, sges)
             self.perf_qps.append(qp)
             j += 1
 
@@ -453,7 +462,9 @@ class QpObjectHelper:
                        (count, ud_spec.svc_name, pd.GID()))
         for i in range(count):
             qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
-            qp = QpObject(pd, qp_id, ud_spec)
+            sges = 2 << i
+            logger.info("UD: qp_id: %d sges: %d" %(qp_id, sges))
+            qp = QpObject(pd, qp_id, ud_spec, sges)
             self.qps.append(qp)
             self.udqps.append(qp)
             j += 1

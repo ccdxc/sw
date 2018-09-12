@@ -68,10 +68,12 @@ class RdmaSessionObject(base.ConfigObjectBase):
     def Show(self):
         logger.info('RDMA Session: %s' % self.GID())
         logger.info('- Session: %s' % self.session.GID())
-        logger.info('- LQP: %s' % self.lqp.GID())
-        logger.info('- RQP: %s' % self.rqp.GID())
-        logger.info('- IsIPV6: %s' % self.IsIPV6())
-        logger.info('- IsVxLAN: %s' % self.IsVxLAN)
+        logger.info('- LQP: %s  Tiny: %s Remote: %s Service: %d' \
+                    %(self.lqp.GID(), self.lqp.tiny, self.lqp.remote, self.lqp.svc))
+        logger.info('- RQP: %s  Tiny: %s Remote: %s Service: %d' \
+                     %(self.rqp.GID(), self.rqp.tiny, self.rqp.remote, self.rqp.svc))
+        logger.info('- IsIPV6: %s' % self.IsIPV6)
+        logger.info('- IsVxLAN: %s' % self.IsVXLAN)
         return
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -394,6 +396,7 @@ class RdmaSessionObjectHelper:
         if len(self.rdma_sessions):
             Store.objects.SetAll(self.rdma_sessions) 
 
+        [s.Show() for s in self.rdma_sessions]
     def __get_matching_sessions(self, selectors = None):
         ssns = []
         for ssn in self.rdma_sessions:

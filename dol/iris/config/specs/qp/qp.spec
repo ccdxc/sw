@@ -9,10 +9,8 @@ rc:
     hostmem_pg_size : 4096
     pmtu            : 1024
     atomic_enabled  : True
-    num_sq_sges     : 4
     num_sq_wqes     : 4096
     num_rrq_wqes    : 256
-    num_rq_sges     : 4
     num_rq_wqes     : 4096
     num_rsq_wqes    : 256
     sq_in_nic       : 0
@@ -25,10 +23,8 @@ perf_rc:
     hostmem_pg_size : 4096
     pmtu            : 1024
     atomic_enabled  : True
-    num_sq_sges     : 4
     num_sq_wqes     : 8
     num_rrq_wqes    : 4
-    num_rq_sges     : 4
     num_rq_wqes     : 64
     num_rsq_wqes    : 4
     sq_in_nic       : 1
@@ -41,10 +37,8 @@ ud:
     hostmem_pg_size : 4096
     pmtu            : 1024
     atomic_enabled  : True
-    num_sq_sges     : 4
     num_sq_wqes     : 16
     num_rrq_wqes    : 4
-    num_rq_sges     : 4
     num_rq_wqes     : 16
     num_rsq_wqes    : 4
     sq_in_nic       : 0

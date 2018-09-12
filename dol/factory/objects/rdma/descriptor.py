@@ -402,6 +402,11 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
                 desc = desc/sge_entry
         
         logger.ShowScapyObject(desc)
+
+        logger.info("q_max_desc_size = %d desc_size = %d" \
+                     %(self.q_max_desc_size, len(desc)))
+        assert(len(desc) <= self.q_max_desc_size)
+
         if self.mem_handle:
             resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(desc))
         else:
@@ -531,6 +536,11 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
             desc = desc/sge_entry
         
         logger.ShowScapyObject(desc)
+
+        logger.info("q_max_desc_size = %d desc_size = %d" \
+                     %(self.q_max_desc_size, len(desc)))
+        assert(len(desc) <= self.q_max_desc_size)
+
         if self.mem_handle:
             resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(desc))
         else:

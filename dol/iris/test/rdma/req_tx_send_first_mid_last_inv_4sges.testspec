@@ -12,7 +12,7 @@ selectors:
 #        interface   : filter://any
 #    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
     rdmasession     :
-        lqp         : filter://svc=0
+        lqp         : filter://svc=0,tiny=False
         rqp         : filter://svc=0
 #    maxflows    : 1 
 #    maxrdmasessions     : 4

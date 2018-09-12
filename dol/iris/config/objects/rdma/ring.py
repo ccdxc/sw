@@ -51,6 +51,10 @@ class RdmaRingObject(ring.RingObject):
         # Bind the descriptor to the ring
         logger.info('posting descriptor at pindex: %d..' %(self.queue.qstate.get_pindex(0)))
         descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_pindex(0)))
+        # pass q_max_desc_size to the descriptor object so that it can check and assert to see 
+        # if generated descritptor size is within the limits of q_max_desc_size to avoid
+        # memory overwrite
+        descriptor.q_max_desc_size = self.desc_size
         if self.nic_resident:
             descriptor.mem_handle = None
         else:
