@@ -3,7 +3,7 @@
 #
 
 LIBDIRS = libsimlib libsimdev
-PGMDIRS = simd tests
+PGMDIRS = model_server simd tests
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 LBUILD_ARCHES = x86_64
 

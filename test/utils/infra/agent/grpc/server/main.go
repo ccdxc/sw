@@ -14,6 +14,15 @@ import (
 
 var grpcServer *grpc.Server
 
+//QemuInstance qemu instance
+var QemuInstance *Qemu
+
+//AppServerInstance appserver instance
+var AppServerInstance *AppServer
+
+//NaplesSimInstance naples sim instance
+var NaplesSimInstance *NaplesSim
+
 //StartServer Start Grpc Server
 func StartServer(port int) {
 	_ = os.Mkdir(agent.LogDir, 644)
@@ -25,8 +34,9 @@ func StartServer(port int) {
 	// create a gRPC server object
 	grpcServer = grpc.NewServer()
 	// attach the App service to the server
-	pb.RegisterAppAgentServer(grpcServer, NewAppServer())
-	pb.RegisterNaplesSimServer(grpcServer, NewNaplesSim())
+	pb.RegisterAppAgentServer(grpcServer, AppServerInstance)
+	pb.RegisterNaplesSimServer(grpcServer, NaplesSimInstance)
+	pb.RegisterQemuServer(grpcServer, QemuInstance)
 	// start the server
 	log.Print("Starting Grpc server started on port :", port)
 	if err := grpcServer.Serve(lis); err == grpc.ErrServerStopped {
@@ -40,4 +50,10 @@ func StartServer(port int) {
 func StopServer() {
 	log.Print("Stopping grpc server")
 	grpcServer.Stop()
+}
+
+func init() {
+	QemuInstance = NewQemu()
+	AppServerInstance = NewAppServer()
+	NaplesSimInstance = NewNaplesSim()
 }

@@ -1,7 +1,6 @@
 package infra
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -19,6 +18,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	yaml "gopkg.in/yaml.v2"
 
+	ionic "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	Agent "github.com/pensando/sw/test/utils/infra/agent"
 	NodeService "github.com/pensando/sw/test/utils/infra/agent/service"
 	Helpers "github.com/pensando/sw/test/utils/infra/common"
@@ -27,9 +27,11 @@ import (
 
 var agentSrc string
 var naplesAgentCfgPath string
+var ethSmartJSON string
 
 const (
 	e2eRegistry = "registry.test.pensando.io:5000/pensando/nic/e2e:2.0"
+	qemuImage   = "build-16"
 )
 
 var (
@@ -38,6 +40,16 @@ var (
 	vmDataInterface = "eth1"
 	tunnelIPSubnet  = "192.168.10.0/24"
 	tunnelIPStart   = "192.168.10.11"
+	linuxBuildEnv   = []string{"GOOS=linux", "GOARCH=amd64"}
+)
+
+var (
+	//SrcNaplesDirectory Naples image source directory
+	SrcNaplesDirectory = "/sw/nic/obj/images"
+	localPlatfromSrc   = "/sw/platform"
+
+	remoteSrc         = "/home/vm/sw"
+	remotePlatformSrc = remoteSrc + "/platform"
 )
 
 var sudoCmd = func(cmd string) string {
@@ -49,6 +61,7 @@ type userTopo struct {
 		Node struct {
 			Name string `yaml:"name"`
 			Kind string `yaml:"kind"`
+			Qemu bool   `yaml:"qemu"`
 		} `yaml:"node"`
 	} `yaml:"nodes"`
 	Apps []struct {
@@ -114,6 +127,7 @@ type vmEntity struct {
 	nodeID     int
 	userName   string
 	passwd     string
+	hasQemu    bool
 	SftpHandle *sftp.Client
 	SSHHandle  *ssh.Client
 	services   *NodeService.NodeServices
@@ -122,10 +136,17 @@ type vmEntity struct {
 //naplesEntity Naples Entity
 type naplesEntity struct {
 	remoteEntity
+	withQemu bool
 }
 
 //appEntity Naples Entity
 type appEntity struct {
+	onQemu bool
+	remoteEntity
+}
+
+//appEntity Naples Entity
+type qemuEntity struct {
 	remoteEntity
 }
 
@@ -169,21 +190,29 @@ func (vm *vmEntity) teardownConnection() error {
 	return nil
 }
 
-func (infraCtx *infraCtx) initDataNode(name string) {
+func (infraCtx *infraCtx) initDataNode(name string, qemu bool) {
 	vmentity := vmEntity{
 		remoteEntity: remoteEntity{name: name, kind: EntityKindVM}}
 	infraCtx.res[name] = &vmentity
 	naplesName := "Naples_" + name
-	naplesentity := naplesEntity{remoteEntity{name: naplesName, kind: EntityKindNaples}}
+	naplesentity := naplesEntity{remoteEntity: remoteEntity{name: naplesName, kind: EntityKindNaples}, withQemu: qemu}
 	infraCtx.res[naplesName] = &naplesentity
+	if qemu {
+		qemuName := "Qemu_" + name
+		qemuentity := qemuEntity{remoteEntity{name: qemuName, kind: EntityKindQemu}}
+		infraCtx.res[qemuName] = &qemuentity
+		qemuentity.parent = &vmentity
+		vmentity.hasQemu = true
+	}
 	naplesentity.parent = &vmentity
 }
 
 func (infraCtx *infraCtx) initApp(name string, parent string) {
-	appentity := appEntity{remoteEntity{name: name, kind: EntityKindContainer}}
+	appentity := appEntity{remoteEntity: remoteEntity{name: name, kind: EntityKindContainer}}
 	if parentEntity, ok := infraCtx.res[parent]; ok {
 		appentity.parent = parentEntity
 		infraCtx.res[name] = &appentity
+		appentity.onQemu = parentEntity.(*vmEntity).hasQemu
 	} else {
 		log.Fatalln("Parent Node not found!")
 	}
@@ -258,84 +287,7 @@ func (vm *vmEntity) ScpTo(src, dest string) error {
 }
 
 func (vm *vmEntity) Exec(cmd string, sudo bool, bg bool) (retCode int, stdout, stderr []string) {
-	fmt.Println(cmd)
-	var stdoutBuf, stderrBuf bytes.Buffer
-	sshSession, err := vm.SSHHandle.NewSession()
-	if err != nil {
-		vm.log("Ssh handle creation failed, is node down ?")
-		return -1, nil, nil
-	}
-
-	//remoteEntity.()
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,     // disable echoing
-		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
-	}
-
-	if err = sshSession.RequestPty("xterm", 80, 40, modes); err != nil {
-		vm.log("Ssh Pty session creation failed")
-		return -1, nil, nil
-	}
-
-	sshOut, err := sshSession.StdoutPipe()
-	if err != nil {
-		vm.log("Unable to get stodut from ssh session")
-		return -1, nil, nil
-	}
-	sshErr, err := sshSession.StderrPipe()
-	if err != nil {
-		vm.log("Unable to get stderr from ssh session")
-		return -1, nil, nil
-	}
-
-	shout := io.MultiWriter(&stdoutBuf, (*LogWriter)(vm.logger))
-	ssherr := io.MultiWriter(&stderrBuf, (*LogWriter)(vm.logger))
-
-	go func() {
-		if true {
-			io.Copy(shout, sshOut)
-		}
-	}()
-	go func() {
-		if true {
-
-			io.Copy(ssherr, sshErr)
-		}
-	}()
-
-	if bg {
-		cmd = "nohup sh -c  \"" + cmd + " 2>&1 >/dev/null </dev/null & \""
-	} else {
-		cmd = "sh -c \"" + cmd + "\""
-	}
-
-	if sudo {
-		cmd = sudoCmd(cmd)
-	}
-
-	vm.log("Running command : " + cmd)
-	if err = sshSession.Run(cmd); err != nil {
-		vm.log("failed command : " + cmd)
-		switch v := err.(type) {
-		case *ssh.ExitError:
-			retCode = v.Waitmsg.ExitStatus()
-		default:
-			retCode = -1
-		}
-	} else {
-		vm.log("sucess command : " + cmd)
-		retCode = 0
-	}
-
-	stdout = strings.Split(stdoutBuf.String(), "\n")
-	stderr = strings.Split(stderrBuf.String(), "\n")
-	vm.log(stdout)
-	vm.log(stderr)
-	vm.log("Return code : " + strconv.Itoa(retCode))
-
-	return retCode, stdout, stderr
-
+	return Helpers.RunSSHCommand(vm.SSHHandle, cmd, sudo, bg, vm.logger)
 }
 
 // bring up methond for naples
@@ -373,6 +325,7 @@ func (naples *naplesEntity) bringUp(ctx context.Context, errChannel chan error) 
 			TunnelIPStart:   tunnelIPStart,
 			TunnelInterface: vmDataInterface, //TODO!!
 			TunnelIPAddress: tunnelIPAddr,
+			WithQemu:        naples.withQemu,
 		})
 		if err != nil {
 			sshRunError <- errors.Wrap(err, "Naples bring up failed.")
@@ -400,6 +353,71 @@ func (naples *naplesEntity) bringUp(ctx context.Context, errChannel chan error) 
 	errChannel <- nil
 }
 
+// bring up method for qemu
+func (qemu *qemuEntity) bringUp(ctx context.Context, errChannel chan error) {
+	var err error
+	var hostNode RemoteEntity
+
+	hostNode, err = qemu.GetHostingNode()
+	if err != nil {
+		/* PANIC as something weird we did in parsing topo file */
+		panic("Unable to find Qemu Hosting node for :" + qemu.Name())
+	}
+
+	qemu.log("Doing qemu bring up on Node")
+
+	sshRunError := make(chan error, 0)
+	go func() {
+
+		/* First clean up current platform gen */
+		rmDir := []string{"rm", "-rf", remotePlatformSrc}
+		ret, _, _ := hostNode.(*vmEntity).Exec(strings.Join(rmDir, " "), true, false)
+		if ret != 0 {
+			log.Printf("failed to remove directory : %s", remotePlatformSrc)
+		}
+
+		/* First copy the compiled gen directory to remote */
+		if err := Helpers.MultiSFTP(localPlatfromSrc, remoteSrc,
+			[]*sftp.Client{hostNode.(*vmEntity).SftpHandle}); err != nil {
+			sshRunError <- errors.Wrap(err, "Copying Platfrom Gen failed for  "+hostNode.Name())
+		}
+
+		/* TODO : Have to pass on num nodes if more than 2 */
+		err := hostNode.(*vmEntity).services.Qemu.BringUp(ctx, &NodeService.QemuConfig{
+			Name:  "Qemu image",
+			Image: qemuImage,
+		})
+		if err != nil {
+			sshRunError <- errors.Wrap(err, "Qemu bring up failed.")
+			return
+		}
+		time.Sleep(NaplesAgentBringUpDelay)
+		sshRunError <- nil
+	}()
+
+	select {
+	// we received the signal of cancelation in this channel
+	case err := <-sshRunError:
+		if err != nil {
+			log.Print("Qemu bring up failed on : " + hostNode.Name())
+			errChannel <- err
+		} else {
+			time.Sleep(time.Second * 5)
+			log.Print("Qemu bring up sucessfull : " + hostNode.Name())
+		}
+		break
+	case <-ctx.Done():
+		fmt.Println("Timeout : Canceling Qemu bring up.")
+		errChannel <- fmt.Errorf("Qemu bring up timeout on : %s", hostNode.Name())
+	}
+
+	errChannel <- nil
+}
+
+func (qemu *qemuEntity) teardown(ctx context.Context, errChannel chan error) {
+	errChannel <- nil
+}
+
 func (appNode *appEntity) bringUp(ctx context.Context, errChannel chan error) {
 	var err error
 	var hostNode RemoteEntity
@@ -410,8 +428,10 @@ func (appNode *appEntity) bringUp(ctx context.Context, errChannel chan error) {
 		panic("Unable to find Naples Hosting node for :" + appNode.Name())
 	}
 
-	err = hostNode.(*vmEntity).services.App.BringUp(ctx,
-		&NodeService.AppConfig{Name: appNode.Name(), Registry: e2eRegistry})
+	appConfig := &NodeService.AppConfig{Name: appNode.Name(),
+		Registry: e2eRegistry, OnQemu: appNode.onQemu}
+
+	err = hostNode.(*vmEntity).services.App.BringUp(ctx, appConfig)
 
 	if err != nil {
 		errChannel <- errors.Wrap(err, "Agent bring up api Failed on App")
@@ -422,7 +442,7 @@ func (appNode *appEntity) bringUp(ctx context.Context, errChannel chan error) {
 	errChannel <- err
 }
 
-func (appNode *appEntity) configure(ep cfg.Endpoint, config *cfg.E2eCfg) error {
+func (appNode *appEntity) configure(ep cfg.Endpoint, config *cfg.E2eCfg, stationDevices []ionic.StationDevice) error {
 	getNetworkFromConfig := func(nwName string, fullCfg *cfg.E2eCfg) *cfg.Network {
 		for _, network := range fullCfg.NetworksInfo.Networks {
 			if network.NetworkMeta.Name == nwName {
@@ -431,6 +451,16 @@ func (appNode *appEntity) configure(ep cfg.Endpoint, config *cfg.E2eCfg) error {
 		}
 
 		return nil
+	}
+
+	getStationMac := func(lifID string) string {
+		for _, sdevice := range stationDevices {
+			sLifID := fmt.Sprintf("lif%d", sdevice.LifID)
+			if sLifID == lifID {
+				return sdevice.MacAddr
+			}
+		}
+		return ""
 	}
 
 	network := getNetworkFromConfig(ep.EndpointSpec.NetworkName, config)
@@ -442,13 +472,18 @@ func (appNode *appEntity) configure(ep cfg.Endpoint, config *cfg.E2eCfg) error {
 
 	appNode.ipAddress = strings.Split(ep.EndpointSpec.Ipv4Address, "/")[0]
 	prefixLen, _ := strconv.Atoi(strings.Split(network.NetworkSpec.Ipv4Subnet, "/")[1])
-	err := hostNode.(*vmEntity).services.App.AttachInterface(context.Background(),
+	parentMac := getStationMac(ep.EndpointSpec.Interface)
+	if parentMac == "" {
+		return errors.Errorf("Invalid lif ID : %s, not part of station device", ep.EndpointSpec.Interface)
+	}
+	err := hostNode.(*vmEntity).services.App.AddVlanInterface(context.Background(),
 		appNode.Name(),
-		&NodeService.AppInterface{Name: ep.EndpointSpec.Interface,
-			MacAddress: ep.EndpointSpec.MacAddresss,
-			Vlan:       uint32(ep.EndpointSpec.UsegVlan),
-			IPaddress:  appNode.ipAddress,
-			PrefixLen:  uint32(prefixLen)})
+		&NodeService.AppVlanInterface{
+			ParentMacMacAddress: parentMac,
+			MacAddress:          ep.EndpointSpec.MacAddresss,
+			Vlan:                uint32(ep.EndpointSpec.UsegVlan),
+			IPaddress:           appNode.ipAddress,
+			PrefixLen:           uint32(prefixLen)})
 
 	if err != nil {
 		return errors.Wrap(err, "Attach Interface failed")
@@ -489,7 +524,8 @@ func (appNode *appEntity) Exec(cmd string, sudo bool, bg bool) (retCode int, std
 	return retCode, stdout, stderr
 }
 
-func (*vmEntity) bringUp(ctx context.Context, errChannel chan error) {
+func (vm *vmEntity) bringUp(ctx context.Context, errChannel chan error) {
+	vm.log("Bringing up Vm entity : " + vm.Name())
 	errChannel <- nil
 }
 
@@ -534,10 +570,11 @@ func (infraCtx *infraCtx) initVMEntities() error {
 
 	buildAgent := func() {
 		cwd, _ := os.Getwd()
+		fmt.Println("AGENT SRC " + agentSrc)
 		os.Chdir(agentSrc)
 		defer os.Chdir(cwd)
 		cmd := []string{"go", "build", "-o", RemoteInfraDirectory + "/" + agentExecName, "."}
-		env := []string{"GOOS=linux", "GOARCH=amd64"}
+		env := append(linuxBuildEnv)
 		if _, stdout, err := Helpers.Run(cmd, 0, false, false, env); err != nil {
 			panic("Building agent failed!" + stdout)
 		}
@@ -619,6 +656,7 @@ func (infraCtx *infraCtx) resetVMEntities() error {
 
 	vmEntities := infraCtx.FindRemoteEntity(EntityKindVM)
 	for _, vm := range vmEntities {
+		vm.(*vmEntity).log("Resetting Vm entity :" + vm.Name())
 		cmd := "pkill -9 " + agentExecName
 		ret, _, _ := vm.(*vmEntity).Exec(cmd, true, false)
 		if ret != 0 {
@@ -676,6 +714,10 @@ func (infraCtx *infraCtx) bringUp() error {
 		return err
 	}
 
+	if err := doBringUp(infraCtx.FindRemoteEntity(EntityKindQemu)); err != nil {
+		return err
+	}
+
 	if err := doBringUp(infraCtx.FindRemoteEntity(EntityKindContainer)); err != nil {
 		return err
 	}
@@ -728,6 +770,33 @@ func (infraCtx *infraCtx) setupLogger() {
 
 }
 
+func (infraCtx *infraCtx) PrintTopology() {
+
+	vmEntities := infraCtx.FindRemoteEntity(EntityKindVM)
+	fmt.Println("************************* TOPOLOGY INFORMATION START  *********************************")
+	for _, vm := range vmEntities {
+		fmt.Println("\tNode Name  :" + vm.Name())
+		ipAddr, _ := vm.(*vmEntity).GetIPAddress()
+		fmt.Println("\tIP Address :" + ipAddr)
+		fmt.Println("\tUserName   :" + vm.(*vmEntity).userName)
+		fmt.Println("\tPassword   :" + vm.(*vmEntity).passwd)
+		fmt.Println("\tPassword   :" + ipAddr)
+		fmt.Println("\tQemu       :" + strconv.FormatBool(vm.(*vmEntity).hasQemu))
+		fmt.Println("\tApps       :")
+		for _, app := range infraCtx.FindRemoteEntity(EntityKindContainer) {
+			hostNode, _ := app.GetHostingNode()
+			if hostNode == vm {
+				fmt.Println("\t\t Name       :", app.(*appEntity).Name())
+				ip, _ := app.(*appEntity).GetIPAddress()
+				fmt.Println("\t\t IP address :", ip)
+			}
+		}
+
+	}
+	fmt.Println("************************* TOPOLOGY INFORMATION END ************************************")
+
+}
+
 // NewInfraCtx initializes/returns an instance of the global context
 func NewInfraCtx(topoFile string, warmdFile string) (Context, error) {
 
@@ -740,7 +809,7 @@ func NewInfraCtx(topoFile string, warmdFile string) (Context, error) {
 	for _, node := range ut.Nodes {
 		switch node.Node.Kind {
 		case DataNode:
-			infraCtx.initDataNode(node.Node.Name)
+			infraCtx.initDataNode(node.Node.Name, node.Node.Qemu)
 		case ControlNode:
 		default:
 			log.Fatalf("Invalid Node type : %s", node.Node.Kind)

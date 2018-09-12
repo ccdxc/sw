@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ const (
 	sshFxFailure = uint32(4)
 	retryCount   = 10
 	retryDelay   = time.Second
+	sftpPort     = 22
 )
 
 // NewSFTPClientWithPublicKey creates a new sftp client
@@ -53,7 +55,7 @@ func NewSFTPClientWithPublicKey(ip, user, publicKeyFile string) (*sftp.Client, e
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	return sftpConnect(ip, config)
+	return sftpConnect(ip, sftpPort, config)
 }
 
 // NewSFTPClient creates a new sftp client
@@ -67,15 +69,29 @@ func NewSFTPClient(ip, user, pwd string) (*sftp.Client, error) {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	return sftpConnect(ip, config)
+	return sftpConnect(ip, sftpPort, config)
 }
 
-func sftpConnect(ip string, config *ssh.ClientConfig) (*sftp.Client, error) {
+// NewSFTPClientWithPort creates a new sftp client
+func NewSFTPClientWithPort(ip string, port int, user, pwd string) (*sftp.Client, error) {
+
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(pwd),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	return sftpConnect(ip, port, config)
+}
+
+func sftpConnect(ip string, port int, config *ssh.ClientConfig) (*sftp.Client, error) {
 	var sshErr error
 	var sshc *ssh.Client
 
 	for ix := 0; ix < retryCount; ix++ {
-		sshc, sshErr = ssh.Dial("tcp", ip+":22", config)
+		sshc, sshErr = ssh.Dial("tcp", ip+":"+strconv.Itoa(port), config)
 		if sshErr == nil {
 			break
 		}

@@ -32,7 +32,7 @@ const (
 )
 
 var (
-	naplesUplinkIntfs = []string{"pen-intf2"}
+	naplesUplinkIntfs = []string{"pen-intf1"}
 )
 
 func (s *NaplesSim) configureHostDataNetwork(intfName string, ipAddress string) error {
@@ -46,7 +46,7 @@ func (s *NaplesSim) configureHostDataNetwork(intfName string, ipAddress string) 
 	return Common.SetUpIPAddress(intfName, ipAddress)
 }
 
-func (s *NaplesSim) bringUpNaples(name string, nodeID int, ctrlNwIPRange string) error {
+func (s *NaplesSim) bringUpNaples(name string, nodeID int, ctrlNwIPRange string, withQemu bool) error {
 	os.Chdir(infra.RemoteNaplesDirectory + "/images")
 	s.log("Untar image : " + infra.NaplesContainerImage)
 	untar := []string{"tar", "-xvzf", infra.NaplesContainerImage}
@@ -57,6 +57,9 @@ func (s *NaplesSim) bringUpNaples(name string, nodeID int, ctrlNwIPRange string)
 	env := []string{"NAPLES_HOME=" + infra.RemoteNaplesDirectory + "/images"}
 	cmd := []string{"sudo", "-E", "python", infra.NaplesVMBringUpScript, "--node-id", strconv.Itoa(nodeID),
 		"--network-ip-range", ctrlNwIPRange}
+	if withQemu {
+		cmd = append(cmd, "--qemu")
+	}
 	if _, stdout, err := Common.Run(cmd, 0, false, false, env); err != nil {
 		return errors.Wrap(err, stdout)
 	}
@@ -125,7 +128,7 @@ func (s *NaplesSim) BringUp(ctx context.Context, in *pb.NaplesSimConfig) (*pb.Na
 			Status: pb.ApiStatus_API_STATUS_FAILED}, nil
 	}
 
-	if err := s.bringUpNaples(in.Name, int(in.NodeID), in.CtrlNwIpRange); err != nil {
+	if err := s.bringUpNaples(in.Name, int(in.NodeID), in.CtrlNwIpRange, in.WithQemu); err != nil {
 		resp := "Naples bring up failed : " + err.Error()
 		s.log(resp)
 		return &pb.NaplesStatus{Response: resp,
@@ -143,6 +146,7 @@ func (s *NaplesSim) BringUp(ctx context.Context, in *pb.NaplesSimConfig) (*pb.Na
 	//s.Hntap = infra.HntapGet(infra.HntapTypeContainer, hntapCfgFile, s.container)
 	resp := "Naples bring up successfull"
 	s.log(resp)
+
 	return &pb.NaplesStatus{Response: resp, Status: pb.ApiStatus_API_STATUS_OK}, nil
 }
 

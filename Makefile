@@ -393,6 +393,14 @@ e2e-telemetry:
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
 
+e2e-turin: pull-assets
+	$(MAKE) -C nic
+	$(MAKE) -C platform sim
+	$(MAKE) -C nic package-sim
+	$(MAKE) -C nic release
+	rm -rf nic.tar
+	$(MAKE) -C test
+
 ui-framework:
 	npm version;
 	cd venice/ui/web-app-framework && npm run pack

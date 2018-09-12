@@ -60,8 +60,9 @@ service Agent {
 }
 
 message AppConfig {
-    string name     = 1;
-    string registry = 2;
+    string name      = 1;
+    string registry  = 2;
+    bool   onQemu      = 3;
 }
 
 message AppStatus {
@@ -73,9 +74,18 @@ message Interface {
     string app  = 1;
     string name  = 2;
     string macAddress = 3;
-    uint32 vlan = 4;
-    string ipAddress = 5;
-    uint32 prefixLen = 6;
+    string ipAddress = 4;
+    uint32 prefixLen = 5;
+}
+
+message VlanInterface {
+    string app  = 1;
+    string parentIntfName  = 2;
+    string parentMacAddress  = 3;
+    string macAddress = 4;
+    uint32 vlan = 5;
+    string ipAddress = 6;
+    uint32 prefixLen = 7;
 }
 
 message InterfaceStatus {
@@ -109,6 +119,10 @@ service AppAgent {
 
   }
 
+  rpc AddVlanInterface(VlanInterface) returns (InterfaceStatus) {
+
+  }
+
   rpc RunCommand(Command) returns (CommandStatus) {
 
   }
@@ -122,6 +136,7 @@ message NaplesSimConfig {
     string tunnelIpStart     = 4;
     string tunnelInterface   = 5; //Interface used on host to send/recv naples uplink traffic.
     string tunnelIpAddress   = 6; //Ip Address
+    bool withQemu            = 7; //Start naples with qemu
 }
 
 message NaplesStatus {
@@ -143,6 +158,30 @@ service NaplesSim {
 
     rpc ConfigureHntap(HntapConfig) returns (NaplesStatus) {
 
+    }
+
+    rpc RunCommand(Command) returns (CommandStatus) {
+
+    }
+
+}
+
+message QemuConfig {
+    string name              = 1;
+    string image             = 2;
+}
+
+message QemuStatus {
+    ApiStatus  status    =  1;
+    string     response  =  2;
+}
+
+
+service Qemu {
+    rpc BringUp(QemuConfig) returns (QemuStatus) {
+    }
+
+    rpc Teardown(QemuConfig) returns (QemuStatus) {
     }
 
     rpc RunCommand(Command) returns (CommandStatus) {

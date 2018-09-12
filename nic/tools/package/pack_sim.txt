@@ -17,6 +17,10 @@ nic/sim/naples/print-cores.sh                                    /nic/tools/
 /lib64/libstdc++.so.6                                            /nic/lib64/
 /usr/lib64/libltdl.so.7                                          /nic/lib64/
 /usr/lib64/libJudy.so.1                                          /nic/lib64/
+/usr/local/lib/libgrpc.so.4					 /nic/lib64/
+/usr/local/lib/libgrpc++.so.4					 /nic/lib64/
+/usr/local/lib/libgrpc_unsecure.so.4			         /nic/lib64/
+/usr/local/lib/libgrpc++_unsecure.so.4			         /nic/lib64/
 bazel-bin/nic/model_sim/cap_model                                /nic/bin/
 bazel-bin/nic/model_sim/libmodel_client.so                       /nic/lib/
 bazel-bin/nic/e2etests/nic_infra_hntap                           /nic/bin/
@@ -34,3 +38,4 @@ platform/gen/x86_64/lib                                          /platform/lib/
 platform/tools/setup_pcie.sh                                     /platform/bin/
 nic/obj/x86_64/agent/heimdall                                    /nic/bin/
 nic/e2etests/go/agent/configs/golden/golden_cfg.yml              /nic/tools/
+platform/src/app/nicmgrd/etc/*.json                              /platform/etc/nicmgrd/

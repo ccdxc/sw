@@ -1,0 +1,78 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: spit out vm ip
+    debug:
+      msg: "VM ip {{ ansible_default_ipv4.address }} "
+
+  - name: enable passwordless sudo
+    lineinfile:
+      path: /etc/sudoers
+      state: present
+      regexp: '^%sudo\s'
+      line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+
+  - name: set mmap count to make elastic happy
+    sysctl:
+      name: vm.max_map_count
+      value: 262144
+      sysctl_set: yes
+
+  - name: "check for docker"
+    shell: "test -x /usr/bin/docker"
+    ignore_errors: true
+    register: docker_exists
+
+  - name: set syn-ack retries to 8
+    sysctl:
+        name: net.ipv4.tcp_synack_retries
+        value: 8
+        sysctl_set: yes
+
+  - name: "yum update"
+    shell: "yum update -y"
+
+  - name: install required packages
+    yum:
+        name: epel-release,yum-utils,device-mapper-persistent-data,lvm2
+
+  - name: add docker repo
+    shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+  - name: "install docker"
+    yum:
+        name: docker-ce
+    when: (docker_exists) or (result is failed)
+
+  - name: add vm to docker users
+    shell: usermod -aG docker vm
+
+  - name: get dns server
+    shell: systemd-resolve --status | grep "DNS Servers" | awk -F":" '{print $2}' | awk '{print $1}'
+    register: dns_result
+
+  - set_fact:
+      dns_server: "{{ dns_result.stdout | to_json }}"
+
+  - file:
+      path: /etc/docker
+      state: directory
+      mode: 0755
+
+  - name: create docker daemon.json
+    template:
+      src: daemon.json.j2
+      dest: /etc/docker/daemon.json
+      mode: 0644
+
+  - name: restart docker
+    service:
+      name: docker
+      state: restarted
+
+  - file:
+      path: /var/naples/
+      state: directory
+      mode: 0755
+

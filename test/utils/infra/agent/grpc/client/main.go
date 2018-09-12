@@ -32,6 +32,16 @@ func NewNaplesAgentClient(ip string, port int) (pb.NaplesSimClient, error) {
 	return pb.NewNaplesSimClient(conn), nil
 }
 
+//NewQemuAgentClient returns instance of new qemu agent client.
+func NewQemuAgentClient(ip string, port int) (pb.QemuClient, error) {
+	var conn *grpc.ClientConn
+	conn, err := grpc.Dial(ip+":"+strconv.Itoa(port), grpc.WithInsecure())
+	if err != nil {
+		return nil, errors.Wrap(err, "Agent connection failed!")
+	}
+	return pb.NewQemuClient(conn), nil
+}
+
 //AppClient Structure
 type AppClient struct {
 	service pb.AppAgentClient
@@ -41,7 +51,7 @@ type AppClient struct {
 func (appClient *AppClient) BringUp(ctx context.Context, config *node.AppConfig) error {
 
 	resp, err := appClient.service.BringUp(ctx,
-		&pb.AppConfig{Name: config.Name, Registry: config.Registry})
+		&pb.AppConfig{Name: config.Name, Registry: config.Registry, OnQemu: config.OnQemu})
 
 	if err != nil {
 		return errors.Wrap(err, "Agent bring up api Failed on App")
@@ -92,7 +102,6 @@ func (appClient *AppClient) AttachInterface(ctx context.Context, app string,
 		&pb.Interface{App: app,
 			Name:       intf.Name,
 			MacAddress: intf.MacAddress,
-			Vlan:       intf.Vlan,
 			IpAddress:  strings.Split(intf.IPaddress, "/")[0],
 			PrefixLen:  intf.PrefixLen})
 
@@ -102,6 +111,30 @@ func (appClient *AppClient) AttachInterface(ctx context.Context, app string,
 
 	if resp.Status != pb.ApiStatus_API_STATUS_OK {
 		return errors.Errorf("Interface attach failed : %s ", resp.GetResponse())
+	}
+
+	return nil
+}
+
+//AddVlanInterface Attach Interface
+func (appClient *AppClient) AddVlanInterface(ctx context.Context, app string,
+	intf *node.AppVlanInterface) error {
+
+	resp, err := appClient.service.AddVlanInterface(ctx,
+		&pb.VlanInterface{App: app,
+			ParentIntfName:   intf.ParentIntfName,
+			ParentMacAddress: intf.ParentMacMacAddress,
+			MacAddress:       intf.MacAddress,
+			Vlan:             intf.Vlan,
+			IpAddress:        strings.Split(intf.IPaddress, "/")[0],
+			PrefixLen:        intf.PrefixLen})
+
+	if err != nil {
+		return errors.Wrap(err, "Add vlan Interface failed")
+	}
+
+	if resp.Status != pb.ApiStatus_API_STATUS_OK {
+		return errors.Errorf("Add vlan Interface failed : %s ", resp.GetResponse())
 	}
 
 	return nil
@@ -119,7 +152,8 @@ func (cli *NaplesClient) BringUp(ctx context.Context, cfg *node.NaplesSimConfig)
 		CtrlNwIpRange:   cfg.CtrlNwIPRange,
 		TunnelIpStart:   cfg.TunnelIPStart,
 		TunnelInterface: cfg.TunnelInterface,
-		TunnelIpAddress: cfg.TunnelIPAddress})
+		TunnelIpAddress: cfg.TunnelIPAddress,
+		WithQemu:        cfg.WithQemu})
 
 	if err != nil {
 		return errors.Wrap(err, "GRPC failure!")
@@ -151,6 +185,48 @@ func NewNaplesClient(ip string, port int) (*NaplesClient, error) {
 	}
 
 	return &NaplesClient{simClient: naples}, nil
+}
+
+//QemuClient Naples client structure
+type QemuClient struct {
+	qemuClient pb.QemuClient
+}
+
+//BringUp Naples bring up
+func (cli *QemuClient) BringUp(ctx context.Context, cfg *node.QemuConfig) error {
+	resp, err := cli.qemuClient.BringUp(ctx, &pb.QemuConfig{Name: cfg.Name,
+		Image: cfg.Image})
+
+	if err != nil {
+		return errors.Wrap(err, "GRPC failure!")
+	}
+
+	if resp.Status != pb.ApiStatus_API_STATUS_OK {
+		return errors.Errorf("Naples Bring up failed: %s", resp.Response)
+	}
+
+	return nil
+
+}
+
+//Teardown Naples  teardown
+func (*QemuClient) Teardown(context.Context, *node.QemuConfig) error {
+	return nil
+}
+
+//RunCommand Naples Run Command
+func (*QemuClient) RunCommand(context.Context, string) (string, string, error) {
+	return "", "", nil
+}
+
+//NewQemuClient Get new instance of naples client
+func NewQemuClient(ip string, port int) (*QemuClient, error) {
+	qemuCli, err := NewQemuAgentClient(ip, port)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to connect to qemu clientt")
+	}
+
+	return &QemuClient{qemuClient: qemuCli}, nil
 }
 
 //NewAppClient Get new instance of app client

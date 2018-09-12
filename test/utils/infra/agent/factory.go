@@ -17,5 +17,10 @@ func InitNodeService(ip string, port int) (*service.NodeServices, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &service.NodeServices{Naples: naples, App: app}, nil
+	qemu, err := grpc.NewQemuClient(ip, port)
+	if err != nil {
+		return nil, err
+	}
+
+	return &service.NodeServices{Naples: naples, App: app, Qemu: qemu}, nil
 }

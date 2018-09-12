@@ -9,6 +9,8 @@ export LOG_DIR=/naples/data/logs
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export HAL_LOG_DIR=$LOG_DIR
 export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/plugins/lif:$HAL_CONFIG_PATH/linkmgr:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:usr/local/lib::$LD_LIBRARY_PATH
+export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk:$LD_LIBRARY_PATH
+export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
 unset MODEL_ZMQ_TYPE_TCP
 export ZMQ_SOC_DIR=$NIC_DIR
 
@@ -45,6 +47,7 @@ if [ -d /naples/nic/data/examples ]; then
     mkdir -p /naples/data/examples/config_tcp_proxy/
     mkdir -p /naples/data/examples/config_vxlan_overlay/
     cp /naples/nic/tools/bootstrap.sh /naples/data/
+    cp /naples/nic/tools/bootstrap-naples.sh /naples/data/
     cp -r /naples/nic/data/examples/* /naples/data/examples/
     cp -r /naples/nic/data/examples/config_ipsec/* /naples/data/examples/config_ipsec/
     cp -r /naples/nic/data/examples/config_tcp_proxy/* /naples/data/examples/config_tcp_proxy/
@@ -58,7 +61,7 @@ cd "$LOG_DIR"
 
 if [ $WITH_QEMU == 1 ]; then
     echo "Running Capri model WITH Qemu"
-    cd $PLATFORM_DIR/bin && sh setup_pcie.sh && cd - && SIMSOCK_PATH=/naples/data/simsock-turin LD_LIBRARY_PATH=$PLATFORM_DIR/lib:$LD_LIBRARY_PATH $PLATFORM_DIR/bin/model_server +PLOG_MAX_QUIT_COUNT=0 +plog=info -d type=eth,bdf=03:00.0,lif=7,rxq_type=0,rxq_count=1,txq_type=1,txq_count=1,intr_count=4,qstate_addr=0xc0088000:0xc0088040:0xc0088080,qstate_size=64:64:64,mac=00:ee:00:00:00:02 > $LOG_DIR/model.log 2>&1 &
+    cd $PLATFORM_DIR/bin && sh setup_pcie.sh && cd - && SIMSOCK_PATH=/naples/data/simsock-turin LD_LIBRARY_PATH=$PLATFORM_DIR/lib:$LD_LIBRARY_PATH $PLATFORM_DIR/bin/model_server +PLOG_MAX_QUIT_COUNT=0 +plog=info -d type=eth,bdf=03:00.0,lif=4,intr_base=0,devcmd_pa=0x13809f000,devcmddb_pa=0x1380a0000 > $LOG_DIR/model.log 2>&1 &
     PID=`ps -eaf | grep model_server | grep -v grep | awk '{print $2}'`
 else
     echo "Running Capri model WITHOUT Qemu"
@@ -109,22 +112,38 @@ if [ "$i" -eq "$MAX_RETRIES" ]; then
     exit 1
 fi
 
+if [ $WITH_QEMU == 1 ]; then
+    echo "Starting real nicmgr...."
+    LD_LIBRARY_PATH=$NICMGR_LIBRARY_PATH $PLATFORM_DIR/bin/nicmgrd -s -c $NICMGR_CONFIG_PATH/eth-smart.json > $LOG_DIR/nicmgr.log 2>&1 &
+    [[ $? -ne 0 ]] && echo "Failed to start NICMGR!" && exit 1
+    echo "NICMGR WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
+    while [ 1 ]
+    do
+        OUTPUT="$(grep  "Polling enabled" $LOG_DIR/nicmgr.log 2>&1)"
+        if [[  ! -z "$OUTPUT" ]]; then
+            break
+        fi
+        sleep 3
+    done
+    echo "NICMGR UP: `date +%x_%H:%M:%S:%N`"
+else
 # start NIC manager and allow it to create uplinks
-echo "Starting nicmgr ..."
-"$NIC_DIR"/bin/nic_mgr_app
-if [ $? -ne 0 ]; then
-    echo "Failed to start nic mgr"
-    exit $?
+    echo "Starting nicmgr ..."
+    "$NIC_DIR"/bin/nic_mgr_app
+    if [ $? -ne 0 ]; then
+        echo "Failed to start nic mgr"
+        exit $?
+    fi
 fi
 
 echo "Starting hntap ..."
 
 if [ $WITH_QEMU == 1 ]; then
     echo "Starting hntap with Qemu mode"
-    $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-with-qemu-cfg.json &
+    $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-with-qemu-cfg.json > $LOG_DIR/hntap.log 2>&1 &
 else
     echo "Starting hntap in standalone mode"
-    $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json &
+    $NIC_DIR/bin/nic_infra_hntap -f $NIC_DIR/conf/hntap-cfg.json > $LOG_DIR/hntap.log 2>&1 &
 fi
 
 PID=`ps -eaf | grep nic_infra_hntap | grep -v grep | awk '{print $2}'`

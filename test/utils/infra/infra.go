@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	ionic "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	cfg "github.com/pensando/sw/test/utils/infra/config"
 )
 
@@ -18,12 +19,13 @@ const (
 	ContainerType = "container"
 	NaplesSimName = "naples-sim"
 
-	NodeBringUpTimeout  = 300 * time.Second
+	NodeBringUpTimeout  = 900 * time.Second
 	NodeTeardownTimeout = 120 * time.Second
 
 	RunnerDirectory       = "/tmp/turin/"
 	RemoteInfraDirectory  = RunnerDirectory + "/infra"
 	RemoteNaplesDirectory = RunnerDirectory + "/naples"
+	RemoteQemuDirectory   = RunnerDirectory + "/qemu"
 	NaplesContainerImage  = "naples-release-v1.tgz"
 	NaplesVMBringUpScript = "naples_vm_bringup.py"
 
@@ -36,8 +38,7 @@ const (
 )
 
 var (
-	//SrcNaplesDirectory Naples image source directory
-	SrcNaplesDirectory = "/sw/nic/obj/images"
+//SrcNaplesDirectory Naples image source directory
 )
 
 // Context - created by one binary usually or possibly one thread of a test binary
@@ -46,9 +47,13 @@ type Context interface {
 
 	GetAppCatalog(match string) []string
 
-	DoConfiguration()
+	/* THIS will go away, based on device file config has to be generated */
+	DoConfiguration(deviceFile string)
 
 	FindRemoteEntityByName(name string) RemoteEntity
+
+	/* Print Topology of infra */
+	PrintTopology()
 }
 
 // ctx is instantiation of Context interface, used by test cases to fetch infra details
@@ -107,10 +112,14 @@ func (ctx *infraCtx) GetAppCatalog(match string) []string {
 }
 
 //DoConfiguration Temp function to push static config for now.
-func (ctx *infraCtx) DoConfiguration() {
+func (ctx *infraCtx) DoConfiguration(deviceFile string) {
 
 	naplesEntities := ctx.FindRemoteEntity(EntityKindNaples)
 
+	stationDevices, err := ionic.ReadStationDevices(deviceFile)
+	if err != nil || len(stationDevices) == 0 {
+		log.Fatalln("Unable to read station devices!")
+	}
 	for id, naples := range naplesEntities {
 		configFile := naplesAgentCfgPath + "/node" + strconv.Itoa(id+1) + ".cfg"
 		hostNode, _ := naples.GetHostingNode()
@@ -124,7 +133,7 @@ func (ctx *infraCtx) DoConfiguration() {
 		appIndex := 0
 		for _, endpoint := range nodeCfg.EndpointsInfo.Endpoints {
 			if endpoint.EndpointSpec.InterfaceType == "lif" {
-				err := hostApps[appIndex].(*appEntity).configure(endpoint, nodeCfg)
+				err := hostApps[appIndex].(*appEntity).configure(endpoint, nodeCfg, stationDevices)
 				if err != nil {
 					fmt.Println("Configuration failed", err.Error())
 				}

@@ -18,6 +18,7 @@ COPY README /naples/nic/data/examples/config_ipsec/README
 COPY README /naples/nic/data/examples/config_tcp_proxy/README
 COPY cfg-overlay/README /naples/nic/data/examples/config_vxlan_overlay/README
 COPY bootstrap.sh /naples/nic/tools/
+COPY bootstrap-naples.sh /naples/nic/tools/
 HEALTHCHECK --interval=2m --timeout=5s --start-period=5m --retries=3 CMD /naples/nic/tools/health-check.sh || exit 1
 ADD nic.tgz /naples/
 

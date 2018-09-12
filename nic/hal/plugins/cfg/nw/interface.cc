@@ -557,8 +557,7 @@ if_update_oif_lists(if_t *hal_if, bool add)
         }
         if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
             l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
-            // Add classic nic/RxQ to bcast list only when RDMA is not enabled for this LIF
-            if (l2seg && !lif->enable_rdma) {
+            if (l2seg) {
                 oif.intf = hal_if;
                 oif.l2seg = l2seg;
 

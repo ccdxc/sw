@@ -1,13 +1,65 @@
-#!/bin/sh
+#!/bin/bash
 
-DRIVE_IMG=${1:?"Usage: qemu-run <qemu-img>"}
+#Parse Command line options first.
+getopt --test > /dev/null
+if [[ $? -ne 4 ]]; then
+    echo "I?m sorry, `getopt --test` failed in this environment."
+    exit 1
+fi
+LONGOPTIONS="img:,memory:,skip-kvm-accel"
 
-#for qemu without kvm, set env: QEMU_MACHINE=q35
-: ${QEMU_MACHINE:=q35,accel=kvm}
+PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
+if [[ $? -ne 0 ]]; then
+    # e.g. $? == 1
+    #  then getopt has complained about wrong arguments to stdout
+    exit 2
+fi
+
+eval set -- "$PARSED"
+while true; do
+    case "$1" in
+         --skip-kvm-accel)
+            NO_KVM_ACCEL=1
+            shift
+            ;;
+        --img)
+            DRIVE_IMG=$2
+            shift 2
+            ;;
+        --memory)
+            MEMORY=$2
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Programming error $1"
+            exit 3
+            ;;
+    esac
+done
+
+if [  -z "$DRIVE_IMG" ];then
+    echo "Image not provided, use --img"
+    exit 1
+fi
+
+if [  -z "$MEMORY" ];then
+    QEMU_MEMORY_MB=256
+else    
+    QEMU_MEMORY_MB=$MEMORY
+fi
+if [  -z "$NO_KVM_ACCEL" ];then
+    QEMU_MACHINE="q35,accel=kvm"
+else    
+    QEMU_MACHINE="q35"
+fi
+
 : ${QEMU_SERIAL_PORT:=1034}
 : ${QEMU_MONITOR_PORT:=1035}
 : ${QEMU_SSH_PORT:=1037}
-: ${QEMU_MEMORY_MB:=256}
 
 SCRIPT_DIR=`dirname $0`
 SCRIPT_PATH=`cd $SCRIPT_DIR; echo $PWD`

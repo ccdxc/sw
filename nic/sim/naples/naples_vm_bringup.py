@@ -36,6 +36,8 @@ NAPLES_PORT_MAPS = {
     str(SIM_PORT) + '/tcp':SIM_PORT
 }
 
+QEMU_ENV = {"WITH_QEMU": "1"}
+
 # Move it out to a configu
 _APP_IMAGES = [
     "networkstatic/iperf3"
@@ -241,11 +243,13 @@ def __bringup_naples_container(args):
     def __wait_for_agent_to_be_up():
         __wait_for_line_log(agent_log_file, "Starting server at")
     print "Bringing up naples container...\n"
+    env = QEMU_ENV if args.with_qemu else {}
     naples_obj = _DOCKER_CLIENT.containers.run(NAPLES_IMAGE,
                                                name=NAPLES_SIM_NAME,
                                                privileged=True,
                                                detach=True,
                                                auto_remove=True,
+                                               environment=env,
                                                ports=NAPLES_PORT_MAPS,
                                                volumes=NAPLES_VOLUME_MOUNTS)
     print "Wating for naples sim to be up"
@@ -262,16 +266,19 @@ def __bringup_naples_container(args):
 
 
 def __run_bootstrap_naples(args):
-    cp_cmd = ["cp", NAPLES_DATA_DIR + "/" + "bootstrap.sh", "/usr/bin/naples-bootstrap.sh"]
+    cp_cmd = ["cp", NAPLES_DATA_DIR + "/" + "bootstrap-naples.sh", "/usr/bin/bootstrap-naples.sh"]
     RunShellCmd(cp_cmd)
-    chmod_cmd = ["chmod", "+x", "/usr/bin/naples-bootstrap.sh"]
+    chmod_cmd = ["chmod", "+x", "/usr/bin/bootstrap-naples.sh"]
     RunShellCmd(chmod_cmd)
-    bootstrap_cmd = ["/usr/bin/naples-bootstrap.sh", str(args.node_id)]
+    #bootstrap_cmd = ["/usr/bin/bootstrap-naples.sh", str(args.node_id)]
+    bootstrap_cmd = ["/usr/bin/bootstrap-naples.sh"]
+    if args.with_qemu:
+        bootstrap_cmd.append("--qemu")
     RunShellCmd(bootstrap_cmd, background=True)
 
 
 def __stop_bootstrap_naples():
-    kill_cmd = ["pkill", "-9", "-f", "naples-bootstrap"]
+    kill_cmd = ["pkill", "-9", "-f", "bootstrap-nap"]
     RunShellCmd(kill_cmd)
 
 
@@ -310,6 +317,10 @@ def main():
     parser.add_argument('--node-count', dest='node_cnt', default=2,
                         help="Node count")
     parser.add_argument('--tunnel-port-prefix', dest='tun_port_prefix', default="vxtun-to-node",
+                        help="Tunnel Port prefix to use")
+    parser.add_argument('--qemu', dest='with_qemu',
+                        action='store_true', help='Setup naples sim for qemu env')
+    parser.add_argument('--tunnel', dest='tun_port_prefix', default="vxtun-to-node",
                         help="Tunnel Port prefix to use")
     args = parser.parse_args()
 

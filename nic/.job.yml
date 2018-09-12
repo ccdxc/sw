@@ -90,9 +90,9 @@ logfiles:
   - /sw/nic/nic_sanity_logs.tar.gz
 
 warmd:
-  target: [ "sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make package-sim && make release && rm -f nic.tar  && cd $GOPATH/src/github.com/pensando/sw/ &&  go run test/e2e/turin/main.go" ]
+  target: [ "sh", "-c", "cd /sw && make e2e-turin && test/bin/e2e-turin test" ]
   create:
-    image: build-8
+    image: build-38
     count: 2
     resources:
       cpus: 4

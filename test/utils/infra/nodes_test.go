@@ -47,6 +47,12 @@ func (s *AppServer) AttachInterface(ctx context.Context, in *pb.Interface) (*pb.
 		Status: pb.ApiStatus_API_STATUS_OK}, nil
 }
 
+// AttachInterface attaches the specified to the container.
+func (s *AppServer) AddVlanInterface(ctx context.Context, in *pb.VlanInterface) (*pb.InterfaceStatus, error) {
+	return &pb.InterfaceStatus{Response: "",
+		Status: pb.ApiStatus_API_STATUS_OK}, nil
+}
+
 // RunCommand Runs command on the container
 func (s *AppServer) RunCommand(ctx context.Context, in *pb.Command) (*pb.CommandStatus, error) {
 	return &pb.CommandStatus{
@@ -92,6 +98,31 @@ func NewNaplesSim() *NaplesSim {
 	return &NaplesSim{}
 }
 
+type Qemu struct{}
+
+//BringUp bringUp Qemu environment
+func (s *Qemu) BringUp(ctx context.Context, in *pb.QemuConfig) (*pb.QemuStatus, error) {
+	return &pb.QemuStatus{Response: "Qemu bring up successful", Status: pb.ApiStatus_API_STATUS_OK}, nil
+}
+
+// Teardown teardown app
+func (s *Qemu) Teardown(ctx context.Context, in *pb.QemuConfig) (*pb.QemuStatus, error) {
+	return &pb.QemuStatus{Response: "Qemu teardowm up successful", Status: pb.ApiStatus_API_STATUS_OK}, nil
+}
+
+// RunCommand Runs command on the container
+func (s *Qemu) RunCommand(ctx context.Context, in *pb.Command) (*pb.CommandStatus, error) {
+	return &pb.CommandStatus{
+		Status:  pb.ApiStatus_API_STATUS_OK,
+		RetCode: int32(0),
+		Stdout:  "",
+	}, nil
+}
+
+func NewQemu() *Qemu {
+	return &Qemu{}
+}
+
 var grpcServer *grpc.Server
 
 func StartServer(port int) {
@@ -105,6 +136,7 @@ func StartServer(port int) {
 	// attach the App service to the server
 	pb.RegisterAppAgentServer(grpcServer, NewAppServer())
 	pb.RegisterNaplesSimServer(grpcServer, NewNaplesSim())
+	pb.RegisterQemuServer(grpcServer, NewQemu())
 	// start the server
 	log.Print("Starting Grpc server started on port :", port)
 	if err := grpcServer.Serve(lis); err == grpc.ErrServerStopped {
@@ -130,7 +162,7 @@ func (noBody) WriteTo(io.Writer) (int64, error) { return 0, nil }
 
 func TestNodesLoad(t *testing.T) {
 	Common.Run = Common.RunCmd
-	sudoCmd = func(cmd string) string {
+	Common.SudoCmd = func(cmd string) string {
 		return cmd
 	}
 
@@ -156,6 +188,7 @@ func TestNodesLoad(t *testing.T) {
 	TestUtils.Assert(t, len(userTopo.Apps) == 2, "Length of nodes mismatch")
 	userTopo.validate()
 	LogDir = "/tmp/"
+	linuxBuildEnv = []string{}
 	ctx, err := NewInfraCtx(userTopoFile, warmdFile)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -192,7 +225,95 @@ func TestNodesLoad(t *testing.T) {
 	AgentConfig.DoConfig = func(req *http.Request) (*http.Response, error) {
 		return &http.Response{Body: noBody{}}, nil
 	}
-	ctx.DoConfiguration()
+	deviceJSONFile := os.Getenv("GOPATH") + "/src/github.com/pensando/sw/platform/src/app/nicmgrd/etc/eth-smart.json"
+	ctx.DoConfiguration(deviceJSONFile)
+	ctx.PrintTopology()
+	ctx.(*infraCtx).CleanUp()
+	jsonPath = "./test_cfg/warmd.json"
+	Helpers.Run(startCmd, 0, false, false, nil)
+	RunCmd("ls")
+	client, _ := ssh.Dial("tcp", fmt.Sprintf("127.0.0.1:22"), &ssh.ClientConfig{
+		User:            "root",
+		Auth:            []ssh.AuthMethod{ssh.Password("root")},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	})
+	ctx.FindRemoteEntityByName("node1")
+	runSSHWithClient(client, "ls")
+	CopyLogs([]string{"./test_cfg/warmd.json"}, "/tmp")
+	copyLogsWithSSHClient(client, []string{"./test_cfg/warmd.json"}, "/tmp")
+}
+
+func TestQemuNodesLoad(t *testing.T) {
+	Common.Run = Common.RunCmd
+	Common.SudoCmd = func(cmd string) string {
+		return cmd
+	}
+
+	SrcNaplesDirectory = "./test_cfg"
+
+	vmUserName = "root"
+	vmPassword = "root"
+	startCmd := []string{"docker", "run", "--rm", "-d", "--publish=22:22", "--name", "testnode", "sickp/alpine-sshd:7.5-r2"}
+	Helpers.Run(startCmd, 0, false, false, nil)
+	stopCmd := []string{"docker", "stop", "testnode"}
+	defer Helpers.Run(stopCmd, 0, false, false, nil)
+	fmt.Println("Started Server")
+	go StartServer(agentPort)
+	defer StopServer()
+
+	fmt.Println(os.Getwd())
+	userTopoFile := "./test_cfg/user_topo_qemu.yaml"
+	warmdFile := "./test_cfg/warmd.json"
+	userTopo := loadUserTopo(userTopoFile)
+
+	TestUtils.Assert(t, userTopo != nil, "User topo load failed!")
+	TestUtils.Assert(t, len(userTopo.Nodes) == 1, "Length of nodes mismatch")
+	TestUtils.Assert(t, len(userTopo.Apps) == 2, "Length of nodes mismatch")
+	userTopo.validate()
+	LogDir = "/tmp/"
+	linuxBuildEnv = []string{}
+	localPlatfromSrc = SrcNaplesDirectory
+	ctx, err := NewInfraCtx(userTopoFile, warmdFile)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	TestUtils.Assert(t, err == nil, "Infra Ctx creation failed")
+	intfractx, _ := ctx.(*infraCtx)
+	//10 Entities: Each node has 5 (VM, naples, switch, 2 apps)
+	TestUtils.Assert(t, len(intfractx.res) == 5, "Number of remote entities mismatched!")
+	TestUtils.Assert(t, intfractx.res["node1"] != nil, "Node 1 present!")
+	vmentity := intfractx.res["node1"].(*vmEntity)
+	TestUtils.Assert(t, vmentity.kind == EntityKindVM, "Node 1 is not VM!")
+	vmEntities := intfractx.FindRemoteEntity(EntityKindVM)
+	TestUtils.Assert(t, len(vmEntities) == 1, "Number of Vm entities don't match")
+	qemuEntities := intfractx.FindRemoteEntity(EntityKindQemu)
+	TestUtils.Assert(t, len(qemuEntities) == 1, "Number of Qemu entities don't match")
+	naples := intfractx.FindRemoteEntity(EntityKindNaples)
+	TestUtils.Assert(t, len(naples) == 1, "Number of naples entities don't match")
+	apps := intfractx.FindRemoteEntity(EntityKindContainer)
+	TestUtils.Assert(t, len(apps) == 2, "Number of app entities don't match")
+	switch v := naples[0].Parent().(type) {
+	case *vmEntity:
+		TestUtils.Assert(t, v.ipAddress != "", "IP address not set")
+	default:
+		TestUtils.Assert(t, false, "Parent type failed!")
+	}
+	switch v := apps[0].Parent().(type) {
+	case *vmEntity:
+		print(v)
+	default:
+		TestUtils.Assert(t, false, "Parent type failed!")
+	}
+	retCode, _, _ := apps[0].(*appEntity).Exec("ls", false, false)
+	apps[0].(*appEntity).ScpTo("src", "dest")
+	TestUtils.Assert(t, retCode == 0, "Retcode not zero")
+	TestUtils.Assert(t, len(ctx.(*infraCtx).getHostApps(vmentity)) == 2, "Number of host apps don't match")
+	AgentConfig.DoConfig = func(req *http.Request) (*http.Response, error) {
+		return &http.Response{Body: noBody{}}, nil
+	}
+	deviceJSONFile := os.Getenv("GOPATH") + "/src/github.com/pensando/sw/platform/src/app/nicmgrd/etc/eth-smart.json"
+	ctx.DoConfiguration(deviceJSONFile)
+	ctx.PrintTopology()
 	ctx.(*infraCtx).CleanUp()
 	jsonPath = "./test_cfg/warmd.json"
 	Helpers.Run(startCmd, 0, false, false, nil)

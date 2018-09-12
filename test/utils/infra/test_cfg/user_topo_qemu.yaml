@@ -1,0 +1,15 @@
+nodes:
+    -
+        node:
+            name: node1
+            kind: datanode
+            qemu: true
+apps:
+    - app:
+            name: app1-1
+            kind: container
+            parent: node1
+    - app:
+            name: app1-2
+            kind: container
+            parent: node1

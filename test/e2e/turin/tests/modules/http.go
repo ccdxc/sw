@@ -37,7 +37,7 @@ func (t *HTTP) Setup(ctx Infra.Context) error {
 func (t *HTTP) Run(ctx Infra.Context) error {
 	srcEp := ctx.FindRemoteEntityByName("app1-2")
 	dstEp := ctx.FindRemoteEntityByName("app2-1")
-	srcIP, _ := dstEp.GetIPAddress()
+	srcIP, _ := srcEp.GetIPAddress()
 	dstIP, _ := dstEp.GetIPAddress()
 	cmd := "wget " + dstIP + ":8000"
 	retcode, stdout, _ := srcEp.Exec(cmd, false, false)

@@ -52,6 +52,7 @@ type RemoteEntity interface {
 // Remote Entity Kind (or type)
 const (
 	EntityKindNaples    = "naples"
+	EntityKindQemu      = "qemu"
 	EnityKindVenice     = "venice"
 	EntityKindContainer = "container"
 	EntityKindVM        = "vm"
@@ -183,7 +184,7 @@ func (re *remoteEntity) bringUp(ctx context.Context, err chan error) {
 }
 
 func (re *remoteEntity) GetIPAddress() (string, error) {
-	return "", nil
+	return re.ipAddress, nil
 }
 
 func (re *remoteEntity) teardown(ctx context.Context, err chan error) {

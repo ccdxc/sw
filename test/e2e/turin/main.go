@@ -6,9 +6,16 @@ import (
 	"os"
 	"time"
 
+	cobra "github.com/spf13/cobra"
+
 	Tests "github.com/pensando/sw/test/e2e/turin/tests"
-	_ "github.com/pensando/sw/test/e2e/turin/tests/modules"
 	infra "github.com/pensando/sw/test/utils/infra"
+
+	_ "github.com/pensando/sw/test/e2e/turin/tests/modules"
+)
+
+var (
+	topofile, deviceJSONFile string
 )
 
 func runModule(ctx infra.Context, tm *Tests.TestManager, module Tests.ModuleSpec) error {
@@ -47,26 +54,120 @@ func runTests(ctx infra.Context) error {
 	return nil
 }
 
-var topoFile string
+func bringUpInfra() (infra.Context, error) {
 
-func main() {
-	fmt.Println(os.Getwd())
+	if topofile == "" {
+		topofile = os.Getenv("GOPATH") + "/src/github.com/pensando/sw/test/e2e/turin/tests/topos/2_naples_node.yaml"
+	} else {
+		topofile = os.Getenv("GOPATH") + "/src/github.com/pensando/sw/test/e2e/turin/tests/topos/" + topofile
+	}
+
+	if deviceJSONFile == "" {
+		deviceJSONFile = os.Getenv("GOPATH") + "/src/github.com/pensando/sw/platform/src/app/nicmgrd/etc/eth-smart.json"
+
+	} else {
+		deviceJSONFile = os.Getenv("GOPATH") + "/src/github.com/pensando/sw/platform/src/app/nicmgrd/etc/" + deviceJSONFile
+
+	}
+
 	warmdFile := "/warmd.json"
-	infraCtx, err := infra.NewInfraCtx(topoFile, warmdFile)
+	infraCtx, err := infra.NewInfraCtx(topofile, warmdFile)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(1)
+		return nil, err
 	}
 	fmt.Println("Infra context bring up was successful")
-	/*Just test configuration for now !*/
-	infraCtx.DoConfiguration()
-	fmt.Println("Pushed agent configuration")
-	time.Sleep(10 * time.Second)
-	if err := runTests(infraCtx); err != nil {
+	return infraCtx, nil
+}
+
+func doConfiguration(infraCtx infra.Context, deviceJSONFile string) error {
+
+	infraCtx.DoConfiguration(deviceJSONFile)
+	fmt.Println("Pushed Configuration")
+	time.Sleep(5 * time.Second)
+
+	return nil
+}
+
+func printTopology(infraCtx infra.Context) error {
+
+	infraCtx.PrintTopology()
+	return nil
+}
+
+func init() {
+	testCmd.Flags().StringVarP(&topofile, "topo-file", "t", "", "Topology file")
+	testCmd.Flags().StringVarP(&deviceJSONFile, "device-file", "", "", "Device json file")
+}
+
+var testCmd = &cobra.Command{
+	Use:   "test",
+	Short: "runs the e2e test",
+	Long:  `test accepts topology and configuration utility`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+
+		infraCtx, err := bringUpInfra()
+		if err != nil {
+			return err
+		}
+
+		if err := doConfiguration(infraCtx, deviceJSONFile); err != nil {
+			return err
+		}
+
+		printTopology(infraCtx)
+
+		if err := runTests(infraCtx); err != nil {
+			log.Println("Tests failed..")
+			return err
+		}
+
+		return nil
+	},
+}
+
+var bringUpCmd = &cobra.Command{
+	Use:   "bringup",
+	Short: "bring up e2e env",
+	Long:  `bringup accepts topology and configuration utility`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+
+		infraCtx, err := bringUpInfra()
+		if err != nil {
+			return err
+		}
+
+		if err := doConfiguration(infraCtx, deviceJSONFile); err != nil {
+			return err
+		}
+
+		printTopology(infraCtx)
+
+		return nil
+	},
+}
+
+// RootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
+	Use:   "e2e-turin",
+	Short: "e2e-turin is cli to serve all E2E needs",
+	Long:  `E2E turin is used to run, setup E2E environment for naples testing`,
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Usage()
+	},
+}
+
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	RootCmd.AddCommand(testCmd)
+	RootCmd.AddCommand(bringUpCmd)
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-func init() {
-	topoFile = os.Getenv("GOPATH") + "/src/github.com/pensando/sw/test/e2e/turin/tests/topos/2_naples_node.yaml"
+func main() {
+	Execute()
 }
