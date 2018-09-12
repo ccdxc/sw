@@ -3,7 +3,7 @@ OutDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/netagent/ctrlerif/resta
 default: restgen swaggergen goimports
 	protoc -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
-	--gofast_out=plugins=grpc:. endpoint.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto route.proto security.proto service.proto sgpolicy.proto tenant.proto tunnel.proto tcp_proxy.proto
+	--gofast_out=plugins=grpc:. endpoint.proto interface.proto ipsec.proto match.proto namespace.proto nat.proto network.proto port.proto route.proto security.proto service.proto sgpolicy.proto tenant.proto tunnel.proto tcp_proxy.proto
 
 restgen:
 	protoc -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \

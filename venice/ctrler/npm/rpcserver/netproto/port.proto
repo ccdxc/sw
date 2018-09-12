@@ -1,0 +1,103 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for port
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package netproto;
+
+// Mandatory imports.
+
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+
+// ---------------------------- Port API ----------------------------
+// Port controller api
+service PortApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Port",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/ports"
+    };
+
+    rpc GetPort (api.ObjectMeta) returns (Port) {};
+    rpc ListPorts (api.ObjectMeta) returns (PortList) {};
+    rpc WatchPorts (api.ObjectMeta) returns (stream PortEvent) {};
+}
+
+// Port object
+message Port {
+    api.TypeMeta    TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta  ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    PortSpec        Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    PortStatus      Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// PortSpec captures all the port level configuration
+message PortSpec {
+    enum PortSpeed {
+        SPEED_NONE      = 0;
+        SPEED_1G        = 1;
+        SPEED_10G       = 2;
+        SPEED_25G       = 3;
+        SPEED_40G       = 4;
+        SPEED_50G       = 5;
+        SPEED_100G      = 6;
+        SPEED_AUTONEG   = 7;
+    }
+
+    enum PortBreakout {
+        BREAKOUT_NONE   = 0;
+        BREAKOUT_4X25G  = 1;
+        BREAKOUT_4X10G  = 2;
+        BREAKOUT_2X50G  = 3;
+    }
+
+    enum IFStatus {
+        NONE    = 0;
+        UP      = 1;
+        DOWN    = 2;
+    }
+
+
+    // Port Speed
+    string Speed            = 1 [(venice.check) = "StrEnum(PortSpec.PortSpeed",
+                                 (gogoproto.jsontag) = "speed,omitempty"];
+
+
+    // Port Breakout Mode
+    string BreakoutMode     = 2  [(venice.check) = "StrEnum(PortSpec.PortBreakout",
+                                  (gogoproto.jsontag) = "breakout-mode,omitempty"];
+
+    // AdminStatus of the overlay port.
+    string AdminStatus      = 3 [(venice.check) = "StrEnum(PortStatus.IFStatus)",
+                                 (gogoproto.jsontag) = "admin-status,omitempty"];
+}
+
+// Port Status
+message PortStatus {
+    // Operational Status
+    string OperStatus       = 1 [(venice.check) = "StrEnum(PortSpec.IFStatus)",
+                                 (gogoproto.jsontag) = "oper-status,omitempty"];
+    // Operational Speed in case of AutoNeg
+    string OperSpeed        = 2 [(venice.check) = "StrEnum(PortSpec.PortSpeed)",
+                                 (gogoproto.jsontag) = "oper-status,omitempty"];
+    // PortID in the datapath
+    uint64 PortID           = 3 [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+message PortList {
+    repeated Port ports  = 1;
+}
+
+// port watch event
+message PortEvent {
+    api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    Port            Port        = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "port,omitempty"];
+}

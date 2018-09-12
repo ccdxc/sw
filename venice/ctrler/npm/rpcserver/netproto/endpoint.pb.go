@@ -12,6 +12,7 @@
 		namespace.proto
 		nat.proto
 		network.proto
+		port.proto
 		route.proto
 		security.proto
 		service.proto
@@ -81,6 +82,11 @@
 		NetworkList
 		NetworkEvent
 		NetworkEventList
+		Port
+		PortSpec
+		PortStatus
+		PortList
+		PortEvent
 		Route
 		RouteSpec
 		RouteStatus
