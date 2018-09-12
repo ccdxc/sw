@@ -23,9 +23,10 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
-// Temporary definition, until CKM provides a API to validate Cert
-const (
-	ValidCertSignature = "O=Pensando Systems, Inc., OU=Pensando Manufacturing, CN=Pensando Manufacturing CA/emailAddress=mfgca@pensando.io"
+// Max time (in milliseconds) to complete the registration sequence,
+// after which the client will cancel the the request
+var (
+	nicRegTimeout = 5000 * time.Millisecond
 )
 
 // CmdClient is the client of CMD server running on Venice node
@@ -270,40 +271,97 @@ func (client *CmdClient) Stop() {
 	client.closeRegistrationRPC()
 }
 
+func makeErrorResp(err error, str string, nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error) {
+	name := ""
+	if nic != nil {
+		name = nic.Name
+	}
+	if err != nil {
+		return grpc.RegisterNICResponse{}, errors.Wrapf(err, fmt.Sprintf("%s, nic: %s", str, name))
+	}
+	return grpc.RegisterNICResponse{}, fmt.Errorf("%s, nic: %s", str, name)
+}
+
 // RegisterSmartNICReq send a register request for SmartNIC to CMD
 func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error) {
 
 	// initialize rpc client
 	err := client.initRegistrationRPC()
 	if err != nil {
-		return grpc.RegisterNICResponse{Phase: cluster.SmartNICSpec_UNKNOWN.String()}, err
+		return makeErrorResp(err, "Error initializing registration RPC", nic)
 	}
 	defer client.closeRegistrationRPC()
 
+	// Generate cluster key and CSR
+	// CMD will sign if the NIC is admitted
 	kp, err := client.nmd.GenClusterKeyPair()
 	if err != nil {
-		return grpc.RegisterNICResponse{}, errors.Wrapf(err, "Error generating key pair")
+		return makeErrorResp(err, "Error generating key pair", nic)
 	}
 	csr, err := certs.CreateCSR(kp, nil, []string{globals.Nmd + "-" + nic.Name}, nil)
 	if err != nil {
-		return grpc.RegisterNICResponse{}, errors.Wrapf(err, "Error creating certificate signing request")
+		return makeErrorResp(err, "Error creating certificate signing request", nic)
 	}
 
 	// make an RPC call to controller
 	nicRPCClient := grpc.NewSmartNICRegistrationClient(client.getRegistrationRPCClient().ClientConn)
-	req := grpc.RegisterNICRequest{
-		Nic:  *nic,
-		Cert: getFactoryCert(),
-		ClusterCertSignRequest: csr.Raw,
-	}
-	resp, err := nicRPCClient.RegisterNIC(context.Background(), &req)
-	if err != nil || resp == nil {
-		log.Errorf("Error resp from CMD for registerNIC, Nic: %v Err: %v Resp: %v",
-			nic.Name, err, resp)
-		return grpc.RegisterNICResponse{}, err
+	ctx, cancel := context.WithTimeout(context.Background(), nicRegTimeout)
+	defer cancel()
+
+	stream, err := nicRPCClient.RegisterNIC(ctx)
+	if err != nil {
+		return makeErrorResp(err, "Error sending RegisterNICRequest", nic)
 	}
 
-	return *resp, nil
+	platformCert, err := client.nmd.GetPlatformCertificate(nic)
+	if err != nil {
+		return makeErrorResp(err, "Error retrieving factory cert", nic)
+	}
+
+	req := grpc.RegisterNICRequest{
+		AdmissionRequest: &grpc.NICAdmissionRequest{
+			Nic:  *nic,
+			Cert: platformCert,
+			ClusterCertSignRequest: csr.Raw,
+		},
+	}
+	err = stream.Send(&req)
+	if err != nil {
+		return makeErrorResp(err, "Error sending RegisterNICRequest", nic)
+	}
+
+	msg, err := stream.Recv()
+	if err != nil {
+		return makeErrorResp(err, fmt.Sprintf("Error receiving registration response, msg: %v", msg), nic)
+	}
+
+	if msg.AuthenticationRequest == nil {
+		return makeErrorResp(nil, "Protocol error: no AuthenticationRequest in message", nic)
+	}
+
+	claimantRandom, challengeResp, err := client.nmd.GenChallengeResponse(nic, msg.AuthenticationRequest.Challenge)
+	authResp := grpc.RegisterNICRequest{
+		AuthenticationResponse: &grpc.AuthenticationResponse{
+			ClaimantRandom:    claimantRandom,
+			ChallengeResponse: challengeResp,
+		},
+	}
+
+	err = stream.Send(&authResp)
+	if err != nil {
+		return makeErrorResp(err, "Error sending challenge response", nic)
+	}
+
+	msg, err = stream.Recv()
+	if err != nil {
+		return makeErrorResp(err, fmt.Sprintf("Error receiving admission response, msg: %v", msg), nic)
+	}
+
+	if msg.AdmissionResponse == nil {
+		return makeErrorResp(nil, "Protocol error: no AdmissionResponse in message", nic)
+	}
+
+	return *msg, nil
 }
 
 // UpdateSmartNICReq send a status update of SmartNIC to CMD
@@ -335,10 +393,4 @@ func (client *CmdClient) UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.Smar
 // WatchSmartNICUpdates starts a CMD watchers to receive SmartNIC objects updates
 func (client *CmdClient) WatchSmartNICUpdates() {
 	go client.runSmartNICWatcher(client.watchCtx)
-}
-
-// getFactoryCert
-// TODO: get factory cert from platform
-func getFactoryCert() []byte {
-	return []byte(ValidCertSignature)
 }

@@ -5,7 +5,6 @@ package smartnic
 import (
 	"crypto/x509"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -21,7 +20,9 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
-	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
+	cmdcertutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/certs"
 	perror "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -42,12 +43,18 @@ const (
 	// at 30min.
 	nicRegMaxInterval = (30 * 60)
 
-	// ValidCertSignature is a Temporary definition, until CKM provides a API to validate Cert
-	ValidCertSignature = "O=Pensando Systems, Inc., OU=Pensando Manufacturing, CN=Pensando Manufacturing CA/emailAddress=mfgca@pensando.io"
+	// Subject for a valid platform certificate
+	platformCertOrg            = "Pensando Systems"
+	platformCertOrgUnit        = "Pensando Manufacturing CA"
+	platformSerialNumberFormat = "PID=%s SN=%s"
 )
 
 var (
 	errAPIServerDown = fmt.Errorf("API Server not reachable or down")
+
+	// Max time (in milliseconds) to complete the entire registration sequence,
+	// after which the server will cancel the request
+	nicRegTimeout = 3000 * time.Millisecond
 )
 
 // RPCServer implements SmartNIC gRPC service.
@@ -132,17 +139,50 @@ func (s *RPCServer) GetNicInRetryDB(key string) *cluster.SmartNIC {
 	return nil
 }
 
-// IsValidFactoryCert inspects the certificate for validity and returns boolean
-func (s *RPCServer) IsValidFactoryCert(cert []byte) bool {
-
-	// TODO: For now, it just looks for a pensando string signature
-	// Will use CKM APIs once it is available for checking validity
-	str := string(cert)
-	if strings.Contains(str, ValidCertSignature) {
-		return true
+// validateNICPlatformCert validates the certificate provided by NAPLES in the admission request
+// It only checks the certificate. It does not check possession of the private key.
+func validateNICPlatformCert(cert *x509.Certificate, nic *cluster.SmartNIC) error {
+	if cert == nil {
+		return fmt.Errorf("No certificate provided")
 	}
 
-	return false
+	if nic == nil {
+		return fmt.Errorf("No SmartNIC object provided")
+	}
+
+	// TODO: use only Pensando PKI certs, do not accept self-signed!
+	verifyOpts := x509.VerifyOptions{
+		Roots: certs.NewCertPool([]*x509.Certificate{cert}),
+	}
+
+	chains, err := cert.Verify(verifyOpts)
+	if err != nil || len(chains) != 1 {
+		return fmt.Errorf("Certificate validation failed, err: %v", err)
+	}
+
+	if len(cert.Subject.Organization) != 1 || cert.Subject.Organization[0] != platformCertOrg {
+		return fmt.Errorf("Invalid organization field in subject: %v", cert.Subject.Organization)
+	}
+
+	if len(cert.Subject.OrganizationalUnit) != 1 || cert.Subject.OrganizationalUnit[0] != platformCertOrgUnit {
+		return fmt.Errorf("Invalid organizational unit field in subject: %v", cert.Subject.OrganizationalUnit)
+	}
+
+	var pid, sn string
+	n, err := fmt.Sscanf(cert.Subject.SerialNumber, platformSerialNumberFormat, &pid, &sn)
+	if n != 2 {
+		return fmt.Errorf("Invalid PID/SN: %s", cert.Subject.SerialNumber)
+	}
+
+	if sn != nic.Status.SerialNum {
+		return fmt.Errorf("Serial number mismatch. AdmissionRequest: %s, Certificate: %s", sn, nic.Status.SerialNum)
+	}
+
+	if cert.Subject.CommonName != nic.Name {
+		return fmt.Errorf("Name mismatch. AdmissionRequest: %s, Certificate: %s", nic.Name, cert.Subject.CommonName)
+	}
+
+	return nil
 }
 
 // GetCluster fetches the Cluster object based on object meta
@@ -316,98 +356,193 @@ func (s *RPCServer) DeleteSmartNIC(om api.ObjectMeta) error {
 	return nil
 }
 
-// RegisterNIC handles the register NIC request and upon validation creates SmartNIC object
+// RegisterNIC handles the register NIC request and upon validation creates SmartNIC object.
 // NMD starts the NIC registration process when the NIC is placed in managed mode.
 // NMD is expected to retry with backoff if there are API errors or if the NIC is rejected.
-func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICRequest) (*grpc.RegisterNICResponse, error) {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return nil, errAPIServerDown
-	}
+func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServer) error {
+	var req *grpc.NICAdmissionRequest
+	var name string
 
-	mac := req.GetNic().Name
-	cert := req.GetCert()
+	// There is no way to specify timeouts for individual Send/Recv calls in Golang gRPC,
+	// so we execute the entire registration sequence under a single timeout.
+	// https://github.com/grpc/grpc-go/issues/445
+	// https://github.com/grpc/grpc-go/issues/1229
+	procRequest := func() (interface{}, error) {
 
-	log.Infof("Received NIC registration request for MAC:%s", mac)
+		// Canned responses in case of error
+		authErrResp := &grpc.RegisterNICResponse{
+			AdmissionResponse: &grpc.NICAdmissionResponse{
+				Phase:  cluster.SmartNICSpec_REJECTED.String(),
+				Reason: string("Authentication error"),
+			},
+		}
 
-	// Validate the factory cert obtained in the request
-	if s.IsValidFactoryCert(cert) == false {
+		intErrResp := &grpc.RegisterNICResponse{
+			AdmissionResponse: &grpc.NICAdmissionResponse{
+				Phase:  cluster.SmartNICSpec_UNKNOWN.String(),
+				Reason: string("Internal error"),
+			},
+		}
 
-		// Reject NIC if the certificate is not valid
-		// TODO: Add exact reason to the response once CKM api is used
-		log.Errorf("Invalid certificate, NIC rejected mac: %v", mac)
-		return &grpc.RegisterNICResponse{Phase: cluster.SmartNICSpec_REJECTED.String(), Reason: string("Invalid Cert")}, nil
-	}
+		protoErrResp := &grpc.RegisterNICResponse{
+			AdmissionResponse: &grpc.NICAdmissionResponse{
+				Phase:  cluster.SmartNICSpec_UNKNOWN.String(),
+				Reason: string("Internal error"),
+			},
+		}
 
-	// Get the Cluster object
-	clusterObj, err := s.GetCluster()
-	if err != nil {
-		log.Errorf("Error getting Cluster object, err: %v", err)
-		return &grpc.RegisterNICResponse{Phase: cluster.SmartNICSpec_UNKNOWN.String()}, err
-	}
+		msg, err := stream.Recv()
+		if err != nil {
+			return nil, errors.Wrapf(err, "Error receiving admission request")
+		}
 
-	// Process the request based on the configured admission mode
-	var phase string
-	if clusterObj.Spec.AutoAdmitNICs == true {
+		cl := s.ClientGetter.APIClient()
+		if cl == nil {
+			return intErrResp, errAPIServerDown
+		}
 
-		// Admit NIC if autoAdmission is enabled
-		phase = cluster.SmartNICSpec_ADMITTED.String()
-	} else {
+		if msg.AdmissionRequest == nil {
+			return protoErrResp, fmt.Errorf("Protocol error: no AdmissionRequest in message")
+		}
 
-		// Set the NIC to pendingState for Manual Approval
-		phase = cluster.SmartNICSpec_PENDING.String()
-	}
-
-	log.Infof("Validated NIC: %s, phase: %s", mac, phase)
-
-	// Create SmartNIC object, if the status is either admitted or pending.
-	if phase == cluster.SmartNICSpec_ADMITTED.String() || phase == cluster.SmartNICSpec_PENDING.String() {
+		req = msg.AdmissionRequest
 		nic := req.GetNic()
-		nic.Spec.Phase = phase
-		nic.ObjectMeta.SelfLink = nic.MakeKey("cluster")
+		name = nic.Name
 
-		_, err = s.UpdateSmartNIC(&nic)
+		cert, err := x509.ParseCertificate(req.GetCert())
 		if err != nil {
-			status := apierrors.FromError(err)
-			log.Errorf("Error updating smartNIC object: %+v err: %v status: %v", nic, err, status)
-			return &grpc.RegisterNICResponse{Phase: phase}, err
+			return authErrResp, errors.Wrapf(err, "Invalid certificate")
 		}
 
-		// Create or Update the Host
-		_, err = s.UpdateHost(&nic)
+		// Validate the factory cert obtained in the request
+		err = validateNICPlatformCert(cert, &nic)
 		if err != nil {
-			log.Errorf("Error creating or updating Host object, host: %s mac: %s err: %v",
-				nic.Spec.HostName, nic.ObjectMeta.Name, err)
+			return authErrResp, errors.Wrapf(err, "Invalid certificate, name: %v, cert subject: %v", nic.Name, cert.Subject)
 		}
-	}
 
-	resp := &grpc.RegisterNICResponse{
-		Phase: phase,
-	}
-
-	if phase == cluster.SmartNICSpec_ADMITTED.String() {
+		// check the CSR
 		csr, err := x509.ParseCertificateRequest(req.GetClusterCertSignRequest())
 		if err != nil {
-			log.Errorf("Received invalid certificate request, error: %v", err)
-			return nil, errors.Wrap(err, "Invalid certificate request")
+			return protoErrResp, errors.Wrapf(err, "Invalid certificate request")
 		}
 		err = csr.CheckSignature()
 		if err != nil {
-			log.Errorf("Received CSR with invalid signature, error: %v", err)
-			return nil, errors.Wrap(err, "Certificate request has invalid signature")
+			return protoErrResp, errors.Wrapf(err, "Certificate request has invalid signature")
 		}
-		cert, err := env.CertMgr.Ca().Sign(csr)
+
+		// Send challenge
+		challenge, err := certs.GeneratePoPNonce()
 		if err != nil {
-			log.Errorf("Error signing CSR: %v", err)
-			return nil, errors.Wrap(err, "Error signing certificate request")
+			return intErrResp, errors.Wrapf(err, "Error generating challenge")
 		}
-		resp.ClusterCert = &certapi.CertificateSignResp{
-			Certificate: &certapi.Certificate{Certificate: cert.Raw},
+
+		authReq := &grpc.RegisterNICResponse{
+			AuthenticationRequest: &grpc.AuthenticationRequest{
+				Challenge: challenge,
+			},
 		}
-		resp.CaTrustChain = utils.GetCaTrustChain(env.CertMgr)
-		resp.TrustRoots = utils.GetTrustRoots(env.CertMgr)
+
+		err = stream.Send(authReq)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Error sending auth request")
+		}
+
+		// Receive challenge response
+		msg, err = stream.Recv()
+		if err != nil {
+			return nil, errors.Wrapf(err, "Error receiving auth response")
+		}
+
+		authResp := msg.AuthenticationResponse
+		if authResp == nil {
+			return protoErrResp, fmt.Errorf("Protocol error: no AuthenticationResponse in msg")
+		}
+
+		err = certs.VerifyPoPChallenge(challenge, authResp.ClaimantRandom, authResp.ChallengeResponse, cert)
+		if err != nil {
+			return authErrResp, errors.Wrapf(err, "Authentication failed")
+		}
+
+		// NAPLES is genuine, sign the CSR
+		clusterCert, err := env.CertMgr.Ca().Sign(csr)
+		if err != nil {
+			return intErrResp, errors.Wrap(err, "Error signing certificate request")
+		}
+
+		// Get the Cluster object
+		clusterObj, err := s.GetCluster()
+		if err != nil {
+			return intErrResp, errors.Wrapf(err, "Error getting Cluster object")
+		}
+
+		// Process the request based on the configured admission mode
+		var phase string
+		if clusterObj.Spec.AutoAdmitNICs == true {
+			// Admit NIC if autoAdmission is enabled
+			phase = cluster.SmartNICSpec_ADMITTED.String()
+		} else {
+			// Set the NIC to pendingState for Manual Approval
+			phase = cluster.SmartNICSpec_PENDING.String()
+		}
+
+		log.Infof("Validated NIC: %s, phase: %s", name, phase)
+
+		// Create SmartNIC object, if the status is either admitted or pending.
+		if phase == cluster.SmartNICSpec_ADMITTED.String() || phase == cluster.SmartNICSpec_PENDING.String() {
+			nic := req.GetNic()
+			nic.Spec.Phase = phase
+			nic.ObjectMeta.SelfLink = nic.MakeKey("cluster")
+
+			_, err = s.UpdateSmartNIC(&nic)
+			if err != nil {
+				status := apierrors.FromError(err)
+				log.Errorf("Error updating smartNIC object: %+v err: %v status: %v", nic, err, status)
+				return intErrResp, errors.Wrapf(err, "Error updating smartNIC object: %+v")
+			}
+
+			// Create or Update the Host
+			_, err = s.UpdateHost(&nic)
+			if err != nil {
+				return intErrResp, errors.Wrapf(err, "Error creating or updating Host object, host: %s mac: %s",
+					nic.Spec.HostName, nic.ObjectMeta.Name)
+			}
+		}
+
+		okResp := &grpc.RegisterNICResponse{
+			AdmissionResponse: &grpc.NICAdmissionResponse{
+				Phase: phase,
+			},
+		}
+
+		if phase == cluster.SmartNICSpec_ADMITTED.String() {
+			okResp.AdmissionResponse.ClusterCert = &certapi.CertificateSignResp{
+				Certificate: &certapi.Certificate{
+					Certificate: clusterCert.Raw,
+				},
+			}
+			okResp.AdmissionResponse.CaTrustChain = cmdcertutils.GetCaTrustChain(env.CertMgr)
+			okResp.AdmissionResponse.TrustRoots = cmdcertutils.GetTrustRoots(env.CertMgr)
+		}
+
+		return okResp, nil
+
 	}
-	return resp, err
+
+	ctx, cancel := context.WithTimeout(stream.Context(), nicRegTimeout)
+	defer cancel()
+	resp, err := utils.ExecuteWithContext(ctx, procRequest)
+
+	// if we have a response we send it back to the client, otherwise
+	// it means we timed out and can just terminate the request
+	if resp != nil {
+		stream.Send(resp.(*grpc.RegisterNICResponse))
+	}
+
+	if err != nil {
+		log.Errorf("Error processing NIC admission request, name: %v, err: %v", name, err)
+	}
+
+	return err
 }
 
 // UpdateNIC handles the update to smartNIC object

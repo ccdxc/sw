@@ -312,7 +312,7 @@ func (n *NMD) initTLSProvider() error {
 	return nil
 }
 
-func (n *NMD) setClusterCredentials(resp *grpc.RegisterNICResponse) error {
+func (n *NMD) setClusterCredentials(resp *grpc.NICAdmissionResponse) error {
 	certMsg := resp.GetClusterCert()
 	if certMsg == nil {
 		return fmt.Errorf("No certificate found in registration response message")

@@ -97,7 +97,7 @@ service SmartNICRegistration {
 	// Register NIC
 	// - registers the NIC when the mode is switched from classic
 	//   to managed mode
-	rpc RegisterNIC (RegisterNICRequest) returns (RegisterNICResponse) {};
+	rpc RegisterNIC (stream RegisterNICRequest) returns (stream RegisterNICResponse) {};
 }
 
 service SmartNICUpdates {
@@ -110,10 +110,27 @@ service SmartNICUpdates {
 
 }
 
-// Register NIC request
-message RegisterNICRequest {
+//            ------------------------
+//             NIC ADMISSION SEQUENCE
+//            ------------------------
+//
+//  NMD                                         CMD
+//        -------- AdmissionRequest -------->
+//
+//        <----- AuthenticationRequest ------
+//
+//        ----- AuthenticationResponse ----->
+//
+//        <------- AdmissionResponse --------
+//
+// The entire sequence is executed using a single bi-dir streaming RPC.
+// gRPC streaming calls allow only messages of a single type in each direction,
+// so both RegisterNICRequest and RegisterNICResponse messages contain multiple
+// sub-messages. Only one sub-message is used in any request or response;
+// the others are supposed to be nil.
 
-	// SmartNIC object
+// NMD --> CMD
+message NICAdmissionRequest {
 	cluster.SmartNIC Nic    = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 
 	// Factory Certificate
@@ -123,9 +140,25 @@ message RegisterNICRequest {
 	bytes ClusterCertSignRequest = 3 [(gogoproto.jsontag) = "clusterCertSignRequest,omitempty"];
 }
 
-// Register NIC response
-message RegisterNICResponse {
+// CMD --> NMD
+message AuthenticationRequest {
+	// Challenge consists of a random nonce
+	bytes Challenge = 1 [(gogoproto.jsontag) = "challenge,omitempty"];
+}
 
+// NMD --> CMD
+message AuthenticationResponse {
+	// Random string chosen by NMD to compute the response
+	// Prevents chosen-plaintext attacks
+	// Needed for verification of the signature
+	bytes ClaimantRandom = 1 [(gogoproto.jsontag) = "claimantRandom,omitempty"];
+
+	// Challenge response
+	bytes ChallengeResponse = 2 [(gogoproto.jsontag) = "challengeResponse,omitempty"];
+}
+
+// CMD --> NMD
+message NICAdmissionResponse {
 	// Admission Status of NIC - string enum of cluster.SmartNICSpec.SmartNICPhase
 	string Phase = 1 [(gogoproto.jsontag) = "phase,omitempty"];
 
@@ -144,6 +177,26 @@ message RegisterNICResponse {
   // Additional root certificates to trust
   certapi.TrustRoots TrustRoots = 5 [(gogoproto.jsontag) = "trustRoots,omitempty"];
 }
+
+// NIC Registration request (CMD --> NMD)
+message RegisterNICRequest {
+	// First message
+	NICAdmissionRequest AdmissionRequest = 1 [(gogoproto.jsontag) = "admissionRequest,omitempty"];
+
+	// Third message
+	AuthenticationResponse AuthenticationResponse = 2 [(gogoproto.jsontag) = "authenticationResponse,omitempty"];
+}
+
+// NIC Registration response (NMD --> CMD)
+message RegisterNICResponse {
+	// Second message
+	AuthenticationRequest AuthenticationRequest = 1 [(gogoproto.jsontag) = "authenticationRequest,omitempty"];
+
+	// Fourth message
+	NICAdmissionResponse AdmissionResponse = 2 [(gogoproto.jsontag) = "admissionResponse,omitempty"];
+}
+
+//// NIC UPDATES AND EVENTS
 
 // Update NIC request
 message UpdateNICRequest {

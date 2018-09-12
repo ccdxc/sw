@@ -3,6 +3,7 @@
 package state
 
 import (
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -90,6 +91,14 @@ func (m *mockAgent) DeleteSmartNIC(nic *cmd.SmartNIC) error {
 	return nil
 }
 
+func (m *mockAgent) GetPlatformCertificate(nic *cmd.SmartNIC) ([]byte, error) {
+	return nil, nil
+}
+
+func (m *mockAgent) GetPlatformSigner(nic *cmd.SmartNIC) (crypto.Signer, error) {
+	return nil, nil
+}
+
 type mockCtrler struct {
 	sync.Mutex
 	nicDB map[string]*cmd.SmartNIC
@@ -113,29 +122,46 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 			return grpc.RegisterNICResponse{}, fmt.Errorf("Error generating CA cert: %v", err)
 		}
 		resp := grpc.RegisterNICResponse{
-			Phase: cmd.SmartNICSpec_ADMITTED.String(),
-			ClusterCert: &certapi.CertificateSignResp{
-				Certificate: &certapi.Certificate{
-					Certificate: cert.Raw,
+			AdmissionResponse: &grpc.NICAdmissionResponse{
+				Phase: cmd.SmartNICSpec_ADMITTED.String(),
+				ClusterCert: &certapi.CertificateSignResp{
+					Certificate: &certapi.Certificate{
+						Certificate: cert.Raw,
+					},
 				},
-			},
-			CaTrustChain: &certapi.CaTrustChain{
-				Certificates: []*certapi.Certificate{
-					&certapi.Certificate{Certificate: cert.Raw},
+				CaTrustChain: &certapi.CaTrustChain{
+					Certificates: []*certapi.Certificate{
+						&certapi.Certificate{
+							Certificate: cert.Raw,
+						},
+					},
 				},
-			},
-			TrustRoots: &certapi.TrustRoots{
-				Certificates: []*certapi.Certificate{
-					&certapi.Certificate{Certificate: cert.Raw},
+				TrustRoots: &certapi.TrustRoots{
+					Certificates: []*certapi.Certificate{
+						&certapi.Certificate{
+							Certificate: cert.Raw,
+						},
+					},
 				},
 			},
 		}
 		return resp, nil
 	}
+
 	if nic.Name == nicKey2 {
-		return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_PENDING.String()}, nil
+		return grpc.RegisterNICResponse{
+			AdmissionResponse: &grpc.NICAdmissionResponse{
+				Phase: cmd.SmartNICSpec_PENDING.String(),
+			},
+		}, nil
 	}
-	return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_REJECTED.String(), Reason: string("Invalid Cert")}, nil
+
+	return grpc.RegisterNICResponse{
+		AdmissionResponse: &grpc.NICAdmissionResponse{
+			Phase:  cmd.SmartNICSpec_REJECTED.String(),
+			Reason: string("Invalid Cert"),
+		},
+	}, nil
 }
 
 func (m *mockCtrler) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error) {
@@ -265,7 +291,7 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 	// create smartNIC
 	resp, err := nm.RegisterSmartNICReq(&nic)
 	AssertOk(t, err, "Error registering nic")
-	Assert(t, resp.Phase == cmd.SmartNICSpec_ADMITTED.String(), "NIC is not admitted", nic)
+	Assert(t, resp.AdmissionResponse.Phase == cmd.SmartNICSpec_ADMITTED.String(), "NIC is not admitted", nic)
 
 	// update smartNIC
 	nic.Status = cmd.SmartNICStatus{

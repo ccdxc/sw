@@ -10,6 +10,7 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -135,6 +136,11 @@ func (n *NMD) StartManagedMode() error {
 						// TODO: get mgmt ip from platform
 						HostName: n.config.Spec.HostName,
 					},
+					// TODO: get these from platform
+					Status: cmd.SmartNICStatus{
+						SerialNum:         "0x0123456789ABCDEFghijk",
+						PrimaryMacAddress: mac,
+					},
 				}
 			}
 			if nicObj.Spec.MgmtIp == "" {
@@ -143,10 +149,12 @@ func (n *NMD) StartManagedMode() error {
 
 			// Send NIC register request to CMD
 			log.Infof("Registering NIC with CMD : %+v", nicObj)
-			resp, err := n.RegisterSmartNICReq(nicObj)
+			msg, err := n.RegisterSmartNICReq(nicObj)
 
 			// Cache it in nicDB
-			nicObj.Spec.Phase = resp.Phase
+			if msg.AdmissionResponse != nil {
+				nicObj.Spec.Phase = msg.AdmissionResponse.Phase
+			}
 			n.SetSmartNIC(nicObj)
 
 			// Error and Phase response is handled according to the following rules.
@@ -166,7 +174,10 @@ func (n *NMD) StartManagedMode() error {
 				// Rule #1 - continue retry at regular interval
 				log.Errorf("Error registering nic, mac: %s err: %+v", mac, err)
 			} else {
-
+				resp := msg.AdmissionResponse
+				if resp == nil {
+					log.Errorf("Protocol error: no AdmissionResponse in message, mac: %s", mac)
+				}
 				log.Infof("Received register response: %+v", resp)
 				switch resp.Phase {
 
@@ -197,7 +208,7 @@ func (n *NMD) StartManagedMode() error {
 					log.Infof("NIC admitted into cluster, mac: %s", mac)
 					n.setRegStatus(false)
 
-					err = n.setClusterCredentials(&resp)
+					err = n.setClusterCredentials(resp)
 					if err != nil {
 						log.Errorf("Error processing cluster credentials: %v", err)
 					}
@@ -324,4 +335,18 @@ func (n *NMD) StopClassicMode(shutdown bool) error {
 
 	// Stop RestServer
 	return n.StopRestServer(shutdown)
+}
+
+// GetPlatformCertificate returns the certificate containing the NIC identity and public key
+func (n *NMD) GetPlatformCertificate(nic *cmd.SmartNIC) ([]byte, error) {
+	return n.platform.GetPlatformCertificate(nic)
+}
+
+// GenChallengeResponse returns the response to a challenge issued by CMD to authenticate this NAPLES
+func (n *NMD) GenChallengeResponse(nic *cmd.SmartNIC, challenge []byte) ([]byte, []byte, error) {
+	signer, err := n.platform.GetPlatformSigner(nic)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Error getting platform signer: %v", err)
+	}
+	return certs.GeneratePoPChallengeResponse(signer, challenge)
 }

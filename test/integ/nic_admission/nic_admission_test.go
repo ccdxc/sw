@@ -539,6 +539,10 @@ func Teardown(m *testing.M) {
 
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 
+	if cmdenv.CertMgr != nil {
+		cmdenv.CertMgr.Close()
+		cmdenv.CertMgr = nil
+	}
 	log.Infof("#### ApiServer and CMD smartnic server is STOPPED")
 }
 

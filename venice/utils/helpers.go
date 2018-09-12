@@ -3,6 +3,7 @@
 package utils
 
 import (
+	"context"
 	"os"
 	"strings"
 	"time"
@@ -39,6 +40,27 @@ retryloop:
 		}
 	}
 	return result, nil
+}
+
+// ExecuteWithContext calls the evaluator (in a separate goroutine) and returns when it completes or
+// when the supplied context is cancelled
+func ExecuteWithContext(ctx context.Context, eval Evaluator) (interface{}, error) {
+	type Result struct {
+		I interface{}
+		E error
+	}
+	ch := make(chan Result, 1)
+	go func() {
+		i, e := eval()
+		ch <- Result{I: i, E: e}
+		close(ch)
+	}()
+	select {
+	case r := <-ch:
+		return r.I, r.E
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 }
 
 // IsEmpty checks if the given string is empty

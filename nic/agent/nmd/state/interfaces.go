@@ -3,6 +3,8 @@
 package state
 
 import (
+	"crypto"
+
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/utils/keymgr"
@@ -39,6 +41,8 @@ type NmdAPI interface {
 	CreateSmartNIC(nic *cluster.SmartNIC) error
 	UpdateSmartNIC(nic *cluster.SmartNIC) error
 	DeleteSmartNIC(nic *cluster.SmartNIC) error
+	GetPlatformCertificate(nic *cluster.SmartNIC) ([]byte, error)
+	GenChallengeResponse(nic *cluster.SmartNIC, challenge []byte) ([]byte, []byte, error)
 }
 
 // PlatformAPI is the API provided by PlatformAgent to NMD
@@ -47,6 +51,8 @@ type PlatformAPI interface {
 	CreateSmartNIC(nic *cluster.SmartNIC) error
 	UpdateSmartNIC(nic *cluster.SmartNIC) error
 	DeleteSmartNIC(nic *cluster.SmartNIC) error
+	GetPlatformCertificate(nic *cluster.SmartNIC) ([]byte, error)
+	GetPlatformSigner(nic *cluster.SmartNIC) (crypto.Signer, error)
 }
 
 // NmdPlatformAPI is the API provided by NMD to Platform agent

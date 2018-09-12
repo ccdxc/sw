@@ -7,7 +7,9 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"net/http"
+	"strings"
 	"testing"
+	"time"
 
 	context "golang.org/x/net/context"
 
@@ -95,6 +97,14 @@ func (ag *mockAgent) GenClusterKeyPair() (*keymgr.KeyPair, error) {
 	return keymgr.NewKeyPairObject("mock-agent-key", key), err
 }
 
+func (ag *mockAgent) GetPlatformCertificate(nic *cmd.SmartNIC) ([]byte, error) {
+	return nil, nil
+}
+
+func (ag *mockAgent) GenChallengeResponse(nic *cmd.SmartNIC, challenge []byte) ([]byte, []byte, error) {
+	return nil, nil, nil
+}
+
 type mockRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	nicdb      map[string]*cmd.SmartNIC
@@ -127,11 +137,55 @@ func createRPCServer(t *testing.T) *mockRPCServer {
 	return &srv
 }
 
-func (srv *mockRPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICRequest) (*grpc.RegisterNICResponse, error) {
-	if req.Nic.Name == "invalid-mac" {
-		return nil, errors.New("Invalid request")
+func (srv *mockRPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServer) error {
+	req, err := stream.Recv()
+	if err != nil {
+		return err
 	}
-	return &grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_ADMITTED.String()}, nil
+
+	if req.AdmissionRequest.Nic.Name == "invalid-mac" {
+		return errors.New("Invalid request")
+	}
+
+	if req.AdmissionRequest.Nic.Name == "proto-err-empty-challenge" {
+		authReq := grpc.RegisterNICResponse{}
+		err = stream.Send(&authReq)
+		return err
+	}
+
+	// send challenge
+	authReq := grpc.RegisterNICResponse{
+		AuthenticationRequest: &grpc.AuthenticationRequest{},
+	}
+	err = stream.Send(&authReq)
+	if err != nil {
+		return err
+	}
+
+	// receive challenge response
+	_, err = stream.Recv()
+	if err != nil {
+		return err
+	}
+
+	if req.AdmissionRequest.Nic.Name == "timeout" {
+		time.Sleep(2 * nicRegTimeout)
+	}
+
+	if req.AdmissionRequest.Nic.Name == "proto-err-empty-response" {
+		resp := &grpc.RegisterNICResponse{}
+		err = stream.Send(resp)
+		return err
+	}
+
+	// send admission response
+	resp := &grpc.RegisterNICResponse{
+		AdmissionResponse: &grpc.NICAdmissionResponse{
+			Phase: cmd.SmartNICSpec_ADMITTED.String(),
+		},
+	}
+	stream.Send(resp)
+	return nil
 }
 
 func (srv *mockRPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (*grpc.UpdateNICResponse, error) {
@@ -315,7 +369,23 @@ func TestCmdClientErrorHandling(t *testing.T) {
 	_, err = cl.RegisterSmartNICReq(&nic)
 	Assert(t, err != nil, "Register NIC should have failed")
 
+	// Test protocol errors
+	nic.Name = "proto-err-empty-challenge"
+	_, err = cl.RegisterSmartNICReq(&nic)
+	Assert(t, err != nil, "Register NIC should have failed")
+
+	nic.Name = "proto-err-empty-response"
+	_, err = cl.RegisterSmartNICReq(&nic)
+	Assert(t, err != nil, "Register NIC should have failed")
+
+	// override default timeout to speed-up the test
+	nicRegTimeout = 100 * time.Millisecond
+	nic.Name = "timeout"
+	_, err = cl.RegisterSmartNICReq(&nic)
+	Assert(t, err != nil && strings.Contains(err.Error(), "DeadlineExceeded"), "Register NIC should have failed due to timeout")
+
 	// Test update nic failure
+	nic.Name = "invalid-mac"
 	_, err = cl.UpdateSmartNICReq(&nic)
 	Assert(t, err != nil, "Update NIC should have failed")
 
