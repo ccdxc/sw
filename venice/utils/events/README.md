@@ -12,11 +12,10 @@ Table of Contents
   * [How to record events from NAPLES platform components?](#how-to-record-events-from-naples-platform-components)
 
 ## Design
-![](https://drive.google.com/uc?id=13XX4KYNDeryxA6P6agUKz_YQkfF41Tso)
+![Events Management System Design](https://drive.google.com/uc?id=13XX4KYNDeryxA6P6agUKz_YQkfF41Tso)
 
 #### Event Source
 Any component in the system that generates an event. For example:
-
 * *Controller components* - CMD, NPM, etc.
 * *Agent components* - NMD, NetAgent, Nicmgr, Linkmgmr, etc.
 
@@ -27,7 +26,7 @@ Recorder creates the event with given information (severity, event type, message
 Proxy server receives events from all different sources and persists it. The call from the recorder terminates here. Further processing and delivery of the events are asynchronous. Events proxy applies deduplication and distributes the received events using the dispatcher library. Events proxy encapsulates the dispatcher and writers.
 
 #### Event Dispatcher
-Events dispatcher is a library used by the proxy for performing deduplication and distribution.
+Events dispatcher is a library used by the proxy for deduplication and distribution.
 
 Events are deduped for a given dedup interval. Any event that reoccurs after the interval will be consisdered a new event.
 
@@ -71,10 +70,10 @@ e.g: `svc_cluster.proto` events will be in `/api/generated/cluster/svc_cluster_e
 	```go
 	import "github.com/pensando/sw/api/generated/cluster"
 	...
-	if _, err := recorder.NewRecorder(
-			&monitoring.EventSource{NodeName: utils.GetHostname(), Component: globals.Cmd},
-			cluster.GetEventTypes(), "", ""); err!=nil {
-			log.Fatalf("failed to create events recorder, err: %v", err)
+	if _, err := recorder.NewRecorder(&recorder.Config{
+		Source:       &monitoring.EventSource{NodeName: utils.GetHostname(), Component: globals.Cmd},
+		EvtTypes:     cluster.GetEventTypes()); err != nil {
+		log.Fatalf("failed to create events recorder, err: %v", err)
 	}
 	```
 
@@ -109,12 +108,11 @@ Same as the venice component.
 	```go
 	import "github.com/pensando/sw/api/generated/cluster"
 	...
-	if _, err := recorder.NewRecorder(
-		&monitoring.EventSource{NodeName: utils.GetHostname(), Component: globals.Nmd},
-		cluster.GetEventTypes(), "", ""); err != nil {
+	if _, err := recorder.NewRecorder(&recorder.Config{
+		Source:       &monitoring.EventSource{NodeName: utils.GetHostname(), Component: globals.Nmd},
+		EvtTypes:     cluster.GetEventTypes()); err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}
-
 	```
 
 2. Start recording events.
