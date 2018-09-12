@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -78,14 +79,11 @@ func GetIndex(dtype globals.DataType, tenant string) string {
 	switch dtype {
 	case globals.Configs:
 		return fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype))
-	case globals.Alerts:
-		return fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
-	case globals.Events:
-		return fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
-	case globals.AuditLogs:
-		return fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
-	case globals.DebugLogs:
-		return fmt.Sprintf("%s.%s.%s.%s", InternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
+	case globals.Alerts, globals.Events, globals.AuditLogs, globals.DebugLogs:
+		if !utils.IsEmpty(tenant) {
+			return fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
+		}
+		return fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, GetDocType(dtype), currentDay)
 	case globals.Stats:
 		return "N/A"
 	}

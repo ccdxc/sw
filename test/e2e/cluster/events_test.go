@@ -97,11 +97,13 @@ var _ = Describe("events test", func() {
 		}
 
 		// check for `NICAdmitted` event
+		// NOTE: cluster objects are not allowed to have tenant, so, NICAdmitted event will be in a index (e.g. venice.external.events.2018-09-12)
+		// different than other events (e.g.venice.external.<tenant>.events.2018-09-12).
 		Eventually(func() error {
 			query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Nmd),
 				es.NewTermQuery("type.keyword", cmd.NICAdmitted))
 			res, err := esClient.Search(context.Background(),
-				elastic.GetIndex(globals.Events, globals.DefaultTenant),
+				elastic.GetIndex(globals.Events, ""), // empty tenant
 				elastic.GetDocType(globals.Events),
 				query, nil, from, maxResults, sortByField, sortAsc)
 
