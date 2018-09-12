@@ -40,12 +40,12 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateCompatCheck(upgCtx *upggo
 	if err != nil {
 		log.Infof("Error from API %s", err)
 	}
-	ver, err = upggosdk.UpgCtxGetPreUpgComponentVersion(upgCtx, "SAMPLECOMPONENT-1")
+	ver, err = upggosdk.UpgCtxGetPreUpgComponentVersion(upgCtx, "COMPONENT-1")
 	if err != nil {
 		log.Infof("Error from API %s", err)
 	}
 	log.Infof("Version for SAMPLECOMPONENT-1 table is %d", ver)
-	ver, err = upggosdk.UpgCtxGetPreUpgComponentVersion(upgCtx, "COMPONENT-10")
+	ver, err = upggosdk.UpgCtxGetPreUpgComponentVersion(upgCtx, "COMPONENT-5")
 	if err != nil {
 		log.Infof("Error from API %s", err)
 	}

@@ -97,14 +97,14 @@ func (ctx *upgstatereqctx) OnUpgStateReqCreate(obj *upgrade.UpgStateReq) {
 func (ctx *upgstatereqctx) OnUpgStateReqUpdate(obj *upgrade.UpgStateReq) {
 	if obj.GetUpgReqState() != upgrade.UpgReqStateType_UpgStateTerminal {
 		log.Infof("===== Incoming Message =====")
-	}
-	ctx.getUpgCtx(obj)
-	var hdlrResp HdlrResp
-	ctx.invokeAppHdlr(obj.GetUpgReqState(), &hdlrResp)
-	if hdlrResp.Resp != InProgress {
-		updateUpgAppResp(getUpgAppRespNext(obj.GetUpgReqState(), (hdlrResp.Resp == Success)), &hdlrResp, ctx.appName, ctx.sdkClient)
-	} else {
-		log.Infof("Application still processing")
+		ctx.getUpgCtx(obj)
+		var hdlrResp HdlrResp
+		ctx.invokeAppHdlr(obj.GetUpgReqState(), &hdlrResp)
+		if hdlrResp.Resp != InProgress {
+			updateUpgAppResp(getUpgAppRespNext(obj.GetUpgReqState(), (hdlrResp.Resp == Success)), &hdlrResp, ctx.appName, ctx.sdkClient)
+		} else {
+			log.Infof("Application still processing")
+		}
 	}
 }
 

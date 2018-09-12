@@ -81,7 +81,7 @@ void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
             upgHdlrPtr_->HandleUpgStateAbort(ctx);
             break;
         default:
-            UPG_LOG_DEBUG("Upgrade: Default state");
+            UPG_LOG_DEBUG("Upgrade: Default state {}", type);
             break;
     }
 }
@@ -128,16 +128,16 @@ delphi::error UpgStateReqReact::OnUpgReqState(delphi::objects::UpgStateReqPtr re
         UPG_LOG_ERROR("No handlers available");
         return delphi::error("Error processing OnUpgReqState");
     }
-    if (req->upgreqstate() != UpgStateTerminal)
+    if (req->upgreqstate() != UpgStateTerminal) {
         UPG_LOG_DEBUG("\n\n\n===== Incoming Message =====");
 
-    InvokeAppHdlr(req->upgreqstate(), hdlrResp);
-    if (hdlrResp.resp != INPROGRESS) {
-        if (req->upgreqstate() != UpgStateTerminal)
+        InvokeAppHdlr(req->upgreqstate(), hdlrResp);
+        if (hdlrResp.resp != INPROGRESS) {
             UPG_LOG_DEBUG("Application returned {}", (hdlrResp.resp==SUCCESS)?"success":"fail");
-        upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS), ctx.upgType), hdlrResp, ctx.upgType);
-    } else {
-        UPG_LOG_DEBUG("Application still processing"); 
+            upgAppRespPtr_->UpdateUpgAppResp(upgAppRespPtr_->GetUpgAppRespNext(req->upgreqstate(), (hdlrResp.resp==SUCCESS), ctx.upgType), hdlrResp, ctx.upgType);
+        } else {
+            UPG_LOG_DEBUG("Application still processing"); 
+        }
     }
     return delphi::error::OK();
 }

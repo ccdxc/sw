@@ -54,6 +54,7 @@ func getUpgCtxFromMeta(upgCtx *UpgCtx) error {
 			meta.Tables[i].Name,
 		}
 	}
+	log.Infof("comp len %d", len(meta.Comps))
 	for i := 0; i < len(meta.Comps); i++ {
 		log.Infof("version %d name %s", meta.Comps[i].Version, meta.Comps[i].Name)
 		upgCtx.PreUpgComps[meta.Comps[i].Name] = ComponentMeta{
