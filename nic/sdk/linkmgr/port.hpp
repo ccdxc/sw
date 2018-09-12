@@ -181,6 +181,9 @@ public:
     // mac sync
     bool port_mac_sync_get(void);
 
+    // mac stats
+    sdk_ret_t port_mac_stats_get (uint64_t *stats_data);
+
     // ----------------------------------------------------
     // serdes methods
     // ----------------------------------------------------

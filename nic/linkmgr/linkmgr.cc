@@ -44,6 +44,12 @@ port_type (uint32_t port)
     return catalog()->port_type(port);
 }
 
+static port_fec_type_t
+port_fec_type (uint32_t port)
+{
+    return catalog()->port_fec_type(port);
+}
+
 static uint32_t
 num_lanes (uint32_t port)
 {
@@ -75,13 +81,29 @@ linkmgr_uplink_create(uint32_t uplink_port)
     PortSpec      spec;
     PortResponse  response;
 
+    // port number
     spec.mutable_key_or_handle()->set_port_id(uplink_port);
-    spec.set_port_speed(linkmgr::sdk_port_speed_to_port_speed_spec(port_speed(uplink_port)));
+
+    // speed
+    port_speed_t speed = port_speed(uplink_port);
+    spec.set_port_speed(linkmgr::sdk_port_speed_to_port_speed_spec(speed));
+
+    // num_lanes
     spec.set_num_lanes(num_lanes(uplink_port));
-    spec.set_port_type(linkmgr::sdk_port_type_to_port_type_spec(port_type(uplink_port)));
+
+    // Port type
+    spec.set_port_type(linkmgr::sdk_port_type_to_port_type_spec(
+                                                port_type(uplink_port)));
+
+    // FEC type
+    spec.set_fec_type(linkmgr::sdk_port_fec_type_to_port_fec_type_spec(
+                                            port_fec_type(uplink_port)));
+
+    // mac_id and mac_ch
     spec.set_mac_id(mac_id(uplink_port, 0));
     spec.set_mac_ch(mac_ch(uplink_port, 0));
 
+    // admin status
     if (enabled(uplink_port) == true) {
         spec.set_admin_state(::port::PORT_ADMIN_STATE_UP);
     }

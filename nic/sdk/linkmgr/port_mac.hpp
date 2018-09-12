@@ -9,6 +9,8 @@
 namespace sdk {
 namespace linkmgr {
 
+#define MAX_MAC_STATS 90
+
 typedef struct mac_info_s {
     uint32_t mac_id;
     uint32_t mac_ch;
@@ -36,6 +38,8 @@ typedef struct mac_fn_s_ {
     bool (*mac_faults_get) (uint32_t port_num);
     bool (*mac_sync_get)   (uint32_t port_num);
     int  (*mac_flush_set)  (uint32_t port_num, bool enable);
+    int  (*mac_stats_get)  (uint32_t mac_inst, uint32_t mac_ch,
+                            uint64_t *stats_data);
 } mac_fn_t;
 
 extern mac_fn_t mac_fns;

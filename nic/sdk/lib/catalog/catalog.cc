@@ -89,6 +89,18 @@ catalog::catalog_type_to_port_type(std::string type)
     return port_type_t::PORT_TYPE_NONE;
 }
 
+port_fec_type_t
+catalog::catalog_fec_type_to_port_fec_type (std::string type)
+{
+    if (type == "rs") {
+        return port_fec_type_t::PORT_FEC_TYPE_RS;
+    } else if (type == "fc") {
+        return port_fec_type_t::PORT_FEC_TYPE_FC;
+    }
+
+    return port_fec_type_t::PORT_FEC_TYPE_NONE;
+}
+
 port_breakout_mode_t
 catalog::parse_breakout_mode(std::string breakout_mode)
 {
@@ -141,10 +153,15 @@ catalog::populate_uplink_port(ptree::value_type &uplink_port,
     uplink_port_p->asic_port = uplink_port.second.get<uint32_t>("asic_port", 0);
     uplink_port_p->num_lanes = uplink_port.second.get<uint32_t>("num_lanes", 1);
     uplink_port_p->enabled = uplink_port.second.get<bool>("enabled", true);
+
     std::string speed = uplink_port.second.get<std::string>("speed", "");
-    uplink_port_p->speed = catalog::catalog_speed_to_port_speed(speed);
+    uplink_port_p->speed = catalog_speed_to_port_speed(speed);
+
+    std::string fec_type = uplink_port.second.get<std::string>("fec", "");
+    uplink_port_p->fec_type = catalog_fec_type_to_port_fec_type(fec_type);
+
     std::string type = uplink_port.second.get<std::string>("type", "");
-    uplink_port_p->type = catalog::catalog_type_to_port_type(type);
+    uplink_port_p->type = catalog_type_to_port_type(type);
 
     return SDK_RET_OK;
 }
@@ -621,6 +638,12 @@ port_type_t
 catalog::port_type(uint32_t port)
 {
     return catalog_db_.uplink_ports[port-1].type;
+}
+
+port_fec_type_t
+catalog::port_fec_type(uint32_t port)
+{
+    return catalog_db_.uplink_ports[port-1].fec_type;
 }
 
 bool

@@ -70,6 +70,7 @@ typedef struct catalog_uplink_port_s {
     bool              enabled;
     port_speed_t      speed;
     port_type_t       type;
+    port_fec_type_t   fec_type;
 } catalog_uplink_port_t;
 
 typedef struct catalog_fp_port_s {
@@ -138,6 +139,7 @@ public:
     static void destroy(catalog *clog);
     static port_speed_t catalog_speed_to_port_speed(std::string speed);
     static port_type_t catalog_type_to_port_type(std::string type);
+    static port_fec_type_t catalog_fec_type_to_port_fec_type(std::string type);
     static platform_type_t catalog_platform_type_to_platform_type(
                                             std::string platform_type);
 
@@ -167,6 +169,7 @@ public:
     uint32_t     mac_id    (uint32_t port, uint32_t lane);
     uint32_t     mac_ch    (uint32_t port, uint32_t lane);
     uint32_t     sbus_addr (uint32_t port, uint32_t lane);
+    port_fec_type_t  port_fec_type (uint32_t port);
 
     uint32_t     glbl_mode  (mac_mode_t mac_mode);
     uint32_t     ch_mode    (mac_mode_t mac_mode, uint32_t ch);

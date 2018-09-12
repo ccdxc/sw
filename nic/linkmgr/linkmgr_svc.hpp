@@ -17,6 +17,7 @@ using port::Port;
 using port::PortDeleteRequest;
 using port::PortDeleteResponseMsg;
 using port::PortSpec;
+using port::PortStats;
 using port::PortOperStatus;
 using port::PortType;
 using port::PortSpeed;

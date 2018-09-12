@@ -1032,6 +1032,10 @@ port_populate_get_response (port_t *pi_p, PortGetResponse *response)
     port_args_t port_args = { 0 };
     hal_ret_t   ret       = HAL_RET_OK;
     sdk_ret_t   sdk_ret   = SDK_RET_OK;
+    PortStats  *stats     = NULL;
+    uint64_t    stats_data[MAX_MAC_STATS];
+
+    memset(stats_data, 0, sizeof(uint64_t) * MAX_MAC_STATS);
 
     // fill in the config spec of this port
     spec = response->mutable_spec();
@@ -1039,6 +1043,8 @@ port_populate_get_response (port_t *pi_p, PortGetResponse *response)
 
     // 1. PD Call to get PD resources
     sdk::linkmgr::port_args_init(&port_args);
+
+    port_args.stats_data = stats_data;
 
     sdk_ret = sdk::linkmgr::port_get(pi_p->pd_p, &port_args);
     if (sdk_ret != SDK_RET_OK) {
@@ -1067,6 +1073,12 @@ port_populate_get_response (port_t *pi_p, PortGetResponse *response)
         spec->set_mtu       (port_args.mtu);
         spec->set_auto_neg_enable (port_args.auto_neg_enable);
         spec->set_debounce_time   (port_args.debounce_time);
+
+        // MAC stats
+        stats = response->mutable_stats();
+        for (int i = 0; i < MAX_MAC_STATS; ++i) {
+            stats->mutable_mac_stats()->add_mac_stats(stats_data[i]);
+        }
     }
 
     response->set_api_status(hal::hal_prepare_rsp(ret));
@@ -1265,6 +1277,7 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
     int         int_code      = 0;
     int         int_data      = 0;
     int         aacs_server_port = 0;
+    uint64_t    stats_data[MAX_MAC_STATS];
 
     sdk::linkmgr::port_args_init(&port_args);
     kh::PortKeyHandle key_handle;
@@ -1547,7 +1560,8 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
             HAL_TRACE_DEBUG("mac_stats mac_inst: {}, mac_ch: {}",
                             mac_inst, mac_ch);
 
-            cap_mx_mac_stat(0 /*chip_id*/, mac_inst, mac_ch, 0);
+            memset(stats_data, 0, sizeof(uint64_t) * MAX_MAC_STATS);
+            cap_mx_mac_stat(0 /*chip_id*/, mac_inst, mac_ch, 0, stats_data);
             break;
 
         case 19:

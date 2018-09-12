@@ -41,6 +41,7 @@ typedef struct port_args_s {
     uint32_t              num_lanes;                  // number of lanes for the port
     uint32_t              debounce_time;              // Debounce time in ms
     uint32_t              mtu;                        // mtu
+    uint64_t              *stats_data;                // MAC stats info
     uint32_t              sbus_addr[MAX_PORT_LANES];  // set the sbus addr for each lane
 } __PACK__ port_args_t;
 

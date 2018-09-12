@@ -623,6 +623,14 @@ mac_flush_set_hw (uint32_t port_num, bool enable)
     return 0;
 }
 
+static int
+mac_stats_get_hw (uint32_t mac_inst, uint32_t mac_ch,
+                  uint64_t *stats_data)
+{
+    cap_mx_mac_stat(0 /*chip_id*/, mac_inst, mac_ch, 0, stats_data);
+    return 0;
+}
+
 //----------------------------------------------------------------------------
 // MGMT MAC methods
 //----------------------------------------------------------------------------
@@ -778,6 +786,14 @@ mac_mgmt_flush_set_hw (uint32_t port_num, bool enable)
     return 0;
 }
 
+static int
+mac_mgmt_stats_get_hw (uint32_t mac_inst, uint32_t mac_ch,
+                       uint64_t *stats_data)
+{
+    cap_bx_mac_stat(0 /*chip_id*/, 0 /* bx_inst */, mac_ch, 0, stats_data);
+    return 0;
+}
+
 //----------------------------------------------------------------------------
 // Mock methods
 //----------------------------------------------------------------------------
@@ -871,6 +887,13 @@ mac_flush_set_default (uint32_t port_num, bool enable)
     return 0;
 }
 
+static int
+mac_stats_get_default (uint32_t mac_inst, uint32_t mac_ch,
+                       uint64_t *stats_data)
+{
+    return 0;
+}
+
 sdk_ret_t
 port_mac_fn_init(linkmgr_cfg_t *cfg)
 {
@@ -887,6 +910,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_fn->mac_faults_get  = &mac_faults_get_default;
     mac_fn->mac_sync_get    = &mac_sync_get_default;
     mac_fn->mac_flush_set   = &mac_flush_set_default;
+    mac_fn->mac_stats_get   = &mac_stats_get_default;
 
     mac_mgmt_fn->mac_cfg         = &mac_cfg_default;
     mac_mgmt_fn->mac_enable      = &mac_enable_default;
@@ -897,6 +921,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_mgmt_fn->mac_faults_get  = &mac_faults_get_default;
     mac_mgmt_fn->mac_sync_get    = &mac_sync_get_default;
     mac_mgmt_fn->mac_flush_set   = &mac_flush_set_default;
+    mac_mgmt_fn->mac_stats_get   = &mac_stats_get_default;
 
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HAPS:
@@ -914,6 +939,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_intr_enable = &mac_intr_enable_hw;
         mac_fn->mac_sync_get    = &mac_sync_get_mock;
         mac_fn->mac_flush_set   = &mac_flush_set_hw;
+        mac_fn->mac_stats_get   = &mac_stats_get_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
@@ -921,6 +947,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_mgmt_fn->mac_faults_get  = &mac_mgmt_faults_get_hw;
         mac_mgmt_fn->mac_sync_get    = &mac_sync_get_mock;
         mac_mgmt_fn->mac_flush_set   = &mac_mgmt_flush_set_hw;
+        mac_mgmt_fn->mac_stats_get   = &mac_mgmt_stats_get_hw;
         break;
 
     case platform_type_t::PLATFORM_TYPE_SIM:
@@ -935,6 +962,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_faults_get  = &mac_faults_get_hw;
         mac_fn->mac_sync_get    = &mac_sync_get_hw;
         mac_fn->mac_flush_set   = &mac_flush_set_hw;
+        mac_fn->mac_stats_get   = &mac_stats_get_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
@@ -942,6 +970,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_mgmt_fn->mac_faults_get  = &mac_mgmt_faults_get_hw;
         mac_mgmt_fn->mac_sync_get    = &mac_mgmt_sync_get_hw;
         mac_mgmt_fn->mac_flush_set   = &mac_mgmt_flush_set_hw;
+        mac_mgmt_fn->mac_stats_get   = &mac_mgmt_stats_get_hw;
         break;
 
     default:

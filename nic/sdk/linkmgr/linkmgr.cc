@@ -615,6 +615,8 @@ port_get (void *pd_p, port_args_t *args)
     args->debounce_time = port_p->debounce_time();
     args->auto_neg_enable = port_p->auto_neg_enable();
 
+    port_p->port_mac_stats_get (args->stats_data);
+
     return ret;
 }
 

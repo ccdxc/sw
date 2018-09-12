@@ -546,7 +546,9 @@ void cap_mx_eos(int chip_id, int inst_id) {
    cap_mx_eos_sta(chip_id,inst_id);
 }
 
-void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report) {
+void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report,
+                     uint64_t *stats_data)
+{
  cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
 
    string stats[180] = {
@@ -641,7 +643,7 @@ void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report) {
    "L", "Frames Truncated",
    "L", "Reserved"
    };
-  
+
    for (int i = 0; i < 90; i += 1) {
       string report_type = stats[i*2];
       if (short_report == 1 && (report_type.compare("L") == 0)) continue;
@@ -649,6 +651,9 @@ void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report) {
       int addr = ((ch&0x3) << 7) | i;
       mx_csr.dhs_mac_stats.entry[addr].read();
       cpp_int rdata = mx_csr.dhs_mac_stats.entry[addr].value();
+      if (stats_data != NULL) {
+          stats_data[i] = mx_csr.dhs_mac_stats.entry[addr].value().convert_to<int>();
+      }
       string counter_name = stats[i*2+1];
       PLOG_MSG( "MX" << inst_id << " Channel" << ch << ": " << counter_name.append(50-counter_name.length(),' ') << " : " << rdata << "\n" );
    }
@@ -656,10 +661,10 @@ void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report) {
 
 void cap_mx_eos_cnt(int chip_id, int inst_id) {
  cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
-   cap_mx_mac_stat(chip_id,inst_id, 0, 1);  // channel 0
-   cap_mx_mac_stat(chip_id,inst_id, 1, 1);  // channel 1
-   cap_mx_mac_stat(chip_id,inst_id, 2, 1);  // channel 2
-   cap_mx_mac_stat(chip_id,inst_id, 3, 1);  // channel 3
+   cap_mx_mac_stat(chip_id,inst_id, 0, 1, NULL);  // channel 0
+   cap_mx_mac_stat(chip_id,inst_id, 1, 1, NULL);  // channel 1
+   cap_mx_mac_stat(chip_id,inst_id, 2, 1, NULL);  // channel 2
+   cap_mx_mac_stat(chip_id,inst_id, 3, 1, NULL);  // channel 3
 }
 
 void cap_mx_eos_int(int chip_id, int inst_id) {

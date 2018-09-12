@@ -44,7 +44,8 @@ void cap_mx_sd_clr_error_cnt(int chip_id, int inst_id, int start_ch, int end_ch,
 void cap_mx_set_ch_enable(int chip_id, int inst_id, int ch, int value);
 void cap_mx_set_soft_reset(int chip_id, int inst_id, int ch, int value);
 sdk_ret_t linkmgr_csr_init(void);
-void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report);
+void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report,
+                     uint64_t *stats_data);
 void cap_mx_set_fec(int chip_id, int inst_id, int ch, int value);
 void cap_mx_set_tx_padding(int chip_id, int inst_id, int enable);
 void cap_mx_set_rx_padding(int chip_id, int inst_id, int ch, bool enable);
@@ -59,6 +60,8 @@ void cap_bx_set_mtu(int chip_id , int inst_id, int max_value, int jabber_value);
 void cap_bx_set_ch_enable(int chip_id, int inst_id, int value);
 void cap_bx_set_soft_reset(int chip_id, int inst_id, int value);
 int cap_bx_check_sync(int chip_id, int inst_id);
+void cap_bx_mac_stat(int chip_id, int inst_id, int ch, int short_report,
+                     uint64_t *stats_data);
 
 void cap_pp_sbus_write(int chip_id, int rcvr_addr, int data_addr, int data);
 int  cap_pp_sbus_read (int chip_id, int rcvr_addr, int data_addr);

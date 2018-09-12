@@ -217,7 +217,8 @@ void cap_bx_eos(int chip_id, int inst_id) {
    cap_bx_eos_sta(chip_id,inst_id);
 }
 
-void cap_bx_mac_stat(int chip_id, int inst_id, int port, int short_report) {
+void cap_bx_mac_stat(int chip_id, int inst_id, int port, int short_report,
+                     uint64_t *stats_data) {
  cap_bx_csr_t & bx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_bx_csr_t, chip_id, inst_id);
 
    string stats[64] = {
@@ -262,13 +263,16 @@ void cap_bx_mac_stat(int chip_id, int inst_id, int port, int short_report) {
       int addr = ((port&0x3) << 7) | i;
       bx_csr.dhs_mac_stats.entry[addr].read();
       cpp_int rdata = bx_csr.dhs_mac_stats.entry[addr].value();
+      if (stats_data != NULL) {
+          stats_data[i] = bx_csr.dhs_mac_stats.entry[addr].value().convert_to<int>();
+      }
       string counter_name = stats[i*2+1];
       PLOG_MSG( "BX: " << counter_name.append(50-counter_name.length(),' ') << " : " << rdata << "\n" );
    }
 }
 
 void cap_bx_eos_cnt(int chip_id, int inst_id) {
-   cap_bx_mac_stat(chip_id,inst_id, 0, 1);  // port 0
+   cap_bx_mac_stat(chip_id,inst_id, 0, 1, NULL);  // port 0
 }
 
 void cap_bx_eos_int(int chip_id, int inst_id) {

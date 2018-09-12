@@ -67,6 +67,98 @@ enum PortFecType {
     PORT_FEC_TYPE_RS   = 2;  // Enable ReedSolomon FEC
 }
 
+enum MacStatsType {
+   FRAMES_RX_OK            =  0;
+   FRAMES_RX_ALL           =  1;
+   FRAMES_RX_BAD_FCS       =  2;
+   FRAMES_RX_BAD_ALL       =  3;
+   OCTETS_RX_OK            =  4;
+   OCTETS_RX_ALL           =  5;
+   FRAMES_RX_UNICAST       =  6;
+   FRAMES_RX_MULTICAST     =  7;
+   FRAMES_RX_BROADCAST     =  8;
+   FRAMES_RX_PAUSE         =  9;
+   FRAMES_RX_BAD_LENGTH    = 10;
+   FRAMES_RX_UNDERSIZED    = 11;
+   FRAMES_RX_OVERSIZED     = 12;
+   FRAMES_RX_FRAGMENTS     = 13;
+   FRAMES_RX_JABBER        = 14;
+   FRAMES_RX_PRIPAUSE      = 15;
+   FRAMES_RX_STOMPED_CRC   = 16;
+   FRAMES_RX_TOO_LONG      = 17;
+   FRAMES_RX_VLAN_GOOD     = 18;
+   FRAMES_RX_DROPPED       = 19;
+   FRAMES_RX_LESS_THAN_64B = 20;
+   FRAMES_RX_64B           = 21;
+   FRAMES_RX_65B_127B      = 22;
+   FRAMES_RX_128B_255B     = 23;
+   FRAMES_RX_256B_511B     = 24;
+   FRAMES_RX_512B_1023B    = 25;
+   FRAMES_RX_1024B_1518B   = 26;
+   FRAMES_RX_1519B_2047B   = 27;
+   FRAMES_RX_2048B_4095B   = 28;
+   FRAMES_RX_4096B_8191B   = 29;
+   FRAMES_RX_8192B_9215B   = 30;
+   FRAMES_RX_OTHER         = 31;
+   FRAMES_TX_OK            = 32;
+   FRAMES_TX_ALL           = 33;
+   FRAMES_TX_BAD           = 34;
+   OCTETS_TX_OK            = 35;
+   OCTETS_TX_TOTAL         = 36;
+   FRAMES_TX_UNICAST       = 37;
+   FRAMES_TX_MULTICAST     = 38;
+   FRAMES_TX_BROADCAST     = 39;
+   FRAMES_TX_PAUSE         = 40;
+   FRAMES_TX_PRIPAUSE      = 41;
+   FRAMES_TX_VLAN          = 42;
+   FRAMES_TX_LESS_THAN_64B = 43;
+   FRAMES_TX_64B           = 44;
+   FRAMES_TX_65B_127B      = 45;
+   FRAMES_TX_128B_255B     = 46;
+   FRAMES_TX_256B_511B     = 47;
+   FRAMES_TX_512B_1023B    = 48;
+   FRAMES_TX_1024B_1518B   = 49;
+   FRAMES_TX_1519B_2047B   = 50;
+   FRAMES_TX_2048B_4095B   = 51;
+   FRAMES_TX_4096B_8191B   = 52;
+   FRAMES_TX_8192B_9215B   = 53;
+   FRAMES_TX_OTHER         = 54;
+   FRAMES_TX_PRI_0         = 55;
+   FRAMES_TX_PRI_1         = 56;
+   FRAMES_TX_PRI_2         = 57;
+   FRAMES_TX_PRI_3         = 58;
+   FRAMES_TX_PRI_4         = 59;
+   FRAMES_TX_PRI_5         = 60;
+   FRAMES_TX_PRI_6         = 61;
+   FRAMES_TX_PRI_7         = 62;
+   FRAMES_RX_PRI_0         = 63;
+   FRAMES_RX_PRI_1         = 64;
+   FRAMES_RX_PRI_2         = 65;
+   FRAMES_RX_PRI_3         = 66;
+   FRAMES_RX_PRI_4         = 67;
+   FRAMES_RX_PRI_5         = 68;
+   FRAMES_RX_PRI_6         = 69;
+   FRAMES_RX_PRI_7         = 70;
+   TX_PRIPAUSE_0_1US_COUNT = 71;
+   TX_PRIPAUSE_1_1US_COUNT = 72;
+   TX_PRIPAUSE_2_1US_COUNT = 73;
+   TX_PRIPAUSE_3_1US_COUNT = 74;
+   TX_PRIPAUSE_4_1US_COUNT = 75;
+   TX_PRIPAUSE_5_1US_COUNT = 76;
+   TX_PRIPAUSE_6_1US_COUNT = 77;
+   TX_PRIPAUSE_7_1US_COUNT = 78;
+   RX_PRIPAUSE_0_1US_COUNT = 79;
+   RX_PRIPAUSE_1_1US_COUNT = 80;
+   RX_PRIPAUSE_2_1US_COUNT = 81;
+   RX_PRIPAUSE_3_1US_COUNT = 82;
+   RX_PRIPAUSE_4_1US_COUNT = 83;
+   RX_PRIPAUSE_5_1US_COUNT = 84;
+   RX_PRIPAUSE_6_1US_COUNT = 85;
+   RX_PRIPAUSE_7_1US_COUNT = 86;
+   RX_PAUSE_1US_COUNT      = 87;
+   FRAMES_TX_TRUNCATED     = 88;
+}
+
 // PortSpec message is used to do add/mod properties of a port
 message PortSpec {
   types.ObjectMeta  meta             = 1;    // common object meta
@@ -139,101 +231,16 @@ message PortDeleteResponseMsg {
   repeated PortDeleteResponse response = 1;
 }
 
+//------------------------------------------------------------------------------
+// MacStats is an array of MAC statictics
+//------------------------------------------------------------------------------
+message MacStats {
+    repeated uint64 mac_stats = 1;
+}
+
 // PortStats captures all the statistics of given Port
 message PortStats {
     MacStats mac_stats            =  1;  // Port MAC stats
-}
-
-message MacStats {
-   uint64 frames_rx_ok            =  1;
-   uint64 frames_rx_all           =  2;
-   uint64 frames_rx_bad_fcs       =  3;
-   uint64 frames_rx_bad_all       =  4;
-   uint64 octets_rx_ok            =  5;
-   uint64 octets_rx_all           =  6;
-   uint64 frames_rx_unicast       =  7;
-   uint64 frames_rx_multicast     =  8;
-   uint64 frames_rx_broadcast     =  9;
-   uint64 frames_rx_pause         = 10;
-   uint64 frames_rx_bad_length    = 11;
-   uint64 frames_rx_undersized    = 12;
-   uint64 frames_rx_oversized     = 13;
-   uint64 frames_rx_fragments     = 14;
-   uint64 frames_rx_jabber        = 15;
-   uint64 frames_rx_pripause      = 16;
-   uint64 frames_rx_stomped_crc   = 17;
-   uint64 frames_rx_too_long      = 18;
-   uint64 frames_rx_vlan_good     = 19;
-   uint64 frames_rx_dropped       = 20;
-   uint64 frames_rx_less_than_64b = 21;
-   uint64 frames_rx_64b           = 22;
-   uint64 frames_rx_65b_127b      = 23;
-   uint64 frames_rx_128b_255b     = 24;
-   uint64 frames_rx_256b_511b     = 25;
-   uint64 frames_rx_512b_1023b    = 26;
-   uint64 frames_rx_1024b_1518b   = 27;
-   uint64 frames_rx_1519b_2047b   = 28;
-   uint64 frames_rx_2048b_4095b   = 29;
-   uint64 frames_rx_4096b_8191b   = 30;
-   uint64 frames_rx_8192b_9215b   = 31;
-   uint64 frames_rx_other         = 32;
-   uint64 frames_tx_ok            = 33;
-   uint64 frames_tx_all           = 34;
-   uint64 frames_tx_bad           = 35;
-   uint64 octets_tx_ok            = 36;
-   uint64 octets_tx_total         = 37;
-   uint64 frames_tx_unicast       = 38;
-   uint64 frames_tx_multicast     = 39;
-   uint64 frames_tx_broadcast     = 40;
-   uint64 frames_tx_pause         = 41;
-   uint64 frames_tx_pripause      = 42;
-   uint64 frames_tx_vlan          = 43;
-   uint64 frames_tx_less_than_64b = 44;
-   uint64 frames_tx_64b           = 45;
-   uint64 frames_tx_65b_127b      = 46;
-   uint64 frames_tx_128b_255b     = 47;
-   uint64 frames_tx_256b_511b     = 48;
-   uint64 frames_tx_512b_1023b    = 49;
-   uint64 frames_tx_1024b_1518b   = 50;
-   uint64 frames_tx_1519b_2047b   = 51;
-   uint64 frames_tx_2048b_4095b   = 52;
-   uint64 frames_tx_4096b_8191b   = 53;
-   uint64 frames_tx_8192b_9215b   = 54;
-   uint64 frames_tx_other         = 55;
-   uint64 frames_tx_pri_0         = 56;
-   uint64 frames_tx_pri_1         = 57;
-   uint64 frames_tx_pri_2         = 58;
-   uint64 frames_tx_pri_3         = 59;
-   uint64 frames_tx_pri_4         = 60;
-   uint64 frames_tx_pri_5         = 61;
-   uint64 frames_tx_pri_6         = 62;
-   uint64 frames_tx_pri_7         = 63;
-   uint64 frames_rx_pri_0         = 64;
-   uint64 frames_rx_pri_1         = 65;
-   uint64 frames_rx_pri_2         = 66;
-   uint64 frames_rx_pri_3         = 67;
-   uint64 frames_rx_pri_4         = 68;
-   uint64 frames_rx_pri_5         = 69;
-   uint64 frames_rx_pri_6         = 70;
-   uint64 frames_rx_pri_7         = 71;
-   uint64 tx_pripause_0_1us_count = 72;
-   uint64 tx_pripause_1_1us_count = 73;
-   uint64 tx_pripause_2_1us_count = 74;
-   uint64 tx_pripause_3_1us_count = 75;
-   uint64 tx_pripause_4_1us_count = 76;
-   uint64 tx_pripause_5_1us_count = 77;
-   uint64 tx_pripause_6_1us_count = 78;
-   uint64 tx_pripause_7_1us_count = 79;
-   uint64 rx_pripause_0_1us_count = 80;
-   uint64 rx_pripause_1_1us_count = 81;
-   uint64 rx_pripause_2_1us_count = 82;
-   uint64 rx_pripause_3_1us_count = 83;
-   uint64 rx_pripause_4_1us_count = 84;
-   uint64 rx_pripause_5_1us_count = 85;
-   uint64 rx_pripause_6_1us_count = 86;
-   uint64 rx_pripause_7_1us_count = 87;
-   uint64 rx_pause_1us_count      = 88;
-   uint64 frames_tx_truncated     = 89;
 }
 
 // PortGetRequest is used to get information about a port

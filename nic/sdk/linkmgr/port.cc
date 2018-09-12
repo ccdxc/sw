@@ -762,6 +762,13 @@ port::bringup_timer_expired(void)
     return (this->bringup_timer_val_ > MAX_LINK_BRINGUP_TIMEOUT);
 }
 
+sdk_ret_t
+port::port_mac_stats_get (uint64_t *stats_data)
+{
+    mac_fns()->mac_stats_get(this->mac_id_, this->mac_ch_, stats_data);
+    return SDK_RET_OK;
+}
+
 // ----------------------------------------------------
 // static methods
 // ----------------------------------------------------
