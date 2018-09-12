@@ -31,9 +31,6 @@ MODULE_AUTHOR("Anish Gupta anish@pensando.io");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(ionic, 1);
 
-const char *ionic_module_dname = DRV_NAME;
-
-
 module_param(ntxq_descs, uint, 0);
 module_param(nrxq_descs, uint, 0);
 MODULE_PARM_DESC(ntxq_descs, "Descriptors per Tx queue, must be power of 2");

@@ -9,11 +9,12 @@
 #include "ionic_bus.h"
 #include "ionic_dev.h"
 #include "ionic_lif.h"
+#include "ionic_txrx.h"
 
 struct lif *get_netdev_ionic_lif(struct net_device *netdev,
 				 const char *api_version)
 {
-	if (if_getdname(netdev) != ionic_module_dname)
+	if (netdev->if_transmit != ionic_start_xmit)
 		return NULL;
 
 	if (strcmp(api_version, IONIC_API_VERSION))

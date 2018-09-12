@@ -117,8 +117,6 @@ MALLOC_DECLARE(M_IONIC);
 struct napi_struct;
 struct ionic_dev;
 
-extern const char *ionic_module_dname;
-
 extern int ionic_max_queues;
 extern int ntxq_descs;
 extern int nrxq_descs;
