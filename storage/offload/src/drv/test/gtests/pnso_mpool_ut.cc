@@ -45,7 +45,7 @@ ut_mpool_create_type(void)
 	uint32_t num_objects, object_size, align_size;
 	struct mem_pool *mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	num_objects = PNSO_UT_MPOOL_NUM_OBJECTS;
@@ -134,7 +134,7 @@ ut_mpool_create_type(void)
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 static void
@@ -145,7 +145,7 @@ ut_mpool_create_num_objects_cpdc(void)
 	uint32_t num_objects, object_size, align_size;
 	struct mem_pool *mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
@@ -164,7 +164,7 @@ ut_mpool_create_num_objects_cpdc(void)
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 static void
@@ -175,7 +175,7 @@ ut_mpool_create_num_objects_cpdc_status(void)
 	uint32_t num_objects, object_size, align_size;
 	struct mem_pool *mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_STATUS_DESC;
@@ -206,7 +206,7 @@ ut_mpool_create_num_objects_cpdc_status(void)
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 static void
@@ -217,7 +217,7 @@ ut_mpool_create_num_objects_cpdc_sgl(void)
 	uint32_t num_objects, object_size, align_size;
 	struct mem_pool *mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_SGL;
@@ -248,7 +248,7 @@ ut_mpool_create_num_objects_cpdc_sgl(void)
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 static void
@@ -259,7 +259,7 @@ ut_mpool_create_num_objects_xts(void)
 	uint32_t num_objects, object_size, align_size;
 	struct mem_pool *mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_XTS_DESC;
@@ -290,7 +290,7 @@ ut_mpool_create_num_objects_xts(void)
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 static void
@@ -324,7 +324,7 @@ ut_pool_create_align_size(void)
 	uint32_t num_objects, object_size, align_size;
 	struct mem_pool *mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
@@ -383,7 +383,7 @@ ut_pool_create_align_size(void)
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 static void
@@ -394,7 +394,7 @@ ut_pool_create_object_size(void)
 	uint32_t num_objects, object_size, align_size;
 	struct mem_pool *mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
@@ -419,7 +419,7 @@ ut_pool_create_object_size(void)
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 static void
@@ -430,7 +430,7 @@ ut_pool_create_null_pool(void)
 	uint32_t num_objects, object_size, align_size;
 	struct mem_pool *mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
@@ -453,7 +453,7 @@ ut_pool_create_null_pool(void)
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 static void
@@ -465,7 +465,7 @@ ut_pool_create_pool_size(void)
 	struct mem_pool *mpool;
 	size_t pool_size;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
@@ -511,7 +511,7 @@ ut_pool_create_pool_size(void)
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 TEST_F(pnso_mpool_test, ut_mpool_create) {
@@ -541,7 +541,7 @@ TEST_F(pnso_mpool_test, ut_mpool_destroy) {
 	uint32_t num_objects, object_size, align_size;
 	struct mem_pool *mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
@@ -560,7 +560,7 @@ TEST_F(pnso_mpool_test, ut_mpool_destroy) {
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 TEST_F(pnso_mpool_test, ut_mpool_get_object) {
@@ -570,7 +570,7 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 	struct mem_pool *mpool;
 	void *p, *q;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
@@ -703,7 +703,7 @@ TEST_F(pnso_mpool_test, ut_mpool_get_object) {
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 TEST_F(pnso_mpool_test, ut_mpool_put_object) {
@@ -713,7 +713,7 @@ TEST_F(pnso_mpool_test, ut_mpool_put_object) {
 	struct mem_pool *mpool;
 	void *p;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* use this same setup across UTs */
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
@@ -766,7 +766,7 @@ TEST_F(pnso_mpool_test, ut_mpool_put_object) {
 	mpool_destroy(&mpool);
 	EXPECT_EQ(mpool, nullptr);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 int main(int argc, char **argv) {

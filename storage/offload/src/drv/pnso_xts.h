@@ -143,8 +143,8 @@ struct xts_desc {
  * @init_params:	[in]	specifies the initialization parameters for
  *				this accelerator.
  * @pc_res:		[in]	specifies the per core container-structure to
- * 				cache the accelerators' internal data
- * 				structures.
+ *				cache the accelerators' internal data
+ *				structures.
  *
  * This MUST be the first function to be invoked prior to exercising any other
  * APIs for this accelerator.
@@ -164,8 +164,8 @@ pnso_error_t xts_init_accelerator(const struct xts_init_params *init_params,
  * xts_deinit_accelerator() - conducts cleanup task specific to encryption and
  * decryption accelerator.
  * @pc_res:	[in/out]	specifies the per core container-structure from
- * 				which the accelerators' internal data structures
- * 				need to be released.
+ *				which the accelerators' internal data structures
+ *				need to be released.
  *
  * This routine will wait for in-flight operations to complete for a graceful
  * shutdown, or canceling the incomplete operations, and taking care of

@@ -53,7 +53,7 @@ TEST_F(pnso_cp_test, ut_cp_setup) {
 	uint16_t temp_flags;
 	uint32_t temp_len;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
@@ -189,7 +189,7 @@ TEST_F(pnso_cp_test, ut_cp_schedule) {
 	struct service_info svc_info;
 	uint32_t len, count;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
@@ -279,7 +279,7 @@ TEST_F(pnso_cp_test, ut_cp_read_status) {
 	struct service_info svc_info;
 	uint32_t len, count;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
@@ -390,7 +390,7 @@ TEST_F(pnso_cp_test, ut_cp_write_result) {
 	struct pnso_service_status svc_status;
 	uint32_t len, count;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
@@ -492,7 +492,7 @@ TEST_F(pnso_cp_test, ut_cp_teardown) {
 	struct service_info svc_info;
 	uint32_t len, count;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);

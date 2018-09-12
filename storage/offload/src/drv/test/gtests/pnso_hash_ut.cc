@@ -91,7 +91,7 @@ ut_hash_setup_buffer(void) {
 	uint32_t temp_len;
 	uint16_t algo_type;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
@@ -241,7 +241,7 @@ void ut_hash_setup_per_block(void) {
 	uint16_t algo_type;
 	char *object;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
@@ -698,7 +698,7 @@ TEST_F(pnso_hash_test, ut_hash_schedule) {
 	struct pnso_buffer_list *dst_blist;
 	uint32_t len, count;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
@@ -787,7 +787,7 @@ TEST_F(pnso_hash_test, ut_hash_read_status) {
 	struct cpdc_status_desc *status_desc;
 	uint32_t len, count;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
@@ -891,7 +891,7 @@ TEST_F(pnso_hash_test, ut_hash_write_result) {
 	struct cpdc_status_desc *status_desc;
 	uint32_t len, count;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
@@ -990,7 +990,7 @@ TEST_F(pnso_hash_test, ut_hash_teardown) {
 	uint32_t len, count;
 	uint16_t temp_flags;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;

@@ -90,7 +90,7 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 	uint32_t ring_id, index;
 	uint16_t qtype;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	ring_id = svc_info->si_seq_info.sqi_ring_id;
 	qtype = svc_info->si_seq_info.sqi_qtype;
@@ -137,7 +137,7 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 			ring_id, index, (u64) src_desc, desc_size);
 	PPRINT_SEQUENCER_DESC(seq_desc);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return seq_desc;
 
 out:
@@ -187,7 +187,7 @@ hw_ring_db(const struct service_info *svc_info, uint16_t index)
 {
 	struct queue *seq_q;
 
-	OSAL_LOG_INFO("enter ... ");
+	OSAL_LOG_DEBUG("enter ... ");
 
 	seq_q = get_seq_q(svc_info, false);
 	if (!seq_q) {
@@ -199,7 +199,7 @@ hw_ring_db(const struct service_info *svc_info, uint16_t index)
 	sonic_q_ringdb(seq_q, index);
 
 out:
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 const struct sequencer_ops hw_seq_ops = {

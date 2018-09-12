@@ -180,7 +180,7 @@ init_service_info(enum pnso_service_type svc_type,
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_info->si_ops = chksum_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_DC_HOT;
-		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	case PNSO_SVC_TYPE_NONE:
@@ -211,7 +211,7 @@ chn_destroy_chain(struct service_chain *chain)
 	if (!chain)
 		return;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 	OSAL_LOG_INFO("chain: %p num_services: %d ", chain,
 			chain->sc_num_services);
 
@@ -251,7 +251,7 @@ chn_destroy_chain(struct service_chain *chain)
 		OSAL_ASSERT(0);
 	}
 
-	OSAL_LOG_INFO("done");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 pnso_error_t
@@ -274,7 +274,7 @@ chn_build_chain(struct pnso_service_request *svc_req,
 	struct service_params svc_params;
 	uint32_t i;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	lif = sonic_get_lif();
 	if (!lif) {
@@ -377,7 +377,7 @@ chn_build_chain(struct pnso_service_request *svc_req,
 	chn_execute_chain(chain);
 	err = PNSO_OK;
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 
 out_free_chain:
@@ -416,7 +416,7 @@ chn_execute_chain(struct service_chain *chain)
 	struct chain_entry *ce_first, *ce_last;
 	struct service_ops *svc_ops;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(chain);
 
@@ -453,18 +453,15 @@ chn_execute_chain(struct service_chain *chain)
 	while (sc_entry) {
 		svc_ops = &sc_entry->ce_svc_info.si_ops;
 		err = svc_ops->read_status(&sc_entry->ce_svc_info);
-		if (err) {
-			OSAL_LOG_ERROR("status verification failed svc_type: %d err: %d",
+		if (err)
+			OSAL_LOG_ERROR("read status failed svc_type: %d err: %d",
 				       sc_entry->ce_svc_info.si_type, err);
-			goto out;
-		}
 
 		err = svc_ops->write_result(&sc_entry->ce_svc_info);
-		if (err) {
-			OSAL_LOG_ERROR("status verification failed svc_type: %d err: %d",
+		if (err)
+			OSAL_LOG_ERROR("write result failed svc_type: %d err: %d",
 				       sc_entry->ce_svc_info.si_type, err);
-			goto out;
-		}
+
 		sc_entry = sc_entry->ce_next;
 	}
 
@@ -477,5 +474,5 @@ out:
 		chain->sc_req_cb(chain->sc_req_cb_ctx, chain->sc_res);
 
 	chn_destroy_chain(chain);
-	OSAL_LOG_INFO("exit");
+	OSAL_LOG_DEBUG("exit");
 }

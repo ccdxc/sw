@@ -147,7 +147,7 @@ decompress_setup(struct service_info *svc_info,
 	size_t src_buf_len, dst_buf_len;
 	uint16_t flags;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	err = CPDC_VALIDATE_SETUP_INPUT(svc_info, svc_params);
 	if (err)
@@ -224,7 +224,7 @@ decompress_setup(struct service_info *svc_info,
 	}
 
 	err = PNSO_OK;
-	OSAL_LOG_INFO("exit! service initialized!");
+	OSAL_LOG_DEBUG("exit! service initialized!");
 	return err;
 
 out_status_desc:
@@ -251,7 +251,7 @@ decompress_chain(struct chain_entry *centry)
 {
 	pnso_error_t err;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(centry);
 
@@ -262,7 +262,7 @@ decompress_chain(struct chain_entry *centry)
 	}
 
 out:
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 
@@ -273,7 +273,7 @@ decompress_schedule(const struct service_info *svc_info)
 	const struct sequencer_info *seq_info;
 	bool ring_db;
 
-	OSAL_LOG_INFO("enter ... ");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -288,7 +288,7 @@ decompress_schedule(const struct service_info *svc_info)
 		err = PNSO_OK;
 	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 
@@ -297,7 +297,7 @@ decompress_poll(const struct service_info *svc_info)
 {
 	volatile struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -307,7 +307,7 @@ decompress_poll(const struct service_info *svc_info)
 	while (status_desc->csd_valid == 0)
 		osal_yield();
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;
 }
 
@@ -318,7 +318,7 @@ decompress_read_status(const struct service_info *svc_info)
 	struct cpdc_desc *dc_desc;
 	struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -329,7 +329,7 @@ decompress_read_status(const struct service_info *svc_info)
 	if (err)
 		goto out;
 
-	OSAL_LOG_INFO("exit! status verification success!");
+	OSAL_LOG_DEBUG("exit! status verification success!");
 	return err;
 
 out:
@@ -344,7 +344,7 @@ decompress_write_result(struct service_info *svc_info)
 	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -376,7 +376,7 @@ decompress_write_result(struct service_info *svc_info)
 	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
 
 	err = PNSO_OK;
-	OSAL_LOG_INFO("exit! status/result update success!");
+	OSAL_LOG_DEBUG("exit! status/result update success!");
 	return err;
 
 out:
@@ -393,7 +393,7 @@ decompress_teardown(const struct service_info *svc_info)
 	struct per_core_resource *pc_res;
 	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -419,7 +419,7 @@ decompress_teardown(const struct service_info *svc_info)
 		OSAL_ASSERT(0);
 	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 struct service_ops dc_ops = {

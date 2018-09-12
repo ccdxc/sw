@@ -11,8 +11,8 @@
 
 /*
  * NOTE/TODO:
- * 	This file is taken from simulator components temporarily
- * 	and needs to addressed/tailored eventually.
+ *	This file is taken from simulator components temporarily
+ *	and needs to addressed/tailored eventually.
  *
  */
 
@@ -67,7 +67,6 @@ lookup_hdr_format(uint32_t hdr_fmt_idx, bool alloc)
 	}
 
 	/* First try to find entry at the given index */
-	// SIM_MAX_CP_HEADER_FMTS
 	if (hdr_fmt_idx <= PNSO_MAX_CP_HEADER_FORMATS) {
 		fmt = &g_cp_hdr_formats[hdr_fmt_idx - 1];
 		if (fmt->fmt_idx == hdr_fmt_idx) {

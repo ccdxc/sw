@@ -14,6 +14,7 @@
 /*
  * TODO-cpdc:
  *	- stitch batch/init params for PNSO_NUM_OBJECTS during pool creation
+ *	- rename/revisit 'objects in object'
  *
  */
 #define PNSO_NUM_OBJECTS		8
@@ -38,8 +39,6 @@ init_mpools(struct per_core_resource *pc_res)
 	pnso_error_t err;
 	uint32_t num_objects, num_object_set, object_size, pad_size;
 	enum mem_pool_type mpool_type;
-
-	OSAL_LOG_INFO("enter ...");
 
 	OSAL_ASSERT(pc_res);
 
@@ -144,7 +143,7 @@ cpdc_init_accelerator(const struct cpdc_init_params *init_params,
 {
 	pnso_error_t err;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(init_params);
 	OSAL_ASSERT(pc_res);
@@ -155,7 +154,7 @@ cpdc_init_accelerator(const struct cpdc_init_params *init_params,
 	if (err)
 		goto out_mpools;
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 
 out_mpools:
@@ -168,11 +167,11 @@ out_mpools:
 void
 cpdc_deinit_accelerator(struct per_core_resource *pc_res)
 {
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(pc_res);
 
 	deinit_mpools(pc_res);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }

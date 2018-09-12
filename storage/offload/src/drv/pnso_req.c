@@ -14,6 +14,7 @@
  * TODO-req:
  *	- print SHA/checksum tags in req_pprint_result()
  *	- revisit validate_xxxx() and asserts
+ *	- share validate_xxxx() to simulator as needed
  *
  */
 
@@ -476,7 +477,7 @@ validate_service_request(struct pnso_service_request *svc_req)
 	enum pnso_service_type svc_type;
 	uint32_t num_services, i;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	if (!svc_req) {
 		OSAL_LOG_ERROR("invalid service request specified! req: 0x%llx err: %d",
@@ -520,7 +521,8 @@ validate_service_request(struct pnso_service_request *svc_req)
 			goto out;
 	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
+	return PNSO_OK;
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -533,7 +535,7 @@ validate_service_result(struct pnso_service_result *svc_res)
 	enum pnso_service_type svc_type;
 	uint32_t num_services, i;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	if (!svc_res) {
 		OSAL_LOG_ERROR("invalid service result specified! res: 0x%llx err: %d",
@@ -565,7 +567,8 @@ validate_service_result(struct pnso_service_result *svc_res)
 			goto out;
 	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
+	return PNSO_OK;
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -580,7 +583,7 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 {
 	pnso_error_t err;
 
-	OSAL_LOG_INFO("enter...");
+	OSAL_LOG_DEBUG("enter...");
 
 	REQ_PPRINT_REQUEST(svc_req);
 	REQ_PPRINT_RESULT(svc_res);
@@ -617,7 +620,6 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 	err = chn_build_chain(svc_req, svc_res, cb, cb_ctx,
 			pnso_poll_fn, pnso_poll_ctx);
 
-	OSAL_LOG_INFO("exit!");
-
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }

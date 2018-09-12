@@ -65,7 +65,7 @@ cpdc_common_read_status(struct cpdc_desc *desc,
 {
 	pnso_error_t err = EINVAL;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(desc);
 	OSAL_ASSERT(status_desc);
@@ -100,6 +100,7 @@ cpdc_common_read_status(struct cpdc_desc *desc,
 	}
 
 	err = PNSO_OK;
+	OSAL_LOG_DEBUG("exit!");
 
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
@@ -415,9 +416,6 @@ cpdc_update_service_info_sgl(struct service_info *svc_info,
 	pnso_error_t err = PNSO_OK;
 	struct cpdc_sgl	*sgl;
 
-	OSAL_LOG_ERROR("=== sp_src_blist: 0x%llx",
-			(u64) svc_params->sp_src_blist);
-
 	sgl = convert_buffer_list_to_sgl(svc_params->sp_src_blist);
 	if (!sgl) {
 		err = EINVAL;
@@ -436,11 +434,6 @@ cpdc_update_service_info_sgls(struct service_info *svc_info,
 {
 	pnso_error_t err = PNSO_OK;
 	struct cpdc_sgl	*sgl;
-
-	OSAL_LOG_ERROR("=== sp_src_blist: 0x%llx",
-			(u64) svc_params->sp_src_blist);
-	OSAL_LOG_ERROR("=== sp_dst_blist: 0x%llx",
-			(u64) svc_params->sp_dst_blist);
 
 	sgl = convert_buffer_list_to_sgl(svc_params->sp_src_blist);
 	if (!sgl) {

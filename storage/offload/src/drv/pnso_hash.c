@@ -203,7 +203,7 @@ hash_setup(struct service_info *svc_info,
 	bool per_block;
 	uint16_t flags;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* TODO-hash: validate interm_fbuf */
 	err = CPDC_VALIDATE_SETUP_INPUT(svc_info, svc_params);
@@ -250,8 +250,7 @@ hash_setup(struct service_info *svc_info,
 				svc_info->si_interm_fbuf,
 				hash_desc, status_desc);
 	} else {
-		err = cpdc_update_service_info_sgl(svc_info, 
-				svc_params);
+		err = cpdc_update_service_info_sgl(svc_info, svc_params);
 		if (err) {
 			OSAL_LOG_ERROR("cannot obtain hash src sgl from pool! err: %d",
 					err);
@@ -281,7 +280,7 @@ hash_setup(struct service_info *svc_info,
 	}
 
 	err = PNSO_OK;
-	OSAL_LOG_INFO("exit! service initialized!");
+	OSAL_LOG_DEBUG("exit! service initialized!");
 	return err;
 
 out_status_desc:
@@ -308,7 +307,7 @@ hash_chain(struct chain_entry *centry)
 {
 	pnso_error_t err;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(centry);
 
@@ -319,7 +318,7 @@ hash_chain(struct chain_entry *centry)
 	}
 
 out:
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 
@@ -330,7 +329,7 @@ hash_schedule(const struct service_info *svc_info)
 	const struct sequencer_info *seq_info;
 	bool ring_db;
 
-	OSAL_LOG_INFO("enter ... ");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -345,7 +344,7 @@ hash_schedule(const struct service_info *svc_info)
 		err = PNSO_OK;
 	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 
@@ -354,7 +353,7 @@ hash_poll(const struct service_info *svc_info)
 {
 	volatile struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -364,7 +363,7 @@ hash_poll(const struct service_info *svc_info)
 	while (status_desc->csd_valid == 0)
 		osal_yield();
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;
 }
 
@@ -381,7 +380,7 @@ hash_read_status_buffer(const struct service_info *svc_info)
 	struct cpdc_desc *hash_desc;
 	struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
@@ -392,7 +391,7 @@ hash_read_status_buffer(const struct service_info *svc_info)
 
 	/* TODO-hash: verify SHA, etc.  */
 
-	OSAL_LOG_INFO("exit! status verification success!");
+	OSAL_LOG_DEBUG("exit! status verification success!");
 	return err;
 
 out:
@@ -406,7 +405,7 @@ hash_read_status(const struct service_info *svc_info)
 	pnso_error_t err = EINVAL;
 	bool per_block;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -431,7 +430,7 @@ hash_write_result_buffer(struct service_info *svc_info)
 	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -466,7 +465,7 @@ hash_write_result_buffer(struct service_info *svc_info)
 			PNSO_HASH_TAG_LEN);
 
 	err = PNSO_OK;
-	OSAL_LOG_INFO("exit! status/result update success!");
+	OSAL_LOG_DEBUG("exit! status/result update success!");
 	return err;
 
 out:
@@ -480,7 +479,7 @@ hash_write_result(struct service_info *svc_info)
 	pnso_error_t err;
 	bool per_block;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -501,12 +500,12 @@ hash_teardown(const struct service_info *svc_info)
 	struct per_core_resource *pc_res;
 	bool per_block;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
 	per_block = is_dflag_per_block_enabled(svc_info->si_desc_flags);
-	OSAL_LOG_INFO("hash_desc: %p flags: %d", svc_info->si_desc,
+	OSAL_LOG_DEBUG("hash_desc: %p flags: %d", svc_info->si_desc,
 			svc_info->si_desc_flags);
 
 	if (!per_block) {
@@ -531,7 +530,7 @@ hash_teardown(const struct service_info *svc_info)
 		OSAL_ASSERT(0);
 	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 struct service_ops hash_ops = {
