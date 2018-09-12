@@ -31,6 +31,9 @@ typedef struct lif_info_s {
     bool receive_broadcast;
     bool receive_all_multicast;
     bool receive_promiscuous;
+    uint32_t max_vlan_filters;
+    uint32_t max_mac_filters;
+    uint32_t max_mac_vlan_filters;
 } lif_info_t;
 
 
@@ -69,5 +72,10 @@ struct eth_spec {
     uint32_t max_pt_entries;
     uint32_t max_keys;
 };
+
+typedef enum {
+    HAL_IRISC_RET_SUCCESS,
+    HAL_IRISC_RET_LIMIT_REACHED
+} hal_irisc_ret_t;
 
 #endif  /* __TYPES_HPP__ */

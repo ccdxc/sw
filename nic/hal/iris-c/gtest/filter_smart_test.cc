@@ -65,6 +65,9 @@ TEST_F(filter_test, test1)
     info.pinned_uplink = up1;
     info.is_management = false;
     info.receive_promiscuous = true;
+    info.max_vlan_filters = 10;
+    info.max_mac_filters = 10;
+    info.max_mac_vlan_filters = 10;
     EthLif *lif1 = EthLif::Factory(&info);
     // EthLif *lif2 = EthLif::Factory(2 /*hw_lif_id*/, up2, false /*is_mgmt*/);
 
@@ -144,8 +147,21 @@ TEST_F(filter_test, test1)
     lif1->AddMac(mac1);
     lif1->AddVlan(vlan1);
     lif1->AddMacVlan(mac1, vlan1);
-    EthLif::Destroy(lif1);
 
+    // Add 10 MACs
+    int i = 0;
+    for (i = 0; i < 10; i++) {
+        mac1 += i;
+        lif1->AddMac(mac1);
+    }
+
+    mac1 += i;
+    hal_irisc_ret_t ret;
+    ret = lif1->AddMac(mac1);
+    EXPECT_EQ(ret, HAL_IRISC_RET_LIMIT_REACHED);
+
+
+    EthLif::Destroy(lif1);
     // HalGRPCClient::Destroy(client);
 }
 
@@ -172,6 +188,9 @@ TEST_F(filter_test, test2)
     info.pinned_uplink = up1;
     info.is_management = false;
     info.receive_promiscuous = true;
+    info.max_vlan_filters = 10;
+    info.max_mac_filters = 10;
+    info.max_mac_vlan_filters = 10;
     EthLif *lif1 = EthLif::Factory(&info);
     EthLif::Factory(&info);
 

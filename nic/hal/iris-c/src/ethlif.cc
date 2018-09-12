@@ -91,36 +91,39 @@ EthLif::~EthLif()
     Lif::Destroy(lif_);
 }
 
-void
+hal_irisc_ret_t
 EthLif::remove_mac_filters()
 {
     // Remove mac filters
     for (auto it = mac_table_.begin(); it != mac_table_.end(); it++) {
         DelMac(*it);
     }
-
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::remove_vlan_filters()
 {
     // Remove vlan filters
     for (auto it = vlan_table_.begin(); it != vlan_table_.end(); it++) {
         DelVlan(*it);
     }
+
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::remove_mac_vlan_filters()
 {
     // Remove (mac,vlan) filters
     for (auto it = mac_vlan_table_.begin(); it != mac_vlan_table_.end(); it++) {
         DelMacVlan(std::get<0>(*it), std::get<1>(*it));
     }
+    return HAL_IRISC_RET_SUCCESS;
 }
 
 
-void
+hal_irisc_ret_t
 EthLif::AddMac(mac_t mac)
 {
     mac_vlan_t mac_vlan;
@@ -129,6 +132,15 @@ EthLif::AddMac(mac_t mac)
     HAL_TRACE_DEBUG("Adding Mac filter: {}", macaddr2str(mac));
 
     if (mac_table_.find(mac) == mac_table_.end()) {
+
+        // Check if max limit reached
+        if (mac_table_.size() == info_.max_mac_filters) {
+            HAL_TRACE_ERR("Reached Max Mac filter limit of {} for lif: {}",
+                          info_.max_mac_filters,
+                          info_.hw_lif_id);
+            return HAL_IRISC_RET_LIMIT_REACHED;
+        }
+
         /*
          * Classic:
          *      - Walk through Vlans and create (Mac,Vlan) filters
@@ -156,9 +168,10 @@ EthLif::AddMac(mac_t mac)
     } else {
         HAL_TRACE_WARN("Mac already registered: {}", mac);
     }
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::DelMac(mac_t mac)
 {
     mac_vlan_t mac_vlan_key, mac_key, vlan_key;
@@ -193,9 +206,10 @@ EthLif::DelMac(mac_t mac)
     } else {
         HAL_TRACE_ERR("Mac not registered: {}", mac);
     }
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::AddVlan(vlan_t vlan)
 {
     mac_vlan_t mac_vlan;
@@ -204,6 +218,14 @@ EthLif::AddVlan(vlan_t vlan)
     HAL_TRACE_DEBUG("Adding Vlan filter: {}", vlan);
 
     if (vlan_table_.find(vlan) == vlan_table_.end()) {
+        // Check if max limit reached
+        if (vlan_table_.size() == info_.max_vlan_filters) {
+            HAL_TRACE_ERR("Reached Max Vlan filter limit of {} for lif: {}",
+                          info_.max_vlan_filters,
+                          info_.hw_lif_id);
+            return HAL_IRISC_RET_LIMIT_REACHED;
+        }
+
         /*
          * Classic:
          *      - Walk through Vlans and create (Mac,Vlan) filters
@@ -231,9 +253,10 @@ EthLif::AddVlan(vlan_t vlan)
     } else {
         HAL_TRACE_WARN("Vlan already registered: {}", vlan);
     }
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::DelVlan(vlan_t vlan)
 {
     mac_vlan_t mac_vlan_key;
@@ -266,9 +289,10 @@ EthLif::DelVlan(vlan_t vlan)
     } else {
         HAL_TRACE_ERR("Vlan not registered: {}", vlan);
     }
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
 {
     mac_vlan_t key(mac, vlan);
@@ -277,6 +301,13 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
     HAL_TRACE_DEBUG("Adding (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
     if (mac_vlan_table_.find(key) == mac_vlan_table_.end()) {
+        // Check if max limit reached
+        if (mac_vlan_table_.size() == info_.max_mac_vlan_filters) {
+            HAL_TRACE_ERR("Reached Max Mac-Vlan filter limit of {} for lif: {}",
+                          info_.max_mac_vlan_filters,
+                          info_.hw_lif_id);
+            return HAL_IRISC_RET_LIMIT_REACHED;
+        }
         if (hal->GetMode() == FWD_MODE_CLASSIC) {
             // Check if mac filter and vlan filter is present
             if (mac_table_.find(mac) == mac_table_.end() ||
@@ -295,9 +326,10 @@ EthLif::AddMacVlan(mac_t mac, vlan_t vlan)
     } else {
         HAL_TRACE_WARN("Mac-Vlan already registered: {}", mac);
     }
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
 {
     mac_vlan_t mac_vlan_key;
@@ -327,9 +359,10 @@ EthLif::DelMacVlan(mac_t mac, vlan_t vlan)
         HAL_TRACE_ERR("(Mac,Vlan) already not registered: mac: {}, vlan: {}",
                       mac, vlan);
     }
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::UpdateReceivePromiscuous(bool receive_promiscuous)
 {
     api_trace("Promiscuous Flag change");
@@ -357,10 +390,10 @@ EthLif::UpdateReceivePromiscuous(bool receive_promiscuous)
     // Update Lif to Hal
     lif_->TriggerHalUpdate();
 end:
-    return;
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::UpdateReceiveBroadcast(bool receive_broadcast)
 {
     api_trace("Broadcast change");
@@ -379,10 +412,10 @@ EthLif::UpdateReceiveBroadcast(bool receive_broadcast)
     // Update Lif to Hal
     lif_->TriggerHalUpdate();
 end:
-    return;
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::UpdateReceiveAllMulticast(bool receive_all_multicast)
 {
     api_trace("AllMulticast change");
@@ -401,10 +434,10 @@ EthLif::UpdateReceiveAllMulticast(bool receive_all_multicast)
     // Update Lif to Hal
     lif_->TriggerHalUpdate();
 end:
-    return;
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::UpdateVlanStripEn(bool vlan_strip_en)
 {
     api_trace("Vlan Strip change");
@@ -423,10 +456,10 @@ EthLif::UpdateVlanStripEn(bool vlan_strip_en)
     // Update Lif to Hal
     lif_->TriggerHalUpdate();
 end:
-    return;
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 EthLif::UpdateVlanInsertEn(bool vlan_insert_en)
 {
     api_trace("Vlan Strip change");
@@ -445,7 +478,7 @@ EthLif::UpdateVlanInsertEn(bool vlan_insert_en)
     // Update Lif to Hal
     lif_->TriggerHalUpdate();
 end:
-    return;
+    return HAL_IRISC_RET_SUCCESS;
 }
 
 void

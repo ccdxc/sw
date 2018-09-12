@@ -21,24 +21,24 @@ public:
 
     static void Destroy(EthLif *eth_lif);
 
-    void AddMac(mac_t mac);
-    void DelMac(mac_t mac);
+    hal_irisc_ret_t AddMac(mac_t mac);
+    hal_irisc_ret_t DelMac(mac_t mac);
 
-    void AddVlan(vlan_t vlan);
-    void DelVlan(vlan_t vlan);
+    hal_irisc_ret_t AddVlan(vlan_t vlan);
+    hal_irisc_ret_t DelVlan(vlan_t vlan);
 
-    void AddMacVlan(mac_t mac, vlan_t vlan);
-    void DelMacVlan(mac_t mac, vlan_t vlan);
+    hal_irisc_ret_t AddMacVlan(mac_t mac, vlan_t vlan);
+    hal_irisc_ret_t DelMacVlan(mac_t mac, vlan_t vlan);
 
-    void UpdateVlanStripEn(bool vlan_stip_en);
-    void UpdateVlanInsertEn(bool vlan_insert_en);
-    void UpdateReceiveBroadcast(bool receive_broadcast);
-    void UpdateReceiveAllMulticast(bool receive_all_multicast);
-    void UpdateReceivePromiscuous(bool receive_promiscuous);
+    hal_irisc_ret_t UpdateVlanStripEn(bool vlan_stip_en);
+    hal_irisc_ret_t UpdateVlanInsertEn(bool vlan_insert_en);
+    hal_irisc_ret_t UpdateReceiveBroadcast(bool receive_broadcast);
+    hal_irisc_ret_t UpdateReceiveAllMulticast(bool receive_all_multicast);
+    hal_irisc_ret_t UpdateReceivePromiscuous(bool receive_promiscuous);
 
-    void remove_mac_filters();
-    void remove_vlan_filters();
-    void remove_mac_vlan_filters();
+    hal_irisc_ret_t remove_mac_filters();
+    hal_irisc_ret_t remove_vlan_filters();
+    hal_irisc_ret_t remove_mac_vlan_filters();
 
     Lif *GetLif();
     Uplink *GetUplink();
@@ -56,7 +56,6 @@ private:
     static constexpr uint64_t max_macaddrs_per_lif = 64;
     static constexpr uint64_t max_vlans_per_lif = 8;
     static constexpr uint64_t max_filters_per_lif = 4096;
-
 
     // Config State (For Disruptive Upgrade):
 #if 0
