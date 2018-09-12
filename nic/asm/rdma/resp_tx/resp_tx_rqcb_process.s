@@ -102,8 +102,6 @@ resp_tx_rqcb_process:
         phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, header_template_addr), d.header_template_addr, \
                     CAPRI_PHV_FIELD(RQCB_TO_RQCB2_P, header_template_size), d.header_template_size
 
-        CAPRI_SET_FIELD2(RQCB_TO_RQCB2_P, read_rsp_in_progress, d.read_rsp_in_progress)
-        
         // incr spec_psn 
         tblmincri       d.spec_read_rsp_psn, 24, 1
 

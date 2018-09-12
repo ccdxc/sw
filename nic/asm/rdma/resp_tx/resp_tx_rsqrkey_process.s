@@ -32,9 +32,9 @@ struct key_entry_aligned_t d;
 #define INFO_RKEY_COOKIE_P t2_s2s_rsqrkey_to_rkey_cookie_info
 
 #define K_XFER_VA CAPRI_KEY_RANGE(IN_P, transfer_va_sbit0_ebit7, transfer_va_sbit32_ebit63)
-#define K_XFER_BYTES CAPRI_KEY_RANGE(IN_P, transfer_bytes_sbit0_ebit7, transfer_bytes_sbit8_ebit11)
+#define K_XFER_BYTES CAPRI_KEY_RANGE(IN_P, transfer_bytes_sbit0_ebit7, transfer_bytes_sbit8_ebit15)
 #define K_HDR_TMP CAPRI_KEY_RANGE(IN_P, header_template_addr_sbit0_ebit7, header_template_addr_sbit24_ebit31)
-#define K_HDR_TMP_SZ CAPRI_KEY_RANGE(IN_P, header_template_size_sbit0_ebit3, header_template_size_sbit4_ebit7)
+#define K_HDR_TMP_SZ CAPRI_KEY_FIELD(IN_P, header_template_size)
 #define K_DCQCN_CB_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, dcqcn_cb_addr_sbit0_ebit15, dcqcn_cb_addr_sbit32_ebit33)
 #define K_PD CAPRI_KEY_RANGE(IN_TO_S_P, pd_sbit0_ebit15, pd_sbit24_ebit31)
 

@@ -36,7 +36,7 @@ resp_tx_rsqwqe_process:
 
     seq         c1, d.read_or_atomic, RSQ_OP_TYPE_READ
     bcf         [c1], process_read
-    seq         c2, CAPRI_KEY_FIELD(IN_P, read_rsp_in_progress), 1 //BD Slot
+    nop // BD Slot
     
 process_atomic:
     add         BTH_OPCODE, RDMA_PKT_OPC_ATOMIC_ACK, CAPRI_KEY_FIELD(IN_P, serv_type), BTH_OPC_SVC_SHIFT
@@ -87,7 +87,7 @@ process_read:
     add         CURR_PSN, r0, d.psn
     add         r2, r0, CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23)
     // now r2 has psn offset within msg, i.e. spec_psn
-    mincr.c2    CURR_PSN, 24, r2
+    mincr       CURR_PSN, 24, r2
     // CURR_PSN is offset by spec_psn if read_rsp is in progress
 
     /*
@@ -221,4 +221,4 @@ skip_rkey:
 
 drop_phv:
     phvwr.e     p.common.p4_intr_global_drop, 1
-    nop // Exit Slot
+    CAPRI_SET_TABLE_0_VALID(0)  //Exit slot

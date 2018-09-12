@@ -133,7 +133,7 @@ drop_phv:
     CAPRI_SET_FIELD2(RQCB0_WB_INFO_P, rate_enforce_failed, 1)
 
     RQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb0_write_back_process, r2)
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rqcb0_write_back_process, r2)
 
     /* 
      * Feeding new cur_timestamp for next iteration to simulate accumulation of tokens. 

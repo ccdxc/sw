@@ -23,7 +23,7 @@ resp_tx_rqcb2_process:
     phvwrpair   p.aeth.syndrome, r6, p.aeth.msn, d.msn
 
     CAPRI_RESET_TABLE_0_ARG()
-    CAPRI_SET_FIELD_RANGE2(RSQWQE_INFO_P, curr_read_rsp_psn, read_rsp_in_progress, CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, read_rsp_in_progress)) 
+    CAPRI_SET_FIELD_RANGE2(RSQWQE_INFO_P, curr_read_rsp_psn, header_template_size, CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, header_template_size)) 
 
     // pass pd to rkey's to_stage
     CAPRI_SET_FIELD2(TO_S_RKEY_P, pd, d.pd)

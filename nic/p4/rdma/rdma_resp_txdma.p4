@@ -165,8 +165,7 @@ header_type resp_tx_rqcb_to_rqcb2_info_t {
         serv_type                        :    3;
         header_template_addr             :   32;
         header_template_size             :    8;
-        read_rsp_in_progress             :    1;
-        pad                              :   23;
+        pad                              :   24;
     }
 }
 
@@ -289,10 +288,10 @@ header_type resp_tx_rsqwqe_to_rkey_info_t {
         key_id                           :    1;
         send_aeth                        :    1;
         last_or_only                     :    1;
-        transfer_bytes                   :   12;
+        transfer_bytes                   :   16;
         header_template_size             :    8;
         skip_rkey                        :    1;
-        pad                              :   11;
+        pad                              :    7;
     }
 }
 
@@ -310,8 +309,7 @@ header_type resp_tx_rqcb2_to_rsqwqe_info_t {
         serv_type                        :    3;
         header_template_addr             :   32;
         header_template_size             :    8;
-        read_rsp_in_progress             :    1;
-        pad                              :   87;
+        pad                              :   88;
     }
 }
 
@@ -555,7 +553,6 @@ action resp_tx_dcqcn_rate_process () {
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.serv_type, t0_s2s_rqcb_to_rqcb2_info.serv_type);
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.header_template_addr, t0_s2s_rqcb_to_rqcb2_info.header_template_addr);
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.header_template_size, t0_s2s_rqcb_to_rqcb2_info.header_template_size);
-    modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.read_rsp_in_progress, t0_s2s_rqcb_to_rqcb2_info.read_rsp_in_progress);
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.pad, t0_s2s_rqcb_to_rqcb2_info.pad);
 
 }
@@ -577,7 +574,6 @@ action resp_tx_dcqcn_timer_process () {
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.serv_type, t0_s2s_rqcb_to_rqcb2_info.serv_type);
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.header_template_addr, t0_s2s_rqcb_to_rqcb2_info.header_template_addr);
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.header_template_size, t0_s2s_rqcb_to_rqcb2_info.header_template_size);
-    modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.read_rsp_in_progress, t0_s2s_rqcb_to_rqcb2_info.read_rsp_in_progress);
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.pad, t0_s2s_rqcb_to_rqcb2_info.pad);
 
 }
@@ -642,7 +638,6 @@ action resp_tx_rqcb2_process () {
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.serv_type, t0_s2s_rqcb_to_rqcb2_info.serv_type);
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.header_template_addr, t0_s2s_rqcb_to_rqcb2_info.header_template_addr);
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.header_template_size, t0_s2s_rqcb_to_rqcb2_info.header_template_size);
-    modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.read_rsp_in_progress, t0_s2s_rqcb_to_rqcb2_info.read_rsp_in_progress);
     modify_field(t0_s2s_rqcb_to_rqcb2_info_scr.pad, t0_s2s_rqcb_to_rqcb2_info.pad);
 
 }
@@ -749,7 +744,6 @@ action resp_tx_rsqwqe_process () {
     modify_field(t0_s2s_rqcb2_to_rsqwqe_info_scr.serv_type, t0_s2s_rqcb2_to_rsqwqe_info.serv_type);
     modify_field(t0_s2s_rqcb2_to_rsqwqe_info_scr.header_template_addr, t0_s2s_rqcb2_to_rsqwqe_info.header_template_addr);
     modify_field(t0_s2s_rqcb2_to_rsqwqe_info_scr.header_template_size, t0_s2s_rqcb2_to_rsqwqe_info.header_template_size);
-    modify_field(t0_s2s_rqcb2_to_rsqwqe_info_scr.read_rsp_in_progress, t0_s2s_rqcb2_to_rsqwqe_info.read_rsp_in_progress);
     modify_field(t0_s2s_rqcb2_to_rsqwqe_info_scr.pad, t0_s2s_rqcb2_to_rsqwqe_info.pad);
 
 }
