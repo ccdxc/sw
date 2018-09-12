@@ -7,14 +7,12 @@
 #include "ionic_bus.h"
 #include "ionic_dev.h"
 #include "ionic_lif.h"
+#include "ionic_txrx.h"
 
 struct lif *get_netdev_ionic_lif(struct net_device *netdev,
 				 const char *api_version)
 {
-	if (!netdev || !netdev->dev.parent || !netdev->dev.parent->driver)
-		return NULL;
-
-	if (netdev->dev.parent->driver->owner != THIS_MODULE)
+	if (!netdev || netdev->netdev_ops->ndo_start_xmit != ionic_start_xmit)
 		return NULL;
 
 	if (strcmp(api_version, IONIC_API_VERSION))
