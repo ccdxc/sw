@@ -15,6 +15,10 @@ import shutil
 # root of the source tree - used in dev mode so that source is mounted every where
 src_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../..")
 
+if sys.version_info[0] != 2:
+    print("This script requires Python version 2.x")
+    sys.exit(1)
+
 #script source dir - this needs to be mounted to node1 so that we can post a cluster create object from this script
 # we go ahead and mount this to all venice node to simplify this script
 script_src_dir = os.path.dirname(os.path.realpath(__file__))
@@ -254,9 +258,9 @@ def createCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip, nett
 
     for i in range(1, 3):
         if runCommand("""docker exec node1 /dind/do.py  -configFile '' -init_cluster_only -init_cluster_node {} -quorum {} -clustervip {}""".format(init_cluster_nodeIP, ",".join(quorum), clustervip)) == 0:
-            break
+            return
         time.sleep(2)
-
+    raise RuntimeException("Unable to create cluster")
 
 def restartCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
     pool = ThreadPool(len(nodes))
@@ -265,6 +269,8 @@ def restartCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
         if runCommand("""docker exec node1 /dind/do.py -configFile ''  -init_cluster_only  -init_cluster_node {} -quorum {} -clustervip {}""".format(init_cluster_nodeIP, ",".join(quorum), clustervip)) == 0:
             break
         time.sleep(2)
+    else:
+        raise RuntimeException("Unable to create cluster")
 
     if not args.skipnode0:
       copyK8sAccessCredentials()
