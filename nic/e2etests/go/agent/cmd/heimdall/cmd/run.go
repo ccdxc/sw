@@ -12,12 +12,12 @@ import (
 )
 
 var (
-	VLANOffset                                                        int
-	ConfigManifest, uplinkMapFile, configFile, TrafficTest            string
-	TestEnv, TestSuite, DeviceJsonFile                                string
-	ForceGen, EnableSim, SkipConfig, SimMode, EpSetup, trafficVerbose bool
-	configs                                                           *pkg.Config
-	err                                                               error
+	VLANOffset                                                                  int
+	ConfigManifest, uplinkMapFile, configFile, TrafficTest                      string
+	TestEnv, TestSuite, DeviceJsonFile                                          string
+	ForceGen, EnableSim, SkipConfig, SimMode, EpSetup, trafficVerbose, SmartNic bool
+	configs                                                                     *pkg.Config
+	err                                                                         error
 )
 
 var runCmd = &cobra.Command{
@@ -47,7 +47,7 @@ var runCmd = &cobra.Command{
 		if EnableSim {
 			// bring up components
 			fmt.Println("Bringing up NAPLES...")
-			err := pkg.BringUpSim()
+			err := pkg.BringUpSim(SmartNic)
 			if err != nil {
 				return err
 			}
@@ -131,6 +131,7 @@ func init() {
 	runCmd.Flags().StringVarP(&DeviceJsonFile, "device-file", "", "", "Device json file")
 	runCmd.Flags().BoolVarP(&ForceGen, "force-gen", "", false, "Forces config generation even if spec file provided")
 	runCmd.Flags().BoolVarP(&EnableSim, "enable-sim", "", false, "Skips bring up sim")
+	runCmd.Flags().BoolVarP(&SmartNic, "smart-nic", "", false, "Bring up sim in smart nic mode")
 	runCmd.Flags().BoolVarP(&SkipConfig, "skip-config", "", false, "Skips NAPLES configuration")
 	runCmd.Flags().IntVarP(&VLANOffset, "vlan-start", "v", 100, "VLAN Start index for networks")
 	trafficCmd.Flags().StringVarP(&uplinkMapFile, "uplink-map", "m", "", "Object config manifest file")

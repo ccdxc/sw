@@ -11,11 +11,10 @@ SIM_DEVICE_JSON=$HEIMDALL_GOLDEN_CONFIG_DIR/sim_device.json
 UPLINK_MAP_JSON=$HEIMDALL_GOLDEN_CONFIG_DIR/uplink_map.json
 
 
-echo "Starting Heimdall run..."
+echo "Starting Heimdall run in default (host-pinned) mode"
 
 set +x
-echo "Pushing golden config..."
-go run $HEIMDALL_RUN run --config-file $HEIMDALL_GOLDEN_CONFIG --enable-sim
+go run $HEIMDALL_RUN run --device-file $SIM_DEVICE_JSON  --config-file $HEIMDALL_GOLDEN_CONFIG --enable-sim
 
 OUT=$?
 if [ $OUT -ne 0 ];then
@@ -25,6 +24,37 @@ fi
 
 echo "Starting Traffic Tests..."
 
+echo "Starting Host-Host Traffic tests.."
+
+go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON --config-file $HEIMDALL_GOLDEN_CONFIG --sim-mode
+
+OUT=$?
+if [ $OUT -ne 0 ];then
+   echo "Host-Host traffic test failed"
+   exit $OUT
+fi
+
+echo "Starting Host-Network Traffic tests.."
+
+go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON  --uplink-map $UPLINK_MAP_JSON --config-file $HEIMDALL_GOLDEN_CONFIG --sim-mode
+
+OUT=$?
+if [ $OUT -ne 0 ];then
+   echo "Host-Network traffic test failed"
+   exit $OUT
+fi
+
+
+echo "Starting Heimdall run in smart nic mode"
+
+echo "Pushing golden config..."
+go run $HEIMDALL_RUN run --config-file $HEIMDALL_GOLDEN_CONFIG --enable-sim --smart-nic
+
+OUT=$?
+if [ $OUT -ne 0 ];then
+   echo "Pushing configuration to agent failed!"
+   exit $OUT
+fi
 
 
 echo "Starting Network-Network Traffic tests.."
@@ -38,9 +68,7 @@ fi
 
 
 echo "Starting Host-Host Traffic tests.."
-
-echo "Pushing golden config..."
-go run $HEIMDALL_RUN run --device-file $SIM_DEVICE_JSON --config-file $HEIMDALL_GOLDEN_CONFIG --enable-sim
+go run $HEIMDALL_RUN run --device-file $SIM_DEVICE_JSON --config-file $HEIMDALL_GOLDEN_CONFIG --enable-sim --smart-nic
 
 OUT=$?
 if [ $OUT -ne 0 ];then

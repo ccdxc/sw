@@ -158,6 +158,10 @@ const char admin_qstate[] = {
     0x00,
 };
 
+static bool is_smart_nic_mode() {
+    return (getenv("SMART_NIC_MODE") && atoi(getenv("SMART_NIC_MODE")));
+}
+
 void
 print_tx_qstate (const char *qstate)
 {
@@ -249,8 +253,10 @@ print_admin_qstate (const char *qstate)
               << std::endl;
 }
 
+#define NUM_UPLINKS 2
 class hal_client {
 public:
+    uint64_t       uplink_hdls[NUM_UPLINKS];
     hal_client(std::shared_ptr<Channel> channel) :
         intf_stub_(Interface::NewStub(channel)),
         nic_stub_(Nic::NewStub(channel)) {
@@ -326,6 +332,9 @@ public:
         for (uint32_t i = 0; i < num_lifs; i++) {
             spec = req_msg.add_request();
             spec->mutable_key_or_handle()->set_lif_id(lif_id + i);
+            if (is_smart_nic_mode()) {
+                spec->mutable_pinned_uplink_if_key_handle()->set_interface_id(uplink_hdls[i%NUM_UPLINKS]);
+            }
             spec->set_admin_status(::intf::IF_STATUS_UP);
             spec->mutable_packet_filter()->set_receive_broadcast(true);
             lif_qstate_map = spec->add_lif_qstate_map();
@@ -395,7 +404,7 @@ public:
     }
 
    // create few uplinks and return the handle for the 1st one
-    uint64_t uplinks_create(uint64_t if_id_start, uint32_t num_uplinks) {
+    int uplinks_create(uint64_t if_id_start, uint32_t num_uplinks) {
         InterfaceSpec           *spec;
         InterfaceRequestMsg     req_msg;
         InterfaceResponseMsg    rsp_msg;
@@ -417,8 +426,11 @@ public:
                 std::cout << "Uplink interface create succeeded, handle = "
                           << rsp_msg.response(i).status().if_handle()
                           << std::endl;
+                if (rsp_msg.response(i).status().if_handle() == 0) {
+                    return -1;
+                }
+                uplink_hdls[i] = rsp_msg.response(i).status().if_handle();
             }
-            return rsp_msg.response(0).status().if_handle();
         } else {
             for (uint32_t i = 0; i < num_uplinks; i++) {
                 std::cout << "Uplink interface create failed, error = "
@@ -439,12 +451,12 @@ private:
 int
 main (int argc, char** argv)
 {
-    uint64_t       uplink_if_handle;
     uint64_t       lif_id = 100;
     uint64_t       if_id = 128;
-    uint64_t       num_lifs = 16, num_uplinks = 2;
+    uint64_t       num_lifs = 16;
     std::string    svc_endpoint;
     std::string    max_lifs;
+    int            ret;
 
     grpc_init();
     if (getenv("HAL_GRPC_PORT")) {
@@ -462,11 +474,13 @@ main (int argc, char** argv)
                                            grpc::InsecureChannelCredentials()));
     //hclient.wait_until_ready();
 
-    hclient.device_set_smart_nic_mode();
+    if (is_smart_nic_mode()) {
+        hclient.device_set_smart_nic_mode();
+    }
 
     // create uplinks
-    uplink_if_handle = hclient.uplinks_create(if_id, num_uplinks);
-    if (uplink_if_handle == 0) {
+    ret = hclient.uplinks_create(if_id, NUM_UPLINKS);
+    if (ret < 0) {
         exit(1);
     }
 

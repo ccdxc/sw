@@ -22,6 +22,12 @@ else
     echo "Running naples-sim with Qemu"
 fi
 
+if [ -z "$SMART_NIC_MODE" ]; then
+    echo "Running naples-sim in host pinned mode"
+else
+    echo "Running naples-sim in smart nic mode"
+    export SMART_NIC_MODE
+fi
 
 if [[ -z "${MAX_LIFS}" ]]; then
   MAX_LIFS=16

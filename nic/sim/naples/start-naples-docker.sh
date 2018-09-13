@@ -7,7 +7,7 @@ HAL_PORT=50054
 CONTAINER="pensando/naples:$VER"
 DEF_LIFS=16
 
-LONGOPTIONS="qemu,lifs:"
+LONGOPTIONS="smartnic,qemu,lifs:"
 
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ $? -ne 0 ]]; then
@@ -19,10 +19,15 @@ fi
 eval set -- "$PARSED"
 lifs=$DEF_LIFS
 qemu=0
+smartnic=0
 while true; do
     case "$1" in
          --qemu)
             qemu=1
+            shift
+            ;;
+         --smartnic)
+            smartnic=1
             shift
             ;;
         -c|--lifs)
@@ -57,7 +62,7 @@ if [ "$qemu" -eq 1 ]
     docker run --rm -d --name naples-$VER --privileged -ti -p $AGENT_PORT:$AGENT_PORT  -p $HAL_PORT:$HAL_PORT --mount type=bind,source=$NAPLES_DIR,target=/naples/data -e WITH_QEMU=1 "$CONTAINER" 
 else
     echo "Running the NAPLES container in stand-alone mode ..."
-    docker run --rm -d --name naples-$VER --privileged -ti -p $AGENT_PORT:$AGENT_PORT  -p $HAL_PORT:$HAL_PORT --mount type=bind,source=$NAPLES_DIR,target=/naples/data -e MAX_LIFS=$lifs "$CONTAINER"
+    docker run --rm -d --name naples-$VER --privileged -ti -p $AGENT_PORT:$AGENT_PORT  -p $HAL_PORT:$HAL_PORT --mount type=bind,source=$NAPLES_DIR,target=/naples/data -e MAX_LIFS=$lifs -e SMART_NIC_MODE=$smartnic "$CONTAINER"
 fi
 
 echo "NAPLES bring up completed"

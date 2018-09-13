@@ -11,7 +11,7 @@ import (
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/libs"
 )
 
-func BringUpSim() error {
+func BringUpSim(smartNic bool) error {
 
 	_, err := os.Stat(NIC_SIM_RELEASE_TARGET)
 	if err != nil {
@@ -21,7 +21,11 @@ func BringUpSim() error {
 	// Ignore error during pre init clean up
 	libs.RunCommand("bash", SIM_STOP_SCRIPT)
 
-	err = libs.RunCommand("bash", SIM_START_UP_SCRIPT, "--lifs", fmt.Sprintf("%d", LIF_COUNT))
+	cmd := []string{"bash", SIM_START_UP_SCRIPT, "--lifs", fmt.Sprintf("%d", LIF_COUNT)}
+	if smartNic {
+		cmd = append(cmd, "--smartnic")
+	}
+	err = libs.RunCommand(cmd[0], cmd[1:]...)
 	if err != nil {
 		return fmt.Errorf("NAPLES Bring up failed. Err: %v", err)
 	}
