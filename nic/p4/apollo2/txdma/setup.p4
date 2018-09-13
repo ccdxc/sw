@@ -1,26 +1,48 @@
 
-action read_qstate_info (PKTQ_QSTATE) {
-    // in rxdma 
-    //          check sw_pindex0, cindex0
-    //          tbl-wr sw_pindex0++
-    //          doorbell(dma) pindex0
+#define TXDMA_QSTATE \
+    pc, rsvd, cosA, cosB, cos_sel, eval_last, host_rings, total_rings, pid, \
+    p_index0, c_index0, sw_cindex0, ring_size, ring_base, rxdma_cindex_addr
+
+#define TXDMA_QSTATE_DVEC_SCRATCH(_scratch_qstate_hdr, _scratch_txdma_qstate) \
+    modify_field(_scratch_qstate_hdr.pc, pc);                                 \
+    modify_field(_scratch_qstate_hdr.rsvd, rsvd);                             \
+    modify_field(_scratch_qstate_hdr.cosA, cosA);                             \
+    modify_field(_scratch_qstate_hdr.cosB, cosB);                             \
+    modify_field(_scratch_qstate_hdr.cos_sel, cos_sel);                       \
+    modify_field(_scratch_qstate_hdr.eval_last, eval_last);                   \
+    modify_field(_scratch_qstate_hdr.host_rings, host_rings);                 \
+    modify_field(_scratch_qstate_hdr.total_rings, total_rings);               \
+    modify_field(_scratch_qstate_hdr.pid, pid);                               \
+    modify_field(_scratch_qstate_hdr.p_index0, p_index0);                     \
+    modify_field(_scratch_qstate_hdr.c_index0, c_index0);                     \
+                                                                              \
+    modify_field(_scratch_txdma_qstate.sw_cindex0, sw_cindex0);               \
+    modify_field(_scratch_txdma_qstate.ring_base, ring_base);                 \
+    modify_field(_scratch_txdma_qstate.ring_size, ring_size);                 \
+    modify_field(_scratch_txdma_qstate.rxdma_cindex_addr, rxdma_cindex_addr)
+
+
+action read_qstate_info (TXDMA_QSTATE) {
     // in txdma 
     //          check sw_cindex0, pindex0
     //          tbl-wr sw_cindex0++
     //          doorbell(dma) cindex0
+    //          dma to rxdma_qstate cindex
     // d-vector
-    PKTQ_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_qstate_txdma_fte_q);
+    TXDMA_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_txdma_qstate);
 
-    if (scratch_qstate_txdma_fte_q.sw_cindex0 == scratch_qstate_hdr.p_index0) {
+    if (scratch_txdma_qstate.sw_cindex0 == scratch_qstate_hdr.p_index0) {
         modify_field(predicate_header.txdma_drop_event, TRUE);
     } else {
         modify_field(txdma_control.control_addr,
-                scratch_qstate_txdma_fte_q.ring_base0 + 
-                (scratch_qstate_txdma_fte_q.sw_cindex0 * PKTQ_PAGE_SIZE));
+                scratch_txdma_qstate.ring_base + 
+                (scratch_txdma_qstate.sw_cindex0 * PKTQ_PAGE_SIZE));
         modify_field(txdma_control.payload_addr, txdma_control.control_addr + (1<<6));
-        modify_field(scratch_qstate_txdma_fte_q.sw_cindex0, 
-                scratch_qstate_txdma_fte_q.sw_cindex0 + 1);
-        modify_field(txdma_control.cindex, scratch_qstate_txdma_fte_q.sw_cindex0);
+        modify_field(scratch_txdma_qstate.sw_cindex0, 
+                scratch_txdma_qstate.sw_cindex0 + 1);
+        modify_field(txdma_control.cindex, scratch_txdma_qstate.sw_cindex0);
+        modify_field(txdma_control.rxdma_cindex_addr, 
+                        scratch_txdma_qstate.rxdma_cindex_addr);
     }
 
 }

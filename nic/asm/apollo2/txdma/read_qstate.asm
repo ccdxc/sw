@@ -19,10 +19,11 @@ read_qstate_info:
     // Increment sw_cindex0
     // update sw_cindex0, unlock
     tblmincri.f d.read_qstate_info_d.sw_cindex0, \
-                    d.{read_qstate_info_d.ring_size0}.hx, 1
+                    d.{read_qstate_info_d.ring_size}.hx, 1
 
-    add         r2, r2, d.{read_qstate_info_d.ring_base0}.dx
+    add         r2, r2, d.{read_qstate_info_d.ring_base}.dx
     phvwr       p.txdma_control_control_addr, r2
+    phvwr       p.txdma_control_rxdma_cindex_addr, d.{read_qstate_info_d.rxdma_cindex_addr}.dx
     // payload_addr will be after predicate header and p4_to_txdma_header
     addi        r3, r2, (APOLLO_PREDICATE_HDR_SZ + APOLLO_P4_TO_TXDMA_HDR_SZ)
     phvwr.e     p.txdma_control_payload_addr, r3

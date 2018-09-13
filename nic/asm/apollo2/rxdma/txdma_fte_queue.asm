@@ -22,7 +22,7 @@ pkt_enqueue:
     // check q full
     add         r1, r0, d.pkt_enqueue_d.sw_pindex0
     mincr       r1, d.{pkt_enqueue_d.ring_size0}.hx, 1
-    seq         c2, r1, d.{pkt_enqueue_d.c_index0}.hx
+    seq         c2, r1, d.{pkt_enqueue_d.sw_cindex0}
     bcf         [c2], txdma_q_full
     // compute entry offset for current p_index
     mul         r2, d.pkt_enqueue_d.sw_pindex0, PKTQ_PAGE_SIZE
@@ -31,7 +31,7 @@ pkt_enqueue:
 
     add         r2, r2, d.{pkt_enqueue_d.ring_base0}.dx
 
-    // dma pkt to pkt buffer
+    // dma pkt to pkt_buffer
     add         r1, k.{capri_p4_intr_packet_len_sbit0_ebit5, \
                     capri_p4_intr_packet_len_sbit6_ebit13}, \
                     (APOLLO_PREDICATE_HDR_SZ + APOLLO_P4_TO_TXDMA_HDR_SZ + \
@@ -41,8 +41,10 @@ pkt_enqueue:
     phvwr       p.dma_cmd_pkt2mem_dma_cmd_eop, 0
     phvwr       p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
 
+    // use Qid1 to ring door-bell. Qid0 is used as a completionQ between txdma and rxdma
+    // this avoids contention on the same qstate0 addr from rxdma, txdma and DB hardware
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_STOP_FENCE(dma_cmd_phv2mem_dma_cmd, \
-        APOLLO_SERVICE_LIF, 0, k.capri_rxdma_intr_qid, 0, \
+        APOLLO_SERVICE_LIF, 0, 1, 0, \
         d.pkt_enqueue_d.sw_pindex0, doorbell_data_pid, doorbell_data_index)
 
     // setup dma_cmd pointer to 1st dma cmd
@@ -59,7 +61,6 @@ txdma_q_full:
     // drop - do nothing
     nop.e
     nop
-
 
 /*****************************************************************************/
 /* error function                                                            */

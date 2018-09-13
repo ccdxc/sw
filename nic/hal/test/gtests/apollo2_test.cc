@@ -52,7 +52,7 @@ typedef struct __attribute__((__packed__)) lif_qstate_  {
     uint64_t arm_pindex : 16;
     uint64_t arm_cindex : 16;
     uint64_t sw_pindex : 16;
-    uint64_t sw_cindex : 16;
+    uint16_t sw_cindex;
     uint64_t ring0_base : 64;
     uint64_t ring1_base : 64;
     uint64_t ring0_size : 16;
@@ -60,6 +60,27 @@ typedef struct __attribute__((__packed__)) lif_qstate_  {
 
     uint8_t  pad[(512-320)/8];
 } lif_qstate_t;
+
+typedef struct __attribute__((__packed__)) txdma_qstate_  {
+    uint64_t pc : 8;
+    uint64_t rsvd : 8;
+    uint64_t cos_a : 4;
+    uint64_t coa_b : 4;
+    uint64_t cos_sel : 8;
+    uint64_t eval_last : 8;
+    uint64_t host_rings : 4;
+    uint64_t total_rings : 4;
+    uint64_t pid : 16;
+    uint64_t pindex : 16;
+    uint64_t cindex : 16;
+
+    uint64_t sw_cindex : 16;
+    uint64_t ring_size : 16;
+    uint64_t ring_base : 64;
+    uint64_t rxdma_cindex_addr : 64;
+
+    uint8_t  pad[(512-256)/8];
+} txdma_qstate_t;
 
 uint8_t g_snd_pkt1[] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1,
@@ -200,6 +221,8 @@ init_service_lif() {
     hal::LIFQState qstate = { 0 };
     qstate.lif_id = APOLLO_SERVICE_LIF;
     qstate.hbm_address = get_start_offset(JLIFQSTATE);
+    qstate.params_in.type[0].entries = 1;
+    qstate.params_in.type[0].size = 1; // 64B
     push_qstate_to_capri(&qstate, 0);
 
     lif_qstate_t lif_qstate = { 0 };
@@ -208,6 +231,15 @@ init_service_lif() {
     lif_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
                  sizeof(lif_qstate));
+
+    txdma_qstate_t txdma_qstate = { 0 };
+    txdma_qstate.rxdma_cindex_addr = qstate.hbm_address + offsetof(lif_qstate_t, sw_cindex);
+    txdma_qstate.ring_base = get_start_offset(JPKTBUFFER);
+    txdma_qstate.ring_size = log2(get_size_kb(JPKTBUFFER) / 10);
+    txdma_qstate.total_rings = 1;
+    write_qstate(qstate.hbm_address + sizeof(lif_qstate_t), 
+                 (uint8_t *)&txdma_qstate,
+                 sizeof(txdma_qstate));
 }
 
 static uint32_t

@@ -3,11 +3,12 @@
 
 header_type txdma_control_metadata_t {
     fields {
-        pad0            : 6;
-        control_addr    : 34;
-        payload_addr    : 40;
-        cindex          : 16;
-        lpm_s2_offset   : 16;
+        pad0                : 6;
+        control_addr        : 34;
+        payload_addr        : 40;
+        cindex              : 16;
+        lpm_s2_offset       : 16;
+        rxdma_cindex_addr   : 34;
     }
 }
 
@@ -21,6 +22,16 @@ header_type scratch_metadata_t {
         payload_len     : 14;
         qid             : 24;
         lif             : 11;
+    }
+}
+
+header_type txdma_qstate_t {
+    fields {
+        // sw dependent portion of qstate
+        sw_cindex0          : 16;
+        ring_size           : 16;   // log2(max_pindex)
+        ring_base           : 64;
+        rxdma_cindex_addr   : 64;
     }
 }
 
@@ -50,11 +61,13 @@ metadata doorbell_data_t    doorbell_data;
 
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t intrinsic_dma;    // dma cmd 1
+metadata dma_cmd_phv2pkt_t intrinsic_dma;       // dma cmd 1
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t payload_dma;   // dma cmd 2
+metadata dma_cmd_mem2pkt_t payload_dma;         // dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t ci_update;  // dma cmd 3
+metadata dma_cmd_phv2mem_t doorbell_ci_update;  // dma cmd 3
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t rxdma_ci_update;     // dma cmd 4
 
 
 // Scratch metadata
@@ -68,5 +81,5 @@ metadata qstate_hdr_t           scratch_qstate_hdr;
 
 @pragma dont_trim
 @pragma scratch_metadata
-metadata qstate_txdma_fte_q_t   scratch_qstate_txdma_fte_q;
+metadata txdma_qstate_t         scratch_txdma_qstate;
 

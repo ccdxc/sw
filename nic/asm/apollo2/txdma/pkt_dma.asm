@@ -41,7 +41,15 @@ pkt_dma:
                     k.{capri_intr_lif_sbit0_ebit2...capri_intr_lif_sbit3_ebit10})
     CAPRI_RING_DOORBELL_DATA(0, k.capri_txdma_intr_qid, 0, k.txdma_control_cindex)
     phvwr       p.{doorbell_data_pid...doorbell_data_index}, r3.dx
-    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP(ci_update_dma_cmd, r4, doorbell_data_pid, doorbell_data_index)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(doorbell_ci_update_dma_cmd, \
+                                r4, \
+                                doorbell_data_pid, \
+                                doorbell_data_index)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP(rxdma_ci_update_dma_cmd, \
+                                    k.{txdma_control_rxdma_cindex_addr_sbit0_ebit31... \
+                                       txdma_control_rxdma_cindex_addr_sbit32_ebit33}, \
+                                    txdma_control_cindex, \
+                                    txdma_control_cindex)
     phvwr       p.capri_intr_tm_iport, TM_PORT_DMA
     phvwr.e     p.capri_intr_tm_oport, TM_PORT_EGRESS
     phvwr       p.txdma_to_p4e_header_vcn_id, k.p4_to_txdma_header_vcn_id
