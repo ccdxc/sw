@@ -51,6 +51,9 @@ const (
 	// Kubernetes clients
 	KubernetesAPIServerClientPKIDir = KubernetesPKIDir + "/apiserver-client"
 
+	// Log direcory
+	LogDir = "/var/log/pensando"
+
 	// Events directoty
 	EventsDir = "/var/lib/pensando/events"
 

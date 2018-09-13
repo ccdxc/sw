@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -55,7 +57,7 @@ func main() {
 		LogToFile:   true,
 		CtxSelector: log.ContextAll,
 		FileCfg: log.FileConfig{
-			Filename:   "/var/log/pensando/collector.log",
+			Filename:   fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Collector)),
 			MaxSize:    10,
 			MaxBackups: 3,
 			MaxAge:     7,

@@ -5,6 +5,8 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/pensando/sw/venice/globals"
@@ -19,7 +21,7 @@ func main() {
 
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		logToFile       = flag.String("logtofile", "/var/log/pensando/spyglass.log", "Redirect logs to file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Spyglass)), "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		apiServerAddr   = flag.String("api-server-addr", globals.APIServer, "ApiServer gRPC endpoint")
 		finderAddr      = flag.String("finder-addr", ":"+globals.SpyglassRPCPort, "Finder search gRPC endpoint")

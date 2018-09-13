@@ -4,7 +4,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/pensando/sw/venice/ctrler/ckm"
 	"github.com/pensando/sw/venice/ctrler/ckm/rpcserver"
@@ -18,7 +20,7 @@ func main() {
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
-		logToFile       = flag.String("logtofile", "/var/log/pensando/ckm.log", "Redirect logs to file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Ckm)), "Redirect logs to file")
 	)
 	flag.Parse()
 

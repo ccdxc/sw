@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	evtsapi "github.com/pensando/sw/api/generated/events"
@@ -29,7 +30,7 @@ func main() {
 
 		logToFile = flag.String(
 			"logtofile",
-			"/var/log/pensando/evtsmgr.log",
+			fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.EvtsMgr)),
 			"Path of the log file",
 		)
 

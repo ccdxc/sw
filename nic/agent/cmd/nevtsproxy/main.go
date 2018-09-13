@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -22,7 +23,7 @@ func main() {
 
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		logToFile       = flag.String("log-to-file", fmt.Sprintf("/var/log/pensando/%s.log", globals.EvtsProxy), "Path of the log file")
+		logToFile       = flag.String("log-to-file", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.EvtsProxy)), "Path of the log file")
 		logToStdoutFlag = flag.Bool("log-to-stdout", false, "Enable logging to stdout")
 		listenURL       = flag.String("listen-url", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "RPC listen URL")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "Comma separated list of resolver URLs of the form 'ip:port'")

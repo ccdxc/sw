@@ -5,6 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	_ "net/http/pprof"
@@ -23,7 +24,7 @@ func main() {
 
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		logToFile       = flag.String("logtofile", "/var/log/pensando/npm.log", "Redirect logs to file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Npm)), "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		listenURL       = flag.String("listen-url", ":"+globals.NpmRPCPort, "gRPC listener URL")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")

@@ -6,6 +6,8 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/pensando/sw/nic/agent/netagent"
@@ -34,7 +36,7 @@ func main() {
 		tpmURL          = flag.String("tpm", "master.local:"+globals.TpmRPCPort, "TPM RPC server URL")
 		disableTSA      = flag.Bool("disabletsa", false, " Disable Telemetry and Troubleshooting agents")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		logToFile       = flag.String("logtofile", "/var/log/pensando/naples-netagent.log", "Redirect logs to file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Netagent)), "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
 		restURL         = flag.String("rest-url", ":"+globals.AgentRESTPort, "specify Agent REST URL")

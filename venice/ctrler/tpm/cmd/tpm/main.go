@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -31,7 +32,7 @@ func main() {
 		nsURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort,
 			"comma separated list of resolver URLs of the form 'ip:port'")
 		listenURL       = flag.String("listen-url", ":"+globals.TpmRPCPort, "gRPC listener URL")
-		logFile         = flag.String("logfile", "/var/log/pensando/"+pkgName+".log", "redirect logs to file")
+		logFile         = flag.String("logfile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Tpm)), "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		debugFlag       = flag.Bool("debug", false, "enable debug mode")
 	)

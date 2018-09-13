@@ -34,8 +34,8 @@ var etcdClientCredsVolume = protos.ModuleSpec_Volume{
 // logVolume is a reusable volume definition for Pensando logs.
 var logVolume = protos.ModuleSpec_Volume{
 	Name:      "logs",
-	HostPath:  "/var/log/pensando",
-	MountPath: "/var/log/pensando",
+	HostPath:  globals.LogDir,
+	MountPath: globals.LogDir,
 }
 
 // runVolume is a volume to keep run time configs.
@@ -48,8 +48,8 @@ var runVolume = protos.ModuleSpec_Volume{
 // eventsVolume is a reusable volume definition for Pensando events.
 var eventsVolume = protos.ModuleSpec_Volume{
 	Name:      "events",
-	HostPath:  "/var/lib/pensando/events",
-	MountPath: "/var/lib/pensando/events",
+	HostPath:  globals.EventsDir,
+	MountPath: globals.EventsDir,
 }
 
 // objstoreVolume is a reusable volume definition for Pensando object store.

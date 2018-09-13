@@ -5,7 +5,7 @@ package main
 import (
 	"flag"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"fmt"
 
@@ -14,14 +14,14 @@ import (
 	"github.com/pensando/sw/venice/vos"
 )
 
-var pkgName = "vos"
+var pkgName = globals.Vos
 
 func main() {
 
 	var (
 		nsURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort,
 			"comma separated list of resolver URLs of the form 'ip:port'")
-		logFile         = flag.String("logfile", "/var/log/pensando/"+pkgName+".log", "redirect logs to file")
+		logFile         = flag.String("logfile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Vos)), "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		debugFlag       = flag.Bool("debug", false, "enable debug mode")
 	)
@@ -30,7 +30,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      strings.ToUpper(pkgName),
+		Module:      pkgName,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugFlag,

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -20,7 +21,7 @@ func main() {
 
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		logToFile       = flag.String("logtofile", fmt.Sprintf("/var/log/pensando/%s.log", globals.EvtsProxy), "Path of the log file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.EvtsProxy)), "Path of the log file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "Enable logging to stdout")
 		listenURL       = flag.String("listen-url", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), "RPC listen URL")
 		evtsMgrURL      = flag.String("evts-mgr-url", fmt.Sprintf(":%s", globals.EvtsMgrRPCPort), "RPC listen URL of events manager")

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"path/filepath"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
@@ -31,7 +32,7 @@ var (
 func main() {
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		logToFile       = flag.String("logtofile", "/var/log/pensando/cmd.log", "Redirect logs to file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Cmd)), "Redirect logs to file")
 		registryURL     = flag.String("registry-url", "registry.test.pensando.io:5000", "URL to docker registry")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 	)

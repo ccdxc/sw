@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -65,7 +66,7 @@ func parseOpts(opts *cliOpts) error {
 		"Enable logging to stdout")
 	flagSet.StringVar(&opts.logToFile,
 		"log-to-file",
-		"/var/log/pensando/vchub.log",
+		fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.VCHub)),
 		"Redirect logs to file")
 
 	err := flagSet.Parse(os.Args[1:])

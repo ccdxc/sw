@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"path/filepath"
 	"strings"
 
 	"google.golang.org/grpc/grpclog"
@@ -50,7 +52,7 @@ func main() {
 		debugflag       = flag.Bool("debug", false, "enable debug mode")
 		host            = flag.String("host", "localhost", "host identity")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
-		logToFile       = flag.String("logtofile", "/var/log/pensando/apigw.log", "redirect logs to file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.APIGw)), "redirect logs to file")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:port>")
 		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
 		override        = flag.String("override", "", "backend override map eg: 'pen-apiserver=localhost:5000,pen-search=localhost:5005'")

@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"google.golang.org/grpc/grpclog"
@@ -31,7 +33,7 @@ func main() {
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		version         = flag.String("version", "v1", "Version string for native version")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
-		logToFile       = flag.String("logtofile", "/var/log/pensando/apiserver.log", "redirect logs to file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.APIServer)), "redirect logs to file")
 		poolsize        = flag.Int("kvpoolsize", apisrv.DefaultKvPoolSize, "size of KV Store connection pool")
 		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
 		usecache        = flag.Bool("use-cache", true, "Use cache between API server and KV Store")

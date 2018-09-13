@@ -4,7 +4,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"path/filepath"
 
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
@@ -26,7 +28,7 @@ func main() {
 		httpURL         = flag.String("http", ":"+globals.CitadelHTTPPort, "HTTP server URL where citadel's REST api is available")
 		nodeUUID        = flag.String("uuid", "", "Node UUID (unique identifier for this citadel instance)")
 		dbPath          = flag.String("db", "/tmp/tstore/", "DB path where citadel's data will be stored")
-		logFile         = flag.String("logfile", "/var/log/pensando/citadel.log", "redirect logs to file")
+		logFile         = flag.String("logfile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Citadel)), "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 	)
 	flag.Parse()

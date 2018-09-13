@@ -5,6 +5,8 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/pensando/sw/nic/agent/netagent"
@@ -27,14 +29,14 @@ func main() {
 		npmURL          = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
-		logToFile       = flag.String("logtofile", "/var/log/pensando/k8sagent.log", "Redirect logs to file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.K8sAgent)), "Redirect logs to file")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
 	)
 	flag.Parse()
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      globals.Netagent,
+		Module:      globals.K8sAgent,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,
