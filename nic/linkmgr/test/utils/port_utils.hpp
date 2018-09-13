@@ -20,6 +20,7 @@ int port_create(uint32_t vrf_id,
 
 int port_update(uint32_t             vrf_id,
                 uint32_t             port_id,
+                hal_ret_t            ret_exp,
                 port::PortSpeed      speed,
                 port::PortAdminState admin_state,
                 port::PortFecType    fec_type,

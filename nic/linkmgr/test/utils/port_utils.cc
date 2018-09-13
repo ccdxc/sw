@@ -44,6 +44,7 @@ int port_create(uint32_t vrf_id,
 
 int port_update(uint32_t             vrf_id,
                 uint32_t             port_id,
+                hal_ret_t            ret_exp,
                 port::PortSpeed      speed,
                 port::PortAdminState admin_state,
                 port::PortFecType    fec_type,
@@ -67,12 +68,13 @@ int port_update(uint32_t             vrf_id,
     g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
     ret = linkmgr::port_update(spec, &rsp);
     g_linkmgr_state->cfg_db_close();
-    if (ret != HAL_RET_OK) {
-        std::cout << __func__ << ": failed" << std::endl;
+    if (ret != ret_exp) {
+        std::cout << __func__ << ": failed. ret: " << ret << std::endl;
         return -1;
     }
     if (rsp.api_status() != api_status) {
-        std::cout << __func__ << ": API failed" << std::endl;
+        std::cout << __func__ << ": API failed. status: "
+                  << rsp.api_status() << std::endl;
         return -1;
     }
     spec.Clear();

@@ -624,11 +624,8 @@ port_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    // send the cloned obj to PD for update
+    // send the obj to PD for update
     pi_p = (port_t *)dhl_entry->cloned_obj;
-
-    HAL_TRACE_DEBUG("update upd cb {}.",
-                     pi_p->port_num);
 
     // 1. PD Call to allocate PD resources and HW programming
     sdk::linkmgr::port_args_init(&port_args);
@@ -663,9 +660,13 @@ end:
 hal_ret_t
 port_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 {
+    // port update doesn't create a clone obj
+    return HAL_RET_OK;
+
+# if 0
     hal_ret_t      ret         = HAL_RET_OK;
-    //sdk_ret_t      sdk_ret     = SDK_RET_OK;
-    //port_args_t    port_args   = { 0 };
+    sdk_ret_t      sdk_ret     = SDK_RET_OK;
+    port_args_t    port_args   = { 0 };
     dllist_ctxt_t  *lnode      = NULL;
     dhl_entry_t    *dhl_entry  = NULL;
     port_t         *pi_p       = NULL;
@@ -687,7 +688,6 @@ port_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
                      pi_p->port_num);
     printf("Original: %p, Clone: %p\n", pi_p, pi_clone_p);
 
-#if 0
     // Free PD
     sdk::linkmgr::port_args_init(&port_args);
     sdk_ret = sdk::linkmgr::port_delete(pi_p->pd_p);
@@ -699,10 +699,10 @@ port_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     // Free PI
     port_free(pi_p);
-#endif
 
 end:
     return ret;
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -712,6 +712,10 @@ end:
 hal_ret_t
 port_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
+    // port update doesn't create a clone obj
+    return HAL_RET_OK;
+
+#if 0
     hal_ret_t        ret = HAL_RET_OK;
     sdk_ret_t      sdk_ret     = SDK_RET_OK;
     port_args_t   port_args = { 0 };
@@ -747,6 +751,7 @@ port_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     port_free(pi_p);
 end:
     return ret;
+#endif
 }
 
 hal_ret_t

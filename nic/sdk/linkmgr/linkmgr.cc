@@ -634,22 +634,31 @@ port_update (void *pd_p, port_args_t *args)
 
     // check if any properties have changed
 
-    if (args->port_speed != port_speed_t::PORT_SPEED_NONE) {
+    if (args->port_speed != port_speed_t::PORT_SPEED_NONE &&
+        args->port_speed != port_p->port_speed()) {
+        SDK_TRACE_DEBUG("speed updated. new: %d, old: %d",
+                        args->port_speed, port_p->port_speed());
         port_p->set_port_speed(args->port_speed);
         configured = true;
     }
 
     if (args->fec_type != port_p->fec_type()) {
+        SDK_TRACE_DEBUG("fec updated. new: %d, old: %d",
+                        args->fec_type, port_p->fec_type());
         port_p->set_fec_type(args->fec_type);
         configured = true;
     }
 
     if (args->debounce_time != port_p->debounce_time()) {
+        SDK_TRACE_DEBUG("Debounce updated. new: %d, old: %d",
+                        args->debounce_time, port_p->debounce_time());
         port_p->set_debounce_time(args->debounce_time);
         configured = true;
     }
 
     if (args->auto_neg_enable != port_p->auto_neg_enable()) {
+        SDK_TRACE_DEBUG("AN updated. new: %d, old: %d",
+                        args->auto_neg_enable, port_p->auto_neg_enable());
         port_p->set_auto_neg_enable(args->auto_neg_enable);
         configured = true;
     }
