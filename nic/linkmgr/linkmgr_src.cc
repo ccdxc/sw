@@ -203,13 +203,7 @@ port_add_to_db (port_t *pi_p, hal_handle_t handle)
 static hal_ret_t
 validate_port_create (PortSpec& spec, PortResponse *rsp)
 {
-#if 0
-    if (!spec.has_meta()) {
-        HAL_TRACE_ERR("no meta");
-        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
-    }
-#endif
+    // TODO meta check
 
     std::string str;
 
@@ -552,6 +546,7 @@ hal_ret_t
 validate_port_update (PortSpec& spec, PortResponse*rsp)
 {
     // TODO no meta check?
+    // TODO can mac_id/mac_ch be updated?
 
     std::string str;
 
@@ -826,7 +821,7 @@ port_update (PortSpec& spec, PortResponse *rsp)
                              port_update_abort_cb,
                              port_update_cleanup_cb);
 end:
-    port_prepare_rsp(rsp, ret, pi_p->hal_handle_id);
+    port_prepare_rsp(rsp, ret, pi_p ? pi_p->hal_handle_id : HAL_HANDLE_INVALID);
 
     hal::hal_api_trace(" API End: port update ");
     return ret;

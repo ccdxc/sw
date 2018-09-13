@@ -482,6 +482,78 @@ linkmgr_init (linkmgr_cfg_t *cfg)
 }
 
 //-----------------------------------------------------------------------------
+// Validate speed against number of lanes
+//-----------------------------------------------------------------------------
+static bool
+validate_speed_lanes (port_speed_t speed, uint32_t num_lanes)
+{
+    bool valid = true;
+
+    // speed = NONE implies no update
+    switch (num_lanes) {
+    case 4:
+        switch (speed) {
+            case port_speed_t::PORT_SPEED_100G:
+            case port_speed_t::PORT_SPEED_40G:
+            case port_speed_t::PORT_SPEED_NONE:
+                break;
+
+            default:
+                valid = false;
+                break;
+        }
+        break;
+
+    case 2:
+        switch (speed) {
+            case port_speed_t::PORT_SPEED_50G:
+            case port_speed_t::PORT_SPEED_NONE:
+                break;
+
+            default:
+                valid = false;
+                break;
+        }
+        break;
+
+    case 1:
+        switch (speed) {
+            case port_speed_t::PORT_SPEED_25G:
+            case port_speed_t::PORT_SPEED_10G:
+            case port_speed_t::PORT_SPEED_1G:
+            case port_speed_t::PORT_SPEED_NONE:
+                break;
+
+            default:
+                valid = false;
+                break;
+        }
+        break;
+
+    default:
+        valid = false;
+        break;
+    }
+
+    if (valid == false) {
+        SDK_TRACE_ERR("Invalid speed and lanes config."
+                      " num_lanes: %d, speed: %d",
+                      num_lanes, speed);
+    }
+
+    return valid;
+}
+
+//-----------------------------------------------------------------------------
+// Validate port create config
+//-----------------------------------------------------------------------------
+static bool
+validate_port_create (port_args_t *args)
+{
+    return validate_speed_lanes (args->port_speed, args->num_lanes);
+}
+
+//-----------------------------------------------------------------------------
 // PD If Create
 //-----------------------------------------------------------------------------
 void *
@@ -489,6 +561,11 @@ port_create (port_args_t *args)
 {
     sdk_ret_t    ret = SDK_RET_OK;
     port         *port_p = NULL;
+
+    if (validate_port_create (args) == false) {
+        // TODO return codes
+        return NULL;
+    }
 
     port_p = (port *)g_linkmgr_state->port_slab()->alloc();
     port_p->set_port_num(args->port_num);
@@ -531,6 +608,15 @@ port_create (port_args_t *args)
 }
 
 //-----------------------------------------------------------------------------
+// Validate port update config
+//-----------------------------------------------------------------------------
+static bool
+validate_port_update (port *port_p, port_args_t *args)
+{
+    return validate_speed_lanes (args->port_speed, port_p->num_lanes());
+}
+
+//-----------------------------------------------------------------------------
 // update given port
 //-----------------------------------------------------------------------------
 sdk_ret_t
@@ -541,7 +627,10 @@ port_update (void *pd_p, port_args_t *args)
     port               *port_p       = (port *)pd_p;
     port_admin_state_t prev_admin_st = port_p->admin_state();
 
-    SDK_TRACE_DEBUG("port update");
+    if (validate_port_update (port_p, args) == false) {
+        // TODO return codes
+        return SDK_RET_ERR;
+    }
 
     // check if any properties have changed
 
