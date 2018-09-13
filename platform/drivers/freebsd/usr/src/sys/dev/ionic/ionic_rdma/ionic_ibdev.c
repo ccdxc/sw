@@ -2621,12 +2621,15 @@ err_cq:
 
 static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
+	unsigned long irqflags;
+
 	mutex_lock(&dev->tbl_lock);
 	tbl_free_node(&dev->cq_tbl);
 	tbl_delete(&dev->cq_tbl, cq->cqid);
 	mutex_unlock(&dev->tbl_lock);
 
-	synchronize_rcu();
+	write_lock_irqsave(&dev->tbl_rcu, irqflags);
+	write_unlock_irqrestore(&dev->tbl_rcu, irqflags);
 
 	ionic_pgtbl_unres(dev, &cq->res);
 
@@ -5423,8 +5426,9 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 {
 	struct ib_event ibev;
 	struct ionic_cq *cq;
+	unsigned long irqflags;
 
-	rcu_read_lock();
+	read_lock_irqsave(&dev->tbl_rcu, irqflags);
 
 	cq = tbl_lookup(&dev->cq_tbl, cqid);
 	if (!cq) {
@@ -5454,7 +5458,7 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 	cq->ibcq.event_handler(&ibev, cq->ibcq.cq_context);
 
 out:
-	rcu_read_unlock();
+	read_unlock_irqrestore(&dev->tbl_rcu, irqflags);
 }
 
 static bool ionic_next_eqe(struct ionic_eq *eq, struct ionic_v1_eqe *eqe)
@@ -6151,6 +6155,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	}
 
 	mutex_init(&dev->tbl_lock);
+	rwlock_init(&dev->tbl_rcu);
 
 	tbl_init(&dev->qp_tbl);
 	tbl_init(&dev->cq_tbl);
