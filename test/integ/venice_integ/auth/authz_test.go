@@ -199,7 +199,7 @@ func TestBootstrapFlag(t *testing.T) {
 	}, "error setting bootstrap flag")
 	Assert(t, clusterObj.Status.AuthBootstrapped, "bootstrap flag should be set to true")
 	// once set, setting bootstrap flag will now need proper authorization
-	AssertConsistently(t, func() (bool, interface{}) {
+	AssertEventually(t, func() (bool, interface{}) {
 		clusterObj, err := tinfo.restcl.ClusterV1().Cluster().AuthBootstrapComplete(context.TODO(), &cluster.ClusterAuthBootstrapRequest{})
 		tinfo.l.Infof("set bootstrap flag error: %v", err)
 		return err != nil, clusterObj
