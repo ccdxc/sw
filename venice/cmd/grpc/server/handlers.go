@@ -236,7 +236,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			return nil, err
 		}
 
-		err = credentials.GenKubernetesCredentials(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots(), []string{req.VirtualIp})
+		err = credentials.GenKubernetesCredentials(req.NodeId, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots(), []string{req.VirtualIp})
 		if err != nil {
 			log.Errorf("Failed to generate Kubernetes credentials, error: %v", err)
 			// try to proceed anyway
@@ -273,7 +273,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.CfgWatcherService.Start()
 	} else {
 		// Generate Kubelet credentials only. Try to continue anyway in case of failure.
-		err := credentials.GenKubeletCredentials(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
+		err := credentials.GenKubeletCredentials(req.NodeId, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
 		if err != nil {
 			log.Errorf("Failed to generate Kubelet credentials, error: %v", err)
 			err2 := credentials.RemoveKubeletCredentials()

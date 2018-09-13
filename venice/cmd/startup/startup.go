@@ -209,7 +209,7 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 	err = credentials.CheckKubernetesCredentials()
 	if err != nil {
 		log.Infof("Invalid Kubernetes credentials (%s), generating a new set", err)
-		err = credentials.GenKubernetesCredentials(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots(), []string{c.VirtualIP})
+		err = credentials.GenKubernetesCredentials(c.NodeID, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots(), []string{c.VirtualIP})
 		if err != nil {
 			log.Errorf("Failed to generate Kubernetes credentials, error: %v", err)
 			// try to proceed anyway

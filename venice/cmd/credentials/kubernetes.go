@@ -7,7 +7,6 @@ import (
 	"crypto/x509/pkix"
 	"fmt"
 	"net"
-	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -21,21 +20,17 @@ import (
 // GenKubeletCredentials generate credentials for the Kubelet to authenticate itself:
 // - as a client to ApiServer
 // - as a server to clients that contact it directly (e.g. to fetch pod logs),
-func GenKubeletCredentials(csrSigner certs.CSRSigner, trustRoots []*x509.Certificate) error {
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "unknown"
-	}
+func GenKubeletCredentials(nodeID string, csrSigner certs.CSRSigner, trustRoots []*x509.Certificate) error {
 	// CN and O must follow the ApiServer NodeAuthorizer conventions
 	kubeletSubj := pkix.Name{
-		CommonName:   "system:node:" + hostname,
+		CommonName:   "system:node:" + nodeID,
 		Organization: []string{"system:nodes"},
 	}
 
 	// Host IP and dns name must be included in the certificate so that clients
 	// recognize it as valid.
 	dnsNames, hostIPs := netutils.NameAndIPs()
-	err = certs.CreateTLSCredentials(globals.KubeletPKIDir, &kubeletSubj, dnsNames, hostIPs, trustRoots, csrSigner)
+	err := certs.CreateTLSCredentials(globals.KubeletPKIDir, &kubeletSubj, dnsNames, hostIPs, trustRoots, csrSigner)
 	if err != nil {
 		return errors.Wrapf(err, "Error creating Kubelet credentials")
 	}
@@ -44,7 +39,7 @@ func GenKubeletCredentials(csrSigner certs.CSRSigner, trustRoots []*x509.Certifi
 }
 
 // GenKubernetesCredentials generate credentials to access Kubernetes API Server from Kubelets, Controllers and CMD
-func GenKubernetesCredentials(csrSigner certs.CSRSigner, trustRoots []*x509.Certificate, vips []string) error {
+func GenKubernetesCredentials(nodeID string, csrSigner certs.CSRSigner, trustRoots []*x509.Certificate, vips []string) error {
 	// When a client authenticates to Kubernetes API server using a certificate,
 	// the common name of the subject is used as the user name for the request.
 	// Client certificates can also indicate a user's group memberships using the
@@ -53,11 +48,6 @@ func GenKubernetesCredentials(csrSigner certs.CSRSigner, trustRoots []*x509.Cert
 		UserName  string
 		Group     string
 		Directory string
-	}
-
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "localhost"
 	}
 
 	emptyDNSNames := []string{}
@@ -86,30 +76,31 @@ func GenKubernetesCredentials(csrSigner certs.CSRSigner, trustRoots []*x509.Cert
 	}
 
 	// This is the certificate that API Server serves to clients (including kubelet, scheduler,
-	// controller-manager), so it must have the right DNS name and/or IP address (VIP),
+	// controller-manager), so it must have the right DNS name and/or IP address (VIP) for the host,
 	// otherwise the TLS handshake will fail.
-	vipAddrs := []net.IP{}
+	// We always include host name and physical IPs and add VIPs if available.
+	apiServerNames, apiServerIPs := netutils.NameAndIPs()
 	for _, i := range vips {
 		a := net.ParseIP(i)
 		if a != nil {
-			vipAddrs = append(vipAddrs, a)
+			apiServerIPs = append(apiServerIPs, a)
 		}
 	}
 
 	// It is also used as a client certificate when API Server contacts directly the kubelet or
 	// admission controllers. For that, it needs the right CN.
-	apiserverSubj := pkix.Name{
+	apiServerSubj := pkix.Name{
 		CommonName:   globals.KubernetesAPIServerUserName,
 		Organization: []string{"kubernetes"},
 	}
 
-	err = certs.CreateTLSCredentials(globals.KubernetesAPIServerPKIDir, &apiserverSubj, []string{globals.KubeAPIServer, hostname, "localhost"}, vipAddrs, trustRoots, csrSigner)
+	err := certs.CreateTLSCredentials(globals.KubernetesAPIServerPKIDir, &apiServerSubj, append(apiServerNames, globals.KubeAPIServer, "localhost"), apiServerIPs, trustRoots, csrSigner)
 	if err != nil {
 		return errors.Wrapf(err, "Error creating Kubernetes API Server credentials")
 	}
 
 	// Kubelet credentials
-	err = GenKubeletCredentials(csrSigner, trustRoots)
+	err = GenKubeletCredentials(nodeID, csrSigner, trustRoots)
 	if err != nil {
 		return err
 	}
