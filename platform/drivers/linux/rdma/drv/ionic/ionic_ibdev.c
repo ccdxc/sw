@@ -3127,8 +3127,6 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 	if (nwc < 1)
 		return 0;
 
-	rcu_read_lock();
-
 	spin_lock_irqsave(&cq->lock, irqflags);
 
 	old_prod = cq->q.prod;
@@ -3262,8 +3260,6 @@ out:
 				 ionic_queue_dbell_val(&cq->q));
 
 	spin_unlock_irqrestore(&cq->lock, irqflags);
-
-	rcu_read_unlock();
 
 	return npolled ?: rc;
 }
