@@ -10,6 +10,17 @@ using namespace std;
 using namespace delphi::messanger;
 
 
+// Checks if the service has mounted the (kind, key)
+bool ServiceInfo::HasMounted(string kind, string key) {
+    for (auto mount: this->Mounts) {
+        if ((mount.MountPath == getMountPath(kind, "")) ||
+            (mount.MountPath == getMountPath(kind, key))) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // DelphiServer constructor
 DelphiServer::DelphiServer() {
     this->syncTimer.set<DelphiServer, &DelphiServer::syncTimerHandler>(this);
@@ -427,7 +438,8 @@ error DelphiServer::Stop() {
 }
 
 // syncTimerHandler is called when sync time fires
-// FIXME: implement filtering
+// FIXME: filtering is currently O(M*S*N), convert mounts to hash to make it O(M*S)
+// where M is the message count, S is the service count and N is the mount count per server
 void DelphiServer::syncTimerHandler(ev::timer &watcher, int revents) {
 
     // see if we have any objects to send
@@ -437,12 +449,19 @@ void DelphiServer::syncTimerHandler(ev::timer &watcher, int revents) {
 
     // walk all services and send the objects to them
     for (map<int, ServiceInfoPtr>::iterator iter=sockets.begin(); iter!=sockets.end(); ++iter) {
+        ServiceInfoPtr svc = iter->second;
         vector<ObjectData *> objlist;
 
         // walk all objects in sync queue
         for (map<string, ObjectData *>::iterator i=syncQueue.begin(); i!=syncQueue.end(); ++i) {
             // dequeue from the sync queue
             ObjectData *syncObj = i->second;
+
+             // check if the service is interested in this object before doin anything else
+            if (svc->HasMounted(syncObj->meta().kind(), syncObj->meta().key()) == false) {
+                continue;
+            }
+
             ObjectData *newObj = new ObjectData();
             newObj->CopyFrom(*syncObj);
 
@@ -451,7 +470,9 @@ void DelphiServer::syncTimerHandler(ev::timer &watcher, int revents) {
         }
 
         // send the object list to the client
-        msgServer->SendNotify(iter->first, objlist);
+        if (objlist.size() > 0) {
+            msgServer->SendNotify(iter->first, objlist);
+        }
     }
     syncQueue.clear();
 

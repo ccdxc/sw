@@ -39,6 +39,7 @@ public:
     uint16_t               ServiceID;     // service id allocated for this service
     int                    SockCtx;       // socket id
     vector<MountInfo>      Mounts;        // mount points requested by this service
+    bool                   HasMounted(string kind, string key);
 };
 typedef std::shared_ptr<ServiceInfo> ServiceInfoPtr;
 
