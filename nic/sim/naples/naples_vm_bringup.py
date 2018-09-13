@@ -36,7 +36,8 @@ NAPLES_PORT_MAPS = {
     str(SIM_PORT) + '/tcp':SIM_PORT
 }
 
-QEMU_ENV = {"WITH_QEMU": "1"}
+NAPLES_ENV = {"SMART_NIC_MODE" : "1"}
+QEMU_ENV   = {"WITH_QEMU": "1"}
 
 # Move it out to a configu
 _APP_IMAGES = [
@@ -243,13 +244,14 @@ def __bringup_naples_container(args):
     def __wait_for_agent_to_be_up():
         __wait_for_line_log(agent_log_file, "Starting server at")
     print "Bringing up naples container...\n"
-    env = QEMU_ENV if args.with_qemu else {}
+    if args.with_qemu:
+        NAPLES_ENV.update(QEMU_ENV)
     naples_obj = _DOCKER_CLIENT.containers.run(NAPLES_IMAGE,
                                                name=NAPLES_SIM_NAME,
                                                privileged=True,
                                                detach=True,
                                                auto_remove=True,
-                                               environment=env,
+                                               environment=NAPLES_ENV,
                                                ports=NAPLES_PORT_MAPS,
                                                volumes=NAPLES_VOLUME_MOUNTS)
     print "Wating for naples sim to be up"
