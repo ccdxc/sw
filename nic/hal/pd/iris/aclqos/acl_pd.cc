@@ -443,6 +443,19 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
     key.flow_lkp_metadata_lkp_dir = 0;
     mask.flow_lkp_metadata_lkp_dir_mask = 0;
 
+    uint64_t drop_reason = 0;
+    uint64_t drop_reason_mask = 0;
+    if (ms->int_key.no_drop) {
+        drop_reason = 0;
+        drop_reason_mask = ~0;
+    } else {
+        drop_reason = drop_reason_codes_to_bitmap(&ms->int_key.drop_reasons);
+        drop_reason_mask = drop_reason_codes_to_bitmap(&ms->int_mask.drop_reasons);
+    }
+    memcpy(key.control_metadata_drop_reason, &drop_reason,
+           sizeof(key.control_metadata_drop_reason));
+    memcpy(mask.control_metadata_drop_reason_mask, &drop_reason_mask,
+           sizeof(mask.control_metadata_drop_reason_mask));
 #ifdef ACL_DOL_TEST_ONLY
     // Key of internal fields for use only with DOL/testing infra
     // For production builds this needs to be removed
@@ -458,21 +471,6 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
     key.l3_metadata_ip_frag = ms->int_key.ip_frag;
     mask.l3_metadata_ip_frag_mask = ms->int_mask.ip_frag;
 
-    uint64_t drop_reason = 0;
-    uint64_t drop_reason_mask = 0;
-
-
-    if (ms->int_key.no_drop) {
-        drop_reason = 0;
-        drop_reason_mask = ~0;
-    } else {
-        drop_reason = drop_reason_codes_to_bitmap(&ms->int_key.drop_reasons);
-        drop_reason_mask = drop_reason_codes_to_bitmap(&ms->int_mask.drop_reasons);
-    }
-    memcpy(key.control_metadata_drop_reason, &drop_reason,
-           sizeof(key.control_metadata_drop_reason));
-    memcpy(mask.control_metadata_drop_reason_mask, &drop_reason_mask,
-           sizeof(mask.control_metadata_drop_reason_mask));
     key.flow_lkp_metadata_lkp_dir = ms->int_key.direction;
     mask.flow_lkp_metadata_lkp_dir_mask = ms->int_mask.direction;
     if (ms->int_mask.from_cpu) {

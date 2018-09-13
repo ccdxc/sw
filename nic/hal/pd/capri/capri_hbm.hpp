@@ -19,6 +19,8 @@
 #define JLIF_QSTATE              "qstate"
 #define JTIMERS                  "timers"
 
+#define HBM_OFFSET(x)       CAPRI_HBM_OFFSET(x)
+
 #include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
@@ -43,6 +45,7 @@ typedef struct capri_hbm_region_s {
 } capri_hbm_region_t;
 
 hal_ret_t capri_hbm_parse(capri_cfg_t *cfg);
+capri_hbm_region_t *get_hbm_region(char *name);
 uint64_t get_hbm_base(void);
 uint64_t get_hbm_offset(const char *reg_name);
 uint64_t get_start_offset(const char *reg_name);
@@ -60,6 +63,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define JP4_REPL            "mcast_repl"
 #define JP4_IPFIX           "ipfix"
 
+#define CAPRI_HBM_REG_FLOW_HASH          "flow_hash"
 #define CAPRI_HBM_REG_NMDR_RX            "nmdr-rx"
 #define CAPRI_HBM_REG_NMDR_TX            "nmdr-tx"
 #define CAPRI_HBM_REG_IPSEC_NMDR_RX      "ipsec-nmdr-rx"
@@ -239,4 +243,4 @@ capri_hbm_cache_regions_init();
 extern capri_hbm_region_t*
 get_hbm_region_by_address(uint64_t addr);
 
-#endif    // __CAPRI_HPP__
+#endif    // __CAPRI_HBM_HPP__

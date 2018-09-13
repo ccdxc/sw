@@ -23,8 +23,6 @@ namespace pt = boost::property_tree;
 static capri_hbm_region_t *hbm_regions_;
 static int num_hbm_regions_;
 
-#define HBM_OFFSET(x)       CAPRI_HBM_OFFSET(x)
-
 hal_ret_t
 capri_hbm_parse (capri_cfg_t *cfg)
 {

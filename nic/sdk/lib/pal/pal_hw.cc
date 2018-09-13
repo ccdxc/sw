@@ -148,8 +148,14 @@ pal_hw_mem_write (uint64_t addr, uint8_t * data, uint32_t size)
         return PAL_RET_NOK;
     }
 
-    for (uint32_t i = 0; i < size; i++) {
-        ((uint8_t *)mmap_addr)[i] = data[i];
+    if (data) {
+        for (uint32_t i = 0; i < size; i++) {
+            ((uint8_t *)mmap_addr)[i] = data[i];
+        }
+    } else {
+        for (uint32_t i = 0; i < size; i++) {
+            ((uint8_t *)mmap_addr)[i] = 0;
+        }
     }
 
     return PAL_RET_OK;

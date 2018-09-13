@@ -316,7 +316,7 @@ public:
         return;
     }
 
-    uint64_t lif_create(uint32_t lif_id, uint32_t type_num, uint32_t num_lifs) {
+    uint64_t lif_create(uint32_t lif_id, uint32_t type_num, uint32_t num_lifs, uint32_t pinned_uplink_if_id) {
         LifSpec              *spec;
         LifRequestMsg        req_msg;
         LifResponseMsg       rsp_msg;
@@ -485,7 +485,7 @@ main (int argc, char** argv)
     }
 
     // create lif(s)
-    hclient.lif_create(lif_id, 1, num_lifs);
+    hclient.lif_create(lif_id, 1, num_lifs, if_id);
     hclient.lif_get_all();
 
     return 0;

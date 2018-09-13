@@ -900,9 +900,10 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
 }
 
 static hal_ret_t
-capri_hbm_regions_init (capri_cfg_t *cfg)
+capri_hbm_regions_init (capri_cfg_t *cfg, hal::hal_cfg_t *hal_cfg)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t           ret = HAL_RET_OK;
+    capri_hbm_region_t *region = NULL;
 
     ret = capri_p4_asm_init(cfg);
     if (ret != HAL_RET_OK) {
@@ -922,6 +923,22 @@ capri_hbm_regions_init (capri_cfg_t *cfg)
     ret = capri_timer_hbm_init();
     if (ret != HAL_RET_OK) {
         return ret;
+    }
+
+#if 0
+    // initial flow hash region
+    flow_hash_region = get_hbm_region(CAPRI_HBM_REG_FLOW_HASH);
+    pal_hw_physical_addr_to_virtual_addr(
+        HBM_OFFSET(flow_hash_region->start_offset),
+        &vaddr);
+    memset(vaddr, 0, flow_hash_region->size_kb * 1024);
+#endif
+    if (hal_cfg && hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) {
+        HAL_TRACE_DEBUG("Resetting flow hash table");
+        char flow_hash[] = CAPRI_HBM_REG_FLOW_HASH;
+        region = get_hbm_region(flow_hash);
+        hal::pd::asic_mem_write(HBM_OFFSET(region->start_offset),
+                            NULL, region->size_kb * 1024);
     }
 
     return ret;
@@ -1095,7 +1112,7 @@ capri_block_init_done(capri_cfg_t *cfg)
 static hal_ret_t
 capri_block_init(capri_cfg_t *cfg)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t           ret = HAL_RET_OK;
 
     HAL_TRACE_DEBUG("capri_block_init");
 
@@ -1149,7 +1166,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     ret = capri_hbm_parse(cfg);
 
     if (ret == HAL_RET_OK) {
-        ret = capri_hbm_regions_init(cfg);
+        ret = capri_hbm_regions_init(cfg, hal_cfg);
     }
 
     if (capri_table_rw_init()) {
