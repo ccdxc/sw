@@ -45,6 +45,7 @@ storage_dol_log = nic_dir + "/storage_dol.log"
 sample_client_log = nic_dir + "/sample_client.log"
 bullseye_model_cov_file = nic_dir + "/coverage/bullseye_model.cov"
 bullseye_hal_cov_file = nic_dir + "/../bazel-out/../../bullseye_hal.cov"
+halctl_dir = nic_dir + "/agent/cmd/halctl"
 
 naples_container_image_dir = nic_dir + "/obj/images"
 #This should be changed to pick up the current version automatically.
@@ -1169,6 +1170,11 @@ def main():
     os.chdir(nic_dir)
     if args.asmcov:
         call(["tools/run-coverage -k -c coverage_asm.json"], shell=True)
+
+    # Get techsupport
+    os.chdir(halctl_dir)
+    os.system("go build && ./halctl show techsupport")
+    os.chdir(nic_dir)
 
     cleanup()
     call([print_cores_script])

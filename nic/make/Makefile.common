@@ -289,7 +289,8 @@ sanity_logs:
                 *.log                       \
                 *.log.*                     \
                 ../dol/*.log                \
-                ../dol/*.log.*)
+                ../dol/*.log.*              \
+                /tmp/hal_techsupport/*)
 
 check_traces:
 	@$(TOPDIR)/tools/trace_valid.py
