@@ -449,6 +449,17 @@ catalog::populate_serdes(char *dir_name, ptree &prop_tree)
     catalog_db_.aacs_info.server_port =
                         prop_tree.get<std::uint32_t>("serdes.port", 0);
 
+    catalog_db_.serdes_fw_file =
+                        prop_tree.get<std::string>("serdes.fw", "");
+
+    std::string serdes_build_id =
+                        prop_tree.get<std::string>("serdes.build_id", "");
+    catalog_db_.serdes_build_id = strtoul(serdes_build_id.c_str(), NULL, 16);
+
+    std::string serdes_rev_id =
+                        prop_tree.get<std::string>("serdes.rev_id", "");
+    catalog_db_.serdes_rev_id = strtoul(serdes_rev_id.c_str(), NULL, 16);
+
     std::string serdes_file =
                         prop_tree.get<std::string>("serdes.serdes_file", "");
 

@@ -133,6 +133,24 @@ serdes_info_get(uint32_t sbus_addr,
                                                cable_type);
 }
 
+int
+serdes_build_id (void)
+{
+    return g_linkmgr_cfg.catalog->serdes_build_id();
+}
+
+int
+serdes_rev_id (void)
+{
+    return g_linkmgr_cfg.catalog->serdes_rev_id();
+}
+
+std::string
+serdes_fw_file (void)
+{
+    return g_linkmgr_cfg.catalog->serdes_fw_file();
+}
+
 sdk_ret_t
 port_link_poll_timer_add(port *port)
 {

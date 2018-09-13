@@ -776,9 +776,11 @@ port::port_mac_stats_get (uint64_t *stats_data)
 sdk_ret_t
 port::port_init(linkmgr_cfg_t *cfg)
 {
-    sdk_ret_t   rc        = SDK_RET_OK;
-    char        *cfg_path = std::getenv("HAL_CONFIG_PATH");
-    std::string cfg_file  = "fw/serdes.0x1087_244D.rom";    // TODO read from catalog
+    sdk_ret_t   rc           = SDK_RET_OK;
+    int         exp_build_id = serdes_build_id();
+    int         exp_rev_id   = serdes_rev_id();
+    char        *cfg_path    = std::getenv("HAL_CONFIG_PATH");
+    std::string cfg_file     = "fw/" + serdes_fw_file();
 
     linkmgr_csr_init();
 
@@ -813,6 +815,18 @@ port::port_init(linkmgr_cfg_t *cfg)
         }
 
         sdk::linkmgr::serdes_fns.serdes_spico_upload(sbus_addr, cfg_file.c_str());
+
+        int build_id = sdk::linkmgr::serdes_fns.serdes_get_build_id(sbus_addr);
+        int rev_id   = sdk::linkmgr::serdes_fns.serdes_get_rev(sbus_addr);
+
+        if (build_id != exp_build_id || rev_id != exp_rev_id) {
+            SDK_TRACE_DEBUG("sbus_addr: 0x%x,"
+                            " build_id: 0x%x, exp_build_id: 0x%x,"
+                            " rev_id: 0x%x, exp_rev_id: 0x%x",
+                            sbus_addr, build_id, exp_build_id,
+                            rev_id, exp_rev_id);
+            // TODO fail if no match
+        }
 
         sdk::linkmgr::serdes_fns.serdes_spico_status(sbus_addr);
 

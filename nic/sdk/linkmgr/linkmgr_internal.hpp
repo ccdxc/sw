@@ -36,6 +36,9 @@ uint8_t        num_sbus_rings(void);
 bool           aacs_server_en  (void);
 bool           aacs_connect    (void);
 uint32_t       aacs_server_port(void);
+int            serdes_build_id (void);
+int            serdes_rev_id (void);
+std::string    serdes_fw_file (void);
 std::string    aacs_server_ip  (void);
 serdes_info_t* serdes_info_get(uint32_t sbus_addr,
                                uint32_t port_speed,

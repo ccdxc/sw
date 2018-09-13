@@ -128,6 +128,9 @@ typedef struct catalog_s {
     aacs_info_t              aacs_info;                         // avago aacs info
     uint32_t                 serdes_jtag_id;                    // jtag for serdes
     uint8_t                  num_sbus_rings;                    // number of sbus rings on chip
+    uint32_t                 serdes_build_id;                   // serdes FW build ID
+    uint32_t                 serdes_rev_id;                     // serdes FW rev ID
+    std::string              serdes_fw_file;                    // serdes FW file
     serdes_info_t            serdes[MAX_SERDES]
                                    [MAX_PORT_SPEEDS]
                                    [sdk::types::CABLE_TYPE_MAX];
@@ -180,8 +183,12 @@ public:
     uint32_t     num_fp_lanes (uint32_t port);
     uint32_t     breakout_modes (uint32_t port);
 
-    uint32_t     jtag_id(void)        { return catalog_db_.serdes_jtag_id; }
-    uint32_t     num_sbus_rings(void) { return catalog_db_.num_sbus_rings; }
+    uint32_t     jtag_id         (void) { return catalog_db_.serdes_jtag_id;  }
+    uint32_t     num_sbus_rings  (void) { return catalog_db_.num_sbus_rings;  }
+    uint32_t     serdes_build_id (void) { return catalog_db_.serdes_build_id; }
+    uint32_t     serdes_rev_id   (void) { return catalog_db_.serdes_rev_id;   }
+    std::string  serdes_fw_file  (void) { return catalog_db_.serdes_fw_file;  }
+
     uint8_t aacs_server_en(void) { return catalog_db_.aacs_info.server_en; }
     uint8_t aacs_connect(void)   { return catalog_db_.aacs_info.connect; }
 
