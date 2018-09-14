@@ -53,9 +53,10 @@ queue_types:
         type        : 2
         purpose     : LIF_QUEUE_PURPOSE_ADMIN
         size        : 64    # Size of Qstate
-        count       : 2     # Number of queues of this type
+        count       : 1     # Number of queues of this type
         queues:
             - queue:
+                #id          : ETH
                 size        : 256    # Number of descriptors in each ring
                 rings:
                     - ring:
@@ -65,6 +66,24 @@ queue_types:
                     - ring:
                         id          : R1
                         desc        : ref://factory/templates/id=DESCR_ADMIN_CQ
+
+    - queue_type:
+        id          : RDMA_AQ
+        type        : 2
+        purpose     : LIF_QUEUE_PURPOSE_ADMIN
+        size        : 64   # Size of Qstate
+        count       : 32   # Number of queues of this type
+        queues:
+            - queue:
+                id          : RDMA
+                count       : 1
+                rings:
+                    - ring:
+                        id          : AQ
+                        pi          : 0
+                        ci          : 0
+                        size        : 32
+                        desc        : ref://factory/templates/id=DESC_RDMA_AQ
 
     - queue_type:
         id          : RDMA_SQ
@@ -119,11 +138,11 @@ queue_types:
         type        : 5
         purpose     : LIF_QUEUE_PURPOSE_CQ
         size        : 64
-        count       : 16
+        count       : 64
         queues:
             - queue:
                 id          : Q0
-                count       : 32
+                count       : 64
                 rings:
                     - ring:
                         id          : CQ

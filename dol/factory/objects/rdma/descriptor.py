@@ -246,6 +246,19 @@ class RdmaEqDescriptor(Packet):
         BitField("color", 0, 1),
     ]
 
+class RdmaAqDescriptorBase(Packet):
+    fields_desc = [
+        ByteField("op", 0),
+        ByteField("type_state", 0),
+        ShortField("dbid_flags", 0),
+        IntField("id_ver", 0),
+    ]
+
+class RdmaAqDescriptorNOP(Packet):
+    fields_desc = [
+        BitField("pad", 0, 448),
+    ]
+
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
@@ -644,6 +657,99 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         rdmabuff.size = total_size
         logger.info("Total data: %s" % bytes(total_data))
         return rdmabuff
+
+class RdmaAqDescriptorObject(base.FactoryObjectBase):
+    def __init__(self):
+        super().__init__()
+        self.Clone(FactoryStore.templates.Get('DESC_RDMA_AQ'))
+
+    def Init(self, spec):
+        super().Init(spec)
+        self.op = self.spec.fields.op if hasattr(self.spec.fields, 'op') else 0
+        self.type_state = self.spec.fields.type_state if hasattr(self.spec.fields, 'type_state') else 0
+        self.dbid_flags = self.spec.fields.dbid_flags if hasattr(self.spec.fields, 'dbid_flags') else 0
+        self.id_ver = self.spec.fields.id_ver if hasattr(self.spec.fields, 'id_ver') else 0
+        self.__create_desc()
+
+    def __create_desc(self):
+        self.desc = RdmaAqDescriptorBase(
+            op=self.op,
+            type_state=self.type_state,
+            dbid_flags=self.dbid_flags,
+            id_ver=self.id_ver)
+
+    def __set_desc(self, desc):
+        self.desc = desc
+
+    def Write(self):
+        """
+        Creates a Descriptor at "self.address"
+        :return:
+        """
+        if hasattr(self.spec.fields, 'nop'):
+           logger.info("Reading Admin NOOP")
+           nop = RdmaAqDescriptorNOP()
+           desc = self.desc/nop
+
+        logger.info("Writing AQ Desciptor @0x%x = : %d " %
+                       (self.address, self.qid))
+        # AQ is not NIC resident
+        assert(self.mem_handle)
+        resmgr.HostMemoryAllocator.write(self.mem_handle,
+                                         bytes(self.desc))
+
+    def Read(self):
+        """
+        Reads a Descriptor from "self.address"
+        :return:
+        """
+        logger.info("Reading AQ Desciptor @ 0x%x " % (self.address))
+        self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
+        mem_handle = resmgr.MemHandle(self.address, self.phy_address)
+        self.__set_desc(RdmaAqDescriptorBase(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaEqDescriptor()))))
+
+    def Show(self):
+        logger.ShowScapyObject(self.desc)
+
+    def __eq__(self, other):
+        logger.info("__eq__ operator invoked on Aq descriptor..")
+
+        logger.info('\nself(expected):')
+        self.Show()
+        logger.info('\nother(actual):')
+        other.Show()
+
+        if self.desc.op != other.desc.op:
+            return False
+
+        logger.info('op matched\n')
+
+        if self.desc.type_state != other.desc.type_state:
+            return False
+
+        logger.info('type_state matched\n')
+
+        if self.desc.id_ver != other.desc.id_ver:
+            return False
+
+        logger.info('id_ver matched\n')
+
+        if self.desc.dbid_flags != other.desc.dbid_flags:
+            return False
+
+        logger.info('dbid_flags matched\n')
+
+        logger.info('AQ descriptor matched\n')
+        return True
+
+        #no need to compare other params as they are meaningful only incase of SUCCESS
+
+
+    def GetBuffer(self):
+        logger.info("GetBuffer() operator invoked on EQ descriptor")
+        # AQ is not associated with any buffer and hence simply create
+        # default RDMABuffer object so that ebuf == abuf check passes
+        return rdmabuffer.RdmaBufferObject()
 
 class RdmaCqDescriptorRecvObject(base.FactoryObjectBase):
     def __init__(self):

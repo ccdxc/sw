@@ -86,10 +86,11 @@ class LifObject(base.ConfigObjectBase):
         # RDMA per LIF allocators
         if self.enable_rdma:
             self.qpid_allocator = objects.TemplateFieldObject("range/0/16384")
+            self.aqid_allocator = objects.TemplateFieldObject("range/0/32")
             self.cqid_allocator = objects.TemplateFieldObject("range/0/16384")
             self.eqid_allocator = objects.TemplateFieldObject("range/0/256")
             self.pd_allocator = objects.TemplateFieldObject("range/0/128")
-            self.mr_key_allocator = objects.TemplateFieldObject("range/1/8192")
+            self.mr_key_allocator = objects.TemplateFieldObject("range/1/16384")
 
         if hasattr(spec, 'rss'):
             self.rss_type = (haldefs.interface.LifRssType.Value("RSS_TYPE_IPV4") |
@@ -132,6 +133,9 @@ class LifObject(base.ConfigObjectBase):
     def GetEqid(self):
         return self.eqid_allocator.get()
 
+    def GetAqid(self):
+        return self.aqid_allocator.get()
+
     def GetPd(self):
         return self.pd_allocator.get()
 
@@ -166,11 +170,21 @@ class LifObject(base.ConfigObjectBase):
             return 0
         self.obj_helper_q.Configure()
 
-    def ConfigureAsyncEQ(self):
+    def ConfigureRdmaLifRes(self):
         if self.enable_rdma:
             # EQID 0 on LIF is used for Async events/errors across all PDs
             self.async_eq = self.GetQ('RDMA_EQ', 0)
-            if (self.async_eq is None):
+            fail = self.async_eq is None
+
+            # Get EQID 1, CQID 0 for Admin queue AQ 0
+            self.admin_eq = self.GetQ('RDMA_EQ', 1)
+            fail = fail or self.admin_eq is None
+            self.admin_cq = self.GetQ('RDMA_CQ', 0)
+            fail = fail or self.admin_cq is None
+            # AQ position in list is different from AQ qid
+            self.adminq = self.GetQ('RDMA_AQ', 1)
+            fail = fail or self.adminq is None
+            if (fail is True):
                 assert(0)
         return 0
 
@@ -319,7 +333,7 @@ class LifObjectHelper:
         halapi.ConfigureLifs(self.lifs)
         for lif in self.lifs:
             lif.ConfigureQueueTypes()
-            lif.ConfigureAsyncEQ()
+            lif.ConfigureRdmaLifRes()
         Store.objects.SetAll(self.lifs)
 
     def Update(self):

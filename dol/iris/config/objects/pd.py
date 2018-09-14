@@ -13,6 +13,7 @@ import iris.config.hal.api           as halapi
 import iris.config.hal.defs          as haldefs
 import rdma_pb2                 as rdma_pb2
 
+import iris.config.objects.aq        as aq
 import iris.config.objects.qp        as qp
 import iris.config.objects.mr        as mr
 import iris.config.objects.mw        as mw
@@ -55,21 +56,15 @@ class PdObject(base.ConfigObjectBase):
            logger.info("Lite PD. Skipping other config than EQ")
            return
 
-        #MWs
-        self.mws = objects.ObjectDatabase()
-        self.obj_helper_mw = mw.MwObjectHelper()
-        mw_spec = spec.mw.Get(Store)
-        self.obj_helper_mw.Generate(self, mw_spec)
-        if len(self.obj_helper_mw.mws):
-            self.mws.SetAll(self.obj_helper_mw.mws)
-
-        #Keys
-        self.keys = objects.ObjectDatabase()
-        self.obj_helper_key = key.KeyObjectHelper()
-        key_spec = spec.key.Get(Store)
-        self.obj_helper_key.Generate(self, key_spec)
-        if len(self.obj_helper_key.keys):
-            self.keys.SetAll(self.obj_helper_key.keys)
+        #AQ
+        #Pinning Admin queue to PD 1
+        if pd_id == 1:
+            self.aqs = objects.ObjectDatabase()
+            self.obj_helper_aq = aq.AqObjectHelper()
+            aq_spec = spec.aq.Get(Store)
+            self.obj_helper_aq.Generate(self, aq_spec)
+            if len(self.obj_helper_aq.aqs):
+                self.aqs.SetAll(self.obj_helper_aq.aqs)
 
         #CQs
         self.cqs = objects.ObjectDatabase()
@@ -78,6 +73,9 @@ class PdObject(base.ConfigObjectBase):
         self.obj_helper_cq.Generate(self, cq_spec)
         if len(self.obj_helper_cq.cqs):
             self.cqs.SetAll(self.obj_helper_cq.cqs)
+
+        #QPs for PD 1 are generated. If CQs are generated in PD, QPs must also be
+        #generated to avoid these CQs from being used by QPs of another PD.
         #QPs
         self.qps = objects.ObjectDatabase()
         self.perf_qps = objects.ObjectDatabase()
@@ -95,6 +93,26 @@ class PdObject(base.ConfigObjectBase):
         #pdudqps = self.udqps.GetAll()
         #for tmpqp in pdudqps:
         #    logger.info('   Qps: %s' % (tmpqp.GID()))
+
+        if self.id == 1:
+           logger.info("Admin PD. Skipping other config than CQ, EQ")
+           return
+
+        #MWs
+        self.mws = objects.ObjectDatabase()
+        self.obj_helper_mw = mw.MwObjectHelper()
+        mw_spec = spec.mw.Get(Store)
+        self.obj_helper_mw.Generate(self, mw_spec)
+        if len(self.obj_helper_mw.mws):
+            self.mws.SetAll(self.obj_helper_mw.mws)
+
+        #Keys
+        self.keys = objects.ObjectDatabase()
+        self.obj_helper_key = key.KeyObjectHelper()
+        key_spec = spec.key.Get(Store)
+        self.obj_helper_key.Generate(self, key_spec)
+        if len(self.obj_helper_key.keys):
+            self.keys.SetAll(self.obj_helper_key.keys)
 
         self.Show()
         return
@@ -114,12 +132,19 @@ class PdObject(base.ConfigObjectBase):
            logger.info("Lite PD. Skipping other config than EQ")
            return
 
+        if self.id == 1 and len(self.obj_helper_aq.aqs):
+            self.obj_helper_aq.Configure()
+        if len(self.obj_helper_cq.cqs):
+            self.obj_helper_cq.Configure()
+
+        if self.id == 1:
+           logger.info("Admin PD. Config for EQ, CQ and AQ only")
+           return
+
         if len(self.obj_helper_mw.mws):
             self.obj_helper_mw.Configure()
         if len(self.obj_helper_key.keys):
             self.obj_helper_key.Configure()
-        if len(self.obj_helper_cq.cqs):
-            self.obj_helper_cq.Configure()
         if len(self.obj_helper_qp.qps):
             self.obj_helper_qp.Configure()
 

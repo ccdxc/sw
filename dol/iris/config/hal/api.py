@@ -683,6 +683,13 @@ def UpdateCryptoKeys(objlist):
              stub.CryptoKeyUpdate)
     return
 
+def ConfigureAqs(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = rdma_pb2.RdmaStub(HalChannel)
+    __config(objlist, rdma_pb2.RdmaAqRequestMsg,
+             stub.RdmaAqCreate)
+    return
+
 def ConfigureQps(objlist):
     if not IsConfigAllowed(objlist): return
     stub = rdma_pb2.RdmaStub(HalChannel)

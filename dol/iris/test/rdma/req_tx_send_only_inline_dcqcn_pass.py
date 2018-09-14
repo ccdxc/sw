@@ -31,6 +31,7 @@ def TestCaseSetup(tc):
     rs.lqp.dcqcn_data.cur_timestamp = 0x19E10 # 106k ticks
     rs.lqp.dcqcn_data.rate_enforced = 1  # 1 Mbps (rate_enforced is in Mbps)
     rs.lqp.dcqcn_data.cur_avail_tokens = 200
+    rs.lqp.dcqcn_data.delta_tokens_last_sched = 0
     rs.lqp.dcqcn_data.token_bucket_size = 150000 #150kb
     rs.lqp.dcqcn_data.sq_cindex = tc.pvtdata.sq_cindex
     rs.lqp.WriteDcqcnCb()

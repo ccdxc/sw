@@ -2,6 +2,6 @@
 meta:
     id: CQ_RDMA
 
-count           : 5
+count           : 7
 hostmem_pg_size : 4096
 num_wqes        : 16

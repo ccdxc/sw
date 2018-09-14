@@ -1,0 +1,6 @@
+# RDMA QPair Object Template
+meta:
+    id  : ADMIN_RDMA
+    feature_set:
+        - iris
+        - gft

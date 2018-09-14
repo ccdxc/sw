@@ -314,7 +314,7 @@ class EndpointObject(base.ConfigObjectBase):
         self.pds.SetAll(self.obj_helper_pd.pds)
         logger.debug("In CreatePds, Endpoint %s" % (self.GID()))
         for eppd in self.obj_helper_pd.pds:
-            if eppd.id == 0:
+            if eppd.id in [0,1]:
                continue
             logger.debug("   Adding QPs for PD %s, Num of Qps %d" % (eppd.GID(), len(eppd.udqps)))
             pdudqps = eppd.udqps.GetAll()

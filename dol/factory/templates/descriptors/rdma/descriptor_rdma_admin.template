@@ -1,0 +1,14 @@
+meta:
+    id      : DESC_RDMA_AQ
+    size    : 64
+    package : factory.objects.rdma
+    module  : descriptor
+    objname : RdmaAqDescriptorObject
+
+op          : None
+type_state  : None
+dbid_flags  : None
+id_ver      : None
+
+nop:
+    pad     : 0

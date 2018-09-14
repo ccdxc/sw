@@ -57,7 +57,7 @@ packets:
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
                 opcode  : 129 # CNP
-                destqp  : ref://testcase/config/rdmasession/rqp/id
+                destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : 0
                 se      : 0
                 m       : 0

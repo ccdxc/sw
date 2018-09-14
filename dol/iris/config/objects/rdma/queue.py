@@ -20,6 +20,38 @@ from infra.common.glopts import GlobalOptions
 from scapy.all import *
 
 
+class RdmaAQstate(Packet):
+    name = "RdmaAQstate"
+    fields_desc = [
+
+        # AQCB0
+        ByteField("pc_offset", 0),
+        ByteField("rsvd0", 0),
+        BitField("cosB", 0, 4),
+        BitField("cosA", 0, 4),
+        ByteField("cos_sel", 0),
+        ByteField("eval_last", 0),
+        BitField("total", 0, 4),
+        BitField("host", 0, 4),
+        ShortField("pid", 0),
+
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
+
+        LEShortField("proxy_pindex", 0),
+        BitField("log_wqe_size", 0, 5),
+        BitField("log_num_size", 0, 5),
+        BitField("rsvd2", 0 , 6),
+
+        XLongField("phy_base_addr", 0),
+        X3BytesField("aq_id", 0),
+        ByteField("busy", 0),
+        X3BytesField("cq_id", 0),
+        ByteField("rsvd3", 0),
+        XLongField("cqcb_addr", 0),
+        BitField("pad", 0, 192),
+    ]
+
 class RdmaRQstate(Packet):
     name = "RdmaRQstate"
     fields_desc = [
@@ -497,6 +529,7 @@ class RdmaEQstate(Packet):
 
 qt_params = {
     #fix the label/program for following entry reflecting txdma params
+    'RDMA_AQ': {'state': RdmaAQstate, 'hrings': 1, 'trings': 1, 'has_label':1, 'label': 'rdma_aq_rx_stage0', 'prog': 'rxdma_stage0.bin'},
     'RDMA_SQ': {'state': RdmaSQstate, 'hrings': 1, 'trings': 2, 'has_label':1, 'label': 'rdma_req_rx_stage0', 'prog': 'rxdma_stage0.bin'},
     'RDMA_RQ': {'state': RdmaRQstate, 'hrings': 1, 'trings': 2, 'has_label':1, 'label': 'rdma_resp_rx_stage0', 'prog': 'rxdma_stage0.bin'},
     'RDMA_CQ': {'state': RdmaCQstate, 'hrings': 3, 'trings': 3, 'has_label':0, 'label': 'rdma_cq_rx_stage0', 'prog': 'rxdma_stage0.bin'},
@@ -675,7 +708,10 @@ class RdmaQueueObject(QueueObject):
 
     def Init(self, queue_type, spec):
         self.queue_type = queue_type
-        self.id         = queue_type.GetQid()
+        self.id = queue_type.GetQid()
+        # Start qid numbering from 1 for adminq
+        if spec.id == "RDMA":
+            self.id = self.id + 1
         self.qp_e_psn   = 0      #Needed for rx multi QP scale tests to pick next psn
         self.GID(str(self.id))
 
