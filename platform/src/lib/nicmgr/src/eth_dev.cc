@@ -465,6 +465,10 @@ Eth::CmdHandler(void *req, void *req_data,
         status = this->_CmdModifyQP(req, req_data, resp, resp_data);
         break;
 
+    case CMD_OPCODE_V0_RDMA_CREATE_AH:
+        status = this->_CmdCreateAH(req, req_data, resp, resp_data);
+        break;
+
     default:
         NIC_LOG_ERR("lif{}: Unknown Opcode {}", info.hw_lif_id,
             cmd->cmd.opcode);
@@ -1481,6 +1485,26 @@ Eth::_CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data)
                   cmd->e_psn, cmd->sq_psn,
                   cmd->header_template_ah_id, cmd->header_template_size,
                   header, cmd->path_mtu);
+
+    return (DEVCMD_SUCCESS);
+}
+
+enum DevcmdStatus
+Eth::_CmdCreateAH(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct create_ah_cmd  *cmd = (struct create_ah_cmd  *) req;
+    unsigned char *header = (unsigned char *)&devcmd->data;
+
+    NIC_LOG_INFO("lif{}: CMD_OPCODE_V0_CREATE_AH:"
+            " ah_id {} pd_id {}"
+            " header_template_size {}",
+            info.hw_lif_id,
+            cmd->ah_id, cmd->pd_id,
+            cmd->header_template_size);
+
+    hal->CreateAh(info.hw_lif_id,
+                  cmd->ah_id, cmd->pd_id,
+                  cmd->header_template_size, header);
 
     return (DEVCMD_SUCCESS);
 }

@@ -151,24 +151,9 @@ message RdmaQpUpdateResponseMsg {
 // RdmaAh object
 message RdmaAhSpec {
   types.ObjectMeta         meta            = 1;    // object meta
-  bytes                    smac            = 2;    // smac
-  bytes                    dmac            = 3;    // dmac
-  uint32                   hw_lif_id       = 4;    // hw lif id
-  uint32                   ethtype         = 5;    // ipv4 or ipv6
-
-  uint32                   vlan            = 6;
-  uint32                   vlan_pri        = 7;
-  uint32                   vlan_cfi        = 8;
-
-  uint32                   ip_ver          = 9;
-  uint32                   ip_tos          = 10;
-  uint32                   ip_ttl          = 11;
-  types.IPAddress          ip_saddr        = 12;
-  types.IPAddress          ip_daddr        = 13;
-
-  uint32                   udp_sport       = 14;
-  uint32                   udp_dport       = 15;
-  uint64                   ahid            = 16;
+  uint64                   ahid            = 2;
+  uint32                   hw_lif_id       = 3;    // hw lif id
+  bytes                    header_template = 4;    // Header Vector Params
 }
 
 // RdmaAhRequestmsg is batched request used to create/update of Rdma QPs

@@ -210,6 +210,9 @@ public:
                uint32_t header_template_ah_id, uint32_t header_template_size,
                unsigned char *header, uint32_t pmtu);
 
+  int CreateAh(uint64_t lif_id, uint32_t ah_id, uint32_t pd_id,
+               uint32_t header_template_size, unsigned char *header);
+
   int RDMACreateEQ(uint64_t lif_id, uint32_t eq_num,
                    uint32_t num_eq_wqes, uint32_t eq_wqe_size,
                    uint32_t eqe_base_addr_pa, uint32_t int_num);

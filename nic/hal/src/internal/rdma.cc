@@ -380,7 +380,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     max_ahs = roundup_to_pow_2(max_ahs);
 
     // TODO: Resize ah table after dcqcn related structures are moved to separate table
-    pad_size = sizeof(header_template_t) + sizeof(dcqcn_cb_t);
+    pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
     if (pad_size & ((1 << HDR_TEMP_ADDR_SHIFT) - 1)) {
         pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
     }
@@ -700,9 +700,8 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     key_entry_t      *lkey_entry_p = &lkey_entry , *rkey_entry_p = &rkey_entry;
     uint32_t         pt_seg_size = HBM_NUM_PT_ENTRIES_PER_CACHE_LINE *
                               spec.hostmem_pg_size();
-    uint32_t         pt_seg_offset, pt_page_offset;
+    uint32_t         pt_seg_offset;
     uint32_t         pt_start_page_id, pt_end_page_id;
-    uint32_t         transfer_bytes, pt_page_offset2;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: RdmaMemReg for HW LIF {} PD {} LKEY {} RKEY {} VA {} LEN {}",
@@ -791,37 +790,21 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
                     __FUNCTION__, lif, g_pt_base[lif], lkey_entry_p->pt_base);
     HAL_ASSERT(lkey_entry_p->pt_base % HBM_NUM_PT_ENTRIES_PER_CACHE_LINE == 0);
 
+    pt_start_page_id = lkey_entry_p->base_va / spec.hostmem_pg_size();
+    pt_end_page_id = (lkey_entry_p->base_va + lkey_entry_p->len + spec.hostmem_pg_size() - 1) / spec.hostmem_pg_size();
+    num_pages = pt_end_page_id - pt_start_page_id;
+
     pt_seg_offset = lkey_entry_p->base_va % pt_seg_size;
-    pt_page_offset = pt_seg_offset % spec.hostmem_pg_size();
-
-    num_pages = 0;
-    transfer_bytes = lkey_entry_p->len;
-    if (pt_page_offset) {
-        num_pages++;
-        transfer_bytes -= (spec.hostmem_pg_size()-pt_page_offset);
-    }
-    pt_page_offset2 =
-        (pt_page_offset + lkey_entry_p->len) % spec.hostmem_pg_size();
-    if (pt_page_offset2) {
-        num_pages++;
-        transfer_bytes -= pt_page_offset2;
-    }
-
-    HAL_ASSERT(transfer_bytes % spec.hostmem_pg_size() == 0);
-    num_pages += transfer_bytes / spec.hostmem_pg_size();
-
-
     pt_start_page_id = pt_seg_offset / spec.hostmem_pg_size();
     pt_end_page_id = pt_start_page_id + num_pages - 1;
 
     HAL_TRACE_DEBUG("{}: base_va: {:#x} len: {} "
            " pt_base: {} pt_seg_offset: {} "
            "pt_start_page_id: {} pt_end_page_id: {} "
-           "pt_page_offset: {} num_pages: {} \n",
+           "num_pages: {} \n",
             __FUNCTION__, lkey_entry_p->base_va, lkey_entry_p->len,
             lkey_entry_p->pt_base, pt_seg_offset,
-            pt_start_page_id, pt_end_page_id, pt_page_offset,
-            num_pages);
+            pt_start_page_id, pt_end_page_id, num_pages);
 
     // Make sure that received the expected number of Pages physical addresses for
     // the VA being registered
@@ -1439,94 +1422,18 @@ hal_ret_t
 rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
 {
     uint32_t            lif = spec.hw_lif_id();
-    uint32_t            ahid;
-    uint8_t             smac[ETH_ADDR_LEN], dmac[ETH_ADDR_LEN];
     uint64_t            ah_table_base_addr;
+    uint64_t            header_template_addr;
     uint64_t            pad_size;
     ah_entry_t          ah_entry;
-    header_template_t   *temp_p = &ah_entry.hdr_tmp;
-    ip_addr_t           ip_addr;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA AH Create", __FUNCTION__);
 
-    memcpy(smac, spec.smac().c_str(), spec.smac().size());
-    memcpy(dmac, spec.dmac().c_str(), spec.dmac().size());
-
-    // HAL_TRACE_DEBUG("{}: Inputs: smac: {} dmac: {} ethtype: {} vlan: {} "
-    //                 "vlan_pri: {} vlan_cfi: {} ip_ver: {} ip_tos: {} "
-    //                 "ip_ttl: {} ip_saddr: {} ip_daddr: {} "
-    //                 "udp_sport: {} udp_dport: {}",
-    //                 __FUNCTION__, (struct ether_addr*)smac,
-    //                 (struct ether_addr*)spec.dmac().c_str(),
-    //                 (struct ether_addr*)spec.smac().c_str(),
-    //                 spec.vlan(), spec.vlan_pri(), spec.vlan_cfi(),
-    //                 spec.ip_ver(), spec.ip_tos(), spec.ip_ttl(),
-    //                 spec.ip_saddr(), spec.ip_daddr(),
-    //                 spec.udp_sport(), spec.udp_dport());
-
-    HAL_TRACE_DEBUG("{}: Inputs: lif: {} ethtype: {} vlan: {} ahid: {}"
-                    "vlan_pri: {} vlan_cfi: {} ip_ver: {} ip_tos: {} "
-                    "ip_ttl: {} ip_saddr: {} ip_daddr: {} "
-                    "udp_sport: {} udp_dport: {}",
-                    __FUNCTION__, lif, spec.ethtype(), spec.vlan(),
-                    spec.ahid(), spec.vlan_pri(), spec.vlan_cfi(),
-                    spec.ip_ver(), spec.ip_tos(), spec.ip_ttl(), 0, 0,
-                    spec.udp_sport(), spec.udp_dport());
-
-    ahid = spec.ahid();
-    memset(temp_p, 0, sizeof(header_template_t));
-
-    if (spec.ip_ver() == 6) {
-        memcpy(&temp_p->v6.eth.dmac, dmac, MAC_SIZE);
-        memcpy(&temp_p->v6.eth.smac, smac, MAC_SIZE);
-        temp_p->v6.eth.ethertype = 0x8100;
-        temp_p->v6.vlan.pri = spec.vlan_pri();
-        temp_p->v6.vlan.vlan = spec.vlan();
-        temp_p->v6.vlan.ethertype = spec.ethtype();
-        temp_p->v6.ip.version = spec.ip_ver();
-        temp_p->v6.ip.tc = spec.ip_tos();
-        temp_p->v6.ip.hop_limit = spec.ip_ttl();
-        temp_p->v6.ip.nh = 17;
-        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_saddr());
-        memrev((uint8_t*)&ip_addr.addr.v6_addr, sizeof(ip_addr.addr.v6_addr));
-        temp_p->v6.ip.saddr = ip_addr.addr.v6_addr;
-        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_daddr());
-        memrev((uint8_t*)&ip_addr.addr.v6_addr, sizeof(ip_addr.addr.v6_addr));
-        temp_p->v6.ip.daddr = ip_addr.addr.v6_addr;
-        temp_p->v6.ip.flow_label = 0;
-        temp_p->v6.udp.sport = spec.udp_sport();
-        temp_p->v6.udp.dport = spec.udp_dport();
-        ah_entry.ah_size = sizeof(temp_p->v6);
-
-        HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {} \n", ipv6addr2str(temp_p->v6.ip.saddr), ipv6addr2str(temp_p->v6.ip.daddr));
-
-    } else {
-        memcpy(&temp_p->v4.eth.dmac, dmac, MAC_SIZE);
-        memcpy(&temp_p->v4.eth.smac, smac, MAC_SIZE);
-        temp_p->v4.eth.ethertype = 0x8100;
-        temp_p->v4.vlan.pri = spec.vlan_pri();
-        temp_p->v4.vlan.vlan = spec.vlan();
-        temp_p->v4.vlan.ethertype = spec.ethtype();
-        temp_p->v4.ip.version = spec.ip_ver();
-        temp_p->v4.ip.ihl = 5;
-        temp_p->v4.ip.tos = spec.ip_tos();
-        temp_p->v4.ip.ttl = spec.ip_ttl();
-        temp_p->v4.ip.protocol = 17;
-        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_saddr());
-        temp_p->v4.ip.saddr = ip_addr.addr.v4_addr;
-        ip_addr_spec_to_ip_addr(&ip_addr, spec.ip_daddr());
-        temp_p->v4.ip.daddr = ip_addr.addr.v4_addr;
-        temp_p->v4.ip.id = 1;
-        temp_p->v4.udp.sport = spec.udp_sport();
-        temp_p->v4.udp.dport = spec.udp_dport();
-        ah_entry.ah_size = sizeof(temp_p->v4);
-        HAL_TRACE_DEBUG("SIP4 : {}  DIP4: {} \n", temp_p->v4.ip.saddr, temp_p->v4.ip.daddr);
-
-    }
+    HAL_TRACE_DEBUG("{}: Inputs: lif: {} ahid: {} header_template_size: {}",
+                    __FUNCTION__, lif, spec.ahid(), spec.header_template().size());
 
     ah_table_base_addr = rdma_lif_at_base_addr(lif);
-    memrev((uint8_t*)temp_p, ah_entry.ah_size);
     pd::pd_capri_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
 
@@ -1535,10 +1442,17 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
         pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
     }
 
-    args.addr = (uint64_t)(((uint8_t*) ah_table_base_addr) + (ahid * pad_size));
-    args.buf = (uint8_t*)&ah_entry;
-    args.size = sizeof(ah_entry);
+    header_template_addr = (uint64_t)(((uint8_t*) ah_table_base_addr)
+                           + (spec.ahid() * pad_size));
+
+    ah_entry.ah_size = std::min(sizeof(header_template_t), spec.header_template().size());
+    memcpy(&ah_entry.hdr_tmp, (uint8_t *)spec.header_template().c_str(), ah_entry.ah_size);
+
+    args.addr = (uint64_t)header_template_addr;
+    args.buf = (uint8_t *)&ah_entry;
+    args.size =  sizeof(ah_entry_t);
     pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 
     HAL_TRACE_DEBUG("{} ah_table_base_addr: {:#x}, header_template_addr: {:#x}, header_template_size: {}\n",
                     __FUNCTION__, ah_table_base_addr, args.addr, args.size);

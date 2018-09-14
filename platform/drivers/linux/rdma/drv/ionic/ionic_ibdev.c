@@ -6257,10 +6257,10 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.max_cqe = 0xffff;
 	dev->dev_attr.max_mr = 4096; /* XXX need from identify */
 	dev->dev_attr.max_pd = 0x10000; /* XXX only limited by the size of bitset we can alloc */
-	dev->dev_attr.max_qp_rd_atom = 0;
+	dev->dev_attr.max_qp_rd_atom = 16;
 	dev->dev_attr.max_ee_rd_atom = 0;
-	dev->dev_attr.max_res_rd_atom = 0;
-	dev->dev_attr.max_qp_init_rd_atom = 0;
+	dev->dev_attr.max_res_rd_atom = 16;
+	dev->dev_attr.max_qp_init_rd_atom = 16;
 	dev->dev_attr.max_ee_init_rd_atom = 0;
 	dev->dev_attr.atomic_cap = IB_ATOMIC_HCA; /* XXX or global? */
 	dev->dev_attr.masked_atomic_cap = IB_ATOMIC_HCA; /* XXX or global? */

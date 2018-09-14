@@ -181,6 +181,7 @@ private:
     enum DevcmdStatus _CmdCreateQP(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data);
 
+    enum DevcmdStatus _CmdCreateAH(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);

@@ -1500,6 +1500,34 @@ int HalClient::CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
     return -1;
 }
 
+int HalClient::CreateAh(uint64_t lif_id, uint32_t ah_id, uint32_t pd_id,
+                        uint32_t header_template_size, unsigned char *header)
+{
+    ClientContext context;
+    RdmaAhRequestMsg request;
+    RdmaAhResponseMsg response;
+
+    RdmaAhSpec *spec = request.add_request();
+    spec->set_ahid(ah_id);
+    spec->set_hw_lif_id(lif_id);
+    spec->set_header_template(header, header_template_size);
+
+    Status status = rdma_stub_->RdmaAhCreate(&context, request, &response);
+    if (status.ok()) {
+        RdmaAhResponse rsp = response.response(0);
+        if (rsp.api_status() != types::API_STATUS_OK) {
+            NIC_FUNC_ERR("API status {}", rsp.api_status());
+        } else {
+            NIC_FUNC_INFO("API status {}", rsp.api_status());
+            return 0;
+        }
+    } else {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
+    }
+
+    return -1;
+}
+
 int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
                         uint32_t dest_qp_num, uint32_t q_key,
                         uint32_t e_psn, uint32_t sq_psn,

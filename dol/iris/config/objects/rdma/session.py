@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 
+import scapy.all                as scapy
 import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.config.base        as base
@@ -84,37 +85,39 @@ class RdmaSessionObject(base.ConfigObjectBase):
         if not self.lqp.svc == 3: return
 
         logger.info("PrepareHALRequestSpec:: RDMA Session: %s Session: %s "
-                       "Remote QP: %s Local QP: %s ah_handle: %d" %\
-                       (self.GID(), self.session.GID(), self.rqp.GID(), self.lqp.GID(), self.ah_handle))
+                       "Remote QP: %s Local QP: %s" %\
+                       (self.GID(), self.session.GID(), self.rqp.GID(), self.lqp.GID()))
         if (GlobalOptions.dryrun): return
 
-        req_spec.smac = bytes(self.session.initiator.ep.macaddr.getnum().to_bytes(6, 'little'))
-        req_spec.dmac = bytes(self.session.responder.ep.macaddr.getnum().to_bytes(6, 'little'))
-        if self.session.IsIPV6():
-             req_spec.ethtype = 0x86dd
-             req_spec.ip_ver = 6
-             req_spec.ip_saddr.ip_af = haldefs.common.IP_AF_INET6
-             req_spec.ip_saddr.v6_addr = self.session.initiator.addr.getnum().to_bytes(16, 'big')
-             req_spec.ip_daddr.ip_af = haldefs.common.IP_AF_INET6
-             req_spec.ip_daddr.v6_addr = self.session.responder.addr.getnum().to_bytes(16, 'big')
-        else:
-             req_spec.ethtype = 0x800
-             req_spec.ip_ver = 4
-             req_spec.ip_saddr.ip_af = haldefs.common.IP_AF_INET
-             req_spec.ip_saddr.v4_addr = self.session.initiator.addr.getnum()
-             req_spec.ip_daddr.ip_af = haldefs.common.IP_AF_INET
-             req_spec.ip_daddr.v4_addr = self.session.responder.addr.getnum()
+        logger.info("RdmaAhCreate:: src_ip: %s dst_ip: %s src_mac: %s dst_mac: %s proto: %s "
+                        "sport: %s dport: %s ah_handle: %d isipv6: %d" %\
+                    (self.session.initiator.addr.get(), self.session.responder.addr.get(),
+                     self.session.initiator.ep.macaddr.get(), self.session.responder.ep.macaddr.get(),
+                     self.session.iflow.proto, self.session.iflow.sport, self.session.iflow.dport,
+                     self.ah_handle, self.session.IsIPV6()))
 
-        req_spec.ip_tos = self.session.iflow.txqos.dscp
-        req_spec.vlan = self.session.initiator.ep.intf.encap_vlan_id
-        req_spec.vlan_pri = self.session.iflow.txqos.cos
-        req_spec.vlan_cfi = 0
-        req_spec.ip_ttl = 64
-        req_spec.udp_sport = int(self.session.iflow.sport)
-        req_spec.udp_dport = int(self.session.iflow.dport)
+        EthHdr = scapy.Ether(src=self.session.initiator.ep.macaddr.get(),
+                             dst=self.session.responder.ep.macaddr.get())
+        Dot1qHdr = scapy.Dot1Q(vlan=self.session.initiator.ep.intf.encap_vlan_id,
+                               prio=self.session.iflow.txqos.cos)
+        if self.session.IsIPV6():
+            IpHdr = scapy.IPv6(src=self.session.initiator.addr.get(),
+                             dst=self.session.responder.addr.get(),
+                             tc=self.session.iflow.txqos.dscp,
+                             plen = 0)
+        else:
+            IpHdr = scapy.IP(src=self.session.initiator.addr.get(),
+                             dst=self.session.responder.addr.get(),
+                             tos=self.session.iflow.txqos.dscp,
+                             len = 0, chksum = 0)
+        UdpHdr = scapy.UDP(sport=self.session.iflow.sport,
+                           dport=self.session.iflow.dport,
+                           len = 0, chksum = 0)
+
         req_spec.hw_lif_id = self.lqp.pd.ep.intf.lif.hw_lif_id
+        req_spec.header_template = bytes(EthHdr/Dot1qHdr/IpHdr/UdpHdr)
         req_spec.ahid = self.ah_handle
-        
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
