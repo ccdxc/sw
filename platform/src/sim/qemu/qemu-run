@@ -15,11 +15,17 @@ if [[ $? -ne 0 ]]; then
     exit 2
 fi
 
+: ${QEMU_MACHINE:=q35,accel=kvm}
+: ${QEMU_MEMORY_MB:=256}
+: ${QEMU_SERIAL_PORT:=1034}
+: ${QEMU_MONITOR_PORT:=1035}
+: ${QEMU_SSH_PORT:=1037}
+
 eval set -- "$PARSED"
 while true; do
     case "$1" in
          --skip-kvm-accel)
-            NO_KVM_ACCEL=1
+            QEMU_MACHINE="q35"
             shift
             ;;
         --img)
@@ -27,7 +33,7 @@ while true; do
             shift 2
             ;;
         --memory)
-            MEMORY=$2
+            QEMU_MEMORY_MB=$2
             shift 2
             ;;
         --)
@@ -45,21 +51,6 @@ if [  -z "$DRIVE_IMG" ];then
     echo "Image not provided, use --img"
     exit 1
 fi
-
-if [  -z "$MEMORY" ];then
-    QEMU_MEMORY_MB=256
-else    
-    QEMU_MEMORY_MB=$MEMORY
-fi
-if [  -z "$NO_KVM_ACCEL" ];then
-    QEMU_MACHINE="q35,accel=kvm"
-else    
-    QEMU_MACHINE="q35"
-fi
-
-: ${QEMU_SERIAL_PORT:=1034}
-: ${QEMU_MONITOR_PORT:=1035}
-: ${QEMU_SSH_PORT:=1037}
 
 SCRIPT_DIR=`dirname $0`
 SCRIPT_PATH=`cd $SCRIPT_DIR; echo $PWD`

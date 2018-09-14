@@ -358,7 +358,7 @@ start_qemu() {
         QEMU_SSH_PORT="$QEMU_SSH_PORT" \
         QEMU_MEMORY_MB="$QEMU_MEMORY_MB" \
         QEMU_EXTRA="$QEMU_EXTRA" \
-        src/sim/qemu/qemu-run $QEMU_IMAGE
+        src/sim/qemu/qemu-run --img $QEMU_IMAGE
 }
 
 start_bsd() {
