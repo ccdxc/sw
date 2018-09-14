@@ -9,6 +9,9 @@ src/osal/linux/kernel/osal_sys.c \
 src/osal/linux/kernel/sim/osal_mem.c \
 src/osal/test/osal_test.c \
 src/drv/pnso_mpool.c \
+src/drv/pnso_api.c \
+src/drv/pnso_req.c \
+src/drv/pnso_chain.c \
 src/drv/pnso_cp.c \
 src/drv/pnso_dc.c \
 src/drv/pnso_chksum.c \
@@ -20,6 +23,9 @@ src/drv/pnso_decrypt.c \
 src/drv/pnso_xts_cmn.c \
 src/drv/pnso_xts.c \
 src/drv/pnso_decompact.c \
+src/drv/pnso_seq.c \
+src/drv/pnso_seq_hw.c \
+src/common/pnso_pbuf.c \
 vnode_if.h \
 src/sim/lzrw1-a.c \
 src/sim/pnso_sim_api.c \
@@ -38,7 +44,7 @@ third-party/freebsd-crypto/src/xform_aes_xts.c
 
 CFLAGS+= -I${SRC_TOP}/sys/ofed/include
 CFLAGS+= -I${SRC_TOP}/sys/compat/linuxkpi/common/include
-INCDIRS = include src/osal src/osal/test src/sim third-party/freebsd-crypto/src
+INCDIRS = include src/osal src/osal/test src/common src/sim third-party/freebsd-crypto/src
 CFLAGS+= $(INCDIRS:%=-I$(PWD)/%)
 CFLAGS+= -D__KERNEL__
 

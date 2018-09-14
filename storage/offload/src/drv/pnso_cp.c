@@ -11,14 +11,13 @@
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
+#include "pnso_seq.h"
 
 #ifdef NDEBUG
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	PNSO_OK
 #define CPDC_PPRINT_DESC(d)
-#define CPDC_PPRINT_STATUS_DESC(d)
 #else
 #define CPDC_PPRINT_DESC(d)		cpdc_pprint_desc(d)
-#define CPDC_PPRINT_STATUS_DESC(d)	cpdc_pprint_status_desc(d)
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	validate_setup_input(i, p)
 #endif
 
@@ -126,7 +125,8 @@ validate_setup_input(const struct service_info *svc_info,
 
 	if (!svc_params->sp_src_blist || !svc_params->sp_dst_blist) {
 		OSAL_LOG_ERROR("invalid src/dst buffers specified! sp_src_blist: %p sp_dst_blist: %p err: %d",
-				svc_params->sp_src_blist, svc_params->sp_dst_blist, err);
+				svc_params->sp_src_blist,
+				svc_params->sp_dst_blist, err);
 		return err;
 	}
 
@@ -148,9 +148,11 @@ validate_setup_input(const struct service_info *svc_info,
 
 static void
 fill_cp_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
-		void *status_buf, uint32_t src_buf_len, uint16_t threshold_len)
+		struct cpdc_status_desc *status_desc, uint32_t src_buf_len,
+		uint16_t threshold_len)
 {
 	memset(desc, 0, sizeof(*desc));
+	memset(status_desc, 0, sizeof(*status_desc));
 
 	desc->cd_src = (uint64_t) osal_virt_to_phy(src_buf);
 	desc->cd_dst = (uint64_t) osal_virt_to_phy(dst_buf);
@@ -164,7 +166,8 @@ fill_cp_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
 	desc->cd_datain_len =
 		(src_buf_len == MAX_CPDC_SRC_BUF_LEN) ? 0 : src_buf_len;
 	desc->cd_threshold_len = threshold_len;
-	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_buf);
+
+	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_CP_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
@@ -178,11 +181,12 @@ compress_setup(struct service_info *svc_info,
 	struct pnso_compression_desc *pnso_cp_desc;
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
+	struct per_core_resource *pc_res;
+	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
 	size_t src_buf_len;
-	uint16_t flags;
-	uint16_t threshold_len;
+	uint16_t flags, threshold_len;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	err = CPDC_VALIDATE_SETUP_INPUT(svc_info, svc_params);
 	if (err)
@@ -205,6 +209,8 @@ compress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
+	pc_res = svc_info->si_pc_res;
+	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
 	cp_desc = (struct cpdc_desc *) mpool_get_object(cpdc_mpool);
 	if (!cp_desc) {
 		err = ENOMEM;
@@ -212,6 +218,7 @@ compress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
+	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
 	status_desc = (struct cpdc_status_desc *)
 		mpool_get_object(cpdc_status_mpool);
 	if (!status_desc) {
@@ -221,7 +228,7 @@ compress_setup(struct service_info *svc_info,
 		goto out_cp_desc;
 	}
 
-	err = cpdc_update_service_info_params(svc_info, svc_params);
+	err = cpdc_update_service_info_sgls(svc_info, svc_params);
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain cp src/dst sgl from pool! err: %d",
 				err);
@@ -238,10 +245,20 @@ compress_setup(struct service_info *svc_info,
 	svc_info->si_desc = cp_desc;
 	svc_info->si_status_desc = status_desc;
 
-	/* TODO-cp: add seq stuff here */
+	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
+		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
+				cp_desc, sizeof(*cp_desc));
+		if (!svc_info->si_seq_info.sqi_desc) {
+			err = EINVAL;
+			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
+					err);
+			goto out_status_desc;
+		}
+	}
 
 	err = PNSO_OK;
-	OSAL_LOG_INFO("exit! service initialized!");
+	OSAL_LOG_DEBUG("exit! service initialized!");
 	return err;
 
 out_status_desc:
@@ -268,19 +285,18 @@ compress_chain(struct chain_entry *centry)
 {
 	pnso_error_t err;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(centry);
 
 	err = cpdc_common_chain(centry);
 	if (err) {
-		/* TODO-cp: revisit */
-		OSAL_LOG_INFO("failed to chain err: %d", err);
+		OSAL_LOG_ERROR("failed to chain! err: %d", err);
 		goto out;
 	}
 
 out:
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 
@@ -288,6 +304,7 @@ static pnso_error_t
 compress_schedule(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
+	const struct sequencer_info *seq_info;
 	bool ring_db;
 
 	OSAL_LOG_INFO("enter ... ");
@@ -297,41 +314,34 @@ compress_schedule(const struct service_info *svc_info)
 	ring_db = (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE);
 	if (ring_db) {
-		/* TODO-cp: add db ringing logic here */
 		OSAL_LOG_INFO("ring door bell <===");
+
+		seq_info = &svc_info->si_seq_info;
+		seq_ring_db(svc_info, seq_info->sqi_index);
+
 		err = PNSO_OK;
 	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 
 static pnso_error_t
 compress_poll(const struct service_info *svc_info)
 {
-	uint32_t i;
-	struct cpdc_status_desc *status_desc;
+	volatile struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
 
-#define PNSO_UT_NUM_POLL 5	/* TODO-cp: remove during HW integration */
-	for (i = 0; i < PNSO_UT_NUM_POLL; i++) {
-		OSAL_LOG_INFO("status updated (%d) status_desc: %p",
-				i + 1, status_desc);
-
-		if (status_desc->csd_valid) {
-			OSAL_LOG_INFO("status updated (%d)", i + 1);
-			break;
-		}
+	while (status_desc->csd_valid == 0)
 		osal_yield();
-	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;
 }
 
@@ -345,45 +355,18 @@ compress_read_status(const struct service_info *svc_info)
 	struct pnso_compression_header *cp_hdr;
 	uint16_t datain_len;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
+	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	if (!status_desc) {
-		OSAL_LOG_ERROR("invalid cp status desc! err: %d", err);
-		goto out;
-	}
-	CPDC_PPRINT_STATUS_DESC(status_desc);
 
-	if (!status_desc->csd_valid) {
-		OSAL_LOG_ERROR("valid bit not set! err: %d", err);
+	err = cpdc_common_read_status(cp_desc, status_desc);
+	if (err)
 		goto out;
-	}
-
-	/* bail on success */
-	if (!status_desc->csd_err) {
-		err = PNSO_OK;
-		OSAL_LOG_ERROR("no hw error reported! csd_err: %d err: %d",
-				status_desc->csd_err, err);
-		goto out;
-	}
-	err = status_desc->csd_err;
 
 	/* TODO-cp: handle bypass on fail flag */
-
-	cp_desc = svc_info->si_desc;
-	if (!cp_desc) {
-		OSAL_LOG_ERROR("invalid cp desc! err: %d", err);
-		goto out;
-	}
-
-	if (status_desc->csd_partial_data != cp_desc->cd_status_data) {
-		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u err: %d",
-				cp_desc->cd_status_data,
-				status_desc->csd_partial_data, err);
-		goto out;
-	}
 
 	if (cp_desc->u.cd_bits.cc_enabled &&
 			cp_desc->u.cd_bits.cc_insert_header) {
@@ -420,6 +403,8 @@ compress_read_status(const struct service_info *svc_info)
 		}
 	}
 
+	err = PNSO_OK;
+
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -432,7 +417,7 @@ compress_write_result(struct service_info *svc_info)
 	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -464,7 +449,7 @@ compress_write_result(struct service_info *svc_info)
 	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
 
 	err = PNSO_OK;
-	OSAL_LOG_INFO("exit! status/result update success!");
+	OSAL_LOG_DEBUG("exit! status/result update success!");
 	return err;
 
 out:
@@ -478,14 +463,18 @@ compress_teardown(const struct service_info *svc_info)
 	pnso_error_t err;
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
+	struct per_core_resource *pc_res;
+	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
 	cpdc_release_sgl(svc_info->si_dst_sgl);
 	cpdc_release_sgl(svc_info->si_src_sgl);
 
+	pc_res = svc_info->si_pc_res;
+	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	err = mpool_put_object(cpdc_status_mpool, status_desc);
 	if (err) {
@@ -494,6 +483,7 @@ compress_teardown(const struct service_info *svc_info)
 		OSAL_ASSERT(0);
 	}
 
+	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
 	err = mpool_put_object(cpdc_mpool, cp_desc);
 	if (err) {
@@ -502,7 +492,7 @@ compress_teardown(const struct service_info *svc_info)
 		OSAL_ASSERT(0);
 	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 struct service_ops cp_ops = {

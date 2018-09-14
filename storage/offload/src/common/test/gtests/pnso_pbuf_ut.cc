@@ -241,6 +241,53 @@ TEST_F(pnso_pbuf_test, ut_pbuf_is_buffer_list_sgl) {
 	pbuf_free_buffer_list(src_list);
 }
 
+TEST_F(pnso_pbuf_test, ut_pbuf_pad_flat_buffer_with_zeros) {
+#if 0
+	struct pnso_flat_buffer *flat_buf;
+	uint32_t len, pad_bytes, block_count, block_size;
+
+	OSAL_LOG_INFO("=== %s:", __func__);
+
+	OSAL_LOG_INFO("### ensure right-pad flat buffer (len == block size) ...");
+	len = block_size = 4096;
+	flat_buf = pbuf_alloc_flat_buffer(len);
+	EXPECT_NE(flat_buf, nullptr);
+	EXPECT_NE(flat_buf->buf, 0);
+	EXPECT_EQ(flat_buf->len, len);
+
+	pad_bytes = pbuf_pad_flat_buffer_with_zeros(flat_buf, block_size);
+	EXPECT_EQ(pad_bytes, block_size-len);
+	pbuf_free_flat_buffer(flat_buf);
+
+	OSAL_LOG_INFO("### ensure right-pad flat buffer (len < block size) ...");
+	len = 4096 - 1;
+	block_size  = 4096;
+	flat_buf = pbuf_alloc_flat_buffer(len);
+	EXPECT_NE(flat_buf, nullptr);
+	EXPECT_NE(flat_buf->buf, 0);
+	EXPECT_EQ(flat_buf->len, len);
+
+	pad_bytes = pbuf_pad_flat_buffer_with_zeros(flat_buf, block_size);
+	EXPECT_EQ(pad_bytes, block_size-len);
+	pbuf_free_flat_buffer(flat_buf);
+
+	OSAL_LOG_INFO("### ensure right-pad flat buffer (len > block size) ...");
+	len = 4096 + 1;
+	block_size  = 4096;
+	flat_buf = pbuf_alloc_flat_buffer(len);
+	EXPECT_NE(flat_buf, nullptr);
+	EXPECT_NE(flat_buf->buf, 0);
+	EXPECT_EQ(flat_buf->len, len);
+
+	block_count = pbuf_get_flat_buffer_block_count(flat_buf, block_size);
+	EXPECT_NE(block_count, 0);
+
+	pad_bytes = pbuf_pad_flat_buffer_with_zeros(flat_buf, block_size);
+	EXPECT_EQ(pad_bytes, ((block_count * block_size) - len));
+	EXPECT_EQ(flat_buf->len, len);
+#endif
+}
+
 int main(int argc, char **argv) {
     int ret;
     osal_log_init(OSAL_LOG_LEVEL_INFO);

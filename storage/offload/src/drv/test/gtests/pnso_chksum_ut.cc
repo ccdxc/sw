@@ -92,13 +92,13 @@ ut_chksum_setup_buffer(void) {
 	uint32_t temp_len;
 	uint16_t algo_type;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -255,7 +255,7 @@ ut_chksum_setup_buffer(void) {
 	EXPECT_EQ(chksum_desc->u.cd_bits.cc_src_is_list, 1);
 	/* ------------------------------------------------------------------ */
 
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 void ut_chksum_setup_per_block(void) {
@@ -275,13 +275,13 @@ void ut_chksum_setup_per_block(void) {
 	uint16_t algo_type;
 	char *object;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -713,7 +713,7 @@ void ut_chksum_setup_per_block(void) {
 	/* TODO-chksum: cut reams */
 	/* ------------------------------------------------------------------ */
 
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_chksum_test, ut_chksum_setup) {
@@ -738,13 +738,13 @@ TEST_F(pnso_chksum_test, ut_chksum_schedule) {
 	struct pnso_buffer_list *dst_blist;
 	uint32_t len, count;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -808,7 +808,7 @@ TEST_F(pnso_chksum_test, ut_chksum_schedule) {
 	/* ------------------------------------------------------------------ */
 
 	svc_info.si_ops.teardown(&svc_info);
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_chksum_test, ut_chksum_poll) {
@@ -827,13 +827,13 @@ TEST_F(pnso_chksum_test, ut_chksum_read_status) {
 	struct cpdc_status_desc *status_desc;
 	uint32_t len, count;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -916,7 +916,7 @@ TEST_F(pnso_chksum_test, ut_chksum_read_status) {
 	/* ------------------------------------------------------------------ */
 
 	svc_info.si_ops.teardown(&svc_info);
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_chksum_test, ut_chksum_write_result) {
@@ -932,13 +932,13 @@ TEST_F(pnso_chksum_test, ut_chksum_write_result) {
 	struct cpdc_status_desc *status_desc;
 	uint32_t len, count;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -1016,7 +1016,7 @@ TEST_F(pnso_chksum_test, ut_chksum_write_result) {
 	/* ------------------------------------------------------------------ */
 
 	svc_info.si_ops.teardown(&svc_info);
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 TEST_F(pnso_chksum_test, ut_chksum_teardown) {
@@ -1032,13 +1032,13 @@ TEST_F(pnso_chksum_test, ut_chksum_teardown) {
 	uint32_t len, count;
 	uint16_t temp_flags;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	init_params.cip_version = 0x1234;
 	init_params.cip_qdepth = 16;
 	init_params.cip_block_size = PNSO_BLOCK_SIZE;
 
-	err = cpdc_start_accelerator(&init_params);
+	err = cpdc_init_accelerator(&init_params);
 	EXPECT_EQ(err, PNSO_OK);
 
 	/* use this same setup across UTs */
@@ -1101,7 +1101,7 @@ TEST_F(pnso_chksum_test, ut_chksum_teardown) {
 	OSAL_LOG_INFO("=== TODO-chksum_ut: verify mpool count on cp desc/sgl/etc.");
 	/* ------------------------------------------------------------------ */
 
-	cpdc_stop_accelerator();
+	cpdc_deinit_accelerator();
 }
 
 int main(int argc, char **argv) {

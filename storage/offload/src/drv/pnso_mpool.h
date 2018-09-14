@@ -21,8 +21,14 @@
  * During accelerators' startup and shutdown phase, pool creation and
  * destruction takes place. mpool uses a stack data structure to keep track
  * of free-objects. Callers will have to obtain/pop one object at a time from
- * the stack, and release/push upon its usage.  Current implementation does
- * not enable callers to obtain two or more contiguous objects automatically.
+ * the stack, and release/push upon its usage.
+ *
+ * Current implementation does not enable callers to obtain two or more
+ * contiguous objects automatically.  In some scenarios, HW wants a group of
+ * command/status descriptors in contiguous memory.  As mpool does not provide
+ * this ability, however, mpool can be created such that one object encompasses
+ * several such descriptors.  This gives the ablility to reference a vector/bulk
+ * of such descriptors through object.
  *
  */
 
@@ -45,11 +51,15 @@ extern "C" {
 enum mem_pool_type {
 	MPOOL_TYPE_NONE = 0,
 	MPOOL_TYPE_CPDC_DESC,
+	MPOOL_TYPE_CPDC_DESC_VECTOR,
 	MPOOL_TYPE_CPDC_SGL,
+	MPOOL_TYPE_CPDC_SGL_VECTOR,
 	MPOOL_TYPE_CPDC_STATUS_DESC,
+	MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR,
 	MPOOL_TYPE_XTS_DESC,
 	MPOOL_TYPE_XTS_AOL,
-	MPOOL_TYPE_CHAIN_ENTRY,
+	MPOOL_TYPE_SERVICE_CHAIN,
+	MPOOL_TYPE_SERVICE_CHAIN_ENTRY,
 	MPOOL_TYPE_MAX
 };
 
@@ -156,6 +166,12 @@ uint32_t mpool_get_pad_size(uint32_t object_size, uint32_t align_size);
  *
  */
 void mpool_pprint(const struct mem_pool *mpool);
+
+#ifdef NDEBUG
+#define MPOOL_PPRINT(mpool)
+#else
+#define MPOOL_PPRINT(mpool) mpool_pprint(mpool)
+#endif
 
 #ifdef __cplusplus
 }

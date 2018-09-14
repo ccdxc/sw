@@ -11,14 +11,13 @@
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
+#include "pnso_seq.h"
 
 #ifdef NDEBUG
 #define CPDC_PPRINT_DESC(d)
-#define CPDC_PPRINT_STATUS_DESC(d)
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	PNSO_OK
 #else
 #define CPDC_PPRINT_DESC(d)		cpdc_pprint_desc(d)
-#define CPDC_PPRINT_STATUS_DESC(d)	cpdc_pprint_status_desc(d)
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	validate_setup_input(i, p)
 #endif
 
@@ -108,54 +107,13 @@ validate_setup_input(const struct service_info *svc_info,
 	return PNSO_OK;
 }
 
-static inline struct cpdc_desc *
-get_hash_desc(bool per_block)
-{
-	struct mem_pool *mpool;
-
-	mpool = per_block ? cpdc_bulk_mpool : cpdc_mpool;
-	return (struct cpdc_desc *) mpool_get_object(mpool);
-}
-
-static inline pnso_error_t
-put_hash_desc(bool per_block, struct cpdc_desc *desc)
-{
-	struct mem_pool *mpool;
-
-	mpool = per_block ? cpdc_bulk_mpool : cpdc_mpool;
-	return mpool_put_object(mpool, desc);
-}
-
-static inline struct cpdc_status_desc *
-get_hash_status_desc(bool per_block)
-{
-	struct mem_pool *mpool;
-
-	mpool = per_block ? cpdc_status_bulk_mpool : cpdc_status_mpool;
-	return (struct cpdc_status_desc *) mpool_get_object(mpool);
-}
-
-static inline pnso_error_t
-put_hash_status_desc(bool per_block, struct cpdc_status_desc *desc)
-{
-	struct mem_pool *mpool;
-
-	mpool = per_block ? cpdc_status_bulk_mpool : cpdc_status_mpool;
-	return mpool_put_object(mpool, desc);
-}
-
-static inline uint32_t
-get_block_count(const struct pnso_flat_buffer *buf, uint32_t block_size)
-{
-	return (buf->len + (block_size - 1)) / block_size;
-}
-
 static void
-fill_hash_desc(enum pnso_hash_type algo_type, uint32_t buf_len, bool flat_buf,
-		void *src_buf, struct cpdc_desc *desc,
-		struct cpdc_status_desc *status_buf)
+fill_hash_desc(enum pnso_hash_type algo_type, uint32_t buf_len,
+		bool flat_buf, void *src_buf,
+		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc)
 {
 	memset(desc, 0, sizeof(*desc));
+	memset(status_desc, 0, sizeof(*status_desc));
 
 	desc->cd_src = (uint64_t) osal_virt_to_phy(src_buf);
 
@@ -175,7 +133,7 @@ fill_hash_desc(enum pnso_hash_type algo_type, uint32_t buf_len, bool flat_buf,
 	}
 
 	desc->cd_datain_len = buf_len;
-	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_buf);
+	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_HASH_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
@@ -194,7 +152,7 @@ fill_hash_desc_per_block(enum pnso_hash_type algo_type,
 	uint32_t desc_object_size, status_object_size, pad_size;
 	uint32_t i, len, block_cnt, buf_len;
 
-	block_cnt = get_block_count(interm_fbuf, block_size);
+	block_cnt = pbuf_get_flat_buffer_block_count(interm_fbuf, block_size);
 	desc = hash_desc;
 	st_desc = status_desc;
 
@@ -240,11 +198,12 @@ hash_setup(struct service_info *svc_info,
 	struct pnso_hash_desc *pnso_hash_desc;
 	struct cpdc_desc *hash_desc;
 	struct cpdc_status_desc *status_desc;
+	struct per_core_resource *pc_res;
 	size_t src_blist_len;
 	bool per_block;
 	uint16_t flags;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	/* TODO-hash: validate interm_fbuf */
 	err = CPDC_VALIDATE_SETUP_INPUT(svc_info, svc_params);
@@ -260,7 +219,8 @@ hash_setup(struct service_info *svc_info,
 	flags = pnso_hash_desc->flags;
 	per_block = is_dflag_per_block_enabled(flags);
 
-	hash_desc = get_hash_desc(per_block);
+	pc_res = svc_info->si_pc_res;
+	hash_desc = cpdc_get_desc(pc_res, per_block);
 	if (!hash_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain hash desc from pool err: %d!",
@@ -268,7 +228,7 @@ hash_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	status_desc = get_hash_status_desc(per_block);
+	status_desc = cpdc_get_status_desc(pc_res, per_block);
 	if (!status_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain hash status desc from pool! err: %d",
@@ -276,24 +236,29 @@ hash_setup(struct service_info *svc_info,
 		goto out_hash_desc;
 	}
 
-	if (!per_block) {
-		err = cpdc_update_service_info_params(svc_info, svc_params);
+	if (per_block) {
+		err = cpdc_update_service_info_sgls(svc_info, svc_params);
 		if (err) {
 			OSAL_LOG_ERROR("cannot obtain hash src/dst sgl from pool! err: %d",
 					err);
 			goto out_status_desc;
 		}
-	}
 
-	if (per_block) {
 		src_blist_len = svc_params->sp_interm_fbuf->len;
 		fill_hash_desc_per_block(pnso_hash_desc->algo_type,
 				svc_info->si_block_size, src_blist_len,
 				svc_info->si_interm_fbuf,
 				hash_desc, status_desc);
 	} else {
+		err = cpdc_update_service_info_sgl(svc_info, svc_params);
+		if (err) {
+			OSAL_LOG_ERROR("cannot obtain hash src sgl from pool! err: %d",
+					err);
+			goto out_status_desc;
+		}
 		src_blist_len =
 			pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+
 		fill_hash_desc(pnso_hash_desc->algo_type, src_blist_len, false,
 				svc_info->si_src_sgl, hash_desc, status_desc);
 	}
@@ -303,21 +268,30 @@ hash_setup(struct service_info *svc_info,
 	svc_info->si_desc = hash_desc;
 	svc_info->si_status_desc = status_desc;
 
-	/* TODO-hash: add seq stuff here */
+	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
+		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
+				hash_desc, sizeof(*hash_desc));
+		if (!svc_info->si_seq_info.sqi_desc) {
+			err = EINVAL;
+			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+			goto out_status_desc;
+		}
+	}
 
 	err = PNSO_OK;
-	OSAL_LOG_INFO("exit! service initialized!");
+	OSAL_LOG_DEBUG("exit! service initialized!");
 	return err;
 
 out_status_desc:
-	err = put_hash_status_desc(per_block, status_desc);
+	err = cpdc_put_status_desc(pc_res, per_block, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
 		OSAL_ASSERT(0);
 	}
 out_hash_desc:
-	err = put_hash_desc(per_block, hash_desc);
+	err = cpdc_put_desc(pc_res, per_block, hash_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return hash desc to pool! err: %d",
 				err);
@@ -333,19 +307,18 @@ hash_chain(struct chain_entry *centry)
 {
 	pnso_error_t err;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(centry);
 
 	err = cpdc_common_chain(centry);
 	if (err) {
-		/* TODO-cp: revisit */
-		OSAL_LOG_INFO("failed to chain err: %d", err);
+		OSAL_LOG_ERROR("failed to chain err: %d", err);
 		goto out;
 	}
 
 out:
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 
@@ -353,50 +326,44 @@ static pnso_error_t
 hash_schedule(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
+	const struct sequencer_info *seq_info;
 	bool ring_db;
 
-	OSAL_LOG_INFO("enter ... ");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
 	ring_db = (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 		(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE);
 	if (ring_db) {
-		/* TODO-cp: add db ringing logic here */
 		OSAL_LOG_INFO("ring door bell <===");
+
+		seq_info = &svc_info->si_seq_info;
+		seq_ring_db(svc_info, seq_info->sqi_index);
+
 		err = PNSO_OK;
 	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
 
 static pnso_error_t
 hash_poll(const struct service_info *svc_info)
 {
-	uint32_t i;
-	struct cpdc_status_desc *status_desc;
+	volatile struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
 
-#define PNSO_UT_NUM_POLL 5	/* TODO-hash: */
-	for (i = 0; i < PNSO_UT_NUM_POLL; i++) {
-		OSAL_LOG_INFO("status updated (%d) status_desc: %p",
-				i + 1, status_desc);
-
-		if (status_desc->csd_valid) {
-			OSAL_LOG_INFO("status updated (%d)", i + 1);
-			break;
-		}
+	while (status_desc->csd_valid == 0)
 		osal_yield();
-	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;
 }
 
@@ -409,47 +376,22 @@ hash_read_status_per_block(const struct service_info *svc_info)
 static pnso_error_t
 hash_read_status_buffer(const struct service_info *svc_info)
 {
-	pnso_error_t err = EINVAL;
+	pnso_error_t err;
 	struct cpdc_desc *hash_desc;
 	struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
+	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	if (!status_desc) {
-		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
-		goto out;
-	}
-	CPDC_PPRINT_STATUS_DESC(status_desc);
 
-	if (!status_desc->csd_valid) {
-		OSAL_LOG_ERROR("valid bit not set! err: %d", err);
+	err = cpdc_common_read_status(hash_desc, status_desc);
+	if (err)
 		goto out;
-	}
-
-	if (status_desc->csd_err) {
-		OSAL_LOG_ERROR("hw error reported! csd_err: %d err: %d",
-				status_desc->csd_err, err);
-		goto out;
-	}
-
-	hash_desc = svc_info->si_desc;
-	if (!hash_desc) {
-		OSAL_LOG_ERROR("invalid hash desc! err: %d", err);
-		goto out;
-	}
-
-	if (status_desc->csd_partial_data != hash_desc->cd_status_data) {
-		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u err: %d",
-				hash_desc->cd_status_data,
-				status_desc->csd_partial_data, err);
-		goto out;
-	}
 
 	/* TODO-hash: verify SHA, etc.  */
 
-	err = PNSO_OK;
-	OSAL_LOG_INFO("exit! status verification success!");
+	OSAL_LOG_DEBUG("exit! status verification success!");
 	return err;
 
 out:
@@ -463,7 +405,7 @@ hash_read_status(const struct service_info *svc_info)
 	pnso_error_t err = EINVAL;
 	bool per_block;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -488,7 +430,7 @@ hash_write_result_buffer(struct service_info *svc_info)
 	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -523,7 +465,7 @@ hash_write_result_buffer(struct service_info *svc_info)
 			PNSO_HASH_TAG_LEN);
 
 	err = PNSO_OK;
-	OSAL_LOG_INFO("exit! status/result update success!");
+	OSAL_LOG_DEBUG("exit! status/result update success!");
 	return err;
 
 out:
@@ -537,7 +479,7 @@ hash_write_result(struct service_info *svc_info)
 	pnso_error_t err;
 	bool per_block;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
@@ -555,14 +497,15 @@ hash_teardown(const struct service_info *svc_info)
 	pnso_error_t err;
 	struct cpdc_desc *hash_desc;
 	struct cpdc_status_desc *status_desc;
+	struct per_core_resource *pc_res;
 	bool per_block;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 
 	per_block = is_dflag_per_block_enabled(svc_info->si_desc_flags);
-	OSAL_LOG_INFO("hash_desc: %p flags: %d", svc_info->si_desc,
+	OSAL_LOG_DEBUG("hash_desc: %p flags: %d", svc_info->si_desc,
 			svc_info->si_desc_flags);
 
 	if (!per_block) {
@@ -570,8 +513,9 @@ hash_teardown(const struct service_info *svc_info)
 		cpdc_release_sgl(svc_info->si_src_sgl);
 	}
 
+	pc_res = svc_info->si_pc_res;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	err = put_hash_status_desc(per_block, status_desc);
+	err = cpdc_put_status_desc(pc_res, per_block, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
@@ -579,14 +523,14 @@ hash_teardown(const struct service_info *svc_info)
 	}
 
 	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = put_hash_desc(per_block, hash_desc);
+	err = cpdc_put_desc(pc_res, per_block, hash_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return hash desc to pool! err: %d",
 				err);
 		OSAL_ASSERT(0);
 	}
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 struct service_ops hash_ops = {

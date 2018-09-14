@@ -13,10 +13,6 @@
 extern "C" {
 #endif
 
-/* TODO-pbuf: Move this to pnso_globals.h/PNSO_MEM_ALIGN_PAGE for 4K */
-#define PNSO_MEM_ALIGN_BUF	256
-#define PNSO_MEM_ALIGN_PAGE	4096
-
 /**
  * pbuf_alloc_flat_buffer() - allocates and returns a pointer to a
  * 'pnso_flat_buffer'.
@@ -190,6 +186,89 @@ void pbuf_convert_buffer_list_v2p(struct pnso_buffer_list *buf_list);
  *
  */
 void pbuf_convert_flat_buffer_v2p(struct pnso_flat_buffer *flat_buf);
+
+/**
+ * pbuf_convert_buffer_list_p2v() - converts physical address of the buffer
+ * within each of one of the flat buffers to its virtual address.
+ * @buf_list:	[in]	specifies the pointer to a pnso_buffer_list.
+ *
+ * This function walks through the list of flat buffers, and converts physical
+ * address of the buffers to virtual address.  This function assumes the input
+ * members of pnso_buffer_list is valid.
+ *
+ * Return Value:
+ *	None
+ *
+ */
+void pbuf_convert_buffer_list_p2v(struct pnso_buffer_list *buf_list);
+
+/**
+ * pbuf_convert_flat_buffer_p2v() - converts physical address of a flat buffer
+ * within pnso_flat_buf to its virtual address.
+ * @flat_buf:	[in]	specifies the pointer to a pnso_flat_buffer.
+ *
+ * This function converts the physical address of the flat buffer to virtual
+ * address.  This function assumes the input members of pnso_flat_buffer is
+ * valid.
+ *
+ * Return Value:
+ *	None
+ *
+ */
+void pbuf_convert_flat_buffer_p2v(struct pnso_flat_buffer *flat_buf);
+
+/**
+ * pbuf_get_flat_buffer_block_count() - returns the number of blocks in a flat
+ * buffer, based on total length of the flat buffer.
+ * @flat_buf:	[in]	specifies the pointer to a pnso_flat_buffer.
+ * @block_size:	[in]	specifies the maximum length of a block in bytes.
+ *
+ * This function computes the number of blocks in a flat buffer using the total
+ * length of flat buffer. This function assumes the input members of
+ * pnso_flat_buffer is valid.
+ *
+ * Return Value:
+ *	- number of blocks in a flat buffer
+ *
+ */
+uint32_t pbuf_get_flat_buffer_block_count(
+		const struct pnso_flat_buffer *flat_buf, uint32_t block_size);
+
+/**
+ * pbuf_get_flat_buffer_block_len() - returns the length of data of a specified
+ * block, based on total length of the flat buffer.
+ * @flat_buf:	[in]	specifies the pointer to a pnso_flat_buffer.
+ * @block_idx:	[in]	specifies the position/index of a block within the flat
+ *			buffer for which the length of data need to be found.
+ * @block_size:	[in]	specifies the maximum length of a block in bytes.
+ *
+ * This function computes the number of bytes as length of data in a requested
+ * block, using the size of block and total length of the flat buffer. This
+ * function assumes the input members of pnso_flat_buffer is valid.
+ *
+ * Return Value:
+ *	- number of bytes within a specified block
+ *
+ */
+uint32_t pbuf_get_flat_buffer_block_len(const struct pnso_flat_buffer *flat_buf,
+		uint32_t block_idx, uint32_t block_size);
+
+/**
+ * pbuf_pad_flat_buffer_with_zeros() - pads the flat buffer with zeros from the
+ * actual buffer length till the remainder of the block.
+ * @flat_buf:	[in]	specifies the pointer to a pnso_flat_buffer.
+ * @block_size:	[in]	specifies the maximum length of a block in bytes.
+ *
+ * This function computes the number of bytes to right-pad with zeros till the
+ * end of the block in the flat buffer. This function assumes the input members
+ * of pnso_flat_buffer is valid.
+ *
+ * Return Value:
+ *	- number of bytes padded with zeros
+ *
+ */
+uint32_t pbuf_pad_flat_buffer_with_zeros(struct pnso_flat_buffer *flat_buf,
+		uint32_t block_size);
 
 /**
  * pbuf_pprint_buffer_list() - prints details of the pnso_buffer_list.

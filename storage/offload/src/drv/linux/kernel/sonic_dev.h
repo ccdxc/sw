@@ -25,6 +25,9 @@
 #include "storage_seq_common.h"
 #include "accel_dev_if.h"
 
+#include "pnso_api.h"
+#include "pnso_mpool.h"
+
 #pragma pack(push, 1)
 
 union dev_cmd {
@@ -302,7 +305,8 @@ struct per_core_resource {
 	unsigned int num_crypto_status_qs;
 	DECLARE_BITMAP(crypto_seq_status_qs_bmp, MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES);
 	struct queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
-	// TODO - Add any mpool handles here
+
+	struct mem_pool *mpools[MPOOL_TYPE_MAX];
 };
 
 struct res {
@@ -377,8 +381,7 @@ void sonic_q_free(struct lif *lif, struct queue *q);
 int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 unsigned int index, const char *base, unsigned int num_descs,
 		 size_t desc_size, unsigned int pid);
-void sonic_q_map(struct queue *q, unsigned int num_descs,
-		unsigned int desc_size, void *base, dma_addr_t base_pa);
+void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa);
 void sonic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		  void *cb_arg);
 void sonic_q_rewind(struct queue *q, struct desc_info *start);

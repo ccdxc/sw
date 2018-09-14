@@ -30,6 +30,9 @@
 #include "osal_sys.h"
 #include "osal_mem.h"
 
+#include "pnso_cpdc.h"
+#include "pnso_xts.h"
+
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 				 void *cb_arg)
 {
@@ -102,7 +105,6 @@ int sonic_q_alloc(struct lif *lif, struct queue *q,
 			sonic_q_free(lif, q);
 			return -ENOMEM;
 		}
-		sonic_q_map(q, num_descs, desc_size, q->base, q->base_pa);
 	}
 
 	return 0;
@@ -180,7 +182,7 @@ static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
 	cq_base = (void *)ALIGN((uintptr_t)q_base + q_size, PAGE_SIZE);
 	cq_base_pa = ALIGN(q_base_pa + q_size, PAGE_SIZE);
 
-	sonic_q_map(&new->q, num_descs, desc_size, q_base, q_base_pa);
+	sonic_q_map(&new->q, q_base, q_base_pa);
 	sonic_cq_map(&new->cq, cq_base, cq_base_pa);
 	sonic_cq_bind(&new->cq, &new->q);
 
@@ -385,7 +387,10 @@ static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
 		sonic_cpdc_qs_deinit(lif->res.pc_res[i]);
+		cpdc_deinit_accelerator(lif->res.pc_res[i]);
+
 		sonic_crypto_qs_deinit(lif->res.pc_res[i]);
+		xts_deinit_accelerator(lif->res.pc_res[i]);
 	}
 }
 
@@ -479,6 +484,7 @@ static int sonic_cpdc_q_init(struct per_core_resource *res, struct queue *q,
 	q->pc_res = res;
 	q->qtype = STORAGE_SEQ_QTYPE_SQ;
 	q->qgroup = qgroup;
+	sonic_q_map(q, q->base, q->base_pa);
 
 	return err;
 }
@@ -595,6 +601,7 @@ static int sonic_crypto_q_init(struct per_core_resource *res,
 	q->pc_res = res;
 	q->qtype = STORAGE_SEQ_QTYPE_SQ;
 	q->qgroup = qgroup;
+	sonic_q_map(q, q->base, q->base_pa);
 
 	return err;
 }
@@ -655,12 +662,16 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 					    int seq_q_count)
 {
 	int err;
+	struct cpdc_init_params cpdc_init_params;
+	struct xts_init_params xts_init_params;
 
 	/* Initialize local driver structures */
 	res->lif = lif;
+
 	err = sonic_cpdc_qs_init(res, seq_q_count / 2);
 	if (err)
 		goto done;
+
 	err = sonic_crypto_qs_init(res, seq_q_count / 2);
 	if (err)
 		goto done;
@@ -669,6 +680,7 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	err = sonic_lif_cpdc_seq_qs_init(res);
 	if (err)
 		goto done;
+
 	err = sonic_lif_crypto_seq_qs_init(res);
 	if (err)
 		goto done;
@@ -676,7 +688,16 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	err = sonic_lif_cpdc_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
 	if (err)
 		goto done;
+
 	err = sonic_lif_crypto_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
+	if (err)
+		goto done;
+
+	err = cpdc_init_accelerator(&cpdc_init_params, res);
+	if (err)
+		goto done;
+
+	err = xts_init_accelerator(&xts_init_params, res);
 	if (err)
 		goto done;
 

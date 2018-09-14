@@ -9,14 +9,8 @@ struct pnso_compression_header {
 	uint16_t version;
 };
 
-extern struct mem_pool *cpdc_mpool;
-extern struct mem_pool *cpdc_sgl_mpool;
-extern struct mem_pool *cpdc_status_mpool;
-
-extern struct mem_pool *cpdc_bulk_mpool;
-extern struct mem_pool *cpdc_status_bulk_mpool;
-
 #define MAX_CPDC_SRC_BUF_LEN	(1 << 16)
+#define MAX_CPDC_DST_BUF_LEN	MAX_CPDC_SRC_BUF_LEN
 
 /* status reported by hardware */
 #define CP_STATUS_SUCCESS		0
@@ -39,17 +33,37 @@ pnso_error_t cpdc_common_chain(struct chain_entry *centry);
 
 void cpdc_common_teardown(void *desc);
 
+pnso_error_t cpdc_common_read_status(struct cpdc_desc *desc,
+		struct cpdc_status_desc *status_desc);
+
 void cpdc_pprint_desc(const struct cpdc_desc *desc);
 
 void cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc);
 
-pnso_error_t cpdc_update_service_info_params(struct service_info *svc_info,
+pnso_error_t cpdc_update_service_info_sgl(struct service_info *svc_info,
+		const struct service_params *svc_params);
+
+pnso_error_t cpdc_update_service_info_sgls(struct service_info *svc_info,
 		const struct service_params *svc_params);
 
 void cpdc_populate_buffer_list(struct cpdc_sgl *sgl,
 		struct pnso_buffer_list *buf_list);
 
 void cpdc_release_sgl(struct cpdc_sgl *sgl);
+
+struct cpdc_desc *
+cpdc_get_desc(struct per_core_resource *pc_res, bool per_block);
+
+pnso_error_t
+cpdc_put_desc(struct per_core_resource *pc_res, bool per_block,
+		struct cpdc_desc *desc);
+
+struct cpdc_status_desc *
+cpdc_get_status_desc(struct per_core_resource *pc_res, bool per_block);
+
+pnso_error_t
+cpdc_put_status_desc(struct per_core_resource *pc_res, bool per_block,
+		struct cpdc_status_desc *desc);
 
 pnso_error_t cpdc_convert_desc_error(int error);
 

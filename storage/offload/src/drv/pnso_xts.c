@@ -10,13 +10,14 @@
 #include "pnso_xts.h"
 
 pnso_error_t
-xts_start_accelerator(const struct xts_init_params *init_params)
+xts_init_accelerator(const struct xts_init_params *init_params,
+		struct per_core_resource *pc_res)
 {
-	return EOPNOTSUPP;
+	return PNSO_OK;	/* EOPNOTSUPP */
 }
 
 void
-xts_stop_accelerator(void)
+xts_deinit_accelerator(struct per_core_resource *pc_res)
 {
 	/* EOPNOTSUPP */
 }

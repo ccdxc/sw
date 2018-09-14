@@ -265,33 +265,97 @@ void
 pbuf_convert_buffer_list_v2p(struct pnso_buffer_list *buf_list)
 {
 	void *ptr;
-	uint64_t addr;
 	uint32_t i;
 
 	if (!buf_list)
 		return;
 
-	i = 0;
 	for (i = 0; i < buf_list->count; i++) {
 		ptr = (void *) buf_list->buffers[i].buf;
-		addr = (uint64_t) osal_virt_to_phy(ptr);
-		buf_list->buffers[i].buf = addr;
-		i++;
+		buf_list->buffers[i].buf = osal_virt_to_phy(ptr);
 	}
 }
 
 void
 pbuf_convert_flat_buffer_v2p(struct pnso_flat_buffer *flat_buf)
 {
-	uint64_t addr;
 	void *ptr;
 
 	if (!flat_buf)
 		return;
 
 	ptr = (void *) flat_buf->buf;
-	addr = (uint64_t) osal_virt_to_phy(ptr);
-	flat_buf->buf = addr;
+	flat_buf->buf = osal_virt_to_phy(ptr);
+}
+
+void
+pbuf_convert_buffer_list_p2v(struct pnso_buffer_list *buf_list)
+{
+	void *ptr;
+	uint32_t i;
+
+	if (!buf_list)
+		return;
+
+	for (i = 0; i < buf_list->count; i++) {
+		ptr = osal_phy_to_virt(buf_list->buffers[i].buf);
+		buf_list->buffers[i].buf = (uint64_t) ptr;
+	}
+}
+
+void
+pbuf_convert_flat_buffer_p2v(struct pnso_flat_buffer *flat_buf)
+{
+	void *ptr;
+
+	if (!flat_buf)
+		return;
+
+	ptr = osal_phy_to_virt(flat_buf->buf);
+	flat_buf->buf = (uint64_t) ptr;
+}
+
+inline uint32_t
+pbuf_get_flat_buffer_block_count(const struct pnso_flat_buffer *flat_buf,
+		uint32_t block_size)
+{
+	return (flat_buf->len + (block_size - 1)) / block_size;
+}
+
+inline uint32_t
+pbuf_get_flat_buffer_block_len(const struct pnso_flat_buffer *flat_buf,
+		uint32_t block_idx, uint32_t block_size)
+{
+	uint32_t len;
+
+	if (flat_buf->len >= (block_size * (block_idx + 1)))
+		len = block_size;
+	else if (flat_buf->len >= (block_size * block_idx))
+		len = flat_buf->len % block_size;
+	else
+		len = 0;
+
+	return len;
+}
+
+uint32_t
+pbuf_pad_flat_buffer_with_zeros(struct pnso_flat_buffer *flat_buf,
+		uint32_t block_size)
+{
+	uint32_t block_count, pad_len;
+
+	block_count = pbuf_get_flat_buffer_block_count(flat_buf, block_size);
+
+	pad_len = block_size -
+		pbuf_get_flat_buffer_block_len(flat_buf, block_count - 1,
+				block_size);
+
+	if (pad_len) {
+		memset((uint8_t *) (flat_buf->buf + flat_buf->len), 0, pad_len);
+		flat_buf->len += pad_len;
+	}
+
+	return pad_len;
 }
 
 void

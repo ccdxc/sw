@@ -116,9 +116,16 @@ struct service_ops {
 	void (*teardown)(const struct service_info *svc_info);
 };
 
+struct sequencer_info {
+	uint32_t sqi_ring_id;	/* CPDC hot/cold, XTS, etc.  */
+	uint16_t sqi_qtype;
+	uint16_t sqi_index;
+	void *sqi_desc;      /* sequencer descriptor */
+};
+
 struct service_info {
 	uint8_t si_type;
-	uint8_t	si_flags;
+	uint8_t	si_flags;		/* service flags (SFLAGS) */
 
 	uint16_t si_block_size;
 	uint16_t si_desc_flags;		/* caller supplied desc flags */
@@ -131,9 +138,12 @@ struct service_info {
 	struct cpdc_sgl	*si_src_sgl;	/* src input buffer converted to sgl */
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
 
+	struct sequencer_info si_seq_info;
+
+	struct per_core_resource *si_pc_res;	/* to access lif/pool/etc. */
+
 	struct service_ops si_ops;
 	struct pnso_service_status *si_svc_status;
-	/* TODO-chain: add sequencer_info, etc. */
 };
 
 struct chain_entry {
@@ -148,6 +158,8 @@ struct service_chain {
 	struct chain_entry *sc_entry;	/* list of services */
 	struct pnso_service_result *sc_res;	/* caller supplied result */
 
+	struct per_core_resource *sc_pc_res;	/* to access pool/etc. */
+
 	completion_cb_t	sc_req_cb;	/* caller supplied call-back */
 	void *sc_req_cb_ctx;		/* caller supplied cb context */
 	pnso_poll_fn_t *sc_req_poll_fn;	/* poller to run in caller's thread */
@@ -155,8 +167,9 @@ struct service_chain {
 };
 
 /**
- * chn_create_chain() - creates a chain structure with the specified list of
- * service chained in order and caches the user supplied parameters.
+ * chn_build_chain() - builds a chain structure using the list of user-
+ * supplied services' request/result information and caches other input
+ * parameters.
  * @svc_req:		[in]	specifies a set of service requests that to be
  *				used to complete the services within the
  *				request.
@@ -170,8 +183,6 @@ struct service_chain {
  * @pnso_poll_fn:	[in]	specifies the polling function, which the caller
  *				will use to poll for completion of the request.
  * @pnso_poll_ctx:	[in]	specifies the context for the polling function.
- * @out_chain:		[out]	specifies a chain structure comprising list of
- *				services that are chained in the user specified
  *				order.
  *
  * Return Value:
@@ -180,25 +191,10 @@ struct service_chain {
  *	EINVAL - on invalid input parameters
  *
  */
-pnso_error_t chn_create_chain(struct pnso_service_request *svc_req,
+pnso_error_t chn_build_chain(struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res,
-		completion_cb_t cb,
-		void *cb_ctx,
-		void *pnso_poll_fn,
-		void *pnso_poll_ctx,
-		struct service_chain **out_chain);
-
-/**
- * chn_build_service_chain() - initializes the services within the chain.
- * @chain:	[in]	specifies the chain structure.
- *
- * Return Value:
- *	PNSO_OK	- on success
- *	ENOMEM - on failing to allocate memory
- *	EINVAL - on invalid input parameters
- *
- */
-pnso_error_t chn_build_service_chain(struct service_chain *chain);
+		completion_cb_t cb, void *cb_ctx,
+		void *pnso_poll_fn, void *pnso_poll_ctx);
 
 /**
  * chn_execute_chain() - notifies the hardware to process the first service
