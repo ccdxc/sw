@@ -76,28 +76,22 @@ OSAL_LICENSE("Dual BSD/GPL");
 
 static struct thread_state osal_test_threads[PNSO_TEST_THREAD_COUNT];
 
-#define MAX_NUM_THREADS 128
-static uint8_t thread_id_arr[MAX_NUM_THREADS];
-static osal_atomic_int_t thread_done[MAX_NUM_THREADS];
-static int nthreads;
-static osal_thread_t ot[MAX_NUM_THREADS];
-
 static void
 comp_cb(void *arg1, struct pnso_service_result *svc_res)
 {
 	struct req_state *rstate = (struct req_state *) arg1;
 
 	/* TODO: iterate through every service */
-	OSAL_LOG_INFO("IO: Request(svc %u) completed, err %d, svc_count %u, core %d\n",
+	OSAL_LOG_INFO("IO: Request(svc %u) completed, err %d, svc_count %u, core %d",
 		 svc_res->svc[0].svc_type, svc_res->err, svc_res->num_services,
 		 osal_get_coreid());
 	if (osal_get_coreid() != rstate->tstate->wafl_thread.core_id) {
-		OSAL_LOG_ERROR("IO: ERROR: sim worker running on wrong core.\n");
+		OSAL_LOG_ERROR("IO: ERROR: worker thread running on wrong core.");
 	}
 
 #if 0
-	OSAL_LOG_INFO("IO: Final svc status is %u\n", svc_res->svc[2].err);
-	OSAL_LOG_INFO("IO: Final length is %d\n",
+	OSAL_LOG_INFO("IO: Final svc status is %u", svc_res->svc[2].err);
+	OSAL_LOG_INFO("IO: Final length is %d",
 			svc_res->svc[2].u.dst.data_len);
 #endif
 
@@ -185,7 +179,7 @@ submit_requests(struct thread_state *tstate)
 					 comp_cb, rstate,
 					 NULL, NULL);
 		if (rc != 0) {
-			OSAL_LOG_ERROR("pnso_submit_request(svc %u) failed with %d\n",
+			OSAL_LOG_ERROR("pnso_submit_request(svc %u) failed with %d",
 				 svc_req->svc[0].svc_type, rc);
 			return rc;
 		}
@@ -279,7 +273,7 @@ verify_hash_req_result(void)
 			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_HASH) {
 				if (svc_res->svc[0].u.hash.num_tags) {
 					count++;
-					OSAL_LOG_INFO("IO: Hash done!  num_tags: %d count: %lu\n",
+					OSAL_LOG_INFO("IO: Hash done!  num_tags: %d count: %lu",
 						    svc_res->svc[0].u.hash.num_tags, count);
 				}
 			}
@@ -342,7 +336,7 @@ verify_chksum_req_result(void)
 			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_CHKSUM) {
 				if (svc_res->svc[0].u.chksum.num_tags) {
 					count++;
-					OSAL_LOG_INFO("IO: Checksum done!  num_tags: %d count: %lu\n",
+					OSAL_LOG_INFO("IO: Checksum done!  num_tags: %d count: %lu",
 						    svc_res->svc[0].u.chksum.num_tags, count);
 				}
 			}
@@ -406,14 +400,14 @@ exec_req(void *arg)
 	int local_core_id = osal_get_coreid();
 
 	/* Prep the polling thread */
-	OSAL_LOG_INFO("PNSO: starting worker thread on core %d\n",
+	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
 		 osal_get_coreid());
 
 #if ENABLE_CPDC_REQ
 	/* Submit compression requests */
 	rc = exec_cp_req(tstate);
 	if (rc != 0) {
-		OSAL_LOG_ERROR("PNSO: Compression request submit FAILED\n");
+		OSAL_LOG_ERROR("PNSO: Compression request submit FAILED");
 		goto error;
 	}
 	while (1) {
@@ -425,11 +419,11 @@ exec_req(void *arg)
 			break;
 		}
 	}
-	OSAL_LOG_INFO("PNSO: Compression requests done, core %d\n",
+	OSAL_LOG_INFO("PNSO: Compression requests done, core %d",
 		 osal_get_coreid());
 	osal_yield();
 	if (osal_get_coreid() != local_core_id) {
-		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly\n");
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
 		rc = EINVAL;
 		goto error;
 	}
@@ -437,7 +431,7 @@ exec_req(void *arg)
 	/* Submit decompression requests */
 	rc = exec_dc_req(tstate);
 	if (rc != 0) {
-		OSAL_LOG_ERROR("PNSO: Decompression request submit FAILED\n");
+		OSAL_LOG_ERROR("PNSO: Decompression request submit FAILED");
 		goto error;
 	}
 	while (1) {
@@ -449,11 +443,11 @@ exec_req(void *arg)
 			break;
 		}
 	}
-	OSAL_LOG_INFO("PNSO: Decompression requests done, core %d\n",
+	OSAL_LOG_INFO("PNSO: Decompression requests done, core %d",
 		 osal_get_coreid());
 	osal_yield();
 	if (osal_get_coreid() != local_core_id) {
-		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly\n");
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
 		rc = EINVAL;
 		goto error;
 	}
@@ -463,7 +457,7 @@ exec_req(void *arg)
 	/* Submit hash requests */
 	rc = exec_hash_req(tstate);
 	if (rc != 0) {
-		OSAL_LOG_ERROR("PNSO: Hash request submit FAILED\n");
+		OSAL_LOG_ERROR("PNSO: Hash request submit FAILED");
 		goto error;
 	}
 	while (1) {
@@ -475,11 +469,11 @@ exec_req(void *arg)
 			break;
 		}
 	}
-	OSAL_LOG_INFO("PNSO: Hash requests done, core %d\n",
+	OSAL_LOG_INFO("PNSO: Hash requests done, core %d",
 		 osal_get_coreid());
 	osal_yield();
 	if (osal_get_coreid() != local_core_id) {
-		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly\n");
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
 		rc = EINVAL;
 		goto error;
 	}
@@ -489,7 +483,7 @@ exec_req(void *arg)
 	/* Submit chksum requests */
 	rc = exec_chksum_req(tstate);
 	if (rc != 0) {
-		OSAL_LOG_ERROR("PNSO: Checksum request submit FAILED\n");
+		OSAL_LOG_ERROR("PNSO: Checksum request submit FAILED");
 		goto error;
 	}
 	while (1) {
@@ -501,21 +495,21 @@ exec_req(void *arg)
 			break;
 		}
 	}
-	OSAL_LOG_INFO("PNSO: Checksum requests done, core %d\n",
+	OSAL_LOG_INFO("PNSO: Checksum requests done, core %d",
 		 osal_get_coreid());
 	osal_yield();
 	if (osal_get_coreid() != local_core_id) {
-		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly\n");
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
 		rc = EINVAL;
 		goto error;
 	}
 #endif
 
-	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d\n", osal_get_coreid());
+	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d", osal_get_coreid());
 	return 0;
 
 error:
-	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d\n",
+	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
 		       local_core_id, osal_get_coreid());
 	return rc;
 }
@@ -554,62 +548,6 @@ init_cp_hdr_fmt(void)
 						 PNSO_TEST_CP_HDR_ALGO_VER);
 }
 
-static int
-thread_test_fn(void *arg)
-{
-	int core = osal_get_coreid();
-	int id = (int)((uint64_t)arg);
-
-	thread_id_arr[nthreads++] = core;
-#ifndef __KERNEL__
-	OSAL_ASSERT(core == osal_get_coreid());
-#endif
-	if (core != osal_get_coreid()) {
-		OSAL_LOG_ERROR("Core id mismatch\n");
-		return EINVAL;
-	}
-
-	osal_atomic_set(&thread_done[id], 1);
-	return 0;
-}
-
-static int
-osal_thread_test(void)
-{
-	int done = 0;
-	void *arg = NULL;
-	int i, rv;
-	int max_threads = osal_get_core_count();
-
-	for (i = 0; i < max_threads; i++) {
-		arg = (void *)((uint64_t)i);
-		if ((rv = osal_thread_create(&ot[i], thread_test_fn,
-					     arg)) == 0) {
-			if ((rv = osal_thread_bind(&ot[i], i)) == 0)
-				rv = osal_thread_start(&ot[i]);
-		}
-		if (rv != 0)
-			return rv;
-
-		do {
-			done = osal_atomic_read(&thread_done[i]);
-			osal_yield();
-		} while (done != 1);
-	}
-
-	for (i = 0; i < max_threads; i++) {
-		rv = osal_thread_stop(&ot[i]);
-		if (rv != 0)
-			return rv;
-
-#ifndef __KERNEL__
-		OSAL_ASSERT(thread_id_arr[i] == (i + thread_id_arr[0]));
-#endif
-	}
-
-	return 0;
-}
-
 int __attribute__((unused))
 body(void)
 {
@@ -625,16 +563,16 @@ body(void)
 	init_params.block_size = PNSO_TEST_BLOCK_SIZE;
 
 	if ((rv = init_crypto()) != 0) {
-		OSAL_LOG_ERROR("PNSO: init_crypto failed\n");
+		OSAL_LOG_ERROR("PNSO: init_crypto failed");
 		goto finit;
 	}
 
 	if ((rv = init_cp_hdr_fmt()) != 0) {
-		OSAL_LOG_ERROR("PNSO: init_cp_hdr_fmt failed\n");
+		OSAL_LOG_ERROR("PNSO: init_cp_hdr_fmt failed");
 		goto finit;
 	}
 
-	OSAL_LOG_INFO("PNSO: starting %d threads on %d core machine\n",
+	OSAL_LOG_INFO("PNSO: starting %d threads on %d core machine",
 		 PNSO_TEST_THREAD_COUNT, osal_get_core_count());
 
 	/* Start threads */
@@ -649,7 +587,7 @@ body(void)
 			}
 		}
 		if (rv) {
-			OSAL_LOG_ERROR("PNSO: FAILED to start thread %d\n",
+			OSAL_LOG_ERROR("PNSO: FAILED to start thread %d",
 				       (int) tid);
 			goto finit;
 		}
@@ -670,14 +608,14 @@ body(void)
 		}
 
 		if (prev_count != count) {
-			OSAL_LOG_INFO("PNSO: new thread completion count %lu, running %d\n",
+			OSAL_LOG_INFO("PNSO: new thread completion count %lu, running %d",
 				 count, running_count);
 			osal_yield();
 		}
 
 		if (count < PNSO_TEST_THREAD_COUNT*NUM_REQ_COUNT) {
 			if ((prev_count != count) && (running_count == 0)) {
-				OSAL_LOG_DEBUG("PNSO: running threads exited early?\n");
+				OSAL_LOG_DEBUG("PNSO: running threads exited early?");
 				goto finit;
 			}
 			osal_yield();
@@ -686,7 +624,7 @@ body(void)
 		}
 		prev_count = count;
 	}
-	OSAL_LOG_INFO("IO: Completed all sim tests\n");
+	OSAL_LOG_INFO("IO: Completed all tests");
 
 #if ENABLE_CPDC_REQ
 	osal_yield();
@@ -709,45 +647,41 @@ body(void)
 
 	osal_yield();
 	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
-		OSAL_LOG_INFO("IO: Final memcmp passed\n");
+		OSAL_LOG_INFO("IO: Final memcmp passed");
 	} else {
-		OSAL_LOG_ERROR("IO: Final memcmp failed\n");
+		OSAL_LOG_ERROR("IO: Final memcmp failed");
 		rv = EINVAL;
 		goto finit;
 	}
 #endif
 
 #if ENABLE_HASH_REQ
-	OSAL_LOG_INFO("hash ... \n");
+	OSAL_LOG_INFO("hash ... ");
 	count = verify_hash_req_result();
 
 	osal_yield();
 	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
-		OSAL_LOG_INFO("IO: Final hash passed\n");
+		OSAL_LOG_INFO("IO: Final hash passed");
 	} else {
-		OSAL_LOG_ERROR("IO: Final hash failed\n");
+		OSAL_LOG_ERROR("IO: Final hash failed");
 		rv = EINVAL;
 		goto finit;
 	}
 #endif
 
 #if ENABLE_CHKSUM_REQ
-	OSAL_LOG_INFO("chksum ... \n");
+	OSAL_LOG_INFO("chksum ... ");
 	count = verify_chksum_req_result();
 
 	osal_yield();
 	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
-		OSAL_LOG_INFO("IO: Final checksum passed\n");
+		OSAL_LOG_INFO("IO: Final checksum passed");
 	} else {
-		OSAL_LOG_ERROR("IO: Final checksum failed\n");
+		OSAL_LOG_ERROR("IO: Final checksum failed");
 		rv = EINVAL;
 		goto finit;
 	}
 #endif
-
-	rv = osal_thread_test();
-	if (rv == 0)
-		OSAL_LOG_INFO("PNSO: Osal test complete\n");
 
 finit:
 	osal_yield(); /* flush logs */
