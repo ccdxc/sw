@@ -37,6 +37,8 @@ struct rx_filters {
 	struct hlist_head by_id[RX_FILTER_HLISTS];	/* by filter_id */
 };
 
+struct ionic_admin_ctx;
+
 void ionic_rx_filter_free(struct lif *lif, struct rx_filter *f);
 int ionic_rx_filter_del(struct lif *lif, struct rx_filter *f);
 int ionic_rx_filters_init(struct lif *lif);
