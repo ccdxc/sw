@@ -195,7 +195,7 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
         "kind": "Cluster",
         "api-version": "v1",
         "meta": {
-            "name": "Singleton",
+            "name": "testCluster",
         },
         "spec": {
             "auto-admit-nics": True,
