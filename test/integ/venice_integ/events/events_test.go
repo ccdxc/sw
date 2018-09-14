@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
+	es "github.com/olivere/elastic"
 	uuid "github.com/satori/go.uuid"
-	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	es "gopkg.in/olivere/elastic.v5"
+	es "github.com/olivere/elastic"
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"

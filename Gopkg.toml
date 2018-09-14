@@ -176,6 +176,10 @@ required = ["github.com/GeertJohan/go.rice",
   version = "2.1.0"
 
 [[constraint]]
+  name = "github.com/olivere/elastic"
+  version = "6.1.11"
+
+[[override]]
   name = "gopkg.in/olivere/elastic.v5"
   version = "5.0.58"
 

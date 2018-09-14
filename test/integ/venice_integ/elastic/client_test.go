@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	es "github.com/olivere/elastic"
 	uuid "github.com/satori/go.uuid"
 	. "gopkg.in/check.v1"
-	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"

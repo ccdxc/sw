@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	es "github.com/olivere/elastic"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	es "gopkg.in/olivere/elastic.v5"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/globals"

@@ -5,7 +5,7 @@ package elastic
 import (
 	"context"
 
-	es "gopkg.in/olivere/elastic.v5"
+	es "github.com/olivere/elastic"
 )
 
 // ESClient interface for elasticsearch client.

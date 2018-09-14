@@ -1223,9 +1223,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cdf13ca0f5df719f31c0b466578feba0837bd6bb0aea95b3981a307844803704"
+  digest = "1:502f9bbd100fbf4c61982f86f89a5de9da1cad97f2701fdb7724b3ac69d216e6"
   name = "github.com/mailru/easyjson"
   packages = [
+    ".",
     "buffer",
     "jlexer",
     "jwriter",
@@ -1457,6 +1458,18 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "0ad87eef1443f64d3d8c50da647e2b1552851124"
+
+[[projects]]
+  digest = "1:1207a31f08a3cb94a1b02f03a70c4d2a57ed850d8c30ba85e47f8fa3d0271c90"
+  name = "github.com/olivere/elastic"
+  packages = [
+    ".",
+    "config",
+    "uritemplates",
+  ]
+  pruneopts = "NUT"
+  revision = "e6cae211ee802eab70248a68fe2cb03b616744c9"
+  version = "v6.2.5"
 
 [[projects]]
   digest = "1:044fe5b2b6dbdc0f41090e86466c27f480e7af860f425708b723008616625915"
@@ -2556,6 +2569,7 @@
     "github.com/miekg/pkcs11",
     "github.com/minio/minio-go",
     "github.com/minio/minio/cmd",
+    "github.com/olivere/elastic",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "github.com/opentracing/opentracing-go",
@@ -2613,7 +2627,6 @@
     "gopkg.in/check.v1",
     "gopkg.in/ldap.v2",
     "gopkg.in/natefinch/lumberjack.v2",
-    "gopkg.in/olivere/elastic.v5",
     "gopkg.in/square/go-jose.v2",
     "gopkg.in/square/go-jose.v2/jwt",
     "gopkg.in/yaml.v2",

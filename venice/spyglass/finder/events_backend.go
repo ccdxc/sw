@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	es "github.com/olivere/elastic"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"

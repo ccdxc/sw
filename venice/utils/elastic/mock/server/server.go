@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	es "gopkg.in/olivere/elastic.v5"
+	es "github.com/olivere/elastic"
 
 	tu "github.com/pensando/sw/venice/utils/testutils"
 )

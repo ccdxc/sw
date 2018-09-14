@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	es "gopkg.in/olivere/elastic.v5"
+	es "github.com/olivere/elastic"
 
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"

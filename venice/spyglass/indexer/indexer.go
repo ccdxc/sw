@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	es "gopkg.in/olivere/elastic.v5"
+	es "github.com/olivere/elastic"
 
 	apiservice "github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/venice/globals"

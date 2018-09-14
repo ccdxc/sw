@@ -12,10 +12,10 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
+	es "github.com/olivere/elastic"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	grpccode "google.golang.org/grpc/codes"
-	es "gopkg.in/olivere/elastic.v5"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
