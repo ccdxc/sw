@@ -89,7 +89,7 @@ int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
 
 	for_each_msi_entry(desc, ionic->dev) {
 		if (i == num) {
-			printk(KERN_INFO "[i = %d] msi_entry: %d.%d\n",
+			pr_info("[i = %d] msi_entry: %d.%d\n",
 				i, desc->platform.msi_index,
 				desc->irq);
 
@@ -112,7 +112,7 @@ static void mnic_set_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
 	int ret;
 	struct device_node* mnic_node = NULL;
 
-	printk("[%d] %x:%x %x\n", desc->platform.msi_index,
+	pr_info("[%d] %x:%x %x\n", desc->platform.msi_index,
 								msg->address_hi, msg->address_lo, msg->data);
 
 	intr_msixcfg(desc->platform.msi_index,
@@ -159,9 +159,9 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 
 	idev->dev_cmd = ionic->bars[0].vaddr;
 	idev->dev_cmd_db = ionic->bars[1].vaddr;
-	idev->intr_ctrl = ionic->bars[2].vaddr;
-	fwcfg_base_addr = dev->intr_ctrl;
-	msix_cfg_base_addr = ionic->bars[3].vaddr;
+	fwcfg_base_addr = ionic->bars[2].vaddr;
+	idev->intr_ctrl = ionic->bars[3].vaddr;
+	msix_cfg_base_addr = ionic->bars[4].vaddr;
 
 #ifdef HAPS
 	idev->ident = ionic->bars[0].vaddr + 0x800;
@@ -171,8 +171,8 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 	if (sig != DEV_CMD_SIGNATURE)
 		return -EFAULT;
 
-	idev->db_pages = ionic->bars[4].vaddr;
-	idev->phy_db_pages = ionic->bars[4].bus_addr;
+	idev->db_pages = ionic->bars[5].vaddr;
+	idev->phy_db_pages = ionic->bars[5].bus_addr;
 
 #ifndef ADMINQ
 	spin_lock_init(&ionic->cmd_lock);
