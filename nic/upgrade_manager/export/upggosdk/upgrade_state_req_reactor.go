@@ -1,7 +1,7 @@
 package upggosdk
 
 import (
-	"github.com/pensando/sw/nic/delphi/gosdk"
+	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk/nic/upgrade_manager/upgrade"
 	"github.com/pensando/sw/venice/utils/log"
@@ -9,7 +9,7 @@ import (
 
 type upgstatereqctx struct {
 	appHdlrs  UpgAppHandlers
-	sdkClient gosdk.Client
+	sdkClient clientApi.Client
 	appName   string
 }
 
@@ -113,7 +113,7 @@ func (ctx *upgstatereqctx) OnUpgStateReqDelete(obj *upgrade.UpgStateReq) {
 	deleteUpgAppResp(ctx.appName, ctx.sdkClient)
 }
 
-func upgStateReqInit(client gosdk.Client, hdlrs UpgAppHandlers, name string) {
+func upgStateReqInit(client clientApi.Client, hdlrs UpgAppHandlers, name string) {
 	log.Infof("UpgRespInit called")
 	ctx := &upgstatereqctx{
 		appHdlrs:  hdlrs,

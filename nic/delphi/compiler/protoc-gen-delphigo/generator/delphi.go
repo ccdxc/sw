@@ -216,7 +216,7 @@ func (g *Generator) delphiAddArayWrapper(wrapperName, typeName string) {
 }
 
 func (g *Generator) delphiGenerateImports() {
-	g.P(`import gosdk "github.com/pensando/sw/nic/delphi/gosdk"`)
+	g.P(`import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"`)
 }
 
 // delphiGenerate first goes through the messages and extract information and
@@ -303,7 +303,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 	// struct
 	g.P("type " + msg.wrapper.name + " struct {")
 	g.In()
-	g.P("sdkClient  gosdk.Client")
+	g.P("sdkClient  clientApi.Client")
 	g.P("parent delphiWrapper")
 	for _, field := range msg.fields {
 		if field.name == "Meta" { // special case
@@ -370,7 +370,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 	}
 
 	// New<NAME>
-	g.P("func New" + msg.wrapper.name + "(sdkClient gosdk.Client) *" +
+	g.P("func New" + msg.wrapper.name + "(sdkClient clientApi.Client) *" +
 		msg.wrapper.name + " {")
 	g.In()
 	g.P("w := &" + msg.wrapper.name + "{}")
@@ -397,7 +397,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 		} else {
 			intype = keyField.typeName
 		}
-		g.P("func New" + msg.wrapper.name + "WithKey(sdkClient gosdk.Client, " +
+		g.P("func New" + msg.wrapper.name + "WithKey(sdkClient clientApi.Client, " +
 			"key " + intype + ") *" + msg.wrapper.name + " {")
 		g.P("  w := New" + msg.wrapper.name + "(sdkClient)")
 		if keyField.isWrapper {
@@ -418,7 +418,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 		} else {
 			intype = keyField.typeName
 		}
-		g.P("func Get" + msg.wrapper.name + "(sdkClient gosdk.Client, key " +
+		g.P("func Get" + msg.wrapper.name + "(sdkClient clientApi.Client, key " +
 			intype + ") *" + msg.wrapper.name + " {")
 		if keyField.isWrapper {
 			g.P("  lookupKey := key.GetProtoMsg().String()")
@@ -437,7 +437,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 		g.P("  return o")
 		g.P("}\n")
 	} else if isSingleton(msg) {
-		g.P("func Get" + msg.wrapper.name + "(sdkClient gosdk.Client) *" +
+		g.P("func Get" + msg.wrapper.name + "(sdkClient clientApi.Client) *" +
 			msg.wrapper.name + " {")
 		g.P("  b := sdkClient.GetObject(\"" + msg.wrapper.name +
 			"\", \"default\")")
@@ -454,7 +454,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 
 	// childNew<NAME>
 	g.P("func childNew" + msg.wrapper.name +
-		"(parent delphiWrapper, sdkClient gosdk.Client) *" +
+		"(parent delphiWrapper, sdkClient clientApi.Client) *" +
 		msg.wrapper.name + "{")
 	g.P("  w := New" + msg.wrapper.name + "(sdkClient)")
 	g.P("  w.parent = parent")
@@ -463,7 +463,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 
 	// childNew<NAME>WithValue
 	g.P("func childNew" + msg.wrapper.name + "WithValue" +
-		"(parent delphiWrapper, sdkClient gosdk.Client, value *" +
+		"(parent delphiWrapper, sdkClient clientApi.Client, value *" +
 		msg.wrapper.name + ") *" +
 		msg.wrapper.name + "{")
 	g.P("  w := childNew" + msg.wrapper.name + "(parent, sdkClient)")
@@ -529,8 +529,8 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 
 		// TriggerEvent
 		g.P("func (obj *" + msg.wrapper.name +
-			") TriggerEvent(oldObj gosdk.BaseObject, " +
-			"op delphi.ObjectOperation, rl []gosdk.BaseReactor) {")
+			") TriggerEvent(oldObj clientApi.BaseObject, " +
+			"op delphi.ObjectOperation, rl []clientApi.BaseReactor) {")
 		g.P("  for _, r := range rl {")
 		g.P("    rctr, ok := r.(" + msg.wrapper.name + "Reactor)")
 		g.P("    if ok == false {")
@@ -583,8 +583,8 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 	// Factory Definition
 	if isDelphiObj(msg) {
 		g.P("func " + lowerFirst(msg.wrapper.name) +
-			"Factory(sdkClient gosdk.Client, data []byte) " +
-			"(gosdk.BaseObject, error) {")
+			"Factory(sdkClient clientApi.Client, data []byte) " +
+			"(clientApi.BaseObject, error) {")
 		g.P("  var msg " + msg.name)
 		g.P("  err := proto.Unmarshal(data, &msg)")
 		g.P("  if err != nil {")
@@ -595,14 +595,14 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 		g.P("  return w, nil")
 		g.P("}\n")
 
-		g.init = append(g.init, "gosdk.RegisterFactory(\""+
+		g.init = append(g.init, "clientApi.RegisterFactory(\""+
 			msg.wrapper.name+"\", "+lowerFirst(msg.wrapper.name)+"Factory)")
 	}
 
 	//<NAME>Mount
 	if isDelphiObj(msg) {
 		g.P("func " + msg.wrapper.name +
-			"Mount(client gosdk.Client, mode delphi.MountMode) {")
+			"Mount(client clientApi.Client, mode delphi.MountMode) {")
 		g.P("  client.MountKind(\"" + msg.wrapper.name + "\", mode)")
 		g.P("}\n")
 	}
@@ -616,7 +616,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 			keytype = keyField.typeName
 		}
 		g.P("func " + msg.wrapper.name + "MountKey" +
-			"(client gosdk.Client, key " + keytype +
+			"(client clientApi.Client, key " + keytype +
 			", mode delphi.MountMode) {")
 		if keyField.isWrapper {
 			g.P("keyString := key.GetProtoMsg().String()")
@@ -630,7 +630,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 
 	//<NAME>Watch
 	if isDelphiObj(msg) {
-		g.P("func " + msg.wrapper.name + "Watch(client gosdk.Client, reactor " +
+		g.P("func " + msg.wrapper.name + "Watch(client clientApi.Client, reactor " +
 			msg.wrapper.name + "Reactor) {")
 		g.P("  client.WatchKind(\"" + msg.wrapper.name + "\", reactor)")
 		g.P("}\n")
@@ -640,7 +640,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 	if isDelphiObj(msg) {
 		// Iterator type
 		g.P("type " + msg.wrapper.name + "Iterator struct {")
-		g.P("  objects []gosdk.BaseObject")
+		g.P("  objects []clientApi.BaseObject")
 		g.P("  cur     int")
 		g.P("}\n")
 		// Iterator Next()
@@ -655,7 +655,7 @@ func (g *Generator) delphiGenerateMessage(msg *delphiMessage) {
 		g.P("  return obj")
 		g.P("}\n")
 		// List
-		g.P("func " + msg.wrapper.name + "List(client gosdk.Client) *" +
+		g.P("func " + msg.wrapper.name + "List(client clientApi.Client) *" +
 			msg.wrapper.name + "Iterator {")
 		g.P("  return &" + msg.wrapper.name + "Iterator {")
 		g.P("    objects: client.List(\"" + msg.wrapper.name + "\"),")
@@ -701,7 +701,7 @@ func (g *Generator) delphiGenerateArrayWrapper(name string) {
 
 	// childNew<NAME>Array
 	g.P("func childNew" + name + " (parent delphiWrapper, " +
-		"sdkClient gosdk.Client) *" + name + " {")
+		"sdkClient clientApi.Client) *" + name + " {")
 	g.P("  arr := new(" + name + ")")
 	g.P("  arr.values = make([]" + typeName + ", 0)")
 	g.P("  arr.parent = parent")
@@ -710,7 +710,7 @@ func (g *Generator) delphiGenerateArrayWrapper(name string) {
 
 	// childNew<NAME>ArrayWithValue
 	g.P("func childNew" + name + "WithValue(parent delphiWrapper, " +
-		"sdkClient gosdk.Client, value *" + name + ") *" + name + " {")
+		"sdkClient clientApi.Client, value *" + name + ") *" + name + " {")
 	g.P("  arr := childNew" + name + "(parent, sdkClient)")
 	g.P("  for _, v := range value.values {")
 	g.P("    arr.values = append(arr.values, v)")

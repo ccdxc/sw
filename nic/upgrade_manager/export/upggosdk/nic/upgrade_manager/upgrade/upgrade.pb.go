@@ -16,7 +16,7 @@ It has these top-level messages:
 */
 package upgrade
 
-import gosdk "github.com/pensando/sw/nic/delphi/gosdk"
+import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -454,8 +454,368 @@ type delphiWrapper interface {
 	bubbleSave()
 }
 
+type UpgReq struct {
+	sdkClient  clientApi.Client
+	parent     delphiWrapper
+	meta       *delphi.ObjectMeta
+	upgReqCmd  UpgReqType
+	upgReqType UpgType
+}
+
+func (o *UpgReq) GetMeta() *delphi.ObjectMeta {
+	return o.meta
+}
+
+func (o *UpgReq) SetMeta(val *delphi.ObjectMeta) {
+	o.meta = val
+	o.bubbleSave()
+}
+
+func (o *UpgReq) GetUpgReqCmd() UpgReqType {
+	return o.upgReqCmd
+}
+
+func (o *UpgReq) SetUpgReqCmd(val UpgReqType) {
+	o.upgReqCmd = val
+	o.bubbleSave()
+}
+
+func (o *UpgReq) GetUpgReqType() UpgType {
+	return o.upgReqType
+}
+
+func (o *UpgReq) SetUpgReqType(val UpgType) {
+	o.upgReqType = val
+	o.bubbleSave()
+}
+
+func (o *UpgReq) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *UpgReq) save() {
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
+}
+
+func (o *UpgReq) Delete() {
+	o.sdkClient.DeleteObject(o)
+}
+
+func NewUpgReq(sdkClient clientApi.Client) *UpgReq {
+	w := &UpgReq{}
+	w.sdkClient = sdkClient
+	w.meta = &delphi.ObjectMeta{
+		Kind: "UpgReq",
+	}
+	return w
+}
+
+func GetUpgReq(sdkClient clientApi.Client) *UpgReq {
+	b := sdkClient.GetObject("UpgReq", "default")
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*UpgReq)
+	if !ok {
+		panic("Couldn't cast to UpgReq")
+	}
+	return o
+}
+
+func childNewUpgReq(parent delphiWrapper, sdkClient clientApi.Client) *UpgReq {
+	w := NewUpgReq(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func childNewUpgReqWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *UpgReq) *UpgReq {
+	w := childNewUpgReq(parent, sdkClient)
+	w.upgReqCmd = value.upgReqCmd
+	w.upgReqType = value.upgReqType
+	return w
+}
+
+func (o *UpgReq) GetProtoMsg() *UpgReq_ {
+	return &UpgReq_{
+		Meta:       o.meta,
+		UpgReqCmd:  o.upgReqCmd,
+		UpgReqType: o.upgReqType,
+	}
+}
+
+func (o *UpgReq) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func (obj *UpgReq) GetKeyString() string {
+	return "default"
+}
+
+func (obj *UpgReq) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(UpgReqReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if oldObj == nil {
+				rctr.OnUpgReqCreate(obj)
+			} else {
+				rctr.OnUpgReqUpdate(obj)
+			}
+		} else {
+			rctr.OnUpgReqDelete(obj)
+		}
+	}
+}
+
+type UpgReqReactor interface {
+	OnUpgReqCreate(obj *UpgReq)
+	OnUpgReqUpdate(obj *UpgReq)
+	OnUpgReqDelete(obj *UpgReq)
+}
+
+func (obj *UpgReq) GetPath() string {
+	return "UpgReq" + "|" + obj.GetKeyString()
+}
+
+func newUpgReqFromMessage(msg *UpgReq_) *UpgReq {
+	return &UpgReq{
+		meta:       msg.Meta,
+		upgReqCmd:  msg.UpgReqCmd,
+		upgReqType: msg.UpgReqType,
+	}
+}
+
+func upgReqFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg UpgReq_
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	w := newUpgReqFromMessage(&msg)
+	w.sdkClient = sdkClient
+	return w, nil
+}
+
+func UpgReqMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("UpgReq", mode)
+}
+
+func UpgReqWatch(client clientApi.Client, reactor UpgReqReactor) {
+	client.WatchKind("UpgReq", reactor)
+}
+
+type UpgReqIterator struct {
+	objects []clientApi.BaseObject
+	cur     int
+}
+
+func (i *UpgReqIterator) Next() *UpgReq {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*UpgReq)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func UpgReqList(client clientApi.Client) *UpgReqIterator {
+	return &UpgReqIterator{
+		objects: client.List("UpgReq"),
+		cur:     0,
+	}
+}
+
+type UpgResp struct {
+	sdkClient      clientApi.Client
+	parent         delphiWrapper
+	meta           *delphi.ObjectMeta
+	upgRespVal     UpgRespType
+	upgRespFailStr *StringArray
+}
+
+func (o *UpgResp) GetMeta() *delphi.ObjectMeta {
+	return o.meta
+}
+
+func (o *UpgResp) SetMeta(val *delphi.ObjectMeta) {
+	o.meta = val
+	o.bubbleSave()
+}
+
+func (o *UpgResp) GetUpgRespVal() UpgRespType {
+	return o.upgRespVal
+}
+
+func (o *UpgResp) SetUpgRespVal(val UpgRespType) {
+	o.upgRespVal = val
+	o.bubbleSave()
+}
+
+func (o *UpgResp) GetUpgRespFailStr() *StringArray {
+	return o.upgRespFailStr
+}
+
+func (o *UpgResp) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *UpgResp) save() {
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
+}
+
+func (o *UpgResp) Delete() {
+	o.sdkClient.DeleteObject(o)
+}
+
+func NewUpgResp(sdkClient clientApi.Client) *UpgResp {
+	w := &UpgResp{}
+	w.sdkClient = sdkClient
+	w.meta = &delphi.ObjectMeta{
+		Kind: "UpgResp",
+	}
+	w.upgRespFailStr = childNewStringArray(w, sdkClient)
+	return w
+}
+
+func GetUpgResp(sdkClient clientApi.Client) *UpgResp {
+	b := sdkClient.GetObject("UpgResp", "default")
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*UpgResp)
+	if !ok {
+		panic("Couldn't cast to UpgResp")
+	}
+	return o
+}
+
+func childNewUpgResp(parent delphiWrapper, sdkClient clientApi.Client) *UpgResp {
+	w := NewUpgResp(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func childNewUpgRespWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *UpgResp) *UpgResp {
+	w := childNewUpgResp(parent, sdkClient)
+	w.upgRespVal = value.upgRespVal
+	w.upgRespFailStr = childNewStringArrayWithValue(w, sdkClient, value.upgRespFailStr)
+	return w
+}
+
+func (o *UpgResp) GetProtoMsg() *UpgResp_ {
+	return &UpgResp_{
+		Meta:           o.meta,
+		UpgRespVal:     o.upgRespVal,
+		UpgRespFailStr: o.upgRespFailStr.GetProtoMsg(),
+	}
+}
+
+func (o *UpgResp) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func (obj *UpgResp) GetKeyString() string {
+	return "default"
+}
+
+func (obj *UpgResp) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(UpgRespReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if oldObj == nil {
+				rctr.OnUpgRespCreate(obj)
+			} else {
+				rctr.OnUpgRespUpdate(obj)
+			}
+		} else {
+			rctr.OnUpgRespDelete(obj)
+		}
+	}
+}
+
+type UpgRespReactor interface {
+	OnUpgRespCreate(obj *UpgResp)
+	OnUpgRespUpdate(obj *UpgResp)
+	OnUpgRespDelete(obj *UpgResp)
+}
+
+func (obj *UpgResp) GetPath() string {
+	return "UpgResp" + "|" + obj.GetKeyString()
+}
+
+func newUpgRespFromMessage(msg *UpgResp_) *UpgResp {
+	return &UpgResp{
+		meta:           msg.Meta,
+		upgRespVal:     msg.UpgRespVal,
+		upgRespFailStr: newStringArrayFromMessage(msg.UpgRespFailStr),
+	}
+}
+
+func upgRespFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg UpgResp_
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	w := newUpgRespFromMessage(&msg)
+	w.sdkClient = sdkClient
+	return w, nil
+}
+
+func UpgRespMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("UpgResp", mode)
+}
+
+func UpgRespWatch(client clientApi.Client, reactor UpgRespReactor) {
+	client.WatchKind("UpgResp", reactor)
+}
+
+type UpgRespIterator struct {
+	objects []clientApi.BaseObject
+	cur     int
+}
+
+func (i *UpgRespIterator) Next() *UpgResp {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*UpgResp)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func UpgRespList(client clientApi.Client) *UpgRespIterator {
+	return &UpgRespIterator{
+		objects: client.List("UpgResp"),
+		cur:     0,
+	}
+}
+
 type UpgStateReq struct {
-	sdkClient   gosdk.Client
+	sdkClient   clientApi.Client
 	parent      delphiWrapper
 	meta        *delphi.ObjectMeta
 	upgReqState UpgReqStateType
@@ -507,7 +867,7 @@ func (o *UpgStateReq) Delete() {
 	o.sdkClient.DeleteObject(o)
 }
 
-func NewUpgStateReq(sdkClient gosdk.Client) *UpgStateReq {
+func NewUpgStateReq(sdkClient clientApi.Client) *UpgStateReq {
 	w := &UpgStateReq{}
 	w.sdkClient = sdkClient
 	w.meta = &delphi.ObjectMeta{
@@ -516,7 +876,7 @@ func NewUpgStateReq(sdkClient gosdk.Client) *UpgStateReq {
 	return w
 }
 
-func GetUpgStateReq(sdkClient gosdk.Client) *UpgStateReq {
+func GetUpgStateReq(sdkClient clientApi.Client) *UpgStateReq {
 	b := sdkClient.GetObject("UpgStateReq", "default")
 	if b == nil {
 		return nil
@@ -528,13 +888,13 @@ func GetUpgStateReq(sdkClient gosdk.Client) *UpgStateReq {
 	return o
 }
 
-func childNewUpgStateReq(parent delphiWrapper, sdkClient gosdk.Client) *UpgStateReq {
+func childNewUpgStateReq(parent delphiWrapper, sdkClient clientApi.Client) *UpgStateReq {
 	w := NewUpgStateReq(sdkClient)
 	w.parent = parent
 	return w
 }
 
-func childNewUpgStateReqWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *UpgStateReq) *UpgStateReq {
+func childNewUpgStateReqWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *UpgStateReq) *UpgStateReq {
 	w := childNewUpgStateReq(parent, sdkClient)
 	w.upgReqState = value.upgReqState
 	w.upgReqType = value.upgReqType
@@ -557,7 +917,7 @@ func (obj *UpgStateReq) GetKeyString() string {
 	return "default"
 }
 
-func (obj *UpgStateReq) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
+func (obj *UpgStateReq) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
 	for _, r := range rl {
 		rctr, ok := r.(UpgStateReqReactor)
 		if ok == false {
@@ -593,7 +953,7 @@ func newUpgStateReqFromMessage(msg *UpgStateReq_) *UpgStateReq {
 	}
 }
 
-func upgStateReqFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
+func upgStateReqFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg UpgStateReq_
 	err := proto.Unmarshal(data, &msg)
 	if err != nil {
@@ -604,16 +964,16 @@ func upgStateReqFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, 
 	return w, nil
 }
 
-func UpgStateReqMount(client gosdk.Client, mode delphi.MountMode) {
+func UpgStateReqMount(client clientApi.Client, mode delphi.MountMode) {
 	client.MountKind("UpgStateReq", mode)
 }
 
-func UpgStateReqWatch(client gosdk.Client, reactor UpgStateReqReactor) {
+func UpgStateReqWatch(client clientApi.Client, reactor UpgStateReqReactor) {
 	client.WatchKind("UpgStateReq", reactor)
 }
 
 type UpgStateReqIterator struct {
-	objects []gosdk.BaseObject
+	objects []clientApi.BaseObject
 	cur     int
 }
 
@@ -629,7 +989,7 @@ func (i *UpgStateReqIterator) Next() *UpgStateReq {
 	return obj
 }
 
-func UpgStateReqList(client gosdk.Client) *UpgStateReqIterator {
+func UpgStateReqList(client clientApi.Client) *UpgStateReqIterator {
 	return &UpgStateReqIterator{
 		objects: client.List("UpgStateReq"),
 		cur:     0,
@@ -637,7 +997,7 @@ func UpgStateReqList(client gosdk.Client) *UpgStateReqIterator {
 }
 
 type UpgAppResp struct {
-	sdkClient     gosdk.Client
+	sdkClient     clientApi.Client
 	parent        delphiWrapper
 	meta          *delphi.ObjectMeta
 	key           string
@@ -699,7 +1059,7 @@ func (o *UpgAppResp) Delete() {
 	o.sdkClient.DeleteObject(o)
 }
 
-func NewUpgAppResp(sdkClient gosdk.Client) *UpgAppResp {
+func NewUpgAppResp(sdkClient clientApi.Client) *UpgAppResp {
 	w := &UpgAppResp{}
 	w.sdkClient = sdkClient
 	w.meta = &delphi.ObjectMeta{
@@ -708,13 +1068,13 @@ func NewUpgAppResp(sdkClient gosdk.Client) *UpgAppResp {
 	return w
 }
 
-func NewUpgAppRespWithKey(sdkClient gosdk.Client, key string) *UpgAppResp {
+func NewUpgAppRespWithKey(sdkClient clientApi.Client, key string) *UpgAppResp {
 	w := NewUpgAppResp(sdkClient)
 	w.SetKey(key)
 	return w
 }
 
-func GetUpgAppResp(sdkClient gosdk.Client, key string) *UpgAppResp {
+func GetUpgAppResp(sdkClient clientApi.Client, key string) *UpgAppResp {
 	lookupKey := fmt.Sprintf("%v", key)
 	b := sdkClient.GetObject("UpgAppResp", lookupKey)
 	if b == nil {
@@ -727,13 +1087,13 @@ func GetUpgAppResp(sdkClient gosdk.Client, key string) *UpgAppResp {
 	return o
 }
 
-func childNewUpgAppResp(parent delphiWrapper, sdkClient gosdk.Client) *UpgAppResp {
+func childNewUpgAppResp(parent delphiWrapper, sdkClient clientApi.Client) *UpgAppResp {
 	w := NewUpgAppResp(sdkClient)
 	w.parent = parent
 	return w
 }
 
-func childNewUpgAppRespWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *UpgAppResp) *UpgAppResp {
+func childNewUpgAppRespWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *UpgAppResp) *UpgAppResp {
 	w := childNewUpgAppResp(parent, sdkClient)
 	w.key = value.key
 	w.upgAppRespVal = value.upgAppRespVal
@@ -758,7 +1118,7 @@ func (obj *UpgAppResp) GetKeyString() string {
 	return fmt.Sprintf("%v", (obj.key))
 }
 
-func (obj *UpgAppResp) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
+func (obj *UpgAppResp) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
 	for _, r := range rl {
 		rctr, ok := r.(UpgAppRespReactor)
 		if ok == false {
@@ -795,7 +1155,7 @@ func newUpgAppRespFromMessage(msg *UpgAppResp_) *UpgAppResp {
 	}
 }
 
-func upgAppRespFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
+func upgAppRespFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg UpgAppResp_
 	err := proto.Unmarshal(data, &msg)
 	if err != nil {
@@ -806,21 +1166,21 @@ func upgAppRespFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, e
 	return w, nil
 }
 
-func UpgAppRespMount(client gosdk.Client, mode delphi.MountMode) {
+func UpgAppRespMount(client clientApi.Client, mode delphi.MountMode) {
 	client.MountKind("UpgAppResp", mode)
 }
 
-func UpgAppRespMountKey(client gosdk.Client, key string, mode delphi.MountMode) {
+func UpgAppRespMountKey(client clientApi.Client, key string, mode delphi.MountMode) {
 	keyString := fmt.Sprintf("%v", key)
 	client.MountKindKey("UpgAppResp", keyString, mode)
 }
 
-func UpgAppRespWatch(client gosdk.Client, reactor UpgAppRespReactor) {
+func UpgAppRespWatch(client clientApi.Client, reactor UpgAppRespReactor) {
 	client.WatchKind("UpgAppResp", reactor)
 }
 
 type UpgAppRespIterator struct {
-	objects []gosdk.BaseObject
+	objects []clientApi.BaseObject
 	cur     int
 }
 
@@ -836,7 +1196,7 @@ func (i *UpgAppRespIterator) Next() *UpgAppResp {
 	return obj
 }
 
-func UpgAppRespList(client gosdk.Client) *UpgAppRespIterator {
+func UpgAppRespList(client clientApi.Client) *UpgAppRespIterator {
 	return &UpgAppRespIterator{
 		objects: client.List("UpgAppResp"),
 		cur:     0,
@@ -844,7 +1204,7 @@ func UpgAppRespList(client gosdk.Client) *UpgAppRespIterator {
 }
 
 type UpgApp struct {
-	sdkClient gosdk.Client
+	sdkClient clientApi.Client
 	parent    delphiWrapper
 	meta      *delphi.ObjectMeta
 	key       string
@@ -886,7 +1246,7 @@ func (o *UpgApp) Delete() {
 	o.sdkClient.DeleteObject(o)
 }
 
-func NewUpgApp(sdkClient gosdk.Client) *UpgApp {
+func NewUpgApp(sdkClient clientApi.Client) *UpgApp {
 	w := &UpgApp{}
 	w.sdkClient = sdkClient
 	w.meta = &delphi.ObjectMeta{
@@ -895,13 +1255,13 @@ func NewUpgApp(sdkClient gosdk.Client) *UpgApp {
 	return w
 }
 
-func NewUpgAppWithKey(sdkClient gosdk.Client, key string) *UpgApp {
+func NewUpgAppWithKey(sdkClient clientApi.Client, key string) *UpgApp {
 	w := NewUpgApp(sdkClient)
 	w.SetKey(key)
 	return w
 }
 
-func GetUpgApp(sdkClient gosdk.Client, key string) *UpgApp {
+func GetUpgApp(sdkClient clientApi.Client, key string) *UpgApp {
 	lookupKey := fmt.Sprintf("%v", key)
 	b := sdkClient.GetObject("UpgApp", lookupKey)
 	if b == nil {
@@ -914,13 +1274,13 @@ func GetUpgApp(sdkClient gosdk.Client, key string) *UpgApp {
 	return o
 }
 
-func childNewUpgApp(parent delphiWrapper, sdkClient gosdk.Client) *UpgApp {
+func childNewUpgApp(parent delphiWrapper, sdkClient clientApi.Client) *UpgApp {
 	w := NewUpgApp(sdkClient)
 	w.parent = parent
 	return w
 }
 
-func childNewUpgAppWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *UpgApp) *UpgApp {
+func childNewUpgAppWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *UpgApp) *UpgApp {
 	w := childNewUpgApp(parent, sdkClient)
 	w.key = value.key
 	return w
@@ -941,7 +1301,7 @@ func (obj *UpgApp) GetKeyString() string {
 	return fmt.Sprintf("%v", (obj.key))
 }
 
-func (obj *UpgApp) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
+func (obj *UpgApp) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
 	for _, r := range rl {
 		rctr, ok := r.(UpgAppReactor)
 		if ok == false {
@@ -976,7 +1336,7 @@ func newUpgAppFromMessage(msg *UpgApp_) *UpgApp {
 	}
 }
 
-func upgAppFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
+func upgAppFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg UpgApp_
 	err := proto.Unmarshal(data, &msg)
 	if err != nil {
@@ -987,21 +1347,21 @@ func upgAppFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error
 	return w, nil
 }
 
-func UpgAppMount(client gosdk.Client, mode delphi.MountMode) {
+func UpgAppMount(client clientApi.Client, mode delphi.MountMode) {
 	client.MountKind("UpgApp", mode)
 }
 
-func UpgAppMountKey(client gosdk.Client, key string, mode delphi.MountMode) {
+func UpgAppMountKey(client clientApi.Client, key string, mode delphi.MountMode) {
 	keyString := fmt.Sprintf("%v", key)
 	client.MountKindKey("UpgApp", keyString, mode)
 }
 
-func UpgAppWatch(client gosdk.Client, reactor UpgAppReactor) {
+func UpgAppWatch(client clientApi.Client, reactor UpgAppReactor) {
 	client.WatchKind("UpgApp", reactor)
 }
 
 type UpgAppIterator struct {
-	objects []gosdk.BaseObject
+	objects []clientApi.BaseObject
 	cur     int
 }
 
@@ -1017,369 +1377,9 @@ func (i *UpgAppIterator) Next() *UpgApp {
 	return obj
 }
 
-func UpgAppList(client gosdk.Client) *UpgAppIterator {
+func UpgAppList(client clientApi.Client) *UpgAppIterator {
 	return &UpgAppIterator{
 		objects: client.List("UpgApp"),
-		cur:     0,
-	}
-}
-
-type UpgReq struct {
-	sdkClient  gosdk.Client
-	parent     delphiWrapper
-	meta       *delphi.ObjectMeta
-	upgReqCmd  UpgReqType
-	upgReqType UpgType
-}
-
-func (o *UpgReq) GetMeta() *delphi.ObjectMeta {
-	return o.meta
-}
-
-func (o *UpgReq) SetMeta(val *delphi.ObjectMeta) {
-	o.meta = val
-	o.bubbleSave()
-}
-
-func (o *UpgReq) GetUpgReqCmd() UpgReqType {
-	return o.upgReqCmd
-}
-
-func (o *UpgReq) SetUpgReqCmd(val UpgReqType) {
-	o.upgReqCmd = val
-	o.bubbleSave()
-}
-
-func (o *UpgReq) GetUpgReqType() UpgType {
-	return o.upgReqType
-}
-
-func (o *UpgReq) SetUpgReqType(val UpgType) {
-	o.upgReqType = val
-	o.bubbleSave()
-}
-
-func (o *UpgReq) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *UpgReq) save() {
-	if o.GetKeyString() != "" {
-		o.sdkClient.SetObject(o)
-	}
-}
-
-func (o *UpgReq) Delete() {
-	o.sdkClient.DeleteObject(o)
-}
-
-func NewUpgReq(sdkClient gosdk.Client) *UpgReq {
-	w := &UpgReq{}
-	w.sdkClient = sdkClient
-	w.meta = &delphi.ObjectMeta{
-		Kind: "UpgReq",
-	}
-	return w
-}
-
-func GetUpgReq(sdkClient gosdk.Client) *UpgReq {
-	b := sdkClient.GetObject("UpgReq", "default")
-	if b == nil {
-		return nil
-	}
-	o, ok := b.(*UpgReq)
-	if !ok {
-		panic("Couldn't cast to UpgReq")
-	}
-	return o
-}
-
-func childNewUpgReq(parent delphiWrapper, sdkClient gosdk.Client) *UpgReq {
-	w := NewUpgReq(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func childNewUpgReqWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *UpgReq) *UpgReq {
-	w := childNewUpgReq(parent, sdkClient)
-	w.upgReqCmd = value.upgReqCmd
-	w.upgReqType = value.upgReqType
-	return w
-}
-
-func (o *UpgReq) GetProtoMsg() *UpgReq_ {
-	return &UpgReq_{
-		Meta:       o.meta,
-		UpgReqCmd:  o.upgReqCmd,
-		UpgReqType: o.upgReqType,
-	}
-}
-
-func (o *UpgReq) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func (obj *UpgReq) GetKeyString() string {
-	return "default"
-}
-
-func (obj *UpgReq) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
-	for _, r := range rl {
-		rctr, ok := r.(UpgReqReactor)
-		if ok == false {
-			panic("Not a Reactor")
-		}
-		if op == delphi.ObjectOperation_SetOp {
-			if oldObj == nil {
-				rctr.OnUpgReqCreate(obj)
-			} else {
-				rctr.OnUpgReqUpdate(obj)
-			}
-		} else {
-			rctr.OnUpgReqDelete(obj)
-		}
-	}
-}
-
-type UpgReqReactor interface {
-	OnUpgReqCreate(obj *UpgReq)
-	OnUpgReqUpdate(obj *UpgReq)
-	OnUpgReqDelete(obj *UpgReq)
-}
-
-func (obj *UpgReq) GetPath() string {
-	return "UpgReq" + "|" + obj.GetKeyString()
-}
-
-func newUpgReqFromMessage(msg *UpgReq_) *UpgReq {
-	return &UpgReq{
-		meta:       msg.Meta,
-		upgReqCmd:  msg.UpgReqCmd,
-		upgReqType: msg.UpgReqType,
-	}
-}
-
-func upgReqFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
-	var msg UpgReq_
-	err := proto.Unmarshal(data, &msg)
-	if err != nil {
-		return nil, err
-	}
-	w := newUpgReqFromMessage(&msg)
-	w.sdkClient = sdkClient
-	return w, nil
-}
-
-func UpgReqMount(client gosdk.Client, mode delphi.MountMode) {
-	client.MountKind("UpgReq", mode)
-}
-
-func UpgReqWatch(client gosdk.Client, reactor UpgReqReactor) {
-	client.WatchKind("UpgReq", reactor)
-}
-
-type UpgReqIterator struct {
-	objects []gosdk.BaseObject
-	cur     int
-}
-
-func (i *UpgReqIterator) Next() *UpgReq {
-	if i.cur >= len(i.objects) {
-		return nil
-	}
-	obj, ok := i.objects[i.cur].(*UpgReq)
-	if !ok {
-		panic("Cast error")
-	}
-	i.cur++
-	return obj
-}
-
-func UpgReqList(client gosdk.Client) *UpgReqIterator {
-	return &UpgReqIterator{
-		objects: client.List("UpgReq"),
-		cur:     0,
-	}
-}
-
-type UpgResp struct {
-	sdkClient      gosdk.Client
-	parent         delphiWrapper
-	meta           *delphi.ObjectMeta
-	upgRespVal     UpgRespType
-	upgRespFailStr *StringArray
-}
-
-func (o *UpgResp) GetMeta() *delphi.ObjectMeta {
-	return o.meta
-}
-
-func (o *UpgResp) SetMeta(val *delphi.ObjectMeta) {
-	o.meta = val
-	o.bubbleSave()
-}
-
-func (o *UpgResp) GetUpgRespVal() UpgRespType {
-	return o.upgRespVal
-}
-
-func (o *UpgResp) SetUpgRespVal(val UpgRespType) {
-	o.upgRespVal = val
-	o.bubbleSave()
-}
-
-func (o *UpgResp) GetUpgRespFailStr() *StringArray {
-	return o.upgRespFailStr
-}
-
-func (o *UpgResp) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *UpgResp) save() {
-	if o.GetKeyString() != "" {
-		o.sdkClient.SetObject(o)
-	}
-}
-
-func (o *UpgResp) Delete() {
-	o.sdkClient.DeleteObject(o)
-}
-
-func NewUpgResp(sdkClient gosdk.Client) *UpgResp {
-	w := &UpgResp{}
-	w.sdkClient = sdkClient
-	w.meta = &delphi.ObjectMeta{
-		Kind: "UpgResp",
-	}
-	w.upgRespFailStr = childNewStringArray(w, sdkClient)
-	return w
-}
-
-func GetUpgResp(sdkClient gosdk.Client) *UpgResp {
-	b := sdkClient.GetObject("UpgResp", "default")
-	if b == nil {
-		return nil
-	}
-	o, ok := b.(*UpgResp)
-	if !ok {
-		panic("Couldn't cast to UpgResp")
-	}
-	return o
-}
-
-func childNewUpgResp(parent delphiWrapper, sdkClient gosdk.Client) *UpgResp {
-	w := NewUpgResp(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func childNewUpgRespWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *UpgResp) *UpgResp {
-	w := childNewUpgResp(parent, sdkClient)
-	w.upgRespVal = value.upgRespVal
-	w.upgRespFailStr = childNewStringArrayWithValue(w, sdkClient, value.upgRespFailStr)
-	return w
-}
-
-func (o *UpgResp) GetProtoMsg() *UpgResp_ {
-	return &UpgResp_{
-		Meta:           o.meta,
-		UpgRespVal:     o.upgRespVal,
-		UpgRespFailStr: o.upgRespFailStr.GetProtoMsg(),
-	}
-}
-
-func (o *UpgResp) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func (obj *UpgResp) GetKeyString() string {
-	return "default"
-}
-
-func (obj *UpgResp) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
-	for _, r := range rl {
-		rctr, ok := r.(UpgRespReactor)
-		if ok == false {
-			panic("Not a Reactor")
-		}
-		if op == delphi.ObjectOperation_SetOp {
-			if oldObj == nil {
-				rctr.OnUpgRespCreate(obj)
-			} else {
-				rctr.OnUpgRespUpdate(obj)
-			}
-		} else {
-			rctr.OnUpgRespDelete(obj)
-		}
-	}
-}
-
-type UpgRespReactor interface {
-	OnUpgRespCreate(obj *UpgResp)
-	OnUpgRespUpdate(obj *UpgResp)
-	OnUpgRespDelete(obj *UpgResp)
-}
-
-func (obj *UpgResp) GetPath() string {
-	return "UpgResp" + "|" + obj.GetKeyString()
-}
-
-func newUpgRespFromMessage(msg *UpgResp_) *UpgResp {
-	return &UpgResp{
-		meta:           msg.Meta,
-		upgRespVal:     msg.UpgRespVal,
-		upgRespFailStr: newStringArrayFromMessage(msg.UpgRespFailStr),
-	}
-}
-
-func upgRespFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
-	var msg UpgResp_
-	err := proto.Unmarshal(data, &msg)
-	if err != nil {
-		return nil, err
-	}
-	w := newUpgRespFromMessage(&msg)
-	w.sdkClient = sdkClient
-	return w, nil
-}
-
-func UpgRespMount(client gosdk.Client, mode delphi.MountMode) {
-	client.MountKind("UpgResp", mode)
-}
-
-func UpgRespWatch(client gosdk.Client, reactor UpgRespReactor) {
-	client.WatchKind("UpgResp", reactor)
-}
-
-type UpgRespIterator struct {
-	objects []gosdk.BaseObject
-	cur     int
-}
-
-func (i *UpgRespIterator) Next() *UpgResp {
-	if i.cur >= len(i.objects) {
-		return nil
-	}
-	obj, ok := i.objects[i.cur].(*UpgResp)
-	if !ok {
-		panic("Cast error")
-	}
-	i.cur++
-	return obj
-}
-
-func UpgRespList(client gosdk.Client) *UpgRespIterator {
-	return &UpgRespIterator{
-		objects: client.List("UpgResp"),
 		cur:     0,
 	}
 }
@@ -1409,14 +1409,14 @@ func newStringArrayFromMessage(msg []string) *StringArray {
 	return arr
 }
 
-func childNewStringArray(parent delphiWrapper, sdkClient gosdk.Client) *StringArray {
+func childNewStringArray(parent delphiWrapper, sdkClient clientApi.Client) *StringArray {
 	arr := new(StringArray)
 	arr.values = make([]string, 0)
 	arr.parent = parent
 	return arr
 }
 
-func childNewStringArrayWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *StringArray) *StringArray {
+func childNewStringArrayWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *StringArray) *StringArray {
 	arr := childNewStringArray(parent, sdkClient)
 	for _, v := range value.values {
 		arr.values = append(arr.values, v)
@@ -1436,11 +1436,11 @@ func init() {
 	proto.RegisterType((*UpgStateReq_)(nil), "upgrade.UpgStateReq_")
 	proto.RegisterType((*UpgAppResp_)(nil), "upgrade.UpgAppResp_")
 	proto.RegisterType((*UpgApp_)(nil), "upgrade.UpgApp_")
-	gosdk.RegisterFactory("UpgStateReq", upgStateReqFactory)
-	gosdk.RegisterFactory("UpgAppResp", upgAppRespFactory)
-	gosdk.RegisterFactory("UpgApp", upgAppFactory)
-	gosdk.RegisterFactory("UpgReq", upgReqFactory)
-	gosdk.RegisterFactory("UpgResp", upgRespFactory)
+	clientApi.RegisterFactory("UpgReq", upgReqFactory)
+	clientApi.RegisterFactory("UpgResp", upgRespFactory)
+	clientApi.RegisterFactory("UpgStateReq", upgStateReqFactory)
+	clientApi.RegisterFactory("UpgAppResp", upgAppRespFactory)
+	clientApi.RegisterFactory("UpgApp", upgAppFactory)
 	proto.RegisterEnum("upgrade.UpgReqType", UpgReqType_name, UpgReqType_value)
 	proto.RegisterEnum("upgrade.UpgRespType", UpgRespType_name, UpgRespType_value)
 	proto.RegisterEnum("upgrade.UpgReqStateType", UpgReqStateType_name, UpgReqStateType_value)
@@ -1451,59 +1451,68 @@ func init() {
 func init() { proto.RegisterFile("nic/upgrade_manager/upgrade/upgrade.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 858 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcd, 0x6e, 0xdb, 0x46,
-	0x10, 0x36, 0x4d, 0xc5, 0x96, 0x46, 0x7f, 0xeb, 0x95, 0x6c, 0xd3, 0x76, 0x12, 0xbb, 0x6a, 0xe0,
-	0xba, 0x2a, 0xe0, 0xa0, 0x72, 0xd0, 0x02, 0x3a, 0xd5, 0x91, 0x5b, 0x40, 0x48, 0x7f, 0x54, 0x29,
-	0x2a, 0xd0, 0x53, 0xb0, 0x92, 0x16, 0x32, 0x1b, 0x8a, 0xdc, 0x72, 0xa9, 0x14, 0xba, 0x15, 0x3d,
-	0xf5, 0x0d, 0x72, 0xed, 0x03, 0xf4, 0x09, 0xf2, 0x32, 0x7d, 0x95, 0x82, 0x43, 0x72, 0xb5, 0x54,
-	0xf5, 0x17, 0x34, 0x27, 0x72, 0xe7, 0xfb, 0xd9, 0xd9, 0xe1, 0xcc, 0x4a, 0xf0, 0xa9, 0x6b, 0x0f,
-	0x9f, 0x4e, 0xc5, 0xd8, 0x67, 0x23, 0xfe, 0x6a, 0xc2, 0x5c, 0x36, 0xe6, 0x7e, 0xb2, 0x4e, 0x9e,
-	0xd7, 0xc2, 0xf7, 0x02, 0x8f, 0xee, 0xc7, 0xcb, 0xd3, 0x27, 0xa1, 0x66, 0xc4, 0x1d, 0x71, 0x6f,
-	0x3f, 0x45, 0x28, 0x59, 0x44, 0x8f, 0x88, 0x5e, 0xfb, 0xdb, 0x80, 0xfd, 0xbe, 0x18, 0x77, 0xf9,
-	0xaf, 0xaf, 0xe8, 0x25, 0x64, 0xbe, 0xe3, 0x01, 0xb3, 0x8c, 0x0b, 0xe3, 0x2a, 0xdf, 0xa0, 0xd7,
-	0x31, 0xf1, 0x87, 0xc1, 0x2f, 0x7c, 0x18, 0x84, 0x48, 0x17, 0x71, 0xfa, 0x25, 0xe4, 0x22, 0x49,
-	0x6b, 0x32, 0xb2, 0x76, 0x2f, 0x8c, 0xab, 0x52, 0xa3, 0x72, 0x9d, 0x64, 0x11, 0x21, 0x2f, 0x67,
-	0x82, 0x3f, 0xcf, 0xfc, 0xfe, 0xb6, 0x66, 0x74, 0xe7, 0x5c, 0xfa, 0x05, 0xc0, 0x1c, 0xb6, 0x4c,
-	0x54, 0x12, 0x5d, 0xa9, 0xc9, 0x34, 0x66, 0x33, 0x1b, 0x46, 0xfe, 0x7c, 0x5b, 0x33, 0x6a, 0x7f,
-	0x19, 0x90, 0x45, 0x40, 0x8a, 0xed, 0xf3, 0x6d, 0xc6, 0xdb, 0x4a, 0xf1, 0x13, 0x73, 0xe2, 0x84,
-	0xab, 0xe9, 0x84, 0xa5, 0xf8, 0xcf, 0xd6, 0xc8, 0xa6, 0x97, 0x50, 0x8a, 0x57, 0xdf, 0x30, 0xdb,
-	0xe9, 0x05, 0xbe, 0x65, 0x5e, 0x98, 0x57, 0xb9, 0xee, 0x42, 0x54, 0x4b, 0xf1, 0x9d, 0x01, 0x85,
-	0xbe, 0x18, 0xf7, 0x02, 0x16, 0xf0, 0xf7, 0x2a, 0xeb, 0x57, 0x90, 0x8f, 0xce, 0x8c, 0xd2, 0x38,
-	0x4f, 0x6b, 0xa1, 0xb0, 0x88, 0x69, 0xb9, 0xea, 0x92, 0x0f, 0x50, 0xdf, 0x77, 0x06, 0x26, 0x71,
-	0x2b, 0xc4, 0xfb, 0x95, 0x98, 0x80, 0xf9, 0x82, 0xcf, 0x30, 0xe7, 0x5c, 0x37, 0x7c, 0xa5, 0x5f,
-	0x43, 0x71, 0x6e, 0x14, 0xd6, 0x3d, 0x4a, 0xe7, 0x44, 0x4f, 0x27, 0xae, 0x51, 0xaa, 0xf8, 0x69,
-	0x15, 0x7d, 0xa2, 0xdb, 0x84, 0xe5, 0xcf, 0xe0, 0x16, 0xe9, 0x60, 0x13, 0xa5, 0xb5, 0x36, 0xb6,
-	0xf2, 0xad, 0xf8, 0x3f, 0x79, 0x47, 0x56, 0xf5, 0x17, 0x7a, 0x25, 0x69, 0x09, 0xa0, 0xed, 0xbe,
-	0x61, 0x8e, 0x3d, 0x6a, 0x4d, 0x46, 0x64, 0x87, 0x16, 0xb0, 0x09, 0x7b, 0x01, 0xf3, 0x03, 0x62,
-	0xc4, 0xab, 0xdb, 0x81, 0xe7, 0x07, 0x64, 0x97, 0x1e, 0x40, 0xb1, 0x2d, 0xfb, 0x62, 0xdc, 0xf1,
-	0xa4, 0xb4, 0x07, 0x0e, 0x27, 0x66, 0xfd, 0xe7, 0xf8, 0xc3, 0x46, 0xe7, 0xa4, 0x65, 0xb5, 0xec,
-	0x30, 0x29, 0xc9, 0x8e, 0x16, 0x08, 0xbb, 0x89, 0x18, 0x94, 0x60, 0x07, 0x85, 0x81, 0xc4, 0xf5,
-	0x08, 0x68, 0x1c, 0x49, 0x5b, 0xff, 0x63, 0x42, 0x79, 0xa1, 0x31, 0xe8, 0x31, 0x54, 0x92, 0xda,
-	0xb6, 0xbc, 0x89, 0x60, 0x41, 0xeb, 0x9e, 0x0f, 0x5f, 0x93, 0x1d, 0x7a, 0x0a, 0x47, 0x09, 0xd0,
-	0xf1, 0xbd, 0x21, 0x97, 0xf2, 0xc7, 0xa9, 0xcd, 0xe5, 0x90, 0x13, 0x23, 0x85, 0x79, 0x32, 0x78,
-	0x6e, 0xbb, 0x5d, 0x2e, 0xf1, 0x80, 0xbb, 0xf4, 0x63, 0x38, 0x4f, 0xb0, 0x3b, 0x16, 0x30, 0xe1,
-	0x30, 0x97, 0xdf, 0x79, 0xbf, 0xb9, 0x81, 0x3d, 0xe1, 0x9d, 0x7b, 0x26, 0xf9, 0xe7, 0xc4, 0xdc,
-	0x4c, 0x6a, 0x90, 0xcc, 0x66, 0xd2, 0x0d, 0x79, 0xb0, 0x99, 0xf4, 0x8c, 0xec, 0xd1, 0x0a, 0x9e,
-	0x3b, 0x3a, 0xa4, 0xc3, 0x99, 0x3b, 0x15, 0x64, 0x5f, 0x0f, 0xf6, 0xa6, 0xc3, 0xf0, 0x80, 0x24,
-	0x4b, 0x29, 0x4e, 0x30, 0x06, 0xc3, 0xf2, 0xf2, 0x11, 0xc9, 0x85, 0x1f, 0x29, 0x89, 0x45, 0x15,
-	0x06, 0xbd, 0x6a, 0x7a, 0x89, 0xf3, 0xb4, 0x0a, 0x24, 0x01, 0xbe, 0xb5, 0xdd, 0xd7, 0x61, 0x26,
-	0xa4, 0xa0, 0xbb, 0x86, 0xd1, 0xbe, 0x20, 0x45, 0x5a, 0x83, 0xc7, 0x2b, 0x13, 0x8f, 0x9a, 0xa5,
-	0x44, 0x4f, 0xe0, 0x30, 0xe1, 0xb4, 0x65, 0x6f, 0x26, 0x03, 0x3e, 0xe9, 0x72, 0x36, 0x9a, 0x91,
-	0xb2, 0xbe, 0xd1, 0x4b, 0xee, 0x4f, 0x6c, 0x97, 0x39, 0x84, 0xd4, 0xff, 0xc8, 0xcd, 0xc3, 0xaa,
-	0x85, 0xce, 0xe1, 0x6c, 0xc9, 0x27, 0xd6, 0x5a, 0x6a, 0x35, 0x21, 0x6e, 0x31, 0x2d, 0xd7, 0x74,
-	0x2f, 0x28, 0x93, 0xdd, 0xf5, 0x1c, 0xf4, 0x31, 0x53, 0x9c, 0x54, 0xdf, 0x28, 0x9f, 0xcc, 0x7a,
-	0x0e, 0xfa, 0x3c, 0xa0, 0x9f, 0xc1, 0x27, 0x1b, 0x7a, 0x4c, 0x19, 0xee, 0x6d, 0x49, 0x46, 0xe7,
-	0xfd, 0xcd, 0xe4, 0x86, 0x72, 0xce, 0x6e, 0x49, 0x46, 0xe7, 0xdc, 0x66, 0xf2, 0x8d, 0x72, 0x86,
-	0x2d, 0xc9, 0xe8, 0x9c, 0xdf, 0x4c, 0x7e, 0xa6, 0x9c, 0x0b, 0x5b, 0x92, 0xd1, 0xb9, 0x48, 0xcf,
-	0xe0, 0x78, 0x61, 0x6e, 0x94, 0x53, 0x69, 0x05, 0x88, 0xca, 0xb2, 0x0e, 0xc6, 0xc3, 0xa5, 0x94,
-	0x64, 0x05, 0x88, 0xca, 0x03, 0xfd, 0x6e, 0x89, 0x26, 0x50, 0x09, 0xe9, 0x72, 0x0c, 0x75, 0x15,
-	0x7d, 0x56, 0x70, 0x4a, 0x95, 0xac, 0xba, 0x14, 0x42, 0xd5, 0xa1, 0xde, 0xfa, 0xda, 0x20, 0x2b,
-	0xed, 0xd1, 0x1a, 0x02, 0x3a, 0x1c, 0xd3, 0x87, 0x60, 0x2d, 0x4e, 0xbc, 0x92, 0x5b, 0xab, 0x50,
-	0xd4, 0x9e, 0xe8, 0xe7, 0x89, 0xee, 0x05, 0xa5, 0x3c, 0x5d, 0x8e, 0xa1, 0xee, 0x8c, 0xd6, 0xe1,
-	0x72, 0xfd, 0xdd, 0xa1, 0x7c, 0x1e, 0x6e, 0xc7, 0x45, 0xdf, 0x47, 0xf4, 0x23, 0x78, 0xb4, 0xf4,
-	0xbe, 0x51, 0x76, 0x8f, 0xd7, 0x52, 0xd0, 0xe5, 0xbc, 0xde, 0xc4, 0x5f, 0x56, 0xbc, 0x7a, 0x0e,
-	0xe1, 0x20, 0x7e, 0xbd, 0xb3, 0xa5, 0x3f, 0x15, 0x81, 0xfd, 0x86, 0x93, 0x1d, 0x6a, 0x41, 0x35,
-	0x0e, 0x7f, 0xef, 0xb9, 0x1a, 0x62, 0x0c, 0xf6, 0xf0, 0x8f, 0xe6, 0xcd, 0xbf, 0x01, 0x00, 0x00,
-	0xff, 0xff, 0x01, 0xb2, 0x3c, 0x63, 0xc4, 0x0a, 0x00, 0x00,
+	// 1004 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0xdd, 0x4e, 0x1b, 0x47,
+	0x14, 0x66, 0xb1, 0xc1, 0xf6, 0x31, 0xb6, 0x87, 0xe1, 0xcf, 0x40, 0x12, 0xa8, 0x1b, 0x51, 0xea,
+	0x2a, 0xa0, 0x98, 0xb4, 0x91, 0xe8, 0x4d, 0x89, 0x69, 0x2b, 0x94, 0x86, 0xd2, 0x75, 0x5c, 0xa9,
+	0x57, 0x68, 0xb0, 0xa7, 0x66, 0x1b, 0x7b, 0x77, 0xba, 0xb3, 0x4e, 0xc5, 0x5d, 0xd4, 0xab, 0xbe,
+	0x41, 0x6e, 0xfb, 0x00, 0x7d, 0x82, 0xbc, 0x4c, 0x5f, 0xa5, 0x9a, 0xb3, 0xbb, 0xe3, 0x59, 0x67,
+	0xfd, 0x13, 0x35, 0x57, 0x78, 0xce, 0xf7, 0x33, 0x67, 0xce, 0x9c, 0x33, 0x5a, 0xe0, 0x73, 0xd7,
+	0xe9, 0x1c, 0x0f, 0x45, 0xcf, 0x67, 0x5d, 0x7e, 0x3d, 0x60, 0x2e, 0xeb, 0x71, 0x3f, 0x5e, 0xc7,
+	0x7f, 0x8f, 0x84, 0xef, 0x05, 0x1e, 0xcd, 0x45, 0xcb, 0x9d, 0x87, 0x4a, 0xd3, 0xe5, 0x7d, 0x71,
+	0xeb, 0x1c, 0x23, 0x14, 0x2f, 0xc2, 0x3f, 0x21, 0xbd, 0xf6, 0x8f, 0x05, 0xb9, 0xb6, 0xe8, 0xd9,
+	0xfc, 0xf7, 0x6b, 0x7a, 0x00, 0xd9, 0x17, 0x3c, 0x60, 0x55, 0x6b, 0xdf, 0x3a, 0x2c, 0x36, 0xe8,
+	0x51, 0x44, 0xfc, 0xf1, 0xe6, 0x37, 0xde, 0x09, 0x14, 0x62, 0x23, 0x4e, 0x9f, 0x42, 0x21, 0x94,
+	0x34, 0x07, 0xdd, 0xea, 0xe2, 0xbe, 0x75, 0x58, 0x6e, 0xac, 0x1d, 0xc5, 0x59, 0x84, 0xc8, 0xcb,
+	0x3b, 0xc1, 0x9f, 0x65, 0xdf, 0xbc, 0xad, 0x59, 0xf6, 0x88, 0x4b, 0xbf, 0x02, 0x18, 0xc1, 0xd5,
+	0x0c, 0x2a, 0x89, 0xa9, 0x34, 0x64, 0x06, 0xf3, 0x34, 0xaf, 0x22, 0x7f, 0xbd, 0xad, 0x59, 0xb5,
+	0xbf, 0x2d, 0xc8, 0x23, 0x20, 0xc5, 0xfc, 0xf9, 0x9e, 0x46, 0xdb, 0x4a, 0xf1, 0x33, 0xeb, 0x47,
+	0x09, 0xaf, 0x27, 0x13, 0x96, 0xe2, 0xbd, 0xad, 0x91, 0x4d, 0x0f, 0xa0, 0x1c, 0xad, 0xbe, 0x63,
+	0x4e, 0xbf, 0x15, 0xf8, 0xd5, 0xcc, 0x7e, 0xe6, 0xb0, 0x60, 0x8f, 0x45, 0x8d, 0x14, 0xdf, 0x59,
+	0xb0, 0xd2, 0x16, 0xbd, 0x56, 0xc0, 0x02, 0xfe, 0x41, 0x65, 0xfd, 0x06, 0x8a, 0xe1, 0x99, 0x51,
+	0x1a, 0xe5, 0x59, 0x1d, 0x2b, 0x2c, 0x62, 0x46, 0xae, 0xa6, 0xe4, 0x23, 0xd4, 0xf7, 0x9d, 0x85,
+	0x49, 0x9c, 0x09, 0xf1, 0x61, 0x25, 0x26, 0x90, 0x79, 0xce, 0xef, 0x30, 0xe7, 0x82, 0xad, 0x7e,
+	0xd2, 0x6f, 0xa1, 0x34, 0x32, 0x52, 0x75, 0x0f, 0xd3, 0xd9, 0x36, 0xd3, 0x89, 0x6a, 0x94, 0x28,
+	0x7e, 0x52, 0x45, 0x1f, 0x9a, 0x36, 0xaa, 0xfc, 0x59, 0xdc, 0x22, 0x19, 0x3c, 0x45, 0x69, 0xed,
+	0x02, 0x5b, 0xf9, 0x4c, 0xfc, 0x9f, 0xbc, 0x23, 0xab, 0x37, 0x59, 0xa8, 0xb4, 0xc3, 0x44, 0x5f,
+	0xf0, 0xc0, 0x77, 0x3a, 0xf2, 0x3a, 0xe6, 0x2a, 0xcb, 0x52, 0x78, 0xc6, 0x2f, 0xa1, 0x74, 0x21,
+	0xdb, 0xa2, 0x77, 0xe5, 0x49, 0xe9, 0xdc, 0xf4, 0xc3, 0x3b, 0x2b, 0x36, 0x2a, 0xf1, 0x76, 0x4d,
+	0x6f, 0xe8, 0x06, 0xdc, 0xb7, 0x93, 0x2c, 0x25, 0x3b, 0x77, 0xa4, 0x3f, 0x14, 0x81, 0xf3, 0x9a,
+	0xb7, 0x45, 0x0f, 0x4b, 0x93, 0x26, 0x4b, 0xb0, 0xe8, 0xd7, 0x40, 0x2e, 0x3d, 0x37, 0xa9, 0xcc,
+	0xa6, 0x2b, 0xdf, 0x23, 0xaa, 0x3d, 0x5b, 0xc3, 0x4e, 0x87, 0x4b, 0xf9, 0xeb, 0xb0, 0xaf, 0x94,
+	0x4b, 0x13, 0xf6, 0x4c, 0xb0, 0xe8, 0x23, 0x28, 0xa8, 0x0e, 0xe7, 0x5d, 0x25, 0x59, 0x4e, 0x97,
+	0x8c, 0x18, 0xf4, 0x18, 0xe0, 0xec, 0xc6, 0xf3, 0x83, 0x90, 0x9f, 0x4b, 0xe7, 0x1b, 0x14, 0xfa,
+	0x08, 0xe0, 0x72, 0x38, 0xb0, 0xb9, 0xba, 0x35, 0x59, 0xcd, 0xa3, 0xa0, 0x14, 0x0b, 0xbe, 0x67,
+	0xc3, 0x1e, 0xb7, 0x0d, 0x02, 0x7d, 0x8c, 0xdd, 0xa9, 0xcb, 0x5d, 0x48, 0xdf, 0xc0, 0xe4, 0xd0,
+	0xa7, 0x38, 0xc0, 0x97, 0x5e, 0xa0, 0x55, 0x90, 0xae, 0x1a, 0xa3, 0xd5, 0x9f, 0x9b, 0xc3, 0x44,
+	0xcb, 0x00, 0x17, 0xee, 0x6b, 0xd6, 0x77, 0xba, 0xcd, 0x41, 0x97, 0x2c, 0xd0, 0x15, 0x7c, 0x87,
+	0x5a, 0x01, 0xf3, 0x03, 0x62, 0x45, 0x2b, 0x3c, 0x17, 0x59, 0xa4, 0xab, 0x63, 0x6d, 0x41, 0x32,
+	0xf5, 0x5f, 0xa2, 0xd9, 0x0e, 0x5b, 0x9d, 0x56, 0xf4, 0xf2, 0x8a, 0x49, 0x49, 0x16, 0x8c, 0x80,
+	0x2a, 0x26, 0xb1, 0x28, 0xc1, 0x47, 0x44, 0x05, 0x62, 0xd7, 0x4d, 0xa0, 0x51, 0x24, 0x69, 0xfd,
+	0x6f, 0x06, 0x5b, 0xd5, 0x7c, 0x1b, 0xe8, 0x16, 0xac, 0xc5, 0xe3, 0xd5, 0xf4, 0x06, 0x82, 0x05,
+	0xcd, 0x5b, 0xde, 0x79, 0x45, 0x16, 0xe8, 0x0e, 0x6c, 0xc6, 0xc0, 0x95, 0xef, 0xa9, 0x8b, 0xfe,
+	0x69, 0xe8, 0x70, 0xd9, 0xe1, 0xc4, 0x4a, 0x60, 0x9e, 0x0c, 0x9e, 0x39, 0xae, 0xcd, 0x25, 0x1e,
+	0x70, 0x91, 0x7e, 0x0a, 0x7b, 0x31, 0x76, 0xce, 0x02, 0x26, 0xfa, 0xcc, 0xe5, 0xe7, 0xde, 0x1f,
+	0x6e, 0xe0, 0x0c, 0xf8, 0xd5, 0x2d, 0x93, 0xfc, 0x31, 0xc9, 0xcc, 0x26, 0x35, 0x48, 0x76, 0x36,
+	0xe9, 0x84, 0x2c, 0xcd, 0x26, 0x3d, 0x21, 0xcb, 0x74, 0x0d, 0xcf, 0x1d, 0x1e, 0xb2, 0xcf, 0x99,
+	0x3b, 0x14, 0x24, 0x67, 0x06, 0xa3, 0x4e, 0x26, 0x79, 0x4a, 0xb1, 0x07, 0x30, 0x18, 0xf6, 0x2a,
+	0x29, 0xa8, 0x4b, 0x8a, 0x63, 0x61, 0x85, 0xc1, 0xac, 0x9a, 0x59, 0xe2, 0x22, 0x5d, 0x07, 0x12,
+	0x03, 0x3f, 0x38, 0xee, 0x2b, 0x95, 0x09, 0x59, 0x31, 0x5d, 0x55, 0xb4, 0x2d, 0x48, 0x89, 0xd6,
+	0xe0, 0xc1, 0xc4, 0xc4, 0xc3, 0x66, 0x29, 0xd3, 0x6d, 0xd8, 0x88, 0x39, 0x17, 0xb2, 0x75, 0x27,
+	0x03, 0x3e, 0xb0, 0x39, 0xeb, 0xde, 0x91, 0x8a, 0xb9, 0xd1, 0x4b, 0xee, 0x0f, 0x1c, 0x97, 0xf5,
+	0x09, 0xa9, 0xff, 0x59, 0x18, 0x85, 0x75, 0x0b, 0xed, 0xc1, 0x6e, 0xca, 0x15, 0x1b, 0x2d, 0x35,
+	0x99, 0x10, 0xb5, 0x98, 0x91, 0x6b, 0xb2, 0x17, 0xb4, 0xc9, 0xe2, 0x74, 0x0e, 0xfa, 0x64, 0x12,
+	0x9c, 0x44, 0xdf, 0x68, 0x9f, 0xec, 0x74, 0x0e, 0xfa, 0x2c, 0xd1, 0x2f, 0xe0, 0xb3, 0x19, 0x3d,
+	0xa6, 0x0d, 0x97, 0xe7, 0x24, 0xa3, 0x73, 0x6e, 0x36, 0xb9, 0xa1, 0x9d, 0xf3, 0x73, 0x92, 0xd1,
+	0xb9, 0x30, 0x9b, 0x7c, 0xa2, 0x9d, 0x61, 0x4e, 0x32, 0x3a, 0x17, 0x67, 0x93, 0x9f, 0x68, 0xe7,
+	0x95, 0x39, 0xc9, 0xe8, 0x5c, 0xa2, 0xbb, 0xb0, 0x35, 0x36, 0x37, 0xda, 0xa9, 0x3c, 0x01, 0x44,
+	0x65, 0xc5, 0x04, 0xa3, 0xe1, 0xd2, 0x4a, 0x32, 0x01, 0x44, 0xe5, 0xaa, 0xf9, 0xb6, 0x84, 0x13,
+	0xa8, 0x85, 0x34, 0x1d, 0x43, 0xdd, 0x9a, 0x39, 0x2b, 0x38, 0xa5, 0x5a, 0xb6, 0x9e, 0x0a, 0xa1,
+	0x6a, 0xc3, 0x6c, 0x7d, 0x63, 0x90, 0xb5, 0x76, 0x73, 0x0a, 0x01, 0x1d, 0xb6, 0xe8, 0x3d, 0xa8,
+	0x8e, 0x4f, 0xbc, 0x96, 0x57, 0x27, 0xa1, 0xa8, 0xdd, 0x36, 0xcf, 0x13, 0xbe, 0x0b, 0x5a, 0xb9,
+	0x93, 0x8e, 0xa1, 0x6e, 0x97, 0xd6, 0xe1, 0x60, 0xfa, 0xdb, 0xa1, 0x7d, 0xee, 0xcd, 0xc7, 0x45,
+	0xdf, 0xfb, 0xf4, 0x13, 0xb8, 0x9f, 0xfa, 0xde, 0x68, 0xbb, 0x07, 0x53, 0x29, 0xe8, 0xb2, 0x57,
+	0x3f, 0xc5, 0x8f, 0x2b, 0x7c, 0x7a, 0x36, 0x60, 0x35, 0xfa, 0x39, 0xfa, 0xc6, 0x20, 0x0b, 0xb4,
+	0x0a, 0xeb, 0x51, 0x38, 0xf1, 0xf5, 0x41, 0xac, 0x9b, 0x65, 0xfc, 0x5f, 0xe3, 0xe4, 0xbf, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x30, 0xbb, 0x0d, 0x6b, 0xc7, 0x0c, 0x00, 0x00,
 }

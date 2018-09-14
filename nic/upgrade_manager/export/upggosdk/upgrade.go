@@ -3,7 +3,7 @@ package upggosdk
 import (
 	"errors"
 
-	"github.com/pensando/sw/nic/delphi/gosdk"
+	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk/nic/upgrade_manager/upgrade"
 	"github.com/pensando/sw/venice/utils/log"
@@ -22,7 +22,7 @@ const (
 type upgSdk struct {
 	svcName   string
 	svcRole   SvcRole
-	sdkClient gosdk.Client
+	sdkClient clientApi.Client
 }
 
 //HdlrRespCode application response code
@@ -161,7 +161,7 @@ func (u *upgSdk) SendAppRespSuccess() error {
 }
 
 //NewUpgSdk API is used to init upgrade sdk
-func NewUpgSdk(name string, client gosdk.Client, role SvcRole, agentHdlrs AgentHandlers, appHdlrs UpgAppHandlers) (UpgSdk, error) {
+func NewUpgSdk(name string, client clientApi.Client, role SvcRole, agentHdlrs AgentHandlers, appHdlrs UpgAppHandlers) (UpgSdk, error) {
 	log.Infof("NewUpgSdk called for %s", name)
 	upggosdk := &upgSdk{
 		svcName:   name,

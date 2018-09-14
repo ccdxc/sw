@@ -1,4 +1,4 @@
-package gosdk
+package clientApi
 
 import (
 	"github.com/golang/protobuf/proto"
@@ -6,14 +6,15 @@ import (
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 )
 
-var factories = make(map[string]Factory)
-
 // Factory is a callback to be called to create objects of a specific type
 type Factory func(client Client, data []byte) (BaseObject, error)
 
+// Factories stores the factory methods for each kind
+var Factories = make(map[string]Factory)
+
 // RegisterFactory register the `Factory` callback for a given `kind`
 func RegisterFactory(kind string, factory Factory) {
-	factories[kind] = factory
+	Factories[kind] = factory
 }
 
 // BaseObject is the interfact that has to be implemented by Delphi objects

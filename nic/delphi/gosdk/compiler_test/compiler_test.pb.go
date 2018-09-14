@@ -16,7 +16,7 @@ It has these top-level messages:
 */
 package compilertest
 
-import gosdk "github.com/pensando/sw/nic/delphi/gosdk"
+import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -177,8 +177,557 @@ type delphiWrapper interface {
 	bubbleSave()
 }
 
+type MessageB struct {
+	sdkClient   clientApi.Client
+	parent      delphiWrapper
+	meta        *delphi.ObjectMeta
+	key         *MessageKey
+	stringValue string
+}
+
+func (o *MessageB) GetMeta() *delphi.ObjectMeta {
+	return o.meta
+}
+
+func (o *MessageB) SetMeta(val *delphi.ObjectMeta) {
+	o.meta = val
+	o.bubbleSave()
+}
+
+func (o *MessageB) GetKey() *MessageKey {
+	return o.key
+}
+
+func (o *MessageB) GetStringValue() string {
+	return o.stringValue
+}
+
+func (o *MessageB) SetStringValue(val string) {
+	o.stringValue = val
+	o.bubbleSave()
+}
+
+func (o *MessageB) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *MessageB) save() {
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
+}
+
+func (o *MessageB) Delete() {
+	o.sdkClient.DeleteObject(o)
+}
+
+func NewMessageB(sdkClient clientApi.Client) *MessageB {
+	w := &MessageB{}
+	w.sdkClient = sdkClient
+	w.meta = &delphi.ObjectMeta{
+		Kind: "MessageB",
+	}
+	w.key = childNewMessageKey(w, sdkClient)
+	return w
+}
+
+func NewMessageBWithKey(sdkClient clientApi.Client, key *MessageKey) *MessageB {
+	w := NewMessageB(sdkClient)
+	w.key = childNewMessageKeyWithValue(w, sdkClient, key)
+	return w
+}
+
+func GetMessageB(sdkClient clientApi.Client, key *MessageKey) *MessageB {
+	lookupKey := key.GetProtoMsg().String()
+	b := sdkClient.GetObject("MessageB", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*MessageB)
+	if !ok {
+		panic("Couldn't cast to MessageB")
+	}
+	return o
+}
+
+func childNewMessageB(parent delphiWrapper, sdkClient clientApi.Client) *MessageB {
+	w := NewMessageB(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func childNewMessageBWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *MessageB) *MessageB {
+	w := childNewMessageB(parent, sdkClient)
+	w.key = childNewMessageKeyWithValue(w, sdkClient, value.key)
+	w.stringValue = value.stringValue
+	return w
+}
+
+func (o *MessageB) GetProtoMsg() *MessageB_ {
+	return &MessageB_{
+		Meta:        o.meta,
+		Key:         o.key.GetProtoMsg(),
+		StringValue: o.stringValue,
+	}
+}
+
+func (o *MessageB) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func (obj *MessageB) GetKeyString() string {
+	return obj.key.GetProtoMsg().String()
+}
+
+func (obj *MessageB) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(MessageBReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if oldObj == nil {
+				rctr.OnMessageBCreate(obj)
+			} else {
+				rctr.OnMessageBUpdate(obj)
+			}
+		} else {
+			rctr.OnMessageBDelete(obj)
+		}
+	}
+}
+
+type MessageBReactor interface {
+	OnMessageBCreate(obj *MessageB)
+	OnMessageBUpdate(obj *MessageB)
+	OnMessageBDelete(obj *MessageB)
+}
+
+func (obj *MessageB) GetPath() string {
+	return "MessageB" + "|" + obj.GetKeyString()
+}
+
+func newMessageBFromMessage(msg *MessageB_) *MessageB {
+	return &MessageB{
+		meta:        msg.Meta,
+		key:         newMessageKeyFromMessage(msg.Key),
+		stringValue: msg.StringValue,
+	}
+}
+
+func messageBFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg MessageB_
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	w := newMessageBFromMessage(&msg)
+	w.sdkClient = sdkClient
+	return w, nil
+}
+
+func MessageBMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("MessageB", mode)
+}
+
+func MessageBMountKey(client clientApi.Client, key *MessageKey, mode delphi.MountMode) {
+	keyString := key.GetProtoMsg().String()
+	client.MountKindKey("MessageB", keyString, mode)
+}
+
+func MessageBWatch(client clientApi.Client, reactor MessageBReactor) {
+	client.WatchKind("MessageB", reactor)
+}
+
+type MessageBIterator struct {
+	objects []clientApi.BaseObject
+	cur     int
+}
+
+func (i *MessageBIterator) Next() *MessageB {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*MessageB)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func MessageBList(client clientApi.Client) *MessageBIterator {
+	return &MessageBIterator{
+		objects: client.List("MessageB"),
+		cur:     0,
+	}
+}
+
+type MessageC struct {
+	sdkClient   clientApi.Client
+	parent      delphiWrapper
+	meta        *delphi.ObjectMeta
+	key         uint32
+	stringValue *StringArray
+}
+
+func (o *MessageC) GetMeta() *delphi.ObjectMeta {
+	return o.meta
+}
+
+func (o *MessageC) SetMeta(val *delphi.ObjectMeta) {
+	o.meta = val
+	o.bubbleSave()
+}
+
+func (o *MessageC) GetKey() uint32 {
+	return o.key
+}
+
+func (o *MessageC) SetKey(val uint32) {
+	o.key = val
+	o.bubbleSave()
+}
+
+func (o *MessageC) GetStringValue() *StringArray {
+	return o.stringValue
+}
+
+func (o *MessageC) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *MessageC) save() {
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
+}
+
+func (o *MessageC) Delete() {
+	o.sdkClient.DeleteObject(o)
+}
+
+func NewMessageC(sdkClient clientApi.Client) *MessageC {
+	w := &MessageC{}
+	w.sdkClient = sdkClient
+	w.meta = &delphi.ObjectMeta{
+		Kind: "MessageC",
+	}
+	w.stringValue = childNewStringArray(w, sdkClient)
+	return w
+}
+
+func NewMessageCWithKey(sdkClient clientApi.Client, key uint32) *MessageC {
+	w := NewMessageC(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
+func GetMessageC(sdkClient clientApi.Client, key uint32) *MessageC {
+	lookupKey := fmt.Sprintf("%v", key)
+	b := sdkClient.GetObject("MessageC", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*MessageC)
+	if !ok {
+		panic("Couldn't cast to MessageC")
+	}
+	return o
+}
+
+func childNewMessageC(parent delphiWrapper, sdkClient clientApi.Client) *MessageC {
+	w := NewMessageC(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func childNewMessageCWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *MessageC) *MessageC {
+	w := childNewMessageC(parent, sdkClient)
+	w.key = value.key
+	w.stringValue = childNewStringArrayWithValue(w, sdkClient, value.stringValue)
+	return w
+}
+
+func (o *MessageC) GetProtoMsg() *MessageC_ {
+	return &MessageC_{
+		Meta:        o.meta,
+		Key:         o.key,
+		StringValue: o.stringValue.GetProtoMsg(),
+	}
+}
+
+func (o *MessageC) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func (obj *MessageC) GetKeyString() string {
+	return fmt.Sprintf("%v", (obj.key))
+}
+
+func (obj *MessageC) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(MessageCReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if oldObj == nil {
+				rctr.OnMessageCCreate(obj)
+			} else {
+				rctr.OnMessageCUpdate(obj)
+			}
+		} else {
+			rctr.OnMessageCDelete(obj)
+		}
+	}
+}
+
+type MessageCReactor interface {
+	OnMessageCCreate(obj *MessageC)
+	OnMessageCUpdate(obj *MessageC)
+	OnMessageCDelete(obj *MessageC)
+}
+
+func (obj *MessageC) GetPath() string {
+	return "MessageC" + "|" + obj.GetKeyString()
+}
+
+func newMessageCFromMessage(msg *MessageC_) *MessageC {
+	return &MessageC{
+		meta:        msg.Meta,
+		key:         msg.Key,
+		stringValue: newStringArrayFromMessage(msg.StringValue),
+	}
+}
+
+func messageCFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg MessageC_
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	w := newMessageCFromMessage(&msg)
+	w.sdkClient = sdkClient
+	return w, nil
+}
+
+func MessageCMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("MessageC", mode)
+}
+
+func MessageCMountKey(client clientApi.Client, key uint32, mode delphi.MountMode) {
+	keyString := fmt.Sprintf("%v", key)
+	client.MountKindKey("MessageC", keyString, mode)
+}
+
+func MessageCWatch(client clientApi.Client, reactor MessageCReactor) {
+	client.WatchKind("MessageC", reactor)
+}
+
+type MessageCIterator struct {
+	objects []clientApi.BaseObject
+	cur     int
+}
+
+func (i *MessageCIterator) Next() *MessageC {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*MessageC)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func MessageCList(client clientApi.Client) *MessageCIterator {
+	return &MessageCIterator{
+		objects: client.List("MessageC"),
+		cur:     0,
+	}
+}
+
+type MessageD struct {
+	sdkClient   clientApi.Client
+	parent      delphiWrapper
+	meta        *delphi.ObjectMeta
+	stringValue string
+}
+
+func (o *MessageD) GetMeta() *delphi.ObjectMeta {
+	return o.meta
+}
+
+func (o *MessageD) SetMeta(val *delphi.ObjectMeta) {
+	o.meta = val
+	o.bubbleSave()
+}
+
+func (o *MessageD) GetStringValue() string {
+	return o.stringValue
+}
+
+func (o *MessageD) SetStringValue(val string) {
+	o.stringValue = val
+	o.bubbleSave()
+}
+
+func (o *MessageD) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *MessageD) save() {
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
+}
+
+func (o *MessageD) Delete() {
+	o.sdkClient.DeleteObject(o)
+}
+
+func NewMessageD(sdkClient clientApi.Client) *MessageD {
+	w := &MessageD{}
+	w.sdkClient = sdkClient
+	w.meta = &delphi.ObjectMeta{
+		Kind: "MessageD",
+	}
+	return w
+}
+
+func GetMessageD(sdkClient clientApi.Client) *MessageD {
+	b := sdkClient.GetObject("MessageD", "default")
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*MessageD)
+	if !ok {
+		panic("Couldn't cast to MessageD")
+	}
+	return o
+}
+
+func childNewMessageD(parent delphiWrapper, sdkClient clientApi.Client) *MessageD {
+	w := NewMessageD(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func childNewMessageDWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *MessageD) *MessageD {
+	w := childNewMessageD(parent, sdkClient)
+	w.stringValue = value.stringValue
+	return w
+}
+
+func (o *MessageD) GetProtoMsg() *MessageD_ {
+	return &MessageD_{
+		Meta:        o.meta,
+		StringValue: o.stringValue,
+	}
+}
+
+func (o *MessageD) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func (obj *MessageD) GetKeyString() string {
+	return "default"
+}
+
+func (obj *MessageD) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(MessageDReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if oldObj == nil {
+				rctr.OnMessageDCreate(obj)
+			} else {
+				rctr.OnMessageDUpdate(obj)
+			}
+		} else {
+			rctr.OnMessageDDelete(obj)
+		}
+	}
+}
+
+type MessageDReactor interface {
+	OnMessageDCreate(obj *MessageD)
+	OnMessageDUpdate(obj *MessageD)
+	OnMessageDDelete(obj *MessageD)
+}
+
+func (obj *MessageD) GetPath() string {
+	return "MessageD" + "|" + obj.GetKeyString()
+}
+
+func newMessageDFromMessage(msg *MessageD_) *MessageD {
+	return &MessageD{
+		meta:        msg.Meta,
+		stringValue: msg.StringValue,
+	}
+}
+
+func messageDFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg MessageD_
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	w := newMessageDFromMessage(&msg)
+	w.sdkClient = sdkClient
+	return w, nil
+}
+
+func MessageDMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("MessageD", mode)
+}
+
+func MessageDWatch(client clientApi.Client, reactor MessageDReactor) {
+	client.WatchKind("MessageD", reactor)
+}
+
+type MessageDIterator struct {
+	objects []clientApi.BaseObject
+	cur     int
+}
+
+func (i *MessageDIterator) Next() *MessageD {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*MessageD)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func MessageDList(client clientApi.Client) *MessageDIterator {
+	return &MessageDIterator{
+		objects: client.List("MessageD"),
+		cur:     0,
+	}
+}
+
 type MessageA struct {
-	sdkClient   gosdk.Client
+	sdkClient   clientApi.Client
 	parent      delphiWrapper
 	meta        *delphi.ObjectMeta
 	key         uint32
@@ -230,7 +779,7 @@ func (o *MessageA) Delete() {
 	o.sdkClient.DeleteObject(o)
 }
 
-func NewMessageA(sdkClient gosdk.Client) *MessageA {
+func NewMessageA(sdkClient clientApi.Client) *MessageA {
 	w := &MessageA{}
 	w.sdkClient = sdkClient
 	w.meta = &delphi.ObjectMeta{
@@ -239,13 +788,13 @@ func NewMessageA(sdkClient gosdk.Client) *MessageA {
 	return w
 }
 
-func NewMessageAWithKey(sdkClient gosdk.Client, key uint32) *MessageA {
+func NewMessageAWithKey(sdkClient clientApi.Client, key uint32) *MessageA {
 	w := NewMessageA(sdkClient)
 	w.SetKey(key)
 	return w
 }
 
-func GetMessageA(sdkClient gosdk.Client, key uint32) *MessageA {
+func GetMessageA(sdkClient clientApi.Client, key uint32) *MessageA {
 	lookupKey := fmt.Sprintf("%v", key)
 	b := sdkClient.GetObject("MessageA", lookupKey)
 	if b == nil {
@@ -258,13 +807,13 @@ func GetMessageA(sdkClient gosdk.Client, key uint32) *MessageA {
 	return o
 }
 
-func childNewMessageA(parent delphiWrapper, sdkClient gosdk.Client) *MessageA {
+func childNewMessageA(parent delphiWrapper, sdkClient clientApi.Client) *MessageA {
 	w := NewMessageA(sdkClient)
 	w.parent = parent
 	return w
 }
 
-func childNewMessageAWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageA) *MessageA {
+func childNewMessageAWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *MessageA) *MessageA {
 	w := childNewMessageA(parent, sdkClient)
 	w.key = value.key
 	w.stringValue = value.stringValue
@@ -287,7 +836,7 @@ func (obj *MessageA) GetKeyString() string {
 	return fmt.Sprintf("%v", (obj.key))
 }
 
-func (obj *MessageA) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
+func (obj *MessageA) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
 	for _, r := range rl {
 		rctr, ok := r.(MessageAReactor)
 		if ok == false {
@@ -323,7 +872,7 @@ func newMessageAFromMessage(msg *MessageA_) *MessageA {
 	}
 }
 
-func messageAFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
+func messageAFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg MessageA_
 	err := proto.Unmarshal(data, &msg)
 	if err != nil {
@@ -334,21 +883,21 @@ func messageAFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, err
 	return w, nil
 }
 
-func MessageAMount(client gosdk.Client, mode delphi.MountMode) {
+func MessageAMount(client clientApi.Client, mode delphi.MountMode) {
 	client.MountKind("MessageA", mode)
 }
 
-func MessageAMountKey(client gosdk.Client, key uint32, mode delphi.MountMode) {
+func MessageAMountKey(client clientApi.Client, key uint32, mode delphi.MountMode) {
 	keyString := fmt.Sprintf("%v", key)
 	client.MountKindKey("MessageA", keyString, mode)
 }
 
-func MessageAWatch(client gosdk.Client, reactor MessageAReactor) {
+func MessageAWatch(client clientApi.Client, reactor MessageAReactor) {
 	client.WatchKind("MessageA", reactor)
 }
 
 type MessageAIterator struct {
-	objects []gosdk.BaseObject
+	objects []clientApi.BaseObject
 	cur     int
 }
 
@@ -364,7 +913,7 @@ func (i *MessageAIterator) Next() *MessageA {
 	return obj
 }
 
-func MessageAList(client gosdk.Client) *MessageAIterator {
+func MessageAList(client clientApi.Client) *MessageAIterator {
 	return &MessageAIterator{
 		objects: client.List("MessageA"),
 		cur:     0,
@@ -372,7 +921,7 @@ func MessageAList(client gosdk.Client) *MessageAIterator {
 }
 
 type MessageKey struct {
-	sdkClient gosdk.Client
+	sdkClient clientApi.Client
 	parent    delphiWrapper
 	value     uint32
 }
@@ -397,19 +946,19 @@ func (o *MessageKey) bubbleSave() {
 func (o *MessageKey) save() {
 }
 
-func NewMessageKey(sdkClient gosdk.Client) *MessageKey {
+func NewMessageKey(sdkClient clientApi.Client) *MessageKey {
 	w := &MessageKey{}
 	w.sdkClient = sdkClient
 	return w
 }
 
-func childNewMessageKey(parent delphiWrapper, sdkClient gosdk.Client) *MessageKey {
+func childNewMessageKey(parent delphiWrapper, sdkClient clientApi.Client) *MessageKey {
 	w := NewMessageKey(sdkClient)
 	w.parent = parent
 	return w
 }
 
-func childNewMessageKeyWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageKey) *MessageKey {
+func childNewMessageKeyWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *MessageKey) *MessageKey {
 	w := childNewMessageKey(parent, sdkClient)
 	w.value = value.value
 	return w
@@ -428,555 +977,6 @@ func (o *MessageKey) GetMessage() proto.Message {
 func newMessageKeyFromMessage(msg *MessageKey_) *MessageKey {
 	return &MessageKey{
 		value: msg.Value,
-	}
-}
-
-type MessageB struct {
-	sdkClient   gosdk.Client
-	parent      delphiWrapper
-	meta        *delphi.ObjectMeta
-	key         *MessageKey
-	stringValue string
-}
-
-func (o *MessageB) GetMeta() *delphi.ObjectMeta {
-	return o.meta
-}
-
-func (o *MessageB) SetMeta(val *delphi.ObjectMeta) {
-	o.meta = val
-	o.bubbleSave()
-}
-
-func (o *MessageB) GetKey() *MessageKey {
-	return o.key
-}
-
-func (o *MessageB) GetStringValue() string {
-	return o.stringValue
-}
-
-func (o *MessageB) SetStringValue(val string) {
-	o.stringValue = val
-	o.bubbleSave()
-}
-
-func (o *MessageB) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *MessageB) save() {
-	if o.GetKeyString() != "" {
-		o.sdkClient.SetObject(o)
-	}
-}
-
-func (o *MessageB) Delete() {
-	o.sdkClient.DeleteObject(o)
-}
-
-func NewMessageB(sdkClient gosdk.Client) *MessageB {
-	w := &MessageB{}
-	w.sdkClient = sdkClient
-	w.meta = &delphi.ObjectMeta{
-		Kind: "MessageB",
-	}
-	w.key = childNewMessageKey(w, sdkClient)
-	return w
-}
-
-func NewMessageBWithKey(sdkClient gosdk.Client, key *MessageKey) *MessageB {
-	w := NewMessageB(sdkClient)
-	w.key = childNewMessageKeyWithValue(w, sdkClient, key)
-	return w
-}
-
-func GetMessageB(sdkClient gosdk.Client, key *MessageKey) *MessageB {
-	lookupKey := key.GetProtoMsg().String()
-	b := sdkClient.GetObject("MessageB", lookupKey)
-	if b == nil {
-		return nil
-	}
-	o, ok := b.(*MessageB)
-	if !ok {
-		panic("Couldn't cast to MessageB")
-	}
-	return o
-}
-
-func childNewMessageB(parent delphiWrapper, sdkClient gosdk.Client) *MessageB {
-	w := NewMessageB(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func childNewMessageBWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageB) *MessageB {
-	w := childNewMessageB(parent, sdkClient)
-	w.key = childNewMessageKeyWithValue(w, sdkClient, value.key)
-	w.stringValue = value.stringValue
-	return w
-}
-
-func (o *MessageB) GetProtoMsg() *MessageB_ {
-	return &MessageB_{
-		Meta:        o.meta,
-		Key:         o.key.GetProtoMsg(),
-		StringValue: o.stringValue,
-	}
-}
-
-func (o *MessageB) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func (obj *MessageB) GetKeyString() string {
-	return obj.key.GetProtoMsg().String()
-}
-
-func (obj *MessageB) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
-	for _, r := range rl {
-		rctr, ok := r.(MessageBReactor)
-		if ok == false {
-			panic("Not a Reactor")
-		}
-		if op == delphi.ObjectOperation_SetOp {
-			if oldObj == nil {
-				rctr.OnMessageBCreate(obj)
-			} else {
-				rctr.OnMessageBUpdate(obj)
-			}
-		} else {
-			rctr.OnMessageBDelete(obj)
-		}
-	}
-}
-
-type MessageBReactor interface {
-	OnMessageBCreate(obj *MessageB)
-	OnMessageBUpdate(obj *MessageB)
-	OnMessageBDelete(obj *MessageB)
-}
-
-func (obj *MessageB) GetPath() string {
-	return "MessageB" + "|" + obj.GetKeyString()
-}
-
-func newMessageBFromMessage(msg *MessageB_) *MessageB {
-	return &MessageB{
-		meta:        msg.Meta,
-		key:         newMessageKeyFromMessage(msg.Key),
-		stringValue: msg.StringValue,
-	}
-}
-
-func messageBFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
-	var msg MessageB_
-	err := proto.Unmarshal(data, &msg)
-	if err != nil {
-		return nil, err
-	}
-	w := newMessageBFromMessage(&msg)
-	w.sdkClient = sdkClient
-	return w, nil
-}
-
-func MessageBMount(client gosdk.Client, mode delphi.MountMode) {
-	client.MountKind("MessageB", mode)
-}
-
-func MessageBMountKey(client gosdk.Client, key *MessageKey, mode delphi.MountMode) {
-	keyString := key.GetProtoMsg().String()
-	client.MountKindKey("MessageB", keyString, mode)
-}
-
-func MessageBWatch(client gosdk.Client, reactor MessageBReactor) {
-	client.WatchKind("MessageB", reactor)
-}
-
-type MessageBIterator struct {
-	objects []gosdk.BaseObject
-	cur     int
-}
-
-func (i *MessageBIterator) Next() *MessageB {
-	if i.cur >= len(i.objects) {
-		return nil
-	}
-	obj, ok := i.objects[i.cur].(*MessageB)
-	if !ok {
-		panic("Cast error")
-	}
-	i.cur++
-	return obj
-}
-
-func MessageBList(client gosdk.Client) *MessageBIterator {
-	return &MessageBIterator{
-		objects: client.List("MessageB"),
-		cur:     0,
-	}
-}
-
-type MessageC struct {
-	sdkClient   gosdk.Client
-	parent      delphiWrapper
-	meta        *delphi.ObjectMeta
-	key         uint32
-	stringValue *StringArray
-}
-
-func (o *MessageC) GetMeta() *delphi.ObjectMeta {
-	return o.meta
-}
-
-func (o *MessageC) SetMeta(val *delphi.ObjectMeta) {
-	o.meta = val
-	o.bubbleSave()
-}
-
-func (o *MessageC) GetKey() uint32 {
-	return o.key
-}
-
-func (o *MessageC) SetKey(val uint32) {
-	o.key = val
-	o.bubbleSave()
-}
-
-func (o *MessageC) GetStringValue() *StringArray {
-	return o.stringValue
-}
-
-func (o *MessageC) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *MessageC) save() {
-	if o.GetKeyString() != "" {
-		o.sdkClient.SetObject(o)
-	}
-}
-
-func (o *MessageC) Delete() {
-	o.sdkClient.DeleteObject(o)
-}
-
-func NewMessageC(sdkClient gosdk.Client) *MessageC {
-	w := &MessageC{}
-	w.sdkClient = sdkClient
-	w.meta = &delphi.ObjectMeta{
-		Kind: "MessageC",
-	}
-	w.stringValue = childNewStringArray(w, sdkClient)
-	return w
-}
-
-func NewMessageCWithKey(sdkClient gosdk.Client, key uint32) *MessageC {
-	w := NewMessageC(sdkClient)
-	w.SetKey(key)
-	return w
-}
-
-func GetMessageC(sdkClient gosdk.Client, key uint32) *MessageC {
-	lookupKey := fmt.Sprintf("%v", key)
-	b := sdkClient.GetObject("MessageC", lookupKey)
-	if b == nil {
-		return nil
-	}
-	o, ok := b.(*MessageC)
-	if !ok {
-		panic("Couldn't cast to MessageC")
-	}
-	return o
-}
-
-func childNewMessageC(parent delphiWrapper, sdkClient gosdk.Client) *MessageC {
-	w := NewMessageC(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func childNewMessageCWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageC) *MessageC {
-	w := childNewMessageC(parent, sdkClient)
-	w.key = value.key
-	w.stringValue = childNewStringArrayWithValue(w, sdkClient, value.stringValue)
-	return w
-}
-
-func (o *MessageC) GetProtoMsg() *MessageC_ {
-	return &MessageC_{
-		Meta:        o.meta,
-		Key:         o.key,
-		StringValue: o.stringValue.GetProtoMsg(),
-	}
-}
-
-func (o *MessageC) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func (obj *MessageC) GetKeyString() string {
-	return fmt.Sprintf("%v", (obj.key))
-}
-
-func (obj *MessageC) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
-	for _, r := range rl {
-		rctr, ok := r.(MessageCReactor)
-		if ok == false {
-			panic("Not a Reactor")
-		}
-		if op == delphi.ObjectOperation_SetOp {
-			if oldObj == nil {
-				rctr.OnMessageCCreate(obj)
-			} else {
-				rctr.OnMessageCUpdate(obj)
-			}
-		} else {
-			rctr.OnMessageCDelete(obj)
-		}
-	}
-}
-
-type MessageCReactor interface {
-	OnMessageCCreate(obj *MessageC)
-	OnMessageCUpdate(obj *MessageC)
-	OnMessageCDelete(obj *MessageC)
-}
-
-func (obj *MessageC) GetPath() string {
-	return "MessageC" + "|" + obj.GetKeyString()
-}
-
-func newMessageCFromMessage(msg *MessageC_) *MessageC {
-	return &MessageC{
-		meta:        msg.Meta,
-		key:         msg.Key,
-		stringValue: newStringArrayFromMessage(msg.StringValue),
-	}
-}
-
-func messageCFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
-	var msg MessageC_
-	err := proto.Unmarshal(data, &msg)
-	if err != nil {
-		return nil, err
-	}
-	w := newMessageCFromMessage(&msg)
-	w.sdkClient = sdkClient
-	return w, nil
-}
-
-func MessageCMount(client gosdk.Client, mode delphi.MountMode) {
-	client.MountKind("MessageC", mode)
-}
-
-func MessageCMountKey(client gosdk.Client, key uint32, mode delphi.MountMode) {
-	keyString := fmt.Sprintf("%v", key)
-	client.MountKindKey("MessageC", keyString, mode)
-}
-
-func MessageCWatch(client gosdk.Client, reactor MessageCReactor) {
-	client.WatchKind("MessageC", reactor)
-}
-
-type MessageCIterator struct {
-	objects []gosdk.BaseObject
-	cur     int
-}
-
-func (i *MessageCIterator) Next() *MessageC {
-	if i.cur >= len(i.objects) {
-		return nil
-	}
-	obj, ok := i.objects[i.cur].(*MessageC)
-	if !ok {
-		panic("Cast error")
-	}
-	i.cur++
-	return obj
-}
-
-func MessageCList(client gosdk.Client) *MessageCIterator {
-	return &MessageCIterator{
-		objects: client.List("MessageC"),
-		cur:     0,
-	}
-}
-
-type MessageD struct {
-	sdkClient   gosdk.Client
-	parent      delphiWrapper
-	meta        *delphi.ObjectMeta
-	stringValue string
-}
-
-func (o *MessageD) GetMeta() *delphi.ObjectMeta {
-	return o.meta
-}
-
-func (o *MessageD) SetMeta(val *delphi.ObjectMeta) {
-	o.meta = val
-	o.bubbleSave()
-}
-
-func (o *MessageD) GetStringValue() string {
-	return o.stringValue
-}
-
-func (o *MessageD) SetStringValue(val string) {
-	o.stringValue = val
-	o.bubbleSave()
-}
-
-func (o *MessageD) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *MessageD) save() {
-	if o.GetKeyString() != "" {
-		o.sdkClient.SetObject(o)
-	}
-}
-
-func (o *MessageD) Delete() {
-	o.sdkClient.DeleteObject(o)
-}
-
-func NewMessageD(sdkClient gosdk.Client) *MessageD {
-	w := &MessageD{}
-	w.sdkClient = sdkClient
-	w.meta = &delphi.ObjectMeta{
-		Kind: "MessageD",
-	}
-	return w
-}
-
-func GetMessageD(sdkClient gosdk.Client) *MessageD {
-	b := sdkClient.GetObject("MessageD", "default")
-	if b == nil {
-		return nil
-	}
-	o, ok := b.(*MessageD)
-	if !ok {
-		panic("Couldn't cast to MessageD")
-	}
-	return o
-}
-
-func childNewMessageD(parent delphiWrapper, sdkClient gosdk.Client) *MessageD {
-	w := NewMessageD(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func childNewMessageDWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *MessageD) *MessageD {
-	w := childNewMessageD(parent, sdkClient)
-	w.stringValue = value.stringValue
-	return w
-}
-
-func (o *MessageD) GetProtoMsg() *MessageD_ {
-	return &MessageD_{
-		Meta:        o.meta,
-		StringValue: o.stringValue,
-	}
-}
-
-func (o *MessageD) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func (obj *MessageD) GetKeyString() string {
-	return "default"
-}
-
-func (obj *MessageD) TriggerEvent(oldObj gosdk.BaseObject, op delphi.ObjectOperation, rl []gosdk.BaseReactor) {
-	for _, r := range rl {
-		rctr, ok := r.(MessageDReactor)
-		if ok == false {
-			panic("Not a Reactor")
-		}
-		if op == delphi.ObjectOperation_SetOp {
-			if oldObj == nil {
-				rctr.OnMessageDCreate(obj)
-			} else {
-				rctr.OnMessageDUpdate(obj)
-			}
-		} else {
-			rctr.OnMessageDDelete(obj)
-		}
-	}
-}
-
-type MessageDReactor interface {
-	OnMessageDCreate(obj *MessageD)
-	OnMessageDUpdate(obj *MessageD)
-	OnMessageDDelete(obj *MessageD)
-}
-
-func (obj *MessageD) GetPath() string {
-	return "MessageD" + "|" + obj.GetKeyString()
-}
-
-func newMessageDFromMessage(msg *MessageD_) *MessageD {
-	return &MessageD{
-		meta:        msg.Meta,
-		stringValue: msg.StringValue,
-	}
-}
-
-func messageDFactory(sdkClient gosdk.Client, data []byte) (gosdk.BaseObject, error) {
-	var msg MessageD_
-	err := proto.Unmarshal(data, &msg)
-	if err != nil {
-		return nil, err
-	}
-	w := newMessageDFromMessage(&msg)
-	w.sdkClient = sdkClient
-	return w, nil
-}
-
-func MessageDMount(client gosdk.Client, mode delphi.MountMode) {
-	client.MountKind("MessageD", mode)
-}
-
-func MessageDWatch(client gosdk.Client, reactor MessageDReactor) {
-	client.WatchKind("MessageD", reactor)
-}
-
-type MessageDIterator struct {
-	objects []gosdk.BaseObject
-	cur     int
-}
-
-func (i *MessageDIterator) Next() *MessageD {
-	if i.cur >= len(i.objects) {
-		return nil
-	}
-	obj, ok := i.objects[i.cur].(*MessageD)
-	if !ok {
-		panic("Cast error")
-	}
-	i.cur++
-	return obj
-}
-
-func MessageDList(client gosdk.Client) *MessageDIterator {
-	return &MessageDIterator{
-		objects: client.List("MessageD"),
-		cur:     0,
 	}
 }
 
@@ -1005,14 +1005,14 @@ func newStringArrayFromMessage(msg []string) *StringArray {
 	return arr
 }
 
-func childNewStringArray(parent delphiWrapper, sdkClient gosdk.Client) *StringArray {
+func childNewStringArray(parent delphiWrapper, sdkClient clientApi.Client) *StringArray {
 	arr := new(StringArray)
 	arr.values = make([]string, 0)
 	arr.parent = parent
 	return arr
 }
 
-func childNewStringArrayWithValue(parent delphiWrapper, sdkClient gosdk.Client, value *StringArray) *StringArray {
+func childNewStringArrayWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *StringArray) *StringArray {
 	arr := childNewStringArray(parent, sdkClient)
 	for _, v := range value.values {
 		arr.values = append(arr.values, v)
@@ -1032,10 +1032,10 @@ func init() {
 	proto.RegisterType((*MessageB_)(nil), "compilertest.MessageB_")
 	proto.RegisterType((*MessageC_)(nil), "compilertest.MessageC_")
 	proto.RegisterType((*MessageD_)(nil), "compilertest.MessageD_")
-	gosdk.RegisterFactory("MessageA", messageAFactory)
-	gosdk.RegisterFactory("MessageB", messageBFactory)
-	gosdk.RegisterFactory("MessageC", messageCFactory)
-	gosdk.RegisterFactory("MessageD", messageDFactory)
+	clientApi.RegisterFactory("MessageB", messageBFactory)
+	clientApi.RegisterFactory("MessageC", messageCFactory)
+	clientApi.RegisterFactory("MessageD", messageDFactory)
+	clientApi.RegisterFactory("MessageA", messageAFactory)
 }
 
 func init() { proto.RegisterFile("compiler_test.proto", fileDescriptor0) }

@@ -1,7 +1,7 @@
 package upggosdk
 
 import (
-	"github.com/pensando/sw/nic/delphi/gosdk"
+	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk/nic/upgrade_manager/upgrade"
 	"github.com/pensando/sw/venice/utils/log"
@@ -175,7 +175,7 @@ func (ctx *upgapprespctx) OnUpgAppRespDelete(obj *upgrade.UpgAppResp) {
 }
 
 //upgAppRespInit init resp subtree coming from upgrade applications
-func upgAppRespInit(client gosdk.Client, hdlrs AgentHandlers, name string) {
+func upgAppRespInit(client clientApi.Client, hdlrs AgentHandlers, name string) {
 	log.Infof("upgAppRespInit called")
 	ctx := &upgapprespctx{
 		agentHdlrs: hdlrs,

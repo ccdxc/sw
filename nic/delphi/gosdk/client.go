@@ -8,63 +8,18 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
+	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/gosdk/messenger"
 	"github.com/pensando/sw/nic/delphi/messanger/proto"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 )
 
-// Service Implement this to use the sdk
-type Service interface {
-	OnMountComplete()
-	Name() string
-}
-
-// MountListener is the interface clients have to implement if the want to be
-// notified of MountComplete
-type MountListener interface {
-	OnMountComplete()
-}
-
-// Client This is the main SDK Client API
-type Client interface {
-	// Mount a kind to get notifications and/or make changes to the objects.
-	// This *MUST* be called before the `Dial` function
-	MountKind(kind string, mode delphi.MountMode) error
-	// Mount a kind,key to get notifications and/or make changes to the objects.
-	// This *MUST* be called before the `Dial` function
-	MountKindKey(kind string, key string, mode delphi.MountMode) error
-	// Dial establishes connection to the HUB
-	Dial() error
-	// SetObject notifies about changes to an object. The user doesn't need to
-	// call this explicitly. It is getting called automatically when there is a
-	// change in any object.
-	SetObject(obj BaseObject) error
-	// GetObject returns the object of kind `kind` with key `key` if it
-	// exists in the local database, else it return nil
-	GetObject(kind string, key string) BaseObject
-	// Delete object, as it names sugests, deletes an object from the database.
-	// Users can use this, or just call <OBJECT>.Delete()
-	DeleteObject(obj BaseObject) error
-	// WatchKind is used internally by the object to register reactors. Users
-	// should not call this directly
-	WatchKind(kind string, reactor BaseReactor) error
-	// WatchMount allows users to register extra onMount callbacks
-	WatchMount(listener MountListener) error
-	// List all the objects in the database of a specific kind
-	List(kind string) []BaseObject
-	// Close, as the name suggests, closes the connection to the hub.
-	Close()
-	// DumpSubtrees prints the local database state to stderr. It's meant to be
-	// used for debugging purposes.
-	DumpSubtrees()
-}
-
 // The main map holding the objects in the local copy of the databse.
-type subtree map[string]BaseObject
+type subtree map[string]clientApi.BaseObject
 
 // Represents a change in on object, used to send changes through a channel
 type change struct {
-	obj BaseObject
+	obj clientApi.BaseObject
 	op  delphi.ObjectOperation
 }
 
@@ -73,10 +28,10 @@ type client struct {
 	id             uint16
 	nextObjID      uint32
 	mclient        messenger.Client
-	service        Service
+	service        clientApi.Service
 	mounts         []*delphi_messanger.MountData
-	mountListeners []MountListener
-	watchers       map[string][]BaseReactor
+	mountListeners []clientApi.MountListener
+	watchers       map[string][]clientApi.BaseReactor
 	subtrees       map[string]subtree
 	changeQueue    chan *change
 	globalLock     *sync.Mutex
@@ -130,7 +85,7 @@ func (c *client) Dial() error {
 // SetObject notifies about changes to an object. The user doesn't need to
 // call this explicitly. It is getting called automatically when there is a
 // change in any object.
-func (c *client) SetObject(obj BaseObject) error {
+func (c *client) SetObject(obj clientApi.BaseObject) error {
 	meta := obj.GetMeta()
 	if meta.Handle == 0 {
 		meta.Key = obj.GetKeyString()
@@ -148,7 +103,7 @@ func (c *client) SetObject(obj BaseObject) error {
 
 // GetObject returns the object of kind `kind` with key `key` if it
 // exists in the local database, else it return nil
-func (c *client) GetObject(kind string, key string) BaseObject {
+func (c *client) GetObject(kind string, key string) clientApi.BaseObject {
 	c.globalLock.Lock()
 	defer c.globalLock.Unlock()
 	subtree := c.subtrees[kind]
@@ -161,7 +116,7 @@ func (c *client) GetObject(kind string, key string) BaseObject {
 
 // Delete object, as it names sugests, deletes an object from the database.
 // Users can use this, or just call <OBJECT>.Delete()
-func (c *client) DeleteObject(obj BaseObject) error {
+func (c *client) DeleteObject(obj clientApi.BaseObject) error {
 	c.queueChange(&change{
 		obj: obj,
 		op:  delphi.ObjectOperation_DeleteOp,
@@ -178,10 +133,10 @@ func (c *client) queueChange(change *change) {
 
 // WathcKind is used internally by the object to register reactors. Users
 // should not call this directly
-func (c *client) WatchKind(kind string, reactor BaseReactor) error {
+func (c *client) WatchKind(kind string, reactor clientApi.BaseReactor) error {
 	rl := c.watchers[kind]
 	if rl == nil {
-		rl = make([]BaseReactor, 0)
+		rl = make([]clientApi.BaseReactor, 0)
 	}
 	rl = append(rl, reactor)
 	c.watchers[kind] = rl
@@ -189,7 +144,7 @@ func (c *client) WatchKind(kind string, reactor BaseReactor) error {
 }
 
 // WatchMount
-func (c *client) WatchMount(listener MountListener) error {
+func (c *client) WatchMount(listener clientApi.MountListener) error {
 	c.mountListeners = append(c.mountListeners, listener)
 	return nil
 }
@@ -251,7 +206,7 @@ func (c *client) run() {
 
 // Update the subtree for a single object
 func (c *client) updateSubtree(op delphi.ObjectOperation, kind string,
-	key string, obj BaseObject) {
+	key string, obj clientApi.BaseObject) {
 	c.globalLock.Lock()
 	defer c.globalLock.Unlock()
 	switch op {
@@ -277,7 +232,7 @@ func (c *client) updateSubtree(op delphi.ObjectOperation, kind string,
 // database. It invokes the reactors
 func (c *client) updateSubtrees(objlist []*delphi_messanger.ObjectData, triggerEvents bool) {
 	for _, obj := range objlist {
-		factory := factories[obj.Meta.Kind]
+		factory := clientApi.Factories[obj.Meta.Kind]
 		baseObj, err := factory(c, obj.Data)
 		oldObj := c.GetObject(obj.Meta.Kind, obj.Meta.Key)
 		if err != nil {
@@ -328,11 +283,11 @@ func (c *client) DumpSubtrees() {
 }
 
 // List all the objects in the database of a specific kind
-func (c *client) List(kind string) []BaseObject {
+func (c *client) List(kind string) []clientApi.BaseObject {
 	c.globalLock.Lock()
 	defer c.globalLock.Unlock()
 
-	objects := make([]BaseObject, 0)
+	objects := make([]clientApi.BaseObject, 0)
 
 	subtr, ok := c.subtrees[kind]
 	if !ok {
@@ -355,14 +310,14 @@ func (c *client) newHandle() uint64 {
 
 // NewClient should be called to create a new Delphi Client. A process is allowed
 // to have more than one clients at the same time.
-func NewClient(service Service) (Client, error) {
+func NewClient(service clientApi.Service) (clientApi.Client, error) {
 	client := &client{
 		mounts:         make([]*delphi_messanger.MountData, 0),
 		service:        service,
 		subtrees:       make(map[string]subtree),
-		watchers:       make(map[string][]BaseReactor),
+		watchers:       make(map[string][]clientApi.BaseReactor),
 		changeQueue:    make(chan *change),
-		mountListeners: make([]MountListener, 0),
+		mountListeners: make([]clientApi.MountListener, 0),
 		globalLock:     &sync.Mutex{},
 	}
 

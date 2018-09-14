@@ -1,7 +1,7 @@
 package upggosdk
 
 import (
-	"github.com/pensando/sw/nic/delphi/gosdk"
+	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk/nic/upgrade_manager/upgrade"
 	"github.com/pensando/sw/venice/utils/log"
@@ -9,7 +9,7 @@ import (
 
 type upgrespctx struct {
 	agentHdlrs AgentHandlers
-	sdkClient  gosdk.Client
+	sdkClient  clientApi.Client
 }
 
 func (ctx *upgrespctx) invokeAgentHandler(obj *upgrade.UpgResp) {
@@ -71,7 +71,7 @@ func (ctx *upgrespctx) OnUpgRespDelete(obj *upgrade.UpgResp) {
 }
 
 //upgRespInit init resp subtree coming from upgrade manager
-func upgRespInit(client gosdk.Client, hdlrs AgentHandlers) {
+func upgRespInit(client clientApi.Client, hdlrs AgentHandlers) {
 	log.Infof("upgRespInit called")
 	ctx := &upgrespctx{
 		agentHdlrs: hdlrs,

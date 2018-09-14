@@ -17,6 +17,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
+import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -84,7 +85,7 @@ type delphiWrapper interface {
 }
 
 type InterfaceSpec struct {
-	sdkClient  Client
+	sdkClient  clientApi.Client
 	parent     delphiWrapper
 	meta       *delphi.ObjectMeta
 	key        *IntfIndex
@@ -131,7 +132,7 @@ func (o *InterfaceSpec) Delete() {
 	o.sdkClient.DeleteObject(o)
 }
 
-func NewInterfaceSpec(sdkClient Client) *InterfaceSpec {
+func NewInterfaceSpec(sdkClient clientApi.Client) *InterfaceSpec {
 	w := &InterfaceSpec{}
 	w.sdkClient = sdkClient
 	w.meta = &delphi.ObjectMeta{
@@ -141,7 +142,7 @@ func NewInterfaceSpec(sdkClient Client) *InterfaceSpec {
 	return w
 }
 
-func GetInterfaceSpec(sdkClient Client, key *IntfIndex) *InterfaceSpec {
+func GetInterfaceSpec(sdkClient clientApi.Client, key *IntfIndex) *InterfaceSpec {
 	lookupKey := key.GetProtoMsg().String()
 	b := sdkClient.GetObject("InterfaceSpec", lookupKey)
 	if b == nil {
@@ -154,7 +155,7 @@ func GetInterfaceSpec(sdkClient Client, key *IntfIndex) *InterfaceSpec {
 	return o
 }
 
-func childNewInterfaceSpec(parent delphiWrapper, sdkClient Client) *InterfaceSpec {
+func childNewInterfaceSpec(parent delphiWrapper, sdkClient clientApi.Client) *InterfaceSpec {
 	w := NewInterfaceSpec(sdkClient)
 	w.parent = parent
 	return w
@@ -176,7 +177,7 @@ func (obj *InterfaceSpec) GetKeyString() string {
 	return obj.key.GetProtoMsg().String()
 }
 
-func (obj *InterfaceSpec) TriggerEvent(oldObj BaseObject, op delphi.ObjectOperation, rl []BaseReactor) {
+func (obj *InterfaceSpec) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
 	for _, r := range rl {
 		rctr, ok := r.(InterfaceSpecReactor)
 		if ok == false {
@@ -212,7 +213,7 @@ func newInterfaceSpecFromMessage(msg *InterfaceSpec_) *InterfaceSpec {
 	}
 }
 
-func interfaceSpecFactory(sdkClient Client, data []byte) (BaseObject, error) {
+func interfaceSpecFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
 	var msg InterfaceSpec_
 	err := proto.Unmarshal(data, &msg)
 	if err != nil {
@@ -223,16 +224,16 @@ func interfaceSpecFactory(sdkClient Client, data []byte) (BaseObject, error) {
 	return w, nil
 }
 
-func InterfaceSpecMount(client Client, mode delphi.MountMode) {
+func InterfaceSpecMount(client clientApi.Client, mode delphi.MountMode) {
 	client.MountKind("InterfaceSpec", mode)
 }
 
-func InterfaceSpecWatch(client Client, reactor InterfaceSpecReactor) {
+func InterfaceSpecWatch(client clientApi.Client, reactor InterfaceSpecReactor) {
 	client.WatchKind("InterfaceSpec", reactor)
 }
 
 type IntfIndex struct {
-	sdkClient Client
+	sdkClient clientApi.Client
 	parent    delphiWrapper
 	ifidx     uint32
 }
@@ -257,13 +258,13 @@ func (o *IntfIndex) bubbleSave() {
 func (o *IntfIndex) save() {
 }
 
-func NewIntfIndex(sdkClient Client) *IntfIndex {
+func NewIntfIndex(sdkClient clientApi.Client) *IntfIndex {
 	w := &IntfIndex{}
 	w.sdkClient = sdkClient
 	return w
 }
 
-func childNewIntfIndex(parent delphiWrapper, sdkClient Client) *IntfIndex {
+func childNewIntfIndex(parent delphiWrapper, sdkClient clientApi.Client) *IntfIndex {
 	w := NewIntfIndex(sdkClient)
 	w.parent = parent
 	return w
@@ -288,7 +289,7 @@ func newIntfIndexFromMessage(msg *IntfIndex_) *IntfIndex {
 func init() {
 	proto.RegisterType((*IntfIndex_)(nil), "example.IntfIndex_")
 	proto.RegisterType((*InterfaceSpec_)(nil), "example.InterfaceSpec_")
-	RegisterFactory("InterfaceSpec", interfaceSpecFactory)
+	clientApi.RegisterFactory("InterfaceSpec", interfaceSpecFactory)
 }
 
 func init() { proto.RegisterFile("client_test.proto", fileDescriptor0) }

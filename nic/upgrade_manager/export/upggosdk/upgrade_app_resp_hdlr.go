@@ -1,12 +1,12 @@
 package upggosdk
 
 import (
-	"github.com/pensando/sw/nic/delphi/gosdk"
+	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk/nic/upgrade_manager/upgrade"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-func canInvokeHandler(sdkClient gosdk.Client, name string, reqType upgrade.UpgReqStateType) bool {
+func canInvokeHandler(sdkClient clientApi.Client, name string, reqType upgrade.UpgReqStateType) bool {
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp == nil {
 		log.Infof("UpgAppResp not found for %s", name)
@@ -21,7 +21,7 @@ func canInvokeHandler(sdkClient gosdk.Client, name string, reqType upgrade.UpgRe
 	return true
 }
 
-func createUpgAppResp(sdkClient gosdk.Client, name string) {
+func createUpgAppResp(sdkClient clientApi.Client, name string) {
 	log.Infof("Creating UpgAppResp for %s", name)
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp == nil {
@@ -36,7 +36,7 @@ func upgAppRespValToStr(respStateType upgrade.UpgStateRespType) string {
 	return getUpgAppRespValToStr(respStateType)
 }
 
-func updateUpgAppResp(respStateType upgrade.UpgStateRespType, appHdlrResp *HdlrResp, name string, sdkClient gosdk.Client) {
+func updateUpgAppResp(respStateType upgrade.UpgStateRespType, appHdlrResp *HdlrResp, name string, sdkClient clientApi.Client) {
 	log.Infof("Updating UpgAppResp for %s", name)
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp == nil {
@@ -53,7 +53,7 @@ func updateUpgAppResp(respStateType upgrade.UpgStateRespType, appHdlrResp *HdlrR
 	return
 }
 
-func deleteUpgAppResp(name string, sdkClient gosdk.Client) {
+func deleteUpgAppResp(name string, sdkClient clientApi.Client) {
 	log.Infof("deleteUpgAppResp called")
 	upgAppResp := upgrade.GetUpgAppResp(sdkClient, name)
 	if upgAppResp != nil {

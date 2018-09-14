@@ -6,7 +6,7 @@ import (
 	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 
-	gosdk "github.com/pensando/sw/nic/delphi/gosdk"
+	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 )
 
@@ -29,29 +29,29 @@ func (t *testClient) Dial() error {
 	return nil
 }
 
-func (t *testClient) SetObject(obj gosdk.BaseObject) error {
+func (t *testClient) SetObject(obj clientApi.BaseObject) error {
 	return nil
 }
 
-func (t *testClient) DeleteObject(obj gosdk.BaseObject) error {
+func (t *testClient) DeleteObject(obj clientApi.BaseObject) error {
 	return nil
 }
 
-func (*testClient) GetObject(kind string, key string) gosdk.BaseObject {
+func (*testClient) GetObject(kind string, key string) clientApi.BaseObject {
 	return nil
 }
 
-func (t *testClient) WatchKind(kind string, reactor gosdk.BaseReactor) error {
+func (t *testClient) WatchKind(kind string, reactor clientApi.BaseReactor) error {
 	return nil
 }
 
-func (t *testClient) WatchMount(l gosdk.MountListener) error {
+func (t *testClient) WatchMount(l clientApi.MountListener) error {
 	return nil
 }
 
-var list = make([]gosdk.BaseObject, 0)
+var list = make([]clientApi.BaseObject, 0)
 
-func (t *testClient) List(kind string) []gosdk.BaseObject {
+func (t *testClient) List(kind string) []clientApi.BaseObject {
 	return list
 }
 
@@ -168,7 +168,7 @@ func TestMessageA(t *testing.T) {
 	}
 
 	r := new(reactA)
-	rl := make([]gosdk.BaseReactor, 1)
+	rl := make([]clientApi.BaseReactor, 1)
 	rl[0] = r
 
 	a2.TriggerEvent(nil, delphi.ObjectOperation_SetOp, rl)
@@ -184,7 +184,7 @@ func TestMessageA(t *testing.T) {
 		t.Errorf(`GetMessageA("", "") != nil`)
 	}
 
-	list = make([]gosdk.BaseObject, 0)
+	list = make([]clientApi.BaseObject, 0)
 	it := MessageAList(client)
 	if it == nil {
 		t.Errorf(`it == nil`)
@@ -390,7 +390,7 @@ func TestMessageBExtra(t *testing.T) {
 	}
 
 	r := new(reactB)
-	rl := make([]gosdk.BaseReactor, 1)
+	rl := make([]clientApi.BaseReactor, 1)
 	rl[0] = r
 
 	b2.TriggerEvent(nil, delphi.ObjectOperation_SetOp, rl)
@@ -409,7 +409,7 @@ func TestMessageBExtra(t *testing.T) {
 		t.Errorf(`GetMessageB("", "") != nil`)
 	}
 
-	list = make([]gosdk.BaseObject, 0)
+	list = make([]clientApi.BaseObject, 0)
 	it := MessageBList(client)
 	if it == nil {
 		t.Errorf(`it == nil`)
@@ -508,7 +508,7 @@ func TestMessageCExtra(t *testing.T) {
 	}
 
 	r := new(reactC)
-	rl := make([]gosdk.BaseReactor, 1)
+	rl := make([]clientApi.BaseReactor, 1)
 	rl[0] = r
 
 	c2.TriggerEvent(nil, delphi.ObjectOperation_SetOp, rl)
@@ -529,7 +529,7 @@ func TestMessageCExtra(t *testing.T) {
 		t.Errorf(`c3.GetKeyString().Length() != 1`)
 	}
 
-	list = make([]gosdk.BaseObject, 0)
+	list = make([]clientApi.BaseObject, 0)
 	it := MessageCList(client)
 	if it == nil {
 		t.Errorf(`it == nil`)
@@ -634,7 +634,7 @@ func TestMessageD(t *testing.T) {
 	}
 
 	r := new(reactD)
-	rl := make([]gosdk.BaseReactor, 1)
+	rl := make([]clientApi.BaseReactor, 1)
 	rl[0] = r
 
 	d2.TriggerEvent(nil, delphi.ObjectOperation_SetOp, rl)
@@ -650,7 +650,7 @@ func TestMessageD(t *testing.T) {
 		t.Errorf(`GetMessageD("", "") != nil`)
 	}
 
-	list = make([]gosdk.BaseObject, 0)
+	list = make([]clientApi.BaseObject, 0)
 	it := MessageDList(client)
 	if it == nil {
 		t.Errorf(`it == nil`)
