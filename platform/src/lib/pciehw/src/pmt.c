@@ -252,7 +252,7 @@ pmt_make_bar(pmt_t *pmt,
              const pciehw_spmt_t *spmt)
 {
     const u_int64_t addr = spmt->baraddr;
-    const u_int64_t addrm = ~((1 << (ffsl(spmt->barsize) - 1)) - 1);
+    const u_int64_t addrm = ~((1ULL << (ffsll(spmt->barsize) - 1)) - 1);
     pmt_datamask_t dm;
     pmr_bar_entry_t *r = &pmt->pmre.bar;
 
