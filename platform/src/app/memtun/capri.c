@@ -42,15 +42,14 @@ static int
 mem_init(memtun_info_t *mi, off_t phys, char *info, uint32_t infosz)
 {
     static const char path[] = "/dev/mem";
-    memtun_t *mp;
+    memtun_t lmp, *mp = &lmp;
     void *mem;
 
     if (open_mem(path, phys, sizeof (memtun_t), &mem) < 0) {
         return -1;
     }
-    mp = (memtun_t *)mem;
 
-    w_memzero(&mp->hdr, sizeof (mp->hdr));
+    memset(&mp->hdr, 0, sizeof (mp->hdr));
     mp->hdr.version = MEMTUN_VERSION;
     mp->hdr.memsize = sizeof (memtun_t);
     mp->hdr.ring_size = PKTS_PER_RING;
@@ -58,7 +57,7 @@ mem_init(memtun_info_t *mi, off_t phys, char *info, uint32_t infosz)
     mp->hdr.rxq_offs = offsetof(memtun_t, rxq);
     mp->hdr.info_offs = offsetof(memtun_t, info);
 
-    w_memcpy(mp->info, info, infosz);
+    memcpy(mp->info, info, infosz);
 
     mp->txq.posted_index = 0;
     mp->txq.fetch_index = 0;
@@ -66,6 +65,10 @@ mem_init(memtun_info_t *mi, off_t phys, char *info, uint32_t infosz)
     mp->rxq.fetch_index = 0;
 
     mp->hdr.magic = MEMTUN_MAGIC;
+
+    // carefully copy local into mem
+    w_memcpy(mem, mp, sizeof (memtun_t));
+    mp = (memtun_t *)mem;
 
     mi->hdr = &mp->hdr;
     mi->txq = &mp->rxq;

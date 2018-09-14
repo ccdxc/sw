@@ -308,7 +308,7 @@ ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 01:00.0 Class 0604: Device 1dd8:1001
 	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Region 0: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=1M]
+	Region 0: Memory at <unassigned> (64-bit, non-prefetchable) [disabled] [size=256K]
 	Bus: primary=00, secondary=02, subordinate=00, sec-latency=0
 	I/O behind bridge: 00000000-00000fff [size=4K]
 	Memory behind bridge: 00000000-000fffff [size=1M]

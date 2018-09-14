@@ -1,0 +1,5 @@
+add eth -L 4
+add eth -L 5
+add accel -L 6
+finalize
+exit

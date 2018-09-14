@@ -233,7 +233,7 @@ pciehdev_finalize(void)
                 pbrdn = pciehdev_bridgedn_new(memtun_en);
                 pbrdn->port = port;
                 pciehdev_addchild(pi->root, pbrdn);
-                pi->memtun_br = memtun_en;
+                if (memtun_en) pi->memtun_br = 1;
             }
 
             pciehdev_finalize_dev(pi->root, bdf_make(0, 0, 0), &nextbus);
@@ -326,7 +326,7 @@ pciehdev_add(pciehdev_t *pdev)
     pbrdn = pciehdev_bridgedn_new(memtun_en);
     pbrdn->port = port;
     pciehdev_addchild(pi->root, pbrdn);
-    pi->memtun_br = memtun_en;
+    if (memtun_en) pi->memtun_br = 1;
     return pciehdev_addchild(pbrdn, pdev);
 }
 

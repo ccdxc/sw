@@ -20,7 +20,7 @@ init_memtun_bar(pciehbars_t *pbars)
     const char *memtun_addr_env = getenv("MEMTUN_ADDR");
     const char *memtun_size_env = getenv("MEMTUN_SIZE");
     u_int64_t memtun_pa = 0x13b000000;
-    u_int64_t memtun_sz = 0x100000;
+    u_int64_t memtun_sz = 0x40000;
 
     if (memtun_addr_env) {
         memtun_pa = strtoull(memtun_addr_env, NULL, 0);
