@@ -1381,6 +1381,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 					},
 					Action: &halproto.MonitorAction{
 						MsKeyHandle: msIDs,
+						Action:      []halproto.RuleAction{halproto.RuleAction_MIRROR},
 					},
 				}
 				updateReqMsg.Request = append(updateReqMsg.Request, &flowRuleSpec)
@@ -1464,6 +1465,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 					},
 					Action: &halproto.MonitorAction{
 						MsKeyHandle: msIDs,
+						Action:      []halproto.RuleAction{halproto.RuleAction_MIRROR},
 					},
 				}
 				updateReqMsg.Request = append(updateReqMsg.Request, &flowRuleSpec)
@@ -1590,6 +1592,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 				},
 				Action: &halproto.MonitorAction{
 					MsKeyHandle: msIDs,
+					Action:      []halproto.RuleAction{halproto.RuleAction_MIRROR},
 				},
 			}
 			ReqMsg.Request = append(ReqMsg.Request, &flowRuleSpec)
@@ -1663,6 +1666,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 				},
 				Action: &halproto.MonitorAction{
 					MsKeyHandle: msIDs,
+					Action:      []halproto.RuleAction{halproto.RuleAction_MIRROR},
 				},
 			}
 			ReqMsg.Request = append(ReqMsg.Request, &flowRuleSpec)
