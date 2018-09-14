@@ -26,7 +26,7 @@ typedef struct pal_sim_vectors_s {
     read_mem_fn_t           read_mem;
     write_mem_fn_t          write_mem;
     ring_doorbell_fn_t      ring_doorbell;
-    step_cpu_pkt_fn_t       step_cpu_pkt; 
+    step_cpu_pkt_fn_t       step_cpu_pkt;
 } pal_sim_vectors_t;
 
 static pal_sim_vectors_t   gl_sim_vecs;
@@ -40,9 +40,9 @@ pal_init_sim_vectors ()
     gl_sim_vecs.write_reg = (write_reg_fn_t)dlsym(gl_lib_handle, "write_reg");
     gl_sim_vecs.read_mem = (read_mem_fn_t)dlsym(gl_lib_handle, "read_mem");
     gl_sim_vecs.write_mem = (write_mem_fn_t)dlsym(gl_lib_handle, "write_mem");
-    gl_sim_vecs.ring_doorbell = 
+    gl_sim_vecs.ring_doorbell =
             (ring_doorbell_fn_t)dlsym(gl_lib_handle, "step_doorbell");
-    gl_sim_vecs.step_cpu_pkt = 
+    gl_sim_vecs.step_cpu_pkt =
             (step_cpu_pkt_fn_t)dlsym(gl_lib_handle, "step_cpu_pkt");
 
     return PAL_RET_OK;
@@ -131,14 +131,14 @@ pal_sim_connect (void)
         return PAL_RET_OK;
     }
 
-    SDK_TRACE_DEBUG("Connecting to ASIC SIM\n");
+    SDK_TRACE_DEBUG("Connecting to ASIC SIM");
     do {
         rc = (*gl_sim_vecs.connect)();
         if (rc != -1) {
-            SDK_TRACE_DEBUG("Connected to the ASIC model...\n");
+            SDK_TRACE_DEBUG("Connected to the ASIC model...");
             break;
         }
-        SDK_TRACE_DEBUG("Failed to connect to asic, retrying in 1 sec ...\n");
+        SDK_TRACE_DEBUG("Failed to connect to asic, retrying in 1 sec ...");
         sleep(1);
     } while (1);
 

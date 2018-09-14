@@ -1114,8 +1114,6 @@ capri_block_init(capri_cfg_t *cfg)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("capri_block_init");
-
     // initialize block info
     capri_block_info_init();
 
@@ -1152,7 +1150,7 @@ capri_init (capri_cfg_t *cfg = NULL)
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("Capri Init ");
+    HAL_TRACE_DEBUG("Initializing Capri");
 
     hal::hal_cfg_t *hal_cfg =
         (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();

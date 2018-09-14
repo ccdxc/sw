@@ -58,7 +58,7 @@ rw_entry_find (pd_rw_entry_key_t *rw_key, pd_rw_entry_t **rwe)
     if ((*rwe) == NULL) {
         ret = HAL_RET_ENTRY_NOT_FOUND;
     } else {
-        HAL_TRACE_DEBUG("PD-RW: Found rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
+        HAL_TRACE_DEBUG("Found rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
                         (*rwe)->rw_idx, rw_key->rw_act,
                         ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
                         ether_ntoa((struct ether_addr*)&rw_key->mac_da));
@@ -99,13 +99,13 @@ rw_entry_alloc (pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
         tmp_rw_idx = rw_info->rw_idx;
         rs = g_hal_state_pd->rw_tbl_idxr()->alloc_withid(tmp_rw_idx);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("PD-RW: Indexer err: {}", rs);
+            HAL_TRACE_ERR("Indexer err: {}", rs);
             goto end;
         }
     } else {
         rs = g_hal_state_pd->rw_tbl_idxr()->alloc(&tmp_rw_idx);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("PD-RW: Resource Exhaustion num_indices_allocated: {} [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
+            HAL_TRACE_ERR("Resource Exhaustion num_indices_allocated: {} [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
                           g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(), rw_key->rw_act,
                           ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
                           ether_ntoa((struct ether_addr*)&rw_key->mac_da));
@@ -129,7 +129,7 @@ rw_entry_alloc (pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
     // Increment the ref count
     rwe->ref_cnt++;
 
-    HAL_TRACE_DEBUG("PD-RW: Usage: {} ref_cnt: {} Allocated rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
+    HAL_TRACE_DEBUG("Usage: {} ref_cnt: {} Allocated rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
                     g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
                     rwe->ref_cnt, tmp_rw_idx, rw_key->rw_act,
                     ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
@@ -171,7 +171,7 @@ rw_entry_find_or_alloc(pd_rw_entry_key_t *rw_key, uint32_t *rw_idx)
         *rw_idx = rwe->rw_idx;
         // Increment the ref count
         rwe->ref_cnt++;
-        HAL_TRACE_DEBUG("PD-RW: Usage: {} ref_cnt: {} Find/Alloc rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
+        HAL_TRACE_DEBUG("Usage: {} ref_cnt: {} Find/Alloc rw_id: {} for [ rw_act: {}, mac_sa: {}, mac_da: {} ]",
                         g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
                         rwe->ref_cnt, rwe->rw_idx, rw_key->rw_act,
                         ether_ntoa((struct ether_addr*)&rw_key->mac_sa),
@@ -230,7 +230,7 @@ rw_entry_delete (pd_rw_entry_key_t *rw_key)
     // Decrement the ref count
     rwe->ref_cnt--;
 
-    buf.write("PD-RW: Usage: {} ref_cnt: {} Delete rw_id: {} for [ rw_act: {}, ",
+    buf.write("Usage: {} ref_cnt: {} Delete rw_id: {} for [ rw_act: {}, ",
             g_hal_state_pd->rw_tbl_idxr()->num_indices_allocated(),
             rwe->ref_cnt,
             rwe->rw_idx,
@@ -256,7 +256,7 @@ rw_entry_delete (pd_rw_entry_key_t *rw_key)
         // Free the index
         rs = g_hal_state_pd->rw_tbl_idxr()->free(rwe->rw_idx);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("PD-RW: Failed to free Indexer err: {}", rs);
+            HAL_TRACE_ERR("Failed to free Indexer err: {}", rs);
         }
 
         rw_entry_pd_free(rwe);
@@ -284,13 +284,13 @@ rw_pd_depgm_rw_tbl (pd_rw_entry_t *rwe)
     sdk_ret = rw_tbl->remove(rwe->rw_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        buf.write("PD-RW: Unable to de-program at rw_id: {} for [ rw_act: {}, ",
+        buf.write("Unable to de-program at rw_id: {} for [ rw_act: {}, ",
                   rwe->rw_idx,
                   rwe->rw_key.rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
     } else {
-        buf.write("PD-RW: De-Programmed at rw_id: {} for [ rw_act: {}, ",
+        buf.write("De-Programmed at rw_id: {} for [ rw_act: {}, ",
                   rwe->rw_idx,
                   rwe->rw_key.rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
@@ -327,13 +327,13 @@ rw_pd_pgm_rw_tbl (pd_rw_entry_t *rwe)
     sdk_ret = rw_tbl->insert_withid(&data, rwe->rw_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        buf.write("PD-RW: Unable to program at rw_id: {} for [ rw_act: {}, ",
+        buf.write("Unable to program at rw_id: {} for [ rw_act: {}, ",
                   rwe->rw_idx,
                   rwe->rw_key.rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));
         buf.write("mac_da: {} ]", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_da));
     } else {
-        buf.write("PD-RW: Programmed at rw_id: {} for [ rw_act: {}, ",
+        buf.write("Programmed at rw_id: {} for [ rw_act: {}, ",
                   rwe->rw_idx,
                   rwe->rw_key.rw_act);
         buf.write("mac_sa: {}, ", ether_ntoa((struct ether_addr*)&rwe->rw_key.mac_sa));

@@ -97,6 +97,10 @@ source /home/haps/haps/scripts/common/mxp.tcl
 mxp_up 0
 mxp_up 1
 
+# To dump mac stats
+temac_statrd 0 0 1
+temac_statrd 1 0 1
+
 # Check link status a few times, The last byte of output should be '6d'.
 # If link does not come up then, you need to go back to *SETUP CAPRI* step.
 phy_regrd 0 0 1
@@ -218,3 +222,26 @@ iperf -u -s -i 5 2>&1 > server.log &
 iperf -u -c 10.10.1.2 -i 1 -l 64 -t 28800 -b1G -e 2>&1 > client.log &
 
 # Copyout server.log and client.log after test is completed
+
+*********************
+* dump PB counters
+*********************
+> source pb_utils.tcl (?)
+> pb_intf_counters
+>
+
+****************************
+* decoding cores from haps
+****************************
+
+cd <WS>
+
+# path to shared lib and sysroot
+cp  /home/saratk/gdbinit_arm  ~/.gdbinit
+
+# run below cmd from ‘sw’ dir
+/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gdb bazel-bin/nic/hal/hal -c <core_file>
+
+# In gdb prompt, make sure shared libs are found. Else use set solib-seach-path to set the search path.
+info shared
+

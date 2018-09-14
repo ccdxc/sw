@@ -9,7 +9,7 @@ void table_health_monitor(uint32_t table_id,
 {
     // TODO: Update new_state depending on usage and
     //       raise an event on state change.
-    HAL_TRACE_DEBUG("Table Health Monior: id: {}, name: {}, capacity: {}, "
-                    "usage: {}, curr_state: {}, new_state: {}",
+    HAL_TRACE_DEBUG("table id: {}, name: {}, capacity: {}, "
+                    "usage: {}, curr state: {}, new state: {}",
                     table_id, name, capacity, usage, curr_state, *new_state);
 }

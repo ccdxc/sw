@@ -85,7 +85,7 @@ capri_hbm_parse (capri_cfg_t *cfg)
         reg->size_kb = p4_tbl.second.get<int>(JKEY_SIZE_KB);
         reg->start_offset = offset;
 
-        HAL_TRACE_DEBUG("Region: {}, Size_KB: {}, Start:{:#x} End:{:#x}",
+        HAL_TRACE_DEBUG("region : {}, size : {}kb, start : {:#x}, end : {:#x}",
                         reg->mem_reg_name, reg->size_kb,
                         HBM_OFFSET(reg->start_offset),
                         HBM_OFFSET(reg->start_offset + reg->size_kb * 1024));
@@ -388,7 +388,7 @@ capri_hbm_cache_regions_init (void)
         }
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4IG) {
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4IG cache(region 1), "
+            HAL_TRACE_DEBUG("Programming {} to P4IG cache(region 1), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4ig_filter_idx);
             capri_hbm_cache_program_region(reg, 1, p4ig_filter_idx, 1, 0);
@@ -396,7 +396,7 @@ capri_hbm_cache_regions_init (void)
         }
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4EG) {
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4EG cache(region 2), "
+            HAL_TRACE_DEBUG("Programming {} to P4EG cache(region 2), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4eg_filter_idx);
             capri_hbm_cache_program_region(reg, 2, p4eg_filter_idx, 1, 0);
@@ -404,7 +404,7 @@ capri_hbm_cache_regions_init (void)
         }
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA) {
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS TXDMA cache(region 3), "
+            HAL_TRACE_DEBUG("Programming {} to P4PLUS TXDMA cache(region 3), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_txdma_filter_idx);
             capri_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx, 1, 1);
@@ -412,7 +412,7 @@ capri_hbm_cache_regions_init (void)
         }
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA) {
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to P4PLUS RXDMA cache(region 0), "
+            HAL_TRACE_DEBUG("Programming {} to P4PLUS RXDMA cache(region 0), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_rxdma_filter_idx);
             capri_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx, 1, 1);
@@ -420,13 +420,13 @@ capri_hbm_cache_regions_init (void)
         }
 
         if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_PCIE_DB) {
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to PCIE, "
+            HAL_TRACE_DEBUG("Programming {} to PCIE, "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_pcie_filter_idx);
             capri_hbm_cache_program_pcie(reg, p4plus_pcie_filter_idx);
             p4plus_pcie_filter_idx++;
 
-            HAL_TRACE_DEBUG("HBM Cache: Programming {} to Doorbell, "
+            HAL_TRACE_DEBUG("Programming {} to Doorbell, "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_db_filter_idx);
             capri_hbm_cache_program_db(reg, p4plus_db_filter_idx);

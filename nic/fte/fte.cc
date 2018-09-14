@@ -115,7 +115,7 @@ void feature_state_init(feature_state_t *feature_state, uint16_t num_features)
             } else {
                 bzero(feature_state[id].ctx_state, feature->state_size);
             }
-            HAL_TRACE_DEBUG("fte::feature_state_init name={} id={}, size={}, offset={} ctx={:p}",
+            HAL_TRACE_DEBUG("name={} id={}, size={}, offset={} ctx={:p}",
                             feature->name, feature->id,
                             feature->state_size, feature->state_offset,
                             feature_state[id].ctx_state);
@@ -325,11 +325,11 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
 static bool CpucbId_Parse(const std::string& queue, uint32_t *qid)
 {
     if (queue == "CPUCB_ID_FLOWMISS") {
-        *qid = 0; 
+        *qid = 0;
         return true;
     } else if (queue == "CPUCB_ID_TCP_CLOSE") {
         *qid = 1;
-        return true;  
+        return true;
     } else if (queue == "CPUCB_ID_RELIABLE_COPY") {
         *qid = 2;
         return true;
@@ -341,7 +341,7 @@ static bool CpucbId_Parse(const std::string& queue, uint32_t *qid)
         return true;
     } else if (queue == "CPUCB_ID_NACL_LOG") {
         *qid = 5;
-        return true; 
+        return true;
     } else {
         return false;
     }
