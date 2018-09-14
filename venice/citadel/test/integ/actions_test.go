@@ -590,7 +590,8 @@ func (it *integTestSuite) verifyKvPattern(c *C, locator string, params ActionPar
 		AssertOk(c, err, fmt.Sprintf("%s: Error listing key-values", locator))
 		jstr, _ := json.Marshal(results)
 		log.Infof("Got list results: %s", jstr)
-		Assert(c, (len(results) == count), "Got invalid number of kv pairs", results)
+		Assert(c, (len(results) == count), fmt.Sprintf("Got %d number of kv pairs, expected %d, {%+v}",
+			len(results), count, results))
 
 		// verify each key and value
 		/*
