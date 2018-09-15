@@ -193,7 +193,8 @@ capri_txs_scheduler_init (uint32_t admin_cos)
     // Init sram.
     txs_csr.cfw_scheduler_glb.read();
     // skip init on RTL/Model.
-    if (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) {
+    if (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_SIM &&
+            hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_RTL) {
         txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
     }
     txs_csr.cfw_scheduler_glb.sram_hw_init(1);
