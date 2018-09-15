@@ -3416,15 +3416,16 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 				  struct ib_qp_init_attr *attr)
 {
 	const u32 ver = (u32)qp->compat << 24;
+	const u32 flags = to_ionic_qp_flags(0, !pd->ibpd.uobject);
 	struct ionic_admin_wr wr = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
 		.wqe = {
 			.op = IONIC_V1_ADMIN_CREATE_QP,
-			.dbid_flags = cpu_to_le16(ionic_dbid(dev, qp->ibqp.uobject)),
+			.dbid_flags = cpu_to_le16(ionic_dbid(dev, pd->ibpd.uobject)),
 			.id_ver = cpu_to_le32(qp->qpid | ver),
 			.qp = {
 				.pd_id = cpu_to_le32(pd->pdid),
-				/* TODO qp access flags / permissions */
+				.priv_flags = cpu_to_le32(flags),
 			}
 		}
 	};
@@ -3580,22 +3581,25 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 				  int mask)
 {
 	const u32 ver = (u32)qp->compat << 24;
+	const u32 flags = to_ionic_qp_flags(attr->qp_access_flags,
+					    !qp->ibqp.uobject);
 	struct ionic_admin_wr wr = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
 		.wqe = {
 			.op = IONIC_V1_ADMIN_MODIFY_QP,
 			.id_ver = cpu_to_le32(qp->qpid | ver),
 			.mod_qp = {
-				.pmtu = attr->path_mtu,
-				.retry = attr->retry_cnt | (attr->rnr_retry << 4),
-				.rnr_timer = attr->min_rnr_timer,
-				.retry_timeout = attr->timeout,
-				/* TODO qp access flags / permissions */
+				.attr_mask = cpu_to_le32(mask),
+				.access_flags = cpu_to_le32(flags),
 				.rq_psn = attr->rq_psn,
 				.sq_psn = attr->sq_psn,
 				.rate_limit_kbps = cpu_to_le32(attr->rate_limit),
 				.rsq_depth = attr->max_dest_rd_atomic,
 				.rrq_depth = attr->max_rd_atomic,
+				.pmtu = attr->path_mtu,
+				.retry = attr->retry_cnt | (attr->rnr_retry << 4),
+				.rnr_timer = attr->min_rnr_timer,
+				.retry_timeout = attr->timeout,
 			}
 		}
 	};

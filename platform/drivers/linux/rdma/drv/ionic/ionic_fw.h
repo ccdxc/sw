@@ -92,6 +92,42 @@ static inline int to_ionic_mr_flags(int access)
 	return flags;
 }
 
+enum ionic_qp_flags {
+	/* bits that determine qp access */
+	IONIC_QPF_LOCAL_WRITE		= BIT(0),
+	IONIC_QPF_REMOTE_WRITE		= BIT(1),
+	IONIC_QPF_REMOTE_READ		= BIT(2),
+	IONIC_QPF_REMOTE_ATOMIC		= BIT(3),
+	IONIC_QPF_MW_BIND		= BIT(4),
+
+	/* bits that determine qp permissions */
+	IONIC_QPF_PRIVILEGED		= BIT(15),
+};
+
+static inline int to_ionic_qp_flags(int access, bool privileged)
+{
+	int flags = 0;
+
+	if (access & IB_ACCESS_LOCAL_WRITE)
+		flags |= IONIC_QPF_LOCAL_WRITE;
+
+	if (access & IB_ACCESS_REMOTE_READ)
+		flags |= IONIC_QPF_REMOTE_READ;
+
+	if (access & IB_ACCESS_REMOTE_WRITE)
+		flags |= IONIC_QPF_REMOTE_WRITE;
+
+	if (access & IB_ACCESS_REMOTE_ATOMIC)
+		flags |= IONIC_QPF_REMOTE_ATOMIC;
+
+	if (access & IB_ACCESS_MW_BIND)
+		flags |= IONIC_QPF_MW_BIND;
+
+	if (privileged)
+		flags |= IONIC_QPF_PRIVILEGED;
+
+	return flags;
+}
 /* cqe non-admin status indicated in status_length field when err bit is set */
 enum ionic_status {
 	IONIC_STS_OK,
@@ -495,8 +531,7 @@ struct ionic_v1_admin_wqe {
 		} cq;
 		struct {
 			__le32		pd_id;
-			__le16		access_perms_flags;
-			__le16		access_perms_rsvd;
+			__le32		priv_flags;
 			__le32		sq_cq_id;
 			__u8		sq_depth_log2;
 			__u8		sq_stride_log2;
@@ -515,21 +550,21 @@ struct ionic_v1_admin_wqe {
 			__le64		rq_dma_addr;
 		} qp;
 		struct {
-			__u8		pmtu;
-			__u8		retry;
-			__u8		rnr_timer;
-			__u8		retry_timeout;
-			__le16		access_perms_flags;
-			__le16		access_perms_mask;
+			__le32		attr_mask;
+			__le32		access_flags;
 			__le32		rq_psn;
 			__le32		sq_psn;
 			__le32		qkey_dest_qpn;
 			__le32		rate_limit_kbps;
+			__u8		pmtu;
+			__u8		retry;
+			__u8		rnr_timer;
+			__u8		retry_timeout;
 			__u8		rsq_depth;
 			__u8		rrq_depth;
 			__le16		pkey_id;
 			__le32		ah_id_len;
-			__u8		rsvd[16];
+			__u8		rsvd[12];
 			__le64		dma_addr;
 		} mod_qp;
 	};
