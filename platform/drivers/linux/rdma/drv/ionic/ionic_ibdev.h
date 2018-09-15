@@ -266,6 +266,9 @@ struct ionic_cq {
 	u8			compat;
 
 	struct dentry		*debug;
+
+	/* XXX xxx_notify */
+	struct delayed_work	notify_work;
 };
 
 struct ionic_sq_meta {

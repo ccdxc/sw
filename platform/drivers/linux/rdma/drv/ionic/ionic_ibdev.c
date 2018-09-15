@@ -92,6 +92,9 @@ MODULE_PARM_DESC(xxx_udp, "XXX Makeshift udp header in template.");
 static bool ionic_xxx_noop = true;
 module_param_named(xxx_noop, ionic_xxx_noop, bool, 0444);
 MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
+static bool ionic_xxx_notify = false;
+module_param_named(xxx_notify, ionic_xxx_notify, bool, 0444);
+MODULE_PARM_DESC(xxx_notify, "XXX Workaround for inoperable EQ (kernel space).");
 /* XXX remove above section for release */
 
 static bool ionic_dbgfs_enable = true; /* XXX false for release */
@@ -2582,6 +2585,14 @@ static int ionic_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
 	}
 }
 
+/* XXX workaround for inoperable event queue */
+static void ionic_cq_fake_notify(struct work_struct *ws)
+{
+	struct ionic_cq *cq = container_of(ws, struct ionic_cq,
+					   notify_work.work);
+	cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
+}
+
 static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 					  struct ionic_tbl_buf *buf,
 					  const struct ib_cq_init_attr *attr,
@@ -2628,6 +2639,9 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	INIT_LIST_HEAD(&cq->poll_sq);
 	INIT_LIST_HEAD(&cq->flush_sq);
 	INIT_LIST_HEAD(&cq->flush_rq);
+
+	/* XXX workaround for inoperable event queue */
+	INIT_DELAYED_WORK(&cq->notify_work, ionic_cq_fake_notify);
 
 	if (!ctx) {
 		cq->compat = dev->rdma_compat;
@@ -2700,6 +2714,8 @@ static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	mutex_unlock(&dev->tbl_lock);
 
 	synchronize_rcu();
+
+	cancel_delayed_work_sync(&cq->notify_work);
 
 	ionic_dbgfs_rm_cq(cq);
 
@@ -3284,7 +3300,11 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 		dbell_val |= cq->arm_any_prod | IONIC_DBELL_RING_ARM;
 	}
 
-	ionic_dbell_ring(&dev->dbpage[dev->cq_qtype], dbell_val);
+	/* XXX workaround for inoperable event queue */
+	if (ionic_xxx_notify)
+		queue_delayed_work(ionic_evt_workq, &cq->notify_work, HZ/4);
+	else
+		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype], dbell_val);
 
 	/* IB_CQ_REPORT_MISSED_EVENTS:
 	 *
