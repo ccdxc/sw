@@ -40,7 +40,7 @@ var traceShowCmd = &cobra.Command{
 }
 
 var flushLogsDebugCmd = &cobra.Command{
-	Use:   "flush-logs",
+	Use:   "flush",
 	Short: "Flush logs",
 	Long:  "Flush logs",
 	Run:   flushLogsDebugCmdHandler,
@@ -49,7 +49,7 @@ var flushLogsDebugCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
-	debugCmd.AddCommand(flushLogsDebugCmd)
+	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
 
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level")
@@ -197,6 +197,8 @@ func flushLogsDebugCmdHandler(cmd *cobra.Command, args []string) {
 			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
 			continue
 		}
-		log.Println("Flushing logs succeeded")
+		if cmd != nil {
+			fmt.Println("Flushing logs succeeded")
+		}
 	}
 }

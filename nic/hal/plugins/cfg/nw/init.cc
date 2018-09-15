@@ -84,6 +84,32 @@ hal_cpu_if_create (uint32_t lif_id)
     return HAL_RET_OK;
 }
 
+static hal_ret_t inline
+hal_uplink_if_create (uint64_t if_id, uint32_t port_num)
+{
+    InterfaceSpec        spec;
+    InterfaceResponse    response;
+    hal_ret_t            ret;
+
+    spec.mutable_key_or_handle()->set_interface_id(if_id);
+    spec.set_type(::intf::IfType::IF_TYPE_UPLINK);
+    spec.set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+    spec.mutable_if_uplink_info()->set_port_num(port_num);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = interface_create(spec, &response);
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Uplink interface {}/port {} create success, handle {}",
+                        if_id, port_num, response.status().if_handle());
+    } else {
+        HAL_TRACE_ERR("Uplink interface {}/port {} create failed, err : {}",
+                      if_id, port_num, ret);
+    }
+    hal::hal_cfg_db_close();
+
+    return HAL_RET_OK;
+}
+
 // initialization routine for network module
 extern "C" hal_ret_t
 init (hal_cfg_t *hal_cfg)

@@ -84,8 +84,8 @@ slab *hal_handle_slab(void);
 slab *hal_handle_ht_entry_slab(void);
 ht *hal_handle_id_ht(void);
 void hal_handle_cfg_db_lock(bool readlock, bool lock);
-void cfg_db_open(cfg_op_t cfg_op);
-void cfg_db_close();
+hal_ret_t hal_cfg_db_open(cfg_op_t cfg_op);
+hal_ret_t hal_cfg_db_close(void);
 
 }    // namespace hal
 

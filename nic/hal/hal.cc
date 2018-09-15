@@ -249,9 +249,6 @@ hal_init (hal_cfg_t *hal_cfg)
         fte::disable_fte();
     }
 
-    // install default HAL configuration
-    HAL_ABORT(hal_default_cfg_init(hal_cfg) == HAL_RET_OK);
-
     sdk_cfg.platform_type  =
             hal_platform_mode_to_sdk_platform_type(hal_cfg->platform_mode);
     sdk_cfg.cfg_path       = hal_cfg->cfg_path.c_str();
@@ -324,16 +321,24 @@ hal_handle_cfg_db_lock (bool readlock, bool lock)
     }
 }
 
-void
-cfg_db_open(cfg_op_t cfg_op)
+//------------------------------------------------------------------------------
+// API open HAL cfg db in read/write mode
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cfg_db_open (cfg_op_t op)
 {
-    g_hal_state->cfg_db()->db_open(cfg_op);
+    HAL_TRACE_DEBUG("Opening cfg db with mode {}", op);
+    return g_hal_state->cfg_db()->db_open(op);
 }
 
-void
-cfg_db_close(void)
+//------------------------------------------------------------------------------
+// API to close the HAL cfg db after performing commit/abort operation
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cfg_db_close (void)
 {
-    g_hal_state->cfg_db()->db_close();
+    HAL_TRACE_DEBUG("Closing cfg db, current mode {}", t_cfg_db_ctxt.cfg_op_);
+    return g_hal_state->cfg_db()->db_close();
 }
 
 }    // namespace hal

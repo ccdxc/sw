@@ -57,7 +57,6 @@ LDLIBS = -llkl
 
 SRC_FILES :=	hal.cc \
 				hal_state.cc \
-				hal_cfg.cc \
 				main.cc \
 				$(NULL)
 
