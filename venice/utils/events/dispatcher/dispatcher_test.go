@@ -1035,6 +1035,9 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 	for {
 		time.Sleep(15 * time.Millisecond) // for batch and processing at the writer
 		evt := mockWriter.GetEventByUUID(evtUUID)
+		if evt == nil {
+			continue
+		}
 		if evt.GetCount() >= prevCount { // event updates
 			prevCount = evt.GetCount()
 			continue
