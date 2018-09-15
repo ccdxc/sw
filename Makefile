@@ -43,12 +43,6 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 
 # Lists the binaries to be containerized
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr tsm evtsproxy aggregator vos citadel
-ifneq ($(NOGOLANG),1)
-# Install gopkgs
-INSTALL := $(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
-# Lists all go packages. Auto ignores vendor
-GO_PKG := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS})
-endif
 
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash
@@ -92,7 +86,7 @@ gen:
 # goimports-src formats the source and orders imports
 # Target directories is needed only for goipmorts where it doesn't accept package names.
 # Doing the go list here avoids an additional global go list
-goimports-src:
+goimports-src: gopkgsinstall
 	$(info +++ goimports sources)
 	$(eval GO_FILES=`gopkgs -short -f '{{.Dir}}/*.go' | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS}`)
 ifdef JOB_ID
@@ -105,20 +99,26 @@ endif
 	@${GOIMPORTS_CMD} -w ${GO_FILES}
 
 # golint-src runs go linter and verifies code style matches golang recommendations
-golint-src:
+golint-src: gopkglist
 	$(info +++ golint sources)
 	@$(eval LINT := $(shell golint ${GO_PKG} | grep -v pb.go))
 	@echo $(LINT)
 	@test -z "$(LINT)"
 
 # govet-src validates source code and reports suspicious constructs
-govet-src:
+govet-src: gopkglist
 	$(info +++ govet sources)
 	@go vet -source ${GO_PKG}
 
-.PHONY: build
+.PHONY: build gopkglist gopkgsinstall
+
+gopkgsinstall:
+	@$(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
+gopkglist: gopkgsinstall
+	@$(eval GO_PKG := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS}))
+
 # build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
-build:
+build: gopkglist
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
 		echo "+++ building go sources"; CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install -ldflags '-X main.GitVersion=${GIT_VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.BuildDate=${BUILD_DATE}' ${GO_PKG};\
 	else \
@@ -132,7 +132,7 @@ build:
 # See venice/utils/testenv
 # unit-test-cover uses go test wrappers in scripts/report/report.go and runs coverage tests.
 # this will return a non 0 error when coverage for a package is < 75.0%
-unit-test-cover:
+unit-test-cover: gopkglist
 	$(info +++ running go tests)
 	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go run scripts/report/report.go ${GO_PKG}
 
@@ -140,7 +140,7 @@ c-start:
 	@tools/scripts/create-container.sh startCluster
 
 c-stop:
-	@tools/scripts/create-container.sh stopCluster
+	@tools/scripts/create-container.sh stopCluster || echo
 
 install:
 	@#copy the agent binaries to netagent
@@ -180,7 +180,9 @@ cluster-restart:
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}
 	tools/scripts/startSim.py
 
-clean: c-stop
+clean:
+	@$(MAKE) c-stop >/dev/null 2>&1
+	@rm -fr bin/* venice/ui/webapp/node_modules  venice/ui/web-app-framework/node_modules  venice/ui/venice-sdk/node_modules
 
 helper-containers:
 	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
@@ -216,23 +218,23 @@ fixtures:
 	@if [ -z ${BYPASS_UI} ]; then \
 		if [ ! -z ${UI_FRAMEWORK} ]; then \
 			echo "+++ populating node_modules from cache for ui-framework";\
-			echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
-			docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
+			echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}"  --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
+			docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/web-app-framework/node_modules.tgz bin/web-app-framework-node-modules.tgz ' ; \
 			cd venice/ui/web-app-framework && tar zxf ../../../bin/web-app-framework-node-modules.tgz ;\
-			docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make  ui-framework; \
+			docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make  ui-framework; \
 			cd ../../.. ;\
 		fi; \
 		if [ ! -f bin/webapp-node-modules.tgz ]; then \
 			echo "+++ populating node_modules from cache for ui";\
-			echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
-			docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+			echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
+			docker run --user $(shell id -u):$(shell id -g) -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} sh -c 'cp /usr/local/lib/venice-sdk/node_modules.tgz bin/venice-sdk-node-modules.tgz; cp /usr/local/lib/webapp/node_modules.tgz bin/webapp-node-modules.tgz' ; \
 			cd venice/ui/webapp && tar zxf ../../../bin/webapp-node-modules.tgz ;\
 			cd ../venice-sdk && tar zxf ../../../bin/venice-sdk-node-modules.tgz ;\
 			cd ../../.. ;\
 		fi ; \
 	    echo "+++ building ui sources" ; \
-		echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
-		docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
+		echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
+		docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ; \
 		echo cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 		cp -r venice/ui/webapp/dist tools/docker-files/apigw ;\
 	fi
@@ -256,11 +258,11 @@ container-qcompile:
 	fi
 
 
-unit-race-test:
+unit-race-test: gopkglist
 	$(info +++ running go tests with race detector)
 	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go test -race ${GO_PKG}
 
-unit-test-verbose:
+unit-test-verbose: gopkglist
 	$(info +++ running go tests verbose)
 	@VENICE_DEV=1 CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" $(GOCMD) test -v -p 1 ${GO_PKG}; \
 
@@ -365,7 +367,7 @@ e2e-api:
 	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/api -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG}'
 
 e2e-ui:
-	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1"  --rm -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=http://192.168.30.10:9000" -w /import/src/github.com/pensando/sw/venice/ui/webapp ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ng e2e -s=false
+	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g)  --rm -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=http://192.168.30.10:9000" -w /import/src/github.com/pensando/sw/venice/ui/webapp ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ng e2e -s=false
 
 # Target to run venice e2e a dind environment. Uses real HAL as Agent Datapath and starts HAL with model
 e2e-sanities:
@@ -417,8 +419,8 @@ ui:
 
 ui-autogen:
 	printf "\n+++++++++++++++++ Generating ui-autogen +++++++++++++++++\n";
-	echo docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
-	docker run --user $(shell id -u):$(shell id -g) -e "NOGOLANG=1" -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
+	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
+	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
 
 VENICE_RELEASE_TAG := v0.2
 venice-release:
