@@ -38,15 +38,6 @@ typedef enum hal_feature_set_s {
     HAL_FEATURE_SET_APOLLO,
 } hal_feature_set_t;
 
-#if 0
-typedef enum hal_forwarding_mode_s {
-    HAL_FORWARDING_MODE_NONE              = 0,
-    HAL_FORWARDING_MODE_SMART_SWITCH      = 1,
-    HAL_FORWARDING_MODE_SMART_HOST_PINNED = 2,
-    HAL_FORWARDING_MODE_CLASSIC           = 3,
-} hal_forwarding_mode_t;
-#endif
-
 #define FORWARDING_MODES(ENTRY)                                                                     \
      ENTRY(HAL_FORWARDING_MODE_NONE,    0, "HAL_FORWARDING_MODE_NONE")                              \
      ENTRY(HAL_FORWARDING_MODE_SMART_SWITCH,    1, "HAL_FORWARDING_MODE_SMART_SWITCH")              \

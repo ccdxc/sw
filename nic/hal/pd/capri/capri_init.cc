@@ -933,7 +933,10 @@ capri_hbm_regions_init (capri_cfg_t *cfg, hal::hal_cfg_t *hal_cfg)
         &vaddr);
     memset(vaddr, 0, flow_hash_region->size_kb * 1024);
 #endif
-    if (hal_cfg && hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) {
+
+    if (hal_cfg &&
+        ((hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) ||
+         (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HW))) {
         HAL_TRACE_DEBUG("Resetting flow hash table");
         char flow_hash[] = CAPRI_HBM_REG_FLOW_HASH;
         region = get_hbm_region(flow_hash);

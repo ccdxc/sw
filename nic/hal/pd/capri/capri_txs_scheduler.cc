@@ -186,7 +186,7 @@ capri_txs_scheduler_init (uint32_t admin_cos)
 
     txs_sched_hbm_base_addr = (uint64_t) get_start_offset(CAPRI_HBM_REG_TXS_SCHEDULER);
 
-    // Update HBM base addr.  
+    // Update HBM base addr.
     txs_csr.cfw_scheduler_static.read();
     txs_csr.cfw_scheduler_static.hbm_base(txs_sched_hbm_base_addr);
 
@@ -227,12 +227,12 @@ capri_txs_scheduler_init (uint32_t admin_cos)
         control_cos = 0;
     }
 #endif
-   
+
     // Init scheduler calendar  for all cos.
     for (uint32_t i = 0; i < DTDM_CALENDAR_SIZE ; i++) {
         txs_csr.dhs_dtdmlo_calendar.entry[i].read();
         txs_csr.dhs_dtdmhi_calendar.entry[i].read();
-        
+
         // Program only admin_cos in hi-calendar to mimic strict-priority.
         // Program control_cos multiple times in lo-calendar for higher priority than other coses.
         txs_csr.dhs_dtdmhi_calendar.entry[i].dtdm_calendar(admin_cos);
@@ -279,7 +279,7 @@ capri_txs_scheduler_init (uint32_t admin_cos)
 }
 
 hal_ret_t
-capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_params_t *txs_hw_params) 
+capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_params_t *txs_hw_params)
 {
 
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
@@ -288,9 +288,9 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_pa
     uint16_t      lif_cos_bmp = 0x0;
 
     lif_cos_bmp = txs_hw_params->cos_bmp;
-    if ((hw_lif_id >= CAPRI_TXS_MAX_TABLE_ENTRIES) ||  
+    if ((hw_lif_id >= CAPRI_TXS_MAX_TABLE_ENTRIES) ||
         (txs_hw_params->sched_table_offset >= CAPRI_TXS_MAX_TABLE_ENTRIES)) {
-        HAL_TRACE_ERR("CAPRI-TXS::{}: Invalid parameters to function {},{}",__func__, hw_lif_id, 
+        HAL_TRACE_ERR("CAPRI-TXS::{}: Invalid parameters to function {},{}",__func__, hw_lif_id,
                        txs_hw_params->sched_table_offset);
         return HAL_RET_INVALID_ARG;
     }
@@ -301,14 +301,14 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_pa
     txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_per_cos(txs_hw_params->num_entries_per_cos);
     txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_act_cos(lif_cos_bmp);
 
-    if (lif_cos_bmp == 0x0 && !txs_hw_params->num_entries_per_cos) 
+    if (lif_cos_bmp == 0x0 && !txs_hw_params->num_entries_per_cos)
         txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_active(0); // lif delete case. Make the entry invalid.
     else
         txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_active(1);
-        
+
     txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].write();
 
-    //Program reverse mapping from scheduler table entry to (lif,queue,cos). 
+    //Program reverse mapping from scheduler table entry to (lif,queue,cos).
     for (i = 0; i < NUM_MAX_COSES; i++) {
         if (CHECK_BIT(lif_cos_bmp, i)) {
             lif_cos_index = (num_cos_val * txs_hw_params->num_entries_per_cos);
@@ -366,7 +366,7 @@ capri_txs_scheduler_tx_alloc (capri_txs_sched_lif_params_t *tx_params,
 {
     hal_ret_t     ret = HAL_RET_OK;
     uint32_t      total_qcount = 0;
-    
+
     *alloc_offset = INVALID_INDEXER_INDEX;
     *alloc_units = 0;
     // Sched table can hold 8K queues per index and mandates new index for each cos.

@@ -745,7 +745,6 @@ proto_msg_dump (Message& msg)
         return;
     }
     google::protobuf::util::MessageToJsonString(msg, &msg_str);
-    HAL_TRACE_DEBUG("Proto Message:");
     HAL_TRACE_DEBUG("{}", msg_str.c_str());
 }
 

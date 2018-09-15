@@ -287,7 +287,7 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
     for (int i = start; i < end; i++) {
         feature_t *feature = pipeline->features[i];
         if (feature == nullptr) {
-            HAL_TRACE_DEBUG("fte:pipeline_invoke_exec skip invalid feature {}", i);
+            HAL_TRACE_DEBUG("skip invalid feature {}", i);
             continue;
         }
 
@@ -307,7 +307,7 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
         default:
             rc = feature->exec_handler(ctx);
         };
-        HAL_TRACE_DEBUG("fte:exec_handler feature={} pipeline={} event={} action={}",
+        HAL_TRACE_DEBUG("feature={} pipeline={} event={} action={}",
                         feature->name, pipeline->name, ctx.pipeline_event(), rc);
 
         if (rc != PIPELINE_CONTINUE) {
