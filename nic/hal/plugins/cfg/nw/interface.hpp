@@ -348,6 +348,8 @@ uint32_t if_restore_cb(void *obj, uint32_t len);
 hal_ret_t enicif_update_egress_en(if_t *hal_if, bool egress_en);
 hal_ret_t get_lif_handle_from_spec (const InterfaceSpec& spec,
                                     hal_handle_t *lif_handle);
+hal_ret_t if_update_classic_oif_lists(if_t *hal_if,
+                                      lif_update_app_ctxt_t *lif_upd);
 
 }    // namespace hal
 

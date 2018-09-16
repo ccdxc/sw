@@ -854,6 +854,27 @@ validate_lif_update (LifSpec& spec, LifResponse *rsp)
     return ret;
 }
 
+hal_ret_t
+lif_bcast_filter_update (lif_t *lif, lif_update_app_ctxt_t *lif_upd)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    dllist_ctxt_t               *curr  = NULL, *next = NULL;
+    if_t                        *hal_if = NULL;
+
+    dllist_for_each_safe(curr, next, &lif->if_list_head) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        hal_if = find_if_by_handle(entry->handle_id);
+        if (!hal_if) {
+            HAL_TRACE_ERR("{}:unable to find if with handle:{}",
+                          __FUNCTION__, entry->handle_id);
+            continue;
+        }
+
+        ret = if_update_classic_oif_lists(hal_if, lif_upd);
+    }
+    return ret;
+}
 //------------------------------------------------------------------------------
 // This is the first call back infra does for update.
 // 1. PD Call to update PD
@@ -907,6 +928,21 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (app_ctxt->pkt_filter_prom_changed) {
         lif_clone->packet_filters.receive_promiscuous =
             app_ctxt->receive_promiscous;
+    }
+
+    if (app_ctxt->pkt_filter_bcast_changed) {
+        lif_clone->packet_filters.receive_broadcast =
+            app_ctxt->receive_broadcast;
+    }
+
+    if (app_ctxt->pkt_filter_allmc_changed) {
+        lif_clone->packet_filters.receive_all_multicast =
+            app_ctxt->receive_all_multicast;
+    }
+
+    if (app_ctxt->pkt_filter_bcast_changed ||
+        app_ctxt->pkt_filter_allmc_changed) {
+        lif_bcast_filter_update(lif, app_ctxt);
     }
 
     if (app_ctxt->rss_config_changed) {
@@ -1217,6 +1253,26 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         app_ctxt->pkt_filter_prom_changed = true;
         app_ctxt->receive_promiscous = spec->
             packet_filter().receive_promiscuous();
+    }
+
+    if (lif->packet_filters.receive_broadcast !=
+        spec->packet_filter().receive_broadcast()) {
+        HAL_TRACE_DEBUG("lif bcast change: {} => {}",
+                        lif->packet_filters.receive_broadcast,
+                        spec->packet_filter().receive_broadcast());
+        app_ctxt->pkt_filter_bcast_changed = true;
+        app_ctxt->receive_broadcast = spec->
+            packet_filter().receive_broadcast();
+    }
+
+    if (lif->packet_filters.receive_all_multicast !=
+        spec->packet_filter().receive_all_multicast()) {
+        HAL_TRACE_DEBUG("lif all_mc change: {} => {}",
+                        lif->packet_filters.receive_all_multicast,
+                        spec->packet_filter().receive_all_multicast());
+        app_ctxt->pkt_filter_allmc_changed = true;
+        app_ctxt->receive_all_multicast = spec->
+            packet_filter().receive_all_multicast();
     }
 
     return ret;

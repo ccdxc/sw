@@ -539,6 +539,68 @@ enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
 }
 
 hal_ret_t
+enicif_classic_update_l2seg_oiflist(if_t *hal_if, l2seg_t *l2seg,
+                                    lif_update_app_ctxt_t *lif_upd)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    oif_t                       oif = {};
+
+    oif.intf = hal_if;
+    oif.l2seg = l2seg;
+
+    if (lif_upd->pkt_filter_bcast_changed) {
+        if (lif_upd->receive_broadcast) {
+            ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        } else {
+            ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
+    }
+
+    if (lif_upd->pkt_filter_allmc_changed) {
+        if (lif_upd->receive_all_multicast) {
+            ret = oif_list_add_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        } else {
+            ret = oif_list_remove_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
+            HAL_ASSERT(ret == HAL_RET_OK);
+        }
+    }
+
+    return ret;
+}
+
+hal_ret_t
+if_update_classic_oif_lists(if_t *hal_if, lif_update_app_ctxt_t *lif_upd)
+{
+    hal_ret_t        ret = HAL_RET_OK;
+    dllist_ctxt_t    *curr, *next;
+    if_l2seg_entry_t *entry = NULL;
+    l2seg_t          *l2seg = NULL, *nat_l2seg = NULL;
+    dllist_ctxt_t    *l2segs_list = &hal_if->l2seg_list_clsc_head;
+
+    // Add native L2Segment if valid
+    if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
+        nat_l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
+        HAL_ASSERT(nat_l2seg);
+        ret = enicif_classic_update_l2seg_oiflist(hal_if, nat_l2seg,
+                                                  lif_upd);
+    }
+
+    dllist_for_each_safe(curr, next, l2segs_list) {
+        entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
+        l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
+        ret = enicif_classic_update_l2seg_oiflist(hal_if, l2seg,
+                                                  lif_upd);
+    }
+
+    return ret;
+}
+
+
+
+hal_ret_t
 if_update_oif_lists(if_t *hal_if, bool add)
 {
     oif_t oif = {};

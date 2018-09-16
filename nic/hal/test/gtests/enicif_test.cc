@@ -773,6 +773,7 @@ TEST_F(enicif_test, test4)
     // Update lif
     lif_spec.mutable_key_or_handle()->set_lif_id(41);
     lif_spec.mutable_packet_filter()->set_receive_promiscuous(false);
+    lif_spec.mutable_packet_filter()->set_receive_broadcast(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_update(lif_spec, &lif_rsp);
     hal::hal_cfg_db_close();
