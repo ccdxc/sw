@@ -12,6 +12,7 @@
 #define JKEY_REGION_NAME         "name"
 #define JKEY_SIZE_KB             "size_kb"
 #define JKEY_CACHE_PIPE          "cache"
+#define JKEY_RESET_REGION        "reset"
 #define JKEY_START_OFF           "start_offset"
 
 #define JP4_PRGM                 "p4_program"
@@ -42,6 +43,7 @@ typedef struct capri_hbm_region_s {
     uint32_t                size_kb;
     uint64_t                start_offset;
     capri_hbm_cache_pipe_t  cache_pipe;
+    bool                    reset;    // true to bzero this region during init
 } capri_hbm_region_t;
 
 hal_ret_t capri_hbm_parse(capri_cfg_t *cfg);
@@ -50,6 +52,7 @@ uint64_t get_hbm_base(void);
 uint64_t get_hbm_offset(const char *reg_name);
 uint64_t get_start_offset(const char *reg_name);
 uint32_t get_size_kb(const char *reg_name);
+void reset_hbm_regions(void);
 int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 

@@ -10,6 +10,7 @@
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include <arpa/inet.h>
+#include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
@@ -61,12 +62,10 @@ capri_hbm_parse (capri_cfg_t *cfg)
     int idx = 0;
     uint64_t offset = 0;
     BOOST_FOREACH(pt::ptree::value_type &p4_tbl, json_pt.get_child(JKEY_REGIONS)) {
-
         reg = hbm_regions_ + idx;
-
         std::string reg_name = p4_tbl.second.get<std::string>(JKEY_REGION_NAME);
-
         std::string cache_pipe_name = p4_tbl.second.get<std::string>(JKEY_CACHE_PIPE, "null");
+        reg->reset = p4_tbl.second.get<bool>(JKEY_RESET_REGION, false);
         if (cache_pipe_name == "p4ig") {
             reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4IG;
         } else if (cache_pipe_name == "p4eg") {
@@ -80,13 +79,13 @@ capri_hbm_parse (capri_cfg_t *cfg)
         } else {
             reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_NONE;
         }
-
         strcpy(reg->mem_reg_name, reg_name.c_str());
         reg->size_kb = p4_tbl.second.get<int>(JKEY_SIZE_KB);
         reg->start_offset = offset;
 
-        HAL_TRACE_DEBUG("region : {}, size : {}kb, start : {:#x}, end : {:#x}",
-                        reg->mem_reg_name, reg->size_kb,
+        HAL_TRACE_DEBUG("region : {}, size : {}kb, reset : {}, "
+                        "start : {:#x}, end : {:#x}",
+                        reg->mem_reg_name, reg->size_kb, reg->reset,
                         HBM_OFFSET(reg->start_offset),
                         HBM_OFFSET(reg->start_offset + reg->size_kb * 1024));
 
@@ -185,6 +184,26 @@ get_hbm_region_by_address (uint64_t addr)
     return NULL;
 }
 
+void
+reset_hbm_regions (void)
+{
+    hal::hal_cfg_t        *hal_cfg;
+    capri_hbm_region_t    *reg;
+
+    hal_cfg = (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+    if (hal_cfg &&
+        ((hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) ||
+         (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HW))) {
+        for (int i = 0; i < num_hbm_regions_; i++) {
+            reg = &hbm_regions_[i];
+            if (reg->reset) {
+                HAL_TRACE_DEBUG("Resetting {} hbm region", reg->mem_reg_name);
+                hal::pd::asic_mem_write(HBM_OFFSET(reg->start_offset),
+                                        NULL, reg->size_kb * 1024);
+            }
+        }
+    }
+}
 
 int32_t
 capri_hbm_read_mem (uint64_t addr, uint8_t *buf, uint32_t size)

@@ -311,8 +311,8 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].name = IPSEC_CB_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_IPSECCB);
     symbols[i].params[1].name = TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE;
-    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
-                                BARCO_GCM1_PI_HBM_TABLE_OFFSET; 
+    symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+                                BARCO_GCM1_PI_HBM_TABLE_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_update_input_desc_aol.bin";
@@ -414,7 +414,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
     i++;
 
-    
+
     symbols[i].name = "cpu_read_desc_pindex.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
@@ -855,14 +855,14 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
                                  BARCO_GCM0_PI_HBM_TABLE_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma1_s1_dummy.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE;
-    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + 
+    symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
                                  BARCO_GCM0_PI_HBM_TABLE_OFFSET;
     i++;
 
@@ -871,7 +871,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     symbols[i].params[0].name = BRQ_BASE;
     symbols[i].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
     i++;
-    
+
     symbols[i].name = "tls-enc-gc-setup.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDR_TLS_GC_TABLE_BASE;
@@ -900,10 +900,9 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
 }
 
 static hal_ret_t
-capri_hbm_regions_init (capri_cfg_t *cfg, hal::hal_cfg_t *hal_cfg)
+capri_hbm_regions_init (capri_cfg_t *cfg)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    capri_hbm_region_t *region = NULL;
 
     ret = capri_p4_asm_init(cfg);
     if (ret != HAL_RET_OK) {
@@ -925,24 +924,8 @@ capri_hbm_regions_init (capri_cfg_t *cfg, hal::hal_cfg_t *hal_cfg)
         return ret;
     }
 
-#if 0
-    // initial flow hash region
-    flow_hash_region = get_hbm_region(CAPRI_HBM_REG_FLOW_HASH);
-    pal_hw_physical_addr_to_virtual_addr(
-        HBM_OFFSET(flow_hash_region->start_offset),
-        &vaddr);
-    memset(vaddr, 0, flow_hash_region->size_kb * 1024);
-#endif
-
-    if (hal_cfg &&
-        ((hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) ||
-         (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HW))) {
-        HAL_TRACE_DEBUG("Resetting flow hash table");
-        char flow_hash[] = CAPRI_HBM_REG_FLOW_HASH;
-        region = get_hbm_region(flow_hash);
-        hal::pd::asic_mem_write(HBM_OFFSET(region->start_offset),
-                            NULL, region->size_kb * 1024);
-    }
+    // reset all the HBM regions that are marked for reset
+    reset_hbm_regions();
 
     return ret;
 }
@@ -1167,7 +1150,7 @@ capri_init (capri_cfg_t *cfg = NULL)
     ret = capri_hbm_parse(cfg);
 
     if (ret == HAL_RET_OK) {
-        ret = capri_hbm_regions_init(cfg, hal_cfg);
+        ret = capri_hbm_regions_init(cfg);
     }
 
     if (capri_table_rw_init(hal_cfg)) {
