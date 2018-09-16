@@ -61,6 +61,7 @@ dbpath(void)
 {
     static const char *pathtab[] = {
         "/pensando/etc/capviewdb.bin",
+        "/platform/etc/capviewdb.bin",
         "/mnt/etc/capviewdb.bin",
         "capviewdb.bin"
     };

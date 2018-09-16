@@ -23,3 +23,4 @@ platform/src/third-party/lib/edit/aarch64/*.so                   /platform/lib/
 platform/src/third-party/lib/gmp/aarch64/*.so                    /platform/lib/
 platform/src/third-party/lib/ncurses/aarch64/*.so                /platform/lib/
 platform/src/app/nicmgrd/etc/*.json                              /platform/etc/nicmgrd/
+platform/gen/aarch64/src/app/capview/builddb/capviewdb.bin       /platform/etc/
