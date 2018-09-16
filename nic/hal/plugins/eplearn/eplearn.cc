@@ -5,7 +5,7 @@
 #include "nic/fte/fte.hpp"
 #include "nic/hal/plugins/eplearn/eplearn.hpp"
 
-#include "flow_miss/fmiss_learn.hpp"
+#include "data_pkt/dpkt_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/arp_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/ndp_learn.hpp"
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_learn.hpp"
@@ -30,11 +30,11 @@ is_arp_ep_learning_enabled(fte::ctx_t &ctx)
 }
 
 static bool
-is_fmiss_ep_learning_enabled(fte::ctx_t &ctx)
+is_dpkt_ep_learning_enabled(fte::ctx_t &ctx)
 {
     hal::l2seg_t *src_l2seg = ctx.sl2seg();
 
-    if (src_l2seg != nullptr && src_l2seg->eplearn_cfg.fmiss_cfg.enabled) {
+    if (src_l2seg != nullptr && src_l2seg->eplearn_cfg.dpkt_cfg.enabled) {
         return true;
     }
     return false;
@@ -150,10 +150,10 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
             ctx.update_flow(flowupd, FLOW_ROLE_INITIATOR);
         }
     } else if (is_host_originated_packet(ctx) &&
-            is_fmiss_ep_learning_enabled(ctx) &&
-            flow_miss_learning_required(ctx)) {
+            is_dpkt_ep_learning_enabled(ctx) &&
+            dpkt_learn_required(ctx)) {
             HAL_TRACE_INFO("EP_LEARN : Flow miss packet processing...");
-        ret = flow_miss_process_packet(ctx);
+        ret = dpkt_learn_process_packet(ctx);
         if (ret != HAL_RET_OK) {
             ctx.set_feature_status(ret);
             HAL_TRACE_ERR("Error in processing flow miss packet.")

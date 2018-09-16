@@ -2554,7 +2554,7 @@ ep_del_session (ep_t *ep, session_t *session)
     }
     ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("add ep =/=> session, ids: {} =/=> {}, "
+    HAL_TRACE_DEBUG("delete ep =/=> session, ids: {} =/=> {}, "
                     "hdls: {} => {}, ret:{}",
                     ep_l2_key_to_str(ep), session->config.session_id,
                     ep->hal_handle, session->hal_handle, ret);

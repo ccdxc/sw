@@ -2,8 +2,6 @@
 #include "sdk/twheel.hpp"
 
 
-#include "nic/hal/plugins/eplearn/flow_miss/fmiss_learn.hpp"
-#include "nic/hal/plugins/eplearn/flow_miss/fmiss_learn_trans.hpp"
 #include "nic/hal/plugins/eplearn/arp/arp_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/arp_trans.hpp"
 #include "nic/hal/plugins/eplearn/eplearn.hpp"
@@ -24,6 +22,8 @@
 #include "nic/gen/proto/hal/nic.pb.h"
 
 #include <tins/tins.h>
+#include "../../data_pkt/dpkt_learn.hpp"
+#include "../../data_pkt/dpkt_learn_trans.hpp"
 
 using namespace Tins;
 using namespace hal;
@@ -148,7 +148,7 @@ void learn_mix_topo_setup()
    l2seg_spec.mutable_key_or_handle()->set_segment_id(2);
    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
    l2seg_spec.mutable_wire_encap()->set_encap_value(12);
-   l2seg_spec.mutable_eplearn_cfg()->mutable_fmiss()->set_enabled(true);
+   l2seg_spec.mutable_eplearn_cfg()->mutable_dpkt()->set_enabled(true);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -241,24 +241,24 @@ class learn_mix_fsm_test : public hal_base_test {
         /* Override the timer so that we can control  */
         //sdk::lib::g_twheel = twheel::factory(10, 100, false);
         learn_mix_topo_setup();
-        flow_miss_learn_init();
+        data_pkt_learn_init();
     }
 };
 
-EthernetII *get_default_fmiss_learn_packet(const char *sender_ip_address,
+EthernetII *get_default_dpkt_learn_packet(const char *sender_ip_address,
                                    unsigned char *sender_hw_addr,
                                    const char *target_ip_addr,
                                    unsigned char *target_hw_addr) {
     EthernetII *eth = new EthernetII();
     eth->src_addr(sender_hw_addr);
-    IP *fmiss_learn = new IP();
+    IP *dpkt_learn = new IP();
 
-    eth->inner_pdu(fmiss_learn);
+    eth->inner_pdu(dpkt_learn);
 
     // Retrieve a pointer to the stored TCP PDU
-    fmiss_learn = eth->find_pdu<IP>();
+    dpkt_learn = eth->find_pdu<IP>();
 
-    //fmiss_learn->IP(sender_ip_address, target_ip_addr);
+    //dpkt_learn->IP(sender_ip_address, target_ip_addr);
 
     HWAddress<6> hw_address(sender_hw_addr);
 
@@ -284,13 +284,13 @@ get_l2seg_hw_id(hal_handle_t l2seg_handle)
 }
 
 
-hal_ret_t fmiss_learn_packet_send(hal_handle_t ep_handle,
+hal_ret_t dpkt_learn_packet_send(hal_handle_t ep_handle,
                      const char *sender_ip_address,
                      unsigned char *sender_hw_addr, const char *target_ip_addr,
                      unsigned char *target_hw_addr = NULL,
                      hal_handle_t dst_ep_handle = 0) {
     EthernetII *eth =
-        get_default_fmiss_learn_packet(sender_ip_address, sender_hw_addr,
+        get_default_dpkt_learn_packet(sender_ip_address, sender_hw_addr,
                                target_ip_addr, target_hw_addr);
 
     std::vector<uint8_t> buffer = eth->serialize();
@@ -318,7 +318,7 @@ hal_ret_t fmiss_learn_packet_send(hal_handle_t ep_handle,
     fte_ctx_init(ctx, dummy_ten,
             dummy_ep, dst_ep, &sip, &dip, &cpu_rxhdr, &buffer[0], buffer.size(), NULL, NULL, feature_state);
     ctx.set_feature_name(FTE_FEATURE_EP_LEARN.c_str());
-    ret = flow_miss_process_packet(ctx);
+    ret = dpkt_learn_process_packet(ctx);
     ctx.process();
     return ret;
 }
@@ -394,17 +394,17 @@ hal_ret_t arp_packet_send(hal_handle_t ep_handle,
     return ret;
 }
 
-TEST_F(learn_mix_fsm_test, fmiss_learn_arp_learn) {
-    fmiss_learn_packet_send(ep_handles[0], "1.1.1.1",
+TEST_F(learn_mix_fsm_test, dpkt_learn_arp_learn) {
+    dpkt_learn_packet_send(ep_handles[0], "1.1.1.1",
                     GET_MAC_ADDR(0), "1.1.1.2");
-    fmiss_learn_trans_key_t key;
+    dpkt_learn_trans_key_t key;
     ip_addr_t ip = {0};
     inet_pton(AF_INET, "1.1.1.1", &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
     ep_t *dummy_ep = find_ep_by_handle(ep_handles[0]);
-    fmiss_learn_trans_t::init_fmiss_learn_trans_key(GET_MAC_ADDR(0), dummy_ep, &ip, &key);
-    fmiss_learn_trans_t *entry = reinterpret_cast<fmiss_learn_trans_t *>(
-        fmiss_learn_trans_t::fmiss_learn_key_ht()->lookup(&key));
+    dpkt_learn_trans_t::init_dpkt_learn_trans_key(GET_MAC_ADDR(0), dummy_ep, &ip, &key);
+    dpkt_learn_trans_t *entry = reinterpret_cast<dpkt_learn_trans_t *>(
+        dpkt_learn_trans_t::dpkt_learn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
 
     ip = {0};
@@ -414,8 +414,8 @@ TEST_F(learn_mix_fsm_test, fmiss_learn_arp_learn) {
     inet_pton(AF_INET, "1.1.1.2", &(ip.addr.v4_addr));
     ASSERT_FALSE(ip_in_ep(&ip, dummy_ep, NULL));
 
-    ASSERT_EQ(fmiss_learn_trans_t::fmiss_learn_key_ht()->num_entries(), 1);
-    ASSERT_EQ(fmiss_learn_trans_t::fmiss_learn_ip_entry_ht()->num_entries(), 1);
+    ASSERT_EQ(dpkt_learn_trans_t::dpkt_learn_key_ht()->num_entries(), 1);
+    ASSERT_EQ(dpkt_learn_trans_t::dpkt_learn_ip_entry_ht()->num_entries(), 1);
 
     /* Also learn from ARP */
 
@@ -453,8 +453,8 @@ TEST_F(learn_mix_fsm_test, fmiss_learn_arp_learn) {
     ASSERT_EQ(arp_trans_t::arplearn_key_ht()->num_entries(), 2);
     //ASSERT_EQ(arp_trans_t::ep_l3_entry_ht()->num_entries(), 2);
 
-    ASSERT_EQ(fmiss_learn_trans_t::fmiss_learn_key_ht()->num_entries(), 1);
-    ASSERT_EQ(fmiss_learn_trans_t::fmiss_learn_ip_entry_ht()->num_entries(), 1);
+    ASSERT_EQ(dpkt_learn_trans_t::dpkt_learn_key_ht()->num_entries(), 1);
+    ASSERT_EQ(dpkt_learn_trans_t::dpkt_learn_ip_entry_ht()->num_entries(), 1);
 }
 
 
@@ -482,7 +482,7 @@ TEST_F(learn_mix_fsm_test, arp_entry_timeout) {
 }
 
 
-TEST_F(learn_mix_fsm_test, fmiss_learn_arp_learn_diffrent_ip_other_ep) {
+TEST_F(learn_mix_fsm_test, dpkt_learn_arp_learn_diffrent_ip_other_ep) {
     ip_addr_t ip = {0};
     inet_pton(AF_INET, "1.1.1.1", &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
@@ -513,17 +513,17 @@ TEST_F(learn_mix_fsm_test, fmiss_learn_arp_learn_diffrent_ip_other_ep) {
 }
 
 
-TEST_F(learn_mix_fsm_test, fmiss_learn_arp_learn_diffrent_ip_same_ep) {
-    fmiss_learn_packet_send(ep_handles[0], "1.1.1.1",
+TEST_F(learn_mix_fsm_test, dpkt_learn_arp_learn_diffrent_ip_same_ep) {
+    dpkt_learn_packet_send(ep_handles[0], "1.1.1.1",
                     GET_MAC_ADDR(0), "1.1.1.2");
-    fmiss_learn_trans_key_t key;
+    dpkt_learn_trans_key_t key;
     ip_addr_t ip = {0};
     inet_pton(AF_INET, "1.1.1.1", &(ip.addr.v4_addr));
     ip.addr.v4_addr = ntohl(ip.addr.v4_addr);
     ep_t *dummy_ep = find_ep_by_handle(ep_handles[0]);
-    fmiss_learn_trans_t::init_fmiss_learn_trans_key(GET_MAC_ADDR(0), dummy_ep, &ip, &key);
-    fmiss_learn_trans_t *entry = reinterpret_cast<fmiss_learn_trans_t *>(
-        fmiss_learn_trans_t::fmiss_learn_key_ht()->lookup(&key));
+    dpkt_learn_trans_t::init_dpkt_learn_trans_key(GET_MAC_ADDR(0), dummy_ep, &ip, &key);
+    dpkt_learn_trans_t *entry = reinterpret_cast<dpkt_learn_trans_t *>(
+        dpkt_learn_trans_t::dpkt_learn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
 
     ip = {0};
@@ -533,8 +533,8 @@ TEST_F(learn_mix_fsm_test, fmiss_learn_arp_learn_diffrent_ip_same_ep) {
     inet_pton(AF_INET, "1.1.1.2", &(ip.addr.v4_addr));
     ASSERT_FALSE(ip_in_ep(&ip, dummy_ep, NULL));
 
-    ASSERT_EQ(fmiss_learn_trans_t::fmiss_learn_key_ht()->num_entries(), 1);
-    ASSERT_EQ(fmiss_learn_trans_t::fmiss_learn_ip_entry_ht()->num_entries(), 1);
+    ASSERT_EQ(dpkt_learn_trans_t::dpkt_learn_key_ht()->num_entries(), 1);
+    ASSERT_EQ(dpkt_learn_trans_t::dpkt_learn_ip_entry_ht()->num_entries(), 1);
 
     /* Learn from ARP a different IP */
 
@@ -586,8 +586,8 @@ TEST_F(learn_mix_fsm_test, fmiss_learn_arp_learn_diffrent_ip_same_ep) {
     ASSERT_FALSE(ip_in_ep(&ip, dummy_ep, NULL));
 
 
-    ASSERT_EQ(fmiss_learn_trans_t::fmiss_learn_key_ht()->num_entries(), 1);
-    ASSERT_EQ(fmiss_learn_trans_t::fmiss_learn_ip_entry_ht()->num_entries(), 1);
+    ASSERT_EQ(dpkt_learn_trans_t::dpkt_learn_key_ht()->num_entries(), 1);
+    ASSERT_EQ(dpkt_learn_trans_t::dpkt_learn_ip_entry_ht()->num_entries(), 1);
 }
 
 

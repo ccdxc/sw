@@ -396,8 +396,11 @@ struct session_s {
     ht_ctxt_t           hal_handle_ht_ctxt;       // hal handle based hash table ctxt
     ht_ctxt_t           hal_iflow_ht_ctxt;        // hal iflow based hash table ctxt
     ht_ctxt_t           hal_rflow_ht_ctxt;        // hal rflow based hash table ctxt
-    dllist_ctxt_t       sep_session_lentry;       // source EP's session list context
-    dllist_ctxt_t       dep_session_lentry;       // destination EP's session list context
+    hal_handle_t        sep_handle;               // Source EP Handle
+    hal_handle_t        dep_handle;               // Destination EP Handle
+    /* TODO: SEP and DEP handles need to be removed */
+    //dllist_ctxt_t       sep_session_lentry;       // source EP's session list context
+    //dllist_ctxt_t       dep_session_lentry;       // destination EP's session list context
     dllist_ctxt_t       sif_session_lentry;       // source interface's session list context
     dllist_ctxt_t       dif_session_lentry;       // destination interface's session list context
     dllist_ctxt_t       sl2seg_session_lentry;    // source L2 segment's session list context

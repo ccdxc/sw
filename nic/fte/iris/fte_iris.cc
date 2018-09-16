@@ -215,6 +215,16 @@ ctx_t::lookup_flow_objs()
         HAL_ASSERT_RETURN(dif_, HAL_RET_IF_NOT_FOUND);
     } else {
         HAL_TRACE_INFO("fte: dest ep unknown, key={}", key_);
+        if (!hal::is_forwarding_mode_host_pinned() &&
+                sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
+            ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
+            dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
+            if (dep_) {
+                HAL_TRACE_INFO("fte: dst ep found by L2 lookup, key={}", key_);
+                dif_ = hal::find_if_by_handle(dep_->if_handle);
+                dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
+            }
+        }
     }
 
     return HAL_RET_OK;

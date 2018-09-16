@@ -402,9 +402,11 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
 
     if (sep) {
         ep_add_session(sep, session);
+        session->sep_handle = sep->hal_handle;
     }
     if (dep) {
         ep_add_session(dep, session);
+        session->dep_handle = dep->hal_handle;
     }
 
     dllist_reset(&session->sif_session_lentry);
@@ -443,12 +445,17 @@ del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
                                                     &session->hal_rflow_ht_ctxt);
     }
 
-    if (sep) {
-        ep_del_session(sep, session);
+    if (sep == NULL) {
+       sep = find_ep_by_handle(session->sep_handle);
+       HAL_ABORT(sep != NULL);
     }
-    if (dep) {
-        ep_del_session(dep, session);
+    if (dep == NULL) {
+       dep = find_ep_by_handle(session->dep_handle);
+       HAL_ABORT(dep != NULL);
     }
+
+    ep_del_session(sep, session);
+    ep_del_session(dep, session);
 }
 
 

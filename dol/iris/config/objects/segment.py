@@ -382,6 +382,8 @@ class SegmentObject(base.ConfigObjectBase):
             if self.eplearn.dhcp:
                 dhcp_server = req_spec.eplearn_cfg.dhcp.trusted_servers.add()
                 dhcp_server = self.ipv4_pool.GetLast()
+            if hasattr(self.eplearn, "dpkt"):
+                req_spec.eplearn_cfg.dpkt.enabled = True
 
         if (self.pinnedif != None):
             req_spec.pinned_uplink_if_key_handle.if_handle = self.pinnedif.hal_handle

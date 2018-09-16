@@ -25,8 +25,8 @@ message EplearnArpCfg {
 
 
 // Arp/Ndp Cfg
-message EplearnFlowMissCfg {
-    bool   enabled       = 1;  // Learn from flow miss packets.
+message EplearnDataPacketCfg {
+    bool   enabled       = 1;  // Learn from data packets.
 }
 
 message EplearnCfg {
@@ -34,7 +34,7 @@ message EplearnCfg {
   bool                         drop_on_static_misatch  = 2; // Drop if static IP mismatch.
   EplearnArpCfg                arp                     = 3;
   EplearnDhcpCfg               dhcp                    = 4;
-  EplearnFlowMissCfg		   fmiss				   = 5;
+  EplearnDataPacketCfg         dpkt                    = 5;
 }
 
 message ArpStats {

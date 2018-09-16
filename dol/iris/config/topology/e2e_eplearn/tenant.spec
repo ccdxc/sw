@@ -19,6 +19,7 @@ fte:
         ipv4     : True
         ipv6     : False
 
+#security_profile: ref://store/objects/id=SEC_PROF_EPLEARN
 sessions:
 
 lif: ref://store/specs/id=LIF_ETH

@@ -42,8 +42,8 @@ cc_binary(
 
 cc_library(
     name = "ep_learn",
-    srcs = glob(["*.cc"]) + glob(["dhcp/*.cc"]) + glob(["arp/*.cc"]) + glob(["flow_miss/*.cc"]) + glob(["common/*.cc"]),
-    hdrs = glob(["dhcp/*.hpp"]) + glob(["arp/*.hpp"]) + glob(["flow_miss/*.hpp"]) + glob(["common/*.hpp"]),
+    srcs = glob(["*.cc"]) + glob(["dhcp/*.cc"]) + glob(["arp/*.cc"]) + glob(["data_pkt/*.cc"]) + glob(["common/*.cc"]),
+    hdrs = glob(["dhcp/*.hpp"]) + glob(["arp/*.hpp"]) + glob(["data_pkt/*.hpp"]) + glob(["common/*.hpp"]),
     deps = [
         "@sdk//obj:sdk_slab",
         "//nic/hal/third-party/isc-dhcp:isc-dhcp",
@@ -81,7 +81,7 @@ cc_library(
         "eplearn.hpp",
         "arp/arp_learn.hpp",
         "dhcp/dhcp_learn.hpp",
-        "flow_miss/fmiss_learn.hpp",
+        "data_pkt/dpkt_learn.hpp",
     ],
 )
 
@@ -89,7 +89,7 @@ cc_library(
     name = "ep_learn_common",
     srcs = glob(["common/*.cc"]),
     hdrs = glob(["common/*.hpp"]) + ["eplearn.hpp", "dhcp/dhcp_trans.hpp", "arp/arp_trans.hpp",
-     "flow_miss/fmiss_learn_trans.hpp"],
+     "data_pkt/dpkt_learn_trans.hpp"],
     deps = common_deps,
     copts = sdk_copts,
     alwayslink = 1,
@@ -122,8 +122,8 @@ cc_test(
 )
 
 cc_test(
-    name = "fmiss_learn_test",
-    srcs = glob(["test/flow_miss/*.cc"]) + [
+    name = "dpkt_learn_test",
+    srcs = glob(["test/data_pkt/*.cc"]) + [
         "test/hal_mock.cc",
     ],
     tags = ["manual", "gtests"],

@@ -13,6 +13,7 @@ eplearn :
     remote            : False
     arp_entry_timeout : 120
     dhcp              : True
+    dpkt              : True
 endpoints   :
     sgenable: True
     useg    : 0

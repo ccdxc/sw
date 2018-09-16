@@ -5,7 +5,7 @@
 #ifndef HAL_PLUGINS_EPLEARN_EPLEARN_HPP_
 #define HAL_PLUGINS_EPLEARN_EPLEARN_HPP_
 #include "common/trans.hpp"
-#include "flow_miss/fmiss_learn_trans.hpp"
+#include "data_pkt/dpkt_learn_trans.hpp"
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_trans.hpp"
 #include "nic/hal/plugins/eplearn/arp/arp_trans.hpp"
 
@@ -16,7 +16,7 @@ namespace eplearn {
 enum ep_learn_type_t {
     ARP_LEARN,
     DHCP_LEARN,
-    FMISS_LEARN,
+    DPKT_LEARN,
     EP_LEARN_MAX,
 };
 
@@ -30,7 +30,7 @@ typedef struct eplearn_trans_ctx_s {
     union {
         dhcp_event_data  dhcp_data;
         arp_event_data_t arp_data;
-        fmiss_learn_event_data_t fmiss_learn_data;
+        dpkt_learn_event_data_t dpkt_learn_data;
     }event_data;
 } eplearn_trans_ctx_t;
 
