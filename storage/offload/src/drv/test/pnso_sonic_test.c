@@ -310,7 +310,6 @@ exec_hash_req(struct thread_state *tstate)
 		svc_req->svc[0].u.hash_desc.flags = 0;	/* reset per block */
 
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_HASH;
-		svc_res->svc[0].u.hash.num_tags = PNSO_TEST_BLOCK_COUNT;
 		svc_res->svc[0].u.hash.tags = rstate->hash_tags;
 	}
 
@@ -373,7 +372,6 @@ exec_chksum_req(struct thread_state *tstate)
 		svc_req->svc[0].u.chksum_desc.flags = 0; /* reset per block */
 
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_CHKSUM;
-		svc_res->svc[0].u.chksum.num_tags = PNSO_TEST_BLOCK_COUNT;
 		svc_res->svc[0].u.chksum.tags = rstate->chksum_tag;
 	}
 

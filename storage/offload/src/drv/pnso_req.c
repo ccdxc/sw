@@ -427,13 +427,6 @@ validate_res_hash_service(struct pnso_service_status *status)
 {
 	pnso_error_t err;
 
-	if (status->u.hash.num_tags <= 0) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid number of tags specified for hash! num_ttags: %d err: %d",
-				status->u.hash.num_tags, err);
-		goto out;
-	}
-
 	if (!status->u.hash.tags) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid tags specified for hash! tags: 0x%llx err: %d",
@@ -450,13 +443,6 @@ static pnso_error_t
 validate_res_chksum_service(struct pnso_service_status *status)
 {
 	pnso_error_t err;
-
-	if (status->u.chksum.num_tags <= 0) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid number of tags specified for chksum! num_ttags: %d err: %d",
-				status->u.chksum.num_tags, err);
-		goto out;
-	}
 
 	if (!status->u.chksum.tags) {
 		err = EINVAL;
