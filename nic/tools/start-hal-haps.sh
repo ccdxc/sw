@@ -6,6 +6,7 @@ export HAL_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/conf/sdk:$NIC_DIR/conf/plugins/lif
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
 export HAL_LOG_FILE='/hal.log'
 export FWD_MODE="$1"
+export DISABLE_AGING=1
 
 # Remove logs
 rm -f /hal.log*
