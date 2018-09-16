@@ -211,7 +211,7 @@ cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc)
 			status_desc->csd_output_data_len);
 	OSAL_LOG_INFO("%30s: %d", "csd_partial_data",
 			status_desc->csd_partial_data);
-	OSAL_LOG_INFO("%30s: %llu", "csd_integrity_data",
+	OSAL_LOG_INFO("%30s: 0x%llx", "csd_integrity_data",
 			status_desc->csd_integrity_data);
 
 	/* TODO-cpdc: print SHA */

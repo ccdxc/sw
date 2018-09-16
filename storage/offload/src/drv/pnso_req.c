@@ -173,6 +173,18 @@ pprint_hash_tags(const struct pnso_hash_tag *tags, uint32_t num_tags)
 		OSAL_LOG_INFO("%30s: %*phN", "hash", 64, tags[i].hash);
 }
 
+static void __attribute__((unused))
+pprint_chksum_tags(const struct pnso_chksum_tag *tags, uint32_t num_tags)
+{
+	uint32_t i;
+
+	if (!tags || (num_tags > MAX_NUM_TAGS))
+		return;
+
+	for (i = 0; i < num_tags; i++)
+		OSAL_LOG_INFO("%30s: %*phN", "checksum", 8, tags[i].chksum);
+}
+
 void __attribute__((unused))
 req_pprint_result(const struct pnso_service_result *res)
 {
@@ -214,6 +226,8 @@ req_pprint_result(const struct pnso_service_result *res)
 			break;
 		case PNSO_SVC_TYPE_CHKSUM:
 			OSAL_LOG_INFO("%30s: %d", "num_tags",
+					res->svc[i].u.chksum.num_tags);
+			pprint_chksum_tags(res->svc[i].u.chksum.tags,
 					res->svc[i].u.chksum.num_tags);
 			OSAL_LOG_INFO("%30s: %d", "rsvd_3",
 					res->svc[i].u.chksum.rsvd_3);

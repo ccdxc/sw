@@ -11,9 +11,9 @@
 #include "pnso_api.h"
 #include "pnso_pbuf.h"
 
-#define ENABLE_CPDC_REQ		1
+#define ENABLE_CPDC_REQ		0
 #define ENABLE_HASH_REQ		0
-#define ENABLE_CHKSUM_REQ	0
+#define ENABLE_CHKSUM_REQ	1
 
 #define NUM_REQ_COUNT		(1+ENABLE_CPDC_REQ)
 
@@ -372,22 +372,20 @@ exec_chksum_req(struct thread_state *tstate)
 
 	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
 		rstate = &tstate->reqs[batch_id];
-		svc_req = &rstate->req.req;
-		svc_res = &rstate->res.res;
-
-		memset(svc_req, 0, sizeof(*svc_req));
-		memset(svc_res, 0, sizeof(*svc_res));
-
 		init_buflist(&rstate->buflists[0], 'A');
-		init_buflist(&rstate->buflists[1], 'B');
+
+		svc_req = &rstate->req.req;
+		memset(svc_req, 0, sizeof(*svc_req));
 
 		svc_req->sgl = rstate->buflists[0].buflist;
 		svc_req->num_services = 1;
-		svc_res->num_services = 1;
-
 		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_CHKSUM);
 		svc_req->svc[0].u.chksum_desc.flags = 0; /* reset per block */
 
+		svc_res = &rstate->res.res;
+		memset(svc_res, 0, sizeof(*svc_res));
+
+		svc_res->num_services = 1;
 		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_CHKSUM;
 		svc_res->svc[0].u.chksum.tags = rstate->chksum_tag;
