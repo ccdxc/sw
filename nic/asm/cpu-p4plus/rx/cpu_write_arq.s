@@ -90,7 +90,7 @@ cpu_rx_arq_full_error:
     CAPRI_CLEAR_TABLE2_VALID
     CAPRI_CLEAR_TABLE3_VALID
     phvwri  p.p4_intr_global_drop, 1
-    illegal
+    //illegal
     nop.e
     nop
         
