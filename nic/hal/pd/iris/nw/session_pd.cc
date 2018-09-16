@@ -16,6 +16,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include "nic/hal/pd/iris/internal/system_pd.hpp"
 #include <string.h>
 
 namespace hal {
@@ -396,7 +397,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     clock_args.hw_tick = &hw_tick;
     clock_args.sw_ns = sw_ns;
     pd_func_args.pd_conv_sw_clock_to_hw_clock = &clock_args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, &pd_func_args);
+    pd_conv_sw_clock_to_hw_clock(&pd_func_args);
     d.flow_info_action_u.flow_info_flow_info.start_timestamp = hw_tick;
     HAL_TRACE_DEBUG("Sw ns: {} hw tick: {}", sw_ns, hw_tick);
 
@@ -997,8 +998,8 @@ hal_ret_t
 pd_session_get (pd_func_args_t *pd_func_args)
 {
     hal_ret_t                               ret = HAL_RET_OK;
-    pd_session_get_args_t *args = pd_func_args->pd_session_get;
-    pd_func_args_t pd_func_args1 = {0};
+    pd_session_get_args_t                  *args = pd_func_args->pd_session_get;
+    pd_func_args_t                          pd_func_args1 = {0};
     sdk_ret_t                               sdk_ret;
     session_state_actiondata                d = {0};
     directmap                              *dm = NULL;
@@ -1080,12 +1081,14 @@ pd_session_get (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_flow_get (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t                 ret = HAL_RET_OK;
-    pd_flow_get_args_t *args = pd_func_args->pd_flow_get;
-    sdk_ret_t                 sdk_ret;
-    flow_stats_actiondata     d = {0};
-    directmap                *dm = NULL;
-    pd_flow_t                 pd_flow;
+    hal_ret_t                               ret = HAL_RET_OK;
+    pd_conv_hw_clock_to_sw_clock_args_t     clock_args = {0};
+    pd_flow_get_args_t                      *args = pd_func_args->pd_flow_get;
+    sdk_ret_t                               sdk_ret;
+    flow_stats_actiondata                   d = {0};
+    flow_info_actiondata                    f = {0};
+    directmap                               *dm = NULL;
+    pd_flow_t                               pd_flow;
 
     if (args->pd_session == NULL) {
         return HAL_RET_INVALID_ARG;
@@ -1108,6 +1111,18 @@ pd_flow_get (pd_func_args_t *pd_func_args)
         args->flow_state->bytes = d.flow_stats_action_u.flow_stats_flow_stats.permit_bytes;
         args->flow_state->drop_packets = d.flow_stats_action_u.flow_stats_flow_stats.drop_packets;
         args->flow_state->drop_bytes = d.flow_stats_action_u.flow_stats_flow_stats.drop_bytes;
+    }
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
+    HAL_ASSERT(dm != NULL);
+
+    sdk_ret = dm->retrieve(pd_flow.flow_stats_hw_id, &f);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret == HAL_RET_OK) {
+        clock_args.hw_tick = f.flow_info_action_u.flow_info_flow_info.start_timestamp;
+        clock_args.sw_ns = &args->flow_state->create_ts;
+        pd_func_args->pd_conv_hw_clock_to_sw_clock = &clock_args;
+        pd_conv_hw_clock_to_sw_clock(pd_func_args);
     }
 
     return ret;

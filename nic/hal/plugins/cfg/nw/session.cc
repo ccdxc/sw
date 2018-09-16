@@ -553,6 +553,32 @@ static void
 session_state_to_session_get_response (session_state_t *session_state,
                                        SessionGetResponse *response)
 {
+    uint32_t        age;
+    timespec_t      ctime;
+    uint64_t        ctime_ns, create_ns;
+
+    // get current time
+    clock_gettime(CLOCK_MONOTONIC, &ctime);
+    sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
+
+    // iflow_age
+    create_ns = session_state->iflow_state.create_ts;
+    age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
+    response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_flow_age(age);
+
+    // rflow age
+    create_ns = session_state->rflow_state.create_ts;
+    age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
+    response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_flow_age(age);
+
+    // TCP state
+    response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_tcp_state(session_state->iflow_state.state);
+    response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_tcp_state(session_state->rflow_state.state);
+
     flow_state_to_flow_stats_response(&session_state->iflow_state,
          response->mutable_stats()->mutable_initiator_flow_stats());
     flow_state_to_flow_stats_response(&session_state->rflow_state,

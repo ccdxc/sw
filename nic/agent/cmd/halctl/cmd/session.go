@@ -345,10 +345,19 @@ func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func sessionShowHeader(cmd *cobra.Command, args []string) {
-	hdrLine := strings.Repeat("-", 132)
+	hdrLine := strings.Repeat("-", 136)
+	fmt.Printf("Legend:\nHandle: Session Handle\tRole: I - Initiator, R - Responder\n")
+	fmt.Printf("KeyType: Flow Key Type\tL2SegID: L2 Segment ID\n")
+	fmt.Printf("SrcVrfID: Source VRF ID\tDstVrfID: Destination VRF ID\n")
+	fmt.Printf("SMAC|SIP[:sport]: Source MAC Address | Source IP Address and Port Number\n")
+	fmt.Printf("DMAC|DIP[:dport]: Destination MAC Address | Destination IP Address and Port Number\n")
+	fmt.Printf("Proto|EType: L4 Protocol | Ethernet Type\n")
+	fmt.Printf("TCP State: State for TCP flows\tAge: Age in Secs\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-14s%-12s%-14s%-12s%-10s%-10s%-24s%-24s%-12s\n",
-		"SessionHandle", "FlowType", "FlowKeyType", "L2SegID", "SrcVrfID", "DstVrfID", "SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "Proto|EType")
+	fmt.Printf("%-8s%-6s%-10s%-12s%-10s%-10s%-24s%-24s%-12s%-16s%-6s\n",
+		"Handle", "Role", "KeyType", "L2SegID", "SrcVrfID", "DstVrfID",
+		"SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "Proto|EType", "TCP State",
+		"Age")
 	fmt.Println(hdrLine)
 }
 
@@ -361,12 +370,12 @@ func sessionShowOneResp(resp *halproto.SessionGetResponse) {
 	responderFlow := spec.GetResponderFlow()
 
 	if initiatorFlow != nil {
-		flowStr := "initiator"
+		flowStr := "I"
 		flowShow(spec, status, initiatorFlow, flowStr)
 	}
 
 	if responderFlow != nil {
-		flowStr := "responder"
+		flowStr := "R"
 		flowShow(spec, status, responderFlow, flowStr)
 	}
 }
@@ -383,10 +392,12 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 		ipproto   string
 	)
 	flowKey := flowSpec.GetFlowKey()
+	flowInfo := flowSpec.GetFlowData().GetFlowInfo()
 
+	tcpState := "-"
 	switch flowKey.GetFlowKey().(type) {
 	case *halproto.FlowKey_L2Key:
-		keyType = "MAC"
+		keyType = "L2"
 		l2Key := flowKey.GetL2Key()
 		id = uint64(l2Key.GetL2SegmentId())
 		src = utils.MactoStr(l2Key.GetSmac())
@@ -410,29 +421,37 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 		switch l4.(type) {
 		case *halproto.FlowKeyV4_TcpUdp:
 			tcp := v4Key.GetTcpUdp()
-			src += ":"
+			src += ":["
 			src += strconv.Itoa(int(tcp.GetSport()))
-			dst += ":"
+			src += "]"
+			dst += ":["
 			dst += strconv.Itoa(int(tcp.GetDport()))
+			dst += "]"
 			if halproto.IPProtocol(v4Key.GetIpProto()) == halproto.IPProtocol_IPPROTO_TCP {
 				ipproto = "TCP"
+				tcpState = tcpStateStringCompact(flowInfo.GetTcpState().String())
 			} else {
 				ipproto = "UDP"
 			}
 		case *halproto.FlowKeyV4_Icmp:
 			icmp := v4Key.GetIcmp()
-			src += ":"
+			src += ":["
 			src += strconv.Itoa(int(icmp.GetType()))
 			src += "/"
 			src += strconv.Itoa(int(icmp.GetCode()))
-			dst += ":"
+			src += "]"
+			dst += ":["
 			dst += strconv.Itoa(int(icmp.GetId()))
+			dst += "]"
 			ipproto = "ICMP"
 		case *halproto.FlowKeyV4_Esp:
 			esp := v4Key.GetEsp()
-			src += ":"
+			src += ":["
 			src += strconv.Itoa(int(esp.GetSpi()))
+			src += "]"
 			ipproto = "ESP"
+		default:
+			ipproto = v4Key.GetIpProto().String()
 		}
 	case *halproto.FlowKey_V6Key:
 		keyType = "IPv6"
@@ -452,29 +471,37 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 		switch l4.(type) {
 		case *halproto.FlowKeyV6_TcpUdp:
 			tcp := v6Key.GetTcpUdp()
-			src += ":"
+			src += ":["
 			src += strconv.Itoa(int(tcp.GetSport()))
-			dst += ":"
+			src += "]"
+			dst += ":["
 			dst += strconv.Itoa(int(tcp.GetDport()))
+			dst += "]"
 			if halproto.IPProtocol(v6Key.GetIpProto()) == halproto.IPProtocol_IPPROTO_TCP {
 				ipproto = "TCP"
+				tcpState = tcpStateStringCompact(flowInfo.GetTcpState().String())
 			} else {
 				ipproto = "UDP"
 			}
 		case *halproto.FlowKeyV6_Icmp:
 			icmp := v6Key.GetIcmp()
-			src += ":"
+			src += ":["
 			src += strconv.Itoa(int(icmp.GetType()))
 			src += "/"
 			src += strconv.Itoa(int(icmp.GetCode()))
-			dst += ":"
+			src += "]"
+			dst += ":["
 			dst += strconv.Itoa(int(icmp.GetId()))
+			dst += "]"
 			ipproto = "ICMP"
 		case *halproto.FlowKeyV6_Esp:
 			esp := v6Key.GetEsp()
-			src += ":"
+			src += ":["
 			src += strconv.Itoa(int(esp.GetSpi()))
+			src += "]"
 			ipproto = "ESP"
+		default:
+			ipproto = v6Key.GetIpProto().String()
 		}
 	default:
 		keyType = "UNK"
@@ -485,13 +512,14 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 		dstID = 0
 	}
 
-	fmt.Printf("%-14d%-12s%-14s%-12d%-10d%-10d%-24s%-24s%-12s\n",
+	age := flowInfo.GetFlowAge()
+
+	fmt.Printf("%-8d%-6s%-10s%-12d%-10d%-10d%-24s%-24s%-12s%-16s%-6d\n",
 		status.GetSessionHandle(),
 		flowStr, keyType, id,
 		srcID, dstID,
-		src, dst, ipproto)
-
-	flowInfo := flowSpec.GetFlowData().GetFlowInfo()
+		src, dst, ipproto,
+		tcpState, age)
 
 	natType := flowInfo.GetNatType()
 	snat := false
@@ -520,6 +548,12 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 		fmt.Printf("%-24s%-8s%-40s%-4s%-40s\n",
 			"", "DNAT", dst, "->", ndStr)
 	}
+}
+
+func tcpStateStringCompact(state string) string {
+	var compactString string
+	fmt.Sscanf(state, "FLOW_TCP_STATE_%s", &compactString)
+	return compactString
 }
 
 // Uint32IPAddrToStr converts uint32 IP address to string

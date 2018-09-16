@@ -123,15 +123,16 @@ enum FlowType {
 // NAT rewrite information etc.
 message FlowInfo {
   FlowAction                         flow_action          = 1;     // flow action(s)
-  NatType                            nat_type             = 2;     // NAT mode
-  types.IPAddress                    nat_sip              = 3;     // source IP to NAT to
-  uint32                             nat_sport            = 4;     // source port to NAT to
-  types.IPAddress                    nat_dip              = 5;     // destination IP to NAT to
-  uint32                             nat_dport            = 6;     // dstination port to NAT to
-  fixed64                            nat_dmac             = 7;     // For DSR
-  FlowTCPState                       tcp_state            = 8;     // TCP state, if any
-  repeated kh.MirrorSessionKeyHandle ing_mirror_sessions  = 9  [(gogoproto.moretags) = "venice:constraints={range:0-7}"]; // list of mirror destinations
-  repeated kh.MirrorSessionKeyHandle egr_mirror_sessions  = 10 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];// list of mirror destinations
+  uint32                             flow_age             = 2;     // Flow Age
+  NatType                            nat_type             = 3;     // NAT mode
+  types.IPAddress                    nat_sip              = 4;     // source IP to NAT to
+  uint32                             nat_sport            = 5;     // source port to NAT to
+  types.IPAddress                    nat_dip              = 6;     // destination IP to NAT to
+  uint32                             nat_dport            = 7;     // dstination port to NAT to
+  fixed64                            nat_dmac             = 8;     // For DSR
+  FlowTCPState                       tcp_state            = 9;     // TCP state, if any
+  repeated kh.MirrorSessionKeyHandle ing_mirror_sessions  = 10  [(gogoproto.moretags) = "venice:constraints={range:0-7}"]; // list of mirror destinations
+  repeated kh.MirrorSessionKeyHandle egr_mirror_sessions  = 11 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];// list of mirror destinations
 }
 
 
