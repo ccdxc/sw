@@ -15,6 +15,7 @@
 #include "nic/include/base.hpp"
 #endif
 #include "nic/include/hal.hpp"
+#include "nic/include/hal_cfg.hpp"
 
 #define CAPRI_P4_NUM_STAGES     6
 #define CAPRI_P4PLUS_NUM_STAGES 8
@@ -47,7 +48,7 @@ typedef struct capri_table_mem_layout_ {
     char        *tablename;
 } capri_table_mem_layout_t;
 
-int capri_table_rw_init();
+int capri_table_rw_init(hal::hal_cfg_t *hal_cfg);
 
 void capri_table_rw_cleanup();
 

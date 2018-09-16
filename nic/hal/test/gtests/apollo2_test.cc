@@ -639,7 +639,7 @@ TEST_F(apollo_test, test1) {
     read_json(json_cfg, pt);
     capri_list_program_addr(pt.get<std::string>("asic.loader_info_file").c_str());
 
-    ret = capri_table_rw_init();
+    ret = capri_table_rw_init(NULL);
     ASSERT_NE(ret, -1);
     ret = capri_hbm_cache_init(&cfg);
     ASSERT_NE(ret, -1);

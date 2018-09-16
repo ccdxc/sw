@@ -729,8 +729,50 @@ capri_tcam_memory_init(bool ingress)
 }
 
 void capri_debug_hbm_reset(void);
+
+
+static void
+capri_zero_all_srams (hal::hal_cfg_t *hal_cfg)
+{
+    pu_cpp_int<128> sram_block_data;
+    cap_pics_csr_t *pics_csr;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    sram_block_data = 0;
+
+    if (hal_cfg &&
+        ((hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) &&
+         (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HW))) {
+        return;
+    }
+
+    pics_csr = &cap0.ssi.pics;
+    for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
+        pics_csr->dhs_sram.entry[i]
+                .data((pu_cpp_int<128>)sram_block_data);
+        pics_csr->dhs_sram.entry[i].write();
+    }
+    pics_csr = &cap0.sse.pics;
+    for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
+        pics_csr->dhs_sram.entry[i]
+                .data((pu_cpp_int<128>)sram_block_data);
+        pics_csr->dhs_sram.entry[i].write();
+    }
+    pics_csr = &cap0.rpc.pics;
+    for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
+        pics_csr->dhs_sram.entry[i]
+                .data((pu_cpp_int<128>)sram_block_data);
+        pics_csr->dhs_sram.entry[i].write();
+    }
+    pics_csr = &cap0.tpc.pics;
+    for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
+        pics_csr->dhs_sram.entry[i]
+                .data((pu_cpp_int<128>)sram_block_data);
+        pics_csr->dhs_sram.entry[i].write();
+    }
+}
+
 int
-capri_table_rw_init (void)
+capri_table_rw_init (hal::hal_cfg_t *hal_cfg)
 {
     // !!!!!!
     // Before making this call, it is expected that
@@ -786,6 +828,9 @@ capri_table_rw_init (void)
     capri_tcam_memory_init(true);
     /* egress pipe tcam memory init */
     capri_tcam_memory_init(false);
+
+    /* Zero all sram memories in P4 and P4+ pipelines */
+    capri_zero_all_srams(hal_cfg);
 
     return (CAPRI_OK);
 }

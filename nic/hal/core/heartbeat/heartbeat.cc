@@ -30,10 +30,10 @@ heartbeat_monitor_cb (void *timer, uint32_t timer_id, void *ctxt)
             hb_ts = hal_thread->heartbeat_ts();
             ts_diff = sdk::timestamp_diff(&curr_ts, &hb_ts);
             if (ts_diff.tv_sec >= HAL_HEARTBEAT_SCAN_INTVL) {
-                HAL_TRACE_ERR("thread {} missed heartbeat for last {}s.{}ms",
-                              hal_thread->name(),
-                              ts_diff.tv_sec,
-                              ts_diff.tv_nsec/TIME_NSECS_PER_MSEC);
+                //HAL_TRACE_ERR("thread {} missed heartbeat for last {}s.{}ms",
+                              //hal_thread->name(),
+                              //ts_diff.tv_sec,
+                              //ts_diff.tv_nsec/TIME_NSECS_PER_MSEC);
             }
         }
     }

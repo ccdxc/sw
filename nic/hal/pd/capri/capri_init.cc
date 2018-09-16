@@ -1170,7 +1170,7 @@ capri_init (capri_cfg_t *cfg = NULL)
         ret = capri_hbm_regions_init(cfg, hal_cfg);
     }
 
-    if (capri_table_rw_init()) {
+    if (capri_table_rw_init(hal_cfg)) {
         return HAL_RET_ERR;
     }
 

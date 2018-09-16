@@ -1446,7 +1446,7 @@ int main(int argc, char **argv) {
         .cfg_path            = std::getenv("HAL_CONFIG_PATH"),
     };
     p4pd_init(&p4pd_cfg);
-    assert(capri_table_rw_init() != -1);
+    assert(capri_table_rw_init(NULL) != -1);
 
     // testing::GTEST_FLAG(filter) = "-*test18*";
     int res = RUN_ALL_TESTS();
