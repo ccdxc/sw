@@ -15,9 +15,11 @@
 
 #ifdef NDEBUG
 #define CPDC_PPRINT_DESC(d)
+#define CPDC_PPRINT_STATUS_DESC(d)
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	PNSO_OK
 #else
 #define CPDC_PPRINT_DESC(d)		cpdc_pprint_desc(d)
+#define CPDC_PPRINT_STATUS_DESC(d)	cpdc_pprint_status_desc(d)
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	validate_setup_input(i, p)
 #endif
 
@@ -98,9 +100,9 @@ validate_setup_input(const struct service_info *svc_info,
 		return err;
 	}
 
-	if (!svc_params->u.sp_cp_desc) {
-		OSAL_LOG_ERROR("invalid desc specified! sp_desc: %p err: %d",
-				svc_params->u.sp_cp_desc, err);
+	if (!svc_params->u.sp_hash_desc) {
+		OSAL_LOG_ERROR("invalid desc specified! desc: 0x%llx err: %d",
+				(u64) svc_params->u.sp_hash_desc, err);
 		return err;
 	}
 
@@ -139,7 +141,7 @@ fill_hash_desc(enum pnso_hash_type algo_type, uint32_t buf_len,
 	CPDC_PPRINT_DESC(desc);
 }
 
-static void
+static uint32_t
 fill_hash_desc_per_block(enum pnso_hash_type algo_type,
 		uint32_t block_size, uint32_t src_buf_len,
 		struct cpdc_sgl *src_sgl,
@@ -148,7 +150,7 @@ fill_hash_desc_per_block(enum pnso_hash_type algo_type,
 {
 	struct cpdc_desc *desc;
 	struct cpdc_status_desc *st_desc;
-	struct pnso_flat_buffer interm_fbuf;
+	struct pnso_flat_buffer flat_buf;
 	char *buf, *obj;
 	uint32_t desc_object_size, status_object_size, pad_size;
 	uint32_t i, len, block_cnt, buf_len;
@@ -161,16 +163,16 @@ fill_hash_desc_per_block(enum pnso_hash_type algo_type,
 	 * come from HBM memory.
 	 *
 	 */
-	interm_fbuf.len = src_sgl->cs_len_0;
-	interm_fbuf.buf = (uint64_t) osal_phy_to_virt(src_sgl->cs_addr_0);
+	flat_buf.len = src_buf_len;
+	flat_buf.buf = (uint64_t) osal_phy_to_virt(src_sgl->cs_addr_0);
 
-	block_cnt = pbuf_get_flat_buffer_block_count(&interm_fbuf, block_size);
+	block_cnt = pbuf_get_flat_buffer_block_count(&flat_buf, block_size);
 	desc = hash_desc;
 	st_desc = status_desc;
 
-	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: %llx hash_desc: %p status_desc: %p",
-			block_cnt, block_size, src_buf_len, interm_fbuf.buf,
-			hash_desc, status_desc);
+	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x%llx hash_desc: 0x%llx status_desc: 0x%llx",
+			block_cnt, block_size, src_buf_len, flat_buf.buf,
+			(u64) hash_desc, (u64) status_desc);
 
 	pad_size = mpool_get_pad_size(sizeof(struct cpdc_desc),
 			PNSO_MEM_ALIGN_DESC);
@@ -182,11 +184,12 @@ fill_hash_desc_per_block(enum pnso_hash_type algo_type,
 
 	buf_len = src_buf_len;
 	for (i = 0; buf_len && (i < block_cnt); i++) {
-		buf = (char *) interm_fbuf.buf + (i * block_size);
+		buf = (char *) flat_buf.buf + (i * block_size);
 		len = buf_len > block_size ? block_size : buf_len;
 
-		OSAL_LOG_DEBUG("blk_num: %d buf: %p, len: %d hash_desc: %p status_desc: %p",
-			i, buf, len, desc, st_desc);
+		OSAL_LOG_INFO("blk_num: %d buf: 0x%llx, len: %d hash_desc: 0x%llx status_desc: 0x%llx",
+			i, (u64) buf, len, (u64) desc, (u64) st_desc);
+
 		fill_hash_desc(algo_type, len, true, buf, desc, st_desc);
 		buf_len -= len;
 
@@ -200,6 +203,8 @@ fill_hash_desc_per_block(enum pnso_hash_type algo_type,
 		obj += status_object_size;
 		st_desc = (struct cpdc_status_desc *) obj;
 	}
+
+	return block_cnt;
 }
 
 static pnso_error_t
@@ -214,6 +219,7 @@ hash_setup(struct service_info *svc_info,
 	size_t src_blist_len;
 	bool per_block;
 	uint16_t flags;
+	uint32_t num_tags;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -255,22 +261,29 @@ hash_setup(struct service_info *svc_info,
 	}
 	src_blist_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
 
-	if (per_block)
-		fill_hash_desc_per_block(pnso_hash_desc->algo_type,
+	if (per_block) {
+		num_tags = fill_hash_desc_per_block(pnso_hash_desc->algo_type,
 				svc_info->si_block_size, src_blist_len,
 				svc_info->si_src_sgl,
 				hash_desc, status_desc);
-	else
+	} else {
 		fill_hash_desc(pnso_hash_desc->algo_type, src_blist_len, false,
 				svc_info->si_src_sgl, hash_desc, status_desc);
+		num_tags = 1;
+	}
 
 	svc_info->si_type = PNSO_SVC_TYPE_HASH;
 	svc_info->si_desc_flags = flags;
 	svc_info->si_desc = hash_desc;
 	svc_info->si_status_desc = status_desc;
+	svc_info->si_num_tags = num_tags;
 
 	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
+		if (num_tags > 1) {
+			svc_info->si_seq_info.sqi_batch_mode = true;
+			svc_info->si_seq_info.sqi_batch_size = num_tags;
+		}
 		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
 				hash_desc, sizeof(*hash_desc));
 		if (!svc_info->si_seq_info.sqi_desc) {
@@ -371,7 +384,65 @@ hash_poll(const struct service_info *svc_info)
 static pnso_error_t
 hash_read_status_per_block(const struct service_info *svc_info)
 {
-	return EOPNOTSUPP;
+	pnso_error_t err = EINVAL;
+	struct pnso_service_status *svc_status;
+	struct cpdc_status_desc *status_desc, *st_desc;
+	uint32_t i, status_object_size, pad_size;
+	char *obj;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	OSAL_ASSERT(svc_info);
+
+	svc_status = svc_info->si_svc_status;
+	if (svc_status->svc_type != svc_info->si_type) {
+		OSAL_LOG_ERROR("service type mismatch! svc_type: %d si_type: %d err: %d",
+			svc_status->svc_type,  svc_info->si_type, err);
+		goto out;
+	}
+
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+	if (!status_desc) {
+		OSAL_LOG_ERROR("invalid hash status desc! err: %d", err);
+		OSAL_ASSERT(err);
+	}
+
+	pad_size = mpool_get_pad_size(sizeof(struct cpdc_status_desc),
+			PNSO_MEM_ALIGN_DESC);
+	status_object_size = sizeof(struct cpdc_status_desc) + pad_size;
+
+	st_desc = status_desc;
+	svc_status->u.hash.num_tags = svc_info->si_num_tags;
+	for (i = 0; i < svc_info->si_num_tags; i++) {
+
+		CPDC_PPRINT_STATUS_DESC(st_desc);
+
+		if (!st_desc->csd_valid) {
+			svc_status->err = err;
+			OSAL_LOG_ERROR("valid bit not set! err: %d", err);
+			goto out;
+		}
+
+		if (st_desc->csd_err) {
+			svc_status->err =
+				cpdc_convert_desc_error(st_desc->csd_err);
+			OSAL_LOG_ERROR("service failed! err: %d", err);
+			goto out;
+		}
+
+		/* move to next status descriptor */
+		obj = (char *) st_desc;
+		obj += status_object_size;
+		st_desc = (struct cpdc_status_desc *) obj;
+	}
+
+	err = PNSO_OK;
+	OSAL_LOG_DEBUG("exit! status/result update success!");
+	return err;
+
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
 }
 
 static pnso_error_t
@@ -389,8 +460,6 @@ hash_read_status_buffer(const struct service_info *svc_info)
 	err = cpdc_common_read_status(hash_desc, status_desc);
 	if (err)
 		goto out;
-
-	/* TODO-hash: verify SHA, etc.  */
 
 	OSAL_LOG_DEBUG("exit! status verification success!");
 	return err;
@@ -429,7 +498,9 @@ hash_write_result_buffer(struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	struct pnso_service_status *svc_status;
-	struct cpdc_status_desc *status_desc;
+	struct cpdc_status_desc *status_desc, *st_desc;
+	uint32_t i, status_object_size, pad_size;
+	char *obj;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -460,10 +531,37 @@ hash_write_result_buffer(struct service_info *svc_info)
 		goto out;
 	}
 
-	/* TODO: handle more SHAs/tags instead of one */
-	svc_status->u.hash.num_tags = 1;
-	memcpy(svc_status->u.hash.tags->hash, status_desc->csd_sha,
-			PNSO_HASH_TAG_LEN);
+	svc_status->u.hash.num_tags = svc_info->si_num_tags;
+	if (svc_info->si_num_tags == 1) {
+		memcpy(svc_status->u.hash.tags[0].hash,
+				status_desc->csd_sha,
+				PNSO_HASH_TAG_LEN);
+
+		OSAL_LOG_INFO("tag: 0 status_desc: 0x%llx hash: %*phN",
+				(u64) status_desc, 64,
+				svc_status->u.hash.tags[0].hash);
+	} else {
+		pad_size = mpool_get_pad_size(sizeof(struct cpdc_status_desc),
+				PNSO_MEM_ALIGN_DESC);
+		status_object_size = sizeof(struct cpdc_status_desc) + pad_size;
+
+		st_desc = status_desc;
+		for (i = 0; i < svc_info->si_num_tags; i++) {
+			memcpy(svc_status->u.hash.tags[i].hash,
+					st_desc->csd_sha,
+					PNSO_HASH_TAG_LEN);
+
+			CPDC_PPRINT_STATUS_DESC(st_desc);
+			OSAL_LOG_INFO("tag: %d status_desc: 0x%llx hash: %*phN",
+				i, (u64) status_desc, 64,
+				svc_status->u.hash.tags[i].hash);
+
+			/* move to next status descriptor */
+			obj = (char *) st_desc;
+			obj += status_object_size;
+			st_desc = (struct cpdc_status_desc *) obj;
+		}
+	}
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");
@@ -485,8 +583,12 @@ hash_write_result(struct service_info *svc_info)
 	OSAL_ASSERT(svc_info);
 
 	per_block = is_dflag_per_block_enabled(svc_info->si_desc_flags);
+#if 0
 	err = per_block ? hash_write_result_per_block(svc_info) :
 		hash_write_result_buffer(svc_info);
+#else
+	err = hash_write_result_buffer(svc_info);
+#endif
 
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;

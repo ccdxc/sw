@@ -132,6 +132,11 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 	seq_desc->sd_desc_size = (uint8_t) ilog2(ring->ring_desc_size);
 	seq_desc->sd_pndx_size = (uint8_t) ilog2(ring->ring_pndx_size);
 	seq_desc->sd_ring_size = (uint8_t) ilog2(ring->ring_size);
+	if (svc_info->si_seq_info.sqi_batch_mode) {
+		seq_desc->sd_batch_mode = true;
+		seq_desc->sd_batch_size =
+			cpu_to_be16(svc_info->si_seq_info.sqi_batch_size);
+	}
 
 	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x%llx  desc_size: %lu",
 			ring_id, index, (u64) src_desc, desc_size);

@@ -11,15 +11,15 @@
 #include "pnso_api.h"
 #include "pnso_pbuf.h"
 
-#define ENABLE_CPDC_REQ		0
-#define ENABLE_HASH_REQ		1	
+#define ENABLE_CPDC_REQ		1
+#define ENABLE_HASH_REQ		0
 #define ENABLE_CHKSUM_REQ	0
 
 #define NUM_REQ_COUNT		(1+ENABLE_CPDC_REQ)
 
 /* Input data defaults */
-#define PNSO_TEST_BLOCK_SIZE 4096
-#define PNSO_TEST_BLOCK_COUNT 1
+#define PNSO_TEST_BLOCK_SIZE	4096
+#define PNSO_TEST_BLOCK_COUNT	2
 #define PNSO_TEST_DATA_SIZE (PNSO_TEST_BLOCK_SIZE * PNSO_TEST_BLOCK_COUNT)
 
 /* Compression defaults */
@@ -39,8 +39,7 @@ static uint8_t iv[64];
 
 /* Structs to avoid extra allocs */
 struct pnso_multi_buflist {
-	struct pnso_buffer_list buflist;
-	struct pnso_flat_buffer bufs[PNSO_TEST_BLOCK_COUNT];
+	struct pnso_buffer_list *buflist;
 	uint8_t data[PNSO_TEST_DATA_SIZE];
 };
 
@@ -101,18 +100,16 @@ comp_cb(void *arg1, struct pnso_service_result *svc_res)
 static void
 init_buflist(struct pnso_multi_buflist *mbuf, char fill_byte)
 {
-	size_t i;
+	uint32_t i;
 
-	mbuf->buflist.count = PNSO_TEST_BLOCK_COUNT;
-	for (i = 0; i < PNSO_TEST_BLOCK_COUNT; i++) {
-		mbuf->buflist.buffers[i].len = PNSO_TEST_BLOCK_SIZE;
-		mbuf->buflist.buffers[i].buf =
-			(u64) osal_aligned_alloc(PNSO_TEST_BLOCK_SIZE,
-					PNSO_TEST_BLOCK_SIZE);
-		memset((void *) mbuf->buflist.buffers[i].buf,
-				fill_byte, PNSO_TEST_DATA_SIZE);
+	mbuf->buflist = pbuf_aligned_alloc_buffer_list(PNSO_TEST_BLOCK_COUNT,
+			PNSO_TEST_BLOCK_SIZE, PNSO_TEST_BLOCK_SIZE);
+	for (i = 0; i < mbuf->buflist->count; i++) {
+		memset((void *) mbuf->buflist->buffers[i].buf,
+				fill_byte, PNSO_TEST_BLOCK_SIZE);
 	}
-	pbuf_convert_buffer_list_v2p(&mbuf->buflist);
+	pbuf_pprint_buffer_list(mbuf->buflist);
+	pbuf_convert_buffer_list_v2p(mbuf->buflist);
 
 	/* TODO: 'bufs' not in-use */
 	memset(mbuf->data, fill_byte, PNSO_TEST_DATA_SIZE);
@@ -207,16 +204,32 @@ exec_cp_req(struct thread_state *tstate)
 		init_buflist(&rstate->buflists[0], 'A');
 		init_buflist(&rstate->buflists[1], 'B');
 
-		svc_req->sgl = &rstate->buflists[0].buflist;
+		svc_req->sgl = rstate->buflists[0].buflist;
 		svc_req->num_services = 1;
 		svc_res->num_services = 1;
 
 		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_COMPRESS);
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
-		svc_res->svc[0].u.dst.sgl = &rstate->buflists[1].buflist;
+		svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
 	}
 
 	return submit_requests(tstate);
+}
+
+void
+fixup_dc_buffer(struct pnso_buffer_list *blist, size_t len)
+{
+	uint32_t i;
+
+	for (i = 0; i < blist->count; i++) {
+		if (len >= PNSO_TEST_BLOCK_SIZE) {
+			blist->buffers[i].len = PNSO_TEST_BLOCK_SIZE;
+			len -= PNSO_TEST_BLOCK_SIZE;
+		} else {
+			blist->buffers[i].len = len;
+			len = 0;
+		}
+	}
 }
 
 static int
@@ -239,16 +252,21 @@ exec_dc_req(struct thread_state *tstate)
 		memset(svc_req, 0, sizeof(*svc_req));
 		memset(svc_res, 0, sizeof(*svc_res));
 
-		svc_req->sgl = &rstate->buflists[1].buflist;
-		svc_req->sgl->buffers[0].len = data_len;
+		pbuf_convert_buffer_list_p2v(rstate->buflists[1].buflist);
+		fixup_dc_buffer(rstate->buflists[1].buflist, data_len);
+		pbuf_pprint_buffer_list(rstate->buflists[1].buflist);
+		pbuf_convert_buffer_list_v2p(rstate->buflists[1].buflist);
+	
+		svc_req->sgl = rstate->buflists[1].buflist;
 		init_buflist(&rstate->buflists[2], 'X');
 
 		svc_req->num_services = 1;
 		svc_res->num_services = 1;
 
 		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_DECOMPRESS);
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_DECOMPRESS;
-		svc_res->svc[0].u.dst.sgl = &rstate->buflists[2].buflist;
+		svc_res->svc[0].u.dst.sgl = rstate->buflists[2].buflist;
 	}
 
 	return submit_requests(tstate);
@@ -293,22 +311,21 @@ exec_hash_req(struct thread_state *tstate)
 
 	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
 		rstate = &tstate->reqs[batch_id];
-		svc_req = &rstate->req.req;
-		svc_res = &rstate->res.res;
-
-		memset(svc_req, 0, sizeof(*svc_req));
-		memset(svc_res, 0, sizeof(*svc_res));
-
 		init_buflist(&rstate->buflists[0], 'A');
-		init_buflist(&rstate->buflists[1], 'B');
 
-		svc_req->sgl = &rstate->buflists[0].buflist;
+		svc_req = &rstate->req.req;
+		memset(svc_req, 0, sizeof(*svc_req));
+
+		svc_req->sgl = rstate->buflists[0].buflist;
 		svc_req->num_services = 1;
-		svc_res->num_services = 1;
-
 		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_HASH);
 		svc_req->svc[0].u.hash_desc.flags = 0;	/* reset per block */
 
+		svc_res = &rstate->res.res;
+		memset(svc_res, 0, sizeof(*svc_res));
+
+		svc_res->num_services = 1;
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_HASH;
 		svc_res->svc[0].u.hash.tags = rstate->hash_tags;
 	}
@@ -364,13 +381,14 @@ exec_chksum_req(struct thread_state *tstate)
 		init_buflist(&rstate->buflists[0], 'A');
 		init_buflist(&rstate->buflists[1], 'B');
 
-		svc_req->sgl = &rstate->buflists[0].buflist;
+		svc_req->sgl = rstate->buflists[0].buflist;
 		svc_req->num_services = 1;
 		svc_res->num_services = 1;
 
 		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_CHKSUM);
 		svc_req->svc[0].u.chksum_desc.flags = 0; /* reset per block */
 
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_CHKSUM;
 		svc_res->svc[0].u.chksum.tags = rstate->chksum_tag;
 	}
@@ -550,10 +568,11 @@ int __attribute__((unused))
 body(void)
 {
 	size_t tid, bid, count, prev_count;
-	int rv;
+	int rv, i;
 	struct thread_state *tstate;
 	struct req_state *rstate;
 	struct pnso_init_params init_params;
+	bool cmp_success;
 
 	/* Initialize session */
 	memset(&init_params, 0, sizeof(init_params));
@@ -632,18 +651,35 @@ body(void)
 		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
 			rstate = &tstate->reqs[bid];
 
-			pbuf_convert_buffer_list_p2v(&rstate->buflists[0].buflist);
-			pbuf_convert_buffer_list_p2v(&rstate->buflists[2].buflist);
+			pbuf_convert_buffer_list_p2v(rstate->buflists[0].buflist);
+			pbuf_convert_buffer_list_p2v(rstate->buflists[1].buflist);
+			pbuf_convert_buffer_list_p2v(rstate->buflists[2].buflist);
 
-			if (memcmp((void *)rstate->buflists[0].buflist.buffers[0].buf,
-				   (void *)rstate->buflists[2].buflist.buffers[0].buf,
-				   PNSO_TEST_BLOCK_SIZE) == 0) {
-				count++;
+			pbuf_pprint_buffer_list(rstate->buflists[0].buflist);
+			pbuf_pprint_buffer_list(rstate->buflists[1].buflist);
+			pbuf_pprint_buffer_list(rstate->buflists[2].buflist);
+
+			cmp_success = true;
+			for (i = 0; cmp_success && i < PNSO_TEST_BLOCK_COUNT; i++) {
+				OSAL_LOG_ERROR("---- DELETE: %d %d", i,
+						rstate->buflists[0].buflist->buffers[i].len);
+				if (memcmp((void *)rstate->buflists[0].buflist->buffers[i].buf,
+					   (void *)rstate->buflists[2].buflist->buffers[i].buf,
+					   rstate->buflists[0].buflist->buffers[i].len)) {
+					cmp_success = false;
+					break;
+				}
 			}
+			if (cmp_success)
+				count++;
+			OSAL_LOG_ERROR("---- DELETE:count: %lu cmp_success: %d",
+					count, cmp_success);
 		}
 	}
 
 	osal_yield();
+	OSAL_LOG_ERROR("---- DELETE: count: %lu xyz: %d",
+					count, (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT));
 	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
 		OSAL_LOG_INFO("IO: Final memcmp passed");
 	} else {
@@ -682,6 +718,7 @@ body(void)
 #endif
 
 finit:
+	OSAL_LOG_INFO("PNSO: Osal test complete!! rv:%d", rv);
 	osal_yield(); /* flush logs */
 	return rv;
 }

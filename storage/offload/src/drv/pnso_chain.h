@@ -119,6 +119,8 @@ struct sequencer_info {
 	uint32_t sqi_ring_id;	/* CPDC hot/cold, XTS, etc.  */
 	uint16_t sqi_qtype;
 	uint16_t sqi_index;
+	uint8_t sqi_batch_mode;
+	uint16_t sqi_batch_size;
 	void *sqi_desc;      /* sequencer descriptor */
 };
 
@@ -128,6 +130,7 @@ struct service_info {
 
 	uint16_t si_block_size;
 	uint16_t si_desc_flags;		/* caller supplied desc flags */
+	uint32_t si_num_tags;		/* for tracking # of hash or checksum */
 
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */
 	void *si_status_desc;		/* status desc of cp/dc/encrypt/etc. */

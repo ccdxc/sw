@@ -44,6 +44,7 @@ pprint_service_info(const struct service_info *svc_info)
 
 	OSAL_LOG_INFO("%30s: %d", "si_block_size", svc_info->si_block_size);
 	OSAL_LOG_INFO("%30s: %d", "si_desc_flagss", svc_info->si_desc_flags);
+	OSAL_LOG_INFO("%30s: %d", "si_num_tags", svc_info->si_num_tags);
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "si_desc",  (u64) svc_info->si_desc);
 	OSAL_LOG_INFO("%30s: 0x%llx", "si_status_desc",
@@ -51,7 +52,7 @@ pprint_service_info(const struct service_info *svc_info)
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_src_sgl",
 			(u64) svc_info->si_src_sgl);
-	OSAL_LOG_INFO("%30s: %llx", "=== si_dst_sgl",
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_dst_sgl",
 			(u64) svc_info->si_dst_sgl);
 
 	/* TODO-chain: include service status and other members */
