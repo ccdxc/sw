@@ -160,6 +160,22 @@ req_pprint_request(const struct pnso_service_request *req)
 	}
 }
 
+static void __attribute__((unused))
+pprint_hash_tags(const struct pnso_hash_tag *tags, uint32_t num_tags)
+{
+	uint32_t i;
+
+	if (!tags)
+		return;
+
+#define MAX_NUM_HASH_TAGS	8	/* TODO-xxxx: */
+	if (num_tags > MAX_NUM_HASH_TAGS)
+		return;
+
+	for (i = 0; i < num_tags; i++)
+		OSAL_LOG_INFO("%30s: %*phN", "hash", 64, tags[i].hash);
+}
+
 void __attribute__((unused))
 req_pprint_result(const struct pnso_service_result *res)
 {
@@ -193,6 +209,8 @@ req_pprint_result(const struct pnso_service_result *res)
 			break;
 		case PNSO_SVC_TYPE_HASH:
 			OSAL_LOG_INFO("%30s: %d", "num_tags",
+					res->svc[i].u.hash.num_tags);
+			pprint_hash_tags(res->svc[i].u.hash.tags,
 					res->svc[i].u.hash.num_tags);
 			OSAL_LOG_INFO("%30s: %d", "rsvd_2",
 					res->svc[i].u.hash.rsvd_2);
@@ -619,6 +637,8 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 	/* build service chain */
 	err = chn_build_chain(svc_req, svc_res, cb, cb_ctx,
 			pnso_poll_fn, pnso_poll_ctx);
+
+	REQ_PPRINT_RESULT(svc_res);
 
 	OSAL_LOG_DEBUG("exit!");
 	return err;
