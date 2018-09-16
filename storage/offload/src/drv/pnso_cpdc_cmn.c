@@ -324,7 +324,7 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 			break;
 		}
 
-		if (count) {
+		if (count && buf_list->buffers[i].len) {
 			sgl->cs_addr_1 = buf_list->buffers[i].buf;
 			sgl->cs_len_1 = buf_list->buffers[i].len;
 			i++;
@@ -334,7 +334,7 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 			break;
 		}
 
-		if (count) {
+		if (count && buf_list->buffers[i].len) {
 			sgl->cs_addr_2 = buf_list->buffers[i].buf;
 			sgl->cs_len_2 = buf_list->buffers[i].len;
 			i++;
