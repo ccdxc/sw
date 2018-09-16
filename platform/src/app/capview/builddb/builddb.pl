@@ -19,9 +19,9 @@ my @defs = <DEFS>;
 close(DEFS);
 my %map;
 for $_ (@defs) {
-    my ($bk, $sbk, $in, $ad) = $_ =~ /BASE_([A-Z]+)_([A-Z]+[0-9]*)_([0-9]+).*(0x.*)/;
+    my ($bk, $sbk, $in, $ad) = $_ =~ /BASE_([A-Z]+)_([A-Z]+[0-9]*)_([0-9]+)_OFFSET.*(0x.*)/;
     if (!defined($ad)) {
-        ($bk, $sbk, $ad) = $_ =~ /BASE_([A-Z]+)_([A-Z]+[0-9]*).*(0x.*)/;
+        ($bk, $sbk, $ad) = $_ =~ /BASE_([A-Z]+)_([A-Z]+[0-9]*)_OFFSET.*(0x.*)/;
         next if !defined($ad);
         $in = -1;
     }
