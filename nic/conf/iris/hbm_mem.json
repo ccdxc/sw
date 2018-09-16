@@ -308,7 +308,8 @@
         },
         {
             "name": "rdma-atomic-resource-addr",
-            "size_kb": 1
+            "size_kb": 1,
+            "reset": true
         },
         {
             "name": "key-desc-array",
