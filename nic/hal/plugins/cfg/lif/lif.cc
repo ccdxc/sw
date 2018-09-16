@@ -1345,6 +1345,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.rx_policer_changed ||
           app_ctxt.tx_policer_changed ||
           app_ctxt.pkt_filter_prom_changed ||
+          app_ctxt.pkt_filter_bcast_changed ||
+          app_ctxt.pkt_filter_allmc_changed ||
           app_ctxt.pinned_uplink_changed)) {
         HAL_TRACE_ERR("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
