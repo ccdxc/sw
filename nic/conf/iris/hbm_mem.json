@@ -317,7 +317,8 @@
         },
         {
             "name": "rdma-eq-intr-table",
-            "size_kb": 32
+            "size_kb": 32,
+            "reset": true
         },
         {
             "name": "storage",
