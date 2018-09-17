@@ -11,7 +11,7 @@
         },
         {
             "name": "ipsec_cb_barco",
-            "size_kb": 1024 
+            "size_kb": 1024
         },
         {
             "name": "nmdr-tx",
@@ -264,7 +264,8 @@
         },
         {
             "name": "atomic_stats",
-            "size_kb": 131072
+            "size_kb": 131072,
+            "reset": true
         },
         {
             "name": "flow_hash",
@@ -382,7 +383,7 @@
         },
         {
             "name": "qos-hbm-fifo",
-            "size_kb": 262144 
+            "size_kb": 262144
         },
         {
             "name": "brq-ring-gcm0",

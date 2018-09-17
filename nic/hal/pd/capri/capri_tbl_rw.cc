@@ -138,6 +138,8 @@ static capri_tcam_shadow_mem_t *g_shadow_tcam_p4[2];
 static capri_sram_shadow_mem_t *g_shadow_sram_rxdma;
 static capri_sram_shadow_mem_t *g_shadow_sram_txdma;
 
+static void capri_debug_hbm_reset(void);
+
 static capri_sram_shadow_mem_t *
 get_sram_shadow_for_table (uint32_t tableid, int gress)
 {
@@ -699,47 +701,45 @@ capri_mpu_icache_invalidate (void)
     }
 }
 
-
-/* After power on, reset tcam memories.
- * This will ensure that all tcam entry lines are invalid
+/*
+ * Reset tcam memories
  */
 static void
-capri_tcam_memory_init(bool ingress)
+capri_tcam_memory_init (hal::hal_cfg_t *hal_cfg)
 {
+    cap_pict_csr_t *pict_csr = NULL;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    /* Toggle reset enable bit */
-    if (ingress) {
-        cap_pict_csr_t & pict_csr = cap0.tsi.pict;
-        pict_csr.cfg_tcam_reset.enable(1);
-        pict_csr.cfg_tcam_reset.vec(0xff);
-        pict_csr.cfg_tcam_reset.write();
-        pict_csr.cfg_tcam_reset.enable(0);
-        pict_csr.cfg_tcam_reset.vec(0x00);
-        pict_csr.cfg_tcam_reset.write();
-    } else {
-        cap_pict_csr_t & pict_csr = cap0.tse.pict;
-        pict_csr.cfg_tcam_reset.enable(1);
-        pict_csr.cfg_tcam_reset.vec(0xff);
-        pict_csr.cfg_tcam_reset.write();
-        pict_csr.cfg_tcam_reset.enable(0);
-        pict_csr.cfg_tcam_reset.vec(0x00);
-        pict_csr.cfg_tcam_reset.write();
+    if (!hal_cfg ||
+        ((hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) &&
+         (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HW))) {
+        return;
+    }
+
+    pict_csr = &cap0.tsi.pict;
+    for (int i = 0 ; i <= CAPRI_TCAM_ROWS * CAPRI_TCAM_BLOCK_COUNT; i++) {
+        pict_csr->dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)0);
+        pict_csr->dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)0);
+        pict_csr->dhs_tcam_xy.entry[i].valid((pu_cpp_int<1>)0);
+        pict_csr->dhs_tcam_xy.entry[i].write();
+    }
+
+    pict_csr = &cap0.tse.pict;
+    for (int i = 0 ; i <= CAPRI_TCAM_ROWS * CAPRI_TCAM_BLOCK_COUNT; i++) {
+        pict_csr->dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)0);
+        pict_csr->dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)0);
+        pict_csr->dhs_tcam_xy.entry[i].valid((pu_cpp_int<1>)0);
+        pict_csr->dhs_tcam_xy.entry[i].write();
     }
 }
-
-void capri_debug_hbm_reset(void);
-
 
 static void
 capri_zero_all_srams (hal::hal_cfg_t *hal_cfg)
 {
-    pu_cpp_int<128> sram_block_data;
     cap_pics_csr_t *pics_csr;
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    sram_block_data = 0;
 
-    if (hal_cfg &&
+    if (!hal_cfg ||
         ((hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) &&
          (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HW))) {
         return;
@@ -747,26 +747,22 @@ capri_zero_all_srams (hal::hal_cfg_t *hal_cfg)
 
     pics_csr = &cap0.ssi.pics;
     for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
-        pics_csr->dhs_sram.entry[i]
-                .data((pu_cpp_int<128>)sram_block_data);
+        pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
         pics_csr->dhs_sram.entry[i].write();
     }
     pics_csr = &cap0.sse.pics;
     for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
-        pics_csr->dhs_sram.entry[i]
-                .data((pu_cpp_int<128>)sram_block_data);
+        pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
         pics_csr->dhs_sram.entry[i].write();
     }
     pics_csr = &cap0.rpc.pics;
     for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
-        pics_csr->dhs_sram.entry[i]
-                .data((pu_cpp_int<128>)sram_block_data);
+        pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
         pics_csr->dhs_sram.entry[i].write();
     }
     pics_csr = &cap0.tpc.pics;
     for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
-        pics_csr->dhs_sram.entry[i]
-                .data((pu_cpp_int<128>)sram_block_data);
+        pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
         pics_csr->dhs_sram.entry[i].write();
     }
 }
@@ -823,11 +819,8 @@ capri_table_rw_init (hal::hal_cfg_t *hal_cfg)
     capri_mpu_icache_invalidate();
     capri_debug_hbm_reset();
 
-    /* If cold boot, initialize tcam memories */
-    /* ingress pipe tcam memory init */
-    capri_tcam_memory_init(true);
-    /* egress pipe tcam memory init */
-    capri_tcam_memory_init(false);
+    /* Initialize tcam memories */
+    capri_tcam_memory_init(hal_cfg);
 
     /* Zero all sram memories in P4 and P4+ pipelines */
     capri_zero_all_srams(hal_cfg);
@@ -1672,7 +1665,7 @@ capri_set_table_txdma_asm_base (int tableid,
     return;
 }
 
-void
+static void
 capri_debug_hbm_read (void)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -1696,7 +1689,7 @@ capri_debug_hbm_read (void)
     HAL_TRACE_DEBUG("------------------ READ HBM END -----------");
 }
 
-void
+static void
 capri_debug_hbm_reset (void)
 {
     hal_ret_t ret = HAL_RET_OK;
