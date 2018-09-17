@@ -83,7 +83,7 @@ static bool is_host_originated_packet(fte::ctx_t &ctx)
     }
     l2seg = (hal::l2seg_t *)obj;
 
-    ethhdr = (ether_header_t *)(ctx.pkt() + cpu_hdr->l2_offset);
+    ethhdr = GET_L2_HEADER(ctx.pkt(), cpu_hdr);
     sep = hal::find_ep_by_l2_key(l2seg->seg_id, ethhdr->smac);
     if (sep == nullptr) {
         /* Probably remote endpoint */

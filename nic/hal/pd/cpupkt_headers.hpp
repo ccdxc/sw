@@ -63,6 +63,13 @@ typedef struct p4_to_p4plus_cpu_pkt_s {
 
 } __attribute__ ((__packed__)) p4_to_p4plus_cpu_pkt_t;
 
+#define GET_IPV4_HEADER(pkt, cpu_hdr) (ipv4_header_t *)(pkt + cpu_hdr->l3_offset);
+#define GET_IPV6_HEADER(pkt, cpu_hdr) (ipv6_header_t *)(pkt + cpu_hdr->l3_offset);
+#define GET_L2_HEADER(pkt, cpu_hdr)   (ether_header_t *)(pkt + cpu_hdr->l2_offset);
+#define GET_VLAN_HEADER(pkt, cpu_hdr) (vlan_header_t *)(pkt + cpu_hdr->l2_offset);
+#define GET_ICMP_HEADER(pkt, cpu_hdr) (icmp_header_t *)(pkt + cpu_hdr->l4_offset);
+
+
 typedef struct p4plus_to_p4_header_s {
 #if __BYTE_ORDER == __BIG_ENDIAN
     uint32_t    p4plus_app_id   : 4;

@@ -71,8 +71,8 @@ ndp_process_entry(const unsigned char *ether_pkt,
     hal_ret_t ret = HAL_RET_OK;
     icmpv6_option_t option_type;
 
-    ipv6_header = (const ipv6_header_t*)(ether_pkt + cpu_hdr->l3_offset);
-    icmp_header = (const icmp_header_t*)(ether_pkt + cpu_hdr->l4_offset);
+    ipv6_header = GET_IPV6_HEADER(ether_pkt, cpu_hdr);
+    icmp_header = GET_ICMP_HEADER(ether_pkt, cpu_hdr);
 
     if (icmp_header->type == ICMP_NEIGHBOR_SOLICITATION) {
         neigh_solic = (const icmpv6_neigh_solict_t*)(ether_pkt + cpu_hdr->l4_offset);

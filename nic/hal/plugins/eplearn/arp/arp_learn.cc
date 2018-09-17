@@ -329,7 +329,7 @@ do_proxy_arp_processing (struct ether_arp *arphead,
 
     if (ctx.vlan_valid()) {
         pkt_len = ARP_DOT1Q_PKT_SIZE;
-        vlan_hdr = (vlan_header_t *)(ctx.pkt() + cpu_hdr->l2_offset);
+        vlan_hdr = GET_VLAN_HEADER(ctx.pkt(), cpu_hdr);
         vlan_tag = ntohs(vlan_hdr->vlan_tag);
         vlan_tag_ptr = &vlan_tag;
     } else {
@@ -342,7 +342,7 @@ do_proxy_arp_processing (struct ether_arp *arphead,
         goto out;
     }
 
-    ethhdr = (ether_header_t *)(ctx.pkt() + cpu_hdr->l2_offset);
+    ethhdr = GET_L2_HEADER(ctx.pkt(), cpu_hdr);
     memcpy(&(src_ip.addr.v4_addr), arphead->arp_spa,
                 sizeof(src_ip.addr.v4_addr));
     src_ip.addr.v4_addr = ntohl(src_ip.addr.v4_addr);

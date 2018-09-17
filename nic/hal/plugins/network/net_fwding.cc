@@ -23,7 +23,7 @@ is_broadcast(fte::ctx_t &ctx) {
     if (!cpu_hdr || !ctx.pkt()) {
         return false;
     }
-    ether_header_t *eth_hdr = (ether_header_t*)(ctx.pkt() + cpu_hdr->l2_offset);
+    ether_header_t *eth_hdr = GET_L2_HEADER(ctx.pkt(), cpu_hdr);
     for (int i = 0; i < ETHER_ADDR_LEN; i++) {
         if (eth_hdr->dmac[i] != 0xff) {
             return false;
