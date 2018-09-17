@@ -424,6 +424,10 @@ func ParseWithValidation(kind string, selector string) (*Selector, error) {
 //
 func (s *Selector) ValidateRequirements(kind string) error {
 	for ii := range s.Requirements {
+		if _, found := Operator_value[s.Requirements[ii].GetOperator()]; !found {
+			return fmt.Errorf("operator %v not supported", s.Requirements[ii].GetOperator())
+		}
+
 		result, err := ref.FieldByJSONTag(kind, s.Requirements[ii].Key)
 		if err != nil {
 			return err
