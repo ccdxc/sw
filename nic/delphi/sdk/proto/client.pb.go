@@ -30,11 +30,13 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type DelphiClientStatus_ struct {
-	Meta      *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
-	Key       string             `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	ServiceId int32              `protobuf:"varint,3,opt,name=ServiceId" json:"ServiceId,omitempty"`
-	Pid       int32              `protobuf:"varint,4,opt,name=Pid" json:"Pid,omitempty"`
-	LastSeen  uint64             `protobuf:"varint,5,opt,name=LastSeen" json:"LastSeen,omitempty"`
+	Meta        *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
+	Key         string             `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
+	ServiceId   int32              `protobuf:"varint,3,opt,name=ServiceId" json:"ServiceId,omitempty"`
+	Pid         int32              `protobuf:"varint,4,opt,name=Pid" json:"Pid,omitempty"`
+	LastSeen    uint64             `protobuf:"varint,5,opt,name=LastSeen" json:"LastSeen,omitempty"`
+	IsOK        bool               `protobuf:"varint,6,opt,name=IsOK" json:"IsOK,omitempty"`
+	ErrorString string             `protobuf:"bytes,7,opt,name=ErrorString" json:"ErrorString,omitempty"`
 }
 
 func (m *DelphiClientStatus_) Reset()                    { *m = DelphiClientStatus_{} }
@@ -77,18 +79,34 @@ func (m *DelphiClientStatus_) GetLastSeen() uint64 {
 	return 0
 }
 
+func (m *DelphiClientStatus_) GetIsOK() bool {
+	if m != nil {
+		return m.IsOK
+	}
+	return false
+}
+
+func (m *DelphiClientStatus_) GetErrorString() string {
+	if m != nil {
+		return m.ErrorString
+	}
+	return ""
+}
+
 type delphiWrapper interface {
 	bubbleSave()
 }
 
 type DelphiClientStatus struct {
-	sdkClient clientApi.Client
-	parent    delphiWrapper
-	meta      *delphi.ObjectMeta
-	key       string
-	serviceId int32
-	pid       int32
-	lastSeen  uint64
+	sdkClient   clientApi.Client
+	parent      delphiWrapper
+	meta        *delphi.ObjectMeta
+	key         string
+	serviceId   int32
+	pid         int32
+	lastSeen    uint64
+	isOK        bool
+	errorString string
 }
 
 func (o *DelphiClientStatus) GetMeta() *delphi.ObjectMeta {
@@ -133,6 +151,24 @@ func (o *DelphiClientStatus) GetLastSeen() uint64 {
 
 func (o *DelphiClientStatus) SetLastSeen(val uint64) {
 	o.lastSeen = val
+	o.bubbleSave()
+}
+
+func (o *DelphiClientStatus) GetIsOK() bool {
+	return o.isOK
+}
+
+func (o *DelphiClientStatus) SetIsOK(val bool) {
+	o.isOK = val
+	o.bubbleSave()
+}
+
+func (o *DelphiClientStatus) GetErrorString() string {
+	return o.errorString
+}
+
+func (o *DelphiClientStatus) SetErrorString(val string) {
+	o.errorString = val
 	o.bubbleSave()
 }
 
@@ -194,16 +230,20 @@ func childNewDelphiClientStatusWithValue(parent delphiWrapper, sdkClient clientA
 	w.serviceId = value.serviceId
 	w.pid = value.pid
 	w.lastSeen = value.lastSeen
+	w.isOK = value.isOK
+	w.errorString = value.errorString
 	return w
 }
 
 func (o *DelphiClientStatus) GetProtoMsg() *DelphiClientStatus_ {
 	return &DelphiClientStatus_{
-		Meta:      o.meta,
-		Key:       o.key,
-		ServiceId: o.serviceId,
-		Pid:       o.pid,
-		LastSeen:  o.lastSeen,
+		Meta:        o.meta,
+		Key:         o.key,
+		ServiceId:   o.serviceId,
+		Pid:         o.pid,
+		LastSeen:    o.lastSeen,
+		IsOK:        o.isOK,
+		ErrorString: o.errorString,
 	}
 }
 
@@ -245,11 +285,13 @@ func (obj *DelphiClientStatus) GetPath() string {
 
 func newDelphiClientStatusFromMessage(msg *DelphiClientStatus_) *DelphiClientStatus {
 	return &DelphiClientStatus{
-		meta:      msg.Meta,
-		key:       msg.Key,
-		serviceId: msg.ServiceId,
-		pid:       msg.Pid,
-		lastSeen:  msg.LastSeen,
+		meta:        msg.Meta,
+		key:         msg.Key,
+		serviceId:   msg.ServiceId,
+		pid:         msg.Pid,
+		lastSeen:    msg.LastSeen,
+		isOK:        msg.IsOK,
+		errorString: msg.ErrorString,
 	}
 }
 
@@ -309,18 +351,20 @@ func init() {
 func init() { proto.RegisterFile("client.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 193 bytes of a gzipped FileDescriptorProto
+	// 231 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x49, 0xce, 0xc9, 0x4c,
 	0xcd, 0x2b, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4d, 0x49, 0xcd, 0x29, 0xc8, 0xc8,
 	0x8c, 0x87, 0x08, 0x4a, 0xa9, 0xe4, 0x65, 0x26, 0xeb, 0x43, 0x84, 0xf4, 0xc1, 0x0a, 0x60, 0x1c,
-	0x08, 0x05, 0xd1, 0xa4, 0xb4, 0x90, 0x91, 0x4b, 0xd8, 0x05, 0x2c, 0xe0, 0x0c, 0xd6, 0x16, 0x5c,
+	0x08, 0x05, 0xd1, 0xa4, 0x74, 0x9d, 0x91, 0x4b, 0xd8, 0x05, 0x2c, 0xe0, 0x0c, 0xd6, 0x16, 0x5c,
 	0x92, 0x58, 0x52, 0x5a, 0x1c, 0x2f, 0xa4, 0xc6, 0xc5, 0xe2, 0x9b, 0x5a, 0x92, 0x28, 0xc1, 0xa8,
 	0xc0, 0xa8, 0xc1, 0x6d, 0x24, 0xa4, 0x07, 0xd5, 0xe4, 0x9f, 0x94, 0x95, 0x9a, 0x5c, 0x02, 0x92,
 	0x09, 0x02, 0xcb, 0x0b, 0x09, 0x70, 0x31, 0x7b, 0xa7, 0x56, 0x4a, 0x30, 0x29, 0x30, 0x6a, 0x70,
 	0x06, 0x81, 0x98, 0x42, 0x32, 0x5c, 0x9c, 0xc1, 0xa9, 0x45, 0x65, 0x99, 0xc9, 0xa9, 0x9e, 0x29,
 	0x12, 0xcc, 0x0a, 0x8c, 0x1a, 0xac, 0x41, 0x08, 0x01, 0x90, 0xfa, 0x80, 0xcc, 0x14, 0x09, 0x16,
 	0xb0, 0x38, 0x88, 0x29, 0x24, 0xc5, 0xc5, 0xe1, 0x93, 0x58, 0x5c, 0x12, 0x9c, 0x9a, 0x9a, 0x27,
-	0xc1, 0xaa, 0xc0, 0xa8, 0xc1, 0x12, 0x04, 0xe7, 0x5b, 0xb1, 0x34, 0x4c, 0x57, 0x62, 0x4c, 0x62,
-	0x03, 0x3b, 0xd5, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0xfa, 0xed, 0x7a, 0x4c, 0xef, 0x00, 0x00,
-	0x00,
+	0xc1, 0xaa, 0xc0, 0xa8, 0xc1, 0x12, 0x04, 0xe7, 0x0b, 0x09, 0x71, 0xb1, 0x78, 0x16, 0xfb, 0x7b,
+	0x4b, 0xb0, 0x29, 0x30, 0x6a, 0x70, 0x04, 0x81, 0xd9, 0x42, 0x0a, 0x5c, 0xdc, 0xae, 0x45, 0x45,
+	0xf9, 0x45, 0xc1, 0x25, 0x45, 0x99, 0x79, 0xe9, 0x12, 0xec, 0x60, 0x9b, 0x91, 0x85, 0xac, 0x58,
+	0x1a, 0xa6, 0x2b, 0x31, 0x26, 0xb1, 0x81, 0x3d, 0x68, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x61,
+	0x16, 0xd8, 0xa8, 0x25, 0x01, 0x00, 0x00,
 }

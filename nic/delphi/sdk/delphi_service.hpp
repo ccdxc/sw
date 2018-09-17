@@ -31,7 +31,11 @@ public:
 
         // get class name and demangle it
         return abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);
-    }
+    };
+
+    virtual std::pair<error, string> Heartbeat() {
+        return std::make_pair(error::OK(), "");
+    };
 };
 typedef std::shared_ptr<Service> ServicePtr;
 

@@ -11,4 +11,6 @@ message DelphiClientStatus {
     int32                  ServiceId      = 3;
     int32                  Pid            = 4;
     uint64                 LastSeen       = 5; // Unix-epoch in seconds
+    bool                   IsOK           = 6;
+    string                 ErrorString    = 7;
 }
