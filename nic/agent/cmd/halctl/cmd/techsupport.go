@@ -68,6 +68,8 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleEpDetailShowCmd(nil, ofile)
 	ofile.WriteString("Session information\n\n")
 	handleSessionDetailShowCmd(nil, ofile)
+	ofile.WriteString("ACL information\n\n")
+	handleACLShowCmd(nil, ofile)
 	ofile.WriteString("Memory information\n\n")
 	allMemoryShowHandler(ofile)
 	ofile.WriteString("Thread information\n\n")
