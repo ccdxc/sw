@@ -44,6 +44,7 @@ TEST_F(port_test, test2)
     port_admin_state_t admin_state      = port_admin_state_t::PORT_ADMIN_STATE_NONE;
     port_fec_type_t    fec_type         = port_fec_type_t::PORT_FEC_TYPE_RS;
     uint32_t           debounce_time    = 100; // ms
+    uint32_t           num_lanes        = 0;
     bool               auto_neg_enable  = true;
     port_oper_status_t port_oper_status = port_oper_status_t::PORT_OPER_STATUS_NONE;
     port_type_t        port_type        = port_type_t::PORT_TYPE_NONE;
@@ -54,7 +55,8 @@ TEST_F(port_test, test2)
                       admin_state,
                       fec_type,
                       debounce_time,
-                      auto_neg_enable);
+                      auto_neg_enable,
+                      num_lanes);
     ASSERT_TRUE(ret == 0);
 
     ret = port_get(port,
@@ -76,14 +78,18 @@ TEST_F(port_test, test3)
     int ret  = 0;
     int port = 1;
 
-    // Try configure 100G on 1 lane port
-    port_speed_t       speed            = port_speed_t::PORT_SPEED_100G;
     port_admin_state_t admin_state      = port_admin_state_t::PORT_ADMIN_STATE_NONE;
     port_fec_type_t    fec_type         = port_fec_type_t::PORT_FEC_TYPE_RS;
     uint32_t           debounce_time    = 100; // ms
+    uint32_t           num_lanes        = 0;
     bool               auto_neg_enable  = true;
     port_oper_status_t port_oper_status = port_oper_status_t::PORT_OPER_STATUS_NONE;
     port_type_t        port_type        = port_type_t::PORT_TYPE_NONE;
+
+    // Faliure params
+
+    // Try 100G on 1 lane
+    port_speed_t       speed            = port_speed_t::PORT_SPEED_100G;
 
     ret = port_update(port,
                       HAL_RET_ERR,
@@ -91,7 +97,8 @@ TEST_F(port_test, test3)
                       admin_state,
                       fec_type,
                       debounce_time,
-                      auto_neg_enable);
+                      auto_neg_enable,
+                      num_lanes);
     ASSERT_TRUE(ret == 0);
 
     ret = port_get(port,
@@ -105,6 +112,31 @@ TEST_F(port_test, test3)
                    debounce_time,
                    auto_neg_enable);
     ASSERT_TRUE(ret == 0);
+
+    // Try to update num_lanes
+    num_lanes = 2;
+    ret = port_update(port,
+                      HAL_RET_ERR,
+                      speed,
+                      admin_state,
+                      fec_type,
+                      debounce_time,
+                      auto_neg_enable,
+                      num_lanes);
+    ASSERT_TRUE(ret == 0);
+
+    ret = port_get(port,
+                   HAL_RET_OK,
+                   true,
+                   port_oper_status,
+                   port_type,
+                   port_speed_t::PORT_SPEED_NONE,
+                   admin_state,
+                   fec_type,
+                   debounce_time,
+                   auto_neg_enable);
+    ASSERT_TRUE(ret == 0);
+
 }
 
 // delete and get

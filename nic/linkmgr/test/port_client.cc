@@ -73,6 +73,100 @@ port::PortType       port_type        = port::PORT_TYPE_NONE;
 port::PortAdminState port_admin_state = port::PORT_ADMIN_STATE_NONE;
 port::PortSpeed      port_speed       = port::PORT_SPEED_NONE;
 
+#define MAX_MAC_STATS 89
+
+std::string mac_stats[MAX_MAC_STATS] = {
+    "Frames Received OK",
+    "Frames Received All (Good/Bad Frames)",
+    "Frames Received with Bad FCS",
+    "Frames with any bad (CRC, Length, Align)",
+    "Octets Received in Good Frames",
+    "Octets Received (Good/Bad Frames)",
+    "Frames Received with Unicast Address",
+    "Frames Received with Multicast Address",
+    "Frames Received with Broadcast Address",
+    "Frames Received of type PAUSE",
+    "Frames Received with Bad Length",
+    "Frames Received Undersized",
+    "Frames Received Oversized",
+    "Fragments Received",
+    "Jabber Received",
+    "Priority Pause Frames",
+    "Stomped CRC",
+    "Frame Too Long",
+    "Rx VLAN Frames (Good)",
+    "Frames Dropped (Buffer Full)",
+    "Frames Received Length<64",
+    "Frames Received Length=64",
+    "Frames Received Length=65~127",
+    "Frames Received Length=128~255",
+    "Frames Received Length=256~511",
+    "Frames Received Length=512~1023",
+    "Frames Received Length=1024~1518",
+    "Frames Received Length=1519~2047",
+    "Frames Received Length=2048~4095",
+    "Frames Received Length=4096~8191",
+    "Frames Received Length=8192~9215",
+    "Frames Received Length>=9216",
+    "Frames Transmitted OK",
+    "Frames Transmitted All (Good/Bad Frames)",
+    "Frames Transmitted Bad",
+    "Octets Transmitted Good",
+    "Octets Transmitted Total (Good/Bad)",
+    "Frames Transmitted with Unicast Address",
+    "Frames Transmitted with Multicast Address",
+    "Frames Transmitted with Broadcast Address",
+    "Frames Transmitted of type PAUSE",
+    "Frames Transmitted of type PriPAUSE",
+    "Frames Transmitted VLAN",
+    "Frames Transmitted Length<64",
+    "Frames Transmitted Length=64",
+    "Frames Transmitted Length=65~127",
+    "Frames Transmitted Length=128~255",
+    "Frames Transmitted Length=256~511",
+    "Frames Transmitted Length=512~1023",
+    "Frames Transmitted Length=1024~1518",
+    "Frames Transmitted Length=1519~2047",
+    "Frames Transmitted Length=2048~4095",
+    "Frames Transmitted Length=4096~8191",
+    "Frames Transmitted Length=8192~9215",
+    "Frames Transmitted Length>=9216",
+    "Pri#0 Frames Transmitted",
+    "Pri#1 Frames Transmitted",
+    "Pri#2 Frames Transmitted",
+    "Pri#3 Frames Transmitted",
+    "Pri#4 Frames Transmitted",
+    "Pri#5 Frames Transmitted",
+    "Pri#6 Frames Transmitted",
+    "Pri#7 Frames Transmitted",
+    "Pri#0 Frames Received",
+    "Pri#1 Frames Received",
+    "Pri#2 Frames Received",
+    "Pri#3 Frames Received",
+    "Pri#4 Frames Received",
+    "Pri#5 Frames Received",
+    "Pri#6 Frames Received",
+    "Pri#7 Frames Received",
+    "Transmit Pri#0 Pause 1US Count",
+    "Transmit Pri#1 Pause 1US Count",
+    "Transmit Pri#2 Pause 1US Count",
+    "Transmit Pri#3 Pause 1US Count",
+    "Transmit Pri#4 Pause 1US Count",
+    "Transmit Pri#5 Pause 1US Count",
+    "Transmit Pri#6 Pause 1US Count",
+    "Transmit Pri#7 Pause 1US Count",
+    "Receive Pri#0 Pause 1US Count",
+    "Receive Pri#1 Pause 1US Count",
+    "Receive Pri#2 Pause 1US Count",
+    "Receive Pri#3 Pause 1US Count",
+    "Receive Pri#4 Pause 1US Count",
+    "Receive Pri#5 Pause 1US Count",
+    "Receive Pri#6 Pause 1US Count",
+    "Receive Pri#7 Pause 1US Count",
+    "Receive Standard Pause 1US Count",
+    "Frames Truncated",
+};
+
 static void
 print_port_info(void)
 {
@@ -262,6 +356,13 @@ public:
                       << rsp_msg.response(i).spec().num_lanes() << std::endl
                       << " Fec Type: "
                       << rsp_msg.response(i).spec().fec_type() << std::endl;
+
+                    for (int j = 0; j < MAX_MAC_STATS; ++j) {
+                        printf("%-41s: %lu\n",
+                               mac_stats[j].c_str(),
+                               rsp_msg.response(i).
+                                       stats().mac_stats().mac_stats(j));
+                    }
                 }
                 else {
                     break;

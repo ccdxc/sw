@@ -54,7 +54,8 @@ int port_update(uint32_t            port_id,
                 port_admin_state_t  admin_state,
                 port_fec_type_t     fec_type,
                 uint32_t            debounce_time,
-                bool                auto_neg_enable)
+                bool                auto_neg_enable,
+                uint32_t            num_lanes)
 {
     hal_ret_t    ret  = HAL_RET_OK;
     port_args_t  args = {0};
@@ -67,6 +68,10 @@ int port_update(uint32_t            port_id,
     args.fec_type        = fec_type;
     args.debounce_time   = debounce_time;
     args.auto_neg_enable = auto_neg_enable;
+
+    if (num_lanes != 0) {
+        args.num_lanes = num_lanes;
+    }
 
     linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
 

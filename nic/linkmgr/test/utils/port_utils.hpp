@@ -14,7 +14,8 @@ int port_update(uint32_t            port_id,
                 port_admin_state_t  admin_state,
                 port_fec_type_t     fec_type,
                 uint32_t            debounce_time,
-                bool                auto_neg_enable);
+                bool                auto_neg_enable,
+                uint32_t            num_lanes);
 
 int port_get(uint32_t             port_id,
              hal_ret_t            ret_exp,

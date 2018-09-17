@@ -550,6 +550,16 @@ validate_speed_lanes (port_speed_t speed, uint32_t num_lanes)
 static bool
 validate_port_create (port_args_t *args)
 {
+    if (args->port_type == port_type_t::PORT_TYPE_NONE) {
+        SDK_TRACE_ERR("Invalid port type for port: %d", args->port_num);
+        return false;
+    }
+
+    if (args->port_speed == port_speed_t::PORT_SPEED_NONE) {
+        SDK_TRACE_ERR("Invalid port speed for port: %d", args->port_num);
+        return false;
+    }
+
     return validate_speed_lanes (args->port_speed, args->num_lanes);
 }
 
@@ -613,6 +623,18 @@ port_create (port_args_t *args)
 static bool
 validate_port_update (port *port_p, port_args_t *args)
 {
+    if (args->port_type != port_type_t::PORT_TYPE_NONE) {
+        SDK_TRACE_ERR("port_type update not supported for port: %d",
+                        args->port_num);
+        return false;
+    }
+
+    if (args->num_lanes != 0) {
+        SDK_TRACE_ERR("num_lanes update not supported for port: %d",
+                        args->port_num);
+        return false;
+    }
+
     return validate_speed_lanes (args->port_speed, port_p->num_lanes());
 }
 
