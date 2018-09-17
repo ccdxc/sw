@@ -82,7 +82,7 @@ func TestContainer(t *testing.T) {
 	newContainer, _ := NewContainer("test-container", "alpine", "")
 
 	if newContainer == nil {
-		t.Errorf("New Container Creation failed")
+		t.Fatalf("New Container Creation failed")
 	}
 	defer newContainer.Stop()
 	newContainer.PrintAppInformation()
