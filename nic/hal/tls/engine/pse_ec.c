@@ -22,9 +22,19 @@ static int pse_ecdsa_verify_sig(const unsigned char *dgst,
                                 EC_KEY *eckey);
 static void pse_ec_key_free(EC_KEY *eckey);
 
+typedef int (*PFUNC_GEN_KEY)(EC_KEY *);
+typedef int (*PFUNC_COMP_KEY)(unsigned char **,
+        size_t *,
+        const EC_POINT *,
+        const EC_KEY *);
 
 EC_KEY_METHOD *pse_get_EC_methods(void) 
 {
+    EC_KEY_METHOD *def_ec_meth = (EC_KEY_METHOD *)EC_KEY_get_default_method();
+    PFUNC_GEN_KEY gen_key_pfunc = NULL;
+    PFUNC_COMP_KEY comp_key_pfunc = NULL;
+
+
     if(pse_ec_method != NULL) {
         return pse_ec_method;   
     }
@@ -49,6 +59,12 @@ EC_KEY_METHOD *pse_get_EC_methods(void)
     EC_KEY_METHOD_set_verify(pse_ec_method,
                              pse_ecdsa_verify,
                              pse_ecdsa_verify_sig);
+
+    EC_KEY_METHOD_get_keygen(def_ec_meth, &gen_key_pfunc);
+    EC_KEY_METHOD_set_keygen(pse_ec_method, gen_key_pfunc);
+
+    EC_KEY_METHOD_get_compute_key(def_ec_meth, &comp_key_pfunc);
+    EC_KEY_METHOD_set_compute_key(pse_ec_method, comp_key_pfunc);
 
     if(pse_ec_ex_data_index == -1) {
         pse_ec_ex_data_index = EC_KEY_get_ex_new_index(0, 

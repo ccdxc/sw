@@ -2064,7 +2064,9 @@ public:
 
         /* TcpProxyRuleMatchSpec: RuleMatch */
         IPAddressObj                *src_addr;
+#ifdef USE_DST_ADDRESS_MATCH
         IPAddressObj                *dst_addr;
+#endif
 
         /* SRC Address Range */
         src_addr = rm_spec->mutable_match()->add_src_address();
@@ -2074,6 +2076,7 @@ public:
         src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_ip_af(types::IP_AF_INET);
         src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_v4_addr(src_address_end);
 
+#ifdef USE_DST_ADDRESS_MATCH
         /* DST Address Range */
         dst_addr = rm_spec->mutable_match()->add_dst_address();
         dst_addr->set_type(types::IP_ADDRESS_IPV4_ANY);
@@ -2081,6 +2084,10 @@ public:
         dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_v4_addr(dst_address_start);
         dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_ip_af(types::IP_AF_INET);
         dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_v4_addr(dst_address_end);
+#else
+        (void)dst_address_start;
+        (void)dst_address_end;
+#endif
 
         *rule_match_spec = rm_spec;
         return 0;
@@ -2210,7 +2217,7 @@ public:
         uint32_t        cert_idx = 1;
 
         if (tcp_tls_proxy_ecdsa_key_add(
-                    "/sw/nic/conf/openssl/certs/ecdsa/client.key",
+                    "/nic/conf/openssl/certs/ecdsa/client.key",
                     &sign_key_idx))
         {
             std::cout << "Failed to setup Client ECDSA Key";
@@ -2218,7 +2225,7 @@ public:
         }
 
         if (tcp_tls_proxy_cert_add(
-                    "/sw/nic/conf/openssl/certs/ecdsa/client.crt",
+                    "/nic/conf/openssl/certs/ecdsa/client.crt",
                     cert_idx,
                     0))
         {
@@ -2260,7 +2267,7 @@ public:
             return -1;
         }
         if (tcp_tls_proxy_cert_add(
-                    "/sw/nic/conf/openssl/certs/ecdsa/server.crt",
+                    "/nic/conf/openssl/certs/ecdsa/server.crt",
                     cert_idx,
                     0))
         {
@@ -2346,7 +2353,7 @@ public:
         }
 
         if (tcp_tls_proxy_cert_add(
-                    "/sw/nic/conf/openssl/certs/rsa/server.crt",
+                    "/nic/conf/openssl/certs/rsa/server.crt",
                     cert_idx,
                     0))
         {
@@ -3212,11 +3219,6 @@ main (int argc, char** argv)
         hclient.lif_policer_update(policer_lif_id, is_rx, pps, policer_rate, policer_burst);
         return 0;
     } else if (proxy_agent_if == true) {
-#if 1
-        /* FIXME: remove this */
-        vrf_handle = hclient.vrf_create(proxy_vrf_id);
-        (void) vrf_handle;
-#endif
 
         if (proxy_type == types::PROXY_TYPE_TCP) {
             if (hclient.tcp_proxy_flow_setup(
