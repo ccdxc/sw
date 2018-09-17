@@ -8,6 +8,7 @@
 #include "sdk/thread.hpp"
 #include "sdk/list.hpp"
 
+#include "linkmgr.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_debug_svc.hpp"
 #include "linkmgr_state.hpp"
@@ -23,6 +24,11 @@ namespace linkmgr {
 extern linkmgr_state *g_linkmgr_state;
 
 typedef uint32_t port_num_t;
+
+typedef struct port_ht_cb_ctxt_s {
+    void          *ctxt;
+    port_get_cb_t cb;
+} port_ht_cb_ctxt_t;
 
 typedef struct linkmgr_cfg_s {
     std::string        cfg_file;
@@ -42,24 +48,6 @@ typedef struct port_s {
     // PD state
     void             *pd_p;           // all PD specific state
 } __PACK__ port_t;
-
-// CB data structures
-typedef struct port_create_app_ctxt_s {
-    uint32_t         port_num;                  // uplink port number
-    PortType         port_type;                 // port type
-    PortSpeed        port_speed;                // port speed
-    PortAdminState   admin_state;               // admin state of the port
-    uint32_t         mac_id;                    // mac id associated with the port
-    uint32_t         mac_ch;                    // mac channel associated with the port
-    uint32_t         num_lanes;                 // number of lanes for the port
-    PortFecType      fec_type;                  // FEC type
-    bool             auto_neg_enable;           // Enable AutoNeg
-    uint32_t         debounce_time;             // Debounce time in ms
-    uint32_t         mtu;                       // mtu
-    uint32_t         sbus_addr[MAX_PORT_LANES]; // sbus addr for each lane
-} __PACK__ port_create_app_ctxt_t;
-
-typedef port_create_app_ctxt_t port_update_app_ctxt_t;
 
 static inline void
 port_lock(port_t *pi_p, const char *fname, int lineno, const char *fxname)
@@ -157,31 +145,12 @@ find_port_by_handle (hal_handle_t handle)
     return (port_t *)hal_handle->obj();
 }
 
-extern void *port_id_get_key_func(void *entry);
-extern uint32_t port_id_compute_hash_func(void *key, uint32_t ht_size);
-extern bool port_id_compare_key_func(void *key1, void *key2);
-
-// SVC CRUD APIs
-hal_ret_t port_create(PortSpec& spec,
-                      PortResponse *rsp);
-hal_ret_t port_update(PortSpec& spec,
-                      PortResponse *rsp);
-hal_ret_t port_delete(PortDeleteRequest& req,
-                      PortDeleteResponseMsg *rsp);
-hal_ret_t port_get(port::PortGetRequest& req,
-                   port::PortGetResponseMsg *rsp);
-hal_ret_t port_info_get(port::PortInfoGetRequest& req,
-                        port::PortInfoGetResponseMsg *rsp);
-
-hal_ret_t
-linkmgr_generic_debug_opn(GenericOpnRequest& req,
-                          GenericOpnResponse *resp);
+void     *port_id_get_key_func(void *entry);
+uint32_t port_id_compute_hash_func(void *key, uint32_t ht_size);
+bool     port_id_compare_key_func(void *key1, void *key2);
 
 hal_ret_t linkmgr_global_init(linkmgr_cfg_t*);
-hal_ret_t linkmgr_init(sdk::linkmgr::linkmgr_cfg_t *sdk_cfg);
-
 sdk::lib::thread *current_thread(void);
-
 hal_ret_t linkmgr_csr_init(void);
 
 }    // namespace linkmgr

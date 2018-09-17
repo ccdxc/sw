@@ -26,50 +26,38 @@ protected:
 TEST_F(port_test, test1)
 {
     int ret    = 0;
-    int vrf_id = 1;
     int port   = 1;
 
-    ret = port_create(vrf_id,
-                      port,
-                      types::ApiStatus::API_STATUS_OK);
+    ret = port_create(port);
     ASSERT_TRUE(ret == 0);
 
-    ret = port_get(vrf_id,
-                   port,
-                   types::ApiStatus::API_STATUS_OK,
-                   HAL_RET_OK);
+    ret = port_get(port, HAL_RET_OK);
     ASSERT_TRUE(ret == 0);
 }
 
 // update and get
 TEST_F(port_test, test2)
 {
-    int                  ret              = 0;
-    int                  vrf_id           = 1;
-    int                  port             = 1;
-    port::PortSpeed      speed            = ::port::PORT_SPEED_10G;
-    port::PortAdminState admin_state      = ::port::PORT_ADMIN_STATE_NONE;
-    port::PortFecType    fec_type         = ::port::PORT_FEC_TYPE_RS;
-    uint32_t             debounce_time    = 100; // ms
-    bool                 auto_neg_enable  = true;
-    types::ApiStatus     api_status       = types::ApiStatus::API_STATUS_OK;
-    port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE;
-    port::PortType       port_type        = port::PORT_TYPE_NONE;
+    int                ret              = 0;
+    int                port             = 1;
+    port_speed_t       speed            = port_speed_t::PORT_SPEED_10G;
+    port_admin_state_t admin_state      = port_admin_state_t::PORT_ADMIN_STATE_NONE;
+    port_fec_type_t    fec_type         = port_fec_type_t::PORT_FEC_TYPE_RS;
+    uint32_t           debounce_time    = 100; // ms
+    bool               auto_neg_enable  = true;
+    port_oper_status_t port_oper_status = port_oper_status_t::PORT_OPER_STATUS_NONE;
+    port_type_t        port_type        = port_type_t::PORT_TYPE_NONE;
 
-    ret = port_update(vrf_id,
-                      port,
+    ret = port_update(port,
                       HAL_RET_OK,
                       speed,
                       admin_state,
                       fec_type,
                       debounce_time,
-                      auto_neg_enable,
-                      api_status);
+                      auto_neg_enable);
     ASSERT_TRUE(ret == 0);
 
-    ret = port_get(vrf_id,
-                   port,
-                   types::ApiStatus::API_STATUS_OK,
+    ret = port_get(port,
                    HAL_RET_OK,
                    true,
                    port_oper_status,
@@ -85,38 +73,33 @@ TEST_F(port_test, test2)
 // failed update and get
 TEST_F(port_test, test3)
 {
-    int                  ret              = 0;
-    int                  vrf_id           = 1;
-    int                  port             = 1;
+    int ret  = 0;
+    int port = 1;
 
     // Try configure 100G on 1 lane port
-    port::PortSpeed      speed            = ::port::PORT_SPEED_100G;
-    port::PortAdminState admin_state      = ::port::PORT_ADMIN_STATE_NONE;
-    port::PortFecType    fec_type         = ::port::PORT_FEC_TYPE_RS;
-    uint32_t             debounce_time    = 100; // ms
-    bool                 auto_neg_enable  = true;
-    port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE;
-    port::PortType       port_type        = port::PORT_TYPE_NONE;
+    port_speed_t       speed            = port_speed_t::PORT_SPEED_100G;
+    port_admin_state_t admin_state      = port_admin_state_t::PORT_ADMIN_STATE_NONE;
+    port_fec_type_t    fec_type         = port_fec_type_t::PORT_FEC_TYPE_RS;
+    uint32_t           debounce_time    = 100; // ms
+    bool               auto_neg_enable  = true;
+    port_oper_status_t port_oper_status = port_oper_status_t::PORT_OPER_STATUS_NONE;
+    port_type_t        port_type        = port_type_t::PORT_TYPE_NONE;
 
-    ret = port_update(vrf_id,
-                      port,
+    ret = port_update(port,
                       HAL_RET_ERR,
                       speed,
                       admin_state,
                       fec_type,
                       debounce_time,
-                      auto_neg_enable,
-                      types::ApiStatus::API_STATUS_ERR);
+                      auto_neg_enable);
     ASSERT_TRUE(ret == 0);
 
-    ret = port_get(vrf_id,
-                   port,
-                   types::ApiStatus::API_STATUS_OK,
+    ret = port_get(port,
                    HAL_RET_OK,
                    true,
                    port_oper_status,
                    port_type,
-                   ::port::PORT_SPEED_NONE,
+                   port_speed_t::PORT_SPEED_NONE,
                    admin_state,
                    fec_type,
                    debounce_time,
@@ -128,16 +111,12 @@ TEST_F(port_test, test3)
 TEST_F(port_test, test4)
 {
     int ret    = 0;
-    int vrf_id = 1;
     int port   = 1;
 
-    ret = port_delete(vrf_id, port, types::ApiStatus::API_STATUS_OK);
+    ret = port_delete(port);
     ASSERT_TRUE(ret == 0);
 
-    ret = port_get(vrf_id,
-                   port,
-                   types::ApiStatus::API_STATUS_NOT_FOUND,
-                   HAL_RET_PORT_NOT_FOUND);
+    ret = port_get(port, HAL_RET_PORT_NOT_FOUND);
     ASSERT_TRUE(ret == 0);
 }
 

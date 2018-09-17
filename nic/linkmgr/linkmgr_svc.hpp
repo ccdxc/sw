@@ -14,28 +14,31 @@ using grpc::ServerContext;
 using grpc::Status;
 
 using port::Port;
-using port::PortDeleteRequest;
+
+using port::PortRequestMsg;
+using port::PortResponseMsg;
+using port::PortGetRequestMsg;
+using port::PortGetResponseMsg;
+using port::PortDeleteRequestMsg;
 using port::PortDeleteResponseMsg;
+using port::PortInfoGetRequestMsg;
+using port::PortInfoGetResponseMsg;
+
 using port::PortSpec;
+using port::PortResponse;
+using port::PortGetRequest;
+using port::PortGetResponse;
+using port::PortDeleteRequest;
+using port::PortDeleteResponse;
+using port::PortInfoGetRequest;
+using port::PortInfoGetResponse;
+
 using port::PortStats;
 using port::PortOperStatus;
 using port::PortType;
 using port::PortSpeed;
 using port::PortAdminState;
 using port::PortFecType;
-using port::PortResponse;
-using port::PortRequestMsg;
-using port::PortResponseMsg;
-using port::PortDeleteRequestMsg;
-using port::PortDeleteResponseMsg;
-using port::PortGetRequest;
-using port::PortGetRequestMsg;
-using port::PortGetResponse;
-using port::PortGetResponseMsg;
-using port::PortInfoGetRequest;
-using port::PortInfoGetRequestMsg;
-using port::PortInfoGetResponse;
-using port::PortInfoGetResponseMsg;
 
 class PortServiceImpl final : public Port::Service {
 public:

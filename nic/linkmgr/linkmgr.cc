@@ -77,42 +77,40 @@ mac_ch (uint32_t port, uint32_t lane)
 static hal_ret_t
 linkmgr_uplink_create(uint32_t uplink_port)
 {
-    hal_ret_t     ret  = HAL_RET_OK;
-    PortSpec      spec;
-    PortResponse  response;
+    hal_ret_t     ret        = HAL_RET_OK;
+    port_args_t   args       = {0};
+    hal_handle_t  hal_handle = 0;
 
-    // port number
-    spec.mutable_key_or_handle()->set_port_id(uplink_port);
+    sdk::linkmgr::port_args_init(&args);
+
+    args.port_num = uplink_port;
 
     // speed
-    port_speed_t speed = port_speed(uplink_port);
-    spec.set_port_speed(linkmgr::sdk_port_speed_to_port_speed_spec(speed));
+    args.port_speed = port_speed(uplink_port);
 
     // num_lanes
-    spec.set_num_lanes(num_lanes(uplink_port));
+    args.num_lanes = num_lanes(uplink_port);
 
     // Port type
-    spec.set_port_type(linkmgr::sdk_port_type_to_port_type_spec(
-                                                port_type(uplink_port)));
+    args.port_type = port_type(uplink_port);
 
     // FEC type
-    spec.set_fec_type(linkmgr::sdk_port_fec_type_to_port_fec_type_spec(
-                                            port_fec_type(uplink_port)));
+    args.fec_type = port_fec_type(uplink_port);
 
     // mac_id and mac_ch
-    spec.set_mac_id(mac_id(uplink_port, 0));
-    spec.set_mac_ch(mac_ch(uplink_port, 0));
+    args.mac_id = mac_id(uplink_port, 0);
+    args.mac_ch = mac_ch(uplink_port, 0);
 
     // admin status
     if (enabled(uplink_port) == true) {
-        spec.set_admin_state(::port::PORT_ADMIN_STATE_UP);
+        args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
     }
 
     HAL_TRACE_DEBUG("creating uplink port {}",  uplink_port);
 
     linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
 
-    ret = linkmgr::port_create(spec, &response);
+    ret = linkmgr::port_create(&args, &hal_handle);
 
     linkmgr::g_linkmgr_state->cfg_db_close();
 

@@ -3,249 +3,240 @@
 #include "port_utils.hpp"
 #include "nic/linkmgr/linkmgr_src.hpp"
 
-using sdk::SDK_RET_OK;
 using linkmgr::g_linkmgr_state;
 
-int port_create(uint32_t vrf_id,
-                uint32_t port_id,
-                types::ApiStatus api_status)
+int port_create(uint32_t port_id)
 {
-    hal_ret_t     ret;
-    PortSpec      spec;
-    PortResponse  rsp;
+    hal_ret_t     ret        = HAL_RET_OK;
+    port_args_t   args       = {0};
+    hal_handle_t  hal_handle = 0;
 
-    spec.Clear();
-    spec.mutable_key_or_handle()->set_port_id(port_id);
-    spec.mutable_meta()->set_vrf_id(vrf_id);
-    spec.set_port_speed(::port::PORT_SPEED_25G);
-    spec.set_num_lanes(1);
-    spec.set_port_type(::port::PORT_TYPE_ETH);
-    spec.set_admin_state(::port::PORT_ADMIN_STATE_UP);
+    sdk::linkmgr::port_args_init(&args);
 
-    g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+    args.port_num = port_id;
 
-    ret = linkmgr::port_create(spec, &rsp);
+    // speed
+    args.port_speed = port_speed_t::PORT_SPEED_25G;
 
-    g_linkmgr_state->cfg_db_close();
+    // num_lanes
+    args.num_lanes = 1;
+
+    // Port type
+    args.port_type = port_type_t::PORT_TYPE_ETH;
+
+    // FEC type
+    args.fec_type = port_fec_type_t::PORT_FEC_TYPE_FC;
+
+    // mac_id and mac_ch
+    args.mac_id = 0;
+    args.mac_ch = 0;
+
+    // admin status
+    args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
+
+    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+
+    ret = linkmgr::port_create(&args, &hal_handle);
+
+    linkmgr::g_linkmgr_state->cfg_db_close();
 
     if (ret != HAL_RET_OK) {
         std::cout << __func__ << ": failed" << std::endl;
         return -1;
     }
 
-    if (rsp.api_status() != api_status) {
-        std::cout << __func__ << ": API failed" << std::endl;
-        return -1;
-    }
-
-    spec.Clear();
     return 0;
 }
 
-int port_update(uint32_t             vrf_id,
-                uint32_t             port_id,
-                hal_ret_t            ret_exp,
-                port::PortSpeed      speed,
-                port::PortAdminState admin_state,
-                port::PortFecType    fec_type,
-                uint32_t             debounce_time,
-                bool                 auto_neg_enable,
-                types::ApiStatus     api_status)
+int port_update(uint32_t            port_id,
+                hal_ret_t           ret_exp,
+                port_speed_t        speed,
+                port_admin_state_t  admin_state,
+                port_fec_type_t     fec_type,
+                uint32_t            debounce_time,
+                bool                auto_neg_enable)
 {
-    hal_ret_t     ret;
-    PortSpec      spec;
-    PortResponse  rsp;
+    hal_ret_t    ret  = HAL_RET_OK;
+    port_args_t  args = {0};
 
-    spec.Clear();
-    spec.mutable_key_or_handle()->set_port_id(port_id);
-    spec.mutable_meta()->set_vrf_id(vrf_id);
-    spec.set_port_speed(speed);
-    spec.set_admin_state(admin_state);
-    spec.set_fec_type(fec_type);
-    spec.set_debounce_time(debounce_time);
-    spec.set_auto_neg_enable(auto_neg_enable);
+    sdk::linkmgr::port_args_init(&args);
 
-    g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
-    ret = linkmgr::port_update(spec, &rsp);
-    g_linkmgr_state->cfg_db_close();
+    args.port_num        = port_id;
+    args.port_speed      = speed;
+    args.admin_state     = admin_state;
+    args.fec_type        = fec_type;
+    args.debounce_time   = debounce_time;
+    args.auto_neg_enable = auto_neg_enable;
+
+    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+
+    ret = linkmgr::port_update(&args);
+
+    linkmgr::g_linkmgr_state->cfg_db_close();
+
     if (ret != ret_exp) {
         std::cout << __func__ << ": failed. ret: " << ret << std::endl;
         return -1;
     }
-    if (rsp.api_status() != api_status) {
-        std::cout << __func__ << ": API failed. status: "
-                  << rsp.api_status() << std::endl;
-        return -1;
-    }
-    spec.Clear();
+
     return 0;
 }
 
-int port_get(
-        uint32_t             vrf_id,
-        uint32_t             port_id,
-        types::ApiStatus     api_status,
-        hal_ret_t            ret_exp,
-        bool                 compare,
-        port::PortOperStatus port_oper_status,
-        port::PortType       port_type,
-        port::PortSpeed      port_speed,
-        port::PortAdminState port_admin_state,
-        port::PortFecType    fec_type,
-        uint32_t             debounce_time,
-        bool                 auto_neg_enable)
+int port_get(uint32_t             port_id,
+             hal_ret_t            ret_exp,
+             bool                 compare,
+             port_oper_status_t   port_oper_status,
+             port_type_t          port_type,
+             port_speed_t         port_speed,
+             port_admin_state_t   port_admin_state,
+             port_fec_type_t      fec_type,
+             uint32_t             debounce_time,
+             bool                 auto_neg_enable)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    PortGetRequest      req;
-    PortGetResponseMsg  rsp;
-    PortGetResponse     response;
+    hal_ret_t    ret  = HAL_RET_OK;
+    port_args_t  args = {0};
 
-    req.Clear();
-    req.mutable_key_or_handle()->set_port_id(port_id);
-    req.mutable_meta()->set_vrf_id(vrf_id);
+    sdk::linkmgr::port_args_init(&args);
 
-    g_linkmgr_state->cfg_db_open(hal::CFG_OP_READ);
-    ret = linkmgr::port_get(req, &rsp);
-    g_linkmgr_state->cfg_db_close();
+    args.port_num = port_id;
+
+    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_READ);
+
+    ret = linkmgr::port_get(&args);
+
+    linkmgr::g_linkmgr_state->cfg_db_close();
+
     if (ret != ret_exp) {
-        std::cout << __func__ << ": failed" << std::endl;
+        std::cout << __func__ << ": failed. ret: " << ret << std::endl;
         return -1;
     }
-
-    response = rsp.response(0);
-
-    if (response.api_status() != api_status) {
-        std::cout << __func__ << ": API failed" << std::endl;
-        return -1;
-    }
-    req.Clear();
 
     std::cout << "Port Get succeeded for port "
-              << port_id << std::endl
+              << port_id          << std::endl
               << " Port oper status: "
-              << response.status().oper_status() << std::endl
+              << static_cast<uint32_t>(args.oper_status) << std::endl
               << " Port type: "
-              << response.spec().port_type() << std::endl
+              << static_cast<uint32_t>(args.port_type)   << std::endl
               << " Admin state: "
-              << response.spec().admin_state() << std::endl
+              << static_cast<uint32_t>(args.admin_state) << std::endl
               << " Port speed: "
-              << response.spec().port_speed() << std::endl
+              << static_cast<uint32_t>(args.port_speed)  << std::endl
               << " MAC ID: "
-              << response.spec().mac_id() << std::endl
+              << args.mac_id      << std::endl
               << " MAC channel: "
-              << response.spec().mac_ch() << std::endl
+              << args.mac_ch      << std::endl
               << " Num lanes: "
-              << response.spec().num_lanes() << std::endl;
+              << args.num_lanes   << std::endl;
 
     if (compare == true) {
-        if (port_oper_status != port::PORT_OPER_STATUS_NONE) {
-            if (response.status().oper_status() != port_oper_status) {
+        if (port_oper_status != port_oper_status_t::PORT_OPER_STATUS_NONE) {
+            if (args.oper_status != port_oper_status) {
                 std::cout << __func__
                           << ": oper_status get does not match."
                           << " Expected: "
-                          << port_oper_status
+                          << static_cast<uint32_t>(port_oper_status)
                           << ", Got: "
-                          << response.status().oper_status()
+                          << static_cast<uint32_t>(args.oper_status)
                           << std::endl;
                 return -1;
             }
         }
 
-        if (port_type != port::PORT_TYPE_NONE) {
-            if (response.spec().port_type() != port_type) {
+        if (port_type != port_type_t::PORT_TYPE_NONE) {
+            if (args.port_type != port_type) {
                 std::cout << __func__
                           << ": port_type get response does not match."
                           << " Expected: "
-                          << port_type
+                          << static_cast<uint32_t>(port_type)
                           << ", Got: "
-                          << response.spec().port_type()
+                          << static_cast<uint32_t>(args.port_type)
                           << std::endl;
                 return -1;
             }
         }
 
-        if (port_speed != port::PORT_SPEED_NONE) {
-            if (response.spec().port_speed() != port_speed) {
+        if (port_speed != port_speed_t::PORT_SPEED_NONE) {
+            if (args.port_speed != port_speed) {
                 std::cout << __func__
-                          << ": port_speed get response does not match"
+                          << ": port_speed get response does not match."
                           << " Expected: "
-                          << port_speed
+                          << static_cast<uint32_t>(port_speed)
                           << ", Got: "
-                          << response.spec().port_speed()
+                          << static_cast<uint32_t>(args.port_speed)
                           << std::endl;
                 return -1;
             }
         }
 
-        if (port_admin_state != port::PORT_ADMIN_STATE_NONE) {
-            if (response.spec().admin_state() != port_admin_state) {
+        if (port_admin_state != port_admin_state_t::PORT_ADMIN_STATE_NONE) {
+            if (args.admin_state != port_admin_state) {
                 std::cout << __func__
-                          << ": admin_state get response does not match"
+                          << ": admin_state get response does not match."
                           << " Expected: "
-                          << port_admin_state
+                          << static_cast<uint32_t>(port_admin_state)
                           << ", Got: "
-                          << response.spec().admin_state()
+                          << static_cast<uint32_t>(args.admin_state)
                           << std::endl;
                 return -1;
             }
         }
 
-        if (response.spec().fec_type() != fec_type) {
+        if (args.fec_type != fec_type) {
             std::cout << __func__
-                      << ": fec_type get response does not match"
+                      << ": fec_type get response does not match."
                       << " Expected: "
-                      << fec_type
+                      << static_cast<uint32_t>(fec_type)
                       << ", Got: "
-                      << response.spec().fec_type()
+                      << static_cast<uint32_t>(args.fec_type)
                       << std::endl;
             return -1;
         }
 
-        if (response.spec().debounce_time() != debounce_time) {
+        if (args.debounce_time != debounce_time) {
             std::cout << __func__
-                      << ": debounce_time get response does not match"
+                      << ": debounce_time get response does not match."
                       << " Expected: "
                       << debounce_time
                       << ", Got: "
-                      << response.spec().debounce_time()
+                      << args.debounce_time
                       << std::endl;
             return -1;
         }
 
-        if (response.spec().auto_neg_enable() != auto_neg_enable) {
+        if (args.auto_neg_enable != auto_neg_enable) {
             std::cout << __func__
-                      << ": AutoNeg get response does not match"
+                      << ": AutoNeg get response does not match."
                       << " Expected: "
                       << auto_neg_enable
                       << ", Got: "
-                      << response.spec().auto_neg_enable()
+                      << args.auto_neg_enable
                       << std::endl;
             return -1;
         }
     }
+
     return 0;
 }
 
-int port_delete(uint32_t vrf_id, uint32_t port_id, types::ApiStatus api_status) {
-    hal_ret_t           ret;
-    PortDeleteRequest   req;
-    PortDeleteResponseMsg  rsp;
+int port_delete(uint32_t port_id)
+{
+    hal_ret_t    ret  = HAL_RET_OK;
+    port_args_t  args = {0};
 
-    req.Clear();
-    req.mutable_key_or_handle()->set_port_id(port_id);
-    req.mutable_meta()->set_vrf_id(vrf_id);
+    sdk::linkmgr::port_args_init(&args);
 
-    g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
-    ret = linkmgr::port_delete(req, &rsp);
-    g_linkmgr_state->cfg_db_close();
+    args.port_num = port_id;
+
+    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+
+    ret = linkmgr::port_delete(&args);
+
+    linkmgr::g_linkmgr_state->cfg_db_close();
+
     if (ret != HAL_RET_OK) {
-        std::cout << __func__ << ": failed" << std::endl;
+        std::cout << __func__ << ": failed. ret: " << ret << std::endl;
         return -1;
     }
-    if (rsp.response(0).api_status() != api_status) {
-        std::cout << __func__ << ": API failed" << std::endl;
-        return -1;
-    }
-    req.Clear();
+
     return 0;
 }

@@ -649,6 +649,14 @@ port_update (void *pd_p, port_args_t *args)
         configured = true;
     }
 
+    if (args->mtu != 0 &&
+        args->mtu != port_p->mtu()) {
+        SDK_TRACE_DEBUG("mtu updated. new: %d, old: %d",
+                        args->mtu, port_p->mtu());
+        port_p->set_mtu(args->mtu);
+        configured = true;
+    }
+
     if (args->debounce_time != port_p->debounce_time()) {
         SDK_TRACE_DEBUG("Debounce updated. new: %d, old: %d",
                         args->debounce_time, port_p->debounce_time());
