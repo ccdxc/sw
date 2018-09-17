@@ -1681,8 +1681,18 @@ static int ionic_v0_create_ah_cmd(struct ionic_ibdev *dev,
 
 	/* XXX hold the cpu with irq disabled... until complete, or 2s. */
 	rc = 0;
-	while (!completion_done(&admin.work) && ++rc < 2000)
+	while (!completion_done(&admin.work) && ++rc < 30000)
 		mdelay(1);
+
+	/* XXX possible PANIC if above timed out, with traces including
+	 * list_add/list_del/ionic_dev_cmd_work.  The list entry is still on
+	 * the list in the eth driver, but here the stack is going away.
+	 * Leaving unfixed for v0 makeshift dev cmds.
+	 *
+	 * Mitigation: increase timeout to 30s.
+	 *
+	 * For v1 rdma admin queue, calls rdma_admin_cancel in this case.
+	 */
 
 	if (0 /* TODO: admin queue failure */) {
 		rc = -EIO;
@@ -6081,8 +6091,7 @@ static void ionic_kill_rdma_admin(struct ionic_ibdev *dev)
 	unsigned long irqflags;
 	int rc;
 
-	/* XXX makeshift will be removed */
-	if (dev->rdma_version < 1)
+	if (!dev->adminq)
 		return;
 
 	/* pause rdma admin queue to reset device */
