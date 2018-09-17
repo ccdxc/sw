@@ -559,5 +559,6 @@ func summaryShowCmdHandler(cmd *cobra.Command, args []string) {
 		memSlabUsed += (stats.GetNumElementsInUse() * spec.GetElementSize())
 	}
 
-	fmt.Printf("Slab Memory Held: %d bytes, Slab Memory in Use: %d bytes\n", memSlabHeld, memSlabUsed)
+	fmt.Printf("Slab Memory Held       : %d bytes\n", memSlabHeld)
+	fmt.Printf("Slab Memory in Use     : %d bytes\n", memSlabUsed)
 }

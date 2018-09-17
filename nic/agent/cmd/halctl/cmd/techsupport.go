@@ -10,8 +10,8 @@ import (
 
 var tsShowCmd = &cobra.Command{
 	Use:   "techsupport",
-	Short: "Collect technical support information",
-	Long:  "Collect technical support information",
+	Short: "collect technical support information",
+	Long:  "collect technical support information",
 	Run:   tsShowCmdHandler,
 }
 
