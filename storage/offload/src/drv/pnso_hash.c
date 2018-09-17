@@ -110,7 +110,7 @@ validate_setup_input(const struct service_info *svc_info,
 }
 
 static void
-fill_hash_desc(enum pnso_hash_type algo_type, uint32_t buf_len,
+fill_hash_desc(uint32_t algo_type, uint32_t buf_len,
 		bool flat_buf, void *src_buf,
 		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc)
 {
@@ -139,72 +139,6 @@ fill_hash_desc(enum pnso_hash_type algo_type, uint32_t buf_len,
 	desc->cd_status_data = CPDC_HASH_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
-}
-
-static uint32_t
-fill_hash_desc_per_block(enum pnso_hash_type algo_type,
-		uint32_t block_size, uint32_t src_buf_len,
-		struct cpdc_sgl *src_sgl,
-		struct cpdc_desc *hash_desc,
-		struct cpdc_status_desc *status_desc)
-{
-	struct cpdc_desc *desc;
-	struct cpdc_status_desc *st_desc;
-	struct pnso_flat_buffer flat_buf;
-	char *buf, *obj;
-	uint32_t desc_object_size, status_object_size, pad_size;
-	uint32_t i, len, block_cnt, buf_len;
-
-	/*
-	 * TODO-hash:
-	 *
-	 * per-block support assumes the input be mapped to flat buffer
-	 * and for 8-blocks max.  Memory for this flat buffer should
-	 * come from HBM memory.
-	 *
-	 */
-	flat_buf.len = src_buf_len;
-	flat_buf.buf = (uint64_t) osal_phy_to_virt(src_sgl->cs_addr_0);
-
-	block_cnt = pbuf_get_flat_buffer_block_count(&flat_buf, block_size);
-	desc = hash_desc;
-	st_desc = status_desc;
-
-	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x%llx hash_desc: 0x%llx status_desc: 0x%llx",
-			block_cnt, block_size, src_buf_len, flat_buf.buf,
-			(u64) hash_desc, (u64) status_desc);
-
-	pad_size = mpool_get_pad_size(sizeof(struct cpdc_desc),
-			PNSO_MEM_ALIGN_DESC);
-	desc_object_size = sizeof(struct cpdc_desc) + pad_size;
-
-	pad_size = mpool_get_pad_size(sizeof(struct cpdc_status_desc),
-			PNSO_MEM_ALIGN_DESC);
-	status_object_size = sizeof(struct cpdc_status_desc) + pad_size;
-
-	buf_len = src_buf_len;
-	for (i = 0; buf_len && (i < block_cnt); i++) {
-		buf = (char *) flat_buf.buf + (i * block_size);
-		len = buf_len > block_size ? block_size : buf_len;
-
-		OSAL_LOG_INFO("blk_num: %d buf: 0x%llx, len: %d hash_desc: 0x%llx status_desc: 0x%llx",
-			i, (u64) buf, len, (u64) desc, (u64) st_desc);
-
-		fill_hash_desc(algo_type, len, true, buf, desc, st_desc);
-		buf_len -= len;
-
-		/* move to next descriptor */
-		obj = (char *) desc;
-		obj += desc_object_size;
-		desc = (struct cpdc_desc *) obj;
-
-		/* move to next status descriptor */
-		obj = (char *) st_desc;
-		obj += status_object_size;
-		st_desc = (struct cpdc_status_desc *) obj;
-	}
-
-	return block_cnt;
 }
 
 static pnso_error_t
@@ -262,10 +196,11 @@ hash_setup(struct service_info *svc_info,
 	src_blist_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
 
 	if (per_block) {
-		num_tags = fill_hash_desc_per_block(pnso_hash_desc->algo_type,
+		num_tags = cpdc_fill_per_block_desc(pnso_hash_desc->algo_type,
 				svc_info->si_block_size, src_blist_len,
 				svc_info->si_src_sgl,
-				hash_desc, status_desc);
+				hash_desc, status_desc,
+				fill_hash_desc);
 	} else {
 		fill_hash_desc(pnso_hash_desc->algo_type, src_blist_len, false,
 				svc_info->si_src_sgl, hash_desc, status_desc);

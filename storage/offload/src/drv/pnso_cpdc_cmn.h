@@ -65,6 +65,19 @@ pnso_error_t
 cpdc_put_status_desc(struct per_core_resource *pc_res, bool per_block,
 		struct cpdc_status_desc *desc);
 
+void cpdc_get_desc_size(uint32_t *object_size, uint32_t *pad_size);
+
+void cpdc_get_status_desc_size(uint32_t *object_size, uint32_t *pad_size);
+
+typedef void (*fill_desc_fn_t) (uint32_t algo_type,
+		uint32_t buf_len, bool flat_buf, void *src_buf,
+		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc);
+
+uint32_t cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
+		uint32_t src_buf_len, struct cpdc_sgl *src_sgl,
+		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc,
+		fill_desc_fn_t fill_desc_fn);
+
 pnso_error_t cpdc_convert_desc_error(int error);
 
 #endif /* __PNSO_CPDC_CMN_H__ */

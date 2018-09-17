@@ -42,7 +42,7 @@ pprint_crypto_desc(const struct pnso_crypto_desc *desc)
 	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_INFO("%30s: %d", "rsvd", desc->rsvd);
 	OSAL_LOG_INFO("%30s: %d", "key_desc_idx", desc->key_desc_idx);
-	OSAL_LOG_INFO("%30s: %llx", "key_desc_idx", desc->iv_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "key_desc_idx", desc->iv_addr);
 }
 
 static void __attribute__((unused))
@@ -176,13 +176,22 @@ pprint_hash_tags(const struct pnso_hash_tag *tags, uint32_t num_tags)
 static void __attribute__((unused))
 pprint_chksum_tags(const struct pnso_chksum_tag *tags, uint32_t num_tags)
 {
-	uint32_t i;
+	uint32_t i, idx;
 
 	if (!tags || (num_tags > MAX_NUM_TAGS))
 		return;
 
-	for (i = 0; i < num_tags; i++)
-		OSAL_LOG_INFO("%30s: %*phN", "checksum", 8, tags[i].chksum);
+	for (i = 0, idx = 0; i < num_tags; i++) {
+		OSAL_LOG_INFO("%30s: %*phN", "checksum", 8, tags[idx].chksum);
+		/*
+		 * TODO-chksum:
+		 *	No access to algo_type to determine the size to skip
+		 *	the bytes and use pnso_get_chksum_algo_size(), but
+		 *	stay with this for now!
+		 *
+		 */
+		idx += PNSO_CHKSUM_TAG_LEN;
+	}
 }
 
 void __attribute__((unused))
