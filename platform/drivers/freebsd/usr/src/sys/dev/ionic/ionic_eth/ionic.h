@@ -24,30 +24,34 @@
 
 //#define ADMINQ
 
-#define	IONIC_ERROR(fmt, ...)			printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
-
 /* Init time debug. */
 #ifdef IONIC_DEBUG
-#define	IONIC_DEBUG_PRINT(fmt, ...)		printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
+#define	IONIC_INFO(fmt, ...)	printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
 #else
-#define	IONIC_DEBUG_PRINT(fmt, ...)
+#define	IONIC_INFO(fmt, ...)
 #endif
+#define	IONIC_ERROR(fmt, ...)	printf("[%s:%d]" fmt, __func__, __LINE__, ##__VA_ARGS__);
 
 /* Device related */
 #define	IONIC_DEV_DEBUG(dev, fmt, ...)							\
 		device_printf((dev)->bsddev, fmt, ##__VA_ARGS__);
 
-#define IONIC_DEV_TRACE(d, f, args...) \
-	IONIC_DEV_DEBUG(d, "%s:%d - " f, __func__, __LINE__, ## args)
-#define IONIC_DEV_WARN(d, f, args...) \
-	IONIC_DEV_DEBUG(d, "warn(%s:%d):" f, __func__, __LINE__, ## args)
-#define IONIC_DEV_ERROR(d, f, args...) \
-	IONIC_DEV_DEBUG(d, "warn(%s:%d):" f, __func__, __LINE__, ## args)
+#ifdef IONIC_DEBUG
+#define IONIC_DEVICE_INFO(d, f, args...) \
+	IONIC_DEV_DEBUG(d, "[%s:%d]" f, __func__, __LINE__, ## args)
+#else
+#define IONIC_DEVICE_INFO(d, f, args...)
+#endif
+
+#define IONIC_DEVICE_WARN(d, f, args...) \
+	IONIC_DEV_DEBUG(d, "[%s:%d]WARN:" f, __func__, __LINE__, ## args)
+#define IONIC_DEVICE_ERROR(d, f, args...) \
+	IONIC_DEV_DEBUG(d, "[%s:%d]ERROR:" f, __func__, __LINE__, ## args)
 
 /* Netdev related. */
-#define IONIC_NETDEV_DEBUG(dev, fmt, ...) if_printf(dev, "NETDEV:" fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_DEBUG(dev, fmt, ...) if_printf(dev, fmt, ##__VA_ARGS__)
 #ifdef IONIC_DEBUG
-#define IONIC_NETDEV_INFO(dev, fmt, ...) IONIC_NETDEV_DEBUG(dev, "info:" fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_INFO(dev, fmt, ...) IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
 #else
 #define IONIC_NETDEV_INFO(dev, fmt, ...)
 #endif
@@ -55,29 +59,30 @@
 #define IONIC_NETDEV_WARN(dev, fmt, ...) IONIC_NETDEV_DEBUG(dev, "WARN:" fmt, ##__VA_ARGS__)
 #define IONIC_NETDEV_ERROR(dev, fmt, ...) IONIC_NETDEV_DEBUG(dev, "ERROR:" fmt, ##__VA_ARGS__)
 
-/* Netdev Q related. */
-#define IONIC_NETDEV_QDEBUG(q, fmt, ...)	do {					\
-	if (q && q->lif && q->lif->netdev)	 							\
-		if_printf(q->lif->netdev, "[%s:%d]:%s:" fmt, __func__, __LINE__, q->name, ##__VA_ARGS__);	\
+/* Netdevice queue related macros. */
+#define IONIC_QUE_DEBUG(q, fmt, ...)	do {					\
+	if (q && q->lif && q->lif->netdev)	 						\
+		if_printf(q->lif->netdev, "[%s:%d](ts:%u):%s:" fmt, 	\
+			__func__, __LINE__, jiffies, q->name, ##__VA_ARGS__);\
 } 	while(0)
 
 #ifdef IONIC_DEBUG
-#define IONIC_NETDEV_QINFO(q, fmt, ...)	 IONIC_NETDEV_QDEBUG(q, "info:" fmt, ##__VA_ARGS__)
+#define IONIC_QUE_INFO(q, fmt, ...)	 IONIC_QUE_DEBUG(q, "info:" fmt, ##__VA_ARGS__)
 #else
-#define IONIC_NETDEV_QINFO(q, fmt, ...)
+#define IONIC_QUE_INFO(q, fmt, ...)
 #endif
 
-#define IONIC_NETDEV_QWARN(q, fmt, ...)	IONIC_NETDEV_QDEBUG(q, "WARN:" fmt, ##__VA_ARGS__)
-#define IONIC_NETDEV_QERR(q, fmt, ...)	IONIC_NETDEV_QDEBUG(q, "ERROR:" fmt, ##__VA_ARGS__)
+#define IONIC_QUE_WARN(q, fmt, ...)	IONIC_QUE_DEBUG(q, "WARN:" fmt, ##__VA_ARGS__)
+#define IONIC_QUE_ERR(q, fmt, ...)	IONIC_QUE_DEBUG(q, "ERROR:" fmt, ##__VA_ARGS__)
 
 #if defined(IONIC_DEBUG_TX) && defined(IONIC_DEBUG)
-#define IONIC_NETDEV_TX_TRACE(q, fmt, ...)	IONIC_NETDEV_QDEBUG(q, "info:" fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_TX_TRACE(q, fmt, ...)	IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
 #else
 #define IONIC_NETDEV_TX_TRACE(q, fmt, ...)
 #endif
 
 #if defined(IONIC_DEBUG_RX) && defined(IONIC_DEBUG)
-#define IONIC_NETDEV_RX_TRACE(q, fmt, ...)	IONIC_NETDEV_QDEBUG(q, "info:" fmt, ##__VA_ARGS__)
+#define IONIC_NETDEV_RX_TRACE(q, fmt, ...)	IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
 #else
 #define IONIC_NETDEV_RX_TRACE(q, fmt, ...)
 #endif

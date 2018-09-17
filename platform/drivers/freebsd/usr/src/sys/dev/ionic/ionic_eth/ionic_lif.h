@@ -71,11 +71,15 @@ struct rx_stats {
 	u64 alloc_err;
 	u64 pkts;
 	u64 bytes;
-	u64 checksum_ip_ok;
-	u64 checksum_ip_bad;
-	u64 checksum_l4_ok;
-	u64 checksum_l4_bad;
+	u64 csum_ip_ok;
+	u64 csum_ip_bad;
+	u64 csum_l4_ok;
+	u64 csum_l4_bad;
+	/* Only for debugging. */
+	u64 mbuf_alloc;
+	u64 mbuf_free;
 	u64 isr_count; 	// Not required.
+	u64 task;		/* Number of time task was invoked. */
 	u64 rss_ip4;
 	u64 rss_tcp_ip4;
 	u64 rss_udp_ip4;
@@ -88,25 +92,17 @@ struct rx_stats {
 	u64 rss_unknown;
 };
 
-#define QCQ_F_INITED		BIT(0)
-#define QCQ_F_SG		BIT(1)
-#define QCQ_F_INTR		BIT(2)
-#define QCQ_F_TX_STATS		BIT(3)
-#define QCQ_F_RX_STATS		BIT(4)
-
 struct ionic_rx_buf {
 	struct mbuf *m;
 	bus_dmamap_t dma_map;
 	uint64_t pa_addr; /* cache address to avoid access to command ring. */
 };
 
-
 struct ionic_tx_buf {
 	struct mbuf *m;
 	bus_dmamap_t dma_map;
 	uint64_t pa_addr; /* cache address to avoid access to command ring. */
 };
-
 
 #define QUEUE_NAME_MAX_SZ		(32)
 
@@ -115,7 +111,8 @@ struct rxque {
 	char name[QUEUE_NAME_MAX_SZ];
 
 	struct lif *lif;
-	unsigned int num_descs;
+	unsigned int num_descs; /* max number of descriptors. */
+	uint32_t descs;	/* Descriptors posted in queue. */
 	unsigned int index;	/* Queue number. */
 	unsigned int pid;
 	unsigned int qid;
@@ -256,42 +253,59 @@ struct adminq {
 struct lif {
 	char name[LIF_NAME_MAX_SZ];
 	struct list_head list;
+
 	struct net_device *netdev;
+
 	u8 dev_addr[ETHER_ADDR_LEN] __aligned(sizeof(int));
+
 	struct ionic *ionic;
+	
+	struct ifmedia          media;
 	bool registered;
+
 	unsigned int index;
+	
 	struct workqueue_struct *adminq_wq;
 	struct mtx adminq_lock;
 	struct adminq *adminqcq;
+	
 	struct txque **txqs;
 	struct rxque **rxqs;
+	
 	unsigned int neqs;
 	unsigned int ntxqs;
 	unsigned int nrxqs;
+	
 	unsigned int rx_mode;
+
 	int rx_mbuf_size;		/* Rx mbuf size pool. */
 	uint16_t max_frame_size; /* MTU size. */
-	u32 hw_features;
+	
+	u32 hw_features;	/* Features enabled in hardware, e.g. checksum, TSO etc. */
+	
 	union stats_dump *stats_dump;
 	dma_addr_t stats_dump_pa;
+	
 	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
 	u8 *rss_ind_tbl;
 	dma_addr_t rss_ind_tbl_pa;
+	
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
+	
 	void *api_private;
+
 	struct sysctl_oid *sysctl_ifnet;
 	struct sysctl_ctx_list sysctl_ctx;
 	struct mtx mtx;
 };
 
-#if 0
+#ifdef OVERRIDE_KASSERT
 #undef KASSERT
 /* Override KASSERT for debug only. */
-#define KASSERT(c, msg)	do {													\
+#define KASSERT(c, msg)	do {												\
 							if (!(c)) {										\
-								printf("PANIC[%s:%d]",  __func__, __LINE__); \
+								printf("PANIC[%s:%d]",  __func__, __LINE__);\
 								printf msg;									\
 								printf("\n");								\
 							}												\
@@ -301,51 +315,47 @@ struct lif {
 /* lif lock. */
 #define IONIC_CORE_LOCK(x)		mtx_lock(&(x)->mtx)
 #define IONIC_CORE_UNLOCK(x)	mtx_unlock(&(x)->mtx)
+#define IONIC_CORE_OWNED(x)		mtx_owned(&(x)->mtx)
 
-#define IONIC_ADMIN_LOCK_INIT(x) mtx_init(&(x)->adminq_lock, "adminq", NULL, MTX_SPIN)
-#define IONIC_ADMIN_LOCK(x)	do { 							\
-	IONIC_DEBUG_PRINT("adminq locked\n");	\
-	mtx_lock_spin(&(x)->adminq_lock);						\
+#define IONIC_ADMIN_LOCK_INIT(x) mtx_init(&(x)->adminq_lock, "adminq", NULL, MTX_DEF)
+
+#define IONIC_ADMIN_LOCK(x)	do { 		\
+		IONIC_INFO("adminq locked\n");	\
+		mtx_lock(&(x)->adminq_lock); 	\
 } while (0)
 
-#define IONIC_ADMIN_UNLOCK(x)	do { 							\
-	IONIC_DEBUG_PRINT("adminq unlocked\n");	\
-	mtx_unlock_spin(&(x)->adminq_lock);						\
+#define IONIC_ADMIN_UNLOCK(x)	do { 	\
+		IONIC_INFO("adminq unlocked\n");\
+		mtx_unlock(&(x)->adminq_lock);	\
 } while (0)
 
 #define IONIC_TX_INIT(x)	mtx_init(&(x)->tx_mtx, (x)->name, NULL, MTX_DEF)
+#define IONIC_TX_DESTROY(x)	mtx_destroy(&(x)->tx_mtx)
+
 #define IONIC_TX_LOCK(x)	mtx_lock(&(x)->tx_mtx)
 #define IONIC_TX_TRYLOCK(x)	mtx_trylock(&(x)->tx_mtx)
 #define IONIC_TX_UNLOCK(x)	mtx_unlock(&(x)->tx_mtx)
-#define IONIC_TX_LOCKED(x)	mtx_owned(&(x)->tx_mtx)
-#define IONIC_TX_DESTROY(x)	mtx_destroy(&(x)->tx_mtx)
+#define IONIC_TX_OWNED(x)	mtx_owned(&(x)->tx_mtx)
 
 #define IONIC_RX_INIT(x)	mtx_init(&(x)->rx_mtx, (x)->name, NULL, MTX_DEF)
-#define IONIC_RX_LOCK(x)	do {							\
-				struct mtx* mtx = &(x)->rx_mtx;				\
-				IONIC_DEBUG_PRINT("%s locked\n",(x)->name);	\
-				mtx_lock(mtx);								\
-	} while(0)
-
-#define IONIC_RX_UNLOCK(x)	do {								\
-				struct mtx* mtx = &(x)->rx_mtx;					\
-				IONIC_DEBUG_PRINT("%s unlocked\n",(x)->name);	\
-				mtx_unlock(mtx);								\
-	} while(0)
-
-#define IONIC_RX_LOCKED(x)	mtx_owned(&(x)->rx_mtx)
 #define IONIC_RX_DESTROY(x)	mtx_destroy(&(x)->rx_mtx)
 
-static bool ionic_tx_avail(struct txque *txq, int want)
-{	
-	int avail;
+#define IONIC_RX_LOCK(x)	do {						\
+				struct mtx* mtx = &(x)->rx_mtx;			\
+				IONIC_INFO("%s locked\n",(x)->name);	\
+				mtx_lock(mtx);							\
+	} while(0)
 
-	avail = ionic_desc_avail(txq->num_descs, txq->cmd_head_index, txq->cmd_tail_index);
+#define IONIC_RX_UNLOCK(x)	do {						\
+				struct mtx* mtx = &(x)->rx_mtx;			\
+				IONIC_INFO("%s unlocked\n",(x)->name);	\
+				mtx_unlock(mtx);						\
+	} while(0)
 
-	return (avail > want);
-}
+#define IONIC_RX_OWNED(x)	mtx_owned(&(x)->rx_mtx)
 
 void ionic_open(void *arg);
+int ionic_stop(struct net_device *netdev);
 
 int ionic_lifs_alloc(struct ionic *ionic);
 void ionic_lifs_free(struct ionic *ionic);
@@ -358,23 +368,20 @@ int ionic_lifs_size(struct ionic *ionic);
 int ionic_intr_alloc(struct lif *lif, struct intr *intr);
 void ionic_intr_free(struct lif *lif, struct intr *intr);
 
-int ionic_reinit_locked(struct net_device *netdev);
+int ionic_reinit(struct net_device *netdev);
 int ionic_set_features(struct lif *lif, uint16_t set_feature);
+int ionic_set_hw_feature(struct lif *lif, uint16_t set_feature);
 
 int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir);
 int ionic_rss_hash_key_set(struct lif *lif, const u8 *key, uint16_t rss_types);
 
-void ionic_rx_fill(struct rxque *rxq);
-void ionic_rx_refill(struct rxque *rxq);
+void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *buf,
+			   struct rxq_comp *comp, 	struct rxq_desc *desc);
 
-void ionic_rx_empty(struct rxque *rxq);
-void ionic_rx_flush(struct rxque *rxq);
 #ifdef IONIC_NAPI
 void ionic_rx_napi(struct napi_struct *napi);
 #endif
 int ionic_tx_clean(struct txque* txq , int tx_limit);
-void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *buf,
-			   struct rxq_comp *comp, 	struct rxq_desc *desc);
 
 int ionic_change_mtu(struct net_device *netdev, int new_mtu);
 #endif /* _IONIC_LIF_H_ */

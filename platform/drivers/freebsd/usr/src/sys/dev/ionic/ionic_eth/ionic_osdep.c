@@ -96,13 +96,13 @@ ionic_dma_alloc(struct ionic* ionic, bus_size_t size,
 			       NULL,	/* lockfuncarg */
 			       &dma->dma_tag);
 	if (r != 0) {
-		IONIC_DEV_ERROR(ionic->dev, "bus_dma_tag_create failed, error: %d\n", r);
+		IONIC_DEVICE_ERROR(ionic->dev, "bus_dma_tag_create failed, error: %d\n", r);
 		goto fail_0;
 	}
 	r = bus_dmamem_alloc(dma->dma_tag, (void **)&dma->dma_vaddr,
 			     BUS_DMA_NOWAIT, &dma->dma_map);
 	if (r != 0) {
-		IONIC_DEV_ERROR(ionic->dev,"bus_dmamem_alloc failed, error: %d\n", r);
+		IONIC_DEVICE_ERROR(ionic->dev,"bus_dmamem_alloc failed, error: %d\n", r);
 		goto fail_1;
 	}
 	r = bus_dmamap_load(dma->dma_tag, dma->dma_map, dma->dma_vaddr,
@@ -111,7 +111,7 @@ ionic_dma_alloc(struct ionic* ionic, bus_size_t size,
 			    &dma->dma_paddr,
 			    mapflags | BUS_DMA_NOWAIT);
 	if (r != 0) {
-		IONIC_DEV_ERROR(ionic->dev, "bus_dmamap_load failed, error: %d\n", r);
+		IONIC_DEVICE_ERROR(ionic->dev, "bus_dmamap_load failed, error: %d\n", r);
 		goto fail_2;
 	}
 	dma->dma_size = size;

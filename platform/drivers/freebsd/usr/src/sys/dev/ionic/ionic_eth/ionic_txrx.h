@@ -41,4 +41,13 @@ void ionic_lif_rss_teardown(struct lif *lif);
 
 void ionic_down_link(struct net_device *netdev);
 void ionic_up_link(struct net_device *netdev);
+
+int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len);
+void ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
+void ionic_rx_destroy_map(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
+
+/* sysctl variables. */
+extern int ionic_rx_stride;
+extern int ionic_rx_fill_threshold;
+extern int ionic_rx_process_limit;
 #endif /* _IONIC_TXRX_H_ */

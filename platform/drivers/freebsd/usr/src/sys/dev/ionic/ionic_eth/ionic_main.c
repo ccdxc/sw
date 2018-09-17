@@ -103,7 +103,7 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		done = ionic_dev_cmd_done(idev);
 #ifdef HAPS
 		if (done)
-			IONIC_DEBUG_PRINT("DEVCMD done took %ld secs (%ld jiffies)\n",
+			IONIC_INFO("DEVCMD done took %ld secs (%ld jiffies)\n",
 			       (jiffies + max_wait - time)/HZ, jiffies + max_wait - time);
 #endif
 		if (done)
