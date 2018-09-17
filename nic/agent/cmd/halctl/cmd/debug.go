@@ -21,28 +21,28 @@ var (
 
 var debugCmd = &cobra.Command{
 	Use:   "debug",
-	Short: "Set debug options",
-	Long:  `Set debug options`,
+	Short: "set debug options",
+	Long:  "set debug options",
 }
 
 var traceDebugCmd = &cobra.Command{
 	Use:   "trace",
-	Short: "Set debug trace level",
-	Long:  "Set debug trace level",
+	Short: "set debug trace level",
+	Long:  "set debug trace level",
 	Run:   traceDebugCmdHandler,
 }
 
 var traceShowCmd = &cobra.Command{
 	Use:   "trace",
-	Short: "Show trace level",
-	Long:  "Show trace level",
+	Short: "show trace level",
+	Long:  "show trace level",
 	Run:   traceShowCmdHandler,
 }
 
 var flushLogsDebugCmd = &cobra.Command{
 	Use:   "flush",
-	Short: "Flush logs",
-	Long:  "Flush logs",
+	Short: "flush logs",
+	Long:  "flush logs",
 	Run:   flushLogsDebugCmdHandler,
 }
 

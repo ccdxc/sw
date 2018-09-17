@@ -29,28 +29,28 @@ var (
 
 var vrfShowCmd = &cobra.Command{
 	Use:   "vrf",
-	Short: "show VRF information",
-	Long:  "show VRF object information",
+	Short: "show vrf information",
+	Long:  "show vrf object information",
 }
 
 var vrfPiShowCmd = &cobra.Command{
 	Use:   "pi",
-	Short: "show VRF PI information",
-	Long:  "show VRF PI object information",
+	Short: "show vrf PI information",
+	Long:  "show vrf PI object information",
 	Run:   vrfPiShowCmdHandler,
 }
 
 var vrfPdShowCmd = &cobra.Command{
 	Use:   "pd",
-	Short: "show VRF PD information",
-	Long:  "show PD information about VRF objects",
+	Short: "show vrf PD information",
+	Long:  "show PD information about vrf objects",
 	Run:   vrfPdShowCmdHandler,
 }
 
 var vrfDetailShowCmd = &cobra.Command{
 	Use:   "detail",
 	Short: "show detailed vrf information",
-	Long:  "show detailed information about VRF objects",
+	Long:  "show detailed information about vrf objects",
 	Run:   vrfDetailShowCmdHandler,
 }
 
@@ -96,13 +96,13 @@ func vrfPiShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.VrfGet(context.Background(), vrfGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting VRF failed. %v", err)
+		log.Errorf("Getting vrf failed. %v", err)
 	}
 
 	// Print Header
 	vrfShowHeader()
 
-	// Print VRFs
+	// Print vrfs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
@@ -141,10 +141,10 @@ func vrfPdShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.VrfGet(context.Background(), vrfGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting VRF failed. %v", err)
+		log.Errorf("Getting vrf failed. %v", err)
 	}
 
-	// Print VRFs
+	// Print vrfs
 	for i, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
@@ -187,10 +187,10 @@ func handleVrfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// HAL call
 	respMsg, err := client.VrfGet(context.Background(), vrfGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting VRF failed. %v", err)
+		log.Errorf("Getting vrf failed. %v", err)
 	}
 
-	// Print VRFs
+	// Print vrfs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
@@ -247,7 +247,7 @@ func vrfEPdShowHeader() {
 	fmt.Printf("\n")
 	fmt.Printf("Id:         Vrf's ID                                Handle:     Vrf Handle\n")
 	fmt.Printf("Type:       (Infra/Tenant)                          HwId:       Vrf's Lookup ID\n")
-	fmt.Printf("FlowLkupId: Vrf's Flow Lookup ID (l2seg part as 0)  CPUVlan:    Pkt's Vlan from CPU on this VRF\n")
+	fmt.Printf("FlowLkupId: Vrf's Flow Lookup ID (l2seg part as 0)  CPUVlan:    Pkt's Vlan from CPU on this vrf\n")
 	fmt.Printf("InpProp:    Inp. Prop. table idx for CPU traffic    GIPoIMN:	Input Mapping Native indices for GIPo\n")
 	fmt.Printf("GIPoIMT:    Input Mapping Tunnel indices for GIPo\n")
 	hdrLine := strings.Repeat("-", 90)

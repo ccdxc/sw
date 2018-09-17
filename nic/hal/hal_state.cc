@@ -420,7 +420,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 
     // initialize filter related data structures
     slabs_[HAL_SLAB_FILTER] =
-        slab::factory("FILTER", HAL_SLAB_FILTER, sizeof(hal::filter_t), 128,
+        slab::factory("filter", HAL_SLAB_FILTER, sizeof(hal::filter_t), 128,
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FILTER] != NULL), false);
 

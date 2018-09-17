@@ -73,26 +73,14 @@ func IPAddrToStr(ipAddr *halproto.IPAddress) string {
 		ip := make(net.IP, 4)
 		binary.BigEndian.PutUint32(ip, v4Addr)
 		return ip.String()
-		/*
-			v4Addr := ipAddr.GetV4Addr()
-			v4Str := fmt.Sprintf("%d.%d.%d.%d", ((v4Addr >> 24) & 0xff), ((v4Addr >> 16) & 0xff),
-				((v4Addr >> 8) & 0xff), (v4Addr & 0xff))
-			return v4Str
-		*/
-	}
-	v6Addr := ipAddr.GetV6Addr()
-	ip := make(net.IP, 16)
-	copy(ip, v6Addr)
-	return ip.String()
-	/*
+	} else if ipAddr.GetIpAf() == halproto.IPAddressFamily_IP_AF_INET6 {
 		v6Addr := ipAddr.GetV6Addr()
-		v6Str := fmt.Sprintf("%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
-			v6Addr[0], v6Addr[1], v6Addr[2], v6Addr[3],
-			v6Addr[4], v6Addr[5], v6Addr[6], v6Addr[7],
-			v6Addr[8], v6Addr[9], v6Addr[10], v6Addr[11],
-			v6Addr[12], v6Addr[13], v6Addr[14], v6Addr[15])
-		return v6Str
-	*/
+		ip := make(net.IP, 16)
+		copy(ip, v6Addr)
+		return ip.String()
+	} else {
+		return "-"
+	}
 
 }
 
