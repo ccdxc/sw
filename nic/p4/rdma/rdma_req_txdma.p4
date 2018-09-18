@@ -486,6 +486,7 @@ header_type req_tx_to_stage_sqcb_wb_info_t {
     fields {
         wqe_addr                         : 64;
         spec_cindex                      : 16;
+        ah_size                          : 8;
         fence                            : 1;
     }
 }
@@ -1863,6 +1864,7 @@ action req_tx_add_headers_process_rd () {
     // to stage
     modify_field(to_s5_sqcb_wb_info_scr.wqe_addr, to_s5_sqcb_wb_info.wqe_addr);
     modify_field(to_s5_sqcb_wb_info_scr.spec_cindex, to_s5_sqcb_wb_info.spec_cindex);
+    modify_field(to_s5_sqcb_wb_info_scr.ah_size, to_s5_sqcb_wb_info.ah_size);
     modify_field(to_s5_sqcb_wb_info_scr.fence, to_s5_sqcb_wb_info.fence);
 
     // stage to stage

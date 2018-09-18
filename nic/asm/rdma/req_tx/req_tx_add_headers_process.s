@@ -24,7 +24,7 @@ struct sqcb2_t d;
 #define K_OP_TYPE     CAPRI_KEY_FIELD(IN_P, op_type)
 #define K_INV_KEY     CAPRI_KEY_RANGE(IN_SEND_WR_P, op_send_wr_inv_key_or_ah_handle_sbit0_ebit7, op_send_wr_inv_key_or_ah_handle_sbit8_ebit31)
 #define K_AH_HANDLE   K_INV_KEY
-#define K_AH_SIZE     CAPRI_KEY_RANGE(IN_P, ah_size_sbit0_ebit2, ah_size_sbit3_ebit7)
+#define K_AH_SIZE     CAPRI_KEY_FIELD(IN_TO_S_P, ah_size)
 #define K_IMM_DATA    CAPRI_KEY_FIELD(IN_SEND_WR_P, op_send_wr_imm_data)
 #define K_RD_READ_LEN CAPRI_KEY_FIELD(IN_RD_P, op_rd_read_len)
 #define K_RD_LOG_PMTU CAPRI_KEY_FIELD(IN_RD_P, op_rd_log_pmtu)
