@@ -60,6 +60,7 @@ type E2eCfg struct {
 	NamespacesInfo NamespacesInfo `json:"Namespaces"`
 	NetworksInfo   NetworksInfo   `json:"Networks"`
 	EndpointsInfo  EndpointsInfo  `json:"Endpoints"`
+	SgPoliciesInfo SgPoliciesInfo `json:"SgPolicies"`
 }
 
 //NamespacesInfo Namespaces info
@@ -116,6 +117,13 @@ type EndpointsInfo struct {
 	Endpoints   []Endpoint `json:"endpoints"`
 }
 
+//SgPoliciesInfo EndpointsInfo
+type SgPoliciesInfo struct {
+	ContentType string        `json:"content-type"`
+	API         string        `json:"api"`
+	SgPoliices  []interface{} `json:"sgpolices"`
+}
+
 //Endpoint Endpoint Info
 type Endpoint struct {
 	Kind         string       `json:"kind"`
@@ -165,6 +173,14 @@ func (nw *NetworksInfo) _GetAgentObjects() []interface{} {
 	return interfaceSlice
 }
 
+func (sg SgPoliciesInfo) _GetAgentObjects() []interface{} {
+	var interfaceSlice = make([]interface{}, len(sg.SgPoliices))
+	for i, d := range sg.SgPoliices {
+		interfaceSlice[i] = d
+	}
+	return interfaceSlice
+}
+
 func (ns NamespacesInfo) _GetAgentDelObjects() []interface{} {
 	var interfaceSlice = make([]interface{}, len(ns.Namespaces))
 	for i, d := range ns.Namespaces {
@@ -191,6 +207,11 @@ func (nw *NetworksInfo) _GetAgentDelObjects() []interface{} {
 	return interfaceSlice
 }
 
+func (sg *SgPoliciesInfo) _GetAgentDelObjects() []interface{} {
+	var interfaceSlice = make([]interface{}, len(sg.SgPoliices))
+	return interfaceSlice
+}
+
 func (ns *NamespacesInfo) _GetAgentAPI() string {
 	return AgentURL + ns.API
 }
@@ -201,6 +222,10 @@ func (ep *EndpointsInfo) _GetAgentAPI() string {
 
 func (nw *NetworksInfo) _GetAgentAPI() string {
 	return AgentURL + nw.API
+}
+
+func (sg *SgPoliciesInfo) _GetAgentAPI() string {
+	return AgentURL + sg.API
 }
 
 var _transport = &http.Transport{
@@ -275,6 +300,8 @@ func ConfigureNaplesContainer(e2ecfg *E2eCfg) {
 	_PushAgentConfig(&e2ecfg.NetworksInfo)
 	fmt.Println("Configuring Endpoints")
 	_PushAgentConfig(&e2ecfg.EndpointsInfo)
+	fmt.Println("Configuring SgPolicies")
+	_PushAgentConfig(&e2ecfg.SgPoliciesInfo)
 }
 
 //ClearNaplesContainer Delete Agent with config.

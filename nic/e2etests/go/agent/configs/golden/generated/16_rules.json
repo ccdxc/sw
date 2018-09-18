@@ -2,7 +2,7 @@
   {
     "kind": "SGPolicy",
     "meta": {
-      "name": "global-fw-rules",
+      "name": "global-fw-rules-vrf-0",
       "tenant": "default",
       "namespace": "scale-vrf-0",
       "creation-time": "1970-01-01T00:00:00Z",
@@ -356,6 +356,83 @@
             ]
           }
         },
+        {
+          "action": "PERMIT"
+        }
+      ]
+    },
+    "status": {}
+  },
+
+  {
+    "kind": "SGPolicy",
+    "meta": {
+      "name": "global-fw-rules-vrf-1",
+      "tenant": "default",
+      "namespace": "scale-vrf-1",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "policy-rules": [
+        {
+          "action": "PERMIT"
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "SGPolicy",
+    "meta": {
+      "name": "global-fw-rules-vrf-2",
+      "tenant": "default",
+      "namespace": "scale-vrf-2",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "policy-rules": [
+        {
+          "action": "PERMIT"
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "SGPolicy",
+    "meta": {
+      "name": "global-fw-rules-vrf-3",
+      "tenant": "default",
+      "namespace": "scale-vrf-3",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "policy-rules": [
+        {
+          "action": "PERMIT"
+        }
+      ]
+    },
+    "status": {}
+  },
+  {
+    "kind": "SGPolicy",
+    "meta": {
+      "name": "global-fw-rules-infra",
+      "tenant": "default",
+      "namespace": "infra",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "policy-rules": [
         {
           "action": "PERMIT"
         }
