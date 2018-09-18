@@ -119,6 +119,9 @@ sdk_ret_t
 catalog::populate_fp_port(ptree::value_type &fp_port,
                           catalog_fp_port_t *fp_port_p)
 {
+    std::string type = fp_port.second.get<std::string>("type", "");
+    fp_port_p->type = catalog_type_to_port_type(type);
+
     fp_port_p->num_lanes = fp_port.second.get<uint32_t>("num_lanes", 0);
 
     for (ptree::value_type &breakout_mode :
@@ -627,8 +630,14 @@ catalog::port_speed(uint32_t port)
     return catalog_db_.uplink_ports[port-1].speed;
 }
 
+port_type_t
+catalog::port_type_fp (uint32_t port)
+{
+    return catalog_db_.fp_ports[port-1].type;
+}
+
 uint32_t
-catalog::num_fp_lanes(uint32_t port)
+catalog::num_lanes_fp (uint32_t port)
 {
     return catalog_db_.fp_ports[port-1].num_lanes;
 }

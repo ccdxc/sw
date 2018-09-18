@@ -16,7 +16,7 @@ using boost::property_tree::ptree;
 #define MAX_ASICS          1
 #define MAX_ASIC_PORTS     9
 #define MAX_UPLINK_PORTS   MAX_ASIC_PORTS
-#define MAX_FP_PORTS       2
+#define MAX_FP_PORTS       3
 #define MAX_PORT_LANES     4
 #define MAX_SERDES         9
 #define SERDES_SBUS_START  34
@@ -74,8 +74,9 @@ typedef struct catalog_uplink_port_s {
 } catalog_uplink_port_t;
 
 typedef struct catalog_fp_port_s {
-    uint32_t  breakout_modes;   // bitmap of breakout modes
-    uint32_t  num_lanes;
+    uint32_t    breakout_modes;   // bitmap of breakout modes
+    port_type_t type;             // port type
+    uint32_t    num_lanes;
 } catalog_fp_port_t;
 
 typedef struct catalog_asic_port_s {
@@ -180,7 +181,8 @@ public:
     uint32_t     glbl_mode_mgmt (mac_mode_t mac_mode);
     uint32_t     ch_mode_mgmt   (mac_mode_t mac_mode, uint32_t ch);
 
-    uint32_t     num_fp_lanes (uint32_t port);
+    port_type_t  port_type_fp   (uint32_t port);
+    uint32_t     num_lanes_fp   (uint32_t port);
     uint32_t     breakout_modes (uint32_t port);
 
     uint32_t     jtag_id         (void) { return catalog_db_.serdes_jtag_id;  }

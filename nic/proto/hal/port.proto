@@ -291,8 +291,9 @@ message PortInfoSpec {
   // key_or_handle is the port number
   kh.PortKeyHandle          key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
 
-  uint32                    num_lanes      = 3;    // number of lanes for port
-  repeated PortBreakoutMode breakout_modes = 4;    // breakout modes supported with this port
+  PortType                  port_type      = 3;    // port type
+  uint32                    num_lanes      = 4;    // number of lanes for port
+  repeated PortBreakoutMode breakout_modes = 5;    // breakout modes supported with this port
 }
 
 message PortInfoGetResponse {

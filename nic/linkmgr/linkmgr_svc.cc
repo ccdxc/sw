@@ -56,9 +56,15 @@ num_fp_ports (void)
 }
 
 static uint32_t
-num_fp_lanes (uint32_t port)
+num_lanes_fp (uint32_t port)
 {
-    return linkmgr::catalog()->num_fp_lanes(port);
+    return linkmgr::catalog()->num_lanes_fp(port);
+}
+
+static port_type_t
+port_type_fp (uint32_t port)
+{
+    return linkmgr::catalog()->port_type_fp(port);
 }
 
 static void
@@ -460,7 +466,9 @@ static hal_ret_t
 populate_port_info(uint32_t fp_port, PortInfoGetResponse *response)
 {
     response->mutable_spec()->mutable_key_or_handle()->set_port_id(fp_port);
-    response->mutable_spec()->set_num_lanes(num_fp_lanes(fp_port));
+    response->mutable_spec()->set_port_type(
+            linkmgr::sdk_port_type_to_port_type_spec(port_type_fp(fp_port)));
+    response->mutable_spec()->set_num_lanes(num_lanes_fp(fp_port));
 
     uint32_t breakout_mask = breakout_modes(fp_port);
 

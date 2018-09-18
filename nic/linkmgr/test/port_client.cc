@@ -402,6 +402,8 @@ public:
                     std::cout
                       << "Port Info Get succeeded for port "
                       << port_id << std::endl
+                      << " Port Type: "
+                      << rsp_msg.response(i).spec().port_type() << std::endl
                       << " Num Lanes: "
                       << rsp_msg.response(i).spec().num_lanes() << std::endl
                       << " Breakout Modes: " << std::endl;
