@@ -1044,6 +1044,8 @@ def main():
                         help='Run with agent.')
     parser.add_argument('--combined', dest='combined', default=False, action='store_true',
                         help='Run storage and network tests combined')
+    parser.add_argument("-n", "--nocleanup", action="store_true",
+                        help="Skip cleanup during shut down")
 
     args = parser.parse_args()
 
@@ -1177,7 +1179,11 @@ def main():
     os.system("go build && ./halctl show techsupport")
     os.chdir(nic_dir)
 
-    cleanup()
+    if args.nocleanup:
+        print "Skipping cleanup"
+    else:
+        cleanup()
+
     call([print_cores_script])
     if not args.rtl and not args.no_error_check:
         ec = os.system("grep ERROR " + model_log)
