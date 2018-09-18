@@ -204,10 +204,8 @@ def run_model(args):
         if args.gft or args.gft_gtest:
             model_cmd.append("+model_debug=" + nic_dir + "/gen/gft/dbg_out/model_debug.json")
         elif args.apollo_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/gen/apollo/dbg_out/model_debug.json")
-        elif args.apollo2_gtest:
-            os.system("%s/tools/merge_model_debug.py --p4 apollo2 --rxdma apollo2_rxdma --txdma apollo2_txdma" % nic_dir)
-            model_cmd.append("+model_debug=" + nic_dir + "/gen/apollo2/dbg_out/combined_model_debug.json")
+            os.system("%s/tools/merge_model_debug.py --p4 apollo --rxdma apollo_rxdma --txdma apollo_txdma" % nic_dir)
+            model_cmd.append("+model_debug=" + nic_dir + "/gen/apollo/dbg_out/combined_model_debug.json")
         else:
             model_cmd.append("+model_debug=" + nic_dir + "/build/iris/gen/datapath/p4/dbg_out/model_debug.json")
     if args.coveragerun or args.asmcov:
@@ -469,15 +467,6 @@ def run_apollo_test(args):
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
     os.chdir(nic_dir)
     cmd = ['../bazel-bin/nic/hal/test/gtests/apollo_test']
-    p = Popen(cmd)
-    return check_for_completion(p, None, model_process, hal_process, args)
-
-# Run Apollo2 tests
-def run_apollo2_test(args):
-    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
-    os.chdir(nic_dir)
-    cmd = ['../bazel-bin/nic/hal/test/gtests/apollo2_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -994,8 +983,6 @@ def main():
     parser.add_argument("--span_gtest", dest='span_gtest', action="store_true",
                         default=False, help="Run Span gtests")
     parser.add_argument("--apollo_gtest", dest='apollo_gtest', action="store_true",
-                        default=False, help="Run Apollo gtests")
-    parser.add_argument("--apollo2_gtest", dest='apollo2_gtest', action="store_true",
                         default=False, help="Run Apollo2 gtests")
     parser.add_argument('--shuffle', dest='shuffle', action="store_true",
                         help='Shuffle tests and loop for X times.')
@@ -1102,9 +1089,7 @@ def main():
                 run_rtl(args)
             else:
                 run_model(args)
-            if args.gft_gtest is False and\
-               args.apollo_gtest is False and\
-               args.apollo2_gtest is False:
+            if args.gft_gtest is False and args.apollo_gtest is False:
                 run_hal(args)
 
     if args.storage and args.feature not in [None, 'storage'] and args.combined is False:
@@ -1130,10 +1115,6 @@ def main():
             print "- GFT test failed, status=", status
     elif args.apollo_gtest:
         status = run_apollo_test(args)
-        if status != 0:
-            print "- Apollo test failed, status=", status
-    elif args.apollo2_gtest:
-        status = run_apollo2_test(args)
         if status != 0:
             print "- Apollo2 test failed, status=", status
     elif args.mbt and not args.feature:

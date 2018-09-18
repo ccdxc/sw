@@ -124,7 +124,7 @@ gtests-common:
 
 gtests: gtests-common
     ifneq ($(ARCH),aarch64)
-		bazel $(BZL_OPT) build $(BZL_BLD_OPT) --build_tag_filters=-gft,-apollo,-apollo2 //nic/hal/test/gtests:all
+		bazel $(BZL_OPT) build $(BZL_BLD_OPT) --build_tag_filters=-gft,-apollo //nic/hal/test/gtests:all
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/utils/agent_api/test:agent_api_test
 		# TODO: Revisit
 		bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/hal/plugins/eplearn:dhcp_test

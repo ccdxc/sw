@@ -1,11 +1,11 @@
-.PHONY: clean iris gft apollo2
+.PHONY: clean iris gft apollo
 
 default: iris
 
 export TOPDIR 		:= ${CURDIR}
 export IRIS_DIR 	:= $(TOPDIR)/hal/iris
 export GFT_DIR 		:= $(TOPDIR)/hal/gft
-export APOLLO_DIR	:= $(TOPDIR)/hal/apollo2/
+export APOLLO_DIR	:= $(TOPDIR)/hal/apollo2
 export TOPDIR_ABS 	:= $(realpath ${CURDIR})
 
 include $(TOPDIR)/make/Makefile.common
@@ -18,7 +18,7 @@ gft:
 	@echo $(TOPDIR)
 	$(MAKE) -C $(GFT_DIR)
 
-apollo2:
+apollo:
 	@echo $(TOPDIR)
 	$(MAKE) -C $(APOLLO_DIR)
 

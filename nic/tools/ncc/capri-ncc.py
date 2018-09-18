@@ -93,7 +93,7 @@ def get_parser():
                         help='Avoid relocating table k-i fields to earlier flits',
                         default=False, required=False)
     parser.add_argument('--pipeline', dest='pipeline', action='store',
-                        help='Pipeline', choices=['iris', 'gft', 'apollo2'],
+                        help='Pipeline', choices=['iris', 'gft', 'apollo'],
                         default=None, required=False)
     return parser
 

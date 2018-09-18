@@ -344,12 +344,12 @@ cc_library(
 )
 
 cc_library(
-    name = "apollo2_p4pd",
+    name = "apollo_p4pd",
     srcs = [
-            "gen/apollo2/src/p4pd.cc",
-            "gen/apollo2/src/p4pd_table_range.cc"],
+            "gen/apollo/src/p4pd.cc",
+            "gen/apollo/src/p4pd_table_range.cc"],
     hdrs = [
-        "gen/apollo2/include/p4pd.h",
+        "gen/apollo/include/p4pd.h",
     ],
     deps = [
         "//nic/include:base_includes",
@@ -357,11 +357,11 @@ cc_library(
 )
 
 cc_library(
-    name = "apollo2_txdma",
-    srcs = ["gen/apollo2_txdma/src/apollo2_txdma_p4pd.cc",
-            "gen/apollo2_txdma/src/apollo2_txdma_p4pd_table_range.cc"],
+    name = "apollo_txdma",
+    srcs = ["gen/apollo_txdma/src/apollo_txdma_p4pd.cc",
+            "gen/apollo_txdma/src/apollo_txdma_p4pd_table_range.cc"],
     hdrs = [
-        "gen/apollo2_txdma/include/apollo2_txdma_p4pd.h",
+        "gen/apollo_txdma/include/apollo_txdma_p4pd.h",
     ],
     deps = [
         "//nic/include:base_includes",
@@ -369,11 +369,11 @@ cc_library(
 )
 
 cc_library(
-    name = "apollo2_rxdma",
-    srcs = ["gen/apollo2_rxdma/src/apollo2_rxdma_p4pd.cc",
-            "gen/apollo2_rxdma/src/apollo2_rxdma_p4pd_table_range.cc"],
+    name = "apollo_rxdma",
+    srcs = ["gen/apollo_rxdma/src/apollo_rxdma_p4pd.cc",
+            "gen/apollo_rxdma/src/apollo_rxdma_p4pd_table_range.cc"],
     hdrs = [
-        "gen/apollo2_rxdma/include/apollo2_rxdma_p4pd.h",
+        "gen/apollo_rxdma/include/apollo_rxdma_p4pd.h",
     ],
     deps = [
         "//nic/include:base_includes",

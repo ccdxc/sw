@@ -13,8 +13,6 @@ LIBDIRS = \
           ipfix \
           adminq \
           gft \
-          tyche \
-          apollo \
           $(NULL)
 
 IRIS_SUBDIRS = \
@@ -49,8 +47,8 @@ MSFT_GFT_SUBDIRS= \
           gft \
           $(NULL)
 
-APOLLO2_SUBDIRS = \
-          apollo2 \
+APOLLO_SUBDIRS = \
+          apollo \
           $(NULL)
 
 PGMDIRS = $(NULL)
@@ -59,14 +57,14 @@ SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 
 TOPDIR = ..
 
-.PHONY: subdirs msft_gft apollo2 $(SUBDIRS)
+.PHONY: subdirs msft_gft apollo $(SUBDIRS)
 default: iris
 
 iris: $(IRIS_SUBDIRS)
 
 msft_gft: $(MSFT_GFT_SUBDIRS)
 
-apollo2: $(APOLLO2_SUBDIRS)
+apollo: $(APOLLO_SUBDIRS)
 
 $(SUBDIRS):
 	$(MAKE) -C $@

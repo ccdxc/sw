@@ -7,12 +7,86 @@
         },
         {
             "name": "p4_program",
+            "size_kb": 1024
+        },
+        {
+            "name": "rxdma_program",
+            "size_kb": 1024,
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "txdma_program",
+            "size_kb": 1024,
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "rxdma_to_txdma_buf",
+            "size_kb": 10240,
+            "_comment": "10MB (1K buffers of size 10K)"
+        },
+        {
+            "name": "local_ip_mapping",
             "size_kb": 131072
         },
         {
-            "name": "p4plus_program",
-            "size_kb": 131072,
-            "cache": "p4plus-all"
+            "name": "flow",
+            "size_kb": 1048576
+        },
+        {
+            "name": "flow_info",
+            "size_kb": 524288
+        },
+        {
+            "name": "flow_stats",
+            "size_kb": 524288
+        },
+        {
+            "name": "remote_vnic_mapping_tx",
+            "size_kb": 131072
+        },
+        {
+            "name": "nat",
+            "size_kb": 131072
+        },
+        {
+            "name": "slacl",
+            "size_kb": 131072
+        },
+        {
+            "name": "slacl_stats",
+            "size_kb": 131072
+        },
+        {
+            "name": "lpm",
+            "size_kb": 12
+        },
+        {
+            "name": "udp_flow_overflow0",
+            "size_kb": 64
+        },
+        {
+            "name": "udp_flow_overflow1",
+            "size_kb": 64
+        },
+        {
+            "name": "udp_flow_overflow2",
+            "size_kb": 64
+        },
+        {
+            "name": "udp_flow_overflow3",
+            "size_kb": 64
+        },
+        {
+            "name": "udp_flow_qid_update_virtual",
+            "size_kb": 64
+        },
+        {
+            "name": "udp_flow_qid_update",
+            "size_kb": 64
+        },
+        {
+            "name": "qos-hbm-fifo",
+            "size_kb": 262144
         },
         {
             "_comment": "hash depth = 1024",
@@ -21,71 +95,6 @@
             "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
             "name": "timers",
             "size_kb": 1088
-        },
-        {
-            "name": "tx-scheduler",
-            "size_kb": 2048
-        },
-        {
-            "name": "qos-hbm-fifo",
-            "size_kb": 262144
-        },
-        {
-            "name": "mpu-trace",
-            "size_kb": 224
-        },
-        {
-            "name": "ep_mapping",
-            "size_kb": 1,
-            "_comment": "depth = 2097152, width = "
-        },
-        {
-            "name": "ep_mapping_ohash",
-            "size_kb": 1,
-            "_comment": "depth = 262144, width = "
-        },
-        {
-            "name": "policy",
-            "size_kb": 1,
-            "_comment": "depth = 16777216, width = "
-        },
-        {
-            "name": "policy_ohash",
-            "size_kb": 1,
-            "_comment": "depth = 262144, width = "
-        },
-        {
-            "name": "policy_stats",
-            "size_kb": 1,
-            "_comment": "depth = 8388608, width = "
-        },
-        {
-            "name": "rewrite",
-            "size_kb": 1,
-            "_comment": "depth = 1024, width = "
-        },
-        {
-            "name": "source_guard",
-            "size_kb": 1,
-            "_comment": "depth = 262144, width = "
-        },
-        {
-            "name": "source_guard_ohash",
-            "size_kb": 1,
-            "_comment": "depth = 262144, width = "
-        },
-        {
-            "name": "slacl_stats",
-            "size_kb": 1,
-            "_comment": "depth = 1048576, width = "
-        },
-        {
-            "name": "lpm",
-            "size_kb": 1
-        },
-        {
-            "name": "slacl",
-            "size_kb": 3172
         }
     ]
 }

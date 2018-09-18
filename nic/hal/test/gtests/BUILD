@@ -373,11 +373,11 @@ cc_test(
 )
 
 cc_test(
-    name = "apollo2_test",
-    srcs = ["apollo2_test.cc"],
+    name = "apollo_test",
+    srcs = ["apollo_test.cc"],
     deps = [
-        "//nic/p4/apollo2/include:p4_apollo2_includes",
-        "//nic:apollo2_p4pd",
+        "//nic/p4/apollo/include:p4_apollo_includes",
+        "//nic:apollo_p4pd",
         "//nic/hal/test:hal_mock",
         "//nic/model_sim:model_client",
         "//nic/hal/pd/capri:capri",
@@ -389,8 +389,8 @@ cc_test(
         "//nic:gen_proto_includes",
         "//nic:libprotobuf",
         "//nic:asic_libs",
-        "//nic:apollo2_txdma",
-        "//nic:apollo2_rxdma",
+        "//nic:apollo_txdma",
+        "//nic:apollo_rxdma",
         "@sdk//obj:sdk_logger",
         "@sdk//obj:sdk_pal",
         "@sdk//obj:sdk_catalog",
@@ -403,7 +403,7 @@ cc_test(
         "@sdk//obj:sdk_periodic",
         ],
     linkopts = [] + gl_linkopts_list,
-    tags = ["apollo2"],
+    tags = ["apollo"],
     copts = sdk_copts,
 )
 
