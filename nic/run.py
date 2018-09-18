@@ -705,18 +705,19 @@ def cleanup(keep_logs=True):
     lock = open(lock_file, "r")
     for pid in lock:
         if is_running(int(pid)):
-            #print "Sending SIGTERM to process group %d" % int(pid)
-            #try:
-            #    os.killpg(int(pid), signal.SIGTERM)
-            #except:
-            #    print "No processes found with PGID %d" % int(pid)
-
-
             print "Sending SIGTERM to process %d" % int(pid)
             try:
                 os.kill(int(pid), signal.SIGTERM)
             except:
-                print "No processes found with PID %d" % int(pid)
+                print "No process found with PID %d" % int(pid)
+
+            # wait for the process to die
+            attempts = 3
+            while is_running(int(pid)) and (attempts > 0):
+                print "Waiting for process %d to die" % int(pid)
+                time.sleep(1)
+                os.waitpid(int(pid), os.WNOHANG);
+                attempts -= 1
 
     print "Sending SIGTERM to run.py PG %d" % os.getpid()
     #try:
