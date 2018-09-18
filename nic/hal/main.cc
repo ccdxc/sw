@@ -34,6 +34,7 @@
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/hal/svc/barco_rings_svc.hpp"
+#include "nic/hal/svc/accel_rgroup_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
 #include "nic/hal/svc/nic_svc.hpp"
 
@@ -117,6 +118,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     CryptoApisServiceImpl    crypto_apis_svc;
     EventServiceImpl         event_svc;
     BarcoRingsServiceImpl    barco_rings_svc;
+    AccelRGroupServiceImpl   accel_rgroup_svc;
     MulticastServiceImpl     multicast_svc;
     GftServiceImpl           gft_svc;
     SystemServiceImpl        system_svc;
@@ -149,6 +151,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&crypto_apis_svc);
         server_builder->RegisterService(&event_svc);
         server_builder->RegisterService(&barco_rings_svc);
+        server_builder->RegisterService(&accel_rgroup_svc);
         server_builder->RegisterService(&system_svc);
         server_builder->RegisterService(&swphv_svc);
     } else if (hal_cfg->features == hal::HAL_FEATURE_SET_GFT) {

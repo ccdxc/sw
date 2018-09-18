@@ -402,6 +402,17 @@ PD_FUNC_STUB(pd_quiesce_stop);
 
 // pb
 PD_FUNC_STUB(pd_pb_stats_get);
+
+// accelerator ring group
+PD_FUNC_STUB(pd_capri_accel_rgroup_add);
+PD_FUNC_STUB(pd_capri_accel_rgroup_del);
+PD_FUNC_STUB(pd_capri_accel_rgroup_ring_add);
+PD_FUNC_STUB(pd_capri_accel_rgroup_ring_del);
+PD_FUNC_STUB(pd_capri_accel_rgroup_reset_set);
+PD_FUNC_STUB(pd_capri_accel_rgroup_enable_set);
+PD_FUNC_STUB(pd_capri_accel_rgroup_pndx_set);
+PD_FUNC_STUB(pd_capri_accel_rgroup_info_get);
+PD_FUNC_STUB(pd_capri_accel_rgroup_indices_get);
 }   // namespace pd
 }   // namespace hal
 

@@ -22,6 +22,7 @@
 #include "l2segment.grpc.pb.h"
 #include "multicast.grpc.pb.h"
 #include "rdma.grpc.pb.h"
+#include "accel_rgroup.grpc.pb.h"
 
 #include "logger.hpp"
 #include "hal_client.hpp"
@@ -32,6 +33,7 @@ using namespace intf;
 using namespace endpoint;
 using namespace l2segment;
 using namespace multicast;
+using namespace accelRGroup;
 
 using namespace grpc;
 using namespace std;
@@ -61,6 +63,7 @@ HalClient::HalClient(enum ForwardingMode fwd_mode)
     l2seg_stub_ = L2Segment::NewStub(channel);
     multicast_stub_ = Multicast::NewStub(channel);
     rdma_stub_ = Rdma::NewStub(channel);
+    accel_rgroup_stub_ = AccelRGroup::NewStub(channel);
     this->fwd_mode = fwd_mode;
 }
 
@@ -1975,3 +1978,315 @@ HalClient::FilterDel(uint64_t lif_id, uint64_t mac, uint32_t vlan)
 
     return -1;
 }
+
+int
+HalClient::AccelRGroupAdd(const std::string& rgroup_name)
+{
+    AccelRGroupAddRequestMsg    req_msg;
+    AccelRGroupAddResponseMsg   rsp_msg;
+    ClientContext               context;
+    Status                      status;
+
+    auto req = req_msg.add_request();
+    req->set_rgroup_name(rgroup_name);
+    status = accel_rgroup_stub_->AccelRGroupAdd(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+    auto rsp = rsp_msg.response(0);
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} rgroup_name {}", rsp.api_status(),
+                     rgroup_name);
+        return -1;
+    }
+    return 0;
+}
+
+int
+HalClient::AccelRGroupDel(const std::string& rgroup_name)
+{
+    AccelRGroupDelRequestMsg    req_msg;
+    AccelRGroupDelResponseMsg   rsp_msg;
+    ClientContext               context;
+    Status                      status;
+
+    auto req = req_msg.add_request();
+    req->set_rgroup_name(rgroup_name);
+    status = accel_rgroup_stub_->AccelRGroupDel(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+    auto rsp = rsp_msg.response(0);
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} rgroup_name {}", rsp.api_status(),
+                     rgroup_name);
+        return -1;
+    }
+
+    return 0;
+}
+
+int
+HalClient::AccelRGroupRingAdd(const std::string& rgroup_name,
+           const std::vector<std::pair<const std::string,uint32_t>>& ring_vec)
+{
+    AccelRGroupRingAddRequestMsg    req_msg;
+    AccelRGroupRingAddResponseMsg   rsp_msg;
+    ClientContext                   context;
+    Status                          status;
+    int                             i;
+
+    assert(ring_vec.size());
+    for (i = 0; i < (int)ring_vec.size(); i++) {
+        auto req = req_msg.add_request();
+        req->set_rgroup_name(rgroup_name);
+        req->set_ring_name(ring_vec[i].first);
+        req->set_ring_handle(ring_vec[i].second);
+    }
+    status = accel_rgroup_stub_->AccelRGroupRingAdd(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+
+    assert(rsp_msg.response_size() == (int)ring_vec.size());
+    for (i = 0; i < rsp_msg.response_size(); i++) {
+        auto rsp = rsp_msg.response(i);
+        if (rsp.api_status() != types::API_STATUS_OK) {
+            NIC_FUNC_ERR("API status {} rgroup_name {} ring_name {}",
+                         rsp.api_status(), rgroup_name, ring_vec[i].first);
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int
+HalClient::AccelRGroupRingDel(const std::string& rgroup_name,
+           const std::vector<std::pair<const std::string,uint32_t>>& ring_vec)
+{
+    AccelRGroupRingDelRequestMsg    req_msg;
+    AccelRGroupRingDelResponseMsg   rsp_msg;
+    ClientContext                   context;
+    Status                          status;
+    int                             i;
+
+    assert(ring_vec.size());
+    for (i = 0; i < (int)ring_vec.size(); i++) {
+        auto req = req_msg.add_request();
+        req->set_rgroup_name(rgroup_name);
+        req->set_ring_name(ring_vec[i].first);
+    }
+    status = accel_rgroup_stub_->AccelRGroupRingDel(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+
+    assert(rsp_msg.response_size() == (int)ring_vec.size());
+    for (i = 0; i < rsp_msg.response_size(); i++) {
+        auto rsp = rsp_msg.response(i);
+        if (rsp.api_status() != types::API_STATUS_OK) {
+            NIC_FUNC_ERR("API status {} rgroup_name {} ring_name {}",
+                         rsp.api_status(), rgroup_name, ring_vec[i].first);
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int
+HalClient::AccelRGroupResetSet(const std::string& rgroup_name,
+                               uint32_t sub_ring,
+                               bool reset_sense)
+{
+    AccelRGroupResetSetRequestMsg   req_msg;
+    AccelRGroupResetSetResponseMsg  rsp_msg;
+    ClientContext                   context;
+    Status                          status;
+
+    auto req = req_msg.add_request();
+    req->set_rgroup_name(rgroup_name);
+    req->set_sub_ring(sub_ring);
+    req->set_reset_sense(reset_sense);
+    status = accel_rgroup_stub_->AccelRGroupResetSet(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+    auto rsp = rsp_msg.response(0);
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} rgroup_name {} last_ring_handle {} last_sub_ring {}",
+                     rsp.api_status(), rgroup_name, rsp.last_ring_handle(),
+                     rsp.last_sub_ring());
+        return -1;
+    }
+    return 0;
+}
+
+int
+HalClient::AccelRGroupEnableSet(const std::string& rgroup_name,
+                               uint32_t sub_ring,
+                               bool enable_sense)
+{
+    AccelRGroupEnableSetRequestMsg  req_msg;
+    AccelRGroupEnableSetResponseMsg rsp_msg;
+    ClientContext                   context;
+    Status                          status;
+
+    auto req = req_msg.add_request();
+    req->set_rgroup_name(rgroup_name);
+    req->set_sub_ring(sub_ring);
+    req->set_enable_sense(enable_sense);
+    status = accel_rgroup_stub_->AccelRGroupEnableSet(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+    auto rsp = rsp_msg.response(0);
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} rgroup_name {} last_ring_handle {} last_sub_ring {}",
+                     rsp.api_status(), rgroup_name, rsp.last_ring_handle(),
+                     rsp.last_sub_ring());
+        return -1;
+    }
+    return 0;
+}
+
+int
+HalClient::AccelRGroupPndxSet(const std::string& rgroup_name,
+                              uint32_t sub_ring,
+                              uint32_t val,
+                              bool conditional)
+{
+    AccelRGroupPndxSetRequestMsg    req_msg;
+    AccelRGroupPndxSetResponseMsg   rsp_msg;
+    ClientContext                   context;
+    Status                          status;
+
+    auto req = req_msg.add_request();
+    req->set_rgroup_name(rgroup_name);
+    req->set_sub_ring(sub_ring);
+    req->set_val(val);
+    req->set_conditional(conditional);
+    status = accel_rgroup_stub_->AccelRGroupPndxSet(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+    auto rsp = rsp_msg.response(0);
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} rgroup_name {} last_ring_handle {} last_sub_ring {}",
+                     rsp.api_status(), rgroup_name, rsp.last_ring_handle(),
+                     rsp.last_sub_ring());
+        return -1;
+    }
+    return 0;
+}
+
+int
+HalClient::AccelRGroupInfoGet(const std::string& rgroup_name,
+                              uint32_t sub_ring,
+                              accel_rgroup_rinfo_rsp_cb_t rsp_cb_func,
+                              void *user_ctx,
+                              uint32_t& ret_num_entries)
+{
+    AccelRGroupInfoGetRequestMsg    req_msg;
+    AccelRGroupInfoGetResponseMsg   rsp_msg;
+    ClientContext                   context;
+    Status                          status;
+    int                             i;
+
+    ret_num_entries = 0;
+    auto req = req_msg.add_request();
+    req->set_rgroup_name(rgroup_name);
+    req->set_sub_ring(sub_ring);
+    status = accel_rgroup_stub_->AccelRGroupInfoGet(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+    auto rsp = rsp_msg.response(0);
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} rgroup_name {}",
+                     rsp.api_status(), rgroup_name);
+        return -1;
+    }
+
+    ret_num_entries = (uint32_t)rsp.ring_info_spec_size();
+    for (i = 0; i < (int)ret_num_entries; i++) {
+        accel_rgroup_rinfo_rsp_t rinfo = {0};
+        auto spec = rsp.ring_info_spec(i);
+
+        rinfo.ring_handle = spec.ring_handle();
+        rinfo.sub_ring = spec.sub_ring();
+        rinfo.base_pa = spec.base_pa();
+        rinfo.pndx_pa = spec.pndx_pa();
+        rinfo.shadow_pndx_pa = spec.shadow_pndx_pa();
+        rinfo.opaque_tag_pa = spec.opaque_tag_pa();
+        rinfo.opaque_tag_size = spec.opaque_tag_size();
+        rinfo.ring_size = spec.ring_size();
+        rinfo.desc_size = spec.desc_size();
+        rinfo.pndx_size = spec.pndx_size();
+        rinfo.sw_reset_capable = spec.sw_reset_capable();
+        rinfo.sw_enable_capable = spec.sw_enable_capable();
+        (*rsp_cb_func)(user_ctx, rinfo);
+    }
+    return 0;
+}
+
+int
+HalClient::AccelRGroupIndicesGet(const std::string& rgroup_name,
+                                 uint32_t sub_ring,
+                                 accel_rgroup_rindices_rsp_cb_t rsp_cb_func,
+                                 void *user_ctx,
+                                 uint32_t& ret_num_entries)
+{
+    AccelRGroupIndicesGetRequestMsg     req_msg;
+    AccelRGroupIndicesGetResponseMsg    rsp_msg;
+    ClientContext                       context;
+    Status                              status;
+    int                                 i;
+
+    auto req = req_msg.add_request();
+    req->set_rgroup_name(rgroup_name);
+    req->set_sub_ring(sub_ring);
+    status = accel_rgroup_stub_->AccelRGroupIndicesGet(&context, req_msg, &rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+    auto rsp = rsp_msg.response(0);
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} rgroup_name {}",
+                     rsp.api_status(), rgroup_name);
+        return -1;
+    }
+
+    ret_num_entries = (uint32_t)rsp.ring_indices_spec_size();
+    for (i = 0; i < (int)ret_num_entries; i++) {
+        accel_rgroup_rindices_rsp_t rindices = {0};
+        auto spec = rsp.ring_indices_spec(i);
+
+        rindices.ring_handle = spec.ring_handle();
+        rindices.sub_ring = spec.sub_ring();
+        rindices.pndx = spec.pndx();
+        rindices.cndx = spec.cndx();
+        (*rsp_cb_func)(user_ctx, rindices);
+    }
+    return 0;
+}
+

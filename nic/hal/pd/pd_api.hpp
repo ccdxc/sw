@@ -30,6 +30,7 @@
 #include "nic/hal/src/internal/rawccb.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/src/internal/proxyccb.hpp"
+#include "nic/hal/src/internal/accel_rgroup.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
 #include "nic/hal/plugins/cfg/lif/lif_manager_base.hpp"
@@ -2673,6 +2674,65 @@ typedef struct pd_capri_barco_sym_hash_process_request_args_s {
     int digest_len;
 } __PACK__ pd_capri_barco_sym_hash_process_request_args_t;
 
+// Accelerator ring group
+typedef struct pd_capri_accel_rgroup_add_args_s {
+    const char *rgroup_name;
+} __PACK__ pd_capri_accel_rgroup_add_args_t;
+
+typedef struct pd_capri_accel_rgroup_del_args_s {
+    const char *rgroup_name;
+} __PACK__ pd_capri_accel_rgroup_del_args_t;
+
+typedef struct pd_capri_accel_rgroup_ring_add_args_s {
+    const char *rgroup_name;
+    const char *ring_name;
+    uint32_t ring_handle;
+} __PACK__ pd_capri_accel_rgroup_ring_add_args_t;
+
+typedef struct pd_capri_accel_rgroup_ring_del_args_s {
+    const char *rgroup_name;
+    const char *ring_name;
+} __PACK__ pd_capri_accel_rgroup_ring_del_args_t;
+
+typedef struct pd_capri_accel_rgroup_reset_set_args_s {
+    const char *rgroup_name;
+    uint32_t sub_ring;
+    bool reset_sense;
+    uint32_t last_ring_handle;
+    uint32_t last_sub_ring;
+} __PACK__ pd_capri_accel_rgroup_reset_set_args_t;
+
+typedef struct pd_capri_accel_rgroup_enable_set_args_s {
+    const char *rgroup_name;
+    uint32_t sub_ring;
+    bool enable_sense;
+    uint32_t last_ring_handle;
+    uint32_t last_sub_ring;
+} __PACK__ pd_capri_accel_rgroup_enable_set_args_t;
+
+typedef struct pd_capri_accel_rgroup_pndx_set_args_s {
+    const char *rgroup_name;
+    uint32_t sub_ring;
+    uint32_t val;
+    uint32_t conditional;
+    uint32_t last_ring_handle;
+    uint32_t last_sub_ring;
+} __PACK__ pd_capri_accel_rgroup_pndx_set_args_t;
+
+typedef struct pd_capri_accel_rgroup_info_get_args_s {
+    const char *rgroup_name;
+    uint32_t sub_ring;
+    accel_rgroup_ring_info_cb_t cb_func;
+    void *usr_ctx;
+} __PACK__ pd_capri_accel_rgroup_info_get_args_t;
+
+typedef struct pd_capri_accel_rgroup_indices_get_args_s {
+    const char *rgroup_name;
+    uint32_t sub_ring;
+    accel_rgroup_ring_indices_cb_t cb_func;
+    void *usr_ctx;
+} __PACK__ pd_capri_accel_rgroup_indices_get_args_t;
+
 // gft
 typedef struct pd_gft_exact_match_profile_args_s {
     gft_exact_match_profile_t       *exact_match_profile;
@@ -3033,7 +3093,16 @@ typedef struct pd_quiesce_stop_args_s {
     ENTRY(PD_FUNC_ID_COLLECTOR_GET,            261, "PD_FUNC_ID_COLLECTOR_GET")\
     ENTRY(PD_FUNC_ID_EP_IF_UPDATE,             262, "PD_FUNC_ID_EP_IF_UPDATE")      \
     ENTRY(PD_FUNC_ID_PB_STATS_GET,             263, "PD_FUNC_ID_PB_STATS_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      264, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_ADD,         264, "PD_FUNC_ID_ACCEL_RGROUP_ADD")\
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_DEL,         265, "PD_FUNC_ID_ACCEL_RGROUP_DEL")\
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_RING_ADD,    266, "PD_FUNC_ID_ACCEL_RGROUP_RING_ADD")\
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_RING_DEL,    267, "PD_FUNC_ID_ACCEL_RGROUP_RING_DEL")\
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_RESET_SET,   268, "PD_FUNC_ID_ACCEL_RGROUP_RESET_SET")\
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_ENABLE_SET,  269, "PD_FUNC_ID_ACCEL_RGROUP_ENABLE_SET")\
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET,    270, "PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET")\
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INFO_GET,    271, "PD_FUNC_ID_ACCEL_RGROUP_INFO_GET")\
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET, 272, "PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      273, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3421,6 +3490,17 @@ typedef struct pd_func_args_s {
 
         // pb
         PD_UNION_ARGS_FIELD(pd_pb_stats_get);
+
+        // accelerator ring group
+        PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_add);
+        PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_del);
+        PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_ring_add);
+        PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_ring_del);
+        PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_reset_set);
+        PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_enable_set);
+        PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_pndx_set);
+        PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_info_get);
+        PD_UNION_ARGS_FIELD(pd_capri_accel_rgroup_indices_get);
     };
 } pd_func_args_t;
 typedef hal_ret_t (* pd_func_t)(pd_func_args_t *args);
@@ -3822,6 +3902,17 @@ PD_FUNCP_TYPEDEF(pd_quiesce_stop);
 
 // pb
 PD_FUNCP_TYPEDEF(pd_pb_stats_get);
+
+// accelerator ring group
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_add);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_del);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_ring_add);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_ring_del);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_reset_set);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_enable_set);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_pndx_set);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_info_get);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_indices_get);
 
 #if 0
 #define PD_FUNCP_TYPEDEF(NAME)                                              \
@@ -4225,6 +4316,17 @@ PD_FUNCP_TYPEDEF(pd_quiesce_stop);
 // pb
 PD_FUNCP_TYPEDEF(pd_pb_stats_get);
 
+// accelerator ring group
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_add);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_del);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_ring_add);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_ring_del);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_reset_set);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_enable_set);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_pndx_set);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_info_get);
+PD_FUNCP_TYPEDEF(pd_capri_accel_rgroup_indices_get);
+
 typedef struct pd_call_s {
     union {
         // init pd calls
@@ -4604,6 +4706,17 @@ typedef struct pd_call_s {
 
         // pb
         PD_UNION_ARGS_FIELD(pd_pb_stats_get);
+
+        // accelerator ring group
+        PD_UNION_FIELD(pd_capri_accel_rgroup_add);
+        PD_UNION_FIELD(pd_capri_accel_rgroup_del);
+        PD_UNION_FIELD(pd_capri_accel_rgroup_ring_add);
+        PD_UNION_FIELD(pd_capri_accel_rgroup_ring_del);
+        PD_UNION_FIELD(pd_capri_accel_rgroup_reset_set);
+        PD_UNION_FIELD(pd_capri_accel_rgroup_enable_set);
+        PD_UNION_FIELD(pd_capri_accel_rgroup_pndx_set);
+        PD_UNION_FIELD(pd_capri_accel_rgroup_info_get);
+        PD_UNION_FIELD(pd_capri_accel_rgroup_indices_get);
     };
 
 } pd_call_t;

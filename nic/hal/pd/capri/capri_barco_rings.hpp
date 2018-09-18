@@ -116,6 +116,11 @@ typedef struct capri_barco_ring_s {
     uint16_t            consumer_idx;       /*  S/W Read ptr                    */
     uint64_t            opaque_tag_addr;    /*  Location of opa tag             */
     uint32_t            opaqe_tag_value;    /*  Running counter for the opa tag */
+    uint16_t            opaque_tag_size;    /*  size of opa tag                 */
+    uint16_t            shadow_pndx_size;   /*  size of shadow pindex, if any   */
+    uint64_t            shadow_pndx_addr;   /*  address of shadow pindx         */
+    bool                sw_reset_capable;   /*  support soft ring reset         */
+    bool                sw_enable_capable;  /*  support soft ring enable/disable*/
     /* TBD lock/spinlock for ring access */
     barco_ring_init_t   init;               /* Ring initialization fn           */
     barco_ring_poller_t poller;             /* Ring poller fn                   */
@@ -195,6 +200,11 @@ capri_barco_resp_dispatch (capri_barco_ring_t *barco_ring)
 #endif
 
 hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr);
+hal_ret_t capri_barco_get_meta_config_info(types::BarcoRings ring_type, uint64_t* shadow_pndx_addr,
+                                           uint32_t *shadow_pndx_size, uint32_t *desc_size,
+                                           uint32_t *opaque_tag_size);
+hal_ret_t capri_barco_get_capabilities(types::BarcoRings ring_type,
+                                       bool *sw_reset_capable, bool *sw_enable_capable);
 
 }    // namespace pd
 }    // namespace hal
