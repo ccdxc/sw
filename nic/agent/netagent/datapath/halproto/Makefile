@@ -4,19 +4,7 @@ LD_LIBRARY_PATH=$(TOP_DIR)/hal/third-party/google/x86_64/lib/
 HAL_PROTO_FILES = $(shell ls ${CURDIR}/../../../../proto/hal/ | grep .proto | tr " " "\n" | LC_ALL=C sort | tr "\n" " ")
 default:
 	$(MAKE) hal-proto
-	# Generate mock files
-	mockgen -source=endpoint.pb.go -destination=endpoint_mock.go -package=halproto
-	mockgen -source=interface.pb.go -destination=interface_mock.go -package=halproto
-	mockgen -source=l2segment.pb.go -destination=l2segment_mock.go -package=halproto
-	mockgen -source=l4lb.pb.go -destination=l4lb_mock.go -package=halproto
-	mockgen -source=nwsec.pb.go -destination=nwsec_mock.go -package=halproto
-	mockgen -source=session.pb.go -destination=session_mock.go -package=halproto
-	mockgen -source=vrf.pb.go -destination=tenant_mock.go -package=halproto
-	mockgen -source=nw.pb.go -destination=network_mock.go -package=halproto
-	mockgen -source=nat.pb.go -destination=nat_mock.go -package=halproto
-	mockgen -source=ipsec.pb.go -destination=ipsec_mock.go -package=halproto
-	mockgen -source=telemetry.pb.go -destination=telemetry_mock.go -package=halproto
-	mockgen -source=tcp_proxy.pb.go -destination=tcp_proxy_mock.go -package=halproto
+	@for c in ${HAL_PROTO_FILES}; do printf "\n+++++++++++++++++ Generating Mocks For $${c} +++++++++++++++++\n"; mockgen -source=`basename $${c} .proto`.pb.go -destination=`basename $${c} .proto`_mock.go -package=halproto || exit 1; done
 	# Run go imports on mock files
 	goimports -w -l *mock.go
 
@@ -30,9 +18,9 @@ hal-proto: clean-proto
 
 clean-proto:
 	# Regenerate all .pb.go. This avoids conflicts due to file renames in nic/proto/hal
-	rm -f ${GEN_DIR}/*.pb.go
+	rm -f ${GEN_DIR}/*.go
 
-proto-sync: hal-proto
+proto-sync: default
 	# Will verify if the generated pb.go are committed
 	@$(eval DIFFS=`git ls-files --exclude-standard --modified --directory ${CURDIR}`)
 	@echo "Found the following uncommitted pb.go files, if any"

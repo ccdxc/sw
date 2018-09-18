@@ -44,7 +44,6 @@ mock_network.go: ../generated/network/svc_network_crudinterface.go Makefile
 	sed -i.bak_ -e 's/[[:space:](]NetworkV1ServiceInterface[[:space:])]/ (network.NetworkV1ServiceInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]NetworkV1NetworkInterface[[:space:])]/ (network.NetworkV1NetworkInterface)/g' $@
 	goimports -local "github.com/pensando/sw" -w $@
-	sed -i.bak_ -e "s/\"github.com\/pensando\/sw\/api\/generated\/network\"/network \"github.com\/pensando\/sw\/api\/generated\/network\"/g" $@
 	rm -f *.bak_
 
 mock_cluster.go: ../generated/cluster/svc_cluster_crudinterface.go Makefile
@@ -60,8 +59,7 @@ mock_cluster.go: ../generated/cluster/svc_cluster_crudinterface.go Makefile
 	sed -i.bak_ -e 's/[[:space:](]ClusterV1SmartNICInterface[[:space:])]/ (cluster.ClusterV1SmartNICInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]ClusterV1TenantInterface[[:space:])]/ (cluster.ClusterV1TenantInterface)/g' $@
 	goimports -local "github.com/pensando/sw" -w $@
-	sed -i.bak_ -e "s/\"github.com\/pensando\/sw\/api\/generated\/cluster\"/cluster \"github.com\/pensando\/sw\/api\/generated\/cluster\"/g" $@
-		rm -f *.bak_
+	rm -f *.bak_
 
 
 clean:
