@@ -31,20 +31,21 @@ var l2segShowCmd = &cobra.Command{
 	Use:   "l2seg",
 	Short: "show L2 segment objects",
 	Long:  "show L2 segment object information",
+	Run:   l2segShowSpecCmdHandler,
 }
 
-var l2segPiShowCmd = &cobra.Command{
-	Use:   "pi",
-	Short: "show L2 segment's PI information",
-	Long:  "show L2 segment's PI information",
-	Run:   l2segPiShowCmdHandler,
+var l2segSpecShowCmd = &cobra.Command{
+	Use:   "spec",
+	Short: "show L2 segment's spec information",
+	Long:  "show L2 segment's spec information",
+	Run:   l2segShowSpecCmdHandler,
 }
 
-var l2segPdShowCmd = &cobra.Command{
-	Use:   "pd",
-	Short: "show L2 segment's PD information",
-	Long:  "show L2 segment's PD information",
-	Run:   l2segPdShowCmdHandler,
+var l2segStatusShowCmd = &cobra.Command{
+	Use:   "status",
+	Short: "show L2 segment's status information",
+	Long:  "show L2 segment's status information",
+	Run:   l2segShowStatusCmdHandler,
 }
 
 var l2segDetailShowCmd = &cobra.Command{
@@ -56,18 +57,18 @@ var l2segDetailShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(l2segShowCmd)
-	l2segShowCmd.AddCommand(l2segPiShowCmd)
-	l2segShowCmd.AddCommand(l2segPdShowCmd)
+	l2segShowCmd.AddCommand(l2segSpecShowCmd)
+	l2segShowCmd.AddCommand(l2segStatusShowCmd)
 	l2segShowCmd.AddCommand(l2segDetailShowCmd)
 
-	l2segPiShowCmd.Flags().Uint64Var(&l2segID, "id", 1, "Specify l2seg id")
-	l2segPiShowCmd.Flags().BoolVar(&l2segBr, "brief", false, "Display briefly")
-	l2segPdShowCmd.Flags().Uint64Var(&pdL2segID, "id", 1, "Specify l2seg id")
-	l2segPdShowCmd.Flags().BoolVar(&pdL2segBr, "brief", false, "Display briefly")
+	l2segSpecShowCmd.Flags().Uint64Var(&l2segID, "id", 1, "Specify l2seg id")
+	l2segSpecShowCmd.Flags().BoolVar(&l2segBr, "brief", false, "Display briefly")
+	l2segStatusShowCmd.Flags().Uint64Var(&pdL2segID, "id", 1, "Specify l2seg id")
+	l2segStatusShowCmd.Flags().BoolVar(&pdL2segBr, "brief", false, "Display briefly")
 	l2segDetailShowCmd.Flags().Uint64Var(&detailL2segID, "id", 1, "Specify l2seg id")
 }
 
-func l2segPiShowCmdHandler(cmd *cobra.Command, args []string) {
+func l2segShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -112,7 +113,7 @@ func l2segPiShowCmdHandler(cmd *cobra.Command, args []string) {
 	c.Close()
 }
 
-func l2segPdShowCmdHandler(cmd *cobra.Command, args []string) {
+func l2segShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {

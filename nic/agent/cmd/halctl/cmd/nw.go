@@ -23,7 +23,21 @@ var nwShowCmd = &cobra.Command{
 	Use:   "network",
 	Short: "show network objects",
 	Long:  "show network object information",
-	Run:   nwShowCmdHandler,
+	Run:   nwShowSpecCmdHandler,
+}
+
+var nwSpecShowCmd = &cobra.Command{
+	Use:   "spec",
+	Short: "show network spec information",
+	Long:  "show network spec information",
+	Run:   nwShowSpecCmdHandler,
+}
+
+var nwStatusShowCmd = &cobra.Command{
+	Use:   "status",
+	Short: "show network status information",
+	Long:  "show network status information",
+	Run:   nwShowStatusCmdHandler,
 }
 
 var nwDetailShowCmd = &cobra.Command{
@@ -35,10 +49,12 @@ var nwDetailShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(nwShowCmd)
+	nwShowCmd.AddCommand(nwSpecShowCmd)
+	nwShowCmd.AddCommand(nwStatusShowCmd)
 	nwShowCmd.AddCommand(nwDetailShowCmd)
 }
 
-func nwShowCmdHandler(cmd *cobra.Command, args []string) {
+func nwShowCmdHandler(cmd *cobra.Command, spec bool, status bool) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -60,7 +76,13 @@ func nwShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Header
-	nwShowHeader()
+	if spec == true {
+		nwShowSpecHeader()
+	}
+
+	if status == true {
+		nwShowStatusHeader()
+	}
 
 	// Print NHs
 	for _, resp := range respMsg.Response {
@@ -68,8 +90,21 @@ func nwShowCmdHandler(cmd *cobra.Command, args []string) {
 			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
 			continue
 		}
-		nwShowOneResp(resp)
+		if spec == true {
+			nwSpecShowOneResp(resp)
+		}
+		if status == true {
+			nwStatusShowOneResp(resp)
+		}
 	}
+}
+
+func nwShowSpecCmdHandler(cmd *cobra.Command, args []string) {
+	nwShowCmdHandler(cmd, true, false)
+}
+
+func nwShowStatusCmdHandler(cmd *cobra.Command, args []string) {
+	nwShowCmdHandler(cmd, false, true)
 }
 
 func handleNwDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
@@ -117,21 +152,27 @@ func nwDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleNwDetailShowCmd(cmd, nil)
 }
 
-func nwShowHeader() {
+func nwShowSpecHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Handle:      Network Handle      VrfId:    Network's vrf id\n")
-	fmt.Printf("GatewayIP:   Gateway IP          Subnet:   Network's subnet\n")
-	fmt.Printf("Router MAC:  Router MAC          SGHandle: Security Group Handle\n")
-	hdrLine := strings.Repeat("-", 96)
+	fmt.Printf("VrfId:       Network's vrf Id    GatewayIP:   Gateway IP\n")
+	fmt.Printf("Subnet:      Network's subnet    Router MAC:  Router MAC\n")
+	fmt.Printf("SGHandle:    Security Group Handles\n")
+	hdrLine := strings.Repeat("-", 86)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-6s%-18s%-32s%-18s%-24s\n",
-		"Handle", "VrfId", "GatewayIP", "Subnet", "Router MAC", "SGHandle")
+	fmt.Printf("%-6s%-18s%-32s%-18s%-24s\n",
+		"VrfId", "GatewayIP", "Subnet", "Router MAC", "SGHandle")
 	fmt.Println(hdrLine)
 }
 
-func nwShowOneResp(resp *halproto.NetworkGetResponse) {
+func nwShowStatusHeader() {
+	hdrLine := strings.Repeat("-", 15)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-15s\n", "Network Handle")
+	fmt.Println(hdrLine)
+}
+
+func nwSpecShowOneResp(resp *halproto.NetworkGetResponse) {
 	spec := resp.GetSpec()
-	status := resp.GetStatus()
 
 	sgKhList := spec.GetSgKeyHandle()
 	sgKhStr := ""
@@ -148,10 +189,14 @@ func nwShowOneResp(resp *halproto.NetworkGetResponse) {
 		sgKhStr += "-"
 	}
 
-	fmt.Printf("%-10d%-6d%-18s%-32s%-18s%-24s\n",
-		status.GetNwHandle(),
+	fmt.Printf("%-6d%-18s%-32s%-18s%-24s\n",
 		spec.GetKeyOrHandle().GetNwKey().GetVrfKeyHandle().GetVrfId(),
 		utils.IPAddrToStr(spec.GetGatewayIp()),
 		utils.IPPrefixToStr(spec.GetKeyOrHandle().GetNwKey().GetIpPrefix()),
 		utils.MactoStr(spec.GetRmac()), sgKhStr)
+}
+
+func nwStatusShowOneResp(resp *halproto.NetworkGetResponse) {
+	status := resp.GetStatus()
+	fmt.Printf("%-15d\n", status.GetNwHandle())
 }

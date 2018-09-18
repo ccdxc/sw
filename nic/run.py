@@ -1156,9 +1156,10 @@ def main():
         call(["tools/run-coverage -k -c coverage_asm.json"], shell=True)
 
     # Get techsupport
-    os.chdir(halctl_dir)
-    os.system("go build && ./halctl show techsupport")
-    os.chdir(nic_dir)
+    if args.feature in ['firewall']:
+        os.chdir(halctl_dir)
+        os.system("go build && ./halctl show techsupport")
+        os.chdir(nic_dir)
 
     if args.nocleanup:
         print "Skipping cleanup"
