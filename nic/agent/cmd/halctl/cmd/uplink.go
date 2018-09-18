@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -49,7 +50,8 @@ func uplinkShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
 
@@ -95,7 +97,8 @@ func uplinkDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
 

@@ -58,7 +58,8 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	client := halproto.NewSystemClient(c.ClientConn)
 
@@ -396,7 +397,8 @@ func threadShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	client := halproto.NewDebugClient(c.ClientConn)
 
@@ -445,7 +447,8 @@ func threadDetailShow(ofile *os.File) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	client := halproto.NewDebugClient(c.ClientConn)
 

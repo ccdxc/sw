@@ -32,19 +32,22 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// remove the output directory if one exists
 	err := os.RemoveAll(outFile)
 	if err != nil {
-		log.Fatalf("Failed to remove directory %s, err : %v", outFile, err)
+		log.Errorf("Failed to remove directory %s, err : %v", outFile, err)
+		os.Exit(1)
 	}
 
 	// create a new directory
 	err = os.MkdirAll(outDir, 0777)
 	if err != nil {
-		log.Fatalf("Failed to create directory %s, err : %v", outDir, err)
+		log.Errorf("Failed to create directory %s, err : %v", outDir, err)
+		os.Exit(1)
 	}
 
 	// create the o/p file
 	ofile, err := os.OpenFile(outFile, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
 	if err != nil {
-		log.Fatalf("Failed to create output file %s, err : %v", outFile, err)
+		log.Errorf("Failed to create output file %s, err : %v", outFile, err)
+		os.Exit(1)
 	}
 
 	ofile.WriteString("Capturing techsupport information\n\n")

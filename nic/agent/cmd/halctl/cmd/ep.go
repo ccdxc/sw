@@ -50,7 +50,8 @@ func epShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -67,12 +68,13 @@ func epShowCmdHandler(cmd *cobra.Command, args []string) {
 	respMsg, err := client.EndpointGet(context.Background(), epGetReqMsg)
 	if err != nil {
 		log.Errorf("Getting Endpoint failed. %v", err)
+		return
 	}
 
 	// Print Header
 	epShowHeader(cmd, args)
 
-	// Print VRFs
+	// Print endpoints
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
@@ -87,7 +89,8 @@ func epPdShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -104,6 +107,7 @@ func epPdShowCmdHandler(cmd *cobra.Command, args []string) {
 	respMsg, err := client.EndpointGet(context.Background(), epGetReqMsg)
 	if err != nil {
 		log.Errorf("Getting Endpoint failed. %v", err)
+		return
 	}
 
 	// Print Header
@@ -123,7 +127,8 @@ func handleEpDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -140,6 +145,7 @@ func handleEpDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	respMsg, err := client.EndpointGet(context.Background(), epGetReqMsg)
 	if err != nil {
 		log.Errorf("Getting Endpoint failed. %v", err)
+		return
 	}
 
 	// Print EPs
@@ -179,9 +185,11 @@ func epShowHeader(cmd *cobra.Command, args []string) {
 }
 
 func epShowOneResp(resp *halproto.EndpointGetResponse) {
+	var ipStr string
+
 	epAddr := resp.GetStatus().GetIpAddress()
-	ipStr := utils.IPAddrToStr(epAddr[0].GetIpAddress())
-	if len(epAddr) > 0 {
+	if (epAddr != nil) && (len(epAddr) > 0) {
+		ipStr = utils.IPAddrToStr(epAddr[0].GetIpAddress())
 		for i := 1; i < len(epAddr); i++ {
 			ipStr += ", "
 			ipStr += utils.IPAddrToStr(epAddr[i].GetIpAddress())

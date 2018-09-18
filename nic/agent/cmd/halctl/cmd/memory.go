@@ -104,7 +104,8 @@ func slabShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -183,7 +184,8 @@ func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -236,7 +238,8 @@ func mtrackShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -296,7 +299,8 @@ func mtrackDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -338,7 +342,8 @@ func hashShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -390,7 +395,8 @@ func hashDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -422,7 +428,8 @@ func allMemoryShowHandler(ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -518,7 +525,8 @@ func summaryShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
 	}
 	defer c.Close()
 
