@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
+	"github.com/pensando/sw/nic/agent/netagent/revproxy"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
@@ -40,6 +41,7 @@ func main() {
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
 		restURL         = flag.String("rest-url", ":"+globals.AgentRESTPort, "specify Agent REST URL")
+		revProxyURL     = flag.String("rev-proxy-url", ":"+globals.RevProxyPort, "specify Reverse Proxy Router REST URL")
 		// ToDo Remove this flag prior to FCS the datapath should be defaulted to HAL
 		datapath = flag.String("datapath", "mock", "specify the agent datapath type either mock or hal")
 		mode     = flag.String("mode", "classic", "specify the agent mode either classic or managed")
@@ -108,6 +110,10 @@ func main() {
 	} else {
 		agMode = protos.AgentMode_CLASSIC
 	}
+
+	// create the reverse proxy router
+	revproxy.NewRevProxyRouter(*revProxyURL)
+	log.Printf("Reverse Proxy Router instantiated")
 
 	// create the new NetAgent
 	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, resolverClient, agMode)

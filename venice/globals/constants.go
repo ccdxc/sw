@@ -57,6 +57,9 @@ const (
 	// Events directoty
 	EventsDir = "/var/lib/pensando/events"
 
+	//Reverse Proxy Router Port
+	RevProxyPort = "8888"
+
 	// API gw Port
 	APIGwRESTPort = "9000"
 
