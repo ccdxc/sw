@@ -7,14 +7,16 @@
 #include "pnso_api.h"
 
 #include "pnso_pbuf.h"
+#include "pnso_svc.h"
 #include "pnso_req.h"
 #include "pnso_chain.h"
+
+#include "pnso_cpdc.h"
+#include "pnso_cpdc_cmn.h"
 
 /*
  * TODO-req:
  *	- print SHA/checksum tags in req_pprint_result()
- *	- revisit validate_xxxx() and asserts
- *	- share validate_xxxx() to simulator as needed
  *
  */
 
@@ -241,6 +243,48 @@ req_pprint_result(const struct pnso_service_result *res)
 }
 
 static pnso_error_t
+validate_req_source_buffer(enum pnso_service_type svc_type,
+		struct pnso_buffer_list *sgl)
+{
+	pnso_error_t err = EINVAL;
+	size_t len;
+
+	if (sgl->count < 1) {
+		OSAL_LOG_DEBUG("invalid # of buffers in req sgl specified! count: %d err: %d",
+				sgl->count, err);
+		goto out;
+	}
+
+	len = pbuf_get_buffer_list_len(sgl);
+	switch (svc_type) {
+	case PNSO_SVC_TYPE_ENCRYPT:
+		break;
+	case PNSO_SVC_TYPE_DECRYPT:
+		break;
+	case PNSO_SVC_TYPE_COMPRESS:
+	case PNSO_SVC_TYPE_DECOMPRESS:
+	case PNSO_SVC_TYPE_HASH:
+	case PNSO_SVC_TYPE_CHKSUM:
+		if (len == 0 || len > MAX_CPDC_SRC_BUF_LEN)
+			goto out_len;
+		break;
+	case PNSO_SVC_TYPE_DECOMPACT:
+		break;
+	default:
+		OSAL_ASSERT(0);
+		break;
+	}
+
+	err = PNSO_OK;
+	return err;
+
+out_len:
+	OSAL_LOG_DEBUG("invalid src buf len specified! svc_type: %d len: %zu err: %d",
+					svc_type, len, err);
+out:
+	return err;
+}
+static pnso_error_t
 validate_req_dummy_service(struct pnso_service *svc)
 {
 	OSAL_ASSERT(0);
@@ -302,21 +346,24 @@ out:
 static pnso_error_t
 validate_req_compression_service(struct pnso_service *svc)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
+	struct pnso_compression_desc *pnso_cp_desc;
 
 	if (!svc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service! svc: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid service! svc: 0x%llx err: %d",
 				(uint64_t) svc, err);
-		OSAL_ASSERT(0);
 		goto out;
 	}
 
 	if (svc->svc_type != PNSO_SVC_TYPE_COMPRESS) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
+		OSAL_LOG_DEBUG("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
 				(uint64_t) svc, svc->svc_type, err);
-		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	pnso_cp_desc = (struct pnso_compression_desc *) &svc->u.cp_desc;
+	if (!svc_is_cp_desc_valid(pnso_cp_desc)) {
+		OSAL_LOG_DEBUG("invalid cp desc specified! err: %d", err);
 		goto out;
 	}
 
@@ -328,21 +375,24 @@ out:
 static pnso_error_t
 validate_req_decompression_service(struct pnso_service *svc)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
+	struct pnso_decompression_desc *pnso_dc_desc;
 
 	if (!svc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service! svc: 0x%llx %d",
+		OSAL_LOG_DEBUG("invalid service! svc: 0x%llx %d",
 				(uint64_t) svc, err);
-		OSAL_ASSERT(0);
 		goto out;
 	}
 
 	if (svc->svc_type != PNSO_SVC_TYPE_DECOMPRESS) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
+		OSAL_LOG_DEBUG("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
 				(uint64_t) svc, svc->svc_type, err);
-		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	pnso_dc_desc = (struct pnso_decompression_desc *) &svc->u.dc_desc;
+	if (!svc_is_dc_desc_valid(pnso_dc_desc)) {
+		OSAL_LOG_DEBUG("invalid dc desc specified! err: %d", err);
 		goto out;
 	}
 
@@ -354,21 +404,24 @@ out:
 static pnso_error_t
 validate_req_hash_service(struct pnso_service *svc)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
+	struct pnso_hash_desc *pnso_hash_desc;
 
 	if (!svc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service! svc: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid service! svc: 0x%llx err: %d",
 				(uint64_t) svc, err);
-		OSAL_ASSERT(0);
 		goto out;
 	}
 
 	if (svc->svc_type != PNSO_SVC_TYPE_HASH) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
+		OSAL_LOG_DEBUG("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
 				(uint64_t) svc, svc->svc_type, err);
-		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	pnso_hash_desc = (struct pnso_hash_desc *) &svc->u.hash_desc;
+	if (!svc_is_hash_desc_valid(pnso_hash_desc)) {
+		OSAL_LOG_DEBUG("invalid hash desc specified! err: %d", err);
 		goto out;
 	}
 
@@ -380,21 +433,25 @@ out:
 static pnso_error_t
 validate_req_chksum_service(struct pnso_service *svc)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
+	struct pnso_checksum_desc *pnso_chksum_desc;
 
 	if (!svc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service! svc: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid service! svc: 0x%llx err: %d",
 				(uint64_t) svc, err);
-		OSAL_ASSERT(0);
 		goto out;
 	}
 
 	if (svc->svc_type != PNSO_SVC_TYPE_CHKSUM) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
+		OSAL_LOG_DEBUG("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
 				(uint64_t) svc, svc->svc_type, err);
-		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	pnso_chksum_desc =
+		(struct pnso_checksum_desc *) &svc->u.chksum_desc;
+	if (!svc_is_chksum_desc_valid(pnso_chksum_desc)) {
+		OSAL_LOG_DEBUG("invalid chksum desc specified! err: %d", err);
 		goto out;
 	}
 
@@ -443,41 +500,84 @@ validate_res_decryption_service(struct pnso_service_status *status)
 static pnso_error_t
 validate_res_compression_service(struct pnso_service_status *status)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
+	struct pnso_buffer_list *sgl;
+	size_t len;
 
-	if (!status->u.dst.sgl) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid dst buffer list specified for compression! sgl: 0x%llx err: %d",
-				(uint64_t) status->u.dst.sgl, err);
-		return err;
+	sgl = status->u.dst.sgl;
+	if (!sgl) {
+		OSAL_LOG_DEBUG("invalid dst buffer list specified for compression! sgl: 0x%llx err: %d",
+				(uint64_t) sgl, err);
+		goto out;
 	}
 
-	return PNSO_OK;
+#if 0	/* TODO-req: verify */
+	if (((uint64_t) sgl % PNSO_MEM_ALIGN_BUF) != 0) {
+		OSAL_LOG_DEBUG("invalid output buffer alignment! sgl: 0x%llx err: %d",
+				(uint64_t) sgl, err);
+		goto out;
+	}
+#endif
+
+	if (sgl->count < 1) {
+		OSAL_LOG_DEBUG("invalid # of buffers in res sgl specified! count: %d err: %d",
+				sgl->count, err);
+		goto out;
+	}
+
+	len = pbuf_get_buffer_list_len(sgl);
+	if (len == 0 || len > MAX_CPDC_DST_BUF_LEN) {
+		OSAL_LOG_DEBUG("invalid len in res sgl specified! len: %zu err: %d",
+				len, err);
+		goto out;
+	}
+
+	err = PNSO_OK;
+out:
+	return err;
 }
 
 static pnso_error_t
 validate_res_decompression_service(struct pnso_service_status *status)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
+	struct pnso_buffer_list *sgl;
+	size_t len;
 
-	if (!status->u.dst.sgl) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid dst buffer list specified for decompression! sgl: 0x%llx err: %d",
-				(uint64_t) status->u.dst.sgl, err);
-		return err;
+	sgl = status->u.dst.sgl;
+	if (!sgl) {
+		OSAL_LOG_DEBUG("invalid dst buffer list specified for decompression! sgl: 0x%llx err: %d",
+				(uint64_t) sgl, err);
+		goto out;
 	}
 
-	return PNSO_OK;
+	if (sgl->count < 1) {
+		OSAL_LOG_DEBUG("invalid # of buffers in res sgl specified! count: %d err: %d",
+				sgl->count, err);
+		goto out;
+	}
+
+	len = pbuf_get_buffer_list_len(sgl);
+	if (len == 0 || len > MAX_CPDC_DST_BUF_LEN) {
+		OSAL_LOG_DEBUG("invalid len in res sgl specified! len: %zu err: %d",
+				len, err);
+		goto out;
+	}
+
+	/* TODO-req: check alignment */
+
+	err = PNSO_OK;
+out:
+	return err;
 }
 
 static pnso_error_t
 validate_res_hash_service(struct pnso_service_status *status)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
 
 	if (!status->u.hash.tags) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid tags specified for hash! tags: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid tags specified for hash! tags: 0x%llx err: %d",
 				(uint64_t) status->u.hash.tags, err);
 		goto out;
 	}
@@ -490,11 +590,10 @@ out:
 static pnso_error_t
 validate_res_chksum_service(struct pnso_service_status *status)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
 
 	if (!status->u.chksum.tags) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid tags specified for chksum! tags: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid tags specified for chksum! tags: 0x%llx err: %d",
 				(uint64_t) status->u.chksum.tags, err);
 		goto out;
 	}
@@ -532,28 +631,21 @@ validate_service_request(struct pnso_service_request *svc_req)
 	OSAL_LOG_DEBUG("enter ...");
 
 	if (!svc_req) {
-		OSAL_LOG_ERROR("invalid service request specified! req: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid service request specified! req: 0x%llx err: %d",
 				(uint64_t) svc_req, err);
 		goto out;
 	}
 
 	if (!svc_req->sgl) {
-		OSAL_LOG_ERROR("invalid sgl in service request specified! sgl: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid sgl in service request specified! sgl: 0x%llx err: %d",
 				(uint64_t) svc_req->sgl, err);
 		goto out;
 	}
 
 	num_services = svc_req->num_services;
 	if (num_services < 1) {
-		OSAL_LOG_ERROR("invalid # of services in req specified! num_services: %d err: %d",
+		OSAL_LOG_DEBUG("invalid # of services in req specified! num_services: %d err: %d",
 				svc_req->num_services, err);
-		goto out;
-	}
-
-	/* sgl here means buffer list ... */
-	if (svc_req->sgl->count < 1) {
-		OSAL_LOG_ERROR("invalid # of buffers in req sgl specified! count: %d err: %d",
-				svc_req->sgl->count, err);
 		goto out;
 	}
 
@@ -562,9 +654,8 @@ validate_service_request(struct pnso_service_request *svc_req)
 		if (svc_type <= PNSO_SVC_TYPE_NONE ||
 				svc_type >= PNSO_SVC_TYPE_MAX) {
 			err = EINVAL;
-			OSAL_LOG_ERROR("invalid service type specified! service #: %d svc_type: %d err: %d",
+			OSAL_LOG_DEBUG("invalid service type specified! service #: %d svc_type: %d err: %d",
 					i+1, svc_type, err);
-			OSAL_ASSERT(0);
 			goto out;
 		}
 
@@ -573,10 +664,17 @@ validate_service_request(struct pnso_service_request *svc_req)
 			goto out;
 	}
 
+	err = validate_req_source_buffer(svc_type, svc_req->sgl);
+	if (err) {
+		OSAL_LOG_DEBUG("invalid # of buffers in req sgl specified! count: %d err: %d",
+				svc_req->sgl->count, err);
+		goto out;
+	}
+
 	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;
 out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 
@@ -590,14 +688,14 @@ validate_service_result(struct pnso_service_result *svc_res)
 	OSAL_LOG_DEBUG("enter ...");
 
 	if (!svc_res) {
-		OSAL_LOG_ERROR("invalid service result specified! res: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid service result specified! res: 0x%llx err: %d",
 				(uint64_t) svc_res, err);
 		goto out;
 	}
 
 	num_services = svc_res->num_services;
 	if (num_services < 1) {
-		OSAL_LOG_ERROR("invalid # of services in res specified! num_services: %d err: %d",
+		OSAL_LOG_DEBUG("invalid # of services in res specified! num_services: %d err: %d",
 				svc_res->num_services, err);
 		goto out;
 	}
@@ -608,7 +706,7 @@ validate_service_result(struct pnso_service_result *svc_res)
 		if (svc_type <= PNSO_SVC_TYPE_NONE ||
 				svc_type >= PNSO_SVC_TYPE_MAX) {
 			err = EINVAL;
-			OSAL_LOG_ERROR("invalid service type specified! service #: %d svc_type: %d err: %d",
+			OSAL_LOG_DEBUG("invalid service type specified! service #: %d svc_type: %d err: %d",
 					i+1, svc_type, err);
 			OSAL_ASSERT(0);
 			goto out;
@@ -626,12 +724,11 @@ out:
 	return err;
 }
 
-pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
-				 struct pnso_service_result *svc_res,
-				 completion_cb_t cb,
-				 void *cb_ctx,
-				 pnso_poll_fn_t *pnso_poll_fn,
-				 void **pnso_poll_ctx)
+pnso_error_t
+pnso_submit_request(struct pnso_service_request *svc_req,
+		struct pnso_service_result *svc_res,
+		completion_cb_t cb, void *cb_ctx,
+		pnso_poll_fn_t *pnso_poll_fn, void **pnso_poll_ctx)
 {
 	pnso_error_t err;
 
@@ -645,7 +742,7 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 	if (err) {
 		OSAL_LOG_ERROR("invalid service request specified! err: %d",
 				err);
-		return err;
+		goto out;
 	}
 
 	/* validate each service result */
@@ -653,14 +750,14 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 	if (err) {
 		OSAL_LOG_ERROR("invalid service result specified! err: %d",
 				err);
-		return err;
+		goto out;
 	}
 
 	if (svc_req->num_services != svc_res->num_services) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("mismatch in # of services listed in request/result! req: %d res: %d err: %d",
 				svc_req->num_services, svc_res->num_services, err);
-		return err;
+		goto out;
 	}
 
 	/* TODO-req:
