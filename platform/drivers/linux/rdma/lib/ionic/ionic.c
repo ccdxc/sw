@@ -33,18 +33,29 @@
 #include <stdio.h>
 
 #include "ionic.h"
+#include "ionic_dbg.h"
 
 extern const struct verbs_context_ops fallback_ctx_ops;
 extern const struct verbs_context_ops ionic_ctx_ops;
 
-static int ionic_env_fallback(void)
+static int ionic_env_val(const char *name)
 {
-	const char *env = getenv("IONIC_FALLBACK");
+	const char *env = getenv(name);
 
 	if (!env)
 		return 0;
 
 	return atoi(env);
+}
+
+static int ionic_env_fallback(void)
+{
+	return ionic_env_val("IONIC_DEBUG");
+}
+
+static int ionic_env_debug(void)
+{
+	return ionic_env_val("IONIC_DEBUG");
 }
 
 static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
@@ -131,6 +142,9 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 
 		verbs_set_ops(&ctx->vctx, &ionic_ctx_ops);
 	}
+
+	if (ionic_env_debug())
+		ctx->dbg_file = IONIC_DEBUG_FILE;
 
 	return &ctx->vctx;
 

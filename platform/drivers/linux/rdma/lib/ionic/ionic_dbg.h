@@ -33,20 +33,18 @@
 #ifndef IONIC_DBG_H
 #define IONIC_DBG_H
 
-/* for now, debug is always enabled */
 #define IONIC_DEBUG
+#define IONIC_DEBUG_FILE stderr
 
-/* this file may be included from other headers that define these types */
-struct ionic_ctx;
+#include "ionic.h"
 
 #ifdef IONIC_DEBUG
 #include <stdio.h>
-static inline void ionic_type_ctx(struct ionic_ctx *ctx) {}
 #define ionic_dbg(ctx, fmt, args...) do { \
-	ionic_type_ctx(ctx); \
-	fprintf(stderr, "%s:%d: " fmt "\n", __func__, __LINE__, ##args); \
+	if (ctx->dbg_file)					\
+		fprintf(ctx->dbg_file, "%s:%d: " fmt "\n",	\
+			__func__, __LINE__, ##args);		\
 } while (0)
-/* TODO: fprintf(ctx->dbg_fd, "%s:%d" fmt "\n", __func__, __LINE__, ##args); */
 #else
 static inline void ionic_dbg(struct ionic_ctx *ctx, const char *fmt, ...)
 	__attribute__((format(printf, 2, 3)));

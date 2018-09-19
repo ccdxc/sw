@@ -42,6 +42,7 @@
 #include <fcntl.h>
 
 #include "ionic.h"
+#include "ionic_dbg.h"
 
 static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 				      struct ibv_comp_channel *channel, int vec)

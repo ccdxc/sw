@@ -36,6 +36,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <endian.h>
 #include <pthread.h>
 
@@ -45,7 +46,6 @@
 
 #include "ionic-abi.h"
 
-#include "ionic_dbg.h"
 #include "ionic_memory.h"
 #include "ionic_queue.h"
 #include "table.h"
@@ -76,6 +76,8 @@ struct ionic_ctx {
 
 	pthread_mutex_t		mut;
 	struct tbl_root		qp_tbl;
+
+	FILE			*dbg_file;
 };
 
 struct ionic_cq {
