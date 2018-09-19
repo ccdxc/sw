@@ -717,7 +717,7 @@ capri_tcam_memory_init (hal::hal_cfg_t *hal_cfg)
     }
 
     pict_csr = &cap0.tsi.pict;
-    for (int i = 0 ; i <= CAPRI_TCAM_ROWS * CAPRI_TCAM_BLOCK_COUNT; i++) {
+    for (int i = 0 ; i < CAPRI_TCAM_ROWS * CAPRI_TCAM_BLOCK_COUNT; i++) {
         pict_csr->dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)0);
         pict_csr->dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)0);
         pict_csr->dhs_tcam_xy.entry[i].valid((pu_cpp_int<1>)0);
@@ -725,7 +725,7 @@ capri_tcam_memory_init (hal::hal_cfg_t *hal_cfg)
     }
 
     pict_csr = &cap0.tse.pict;
-    for (int i = 0 ; i <= CAPRI_TCAM_ROWS * CAPRI_TCAM_BLOCK_COUNT; i++) {
+    for (int i = 0 ; i < CAPRI_TCAM_ROWS * CAPRI_TCAM_BLOCK_COUNT; i++) {
         pict_csr->dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)0);
         pict_csr->dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)0);
         pict_csr->dhs_tcam_xy.entry[i].valid((pu_cpp_int<1>)0);
@@ -746,22 +746,22 @@ capri_zero_all_srams (hal::hal_cfg_t *hal_cfg)
     }
 
     pics_csr = &cap0.ssi.pics;
-    for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
+    for (int i = 0 ; i < CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
         pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
         pics_csr->dhs_sram.entry[i].write();
     }
     pics_csr = &cap0.sse.pics;
-    for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
+    for (int i = 0 ; i < CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
         pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
         pics_csr->dhs_sram.entry[i].write();
     }
     pics_csr = &cap0.rpc.pics;
-    for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
+    for (int i = 0 ; i < CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
         pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
         pics_csr->dhs_sram.entry[i].write();
     }
     pics_csr = &cap0.tpc.pics;
-    for (int i = 0 ; i <= CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
+    for (int i = 0 ; i < CAPRI_SRAM_ROWS * CAPRI_SRAM_BLOCK_COUNT; i++) {
         pics_csr->dhs_sram.entry[i].data((pu_cpp_int<128>)0);
         pics_csr->dhs_sram.entry[i].write();
     }

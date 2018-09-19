@@ -13,7 +13,12 @@ nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom              /nic/conf/fw/
 platform/gen/aarch64/lib                                         /platform/lib/
 nic/tools/start-hal-haps.sh                                      /nic/tools/
 nic/tools/sysinit.sh                                             /nic/tools/
+nic/tools/sysreset.sh                                            /nic/tools/
+nic/tools/sysupdate.sh                                           /nic/tools/
 nic/tools/start-linkmgr-haps.sh                                  /nic/tools/
+nic/tools/port_init_100g.sh                                      /nic/tools/
+nic/tools/check_stats.sh                                         /nic/tools/
+nic/tools/check_link.sh                                          /nic/tools/
 bazel-bin/nic/hal/test/hal_test                                  /nic/bin/
 nic/sdk/bazel-bin/examples/pal-app/hal_access                    /nic/bin/
 platform/gen/aarch64/bin                                         /platform/bin/
@@ -24,3 +29,5 @@ platform/src/third-party/lib/gmp/aarch64/*.so                    /platform/lib/
 platform/src/third-party/lib/ncurses/aarch64/*.so                /platform/lib/
 platform/src/app/nicmgrd/etc/*.json                              /platform/etc/nicmgrd/
 platform/gen/aarch64/src/app/capview/builddb/capviewdb.bin       /platform/etc/
+platform/drivers/linux/eth/ionic/ionic_mnic.ko                   /platform/
+nic/sdk/third-party/avago/aapl-2.6.6/build/aarch64/bin/aapl      /nic/bin/

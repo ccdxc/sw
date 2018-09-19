@@ -493,7 +493,7 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     // TODO: Get these from hw
     rsp->dev.asic_type = 0x00;
     rsp->dev.asic_rev = 0xA0;
-    sprintf((char *)&rsp->dev.serial_num, "haps");
+    sprintf((char *)&rsp->dev.serial_num, "naples");
     // TODO: Get this from sw
     sprintf((char *)&rsp->dev.fw_version, "v0.0.1");
     rsp->dev.nlifs = 1;
@@ -501,8 +501,11 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     rsp->dev.ntxqs_per_lif = spec->txq_count;
     rsp->dev.nrxqs_per_lif = spec->rxq_count;
     rsp->dev.nintrs = spec->intr_count;
+    rsp->dev.intr_coal_mult = 1;
+    rsp->dev.intr_coal_div = 10;
     rsp->dev.nucasts_per_lif = 32;
     rsp->dev.nmcasts_per_lif = 32;
+
     // TODO: Split these into ethernet & rdma
     rsp->dev.nadminqs_per_lif = spec->adminq_count + spec->rdma_adminq_count;
     rsp->dev.neqs_per_lif = spec->eq_count + spec->rdma_eq_count;

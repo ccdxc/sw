@@ -96,8 +96,8 @@ loop()
 #endif
     p.inithw = 1;
     p.subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100;
-    p.enabled_ports = 0x5;
-    pme->enabled_ports = 0x5;
+    p.enabled_ports = 0x1;
+    pme->enabled_ports = 0x1;
 
     for (int port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->enabled_ports & (1 << port)) {
@@ -126,6 +126,7 @@ loop()
         exit(1);
     }
 
+    devmgr = new DeviceManager(fwd_mode);
     devmgr->LoadConfig(config_file);
 
     // Register for PCI events
@@ -213,8 +214,6 @@ int main(int argc, char *argv[])
         cerr << "Please specify a config file" << endl;
         exit(1);
     }
-
-    devmgr = new DeviceManager(fwd_mode);
 
     osigint  = signal(SIGINT,  polling_sighand);
     osigterm = signal(SIGTERM, polling_sighand);
