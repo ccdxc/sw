@@ -14,7 +14,9 @@
 #include "osal.h"
 #include "pnso_api.h"
 
-#include "storage_seq_p4pd.h"
+// #include "storage_seq_p4pd.h"
+#include "pnso_utils.h"
+
 #include "pnso_seq_p4pd.h"
 #include "pnso_chain_params.h"
 #include "pnso_seq_ops.h"
@@ -25,6 +27,7 @@
  *	- although chaining can be done generically for compression
  *	related chains, focus for now is comp+hash bring-up.
  *	- revisit layer violations
+ *	- storage_seq_p4pd. vs utils.h
  *
  */
 #ifdef NDEBUG
@@ -344,7 +347,20 @@ get_seq_q(const struct service_info *svc_info, bool status_q)
 	return q;
 }
 
-static void
+/*
+ * TODO-chain:
+ *	Per discussion with Neel and John, switching to write_bit_fields() mode,
+ *	as opposed to using the recently added 'pack' macros.
+ *
+ *	John mentioned that using p4pd_storage_seq_entry_pack() will cause
+ *	several hurdles like porting C++ code into kernel, and resolving its
+ *	inter-dependencies. Secondly, Neel says that bit-fields are not to be
+ *	used in driver/P4 interfacing structs, as it violates upstreaming
+ *	requirements.
+ *
+ */
+#if 0
+static void __attribute__((unused))
 fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 		uint8_t *seq_status_desc)
 {
@@ -548,6 +564,197 @@ fill_xts_seq_status(struct xts_chain_params *chain_params,
 	STORAGE_SEQ_XS_DESC1_PACK(seq_status_desc +
 			STORAGE_SEQ_P4PD_TABLE_BYTE_WIDTH_DFLT, desc1_action);
 }
+#else
+static void
+fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
+		uint8_t *seq_status_desc)
+{
+	struct next_db_spec *next_db_spec;
+	struct barco_spec *barco_spec;
+	struct cpdc_chain_params_command *cmd;
+
+	barco_spec = &chain_params->ccp_barco_spec;
+	next_db_spec = &chain_params->ccp_next_db_spec;
+	cmd = &chain_params->ccp_cmd;
+
+	memset(seq_status_desc, 0, SONIC_SEQ_STATUS_Q_DESC_SIZE);
+	// desc bytes 0-63
+	if (cmd->ccpc_next_db_action_barco_push) {
+		write_bit_fields(seq_status_desc, 0, 64,
+				barco_spec->bs_ring_addr);
+		write_bit_fields(seq_status_desc, 64, 64,
+				barco_spec->bs_desc_addr);
+		write_bit_fields(seq_status_desc, 128, 34,
+				barco_spec->bs_pndx_addr);
+		write_bit_fields(seq_status_desc, 162, 34,
+				barco_spec->bs_pndx_shadow_addr);
+		write_bit_fields(seq_status_desc, 196, 4,
+				barco_spec->bs_desc_size);
+		write_bit_fields(seq_status_desc, 200, 3,
+				barco_spec->bs_pndx_size);
+		write_bit_fields(seq_status_desc, 203, 5,
+				barco_spec->bs_ring_size);
+		write_bit_fields(seq_status_desc, 208, 10,
+				barco_spec->bs_num_descs);
+	} else {
+		write_bit_fields(seq_status_desc, 0, 64,
+				next_db_spec->nds_addr);
+		write_bit_fields(seq_status_desc, 64, 64,
+				next_db_spec->nds_data);
+	}
+
+	write_bit_fields(seq_status_desc, 218, 64,
+			chain_params->ccp_status_addr_0);
+	write_bit_fields(seq_status_desc, 282, 64,
+			chain_params->ccp_status_addr_1);
+	write_bit_fields(seq_status_desc, 346, 64,
+			chain_params->ccp_intr_addr);
+	write_bit_fields(seq_status_desc, 410, 32,
+			chain_params->ccp_intr_data);
+	write_bit_fields(seq_status_desc, 442, 16,
+			chain_params->ccp_status_len);
+	write_bit_fields(seq_status_desc, 458, 7,
+			chain_params->ccp_status_offset_0);
+	write_bit_fields(seq_status_desc, 465, 1,
+			cmd->ccpc_status_dma_en);
+	write_bit_fields(seq_status_desc, 466, 1,
+			cmd->ccpc_next_doorbell_en);
+	write_bit_fields(seq_status_desc, 467, 1,
+			cmd->ccpc_intr_en);
+	write_bit_fields(seq_status_desc, 468, 1,
+			cmd->ccpc_next_db_action_barco_push);
+
+	// desc bytes 64-127
+	write_bit_fields(seq_status_desc, 512 + 0, 64, 0);
+	write_bit_fields(seq_status_desc, 512 + 64, 64,
+			chain_params->ccp_comp_buf_addr);
+	write_bit_fields(seq_status_desc, 512 + 128, 64,
+			chain_params->ccp_aol_src_vec_addr);
+	write_bit_fields(seq_status_desc, 512 + 192, 64,
+			chain_params->ccp_aol_dst_vec_addr);
+	write_bit_fields(seq_status_desc, 512 + 256, 64,
+			chain_params->ccp_sgl_vec_addr);
+	write_bit_fields(seq_status_desc, 512 + 320, 64,
+			chain_params->ccp_pad_buf_addr);
+	write_bit_fields(seq_status_desc, 512 + 384, 64,
+			chain_params->ccp_alt_buf_addr);
+	write_bit_fields(seq_status_desc, 512 + 448, 16,
+			chain_params->ccp_data_len);
+
+	write_bit_fields(seq_status_desc, 512 + 464, 5,
+			chain_params->ccp_pad_boundary_shift);
+
+	write_bit_fields(seq_status_desc, 512 + 469, 1,
+			cmd->ccpc_stop_chain_on_error);
+	write_bit_fields(seq_status_desc, 512 + 470, 1,
+			cmd->ccpc_data_len_from_desc);
+	write_bit_fields(seq_status_desc, 512 + 471, 1,
+			cmd->ccpc_aol_pad_en);
+	write_bit_fields(seq_status_desc, 512 + 472, 1,
+			cmd->ccpc_sgl_pad_en);
+	write_bit_fields(seq_status_desc, 512 + 473, 1,
+			cmd->ccpc_sgl_sparse_format_en);
+	write_bit_fields(seq_status_desc, 512 + 474, 1,
+			cmd->ccpc_sgl_pdma_en);
+	write_bit_fields(seq_status_desc, 512 + 475, 1,
+			cmd->ccpc_sgl_pdma_pad_only);
+	write_bit_fields(seq_status_desc, 512 + 476, 1,
+			cmd->ccpc_sgl_pdma_alt_src_on_error);
+	write_bit_fields(seq_status_desc, 512 + 477, 1,
+			cmd->ccpc_desc_vec_push_en);
+	write_bit_fields(seq_status_desc, 512 + 478, 1,
+			cmd->ccpc_chain_alt_desc_on_error);
+}
+
+static void __attribute__((unused))
+fill_xts_seq_status(struct xts_chain_params *chain_params,
+		uint8_t *seq_status_desc)
+{
+	struct next_db_spec *next_db_spec;
+	struct barco_spec *barco_spec;
+	struct xts_chain_params_command *cmd;
+
+	barco_spec = &chain_params->xcp_barco_spec;
+	next_db_spec = &chain_params->xcp_next_db_spec;
+	cmd = &chain_params->xcp_cmd;
+
+	memset(seq_status_desc, 0, SONIC_SEQ_STATUS_Q_DESC_SIZE);
+	// desc bytes 0-63
+	if (cmd->xcpc_next_db_action_barco_push) {
+		write_bit_fields(seq_status_desc, 0, 64,
+				barco_spec->bs_ring_addr);
+		write_bit_fields(seq_status_desc, 64, 64,
+				barco_spec->bs_desc_addr);
+		write_bit_fields(seq_status_desc, 128, 34,
+				barco_spec->bs_pndx_addr);
+		write_bit_fields(seq_status_desc, 162, 34,
+				barco_spec->bs_pndx_shadow_addr);
+		write_bit_fields(seq_status_desc, 196, 4,
+				barco_spec->bs_desc_size);
+		write_bit_fields(seq_status_desc, 200, 3,
+				barco_spec->bs_pndx_size);
+		write_bit_fields(seq_status_desc, 203, 5,
+				barco_spec->bs_ring_size);
+		write_bit_fields(seq_status_desc, 208, 10,
+				barco_spec->bs_num_descs);
+	} else {
+		write_bit_fields(seq_status_desc, 0, 64,
+				next_db_spec->nds_addr);
+		write_bit_fields(seq_status_desc, 64, 64,
+				next_db_spec->nds_data);
+	}
+
+	write_bit_fields(seq_status_desc, 218, 64,
+			chain_params->xcp_status_addr_0);
+	write_bit_fields(seq_status_desc, 282, 64,
+			chain_params->xcp_status_addr_1);
+	write_bit_fields(seq_status_desc, 346, 64,
+			chain_params->xcp_intr_addr);
+	write_bit_fields(seq_status_desc, 410, 32,
+			chain_params->xcp_intr_data);
+	write_bit_fields(seq_status_desc, 442, 16,
+			chain_params->xcp_status_len);
+	write_bit_fields(seq_status_desc, 458, 7,
+			chain_params->xcp_status_offset_0);
+	write_bit_fields(seq_status_desc, 465, 1,
+			cmd->xcpc_status_dma_en);
+	write_bit_fields(seq_status_desc, 466, 1,
+			cmd->xcpc_next_doorbell_en);
+	write_bit_fields(seq_status_desc, 467, 1,
+			cmd->xcpc_intr_en);
+	write_bit_fields(seq_status_desc, 468, 1,
+			cmd->xcpc_next_db_action_barco_push);
+
+	// desc bytes 64-127
+	write_bit_fields(seq_status_desc, 512 + 0, 64,
+			chain_params->xcp_comp_sgl_src_addr);
+	write_bit_fields(seq_status_desc, 512 + 64, 64,
+			chain_params->xcp_sgl_pdma_dst_addr);
+	write_bit_fields(seq_status_desc, 512 + 128, 64,
+			chain_params->xcp_decr_buf_addr);
+	write_bit_fields(seq_status_desc, 512 + 192, 16,
+			chain_params->xcp_data_len);
+	write_bit_fields(seq_status_desc, 512 + 208, 5,
+			chain_params->xcp_blk_boundary_shift);
+	write_bit_fields(seq_status_desc, 512 + 213, 1,
+			cmd->xcpc_stop_chain_on_error);
+	write_bit_fields(seq_status_desc, 512 + 214, 1,
+			cmd->xcpc_comp_len_update_en);
+	write_bit_fields(seq_status_desc, 512 + 215, 1,
+			cmd->xcpc_comp_sgl_src_en);
+	write_bit_fields(seq_status_desc, 512 + 216, 1,
+			cmd->xcpc_comp_sgl_src_vec_en);
+	write_bit_fields(seq_status_desc, 512 + 217, 1,
+			cmd->xcpc_sgl_sparse_format_en);
+	write_bit_fields(seq_status_desc, 512 + 218, 1,
+			cmd->xcpc_sgl_pdma_en);
+	write_bit_fields(seq_status_desc, 512 + 219, 1,
+			cmd->xcpc_sgl_pdma_len_from_desc);
+	write_bit_fields(seq_status_desc, 512 + 220, 1,
+			cmd->xcpc_desc_vec_push_en);
+}
+
+#endif
 
 static void *
 hw_setup_desc(struct service_info *svc_info, const void *src_desc,
@@ -708,6 +915,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 		OSAL_ASSERT(seq_status_desc);
 		goto out;
 	}
+	seq_info->sqi_index = index;
 	seq_info->sqi_status_desc = seq_status_desc;
 
 	seq_spec->sqs_seq_q = (uint64_t) q;
@@ -773,6 +981,7 @@ hw_setup_hash_chain_params(struct chain_entry *centry,
 
 	seq_info = &svc_info->si_seq_info;
 	ring_id = seq_info->sqi_ring_id;
+	PPRINT_SEQUENCER_INFO(seq_info);
 
 	ring = sonic_get_accel_ring(ring_id);
 	if (!ring) {
