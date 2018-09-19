@@ -12,9 +12,9 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/revproxy"
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
-	"github.com/pensando/sw/nic/agent/netagent/revproxy"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"

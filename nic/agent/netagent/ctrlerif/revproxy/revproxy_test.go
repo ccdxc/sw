@@ -1,7 +1,6 @@
 package revproxy
 
 import (
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 var apiPfx = "api"
@@ -99,14 +99,9 @@ func newRestServer(listenURL string, prefix string, api routeAddFunc) (*restServ
 
 func test(t *testing.T, pfx string, port string, url string, test string) {
 	AddRevProxyDest(pfx, port)
-	resp, err := http.Get(url)
+	body, err := netutils.HTTPGetRaw(url)
 	if err != nil {
 		t.Errorf("Could not receive response. Error: %v", err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		t.Errorf("Could not get body. Error: %v", err)
 	}
 	s := string(body)
 	s = s[1 : len(s)-2]
