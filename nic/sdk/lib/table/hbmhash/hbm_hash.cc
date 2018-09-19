@@ -22,7 +22,7 @@ hbm_hash_print_bytes(void *data, uint32_t len)
 {
     uint8_t *tmp = (uint8_t *)data;
 
-    SDK_TRACE_DEBUG("Key:\n");
+    SDK_TRACE_DEBUG("Key:");
     for (uint32_t i = 0; i < len; i++) {
         SDK_TRACE_PRINT("%#x ", tmp[i]);
     }
@@ -181,7 +181,7 @@ HbmHash::HbmHash(std::string table_name,
                     "hwkey_len:%dB, hwdata_len:%dB, "
                     "hash_tbl_key_len_:%db, hash_coll_tbl_key_len_:%db"
                     "hint_len:%db, hint_mem_len_B_:%d, hash_capacity_:%d "
-                    "coll_capacity_:%d\n",
+                    "coll_capacity_:%d",
                     table_name_.c_str(), key_len_, data_len_, entire_data_len_,
                     hwkey_len_, hwdata_len_,
                     hash_tbl_key_len_, hash_coll_tbl_key_len_,
@@ -310,14 +310,14 @@ HbmHash::insert (void *key, void *data, uint32_t *index)
     HbmHashTableEntry               *bucket = NULL;
 
 
-    SDK_TRACE_DEBUG("---------- Insert ---------\n");
+    SDK_TRACE_DEBUG("---------- Insert ---------");
 
     rs = alloc_entry_index_(&fe_idx);
     if (rs != SDK_RET_OK) goto end;
 
     //hbm_hash_print_bytes(key, key_len_);
 
-    SDK_TRACE_DEBUG("Insert entry_pi_idx_:%d for tbl_id:%d\n",
+    SDK_TRACE_DEBUG("Insert entry_pi_idx_:%d for tbl_id:%d",
                     fe_idx, table_id_);
 
     // create a entry
@@ -337,21 +337,21 @@ HbmHash::insert (void *key, void *data, uint32_t *index)
     // check if table entry exists
     bucket_index = fetch_hbm_hash_table_bits_(hash_val);
     bucket = retrieve_bucket(bucket_index);
-    SDK_TRACE_DEBUG("hash_val:%#x, hbm_hash_table_index:%#x\n",
+    SDK_TRACE_DEBUG("hash_val:%#x, hbm_hash_table_index:%#x",
                     hash_val, bucket_index);
     if (bucket) {
         // entry already exists
-        SDK_TRACE_DEBUG("Bucket exists ...\n");
+        SDK_TRACE_DEBUG("Bucket exists ...");
         rs = bucket->insert(entry);
         // TODO: No need to send coll return status
         if (rs == SDK_RET_OK) {
-            SDK_TRACE_DEBUG("Setting collision return code\n");
+            SDK_TRACE_DEBUG("Setting collision return code");
             rs = SDK_RET_HBM_HASH_COLL;
         }
 
     } else {
         // entry doesnt exist
-        SDK_TRACE_DEBUG("New FT Entry ...\n");
+        SDK_TRACE_DEBUG("New FT Entry ...");
         bucket = HbmHashTableEntry::factory(bucket_index, this);
         rs = bucket->insert(entry);
 
@@ -370,7 +370,7 @@ HbmHash::insert (void *key, void *data, uint32_t *index)
         *index = fe_idx;
     } else {
         // insert failed
-        SDK_TRACE_DEBUG("Insert FAIL ...\n");
+        SDK_TRACE_DEBUG("Insert FAIL ...");
 
         // delete entry
         HbmHashEntry::destroy(entry);
@@ -384,7 +384,7 @@ end:
 
     // Uncomment for debugging
     // print_hbm_hash();
-    //SDK_TRACE_DEBUG("ret:{}\n", rs);
+    //SDK_TRACE_DEBUG("ret:{}", rs);
     stats_update(INSERT, rs);
     trigger_health_monitor();
     return rs;
@@ -403,14 +403,14 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
     uint32_t                        bucket_index = 0, fe_idx = 0;
     void                            *hwkey = NULL;
 
-    SDK_TRACE_DEBUG("---------- HbmHash Table Insert With Hash ---------\n");
+    SDK_TRACE_DEBUG("---------- HbmHash Table Insert With Hash ---------");
 
     rs = alloc_entry_index_(&fe_idx);
     if (rs != SDK_RET_OK) goto end;
 
     //hbm_hash_print_bytes(key, key_len_);
 
-    SDK_TRACE_DEBUG("Insert entry_pi_idx:%d for tbl_id:%d\n",
+    SDK_TRACE_DEBUG("Insert entry_pi_idx:%d for tbl_id:%d",
                     fe_idx, table_id_);
 
     // create a flow entry
@@ -426,22 +426,22 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
 
     // check if flow table entry exists
     bucket_index = fetch_hbm_hash_table_bits_(hash_val);
-    SDK_TRACE_DEBUG("hash_val:#x, hbm_hash_table_index:%d\n",
+    SDK_TRACE_DEBUG("hash_val:#x, hbm_hash_table_index:%d",
                     hash_val, bucket_index);
     bucket = retrieve_bucket(bucket_index);
     if (bucket) {
         // flow table entry already exists
-        SDK_TRACE_DEBUG("Bucket exist ...\n");
+        SDK_TRACE_DEBUG("Bucket exist ...");
         rs = bucket->insert(entry);
         // TODO: No need to send flow coll return status
         if (rs == SDK_RET_OK) {
-            SDK_TRACE_DEBUG("Setting collision return code\n");
+            SDK_TRACE_DEBUG("Setting collision return code");
             rs = SDK_RET_HBM_HASH_COLL;
         }
 
     } else {
         // flow table entry doesnt exist
-        SDK_TRACE_DEBUG("New Bucket ...\n");
+        SDK_TRACE_DEBUG("New Bucket ...");
         bucket = HbmHashTableEntry::factory(bucket_index, this);
         rs = bucket->insert(entry);
 
@@ -461,7 +461,7 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
         *index = fe_idx;
     } else {
         // insert failed
-        SDK_TRACE_DEBUG("Insert FAIL ...\n");
+        SDK_TRACE_DEBUG("Insert FAIL ...");
 
         // delete flow entry
         // delete entry;
@@ -493,7 +493,7 @@ HbmHash::update(uint32_t index, void *data)
     sdk_ret_t                   rs = SDK_RET_OK;
     HbmHashEntry                *entry = NULL;
 
-    SDK_TRACE_DEBUG("Update Entry %d\n", index);
+    SDK_TRACE_DEBUG("Update Entry %d", index);
     // check if entry exists.
     entry = retrieve_entry(index);
     if (entry) {
@@ -503,7 +503,7 @@ HbmHash::update(uint32_t index, void *data)
         SDK_ASSERT(rs == SDK_RET_OK);
     } else {
         // entry doesn't exist
-        SDK_TRACE_DEBUG("Error: Not Present %d ...\n", index);
+        SDK_TRACE_DEBUG("Error: Not Present %d ...", index);
         rs = SDK_RET_ENTRY_NOT_FOUND;
     }
 
@@ -666,12 +666,12 @@ HbmHash::alloc_entry_index_(uint32_t *idx)
     // Allocate an index in repl. table
     indexer::status irs = entry_indexer_->alloc((uint32_t *)idx);
     if (irs != indexer::SUCCESS) {
-        SDK_TRACE_DEBUG("HbmHash Entry Capacity reached:%d\n",
+        SDK_TRACE_DEBUG("HbmHash Entry Capacity reached:%d",
                         entry_indexer_->get_size());
         return SDK_RET_NO_RESOURCE;
     }
 
-    SDK_TRACE_DEBUG("Alloc entry_index:%d\n", *idx);
+    SDK_TRACE_DEBUG("Alloc entry_index:%d", *idx);
     return rs;
 }
 
@@ -690,7 +690,7 @@ HbmHash::free_hbm_hash_entry_index_(uint32_t idx)
     if (irs != indexer::SUCCESS) {
         return SDK_RET_ERR;
     }
-    SDK_TRACE_DEBUG("Free entry_index:%d\n", idx);
+    SDK_TRACE_DEBUG("Free entry_index:%d", idx);
 
     return rs;
 }
@@ -708,7 +708,7 @@ HbmHash::alloc_collision_index(uint32_t *idx)
     if (irs != indexer::SUCCESS) {
         return SDK_RET_NO_RESOURCE;
     }
-    SDK_TRACE_DEBUG("alloc_coll_indexer:%d\n", *idx);
+    SDK_TRACE_DEBUG("alloc_coll_indexer:%d", *idx);
 
     return rs;
 }
@@ -729,7 +729,7 @@ HbmHash::free_collision_index(uint32_t idx)
         return SDK_RET_ERR;
     }
 
-    SDK_TRACE_DEBUG("free_coll_indexer:%d\n", idx);
+    SDK_TRACE_DEBUG("free_coll_indexer:%d", idx);
     return rs;
 }
 
@@ -960,22 +960,22 @@ HbmHash::print_hbm_hash()
     HbmHashTableEntry   *bucket = NULL;
     HbmHashEntry        *entry = NULL;
 
-    SDK_TRACE_DEBUG("Printing Tables:\n");
-    SDK_TRACE_DEBUG("-------- ---- -------\n");
+    SDK_TRACE_DEBUG("Printing Tables:");
+    SDK_TRACE_DEBUG("-------- ---- -------");
     SDK_TRACE_DEBUG("Total Num_FTEs:%d\n", bucket_count());
     for (bucket_index = 0; bucket_index < table_capacity(); bucket_index++) {
         bucket = retrieve_bucket(bucket_index);
         if (bucket) {
-            SDK_TRACE_DEBUG("BucketIndex:%#x\n", bucket_index);
+            SDK_TRACE_DEBUG("BucketIndex:%#x", bucket_index);
             bucket->print_hbm_hash_table_entries();
         }
     }
 
-    SDK_TRACE_DEBUG("Total Num_FEs:%d\n", entry_count());
+    SDK_TRACE_DEBUG("Total Num_FEs:%d", entry_count());
     for (entry_index = 0; entry_index < table_capacity(); entry_index++) {
         entry = retrieve_entry(entry_index);
         if (entry) {
-            SDK_TRACE_DEBUG(" EntryIndex:%#x\n", entry_index);
+            SDK_TRACE_DEBUG(" EntryIndex:%#x", entry_index);
             entry->print_fe();
         }
     }

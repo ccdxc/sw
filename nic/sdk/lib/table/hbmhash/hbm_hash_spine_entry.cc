@@ -78,7 +78,7 @@ HbmHashSpineEntry::form_action_data(void *action_data)
     uint32_t        hint_mem_len_B = get_ht_entry()->get_hbm_hash()->get_hint_mem_len_B();
     HbmHashHintGroupList::iterator itr;
 
-    SDK_TRACE_DEBUG("P4-API: Table: FT Call ...\n");
+    SDK_TRACE_DEBUG("P4-API: Table: FT Call ...");
     get_ht_entry()->get_hbm_hash()->hbm_hash_action_data_offsets(action_data,
                                                          &action_id,
                                                          &entry_valid,
@@ -100,8 +100,8 @@ HbmHashSpineEntry::form_action_data(void *action_data)
         for (uint32_t i = 0; i < anchor_entry_->get_data_len(); i++, tmp++) {
             buf.write("{:#x} ", (uint8_t)*tmp);
         }
-        SDK_TRACE_DEBUG("Data:\n");
-        SDK_TRACE_DEBUG("%s\n", buf.c_str());
+        SDK_TRACE_DEBUG("Data:");
+        SDK_TRACE_DEBUG("%s", buf.c_str());
 #endif
         // +1 for entry_valid. export_en + hbm_hash_index is data
         memcpy(data, anchor_entry_->get_data(), anchor_entry_->get_data_len());
@@ -158,7 +158,7 @@ HbmHashSpineEntry::program_table()
     sw_key = SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_SPINE_ENTRY_SW_KEY,
                         sw_key_len);
 
-    SDK_TRACE_DEBUG("Before forming action data\n");
+    SDK_TRACE_DEBUG("Before forming action data");
     if (is_in_ht_) {
         form_action_data(action_data);
         // Form Hw key for anchor
@@ -175,7 +175,7 @@ HbmHashSpineEntry::program_table()
         }
 
         uint32_t ft_index = get_ht_entry()->get_bucket_index();
-        SDK_TRACE_DEBUG("P4 FT Write:%d\n", ft_index);
+        SDK_TRACE_DEBUG("P4 FT Write:%d", ft_index);
 
         // Entry trace
         if (anchor_entry_ &&
@@ -203,7 +203,7 @@ HbmHashSpineEntry::program_table()
 #endif
         }
 
-        SDK_TRACE_DEBUG("P4 FHCT Write:%d\n", hct_index_);
+        SDK_TRACE_DEBUG("P4 FHCT Write:%d", hct_index_);
 
         // Entry trace
         if (get_ht_entry()->get_hbm_hash()->get_entry_trace_en()) {
@@ -416,9 +416,9 @@ HbmHashSpineEntry::entry_trace(uint32_t table_id, uint32_t index,
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
     if (!key && !data) {
-        SDK_TRACE_DEBUG("Clearing entry at Index:%d\n", index);
+        SDK_TRACE_DEBUG("Clearing entry at Index:%d", index);
     } else {
-        SDK_TRACE_DEBUG("Index:%d \n %s\n", index, buff);
+        SDK_TRACE_DEBUG("Index:%d %s", index, buff);
     }
 
     return SDK_RET_OK;
@@ -430,7 +430,7 @@ HbmHashSpineEntry::print_hse()
     HbmHashHintGroup               *hg = NULL;
     HbmHashHintGroupList::iterator itr;
     SDK_TRACE_DEBUG("hse:: is_in_ft:%d, fhct_index:%d, anc_entry_present:%d, "
-                    "prev:%d, next:%d\n",
+                    "prev:%d, next:%d",
                     is_in_ht_, hct_index_,
                     ((anchor_entry_ != NULL) ? true : false),
                     prev_ ? prev_->get_fhct_index() : -1,

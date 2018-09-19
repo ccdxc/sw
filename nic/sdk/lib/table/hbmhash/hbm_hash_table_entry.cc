@@ -76,18 +76,18 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
     bool                is_new_fse = FALSE;
     std::map<uint32_t, HbmHashHintGroup*>::iterator itr;
 
-    SDK_TRACE_DEBUG("Hash_Table_Entry:%#x ...\n", get_bucket_index());
+    SDK_TRACE_DEBUG("Hash_Table_Entry:%#x ...", get_bucket_index());
 
     hint_bits = get_hbm_hash()->fetch_hint_bits_(h_entry->get_hash_val());
     itr = hint_groups_map_.find(hint_bits);
     // Check if Hint Group exists for the HBM Hash entry
     if (itr != hint_groups_map_.end()) {
         // Hint Group exists
-        SDK_TRACE_DEBUG("HG Entry exist ...\n");
+        SDK_TRACE_DEBUG("HG Entry exist ...");
         fh_grp = itr->second;
 
         if(fh_grp->check_hbm_hash_entry_exists(h_entry)) {
-            SDK_TRACE_DEBUG("Duplicate Insert\n");
+            SDK_TRACE_DEBUG("Duplicate Insert");
             return SDK_RET_DUPLICATE_INS;
         }
 
@@ -102,7 +102,7 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
         }
     } else {
         // Hint Group doesnt exist
-        SDK_TRACE_DEBUG("New HG Entry ...\n");
+        SDK_TRACE_DEBUG("New HG Entry ...");
         // Check if we can put this new HG in the existing Spine Entry
         fse = get_spine_entry_for_new_hg(&is_new_fse);
         //   - Create Hint Group
@@ -150,22 +150,22 @@ HbmHashTableEntry::remove(HbmHashEntry *h_entry)
 
     rs = h_entry->remove();
 
-    SDK_TRACE_DEBUG("After Removal: hg_num_fes:%d, hg_num_anchors:%d\n",
+    SDK_TRACE_DEBUG("After Removal: hg_num_fes:%d, hg_num_anchors:%d",
                     hg->get_num_hbm_hash_entries(),
                     hg->get_num_anchor_hbm_hash_entries());
     // Check if this is last in Hint group.
     if (!hg->get_num_hbm_hash_entries() && !hg->get_num_anchor_hbm_hash_entries()) {
-        SDK_TRACE_DEBUG("hint_bits:%#x Removing hg\n", hg->get_hint_bits());
+        SDK_TRACE_DEBUG("hint_bits:%#x Removing hg", hg->get_hint_bits());
         remove_hg(hg);
     }
-    SDK_TRACE_DEBUG("After Removal: fspe_has_anchor:%#x, fspe_num_hgs:%d\n",
+    SDK_TRACE_DEBUG("After Removal: fspe_has_anchor:%#x, fspe_num_hgs:%d",
                     fspe->get_anchor_entry() ? true : false,
                     fspe->get_num_hgs());
     // Check if this is last in Spine entry.
     if (!fspe->get_anchor_entry() && !fspe->get_num_hgs()) {
         // Reset & Programming of Prev would have been done in HbmHashEntry.
         // Just free up
-        SDK_TRACE_DEBUG("Removing spine entry\n");
+        SDK_TRACE_DEBUG("Removing spine entry");
         // delete fspe;
         HbmHashSpineEntry::destroy(fspe);
         num_spine_entries_--;
@@ -206,7 +206,7 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new)
     if (!sp_entry ||
             (sp_entry->get_num_hgs() ==
             hbm_hash_->get_num_hints_per_entry())) {
-        SDK_TRACE_DEBUG("New Spine Entry ...\n");
+        SDK_TRACE_DEBUG("New Spine Entry ...");
         *is_new = TRUE;
         // new_sp_entry = new HbmHashSpineEntry(this);
         new_sp_entry = HbmHashSpineEntry::factory(this);
@@ -225,8 +225,8 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new)
         num_spine_entries_++;
         return new_sp_entry;
     }
-    
-    SDK_TRACE_DEBUG("Spine Entry exist...\n");
+
+    SDK_TRACE_DEBUG("Spine Entry exist...");
     return sp_entry;
 }
 
@@ -395,7 +395,7 @@ HbmHashTableEntry::inter_spine_str(HbmHashSpineEntry *eff_spine,
         strcat(buff, tmp_buff);
         (*num_recircs)++;
         if (sp_entry == eff_spine) {
-            SDK_TRACE_DEBUG("Inter spine str:%s\n", buff);
+            SDK_TRACE_DEBUG("Inter spine str:%s", buff);
             // Don't count the first one
             (*num_recircs)--;
             return;
@@ -414,18 +414,18 @@ HbmHashTableEntry::print_hbm_hash_table_entries()
     HbmHashHintGroup *hg = NULL;
     HbmHashSpineEntry *sp_entry = spine_entry_;
 
-    SDK_TRACE_DEBUG("Num_FSEs:%d\n", num_spine_entries_);
+    SDK_TRACE_DEBUG("Num_FSEs:%d", num_spine_entries_);
     while (sp_entry) {
         sp_entry->print_hse();
         sp_entry = sp_entry->get_next();
     }
 
-    SDK_TRACE_DEBUG("Total Num_HGs:%d\n", hint_groups_map_.size());
+    SDK_TRACE_DEBUG("Total Num_HGs:%d", hint_groups_map_.size());
     for (HGMap::const_iterator it = hint_groups_map_.begin();
             it != hint_groups_map_.end(); ++it) {
             hint_bits = it->first;
             hg = it->second;
-            SDK_TRACE_DEBUG("  hint_bits:%#x\n", hint_bits);
+            SDK_TRACE_DEBUG("  hint_bits:%#x", hint_bits);
             hg->print_hg();
     }
 }
@@ -435,7 +435,7 @@ HbmHashTableEntry::entry_to_str(char *buff, uint32_t buff_size)
 {
     HbmHashSpineEntry *sp_entry = spine_entry_;
 
-    SDK_TRACE_DEBUG("Num_FSEs:%d\n", num_spine_entries_);
+    SDK_TRACE_DEBUG("Num_FSEs:%d", num_spine_entries_);
     while (sp_entry) {
         sp_entry->entry_to_str(buff, buff_size);
         sp_entry = sp_entry->get_next();

@@ -307,9 +307,9 @@ func l2segEPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	for idx := range inpPropIdx {
 		if first == true {
 			first = false
-			inpPropIdxStr += fmt.Sprintf("%d", idx)
+			inpPropIdxStr += fmt.Sprintf("%d", inpPropIdx[idx])
 		} else {
-			inpPropIdxStr += fmt.Sprintf(",%d", idx)
+			inpPropIdxStr += fmt.Sprintf(",%d", inpPropIdx[idx])
 		}
 	}
 
@@ -320,9 +320,9 @@ func l2segEPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	for idx := range inpPropIdxPrTag {
 		if first == true {
 			first = false
-			inpPropIdxPrTagStr += fmt.Sprintf("%d", idx)
+			inpPropIdxPrTagStr += fmt.Sprintf("%d", inpPropIdxPrTag[idx])
 		} else {
-			inpPropIdxPrTagStr += fmt.Sprintf(",%d", idx)
+			inpPropIdxPrTagStr += fmt.Sprintf(",%d", inpPropIdxPrTag[idx])
 		}
 	}
 

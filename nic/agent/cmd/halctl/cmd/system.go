@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	// "math/rand"
 	"os"
 	"reflect"
 	"strings"
@@ -27,8 +28,8 @@ var systemShowCmd = &cobra.Command{
 
 var systemStatsShowCmd = &cobra.Command{
 	Use:   "statistics",
-	Short: "show system statistics [ingress-drop | egress-drop | fte | table | api | all] (Default: all)",
-	Long:  "show system statistics [ingress-drop | egress-drop | fte | table | api | all] (Default: all)",
+	Short: "show system statistics [ingress-drop | egress-drop | fte | table | api | pb | all] (Default: all)",
+	Long:  "show system statistics [ingress-drop | egress-drop | fte | table | api | pb | all] (Default: all)",
 	Run:   systemStatsShowCmdHandler,
 }
 
@@ -69,6 +70,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	table := false
 	fte := false
 	api := false
+	pb := false
 
 	if len(args) > 0 {
 		if strings.Compare(args[0], "ingress-drop") == 0 {
@@ -81,12 +83,15 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			fte = true
 		} else if strings.Compare(args[0], "api") == 0 {
 			api = true
+		} else if strings.Compare(args[0], "pb") == 0 {
+			pb = true
 		} else if strings.Compare(args[0], "all") == 0 {
 			ingressDrop = true
 			egressDrop = true
 			table = true
 			fte = true
 			api = true
+			pb = true
 		} else {
 			fmt.Printf("Invalid argument\n")
 			return
@@ -97,6 +102,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		table = true
 		fte = true
 		api = true
+		pb = true
 	}
 
 	// HAL call
@@ -168,6 +174,353 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Println("\nSession Summary Stats:")
 		sessionSummaryStatsShow(resp.GetStats())
 	}
+
+	if pb {
+		var dmaIn uint32
+		var dmaOut uint32
+		var ingIn uint32
+		var ingOut uint32
+		var egrIn uint32
+		var egrOut uint32
+		uplinkIn := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
+		uplinkOut := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+		for _, entry := range resp.GetStats().GetPacketBufferStats().PortStats {
+			if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_DMA {
+				dmaIn = entry.GetBufferStats().GetSopCountIn()
+				dmaOut = entry.GetBufferStats().GetSopCountOut()
+			} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4IG {
+				ingIn = entry.GetBufferStats().GetSopCountIn()
+				ingOut = entry.GetBufferStats().GetSopCountOut()
+			} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4EG {
+				egrIn = entry.GetBufferStats().GetSopCountIn()
+				egrOut = entry.GetBufferStats().GetSopCountOut()
+			} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_UPLINK {
+				uplinkIn[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountIn()
+				uplinkOut[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountOut()
+			}
+		}
+		pbStatsShow(dmaIn, dmaOut,
+			ingIn, ingOut,
+			egrIn, egrOut,
+			uplinkIn, uplinkOut)
+	}
+}
+
+func pbStatsShow(dmaIn uint32, dmaOut uint32,
+	ingIn uint32, ingOut uint32,
+	egrIn uint32, egrOut uint32,
+	portIn []uint32, portOut []uint32) {
+
+	// Randomized values
+	// dmaIn = uint32(rand.Intn(65535))
+	// dmaOut = uint32(rand.Intn(65535))
+	// ingIn = uint32(rand.Intn(65535))
+	// ingOut = uint32(rand.Intn(65535))
+	// egrIn = uint32(rand.Intn(65535))
+	// egrOut = uint32(rand.Intn(65535))
+	// for i := 0; i < 9; i++ {
+	// 	portIn[i] = uint32(rand.Intn(65535))
+	// 	portOut[i] = uint32(rand.Intn(65535))
+	// }
+
+	fmt.Println()
+
+	fmt.Println("Packet Buffer (PB) Stats:")
+
+	// P4+ block
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat(" ", 5))
+	fmt.Println(strings.Repeat("-", 129))
+	// 2nd line
+	fmt.Print(strings.Repeat(" ", 5))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 28))
+	fmt.Print("TX-DMA")
+	fmt.Print(strings.Repeat(" ", 29))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 28))
+	fmt.Print("RX-DMA")
+	fmt.Print(strings.Repeat(" ", 28))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+
+	// 3rd line
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat("-", 4))
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat("-", 129))
+	fmt.Print(" ")
+	fmt.Println(strings.Repeat("-", 4))
+
+	// 4th line
+	printDMAStats(dmaIn, dmaOut)
+	// 5th line
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 3))
+	blankSpaces(127)
+	fmt.Print(strings.Repeat(" ", 3))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+	// 6th line
+	printP4OutStats(ingOut, egrOut)
+	// 7th line
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(" 4 ")
+	blankSpaces(127)
+	fmt.Print(" 4 ")
+	fmt.Printf("%c\n", 65372) // Vert. bar
+	// 8th line
+	printPacketBuffer()
+	// 9th line
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(" N ")
+	blankSpaces(127)
+	fmt.Print(" G ")
+	fmt.Printf("%c\n", 65372) // Vert. bar
+	// 10th line
+	printP4InStats(ingIn, egrIn)
+	// 11th line
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 3))
+	blankSpaces(127)
+	fmt.Print(strings.Repeat(" ", 3))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+
+	printOddUplinkStats(portIn, portOut)
+
+	// Hor line
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat("-", 4))
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat("-", 12))
+
+	// Print dotted line for uplinks
+	for i := 0; i < 9; i++ {
+		fmt.Printf("%c", 9679) // Circle
+		fmt.Print(strings.Repeat("-", 12))
+	}
+	fmt.Print(" ")
+	fmt.Println(strings.Repeat("-", 4))
+
+	printUplinkNum()
+
+	printEvenUplinkStats(portIn, portOut)
+
+	fmt.Println()
+	fmt.Println()
+}
+
+func printOddUplinkStats(portIn []uint32, portOut []uint32) {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 3))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 18))
+	fmt.Printf("%5d", portIn[1])
+	fmt.Print(strings.Repeat(" ", 3))
+	fmt.Printf("%-5d", portOut[1])
+
+	for i := 3; i < 9; i = i + 2 {
+		fmt.Print(strings.Repeat(" ", 13))
+		fmt.Printf("%5d", portIn[i])
+		fmt.Print(strings.Repeat(" ", 3))
+		fmt.Printf("%-5d", portOut[i])
+	}
+
+	fmt.Print(strings.Repeat(" ", 18))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 3))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printEvenUplinkStats(portIn []uint32, portOut []uint32) {
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat(" ", 5))
+	fmt.Print(strings.Repeat(" ", 6))
+	fmt.Printf("%5d", portIn[0])
+	fmt.Print(strings.Repeat(" ", 3))
+	fmt.Printf("%-5d", portOut[0])
+
+	for i := 2; i < 10; i = i + 2 {
+		fmt.Print(strings.Repeat(" ", 13))
+		fmt.Printf("%5d", portIn[i])
+		fmt.Print(strings.Repeat(" ", 3))
+		fmt.Printf("%-5d", portOut[i])
+	}
+}
+
+func printUplinkNum() {
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat(" ", 5))
+	spaceLine := strings.Repeat(" ", 9)
+	fmt.Print(spaceLine)
+
+	fmt.Printf("%c  0 %c", 11014, 11015) // Arrows
+	for i := 1; i < 9; i++ {
+		fmt.Print(strings.Repeat(" ", 7))
+		fmt.Printf("%c  %d %c", 11014, i, 11015) // Arrows
+	}
+	fmt.Println()
+}
+
+func printBlock(ingIn uint32, ingOut uint32, egrIn uint32, egrOut uint32) {
+	// ----- First Line ------
+	fmt.Printf("%c", 65372) // Vert. bar
+	// Indent
+	spaceLine := strings.Repeat(" ", 30)
+	fmt.Print(spaceLine)
+
+	// Ingress top bar
+	horLine := strings.Repeat("-", 10)
+	fmt.Print(horLine)
+
+	spaceLine = strings.Repeat(" ", 40)
+	fmt.Print(spaceLine)
+
+	// Egress top bar
+	horLine = strings.Repeat("-", 10)
+	fmt.Print(horLine)
+
+	// Spaces after egress
+	spaceLine = strings.Repeat(" ", 37)
+	fmt.Print(spaceLine)
+
+	fmt.Printf("%c\n", 65372) // Vert. bar
+
+	// ----- Second Line ------
+	fmt.Printf("%c", 65372) // Vert. bar
+	// Indent
+	spaceLine = strings.Repeat(" ", 21)
+	fmt.Print(spaceLine)
+
+	fmt.Printf("%5d ", ingIn)
+
+	fmt.Printf("%c ", 10145) // Right arrow
+
+	// Ingress left bar
+	fmt.Printf("%c", 65372) // Vert. bar
+
+	// Ingress spaces
+	fmt.Printf("Ingress ")
+
+	// Ingress right bar
+	fmt.Printf("%c", 65372) // Vert. bar
+
+	fmt.Printf("%c", 10145) // Right arrow
+
+	fmt.Printf(" %-5d", ingOut)
+
+	spaceLine = strings.Repeat(" ", 23)
+	fmt.Print(spaceLine)
+
+	fmt.Printf("%5d ", egrIn)
+
+	fmt.Printf("%c ", 10145) // Right arrow
+
+	// Egress left bar
+	fmt.Printf("%c", 65372) // Vert. bar
+
+	// Egress spaces
+	fmt.Printf(" Egress ")
+
+	// Egress right bar
+	fmt.Printf("%c", 65372) // Vert. bar
+
+	fmt.Printf("%c", 10145) // Right arrow
+
+	fmt.Printf(" %-5d", egrOut)
+
+	// Spaces after egress
+	spaceLine = strings.Repeat(" ", 29)
+	fmt.Print(spaceLine)
+
+	fmt.Printf("%c\n", 65372) // Vert. bar
+
+	// ----- Third Line ------
+	fmt.Printf("%c", 65372) // Vert. bar
+	// Indent
+	spaceLine = strings.Repeat(" ", 30)
+	fmt.Print(spaceLine)
+
+	// Ingress top bar
+	horLine = strings.Repeat("-", 10)
+	fmt.Print(horLine)
+
+	spaceLine = strings.Repeat(" ", 40)
+	fmt.Print(spaceLine)
+
+	// Egress top bar
+	horLine = strings.Repeat("-", 10)
+	fmt.Print(horLine)
+
+	// Spaces after egress
+	spaceLine = strings.Repeat(" ", 37)
+	fmt.Print(spaceLine)
+
+	fmt.Printf("%c\n", 65372) // Vert. bar
+
+}
+
+func printPacketBuffer() {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(" I ")
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 58))
+	fmt.Print("Packet Buffer")
+	fmt.Print(strings.Repeat(" ", 56))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(" E ")
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printP4InStats(ingIn uint32, egrIn uint32) {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(" G ")
+	fmt.Printf("%c", 65372)              // Vert. bar
+	fmt.Printf(" %c %-5d", 10145, ingIn) // -> arrow
+	fmt.Print(strings.Repeat(" ", 111))
+	fmt.Printf("%5d %c ", egrIn, 11013) // <- arrow
+	fmt.Printf("%c", 65372)             // Vert. bar
+	fmt.Print(" R ")
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printP4OutStats(ingOut uint32, egrOut uint32) {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(" P ")
+	fmt.Printf("%c", 65372)               // Vert. bar
+	fmt.Printf(" %c %-5d", 11013, ingOut) // <- arrow
+	fmt.Print(strings.Repeat(" ", 111))
+	fmt.Printf("%5d %c ", egrOut, 10145) // -> arrow
+	fmt.Printf("%c", 65372)              // Vert. bar
+	fmt.Print(" P ")
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printDMAStats(dmaIn uint32, dmaOut uint32) {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 3))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 25))
+	fmt.Printf("%5d %c", dmaIn, 11015)
+	fmt.Print(strings.Repeat(" ", 58))
+	fmt.Printf("%5d %c", dmaOut, 11014)
+	fmt.Print(strings.Repeat(" ", 30))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 3))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func blankSpaces(num int) {
+	fmt.Printf("%c", 65372) // Vert. bar
+	blankLine := strings.Repeat(" ", num)
+	fmt.Print(blankLine)
+	fmt.Printf("%c", 65372) // Vert. bar
+}
+
+func blankLine(num int) {
+	fmt.Printf("%c", 65372) // Vert. bar
+	blankLine := strings.Repeat(" ", num)
+	fmt.Print(blankLine)
+	fmt.Printf("%c\n", 65372) // Vert. bar
 }
 
 func systemDropStatsShowHeader() {

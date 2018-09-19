@@ -1270,10 +1270,10 @@ pd_l2seg_get (pd_func_args_t *pd_func_args)
     l2seg_info->set_l2seg_vlan_id_cpu(l2seg_pd->cpu_l2seg_id);
     l2seg_info->set_inp_prop_cpu_idx(l2seg_pd->inp_prop_tbl_cpu_idx);
     for (int i = 0; i < HAL_MAX_UPLINK_IF_PCS; i++) {
-        if (l2seg_pd->inp_prop_tbl_idx[i] != 0xFFFFFFFF) {
+        if (l2seg_pd->inp_prop_tbl_idx[i] != INVALID_INDEXER_INDEX) {
             l2seg_info->add_inp_prop_idx(l2seg_pd->inp_prop_tbl_idx[i]);
         }
-        if (l2seg_pd->inp_prop_tbl_idx_pri[i] != 0xFFFFFFFF) {
+        if (l2seg_pd->inp_prop_tbl_idx_pri[i] != INVALID_INDEXER_INDEX) {
             l2seg_info->add_inp_prop_idx_pr_tag(l2seg_pd->inp_prop_tbl_idx_pri[i]);
         }
     }

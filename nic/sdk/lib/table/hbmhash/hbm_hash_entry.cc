@@ -68,8 +68,8 @@ HbmHashEntry::HbmHashEntry(void *key, uint32_t key_len,
     std::memcpy(data_, data, data_len);
 
     if (log) {
-        //SDK_TRACE_DEBUG("HbmHashE:: key_len: %d, data_len: %d\n", key_len, data_len);
-        //SDK_TRACE_DEBUG("HbmHashE:: key: %p data: %p\n", key_, data_);
+        //SDK_TRACE_DEBUG("HbmHashE:: key_len: %d, data_len: %d", key_len, data_len);
+        //SDK_TRACE_DEBUG("HbmHashE:: key: %p data: %p", key_, data_);
     }
 
     hash_val_ = 0;
@@ -98,11 +98,11 @@ HbmHashEntry::insert(HbmHashHintGroup *hg, HbmHashSpineEntry *fse)
 {
     sdk_ret_t rs = SDK_RET_OK;
 
-    SDK_TRACE_DEBUG("Insert ...\n");
+    SDK_TRACE_DEBUG("Insert ...");
 
     if (fse->get_is_in_ft() && !fse->get_anchor_entry()) {
         // Case 1: First Entry in HBM Hash Table Entry. Anchor Entry
-        SDK_TRACE_DEBUG("Insert:Anchor ...\n");
+        SDK_TRACE_DEBUG("Insert:Anchor ...");
         // Install FSE in FT.
 
         // Set fields in HbmHashEntry
@@ -124,12 +124,12 @@ HbmHashEntry::insert(HbmHashHintGroup *hg, HbmHashSpineEntry *fse)
         //       - HG doesnt have anchor and this is first entry.
         // Install FEntry in FHCT
         // Install FSE in FT pointing to the above entry in FHCT
-        SDK_TRACE_DEBUG("Insert:HG SE Attach Entry...\n");
+        SDK_TRACE_DEBUG("Insert:HG SE Attach Entry...");
 
         // Allocate an entry in HBM Hash Coll. Table.
         rs = alloc_collision_index(fse, &hct_index_);
         if (rs != SDK_RET_OK) {
-            SDK_TRACE_DEBUG("Failed to alloc fhct idx\n");
+            SDK_TRACE_DEBUG("Failed to alloc fhct idx");
             return rs;
         }
 
@@ -148,20 +148,20 @@ HbmHashEntry::insert(HbmHashHintGroup *hg, HbmHashSpineEntry *fse)
         // Write the HBM Hash Entry in FHCT
         // P4-PI: hct_index_ => [hw_key_, data_,]
         rs = program_table_non_anchor_entry(NULL);
-        SDK_TRACE_DEBUG("%d Done Programming non-anchor entry\n", rs);
+        SDK_TRACE_DEBUG("%d Done Programming non-anchor entry", rs);
         if (rs != SDK_RET_OK) {
             free_collision_index(fse, hct_index_);
             goto end;
         }
 
-        SDK_TRACE_DEBUG("Program Spine Entry \n");
+        SDK_TRACE_DEBUG("Program Spine Entry ");
         // Program FT / FHCT Spine Entry
         fse->program_table();
 
         // Have to check if this is the first entry in spine then reprogram prev as well
         // Prevent for first spine entry
         if (fse->get_num_hgs() == 1 && fse->get_prev()) {
-            SDK_TRACE_DEBUG("FSE being programmed for first time...\n");
+            SDK_TRACE_DEBUG("FSE being programmed for first time...");
             // Link prev to this
             fse->get_prev()->set_next(fse);
             // Reprogram prev FSE
@@ -173,7 +173,7 @@ HbmHashEntry::insert(HbmHashHintGroup *hg, HbmHashSpineEntry *fse)
         //      - FEntry will be installed at the end of HG.
         // Install FEntry in FHCT.
         // Re-Install last entry in the HG to point to the above entry.
-        SDK_TRACE_DEBUG("Insert:HG Chain Entry ...\n");
+        SDK_TRACE_DEBUG("Insert:HG Chain Entry ...");
 
         // Allocate an entry in HBM Hash Coll. Table.
         rs = alloc_collision_index(fse, &hct_index_);
@@ -220,21 +220,21 @@ sdk_ret_t
 HbmHashEntry::update(void *data)
 {
     sdk_ret_t rs = SDK_RET_OK;
-    SDK_TRACE_DEBUG("Update...\n");
+    SDK_TRACE_DEBUG("Update...");
 
     // Updates Data in the entry
     std::memcpy(data_, data, data_len_);
 
     if (is_anchor_entry_) { // Case 1: FT Entry Re-Install
 
-        SDK_TRACE_DEBUG("Update anchor\n");
+        SDK_TRACE_DEBUG("Update anchor");
 
         // Program FT/FHCT Spine entry.
         spine_entry_->program_table();
 
     } else { // Case 2: FHCT Single HBM Hash Entry Rewrite
 
-        SDK_TRACE_DEBUG("Update FHCT: %d\n", hct_index_);
+        SDK_TRACE_DEBUG("Update FHCT: %d", hct_index_);
         // P4-PI: FHCT Table Write
         HbmHashEntry *next_fe = hint_group_->get_next_hbm_hash_entry(this);
         program_table_non_anchor_entry(next_fe);
@@ -260,7 +260,7 @@ HbmHashEntry::remove()
     // Step 1: Replace the entry & reprogram
     if (is_anchor_entry_) {
         // Case 1: Anchor entry.
-        SDK_TRACE_DEBUG("Removing anchor entry\n");
+        SDK_TRACE_DEBUG("Removing anchor entry");
 
         // Get the entry which will be moved
         last_hbm_hash_entry = eff_spine_entry->get_ht_entry()->get_last_hbm_hash_entry();
@@ -268,7 +268,7 @@ HbmHashEntry::remove()
         if (this == last_hbm_hash_entry) {
             // No need to move.
             // This is the last entry in the spine entry.
-            SDK_TRACE_DEBUG("Removing the only existing entry\n");
+            SDK_TRACE_DEBUG("Removing the only existing entry");
 
             // Program previous spine entry as this spine entry is going away
             // May not happen as anchor is only in FT's spine entry
@@ -320,7 +320,7 @@ HbmHashEntry::remove()
                 // Removing Last HBM Hash Entry
                 HbmHashHintGroup *last_hg = last_hbm_hash_entry->get_fh_group();
                 HbmHashSpineEntry *last_fse = last_hg->get_fs_entry();
-                SDK_TRACE_DEBUG("last_hg:\n");
+                SDK_TRACE_DEBUG("last_hg:");
                 last_hg->print_hg();
                 // Add last_hbm_hash_entry to the anchor list of HG
                 last_hg->add_anchor_hbm_hash_entry(last_hbm_hash_entry);
@@ -330,7 +330,7 @@ HbmHashEntry::remove()
                 if (last_hg->get_num_hbm_hash_entries()) {
                     // ----------
                     SDK_TRACE_DEBUG("Move: Hint Group Chain prev entry "
-                                    "reprogram & deprogram \n");
+                                    "reprogram & deprogram ");
                     // Re-program prev entry in the chain.
                     last_hg->get_last_hbm_hash_entry()->
                         program_table_non_anchor_entry(NULL);
@@ -348,7 +348,7 @@ HbmHashEntry::remove()
                     // Remove HG from FSE and FTE
                     // fte->remove_hg(last_hg);
                     if (last_fse->get_num_hgs() || last_fse->get_anchor_entry()) {
-                        SDK_TRACE_DEBUG("Move: HG Remove: Reprogram last spine\n");
+                        SDK_TRACE_DEBUG("Move: HG Remove: Reprogram last spine");
                         // Re-program last_fse
                         last_fse->program_table();
                         // Un-program last_hbm_hash_entry
@@ -357,7 +357,7 @@ HbmHashEntry::remove()
                         free_collision_index(last_fse, last_hbm_hash_entry->get_fhct_index());
                     } else {
                         SDK_TRACE_DEBUG("Move: HG Remove, Spine Remove: "
-                                        "Reprogram last spine, Deprogram prev spine\n");
+                                        "Reprogram last spine, Deprogram prev spine");
                         // Reprogram prev. last fse entry as last fse is going away.
                         HbmHashSpineEntry *last_fse_prev = last_fse->get_prev();
                         last_fse_prev->set_next(NULL);
@@ -409,7 +409,7 @@ HbmHashEntry::remove()
         }
     } else if (hint_group_->get_first_hbm_hash_entry() == this) {
         // Case 2: HBM hash entry is attached to spine entry.
-        SDK_TRACE_DEBUG("Removing HBM Hash entry attached to spine entry\n");
+        SDK_TRACE_DEBUG("Removing HBM Hash entry attached to spine entry");
 
         if (hint_group_->get_num_hbm_hash_entries() > 1) {
             // ----------
@@ -417,7 +417,7 @@ HbmHashEntry::remove()
             // At hct_index_ program all 0s
             //    TODO-P4-PI: hct_index_ => [hw_key_, data_,]
             SDK_TRACE_DEBUG("HS has extra entries..."
-                            "just reprogram spine entry\n");
+                            "just reprogram spine entry");
 
             // Remove HBM Hash entry from HG hbm_hash_entry_list_
             hint_group_->del_hbm_hash_entry(this);
@@ -427,7 +427,7 @@ HbmHashEntry::remove()
 
         } else {
             // HG rooted on spine entry is getting detached.
-            SDK_TRACE_DEBUG("HG rooted on spine entry is getting detached\n");
+            SDK_TRACE_DEBUG("HG rooted on spine entry is getting detached");
 
             // Remove HBM Hash entry from HG hbm_hash_entry_list_
             hint_group_->del_hbm_hash_entry(this);
@@ -438,7 +438,7 @@ HbmHashEntry::remove()
             last_hg = fse_last->get_last_hg();
             if (last_hg == hint_group_) {
                 SDK_TRACE_DEBUG("Current is last HG: Last HG is removed."
-                                "Reprogram last spine entry\n");
+                                "Reprogram last spine entry");
                 // No need to move
                 // Remove hg from fse
                 eff_spine_entry->del_hg(hint_group_);
@@ -447,7 +447,7 @@ HbmHashEntry::remove()
                 if (!eff_spine_entry->get_anchor_entry() &&
                         !eff_spine_entry->get_num_hgs()) {
                 SDK_TRACE_DEBUG("Current is last HG: Last Spine entry is removed."
-                                "Reprogram last prev. spine entry\n");
+                                "Reprogram last prev. spine entry");
                     fse_prev = eff_spine_entry->get_prev();
                     if (fse_prev) {
                         fse_prev->set_next(NULL);
@@ -703,7 +703,7 @@ HbmHashEntry::program_table_non_anchor_entry(HbmHashEntry *next_fe)
         memcpy(loc + 2, &fhct_idx, hint_mem_len_B);
     }
 
-    SDK_TRACE_DEBUG("CollisionTID: %d P4 FHCT Write: %d\n",
+    SDK_TRACE_DEBUG("CollisionTID: %d P4 FHCT Write: %d",
                     coll_table_id, hct_index_);
 
     hwkey = SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_ENTRY_HW_KEY, hwkey_len_);
@@ -713,7 +713,7 @@ HbmHashEntry::program_table_non_anchor_entry(HbmHashEntry *next_fe)
     // P4-API: Collision Table Write
     pd_err = p4pd_entry_write(coll_table_id, hct_index_, (uint8_t*)hwkey, NULL,
                               swdata);
-    SDK_TRACE_DEBUG("Done programming HBM Hash Collision %d\n", pd_err);
+    SDK_TRACE_DEBUG("Done programming HBM Hash Collision %d", pd_err);
 
     // Free
     SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_ENTRY_HW_KEY, hwkey);
@@ -735,7 +735,7 @@ HbmHashEntry::deprogram_table_non_anchor_entry()
     uint32_t                        entire_data_len = 0;
     void                            *swdata = NULL;
 
-    SDK_TRACE_DEBUG("Deprogram Coll. Table idx: %d\n", hct_index_);
+    SDK_TRACE_DEBUG("Deprogram Coll. Table idx: %d", hct_index_);
 
     entire_data_len = get_bucket()->get_hbm_hash()->
                       get_entire_data_len();
@@ -879,7 +879,7 @@ HbmHashEntry::entry_trace(uint32_t table_id, uint32_t index,
                                               data, buff, sizeof(buff));
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
-    SDK_TRACE_DEBUG("Index: %d \n %s\n", index, buff);
+    SDK_TRACE_DEBUG("Index: %d %s", index, buff);
 
     return SDK_RET_OK;
 }
@@ -891,7 +891,7 @@ void
 HbmHashEntry::print_fe()
 {
     SDK_TRACE_DEBUG("      hbm_hash_entry: fe_idx: %d, is_anchor: %d, "
-                    "fhct_index: %d, hg_bits: %#x\n",
+                    "fhct_index: %d, hg_bits: %#x",
                     gl_index_, is_anchor_entry_,
                     hct_index_, hint_group_->get_hint_bits());
 }

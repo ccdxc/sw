@@ -27,7 +27,11 @@ var enicShowCmd = &cobra.Command{
 	Use:   "enic",
 	Short: "show enic interface information",
 	Long:  "show enic interface object information",
-	Run:   enicShowCmdHandler,
+	Run: func(cmd *cobra.Command, args []string) {
+		// cmd.Help()
+		enicShowCmdHandler(cmd, args)
+	},
+	// Run:   enicShowCmdHandler,
 }
 
 var enicDetailShowCmd = &cobra.Command{

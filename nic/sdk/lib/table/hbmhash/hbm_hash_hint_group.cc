@@ -177,7 +177,7 @@ HbmHashHintGroup::check_hbm_hash_entry_exists(HbmHashEntry *fe)
             itr != anchor_list_.end(); itr++) {
         tmp_fe = (*itr);
 
-        SDK_TRACE_DEBUG("HbmHashHG:: key1:%#x key2:%#x, key_len:%d\n",
+        SDK_TRACE_DEBUG("HbmHashHG:: key1:%#x key2:%#x, key_len:%d",
                 fe->get_key(), tmp_fe->get_key(), tmp_fe->get_key_len());
         if ((tmp_fe->get_key_len() == fe->get_key_len()) &&
 
@@ -211,8 +211,8 @@ HbmHashHintGroup::inter_hg_str(HbmHashEntry *h_entry,
         (*num_recircs)++;
         if (tmp_fe == h_entry) {
             tmp_fe->entry_to_str(entry_buff, entry_size);
-            SDK_TRACE_DEBUG("Inter HG str:%s\n", inter_hg_buff);
-            SDK_TRACE_DEBUG("Entry..:%s\n", entry_buff);
+            SDK_TRACE_DEBUG("Inter HG str:%s", inter_hg_buff);
+            SDK_TRACE_DEBUG("Entry..:%s", entry_buff);
             return;
         }
     }
@@ -226,20 +226,20 @@ HbmHashHintGroup::inter_hg_str(HbmHashEntry *h_entry,
 void
 HbmHashHintGroup::print_hg()
 {
-    SDK_TRACE_DEBUG("  HG:: hint_bits:%#x, num_anchors:%d, num_fes:%d\n",
+    SDK_TRACE_DEBUG("  HG:: hint_bits:%#x, num_anchors:%d, num_fes:%d",
             hint_bits_, anchor_list_.size(), hbm_hash_entry_list_.size());
     std::list<HbmHashEntry*>::iterator itr;
     HbmHashEntry *tmp_fe = NULL;
     for (itr = anchor_list_.begin();
             itr != anchor_list_.end(); itr++) {
         tmp_fe = (*itr);
-        SDK_TRACE_DEBUG("    HE: Anchors\n");
+        SDK_TRACE_DEBUG("    HE: Anchors");
         tmp_fe->print_fe();
     }
     for (itr = hbm_hash_entry_list_.begin();
             itr != hbm_hash_entry_list_.end(); itr++) {
         tmp_fe = (*itr);
-        SDK_TRACE_DEBUG("    HE: Entries\n");
+        SDK_TRACE_DEBUG("    HE: Entries");
         tmp_fe->print_fe();
     }
 }
