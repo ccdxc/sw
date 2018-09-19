@@ -54,7 +54,7 @@ uint64_t get_start_offset(const char *reg_name);
 uint32_t get_size_kb(const char *reg_name);
 void reset_hbm_regions(void);
 int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size);
-int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
+int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 
 #define JKEY_REGIONS        "regions"
 #define JKEY_REGION_NAME    "name"

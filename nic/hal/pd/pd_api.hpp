@@ -2493,7 +2493,7 @@ typedef struct pd_capri_hbm_read_mem_args_s {
 
 typedef struct pd_capri_hbm_write_mem_args_s {
     uint64_t addr;
-    uint8_t *buf;
+    const uint8_t *buf;
     uint32_t size;
 } __PACK__ pd_capri_hbm_write_mem_args_t;
 

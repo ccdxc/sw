@@ -95,13 +95,13 @@ int32_t LIFManager::ReadQStateImpl(
 
 int32_t LIFManager::WriteQStateImpl(
     uint64_t q_addr, const uint8_t *buf, uint32_t q_size) {
-  pd::pd_write_qstate_args_t args = {0};
+  pd::pd_capri_hbm_write_mem_args_t args = {0};
   pd::pd_func_args_t          pd_func_args = {0};
-  args.q_addr = q_addr;
+  args.addr = q_addr;
   args.buf = buf;
-  args.q_size = q_size;
-  pd_func_args.pd_write_qstate = &args;
-  pd::hal_pd_call(pd::PD_FUNC_ID_WRITE_QSTATE, &pd_func_args);
+  args.size = q_size;
+  pd_func_args.pd_capri_hbm_write_mem = &args;
+  pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 
   return 0;
 }
