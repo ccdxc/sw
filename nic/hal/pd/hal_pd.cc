@@ -360,7 +360,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_REG_RXQ, pd_cpupkt_register_rx_queue);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_REG_TXQ, pd_cpupkt_register_tx_queue);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_UNREG_TXQ, pd_cpupkt_unregister_tx_queue);
-    PD_FUNC_LOAD(PD_FUNC_ID_CPU_POLL_REC, pd_cpupkt_poll_receive);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_POLL_RECV, pd_cpupkt_poll_receive);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_FREE, pd_cpupkt_free);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_SEND, pd_cpupkt_send);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_PAGE_ALLOC, pd_cpupkt_page_alloc);

@@ -540,6 +540,7 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
     flow_to_flow_spec(session->iflow,
                       response->mutable_spec()->mutable_initiator_flow());
     if (session->rflow) {
+        HAL_TRACE_DEBUG("valid rflow session");
         flow_to_flow_spec(session->rflow,
                           response->mutable_spec()->mutable_responder_flow());
     }
@@ -859,7 +860,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     *session = {};
 
     session->fte_id = fte::fte_id();
-    HAL_TRACE_DEBUG("Creating session {:p}", (void *)session);
+    HAL_TRACE_DEBUG("Creating session {:p} with a rflow :{}", (void *)session, (args->valid_rflow) ? "valid" : "not valid");
 
     dllist_reset(&session->feature_list_head);
     session->config = *args->session;

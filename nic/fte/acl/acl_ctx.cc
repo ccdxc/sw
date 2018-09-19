@@ -410,6 +410,9 @@ acl_ctx_t::add_rule(const acl_ctx_t **ctxp, const acl_rule_t *rule)
     }
 
     if (min_cost_fid < ctx->cfg_.num_fields) {
+    #ifdef ACL_DEBUG
+        HAL_TRACE_DEBUG(" min cost field id: {}, min_cost {}", min_cost_fid, min_cost);
+    #endif
         return ACL_TABLE_ADD_RULE(&ctx->cfg_, min_cost_fid, tablep, rule);
     }
 

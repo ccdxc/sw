@@ -65,7 +65,7 @@ hal_ret_t cpupkt_poll_receive(hal::pd::cpupkt_ctxt_t *ctx,
     args.data_len = pkt_len;
     pd_func_args.pd_cpupkt_poll_receive = &args;
 
-    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_POLL_REC, &pd_func_args);
+    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_POLL_RECV, &pd_func_args);
 
 }
 

@@ -36,7 +36,9 @@ hal_ret_t acl_list_add_rule(const acl_config_t *cfg, uint8_t fid,
         const acl_rule_t *rule = (const acl_rule_t *) cb_arg;
         return acl_rule_from_ref(entry)->data.priority >= rule->data.priority; 
     };
-
+    #ifdef ACL_DEBUG 
+    HAL_TRACE_DEBUG("added rule to the list");
+    #endif
     return list_t::insert((const list_t **)listp, acl_rule_to_ref(rule),
                           rule, match);
 }
