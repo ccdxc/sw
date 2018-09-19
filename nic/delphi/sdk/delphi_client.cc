@@ -680,6 +680,9 @@ void DelphiClient::msgqTimerHandler(ev::timer &watcher, int revents) {
 
 // heartbeatTimerHandler handles msg queue events
 void DelphiClient::heartbeatTimerHandler(ev::timer &watcher, int revents) {
+    if (this->service->SkipHeartbeat()) {
+        return;
+    }
     // Check with the service first if it wants to override the status
     auto service_status = this->service->Heartbeat();
     // Set the status object in Delphi

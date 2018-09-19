@@ -8,6 +8,7 @@
 
 #include "service.hpp"
 #include "spec.hpp"
+#include "watchdog.hpp"
 
 enum action_type_t
 {
@@ -19,10 +20,11 @@ enum action_type_t
 class Action
 {
 public:
-  Action(action_type_t type, 
+  Action(action_type_t type, int sleep = 0,
     list<shared_ptr<Service> > launch_list=list<shared_ptr<Service> >()):
-    type(type), launch_list(launch_list) {};
+    type(type), sleep(sleep), launch_list(launch_list) {};
   const action_type_t type;
+  int sleep;
   list<shared_ptr<Service> > launch_list;
 };
 
@@ -37,6 +39,7 @@ public:
   void service_started(pid_t pid);
   void service_died(const string &name);
   void service_died(pid_t pid);
+  void heartbeat(pid_t pid);
 
 private:
   void service_ready(shared_ptr<Service> srv);
@@ -53,6 +56,8 @@ private:
   list<shared_ptr<Service> > next_launch();
   bool deadlocked();
   bool should_reboot();
+
+  shared_ptr<Watchdog> watchdog = make_shared<Watchdog>();
 };
 
 #endif

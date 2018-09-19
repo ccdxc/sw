@@ -36,6 +36,10 @@ public:
     virtual std::pair<error, string> Heartbeat() {
         return std::make_pair(error::OK(), "");
     };
+
+    virtual bool SkipHeartbeat() {
+        return false;
+    };
 };
 typedef std::shared_ptr<Service> ServicePtr;
 

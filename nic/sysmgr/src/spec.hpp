@@ -6,22 +6,23 @@
 
 using namespace std;
 
-enum spec_restartability {
-    NON_RESTARTABLE,
-    RESTARTABLE,
+enum flags {
+    DEFAULT_SPEC_FLAGS = 0x0000,
+    RESTARTABLE        = 0x0001,
+    NO_WATCHDOG        = 0x0002,
 };
 
 class Spec {
     public:
-        Spec(const string name, enum spec_restartability restartability,
+        Spec(const string name, enum flags flags,
             const string command, const vector<string> dependencies):
             name(name), command(command), dependencies(dependencies), 
-            restartability(restartability) {
+            flags(flags) {
         }
         const string name;
         const string command;
         const vector<string> dependencies;
-        const enum spec_restartability restartability;
+        const enum flags flags;
 };
 
 extern const vector<Spec> SPECS;

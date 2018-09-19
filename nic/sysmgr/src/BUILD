@@ -58,3 +58,19 @@ cc_test(
     ],
     timeout="short",
 )
+
+cc_test(
+    name = "watchdog_test",
+    srcs = [
+        "watchdog.cpp",
+        "watchdog.hpp",
+        "watchdog_test.cpp",
+    ],
+    linkopts = [
+        "-lpthread",
+    ],
+    deps = [
+        "//:gtest",
+    ],
+    timeout="short",
+)

@@ -81,7 +81,7 @@ static void start_all(Scheduler &sched)
 TEST(Scheduler, ServiceCompare)
 {
     auto s = ServiceSet();
-    auto srv = make_shared<Service>("nicmgr", "/bin/ls -l", true);
+    auto srv = make_shared<Service>("nicmgr", "/bin/ls -l", true, false);
     auto srv2 = srv;
     s.insert(srv);
     s.insert(srv2);
@@ -91,11 +91,11 @@ TEST(Scheduler, ServiceCompare)
 TEST(Scheduler, BasicFunctionality)
 {
     const vector<Spec> specs = {
-        Spec("delphi", NON_RESTARTABLE, "/bin/ls -l", {}),
-        Spec("agent1", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
-        Spec("hal", NON_RESTARTABLE, "/bin/ls -l", {"delphi"}),
-        Spec("nicmgr", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal"}),
-        Spec("agent2", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+        Spec("delphi", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {}),
+        Spec("agent1", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+        Spec("hal", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi"}),
+        Spec("nicmgr", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi", "hal"}),
+        Spec("agent2", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
     };
 
     auto sched = Scheduler(specs);
@@ -118,9 +118,9 @@ TEST(Scheduler, BasicFunctionality)
 TEST(Scheduler, CircularDependencies)
 {
     const vector<Spec> specs = {
-        Spec("hal", NON_RESTARTABLE, "/bin/ls -l", {}),
-        Spec("nicmgr", NON_RESTARTABLE, "/bin/ls -l", {"hal", "agent"}),
-        Spec("agent", NON_RESTARTABLE, "/bin/ls -l", {"nicmgr"}),
+        Spec("hal", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {}),
+        Spec("nicmgr", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"hal", "agent"}),
+        Spec("agent", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"nicmgr"}),
     };
 
     auto sched = Scheduler(specs);
@@ -133,10 +133,10 @@ TEST(Scheduler, CircularDependencies)
 TEST(Scheduler, RestartableProcessDeath)
 {
     const vector<Spec> specs = {
-        Spec("delphi", NON_RESTARTABLE, "/bin/ls -l", {}),
-        Spec("agent1", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
-        Spec("hal", NON_RESTARTABLE, "/bin/ls -l", {"delphi"}),
-        Spec("nicmgr", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal"}),
+        Spec("delphi", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {}),
+        Spec("agent1", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+        Spec("hal", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi"}),
+        Spec("nicmgr", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi", "hal"}),
         Spec("agent2", RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
     };
 
@@ -160,10 +160,10 @@ TEST(Scheduler, RestartableProcessDeath)
 TEST(Scheduler, NonRestartableStartedProcessDeath)
 {
     const vector<Spec> specs = {
-        Spec("delphi", NON_RESTARTABLE, "/bin/ls -l", {}),
-        Spec("agent1", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
-        Spec("hal", NON_RESTARTABLE, "/bin/ls -l", {"delphi"}),
-        Spec("nicmgr", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal"}),
+        Spec("delphi", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {}),
+        Spec("agent1", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+        Spec("hal", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi"}),
+        Spec("nicmgr", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi", "hal"}),
         Spec("agent2", RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
     };
 
@@ -178,10 +178,10 @@ TEST(Scheduler, NonRestartableStartedProcessDeath)
 TEST(Scheduler, NonRestartableStartingProcessDeath)
 {
     const vector<Spec> specs = {
-        Spec("delphi", NON_RESTARTABLE, "/bin/ls -l", {}),
-        Spec("agent1", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
-        Spec("hal", NON_RESTARTABLE, "/bin/ls -l", {"delphi"}),
-        Spec("nicmgr", NON_RESTARTABLE, "/bin/ls -l", {"delphi", "hal"}),
+        Spec("delphi", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {}),
+        Spec("agent1", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
+        Spec("hal", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi"}),
+        Spec("nicmgr", DEFAULT_SPEC_FLAGS, "/bin/ls -l", {"delphi", "hal"}),
         Spec("agent2", RESTARTABLE, "/bin/ls -l", {"delphi", "hal", "nicmgr"}),
     };
 

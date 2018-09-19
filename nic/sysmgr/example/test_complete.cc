@@ -28,7 +28,12 @@ class TestCompleteService : public delphi::Service, public enable_shared_from_th
 
     virtual void OnMountComplete()
     {
-        this->sysmgr.test_done();
+        this->sysmgr.init_done();
+    }
+
+    virtual bool SkipHeartbeat()
+    {
+        return true;
     }
 };
 

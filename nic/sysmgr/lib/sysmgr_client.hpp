@@ -26,7 +26,6 @@ class Client : public delphi::objects::SysmgrShutdownReqReactor {
             delphi::objects::SysmgrShutdownReq::Mount(this->delphi, delphi::ReadMode);
             mountKey<delphi::objects::SysmgrServiceStatus>(this->delphi, name);
             mountKey<delphi::objects::SysmgrShutdownStatus>(this->delphi, name);
-            mountKey<delphi::objects::SysmgrTestCompleteReq>(this->delphi, name);
         };
         void init_done();
         void test_done();

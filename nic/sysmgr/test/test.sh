@@ -3,6 +3,7 @@
 bazel test //nic/sysmgr/... --jobs 1 --cache_test_results=no --test_output=all
 RET_1=$?
 
+rm -f *.log
 timeout 60s /sw/bazel-bin/nic/sysmgr/src/sysmgr_test
 RET_2=$?
 

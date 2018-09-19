@@ -24,13 +24,6 @@ message SysmgrRebootReq {
     int32                  Pid   = 3;
 }
 
-message SysmgrTestCompleteReq {
-    option (delphi.update_event) = true;
-    delphi.ObjectMeta      Meta  = 1;
-    string                 Key   = 2;
-    int32                  Pid   = 3;
-}
-
 message SysmgrServiceStatus {
     option (delphi.update_event) = true;
     delphi.ObjectMeta      Meta  = 1;

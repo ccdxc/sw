@@ -9,6 +9,7 @@
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/sysmgr/proto/sysmgr.delphi.hpp"
 
+#include "pipe_t.hpp"
 #include "logger.hpp"
 
 using namespace std;

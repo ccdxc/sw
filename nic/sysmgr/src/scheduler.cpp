@@ -13,8 +13,8 @@ shared_ptr<Service> Scheduler::get_for_pid(pid_t pid)
     if (s == this->pids.end())
     {
         ERR("PID {} not found", pid);
+        return nullptr;
     }
-    assert(s != this->pids.end());
 
     return s->second;
 }
@@ -36,7 +36,9 @@ Scheduler::Scheduler(vector<Spec> specs)
     // Populate the services map based on the spec
     for (auto &sp : specs)
     {
-        auto service = make_shared<Service>(sp.name, sp.command, sp.restartability == RESTARTABLE);
+        auto service = make_shared<Service>(sp.name, sp.command, 
+            (sp.flags & RESTARTABLE) == RESTARTABLE,
+            (sp.flags & NO_WATCHDOG) == NO_WATCHDOG);
         this->services.insert(pair<const string &, shared_ptr<Service>>(service->name, service));
         INFO("Added service {}", service->name);
     }
@@ -103,14 +105,24 @@ bool Scheduler::should_reboot()
 {
     if (deadlocked())
     {
+        INFO("Deadlock restart");
         return true;
     }
     for (auto s: this->dead)
     {
         if (s->is_restartable == false)
         {
+            INFO("Non-restartable process({}) restart", s->name);
             return true;
         }
+    }
+    if (this->watchdog->expired().size() > 0)
+    {
+        INFO("Watchdog restart");
+        for (auto ex: this->watchdog->expired()) {
+            INFO("Expired watchdog process: {}", ex);
+        }
+        return true;
     }
     return false;
 }
@@ -124,15 +136,15 @@ unique_ptr<Action> Scheduler::next_action()
     auto launch_list = next_launch();
     if (launch_list.size() > 0)
     {
-        return unique_ptr<Action>(new Action(LAUNCH, launch_list));
+        return unique_ptr<Action>(new Action(LAUNCH, 0, launch_list));
     }
     
     if (should_reboot())
     {
-        return unique_ptr<Action>(new Action(REBOOT));
+        return unique_ptr<Action>(new Action(REBOOT, 0));
     }
-    
-    return unique_ptr<Action>(new Action(WAIT));
+
+    return unique_ptr<Action>(new Action(WAIT, this->watchdog->next_tick()));
 }
 
 void Scheduler::service_ready(shared_ptr<Service> service)
@@ -154,6 +166,11 @@ void Scheduler::service_launched(shared_ptr<Service> service, pid_t pid)
     this->ready.erase(service);
     this->dead.erase(service);
     this->starting.insert(service);
+
+    if (service->is_watchdog_disabled == false)
+    {
+        this->watchdog->refresh(service->name);
+    }
 
     this->pids.insert(pair<pid_t, shared_ptr<Service>>(pid, service));
     INFO("{} -> launched with pid({})", service->name, pid);
@@ -218,4 +235,15 @@ void Scheduler::debug()
         }
     }
     INFO("- Debug end -");
+}
+
+void Scheduler::heartbeat(pid_t pid)
+{
+    auto service = this->get_for_pid(pid);
+    if (service == nullptr) {
+        return;
+    }
+    INFO("Received heartbeat from {}", service->name);
+
+    watchdog->refresh(service->name);
 }

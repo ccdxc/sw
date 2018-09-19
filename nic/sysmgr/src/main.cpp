@@ -31,7 +31,8 @@ using namespace std;
 
 static auto died_pids = make_shared<Pipe<pid_t>>();
 static auto started_pids = make_shared<Pipe<pid_t>>();
-static auto delphi_messages = make_shared<Pipe<int32_t>>();;
+static auto delphi_messages = make_shared<Pipe<int32_t>>();
+static auto heartbeats = make_shared<Pipe<pid_t>>();
 
 void redirect(const string &filename, int fd)
 {
@@ -121,11 +122,11 @@ void install_sigchld_handler()
     }
 }
 
-void wait_for_events(Scheduler &scheduler, int epollfd)
+void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
 {
     struct epoll_event events[MAX_EVENTS];
 
-    int fds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+    int fds = epoll_wait(epollfd, events, MAX_EVENTS, sleep * 1000);
     if (fds == -1) {
         ERR("epoll_wait() error: {}", strerror(errno));
     }
@@ -163,16 +164,20 @@ void wait_for_events(Scheduler &scheduler, int epollfd)
                 {
                     scheduler.service_started("delphi");
                 }
-                else if (msg == TEST_COMPLETE)
-                {
-                    INFO("Test complete");
-                    kill(-getpid(), SIGQUIT);
-                    exit(0);
-                }
                 else
                 {
                     INFO("UKNOWN delphi_messages message");
                 }
+            }
+        }
+        else if (events[i].data.fd == heartbeats->raw_fd())
+        {
+            INFO("heartbeat event");
+            pid_t pid;
+            while((pid = heartbeats->pipe_read()) > 0)
+            {
+                INFO("heartbeat: pipe_read(): {}", pid);
+                scheduler.heartbeat(pid);
             }
         }
         else
@@ -207,6 +212,7 @@ void loop(Scheduler &scheduler)
     epollfd_register(epollfd, died_pids->raw_fd());
     epollfd_register(epollfd, started_pids->raw_fd());
     epollfd_register(epollfd, delphi_messages->raw_fd());
+    epollfd_register(epollfd, heartbeats->raw_fd());
 
     for (;;)
     {
@@ -224,7 +230,7 @@ void loop(Scheduler &scheduler)
         else if (action->type == WAIT)
         {
             INFO("Waiting for events");
-            wait_for_events(scheduler, epollfd);
+            wait_for_events(scheduler, epollfd, action->sleep);
         }
         else if (action->type == REBOOT)
         {
@@ -241,7 +247,8 @@ void *delphi_thread_run(void *ctx)
 {
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
 
-    shared_ptr<SysmgrService> svc = make_shared<SysmgrService>(sdk, "SystemManager", started_pids, delphi_messages);
+    shared_ptr<SysmgrService> svc = make_shared<SysmgrService>(sdk, "SystemManager", started_pids, 
+        delphi_messages, heartbeats);
     sdk->RegisterService(svc);
 
     INFO("Starting Delphi MainLoop()");

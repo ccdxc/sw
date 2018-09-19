@@ -15,7 +15,6 @@ SysmgrServiceStatusReactor::SysmgrServiceStatusReactor(shared_ptr<Pipe<pid_t> > 
     this->started_pids_pipe = started_pids_pipe;
 }
 
-
 delphi::error SysmgrServiceStatusReactor::OnSysmgrServiceStatusCreate(delphi::objects::SysmgrServiceStatusPtr obj)
 {
     INFO("SysmgrServiceCreate {}({})", obj->key(), obj->pid());

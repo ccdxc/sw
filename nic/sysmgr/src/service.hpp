@@ -28,8 +28,11 @@ class Service
     const string name;
     const string command;
     const bool is_restartable;
+    const bool is_watchdog_disabled;
 
-    Service(string name, string command, bool restartable) : name(name), command(command), is_restartable(restartable)
+    Service(string name, string command, bool restartable, bool watchdog_disabled) : name(name), 
+        command(command), is_restartable(restartable),
+        is_watchdog_disabled(watchdog_disabled)
     {
         status = WAITING;
         pid = 0;
