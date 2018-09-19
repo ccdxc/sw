@@ -169,7 +169,7 @@ uint16_t g_local_vnic_tag = 100;
 uint32_t g_local_slot_id = 0x12345;
 uint32_t g_flow_index = 0x31;
 
-uint16_t g_nexthop_index = 0;
+uint16_t g_nexthop_index = 0x155;
 uint16_t g_tep_index = 100;
 uint32_t g_gw_slot_id = 200;
 uint32_t g_gw_dip = 0x0C0C0101;
@@ -545,9 +545,10 @@ route_lpm_init (void) {
     uint64_t data = 0xFFFFFFFFFFFFFFFF;
     uint64_t lpm_hbm_addr = get_start_offset(JLPMBASE);
 
-    data  = 0x00000A0A0000FFFF;
-    data |= (((uint64_t)g_nexthop_index) << 48);
-    capri_hbm_write_mem(lpm_hbm_addr+1020, (uint8_t*)&data, 8);
+    data  = 0xFFFF;
+    data |= ((uint64_t)htonl((g_layer1_dip & 0xFFFF0000))) << 16;
+    data |= ((uint64_t)htons(g_nexthop_index)) << 48;
+    capri_hbm_write_mem(lpm_hbm_addr+1020, (uint8_t*)&data, sizeof(data));
 }
 
 class apollo_test : public ::testing::Test {

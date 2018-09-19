@@ -287,34 +287,34 @@ action s2_name(data_, key0, data0, key1, data1, key2, data2, key3,
 @pragma hbm_table
 @pragma raw_index_table
 table s0_name {
-        reads {
-                key : exact;
-        }
-        actions {
-            s0_name;
-        }
+    reads {
+        next_addr : exact;
+    }
+    actions {
+        s0_name;
+    }
 }
 
 @pragma stage s1_stage
 @pragma hbm_table
 @pragma raw_index_table
 table s1_name {
-        reads {
-                key : exact;
-        }
-        actions {
-            s1_name;
-        }
+    reads {
+        next_addr : exact;
+    }
+    actions {
+        s1_name;
+    }
 }
 
 @pragma stage s2_stage
 @pragma hbm_table
 @pragma raw_index_table
 table s2_name {
-        reads {
-                key : exact;
-        }
-        actions {
-            s2_name;
-        }
+    reads {
+        next_addr : exact;
+    }
+    actions {
+        s2_name;
+    }
 }
