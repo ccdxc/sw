@@ -8,6 +8,7 @@ broadcast   : drop
 multicast   : drop
 l4lb        : False
 endpoints   :
+    sgenable: True
     useg    : 0
     pvlan   : 0
     direct  : 0

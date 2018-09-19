@@ -48,6 +48,12 @@ def ConfigureSecurityProfiles(objlist):
     logger.info(" - Skipping - AGENT TBD.")
     return
 
+def ConfigureSecurityGroupPolicies(objlist):
+    if not IsConfigAllowed(objlist): return
+    url = AGENT_URL + 'api/security/policies/'
+    __config(objlist, url)
+    return
+
 def ConfigureSecurityGroups(objlist):
     if not IsConfigAllowed(objlist): return
     url = AGENT_URL + 'api/sgs/'

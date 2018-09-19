@@ -11,7 +11,7 @@ l4lb        : False
 networks    :
     sgenable: True
 endpoints   :
-    sgenable: False
+    sgenable: True
     useg    : 0
     pvlan   : 0
     direct  : 0

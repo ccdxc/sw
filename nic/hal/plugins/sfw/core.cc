@@ -123,13 +123,23 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
         acl_key.port_dst = ctx.key().dport;
         break;
     default:
-        HAL_ASSERT(true);
-        ret = HAL_RET_FTE_RULE_NO_MATCH;
-        goto end_match;
+        HAL_TRACE_DEBUG("Any proto:{}", ctx.key().proto);
     }
 
     sep = ctx.sep();
     dep = ctx.dep();
+    if (!sep) {
+        HAL_TRACE_DEBUG("sep not known");
+    } else {
+        HAL_TRACE_DEBUG("sg count {}", sep->sgs.sg_id_cnt);
+    }
+
+    if (!dep) {
+        HAL_TRACE_DEBUG("dep not known");
+    } else {
+        HAL_TRACE_DEBUG("sg count {}", sep->sgs.sg_id_cnt);
+    }
+        
 
     if (((!sep) || (!dep)) || (sep && dep && sep->sgs.sg_id_cnt == 0 && dep->sgs.sg_id_cnt == 0)) {
         HAL_TRACE_DEBUG("Classify the packet");
@@ -207,18 +217,15 @@ net_sfw_pol_check_sg_policy(ctx_t                  &ctx,
         return HAL_RET_OK;
     }
 
-    if (ctx.drop_flow()) {
-        match_rslt->valid = 1;
-        match_rslt->action = session::FLOW_ACTION_DROP;
-        return HAL_RET_OK;
-    }
-
     ret = net_sfw_check_security_policy(ctx, match_rslt);
-    if (ret == HAL_RET_OK) {
-        return ret;
+    if (ret != HAL_RET_OK) {
+        if (ret == HAL_RET_FTE_RULE_NO_MATCH) {
+            match_rslt->valid = 1;
+            match_rslt->action = session::FLOW_ACTION_DROP;
+            return HAL_RET_OK;
+        }
     }
-
-       return HAL_RET_OK;
+    return HAL_RET_OK;
 }
 
 static void
@@ -285,6 +292,22 @@ sfw_exec(ctx_t& ctx)
 
     HAL_TRACE_DEBUG("In sfw_exec....");
 
+
+    if (ctx.drop_flow()) {
+        flowupd.action = session::FLOW_ACTION_DROP;
+        sfw_info->sfw_done = true;
+        goto install_flow;
+    }
+
+    // only ipv4 is handled in data path. 
+    if (!ctx.protobuf_request()  && (ctx.key().flow_type == hal::FLOW_TYPE_V6 || ctx.key().flow_type == hal::FLOW_TYPE_L2)) {
+        HAL_TRACE_DEBUG("flow type is non-ipv4:{}", ctx.key().flow_type);
+        sfw_info->sfw_done = true;
+        flowupd.action = session::FLOW_ACTION_ALLOW;
+        goto install_flow;
+    
+    }
+
     if ((!ctx.protobuf_request() && ctx.existing_session()) || 
         (ctx.role() == hal::FLOW_ROLE_INITIATOR &&
          (sfw_info->skip_sfw || sfw_info->sfw_done))) {
@@ -346,6 +369,7 @@ sfw_exec(ctx_t& ctx)
         }
     }
 
+install_flow:
     ret = ctx.update_flow(flowupd);
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);

@@ -9,6 +9,7 @@ broadcast   : flood
 multicast   : flood
 l4lb        : False
 endpoints   :
+    sgenable: True
     useg    : 1
     pvlan   : 0
     direct  : 0

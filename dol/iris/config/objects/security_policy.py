@@ -9,10 +9,13 @@ import iris.config.objects.rules        as rules
 import iris.config.hal.defs             as haldefs
 import iris.config.resmgr               as resmgr
 
+
 from    iris.config.store               import Store
-from    infra.common.logging       import logger
+from    infra.common.logging            import logger
+from    infra.common.glopts             import GlobalOptions
 from    iris.config.objects.security_group import SecurityGroupObject
 from    iris.config.objects.tenant         import TenantObject
+import  iris.config.agent.api          as agentapi
 
 class SGPairObject(base.ConfigObjectBase):
     def __init__(self, sg_id, peer_sg_id, ten_id, obj):
@@ -74,8 +77,17 @@ class SGPairObjectHelper:
                 self.sgpair_objlist.extend([sgpair_obj, sgpair_obj_rev])
             else:
                 sgpair_obj = SGPairObject(sgpair[0].id, sgpair[1].id,tenant_id,
+                                          sp)
+                self.sgpair_objlist.extend([sgpair_obj])
+
+                sgpair_obj = SGPairObject(0, sgpair[1].id,tenant_id,
                                         sp)
                 self.sgpair_objlist.extend([sgpair_obj])
+
+        sgpair_obj = SGPairObject(0, 0,tenant_id,
+                                        sp)
+        self.sgpair_objlist.extend([sgpair_obj])
+
         Store.objects.SetAll(self.sgpair_objlist)
     def PrepareHALRequestSpec(self, req_spec):
         rule_start = 0
@@ -131,9 +143,13 @@ class SecurityGroupPolicyObjectHelper:
         return
 
     def Configure(self):
+        
         sgpolicylist  = Store.objects.GetAllByClass(SecurityGroupPolicyObject)
         if len(sgpolicylist):
             logger.info("Confguring %d SecurityGroupPolicies." %len(sgpolicylist))
+            #if GlobalOptions.agent:
+            #    agentapi.ConfigureSecurityGroupPolicies(sgpolicylist)
+            #else:
             halapi.ConfigureSecurityGroupPolicies(sgpolicylist)
         return
 
@@ -158,6 +174,8 @@ class SecurityGroupPolicyObjectHelper:
         return None
 
     def GetAction(self, flow_obj, sep, dep):
+        if (flow_obj.IsIPV6() or flow_obj.IsMAC()):
+            return None
         src_sg_list  = getattr(sep, 'sgs', None)
         dst_sg_list  = getattr(dep, 'sgs', None)
         if src_sg_list is None or dst_sg_list is None:

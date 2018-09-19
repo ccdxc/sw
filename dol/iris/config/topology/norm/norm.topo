@@ -24,6 +24,7 @@ acls: None
 qos : False
 
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
+security_policy: ref://store/specs/id=SECURITY_POLICY_DEFAULT
 
 tenants:
     -   spec    : ref://store/specs/id=TENANT_INFRA
