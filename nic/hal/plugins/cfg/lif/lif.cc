@@ -1704,6 +1704,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
 
     rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
     rsp->mutable_status()->set_lif_handle(lif->hal_handle);
+    rsp->mutable_status()->set_lif_status(lif->admin_status);
 
     // Return LifQstate addresses
     intf::LifQState *entry;

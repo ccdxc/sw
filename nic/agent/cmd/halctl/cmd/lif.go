@@ -21,6 +21,8 @@ import (
 
 var (
 	lifID       uint64
+	lifSpecID   uint64
+	lifStatusID uint64
 	lifDetailID uint64
 )
 
@@ -29,6 +31,20 @@ var lifShowCmd = &cobra.Command{
 	Short: "show logical interface (lif) information",
 	Long:  "shows logical interface (lif) object information",
 	Run:   lifShowCmdHandler,
+}
+
+var lifShowSpecCmd = &cobra.Command{
+	Use:   "spec",
+	Short: "show logical interface (lif) spec information",
+	Long:  "shows logical interface (lif) object spec information",
+	Run:   lifShowSpecCmdHandler,
+}
+
+var lifShowStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "show logical interface (lif) status information",
+	Long:  "shows logical interface (lif) object status information",
+	Run:   lifShowStatusCmdHandler,
 }
 
 var lifDetailShowCmd = &cobra.Command{
@@ -40,13 +56,17 @@ var lifDetailShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(lifShowCmd)
+	lifShowCmd.AddCommand(lifShowSpecCmd)
+	lifShowCmd.AddCommand(lifShowStatusCmd)
 	lifShowCmd.AddCommand(lifDetailShowCmd)
 
 	lifShowCmd.Flags().Uint64Var(&lifID, "id", 1, "Specify lif-id")
+	lifShowSpecCmd.Flags().Uint64Var(&lifSpecID, "id", 1, "Specify lif-id")
+	lifShowStatusCmd.Flags().Uint64Var(&lifStatusID, "id", 1, "Specify lif-id")
 	lifDetailShowCmd.Flags().Uint64Var(&lifDetailID, "id", 1, "Specify lif-id")
 }
 
-func lifShowCmdHandler(cmd *cobra.Command, args []string) {
+func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -55,12 +75,12 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewInterfaceClient(c.ClientConn)
 
 	var req *halproto.LifGetRequest
-	if cmd.Flags().Changed("id") {
+	if id != 0 {
 		// Get specific lif
 		req = &halproto.LifGetRequest{
 			KeyOrHandle: &halproto.LifKeyHandle{
 				KeyOrHandle: &halproto.LifKeyHandle_LifId{
-					LifId: lifID,
+					LifId: id,
 				},
 			},
 		}
@@ -68,6 +88,7 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 		// Get all Lifs
 		req = &halproto.LifGetRequest{}
 	}
+
 	lifGetReqMsg := &halproto.LifGetRequestMsg{
 		Request: []*halproto.LifGetRequest{req},
 	}
@@ -79,7 +100,11 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Header
-	lifShowHeader(cmd, args)
+	if spec == true {
+		lifShowSpecHeader()
+	} else if status == true {
+		lifShowStatusHeader()
+	}
 
 	// Print LIFs
 	for _, resp := range respMsg.Response {
@@ -87,9 +112,37 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
 			continue
 		}
-		lifShowOneResp(resp)
+		if spec == true {
+			lifShowSpecOneResp(resp)
+		} else if status == true {
+			lifShowStatusOneResp(resp)
+		}
 	}
 	c.Close()
+}
+
+func lifShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("id") {
+		handleLifShowCmd(cmd, lifID, true, false)
+	} else {
+		handleLifShowCmd(cmd, 0, true, false)
+	}
+}
+
+func lifShowSpecCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("id") {
+		handleLifShowCmd(cmd, lifSpecID, true, false)
+	} else {
+		handleLifShowCmd(cmd, 0, true, false)
+	}
+}
+
+func lifShowStatusCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("id") {
+		handleLifShowCmd(cmd, lifStatusID, false, true)
+	} else {
+		handleLifShowCmd(cmd, 0, false, true)
+	}
 }
 
 func handlelifDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
@@ -146,30 +199,53 @@ func handlelifDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func lifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	handlelifDetailShowCmd(cmd, nil)
 }
-func lifShowHeader(cmd *cobra.Command, args []string) {
+
+func lifShowSpecHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:          Lif Id                                Handle:  Lif's HAL Handle\n")
-	fmt.Printf("PktFilter:   Packet Filters (ALL-MC, BC, Prom)     VStrip:  Vlan Strip Enable\n")
-	fmt.Printf("VIns:        Vlan Insert Enable                    PUplink: Pinned Uplink IF Id\n")
-	fmt.Printf("RdmaEn:      RDMA Enable\n")
+	fmt.Printf("Id:          Lif Id                   PktFilter:   Packet Filters (ALL-MC, BC, Prom)\n")
+	fmt.Printf("VStrip:      Vlan Strip Enable        VIns:        Vlan Insert Enable\n")
+	fmt.Printf("PUplink:     Pinned Uplink IF Id      RdmaEn:      RDMA Enable\n")
 	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 70)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"Id", "Handle", "PktFilter", "VStrip", "VIns", "PUplink", "RdmaEn")
+	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s\n",
+		"Id", "PktFilter", "VStrip", "VIns", "PUplink", "RdmaEn")
 	fmt.Println(hdrLine)
 }
 
-func lifShowOneResp(resp *halproto.LifGetResponse) {
-	fmt.Printf("%-10d%-10d%-10s%-10v%-10v%-10d%-10v\n",
+func lifShowSpecOneResp(resp *halproto.LifGetResponse) {
+	fmt.Printf("%-10d%-10s%-10v%-10v%-10d%-10v\n",
 		resp.GetSpec().GetKeyOrHandle().GetLifId(),
-		resp.GetStatus().GetLifHandle(),
 		pktfltrToStr(resp.GetSpec().GetPacketFilter()),
 		resp.GetSpec().GetVlanStripEn(),
 		resp.GetSpec().GetVlanInsertEn(),
 		resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId(),
 		resp.GetSpec().GetEnableRdma())
+}
+
+func lifShowStatusHeader() {
+	fmt.Printf("\n")
+	fmt.Printf("Handle:  Lif Handle         HW ID:   Lif Hardware ID\n")
+	fmt.Printf("Status:  Lif Status\n")
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 30)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-10s%-10s\n",
+		"Handle", "HW ID", "Status")
+	fmt.Println(hdrLine)
+}
+
+func lifShowStatusOneResp(resp *halproto.LifGetResponse) {
+	status := resp.GetStatus()
+	lifStatus := status.GetLifStatus().String()
+	lifStatus = strings.ToLower(strings.Replace(lifStatus, "IF_STATUS_", "", -1))
+
+	fmt.Printf("%-10d%-10d%-10s\n",
+		status.GetLifHandle(),
+		status.GetHwLifId(),
+		lifStatus)
 }
 
 func pktfltrToStr(fltrType *halproto.PktFilter) string {
