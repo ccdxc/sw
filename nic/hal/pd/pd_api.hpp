@@ -2472,12 +2472,6 @@ typedef struct pd_read_qstate_args_s {
     uint32_t q_size;
 } __PACK__ pd_read_qstate_args_t;
 
-typedef struct pd_write_qstate_args_s {
-    uint64_t q_addr;
-    const uint8_t *buf;
-    uint32_t q_size;
-} __PACK__ pd_write_qstate_args_t;
-
 typedef struct pd_get_pc_offset_args_s {
     const char *handle;
     const char *prog_name;
@@ -2939,7 +2933,6 @@ typedef struct pd_quiesce_stop_args_s {
     ENTRY(PD_FUNC_ID_PUSH_QSTATE,           167, "PD_FUNC_ID_PUSH_QSTATE")\
     ENTRY(PD_FUNC_ID_CLEAR_QSTATE,          168, "PD_FUNC_ID_CLEAR_QSTATE")\
     ENTRY(PD_FUNC_ID_READ_QSTATE,           169, "PD_FUNC_ID_READ_QSTATE")\
-    ENTRY(PD_FUNC_ID_WRITE_QSTATE,          170, "PD_FUNC_ID_WRITE_QSTATE")\
     ENTRY(PD_FUNC_ID_GET_PC_OFFSET,         171, "PD_FUNC_ID_GET_PC_OFFSET")\
     ENTRY(PD_FUNC_ID_HBM_READ,              172, "PD_FUNC_ID_HBM_READ")\
     ENTRY(PD_FUNC_ID_HBM_WRITE,             173, "PD_FUNC_ID_HBM_WRITE")\
@@ -3366,7 +3359,6 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_push_qstate_to_capri);
         PD_UNION_ARGS_FIELD(pd_clear_qstate);
         PD_UNION_ARGS_FIELD(pd_read_qstate);
-        PD_UNION_ARGS_FIELD(pd_write_qstate);
         PD_UNION_ARGS_FIELD(pd_get_pc_offset);
         PD_UNION_ARGS_FIELD(pd_capri_hbm_read_mem);
         PD_UNION_ARGS_FIELD(pd_capri_hbm_write_mem);
@@ -3758,7 +3750,6 @@ PD_FUNCP_TYPEDEF(pd_get_size_kb);
 PD_FUNCP_TYPEDEF(pd_push_qstate_to_capri);
 PD_FUNCP_TYPEDEF(pd_clear_qstate);
 PD_FUNCP_TYPEDEF(pd_read_qstate);
-PD_FUNCP_TYPEDEF(pd_write_qstate);
 PD_FUNCP_TYPEDEF(pd_get_pc_offset);
 PD_FUNCP_TYPEDEF(pd_capri_hbm_read_mem);
 PD_FUNCP_TYPEDEF(pd_capri_hbm_write_mem);
@@ -4160,7 +4151,6 @@ PD_FUNCP_TYPEDEF(pd_get_size_kb);
 PD_FUNCP_TYPEDEF(pd_push_qstate_to_capri);
 PD_FUNCP_TYPEDEF(pd_clear_qstate);
 PD_FUNCP_TYPEDEF(pd_read_qstate);
-PD_FUNCP_TYPEDEF(pd_write_qstate);
 PD_FUNCP_TYPEDEF(pd_get_pc_offset);
 PD_FUNCP_TYPEDEF(pd_capri_hbm_read_mem);
 PD_FUNCP_TYPEDEF(pd_capri_hbm_write_mem);
@@ -4556,7 +4546,6 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_push_qstate_to_capri);
         PD_UNION_FIELD(pd_clear_qstate);
         PD_UNION_FIELD(pd_read_qstate);
-        PD_UNION_FIELD(pd_write_qstate);
         PD_UNION_FIELD(pd_get_pc_offset);
         PD_UNION_FIELD(pd_capri_hbm_read_mem);
         PD_UNION_FIELD(pd_capri_hbm_write_mem);

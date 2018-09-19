@@ -60,14 +60,6 @@ pd_read_qstate (pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_write_qstate (pd_func_args_t *pd_func_args)
-{
-    pd_write_qstate_args_t *args = pd_func_args->pd_write_qstate;
-    write_qstate(args->q_addr, args->buf, args->q_size);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
 pd_get_pc_offset (pd_func_args_t *pd_func_args)
 {
     pd_get_pc_offset_args_t *args = pd_func_args->pd_get_pc_offset;
@@ -87,7 +79,7 @@ pd_capri_hbm_read_mem (pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
-static p4plus_cache_action_t 
+static p4plus_cache_action_t
 capri_hbm_cache_pipe_to_action (capri_hbm_cache_pipe_t cache_pipe)
 {
     if (cache_pipe == CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA) {

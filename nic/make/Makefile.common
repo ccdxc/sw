@@ -22,7 +22,7 @@ delphi-test:
 ####################################################
 #################### sysmgr ########################
 ####################################################
- sysmgr:
+sysmgr:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/sysmgr/...
 	bazel $(BZL_OPT) test $(BZL_BLD_OPT) //nic/sysmgr/...
 

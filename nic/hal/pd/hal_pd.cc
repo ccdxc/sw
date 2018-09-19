@@ -392,7 +392,6 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_PUSH_QSTATE, pd_push_qstate_to_capri);
     PD_FUNC_LOAD(PD_FUNC_ID_CLEAR_QSTATE, pd_clear_qstate);
     PD_FUNC_LOAD(PD_FUNC_ID_READ_QSTATE, pd_read_qstate);
-    PD_FUNC_LOAD(PD_FUNC_ID_WRITE_QSTATE, pd_write_qstate);
     PD_FUNC_LOAD(PD_FUNC_ID_GET_PC_OFFSET, pd_get_pc_offset);
     PD_FUNC_LOAD(PD_FUNC_ID_HBM_READ, pd_capri_hbm_read_mem);
     PD_FUNC_LOAD(PD_FUNC_ID_HBM_WRITE, pd_capri_hbm_write_mem);
