@@ -65,9 +65,9 @@ metadata dma_cmd_phv2pkt_t intrinsic_dma;       // dma cmd 1
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t payload_dma;         // dma cmd 2
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t doorbell_ci_update;  // dma cmd 3
+metadata dma_cmd_phv2mem_t rxdma_ci_update;  // dma cmd 3
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t rxdma_ci_update;     // dma cmd 4
+metadata dma_cmd_phv2mem_t doorbell_ci_update;     // dma cmd 4
 
 
 // Scratch metadata
