@@ -41,8 +41,7 @@ namespace hal {
 
 thread_local void *t_session_timer;
 thread_local void *t_fte_stats_timer;
-fte::fte_stats_t g_fte_stats;
-session_stats_t  g_session_stats;
+session_stats_t  g_session_stats = {};
 
 
 #define SESSION_SW_DEFAULT_TIMEOUT                 (3600)
@@ -58,6 +57,7 @@ session_stats_t  g_session_stats;
 #define MAX_TCP_TICKLES                             3
 #define HAL_MAX_SESSION_PER_ENQ                     5
 #define HAL_MAX_DATA_THREAD                        (g_hal_state->oper_db()->max_data_threads())
+#define HAL_MAX_ERRORS                              255
 
 void *
 session_get_handle_key_func (void *entry)
@@ -822,18 +822,18 @@ update_global_session_stats (session_t *session, bool decr=false)
     flow_key_t key = session->iflow->config.key;
 
     if (session->iflow->pgm_attrs.drop)
-        g_session_stats.drop_sessions += (decr)?(-1):1;
+        HAL_ATOMIC_INC_UINT64(&g_session_stats.drop_sessions, (decr)?(-1):1);
 
     if (key.flow_type == FLOW_TYPE_L2) {
-        g_session_stats.l2_sessions  += (decr)?(-1):1;
+        HAL_ATOMIC_INC_UINT64(&g_session_stats.l2_sessions, (decr)?(-1):1);
     } else if (key.flow_type == FLOW_TYPE_V4 ||
                key.flow_type == FLOW_TYPE_V6) {
         if (key.proto == types::IPPROTO_TCP) {
-            g_session_stats.tcp_sessions  += (decr)?(-1):1;
+            HAL_ATOMIC_INC_UINT64(&g_session_stats.tcp_sessions, (decr)?(-1):1);
         } else if (key.proto == types::IPPROTO_UDP) {
-            g_session_stats.udp_sessions  += (decr)?(-1):1;
+            HAL_ATOMIC_INC_UINT64(&g_session_stats.udp_sessions, (decr)?(-1):1);
         } else if (key.proto == types::IPPROTO_ICMP) {
-            g_session_stats.icmp_sessions  += (decr)?(-1):1;
+            HAL_ATOMIC_INC_UINT64(&g_session_stats.icmp_sessions, (decr)?(-1):1);
         }
 
     }
@@ -1476,6 +1476,8 @@ build_and_send_tcp_pkt (void *data)
                              ctxt->session_state.rflow_state, &cpu_header, pkt, true);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, TCP_IPV4_PKT_SZ);
         }
+
+        HAL_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1);
         // time to clean up the session
         ret = fte::session_delete_in_fte(session->hal_handle);
         if (ret != HAL_RET_OK) {
@@ -1613,6 +1615,7 @@ session_age_cb (void *entry, void *ctxt)
                 HAL_ASSERT(args->session_list[session->fte_id] != NULL);
                 args->num_del_sess[session->fte_id] = 0;
             }
+            HAL_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1); 
         }
     }
 
@@ -1706,6 +1709,27 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     sdk::lib::timer_update(timer, reinterpret_cast<void *>(bucket));
 }
 
+static inline void
+update_fte_stats (fte::fte_stats_t *stats, fte::fte_stats_t &val) 
+{
+    HAL_ATOMIC_INC_UINT64(&stats->cps, val.cps);
+    HAL_ATOMIC_INC_UINT64(&stats->flow_miss_pkts, val.flow_miss_pkts);
+    HAL_ATOMIC_INC_UINT64(&stats->redirect_pkts, val.redirect_pkts);
+    HAL_ATOMIC_INC_UINT64(&stats->cflow_pkts, val.cflow_pkts);
+    HAL_ATOMIC_INC_UINT64(&stats->tcp_close_pkts, val.tcp_close_pkts);
+    HAL_ATOMIC_INC_UINT64(&stats->softq_req, val.softq_req);
+    HAL_ATOMIC_INC_UINT64(&stats->queued_tx_pkts, val.queued_tx_pkts);
+    for (uint8_t idx=0; idx<HAL_RET_ERR; idx++)
+        HAL_ATOMIC_INC_UINT64(&stats->fte_errors[idx], val.fte_errors[idx]);
+    for (uint8_t idx=0; idx<fte::get_num_features(); idx++) {
+        HAL_ATOMIC_INC_UINT64(&stats->feature_stats[idx].drop_pkts,
+                                           val.feature_stats[idx].drop_pkts);
+        for (uint8_t rc=0; rc<HAL_RET_ERR; rc++)
+            HAL_ATOMIC_INC_UINT64(&stats->feature_stats[idx].drop_reason[rc],
+                                            val.feature_stats[idx].drop_reason[rc]);
+    }
+}
+
 //------------------------------------------------------------------------------
 // callback invoked by the HAL periodic thread for FTE CPS computation
 //------------------------------------------------------------------------------
@@ -1713,21 +1737,25 @@ static void
 fte_stats_collect_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     uint64_t          cps = 0;
-    fte::fte_stats_t  stats;
+    fte::fte_stats_t  stats = {};
+    fte::fte_stats_t  *g_stats = (fte::fte_stats_t *)ctxt;
 
+    stats.cps = 0;
+    HAL_ATOMIC_STORE_UINT64(&g_stats->cps, &stats.cps);
     for (uint32_t i = 0; i < hal::g_hal_cfg.num_data_threads; i++) {
-        stats = fte::fte_stats_get(i, true);
-        g_fte_stats += stats;
+        stats += fte::fte_stats_get(i, true);
         cps += stats.cps;
     }
+
+    update_fte_stats(g_stats, stats);
+
+    //HAL_TRACE_DEBUG("Stats: {} g_stats: {}", stats, *g_stats); 
 
     // Compute cps from the cumulative # of packets received from
     // each FTE. We collect it every 10s and get an approximate
     // value per second.
-    g_fte_stats.cps = (cps/HAL_FTE_STATS_TIMER_INTVL_SECS);
-
-    // store the bucket id to resume on next invocation
-    sdk::lib::timer_update(timer, NULL);
+    stats.cps = (cps/HAL_FTE_STATS_TIMER_INTVL_SECS);
+    HAL_ATOMIC_STORE_UINT64(&g_stats->cps, &stats.cps);
 }
 
 //------------------------------------------------------------------------------
@@ -1736,11 +1764,15 @@ fte_stats_collect_cb (void *timer, uint32_t timer_id, void *ctxt)
 hal_ret_t
 session_init (hal_cfg_t *hal_cfg)
 {
+    fte::fte_stats_t *fte_stats = NULL;
+
     g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_threads);
 
     // Initialize Global counters
-    bzero(&g_session_stats, sizeof(session_stats_t));
-    bzero(&g_fte_stats, sizeof(fte::fte_stats_t));
+    fte_stats = (fte::fte_stats_t *)HAL_CALLOC(HAL_MEM_ALLOC_FTE_STATS, sizeof(fte::fte_stats_t));
+    HAL_ASSERT(fte_stats != NULL);
+
+    g_hal_state->set_fte_stats((void *)fte_stats);    
 
     // Disable aging when FTE is disabled
     if (getenv("DISABLE_AGING")) {
@@ -1765,7 +1797,7 @@ session_init (hal_cfg_t *hal_cfg)
     t_fte_stats_timer =
         sdk::lib::timer_schedule(HAL_TIMER_ID_FTE_STATS,            // timer_id
                                       HAL_FTE_STATS_TIMER_INTVL,
-                                      (void *)0,    // ctxt
+                                      (void *)fte_stats,    // ctxt
                                       fte_stats_collect_cb, true);
     if (!t_fte_stats_timer) {
         return HAL_RET_ERR;
@@ -2197,9 +2229,12 @@ session_eval_matching_session (session_match_t  *match)
 hal_ret_t
 system_fte_stats_get(SystemResponse *rsp)
 {
-    FTEStats *fte_stats = NULL;
+    FTEStats          *fte_stats = NULL;
+    fte::fte_stats_t  *stats = (fte::fte_stats_t *)g_hal_state->fte_stats();
+    fte::fte_stats_t   g_fte_stats = *stats;
 
     fte_stats = rsp->mutable_stats()->mutable_fte_stats();
+
 
     fte_stats->set_conn_per_second(g_fte_stats.cps);
     fte_stats->set_flow_miss_pkts(g_fte_stats.flow_miss_pkts);
@@ -2210,14 +2245,15 @@ system_fte_stats_get(SystemResponse *rsp)
     fte_stats->set_softq_reqs(g_fte_stats.softq_req);
     fte_stats->set_queued_tx_pkts(g_fte_stats.queued_tx_pkts);
 
-    for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
-        hal_ret_t               ret = (hal_ret_t)idx;
-        std::ostringstream 	str;
-        FTEError                *fte_err = fte_stats->add_fte_errors();
+    HAL_TRACE_DEBUG("Gathering fte stats ");
 
-        str << std::cout.rdbuf() << ret; // std::ostream to std::ostringstream
-        fte_err->set_count(g_fte_stats.fte_errors[idx]);
-        fte_err->set_fte_error(str.str());
+    for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
+        if (std::strcmp(HAL_RET_ENTRIES_str((hal_ret_t)idx), "unknown")) {
+            FTEError   *fte_err = fte_stats->add_fte_errors();
+
+            fte_err->set_count(g_fte_stats.fte_errors[idx]);
+            fte_err->set_fte_error(HAL_RET_ENTRIES_str((hal_ret_t)idx));
+        }
     }
 
     for (uint8_t feature=0; feature<fte::get_num_features(); feature++) {
@@ -2227,13 +2263,12 @@ system_fte_stats_get(SystemResponse *rsp)
         feature_stat->set_feature_name(feature_name.substr(feature_name.find(":")+1));
         feature_stat->set_drop_pkts(g_fte_stats.feature_stats[feature].drop_pkts);
         for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
-            hal_ret_t               ret = (hal_ret_t)idx;
-            std::ostringstream      str;
-            FTEError *fte_err = feature_stat->add_drop_reason();
-
-            str << std::cout.rdbuf() << ret; // std::ostream to std::ostringstream
-            fte_err->set_count(g_fte_stats.feature_stats[feature].drop_reason[idx]);
-            fte_err->set_fte_error(str.str());
+            if (std::strcmp(HAL_RET_ENTRIES_str((hal_ret_t)idx), "unknown")) {
+                FTEError   *fte_err = feature_stat->add_drop_reason();
+        
+                fte_err->set_count(g_fte_stats.feature_stats[feature].drop_reason[idx]);
+                fte_err->set_fte_error(HAL_RET_ENTRIES_str((hal_ret_t)idx));
+            }
         }
     }
 
@@ -2251,6 +2286,7 @@ system_session_summary_get(SystemResponse *rsp)
     session_stats->set_udp_sessions(g_session_stats.udp_sessions);
     session_stats->set_icmp_sessions(g_session_stats.icmp_sessions);
     session_stats->set_drop_sessions(g_session_stats.drop_sessions);
+    session_stats->set_aged_sessions(g_session_stats.aged_sessions);
 
     return HAL_RET_OK;
 }

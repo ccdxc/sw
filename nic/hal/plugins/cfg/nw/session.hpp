@@ -415,6 +415,7 @@ typedef struct session_stats_ {
     uint64_t    udp_sessions;
     uint64_t    icmp_sessions;
     uint64_t    drop_sessions;
+    uint64_t    aged_sessions;
 } session_stats_t;
 
 // max. number of session supported  (TODO: we can take this from cfg file)

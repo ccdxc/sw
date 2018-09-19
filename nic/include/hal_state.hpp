@@ -280,6 +280,9 @@ public:
     void set_default_security_profile (hal_handle_t hdl) { default_securityprof_hdl_ = hdl; }
     hal_handle_t default_security_profile_hdl (void) const { return default_securityprof_hdl_; }
 
+    void *fte_stats(void) const { return fte_stats_; }
+    void set_fte_stats(void *fte_stats) { fte_stats_ = fte_stats; }
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -353,6 +356,7 @@ private:
 
     // following comes from linux process virtual memory
     shmmgr       *mmgr_;
+    void         *fte_stats_;
 
 private:
     bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
@@ -603,6 +607,9 @@ public:
     void set_api_stats(int idx, int val) { api_stats_[idx] = val; }
     uint64_t preserve_state(void);
     hal_ret_t restore_state(void);
+
+    void *fte_stats(void) const { return oper_db_->fte_stats(); }
+    void set_fte_stats(void *fte_stats) { oper_db_->set_fte_stats(fte_stats); }
 
 private:
     // following come from shared memory or non-linux HBM memory

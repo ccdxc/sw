@@ -685,18 +685,18 @@ func fteStatsShow(stats *halproto.Stats) {
 	fmt.Printf("%s%-15d\n", "TLS Proxy Packets		:", ftestats.GetTlsProxyPkts())
 	fmt.Printf("%s%-15d\n", "Softq Reqs			:", ftestats.GetSoftqReqs())
 	fmt.Printf("%s%-15d\n", "Queued Tx Packets		:", ftestats.GetQueuedTxPkts())
-	fmt.Printf("\n%s\n", "FTE Error Count:")
+	fmt.Printf("\n%s\n", "FTE Error Count: ")
 	hdrLine := strings.Repeat("-", 56)
 	fmt.Println(hdrLine)
 	fmt.Printf("%25s%25s\n", "Error Type", "Drop Count")
 	fmt.Println(hdrLine)
 	for _, fteerr := range ftestats.FteErrors {
 		if fteerr.GetCount() != 0 {
-			fmt.Printf("%-25s%-25d\n", fteerr.GetFteError(), fteerr.GetCount())
+			fmt.Printf("%25s%25d\n", fteerr.GetFteError(), fteerr.GetCount())
 		}
 	}
 
-	fmt.Printf("%s\n", "FTE Feature Stats:")
+	fmt.Printf("\n%s\n", "FTE Feature Stats:")
 	hdrLines := strings.Repeat("-", 100)
 	fmt.Println(hdrLines)
 	fmt.Printf("%25s%25s%25s%25s\n", "Feature Name", "Drop Count", "Drop Reason", "Drops per-reason")
@@ -727,6 +727,7 @@ func sessionSummaryStatsShow(stats *halproto.Stats) {
 	fmt.Printf("%25s%25d\n", "UDP", sessstats.GetUdpSessions())
 	fmt.Printf("%25s%25d\n", "ICMP", sessstats.GetIcmpSessions())
 	fmt.Printf("%25s%25d\n", "DROP", sessstats.GetDropSessions())
+	fmt.Printf("%25s%25d\n", "AGED", sessstats.GetAgedSessions())
 }
 
 func apiStatsShowHeader() {

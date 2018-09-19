@@ -285,4 +285,5 @@ message SessionSummaryStats {
     uint64      udp_sessions  = 3;
     uint64      icmp_sessions = 4;
     uint64      drop_sessions = 5;
+    uint64      aged_sessions = 6;
 }

@@ -437,7 +437,10 @@ typedef struct fte_feature_stats_s {
 //----------------------------------------------------------------------------------
 // FTE per-thread stats
 //----------------------------------------------------------------------------------
-typedef struct fte_stats_ {
+
+struct fte_stats_t;
+
+struct fte_stats_t {
     uint64_t              cps;                         // Number of connections per second processed by this FTE
     uint64_t              flow_miss_pkts;              // Number of flow miss packets processed by this FTE
     uint64_t              redirect_pkts;               // Number of NACL redirect packets processed by this FTE
@@ -448,8 +451,10 @@ typedef struct fte_stats_ {
     uint64_t              queued_tx_pkts;              // Number of packets queued from this FTE to be transmitted
     uint64_t              fte_errors[HAL_RET_ERR];     // Number of FTE errors encountered
     fte_feature_stats_t   feature_stats[MAX_FEATURES]; // Number of drops per feature
-} fte_stats_t;
-fte_stats_t& operator+=(fte_stats_t& val1, fte_stats_t& val2);
+public:
+    fte_stats_t& operator+=(const fte_stats_t& rhs);
+};
+std::ostream& operator<<(std::ostream& os, const fte_stats_t& val);
 
 class flow_t;
 class ctx_t;

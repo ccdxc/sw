@@ -511,14 +511,14 @@ ctx_t::process()
     // execute the pipeline
     ret = execute_pipeline(*this);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failied to execute pipeline, ret={}", ret);
+        HAL_TRACE_ERR("fte: failed to execute pipeline, ret={}", ret);
         goto end;
     }
 
     // update flow table
     ret = update_flow_table();
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failied to updated gft, ret={}", ret);
+        HAL_TRACE_ERR("fte: failed to updated gft, ret={}", ret);
         goto end;
     }
 

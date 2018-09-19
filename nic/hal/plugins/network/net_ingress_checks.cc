@@ -30,17 +30,42 @@ is_broadcast(fte::ctx_t &ctx) {
     return true;
 }
 
+static bool
+is_multicast_dmac(fte::ctx_t &ctx) {
+    const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
+    ether_header_t *eth_hdr;
+    if (!ctx.pkt()) {
+        return false;
+    }
+
+    eth_hdr = (ether_header_t*)(ctx.pkt() + cpu_hdr->l2_offset);
+    if (eth_hdr->dmac[0]&0x01) {
+        return true;
+    }
+
+    return false;
+}
+
 static inline hal_ret_t
 update_src_if(fte::ctx_t&ctx)
 {
     bool src_local = (ctx.sep() && ctx.sep()->ep_flags & EP_FLAGS_LOCAL);
     bool dst_local = (ctx.dep() && ctx.dep()->ep_flags & EP_FLAGS_LOCAL);
     bool broadcast_pkt = is_broadcast(ctx);
+    bool mcast_dmac = is_multicast_dmac(ctx);
     if_t *sif;
 
     if (broadcast_pkt) {
         return HAL_RET_OK;
     }
+
+    if (mcast_dmac) {
+        fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
+        flowupd.action = session::FLOW_ACTION_DROP;
+        HAL_TRACE_ERR("Dropping packet for multicast dmac");
+        return ctx.update_flow(flowupd);
+    }
+
     // drop remote to remote sessions
     if (!src_local &&  !dst_local) {
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};

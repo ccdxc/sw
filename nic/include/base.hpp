@@ -157,6 +157,7 @@ do {                                                       \
 #define _ENUM_STR(_name, _val, _desc) \
     inline const char *_name ## _str() {return _desc; }
 #define _ENUM_CASE(_name, _val, _desc) case _name: return os << #_desc;
+#define _ENUM_CASE_STR(_name, _val, _desc) case _name: return #_name;
 
 #define DEFINE_ENUM(_typ, _entries)                                     \
     typedef enum { _entries(_ENUM_FIELD) } _typ;                        \
@@ -169,6 +170,15 @@ do {                                                       \
     }                                                                   \
     _entries(_ENUM_STR)                                                 \
 
+#define DEFINE_ENUM_TO_STR(_typ, _entries)                              \
+    inline const char *_entries##_str(_typ c)                           \
+    {                                                                   \
+        switch (c) {                                                    \
+            _entries(_ENUM_CASE_STR);                                   \
+        }                                                               \
+        return "uknown";                                                \
+    }                                                                   \
+
 //------------------------------------------------------------------------------
 // TODO: we need atomic increment operations for ARM
 // gnu gcc builin functions aren't availabe for ARM, ARM has its own library
@@ -179,6 +189,7 @@ do {                                                       \
 #define HAL_ATOMIC_LOAD_UINT32(ptr, vptr)   __atomic_load(ptr, vptr, __ATOMIC_SEQ_CST)
 #define HAL_ATOMIC_INC_UINT64(ptr, val)     __atomic_add_fetch(ptr, val, __ATOMIC_SEQ_CST)
 #define HAL_ATOMIC_DEC_UINT64(ptr, val)     __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_STORE_UINT64(ptr, vptr)  __atomic_store(ptr, vptr, __ATOMIC_SEQ_CST)
 
 #define HAL_ARRAY_SIZE(arr)                (sizeof((arr))/sizeof((arr)[0]))
 
@@ -273,6 +284,7 @@ do {                                                       \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)
+DEFINE_ENUM_TO_STR(hal_ret_t, HAL_RET_ENTRIES)
 
 #undef HAL_RET_ENTRIES
 

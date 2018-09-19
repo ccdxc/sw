@@ -497,6 +497,8 @@ fte_stats_t inst_t::get_stats(bool clear_on_read)
     if (clear_on_read)
         bzero(&stats_, sizeof(fte_stats_t));
 
+    HAL_TRACE_DEBUG("Clear on read: {} stats: {}", clear_on_read, stats_);
+
     return stats;
 }
 
@@ -514,6 +516,7 @@ fte_stats_get (uint8_t fte_id, bool clear_on_read)
     if (fte_disabled_)
         goto done;
 
+    fn_ctx.clear_on_read = clear_on_read;
     fte_execute(fte_id, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
             fn_ctx->fte_stats = t_inst->get_stats(fn_ctx->clear_on_read);
@@ -523,26 +526,57 @@ done:
     return fn_ctx.fte_stats;
 }
 
-fte_stats_t& operator+=(fte_stats_t& val1, fte_stats_t& val2)
-{
-    val1.cps += val2.cps;
-    val1.flow_miss_pkts += val2.flow_miss_pkts;
-    val1.redirect_pkts += val2.redirect_pkts;
-    val1.cflow_pkts += val2.cflow_pkts;
-    val1.tcp_close_pkts += val2.tcp_close_pkts;
-    val1.softq_req += val2.softq_req;
-    val1.queued_tx_pkts += val2.queued_tx_pkts;
+fte_stats_t& fte_stats_t::operator+=(const fte_stats_t& rhs) {
+    cps += rhs.cps;
+    flow_miss_pkts += rhs.flow_miss_pkts;
+    redirect_pkts += rhs.redirect_pkts;
+    cflow_pkts += rhs.cflow_pkts;
+    tcp_close_pkts += rhs.tcp_close_pkts;
+    softq_req += rhs.softq_req;
+    queued_tx_pkts += rhs.queued_tx_pkts;
     for (uint8_t idx=0; idx<HAL_RET_ERR; idx++)
-        val1.fte_errors[idx] += val2.fte_errors[idx];
+        fte_errors[idx] += rhs.fte_errors[idx];
     for (uint8_t idx=0; idx<get_num_features(); idx++) {
-        val1.feature_stats[idx].drop_pkts += \
-                                           val2.feature_stats[idx].drop_pkts;
+        feature_stats[idx].drop_pkts += \
+                                  rhs.feature_stats[idx].drop_pkts;
         for (uint8_t rc=0; rc<HAL_RET_ERR; rc++)
-            val1.feature_stats[idx].drop_reason[rc] += \
-                                            val2.feature_stats[idx].drop_reason[rc];
+            feature_stats[idx].drop_reason[rc] += \
+                                            rhs.feature_stats[idx].drop_reason[rc];
     }
 
-    return val1;
+    return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, const fte_stats_t& val)
+{
+    os << "{cps=" << val.cps;
+    os << " ,flow_miss_pkts=" << val.flow_miss_pkts;
+    os << " ,redirect_pkts=" << val.redirect_pkts;
+    os << " ,cflow_pkts=" << val.cflow_pkts;
+    os << " ,tcp_close_pkts=" << val.tcp_close_pkts;
+    os << " ,tls_proxy_pkts=" << val.tls_proxy_pkts;
+    os << " ,softq_req=" <<  val.softq_req;
+    os << " ,queued_tx_pkts=" << val.queued_tx_pkts;
+    os << " { FTE Errors: ";
+    for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
+        if (val.fte_errors[idx]) {
+            os << " ," << HAL_RET_ENTRIES_str((hal_ret_t)idx) << "=" << val.fte_errors[idx];
+        }
+    }
+    os << " }, { Feature Drop Counters: ";
+    for (uint8_t idx=0; idx<get_num_features(); idx++) {
+        std::string      feature_name = fte::feature_id_to_name(idx);
+        os <<  feature_name.substr(feature_name.find(":")+1) << " : ";
+        os << " drop pkts=" << val.feature_stats[idx].drop_pkts;
+        os << " { Feature Errors: ";
+        for (uint8_t rc=0; rc<HAL_RET_ERR; rc++) {
+            if (val.feature_stats[idx].drop_reason[rc]) {
+                os << " ," << HAL_RET_ENTRIES_str((hal_ret_t)rc) << "=" << val.feature_stats[idx].drop_reason[rc];
+            }
+        }
+        os << " } ";
+    }
+    return os << "} }";
 }
 
 } //   namespace fte
