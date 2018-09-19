@@ -58,6 +58,11 @@ static int ionic_env_debug(void)
 	return ionic_env_val("IONIC_DEBUG");
 }
 
+static int ionic_env_lockfree(void)
+{
+	return ionic_env_val("IONIC_LOCKFREE");
+}
+
 static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 						 int cmd_fd)
 {
@@ -142,6 +147,8 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 
 		verbs_set_ops(&ctx->vctx, &ionic_ctx_ops);
 	}
+
+	ctx->lockfree = ionic_env_lockfree();
 
 	if (ionic_env_debug())
 		ctx->dbg_file = IONIC_DEBUG_FILE;
