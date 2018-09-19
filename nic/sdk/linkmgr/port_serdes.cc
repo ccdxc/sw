@@ -225,10 +225,12 @@ sbus_access (uint32_t sbus_addr,
 
     switch (command) {
     case 0x0:   // sbus reset
+        /*
         SDK_TRACE_DEBUG("sbus_reset."
                 " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
                 " ring: 0x%x, sbus_id: 0x%x",
                 sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
+        */
 
         if(ring_number == 0) {
             cap_pp_sbus_reset(chip_id, sbus_id);
@@ -241,10 +243,12 @@ sbus_access (uint32_t sbus_addr,
 
 
     case 0x1:   // sbus write
+        /*
         SDK_TRACE_DEBUG("sbus_write."
                 " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
                 " ring: 0x%x, sbus_id: 0x%x",
                 sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id);
+        */
 
         if(ring_number == 0) {
             cap_pp_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
@@ -263,11 +267,13 @@ sbus_access (uint32_t sbus_addr,
             // *sbus_data = cap_ms_sbus_read(chip_id, sbus_id, reg_addr);
         }
 
+        /*
         SDK_TRACE_DEBUG("sbus_read."
                 " sbus_addr 0x%x, reg_addr: 0x%x, cmd: 0x%x, sbus_data: 0x%x,"
                 " ring: 0x%x, sbus_id: 0x%x, sbus:data: 0x%x",
                 sbus_addr, reg_addr, command, *sbus_data, ring_number, sbus_id,
                 *sbus_data);
+        */
 
         status = 1;
         break;

@@ -74,6 +74,12 @@ mac_ch (uint32_t port, uint32_t lane)
     return catalog()->mac_ch(port, lane);
 }
 
+static uint32_t
+sbus_addr (uint32_t port, uint32_t lane)
+{
+    return catalog()->sbus_addr(port, lane);
+}
+
 static hal_ret_t
 linkmgr_uplink_create(uint32_t uplink_port)
 {
@@ -104,6 +110,11 @@ linkmgr_uplink_create(uint32_t uplink_port)
     // admin status
     if (enabled(uplink_port) == true) {
         args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
+    }
+
+    // TODO move to sdk-linkmgr.cc:port_init_defaults
+    for (uint32_t i = 0; i < args.num_lanes; ++i) {
+        args.sbus_addr[i] = sbus_addr(uplink_port, i);
     }
 
     HAL_TRACE_DEBUG("creating uplink port {}",  uplink_port);

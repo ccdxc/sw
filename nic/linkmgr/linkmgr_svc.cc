@@ -78,6 +78,7 @@ populate_port_create_args (PortSpec& spec, port_args_t *args)
     args->num_lanes       = spec.num_lanes();
     args->auto_neg_enable = spec.auto_neg_enable();
     args->debounce_time   = spec.debounce_time();
+    args->mtu             = spec.mtu();
 
     args->port_type   =
         linkmgr::port_type_spec_to_sdk_port_type (spec.port_type());
@@ -87,13 +88,6 @@ populate_port_create_args (PortSpec& spec, port_args_t *args)
         linkmgr::port_speed_spec_to_sdk_port_speed(spec.port_speed());
     args->fec_type    =
         linkmgr::port_fec_type_spec_to_sdk_port_fec_type(spec.fec_type());
-
-    if (spec.mtu() == 0) {
-        // TODO define?
-        args->mtu = 9216;
-    } else {
-        args->mtu = spec.mtu();
-    }
 
     for (uint32_t i = 0; i < spec.num_lanes(); ++i) {
         args->sbus_addr[i] = sbus_addr(spec.key_or_handle().port_id(), i);

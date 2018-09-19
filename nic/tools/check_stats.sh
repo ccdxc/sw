@@ -11,5 +11,4 @@ kill -STOP `pidof hal`
 kill -10 `pidof linkmgr`
 tail -80 /run.log | grep -E "Frames Transmitted (OK|All)"
 tail -80 /run.log | grep -E "Frames Received (OK|All)"
-
 kill -CONT `pidof hal`

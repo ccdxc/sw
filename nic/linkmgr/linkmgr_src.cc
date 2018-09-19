@@ -923,6 +923,10 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
                 return HAL_RET_ERR;
             }
 
+            // reset port_type and num_lanes for update
+            port_args.port_type   = port_type_t::PORT_TYPE_NONE;
+            port_args.num_lanes   = 0;
+
             port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
 
             sdk_ret = sdk::linkmgr::port_update(pi_p->pd_p, &port_args);
@@ -955,6 +959,10 @@ linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
                                pi_p->port_num, sdk_ret);
                 return HAL_RET_ERR;
             }
+
+            // reset port_type and num_lanes for update
+            port_args.port_type   = port_type_t::PORT_TYPE_NONE;
+            port_args.num_lanes   = 0;
 
             port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
 

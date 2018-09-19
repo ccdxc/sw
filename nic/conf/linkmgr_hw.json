@@ -1,0 +1,6 @@
+{
+  "platform_type" : "hw",
+  "sw" : {
+    "grpc_port": "50053"
+  }
+}

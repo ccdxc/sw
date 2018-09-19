@@ -217,6 +217,26 @@ port::port_sbus_addr(uint32_t lane)
     return this->sbus_addr_[lane];
 }
 
+port_speed_t
+port::port_speed_to_serdes_speed(port_speed_t port_speed)
+{
+    switch(port_speed) {
+    case port_speed_t::PORT_SPEED_100G:
+    case port_speed_t::PORT_SPEED_50G:
+    case port_speed_t::PORT_SPEED_25G:
+        return port_speed_t::PORT_SPEED_25G;
+
+    case port_speed_t::PORT_SPEED_40G:
+    case port_speed_t::PORT_SPEED_10G:
+        return port_speed_t::PORT_SPEED_10G;
+
+    default:
+        break;
+    }
+
+    return port_speed;
+}
+
 sdk_ret_t
 port::port_serdes_cfg(void)
 {
@@ -224,12 +244,15 @@ port::port_serdes_cfg(void)
     uint32_t      sbus_addr    = 0;
     serdes_info_t *serdes_info = NULL;
 
+    port_speed_t serdes_speed =
+                    port_speed_to_serdes_speed(this->port_speed_);
+
     for (lane = 0; lane < num_lanes_; ++lane) {
         sbus_addr = port_sbus_addr(lane);
 
         serdes_info = serdes_info_get(
                                     sbus_addr,
-                                    static_cast<uint32_t>(this->port_speed_),
+                                    static_cast<uint32_t>(serdes_speed),
                                     this->cable_type_);
 
         serdes_fns()->serdes_cfg(sbus_addr, serdes_info);

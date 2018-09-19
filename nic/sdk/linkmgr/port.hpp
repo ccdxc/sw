@@ -259,6 +259,8 @@ private:
     // Get serdes sbus address for a port lane
     uint32_t port_sbus_addr(uint32_t lane);
 
+    port_speed_t port_speed_to_serdes_speed(port_speed_t port_speed);
+
     mac_fn_t*    mac_fns(void)    { return this->mac_fns_; }     // mac functions
     serdes_fn_t* serdes_fns(void) { return this->serdes_fns_; }  // serdes functions
 };

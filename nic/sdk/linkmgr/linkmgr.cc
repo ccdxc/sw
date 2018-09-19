@@ -563,6 +563,14 @@ validate_port_create (port_args_t *args)
     return validate_speed_lanes (args->port_speed, args->num_lanes);
 }
 
+static void
+port_init_defaults (port_args_t *args)
+{
+    if (args->mtu == 0) {
+        args->mtu = 9216;   // TODO define?
+    }
+}
+
 //-----------------------------------------------------------------------------
 // PD If Create
 //-----------------------------------------------------------------------------
@@ -576,6 +584,8 @@ port_create (port_args_t *args)
         // TODO return codes
         return NULL;
     }
+
+    port_init_defaults(args);
 
     port_p = (port *)g_linkmgr_state->port_slab()->alloc();
     port_p->set_port_num(args->port_num);
@@ -745,8 +755,8 @@ port_delete (void *pd_p)
 sdk_ret_t
 port_get (void *pd_p, port_args_t *args)
 {
-    sdk_ret_t            ret = SDK_RET_OK;
-    port    *port_p = (port *)pd_p;
+    sdk_ret_t ret     = SDK_RET_OK;
+    port      *port_p = (port *)pd_p;
 
     SDK_TRACE_DEBUG("port get");
     args->port_type   = port_p->port_type();

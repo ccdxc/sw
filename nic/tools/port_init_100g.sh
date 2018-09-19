@@ -27,7 +27,9 @@ sleep 5
 
 echo "Step 2: serdes init"
 /nic/bin/aapl serdes-init -server 0.0.0.0 -port 9000 -addr 34-41 -divider 165 -width-mode 40
-/nic/bin/aapl serdes  -server localhost -port 9000 -addr 34-41 -pre 2 -post 6
+/nic/bin/aapl serdes -server localhost -port 9000 -addr 34-41 -pre 2 -post 6
+/nic/bin/aapl serdes -server 0.0.0.0 -port 9000 -addr 34-41 -interrupt 0xd 0x800f
+/nic/bin/aapl serdes -server 0.0.0.0 -port 9000 -addr 34-41 -interrupt 0xe 0x9e00
 sleep 5
 /nic/bin/aapl serdes -server 0.0.0.0 -port 9000 -addr 34-41 -tx-data core
 /nic/bin/aapl serdes -server 0.0.0.0 -port 9000 -addr 34-41 -rx-input 0
@@ -37,6 +39,12 @@ sleep 5
 echo "Step 3: MAC CFG"
 /nic/bin/port_client -g localhost:50053 -o 2 -w 1 -x 0
 /nic/bin/port_client -g localhost:50053 -o 2 -w 2 -x 0
+/nic/bin/port_client -g localhost:50053 -o 33 -w 1 -x 0 -y 1027 -z 9216
+/nic/bin/port_client -g localhost:50053 -o 33 -w 1 -x 0 -y 1028 -z 9232
+/nic/bin/port_client -g localhost:50053 -o 33 -w 1 -x 0 -y 1029 -z 9232
+/nic/bin/port_client -g localhost:50053 -o 33 -w 1 -x 1 -y 1027 -z 9216
+/nic/bin/port_client -g localhost:50053 -o 33 -w 1 -x 1 -y 1028 -z 9232
+/nic/bin/port_client -g localhost:50053 -o 33 -w 1 -x 1 -y 1029 -z 9232
 
 sleep 5
 
