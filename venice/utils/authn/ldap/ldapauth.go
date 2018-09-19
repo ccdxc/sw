@@ -6,13 +6,9 @@ import (
 
 	"gopkg.in/ldap.v2"
 
-	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authn"
-	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 var (
@@ -30,19 +26,13 @@ var (
 
 // authenticator is used for authenticating LDAP user. It implements authn.Authenticator interface.
 type authenticator struct {
-	name            string
-	apiServer       string
-	resolver        resolver.Interface
 	ldapConfig      *auth.Ldap
 	getConnectionFn connectionGetter
 }
 
 // NewLdapAuthenticator returns an instance of Authenticator
-func NewLdapAuthenticator(name, apiServer string, rslver resolver.Interface, config *auth.Ldap) authn.Authenticator {
+func NewLdapAuthenticator(config *auth.Ldap) authn.Authenticator {
 	return &authenticator{
-		name:            name,
-		apiServer:       apiServer,
-		resolver:        rslver,
 		ldapConfig:      config,
 		getConnectionFn: getConnection,
 	}
@@ -69,24 +59,13 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		return nil, false, err
 	}
 
-	// create a grpc client
-	config := log.GetDefaultConfig(a.name)
-	l := log.GetNewLogger(config)
-	b := balancer.New(a.resolver)
-	apicl, err := apiclient.NewGrpcAPIClient(a.name, a.apiServer, l, rpckit.WithBalancer(b))
-	if err != nil {
-		log.Errorf("Failed to connect to gRPC server [%s], Err: %v", a.apiServer, err)
-		return nil, false, err
-	}
-
 	// Create/update external user
-	return authn.UpdateExternalUser(apicl,
-		ldapCredential.Username,
+	return authn.CreateExternalUser(ldapCredential.Username,
 		entry.GetAttributeValue(a.ldapConfig.GetAttributeMapping().GetTenant()),
 		entry.GetAttributeValue(a.ldapConfig.GetAttributeMapping().GetFullname()),
 		entry.GetAttributeValue(a.ldapConfig.GetAttributeMapping().GetEmail()),
-		groups)
-	//TODO: Update last login information
+		groups,
+		auth.Authenticators_LDAP)
 }
 
 // bind chases ldap referrals while authenticating an ldap user entry. Upon successful authentication it returns the user ldap entry and

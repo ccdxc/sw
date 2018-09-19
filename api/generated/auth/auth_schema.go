@@ -280,14 +280,15 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version": api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"email":       api.CLIInfo{Path: "Spec.Email", Skip: false, Insert: "", Help: ""},
-			"fullname":    api.CLIInfo{Path: "Spec.Fullname", Skip: false, Insert: "", Help: ""},
-			"kind":        api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"password":    api.CLIInfo{Path: "Spec.Password", Skip: false, Insert: "", Help: ""},
-			"roles":       api.CLIInfo{Path: "Status.Roles", Skip: false, Insert: "", Help: ""},
-			"type":        api.CLIInfo{Path: "Spec.Type", Skip: false, Insert: "", Help: ""},
-			"user-groups": api.CLIInfo{Path: "Status.UserGroups", Skip: false, Insert: "", Help: ""},
+			"api-version":    api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"authenticators": api.CLIInfo{Path: "Status.Authenticators", Skip: false, Insert: "", Help: ""},
+			"email":          api.CLIInfo{Path: "Spec.Email", Skip: false, Insert: "", Help: ""},
+			"fullname":       api.CLIInfo{Path: "Spec.Fullname", Skip: false, Insert: "", Help: ""},
+			"kind":           api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"password":       api.CLIInfo{Path: "Spec.Password", Skip: false, Insert: "", Help: ""},
+			"roles":          api.CLIInfo{Path: "Status.Roles", Skip: false, Insert: "", Help: ""},
+			"type":           api.CLIInfo{Path: "Spec.Type", Skip: false, Insert: "", Help: ""},
+			"user-groups":    api.CLIInfo{Path: "Status.UserGroups", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"auth.UserSpec": &api.Struct{
@@ -310,6 +311,8 @@ var typesMapAuth = map[string]*api.Struct{
 			"UserGroups": api.Field{Name: "UserGroups", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user-groups", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"LastSuccessfulLogin": api.Field{Name: "LastSuccessfulLogin", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-successful-login", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+
+			"Authenticators": api.Field{Name: "Authenticators", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "authenticators", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

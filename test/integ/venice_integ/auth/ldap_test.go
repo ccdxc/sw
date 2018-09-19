@@ -7,7 +7,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/log"
@@ -31,55 +30,44 @@ const (
 	referralUserPassword = "pensando"
 )
 
-var apicl apiclient.Services
-var apiSrvAddr, ldapAddr, referralAddr string
-
 func setupLdap() {
-	// api server client
-	logger := log.WithContext("Pkg", "ldap_test")
 	var err error
-	apicl, err = apiclient.NewGrpcAPIClient("ldap_test", tinfo.apiServerAddr, logger)
-	if err != nil {
-		log.Errorf("Error creating api client: %v", err)
-		os.Exit(-1)
-	}
-
 	// start ldap server
-	ldapAddr, err = StartLdapServer(ldapServer)
+	tinfo.ldapAddr, err = StartLdapServer(ldapServer)
 	if err != nil {
 		log.Errorf("Error creating LDAP Server: %v", err)
 		os.Exit(-1)
 	}
 	// start referral server
-	referralAddr, err = StartLdapServer(referralServer)
+	tinfo.referralAddr, err = StartLdapServer(referralServer)
 	if err != nil {
 		StopLdapServer(ldapServer)
 		log.Errorf("Error creating referral LDAP Server: %v", err)
 		os.Exit(-1)
 	}
 	// create test ldap user
-	err = CreateLdapUser(ldapAddr, ldapUser, ldapUserPassword, "default", []string{ldapUserGroupDN})
+	err = CreateLdapUser(tinfo.ldapAddr, ldapUser, ldapUserPassword, testTenant, []string{ldapUserGroupDN})
 	if err != nil {
 		shutdownLdap()
 		log.Errorf("Error creating test ldap user: %v", err)
 		os.Exit(-1)
 	}
 	// create testReferral ldap user in referral server
-	err = CreateLdapUser(referralAddr, referralUser, referralUserPassword, "default", []string{referralUserGroupDN})
+	err = CreateLdapUser(tinfo.referralAddr, referralUser, referralUserPassword, testTenant, []string{referralUserGroupDN})
 	if err != nil {
 		shutdownLdap()
 		log.Errorf("Error creating test ldap user: %v", err)
 		os.Exit(-1)
 	}
 	// create testReferral ldap group in referral server
-	err = CreateGroup(referralAddr, referralUserGroupDN, []string{ldapUserGroupDN}, []string{referralUserDN})
+	err = CreateGroup(tinfo.referralAddr, referralUserGroupDN, []string{ldapUserGroupDN}, []string{referralUserDN})
 	if err != nil {
 		shutdownLdap()
 		log.Errorf("Error creating testReferral ldap group in referral server: %v", err)
 		os.Exit(-1)
 	}
 	// create referral entry in ldap server
-	err = CreateReferral(ldapAddr, referralUser, "ldap://"+referralAddr+"/"+BaseDN)
+	err = CreateReferral(tinfo.ldapAddr, referralUser, "ldap://"+tinfo.referralAddr+"/"+BaseDN)
 	if err != nil {
 		shutdownLdap()
 		log.Errorf("Error creating testReferral referral entry in ldap server: %v", err)
@@ -99,7 +87,7 @@ func authenticationPoliciesData() map[string]*auth.Ldap {
 		Enabled: true,
 		Servers: []*auth.LdapServer{
 			{
-				Url: ldapAddr,
+				Url: tinfo.ldapAddr,
 				TLSOptions: &auth.TLSOptions{
 					StartTLS:                   true,
 					SkipServerCertVerification: false,
@@ -122,7 +110,7 @@ func authenticationPoliciesData() map[string]*auth.Ldap {
 		Enabled: true,
 		Servers: []*auth.LdapServer{
 			{
-				Url: ldapAddr,
+				Url: tinfo.ldapAddr,
 				TLSOptions: &auth.TLSOptions{
 					StartTLS:                   true,
 					SkipServerCertVerification: true,
@@ -146,7 +134,7 @@ func authenticationPoliciesData() map[string]*auth.Ldap {
 		Enabled: true,
 		Servers: []*auth.LdapServer{
 			{
-				Url: ldapAddr,
+				Url: tinfo.ldapAddr,
 				TLSOptions: &auth.TLSOptions{
 					StartTLS: false,
 				},
@@ -169,14 +157,14 @@ func authenticationPoliciesData() map[string]*auth.Ldap {
 
 // createDefaultAuthenticationPolicy creates an authentication policy with LDAP with TLS enabled
 func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
-	return MustCreateAuthenticationPolicy(apicl,
+	return MustCreateAuthenticationPolicy(tinfo.apicl,
 		&auth.Local{
 			Enabled: true,
 		}, &auth.Ldap{
 			Enabled: true,
 			Servers: []*auth.LdapServer{
 				{
-					Url: ldapAddr,
+					Url: tinfo.ldapAddr,
 					TLSOptions: &auth.TLSOptions{
 						StartTLS:                   true,
 						SkipServerCertVerification: false,
@@ -194,6 +182,7 @@ func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 				UserObjectClass:  UserObjectClassAttribute,
 				Group:            GroupAttribute,
 				GroupObjectClass: GroupObjectClassAttribute,
+				Tenant:           TenantAttribute,
 			},
 		})
 }
@@ -201,17 +190,17 @@ func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 func TestAuthenticate(t *testing.T) {
 	t.Skip()
 	for testtype, ldapconf := range authenticationPoliciesData() {
-		_, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, ldapconf)
+		_, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, ldapconf)
 		if err != nil {
 			t.Errorf("err %s in CreateAuthenticationPolicy", err)
 			return
 		}
 		// create password authenticator
-		authenticator := ldap.NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, ldapconf)
+		authenticator := ldap.NewLdapAuthenticator(ldapconf)
 
 		// authenticate
 		autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
-		DeleteAuthenticationPolicy(apicl)
+		DeleteAuthenticationPolicy(tinfo.apicl)
 
 		Assert(t, ok, fmt.Sprintf("[%v] Unsuccessful ldap user authentication", testtype))
 		Assert(t, autheduser.Name == ldapUser, fmt.Sprintf("[%v] User returned by ldap authenticator didn't match user being authenticated", testtype))
@@ -226,10 +215,10 @@ func TestAuthenticate(t *testing.T) {
 func TestIncorrectPasswordAuthentication(t *testing.T) {
 	t.Skip()
 	policy := createDefaultAuthenticationPolicy()
-	defer DeleteAuthenticationPolicy(apicl)
+	defer DeleteAuthenticationPolicy(tinfo.apicl)
 
 	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
+	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: "wrongpassword"})
@@ -242,10 +231,10 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 func TestIncorrectUserAuthentication(t *testing.T) {
 	t.Skip()
 	policy := createDefaultAuthenticationPolicy()
-	defer DeleteAuthenticationPolicy(apicl)
+	defer DeleteAuthenticationPolicy(tinfo.apicl)
 
 	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
+	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: "test1", Password: "password"})
@@ -259,11 +248,11 @@ func TestIncorrectUserAuthentication(t *testing.T) {
 
 func TestMissingLdapAttributeMapping(t *testing.T) {
 	t.Skip()
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
+	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
 			{
-				Url: ldapAddr,
+				Url: tinfo.ldapAddr,
 				TLSOptions: &auth.TLSOptions{
 					StartTLS:                   true,
 					SkipServerCertVerification: false,
@@ -280,10 +269,10 @@ func TestMissingLdapAttributeMapping(t *testing.T) {
 		t.Errorf("err %s in CreateAuthenticationPolicy", err)
 		return
 	}
-	defer DeleteAuthenticationPolicy(apicl)
+	defer DeleteAuthenticationPolicy(tinfo.apicl)
 
 	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
+	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
@@ -294,11 +283,11 @@ func TestMissingLdapAttributeMapping(t *testing.T) {
 
 func TestIncorrectLdapAttributeMapping(t *testing.T) {
 	t.Skip()
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
+	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
 			{
-				Url: ldapAddr,
+				Url: tinfo.ldapAddr,
 				TLSOptions: &auth.TLSOptions{
 					StartTLS:                   true,
 					SkipServerCertVerification: false,
@@ -321,10 +310,10 @@ func TestIncorrectLdapAttributeMapping(t *testing.T) {
 		t.Errorf("err %s in CreateAuthenticationPolicy", err)
 		return
 	}
-	defer DeleteAuthenticationPolicy(apicl)
+	defer DeleteAuthenticationPolicy(tinfo.apicl)
 
 	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
+	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
@@ -335,11 +324,11 @@ func TestIncorrectLdapAttributeMapping(t *testing.T) {
 
 func TestIncorrectBaseDN(t *testing.T) {
 	t.Skip()
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
+	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
 			{
-				Url: ldapAddr,
+				Url: tinfo.ldapAddr,
 				TLSOptions: &auth.TLSOptions{
 					StartTLS:                   true,
 					SkipServerCertVerification: false,
@@ -362,10 +351,10 @@ func TestIncorrectBaseDN(t *testing.T) {
 		t.Errorf("err %s in CreateAuthenticationPolicy", err)
 		return
 	}
-	defer DeleteAuthenticationPolicy(apicl)
+	defer DeleteAuthenticationPolicy(tinfo.apicl)
 
 	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
+	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
@@ -376,11 +365,11 @@ func TestIncorrectBaseDN(t *testing.T) {
 
 func TestIncorrectBindPassword(t *testing.T) {
 	t.Skip()
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
+	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
 			{
-				Url: ldapAddr,
+				Url: tinfo.ldapAddr,
 				TLSOptions: &auth.TLSOptions{
 					StartTLS:                   true,
 					SkipServerCertVerification: false,
@@ -403,10 +392,10 @@ func TestIncorrectBindPassword(t *testing.T) {
 		t.Errorf("err %s in CreateAuthenticationPolicy", err)
 		return
 	}
-	defer DeleteAuthenticationPolicy(apicl)
+	defer DeleteAuthenticationPolicy(tinfo.apicl)
 
 	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
+	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
@@ -417,11 +406,11 @@ func TestIncorrectBindPassword(t *testing.T) {
 
 func TestDisabledLdapAuthenticator(t *testing.T) {
 	t.Skip()
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{
+	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
 		Enabled: false,
 		Servers: []*auth.LdapServer{
 			{
-				Url: ldapAddr,
+				Url: tinfo.ldapAddr,
 				TLSOptions: &auth.TLSOptions{
 					StartTLS:                   true,
 					SkipServerCertVerification: false,
@@ -445,10 +434,10 @@ func TestDisabledLdapAuthenticator(t *testing.T) {
 		t.Errorf("err %s in CreateAuthenticationPolicy", err)
 		return
 	}
-	defer DeleteAuthenticationPolicy(apicl)
+	defer DeleteAuthenticationPolicy(tinfo.apicl)
 
 	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLdap())
+	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
@@ -460,17 +449,17 @@ func TestDisabledLdapAuthenticator(t *testing.T) {
 func TestReferral(t *testing.T) {
 	t.Skip()
 	for testtype, ldapconf := range authenticationPoliciesData() {
-		_, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, ldapconf)
+		_, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, ldapconf)
 		if err != nil {
 			t.Errorf("err %s in CreateAuthenticationPolicy", err)
 			return
 		}
 		// create password authenticator
-		authenticator := ldap.NewLdapAuthenticator("ldap_test", apiSrvAddr, nil, ldapconf)
+		authenticator := ldap.NewLdapAuthenticator(ldapconf)
 
 		// authenticate
 		autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: referralUser, Password: referralUserPassword})
-		DeleteAuthenticationPolicy(apicl)
+		DeleteAuthenticationPolicy(tinfo.apicl)
 
 		Assert(t, ok, fmt.Sprintf("[%v] Unsuccessful ldap user authentication", testtype))
 		Assert(t, autheduser.Name == referralUser, fmt.Sprintf("[%v] User returned by ldap authenticator didn't match user being authenticated", testtype))

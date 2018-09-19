@@ -298,7 +298,7 @@ func MustDeleteRole(apicl apiclient.Services, name, tenant string) {
 }
 
 // CreateRoleBinding creates a role binding
-func CreateRoleBinding(apicl apiclient.Services, name, tenant, roleName, user string) (*auth.RoleBinding, error) {
+func CreateRoleBinding(apicl apiclient.Services, name, tenant, roleName string, users, groups []string) (*auth.RoleBinding, error) {
 	// TODO: use func from rbac utils
 	roleBinding := &auth.RoleBinding{
 		TypeMeta: api.TypeMeta{Kind: auth.Permission_RoleBinding.String()},
@@ -307,8 +307,9 @@ func CreateRoleBinding(apicl apiclient.Services, name, tenant, roleName, user st
 			Tenant: tenant,
 		},
 		Spec: auth.RoleBindingSpec{
-			Users: []string{user},
-			Role:  roleName,
+			Users:      users,
+			UserGroups: groups,
+			Role:       roleName,
 		},
 	}
 	var err error
@@ -327,8 +328,8 @@ func CreateRoleBinding(apicl apiclient.Services, name, tenant, roleName, user st
 }
 
 // MustCreateRoleBinding creates a role binding and panics if fails
-func MustCreateRoleBinding(apicl apiclient.Services, name, tenant, roleName, user string) *auth.RoleBinding {
-	roleBinding, err := CreateRoleBinding(apicl, name, tenant, roleName, user)
+func MustCreateRoleBinding(apicl apiclient.Services, name, tenant, roleName string, users, groups []string) *auth.RoleBinding {
+	roleBinding, err := CreateRoleBinding(apicl, name, tenant, roleName, users, groups)
 	if err != nil {
 		panic(fmt.Sprintf("error %s in CreateRoleBinding", err))
 	}

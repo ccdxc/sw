@@ -538,6 +538,7 @@ func (m *User) Defaults(ver string) bool {
 	m.Tenant, m.Namespace = "default", "default"
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -586,7 +587,15 @@ func (m *UserStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *UserStatus) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		for k := range m.Authenticators {
+			m.Authenticators[k] = "LOCAL"
+		}
+	}
+	return ret
 }
 
 // Validators
@@ -824,6 +833,17 @@ func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
 	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
 		ret = append(ret, errs...)
 	}
+	if !ignoreStatus {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -847,6 +867,19 @@ func (m *UserSpec) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapAuth["UserStatus"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapAuth["UserStatus"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -912,6 +945,18 @@ func init() {
 
 		if _, ok := UserSpec_UserType_value[m.Type]; !ok {
 			return errors.New("UserSpec.Type did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapAuth["UserStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAuth["UserStatus"]["all"] = append(validatorMapAuth["UserStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*UserStatus)
+
+		for k, v := range m.Authenticators {
+			if _, ok := Authenticators_AuthenticatorType_value[v]; !ok {
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Authenticators", k)
+			}
 		}
 		return nil
 	})

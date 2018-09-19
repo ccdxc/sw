@@ -60,6 +60,8 @@ type tInfo struct {
 	mockResolver  *mockresolver.ResolverClient
 	fdr           finder.Interface
 	fdrAddr       string
+	ldapAddr      string
+	referralAddr  string
 	restcl        apiclient.Services
 	apicl         apiclient.Services
 }

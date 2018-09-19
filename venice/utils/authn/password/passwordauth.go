@@ -15,11 +15,11 @@ import (
 )
 
 var (
-	//ErrInvalidCredential error is returned when user doesn't exist
+	// ErrInvalidCredential error is returned when user doesn't exist
 	ErrInvalidCredential = errors.New("incorrect credential")
 )
 
-//authenticator is used for authenticating local user. It implements authn.Authenticator interface.
+// authenticator is used for authenticating local user. It implements authn.Authenticator interface.
 type authenticator struct {
 	name       string
 	apiServer  string
@@ -27,7 +27,7 @@ type authenticator struct {
 	authConfig *auth.Local
 }
 
-//NewPasswordAuthenticator returns an instance of Authenticator
+// NewPasswordAuthenticator returns an instance of Authenticator
 func NewPasswordAuthenticator(name, apiServer string, rslver resolver.Interface, config *auth.Local) authn.Authenticator {
 	return &authenticator{
 		name:       name,
@@ -37,12 +37,12 @@ func NewPasswordAuthenticator(name, apiServer string, rslver resolver.Interface,
 	}
 }
 
-//Authenticate authenticates local user
-//Returns
-//  *auth.User upon successful authentication
-//  bool true upon successful authentication
-//  error authn.ErrInvalidCredentialType if invalid credential type is passed, ErrInvalidCredential if user doesn't exist,
-//        errors returned by hash comparison function
+// Authenticate authenticates local user
+// Returns
+//   *auth.User upon successful authentication
+//   bool true upon successful authentication
+//   error authn.ErrInvalidCredentialType if invalid credential type is passed, ErrInvalidCredential if user doesn't exist,
+//         errors returned by hash comparison function
 func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, bool, error) {
 	if !a.authConfig.GetEnabled() {
 		return nil, false, nil
@@ -63,7 +63,7 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		log.Errorf("Failed to connect to gRPC server [%s], Err: %v", a.apiServer, err)
 		return nil, false, err
 	}
-
+	defer apicl.Close()
 	// fetch user
 	objMeta := &api.ObjectMeta{
 		Name:   passwdcred.Username,
@@ -74,15 +74,18 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		log.Errorf("passwordauth: Error fetching user [%s], Err: %v", passwdcred.Username, err)
 		return nil, false, ErrInvalidCredential
 	}
-
+	if user.Spec.Type == auth.UserSpec_EXTERNAL.String() {
+		log.Infof("skipping local auth for external user [%s|%s]", passwdcred.Tenant, passwdcred.Username)
+		return nil, false, ErrInvalidCredential
+	}
 	hasher := GetPasswordHasher()
 	ok, err := hasher.CompareHashAndPassword(user.GetSpec().Password, passwdcred.Password)
 	if err != nil {
 		return nil, false, err
 	}
 
+	user.Status.Authenticators = []string{auth.Authenticators_LOCAL.String()}
 	log.Debugf("passwordauth: Successfully authenticated user [%s]", passwdcred.Username)
 
-	//TODO: Update last successful login
 	return user, ok, nil
 }

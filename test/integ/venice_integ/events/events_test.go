@@ -356,7 +356,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 
 	// setup authn and get authz token
 	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
-	err = testutils.SetupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
+	err = testutils.SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCreds, ti.logger)
 	AssertOk(t, err, "failed to setup authN service")
 	authzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, userCreds)
 	AssertOk(t, err, "failed to get authZ header")

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -14,8 +15,10 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/login"
 	. "github.com/pensando/sw/test/utils"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/pensando/sw/venice/utils/authz"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -26,7 +29,7 @@ func TestLogin(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -55,6 +58,12 @@ func TestLogin(t *testing.T) {
 	AssertOk(t, json.NewDecoder(resp.Body).Decode(&user), "unable to decode user from http response")
 	Assert(t, user.Name == userCred.Username && user.Tenant == userCred.Tenant, fmt.Sprintf("incorrect user [%s] and tenant [%s] returned", user.Name, user.Tenant))
 	Assert(t, user.Spec.Password == "", "password should be empty")
+	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
+	logintime, err := user.Status.LastSuccessfulLogin.Time()
+	AssertOk(t, err, "error getting successful login time")
+	Assert(t, time.Now().Sub(logintime) < time.Second, fmt.Sprintf("unexpected successful login time [%v]", logintime.Local()))
+	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_LOCAL.String(),
+		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_LOCAL.String(), user.Status.Authenticators[0]))
 	// check CSRF token header is present
 	Assert(t, resp.Header.Get(apigw.GrpcMDCsrfHeader) != "", "CSRF token not present")
 }
@@ -103,7 +112,7 @@ func TestLoginFailures(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -133,7 +142,7 @@ func TestUserPasswordRemoval(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -210,7 +219,7 @@ func TestAuthPolicy(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -287,4 +296,212 @@ func TestAuthPolicy(t *testing.T) {
 		policy, err = restcl.AuthV1().AuthenticationPolicy().Delete(ctx, &api.ObjectMeta{Name: "AuthenticationPolicy3"})
 		return err != nil, nil
 	}, "AuthenticationPolicy can't be deleted")
+}
+
+func TestUserStatus(t *testing.T) {
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+
+	currtime := time.Now()
+	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
+	if err != nil {
+		panic("error creating rest client")
+	}
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context")
+	// test GET user
+	var user *auth.User
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: testUser, Tenant: testTenant})
+		return err == nil, nil
+	}, "unable to fetch user")
+	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
+	logintime, err := user.Status.LastSuccessfulLogin.Time()
+	AssertOk(t, err, "error getting successful login time")
+	Assert(t, logintime.After(currtime), fmt.Sprintf("login time [%v] not after current time [%v]", logintime.Local(), currtime.Local()))
+	Assert(t, logintime.Sub(currtime) < 30*time.Second, fmt.Sprintf("login time [%v] not within 30 seconds of current time [%v]", logintime, currtime))
+	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_LOCAL.String(),
+		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_LOCAL.String(), user.Status.Authenticators[0]))
+	// test LIST user
+	var users []*auth.User
+	AssertEventually(t, func() (bool, interface{}) {
+		users, err = restcl.AuthV1().User().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: testTenant}})
+		return err == nil, nil
+	}, "unable to fetch users")
+	Assert(t, len(users[0].Status.Roles) == 1 && users[0].Status.Roles[0] == globals.AdminRole, "user should have admin role")
+	MustCreateRole(tinfo.apicl, "NetworkAdminRole", testTenant, login.NewPermission(
+		testTenant,
+		"network",
+		auth.Permission_Network.String(),
+		authz.ResourceNamespaceAll,
+		"",
+		auth.Permission_ALL_ACTIONS.String()),
+		login.NewPermission(
+			testTenant,
+			"auth",
+			auth.Permission_AllResourceKinds.String(),
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_ALL_ACTIONS.String()))
+	defer MustDeleteRole(tinfo.apicl, "NetworkAdminRole", testTenant)
+	MustCreateRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", testTenant, "NetworkAdminRole", []string{testUser}, nil)
+	defer MustDeleteRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", testTenant)
+	// login again to see if user status is updated with new login time
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context")
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: testUser, Tenant: testTenant})
+		return err == nil, nil
+	}, "unable to fetch user")
+	Assert(t, len(user.Status.Roles) == 2, "user should have two roles")
+	newlogintime, err := user.Status.LastSuccessfulLogin.Time()
+	AssertOk(t, err, "error getting successful login time")
+	Assert(t, newlogintime.After(logintime), fmt.Sprintf("new login time [%v] not after old login time [%v]", newlogintime.Local(), logintime.Local()))
+}
+
+func TestLdapLogin(t *testing.T) {
+	t.Skip()
+	localUserCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
+	}
+	ldapConf := &auth.Ldap{
+		Enabled: true,
+		Servers: []*auth.LdapServer{
+			{
+				Url: tinfo.ldapAddr,
+				TLSOptions: &auth.TLSOptions{
+					StartTLS:                   true,
+					SkipServerCertVerification: false,
+					ServerName:                 ServerName,
+					TrustedCerts:               TrustedCerts,
+				},
+			},
+		},
+
+		BaseDN:       BaseDN,
+		BindDN:       BindDN,
+		BindPassword: BindPassword,
+		AttributeMapping: &auth.LdapAttributeMapping{
+			User:             UserAttribute,
+			UserObjectClass:  UserObjectClassAttribute,
+			Group:            GroupAttribute,
+			GroupObjectClass: GroupObjectClassAttribute,
+			Tenant:           TenantAttribute,
+		},
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, localUserCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
+	ldapUserCred := &auth.PasswordCredential{
+		Username: ldapUser,
+		Password: ldapUserPassword,
+	}
+
+	currtime := time.Now()
+	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
+	if err != nil {
+		panic("error creating rest client")
+	}
+	MustCreateRoleBinding(tinfo.apicl, "LdapAdminRoleBinding", testTenant, globals.AdminRole, nil, []string{ldapUserGroupDN})
+	defer MustDeleteRoleBinding(tinfo.apicl, "LdapAdminRoleBinding", testTenant)
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, ldapUserCred)
+	AssertOk(t, err, "unable to get logged in context")
+	// test GET user
+	var user *auth.User
+	AssertEventually(t, func() (bool, interface{}) {
+		user, err = restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: ldapUser, Tenant: testTenant})
+		return err == nil, nil
+	}, "unable to fetch user")
+	defer MustDeleteUser(tinfo.apicl, ldapUser, testTenant)
+	Assert(t, user.Spec.Type == auth.UserSpec_EXTERNAL.String(), "unexpected user type: %s", user.Spec.Type)
+	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
+	logintime, err := user.Status.LastSuccessfulLogin.Time()
+	AssertOk(t, err, "error getting successful login time")
+	Assert(t, logintime.After(currtime), fmt.Sprintf("login time [%v] not after current time [%v]", logintime.Local(), currtime.Local()))
+	Assert(t, logintime.Sub(currtime) < 30*time.Second, fmt.Sprintf("login time [%v] not within 30 seconds of current time [%v]", logintime, currtime))
+	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_LDAP.String(),
+		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_LDAP.String(), user.Status.Authenticators[0]))
+}
+
+func TestUsernameConflict(t *testing.T) {
+	t.Skip()
+	localUserCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   testTenant,
+	}
+	ldapConf := &auth.Ldap{
+		Enabled: true,
+		Servers: []*auth.LdapServer{
+			{
+				Url: tinfo.ldapAddr,
+				TLSOptions: &auth.TLSOptions{
+					StartTLS:                   true,
+					SkipServerCertVerification: false,
+					ServerName:                 ServerName,
+					TrustedCerts:               TrustedCerts,
+				},
+			},
+		},
+
+		BaseDN:       BaseDN,
+		BindDN:       BindDN,
+		BindPassword: BindPassword,
+		AttributeMapping: &auth.LdapAttributeMapping{
+			User:             UserAttribute,
+			UserObjectClass:  UserObjectClassAttribute,
+			Group:            GroupAttribute,
+			GroupObjectClass: GroupObjectClassAttribute,
+			Tenant:           TenantAttribute,
+		},
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, localUserCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
+	ldapUserCred := &auth.PasswordCredential{
+		Username: ldapUser,
+		Password: ldapUserPassword,
+	}
+	// create local user with same name as ldap user
+	MustCreateTestUser(tinfo.apicl, ldapUser, testPassword, testTenant)
+	var resp *http.Response
+	var statusCode int
+	AssertEventually(t, func() (bool, interface{}) {
+		var err error
+		resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), ldapUserCred)
+		if err == nil {
+			statusCode = resp.StatusCode
+		}
+		return err == nil && statusCode == http.StatusConflict, err
+	}, fmt.Sprintf("for username conflict expected status code [%d], got [%d]", http.StatusConflict, statusCode))
+	MustDeleteUser(tinfo.apicl, ldapUser, testTenant)
+	// ldap login should succeed after local user is deleted
+	AssertEventually(t, func() (bool, interface{}) {
+		var err error
+		resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), ldapUserCred)
+		if err == nil {
+			statusCode = resp.StatusCode
+		}
+		return err == nil && statusCode == http.StatusOK, err
+	}, fmt.Sprintf("login request after deletion of local user with same name should succeed, Status code: %d", statusCode))
+	defer MustDeleteUser(tinfo.apicl, ldapUser, testTenant)
+	var user auth.User
+	AssertOk(t, json.NewDecoder(resp.Body).Decode(&user), "unable to decode user from http response")
+	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_LDAP.String(),
+		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_LDAP.String(), user.Status.Authenticators[0]))
+	Assert(t, user.Spec.Type == auth.UserSpec_EXTERNAL.String(), fmt.Sprintf("expected external user type, got [%s]", user.Spec.Type))
 }

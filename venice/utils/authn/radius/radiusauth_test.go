@@ -236,7 +236,7 @@ func TestAuthenticator(t *testing.T) {
 			return
 		}
 		// create password authenticator
-		authenticator := NewRadiusAuthenticator("radius_test", apiSrvAddr, nil, policy.Spec.Authenticators.Radius)
+		authenticator := NewRadiusAuthenticator(policy.Spec.Authenticators.Radius)
 
 		// authenticate
 		autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: test.user, Password: test.password})

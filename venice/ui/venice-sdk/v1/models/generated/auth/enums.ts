@@ -67,6 +67,12 @@ export enum AuthUserSpec_type {
     'EXTERNAL' = "EXTERNAL",
 }
 
+export enum AuthUserStatus_authenticators {
+    'LOCAL' = "LOCAL",
+    'LDAP' = "LDAP",
+    'RADIUS' = "RADIUS",
+}
+
 
 export enum AuthAuthenticators_authenticator_order_uihint {
     'LOCAL' = "Local",
@@ -121,6 +127,10 @@ export enum AuthUserSpec_type_uihint {
     'LOCAL' = "Local",
 }
 
+export enum AuthUserStatus_authenticators_uihint {
+    'LOCAL' = "Local",
+}
+
 
 
 
@@ -157,9 +167,11 @@ export class AllEnums {
     AuthPermission_actions = AuthPermission_actions;
     AuthRadiusServer_auth_method = AuthRadiusServer_auth_method;
     AuthUserSpec_type = AuthUserSpec_type;
+    AuthUserStatus_authenticators = AuthUserStatus_authenticators;
 
     AuthAuthenticators_authenticator_order_uihint = AuthAuthenticators_authenticator_order_uihint;
     AuthPermission_resource_kind_uihint = AuthPermission_resource_kind_uihint;
     AuthPermission_actions_uihint = AuthPermission_actions_uihint;
     AuthUserSpec_type_uihint = AuthUserSpec_type_uihint;
+    AuthUserStatus_authenticators_uihint = AuthUserStatus_authenticators_uihint;
 }

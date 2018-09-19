@@ -2758,6 +2758,7 @@
           },
           {
             "name": "status.roles",
+            "description": "Roles assigned to user.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -2767,6 +2768,7 @@
           },
           {
             "name": "status.user-groups",
+            "description": "Groups that external user belongs to.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -2776,10 +2778,21 @@
           },
           {
             "name": "status.last-successful-login",
+            "description": "Last successful login time.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
+          },
+          {
+            "name": "status.authenticators",
+            "description": "Authenticators used for last successful login.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -3299,6 +3312,7 @@
           },
           {
             "name": "status.roles",
+            "description": "Roles assigned to user.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -3308,6 +3322,7 @@
           },
           {
             "name": "status.user-groups",
+            "description": "Groups that external user belongs to.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -3317,10 +3332,21 @@
           },
           {
             "name": "status.last-successful-login",
+            "description": "Last successful login time.",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
+          },
+          {
+            "name": "status.authenticators",
+            "description": "Authenticators used for last successful login.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -4361,17 +4387,36 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "Roles assigned to user"
         },
         "user-groups": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "Groups that external user belongs to"
         },
         "last-successful-login": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "Last successful login time"
+        },
+        "authenticators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "enum": [
+            "LOCAL",
+            "LDAP",
+            "RADIUS"
+          ],
+          "default": "LOCAL",
+          "x-ui-hints": {
+            "LOCAL": "Local"
+          },
+          "title": "Authenticators used for last successful login"
         }
       },
       "title": "status part of user object"

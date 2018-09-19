@@ -7,11 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { AuthUserStatus_authenticators,  AuthUserStatus_authenticators_uihint  } from './enums';
 
 export interface IAuthUserStatus {
     'roles'?: Array<string>;
     'user-groups'?: Array<string>;
     'last-successful-login'?: Date;
+    'authenticators'?: Array<AuthUserStatus_authenticators>;
 }
 
 
@@ -19,6 +21,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     'roles': Array<string> = null;
     'user-groups': Array<string> = null;
     'last-successful-login': Date = null;
+    'authenticators': Array<AuthUserStatus_authenticators> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'roles': {
             type: 'Array<string>'
@@ -28,6 +31,11 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         },
         'last-successful-login': {
             type: 'Date'
+        },
+        'authenticators': {
+            enum: AuthUserStatus_authenticators_uihint,
+            default: 'LOCAL',
+            type: 'Array<string>'
         },
     }
 
@@ -52,6 +60,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         super();
         this['roles'] = new Array<string>();
         this['user-groups'] = new Array<string>();
+        this['authenticators'] = new Array<AuthUserStatus_authenticators>();
         this.setValues(values);
     }
 
@@ -71,6 +80,9 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         } else if (AuthUserStatus.hasDefaultValue('last-successful-login')) {
             this['last-successful-login'] = AuthUserStatus.propInfo['last-successful-login'].default;
         }
+        if (values) {
+            this.fillModelArray<AuthUserStatus_authenticators>(this, 'authenticators', values['authenticators']);
+        }
     }
 
 
@@ -82,11 +94,14 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
                 'roles': new FormArray([]),
                 'user-groups': new FormArray([]),
                 'last-successful-login': new FormControl(this['last-successful-login']),
+                'authenticators': new FormArray([]),
             });
             // generate FormArray control elements
             this.fillFormArray<string>('roles', this['roles']);
             // generate FormArray control elements
             this.fillFormArray<string>('user-groups', this['user-groups']);
+            // generate FormArray control elements
+            this.fillFormArray<AuthUserStatus_authenticators>('authenticators', this['authenticators']);
         }
         return this._formGroup;
     }
@@ -96,6 +111,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
             this.fillModelArray<string>(this, 'roles', this['roles']);
             this.fillModelArray<string>(this, 'user-groups', this['user-groups']);
             this._formGroup.controls['last-successful-login'].setValue(this['last-successful-login']);
+            this.fillModelArray<AuthUserStatus_authenticators>(this, 'authenticators', this['authenticators']);
         }
     }
 }

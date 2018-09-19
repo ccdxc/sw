@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/authn"
 	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/password"
+	"github.com/pensando/sw/venice/utils/authn/radius"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -119,13 +119,9 @@ func (ug *defaultAuthGetter) GetAuthenticators() ([]authn.Authenticator, error) 
 				ug.resolver,
 				policy.Spec.Authenticators.GetLocal())
 		case auth.Authenticators_LDAP.String():
-			authenticators[i] = ldap.NewLdapAuthenticator(
-				ug.name,
-				ug.apiServer,
-				ug.resolver,
-				policy.Spec.Authenticators.GetLdap())
+			authenticators[i] = ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
 		case auth.Authenticators_RADIUS.String():
-			return nil, fmt.Errorf("[%s] Authenticator not yet implemented", authenticatorType)
+			authenticators[i] = radius.NewRadiusAuthenticator(policy.Spec.Authenticators.GetRadius())
 		}
 	}
 	return authenticators, nil

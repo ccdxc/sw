@@ -488,7 +488,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		Tenant:   testutils.TestTenant,
 	}
 	l = log.GetNewLogger(log.GetDefaultConfig("VeniceIntegTest-setupAuth"))
-	err = testutils.SetupAuth(integTestApisrvURL, true, false, it.userCred, l)
+	err = testutils.SetupAuth(integTestApisrvURL, true, &auth.Ldap{Enabled: false}, it.userCred, l)
 	c.Assert(err, IsNil)
 
 	it.vcHub.SetUp(c, it.numAgents)

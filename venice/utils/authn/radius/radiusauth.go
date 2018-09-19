@@ -9,14 +9,10 @@ import (
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 
-	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/utils/authn"
 	penattrs "github.com/pensando/sw/venice/utils/authn/radius/generated"
-	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 var (
@@ -26,19 +22,13 @@ var (
 
 // authenticator is used for authenticating RADIUS user. It implements authn.Authenticator interface.
 type authenticator struct {
-	name         string
-	apiServer    string
-	resolver     resolver.Interface
 	radiusConfig *auth.Radius
 	radiusClient *radius.Client
 }
 
 // NewRadiusAuthenticator returns an instance of Authenticator
-func NewRadiusAuthenticator(name, apiServer string, rslver resolver.Interface, config *auth.Radius) authn.Authenticator {
+func NewRadiusAuthenticator(config *auth.Radius) authn.Authenticator {
 	return &authenticator{
-		name:         name,
-		apiServer:    apiServer,
-		resolver:     rslver,
 		radiusConfig: config,
 		radiusClient: &radius.Client{
 			Retry: time.Second * 1, // retry every 1 sec
@@ -100,16 +90,7 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 	}
 	log.Debugf("groups retrieved from RADIUS attribute: %v", groups)
 
-	// create a grpc client
-	config := log.GetDefaultConfig(a.name)
-	l := log.GetNewLogger(config)
-	b := balancer.New(a.resolver)
-	apicl, err := apiclient.NewGrpcAPIClient(a.name, a.apiServer, l, rpckit.WithBalancer(b))
-	if err != nil {
-		log.Errorf("Failed to connect to gRPC server [%s], Err: %v", a.apiServer, err)
-		return nil, false, err
-	}
-	return authn.UpdateExternalUser(apicl, username, tenant, username, "", groups)
+	return authn.CreateExternalUser(username, tenant, username, "", groups, auth.Authenticators_RADIUS)
 }
 
 func (a *authenticator) newAccessRequest(credential authn.Credential, server *auth.RadiusServer) (*radius.Packet, error) {

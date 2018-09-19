@@ -6,24 +6,33 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authn/manager"
+	"github.com/pensando/sw/venice/utils/authz/rbac"
+	"github.com/pensando/sw/venice/utils/balancer"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
@@ -38,15 +47,20 @@ const (
 var (
 	// ErrInternal is returned for any server error
 	ErrInternal = errors.New("internal error")
+	// ErrUsernameConflict is returned when local user with same name as external user exists
+	ErrUsernameConflict = errors.New("local user name conflicts with external user")
 )
 
 type loginV1GwService struct {
 	defSvcProf      apigw.ServiceProfile
 	svcProf         map[string]apigw.ServiceProfile
+	logger          log.Logger
+	apiserver       string
 	rslvr           resolver.Interface
 	tokenExpiration time.Duration
 	csrfTokenLength int
 	authnMgr        *manager.AuthenticationManager
+	permGetter      rbac.PermissionGetter
 }
 
 func (s *loginV1GwService) setupSvcProfile() {
@@ -75,25 +89,30 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 	m *http.ServeMux,
 	rslvr resolver.Interface,
 	wg *sync.WaitGroup) error {
+	s.logger = logger
 	// cache resolver
 	s.rslvr = rslvr
 	apiGateway := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 	grpcaddr := globals.APIServer
 	grpcaddr = apiGateway.GetAPIServerAddr(grpcaddr)
+	s.apiserver = grpcaddr
 	// create AuthenticationManager
 	authnMgr, err := manager.NewAuthenticationManager(globals.APIGw, grpcaddr, s.rslvr, s.tokenExpiration)
 	if err != nil {
-		log.Errorf("failed to create authentication manager: %v", err)
+		s.logger.Errorf("failed to create authentication manager: %v", err)
 		return ErrInternal
 	}
 	s.authnMgr = authnMgr
+	// create PermissionGetter
+	s.permGetter = rbac.GetPermissionGetter(globals.APIGw, grpcaddr, s.rslvr)
+
 	router := mux.NewRouter()
 	router.Path(login.LoginURLPath).Methods("POST").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-			log.Errorf("failed to read body from login request: %v", err)
+			s.logger.Errorf("failed to read body from login request: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			vErrors.SendInternalError(w, errors.New("Failed to read body from login request: "+err.Error()))
 			return
@@ -101,7 +120,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 
 		cred := &auth.PasswordCredential{}
 		if err := json.Unmarshal(body, cred); err != nil {
-			log.Errorf("failed to unmarshal credentials from request body: %v", err)
+			s.logger.Errorf("failed to unmarshal credentials from request body: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			vErrors.SendInternalError(w, errors.New("Failed to unmarshal credentials from request body: "+err.Error()))
 			return
@@ -122,10 +141,16 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 			return
 		}
 
-		// create CSRF and session token
-		sessionToken, csrfToken, err := s.postLogin(ctx, user)
-		if err != nil {
-			log.Errorf("failed to generate CSRF token: %v", err)
+		// update user, create CSRF and session token
+		user, sessionToken, csrfToken, err := s.postLogin(ctx, user, cred.Password)
+		switch err {
+		case ErrUsernameConflict:
+			w.WriteHeader(http.StatusConflict)
+			vErrors.SendConflict(w, user.Kind, fmt.Sprintf("%s|%s", user.Tenant, user.Name), err)
+			return
+		case nil:
+			// do nothing
+		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			vErrors.SendInternalError(w, err)
 			return
@@ -138,9 +163,10 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 		// remove user password
 		user.Spec.Password = ""
 		if err := json.NewEncoder(w).Encode(user); err != nil {
-			log.Errorf("failed to send user json: %v", err)
+			s.logger.Errorf("failed to send user json: %v", err)
 			return
 		}
+		s.logger.Infof("user [%s|%s] successfully authenticated", user.Tenant, user.Name)
 	})
 	m.Handle(login.LoginURLPath, router)
 	return nil
@@ -158,32 +184,109 @@ func init() {
 func (s *loginV1GwService) login(ctx context.Context, in *auth.PasswordCredential) (*auth.User, error) {
 	user, ok, err := s.authnMgr.Authenticate(in)
 	if err != nil {
-		log.Errorf("failed to authenticate user [%s] in tenant [%s]:  err: %v", in.Username, in.Tenant, err)
+		s.logger.Errorf("failed to authenticate user [%s|%s]:  err: %v", in.Tenant, in.Username, err)
 		return nil, err
 	}
 	if !ok {
-		log.Infof("failed to authenticate user: %s in tenant %s", in.Username, in.Tenant)
+		s.logger.Infof("failed to authenticate user: [%s|%s]", in.Tenant, in.Username)
 		return nil, err
 	}
 	return user, nil
 }
 
-func (s *loginV1GwService) postLogin(ctx context.Context, in *auth.User) (string, string, error) {
+func (s *loginV1GwService) postLogin(ctx context.Context, in *auth.User, password string) (*auth.User, string, string, error) {
+	// updates user status with role info. Needs to be called before creating jwt
+	user, err := s.updateUserStatus(in, password)
+	if err != nil {
+		s.logger.Errorf("Error updating status for user [%s|%s], Err: %v", in.Tenant, in.Name, err)
+		return in, "", "", err
+	}
 	// create CSRF token
 	csrfToken, err := createCSRFToken(s.csrfTokenLength)
 	if err != nil {
-		log.Errorf("failed to generate CSRF token: %v", err)
-		return "", "", ErrInternal
+		s.logger.Errorf("failed to generate CSRF token: %v", err)
+		return user, "", "", ErrInternal
 	}
 	claims := make(map[string]interface{})
 	claims[manager.CsrfClaim] = csrfToken
 	// create session token
 	token, err := s.authnMgr.CreateToken(in, claims)
 	if err != nil {
-		log.Errorf("failed to create session token: %v", err)
-		return "", "", ErrInternal
+		s.logger.Errorf("failed to create session token: %v", err)
+		return user, "", "", ErrInternal
 	}
-	return token, csrfToken, nil
+	return user, token, csrfToken, nil
+}
+
+// updateUserStatus updates user object with status(user groups, last successful login, authenticators used) in API server.
+// User role information is not saved in API server
+func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*auth.User, error) {
+	m, err := types.TimestampProto(time.Now())
+	if err != nil {
+		return nil, err
+	}
+	user.Status.LastSuccessfulLogin = &api.Timestamp{
+		Timestamp: *m,
+	}
+	b := balancer.New(s.rslvr)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.APIGw, s.apiserver, s.logger, rpckit.WithBalancer(b))
+	if err != nil {
+		return nil, err
+	}
+	defer apicl.Close()
+	var storedUser *auth.User
+	if storedUser, err = apicl.AuthV1().User().Get(context.Background(), user.GetObjectMeta()); err != nil {
+		status := apierrors.FromError(err)
+		//  Create user if it is external and not found
+		if user.Spec.Type == auth.UserSpec_EXTERNAL.String() && status.Code == http.StatusNotFound {
+			user, err = apicl.AuthV1().User().Create(context.Background(), user)
+			if err != nil {
+				s.logger.Errorf("Error creating external user [%s|%s], Err: %v", user.Tenant, user.Name, err)
+				return nil, err
+			}
+			s.logger.Infof("External user [%s|%s] created.", user.Tenant, user.Name)
+		} else {
+			s.logger.Errorf("Error fetching user [%s|%s] of type [%s]): %v", user.Tenant, user.Name, user.Spec.Type, err)
+			return nil, err
+		}
+	} else {
+		// check if local user with same name as external user exists
+		if storedUser.Spec.Type != user.Spec.Type {
+			s.logger.Errorf("[%s] user [%s|%s] with same name as [%s] user exists",
+				storedUser.Spec.Type, user.Tenant, user.Name, user.Spec.Type)
+			return nil, ErrUsernameConflict
+		}
+
+		if user.Spec.Type == auth.UserSpec_LOCAL.String() { // update local user with retries as ResourceVersion could have changed
+			result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+				storedUser, err = apicl.AuthV1().User().Get(context.Background(), user.GetObjectMeta())
+				if err != nil {
+					return nil, err
+				}
+				// set user plaintext password for local user before updating user status; user object retrieved from API server contains hashed password.
+				storedUser.Spec.Password = password
+				storedUser.Status = user.Status
+				return apicl.AuthV1().User().Update(context.Background(), storedUser)
+			}, 100*time.Millisecond, 20)
+			if err != nil {
+				return nil, err
+			}
+			user = result.(*auth.User)
+		} else { // update external user. We are not retrying as ResourceVersion is not set by external authenticators. We always update externally authenticated user info in kvstore
+			user, err = apicl.AuthV1().User().Update(context.Background(), user)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// reset roles
+	user.Status.Roles = []string{}
+	roles := s.permGetter.GetRolesForUser(user)
+	for _, role := range roles {
+		user.Status.Roles = append(user.Status.Roles, role.Name)
+	}
+	return user, nil
 }
 
 func createCookie(token string, expiration time.Duration) *http.Cookie {

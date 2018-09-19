@@ -22,17 +22,22 @@ message UserSpec {
         EXTERNAL = 1; //User external to Venice like in LDAP, SAML
     }
 
-    string Fullname = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "fullname,omitempty"];
-    string Email    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "email,omitempty"];
-    string Password = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "password,omitempty"];
-    string Type     = 4 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(UserSpec.UserType)", (gogoproto.jsontag) = "type,omitempty"];
+    string Fullname = 1 [(gogoproto.jsontag) = "fullname,omitempty"];
+    string Email    = 2 [(gogoproto.jsontag) = "email,omitempty"];
+    string Password = 3 [(gogoproto.jsontag) = "password,omitempty"];
+    string Type     = 4 [(venice.check) = "StrEnum(UserSpec.UserType)", (gogoproto.jsontag) = "type,omitempty"];
 }
 
 // status part of user object
 message UserStatus {
+    // Roles assigned to user
     repeated string Roles             = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "roles,omitempty"];
+    // Groups that external user belongs to
     repeated string UserGroups        = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-groups,omitempty"];
+    // Last successful login time
     api.Timestamp LastSuccessfulLogin = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-successful-login,omitempty"];
+    // Authenticators used for last successful login
+    repeated string Authenticators    = 4 [(venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticators,omitempty"];
 }
 
 // User could be local or external
@@ -65,7 +70,7 @@ message Authenticators {
         RADIUS = 2;
     }
 
-    //Order in which authenticators are applied. If an authenticator returns success, others are skipped
+    // Order in which authenticators are applied. If an authenticator returns success, others are skipped
     repeated string AuthenticatorOrder = 1 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticator-order,omitempty"];
     Ldap Ldap                          = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ldap,omitempty"];
     Local Local                        = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "local,omitempty"];
@@ -74,9 +79,9 @@ message Authenticators {
 
 message Ldap {
     bool Enabled                          = 1 [(gogoproto.jsontag) = "enabled,omitempty"];
-    string BaseDN                         = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "base-dn,omitempty"];
-    string BindDN                         = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "bind-dn,omitempty"];
-    string BindPassword                   = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "bind-password,omitempty"];
+    string BaseDN                         = 2 [(gogoproto.jsontag) = "base-dn,omitempty"];
+    string BindDN                         = 3 [(gogoproto.jsontag) = "bind-dn,omitempty"];
+    string BindPassword                   = 4 [(gogoproto.jsontag) = "bind-password,omitempty"];
     LdapAttributeMapping AttributeMapping = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attribute-mapping,omitempty"];
 
     // Servers is a list that lets you configure multiple LDAP servers for high availability
@@ -98,26 +103,26 @@ message TLSOptions {
     bool SkipServerCertVerification = 2 [(gogoproto.jsontag) = "skip-server-cert-verification,omitempty"];
 
     // ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true.
-    string ServerName               = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "server-name,omitempty"];
+    string ServerName               = 3 [(gogoproto.jsontag) = "server-name,omitempty"];
 
     // TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates.
-    string TrustedCerts             = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "trusted-certs,omitempty"];
+    string TrustedCerts             = 4 [(gogoproto.jsontag) = "trusted-certs,omitempty"];
 }
 
 message LdapAttributeMapping {
-    string User             = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user,omitempty"];
+    string User             = 1 [(gogoproto.jsontag) = "user,omitempty"];
 
     // UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search
-    string UserObjectClass  = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-object-class,omitempty"];
+    string UserObjectClass  = 2 [(gogoproto.jsontag) = "user-object-class,omitempty"];
 
-    string Tenant           = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tenant,omitempty"];
-    string Group            = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "group,omitempty"];
+    string Tenant           = 3 [(gogoproto.jsontag) = "tenant,omitempty"];
+    string Group            = 4 [(gogoproto.jsontag) = "group,omitempty"];
 
     // GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search
-    string GroupObjectClass = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "group-object-class,omitempty"];
+    string GroupObjectClass = 5 [(gogoproto.jsontag) = "group-object-class,omitempty"];
 
-    string Email            = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "email,omitempty"];
-    string Fullname         = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "fullname,omitempty"];
+    string Email            = 6 [(gogoproto.jsontag) = "email,omitempty"];
+    string Fullname         = 7 [(gogoproto.jsontag) = "fullname,omitempty"];
 }
 
 message Local {

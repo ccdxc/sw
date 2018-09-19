@@ -234,21 +234,6 @@ func TestAuthnRegistration(t *testing.T) {
 }
 
 func TestRemovePassword(t *testing.T) {
-	users := []*auth.User{
-		{
-			TypeMeta: api.TypeMeta{Kind: "User"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant: "testTenant",
-				Name:   "testuser",
-			},
-			Spec: auth.UserSpec{
-				Fullname: "Test User",
-				Password: "password",
-				Email:    "testuser@pensandio.io",
-				Type:     auth.UserSpec_LOCAL.String(),
-			},
-		},
-	}
 	tests := []struct {
 		name string
 		in   interface{}
@@ -256,13 +241,39 @@ func TestRemovePassword(t *testing.T) {
 	}{
 		{
 			name: "User object",
-			in:   users[0],
-			err:  false,
+			in: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testuser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_LOCAL.String(),
+				},
+			},
+			err: false,
 		},
 		{
 			name: "User list",
 			in: &auth.UserList{
-				Items: users,
+				Items: []*auth.User{
+					{
+						TypeMeta: api.TypeMeta{Kind: "User"},
+						ObjectMeta: api.ObjectMeta{
+							Tenant: "testTenant",
+							Name:   "testuser",
+						},
+						Spec: auth.UserSpec{
+							Fullname: "Test User",
+							Password: "password",
+							Email:    "testuser@pensandio.io",
+							Type:     auth.UserSpec_LOCAL.String(),
+						},
+					},
+				},
 			},
 			err: false,
 		},
@@ -285,6 +296,76 @@ func TestRemovePassword(t *testing.T) {
 		case *auth.UserList:
 			for _, user := range obj.GetItems() {
 				Assert(t, user.Spec.Password == "", "non empty password in user list")
+			}
+		}
+
+	}
+}
+
+func TestAddRoles(t *testing.T) {
+	tests := []struct {
+		name string
+		in   interface{}
+		err  bool
+	}{
+		{
+			name: "User object",
+			in: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testuser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_LOCAL.String(),
+				},
+			},
+			err: false,
+		},
+		{
+			name: "User list",
+			in: &auth.UserList{
+				Items: []*auth.User{
+					{
+						TypeMeta: api.TypeMeta{Kind: "User"},
+						ObjectMeta: api.ObjectMeta{
+							Tenant: "testTenant",
+							Name:   "testuser",
+						},
+						Spec: auth.UserSpec{
+							Fullname: "Test User",
+							Password: "password",
+							Email:    "testuser@pensandio.io",
+							Type:     auth.UserSpec_LOCAL.String(),
+						},
+					},
+				},
+			},
+			err: false,
+		},
+		{
+			name: "invalid object",
+			in:   &struct{ name string }{name: "invalid object type"},
+			err:  true,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testNetworkAdminRole}, []*auth.RoleBinding{testNetworkAdminRoleBinding}, nil, nil)
+	for _, test := range tests {
+		_, out, err := r.addRoles(context.TODO(), test.in)
+		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
+		switch obj := out.(type) {
+		case *auth.User:
+			Assert(t, len(obj.Status.Roles) == 1 && obj.Status.Roles[0] == "NetworkAdmin", "user should have network admin role")
+		case *auth.UserList:
+			for _, user := range obj.GetItems() {
+				Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == "NetworkAdmin", "user should have network admin role")
 			}
 		}
 
@@ -358,6 +439,27 @@ func TestRemovePasswordHookRegistration(t *testing.T) {
 	svc = mocks.NewFakeAPIGwService(l, true)
 	err = r.registerRemovePasswordHook(svc)
 	Assert(t, err != nil, "expected error in removePassword hook registration")
+}
+
+func TestAddRolesHookRegistration(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(l, false)
+	r := &authHooks{}
+	r.logger = l
+	err := r.registerAddRolesHook(svc)
+	AssertOk(t, err, "addRoles hook registration failed")
+
+	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
+	for _, oper := range opers {
+		prof, err := svc.GetCrudServiceProfile("User", oper)
+		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
+		Assert(t, len(prof.PostCallHooks()) == 1, fmt.Sprintf("unexpected number of post call hooks [%d] for User operation [%v]", len(prof.PostCallHooks()), oper))
+	}
+	// test err
+	svc = mocks.NewFakeAPIGwService(l, true)
+	err = r.registerAddRolesHook(svc)
+	Assert(t, err != nil, "expected error in addRoles hook registration")
 }
 
 func TestRemoveSecretHookRegistration(t *testing.T) {

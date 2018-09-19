@@ -502,9 +502,6 @@ func TestBind(t *testing.T) {
 	for _, test := range tests {
 		ldapConf.Servers[0].Url = test.url
 		authenticator := &authenticator{
-			name:            "ldap_test",
-			apiServer:       apiSrvAddr,
-			resolver:        nil,
 			ldapConfig:      ldapConf,
 			getConnectionFn: getMockConnectionGetter(test.name),
 		}
@@ -522,9 +519,6 @@ func TestAuthenticate(t *testing.T) {
 	policy := createDefaultAuthenticationPolicy()
 	defer DeleteAuthenticationPolicy(apicl)
 	authenticator := &authenticator{
-		name:            "ldap_test",
-		apiServer:       apiSrvAddr,
-		resolver:        nil,
 		ldapConfig:      policy.Spec.Authenticators.Ldap,
 		getConnectionFn: getMockConnectionGetter(successfulAuth),
 	}

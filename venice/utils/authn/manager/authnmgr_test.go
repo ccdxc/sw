@@ -255,41 +255,6 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 	}
 }
 
-// TestNotYetImplementedAuthenticator tests un-implemented authenticator
-func TestNotYetImplementedAuthenticator(t *testing.T) {
-	policy := &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "AuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: false,
-				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
-				Radius:             &auth.Radius{},
-				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
-			},
-		},
-	}
-	createAuthenticationPolicy(t, policy)
-	defer deleteAuthenticationPolicy(t)
-
-	var user *auth.User
-	var ok bool
-	var err error
-	AssertConsistently(t, func() (bool, interface{}) {
-		user, ok, err = authnmgr.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
-		return !ok, nil
-	}, "User authenticated when unimplemented authenticator is configured")
-
-	Assert(t, err != nil, "No error returned for un-implemented authenticator")
-	Assert(t, user == nil, "User returned when unimplemented authenticator is configured")
-}
-
 // disabledLocalAuthenticatorPolicyData returns policy data where both LDAP and Local authenticators are disabled
 func disabledLocalAuthenticatorPolicyData() map[string](*auth.AuthenticationPolicy) {
 	policydata := make(map[string]*auth.AuthenticationPolicy)

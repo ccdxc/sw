@@ -38,6 +38,7 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 
 	//Don't save password for external user
 	if r.Spec.GetType() == auth.UserSpec_EXTERNAL.String() {
+		r.Spec.Password = ""
 		return r, true, nil
 	}
 

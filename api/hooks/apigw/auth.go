@@ -66,6 +66,31 @@ func (a *authHooks) removePassword(ctx context.Context, out interface{}) (contex
 	}
 }
 
+// addRoles is a post-call hook to populate roles in user status
+func (a *authHooks) addRoles(ctx context.Context, out interface{}) (context.Context, interface{}, error) {
+	a.logger.DebugLog("msg", "APIGw addRoles hook called")
+	switch obj := out.(type) {
+	case *auth.User:
+		obj.Status.Roles = []string{}
+		roles := a.permissionGetter.GetRolesForUser(obj)
+		for _, role := range roles {
+			obj.Status.Roles = append(obj.Status.Roles, role.Name)
+		}
+		return ctx, obj, nil
+	case *auth.UserList:
+		for _, user := range obj.GetItems() {
+			roles := a.permissionGetter.GetRolesForUser(user)
+			user.Status.Roles = []string{}
+			for _, role := range roles {
+				user.Status.Roles = append(user.Status.Roles, role.Name)
+			}
+		}
+		return ctx, obj, nil
+	default:
+		return ctx, out, errors.New("invalid input type")
+	}
+}
+
 // removeSecret is a post-call hook to remove secret from AuthenticationPolicy
 func (a *authHooks) removeSecret(ctx context.Context, out interface{}) (context.Context, interface{}, error) {
 	a.logger.DebugLog("msg", "APIGw removeSecret hook called")
@@ -142,6 +167,18 @@ func (a *authHooks) registerRemovePasswordHook(svc apigw.APIGatewayService) erro
 			return err
 		}
 		prof.AddPostCallHook(a.removePassword)
+	}
+	return nil
+}
+
+func (a *authHooks) registerAddRolesHook(svc apigw.APIGatewayService) error {
+	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
+	for _, oper := range opers {
+		prof, err := svc.GetCrudServiceProfile("User", oper)
+		if err != nil {
+			return err
+		}
+		prof.AddPostCallHook(a.addRoles)
 	}
 	return nil
 }
@@ -245,6 +282,10 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 
 	// register post call hook to remove password from user object
 	if err := r.registerRemovePasswordHook(svc); err != nil {
+		return err
+	}
+	// register post call hook to add roles to user status
+	if err := r.registerAddRolesHook(svc); err != nil {
 		return err
 	}
 	// register post call hook to remove secret from AuthenticationPolicy

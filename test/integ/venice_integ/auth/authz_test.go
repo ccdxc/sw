@@ -24,7 +24,7 @@ func TestAuthorization(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -57,7 +57,7 @@ func TestAdminRole(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, adminCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l)
@@ -111,7 +111,7 @@ func TestPrivilegeEscalation(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -149,7 +149,7 @@ func TestPrivilegeEscalation(t *testing.T) {
 			"",
 			auth.Permission_ALL_ACTIONS.String()))
 	defer MustDeleteRole(tinfo.apicl, "NetworkAdminRole", testTenant)
-	roleBinding := MustCreateRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", testTenant, "NetworkAdminRole", "testUser2")
+	roleBinding := MustCreateRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", testTenant, "NetworkAdminRole", []string{"testUser2"}, nil)
 	defer MustDeleteRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", testTenant)
 	// login as network admin
 	ctx, err = NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{
@@ -189,7 +189,7 @@ func TestBootstrapFlag(t *testing.T) {
 	}, "bootstrap flag shouldn't be set till role binding is created")
 	MustCreateTestUser(tinfo.restcl, testUser, testPassword, globals.DefaultTenant)
 	defer MustDeleteUser(tinfo.apicl, testUser, globals.DefaultTenant)
-	MustCreateRoleBinding(tinfo.restcl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, testUser)
+	MustCreateRoleBinding(tinfo.restcl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, []string{testUser}, nil)
 	defer MustDeleteRoleBinding(tinfo.apicl, "AdminRoleBinding", globals.DefaultTenant)
 	// set bootstrap flag
 	AssertEventually(t, func() (bool, interface{}) {
