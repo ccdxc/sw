@@ -111,10 +111,6 @@ func main() {
 		agMode = protos.AgentMode_CLASSIC
 	}
 
-	// create the reverse proxy router
-	revproxy.NewRevProxyRouter(*revProxyURL)
-	log.Printf("Reverse Proxy Router instantiated")
-
 	// create the new NetAgent
 	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, resolverClient, agMode)
 	if err != nil {
@@ -137,6 +133,15 @@ func main() {
 			log.Fatalf("Error creating hal datapath. Err: %v", err)
 		}
 		tsdp = mockDp
+	}
+
+	// create the reverse proxy router
+	if proxyRouter, ok := revproxy.NewRevProxyRouter(*revProxyURL); ok == nil {
+		log.Printf("Reverse Proxy Router instantiated")
+		revproxy.AddRevProxyDest("api", "9007")
+		defer proxyRouter.Stop()
+	} else {
+		log.Fatalf("Could not start Reverse Proxy Router. Err: %v", err)
 	}
 
 	// TODO remove the command line switch
