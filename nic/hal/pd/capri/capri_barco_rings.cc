@@ -54,6 +54,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        0,
+        0,
+        true,   // run-time modified based on platform
+        false,
         capri_barco_asym_init,
         capri_barco_asym_poller,
         capri_barco_asym_queue_request,
@@ -69,6 +74,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        sizeof(uint32_t),
+        0,
+        true,   // run-time modified based on platform
+        false,
         capri_barco_gcm0_init,
         capri_barco_gcm0_poller,
         capri_barco_gcm0_queue_request,
@@ -84,6 +94,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        sizeof(uint32_t),
+        0,
+        true,   // run-time modified based on platform
+        false,
         capri_barco_gcm1_init,
         capri_barco_gcm1_poller,
         capri_barco_gcm1_queue_request,
@@ -99,6 +114,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        sizeof(uint32_t),
+        0,
+        true,   // run-time modified based on platform
+        false,
         capri_barco_xts0_init,
         capri_barco_xts0_poller,
         NULL,
@@ -114,6 +134,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        sizeof(uint32_t),
+        0,
+        true,   // run-time modified based on platform
+        false,
         capri_barco_xts1_init,
         capri_barco_xts1_poller,
         NULL,
@@ -129,6 +154,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        0,
+        0,
+        true,   // run-time modified based on platform
+        false,
         capri_barco_mpp0_init,
         capri_barco_mpp_poller,
         capri_barco_mpp_queue_request,
@@ -144,6 +174,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        0,
+        0,
+        true,   // run-time modified based on platform
+        false,
         capri_barco_mpp1_init,
         NULL,
         NULL,
@@ -159,6 +194,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        0,
+        0,
+        true,   // run-time modified based on platform
+        false,
         capri_barco_mpp2_init,
         NULL,
         NULL,
@@ -174,6 +214,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        0,
+        0,
+        true,   // run-time modified based on platform
+        false,
         capri_barco_mpp3_init,
         NULL,
         NULL,
@@ -197,6 +242,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        sizeof(uint32_t),
+        0,
+        true,   // run-time modified based on platform
+        true,   //   "        "
         capri_barco_cp_init,
         capri_barco_cp_poller,
         NULL,
@@ -212,6 +262,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        0,
+        sizeof(uint32_t),
+        0,
+        true,   // run-time modified based on platform
+        true,   //   "        "
         capri_barco_cp_hot_init,
         capri_barco_cp_hot_poller,
         NULL,
@@ -227,6 +282,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        sizeof(uint32_t),
+        sizeof(uint32_t),
+        0,
+        true,   // run-time modified based on platform
+        true,   //   "        "
         capri_barco_dc_init,
         capri_barco_dc_poller,
         NULL,
@@ -242,6 +302,11 @@ capri_barco_ring_t  barco_rings[] = {
         0,
         0,
         0,
+        0,
+        sizeof(uint32_t),
+        0,
+        true,   // run-time modified based on platform
+        true,   //   "        "
         capri_barco_dc_hot_init,
         capri_barco_dc_hot_poller,
         NULL,
@@ -1594,8 +1659,20 @@ hal_ret_t capri_barco_rings_init(void)
     uint16_t        idx;
     uint64_t        opa_tag_addr = 0;
     uint32_t        opa_tag_def_val = 0;
+    uint64_t        shadow_pndx_addr = 0;
+    uint64_t        shadow_pndx_def_val = 0;
+    uint64_t        shadow_pndx_total = 0;
+    uint32_t        shadow_pndx_size = 0;
     hal_ret_t       ret = HAL_RET_OK;
+    hal_cfg_t       *hal_cfg = (hal::hal_cfg_t *)hal::hal_get_current_thread()->data();
+    HAL_ASSERT(hal_cfg);
 
+    shadow_pndx_total = CRYPTO_BARCO_RES_HBM_MEM_512B_SIZE;
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B, NULL, &shadow_pndx_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to allocate shadow pndx storage for rings");
+        return ret;
+    }
     for (idx = 0; idx < types::BarcoRings_ARRAYSIZE; idx++) {
         barco_rings[idx].producer_idx = 0;
         barco_rings[idx].consumer_idx = 0;
@@ -1621,6 +1698,34 @@ hal_ret_t capri_barco_rings_init(void)
 
             barco_rings[idx].opaque_tag_addr = opa_tag_addr;
         }
+        shadow_pndx_size = barco_rings[idx].shadow_pndx_size;
+        if (shadow_pndx_size) {
+            assert(shadow_pndx_size <= sizeof(shadow_pndx_def_val));
+            if (shadow_pndx_total < shadow_pndx_size) {
+                HAL_TRACE_ERR("Out of shadow pndx storage for ring {}",
+                              barco_rings[idx].ring_name);
+                return HAL_RET_HW_FAIL;
+            }
+            barco_rings[idx].shadow_pndx_addr = shadow_pndx_addr;
+            if(capri_hbm_write_mem(shadow_pndx_addr, (uint8_t *)&shadow_pndx_def_val,
+                                   shadow_pndx_size)) {
+                HAL_TRACE_ERR("Ring: {}: Failed to initialize shadow pndx @ {:x}",
+                              barco_rings[idx].ring_name, shadow_pndx_addr);
+                return HAL_RET_HW_FAIL;
+            } 
+            HAL_TRACE_DEBUG("Ring: {}: initialized shadow pndx to 0 @ {:x}",
+                            barco_rings[idx].ring_name, shadow_pndx_addr);
+            shadow_pndx_addr += shadow_pndx_size;
+            shadow_pndx_total -= shadow_pndx_size;
+        }
+
+        /* Model does not support sw_reset */
+        if (barco_rings[idx].sw_reset_capable) {
+            if ((hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HAPS) &&
+                (hal_cfg->platform_mode != hal::HAL_PLATFORM_MODE_HW)) {
+                barco_rings[idx].sw_reset_capable = false;
+            }
+        }
         if (barco_rings[idx].init) {
             ret = barco_rings[idx].init(&barco_rings[idx]);
             if (ret != HAL_RET_OK) {
@@ -1636,6 +1741,25 @@ hal_ret_t capri_barco_rings_init(void)
 hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr)
 {
     *addr = barco_rings[ring_type].opaque_tag_addr;
+    return HAL_RET_OK;
+}
+
+hal_ret_t capri_barco_get_meta_config_info(types::BarcoRings ring_type, uint64_t* shadow_pndx_addr,
+                                           uint32_t *shadow_pndx_size, uint32_t *desc_size,
+                                           uint32_t *opaque_tag_size)
+{
+    *shadow_pndx_addr = barco_rings[ring_type].shadow_pndx_addr;
+    *desc_size = barco_rings[ring_type].descriptor_size;
+    *shadow_pndx_size = barco_rings[ring_type].shadow_pndx_size;
+    *opaque_tag_size = barco_rings[ring_type].opaque_tag_size;
+    return HAL_RET_OK;
+}
+
+hal_ret_t capri_barco_get_capabilities(types::BarcoRings ring_type,
+                                       bool *sw_reset_capable, bool *sw_enable_capable)
+{
+    *sw_reset_capable = barco_rings[ring_type].sw_reset_capable;
+    *sw_enable_capable = barco_rings[ring_type].sw_enable_capable;
     return HAL_RET_OK;
 }
 

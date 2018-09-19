@@ -37,6 +37,16 @@ enum {
 
 typedef uint32_t    accel_ring_id_t;
 
+/*
+ * Accelerator sub-rings:
+ *  Capri: single sub-ring per ring ID
+ *  Post-Capri: multiple sub-rings per
+ */
+enum {
+    ACCEL_SUB_RING0     = 0,
+    ACCEL_SUB_RING_ALL  = 0xffffffff,
+};
+
 /**
  * accel_ring_t - Hardware accelerator ring information
  * 

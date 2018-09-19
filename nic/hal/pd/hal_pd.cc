@@ -443,6 +443,17 @@ hal_pd_load_symbols (void)
 
     // pb
     PD_FUNC_LOAD(PD_FUNC_ID_PB_STATS_GET, pd_pb_stats_get);
+
+    // accelerator ring group
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_ADD, pd_capri_accel_rgroup_add);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_DEL, pd_capri_accel_rgroup_del);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_RING_ADD, pd_capri_accel_rgroup_ring_add);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_RING_DEL, pd_capri_accel_rgroup_ring_del);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_RESET_SET, pd_capri_accel_rgroup_reset_set);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_ENABLE_SET, pd_capri_accel_rgroup_enable_set);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET, pd_capri_accel_rgroup_pndx_set);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_INFO_GET, pd_capri_accel_rgroup_info_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET, pd_capri_accel_rgroup_indices_get);
     return ret;
 }
 

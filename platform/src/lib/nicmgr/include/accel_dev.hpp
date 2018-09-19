@@ -3,6 +3,7 @@
 #define __ACCEL_DEV_HPP__
 
 #include <map>
+#include <unordered_map>
 
 #include "dev.hpp"
 #include "pci_ids.h"
@@ -13,6 +14,7 @@
 #include "pciehdevices.h"
 #include "pciehw.h"
 #include "pcieport.h"
+#include "hal_client.hpp"
 #include "accel_ring.h"
 #include "storage_seq_common.h"
 
@@ -33,14 +35,6 @@ enum {
 
     ACCEL_DEV_BAR0_NUM_PAGES_MAX        = 8
 };
-
-/*
- * One additional HBM page (not in BAR0) for the shadow pindices
- */
-enum {
-    ACCEL_DEV_SHADOW_PINDEX_NUM_PAGES_MAX = 1
-};
-
 
 /*
  * Physical host address bit manipulation
@@ -137,36 +131,29 @@ typedef struct dev_cmd_regs {
 
 #endif /* ACCEL_DEV_CMD_ENUMERATE */
 
-/*
- * Very simple bitmap implementation for ring IDs
+/**
+ * Accelerator device ring group ring info
  */
-typedef uint32_t    accel_ring_id_map_t;
+typedef struct {
+    accel_rgroup_rinfo_rsp_t    info;
+    accel_rgroup_rindices_rsp_t indices;
+} accel_rgroup_ring_t;
 
-static inline void
-accel_ring_id_map_init(accel_ring_id_map_t& map)
+/*
+ * Ring group map:
+ * key = {ring_handle, sub_ring}
+ * value = accel_rgroup_ring_t
+ */
+typedef uint64_t                            accel_rgroup_ring_key_t;
+typedef std::map<accel_rgroup_ring_key_t,accel_rgroup_ring_t>  accel_rgroup_map_t;
+typedef accel_rgroup_map_t::iterator        accel_rgroup_iter_t;
+typedef accel_rgroup_map_t::const_iterator  accel_rgroup_iter_c;
+
+static inline accel_rgroup_ring_key_t
+accel_rgroup_ring_key_make(uint32_t ring_handle,
+                           uint32_t sub_ring)
 {
-    map = 0;
-}
-
-static inline void
-accel_ring_id_map_set(accel_ring_id_map_t& map,
-                      accel_ring_id_t id)
-{
-    map |= 1 << id;
-}
-
-static inline uint32_t
-accel_ring_id_map_bitcount(accel_ring_id_map_t map)
-{
-    uint32_t    bitcount = 0;
-
-    while (map) {
-        if (map & 1) {
-            bitcount++;
-        }
-        map >>= 1;
-    }
-    return bitcount;
+    return ((accel_rgroup_ring_key_t)(ring_handle) << 32) | sub_ring;
 }
 
 /*
@@ -181,11 +168,6 @@ public:
 private:
   uint64_t  timeout_us;
 };
-
-/*
- * Forward declarations
- */
-typedef struct accel_csr    accel_csr_t;
 
 /**
  * Accelerator PF Device
@@ -219,8 +201,6 @@ private:
     pciehdevice_resources_t     pci_resources;
 
     // Oher states
-    uint64_t                    shadow_pndx_page_addr;
-    uint32_t                    shadow_pndx_bytes_used;
     uint32_t                    seq_qid_init_high;  // highest seq qid initialized
 
     const struct lif_info       *nicmgr_lif_info;
@@ -243,31 +223,21 @@ private:
 
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
 
-    void accel_ring_info_get_all(void);
-    void accel_ring_reset_all(void);
-    void accel_ring_reset_csr_set(const accel_csr_t *csr,
-                                  bool enable);
-    void accel_ring_enable_csr_set(const accel_csr_t *csr,
-                                   bool enable);
-    void accel_engine_enable_csr_set(const accel_csr_t *csr,
-                                     bool enable);
-    void accel_ring_pndx_csr_set(const accel_csr_t *csr,
-                                 uint32_t val);
-    uint32_t accel_ring_num_pendings_get(const accel_csr_t *csr,
-                                         accel_ring_id_map_t& ring_empty_map);
-    void accel_ring_max_pendings_get(const accel_csr_t *csr,
-                                      uint32_t& max_pendings);
-    void accel_ring_wait_quiesce_all(void);
+    int accel_ring_info_get_all(void);
+    int accel_ring_reset_all(void);
+    int accel_ring_wait_quiesce_all(void);
+    int accel_rgroup_add(void);
+    int accel_rgroup_rings_add(void);
+    int accel_rgroup_reset_set(bool reset_sense);
+    int accel_rgroup_enable_set(bool enable_sense);
+    int accel_rgroup_pndx_set(uint32_t val,
+                              bool conditional);
+    int accel_rgroup_rinfo_get(void);
+    int accel_rgroup_rindices_get(void);
+    uint32_t accel_ring_num_pendings_get(const accel_rgroup_ring_t& rgroup_ring);
+    int accel_ring_max_pendings_get(uint32_t& max_pendings);
 
     friend ostream &operator<<(ostream&, const Accel_PF&);
 };
-
-
-uint64_t accel_csr_get64(uint64_t csr_offs);
-void accel_csr_set64(uint64_t csr_offs,
-                     uint64_t csr_val);
-uint32_t accel_csr_get32(uint64_t csr_offs);
-void accel_csr_set32(uint64_t csr_offs,
-                     uint32_t csr_val);
 
 #endif

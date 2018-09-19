@@ -16,6 +16,7 @@
 #include "l2segment.grpc.pb.h"
 #include "multicast.grpc.pb.h"
 #include "rdma.grpc.pb.h"
+#include "accel_rgroup.grpc.pb.h"
 
 using namespace kh;
 using namespace types;
@@ -26,6 +27,7 @@ using namespace endpoint;
 using namespace l2segment;
 using namespace multicast;
 using namespace rdma;
+using namespace accelRGroup;
 
 using namespace grpc;
 using namespace std;
@@ -63,6 +65,38 @@ struct lif_info {
   uint64_t qstate_addr[NUM_QUEUE_TYPES];
 };
 
+/**
+ * Accelerator ring group ring info response structure
+ */
+typedef struct {
+    uint32_t    ring_handle;
+    uint32_t    sub_ring;
+    uint64_t    base_pa;
+    uint64_t    pndx_pa;
+    uint64_t    shadow_pndx_pa;
+    uint64_t    opaque_tag_pa;
+    uint32_t    opaque_tag_size;
+    uint32_t    ring_size;
+    uint32_t    desc_size;
+    uint32_t    pndx_size;
+    uint32_t    sw_reset_capable;
+    uint32_t    sw_enable_capable;
+} accel_rgroup_rinfo_rsp_t;
+
+typedef void (*accel_rgroup_rinfo_rsp_cb_t)(void *user_ctx,
+                                            const accel_rgroup_rinfo_rsp_t& info);
+/*
+ * Accelerator ring group ring indices response structure
+ */
+typedef struct {
+    uint32_t    ring_handle;
+    uint32_t    sub_ring;
+    uint32_t    pndx;
+    uint32_t    cndx;
+} accel_rgroup_rindices_rsp_t;
+
+typedef void (*accel_rgroup_rindices_rsp_cb_t)(void *user_ctx,
+                                               const accel_rgroup_rindices_rsp_t& indices);
 /**
  * Client for interacting with HAL
  */
@@ -225,6 +259,32 @@ public:
   int RDMACreateAdminQ(uint64_t lif_id, uint32_t aq_num,
                        uint32_t log_num_wqes, uint32_t log_wqe_size,
                        uint64_t va, uint32_t cq_num);
+  int AccelRGroupAdd(const std::string& rgroup_name);
+  int AccelRGroupDel(const std::string& rgroup_name);
+  int AccelRGroupRingAdd(const std::string& rgroup_name,
+      const std::vector<std::pair<const std::string,uint32_t>>& ring_vec);
+  int AccelRGroupRingDel(const std::string& rgroup_name,
+      const std::vector<std::pair<const std::string,uint32_t>>& ring_vec);
+  int AccelRGroupResetSet(const std::string& rgroup_name,
+                          uint32_t sub_ring,
+                          bool reset_sense);
+  int AccelRGroupEnableSet(const std::string& rgroup_name,
+                           uint32_t sub_ring,
+                           bool enable_sense);
+  int AccelRGroupPndxSet(const std::string& rgroup_name,
+                         uint32_t sub_ring,
+                         uint32_t val,
+                         bool conditional);
+  int AccelRGroupInfoGet(const std::string& rgroup_name,
+                          uint32_t sub_ring,
+                          accel_rgroup_rinfo_rsp_cb_t rsp_cb_func,
+                          void *user_ctx,
+                          uint32_t& ret_num_entries);
+  int AccelRGroupIndicesGet(const std::string& rgroup_name,
+                            uint32_t sub_ring,
+                            accel_rgroup_rindices_rsp_cb_t rsp_cb_func,
+                            void *user_ctx,
+                            uint32_t& ret_num_entries);
 
   /* Filter APIs */
   int FilterAdd(uint64_t lif_id, uint64_t mac, uint32_t vlan);
@@ -258,6 +318,7 @@ private:
   std::unique_ptr<L2Segment::Stub> l2seg_stub_;
   std::unique_ptr<Multicast::Stub> multicast_stub_;
   std::unique_ptr<Rdma::Stub> rdma_stub_;
+  std::unique_ptr<AccelRGroup::Stub> accel_rgroup_stub_;
 };
 
 #define   IB_QP_STATE        (1 << 0)

@@ -49,6 +49,7 @@ typedef enum capri_barco_res_type_e {
 #define CRYPTO_SYM_MSG_DESCR_COUNT_MAX  1024
 #define CRYPTO_HBM_MEM_COUNT_MAX        1024
 #define CRYPTO_ASYM_KEY_DESCR_COUNT_MAX (64 * 1024)
+#define CRYPTO_BARCO_RES_HBM_MEM_512B_SIZE 512
 
 hal_ret_t capri_barco_res_alloc(capri_barco_res_type_t res_type,
         int32_t *res_id, uint64_t *res);
