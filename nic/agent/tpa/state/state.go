@@ -253,8 +253,9 @@ func (s *PolicyState) createCollectorPolicy(ctx context.Context, netMeta *networ
 		return uint64(0), fmt.Errorf("failed to parse %s, %s", export.Transport, err)
 	}
 
+	// only IPFIX is supported
 	format, ok := halproto.ExportFormat_value[fmtStr]
-	if !ok {
+	if !ok || halproto.ExportFormat(format) != halproto.ExportFormat_IPFIX {
 		return uint64(0), fmt.Errorf("invalid format %s", fmtStr)
 	}
 
@@ -438,6 +439,41 @@ func (s *PolicyState) createFlowMonitorRule(ctx context.Context, meta *networkMe
 			},
 		},
 		CollectorKeyHandle: collectorKeys,
+		// match all, 0.0.0.0/0
+		Match: &halproto.RuleMatch{
+			SrcAddress: []*halproto.IPAddressObj{
+				{
+					Formats: &halproto.IPAddressObj_Address{
+						Address: &halproto.Address{
+							Address: &halproto.Address_Prefix{
+								Prefix: &halproto.IPSubnet{
+									Subnet: &halproto.IPSubnet_Ipv4Subnet{
+										Ipv4Subnet: &halproto.IPPrefix{
+											Address: &halproto.IPAddress{
+												IpAf:   halproto.IPAddressFamily_IP_AF_INET,
+												V4OrV6: &halproto.IPAddress_V4Addr{},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			AppMatch: &halproto.RuleMatch_AppMatch{
+				App: &halproto.RuleMatch_AppMatch_PortInfo{
+					PortInfo: &halproto.RuleMatch_L4PortAppInfo{
+						DstPortRange: []*halproto.L4PortRange{
+							{
+								PortLow:  0,
+								PortHigh: 65535, // all ports
+							},
+						},
+					},
+				},
+			},
+		},
 		Action: &halproto.MonitorAction{
 			Action: []halproto.RuleAction{
 				halproto.RuleAction_COLLECT_FLOW_STATS,

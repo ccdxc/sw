@@ -41,7 +41,7 @@ import (
                             Spec:   tpmprotos.{{title $crudObject}}Spec{
                                 Targets: []monitoring.FlowExportTarget{ {
                                     Interval: "15s",
-                                    Format:"NETFLOWV9",
+                                    Format:"IPFIX",
                                     Exports: []api.ExportConfig{
                                         {
                                         Destination: "10.1.1.0",
@@ -72,7 +72,7 @@ import (
                              Spec:   tpmprotos.{{title $crudObject}}Spec{
                                 Targets: []monitoring.FlowExportTarget{ {
                                     Interval: "15s",
-                                    Format:"NETFLOWV9",
+                                    Format:"IPFIX",
                                     Exports: []api.ExportConfig{
                                         {
                                         Destination: "10.1.1.0",

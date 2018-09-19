@@ -76,7 +76,7 @@ func TestFindNumExports(t *testing.T) {
 	spec := monitoring.FlowExportTarget{
 
 		Interval: "15s",
-		Format:   "NETFLOWV9",
+		Format:   "IPFIX",
 		Exports: []api.ExportConfig{
 			{
 				Destination: fmt.Sprintf("192.168.3.1"),
@@ -137,7 +137,7 @@ func TestValidatePolicy(t *testing.T) {
 			Targets: []monitoring.FlowExportTarget{
 				{
 					Interval: "15s",
-					Format:   "NETFLOWV9",
+					Format:   "IPFIX",
 					Exports:  []api.ExportConfig{},
 				},
 			},
@@ -153,7 +153,7 @@ func TestValidatePolicy(t *testing.T) {
 			Targets: []monitoring.FlowExportTarget{
 				{
 					Interval: "15s",
-					Format:   "NETFLOWV9",
+					Format:   "IPFIX",
 					Exports: []api.ExportConfig{
 						{Transport: "TCP/1234"},
 					},
@@ -171,7 +171,7 @@ func TestValidatePolicy(t *testing.T) {
 			Targets: []monitoring.FlowExportTarget{
 				{
 					Interval: "15s",
-					Format:   "NETFLOWV9",
+					Format:   "IPFIX",
 					Exports: []api.ExportConfig{
 						{
 							Destination: fmt.Sprintf("192.168.3.1"),
@@ -191,7 +191,7 @@ func TestValidatePolicy(t *testing.T) {
 			Targets: []monitoring.FlowExportTarget{
 				{
 					Interval: "15s",
-					Format:   "NETFLOWV9",
+					Format:   "IPFIX",
 					Exports: []api.ExportConfig{
 						{
 							Destination: fmt.Sprintf("192.168.3.1"),
@@ -314,7 +314,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 				Targets: []monitoring.FlowExportTarget{
 					{
 						Interval: "15s",
-						Format:   "NETFLOWV9",
+						Format:   "IPFIX",
 						Exports: []api.ExportConfig{
 							{
 								Destination: fmt.Sprintf("192.168.3.%d", 10+l),
@@ -348,7 +348,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 				Targets: []monitoring.FlowExportTarget{
 					{
 						Interval: "15s",
-						Format:   "NETFLOWV9",
+						Format:   "IPFIX",
 						Exports: []api.ExportConfig{
 							{
 								Destination: fmt.Sprintf("192.168.3.%d", 10+l),
@@ -480,7 +480,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 			Targets: []monitoring.FlowExportTarget{
 				{
 					Interval: "15s",
-					Format:   "NETFLOWV9",
+					Format:   "IPFIX",
 					Exports: []api.ExportConfig{
 						{
 							Destination: fmt.Sprintf("192.168.3.11"),
@@ -544,7 +544,7 @@ func TestNetagentInfo(t *testing.T) {
 			Targets: []monitoring.FlowExportTarget{
 				{
 					Interval: "15s",
-					Format:   "NETFLOWV9",
+					Format:   "IPFIX",
 					Exports: []api.ExportConfig{
 						{
 							Destination: "10.10.10.1",

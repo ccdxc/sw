@@ -36,7 +36,7 @@ func TestFlowExportPolicyPost(t *testing.T) {
 		Spec: tpmprotos.FlowExportPolicySpec{
 			Targets: []monitoring.FlowExportTarget{{
 				Interval: "15s",
-				Format:   "NETFLOWV9",
+				Format:   "IPFIX",
 				Exports: []api.ExportConfig{
 					{
 						Destination: "10.1.1.0",
@@ -66,7 +66,7 @@ func TestFlowExportPolicyDelete(t *testing.T) {
 		Spec: tpmprotos.FlowExportPolicySpec{
 			Targets: []monitoring.FlowExportTarget{{
 				Interval: "15s",
-				Format:   "NETFLOWV9",
+				Format:   "IPFIX",
 				Exports: []api.ExportConfig{
 					{
 						Destination: "10.1.1.0",

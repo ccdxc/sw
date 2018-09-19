@@ -21,44 +21,91 @@ func MockHal() *Mock {
 
 // CollectorCreate mock
 func (m *Mock) CollectorCreate(ctx context.Context, in *halproto.CollectorRequestMsg, opts ...grpc.CallOption) (*halproto.CollectorResponseMsg, error) {
-	return nil, nil
+	return &halproto.CollectorResponseMsg{
+		Response: []*halproto.CollectorResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}, nil
 }
 
 // CollectorUpdate mock
 func (m *Mock) CollectorUpdate(ctx context.Context, in *halproto.CollectorRequestMsg, opts ...grpc.CallOption) (*halproto.CollectorResponseMsg, error) {
-	return nil, nil
+	return &halproto.CollectorResponseMsg{
+		Response: []*halproto.CollectorResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}, nil
 }
 
 // CollectorDelete mock
 func (m *Mock) CollectorDelete(ctx context.Context, in *halproto.CollectorDeleteRequestMsg, opts ...grpc.CallOption) (*halproto.CollectorDeleteResponseMsg, error) {
-	return nil, nil
+	return &halproto.CollectorDeleteResponseMsg{
+		Response: []*halproto.CollectorDeleteResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK},
+		},
+	}, nil
 }
 
 // CollectorGet mock
 func (m *Mock) CollectorGet(ctx context.Context, in *halproto.CollectorGetRequestMsg, opts ...grpc.CallOption) (*halproto.CollectorGetResponseMsg, error) {
-	return nil, nil
+	return &halproto.CollectorGetResponseMsg{
+		Response: []*halproto.CollectorGetResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}, nil
 }
 
 // FlowMonitorRules CRUD Operations
 
 // FlowMonitorRuleCreate mock
 func (m *Mock) FlowMonitorRuleCreate(ctx context.Context, in *halproto.FlowMonitorRuleRequestMsg, opts ...grpc.CallOption) (*halproto.FlowMonitorRuleResponseMsg, error) {
-	return nil, nil
+	return &halproto.FlowMonitorRuleResponseMsg{
+		Response: []*halproto.FlowMonitorRuleResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}, nil
 }
 
 // FlowMonitorRuleUpdate mock
 func (m *Mock) FlowMonitorRuleUpdate(ctx context.Context, in *halproto.FlowMonitorRuleRequestMsg, opts ...grpc.CallOption) (*halproto.FlowMonitorRuleResponseMsg, error) {
-	return nil, nil
+	return &halproto.FlowMonitorRuleResponseMsg{
+		Response: []*halproto.FlowMonitorRuleResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}, nil
 }
 
 // FlowMonitorRuleDelete mock
 func (m *Mock) FlowMonitorRuleDelete(ctx context.Context, in *halproto.FlowMonitorRuleDeleteRequestMsg, opts ...grpc.CallOption) (*halproto.FlowMonitorRuleDeleteResponseMsg, error) {
-	return nil, nil
+	return &halproto.FlowMonitorRuleDeleteResponseMsg{
+		Response: []*halproto.FlowMonitorRuleDeleteResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}, nil
 }
 
 // FlowMonitorRuleGet mock
 func (m *Mock) FlowMonitorRuleGet(ctx context.Context, in *halproto.FlowMonitorRuleGetRequestMsg, opts ...grpc.CallOption) (*halproto.FlowMonitorRuleGetResponseMsg, error) {
-	return nil, nil
+	return &halproto.FlowMonitorRuleGetResponseMsg{
+		Response: []*halproto.FlowMonitorRuleGetResponse{
+			{
+				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}, nil
 }
 
 // DropMonitorRules CRUD Operations
