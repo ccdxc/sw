@@ -8,6 +8,7 @@ cc_library(
             "buf_hdr.h",
             "c2scapy.h",
             "cap_blk_env_base.h",
+            "pen_blk_env_base.h",
             "cap_env_base.h",
             "cap_model_base.h",
             "cpu_bus_base.h",

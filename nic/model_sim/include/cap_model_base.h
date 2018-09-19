@@ -7,7 +7,16 @@
 #define _CAP_MODEL_BASE_H_
 #include <stdint.h>
 #include <vector>
+#include <string>
 struct axi_info_t;
+
+class cap_model_cb_base {
+    public:
+        cap_model_cb_base() {}
+        virtual ~cap_model_cb_base() {}
+        virtual void run(void) {}
+};
+
 class cap_model_base {
 public:
     cap_model_base() {}
@@ -46,6 +55,7 @@ public:
     virtual void save_axi_xn() = 0;
     virtual axi_info_t * get_next_axi_xn(uint32_t port) = 0;
     virtual unsigned get_drop_count() = 0;
+    virtual void register_callback(std::string name, cap_model_cb_base *cb) = 0;
     virtual ~cap_model_base() {}
 
 };

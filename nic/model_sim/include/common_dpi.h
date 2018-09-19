@@ -1,5 +1,5 @@
-#ifndef __CAP_COMMON_DPI_HH__
-#define __CAP_COMMON_DPI_HH__
+#ifndef __PEN_COMMON_DPI_HH__
+#define __PEN_COMMON_DPI_HH__
 #ifdef _CSV_INCLUDED_
 
 #include <iostream>
@@ -38,4 +38,4 @@ void dpi_force_finish();
 
 
 #endif //_CSV_INCLUDED_
-#endif //__CAP_COMMON_DPI_HH__
+#endif //__PEN_COMMON_DPI_HH__

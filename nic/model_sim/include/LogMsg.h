@@ -28,11 +28,11 @@ class LogMsg {
 
     public:
         enum msgLevelEnum { ERROR = 1, WARNING = 2, MSG = 10, INFO = 20, CPU = 30, DEBUG = 40}; 
+        void logNow(string msg);
     protected:
         LogMsg();
         vector<string> enabledScopes;
         unsigned int curMsgLevel;
-        void logNow(string msg);
         void exitSim();
         //stringstream localStringStream;
 
@@ -73,6 +73,29 @@ class LogMsg {
         }\
 }
 
+
+#ifdef PLOG_ONLY_ERR_MODE 
+#define PLOG_MSG(X)    {  }
+#define PLOG_INFO(X)   {  }
+#define PLOG_ERR(X)    { PLOG_MSG_GLB(X, LogMsg::ERROR) }
+#define PLOG_WARN(X)   { PLOG_MSG_GLB(X, LogMsg::WARNING) }
+
+#define PLOG_CPU(X)    {  }
+#define PLOG_DEBUG(X)  {  }
+#define PLOG_GET_ERR_CNT()  LogMsg::Instance().get()->getErrCount()
+#define PLOG_SET_MAX_ERR_CNT(X)  LogMsg::Instance().get()->setMaxErrCount(X)
+#define PLOG_SET_ERR_CNT(X)  LogMsg::Instance().get()->setErrCount(X)
+
+#define PLOG(SCOPE,X) {  }
+
+#define PLOG_API_MSG(SRC, MSG) {  }
+
+#define PLOG_CHECK_MSG_LEVEL(LEVEL) LogMsg::Instance().get()->checkMsgLevel(LEVEL)
+
+
+#define PEN_ASSERT(c) assert(c)
+
+#else // PLOG_ONLY_ERR_MODE
 #define PLOG_MSG(X)    { PLOG_MSG_GLB(X, LogMsg::MSG) }
 #define PLOG_INFO(X)   { PLOG_MSG_GLB(X, LogMsg::INFO) }
 #define PLOG_ERR(X)    { PLOG_MSG_GLB(X, LogMsg::ERROR) }
@@ -95,4 +118,6 @@ class LogMsg {
 #define PEN_ASSERT(c) assert(c)
 #endif
 
+
+#endif // PLOG_ONLY_ERR_MODE
 #endif // _LOG_MSG_H_

@@ -35,6 +35,7 @@ private:
   static atomic<cpu*> _cpu_if;
   static mutex m_;
   cpu_access_type_e access_type;
+  unsigned force_global_flags;
   cpu();
   virtual ~cpu() { };
 
@@ -43,6 +44,25 @@ public:
 
   virtual void set_cur_if_name(string if_name) { // method to set the current active interface associated with this driver
      cur_cpu_if_name = if_name;
+  }
+
+  virtual string get_cur_chip_name() {
+     string chip_name = "capri";
+     return(chip_name);
+  }
+
+  virtual uint32_t get_cur_chip_id() {
+     uint32_t chip_id = 0;
+     return(chip_id);
+  }
+
+  virtual uint32_t get_cur_chp_id() {
+     return(get_cur_chip_id());
+  }
+
+  virtual string get_cur_chp_name() {
+     string chp_name = "cap";
+     return(chp_name);
   }
 
   virtual string get_cur_if_name() {
@@ -56,6 +76,7 @@ public:
   }
 
   virtual void remove_if(string cpu_if_name);
+  virtual void set_global_flags(unsigned);
 
   //virtual uint32_t add_mem_prop(uint64_t addr_lo, uint64_t addr_hi, string hier_path, cpu_access_type_e access_type, bool add_index);
   //virtual mem_property* get_mem_prop(uint64_t addr ); // gets a memory hierarchy, given the address

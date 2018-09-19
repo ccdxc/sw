@@ -64,10 +64,10 @@ public:
   virtual ~cpu_bus_base() {
   }
 
-  void set_agt_idx(uint32_t idx) { agt_idx = idx; }
-  uint32_t get_agt_idx() { return agt_idx; }
-  string get_if_name(void) const { return _cpu_if_name; };
-  string get_hier_path(void) const { return _cpu_if_hier_path; };
+  virtual void set_agt_idx(uint32_t idx) { agt_idx = idx; }
+  virtual uint32_t get_agt_idx() { return agt_idx; }
+  virtual string get_if_name(void) const { return _cpu_if_name; };
+  virtual string get_hier_path(void) const { return _cpu_if_hier_path; };
 
   virtual uint32_t read(uint32_t chip, uint64_t addr, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0 ; 
   virtual void write(uint32_t chip, uint64_t addr, uint32_t data, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0;

@@ -61,6 +61,8 @@ protected:
     // Timer update
     virtual void step_tmr_wheel_update(unsigned slowfas, unsigned ctime);
 
+    virtual void register_model_callback(std::string cb_name, cap_model_cb_base * cb) ;
+
     virtual void init(void);
     virtual int get_chip_id(void)
     {

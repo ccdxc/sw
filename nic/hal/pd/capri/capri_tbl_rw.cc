@@ -25,7 +25,7 @@
 #include "nic/asic/capri/model/cap_pic/cap_pict_csr.h"
 #include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
 #include "nic/asic/capri/model/cap_te/cap_te_csr.h"
-#include "nic/asic/capri/model/utils/cpp_int_helper.h"
+#include "nic/asic/ip/verif/pcpp/cpp_int_helper.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/csr/cpu_hal_if.h"
 #include "nic/hal/pd/capri/capri_loader.h"
