@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	testPeriod                  = 50 * time.Millisecond
 	testSendInterval            = 10 * time.Millisecond
 	testConnectionRetryInterval = 10 * time.Millisecond
 	testTenant                  = "test-tenant"
@@ -26,9 +25,9 @@ type Suite struct {
 }
 
 // NewSuite creates a new test suite with client, collector and db
-func NewSuite(numBE int, url string, batchPeriod time.Duration, testName, dbName string) *Suite {
+func NewSuite(url string, testName, dbName string) *Suite {
 	ts := &Suite{}
-	cs := collectorinteg.NewSuite(numBE, url, batchPeriod)
+	cs := collectorinteg.NewSuite(url)
 	cs.CreateDB(dbName)
 
 	// setup client
@@ -53,7 +52,7 @@ func (ts *Suite) TearDown() {
 }
 
 func validate(ts *Suite, dbName, measName string, tt *collectorinteg.TimeTable) (bool, error) {
-	res, err := ts.cs.Query(0, dbName, fmt.Sprintf("SELECT * FROM %s", measName))
+	res, err := ts.cs.Query(dbName, fmt.Sprintf("SELECT * FROM %s", measName))
 	if err != nil {
 		log.Errorf("error querying tsdb: %s", err)
 		return false, err
@@ -71,7 +70,7 @@ func validate(ts *Suite, dbName, measName string, tt *collectorinteg.TimeTable) 
 }
 
 func getCount(ts *Suite, dbName, measName string) (int, error) {
-	res, err := ts.cs.Query(0, dbName, fmt.Sprintf("SELECT * FROM %s", measName))
+	res, err := ts.cs.Query(dbName, fmt.Sprintf("SELECT * FROM %s", measName))
 	if err != nil {
 		log.Errorf("error querying tsdb: %s", err)
 		return 0, err

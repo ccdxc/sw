@@ -110,6 +110,8 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 		replMap[pri.ShardID] = pri
 	}
 
+	//TODO: batch process
+
 	// walk the per shard list and write it to each node
 	for sid, points := range pointsMap {
 		// get the rpc client for the node
@@ -231,4 +233,9 @@ func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string)
 	}
 
 	return results, nil
+}
+
+// WriteLines writes influx line protocol
+func (br *Broker) WriteLines(ctx context.Context, database string, lines []string) error {
+	return nil
 }

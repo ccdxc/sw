@@ -9,7 +9,7 @@ import (
 	context "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/collector/rpcserver/metric"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"

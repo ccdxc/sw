@@ -16,7 +16,7 @@ import (
 	"github.com/pensando/sw/test/integ/tsdb/aggutils"
 	ci "github.com/pensando/sw/test/integ/tsdb/collector"
 	"github.com/pensando/sw/venice/aggregator/gatherer"
-	"github.com/pensando/sw/venice/collector/statssim"
+	"github.com/pensando/sw/venice/citadel/collector/statssim"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 

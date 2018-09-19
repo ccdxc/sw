@@ -9,10 +9,12 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	tec "github.com/pensando/sw/venice/collector"
-	"github.com/pensando/sw/venice/collector/mockdb"
-	"github.com/pensando/sw/venice/collector/rpcserver/metric"
-	"github.com/pensando/sw/venice/collector/statssim"
+	"github.com/pensando/sw/venice/citadel/collector"
+	tec "github.com/pensando/sw/venice/citadel/collector"
+	"github.com/pensando/sw/venice/citadel/collector/influxdb"
+	"github.com/pensando/sw/venice/citadel/collector/mockdb"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
+	"github.com/pensando/sw/venice/citadel/collector/statssim"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	tu "github.com/pensando/sw/venice/utils/testutils"
@@ -25,7 +27,6 @@ const (
 
 type suite struct {
 	dbA       *mockdb.MockTSDB
-	dbB       *mockdb.MockTSDB
 	c         *tec.Collector
 	srv       *CollRPCSrv
 	rpcClient *rpckit.RPCClient
@@ -38,19 +39,13 @@ func (ts *suite) Setup(t *testing.T) {
 	ts.dbA = &mockdb.MockTSDB{}
 	dbServerA, err := ts.dbA.Setup()
 	tu.AssertOk(t, err, "failed to setup mockdb")
-	ts.dbB = &mockdb.MockTSDB{}
-	dbServerB, err := ts.dbB.Setup()
-	tu.AssertOk(t, err, "failed to setup mockdb")
 
-	ts.c = tec.NewCollector(context.Background()).WithPeriod(100 * time.Millisecond)
-	err = ts.c.AddBackEnd(dbServerA)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	err = ts.c.AddBackEnd(dbServerB)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
+	cl, err := influxclient.NewInfluxClient(&influxclient.InfluxConfig{
+		Addr: dbServerA,
+	})
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create influx client %s}", dbServerA))
+
+	ts.c = collector.NewCollector(cl)
 
 	// setup an rpc server
 	srv, err := NewCollRPCSrv(colURL, ts.c)
@@ -74,7 +69,6 @@ func (ts *suite) Teardown() {
 	ts.rpcClient.Close()
 	ts.srv.Stop()
 	ts.dbA.Teardown()
-	ts.dbB.Teardown()
 }
 
 func (ts *suite) getMetricBundle(len int, name, fType string) *metric.MetricBundle {
@@ -144,7 +138,6 @@ func (ts *suite) verifyBasic(t *testing.T, count, exp int, fType string) {
 	ts.mc.WriteMetrics(context.Background(), bundle)
 	msg := fmt.Sprintf("Expected %d write(s), got ", exp)
 	tu.Assert(t, ts.dbA.Writes == uint64(exp), msg, ts.dbA.Writes)
-	tu.Assert(t, ts.dbB.Writes == uint64(exp), msg, ts.dbB.Writes)
 }
 
 func TestServer(t *testing.T) {
@@ -158,7 +151,6 @@ func TestServer(t *testing.T) {
 	tb.verifyBasic(t, 2, 3, "String")
 	tb.verifyBasic(t, 2, 4, "Bool")
 	// verify points written so far
-	tu.Assert(t, tb.dbB.PointsWritten == 6, "Expected 6 points, got ", tb.dbB.PointsWritten)
 	tu.Assert(t, tb.dbA.PointsWritten == 6, "Expected 6 points, got ", tb.dbA.PointsWritten)
 	tu.Assert(t, tb.srv.badReqs == 0, "Expected 0 badReqs, got ", tb.srv.badReqs)
 	tu.Assert(t, tb.srv.badPoints == 0, "Expected 0 badPoints, got ", tb.srv.badPoints)
@@ -168,7 +160,6 @@ func TestServer(t *testing.T) {
 	bundle.Reporter = "UT"
 	tb.mc.WriteMetrics(context.Background(), bundle)
 	tu.Assert(t, tb.srv.badReqs == 1, "Expected 1 badReqs, got ", tb.srv.badReqs)
-	tu.Assert(t, tb.dbB.PointsWritten == 6, "Expected 6 points, got ", tb.dbB.PointsWritten)
 	tu.Assert(t, tb.dbA.PointsWritten == 6, "Expected 6 points, got ", tb.dbA.PointsWritten)
 
 	// Bad points
@@ -178,7 +169,6 @@ func TestServer(t *testing.T) {
 	bundle.Reporter = "UT"
 	bundle.DbName = testDB
 	tb.mc.WriteMetrics(context.Background(), bundle)
-	tu.Assert(t, tb.dbB.PointsWritten == 8, "Expected 8 points, got ", tb.dbB.PointsWritten)
 	tu.Assert(t, tb.dbA.PointsWritten == 8, "Expected 8 points, got ", tb.dbA.PointsWritten)
 	tu.Assert(t, tb.srv.badPoints == 1, "Expected 1 badPoints, got ", tb.srv.badPoints)
 
@@ -195,6 +185,5 @@ func TestServer(t *testing.T) {
 
 	lb.Lines = statssim.GetLinePoints(tb.sim, "measA", 10)
 	tb.mc.WriteLines(context.Background(), lb)
-	tu.Assert(t, tb.dbB.PointsWritten == 18, "Expected 18 points, got ", tb.dbB.PointsWritten)
 	tu.Assert(t, tb.dbA.PointsWritten == 18, "Expected 18 points, got ", tb.dbA.PointsWritten)
 }

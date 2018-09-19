@@ -11,7 +11,7 @@ import (
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/collector/rpcserver/metric"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -490,7 +490,7 @@ func (c *BatchTransmitter) Init(opts Options) error {
 	if opts.DBName != "" {
 		c.dbName = opts.DBName
 	}
-	collector := globals.Collector
+	collector := globals.Citadel
 	if opts.Collector != "" {
 		collector = opts.Collector
 	}

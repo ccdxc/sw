@@ -24,7 +24,7 @@ import (
 	"github.com/influxdata/influxql"
 
 	"github.com/pensando/sw/venice/aggregator/cachedb"
-	"github.com/pensando/sw/venice/collector/statssim"
+	"github.com/pensando/sw/venice/citadel/collector/statssim"
 )
 
 const (

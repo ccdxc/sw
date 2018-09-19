@@ -16,7 +16,7 @@ TO_GEN := api api/labels api/fields venice/cmd/types/protos venice/cmd/grpc \
 venice/ctrler/ckm/rpcserver/ckmproto venice/ctrler/npm/rpcserver/netproto \
 venice/ctrler/tpm/rpcserver/protos  \
 venice/ctrler/tsm/rpcserver/tsproto \
-venice/collector/rpcserver/metric venice/utils/runtime/test \
+venice/citadel/collector/rpcserver/metric venice/utils/runtime/test \
 venice/utils/apigen/annotations venice/orch \
 venice/cmd/grpc/server/certificates/certapi \
 venice/ctrler/evtsmgr/rpcserver/evtsmgrproto \
@@ -42,7 +42,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./vendor/layeh.com/radius/cmd/radius-dict-gen \
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd collector nmd tpm netagent spyglass evtsmgr tsm evtsproxy aggregator vos citadel
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd nmd tpm netagent spyglass evtsmgr tsm evtsproxy aggregator vos citadel
 
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash

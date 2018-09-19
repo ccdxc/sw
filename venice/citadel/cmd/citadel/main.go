@@ -12,8 +12,10 @@ import (
 	_ "github.com/influxdata/influxdb/tsdb/index"
 
 	"github.com/pensando/sw/venice/citadel/broker"
-	"github.com/pensando/sw/venice/citadel/collectors"
+	"github.com/pensando/sw/venice/citadel/collector"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
 	"github.com/pensando/sw/venice/citadel/data"
+	"github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -28,6 +30,7 @@ func main() {
 		httpURL         = flag.String("http", ":"+globals.CitadelHTTPPort, "HTTP server URL where citadel's REST api is available")
 		nodeUUID        = flag.String("uuid", "", "Node UUID (unique identifier for this citadel instance)")
 		dbPath          = flag.String("db", "/tmp/tstore/", "DB path where citadel's data will be stored")
+		collectorURL    = flag.String("collector-url", fmt.Sprintf(":%s", globals.CollectorRPCPort), "listen URL where citadel metrics collector's gRPC server runs")
 		logFile         = flag.String("logfile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Citadel)), "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 	)
@@ -94,11 +97,22 @@ func main() {
 	log.Infof("Datanode %+v and broker %+v are running", dn, br)
 
 	// start the http server
-	hsrv, err := collectors.NewHTTPServer(*httpURL, br)
+	hsrv, err := httpserver.NewHTTPServer(*httpURL, br)
 	if err != nil {
 		log.Fatalf("Error creating HTTP server. Err: %v", err)
 	}
 	log.Infof("HTTP server is listening on %s", hsrv.GetAddr())
+
+	// start collector, use citadel
+	c := collector.NewCollector(br)
+
+	// setup an rpc server
+	srv, err := rpcserver.NewCollRPCSrv(*collectorURL, c)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	log.Infof("citadel metrics collector {%+v} started", srv)
 
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)

@@ -14,8 +14,8 @@ import (
 	context "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	tec "github.com/pensando/sw/venice/collector"
-	"github.com/pensando/sw/venice/collector/rpcserver/metric"
+	tec "github.com/pensando/sw/venice/citadel/collector"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -35,7 +35,7 @@ type CollRPCSrv struct {
 
 // NewCollRPCSrv creates and starts a collector RPC server
 func NewCollRPCSrv(listenURL string, c *tec.Collector) (*CollRPCSrv, error) {
-	s, err := rpckit.NewRPCServer(globals.Collector, listenURL, rpckit.WithLoggerEnabled(false))
+	s, err := rpckit.NewRPCServer(globals.Citadel, listenURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Infof("failed to start grpc server: %v", err)
 		return nil, err
@@ -75,7 +75,7 @@ func (s *CollRPCSrv) WriteLines(c context.Context, lb *metric.LineBundle) (*api.
 		atomic.AddUint64(&s.badReqs, 1)
 		return e, nil
 	}
-	s.c.WriteLines(lb.GetDbName(), lb.Lines)
+	s.c.WriteLines(c, lb.GetDbName(), lb.Lines)
 	return e, nil
 }
 
@@ -94,7 +94,7 @@ func (s *CollRPCSrv) WriteMetrics(c context.Context, mb *metric.MetricBundle) (*
 	if len(p) == 0 {
 		atomic.AddUint64(&s.badReqs, 1)
 	} else {
-		s.c.WritePoints(mb.GetDbName(), "", p)
+		s.c.WritePoints(c, mb.GetDbName(), "", p)
 	}
 
 	return e, nil

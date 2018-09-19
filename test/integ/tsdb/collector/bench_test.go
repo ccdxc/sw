@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/test/integ/tsdb/aggutils"
-	"github.com/pensando/sw/venice/collector/rpcserver/metric"
-	"github.com/pensando/sw/venice/collector/statssim"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
+	"github.com/pensando/sw/venice/citadel/collector/statssim"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -171,7 +171,7 @@ func TestMain(m *testing.M) {
 	saSrv = aggutils.OpenDefaultServer(aggutils.NewConfig())
 
 	// create a collector suite
-	suite = NewSuite(1, ":0", 1*time.Second)
+	suite = NewSuite(":0")
 
 	// setup client
 	var opts []grpc.DialOption

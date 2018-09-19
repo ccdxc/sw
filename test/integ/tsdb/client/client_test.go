@@ -17,11 +17,11 @@ func TestTableAPI(t *testing.T) {
 	measName := t.Name()
 
 	// setup tsdb, collector
-	ts := NewSuite(1, ":0", testPeriod, t.Name(), dbName)
+	ts := NewSuite(":0", t.Name(), dbName)
 	defer ts.TearDown()
 
 	// ensure that we start with empty backend
-	res, err := ts.cs.Query(0, dbName, fmt.Sprintf("SELECT * FROM %s", measName))
+	res, err := ts.cs.Query(dbName, fmt.Sprintf("SELECT * FROM %s", measName))
 	Assert(t, err == nil, "Expected no error")
 	Assert(t, len(res[0].Series) == 0, "Expected empty result")
 
@@ -56,7 +56,7 @@ func TestPointsPrecision(t *testing.T) {
 	measName := t.Name()
 
 	// setup tsdb, collector
-	ts := NewSuite(1, ":0", testPeriod, t.Name(), dbName)
+	ts := NewSuite(":0", t.Name(), dbName)
 	defer ts.TearDown()
 
 	// create tsdb table (change the precision between metrics)
@@ -107,7 +107,7 @@ func TestRegression(t *testing.T) {
 	measName := t.Name()
 
 	// setup tsdb, collector
-	ts := NewSuite(1, ":0", testPeriod, t.Name(), dbName)
+	ts := NewSuite(":0", t.Name(), dbName)
 	defer ts.TearDown()
 
 	// push metrics
@@ -123,7 +123,8 @@ func TestRegression(t *testing.T) {
 	epm.RxPacketSize.SetRanges([]int64{10, 100, 1000, 10000})
 	intSamples := []int64{9, 99, 999, 9999}
 
-	nIters := 10000
+	nIters := 1000
+
 	for i := 0; i < nIters; i++ {
 		// minimum 2ms to allow separate points within measurement
 		sleepTime := time.Duration(2+(rand.Int()%10)) * time.Millisecond
@@ -147,7 +148,9 @@ func TestRegression(t *testing.T) {
 		fmt.Printf("Expected %d records, Got %d instead\n", nIters, numSeries)
 		return false, nil
 	}
+
 	AssertEventually(t, f, "Records retrieved from the DB did not match the number of records written.", "1s", maxTimeOut)
+
 }
 
 type endpoint struct {
@@ -175,11 +178,11 @@ func TestOTableAPI(t *testing.T) {
 	measName := t.Name()
 
 	// setup tsdb, collector
-	ts := NewSuite(1, ":0", testPeriod, t.Name(), dbName)
+	ts := NewSuite(":0", t.Name(), dbName)
 	defer ts.TearDown()
 
 	// ensure that we start with empty backend
-	res, err := ts.cs.Query(0, dbName, fmt.Sprintf("SELECT * FROM %s", measName))
+	res, err := ts.cs.Query(dbName, fmt.Sprintf("SELECT * FROM %s", measName))
 	Assert(t, err == nil, "Expected no error")
 	Assert(t, len(res[0].Series) == 0, "Expected empty result")
 

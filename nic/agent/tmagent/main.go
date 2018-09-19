@@ -43,14 +43,14 @@ func main() {
 
 	rList := strings.Split(resolverURLs, ",")
 	cfg := &resolver.Config{
-		Name:    globals.Collector,
+		Name:    globals.Citadel,
 		Servers: rList,
 	}
 
 	rc := resolver.New(cfg)
 	tsdbOpts := &ntsdb.Opts{ClientName: "tmAgent",
 		ResolverClient: rc,
-		Collector:      globals.Collector,
+		Collector:      globals.Citadel,
 		DBName:         "FWLogs",
 	}
 	ntsdb.Init(context.Background(), tsdbOpts)

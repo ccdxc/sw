@@ -120,7 +120,7 @@ const (
 	// Influx
 	InfluxHTTPPort    = "8086"
 	InfluxAdminPort   = "8083"
-	CollectorAPIPort  = "10777"
+	CollectorRPCPort  = "10777"
 	AggregatorAPIPort = "10778"
 	CitadelRPCPort    = "7000"
 	CitadelHTTPPort   = "7086"

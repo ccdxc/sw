@@ -12,7 +12,6 @@ const (
 	VCHub                 = "pen-vchub"
 	Npm                   = "pen-npm"
 	Influx                = "pen-influx"
-	Collector             = "pen-collector"
 	EvtsMgr               = "pen-evtsmgr"
 	Spyglass              = "pen-spyglass"
 	ElasticSearch         = "pen-elastic"

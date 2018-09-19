@@ -8,7 +8,7 @@ import (
 	protobuf "github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/collector/rpcserver/metric"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"

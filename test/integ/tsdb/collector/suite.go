@@ -1,8 +1,6 @@
 package collectorinteg
 
 import (
-	"context"
-	"fmt"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -10,35 +8,46 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/test/integ/tsdb/aggutils"
-	tec "github.com/pensando/sw/venice/collector"
-	"github.com/pensando/sw/venice/collector/rpcserver"
-	"github.com/pensando/sw/venice/collector/rpcserver/metric"
+	tec "github.com/pensando/sw/venice/citadel/collector"
+	"github.com/pensando/sw/venice/citadel/collector/influxdb"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	log "github.com/pensando/sw/venice/utils/log"
 )
 
 // Suite defines a collector testbed with backends
 type Suite struct {
-	backends []aggutils.Server
+	backends aggutils.Server
 	col      *tec.Collector
 	rpcSrv   *rpcserver.CollRPCSrv
-	clients  []ic.Client
+	clients  ic.Client
 }
 
 // NewSuite sets up influx backends, collector and rpc
-func NewSuite(numBE int, url string, batchPeriod time.Duration) *Suite {
-	c := tec.NewCollector(context.Background()).WithPeriod(batchPeriod).WithSize(10000)
+func NewSuite(url string) *Suite {
+	be := aggutils.OpenDefaultServer(aggutils.NewConfig())
+	log.Infof("use influx {%+v} ", be.URL())
+	cl, err := influxclient.NewInfluxClient(&influxclient.InfluxConfig{
+		Addr: be.URL(),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	c := tec.NewCollector(cl)
 	s := &Suite{
 		col: c,
 	}
-	for ix := 0; ix < numBE; ix++ {
-		be := aggutils.OpenDefaultServer(aggutils.NewConfig())
-		s.col.AddBackEnd(be.URL())
-		s.backends = append(s.backends, be)
-		client, _ := ic.NewHTTPClient(ic.HTTPConfig{
-			Addr: be.URL(),
-		})
-		s.clients = append(s.clients, client)
+
+	s.backends = be
+	client, err := ic.NewHTTPClient(ic.HTTPConfig{
+		Addr: be.URL(),
+	})
+
+	if err != nil {
+		log.Fatal(err)
 	}
+	s.clients = client
 
 	srv, err := rpcserver.NewCollRPCSrv(url, c)
 	if err != nil {
@@ -56,47 +65,37 @@ func (s *Suite) CollectorURL() string {
 
 // BackendURLs returns the URLs of the influx backends
 func (s *Suite) BackendURLs() []string {
-	u := make([]string, len(s.backends))
-	for ix, be := range s.backends {
-		u[ix] = be.URL()
-	}
-
-	return u
+	return []string{s.backends.URL()}
 }
 
 // CreateDB creates a database on the backend
 func (s *Suite) CreateDB(db string) error {
-	for _, be := range s.backends {
-		_, err := be.CreateDatabase(db)
-		if err != nil {
-			return err
-		}
+	_, err := s.backends.CreateDatabase(db)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 // Backends returns the influx backends
-func (s *Suite) Backends() []aggutils.Server {
+func (s *Suite) Backends() aggutils.Server {
 	return s.backends
 }
 
 // Clients returns the influx clients
-func (s *Suite) Clients() []ic.Client {
+func (s *Suite) Clients() ic.Client {
 	return s.clients
 }
 
 // Query queries the specifed be
-func (s *Suite) Query(beID int, db, cmd string) ([]ic.Result, error) {
-	if beID >= len(s.clients) || s.clients[beID] == nil {
-		return nil, fmt.Errorf("Invalid backend")
-	}
+func (s *Suite) Query(db, cmd string) ([]ic.Result, error) {
 
 	q := ic.Query{
 		Command:  cmd,
 		Database: db,
 	}
-	response, err := s.clients[beID].Query(q)
+	response, err := s.clients.Query(q)
 	if err != nil {
 		return nil, err
 	}
@@ -110,12 +109,8 @@ func (s *Suite) Query(beID int, db, cmd string) ([]ic.Result, error) {
 // TearDown stops all servers
 func (s *Suite) TearDown() {
 	s.rpcSrv.Stop()
-	for _, be := range s.backends {
-		be.Close()
-	}
-	for _, c := range s.clients {
-		c.Close()
-	}
+	s.backends.Close()
+	s.clients.Close()
 }
 
 // GetMetricPoint creates a MetricPoint struct

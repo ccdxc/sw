@@ -10,7 +10,7 @@ import (
 
 	"github.com/pensando/sw/test/integ/tsdb/aggutils"
 	"github.com/pensando/sw/venice/aggregator/gatherer"
-	"github.com/pensando/sw/venice/collector/statssim"
+	"github.com/pensando/sw/venice/citadel/collector/statssim"
 )
 
 const testMeas = "testStats"

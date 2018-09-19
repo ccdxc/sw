@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/pensando/sw/venice/collector/rpcserver/metric"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -40,7 +40,7 @@ var (
 )
 
 func TestCollector(t *testing.T) {
-	cs := NewSuite(1, ":0", testPeriod)
+	cs := NewSuite(":0")
 	defer cs.TearDown()
 	cs.CreateDB("dbA")
 
@@ -68,13 +68,14 @@ func TestCollector(t *testing.T) {
 
 	// verify the write on backend
 
-	res, err := cs.Query(0, "dbA", "SELECT * FROM measA")
+	res, err := cs.Query("dbA", "SELECT * FROM measA")
 	Assert(t, err == nil, "Expected no error")
-	Assert(t, len(res[0].Series) == 0, "Expected empty result")
-	client.WriteMetrics(context.Background(), mb)
-	res, err = cs.Query(0, "dbA", "SELECT * FROM measA")
-	Assert(t, err == nil, "Expected no error")
-	Assert(t, len(res[0].Series) == 1, "Expected 1 series")
+	Assert(t, len(res[0].Series) == 0, "Expected empty result, got %+v", res[0].Series)
+	_, err = client.WriteMetrics(context.Background(), mb)
+	Assert(t, err == nil, "failed to write metrics")
+	res, err = cs.Query("dbA", "SELECT * FROM measA")
+	AssertOk(t, err, "failed to query influx")
+	Assert(t, len(res[0].Series) == 1, "Expected 1 series, got %d,{%+v}", len(res[0].Series), res[0].Series)
 	tt := NewTimeTable("measA")
 	tt.AddRow(InfluxTS(ts1, time.Millisecond), tagsA, fieldsA)
 	err = tt.MatchQueryRow(res[0].Series[0])
