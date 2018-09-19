@@ -201,7 +201,7 @@ eval_wakeup:
     nop
 
 skip_wakeup:
-    //DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
     DMA_SET_END_OF_CMDS_E(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
     nop //Exit Slot
 

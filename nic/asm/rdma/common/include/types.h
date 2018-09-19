@@ -945,6 +945,9 @@ struct rsqwqe_t {
 #define KEY_INDEX_GET(_key_index_r, _key_r) \
     srl     _key_index_r, _key_r, KEY_INDEX_SHIFT
 
+#define KEY_USER_KEY_GET(_reg, _key_r) \
+    and     _reg, _key_r, 0xff
+
 // entry_addr = base_addr + (index * sizeof(key_entry_t))
 #define KEY_ENTRY_ADDR_GET(_entry_addr_r, _kt_base_r, _key_index_r) \
     add     _entry_addr_r, _kt_base_r, _key_index_r[31:8], LOG_SIZEOF_KEY_ENTRY_T;
@@ -1354,11 +1357,12 @@ struct resp_bt_info_t {
 //Define all stat types requested by the driver
 #define AQ_STATS_DUMP_TYPE_QP   0
 #define AQ_STATS_DUMP_TYPE_CQ   1
+#define AQ_STATS_DUMP_TYPE_EQ   2
 
 struct aqwqe_t {
 	op: 8;
     type_state: 8;
-    dbid: 16;
+    dbid_flags: 16;
     id_ver: 32;
 	union {
 		struct {
@@ -1371,13 +1375,11 @@ struct aqwqe_t {
 			rsvd: 384;
 		} ah;
 		struct {
-			lkey: 32;
 			va: 64;
 			length: 64;
 			pd_id: 32;
-			odp_id: 32;
             access_flags: 16;            
-			rsvd: 64;
+			rsvd: 128;
 			dir_size_log2: 8;
 			page_size_log2: 8;
 			tbl_index: 32;

@@ -195,7 +195,7 @@ eval_wakeup:
                                           DB_ADDR, DB_DATA);
 
 skip_wakeup:
-    //DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_CQ)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_CQ)
     DMA_SET_END_OF_CMDS_E(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
     nop //Exit Slot
 

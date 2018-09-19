@@ -24,7 +24,7 @@ struct aq_tx_s2_t0_k k;
 .align
 rdma_aq_tx_modify_qp_2_process:
 
-    add         r3, r0, d.dbid
+    add         r3, r0, d.dbid_flags
     andi        r6, r3, RDMA_UPDATE_QP_OPER_SET_DEST_QP
 
     //SQCB_ADDR_GET(r1, d.id_ver[55:32], K_SQCB_BASE_ADDR_HI)

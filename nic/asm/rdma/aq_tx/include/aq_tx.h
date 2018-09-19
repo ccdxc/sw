@@ -12,12 +12,6 @@
 
 #define AQ_TX_DMA_CMD_PHV_INTRINSIC 2
 
-#define AQ_TX_DMA_CMD_KT_UPDATE 16
-
-#define AQ_TX_DMA_CMD_PT_SRC_HOST 17
-
-#define AQ_TX_DMA_CMD_PT_DST_HBM 18
-
 #define AQ_TX_MAX_DMA_CMDS        12
 
 #define AQ_TX_DMA_CMD_START_FLIT_ID 9
@@ -37,7 +31,11 @@
 #define AQ_TX_DMA_CMD_STATS_DUMP_2 (AQ_TX_MAX_DMA_CMDS - 4)
 #define AQ_TX_DMA_CMD_STATS_DUMP_1 (AQ_TX_MAX_DMA_CMDS - 5)
 
-#define AQ_TX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi) \
+#define AQ_TX_DMA_CMD_MR_PT_DST (AQ_TX_MAX_DMA_CMDS - 2)
+#define AQ_TX_DMA_CMD_MR_PT_SRC (AQ_TX_MAX_DMA_CMDS - 3)
+#define AQ_TX_DMA_CMD_MR_KT_UPDATE (AQ_TX_MAX_DMA_CMDS - 4)
+
+#define AQ_TX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi)  \
     CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
 
 #define RDMA_UPDATE_QP_OPER_SET_DEST_QP 0

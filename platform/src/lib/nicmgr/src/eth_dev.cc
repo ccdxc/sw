@@ -13,7 +13,21 @@
 #include "logger.hpp"
 #include "intrutils.h"
 #include "eth_dev.hpp"
+#include "rdma_dev.hpp"
 #include "hal_client.hpp"
+
+static uint8_t *
+memrev (uint8_t *block, size_t elnum)
+{
+    uint8_t *s, *t, tmp;
+
+    for (s = block, t = s + (elnum - 1); s < t; s++, t--) {
+        tmp = *s;
+        *s = *t;
+        *t = tmp;
+    }
+    return block;
+}
 
 static bool
 mac_is_multicast(uint64_t mac) {
@@ -94,7 +108,7 @@ struct queue_info Eth::qinfo [NUM_QUEUE_TYPES] = {
     },
     [ETH_QTYPE_EQ] = {
         .type_num = ETH_QTYPE_EQ,
-        .size = 0,
+        .size = 1,
         .entries = 0,
         .purpose = ::intf::LIF_QUEUE_PURPOSE_EQ,
         .prog = "txdma_stage0.bin",
@@ -516,7 +530,7 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     rsp->dev.rdma_version = 1;
     rsp->dev.rdma_admin_opcodes[0] = 50;
-    
+
     comp->ver = IDENTITY_VERSION_1;
 
     return (DEVCMD_SUCCESS);
@@ -1421,7 +1435,11 @@ Eth::_CmdCreateCQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct create_cq_cmd  *cmd = (struct create_cq_cmd  *) req;
 
-    NIC_LOG_INFO("lif{}: CMD_OPCODE_V0_CREATE_CQ", info.hw_lif_id + cmd->lif_id);
+    NIC_LOG_INFO("lif{}: CMD_OPCODE_V0_CREATE_CQ "
+                 "cq_num {} wqe_size {} num_wqes {} host_pg_size {}",
+                 info.hw_lif_id + cmd->lif_id, cmd->cq_num,
+                 cmd->cq_wqe_size, cmd->num_cq_wqes,
+                 cmd->host_pg_size);
 
     hal->CreateCQ(info.hw_lif_id + cmd->lif_id,
             cmd->cq_num, cmd->cq_wqe_size, cmd->num_cq_wqes,
@@ -1474,8 +1492,8 @@ Eth::_CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data)
           " dest_qp_num {} q_key {}"
           " e_psn {} sq_psn {}"
           " header_template_ah_id {} header_template_size {}"
-          " path_mtu {} qstate {}",
-          info.hw_lif_id,
+          " path_mtu {}",
+          info.hw_lif_id + cmd->lif_id,
           cmd->qp_num, cmd->attr_mask,
           cmd->dest_qp_num, cmd->q_key,
           cmd->e_psn, cmd->sq_psn,
@@ -1519,14 +1537,56 @@ enum DevcmdStatus
 Eth::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd  *cmd = (struct rdma_queue_cmd  *) req;
+    eqcb_t       eqcb;
+    uint64_t addr;
+    
+    NIC_LOG_INFO("lif{}: CMD_OPCODE_RDMA_CREATE_EQ "
+                 "qid {} depth_log2 {} "
+                 "stride_log2 {} dma_addr {} "
+                 "cid {}", info.hw_lif_id + cmd->lif_id, cmd->qid_ver,
+                 1u << cmd->depth_log2, 1u << cmd->stride_log2,
+                 cmd->dma_addr, cmd->cid);
 
-    NIC_LOG_INFO("lif{}: CMD_OPCODE_RDMA_CREATE_EQ", info.hw_lif_id);
+    memset(&eqcb, 0, sizeof(eqcb_t));
+    // EQ does not need scheduling, so set one less (meaning #rings as zero)
+    eqcb.ring_header.total_rings = MAX_EQ_RINGS - 1;
+    eqcb.eqe_base_addr = cmd->dma_addr;
+    eqcb.log_wqe_size = cmd->stride_log2;
+    eqcb.log_num_wqes = cmd->depth_log2;
+    eqcb.int_enabled = 1;
+    //eqcb.int_num = spec.int_num();
+    eqcb.eq_id = cmd->cid;
+    eqcb.color = 0;
 
+    eqcb.int_assert_addr = intr_assert_addr(pci_resources.intrb + cmd->cid);
+
+    memrev((uint8_t*)&eqcb, sizeof(eqcb_t));
+
+    addr = GetQstateAddr(ETH_QTYPE_EQ, cmd->qid_ver);
+    NIC_LOG_INFO("lif{}: CMD_OPCODE_RDMA_CREATE_EQ "
+                 "QstateAddr = {:#x}",
+                 info.hw_lif_id + cmd->lif_id,
+                 addr);
+    
+    if (addr == 0) {
+        NIC_LOG_ERR("lif{}: Failed to get qstate address for EQ qid {}",
+                    info.hw_lif_id+ cmd->lif_id, cmd->qid_ver);
+        return (DEVCMD_ERROR);
+    }
+    WRITE_MEM(addr, (uint8_t *)&eqcb, sizeof(eqcb));
+    invalidate_rxdma_cacheline(addr);
+    invalidate_txdma_cacheline(addr);
+    
+#if 0
+    /*
+     * moving the devcmd implementation out of HAL
+     */
     hal->RDMACreateEQ(info.hw_lif_id + cmd->lif_id,
                         cmd->qid_ver,
                         1u << cmd->depth_log2, 1u << cmd->stride_log2,
                         cmd->dma_addr, cmd->cid);
-    
+#endif
+
     return (DEVCMD_SUCCESS);
 }
 
