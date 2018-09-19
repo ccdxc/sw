@@ -411,9 +411,13 @@ SSLConnection::handle_ssl_ret(int ret)
 
     default:
         char buf[256];
-        ERR_error_string_n(error, buf, sizeof(buf));
-        HAL_TRACE_ERR("SSL: SSL operation failed with error: {} {}",
-                        error, buf);
+        unsigned long   q_err;
+
+        while ((q_err = ERR_get_error()) != 0) {
+            ERR_error_string_n(q_err, buf, sizeof(buf));
+            HAL_TRACE_ERR("SSL: SSL operation failed with error: {} {}",
+                    q_err, buf);
+        }
         return HAL_RET_ERR;
     }
     return HAL_RET_OK;

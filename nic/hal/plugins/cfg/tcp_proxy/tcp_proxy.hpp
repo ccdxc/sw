@@ -10,6 +10,8 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
 #include "nic/hal/src/utils/utils.hpp"
+#include "nic/gen/proto/hal/proxy.grpc.pb.h"
+#include "nic/hal/src/internal/proxy.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -41,6 +43,12 @@ using tcp_proxy::TcpProxyCbGetRequest;
 using tcp_proxy::TcpProxyCbGetRequestMsg;
 using tcp_proxy::TcpProxyCbGetResponse;
 using tcp_proxy::TcpProxyCbGetResponseMsg;
+
+using grpc::Status;
+using proxy::ProxySpec;
+using proxy::ProxyResponse;
+
+
 
 #define INVALID_HEADER_TEMPLATE_LEN ((uint32_t)-1)
 
@@ -312,12 +320,29 @@ tcp_proxy_cfg_rule_alloc_init (void)
     return rule;
 }
 
+static inline hal_ret_t tcp_proxy_enable(types::ProxyType proxy_type)
+{
+    ProxySpec           spec;
+    ProxyResponse       rsp;
+    Status              status;
+    hal_ret_t           ret = HAL_RET_OK;
+
+    spec.set_proxy_type(proxy_type);
+    ret = proxy_enable(spec, &rsp);
+
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        ret = HAL_RET_ERR;
+    }
+    return ret;
+}
+
 static inline hal_ret_t
 tcp_proxy_cfg_rule_action_spec_extract (const tcp_proxy::TcpProxyAction& spec,
                                     tcp_proxy_cfg_rule_action_t *action)
 {
     hal_ret_t ret = HAL_RET_OK;
     action->tcp_proxy_action = spec.tcp_proxy_action_type();
+    action->proxy_type = spec.proxy_type();
     if (spec.proxy_type() == types::PROXY_TYPE_TCP) {
         HAL_TRACE_DEBUG("PROXY_TYPE_TCP: Policy")
     } else if (spec.proxy_type() == types::PROXY_TYPE_TLS) {

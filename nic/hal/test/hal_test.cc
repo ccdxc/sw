@@ -2089,6 +2089,8 @@ public:
         (void)dst_address_end;
 #endif
 
+        rm_spec->mutable_match()->set_protocol(types::IPPROTO_TCP);
+
         *rule_match_spec = rm_spec;
         return 0;
     }

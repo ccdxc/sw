@@ -293,6 +293,18 @@ tcp_proxy_rule_create (TcpProxyRuleSpec& spec, TcpProxyRuleResponse *rsp)
         goto end;
     }
 
+    ret = tcp_proxy_enable(types::PROXY_TYPE_TCP);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to enable TCP Proxy Type");
+        return ret;
+    }
+    ret = tcp_proxy_enable(types::PROXY_TYPE_TLS);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to enable TLS Proxy Type");
+        return ret;
+    }
+
+
 end:
     tcp_proxy_cfg_pol_create_rsp_build(rsp, ret, pol ? pol->hal_hdl : HAL_HANDLE_INVALID);
     return ret;

@@ -37,7 +37,7 @@ tls_dec_serq_consume:
     nop
 
 table_read_TNMDR_ALLOC_IDX:
-    addi        r3, r0, TNMDR_ALLOC_IDX
+    addi        r3, r0, TNMDPR_ALLOC_IDX
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tls_dec_alloc_tnmdr_process,
                           r3, TABLE_SIZE_16_BITS)
 tls_dec_pkt_descriptor_process:

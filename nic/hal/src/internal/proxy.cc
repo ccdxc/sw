@@ -527,6 +527,13 @@ proxy_enable(ProxySpec& spec, ProxyResponse *rsp)
         HAL_TRACE_ERR("Proxy validate failure, err : {}", ret);
         return ret;
     }
+    /* Validate if proxy type is already enabled */
+    proxy = find_proxy_by_type(spec.proxy_type());
+    if (proxy != NULL) {
+        rsp->set_api_status(types::API_STATUS_OK);
+        rsp->mutable_proxy_status()->set_proxy_handle(proxy->hal_handle);
+        return HAL_RET_OK;
+    }
 
     // instantiate Proxy
     proxy = proxy_factory(spec.proxy_type());

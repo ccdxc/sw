@@ -20,6 +20,11 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
+using proxy::ProxyGlobalCfgRequest;
+using proxy::ProxyGlobalCfgRequestMsg;
+using proxy::ProxyGlobalCfgResponseMsg;
+
+
 namespace hal {
 namespace proxy {
 
@@ -639,7 +644,23 @@ tcp_proxy_type_action(fte::ctx_t &ctx, proxy_flow_info_t *pfi)
     rc = (acl::ref_t *)rule->data.userdata;
     rule_cfg = RULE_MATCH_USER_DATA(rc, tcp_proxy_cfg_rule_t, ref_count);
 
-    if (rule_cfg->action.proxy_type  == types::PROXY_TYPE_TLS) {
+    if (rule_cfg->action.proxy_type  == types::PROXY_TYPE_TCP) {
+        /* FIXME: Unfortunately bypass TLS is currently a global knob and not
+         * per flow
+         */
+        ProxyGlobalCfgRequest       req;
+        ProxyGlobalCfgResponseMsg   rsp_msg;
+
+        req.set_proxy_type(types::PROXY_TYPE_TLS);
+        req.set_bypass_mode(1);
+
+        if (HAL_RET_OK != proxy_globalcfg_set(req, &rsp_msg)) {
+            HAL_TRACE_ERR("Failed to enable TLSL bypass for PROXY_TYPE_TCP: err {}",
+                    rsp_msg.api_status(0));
+            return HAL_RET_ERR;
+        }
+    }
+    else if (rule_cfg->action.proxy_type  == types::PROXY_TYPE_TLS) {
         return tls_proxy_cfg_rule_action(&rule_cfg->action.u.tls_cfg, pfi);
     }
 
@@ -691,6 +712,12 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
         }
         pfi = tcp_proxy_get_flow_info(flow_key);
         HAL_ASSERT_RETURN((NULL != pfi), fte::PIPELINE_CONTINUE);
+        // Proxy type specific configuration
+        ret = tcp_proxy_type_action(ctx, pfi);
+        if (ret != HAL_RET_OK) {
+            ctx.set_feature_status(ret);
+            return fte::PIPELINE_END;
+        }
     }
 
     // Update iflow
@@ -700,9 +727,6 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
         ctx.set_feature_status(ret);
         return fte::PIPELINE_END;
     }
-
-    // Proxy type specific configuration
-    tcp_proxy_type_action(ctx, pfi);
 
     return fte::PIPELINE_CONTINUE;
 }

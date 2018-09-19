@@ -25,12 +25,15 @@ tls_dec_alloc_tnmdr_process:
 
         CAPRI_CLEAR_TABLE1_VALID
 
-	    phvwr		p.s3_t1_s2s_tnmdr_pidx, d.{u.read_tnmdr_pidx_d.tnmdr_pidx}.wx
+        add         r4, r0, d.{u.read_tnmdr_pidx_d.tnmdr_pidx}.wx
+        andi        r4, r4, ((1 << CAPRI_TNMDPR_BIG_RING_SHIFT) - 1)
+
+	    phvwr		p.s3_t1_s2s_tnmdr_pidx, r4
 
 table_read_TNMDR_DESC:
 	    addui		r3, r0, hiword(TNMDPR_BIG_TABLE_BASE)
 	    addi		r3, r0, loword(TNMDPR_BIG_TABLE_BASE)
-	    CAPRI_NEXT_TABLE_READ_INDEX(1, d.{u.read_tnmdr_pidx_d.tnmdr_pidx}.wx, TABLE_LOCK_DIS,
+	    CAPRI_NEXT_TABLE_READ_INDEX(1, r4, TABLE_LOCK_DIS,
                                tls_dec_tdesc_alloc_process,
   	                           r3, TNMDPR_BIG_TABLE_ENTRY_SIZE_SHFT,
 	                           TABLE_SIZE_512_BITS)
