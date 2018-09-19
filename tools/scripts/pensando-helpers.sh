@@ -164,7 +164,7 @@ make_all() {
 }
 
 build_all() {
-    git submodule update --recursive && \
+    git submodule update --init --recursive && \
         make ws-tools && make pull-assets && make_all
 }
 
