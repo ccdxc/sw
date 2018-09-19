@@ -34,7 +34,9 @@ func serveReverseProxy(target string, res http.ResponseWriter, req *http.Request
 func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	host, err := getProxyPort(req.URL)
 	if err != nil {
-		log.Fatalf("Err: %v", err)
+		fmt.Fprintf(res, "%+v", err.Error())
+		log.Infof("Err: %v", err)
+		return
 	}
 	host = "http://localhost:" + host
 	serveReverseProxy(host, res, req)
