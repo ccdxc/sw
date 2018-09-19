@@ -165,6 +165,11 @@ class QpObject(base.ConfigObjectBase):
         self.q_key = value
         halapi.ModifyQps([self])
 
+    def set_q_state(self, value):
+        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QSTATE
+        self.qstate = value
+        halapi.ModifyQps([self])
+
     def PrepareHALRequestSpec(self, req_spec):
         logger.info("QP: %s PD: %s Remote: %s HW_LIF: %d EP->Intf: %s" %\
                         (self.GID(), self.pd.GID(), self.remote, self.pd.ep.intf.lif.hw_lif_id,
@@ -212,6 +217,8 @@ class QpObject(base.ConfigObjectBase):
             elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
                req_spec.header_template = bytes(self.HdrTemplate)
                req_spec.ahid = self.ah_handle
+            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QSTATE:
+               req_spec.qstate = self.qstate
 
     def ProcessHALResponse(self, req_spec, resp_spec):
 

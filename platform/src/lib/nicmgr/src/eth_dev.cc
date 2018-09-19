@@ -1471,20 +1471,20 @@ Eth::_CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data)
           " dest_qp_num {} q_key {}"
           " e_psn {} sq_psn {}"
           " header_template_ah_id {} header_template_size {}"
-          " path_mtu {}",
+          " path_mtu {} qstate {}",
           info.hw_lif_id,
           cmd->qp_num, cmd->attr_mask,
           cmd->dest_qp_num, cmd->q_key,
           cmd->e_psn, cmd->sq_psn,
           cmd->header_template_ah_id, cmd->header_template_size,
-          cmd->path_mtu);
+          cmd->path_mtu, cmd->state);
 
     hal->ModifyQP(info.hw_lif_id + cmd->lif_id,
                   cmd->qp_num, cmd->attr_mask,
                   cmd->dest_qp_num, cmd->q_key,
                   cmd->e_psn, cmd->sq_psn,
                   cmd->header_template_ah_id, cmd->header_template_size,
-                  header, cmd->path_mtu);
+                  header, cmd->path_mtu, cmd->state);
 
     return (DEVCMD_SUCCESS);
 }

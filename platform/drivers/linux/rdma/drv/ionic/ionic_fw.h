@@ -245,6 +245,13 @@ static inline int to_ionic_qp_state(enum ib_qp_state state)
 	}
 }
 
+static inline int to_ionic_qp_modify_state(enum ib_qp_state to_state,
+					   enum ib_qp_state from_state)
+{
+	return to_ionic_qp_state(to_state) |
+		(to_ionic_qp_state(from_state) << 4);
+}
+
 /* fw abi v1 */
 
 /* completion queue v1 cqe */

@@ -50,6 +50,11 @@ class RdmaSessionObject(base.ConfigObjectBase):
                                          self.ah_handle)
             self.lqp.set_dst_qp(self.rqp.id)
 
+        if self.lqp.svc == 3:
+            self.lqp.set_q_key(self.lqp.id) #we are using q_id as q_key
+
+        self.lqp.set_q_state(3) # Q_STATE_RTS
+
         # For local-local rdma sessions, need to setup reverse direction too
         if not self.rqp.remote:
             self.rqp.ConfigureHeaderTemplate(self, self.session.responder,
@@ -58,12 +63,8 @@ class RdmaSessionObject(base.ConfigObjectBase):
                                          self.session.IsIPV6(), False,
                                          self.ah_remote)
             self.rqp.set_dst_qp(self.lqp.id)
+            self.rqp.set_q_state(3)
 
-        if self.lqp.svc == 3:
-            self.lqp.set_q_key(self.lqp.id) #we are using q_id as q_key
-        #self.lqp.rq.set_dst_qp(self.rqp.id)
-        #logger.info('RDMA Session: %s  Setting SQCB Local QID: %d Remote QID: %d ' % 
-        #               (self.GID(), self.lqp.id, self.rqp.id))
         pass
          
     def Show(self):

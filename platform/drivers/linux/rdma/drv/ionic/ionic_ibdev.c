@@ -74,7 +74,7 @@ MODULE_LICENSE("Dual BSD/GPL");
 static bool ionic_xxx_haps = false;
 module_param_named(xxx_haps, ionic_xxx_haps, bool, 0444);
 MODULE_PARM_DESC(xxx_haps, "XXX Misc workarounds for HAPS.");
-static bool ionic_xxx_pgtbl = false;
+static bool ionic_xxx_pgtbl = true;
 module_param_named(xxx_pgtbl, ionic_xxx_pgtbl, bool, 0444);
 MODULE_PARM_DESC(xxx_pgtbl, "XXX Allocate pgtbl even for contiguous buffers that don't need it.");
 static bool ionic_xxx_limits = false;
@@ -3524,6 +3524,8 @@ static int ionic_v0_modify_qp_cmd(struct ionic_ibdev *dev,
 			.path_mtu = ib_mtu_enum_to_int(attr->path_mtu),
 			.rsq_depth = attr->max_dest_rd_atomic,
 			.rrq_depth = attr->max_rd_atomic,
+			.state = to_ionic_qp_modify_state(attr->qp_state,
+							  attr->cur_qp_state),
 		},
 	};
 	struct ib_ud_header *hdr = NULL;
@@ -3613,10 +3615,13 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 	const u32 ver = (u32)qp->compat << 24;
 	const u32 flags = to_ionic_qp_flags(attr->qp_access_flags,
 					    !qp->ibqp.uobject);
+	const u8 state = to_ionic_qp_modify_state(attr->qp_state,
+						  attr->cur_qp_state);
 	struct ionic_admin_wr wr = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
 		.wqe = {
 			.op = IONIC_V1_ADMIN_MODIFY_QP,
+			.type_state = state,
 			.id_ver = cpu_to_le32(qp->qpid | ver),
 			.mod_qp = {
 				.attr_mask = cpu_to_le32(mask),

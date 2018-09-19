@@ -1158,9 +1158,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_p->sqcb0.ring_header.total_rings = MAX_SQ_DOORBELL_RINGS;
     sqcb_p->sqcb0.ring_header.host_rings = MAX_SQ_HOST_RINGS;
 
-    // for now initialize state with RTS to satisfy DOLs.
-    // it needs to be changed to RESET state at later time
-    sqcb.sqcb0.state = sqcb.sqcb1.state = RDMA_QP_STATE_RTS;
+    // Initialize qp state to RESET. Further state changes happen in qp_update
+    sqcb.sqcb0.state = sqcb.sqcb1.state = RDMA_QP_STATE_RESET;
 
     sqcb_p->sqcb0.poll_for_work = 0;
     sqcb_p->sqcb0.color = 1;
@@ -1272,9 +1271,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.ring_header.total_rings = MAX_RQ_RINGS;
     rqcb.rqcb0.ring_header.host_rings = MAX_RQ_RINGS;
 
-    // for now initialize state with RTS to satisfy DOLs.
-    // it needs to be changed to RESET state at later time
-    rqcb.rqcb0.state = rqcb.rqcb1.state = RDMA_QP_STATE_RTS;
+    // Initialize qp state to RESET. Further state changes happen in qp_update
+    rqcb.rqcb0.state = rqcb.rqcb1.state = RDMA_QP_STATE_RESET;
 
     if (spec.rq_in_nic_memory()) {
         rqcb_p->rqcb0.rq_in_hbm = 1;
@@ -1466,6 +1464,39 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
     return (HAL_RET_OK);
 }
 
+uint8_t rdma_qp_state_from_ionic (uint8_t state)
+{
+    uint8_t ret = 0;
+
+    switch (state) {
+
+        case QP_STATE_RESET:
+            ret = RDMA_QP_STATE_RESET;
+            break;
+        case QP_STATE_INIT:
+            ret = RDMA_QP_STATE_INIT;
+            break;
+        case QP_STATE_RTR:
+            ret = RDMA_QP_STATE_RTR;
+            break;
+        case QP_STATE_RTS:
+            ret = RDMA_QP_STATE_RTS;
+            break;
+        case QP_STATE_SQD:
+            ret = RDMA_QP_STATE_SQD;
+            break;
+        // These are not valid state transitions
+        case QP_STATE_SQE:
+            ret = RDMA_QP_STATE_SQ_ERR;
+        case QP_STATE_ERR:
+        default:
+            ret = RDMA_QP_STATE_ERR;
+            break;
+    }
+
+    return ret;
+}
+
 hal_ret_t
 rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 {
@@ -1478,6 +1509,8 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     rqcb_t       *rqcb_p = &rqcb;
     uint64_t     header_template_addr;
     uint64_t     pad_size;
+    uint8_t      state;
+
     pd::pd_capri_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
 
@@ -1495,6 +1528,8 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
                     spec.tx_psn());
     HAL_TRACE_DEBUG("{}: Inputs: path_mtu: {}", __FUNCTION__,
                     spec.pmtu());
+    HAL_TRACE_DEBUG("{}: Inputs: qstate: {}", __FUNCTION__,
+                    spec.qstate());
 
     // Read sqcb from HW
     memset(sqcb_p, 0, sizeof(sqcb_t));
@@ -1510,6 +1545,15 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     memrev((uint8_t*)&rqcb_p->rqcb1, sizeof(rqcb1_t));
 
     switch (oper) {
+
+        case rdma::RDMA_UPDATE_QP_OPER_SET_QSTATE:
+            // XXX: Check cur_qp_state before moving qp to new state
+            state = rdma_qp_state_from_ionic(uint8_t(spec.qstate() & QP_STATE_MASK));
+            sqcb_p->sqcb0.state = sqcb_p->sqcb1.state = state;
+            rqcb_p->rqcb0.state = rqcb_p->rqcb1.state = state;
+
+            HAL_TRACE_DEBUG("{}: Update: Setting qp_state to: {}", __FUNCTION__, state);
+        break;
 
         case rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QP:
             rqcb_p->rqcb0.dst_qp = spec.dst_qp_num();

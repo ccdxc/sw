@@ -629,6 +629,18 @@ void ConnectInitiatorAndTarget(uint32_t qp1, uint32_t qp2, uint64_t mac1,
   grpc::ClientContext context2;
   status = rdma_stub->RdmaQpUpdate(&context2, req, &resp);
   assert(status.ok());
+
+  req.clear_request();
+  resp.clear_response();
+  qu = req.add_request();
+  qu->set_qp_num(qp1);
+  qu->set_hw_lif_id(g_rdma_hw_lif_id);
+  qu->set_oper(rdma::RDMA_UPDATE_QP_OPER_SET_QSTATE);
+  qu->set_dst_qp_num(qp2);
+  qu->set_qstate(3);
+  grpc::ClientContext context3;
+  status = rdma_stub->RdmaQpUpdate(&context3, req, &resp);
+  assert(status.ok());
 }
 
 

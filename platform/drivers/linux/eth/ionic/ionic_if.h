@@ -1433,7 +1433,8 @@ struct modify_qp_cmd {
 	u32 path_mtu;
 	u8 rrq_depth;
 	u8 rsq_depth;
-	u8 rsvd[14];
+	u8 state;
+	u8 rsvd[13];
 };
 
 /**

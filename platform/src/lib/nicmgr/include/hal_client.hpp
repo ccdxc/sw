@@ -208,7 +208,7 @@ public:
                uint32_t dest_qp_num, uint32_t q_key,
                uint32_t e_psn, uint32_t sq_psn,
                uint32_t header_template_ah_id, uint32_t header_template_size,
-               unsigned char *header, uint32_t pmtu);
+               unsigned char *header, uint32_t pmtu, uint8_t qstate);
 
   int CreateAh(uint64_t lif_id, uint32_t ah_id, uint32_t pd_id,
                uint32_t header_template_size, unsigned char *header);
@@ -260,6 +260,7 @@ private:
   std::unique_ptr<Rdma::Stub> rdma_stub_;
 };
 
+#define   IB_QP_STATE        (1 << 0)
 #define   IB_QP_QKEY         (1 << 6)
 #define   IB_QP_AV           (1 << 7)
 #define   IB_QP_PATH_MTU     (1 << 8)

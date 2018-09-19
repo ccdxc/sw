@@ -66,6 +66,7 @@ extern hal_ret_t rdma_memory_window_alloc(RdmaMemWindowSpec& spec, RdmaMemWindow
 extern uint64_t rdma_lif_pt_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_kt_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_at_base_addr(uint32_t lif_id);
+extern uint8_t rdma_qp_state_from_ionic(uint8_t state);
 extern  hal_ret_t rdma_ah_create(RdmaAhSpec& spec, RdmaAhResponse *rsp);
 extern hal_ret_t rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp);
 
@@ -277,15 +278,17 @@ typedef struct key_entry_s {
 
 extern uint8_t error_code;
 
+#define QP_STATE_MASK 0xF
+#define QP_CUR_STATE(qstate) \
+        ((qstate) >> QP_STATE_MASK)
 typedef enum qp_state_e {
     QP_STATE_RESET,
     QP_STATE_INIT,
     QP_STATE_RTR,
     QP_STATE_RTS,
     QP_STATE_SQD,
-    QP_STATE_SQERR,
+    QP_STATE_SQE,
     QP_STATE_ERR,
-    QP_STATE_SQD_ON_ERR
 } qp_state_t;
 
 #if 0
