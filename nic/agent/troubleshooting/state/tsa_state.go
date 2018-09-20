@@ -2080,7 +2080,9 @@ func (tsa *Tagent) CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 		// session in HW. Update mirrorSession object will also carry required
 		// drop/monitor rules.
 		key := objectKey(pcSession.ObjectMeta, pcSession.TypeMeta)
+		tsa.Lock()
 		tsa.DB.MirrorSessionDB[key] = pcSession
+		tsa.Unlock()
 		return nil
 	}
 	return tsa.createUpdatePacketCaptureSession(pcSession, false)
