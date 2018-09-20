@@ -671,7 +671,7 @@ static void ionic_clean_cq(struct ionic_cq *cq, u32 qpid)
 
 		prod = ionic_queue_next(&cq->q, prod);
 		qcqe = ionic_queue_at(&cq->q, prod);
-		color = color != (prod == 0);
+		color = ionic_color_wrap(prod, color);
 	}
 }
 
