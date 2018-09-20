@@ -3327,7 +3327,7 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 	 * after arming the cq can empty it.
 	 */
 	return (flags & IB_CQ_REPORT_MISSED_EVENTS) &&
-		ionic_queue_color(&cq->q) !=
+		ionic_queue_color(&cq->q) ==
 		ionic_v1_cqe_color(ionic_queue_at_prod(&cq->q));
 }
 
