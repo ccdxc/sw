@@ -6,6 +6,7 @@ cc_test(
     srcs = glob(["upgrade_manager_test.cc"]),
     linkopts = [
         "-lpthread",
+        "-lm",
     ],
     deps = [
         "//:gtest",
@@ -22,6 +23,7 @@ cc_test(
     srcs = glob(["upgrade_sdkclib_test.cc"]),
     linkopts = [
         "-lpthread",
+        "-lm",
     ],
     deps = [
         "//:gtest",

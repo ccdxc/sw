@@ -36,6 +36,7 @@ cc_binary(
     ],
     linkopts = [
         "-lpthread",
+        "-lm",
     ],
 )
 
@@ -47,6 +48,7 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
+        "-lm",
     ],
     deps = [
         "//:gtest",

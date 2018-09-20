@@ -52,6 +52,7 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
+        "-lm",
     ],
     deps = [
         "//:gtest",
@@ -71,6 +72,7 @@ cc_test(
     linkopts = [
         "-lpthread",
         "-lrt",
+        "-lm",
     ],
     deps = [
         "//:gtest",

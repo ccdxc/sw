@@ -35,6 +35,7 @@ cc_binary(
     ],
     linkopts = [
         "-lpthread",
+        "-lm",
     ],
 )
 
@@ -61,5 +62,6 @@ cc_binary(
     ],
     linkopts = [
         "-lpthread",
+        "-lm",
     ],
 )

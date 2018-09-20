@@ -83,6 +83,7 @@ cc_binary(
     linkopts = [
         "-lpthread",
         "-lrt",
+        "-lm",
     ],
     deps = [
         ":shm",

@@ -7,6 +7,7 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
+        "-lm",
     ],
     deps = [
         "//:gtest",
@@ -50,6 +51,7 @@ cc_test(
     ],
     linkopts = [
         "-lpthread",
+        "-lm",
     ],
     timeout="short",
 )
