@@ -1059,18 +1059,18 @@ populate_match_spec (acl_match_spec_t *ms,
     ip_mask = &ms->mask.ip;
 
     if (ms->src_if_match) {
-        sel->mutable_src_if_key_handle()->set_if_handle(ms->src_if_handle);
+        sel->mutable_src_if_key_handle()->set_interface_id(find_if_id_from_hal_handle(ms->src_if_handle));
     }
     if (ms->dest_if_match) {
-        sel->mutable_dst_if_key_handle()->set_if_handle(ms->dest_if_handle);
+        sel->mutable_dst_if_key_handle()->set_interface_id(find_if_id_from_hal_handle(ms->dest_if_handle));
     }
 
     if (ms->vrf_match) {
-        sel->mutable_vrf_key_handle()->set_vrf_handle(ms->vrf_handle);
+        sel->mutable_vrf_key_handle()->set_vrf_id(((vrf_t *)hal_handle_get_obj(ms->vrf_handle))->vrf_id);
     }
 
     if (ms->l2seg_match) {
-        sel->mutable_l2segment_key_handle()->set_l2segment_handle(ms->l2seg_handle);
+        sel->mutable_l2segment_key_handle()->set_segment_id(((l2seg_t *)hal_handle_get_obj(ms->l2seg_handle))->seg_id);
     }
 
     switch (ms->acl_type) {
@@ -1292,7 +1292,7 @@ populate_action_spec (acl_action_spec_t *as,
         ainfo->mutable_copp_key_handle()->set_copp_handle(as->copp_handle);
     }
     if (as->redirect_if_handle != HAL_HANDLE_INVALID) {
-        ainfo->mutable_redirect_if_key_handle()->set_if_handle(as->redirect_if_handle);
+        ainfo->mutable_redirect_if_key_handle()->set_interface_id(find_if_id_from_hal_handle(as->redirect_if_handle));
     }
 #ifdef ACL_DOL_TEST_ONLY
     if (as->redirect_if_handle != HAL_HANDLE_INVALID) {

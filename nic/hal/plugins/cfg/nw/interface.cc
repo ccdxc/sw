@@ -180,6 +180,26 @@ find_hal_handle_from_if_id (if_id_t if_id)
     return HAL_HANDLE_INVALID;
 }
 
+if_id_t
+find_if_id_from_hal_handle (hal_handle_t handle)
+{
+    if (handle == HAL_HANDLE_INVALID) {
+        return 0;
+    }
+
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("Failed to find object with handle : {}", handle);
+        return 0;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_INTERFACE) {
+        HAL_TRACE_DEBUG("Failed to find if with handle : {}", handle);
+        return 0;
+    }
+
+    return ((if_t *)hal_handle_get_obj(handle))->if_id;
+}
+
 if_t *
 find_if_by_id (if_id_t if_id)
 {
