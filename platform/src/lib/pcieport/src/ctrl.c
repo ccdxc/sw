@@ -83,6 +83,22 @@ pcieport_mac_set_ids(pcieport_t *p)
     pal_reg_wr32(PXC_(CFG_C_MAC_SSVID_CAP, pn), val);
 }
 
+/*
+ * Select local or host as source for pcie refclk.
+ * Hw default is local refclk.
+ */
+static void
+pcieport_select_pcie_refclk(const int host_clock)
+{
+    if (host_clock) {
+        pal_reg_wr32(PP_(CFG_PP_PCIE_PLL_REFCLK_SEL), 0xff);
+        pal_reg_wr32(PP_(CFG_PP_PCIE_PLL_REFCLK_SOURCE_SEL), 0x3);
+    } else {
+        pal_reg_wr32(PP_(CFG_PP_PCIE_PLL_REFCLK_SEL), 0x00);
+        pal_reg_wr32(PP_(CFG_PP_PCIE_PLL_REFCLK_SOURCE_SEL), 0x0);
+    }
+}
+
 static void
 pcieport_unreset(pcieport_t *p)
 {
@@ -143,6 +159,24 @@ pcieport_hostconfig(pcieport_t *p)
         pcieport_set_serdes_reset(p, 1);
         pcieport_set_pcs_reset(p, 1);
         pcieport_set_serdes_reset(p, 0);
+        pcieport_set_pcs_reset(p, 0);
+    } else {
+        static int done_once;
+
+        if (!done_once) {
+            int host_clock = 1;
+            char *env = getenv("PCIEPORT_HOST_CLOCK");
+
+            if (env) {
+                host_clock = strtoul(env, NULL, 0);
+                pciehsys_log("host_clock override %d\n", host_clock);
+            }
+
+            pcieport_select_pcie_refclk(host_clock);
+            pcieport_serdes_init();
+            done_once = 1;
+        }
+        pcieport_set_pcs_reset(p, 1);
         pcieport_set_pcs_reset(p, 0);
     }
 
@@ -262,7 +296,6 @@ pcieport_cmd_hostconfig(pcieport_t *p, void *arg)
      * Provide default params for any unspecified.
      */
     if (p->cap_gen == 0) {
-        p->cap_gen = pal_is_asic() ? 1 : 1; /* XXX asic gen1 for bringup */
         p->cap_gen = pal_is_asic() ? 4 : 1;
     }
     if (p->cap_width == 0) {

@@ -65,8 +65,6 @@ pcieport_link_init_asic(void)
     pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), 0x0); /* 1 port x16 linkwidth mode */
     pcieport_rx_credit_init(1);
     pcieport_macfifo_thres(5); /* match late-stage ECO */
-
-    pcieport_serdes_init();
 }
 
 static void

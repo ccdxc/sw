@@ -63,7 +63,7 @@ romfile_close(void *ctx)
 static int
 pcieport_serdes_fw_gen(void)
 {
-    int gen = 1;
+    int gen = 4;
     const char *env = getenv("PCIEPORT_SERDES_FW_GEN");
     if (env) {
         gen = strtoul(env, NULL, 0);
