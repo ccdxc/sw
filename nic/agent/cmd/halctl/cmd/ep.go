@@ -26,11 +26,18 @@ var epShowCmd = &cobra.Command{
 	Run:   epShowCmdHandler,
 }
 
-var epPdShowCmd = &cobra.Command{
-	Use:   "pd",
-	Short: "show endpoint PD information",
-	Long:  "show PD information about endpoint objects",
-	Run:   epPdShowCmdHandler,
+var epShowSpecCmd = &cobra.Command{
+	Use:   "spec",
+	Short: "show endpoint spec information",
+	Long:  "show endpoint object spec information",
+	Run:   epShowCmdHandler,
+}
+
+var epShowStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "show endpoint status information",
+	Long:  "show status information about endpoint objects",
+	Run:   epStatusShowCmdHandler,
 }
 
 var epDetailShowCmd = &cobra.Command{
@@ -42,7 +49,8 @@ var epDetailShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(epShowCmd)
-	epShowCmd.AddCommand(epPdShowCmd)
+	epShowCmd.AddCommand(epShowSpecCmd)
+	epShowCmd.AddCommand(epShowStatusCmd)
 	epShowCmd.AddCommand(epDetailShowCmd)
 }
 
@@ -84,7 +92,7 @@ func epShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func epPdShowCmdHandler(cmd *cobra.Command, args []string) {
+func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
@@ -111,7 +119,7 @@ func epPdShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Header
-	epPdShowHeader(cmd, args)
+	epStatusShowHeader(cmd, args)
 
 	// Print EPs
 	for _, resp := range respMsg.Response {
@@ -119,7 +127,7 @@ func epPdShowCmdHandler(cmd *cobra.Command, args []string) {
 			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
 			continue
 		}
-		epPdShowOneResp(resp)
+		epStatusShowOneResp(resp)
 	}
 }
 
@@ -175,12 +183,12 @@ func epShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n")
 	fmt.Printf("Handle   : Endpoint's Handle                       L2SegID : Endpoint's L2seg ID\n")
 	fmt.Printf("Mac      : Endpoint's Mac                          IfId    : Interface on which EP was learnt\n")
-	fmt.Printf("IsLocal  : Endpoint's location                     #IPs    : Endpoint's IPs\n")
-	fmt.Printf("IPs      : Endpoint's IPs\n")
+	fmt.Printf("IsLocal  : Endpoint's location                     Vlan    : Endpoint's Vlan\n")
+	fmt.Printf("#IPs     : Endpoint's IPs                          IPs     : Endpoint's IPs\n")
 	hdrLine := strings.Repeat("-", 120)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-12s%-12s%-24s%-10s%-10s%-10s%-20s\n",
-		"Handle", "L2SegID", "Mac", "IfId", "IsLocal", "#IPs", "IPs")
+	fmt.Printf("%-12s%-12s%-24s%-10s%-10s%-5s%-10s%-20s\n",
+		"Handle", "L2SegID", "Mac", "IfId", "IsLocal", "Vlan", "#IPs", "IPs")
 	fmt.Println(hdrLine)
 }
 
@@ -196,17 +204,18 @@ func epShowOneResp(resp *halproto.EndpointGetResponse) {
 		}
 	}
 	macStr := utils.MactoStr(resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetMacAddress())
-	fmt.Printf("%-12d%-12d%-24s%-10d%-10t%-10d%-20s\n",
+	fmt.Printf("%-12d%-12d%-24s%-10d%-10t%-5d%-10d%-20s\n",
 		resp.GetStatus().GetEndpointHandle(),
 		resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetL2SegmentKeyHandle().GetSegmentId(),
 		macStr,
 		resp.GetSpec().GetEndpointAttrs().GetInterfaceKeyHandle().GetInterfaceId(),
 		resp.GetStatus().GetIsEndpointLocal(),
+		resp.GetSpec().GetEndpointAttrs().GetUsegVlan(),
 		len(resp.GetStatus().GetIpAddress()),
 		ipStr)
 }
 
-func epPdShowHeader(cmd *cobra.Command, args []string) {
+func epStatusShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n")
 	fmt.Printf("Handle    : Endpoint's Handle                L2SegID     : Endpoint's L2seg ID\n")
 	fmt.Printf("MacTblIdx : Registered MAC table Index       RwTblIdx    : Rewrite table Index\n")
@@ -217,7 +226,7 @@ func epPdShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Println(hdrLine)
 }
 
-func epPdShowOneResp(resp *halproto.EndpointGetResponse) {
+func epStatusShowOneResp(resp *halproto.EndpointGetResponse) {
 	epd := resp.GetStatus().GetEpdStatus()
 
 	rwTblStr := ""
