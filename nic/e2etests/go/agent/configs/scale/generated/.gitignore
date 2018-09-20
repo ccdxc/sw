@@ -1,5 +1,6 @@
-# Ignore everything in this directory. They are installed by build scripts
+# Ignore all generated jsons in this dir for scale setup
 *
 # Except this file
 !.gitignore
 !75k_rules.json
+!1k_rules.json

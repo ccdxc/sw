@@ -7,6 +7,8 @@ HEIMDALL=$TOPDIR/cmd/heimdall
 HEIMDALL_RUN=$HEIMDALL/main.go
 HEIMDALL_GOLDEN_CONFIG_DIR=$TOPDIR/configs/golden
 HEIMDALL_GOLDEN_CONFIG=$HEIMDALL_GOLDEN_CONFIG_DIR/golden_cfg.yml
+HEIMDALL_SCALE_CONFIG_DIR=$TOPDIR/configs/scale
+HEIMDALL_SCALE_CONFIG=$HEIMDALL_SCALE_CONFIG_DIR/scale_cfg.yml
 SIM_DEVICE_JSON=$HEIMDALL_GOLDEN_CONFIG_DIR/sim_device.json
 UPLINK_MAP_JSON=$HEIMDALL_GOLDEN_CONFIG_DIR/uplink_map.json
 
@@ -95,3 +97,14 @@ fi
 
 
 echo "Golden sanity passed..."
+
+echo "Pushing golden config..."
+go run $HEIMDALL_RUN run --config-file $HEIMDALL_SCALE_CONFIG --enable-sim --vlan-start 1000
+
+OUT=$?
+if [ $OUT -ne 0 ];then
+   echo "Pushing configuration to agent failed!"
+   exit $OUT
+fi
+
+echo "Scale sanity passed..."

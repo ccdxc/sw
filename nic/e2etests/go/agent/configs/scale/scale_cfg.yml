@@ -8,14 +8,14 @@ objects:
   rest-endpoint: "/api/namespaces/"
 - kind: Network
   name: scale-nw
-  count: 1024
+  count: 128
   rest-endpoint: "/api/networks/"
 - kind: Endpoint
   name: scale-ep
-  count: 4096
+  count: 512
   rest-endpoint: "/api/endpoints/"
 - kind: SGPolicy
   name: scale-sg-policy
   count: 1
   rest-endpoint: "/api/security/policies/"
-  spec-file: "generated/75k_rules.json"
+  spec-file: "generated/1k_rules.json"
