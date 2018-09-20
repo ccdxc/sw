@@ -165,7 +165,6 @@ extern log *g_syslog_logger;
     if (unlikely(hal::utils::hal_logger())) {                                  \
         hal::utils::hal_logger()->error("[{}:{}] " fmt, __func__, __LINE__,    \
                                         ##__VA_ARGS__);                        \
-        hal::utils::hal_logger()->flush();                                     \
     }                                                                          \
 
 #define HAL_TRACE_ERR_NO_META(fmt...)                                          \
@@ -189,7 +188,6 @@ extern log *g_syslog_logger;
     if (unlikely(hal::utils::hal_logger())) {                                  \
         hal::utils::hal_logger()->debug("[{}:{}] " fmt, __func__, __LINE__,    \
                                         ##__VA_ARGS__);                        \
-        hal::utils::hal_logger()->flush();                                     \
     }                                                                          \
 
 #define HAL_TRACE_DEBUG_NO_META(fmt...)                                        \
