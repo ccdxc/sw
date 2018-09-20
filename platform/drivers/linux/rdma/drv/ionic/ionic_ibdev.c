@@ -5830,7 +5830,7 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev, int eqid)
 
 	eq->intr = rc;
 
-	ionic_queue_dbell_init(&eq->q, eq->intr);
+	ionic_queue_dbell_init(&eq->q, eq->eqid);
 	ionic_queue_color_init(&eq->q);
 
 	snprintf(eq->name, sizeof(eq->name), "%s-%d-%d-eq",
