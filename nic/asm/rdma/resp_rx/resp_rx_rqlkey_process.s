@@ -30,6 +30,8 @@ struct key_entry_aligned_t d;
 #define IN_TO_S_P to_s4_lkey_info
 
 #define K_VA CAPRI_KEY_FIELD(IN_P, va)
+#define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
+#define K_CURR_SGE_OFFSET CAPRI_KEY_FIELD(IN_P, current_sge_offset)
 
 %%
     .param  resp_rx_ptseg_process
@@ -62,7 +64,7 @@ resp_rx_rqlkey_process:
     add         r1, d.base_va, d.len
     //add         r2, k.args.va, k.args.len
     //slt         c2, r1, r2
-    sslt        c2, r1, ABS_VA, CAPRI_KEY_FIELD(IN_P, len)
+    sslt        c2, r1, ABS_VA, K_LEN
     bcf         [c1 | c2], error_completion
     
     CAPRI_SET_TABLE_1_VALID_C(c1, 0)    //BD Slot
@@ -100,7 +102,7 @@ resp_rx_rqlkey_process:
     //add         r7, r7, k.args.len
     // pt_seg_size <= ((transfer_offset % pt_seg_size) + transfer_bytes)
     //sle         c1, r6, r7
-    ssle        c1, r6, r7, CAPRI_KEY_FIELD(IN_P, len)
+    ssle        c1, r6, r7, K_LEN
     bcf         [!c1], aligned_pt
     seq         c2, CAPRI_KEY_FIELD(IN_P, tbl_id), 0    //BD Slot
 
@@ -130,7 +132,7 @@ invoke_pt:
     CAPRI_NEXT_TABLE_I_READ_PC(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_ptseg_process, PT_SEG_P)
     CAPRI_GET_TABLE_0_OR_1_ARG(resp_rx_phv_t, r7, c2)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_offset, PT_OFFSET)
-    CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, pt_bytes, sge_index, CAPRI_KEY_RANGE(IN_P, len, tbl_id))
+    CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, pt_bytes, sge_index, CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, tbl_id))
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, d.log_page_size)
     //host_addr, override_lif_vld, override_lif
     CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, host_addr, override_lif, d.{host_addr...override_lif})
@@ -150,7 +152,7 @@ check_write_back:
     RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
 
     phvwr       CAPRI_PHV_FIELD(INFO_WBCB1_P, current_sge_offset), \
-                CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit24_ebit31)
+                K_CURR_SGE_OFFSET
 
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
 

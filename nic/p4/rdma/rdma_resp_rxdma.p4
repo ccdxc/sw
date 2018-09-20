@@ -160,16 +160,14 @@ header_type resp_rx_to_stage_ext_hdr_info_t {
 header_type resp_rx_key_info_t {
     fields {
         va                               :   64;
+        current_sge_offset               :   32;
         len                              :   32;
         dma_cmd_start_index              :    8;
         tbl_id                           :    3;
-        acc_ctrl                         :    8;
         dma_cmdeop                       :    1;
-        skip_pt                          :    1;
         invoke_writeback                 :    1;
         rsvd_key_err                     :    1;
-        rsvd                             :    9;
-        current_sge_offset               :   32;
+        rsvd                             :   18;
     }
 }
 
@@ -1414,16 +1412,14 @@ action resp_rx_rqlkey_process () {
 
     // stage to stage
     modify_field(t1_s2s_key_info_scr.va, t1_s2s_key_info.va);
+    modify_field(t1_s2s_key_info_scr.current_sge_offset, t1_s2s_key_info.current_sge_offset);
     modify_field(t1_s2s_key_info_scr.len, t1_s2s_key_info.len);
     modify_field(t1_s2s_key_info_scr.dma_cmd_start_index, t1_s2s_key_info.dma_cmd_start_index);
     modify_field(t1_s2s_key_info_scr.tbl_id, t1_s2s_key_info.tbl_id);
-    modify_field(t1_s2s_key_info_scr.acc_ctrl, t1_s2s_key_info.acc_ctrl);
     modify_field(t1_s2s_key_info_scr.dma_cmdeop, t1_s2s_key_info.dma_cmdeop);
-    modify_field(t1_s2s_key_info_scr.skip_pt, t1_s2s_key_info.skip_pt);
     modify_field(t1_s2s_key_info_scr.invoke_writeback, t1_s2s_key_info.invoke_writeback);
     modify_field(t1_s2s_key_info_scr.rsvd_key_err, t1_s2s_key_info.rsvd_key_err);
     modify_field(t1_s2s_key_info_scr.rsvd, t1_s2s_key_info.rsvd);
-    modify_field(t1_s2s_key_info_scr.current_sge_offset, t1_s2s_key_info.current_sge_offset);
 
 }
 

@@ -27,6 +27,7 @@ struct resp_rx_s1_t1_k k;
 #define K_RSQWQE_PTR CAPRI_KEY_FIELD(IN_TO_S_P, rsqwqe_ptr)
 #define K_ATOMIC_RKEY_INFO_VA CAPRI_KEY_FIELD(IN_P, va)
 #define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
+#define K_RSQ_PINDEX CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15)
 
 %%
     .param  rdma_atomic_resource_addr
@@ -164,7 +165,7 @@ loop_exit:
     CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_process, KEY_ADDR)
 
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, K_GLOBAL_LIF, K_GLOBAL_QTYPE, DB_ADDR)
-    CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, CAPRI_KEY_FIELD(IN_P, rsq_p_index), DB_DATA)
+    CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, K_RSQ_PINDEX, DB_DATA)
     // store db_data in LE format
     phvwr   p.db_data1, DB_DATA.dx
 

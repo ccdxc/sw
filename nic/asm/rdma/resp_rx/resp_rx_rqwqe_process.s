@@ -53,32 +53,39 @@ resp_rx_rqwqe_process:
     // now r1 = (current_sge_id << 32) + current_sge_offset
     add         r1, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31), CAPRI_KEY_FIELD(IN_P, current_sge_id), SGE_OFFSET_SHIFT
 
+    add         REM_PYLD_BYTES, r0, CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
     seq         c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1
 
-    //num_valid_sges = (in_progress == TRUE) ? 
-    //  rqcb_to_wqe_info_info_p->num_valid_sges ? wqe_p->num_sges;
-    cmov        NUM_VALID_SGES, c1, CAPRI_KEY_FIELD(IN_P, num_valid_sges), d.num_sges
+    bcf         [!c1], fresh_init 
+    // first_pass = TRUE
+    setcf       F_FIRST_PASS, [c0]  //BD Slot
 
-    //sge_p = (in_progress == TRUE) ? d_p : (d_p + RQWQE_SGE_OFFSET)
-    // we need to add SIZEOF_SGE_T_BITS because SGE is accessed from bottom to top in big-endian
-    //big-endian
-    cmov        SGE_P, c1, \
-                (HBM_CACHE_LINE_SIZE_BITS - (1 << LOG_SIZEOF_SGE_T_BITS)),  \
-                (RQWQE_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
+in_progress_init:
+    tblwr.l     d.rsvd2[63:0], 0
+    #tblwr.l     d.rsvd2[127:64], 0
+    #tblwr.l     d.rsvd2[159:128], 0
 
-    phvwr.!c1   p.cqe.recv.wrid, d.wrid
+    add         NUM_VALID_SGES, r0, CAPRI_KEY_FIELD(IN_P, num_valid_sges)
+    add         SGE_P, r0, (HBM_CACHE_LINE_SIZE_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
+
+    b           loop
+    add         r7, r0, offsetof(struct rqwqe_base_t, rsvd2) //BD Slot
+
+fresh_init:
+    tblwr.l     d.rsvd[63:0], 0
+    #tblwr.l     d.rsvd[127:64], 0
+    #tblwr.l     d.rsvd[159:128], 0
+
+    add         NUM_VALID_SGES, r0, d.num_sges
+    add         SGE_P, r0, (RQWQE_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
+
+    phvwr       p.cqe.recv.wrid, d.wrid
     // store wrid into rqcb3
     RQCB3_WRID_ADDR_GET(r6)
-    memwr.d.!c1 r6, d.wrid
+    memwr.d     r6, d.wrid
 
-    cmov        r7, c1, offsetof(struct rqwqe_base_t, rsvd2), offsetof(struct rqwqe_base_t, rsvd) // BD Slot
+    add         r7, r0, offsetof(struct rqwqe_base_t, rsvd)
 
-    add         REM_PYLD_BYTES, r0, CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
-   
-   #CAPRI_RESET_TABLE_0_AND_1_ARG()
-
-    // first_pass = TRUE
-    setcf       F_FIRST_PASS, [c0]
 loop:
     // r6 <- sge_p->len
     CAPRI_TABLE_GET_FIELD(r6, SGE_P, SGE_T, len)

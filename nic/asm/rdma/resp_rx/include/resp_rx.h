@@ -223,18 +223,16 @@ struct resp_rx_phv_t {
 //20
 struct resp_rx_key_info_t {
     va: 64;
+    current_sge_offset: 32;
     //keep len...tbl_id in the same order
     //aligning with resp_rx_lkey_to_pt_info_t
     len: 32;
     dma_cmd_start_index: 8;
     tbl_id: 3;
-    acc_ctrl: 8;
     dma_cmdeop: 1;
-    skip_pt: 1;
     invoke_writeback: 1;
     rsvd_key_err: 1;
-    rsvd: 9;
-    current_sge_offset: 32;
+    rsvd: 18;
 };
 
 struct resp_rx_lkey_to_pt_info_t {

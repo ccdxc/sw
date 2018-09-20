@@ -24,6 +24,8 @@ struct key_entry_aligned_t d;
 #define IN_TO_S_P to_s4_lkey_info
 
 #define K_VA CAPRI_KEY_FIELD(IN_P, va)
+#define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
+#define K_CURR_SGE_OFFSET CAPRI_KEY_FIELD(IN_P, current_sge_offset)
 
 %%
     .param  resp_rx_ptseg_process
@@ -41,7 +43,7 @@ resp_rx_rqlkey_rsvd_lkey_process:
     //STORAGE_USE_CASE
     crestore            [c1], d.{override_lif_vld}, 0x1
     //Always assume resvered lkey based address to be of host_addr
-    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c0, CAPRI_KEY_FIELD(IN_P, len), K_VA, c1, d.override_lif)
+    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c0, K_LEN, K_VA, c1, d.override_lif)
     
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS 
 
@@ -55,7 +57,7 @@ check_write_back:
     RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
 
     phvwr       CAPRI_PHV_FIELD(INFO_WBCB1_P, current_sge_offset), \
-                CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit24_ebit31)
+                K_CURR_SGE_OFFSET
 
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
 

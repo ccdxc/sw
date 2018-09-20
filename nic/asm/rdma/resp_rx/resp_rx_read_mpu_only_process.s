@@ -21,6 +21,7 @@ struct resp_rx_s1_t1_k k;
 
 #define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
 #define K_VA CAPRI_KEY_FIELD(IN_P, va)
+#define K_RSQ_PINDEX CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15)
 
 %%
     .param  resp_rx_rqrkey_process
@@ -64,7 +65,7 @@ resp_rx_read_mpu_only_process:
 ring_rsq_dbell:
 
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, K_GLOBAL_LIF, K_GLOBAL_QTYPE, DB_ADDR)
-    CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, CAPRI_KEY_FIELD(IN_P, rsq_p_index), DB_DATA)
+    CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, K_RSQ_PINDEX, DB_DATA)
     // store db_data in LE format
     phvwr   p.db_data1, DB_DATA.dx
 
