@@ -32,18 +32,28 @@ typedef uint32_t    slot_id_t;    // 20 bit id
 
 // global switch port configuration for this NIC
 typedef struct switch_port_cfg_s {
+    uint32_t       flags;
     ipv4_addr_t    mytep_ip;    // local linux IP in the substrate
     mac_addr_t     my_mac;      // local MAC
 } switch_port_cfg_t;
 
+// GRE tunnels
+typedef struct tep_s {
+    uint32_t       flags;
+    ipv4_addr_t    tep_ip;    // IP address of remote server in the substrate
+} tep_t;
+
+
 // VCN representation
 typedef struct vcn_s {
+    uint32_t       flags;
     vcn_id_t       vcn_id;     // VCN's unique id
     ip_prefix_t    vcn_pfx;    // VCN's CIDR block
 } vcn_t;
 
 // subnet representation
 typedef struct subnet_s {
+    uint32_t       flags;
     subnet_id_t    subnet_id;     // subnet's unique id
     vcn_id_t       vcn_id;        // VCN this subnet is part of
     ip_prefix_t    subnet_pfx;    // subnet's CIDR block
@@ -59,6 +69,7 @@ typedef struct vnic_ip_info_s {
 
 // VNIC representation
 typedef struct vnic_s {
+    uint32_t          flags;
     vnic_id_t         vnic_id;          // vnic's unique id
     subnet_id_t       subnet_id;        // subnet id of this vnic
     vlan_id_t         vlan_id;          // VLAN tag assigned to this vnic
@@ -66,12 +77,9 @@ typedef struct vnic_s {
     mac_addr_t        mac_addr;         // overlay MAC address of the vnic
     vnic_ip_info_t    ip_info[MAX_IP_PER_VNIC];    // IP address information of this VNIC
     bool              src_dst_check;    // true if src/dst check is enabled
+    // shall we use a tep-hndl instead ?? 
+    tep_t             tep;   // if tep == mytep local vnic, else remote vnic
 } vnic_t;
-
-// GRE tunnels
-typedef struct tep_s {
-    ipv4_addr_t    tep_ip;    // IP address of remote server in the substrate
-} tep_t;
 
 // single route
 typedef struct route_s {
@@ -81,6 +89,7 @@ typedef struct route_s {
 
 // route rules per subnet
 typedef struct routes_s {
+    uint32_t       flags;
     subnet_id_t    subnet_id;
     uint32_t       num_routes;
     route_t        routes[0];
@@ -125,6 +134,7 @@ typedef struct security_rule_s {
 } security_rule_t;
 
 typedef struct security_list_s {
+    uint32_t        flags;
     subnet_id_t        subnet_id;
     uint32_t           num_rules;
     security_rule_t    rules[0];
@@ -134,6 +144,8 @@ ret_code_t vcn_create(vcn_t *vcn);
 ret_code_t vcn_delete(vcn_t *vcn);
 ret_code_t subnet_create(subnet_t *subnet);
 ret_code_t subnet_delete(subnet_t *subnet);
+ret_code_t tep_create(tep_t *tep);
+ret_code_t tep_delete(tep_t *tep);
 ret_code_t vnic_create(vnic_t *vnic);
 ret_code_t vnic_delete(vnic_t *vnic);
 ret_code_t security_list_create(security_list_t *security_list);
