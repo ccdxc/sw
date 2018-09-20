@@ -58,6 +58,16 @@ typedef struct _oci_vnic_t
     oci_ip_addr_t tep;                         /**< Tunnel dst behind which the
                                                     remote VNIC is present */
 
+    /**
+     * @brief Local/Remote VNIC
+     */
+    bool is_local;
+    
+    /**
+     * @brief Tunnel behind which the VNIC is present, valid for remote vnics
+     */
+    oci_tunnel_t tunnel;
+
 } PACKED oci_vnic_t;
 
 /**
