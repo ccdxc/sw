@@ -3,29 +3,22 @@
 
 header_type slacl_metadata_t {
     fields {
-        pad0        : 6;
-        addr3       : 34;
-        pad1        : 4;
-        stats_index : 20;
-        class_id0   : 10;
-        class_id1   : 10;
-        class_id2   : 8;
-        class_id3   : 8;
-        class_id4   : 4;
-        class_id5   : 10;
-        class_id6   : 10;
-        class_id7   : 10;
-        drop        : 1;
-        sl_result      : 2;    // (sf,sl) encoded value
-    }
-}
-
-header_type rxdma_predicates_t {
-    fields {
-        sl_result                   : 2;    // (sf,sl) encoded value
-        udp_flow_lkp_continue       : 1;
-        udp_flow_lkp_result         : 2;
-        pad                         : 3;
+        pad0                 : 6;
+        sport_addr           : 34;
+        pad1                 : 6;
+        ipv4_addr            : 34;
+        pad2                 : 6;
+        proto_dport_addr     : 34;
+        pad3                 : 6;
+        p1_addr              : 34;
+        pad4                 : 6;
+        p2_addr              : 34;
+        pad5                 : 1;
+        sport_class_id       : 7;
+        proto_dport_class_id : 8;
+        pad6                 : 4;
+        ipv4_class_id        : 10;
+        p1_class_id          : 10;
     }
 }
 
@@ -38,9 +31,10 @@ header_type scratch_metadata_t {
         class_id10      : 10;
         class_id8       : 8;
         class_pad       : 2;
-        sl_result       : 2;
         qid             : 24;
         dma_size        : 16;
+        slacl_result    : 2;
+        data512         : 512;
     }
 }
 

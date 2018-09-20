@@ -1,8 +1,12 @@
 #include "apollo_rxdma.h"
+#include "INGRESS_p.h"
+#include "ingress.h"
+
+struct phv_                 p;
 
 %%
 
-slacl_ip_15_00:
+slacl_p2:
     nop.e
     nop
 
@@ -11,6 +15,6 @@ slacl_ip_15_00:
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-slacl_ip_15_00_error:
+slacl_p2_error:
     nop.e
     nop

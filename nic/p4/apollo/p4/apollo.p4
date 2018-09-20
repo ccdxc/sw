@@ -30,8 +30,6 @@ action drop_packet() {
 
 action slacl_init(base_addr) {
     modify_field(p4_to_rxdma_header.slacl_base_addr, base_addr);
-    modify_field(p4_to_rxdma_header.slacl_addr1, base_addr);
-    modify_field(p4_to_rxdma_header.slacl_addr2, base_addr + SLACL_IP_TABLE_OFFSET);
 }
 
 action lpm_init(base_addr) {

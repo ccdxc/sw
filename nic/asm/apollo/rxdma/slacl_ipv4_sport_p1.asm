@@ -1,8 +1,12 @@
 #include "apollo_rxdma.h"
+#include "INGRESS_p.h"
+#include "ingress.h"
+
+struct phv_                 p;
 
 %%
 
-slacl_p1_c0c2:
+slacl_ipv4_sport_p1:
     nop.e
     nop
 
@@ -11,6 +15,6 @@ slacl_p1_c0c2:
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-slacl_p1_c0c2_error:
+slacl_ipv4_sport_p1_error:
     nop.e
     nop

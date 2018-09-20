@@ -11,7 +11,7 @@ action pkt_enqueue(PKTQ_QSTATE) {
     PKTQ_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_qstate_txdma_fte_q);
 
     // k-vector
-    modify_field(scratch_metadata.sl_result, p4_to_rxdma_header.sl_result);
+    modify_field(scratch_metadata.slacl_result, p4_to_rxdma_header.slacl_result);
     modify_field(scratch_metadata.qid, capri_rxdma_intr.qid);
     modify_field(scratch_metadata.dma_size, (capri_p4_intr.packet_len +
                                              APOLLO_PREDICATE_HDR_SZ +
@@ -123,7 +123,7 @@ control pkt_enqueue {
         apply(toeplitz_seed);
         apply(rx_cpu_hash);
     }
-    if (p4_to_rxdma_header.sl_result == 0x00) {
+    if (p4_to_rxdma_header.slacl_result == 0x00) {
         // drop
     } else {
         // enqueue to FTE or TxDMA ring based on SF bit (I)

@@ -9,12 +9,12 @@ struct txdma_fte_queue_d    d;
 %%
 
 pkt_enqueue:
-    // k.p4_to_rxdma_header_sl_result,
+    // k.p4_to_rxdma_header_slacl_result,
     // == 00 : drop, used as predicate for applying this table
     // == 01 : txdma
     // == 10 : fte
     // == 11 : fte
-    bbeq         k.p4_to_rxdma_header_sl_result[1], 1, q_pkt_to_fte
+    bbeq         k.p4_to_rxdma_header_slacl_result[1], 1, q_pkt_to_fte
     // common case, send to txdma
     // check q full
     add         r1, r0, d.pkt_enqueue_d.sw_pindex0

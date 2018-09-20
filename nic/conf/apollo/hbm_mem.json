@@ -50,11 +50,7 @@
         },
         {
             "name": "slacl",
-            "size_kb": 131072
-        },
-        {
-            "name": "slacl_stats",
-            "size_kb": 131072
+            "size_kb": 524288
         },
         {
             "name": "lpm",

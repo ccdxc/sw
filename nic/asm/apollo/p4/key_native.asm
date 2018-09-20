@@ -14,8 +14,7 @@ nop:
 
 .align
 native_ipv4_packet:
-    phvwr           p.p4_to_rxdma_header_slacl_ip_15_00, k.ipv4_1_dstAddr[15:0]
-    phvwr           p.p4_to_rxdma_header_slacl_ip_31_16, k.ipv4_1_dstAddr[31:16]
+    phvwr           p.p4_to_rxdma_header_slacl_ipv4, k.ipv4_1_dstAddr
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV4
     phvwr           p.key_metadata_src, k.ipv4_1_srcAddr
     phvwr           p.key_metadata_dst, k.ipv4_1_dstAddr

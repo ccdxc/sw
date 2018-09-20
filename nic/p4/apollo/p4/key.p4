@@ -2,8 +2,7 @@
 /* Key derivation tables                                                      */
 /******************************************************************************/
 action native_ipv4_packet() {
-    modify_field(p4_to_rxdma_header.slacl_ip_15_00, ipv4_1.dstAddr);
-    modify_field(p4_to_rxdma_header.slacl_ip_31_16, (ipv4_1.dstAddr >> 16) & 0xFFFF);
+    modify_field(p4_to_rxdma_header.slacl_ipv4, ipv4_1.dstAddr);
 
     modify_field(key_metadata.ktype, KEY_TYPE_IPV4);
     modify_field(key_metadata.src, ipv4_1.srcAddr);
@@ -40,8 +39,7 @@ action native_nonip_packet() {
 }
 
 action tunneled_ipv4_packet() {
-    modify_field(p4_to_rxdma_header.slacl_ip_15_00, ipv4_2.srcAddr);
-    modify_field(p4_to_rxdma_header.slacl_ip_31_16, (ipv4_2.srcAddr >> 16) & 0xFFFF);
+    modify_field(p4_to_rxdma_header.slacl_ipv4, ipv4_2.srcAddr);
     modify_field(key_metadata.ktype, KEY_TYPE_IPV4);
     modify_field(key_metadata.src, ipv4_2.srcAddr);
     modify_field(key_metadata.dst, ipv4_2.dstAddr);

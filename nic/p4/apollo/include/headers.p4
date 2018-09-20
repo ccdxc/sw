@@ -147,35 +147,24 @@ header_type predicate_header_t {
     fields {
         // Keep the txdma_drop_event as the msb so that copying d-vector
         // into the PHV in txdma read_control is simpler
-        txdma_drop_event    : 1;
-        pad0                : 5;
-        lpm_bypass          : 1;
-        direction           : 1;
+        txdma_drop_event      : 1;
+        pad0                  : 5;
+        lpm_bypass            : 1;
+        direction             : 1;
     }
 }
 
 header_type p4_to_rxdma_header_t {
     fields {
-        p4plus_app_id       : 4;
-        to_arm              : 1;
-        slacl_bypass        : 1;
-        slacl_base_addr     : 34;
-        local_vnic_tag      : 16;
+        udp_flow_lkp_continue : 1;
+        slacl_bypass          : 1;
+        slacl_result          : 2; // (sf,sl) encoded value
+        udp_flow_lkp_result   : 2;
+        slacl_base_addr       : 34;
+        local_vnic_tag        : 16;
 
-        // stuff in predicates where bits are available
-        direction                   : 1;
-        sl_result                   : 2;    // (sf,sl) encoded value
-        udp_flow_lkp_continue       : 1;
-        udp_flow_lkp_result         : 2;
-
-        slacl_addr1                 : 34;
-
-        pad1                : 6;
-        slacl_addr2         : 34;
-
-        slacl_ip_15_00      : 16;
+        slacl_ipv4          : 32;
         ip_proto            : 8;
-        slacl_ip_31_16      : 16;
         l4_sport            : 16;
         l4_dport            : 16;
 

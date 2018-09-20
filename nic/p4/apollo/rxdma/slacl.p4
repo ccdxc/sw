@@ -1,245 +1,218 @@
 #include "../include/slacl_defines.h"
 
-action slacl_ip_31_16(class_ids, pad) {
-    modify_field(scratch_metadata.class_ids, class_ids);
-    modify_field(scratch_metadata.class_pad, pad);
-    modify_field(scratch_metadata.class_id10, p4_to_rxdma_header.slacl_ip_31_16 % 51);
-    modify_field(slacl_metadata.class_id0, scratch_metadata.class_id10);
-
-    modify_field(p4_to_rxdma_header.slacl_addr1, (p4_to_rxdma_header.slacl_base_addr +
-                                        SLACL_SPORT_TABLE_OFFSET +
-                                        p4_to_rxdma_header.l4_sport));
+action slacl_sport_lpm_s0 (data) {
+    modify_field(scratch_metadata.data512, data);
+    // Form the address for sport s1 lookup 
+    modify_field(slacl_metadata.sport_addr, 
+                    p4_to_rxdma_header.slacl_base_addr + SLACL_SPORT_TABLE_OFFSET);
+    // Form the address for ipv4 lookup 
+    modify_field(slacl_metadata.ipv4_addr, 
+                    p4_to_rxdma_header.slacl_base_addr + SLACL_IPV4_TABLE_OFFSET);
+    // Form the address for dport+proto lookup
+    modify_field(slacl_metadata.proto_dport_addr, 
+                    p4_to_rxdma_header.slacl_base_addr + SLACL_PROTO_DPORT_TABLE_OFFSET);
 }
 
-@pragma stage 0
+action slacl_sport_lpm_s1 (data) {
+    modify_field(scratch_metadata.data512, data);
+}
+
+action slacl_ipv4_lpm_s0 (data) {
+    modify_field(scratch_metadata.data512, data);
+}
+
+action slacl_ipv4_lpm_s1 (data) {
+    modify_field(scratch_metadata.data512, data);
+}
+
+action slacl_ipv4_lpm_s2 (data) {
+    modify_field(scratch_metadata.data512, data);
+    modify_field(slacl_metadata.ipv4_class_id, data);
+    // Form the address for p1 lookup
+    // Just a representation. Doesn't account for the packing
+    modify_field(slacl_metadata.p1_addr, 
+                    p4_to_rxdma_header.slacl_base_addr + SLACL_P1_TABLE_OFFSET + 
+                    slacl_metadata.sport_class_id << 10 +
+                    slacl_metadata.ipv4_class_id);
+}
+
+action slacl_proto_dport_lpm_s0 (data) {
+    modify_field(scratch_metadata.data512, data);
+}
+
+action slacl_proto_dport_lpm_s1 (data) {
+    modify_field(scratch_metadata.data512, data);
+}
+
+action slacl_proto_dport_lpm_s2 (data) {
+    modify_field(scratch_metadata.data512, data);
+    modify_field(scratch_metadata.class_id10, slacl_metadata.p1_class_id);
+    modify_field(slacl_metadata.proto_dport_class_id, data);
+    // Form the address for p2 lookup
+    // Just a representation. Doesn't account for the packing
+    modify_field(slacl_metadata.p2_addr, 
+                    p4_to_rxdma_header.slacl_base_addr + SLACL_P2_TABLE_OFFSET + 
+                    slacl_metadata.p1_class_id << 8 +
+                    slacl_metadata.proto_dport_class_id);
+}
+
+action slacl_ipv4_sport_p1 (data) {
+    modify_field(scratch_metadata.data512, data);
+}
+
+action slacl_p2 (slacl_result) {
+    modify_field(p4_to_rxdma_header.slacl_result, slacl_result);
+}
+
+@pragma stage 0 
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_ip_31_16 {
+table slacl_sport_lpm_s0 {
     reads {
-        p4_to_rxdma_header.slacl_addr1    : exact;
+        p4_to_rxdma_header.slacl_base_addr : exact;
     }
     actions {
-        slacl_ip_31_16;
+        slacl_sport_lpm_s0;
     }
-    size : SLACL_IP_TABLE_SIZE;
 }
 
-action slacl_ip_15_00(class_ids, pad) {
-    modify_field(scratch_metadata.class_ids, class_ids);
-    modify_field(scratch_metadata.class_pad, pad);
-    modify_field(scratch_metadata.class_id10, p4_to_rxdma_header.slacl_ip_15_00 % 51);
-    modify_field(slacl_metadata.class_id1, scratch_metadata.class_id10);
-
-    modify_field(p4_to_rxdma_header.slacl_addr2, (p4_to_rxdma_header.slacl_base_addr +
-                                        SLACL_DPORT_TABLE_OFFSET +
-                                        p4_to_rxdma_header.l4_dport));
-    modify_field(slacl_metadata.addr3, (p4_to_rxdma_header.slacl_base_addr +
-                                        SLACL_PROTO_TABLE_OFFSET +
-                                        (p4_to_rxdma_header.ip_proto >> 1)));
-}
-
-@pragma stage 0
+@pragma stage 1 
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_ip_15_00 {
+table slacl_sport_lpm_s1 {
     reads {
-        p4_to_rxdma_header.slacl_addr2    : exact;
+        slacl_metadata.sport_addr : exact;
     }
     actions {
-        slacl_ip_15_00;
+        slacl_sport_lpm_s1;
     }
-    size : SLACL_IP_TABLE_SIZE;
 }
 
-action slacl_sport(class_id) {
-    modify_field(scratch_metadata.class_id8, class_id);
-    modify_field(
-        p4_to_rxdma_header.slacl_addr1,
-        (p4_to_rxdma_header.slacl_base_addr + SLACL_P1_C0C2_TABLE_OFFSET +
-         (((slacl_metadata.class_id0 << 8 + scratch_metadata.class_id8) / 51) << 6)));
-    modify_field(slacl_metadata.class_id2, class_id);
-}
-
-@pragma stage 1
+@pragma stage 1 
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_sport {
+table slacl_ipv4_lpm_s0 {
     reads {
-        p4_to_rxdma_header.slacl_addr1    : exact;
+        slacl_metadata.ipv4_addr : exact;
     }
     actions {
-        slacl_sport;
+        slacl_ipv4_lpm_s0;
     }
-    size : SLACL_PORT_TABLE_SIZE;
 }
 
-action slacl_dport(class_id) {
-    modify_field(scratch_metadata.class_id8, class_id);
-    modify_field(
-        p4_to_rxdma_header.slacl_addr2,
-        (p4_to_rxdma_header.slacl_base_addr + SLACL_P1_C1C3_TABLE_OFFSET +
-         (((slacl_metadata.class_id1 << 8 + scratch_metadata.class_id8) / 51) << 6)));
-    modify_field(slacl_metadata.class_id3, class_id);
-}
-
-@pragma stage 1
+@pragma stage 2 
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_dport {
+table slacl_ipv4_lpm_s1 {
     reads {
-        p4_to_rxdma_header.slacl_addr2    : exact;
+        slacl_metadata.ipv4_addr : exact;
     }
     actions {
-        slacl_dport;
+        slacl_ipv4_lpm_s1;
     }
-    size : SLACL_PORT_TABLE_SIZE;
 }
 
-action slacl_proto(class_id) {
-    modify_field(scratch_metadata.class_id8, class_id);
-    modify_field(slacl_metadata.class_id4, p4_to_rxdma_header.ip_proto % 2);
-}
-
-@pragma stage 1
+@pragma stage 3 
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_proto {
+table slacl_ipv4_lpm_s2 {
     reads {
-        slacl_metadata.addr3    : exact;
+        slacl_metadata.ipv4_addr : exact;
     }
     actions {
-        slacl_proto;
+        slacl_ipv4_lpm_s2;
     }
-    size : SLACL_PROTO_TABLE_SIZE;
 }
 
-action slacl_p1_c0c2(class_ids, pad) {
-    modify_field(scratch_metadata.class_ids, class_ids);
-    modify_field(scratch_metadata.class_pad, pad);
-    modify_field(scratch_metadata.class_id10,
-                 (slacl_metadata.class_id0 << 8 + slacl_metadata.class_id2) % 51);
-    modify_field(slacl_metadata.class_id5, scratch_metadata.class_id10);
-}
-
-@pragma stage 2
+@pragma stage 3 
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_p1_c0c2 {
+table slacl_proto_dport_lpm_s0 {
     reads {
-        p4_to_rxdma_header.slacl_addr1    : exact;
+        slacl_metadata.proto_dport_addr : exact;
     }
     actions {
-        slacl_p1_c0c2;
+        slacl_proto_dport_lpm_s0;
     }
-    size : SLACL_P1_C0C2_TABLE_SIZE;
 }
 
-action slacl_p1_c1c3(class_ids, pad) {
-    modify_field(scratch_metadata.class_ids, class_ids);
-    modify_field(scratch_metadata.class_pad, pad);
-    modify_field(scratch_metadata.class_id10,
-                 (slacl_metadata.class_id1 << 8 + slacl_metadata.class_id3) % 51);
-    modify_field(slacl_metadata.class_id6, scratch_metadata.class_id10);
-    modify_field(p4_to_rxdma_header.slacl_addr1,
-                 (p4_to_rxdma_header.slacl_base_addr + SLACL_P2_C6C4_TABLE_OFFSET +
-                  (((slacl_metadata.class_id4 << 4 + scratch_metadata.class_id10) / 51) << 6)));
-}
-
-@pragma stage 2
+@pragma stage 4 
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_p1_c1c3 {
+table slacl_proto_dport_lpm_s1 {
     reads {
-        p4_to_rxdma_header.slacl_addr2    : exact;
+        slacl_metadata.proto_dport_addr : exact;
     }
     actions {
-        slacl_p1_c1c3;
+        slacl_proto_dport_lpm_s1;
     }
-    size : SLACL_P1_C1C3_TABLE_SIZE;
 }
 
-action slacl_p2_c6c4(class_ids, pad) {
-    modify_field(scratch_metadata.class_ids, class_ids);
-    modify_field(scratch_metadata.class_pad, pad);
-    modify_field(scratch_metadata.class_id10,
-                 (slacl_metadata.class_id6 << 4 + slacl_metadata.class_id4) % 51);
-    modify_field(slacl_metadata.class_id7, scratch_metadata.class_id10);
-    modify_field(p4_to_rxdma_header.slacl_addr1,
-                 (p4_to_rxdma_header.slacl_base_addr + SLACL_P3_TABLE_OFFSET +
-                  ((slacl_metadata.class_id5 << 10 + scratch_metadata.class_id10) << 1)));
-}
-
-@pragma stage 3
+@pragma stage 5 
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_p2_c6c4 {
+table slacl_proto_dport_lpm_s2 {
     reads {
-        p4_to_rxdma_header.slacl_addr1    : exact;
+        slacl_metadata.proto_dport_addr : exact;
     }
     actions {
-        slacl_p2_c6c4;
-    }
-    size : SLACL_P2_C6C4_TABLE_SIZE;
-}
-
-action slacl_action(rule_id, drop) {
-    modify_field(scratch_metadata.rule_id, rule_id);
-    modify_field(slacl_metadata.drop, drop);
-    if (p4_to_rxdma_header.direction == RX_FROM_SWITCH) {
-        modify_field(slacl_metadata.stats_index, scratch_metadata.rule_id +
-                     (p4_to_rxdma_header.local_vnic_tag * (4 * 1024)));
-    } else {
-        modify_field(slacl_metadata.stats_index, scratch_metadata.rule_id +
-                     (p4_to_rxdma_header.local_vnic_tag * (4 * 1024)));
+        slacl_proto_dport_lpm_s2;
     }
 }
 
-@pragma stage 4
+@pragma stage 4 
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_p3 {
+table slacl_ipv4_sport_p1 {
     reads {
-        p4_to_rxdma_header.slacl_addr1    : exact;
+        slacl_metadata.p1_addr : exact;
     }
     actions {
-        slacl_action;
-    }
-    size : SLACL_P3_TABLE_SIZE;
-}
-
-action slacl_stats(permit_packets, permit_bytes, deny_packets, deny_bytes) {
-    if (slacl_metadata.drop == FALSE) {
-        modify_field(scratch_metadata.in_packets, permit_packets);
-        modify_field(scratch_metadata.in_bytes, permit_bytes);
-    } else {
-        modify_field(scratch_metadata.in_packets, deny_packets);
-        modify_field(scratch_metadata.in_bytes, deny_bytes);
+        slacl_ipv4_sport_p1;
     }
 }
 
-@pragma stage 5
+@pragma stage 6 
 @pragma hbm_table
-table slacl_stats {
+@pragma raw_index_table
+table slacl_p2 {
     reads {
-        slacl_metadata.stats_index  : exact;
+        slacl_metadata.p2_addr : exact;
     }
     actions {
-        slacl_stats;
+        slacl_p2;
     }
-    size : SLACL_STATS_TABLE_SIZE;
 }
 
 control slacl {
     if (p4_to_rxdma_header.slacl_bypass == FALSE) {
-        apply(slacl_ip_15_00);
-        apply(slacl_ip_31_16);
-        apply(slacl_sport);
-        apply(slacl_dport);
-        apply(slacl_proto);
-        apply(slacl_p1_c0c2);
-        apply(slacl_p1_c1c3);
-        apply(slacl_p2_c6c4);
-        apply(slacl_p3);
-        apply(slacl_stats);
+        /* This assumes we're supporting 
+         * 128 sport ranges - 256 nodes in LPM tree, outputs 7 bit class-id
+         *                    16*16 entries packed in 2 level LPM 
+         *                    (class-id is adjacent in each node)
+         * 128 proto+dport ranges - 512 nodes in LPM tree, outputs 8 bit class-id
+         *                          16*16*16 entres packed in 3 level LPM 
+         *                          (class-id is adjacent in each node)
+         * 1k ipv4 - 2k nodes in LPM tree, outputs 10 bit class-id
+         *           16*16*8 entries packed in 3 level LPM
+         *
+         * Phase 1:
+         * Combine 7 bit sport-class-id and 10 bit ipv4-class-id, output 
+         * 10 bit class-id
+         *
+         * Phase2:
+         * Combine 8 bit prot+dport-class-id and 10 bit phase 1 class-id to yield
+         * 2 bit result
+         */
+        apply(slacl_sport_lpm_s0);
+        apply(slacl_sport_lpm_s1);
+        apply(slacl_ipv4_lpm_s0);
+        apply(slacl_ipv4_lpm_s1);
+        apply(slacl_ipv4_lpm_s2);
+        apply(slacl_proto_dport_lpm_s0);
+        apply(slacl_proto_dport_lpm_s1);
+        apply(slacl_proto_dport_lpm_s2);
+        apply(slacl_ipv4_sport_p1);
+        apply(slacl_p2);
     }
 }
