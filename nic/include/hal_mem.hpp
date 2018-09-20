@@ -113,7 +113,8 @@ typedef enum hal_slab_e {
     HAL_SLAB_FILTER                          = 101,
     HAL_SLAB_TLS_PROXY_CB                    = 102,
     HAL_SLAB_DPKT_LEARN                      = 103,
-    HAL_SLAB_PI_MAX                          = 104,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_L2SEG_UPLINK_OIF_LIST           = 104,
+    HAL_SLAB_PI_MAX                          = 105,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

@@ -215,6 +215,13 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       false, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_L2SEG] != NULL), false);
 
+    slabs_[HAL_SLAB_L2SEG_UPLINK_OIF_LIST] =
+            slab::factory("l2seg_uplink_oif_list",
+                          HAL_SLAB_L2SEG_UPLINK_OIF_LIST,
+                          sizeof(hal::l2_seg_uplink_oif_list_t), 16,
+                          false, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_L2SEG_UPLINK_OIF_LIST] != NULL), false);
+
     // initialize multicast related data structures
     slabs_[HAL_SLAB_MC_ENTRY] =
         slab::factory("mc_entry", HAL_SLAB_MC_ENTRY,
@@ -801,6 +808,14 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, mmgr);
     HAL_ASSERT_RETURN((l2seg_id_ht_ != NULL), false);
 
+    HAL_HT_CREATE("l2seg_uplink_oifs", l2seg_uplink_oif_ht_,
+                  HAL_MAX_MC_ENTRIES >> 1,
+                  hal::l2seg_uplink_oif_get_key_func,
+                  hal::l2seg_uplink_oif_compute_hash_func,
+                  hal::l2seg_uplink_oif_compare_key_func,
+                  true, mmgr);
+    HAL_ASSERT_RETURN((l2seg_uplink_oif_ht_ != NULL), false);
+
     HAL_HT_CREATE("EP L2", ep_l2_ht_,
                   HAL_MAX_ENDPOINTS >> 1,
                   hal::ep_get_l2_key_func,
@@ -1171,6 +1186,7 @@ hal_oper_db::hal_oper_db()
     network_key_ht_ = NULL;
     nwsec_profile_id_ht_ = NULL;
     l2seg_id_ht_ = NULL;
+    l2seg_uplink_oif_ht_ = NULL;
     ep_l2_ht_ = NULL;
     ep_l3_entry_ht_ = NULL;
     mc_key_ht_ = NULL;
@@ -1228,6 +1244,7 @@ hal_oper_db::~hal_oper_db()
     network_key_ht_ ? ht::destroy(network_key_ht_, mmgr_) : HAL_NOP;
     nwsec_profile_id_ht_ ? ht::destroy(nwsec_profile_id_ht_, mmgr_) : HAL_NOP;
     l2seg_id_ht_ ? ht::destroy(l2seg_id_ht_, mmgr_) : HAL_NOP;
+    l2seg_uplink_oif_ht_ ? ht::destroy(l2seg_uplink_oif_ht_, mmgr_) : HAL_NOP;
     ep_l2_ht_ ? ht::destroy(ep_l2_ht_, mmgr_) : HAL_NOP;
     ep_l3_entry_ht_ ? ht::destroy(ep_l3_entry_ht_, mmgr_) : HAL_NOP;
     mc_key_ht_ ? ht::destroy(mc_key_ht_, mmgr_) : HAL_NOP;
@@ -1708,6 +1725,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_L2SEG:
         g_hal_state->l2seg_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_L2SEG_UPLINK_OIF_LIST:
+        g_hal_state->l2seg_uplink_oif_slab()->free(elem);
         break;
 
     case HAL_SLAB_MC_ENTRY:

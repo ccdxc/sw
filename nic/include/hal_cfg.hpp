@@ -38,6 +38,14 @@ typedef enum hal_feature_set_s {
     HAL_FEATURE_SET_APOLLO,
 } hal_feature_set_t;
 
+#define UPLINK_FLOOD_MODES(ENTRY)                                                                   \
+     ENTRY(HAL_UPLINK_FLOOD_MODE_NONE,   0, "HAL_UPLINK_FLOOD_MODE_NONE")                           \
+     ENTRY(HAL_UPLINK_FLOOD_MODE_RPF,    1, "HAL_UPLINK_FLOOD_MODE_RPF")                            \
+     ENTRY(HAL_UPLINK_FLOOD_MODE_PINNED, 2, "HAL_UPLINK_FLOOD_MODE_PINNED")
+
+ DEFINE_ENUM(hal_uplink_flood_mode_t, UPLINK_FLOOD_MODES)
+ #undef UPLINK_FLOOD_MODES
+
 #define FORWARDING_MODES(ENTRY)                                                                     \
      ENTRY(HAL_FORWARDING_MODE_NONE,    0, "HAL_FORWARDING_MODE_NONE")                              \
      ENTRY(HAL_FORWARDING_MODE_SMART_SWITCH,    1, "HAL_FORWARDING_MODE_SMART_SWITCH")              \

@@ -96,6 +96,8 @@ typedef struct l2seg_s {
     void                  *pd;                     // all PD specific state
     bool                   proxy_arp_enabled;
 
+    ht_ctxt_t              uplink_oif_list_ht_ctxt;// hash table for uplink OIF lists
+
 } __PACK__ l2seg_t;
 
 #define HAL_BCAST_OIFLIST_OFFSET      0
@@ -176,6 +178,25 @@ hal_ret_t l2segment_get(l2segment::L2SegmentGetRequest& req,
 hal_ret_t l2seg_store_cb(void *obj, uint8_t *mem,
                           uint32_t len, uint32_t *mlen);
 uint32_t l2seg_restore_cb(void *obj, uint32_t len);
+
+typedef struct l2_seg_uplink_oif_list_key_s {
+    hal_handle_t l2seg_handle;
+    hal_handle_t uplink_handle;
+} __PACK__ l2_seg_uplink_oif_list_key_t;
+
+typedef struct l2_seg_uplink_oif_list_s {
+    l2_seg_uplink_oif_list_key_t key;
+    oif_list_id_t                oif_list_id;
+    ht_ctxt_t                    ht_ctxt;
+} __PACK__ l2_seg_uplink_oif_list_t;
+
+void *
+l2seg_uplink_oif_get_key_func (void *entry);
+uint32_t
+l2seg_uplink_oif_compute_hash_func (void *key, uint32_t ht_size);
+bool
+l2seg_uplink_oif_compare_key_func (void *key1, void *key2);
+
 }    // namespace hal
 
 #endif    // __L2SEGMENT_HPP__

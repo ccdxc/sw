@@ -114,6 +114,7 @@ public:
     slab *nwsec_policy_appid_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_NWSEC_POLICY_APPID]); }
     slab *dos_policy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_DOS_POLICY]); }
     slab *l2seg_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_L2SEG]); }
+    slab *l2seg_uplink_oif_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_L2SEG_UPLINK_OIF_LIST]); }
     slab *mc_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_MC_ENTRY]); }
     slab *lif_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_LIF]); }
     slab *if_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IF]); }
@@ -204,6 +205,7 @@ public:
     ht *nat_policy_ht(void) const { return nat_policy_ht_; }
     ht *nwsec_group_ht(void) const { return nwsec_group_ht_; }
     ht *l2seg_id_ht(void) const { return l2seg_id_ht_; }
+    ht *l2seg_uplink_oif_ht(void) const { return l2seg_uplink_oif_ht_; }
     ht *ep_l2_ht(void) const { return ep_l2_ht_; }
     ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
     ht *mc_key_ht(void) const { return mc_key_ht_; }
@@ -259,6 +261,11 @@ public:
     }
     hal_forwarding_mode_t forwarding_mode(void) const { return forwarding_mode_; }
 
+    void set_uplink_flood_mode(hal_uplink_flood_mode_t mode) {
+        uplink_flood_mode_ = mode;
+    }
+    hal_uplink_flood_mode_t uplink_flood_mode(void) const { return uplink_flood_mode_; }
+
     void set_allow_local_switch_for_promiscuous(bool allow) {
         allow_local_switch_for_promiscuous_ = allow;
     }
@@ -295,6 +302,7 @@ private:
     ht    *nat_policy_ht_;
     ht    *nwsec_group_ht_;
     ht    *l2seg_id_ht_;
+    ht    *l2seg_uplink_oif_ht_;
     ht    *ep_l2_ht_;
     ht    *ep_l3_entry_ht_;
     ht    *mc_key_ht_;
@@ -337,6 +345,7 @@ private:
     eventmgr                *event_mgr_;
     ip_addr_t               mytep_ip_;
     hal_forwarding_mode_t   forwarding_mode_;
+    hal_uplink_flood_mode_t uplink_flood_mode_;
     if_id_t                 app_redir_if_id_;
     uint8_t                 max_data_threads_;
     hal_handle_t            default_securityprof_hdl_;
@@ -430,6 +439,8 @@ public:
     // get APIs for L2 segment state
     slab *l2seg_slab(void) const { return cfg_db_->l2seg_slab(); }
     ht *l2seg_id_ht(void) const { return oper_db_->l2seg_id_ht(); }
+    slab *l2seg_uplink_oif_slab(void) const { return cfg_db_->l2seg_uplink_oif_slab(); }
+    ht *l2seg_uplink_oif_ht(void) const { return oper_db_->l2seg_uplink_oif_ht(); }
 
     // get APIs for multicast entry state
     slab *mc_entry_slab(void) const { return cfg_db_->mc_entry_slab(); }
@@ -582,6 +593,12 @@ public:
     }
     hal_forwarding_mode_t forwarding_mode(void) const { return oper_db_->forwarding_mode(); }
 
+    // multicast uplink mode APIs
+    void set_uplink_flood_mode(hal_uplink_flood_mode_t mode) {
+        oper_db_->set_uplink_flood_mode(mode);
+    }
+    hal_uplink_flood_mode_t uplink_flood_mode(void) const { return oper_db_->uplink_flood_mode(); }
+
     void set_allow_local_switch_for_promiscuous(bool allow) {
         oper_db_->set_allow_local_switch_for_promiscuous(allow);
     }
@@ -645,6 +662,18 @@ static inline bool
 is_forwarding_mode_smart_nic (void)
 {
     return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH;
+}
+
+static inline bool
+is_uplink_flood_mode_host_pinned (void)
+{
+    return g_hal_state->uplink_flood_mode() == HAL_UPLINK_FLOOD_MODE_PINNED;
+}
+
+static inline bool
+is_uplink_flood_mode_rpf (void)
+{
+    return g_hal_state->uplink_flood_mode() == HAL_UPLINK_FLOOD_MODE_RPF;
 }
 
 static inline if_id_t

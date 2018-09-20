@@ -17,6 +17,66 @@
 
 namespace hal {
 
+// ----------------------------------------------------------------------------
+// hash table key => entry
+//  - Get key from entry
+// ----------------------------------------------------------------------------
+void *
+l2seg_uplink_oif_get_key_func (void *entry)
+{
+    l2_seg_uplink_oif_list_t    *l2_seg_uplink_oif_list = NULL;
+    hal_handle_id_ht_entry_t    *ht_entry = (hal_handle_id_ht_entry_t *)entry;
+
+    HAL_ASSERT(ht_entry != NULL);
+    l2_seg_uplink_oif_list = (l2_seg_uplink_oif_list_t *)
+            hal_handle_get_obj(ht_entry->handle_id);
+    return (void *)&(l2_seg_uplink_oif_list->key);
+}
+
+// ----------------------------------------------------------------------------
+// hash table key => entry - compute hash
+// ----------------------------------------------------------------------------
+uint32_t
+l2seg_uplink_oif_compute_hash_func (void *key, uint32_t ht_size)
+{
+    HAL_ASSERT(key != NULL);
+    return sdk::lib::hash_algo::
+           fnv_hash(key, sizeof(l2_seg_uplink_oif_list_key_t)) % ht_size;
+}
+
+// ----------------------------------------------------------------------------
+// hash table key => entry - compare function
+// ----------------------------------------------------------------------------
+bool
+l2seg_uplink_oif_compare_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    return (memcmp(key1, key2, sizeof(l2_seg_uplink_oif_list_key_t)) == 0);
+}
+
+// allocate a l2segment uplink OIF list instance
+static inline l2_seg_uplink_oif_list_t *
+l2_seg_uplink_oif_list_alloc (void)
+{
+    l2_seg_uplink_oif_list_t *l2seg_uplink_oif_list;
+
+    l2seg_uplink_oif_list = (l2_seg_uplink_oif_list_t *)g_hal_state->
+            l2seg_uplink_oif_slab()->alloc();
+    if (l2seg_uplink_oif_list == NULL) {
+        return NULL;
+    }
+    return l2seg_uplink_oif_list;
+}
+
+// free l2segment uplink OIF list instance
+static inline hal_ret_t
+l2_seg_uplink_oif_list_free (l2_seg_uplink_oif_list_t *l2seg_uplink_oif_list)
+{
+    hal::delay_delete_to_slab(HAL_SLAB_L2SEG_UPLINK_OIF_LIST,
+                              l2seg_uplink_oif_list);
+    return HAL_RET_OK;
+}
+
 static void l2seg_ep_learning_update(l2seg_t *l2seg, const L2SegmentSpec& spec);
 //----------------------------------------------------------------------------
 // hash table seg_id => entry
@@ -300,6 +360,90 @@ end:
     return ret;
 }
 
+static inline hal_ret_t
+l2seg_create_uplink_oiflists(l2seg_t *l2seg, if_t *uplink) {
+    oif_t                        oif = {};
+    if_t                         *pinned_if = NULL;
+    l2_seg_uplink_oif_list_t     *uplink_oif_list;
+    sdk_ret_t                    sdk_ret;
+    hal_ret_t                    ret;
+    l2_seg_uplink_oif_list_key_t key;
+
+    key.l2seg_handle = l2seg->hal_handle;
+    key.uplink_handle = uplink->hal_handle;
+
+    uplink_oif_list = (l2_seg_uplink_oif_list_t *)g_hal_state->
+            l2seg_uplink_oif_ht()->lookup(&key);
+
+    if (uplink_oif_list == NULL) {
+        uplink_oif_list = l2_seg_uplink_oif_list_alloc();
+        if (uplink_oif_list == NULL) {
+            HAL_TRACE_ERR("Failed to allocate memory for l2seg uplink oif list");
+            return HAL_RET_OOM;
+        }
+
+        uplink_oif_list->ht_ctxt.reset();
+        uplink_oif_list->key.l2seg_handle = l2seg->hal_handle;
+        uplink_oif_list->key.uplink_handle = uplink->hal_handle;
+        uplink_oif_list->oif_list_id = OIF_LIST_ID_INVALID;
+
+        sdk_ret = g_hal_state->l2seg_uplink_oif_ht()->
+                insert_with_key(&uplink_oif_list->key, uplink_oif_list,
+                                &uplink_oif_list->ht_ctxt);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to add uplink oif list for l2seg {}"
+                          " and uplink {}, err : {}",
+                          l2seg->hal_handle,
+                          uplink->hal_handle,
+                          ret);
+            hal::delay_delete_to_slab(HAL_SLAB_L2SEG_UPLINK_OIF_LIST,
+                                      uplink_oif_list);
+            return ret;
+        }
+
+        ret = oif_list_create(&uplink_oif_list->oif_list_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to create uplink oif list for l2seg {}"
+                          " and uplink {}, err : {}",
+                          l2seg->hal_handle,
+                          uplink->hal_handle,
+                          ret);
+            return ret;
+        }
+
+        for (const void *ptr : *l2seg->if_list) {
+            auto p_hdl_id = (hal_handle_t *)ptr;
+            if_t *hal_if = find_if_by_handle(*p_hdl_id);
+            if (!hal_if) {
+                HAL_TRACE_ERR("Unable to find if with handle : {}",
+                              *p_hdl_id);
+                continue;
+            }
+
+            if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+                if_enicif_get_pinned_if(hal_if, &pinned_if);
+                if ((pinned_if != NULL) && (pinned_if == uplink)) {
+                    oif.intf = hal_if;
+                    oif.l2seg = l2seg;
+                    ret = oif_list_add_oif(uplink_oif_list->oif_list_id, &oif);
+
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_ERR("Failed to add enic to uplink OIFlist for l2seg {}"
+                                      " and uplink {}, err : {}",
+                                      l2seg->hal_handle,
+                                      uplink->hal_handle,
+                                      ret);
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
 //-----------------------------------------------------------------------------
 // Add all oifs to bcast oiflist
 //-----------------------------------------------------------------------------
@@ -318,6 +462,21 @@ l2seg_add_oifs (l2seg_t *l2seg)
             oif.intf = hal_if;
             oif.l2seg = l2seg;
             ret = oif_list_add_oif(l2seg->base_oif_list_id, &oif);
+
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to add uplink to OIFlist for l2seg,"
+                              " err : {}", ret);
+                break;
+            }
+
+            if (is_uplink_flood_mode_host_pinned()) {
+                ret = l2seg_create_uplink_oiflists(l2seg, hal_if);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Failed to create uplink OIFlist for l2seg,"
+                                  " err : {}", ret);
+                    break;
+                }
+            }
         }
     }
 
