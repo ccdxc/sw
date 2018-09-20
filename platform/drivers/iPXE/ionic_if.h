@@ -1,156 +1,81 @@
-#ifndef _IONIC_H
-#define _IONIC_H
+/*
+ * Copyright 2017-2018 Pensando Systems, Inc.  All rights reserved.
+ *
+ * This program is free software; you may redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; version 2 of the License.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
 
-/** @file
- * This is for the IONIC adapter 
- * property of Pensando Systems.
-*/
+#ifndef _IONIC_IF_H_
+#define _IONIC_IF_H_
 
-FILE_LICENCE ( GPL2_OR_LATER_OR_UBDL );
-
-#include <errno.h>
-#include <ipxe/io.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <unistd.h>
-#include <byteswap.h>
-#include <ipxe/netdevice.h>
-#include <ipxe/ethernet.h>
-#include <ipxe/if_ether.h>
-#include <ipxe/iobuf.h>
-#include <ipxe/malloc.h>
-#include <ipxe/pci.h>
-
-#undef ERRFILE
-#define ERRFILE ERRFILE_Ionic
-
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-#endif
-
-#define BIT(n)  (1 << (n))
-#define __iomem
-#define is_power_of_2(x)    ((x) != 0 && (((x) & ((x) - 1)) == 0))
-
-#define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
-#define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
-
-#define DRV_VERSION                "1.0"
-#define IPXE_VERSION_CODE          "1.0"
-
-#define IONIC_MAX_MTU        2304
-
-// Queue alignment
-#define IDENTITY_ALIGN 4096
-
-// BAR0 resources
-#define IONIC_BARS_MAX        2
-#define BAR0_SIZE            0x8000
-
-#define BAR0_DEV_CMD_REGS_OFFSET    0x0000
-#define BAR0_DEV_CMD_DB_OFFSET      0x1000
-#define BAR0_INTR_CTRL_OFFSET       0x2000
-#define BAR0_INTR_STATUS_OFFSET     0x3000
-
-// Dev Command related defines
-#define DEV_CMD_SIGNATURE    0x44455643      /* 'DEVC' */
-#define devcmd_timeout       30
-#define DEV_CMD_DONE         0x00000001
-
-#define ASIC_TYPE_CAPRI      0
-
-// Q flags
-#define QCQ_F_INITED        BIT(0)
-#define QCQ_F_SG            BIT(1)
-#define QCQ_F_INTR          BIT(2)
-#define QCQ_F_TX_STATS      BIT(3)
-#define QCQ_F_RX_STATS      BIT(4)
-
-// Q related definitions
-#define QUEUE_NAME_MAX_SZ        (32)
-#define LIF_NAME_MAX_SZ          (32)
-#define IONIC_TX_MAX_SG_ELEMS    16
-#define DEFAULT_COS              0
-#define DEFAULT_INTR_INDEX       0
-#define NRXQ_DESC                1024
-#define RX_RING_DOORBELL_STRIDE        ((1 << 3) - 1)
-
-#define IDENTITY_VERSION_1        1
-
-#define INTR_CTRL_REGS_MAX    64
-#define INTR_CTRL_COAL_MAX    0x3F
-
-#define intr_to_coal(intr_ctrl)            (void *)((u8 *)(intr_ctrl) + 0)
-#define intr_to_mask(intr_ctrl)            (void *)((u8 *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl)        (void *)((u8 *)(intr_ctrl) + 8)
-#define intr_to_mask_on_assert(intr_ctrl)    (void *)((u8 *)(intr_ctrl) + 12)
-
-//define data types
-typedef enum {
-    false = 0,
-    true = 1
-} bool;
-
-typedef    unsigned char u8;
-typedef    unsigned short u16;
-typedef    unsigned int u32;
-typedef    unsigned long long u64;
 typedef u64 dma_addr_t;
-typedef unsigned long uintptr_t;
+#define BIT(n)  (1 << (n))
 
-/**
- * Command opcodes.
-*/
+#define DEV_CMD_SIGNATURE               0x44455643      /* 'DEVC' */
+
+#define IONIC_ADMINQ_ETH        0
+#define IONIC_ADMINQ_RDMA        1
+
 enum cmd_opcode {
-    CMD_OPCODE_NOP                = 0,
-    CMD_OPCODE_RESET            = 1,
-    CMD_OPCODE_IDENTIFY            = 2,
-    CMD_OPCODE_LIF_INIT            = 3,
-    CMD_OPCODE_ADMINQ_INIT            = 4,
-    CMD_OPCODE_TXQ_INIT            = 5,
-    CMD_OPCODE_RXQ_INIT            = 6,
-    CMD_OPCODE_FEATURES            = 7,
-    CMD_OPCODE_HANG_NOTIFY            = 8,
+	CMD_OPCODE_NOP				= 0,
+	CMD_OPCODE_RESET			= 1,
+	CMD_OPCODE_IDENTIFY			= 2,
+	CMD_OPCODE_LIF_INIT			= 3,
+	CMD_OPCODE_ADMINQ_INIT			= 4,
+	CMD_OPCODE_TXQ_INIT			= 5,
+	CMD_OPCODE_RXQ_INIT			= 6,
+	CMD_OPCODE_FEATURES			= 7,
+	CMD_OPCODE_HANG_NOTIFY			= 8,
 
-    CMD_OPCODE_Q_ENABLE            = 9,
-    CMD_OPCODE_Q_DISABLE            = 10,
+	CMD_OPCODE_Q_ENABLE			= 9,
+	CMD_OPCODE_Q_DISABLE			= 10,
 
-    CMD_OPCODE_STATION_MAC_ADDR_GET        = 15,
-    CMD_OPCODE_MTU_SET            = 16,
-    CMD_OPCODE_RX_MODE_SET            = 17,
-    CMD_OPCODE_RX_FILTER_ADD        = 18,
-    CMD_OPCODE_RX_FILTER_DEL        = 19,
-    CMD_OPCODE_STATS_DUMP_START        = 20,
-    CMD_OPCODE_STATS_DUMP_STOP        = 21,
-    CMD_OPCODE_RSS_HASH_SET            = 22,
-    CMD_OPCODE_RSS_INDIR_SET        = 23,
+	CMD_OPCODE_STATION_MAC_ADDR_GET		= 15,
+	CMD_OPCODE_MTU_SET			= 16,
+	CMD_OPCODE_RX_MODE_SET			= 17,
+	CMD_OPCODE_RX_FILTER_ADD		= 18,
+	CMD_OPCODE_RX_FILTER_DEL		= 19,
+	CMD_OPCODE_STATS_DUMP_START		= 20,
+	CMD_OPCODE_STATS_DUMP_STOP		= 21,
+	CMD_OPCODE_RSS_HASH_SET			= 22,
+	CMD_OPCODE_RSS_INDIR_SET		= 23,
 
-    CMD_OPCODE_RDMA_FIRST_CMD        = 50, //Keep this as first rdma cmd
+	CMD_OPCODE_RDMA_FIRST_CMD		= 50, //Keep this as first rdma cmd
 
-    CMD_OPCODE_RDMA_RESET_LIF        = 50,
-    CMD_OPCODE_RDMA_CREATE_EQ        = 51,
-    CMD_OPCODE_RDMA_CREATE_CQ        = 52,
-    CMD_OPCODE_RDMA_CREATE_ADMINQ        = 53,
+	CMD_OPCODE_RDMA_RESET_LIF		= 50,
+	CMD_OPCODE_RDMA_CREATE_EQ		= 51,
+	CMD_OPCODE_RDMA_CREATE_CQ		= 52,
+	CMD_OPCODE_RDMA_CREATE_ADMINQ		= 53,
 
-    //XXX below are makshift, version zero
-    //XXX to be removed when device supports rdma adminq
-    CMD_OPCODE_RDMA_FIRST_MAKESHIFT_CMD    = 54,
+	//XXX below are makshift, version zero
+	//XXX to be removed when device supports rdma adminq
+	CMD_OPCODE_RDMA_FIRST_MAKESHIFT_CMD	= 54,
 
-    CMD_OPCODE_V0_RDMA_CREATE_MR        = 54,
-    CMD_OPCODE_V0_RDMA_DESTROY_MR        = 55,
-    CMD_OPCODE_V0_RDMA_CREATE_CQ        = 56,
-    CMD_OPCODE_V0_RDMA_DESTROY_CQ        = 57,
-    CMD_OPCODE_V0_RDMA_RESIZE_CQ        = 58,
-    CMD_OPCODE_V0_RDMA_CREATE_QP        = 59,
-    CMD_OPCODE_V0_RDMA_MODIFY_QP        = 60,
-    CMD_OPCODE_V0_RDMA_DESTROY_QP        = 61,
-    CMD_OPCODE_V0_RDMA_QUERY_PORT        = 62,
-    CMD_OPCODE_V0_RDMA_CREATE_AH        = 63,
-    CMD_OPCODE_V0_RDMA_DESTROY_AH        = 64,
-    CMD_OPCODE_RDMA_LAST_CMD        = 65, //Keep this as last rdma cmd
+	CMD_OPCODE_V0_RDMA_CREATE_MR		= 54,
+	CMD_OPCODE_V0_RDMA_DESTROY_MR		= 55,
+	CMD_OPCODE_V0_RDMA_CREATE_CQ		= 56,
+	CMD_OPCODE_V0_RDMA_DESTROY_CQ		= 57,
+	CMD_OPCODE_V0_RDMA_RESIZE_CQ		= 58,
+	CMD_OPCODE_V0_RDMA_CREATE_QP		= 59,
+	CMD_OPCODE_V0_RDMA_MODIFY_QP		= 60,
+	CMD_OPCODE_V0_RDMA_DESTROY_QP		= 61,
+	CMD_OPCODE_V0_RDMA_QUERY_PORT		= 62,
+	CMD_OPCODE_V0_RDMA_CREATE_AH		= 63,
+	CMD_OPCODE_V0_RDMA_DESTROY_AH		= 64,
+	CMD_OPCODE_RDMA_LAST_CMD		= 65, //Keep this as last rdma cmd
 
-    CMD_OPCODE_DEBUG_Q_DUMP            = 0xf0,
+	CMD_OPCODE_DEBUG_Q_DUMP			= 0xf0,
 };
 
 #pragma pack(push, 1)
@@ -161,8 +86,8 @@ enum cmd_opcode {
  * @cmd_data: Opcode-specific command bytes
  */
 struct admin_cmd {
-    u16 opcode;
-    u16 cmd_data[31];
+	u16 opcode;
+	u16 cmd_data[31];
 };
 
 /**
@@ -178,12 +103,12 @@ struct admin_cmd {
  *              Device Cmd Registers.)
  */
 struct admin_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u8 cmd_data[11];
-    u8 rsvd2:7;
-    u8 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u8 cmd_data[11];
+	u8 rsvd2:7;
+	u8 color:1;
 };
 
 /**
@@ -191,8 +116,8 @@ struct admin_comp {
  * @opcode: opcode = 0
  */
 struct nop_cmd {
-    u16 opcode;
-    u16 rsvd[31];
+	u16 opcode;
+	u16 rsvd[31];
 };
 
 /**
@@ -201,9 +126,9 @@ struct nop_cmd {
  *             0 = Successful completion
  */
 struct nop_comp {
-    u32 status:8;
-    u32 rsvd:24;
-    u32 rsvd2[3];
+	u32 status:8;
+	u32 rsvd:24;
+	u32 rsvd2[3];
 };
 
 /**
@@ -211,8 +136,8 @@ struct nop_comp {
  * @opcode: opcode = 1
  */
 struct reset_cmd {
-    u16 opcode;
-    u16 rsvd[31];
+	u16 opcode;
+	u16 rsvd[31];
 };
 
 /**
@@ -221,10 +146,12 @@ struct reset_cmd {
  *             0 = Successful completion
  */
 struct reset_comp {
-    u32 status:8;
-    u32 rsvd:24;
-    u32 rsvd2[3];
+	u32 status:8;
+	u32 rsvd:24;
+	u32 rsvd2[3];
 };
+
+#define IDENTITY_VERSION_1		1
 
 /**
  * struct identify_cmd - Driver/device identify command
@@ -235,10 +162,10 @@ struct reset_comp {
  *           identify info
  */
 struct identify_cmd {
-    u16 opcode;
-    u16 ver;
-    dma_addr_t addr;
-    u32 rsvd2[13];
+	u16 opcode;
+	u16 ver;
+	dma_addr_t addr;
+	u32 rsvd2[13];
 };
 
 /**
@@ -249,18 +176,19 @@ struct identify_cmd {
  * @ver:    Version of identify returned by device
  */
 struct identify_comp {
-    u32 status:8;
-    u32 rsvd:24;
-    u16 ver;
-    u16 rsvd2[5];
+	u32 status:8;
+	u32 rsvd:24;
+	u16 ver;
+	u16 rsvd2[5];
 };
 
 enum os_type {
-    OS_TYPE_LINUX   = 1,
-    OS_TYPE_WIN     = 2,
-    OS_TYPE_DPDK    = 3,
-    OS_TYPE_FREEBSD = 4,
-    OS_TYPE_IXPE    = 5,
+	OS_TYPE_LINUX   = 1,
+	OS_TYPE_WIN     = 2,
+	OS_TYPE_DPDK    = 3,
+	OS_TYPE_FREEBSD = 4,
+	OS_TYPE_IPXE    = 5,
+	OS_TYPE_ESXI    = 6,
 };
 
 /**
@@ -318,39 +246,39 @@ enum os_type {
  *                        current version and six prior versions.
  */
 union identity {
-    struct {
-        u32 os_type;
-        u32 os_dist;
-        char os_dist_str[128];
-        u32 kernel_ver;
-        char kernel_ver_str[32];
-        char driver_ver_str[32];
-    } drv;
-    struct {
-        u8 asic_type;
-        u8 asic_rev;
-        u8 rsvd[2];
-        char serial_num[20];
-        char fw_version[20];
-        u32 nlifs;
-        u32 ndbpgs_per_lif;
-        u32 nadminqs_per_lif;
-        u32 ntxqs_per_lif;
-        u32 nrxqs_per_lif;
-        u32 ncqs_per_lif;
-        u32 nrdmasqs_per_lif;
-        u32 nrdmarqs_per_lif;
-        u32 neqs_per_lif;
-        u32 nintrs;
-        u32 nucasts_per_lif;
-        u32 nmcasts_per_lif;
-        u32 intr_coal_mult;
-        u32 intr_coal_div;
-        u16 rdma_version;
-        u8 rdma_qp_opcodes[7];
-        u8 rdma_admin_opcodes[7];
-    } dev;
-    u32 words[1024];
+	struct {
+		u32 os_type;
+		u32 os_dist;
+		char os_dist_str[128];
+		u32 kernel_ver;
+		char kernel_ver_str[32];
+		char driver_ver_str[32];
+	} drv;
+	struct {
+		u8 asic_type;
+		u8 asic_rev;
+		u8 rsvd[2];
+		char serial_num[20];
+		char fw_version[20];
+		u32 nlifs;
+		u32 ndbpgs_per_lif;
+		u32 nadminqs_per_lif;
+		u32 ntxqs_per_lif;
+		u32 nrxqs_per_lif;
+		u32 ncqs_per_lif;
+		u32 nrdmasqs_per_lif;
+		u32 nrdmarqs_per_lif;
+		u32 neqs_per_lif;
+		u32 nintrs;
+		u32 nucasts_per_lif;
+		u32 nmcasts_per_lif;
+		u32 intr_coal_mult;
+		u32 intr_coal_div;
+		u16 rdma_version;
+		u8 rdma_qp_opcodes[7];
+		u8 rdma_admin_opcodes[7];
+	} dev;
+	u32 words[1024];
 };
 
 /**
@@ -359,11 +287,11 @@ union identity {
  * @index:     LIF index
  */
 struct lif_init_cmd {
-    u16 opcode;
-    u16 rsvd;
-    u32 index:24;
-    u32 rsvd2:8;
-    u32 rsvd3[14];
+	u16 opcode;
+	u16 rsvd;
+	u32 index:24;
+	u32 rsvd2:8;
+	u32 rsvd3[14];
 };
 
 /**
@@ -372,9 +300,9 @@ struct lif_init_cmd {
  *             0 = Successful completion
  */
 struct lif_init_comp {
-    u32 status:8;
-    u32 rsvd:24;
-    u32 rsvd2[3];
+	u32 status:8;
+	u32 rsvd:24;
+	u32 rsvd2[3];
 };
 
 /**
@@ -396,14 +324,14 @@ struct lif_init_comp {
  * @ring_base:    Admin queue ring base address
  */
 struct adminq_init_cmd {
-    u16 opcode;
-    u16 pid;
-    u16 index;
-    u16 intr_index;
-    u32 lif_index:24;
-    u32 ring_size:8;
-    dma_addr_t ring_base;
-    u32 rsvd2[11];
+	u16 opcode;
+	u16 pid;
+	u16 index;
+	u16 intr_index;
+	u32 lif_index:24;
+	u32 ring_size:8;
+	dma_addr_t ring_base;
+	u32 rsvd2[11];
 };
 
 /**
@@ -414,15 +342,15 @@ struct adminq_init_cmd {
  * @qtype:   Queue type
  */
 struct adminq_init_comp {
-    u32 status:8;
-    u32 rsvd:24;
-    u32 qid:24;
-    u32 qtype:8;
-    u32 rsvd2[2];
+	u32 status:8;
+	u32 rsvd:24;
+	u32 qid:24;
+	u32 qtype:8;
+	u32 rsvd2[2];
 };
 
 enum txq_type {
-    TXQ_TYPE_ETHERNET = 1,
+	TXQ_TYPE_ETHERNET = 0,
 };
 
 /**
@@ -452,20 +380,20 @@ enum txq_type {
  * @ring_base:  Transmit Queue ring base address.
  */
 struct txq_init_cmd {
-    u16 opcode;
-    u8 I:1;
-    u8 E:1;
-    u8 rsvd;
-    u16 pid;
-    u16 intr_index;
-    u32 type:8;
-    u32 index:16;
-    u32 rsvd2:8;
-    u32 cos:3;
-    u32 ring_size:8;
-    u32 rsvd3:21;
-    dma_addr_t ring_base;
-    u32 rsvd4[10];
+	u16 opcode;
+	u8 I:1;
+	u8 E:1;
+	u8 rsvd;
+	u16 pid;
+	u16 intr_index;
+	u32 type:8;
+	u32 index:16;
+	u32 rsvd2:8;
+	u32 cos:3;
+	u32 ring_size:8;
+	u32 rsvd3:21;
+	dma_addr_t ring_base;
+	u32 rsvd4[10];
 };
 
 /**
@@ -479,21 +407,21 @@ struct txq_init_cmd {
  * @color:      Color bit.
  */
 struct txq_init_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u32 qid:24;
-    u32 qtype:8;
-    u32 rsvd2;
-    u32 rsvd3:31;
-    u32 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u32 qid:24;
+	u32 qtype:8;
+	u32 rsvd2;
+	u32 rsvd3:31;
+	u32 color:1;
 };
 
 enum txq_desc_opcode {
-    TXQ_DESC_OPCODE_CALC_NO_CSUM = 0,
-    TXQ_DESC_OPCODE_CALC_CSUM,
-    TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP,
-    TXQ_DESC_OPCODE_TSO,
+	TXQ_DESC_OPCODE_CALC_NO_CSUM = 0,
+	TXQ_DESC_OPCODE_CALC_CSUM,
+	TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP,
+	TXQ_DESC_OPCODE_TSO,
 };
 
 /**
@@ -596,41 +524,43 @@ enum txq_desc_opcode {
  *                TXQ_DESC_OPCODE_CALC_CSUM.
  */
 struct txq_desc {
-    u64 addr:52;
-    u64 rsvd:4;
-    u64 num_sg_elems:5;
-    u64 opcode:3;
-    u16 len;
-    u16 vlan_tci;
-    u16 hdr_len:10;
-    u16 rsvd2:3;
-    u16 V:1;
-    u16 C:1;
-    u16 O:1;
-    union {
-        struct {
-            u16 mss:14;
-            u16 S:1;
-            u16 E:1;
-        };
-        struct {
-            u16 csum_offset:14;
-            u16 rsvd4:2;
-        };
-    };
+	u64 addr:52;
+	u64 rsvd:4;
+	u64 num_sg_elems:5;
+	u64 opcode:3;
+	u16 len;
+	u16 vlan_tci;
+	u16 hdr_len:10;
+	u16 rsvd2:3;
+	u16 V:1;
+	u16 C:1;
+	u16 O:1;
+	union {
+		struct {
+			u16 mss:14;
+			u16 S:1;
+			u16 E:1;
+		};
+		struct {
+			u16 csum_offset:14;
+			u16 rsvd4:2;
+		};
+	};
 };
+
+#define IONIC_TX_MAX_SG_ELEMS	16
 
 /** struct txq_sg_desc - Transmit scatter-gather (SG) list
  * @addr:      DMA address of SG element data buffer
  * @len:       Length of SG element data buffer, in bytes
  */
 struct txq_sg_desc {
-    struct txq_sg_elem {
-        u64 addr:52;
-        u64 rsvd:12;
-        u16 len;
-        u16 rsvd2[3];
-    } elems[IONIC_TX_MAX_SG_ELEMS];
+	struct txq_sg_elem {
+		u64 addr:52;
+		u64 rsvd:12;
+		u16 len;
+		u16 rsvd2[3];
+	} elems[IONIC_TX_MAX_SG_ELEMS];
 };
 
 /** struct txq_comp - Ethernet transmit queue completion descriptor
@@ -641,16 +571,17 @@ struct txq_sg_desc {
  * @color:      Color bit.
  */
 struct txq_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u32 rsvd2[2];
-    u32 rsvd3:31;
-    u32 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u32 rsvd2[2];
+	u32 rsvd3:31;
+	u32 color:1;
 };
 
+
 enum rxq_type {
-    RXQ_TYPE_ETHERNET = 0,
+	RXQ_TYPE_ETHERNET = 0,
 };
 
 /**
@@ -679,19 +610,19 @@ enum rxq_type {
  * @ring_base:  Transmit Queue ring base address.
  */
 struct rxq_init_cmd {
-    u16 opcode;
-    u8 I:1;
-    u8 E:1;
-    u8 rsvd;
-    u16 pid;
-    u16 intr_index;
-    u32 type:8;
-    u32 index:16;
-    u32 rsvd2:8;
-    u32 ring_size:8;
-    u32 rsvd3:24;
-    dma_addr_t ring_base;
-    u32 rsvd4[10];
+	u16 opcode;
+	u8 I:1;
+	u8 E:1;
+	u8 rsvd;
+	u16 pid;
+	u16 intr_index;
+	u32 type:8;
+	u32 index:16;
+	u32 rsvd2:8;
+	u32 ring_size:8;
+	u32 rsvd3:24;
+	dma_addr_t ring_base;
+	u32 rsvd4[10];
 };
 
 /**
@@ -705,19 +636,19 @@ struct rxq_init_cmd {
  * @color:      Color bit.
  */
 struct rxq_init_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u32 qid:24;
-    u32 qtype:8;
-    u32 rsvd2;
-    u32 rsvd3:31;
-    u32 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u32 qid:24;
+	u32 qtype:8;
+	u32 rsvd2;
+	u32 rsvd3:31;
+	u32 color:1;
 };
 
 enum rxq_desc_opcode {
-    RXQ_DESC_OPCODE_NOP = 0,
-    RXQ_DESC_OPCODE_SIMPLE,
+	RXQ_DESC_OPCODE_NOP = 0,
+	RXQ_DESC_OPCODE_SIMPLE,
 };
 
 /**
@@ -740,25 +671,25 @@ enum rxq_desc_opcode {
  *
  */
 struct rxq_desc {
-    u64 addr:52;
-    u64 rsvd:12;
-    u16 len;
-    u16 opcode:3;
-    u16 rsvd2:13;
-    u32 rsvd3;
+	u64 addr:52;
+	u64 rsvd:12;
+	u16 len;
+	u16 opcode:3;
+	u16 rsvd2:13;
+	u32 rsvd3;
 };
 
 enum rxq_comp_rss_type {
-    RXQ_COMP_RSS_TYPE_NONE = 0,
-    RXQ_COMP_RSS_TYPE_IPV4,
-    RXQ_COMP_RSS_TYPE_IPV4_TCP,
-    RXQ_COMP_RSS_TYPE_IPV4_UDP,
-    RXQ_COMP_RSS_TYPE_IPV6,
-    RXQ_COMP_RSS_TYPE_IPV6_TCP,
-    RXQ_COMP_RSS_TYPE_IPV6_UDP,
-    RXQ_COMP_RSS_TYPE_IPV6_EX,
-    RXQ_COMP_RSS_TYPE_IPV6_TCP_EX,
-    RXQ_COMP_RSS_TYPE_IPV6_UDP_EX,
+	RXQ_COMP_RSS_TYPE_NONE = 0,
+	RXQ_COMP_RSS_TYPE_IPV4,
+	RXQ_COMP_RSS_TYPE_IPV4_TCP,
+	RXQ_COMP_RSS_TYPE_IPV4_UDP,
+	RXQ_COMP_RSS_TYPE_IPV6,
+	RXQ_COMP_RSS_TYPE_IPV6_TCP,
+	RXQ_COMP_RSS_TYPE_IPV6_UDP,
+	RXQ_COMP_RSS_TYPE_IPV6_EX,
+	RXQ_COMP_RSS_TYPE_IPV6_TCP_EX,
+	RXQ_COMP_RSS_TYPE_IPV6_UDP_EX,
 };
 
 /** struct rxq_comp - Ethernet receive queue completion descriptor
@@ -774,6 +705,7 @@ enum rxq_comp_rss_type {
  * @vlan_tci:     VLAN tag stripped from the packet.  Valid if @V is
  *                set.  Includes .1p and .1q tags.
  * @len:          Received packet length, in bytes.  Excludes FCS.
+ * @csum_calc     L2 payload checksum is computed or not
  * @rss_type:     RSS type for @rss_hash:
  *                   0 = RSS hash not calcuated
  *                   1 = L3 IPv4
@@ -813,47 +745,48 @@ enum rxq_comp_rss_type {
  * @color:        Color bit.
  */
 struct rxq_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u32 rss_hash;
-    u16 csum;
-    u16 vlan_tci;
-    u32 len:14;
-    u32 rsvd2:2;
-    u32 rss_type:4;
-    u32 rsvd3:4;
-    u32 csum_tcp_ok:1;
-    u32 csum_tcp_bad:1;
-    u32 csum_udp_ok:1;
-    u32 csum_udp_bad:1;
-    u32 csum_ip_ok:1;
-    u32 csum_ip_bad:1;
-    u32 V:1;
-    u32 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u32 rss_hash;
+	u16 csum;
+	u16 vlan_tci;
+	u32 len:14;
+	u32 rsvd2:2;
+	u32 rss_type:4;
+	u32 csum_calc:1;
+	u32 rsvd3:3;
+	u32 csum_tcp_ok:1;
+	u32 csum_tcp_bad:1;
+	u32 csum_udp_ok:1;
+	u32 csum_udp_bad:1;
+	u32 csum_ip_ok:1;
+	u32 csum_ip_bad:1;
+	u32 V:1;
+	u32 color:1;
 };
 
 enum feature_set {
-    FEATURE_SET_ETH_HW_FEATURES = 1,
+	FEATURE_SET_ETH_HW_FEATURES = 1,
 };
 
 enum eth_hw_features {
-    ETH_HW_VLAN_TX_TAG    = BIT(0),
-    ETH_HW_VLAN_RX_STRIP    = BIT(1),
-    ETH_HW_VLAN_RX_FILTER    = BIT(2),
-    ETH_HW_RX_HASH        = BIT(3),
-    ETH_HW_RX_CSUM        = BIT(4),
-    ETH_HW_TX_SG        = BIT(5),
-    ETH_HW_TX_CSUM        = BIT(6),
-    ETH_HW_TSO        = BIT(7),
-    ETH_HW_TSO_IPV6        = BIT(8),
-    ETH_HW_TSO_ECN        = BIT(9),
-    ETH_HW_TSO_GRE        = BIT(10),
-    ETH_HW_TSO_GRE_CSUM    = BIT(11),
-    ETH_HW_TSO_IPXIP4    = BIT(12),
-    ETH_HW_TSO_IPXIP6    = BIT(13),
-    ETH_HW_TSO_UDP        = BIT(14),
-    ETH_HW_TSO_UDP_CSUM    = BIT(15),
+	ETH_HW_VLAN_TX_TAG	= BIT(0),
+	ETH_HW_VLAN_RX_STRIP	= BIT(1),
+	ETH_HW_VLAN_RX_FILTER	= BIT(2),
+	ETH_HW_RX_HASH		= BIT(3),
+	ETH_HW_RX_CSUM		= BIT(4),
+	ETH_HW_TX_SG		= BIT(5),
+	ETH_HW_TX_CSUM		= BIT(6),
+	ETH_HW_TSO		= BIT(7),
+	ETH_HW_TSO_IPV6		= BIT(8),
+	ETH_HW_TSO_ECN		= BIT(9),
+	ETH_HW_TSO_GRE		= BIT(10),
+	ETH_HW_TSO_GRE_CSUM	= BIT(11),
+	ETH_HW_TSO_IPXIP4	= BIT(12),
+	ETH_HW_TSO_IPXIP6	= BIT(13),
+	ETH_HW_TSO_UDP		= BIT(14),
+	ETH_HW_TSO_UDP_CSUM	= BIT(15),
 };
 
 /**
@@ -863,10 +796,10 @@ enum eth_hw_features {
  * @wanted:     Features from set wanted by driver.
  */
 struct features_cmd {
-    u16 opcode;
-    u16 set;
-    u32 wanted;
-    u32 rsvd2[14];
+	u16 opcode;
+	u16 set;
+	u32 wanted;
+	u32 rsvd2[14];
 };
 
 /**
@@ -879,13 +812,13 @@ struct features_cmd {
  * @color:      Color bit.
  */
 struct features_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u32 supported;
-    u32 rsvd2;
-    u32 rsvd3:31;
-    u32 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u32 supported;
+	u32 rsvd2;
+	u32 rsvd3:31;
+	u32 color:1;
 };
 
 /**
@@ -893,8 +826,8 @@ struct features_comp {
  * @opcode:     opcode = 8
  */
 struct hang_notify_cmd {
-    u16 opcode;
-    u16 rsvd[31];
+	u16 opcode;
+	u16 rsvd[31];
 };
 
 /**
@@ -903,9 +836,9 @@ struct hang_notify_cmd {
  *             0 = Successful completion
  */
 struct hang_notify_comp {
-    u32 status:8;
-    u32 rsvd:24;
-    u32 rsvd2[3];
+	u32 status:8;
+	u32 rsvd:24;
+	u32 rsvd2[3];
 };
 
 /**
@@ -915,11 +848,11 @@ struct hang_notify_comp {
  * @qtype:      Queue type
  */
 struct q_enable_cmd {
-    u16 opcode;
-    u16 rsvd;
-    u32 qid:24;
-    u32 qtype:8;
-    u32 rsvd2[14];
+	u16 opcode;
+	u16 rsvd;
+	u32 qid:24;
+	u32 qtype:8;
+	u32 rsvd2[14];
 };
 
 typedef struct admin_comp q_enable_comp;
@@ -931,11 +864,11 @@ typedef struct admin_comp q_enable_comp;
  * @qtype:      Queue type
  */
 struct q_disable_cmd {
-    u16 opcode;
-    u16 rsvd;
-    u32 qid:24;
-    u32 qtype:8;
-    u32 rsvd2[14];
+	u16 opcode;
+	u16 rsvd;
+	u32 qid:24;
+	u32 qtype:8;
+	u32 rsvd2[14];
 };
 
 typedef struct admin_comp q_disable_comp;
@@ -946,8 +879,8 @@ typedef struct admin_comp q_disable_comp;
  * @opcode:     opcode = 15
  */
 struct station_mac_addr_get_cmd {
-    u16 opcode;
-    u16 rsvd[31];
+	u16 opcode;
+	u16 rsvd[31];
 };
 
 /**
@@ -961,13 +894,13 @@ struct station_mac_addr_get_cmd {
  * @color:      Color bit.
  */
 struct station_mac_addr_get_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u8 addr[6];
-    u16 rsvd2;
-    u32 rsvd3:31;
-    u32 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u8 addr[6];
+	u16 rsvd2;
+	u32 rsvd3:31;
+	u32 color:1;
 };
 
 /**
@@ -977,19 +910,19 @@ struct station_mac_addr_get_comp {
  *              Max MTU=9200.
  */
 struct mtu_set_cmd {
-    u16 opcode;
-    u16 mtu;
-    u16 rsvd[30];
+	u16 opcode;
+	u16 mtu;
+	u16 rsvd[30];
 };
 
 typedef struct admin_comp mtu_set_comp;
 
 enum rx_mode {
-    RX_MODE_F_UNICAST        = BIT(0),
-    RX_MODE_F_MULTICAST        = BIT(1),
-    RX_MODE_F_BROADCAST        = BIT(2),
-    RX_MODE_F_PROMISC        = BIT(3),
-    RX_MODE_F_ALLMULTI        = BIT(4),
+	RX_MODE_F_UNICAST		= BIT(0),
+	RX_MODE_F_MULTICAST		= BIT(1),
+	RX_MODE_F_BROADCAST		= BIT(2),
+	RX_MODE_F_PROMISC		= BIT(3),
+	RX_MODE_F_ALLMULTI		= BIT(4),
 };
 
 /**
@@ -1007,17 +940,17 @@ enum rx_mode {
  *                  packets.
  */
 struct rx_mode_set_cmd {
-    u16 opcode;
-    u16 rx_mode;
-    u16 rsvd[30];
+	u16 opcode;
+	u16 rx_mode;
+	u16 rsvd[30];
 };
 
 typedef struct admin_comp rx_mode_set_comp;
 
 enum rx_filter_match_type {
-    RX_FILTER_MATCH_VLAN = 0,
-    RX_FILTER_MATCH_MAC,
-    RX_FILTER_MATCH_MAC_VLAN,
+	RX_FILTER_MATCH_VLAN = 0,
+	RX_FILTER_MATCH_MAC,
+	RX_FILTER_MATCH_MAC_VLAN,
 };
 
 /**
@@ -1030,25 +963,25 @@ enum rx_filter_match_type {
  * @qtype:      Queue type
  */
 struct rx_filter_add_cmd {
-    u16 opcode;
-    u16 match;
-    union {
-        struct {
-            u16 vlan;
-            u16 rsvd[29];
-        } vlan;
-        struct {
-            u8 addr[6];
-            u8 rsvd[2];
-            u16 rsvd2[26];
-        } mac;
-        struct {
-            u16 vlan;
-            u8 addr[6];
-            u8 rsvd[2];
-            u16 rsvd3[25];
-        } mac_vlan;
-    };
+	u16 opcode;
+	u16 match;
+	union {
+		struct {
+			u16 vlan;
+			u16 rsvd[29];
+		} vlan;
+		struct {
+			u8 addr[6];
+			u8 rsvd[2];
+			u16 rsvd2[26];
+		} mac;
+		struct {
+			u16 vlan;
+			u8 addr[6];
+			u8 rsvd[2];
+			u16 rsvd3[25];
+		} mac_vlan;
+	};
 };
 
 /**
@@ -1061,13 +994,13 @@ struct rx_filter_add_cmd {
  * @color:      Color bit.
  */
 struct rx_filter_add_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u32 filter_id;
-    u32 rsvd2;
-    u32 rsvd3:31;
-    u32 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u32 filter_id;
+	u32 rsvd2;
+	u32 rsvd3:31;
+	u32 color:1;
 };
 
 /**
@@ -1076,13 +1009,14 @@ struct rx_filter_add_comp {
  * @filter_id:  Filter ID
  */
 struct rx_filter_del_cmd {
-    u16 opcode;
-    u32 filter_id;
-    u16 rsvd[29];
+	u16 opcode;
+	u32 filter_id;
+	u16 rsvd[29];
 };
 
 typedef struct admin_comp rx_filter_del_comp;
 
+#define STATS_DUMP_VERSION_1		1
 
 /**
  * struct stats_dump_cmd - Setup stats dump shared memory command
@@ -1101,10 +1035,10 @@ typedef struct admin_comp rx_filter_del_comp;
  * released by the driver.
  */
 struct stats_dump_cmd {
-    u16 opcode;
-    u16 ver;
-    dma_addr_t addr;
-    u32 rsvd2[13];
+	u16 opcode;
+	u16 ver;
+	dma_addr_t addr;
+	u32 rsvd2[13];
 };
 
 /**
@@ -1121,13 +1055,13 @@ struct stats_dump_cmd {
  * @color:      Color bit.
  */
 struct stats_dump_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u16 ver;
-    u16 rsvd2[3];
-    u32 rsvd3:31;
-    u32 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u16 ver;
+	u16 rsvd2[3];
+	u32 rsvd3:31;
+	u32 color:1;
 };
 
 /**
@@ -1137,26 +1071,26 @@ struct stats_dump_comp {
  * @stat2:  64-bit device stat
  */
 union stats_dump {
-    struct {
-        /* TODO these are placeholders */
-        u64 stat1;
-        u64 stat2;
-    } ver1;
-    u32 words[1024];
+	struct {
+		/* TODO these are placeholders */
+		u64 stat1;
+		u64 stat2;
+	} ver1;
+	u32 words[1024];
 };
 
-#define RSS_HASH_KEY_SIZE    40
+#define RSS_HASH_KEY_SIZE	40
 
 enum rss_hash_types {
-    RSS_TYPE_IPV4        = BIT(0),
-    RSS_TYPE_IPV4_TCP    = BIT(1),
-    RSS_TYPE_IPV4_UDP    = BIT(2),
-    RSS_TYPE_IPV6        = BIT(3),
-    RSS_TYPE_IPV6_TCP    = BIT(4),
-    RSS_TYPE_IPV6_UDP    = BIT(5),
-    RSS_TYPE_IPV6_EX    = BIT(6),
-    RSS_TYPE_IPV6_TCP_EX    = BIT(7),
-    RSS_TYPE_IPV6_UDP_EX    = BIT(8),
+	RSS_TYPE_IPV4		= BIT(0),
+	RSS_TYPE_IPV4_TCP	= BIT(1),
+	RSS_TYPE_IPV4_UDP	= BIT(2),
+	RSS_TYPE_IPV6		= BIT(3),
+	RSS_TYPE_IPV6_TCP	= BIT(4),
+	RSS_TYPE_IPV6_UDP	= BIT(5),
+	RSS_TYPE_IPV6_EX	= BIT(6),
+	RSS_TYPE_IPV6_TCP_EX	= BIT(7),
+	RSS_TYPE_IPV6_UDP_EX	= BIT(8),
 };
 
 /**
@@ -1166,15 +1100,15 @@ enum rss_hash_types {
  * @key:       The hash secret key.
  */
 struct rss_hash_set_cmd {
-    u16 opcode;
-    u16 types;
-    u8 key[RSS_HASH_KEY_SIZE];
-    u32 rsvd[5];
+	u16 opcode;
+	u16 types;
+	u8 key[RSS_HASH_KEY_SIZE];
+	u32 rsvd[5];
 };
 
 typedef struct admin_comp rss_hash_set_comp;
 
-#define RSS_IND_TBL_SIZE    128
+#define RSS_IND_TBL_SIZE	128
 
 /**
  * struct rss_indir_set_cmd - Set the RSS indirection table values
@@ -1182,9 +1116,9 @@ typedef struct admin_comp rss_hash_set_comp;
  * @addr:      Address for RSS indirection table shared memory.
 */
 struct rss_indir_set_cmd {
-    u16 opcode;
-    dma_addr_t addr;
-    u16 rsvd[27];
+	u16 opcode;
+	dma_addr_t addr;
+	u16 rsvd[27];
 };
 
 typedef struct admin_comp rss_indir_set_comp;
@@ -1196,11 +1130,11 @@ typedef struct admin_comp rss_indir_set_comp;
  * @qtype:      Queue type
  */
 struct debug_q_dump_cmd {
-    u16 opcode;
-    u16 rsvd;
-    u32 qid:24;
-    u32 qtype:8;
-    u32 rsvd2[14];
+	u16 opcode;
+	u16 rsvd;
+	u32 qid:24;
+	u32 qtype:8;
+	u32 rsvd2[14];
 };
 
 /**
@@ -1216,363 +1150,361 @@ struct debug_q_dump_cmd {
  * @color:      Color bit.
  */
 struct debug_q_dump_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u16 p_index0;
-    u16 c_index0;
-    u16 p_index1;
-    u16 c_index1;
-    u32 rsvd2:31;
-    u32 color:1;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u16 p_index0;
+	u16 c_index0;
+	u16 p_index1;
+	u16 c_index1;
+	u32 rsvd2:31;
+	u32 color:1;
 };
 
+/******************************************************************
+ ******************* RDMA Commands ********************************
+ ******************************************************************/
+
+/**
+ * struct rdma_reset_cmd - Reset RDMA LIF cmd
+ * @opcode:        opcode = 50
+ * @lif_id:        hardware lif id
+ *
+ * There is no rdma specific dev command completion struct.  Completion uses
+ * the common struct admin_comp.  Only the status is indicated.  Nonzero status
+ * means the LIF does not support rdma.
+ **/
+struct rdma_reset_cmd {
+	u16 opcode;
+	u16 lif_id;
+	u8 rsvd[60];
+};
+
+/**
+ * struct rdma_queue_cmd - Create RDMA Queue command
+ * @opcode:        opcode = 51, 52, 53
+ * @lif_id:        hardware lif id
+ * @qid_ver:       (qid | (rdma version << 24))
+ * @cid:           intr, eq_id, or cq_id
+ * @dbid:          doorbell page id
+ * @depth_log2:    log base two of queue depth
+ * @stride_log2:   log base two of queue stride
+ * @dma_addr:      address of the queue memory
+ * @xxx_table_index: temporary, but should not need pgtbl for contig. queues.
+ *
+ * The same command struct is used to create an rdma event queue, completion
+ * queue, or rdma admin queue.  The cid is an interrupt number for an event
+ * queue, an event queue id for a completion queue, or a completion queue id
+ * for an rdma admin queue.
+ *
+ * The queue created via a dev command must be contiguous in dma space.
+ *
+ * The dev commands are intended only to be used during driver initialization,
+ * to create queues supporting the rdma admin queue.  Other queues, and other
+ * types of rdma resources like memory regions, will be created and registered
+ * via the rdma admin queue, and will support a more complete interface
+ * providing scatter gather lists for larger, scattered queue buffers and
+ * memory registration.
+ *
+ * There is no rdma specific dev command completion struct.  Completion uses
+ * the common struct admin_comp.  Only the status is indicated.
+ **/
+struct rdma_queue_cmd {
+	u16 opcode;
+	u16 lif_id;
+	u32 qid_ver;
+	u32 cid;
+	u16 dbid;
+	u8 depth_log2;
+	u8 stride_log2;
+	u64 dma_addr;
+	u8 rsvd[36];
+	u32 xxx_table_index;
+};
+
+
+/*    XXX --- all below are makeshift --- XXX    */
+/* to be removed when device supports rdma adminq */
+
+
+/**
+ * struct rdma_create_ah_cmd - Create Address Handle command
+ * @opcode:        opcode = 63
+ * @pd_id:	protection domain id
+ * @header_template: header tempalte
+ * @header_template_size: header template size
+ **/
+struct create_ah_cmd {
+	u16 opcode;
+	u8 rsvd[6];
+	u32 ah_id;
+	u32 pd_id;
+	u64 header_template;
+	u32 header_template_size;
+	u8 rsvd2[36];
+};
+
+/**
+ * rdma_create_ah_comp - create_ah command completion
+ * @status:        Status of the command.
+ *                  0 - Successful completion
+ * @len:	Opaque value identifying the AH on the device
+ * @handle:	Opaque value identifying the AH on the device
+ *
+ * The AH is identified by the vector <handle,len>.
+ *
+ * TODO: the driver should alloc the ah id, like other resources.
+ * The completion should only indicate status.
+ **/
+struct create_ah_comp {
+	u32 status:8;
+	u32 rsvd:24;
+	u32 len;
+	u64 handle;
+};
+
+/**
+ * struct rdma_create_mr_cmd - Create Memory registration command
+ * @opcode:        opcode = 54
+ * @pd_num:        id of the pd
+ * @lif:           hardware lif id
+ * @access_flags:  access protaction requested for memory region
+ * @start:         starting virtual address of the memory region
+ * @length:        length of the memory region in bytes.
+ * @pdir_dma:      PA of the page translation table
+ * @page_size:     Host Page Size
+ * @nchunks:       number of physical pages in the PT table.
+ * @lkey:          local key
+ * @rkey:          remote key
+ *
+ **/
+struct create_mr_cmd {
+	u16 opcode;
+	u16 pd_num;
+	u16 lif;
+	u16 access_flags;
+	u64 start;
+	u64 length;
+	u64 pt_dma;
+	u32 page_size;
+	u32 nchunks;
+	u32 lkey;
+	u32 rkey;
+	u32 table_index;
+	u8 rsvd[12];
+};
+
+/**
+ * rdma_create_mr_comp - create_mr command completion
+ * @status:        Status of the command. 
+ *                  0 - Successful completion
+ **/
+struct create_mr_comp {
+	u32 status:8;
+	u32 rsvd:24;
+	u32 rsvd2[3];
+};
+
+/**
+ * struct create_cq_cmd - Create RDMA Completion queue command
+ * @opcode:        opcode = 50
+ * @cq_wqe_size:   work queue entry size for CQ
+ * @num_cq_wqes:   number of wqes in CQ
+ * @cq_num:        queue id for CQ. Driver manages the space.
+ * @lif_id:        LIF ID
+ * @host_pg_size:  Host Page Size
+ * @cq_lkey:       local key for CQ memory
+ * @eq_id:         EQ ID
+ * @pt_base_addr:  page translation table base address for CQ memory
+ * @cq_va:         Starting virtual address of CQ memory
+ * @pt_size:       number of page translation table entries.
+ **/
+struct create_cq_cmd {
+	u16 opcode;
+	u16 cq_wqe_size;
+	u32 cq_num;
+	u16 num_cq_wqes;
+	u16 lif_id;
+	u32 host_pg_size;
+	u32 cq_lkey;
+	u32 eq_id;
+	u64 pt_base_addr;
+	u64 cq_va;
+	u64 va_len;
+	u32 pt_size;
+	u32 table_index;
+	u8  rsvd2[8];
+};
+
+/**
+ * struct create_cq_comp
+ * @status: The status of the command.  Values for status are:
+ *             0 = Successful completion
+ */
+struct create_cq_comp {
+	u32 status:8;
+	u32 qtype:8;
+	u32 rsvd:16;
+	u32 rsvd2[3];
+};
+
+/**
+ * struct create_qp_cmd - Create RDMA SQ/RQ queue command
+ * @opcode:        opcode = 59
+ * @sq_wqe_size:   work queue entry size for SQ
+ * @rq_wqe_size:   work queue entry size for RQ
+ * @num_sq_wqes:   number of wqes in SQ
+ * @num_rq_wqes:   number of wqes in RQ
+ * @num_rsq_wqes:  number of wqes in RSQ
+ * @num_rrq_wqes:  number of wqes in RRQ
+ * @pd:            pd number
+ * @lif_id:        LIF ID
+ * @service:       RC/UD
+ * @flags:         qp flags
+ * @pmtu:          path mtu for qp
+ * @sq_cq_num:     cq for SQ
+ * @rq_cq_num:     cq for RQ
+ * @host_pg_size:  host page size
+ * @sq_lkey:       local key for SQ
+ * @rq_lkey:       local key for RQ
+ **/
+
+struct create_qp_cmd {
+	u16 opcode;
+	u16 sq_wqe_size;
+	u16 rq_wqe_size;    
+	u16 num_sq_wqes;
+	u16 num_rq_wqes;    
+	u32 sq_table_index; /* XXX bad alignment */
+	u16 pd;
+	u16 lif_id;
+	u8  service;
+	u8  rsvd;
+	u32 pmtu;
+	u32 qp_num;
+	u32 sq_cq_num;
+	u32 rq_cq_num;    
+	u32 host_pg_size;
+    /*
+     * For we can transfer only one DMA mapped address range in dev commands
+     * because of HAPS devcmd limitations. So need to combine sq/rq translations
+     * to a single PT table.
+     */
+	u64 pt_base_addr;
+	u32 pt_size;
+	u32 sq_pt_size;
+	u32 flags;
+	u32 rq_table_index;
+};
+
+/**
+ * struct create_cq_comp
+ * @status: The status of the command.  Values for status are:
+ *             0 = Successful completion
+ * @sq_qtype: qtype for SQ
+ * @rq_qtype: qtype for Q 
+ */
+
+struct create_qp_comp {
+	u32 status:8;
+	u32 sq_qtype:8;
+	u32 rq_qtype:8;    
+	u32 rsvd:8;
+	u32 rsvd2[3];
+};
+
+/**
+ * struct modify_qp_cmd - modify RDMA SQ/RQ queue command
+ * @opcode:        opcode = 60
+ * @lif_id:        lif id
+ * @attr_mask:     mask to indicate which attributes are being modified
+ * @qp_num:        qp number
+ * @dest_qp_num:   destination qp number
+ * @q_key:         q_key for UD
+ * @e_psn:         initial expected seq number
+ * @sq_psn:        initial send side psn
+ * @header_template: header tempalte
+ * @header_template_size: header template size
+ */
+struct modify_qp_cmd {
+	u16 opcode;
+	u16 lif_id;
+	u32 attr_mask;
+	u32 qp_num;
+	u32 dest_qp_num;    
+	u32 q_key;
+	u32 e_psn;
+	u32 sq_psn;
+	u64 header_template;
+	u32 header_template_size;
+	u32 header_template_ah_id;
+	u32 path_mtu;
+	u8  rrq_depth;
+	u8  rsq_depth;
+	u8  state;
+	u8  retry_count;
+	u8  retry_timeout;
+	u8  min_rnr_timer;
+	u16 flags;
+	u32 rrq_index;
+	u32 rsq_index;
+};
+
+/**
+ * struct create_qp_comp
+ * @status: The status of the command.  Values for status are:
+ *             0 = Successful completion
+ */
+
+struct modify_qp_comp {
+	u32 status:8;
+	u32 rsvd:24;
+	u32 rsvd2[3];
+};
 
 #pragma pack(pop)
 
 union adminq_cmd {
-    struct admin_cmd cmd;
-    struct nop_cmd nop;
-    struct txq_init_cmd txq_init;
-    struct rxq_init_cmd rxq_init;
-    struct features_cmd features;
-    struct q_enable_cmd q_enable;
-    struct q_disable_cmd q_disable;
-    struct station_mac_addr_get_cmd station_mac_addr_get;
-    struct mtu_set_cmd mtu_set;
-    struct rx_mode_set_cmd rx_mode_set;
-    struct rx_filter_add_cmd rx_filter_add;
-    struct rx_filter_del_cmd rx_filter_del;
-    struct stats_dump_cmd stats_dump;
-    struct rss_hash_set_cmd rss_hash_set;
-    struct rss_indir_set_cmd rss_indir_set;
-    struct debug_q_dump_cmd debug_q_dump;
+	struct admin_cmd cmd;
+	struct nop_cmd nop;
+	struct txq_init_cmd txq_init;
+	struct rxq_init_cmd rxq_init;
+	struct features_cmd features;
+	struct q_enable_cmd q_enable;
+	struct q_disable_cmd q_disable;
+	struct station_mac_addr_get_cmd station_mac_addr_get;
+	struct mtu_set_cmd mtu_set;
+	struct rx_mode_set_cmd rx_mode_set;
+	struct rx_filter_add_cmd rx_filter_add;
+	struct rx_filter_del_cmd rx_filter_del;
+	struct stats_dump_cmd stats_dump;
+	struct rss_hash_set_cmd rss_hash_set;
+	struct rss_indir_set_cmd rss_indir_set;
+	struct debug_q_dump_cmd debug_q_dump;
+	struct rdma_reset_cmd rdma_reset;
+	struct rdma_queue_cmd rdma_queue;
+	struct create_ah_cmd create_ah;
+	struct create_mr_cmd create_mr;
+	struct create_cq_cmd create_cq;
+	struct create_qp_cmd create_qp;
+	struct modify_qp_cmd modify_qp;
 };
 
 union adminq_comp {
-    struct admin_comp comp;
-    struct nop_comp nop;
-    struct txq_init_comp txq_init;
-    struct rxq_init_comp rxq_init;
-    struct features_comp features;
-    struct station_mac_addr_get_comp station_mac_addr_get;
-    struct rx_filter_add_comp rx_filter_add;
-    struct stats_dump_comp stats_dump;
-    struct debug_q_dump_comp debug_q_dump;
+	struct admin_comp comp;
+	struct nop_comp nop;
+	struct txq_init_comp txq_init;
+	struct rxq_init_comp rxq_init;
+	struct features_comp features;
+	struct station_mac_addr_get_comp station_mac_addr_get;
+	struct rx_filter_add_comp rx_filter_add;
+	struct stats_dump_comp stats_dump;
+	struct debug_q_dump_comp debug_q_dump;
+	struct create_ah_comp create_ah;
+	struct create_mr_comp create_mr;
+	struct create_cq_comp create_cq;
+	struct create_qp_comp create_qp;
+	struct modify_qp_comp modify_qp;
 };
 
-
-#pragma pack(push, 1)
-
-union dev_cmd {
-    u32 words[16];
-    struct admin_cmd cmd;
-    struct nop_cmd nop;
-    struct reset_cmd reset;
-    struct hang_notify_cmd hang_notify;
-    struct identify_cmd identify;
-    struct lif_init_cmd lif_init;
-    struct adminq_init_cmd adminq_init;
-    struct station_mac_addr_get_cmd station_mac_addr_get;
-    struct txq_init_cmd txq_init;
-    struct rxq_init_cmd rxq_init;
-    struct q_enable_cmd q_enable;
-    struct q_disable_cmd q_disable;
-    struct rx_mode_set_cmd rx_mode_set;
-    struct rx_filter_add_cmd rx_filter_add;
-};
-
-union dev_cmd_comp {
-    u32 words[4];
-    u8 status;
-    struct admin_comp comp;
-    struct nop_comp nop;
-    struct reset_comp reset;
-    struct hang_notify_comp hang_notify;
-    struct identify_comp identify;
-    struct lif_init_comp lif_init;
-    struct adminq_init_comp adminq_init;
-};
-
-struct dev_cmd_regs {
-    u32 signature;
-    u32 done;
-    union dev_cmd cmd;
-    union dev_cmd_comp comp;
-};
-
-struct dev_cmd_db {
-    u32 v;
-};
-
-
-struct ionic_device_bar {
-    void *virtaddr;
-    unsigned long long bus_addr;
-    unsigned long len;
-};
-
-/**
- * struct doorbell - Doorbell register layout
- * @p_index: Producer index
- * @ring:    Selects the specific ring of the queue to update.
- *           Type-specific meaning:
- *              ring=0: Default producer/consumer queue.
- *              ring=1: (CQ, EQ) Re-Arm queue.  RDMA CQs
- *              send events to EQs when armed.  EQs send
- *              interrupts when armed.
- * @qid:     The queue id selects the queue destination for the
- *           producer index and flags.
- */
-struct doorbell {
-    u16 p_index;
-    u8 ring:3;
-    u8 rsvd:5;
-    u8 qid_lo;
-    u16 qid_hi;
-    u16 rsvd2;
-};
-
-/**
- * struct intr_ctrl - Interrupt control register
- * @coalescing_init:  Coalescing timer initial value, in
- *                    device units.  Use @identity->intr_coal_mult
- *                    and @identity->intr_coal_div to convert from
- *                    usecs to device units:
- *
- *                      coal_init = coal_usecs * coal_mutl / coal_div
- *
- *                    When an interrupt is sent the interrupt
- *                    coalescing timer current value
- *                    (@coalescing_curr) is initialized with this
- *                    value and begins counting down.  No more
- *                    interrupts are sent until the coalescing
- *                    timer reaches 0.  When @coalescing_init=0
- *                    interrupt coalescing is effectively disabled
- *                    and every interrupt assert results in an
- *                    interrupt.  Reset value: 0.
- * @mask:             Interrupt mask.  When @mask=1 the interrupt
- *                    resource will not send an interrupt.  When
- *                    @mask=0 the interrupt resource will send an
- *                    interrupt if an interrupt event is pending
- *                    or on the next interrupt assertion event.
- *                    Reset value: 1.
- * @int_credits:      Interrupt credits.  This register indicates
- *                    how many interrupt events the hardware has
- *                    sent.  When written by software this
- *                    register atomically decrements @int_credits
- *                    by the value written.  When @int_credits
- *                    becomes 0 then the "pending interrupt" bit
- *                    in the Interrupt Status register is cleared
- *                    by the hardware and any pending but unsent
- *                    interrupts are cleared.
- *                    The upper 2 bits are special flags:
- *                       Bits 0-15: Interrupt Events -- Interrupt
- *                       event count.
- *                       Bit 16: @unmask -- When this bit is
- *                       written with a 1 the interrupt resource
- *                       will set mask=0.
- *                       Bit 17: @coal_timer_reset -- When this
- *                       bit is written with a 1 the
- *                       @coalescing_curr will be reloaded with
- *                       @coalescing_init to reset the coalescing
- *                       timer.
- * @mask_on_assert:   Automatically mask on assertion.  When
- *                    @mask_on_assert=1 the interrupt resource
- *                    will set @mask=1 whenever an interrupt is
- *                    sent.  When using interrupts in Legacy
- *                    Interrupt mode the driver must select
- *                    @mask_on_assert=0 for proper interrupt
- *                    operation.
- * @coalescing_curr:  Coalescing timer current value, in
- *                    microseconds.  When this value reaches 0
- *                    the interrupt resource is again eligible to
- *                    send an interrupt.  If an interrupt event
- *                    is already pending when @coalescing_curr
- *                    reaches 0 the pending interrupt will be
- *                    sent, otherwise an interrupt will be sent
- *                    on the next interrupt assertion event.
- */
-struct intr_ctrl {
-    u32 coalescing_init:6;
-    u32 rsvd:26;
-    u32 mask:1;
-    u32 rsvd2:31;
-    u32 int_credits:16;
-    u32 unmask:1;
-    u32 coal_timer_reset:1;
-    u32 rsvd3:14;
-    u32 mask_on_assert:1;
-    u32 rsvd4:31;
-    u32 coalescing_curr:6;
-    u32 rsvd5:26;
-    u32 rsvd6[3];
-};
-
-struct intr_status {
-    u32 status[2];
-};
-
-/** ionic_admin_ctx - Admin command context.
- * @cmd:        Admin command (64B) to be copied to the queue.
- * @comp:        Admin completion (16B) copied from the queue.
- *
- * @side_data:        Additional data to be copied to the doorbell page,
- *              if the command is issued as a dev cmd.
- * @side_data_len:    Length of additional data to be copied.
- *
- * TODO:
- * The side_data and side_data_len are temporary and will be removed.  For now,
- * they are used when admin commands referring to side-band data are posted as
- * dev commands instead.  Only single-indirect side-band data is supported.
- * Only 2K of data is supported, because first half of page is for registers.
- */
-struct ionic_admin_ctx {
-    union adminq_cmd cmd;
-    union adminq_comp comp;
-};
-
-#pragma pack(pop)
-
-struct cq_info {
-    void *cq_desc;
-    struct cq_info *next;
-    unsigned int index;
-    bool last;
-};
-
-struct queue;
-struct desc_info;
-
-typedef void (*desc_cb)(struct queue *q, struct desc_info *desc_info,
-            struct cq_info *cq_info, void *cb_arg);
-
-struct desc_info {
-    void *desc;
-    void *sg_desc;
-    struct desc_info *next;
-    unsigned int index;
-    unsigned int left;
-    desc_cb cb;
-    void *cb_arg;
-};
-
-struct cq {
-    void *base;
-    dma_addr_t base_pa;
-    struct lif *lif;
-    struct cq_info *info;
-    struct cq_info *tail;
-    struct queue *bound_q;
-    struct intr *bound_intr;
-    unsigned int num_descs;
-    unsigned int desc_size;
-    bool done_color;
-};
-
-struct queue {
-    char name[QUEUE_NAME_MAX_SZ];
-    struct ionic_dev *idev;
-    struct lif *lif;
-    unsigned int index;
-    void *base;
-    void *sg_base;
-    dma_addr_t base_pa;
-    dma_addr_t sg_base_pa;
-    struct desc_info *info;
-    struct desc_info *tail;
-    struct desc_info *head;
-    unsigned int num_descs;
-    unsigned int desc_size;
-    unsigned int sg_desc_size;
-    struct doorbell __iomem *db;
-    void *nop_desc;
-    unsigned int pid;
-    unsigned int qid;
-    unsigned int qtype;
-};
-
-struct qcq {
-    void *base;
-    dma_addr_t base_pa;
-    unsigned int total_size;
-    struct queue q;
-    struct cq cq;
-    unsigned int flags;
-};
-
-struct lif {
-    char name[LIF_NAME_MAX_SZ];
-    struct ionic *ionic;
-    unsigned int index;
-    struct qcq *adminqcq;
-    struct qcq *txqcqs;
-    struct qcq *rxqcqs;
-    struct io_buffer *rx_iobuf[NRXQ_DESC];
-};
-
-struct ionic_dev {
-    struct dev_cmd_regs __iomem *dev_cmd;
-    struct dev_cmd_db __iomem *dev_cmd_db;
-    struct doorbell __iomem *db_pages;
-    dma_addr_t phy_db_pages;
-    struct intr_ctrl __iomem *intr_ctrl;
-    struct intr_status __iomem *intr_status;
-    unsigned long *hbm_inuse;
-    dma_addr_t phy_hbm_pages;
-    u32 hbm_npages;
-};
-
-/** An ionic network card */
-struct ionic {
-    struct pci_dev *pdev;
-    struct platform_device *pfdev;
-    struct device *dev;
-    struct ionic_dev idev;
-    struct ionic_device_bar bars[IONIC_BARS_MAX];
-    unsigned int num_bars;
-    union identity *ident;
-    dma_addr_t ident_pa;
-    struct lif *ionic_lif;
-};
-
-/**
- * Function definitions
-**/
-//Probe Helper functions
-int ionic_setup(struct ionic *ionic);
-int ionic_dev_setup(struct ionic_dev *idev, struct ionic_device_bar bars[],
-            unsigned int num_bars);
-int ionic_identify(struct ionic *ionic);
-int ionic_lif_alloc(struct ionic *ionic, unsigned int index);
-int ionic_lif_init(struct net_device *netdev);
-void ionic_qcq_dealloc(struct qcq *qcq);
-
-//Netops helper functions
-int  ionic_qcq_enable(struct qcq *qcq);
-int  ionic_qcq_disable(struct qcq *qcq);
-int  ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode);
-
-void ionic_rx_flush(struct lif *lif);
-void ionic_rx_fill(struct net_device *netdev, int length);
-void ionic_poll_rx (struct net_device *netdev);
-void ionic_poll_tx (struct net_device *netdev);
-bool ionic_q_has_space(struct queue *q, unsigned int want);
-
-//helper functions from ionic_main
-int  ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
-void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index);
-char *ionic_dev_asic_name(u8 asic_type);
-void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
-void ionic_dev_cmd_reset(struct ionic_dev *idev);
-u8   ionic_dev_cmd_status(struct ionic_dev *idev);
-bool ionic_dev_cmd_done(struct ionic_dev *idev);
-void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
-void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
-                   unsigned int lif_index, unsigned int intr_index);
-void ionic_dev_cmd_station_get(struct ionic_dev *idev);
-void ionic_dev_cmd_rxq_init(struct ionic_dev *idev, struct queue *rxq);
-void ionic_enable_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx);
-void ionic_disable_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx);
-unsigned int ionic_q_space_avail(struct queue *q);
-#endif /* _IONIC_H */
+#endif /* _IONIC_IF_H_ */
