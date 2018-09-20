@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pensando/test-infra-tracker/types"
 )
 
 // minCoverage is the minimum expected coverage for a package
@@ -20,13 +22,25 @@ const (
 	failPrefix  = "--- FAIL:"
 	// report should not enforce coverage when there are no test files.
 	covIgnorePrefix = "[no test files]"
+	// only handle pensando/sw repo
+	swPkgPrefix = "github.com/pensando/sw/"
+	swBaseRepo  = "pensando/sw"
+	testbed     = "jobd-ci"
 )
 
-// ErrTestFailed errors out when there is a compilation failure or test assertions.
-var ErrTestFailed = errors.New("test execution failed")
+var (
+	// ErrTestFailed errors out when there is a compilation failure or test assertions.
+	ErrTestFailed = errors.New("test execution failed")
 
-// ErrTestCovFailed errors out when the coverage percent is < 75.0%
-var ErrTestCovFailed = errors.New("coverage tests failed")
+	// ErrTestCovFailed errors out when the coverage percent is < 75.0%
+	ErrTestCovFailed = errors.New("coverage tests failed")
+
+	errFailSend    = errors.New("failed to send test tracker report")
+	errNotBaseRepo = errors.New("not pensando/sw repo")
+
+	retryTrackerInterval = 5 * time.Second
+	retryTrackerCount    = 5
+)
 
 // TestReport summarizes all the targets. We capture only the failed tests.
 type TestReport struct {
@@ -60,6 +74,18 @@ func main() {
 
 	t.testCoveragePass()
 
+	// send result to testtracker only in jobd CI environment
+	if isJobdCI() {
+		trackerURL := os.Getenv("TRACKER_URL")
+		if trackerURL != "" {
+			if err := t.sendToTestTracker(trackerURL); err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			fmt.Println("TRACKER_URL environment variable is not defined")
+		}
+	}
+
 	if t.RunFailed {
 		t = t.filterFailedTests()
 		failedTests, _ := t.reportToJSON()
@@ -67,6 +93,15 @@ func main() {
 	}
 
 	fmt.Println(string(j))
+}
+
+func isJobdCI() bool {
+	fmt.Printf("JOB_REPOSITORY: %s, JOB_FORK_REPOSITORY: %s, JOB_BASE_REPOSITORY: %s, JOB_ID: %s, TARGET_ID: %s\n",
+		os.Getenv("JOB_REPOSITORY"), os.Getenv("JOB_FORK_REPOSITORY"), os.Getenv("JOB_BASE_REPOSITORY"),
+		os.Getenv("JOB_ID"), os.Getenv("TARGET_ID"))
+	return os.Getenv("JOB_ID") != "" &&
+		os.Getenv("TARGET_ID") != "" &&
+		os.Getenv("JOB_FORK_REPOSITORY") != ""
 }
 
 func (t *TestReport) filterFailedTests() TestReport {
@@ -174,4 +209,91 @@ func (tgt *Target) getCoveragePercent(b []byte) error {
 		}
 	}
 	return nil
+}
+
+func (t *TestReport) sendToTestTracker(trackerURL string) error {
+	if os.Getenv("JOB_FORK_REPOSITORY") != swBaseRepo {
+		return errNotBaseRepo
+	}
+
+	targetID, err := strconv.Atoi(os.Getenv("TARGET_ID"))
+	if err != nil {
+		return fmt.Errorf("while getting target ID: %v", err)
+	}
+
+	sha := "unknown"
+	title := "unknown"
+	content, err := exec.Command("git", "rev-parse", "--short", "HEAD").Output()
+	if err != nil {
+		return fmt.Errorf("while extracting sha: %v", err)
+	}
+	sha = string(content)
+
+	content, err = exec.Command("sh", "-c", `git log --format=%s -n 1 `+sha).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("while extracting log of sha: %v", err)
+	}
+	title = strings.TrimSpace(string(content))
+
+	cli, err := types.NewClient(trackerURL)
+	if err != nil {
+		return err
+	}
+
+	reports := types.Reports{
+		Repository: swBaseRepo,
+		Testbed:    testbed,
+		SHA:        sha,
+		SHATitle:   title,
+		TargetID:   int32(targetID),
+		Testcases:  []*types.Report{},
+	}
+	for _, tgt := range t.Results {
+		n := strings.TrimPrefix(tgt.Name, swPkgPrefix)
+		report := &types.Report{
+			Name:        n,
+			Description: n,
+			FinishTime:  time.Now(),
+			Coverage:    int32(tgt.Coverage),
+			LogURL:      fmt.Sprintf("http://jobd/logs/%d", targetID),
+		}
+		if tgt.FailedTests == nil && tgt.Error == "" {
+			report.Result = 1
+		} else {
+			report.Result = -1
+			report.Detail = tgt.Error
+		}
+		d, err := time.ParseDuration(tgt.Duration)
+		if err != nil {
+			// if error, set duration to 0
+			fmt.Printf("while converting %s's test duration to second: %v\n", tgt.Duration, err)
+			report.Duration = 0
+		} else {
+			report.Duration = int32(d.Seconds())
+		}
+
+		parts := strings.SplitN(strings.TrimPrefix(tgt.Name, swPkgPrefix), "/", 2)
+		report.Area = parts[0]
+		if len(parts) > 1 {
+			report.Subarea = parts[1]
+		}
+		reports.Testcases = append(reports.Testcases, report)
+	}
+
+	// send reports with 5 retry
+	for retry := 0; retry < retryTrackerCount; retry++ {
+		if err := cli.Report(&reports); err == nil {
+			return nil
+		} else if !strings.Contains(err.Error(), "connection timed out") &&
+			!strings.Contains(err.Error(), "connection refused") {
+			// retry only if connection failure, for example potential network issue, server restart
+			return err
+		} else {
+			fmt.Printf("while sending report: %v\n", err)
+		}
+
+		fmt.Printf("sleep and retry %d time\n", retry+1)
+		time.Sleep(retryTrackerInterval)
+	}
+	return errFailSend
 }

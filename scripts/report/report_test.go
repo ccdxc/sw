@@ -2,7 +2,17 @@ package main
 
 //
 import (
+	"encoding/json"
+	"fmt"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/pensando/test-infra-tracker/types"
 
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -129,10 +139,41 @@ func TestCoverageFail(t *testing.T) {
 	}
 	tr.testCoveragePass()
 	AssertEquals(t, true, tr.RunFailed, "expected the run to fail due to low coverage")
-
 }
-func TestFilterFailTests(t *testing.T) {
 
+func TestCoverageFailTracker(t *testing.T) {
+	if !isJobdCI() {
+		t.Skip("Skip because not in job-ci environment")
+	}
+
+	tr := TestReport{
+		Results: []*Target{
+			{
+				Name:     test,
+				Coverage: 45.0,
+				Error:    ErrTestCovFailed.Error(),
+			},
+		},
+	}
+
+	// testtracker should receive corresponding data
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		var rep types.Reports
+		AssertOk(t, json.NewDecoder(r.Body).Decode(&rep), "Could not parse tracker report")
+		AssertEquals(t, int32(-1), rep.Testcases[0].Result, "Receive wrong test case result")
+		AssertEquals(t, int32(45), rep.Testcases[0].Coverage, "Receive wrong test case coverage")
+		AssertEquals(t, ErrTestCovFailed.Error(), rep.Testcases[0].Detail, "Receive wrong test case detail")
+	}))
+	defer ts.Close()
+
+	jobRepoBak := os.Getenv("JOB_FORK_REPOSITORY")
+	AssertOk(t, os.Setenv("JOB_FORK_REPOSITORY", swBaseRepo), "Could not set environment variable")
+	AssertOk(t, tr.sendToTestTracker(strings.TrimPrefix(ts.URL, "http://")), "Could not send report to test tracker")
+	AssertOk(t, os.Setenv("JOB_FORK_REPOSITORY", jobRepoBak), "Could not set environment variable")
+}
+
+func TestFilterFailTests(t *testing.T) {
 	tr := TestReport{
 		RunFailed: true,
 		Results: []*Target{
@@ -152,6 +193,58 @@ func TestFilterFailTests(t *testing.T) {
 	AssertEquals(t, tr.RunFailed, tr2.RunFailed, "RunFailed should be same after filterFailedTests")
 	AssertEquals(t, len(tr2.Results), 1, "Only failed test should be present")
 	AssertEquals(t, tr.Results[0], tr2.Results[0], "Only failed test should be present")
+}
+
+func TestFilterFailTestsTracker(t *testing.T) {
+	if !isJobdCI() {
+		t.Skip("Skip because not in job-ci environment")
+	}
+
+	tr := TestReport{
+		RunFailed: true,
+		Results: []*Target{
+			{
+				Name:     "test",
+				Coverage: 45.0,
+				Error:    ErrTestCovFailed.Error(),
+			},
+			{
+				Name:     "test2",
+				Coverage: 88.0,
+				Error:    "",
+			},
+		},
+	}
+	// testtracker should receive corresponding data
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var rep types.Reports
+		AssertOk(t, json.NewDecoder(r.Body).Decode(&rep), "Could not parse tracker report")
+		AssertEquals(t, 2, len(rep.Testcases), "Receive wrong number of test case ")
+
+		foundtest := false
+		foundtest2 := false
+		for _, tc := range rep.Testcases {
+			if tc.Name == "test" {
+				foundtest = true
+				AssertEquals(t, int32(-1), tc.Result, "Receive wrong test case result")
+				AssertEquals(t, int32(45), tc.Coverage, "Receive wrong test case coverage")
+				AssertEquals(t, ErrTestCovFailed.Error(), tc.Detail, "Receive wrong test case detail")
+			}
+			if tc.Name == "test2" {
+				foundtest2 = true
+				AssertEquals(t, int32(1), tc.Result, "Receive wrong test case result")
+				AssertEquals(t, int32(88), tc.Coverage, "Receive wrong test case coverage")
+				AssertEquals(t, "", tc.Detail, "Receive wrong test case detail")
+			}
+		}
+		AssertEquals(t, true, foundtest, "test not found")
+		AssertEquals(t, true, foundtest2, "test2 not found")
+	}))
+
+	jobRepoBak := os.Getenv("JOB_FORK_REPOSITORY")
+	AssertOk(t, os.Setenv("JOB_FORK_REPOSITORY", swBaseRepo), "Could not set environment variable")
+	AssertOk(t, tr.sendToTestTracker(strings.TrimPrefix(ts.URL, "http://")), "Could not send report to test tracker")
+	AssertOk(t, os.Setenv("JOB_FORK_REPOSITORY", jobRepoBak), "Could not set environment variable")
 }
 
 func TestStdOutParsing(t *testing.T) {
@@ -181,16 +274,127 @@ func TestCoverageIgnore(t *testing.T) {
 	}
 	err := tgt.getCoveragePercent([]byte(testCovIgnoreNoTestFiles))
 	AssertOk(t, err, "coverage parsing expected to pass")
-	AssertEquals(t, 100.0, tgt.Coverage, "Expected coverage 100% for missing test files")
+	AssertEquals(t, 100.0, tgt.Coverage, "Expected coverage 100%% for missing test files")
 
 	tgt.Coverage = 0.0
 	err = tgt.getCoveragePercent([]byte(testCovIgnoreSkipped))
 	AssertOk(t, err, "coverage parsing expected to pass")
-	AssertEquals(t, 100.0, tgt.Coverage, "Expected coverage 100% for missing test files")
+	AssertEquals(t, 100.0, tgt.Coverage, "Expected coverage 100%% for missing test files")
 
 	tgt.Coverage = 0.0
 	err = tgt.getCoveragePercent([]byte(testCovIgnoreZeroCov))
 	AssertOk(t, err, "coverage parsing expected to pass")
-	AssertEquals(t, 100.0, tgt.Coverage, "Expected coverage 100% for missing test files")
+	AssertEquals(t, 100.0, tgt.Coverage, "Expected coverage 100%% for missing test files")
 
+}
+
+func TestTrackerBasic(t *testing.T) {
+	if !isJobdCI() {
+		t.Skip("Skip because not in job-ci environment")
+	}
+
+	tr := TestReport{
+		Results: []*Target{
+			{
+				Name: test,
+			},
+		},
+	}
+
+	tr.runCoverage()
+
+	// testtracker should receive data
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var rep types.Reports
+		AssertOk(t, json.NewDecoder(r.Body).Decode(&rep), "Could not parse tracker report")
+		AssertEquals(t, swBaseRepo, rep.Repository, "Receive wrong repo")
+		Assert(t, rep.TargetID != int32(0), "Receive wrong TargetID")
+		Assert(t, rep.SHA != "", "Receive wrong SHA")
+		Assert(t, rep.SHATitle != "", "Receive wrong SHA title")
+		AssertEquals(t, testbed, rep.Testbed, "Receive wrong testbed")
+		AssertEquals(t, 1, len(rep.Testcases), "Receive wrong number of test cases")
+		AssertEquals(t, "nic/agent/netagent/state", rep.Testcases[0].Name, "Receive wrong test case name")
+		AssertEquals(t, "nic/agent/netagent/state", rep.Testcases[0].Description, "Receive wrong test case description")
+		Assert(t, time.Now().Format("Mon Jan 2 -0700 MST 2006") == rep.Testcases[0].FinishTime.Format("Mon Jan 2 -0700 MST 2006"), "Receive wrong test case finish time")
+		AssertEquals(t, int32(tr.Results[0].Coverage), rep.Testcases[0].Coverage, "Receive wrong test case coverage")
+		AssertEquals(t, fmt.Sprintf("http://jobd/logs/%d", rep.TargetID), rep.Testcases[0].LogURL, "Receive wrong test case log url")
+		AssertEquals(t, int32(1), rep.Testcases[0].Result, "Receive wrong test case result")
+		AssertEquals(t, "nic", rep.Testcases[0].Area, "Receive wrong test case area")
+		AssertEquals(t, "agent/netagent/state", rep.Testcases[0].Subarea, "Receive wrong test case subarea")
+	}))
+	defer ts.Close()
+
+	u := strings.TrimPrefix(ts.URL, "http://")
+
+	jobRepoBak := os.Getenv("JOB_FORK_REPOSITORY")
+	targetIDBak := os.Getenv("TARGET_ID")
+	AssertOk(t, os.Unsetenv("JOB_FORK_REPOSITORY"), "Could not unset environment variable")
+	AssertOk(t, os.Unsetenv("TARGET_ID"), "Could not unset environment variable")
+	// empty job repo environment should not sent report
+	AssertEquals(t, errNotBaseRepo.Error(), tr.sendToTestTracker(u).Error(), "Could not check empty sw repo")
+
+	// non pensando/sw repo should report failure too
+	AssertOk(t, os.Setenv("JOB_FORK_REPOSITORY", "pensando/swtest"), "Could not set environment variable")
+
+	AssertEquals(t, errNotBaseRepo.Error(), tr.sendToTestTracker(u).Error(), "Could not check non sw repo")
+
+	AssertOk(t, os.Setenv("JOB_FORK_REPOSITORY", swBaseRepo), "Could not set environment variable")
+
+	// empty TARGET_ID should fail too
+	Assert(t, tr.sendToTestTracker(u) != nil, "Could not check empty target id")
+
+	AssertOk(t, os.Setenv("TARGET_ID", targetIDBak), "Could not set environment variable")
+	AssertOk(t, tr.sendToTestTracker(u), "Could not send report to test tracker")
+
+	AssertOk(t, os.Setenv("JOB_FORK_REPOSITORY", jobRepoBak), "Could not set environment variable")
+}
+
+func TestTrackerRetry(t *testing.T) {
+	if !isJobdCI() {
+		t.Skip("Skip because not in job-ci environment")
+	}
+
+	tr := TestReport{
+		RunFailed: true,
+		Results: []*Target{
+			{
+				Name:     "test",
+				Coverage: 45.0,
+				Error:    ErrTestCovFailed.Error(),
+			},
+		},
+	}
+
+	// reduce retryTimeout to speed up test
+	retryTrackerInterval = time.Second
+
+	// testtracker should receive corresponding data
+	ts := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	}))
+
+	u := "127.0.0.1:7890"
+
+	go func() {
+		// start http test server after 3 seconds
+		time.Sleep(3 * time.Second)
+		l, err := net.Listen("tcp", u)
+		AssertOk(t, err, "Could not listen on 127.0.0.1:7890")
+		ts.Listener = l
+		ts.Start()
+	}()
+
+	jobRepoBak := os.Getenv("JOB_FORK_REPOSITORY")
+	AssertOk(t, os.Setenv("JOB_FORK_REPOSITORY", swBaseRepo), "Could not set environment variable")
+	AssertOk(t, tr.sendToTestTracker(u), "Could not send report to test tracker")
+
+	// Not retry if server return error
+	ts2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "test failure", 500)
+	}))
+
+	err := tr.sendToTestTracker(strings.TrimPrefix(ts2.URL, "http://"))
+	Assert(t, err != nil, "Could receive failure without error")
+	AssertEquals(t, "test failure", err.Error(), "Could not receive expected failure reply")
+
+	AssertOk(t, os.Setenv("JOB_FORK_REPOSITORY", jobRepoBak), "Could not set environment variable")
 }

@@ -1593,6 +1593,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:38636af81bc2ba30882292a8833552f48064ade916d2e2e38e3b3ff348a33a66"
+  name = "github.com/pensando/test-infra-tracker"
+  packages = ["types"]
+  pruneopts = "NUT"
+  revision = "24051462d7f436829005b970f2efbc7228552f37"
+
+[[projects]]
+  branch = "master"
   digest = "1:07ac9135b7af2494c8178f8ba2b29aa6c9d53fb7ea343718d458cbcfec79bf73"
   name = "github.com/pensando/vic"
   packages = [
@@ -2476,7 +2484,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/GeertJohan/go.rice",
-    "github.com/GeertJohan/go.rice/embedded",
     "github.com/GeertJohan/go.rice/rice",
     "github.com/appc/cni/pkg/types",
     "github.com/appc/cni/pkg/version",
@@ -2586,6 +2593,7 @@
     "github.com/pensando/grpc-gateway/runtime",
     "github.com/pensando/grpc-gateway/third_party/googleapis/google/api",
     "github.com/pensando/grpc-gateway/utilities",
+    "github.com/pensando/test-infra-tracker/types",
     "github.com/pensando/vic/pkg/vsphere/simulator",
     "github.com/pensando/vic/pkg/vsphere/simulator/esx",
     "github.com/pkg/errors",

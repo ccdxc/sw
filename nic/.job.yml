@@ -73,7 +73,7 @@ targets:
   upgmgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all ; ret=$? ; exit $ret" ]
   delphi:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/delphi/...  && cd $GOPATH/src/github.com/pensando/sw && go test -v ./nic/delphi/...; ret=$? ; exit $ret" ]
   sysmgr:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && bazel build //nic/delphi/... && bazel build //nic/sysmgr/... && cd /sw/nic/sysmgr/test && ./test.sh; ret=$? ; exit $ret" ]
-  venice: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make checks && make unit-test-cover; ret=$? ; make sanity_logs ; exit $ret" ]
+  venice: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make checks && TRACKER_URL=\"tracker.test.pensando.io\" make unit-test-cover; ret=$? ; make sanity_logs ; exit $ret" ]
   # iris-c gtests
   filter/gtest:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make clean && make && make gtests-iris-c && ./run.py --filter_gtest --classic && ./run.py --filter_gtest ; ret=$? ; make sanity_logs ; exit $ret" ]
   sdk/newmake: ["sh", "-c", "cd /sw && make pull-assets && cd nic/sdk && make -j -f Makefile.nrmake && make ARCH=aarch64 -j -f Makefile.nrmake" ]
