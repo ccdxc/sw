@@ -4462,8 +4462,7 @@ static void ionic_v0_prep_base(struct ionic_qp *qp,
 	meta->ibsts = IB_WC_SUCCESS;
 	meta->signal = false;
 
-	/* XXX wqe wrid can be removed */
-	wqe->base.wrid = 0;
+	wqe->base.wrid = qp->sq.prod;
 
 	if (wr->send_flags & IB_SEND_FENCE)
 		wqe->base.fence = 1;
