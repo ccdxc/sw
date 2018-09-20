@@ -1,4 +1,5 @@
 #include "nic/hal/pd/utils/met/met.hpp"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "sdk/pal.hpp"
 #include "sdk/types.hpp"
 #include <gtest/gtest.h>
@@ -22,7 +23,23 @@ protected:
   virtual void TearDown() {
   }
 
+   // Will be called at the beginning of all test cases in this class
+   static void SetUpTestCase() {
+	   sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
+   }
+
 };
+
+typedef struct __attribute__((__packed__)) __p4_replication_data_t {
+    uint64_t rewrite_index:12;
+    uint64_t is_tunnel:1;
+    uint64_t is_qid:1;
+    uint64_t repl_type:2;
+    uint64_t qid_or_vnid:24;
+    uint64_t tunnel_rewrite_index:10;
+    uint64_t lport:11;
+    uint64_t qtype:3;
+} p4_replication_data_t;
 
 typedef struct __attribute__((__packed__)) hal_pd_replication_tbl_mbr_entry_s {
     uint64_t lif : 11;
@@ -35,10 +52,10 @@ typedef struct __attribute__((__packed__)) hal_pd_replication_tbl_mbr_entry_s {
 /* ---------------------------------------------------------------------------
  *
  * Test Case 1:
- *      - Test Case to verify the update 
+ *      - Test Case to verify the update
  *   - Create Met
  *   - Create Repl list
- *   - Add repl 
+ *   - Add repl
  *   - Rem repl
  *   - Delete Repl list
  */
@@ -49,8 +66,7 @@ TEST_F(met_test, test1) {
     std::string table_name = "Test_Table";
 	hal_pd_replication_tbl_mbr_entry_t entry;
 
-    sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
-    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6, 
+    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6,
                        sizeof(hal_pd_replication_tbl_mbr_entry_t));
 
     memset(&entry, 0, sizeof(entry));
@@ -88,7 +104,7 @@ TEST_F(met_test, test2) {
 	hal_pd_replication_tbl_mbr_entry_t entry;
 
     memset(&entry, 0, sizeof(entry));
-    Met *test_met = Met::factory(table_name, (uint32_t)1, 100, 6, 
+    Met *test_met = Met::factory(table_name, (uint32_t)1, 100, 6,
                        sizeof(entry));
 
     for (int i = 1; i < 100; i++) {
@@ -130,7 +146,7 @@ TEST_F(met_test, test3) {
 	hal_pd_replication_tbl_mbr_entry_t entry;
 
     memset(&entry, 0, sizeof(entry));
-    Met *test_met = Met::factory(table_name, (uint32_t)1, 100, 6, 
+    Met *test_met = Met::factory(table_name, (uint32_t)1, 100, 6,
                        sizeof(entry));
 
     rs = test_met->create_repl_list(&tmp_idx);
@@ -157,7 +173,7 @@ TEST_F(met_test, test4) {
 	hal_pd_replication_tbl_mbr_entry_t entry;
 
     memset(&entry, 0, sizeof(entry));
-    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6, 
+    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6,
                        sizeof(hal_pd_replication_tbl_mbr_entry_t));
 
     test_met->create_repl_list(&repl_list_idx);
@@ -184,43 +200,89 @@ TEST_F(met_test, test4) {
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
-/* ---------------------------------------------------------------------------
- *
- * Test Case 5:
- *      - Test Case to verify more than 6 replications
- *   - Create Met
- */
-TEST_F(met_test, test5) {
+bool met_print_iterate(uint32_t repl_list_idx, Met *met, const void *cb_data)
+{
+    char buff[8192];
 
-    hal_ret_t rs = HAL_RET_OK;
-    uint32_t repl_list_idx;
-    std::string table_name = "Test_Table";
-	hal_pd_replication_tbl_mbr_entry_t entry;
+    met->repl_list_to_str(repl_list_idx, buff, 8192);
 
-    memset(&entry, 0, sizeof(entry));
-    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6, 
-                       sizeof(hal_pd_replication_tbl_mbr_entry_t));
+    HAL_TRACE_DEBUG("Repl List: \n{}", buff);
 
-    test_met->create_repl_list(&repl_list_idx);
-    ASSERT_TRUE(rs == HAL_RET_OK);
-
-	entry.lif = 10;
-	entry.encap_id = 100;
-    for (int i = 0; i < 100; i++) {
-        HAL_TRACE_DEBUG("Adding Repl entry: {}", i);
-        rs = test_met->add_replication(repl_list_idx, &entry);
-        ASSERT_TRUE(rs == HAL_RET_OK);
-    }
-
-    for (int i = 0; i < 100; i++) {
-        HAL_TRACE_DEBUG("Deleting Repl entry: {}", i);
-        rs = test_met->del_replication(repl_list_idx, &entry);
-        ASSERT_TRUE(rs == HAL_RET_OK);
-    }
-
-	rs = test_met->delete_repl_list(repl_list_idx);
-    ASSERT_TRUE(rs == HAL_RET_OK);
+    return false;
 }
+
+const char *
+repl_type_to_str(uint32_t type)
+{
+    switch(type) {
+        case TM_REPL_TYPE_DEFAULT: return "DEFAULT";
+        case TM_REPL_TYPE_TO_CPU_REL_COPY: return "CPU_REL_COPY";
+        case TM_REPL_TYPE_HONOR_INGRESS: return "HON_ING";
+        default: return "INVALID";
+    }
+}
+
+uint32_t repl_entry_data_to_str(void *repl_entry_data,
+                                char *buff, uint32_t buff_size)
+{
+    uint32_t b = 0;
+    p4_replication_data_t *data = (p4_replication_data_t *)repl_entry_data;
+
+    b = snprintf(buff, buff_size, "\n\t\tType: %s, lport: %lu,"
+                 "(is_qid: %lu, qid/vnid: %lu), rw_idx: %lu,"
+                 "is_tunnel: %lu, tnnl_rw_index: %lu,"
+                 "qtype: %lu",
+                 repl_type_to_str(data->repl_type),
+                 data->lport,
+                 data->is_qid,
+                 data->qid_or_vnid,
+                 data->rewrite_index,
+                 data->is_tunnel,
+                 data->tunnel_rewrite_index,
+                 data->qtype);
+
+    return b;
+}
+
+
+ /* ---------------------------------------------------------------------------
+  *
+  * Test Case 5:
+  *      - Test Case to verify more than 6 replications
+  *   - Create Met
+  */
+ TEST_F(met_test, test5) {
+
+     hal_ret_t rs = HAL_RET_OK;
+     uint32_t repl_list_idx;
+     std::string table_name = "Test_Table";
+     hal_pd_replication_tbl_mbr_entry_t entry;
+
+     memset(&entry, 0, sizeof(entry));
+     Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6,
+                        sizeof(hal_pd_replication_tbl_mbr_entry_t));
+
+     test_met->create_repl_list(&repl_list_idx);
+     ASSERT_TRUE(rs == HAL_RET_OK);
+
+     entry.lif = 10;
+     entry.encap_id = 100;
+     for (int i = 0; i < 100; i++) {
+         HAL_TRACE_DEBUG("Adding Repl entry: {}", i);
+         rs = test_met->add_replication(repl_list_idx, &entry);
+         ASSERT_TRUE(rs == HAL_RET_OK);
+     }
+
+     for (int i = 0; i < 100; i++) {
+         HAL_TRACE_DEBUG("Deleting Repl entry: {}", i);
+         rs = test_met->del_replication(repl_list_idx, &entry);
+         ASSERT_TRUE(rs == HAL_RET_OK);
+     }
+
+     rs = test_met->delete_repl_list(repl_list_idx);
+     ASSERT_TRUE(rs == HAL_RET_OK);
+ }
+
 
 /* ---------------------------------------------------------------------------
  *
@@ -236,7 +298,7 @@ TEST_F(met_test, test6) {
 	hal_pd_replication_tbl_mbr_entry_t entry;
 
     memset(&entry, 0, sizeof(entry));
-    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6, 
+    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6,
                        sizeof(hal_pd_replication_tbl_mbr_entry_t));
 
     test_met->create_repl_list(&repl_list_idx);
@@ -276,7 +338,7 @@ TEST_F(met_test, test7) {
 	hal_pd_replication_tbl_mbr_entry_t entry;
 
     memset(&entry, 0, sizeof(entry));
-    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6, 
+    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6,
                        sizeof(hal_pd_replication_tbl_mbr_entry_t));
 
     test_met->create_repl_list(&repl_list_idx);
@@ -320,7 +382,7 @@ TEST_F(met_test, test8) {
 	hal_pd_replication_tbl_mbr_entry_t entry;
 
     memset(&entry, 0, sizeof(entry));
-    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6, 
+    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6,
                        sizeof(hal_pd_replication_tbl_mbr_entry_t));
 
     test_met->create_repl_list(&repl_list_idx);
@@ -369,8 +431,62 @@ TEST_F(met_test, test8) {
                     test_met->table_num_deletes(), test_met->table_num_delete_errors());
 
 }
+
+/* ---------------------------------------------------------------------------
+ *
+ * Test Case 9:
+ *      - Test Case to verify iterate and to str
+ */
+TEST_F(met_test, test9) {
+
+    hal_ret_t rs = HAL_RET_OK;
+    uint32_t repl_list_idx;
+    std::string table_name = "Test_Table";
+    p4_replication_data_t entry;
+
+    memset(&entry, 0, sizeof(entry));
+    Met *test_met = Met::factory(table_name, (uint32_t)1, 64000, 6,
+                       sizeof(p4_replication_data_t),
+                       50,
+                       NULL,
+                       repl_entry_data_to_str);
+
+    test_met->create_repl_list(&repl_list_idx);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+	entry.lport = 10;
+	entry.qid_or_vnid = 100;
+    for (int i = 0; i < 10; i++) {
+        HAL_TRACE_DEBUG("Adding Repl entry: {}", i);
+        rs = test_met->add_replication(repl_list_idx, &entry);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+    }
+
+    // Met to String
+    test_met->iterate(met_print_iterate, NULL);
+
+    for (int i = 0; i < 10; i++) {
+        HAL_TRACE_DEBUG("Deleting Repl entry: {}", i);
+        rs = test_met->del_replication(repl_list_idx, &entry);
+        ASSERT_TRUE(rs == HAL_RET_OK);
+    }
+
+	rs = test_met->delete_repl_list(repl_list_idx);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+
 int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
+    std::string logfile;
+
+    ::testing::InitGoogleTest(&argc, argv);
+
+    logfile = std::string("./hal.log");
+    hal::utils::trace_init("hal", 0x3, true,
+                            logfile.c_str(),
+                            hal::utils::trace_debug);
+
+    HAL_TRACE_DEBUG("Starting Main ... ");
+
   return RUN_ALL_TESTS();
 }
 

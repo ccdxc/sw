@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -165,7 +166,8 @@ func tableDumpShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.TableGet(context.Background(), tableReqMsg)
 	if err != nil {
-		log.Errorf("Getting VRF failed. %v", err)
+		log.Errorf("Getting Table failed. %v", err)
+		os.Exit(1)
 	}
 
 	// Print Header
@@ -319,6 +321,7 @@ func tableShowOneResp(resp *halproto.TableResponse) {
 	} else if resp.GetFlowTable() != nil {
 		tableFlowShow(resp)
 	} else if resp.GetMetTable() != nil {
+		tableMetShow(resp)
 	} else {
 	}
 }
@@ -383,6 +386,24 @@ func tableFlowShow(resp *halproto.TableResponse) {
 	}
 
 	for _, entry := range flowMsg.GetFlowEntry() {
+		// All or specific entry ID
+		if !tableEntryIDSpecified || (tableEntryID == entry.GetIndex()) {
+			fmt.Printf("Index: %d\n", entry.GetIndex())
+			fmt.Printf("-----------\n")
+			fmt.Printf("%s\n", entry.GetEntry())
+		}
+	}
+}
+
+func tableMetShow(resp *halproto.TableResponse) {
+	metMsg := resp.GetMetTable()
+
+	if len(metMsg.GetMetEntry()) == 0 {
+		fmt.Printf("No elements programmed\n")
+		return
+	}
+
+	for _, entry := range metMsg.GetMetEntry() {
 		// All or specific entry ID
 		if !tableEntryIDSpecified || (tableEntryID == entry.GetIndex()) {
 			fmt.Printf("Index: %d\n", entry.GetIndex())

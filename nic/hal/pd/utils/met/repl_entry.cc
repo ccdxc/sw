@@ -30,7 +30,7 @@ ReplEntry::factory(void *data, uint32_t data_len, uint32_t mtrack_id)
 // Method to free & delete the object
 //---------------------------------------------------------------------------
 void
-ReplEntry::destroy(ReplEntry *re, uint32_t mtrack_id) 
+ReplEntry::destroy(ReplEntry *re, uint32_t mtrack_id)
 {
     if (re) {
         re->~ReplEntry();
@@ -61,6 +61,22 @@ ReplEntry::~ReplEntry()
 {
     // ::operator delete(data_);
     HAL_FREE(HAL_MEM_ALLOC_MET_REPL_ENTRY_DATA, data_);
+}
+
+
+hal_ret_t
+ReplEntry::entry_to_str(met_repl_entry_to_str_func_t to_str_func,
+                        char **buff, uint32_t *buff_size)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    uint32_t  buff_used = 0;
+
+    buff_used = to_str_func(data_, *buff, *buff_size);
+
+    *buff += buff_used;
+    *buff_size -= buff_used;
+
+    return ret;
 }
 
 // ----------------------------------------------------------------------------

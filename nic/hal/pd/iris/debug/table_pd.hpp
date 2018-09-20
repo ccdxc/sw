@@ -28,6 +28,10 @@ typedef struct pd_flow_entry_cb_s {
     TableFlowMsg *msg;
 } pd_flow_entry_cb_t;
 
+typedef struct pd_met_entry_cb_s {
+    TableMetMsg *msg;
+} pd_met_entry_cb_t;
+
 } // namespace pd
 } // namespace hal
 

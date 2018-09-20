@@ -198,6 +198,30 @@ ReplTableEntry::deprogram_table()
     return rs;
 }
 
+hal_ret_t
+ReplTableEntry::entry_to_str(char **buff, uint32_t *buff_size)
+{
+    hal_ret_t       rs = HAL_RET_ENTRY_NOT_FOUND;
+    ReplEntry       *re = NULL;
+    uint32_t        b = 0;
+
+    b = snprintf(*buff, *buff_size, "\n\tRTE: Idx: %d, Next_idx: %d, #Repls: %d => ",
+                 repl_table_index_, next_ ? next_->get_repl_table_index() : -1,
+                 num_repl_entries_);
+
+    *buff += b;
+    *buff_size -= b;
+
+    re = first_repl_entry_;
+    while (re) {
+        re->entry_to_str(repl_list_->get_met()->get_repl_entry_to_str_func(),
+                         buff, buff_size);
+        re = re->get_next();
+    }
+
+    return rs;
+}
+
 // ----------------------------------------------------------------------------
 // Trace Replication Table Entry
 // ----------------------------------------------------------------------------

@@ -86,10 +86,13 @@ message L2segmentStatusCpd {
 message L2SegmentStatus {
   fixed64                   l2segment_handle    = 1;    // id of the L2 segment returned by HAL
   uint32                    vrf_id              = 2;    // TODO REMOVE DOL ONLY - hw vrf id
+  uint32                    bcast_idx           = 3;    // Bcast replication list
+  uint32                    mcast_idx           = 4;    // Mcast replication list
+  uint32                    prom_idx            = 5;    // Prom replication list
   // TODO - add vNICs/uplinks this vlan is up on
   oneof l2seg_status {
-      L2segmentStatusEpd    epd_info            = 3;    // L2seg oper state for enterprise pipeline
-      L2segmentStatusCpd    cpd_info            = 4;    // L2seg oper state for cloud pipeline
+      L2segmentStatusEpd    epd_info            = 6;    // L2seg oper state for enterprise pipeline
+      L2segmentStatusCpd    cpd_info            = 7;    // L2seg oper state for cloud pipeline
   }
 }
 

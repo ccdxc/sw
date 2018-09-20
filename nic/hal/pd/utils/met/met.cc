@@ -11,7 +11,8 @@ Met *
 Met::factory(std::string table_name, uint32_t table_id,
              uint32_t repl_table_capacity, uint32_t num_repl_entries,
              uint32_t repl_entry_data_len, uint32_t mtrack_id,
-             table_health_monitor_func_t health_monitor_func)
+             table_health_monitor_func_t health_monitor_func,
+             met_repl_entry_to_str_func_t repl_entry_str_func)
 {
     void        *mem = NULL;
     Met   *met = NULL;
@@ -22,7 +23,8 @@ Met::factory(std::string table_name, uint32_t table_id,
     }
 
     met = new (mem) Met(table_name, table_id, repl_table_capacity,
-                        num_repl_entries, repl_entry_data_len, health_monitor_func);
+                        num_repl_entries, repl_entry_data_len, health_monitor_func,
+                        repl_entry_str_func);
 
     HAL_TRACE_DEBUG("met: table_name: {}, tableid: {}, repl_table_capacity:{}"
                     "num_repl_entries:{}, repl_entry_data_len:{}",
@@ -50,13 +52,17 @@ Met::destroy(Met *met, uint32_t mtrack_id)
 Met::Met(std::string table_name, uint32_t table_id,
          uint32_t repl_table_capacity, uint32_t max_num_repls_per_entry,
          uint32_t repl_entry_data_len,
-         table_health_monitor_func_t health_monitor_func)
+         table_health_monitor_func_t health_monitor_func,
+         met_repl_entry_to_str_func_t repl_entry_str_func)
 {
     table_name_                 = table_name;
     table_id_                   = table_id;
     repl_table_capacity_        = repl_table_capacity;
     max_num_repls_per_entry_    = max_num_repls_per_entry;
     repl_entry_data_len_        = repl_entry_data_len;
+    health_monitor_func_        = health_monitor_func;
+    repl_entry_str_func_        = repl_entry_str_func;
+
 
     // repl_table_indexer_         = new indexer(repl_table_capacity_, TRUE, TRUE);
 #if 0
@@ -570,6 +576,47 @@ Met::table_num_delete_errors(void)
     return stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
 }
 
+//---------------------------------------------------------------------------
+// Met iterate
+//---------------------------------------------------------------------------
+hal_ret_t
+Met::iterate(met_iterate_func_t cb, const void *cb_data)
+{
+    for (std::map<uint32_t, ReplList*>::iterator it = repl_list_map_.begin();
+            it != repl_list_map_.end(); ++it) {
+        cb(it->first, this, cb_data);
+    }
+
+    return HAL_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// Entry to string
+// ----------------------------------------------------------------------------
+hal_ret_t
+Met::repl_list_to_str(uint32_t repl_list_idx, char *buff, uint32_t buff_size)
+{
+    hal_ret_t               rs = HAL_RET_OK;
+    ReplList                *rep_list = NULL;
+    ReplListMap::iterator   itr;
+
+    // Get Repl. List
+    itr = repl_list_map_.find(repl_list_idx);
+    if (itr == repl_list_map_.end()) {
+        rs = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+
+    memset(buff, 0, buff_size);
+
+    rep_list = itr->second;
+
+    rep_list->entry_to_str(buff, buff_size);
+
+end:
+    return rs;
+
+}
 
 // ----------------------------------------------------------------------------
 // Trace Met

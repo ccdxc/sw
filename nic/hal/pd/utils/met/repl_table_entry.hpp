@@ -25,7 +25,7 @@ class ReplTableEntry {
 
 private:
 
-    uint32_t        repl_table_index_;		// idx in repl. table	
+    uint32_t        repl_table_index_;		// idx in repl. table
     ReplList        *repl_list_;			// back ptr to repl. list
 
     uint32_t        num_repl_entries_;		// number of repl entries
@@ -37,10 +37,10 @@ private:
     ReplTableEntry(uint32_t repl_table_index, ReplList *repl_list);
     ~ReplTableEntry();
 public:
-    static ReplTableEntry *factory(uint32_t repl_table_index, 
-                                   ReplList *repl_list, 
+    static ReplTableEntry *factory(uint32_t repl_table_index,
+                                   ReplList *repl_list,
                                    uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_TABLE_ENTRY);
-    static void destroy(ReplTableEntry *rte, 
+    static void destroy(ReplTableEntry *rte,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_TABLE_ENTRY);
 
     // Getters & Setters
@@ -62,6 +62,7 @@ public:
     hal_ret_t program_table();
     hal_ret_t deprogram_table();
     hal_ret_t trace_repl_tbl_entry();
+    hal_ret_t entry_to_str(char **buff, uint32_t *buff_size);
 };
 
 }   // utils

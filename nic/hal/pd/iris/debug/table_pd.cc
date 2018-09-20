@@ -299,6 +299,45 @@ pd_table_flow_get_entries (uint32_t table_id, TableResponse *rsp)
     return ret;
 }
 
+// Met
+bool pd_table_met_entry(uint32_t repl_list_idx,
+                        Met *met, const void *cb_data)
+{
+    char buff[8192];
+    pd_met_entry_cb_t *cb = (pd_met_entry_cb_t*)cb_data;
+    TableMetMsg *msg = cb->msg;
+    TableMetEntry *entry = msg->add_met_entry();
+
+
+    met->repl_list_to_str(repl_list_idx, buff,
+                          sizeof(buff));
+
+    HAL_TRACE_DEBUG("Entry: {}", buff);
+
+    entry->set_index(repl_list_idx);
+    entry->set_entry(buff);
+
+    return true;
+}
+
+
+hal_ret_t
+pd_table_met_get_entries (uint32_t table_id, TableResponse *rsp)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    pd_met_entry_cb_t cb = {0};
+    TableMetMsg *msg = rsp->mutable_met_table();
+    Met *met = NULL;
+
+    met = g_hal_state_pd->met_table();
+    HAL_ASSERT_RETURN((met != NULL), HAL_RET_ERR);
+    cb.msg = msg;
+
+    met->iterate(pd_table_met_entry, &cb);
+
+    return ret;
+}
+
 hal_ret_t
 pd_table_get (pd_func_args_t *pd_func_args)
 {
@@ -345,6 +384,11 @@ pd_table_get (pd_func_args_t *pd_func_args)
             }
             break;
         case table::TABLE_MET:
+            ret = pd_table_met_get_entries(key.table_id(), rsp);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to get entries of table id: {}",
+                              key.table_id());
+            }
             break;
         default:
             // do nothing

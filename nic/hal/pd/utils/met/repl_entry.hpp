@@ -3,6 +3,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
+#include "nic/hal/pd/utils/met/met.hpp"
 
 namespace hal {
 namespace pd {
@@ -29,7 +30,7 @@ private:
 public:
     static ReplEntry *factory(void *data, uint32_t data_len,
                               uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_ENTRY);
-    static void destroy(ReplEntry *re, 
+    static void destroy(ReplEntry *re,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_ENTRY);
 
     // Getters & Setters
@@ -45,6 +46,8 @@ public:
 
     // Methods:
     hal_ret_t trace_repl_entry();
+    hal_ret_t entry_to_str(met_repl_entry_to_str_func_t to_str_func,
+                           char **buff, uint32_t *buff_size);
 
 };
 

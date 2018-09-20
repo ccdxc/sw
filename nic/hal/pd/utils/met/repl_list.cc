@@ -378,6 +378,33 @@ end:
     return rs;
 }
 
+hal_ret_t
+ReplList::entry_to_str(char *buff, uint32_t buff_size)
+{
+    hal_ret_t       rs = HAL_RET_OK;
+    ReplTableEntry  *repl_te = NULL;
+    uint32_t        b = 0;
+
+    // Add num. of repl table entries to buff and reduce buff_size
+    b = snprintf(buff, buff_size, "Repl_list: %d, #Repl_table_entries: %d, "
+                 "Attached_repl_idx: %d",
+                 repl_tbl_index_,
+                 num_repl_tbl_entries_,
+                 attached_list_idx_);
+
+    buff += b;
+    buff_size -= b;
+
+    repl_te = first_repl_tbl_entry_;
+    while (repl_te) {
+        repl_te->entry_to_str(&buff, &buff_size);
+        repl_te = repl_te->get_next();
+    }
+
+    return rs;
+
+}
+
 // ----------------------------------------------------------------------------
 // Trace Replication List
 // ----------------------------------------------------------------------------

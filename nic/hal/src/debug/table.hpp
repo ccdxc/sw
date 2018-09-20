@@ -29,6 +29,8 @@ using table::TableHashMsg;
 using table::TableHashEntry;
 using table::TableFlowMsg;
 using table::TableFlowEntry;
+using table::TableMetMsg;
+using table::TableMetEntry;
 
 namespace hal {
 

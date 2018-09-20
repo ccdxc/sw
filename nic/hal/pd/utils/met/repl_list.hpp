@@ -36,7 +36,7 @@ private:
 public:
     static ReplList *factory(uint32_t repl_tbl_index, Met *met,
                              uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_LIST);
-    static void destroy(ReplList *repl_list, 
+    static void destroy(ReplList *repl_list,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_MET_REPL_LIST);
 
     // Getters & Setters
@@ -56,6 +56,7 @@ public:
     hal_ret_t attach_to_repl_list(ReplList *list);
     hal_ret_t detach_frm_repl_list(void);
 
+    hal_ret_t entry_to_str(char *buff, uint32_t buff_size);
     hal_ret_t trace_repl_list();
 };
 

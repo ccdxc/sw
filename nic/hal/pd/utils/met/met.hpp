@@ -25,10 +25,16 @@ namespace hal {
 namespace pd {
 namespace utils {
 
-
+class Met;
 class ReplList;
 
 typedef std::map<uint32_t, ReplList*> ReplListMap;
+
+typedef uint32_t (*met_repl_entry_to_str_func_t)(void *repl_entry_data,
+                                                 char *buff, uint32_t buff_size);
+
+typedef bool (*met_iterate_func_t)(uint32_t repl_list_idx, Met *met,
+                                   const void *cb_data);
 
 /** ---------------------------------------------------------------------------
   *
@@ -62,6 +68,7 @@ private:
     indexer                     *repl_table_indexer_;    // repl table indexer
     table_health_state_t        health_state_;  // health state
     table_health_monitor_func_t health_monitor_func_;   // health mon. cb
+    met_repl_entry_to_str_func_t repl_entry_str_func_;   // repl. entry to str func
 
     ReplListMap     repl_list_map_;
 
@@ -83,7 +90,8 @@ private:
     Met(std::string table_name, uint32_t table_id,
         uint32_t repl_table_capacity, uint32_t num_repl_entries,
         uint32_t repl_entry_data_len,
-        table_health_monitor_func_t health_monitor_func = NULL);
+        table_health_monitor_func_t health_monitor_func = NULL,
+        met_repl_entry_to_str_func_t repl_entry_str_func = NULL);
     ~Met();
 
 public:
@@ -91,7 +99,8 @@ public:
                         uint32_t repl_table_capacity, uint32_t num_repl_entries,
                         uint32_t repl_entry_data_len,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_MET,
-                        table_health_monitor_func_t health_monitor_func = NULL);
+                        table_health_monitor_func_t health_monitor_func = NULL,
+                        met_repl_entry_to_str_func_t repl_entry_str_func = NULL);
     static void destroy(Met *met,
                         uint32_t mtrack_id = HAL_MEM_ALLOC_MET);
 
@@ -112,6 +121,7 @@ public:
     // Getters & Setters
     uint32_t get_repl_entry_data_len() { return repl_entry_data_len_; }
     uint32_t get_max_num_repls_per_entry() { return max_num_repls_per_entry_; }
+    met_repl_entry_to_str_func_t get_repl_entry_to_str_func() { return repl_entry_str_func_; }
     // Methods
     hal_ret_t create_repl_list(uint32_t *repl_list_idx);
     hal_ret_t create_repl_list_with_id(uint32_t repl_list_idx);
@@ -122,6 +132,8 @@ public:
     hal_ret_t delete_repl_list_block(uint32_t repl_list_idx, uint32_t size);
     hal_ret_t attach_repl_lists(uint32_t frm_list_idx, uint32_t to_list_idx);
     hal_ret_t detach_repl_lists(uint32_t frm_list_idx);
+    hal_ret_t iterate(met_iterate_func_t cb, const void *cb_data);
+    hal_ret_t repl_list_to_str(uint32_t repl_list_idx, char *buff, uint32_t buff_size);
 
     hal_ret_t alloc_repl_table_index(uint32_t *idx);
     hal_ret_t free_repl_table_index(uint32_t idx);

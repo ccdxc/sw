@@ -5,6 +5,7 @@
 #include "nic/hal/pd/iris/firewall/nwsec_pd.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 #include "nic/hal/pd/iris/mcast/multicast_pd.hpp"
+#include "nic/hal/pd/iris/mcast/repl_decode.hpp"
 #include "nic/hal/pd/iris/lif/lif_pd.hpp"
 #include "nic/hal/pd/iris/nw/endpoint_pd.hpp"
 #include "nic/hal/pd/iris/nw/uplinkif_pd.hpp"
@@ -820,7 +821,8 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                               CAPRI_REPL_NUM_P4_ENTRIES_PER_NODE,
                               P4_REPL_ENTRY_WIDTH,
                               HAL_MEM_ALLOC_MET,
-                              table_health_monitor);
+                              table_health_monitor,
+                              repl_entry_data_to_str);
     HAL_ASSERT(met_table_ != NULL);
 
     // for debugging

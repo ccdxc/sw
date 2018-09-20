@@ -97,6 +97,8 @@ func l2segShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 	respMsg, err := client.L2SegmentGet(context.Background(), l2segGetReqMsg)
 	if err != nil {
 		log.Errorf("Getting L2Seg failed. %v", err)
+		c.Close()
+		os.Exit(1)
 	}
 
 	// Print Header
@@ -219,12 +221,12 @@ func l2segShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("Id:            L2seg's ID                            Handle:      L2seg Handle\n")
 	fmt.Printf("vrfId:         L2segs's VRF Id                       WireEncap:   Wire encap type/value\n")
 	fmt.Printf("TunnelEncap:   Tunnel encap type/value               MFP:         Multicast fwd. policy\n")
-	fmt.Printf("BFP:           Broadcast fwd. policy                 #EPs:        Num. of EPs in L2seg\n")
-	fmt.Printf("IFs:           Member Interfaces\n")
+	fmt.Printf("BFP:           Broadcast fwd. policy                 BMP:         Bcast, Mcast, Prom Repl indices\n")
+	fmt.Printf("#EPs:        Num. of EPs in L2seg                    IFs:         Member Interfaces\n")
 	hdrLine := strings.Repeat("-", 110)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-15s%-15s%-10s%-10s%-10s%-20s\n",
-		"Id", "Handle", "vrfId", "WireEncap", "TunnelEncap", "MFP", "BFP", "#EPs", "IFs")
+	fmt.Printf("%-10s%-10s%-10s%-15s%-15s%-10s%-10s%-15s%-10s%-20s\n",
+		"Id", "Handle", "vrfId", "WireEncap", "TunnelEncap", "MFP", "BFP", "B-M-P", "#EPs", "IFs")
 	fmt.Println(hdrLine)
 }
 
@@ -234,6 +236,7 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	weStr := ""
 	teStr := ""
 	encapType := ""
+	replIndices := ""
 
 	if len(ifList) > 0 {
 		for i := 0; i < len(ifList); i++ {
@@ -261,13 +264,19 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 			resp.GetSpec().GetTunnelEncap().GetEncapValue())
 	}
 
-	fmt.Printf("%-10d%-10d%-10d%-15s%-15s%-10s%-10s%-10d%-20s\n",
+	replIndices = fmt.Sprintf("%d-%d-%d",
+		resp.GetStatus().GetBcastIdx(),
+		resp.GetStatus().GetMcastIdx(),
+		resp.GetStatus().GetPromIdx())
+
+	fmt.Printf("%-10d%-10d%-10d%-15s%-15s%-10s%-10s%-15s%-10d%-20s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		resp.GetStatus().GetL2SegmentHandle(),
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
 		weStr, teStr,
 		mcastFwdPolToStr(resp.GetSpec().GetMcastFwdPolicy()),
 		bcastFwdPolToStr(resp.GetSpec().GetBcastFwdPolicy()),
+		replIndices,
 		resp.GetStats().GetNumEndpoints(),
 		ifStr)
 

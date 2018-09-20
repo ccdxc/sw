@@ -169,8 +169,8 @@ message TableFlowMsg {
 }
 
 message TableMetEntry {
-  fixed32   index                       = 1;
-  fixed32   table_index                 = 2;
+  fixed32 index                         = 1;
+  string  entry                         = 2;
 }
 
 message TableMetMsg {
