@@ -1392,9 +1392,11 @@ int HalClient::CreateMR(uint64_t lif_id, uint32_t pd, uint64_t va, uint64_t leng
     spec->set_rkey(r_key);
     spec->set_hostmem_pg_size(page_size);
 
+    /*
     for (int i = 0; i < (int)pt_size; i++) {
         spec->add_va_pages_phy_addr(pt_table[i] | (1ULL << 63) | ((uint64_t)lif_id << 52));
     }
+    */
 
     Status status = rdma_stub_->RdmaMemReg(&context, request, &response);
     if (status.ok()) {
@@ -1429,10 +1431,12 @@ int HalClient::CreateCQ(uint32_t lif_id,
     spec->set_num_cq_wqes(num_cq_wqes);
     spec->set_hostmem_pg_size(host_page_size);
 
+    /*
     //Set the va to pa translations.
     for (int i = 0; i < (int)pt_size; i++) {
         spec->add_cq_va_pages_phy_addr(pt_table[i] | (1ULL << 63) | ((uint64_t)lif_id << 52));
     }
+    */
     
     Status status = rdma_stub_->RdmaCqCreate(&context, request, &response);
     if (status.ok()) {
@@ -1483,9 +1487,11 @@ int HalClient::CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
     spec->set_rq_cq_num(rq_cq_num);
     spec->set_num_sq_pages(sq_pt_size);
 
+    /*
     for (uint32_t i = 0; i < pt_size; i++) {
         spec->add_va_pages_phy_addr(pt_table[i] | (1ULL << 63) | ((uint64_t)lif_id << 52));
     }
+    */
 
     Status status = rdma_stub_->RdmaQpCreate(&context, request, &response);
     if (status.ok()) {

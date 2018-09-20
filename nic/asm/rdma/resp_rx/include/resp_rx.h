@@ -246,7 +246,8 @@ struct resp_rx_lkey_to_pt_info_t {
     sge_index: 3;
     log_page_size: 5;
     dma_cmdeop: 1;
-    rsvd: 2;
+    rsvd: 1;
+    host_addr: 1;
     override_lif_vld: 1;
     override_lif: 12;
     pad: 64;

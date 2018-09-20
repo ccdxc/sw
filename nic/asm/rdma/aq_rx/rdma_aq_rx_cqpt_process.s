@@ -35,6 +35,8 @@ rdma_aq_rx_cqpt_process:
     sll             PAGE_ADDR_P, PAGE_ADDR_P, CAPRI_LOG_SIZEOF_U64_BITS
 
     tblrdp.dx       PAGE_ADDR_P, PAGE_ADDR_P, 0, CAPRI_SIZEOF_U64_BITS
+    or              PAGE_ADDR_P, PAGE_ADDR_P, 1,  63
+    or              PAGE_ADDR_P, PAGE_ADDR_P, K_GLOBAL_LIF, 52
     
     // Lets cache the translated page physical address
     // *cq_cb->pt_next_pa = page_addr_p

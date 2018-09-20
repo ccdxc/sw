@@ -971,9 +971,10 @@ struct key_entry_t {
     base_va: 64;
     pt_base: 32;
     pd: 32;
+    host_addr: 1;
     override_lif_vld: 1;
     override_lif: 12;
-    rsvd1: 19;
+    rsvd1: 18;
     flags: 8;
     qp: 24; //qp which bound the MW ?
     mr_l_key: 32;
@@ -992,9 +993,10 @@ struct key_entry_aligned_t {
     base_va: 64;
     pt_base: 32;
     pd: 32;
+    host_addr: 1;
     override_lif_vld: 1;
     override_lif: 12;
-    rsvd1: 19;
+    rsvd1: 18;
     flags: 8;
     qp: 24; //qp which bound the MW ?
     mr_l_key: 32;

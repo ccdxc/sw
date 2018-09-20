@@ -71,12 +71,16 @@ message RdmaQpSpec {
   uint32                   sq_cq_num       = 18;   // SQ's CQ Number
   bool                     immdt_as_dbell  = 19;   // Use immdt data to ring dbell
   bool                     sq_in_nic_memory= 20;   // Allocate SQ in NIC Memory
-  bool                     rq_in_nic_memory= 21;   // Allocate RQ in NIC Memory
-  fixed64                  if_handle       = 22;   // EP's/ENIC's interface
+  // if sq_in_nic_memory and sq_base_addr == NULL, HAL will allocate
+  uint64                   sq_base_addr    = 21;   
+  bool                     rq_in_nic_memory= 22;   // Allocate RQ in NIC Memory
+  // if rq_in_nic_memory and rq_base_addr == NULL, HAL will allocate
+  uint64                   rq_base_addr    = 23;   
+  fixed64                  if_handle       = 24;   // EP's/ENIC's interface
                                                    // handle
-  repeated uint64          va_pages_phy_addr = 23;  // Virtual memory pages's
+  repeated uint64          va_pages_phy_addr = 25;  // Virtual memory pages's
                                                        // phy addr
-  uint32                   num_sq_pages      = 24;  // rq num PT entries
+  uint32                   num_sq_pages      = 26;  // rq num PT entries
   //repeated uint64          rq_va_pages_phy_addr = 25;  // Virtual memory pages's
                                                        // phy addr
   //uint32                   num_rq_pages      = 26;  // rq num PT entries
@@ -254,7 +258,8 @@ message RdmaMemRegSpec {
   uint32                   hostmem_pg_size = 12;   // Host Memory Page Size
   uint32                   override_lif    = 13;   // Override LIF value
   bool                     override_lif_vld  = 14; // Override LIF valid
-  repeated uint64          va_pages_phy_addr = 15;  // Virtual memory pages's phy addr     
+  bool                     host_addr         = 15; // Host/NIC Address
+  repeated uint64          va_pages_phy_addr = 16;  // Virtual memory pages's phy addr     
 }
 
 // RdmaMemRegRequestMsg is batched request used to create/update of Rdma QPs

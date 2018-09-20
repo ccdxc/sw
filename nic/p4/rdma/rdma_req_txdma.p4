@@ -463,7 +463,7 @@ header_type req_tx_to_stage_dcqcn_bind_mw_info_t {
         header_template_addr_or_pd       : 32; 
         packet_len                       : 14;
         congestion_mgmt_enable           : 1; 
-        rsvd                             : 1;
+        host_addr                        : 1;
         spec_cindex                      : 16;
         mr_l_key                         : 32; 
         mr_cookie                        : 32; 
@@ -1712,6 +1712,7 @@ action req_tx_bind_mw_rkey_process_s4 () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s4_dcqcn_bind_mw_info_scr.host_addr, to_s4_dcqcn_bind_mw_info.host_addr);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.mr_l_key, to_s4_dcqcn_bind_mw_info.mr_l_key);
     modify_field(to_s4_dcqcn_bind_mw_info_scr.mr_cookie, to_s4_dcqcn_bind_mw_info.mr_cookie);
 

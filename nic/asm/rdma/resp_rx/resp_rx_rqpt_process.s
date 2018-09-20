@@ -29,6 +29,8 @@ resp_rx_rqpt_process:
     sll     r3, r3, CAPRI_LOG_SIZEOF_U64_BITS
     //big-endian
     tblrdp.dx  r3, r3, 0, CAPRI_SIZEOF_U64_BITS
+    or         r3, r3, 1, 63
+    or         r3, r3, K_GLOBAL_LIF, 52
 
     // wqe_p = (void *)(*page_addr_p + rqcb_to_pt_info_p->page_offset);
     add     r3, r3, IN_PAGE_OFFSET

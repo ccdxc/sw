@@ -240,9 +240,10 @@ typedef struct key_entry_s {
     uint32_t         mr_l_key;
     uint32_t         qp: 24; //qp which bound the MW ?
     uint8_t          flags;
-    uint32_t         rsvd1: 19;
+    uint32_t         rsvd1: 18;
     uint32_t         override_lif: 12;
     uint32_t         override_lif_vld: 1;
+    uint32_t         host_addr: 1;
     uint32_t         pd;
     uint32_t         pt_base;
     uint64_t         base_va;
@@ -947,26 +948,26 @@ typedef enum rdma_qp_state_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t   rsvd_cb1_flags: 4;
-    uint8_t   frpmr_in_progress: 1;
-    uint8_t   need_credits: 1;
-    uint8_t   in_progress: 1;
-    uint8_t   cb1_busy: 1;
+    uint8_t  rsvd_cb1_flags: 4;
+    uint8_t  frpmr_in_progress: 1;
+    uint8_t  need_credits: 1;
+    uint8_t  in_progress: 1;
+    uint8_t  cb1_busy: 1;
 
-    uint16_t  busy: 1;        //tx
-    uint16_t  li_fence:1;
-    uint16_t  fence:1;
-    uint16_t  color: 1;
-    uint16_t  poll_in_progress: 1;
-    uint16_t  retry_timer_on: 1;
-    uint16_t  bktrack_in_progress:1;
-    uint16_t  dcqcn_rl_failure:1;
+    uint16_t busy: 1;        //tx
+    uint16_t li_fence:1;
+    uint16_t fence:1;
+    uint16_t color: 1;
+    uint16_t poll_in_progress: 1;
+    uint16_t retry_timer_on: 1;
+    uint16_t bktrack_in_progress:1;
+    uint16_t dcqcn_rl_failure:1;
 
-    uint16_t  rsvd_stage_flags: 8;
+    uint16_t rsvd_stage_flags: 8;
 
     uint8_t  num_sges;
     uint8_t  current_sge_id;
-    uint32_t  current_sge_offset;
+    uint32_t current_sge_offset;
     uint64_t curr_wqe_ptr;
 
     uint16_t spec_sq_cindex: 16;

@@ -73,6 +73,8 @@ req_tx_bind_mw_sqlkey_process:
     phvwrpair  CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
                CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, mr_cookie), d.mr_cookie
 
+    phvwr      CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, host_addr), d.host_addr
+
     KT_BASE_ADDR_GET2(r1, r2)
     add            r2, K_R_KEY, r0
     KEY_ENTRY_ADDR_GET(r1, r1, r2)

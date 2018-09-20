@@ -752,6 +752,7 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
         lkey_entry_p->override_lif_vld = 1;
         lkey_entry_p->override_lif = spec.override_lif();
     }
+    lkey_entry_p->host_addr = spec.host_addr();
 
     lkey_entry_p->type = MR_TYPE_MR;
     lkey_entry_p->mr_l_key = 0;
@@ -874,6 +875,7 @@ rdma_memory_window_alloc (RdmaMemWindowSpec& spec, RdmaMemWindowResponse *rsp)
         rkey_entry_p->override_lif_vld = 1;
         rkey_entry_p->override_lif = spec.override_lif();
     }
+    //rkey_entry_p->host_addr = spec.host_addr();
 
     rkey_entry_p->type = spec.mw_type();
     // If unspecified MW type, then allow both type_1 and type_2
@@ -1132,9 +1134,11 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     HAL_TRACE_DEBUG("{}: Inputs: sq_cq_id: {} rq_cq_id: {}", __FUNCTION__,
                     spec.sq_cq_num(), spec.rq_cq_num());
     HAL_TRACE_DEBUG("{}: Inputs: atomic_enabled: {} immdt_as_dbell: {}, "
-                    "sq_in_nic: {}, rq_in_nic: {}", __FUNCTION__,
+                    "sq_in_nic: {}, sq_base_addr: {}, "
+                    "rq_in_nic: {}, rq_base_addr: {}", __FUNCTION__,
                     spec.atomic_enabled(), spec.immdt_as_dbell(),
-                    spec.sq_in_nic_memory(), spec.rq_in_nic_memory());
+                    spec.sq_in_nic_memory(), spec.sq_base_addr(), 
+                    spec.rq_in_nic_memory(), spec.rq_base_addr());
 
     // allocate sq and rq
     sqwqe_size = roundup_to_pow_2(spec.sq_wqe_size());
@@ -1166,11 +1170,15 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     if (spec.sq_in_nic_memory()) {
         sqcb_p->sqcb0.sq_in_hbm = 1;
         sq_size = num_sq_wqes * sqwqe_size;
-        hbm_sq_base_addr = g_rdma_manager->HbmAlloc(sq_size);
-        HAL_ASSERT(hbm_sq_base_addr);
-        HAL_ASSERT(hbm_sq_base_addr != (uint32_t)-ENOMEM);
-        // Make sure hbm_sq_base_addr is 8 byte aligned
-        HAL_ASSERT(hbm_sq_base_addr % 8 == 0);
+        if (spec.sq_base_addr()) {
+            hbm_sq_base_addr = spec.sq_base_addr();
+        } else {
+            hbm_sq_base_addr = g_rdma_manager->HbmAlloc(sq_size);
+            HAL_ASSERT(hbm_sq_base_addr);
+            HAL_ASSERT(hbm_sq_base_addr != (uint32_t)-ENOMEM);
+            // Make sure hbm_sq_base_addr is 8 byte aligned
+            HAL_ASSERT(hbm_sq_base_addr % 8 == 0);
+        }
         sqcb_p->sqcb0.hbm_sq_base_addr = hbm_sq_base_addr >> HBM_SQ_BASE_ADDR_SHIFT;
     } else {
         sqcb_p->sqcb0.sq_in_hbm = 0;
@@ -1277,12 +1285,16 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     if (spec.rq_in_nic_memory()) {
         rqcb_p->rqcb0.rq_in_hbm = 1;
         rqcb_p->rqcb1.rq_in_hbm = 1;
-        rq_size = num_rq_wqes * rqwqe_size;
-        hbm_rq_base_addr = g_rdma_manager->HbmAlloc(rq_size);
-        HAL_ASSERT(hbm_rq_base_addr);
-        HAL_ASSERT(hbm_rq_base_addr != (uint32_t)-ENOMEM);
-        // Make sure hbm_rq_base_addr is 8 byte aligned
-        HAL_ASSERT(hbm_rq_base_addr % 8 == 0);
+        if (spec.rq_base_addr()) {
+            hbm_rq_base_addr = spec.rq_base_addr();
+        } else {
+            rq_size = num_rq_wqes * rqwqe_size;
+            hbm_rq_base_addr = g_rdma_manager->HbmAlloc(rq_size);
+            HAL_ASSERT(hbm_rq_base_addr);
+            HAL_ASSERT(hbm_rq_base_addr != (uint32_t)-ENOMEM);
+            // Make sure hbm_rq_base_addr is 8 byte aligned
+            HAL_ASSERT(hbm_rq_base_addr % 8 == 0);
+        }
         rqcb_p->rqcb0.hbm_rq_base_addr = hbm_rq_base_addr >> HBM_RQ_BASE_ADDR_SHIFT;
         rqcb_p->rqcb1.hbm_rq_base_addr = rqcb_p->rqcb0.hbm_rq_base_addr;
     } else {

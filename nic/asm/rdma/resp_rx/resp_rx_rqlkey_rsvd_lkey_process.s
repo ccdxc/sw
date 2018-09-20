@@ -39,8 +39,9 @@ resp_rx_rqlkey_rsvd_lkey_process:
     // r1 has DMA_CMD_BASE
 
     //STORAGE_USE_CASE
-    seq                 c1, d.override_lif_vld, 1
-    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c1, CAPRI_KEY_FIELD(IN_P, len), K_VA, c1, d.override_lif)
+    crestore            [c1], d.{override_lif_vld}, 0x1
+    //Always assume resvered lkey based address to be of host_addr
+    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c0, CAPRI_KEY_FIELD(IN_P, len), K_VA, c1, d.override_lif)
     
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS 
 

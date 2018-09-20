@@ -22,6 +22,7 @@ struct key_entry_aligned_t d;
 #define K_MR_L_KEY         CAPRI_KEY_RANGE(IN_TO_S_P, mr_l_key_sbit0_ebit7, mr_l_key_sbit24_ebit31)
 #define K_MR_COOKIE        CAPRI_KEY_RANGE(IN_TO_S_P, mr_cookie_sbit0_ebit7, mr_cookie_sbit16_ebit31)
 #define K_PD               CAPRI_KEY_FIELD(IN_TO_S_P, header_template_addr_or_pd)
+#define K_HOST_ADDR        CAPRI_KEY_FIELD(IN_TO_S_P, host_addr)
 
 %%
 
@@ -90,6 +91,7 @@ update_key:
     tblwr          d.qp, K_GLOBAL_QID
     tblwr          d.mr_l_key, K_MR_L_KEY
     tblwr          d.mr_cookie, K_MR_COOKIE
+    tblwr          d.host_addr, K_HOST_ADDR
     or             r1, r0, K_ZBVA, LOG_MR_FLAG_ZBVA
     tblor.e        d.flags, r1
     

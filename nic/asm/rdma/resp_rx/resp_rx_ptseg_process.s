@@ -72,8 +72,8 @@ transfer_loop:
     bcf                 [IS_ATOMIC], atomic
     
     //STORAGE_USE_CASE
-    seq                 OVERRIDE_LIF_VLD, CAPRI_KEY_FIELD(IN_P, override_lif_vld), 1 //BD Slot
-    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c1, DMA_BYTES, DMA_ADDR, OVERRIDE_LIF_VLD, CAPRI_KEY_RANGE(IN_P, override_lif_sbit0_ebit3, override_lif_sbit4_ebit11))
+    crestore            [c2, c1], CAPRI_KEY_RANGE(IN_P, host_addr, override_lif_vld), 0x3 //BD Slot
+    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c2, DMA_BYTES, DMA_ADDR, OVERRIDE_LIF_VLD, CAPRI_KEY_RANGE(IN_P, override_lif_sbit0_ebit3, override_lif_sbit4_ebit11))
     
     add                 PAGE_OFFSET, r0, r0
     sub                 TRANSFER_BYTES, TRANSFER_BYTES, DMA_BYTES

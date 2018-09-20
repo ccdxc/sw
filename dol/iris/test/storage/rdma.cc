@@ -519,6 +519,12 @@ void CreateInitiatorQP() {
   rq->set_sq_cq_num(0);
   rq->set_immdt_as_dbell(true);
 
+  rq->set_sq_in_nic_memory(true);
+  rq->set_sq_base_addr(initiator_sq_va->pa());
+  rq->set_rq_in_nic_memory(true);
+  rq->set_rq_base_addr(initiator_rq_va->pa());
+
+#if 0
   uint32_t size_done = 0;
   uint32_t num_sq_pages = 0;
   while (size_done < roce_sq_mem_reg_size) {
@@ -534,6 +540,7 @@ void CreateInitiatorQP() {
   }
 
   rq->set_num_sq_pages(num_sq_pages);
+#endif
   
   grpc::ClientContext context;
   auto status = rdma_stub->RdmaQpCreate(&context, req, &resp);
@@ -559,6 +566,12 @@ void CreateTargetQP() {
   rq->set_sq_cq_num(1);
   rq->set_immdt_as_dbell(true);
 
+  rq->set_sq_in_nic_memory(true);
+  rq->set_sq_base_addr(target_sq_va->pa());
+  rq->set_rq_in_nic_memory(true);
+  rq->set_rq_base_addr(target_rq_va->pa());
+
+#if 0
   uint32_t size_done = 0;
   uint32_t num_sq_pages = 0;
   while (size_done < roce_sq_mem_reg_size) {
@@ -574,6 +587,7 @@ void CreateTargetQP() {
   }
 
   rq->set_num_sq_pages(num_sq_pages);
+#endif
   
   grpc::ClientContext context;
   auto status = rdma_stub->RdmaQpCreate(&context, req, &resp);

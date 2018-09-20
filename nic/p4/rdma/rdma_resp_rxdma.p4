@@ -218,7 +218,8 @@ header_type resp_rx_lkey_to_pt_info_t {
         sge_index                        :    3;
         log_page_size                    :    5;
         dma_cmdeop                       :    1;
-        rsvd                             :    2;
+        rsvd                             :    1;
+        host_addr                        :    1;
         override_lif_vld                 :    1;
         override_lif                     :   12;
         pad                              :   64 ;
@@ -1340,6 +1341,7 @@ action resp_rx_ptseg_process () {
     modify_field(t0_s2s_lkey_to_pt_info_scr.log_page_size, t0_s2s_lkey_to_pt_info.log_page_size);
     modify_field(t0_s2s_lkey_to_pt_info_scr.dma_cmdeop, t0_s2s_lkey_to_pt_info.dma_cmdeop);
     modify_field(t0_s2s_lkey_to_pt_info_scr.rsvd, t0_s2s_lkey_to_pt_info.rsvd);
+    modify_field(t0_s2s_lkey_to_pt_info_scr.host_addr, t0_s2s_lkey_to_pt_info.host_addr);
     modify_field(t0_s2s_lkey_to_pt_info_scr.override_lif_vld, t0_s2s_lkey_to_pt_info.override_lif_vld);
     modify_field(t0_s2s_lkey_to_pt_info_scr.override_lif, t0_s2s_lkey_to_pt_info.override_lif);
     modify_field(t0_s2s_lkey_to_pt_info_scr.pad, t0_s2s_lkey_to_pt_info.pad);

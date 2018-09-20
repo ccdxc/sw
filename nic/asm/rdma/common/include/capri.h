@@ -988,13 +988,12 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
     phvwrp._cf  _base_r, offsetof(DMA_CMD_PKT2MEM_T, host_addr), sizeof(DMA_CMD_PKT2MEM_T.host_addr), 1; \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, cmdtype), sizeof(DMA_CMD_PKT2MEM_T.cmdtype), DMA_CMD_TYPE_PKT2MEM;
 
-#define DMA_PKT2MEM_SETUP_OVERRIDE_LIF(_base_r, _cf, _size, _addr, _cf_override_lif, _override_lif) \
+#define DMA_PKT2MEM_SETUP_OVERRIDE_LIF(_base_r, _cf_host_addr, _size, _addr, _cf_override_lif, _override_lif) \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, size), sizeof(DMA_CMD_PKT2MEM_T.size), _size; \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, addr), sizeof(DMA_CMD_PKT2MEM_T.addr), _addr; \
     phvwrp._cf_override_lif    _base_r, offsetof(DMA_CMD_PKT2MEM_T, use_override_lif), sizeof(DMA_CMD_PKT2MEM_T.use_override_lif), 1; \
     phvwrp._cf_override_lif    _base_r, offsetof(DMA_CMD_PKT2MEM_T, override_lif), sizeof(DMA_CMD_PKT2MEM_T.override_lif), _override_lif; \
-    seq         _cf, _addr[63], 1; \
-    phvwrp._cf  _base_r, offsetof(DMA_CMD_PKT2MEM_T, host_addr), sizeof(DMA_CMD_PKT2MEM_T.host_addr), 1; \
+    phvwrp._cf_host_addr       _base_r, offsetof(DMA_CMD_PKT2MEM_T, host_addr), sizeof(DMA_CMD_PKT2MEM_T.host_addr), 1; \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, cmdtype), sizeof(DMA_CMD_PKT2MEM_T.cmdtype), DMA_CMD_TYPE_PKT2MEM;
 
 #define DMA_HBM_PKT2MEM_SETUP(_base_r, _size, _addr) \

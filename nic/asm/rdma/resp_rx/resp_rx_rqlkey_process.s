@@ -132,7 +132,8 @@ invoke_pt:
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_offset, PT_OFFSET)
     CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, pt_bytes, sge_index, CAPRI_KEY_RANGE(IN_P, len, tbl_id))
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, d.log_page_size)
-    CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, override_lif_vld, override_lif, d.{override_lif_vld...override_lif})
+    //host_addr, override_lif_vld, override_lif
+    CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, host_addr, override_lif, d.{host_addr...override_lif})
 
 skip_pt:
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS 

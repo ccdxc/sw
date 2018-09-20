@@ -55,6 +55,7 @@ class MrObject(base.ConfigObjectBase):
         req_spec.lkey = self.lkey
         req_spec.rkey = self.rkey
         req_spec.hostmem_pg_size = self.slab.page_size
+        req_spec.host_addr = 1
         req_spec.va_pages_phy_addr[:] = self.slab.phy_address
         self.Show()
 
