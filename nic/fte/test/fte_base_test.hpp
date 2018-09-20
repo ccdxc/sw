@@ -5,6 +5,7 @@
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
+#include "nic/gen/proto/hal/telemetry.pb.h"
 #include "nic/gen/proto/hal/nic.pb.h"
 #include "nic/hal/plugins/cfg/nw/nic.hpp"
 #include "nic/include/fte_ctx.hpp"
@@ -68,6 +69,7 @@ public:
             bool                          has_alg_opts;
             hal::alg_opts                 alg_opt;
         } app;
+        telemetry::MonitorAction mon_action;
     };
 	
     static uint32_t myrandom(uint32_t i) { return std::rand()%i;}
@@ -90,6 +92,8 @@ public:
         
 
     static hal_handle_t add_nwsec_policy(hal_handle_t vrfh, std::vector<v4_rule_t> &rules);
+
+    static hal_handle_t add_flowmon_policy(hal_handle_t vrfh, std::vector<v4_rule_t> &rules);
 
     static hal_handle_t add_nat_pool(hal_handle_t vrfh,
                                      uint32_t v4_addr, uint8_t prefix_len);
@@ -283,10 +287,26 @@ protected:
 
 private:
     static uint32_t vrf_id_, l2seg_id_, intf_id_, nwsec_id_, nh_id_, pool_id_;
+    static uint64_t flowmon_rule_id_;
     static bool ipc_logging_disable_;
     static std::map<hal_handle_t, ep_info_t> eps;
     static std::vector<dev_handle_t> handles;
 };
+
+#define CHECK_MIRROR_ACTION(dep, sep, dst_port, src_port, msg) {                   \
+        hal_ret_t ret;                                                         \
+        Tins::TCP tcp = Tins::TCP(dst_port, src_port);                         \
+        tcp.flags(Tins::TCP::SYN);                                             \
+        tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));                 \
+        tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));                     \
+        tcp.mss(1200);                                                         \
+        ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep, tcp);             \
+        EXPECT_EQ(ret, HAL_RET_OK)<< msg;                                      \
+        EXPECT_NE(ctx_.session(), nullptr)<< msg;                              \
+        EXPECT_NE(ctx_.session()->iflow, nullptr)<< msg;                       \
+        EXPECT_NE(ctx_.session()->rflow, nullptr)<< msg;                       \
+        EXPECT_EQ(ctx_.session()->iflow->config.ing_mirror_session, 2)<< msg;             \
+    }
 
 #define CHECK_ALLOW_TCP(dep, sep, dst_port, src_port, msg) {                   \
         hal_ret_t ret;                                                         \

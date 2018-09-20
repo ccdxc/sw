@@ -225,6 +225,7 @@ flowkey2str (const flow_key_t& key)
     return buf;
 }
 
+//------------------------------------------------------------------------------
 // extract mirror sessions specified in spec into ingress and egress bitmaps
 //------------------------------------------------------------------------------
 static hal_ret_t

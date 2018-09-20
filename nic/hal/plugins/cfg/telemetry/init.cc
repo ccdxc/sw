@@ -31,7 +31,7 @@ svc_reg (ServerBuilder *server_builder, hal::hal_feature_set_t feature_set)
 
 // initialization routine for telemetry module
 extern "C" hal_ret_t
-telemetry_init (hal_cfg_t *hal_cfg)
+telemetrycfg_init (hal_cfg_t *hal_cfg)
 {
     svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
     return HAL_RET_OK;
@@ -39,7 +39,7 @@ telemetry_init (hal_cfg_t *hal_cfg)
 
 // cleanup routine for mcast module
 extern "C" void
-telemetry_exit (void)
+telemetrycfg_exit (void)
 {
 }
 

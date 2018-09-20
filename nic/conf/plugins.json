@@ -209,13 +209,23 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
+            "name"      : "telemetrycfg",
+            "provider"  : "pensando.io",
+            "lib"       : "telemetry/libtelemetrycfg.so",
+            "init_func" : "telemetrycfg_init",
+            "exit_func" : "telemetrycfg_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
             "name"      : "telemetry",
             "provider"  : "pensando.io",
             "lib"       : "telemetry/libtelemetry.so",
             "init_func" : "telemetry_init",
             "exit_func" : "telemetry_exit",
             "auto_load" : "true",
-            "deps"      : ["pensando.io/nw"]
+            "deps"      : ["pensando.io/nw"],
+            "features"  : ["telemetry"]
         },
         {
             "name"      : "mcast",

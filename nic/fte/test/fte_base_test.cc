@@ -27,6 +27,7 @@ uint32_t fte_base_test::intf_id_ = 0;
 uint32_t fte_base_test::nwsec_id_ = 0;
 uint32_t fte_base_test::nh_id_ = 0;
 uint32_t fte_base_test::pool_id_ = 0;
+uint64_t fte_base_test::flowmon_rule_id_ = 0;
 fte::ctx_t fte_base_test::ctx_ = {};
 bool  fte_base_test::ipc_logging_disable_ = false;
 std::vector<dev_handle_t> fte_base_test::handles;
@@ -255,6 +256,56 @@ hal_handle_t fte_base_test::add_nwsec_policy(hal_handle_t vrfh, std::vector<fte_
     EXPECT_EQ(ret, HAL_RET_OK);
 
     return resp.policy_status().security_policy_handle();
+}
+
+hal_handle_t fte_base_test::add_flowmon_policy(hal_handle_t vrfh, std::vector<fte_base_test::v4_rule_t> &rules)
+{
+    hal_ret_t ret;
+    telemetry::FlowMonitorRuleSpec                      spec;
+    telemetry::FlowMonitorRuleResponse                  resp;
+
+    hal::vrf_t *vrf = hal::vrf_lookup_by_handle(vrfh);
+    EXPECT_NE(vrf, nullptr);
+
+    spec.mutable_key_or_handle()->set_flowmonitorrule_id(++flowmon_rule_id_);
+    spec.mutable_vrf_key_handle()->set_vrf_id(vrf->vrf_id);
+
+    for (auto &rule: rules) {
+        types::RuleMatch *match = spec.mutable_match();
+        *(spec.mutable_action()) = rule.mon_action;
+
+        if (rule.to.addr) {
+            types::IPPrefix *prefix = match->add_dst_address()->
+                mutable_address()->mutable_prefix()->mutable_ipv4_subnet();
+
+            prefix->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+            prefix->mutable_address()->set_v4_addr(rule.to.addr);
+            prefix->set_prefix_len(rule.to.plen ?: 32);
+        }
+
+        if (rule.from.addr) {
+            types::IPPrefix *prefix = match->add_src_address()->
+                mutable_address()->mutable_prefix()->mutable_ipv4_subnet();
+            prefix->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+            prefix->mutable_address()->set_v4_addr(rule.from.addr);
+            prefix->set_prefix_len(rule.from.plen ?: 32);
+        }
+
+        types::L4PortRange *dport_range = match->mutable_app_match()->mutable_port_info()->add_dst_port_range();
+        dport_range->set_port_low(rule.app.dport_low);
+        dport_range->set_port_high(rule.app.dport_high);
+
+        if (rule.app.proto) {
+            match->set_protocol((types::IPProtocol)rule.app.proto);
+        }
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::flow_monitor_rule_create(spec, &resp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    return resp.status().handle();
 }
 
 hal_handle_t fte_base_test::add_route(hal_handle_t vrfh,

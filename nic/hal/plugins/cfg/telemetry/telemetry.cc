@@ -434,17 +434,22 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
     if (spec.has_action()) {
         if ((spec.action().action(0) == telemetry::MIRROR) ||
             (spec.action().action(0) == telemetry::MIRROR_TO_CPU)) {
+            HAL_TRACE_DEBUG("Action: {}", spec.action().action(0));
             /* Mirror action */
             int n = spec.action().ms_key_handle_size();
             for (int i = 0; i < n; i++) {
                 rule->action.mirror_destinations[i] = spec.action().ms_key_handle(i).mirrorsession_id();
+                HAL_TRACE_DEBUG("Mirror Destinations[{}]: {}", i,
+                               rule->action.mirror_destinations[i]);
             }
             rule->action.num_mirror_dest = n;
+            HAL_TRACE_DEBUG("Num mirror dest: {}", n);
             n = spec.action().action_size();
             if (n != 0) {
                 // Only one action for mirroring
                 rule->action.mirror_to_cpu = (spec.action().action(0) ==
                                            telemetry::MIRROR_TO_CPU) ? true : false;
+                HAL_TRACE_DEBUG("Mirror to cpu: {}", rule->action.mirror_to_cpu);
             }
         }
         if (spec.action().action(0) == telemetry::COLLECT_FLOW_STATS) {
@@ -470,6 +475,7 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
                 rule->action.collectors[i] = spec.collector_key_handle(i).collector_id();
             }
             rule->action.num_collector = n;
+            HAL_TRACE_DEBUG("Collect action: num_collectors {}", n);
         }
     }
     return ret;
@@ -480,7 +486,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
 {
     uint32_t            rule_id;
     hal_ret_t           ret = HAL_RET_OK;
-    flow_monitor_rule_t *rule;
+    flow_monitor_rule_t *rule = NULL;
     const acl_ctx_t     *flowmon_acl_ctx;
 
     HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
@@ -508,6 +514,8 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
         /* Create a new acl context */
         flowmon_acl_ctx = hal::rule_lib_init(flowmon_acl_ctx_name(rule->vrf_id),
                                              &flowmon_rule_config_glbl);
+        HAL_TRACE_DEBUG("Creating new ACL ctx for vrf {} id {}", 
+                         flowmon_acl_ctx_name(rule->vrf_id), rule->vrf_id);
     }
     ret = populate_flow_monitor_rule(spec, rule);
     if (ret != HAL_RET_OK) {
@@ -521,10 +529,20 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
         HAL_TRACE_ERR("Rule match add failed: ruleid {}", spec.key_or_handle().flowmonitorrule_id());
         goto end;
     }
-
     rsp->set_api_status(types::API_STATUS_OK);
-
+    
 end:
+    if (flowmon_acl_ctx) {
+        ret = acl::acl_commit(flowmon_acl_ctx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("ACL commit fail vrf {} id {}",
+                       flowmon_acl_ctx_name(spec.vrf_key_handle().vrf_id()),
+                       spec.vrf_key_handle().vrf_id());
+            rsp->set_api_status(types::API_STATUS_ERR);
+            goto end;
+        }
+        acl::acl_deref(flowmon_acl_ctx);
+    }
     return ret;
 }
 
@@ -570,6 +588,7 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
                               (void *)&rule->ref_count);
     flow_mon_rules[rule_id] = NULL;
     flow_monitor_rule_free(rule);
+    acl::acl_deref(flowmon_acl_ctx);
 
 end:
     return ret;

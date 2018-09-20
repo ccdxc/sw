@@ -17,7 +17,7 @@ cc_library(
 )
 
 cc_library(
-    name = "telemetry",
+    name = "telemetrycfg",
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.hpp"]),
     deps = [

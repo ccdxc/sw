@@ -136,7 +136,7 @@ cc_library(
         "//nic/hal/plugins/cfg/tls_proxy:tls_proxy",
         "//nic:liblif",
         "//nic/hal/plugins/cfg/mcast:mcast",
-        "//nic/hal/plugins/cfg/telemetry:telemetry",
+        "//nic/hal/plugins/cfg/telemetry:telemetrycfg",
         "//nic/hal/plugins/cfg/dos:dos",
         "//nic/hal/plugins/cfg/l4lb:l4lb",
 

@@ -534,8 +534,9 @@ ctx_t::update_flow_table()
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
                         "nat_dip={} nat_sport={} nat_dport={} nat_type={} is_ing_proxy_mirror={} "
-                        "is_eg_proxy_mirror={} slif_en={} slif={} qos_class_en={} "
-                        "qos_class_id={} is_proxy_en={} is_proxy_mcast={}",
+                        "is_eg_proxy_mirror={} ing_mirror_session={} eg_mirror_session={} "
+                        "slif_en={} slif={} qos_class_en={} qos_class_id={} "
+                        "is_proxy_en={} is_proxy_mcast={}",
                         stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_attrs.vrf_hwid,
                         iflow_cfg.action, iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
@@ -544,6 +545,7 @@ ctx_t::update_flow_table()
                         iflow_attrs.tnnl_rw_idx, iflow_attrs.tnnl_vnid, iflow_cfg.nat_sip,
                         iflow_cfg.nat_dip, iflow_cfg.nat_sport, iflow_cfg.nat_dport,
                         iflow_cfg.nat_type, iflow_cfg.is_ing_proxy_mirror, iflow_cfg.is_eg_proxy_mirror,
+                        iflow_cfg.ing_mirror_session, iflow_cfg.eg_mirror_session,
                         iflow_attrs.expected_src_lif_en, iflow_attrs.expected_src_lif,
                         iflow_attrs.qos_class_en, iflow_attrs.qos_class_id, iflow_attrs.is_proxy_en,
                         iflow_attrs.is_proxy_mcast);
@@ -608,6 +610,7 @@ ctx_t::update_flow_table()
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
                         "nat_dip={} nat_sport={} nat_dport={} nat_type={} slif_en={} slif={} "
+                        "ing_mirror_session={} eg_mirror_session={} "
                         "qos_class_en={} qos_class_id={}",
                         stage, rflow_cfg.key, rflow_attrs.lkp_inst,
                         rflow_attrs.vrf_hwid, rflow_cfg.action,
@@ -618,6 +621,7 @@ ctx_t::update_flow_table()
                         rflow_attrs.tnnl_rw_idx, rflow_attrs.tnnl_vnid, rflow_cfg.nat_sip,
                         rflow_cfg.nat_dip, rflow_cfg.nat_sport, rflow_cfg.nat_dport,
                         rflow_cfg.nat_type, rflow_attrs.expected_src_lif_en, rflow_attrs.expected_src_lif,
+                        rflow_cfg.ing_mirror_session, rflow_cfg.eg_mirror_session,
                         rflow_attrs.qos_class_en, rflow_attrs.qos_class_id);
     }
 

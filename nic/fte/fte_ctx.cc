@@ -768,22 +768,22 @@ std::ostream& operator<<(std::ostream& os, const mcast_info_t& val)
 
 std::ostream& operator<<(std::ostream& os, const mirror_info_t& val)
 {
-    os << "{mirror_en=" << val.mirror_en;
-    os << " ,ing_mirror_session=" << val.ing_mirror_session;
-    os << " ,egr_mirror_session=" << val.egr_mirror_session;
-    os << " ,proxy_ing_mirror_session=" << val.proxy_ing_mirror_session;
-    os << " ,proxy_egr_mirror_session=" << val.proxy_egr_mirror_session;
-    return os << "}";
+    os << "{ mirror_en=" << (bool)val.mirror_en;
+    os << " ,ing_mirror_session=" << (uint32_t)val.ing_mirror_session;
+    os << " ,egr_mirror_session=" << (uint32_t)val.egr_mirror_session;
+    os << " ,proxy_ing_mirror_session=" << (uint32_t)val.proxy_ing_mirror_session;
+    os << " ,proxy_egr_mirror_session=" << (uint32_t)val.proxy_egr_mirror_session;
+    return os << " }";
 }
 
 std::ostream& operator<<(std::ostream& os, const export_info_t& val)
 {
-    os << "{export_en=" << val.export_en;
-    os << " ,export_id1=" << val.export_id1;
-    os << " ,export_id2=" << val.export_id2;
-    os << " ,export_id3=" << val.export_id3;
-    os << " ,export_id4=" << val.export_id4;
-    return os << "}";
+    os << "{ export_en=" << (uint8_t)val.export_en;
+    os << " ,export_id1=" << (uint8_t)val.export_id1;
+    os << " ,export_id2=" << (uint8_t)val.export_id2;
+    os << " ,export_id3=" << (uint8_t)val.export_id3;
+    os << " ,export_id4=" << (uint8_t)val.export_id4;
+    return os << " }";
 }
 
 } // namespace fte

@@ -24,14 +24,18 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx)
     const hal::flow_monitor_rule_t      *frule = NULL;
     const hal::ipv4_rule_t              *rule = NULL;
     const acl::acl_ctx_t                *acl_ctx = NULL;
-
+    
+    memset(&mirror_flowupd, 0, sizeof(fte::flow_update_t));
+    memset(&export_flowupd, 0, sizeof(fte::flow_update_t));
     mirror_flowupd.mirror_info.mirror_en = 0;
     export_flowupd.export_info.export_en = 0;
     const char *ctx_name = flowmon_acl_ctx_name(ctx.get_key().svrf_id);
     acl_ctx = acl::acl_get(ctx_name);
     if (acl_ctx == NULL) {
-        HAL_TRACE_DEBUG("telemetry::No telemetry acl_ctx for vrf {}", ctx_name);
-        return HAL_RET_OK;
+        HAL_TRACE_DEBUG("telemetry::No telemetry acl_ctx for vrf {} id {}",
+                         ctx_name, ctx.get_key().svrf_id);
+        ret = HAL_RET_OK;
+        goto end;
     }
     if (ctx.get_key().flow_type == FLOW_TYPE_V4) {
         acl_key.proto = ctx.get_key().proto;
@@ -47,7 +51,8 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx)
         }
     } else {
         HAL_TRACE_DEBUG("telemetry::Invalid flow type {}", ctx.get_key().flow_type);
-        return HAL_RET_OK;
+        ret = HAL_RET_OK;
+        goto end;
     }
     if (ctx.get_key().flow_type != FLOW_TYPE_L2){
         switch ( ctx.get_key().proto) {
@@ -111,23 +116,27 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx)
                 export_flowupd.export_info.export_id4 = frule->action.collectors[3];
             }
         }
-    }
-
-    if (mirror_flowupd.mirror_info.mirror_en) {
-        ret = ctx.update_flow(mirror_flowupd);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error updating mirror info");
-            return ret;
+        if (mirror_flowupd.mirror_info.mirror_en) {
+            ret = ctx.update_flow(mirror_flowupd);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error updating mirror info");
+                return ret;
+            }
         }
-    }
-    if (export_flowupd.export_info.export_en) {
-        ret = ctx.update_flow(export_flowupd);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error updating export info");
-            return ret;
+        if (export_flowupd.export_info.export_en) {
+            ret = ctx.update_flow(export_flowupd);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error updating export info");
+                return ret;
+            }
         }
+    } else {
+        HAL_TRACE_DEBUG("Flow did not match any telemetry rules!");
     }
 end:
+    if (acl_ctx) {
+        acl::acl_deref(acl_ctx);
+    }
     HAL_TRACE_DEBUG("continue to process telemetry");
     return ret;
 }
