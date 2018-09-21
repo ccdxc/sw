@@ -386,7 +386,8 @@ start_qemu_rxe() {
         echo "Please use a bridge device"
     fi
 
-    qemu-system-x86_64 \
+    # sudo needed for -netdev bridge (or we need to make qemu-bridge-helper work)
+    sudo qemu-system-x86_64 \
         -machine q35,accel=kvm -smp cpus=4,sockets=2,cores=2 -nographic -m $QEMU_MEMORY_MB \
         -netdev user,id=net0,hostfwd=tcp::$QEMU_SSH_PORT_RXE-:22 \
         -device e1000,netdev=net0 \
