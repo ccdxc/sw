@@ -361,7 +361,7 @@ public:
                         printf("%-41s: %lu\n",
                                mac_stats[j].c_str(),
                                rsp_msg.response(i).
-                                       stats().mac_stats().mac_stats(j));
+                                       stats().mac_stats(j).count());
                     }
                 }
                 else {

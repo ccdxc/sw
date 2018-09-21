@@ -2216,6 +2216,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
     spec->set_type(hal_if->if_type);
     rsp->mutable_status()->set_if_handle(hal_if->hal_handle);
     spec->set_admin_status(hal_if->if_admin_status);
+    rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
 
     switch (hal_if->if_type) {
     case intf::IF_TYPE_ENIC:

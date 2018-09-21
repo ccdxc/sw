@@ -391,7 +391,9 @@ populate_port_get_response_spec (port_args_t *port_args,
         // MAC stats
         stats = response->mutable_stats();
         for (int i = 0; i < MAX_MAC_STATS; ++i) {
-            stats->mutable_mac_stats()->add_mac_stats(port_args->stats_data[i]);
+            auto mac_stats = stats->add_mac_stats();
+            mac_stats->set_type(MacStatsType(i));
+            mac_stats->set_count(port_args->stats_data[i]);
         }
     }
 

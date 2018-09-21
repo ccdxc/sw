@@ -40,6 +40,8 @@ using port::PortSpeed;
 using port::PortAdminState;
 using port::PortFecType;
 
+using port::MacStatsType;
+
 class PortServiceImpl final : public Port::Service {
 public:
     Status PortCreate(ServerContext *context,

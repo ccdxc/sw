@@ -21,6 +21,7 @@ import (
 
 var (
 	ifID       uint64
+	ifStatusID uint64
 	ifDetailID uint64
 )
 
@@ -29,6 +30,20 @@ var ifShowCmd = &cobra.Command{
 	Short: "show interface information",
 	Long:  "show interface object information",
 	Run:   ifShowCmdHandler,
+}
+
+var ifShowSpecCmd = &cobra.Command{
+	Use:   "spec",
+	Short: "show interface spec information",
+	Long:  "show interface object spec information",
+	Run:   ifShowCmdHandler,
+}
+
+var ifShowStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "show interface status information",
+	Long:  "show interface object status information",
+	Run:   ifShowStatusCmdHandler,
 }
 
 var ifDetailShowCmd = &cobra.Command{
@@ -40,9 +55,13 @@ var ifDetailShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(ifShowCmd)
+	ifShowCmd.AddCommand(ifShowSpecCmd)
+	ifShowCmd.AddCommand(ifShowStatusCmd)
 	ifShowCmd.AddCommand(ifDetailShowCmd)
 
 	ifShowCmd.Flags().Uint64Var(&ifID, "id", 1, "Specify if-id")
+	ifShowSpecCmd.Flags().Uint64Var(&ifID, "id", 1, "Specify if-id")
+	ifShowStatusCmd.Flags().Uint64Var(&ifStatusID, "id", 1, "Specify if-id")
 	ifDetailShowCmd.Flags().Uint64Var(&ifDetailID, "id", 1, "Specify if-id")
 }
 
@@ -79,7 +98,7 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Header
-	ifShowHeader(cmd, args)
+	ifShowHeader()
 
 	// Print IFs
 	for _, resp := range respMsg.Response {
@@ -90,6 +109,52 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 		ifShowOneResp(resp)
 	}
 	c.Close()
+}
+
+func ifShowStatusCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	client := halproto.NewInterfaceClient(c.ClientConn)
+	defer c.Close()
+
+	var req *halproto.InterfaceGetRequest
+	if cmd.Flags().Changed("id") {
+		// Get specific if
+		req = &halproto.InterfaceGetRequest{
+			KeyOrHandle: &halproto.InterfaceKeyHandle{
+				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+					InterfaceId: ifID,
+				},
+			},
+		}
+	} else {
+		// Get all ifs
+		req = &halproto.InterfaceGetRequest{}
+	}
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
+	if err != nil {
+		log.Errorf("Getting if failed. %v", err)
+	}
+
+	// Print Header
+	ifShowStatusHeader()
+
+	// Print IFs
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+		ifShowStatusOneResp(resp)
+	}
 }
 
 func handleIfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
@@ -149,7 +214,7 @@ func ifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleIfDetailShowCmd(cmd, nil)
 }
 
-func ifShowHeader(cmd *cobra.Command, args []string) {
+func ifShowHeader() {
 	fmt.Printf("\n")
 	fmt.Printf("Id:    Interface ID         Handle: IF's handle\n")
 	fmt.Printf("Ifype: Interface type\n")
@@ -181,8 +246,25 @@ func ifTypeToStr(ifType halproto.IfType) string {
 	case halproto.IfType_IF_TYPE_CPU:
 		return "CPU"
 	case halproto.IfType_IF_TYPE_APP_REDIR:
-		return "APP_REDIR"
+		return "AppRedir"
 	default:
 		return "Invalid"
 	}
+}
+
+func ifShowStatusHeader() {
+	fmt.Printf("\n")
+	fmt.Printf("Handle:    Interface handle         Status:    Interface status \n")
+	hdrLine := strings.Repeat("-", 13)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-7s%-6s\n",
+		"Handle", "Status")
+	fmt.Println(hdrLine)
+}
+
+func ifShowStatusOneResp(resp *halproto.InterfaceGetResponse) {
+	fmt.Printf("%-7d%-6s",
+		resp.GetStatus().GetIfHandle(),
+		strings.ToLower(strings.Replace(resp.GetStatus().GetIfStatus().String(), "IF_STATUS_", "", -1)))
+	fmt.Printf("\n")
 }

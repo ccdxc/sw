@@ -67,6 +67,81 @@ enum PortFecType {
     PORT_FEC_TYPE_RS   = 2;  // Enable ReedSolomon FEC
 }
 
+// PortSpec message is used to do add/mod properties of a port
+message PortSpec {
+  types.ObjectMeta  meta             = 1;    // common object meta
+
+  // key_or_handle is the port number
+  kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
+
+  PortType          port_type        = 3 [(gogoproto.moretags) = "venice:immutable"];    // port type
+  PortAdminState    admin_state      = 4;    // admin status of the port
+  PortSpeed         port_speed       = 6;    // speed of the port
+  uint32            mac_id           = 7 [(gogoproto.moretags) = "venice:immutable"];    // mac associated with the port
+  uint32            mac_ch           = 8 [(gogoproto.moretags) = "venice:immutable"];    // mac channel associated with the port
+  uint32            num_lanes        = 9 [(gogoproto.moretags) = "venice:immutable"];    // number of lanes for the port
+  PortFecType       fec_type         = 10;   // FEC type
+  bool              auto_neg_enable  = 11;   // Enable AutoNeg
+  uint32            debounce_time    = 12;   // Debounce time in ms
+  uint32            mtu              = 13;   // port mtu
+}
+
+message PortStatus {
+    PortOperStatus   oper_status  = 1;    // operational state of port
+}
+
+//------------------------------------------------------------------------------
+// PortRequestMsg is batched add or modify port request
+//------------------------------------------------------------------------------
+message PortRequestMsg {
+  repeated PortSpec  request = 1;    // batched request
+}
+
+// PortResponse is response to PortSpec
+message PortResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  PortStatus       status     = 2;    // status of port
+}
+
+//------------------------------------------------------------------------------
+// PortResponseMsg is batched response to PortRequestMsg
+//------------------------------------------------------------------------------
+message PortResponseMsg {
+  repeated PortResponse  response = 1;    // batched response
+}
+
+// PortDeleteRequest is used to delete a port
+message PortDeleteRequest {
+  types.ObjectMeta  meta          = 1;    // object meta
+
+  // key_or_handle is the port number
+  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+}
+
+//------------------------------------------------------------------------------
+// PortDeleteRequestMsg is used to delete a batch of ports
+//------------------------------------------------------------------------------
+message PortDeleteRequestMsg {
+  repeated PortDeleteRequest request = 1;    // batched delete request
+}
+
+//------------------------------------------------------------------------------
+// PortDeleteResponse is response to PortDeleteRequest
+//------------------------------------------------------------------------------
+message PortDeleteResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+//------------------------------------------------------------------------------
+// PortDeleteResponseMsg is batched response to PortDeleteRequestMsg
+//------------------------------------------------------------------------------
+message PortDeleteResponseMsg {
+  repeated PortDeleteResponse response = 1;
+}
+
+//------------------------------------------------------------------------------
+// MacStats consists of MacStatsType and count
+//------------------------------------------------------------------------------
 enum MacStatsType {
    FRAMES_RX_OK            =  0;
    FRAMES_RX_ALL           =  1;
@@ -159,88 +234,14 @@ enum MacStatsType {
    FRAMES_TX_TRUNCATED     = 88;
 }
 
-// PortSpec message is used to do add/mod properties of a port
-message PortSpec {
-  types.ObjectMeta  meta             = 1;    // common object meta
-
-  // key_or_handle is the port number
-  kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
-
-  PortType          port_type        = 3 [(gogoproto.moretags) = "venice:immutable"];    // port type
-  PortAdminState    admin_state      = 4;    // admin status of the port
-  PortSpeed         port_speed       = 6;    // speed of the port
-  uint32            mac_id           = 7 [(gogoproto.moretags) = "venice:immutable"];    // mac associated with the port
-  uint32            mac_ch           = 8 [(gogoproto.moretags) = "venice:immutable"];    // mac channel associated with the port
-  uint32            num_lanes        = 9 [(gogoproto.moretags) = "venice:immutable"];    // number of lanes for the port
-  PortFecType       fec_type         = 10;   // FEC type
-  bool              auto_neg_enable  = 11;   // Enable AutoNeg
-  uint32            debounce_time    = 12;   // Debounce time in ms
-  uint32            mtu              = 13;   // port mtu
-}
-
-message PortStatus {
-    PortOperStatus   oper_status  = 1;    // operational state of port
-}
-
-//------------------------------------------------------------------------------
-// PortRequestMsg is batched add or modify port request
-//------------------------------------------------------------------------------
-message PortRequestMsg {
-  repeated PortSpec  request = 1;    // batched request
-}
-
-// PortResponse is response to PortSpec
-message PortResponse {
-  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-  PortStatus       status     = 2;    // status of port
-}
-
-//------------------------------------------------------------------------------
-// PortResponseMsg is batched response to PortRequestMsg
-//------------------------------------------------------------------------------
-message PortResponseMsg {
-  repeated PortResponse  response = 1;    // batched response
-}
-
-// PortDeleteRequest is used to delete a port
-message PortDeleteRequest {
-  types.ObjectMeta  meta          = 1;    // object meta
-
-  // key_or_handle is the port number
-  kh.PortKeyHandle  key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
-}
-
-//------------------------------------------------------------------------------
-// PortDeleteRequestMsg is used to delete a batch of ports
-//------------------------------------------------------------------------------
-message PortDeleteRequestMsg {
-  repeated PortDeleteRequest request = 1;    // batched delete request
-}
-
-//------------------------------------------------------------------------------
-// PortDeleteResponse is response to PortDeleteRequest
-//------------------------------------------------------------------------------
-message PortDeleteResponse {
-  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
-}
-
-//------------------------------------------------------------------------------
-// PortDeleteResponseMsg is batched response to PortDeleteRequestMsg
-//------------------------------------------------------------------------------
-message PortDeleteResponseMsg {
-  repeated PortDeleteResponse response = 1;
-}
-
-//------------------------------------------------------------------------------
-// MacStats is an array of MAC statictics
-//------------------------------------------------------------------------------
 message MacStats {
-    repeated uint64 mac_stats = 1;
+  MacStatsType   type  = 1;
+  uint64         count = 2;
 }
 
 // PortStats captures all the statistics of given Port
 message PortStats {
-    MacStats mac_stats            =  1;  // Port MAC stats
+    repeated MacStats mac_stats =  1;  // Port MAC stats
 }
 
 // PortGetRequest is used to get information about a port
