@@ -26,7 +26,7 @@ icmp_list_elem_alloc ()
 static inline void
 icmp_list_elem_free (icmp_list_elem_t *icmp)
 {
-    hal::delay_delete_to_slab(HAL_SLAB_SG_LIST_ELEM, icmp);
+    hal::delay_delete_to_slab(HAL_SLAB_ICMP_LIST_ELEM, icmp);
 }
 
 static inline void

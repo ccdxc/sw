@@ -26,10 +26,12 @@ addr_list_elem_alloc (uint8_t af)
 static inline void
 addr_list_elem_free (addr_list_elem_t *addr)
 {
-    if (addr->ip_range.af == IP_AF_IPV4)
-        hal::delay_delete_to_slab(HAL_SLAB_V4ADDR_LIST_ELEM, addr);
-    else
-        hal::delay_delete_to_slab(HAL_SLAB_V6ADDR_LIST_ELEM, addr);
+    if (addr->num_addrs > 0) {
+        if (addr->ip_range.af == IP_AF_IPV4)
+            hal::delay_delete_to_slab(HAL_SLAB_V4ADDR_LIST_ELEM, addr);
+        else
+            hal::delay_delete_to_slab(HAL_SLAB_V6ADDR_LIST_ELEM, addr);
+    }
 }
 
 static inline void

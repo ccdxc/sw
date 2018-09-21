@@ -54,9 +54,9 @@ objects:
             pre_cb   : None
             post_cb  : None
         delete:
-            api      : None
-            request  : None
-            response : None
+            api      : FlowMonitorRuleDelete
+            request  : FlowMonitorRuleDeleteRequestMsg
+            response : FlowMonitorRuleDeleteResponseMsg
             pre_cb   : None
             post_cb  : None
         get:

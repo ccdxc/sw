@@ -172,7 +172,7 @@ slab::alloc_block_(void)
     uint8_t         *ptr;
 
 #if SDK_DEBUG
-    SDK_TRACE_DEBUG("Allocating block from slab %s, id: %u\n"
+    SDK_TRACE_DEBUG("Allocating block from slab %s, id: %u\n",
                     name_, slab_id_);
 #endif
 
@@ -260,6 +260,10 @@ slab::alloc(void)
         memset(elem, 0, (this->elem_sz_ - SLAB_ELEM_META_SIZE));
     }
 
+#if SDK_DEBUG
+    SDK_TRACE_DEBUG("Alloc called for slab %s, id: %u ret-elem: 0x%x block: 0x%x\n",
+                    name_, slab_id_, elem, block);
+#endif
     return elem;
 
 cleanup:
@@ -294,6 +298,11 @@ slab::free_(void *elem)
         }
         block = block->next_;
     }
+
+#if SDK_DEBUG
+    SDK_TRACE_DEBUG("Free called for slab %s, id: %u elem: 0x%x block: 0x%x\n",
+                    name_, slab_id_, elem, block);
+#endif
 
     if (block) {
         *(void **)elem = block->free_head_;
