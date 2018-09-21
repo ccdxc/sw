@@ -47,6 +47,21 @@ func newMockClient() elastic.ESClient {
 	}
 }
 
+// GetIndicesStats - mock implementation
+func (e *mockClient) GetIndicesStats(ctx context.Context, nodeIDs []string) (*es.IndicesStatsResponse, error) {
+	return nil, nil
+}
+
+// GetNodesInfo - mock implementation
+func (e *mockClient) GetNodesInfo(ctx context.Context, nodeIDs []string) (*es.NodesInfoResponse, error) {
+	return nil, nil
+}
+
+// GetSearchShards - mock implementation
+func (e *mockClient) GetSearchShards(ctx context.Context, indices []string) (*es.SearchShardsResponse, error) {
+	return nil, nil
+}
+
 // IsClusterHealthy - mock implementation
 func (e *mockClient) IsClusterHealthy(ctx context.Context) (bool, error) {
 	return true, nil

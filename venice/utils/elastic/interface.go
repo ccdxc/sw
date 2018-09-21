@@ -60,4 +60,13 @@ type ESClient interface {
 
 	// returns the cluster and indices health info
 	GetClusterHealth(indices []string) (*es.ClusterHealthResponse, error)
+
+	// returns the indices and shards that a search request would be executed against
+	GetSearchShards(ctx context.Context, indices []string) (*es.SearchShardsResponse, error)
+
+	// returns one or more (or all) of the cluster nodes statistics
+	GetNodesInfo(ctx context.Context, nodeIDs []string) (*es.NodesInfoResponse, error)
+
+	// returns index level stats on different operations happening on an index
+	GetIndicesStats(ctx context.Context, indices []string) (*es.IndicesStatsResponse, error)
 }

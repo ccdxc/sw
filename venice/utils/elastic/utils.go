@@ -42,7 +42,7 @@ const (
 
 	// maxRetries maximum number of retries for fetching elasticsearch URLs
 	// and creating client.
-	maxRetries = 60
+	maxRetries = 10
 
 	// delay between retries
 	retryDelay = 2 * time.Second

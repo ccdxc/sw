@@ -165,6 +165,17 @@ func (e *elasticsearchTestSuite) TestElastic(c *C) {
 
 		}, "failed to get indices", "20ms", "2s")
 
+	// test search shards and get nodes info APIs
+	shardsInfo, err := esClient.GetSearchShards(ctx, []string{indexName})
+	AssertOk(c, err, "failed to get search shards info, err: %v", err)
+	for _, shards := range shardsInfo.Shards {
+		for _, shard := range shards {
+			nodesInfo, err := esClient.GetNodesInfo(ctx, []string{shard.Node})
+			AssertOk(c, err, "failed to get nodes info, err: %v", err)
+			Assert(c, len(nodesInfo.Nodes) > 0, "failed to get nodes info")
+		}
+	}
+
 	// curator test events
 	testCurator(ctx, esClient, c)
 

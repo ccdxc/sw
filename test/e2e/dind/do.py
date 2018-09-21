@@ -59,9 +59,9 @@ class TestMgmtNode:
         if self.nettype == 'bridge':
             ports_exposed = """ -p {}:9000 -p {}:9200 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex)
         if self.dev_mode:
-            runCommand("""docker run -td {} -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.3 /bin/sh """.format(ports_exposed, self.ipaddress, src_dir, self.name, self.name))
+            runCommand("""docker run -td {} -l pens --network pen-dind-net --ip {}  -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.4 /bin/sh """.format(ports_exposed, self.ipaddress, src_dir, self.name, self.name))
         else:
-            runCommand("""docker run -td {} -l pens --network pen-dind-net --ip {}  -v sshSecrets:/root/.ssh --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.3 /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name))
+            runCommand("""docker run -td {} -l pens --network pen-dind-net --ip {} -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.4 /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name))
         self.runCmd("""sh -c 'if ! test -f /root/.ssh/id_rsa ; then ssh-keygen -f /root/.ssh/id_rsa -t rsa -N "";fi ' """)
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys""")
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys2""")

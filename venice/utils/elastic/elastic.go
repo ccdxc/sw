@@ -38,6 +38,9 @@ const (
 
 	// max retry delay between request retries
 	maxRetryInterval = 500 * time.Millisecond
+
+	// request gets cancelled after 10s
+	contextDeadline = 10 * time.Second
 )
 
 type request func() (interface{}, error)
@@ -94,12 +97,15 @@ func NewClient(elasticURL string, resolverClient resolver.Interface, logger log.
 
 // IsClusterHealthy ensures the cluster status is `green`
 func (e *Client) IsClusterHealthy(ctx context.Context) (bool, error) {
-	result, err := e.esClient.ClusterHealth().Do(ctx)
+	ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+	defer cancel()
+
+	result, err := e.esClient.ClusterHealth().Do(ctxWithDeadline)
 	if err != nil {
 		return false, err
 	}
 
-	if result.Status != "green" {
+	if result.Status == "red" {
 		if err = e.esClient.WaitForGreenStatus("10s"); err != nil {
 			return false, err
 		}
@@ -138,8 +144,11 @@ func (e *Client) CreateIndexTemplate(ctx context.Context, name, settings string)
 
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+
 			// create index template
-			resp, err := e.esClient.IndexPutTemplate(name).BodyString(settings).Do(ctx)
+			resp, err := e.esClient.IndexPutTemplate(name).BodyString(settings).Do(ctxWithDeadline)
 			if err != nil {
 				return resp, err
 			} else if !resp.Acknowledged {
@@ -180,8 +189,11 @@ func (e *Client) DeleteIndexTemplate(ctx context.Context, name string) error {
 
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+
 			// create index template
-			resp, err := e.esClient.IndexDeleteTemplate(name).Do(ctx)
+			resp, err := e.esClient.IndexDeleteTemplate(name).Do(ctxWithDeadline)
 			if err != nil {
 				return resp, err
 			} else if !resp.Acknowledged {
@@ -222,15 +234,18 @@ func (e *Client) CreateIndex(ctx context.Context, index, settings string) error 
 
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+
 			// check if index exists
-			if indexExistsResp, err := e.esClient.IndexExists(index).Do(ctx); err != nil {
+			if indexExistsResp, err := e.esClient.IndexExists(index).Do(ctxWithDeadline); err != nil {
 				return indexExistsResp, err
 			} else if indexExistsResp {
 				return indexExistsResp, NewError(ErrIndexExists, "")
 			}
 
 			// create index
-			resp, err := e.esClient.CreateIndex(index).BodyString(settings).Do(ctx)
+			resp, err := e.esClient.CreateIndex(index).BodyString(settings).Do(ctxWithDeadline)
 			if err != nil {
 				return resp, err
 			} else if !resp.Acknowledged {
@@ -272,7 +287,10 @@ func (e *Client) DeleteIndex(ctx context.Context, index string) error {
 
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
-			deleteIndexResp, err := e.esClient.DeleteIndex(index).Do(ctx)
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+
+			deleteIndexResp, err := e.esClient.DeleteIndex(index).Do(ctxWithDeadline)
 			if err != nil {
 				return deleteIndexResp, err
 			} else if !deleteIndexResp.Acknowledged {
@@ -311,7 +329,9 @@ func (e *Client) FlushIndex(ctx context.Context, index string) error {
 
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
-			return e.esClient.Flush().Index(index).Do(ctx)
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+			return e.esClient.Flush().Index(index).Do(ctxWithDeadline)
 		}, retryCount, rResp, rErr)
 
 		if retry {
@@ -422,8 +442,10 @@ func (e *Client) Index(ctx context.Context, index, iType, ID string, obj interfa
 
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
 			// index the given document(obj)
-			return e.esClient.Index().Index(index).Type(iType).Id(ID).BodyJson(obj).Do(ctx)
+			return e.esClient.Index().Index(index).Type(iType).Id(ID).BodyJson(obj).Do(ctxWithDeadline)
 		}, retryCount, rResp, rErr)
 
 		if retry {
@@ -466,6 +488,8 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
 			// construct bulk request
 			bulkReq := e.esClient.Bulk()
 
@@ -488,7 +512,7 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 			// i.e. bulkReq.NumberOfActions() == len(objs)
 
 			// execute the bulk request
-			bulkResp, err := bulkReq.Do(ctx)
+			bulkResp, err := bulkReq.Do(ctxWithDeadline)
 			if err != nil {
 				return nil, err
 			}
@@ -544,7 +568,9 @@ func (e *Client) Delete(ctx context.Context, index, docType, ID string) error {
 
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
-			return e.esClient.Delete().Index(index).Type(docType).Id(ID).Do(ctx)
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+			return e.esClient.Delete().Index(index).Type(docType).Id(ID).Do(ctxWithDeadline)
 		}, retryCount, rResp, rErr)
 
 		if retry {
@@ -606,6 +632,9 @@ func (e *Client) Search(ctx context.Context, index, iType string, query es.Query
 
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+
 			// Construct the search request on a given index
 			request := e.esClient.Search().Index(index)
 
@@ -644,7 +673,7 @@ func (e *Client) Search(ctx context.Context, index, iType string, query es.Query
 			}
 
 			// Execute the search request with desired size
-			return request.Do(ctx)
+			return request.Do(ctxWithDeadline)
 		}, retryCount, rResp, rErr)
 
 		if retry {
@@ -668,6 +697,200 @@ func (e *Client) Search(ctx context.Context, index, iType string, query es.Query
 
 		searchResult := rResp.(*es.SearchResult)
 		return searchResult, rErr
+	}
+}
+
+// GetClusterHealth returns cluster health info including indices health if specified
+func (e *Client) GetClusterHealth(indices []string) (*es.ClusterHealthResponse, error) {
+	retryCount := 0
+	retryInterval := initialRetryInterval
+
+	var rResp interface{}
+	var rErr error
+	var retry bool
+	for {
+		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(context.Background(), time.Now().Add(contextDeadline))
+			defer cancel()
+
+			// Get cluster health service handle
+			chs := e.esClient.ClusterHealth()
+			if chs == nil {
+				return nil, fmt.Errorf("failed to create cluster health service")
+			}
+
+			// Add indices if specified
+			if len(indices) > 0 {
+				chs = chs.Index(indices...)
+			}
+
+			return chs.Do(ctxWithDeadline)
+		}, retryCount, rResp, rErr)
+
+		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
+			e.logger.Debug("retrying, get cluster health")
+			retryCount++
+			continue
+		}
+
+		// request failed
+		if rErr != nil {
+			return nil, rErr
+		}
+
+		// request executed successfully
+		return rResp.(*es.ClusterHealthResponse), rErr
+	}
+}
+
+// GetSearchShards returns the indices and shards that a search request would be executed against.
+// Helps to retrive the node IDs belonging to the index shards.
+func (e *Client) GetSearchShards(ctx context.Context, indices []string) (*es.SearchShardsResponse, error) {
+	retryCount := 0
+	retryInterval := initialRetryInterval
+
+	var rResp interface{}
+	var rErr error
+	var retry bool
+	for {
+		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+
+			// get search shards service handle
+			sss := e.esClient.SearchShards(indices...)
+			if sss == nil {
+				return nil, fmt.Errorf("failed to create search shards service")
+			}
+
+			return sss.Do(ctxWithDeadline)
+		}, retryCount, rResp, rErr)
+
+		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
+			e.logger.Debug("retrying, get cluster health")
+			retryCount++
+			continue
+		}
+
+		// request failed
+		if rErr != nil {
+			return nil, rErr
+		}
+
+		// request executed successfully
+		return rResp.(*es.SearchShardsResponse), rErr
+	}
+}
+
+// GetNodesInfo returns one or more (or all) of the cluster nodes statistics.
+// Helps to retrieve the node details and other stats of the given nodeID(s).
+func (e *Client) GetNodesInfo(ctx context.Context, nodeIDs []string) (*es.NodesInfoResponse, error) {
+	retryCount := 0
+	retryInterval := initialRetryInterval
+
+	var rResp interface{}
+	var rErr error
+	var retry bool
+	for {
+		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+
+			// get nodes info service handle
+			nis := e.esClient.NodesInfo()
+			if nis == nil {
+				return nil, fmt.Errorf("failed to create nodes info service")
+			}
+			nis = nis.NodeId(nodeIDs...)
+
+			return nis.Do(ctxWithDeadline)
+		}, retryCount, rResp, rErr)
+
+		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
+			e.logger.Debug("retrying, get cluster health")
+			retryCount++
+			continue
+		}
+
+		// request failed
+		if rErr != nil {
+			return nil, rErr
+		}
+
+		// request executed successfully
+		return rResp.(*es.NodesInfoResponse), rErr
+	}
+}
+
+// GetIndicesStats returns index level stats on different operations happening on an index.
+// Helps to retrieve shard details of the given indices.
+func (e *Client) GetIndicesStats(ctx context.Context, indices []string) (*es.IndicesStatsResponse, error) {
+	retryCount := 0
+	retryInterval := initialRetryInterval
+
+	var rResp interface{}
+	var rErr error
+	var retry bool
+	for {
+		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+
+			// get index stats service handle
+			iss := e.esClient.IndexStats()
+			if iss == nil {
+				return nil, fmt.Errorf("failed to create index stats service")
+			}
+
+			iss = iss.Index(indices...)
+			return iss.Do(ctxWithDeadline)
+		}, retryCount, rResp, rErr)
+
+		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
+			e.logger.Debug("retrying, get cluster health")
+			retryCount++
+			continue
+		}
+
+		// request failed
+		if rErr != nil {
+			return nil, rErr
+		}
+
+		// request executed successfully
+		return rResp.(*es.IndicesStatsResponse), rErr
 	}
 }
 
@@ -721,24 +944,6 @@ func (e *Client) Perform(req request, retryCount int, res interface{}, err error
 	return false, res, err
 }
 
-// GetClusterHealth returns cluster health info including indices health if specified
-func (e *Client) GetClusterHealth(indices []string) (*es.ClusterHealthResponse, error) {
-
-	// Get cluster health service handle
-	chs := e.esClient.ClusterHealth()
-	if chs == nil {
-		return nil, fmt.Errorf("failed to create cluster health service")
-	}
-
-	// Add indices if specified
-	if len(indices) > 0 {
-		chs = chs.Index(indices...)
-	}
-
-	// Get cluster health
-	return chs.Do(context.TODO())
-}
-
 // resetClient tries to reset the client
 // error == nil, indicates the connection is reset successfully and the caller can retry the request.
 // otherwise, it failed to reset the client.
@@ -787,20 +992,20 @@ func (e *Client) resetClientHelper() error {
 		// update the client
 		newClient, err := newElasticClient(elasticURLs, e.logger)
 		if err != nil {
-			e.logger.Errorf("failed to reset elastic client, err: %v", err)
+			e.logger.Errorf("failed to create new elastic client, err: %v", err)
 			return err
 		}
 
 		// check cluster health
 		result, err := newClient.ClusterHealth().Do(context.Background())
 		if err != nil {
-			e.logger.Errorf("elasticsearch cluster not healthy, err: %v", err)
+			e.logger.Errorf("failed to get elasticsearch cluster health, err: %v", err)
 			return err
 		}
 
-		if result.Status != "green" {
+		if result.Status == "red" {
 			if err = newClient.WaitForGreenStatus("10s"); err != nil {
-				e.logger.Errorf("elasticsearch cluster not healthy, err: %v", err)
+				e.logger.Errorf("elasticsearch cluster not in green status, err: %v", err)
 				return err
 			}
 		}

@@ -96,7 +96,8 @@ func IsConnRefused(err error) bool {
 		strings.Contains(errStr, "EOF") ||
 		strings.Contains(errStr, "connection reset") ||
 		strings.Contains(errStr, "server closed") ||
-		strings.Contains(errStr, "no available connection") {
+		strings.Contains(errStr, "no available connection") ||
+		strings.Contains(errStr, "Service Unavailable") {
 		return true
 	}
 

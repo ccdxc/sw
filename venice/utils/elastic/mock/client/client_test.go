@@ -223,3 +223,18 @@ func TestESMockBulk(t *testing.T) {
 	Assert(t, err == nil, "failed to search")
 	Assert(t, int(result.TotalHits()) == totalEvents/2, fmt.Sprintf("expected search result %v, got %v", totalEvents/2, result.TotalHits()))
 }
+
+func TestESMockFunctions(t *testing.T) {
+	mc := newMockClient()
+	defer mc.Close()
+	Assert(t, mc.CreateIndex(ctx, indexName, "") == nil, "failed to create index")
+
+	_, err := mc.GetIndicesStats(ctx, []string{indexName})
+	AssertOk(t, err, "failed get indices stats")
+
+	_, err = mc.GetSearchShards(ctx, []string{indexName})
+	AssertOk(t, err, "failed get search shards")
+
+	_, err = mc.GetNodesInfo(ctx, []string{"test"})
+	AssertOk(t, err, "failed get node info")
+}
