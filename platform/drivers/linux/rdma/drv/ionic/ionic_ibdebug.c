@@ -920,11 +920,11 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 
 		ionic_tbl_res_show(s, "sq.", &qp->sq_res);
 
-		seq_printf(s, "sq_is_hbm:\t%d\n", qp->sq_is_hbm);
-		if (qp->sq_is_hbm) {
-			seq_printf(s, "sq_hbm_order:\t%d\n", qp->sq_hbm_order);
-			seq_printf(s, "sq_hbm_pgid:\t%d\n", qp->sq_hbm_pgid);
-			seq_printf(s, "sq_hbm_addr:\t%#llx\n", (u64)qp->sq_hbm_addr);
+		seq_printf(s, "sq_is_cmb:\t%d\n", qp->sq_is_cmb);
+		if (qp->sq_is_cmb) {
+			seq_printf(s, "sq_cmb_order:\t%d\n", qp->sq_cmb_order);
+			seq_printf(s, "sq_cmb_pgid:\t%d\n", qp->sq_cmb_pgid);
+			seq_printf(s, "sq_cmb_addr:\t%#llx\n", (u64)qp->sq_cmb_addr);
 		}
 	}
 

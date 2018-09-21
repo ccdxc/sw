@@ -76,23 +76,23 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 	/* BAR2 resources
 	*/
 
-	mutex_init(&idev->hbm_inuse_lock);
+	mutex_init(&idev->cmb_inuse_lock);
 
 	bar++;
 	if (num_bars < 3) {
-		idev->phy_hbm_pages = 0;
-		idev->hbm_npages = 0;
-		idev->hbm_inuse = NULL;
+		idev->phy_cmb_pages = 0;
+		idev->cmb_npages = 0;
+		idev->cmb_inuse = NULL;
 		return 0;
 	}
 
-	idev->phy_hbm_pages = bar->bus_addr;
-	idev->hbm_npages = bar->len / PAGE_SIZE;
-	idev->hbm_inuse = kzalloc(BITS_TO_LONGS(idev->hbm_npages) * sizeof(long),
+	idev->phy_cmb_pages = bar->bus_addr;
+	idev->cmb_npages = bar->len / PAGE_SIZE;
+	idev->cmb_inuse = kzalloc(BITS_TO_LONGS(idev->cmb_npages) * sizeof(long),
 				  GFP_KERNEL);
-	if (!idev->hbm_inuse) {
-		idev->phy_hbm_pages = 0;
-		idev->hbm_npages = 0;
+	if (!idev->cmb_inuse) {
+		idev->phy_cmb_pages = 0;
+		idev->cmb_npages = 0;
 	}
 
 	return 0;

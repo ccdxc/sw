@@ -117,13 +117,13 @@ static u16 ionic_eq_work_budget = 1000; /* XXX needs tuning */
 module_param_named(work_budget, ionic_eq_work_budget, ushort, 0644);
 MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
 
-static bool ionic_sqhbm_inline = true;
-module_param_named(sqhbm_inline, ionic_sqhbm_inline, bool, 0644);
-MODULE_PARM_DESC(sqhbm_inline, "Only alloc sq hbm for inline data capability.");
+static bool ionic_sqcmb_inline = true;
+module_param_named(sqcmb_inline, ionic_sqcmb_inline, bool, 0644);
+MODULE_PARM_DESC(sqcmb_inline, "Only alloc sq cmb for inline data capability.");
 
-static int ionic_sqhbm_order = 0; /* XXX needs tuning */
-module_param_named(sqhbm_order, ionic_sqhbm_order, int, 0644);
-MODULE_PARM_DESC(sqhbm_order, "Only alloc sq hbm less than order.");
+static int ionic_sqcmb_order = 0; /* XXX needs tuning */
+module_param_named(sqcmb_order, ionic_sqcmb_order, int, 0644);
+MODULE_PARM_DESC(sqcmb_order, "Only alloc sq cmb less than order.");
 
 /* work queue for handling network events, managing ib devices */
 static struct workqueue_struct *ionic_dev_workq;
@@ -3812,7 +3812,7 @@ static int ionic_destroy_qp_cmd(struct ionic_ibdev *dev, u32 qpid)
 	}
 }
 
-static void ionic_qp_sq_init_hbm(struct ionic_ibdev *dev,
+static void ionic_qp_sq_init_cmb(struct ionic_ibdev *dev,
 				 struct ionic_ctx *ctx,
 				 struct ionic_qp *qp,
 				 bool cap_inline)
@@ -3820,63 +3820,63 @@ static void ionic_qp_sq_init_hbm(struct ionic_ibdev *dev,
 	int rc;
 
 	if (!qp->has_sq)
-		goto err_hbm;
+		goto err_cmb;
 
-	if (ionic_sqhbm_inline && !cap_inline)
-		goto err_hbm;
+	if (ionic_sqcmb_inline && !cap_inline)
+		goto err_cmb;
 
-	qp->sq_hbm_order = order_base_2(qp->sq.size / PAGE_SIZE);
+	qp->sq_cmb_order = order_base_2(qp->sq.size / PAGE_SIZE);
 
-	if (qp->sq_hbm_order >= ionic_sqhbm_order)
-		goto err_hbm;
+	if (qp->sq_cmb_order >= ionic_sqcmb_order)
+		goto err_cmb;
 
-	rc = ionic_api_get_hbm(dev->lif, &qp->sq_hbm_pgid,
-			       &qp->sq_hbm_addr, qp->sq_hbm_order);
+	rc = ionic_api_get_cmb(dev->lif, &qp->sq_cmb_pgid,
+			       &qp->sq_cmb_addr, qp->sq_cmb_order);
 	if (rc)
-		goto err_hbm;
+		goto err_cmb;
 
 	if (ctx) {
-		qp->sq_hbm_ptr = NULL;
+		qp->sq_cmb_ptr = NULL;
 	} else {
-		qp->sq_hbm_ptr = ioremap(qp->sq_hbm_addr, qp->sq.size);
-		if (!qp->sq_hbm_ptr)
+		qp->sq_cmb_ptr = ioremap(qp->sq_cmb_addr, qp->sq.size);
+		if (!qp->sq_cmb_ptr)
 			goto err_map;
 	}
 
-	qp->sq_is_hbm = true;
+	qp->sq_is_cmb = true;
 
 	return;
 
 err_map:
-	ionic_api_put_hbm(dev->lif, qp->sq_hbm_pgid, qp->sq_hbm_order);
-err_hbm:
-	qp->sq_is_hbm = false;
-	qp->sq_hbm_ptr = NULL;
-	qp->sq_hbm_order = -1;
-	qp->sq_hbm_pgid = 0;
-	qp->sq_hbm_addr = 0;
+	ionic_api_put_cmb(dev->lif, qp->sq_cmb_pgid, qp->sq_cmb_order);
+err_cmb:
+	qp->sq_is_cmb = false;
+	qp->sq_cmb_ptr = NULL;
+	qp->sq_cmb_order = -1;
+	qp->sq_cmb_pgid = 0;
+	qp->sq_cmb_addr = 0;
 
-	qp->sq_hbm_mmap.offset = 0;
-	qp->sq_hbm_mmap.size = 0;
-	qp->sq_hbm_mmap.pfn = 0;
+	qp->sq_cmb_mmap.offset = 0;
+	qp->sq_cmb_mmap.size = 0;
+	qp->sq_cmb_mmap.pfn = 0;
 }
 
-static void ionic_qp_sq_destroy_hbm(struct ionic_ibdev *dev,
+static void ionic_qp_sq_destroy_cmb(struct ionic_ibdev *dev,
 				    struct ionic_ctx *ctx,
 				    struct ionic_qp *qp)
 {
-	if (!qp->sq_is_hbm)
+	if (!qp->sq_is_cmb)
 		return;
 
 	if (ctx) {
 		mutex_lock(&ctx->mmap_mut);
-		list_del(&qp->sq_hbm_mmap.ctx_ent);
+		list_del(&qp->sq_cmb_mmap.ctx_ent);
 		mutex_unlock(&ctx->mmap_mut);
 	} else {
-		iounmap(qp->sq_hbm_ptr);
+		iounmap(qp->sq_cmb_ptr);
 	}
 
-	ionic_api_put_hbm(dev->lif, qp->sq_hbm_pgid, qp->sq_hbm_order);
+	ionic_api_put_cmb(dev->lif, qp->sq_cmb_pgid, qp->sq_cmb_order);
 }
 
 static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
@@ -3890,9 +3890,9 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	qp->sq_msn_prod = 0;
 	qp->sq_msn_cons = 0;
 	qp->sq_npg_cons = 0;
-	qp->sq_hbm_prod = 0;
+	qp->sq_cmb_prod = 0;
 
-	INIT_LIST_HEAD(&qp->sq_hbm_mmap.ctx_ent);
+	INIT_LIST_HEAD(&qp->sq_cmb_mmap.ctx_ent);
 
 	if (!qp->has_sq) {
 		if (ctx)
@@ -3957,10 +3957,10 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 		}
 	}
 
-	ionic_qp_sq_init_hbm(dev, ctx, qp, max_data > 0);
-	if (qp->sq_is_hbm)
+	ionic_qp_sq_init_cmb(dev, ctx, qp, max_data > 0);
+	if (qp->sq_is_cmb)
 		rc = ionic_pgtbl_init(dev, &qp->sq_res, buf,
-				      NULL, qp->sq_hbm_addr, 1);
+				      NULL, qp->sq_cmb_addr, 1);
 	else
 		rc = ionic_pgtbl_init(dev, &qp->sq_res, buf,
 				      qp->sq_umem, qp->sq.dma, 1);
@@ -3970,7 +3970,7 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	return 0;
 
 err_sq_tbl:
-	ionic_qp_sq_destroy_hbm(dev, ctx, qp);
+	ionic_qp_sq_destroy_cmb(dev, ctx, qp);
 
 	if (qp->sq_msn_idx)
 		kfree(qp->sq_msn_idx);
@@ -3995,7 +3995,7 @@ static void ionic_qp_sq_destroy(struct ionic_ibdev *dev,
 
 	ionic_pgtbl_unres(dev, &qp->sq_res);
 
-	ionic_qp_sq_destroy_hbm(dev, ctx, qp);
+	ionic_qp_sq_destroy_cmb(dev, ctx, qp);
 
 	if (qp->sq_msn_idx)
 		kfree(qp->sq_msn_idx);
@@ -4213,17 +4213,17 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	if (ctx) {
 		resp.qpid = qp->qpid;
 
-		if (qp->sq_is_hbm) {
-			qp->sq_hbm_mmap.size = qp->sq.size;
-			qp->sq_hbm_mmap.pfn = PHYS_PFN(qp->sq_hbm_addr);
+		if (qp->sq_is_cmb) {
+			qp->sq_cmb_mmap.size = qp->sq.size;
+			qp->sq_cmb_mmap.pfn = PHYS_PFN(qp->sq_cmb_addr);
 
 			mutex_lock(&ctx->mmap_mut);
-			qp->sq_hbm_mmap.offset = ctx->mmap_off;
+			qp->sq_cmb_mmap.offset = ctx->mmap_off;
 			ctx->mmap_off += qp->sq.size;
-			list_add(&qp->sq_hbm_mmap.ctx_ent, &ctx->mmap_list);
+			list_add(&qp->sq_cmb_mmap.ctx_ent, &ctx->mmap_list);
 			mutex_unlock(&ctx->mmap_mut);
 
-			resp.sq_hbm_offset = qp->sq_hbm_mmap.offset;
+			resp.sq_cmb_offset = qp->sq_cmb_mmap.offset;
 		}
 
 		rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
@@ -5082,9 +5082,9 @@ static int ionic_prep_one_ud(struct ionic_qp *qp,
 	return rc;
 }
 
-static void ionic_post_hbm(struct ionic_ibdev *dev, struct ionic_qp *qp)
+static void ionic_post_cmb(struct ionic_ibdev *dev, struct ionic_qp *qp)
 {
-	void __iomem *hbm_ptr;
+	void __iomem *cmb_ptr;
 	void *wqe_ptr;
 	u32 stride;
 	u16 pos, end;
@@ -5093,14 +5093,14 @@ static void ionic_post_hbm(struct ionic_ibdev *dev, struct ionic_qp *qp)
 	stride_log2 = qp->sq.stride_log2;
 	stride = BIT(stride_log2);
 
-	pos = qp->sq_hbm_prod;
+	pos = qp->sq_cmb_prod;
 	end = qp->sq.prod;
 
 	while (pos != end) {
-		hbm_ptr = qp->sq_hbm_ptr + ((size_t)pos << stride_log2);
+		cmb_ptr = qp->sq_cmb_ptr + ((size_t)pos << stride_log2);
 		wqe_ptr = ionic_queue_at(&qp->sq, pos);
 
-		memcpy_toio(hbm_ptr, wqe_ptr, stride);
+		memcpy_toio(cmb_ptr, wqe_ptr, stride);
 
 		pos = ionic_queue_next(&qp->sq, pos);
 
@@ -5108,7 +5108,7 @@ static void ionic_post_hbm(struct ionic_ibdev *dev, struct ionic_qp *qp)
 				 qp->sq.dbell | pos);
 	}
 
-	qp->sq_hbm_prod = end;
+	qp->sq_cmb_prod = end;
 }
 
 static int ionic_v1_prep_recv(struct ionic_qp *qp,
@@ -5226,8 +5226,8 @@ static int ionic_post_send_common(struct ionic_ibdev *dev,
 
 out:
 	if (likely(qp->sq.prod != old_prod)) {
-		if (qp->sq_hbm_ptr)
-			ionic_post_hbm(dev, qp);
+		if (qp->sq_cmb_ptr)
+			ionic_post_cmb(dev, qp);
 		else
 			ionic_dbell_ring(&dev->dbpage[dev->sq_qtype],
 					 ionic_queue_dbell_val(&qp->sq));

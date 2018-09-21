@@ -721,8 +721,8 @@ static int ionic_qp_sq_init(struct ionic_ctx *ctx, struct ionic_qp *qp,
 	if (rc)
 		goto err_sq;
 
-	qp->sq_hbm_ptr = NULL;
-	qp->sq_hbm_prod = 0;
+	qp->sq_cmb_ptr = NULL;
+	qp->sq_cmb_prod = 0;
 
 	qp->sq_meta = calloc((uint32_t)qp->sq.mask + 1,
 			     sizeof(*qp->sq_meta));
@@ -873,13 +873,13 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 	if (rc)
 		goto err_cmd;
 
-	if (resp.sq_hbm_offset) {
-		qp->sq_hbm_ptr = ionic_map_device(qp->sq.size,
+	if (resp.sq_cmb_offset) {
+		qp->sq_cmb_ptr = ionic_map_device(qp->sq.size,
 						  ctx->vctx.context.cmd_fd,
-						  resp.sq_hbm_offset);
-		if (!qp->sq_hbm_ptr) {
+						  resp.sq_cmb_offset);
+		if (!qp->sq_cmb_ptr) {
 			rc = errno;
-			goto err_hbm;
+			goto err_cmb;
 		}
 	}
 
@@ -912,7 +912,7 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 
 	return &qp->vqp.qp;
 
-err_hbm:
+err_cmb:
 	ibv_cmd_destroy_qp(&qp->vqp.qp);
 err_cmd:
 	ionic_qp_rq_destroy(qp);
@@ -1050,7 +1050,7 @@ static int ionic_destroy_qp(struct ibv_qp *ibqp)
 		ionic_spin_unlock(ctx, &cq->lock);
 	}
 
-	ionic_unmap(qp->sq_hbm_ptr, qp->sq.size);
+	ionic_unmap(qp->sq_cmb_ptr, qp->sq.size);
 
 	pthread_spin_destroy(&qp->rq_lock);
 	pthread_spin_destroy(&qp->sq_lock);
@@ -1747,9 +1747,9 @@ static int ionic_prep_one_ud(struct ionic_qp *qp,
 	return rc;
 }
 
-static void ionic_post_hbm(struct ionic_ctx *ctx, struct ionic_qp *qp)
+static void ionic_post_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
 {
-	void *hbm_ptr;
+	void *cmb_ptr;
 	void *wqe_ptr;
 	uint32_t stride;
 	uint16_t pos, end;
@@ -1758,15 +1758,15 @@ static void ionic_post_hbm(struct ionic_ctx *ctx, struct ionic_qp *qp)
 	stride_log2 = qp->sq.stride_log2;
 	stride = 1u << stride_log2;
 
-	pos = qp->sq_hbm_prod;
+	pos = qp->sq_cmb_prod;
 	end = qp->sq.prod;
 
 	while (pos != end) {
-		hbm_ptr = qp->sq_hbm_ptr + ((size_t)pos << stride_log2);
+		cmb_ptr = qp->sq_cmb_ptr + ((size_t)pos << stride_log2);
 		wqe_ptr = ionic_queue_at(&qp->sq, pos);
 
 		mmio_wc_start();
-		mmio_memcpy_x64(hbm_ptr, wqe_ptr, stride);
+		mmio_memcpy_x64(cmb_ptr, wqe_ptr, stride);
 		mmio_flush_writes();
 
 		pos = ionic_queue_next(&qp->sq, pos);
@@ -1777,7 +1777,7 @@ static void ionic_post_hbm(struct ionic_ctx *ctx, struct ionic_qp *qp)
 				 qp->sq.dbell | pos);
 	}
 
-	qp->sq_hbm_prod = end;
+	qp->sq_cmb_prod = end;
 }
 
 static int ionic_post_send_common(struct ionic_ctx *ctx,
@@ -1839,8 +1839,8 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 
 out:
 	if (likely(qp->sq.prod != old_prod)) {
-		if (qp->sq_hbm_ptr) {
-			ionic_post_hbm(ctx, qp);
+		if (qp->sq_cmb_ptr) {
+			ionic_post_cmb(ctx, qp);
 		} else {
 			udma_to_device_barrier();
 			ionic_dbg(ctx, "dbell qtype %d val %#lx",

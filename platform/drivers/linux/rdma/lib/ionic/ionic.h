@@ -137,8 +137,8 @@ struct ionic_qp {
 	uint16_t		sq_msn_cons;
 	uint16_t		sq_npg_cons;
 
-	void			*sq_hbm_ptr;
-	uint16_t		sq_hbm_prod;
+	void			*sq_cmb_ptr;
+	uint16_t		sq_cmb_prod;
 
 	pthread_spinlock_t	rq_lock;
 	bool			rq_flush;

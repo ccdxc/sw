@@ -53,7 +53,7 @@
 #define IONIC_DBPAGE_SIZE	0x1000
 #define IONIC_MAX_MRID		0xffffff
 #define IONIC_MAX_QPID		0xffffff
-#define IONIC_MAX_HBM_ORDER	15
+#define IONIC_MAX_CMB_ORDER	15
 
 #define IONIC_META_LAST ((void *)1ul)
 #define IONIC_META_POSTED ((void *)2ul)
@@ -317,8 +317,8 @@ struct ionic_qp {
 	u16			sq_msn_cons;
 	u16			sq_npg_cons;
 
-	void			__iomem *sq_hbm_ptr;
-	u16			sq_hbm_prod;
+	void			__iomem *sq_cmb_ptr;
+	u16			sq_cmb_prod;
 
 	spinlock_t		rq_lock; /* for posting and polling */
 	bool			rq_flush;
@@ -327,11 +327,11 @@ struct ionic_qp {
 	struct ionic_rq_meta	*rq_meta_head;
 
 	/* infrequently accessed, keep at end */
-	bool			sq_is_hbm;
-	int			sq_hbm_order;
-	u32			sq_hbm_pgid;
-	phys_addr_t		sq_hbm_addr;
-	struct ionic_mmap_info	sq_hbm_mmap;
+	bool			sq_is_cmb;
+	int			sq_cmb_order;
+	u32			sq_cmb_pgid;
+	phys_addr_t		sq_cmb_addr;
+	struct ionic_mmap_info	sq_cmb_mmap;
 
 	struct ib_umem		*sq_umem;
 	struct ionic_tbl_res	sq_res;

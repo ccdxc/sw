@@ -94,7 +94,7 @@ struct ionic_qp_req {
 struct ionic_qp_resp {
 	__u32 qpid;
 	__u32 rsvd;
-	__aligned_u64 sq_hbm_offset;
+	__aligned_u64 sq_cmb_offset;
 };
 
 struct ionic_srq_req {
