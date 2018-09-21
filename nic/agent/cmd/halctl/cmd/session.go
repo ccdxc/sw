@@ -53,6 +53,13 @@ var sessionDetailShowCmd = &cobra.Command{
 	Run:   sessionDetailShowCmdHandler,
 }
 
+var sessionClearCmd = &cobra.Command{
+	Use:   "session",
+	Short: "clear session information",
+	Long:  "clear session object information",
+	Run:   sessionClearCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(sessionShowCmd)
 	sessionShowCmd.AddCommand(sessionDetailShowCmd)
@@ -73,6 +80,16 @@ func init() {
 	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailDstPort, "dstport", 0, "Specify session dst port")
 	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailIPProto, "ipproto", 0, "Specify session IP proto")
 	sessionDetailShowCmd.Flags().Uint32Var(&sessionDetailL2SegID, "l2segid", 0, "Specify session L2 Segment ID")
+
+	clearCmd.AddCommand(sessionClearCmd)
+	sessionClearCmd.Flags().Uint64Var(&sessionVrfID, "vrfid", 0, "Specify vrf-id (default is 0)")
+	sessionClearCmd.Flags().Uint64Var(&sessionHandle, "handle", 0, "Specify session handle")
+	sessionClearCmd.Flags().StringVar(&sessionSrcIP, "srcip", "0.0.0.0", "Specify session src ip")
+	sessionClearCmd.Flags().StringVar(&sessionDstIP, "dstip", "0.0.0.0", "Specify session dst ip")
+	sessionClearCmd.Flags().Uint32Var(&sessionSrcPort, "srcport", 0, "Specify session src port")
+	sessionClearCmd.Flags().Uint32Var(&sessionDstPort, "dstport", 0, "Specify session dst port")
+	sessionClearCmd.Flags().Uint32Var(&sessionIPProto, "ipproto", 0, "Specify session IP proto")
+	sessionClearCmd.Flags().Uint32Var(&sessionL2SegID, "l2segid", 0, "Specify session L2 Segment ID")
 }
 
 func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -566,4 +583,129 @@ func IPAddrStrtoUint32(ip string) uint32 {
 	var addr [4]uint32
 	fmt.Sscanf(ip, "%d.%d.%d.%d", &addr[0], &addr[1], &addr[2], &addr[3])
 	return ((addr[0] << 24) + (addr[1] << 16) + (addr[2] << 8) + (addr[3]))
+}
+
+func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	client := halproto.NewSessionClient(c.ClientConn)
+
+	var sessionDeleteReqMsg *halproto.SessionDeleteRequestMsg
+
+	if cmd.Flags().Changed("handle") {
+		var req *halproto.SessionDeleteRequest
+		req = &halproto.SessionDeleteRequest{
+			GetBy: &halproto.SessionDeleteRequest_SessionHandle{
+				SessionHandle: sessionHandle,
+			},
+		}
+		sessionDeleteReqMsg = &halproto.SessionDeleteRequestMsg{
+			Request: []*halproto.SessionDeleteRequest{req},
+		}
+	} else if cmd.Flags().Changed("vrfid") || cmd.Flags().Changed("srcip") ||
+		cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
+		cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto") ||
+		cmd.Flags().Changed("l2segid") {
+		var req *halproto.SessionDeleteRequest
+		if cmd.Flags().Changed("srcip") && cmd.Flags().Changed("dstip") {
+			req = &halproto.SessionDeleteRequest{
+				GetBy: &halproto.SessionDeleteRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						SrcIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
+							},
+						},
+						DstIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionDstIP),
+							},
+						},
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
+					},
+				},
+			}
+		} else if cmd.Flags().Changed("srcip") {
+			req = &halproto.SessionDeleteRequest{
+				GetBy: &halproto.SessionDeleteRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						SrcIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
+							},
+						},
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
+					},
+				},
+			}
+		} else if cmd.Flags().Changed("dstip") {
+			req = &halproto.SessionDeleteRequest{
+				GetBy: &halproto.SessionDeleteRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						DstIp: &halproto.IPAddress{
+							IpAf: halproto.IPAddressFamily_IP_AF_INET,
+							V4OrV6: &halproto.IPAddress_V4Addr{
+								V4Addr: IPAddrStrtoUint32(sessionDstIP),
+							},
+						},
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
+					},
+				},
+			}
+		} else {
+			req = &halproto.SessionDeleteRequest{
+				GetBy: &halproto.SessionDeleteRequest_SessionFilter{
+					SessionFilter: &halproto.SessionFilter{
+						SrcPort:     sessionSrcPort,
+						DstPort:     sessionDstPort,
+						IpProto:     halproto.IPProtocol(sessionIPProto),
+						VrfId:       sessionVrfID,
+						L2SegmentId: sessionL2SegID,
+					},
+				},
+			}
+		}
+		sessionDeleteReqMsg = &halproto.SessionDeleteRequestMsg{
+			Request: []*halproto.SessionDeleteRequest{req},
+		}
+	} else {
+		// Delete all Sessions
+		sessionDeleteReqMsg = &halproto.SessionDeleteRequestMsg{
+			Request: []*halproto.SessionDeleteRequest{},
+		}
+	}
+
+	// HAL call
+	respMsg, err := client.SessionDelete(context.Background(), sessionDeleteReqMsg)
+	if err != nil {
+		log.Errorf("Deleting Session failed. %v", err)
+	}
+
+	// Sessions
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			continue
+		}
+	}
 }

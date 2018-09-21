@@ -559,7 +559,8 @@ flow_state_to_flow_stats_response (flow_state_t *flow_state,
 }
 
 static void
-session_state_to_session_get_response (session_state_t *session_state,
+session_state_to_session_get_response (session_t *session,
+                                       session_state_t *session_state,
                                        SessionGetResponse *response)
 {
     uint32_t        age;
@@ -576,22 +577,29 @@ session_state_to_session_get_response (session_state_t *session_state,
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
 
-    // rflow age
-    create_ns = session_state->rflow_state.create_ts;
-    age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
-    response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
-              mutable_flow_info()->set_flow_age(age);
-
     // TCP state
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
-              mutable_flow_info()->set_tcp_state(session_state->iflow_state.state);
-    response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
-              mutable_flow_info()->set_tcp_state(session_state->rflow_state.state);
+              mutable_flow_info()->set_tcp_state(session_state->iflow_state.state); 
 
     flow_state_to_flow_stats_response(&session_state->iflow_state,
          response->mutable_stats()->mutable_initiator_flow_stats());
-    flow_state_to_flow_stats_response(&session_state->rflow_state,
-         response->mutable_stats()->mutable_responder_flow_stats());
+
+    if (session->rflow) {
+        HAL_TRACE_DEBUG("valid rflow session");
+        // rflow age
+        create_ns = session_state->rflow_state.create_ts;
+        age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
+        response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_flow_age(age);
+
+        // TCP state
+        response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_tcp_state(session_state->rflow_state.state);
+
+        flow_state_to_flow_stats_response(&session_state->rflow_state,
+                response->mutable_stats()->mutable_responder_flow_stats());
+    }
+
     return;
 }
 
@@ -614,7 +622,7 @@ system_get_fill_rsp (session_t *session, SessionGetResponse *response)
     }
 
     session_to_session_get_response(session, response);
-    session_state_to_session_get_response(&session_state, response);
+    session_state_to_session_get_response(session, &session_state, response);
     response->set_api_status(types::API_STATUS_OK);
     ret = fte::session_get(session, response);
 
@@ -676,6 +684,7 @@ session_matches_filter (hal::session_t *session, SessionFilter *filter)
     }
 
     if (filter->has_dst_ip()) {
+	HAL_TRACE_DEBUG("Checking for dest ip");
         ret = ip_addr_spec_to_ip_addr(&ip_addr, filter->dst_ip());
         if (ret != HAL_RET_OK) {
             return false;
@@ -721,31 +730,34 @@ session_matches_filter (hal::session_t *session, SessionFilter *filter)
     return true;
 }
 
-static inline bool
-session_get_ht_cb (void *entry, void *ctxt)
-{
-    hal::session_t          *session = (session_t *)entry;
-    SessionGetResponseMsg   *rsp = (SessionGetResponseMsg *)(((session_get_filter_t *)ctxt)->response);
-    SessionFilter           *filter = (SessionFilter *)(((session_get_filter_t *)ctxt)->filter);
-
-    if (session_matches_filter(session, filter)) {
-        system_get_fill_rsp(session, rsp->add_response());
-    }
-
-    return false;
-}
-
 hal_ret_t
 session_get (SessionGetRequest& req, SessionGetResponseMsg *response)
 {
     session_t                   *session;
     SessionGetResponse          *rsp;
 
+    struct session_get_filter_t {
+        SessionFilter           *filter;
+        SessionGetResponseMsg   *response;
+    } ctxt = {0};
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t          *session = (session_t *)entry;
+        SessionGetResponseMsg   *rsp = (SessionGetResponseMsg *)(\
+                           ((session_get_filter_t *)ctxt)->response);
+        SessionFilter           *filter = (SessionFilter *)(\
+                           ((session_get_filter_t *)ctxt)->filter);
+
+        if (session_matches_filter(session, filter)) {
+            system_get_fill_rsp(session, rsp->add_response());
+        }
+        return false; 
+    }; 
+
     if (req.has_session_filter()) {
-        session_get_filter_t ctxt = {0};
         ctxt.filter = req.mutable_session_filter();
         ctxt.response = response;
-        g_hal_state->session_hal_handle_ht()->walk_safe(session_get_ht_cb, &ctxt);
+        g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &ctxt);
         return HAL_RET_OK;
     } else if (req.session_handle()) {
         rsp = response->add_response();
@@ -758,6 +770,150 @@ session_get (SessionGetRequest& req, SessionGetResponseMsg *response)
     } else {
         return session_get_all(response);
     }
+}
+
+hal_ret_t
+session_delete (SessionDeleteRequest& req, SessionDeleteResponseMsg *response)
+{
+    session_t                   *session;
+    SessionDeleteResponse          *rsp;
+    hal_ret_t                       ret;
+
+    struct session_delete_filter_t {
+        SessionDeleteRequest       req;
+        dllist_ctxt_t             *session_list;
+    } ctxt = {};
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t             *session = (session_t *)entry;
+        SessionDeleteRequest        req = ((session_delete_filter_t *)ctxt)->req;
+        SessionFilter              *filter = req.mutable_session_filter();
+        dllist_ctxt_t              *list_head = ((session_delete_filter_t *)ctxt)->session_list;
+
+        if (session_matches_filter(session, filter)) {
+            hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->\
+                                   hal_handle_id_list_entry_slab()->alloc();
+            if (list_entry == NULL) {
+                HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
+                return false;
+            }
+            list_entry->handle_id = session->hal_handle;
+            dllist_add(list_head, &list_entry->dllist_ctxt);
+        }
+
+        return false;
+    };
+
+    if (req.has_session_filter()) {
+        dllist_ctxt_t session_list;
+        dllist_reset(&session_list);
+        ctxt.req = req;
+        ctxt.session_list = &session_list;
+
+        g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &ctxt);
+        ret = session_delete_list(&session_list, false);
+        rsp = response->add_response();
+        rsp->set_api_status(hal::hal_prepare_rsp(ret));
+        return HAL_RET_OK;
+    } else if (req.session_handle()) {
+        rsp = response->add_response();
+        session = find_session_by_handle(req.session_handle());
+        if (session == NULL) {
+            rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+            return HAL_RET_SESSION_NOT_FOUND;
+        }
+        ret = fte::session_delete(session, true);
+        rsp->set_api_status(hal::hal_prepare_rsp(ret));
+        return HAL_RET_OK;
+    } else {
+        return session_delete_all(response);
+    }
+}
+
+hal_ret_t
+session_get_all(SessionGetResponseMsg *rsp)
+{
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t  *session = (session_t *)entry;
+        SessionGetResponseMsg *rsp = (SessionGetResponseMsg *)ctxt;
+        system_get_fill_rsp(session, rsp->add_response());
+        return false;
+    };
+
+    sdk_ret_t ret = g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, rsp);
+
+    return hal_sdk_ret_to_hal_ret(ret);
+}
+
+hal_ret_t
+session_delete_list (dllist_ctxt_t *session_list, bool async)
+{
+    // delete all sessions
+    hal_ret_t ret = HAL_RET_OK;
+    dllist_ctxt_t  *curr = NULL, *next = NULL;
+    dllist_for_each_safe(curr, next, session_list) {
+        hal_handle_id_list_entry_t  *entry =
+            dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        hal::session_t *session = hal::find_session_by_handle(entry->handle_id);
+        if (session) {
+            if (async) {
+                ret = fte::session_delete_async(session, true);
+            } else {
+                ret = fte::session_delete(session, true);
+                if (ret != HAL_RET_OK) {
+                    goto cleanup;
+                }
+            }
+        }
+        // Remove from list
+        dllist_del(&entry->dllist_ctxt);
+        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+    }
+
+cleanup:
+    dllist_for_each_safe(curr, next, session_list) {
+        hal_handle_id_list_entry_t  *entry =
+            dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+
+        // Remove from list
+        dllist_del(&entry->dllist_ctxt);
+        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+    }
+
+    return ret;
+}
+
+hal_ret_t
+session_delete_all (SessionDeleteResponseMsg *rsp)
+{
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t  *session = (session_t *)entry;
+        dllist_ctxt_t   *list_head = (dllist_ctxt_t  *)ctxt;
+
+        hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
+                hal_handle_id_list_entry_slab()->alloc();
+
+        if (list_entry == NULL) {
+            HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
+            return false;
+        }
+
+        list_entry->handle_id = session->hal_handle;
+        dllist_add(list_head, &list_entry->dllist_ctxt);
+        return false;
+    };
+
+    // build list of session_ids
+    dllist_ctxt_t session_list;
+    dllist_reset(&session_list);
+    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &session_list);
+
+    hal_ret_t ret;
+    ret = session_delete_list(&session_list);
+    rsp->add_response()->set_api_status(hal::hal_prepare_rsp(ret));
+
+    return HAL_RET_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -2099,78 +2255,6 @@ session_set_tcp_state (session_t *session, hal::flow_role_t role,
         flow->state = tcp_state;
 
     HAL_TRACE_DEBUG("Updated tcp state to {}", tcp_state);
-}
-
-hal_ret_t
-session_get_all(SessionGetResponseMsg *rsp)
-{
-    auto walk_func = [](void *entry, void *ctxt) {
-        hal::session_t  *session = (session_t *)entry;
-        SessionGetResponseMsg *rsp = (SessionGetResponseMsg *)ctxt;
-        system_get_fill_rsp(session, rsp->add_response());
-        return false;
-    };
-
-    sdk_ret_t ret = g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, rsp);
-
-    return hal_sdk_ret_to_hal_ret(ret);
-}
-
-hal_ret_t
-session_delete_list (dllist_ctxt_t *session_list, bool async)
-{
-    // delete all sessions
-    hal_ret_t ret = HAL_RET_OK;
-    dllist_ctxt_t  *curr = NULL, *next = NULL;
-    dllist_for_each_safe(curr, next, session_list) {
-        hal_handle_id_list_entry_t  *entry =
-            dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        hal::session_t *session = hal::find_session_by_handle(entry->handle_id);
-        if (session) {
-            if (async) {
-                ret = fte::session_delete_async(session);
-            } else {
-                ret = fte::session_delete(session);
-            }
-        }
-        // Remove from list
-        dllist_del(&entry->dllist_ctxt);
-        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-    }
-    return ret;
-}
-
-hal_ret_t
-session_delete_all (SessionDeleteResponseMsg *rsp)
-{
-
-    auto walk_func = [](void *entry, void *ctxt) {
-        hal::session_t  *session = (session_t *)entry;
-        dllist_ctxt_t   *list_head = (dllist_ctxt_t  *)ctxt;
-
-        hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
-                hal_handle_id_list_entry_slab()->alloc();
-
-        if (entry == NULL) {
-            HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
-            return false;
-        }
-
-        list_entry->handle_id = session->hal_handle;
-        dllist_add(list_head, &list_entry->dllist_ctxt);
-        return false;
-    };
-
-    // build list of session_ids
-    dllist_ctxt_t session_list;
-    dllist_reset(&session_list);
-    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &session_list);
-
-	hal_ret_t ret;
-	ret = session_delete_list(&session_list);
-	rsp->add_response()->set_api_status(hal::hal_prepare_rsp(ret));
-
-    return HAL_RET_OK;
 }
 
 bool

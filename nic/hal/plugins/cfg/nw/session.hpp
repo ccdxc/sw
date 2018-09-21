@@ -1,4 +1,5 @@
 //-----------------------------------------------------------------------------
+
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
@@ -422,11 +423,6 @@ typedef struct session_stats_ {
 #define HAL_MAX_SESSIONS                             524288
 #define HAL_MAX_FLOWS                                (HAL_MAX_SESSIONS << 1)
 
-typedef struct session_get_filter_s {
-    SessionFilter           *filter;
-    SessionGetResponseMsg   *response;
-} session_get_filter_t;
-
 session_t *find_session_by_handle(hal_handle_t handle);
 //session_t *find_session_by_id(session_id_t session_id);
 
@@ -471,6 +467,8 @@ hal_ret_t session_delete_all (session::SessionDeleteResponseMsg *rsp);
 hal_ret_t session_eval_matching_session (session_match_t *match);
 hal_ret_t system_fte_stats_get (SystemResponse *rsp);
 hal_ret_t system_session_summary_get (SystemResponse *rsp);
+hal_ret_t session_delete (session::SessionDeleteRequest& spec,
+                      session::SessionDeleteResponseMsg *rsp);
 
 }    // namespace hal
 

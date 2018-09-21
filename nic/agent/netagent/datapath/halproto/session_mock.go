@@ -244,6 +244,64 @@ func (mr *MockisSessionStatus_AlgInfoMockRecorder) Size() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisSessionStatus_AlgInfo)(nil).Size))
 }
 
+// MockisSessionDeleteRequest_GetBy is a mock of isSessionDeleteRequest_GetBy interface
+type MockisSessionDeleteRequest_GetBy struct {
+	ctrl     *gomock.Controller
+	recorder *MockisSessionDeleteRequest_GetByMockRecorder
+}
+
+// MockisSessionDeleteRequest_GetByMockRecorder is the mock recorder for MockisSessionDeleteRequest_GetBy
+type MockisSessionDeleteRequest_GetByMockRecorder struct {
+	mock *MockisSessionDeleteRequest_GetBy
+}
+
+// NewMockisSessionDeleteRequest_GetBy creates a new mock instance
+func NewMockisSessionDeleteRequest_GetBy(ctrl *gomock.Controller) *MockisSessionDeleteRequest_GetBy {
+	mock := &MockisSessionDeleteRequest_GetBy{ctrl: ctrl}
+	mock.recorder = &MockisSessionDeleteRequest_GetByMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisSessionDeleteRequest_GetBy) EXPECT() *MockisSessionDeleteRequest_GetByMockRecorder {
+	return m.recorder
+}
+
+// isSessionDeleteRequest_GetBy mocks base method
+func (m *MockisSessionDeleteRequest_GetBy) isSessionDeleteRequest_GetBy() {
+	m.ctrl.Call(m, "isSessionDeleteRequest_GetBy")
+}
+
+// isSessionDeleteRequest_GetBy indicates an expected call of isSessionDeleteRequest_GetBy
+func (mr *MockisSessionDeleteRequest_GetByMockRecorder) isSessionDeleteRequest_GetBy() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isSessionDeleteRequest_GetBy", reflect.TypeOf((*MockisSessionDeleteRequest_GetBy)(nil).isSessionDeleteRequest_GetBy))
+}
+
+// MarshalTo mocks base method
+func (m *MockisSessionDeleteRequest_GetBy) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisSessionDeleteRequest_GetByMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisSessionDeleteRequest_GetBy)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisSessionDeleteRequest_GetBy) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisSessionDeleteRequest_GetByMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisSessionDeleteRequest_GetBy)(nil).Size))
+}
+
 // MockisSessionGetRequest_GetBy is a mock of isSessionGetRequest_GetBy interface
 type MockisSessionGetRequest_GetBy struct {
 	ctrl     *gomock.Controller

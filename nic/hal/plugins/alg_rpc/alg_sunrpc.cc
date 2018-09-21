@@ -355,6 +355,9 @@ size_t process_sunrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
  * Initialize RPC Info
  */
 static void reset_rpc_info(rpc_info_t *rpc_info) {
+
+    HAL_ASSERT(rpc_info);
+
     if (rpc_info->pkt_len && rpc_info->pkt != NULL) {
         HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);
     }
@@ -660,6 +663,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 l4_sess->isCtrl = TRUE;
                 l4_sess->info = rpc_info;
             }
+
             reset_rpc_info(rpc_info);
             rpc_info->map_entry_timeout = sfw_info->alg_opts.opt.sunrpc_opts.map_entry_timeout;
 

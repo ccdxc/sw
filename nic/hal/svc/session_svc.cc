@@ -37,7 +37,6 @@ SessionServiceImpl::SessionDelete(ServerContext *context,
                                   SessionDeleteResponseMsg *rsp)
 {
     uint32_t               i, nreqs = req->request_size();
-    SessionDeleteResponse  *response;
 
     if (nreqs == 0) {
         HAL_TRACE_DEBUG("Rcvd Session Delete All Request");
@@ -50,9 +49,8 @@ SessionServiceImpl::SessionDelete(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        response = rsp->add_response();
         auto spec = req->request(i);
-        fte::session_delete(spec, response);
+        hal::session_delete(spec, rsp);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

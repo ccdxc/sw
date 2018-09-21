@@ -525,6 +525,8 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     // Take the lock
     HAL_SPINLOCK_LOCK(&app_sess->slock);
 
+    app_sess_ht()->remove_entry(app_sess, &app_sess->app_sess_ht_ctxt);
+
     dllist_for_each_safe(lentry, next, &app_sess->exp_flow_lhead)
     {
         l4_alg_status_t *exp_flow = dllist_entry(lentry,
@@ -549,6 +551,7 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     HAL_SPINLOCK_DESTROY(&app_sess->slock);
 
     app_sess_slab()->free(app_sess);
+    HAL_TRACE_DEBUG("Cleaned up ALG App session");
 }
 
 } //namespace alg_utils

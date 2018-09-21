@@ -285,7 +285,10 @@ message SessionResponseMsg {
 message SessionDeleteRequest {
   types.ObjectMeta    meta           = 1;    // object meta
   // session_handle is the handle of the session
-  fixed64             session_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  oneof get_by {
+      fixed64             session_handle = 2 [(gogoproto.moretags) = "venice:key"];
+      SessionFilter       session_filter  = 3;
+  }
 }
 
 // SessionDeleteRequestMsg is batched session delete request

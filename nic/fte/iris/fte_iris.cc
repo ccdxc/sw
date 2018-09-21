@@ -674,7 +674,7 @@ ctx_t::update_flow_table()
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Session {} failed, ret = {}", update_type, ret);
     } else {
-        HAL_TRACE_DEBUG("Session {} successful", update_type);
+        HAL_TRACE_DEBUG("Session {} of session {} successful", update_type, session_handle);
     }
 
     uint8_t istage = 0, rstage = 0;
