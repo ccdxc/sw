@@ -19,8 +19,6 @@
 extern "C" {
 #endif
 
-#define CPDC_MAX_BUFFER_LEN	(64 * 1024)
-
 /**
  * struct cpdc_init_params - used to initialize CPDC accelerator.
  * @cip_version: to be populated in 'struct psno_compression_header'
@@ -130,7 +128,7 @@ struct cpdc_cmd {
  * @cd_cmd: 16-bit command descriptor.  Refer to 'struct cpdc_cmd' for more
  * details.
  * @cd_datain_len: total length of the input source buffer in bytes. If set to
- * 0, then the length is considered to be CPDC_MAX_BUFFER_LEN bytes.
+ * 0, then the length is considered to be 64K.
  * @cd_extended_len: total length of the input source buffer in bytes, when
  * the requested operation is not compression or decompression.  The length is
  * extended to 32-bits.
