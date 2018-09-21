@@ -73,6 +73,27 @@ def parse_logs():
             programline = linenum
             print linenum, '0x'+fields[2], program
             line = line.replace('0x'+fields[2], program)
+        elif re.match("^\[(.*)\]: ([0-9a-fA-F]+): ([0-9a-fA-F]+)\s+b\w+\s+.+, 0x([0-9a-fA-F]+)", line, re.I):
+#this part added to translate the branch pointers in code
+            
+	    fields1 = re.split(r'\[(.*)\]: ([0-9a-fA-F]+): ([0-9a-fA-F]+)\s+b\w+\s+.+, 0x([0-9a-fA-F]+)', line)
+            key1 = '0x'+fields1[2].upper()
+            key2 = '0x'+fields1[4].upper()
+         #   print "branch found ", line , "key1 ", key1, " key2 ", key2
+            if key1 in symbols:
+                line = line.replace(fields1[2], symbols[key1])
+            if key2 in symbols:
+                line = line.replace(fields1[4], fields1[4]+"("+symbols[key2]+")")
+         #   print linenum, 'Jump to '+fields[2], program
+            inscountfile.write("%04d %s %d\n" % (int(fields1[1])+1, program, programline))
+        elif re.match("^\[(.*)\]: ([0-9a-fA-F]+):(.*)", line, re.I):
+#this part added to mark what jumps were taken
+            fields1 = re.split(r'\[(.*)\]: ([0-9a-fA-F]+):(.*)', line)
+            key = '0x'+fields1[2].upper()
+            if key in symbols:
+                line = line.replace(fields1[2], symbols[key])
+        #    print linenum, 'Jump to '+fields[2], program
+            inscountfile.write("%03d %s %d\n" % (int(fields1[1])+1, program, programline))
         elif re.match(".* PC_ADDR=0x(.*) INST=0x", line, re.I):
             fields = re.split(r'.* PC_ADDR=0x(.*) INST=0x', line)
             key = '0x'+fields[1].upper()
@@ -233,10 +254,31 @@ def parse_json():
             rawLevelIIII["name"]=line
             rawLevelIIII["line"]=linenum
            # rawLevelIIII["children"]=[]
-    line =json.dumps(rawLevel0, ensure_ascii=False) 
+    if rawLevelIIII!={} :
+        if rawLevelIII!={} :
+            if "children" not in rawLevelIII :
+                rawLevelIII["children"]=[]
+            rawLevelIII["children"].append(rawLevelIIII);
+
+    if rawLevelIII!={} :
+        if rawLevelII!={} :
+            if "children" not in rawLevelII :
+                rawLevelII["children"]=[]
+            rawLevelII["children"].append(rawLevelIII);
+
+    if rawLevelII!={} :
+        if "children" not in rawLevelI :
+            rawLevelI["children"]=[]
+        rawLevelI["children"].append(rawLevelII);
+
+    if rawLevelI!={} :
+        rawLevel0["children"].append(rawLevelI);
+        rawLevelI={}
+    line =json.dumps(rawLevel0, ensure_ascii=False)
     modeljson.write(line)
     modeljson.close()
     modelfile.close()
+
     # prepare sorted inscount file
     print "To enable HTTP server for parser analyser please run\n   python -m SimpleHTTPServer 8000 & \n\nThen open broswer with the IP of this server\nFor example\n\"http://192.168.68.12:8000/\""
     return
