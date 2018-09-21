@@ -1,42 +1,55 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, ViewEncapsulation, OnDestroy, AfterViewInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { IPUtility } from '@app/common/IPUtility';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
+import { SearchUtil } from '@app/components/search/SearchUtil';
 import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
 import { IApiStatus, ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
-import { SearchUtil } from '@app/components/search/SearchUtil';
 
 /**
  * Component for displaying a security policy and providing IP searching
- * on the rules. 
- * 
+ * on the rules.
+ *
  * When there is text entered in any of the search boxes, the
  * search button and the clear search button appear. User can hit enter in
  * any of the boxes to trigger a search or can hit the search button. If they
  * are searching an invalid IP, an error message will show up to the right
  * of the buttons. If the search executes and returns no matches, we display
  * an error message of No Matching Results. Otherwise, the table will scroll
- * to the matching rule and it will be highlighted. 
- * 
- * If the user starts typing in the search box and changes the query, 
- * then the highlighting wil disappear but the user remains at current 
- * scroll position. If the user clicks the clear search button, 
+ * to the matching rule and it will be highlighted.
+ *
+ * If the user starts typing in the search box and changes the query,
+ * then the highlighting wil disappear but the user remains at current
+ * scroll position. If the user clicks the clear search button,
  * the search will clear and they will be brought back to the top of the table.
- * 
+ *
  * If new data comes in while we have a search displayed, there are two scenarios
- * 1. User clicks the load new data, and we make a new elastic request and take 
+ * 1. User clicks the load new data, and we make a new elastic request and take
  * them to the matching rule in the new data.
  * 2. User makes a new query but haven't clicked load data. We force switch to
  * the new data and then make the query they requested.
+ *
+ *
+ * If a user navigates to a policy that doesn't exist
+ * Ex. /security/sgpolicies/fakePolicy
+ * they will be shown a Policy does not exist overlay
+ * If the policy becomes created while they are on the page
+ * it will immediately go away and show the policy
+ * If a policy is deleted while a user is looking at it,
+ * it will immediately show a policy is deleted overlay.
+ * Again, if the policy becomes recreated the overlay will disappear
+ * and will show the data.
  */
 class SecuritySGRuleWrapper {
   order: number;
@@ -44,12 +57,12 @@ class SecuritySGRuleWrapper {
 }
 
 @Component({
-  selector: 'app-sgpolicy',
-  templateUrl: './sgpolicy.component.html',
-  styleUrls: ['./sgpolicy.component.scss'],
-  encapsulation: ViewEncapsulation.None,
+  selector: 'app-sgpolicydetail',
+  templateUrl: './sgpolicydetail.component.html',
+  styleUrls: ['./sgpolicydetail.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
-export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {
+export class SgpolicydetailComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('sgpolicyTable') sgpolicyTurboTable: Table;
   @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
   viewInitComplete: boolean = false;
@@ -57,9 +70,6 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   subscriptions = [];
 
   cols: any[];
-  // Holds all policy objects, for initial use case, there will only be one object
-  sgPolicies: ReadonlyArray<SecuritySGPolicy> = [];
-  sgPoliciesEventUtility: HttpEventUtility;
 
   // Used for the table - when true there is a loading icon displayed
   loading: boolean = false;
@@ -80,6 +90,9 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     svgIcon: 'policy'
   };
 
+  // Id of the policy the user has navigated to
+  selectedPolicyId: string;
+
   // Current policy that is being displayed
   selectedPolicy: SecuritySGPolicy;
 
@@ -95,31 +108,60 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
   portFormControl: FormControl = new FormControl('', [
   ]);
 
+  // Holds all policy objects
+  sgPolicies: ReadonlyArray<SecuritySGPolicy>;
+  sgPoliciesEventUtility: HttpEventUtility;
+
   // Holds all the policy rules of the currently selected policy
-  sgPolicyRules: ReadonlyArray<SecuritySGRuleWrapper[]> = [];
+  sgPolicyRules: ReadonlyArray<SecuritySGRuleWrapper[]>;
 
   // Current filter applied to all the data in the table
-  currentSearch = null;
+  currentSearch;
+
   // Index of the rule to highlight
-  selectedRuleIndex: number = null;
+  selectedRuleIndex: number;
 
   // Error message to display next to IP search
-  searchErrorMessage = '';
+  searchErrorMessage: string;
 
   // subscription for elastic search queries
   searchSubscription;
 
+  // Whether we show a deletion overlay
+  showDeletionScreen: boolean;
+
+  // Whether we show a missing overlay
+  showMissingScreen: boolean;
+
   constructor(protected _controllerService: ControllerService,
     private elRef: ElementRef,
     protected securityService: SecurityService,
-    protected searchService: SearchService
+    protected searchService: SearchService,
+    private _route: ActivatedRoute,
+    private uiconfigsService: UIConfigsService
   ) {
     super(_controllerService);
   }
 
+
   ngOnInit() {
-    this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'AlerttableComponent', 'state': Eventtypes.COMPONENT_INIT });
-    this.getSGPolicies();
+    this.initializeData();
+
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'SgpolicydetailComponent', 'state': Eventtypes.COMPONENT_INIT });
+    this._route.params
+      .map(params => params['id'])
+      .subscribe((id) => {
+        this.selectedPolicyId = id;
+        this.initializeData();
+        this.getSGPoliciesDetail();
+        this._controllerService.setToolbarData({
+          buttons: [],
+          breadcrumb: [
+            { label: 'Security' },
+            { label: 'Security Group Policies', url: window.location.protocol + '//' + window.location.hostname + ':' + window.location.port + '/#/security/sgpolicies' },
+            { label: id }]
+        });
+      });
 
     this.cols = [
       { field: 'sourceIPs', header: 'Source IPs' },
@@ -127,10 +169,41 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
       { field: 'action', header: 'Action' },
       { field: 'protocolPort', header: 'Protocol/Ports' },
     ];
-    this._controllerService.setToolbarData({
-      buttons: [],
-      breadcrumb: [{ label: 'Security', url: '' }, { label: 'Security Policy', url: '' }]
-    });
+  }
+
+  initializeData() {
+    // Initializing variables so that state is cleared between routing of different
+    // sgpolicies
+    // Ex. /sgpolicies/policy1 -> /sgpolicies/policy2
+    this.sgPolicies = [];
+    this.sgPolicyRules = [];
+    this.showDeletionScreen = false;
+    this.showMissingScreen = false;
+    this.searchErrorMessage = '';
+    this.selectedRuleIndex = null;
+    this.currentSearch = null;
+    this.selectedPolicy = null;
+    this.sourceIpFormControl.setValue('');
+    this.destIpFormControl.setValue('');
+    this.portFormControl.setValue('');
+    this.enableFormControls();
+  }
+
+  disableFormControls() {
+    // Setting values to blank so that the hint text shows up instead of
+    // just a blank field
+    this.sourceIpFormControl.setValue('');
+    this.destIpFormControl.setValue('');
+    this.portFormControl.setValue('');
+    this.sourceIpFormControl.disable();
+    this.destIpFormControl.disable();
+    this.portFormControl.disable();
+  }
+
+  enableFormControls() {
+    this.sourceIpFormControl.enable();
+    this.destIpFormControl.enable();
+    this.portFormControl.enable();
   }
 
   keyUpInput(event) {
@@ -201,12 +274,12 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     }
     // If there is text entered but it isn't a valid IP, we dont invoke search.
     if (sourceIP != null && sourceIP.length !== 0 && !IPUtility.isValidIP(sourceIP)) {
-      this.searchErrorMessage = "Invalid IP";
+      this.searchErrorMessage = 'Invalid IP';
       return false;
     }
     // If there is text entered but it isn't a valid IP, we dont invoke search.
     if (destIP != null && destIP.length !== 0 && !IPUtility.isValidIP(destIP)) {
-      this.searchErrorMessage = "Invalid IP";
+      this.searchErrorMessage = 'Invalid IP';
       return false;
     }
 
@@ -221,6 +294,8 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
 
     const req = new SearchPolicySearchRequest();
     req.tenant = Utility.getInstance().getTenant();
+    req.namespace = Utility.getInstance().getNamespace();
+    req['sg-policy'] = this.selectedPolicyId;
     if (port != null && port.trim().length !== 0) {
       req.app = port.trim();
     }
@@ -245,7 +320,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
       sourceIP: sourceIP,
       destIP: destIP,
       port: port
-    }
+    };
     this.loading = true;
     // If we are displaying old data, we force update to new data
     if (this.lazyRenderWrapper.hasUpdate) {
@@ -259,23 +334,23 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
       (data) => {
         // const body = data.body as ISearchPolicySearchResponse;
         const body = data.body as any;
-        if (body.status === "MATCH") {
+        if (body.status === 'MATCH') {
           if (this.selectedPolicy == null || body.results[this.selectedPolicy.meta.name] == null) {
-            this.searchErrorMessage = "No Matching Rule"
+            this.searchErrorMessage = 'No Matching Rule';
           } else {
             this.searchErrorMessage = '';
             this.selectedRuleIndex = body.results[this.selectedPolicy.meta.name].index;
             this.lazyRenderWrapper.scrollToRowNumber(this.selectedRuleIndex);
           }
         } else {
-          this.searchErrorMessage = "No Matching Rule"
+          this.searchErrorMessage = 'No Matching Rule';
         }
         this.loading = false;
       },
       (error) => {
-        console.error('policy search query failed');
+        console.error('policy search query failed', error);
       }
-    )
+    );
 
   }
 
@@ -289,7 +364,7 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
    */
   ngOnDestroy() {
     // publish event that AppComponent is about to be destroyed
-    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'sgpolicyComponent', 'state': Eventtypes.COMPONENT_DESTROY });
+    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'sgpolicydetailComponent', 'state': Eventtypes.COMPONENT_DESTROY });
     this.subscriptions.forEach(subscription => {
       subscription.unsubscribe();
     });
@@ -306,19 +381,60 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
     return this.constructor.name;
   }
 
-  getSGPolicies() {
+  getSGPoliciesDetail() {
+    // We perform a get as well as a watch so that we can know if the object the user is
+    // looking for exists or not.
+    const getSubscription = this.securityService.GetSGPolicy(this.selectedPolicyId).subscribe(
+      response => {
+        // We do nothing, and wait for the callback of the watch to populate the view
+      },
+      error => {
+        // If we receive any error code we display object is missing
+        // TODO: Update to be more descriptive based on error message
+        this.showMissingScreen = true;
+        // Putting focus onto the overlay to prevent user
+        // being able to interact with the page underneath
+        this.disableFormControls();
+
+        // TODO: Error handling
+        if (error.body instanceof Error) {
+          console.error('Security service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.error('Security service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+        }
+      }
+    );
     this.sgPoliciesEventUtility = new HttpEventUtility(SecuritySGPolicy);
     this.sgPolicies = this.sgPoliciesEventUtility.array;
-    const subscription = this.securityService.WatchSGPolicy().subscribe(
+    // const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId}).subscribe(
+    const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'ObjectMeta.Name=' + this.selectedPolicyId }).subscribe(
       response => {
         const body: any = response.body;
         this.sgPoliciesEventUtility.processEvents(body);
-        // only look at the first policy
+        if (this.sgPolicies.length > 1) {
+          // because of the name selector, we should
+          // have only got one object
+          console.error(
+            'Received more than one security policy. Expected '
+            + this.selectedPolicyId + ', received ' +
+            this.sgPolicies.map((policy) => policy.meta.name).join(', '));
+        }
         if (this.sgPolicies.length > 0) {
+          // In case object was deleted and then readded while we are on the same screen
+          this.showDeletionScreen = false;
+          // In case object wasn't created yet and then was added while we are on the same screen
+          this.showMissingScreen = false;
+          this.enableFormControls();
           // Set sgpolicyrules
           this.selectedPolicy = new SecuritySGPolicy(this.sgPolicies[0]);
           this.sgPolicyRules = this.addOrderRanking(this.selectedPolicy.spec.rules);
         } else {
+          // Must have received a delete event.
+          this.showDeletionScreen = true;
+          // Putting focus onto the overlay to prevent user
+          // being able to interact with the page underneath
+          this.disableFormControls();
+
           this.selectedPolicy = null;
           this.sgPolicyRules = [];
         }
@@ -326,20 +442,13 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
       error => {
         // TODO: Error handling
         if (error.body instanceof Error) {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+          console.error('Security service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
         } else {
-          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+          console.error('Security service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
       }
     );
     this.subscriptions.push(subscription);
-  }
-
-  /**
-   * Returns the table's current scroll amount
-   */
-  getTableScroll() {
-    return this.elRef.nativeElement.querySelector('.ui-table-scrollable-body').scrollTop;
   }
 
   /**
@@ -358,5 +467,12 @@ export class SgpolicyComponent extends BaseComponent implements OnInit, OnDestro
       );
     });
     return retRules;
+  }
+
+  /**
+   * Used by html
+   */
+  routeToHomepage() {
+    this.uiconfigsService.navigateToHomepage();
   }
 }

@@ -68,7 +68,7 @@ export class NaplesComponent implements OnInit, OnDestroy {
           console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
       }
-    )
+    );
   }
 
   displayColumn(data, col): any {

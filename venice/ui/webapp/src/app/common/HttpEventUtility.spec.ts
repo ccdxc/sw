@@ -8,7 +8,7 @@ class MockConstructor {
     this.data = data;
     this.meta = {
       name: data.meta.name
-    }
+    };
   }
 }
 
@@ -203,5 +203,5 @@ describe('HttpEventUtility', () => {
     serviceUtilitySingleton.processEvents(putEvent);
     expect(data.length).toBe(1);
     expect(data[0].meta.name).toEqual('obj2');
-  })
+  });
 });

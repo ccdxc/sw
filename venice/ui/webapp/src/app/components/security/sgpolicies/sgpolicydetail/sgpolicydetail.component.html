@@ -33,6 +33,26 @@
     </div>
   </mat-expansion-panel>
   <ng-container *ngTemplateOutlet="DataTable" ></ng-container>
+  <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->
+  <!-- Missing screen overlay displays when the policy does not exist-->
+  <div #overlay *ngIf="showDeletionScreen || showMissingScreen" fxLayout="row" fxLayoutAlign="center stretch" class="sgpolicy-overlay">
+    <div fxFlex="50%" fxLayout="column" class="sgpolicy-overlay-content">
+        <div fxFlex='20%'></div>
+        <div *ngIf="showDeletionScreen" fxFlex='15%' class="sgpolicy-deleted-policy"></div>
+        <div *ngIf="showMissingScreen" fxFlex='15%' class="sgpolicy-missing-policy"></div>
+        <div *ngIf="showDeletionScreen" fxFlex="none" class="sgpolicy-overlay-text">
+          {{selectedPolicyId}} has been deleted
+        </div>
+        <div *ngIf="showMissingScreen" fxFlex="none" class="sgpolicy-overlay-text">
+          {{selectedPolicyId}} does not exist
+        </div>
+        <div fxFlex="5%"></div>
+        <div fxFlex="none" fxLayout="row" fxLayoutAlign="center stretch" fxLayoutGap="40px">
+          <button  fxFlex="none" class="global-button-primary sgpolicy-overlay-button" routerLink="../">SG POLICIES</button>
+          <button  fxFlex="none" class="global-button-primary sgpolicy-overlay-button" (click)="routeToHomepage()">HOMEPAGE</button>
+        </div>
+    </div>
+  </div>
 </app-pagebody>
 
 <ng-template #DataTable>
@@ -93,7 +113,7 @@
         <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
           <tr [class]="rowData.order===selectedRuleIndex ? 'sgpolicy-match' : ''">
             <td class="sgpolicy-rule-number" style="width: 2.25em">
-              {{ rowData.order }}
+              {{ rowData.order + 1}}
             </td>
             <td> 
               {{  rowData.rule['from-ip-addresses'].join(', ') }}

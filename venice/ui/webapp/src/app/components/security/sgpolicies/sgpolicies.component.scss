@@ -1,0 +1,11 @@
+@import 'global-mixins';
+
+.sgpolicies-table {
+  height: 100%;
+  @include primary-font;
+  overflow: hidden;
+}
+
+.sgpolicies-column-name {
+  width: 15%;
+}

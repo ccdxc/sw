@@ -1,8 +1,8 @@
-import { DebugElement } from "@angular/core";
-import { ComponentFixture } from "@angular/core/testing";
-import { PrettyDatePipe } from "@app/components/shared/Pipes/PrettyDate.pipe";
-import { By } from "@angular/platform-browser";
-import { Utility } from "@app/common/Utility";
+import { DebugElement } from '@angular/core';
+import { ComponentFixture } from '@angular/core/testing';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { By } from '@angular/platform-browser';
+import { Utility } from '@app/common/Utility';
 import { } from 'jasmine';
 
 export class TestingUtility {

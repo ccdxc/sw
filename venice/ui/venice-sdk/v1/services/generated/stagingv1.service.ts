@@ -20,9 +20,9 @@ export class Stagingv1Service extends AbstractService {
   }
 
   /** List Buffer objects */
-  public ListBuffer_1():Observable<{body: IStagingBufferList | IApiStatus | Error, statusCode: number}> {
+  public ListBuffer_1(queryParam: any = null):Observable<{body: IStagingBufferList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers';
-    return this.invokeAJAXGetCall(url, 'ListBuffer_1') as Observable<{body: IStagingBufferList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListBuffer_1') as Observable<{body: IStagingBufferList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Buffer object */
@@ -32,10 +32,10 @@ export class Stagingv1Service extends AbstractService {
   }
   
   /** Get Buffer object */
-  public GetBuffer_1(O_Name):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
+  public GetBuffer_1(O_Name, queryParam: any = null):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetBuffer_1') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetBuffer_1') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Buffer object */
@@ -58,10 +58,10 @@ export class Stagingv1Service extends AbstractService {
   }
   
   /** List Buffer objects */
-  public ListBuffer():Observable<{body: IStagingBufferList | IApiStatus | Error, statusCode: number}> {
+  public ListBuffer(queryParam: any = null):Observable<{body: IStagingBufferList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListBuffer') as Observable<{body: IStagingBufferList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListBuffer') as Observable<{body: IStagingBufferList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Buffer object */
@@ -72,11 +72,11 @@ export class Stagingv1Service extends AbstractService {
   }
   
   /** Get Buffer object */
-  public GetBuffer(O_Name):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
+  public GetBuffer(O_Name, queryParam: any = null):Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetBuffer') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetBuffer') as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Buffer object */

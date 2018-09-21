@@ -27,7 +27,11 @@ export class AbstractService {
     let observer;
     switch (method) {
       case 'GET':
-        observer = this._http.get(url, { observe: 'response' });
+        if (payload == null) {
+          observer = this._http.get(url, { observe: 'response' });
+        } else {
+          observer = this._http.get(url, { params: payload, observe: 'response' });
+        }
         break;
       case 'POST':
         observer = this._http.post(url, payload, { observe: 'response' });
@@ -44,8 +48,8 @@ export class AbstractService {
     return observer;
   }
 
-  protected invokeAJAXGetCall(url: string, eventPayloadID: any, forceReal: boolean = false): Observable<any> {
-    return this.invokeAJAX('GET', url, null, eventPayloadID, forceReal);
+  protected invokeAJAXGetCall(url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<any> {
+    return this.invokeAJAX('GET', url, payload, eventPayloadID, forceReal);
   }
 
   protected invokeAJAXPostCall(url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<any> {

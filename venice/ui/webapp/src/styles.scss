@@ -124,7 +124,7 @@
   }
 
   /*********  Prime NG overrides  *********/
-  .global-primeng-table {
+  %primeng-table {
     .ui-table {
       .ui-table-caption {
           background: #ffffff;
@@ -184,6 +184,25 @@
       }
     }
   } 
+  .global-primeng-table {
+    @extend %primeng-table;
+  }
+
+  .global-primeng-table-lazyload {
+    @extend %primeng-table;
+    .ui-table {
+      .ui-table-tbody > tr {
+        // fixes issue where table would have a height 1px
+        // greater than the tbody, causing a scrollbar to appear
+        display: table;
+        width: 100%;
+      }
+    }
+  }
+
+  .global-column-date {
+    width: 10%;
+  }
 }
 
 

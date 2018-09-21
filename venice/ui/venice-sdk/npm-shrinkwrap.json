@@ -38,7 +38,7 @@
     },
     "@pensando/swagger-ts-generator": {
       "version": "file:pensando-swagger-ts-generator-1.1.29.tgz",
-      "integrity": "sha512-VOo+k2ZRy1tjgkTTMAuOZTf30ZqYajpcjkTPRHtyMM4K6BjqEYEX3CCRKJVdjC6Rt+OVay57MD+7MQMAYI+miw==",
+      "integrity": "sha512-Zpn2pP49ABZx8GmRdAkAA1eo/eqPCejiUI1Z9KBjJ6yV3Eclh1dPTNjyK2U39ukPt31kOTQNR1fpDEyBmP8WYQ==",
       "requires": {
         "fs": "0.0.2",
         "handlebars": "4.0.12",
@@ -150,7 +150,7 @@
     },
     "minimist": {
       "version": "0.0.10",
-      "resolved": "http://registry.npmjs.org/minimist/-/minimist-0.0.10.tgz",
+      "resolved": "https://registry.npmjs.org/minimist/-/minimist-0.0.10.tgz",
       "integrity": "sha1-3j+YVD2/lggr5IrRoMfNqDYwHc8="
     },
     "moment": {

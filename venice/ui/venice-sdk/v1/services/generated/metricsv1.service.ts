@@ -22,9 +22,9 @@ export class Metricsv1Service extends AbstractService {
   /** In the example below a query like
    http://<...>/venice/v1/metrics/query
  generates a RPC call Query */
-  public GetQuery_1():Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}> {
+  public GetQuery_1(queryParam: any = null):Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/metrics/v1/metrics';
-    return this.invokeAJAXGetCall(url, 'GetQuery_1') as Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetQuery_1') as Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}>;
   }
   
   /** In the example below a query like

@@ -45,11 +45,7 @@ import { CommonComponent } from '@app/common.component';
 // import VeniceUI modules so that they will load fast
 import { CoreModule } from '@app/core';
 import { SettingsModule } from '@app/components/settings';
-import { DashboardModule } from '@app/components/dashboard';
 import { AlertlistModule } from '@app/components/alertlist';
-import { SecurityModule } from '@app/components/security';
-import { NetworkModule } from '@app/components/network';
-import { LoginModule } from '@app/components/login/login.module';
 import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
 import { AuthGuard } from '@app/services/authguard.service';
@@ -117,10 +113,6 @@ import { EventsService } from '@app/services/events.service';
     CoreModule,
     SettingsModule,
     AlertlistModule,
-    LoginModule,
-    DashboardModule,
-    SecurityModule,
-    NetworkModule,
     SharedModule,
 
     // material-design

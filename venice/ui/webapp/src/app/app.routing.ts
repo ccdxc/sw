@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { SettingsComponent } from '@app/components/settings';
-import { DashboardComponent } from '@app/components/dashboard';
 import { AuthGuard } from '@app/services/authguard.service';
 import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
 import { RouteGuard } from '@app/services/routeguard.service';
@@ -39,7 +38,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
-        component: DashboardComponent,
+        loadChildren: '@components/dashboard/dashboard.module#DashboardModule',
       },
       {
         path: 'workload',
@@ -74,7 +73,7 @@ export const routes: Routes = [
       },
       {
         path: '**',
-        component: DashboardComponent,
+        loadChildren: '@components/dashboard/dashboard.module#DashboardModule',
       }
     ]
   },

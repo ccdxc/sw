@@ -1,19 +1,19 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { SgpolicyComponent } from './sgpolicy/sgpolicy.component';
-import { SecurityComponent } from './security.component';
 
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'sgpolicy',
+    redirectTo: 'sgpolicies',
     pathMatch: 'full'
   },
   {
-    path: 'sgpolicy',
-    component: SecurityComponent,
+    path: 'sgpolicies',
     children: [
-      { path: '', component: SgpolicyComponent }
+      {
+        path: '',
+        loadChildren: '@app/components/security/sgpolicies/sgpolicies.module#SgpoliciesModule'
+      }
     ]
   }
 ];

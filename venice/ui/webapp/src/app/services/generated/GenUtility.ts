@@ -28,9 +28,10 @@ export class GenServiceUtility {
    * it will close the connection
    *
    * @param url URL for oboe to listen to
+   * @param payload Query param object to send with the request
    * @param eventPayload payload to publish on connection end
    */
-  protected oboeObserverCreate(url: string, eventPayload: any) {
+  protected oboeObserverCreate(url: string, payload: any, eventPayload: any) {
     return (observer) => {
       const headers = {};
       headers[Utility.XSRF_NAME] = Utility.getInstance().getXSRFtoken();
@@ -73,10 +74,14 @@ export class GenServiceUtility {
    * @param url Url to issue a GET request against, used to uniquely idenitfy the observer objects
    * @param eventPayload EventPayload that will be published on AJAX End
    */
-  protected handleWatchRequest(url: string, eventPayload: any): Observable<VeniceResponse> {
+  protected handleWatchRequest(url: string, payload: any, eventPayload: any): Observable<VeniceResponse> {
+    if (payload != null) {
+      // we add the query params to the url
+      url += '?' + Utility.getJQuery().param(payload);
+    }
     if (this.oboeServiceMap[url] == null)  {
       // Creating cold observer that emits events when oboe receives new data
-      const oboeObserver = Observable.create(this.oboeObserverCreate(url, eventPayload));
+      const oboeObserver = Observable.create(this.oboeObserverCreate(url, payload, eventPayload));
       // Creating a replay subject that subscribes and unsubscribes from the oboeObserver source
       // only if it has subscribers.
       // The connection will only be open if there is a listener, and closed as soon as there
@@ -114,13 +119,17 @@ export class GenServiceUtility {
 
     if (url.indexOf('watch') >= 0) {
       // We use oboe to load the chunked responses if it is a watch request
-      return this.handleWatchRequest(url, eventPayload);
+      return this.handleWatchRequest(url, payload, eventPayload);
     }
 
     let observer: Observable<HttpResponse<Object>>;
     switch (method) {
       case 'GET':
-        observer = this._http.get(url, { observe: 'response' });
+        if (payload == null) {
+          observer = this._http.get(url, { observe: 'response' });
+        } else {
+          observer = this._http.get(url, { params: payload, observe: 'response' });
+        }
         break;
       case 'POST':
         observer = this._http.post(url, payload, { observe: 'response' });

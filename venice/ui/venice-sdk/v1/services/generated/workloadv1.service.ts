@@ -20,9 +20,9 @@ export class Workloadv1Service extends AbstractService {
   }
 
   /** List Endpoint objects */
-  public ListEndpoint_1():Observable<{body: IWorkloadEndpointList | IApiStatus | Error, statusCode: number}> {
+  public ListEndpoint_1(queryParam: any = null):Observable<{body: IWorkloadEndpointList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/endpoints';
-    return this.invokeAJAXGetCall(url, 'ListEndpoint_1') as Observable<{body: IWorkloadEndpointList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListEndpoint_1') as Observable<{body: IWorkloadEndpointList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Endpoint object */
@@ -32,10 +32,10 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Get Endpoint object */
-  public GetEndpoint_1(O_Name):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
+  public GetEndpoint_1(O_Name, queryParam: any = null):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/endpoints/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetEndpoint_1') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetEndpoint_1') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Endpoint object */
@@ -53,10 +53,10 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** List Endpoint objects */
-  public ListEndpoint():Observable<{body: IWorkloadEndpointList | IApiStatus | Error, statusCode: number}> {
+  public ListEndpoint(queryParam: any = null):Observable<{body: IWorkloadEndpointList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/endpoints';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListEndpoint') as Observable<{body: IWorkloadEndpointList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListEndpoint') as Observable<{body: IWorkloadEndpointList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Endpoint object */
@@ -67,11 +67,11 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Get Endpoint object */
-  public GetEndpoint(O_Name):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
+  public GetEndpoint(O_Name, queryParam: any = null):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/endpoints/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetEndpoint') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetEndpoint') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Endpoint object */
@@ -91,10 +91,10 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** List Workload objects */
-  public ListWorkload():Observable<{body: IWorkloadWorkloadList | IApiStatus | Error, statusCode: number}> {
+  public ListWorkload(queryParam: any = null):Observable<{body: IWorkloadWorkloadList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/workloads';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListWorkload') as Observable<{body: IWorkloadWorkloadList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListWorkload') as Observable<{body: IWorkloadWorkloadList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Workload object */
@@ -105,11 +105,11 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Get Workload object */
-  public GetWorkload(O_Name):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+  public GetWorkload(O_Name, queryParam: any = null):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/workloads/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetWorkload') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetWorkload') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Workload object */
@@ -129,35 +129,35 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Watch Endpoint objects */
-  public WatchEndpoint_1():Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchEndpoint_1(queryParam: any = null):Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/watch/endpoints';
-    return this.invokeAJAXGetCall(url, 'WatchEndpoint_1') as Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchEndpoint_1') as Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Endpoint objects */
-  public WatchEndpoint():Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchEndpoint(queryParam: any = null):Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/watch/tenant/{O.Tenant}/endpoints';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchEndpoint') as Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchEndpoint') as Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Workload objects */
-  public WatchWorkload():Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchWorkload(queryParam: any = null):Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/watch/tenant/{O.Tenant}/workloads';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchWorkload') as Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchWorkload') as Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Workload objects */
-  public WatchWorkload_1():Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchWorkload_1(queryParam: any = null):Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/watch/workloads';
-    return this.invokeAJAXGetCall(url, 'WatchWorkload_1') as Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchWorkload_1') as Observable<{body: IWorkloadAutoMsgWorkloadWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Workload objects */
-  public ListWorkload_1():Observable<{body: IWorkloadWorkloadList | IApiStatus | Error, statusCode: number}> {
+  public ListWorkload_1(queryParam: any = null):Observable<{body: IWorkloadWorkloadList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/workloads';
-    return this.invokeAJAXGetCall(url, 'ListWorkload_1') as Observable<{body: IWorkloadWorkloadList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListWorkload_1') as Observable<{body: IWorkloadWorkloadList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Workload object */
@@ -167,10 +167,10 @@ export class Workloadv1Service extends AbstractService {
   }
   
   /** Get Workload object */
-  public GetWorkload_1(O_Name):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+  public GetWorkload_1(O_Name, queryParam: any = null):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/workloads/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetWorkload_1') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetWorkload_1') as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Workload object */

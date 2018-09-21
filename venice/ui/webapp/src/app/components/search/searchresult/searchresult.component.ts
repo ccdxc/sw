@@ -242,7 +242,7 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   displayEventValue(event, eventValue): string {
     const value = Utility.getObjectValueByPropertyPath(new EventsEvent(event), eventValue);
     if (typeof value === 'string') {
-      return value
+      return value;
     }
     if (value instanceof Object) {
       return this.getObjectValues(new EventsEvent(event)[eventValue]);

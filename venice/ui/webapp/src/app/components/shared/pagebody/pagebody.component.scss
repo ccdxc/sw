@@ -36,7 +36,8 @@
 /* avoid UI issue of having uncessary space gap */
 .pagebody-content {
     height: 100%;
-    width: calc(100% - 17px);
+    width: 100%;
+    position: relative;
 }
 
 .pagebody-content-container {

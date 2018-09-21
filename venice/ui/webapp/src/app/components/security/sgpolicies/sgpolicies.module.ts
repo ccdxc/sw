@@ -5,8 +5,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
-import { SecurityComponent } from './security.component';
-import { SecurityRoutingModule } from './security.route';
+import { SgpoliciesComponent } from './sgpolicies.component';
+import { SgpolicydetailComponent } from './sgpolicydetail/sgpolicydetail.component';
+import { SgpoliciesRoutingModule } from '@app/components/security/sgpolicies/sgpolicies.route';
+
 
 @NgModule({
   imports: [
@@ -21,12 +23,8 @@ import { SecurityRoutingModule } from './security.route';
     ReactiveFormsModule,
     SharedModule,
 
-    SecurityRoutingModule
+    SgpoliciesRoutingModule
   ],
-  declarations: [SecurityComponent],
-  exports: [SecurityComponent],
-  entryComponents: [
-    SecurityComponent
-  ],
+  declarations: [SgpoliciesComponent, SgpolicydetailComponent],
 })
-export class SecurityModule { }
+export class SgpoliciesModule { }

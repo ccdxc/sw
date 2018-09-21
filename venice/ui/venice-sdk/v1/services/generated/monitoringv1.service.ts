@@ -20,9 +20,9 @@ export class Monitoringv1Service extends AbstractService {
   }
 
   /** List MirrorSession objects */
-  public ListMirrorSession_1():Observable<{body: IMonitoringMirrorSessionList | IApiStatus | Error, statusCode: number}> {
+  public ListMirrorSession_1(queryParam: any = null):Observable<{body: IMonitoringMirrorSessionList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/MirrorSession';
-    return this.invokeAJAXGetCall(url, 'ListMirrorSession_1') as Observable<{body: IMonitoringMirrorSessionList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListMirrorSession_1') as Observable<{body: IMonitoringMirrorSessionList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create MirrorSession object */
@@ -32,10 +32,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get MirrorSession object */
-  public GetMirrorSession_1(O_Name):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
+  public GetMirrorSession_1(O_Name, queryParam: any = null):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/MirrorSession/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetMirrorSession_1') as Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetMirrorSession_1') as Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete MirrorSession object */
@@ -53,9 +53,9 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List TroubleshootingSession objects */
-  public ListTroubleshootingSession_1():Observable<{body: IMonitoringTroubleshootingSessionList | IApiStatus | Error, statusCode: number}> {
+  public ListTroubleshootingSession_1(queryParam: any = null):Observable<{body: IMonitoringTroubleshootingSessionList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/TroubleshootingSession';
-    return this.invokeAJAXGetCall(url, 'ListTroubleshootingSession_1') as Observable<{body: IMonitoringTroubleshootingSessionList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListTroubleshootingSession_1') as Observable<{body: IMonitoringTroubleshootingSessionList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create TroubleshootingSession object */
@@ -65,10 +65,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get TroubleshootingSession object */
-  public GetTroubleshootingSession_1(O_Name):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
+  public GetTroubleshootingSession_1(O_Name, queryParam: any = null):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/TroubleshootingSession/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetTroubleshootingSession_1') as Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetTroubleshootingSession_1') as Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete TroubleshootingSession object */
@@ -86,9 +86,9 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List AlertDestination objects */
-  public ListAlertDestination_1():Observable<{body: IMonitoringAlertDestinationList | IApiStatus | Error, statusCode: number}> {
+  public ListAlertDestination_1(queryParam: any = null):Observable<{body: IMonitoringAlertDestinationList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alertDestinations';
-    return this.invokeAJAXGetCall(url, 'ListAlertDestination_1') as Observable<{body: IMonitoringAlertDestinationList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListAlertDestination_1') as Observable<{body: IMonitoringAlertDestinationList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create AlertDestination object */
@@ -98,10 +98,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get AlertDestination object */
-  public GetAlertDestination_1(O_Name):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
+  public GetAlertDestination_1(O_Name, queryParam: any = null):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alertDestinations/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetAlertDestination_1') as Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetAlertDestination_1') as Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete AlertDestination object */
@@ -119,9 +119,9 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List AlertPolicy objects */
-  public ListAlertPolicy_1():Observable<{body: IMonitoringAlertPolicyList | IApiStatus | Error, statusCode: number}> {
+  public ListAlertPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAlertPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alertPolicies';
-    return this.invokeAJAXGetCall(url, 'ListAlertPolicy_1') as Observable<{body: IMonitoringAlertPolicyList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListAlertPolicy_1') as Observable<{body: IMonitoringAlertPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create AlertPolicy object */
@@ -131,10 +131,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get AlertPolicy object */
-  public GetAlertPolicy_1(O_Name):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetAlertPolicy_1(O_Name, queryParam: any = null):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alertPolicies/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetAlertPolicy_1') as Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetAlertPolicy_1') as Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete AlertPolicy object */
@@ -152,16 +152,16 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List Alert objects */
-  public ListAlert_1():Observable<{body: IMonitoringAlertList | IApiStatus | Error, statusCode: number}> {
+  public ListAlert_1(queryParam: any = null):Observable<{body: IMonitoringAlertList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alerts';
-    return this.invokeAJAXGetCall(url, 'ListAlert_1') as Observable<{body: IMonitoringAlertList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListAlert_1') as Observable<{body: IMonitoringAlertList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Alert object */
-  public GetAlert_1(O_Name):Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}> {
+  public GetAlert_1(O_Name, queryParam: any = null):Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/alerts/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetAlert_1') as Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetAlert_1') as Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update Alert object */
@@ -178,10 +178,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get EventPolicy object */
-  public GetEventPolicy_1(O_Name):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetEventPolicy_1(O_Name, queryParam: any = null):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/event-policy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetEventPolicy_1') as Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetEventPolicy_1') as Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete EventPolicy object */
@@ -199,9 +199,9 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List FlowExportPolicy objects */
-  public ListFlowExportPolicy_1():Observable<{body: IMonitoringFlowExportPolicyList | IApiStatus | Error, statusCode: number}> {
+  public ListFlowExportPolicy_1(queryParam: any = null):Observable<{body: IMonitoringFlowExportPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/flowExportPolicy';
-    return this.invokeAJAXGetCall(url, 'ListFlowExportPolicy_1') as Observable<{body: IMonitoringFlowExportPolicyList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListFlowExportPolicy_1') as Observable<{body: IMonitoringFlowExportPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create FlowExportPolicy object */
@@ -211,10 +211,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get FlowExportPolicy object */
-  public GetFlowExportPolicy_1(O_Name):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetFlowExportPolicy_1(O_Name, queryParam: any = null):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/flowExportPolicy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetFlowExportPolicy_1') as Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetFlowExportPolicy_1') as Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete FlowExportPolicy object */
@@ -232,16 +232,16 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List FwlogPolicy objects */
-  public ListFwlogPolicy_1():Observable<{body: IMonitoringFwlogPolicyList | IApiStatus | Error, statusCode: number}> {
+  public ListFwlogPolicy_1(queryParam: any = null):Observable<{body: IMonitoringFwlogPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/fwlogPolicy';
-    return this.invokeAJAXGetCall(url, 'ListFwlogPolicy_1') as Observable<{body: IMonitoringFwlogPolicyList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListFwlogPolicy_1') as Observable<{body: IMonitoringFwlogPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get FwlogPolicy object */
-  public GetFwlogPolicy_1(O_Name):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetFwlogPolicy_1(O_Name, queryParam: any = null):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/fwlogPolicy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetFwlogPolicy_1') as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetFwlogPolicy_1') as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update FwlogPolicy object */
@@ -252,16 +252,16 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List StatsPolicy objects */
-  public ListStatsPolicy_1():Observable<{body: IMonitoringStatsPolicyList | IApiStatus | Error, statusCode: number}> {
+  public ListStatsPolicy_1(queryParam: any = null):Observable<{body: IMonitoringStatsPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/statsPolicy';
-    return this.invokeAJAXGetCall(url, 'ListStatsPolicy_1') as Observable<{body: IMonitoringStatsPolicyList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListStatsPolicy_1') as Observable<{body: IMonitoringStatsPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get StatsPolicy object */
-  public GetStatsPolicy_1(O_Name):Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetStatsPolicy_1(O_Name, queryParam: any = null):Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/statsPolicy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetStatsPolicy_1') as Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetStatsPolicy_1') as Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update StatsPolicy object */
@@ -272,10 +272,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List MirrorSession objects */
-  public ListMirrorSession():Observable<{body: IMonitoringMirrorSessionList | IApiStatus | Error, statusCode: number}> {
+  public ListMirrorSession(queryParam: any = null):Observable<{body: IMonitoringMirrorSessionList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/MirrorSession';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListMirrorSession') as Observable<{body: IMonitoringMirrorSessionList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListMirrorSession') as Observable<{body: IMonitoringMirrorSessionList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create MirrorSession object */
@@ -286,11 +286,11 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get MirrorSession object */
-  public GetMirrorSession(O_Name):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
+  public GetMirrorSession(O_Name, queryParam: any = null):Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/MirrorSession/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetMirrorSession') as Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetMirrorSession') as Observable<{body: IMonitoringMirrorSession | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete MirrorSession object */
@@ -310,10 +310,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List TroubleshootingSession objects */
-  public ListTroubleshootingSession():Observable<{body: IMonitoringTroubleshootingSessionList | IApiStatus | Error, statusCode: number}> {
+  public ListTroubleshootingSession(queryParam: any = null):Observable<{body: IMonitoringTroubleshootingSessionList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/TroubleshootingSession';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListTroubleshootingSession') as Observable<{body: IMonitoringTroubleshootingSessionList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListTroubleshootingSession') as Observable<{body: IMonitoringTroubleshootingSessionList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create TroubleshootingSession object */
@@ -324,11 +324,11 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get TroubleshootingSession object */
-  public GetTroubleshootingSession(O_Name):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
+  public GetTroubleshootingSession(O_Name, queryParam: any = null):Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/TroubleshootingSession/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetTroubleshootingSession') as Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetTroubleshootingSession') as Observable<{body: IMonitoringTroubleshootingSession | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete TroubleshootingSession object */
@@ -348,10 +348,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List AlertDestination objects */
-  public ListAlertDestination():Observable<{body: IMonitoringAlertDestinationList | IApiStatus | Error, statusCode: number}> {
+  public ListAlertDestination(queryParam: any = null):Observable<{body: IMonitoringAlertDestinationList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alertDestinations';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListAlertDestination') as Observable<{body: IMonitoringAlertDestinationList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListAlertDestination') as Observable<{body: IMonitoringAlertDestinationList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create AlertDestination object */
@@ -362,11 +362,11 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get AlertDestination object */
-  public GetAlertDestination(O_Name):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
+  public GetAlertDestination(O_Name, queryParam: any = null):Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alertDestinations/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetAlertDestination') as Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetAlertDestination') as Observable<{body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete AlertDestination object */
@@ -386,10 +386,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List AlertPolicy objects */
-  public ListAlertPolicy():Observable<{body: IMonitoringAlertPolicyList | IApiStatus | Error, statusCode: number}> {
+  public ListAlertPolicy(queryParam: any = null):Observable<{body: IMonitoringAlertPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alertPolicies';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListAlertPolicy') as Observable<{body: IMonitoringAlertPolicyList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListAlertPolicy') as Observable<{body: IMonitoringAlertPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create AlertPolicy object */
@@ -400,11 +400,11 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get AlertPolicy object */
-  public GetAlertPolicy(O_Name):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetAlertPolicy(O_Name, queryParam: any = null):Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alertPolicies/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetAlertPolicy') as Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetAlertPolicy') as Observable<{body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete AlertPolicy object */
@@ -424,18 +424,18 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List Alert objects */
-  public ListAlert():Observable<{body: IMonitoringAlertList | IApiStatus | Error, statusCode: number}> {
+  public ListAlert(queryParam: any = null):Observable<{body: IMonitoringAlertList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alerts';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListAlert') as Observable<{body: IMonitoringAlertList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListAlert') as Observable<{body: IMonitoringAlertList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Alert object */
-  public GetAlert(O_Name):Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}> {
+  public GetAlert(O_Name, queryParam: any = null):Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/alerts/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetAlert') as Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetAlert') as Observable<{body: IMonitoringAlert | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update Alert object */
@@ -454,11 +454,11 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get EventPolicy object */
-  public GetEventPolicy(O_Name):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetEventPolicy(O_Name, queryParam: any = null):Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/event-policy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetEventPolicy') as Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetEventPolicy') as Observable<{body: IMonitoringEventPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete EventPolicy object */
@@ -478,10 +478,10 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List FlowExportPolicy objects */
-  public ListFlowExportPolicy():Observable<{body: IMonitoringFlowExportPolicyList | IApiStatus | Error, statusCode: number}> {
+  public ListFlowExportPolicy(queryParam: any = null):Observable<{body: IMonitoringFlowExportPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/flowExportPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListFlowExportPolicy') as Observable<{body: IMonitoringFlowExportPolicyList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListFlowExportPolicy') as Observable<{body: IMonitoringFlowExportPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create FlowExportPolicy object */
@@ -492,11 +492,11 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Get FlowExportPolicy object */
-  public GetFlowExportPolicy(O_Name):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetFlowExportPolicy(O_Name, queryParam: any = null):Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/flowExportPolicy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetFlowExportPolicy') as Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetFlowExportPolicy') as Observable<{body: IMonitoringFlowExportPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete FlowExportPolicy object */
@@ -516,18 +516,18 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List FwlogPolicy objects */
-  public ListFwlogPolicy():Observable<{body: IMonitoringFwlogPolicyList | IApiStatus | Error, statusCode: number}> {
+  public ListFwlogPolicy(queryParam: any = null):Observable<{body: IMonitoringFwlogPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/fwlogPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListFwlogPolicy') as Observable<{body: IMonitoringFwlogPolicyList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListFwlogPolicy') as Observable<{body: IMonitoringFwlogPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get FwlogPolicy object */
-  public GetFwlogPolicy(O_Name):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetFwlogPolicy(O_Name, queryParam: any = null):Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/fwlogPolicy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetFwlogPolicy') as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetFwlogPolicy') as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update FwlogPolicy object */
@@ -539,18 +539,18 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** List StatsPolicy objects */
-  public ListStatsPolicy():Observable<{body: IMonitoringStatsPolicyList | IApiStatus | Error, statusCode: number}> {
+  public ListStatsPolicy(queryParam: any = null):Observable<{body: IMonitoringStatsPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/statsPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListStatsPolicy') as Observable<{body: IMonitoringStatsPolicyList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListStatsPolicy') as Observable<{body: IMonitoringStatsPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get StatsPolicy object */
-  public GetStatsPolicy(O_Name):Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetStatsPolicy(O_Name, queryParam: any = null):Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/statsPolicy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetStatsPolicy') as Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetStatsPolicy') as Observable<{body: IMonitoringStatsPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update StatsPolicy object */
@@ -562,107 +562,107 @@ export class Monitoringv1Service extends AbstractService {
   }
   
   /** Watch MirrorSession objects */
-  public WatchMirrorSession_1():Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchMirrorSession_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/MirrorSession';
-    return this.invokeAJAXGetCall(url, 'WatchMirrorSession_1') as Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchMirrorSession_1') as Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch AlertDestination objects */
-  public WatchAlertDestination_1():Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchAlertDestination_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/alertDestinations';
-    return this.invokeAJAXGetCall(url, 'WatchAlertDestination_1') as Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchAlertDestination_1') as Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch AlertPolicy objects */
-  public WatchAlertPolicy_1():Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchAlertPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/alertPolicies';
-    return this.invokeAJAXGetCall(url, 'WatchAlertPolicy_1') as Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchAlertPolicy_1') as Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Alert objects */
-  public WatchAlert_1():Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchAlert_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/alerts';
-    return this.invokeAJAXGetCall(url, 'WatchAlert_1') as Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchAlert_1') as Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch EventPolicy objects */
-  public WatchEventPolicy_1():Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchEventPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/event-policy';
-    return this.invokeAJAXGetCall(url, 'WatchEventPolicy_1') as Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchEventPolicy_1') as Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch FlowExportPolicy objects */
-  public WatchFlowExportPolicy_1():Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchFlowExportPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/flowExportPolicy';
-    return this.invokeAJAXGetCall(url, 'WatchFlowExportPolicy_1') as Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchFlowExportPolicy_1') as Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch FwlogPolicy objects */
-  public WatchFwlogPolicy_1():Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchFwlogPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/fwlogPolicy';
-    return this.invokeAJAXGetCall(url, 'WatchFwlogPolicy_1') as Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchFwlogPolicy_1') as Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch StatsPolicy objects */
-  public WatchStatsPolicy_1():Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchStatsPolicy_1(queryParam: any = null):Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/statsPolicy';
-    return this.invokeAJAXGetCall(url, 'WatchStatsPolicy_1') as Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchStatsPolicy_1') as Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch MirrorSession objects */
-  public WatchMirrorSession():Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchMirrorSession(queryParam: any = null):Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/MirrorSession';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchMirrorSession') as Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchMirrorSession') as Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch AlertDestination objects */
-  public WatchAlertDestination():Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchAlertDestination(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/alertDestinations';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchAlertDestination') as Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchAlertDestination') as Observable<{body: IMonitoringAutoMsgAlertDestinationWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch AlertPolicy objects */
-  public WatchAlertPolicy():Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchAlertPolicy(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/alertPolicies';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchAlertPolicy') as Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchAlertPolicy') as Observable<{body: IMonitoringAutoMsgAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Alert objects */
-  public WatchAlert():Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchAlert(queryParam: any = null):Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/alerts';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchAlert') as Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchAlert') as Observable<{body: IMonitoringAutoMsgAlertWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch EventPolicy objects */
-  public WatchEventPolicy():Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchEventPolicy(queryParam: any = null):Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/event-policy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchEventPolicy') as Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchEventPolicy') as Observable<{body: IMonitoringAutoMsgEventPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch FlowExportPolicy objects */
-  public WatchFlowExportPolicy():Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchFlowExportPolicy(queryParam: any = null):Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/flowExportPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchFlowExportPolicy') as Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchFlowExportPolicy') as Observable<{body: IMonitoringAutoMsgFlowExportPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch FwlogPolicy objects */
-  public WatchFwlogPolicy():Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchFwlogPolicy(queryParam: any = null):Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/fwlogPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchFwlogPolicy') as Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchFwlogPolicy') as Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch StatsPolicy objects */
-  public WatchStatsPolicy():Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchStatsPolicy(queryParam: any = null):Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/statsPolicy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchStatsPolicy') as Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchStatsPolicy') as Observable<{body: IMonitoringAutoMsgStatsPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
 }

@@ -50,32 +50,32 @@ describe('WorkloadComponent', () => {
   let fixture: ComponentFixture<WorkloadComponent>;
 
   const workload1 = new WorkloadWorkload({
-    "meta": {
-      "name": "workload1",
-      "labels": {
-        "Location": "us-west-A"
+    'meta': {
+      'name': 'workload1',
+      'labels': {
+        'Location': 'us-west-A'
       },
-      "mod-time": '2018-08-23T17:35:08.534909931Z',
-      "creation-time": '2018-08-23T17:30:08.534909931Z'
+      'mod-time': '2018-08-23T17:35:08.534909931Z',
+      'creation-time': '2018-08-23T17:30:08.534909931Z'
     },
-    "spec": {
-      "host-name": "esx-host1.local",
-      "interfaces": {
-        "00:50:56:00:00:03": {
-          "micro-seg-vlan": 103,
-          "external-vlan": 1003
+    'spec': {
+      'host-name': 'esx-host1.local',
+      'interfaces': {
+        '00:50:56:00:00:03': {
+          'micro-seg-vlan': 103,
+          'external-vlan': 1003
         },
-        "00:50:56:00:00:04": {
-          "micro-seg-vlan": 103,
-          "external-vlan": 1003
+        '00:50:56:00:00:04': {
+          'micro-seg-vlan': 103,
+          'external-vlan': 1003
         }
       }
     },
-    "status": {
-      "interfaces": {
-        "00:50:56:00:00:03": {
-          "ip-addresses": [
-            "10.1.1.1, 11.1.1.1"
+    'status': {
+      'interfaces': {
+        '00:50:56:00:00:03': {
+          'ip-addresses': [
+            '10.1.1.1, 11.1.1.1'
           ]
         }
       }
@@ -83,37 +83,37 @@ describe('WorkloadComponent', () => {
   });
 
   const workload2 = new WorkloadWorkload({
-    "meta": {
-      "name": "workload2",
-      "labels": {
-        "Location": "us-west-A"
+    'meta': {
+      'name': 'workload2',
+      'labels': {
+        'Location': 'us-west-A'
       },
-      "mod-time": '2018-08-23T17:35:08.534909931Z',
-      "creation-time": '2018-08-23T17:30:08.534909931Z'
+      'mod-time': '2018-08-23T17:35:08.534909931Z',
+      'creation-time': '2018-08-23T17:30:08.534909931Z'
     },
-    "spec": {
-      "host-name": "esx-host1.local",
-      "interfaces": {
-        "00:50:56:00:00:05": {
-          "micro-seg-vlan": 104,
-          "external-vlan": 1004
+    'spec': {
+      'host-name': 'esx-host1.local',
+      'interfaces': {
+        '00:50:56:00:00:05': {
+          'micro-seg-vlan': 104,
+          'external-vlan': 1004
         },
-        "00:50:56:00:00:06": {
-          "micro-seg-vlan": 104,
-          "external-vlan": 1004
+        '00:50:56:00:00:06': {
+          'micro-seg-vlan': 104,
+          'external-vlan': 1004
         }
       }
     },
-    "status": {
-      "interfaces": {
-        "00:50:56:00:00:05": {
-          "ip-addresses": [
-            "10.1.1.1"
+    'status': {
+      'interfaces': {
+        '00:50:56:00:00:05': {
+          'ip-addresses': [
+            '10.1.1.1'
           ]
         },
-        "00:50:56:00:00:06": {
-          "ip-addresses": [
-            "10.1.1.1", "11.1.1.1"
+        '00:50:56:00:00:06': {
+          'ip-addresses': [
+            '10.1.1.1', '11.1.1.1'
           ]
         }
       }
@@ -121,29 +121,29 @@ describe('WorkloadComponent', () => {
   });
 
   const workload3 = new WorkloadWorkload({
-    "meta": {
-      "name": "workload3",
-      "mod-time": '2018-08-23T17:35:08.534909931Z',
-      "creation-time": '2018-08-23T17:30:08.534909931Z'
+    'meta': {
+      'name': 'workload3',
+      'mod-time': '2018-08-23T17:35:08.534909931Z',
+      'creation-time': '2018-08-23T17:30:08.534909931Z'
     },
-    "spec": {
-      "host-name": "esx-host1.local",
-      "interfaces": {
-        "00:50:56:00:00:05": {
-          "micro-seg-vlan": 104,
-          "external-vlan": 1004
+    'spec': {
+      'host-name': 'esx-host1.local',
+      'interfaces': {
+        '00:50:56:00:00:05': {
+          'micro-seg-vlan': 104,
+          'external-vlan': 1004
         },
-        "00:50:56:00:00:06": {
-          "micro-seg-vlan": 104,
-          "external-vlan": 1004
+        '00:50:56:00:00:06': {
+          'micro-seg-vlan': 104,
+          'external-vlan': 1004
         }
       }
     },
-    "status": {
-      "interfaces": {
-        "00:50:56:00:00:05": {
+    'status': {
+      'interfaces': {
+        '00:50:56:00:00:05': {
         },
-        "00:50:56:00:00:06": {
+        '00:50:56:00:00:06': {
         }
       }
     }
@@ -199,15 +199,15 @@ describe('WorkloadComponent', () => {
           result: {
             Events: [
               {
-                Type: "Created",
+                Type: 'Created',
                 Object: workload1.getValues()
               },
               {
-                Type: "Created",
+                Type: 'Created',
                 Object: workload2.getValues()
               },
               {
-                Type: "Created",
+                Type: 'Created',
                 Object: workload3.getValues()
               }
             ]
@@ -218,7 +218,7 @@ describe('WorkloadComponent', () => {
     fixture.detectChanges();
     // check table header
     const title = fixture.debugElement.query(By.css('.tableheader-title'));
-    expect(title.nativeElement.textContent).toContain('Workloads (3)')
+    expect(title.nativeElement.textContent).toContain('Workloads (3)');
     // check table contents
     const tableBody = fixture.debugElement.query(By.css('tbody'));
     expect(tableBody).toBeTruthy();
@@ -229,16 +229,16 @@ describe('WorkloadComponent', () => {
         macs.forEach((mac) => {
           expect(field.nativeElement.textContent)
             .toContain(mac, 'interface column did not contain ' + mac + ' for row ' + rowIndex);
-          const ips = rowData.status.interfaces[mac]
-          if (ips != null && ips["ip-addresses"] != null) {
-            ips["ip-addresses"].forEach((ip) => {
+          const ips = rowData.status.interfaces[mac];
+          if (ips != null && ips['ip-addresses'] != null) {
+            ips['ip-addresses'].forEach((ip) => {
               expect(field.nativeElement.textContent)
                 .toContain(ip, 'interface column did not contain ' + mac + ' for row ' + rowIndex);
             });
           }
-        })
+        });
       }
-    }
+    };
     TestingUtility.verifyTable([workload1, workload2, workload3], component.cols, tableBody, caseMap);
   });
 

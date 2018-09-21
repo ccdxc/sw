@@ -155,14 +155,36 @@
 
 /*----- sgpolicy table -----*/
 
-.sgpolicy-toolbar-refresh-button {
-  @include primary-font(16px, #ffffff);
-  height: 30px;
-  text-align: center;
-  width: 80px;
-  display: block;
-  padding: 0px 10px;
+.sgpolicy-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  z-index:10;
 }
 
+.sgpolicy-overlay-content {
+  z-index: 20;
+}
+
+.sgpolicy-deleted-policy {
+  background: url("/assets/images/icons/security/icon-security-policy-deleted.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.sgpolicy-missing-policy {
+  background: url("/assets/images/icons/security/icon-security-policy-missing.svg") center center no-repeat;
+  background-size: contain;
+}
   
-  
+.sgpolicy-overlay-text {
+  @include primary-font(45px, #676763, 600);
+  text-align: center;
+}
+
+.sgpolicy-overlay-button {
+  font-size: 16px;
+  padding: 6px 20px;
+}

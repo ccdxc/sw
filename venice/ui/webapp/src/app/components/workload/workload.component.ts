@@ -154,7 +154,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   formatInterfaces(interfacesObj) {
     const interfaces = [];
     Object.keys(interfacesObj).forEach((key) => {
-      let ret = key + '  -  ' + interfacesObj[key]['ip'].join(',    ') + ' \n'
+      let ret = key + '  -  ' + interfacesObj[key]['ip'].join(',    ') + ' \n';
       const network = interfacesObj[key]['network'];
       if (network != null) {
         ret += '    Network: ' + network + '    ';
@@ -178,7 +178,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     const value = Utility.getObjectValueByPropertyPath(data, fields);
     const column = col.field;
     switch (column) {
-      case "meta.labels":
+      case 'meta.labels':
         return this.formatLabels(data.meta.labels);
       default:
         return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
@@ -228,7 +228,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
           console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
       }
-    )
+    );
     this.subscriptions.push(subscription);
   }
 

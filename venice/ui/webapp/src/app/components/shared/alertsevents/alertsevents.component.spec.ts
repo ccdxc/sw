@@ -160,7 +160,7 @@ describe('AlertseventsComponent', () => {
         expect(field.nativeElement.textContent).toContain(
           rowData.source['node-name'] + '  :  ' + rowData.source.component, 'source column did not match');
       }
-    }
+    };
     TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
   });
 });

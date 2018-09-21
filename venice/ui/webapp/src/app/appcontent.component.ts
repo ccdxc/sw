@@ -221,8 +221,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   private onSidenavInvokation(payload) {
     if (payload['id'] === 'workload') {
       this.navigate(['/workload']);
-    } else if (payload['id'] === 'sgpolicy') {
-      this.navigate(['/security', 'sgpolicy']);
+    } else if (payload['id'] === 'sgpolicies') {
+      this.navigate(['/security', 'sgpolicies']);
     } else if (payload['id'] === 'network') {
       this.navigate(['/network', 'network']);
     } else if (payload['id'] === 'troubleshooting') {

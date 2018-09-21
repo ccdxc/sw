@@ -20,9 +20,9 @@ export class Clusterv1Service extends AbstractService {
   }
 
   /** Get Cluster object */
-  public GetCluster():Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
+  public GetCluster(queryParam: any = null):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/cluster';
-    return this.invokeAJAXGetCall(url, 'GetCluster') as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetCluster') as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Cluster object */
@@ -43,9 +43,9 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** List Host objects */
-  public ListHost():Observable<{body: IClusterHostList | IApiStatus | Error, statusCode: number}> {
+  public ListHost(queryParam: any = null):Observable<{body: IClusterHostList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/hosts';
-    return this.invokeAJAXGetCall(url, 'ListHost') as Observable<{body: IClusterHostList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListHost') as Observable<{body: IClusterHostList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Host object */
@@ -55,10 +55,10 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Get Host object */
-  public GetHost(O_Name):Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}> {
+  public GetHost(O_Name, queryParam: any = null):Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/hosts/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetHost') as Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetHost') as Observable<{body: IClusterHost | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Host object */
@@ -76,9 +76,9 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** List Node objects */
-  public ListNode():Observable<{body: IClusterNodeList | IApiStatus | Error, statusCode: number}> {
+  public ListNode(queryParam: any = null):Observable<{body: IClusterNodeList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/nodes';
-    return this.invokeAJAXGetCall(url, 'ListNode') as Observable<{body: IClusterNodeList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListNode') as Observable<{body: IClusterNodeList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Node object */
@@ -88,10 +88,10 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Get Node object */
-  public GetNode(O_Name):Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}> {
+  public GetNode(O_Name, queryParam: any = null):Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/nodes/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetNode') as Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetNode') as Observable<{body: IClusterNode | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Node object */
@@ -109,9 +109,9 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** List SmartNIC objects */
-  public ListSmartNIC():Observable<{body: IClusterSmartNICList | IApiStatus | Error, statusCode: number}> {
+  public ListSmartNIC(queryParam: any = null):Observable<{body: IClusterSmartNICList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/smartnics';
-    return this.invokeAJAXGetCall(url, 'ListSmartNIC') as Observable<{body: IClusterSmartNICList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListSmartNIC') as Observable<{body: IClusterSmartNICList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create SmartNIC object */
@@ -121,10 +121,10 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Get SmartNIC object */
-  public GetSmartNIC(O_Name):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
+  public GetSmartNIC(O_Name, queryParam: any = null):Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/smartnics/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetSmartNIC') as Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetSmartNIC') as Observable<{body: IClusterSmartNIC | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete SmartNIC object */
@@ -142,9 +142,9 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** List Tenant objects */
-  public ListTenant():Observable<{body: IClusterTenantList | IApiStatus | Error, statusCode: number}> {
+  public ListTenant(queryParam: any = null):Observable<{body: IClusterTenantList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/tenants';
-    return this.invokeAJAXGetCall(url, 'ListTenant') as Observable<{body: IClusterTenantList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListTenant') as Observable<{body: IClusterTenantList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Tenant object */
@@ -154,10 +154,10 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Get Tenant object */
-  public GetTenant(O_Name):Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}> {
+  public GetTenant(O_Name, queryParam: any = null):Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/tenants/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetTenant') as Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetTenant') as Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Tenant object */
@@ -175,33 +175,33 @@ export class Clusterv1Service extends AbstractService {
   }
   
   /** Watch Cluster objects */
-  public WatchCluster():Observable<{body: IClusterAutoMsgClusterWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchCluster(queryParam: any = null):Observable<{body: IClusterAutoMsgClusterWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/cluster';
-    return this.invokeAJAXGetCall(url, 'WatchCluster') as Observable<{body: IClusterAutoMsgClusterWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchCluster') as Observable<{body: IClusterAutoMsgClusterWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Host objects */
-  public WatchHost():Observable<{body: IClusterAutoMsgHostWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchHost(queryParam: any = null):Observable<{body: IClusterAutoMsgHostWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/hosts';
-    return this.invokeAJAXGetCall(url, 'WatchHost') as Observable<{body: IClusterAutoMsgHostWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchHost') as Observable<{body: IClusterAutoMsgHostWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Node objects */
-  public WatchNode():Observable<{body: IClusterAutoMsgNodeWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchNode(queryParam: any = null):Observable<{body: IClusterAutoMsgNodeWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/nodes';
-    return this.invokeAJAXGetCall(url, 'WatchNode') as Observable<{body: IClusterAutoMsgNodeWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchNode') as Observable<{body: IClusterAutoMsgNodeWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch SmartNIC objects */
-  public WatchSmartNIC():Observable<{body: IClusterAutoMsgSmartNICWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchSmartNIC(queryParam: any = null):Observable<{body: IClusterAutoMsgSmartNICWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/smartnics';
-    return this.invokeAJAXGetCall(url, 'WatchSmartNIC') as Observable<{body: IClusterAutoMsgSmartNICWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchSmartNIC') as Observable<{body: IClusterAutoMsgSmartNICWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Tenant objects */
-  public WatchTenant():Observable<{body: IClusterAutoMsgTenantWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchTenant(queryParam: any = null):Observable<{body: IClusterAutoMsgTenantWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/tenants';
-    return this.invokeAJAXGetCall(url, 'WatchTenant') as Observable<{body: IClusterAutoMsgTenantWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchTenant') as Observable<{body: IClusterAutoMsgTenantWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
 }

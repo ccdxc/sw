@@ -14,7 +14,7 @@
 <ng-template #EventsTableTemplate>
   <div fxFlex class="alertsevents-events-table">
     <app-lazyrender [data]="filteredEvents" [rows]="28" [virtualRowHeight]="36">
-      <p-table #eventTable class="global-primeng-table" [columns]="eventCols" 
+      <p-table #eventTable class="global-primeng-table-lazyload" [columns]="eventCols" 
                 dataKey="meta.name" [responsive]="true" 
                 [loading]="eventsLoading" [resizableColumns]="true">
         <!-- Table Caption -->
@@ -54,10 +54,10 @@
       <ng-template pTemplate="body" let-rowData>
         <tr>
           <td *ngFor="let col of eventCols" [ngSwitch]="col.field" [class]="col.class">
-            <div *ngSwitchCase="'meta.mod-time'" class="alertseventsrecord-date-row">
+            <div *ngSwitchCase="'meta.mod-time'">
               {{rowData.meta['mod-time'] | PrettyDate }}
             </div>
-            <div *ngSwitchCase="'meta.creation-time'" class="alertseventsrecord-date-row">
+            <div *ngSwitchCase="'meta.creation-time'">
               {{rowData.meta['creation-time'] | PrettyDate }}
             </div>
             <ng-container *ngSwitchCase="'severity'" >

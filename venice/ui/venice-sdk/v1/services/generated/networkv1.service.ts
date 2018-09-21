@@ -20,9 +20,9 @@ export class Networkv1Service extends AbstractService {
   }
 
   /** List LbPolicy objects */
-  public ListLbPolicy_1():Observable<{body: INetworkLbPolicyList | IApiStatus | Error, statusCode: number}> {
+  public ListLbPolicy_1(queryParam: any = null):Observable<{body: INetworkLbPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/lb-policy';
-    return this.invokeAJAXGetCall(url, 'ListLbPolicy_1') as Observable<{body: INetworkLbPolicyList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListLbPolicy_1') as Observable<{body: INetworkLbPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create LbPolicy object */
@@ -32,10 +32,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Get LbPolicy object */
-  public GetLbPolicy_1(O_Name):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetLbPolicy_1(O_Name, queryParam: any = null):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/lb-policy/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetLbPolicy_1') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetLbPolicy_1') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete LbPolicy object */
@@ -53,9 +53,9 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** List Network objects */
-  public ListNetwork_1():Observable<{body: INetworkNetworkList | IApiStatus | Error, statusCode: number}> {
+  public ListNetwork_1(queryParam: any = null):Observable<{body: INetworkNetworkList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/networks';
-    return this.invokeAJAXGetCall(url, 'ListNetwork_1') as Observable<{body: INetworkNetworkList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListNetwork_1') as Observable<{body: INetworkNetworkList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Network object */
@@ -65,10 +65,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Get Network object */
-  public GetNetwork_1(O_Name):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+  public GetNetwork_1(O_Name, queryParam: any = null):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/networks/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetNetwork_1') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetNetwork_1') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Network object */
@@ -86,9 +86,9 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** List Service objects */
-  public ListService_1():Observable<{body: INetworkServiceList | IApiStatus | Error, statusCode: number}> {
+  public ListService_1(queryParam: any = null):Observable<{body: INetworkServiceList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/services';
-    return this.invokeAJAXGetCall(url, 'ListService_1') as Observable<{body: INetworkServiceList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListService_1') as Observable<{body: INetworkServiceList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Service object */
@@ -98,10 +98,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Get Service object */
-  public GetService_1(O_Name):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
+  public GetService_1(O_Name, queryParam: any = null):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/services/{O.Name}';
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetService_1') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetService_1') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Service object */
@@ -119,10 +119,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** List LbPolicy objects */
-  public ListLbPolicy():Observable<{body: INetworkLbPolicyList | IApiStatus | Error, statusCode: number}> {
+  public ListLbPolicy(queryParam: any = null):Observable<{body: INetworkLbPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/lb-policy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListLbPolicy') as Observable<{body: INetworkLbPolicyList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListLbPolicy') as Observable<{body: INetworkLbPolicyList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create LbPolicy object */
@@ -133,11 +133,11 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Get LbPolicy object */
-  public GetLbPolicy(O_Name):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
+  public GetLbPolicy(O_Name, queryParam: any = null):Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/lb-policy/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetLbPolicy') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetLbPolicy') as Observable<{body: INetworkLbPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete LbPolicy object */
@@ -157,10 +157,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** List Network objects */
-  public ListNetwork():Observable<{body: INetworkNetworkList | IApiStatus | Error, statusCode: number}> {
+  public ListNetwork(queryParam: any = null):Observable<{body: INetworkNetworkList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/networks';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListNetwork') as Observable<{body: INetworkNetworkList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListNetwork') as Observable<{body: INetworkNetworkList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Network object */
@@ -171,11 +171,11 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Get Network object */
-  public GetNetwork(O_Name):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+  public GetNetwork(O_Name, queryParam: any = null):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/networks/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetNetwork') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetNetwork') as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Network object */
@@ -195,10 +195,10 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** List Service objects */
-  public ListService():Observable<{body: INetworkServiceList | IApiStatus | Error, statusCode: number}> {
+  public ListService(queryParam: any = null):Observable<{body: INetworkServiceList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/services';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'ListService') as Observable<{body: INetworkServiceList | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'ListService') as Observable<{body: INetworkServiceList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Create Service object */
@@ -209,11 +209,11 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Get Service object */
-  public GetService(O_Name):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
+  public GetService(O_Name, queryParam: any = null):Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/services/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
-    return this.invokeAJAXGetCall(url, 'GetService') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetService') as Observable<{body: INetworkService | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Delete Service object */
@@ -233,42 +233,42 @@ export class Networkv1Service extends AbstractService {
   }
   
   /** Watch LbPolicy objects */
-  public WatchLbPolicy_1():Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchLbPolicy_1(queryParam: any = null):Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/lb-policy';
-    return this.invokeAJAXGetCall(url, 'WatchLbPolicy_1') as Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchLbPolicy_1') as Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Network objects */
-  public WatchNetwork_1():Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchNetwork_1(queryParam: any = null):Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/networks';
-    return this.invokeAJAXGetCall(url, 'WatchNetwork_1') as Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchNetwork_1') as Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Service objects */
-  public WatchService_1():Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchService_1(queryParam: any = null):Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/services';
-    return this.invokeAJAXGetCall(url, 'WatchService_1') as Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchService_1') as Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch LbPolicy objects */
-  public WatchLbPolicy():Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchLbPolicy(queryParam: any = null):Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/tenant/{O.Tenant}/lb-policy';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchLbPolicy') as Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchLbPolicy') as Observable<{body: INetworkAutoMsgLbPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Network objects */
-  public WatchNetwork():Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchNetwork(queryParam: any = null):Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/tenant/{O.Tenant}/networks';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchNetwork') as Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchNetwork') as Observable<{body: INetworkAutoMsgNetworkWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Service objects */
-  public WatchService():Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}> {
+  public WatchService(queryParam: any = null):Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/watch/tenant/{O.Tenant}/services';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
-    return this.invokeAJAXGetCall(url, 'WatchService') as Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchService') as Observable<{body: INetworkAutoMsgServiceWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
 }

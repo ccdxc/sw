@@ -76,7 +76,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
           console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
       }
-    )
+    );
     this.subscriptions.push(subscription);
   }
 
@@ -96,7 +96,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
           console.log('Cluster service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
       }
-    )
+    );
     this.subscriptions.push(subscription);
   }
 

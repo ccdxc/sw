@@ -696,6 +696,10 @@ export class Utility {
     return 'default';
   }
 
+  getNamespace(): string {
+    return 'default';
+  }
+
   getXSRFtoken(): string {
     if (this.getControllerService() && this.getControllerService().LoginUserInfo) {
       return this.getControllerService().LoginUserInfo[Utility.XSRF_NAME];

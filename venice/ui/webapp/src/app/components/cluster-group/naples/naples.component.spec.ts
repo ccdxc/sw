@@ -28,34 +28,34 @@ describe('NaplesComponent', () => {
   let fixture: ComponentFixture<NaplesComponent>;
 
   const naples1 = {
-    "meta": {
-      "name": "naples1",
-      "labels": {
-        "Location": "us-west-A"
+    'meta': {
+      'name': 'naples1',
+      'labels': {
+        'Location': 'us-west-A'
       },
-      "mod-time": '2018-08-23T17:35:08.534909931Z',
-      "creation-time": '2018-08-23T17:30:08.534909931Z'
+      'mod-time': '2018-08-23T17:35:08.534909931Z',
+      'creation-time': '2018-08-23T17:30:08.534909931Z'
     },
-    "spec": {
-      "phase": "ADMITTED",
-      "mgmt-ip": "0.0.0.0",
-      "host-name": "naples1-host"
+    'spec': {
+      'phase': 'ADMITTED',
+      'mgmt-ip': '0.0.0.0',
+      'host-name': 'naples1-host'
     },
   };
 
   const naples2 = {
-    "meta": {
-      "name": "naples2",
-      "labels": {
-        "Location": "us-east-A"
+    'meta': {
+      'name': 'naples2',
+      'labels': {
+        'Location': 'us-east-A'
       },
-      "mod-time": '2018-08-23T17:25:08.534909931Z',
-      "creation-time": '2018-08-23T17:20:08.534909931Z'
+      'mod-time': '2018-08-23T17:25:08.534909931Z',
+      'creation-time': '2018-08-23T17:20:08.534909931Z'
     },
-    "spec": {
-      "phase": "ADMITTED",
-      "mgmt-ip": "0.0.0.10",
-      "host-name": "naples2-host"
+    'spec': {
+      'phase': 'ADMITTED',
+      'mgmt-ip': '0.0.0.10',
+      'host-name': 'naples2-host'
     },
   };
 
@@ -99,11 +99,11 @@ describe('NaplesComponent', () => {
           result: {
             Events: [
               {
-                Type: "Created",
+                Type: 'Created',
                 Object: naples1
               },
               {
-                Type: "Created",
+                Type: 'Created',
                 Object: naples2
               }
             ]
@@ -114,7 +114,7 @@ describe('NaplesComponent', () => {
     fixture.detectChanges();
     // check table header
     const title = fixture.debugElement.query(By.css('.tableheader-title'));
-    expect(title.nativeElement.textContent).toContain('Naples (2)')
+    expect(title.nativeElement.textContent).toContain('Naples (2)');
     // check table contents
     const tableBody = fixture.debugElement.query(By.css('tbody'));
     expect(tableBody).toBeTruthy();

@@ -18,7 +18,7 @@ interface PageRequirementMap {
   [url: string]: PageRequirement;
 }
 
-const CONFIG_FILENAME = "config.json"
+const CONFIG_FILENAME = 'config.json';
 
 @Injectable()
 export class UIConfigsService {
@@ -104,7 +104,7 @@ export class UIConfigsService {
   /**
    * If we don't have a config file, we by default
    * allow all objects
-   * @param objName 
+   * @param objName
    */
   isObjectDisabled(objName: string): boolean {
     if (this.configFile == null) {
@@ -119,7 +119,7 @@ export class UIConfigsService {
   /**
    * If we don't have a config file, we by default
    * allow all features
-   * @param featureName 
+   * @param featureName
    */
   isFeatureDisabled(featureName: string): boolean {
     if (this.configFile == null) {
@@ -133,7 +133,7 @@ export class UIConfigsService {
 
   navigateToHomepage() {
     // Changing homepage for August release
-    // this.router.navigate(['dashboard']); 
+    // this.router.navigate(['dashboard']);
     this.router.navigate(['cluster', 'cluster']);
   }
 

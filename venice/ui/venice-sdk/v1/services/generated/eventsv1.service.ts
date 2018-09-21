@@ -20,9 +20,9 @@ export class Eventsv1Service extends AbstractService {
   }
 
   /** http://<...>/events/v1/events */
-  public GetGetEvents_1():Observable<{body: IEventsEventList | Error, statusCode: number}> {
+  public GetGetEvents_1(queryParam: any = null):Observable<{body: IEventsEventList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events';
-    return this.invokeAJAXGetCall(url, 'GetGetEvents_1') as Observable<{body: IEventsEventList | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetGetEvents_1') as Observable<{body: IEventsEventList | Error, statusCode: number}>;
   }
   
   /** http://<...>/events/v1/events */
@@ -32,10 +32,10 @@ export class Eventsv1Service extends AbstractService {
   }
   
   /** http://<...>/events/v1/events/12345 will be translated to a gRPC query - GetEvent(uuid:"12345") */
-  public GetGetEvent(UUID):Observable<{body: IEventsEvent | Error, statusCode: number}> {
+  public GetGetEvent(UUID, queryParam: any = null):Observable<{body: IEventsEvent | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/events/v1/events/{UUID}';
     url = url.replace('{UUID}', UUID);
-    return this.invokeAJAXGetCall(url, 'GetGetEvent') as Observable<{body: IEventsEvent | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetGetEvent') as Observable<{body: IEventsEvent | Error, statusCode: number}>;
   }
   
 }

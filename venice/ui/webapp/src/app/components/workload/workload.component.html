@@ -39,10 +39,10 @@
       <ng-template pTemplate="body" let-rowData>
         <tr (mouseover)="rowHover(rowData)" (mouseleave)="resetHover(rowData)">
           <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
-            <div *ngSwitchCase="'meta.mod-time'" class="workload-date-row">
+            <div *ngSwitchCase="'meta.mod-time'">
               {{rowData.meta['mod-time'] | PrettyDate }}
             </div>
-            <div *ngSwitchCase="'meta.creation-time'" class="workload-date-row">
+            <div *ngSwitchCase="'meta.creation-time'">
               {{rowData.meta['creation-time'] | PrettyDate }}
             </div>
             <div *ngSwitchCase="'spec.interfaces'" class="workload-column-interfaces-data">

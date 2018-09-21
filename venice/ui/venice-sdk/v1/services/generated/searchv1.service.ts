@@ -20,9 +20,9 @@ export class Searchv1Service extends AbstractService {
   }
 
   /** Security Policy Query */
-  public GetPolicyQuery_1():Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}> {
+  public GetPolicyQuery_1(queryParam: any = null):Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/policy-query';
-    return this.invokeAJAXGetCall(url, 'GetPolicyQuery_1') as Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetPolicyQuery_1') as Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}>;
   }
   
   /** Security Policy Query */
@@ -35,9 +35,9 @@ export class Searchv1Service extends AbstractService {
    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
  generates a RPC call Query with the parameter as
  SearchRequest{ QueryString: "XXXXX", MaxResults:100} */
-  public GetQuery_1():Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
+  public GetQuery_1(queryParam: any = null):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/query';
-    return this.invokeAJAXGetCall(url, 'GetQuery_1') as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, 'GetQuery_1') as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
   }
   
   /** In the example below a query like

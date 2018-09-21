@@ -23,10 +23,10 @@
     <ng-template pTemplate="body" let-rowData>
       <tr>
         <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
-          <div *ngSwitchCase="'meta.mod-time'" class="naples-date-row">
+          <div *ngSwitchCase="'meta.mod-time'">
             {{rowData.meta['mod-time'] | PrettyDate }}
           </div>
-          <div *ngSwitchCase="'meta.creation-time'" class="naples-date-row">
+          <div *ngSwitchCase="'meta.creation-time'">
             {{rowData.meta['creation-time'] | PrettyDate }}
           </div>
           <ng-container *ngSwitchDefault>

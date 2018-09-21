@@ -22,10 +22,10 @@ export class HttpEventUtility {
   /**
    * @param objectConstructor   Constructor that will be called on all
    *                            incoming data if given
-   * 
+   *
    * @param isSingleton         Whether the events are for a singleton object
    *                            Supports object being renamed if its a singleton
-   * 
+   *
    * @param filter              If the filter returns false for an object,
    *                            it won't be added to the array
    */
@@ -45,7 +45,7 @@ export class HttpEventUtility {
 
   public processEvents(eventChunk) {
     if (eventChunk.result == null) {
-      console.log('event chunk was blank');
+      console.log('event chunk was blank', eventChunk);
       return;
     }
     const events = eventChunk.result.Events;
