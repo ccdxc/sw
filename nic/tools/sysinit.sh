@@ -36,7 +36,7 @@ if [[ "$PLATFORM" == 'hw' ]]; then
 fi
 
 # start HAL
-$NIC_DIR/tools/start-hal-haps.sh "$FWD_MODE"
+$NIC_DIR/tools/start-hal-haps.sh "$FWD_MODE" "$PLATFORM"
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - HAL failed to start!" && exit 1
 
 # start nicmgr

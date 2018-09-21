@@ -6,6 +6,7 @@ export HAL_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/conf/sdk:$NIC_DIR/conf/plugins/lif
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
 export HAL_LOG_FILE='/hal.log'
 export FWD_MODE="$1"
+export PLATFORM="$2"
 export DISABLE_AGING=1
 
 # Remove logs
@@ -19,7 +20,11 @@ else
     cp $HAL_CONFIG_PATH/hal_classic.ini $HAL_CONFIG_PATH/hal.ini
 fi
 
-LD_LIBRARY_PATH=$HAL_LIBRARY_PATH $NIC_DIR/bin/hal -c hal_haps.json > $HAL_LOG_FILE 2>&1 &
+if [[ "$PLATFORM" != "hw" ]]; then
+    LD_LIBRARY_PATH=$HAL_LIBRARY_PATH $NIC_DIR/bin/hal -c hal_haps.json > $HAL_LOG_FILE 2>&1 &
+else
+    LD_LIBRARY_PATH=$HAL_LIBRARY_PATH $NIC_DIR/bin/hal -c hal_hw.json > $HAL_LOG_FILE 2>&1 &
+fi
 [[ $? -ne 0 ]] && echo "Failed to start HAL!" && exit 1
 
 echo "HAL WAIT BEGIN: `date +%x_%H:%M:%S:%N`"

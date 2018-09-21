@@ -1,4 +1,5 @@
 # common arm libs
+
 nic/gen/aarch64/lib/libhalproto.so                                                /nic/lib/
 nic/hal/third-party/lkl/export/aarch64/bin/liblkl.so                              /nic/lib/
 nic/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so                   /nic/lib/

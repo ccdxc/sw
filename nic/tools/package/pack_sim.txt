@@ -2,6 +2,7 @@
 
 nic/gen/x86_64/lib/libhalproto.so                                /nic/lib/
 nic/hal/third-party/lkl/export/x86_64/bin/liblkl.so              /nic/lib/
+nic/third-party/libev/x86_64/lib/libev.a                         /nic/lib/
 nic/asic/capri/model/capsim-master/gen/x86_64/lib/libmpuobj.so   /nic/lib/
 nic/asic/capri/model/capsim-master/gen/x86_64/lib/libcapisa.so   /nic/lib/
 nic/asic/capri/model/capsim-master/gen/x86_64/lib/libisa.so      /nic/lib/
