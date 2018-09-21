@@ -20,9 +20,15 @@
  */
 typedef enum _oci_class_id_t
 {
-    OCI_CLASS_ID_UNSPECIFIED      =  0, /**< unspecified */
-    OCI_CLASS_ID_VCN              =  1, /**< vnc */
-    OCI_CLASS_ID_MAX              =  2, /**< total number of class-id */
+    OCI_CLASS_ID_UNSPECIFIED      =  0,    /**< unspecified */
+    OCI_CLASS_ID_VCN              =  1,    /**< vnc */
+    OCI_CLASS_ID_SUBNET           =  2,    /**< subnet */
+    OCI_CLASS_ID_TUNNEL           =  3,    /**< tunnel */
+    OCI_CLASS_ID_VNIC             =  4,    /**< vnic */
+    OCI_CLASS_ID_RT               =  5,    /**< route */
+    OCI_CLASS_ID_SECRULE          =  6,    /**< security rule */
+    OCI_CLASS_ID_MAX              =  7,    /**< total number of class-id */
+
 } oci_class_id_t;
 
 /**
@@ -30,23 +36,12 @@ typedef enum _oci_class_id_t
  */
 typedef enum _oci_log_level_t
 {
-    /** Log Level Debug */
-    OCI_LOG_LEVEL_DEBUG            = 0,
-
-    /** Log Level Info */
-    OCI_LOG_LEVEL_INFO             = 1,
-
-    /** Log Level Notice */
-    OCI_LOG_LEVEL_NOTICE           = 2,
-
-    /** Log level Warning */
-    OCI_LOG_LEVEL_WARN             = 3,
-
-    /** Log Level Error */
-    OCI_LOG_LEVEL_ERROR            = 4,
-
-    /** Log Level Critical */
-    OCI_LOG_LEVEL_CRITICAL         = 5
+    OCI_LOG_LEVEL_DEBUG            = 0,    /**< Log level debug */
+    OCI_LOG_LEVEL_INFO             = 1,    /**< Log level info */
+    OCI_LOG_LEVEL_NOTICE           = 2,    /**< Log level notice */
+    OCI_LOG_LEVEL_WARN             = 3,    /**< Log level warn */
+    OCI_LOG_LEVEL_ERROR            = 4,    /**< Log level error */
+    OCI_LOG_LEVEL_CRITICAL         = 5     /**< Log level critical */
 
 } oci_log_level_t;
 
@@ -55,7 +50,7 @@ typedef enum _oci_log_level_t
  *
  * The default log level is #OCI_LOG_LEVEL_WARN.
  *
- * @param[in] oci_api_id OCI API ID
+ * @param[in] oci_api_id OCI CLASS ID
  * @param[in] log_level Log level
  *
  * @return #OCI_STATUS_SUCCESS on success, failure status code on error

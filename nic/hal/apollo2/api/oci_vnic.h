@@ -22,52 +22,22 @@
  */
 typedef struct _oci_vnic_ip_t
 {
-    /**
-     * @brief Private IP Address
-     */
-    oci_ip_addr_t private_ip;
+    oci_ip_addr_t private_ip;         /**< Private IP address */
+    oci_ip_addr_t public_ip;          /**< Public IP address */
+    oci_ip_addr_t substrate_ip;       /**< Substrate IP address */
+    uint32_t public_ip_valid:1;       /**< TRUE if public IP is valid */
+    uint32_t substrate_ip_valid:1;    /**< TRUE if substrate IP is valid */
 
-    /**
-     * @brief Public IP Address
-     */
-    oci_ip_addr_t public_ip;
-
-    /**
-     * @brief Substrate IP Address
-     */
-    oci_ip_addr_t substrate_ip;
-
-    /**
-     * @brief TRUE if public IP is valid
-     */
-    uint32_t public_ip_valid:1;
-
-    /**
-     * @brief TRUE if substrate IP is valid
-     */
-    uint32_t substrate_ip_valid:1;
-
-} vnic_ip_info_t;
+} oci_vnic_ip_t;
 
 /**
  * @brief VNIC Key
  */
 typedef struct _oci_vnic_key_t
 {
-    /**
-     * @brief VCN ID
-     */
-    oci_vcn_id_t vcn_id;
-
-    /**
-     * @brief Subnet ID
-     */
-    oci_subnet_id_t subnet_id;
-
-    /**
-     * @brief VNIC ID
-     */
-    oci_vnic_id_t vnic_id;
+    oci_vcn_id_t vcn_id;          /**< VCN ID */
+    oci_subnet_id_t subnet_id;    /**< Subnet ID */
+    oci_vnic_id_t id;             /**< VNIC ID */
 
 } PACKED oci_vnic_key_t;
 
@@ -76,35 +46,17 @@ typedef struct _oci_vnic_key_t
  */
 typedef struct _oci_vnic_t
 {
-    /**
-     * @brief VNIC Key
-     */
-    oci_vnic_key_t key;
-
-    /**
-     * @brief VLAN ID
-     */
-    oci_vlan_id_t vlan_id;
-
-    /**
-     * @brief Virtual slot (Encap: MPLS Tag)
-     */
-    oci_slot_id_t slot;
-
-    /**
-     * @brief MAC address
-     */
-    oci_mac_t mac_addr;
-
-    /**
-     * @brief IP information
-     */
-    oci_vnic_ip_t ip_info[MAX_IP_PER_VNIC];
-
-    /**
-     * @brief Source/Destination check is enabled
-     */
-    uint32_t src_dst_check : 1;
+    oci_vnic_key_t key;                        /**< VNIC Key */
+    oci_vlan_id_t vlan_id;                     /**< VLAN ID */
+    oci_slot_id_t slot;                        /**< Virtual slot
+                                                    (Encap: MPLS Tag) */
+    oci_mac_t mac_addr;                        /**< MAC address */
+    oci_vnic_ip_t ip_info[MAX_IP_PER_VNIC];    /**< IP information */
+    uint32_t src_dst_check : 1;                /**< TRUE if source/destination
+                                                    check is enabled */
+    uint32_t local : 1;                        /**< TRUE if vnic is local */
+    oci_ip_addr_t tep;                         /**< Tunnel dst behind which the
+                                                    remote VNIC is present */
 
 } PACKED oci_vnic_t;
 

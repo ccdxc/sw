@@ -31,10 +31,7 @@ typedef enum _oci_tunnel_type_t
  */
 typedef struct _oci_tunnel_key_t
 {
-    /**
-     * @brief Tunnel destination
-     */
-    oci_ip4_t dst;
+    oci_ip4_t dst;    /**< Tunnel destination */
 
 } PACKED oci_tunnel_key_t;
 
@@ -43,15 +40,8 @@ typedef struct _oci_tunnel_key_t
  */
 typedef struct _oci_tunnel_t
 {
-    /**
-     * @brief Tunnel Key
-     */
-    oci_tunnel_key_t key;
-
-    /**
-     * @brief Tunnel type
-     */
-    oci_tunnel_type_t type;
+    oci_tunnel_key_t key;      /**< Tunnel key */
+    oci_tunnel_type_t type;    /**< Tunnel type */
 
 } PACKED oci_tunnel_t;
 

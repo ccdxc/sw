@@ -22,10 +22,7 @@
  */
 typedef struct _oci_rt_key_t
 {
-    /**
-     * @brief IP Prefix Destination
-     */
-    oci_ip_prefix_t dst_pfx;
+    oci_ip_prefix_t dst_pfx;    /**< IP prefix destination */
 
 } oci_rt_key_t;
 
@@ -34,15 +31,8 @@ typedef struct _oci_rt_key_t
  */
 typedef struct _oci_rt_t
 {
-    /**
-     * @brief Route key
-     */
-    oci_rt_key_t key;
-
-    /**
-     * @brief Next hop IP Address
-     */
-    oci_ip_addr_t nh_ip;
+    oci_rt_key_t key;       /**< Route key */
+    oci_ip_addr_t nh_ip;    /**< Next hop IP address */
 
 } oci_rt_t;
 
@@ -51,15 +41,8 @@ typedef struct _oci_rt_t
  */
 typedef struct _oci_rt_list_t
 {
-    /**
-     * @brief Number of routes in the list
-     */
-    oci_uint32_t count;
-
-    /**
-     * @brief List or routes
-     */
-    oci_rt_t rt_list[0];
+    oci_uint32_t count;     /**< Number of routes in the list */
+    oci_rt_t rt_list[0];    /**< List or routes */
 
 } oci_rt_list_t;
 
@@ -68,10 +51,7 @@ typedef struct _oci_rt_list_t
  */
 typedef struct _oci_rt_grp_key_t
 {
-    /**
-     * @brief Subnet ID
-     */
-    oci_subnet_id_t subnet_id;
+    oci_subnet_id_t subnet_id;    /**< Subnet ID */
 
 } PACKED oci_rt_grp_key_t;
 
@@ -80,15 +60,8 @@ typedef struct _oci_rt_grp_key_t
  */
 typedef struct _oci_rt_grp_t
 {
-    /**
-     * @brief Route Group key
-     */
-    oci_rt_grp_key_t key;
-
-    /**
-     * @brief List of routes in the group
-     */
-    oci_rt_list_t rt_list;
+    oci_rt_grp_key_t key;     /**< Route group key */
+    oci_rt_list_t rt_list;    /**< List of routes in the group */
 
 } PACKED oci_rt_grp_t;
 

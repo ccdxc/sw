@@ -22,15 +22,8 @@
  */
 typedef struct _oci_secrule_l4_port_match_t
 {
-    /**
-     * @brief Source port range
-     */
-    oci_l4_port_range_t sport_range;
-
-    /**
-     * @brief Destination port range
-     */
-    oci_l4_port_range_t dport_range;
+    oci_l4_port_range_t sport_range;    /**< Source port range */
+    oci_l4_port_range_t dport_range;    /**< Destination port range */
 
 } oci_secrule_l4_port_match_t;
 
@@ -39,15 +32,8 @@ typedef struct _oci_secrule_l4_port_match_t
  */
 typedef struct _oci_secrule_icmp_match_t
 {
-    /**
-     * @brief ICMP Type
-     */
-    oci_uint8_t icmp_type;
-
-    /**
-     * @brief ICMP Code
-     */
-    oci_uint8_t icmp_code;
+    oci_uint8_t icmp_type;    /**< ICMP type */
+    oci_uint8_t icmp_code;    /**< ICMP code */
 
 } oci_secrule_icmp_match_t;
 
@@ -57,15 +43,8 @@ typedef struct _oci_secrule_icmp_match_t
 typedef struct _oci_secrule_l4_match_t
 {
     union {
-        /**
-         * @brief Layer4 port match
-         */
-        oci_secrule_l4_port_match_t port_match;
-
-        /**
-         * @brief ICMP match
-         */
-        oci_secrule_icmp_match_t icmp_match;
+        oci_secrule_l4_port_match_t port_match;    /**< Layer4 port match */
+        oci_secrule_icmp_match_t icmp_match;       /**< ICMP match */
     };
 
 } oci_secrule_l4_match_t;
@@ -75,25 +54,10 @@ typedef struct _oci_secrule_l4_match_t
  */
 typedef struct _oci_sec_rule_match_t
 {
-    /**
-     * @brief Source IP prefix
-     */
-    oci_ip_prefix_t src_ip;
-
-    /**
-     * @brief Destination IP prefix
-     */
-    oci_ip_prefix_t dst_ip;
-
-    /**
-     * @brief IP protocol
-     */
-    oci_uint8_t ip_proto;
-
-    /**
-     * @brief Layer4 match
-     */
-    oci_secrule_l4_match_t l4_match;
+    oci_ip_prefix_t src_ip;             /**< Source IP prefix */
+    oci_ip_prefix_t dst_ip;             /**< Destination IP prefix */
+    oci_uint8_t ip_proto;               /**< IP protocol */
+    oci_secrule_l4_match_t l4_match;    /**< Layer4 match */
 
 } oci_secrule_match_t;
 
@@ -102,15 +66,8 @@ typedef struct _oci_sec_rule_match_t
  */
 typedef struct _oci_secrule_action_t
 {
-    /**
-     * @brief Deny 
-     */
-    SECRULE_ACTION_DENY = 0,
-
-    /**
-     * @brief Allow
-     */
-    SECRULE_ACTION_ALLOW,
+    SECRULE_ACTION_DENY = 0,    /**< Deny */
+    SECRULE_ACTION_ALLOW,       /**< Allow */
 
 } oci_secrule_action_t;
 
@@ -119,20 +76,9 @@ typedef struct _oci_secrule_action_t
  */
 typedef struct _oci_secrule_t
 {
-    /**
-     * @brief TRUE if rule is stateful
-     */
-    uint32_t stateful:1;
-
-    /**
-     * @brief Rule Match
-     */
-    oci_secrule_match_t match;
-
-    /**
-     * @brief Rule Action
-     */
-    oci_secrule_action_t action;
+    uint32_t stateful:1;            /**< TRUE if rule is stateful */
+    oci_secrule_match_t match;      /**< Rule match */
+    oci_secrule_action_t action;    /**< Rule action */
 
 } oci_secrule_t;
 
@@ -141,15 +87,8 @@ typedef struct _oci_secrule_t
  */
 typedef struct _oci_secrule_list_t
 {
-    /**
-     * @brief Number of rules in the list
-     */
-    oci_uint32_t count;
-
-    /**
-     * @brief List of rules 
-     */
-    oci_secrule_t secrule_list[0];
+    oci_uint32_t count;               /**< Number of rules in the list */
+    oci_secrule_t secrule_list[0];    /**< List of rules */
 
 } oci_secrule_list_t;
 
@@ -158,10 +97,7 @@ typedef struct _oci_secrule_list_t
  */
 typedef struct _oci_secrule_grp_key_t
 {
-    /**
-     * @brief Subnet ID
-     */
-    oci_subnet_id_t subnet_id;
+    oci_subnet_id_t subnet_id;    /**< Subnet ID */
 
 } PACKED oci_secrule_grp_key_t;
 
@@ -170,16 +106,9 @@ typedef struct _oci_secrule_grp_key_t
  */
 typedef struct _oci_secrule_grp_t
 {
-    /**
-     * @brief Security rule group key
-     */
-    oci_secrule_grp_key_t key;
-
-    /**
-     * @brief List of security rules in the group
-     */
-    oci_secrule_list_t secrule_list;
-
+    oci_secrule_grp_key_t key;          /**< Security rule group key */
+    oci_secrule_list_t secrule_list;    /**< List of security rules in
+                                             the group */
 } PACKED oci_secrule_grp_t;
 
 /**

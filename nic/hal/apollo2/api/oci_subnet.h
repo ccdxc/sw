@@ -22,15 +22,8 @@
  */
 typedef struct _oci_subnet_key_t
 {
-    /**
-     * @brief VCN ID
-     */
-    oci_vcn_id_t vcn_id;
-
-    /**
-     * @brief Subnet ID
-     */
-    oci_subnet_id_t id;
+    oci_vcn_id_t vcn_id;    /**< VCN ID */
+    oci_subnet_id_t id;     /**< Subnet ID */
 
 } PACKED oci_subnet_key_t;
 
@@ -39,15 +32,8 @@ typedef struct _oci_subnet_key_t
  */
 typedef struct _oci_subnet_t
 {
-    /**
-     * @brief Subnet Key
-     */
-    oci_subnet_key_t key;
-
-    /**
-     * @brief Subnet CIDR block
-     */
-    oci_ip_prefix_t pfx;
+    oci_subnet_key_t key;    /**< Subnet key */
+    oci_ip_prefix_t pfx;     /**< Subnet CIDR block
 
 } PACKED oci_subnet_t;
 

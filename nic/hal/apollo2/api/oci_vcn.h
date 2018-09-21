@@ -22,10 +22,7 @@
  */
 typedef struct _oci_vcn_key_t
 {
-    /**
-     * @brief VCN ID
-     */
-    oci_vcn_id_t id;
+    oci_vcn_id_t id;    /**< VNC ID */
 
 } PACKED oci_vcn_key_t;
 
@@ -34,15 +31,8 @@ typedef struct _oci_vcn_key_t
  */
 typedef struct _oci_vcn_t
 {
-    /**
-     * @brief VCN Key
-     */
-    oci_vcn_key_t key;
-
-    /**
-     * @brief VCN CIDR block
-     */
-    oci_ip_prefix_t pfx;
+    oci_vcn_key_t key;      /**< VCN Key */
+    oci_ip_prefix_t pfx;    /**< VCN CIDR block */
 
 } PACKED oci_vcn_t;
 
