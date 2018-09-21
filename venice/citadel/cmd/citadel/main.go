@@ -112,7 +112,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	log.Infof("citadel metrics collector {%+v} started", srv)
+	log.Infof("%s is running {%+v}", globals.Citadel, srv)
 
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)

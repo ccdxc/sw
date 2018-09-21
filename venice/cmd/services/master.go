@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/utils"
+
 	gogotypes "github.com/gogo/protobuf/types"
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
@@ -119,13 +121,15 @@ func WithElasticCuratorSvcrOption(curSvc curator.Interface) MasterOption {
 type resolverServiceObserver struct{}
 
 func (r *resolverServiceObserver) OnNotifyServiceInstance(e k8stypes.ServiceInstanceEvent) error {
-	switch e.Type {
-	case k8stypes.ServiceInstanceEvent_Added:
-		recorder.Event(evtsapi.ServiceStarted, evtsapi.SeverityLevel_INFO,
-			fmt.Sprintf("Service %s started on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
-	case k8stypes.ServiceInstanceEvent_Deleted:
-		recorder.Event(evtsapi.ServiceStopped, evtsapi.SeverityLevel_INFO,
-			fmt.Sprintf("Service %s stopped on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
+	if e.GetInstance() != nil && !utils.IsEmpty(e.GetInstance().GetNode()) {
+		switch e.Type {
+		case k8stypes.ServiceInstanceEvent_Added:
+			recorder.Event(evtsapi.ServiceStarted, evtsapi.SeverityLevel_INFO,
+				fmt.Sprintf("Service %s started on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
+		case k8stypes.ServiceInstanceEvent_Deleted:
+			recorder.Event(evtsapi.ServiceStopped, evtsapi.SeverityLevel_INFO,
+				fmt.Sprintf("Service %s stopped on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
+		}
 	}
 	return nil
 }
