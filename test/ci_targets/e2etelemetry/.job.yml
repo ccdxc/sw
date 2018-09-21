@@ -6,7 +6,7 @@ image:
 
 rebase: true
 warmd:
-  target: [ "go", "run", "e2etelemetry.go" ]
+#  target: [ "go", "run", "e2etelemetry.go" ]
   create:
     image: build-30
     count: 1

@@ -1,6 +1,6 @@
 ---
 targets:
-  dummy : [ "sh", "-c", "pwd && echo"]
+#  dummy : [ "sh", "-c", "pwd && echo"]
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw"

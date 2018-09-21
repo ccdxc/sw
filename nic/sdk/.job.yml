@@ -1,6 +1,6 @@
 ---
 targets:
-  main: ["sh", "-c", "cd /sdk && make lib && make test" ]
+#  main: ["sh", "-c", "cd /sdk && make lib && make test" ]
 cache:
   name: "sdk"
   mount_dir: "/root/.cache"
