@@ -7,6 +7,12 @@
 #include "osal_rmem.h"
 #include "pnso_mpool.h"
 
+#ifdef NDEBUG
+#define MPOOL_VALIDATE_OBJECT(p, o)
+#else
+#define MPOOL_VALIDATE_OBJECT(p, o)	validate_object(p, o)
+#endif
+
 #define MPOOL_MAGIC_VALID	0xffff012345670000
 #define MPOOL_MAGIC_INVALID	0xabf0cdf0eff0abf0
 
@@ -46,6 +52,21 @@ static bool __attribute__ ((unused))
 is_pool_valid(struct mem_pool *mpool)
 {
 	return (mpool->mp_magic & MPOOL_MAGIC_VALID) ? true : false;
+}
+
+static void inline __attribute__ ((unused))
+validate_object(struct mem_pool *mpool, void *object)
+{
+	uint32_t pool_size, obj_size;
+	bool in_range;
+
+	obj_size = mpool->mp_config.mpc_object_size +
+		 mpool->mp_config.mpc_pad_size;
+	pool_size = mpool->mp_config.mpc_pool_size;
+
+	in_range = ((((char *) object - (char *) mpool->mp_objects) /
+				obj_size) < pool_size);
+	OSAL_ASSERT(in_range);
 }
 
 uint32_t
@@ -339,10 +360,10 @@ mpool_get_object(struct mem_pool *mpool)
 		return NULL;
 
 	mem_stack = &mpool->mp_stack;
-	OSAL_ASSERT(mem_stack);
-
-	if (mem_stack->mps_top > 0)
+	if (mem_stack->mps_top > 0) {
 		object = mem_stack->mps_objects[--(mem_stack->mps_top)];
+		MPOOL_VALIDATE_OBJECT(mpool, object);
+	}
 
 	return object;
 }
@@ -359,9 +380,9 @@ mpool_put_object(struct mem_pool *mpool, void *object)
 	if (!is_pool_valid(mpool))
 		return EINVAL;
 
-	mem_stack = &mpool->mp_stack;
-	OSAL_ASSERT(mem_stack);
+	MPOOL_VALIDATE_OBJECT(mpool, object);
 
+	mem_stack = &mpool->mp_stack;
 	if (mem_stack->mps_top < mem_stack->mps_num_objects) {
 		mem_stack->mps_objects[mem_stack->mps_top] = object;
 		mem_stack->mps_top++;

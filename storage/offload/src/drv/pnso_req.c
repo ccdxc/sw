@@ -698,7 +698,7 @@ validate_service_request(struct pnso_service_request *svc_req)
 	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;
 out:
-	OSAL_LOG_DEBUG("exit! err: %d", err);
+	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 
