@@ -22,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
 
@@ -280,6 +281,11 @@ func (n *NMD) StartRestServer() error {
 func (n *NMD) StopRestServer(shutdown bool) error {
 	n.Lock()
 	defer n.Unlock()
+
+	// TODO: This code has to go once we have Delphi integrated and we should use Delphi instead
+	var postData interface{}
+	var resp interface{}
+	netutils.HTTPPost("http://localhost:8888/revproxy/stop", &postData, &resp)
 
 	if shutdown && n.httpServer != nil {
 		err := n.httpServer.Close()

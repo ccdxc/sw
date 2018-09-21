@@ -103,7 +103,7 @@ func modeManagedCmdHandler(cmd *cobra.Command, args []string) {
 		},
 	}
 
-	err := restPost(naplesCfg, 9008, "api/v1/naples/")
+	err := restPost(naplesCfg, revProxyPort, "api/v1/naples/")
 	if err != nil {
 		if strings.Contains(err.Error(), "EOF") {
 			if verbose {
@@ -117,7 +117,7 @@ func modeManagedCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func modeManagedShowCmdHandler(cmd *cobra.Command, args []string) {
-	resp, err := restGet(9008, "api/v1/naples/")
+	resp, err := restGet(revProxyPort, "api/v1/naples/")
 
 	if err != nil {
 		if verbose {

@@ -138,7 +138,7 @@ func main() {
 	// create the reverse proxy router
 	if proxyRouter, ok := revproxy.NewRevProxyRouter(*revProxyURL); ok == nil {
 		log.Printf("Reverse Proxy Router instantiated")
-		revproxy.AddRevProxyDest("api", "9007")
+		revproxy.AddRevProxyDest("api", globals.NmdRESTPort)
 		defer proxyRouter.Stop()
 	} else {
 		log.Fatalf("Could not start Reverse Proxy Router. Err: %v", err)

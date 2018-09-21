@@ -60,6 +60,8 @@ type Server struct {
 	httpServer *http.Server // HTTP server
 }
 
+var selfServer *Server
+
 // NewRevProxyRouter creates a new reverse proxy router
 func NewRevProxyRouter(listenURL string) (*Server, error) {
 	initRevProxyMap()
@@ -69,12 +71,22 @@ func NewRevProxyRouter(listenURL string) (*Server, error) {
 	revProxyRouter.httpServer = &http.Server{Addr: listenURL}
 
 	http.HandleFunc("/", handleRequestAndRedirect)
-	go func() {
-		if err := revProxyRouter.httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("Error creating Reverse Proxy Router. Err: %v", err)
-		}
-	}()
+	http.HandleFunc("/revproxy/stop", handleStopRequest)
+	revProxyRouter.Start()
+	selfServer = &revProxyRouter
 	return &revProxyRouter, nil
+}
+
+// Start starts the http server
+func (s *Server) Start() error {
+	if s.httpServer != nil {
+		go s.httpServer.ListenAndServe()
+	}
+	return nil
+}
+
+func handleStopRequest(res http.ResponseWriter, req *http.Request) {
+	selfServer.Stop()
 }
 
 // Stop stops the http server

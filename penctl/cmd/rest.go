@@ -10,12 +10,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 
 	"github.com/ghodss/yaml"
 )
 
-func restPost(v interface{}, port int, url string) error {
+func restPost(v interface{}, port string, url string) error {
 	payloadBytes, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -31,7 +30,7 @@ func restPost(v interface{}, port int, url string) error {
 	}
 	body := bytes.NewReader(payloadBytes)
 
-	url = "http://" + naplesIP + ":" + strconv.Itoa(port) + "/" + url
+	url = "http://" + naplesIP + ":" + port + "/" + url
 	if verbose {
 		fmt.Println("URL: ", url)
 	}
@@ -53,11 +52,11 @@ func restPost(v interface{}, port int, url string) error {
 	return nil
 }
 
-func restGet(port int, url string) ([]byte, error) {
+func restGet(port string, url string) ([]byte, error) {
 	if verbose {
 		fmt.Println("Doing GET request to netagent")
 	}
-	url = "http://" + naplesIP + ":" + strconv.Itoa(port) + "/" + url
+	url = "http://" + naplesIP + ":" + port + "/" + url
 	if verbose {
 		fmt.Println("URL: ", url)
 	}

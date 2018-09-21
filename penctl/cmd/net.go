@@ -10,15 +10,18 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
 var naplesIP string
 var naplesSSHIP string
+var revProxyPort string
 
 func pickNetwork(cmd *cobra.Command, args []string) error {
-	naplesIP = "192.168.30.12"
+	naplesIP = "127.0.0.1"
 	naplesSSHIP = "192.168.68.155"
+	revProxyPort = globals.RevProxyPort
 	if !impl.IPAddr(naplesIP) {
 		panic(errors.New("Not valid Naples IP"))
 	}
