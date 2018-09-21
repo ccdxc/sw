@@ -466,8 +466,11 @@ static int ionic_cq_info_show(struct seq_file *s, void *v)
 
 	ionic_tbl_res_show(s, "", &cq->res);
 
-	if (cq->q.ptr)
+	if (cq->q.ptr) {
 		ionic_q_show(s, "", &cq->q);
+		seq_printf(s, "arm_any_prod:\t%#06x\n", cq->arm_any_prod);
+		seq_printf(s, "arm_sol_prod:\t%#06x\n", cq->arm_sol_prod);
+	}
 
 	if (cq->umem)
 		ionic_umem_show(s, "", cq->umem);
