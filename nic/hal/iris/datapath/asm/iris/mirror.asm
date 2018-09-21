@@ -32,6 +32,8 @@ local_span:
 
   add           r1, r0, d.u.local_span_d.truncate_len
   phvwr         p.control_metadata_dst_lport, d.u.local_span_d.dst_lport
+  seq           c1, d.u.local_span_d.qid_en, TRUE
+  phvwr.c1      p.control_metadata_qid, d.u.local_span_d.qid
   phvwr         p.tunnel_metadata_tunnel_originate, FALSE
   sne           c7, r0, r0
   bne           r1, r0, span_truncation

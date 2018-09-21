@@ -2,9 +2,9 @@
 /* NACL table processing                                                     */
 /*****************************************************************************/
 action nacl_permit(force_flow_hit, policer_index, log_en,
-                   ingress_mirror_en, egress_mirror_en, 
+                   ingress_mirror_en, egress_mirror_en,
                    ingress_mirror_session_id, egress_mirror_session_id,
-                   qid_en, qid, 
+                   qid_en, qid,
                    rewrite_en, rewrite_index, rewrite_flags,
                    tunnel_rewrite_en, tunnel_rewrite_index, tunnel_vnid,
                    tunnel_originate,
@@ -24,7 +24,7 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
         permit_packet();
         modify_field(control_metadata.drop_reason, 0);
     }
-        
+
     if (force_flow_hit == TRUE) {
         modify_field(control_metadata.flow_miss, FALSE);
         modify_field(control_metadata.flow_miss_ingress, FALSE);

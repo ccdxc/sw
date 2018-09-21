@@ -12,9 +12,13 @@ action mirror_truncate(truncate_len, is_erspan) {
     }
 }
 
-action local_span(dst_lport, truncate_len, span_tm_oq) {
+action local_span(dst_lport, truncate_len, span_tm_oq, qid, qid_en) {
     if (vlan_tag.valid == TRUE) {
         remove_header(vlan_tag);
+    }
+    if (qid_en == TRUE) {
+        modify_field(scratch_metadata.qid_en, qid_en);
+        modify_field(control_metadata.qid, qid);
     }
 
     modify_field(p4_to_p4plus_mirror.session_id,

@@ -15,7 +15,7 @@ action redirect_to_remote(tunnel_index, tm_oport, egress_mirror_en, tm_oq) {
     modify_field(scratch_metadata.flag, egress_mirror_en);
 }
 
-action redirect_to_cpu(dst_lif, egress_mirror_en, 
+action redirect_to_cpu(dst_lif, egress_mirror_en,
                        control_tm_oq, cpu_copy_tm_oq) {
     if (control_metadata.cpu_copy == TRUE) {
         modify_field(capri_intrinsic.tm_oq, cpu_copy_tm_oq);
