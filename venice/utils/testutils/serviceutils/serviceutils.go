@@ -15,7 +15,7 @@ import (
 )
 
 // StartAPIServer helper function to start API server
-func StartAPIServer(serverAddr string, logger log.Logger) (apiserver.Server, string, error) {
+func StartAPIServer(serverAddr, clusterName string, logger log.Logger) (apiserver.Server, string, error) {
 	log.Info("starting API server ...")
 	if utils.IsEmpty(serverAddr) {
 		// find an available port
@@ -37,7 +37,7 @@ func StartAPIServer(serverAddr string, logger log.Logger) (apiserver.Server, str
 		Kvstore: store.Config{
 			Type:    store.KVStoreTypeMemkv,
 			Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme()),
-			Servers: []string{"test-cluster"},
+			Servers: []string{clusterName},
 		},
 		GetOverlay: cache.GetOverlay,
 		IsDryRun:   cache.IsDryRun,

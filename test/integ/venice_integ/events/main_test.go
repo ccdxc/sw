@@ -59,7 +59,7 @@ type tInfo struct {
 }
 
 // setup helper function create evtsmgr, evtsproxy, etc. services
-func (t *tInfo) setup() error {
+func (t *tInfo) setup(tst *testing.T) error {
 	var err error
 	logConfig := log.GetDefaultConfig("events_test")
 	//logConfig.Debug = true
@@ -81,7 +81,7 @@ func (t *tInfo) setup() error {
 	}
 
 	// start API server
-	t.apiServer, t.apiServerAddr, err = serviceutils.StartAPIServer(testURL, t.logger)
+	t.apiServer, t.apiServerAddr, err = serviceutils.StartAPIServer(testURL, tst.Name(), t.logger)
 	if err != nil {
 		log.Errorf("failed to start API server, err: %v", err)
 		return err

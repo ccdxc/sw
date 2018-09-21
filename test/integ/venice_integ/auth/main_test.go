@@ -114,7 +114,7 @@ func (tInfo *tInfo) setup() error {
 
 	// start API server
 	trace.Init("ApiServer")
-	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", tInfo.l)
+	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", "AuthIntegTest", tInfo.l)
 	if err != nil {
 		return err
 	}

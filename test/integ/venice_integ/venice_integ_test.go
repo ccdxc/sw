@@ -353,7 +353,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	logConf.Filter = log.AllowAllFilter
 	l = log.GetNewLogger(logConf)
 	// start API server
-	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, l)
+	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, c.TestName(), l)
 	c.Assert(err, IsNil)
 
 	l = log.GetNewLogger(log.GetDefaultConfig("api-gw"))

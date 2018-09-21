@@ -52,7 +52,7 @@ func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rp
 	mr := mockresolver.New()
 
 	// create API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", logger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
 	tu.AssertOk(t, err, "failed to start API server")
 
 	// udpate mock resolver

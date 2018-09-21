@@ -67,7 +67,7 @@ var (
 
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "authnmgr_test"},
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "ldap_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true})
@@ -83,7 +83,7 @@ func TestMain(m *testing.M) {
 func setup() {
 	var err error
 	// api server
-	apiSrv, apiSrvAddr, err = serviceutils.StartAPIServer(apisrvURL, logger)
+	apiSrv, apiSrvAddr, err = serviceutils.StartAPIServer(apisrvURL, "ldap_test", logger)
 	if err != nil {
 		panic("Unable to start API Server")
 	}

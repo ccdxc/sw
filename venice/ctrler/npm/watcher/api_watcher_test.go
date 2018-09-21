@@ -52,7 +52,7 @@ func TestApiWatcher(t *testing.T) {
 	}
 
 	// create api server
-	apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", logger)
+	apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
 	AssertOk(t, err, "Error starting api server")
 
 	// create memkvstore
@@ -247,7 +247,7 @@ func TestAPIServerRestarts(t *testing.T) {
 	}
 
 	// create api server
-	apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", logger)
+	apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
 	AssertOk(t, err, "Error starting api server")
 
 	// create memkvstore
@@ -485,7 +485,7 @@ func TestAPIServerRestarts(t *testing.T) {
 	apicl.Close()
 
 	// restart api server and watchers
-	apiSrv, apisrvURL, err = serviceutils.StartAPIServer(apisrvURL, logger)
+	apiSrv, apisrvURL, err = serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
 	AssertOk(t, err, "Error restarting api server")
 	apicl, err = apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, l)
 	AssertOk(t, err, "Error restarting api server client")
@@ -547,7 +547,7 @@ func TestApiServerClient(t *testing.T) {
 	testCount := 5
 	for i := 0; i < testCount; i++ {
 		// create api server
-		apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", logger)
+		apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
 		AssertOk(t, err, "Error starting api server")
 
 		// create an api server client
@@ -623,7 +623,7 @@ func TestWorkloadWatcher(t *testing.T) {
 	}
 
 	// create api server
-	apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", logger)
+	apiSrv, apisrvURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
 	AssertOk(t, err, "Error starting api server", apiSrv)
 	defer apiSrv.Stop()
 

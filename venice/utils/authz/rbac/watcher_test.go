@@ -54,10 +54,15 @@ func createAPIClient(apiSrvAddr string) apiclient.Services {
 }
 
 func TestWatcher(t *testing.T) {
-	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
 	AssertOk(t, err, "failed to create API server")
+	// wait for api server to stop
+	defer time.Sleep(time.Millisecond * 100)
+	defer apiSrv.Stop()
 	watcher := createWatcher(&userPermissionsCache{}, "watcher_test", apiSrvAddr)
+	defer watcher.stop()
 	apicl := createAPIClient(apiSrvAddr)
+	defer apicl.Close()
 
 	userPermCache := (watcher.cache).(*userPermissionsCache)
 	// with no tenants created, role and role binding cache should be empty
@@ -157,12 +162,6 @@ func TestWatcher(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		return len(userPermCache.getRoleCache()) == 0 && len(userPermCache.getRoleBindingCache()) == 0, nil
 	}, "role and role binding cache not deleted for tenant")
-
-	apicl.Close()
-	watcher.stop()
-	apiSrv.Stop()
-	// wait for api server to stop
-	time.Sleep(time.Millisecond * 100)
 }
 
 func TestWatcherWithApiServerDown(t *testing.T) {
@@ -193,10 +192,10 @@ func TestWatcherWithApiServerDown(t *testing.T) {
 	testCache.addRole(role)
 	_, ok := testCache.roles[role.GetTenant()][getKey(role.GetTenant(), role.GetName())]
 	Assert(t, ok, "role didn't get added to the cache")
-
-	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
 	AssertOk(t, err, "failed to start API server")
 	watcher := createWatcher(testCache, "watcher_test", apiSrvAddr)
+	defer watcher.stop()
 	Assert(t, !watcher.stopped(), "watcher shouldn't be in stopped state")
 	// verify cache resets when watcher starts
 	AssertEventually(t, func() (bool, interface{}) {

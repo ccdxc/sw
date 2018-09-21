@@ -108,7 +108,7 @@ type testInfo struct {
 
 var tInfo testInfo
 
-func (tInfo *testInfo) setup() error {
+func (tInfo *testInfo) setup(t *testing.T) error {
 	var err error
 
 	// start elasticsearch
@@ -136,7 +136,7 @@ func (tInfo *testInfo) setup() error {
 	tInfo.fdrAddr = fdrAddr
 
 	// start API server
-	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", tInfo.l)
+	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", t.Name(), tInfo.l)
 	if err != nil {
 		return err
 	}
@@ -283,7 +283,7 @@ func TestSpyglass(t *testing.T) {
 	logConfig := log.GetDefaultConfig("spyglass_integ_test")
 	tInfo.l = log.GetNewLogger(logConfig)
 
-	AssertOk(t, tInfo.setup(), "failed to setup test")
+	AssertOk(t, tInfo.setup(t), "failed to setup test")
 	defer tInfo.teardown()
 
 	ctx := context.Background()

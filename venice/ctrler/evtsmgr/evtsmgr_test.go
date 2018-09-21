@@ -54,7 +54,7 @@ func addMockService(mr *mockresolver.ResolverClient, serviceName, serviceURL str
 }
 
 // setup helper function creates mock elastic server and resolver
-func setup() (*mockes.ElasticServer, *mockresolver.ResolverClient, apiserver.Server, error) {
+func setup(t *testing.T) (*mockes.ElasticServer, *mockresolver.ResolverClient, apiserver.Server, error) {
 	// create elastic mock server
 	ms := mockes.NewElasticServer()
 	ms.Start()
@@ -63,7 +63,7 @@ func setup() (*mockes.ElasticServer, *mockresolver.ResolverClient, apiserver.Ser
 	mr := mockresolver.New()
 
 	// create API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", logger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -77,7 +77,7 @@ func setup() (*mockes.ElasticServer, *mockresolver.ResolverClient, apiserver.Ser
 
 // TestEventsManager tests the creation of the new events manager
 func TestEventsManager(t *testing.T) {
-	mockElasticsearchServer, mockResolver, apiServer, err := setup()
+	mockElasticsearchServer, mockResolver, apiServer, err := setup(t)
 	tu.AssertOk(t, err, "failed to setup test, err: %v", err)
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
@@ -94,7 +94,7 @@ func TestEventsManagerInstantiation(t *testing.T) {
 	maxRetries = 2
 	retryDelay = 20 * time.Millisecond
 
-	mockElasticsearchServer, mockResolver, apiServer, err := setup()
+	mockElasticsearchServer, mockResolver, apiServer, err := setup(t)
 	tu.AssertOk(t, err, "failed to setup test, err: %v", err)
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
@@ -129,7 +129,7 @@ func TestEventsManagerInstantiation(t *testing.T) {
 
 // TestEventsElasticTemplate tests events template creation in elasticsearch
 func TestEventsElasticTemplate(t *testing.T) {
-	mockElasticsearchServer, mockResolver, apiServer, err := setup()
+	mockElasticsearchServer, mockResolver, apiServer, err := setup(t)
 	tu.AssertOk(t, err, "failed to setup test, err: %v", err)
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
@@ -161,7 +161,7 @@ func TestEventsElasticTemplate(t *testing.T) {
 
 // TestEventsMgrAlertPolicyCache tests the mem DB CRUD on alert policy objects
 func TestEventsMgrAlertPolicyCache(t *testing.T) {
-	mockElasticsearchServer, mockResolver, apiServer, err := setup()
+	mockElasticsearchServer, mockResolver, apiServer, err := setup(t)
 	tu.AssertOk(t, err, "failed to setup test, err: %v", err)
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
@@ -219,7 +219,7 @@ func TestEventsMgrAlertPolicyCache(t *testing.T) {
 
 // TestEventsMgrAlertCache tests mem DB CRUD on alert objects
 func TestEventsMgrAlertCache(t *testing.T) {
-	mockElasticsearchServer, mockResolver, apiServer, err := setup()
+	mockElasticsearchServer, mockResolver, apiServer, err := setup(t)
 	tu.AssertOk(t, err, "failed to setup test, err: %v", err)
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()

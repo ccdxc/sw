@@ -62,7 +62,7 @@ var (
 // 2. verify the events reached elastic through the pipeline (proxy->writer->evtsmgr->elastic) using elastic client.
 func TestEvents(t *testing.T) {
 	ti := tInfo{}
-	AssertOk(t, ti.setup(), "failed to setup test")
+	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
 	// uuid to make each source unique
@@ -142,7 +142,7 @@ func TestEvents(t *testing.T) {
 // 4. verify that all the recorded events reached elastic using elastic client.
 func TestEventsProxyRestart(t *testing.T) {
 	ti := tInfo{}
-	AssertOk(t, ti.setup(), "failed to setup test")
+	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
 	numRecorders := 3
@@ -242,7 +242,7 @@ func TestEventsProxyRestart(t *testing.T) {
 // 4. verify that all the recorded events reached elastic using elastic client.
 func TestEventsMgrRestart(t *testing.T) {
 	ti := tInfo{}
-	AssertOk(t, ti.setup(), "failed to setup test")
+	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
 	numRecorders := 3
@@ -339,7 +339,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 
 	// setup events pipeline to record and distribute events
 	ti := tInfo{}
-	AssertOk(t, ti.setup(), "failed to setup test")
+	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
 	// start spyglass (backend service for events)
@@ -826,7 +826,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 func TestEventsAlertEngine(t *testing.T) {
 	// setup events pipeline to record and distribute events
 	ti := tInfo{}
-	AssertOk(t, ti.setup(), "failed to setup test")
+	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
 	// create API server client

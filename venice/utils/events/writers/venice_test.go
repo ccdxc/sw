@@ -75,7 +75,7 @@ func setup(t *testing.T) (*mockes.ElasticServer, apiserver.Server, *evtsmgr.Even
 	ms.Start()
 
 	// start API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", logger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
 	AssertOk(t, err, "failed to start API server")
 
 	// update resolver

@@ -41,7 +41,7 @@ var (
 
 func TestNetworkWriter(t *testing.T) {
 	// api server
-	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
 	AssertOk(t, err, "Error starting api server")
 
 	// create network state manager
@@ -89,7 +89,7 @@ func TestNetworkWriter(t *testing.T) {
 
 func TestEndpointWriter(t *testing.T) {
 	// api server
-	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
 	AssertOk(t, err, "Error starting api server")
 
 	// create network state manager
@@ -140,7 +140,7 @@ func TestEndpointWriter(t *testing.T) {
 
 func TestSgWriter(t *testing.T) {
 	// api server
-	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
 	AssertOk(t, err, "Error starting api server")
 
 	// create network state manager
@@ -187,7 +187,7 @@ func TestSgWriter(t *testing.T) {
 
 func TestSgPolicyWriter(t *testing.T) {
 	// api server
-	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
 	AssertOk(t, err, "Error starting api server")
 
 	// create network state manager
@@ -241,7 +241,7 @@ func TestSgPolicyWriter(t *testing.T) {
 
 func TestTenantWriter(t *testing.T) {
 	// api server
-	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, logger)
+	apiSrv, url, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
 	AssertOk(t, err, "Error starting api server")
 
 	// create network state manager
