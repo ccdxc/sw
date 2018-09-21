@@ -24,9 +24,9 @@ var _ = math.Inf
 type MonitoringExportFormat int32
 
 const (
-	//
+	// ui-hint: BSD
 	MonitoringExportFormat_SYSLOG_BSD MonitoringExportFormat = 0
-	//
+	// ui-hint: RFC5424
 	MonitoringExportFormat_SYSLOG_RFC5424 MonitoringExportFormat = 1
 )
 

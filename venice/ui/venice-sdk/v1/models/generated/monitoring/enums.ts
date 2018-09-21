@@ -148,6 +148,16 @@ export enum MonitoringAlertStatus_severity_uihint {
     'WARNING' = "Warning",
 }
 
+export enum MonitoringEventExport_format_uihint {
+    'SYSLOG_BSD' = "BSD",
+    'SYSLOG_RFC5424' = "RFC5424",
+}
+
+export enum MonitoringFwlogExport_format_uihint {
+    'SYSLOG_BSD' = "BSD",
+    'SYSLOG_RFC5424' = "RFC5424",
+}
+
 export enum MonitoringFwlogExport_export_filter_uihint {
     'FWLOG_ACCEPT' = "Accept",
     'FWLOG_ALL' = "All",
@@ -188,6 +198,11 @@ export enum MonitoringMirrorSessionStatus_oper_state_uihint {
     'RUNNING' = "Running",
     'SCHEDULED' = "Scheduled",
     'STOPPED' = "Stopped",
+}
+
+export enum MonitoringSyslogExport_format_uihint {
+    'SYSLOG_BSD' = "BSD",
+    'SYSLOG_RFC5424' = "RFC5424",
 }
 
 export enum MonitoringTroubleshootingSessionStatus_state_uihint {
@@ -250,11 +265,14 @@ export class AllEnums {
     MonitoringAlertPolicySpec_severity_uihint = MonitoringAlertPolicySpec_severity_uihint;
     MonitoringAlertSpec_state_uihint = MonitoringAlertSpec_state_uihint;
     MonitoringAlertStatus_severity_uihint = MonitoringAlertStatus_severity_uihint;
+    MonitoringEventExport_format_uihint = MonitoringEventExport_format_uihint;
+    MonitoringFwlogExport_format_uihint = MonitoringFwlogExport_format_uihint;
     MonitoringFwlogExport_export_filter_uihint = MonitoringFwlogExport_export_filter_uihint;
     MonitoringFwlogSpec_filter_uihint = MonitoringFwlogSpec_filter_uihint;
     MonitoringMatchedRequirement_operator_uihint = MonitoringMatchedRequirement_operator_uihint;
     MonitoringMirrorCollector_type_uihint = MonitoringMirrorCollector_type_uihint;
     MonitoringMirrorSessionSpec_packet_filters_uihint = MonitoringMirrorSessionSpec_packet_filters_uihint;
     MonitoringMirrorSessionStatus_oper_state_uihint = MonitoringMirrorSessionStatus_oper_state_uihint;
+    MonitoringSyslogExport_format_uihint = MonitoringSyslogExport_format_uihint;
     MonitoringTroubleshootingSessionStatus_state_uihint = MonitoringTroubleshootingSessionStatus_state_uihint;
 }

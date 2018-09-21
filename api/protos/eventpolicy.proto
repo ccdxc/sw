@@ -13,8 +13,10 @@ import "github.com/pensando/sw/api/fields/selector.proto";
 
 // ------------------------------- Event Policy --------------------------------
 enum MonitoringExportFormat {
-    SYSLOG_BSD      = 0; // ui-hint: BSD
-    SYSLOG_RFC5424  = 1; // ui-hint: RFC5424
+    // ui-hint: BSD
+    SYSLOG_BSD      = 0;
+    // ui-hint: RFC5424
+    SYSLOG_RFC5424  = 1;
 }
 
 // Event Policy represents the policy definition for Events.

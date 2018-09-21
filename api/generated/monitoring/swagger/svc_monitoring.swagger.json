@@ -12125,6 +12125,10 @@
             "SYSLOG_RFC5424"
           ],
           "default": "SYSLOG_BSD",
+          "x-ui-hints": {
+            "SYSLOG_BSD": "BSD",
+            "SYSLOG_RFC5424": "RFC5424"
+          },
           "title": "event export format, SYSLOG_BSD default"
         },
         "selector": {
@@ -12301,6 +12305,10 @@
             "SYSLOG_RFC5424"
           ],
           "default": "SYSLOG_BSD",
+          "x-ui-hints": {
+            "SYSLOG_BSD": "BSD",
+            "SYSLOG_RFC5424": "RFC5424"
+          },
           "title": "fwlog format, SYSLOG_BSD default"
         },
         "export-filter": {
@@ -12800,6 +12808,10 @@
             "SYSLOG_RFC5424"
           ],
           "default": "SYSLOG_BSD",
+          "x-ui-hints": {
+            "SYSLOG_BSD": "BSD",
+            "SYSLOG_RFC5424": "RFC5424"
+          },
           "title": "event export format, SYSLOG_BSD default"
         },
         "target": {

@@ -7,7 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { MonitoringSyslogExport_format,  } from './enums';
+import { MonitoringSyslogExport_format,  MonitoringSyslogExport_format_uihint  } from './enums';
 import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
 import { ApiSyslogExportConfig, IApiSyslogExportConfig } from './api-syslog-export-config.model';
 
@@ -24,7 +24,7 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
     'config': ApiSyslogExportConfig = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'format': {
-            enum: MonitoringSyslogExport_format,
+            enum: MonitoringSyslogExport_format_uihint,
             default: 'SYSLOG_BSD',
             type: 'string'
         },

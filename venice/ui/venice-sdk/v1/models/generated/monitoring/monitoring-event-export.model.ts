@@ -7,7 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { MonitoringEventExport_format,  } from './enums';
+import { MonitoringEventExport_format,  MonitoringEventExport_format_uihint  } from './enums';
 import { FieldsSelector, IFieldsSelector } from './fields-selector.model';
 import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
 import { ApiSyslogExportConfig, IApiSyslogExportConfig } from './api-syslog-export-config.model';
@@ -27,7 +27,7 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
     'syslog-config': ApiSyslogExportConfig = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'format': {
-            enum: MonitoringEventExport_format,
+            enum: MonitoringEventExport_format_uihint,
             default: 'SYSLOG_BSD',
             type: 'string'
         },

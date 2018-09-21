@@ -8,7 +8,7 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
-import { MonitoringFwlogExport_format,  } from './enums';
+import { MonitoringFwlogExport_format,  MonitoringFwlogExport_format_uihint  } from './enums';
 import { MonitoringFwlogExport_export_filter,  MonitoringFwlogExport_export_filter_uihint  } from './enums';
 import { ApiSyslogExportConfig, IApiSyslogExportConfig } from './api-syslog-export-config.model';
 
@@ -30,7 +30,7 @@ export class MonitoringFwlogExport extends BaseModel implements IMonitoringFwlog
             type: 'object'
         },
         'format': {
-            enum: MonitoringFwlogExport_format,
+            enum: MonitoringFwlogExport_format_uihint,
             default: 'SYSLOG_BSD',
             type: 'string'
         },
