@@ -17,6 +17,8 @@ import (
 
 var (
 	traceLevel string
+	secProfID  uint32
+	connTrack  string
 )
 
 var debugCmd = &cobra.Command{
@@ -46,13 +48,32 @@ var flushLogsDebugCmd = &cobra.Command{
 	Run:   flushLogsDebugCmdHandler,
 }
 
+var fwDebugCmd = &cobra.Command{
+	Use:   "firewall",
+	Short: "set firewall options",
+	Long:  "set firewall options",
+}
+
+var secProfDebugCmd = &cobra.Command{
+	Use:   "security-profile",
+	Short: "set firewall security profile options",
+	Long:  "set firewall security profile options",
+	Run:   fwSecProfDebugCmdHandler,
+}
+
 func init() {
 	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
+	debugCmd.AddCommand(fwDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
+	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
 
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level")
+	secProfDebugCmd.Flags().Uint32Var(&secProfID, "id", 0, "Specify firewall security profile ID")
+	secProfDebugCmd.Flags().StringVar(&connTrack, "conntrack", "off", "Turn connection tracking on/off")
+	secProfDebugCmd.MarkFlagRequired("id")
+	secProfDebugCmd.MarkFlagRequired("conntrack")
 }
 
 func traceShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -201,4 +222,115 @@ func flushLogsDebugCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println("Flushing logs succeeded")
 		}
 	}
+}
+
+func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+	}
+	defer c.Close()
+
+	client := halproto.NewNwSecurityClient(c.ClientConn)
+
+	var reqMsg *halproto.SecurityProfileRequestMsg
+
+	if cmd.Flags().Changed("id") {
+		if cmd.Flags().Changed("conntrack") {
+			if isConnTrackValid(connTrack) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			var req *halproto.SecurityProfileSpec
+
+			// Set conn tracking
+			req = &halproto.SecurityProfileSpec{
+				KeyOrHandle: &halproto.SecurityProfileKeyHandle{
+					KeyOrHandle: &halproto.SecurityProfileKeyHandle_ProfileId{
+						ProfileId: secProfID,
+					},
+				},
+				CnxnTrackingEn: inputToConnTrack(connTrack),
+			}
+			reqMsg = &halproto.SecurityProfileRequestMsg{
+				Request: []*halproto.SecurityProfileSpec{req},
+			}
+		} else {
+			fmt.Printf("Argument required. Turn connection tracking on/off using '--conntrack on/off' flag\n")
+		}
+	} else {
+		fmt.Printf("Argument required. Set security profile ID using '--id ...' flag\n")
+		return
+	}
+
+	// HAL call
+	_, err = client.SecurityProfileUpdate(context.Background(), reqMsg)
+	if err != nil {
+		log.Errorf("Set conn tracking failed. %v", err)
+	}
+
+	// Get security profile
+	var getReqMsg *halproto.SecurityProfileGetRequestMsg
+	var getReq *halproto.SecurityProfileGetRequest
+
+	getReq = &halproto.SecurityProfileGetRequest{
+		KeyOrHandle: &halproto.SecurityProfileKeyHandle{
+			KeyOrHandle: &halproto.SecurityProfileKeyHandle_ProfileId{
+				ProfileId: secProfID,
+			},
+		},
+	}
+
+	getReqMsg = &halproto.SecurityProfileGetRequestMsg{
+		Request: []*halproto.SecurityProfileGetRequest{getReq},
+	}
+
+	// HAL call
+	getRespMsg, err := client.SecurityProfileGet(context.Background(), getReqMsg)
+	if err != nil {
+		log.Errorf("Get conn tracking failed. %v", err)
+	}
+
+	// Print Conn Tracking
+	for _, getResp := range getRespMsg.Response {
+		if getResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL Returned non OK status. %v", getResp.ApiStatus)
+			continue
+		}
+		fmt.Printf("Connection Tracking is %s\n", getConnTrack(getResp))
+	}
+}
+
+func isConnTrackValid(str string) bool {
+	switch str {
+	case "on":
+		return true
+	case "off":
+		return true
+	default:
+		return false
+	}
+}
+
+func inputToConnTrack(str string) bool {
+	switch str {
+	case "on":
+		return true
+	case "off":
+		return false
+	}
+
+	return false
+}
+
+func getConnTrack(resp *halproto.SecurityProfileGetResponse) string {
+	switch resp.GetSpec().GetCnxnTrackingEn() {
+	case true:
+		return "on"
+	case false:
+		return "off"
+	}
+
+	return "off"
 }

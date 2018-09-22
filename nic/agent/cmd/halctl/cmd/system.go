@@ -33,6 +33,13 @@ var systemStatsShowCmd = &cobra.Command{
 	Run:   systemStatsShowCmdHandler,
 }
 
+var systemStatsTableShowCmd = &cobra.Command{
+	Use:   "table",
+	Short: "show system statistics table",
+	Long:  "show system statistics table",
+	Run:   tableInfoShowCmdHandler,
+}
+
 var threadShowCmd = &cobra.Command{
 	Use:   "thread",
 	Short: "show system threads",
@@ -51,6 +58,7 @@ func init() {
 	showCmd.AddCommand(systemShowCmd)
 	systemShowCmd.AddCommand(systemStatsShowCmd)
 	systemShowCmd.AddCommand(threadShowCmd)
+	systemStatsShowCmd.AddCommand(systemStatsTableShowCmd)
 	threadShowCmd.AddCommand(threadDetailShowCmd)
 }
 

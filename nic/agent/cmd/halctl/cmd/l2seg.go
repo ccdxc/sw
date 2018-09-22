@@ -219,14 +219,15 @@ func l2segDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 func l2segShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n")
 	fmt.Printf("Id:            L2seg's ID                            Handle:      L2seg Handle\n")
-	fmt.Printf("vrfId:         L2segs's VRF Id                       WireEncap:   Wire encap type/value\n")
+	fmt.Printf("vrfId:         L2segs's VRF ID                       WireEncap:   Wire encap type/value\n")
 	fmt.Printf("TunnelEncap:   Tunnel encap type/value               MFP:         Multicast fwd. policy\n")
 	fmt.Printf("BFP:           Broadcast fwd. policy                 BMP:         Bcast, Mcast, Prom Repl indices\n")
-	fmt.Printf("#EPs:        Num. of EPs in L2seg                    IFs:         Member Interfaces\n")
-	hdrLine := strings.Repeat("-", 110)
+	fmt.Printf("#EPs:          Num. of EPs in L2seg                  IFs:         Member Interfaces\n")
+	fmt.Printf("PinUplnkId:    Pinned Uplink Interface ID\n")
+	hdrLine := strings.Repeat("-", 135)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-15s%-15s%-10s%-10s%-15s%-10s%-20s\n",
-		"Id", "Handle", "vrfId", "WireEncap", "TunnelEncap", "MFP", "BFP", "B-M-P", "#EPs", "IFs")
+	fmt.Printf("%-10s%-10s%-10s%-15s%-15s%-10s%-10s%-15s%-10s%-20s%-10s\n",
+		"Id", "Handle", "vrfId", "WireEncap", "TunnelEncap", "MFP", "BFP", "B-M-P", "#EPs", "IFs", "PinUplnkId")
 	fmt.Println(hdrLine)
 }
 
@@ -269,7 +270,7 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		resp.GetStatus().GetMcastIdx(),
 		resp.GetStatus().GetPromIdx())
 
-	fmt.Printf("%-10d%-10d%-10d%-15s%-15s%-10s%-10s%-15s%-10d%-20s\n",
+	fmt.Printf("%-10d%-10d%-10d%-15s%-15s%-10s%-10s%-15s%-10d%-20s%-10d\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		resp.GetStatus().GetL2SegmentHandle(),
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
@@ -278,21 +279,21 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		bcastFwdPolToStr(resp.GetSpec().GetBcastFwdPolicy()),
 		replIndices,
 		resp.GetStats().GetNumEndpoints(),
-		ifStr)
+		ifStr,
+		resp.GetSpec().GetPinnedUplinkIfKeyHandle())
 
 }
 
 func l2segPdShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n")
-	fmt.Printf("Id:         L2seg's ID                       Handle:     L2seg Handle\n")
-	fmt.Printf("vrfId:      L2segs's VRF Id                  HwId:       L2seg's Hwid used in flow lookup\n")
+	fmt.Printf("Id:         L2seg's ID                       HwId:       L2seg's Hwid used in flow lookup\n")
 	fmt.Printf("LookupId:   L2seg's Lookup Id                CPUVlan:    Pkt's Vlan from CPU on this L2seg\n")
-	fmt.Printf("InpPropCPU: Input Prop. table idx from CPU   InpProp.1q: Inp. Prop table indices for IFs\n")
-	fmt.Printf("InpPropPr:  Inp. Prop table indices for IFs\n")
-	hdrLine := strings.Repeat("-", 110)
+	fmt.Printf("InpPropCPU: Input Prop. table idx from CPU   BcastIdx:   Bcast replication list\n")
+	fmt.Printf("InpProp.1q: Inp. Prop table indices for IFs  InpPropPr:  Inp. Prop table indices for IFs\n")
+	hdrLine := strings.Repeat("-", 155)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-12s%-20s%-20s\n",
-		"Id", "Handle", "vrfId", "HwId", "LookupId", "CPUVlan", "InpPropCPU", "InpProp.1q", "InpPropPr")
+	fmt.Printf("%-10s%-10s%-10s%-10s%-12s%-10s%-45s%-45s\n",
+		"Id", "HwId", "LookupId", "CPUVlan", "InpPropCPU", "BcastIdx", "InpProp.1q", "InpPropPr")
 	fmt.Println(hdrLine)
 }
 
@@ -305,6 +306,7 @@ func l2segPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
 }
 
 func l2segEPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
+	status := resp.GetStatus()
 	epdStatus := resp.GetStatus().GetEpdInfo()
 	inpPropIdxStr := ""
 	inpPropIdxPrTagStr := ""
@@ -339,14 +341,13 @@ func l2segEPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		inpPropIdxPrTagStr = "None"
 	}
 
-	fmt.Printf("%-10d%-10d%-10d%-10d%-10d%-10d%-12d%-20s%-20s\n",
+	fmt.Printf("%-10d%-10d%-10d%-10d%-12d%-10d%-45s%-45s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
-		resp.GetStatus().GetL2SegmentHandle(),
-		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
 		epdStatus.GetHwL2SegId(),
 		epdStatus.GetL2SegLookupId(),
 		epdStatus.GetL2SegVlanIdCpu(),
 		epdStatus.GetInpPropCpuIdx(),
+		status.GetBcastIdx(),
 		inpPropIdxStr,
 		inpPropIdxPrTagStr)
 }

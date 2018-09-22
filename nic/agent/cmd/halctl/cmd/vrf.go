@@ -219,23 +219,24 @@ func vrfShowHeader() {
 	fmt.Printf("Id:         Vrf's ID                                Handle:     Vrf Handle\n")
 	fmt.Printf("Type:       Vrf's Type                              #L2Segs:    Num. of L2Segments\n")
 	fmt.Printf("#SGs:       Num. of Security Groups                 #EPs:       Num. of EPs\n")
-	fmt.Printf("#LBSVCs:    Num. of L4 LB Services\n")
-	hdrLine := strings.Repeat("-", 70)
+	fmt.Printf("#LBSVCs:    Num. of L4 LB Services                  NwSecId:    Security Profile ID\n")
+	hdrLine := strings.Repeat("-", 77)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"Id", "Handle", "Type", "#L2Segs", "#SGs", "#EPs", "#LBSVCs")
+	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-7s\n",
+		"Id", "Handle", "Type", "#L2Segs", "#SGs", "#EPs", "#LBSVCs", "NwSecId")
 	fmt.Println(hdrLine)
 }
 
 func vrfShowOneResp(resp *halproto.VrfGetResponse) {
-	fmt.Printf("%-10d%-10d%-10s%-10d%-10d%-10d%-10d\n",
+	fmt.Printf("%-10d%-10d%-10s%-10d%-10d%-10d%-10d%-7d\n",
 		resp.GetSpec().GetKeyOrHandle().GetVrfId(),
 		resp.GetStatus().GetVrfHandle(),
 		utils.VrfTypeToStr(resp.GetSpec().GetVrfType()),
 		resp.GetStats().GetNumL2Segments(),
 		resp.GetStats().GetNumSecurityGroups(),
 		resp.GetStats().GetNumEndpoints(),
-		resp.GetStats().GetNumL4LbServices())
+		resp.GetStats().GetNumL4LbServices(),
+		resp.GetSpec().GetSecurityKeyHandle().GetProfileId())
 }
 
 func vrfPdShowHeader(resp *halproto.VrfGetResponse) {
@@ -253,7 +254,7 @@ func vrfEPdShowHeader() {
 	fmt.Printf("GIPoIMT:    Input Mapping Tunnel indices for GIPo\n")
 	hdrLine := strings.Repeat("-", 90)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
+	fmt.Printf("%-10s%-10s%-10s%-10s%-11s%-10s%-10s%-10s%-10s\n",
 		"Id", "Handle", "Type", "HwId", "FlowLkupId", "CPUVlan", "InpProp", "GIPoIMN", "GIPoIMT")
 	fmt.Println(hdrLine)
 }
@@ -292,7 +293,7 @@ func vrfEPdShowOneResp(resp *halproto.VrfGetResponse) {
 	}
 
 	epdStatus := resp.GetStatus().GetEpdStatus()
-	fmt.Printf("%-10d%-10d%-10s%-10d%-10d%-10d%-10d%-10s%-10s\n",
+	fmt.Printf("%-10d%-10d%-10s%-10d%-11d%-10d%-10d%-10s%-10s\n",
 		resp.GetSpec().GetKeyOrHandle().GetVrfId(),
 		resp.GetStatus().GetVrfHandle(),
 		utils.VrfTypeToStr(resp.GetSpec().GetVrfType()),
