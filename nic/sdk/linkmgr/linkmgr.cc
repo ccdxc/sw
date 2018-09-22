@@ -316,9 +316,9 @@ port_link_poll_timer(linkmgr_entry_data_t *data)
 
             if (port_p != NULL) {
                 if(port_p->port_link_status() == false) {
+                    SDK_TRACE_DEBUG("%d: Link DOWN", port_p->port_num());
                     port_p->port_link_dn_handler();
                 }
-                SDK_TRACE_DEBUG("%d: Link still UP", port_p->port_num());
             }
         }
     }

@@ -327,10 +327,6 @@ serdes_global_init_hw(uint32_t     jtag_id,
 {
     Aapl_comm_method_t comm_method = AVAGO_SBUS;
 
-    // TODO CLI
-    int         verbose        = 1;
-    int         debug          = 8;
-
     // TODO read from catalog
     int      num_chips      = 1;
 
@@ -343,8 +339,8 @@ serdes_global_init_hw(uint32_t     jtag_id,
     aapl->jtag_idcode[0]       = jtag_id;
     aapl->sbus_rings           = num_sbus_rings;
     aapl->chips                = num_chips;
-    aapl->debug                = debug;
-    aapl->verbose              = verbose;
+    aapl->debug                = 8;
+    aapl->verbose              = 1;
 
     if (aacs_connect == true) {
         aapl->aacs  = aacs_connect;
@@ -830,7 +826,7 @@ void
 serdes_aacs_start_hw(int port)
 {
     // blocking call. waits for incoming connections
-    avago_aacs_server(aapl, port);;
+    avago_aacs_server(aapl, port);
 }
 
 sdk_ret_t
