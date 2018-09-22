@@ -127,7 +127,7 @@ if [ $VERIFY != 1 ]; then
 
     if [ -f $UBOOT ]; then
         dev_info uboot
-        NUM_BLOCKS="$(( (($UBOOT_SZ + 0x$DEV_BLKSZ) / 0x$DEV_BLKSZ) - 1 ))"
+        NUM_BLOCKS="$(( (($UBOOT_SZ + 0x$DEV_BLKSZ - 1) / 0x$DEV_BLKSZ) ))"
         ERASE_CMD="flash_erase /dev/$DEV 0 $NUM_BLOCKS"
         WRITE_CMD="dd if=$UBOOT of=/dev/$DEV"
         if [ $DRYRUN = 1 ]; then
@@ -158,7 +158,7 @@ if [ $VERIFY != 1 ]; then
 
     if [ -f $UIMG ]; then
         dev_info mainfw
-        NUM_BLOCKS="$(( (($UIMG_SZ + 0x$DEV_BLKSZ) / 0x$DEV_BLKSZ) - 1 ))"
+        NUM_BLOCKS="$(( (($UIMG_SZ + 0x$DEV_BLKSZ - 1) / 0x$DEV_BLKSZ) ))"
         ERASE_CMD="flash_erase /dev/$DEV 65536 $NUM_BLOCKS"
         WRITE_CMD="dd if=$UIMG of=/dev/$DEV bs=64k seek=1"
         if [ $DRYRUN = 1 ]; then
