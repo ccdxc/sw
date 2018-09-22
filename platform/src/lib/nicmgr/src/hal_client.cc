@@ -1552,7 +1552,7 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
 
         spec->set_qp_num(qp_num);
         spec->set_hw_lif_id(lif_id);
-        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_AV);
 
         spec->set_header_template(header, header_template_size);
         spec->set_ahid(header_template_ah_id);
@@ -1581,7 +1581,7 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
 
         spec->set_qp_num(qp_num);
         spec->set_hw_lif_id(lif_id);
-        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_DEST_QP);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_DEST_QPN);
         spec->set_dst_qp_num(dest_qp_num);
 
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
@@ -1608,7 +1608,7 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
 
         spec->set_qp_num(qp_num);
         spec->set_hw_lif_id(lif_id);
-        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_E_PSN);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_RQ_PSN);
         spec->set_e_psn(e_psn);
 
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
@@ -1635,7 +1635,7 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
 
         spec->set_qp_num(qp_num);
         spec->set_hw_lif_id(lif_id);
-        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_TX_PSN);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_SQ_PSN);
         spec->set_tx_psn(sq_psn);
 
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
@@ -1662,7 +1662,7 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
 
         spec->set_qp_num(qp_num);
         spec->set_hw_lif_id(lif_id);
-        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_Q_KEY);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_QKEY);
         spec->set_q_key(q_key);
 
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
@@ -1689,7 +1689,7 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
 
         spec->set_qp_num(qp_num);
         spec->set_hw_lif_id(lif_id);
-        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_PMTU);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_PATH_MTU);
         spec->set_pmtu(pmtu);
 
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
@@ -1716,7 +1716,7 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
 
         spec->set_qp_num(qp_num);
         spec->set_hw_lif_id(lif_id);
-        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_QSTATE);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_STATE);
         spec->set_qstate(qstate);
 
         Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);

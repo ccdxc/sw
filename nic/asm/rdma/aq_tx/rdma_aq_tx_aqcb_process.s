@@ -22,7 +22,7 @@ rdma_aq_tx_aqcb_process:
      * Initially the plan is to implement only one admin command with busy flag
      * and later will be optimized further.
      * Not setting ci = pi so there will be many spurious phvs generated and get
-     * dropped if busy fag set.
+     * dropped if busy flag set.
      */
 
     .brbegin
@@ -38,9 +38,7 @@ rdma_aq_tx_aqcb_process:
     .brcase     1
         seq         c1, d.busy, 1           
         bcf         [c1], drop              
-        nop         
-
-        tblwr       d.busy, 1
+        tblwr       d.busy, 1 //BD Slot
 
         // copy intrinsic to global
         add            r1, r0, offsetof(struct phv_, common_global_global_data) 

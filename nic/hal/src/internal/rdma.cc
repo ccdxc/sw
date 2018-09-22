@@ -1562,7 +1562,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 
     switch (oper) {
 
-        case rdma::RDMA_UPDATE_QP_OPER_SET_QSTATE:
+        case rdma::RDMA_UPDATE_QP_OPER_SET_STATE:
             // XXX: Check cur_qp_state before moving qp to new state
             state = rdma_qp_state_from_ionic(uint8_t(spec.qstate() & QP_STATE_MASK));
             sqcb_p->sqcb0.state = sqcb_p->sqcb1.state = state;
@@ -1571,7 +1571,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
             HAL_TRACE_DEBUG("{}: Update: Setting qp_state to: {}", __FUNCTION__, state);
         break;
 
-        case rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QP:
+        case rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QPN:
             rqcb_p->rqcb0.dst_qp = spec.dst_qp_num();
             sqcb_p->sqcb2.dst_qp = spec.dst_qp_num();
 
@@ -1579,13 +1579,13 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
                     spec.dst_qp_num());
         break;
 
-        case rdma::RDMA_UPDATE_QP_OPER_SET_E_PSN:
+        case rdma::RDMA_UPDATE_QP_OPER_SET_RQ_PSN:
             rqcb_p->rqcb1.e_psn = spec.e_psn();
             HAL_TRACE_DEBUG("{}: Update: Setting e_psn to: {}", __FUNCTION__,
                             spec.e_psn());
             break;
 
-        case rdma::RDMA_UPDATE_QP_OPER_SET_TX_PSN:
+        case rdma::RDMA_UPDATE_QP_OPER_SET_SQ_PSN:
             sqcb_p->sqcb2.tx_psn = spec.tx_psn();
             sqcb_p->sqcb2.exp_rsp_psn = (sqcb_p->sqcb2.tx_psn - 1);
             sqcb_p->sqcb1.tx_psn = sqcb_p->sqcb2.tx_psn;
@@ -1595,7 +1595,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
                             spec.tx_psn());
             break;
 
-        case rdma::RDMA_UPDATE_QP_OPER_SET_Q_KEY:
+        case rdma::RDMA_UPDATE_QP_OPER_SET_QKEY:
             rqcb_p->rqcb0.q_key = spec.q_key();
             rqcb_p->rqcb1.q_key = rqcb_p->rqcb0.q_key;
             sqcb_p->sqcb2.q_key = spec.q_key();
@@ -1603,7 +1603,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
                             spec.q_key());
             break;
 
-        case rdma::RDMA_UPDATE_QP_OPER_SET_PMTU:
+        case rdma::RDMA_UPDATE_QP_OPER_SET_PATH_MTU:
             sqcb_p->sqcb0.log_pmtu = log2(spec.pmtu());
             sqcb_p->sqcb1.log_pmtu = sqcb_p->sqcb0.log_pmtu;
 
@@ -1613,7 +1613,7 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
                             spec.pmtu());
             break;
 
-        case rdma::RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
+        case rdma::RDMA_UPDATE_QP_OPER_SET_AV:
 
             header_template_addr = rdma_lif_at_base_addr(lif);
 

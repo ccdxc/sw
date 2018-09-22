@@ -6,6 +6,8 @@
 #define RDMA_RESERVED_LKEY_ID 0
 #define RDMA_EQ_ID_ASYNC 0
 
+#define RDMA_AQ_QID_START 1
+
 #define HBM_NUM_PT_ENTRIES_PER_CACHE_LINE 8
 #define HBM_PAGE_SIZE_SHIFT 12 // HBM page size is assumed as 4K
 #define HBM_CACHE_LINE_SIZE 64 // Bytes
@@ -1429,25 +1431,22 @@ struct aqwqe_t {
 			rq_dma_addr: 64;
 		} qp;
 		struct {
-			pmtu: 4;
-            rsvd1: 4;
-            rnr_try: 4;
-			retry: 4;
-			rnr_timer: 8;
-			retry_timeout: 8;
-			access_perms_flags: 16;
-			access_perms_mask: 16;
-			rq_psn: 32;
-			sq_psn: 32;
-			qkey_dest_qpn: 32;
-			rate_limit_kbps: 32;
-			rsq_depth: 8;
-			rrq_depth: 8;
-			pkey_id: 16;
-            ah_id: 24;
-			ah_id_len: 8;
-			rsvd2 : 128;
-			dma_addr: 64;
+            attr_mask:32;
+            access_flags:32;
+            rq_psn:32;
+            sq_psn:32;
+            qkey_dest_qpn:32;
+            rate_limit_kbps:32;
+            pmtu:8;
+            retry:8;
+            rnr_timer:8;
+            retry_timeout:8;
+            rsq_depth:8;
+            rrq_depth:8;
+            pkey_id:16;
+            ah_id_len:32;
+            rsvd:96;
+            dma_addr:64;
 		} mod_qp;
 	};
 };

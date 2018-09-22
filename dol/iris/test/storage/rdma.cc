@@ -626,7 +626,7 @@ void ConnectInitiatorAndTarget(uint32_t qp1, uint32_t qp2, uint64_t mac1,
   rdma::RdmaQpUpdateSpec *qu = req.add_request();
   qu->set_qp_num(qp1);
   qu->set_hw_lif_id(g_rdma_hw_lif_id);
-  qu->set_oper(rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QP);
+  qu->set_oper(rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QPN);
   qu->set_dst_qp_num(qp2);
   grpc::ClientContext context1;
   auto status = rdma_stub->RdmaQpUpdate(&context1, req, &resp);
@@ -637,7 +637,7 @@ void ConnectInitiatorAndTarget(uint32_t qp1, uint32_t qp2, uint64_t mac1,
   qu = req.add_request();
   qu->set_qp_num(qp1);
   qu->set_hw_lif_id(g_rdma_hw_lif_id);
-  qu->set_oper(rdma::RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE);
+  qu->set_oper(rdma::RDMA_UPDATE_QP_OPER_SET_AV);
   qu->set_dst_qp_num(qp2);
   qu->set_header_template(hdr, sizeof(hdr));
   grpc::ClientContext context2;
@@ -649,7 +649,7 @@ void ConnectInitiatorAndTarget(uint32_t qp1, uint32_t qp2, uint64_t mac1,
   qu = req.add_request();
   qu->set_qp_num(qp1);
   qu->set_hw_lif_id(g_rdma_hw_lif_id);
-  qu->set_oper(rdma::RDMA_UPDATE_QP_OPER_SET_QSTATE);
+  qu->set_oper(rdma::RDMA_UPDATE_QP_OPER_SET_STATE);
   qu->set_dst_qp_num(qp2);
   qu->set_qstate(3);
   grpc::ClientContext context3;

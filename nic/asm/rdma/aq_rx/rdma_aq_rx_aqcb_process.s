@@ -40,6 +40,7 @@ process_feedback:
     
     seq         c1, K_OP, AQ_OP_TYPE_CREATE_QP
     bcf         [c1], create_qp
+    nop
     
 aq_feedback:
     
@@ -87,20 +88,20 @@ create_qp:
         //TODO: RQ in HBM still need to be implemented
 
     phvwr       p.rqcb0.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0]
-    phvwrpair       p.rqcb0.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb0.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0]
+    phvwrpair   p.rqcb0.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb0.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0]
     phvwr       p.rqcb0.serv_type, k.rdma_aq_feedback_qp_rq_type_state
 
     //RQCB1
 
     phvwr       p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state
-    phvwrpair       p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RTS
-    phvwrpair       p.rqcb1.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb1.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0]
-    phvwrpair       p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state[2:0], p.rqcb1.pd, K_PD
+    phvwrpair   p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RTS
+    phvwrpair   p.rqcb1.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb1.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0]
+    phvwrpair   p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state[2:0], p.rqcb1.pd, K_PD
     phvwr       p.rqcb1.cq_id, k.rdma_aq_feedback_qp_rq_cq_id
 
     //RQCB2
     
-    phvwrpair       p.rqcb2.rnr_timeout, 0xb, p.rqcb2.pd, K_PD
+    phvwrpair   p.rqcb2.rnr_timeout, 0xb, p.rqcb2.pd, K_PD
 
     //          TODO: Move RSQ/RRQ allocation to modify_qp frm create_qp
     //          TODO: Move pmtu setup to modify_qp
@@ -119,7 +120,7 @@ create_qp:
      * stage1.
      */
     CAPRI_RESET_TABLE_3_ARG() //BD Slot
-    phvwrpair       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_id), K_RQ_ID, CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_tbl_index), k.rdma_aq_feedback_qp_rq_tbl_index
+    phvwrpair   CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_id), K_RQ_ID, CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_tbl_index), k.rdma_aq_feedback_qp_rq_tbl_index
     phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_map_count), K_RQ_MAP_COUNT
     phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_dma_addr), K_RQ_DMA_ADDR
 

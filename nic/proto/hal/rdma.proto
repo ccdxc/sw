@@ -109,15 +109,32 @@ message RdmaQpResponseMsg {
 
 // types of Update QP operations
 enum RdmaQpUpdateOper {
-    RDMA_UPDATE_QP_OPER_SET_DEST_QP    = 0;  // Dest QP
-    RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE = 1;  // L2/L3 Header Params
-    RDMA_UPDATE_QP_OPER_SET_Q_KEY = 2; // Q_KEY
-    RDMA_UPDATE_QP_OPER_SET_E_PSN = 3; // E_PSN
-    RDMA_UPDATE_QP_OPER_SET_TX_PSN = 4; // TX_PSN
-    RDMA_UPDATE_QP_OPER_SET_RD_ATM = 5; // RRQ_DEPTH
-    RDMA_UPDATE_QP_OPER_SET_DEST_RD_ATM = 6; // RSQ_DEPTH
-    RDMA_UPDATE_QP_OPER_SET_PMTU = 7; // PATH MTU
-    RDMA_UPDATE_QP_OPER_SET_QSTATE = 8; // QSTATE
+    RDMA_UPDATE_QP_OPER_SET_STATE = 0; //state
+    RDMA_UPDATE_QP_OPER_SET_CUR_STATE = 1; //only if cur_state matches
+    RDMA_UPDATE_QP_OPER_SET_EN_SQD_ASYNC_NOTIFY = 2; //sqd_async_notify
+    RDMA_UPDATE_QP_OPER_SET_ACCESS_FLAGS = 3; //access_flags
+    RDMA_UPDATE_QP_OPER_SET_PKEY_INDEX = 4; //pkey
+    RDMA_UPDATE_QP_OPER_SET_PORT = 5; //port - NA
+    RDMA_UPDATE_QP_OPER_SET_QKEY = 6; //q_key
+    RDMA_UPDATE_QP_OPER_SET_AV = 7; //address-vector/header-template
+    RDMA_UPDATE_QP_OPER_SET_PATH_MTU = 8; //pmtu
+    RDMA_UPDATE_QP_OPER_SET_TIMEOUT = 9; //local-ack/retransmit timeout
+    RDMA_UPDATE_QP_OPER_SET_RETRY_CNT = 10; //retry_count
+    RDMA_UPDATE_QP_OPER_SET_RNR_RETRY = 11; //RNR retry timeout
+    RDMA_UPDATE_QP_OPER_SET_RQ_PSN = 12; //e_psn
+    RDMA_UPDATE_QP_OPER_SET_MAX_QP_RD_ATOMIC = 13; //local max_qp_rd_atomic
+    RDMA_UPDATE_QP_OPER_SET_ALT_PATH = 14; //alt-path - NA
+    RDMA_UPDATE_QP_OPER_SET_MIN_RNR_TIMER = 15; //min RNR timer
+    RDMA_UPDATE_QP_OPER_SET_SQ_PSN = 16; //psn
+    RDMA_UPDATE_QP_OPER_SET_MAX_DEST_RD_ATOMIC = 17; //remote max_rd_atomic
+    RDMA_UPDATE_QP_OPER_SET_PATH_MIG_STATE = 18; // NA
+    RDMA_UPDATE_QP_OPER_SET_CAP = 19; //capabilities ??
+    RDMA_UPDATE_QP_OPER_SET_DEST_QPN = 20; //dest_qp 
+    RDMA_UPDATE_QP_OPER_SET_RESERVED1 = 21; 
+    RDMA_UPDATE_QP_OPER_SET_RESERVED2 = 22;
+    RDMA_UPDATE_QP_OPER_SET_RESERVED3 = 23;
+    RDMA_UPDATE_QP_OPER_SET_RESERVED4 = 24;
+    RDMA_UPDATE_QP_OPER_SET_RATE_LIMIT = 25; //rate-limit
 }
  
 //****************   Update Queue Pair  ********************************//

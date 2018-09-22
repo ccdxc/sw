@@ -25,7 +25,7 @@ struct aq_tx_s1_t0_k k;
 .align
 rdma_aq_tx_wqe_process:
 
-    add         r1, r0, d.op  //BD-slot
+    add         r1, r0, d.op
 
     .brbegin
     br          r1[3:0]
@@ -224,7 +224,7 @@ create_qp:
     phvwr       p.sqcb0.pd, d.qp.pd_id
     phvwr       p.sqcb0.service, d.type_state
     
-    //compute the offset of the label of CQ program
+    //compute the offset of the label of SQ program
     addi        r4, r0, rdma_req_tx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     addi        r3, r0, tx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     sub         r4, r4, r3              
@@ -243,7 +243,7 @@ create_qp:
     phvwr       p.sqcb1.credits, 0x1F
     phvwr       p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x7<<3|0x7)
 
-//SQCB2:
+    //SQCB2:
 
     phvwr       p.sqcb2.log_sq_size, d.qp.sq_depth_log2[4: 0]
     phvwr       p.sqcb2.ssn, 1
@@ -380,18 +380,15 @@ eq_dump:
     
 modify_qp:
 
-    //SQCB_ADDR_GET(r1, d.{id_ver[23:0]}.wx, K_SQCB_BASE_ADDR_HI)
-    //RQCB_ADDR_GET(r2, d.{id_ver[23:0]}.wx, K_RQCB_BASE_ADDR_HI)
-
-    add         r3, r0, d.dbid_flags
+    add         r3, r0, d.{id_ver}.wx  //TODO: Need to optimize 
+    SQCB_ADDR_GET(r1, r3[23:0], K_SQCB_BASE_ADDR_HI)
+    RQCB_ADDR_GET(r2, r3[23:0], K_RQCB_BASE_ADDR_HI)
 
 dst_qp:
-    andi        r6, r3, RDMA_UPDATE_QP_OPER_SET_DEST_QP
-    beq         r6, r0, e_psn
-    andi        r6, r3, RDMA_UPDATE_QP_OPER_SET_E_PSN
+    bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_DEST_QPN], 1, e_psn
 
     // Invoke sqcb2 for QP
-    add         r4, r1, (CB_UNIT_SIZE_BYTES * 2)
+    add         r4, r1, (CB_UNIT_SIZE_BYTES * 2) //BD Slot
     add         r4, r4, FIELD_OFFSET(sqcb2_t, dst_qp)
     memwr.d     r4, d.mod_qp.qkey_dest_qpn
 
@@ -400,20 +397,18 @@ dst_qp:
     memwr.d     r5, d.mod_qp.qkey_dest_qpn
 
 e_psn:
-    beq         r6, r0, tx_psn
-    andi        r6, r3, RDMA_UPDATE_QP_OPER_SET_TX_PSN
+    bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_RQ_PSN], 1, tx_psn
 
     // Invoke rqcb1
-    add         r5, r2, (CB_UNIT_SIZE_BYTES)
+    add         r5, r2, (CB_UNIT_SIZE_BYTES) //BD Slot
     add         r5, r5, FIELD_OFFSET(rqcb1_t, e_psn)
     memwr.d     r5, d.mod_qp.rq_psn
 
 tx_psn:
-    beq         r6, r0, q_key
-    andi        r6, r3, RDMA_UPDATE_QP_OPER_SET_Q_KEY
+    bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_SQ_PSN], 1, q_key
 
     // Invoke sqcb1
-    add         r4, r1, (CB_UNIT_SIZE_BYTES)
+    add         r4, r1, (CB_UNIT_SIZE_BYTES) //BD Slot
     add         r5, r4, FIELD_OFFSET(sqcb1_t, tx_psn)
     memwr.d     r5, d.mod_qp.sq_psn
 
@@ -434,8 +429,9 @@ tx_psn:
 
 q_key:
     mfspr       r7, spr_tbladdr
-    beq         r6, r0, prepare_feedback
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_modify_qp_2_process, r7) // BD slot
+    //CAPRI_RESET_TABLE_1_ARG()
+    bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_QKEY], 1, prepare_feedback
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_modify_qp_2_process, r7) // BD slot
 
     //Invoke rqcb0
     add         r4, r2, r0

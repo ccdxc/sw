@@ -51,8 +51,9 @@
 
 #define tx_table_s1_t0_action aq_tx_aqwqe_process
 
-#define tx_table_s2_t0_action aq_tx_modify_qp_2_process
+#define tx_table_s2_t1_action aq_tx_modify_qp_2_process
 
+#define tx_table_s2_t0_action aq_tx_feedback_process_s3
 #define tx_table_s3_t0_action aq_tx_feedback_process_s3
 #define tx_table_s4_t0_action aq_tx_feedback_process_s4
 #define tx_table_s5_t0_action aq_tx_feedback_process_s5
@@ -100,7 +101,9 @@ header_type aq_tx_to_stage_wqe2_info_t {
         ah_base_addr_page_id             :   22;
         rrq_base_addr_page_id            :   22;
         rsq_base_addr_page_id            :   22;
-        pad                              :   62;
+        sqcb_base_addr_hi                :   24;
+        rqcb_base_addr_hi                :   24;
+        pad                              :   14;
     }
 }
 
@@ -188,6 +191,8 @@ action aq_tx_modify_qp_2_process () {
     modify_field(to_s2_info_scr.ah_base_addr_page_id, to_s2_info.ah_base_addr_page_id);
     modify_field(to_s2_info_scr.rrq_base_addr_page_id, to_s2_info.rrq_base_addr_page_id);
     modify_field(to_s2_info_scr.rsq_base_addr_page_id, to_s2_info.rsq_base_addr_page_id);
+    modify_field(to_s2_info_scr.sqcb_base_addr_hi, to_s2_info.sqcb_base_addr_hi);
+    modify_field(to_s2_info_scr.rqcb_base_addr_hi, to_s2_info.rqcb_base_addr_hi);
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage

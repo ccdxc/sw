@@ -156,17 +156,17 @@ class QpObject(base.ConfigObjectBase):
             logger.info('SQ_CQ: %s RQ_CQ: %s' %(self.sq_cq.GID(), self.rq_cq.GID()))
 
     def set_dst_qp(self, value):
-        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QP
+        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QPN
         self.dst_qp = value
         halapi.ModifyQps([self])
 
     def set_q_key(self, value):
-        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_Q_KEY
+        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QKEY
         self.q_key = value
         halapi.ModifyQps([self])
 
     def set_q_state(self, value):
-        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QSTATE
+        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_STATE
         self.qstate = value
         halapi.ModifyQps([self])
 
@@ -210,14 +210,14 @@ class QpObject(base.ConfigObjectBase):
             req_spec.qp_num = self.id
             req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
             req_spec.oper = self.modify_qp_oper
-            if req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QP:
+            if req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QPN:
                req_spec.dst_qp_num = self.dst_qp
-            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_Q_KEY:
+            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QKEY:
                req_spec.q_key = self.q_key
-            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
+            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV:
                req_spec.header_template = bytes(self.HdrTemplate)
                req_spec.ahid = self.ah_handle
-            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QSTATE:
+            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_STATE:
                req_spec.qstate = self.qstate
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -333,7 +333,7 @@ class QpObject(base.ConfigObjectBase):
         # 136 = [ 66 (header_template_t) + 1 (ah_size) + 64 (dcqcncb_t) ] 8 byte aligned
         self.header_temp_addr = self.pd.ep.intf.lif.rdma_at_base_addr + (ah_handle * 136)
 
-        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE
+        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV
 
         if (GlobalOptions.dryrun): return
 
