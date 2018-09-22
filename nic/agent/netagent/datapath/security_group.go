@@ -10,22 +10,6 @@ import (
 
 // CreateSecurityGroup creates a security group
 func (hd *Datapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
-	var secGroupPolicyRequests []*halproto.SecurityGroupPolicySpec
-	sgPolicyRequestMsg := halproto.SecurityGroupPolicyRequestMsg{
-		Request: secGroupPolicyRequests,
-	}
-
-	// add security group policies
-	_, err := hd.Hal.Sgclient.SecurityGroupPolicyCreate(context.Background(), &sgPolicyRequestMsg)
-	if err != nil {
-		log.Errorf("Could not create SG Policy. %v", err)
-		return err
-	}
-
-	hd.Lock()
-	hd.DB.SgPolicyDB[objectKey(&sg.ObjectMeta)] = &sgPolicyRequestMsg
-	hd.Unlock()
-
 	// build security group message
 	sgs := halproto.SecurityGroupSpec{
 		Meta: &halproto.ObjectMeta{},
@@ -40,7 +24,7 @@ func (hd *Datapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// add security group
-	_, err = hd.Hal.Sgclient.SecurityGroupCreate(context.Background(), &sgmsg)
+	_, err := hd.Hal.Sgclient.SecurityGroupCreate(context.Background(), &sgmsg)
 	if err != nil {
 		log.Errorf("Error creating security group. Err: %v", err)
 		return err
@@ -56,22 +40,6 @@ func (hd *Datapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 
 // UpdateSecurityGroup updates a security group
 func (hd *Datapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
-	var secGroupPolicyRequests []*halproto.SecurityGroupPolicySpec
-
-	sgPolicyRequestMsg := halproto.SecurityGroupPolicyRequestMsg{
-		Request: secGroupPolicyRequests,
-	}
-	// add security group policies
-	_, err := hd.Hal.Sgclient.SecurityGroupPolicyUpdate(context.Background(), &sgPolicyRequestMsg)
-	if err != nil {
-		log.Errorf("Could not create SG Policy. %v", err)
-		return err
-	}
-
-	hd.Lock()
-	hd.DB.SgPolicyDB[objectKey(&sg.ObjectMeta)] = &sgPolicyRequestMsg
-	hd.Unlock()
-
 	// build security group message
 	sgs := halproto.SecurityGroupSpec{
 		Meta: &halproto.ObjectMeta{},
@@ -86,7 +54,7 @@ func (hd *Datapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	}
 
 	// update security group
-	_, err = hd.Hal.Sgclient.SecurityGroupUpdate(context.Background(), &sgmsg)
+	_, err := hd.Hal.Sgclient.SecurityGroupUpdate(context.Background(), &sgmsg)
 	if err != nil {
 		log.Errorf("Error updating security group. Err: %v", err)
 		return err

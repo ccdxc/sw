@@ -45,6 +45,7 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 				Spec: network.NetworkSpec{
 					IPv4Subnet:  "",
 					IPv4Gateway: "",
+					VlanID:      intf.ExternalVlan,
 				},
 				Status: network.NetworkStatus{},
 			})
@@ -93,16 +94,16 @@ func (wr *WorkloadReactor) CreateWorkload(w workload.Workload) error {
 				},
 				Spec: workload.EndpointSpec{},
 				Status: workload.EndpointStatus{
-					Network:      netName,
-					EndpointUUID: epName,
-					NodeUUID:     nodeUUID,
-					WorkloadName: w.Name,
-					WorkloadUUID: w.Name,
-					// TODO: get workload attributes WorkloadAttributes: ,
-					MacAddress:       mac,
-					HomingHostAddr:   "", // TODO: get host address
-					HomingHostName:   w.Spec.HostName,
-					MicroSegmentVlan: intf.MicroSegVlan,
+					Network:            netName,
+					EndpointUUID:       epName,
+					NodeUUID:           nodeUUID,
+					WorkloadName:       w.Name,
+					WorkloadUUID:       w.Name,
+					WorkloadAttributes: w.Labels,
+					MacAddress:         mac,
+					HomingHostAddr:     "", // TODO: get host address
+					HomingHostName:     w.Spec.HostName,
+					MicroSegmentVlan:   intf.MicroSegVlan,
 				},
 			}
 

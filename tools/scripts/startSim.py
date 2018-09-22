@@ -99,7 +99,7 @@ class Node:
     # Start NMD process on the node
     def startNMD(self, cmdreg, cmdupd, cmdcerts, resolvers, hostif, uplink):
         ssh_object = self.sshConnect(self.username, self.password)
-        command = "sudo " + self.gobin + "/nmd -cmdregistration " + cmdreg + " -cmdupdates " + cmdupd + " -cmdcerts " + cmdcerts \
+        command = "sudo " + self.gobin + "/nmd -cmdregistration " + cmdreg + " -cmdupdates " + cmdupd + " -cmdcerts " + cmdcerts + \
                   " -mode managed -hostif " + hostif + " > /tmp/pensando-nmd.log 2>&1"
         self.npThread = threading.Thread(target=ssh_exec_thread, args=(ssh_object, command))
         # npThread.setDaemon(True)

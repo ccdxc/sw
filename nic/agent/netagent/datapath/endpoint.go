@@ -53,8 +53,8 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
 		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupHandle{
-				SecurityGroupHandle: sg.Status.SecurityGroupID,
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
+				SecurityGroupId: sg.Status.SecurityGroupID,
 			},
 		}
 		sgHandles = append(sgHandles, &sgKey)
@@ -169,7 +169,7 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 			return nil, err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("Error creating endpoint. Err: %v", err)
+			log.Errorf("Error creating endpoint. Err: %v", resp.Response[0].ApiStatus)
 			return nil, ErrHALNotOK
 		}
 	} else {
@@ -213,8 +213,8 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
 		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupHandle{
-				SecurityGroupHandle: sg.Status.SecurityGroupID,
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
+				SecurityGroupId: sg.Status.SecurityGroupID,
 			},
 		}
 		sgHandles = append(sgHandles, &sgKey)
@@ -406,8 +406,8 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
 		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupHandle{
-				SecurityGroupHandle: sg.Status.SecurityGroupID,
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
+				SecurityGroupId: sg.Status.SecurityGroupID,
 			},
 		}
 		sgHandles = append(sgHandles, &sgKey)
@@ -511,8 +511,8 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 	var sgHandles []*halproto.SecurityGroupKeyHandle
 	for _, sg := range sgs {
 		sgKey := halproto.SecurityGroupKeyHandle{
-			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupHandle{
-				SecurityGroupHandle: sg.Status.SecurityGroupID,
+			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
+				SecurityGroupId: sg.Status.SecurityGroupID,
 			},
 		}
 		sgHandles = append(sgHandles, &sgKey)

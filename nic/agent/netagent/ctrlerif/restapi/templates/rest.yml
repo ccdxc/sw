@@ -2,5 +2,7 @@
  templates:
    - template: "restgen.tmpl"
      outputpath: "{FILE}_api.go"
+   - template: "restclient.tmpl"
+     outputpath: "restclient/{FILE}_client.go"
    - template: "restgen_test.tmpl"
      outputpath: "{FILE}_api_test.go"

@@ -44,6 +44,7 @@ type TestBedConfig struct {
 	SSHPasswd      string `json:",omitempty"`
 	SSHAuthMethod  string `json:",omitempty"` // Only password is implemented now. Cert will come later.
 	FirstVeniceIP  string `json:",omitempty"`
+	FirstNaplesIP  string `json:",omitempty"`
 	SSHPrivKeyFile string `json:",omitempty"`
 	User           string `json:",omitempty"`
 	Password       string `json:",omitempty"`

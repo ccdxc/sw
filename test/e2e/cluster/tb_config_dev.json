@@ -7,6 +7,7 @@
     "SSHPasswd":      "vagrant",
     "SSHAuthMethod":  "password",
     "FirstVeniceIP":  "192.168.30.11",
+    "FirstNaplesIP":  "192.168.30.12",
     "E2EMode":        "MOCK",
     "User":           "test",
     "Password":       "pensando",

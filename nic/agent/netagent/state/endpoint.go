@@ -182,7 +182,7 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 
 	}
 	// check if endpoint contents are same
-	if proto.Equal(oldEp, ep) {
+	if proto.Equal(&oldEp.Spec, &ep.Spec) {
 		log.Infof("Received duplicate endpoint create for ep {%+v}", ep)
 		return nil
 	}
@@ -211,6 +211,9 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 
 		sgs = append(sgs, sg)
 	}
+
+	// save the enic id in the ep status for deletions
+	ep.Status.EnicID = oldEp.Status.EnicID
 
 	// call the datapath
 	if ep.Spec.NodeUUID == na.NodeUUID {

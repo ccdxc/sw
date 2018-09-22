@@ -93,7 +93,7 @@ func (na *Nagent) FindTenant(tenant string) (*netproto.Tenant, error) {
 	key := na.Solver.ObjectKey(meta, typeMeta)
 	tn, ok := na.TenantDB[key]
 	if !ok {
-		return nil, fmt.Errorf("tenant not found %v", tn)
+		return nil, fmt.Errorf("tenant not found %v", key)
 	}
 
 	return tn, nil

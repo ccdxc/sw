@@ -15,6 +15,7 @@ import (
 // creates the l2segment and adds the l2segment on all the uplinks in datapath.
 func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Interface, ns *netproto.Namespace) error {
 	var nwKey halproto.NetworkKeyHandle
+	var nwKeyOrHandle []*halproto.NetworkKeyHandle
 	var macAddr uint64
 	var wireEncap halproto.EncapInfo
 	var bcastPolicy halproto.BroadcastFwdPolicy
@@ -60,6 +61,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 				},
 			},
 		}
+		nwKeyOrHandle = append(nwKeyOrHandle, &nwKey)
 
 		if len(nw.Spec.RouterMAC) != 0 {
 			mac, err := net.ParseMAC(nw.Spec.RouterMAC)
@@ -126,13 +128,11 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 				SegmentId: nw.Status.NetworkID,
 			},
 		},
-		McastFwdPolicy: halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_NONE,
-		BcastFwdPolicy: bcastPolicy,
-		WireEncap:      &wireEncap,
-		VrfKeyHandle:   vrfKey,
-		NetworkKeyHandle: []*halproto.NetworkKeyHandle{
-			&nwKey,
-		},
+		McastFwdPolicy:   halproto.MulticastFwdPolicy_MULTICAST_FWD_POLICY_NONE,
+		BcastFwdPolicy:   bcastPolicy,
+		WireEncap:        &wireEncap,
+		VrfKeyHandle:     vrfKey,
+		NetworkKeyHandle: nwKeyOrHandle,
 		PinnedUplinkIfKeyHandle: &halproto.InterfaceKeyHandle{
 			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
 				InterfaceId: uplinks[pinnedUplinkIdx].Status.InterfaceID,
