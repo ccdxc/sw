@@ -256,7 +256,7 @@ start_relay() {
 
     sleep 10 && setup_tap &
     SETUP_PID=$!
-    sudo ZMQ_SOC_DIR=$PWD ./model_sim/src/relay.py bidi -v -x --mac $RELAY_MAC_ADDR -tname $RELAY_TAP
+    sudo ZMQ_SOC_DIR=$PWD ./model_sim/src/relay.py bidi "$@" --mac $RELAY_MAC_ADDR -tname $RELAY_TAP
     kill $SETUP_PID
     wait $SETUP_PID
 }
