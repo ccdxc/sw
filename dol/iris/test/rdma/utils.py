@@ -116,6 +116,7 @@ def ResetErrQState(tc):
     rs.lqp.sq.qstate.data.state = rs.lqp.sq.qstate.data.sqcb1_state = 4 # QP_STATE_RTS
     rs.lqp.sq.qstate.data.sq_cindex = rs.lqp.sq.qstate.data.spec_sq_cindex = rs.lqp.sq.qstate.data.c_index0 = rs.lqp.sq.qstate.data.p_index0;
     rs.lqp.sq.qstate.data.c_index1 = rs.lqp.sq.qstate.data.p_index1;
+    rs.lqp.sq.qstate.data.c_index3 = rs.lqp.sq.qstate.data.p_index3;
     rs.lqp.sq.qstate.WriteWithDelay()
 
     #Reset Rq

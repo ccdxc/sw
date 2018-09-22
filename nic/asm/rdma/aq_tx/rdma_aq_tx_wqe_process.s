@@ -235,21 +235,22 @@ create_qp:
     phvwr       p.sqcb1.cq_id, d.qp.sq_cq_id[23:0]
     phvwr       p.sqcb1.state, QP_STATE_RTS
 
-    //TODO: Standard says initial value of LSN should be 0. Need to fix
-    phvwrpair   p.sqcb1.service, d.type_state[3:0], p.sqcb1.lsn, 128
+    phvwr       p.sqcb1.service, d.type_state[3:0]
     phvwr       p.sqcb1.ssn, 1
     phvwr       p.sqcb1.max_ssn, 1
     
-    //TODO: what    is the correct value of credits? zero?
     //infinite  retries                 
-    phvwr       p.sqcb1.credits, 0xe
+    phvwr       p.sqcb1.credits, 0x1F
     phvwr       p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x7<<3|0x7)
 
 //SQCB2:
 
-    phvwrpair   p.sqcb2.log_sq_size, d.qp.sq_depth_log2[4: 0], p.sqcb2.credits, 0xe
+    phvwr       p.sqcb2.log_sq_size, d.qp.sq_depth_log2[4: 0]
     phvwr       p.sqcb2.ssn, 1
-    phvwrpair   p.{sqcb2.err_retry_ctr, sqcb2.rnr_retry_ctr}, (0x7<<3|0x7), p.sqcb2.lsn,128
+    // TODO Default should enable credits and set as part of connection negotiation
+    phvwr       p.sqcb2.disable_credits, 1
+    phvwrpair   p.{sqcb2.err_retry_ctr, sqcb2.rnr_retry_ctr}, (0x7<<3|0x7), p.sqcb2.lsn, 0
+    phvwrpair   p.sqcb2.lsn_rx, 0, p.sqcb2.lsn_tx, 0
 
     //          TODO: Move RSQ/RRQ allocation to modify_qp frm create_qp
     //          TODO: Move pmtu setup to modify_qp

@@ -99,6 +99,10 @@ add _r, k.{rdma_completion_feedback_wrid_sbit32_ebit47...rdma_completion_feedbac
     k.{rdma_timer_expiry_feedback_rexmit_psn_sbit0_ebit7...rdma_timer_expiry_feedback_rexmit_psn_sbit8_ebit23}
 #define CAPRI_TIMER_EXPIRY_FEEDBACK_TX_PSN \
     k.{rdma_timer_expiry_feedback_tx_psn_sbit0_ebit7...rdma_timer_expiry_feedback_tx_psn_sbit16_ebit23}
+#define CAPRI_SQ_DRAIN_FEEDBACK_SSN(_r) \
+    add _r, k.rdma_sq_drain_feedback_ssn_sbit8_ebit23, k.rdma_sq_drain_feedback_ssn_sbit0_ebit7, 16
+#define CAPRI_SQ_DRAIN_FEEDBACK_TX_PSN \
+    k.{rdma_sq_drain_feedback_tx_psn_sbit0_ebit7...rdma_sq_drain_feedback_tx_psn_sbit8_ebit23}
 
 #define CAPRI_RAW_TABLE_PC_SHIFT 6
 
@@ -1176,6 +1180,14 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 
 #define DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(_lif, _qtype, _qid, _ring_id, _addr, _data)         \
     PREPARE_DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(_lif, _qtype, _qid, _ring_id, _addr, _data);     \
+    memwr.dx   _addr, _data;
+
+#define PREPARE_DOORBELL_NO_UPDATE_ENABLE_SCHEDULER(_lif, _qtype, _qid, _ring_id, _addr, _data) \
+    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_NO_UPDATE, DB_SCHED_WR_1, _lif, _qtype, _addr);   \
+    CAPRI_SETUP_DB_DATA(_qid, _ring_id, r0, _data);                                            \
+
+#define DOORBELL_NO_UPDATE_ENABLE_SCHEDULER(_lif, _qtype, _qid, _ring_id, _addr, _data)         \
+    PREPARE_DOORBELL_NO_UPDATE_ENABLE_SCHEDULER(_lif, _qtype, _qid, _ring_id, _addr, _data);     \
     memwr.dx   _addr, _data;
 
 #define ARE_ALL_RINGS_EMPTY(_c, _flags_r, _ring_id_bmap) \

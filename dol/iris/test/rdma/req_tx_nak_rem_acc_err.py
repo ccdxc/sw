@@ -62,8 +62,9 @@ def TestCaseStepVerify(tc, step):
             return False
         
         # verify that lsn is incremented by 1 for write
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 1):
-            return False
+        if tc.pvtdata.sq_pre_qstate.disable_credits != 1:
+            if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 1):
+                return False
         
         # verify that busy is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
@@ -74,7 +75,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that p_index of rrq is not incremented
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index4', tc.pvtdata.sq_post_qstate, 'p_index4'):
             return False
 
     elif step.step_id == 1:
@@ -89,7 +90,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that c_index of rrq is not incremented
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index5', tc.pvtdata.sq_post_qstate, 'c_index5'):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index4', tc.pvtdata.sq_post_qstate, 'c_index4'):
             return False
 
         # verify that busy is 0

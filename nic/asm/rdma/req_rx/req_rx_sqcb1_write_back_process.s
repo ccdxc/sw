@@ -111,7 +111,7 @@ post_bktrack_ring:
 check_sq_drain:
      // check for any unacknowledged requests if in drain state
      slt           c1, d.state, QP_STATE_SQD
-     bcf           [!c1], exit
+     bcf           [c1], exit
 
      sub           r1, d.max_ssn, 1 // Branch Delay Slot
      mincr         r1, 24, r0
@@ -124,10 +124,14 @@ check_sq_drain:
      bcf           [c1], error_disable_exit
      nop           // Branch Delay Slot
 
-     // TODO if QP_STATE_SQD, post completion and notify driver about
-     // drain completion
-     nop.e
-     nop
+     // Do not raise SQ drain async event if either async_notify is not requested
+     // by user or if sq_drain feedback has not been received from TxDMA
+     crestore      [c2, c1], d.{sq_drained...sqd_async_notify_enable}, 0x3
+     bcf           [!c1 | !c2], exit
+     // if QP_STATE_SQD, post async event and notify driver about drain completion
+     phvwr         p.eqwqe.qid, K_GLOBAL_QID
+     phvwrpair.e   p.eqwqe.code, EQE_CODE_QP_SQ_DRAIN, p.eqwqe.type, EQE_TYPE_QP
+     phvwr         CAPRI_PHV_FIELD(TO_S6_P, async_event_or_error), 1
 
 bubble_to_next_stage:
      seq           c1, r1[4:2], STAGE_3
@@ -183,13 +187,13 @@ error_disable_exit:
     add            r1, FIELD_OFFSET(sqcb0_t, service), r1
     DMA_HBM_PHV2MEM_SETUP(r7, service, state, r1)
 
-    // doorbell to inc FC ring's p_index so that TXDMA is triggered to send Flush
+    // doorbell to inc CNP ring's p_index so that TXDMA is triggered to send Flush
     // feedback for RQ. This is fenced on state update in sqcb0 such that when
-    // doorbell evals fc ring and schedules req_tx stage0 sqcb0's state is guaranteed
+    // doorbell evals cnp ring and schedules req_tx stage0 sqcb0's state is guaranteed
     // to be updated. Since inc_pindex is used, ring should have a size of 2^16,
     // hence one of the internal rings is used
     DMA_CMD_STATIC_BASE_GET(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RQ_FLUSH_DB)
-    PREPARE_DOORBELL_INC_PINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, FC_RING_ID, r1, r2)
+    PREPARE_DOORBELL_INC_PINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, CNP_RING_ID, r1, r2)
     phvwr          p.db_data1, r2.dx
     DMA_HBM_PHV2MEM_SETUP(r7, db_data1, db_data1, r1)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r7)

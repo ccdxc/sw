@@ -49,8 +49,9 @@ def TestCaseVerify(tc):
         return False
 
     # verify that lsn is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 1):
-        return False
+    if tc.pvtdata.sq_pre_qstate.disable_credits != 1:
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 1):
+            return False
 
     # verify that busy is 0
     if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):

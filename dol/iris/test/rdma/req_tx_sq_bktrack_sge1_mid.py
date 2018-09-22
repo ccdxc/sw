@@ -44,7 +44,7 @@ def TestCaseStepVerify(tc, step):
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
-    ring5_mask = (rs.lqp.num_rrq_wqes - 1)
+    ring4_mask = (rs.lqp.num_rrq_wqes - 1)
     tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
 
     if step.step_id == 0:
@@ -65,8 +65,9 @@ def TestCaseStepVerify(tc, step):
             return False
         
         # verify that lsn is incremented by 2
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 2):
-            return False
+        if tc.pvtdata.sq_pre_qstate.disable_credits != 1:
+            if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 2):
+                return False
         
         # verify that busy is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
@@ -77,7 +78,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that p_index of rrq is incremented by 1
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index5', ring5_mask, 1):
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index4', ring4_mask, 1):
             return False
 
     elif step.step_id == 1:
@@ -86,11 +87,11 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that p_index of rrq is bktracked
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'p_index5', 1):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'p_index4', 1):
             return False
 
         # verify that c_index of rrq is bktracked 
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'c_index5', 0):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'c_index4', 0):
             return False
 
         # verify rexmit_psn incremented is  increment by 1
@@ -131,11 +132,11 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that p_index of rrq is not modified
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index4', tc.pvtdata.sq_post_qstate, 'p_index4'):
             return False
 
         # verify that c_index of rrq is incremented by 1
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index5', tc.pvtdata.sq_post_qstate, 'c_index5'):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index4', tc.pvtdata.sq_post_qstate, 'c_index4'):
             return False
 
         # verify that tx_psn is not incremented
@@ -180,11 +181,11 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that p_index of rrq is not modified
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index4', tc.pvtdata.sq_post_qstate, 'p_index4'):
             return False
 
         # verify that c_index of rrq is incremented by 1
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index5', ring5_mask, 1):
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index4', ring4_mask, 1):
 
             return False
 

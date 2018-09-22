@@ -112,16 +112,16 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'ssn', 1):
             return False
         
-        # verify that lsn is incremented by 1
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 127, 1):
+        # verify that lsn is not incremented
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'lsn', tc.pvtdata.sq_post_qstate, 'lsn'):
             return False
         
         # verify that p_index of rrq is not incremented
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index4', tc.pvtdata.sq_post_qstate, 'p_index4'):
             return False
 
         # verify that c_index of rrq is not incremented
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index5', tc.pvtdata.sq_post_qstate, 'c_index5'):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index4', tc.pvtdata.sq_post_qstate, 'c_index4'):
             return False
 
         msn = tc.pvtdata.sq_pre_qstate.ssn

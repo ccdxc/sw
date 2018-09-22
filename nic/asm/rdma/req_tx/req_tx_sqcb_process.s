@@ -43,22 +43,25 @@ struct req_tx_s0_t0_k k;
     .param    req_tx_bktrack_sqcb2_process
     .param    req_tx_sqcb2_cnp_process
     .param    req_tx_timer_expiry_process
+    .param    req_tx_sq_drain_feedback_process
     .param    req_tx_sqcb2_fence_process
     .param    req_tx_dcqcn_enforce_process
     .param    req_tx_bind_mw_rkey_process
 
 .align
 req_tx_sqcb_process:
+    // Bypass state ccheck for recirc pkts as state has already been checked
+    // in the previous pass.
+    seq            c1, CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT, 0
+    bcf            [!c1], process_recirc
+
     // If QP is not in RTS state, do no process any event. Branch to check for
     // drain state and process only if SQ has to be drained till a specific WQE
-    seq            c1, d.state, QP_STATE_RTS
-    bcf            [!c1], check_state
+    seq            c7, d.state, QP_STATE_RTS
+    bcf            [!c7], check_state
+    tblwr.c7       d.sq_drained, 0 // Branch Delay Slot
 
-    seq            c1, CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT, 0 // Branch Delay Slot
 process_req_tx:
-    bcf            [!c1], process_recirc
-    nop
-
 #   // moving to _ext program
 #   // copy intrinsic to global
 #   add            r1, r0, offsetof(struct phv_, common_global_global_data) 
@@ -77,7 +80,7 @@ process_req_tx:
 #   TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_START_FLIT_CMD_ID)
 
     .brbegin
-    brpri          r7[MAX_SQ_DOORBELL_RINGS-1: 0], [CNP_PRI, TIMER_PRI, SQ_BKTRACK_PRI, FC_PRI, SQ_PRI]
+    brpri          r7[MAX_SQ_DOORBELL_RINGS-1: 0], [CNP_PRI, TIMER_PRI, SQ_BKTRACK_PRI, SQ_PRI]
     nop
 
     .brcase        SQ_RING_ID
@@ -256,26 +259,26 @@ end1:
         nop.e
         nop
 
-    .brcase        FC_RING_ID
-        bbeq             d.cb1_busy, 1, exit
-        // reset sched_eval_done 
-        tblwr          d.ring_empty_sched_eval_done, 0 // Branch Delay Slot
-        
-        tblwr            d.cb1_busy, 1
-        
-        // set cindex same as pindex without ringing doorbell, as stage0
-        // can get scheduled again while doorbell memwr is still in the queue
-        // to be processed. This will cause credits to get updated again. Instead,
-        // set cindex to pindex using tblwr. When the queue gets scheduled again, 
-        // check for ring empty case and perform doorbell to eval scheduler at that
-        // time
-        tblwr          FC_C_INDEX, FC_P_INDEX
-        
-        // sqcb1_p
-        CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_credits_process, r0)
-        
-        nop.e
-        nop
+    #.brcase        FC_RING_ID
+    #    bbeq             d.cb1_busy, 1, exit
+    #    // reset sched_eval_done 
+    #    tblwr          d.ring_empty_sched_eval_done, 0 // Branch Delay Slot
+    #    
+    #    tblwr            d.cb1_busy, 1
+    #    
+    #    // set cindex same as pindex without ringing doorbell, as stage0
+    #    // can get scheduled again while doorbell memwr is still in the queue
+    #    // to be processed. This will cause credits to get updated again. Instead,
+    #    // set cindex to pindex using tblwr. When the queue gets scheduled again, 
+    #    // check for ring empty case and perform doorbell to eval scheduler at that
+    #    // time
+    #    tblwr          FC_C_INDEX, FC_P_INDEX
+    #    
+    #    // sqcb1_p
+    #    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_credits_process, r0)
+    #    
+    #    nop.e
+    #    nop
 
     .brcase        SQ_BKTRACK_RING_ID
         crestore       [c2,c1], d.{busy...cb1_busy}, 0x3
@@ -381,7 +384,7 @@ restart_timer:
         #c2 - poll_for_work
         #c1 - poll_in_progress
 
-        setcf c3, [c2 & !c1]
+        setcf c3, [c7 & c2 & !c1]
         bcf   [c3], poll_for_work
         tblwr.c3 d.poll_in_progress, 1 //BD Slot
 
@@ -499,9 +502,8 @@ exit:
 check_state:
     // If in QP_STATE_SQD or QP_STATE_SQD_ON_ERR, start procesing
     // sq until the drain cindex
-    slt           c2, d.state, QP_STATE_SQD
-    // TODO check for drain cindex
-    bcf           [!c2], process_req_tx
+    slt           c7, d.state, QP_STATE_SQD
+    bcf           [!c7], process_sq_drain
 
     // One of Init, Reset, RTR, ERR or SQ_ERR states. So disable scheduler
     // bit until modify_qp updates the state to RTS
@@ -544,4 +546,54 @@ flush_rq:
     tblwr          d.flush_rq, 0
  
 
+process_sq_drain:
+    // Flush all wqes in SQ ring below drain cindex in SQD or SQD_ON_ERR state.
+    // If spec_cindex is above drain cindex but its not SQ ring event, then
+    // process the event otherwise cease SQ processing. Eventually upon
+    // receiving acks for all the drained wqes an asynchronous event
+    // will be raised to notify driver about drain completion.
+    sle            c7, SPEC_SQ_C_INDEX, d.sqd_cindex
+    seq            c2, d.in_progress, 1
+    seq            c3, d.fence, 1
+    seq            c4, d.frpmr_in_progress, 1
+    sne            c5, r7[MAX_SQ_DOORBELL_RINGS:1], 0
+    bcf            [c7 | c2 | c3 | c4 | c5], process_req_tx
+    nop            // Branch Delay Slot
+
+    // Upon draining SQ, send feedback to RxDMA to denote completion of
+    // SQ drain in TxDMA which includes all packet and non-packet generating
+    // wqes. RxDMA on reeciving this feedback will mark completion of
+    // non-packet generating wqes and wait for pending responses for all packet
+    // generating wqes. Once all responses are received an async event is raised
+    // to denote sq drain completion. If feedback was already sent, which could
+    // happen if there was backtrack for packet generating wqes or if a new
+    // wqe is posted by user, then skip sending feedback msg again as RxDMA
+    // has already recorded the fact in sqcb1 that non-packet gernating wqes
+    // are drained in TxDMA
+    bbeq           d.sq_drained, 1, drop
+
+    seq            c2, d.dcqcn_rl_failure, 1 // Branch Delay Slot
+    tblwr.c2       SPEC_SQ_C_INDEX, SQ_C_INDEX
+    tblwr.c2       d.dcqcn_rl_failure, 0
+
+    seq            c2, SPEC_SQ_C_INDEX, SQ_C_INDEX // Branch Delay Slot
+    bcf            [!c2], drop
+    nop            // Branch Delay Slot
+
+drain_feedback:
+    tblwr          d.sq_drained, 1
+    CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_sq_drain_feedback_process, r0)
+
+drop:
+#ifndef HAPS
+    // Disable schceduler bit for SQ in model run to prevent model from
+    // getting into infinite loop.
+
+    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(CAPRI_TXDMA_INTRINSIC_LIF, \
+                                         CAPRI_TXDMA_INTRINSIC_QTYPE, \
+                                         CAPRI_TXDMA_INTRINSIC_QID, \
+                                         SQ_RING_ID, r1, r2)
+#endif
+    phvwr.e        p.common.p4_intr_global_drop, 1
+    nop
 

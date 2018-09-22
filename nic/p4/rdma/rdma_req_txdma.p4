@@ -249,7 +249,8 @@ header_type req_tx_to_stage_stats_info_t {
         timeout                          :    1;
         timeout_local_ack                :    1;
         timeout_rnr                      :    1;
-        pad                              :  105;
+        sq_drain                         :    1;
+        pad                              :  104;
     }
 }
 
@@ -2328,6 +2329,7 @@ action req_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.timeout, to_s7_stats_info.timeout);
     modify_field(to_s7_stats_info_scr.timeout_local_ack, to_s7_stats_info.timeout_local_ack);
     modify_field(to_s7_stats_info_scr.timeout_rnr, to_s7_stats_info.timeout_rnr);
+    modify_field(to_s7_stats_info_scr.sq_drain, to_s7_stats_info.sq_drain);
 
     // stage to stage
     modify_field(t3_s2s_stats_info_scr.pad, t3_s2s_stats_info.pad);

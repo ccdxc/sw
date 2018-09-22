@@ -59,13 +59,13 @@ err_completion:
     add            r1, FIELD_OFFSET(sqcb0_t, state), r1
     DMA_HBM_PHV2MEM_SETUP(r7, service, state, r1)
 
-    // doorbell to inc FC ring's p_index so that TXDMA is triggered to send Flush
+    // doorbell to inc CNP ring's p_index so that TXDMA is triggered to send Flush
     // feedback for RQ. This is fenced on state update in sqcb0 such that when
-    // doorbell evals fc ring and schedules req_tx stage0 sqcb0's state is guaranteed
+    // doorbell evals CNP ring and schedules req_tx stage0 sqcb0's state is guaranteed
     // to be updated. Since inc_pindex is used, ring should have a size of 2^16,
     // hence one of the internal rings is used
     DMA_CMD_STATIC_BASE_GET(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RQ_FLUSH_DB)
-    PREPARE_DOORBELL_INC_PINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, FC_RING_ID, r1, r2)
+    PREPARE_DOORBELL_INC_PINDEX(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, CNP_RING_ID, r1, r2)
     phvwr          p.db_data1, r2.dx // Branch Delay Slot
     DMA_HBM_PHV2MEM_SETUP(r7, db_data1, db_data1, r1)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r7)

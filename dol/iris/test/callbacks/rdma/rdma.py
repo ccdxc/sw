@@ -155,6 +155,10 @@ def GetEQEcodeCQNotify (tc, desc, args = None):
     #EQE_CODE_CQ_NOTIFY
     return 0
 
+def GetEQEcodeSQDrain (tc, desc, args = None):
+    #EQE_CODE_QP_SQ_DRAIN
+    return 1
+
 def GetEQEcodeCQErrFull (tc, desc, args = None):
     #EQE_CODE_CQ_ERR_FULL
     return 8

@@ -92,7 +92,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that p_index of rrq is not incremented
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index4', tc.pvtdata.sq_post_qstate, 'p_index4'):
             return False
 
         # verify that cur_avail_tokens in dcqcn state is 44. Since at end of 3 iteration 300 bits will be accumulated.

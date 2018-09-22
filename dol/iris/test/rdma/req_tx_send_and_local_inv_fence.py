@@ -58,7 +58,7 @@ def TestCaseStepVerify(tc, step):
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
-    ring5_mask = (rs.lqp.num_rrq_wqes - 1)
+    ring4_mask = (rs.lqp.num_rrq_wqes - 1)
     tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
         
     if step.step_id == 0:
@@ -75,7 +75,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that p_index of rrq is not incremented
-        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index5', ring5_mask, 0):
+        if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index4', ring4_mask, 0):
             return False
 
         # verify that ssn is incremented by 1

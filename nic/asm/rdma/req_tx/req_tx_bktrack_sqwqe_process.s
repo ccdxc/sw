@@ -211,8 +211,8 @@ wqe_page_bktrack:
 sqcb_writeback:
     phvwr          p.common.p4_intr_global_drop, 1
 
+    phvwr     CAPRI_PHV_FIELD(TO_S3_BT_P, wqe_addr), r5
     phvwrpair CAPRI_PHV_FIELD(TO_S4_BT_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S5_BT_P, wqe_addr), r5
-
     phvwrpair CAPRI_PHV_FIELD(TO_S6_BT_P, wqe_addr), r5, CAPRI_PHV_FIELD(TO_S7_BT_P, wqe_addr), r5
 
     CAPRI_RESET_TABLE_1_ARG()

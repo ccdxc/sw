@@ -26,9 +26,13 @@ req_tx_bktrack_sqcb2_write_back_process:
      tblwr         d.curr_op_type, K_OP_TYPE
 
      // Revert LSN based on last received ACK's MSN and credits
-     DECODE_ACK_SYNDROME_CREDITS(r1, d.credits, c1)
-     mincr         r1, 24, d.msn
-     tblwr         d.lsn, r1
+     //DECODE_ACK_SYNDROME_CREDITS(r1, d.credits, c1)
+     //mincr         r1, 24, d.msn
+     // TODO Need to fix test cases to have credits as 0x1F (currently SQ
+     // is configured for disabled credits), so that RxDMA will not not copy
+     // lsn to TXDMA's SQCB
+     //tblwr         d.lsn_tx, d.lsn_rx
+     //tblwr         d.lsn, d.lsn_rx
 
      seq           c1, CAPRI_KEY_FIELD(IN_P, skip_wqe_start_psn), 1
      tblwr.!c1     d.wqe_start_psn, K_TX_PSN
@@ -40,12 +44,12 @@ req_tx_bktrack_sqcb2_write_back_process:
      // Update tx_psn, ssn and lsn in sqcb1 for RXDMA
      SQCB1_ADDR_GET(r1)
      add            r2, FIELD_OFFSET(sqcb1_t, tx_psn), r1
-     memwr.d        r2, d.{tx_psn...lsn[23:8]}
-     add            r2, r2, 8
-     memwr.b        r2, d.lsn[7:0]
+     memwr.w        r2, d.{tx_psn...ssn[23:16]}
+     add            r2, r2, 4
+     memwr.h        r2, d.ssn[15:0]
      // Also, empty rrq ring, which will then get posted
      // with retransmit requests
-     add            r2, FIELD_OFFSET(sqcb1_t, ring5), r1
+     add            r2, FIELD_OFFSET(sqcb1_t, ring4), r1
      memwr.w        r2, 0        
 
      // Clear rrq_spec_cindex

@@ -17,17 +17,18 @@
 #define REQ_RX_DMA_CMD_START_FLIT_ID       7 // flits 8-11 are used for dma cmds
 #define REQ_RX_DMA_CMD_START_FLIT_CMD_ID   1
 #define REQ_RX_DMA_CMD_START               1
-#define REQ_RX_DMA_CMD_MSN_CREDITS         1
-#define REQ_RX_DMA_CMD_FC_DB               2
+#define REQ_RX_DMA_CMD_LSN                 1
+//#define REQ_RX_DMA_CMD_SQ_DB               2
 #define REQ_RX_DMA_CMD_RQ_FLUSH_DB         2
-#define REQ_RX_DMA_CMD_REXMIT_PSN          3
-#define REQ_RX_DMA_CMD_BKTRACK_DB          4
-#define REQ_RX_DMA_CMD_RNR_TIMEOUT         5
-#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 4
-#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_END   16
-#define REQ_RX_DMA_CMD_SKIP_TO_EOP         (REQ_RX_MAX_DMA_CMDS - 4)
-#define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 3)
-#define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 2)
+#define REQ_RX_DMA_CMD_REXMIT_PSN          2
+#define REQ_RX_DMA_CMD_BKTRACK_DB          3
+#define REQ_RX_DMA_CMD_RNR_TIMEOUT         4
+#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 3
+#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_END   15
+#define REQ_RX_DMA_CMD_SKIP_TO_EOP         (REQ_RX_MAX_DMA_CMDS - 5)
+#define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 4)
+#define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 3)
+#define REQ_RX_DMA_CMD_EQ_ASYNC            (REQ_RX_MAX_DMA_CMDS - 2)
 //wakeup dpath and EQ are mutually exclusive
 #define REQ_RX_DMA_CMD_WAKEUP_DPATH        REQ_RX_DMA_CMD_EQ
 #define REQ_RX_DMA_CMD_EQ_INTR             (REQ_RX_MAX_DMA_CMDS - 1)
@@ -73,9 +74,8 @@ struct req_rx_phv_t {
     service                 : 4;
     flush_rq                : 1;
     state                   : 3;
-    msn                     : 24;
-    rsvd1                   : 3;
-    credits                 : 5;
+    lsn                     : 24;
+    rsvd1                   : 8;
     db_data2                : 64;
     db_data1                : 64;
     union {

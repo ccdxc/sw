@@ -417,29 +417,31 @@ inc_psn:
     //     sqcb1_p->ssn++;
     tblmincri.c1   d.ssn, 24, 1
 
-    // inc lsn for read, atomic, write (without imm)
-    tblmincri.c4   d.lsn, 24, 1
-   
     SQCB1_ADDR_GET(r1)
     add            r2, FIELD_OFFSET(sqcb1_t, tx_psn), r1
-    memwr.d        r2, d.{tx_psn...lsn[23:8]}
-    add            r2, r2, 8
-    memwr.b        r2, d.lsn[7:0]
+    memwr.w        r2, d.{tx_psn...ssn[23:16]}
+    add            r2, r2, 4
+    memwr.h        r2, d.ssn[15:0]
 
-    // TODO:For RTL perf tests, disable check_credits
-    setcf          c5, [!c0]
+    // set check_credits to false if credit check is disabled
+    bbeq           d.disable_credits, 1, rrq_p_index_chk
+    setcf          c5, [!c0] // Branch Delay Slot
 
     // if (check_credits && (sqcb1_p->ssn > sqcb1_p->lsn))
     //     phv_p->bth.a = 1
     //     write_back_info_p->set_credits = TRUE
-    scwlt24.c5     c5, d.lsn, d.ssn
-    bcf            [!c5], rrq_p_index_chk
-    SQCB0_ADDR_GET(r2) // Branch Delay Slot
+    sne            c5, d.lsn_rx, d.lsn_tx
+    tblwr.c5       d.lsn, d.lsn_rx
+    tblwr.c5       d.lsn_tx, d.lsn_rx
+    // inc lsn for read, atomic, write (without imm)
+    tblmincri.c4   d.lsn, 24, 1
 
-    phvwr          BTH_ACK_REQ, 1
+    scwlt24        c5, d.lsn, d.ssn
+    bcf            [!c5], rrq_p_index_chk
     // Disable TX scheduler for this QP until ack is received with credits to
     // send subsequent packets
-    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r3, r5)
+    DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(K_GLOBAL_LIF, K_GLOBAL_QTYPE, K_GLOBAL_QID, SQ_RING_ID, r3, r5) // Branch Delay Slot
+    phvwr          BTH_ACK_REQ, 1
 
 rrq_p_index_chk:
     // do we need to increment rrq_pindex ?
@@ -457,6 +459,7 @@ rrq_p_index_chk:
     DMA_HBM_PHV2MEM_SETUP(r6, rrq_p_index, rrq_p_index, r3)
 
 cb1_byte_update:
+    SQCB0_ADDR_GET(r2)
     // on top of it, set need_credits flag is conditionally
     add.c5         r5, r5, SQCB0_NEED_CREDITS_FLAG
     or             r5, r5, CAPRI_KEY_FIELD(IN_P, in_progress), SQCB0_IN_PROGRESS_BIT_OFFSET
@@ -502,7 +505,9 @@ load_hdr_template:
     phvwrpair          p.p4plus_to_p4.flow_index[15:0], d.timestamp, P4PLUS_TO_P4_FLOW_INDEX_VALID, 1
 #else
     //not enough bits on d[] vector to have 64 bit TS value
-    phvwr          p.{roce_options.TS_value[15:0]...roce_options.TS_echo[31:16]}, d.{timestamp...timestamp_echo}
+    #phvwr          p.{roce_options.TS_value[15:0]...roce_options.TS_echo[30:16]}, d.{timestamp...timestamp_echo}
+    phvwrpair      p.roce_options.TS_value[15:0], d.timestamp, \
+                   p.roce_options.TS_echo[30:16], d.timestamp_echo
 #endif
     phvwrpair      p.roce_options.MSS_value, d.mss, p.roce_options.EOL_kind, ROCE_OPT_KIND_EOL
 

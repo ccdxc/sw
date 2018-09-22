@@ -85,7 +85,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that p_index of rrq is not incremented
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index5', tc.pvtdata.sq_post_qstate, 'p_index5'):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index4', tc.pvtdata.sq_post_qstate, 'p_index4'):
             return False
 
     elif step.step_id == 1:
@@ -96,7 +96,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that c_index of rrq is not incremented
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index5', tc.pvtdata.sq_post_qstate, 'c_index5'):
+        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index4', tc.pvtdata.sq_post_qstate, 'c_index4'):
             return False
 
         # verify rexmit_psn is incremented to that of tx_psn
@@ -144,5 +144,6 @@ def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq_cq.qstate.reset_cindex(0)
+    rs.lqp.sq.qstate.reset_cindex(3)
     ResetErrQState(tc)
     return

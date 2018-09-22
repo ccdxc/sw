@@ -2,47 +2,44 @@
 #define __SQCB_H
 #include "capri.h"
 
-#define MAX_SQ_RINGS            6
+#define MAX_SQ_RINGS            5
 #define MAX_SQ_DOORBELL_RINGS   (MAX_SQ_RINGS - 1)
 #define MAX_SQ_HOST_RINGS       1
 
 #define SQ_RING_ID              0
-#define FC_RING_ID              1
-#define SQ_BKTRACK_RING_ID      2
-#define TIMER_RING_ID           3
-#define CNP_RING_ID             4
+#define SQ_BKTRACK_RING_ID      1
+#define TIMER_RING_ID           2
+#define CNP_RING_ID             3
 #define RRQ_RING_ID	        (MAX_SQ_RINGS - 1)
 
 #define CNP_PRI                 0
-#define FC_PRI                  1 
-#define SQ_BKTRACK_PRI          2
-#define TIMER_PRI               3
-#define SQ_PRI                  4
+#define SQ_BKTRACK_PRI          1
+#define TIMER_PRI               2
+#define SQ_PRI                  3
 
 #define SQ_RING_ID_BITMAP            0x01 // (1 << SQ_RING_ID)
-#define FC_RING_ID_BITMAP            0x02 // (1 << FC_RING_ID)
-#define SQ_BKTRACK_RING_ID_BITMAP    0x04 // (1 << SQ_BACKTRACK_RING_ID)
-#define TIMER_RING_ID_BITMAP         0x08 // (1 << TIMER_RING_ID)
+#define SQ_BKTRACK_RING_ID_BITMAP    0x02 // (1 << SQ_BACKTRACK_RING_ID)
+#define TIMER_RING_ID_BITMAP         0x04 // (1 << TIMER_RING_ID)
+#define CNP_RING_ID_BITMAP           0x08 // (1 << CNP_RING_ID)
+#define RRQ_RING_ID_BITMAP           0x10 // (1 << RRQ_RING_ID)
 
 #define SQ_P_INDEX                   d.{ring0.pindex}.hx
 #define SQ_C_INDEX                   d.{ring0.cindex}.hx
-#define FC_P_INDEX                   d.{ring1.pindex}.hx
-#define FC_C_INDEX                   d.{ring1.cindex}.hx
-#define SQ_BKTRACK_P_INDEX           d.{ring2.pindex}.hx
-#define SQ_BKTRACK_C_INDEX           d.{ring2.cindex}.hx
-#define SQ_TIMER_P_INDEX             d.{ring3.pindex}.hx
-#define SQ_TIMER_C_INDEX             d.{ring3.cindex}.hx
+#define SQ_BKTRACK_P_INDEX           d.{ring1.pindex}.hx
+#define SQ_BKTRACK_C_INDEX           d.{ring1.cindex}.hx
+#define SQ_TIMER_P_INDEX             d.{ring2.pindex}.hx
+#define SQ_TIMER_C_INDEX             d.{ring2.cindex}.hx
+#define CNP_P_INDEX                  d.{ring3.pindex}.hx
+#define CNP_C_INDEX                  d.{ring3.cindex}.hx
+#define RRQ_P_INDEX                  d.{ring4.pindex}
+#define RRQ_C_INDEX                  d.{ring4.cindex}
 #define SQCB0_RRQ_P_INDEX            d.{rrq_pindex}.hx
-#define RRQ_P_INDEX                  d.{ring5.pindex}
-#define RRQ_C_INDEX                  d.{ring5.cindex}
-#define CNP_P_INDEX                  d.{ring4.pindex}.hx
-#define CNP_C_INDEX                  d.{ring4.cindex}.hx
 
 #define SPEC_SQ_C_INDEX              d.spec_sq_cindex
 
-#define RRQ_P_INDEX_OFFSET           FIELD_OFFSET(sqcb1_t, ring5.pindex)
-#define RRQ_C_INDEX_OFFSET           FIELD_OFFSET(sqcb1_t, ring5.cindex)
-#define SQCB2_MSN_OFFSET             FIELD_OFFSET(sqcb2_t, msn)
+#define RRQ_P_INDEX_OFFSET           FIELD_OFFSET(sqcb1_t, ring4.pindex)
+#define RRQ_C_INDEX_OFFSET           FIELD_OFFSET(sqcb1_t, ring4.cindex)
+#define SQCB2_LSN_RX_OFFSET          FIELD_OFFSET(sqcb2_t, lsn_rx)
 #define SQCB2_REXMIT_PSN_OFFSET      FIELD_OFFSET(sqcb2_t, rexmit_psn)
 #define SQCB2_MSN_CREDITS_BYTES      4
 #define SQCB2_RNR_TIMEOUT_OFFSET     FIELD_OFFSET(sqcb2_t, rnr_timeout)
@@ -53,7 +50,7 @@
 
 #define SIZEOF_TOKEN_ID_BITS  8
 
-#define SQCB0_NEED_CREDITS_FLAG 0x40
+#define SQCB0_NEED_CREDITS_FLAG 0x20
 #define SQCB0_CB1_BUSY_FLAG 0x80
 
 #define SQCB_SQ_PINDEX_OFFSET        FIELD_OFFSET(sqcb0_t, ring0.pindex)
@@ -74,7 +71,8 @@ struct sqcb0_t {
     struct capri_intrinsic_ring_t ring1;
     struct capri_intrinsic_ring_t ring2;
     struct capri_intrinsic_ring_t ring3;
-    struct capri_intrinsic_ring_t ring4;
+    sqd_cindex                    : 16; // RO S0, WO S5
+    rsvd                          : 16;
 
     union {
         pt_base_addr              : 32; // RO
@@ -111,7 +109,8 @@ struct sqcb0_t {
     current_sge_id                : 8;  // WO S5, RO S0
     num_sges                      : 8;  // WO S5, RO S0
 
-    rsvd_state_flags              : 8;
+    sq_drained                    : 1; // RW S5
+    rsvd_state_flags              : 7;
 
     dcqcn_rl_failure              : 1;  // RW S0, RW S5
     bktrack_in_progress           : 1;  // RW S5, RW S0
@@ -137,7 +136,7 @@ struct sqcb0_t {
 struct sqcb1_t {
     pc                             : 8;
     cq_id                          : 24; // RO S0
-    struct capri_intrinsic_ring_t  ring5; // RRQ Ring
+    struct capri_intrinsic_ring_t  ring4; // RRQ Ring
 
     rrq_base_addr                  : 32; // RO S0
     log_rrq_size                   : 8;  // RO S0
@@ -150,7 +149,7 @@ struct sqcb1_t {
 
     tx_psn                         : 24; // R0 S0 (WO S5 TXDMA)
     ssn                            : 24; // R0 S0 (WO S5 TXDMA)
-    lsn                            : 24; // R0 S0 (WO S5 TXDMA)
+    rsvd1                          : 24; // R0 S0 (WO S5 TXDMA)
 
     header_template_addr           : 32; // RO SO // DCQCN ???
     header_template_size           : 8;  // RO SO
@@ -163,7 +162,7 @@ struct sqcb1_t {
     msn                            : 24; // RW S0
 
     credits                        : 5;  // RW S0 
-    rsvd1                          : 3;
+    rsvd2                          : 3;
 
     max_tx_psn                     : 24; // RW S0
     max_ssn                        : 24; // RW S0
@@ -174,7 +173,9 @@ struct sqcb1_t {
     rrq_in_progress                : 1;  // RW S3
     state                          : 3;  // RW S3
     sqcb1_priv_oper_enable         : 1;  // RO
-    rsvd2                          : 3;
+    sq_drained                     : 1;  // RW S5
+    sqd_async_notify_enable        : 1;  // RO S5
+    rsvd3                          : 1;
 
     bktrack_in_progress            : 8; // RW S3 (W0 S5 TXDMA)
     pd                             : 32; // RO
@@ -196,8 +197,8 @@ struct sqcb2_t {
     roce_opt_mss_enable            : 1;  // RO S5
     service                        : 4;  // RO S5
 
-    msn                            : 24; // RO S1 (WO RXDMA)
-    credits                        : 8;  // RO S1 (WO RXDMA)
+    lsn_rx                         : 24; // RO S1 (WO RXDMA)
+    lsn_tx                         : 24; // RW S5
     rexmit_psn                     : 24; // RO S1 (WO RXDMA)
 
     last_ack_or_req_ts             : 48; // RW S5 (WO RXDMA)
@@ -214,28 +215,26 @@ struct sqcb2_t {
     ssn                            : 24; // RW S5
     lsn                            : 24; // RW S5
     wqe_start_psn                  : 24; // RW S5
-    curr_op_type                   : 8;  // RW S5
 
     union {
         imm_data                       : 32; // RW S5
         inv_key                        : 32; // RW S5
     };
 
-    fence                          : 1;  // WO S5, RO S1
-    li_fence                       : 1;  // WO S5, RO S1
-    fence_done                     : 1;  // RW S1, WO S5
-    rsvd                           : 5;
     sq_cindex                      : 16; // RW S5
     rrq_pindex                     : 16; // RW S5
     rrq_cindex                     : 16; // RO S1 (WO RXDMA)
+    fence                          : 1;  // WO S5, RO S1
+    li_fence                       : 1;  // WO S5, RO S1
+    fence_done                     : 1;  // RW S1, WO S5
+    curr_op_type                   : 5; // RW S5
 
     exp_rsp_psn                    : 24; // RW S5
-
     //Temporary use for DOL - ROCE UDP options
     timestamp                      : 16;
-    timestamp_echo                 : 16;
+    disable_credits                : 1;
+    timestamp_echo                 : 15;
     mss                            : 16;
-    pad                            : 8;
 };
 
 struct sqcb3_t {

@@ -29,7 +29,8 @@ struct cqcb_t d;
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
-#define K_QP_STATE CAPRI_KEY_FIELD(IN_TO_S_P, state)
+#define K_ASYNC_EVENT_OR_ERROR CAPRI_KEY_FIELD(IN_TO_S_P, async_event_or_error)
+#define K_QP_STATE CAPRI_KEY_RANGE(IN_TO_S_P, state_sbit0_ebit1, state_sbit2_ebit2)
 
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit8_ebit23)
 #define K_CQE_TYPE CAPRI_KEY_FIELD(IN_P, cqe_type)
@@ -47,9 +48,11 @@ req_rx_cqcb_process:
     mfspr            r1, spr_mpuid
     seq              c1, r1[4:2], STAGE_6
     bcf              [!c1], bubble_to_next_stage
-    seq              c1, CQ_PROXY_PINDEX, 0 //BD Slot
 
     bbeq             d.cq_full, 1, error_disable_qp_using_recirc
+    seq              c1, CQ_PROXY_PINDEX, 0 //BD Slot
+
+    bbeq             K_ASYNC_EVENT_OR_ERROR, 1, report_async
 
     #check for CQ full
     seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX //BD Slot

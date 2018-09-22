@@ -688,6 +688,7 @@ table rx_table_s4_t2 {
         rx_table_s4_t2_action;
         rx_table_s4_t2_action1;
         rx_table_s4_t2_action2;
+        rx_table_s4_t2_action3;
         rx_table_s4_t2_cfg_action;
     }
 }
@@ -1048,7 +1049,8 @@ action common_p4plus_stage0_app_header_table_action(data0, data1, data2, data3,
         common_p4plus_stage0_app_header_table_action_dummy15; \
         common_p4plus_stage0_app_header_table_action_dummy16; \
         common_p4plus_stage0_app_header_table_action_dummy17; \
-        common_p4plus_stage0_app_header_table_action_dummy18;
+        common_p4plus_stage0_app_header_table_action_dummy18; \
+        common_p4plus_stage0_app_header_table_action_dummy19;
 
 @pragma stage 0
 @pragma raw_index_table

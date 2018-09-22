@@ -1226,6 +1226,7 @@ struct dcqcn_cb_t {
 #define RDMA_CQ_ARM_FEEDBACK          0x2
 #define RDMA_TIMER_EXPIRY_FEEDBACK    0x3
 #define RDMA_AQ_FEEDBACK              0x4
+#define RDMA_SQ_DRAIN_FEEDBACK        0x5
 
 struct rdma_feedback_t {
     feedback_type:8;
@@ -1252,12 +1253,19 @@ struct rdma_feedback_t {
             tx_psn: 24;
             pad: 8;
         }timer_expiry;
+        /* TYPE: RDMA_AQ_FEEDBACK */
         struct {
             cq_num: 24; 
             status: 8;
             error:  1;
             pad: 47;
         }aq_completion;
+        /* TYPE: RDMA_SQ_DRAIN_FEEDBACK */
+        struct {
+            tx_psn: 24;
+            ssn: 24;
+            pad: 32;
+        }sq_drain;
     }; 
 };
 

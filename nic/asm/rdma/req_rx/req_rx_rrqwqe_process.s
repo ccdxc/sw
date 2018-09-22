@@ -87,7 +87,6 @@ ack_or_nak_or_rnr:
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, tbl_id), 3
     phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6
     
-    phvwr          p.msn, r2
     phvwr          p.cqe.send.msn, r2
     IS_MASKED_VAL_EQUAL(c3, r1, SYNDROME_MASK, ACK_SYNDROME)
     bcf            [!c3], nak_or_rnr
@@ -181,7 +180,6 @@ read_or_atomic:
     cmov           r1, c2, r1, K_AETH_MSN
 
     phvwr          p.cqe.send.msn, r1
-    phvwr          p.msn, r1
     add            r6, K_BTH_PSN, 1
     phvwr          p.rexmit_psn, r6
     // If its mid packet, retain the last ack msn written in sqcb1
@@ -300,7 +298,6 @@ implicit_nak:
     // the first outstanding read request wqe
     add            r2, d.msn, 0
     mincr          r2, 24, -1
-    phvwr          p.msn, r2
     phvwr          p.cqe.send.msn, r2
 
     sne            c1, K_REMAINING_PAYLOAD_BYTES, 0

@@ -11,6 +11,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define SQCB1_TO_TIMER_EXPIRY_P t2_s2s_sqcb1_to_timer_expiry_info
 #define SQCB1_TO_COMPL_FEEDBACK_P t2_s2s_sqcb1_to_compl_feedback_info
 #define SQCB1_TO_SGE_RECIRC_P t0_s2s_sqcb1_to_sge_recirc_info
+#define SQCB1_TO_SQ_DRAIN_P t2_s2s_sqcb1_to_sq_drain_feedback_info
 
 #define TO_S4_P to_s4_sqcb1_wb_info
 #define TO_S3_P to_s3_rrqlkey_info
@@ -28,18 +29,12 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    req_rx_dummy_sqcb1_write_back_process
     .param    req_rx_completion_feedback_process
     .param    req_rx_sqcb1_recirc_sge_process
+    .param    req_rx_sq_drain_feedback_process
 
 .align
 req_rx_sqcb1_process:
-    // If QP is not in RTS state, do not process any received packet. Branch to
-    // check for drain state and process packets until number of acknowledged
-    // messages (msn) matches total number of messages sent out (max_ssn -1)
-    seq            c1, d.state, QP_STATE_RTS
-    bcf            [!c1], check_state
-
     add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS  // Branch Delay Slot
 
-process_req_rx:
     // is this a new packet or recirc packet
     seq            c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
     bcf            [!c1], recirc_pkt
@@ -57,10 +52,18 @@ process_req_rx:
     // avoid updating CB state while bktrack logic is updating the same
     bbeq            d.bktrack_in_progress[0], 1, drop_packet
 
+    // If QP is not in RTS state, do not process any received packet. Branch to
+    // check for drain state and process packets until number of acknowledged
+    // messages (msn) matches total number of messages sent out (max_ssn -1)
+    seq            c1, d.state, QP_STATE_RTS // Branch Delay Slot
+    bcf            [!c1], check_state
+    tblwr.c1       d.sq_drained, 0
+
     // copy cur_timestamp loaded in r4 into phv to DMA ack_timestamp
     // into sqcb2 for valid aeth packet
     phvwr          p.ack_timestamp, r4 // Branch Delay slot
 
+process_req_rx:
     // get token_id for this packet
     phvwr          p.common.rdma_recirc_token_id, TOKEN_ID
     phvwr          CAPRI_PHV_FIELD(TO_S4_P, my_token_id), TOKEN_ID
@@ -208,35 +211,34 @@ check_duplicate_resp:
     bcf            [!c3], duplicate_resp
 
 process_aeth:
-    bcf            [!c5], post_msn_credits
-    phvwr          p.credits, d.credits // Branch Delay Slot
+    sne.c5         c5, CAPRI_APP_DATA_AETH_SYNDROME[4:0], 0x1F // Branch Delay Slot
+    bcf            [!c5], post_rexmit_psn
 
-    tblwr          d.credits, CAPRI_APP_DATA_AETH_SYNDROME[4:0]
-
-    // if (sqcb1_p->lsn != ((1 << (sqcb1_p->credits >> 1)) + sqcb1_p->msn))
-    //     doorbell_incr_pindex(fc_ring_id) 
     DECODE_ACK_SYNDROME_CREDITS(r2, CAPRI_APP_DATA_AETH_SYNDROME, c1)
     mincr          r2, 24, CAPRI_APP_DATA_AETH_MSN
-    sne            c1, d.lsn, r2
-
 post_msn_credits:
     // get DMA cmd entry based on dma_cmd_index
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_MSN_CREDITS)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN)
     // dma_cmd - msn and credits
-    add            r4, r7, SQCB2_MSN_OFFSET
-    DMA_HBM_PHV2MEM_SETUP(r6, msn, credits, r4)
-    bcf            [!c1], post_rexmit_psn
-    phvwr          p.credits, d.credits
+    add            r4, r7, SQCB2_LSN_RX_OFFSET
+    DMA_HBM_PHV2MEM_SETUP(r6, lsn, lsn, r4)
+    phvwr          p.lsn, r2
 
+    
     // dma_cmd - fc_ring db data
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_FC_DB)
-    PREPARE_DOORBELL_INC_PINDEX(CAPRI_RXDMA_INTRINSIC_LIF,
-                                CAPRI_RXDMA_INTRINSIC_QTYPE,
-                                CAPRI_RXDMA_INTRINSIC_QID,
-                                FC_RING_ID, r3, r2)
-    phvwr          p.db_data1, r2.dx
-    DMA_HBM_PHV2MEM_SETUP(r6, db_data1, db_data1, r3)
-    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
+    // TODO No need to enable scheduler on receiving every response. This would be
+    // a problem for dol run as upon depletion of credits TxDMA disables
+    // SQ scheduler bit. It has be enabled back on receiving response. Currently
+    // there is no test case for depleted credits case. Need to address this when
+    // the test case is added
+    //DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_SQ_DB)
+    //PREPARE_DOORBELL_NO_UPDATE_ENABLE_SCHEDULER(CAPRI_RXDMA_INTRINSIC_LIF,
+    //                                            CAPRI_RXDMA_INTRINSIC_QTYPE,
+    //                                            CAPRI_RXDMA_INTRINSIC_QID,
+    //                                            SQ_RING_ID, r3, r2)
+    //phvwr          p.db_data1, r2.dx
+    //DMA_HBM_PHV2MEM_SETUP(r6, db_data1, db_data1, r3)
+    //DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
 
 post_rexmit_psn:
     phvwr          p.err_retry_ctr, d.err_retry_count
@@ -307,10 +309,27 @@ drop_feedback:
     nop
 
 process_feedback:
-    seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_TIMER_EXPIRY_FEEDBACK
-    bcf            [c1], timer_expiry
     seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_COMPLETION_FEEDBACK
+    bcf            [c1], completion_feedback
+    seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_TIMER_EXPIRY_FEEDBACK
+    bcf            [c1], timer_expiry_feedback
+    seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_SQ_DRAIN_FEEDBACK
     bcf            [!c1], drop_feedback
+
+sq_drain_feedback:
+    CAPRI_SQ_DRAIN_FEEDBACK_SSN(r1)
+    scwlt24        c1, d.max_ssn, r1
+    tblwr.c1       d.max_ssn, r1
+
+    scwlt24        c1, d.max_tx_psn, CAPRI_SQ_DRAIN_FEEDBACK_TX_PSN
+    bbeq           d.sq_drained, 1, drop_feedback
+    tblwr.c1       d.max_tx_psn, CAPRI_SQ_DRAIN_FEEDBACK_TX_PSN // Branch Delay Slot
+
+    CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_RESET_TABLE_2_ARG()
+
+    phvwr     CAPRI_PHV_FIELD(SQCB1_TO_SQ_DRAIN_P, ssn), d.max_ssn
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sq_drain_feedback_process, r0)
 
 completion_feedback:
     CAPRI_SET_TABLE_0_VALID(0)
@@ -331,7 +350,7 @@ set_cqcb_arg:
                    CAPRI_PHV_FIELD(RRQWQE_TO_CQ_P, cqe_type), CQE_TYPE_SEND_NPG
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
 
-timer_expiry:
+timer_expiry_feedback:
     // It is ok to update max_tx_psn/max_ssn while bktrack is in progress
     // (provided max_tx_psn/max_ssn is lesser than tx_psn/ssn) as it is
     // not updated as part of bktrack process itself
@@ -343,14 +362,11 @@ timer_expiry:
     bbeq           d.bktrack_in_progress[0], 1, drop_feedback
     tblwr.c1       d.max_ssn, r1 // Branch Delay Slot
 
-    CAPRI_RESET_TABLE_3_ARG()
-    phvwr     CAPRI_PHV_FIELD(SQCB1_TO_TIMER_EXPIRY_P, rexmit_psn), CAPRI_TIMER_EXPIRY_FEEDBACK_REXMIT_PSN
-
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_timer_expiry_process, r0)
     CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_RESET_TABLE_2_ARG()
 
-    nop.e
-    nop
+    phvwr     CAPRI_PHV_FIELD(SQCB1_TO_TIMER_EXPIRY_P, rexmit_psn), CAPRI_TIMER_EXPIRY_FEEDBACK_REXMIT_PSN
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_timer_expiry_process, r0)
 
 recirc_pkt:
     // If backtrack is already in progress then continue with processing

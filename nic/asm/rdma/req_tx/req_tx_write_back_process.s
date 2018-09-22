@@ -68,6 +68,14 @@ skip_poll_success:
     tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1
     seq           c2, SQ_C_INDEX, r0
     tblmincri.c2  d.color, 1, 1
+    // Update drain cindex every time first/only pkt is transmitted.
+    // If state changes to SQD through admin Q, stage0 sends a sq_drain
+    // feedback as a flush marker beyond which no phvs are sent from stage0
+    // Whenever this feedback phv is seen by writebac (sq_drained == 1),
+    // it can stop updating sqd_cindex.
+    seq           c2, CAPRI_KEY_FIELD(IN_P, first), 1
+    sne.c2        c2, d.sq_drained, 1
+    tblwr.c2      d.sqd_cindex, SQ_C_INDEX
 
     // Ordering rules:
     // We decided NOT to ring doorbell to update the c_index and there by re-evaluate scheduler.
@@ -117,6 +125,16 @@ spec_fail:
     CAPRI_SET_TABLE_2_VALID(0)
 
 error_disable_exit:
+    // Update sqd_cindex to one before the cindex for which error is
+    // encountered. Flush feedback is sent to RXDMA to change state
+    // to SQD_ON_ERR and responses are awaited till sqd_cindex. This
+    // ensures that even though out of order error is encountered
+    // all completions are posted until the errored wqe before error
+    // disabling QP
+    add            r1, SQ_C_INDEX, 0
+    mincr          r1, d.log_num_wqes, -1
+    tblwr          d.sqd_cindex, r1
+
     /*
      *  TODO: Incrementing cindex to satisfy model. Ideally, on error disabling we should just exit and be
      *  in the same state which caused the error.
