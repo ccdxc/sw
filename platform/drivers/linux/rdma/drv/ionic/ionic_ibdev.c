@@ -89,7 +89,7 @@ MODULE_PARM_DESC(xxx_mrid, "XXX key should be low byte, index high bytes, we hav
 static bool ionic_xxx_udp = true;
 module_param_named(xxx_udp, ionic_xxx_udp, bool, 0444);
 MODULE_PARM_DESC(xxx_udp, "XXX Makeshift udp header in template.");
-static bool ionic_xxx_noop = true;
+static bool ionic_xxx_noop = false;
 module_param_named(xxx_noop, ionic_xxx_noop, bool, 0444);
 MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
 static bool ionic_xxx_notify = false;
