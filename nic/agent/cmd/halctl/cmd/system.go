@@ -28,8 +28,8 @@ var systemShowCmd = &cobra.Command{
 
 var systemStatsShowCmd = &cobra.Command{
 	Use:   "statistics",
-	Short: "show system statistics [ingress-drop | egress-drop | fte | table | api | pb | all] (Default: all)",
-	Long:  "show system statistics [ingress-drop | egress-drop | fte | table | api | pb | all] (Default: all)",
+	Short: "show system statistics [ingress-drop | egress-drop | fte | fte-txrx | table | api | pb | all] (Default: all)",
+	Long:  "show system statistics [ingress-drop | egress-drop | fte | fte-txrx | table | api | pb | all] (Default: all)",
 	Run:   systemStatsShowCmdHandler,
 }
 
@@ -79,6 +79,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	fte := false
 	api := false
 	pb := false
+	fteTxRx := false
 
 	if len(args) > 0 {
 		if strings.Compare(args[0], "ingress-drop") == 0 {
@@ -93,6 +94,8 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			api = true
 		} else if strings.Compare(args[0], "pb") == 0 {
 			pb = true
+		} else if strings.Compare(args[0], "fte-txrx") == 0 {
+			fteTxRx = true
 		} else if strings.Compare(args[0], "all") == 0 {
 			ingressDrop = true
 			egressDrop = true
@@ -100,6 +103,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			fte = true
 			api = true
 			pb = true
+			fteTxRx = true
 		} else {
 			fmt.Printf("Invalid argument\n")
 			return
@@ -111,6 +115,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		fte = true
 		api = true
 		pb = true
+		fteTxRx = true
 	}
 
 	// HAL call
@@ -181,6 +186,11 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 
 		fmt.Println("\nSession Summary Stats:")
 		sessionSummaryStatsShow(resp.GetStats())
+	}
+
+	if fteTxRx {
+		fmt.Println("\nFTE TxRx Stats:")
+		fteTxRxStatsShow(resp.GetStats())
 	}
 
 	if pb {
@@ -678,6 +688,58 @@ func systemTableStatsShowEntry(entry *halproto.TableStatsEntry) {
 		entry.GetNumInsertErrors(),
 		entry.GetNumDeletes(),
 		entry.GetNumDeleteErrors())
+}
+
+func fteTxRxStatsShow(stats *halproto.Stats) {
+	var pmdstats *halproto.PMDStats
+	var ftestats *halproto.FTEStats
+
+	ftestats = stats.GetFteStats()
+	pmdstats = stats.GetPmdStats()
+
+	fmt.Printf("%s%d\n", "Flow-miss Packets		: ", ftestats.GetFlowMissPkts())
+	fmt.Printf("%s%-15d\n", "Redir Packets			: ", ftestats.GetRedirPkts())
+	fmt.Printf("%s%-15d\n", "Ctrlflow Packets		: ", ftestats.GetCflowPkts())
+	fmt.Printf("%s%-15d\n", "TCP Close Packets		: ", ftestats.GetTcpClosePkts())
+	fmt.Printf("%s%-15d\n", "TLS Proxy Packets		: ", ftestats.GetTlsProxyPkts())
+	fmt.Printf("%s%-15d\n", "Queued Tx Packets		: ", ftestats.GetQueuedTxPkts())
+	fmt.Printf("\n")
+	var fteid int
+	for _, fteinfo := range pmdstats.FteInfo {
+		fmt.Printf("%s%-3d\n", "FTE     : ", fteid)
+		fmt.Printf("%s\n", strings.Repeat("-", 13))
+		fmt.Printf("%-50s%-22s\n", "     STATS", "INFO")
+		fmt.Printf("%10s%44s\n", strings.Repeat("-", 5), strings.Repeat("-", 4))
+		for _, qinfo := range fteinfo.Qinfo {
+			fmt.Printf("%s%-15s\n", "Queue Type    : ", halproto.WRingType_name[int32(qinfo.GetQueueType())])
+			ctr := qinfo.GetCtr()
+			fmt.Printf("%s%-15d%s%d\n", "send pkts               : ", ctr.GetSendPkts(), "queue id         : ", qinfo.GetQueueId())
+			fmt.Printf("%s%-15d%s%#x\n", "recv pkts               : ", ctr.GetRecvPkts(), "base addr        : ", qinfo.GetBaseAddr())
+			fmt.Printf("%s%-15d%s%#x\n", "Rx Sem Write Err        : ", ctr.GetRxSemWrErr(), "p/c index        : ", qinfo.GetPcIndex())
+			fmt.Printf("%s%-15d%s%#x\n", "Rx Slot Value Read Err  : ", ctr.GetRxSlotValueReadErr(), "p/c index_addr   : ", qinfo.GetPcIndexAddr())
+			fmt.Printf("%s%-15d%s%#x\n", "Rx Descr Read Err       : ", ctr.GetRxDescrReadErr(), "exp valid bit val: ", qinfo.GetValidBitValue())
+			fmt.Printf("%s%-15d\n", "Rx Descr To Hdr Err     : ", ctr.GetRxDescrToHdrErr())
+			fmt.Printf("%s%-15d\n", "Rx Descr Free_err       : ", ctr.GetRxDescrFreeErr())
+			fmt.Printf("%s%-15d\n", "Tx Descr Free_err       : ", ctr.GetTxDescrFreeErr())
+			fmt.Printf("%s%-15d\n", "Tx Page Alloc_err       : ", ctr.GetTxPageAllocErr())
+			fmt.Printf("%s%-15d\n", "Tx Page Copy Err        : ", ctr.GetTxPageCopyErr())
+			fmt.Printf("%s%-15d\n", "Tx Descr Pgm Err        : ", ctr.GetTxDescrPgmErr())
+			fmt.Printf("%s%-15d\n", "Tx Send Err             : ", ctr.GetTxSendErr())
+
+			fmt.Printf("\n")
+		}
+		fmt.Printf("\n")
+		fmt.Printf("FTE Local\n")
+		glbl := fteinfo.GetGlbal()
+		fmt.Printf("%s%-15d\n", "GC pindex           : ", glbl.GetGcPindex())
+		fmt.Printf("%s%-15d\n", "Cpu Tx Page Pindex  : ", glbl.GetCpuTxPagePindex())
+		fmt.Printf("%s%-15d\n", "Cpu Tx Page Cindex  : ", glbl.GetCpuTxPageCindex())
+		fmt.Printf("%s%-15d\n", "Cpu Tx Descr Pindex : ", glbl.GetCpuTxDescrPindex())
+		fmt.Printf("%s%-15d\n", "Cpu Tx Descr Cindex : ", glbl.GetCpuTxDescrCindex())
+
+		fteid++
+	}
+	fmt.Printf("\n")
 }
 
 func fteStatsShow(stats *halproto.Stats) {

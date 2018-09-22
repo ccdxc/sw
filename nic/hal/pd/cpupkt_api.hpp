@@ -49,14 +49,31 @@ namespace pd {
 typedef uint64_t  cpupkt_hw_id_t;
 struct cpupkt_queue_info_s;
 typedef struct cpupkt_queue_info_s cpupkt_queue_info_t;
+typedef struct cpupkt_qinst_ctr_s {
+    uint64_t        recv_pkts;
+    uint64_t        send_pkts;
+    uint64_t        num_errs;
+    uint32_t        rx_sem_wr_err;
+    uint32_t        rx_slot_value_read_err;
+    uint32_t        rx_descr_read_err;
+    uint32_t        rx_descr_to_hdr_err;
+    uint32_t        rx_descr_free_err;
+    uint32_t        tx_descr_free_err;
+    uint32_t        tx_page_alloc_err;
+    uint32_t        tx_page_copy_err;
+    uint32_t        tx_descr_pgm_err;
+    uint32_t        tx_send_err;
+    uint32_t        tx_db_err;
+} __PACK__ cpupkt_qinst_ctr_t;
 
 typedef struct cpupkt_qinst_info_s {
     uint32_t                queue_id;
     cpupkt_hw_id_t          base_addr;
-    uint32_t                pc_index;
+    uint32_t                pc_index;    //Producer index in case of TX queue / Consumer index in case of RXQ
     cpupkt_hw_id_t          pc_index_addr;
     uint64_t                valid_bit_value;
     cpupkt_queue_info_t     *queue_info;
+    cpupkt_qinst_ctr_t      ctr;
 } cpupkt_qinst_info_t;
 
 typedef struct cpupkt_queue_info_s {
@@ -79,6 +96,30 @@ typedef struct cpupkt_ctxt_s {
     cpupkt_rx_ctxt_t rx;
     cpupkt_tx_ctxt_t tx;
 } __PACK__ cpupkt_ctxt_t;
+
+
+// Stats for cpupkt
+
+typedef struct cpupkt_global_info_s {
+    uint32_t       gc_pindex;
+    uint32_t       cpu_tx_page_pindex;
+    uint32_t       cpu_tx_page_cindex;
+    uint32_t       cpu_tx_descr_pindex;
+    uint32_t       cpu_tx_descr_cindex;
+} __PACK__ cpupkt_global_info_t;
+
+typedef struct cpupkt_qinst_stats_s {
+    cpupkt_qinst_ctr_t  ctr;
+    uint32_t            queue_id;
+    cpupkt_hw_id_t      base_addr;
+    uint32_t            pc_index;
+    cpupkt_hw_id_t      pc_index_addr;
+} __PACK__ cpupkt_qinst_stats_t;
+
+typedef struct cpupkt_qinfo_stats_s {
+    types::WRingType       type;
+    cpupkt_qinst_stats_t   inst;    // Today we have only one instance
+} __PACK__ cpupkt_qinfo_stats_t;
 
 static inline cpupkt_ctxt_t *
 cpupkt_ctxt_init (cpupkt_ctxt_t *ctxt)

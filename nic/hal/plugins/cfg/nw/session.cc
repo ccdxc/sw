@@ -32,6 +32,11 @@ using sys::FTEFeatureStats;
 using sys::FTEError;
 using sys::SystemResponse;
 using sys::SessionSummaryStats;
+using sys::PMDStats;
+using sys::FTEInfo;
+using sys::QCtr;
+using sys::QGlobalInfo;
+using sys::QInfo;
 
 using namespace sdk::lib;
 
@@ -2308,6 +2313,72 @@ session_eval_matching_session (session_match_t  *match)
 
     HAL_TRACE_DEBUG("delete session");
     session_delete_list(&session_list, true /*async:true*/);
+    return HAL_RET_OK;
+}
+hal_ret_t
+system_fte_txrx_stats_get(SystemResponse *rsp)
+{
+    fte::fte_txrx_stats_t txrx_stats = {};
+
+    PMDStats          *pmd_stats = NULL;
+
+    FTEStats          *fte_stats = NULL;
+    fte::fte_stats_t  *stats = (fte::fte_stats_t *)g_hal_state->fte_stats();
+    fte::fte_stats_t   g_fte_stats = *stats;
+
+    fte_stats = rsp->mutable_stats()->mutable_fte_stats();
+
+
+    fte_stats->set_flow_miss_pkts(g_fte_stats.flow_miss_pkts);
+    fte_stats->set_redir_pkts(g_fte_stats.redirect_pkts);
+    fte_stats->set_cflow_pkts(g_fte_stats.cflow_pkts);
+    fte_stats->set_tcp_close_pkts(g_fte_stats.tcp_close_pkts);
+    fte_stats->set_tls_proxy_pkts(g_fte_stats.tls_proxy_pkts);
+    fte_stats->set_queued_tx_pkts(g_fte_stats.queued_tx_pkts);
+
+    HAL_TRACE_DEBUG("Gathering fte txrx stats ");
+    pmd_stats = rsp->mutable_stats()->mutable_pmd_stats();
+
+    for (uint32_t threads = 0; threads < hal::g_hal_cfg.num_data_threads; threads++) {
+        txrx_stats = fte::fte_txrx_stats_get(threads, false);
+        FTEInfo *fte_info = pmd_stats->add_fte_info();
+        QGlobalInfo *global_info = fte_info->mutable_glbal();
+        global_info->set_gc_pindex(txrx_stats.glinfo.gc_pindex);
+        global_info->set_cpu_tx_page_pindex(txrx_stats.glinfo.cpu_tx_page_pindex);
+        global_info->set_cpu_tx_page_cindex(txrx_stats.glinfo.cpu_tx_page_cindex);
+        global_info->set_cpu_tx_descr_pindex(txrx_stats.glinfo.cpu_tx_descr_pindex);
+        global_info->set_cpu_tx_descr_cindex(txrx_stats.glinfo.cpu_tx_descr_cindex);
+
+        for (int i = 0; i < FTE_MAX_CPU_QUEUES; i++) {
+            //for number of queues
+            hal::pd::cpupkt_qinfo_stats_t fte_qinfo = txrx_stats.qinfo[i];
+
+
+            QInfo *qinfo = fte_info->add_qinfo();
+            qinfo->set_base_addr(fte_qinfo.inst.base_addr);
+            qinfo->set_pc_index(fte_qinfo.inst.pc_index);
+            qinfo->set_pc_index_addr(fte_qinfo.inst.pc_index_addr);
+            //qinfo->set_valid_bit_value(fte_qinfo.inst.valid_bit_value);
+            qinfo->set_queue_id(fte_qinfo.inst.queue_id);
+            qinfo->set_queue_type(fte_qinfo.type);
+
+            // Per Queue Ctrs
+            QCtr *ctr = qinfo->mutable_ctr();
+            ctr->set_send_pkts(fte_qinfo.inst.ctr.send_pkts);
+            ctr->set_recv_pkts(fte_qinfo.inst.ctr.recv_pkts);
+            ctr->set_rx_sem_wr_err(fte_qinfo.inst.ctr.rx_sem_wr_err);
+            ctr->set_rx_slot_value_read_err(fte_qinfo.inst.ctr.rx_slot_value_read_err);
+            ctr->set_rx_descr_read_err(fte_qinfo.inst.ctr.rx_descr_read_err);
+            ctr->set_rx_descr_to_hdr_err(fte_qinfo.inst.ctr.rx_descr_to_hdr_err);
+            ctr->set_rx_descr_free_err(fte_qinfo.inst.ctr.rx_descr_free_err);
+            ctr->set_tx_descr_free_err(fte_qinfo.inst.ctr.tx_descr_free_err);
+            ctr->set_tx_page_alloc_err(fte_qinfo.inst.ctr.tx_page_alloc_err);
+            ctr->set_tx_page_copy_err(fte_qinfo.inst.ctr.tx_page_copy_err);
+            ctr->set_tx_descr_pgm_err(fte_qinfo.inst.ctr.tx_descr_pgm_err);
+            ctr->set_tx_send_err(fte_qinfo.inst.ctr.tx_send_err);
+
+        }
+    }
     return HAL_RET_OK;
 }
 

@@ -42,8 +42,10 @@ public:
     ipc_logger *get_ipc_logger() const { return logger_; }
     void incr_feature_stats (uint16_t feature_id, hal_ret_t rc, bool set_rc);
     void incr_fte_error (hal_ret_t rc);
-    fte_stats_t get_stats(bool clear_on_read);
-
+    fte_stats_t      get_stats(bool clear_on_read);
+    fte_txrx_stats_t get_txrx_stats(bool clear_on_read);
+    void update_rx_stats(cpu_rxhdr_t *rxhdr, size_t pkt_len);
+    void update_tx_stats(size_t pkt_len);
 private:
     uint8_t                 id_;
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
@@ -61,8 +63,6 @@ private:
     void process_arq();
     void process_softq();
     void ctx_mem_init();
-    void update_rx_stats(cpu_rxhdr_t *rxhdr, size_t pkt_len);
-    void update_tx_stats(size_t pkt_len);
 };
 
 //------------------------------------------------------------------------------
@@ -392,6 +392,31 @@ void incr_inst_fte_error(hal_ret_t rc)
     t_inst->incr_fte_error(rc);
 }
 
+
+//----------------------------------------------------------------------------
+// Increment fte tx stats
+//----------------------------------------------------------------------------
+void incr_inst_fte_tx_stats(size_t pkt_len)
+{
+    if (fte_disabled_ || t_inst == NULL) {
+        return;
+    }
+
+    t_inst->update_tx_stats(pkt_len);
+}
+
+//----------------------------------------------------------------------------
+// Increment fte rx stats
+//----------------------------------------------------------------------------
+void incr_inst_fte_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
+{
+    if (fte_disabled_ || t_inst == NULL) {
+        return;
+    }
+
+    t_inst->update_rx_stats(cpu_rxhdr, pkt_len);
+}
+
 //----------------------------------------------------------------------------
 // Increment fte error counters
 //----------------------------------------------------------------------------
@@ -479,8 +504,8 @@ void inst_t::process_arq()
 
         // write the packets
         ret = ctx_->send_queued_pkts(arm_ctx_);
-        if (ret == HAL_RET_OK) {
-            update_tx_stats(pkt_len);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte: failed to send pkt ret={}", ret);
         }
     } while(false);
 
@@ -502,9 +527,87 @@ fte_stats_t inst_t::get_stats(bool clear_on_read)
     return stats;
 }
 
+fte_txrx_stats_t inst_t::get_txrx_stats(bool clear_on_read)
+{
+    int      qindex = 0;
+    uint8_t  queue_id = id_;
+    //Get stats from the ctx
+    hal::pd::cpupkt_ctxt_t *ctx = arm_ctx_;
+
+    //Fill common data
+    fte_txrx_stats_t txrx_stats;
+
+    txrx_stats.flow_miss_pkts = stats_.flow_miss_pkts;
+    txrx_stats.redirect_pkts = stats_.redirect_pkts;
+    txrx_stats.cflow_pkts    = stats_.cflow_pkts;
+    txrx_stats.tcp_close_pkts = stats_.tcp_close_pkts;
+    txrx_stats.tls_proxy_pkts = stats_.tls_proxy_pkts;
+
+    //Get RX stats
+    for (uint8_t i = 0; i < ctx->rx.num_queues; i++) {
+        txrx_stats.qinfo[qindex].type  = ctx->rx.queue[i].type;
+        txrx_stats.qinfo[qindex].inst.ctr = ctx->rx.queue[i].qinst_info[queue_id]->ctr;
+        txrx_stats.qinfo[qindex].inst.queue_id = ctx->rx.queue[i].qinst_info[queue_id]->queue_id;
+        txrx_stats.qinfo[qindex].inst.base_addr = ctx->rx.queue[i].qinst_info[queue_id]->base_addr;
+        txrx_stats.qinfo[qindex].inst.pc_index  = ctx->rx.queue[i].qinst_info[queue_id]->pc_index;
+        txrx_stats.qinfo[qindex].inst.pc_index_addr = ctx->rx.queue[i].qinst_info[queue_id]->pc_index_addr;
+        qindex++;
+    }
+
+    //GET Tx stats
+    int index = types::WRING_TYPE_ASQ;  // pollmode driver uses wring type as index
+    txrx_stats.qinfo[qindex].type = ctx->tx.queue[index].type;
+    txrx_stats.qinfo[qindex].inst.ctr = ctx->tx.queue[index].qinst_info[queue_id]->ctr;
+    txrx_stats.qinfo[qindex].inst.queue_id = ctx->tx.queue[index].qinst_info[queue_id]->queue_id;
+    txrx_stats.qinfo[qindex].inst.base_addr = ctx->tx.queue[index].qinst_info[queue_id]->base_addr;
+    txrx_stats.qinfo[qindex].inst.pc_index  = ctx->tx.queue[index].qinst_info[queue_id]->pc_index;
+    txrx_stats.qinfo[qindex].inst.pc_index_addr = ctx->tx.queue[index].qinst_info[queue_id]->pc_index_addr;
+
+    // Fill common info
+    //
+    hal::pd::pd_cpupkt_get_global_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
+    pd_func_args.pd_cpupkt_get_global = &args;
+
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_GET_GLOBAL, &pd_func_args);
+    txrx_stats.glinfo.gc_pindex = args.gc_pindex;
+    txrx_stats.glinfo.cpu_tx_page_pindex = args.cpu_tx_page_pindex;
+    txrx_stats.glinfo.cpu_tx_page_cindex = args.cpu_tx_page_cindex;
+    txrx_stats.glinfo.cpu_tx_descr_pindex = args.cpu_tx_descr_pindex;
+    txrx_stats.glinfo.cpu_tx_descr_cindex = args.cpu_tx_descr_cindex;
+    return txrx_stats;
+
+}
+
+//------------------------------------------------------------------------------
+// API to get txrxstats per thread
+//------------------------------------------------------------------------------
+fte_txrx_stats_t
+fte_txrx_stats_get (uint8_t fte_id, bool clear_on_read)
+{
+    struct fn_ctx_t {
+        fte_txrx_stats_t fte_stats;
+        bool             clear_on_read;
+    } fn_ctx;
+
+    if (fte_disabled_)
+        goto done;
+
+    fn_ctx.clear_on_read = clear_on_read;
+    fte_execute(fte_id, [](void *data) {
+            fn_ctx_t *fn_ctx = (fn_ctx_t *) data;            
+            fn_ctx->fte_stats = t_inst->get_txrx_stats(fn_ctx->clear_on_read);
+        }, &fn_ctx);
+
+done:
+    return fn_ctx.fte_stats;
+}
+
+
 //------------------------------------------------------------------------------
 // API to get stats per thread
 //------------------------------------------------------------------------------
+
 fte_stats_t
 fte_stats_get (uint8_t fte_id, bool clear_on_read)
 {

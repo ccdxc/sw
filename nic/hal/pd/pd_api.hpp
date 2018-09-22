@@ -2387,6 +2387,14 @@ typedef struct pd_cpupkt_program_send_ring_doorbell_args_s {
     uint8_t  flags;
 } pd_cpupkt_program_send_ring_doorbell_args_t;
 
+typedef struct pd_cpupkt_get_global_args_s {
+    uint32_t  gc_pindex;
+    uint32_t  cpu_tx_page_pindex;
+    uint32_t  cpu_tx_page_cindex;
+    uint32_t  cpu_tx_descr_pindex;
+    uint32_t  cpu_tx_descr_cindex;
+} pd_cpupkt_get_global_args_t;
+
 // rdma
 typedef struct pd_rxdma_table_entry_add_args_s {
     uint32_t idx;
@@ -2980,19 +2988,20 @@ typedef struct pd_quiesce_stop_args_s {
     ENTRY(PD_FUNC_ID_CPU_SEND,              154, "PD_FUNC_ID_CPU_SEND")\
     ENTRY(PD_FUNC_ID_CPU_PAGE_ALLOC,        155, "PD_FUNC_ID_CPU_PAGE_ALLOC")\
     ENTRY(PD_FUNC_ID_CPU_DESCR_ALLOC,       156, "PD_FUNC_ID_CPU_DESCR_ALLOC")\
-    ENTRY(PD_FUNC_ID_PGM_SEND_RING_DBELL,   157, "PD_FUNC_ID_PGM_SEND_RING_DBELL")\
-    ENTRY(PD_FUNC_ID_RXDMA_TABLE_ADD,       158, "PD_FUNC_ID_RXDMA_TABLE_ADD")\
-    ENTRY(PD_FUNC_ID_TXDMA_TABLE_ADD,       159, "PD_FUNC_ID_TXDMA_TABLE_ADD")\
-    ENTRY(PD_FUNC_ID_LIF_GET_LPORTID,       160, "PD_FUNC_ID_LIF_GET_LPORTID")\
-    ENTRY(PD_FUNC_ID_P4PT_INIT,             161, "PD_FUNC_ID_P4PT_INIT")\
-    ENTRY(PD_FUNC_ID_RSS_PARAMS_TABLE_ADD,  162, "PD_FUNC_ID_RSS_PARAMS_TABLE_ADD")\
-    ENTRY(PD_FUNC_ID_RSS_INDIR_TABLE_ADD,   163, "PD_FUNC_ID_RSS_INDIR_TABLE_ADD")\
-    ENTRY(PD_FUNC_ID_ASIC_INIT,             164, "PD_FUNC_ID_ASIC_INIT")\
-    ENTRY(PD_FUNC_ID_GET_START_OFFSET,      165, "PD_FUNC_ID_GET_START_OFFSET")\
-    ENTRY(PD_FUNC_ID_GET_REG_SIZE,          166, "PD_FUNC_ID_GET_REG_SIZE")\
-    ENTRY(PD_FUNC_ID_PUSH_QSTATE,           167, "PD_FUNC_ID_PUSH_QSTATE")\
-    ENTRY(PD_FUNC_ID_CLEAR_QSTATE,          168, "PD_FUNC_ID_CLEAR_QSTATE")\
-    ENTRY(PD_FUNC_ID_READ_QSTATE,           169, "PD_FUNC_ID_READ_QSTATE")\
+    ENTRY(PD_FUNC_ID_CPU_GET_GLOBAL,        157, "PD_FUNC_ID_CPU_GET_GLOBAL")\
+    ENTRY(PD_FUNC_ID_PGM_SEND_RING_DBELL,   158, "PD_FUNC_ID_PGM_SEND_RING_DBELL")\
+    ENTRY(PD_FUNC_ID_RXDMA_TABLE_ADD,       159, "PD_FUNC_ID_RXDMA_TABLE_ADD")\
+    ENTRY(PD_FUNC_ID_TXDMA_TABLE_ADD,       160, "PD_FUNC_ID_TXDMA_TABLE_ADD")\
+    ENTRY(PD_FUNC_ID_LIF_GET_LPORTID,       161, "PD_FUNC_ID_LIF_GET_LPORTID")\
+    ENTRY(PD_FUNC_ID_P4PT_INIT,             162, "PD_FUNC_ID_P4PT_INIT")\
+    ENTRY(PD_FUNC_ID_RSS_PARAMS_TABLE_ADD,  163, "PD_FUNC_ID_RSS_PARAMS_TABLE_ADD")\
+    ENTRY(PD_FUNC_ID_RSS_INDIR_TABLE_ADD,   164, "PD_FUNC_ID_RSS_INDIR_TABLE_ADD")\
+    ENTRY(PD_FUNC_ID_ASIC_INIT,             165, "PD_FUNC_ID_ASIC_INIT")\
+    ENTRY(PD_FUNC_ID_GET_START_OFFSET,      166, "PD_FUNC_ID_GET_START_OFFSET")\
+    ENTRY(PD_FUNC_ID_GET_REG_SIZE,          167, "PD_FUNC_ID_GET_REG_SIZE")\
+    ENTRY(PD_FUNC_ID_PUSH_QSTATE,           168, "PD_FUNC_ID_PUSH_QSTATE")\
+    ENTRY(PD_FUNC_ID_CLEAR_QSTATE,          169, "PD_FUNC_ID_CLEAR_QSTATE")\
+    ENTRY(PD_FUNC_ID_READ_QSTATE,           170, "PD_FUNC_ID_READ_QSTATE")\
     ENTRY(PD_FUNC_ID_GET_PC_OFFSET,         171, "PD_FUNC_ID_GET_PC_OFFSET")\
     ENTRY(PD_FUNC_ID_HBM_READ,              172, "PD_FUNC_ID_HBM_READ")\
     ENTRY(PD_FUNC_ID_HBM_WRITE,             173, "PD_FUNC_ID_HBM_WRITE")\
@@ -3402,6 +3411,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_cpupkt_page_alloc);
         PD_UNION_ARGS_FIELD(pd_cpupkt_descr_alloc);
         PD_UNION_ARGS_FIELD(pd_cpupkt_program_send_ring_doorbell);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_get_global);
 
         // rdma
         PD_UNION_ARGS_FIELD(pd_rxdma_table_entry_add);
@@ -3804,6 +3814,7 @@ PD_FUNCP_TYPEDEF(pd_cpupkt_send);
 PD_FUNCP_TYPEDEF(pd_cpupkt_page_alloc);
 PD_FUNCP_TYPEDEF(pd_cpupkt_descr_alloc);
 PD_FUNCP_TYPEDEF(pd_cpupkt_program_send_ring_doorbell);
+PD_FUNCP_TYPEDEF(pd_cpupkt_get_global);
 
 // rdma
 PD_FUNCP_TYPEDEF(pd_rxdma_table_entry_add);
@@ -4216,6 +4227,7 @@ PD_FUNCP_TYPEDEF(pd_cpupkt_send);
 PD_FUNCP_TYPEDEF(pd_cpupkt_page_alloc);
 PD_FUNCP_TYPEDEF(pd_cpupkt_descr_alloc);
 PD_FUNCP_TYPEDEF(pd_cpupkt_program_send_ring_doorbell);
+PD_FUNCP_TYPEDEF(pd_cpupkt_get_global)
 
 // rdma
 PD_FUNCP_TYPEDEF(pd_rxdma_table_entry_add);
@@ -4622,6 +4634,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_cpupkt_page_alloc);
         PD_UNION_FIELD(pd_cpupkt_descr_alloc);
         PD_UNION_FIELD(pd_cpupkt_program_send_ring_doorbell);
+        PD_UNION_FIELD(pd_cpupkt_get_global);
 
         // rdma
         PD_UNION_FIELD(pd_rxdma_table_entry_add);

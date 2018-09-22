@@ -92,4 +92,8 @@ void incr_inst_fte_error (hal_ret_t rc);
 // API to fetch per-instance FTE stats
 fte_stats_t fte_stats_get (uint8_t fte_id, bool clear_on_read=false);
 
+
+// API to fetch per-instance FTE txrxstats
+fte_txrx_stats_t fte_txrx_stats_get (uint8_t fte_id, bool clear_on_read=false);
+
 } // namespace fte

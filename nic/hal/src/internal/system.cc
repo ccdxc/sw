@@ -458,7 +458,7 @@ api_stats_get (ApiStatsResponse *rsp)
 }
 
 //------------------------------------------------------------------------------
-// process a vrf get request
+// process a system get request
 //------------------------------------------------------------------------------
 hal_ret_t
 system_get (SystemResponse *rsp)
@@ -519,6 +519,14 @@ system_get (SystemResponse *rsp)
         rsp->set_api_status(types::API_STATUS_ERR);
         goto end;
     }
+    
+    system_fte_txrx_stats_get(rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_ERR);
+        goto end;
+    }
+
    
     // Session Summary get
     system_session_summary_get(rsp);

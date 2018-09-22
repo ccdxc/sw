@@ -965,11 +965,11 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failed to transmit pkt, ret={}", ret);
         }
+        incr_inst_fte_tx_stats(pkt_info->pkt_len);
         // Issue a callback to free the packet
         if (pkt_info->cb)
             pkt_info->cb(pkt_info->pkt);
     }
-
     txpkt_cnt_ = 0;
 
     return HAL_RET_OK;

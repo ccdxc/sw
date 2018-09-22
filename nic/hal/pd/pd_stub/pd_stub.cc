@@ -332,6 +332,7 @@ PD_FUNC_STUB(pd_cpupkt_send);
 PD_FUNC_STUB(pd_cpupkt_page_alloc);
 PD_FUNC_STUB(pd_cpupkt_descr_alloc);
 PD_FUNC_STUB(pd_cpupkt_program_send_ring_doorbell);
+PD_FUNC_STUB(pd_cpupkt_get_global);
 
 // rdma
 PD_FUNC_STUB(pd_rxdma_table_entry_add);

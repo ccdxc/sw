@@ -429,6 +429,8 @@ typedef struct fte_flow_log_info_s {
 void incr_inst_feature_stats (uint16_t feature_id, hal_ret_t rc=HAL_RET_OK, 
                               bool set_rc=false);
 
+void incr_inst_fte_rx_stats (cpu_rxhdr_t *rxhdr, size_t pkt_len);
+void incr_inst_fte_tx_stats (size_t pkt_len);
 typedef struct fte_feature_stats_s {
     uint64_t        drop_pkts;                 // Number of packets dropped by the feature
     uint64_t        drop_reason[HAL_RET_ERR];  // Number of drops seen per drop reason code
@@ -439,6 +441,18 @@ typedef struct fte_feature_stats_s {
 //----------------------------------------------------------------------------------
 
 struct fte_stats_t;
+
+#define FTE_MAX_CPU_QUEUES 3 // ARQ, ASCQ, ASQ
+typedef struct fte_txrx_stats_s {
+    uint64_t             flow_miss_pkts;
+    uint64_t             redirect_pkts;
+    uint64_t             cflow_pkts;
+    uint64_t             tcp_close_pkts;
+    uint64_t             tls_proxy_pkts;
+    int                  num_cpu_pkt_queues;
+    hal::pd::cpupkt_global_info_t glinfo;
+    hal::pd::cpupkt_qinfo_stats_t qinfo[FTE_MAX_CPU_QUEUES];
+} __PACK__ fte_txrx_stats_t;
 
 struct fte_stats_t {
     uint64_t              cps;                         // Number of connections per second processed by this FTE

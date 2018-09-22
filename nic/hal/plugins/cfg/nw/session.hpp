@@ -466,6 +466,7 @@ hal_ret_t session_delete_list (dllist_ctxt_t *session_list, bool async=false);
 hal_ret_t session_delete_all (session::SessionDeleteResponseMsg *rsp);
 hal_ret_t session_eval_matching_session (session_match_t *match);
 hal_ret_t system_fte_stats_get (SystemResponse *rsp);
+hal_ret_t system_fte_txrx_stats_get (SystemResponse *rsp);
 hal_ret_t system_session_summary_get (SystemResponse *rsp);
 hal_ret_t session_delete (session::SessionDeleteRequest& spec,
                       session::SessionDeleteResponseMsg *rsp);

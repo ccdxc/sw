@@ -366,6 +366,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_PAGE_ALLOC, pd_cpupkt_page_alloc);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_DESCR_ALLOC, pd_cpupkt_descr_alloc);
     PD_FUNC_LOAD(PD_FUNC_ID_PGM_SEND_RING_DBELL, pd_cpupkt_program_send_ring_doorbell);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_GET_GLOBAL, pd_cpupkt_get_global);
 
     // rdma
     PD_FUNC_LOAD(PD_FUNC_ID_RXDMA_TABLE_ADD, pd_rxdma_table_entry_add);
