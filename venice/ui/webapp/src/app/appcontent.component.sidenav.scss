@@ -100,16 +100,16 @@
 
 #app-sidebar a[aria-expanded="false"]::before,
 a[aria-expanded="true"]::before {
-  content: '\e259';
+  content: '\f107';
   display: block;
   position: absolute;
   right: 20px;
-  font-family: 'Glyphicons Halflings';
-  font-size: 0.6em;
+  font-family: 'FontAwesome';
+  font-size: 16px;
 }
 
 #app-sidebar a[aria-expanded="true"]::before {
-  content: '\e260';
+  content: '\f106';
 }
 
 #app-sidebar ul ul a {

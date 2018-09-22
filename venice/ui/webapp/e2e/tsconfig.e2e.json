@@ -9,6 +9,9 @@
       "jasmine",
       "jasminewd2",
       "node"
-    ]
+    ],
+    "paths": {
+      "@sdk/*": ["../../venice-sdk/*"]
+    }
   }
 }

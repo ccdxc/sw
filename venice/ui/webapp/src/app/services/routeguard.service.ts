@@ -20,10 +20,17 @@ export class RouteGuard implements CanActivate, CanActivateChild {
     const path = [];
     route.pathFromRoot.forEach((pathSnapshot) => {
       if (pathSnapshot.url.length > 0) {
+        if (pathSnapshot.url.length > 1) {
+          console.error('Support for matching multiple url segments not currently supported');
+        }
         path.push(pathSnapshot.url[0].path);
       }
     });
-    return this.uiconfigsService.verifySubRoute(path.join('/'));
+    if (!this.uiconfigsService.canActivateSubRoute(path.join('/'))) {
+      this.uiconfigsService.navigateToHomepage();
+      return false;
+    }
+    return true;
 
   }
 }

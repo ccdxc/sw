@@ -32,11 +32,11 @@
                             <mat-icon>notifications </mat-icon>
                             <span class="app-notification-number" *ngIf="alertNumbers>0">{{alertNumbers}}</span>
                         </button> -->
-                        <button mat-icon-button [matMenuTriggerFor]="toolbarUserMenu">
+                        <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarUserMenu">
                             <mat-icon>person</mat-icon>
                         </button>
                         <mat-menu #toolbarUserMenu="matMenu">
-                            <button mat-menu-item (click)="onLogoutClick()">
+                            <button mat-menu-item class="app-logout-button" (click)="onLogoutClick()">
                                 <mat-icon style="color: black">power_settings_new</mat-icon>
                                 <span>Logout</span>
                             </button>

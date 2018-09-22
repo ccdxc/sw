@@ -55,21 +55,6 @@ export class UIConfigsService {
   ) { }
 
   /**
-   * We check the route, and if it isn't allowed,
-   * we redirect to the homepage and return false to
-   * the guard calling this function
-   *
-   * @param route
-   */
-  verifySubRoute(route: string) {
-    if (!this.canActivateSubRoute(route)) {
-      this.navigateToHomepage();
-      return false;
-    }
-    return true;
-  }
-
-  /**
    * Looks up the route in the pageRequirements object
    * If the url isn't present it is allowed by default
    * Otherwise we follow the algorithm stated above pageRequirements

@@ -8,31 +8,6 @@ import { } from 'jasmine';
 export class TestingUtility {
   fixture: ComponentFixture<any>;
 
-  constructor(fixture: ComponentFixture<any>) {
-    this.fixture = fixture;
-  }
-
-  setText(elem: DebugElement, text: string) {
-    const elemNative = elem.nativeElement;
-    elemNative.value = text;
-    elemNative.dispatchEvent(new Event('input'));
-    this.fixture.detectChanges();
-    return this.fixture.whenStable();
-  }
-
-  sendEnterKeyup(elem: DebugElement) {
-    elem.triggerEventHandler('keyup', { keyCode: 13 });
-    this.fixture.detectChanges();
-    return this.fixture.whenStable();
-  }
-
-  sendClick(elem: DebugElement) {
-    const elemNative = elem.nativeElement;
-    elemNative.click();
-    this.fixture.detectChanges();
-    return this.fixture.whenStable();
-  }
-
   /**
    * Returning the equality instead of using a jasmine expect so
    * that the caller can add context to the expect call.
@@ -40,10 +15,6 @@ export class TestingUtility {
   public static isDateDisplayCorrect(time, timeDebugElem): boolean {
     const formattedModTime = new PrettyDatePipe('en-US').transform(time);
     return timeDebugElem.nativeElement.textContent.indexOf(formattedModTime) >= 0;
-  }
-
-  isDateDisplayCorrect(time, timeDebugElem): boolean {
-    return TestingUtility.isDateDisplayCorrect(time, timeDebugElem);
   }
 
   /**
@@ -101,6 +72,38 @@ export class TestingUtility {
       });
     });
   }
+
+
+  constructor(fixture: ComponentFixture<any>) {
+    this.fixture = fixture;
+  }
+
+  setText(elem: DebugElement, text: string) {
+    const elemNative = elem.nativeElement;
+    elemNative.value = text;
+    elemNative.dispatchEvent(new Event('input'));
+    this.fixture.detectChanges();
+    return this.fixture.whenStable();
+  }
+
+  sendEnterKeyup(elem: DebugElement) {
+    elem.triggerEventHandler('keyup', { keyCode: 13 });
+    this.fixture.detectChanges();
+    return this.fixture.whenStable();
+  }
+
+  sendClick(elem: DebugElement) {
+    const elemNative = elem.nativeElement;
+    elemNative.click();
+    this.fixture.detectChanges();
+    return this.fixture.whenStable();
+  }
+
+
+  isDateDisplayCorrect(time, timeDebugElem): boolean {
+    return TestingUtility.isDateDisplayCorrect(time, timeDebugElem);
+  }
+
 
   /**
    * Verifies the data in the table matches the passed in data.

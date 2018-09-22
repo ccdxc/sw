@@ -57,7 +57,7 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   dataLazy: ReadonlyArray<any> = [];
 
   // Utility class that holds all the data, and lets us easily request chunks
-  dataChunkUtility = new ArrayChunkUtility(false, []);
+  dataChunkUtility = new ArrayChunkUtility([], false);
 
   // Whether or not we have a new set of data ready to update to
   hasUpdate: boolean = false;

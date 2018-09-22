@@ -29,12 +29,12 @@ export class ArrayChunkUtility {
 
   /**
    *
+   * @param data          initial data
+   *
    * @param instantUpdate Whether to automatically update
    *                      currentDataArray instead of holding the data
-   *
-   * @param data          initial data
    */
-  constructor(instantUpdate: boolean, data: any[]) {
+  constructor(data: any[], instantUpdate: boolean = false) {
     this.instantUpdate = instantUpdate;
     this.currentDataArray = Utility.getLodash().cloneDeep(data);
   }

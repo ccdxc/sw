@@ -9,7 +9,8 @@
     "dev": "ng serve --proxy-config proxy.conf.js",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "export DISABLE_FOCUS_TESTS='true' && ng e2e -s=false",
+    "e2e-dev": "export DISABLE_FOCUS_TESTS='false' && ng e2e -s=false --proxy-config proxy.conf.js"
   },
   "private": true,
   "dependencies": {
@@ -35,7 +36,7 @@
     "angular-gridster2": "^4.7.2",
     "angular2-moment": "^1.8.0",
     "angular2gridster": "^1.3.4",
-    "bootstrap": "^3.3.7",
+    "bootstrap": "^4.1.3",
     "chart.js": "^2.7.2",
     "chartjs-plugin-datalabels": "^0.2.0",
     "core-js": "^2.5.4",
@@ -49,6 +50,7 @@
     "ng2-charts": "^1.6.0",
     "oboe": "^2.1.4",
     "plotly.js": "^1.35.2",
+    "popper.js": "^1.14.4",
     "primeicons": "^1.0.0-beta.9",
     "primeng": "^6.0.2",
     "rxjs": "^5.5.8",
@@ -58,7 +60,7 @@
     "zone.js": "^0.8.21"
   },
   "devDependencies": {
-    "@angular/cli": "^1.6.1",
+    "@angular/cli": "^1.7.4",
     "@angular/compiler-cli": "^5.2.9",
     "@angular/language-service": "^5.2.9",
     "@types/d3": "4.12.0",
@@ -77,6 +79,7 @@
     "karma-jasmine-html-reporter": "^0.2.2",
     "protractor": "~5.3.0",
     "ts-node": "~5.0.1",
+    "tsconfig-paths": "^3.4.2",
     "tslint": "~5.9.1"
   }
 }
