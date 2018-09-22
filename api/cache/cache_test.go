@@ -497,13 +497,16 @@ func TestPrefixWatcher(t *testing.T) {
 	kstr.Watchfn = watchfn
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go pw.worker(ctx, &wg)
+	startCh := make(chan error)
+	go pw.worker(ctx, &wg, startCh)
 	t.Logf("  -> test watcher create")
-	AssertEventually(t, func() (bool, interface{}) {
-		defer pw.Unlock()
-		pw.Lock()
-		return pw.running == true, nil
-	}, "running not set")
+	<-startCh
+	pw.Lock()
+	running := pw.running
+	pw.Unlock()
+	if !running {
+		t.Fatalf("running not set for prefix watcher")
+	}
 	if kstr.Prefixwatches != 1 {
 		t.Fatalf("Watch not established")
 	}

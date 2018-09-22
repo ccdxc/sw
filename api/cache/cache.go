@@ -117,7 +117,7 @@ type prefixWatcher struct {
 }
 
 // worker monitors the watch for a prefix and then updates the cache.
-func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup) {
+func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh chan error) {
 	var evtype kvstore.WatchEventType
 	var w kvstore.Watcher
 	var err error
@@ -161,6 +161,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup) {
 				}{}
 				if err = p.parent.listBackend(ctx, p.path, &into); err == nil {
 					p.lastVer = into.ResourceVersion
+					evtype = kvstore.Created
 					for _, v := range into.Items {
 						meta, ver := mustGetObjectMetaVersion(v)
 						if meta.SelfLink == "" {
@@ -198,6 +199,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup) {
 	p.Lock()
 	p.running = true
 	p.Unlock()
+	close(startCh)
 	for {
 		select {
 		case <-ctx.Done():
@@ -269,7 +271,9 @@ func (a *backendWatcher) NewPrefixWatcher(ctx context.Context, path string) *pre
 	a.prefixes[path] = &w
 	a.wg.Add(1)
 	a.parent.logger.DebugLog("oper", "NewPrefixWatcher", "path", path, "msg", "starting backend prefix watcher")
-	go w.worker(ctx, &a.wg)
+	startCh := make(chan error)
+	go w.worker(ctx, &a.wg, startCh)
+	<-startCh
 	return &w
 }
 
@@ -420,7 +424,6 @@ func CreateNewCache(config Config) (apiintf.CacheInterface, error) {
 }
 
 func (c *cache) Start() error {
-	defer c.Unlock()
 	c.Lock()
 	end := time.Now().Add(maxStartRetryInterval)
 	for i := 0; i < c.config.NumKvClients; i++ {
@@ -436,6 +439,7 @@ func (c *cache) Start() error {
 				conn := c.pool.GetFromPool()
 				if conn == nil {
 					err = errors.Wrap(err, "could not create KV conn pool")
+					c.Unlock()
 					return err
 				}
 				k1 := conn.(kvstore.Interface)
@@ -451,6 +455,7 @@ func (c *cache) Start() error {
 		c.pool.AddToPool(k)
 	}
 	c.ctx, c.cancel = context.WithCancel(context.Background())
+	c.Unlock()
 	// start monitor on the backend.
 	// XXX-TODO(sanjayt): right now one watch on "/venice" but can be optimized to
 	// have sharded watches one per object type using different connections.
