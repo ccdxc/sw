@@ -67,10 +67,12 @@ renice 20 $(ls -1 /proc/`pidof linkmgr`/task)
 # start netagent
 if [[ "$FWD_MODE" != "classic" ]]; then
     # Remove logs
-    rm -f agent.log*
+    rm -f agent.log* /tmp/*.db
 
     $NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
     [[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
 fi
+
+$NIC_DIR/tools/port_init_100g.sh
 
 echo "All processes brought up, please check ..."

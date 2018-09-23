@@ -29,6 +29,9 @@ platform/gen/aarch64/src/app/capview/builddb/capviewdb.bin       /platform/etc/
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                   /platform/
 nic/sdk/third-party/avago/aapl-2.6.6/build/aarch64/bin/aapl      /nic/bin/
 
+# hal objects CLI
+nic/obj/aarch64/agent/halctl                                     /nic/bin/
+
 # link scripts
 nic/tools/start-linkmgr-hw.sh                                    /nic/tools/
 nic/tools/port_init_100g.sh                                      /nic/tools/

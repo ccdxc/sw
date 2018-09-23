@@ -1,6 +1,3 @@
-# hal objects CLI
-nic/obj/aarch64/agent/halctl                          /nic/bin/
-
 bazel-bin/nic/hal/test/nic_mgr_app                    /nic/bin/
 bazel-bin/nic/hal/test/hal_scale_test                 /nic/bin/
 
