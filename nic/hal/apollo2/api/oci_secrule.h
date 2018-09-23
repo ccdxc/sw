@@ -12,7 +12,7 @@
 #include <oci_types.h>
 
 /**
- * @defgroup OCI_SECRULE- Security Rule specific API definitions
+ * @defgroup OCI_SECRULE - Security Rule specific API definitions
  *
  * @{
  */
