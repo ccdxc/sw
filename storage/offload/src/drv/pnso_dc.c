@@ -61,7 +61,7 @@ decompress_setup(struct service_info *svc_info,
 	struct cpdc_desc *dc_desc;
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pc_res;
-	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
+	size_t src_buf_len, dst_buf_len;
 	uint16_t flags;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -71,17 +71,14 @@ decompress_setup(struct service_info *svc_info,
 	flags = pnso_dc_desc->flags;
 
 	pc_res = svc_info->si_pc_res;
-	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
-	dc_desc = (struct cpdc_desc *) mpool_get_object(cpdc_mpool);
+	dc_desc = cpdc_get_desc(pc_res, false);
 	if (!dc_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain dc desc from pool! err: %d", err);
 		goto out;
 	}
 
-	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
-	status_desc = (struct cpdc_status_desc *)
-		mpool_get_object(cpdc_status_mpool);
+	status_desc = cpdc_get_status_desc(pc_res, false);
 	if (!status_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain dc status desc from pool! err: %d",
@@ -96,8 +93,11 @@ decompress_setup(struct service_info *svc_info,
 		goto out_status_desc;
 	}
 
-	fill_dc_desc(dc_desc, svc_info->si_src_sgl.sgl, svc_info->si_dst_sgl.sgl,
-			status_desc, svc_info->si_src_blist.len, svc_info->si_dst_blist.len);
+	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+	dst_buf_len = pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
+
+	fill_dc_desc(dc_desc, svc_info->si_src_sgl, svc_info->si_dst_sgl,
+			status_desc, src_buf_len, dst_buf_len);
 	clear_dc_header_present(flags, dc_desc);
 
 	svc_info->si_type = PNSO_SVC_TYPE_DECOMPRESS;
@@ -121,14 +121,14 @@ decompress_setup(struct service_info *svc_info,
 	return err;
 
 out_status_desc:
-	err = mpool_put_object(cpdc_status_mpool, status_desc);
+	err = cpdc_put_status_desc(pc_res, false, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
 				err);
 		OSAL_ASSERT(0);
 	}
 out_dc_desc:
-	err = mpool_put_object(cpdc_mpool, dc_desc);
+	err = cpdc_put_desc(pc_res, false, dc_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return dc desc to pool! err: %d",
 				err);
@@ -313,7 +313,6 @@ decompress_teardown(struct service_info *svc_info)
 	struct cpdc_desc *dc_desc;
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pc_res;
-	struct mem_pool *cpdc_mpool, *cpdc_status_mpool;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -329,18 +328,17 @@ decompress_teardown(struct service_info *svc_info)
 	pc_res_sgl_put(svc_info->si_pc_res, &svc_info->si_src_sgl);
 
 	pc_res = svc_info->si_pc_res;
-	cpdc_status_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
+
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	err = mpool_put_object(cpdc_status_mpool, status_desc);
+	err = cpdc_put_status_desc(pc_res, false, status_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return status desc to pool! status_desc: %p err: %d",
 				status_desc, err);
 		OSAL_ASSERT(0);
 	}
 
-	cpdc_mpool = pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = mpool_put_object(cpdc_mpool, dc_desc);
+	err = cpdc_put_desc(pc_res, false, dc_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return dc desc to pool! dc_desc: %p err: %d",
 				dc_desc, err);
