@@ -26,6 +26,13 @@ var systemShowCmd = &cobra.Command{
 	Long:  "show system information",
 }
 
+var systemDetailShowCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "show system object information",
+	Long:  "show system object information",
+	Run:   systemDetailShowCmdHandler,
+}
+
 var systemStatsShowCmd = &cobra.Command{
 	Use:   "statistics",
 	Short: "show system statistics [ingress-drop | egress-drop | fte | fte-txrx | table | api | pb | all] (Default: all)",
@@ -58,8 +65,50 @@ func init() {
 	showCmd.AddCommand(systemShowCmd)
 	systemShowCmd.AddCommand(systemStatsShowCmd)
 	systemShowCmd.AddCommand(threadShowCmd)
+	systemShowCmd.AddCommand(systemDetailShowCmd)
 	systemStatsShowCmd.AddCommand(systemStatsTableShowCmd)
 	threadShowCmd.AddCommand(threadDetailShowCmd)
+}
+
+func handleSystemDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
+	}
+	client := halproto.NewSystemClient(c.ClientConn)
+
+	// HAL call
+	var empty *halproto.Empty
+	resp, err := client.SystemGet(context.Background(), empty)
+	if err != nil {
+		log.Errorf("Getting System Stats failed. %v", err)
+		return
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		log.Errorf("HAL Returned non OK status. %v", resp.GetApiStatus())
+		return
+	}
+
+	// Print Response
+	respType := reflect.ValueOf(resp)
+	b, _ := yaml.Marshal(respType.Interface())
+	if ofile != nil {
+		if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+			log.Errorf("Failed to write to file %s, err : %v",
+				ofile.Name(), err)
+		}
+	} else {
+		fmt.Println(string(b) + "\n")
+		fmt.Println("---")
+	}
+}
+
+func systemDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleSystemDetailShowCmd(cmd, nil)
 }
 
 func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {

@@ -77,6 +77,8 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	allMemoryShowHandler(ofile)
 	ofile.WriteString("Thread information\n\n")
 	threadDetailShow(ofile)
+	ofile.WriteString("System information\n\n")
+	handleSystemDetailShowCmd(nil, ofile)
 	ofile.WriteString("Flush HAL logs\n\n")
 	flushLogsDebugCmdHandler(nil, nil)
 	ofile.Close()
