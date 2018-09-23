@@ -2072,9 +2072,9 @@ public:
         src_addr = rm_spec->mutable_match()->add_src_address();
         src_addr->set_type(types::IP_ADDRESS_IPV4_ANY);
         src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_ip_af(types::IP_AF_INET);
-        src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_v4_addr(src_address_start);
+        src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_v4_addr(ntohl(src_address_start));
         src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_ip_af(types::IP_AF_INET);
-        src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_v4_addr(src_address_end);
+        src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_v4_addr(ntohl(src_address_end));
 
 #ifdef USE_DST_ADDRESS_MATCH
         /* DST Address Range */
@@ -2313,7 +2313,7 @@ public:
         }
 
         if (tcp_tls_proxy_cert_add(
-                    "/sw/nic/conf/openssl/certs/rsa/client.crt",
+                    "/nic/conf/openssl/certs/rsa/client.crt",
                     cert_idx,
                     0))
         {
@@ -3095,6 +3095,20 @@ main (int argc, char** argv)
             {
                 return -1;
             }
+        } else if (!strcmp(argv[1], "tcp-tls-proxy-client-rsa")) {
+            proxy_agent_if = true;
+            proxy_type = types::PROXY_TYPE_TLS;
+            proxy_srv = false;
+            key_type = types::CRYPTO_ASYM_KEY_TYPE_RSA;
+            if (proxy_parse_args(argc, argv, 
+                        &proxy_vrf_id, 
+                        &src_range_start,
+                        &src_range_end,
+                        &dst_range_start,
+                        &dst_range_end))
+            {
+                return -1;
+            }
         }
     } else {
         std::cout << "Usage: <pgm> config" << std::endl;
@@ -3231,6 +3245,9 @@ main (int argc, char** argv)
                     dst_range_end)) {
                 return -1;
             }
+            else {
+                return 0;
+            }
         }
         else if (proxy_type == types::PROXY_TYPE_TLS) {
             if (proxy_srv == true) {
@@ -3244,6 +3261,22 @@ main (int argc, char** argv)
                             dst_range_end
                             )) {
                         return -1;
+                    }
+                    else {
+                        return 0;
+                    }
+                }
+                else if (key_type == types::CRYPTO_ASYM_KEY_TYPE_RSA) {
+                    if (hclient.tcp_tls_proxy_client_rsa_flow_setup(proxy_vrf_id,
+                            src_range_start,
+                            src_range_end,
+                            dst_range_start,
+                            dst_range_end
+                            )) {
+                        return -1;
+                    }
+                    else {
+                        return 0;
                     }
                 }
             }
