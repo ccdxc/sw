@@ -358,7 +358,6 @@ func (s *PolicyState) deleteFlowMonitorRule(ctx context.Context, netMeta *networ
 
 	var req []*halproto.FlowMonitorRuleDeleteRequest
 	req = append(req, &halproto.FlowMonitorRuleDeleteRequest{
-		Meta: &halproto.ObjectMeta{VrfId: netMeta.vrf},
 		KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 			KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
 				FlowmonitorruleId: flowMon.Key,
@@ -425,9 +424,6 @@ func (s *PolicyState) createFlowMonitorRule(ctx context.Context, meta *networkMe
 	// create flow monitor rule
 	var req []*halproto.FlowMonitorRuleSpec
 	req = append(req, &halproto.FlowMonitorRuleSpec{
-		Meta: &halproto.ObjectMeta{
-			VrfId: meta.vrf,
-		},
 		VrfKeyHandle: &halproto.VrfKeyHandle{
 			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 				VrfId: meta.vrf,
