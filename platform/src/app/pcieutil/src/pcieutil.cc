@@ -18,6 +18,10 @@
 #include "cap_pp_c_hdr.h"
 
 #include "pal.h"
+#include "cmd.h"
+
+extern cmd_t __start_cmdtab[];
+extern cmd_t __stop_cmdtab[];
 
 /*
  * Register convenience macros.
@@ -48,11 +52,7 @@
     (CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_ ##REG## _FIELD_MASK)
 
 static void
-usage(void)
-{
-    fprintf(stderr, "pcieutil [cmd][cmd-args ...]\n");
-}
-
+cmd_pending(int argc, char *argv[]) __attribute__((used));
 static void
 cmd_pending(int argc, char *argv[])
 {
@@ -98,156 +98,67 @@ cmd_pending(int argc, char *argv[])
     if (showtime_us) return; /* XXX */
 }
 
-static void
-cmd_linkstate(int argc, char *argv[])
-{
-    struct linkstate {
-        unsigned int perstn:1;
-        unsigned int phystatus:1;
-        unsigned int portgate:1;
-        unsigned int crs:1;
-        unsigned int ltssm_en:1;
-        unsigned int ltssm_st:5;
-        unsigned int fifo_rd:8;
-        unsigned int fifo_wr:8;
-    } ost, nst;
-    int port, polltm_us, opt;
-
-    port = 0;
-    polltm_us = 0;
-
-    optind = 0;
-    while ((opt = getopt(argc, argv, "p:t:")) != -1) {
-        switch (opt) {
-        case 'p':
-            port = strtoul(optarg, NULL, 0);
-            break;
-        case 't':
-            polltm_us = strtoul(optarg, NULL, 0);
-            break;
-        default:
-            return;
-        }
-    }
-
-    printf("perstn\n");
-    printf("|phystatus\n");
-    printf("||portgate_open\n");
-    printf("|||cfg_retry\n");
-    printf("||||ltssm_en\n");
-    printf("|||||  fifo\n");
-    printf("Ppgrl  rd/wr  ltssm\n");
-
-    memset(&ost, 0, sizeof(ost));
-    memset(&nst, 0, sizeof(nst));
-    while (1) {
-        const u_int32_t sta_rst = pal_reg_rd32(PXC_(STA_C_PORT_RST, port));
-        const u_int32_t sta_mac = pal_reg_rd32(PXC_(STA_C_PORT_MAC, port));
-        const u_int32_t cfg_mac = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, port));
-        u_int16_t portfifo[8], depths;
-#define PORTFIFO_DEPTH \
-        (CAP_ADDR_BASE_PXB_PXB_OFFSET +                 \
-         CAP_PXB_CSR_STA_ITR_PORTFIFO_DEPTH_BYTE_ADDRESS)
-
-        nst.perstn = (sta_rst & STA_RSTF_(PERSTN)) != 0;
-        nst.phystatus = (sta_rst & STA_RSTF_(PHYSTATUS_OR)) != 0;
-        nst.portgate = (sta_mac & STA_MACF_(PORTGATE_OPEN)) != 0;
-        nst.ltssm_en = (cfg_mac & CFG_MACF_(0_2_LTSSM_EN)) != 0;
-        nst.crs = (cfg_mac & CFG_MACF_(0_2_CFG_RETRY_EN)) != 0;
-        nst.ltssm_st = (sta_mac & 0x1f);
-
-        pal_reg_rd32w(PORTFIFO_DEPTH, (u_int32_t *)portfifo, 4);
-        depths = portfifo[port];
-
-        nst.fifo_wr = depths;
-        nst.fifo_rd = depths >> 8;
-
-        /* fold small depths to 0's */
-        if (nst.fifo_wr <= 2) nst.fifo_wr = 0;
-        if (nst.fifo_rd <= 2) nst.fifo_rd = 0;
-
-        if (memcmp(&nst, &ost, sizeof(nst)) != 0) {
-
-            printf("%c%c%c%c%c %3u/%-3u %u\n",
-                   nst.perstn ? 'P' : '-',
-                   nst.phystatus ? 'p' :'-',
-                   nst.portgate ? 'g' : '-',
-                   nst.crs ? 'r' : '-',
-                   nst.ltssm_en ? 'l' : '-',
-                   nst.fifo_rd,
-                   nst.fifo_wr,
-                   nst.ltssm_st);
-
-            ost = nst;
-        }
-
-        if (polltm_us) usleep(polltm_us);
-    }
-}
-
-typedef struct cmd_s {
-    const char *name;
-    void (*f)(int argc, char *argv[]);
-    const char *desc;
-    const char *helpstr;
-} cmd_t;
-
-static cmd_t cmdtab[] = {
-#define CMDENT(name, desc, helpstr) \
-    { #name, cmd_##name, desc, helpstr }
-    CMDENT(pending, "pending transactions", ""),
-    CMDENT(linkstate, "show link state", ""),
-    { NULL, NULL }
-};
-
 static cmd_t *
-cmd_lookup(cmd_t *cmdtab, const char *name)
+cmd_lookup(const char *name)
 {
-    cmd_t *c;
-
-    for (c = cmdtab; c->name; c++) {
-        if (strcmp(c->name, name) == 0) {
-            return c;
-        }
+    for (cmd_t *c = __start_cmdtab; c < __stop_cmdtab; c++) {
+        if (strcmp(name, c->name) == 0) return c;
     }
     return NULL;
 }
 
 static void
-do_cmd(int argc, char *argv[])
+help(int argc, char *argv[])
 {
-    cmd_t *c;
-
-    c = cmd_lookup(cmdtab, argv[0]);
-    if (c == NULL) {
-        fprintf(stderr, "%s: command not found\n", argv[0]);
+    if (argc <= 1) {
+        printf("Usage: pcieutil <cmd>[args...]\n"
+               "Available commands:");
+        int pos = 80;
+        const char *sep = "";
+        for (cmd_t *c = __start_cmdtab; c < __stop_cmdtab; c++) {
+            int len = strlen(sep) + strlen(c->name);
+            if (pos + len >= 80) {
+                fputs("\n    ", stdout);
+                pos = 4;
+                sep = "";
+            }
+            printf("%s%s", sep, c->name);
+            sep = ", ";
+            pos += len;
+        }
+        putchar('\n');
         return;
     }
-    c->f(argc, argv);
+
+    cmd_t *c = cmd_lookup(argv[1]);
+    if (c == NULL) {
+        printf("%s: not found\n", argv[1]);
+        return;
+    }
+
+    printf("Usage: %s\n", c->help);
 }
+CMDFUNC(help, "help [<cmd>]");
 
 int
 main(int argc, char *argv[])
 {
-    int opt;
+    cmd_t *c;
 
-    while ((opt = getopt(argc, argv, "")) != -1) {
-        switch (opt) {
-        default:
-            usage();
-            exit(1);
-        }
+    if (argc <= 1) {
+        c = cmd_lookup("help");
+        c->func(argc, argv);
+        exit(0);
     }
 
-    argv += optind;
-    argc -= optind;
-
-    if (argc <= 0) {
-        usage();
+    c = cmd_lookup(argv[1]);
+    if (c == NULL) {
+        printf("%s: not found\n", argv[1]);
         exit(1);
     }
 
-    do_cmd(argc, argv);
-
+    argc--;
+    argv++;
+    c->func(argc, argv);
     exit(0);
 }
