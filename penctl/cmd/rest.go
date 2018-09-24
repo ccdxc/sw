@@ -77,19 +77,21 @@ func restGet(port string, url string) ([]byte, error) {
 	}
 	bodyBytes, _ := ioutil.ReadAll(getResp.Body)
 
-	var prettyJSON bytes.Buffer
-	error := json.Indent(&prettyJSON, bodyBytes, "", "\t")
-	if error != nil {
-		return nil, err
-	}
-	b, err := yaml.JSONToYAML(bodyBytes)
-	if err != nil {
-		return nil, err
-	}
-	if jsonFormat {
-		fmt.Println(string(prettyJSON.Bytes()))
-	} else if yamlFormat {
-		fmt.Println(string(b))
+	if jsonFormat || yamlFormat {
+		var prettyJSON bytes.Buffer
+		error := json.Indent(&prettyJSON, bodyBytes, "", "\t")
+		if error != nil {
+			return nil, err
+		}
+		b, err := yaml.JSONToYAML(bodyBytes)
+		if err != nil {
+			return nil, err
+		}
+		if jsonFormat {
+			fmt.Println(string(prettyJSON.Bytes()))
+		} else if yamlFormat {
+			fmt.Println(string(b))
+		}
 	}
 	return bodyBytes, nil
 }

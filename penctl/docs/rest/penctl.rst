@@ -29,6 +29,7 @@ Options
 SEE ALSO
 ~~~~~~~~
 
+* `penctl logs <penctl_logs.rst>`_ 	 - Show logs from Naples
 * `penctl mode <penctl_mode.rst>`_ 	 - Set Naples to Managed mode
 * `penctl ssh <penctl_ssh.rst>`_ 	 - SSH Commands to Naples
 
