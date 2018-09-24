@@ -73,6 +73,8 @@ if [[ "$FWD_MODE" != "classic" ]]; then
     [[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
 fi
 
-$NIC_DIR/tools/port_init_100g.sh
+if [[ "$PLATFORM" == 'hw' ]]; then
+    $NIC_DIR/tools/port_init_100g.sh
+fi
 
 echo "All processes brought up, please check ..."
