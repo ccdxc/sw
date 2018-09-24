@@ -5,12 +5,18 @@
  */
 
 /* TODO: remove userspace specific includes */
-#include <stdlib.h>
+#include <stdlib.h> /* for: atoi, exit */
+#include <ctype.h> /* for: isdigit */
 
 #include "osal_stdtypes.h"
 #include "osal_mem.h"
 #include "osal_errno.h"
 #include "pnso_test.h"
+
+void status_output_func(const char *status)
+{
+	printf("%s", status);
+}
 
 int main(int argc, char *argv[])
 {
@@ -19,6 +25,7 @@ int main(int argc, char *argv[])
 	size_t i;
 	uint32_t ifilenames_count = 0;
 	char **ifilenames = NULL;
+//	char *ofilename = NULL;
 	char *path_prefix = NULL;
 	char *cur_filename;
 	char *literyaml = NULL;
@@ -29,35 +36,65 @@ int main(int argc, char *argv[])
 "  delete_output_files: 1\n"
 "  per_core_qdepth: 32\n"
 "  block_size: 8192\n"
+"  limit_rate: 1000000\n"
+"  status_interval: 5\n"
+"cp_hdr_format:\n"
+"  idx: 1\n"
+"  cp_hdr_field:\n"
+"    type: indata_chksum\n"
+"    offset: 0\n"
+"    len: 4\n"
+"    val: 0\n"
+"  cp_hdr_field:\n"
+"    type: outdata_length\n"
+"    offset: 4\n"
+"    len: 2\n"
+"    val: 0\n"
+"  cp_hdr_field:\n"
+"    type: algo\n"
+"    offset: 6\n"
+"    len: 2\n"
+"    val: 1\n"
+"cp_hdr_mapping:\n"
+"  - entry:\n"
+"      pnso_algo: 1\n"
+"      hdr_algo: 1\n"
 "svc_chains:\n"
 "  - svc_chain:\n"
 "      idx: 1\n"
 "      input:\n"
 "        pattern: ababababababababababababababababababababababababababababababababababababab1234\n"
-"        buffer_size: 2000\n"
+"        len: 2000\n"
 "      ops:\n"
 "        - compress:\n"
 "            flags: 'zero_pad,insert_header'\n"
+"            hdr_fmt_idx: 1\n"
 "            threshold_delta: 8\n"
-"            output_file: '%chain_id%_compressed_1.bin'\n"
+"            output_file: 'compressed_1.bin'\n"
 "        - decompress:\n"
 "            flags: 'header_present'\n"
-"            output_file: '%chain_id%_decompressed.bin'\n"
+"            hdr_fmt_idx: 1\n"
+"            output_file: 'decompressed.bin'\n"
 "        - compress:\n"
 "            flags: 'zero_pad,insert_header'\n"
+"            hdr_fmt_idx: 1\n"
 "            threshold_delta: 8\n"
-"            output_file: '%chain_id%_compressed_2.bin'\n"
+"            output_file: 'compressed_2.bin'\n"
 "tests:\n"
 "  - test:\n"
 "      idx: 1\n"
 "      svc_chains: 1\n"
-"      repeat: 1\n"
+"      repeat: 10000\n"
+"      batch_depth: 10\n"
+"      mode: poll\n"
 "      validations:\n"
 "        - data_compare:\n"
 "            idx: 1\n"
-"            file1: '%chain_id%_compressed_1.bin'\n"
-"            file2: '%chain_id%_compressed_2.bin'\n"
+"            file1: 'compressed_1.bin'\n"
+"            file2: 'compressed_2.bin'\n"
 "\n";
+
+	osal_log_init(OSAL_LOG_LEVEL_INFO);
 
 	/* Parse cmdline parameters */
 	for (i = 1; i < argc; i++) {
@@ -74,6 +111,16 @@ int main(int argc, char *argv[])
 					bad_param = 1;
 				}
 				break;
+#if 0
+			case 'o':
+				if (i+1 < argc) {
+					ofilename = argv[++i];
+				} else {
+					PNSO_LOG_ERROR("Missing output filename for param -o\n");
+					bad_param = 1;
+				}
+				break;
+#endif
 			case 'p':
 				if (i+1 < argc) {
 					path_prefix = argv[++i];
@@ -91,10 +138,14 @@ int main(int argc, char *argv[])
 				}
 				break;
 			case 'h':
-				PNSO_LOG_INFO("Usage: pnso_test_main -y <literal_yaml> -p <base_path> -i <yaml_files>\n");
+				PNSO_LOG_INFO("Usage: pnso_test_main -y <literal_yaml> -o <output_file> -p <base_path> -i <yaml_files>\n");
 				PNSO_LOG_INFO("Valid YAML structure:\n");
 				test_dump_yaml_desc_tree();
 				exit(0);
+				break;
+			case 'v':
+				/* verbose */
+				osal_log_init(OSAL_LOG_LEVEL_DEBUG);
 				break;
 			default:
 				PNSO_LOG_ERROR("Unsupported parameter %s\n", arg);
@@ -112,12 +163,12 @@ int main(int argc, char *argv[])
 			}
 		}
 		if (bad_param) {
-			exit(1);
+			exit(EINVAL);
 		}
 	}
 
-
-	pnso_test_init_fns(pnso_submit_request, osal_alloc, osal_free, NULL);
+	pnso_test_init_fns(pnso_submit_request, status_output_func,
+			   osal_alloc, osal_free, NULL);
 
 	cfg = pnso_test_desc_alloc();
 	if (!cfg) {
@@ -158,7 +209,6 @@ int main(int argc, char *argv[])
 			goto done;
 		}
 	}
-
 	test_dump_desc(cfg);
 
 	err = pnso_test_run_all(cfg);

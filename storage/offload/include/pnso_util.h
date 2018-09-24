@@ -27,6 +27,23 @@ static inline size_t pnso_get_chksum_algo_size(uint16_t algo_type)
 	return 0;
 }
 
+static inline size_t pnso_get_hash_algo_size(uint16_t algo_type)
+{
+	switch (algo_type) {
+	case PNSO_HASH_TYPE_SHA2_512:
+		return 512/8;
+	case PNSO_HASH_TYPE_SHA2_256:
+		return 256/8;
+	default:
+		break;
+	}
+	return 0;
+}
+
+static inline bool pnso_svc_type_is_data(uint16_t svc_type)
+{
+	return (svc_type != PNSO_SVC_TYPE_HASH && svc_type != PNSO_SVC_TYPE_CHKSUM);
+}
 
 
 #ifdef __cplusplus

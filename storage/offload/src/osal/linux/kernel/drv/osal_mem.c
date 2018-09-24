@@ -28,6 +28,16 @@ void osal_free(void* ptr)
 	return kfree(ptr);
 }
 
+void* osal_realloc(void *ptr, size_t size)
+{
+	return krealloc(ptr, size, GFP_KERNEL);
+}
+
+char *osal_strdup(const char *str)
+{
+	return kstrdup(str, GFP_KERNEL);
+}
+
 /* TODO - rmem functions need to be filled */
 uint64_t osal_rmem_alloc(size_t size) 
 {
