@@ -25,7 +25,7 @@ echo "NICMGR WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
 
 while [ 1 ]
 do
-    OUTPUT="$(tail /nicmgr.stdout 2>&1 | grep "Polling enabled")"
+    OUTPUT="$(tail -100 /nicmgr.stdout 2>&1 | grep "Polling enabled")"
     if [[  ! -z "$OUTPUT" ]]; then
         break
     fi
