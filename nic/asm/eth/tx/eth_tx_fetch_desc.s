@@ -18,7 +18,7 @@ struct tx_table_s0_t0_eth_tx_fetch_desc_d d;
 eth_tx_fetch_desc:
   seq             c1, d.enable, 0
   bcf             [c1], eth_tx_queue_disabled
-  seq             c2, d.ci_fetch, d.p_index0
+  seq             c2, d.p_index0, d.c_index0
   bcf             [c2], eth_tx_spurious_db
   seq             c3, d.spurious_db_cnt, 0
 
