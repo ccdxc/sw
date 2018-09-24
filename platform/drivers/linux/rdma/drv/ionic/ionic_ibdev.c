@@ -4322,6 +4322,26 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 	}
 }
 
+static int ionic_check_modify_qp(struct ionic_qp *qp, struct ib_qp_attr *attr,
+				 int mask)
+{
+	enum ib_qp_state cur_state = (mask & IB_QP_CUR_STATE) ?
+		attr->cur_qp_state : qp->state;
+	enum ib_qp_state next_state = (mask & IB_QP_STATE) ?
+		attr->qp_state : cur_state;
+
+	if (!ib_modify_qp_is_ok(cur_state, next_state, qp->ibqp.qp_type, mask,
+				IB_LINK_LAYER_ETHERNET))
+		return -EINVAL;
+
+	/* unprivileged qp not allowed priveleged qkey */
+	if ((mask & IB_QP_QKEY) && (attr->qkey & 0x80000000) &&
+	    qp->ibqp.uobject)
+		return -EPERM;
+
+	return 0;
+}
+
 static int ionic_modify_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 			   int mask, struct ib_udata *udata)
 {
@@ -4330,6 +4350,10 @@ static int ionic_modify_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 	int rc;
 
 	rc = ionic_validate_udata(udata, 0, 0);
+	if (rc)
+		goto err_qp;
+
+	rc = ionic_check_modify_qp(qp, attr, mask);
 	if (rc)
 		goto err_qp;
 
