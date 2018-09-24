@@ -23,6 +23,7 @@ path.link {
   fill: none;
   stroke: #ccc;
   stroke-width: 1.5px;
+opacity: 3;
 }
 
     </style>
@@ -30,15 +31,15 @@ path.link {
   <body>
     <div id="body">
       <div id="footer">
-        d3.layout.tree
-        <div class="hint">click or option-click to expand or collapse</div>
+<button type="button" onclick="collapseAll()">Collapse All</button>
+<button type="button" onclick="expandAll()">Expand All</button>
       </div>
     </div>
     <script type="text/javascript">
 
 var m = [20, 120, 20, 120],
     w = 3480 - m[1] - m[3],
-    h = 3600 - m[0] - m[2],
+    h = 6600 - m[0] - m[2],
     i = 0,
     root;
 
@@ -76,6 +77,49 @@ d3.json("model.json", function(json) {
   update(root);
 });
 
+/*
+ * Collapses the node d and all the children nodes of d
+ * @param {node} d
+*/
+function collapse(d) {
+  if (d.children) {
+    d._children = d.children;
+    d._children.forEach(collapse);
+    d.children = null;
+  }
+}
+
+/*
+ * Collapses the node in the tree
+*/
+function collapseAll() {
+	root.children.forEach(collapse);
+	update(root);
+}
+
+/*
+ * Expands the node d and all the children nodes of d
+ * @param {node} d
+*/
+function expand(d) {
+	if (d._children) {
+		d.children = d._children;
+		d._children = null;
+	}
+	if (d.children) {
+		d.children.forEach(expand);
+	}
+	
+}
+/*
+ * Expands all the nodes in the tree
+*/
+function expandAll() {
+	root.children.forEach(expand);
+	update(root);
+}
+
+
 function update(source) {
   var duration = d3.event && d3.event.altKey ? 5000 : 500;
 
@@ -105,7 +149,9 @@ function update(source) {
       .attr("dy", ".35em")
 //      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
       .attr("text-anchor", function(d) {"end"})
+      .attr("stroke", function(d) { return d.colorCode; })
       .text(function(d) { return d.name; })
+
       .style("fill-opacity", 1e-6);
 
   // Transition nodes to their new position.
