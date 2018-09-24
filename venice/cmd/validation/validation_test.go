@@ -43,15 +43,6 @@ func TestValidateCluster(t *testing.T) {
 				&cmd.ClusterStatus{},
 			),
 		},
-		"bad-cluster-wo-virtual-ip": {
-			isExpectedFailure: true,
-			cluster: testCluster("foo",
-				&cmd.ClusterSpec{
-					QuorumNodes: []string{"node1", "node2", "node3"},
-				},
-				&cmd.ClusterStatus{},
-			),
-		},
 		// status must be empty in the request object
 		"bad-cluster-with-status": {
 			isExpectedFailure: true,

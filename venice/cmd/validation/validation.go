@@ -52,9 +52,7 @@ func ValidateClusterSpec(spec *cmd.ClusterSpec, fldPath *field.Path) field.Error
 	}
 
 	// Virtual IP is specified.
-	if spec.VirtualIP == "" {
-		allErrs = append(allErrs, field.Invalid(fldPath.Child("virtualIP"), spec.VirtualIP, "virtual IP is mandatory"))
-	} else {
+	if spec.VirtualIP != "" {
 		ipaddr := net.ParseIP(spec.VirtualIP)
 		if ipaddr == nil {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("virtualIP"), spec.VirtualIP, "virtual IP is invalid"))
