@@ -4,12 +4,12 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
 
-cc_library(
-    name = "pnso_drv",
-    deps = [
-        "//storage/offload/src/drv:pnso_drv",
-    ],
-)
+#cc_library(
+#    name = "pnso_drv",
+#    deps = [
+#        "//storage/offload/src/drv:pnso_drv",
+#    ],
+#)
 
 cc_library(
     name = "osal",
