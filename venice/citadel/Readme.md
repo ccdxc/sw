@@ -10,7 +10,7 @@ In terms of CAP theorem, its an AP system. It implements an eventual consistency
 
 ## Citadel Architecture
 
-![Architecture](https://drive.google.com/uc?id=1yEXlZU4DWEEnmiGQkKEvVaqQY__YNc_m "Architecture")
+![Architecture](./docs/architecture.png "Architecture")
 
 Each Citadel node is equal in all aspects, there are no master nodes or worker nodes. Any client can talk to any citadel node and they would get exactly same behavior.
 Each citadel node is made up of multiple components.
@@ -40,7 +40,7 @@ Broker does this with the help of metadata manager. Broker is a stateless entity
 Sharding in Citadel is similar to how most distributed hash table implementations work.
 All keys are hashed to a hash bucket and hash buckets are distributed across nodes.
 
-![ShardMap](https://drive.google.com/uc?id=18aKscHvusTbkL3QMrsoLOgXarFKrnTAv "ShardMap")
+![ShardMap](./docs/shardmap.png "ShardMap")
 
 ### ShardMap
 ShardMap is basically the DHT metadata. Each hash bucket is a shard. Number of shards in a shardmap is fixed for the lifetime of the shardmap.
@@ -142,7 +142,7 @@ Kstore was created mostly to demonstrate how Citadel's metadata management is in
 In terms of CAP theorem, it is a AP system(While Etcd is a CP system). Main value of Kstore is, its optimized for batch writes and reads.
 It can perform hundreds of thousands of read/write operations per second per node and scale linearly with number of nodes. Kstore is meant to be used for running high performance analytics jobs on key-value data.
 
-![Kstore](https://drive.google.com/uc?id=1oBuI9sVsE0ZGkScUZc-pMYxhxgrDCMRN "Kstore")
+![Kstore](./docs/kstore-arch.png "Kstore")
 
 Kstore uses a Boltdb backend to store the key-value pairs. It uses the same metadata management logic as described above.
 There is a separate instance of metadata manager for time-series data(tstore) and key-value data(kstore).

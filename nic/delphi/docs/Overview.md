@@ -2,7 +2,7 @@
 
 Delphi is a reactive framework for writing Naples services(like Agents, HAL, NicMgr, LinkMgr etc). Delphi supports writing code in multiple languages like C++, Go and Python.
 
-![Delphi System Overview](https://drive.google.com/uc?id=1Uq25PJqaxOoKLS9hxpXvo-C4vyoT_kfm)
+![Delphi System Overview](./delphi-system.jpeg)
 
 Delphi framework follows the 'inversion of control' approach similar to many popular frameworks. Unlike in traditional libraries, where user code invokes library code, in this approach framework code invokes user code as needed. Main control flow is determined by the framework rather than the user code. Since delphi is a reactive framework, callbacks to the user code is done based on events in the system. Delphi stores all state in the system in a central database. It manages state as tree of objects. Each delphi service(i.e a process) should manage a subtree of system state it specializes in. For example, LinkMgr might manage physical port related objects, NicMgr might manage PCIe device related objects, HAL would manage forwarding objects etc.
 
@@ -25,19 +25,19 @@ In reactive programming, programs are written as event reactors on a data flow. 
 
 Lets compare this to typical RPC style programs. Picture below shows an example of RPC style program.
 
-<img src="https://drive.google.com/uc?id=14sSvZlgV3UDK8Ssh0Ti4FZv_ECEjkyfZ" width="500">
+<img src="rpc-style.jpeg" width="500">
 
 Typical RPC style program is written as number of message handlers which process incoming message, create some internal state and respond back with another message.
 
 In comparison, a reactive program is written as an event handler on an event. Event Reactor is similar to an AWS Lambda function that knows how to react to a single event. It contains just enough logic to know how to change the derived objects based on the event and nothing more. This lets you write highly modular code.
 
-<img src="https://drive.google.com/uc?id=1_9hn6bsBIkEozBcqwb2wt9PtKHCel85A" width="500">
+<img src="reactive-style.jpeg" width="500">
 
 In this example, the event reactor just needs to know that it is reacting to an event on `Spec` object and in response, it needs to create the `State` object and `Status` object. it needs to have no further logic. This is really the power of reactive programming, it lets developer focus just on the part of the data flow graph he's interested in without having to worry about the rest of the picture.
 
 Lets take a more concrete example of hypothetical HAL process that programs the HW in a reactive model.
 
-<img src="https://drive.google.com/uc?id=1x26bGoO9N3nE7NZF4LF2DqJmsJlOOwW8" width="500">
+<img src="hal-reactive-style.jpeg" width="500">
 
 In this example, the agent process publishes an `InterfaceSpec` object, the HAL PI module might have a reactor registered for `InterfaceSpec` object and create a `LifStatus` object and a `PD-Lif` object in response. The HAL PD modules might register multiple event reactors on `PD-Lif` object, one to program the HW and FTE state and other to program the QOS parameters. Again, this improves the modularity of the code by allowing the QOS developer to focus on his module while interface developer to focus on his part.
 
@@ -50,7 +50,7 @@ Writing a delphi service is three step process.
 2. Define the event reactors.
 3. Define a service object that mounts all the objects from delphi hub and instantiates all the event reactors.
 
-<img src="https://drive.google.com/uc?id=1RQo4pJSutsd3u86TbPzyUunWZKYg8Id0" width="700">
+<img src="objects-and-reactors.jpeg" width="700">
 
 **Object Model:** Delphi object model is defined using protobuf syntax. Protobuf objects need to follow certain convention (see Developer guide for details). Once the protobuf object is defined, it is compiled using delphi compiler. Delphi compiler generates the protobuf objects using `protoc` compiler and wraps the protobuf object in a delphi object. Delphi object contains all the hooks required by delphi framework. Delphi compiler also generates a reactor base class for each delphi object. When developers want to write the event reactor for an object, they need to inherit from this base reactor class.
 
@@ -72,7 +72,7 @@ Delphi Framework runs the main event loop of all delphi services. To provide sim
 
 Each delphi service needs to mount part of the object sub tree they are interested in. A service can mount a subtree as read-only or as read-write. When it is mounted as read-only, the object can only watch the subtree, it can not modify it. When it is mounted as read-write, it can modify the objects in that subtree. Only one service can mount a subtree as read-write, all others have to mount it read only.
 
-<img src="https://drive.google.com/uc?id=19JmCdB1uFVfOMMcEBeLKai8WZvNKU-Bu" width="500">
+<img src="mounting-and-watching.jpeg" width="500">
 
 Once a subtree is mounted into a service, all objects in that subtree are available in the local memory of the process as C++/Go/Python objects. They can be accessed any time at memory speeds. If the subtree is mounted as read-write, these objects can be modified by the service and they will be reflected back to delphi hub and all the other services mounting the subtree.
 
@@ -82,7 +82,7 @@ A watch can be established for any object in the mounted subtree. Whenever the o
 
 If a delphi service modifies an object, changed state will be synced back to delphi hub and all the other services mounting the object. This sync operation is done asynchronously when the delphi framework finishes handling the events and goes back to the main event loop. Typically, these object syncs are done in large batches by accumulating the object changes over a small period of time.
 
-<img src="https://drive.google.com/uc?id=1jQg4aafO3qBhykXBRrmE11NxndDWRm0_" width="500">
+<img src="object-sync.jpeg" width="500">
 
 Delphi hub maintains a list of services mounting a subtree of objects. When delphi hub receives a change event on an object it re-distributes the change to all services mounting the subtree. This is also done in large batches of objects to achieve efficiency.
 
@@ -92,13 +92,13 @@ Delphi framework does not provide any guarantees on ordering events across objec
 
 Delphi framework manages the internal lifecycle of services. This doesn't mean, delphi framework manages the process starting/stopping etc. systemd or launcher will manages starting of processes. Delphi framework manages the internal event loop lifecycle, connecting to delphi hub, mounting all the objects, providing callbacks etc. Picture below shows the typical service lifecycle events.
 
-<img src="https://drive.google.com/uc?id=1VK16_GP7DWsCXdgA5WqSFK7_L4wzCqP8" width="800">
+<img src="service-lifecycle.jpeg" width="800">
 
 When the service starts, first it initializes the delphi SDK and instantiates it's service object(as described above, this class is derived from `delphi::Service` class). As part of service's constructor, it needs to request mounting the objects it is interested in and watch the objects it is interested in. After the service object is instantiated, process can enter the main event loop. Once the delphi main loop is started, it connects to the delphi hub and downloads all the mounted objects. Once all the objects are instantiated in process's local memory, it calls the `OnMountComplete()` callback. The service is required to reconcile it's state during this callback. After the reconciliation is complete, delphi enters the event callback loop. Any changes to the object after this point will trigger event callback on reactors.
 
 ## Service Heartbeat
 
-<img src="https://drive.google.com/uc?id=1xbZYPIi5DJumtrwQvkXpwtqWzKwOcMqJ" width="500">
+<img src="service-heartbeat.jpeg" width="500">
 
 Delphi framework maintains a periodic heartbeat with delphi hub. This heartbeat is performed periodically when event callbacks are done and it goes back to the event loop. So, if any event callback is stuck, heartbeat will not be done. A health monitor process can watch the service heartbeat objects in dlephi hub and see if any process is not performing the heartbeat. It can restart the process thats stuck for too long.
 
@@ -108,7 +108,7 @@ Its also worth mentioning that dlephi Hub maintains a list of all services that 
 
 Being able to unit test the code is important part of any framework. Since delphi is an event based framework, it provides a way to inject specific events to unit test the code. This allows developers to test their event reactors without requiring the delphi hub and rest of the system. Delphi unit test works by simulating a mounted object database and triggering events on it. Delphi unit test is integrated with google's gtest suite.
 
-<img src="https://drive.google.com/uc?id=1JRiikfphFKb5-kGBNGZr_7GNqa3yRWuq" width="500">
+<img src="unit-test.jpeg" width="500">
 
 Delphi unit test can be done at two levels:
 1. **Reactor level tests:** Reactor level test can be done by instantiating a single reactor object and triggering events on it. These should be isolated tests for a single reactor class without requiring other reactor classes. This is true unit test.
@@ -119,7 +119,7 @@ Delphi unit test can be done at two levels:
 
 Delphi Metrics is a shared memory object database where all delphi services can publish statistics. Metrics published into this shared memory database are also in protobuf serialized objects. Multiple processes or threads can read and write into the shared memory database concurrently. Details of the shared memory implementation are still to be worked out.
 
-<img src="https://drive.google.com/uc?id=14tiixm8zmkr9ePy49D2RdGWS_P_dQzCK" width="500">
+<img src="delphi-metrics.jpeg" width="500">
 
 
 ## Delphi framework features
@@ -146,4 +146,4 @@ Delphi event loop is based on ‘libev’ (which is just a wrapper on select/epo
 
 # Developer Guide
 
-See [here](./Readme.md) for developer guide on how to write delphi services.
+See [here](../Readme.md) for developer guide on how to write delphi services.

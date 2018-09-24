@@ -2,7 +2,7 @@
 
 Delphi is a reactive framework for writing Naples services(like Agents, HAL, NicMgr, LinkMgr etc). Delphi supports wiriting code in multiple languages like C++, Go and Python.
 
-![Delphi System Overview](https://drive.google.com/uc?id=1Uq25PJqaxOoKLS9hxpXvo-C4vyoT_kfm)
+![Delphi System Overview](./docs/delphi-system.jpeg)
 
 Delphi is made up of three components:
 
@@ -12,9 +12,9 @@ Delphi is made up of three components:
 
 
 
-See [Overview](./Overview.md) for more details on Delphi Framework.
+See [Overview](./docs/Overview.md) for more details on Delphi Framework.
 
-See [here](./Build.md) for instructions on how to build delphi and the examples.
+See [here](./docs/Build.md) for instructions on how to build delphi and the examples.
 
 See [here](./shm/Readme.md) for an overview of delphi shared memory implementation.
 

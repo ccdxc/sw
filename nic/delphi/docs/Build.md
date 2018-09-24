@@ -2,8 +2,8 @@
 
 Delphi framework can be built using `bazel` build tool. Delphi can be built either in Venice vagrant VM or Nic `make shell` container.
 
-See [here](../../docs/dev.md) for instructions on how to bringup Venice vagrant VMs. Note: running `PENS_NODES=1 make dev` will bringup a single VM for development environment.
-See [here](../README.md) for instruction on how to bringup `make shell` container for Nic builds.
+See [here](../../../docs/dev.md) for instructions on how to bringup Venice vagrant VMs. Note: running `PENS_NODES=1 make dev` will bringup a single VM for development environment.
+See [here](../../README.md) for instruction on how to bringup `make shell` container for Nic builds.
 
 ### 0. Build the delphi complier (Required only in Venice vagrant VMs)
 
