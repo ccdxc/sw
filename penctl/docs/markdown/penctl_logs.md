@@ -21,32 +21,8 @@ penctl logs [flags]
   -h, --help            help for logs
   -m, --module string   Module to show logs for
 			Valid modules are:
-				apigw
-				apiserver
-				cmd
-				ckm
-				etcd
-				filebeat
-				ntp
-				vchub
-				npm
-				influx
-				evtsmgr
-				spyglass
-				elastic
-				evtsproxy
-				kube-apiserver
-				kube-scheduler
-				kube-controller-manager
-				kubelet
-				tpm
-				tsm
 				nmd
 				netagent
-				k8sagent
-				vos
-				aggregator
-				citadel
 
 ```
 
