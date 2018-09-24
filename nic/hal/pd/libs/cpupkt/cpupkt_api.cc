@@ -187,12 +187,16 @@ cpupkt_rx_upd_sem_index(cpupkt_qinst_info_t& qinst_info, bool init_pindex)
 {
     cpupkt_hw_id_t pi_sem_addr = 0;
     cpupkt_hw_id_t ci_sem_addr = 0;
+
+    HAL_ABORT_TRACE(qinst_info.queue_id >= 0 && qinst_info.queue_id < 4,
+                    "qinst_info->queue_id {} not initialized",
+                    qinst_info.queue_id);
     switch(qinst_info.queue_info->type) {
     case types::WRING_TYPE_ARQRX:
-        ci_sem_addr = CAPRI_SEM_ARQ_CI_RAW_ADDR(tg_cpu_id);
+        ci_sem_addr = CAPRI_SEM_ARQ_CI_RAW_ADDR(qinst_info.queue_id);
         break;
     case types::WRING_TYPE_ASCQ:
-        ci_sem_addr = CAPRI_SEM_ASCQ_CI_RAW_ADDR(tg_cpu_id);
+        ci_sem_addr = CAPRI_SEM_ASCQ_CI_RAW_ADDR(qinst_info.queue_id);
         break;
     default:
         return HAL_RET_OK;

@@ -529,14 +529,15 @@ fte_stats_t inst_t::get_stats(bool clear_on_read)
 
 fte_txrx_stats_t inst_t::get_txrx_stats(bool clear_on_read)
 {
-    int      qindex = 0;
-    uint8_t  queue_id = id_;
+    //int      qindex = 0;
+    //uint8_t  queue_id = id_;
     //Get stats from the ctx
-    hal::pd::cpupkt_ctxt_t *ctx = arm_ctx_;
+    //hal::pd::cpupkt_ctxt_t *ctx = arm_ctx_;
 
     //Fill common data
     fte_txrx_stats_t txrx_stats;
 
+#if 0
     txrx_stats.flow_miss_pkts = stats_.flow_miss_pkts;
     txrx_stats.redirect_pkts = stats_.redirect_pkts;
     txrx_stats.cflow_pkts    = stats_.cflow_pkts;
@@ -575,6 +576,7 @@ fte_txrx_stats_t inst_t::get_txrx_stats(bool clear_on_read)
     txrx_stats.glinfo.cpu_tx_page_cindex = args.cpu_tx_page_cindex;
     txrx_stats.glinfo.cpu_tx_descr_pindex = args.cpu_tx_descr_pindex;
     txrx_stats.glinfo.cpu_tx_descr_cindex = args.cpu_tx_descr_cindex;
+#endif
     return txrx_stats;
 
 }

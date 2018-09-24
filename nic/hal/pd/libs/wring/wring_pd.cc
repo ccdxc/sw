@@ -363,6 +363,8 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         p4plus_reg_write(
                 meta->alloc_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
                 val32);
+        // Set PI to 0
+        p4plus_reg_write(meta->alloc_semaphore_addr, 0);
     }
     if (meta->free_semaphore_addr &&
                     CAPRI_SEM_RAW_IS_PI_CI(meta->free_semaphore_addr)) {
