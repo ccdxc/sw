@@ -8,6 +8,7 @@
 #include "pnso_api.h"
 
 #include "pnso_mpool.h"
+#include "pnso_batch.h"
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
@@ -16,6 +17,8 @@
  * TODO-cpdc:
  *	- stitch batch/init params for PNSO_NUM_OBJECTS during pool creation
  *	- rename/revisit 'objects in object'
+ *	- move init/deinit of the following out of CPDC:
+ *		MPOOL_TYPE_SERVICE_CHAIN*, MPOOL_TYPE_BATCH_*
  *
  */
 #define PNSO_NUM_OBJECTS		128
@@ -27,6 +30,8 @@ deinit_mpools(struct per_core_resource *pc_res)
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR]);
+	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_BATCH_INFO]);
+	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_BATCH_PAGE]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC]);
@@ -80,6 +85,20 @@ init_mpools(struct pc_res_init_params *pc_init,
 	if (err)
 		goto out;
 
+	mpool_type = MPOOL_TYPE_BATCH_PAGE;
+	err = mpool_create(mpool_type, num_objects,
+			sizeof(struct batch_page), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[mpool_type]);
+	if (err)
+		goto out;
+
+	mpool_type = MPOOL_TYPE_BATCH_INFO;
+	err = mpool_create(mpool_type, num_objects,
+			sizeof(struct batch_info), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[mpool_type]);
+	if (err)
+		goto out;
+
 	/*
 	 * following pools are for special type of objects
 	 * i.e. set of objects to be in contiguous memory
@@ -129,6 +148,8 @@ init_mpools(struct pc_res_init_params *pc_init,
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR]);
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN]);
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_BATCH_PAGE]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_BATCH_INFO]);
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS]);
 
 	return PNSO_OK;
