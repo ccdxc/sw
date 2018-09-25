@@ -3,7 +3,6 @@
 package cluster
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -57,11 +56,11 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 	}
 
 	// create sg policy
-	resp, err := stg.suite.restSvc.SecurityV1().SGPolicy().Create(context.Background(), &sg)
+	resp, err := stg.suite.restSvc.SecurityV1().SGPolicy().Create(stg.suite.loggedInCtx, &sg)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify we can read the policy back
-	rsg, err := stg.suite.restSvc.SecurityV1().SGPolicy().Get(context.Background(), &sg.ObjectMeta)
+	rsg, err := stg.suite.restSvc.SecurityV1().SGPolicy().Get(stg.suite.loggedInCtx, &sg.ObjectMeta)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(rsg).Should(Equal(resp))
 
@@ -82,7 +81,7 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 	}, 30, 1).Should(BeTrue(), "Failed to get sg policies on netagent")
 
 	// delete the sg policy
-	_, err = stg.suite.restSvc.SecurityV1().SGPolicy().Delete(context.Background(), &sg.ObjectMeta)
+	_, err = stg.suite.restSvc.SecurityV1().SGPolicy().Delete(stg.suite.loggedInCtx, &sg.ObjectMeta)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify policy is gone from the agents
@@ -118,11 +117,11 @@ func (stg *securityTestGroup) testSecurityGroupCreateDelete() {
 	}
 
 	// create sg policy
-	resp, err := stg.suite.restSvc.SecurityV1().SecurityGroup().Create(context.Background(), &sg)
+	resp, err := stg.suite.restSvc.SecurityV1().SecurityGroup().Create(stg.suite.loggedInCtx, &sg)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify we can read the policy back
-	rsg, err := stg.suite.restSvc.SecurityV1().SecurityGroup().Get(context.Background(), &sg.ObjectMeta)
+	rsg, err := stg.suite.restSvc.SecurityV1().SecurityGroup().Get(stg.suite.loggedInCtx, &sg.ObjectMeta)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(rsg).Should(Equal(resp))
 
@@ -143,7 +142,7 @@ func (stg *securityTestGroup) testSecurityGroupCreateDelete() {
 	}, 30, 1).Should(BeTrue(), "Failed to get security groups on netagent")
 
 	// delete the sg policy
-	_, err = stg.suite.restSvc.SecurityV1().SecurityGroup().Delete(context.Background(), &sg.ObjectMeta)
+	_, err = stg.suite.restSvc.SecurityV1().SecurityGroup().Delete(stg.suite.loggedInCtx, &sg.ObjectMeta)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify policy is gone from the agents

@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
@@ -39,6 +40,7 @@ type TestSuite struct {
 	tu              *testutils.TestUtils
 	restSvc         apiclient.Services
 	netagentClients []*restclient.NetagentClient
+	loggedInCtx     context.Context
 }
 
 var ts *TestSuite
@@ -50,6 +52,9 @@ var _ = BeforeSuite(func() {
 		tu: testutils.New(nil, configFile),
 	}
 	ts.tu.Init()
+
+	// get auth context
+	ts.loggedInCtx = ts.tu.NewLoggedInContext(context.Background())
 
 	// create apigw workload client
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
