@@ -1,35 +1,9 @@
 /*****************************************************************************/
 /* Ingress VNIC stats                                                        */
 /*****************************************************************************/
-action vnic_tx_stats(in_packets, in_bytes) {
-    add(scratch_metadata.in_packets, in_packets, 1);
-    add(scratch_metadata.in_bytes, in_bytes, capri_p4_intrinsic.packet_len);
-
-    if ((service_header.local_ip_mapping_done == FALSE) or
-        (service_header.flow_done == FALSE)) {
-        add_header(service_header);
-        modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
-    } else {
-        // TODO: Does this functionality need to go to some other place ?
-        modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
-        add_header(capri_p4_intrinsic);
-        add_header(capri_rxdma_intrinsic);
-        add_header(p4_to_rxdma_header);
-        // Splitter offset should point to here
-        modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                     (CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
-                      CAPRI_RXDMA_INTRINSIC_HDR_SZ +
-                      APOLLO_P4_TO_RXDMA_HDR_SZ));
-        add_header(predicate_header);
-        add_header(p4_to_txdma_header);
-        add_header(p4i_apollo_i2e);
-        remove_header(service_header);
-
-        modify_field(predicate_header.direction, control_metadata.direction);
-        if (control_metadata.direction == RX_FROM_SWITCH) {
-            modify_field(predicate_header.lpm_bypass, TRUE);
-        }
-    }
+action vnic_tx_stats(out_packets, out_bytes) {
+    add(scratch_metadata.in_packets, out_packets, 1);
+    add(scratch_metadata.in_bytes, out_bytes, capri_p4_intrinsic.packet_len);
 }
 
 @pragma stage 5
@@ -77,10 +51,9 @@ control ingress_stats {
 /*****************************************************************************/
 /* Egress VNIC stats                                                         */
 /*****************************************************************************/
-action vnic_rx_stats(out_packets, out_bytes) {
-    modify_field(scratch_metadata.in_packets, out_packets);
-    modify_field(scratch_metadata.in_bytes, out_bytes);
-    add(scratch_metadata.in_bytes, out_bytes, capri_p4_intrinsic.packet_len);
+action vnic_rx_stats(in_packets, in_bytes) {
+    add(scratch_metadata.in_packets, in_packets, 1);
+    add(scratch_metadata.in_bytes, in_bytes, capri_p4_intrinsic.packet_len);
 }
 
 @pragma stage 3

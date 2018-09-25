@@ -9,8 +9,8 @@ struct phv_     p;
 %%
 
 vnic_tx_stats:
-    tbladd.e        d.vnic_tx_stats_d.in_packets, 1
-    tbladd          d.vnic_tx_stats_d.in_bytes, \
+    tbladd.e        d.vnic_tx_stats_d.out_packets, 1
+    tbladd          d.vnic_tx_stats_d.out_bytes, \
                     k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                        capri_p4_intrinsic_packet_len_sbit6_ebit13}
 

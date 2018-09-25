@@ -7,6 +7,6 @@ struct vnic_tx_stats_d   d;
 struct phv_     p;
 
 d = {
-    vnic_tx_stats_d.in_packets = 0x20;
-    vnic_tx_stats_d.in_bytes = 0x100;
+    vnic_tx_stats_d.out_packets = 0x20;
+    vnic_tx_stats_d.out_bytes = 0x100;
 };
