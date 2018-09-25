@@ -33,8 +33,9 @@ typedef struct _oci_subnet_key_t
 typedef struct _oci_subnet_t
 {
     oci_subnet_key_t key;    /**< Subnet key */
-    oci_ip_prefix_t pfx;     /**< Subnet CIDR block
-
+    oci_ip_prefix_t  pfx;    /**< Subnet CIDR block */
+    oci_ip_addr_t    vr_ip;  /**< Virtual Router IP */
+    mac_addr_t       vr_mac; /**< Virtual Router Mac */
 } PACKED oci_subnet_t;
 
 /**

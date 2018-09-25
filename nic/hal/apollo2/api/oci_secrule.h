@@ -18,6 +18,15 @@
  */
 
 /**
+ * @brief Security Rule Direction 
+ */
+typedef enum oci_secrule_direction_t_
+{
+    OCI_SECRULE_DIRECTION_INGRESS = 0; /**< Ingress Direction */
+    OCI_SECRULE_DIRECTION_EGRESS = 1; /**< Egress Direction */
+} oci_secrule_direction_t;
+
+/**
  * @brief Layer4 port match
  */
 typedef struct _oci_secrule_l4_port_match_t
@@ -54,8 +63,7 @@ typedef struct _oci_secrule_l4_match_t
  */
 typedef struct _oci_sec_rule_match_t
 {
-    oci_ip_prefix_t src_ip;             /**< Source IP prefix */
-    oci_ip_prefix_t dst_ip;             /**< Destination IP prefix */
+    oci_ip_prefix_t ip;                 /**< IP prefix */
     oci_uint8_t ip_proto;               /**< IP protocol */
     oci_secrule_l4_match_t l4_match;    /**< Layer4 match */
 
@@ -87,50 +95,40 @@ typedef struct _oci_secrule_t
  */
 typedef struct _oci_secrule_list_t
 {
-    oci_uint32_t count;               /**< Number of rules in the list */
-    oci_secrule_t secrule_list[0];    /**< List of rules */
-
+    oci_subnet_id_t         subnet_id;       /**< Subnet ID */
+    oci_secrule_direction_t direction;       /**< Ingress/Egress */
+    oci_uint32_t            count;           /**< Number of rules in the list */
+    oci_secrule_t           secrule_list[0]; /**< List of rules */
 } oci_secrule_list_t;
 
 /**
- * @brief Security rule group key
+ * @brief Security rule list 
  */
-typedef struct _oci_secrule_grp_key_t
+typedef struct _oci_secrule_list_t
 {
-    oci_subnet_id_t subnet_id;    /**< Subnet ID */
-
-} PACKED oci_secrule_grp_key_t;
-
-/**
- * @brief Security rule group
- */
-typedef struct _oci_secrule_grp_t
-{
-    oci_secrule_grp_key_t key;          /**< Security rule group key */
-    oci_secrule_list_t secrule_list;    /**< List of security rules in
-                                             the group */
-} PACKED oci_secrule_grp_t;
+    oci_secrule_list_t secrule_list;     /**< List of security rules in the group */
+} PACKED oci_secrule_list_t;
 
 /**
  * @brief Create security rules group 
  *
- * @param[in] secrule_grp Security Rules Group information
+ * @param[in] secrule_list Security Rules Group information
  *
  * @return #OCI_STATUS_SUCCESS on success, failure status code on error
  */
-oci_status_t oci_secrule_grp_create (
-        _In_ oci_secrule_grp_t *secrule_grp);
+oci_status_t oci_secrule_list_create (
+        _In_ oci_secrule_list_t *secrule_list);
 
 
 /**
  * @brief Delete security rules group
  *
- * @param[in] secrule_grp_key Security Rule Group Key
+ * @param[in] secrule_list Security Rule List Key
  *
  * @return #OCI_STATUS_SUCCESS on success, failure status code on error
  */
-oci_status_t oci_secrule_grp_delete (
-        _In_ oci_secrule_grp_key_t *secrule_grp_key);
+oci_status_t oci_secrule_list_delete (
+        _In_ oci_secrule_list_t *secrule_rule);
 
 /**
  * @}

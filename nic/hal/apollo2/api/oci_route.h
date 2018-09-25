@@ -18,10 +18,23 @@
  */
 
 /**
+ * @brief Nexthop Types 
+ */
+typedef enum oci_nh_type_t 
+{
+   OCI_NH_TYPE_NONE      = 0; /**< Invalid NH type */
+   OCI_NH_TYPE_BLACKHOLE = 1; /**< Blackhole/Drop Route */
+   OCI_NH_TYPE_GATEWAY   = 2; /**< Route to Gateway */
+   OCI_NH_TYPE_REMOTE_EP = 3; /**< Remote EPs behind TEPs */
+   OCI_NH_TYPE_REMOTE_TEP = 4; /**< Remote Server's Physical IP */
+}
+
+/**
  * @brief Route key
  */
 typedef struct _oci_route_key_t
 {
+    oci_subnet_id_t subnet_id; /**< Subnet Id */
     oci_ip_prefix_t dst_pfx;    /**< IP prefix destination */
 
 } oci_route_key_t;
@@ -32,8 +45,9 @@ typedef struct _oci_route_key_t
 typedef struct _oci_route_t
 {
     oci_route_key_t key;       /**< Route key */
-    oci_ip_addr_t nh_ip;    /**< Next hop IP address */
-
+    oci_ip_addr_t   nh_ip;    /**< Next hop IP address */
+    oci_nh_type_t   nh_type; /**< Next Hop type */ 
+    oci_vcn_id_t    vcn_id; /**< Result VCN Id */
 } oci_route_t;
 
 /**
