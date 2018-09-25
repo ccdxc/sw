@@ -256,6 +256,7 @@ func (n *NMD) StartRestServer() error {
 	t2.HandleFunc("/api/{*}", unknownAction)
 
 	router.PathPrefix(MonitoringURL + "logs/").Handler(http.StripPrefix(MonitoringURL+"logs/", http.FileServer(http.Dir(globals.LogDir))))
+	router.PathPrefix(MonitoringURL + "events/").Handler(http.StripPrefix(MonitoringURL+"events/", http.FileServer(http.Dir(globals.EventsDir))))
 
 	// create listener
 	listener, err := net.Listen("tcp", n.listenURL)

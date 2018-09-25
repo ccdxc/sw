@@ -22,6 +22,7 @@ Pensando CLIs
 ```
 
 ### SEE ALSO
+* [penctl events](penctl_events.md)	 - Show events from Naples
 * [penctl logs](penctl_logs.md)	 - Show logs from Naples
 * [penctl mode](penctl_mode.md)	 - Set Naples to Managed mode
 * [penctl ssh](penctl_ssh.md)	 - SSH Commands to Naples
