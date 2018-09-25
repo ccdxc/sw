@@ -485,18 +485,24 @@ hal_ret_t
 flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp)
 {
     uint32_t            rule_id;
+    uint64_t            vrf_id;
     hal_ret_t           ret = HAL_RET_OK;
     flow_monitor_rule_t *rule = NULL;
-    const acl_ctx_t     *flowmon_acl_ctx;
+    const acl_ctx_t     *flowmon_acl_ctx = NULL;
 
     HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
     flowmonrule_spec_dump(spec);
     rule_id = spec.key_or_handle().flowmonitorrule_id();
-    if (spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        HAL_TRACE_ERR("vrf {}", spec.meta().vrf_id());
-        ret = HAL_RET_INVALID_ARG;
-        goto end;
+    vrf_id = spec.meta().vrf_id();
+    if (vrf_id == HAL_VRF_ID_INVALID) {
+        vrf_id = spec.vrf_key_handle().vrf_id();
+        if (vrf_id == HAL_VRF_ID_INVALID) {
+            rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+            HAL_TRACE_ERR("Invalid vrf. Vrf in meta {} vrf in key_handle {}",
+                          spec.meta().vrf_id(), spec.vrf_key_handle().vrf_id());
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
     }
     if (rule_id >= MAX_FLOW_MONITOR_RULES) {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
@@ -505,7 +511,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
         goto end;
     }
     rule = flow_monitor_rule_alloc_init();
-    rule->vrf_id = spec.vrf_key_handle().vrf_id();
+    rule->vrf_id = vrf_id;
     rule->rule_id = rule_id;
     flow_mon_rules[rule_id] = rule;
     
@@ -536,8 +542,7 @@ end:
         ret = acl::acl_commit(flowmon_acl_ctx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ACL commit fail vrf {} id {}",
-                       flowmon_acl_ctx_name(spec.vrf_key_handle().vrf_id()),
-                       spec.vrf_key_handle().vrf_id());
+                           flowmon_acl_ctx_name(vrf_id), vrf_id);
             rsp->set_api_status(types::API_STATUS_ERR);
             goto end;
         }

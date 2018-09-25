@@ -5,6 +5,7 @@
       "name": "scale-mirror-0",
       "tenant": "default",
       "namespace": "scale-vrf-0",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -26,30 +27,37 @@
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "177.75.132.2"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "ICMP/0/0"
             ]
           }
         },
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "112.211.249.2"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "TCP/0/0"
             ]
           }
         }
-      ],
-      "packet-filters": [
-        "ALL_DROPS"
       ]
     }
   },
@@ -59,6 +67,7 @@
       "name": "scale-mirror-1",
       "tenant": "default",
       "namespace": "scale-vrf-1",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -80,30 +89,37 @@
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "170.22.196.2"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "ICMP/0/0"
             ]
           }
         },
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "91.39.142.2"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "TCP/0/0"
             ]
           }
         }
-      ],
-      "packet-filters": [
-        "ALL_DROPS"
       ]
     }
   },
@@ -113,6 +129,7 @@
       "name": "scale-mirror-2",
       "tenant": "default",
       "namespace": "scale-vrf-2",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -134,30 +151,37 @@
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "177.75.132.3"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "ICMP/0/0"
             ]
           }
         },
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "112.211.249.3"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "TCP/0/0"
             ]
           }
         }
-      ],
-      "packet-filters": [
-        "ALL_DROPS"
       ]
     }
   },
@@ -167,6 +191,7 @@
       "name": "scale-mirror-3",
       "tenant": "default",
       "namespace": "scale-vrf-3",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -188,30 +213,37 @@
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "170.22.196.3"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "ICMP/0/0"
             ]
           }
         },
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "91.39.142.3"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "TCP/0/0"
             ]
           }
         }
-      ],
-      "packet-filters": [
-        "ALL_DROPS"
       ]
     }
   },
@@ -221,6 +253,7 @@
       "name": "scale-mirror-4",
       "tenant": "default",
       "namespace": "scale-vrf-0",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -242,30 +275,37 @@
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "177.75.132.4"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "ICMP/0/0"
             ]
           }
         },
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "112.211.249.4"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "TCP/0/0"
             ]
           }
         }
-      ],
-      "packet-filters": [
-        "ALL_DROPS"
       ]
     }
   },
@@ -275,6 +315,7 @@
       "name": "scale-mirror-5",
       "tenant": "default",
       "namespace": "scale-vrf-1",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -296,30 +337,37 @@
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "170.22.196.4"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "ICMP/0/0"
             ]
           }
         },
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "91.39.142.4"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "TCP/0/0"
             ]
           }
         }
-      ],
-      "packet-filters": [
-        "ALL_DROPS"
       ]
     }
   },
@@ -329,6 +377,7 @@
       "name": "scale-mirror-6",
       "tenant": "default",
       "namespace": "scale-vrf-2",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -350,30 +399,37 @@
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "177.75.132.5"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "ICMP/0/0"
             ]
           }
         },
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "112.211.249.5"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "TCP/0/0"
             ]
           }
         }
-      ],
-      "packet-filters": [
-        "ALL_DROPS"
       ]
     }
   },
@@ -383,6 +439,7 @@
       "name": "scale-mirror-7",
       "tenant": "default",
       "namespace": "scale-vrf-3",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -404,30 +461,37 @@
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "170.22.196.5"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "ICMP/0/0"
             ]
           }
         },
         {
           "source": {
             "ip-addresses": [
-              "100.100.100.100"
+              "0.0.0.0/0"
             ]
           },
           "destination": {
             "ip-addresses": [
-              "91.39.142.5"
+              "0.0.0.0/0"
+            ]
+          },
+          "app-protocol-selectors": {
+            "ports": [
+              "TCP/0/0"
             ]
           }
         }
-      ],
-      "packet-filters": [
-        "ALL_DROPS"
       ]
     }
   }
