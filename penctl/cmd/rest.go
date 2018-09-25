@@ -54,7 +54,7 @@ func restPost(v interface{}, port string, url string) error {
 
 func restGet(port string, url string) ([]byte, error) {
 	if verbose {
-		fmt.Println("Doing GET request to netagent")
+		fmt.Println("Doing GET request to naples")
 	}
 	url = "http://" + naplesIP + ":" + port + "/" + url
 	if verbose {
@@ -68,6 +68,10 @@ func restGet(port string, url string) ([]byte, error) {
 
 	getResp, err := http.DefaultClient.Do(getReq)
 	if err != nil {
+		fmt.Println("Unable to get response from Naples.")
+		if verbose {
+			fmt.Println("Err: ", err.Error())
+		}
 		return nil, err
 	}
 	defer getResp.Body.Close()

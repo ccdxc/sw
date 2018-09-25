@@ -123,6 +123,7 @@ func modeManagedShowCmdHandler(cmd *cobra.Command, args []string) {
 		if verbose {
 			fmt.Println(err.Error())
 		}
+		return
 	}
 	naplesCfg := nmd.Naples{}
 	json.Unmarshal(resp, &naplesCfg)
