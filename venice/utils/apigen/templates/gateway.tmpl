@@ -145,7 +145,8 @@ func (e *s{{.Name}}GwService) setupSvcProfile() {
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 	{{range .Methods}}{{if isRestExposed .}}
-	e.svcProf["{{.Name}}"] = apigwpkg.NewServiceProfile(e.defSvcProf){{end}}{{end}}
+	e.svcProf["{{.Name}}"] = apigwpkg.NewServiceProfile(e.defSvcProf){{end}}{{end}}{{$proxyPaths := getProxyPaths .}}{{range $proxyPaths}}
+	e.svcProf["_RProxy_" + "{{.Prefix}}"] = apigwpkg.NewServiceProfile(e.defSvcProf){{end}}
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -171,6 +172,12 @@ func (e *s{{.Name}}GwService) GetCrudServiceProfile(obj string, oper apiserver.A
 		return e.GetServiceProfile(name)
 	}
 	return nil, errors.New("not found")
+}
+
+// GetProxyServiceProfile returns the service Profile for a reverse proxy path
+func (e *s{{.Name}}GwService) GetProxyServiceProfile(path string)  (apigw.ServiceProfile, error) {
+	name := "_RProxy_" + path
+	return e.GetServiceProfile(name)
 }
 
 func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
@@ -199,6 +206,19 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 	err := registerSwaggerDef(m, logger)
 	if err != nil {
 		logger.ErrorLog("msg", "failed to register swagger spec", "service", "{{$pkgname}}.{{.Name}}", "error", err)
+	}{{end}} {{$proxyPaths := getProxyPaths .}}{{range $proxyPaths}}
+	{
+		name := "_RProxy_" + "{{.Prefix}}"
+		svcProf, err := e.GetServiceProfile(name)
+		if err != nil {
+			logger.Fatalf("failed to get service profile for [%s](%s)", name, err)
+		}
+
+		rproxy, err := apigwpkg.NewRProxyHandler("{{.FullPath}}", "{{.Backend}}", svcProf)
+		if err != nil {
+			logger.Fatalf("failed to get proxy handler for [%s](%s)", name, err)
+		}
+		m.Handle("{{.FullPath}}", rproxy)
 	}{{end}}
 	wg.Add(1)
 	go func() {

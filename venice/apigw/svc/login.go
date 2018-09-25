@@ -75,6 +75,10 @@ func (s *loginV1GwService) GetServiceProfile(method string) (apigw.ServiceProfil
 	return nil, errors.New("not found")
 }
 
+func (s *loginV1GwService) GetProxyServiceProfile(path string) (apigw.ServiceProfile, error) {
+	return nil, nil
+}
+
 func (s *loginV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {

@@ -24,6 +24,7 @@ type APIGatewayService interface {
 	CompleteRegistration(ctx context.Context, logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, rslvr resolver.Interface, wg *sync.WaitGroup) error
 	GetServiceProfile(method string) (ServiceProfile, error)
 	GetCrudServiceProfile(object string, oper apiserver.APIOperType) (ServiceProfile, error)
+	GetProxyServiceProfile(path string) (ServiceProfile, error)
 }
 
 // ServiceHookCb is a function callack for registering hooks

@@ -5,12 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/http/pprof"
 	"net/textproto"
+	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -38,6 +42,7 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	penruntime "github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -663,4 +668,163 @@ func (a *apiGw) isRequestAuthenticated(ctx context.Context) (*auth.User, bool) {
 	}
 
 	return user, true
+}
+
+// RProxyHandler handles reverse proxy paths
+type RProxyHandler struct {
+	path        string
+	svcProfile  apigw.ServiceProfile
+	proxy       *httputil.ReverseProxy
+	apiGw       *apiGw
+	destination string
+	scheme      string
+	useResolver bool
+	rnd         *rand.Rand
+}
+
+func (p *RProxyHandler) director(r *http.Request) {
+	if p.apiGw.rslver == nil {
+		p.apiGw.logger.ErrorLog("msg", "need resolver, but no resolver initialized", "path", p.path, "service", p.destination)
+		r.Host, r.URL.Host = "", ""
+		return
+	}
+	urls := p.apiGw.rslver.GetURLs(p.destination)
+	if len(urls) == 0 {
+		p.apiGw.logger.ErrorLog("msg", "could not find any active backend services", "path", p.path, "service", p.destination)
+		// clear the request destination so a 502 Status Bad Gateway error is returned. Add a custom error handler to return
+		//  custom error once we have the feature available in reverse proxy.
+		r.Host, r.URL.Host = "", ""
+		return
+	}
+	destURL := urls[p.rnd.Intn(len(urls))]
+	if !strings.HasPrefix(destURL, "http") {
+		destURL = p.scheme + destURL
+	}
+	durl, err := url.Parse(destURL)
+	if err != nil {
+		p.apiGw.logger.ErrorLog("msg", "could not resolve URL", "path", p.path, "service", p.destination, "error", err)
+		r.Host, r.URL.Host = "", ""
+		return
+	}
+	r.Host = durl.Host
+	r.URL.Host = durl.Host
+	r.URL.Scheme = durl.Scheme
+}
+
+// ServeHTTP satisfies the http.Handler interface
+func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var err error
+	nctx := r.Context()
+
+	// Call all PreAuthZHooks, if any of them return err then abort
+	pnHooks := p.svcProfile.PreAuthNHooks()
+	skipAuth := p.apiGw.skipAuth
+	skip := false
+	for _, h := range pnHooks {
+		nctx, _, skip, err = h(nctx, r)
+		skipAuth = skipAuth || skip
+		if err != nil {
+			p.apiGw.logger.ErrorLog("msg", "PreAuthNHook failed", "error", err)
+			p.apiGw.HTTPOtherErrorHandler(w, r, "Authentication failed", int(codes.Unauthenticated))
+			return
+		}
+	}
+
+	if !skipAuth {
+		user, ok := p.apiGw.isRequestAuthenticated(nctx)
+		if !ok {
+			p.apiGw.logger.ErrorLog("msg", "authentication failed")
+			p.apiGw.HTTPOtherErrorHandler(w, r, "Authentication failed", int(codes.Unauthenticated))
+			return
+		}
+		// add user to context
+		nctx = NewContextWithUser(nctx, user)
+		if !p.apiGw.skipAuthz {
+			pzHooks := p.svcProfile.PreAuthZHooks()
+			for _, h := range pzHooks {
+				nctx, _, err = h(nctx, r)
+				if err != nil {
+					p.apiGw.logger.ErrorLog("msg", "PreAuthZHook failed", "user", user.Name, "tenant", user.Tenant, "error", err)
+					p.apiGw.HTTPOtherErrorHandler(w, r, "Authorization failed", int(codes.PermissionDenied))
+					return
+				}
+			}
+			// check authorization
+			operations, ok := OperationsFromContext(nctx)
+			if !ok {
+				p.apiGw.logger.ErrorLog("msg", "error getting operations from context", "user", user.Name, "tenant", user.Tenant)
+				p.apiGw.HTTPOtherErrorHandler(w, r, "Authorization failed", int(codes.PermissionDenied))
+				return
+			}
+			p.apiGw.logger.Debugf("Authorizing Operations (%s) for user (%s|%s)", login.PrintOperations(operations), user.Tenant, user.Name)
+			ok, err := p.apiGw.authzMgr.IsAuthorized(user, operations...)
+			if !ok || err != nil {
+				p.apiGw.logger.ErrorLog("msg", "not authorized for operations", "user", user.Name, "tenant", user.Tenant, "operation", login.PrintOperations(operations))
+				p.apiGw.HTTPOtherErrorHandler(w, r, "Authorization failed", int(codes.PermissionDenied))
+				return
+			}
+		}
+	}
+
+	// Call pre Call Hooks
+	skipCall := false
+	skip = false
+	precall := p.svcProfile.PreCallHooks()
+	for _, h := range precall {
+		nctx, _, skip, err = h(nctx, r)
+		if err != nil {
+			p.apiGw.logger.ErrorLog("msg", "Precall Hook failed", "error", err)
+			p.apiGw.HTTPOtherErrorHandler(w, r, "Pre condition failed", int(codes.Aborted))
+			return
+		}
+		skipCall = skip || skipCall
+	}
+	if !skipCall {
+		nr := r.WithContext(nctx)
+		p.proxy.ServeHTTP(w, nr)
+	}
+	postCall := p.svcProfile.PostCallHooks()
+	for _, h := range postCall {
+		nctx, _, err = h(nctx, w)
+		if err != nil {
+			p.apiGw.logger.ErrorLog("msg", "Postcall Hook failed", "error", err)
+			p.apiGw.HTTPOtherErrorHandler(w, r, "Operation failed to complete", int(codes.Aborted))
+			return
+		}
+	}
+}
+
+// NewRProxyHandler creates a new RProxyHandler
+func NewRProxyHandler(path, destination string, svcProf apigw.ServiceProfile) (*RProxyHandler, error) {
+	ret := &RProxyHandler{path: path, svcProfile: svcProf, destination: destination}
+	durl, err := url.Parse(destination + path)
+	if err != nil {
+		return nil, err
+	}
+
+	if !strings.HasPrefix(durl.Scheme, "http") {
+		if _, _, err := net.SplitHostPort(destination); err != nil {
+			ret.useResolver = true
+		} else {
+			// specified as host:port add "http://" by default
+			durl, err = url.Parse("http://" + destination + path)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	ret.apiGw = MustGetAPIGateway().(*apiGw)
+	ret.proxy = httputil.NewSingleHostReverseProxy(durl)
+	if ret.useResolver {
+		ret.proxy.Director = ret.director
+		tlsp, _ := rpckit.GetDefaultTLSProvider(destination)
+		if tlsp != nil {
+			ret.scheme = "https://"
+		} else {
+			ret.scheme = "http://"
+		}
+	}
+	ret.rnd = rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
+	return ret, nil
 }

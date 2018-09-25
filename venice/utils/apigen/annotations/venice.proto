@@ -51,6 +51,17 @@ message ActionEndpoint {
   string Response = 5;
 }
 
+// ProxyEndpoint defines an endpoint which will be reverse proxied to a backend.
+message ProxyEndpoint {
+  // Backend specifies the external server where the request will be proxied to.
+  //  This can either be a fully qualified path <hostname>:<port> or a resolver
+  //  destination "pen-xxxserver"
+  string Backend = 1;
+  // URI path that needs to be reverse proxied to Backend. this is a simple path prefix
+  //  sub-paths for which will all be forwarded. Only one rule per path prefix is allowed.
+  string PathPrefix = 2;
+}
+
 // Venice Option extensions applicable at the file level.
 extend google.protobuf.FileOptions {
   // GRPC destination. This is typically a service discovery key.
@@ -80,6 +91,8 @@ extend google.protobuf.ServiceOptions {
   repeated ActionEndpoint apiAction = 51255;
   // list of enum names containing the event types supported by this service
   repeated string eventTypes = 51256;
+  // proxyPrefix option adds a reverse proxy endpoint
+  repeated ProxyEndpoint proxyPrefix = 51257; 
 };
 
 // Venice Option extensions applicable to rpc Methods.

@@ -1021,6 +1021,7 @@ func (e *sBookstoreV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["Cleardiscount"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 	e.svcProf["Restock"] = apigwpkg.NewServiceProfile(e.defSvcProf)
+	e.svcProf["_RProxy_"+"/uploads/"] = apigwpkg.NewServiceProfile(e.defSvcProf)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -1048,6 +1049,12 @@ func (e *sBookstoreV1GwService) GetCrudServiceProfile(obj string, oper apiserver
 	return nil, errors.New("not found")
 }
 
+// GetProxyServiceProfile returns the service Profile for a reverse proxy path
+func (e *sBookstoreV1GwService) GetProxyServiceProfile(path string) (apigw.ServiceProfile, error) {
+	name := "_RProxy_" + path
+	return e.GetServiceProfile(name)
+}
+
 func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,
@@ -1072,6 +1079,19 @@ func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 	err := registerSwaggerDef(m, logger)
 	if err != nil {
 		logger.ErrorLog("msg", "failed to register swagger spec", "service", "bookstore.BookstoreV1", "error", err)
+	}
+	{
+		name := "_RProxy_" + "/uploads/"
+		svcProf, err := e.GetServiceProfile(name)
+		if err != nil {
+			logger.Fatalf("failed to get service profile for [%s](%s)", name, err)
+		}
+
+		rproxy, err := apigwpkg.NewRProxyHandler("/configs/bookstore/v1/uploads/", "http://localhost:9918", svcProf)
+		if err != nil {
+			logger.Fatalf("failed to get proxy handler for [%s](%s)", name, err)
+		}
+		m.Handle("/configs/bookstore/v1/uploads/", rproxy)
 	}
 	wg.Add(1)
 	go func() {

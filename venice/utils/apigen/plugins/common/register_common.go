@@ -117,6 +117,14 @@ func parseEventTypes(val interface{}) (interface{}, error) {
 	return enumNames, nil
 }
 
+func parseProxyEndpoint(val interface{}) (interface{}, error) {
+	c, ok := val.([]*venice.ProxyEndpoint)
+	if !ok {
+		return nil, errInvalidOption
+	}
+	return c, nil
+}
+
 // CheckArgs defines a function to check args for validators
 type CheckArgs func(string) bool
 
@@ -687,4 +695,5 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.default", parseStringSliceOptions)
 	reg.RegisterOptionParser("venice.eventTypes", parseEventTypes)
 	reg.RegisterOptionParser("venice.fileCategory", parseStringOptions)
+	reg.RegisterOptionParser("venice.proxyPrefix", parseProxyEndpoint)
 }

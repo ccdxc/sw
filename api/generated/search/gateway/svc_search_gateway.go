@@ -125,6 +125,12 @@ func (e *sSearchV1GwService) GetCrudServiceProfile(obj string, oper apiserver.AP
 	return nil, errors.New("not found")
 }
 
+// GetProxyServiceProfile returns the service Profile for a reverse proxy path
+func (e *sSearchV1GwService) GetProxyServiceProfile(path string) (apigw.ServiceProfile, error) {
+	name := "_RProxy_" + path
+	return e.GetServiceProfile(name)
+}
+
 func (e *sSearchV1GwService) CompleteRegistration(ctx context.Context,
 	logger log.Logger,
 	grpcserver *grpc.Server,

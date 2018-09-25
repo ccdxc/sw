@@ -22,11 +22,13 @@ type fakeAPIGwService struct {
 	regevents     int
 }
 
+// CompleteRegistration is a fake implementation
 func (m *fakeAPIGwService) CompleteRegistration(ctx context.Context, logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, rslvr resolver.Interface, wg *sync.WaitGroup) error {
 	m.regevents = m.regevents + 1
 	return nil
 }
 
+// GetServiceProfile is a fake implementation
 func (m *fakeAPIGwService) GetServiceProfile(method string) (apigw.ServiceProfile, error) {
 	if m.simulateError {
 		return nil, errors.New("not found")
@@ -39,6 +41,7 @@ func (m *fakeAPIGwService) GetServiceProfile(method string) (apigw.ServiceProfil
 	return prof, nil
 }
 
+// GetCrudServiceProfile is a fake implementation
 func (m *fakeAPIGwService) GetCrudServiceProfile(object string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
 	if m.simulateError {
 		return nil, errors.New("not found")
@@ -48,6 +51,11 @@ func (m *fakeAPIGwService) GetCrudServiceProfile(object string, oper apiserver.A
 		return m.GetServiceProfile(name)
 	}
 	return nil, errors.New("not found")
+}
+
+// GetProxyServiceProfile is a fake implementation
+func (m *fakeAPIGwService) GetProxyServiceProfile(path string) (apigw.ServiceProfile, error) {
+	return nil, nil
 }
 
 // NewFakeAPIGwService is used to test API Gateway hooks

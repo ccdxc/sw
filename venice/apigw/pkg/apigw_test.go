@@ -20,11 +20,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
+	cmdtypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	authnmgr "github.com/pensando/sw/venice/utils/authn/manager"
@@ -33,6 +35,7 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -62,6 +65,10 @@ func (t *testGwService) GetServiceProfile(method string) (apigw.ServiceProfile, 
 }
 
 func (t *testGwService) GetCrudServiceProfile(object string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+	return nil, nil
+}
+
+func (t *testGwService) GetProxyServiceProfile(path string) (apigw.ServiceProfile, error) {
 	return nil, nil
 }
 
@@ -652,5 +659,181 @@ func TestAuthzFailures(t *testing.T) {
 		out, err := a.HandleRequest(ctx, &input, prof, call)
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed", test.name))
 		Assert(t, out == nil, fmt.Sprintf("obj returned should be nil, [%v] test failed", test.name))
+	}
+}
+
+func TestNewProxyHandler(t *testing.T) {
+	goodcases := []struct {
+		path, destination string
+		useResolver       bool
+	}{
+		{path: "/test/path", destination: "pen-apiserver", useResolver: true},
+		{path: "/test/path1", destination: "localhost:1111", useResolver: false},
+		{path: "/test/path1", destination: "http://localhost:1111", useResolver: false},
+		{path: "/test/path1", destination: "https://localhost:1111", useResolver: false},
+		{path: "/test/path1", destination: "unknowns://localhost:1111", useResolver: true},
+	}
+	for _, c := range goodcases {
+		p, err := NewRProxyHandler(c.path, c.destination, nil)
+		if err != nil {
+			t.Fatalf("failed get proxy handler")
+		}
+		if p.destination != c.destination || p.path != c.path || p.useResolver != c.useResolver {
+			t.Fatalf("returned proxy handler does not match expected values [%v]/[%v]/[%v]", p.destination, p.path, p.useResolver)
+		}
+		if p.useResolver && p.proxy.Director == nil {
+			t.Fatalf("director not set up for resolved proxy")
+		}
+	}
+	badcases := []string{":ahtt#@Sc---ada", "-http:\\aadadaada"}
+	for _, c := range badcases {
+		_, err := NewRProxyHandler("/test/path1", c, nil)
+		if err == nil {
+			t.Fatalf("expecting to fail [%s]", c)
+		}
+	}
+}
+
+func TestProxyDirector(t *testing.T) {
+	rslver := mockresolver.New()
+	svcs := []cmdtypes.ServiceInstance{
+		{
+			ObjectMeta: api.ObjectMeta{
+				Name: "node1",
+			},
+			Service: "dummyserver",
+			URL:     "node1:111",
+		},
+		{
+			ObjectMeta: api.ObjectMeta{
+				Name: "node2",
+			},
+			Service: "dummyserver",
+			URL:     "node2:111",
+		},
+	}
+	buf := &bytes.Buffer{}
+	logConfig := log.GetDefaultConfig("TestApiGw")
+	l := log.GetNewLogger(logConfig).SetOutput(buf)
+	_ = MustGetAPIGateway()
+	singletonAPIGw.logger = l
+	singletonAPIGw.rslver = rslver
+	req, err := http.NewRequest("GET", "http://localhost", nil)
+	if err != nil {
+		t.Fatalf("unable to get http request(%s)", err)
+	}
+	p, err := NewRProxyHandler("/test/path", "dummyserver", nil)
+	if err != nil {
+		t.Fatalf("unable to get proxy handler (%s)", err)
+	}
+	// Test without any service instances
+	p.director(req)
+	if req.Host != "" || req.URL.Host != "" {
+		t.Fatalf("request destination not cleared [%v][%v]", req.Host, req.URL.Host)
+	}
+	for i := range svcs {
+		rslver.AddServiceInstance(&svcs[i])
+	}
+
+	var node1, node2 bool
+	for i := 0; i < 10; i++ {
+		p.director(req)
+		if req.Host == "" || req.URL.Host == "" {
+			t.Fatalf("req not set to resolved service[%v][%v]", req.Host, req.URL.Host)
+		}
+		if strings.Contains(req.Host, "node1:111") {
+			node1 = true
+		}
+		if strings.Contains(req.Host, "node2:111") {
+			node2 = true
+		}
+	}
+	if !(node1 && node2) {
+		t.Fatalf("request did not get load balanced [%v],[%v]", node1, node2)
+	}
+}
+
+func TestHandleProxyRequest(t *testing.T) {
+	prof := NewServiceProfile(nil)
+	mock := &testHooks{}
+	prof.AddPreAuthNHook(mock.preAuthNHook)
+	prof.AddPreAuthNHook(mock.preAuthNHook)
+	prof.AddPreAuthNHook(mock.preAuthNHook)
+	prof.AddPreAuthZHook(mock.preAuthZHook)
+	prof.AddPreAuthZHook(mock.preAuthZHook)
+	prof.AddPreAuthZHook(mock.preAuthZHook)
+	prof.AddPreAuthZHook(mock.preAuthZHook)
+	prof.AddPreCallHook(mock.preCallHook)
+	prof.AddPreCallHook(mock.preCallHook)
+	prof.AddPostCallHook(mock.postCallHook)
+
+	input := struct {
+		Test string
+	}{"testing"}
+
+	mock.retObj = &input
+
+	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+	w := httptest.NewRecorder()
+	_ = MustGetAPIGateway()
+
+	buf := &bytes.Buffer{}
+	logConfig := log.GetDefaultConfig("TestApiGw")
+	l := log.GetNewLogger(logConfig).SetOutput(buf)
+	singletonAPIGw.logger = l
+	singletonAPIGw.authnMgr = authnmgr.NewMockAuthenticationManager()
+	singletonAPIGw.authzMgr = authzmgr.NewAlwaysAllowAuthorizer()
+
+	// create authenticated context
+	ctx := metadata.NewOutgoingContext(context.TODO(), metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
+		"req-method", "GET"))
+	// context with authz operations
+	mock.retAuthzCtx = NewContextWithOperations(ctx, nil)
+	p, err := NewRProxyHandler("/test/path", "dummyserver", prof)
+	if err != nil {
+		t.Fatalf("unable to get proxy handler (%s)", err)
+	}
+	req = req.WithContext(ctx)
+	p.ServeHTTP(w, req)
+
+	pa := prof.PreAuthNHooks()
+	if len(pa) != 3 || mock.preAuthNCnt != len(pa) {
+		t.Errorf("expecting %v pre authN hooks got %d", len(pa), mock.preAuthNCnt)
+	}
+	pz := prof.PreAuthZHooks()
+	if len(pz) != 4 || mock.preAuthZCnt != len(pz) {
+		t.Errorf("expecting %v pre authZ hooks got %d", len(pz), mock.preAuthZCnt)
+	}
+	pc := prof.PreCallHooks()
+	if len(pc) != 2 || mock.preCallCnt != len(pc) {
+		t.Errorf("expecting %v pre call hooks got %d", len(pc), mock.preCallCnt)
+	}
+	tc := prof.PostCallHooks()
+	if len(tc) != 1 || mock.postCallCnt != len(tc) {
+		t.Errorf("expecting %v post call hooks got %d", len(tc), mock.postCallCnt)
+	}
+
+	// Test with the one preAuthn hook returning skip
+	skipfn := func() bool {
+		return mock.preCallCnt == 1
+	}
+	mock.skipCallFn = skipfn
+	mock.preCallCnt, mock.postCallCnt, mock.preAuthNCnt, mock.preAuthZCnt = 0, 0, 0, 0
+	p.ServeHTTP(w, req)
+	pa = prof.PreAuthNHooks()
+	if len(pa) != 3 || mock.preAuthNCnt != len(pa) {
+		t.Errorf("expecting 3 pre authN hooks got %d/%d", len(pa), mock.preAuthNCnt)
+	}
+	pz = prof.PreAuthZHooks()
+	if len(pz) != 4 || mock.preAuthZCnt != len(pz) {
+		t.Errorf("expecting 4 pre authZ hooks got %d/%d", len(pz), mock.preAuthZCnt)
+	}
+	pc = prof.PreCallHooks()
+	if len(pc) != 2 || mock.preCallCnt != len(pc) {
+		t.Errorf("expecting 2 pre call hooks got %d/%d", len(pc), mock.preCallCnt)
+	}
+	tc = prof.PostCallHooks()
+	if len(tc) != 1 || mock.postCallCnt != len(tc) {
+		t.Errorf("expecting 1 pre call hooks got %d/%d", len(tc), mock.postCallCnt)
 	}
 }

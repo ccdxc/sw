@@ -1992,6 +1992,51 @@ func isObjTenanted(file *descriptor.File, obj string) (bool, error) {
 	return isTenanted(msg)
 }
 
+// ProxyPath is parameters for reverse proxy endpoints
+type ProxyPath struct {
+	Prefix   string
+	FullPath string
+	Backend  string
+}
+
+func getProxyPaths(svc *descriptor.Service) ([]ProxyPath, error) {
+	var ret []ProxyPath
+	svcParams, err := getSvcParams(svc)
+	if err != nil {
+		glog.V(1).Infof("unable to get proxy paths for service [%s]", *svc.Name)
+		return ret, err
+	}
+	i, err := reg.GetExtension("venice.proxyPrefix", svc)
+	if err != nil {
+		glog.V(1).Infof("no proxy options found on service [%s](%s)", *svc.Name, err)
+		return ret, nil
+	}
+	opts, ok := i.([]*venice.ProxyEndpoint)
+	if !ok {
+		glog.V(1).Infof("could not parse option")
+		return ret, fmt.Errorf("could not parse proxy option for service [%s] [%+v]", *svc.Name, opts)
+	}
+	glog.V(1).Infof("found proxy options on service [%s] [%+v]", *svc.Name, opts)
+	pathMap := make(map[string]bool)
+	category := globals.ConfigURIPrefix
+	if i, err = reg.GetExtension("venice.fileCategory", svc.File); err == nil {
+		if category, ok = i.(string); !ok {
+			category = globals.ConfigURIPrefix
+		}
+	} else {
+		glog.V(1).Infof("Did not find Category %s", err)
+	}
+	for _, opt := range opts {
+		if _, ok := pathMap[opt.GetPathPrefix()]; ok {
+			glog.Fatalf("duplicate path detected in proxy paths service [%s] path [%s]", *svc.Name, opt.GetPathPrefix())
+		}
+
+		path := "/" + category + "/" + svcParams.Prefix + "/" + svcParams.Version + "/" + strings.TrimPrefix(opt.GetPathPrefix(), "/")
+		ret = append(ret, ProxyPath{Prefix: opt.GetPathPrefix(), FullPath: path, Backend: opt.GetBackend()})
+	}
+	return ret, nil
+}
+
 func init() {
 	cliTagRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
 
@@ -2062,6 +2107,7 @@ func init() {
 	reg.RegisterFunc("isClientStreaming", isClientStreaming)
 	reg.RegisterFunc("isTenanted", isTenanted)
 	reg.RegisterFunc("isObjTenanted", isObjTenanted)
+	reg.RegisterFunc("getProxyPaths", getProxyPaths)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

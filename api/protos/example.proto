@@ -263,4 +263,9 @@ service BookstoreV1 {
        Request: "RestockRequest"
        Response: "RestockResponse"
     };
+  // Reverse Proxy Path
+  option (venice.proxyPrefix) = {
+      PathPrefix: "/uploads/"
+      Backend: "http://localhost:9918"
+  };
 }
