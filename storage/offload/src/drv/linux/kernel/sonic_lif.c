@@ -962,6 +962,11 @@ struct lif *sonic_get_lif(void)
 	return sonic_glif;
 }
 
+struct sonic_dev *sonic_get_idev(void)
+{
+	return &sonic_glif->sonic->idev;
+}
+
 static int sonic_lif_seq_q_init(struct queue *q)
 {
 	struct lif *lif = q->lif;

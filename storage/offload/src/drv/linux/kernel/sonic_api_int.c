@@ -7,6 +7,7 @@
 #include "sonic_lif.h"
 #include "sonic_api_int.h"
 #include "osal_logger.h"
+#include "osal_assert.h"
 
 /*
  * Physical host address bit manipulation
@@ -24,12 +25,75 @@
 #define SONIC_PHYS_ADDR_LIF_VAL(lif) \
 	SONIC_PHYS_ADDR_FIELD_VAL(SONIC_PHYS_ADDR_LIF_POS, SONIC_PHYS_ADDR_LIF_MASK, lif)
 
-static int sonic_api_get_rmem(struct lif *lif, uint32_t *pgid,
-		uint64_t *pgaddr, int order)
+static identity_t *sonic_get_identity(void);
+
+static inline uint64_t
+sonic_rmem_base_pa(void)
 {
-	struct sonic_dev *idev = &lif->sonic->idev;
+	identity_t *ident = sonic_get_identity();
+	return ident->dev.cm_base_pa;
+}
+
+static inline void __iomem *
+sonic_rmem_base_iomem(void)
+{
+	struct sonic_dev *idev = sonic_get_idev();
+	OSAL_ASSERT(idev->hbm_iomem_vaddr);
+	return idev->hbm_iomem_vaddr;
+}
+
+static inline uint64_t
+sonic_rmem_pgid_to_offset(uint32_t pgid)
+{
+	return (uint64_t)pgid * PAGE_SIZE;
+}
+
+static inline uint32_t
+sonic_rmem_offset_to_pgid(uint64_t offset)
+{
+	return offset / PAGE_SIZE;
+}
+
+static inline int
+sonic_rmem_page_order(size_t size)
+{
+	return size / PAGE_SIZE;
+}
+
+static inline uint64_t
+sonic_rmem_pgid_to_pgaddr(uint32_t pgid)
+{
+	uint64_t offset = sonic_rmem_pgid_to_offset(pgid);
+	OSAL_ASSERT((sonic_rmem_base_pa() & (offset + PAGE_SIZE - 1)) == 0);
+	return sonic_rmem_base_pa() + offset;
+}
+
+static inline void __iomem *
+sonic_rmem_pgid_to_iomem(uint32_t pgid)
+{
+	uint64_t offset = sonic_rmem_pgid_to_offset(pgid);
+	OSAL_ASSERT(((uint64_t)sonic_rmem_base_iomem() &
+		(offset + PAGE_SIZE - 1)) == 0);
+	return sonic_rmem_base_iomem() + offset;
+}
+
+static inline uint32_t
+sonic_rmem_pgaddr_to_pgid(uint64_t pgaddr)
+{
+	OSAL_ASSERT(pgaddr >= sonic_rmem_base_pa());
+	return sonic_rmem_offset_to_pgid(pgaddr - sonic_rmem_base_pa());
+}
+
+static inline void __iomem *
+sonic_rmem_pgaddr_to_iomem(uint64_t pgaddr)
+{
+	return sonic_rmem_pgid_to_iomem(sonic_rmem_pgaddr_to_pgid(pgaddr));
+}
+
+static uint64_t sonic_api_get_rmem(int order)
+{
+	struct sonic_dev *idev = sonic_get_idev();
 	int ret;
-	uint64_t cm_base_pa = lif->sonic->ident->dev.cm_base_pa;
 
 	spin_lock(&idev->hbm_inuse_lock);
 	ret = bitmap_find_free_region(idev->hbm_inuse, idev->hbm_npages, order);
@@ -38,51 +102,56 @@ static int sonic_api_get_rmem(struct lif *lif, uint32_t *pgid,
 	if (ret < 0) {
 		OSAL_LOG_ERROR("rmem bitmap_find_free_region failed ret: %d",
 				ret);
-		return ret;
-	}
-
-	*pgid = (u32)ret;
-	*pgaddr = cm_base_pa + ret * PAGE_SIZE;
-
-	return 0;
-}
-
-uint64_t sonic_rmem_alloc(size_t size)
-{
-	int ret = 0;
-	int order = size/PAGE_SIZE;
-	uint32_t pgid;
-	uint64_t addr = 0;
-	struct lif *lif = sonic_get_lif();
-
-	ret = sonic_api_get_rmem(lif, &pgid, &addr, order);
-	if (ret < 0) {
-		OSAL_LOG_ERROR("sonic_api_get_rmem failed ret: %d", ret);
 		return 0;
 	}
 
-	return addr;
+	return sonic_rmem_pgid_to_pgaddr((uint32_t)ret);
 }
 
-static void sonic_api_put_rmem(struct lif *lif, uint32_t pgid, int order)
+static void sonic_api_put_rmem(uint32_t pgid, int order)
 {
-	struct sonic_dev *idev = &lif->sonic->idev;
+	struct sonic_dev *idev = sonic_get_idev();
 
 	spin_lock(&idev->hbm_inuse_lock);
 	bitmap_release_region(idev->hbm_inuse, pgid, order);
 	spin_unlock(&idev->hbm_inuse_lock);
 }
 
-void sonic_rmem_free(uint64_t ptr, size_t size)
+uint64_t sonic_rmem_alloc(size_t size)
 {
-	uint32_t pgid;
-	struct lif *lif = sonic_get_lif();
-	int order = 0;
-	uint64_t cm_base_pa = lif->sonic->ident->dev.cm_base_pa;
+	return sonic_api_get_rmem(sonic_rmem_page_order(size));
+}
 
-	pgid = (ptr - cm_base_pa)/PAGE_SIZE;
-	order = size/PAGE_SIZE;
-	sonic_api_put_rmem(lif, pgid, order);
+uint64_t sonic_rmem_calloc(size_t size)
+{
+	uint64_t pgaddr = sonic_rmem_alloc(size);
+
+	if (pgaddr) {
+		sonic_rmem_set(pgaddr, 0, size);
+	}
+	return pgaddr;
+}
+
+void sonic_rmem_free(uint64_t pgaddr, size_t size)
+{
+	sonic_api_put_rmem(sonic_rmem_pgaddr_to_pgid(pgaddr), sonic_rmem_page_order(size));
+}
+
+void sonic_rmem_set(uint64_t pgaddr, uint8_t val, size_t size)
+{
+	memset_io(sonic_rmem_pgaddr_to_iomem(pgaddr), val, size);
+}
+
+void sonic_rmem_read(void *dst, uint64_t pgaddr, size_t size)
+{
+	OSAL_ASSERT(size <= PAGE_SIZE);
+	memcpy_fromio(dst, sonic_rmem_pgaddr_to_iomem(pgaddr), size);
+}
+
+void sonic_rmem_write(uint64_t pgaddr, const void *src, size_t size)
+{
+	OSAL_ASSERT(size <= PAGE_SIZE);
+	memcpy_toio(sonic_rmem_pgaddr_to_iomem(pgaddr), src, size);
 }
 
 static identity_t *sonic_get_identity(void)
