@@ -52,7 +52,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='req_types.proto',
   package='iotamodel',
   syntax='proto3',
-  serialized_pb=_b('\n\x0freq_types.proto\x12\tiotamodel\x1a\x1cgoogle/api/annotations.proto\x1a-github.com/gogo/protobuf/gogoproto/gogo.proto\x1a\x45github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto\x1a\x0c\x63ommon.proto\"\xd4\x02\n\x12\x43onfigTopologyInfo\x12\x61\n\x10\x43onfigEntrypoint\x18\x01 \x01(\tBG\xaa\x86\x19$StrEnum(TopologyInfo.EntrypointType)\xea\xde\x1f\x1b\x63onfig-entrypoint,omitempty\x12\x39\n\x0cRestEndpoint\x18\x02 \x01(\tB#\xea\xde\x1f\x1fnaples-rest-endpoint, omitempty\x12\x33\n\x05Nodes\x18\x03 \x03(\x0b\x32\x0f.iotamodel.NodeB\x13\xea\xde\x1f\x0fnodes,omitempty\x12\"\n\x05VLANs\x18\x04 \x03(\rB\x13\xea\xde\x1f\x0fvlans,omitempty\"G\n\x0e\x45ntrypointType\x12\x13\n\x0f\x45NTRYPOINT_NONE\x10\x00\x12\x0f\n\x0bNAPLES_REST\x10\x01\x12\x0f\n\x0bVENICE_REST\x10\x02\"\xe3\x01\n\x03\x41pp\x12<\n\x07\x41ppType\x18\x01 \x01(\tB+\xaa\x86\x19\x11StrEnum(App.Type)\xea\xde\x1f\x12\x61pp-type,omitempty\x12+\n\tAppConfig\x18\x02 \x01(\tB\x18\xea\xde\x1f\x14\x61pp-config,omitempty\x12\x41\n\nAppCommand\x18\x03 \x01(\x0b\x32\x12.iotamodel.CommandB\x19\xea\xde\x1f\x15\x61pp-command,omitempty\".\n\x04Type\x12\x0c\n\x08\x41PP_NONE\x10\x00\x12\x0b\n\x07RAW_PKT\x10\x01\x12\x0b\n\x07\x43MD_APP\x10\x02\"\xa3\x01\n\x07\x43ommand\x12K\n\x0b\x43ommandType\x18\x01 \x01(\tB6\xaa\x86\x19\x18StrEnum(Command.CmdType)\xea\xde\x1f\x16\x63ommand-type,omitempty\"K\n\x07\x43mdType\x12\x10\n\x0c\x43OMMAND_NONE\x10\x00\x12\x16\n\x12\x43OMMAND_FOREGROUND\x10\x01\x12\x16\n\x12\x43OMMAND_BACKGROUND\x10\x02\"\x96\x02\n\x04Node\x12M\n\x0fPersonalityType\x18\x01 \x01(\tB4\xaa\x86\x19\x12StrEnum(Node.Type)\xea\xde\x1f\x1apersonality-type,omitempty\x12\"\n\x05Image\x18\x02 \x01(\tB\x13\xea\xde\x1f\x0fimage,omitempty\x12+\n\tIPAddress\x18\x03 \x01(\tB\x18\xea\xde\x1f\x14ip-address,omitempty\"n\n\x04Type\x12\x14\n\x10PERSONALITY_NONE\x10\x00\x12\x16\n\x12PERSONALITY_NAPLES\x10\x01\x12\x16\n\x12PERSONALITY_VENICE\x10\x02\x12 \n\x1cPERSONALITY_NAPLES_WITH_QEMU\x10\x03P\x02\x62\x06proto3')
+  serialized_pb=_b('\n\x0freq_types.proto\x12\tiotamodel\x1a\x1cgoogle/api/annotations.proto\x1a-github.com/gogo/protobuf/gogoproto/gogo.proto\x1a\x45github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto\x1a\x0c\x63ommon.proto\"\xd4\x02\n\x12\x43onfigTopologyInfo\x12\x61\n\x10\x43onfigEntrypoint\x18\x01 \x01(\tBG\xaa\x86\x19$StrEnum(TopologyInfo.EntrypointType)\xea\xde\x1f\x1b\x63onfig-entrypoint,omitempty\x12\x39\n\x0cRestEndpoint\x18\x02 \x03(\tB#\xea\xde\x1f\x1fnaples-rest-endpoint, omitempty\x12\x33\n\x05Nodes\x18\x03 \x03(\x0b\x32\x0f.iotamodel.NodeB\x13\xea\xde\x1f\x0fnodes,omitempty\x12\"\n\x05VLANs\x18\x04 \x03(\rB\x13\xea\xde\x1f\x0fvlans,omitempty\"G\n\x0e\x45ntrypointType\x12\x13\n\x0f\x45NTRYPOINT_NONE\x10\x00\x12\x0f\n\x0bNAPLES_REST\x10\x01\x12\x0f\n\x0bVENICE_REST\x10\x02\"\xe3\x01\n\x03\x41pp\x12<\n\x07\x41ppType\x18\x01 \x01(\tB+\xaa\x86\x19\x11StrEnum(App.Type)\xea\xde\x1f\x12\x61pp-type,omitempty\x12+\n\tAppConfig\x18\x02 \x01(\tB\x18\xea\xde\x1f\x14\x61pp-config,omitempty\x12\x41\n\nAppCommand\x18\x03 \x01(\x0b\x32\x12.iotamodel.CommandB\x19\xea\xde\x1f\x15\x61pp-command,omitempty\".\n\x04Type\x12\x0c\n\x08\x41PP_NONE\x10\x00\x12\x0b\n\x07RAW_PKT\x10\x01\x12\x0b\n\x07\x43MD_APP\x10\x02\"\xa3\x01\n\x07\x43ommand\x12K\n\x0b\x43ommandType\x18\x01 \x01(\tB6\xaa\x86\x19\x18StrEnum(Command.CmdType)\xea\xde\x1f\x16\x63ommand-type,omitempty\"K\n\x07\x43mdType\x12\x10\n\x0c\x43OMMAND_NONE\x10\x00\x12\x16\n\x12\x43OMMAND_FOREGROUND\x10\x01\x12\x16\n\x12\x43OMMAND_BACKGROUND\x10\x02\"\x96\x02\n\x04Node\x12M\n\x0fPersonalityType\x18\x01 \x01(\tB4\xaa\x86\x19\x12StrEnum(Node.Type)\xea\xde\x1f\x1apersonality-type,omitempty\x12\"\n\x05Image\x18\x02 \x01(\tB\x13\xea\xde\x1f\x0fimage,omitempty\x12+\n\tIPAddress\x18\x03 \x01(\tB\x18\xea\xde\x1f\x14ip-address,omitempty\"n\n\x04Type\x12\x14\n\x10PERSONALITY_NONE\x10\x00\x12\x16\n\x12PERSONALITY_NAPLES\x10\x01\x12\x16\n\x12PERSONALITY_VENICE\x10\x02\x12 \n\x1cPERSONALITY_NAPLES_WITH_QEMU\x10\x03\"\xdf\x01\n\x12\x43\x66gQueryParameters\x12[\n\nObjectMode\x18\x01 \x01(\tBG\xaa\x86\x19*StrEnum(ConfigTopologyInfo.EntrypointType)\xea\xde\x1f\x15object-mode,omitempty\x12-\n\nObjectKind\x18\x02 \x01(\tB\x19\xea\xde\x1f\x15object-kind,omitempty\x12=\n\x05match\x18\x03 \x03(\x0b\x32\x18.iotamodel.MatchSelectorB\x14\xea\xde\x1f\x10match, omitempty\"?\n\rMatchSelector\x12\x14\n\x03Key\x18\x01 \x01(\tB\x07\xea\xde\x1f\x03key\x12\x18\n\x05Value\x18\x02 \x01(\tB\t\xea\xde\x1f\x05valueP\x02\x62\x06proto3')
   ,
   dependencies=[google_dot_api_dot_annotations__pb2.DESCRIPTOR,github_dot_com_dot_gogo_dot_protobuf_dot_gogoproto_dot_gogo__pb2.DESCRIPTOR,github_dot_com_dot_pensando_dot_sw_dot_venice_dot_utils_dot_apigen_dot_annotations_dot_includes__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,],
   public_dependencies=[github_dot_com_dot_pensando_dot_sw_dot_venice_dot_utils_dot_apigen_dot_annotations_dot_includes__pb2.DESCRIPTOR,])
@@ -184,8 +184,8 @@ _CONFIGTOPOLOGYINFO = _descriptor.Descriptor(
       options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\252\206\031$StrEnum(TopologyInfo.EntrypointType)\352\336\037\033config-entrypoint,omitempty'))),
     _descriptor.FieldDescriptor(
       name='RestEndpoint', full_name='iotamodel.ConfigTopologyInfo.RestEndpoint', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      number=2, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\037naples-rest-endpoint, omitempty'))),
@@ -344,16 +344,102 @@ _NODE = _descriptor.Descriptor(
   serialized_end=1210,
 )
 
+
+_CFGQUERYPARAMETERS = _descriptor.Descriptor(
+  name='CfgQueryParameters',
+  full_name='iotamodel.CfgQueryParameters',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ObjectMode', full_name='iotamodel.CfgQueryParameters.ObjectMode', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\252\206\031*StrEnum(ConfigTopologyInfo.EntrypointType)\352\336\037\025object-mode,omitempty'))),
+    _descriptor.FieldDescriptor(
+      name='ObjectKind', full_name='iotamodel.CfgQueryParameters.ObjectKind', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\025object-kind,omitempty'))),
+    _descriptor.FieldDescriptor(
+      name='match', full_name='iotamodel.CfgQueryParameters.match', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\020match, omitempty'))),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1213,
+  serialized_end=1436,
+)
+
+
+_MATCHSELECTOR = _descriptor.Descriptor(
+  name='MatchSelector',
+  full_name='iotamodel.MatchSelector',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='Key', full_name='iotamodel.MatchSelector.Key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\003key'))),
+    _descriptor.FieldDescriptor(
+      name='Value', full_name='iotamodel.MatchSelector.Value', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\005value'))),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1438,
+  serialized_end=1501,
+)
+
 _CONFIGTOPOLOGYINFO.fields_by_name['Nodes'].message_type = _NODE
 _CONFIGTOPOLOGYINFO_ENTRYPOINTTYPE.containing_type = _CONFIGTOPOLOGYINFO
 _APP.fields_by_name['AppCommand'].message_type = _COMMAND
 _APP_TYPE.containing_type = _APP
 _COMMAND_CMDTYPE.containing_type = _COMMAND
 _NODE_TYPE.containing_type = _NODE
+_CFGQUERYPARAMETERS.fields_by_name['match'].message_type = _MATCHSELECTOR
 DESCRIPTOR.message_types_by_name['ConfigTopologyInfo'] = _CONFIGTOPOLOGYINFO
 DESCRIPTOR.message_types_by_name['App'] = _APP
 DESCRIPTOR.message_types_by_name['Command'] = _COMMAND
 DESCRIPTOR.message_types_by_name['Node'] = _NODE
+DESCRIPTOR.message_types_by_name['CfgQueryParameters'] = _CFGQUERYPARAMETERS
+DESCRIPTOR.message_types_by_name['MatchSelector'] = _MATCHSELECTOR
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 ConfigTopologyInfo = _reflection.GeneratedProtocolMessageType('ConfigTopologyInfo', (_message.Message,), dict(
@@ -384,6 +470,20 @@ Node = _reflection.GeneratedProtocolMessageType('Node', (_message.Message,), dic
   ))
 _sym_db.RegisterMessage(Node)
 
+CfgQueryParameters = _reflection.GeneratedProtocolMessageType('CfgQueryParameters', (_message.Message,), dict(
+  DESCRIPTOR = _CFGQUERYPARAMETERS,
+  __module__ = 'req_types_pb2'
+  # @@protoc_insertion_point(class_scope:iotamodel.CfgQueryParameters)
+  ))
+_sym_db.RegisterMessage(CfgQueryParameters)
+
+MatchSelector = _reflection.GeneratedProtocolMessageType('MatchSelector', (_message.Message,), dict(
+  DESCRIPTOR = _MATCHSELECTOR,
+  __module__ = 'req_types_pb2'
+  # @@protoc_insertion_point(class_scope:iotamodel.MatchSelector)
+  ))
+_sym_db.RegisterMessage(MatchSelector)
+
 
 _CONFIGTOPOLOGYINFO.fields_by_name['ConfigEntrypoint'].has_options = True
 _CONFIGTOPOLOGYINFO.fields_by_name['ConfigEntrypoint']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\252\206\031$StrEnum(TopologyInfo.EntrypointType)\352\336\037\033config-entrypoint,omitempty'))
@@ -407,4 +507,14 @@ _NODE.fields_by_name['Image'].has_options = True
 _NODE.fields_by_name['Image']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\017image,omitempty'))
 _NODE.fields_by_name['IPAddress'].has_options = True
 _NODE.fields_by_name['IPAddress']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\024ip-address,omitempty'))
+_CFGQUERYPARAMETERS.fields_by_name['ObjectMode'].has_options = True
+_CFGQUERYPARAMETERS.fields_by_name['ObjectMode']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\252\206\031*StrEnum(ConfigTopologyInfo.EntrypointType)\352\336\037\025object-mode,omitempty'))
+_CFGQUERYPARAMETERS.fields_by_name['ObjectKind'].has_options = True
+_CFGQUERYPARAMETERS.fields_by_name['ObjectKind']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\025object-kind,omitempty'))
+_CFGQUERYPARAMETERS.fields_by_name['match'].has_options = True
+_CFGQUERYPARAMETERS.fields_by_name['match']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\020match, omitempty'))
+_MATCHSELECTOR.fields_by_name['Key'].has_options = True
+_MATCHSELECTOR.fields_by_name['Key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\003key'))
+_MATCHSELECTOR.fields_by_name['Value'].has_options = True
+_MATCHSELECTOR.fields_by_name['Value']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\352\336\037\005value'))
 # @@protoc_insertion_point(module_scope)

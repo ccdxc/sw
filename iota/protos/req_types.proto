@@ -23,17 +23,17 @@ message ConfigTopologyInfo{
     }
     // ConfigEntrypoint captures what object model configs to generate for a given testbed.
     // Could either be venice object model or Agent object model
-    string ConfigEntrypoint     = 1 [(venice.check) = "StrEnum(TopologyInfo.EntrypointType)",
-                                     (gogoproto.jsontag) = "config-entrypoint,omitempty"];
+    string ConfigEntrypoint         = 1 [(venice.check) = "StrEnum(TopologyInfo.EntrypointType)",
+                                         (gogoproto.jsontag) = "config-entrypoint,omitempty"];
 
     // RESTEndpoint to push the generated configs to
-    string RestEndpoint         = 2 [(gogoproto.jsontag) = "naples-rest-endpoint, omitempty"];
+    repeated string RestEndpoint    = 2 [(gogoproto.jsontag) = "naples-rest-endpoint, omitempty"];
 
     // Nodes in the topology
-    repeated Node   Nodes       = 3 [(gogoproto.jsontag) = "nodes,omitempty"];
+    repeated Node   Nodes           = 3 [(gogoproto.jsontag) = "nodes,omitempty"];
 
     // VLANs for the testbed
-    repeated uint32 VLANs       = 4 [(gogoproto.jsontag) = "vlans,omitempty"];
+    repeated uint32 VLANs           = 4 [(gogoproto.jsontag) = "vlans,omitempty"];
 }
 
 message App {
@@ -83,4 +83,21 @@ message Node {
 
     // IP Address of the node
     string IPAddress        = 3 [(gogoproto.jsontag) = "ip-address,omitempty"];
+}
+
+message CfgQueryParameters {
+    // Object Type to query. Either venice or agent level object
+    string ObjectMode               = 1 [(venice.check) = "StrEnum(ConfigTopologyInfo.EntrypointType)",
+                                         (gogoproto.jsontag) = "object-mode,omitempty"];
+
+    // Object Kind
+    string ObjectKind               = 2 [(gogoproto.jsontag) = "object-kind,omitempty"];
+
+    // MatchSelector accepts a multiple key value pair, with a default AND between them
+    repeated MatchSelector match    = 3 [(gogoproto.jsontag) = "match, omitempty"];
+}
+
+message MatchSelector {
+    string Key      = 1 [(gogoproto.jsontag) = "key"];
+    string Value    = 2 [(gogoproto.jsontag) = "value"];
 }

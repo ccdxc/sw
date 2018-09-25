@@ -57,7 +57,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='topo_svc.proto',
   package='iotamodel',
   syntax='proto3',
-  serialized_pb=_b('\n\x0etopo_svc.proto\x12\tiotamodel\x1a\x1cgoogle/api/annotations.proto\x1a-github.com/gogo/protobuf/gogoproto/gogo.proto\x1a\x0freq_types.proto\x1a\x10resp_types.proto2\x83\x03\n\x0bTopologyApi\x12Z\n\x13InstantiateTopology\x12\x1d.iotamodel.ConfigTopologyInfo\x1a\".iotamodel.InstantiateTopoResponse\"\x00\x12\x46\n\x0fInstantiateApps\x12\x0e.iotamodel.App\x1a!.iotamodel.InstantiateAppResponse\"\x00\x12\x38\n\x07\x41\x64\x64Node\x12\x0f.iotamodel.Node\x1a\x1a.iotamodel.AddNodeResponse\"\x00\x12=\n\nTriggerApp\x12\x0e.iotamodel.App\x1a\x1d.iotamodel.TriggerAppResponse\"\x00\x12W\n\x12\x43heckClusterHealth\x12\x1d.iotamodel.ConfigTopologyInfo\x1a .iotamodel.ClusterHealthResponse\"\x00P\x02P\x03\x62\x06proto3')
+  serialized_pb=_b('\n\x0etopo_svc.proto\x12\tiotamodel\x1a\x1cgoogle/api/annotations.proto\x1a-github.com/gogo/protobuf/gogoproto/gogo.proto\x1a\x0freq_types.proto\x1a\x10resp_types.proto2\xc4\x03\n\x0bTopologyApi\x12Z\n\x13InstantiateTopology\x12\x1d.iotamodel.ConfigTopologyInfo\x1a\".iotamodel.InstantiateTopoResponse\"\x00\x12\x46\n\x0fInstantiateApps\x12\x0e.iotamodel.App\x1a!.iotamodel.InstantiateAppResponse\"\x00\x12\x38\n\x07\x41\x64\x64Node\x12\x0f.iotamodel.Node\x1a\x1a.iotamodel.AddNodeResponse\"\x00\x12=\n\nTriggerApp\x12\x0e.iotamodel.App\x1a\x1d.iotamodel.TriggerAppResponse\"\x00\x12?\n\x0cGetAppStdout\x12\x0e.iotamodel.App\x1a\x1d.iotamodel.TriggerAppResponse\"\x00\x12W\n\x12\x43heckClusterHealth\x12\x1d.iotamodel.ConfigTopologyInfo\x1a .iotamodel.ClusterHealthResponse\"\x00P\x02P\x03\x62\x06proto3')
   ,
   dependencies=[google_dot_api_dot_annotations__pb2.DESCRIPTOR,github_dot_com_dot_gogo_dot_protobuf_dot_gogoproto_dot_gogo__pb2.DESCRIPTOR,req__types__pb2.DESCRIPTOR,resp__types__pb2.DESCRIPTOR,],
   public_dependencies=[req__types__pb2.DESCRIPTOR,resp__types__pb2.DESCRIPTOR,])
@@ -75,7 +75,7 @@ _TOPOLOGYAPI = _descriptor.ServiceDescriptor(
   index=0,
   options=None,
   serialized_start=142,
-  serialized_end=529,
+  serialized_end=594,
   methods=[
   _descriptor.MethodDescriptor(
     name='InstantiateTopology',
@@ -114,9 +114,18 @@ _TOPOLOGYAPI = _descriptor.ServiceDescriptor(
     options=None,
   ),
   _descriptor.MethodDescriptor(
+    name='GetAppStdout',
+    full_name='iotamodel.TopologyApi.GetAppStdout',
+    index=4,
+    containing_service=None,
+    input_type=req__types__pb2._APP,
+    output_type=resp__types__pb2._TRIGGERAPPRESPONSE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
     name='CheckClusterHealth',
     full_name='iotamodel.TopologyApi.CheckClusterHealth',
-    index=4,
+    index=5,
     containing_service=None,
     input_type=req__types__pb2._CONFIGTOPOLOGYINFO,
     output_type=resp__types__pb2._CLUSTERHEALTHRESPONSE,

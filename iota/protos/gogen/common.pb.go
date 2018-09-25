@@ -18,6 +18,8 @@
 		App
 		Command
 		Node
+		CfgQueryParameters
+		MatchSelector
 		IotaAPIResponse
 		ClusterHealthResponse
 		NodeStatus

@@ -28,5 +28,6 @@ service ConfigMgmtApi {
     // This method is expected to be used for test cases that want to modify an individual object during the context of the testcase run
     rpc PushConfig(ConfigObject) returns (ConfigPushResponse) {};
 
-    // TODO Add Query API
+    // Query API queries the base config to match any parameters
+    rpc QueryConfig(CfgQueryParameters) returns (ConfigObject) {};
 }

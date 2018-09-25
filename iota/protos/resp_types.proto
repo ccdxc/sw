@@ -42,7 +42,7 @@ message NodeStatus {
         APP_DOWN       = 3;
     }
     // API Response
-    IotaAPIResponse APIStatus   = 1 [(gogoproto.jsontag) = "api-status,omitempty"];
+    IotaAPIResponse HealthCheckResponse   = 1 [(gogoproto.jsontag) = "api-status,omitempty"];
 
     // Health captures individual node health
     string Health   = 2 [(venice.check) = "StrEnum(NodeStatus.HealthCodeType)",
@@ -71,19 +71,22 @@ message AddNodeResponse {
 
 // Generate Configs API Response
 message GeneratedConfigResponse {
-    IotaAPIResponse APIStatus   = 1 [(gogoproto.jsontag) = "api-status,omitemtpy"];
+    IotaAPIResponse GeneratedConfigResponse     = 1 [(gogoproto.jsontag) = "api-status,omitemtpy"];
 
     // Generated Configs
-    ConfigInfo Configs          = 2 [(gogoproto.jsontag) = "configs,omitemtpy"];
+    ConfigInfo ConfigInfo                       = 2 [(gogoproto.jsontag) = "configs,omitemtpy"];
 }
 
 // Config Push API Response
 message ConfigPushResponse {
-    IotaAPIResponse APIStatus = 1 [(gogoproto.jsontag) = "api-status,omitemtpy"];
+    IotaAPIResponse ConfigPushResponse = 1 [(gogoproto.jsontag) = "api-status,omitemtpy"];
 
 }
 
 // App Trigger API Response
 message TriggerAppResponse {
-    IotaAPIResponse APIStatus = 1 [(gogoproto.jsontag) = "api-status,omitemtpy"];
+    IotaAPIResponse APIStatus   = 1 [(gogoproto.jsontag) = "api-status,omitemtpy"];
+    string AppHandle            = 2 [(gogoproto.jsontag) = "app-handle,omitemtpy"];
+    string AppStdOut            = 3 [(gogoproto.jsontag) = "app-stdout,omitemtpy"];
+    uint32 ExitCode             = 4 [(gogoproto.jsontag) = "exit-code,omitemtpy"];
 }

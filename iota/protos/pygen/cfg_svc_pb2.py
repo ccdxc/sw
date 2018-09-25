@@ -74,7 +74,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='cfg_svc.proto',
   package='iotamodel',
   syntax='proto3',
-  serialized_pb=_b('\n\rcfg_svc.proto\x12\tiotamodel\x1a\x1cgoogle/api/annotations.proto\x1a-github.com/gogo/protobuf/gogoproto/gogo.proto\x1a\x0freq_types.proto\x1a\x10resp_types.proto\x1a\x0c\x63ommon.proto2\xba\x01\n\rConfigMgmtApi\x12\x61\n\x1aGenerateAndPushBaseConfigs\x12\x1d.iotamodel.ConfigTopologyInfo\x1a\".iotamodel.GeneratedConfigResponse\"\x00\x12\x46\n\nPushConfig\x12\x17.iotamodel.ConfigObject\x1a\x1d.iotamodel.ConfigPushResponse\"\x00P\x02P\x03\x62\x06proto3')
+  serialized_pb=_b('\n\rcfg_svc.proto\x12\tiotamodel\x1a\x1cgoogle/api/annotations.proto\x1a-github.com/gogo/protobuf/gogoproto/gogo.proto\x1a\x0freq_types.proto\x1a\x10resp_types.proto\x1a\x0c\x63ommon.proto2\x83\x02\n\rConfigMgmtApi\x12\x61\n\x1aGenerateAndPushBaseConfigs\x12\x1d.iotamodel.ConfigTopologyInfo\x1a\".iotamodel.GeneratedConfigResponse\"\x00\x12\x46\n\nPushConfig\x12\x17.iotamodel.ConfigObject\x1a\x1d.iotamodel.ConfigPushResponse\"\x00\x12G\n\x0bQueryConfig\x12\x1d.iotamodel.CfgQueryParameters\x1a\x17.iotamodel.ConfigObject\"\x00P\x02P\x03\x62\x06proto3')
   ,
   dependencies=[google_dot_api_dot_annotations__pb2.DESCRIPTOR,github_dot_com_dot_gogo_dot_protobuf_dot_gogoproto_dot_gogo__pb2.DESCRIPTOR,req__types__pb2.DESCRIPTOR,resp__types__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,],
   public_dependencies=[req__types__pb2.DESCRIPTOR,resp__types__pb2.DESCRIPTOR,])
@@ -92,7 +92,7 @@ _CONFIGMGMTAPI = _descriptor.ServiceDescriptor(
   index=0,
   options=None,
   serialized_start=155,
-  serialized_end=341,
+  serialized_end=414,
   methods=[
   _descriptor.MethodDescriptor(
     name='GenerateAndPushBaseConfigs',
@@ -110,6 +110,15 @@ _CONFIGMGMTAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=common__pb2._CONFIGOBJECT,
     output_type=resp__types__pb2._CONFIGPUSHRESPONSE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='QueryConfig',
+    full_name='iotamodel.ConfigMgmtApi.QueryConfig',
+    index=2,
+    containing_service=None,
+    input_type=req__types__pb2._CFGQUERYPARAMETERS,
+    output_type=common__pb2._CONFIGOBJECT,
     options=None,
   ),
 ])

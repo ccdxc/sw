@@ -32,6 +32,9 @@ service TopologyApi {
     // Trigger calls the trigger function of the app.
     rpc TriggerApp(App) returns (TriggerAppResponse) {};
 
+    // GetAppStdout returns the std out of an app which was run in the background.
+    rpc GetAppStdout(App) returns (TriggerAppResponse) {};
+
     // Harness queries cluster health prior to running a test case
     rpc CheckClusterHealth(ConfigTopologyInfo) returns  (ClusterHealthResponse) {};
 
