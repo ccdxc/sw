@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+	"net"
 	"sync"
 
 	"github.com/pensando/sw/venice/cmd/env"
@@ -88,6 +90,13 @@ func (i *vipService) AddVirtualIPs(vips ...string) error {
 	defer i.Unlock()
 	var err error
 	for _, ip := range vips {
+		if ip == "" {
+			continue
+		}
+		if net.ParseIP(ip) == nil {
+			err = fmt.Errorf("%s is not a valid ip", ip)
+			continue
+		}
 		i.virtualIPs[ip] = nil
 		// TODO: When VIP service runs its own leaderService, start a per-VIP based leaderService
 		if i.isLeader {

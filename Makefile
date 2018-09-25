@@ -182,7 +182,7 @@ cluster-restart:
 
 clean:
 	@$(MAKE) c-stop >/dev/null 2>&1
-	@rm -fr bin/* venice/ui/webapp/node_modules  venice/ui/web-app-framework/node_modules  venice/ui/venice-sdk/node_modules
+	@rm -fr bin/* venice/ui/webapp/node_modules  venice/ui/web-app-framework/node_modules  venice/ui/venice-sdk/node_modules venice/ui/webapp/dist
 
 helper-containers:
 	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
