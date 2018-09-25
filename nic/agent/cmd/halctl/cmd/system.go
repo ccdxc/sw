@@ -745,6 +745,9 @@ func fteTxRxStatsShow(stats *halproto.Stats) {
 
 	ftestats = stats.GetFteStats()
 	pmdstats = stats.GetPmdStats()
+	if pmdstats == nil {
+		return
+	}
 
 	fmt.Printf("%s%d\n", "Flow-miss Packets		: ", ftestats.GetFlowMissPkts())
 	fmt.Printf("%s%-15d\n", "Redir Packets			: ", ftestats.GetRedirPkts())
@@ -754,6 +757,9 @@ func fteTxRxStatsShow(stats *halproto.Stats) {
 	fmt.Printf("%s%-15d\n", "Queued Tx Packets		: ", ftestats.GetQueuedTxPkts())
 	fmt.Printf("\n")
 	var fteid int
+	if pmdstats.FteInfo == nil {
+		return
+	}
 	for _, fteinfo := range pmdstats.FteInfo {
 		fmt.Printf("%s%-3d\n", "FTE     : ", fteid)
 		fmt.Printf("%s\n", strings.Repeat("-", 13))
@@ -795,6 +801,9 @@ func fteStatsShow(stats *halproto.Stats) {
 	var ftestats *halproto.FTEStats
 
 	ftestats = stats.GetFteStats()
+	if ftestats == nil {
+		return
+	}
 
 	fmt.Printf("\n%s%-15d\n", "Connection per-second		:", ftestats.GetConnPerSecond())
 	fmt.Printf("%s%-15d\n", "Flow-miss Packets		:", ftestats.GetFlowMissPkts())
@@ -809,9 +818,13 @@ func fteStatsShow(stats *halproto.Stats) {
 	fmt.Println(hdrLine)
 	fmt.Printf("%25s%25s\n", "Error Type", "Drop Count")
 	fmt.Println(hdrLine)
-	for _, fteerr := range ftestats.FteErrors {
-		if fteerr.GetCount() != 0 {
-			fmt.Printf("%25s%25d\n", fteerr.GetFteError(), fteerr.GetCount())
+	if ftestats.FteErrors != nil {
+		for _, fteerr := range ftestats.FteErrors {
+			if fteerr != nil {
+				if fteerr.GetCount() != 0 {
+					fmt.Printf("%25s%25d\n", fteerr.GetFteError(), fteerr.GetCount())
+				}
+			}
 		}
 	}
 
@@ -820,16 +833,20 @@ func fteStatsShow(stats *halproto.Stats) {
 	fmt.Println(hdrLines)
 	fmt.Printf("%25s%25s%25s%25s\n", "Feature Name", "Drop Count", "Drop Reason", "Drops per-reason")
 	fmt.Println(hdrLines)
-	for _, featurestats := range ftestats.FeatureStats {
-		fmt.Printf("%25s%25d", featurestats.GetFeatureName(), featurestats.GetDropPkts())
-		for _, fteerr := range featurestats.DropReason {
-			if fteerr.GetCount() != 0 {
-				fmt.Printf("%25s%25d\n", fteerr.GetFteError(), fteerr.GetCount())
+	if ftestats.FeatureStats != nil {
+		for _, featurestats := range ftestats.FeatureStats {
+			if featurestats != nil {
+				fmt.Printf("%25s%25d", featurestats.GetFeatureName(), featurestats.GetDropPkts())
+				for _, fteerr := range featurestats.DropReason {
+					if fteerr.GetCount() != 0 {
+						fmt.Printf("%25s%25d\n", fteerr.GetFteError(), fteerr.GetCount())
+					}
+				}
 			}
+			fmt.Printf("\n")
 		}
 		fmt.Printf("\n")
 	}
-	fmt.Printf("\n")
 }
 
 func sessionSummaryStatsShow(stats *halproto.Stats) {

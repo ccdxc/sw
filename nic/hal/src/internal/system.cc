@@ -512,28 +512,32 @@ system_get (SystemResponse *rsp)
         goto end;
     }
 
-    // FTE stats get
-    system_fte_stats_get(rsp);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_ERR);
-        goto end;
-    }
-    
-    system_fte_txrx_stats_get(rsp);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_ERR);
-        goto end;
-    }
+    if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
+        (hal::g_hal_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)) {
 
-   
-    // Session Summary get
-    system_session_summary_get(rsp);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get session summary get, err : {}", ret);
-        rsp->set_api_status(types::API_STATUS_ERR);
-        goto end;
+        // FTE stats get
+        system_fte_stats_get(rsp);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+            rsp->set_api_status(types::API_STATUS_ERR);
+            goto end;
+        }
+        
+        system_fte_txrx_stats_get(rsp);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+            rsp->set_api_status(types::API_STATUS_ERR);
+            goto end;
+        }
+
+       
+        // Session Summary get
+        system_session_summary_get(rsp);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get session summary get, err : {}", ret);
+            rsp->set_api_status(types::API_STATUS_ERR);
+            goto end;
+        }
     }
 
     rsp->set_api_status(types::API_STATUS_OK);
