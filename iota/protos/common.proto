@@ -1,0 +1,39 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for IO Test Automation Common Message Types
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package iotamodel;
+
+// Imports
+import "google/api/annotations.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+
+
+message ConfigInfo {
+    // Configs captures all the user visible objects that need to be pushed.
+    repeated ConfigObject Configs = 1 [(gogoproto.jsontag) = "configs,omitempty"];
+}
+
+
+message ConfigObject{
+    enum CfgMethodType {
+        NONE            = 0;
+        CREATE          = 1;
+        UPDATE          = 2;
+        DELETE          = 3;
+        CREATE_DELETE   = 4;
+    }
+    // Method indicates the REST method to call on the object. CREATE_DELETE is used to create delete loop test cases
+    string Method               = 1 [(venice.check) = "StrEnum(ConfigObject.CfgMethodType)",
+                                     (gogoproto.jsontag) = "method,omitempty"];
+
+    // ConfigEntrypoint captures where an individual config is expected to be pushed
+    string ConfigEntrypoint     = 2 [(venice.check) = "StrEnum(TopologyInfo.EntrypointType)",
+                                    (gogoproto.jsontag) = "config-entrypoint,omitempty"];
+    // Config captures the Marshaled JSON object
+    string Config               = 3 [(gogoproto.jsontag) = "config,omitempty"];
+}

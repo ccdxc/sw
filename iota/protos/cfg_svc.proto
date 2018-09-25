@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for IO Test Automation Config Management Service
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package iotamodel;
+
+// Imports.
+import "google/api/annotations.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// Common proto imports
+import public "req_types.proto";
+import public "resp_types.proto";
+import "common.proto";
+
+// ---------------------------- Config API ----------------------------
+// Config Management Service
+service ConfigMgmtApi {
+    // GenerateConfigs accepts the topology information and config information and auto generates the config that needs
+    // to be pushed. The intent is to support only the user facing objects at NAPLES REST or Venice REST Level.
+    // It also pushes the base config either to Venice/NAPLES REST Endpoint
+    rpc GenerateAndPushBaseConfigs (ConfigTopologyInfo) returns (GeneratedConfigResponse) {};
+
+    // PushConfig pushes a single modified object to the REST Endpoint and returns the push status.
+    // This method is expected to be used for test cases that want to modify an individual object during the context of the testcase run
+    rpc PushConfig(ConfigObject) returns (ConfigPushResponse) {};
+
+    // TODO Add Query API
+}

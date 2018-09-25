@@ -1,0 +1,40 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for IO Test Automation Topology Abstraction Service
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package iotamodel;
+
+// Imports
+import "google/api/annotations.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// Common proto imports
+import public "req_types.proto";
+import public "resp_types.proto";
+
+// ---------------------------- Topology API ----------------------------
+
+// Topology Service Methods
+service TopologyApi {
+    // InstantiateTopology is called by harness which assigns a personality to the node based on the topology.
+    // This is a blocking call to the harness, The parallel instantiation across the nodes is handled internally.
+    rpc InstantiateTopology (ConfigTopologyInfo) returns (InstantiateTopoResponse) {};
+
+    // InstantiateApps creates a app on the specified node.
+    rpc InstantiateApps (App) returns (InstantiateAppResponse) {};
+
+    // AddNode adds a node to the current topology
+    rpc AddNode(Node) returns (AddNodeResponse) {};
+
+    // Trigger calls the trigger function of the app.
+    rpc TriggerApp(App) returns (TriggerAppResponse) {};
+
+    // Harness queries cluster health prior to running a test case
+    rpc CheckClusterHealth(ConfigTopologyInfo) returns  (ClusterHealthResponse) {};
+
+    // TODO Add Query API
+    // TODO Add Validator API
+}

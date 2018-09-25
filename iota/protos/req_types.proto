@@ -1,0 +1,86 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for IO Test Automation Request Message Types
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package iotamodel;
+
+// Imports
+import "google/api/annotations.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "common.proto";
+
+
+// ConfigTopologyInfo encapsulates all topology information for a given iota invocation
+message ConfigTopologyInfo{
+    enum EntrypointType {
+        ENTRYPOINT_NONE    = 0;
+        NAPLES_REST        = 1;
+        VENICE_REST        = 2;
+    }
+    // ConfigEntrypoint captures what object model configs to generate for a given testbed.
+    // Could either be venice object model or Agent object model
+    string ConfigEntrypoint     = 1 [(venice.check) = "StrEnum(TopologyInfo.EntrypointType)",
+                                     (gogoproto.jsontag) = "config-entrypoint,omitempty"];
+
+    // RESTEndpoint to push the generated configs to
+    string RestEndpoint         = 2 [(gogoproto.jsontag) = "naples-rest-endpoint, omitempty"];
+
+    // Nodes in the topology
+    repeated Node   Nodes       = 3 [(gogoproto.jsontag) = "nodes,omitempty"];
+
+    // VLANs for the testbed
+    repeated uint32 VLANs       = 4 [(gogoproto.jsontag) = "vlans,omitempty"];
+}
+
+message App {
+    enum Type {
+        APP_NONE    = 0;
+        RAW_PKT     = 1;
+        CMD_APP     = 2;
+    }
+
+    // AppType captures the workload type. Currently two categories are supported RAW_PKT which supports packet tx and rx
+    // and CommandType which can run a command natively on the node. iPerf and the like
+    string AppType      = 1 [(venice.check) = "StrEnum(App.Type)",
+                             (gogoproto.jsontag) = "app-type,omitempty"];
+
+    // AppConfig is arguments to the app
+    string AppConfig    = 2 [(gogoproto.jsontag) = "app-config,omitempty"];
+
+    // Command that needs to be run on an app
+    Command AppCommand  = 3 [(gogoproto.jsontag) = "app-command,omitempty"];
+}
+
+message Command {
+    enum CmdType {
+        COMMAND_NONE        = 0;
+        COMMAND_FOREGROUND  = 1;
+        COMMAND_BACKGROUND  = 2;
+    }
+    // CommandType captures the App command type. Whether it should be run in foreground or in background
+    string CommandType      = 1 [(venice.check) = "StrEnum(Command.CmdType)",
+                                 (gogoproto.jsontag) = "command-type,omitempty"];
+}
+
+
+message Node {
+    enum Type {
+        PERSONALITY_NONE                = 0;
+        PERSONALITY_NAPLES              = 1;
+        PERSONALITY_VENICE              = 2;
+        PERSONALITY_NAPLES_WITH_QEMU    = 3;
+    }
+    // PersonalityType captures the node personality. naples node, venice node or qemu
+    string PersonalityType  = 1 [(venice.check) = "StrEnum(Node.Type)",
+                                 (gogoproto.jsontag) = "personality-type,omitempty"];
+
+    // Image captures the the built artifacts that need to be loaded on the node depending on the personality type
+    string Image            = 2 [(gogoproto.jsontag) = "image,omitempty"];
+
+    // IP Address of the node
+    string IPAddress        = 3 [(gogoproto.jsontag) = "ip-address,omitempty"];
+}
