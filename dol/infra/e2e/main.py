@@ -16,7 +16,7 @@ def __GenerateEpCfgs(cfg_file):
             return data["LifObject"][data["EnicObject"][ep["intf"]]["lif"]]["id"], 0
     
     data = json.load(open(cfg_file))
-    ep_cfgs = []
+    ep_cfgs = { "devices" : [] }
     for ten_id, ten in data["TenantObject"].items():
         if ten["type"] == "TENANT":
             eps = [ (ep_name, ep) for ep_name, ep in data["EndpointObject"].items() if ep["tenant"] == ten_id ]
@@ -27,7 +27,7 @@ def __GenerateEpCfgs(cfg_file):
                         "prefix_len" : 24, "intf_name" : ep["intf"],
                          "encap_vlan" : data["EnicObject"][ep["intf"]]["encap_vlan_id"] 
                                         if not ep["remote"] else None}
-                ep_cfgs.append(cfg)
+                ep_cfgs["devices"].append(cfg)
                 
     return ep_cfgs
 
@@ -46,12 +46,12 @@ def Start(dol_cfg_file):
         json.dump(ep_cfgs, fp)    
     __start_htnap(e2e_cfg_file)
     global EpMgr
-    EpMgr = EndpointManager(ep_cfgs)
+    EpMgr = EndpointManager(ep_cfgs["devices"])
     EpMgr.BringUpEndpoints()
     #This is hack for now as all the Endpoints are in same segment
     #If learning is enabled, then no need to install ARP entries.
     data = json.load(open(dol_cfg_file))
-    segment = data["EndpointObject"][ep_cfgs[0]["name"]]["segment"]
+    segment = data["EndpointObject"][ep_cfgs["devices"][0]["name"]]["segment"]
     EpMgr.ConfigureEndpoints(add_arp=not data["SegmentObject"][segment]["eplearn"])
     
 def Stop():

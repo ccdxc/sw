@@ -28,6 +28,7 @@
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/model_sim/include/buf_hdr.h"
 #include "nic/e2etests/driver/lib_driver.hpp"
+#include "nic/e2etests/hntap/hntap_switch.hpp"
 #include "nic/e2etests/hntap/dev.hpp"
 #include "nic/e2etests/lib/helpers.hpp"
 #include "nic/e2etests/lib/packet.hpp"
@@ -141,7 +142,7 @@ model_check_host_dev(dev_handle_t *dev_handles[], uint32_t max_handles)
 
 
 static void
-model_check_uplinks(dev_handle_t *dev_handles[], uint32_t max_handles)
+model_check_uplinks(dev_handle_t *dev_handles[], uint32_t max_handles, HntapSwitchBase *hswitch)
 {
     uint32_t port, cos;
     std::vector<uint8_t> opkt1, opkt2;
@@ -161,7 +162,12 @@ model_check_uplinks(dev_handle_t *dev_handles[], uint32_t max_handles)
         for (uint32_t i = 0 ; i < max_handles; i++) {
             dev_handle_t * dev_handle = dev_handles[i];
             if (dev_handle->tap_ep == TAP_ENDPOINT_NET && dev_handle->port == port) {
-                send_pkt_to_dev(dev_handle, opkt1.data(), opkt1.size());
+                if (hswitch != NULL) {
+                    TLOG("Sending uplink packet to Hntap Switch...\n");
+                    hswitch->ProcessPacketFromModelUplink(dev_handle, opkt1.data(), opkt1.size());
+                } else {
+                    send_pkt_to_dev(dev_handle, opkt1.data(), opkt1.size());
+                }
             }
         }
     }
@@ -551,6 +557,7 @@ hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int 
 struct thread_data {
     dev_handle_t **dev_handles;
     uint32_t max_handles;
+    HntapSwitchBase *hswitch;
 };
 
 static void*
@@ -561,7 +568,7 @@ model_poller(void *arg) {
        std::this_thread::sleep_for (std::chrono::milliseconds(1));
        model_mutex.lock();
        model_check_host_dev(data->dev_handles, data->max_handles);
-       model_check_uplinks(data->dev_handles, data->max_handles);
+       model_check_uplinks(data->dev_handles, data->max_handles, data->hswitch);
        model_mutex.unlock();
    }
 
@@ -594,7 +601,8 @@ init_dev_handles(dev_handle_t *dev_handles[], uint32_t max_handles)
 }
 
 void
-hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles, bool parallel)
+hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles,
+        bool parallel, HntapSwitchBase *hswitch)
 {
   int		maxfd;
   uint16_t  nread;
@@ -607,6 +615,7 @@ hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles, bool paralle
 
   data.dev_handles = dev_handles;
   data.max_handles = max_handles;
+  data.hswitch = hswitch;
 
   if (hntap_go_thru_model) {
       lib_model_connect();

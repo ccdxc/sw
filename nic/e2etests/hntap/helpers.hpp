@@ -19,6 +19,7 @@ TLOG(const char *fmt, ...) {
   gettimeofday(&tv, NULL);
   strftime(timestr, 24, "%H:%M:%S", gmtime(&tv.tv_sec));
   printf("[%s.%03ld] ", timestr, tv.tv_usec / 1000);
+  fflush(stdout);
 
   va_start(args, fmt);
   vprintf(fmt, args);

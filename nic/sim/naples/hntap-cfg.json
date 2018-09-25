@@ -1,110 +1,112 @@
-[
-  {
-    "name"   : "pen-intf1",
-    "local"  : false,
-    "port"   : 1,
-    "lif_id" : 0
-  },
-  {
-    "name"    : "pen-intf2",
-    "local"   : false,
-    "port"    : 2,
-    "lif_id"  : 0
-  },
-  {
-    "name"    : "lif100",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 100 
-  },
-  {
-    "name"    : "lif101",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 101
-  },
-  {
-    "name"    : "lif102",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 102
-  },
-  {
-    "name"    : "lif103",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 103
-  },
-  {
-    "name"    : "lif104",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 104
-  },
-  {
-    "name"    : "lif105",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 105
-  },
-  {
-    "name"    : "lif106",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 106
-  },
-  {
-    "name"    : "lif107",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 107
-  },
-  {
-    "name"    : "lif108",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 108
-  },
-  {
-    "name"    : "lif109",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 109
-  },
-  {
-    "name"    : "lif110",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 110
-  },
-  {
-    "name"    : "lif111",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 111
-  },
-  {
-    "name"    : "lif112",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 112
-  },
-  {
-    "name"    : "lif113",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 113
-  },
-  {
-    "name"    : "lif114",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 114
-  },
-  {
-    "name"    : "lif115",
-    "local"   : true,
-    "port"    : 0,
-    "lif_id"  : 115
-  }
-]
+{
+  "devices": [
+      {
+        "name"   : "pen-intf1",
+        "local"  : false,
+        "port"   : 1,
+        "lif_id" : 0
+      },
+      {
+        "name"    : "pen-intf2",
+        "local"   : false,
+        "port"    : 2,
+        "lif_id"  : 0
+      },
+      {
+        "name"    : "lif100",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 100 
+      },
+      {
+        "name"    : "lif101",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 101
+      },
+      {
+        "name"    : "lif102",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 102
+      },
+      {
+        "name"    : "lif103",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 103
+      },
+      {
+        "name"    : "lif104",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 104
+      },
+      {
+        "name"    : "lif105",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 105
+      },
+      {
+        "name"    : "lif106",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 106
+      },
+      {
+        "name"    : "lif107",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 107
+      },
+      {
+        "name"    : "lif108",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 108
+      },
+      {
+        "name"    : "lif109",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 109
+      },
+      {
+        "name"    : "lif110",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 110
+      },
+      {
+        "name"    : "lif111",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 111
+      },
+      {
+        "name"    : "lif112",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 112
+      },
+      {
+        "name"    : "lif113",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 113
+      },
+      {
+        "name"    : "lif114",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 114
+      },
+      {
+        "name"    : "lif115",
+        "local"   : true,
+        "port"    : 0,
+        "lif_id"  : 115
+      }
+    ]
+}

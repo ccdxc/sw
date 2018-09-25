@@ -402,7 +402,7 @@ hntap_do_drop_rexmit(dev_handle_t *dev, uint32_t app_port_index, char *pkt, int 
 
 void
 hntap_work_loop (dev_handle_t *dev_handles[], uint32_t max_handles,
-        bool send_recv_parallel)
+        bool send_recv_parallel, HntapSwitchBase *hswitch)
 {
   int		maxfd;
   uint16_t  nread;

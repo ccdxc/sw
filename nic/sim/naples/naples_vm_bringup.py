@@ -8,6 +8,7 @@ import argparse
 import time
 import struct
 import socket
+import json
 
 NAPLES_VER = "v1"
 NAPLES_IMAGE = "pensando/naples:" + NAPLES_VER
@@ -31,6 +32,13 @@ NAPLES_VOLUME_MOUNTS = {
     NAPLES_DATA_DIR: {'bind': '/naples/data', 'mode': 'rw'}
 }
 
+
+NAPLES_CFG_DIR        = "/naples/nic/conf"
+HNTAP_CFG_FILE        = "hntap-cfg.json"
+HNTAP_QEMU_CFG_FILE   = "hntap-with-qemu-cfg.json"
+HNTAP_RESTART_CMD     = "/naples/nic/tools/restart-hntap.sh"
+HNTAP_TEMP_CFG_FILE   = "/tmp/hntap-cfg.json"
+    
 NAPLES_PORT_MAPS = {
     str(AGENT_PORT) + '/tcp': AGENT_PORT,
     str(SIM_PORT) + '/tcp':SIM_PORT
@@ -175,7 +183,105 @@ def __setup_docker_network(args):
     return nw
 
 
-def __setup_data_network(args):
+def moveInterfaceToNs(intf, ns):
+    cmd = ["ip", "link", "set",  intf, "netns",  ns,  "name",  intf]
+    if not RunShellCmd(cmd):
+        print "Moving interface %s to naples-sim  failed" % intf
+        sys.exit(1)
+    cmd = ["ip", "netns", "exec", ns, "ifconfig", intf, "up"]
+    RunShellCmd(cmd)
+    print "Moving interface %s to naples-sim  success" % intf
+
+
+def __move_data_intfs_to_naples_sim(container_obj, node_ip, data_intfs):
+    pid = str(_DOCKER_API_CLIENT.inspect_container(container_obj.id)["State"]["Pid"])
+    for intf in data_intfs:
+        moveInterfaceToNs(intf, pid)
+        cmd = ["ip", "netns", "exec", pid, "ifconfig", data_intfs[0], node_ip + "/24", "up"]
+        if not RunShellCmd(cmd):
+            print ("Failed to configure IP for intf : %s with  :%s" % (intf, node_ip))
+            sys.exit(1)
+        print ("Configure IP for intf : %s with  :%s" % (intf, node_ip))
+        
+    
+def __setup_hntap(container_obj, args):
+    def __ip2int(ipstr): return struct.unpack('!I', socket.inet_aton(ipstr))[0]
+
+    def __int2ip(n): return socket.inet_ntoa(struct.pack('!I', n))
+    
+    start_ip = __ip2int(args.tunnel_ip_start)
+    node_ip = __int2ip(start_ip + int(args.node_id) - 1)
+    
+    __move_data_intfs_to_naples_sim(container_obj, node_ip, args.data_intfs)
+    
+    hntapFile = None
+    if args.with_qemu:
+        hntapFile = NAPLES_CFG_DIR + "/" + HNTAP_QEMU_CFG_FILE
+    else:
+        hntapFile = NAPLES_CFG_DIR + "/" + HNTAP_CFG_FILE
+        
+    cpCmd = ["docker", "cp", NAPLES_SIM_NAME + ":" + hntapFile, HNTAP_TEMP_CFG_FILE]
+    
+    if not RunShellCmd(cpCmd):
+        print "Error in coping hntap config file to host"
+        sys.exit(1)
+    
+    try:
+        hntap_cfg = json.load(open(HNTAP_TEMP_CFG_FILE))
+    except Exeception as ex:
+        print "Error opening Json file :" + str(ex)
+        sys.exit(1)
+    
+    peerIPs = []
+    for peer in range(0, args.node_cnt):
+        if int(args.node_id) != peer + 1:
+            peerIPs.append(__int2ip(start_ip + peer))
+                    
+    if args.hntap_mode == "tunnel":
+        #For Tunnel mode, just pick the first data interface.
+        hntap_cfg["switch"] = {
+                                "tunnel-mode" : 
+                                    {
+                                        "out-interface" : args.data_intfs[0],
+                                        "peers" : peerIPs
+                                    }
+                                }
+    else:
+        #For Pass through mode, associate each uplink interface to data interface.
+        hntap_cfg["switch"] = {
+                                "passthrough-mode" : 
+                                    {
+                                        "uplink-map": {}
+                                    }
+                               }
+        i = 0
+        for intf in hntap_cfg["devices"]:
+            if not intf["local"]:
+                hntap_cfg["switch"]["passthrough-mode"]["uplink-map"][intf["name"]] = args.data_intfs[i]
+                i += 1
+                
+    with open(HNTAP_TEMP_CFG_FILE, "w") as fp:
+        json.dump(hntap_cfg, fp)
+        
+    cpCmd = ["docker", "cp", HNTAP_TEMP_CFG_FILE,  NAPLES_SIM_NAME + ":" + hntapFile]
+    if not RunShellCmd(cpCmd):
+        print "Error in coping hntap config to naples-sim"
+        sys.exit(1)
+        
+    cmd_to_run = [HNTAP_RESTART_CMD]
+    container_obj.exec_run(cmd_to_run, detach=True, stdout=True, tty=False)
+
+def __setup_data_network(container_obj, args):
+    pid = str(_DOCKER_API_CLIENT.inspect_container(container_obj.id)["State"]["Pid"])
+    
+    cmd = ["mkdir", "-p", "/var/run/netns"]
+    RunShellCmd(cmd)
+    cmd = ["ln", "-s",  "/proc/" + pid + "/ns/net" ,  "/var/run/netns/" + pid]
+    RunShellCmd(cmd)
+    __setup_hntap(container_obj, args)
+
+# This is not being used for now.
+def __setup_ovs_data_network(args):
     def __ip2int(ipstr): return struct.unpack('!I', socket.inet_aton(ipstr))[0]
 
     def __int2ip(n): return socket.inet_ntoa(struct.pack('!I', n))
@@ -261,10 +367,14 @@ def __bringup_naples_container(args):
     time.sleep(5)
     __wait_for_agent_to_be_up()
     print "Nic container bring up was successfull"
+
     nw = __setup_docker_network(args)
     print "Connecting %s to docker network : %s" % (NAPLES_IMAGE, args.nw_name)
     nw.connect(NAPLES_SIM_NAME)
     print "Connected %s to docker network : %s" % (NAPLES_IMAGE, args.nw_name)
+    print "Setting uplink data network for  %s " % (NAPLES_IMAGE)
+    __setup_data_network(naples_obj, args)
+    print "Setting uplink data network  : %s  success" % (NAPLES_IMAGE)
 
 
 def __run_bootstrap_naples(args):
@@ -300,6 +410,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--network-driver', dest='nw_driver', default="macvlan",
                         choices=["macvlan"], help='Network Driver for docker network')
+    parser.add_argument('--data-intfs', dest='data_intfs', default=None,
+                        help='List of data interfaces to be used.')
     parser.add_argument('--network-name', dest='nw_name', default="control-net",
                         help='Network Driver for docker network')
     parser.add_argument('--network-subnet', dest='nw_subnet', default="11.1.1.0/24",
@@ -324,15 +436,21 @@ def main():
                         action='store_true', help='Setup naples sim for qemu env')
     parser.add_argument('--tunnel', dest='tun_port_prefix', default="vxtun-to-node",
                         help="Tunnel Port prefix to use")
+    parser.add_argument('--hntap-mode', dest='hntap_mode', default="tunnel",
+                        choices=["tunnel", "passthrough"], help='Hntap Mode to run in naples sim')
     args = parser.parse_args()
 
+    args.data_intfs = args.data_intfs.split(',')
+    if len(args.data_intfs) == 0:
+        print "No data interfaces be specified..."
+        sys.exit(1)
     __reset(args)
     __initial_setup()
     __pull_app_docker_images()
     __bringup_naples_container(args)
-    __setup_data_network(args)
     __run_bootstrap_naples(args)
 
 
 if __name__ == '__main__':
     main()
+

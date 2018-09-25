@@ -12,5 +12,14 @@
       "port": 2,
       "lif_id": 0
     }
-  ]
+  ],
+  "switch": {
+    "tunnel-mode" : {
+        "out-interface": "eth3",
+        "peers": [
+          "192.168.11.2",
+          "192.168.11.3"
+        ]
+      }
+    }
 }

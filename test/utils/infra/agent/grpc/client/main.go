@@ -150,9 +150,8 @@ func (cli *NaplesClient) BringUp(ctx context.Context, cfg *node.NaplesSimConfig)
 	resp, err := cli.simClient.BringUp(ctx, &pb.NaplesSimConfig{Name: cfg.Name,
 		NodeID:          cfg.NodeID,
 		CtrlNwIpRange:   cfg.CtrlNwIPRange,
-		TunnelIpStart:   cfg.TunnelIPStart,
-		TunnelInterface: cfg.TunnelInterface,
-		TunnelIpAddress: cfg.TunnelIPAddress,
+		DataIntfs:       cfg.DataIntfs,
+		PassThroughMode: cfg.PassThroughMode,
 		WithQemu:        cfg.WithQemu})
 
 	if err != nil {
@@ -173,8 +172,21 @@ func (*NaplesClient) Teardown(context.Context, *node.NaplesSimConfig) error {
 }
 
 //RunCommand Naples Run Command
-func (*NaplesClient) RunCommand(context.Context, string) (string, string, error) {
-	return "", "", nil
+func (cli *NaplesClient) RunCommand(ctx context.Context, cmd string) (string, string, error) {
+	resp, err := cli.simClient.RunCommand(ctx, &pb.Command{
+		Cmd:        cmd,
+		Background: false,
+		Timeout:    0})
+
+	if err != nil {
+		return "", "", errors.Wrap(err, "GRPC failure!")
+	}
+
+	if resp.Status != pb.ApiStatus_API_STATUS_OK {
+		return "", "", errors.Errorf("Naples Run command up failed: %d", resp.RetCode)
+	}
+
+	return resp.GetStdout(), resp.GetStderr(), nil
 }
 
 //NewNaplesClient Get new instance of naples client

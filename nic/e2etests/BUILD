@@ -55,7 +55,8 @@ cc_library(
     name = "hntap-lib",
     srcs = [
             "hntap/dev.cc",
-            "hntap/hntap.cc"
+            "hntap/hntap.cc",
+            "hntap/hntap_switch.cc"
            ],
     hdrs = glob(["hntap/*.hpp"]),
         deps = [
@@ -106,6 +107,7 @@ cc_library(
     srcs = [
         "hntap/hntap.cc",
         "hntap/dev.cc",
+        "hntap/hntap_switch.cc",
     ],
     deps = [
         "//nic/model_sim/include:modelsim_includes",

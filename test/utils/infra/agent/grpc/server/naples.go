@@ -1,6 +1,8 @@
 package server
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -15,13 +17,37 @@ import (
 	Common "github.com/pensando/sw/test/utils/infra/common"
 )
 
-const hntapCfgFile string = "/tmp/hntap-cfg.json"
+const (
+	naplesCfgDir              = "/naples/nic/conf"
+	hntapCfgFile              = "hntap-cfg.json"
+	hntapQemCfgFile           = "hntap-with-qemu.json"
+	containerHntapRestartCmd  = "naples/nic/tools/restart-hntap.sh"
+	hntapTempCfgFile          = "/tmp/hntap-cfg.json"
+	bootStrapNaplesCmd        = "/usr/bin/bootstrap-naples.sh"
+	bootStrapNaplesQemuOption = "--qemu"
+)
+
+//HntapCfg hntap config structure
+type hntapCfg struct {
+	Devices []struct {
+		Name  string `json:"name"`
+		Local bool   `json:"local"`
+		Port  int    `json:"port"`
+		LifID int    `json:"lif_id"`
+	} `json:"devices"`
+	Switch struct {
+		OutInterface string   `json:"out-interface"`
+		Peers        []string `json:"peers"`
+	} `json:"switch"`
+}
 
 // NaplesSim is used to implement Naples Sim
 type NaplesSim struct {
 	server
-	simName   string
-	container *infra.Container
+	simName         string
+	container       *infra.Container
+	withQemu        bool
+	passThroughMode bool
 	//Hntap     infra.Hntap
 }
 
@@ -46,7 +72,8 @@ func (s *NaplesSim) configureHostDataNetwork(intfName string, ipAddress string) 
 	return Common.SetUpIPAddress(intfName, ipAddress)
 }
 
-func (s *NaplesSim) bringUpNaples(name string, nodeID int, ctrlNwIPRange string, withQemu bool) error {
+func (s *NaplesSim) bringUpNaples(name string, nodeID int, ctrlNwIPRange string,
+	dataIntfs []string, withQemu bool, passThroughMode bool) error {
 	os.Chdir(infra.RemoteNaplesDirectory + "/images")
 	s.log("Untar image : " + infra.NaplesContainerImage)
 	untar := []string{"tar", "-xvzf", infra.NaplesContainerImage}
@@ -56,10 +83,20 @@ func (s *NaplesSim) bringUpNaples(name string, nodeID int, ctrlNwIPRange string,
 	s.log("Untar successfull")
 	env := []string{"NAPLES_HOME=" + infra.RemoteNaplesDirectory + "/images"}
 	cmd := []string{"sudo", "-E", "python", infra.NaplesVMBringUpScript, "--node-id", strconv.Itoa(nodeID),
-		"--network-ip-range", ctrlNwIPRange}
+		"--network-ip-range", ctrlNwIPRange, "--data-intfs", strings.Join(dataIntfs, ",")}
 	if withQemu {
 		cmd = append(cmd, "--qemu")
+		s.withQemu = true
 	}
+
+	cmd = append(cmd, "--hntap-mode")
+	if passThroughMode {
+		cmd = append(cmd, "passthrough")
+		s.passThroughMode = true
+	} else {
+		cmd = append(cmd, "tunnel")
+	}
+
 	if _, stdout, err := Common.Run(cmd, 0, false, false, env); err != nil {
 		return errors.Wrap(err, stdout)
 	}
@@ -72,6 +109,63 @@ func (s *NaplesSim) bringUpNaples(name string, nodeID int, ctrlNwIPRange string,
 
 	return nil
 
+}
+
+func (s *NaplesSim) configureNewNaplesDataNetwork(intfName string, peers []string) error {
+
+	var hntapFile string
+	if s.withQemu {
+		hntapFile = naplesCfgDir + "/" + hntapQemCfgFile
+	} else {
+		hntapFile = naplesCfgDir + "/" + hntapCfgFile
+	}
+	cpCmd := []string{"docker", "cp", s.simName + ":" + hntapFile, hntapTempCfgFile}
+	if _, _, err := Common.Run(cpCmd, 0, false, false, nil); err != nil {
+		return errors.Wrap(err, "Error in coping hntap config file to host")
+	}
+
+	jsonFile, err := os.Open(hntapTempCfgFile)
+	if err != nil {
+		return errors.Wrap(err, "Error opening hntap cfg file")
+	}
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var hntapcfg hntapCfg
+	json.Unmarshal(byteValue, &hntapcfg)
+	hntapcfg.Switch.OutInterface = intfName
+	for _, peer := range peers {
+		hntapcfg.Switch.Peers = append(hntapcfg.Switch.Peers, peer)
+	}
+
+	hntapJSON, _ := json.Marshal(hntapcfg)
+	if err := ioutil.WriteFile(hntapTempCfgFile, hntapJSON, 0644); err != nil {
+		return errors.Wrap(err, "Error in marshalling hntap cfg")
+	}
+
+	cpCmd = []string{"docker", "cp", hntapTempCfgFile, s.simName + ":" + hntapFile}
+	if _, _, err := Common.Run(cpCmd, 0, false, false, nil); err != nil {
+		return errors.Wrap(err, "Error in coping hntap config file to host")
+	}
+
+	killBootStrapNaples := []string{"pkill", "-9", "-f", "bootstrap-nap"}
+	Common.Run(killBootStrapNaples, 0, false, false, nil)
+
+	retCode, stdout, _, _ := s.container.RunCommand([]string{containerHntapRestartCmd}, 0, false, true)
+	if retCode != 0 {
+		errors.New("Restart hntap failed..." + stdout)
+	}
+
+	bootstrapCmd := []string{bootStrapNaplesCmd}
+	if s.withQemu {
+		bootstrapCmd = append(bootstrapCmd, bootStrapNaplesQemuOption)
+	}
+
+	if _, _, err := Common.Run(bootstrapCmd, 0, false, true, nil); err != nil {
+		errors.New("Bootstrap start cmd failed..." + stdout)
+	}
+
+	return nil
 }
 
 func (s *NaplesSim) configureNaplesDataNetwork() error {
@@ -121,27 +215,14 @@ func (s *NaplesSim) BringUp(ctx context.Context, in *pb.NaplesSimConfig) (*pb.Na
 
 	s.log("Bring up request received for : " + in.Name)
 
-	if err := s.configureHostDataNetwork(in.TunnelInterface, in.TunnelIpAddress+"/24"); err != nil {
-		resp := "Configure Naples Host Network failed " + err.Error()
-		s.log(resp)
-		return &pb.NaplesStatus{Response: resp,
-			Status: pb.ApiStatus_API_STATUS_FAILED}, nil
-	}
-
-	if err := s.bringUpNaples(in.Name, int(in.NodeID), in.CtrlNwIpRange, in.WithQemu); err != nil {
+	if err := s.bringUpNaples(in.Name, int(in.NodeID), in.CtrlNwIpRange, in.DataIntfs,
+		in.WithQemu, in.PassThroughMode); err != nil {
 		resp := "Naples bring up failed : " + err.Error()
 		s.log(resp)
 		return &pb.NaplesStatus{Response: resp,
 			Status: pb.ApiStatus_API_STATUS_FAILED}, nil
 	}
 	s.log("Naples bring script up succesful.")
-
-	if err := s.configureNaplesDataNetwork(); err != nil {
-		resp := "Configure Naples Data Network failed " + err.Error()
-		s.log(resp)
-		return &pb.NaplesStatus{Response: resp,
-			Status: pb.ApiStatus_API_STATUS_FAILED}, nil
-	}
 
 	//s.Hntap = infra.HntapGet(infra.HntapTypeContainer, hntapCfgFile, s.container)
 	resp := "Naples bring up successfull"

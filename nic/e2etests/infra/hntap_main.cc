@@ -13,10 +13,15 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include "netinet/ip.h"
+#include "netinet/udp.h"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/e2etests/lib/helpers.hpp"
 #include "nic/e2etests/hntap/dev.hpp"
+#include "nic/e2etests/hntap/hntap_switch.hpp"
 
 #include <grpc++/grpc++.h>
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
@@ -40,10 +45,16 @@ using types::Empty;
 
 using boost::property_tree::ptree;
 
+#define BUF_SIZE 9126
+#define HSWITCH_SEND_PORT 12345
+#define HSWITCH_RECV_PORT 54321
+#define IP_IDENTIFICATION HSWITCH_RECV_PORT
+
 extern uint32_t nw_retries;
 extern uint16_t hntap_port;
 extern bool hntap_drop_rexmit;
 extern bool hntap_go_thru_model;
+
 
 
 const unsigned char lif_mac_addr_start[]  = { 0x00, 0x02, 0x00, 0x00, 0x01, 0x01};
@@ -104,6 +115,25 @@ private:
 };
 
 
+static HntapSwitch *
+hntapSwitchInit(const char *intfName, std::list<std::string> peerIps) {
+    HntapSwitch *hswitch = new HntapSwitch(intfName);
+
+    for (std::string ip: peerIps) {
+        HntapTunnelPeer *peer = new HntapTunnelPeer();
+        inet_pton(AF_INET, ip.c_str(), &(peer->ip.addr.v4_addr));
+        peer->ip.addr.v4_addr = ntohl(peer->ip.addr.v4_addr);
+        hswitch->AddPeer(peer);
+    }
+
+    return hswitch;
+}
+
+static HntapPassThroughSwitch *
+hntapPassThroughSwitchInit() {
+    return new HntapPassThroughSwitch();
+}
+
 int main(int argv, char *argc[])
 {
   dev_handle_t* host_tap_hdl = nullptr;
@@ -117,6 +147,10 @@ int main(int argv, char *argc[])
   std::string    svc_endpoint;
   char mac_addr_str[20];
   const unsigned char *mac_addr;
+  HntapSwitchBase *hswitch = NULL;
+  HntapPassThroughSwitch *passThroughswitch = NULL;
+  std::string hswitchOutIntf;
+  std::list<std::string>peers;
 
   grpc_init();
   if (getenv("HAL_GRPC_PORT")) {
@@ -168,7 +202,39 @@ int main(int argv, char *argc[])
   std::ifstream json_cfg(cfg_file);
   read_json(json_cfg, pt);
 
-  uint32_t dev_handle_cnt = pt.size();
+  ptree& devices =  pt.get_child("devices");
+  boost::optional< ptree& > hswitch_cfg =  pt.get_child_optional("switch");
+  if (hswitch_cfg) {
+      TLOG("Hntap Switch config is present..\n");
+      ptree& hswitchCfg  = hswitch_cfg.get();
+      boost::optional< ptree& > tun_cfg =  hswitchCfg.get_child_optional("tunnel-mode");
+      boost::optional< ptree& > passthrough_cfg =  hswitchCfg.get_child_optional("passthrough-mode");
+
+      if (tun_cfg) {
+          TLOG("Hntap Switch in tunnel mode..\n");
+          ptree& tunCfg  = tun_cfg.get();
+          hswitchOutIntf = tunCfg.get<std::string>("out-interface");
+          for (auto& peer :  tunCfg.get_child("peers")) {
+              peers.push_back(peer.second.get_value<std::string>());
+          }
+          hswitch = hntapSwitchInit(hswitchOutIntf.c_str(), peers);
+      } else if (passthrough_cfg) {
+          TLOG("Hntap Switch in passthrough mode..\n");
+          ptree& passthroughCfg  = passthrough_cfg.get();
+          boost::optional< ptree& > uplink_map =  passthroughCfg.get_child_optional("uplink-map");
+          if (uplink_map) {
+              passThroughswitch = hntapPassThroughSwitchInit();
+              for (auto& uplinkMap :  passthroughCfg.get_child("uplink-map")) {
+                  passThroughswitch->AddUplinkMap(uplinkMap.first, uplinkMap.second.data());
+              }
+              hswitch = passThroughswitch;
+          }
+      } else {
+          TLOG("Hntap Switch Config is empty..\n");
+      }
+  }
+
+  uint32_t dev_handle_cnt = devices.size();
   uint32_t i = 0;
   uint32_t lif_mac_offset = 0;
   uint32_t uplink_mac_offset = 0;
@@ -177,7 +243,7 @@ int main(int argv, char *argc[])
   TLOG("Number of devices to create : %d\n", dev_handle_cnt);
   dev_handles = (dev_handle_t**)malloc(sizeof(dev_handle_t) * dev_handle_cnt);
   uint32_t pair_id = 0;
-  for (ptree::value_type &ep_pairs: pt) {
+  for (ptree::value_type &ep_pairs: devices) {
       //std::cout <<ep_pairs.second;
       std::string src_ep_name = ep_pairs.second.get<std::string>("name");
       bool src_ep_local =  ep_pairs.second.get<bool>("local");
@@ -205,6 +271,7 @@ int main(int argv, char *argc[])
         abort();
       }
 
+      host_tap_hdl->port = src_port ? src_port - 1 : 0;
       if (src_ep_local) {
           hw_lif_id = hclient.get_hw_lif_id(src_lif_id);
           if (!hw_lif_id) {
@@ -216,11 +283,13 @@ int main(int argv, char *argc[])
           type = TAP_ENDPOINT_HOST;
       } else {
           type = TAP_ENDPOINT_NET;
+          if (hswitch != nullptr) {
+              hswitch->AddDevHandle(host_tap_hdl);
+          }
       }
 
       host_tap_hdl->tap_ports[0] = hntap_port;
       host_tap_hdl->lif_id = hw_lif_id;
-      host_tap_hdl->port = src_port ? src_port - 1 : 0;
 
       dev_handles[i++] = host_tap_hdl;
       TLOG("Added configuration for device %s , type : %s\n",
@@ -235,6 +304,11 @@ int main(int argv, char *argc[])
       }
   }
 
+  if (hswitch) {
+      TLOG("Starting Hntap Switch Receiver..\n");
+      hswitch->StartReceiver();
+  }
+
   TLOG("  Setup done, listening on tap devices..\n");
   if (!hntap_go_thru_model) {
       for (uint32_t i = 0; i < dev_handle_pair_cnt; i++) {
@@ -242,6 +316,9 @@ int main(int argv, char *argc[])
                   dev_handle_pairs[i][1]);
       }
   }
-  hntap_work_loop(dev_handles, dev_handle_cnt, true);
+  hntap_work_loop(dev_handles, dev_handle_cnt, true, hswitch);
   return(0);
 }
+
+
+

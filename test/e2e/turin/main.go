@@ -16,6 +16,7 @@ import (
 
 var (
 	topofile, deviceJSONFile string
+	passThroughMode          bool
 )
 
 func runModule(ctx infra.Context, tm *Tests.TestManager, module Tests.ModuleSpec) error {
@@ -71,7 +72,7 @@ func bringUpInfra() (infra.Context, error) {
 	}
 
 	warmdFile := "/warmd.json"
-	infraCtx, err := infra.NewInfraCtx(topofile, warmdFile)
+	infraCtx, err := infra.NewInfraCtx(topofile, warmdFile, passThroughMode)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
@@ -98,6 +99,7 @@ func printTopology(infraCtx infra.Context) error {
 func init() {
 	testCmd.Flags().StringVarP(&topofile, "topo-file", "t", "", "Topology file")
 	testCmd.Flags().StringVarP(&deviceJSONFile, "device-file", "", "", "Device json file")
+	testCmd.Flags().BoolVarP(&passThroughMode, "naples-passthrough-mode", "", false, "Pass through mode for naples")
 }
 
 var testCmd = &cobra.Command{

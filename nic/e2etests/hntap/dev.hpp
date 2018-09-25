@@ -23,6 +23,9 @@ enum pkt_direction_t {
 typedef int (*pkt_pre_process_func)(char *pktbuf, uint32_t len);
 typedef int (*pkt_process_nat_cb)(char *pktbuf, uint32_t len, pkt_direction_t direction);
 
+//Forward declaration
+struct HntapSwitchBase;
+
 typedef struct dev_handle_t {
 #define MAX_TAP_APP_PORTS 1
 #define TX_RX_QUEUE_SIZE 16
@@ -33,7 +36,7 @@ typedef struct dev_handle_t {
     bool                 needs_vlan_tag; //Add vlan tag for Tunneled packets only.
     int                  lif_id;
     uint32_t             port;
-    const char           name[50];
+    char                 name[50];
     const char           ip[50];
     const char           ip_mask[50];
     const char           route_dest[50];
@@ -62,7 +65,10 @@ dev_handle_t* hntap_create_tap_device(tap_endpoint_t type,
         const char *dev, const char*mac_addr = NULL,
         const char *dev_ip = NULL, const char *dev_ipmask = NULL);
 
-void hntap_work_loop(dev_handle_t *dev_handles[], uint32_t max_handles, bool send_recv_parallel = false);
+void hntap_work_loop(dev_handle_t *dev_handles[], uint32_t max_handles,
+        bool send_recv_parallel = false, HntapSwitchBase *hswitch = nullptr);
+
+void hntap_model_send_process(dev_handle_t *dev_handle, char *pktbuf, int size);
 
 static inline const char* hntap_type(tap_endpoint_t type) {
     switch(type) {

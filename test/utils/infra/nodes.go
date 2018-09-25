@@ -35,12 +35,14 @@ const (
 )
 
 var (
-	vmUserName      = "vm"
-	vmPassword      = "vm"
-	vmDataInterface = "eth1"
-	tunnelIPSubnet  = "192.168.10.0/24"
-	tunnelIPStart   = "192.168.10.11"
-	linuxBuildEnv   = []string{"GOOS=linux", "GOARCH=amd64"}
+	vmUserName             = "vm"
+	vmPassword             = "vm"
+	vmDataInterface        = "eth1"
+	tunnelIPSubnet         = "192.168.10.0/24"
+	tunnelIPStart          = "192.168.10.11"
+	linuxBuildEnv          = []string{"GOOS=linux", "GOARCH=amd64"}
+	tunneledModeIntfs      = [...]string{"eth2"}
+	passedThroughModeIntfs = [...]string{"eth1", "eth2"}
 )
 
 var (
@@ -136,7 +138,8 @@ type vmEntity struct {
 //naplesEntity Naples Entity
 type naplesEntity struct {
 	remoteEntity
-	withQemu bool
+	withQemu        bool
+	passThroughMode bool
 }
 
 //appEntity Naples Entity
@@ -190,12 +193,13 @@ func (vm *vmEntity) teardownConnection() error {
 	return nil
 }
 
-func (infraCtx *infraCtx) initDataNode(name string, qemu bool) {
+func (infraCtx *infraCtx) initDataNode(name string, qemu bool, passThroughMode bool) {
 	vmentity := vmEntity{
 		remoteEntity: remoteEntity{name: name, kind: EntityKindVM}}
 	infraCtx.res[name] = &vmentity
 	naplesName := "Naples_" + name
-	naplesentity := naplesEntity{remoteEntity: remoteEntity{name: naplesName, kind: EntityKindNaples}, withQemu: qemu}
+	naplesentity := naplesEntity{remoteEntity: remoteEntity{name: naplesName, kind: EntityKindNaples},
+		withQemu: qemu, passThroughMode: passThroughMode}
 	infraCtx.res[naplesName] = &naplesentity
 	if qemu {
 		qemuName := "Qemu_" + name
@@ -315,18 +319,28 @@ func (naples *naplesEntity) bringUp(ctx context.Context, errChannel chan error) 
 	}
 
 	sshRunError := make(chan error, 0)
+	nodeid := hostNode.(*vmEntity).nodeID
+
 	go func() {
 		/* TODO : Have to pass on num nodes if more than 2 */
-		nodeid := hostNode.(*vmEntity).nodeID
-		tunnelIPAddr, _ := Helpers.IncrementIP(tunnelIPStart, tunnelIPSubnet, byte(nodeid-1))
-		err := hostNode.(*vmEntity).services.Naples.BringUp(ctx, &NodeService.NaplesSimConfig{
+		naplesSimConfg := &NodeService.NaplesSimConfig{
 			Name: NaplesSimName, NodeID: uint32(nodeid),
 			CtrlNwIPRange:   "11.1.1." + strconv.Itoa(32+32*nodeid) + "/27",
-			TunnelIPStart:   tunnelIPStart,
-			TunnelInterface: vmDataInterface, //TODO!!
-			TunnelIPAddress: tunnelIPAddr,
 			WithQemu:        naples.withQemu,
-		})
+			PassThroughMode: naples.passThroughMode,
+		}
+
+		if naples.passThroughMode {
+			for _, intf := range passedThroughModeIntfs {
+				naplesSimConfg.DataIntfs = append(naplesSimConfg.DataIntfs, intf)
+			}
+		} else {
+			for _, intf := range tunneledModeIntfs {
+				naplesSimConfg.DataIntfs = append(naplesSimConfg.DataIntfs, intf)
+			}
+		}
+
+		err := hostNode.(*vmEntity).services.Naples.BringUp(ctx, naplesSimConfg)
 		if err != nil {
 			sshRunError <- errors.Wrap(err, "Naples bring up failed.")
 			return
@@ -618,32 +632,21 @@ func (infraCtx *infraCtx) initVMEntities() error {
 	return setupAgents()
 }
 
-func (infraCtx *infraCtx) verifyVMConnectivity() error {
+func (infraCtx *infraCtx) verifyNaplesConnectivity() error {
 
 	vmEntities := infraCtx.FindRemoteEntity(EntityKindVM)
-	dumpIfconfig := func() {
-		for _, vm := range vmEntities {
-			ifconfigCmd := "ifconfig " + vmDataInterface
-			_, stdout, _ := vm.(*vmEntity).Exec(ifconfigCmd, true, false)
-			infraCtx.logger.Println(stdout)
-		}
-
-	}
 
 	if len(vmEntities) < 2 {
-		dumpIfconfig()
 		infraCtx.logger.Println("Number of nodes less 2 , skipping connectivity check.")
 		return nil
 	}
 	for _, vm := range vmEntities {
 		for i := 0; i < len(vmEntities); i++ {
-			//TODO : Change from hardcoded values
 			nextIP, _ := Helpers.IncrementIP(tunnelIPStart, tunnelIPSubnet, byte(i))
 			pingCmd := "ping -c 5 " + nextIP
-			ret, stdout, _ := vm.(*vmEntity).Exec(pingCmd, false, false)
+			stdout, _, err := vm.(*vmEntity).services.Naples.RunCommand(context.Background(), pingCmd)
 			infraCtx.logger.Println(stdout)
-			if ret != 0 {
-				dumpIfconfig()
+			if err != nil {
 				return errors.Errorf("Ping to destination %s failed from %s", nextIP, vm.Name())
 			}
 		}
@@ -722,8 +725,8 @@ func (infraCtx *infraCtx) bringUp() error {
 		return err
 	}
 
-	/* Finally verify Vm Connectivity */
-	if err := infraCtx.verifyVMConnectivity(); err != nil {
+	/*Finally verify Vm Connectivity */
+	if err := infraCtx.verifyNaplesConnectivity(); err != nil {
 		return errors.Wrap(err, "VM connectivity verification failed!")
 	}
 	return nil
@@ -798,7 +801,7 @@ func (infraCtx *infraCtx) PrintTopology() {
 }
 
 // NewInfraCtx initializes/returns an instance of the global context
-func NewInfraCtx(topoFile string, warmdFile string) (Context, error) {
+func NewInfraCtx(topoFile string, warmdFile string, passThroughMode bool) (Context, error) {
 
 	ut := loadUserTopo(topoFile)
 	ut.validate()
@@ -809,7 +812,7 @@ func NewInfraCtx(topoFile string, warmdFile string) (Context, error) {
 	for _, node := range ut.Nodes {
 		switch node.Node.Kind {
 		case DataNode:
-			infraCtx.initDataNode(node.Node.Name, node.Node.Qemu)
+			infraCtx.initDataNode(node.Node.Name, node.Node.Qemu, passThroughMode)
 		case ControlNode:
 		default:
 			log.Fatalf("Invalid Node type : %s", node.Node.Kind)

@@ -15,6 +15,7 @@
 #include <net/ethernet.h>
 #include <net/route.h>
 #include "nic/e2etests/lib/helpers.hpp"
+#include "nic/e2etests/hntap/hntap_switch.hpp"
 #include "nic/e2etests/hntap/dev.hpp"
 
 static dev_handle_t*
@@ -359,6 +360,7 @@ dev_handle_t* hntap_create_tap_device (tap_endpoint_t type,
 
   handle = allocate_dev_handle();
   handle->sock = sock;
+  strncpy(handle->name, dev, strlen(dev));
   handle->fd = fd;
   handle->tap_ep = type;
   handle->type = HNTAP_TAP;

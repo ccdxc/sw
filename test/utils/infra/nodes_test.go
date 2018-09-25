@@ -189,7 +189,7 @@ func TestNodesLoad(t *testing.T) {
 	userTopo.validate()
 	LogDir = "/tmp/"
 	linuxBuildEnv = []string{}
-	ctx, err := NewInfraCtx(userTopoFile, warmdFile)
+	ctx, err := NewInfraCtx(userTopoFile, warmdFile, false)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -273,7 +273,7 @@ func TestQemuNodesLoad(t *testing.T) {
 	LogDir = "/tmp/"
 	linuxBuildEnv = []string{}
 	localPlatfromSrc = SrcNaplesDirectory
-	ctx, err := NewInfraCtx(userTopoFile, warmdFile)
+	ctx, err := NewInfraCtx(userTopoFile, warmdFile, false)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

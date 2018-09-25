@@ -9,9 +9,8 @@ type NaplesSimConfig struct {
 	Name            string
 	NodeID          uint32
 	CtrlNwIPRange   string //Control network
-	TunnelIPStart   string
-	TunnelInterface string
-	TunnelIPAddress string
+	PassThroughMode bool
+	DataIntfs       []string
 	WithQemu        bool
 }
 

@@ -130,13 +130,12 @@ service AppAgent {
 }
 
 message NaplesSimConfig {
-    string name              = 1;
-    uint32 nodeID            = 2;
-    string ctrlNwIpRange     = 3; //Control network
-    string tunnelIpStart     = 4;
-    string tunnelInterface   = 5; //Interface used on host to send/recv naples uplink traffic.
-    string tunnelIpAddress   = 6; //Ip Address
-    bool withQemu            = 7; //Start naples with qemu
+    string name                 = 1;
+    uint32 nodeID               = 2;
+    string ctrlNwIpRange        = 3; //Control network
+    repeated string dataIntfs   = 4; //Tunnel Peers
+    bool withQemu               = 5; //Start naples with qemu
+    bool PassThroughMode        = 6; // Pass Through mode
 }
 
 message NaplesStatus {

@@ -12,5 +12,13 @@
       "port": 2,
       "lif_id": 0
     }
-  ]
+  ],
+  "switch": {
+    "passthrough-mode" : {
+        "uplink-map": {
+          "pen-intf1" : "eth2",
+          "pen-intf2" : "eth3"
+        }
+      }
+    }
 }

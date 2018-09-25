@@ -48,7 +48,7 @@ function setup_intf1()
         nsenter -t $pid -n ip link set $INTF1 netns 1  >& /dev/null
         if [ $? -eq 0 ]; then
             set -x
-            ovs-vsctl add-port data-net pen-intf1
+            #ovs-vsctl add-port data-net pen-intf1
             ip link set up dev $INTF1
             ip link set mtu 9216 dev $INTF1
             set +x
@@ -68,7 +68,7 @@ function setup_intf2()
         nsenter -t $pid -n ip link set $INTF2 netns 1  >& /dev/null
         if [ $? -eq 0 ]; then
             set -x
-            ovs-vsctl add-port data-net pen-intf2
+            #ovs-vsctl add-port data-net pen-intf2
             ip link set up dev $INTF2
             ip link set mtu 9216 dev $INTF2
             set +x
@@ -99,6 +99,6 @@ fi
 
 # setup the uplinks in background
 $(setup_intf1  >& $LOGDIR/bootstrap-intf1.log) &
-#$(setup_intf2  >& $LOGDIR/bootstrap-intf2.log) &
+$(setup_intf2  >& $LOGDIR/bootstrap-intf2.log) &
 
 
