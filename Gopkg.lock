@@ -2484,6 +2484,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/GeertJohan/go.rice",
+    "github.com/GeertJohan/go.rice/embedded",
     "github.com/GeertJohan/go.rice/rice",
     "github.com/appc/cni/pkg/types",
     "github.com/appc/cni/pkg/version",
