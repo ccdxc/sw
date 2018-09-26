@@ -45,8 +45,6 @@ void pnso_test_desc_free(struct test_desc *desc);
 pnso_error_t pnso_test_parse_file(const char *fname, struct test_desc *desc);
 pnso_error_t pnso_test_parse_buf(const unsigned char *buf, size_t buf_len,
 				 struct test_desc *desc);
-pnso_error_t pnso_test_stats_to_yaml(uint16_t testcase_id, uint64_t *stats,
-			const char **stats_names, uint32_t stat_count);
 pnso_error_t pnso_test_run_all(struct test_desc *desc);
 
 void test_dump_desc(struct test_desc *desc);
@@ -64,6 +62,8 @@ pnso_error_t test_write_file(const char *fname,
 pnso_error_t test_delete_file(const char *fname);
 pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed);
 int test_compare_files(const char *path1, const char *path2, uint32_t offset, uint32_t len);
+int test_compare_file_data(const char *path, uint32_t offset, uint32_t len,
+			   const uint8_t *pattern, uint32_t pat_len);
 
 void *pnso_test_alloc(size_t sz);
 void pnso_test_free(void *ptr);

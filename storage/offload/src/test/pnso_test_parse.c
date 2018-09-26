@@ -33,6 +33,20 @@ void pnso_test_free(void *ptr)
 	return g_hooks.dealloc(ptr);
 }
 
+#if 0
+#undef TEST_NODE
+#define TEST_NODE(name) #name
+static const char *node_type_to_name_list[NODE_MAX] = {
+	TEST_NODE_LIST
+};
+#endif
+
+#undef VALIDATION_TYPE
+#define VALIDATION_TYPE(name) #name
+static const char *validation_type_to_name_list[VALIDATION_TYPE_MAX] = {
+	VALIDATION_TYPE_LIST
+};
+
 /* global defaults */
 static struct test_desc default_desc = {
 	.node = { NODE_ROOT, 0, NULL, { NULL, NULL } },
@@ -296,6 +310,26 @@ static uint32_t safe_itoa(char *dst, uint32_t dst_len, uint32_t val)
 	return ret;
 }
 
+static uint32_t safe_strcpy_tolower(char *dst, const char *src, uint32_t max_len)
+{
+	uint32_t len;
+
+	if (dst == NULL)
+		return 0;
+
+	if (src == NULL) {
+		*dst = '\0';
+		return 0;
+	}
+
+	for (len = 0; src[len] != '\0' && len < (max_len -1); len++) {
+		dst[len] = tolower(src[len]);
+	}
+	dst[len] = '\0';
+
+	return len;
+}
+
 static uint32_t safe_strcpy(char *dst, const char *src, uint32_t max_len)
 {
 	uint32_t len;
@@ -308,7 +342,7 @@ static uint32_t safe_strcpy(char *dst, const char *src, uint32_t max_len)
 		return 0;
 	}
 
-	for (len = 0; src[len] != '\0' && len < (max_len -1); len++) { 
+	for (len = 0; src[len] != '\0' && len < (max_len -1); len++) {
 		dst[len] = src[len];
 	}
 	dst[len] = '\0';
@@ -367,6 +401,9 @@ static void dump_validation(struct test_validation *validation)
 	}
 	if (validation->file2[0]) {
 		PNSO_LOG_INFO("        File2 %s\n", validation->file2);
+	}
+	if (validation->pattern[0]) {
+		PNSO_LOG_INFO("        Pattern %s\n", validation->pattern);
 	}
 	if (validation->offset) {
 		PNSO_LOG_INFO("        Offset %u\n", validation->offset);
@@ -948,6 +985,7 @@ FUNC_SET_STRING(test_set_validation_file1, ((struct test_validation *)parent)->f
 		TEST_MAX_PATH_LEN)
 FUNC_SET_STRING(test_set_validation_file2, ((struct test_validation *)parent)->file2,
 		TEST_MAX_PATH_LEN)
+FUNC_SET_STRING(test_set_validation_pattern, ((struct test_validation *)parent)->pattern, TEST_MAX_PATTERN_LEN)
 FUNC_SET_PARAM(test_set_compare_type, ((struct test_validation *)parent)->cmp_type,
 	       g_cmp_type_map, 0, 0, COMPARE_TYPE_MAX-1)
 
@@ -1804,6 +1842,7 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ "data_compare",  "type",            NULL, test_set_compare_type, NULL, NULL },
 	{ "data_compare",  "file1",           NULL, test_set_validation_file1, NULL, NULL },
 	{ "data_compare",  "file2",           NULL, test_set_validation_file2, NULL, NULL },
+	{ "data_compare",  "pattern",         NULL, test_set_validation_pattern, NULL },
 	{ "data_compare",  "offset",          NULL, test_set_validation_data_offset, NULL, NULL },
 	{ "data_compare",  "len",             NULL, test_set_validation_data_len, NULL, NULL },
 
@@ -2144,41 +2183,85 @@ pnso_error_t pnso_test_parse_file(const char *fname, struct test_desc *desc)
 	return err;
 }
 
+#define TEST_MAX_VALIDATION_STAT_LEN 128
+static uint32_t validation_stats_to_yaml(const struct test_validation *validation, char *dst)
+{
+	uint32_t len = 0;
+	uint32_t max_len = TEST_MAX_VALIDATION_STAT_LEN;
+
+	if (validation->type  >= VALIDATION_TYPE_MAX)
+		return 0;
+
+	len += safe_strcpy(dst+len, "    { ", max_len-len);
+	len += safe_strcpy_tolower(dst+len, validation_type_to_name_list[validation->type], max_len-len);
+	len += safe_strcpy(dst+len, ": {\n", max_len-len);
+
+	len += safe_strcpy(dst+len, "        idx: ", max_len-len);
+	len += safe_itoa(dst+len, max_len-len, validation->node.idx);
+	len += safe_strcpy(dst+len, ",\n", max_len-len);
+
+	len += safe_strcpy(dst+len, "        success: ", max_len-len);
+	len += safe_itoa(dst+len, max_len-len, validation->rt_success_count);
+	len += safe_strcpy(dst+len, ",\n", max_len-len);
+
+	len += safe_strcpy(dst+len, "        failure: ", max_len-len);
+	len += safe_itoa(dst+len, max_len-len, validation->rt_failure_count);
+
+	len += safe_strcpy(dst+len, "\n    },\n", max_len-len);
+
+	return len;
+}
+
 #define TEST_MAX_STAT_NAME_LEN 32
-pnso_error_t pnso_test_stats_to_yaml(uint16_t testcase_id, uint64_t *stats, const char **stats_names, uint32_t stat_count)
+pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
+		uint64_t *stats, const char **stats_names, uint32_t stat_count,
+		bool output_validations)
 {
 	uint32_t i;
 	uint32_t len = 0;
 	uint32_t max_len = 64 + stat_count*(32 + TEST_MAX_STAT_NAME_LEN);
-	char *dst = osal_alloc(max_len);
+	char *dst;
 
+	if (output_validations)
+		max_len += TEST_MAX_VALIDATION_STAT_LEN *
+				test_count_nodes(&testcase->validations);
+
+	dst = osal_alloc(max_len);
 	if (!dst)
 		return ENOMEM;
 
-	len += safe_strcpy(dst+len, "{tests: [{ test: {\n  idx: ", max_len);
-	len += safe_itoa(dst+len, max_len-len, testcase_id);
+	len += safe_strcpy(dst+len, "{tests: [{ test: {\n  idx: ", max_len-len);
+	len += safe_itoa(dst+len, max_len-len, testcase->node.idx);
 	len += safe_strcpy(dst+len, "\n  stats: {\n", max_len-len);
 	for (i = 0; i < stat_count; i++) {
 		if (len >= max_len-1)
 			goto nomem;
 		len += safe_strcpy(dst+len, "    ", max_len-len);
-		if (len >= max_len-1)
-			goto nomem;
-		len += safe_strcpy(dst+len, stats_names[i], max_len-len);
-		if (len >= max_len-1)
-			goto nomem;
+		len += safe_strcpy(dst+len, stats_names[i], TEST_MAX_STAT_NAME_LEN);
 		len += safe_strcpy(dst+len, ": ", max_len-len);
-		if (len >= max_len-1)
-			goto nomem;
 		len += safe_itoa(dst+len, max_len-len, stats[i]);
-		if (len >= max_len-1)
-			goto nomem;
 		len += safe_strcpy(dst+len, ",\n", max_len-len);
 	}
 	if (len >= max_len-1)
 		goto nomem;
 
-	len += safe_strcpy(dst+len, "  }\n}}]}\n", max_len-len);
+	len += safe_strcpy(dst+len, "  }\n", max_len-len);
+
+	if (output_validations && testcase->validations.head) {
+		struct test_node *node;
+
+		len += safe_strcpy(dst+len, "  validations [\n", max_len-len);
+		FOR_EACH_NODE(testcase->validations) {
+			if (len+TEST_MAX_VALIDATION_STAT_LEN >= max_len-1)
+				goto nomem;
+			len += validation_stats_to_yaml((const struct test_validation *)(node), dst+len);
+		}
+		len += safe_strcpy(dst+len, "  ]\n", max_len-len);
+	}
+	if (len >= max_len-1)
+		goto nomem;
+
+	len += safe_strcpy(dst+len, "}}]}\n", max_len-len);
 
 	if (len >= max_len-1)
 		goto nomem;

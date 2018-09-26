@@ -847,6 +847,10 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 	char path2[TEST_MAX_FULL_PATH_LEN] = "";
 	int cmp = 0;
 
+	if (validation->svc_chain_idx) {
+		ctx->vars[TEST_VAR_CHAIN] = validation->svc_chain_idx;
+	}
+
 	/* construct dynamic pathnames */
 	if (validation->file1[0]) {
 		err = construct_filename(ctx->desc, ctx->vars,
@@ -862,16 +866,45 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 
 	switch (validation->type) {
 	case VALIDATION_DATA_COMPARE:
-		/* Try to compare just local metadata */
-		fnode1 = lookup_file_node(test_ctx->output_file_tbl, path1);
-		fnode2 = lookup_file_node(test_ctx->output_file_tbl, path2);
-		if (fnode1 && fnode2) {
-			cmp = cmp_file_node_data(fnode1, fnode2);
+		if (path1[0] && path2[0]) {
+			cmp = -1;
+			/* Try to compare just local metadata */
+			fnode1 = lookup_file_node(test_ctx->output_file_tbl, path1);
+			fnode2 = lookup_file_node(test_ctx->output_file_tbl, path2);
+			if (fnode1 && fnode2) {
+				cmp = cmp_file_node_data(fnode1, fnode2);
+			}
+			/* Metadata not available or inconclusive, do full file compare */
+			if (cmp != 0) {
+				cmp = test_compare_files(path1, path2,
+							 validation->offset,
+							 validation->len);
+			}
+		} else if (validation->pattern[0] && (path1[0] || path2[0])) {
+			char *path = path1;
+			const char *pat = validation->pattern;
+			uint32_t pat_len = strlen(validation->pattern);
+			uint8_t hex_pat[TEST_MAX_PATTERN_LEN];
+
+			if (!path1[0])
+				path = path2;
+
+			if (pat[0] == '0' && (pat[1] == 'x' || pat[1] == 'X')) {
+				uint32_t tmp = sizeof(hex_pat) - 1;
+
+				if (parse_hex(pat+2, hex_pat, &tmp) == PNSO_OK) {
+					pat = (const char *) hex_pat;
+					pat_len = tmp;
+				}
+			}
+
+			cmp = test_compare_file_data(path,
+						     validation->offset,
+						     validation->len,
+						     (const uint8_t *) pat,
+						     pat_len);
 		} else {
-			/* Metadata not available, do full file compare */
-			cmp = test_compare_files(path1, path2,
-						 validation->offset,
-						 validation->len);
+			err = EINVAL;
 		}
 		break;
 	case VALIDATION_SIZE_COMPARE:
@@ -951,8 +984,13 @@ done:
 
 static pnso_error_t run_req_validation(struct request_context *req_ctx)
 {
-	const struct test_testcase *testcase = req_ctx->batch_ctx->test_ctx->testcase;
+	const struct test_testcase *testcase;
 	struct test_node *node;
+
+	if (!req_ctx || !req_ctx->svc_chain)
+		return EINVAL;
+
+	testcase = req_ctx->batch_ctx->test_ctx->testcase;
 
 	output_results(req_ctx, req_ctx->svc_chain);
 
@@ -998,10 +1036,37 @@ static pnso_error_t run_batch_validation(struct batch_context *batch_ctx)
 	return err;
 }
 
+static void reset_req_context(struct request_context *ctx)
+{
+	uint32_t i;
+
+	if (!ctx) {
+		return;
+	}
+
+	if (ctx->input_buffer) {
+		TEST_FREE(ctx->input_buffer);
+	}
+
+	for (i = 0; i < PNSO_SVC_TYPE_MAX; i++) {
+		if (ctx->svc_res.svc[i].svc_type == PNSO_SVC_TYPE_HASH ||
+		    ctx->svc_res.svc[i].svc_type == PNSO_SVC_TYPE_CHKSUM) {
+			if (ctx->svc_res.svc[i].u.hash.tags) {
+				TEST_FREE(ctx->svc_res.svc[i].u.hash.tags);
+			}
+		} else {
+			test_free_buffer_list(ctx->svc_res.svc[i].u.dst.sgl);
+		}
+	}
+
+	memset(ctx, 0, sizeof(*ctx));
+}
+
 static void init_req_context(struct request_context *req_ctx,
 			     struct batch_context *batch_ctx,
 			     const struct test_svc_chain *svc_chain)
 {
+	reset_req_context(req_ctx);
 	req_ctx->batch_ctx = batch_ctx;
 	req_ctx->svc_chain = svc_chain;
 	copy_vars(batch_ctx->vars, req_ctx->vars);
@@ -1040,6 +1105,7 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 		if (++chain_i >= testcase->svc_chain_count) {
 			chain_i = 0;
 		}
+		batch_ctx->vars[TEST_VAR_CHAIN] = svc_chain->node.idx;
 
 		req_ctx = batch_ctx->req_ctxs[i];
 		if (!req_ctx) {
@@ -1093,28 +1159,11 @@ static struct request_context *alloc_req_context()
 
 static void free_req_context(struct request_context *ctx)
 {
-	uint32_t i;
+	reset_req_context(ctx);
 
-	if (!ctx) {
-		return;
+	if (ctx) {
+		TEST_FREE(ctx);
 	}
-
-	if (ctx->input_buffer) {
-		TEST_FREE(ctx->input_buffer);
-	}
-
-	for (i = 0; i < PNSO_SVC_TYPE_MAX; i++) {
-		if (ctx->svc_res.svc[i].svc_type == PNSO_SVC_TYPE_HASH ||
-		    ctx->svc_res.svc[i].svc_type == PNSO_SVC_TYPE_CHKSUM) {
-			if (ctx->svc_res.svc[i].u.hash.tags) {
-				TEST_FREE(ctx->svc_res.svc[i].u.hash.tags);
-			}
-		} else {
-			test_free_buffer_list(ctx->svc_res.svc[i].u.dst.sgl);
-		}
-	}
-
-	TEST_FREE(ctx);
 }
 
 static void free_batch_context(struct batch_context *ctx)
@@ -1394,8 +1443,6 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 					   const struct test_testcase *testcase)
 {
 	pnso_error_t err = PNSO_OK;
-	uint64_t iter = 0;
-	struct test_node *node;
 	struct testcase_context *ctx;
 	struct worker_context *worker_ctx;
 	struct batch_context *batch_ctx;
@@ -1507,10 +1554,10 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			/* Check whether it's time to output stats */
 			if (desc->status_interval) {
 				if ((ctx->stats.elapsed_time / OSAL_NSEC_PER_SEC) > next_status_time) {
-					pnso_test_stats_to_yaml(testcase->node.idx,
+					pnso_test_stats_to_yaml(testcase,
 						(uint64_t*) (&ctx->stats),
 						testcase_stats_names,
-						TESTCASE_STATS_COUNT);
+						TESTCASE_STATS_COUNT, false);
 					next_status_time += desc->status_interval;
 				}
 			}
@@ -1525,37 +1572,42 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 
 	/* Final tally for stats */
 	ctx->stats.elapsed_time = osal_get_clock_nsec() - ctx->start_time;
-	pnso_test_stats_to_yaml(testcase->node.idx,
+	pnso_test_stats_to_yaml(testcase,
 				(uint64_t*) (&ctx->stats),
 				testcase_stats_names,
-				TESTCASE_STATS_COUNT);
+				TESTCASE_STATS_COUNT,
+				true);
 
-	/* TODO: debug only */
-	PNSO_LOG_INFO("max_idle_time_ns %lu, batch_submit_count %lu, batch_completion_count %lu, rate_limit_loops %lu\n",
-		      max_idle_time, batch_submit_count, batch_completion_count, rate_limit_loop_count);
-
-	if (err == PNSO_OK) {
-		PNSO_LOG_INFO("Testcase %u %s:\n"
-                              "  Successfully ran for %lu iterations,"
-			      " with %lu reqs submitted\n",
-			      testcase->node.idx, testcase->name, iter,
-			      req_submit_count);
-	}
+	PNSO_LOG_DEBUG("Testcase %u %s: status %d, elapsed_time %lu, "
+		       "req_submit_count %lu, max_idle_time_ns %lu, "
+		       "batch_submit_count %lu, batch_completion_count %lu, "
+		       "rate_limit_loops %lu\n",
+		       testcase->node.idx, testcase->name, err,
+		       ctx->stats.elapsed_time / OSAL_NSEC_PER_MSEC,
+		       req_submit_count, max_idle_time,
+		       batch_submit_count, batch_completion_count,
+		       rate_limit_loop_count);
 
 	/* Print summary of validation success/failure */
-	FOR_EACH_NODE(testcase->validations) {
-		struct test_validation *validation =
+#if 0
+	if (testcase->validations.head) {
+		struct test_node *node;
+
+		FOR_EACH_NODE(testcase->validations) {
+			struct test_validation *validation =
 				(struct test_validation *) node;
-		PNSO_LOG_INFO("  validation %u(%s): successes=%u, failures=%u\n",
-			      validation->node.idx,
-			      validation->name,
-			      validation->rt_success_count,
-			      validation->rt_failure_count);
+			PNSO_LOG_INFO("  validation %u(%s): successes=%lu, failures=%lu\n",
+				      validation->node.idx,
+				      validation->name,
+				      validation->rt_success_count,
+				      validation->rt_failure_count);
+		}
 	}
 
 	/* Print runtime summary */
 	PNSO_LOG_INFO("  runtime: total %lu ms\n",
 		      ctx->stats.elapsed_time / OSAL_NSEC_PER_MSEC);
+#endif
 
 	free_testcase_context(ctx);
 

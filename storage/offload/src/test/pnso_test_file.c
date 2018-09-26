@@ -113,11 +113,9 @@ pnso_error_t test_read_file(const char *fname, struct pnso_buffer_list *buflist,
 			buflist->buffers[i].len = 0;
 			continue;
 		}
-		if (!flen || flen > buflist->buffers[i].len) {
-			read_len = buflist->buffers[i].len;
-		} else {
+		read_len = buflist->buffers[i].len;
+		if (flen && read_len > flen)
 			read_len = flen;
-		}
 
 		buflist->buffers[i].len = fread((void*)buflist->buffers[i].buf,
 						1, read_len, f);
@@ -127,7 +125,9 @@ pnso_error_t test_read_file(const char *fname, struct pnso_buffer_list *buflist,
 			f = NULL;
 			/* Don't break, since we still need to clear buflist */
 		}
-		flen -= buflist->buffers[i].len;
+		if (flen) {
+			flen -= buflist->buffers[i].len;
+		}
 	}
 
 done:
@@ -246,7 +246,7 @@ int test_compare_files(const char *path1, const char *path2,
 
 	while (ret == 0) {
 		read_len = TEST_FREAD_SIZE;
-		if (read_len > flen) {
+		if (flen && read_len > flen) {
 			read_len = flen;
 		}
 		len1 = fread(buf1, 1, read_len, f1);
@@ -273,5 +273,57 @@ int test_compare_files(const char *path1, const char *path2,
 done:
 	fclose(f1);
 	fclose(f2);
+	return ret;
+}
+
+int test_compare_file_data(const char *path,
+			   uint32_t foffset, uint32_t flen,
+			   const uint8_t *pat, uint32_t pat_len)
+{
+	int ret = 0;
+	FILE *f;
+	uint32_t i, pat_i = 0;
+	size_t len, read_len;
+	uint8_t buf[TEST_FREAD_SIZE];
+
+	f = fopen(path, "r");
+	if (f == NULL) {
+		return -2;
+	}
+
+	if (foffset) {
+		if (0 != fseek(f, foffset, SEEK_SET)) {
+			ret = -2;
+			goto done;
+		}
+	}
+
+	while (ret == 0) {
+		read_len = TEST_FREAD_SIZE;
+		if (flen && read_len > flen) {
+			read_len = flen;
+		}
+		len = fread(buf, 1, read_len, f);
+		if (len) {
+			for (i = 0; i < len; i++) {
+				ret = (int) buf[i] - (int) pat[pat_i++ % pat_len];
+				if (ret)
+					goto done;
+			}
+		} else {
+			/* hit EOF */
+			break;
+		}
+		if (flen) {
+			/* Exit early in case max length specified */
+			flen -= len;
+			if (!flen) {
+				break;
+			}
+		}
+	}
+
+done:
+	fclose(f);
 	return ret;
 }

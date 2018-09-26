@@ -14,17 +14,22 @@ extern "C"
 {
 #endif
 
+#define TEST_NODE_LIST \
+	TEST_NODE(ROOT), \
+	TEST_NODE(ALIAS), \
+	TEST_NODE(SVC_CHAIN), \
+	TEST_NODE(SVC), \
+	TEST_NODE(CRYPTO_KEY), \
+	TEST_NODE(TESTCASE), \
+	TEST_NODE(VALIDATION), \
+	TEST_NODE(CP_HDR), \
+	TEST_NODE(CP_HDR_MAPPING), \
+	TEST_NODE(FILE) \
+  
+#undef TEST_NODE
+#define TEST_NODE(name) NODE_##name
 typedef enum {
-	NODE_ROOT,
-	NODE_ALIAS,
-	NODE_SVC_CHAIN,
-	NODE_SVC,
-	NODE_CRYPTO_KEY,
-	NODE_TESTCASE,
-	NODE_VALIDATION,
-	NODE_CP_HDR,
-	NODE_CP_HDR_MAPPING,
-	NODE_FILE,
+	TEST_NODE_LIST,
 
 	/* Must be last */
 	NODE_MAX
@@ -58,6 +63,33 @@ struct test_node_table {
 	for (bucket = 0, list = &(table).buckets[bucket]; \
 	     bucket < TEST_TABLE_BUCKET_COUNT; \
 	     list = &(table).buckets[++bucket])
+
+static inline uint32_t test_count_nodes(const struct test_node_list *list)
+{
+	uint32_t count = 0;
+	struct test_node *node;
+
+	if (!list)
+		return 0;
+
+	FOR_EACH_NODE(*list) {
+		count++;
+	}
+	return count;
+}
+
+static inline uint32_t test_count_ancestor_nodes(const struct test_node *node)
+{
+	uint32_t count = 0;
+
+	if (!node)
+		return 0;
+
+	while ((node = node->parent))
+		count++;
+
+	return count;
+}
 
 #define TEST_CRYPTO_MAX_KEY_LEN 128
 
@@ -139,11 +171,16 @@ static inline struct pnso_service *get_cur_svc(struct test_node *node)
 
 #define MAX_SVC_CHAINS_PER_TESTCASE 64
 
+#define VALIDATION_TYPE_LIST \
+	VALIDATION_TYPE(UNKNOWN), \
+	VALIDATION_TYPE(DATA_COMPARE), \
+	VALIDATION_TYPE(SIZE_COMPARE), \
+	VALIDATION_TYPE(RETCODE_COMPARE)
+
+#undef VALIDATION_TYPE
+#define VALIDATION_TYPE(name) VALIDATION_##name
 enum {
-	VALIDATION_UNKNOWN,
-	VALIDATION_DATA_COMPARE,
-	VALIDATION_SIZE_COMPARE,
-	VALIDATION_RETCODE_COMPARE,
+	VALIDATION_TYPE_LIST,
 
 	/* Must be last */
 	VALIDATION_TYPE_MAX
@@ -168,6 +205,7 @@ struct test_validation {
 	uint16_t cmp_type; /* COMPARE_TYPE_* */
 	char file1[TEST_MAX_PATH_LEN];
 	char file2[TEST_MAX_PATH_LEN];
+	char pattern[TEST_MAX_PATTERN_LEN];
 	uint32_t offset;
 	uint32_t len;
 	uint32_t svc_chain_idx;
@@ -176,8 +214,8 @@ struct test_validation {
 	pnso_error_t svc_retcodes[PNSO_SVC_TYPE_MAX];
 
 	/* runtime stats, protect with lock */
-	uint32_t rt_success_count;
-	uint32_t rt_failure_count;
+	uint64_t rt_success_count;
+	uint64_t rt_failure_count;
 };
 
 struct test_cp_header {
@@ -221,7 +259,7 @@ struct test_node_file {
 };
 
 #define TEST_ALIAS_MAX_NAME_LEN 32
-#define TEST_ALIAS_MAX_VAL_LEN 64
+#define TEST_ALIAS_MAX_VAL_LEN 80
 struct test_alias {
 	struct test_node node;
 	char name[TEST_ALIAS_MAX_NAME_LEN];
