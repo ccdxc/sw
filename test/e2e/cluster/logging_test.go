@@ -34,7 +34,7 @@ var _ = Describe("Logging tests", func() {
 			esAddr := fmt.Sprintf("%s:%s", ts.tu.FirstVeniceIP, globals.ElasticsearchRESTPort)
 			logConfig := log.GetDefaultConfig("log-e2e-test")
 			Eventually(func() error {
-				esClient, err = elastic.NewClient(esAddr, nil, log.GetNewLogger(logConfig))
+				esClient, err = elastic.NewAuthenticatedClient(esAddr, nil, log.GetNewLogger(logConfig))
 				return err
 			}, 90, 1).Should(BeNil(), "failed to initialize elastic client")
 		})

@@ -52,7 +52,7 @@ static_images = {
     'pen-filebeat' : 'registry.test.pensando.io:5000/beats/filebeat:6.3.0',
     'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.4',
     'pen-influx' : 'registry.test.pensando.io:5000/influxdb:1.4.2',
-    'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.4',
+    'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.5',
     'pen-pause' : 'gcr.io/google_containers/pause-amd64:3.0',
 }
 
@@ -117,7 +117,7 @@ installInfo['Preload'] = [InstallationItem(k + ".tar") for k in imageMap]
 installInfo['Preload'].append(InstallationItem("pen-install.tar"))
 installInfo['LoadAndInstall'] = [InstallationItem(install_type="inline-script", data="echo starting install", comment="start")]
 installInfo['LoadAndInstall'].append(InstallationItem(install_type="inline-script",
-    data="docker run --rm --name pen-install -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-install -c /initscript",
+    data="docker run --rm --name pen-install -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando -v /var/lib/pensando:/host/var/lib/pensando pen-install -c /initscript",
     comment="run initscript"))
 installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-daemon-reload", data="", comment="systemctl daemon reload"))
 installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-reload-running", data="pen-etcd.service", comment="restart pen-etcd"))

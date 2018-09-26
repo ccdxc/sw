@@ -293,8 +293,17 @@ func (c *Configs) GenerateElasticMgmtConfig(mgmtAddr string, quorumSize int) err
 	return nil
 }
 
+// GenerateElasticAuthConfig is a mock implementation for Elastic auth config generation.
+func (c *Configs) GenerateElasticAuthConfig(mgmtAddr string) error {
+	return nil
+}
+
 // RemoveElasticMgmtConfig is a mock implementation for removing Elastic-Mgmt configuration.
 func (c *Configs) RemoveElasticMgmtConfig() {
+}
+
+// RemoveElasticAuthConfig is a mock implementation for removing Elastic auth configuration.
+func (c *Configs) RemoveElasticAuthConfig() {
 }
 
 // GenerateKubeMasterConfig is a mock implemenation for kube master config generation.

@@ -25,7 +25,9 @@ import (
 // make sure the elastic connection is intact during elasticsearch restarts
 func (e *elasticsearchTestSuite) TestElasticsearchRestart(c *C) {
 	elasticsearchName := c.TestName()
-	elasticAddr, err := testutils.StartElasticsearch(elasticsearchName)
+	signer, _, trustRoots, err := testutils.GetCAKit()
+	Assert(c, err == nil, "Error getting CA artifacts")
+	elasticAddr, err := testutils.StartElasticsearch(elasticsearchName, signer, trustRoots)
 	Assert(c, err == nil, fmt.Sprintf("failed to start elasticsearch container, err: %v", err))
 	defer testutils.StopElasticsearch(elasticsearchName)
 
@@ -62,7 +64,7 @@ func (e *elasticsearchTestSuite) TestElasticsearchRestart(c *C) {
 	// create elastic client
 	AssertEventually(c,
 		func() (bool, interface{}) {
-			esClient, err = elastic.NewClient("", mr, logger)
+			esClient, err = testutils.CreateElasticClient("", mr, logger, signer, trustRoots)
 			if err != nil {
 				log.Errorf("error creating client: %v", err)
 				return false, nil
@@ -103,7 +105,7 @@ func (e *elasticsearchTestSuite) TestElasticsearchRestart(c *C) {
 
 			time.Sleep(100 * time.Millisecond)
 
-			elasticAddr, err = testutils.StartElasticsearch(elasticsearchName)
+			elasticAddr, err := testutils.StartElasticsearch(elasticsearchName, signer, trustRoots)
 			if err != nil {
 				errs <- fmt.Errorf("failed to start elasticsearch, err:%v", err)
 				return

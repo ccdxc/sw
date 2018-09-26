@@ -4,6 +4,7 @@ package elastic
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/elastic/curator"
 	mapper "github.com/pensando/sw/venice/utils/elastic/mapper"
@@ -83,13 +85,17 @@ func (e *elasticsearchTestSuite) TestElastic(c *C) {
 	//context must be passed for each elastic call
 	ctx := context.Background()
 
-	setup(c, elasticsearchName)
+	signer, _, trustRoots, err := testutils.GetCAKit()
+	Assert(c, err == nil, "Error getting CA artifacts")
+
+	setup(c, elasticsearchName, signer, trustRoots)
 	defer teardown(ctx, esClient, c, elasticsearchName)
 
 	// Create a client
 	AssertEventually(c,
 		func() (bool, interface{}) {
-			esClient, err = elastic.NewClient(elasticAddr, nil, log.GetNewLogger(logConfig))
+			// CreateElasticClient also checks cluster health
+			esClient, err = testutils.CreateElasticClient(elasticAddr, nil, log.GetNewLogger(logConfig), signer, trustRoots)
 			if err != nil {
 				log.Errorf("error creating client: %v", err)
 				return false, nil
@@ -502,8 +508,9 @@ func testCurator(ctx context.Context, client elastic.ESClient, c *C) {
 		Resolver:        nil,
 		ElasticAddr:     elasticAddr,
 	}
+
 	log.Infof("creating curator: %v", config)
-	curatorSvc, err := curator.NewCurator(&config)
+	curatorSvc, err := curator.NewCurator(&config, curator.WithElasticClient(client))
 	Assert(c, err == nil, "Failed to create curator service")
 
 	// Start curator service
@@ -577,7 +584,7 @@ func teardown(ctx context.Context, client elastic.ESClient, c *C, name string) {
 }
 
 // setup spins a elasticsearch cluster if requested
-func setup(c *C, name string) {
+func setup(c *C, name string, signer certs.CSRSigner, trustRoots []*x509.Certificate) {
 	// construct event object to be indexed
 	constructEvent()
 
@@ -592,7 +599,7 @@ func setup(c *C, name string) {
 
 	// spin up a single node elasticsearch with the given name; running separate elasticsearch for
 	// each test helps to run the tests in parallel.
-	elasticAddr, err = testutils.StartElasticsearch(name)
+	elasticAddr, err = testutils.StartElasticsearch(name, signer, trustRoots)
 	Assert(c, err == nil, fmt.Sprintf("failed to start elasticsearch container, err: %v", err))
 }
 

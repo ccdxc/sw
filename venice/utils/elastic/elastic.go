@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
@@ -14,7 +15,9 @@ import (
 
 	es "github.com/olivere/elastic"
 
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -45,6 +48,21 @@ const (
 
 type request func() (interface{}, error)
 
+type options struct {
+	httpClient *http.Client // Custom HTTP/HTTPS REST client
+}
+
+// Option fills the optional params for NewClient
+type Option func(opt *options)
+
+// WithHTTPClient passes a custom HTTP REST client
+// used, for example, to enable HTTPS
+func WithHTTPClient(c *http.Client) Option {
+	return func(o *options) {
+		o.httpClient = c
+	}
+}
+
 // Client holds the elastic config and client;
 type Client struct {
 	sync.Mutex
@@ -53,10 +71,9 @@ type Client struct {
 	resolverClient resolver.Interface // resolver used to get the updated elasticsearch URLs
 	resetCount     int                // number of times the client is reset
 	logger         log.Logger
+	scheme         string
+	options
 }
-
-// TODO
-// 1. support for credentials
 
 // NewClient create a new elastic client.
 // Use resolver based resolution only inside cluster; otherwise use URL based clients (for tests)
@@ -66,19 +83,32 @@ type Client struct {
 // New client is created using `elasticURL` if it is not empty; otherwise, the given resolver
 // is used to fetch elastic URLs and the client is created using that.
 // either elasticURL or resolverClient is needed to create elastic client.
-func NewClient(elasticURL string, resolverClient resolver.Interface, logger log.Logger) (ESClient, error) {
+func NewClient(elasticURL string, resolverClient resolver.Interface, logger log.Logger, opts ...Option) (ESClient, error) {
 	var err error
 	wrapperClient := &Client{
 		logger:         logger.WithContext("submodule", "elastic-client"),
 		resolverClient: resolverClient,
 	}
 
+	// add custom options
+	for _, o := range opts {
+		if o != nil {
+			o(&wrapperClient.options)
+		}
+	}
+
+	if isHTTPSClient(wrapperClient.options.httpClient) {
+		wrapperClient.scheme = "https"
+	} else {
+		wrapperClient.scheme = "http"
+	}
+
 	if !utils.IsEmpty(elasticURL) {
-		elasticURL = fmt.Sprintf("http://%s", elasticURL)
+		elasticURL = fmt.Sprintf("%s://%s", wrapperClient.scheme, elasticURL)
 		wrapperClient.urls = []string{elasticURL}
 	} else if resolverClient != nil {
 		// use resolver and find the elasticsearch URLs
-		wrapperClient.urls, err = getElasticSearchURLs(resolverClient)
+		wrapperClient.urls, err = getElasticSearchURLs(wrapperClient.scheme, resolverClient)
 		if err != nil {
 			return nil, err
 		}
@@ -87,12 +117,24 @@ func NewClient(elasticURL string, resolverClient resolver.Interface, logger log.
 	}
 
 	// create new elastic client with sniffing and health checks enabled
-	wrapperClient.esClient, err = newElasticClient(wrapperClient.urls, wrapperClient.logger)
+	wrapperClient.esClient, err = newElasticClient(wrapperClient.urls, wrapperClient.logger, wrapperClient.httpClient)
 	if err != nil {
 		return nil, err
 	}
 
 	return wrapperClient, nil
+}
+
+// NewAuthenticatedClient create a new elastic client with TLS certificates to authenticate itself.
+func NewAuthenticatedClient(elasticURL string, resolverClient resolver.Interface, logger log.Logger) (ESClient, error) {
+	tlsConfig, err := certs.LoadTLSCredentials(globals.ElasticClientAuthDir)
+	if err != nil {
+		return nil, fmt.Errorf("Error accessing client credentials: %v", err)
+	}
+	tlsConfig.ServerName = globals.ElasticSearch + "-https"
+	transport := &http.Transport{TLSClientConfig: tlsConfig}
+	client := &http.Client{Transport: transport}
+	return NewClient(elasticURL, resolverClient, logger, WithHTTPClient(client))
 }
 
 // IsClusterHealthy ensures the cluster status is `green`
@@ -982,7 +1024,7 @@ func (e *Client) resetClientHelper() error {
 
 	e.logger.Debug("trying to reset the client")
 	// try to get the new list of URLs and re-create client
-	elasticURLs, err := getElasticSearchURLs(e.resolverClient)
+	elasticURLs, err := getElasticSearchURLs(e.scheme, e.resolverClient)
 	if err != nil {
 		e.logger.Debug("failed to get elasticsearch URLs from the resolver")
 		return err
@@ -990,7 +1032,7 @@ func (e *Client) resetClientHelper() error {
 
 	if len(elasticURLs) > 0 {
 		// update the client
-		newClient, err := newElasticClient(elasticURLs, e.logger)
+		newClient, err := newElasticClient(elasticURLs, e.logger, e.httpClient)
 		if err != nil {
 			e.logger.Errorf("failed to create new elastic client, err: %v", err)
 			return err
@@ -1023,19 +1065,36 @@ func (e *Client) resetClientHelper() error {
 	return fmt.Errorf("failed to reset elastic client")
 }
 
+func isHTTPSClient(client *http.Client) bool {
+	if client == nil {
+		return false
+	}
+	transport, ok := client.Transport.(*http.Transport)
+	return ok && transport.TLSClientConfig != nil
+}
+
 // helper function to create a elastic client
-func newElasticClient(urls []string, logger log.Logger) (*es.Client, error) {
-	return es.NewClient(
+func newElasticClient(urls []string, logger log.Logger, httpClient *http.Client) (*es.Client, error) {
+	opts := []es.ClientOptionFunc{
 		es.SetURL(urls...),
 		es.SetSniff(true),
 		es.SetTraceLog(logger),
 		es.SetErrorLog(logger),
 		es.SetInfoLog(logger),
-	)
+	}
+
+	if httpClient != nil {
+		opts = append(opts, es.SetHttpClient(httpClient))
+		if isHTTPSClient(httpClient) {
+			opts = append(opts, es.SetScheme("https"))
+		}
+	}
+
+	return es.NewClient(opts...)
 }
 
 // getElasticSearchURLs helper function to retrieve the list of elasticsearch URLs using the resolver
-func getElasticSearchURLs(resolverClient resolver.Interface) ([]string, error) {
+func getElasticSearchURLs(scheme string, resolverClient resolver.Interface) ([]string, error) {
 	elasticAddrs, err := getElasticSearchAddrs(resolverClient)
 	if err != nil {
 		return []string{}, err
@@ -1043,7 +1102,7 @@ func getElasticSearchURLs(resolverClient resolver.Interface) ([]string, error) {
 
 	// update the urls
 	for i := 0; i < len(elasticAddrs); i++ {
-		elasticAddrs[i] = fmt.Sprintf("http://%s", elasticAddrs[i])
+		elasticAddrs[i] = fmt.Sprintf("%s://%s", scheme, elasticAddrs[i])
 	}
 
 	return elasticAddrs, nil

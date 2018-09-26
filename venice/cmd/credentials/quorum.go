@@ -29,7 +29,7 @@ func SetQuorumInstanceAuth(c *quorum.Config, csrSigner certs.CSRSigner, trustRoo
 		return errors.Wrapf(err, "error generating private key")
 	}
 	_, ipaddrs := netutils.NameAndIPs()
-	csr, err := certs.CreateCSR(kvsPrivKey, nil, []string{globals.Etcd}, ipaddrs)
+	csr, err := certs.CreateCSR(kvsPrivKey, nil, []string{globals.Etcd, c.MemberName}, ipaddrs)
 	if err != nil {
 		return errors.Wrapf(err, "error generating csr")
 	}

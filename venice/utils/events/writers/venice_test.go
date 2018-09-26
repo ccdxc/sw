@@ -82,17 +82,17 @@ func setup(t *testing.T) (*mockes.ElasticServer, apiserver.Server, *evtsmgr.Even
 	addMockService(mr, globals.ElasticSearch, ms.GetElasticURL())
 	addMockService(mr, globals.APIServer, apiServerURL)
 
+	// create elastic client; this is used to confirm the events have reached elasticsearch through events manager
+	elasticClient, err := elastic.NewClient(ms.GetElasticURL(), nil, logger)
+	AssertOk(t, err, "failed to create elastic client")
+
 	// run gRPC events manager server
-	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, testServerURL, mr, logger)
+	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, testServerURL, mr, logger, evtsmgr.WithElasticClient(elasticClient))
 	AssertOk(t, err, "failed to run gRPC events manager server")
 
 	// create venice writer
 	veniceWriter, err := NewVeniceWriter("venice_writer", veniceBufferLen, evtsMgr.RPCServer.GetListenURL(), nil, logger)
 	AssertOk(t, err, "failed to create venice events writer")
-
-	// create elastic client; this is used to confirm the events have reached elasticsearch through events manager
-	elasticClient, err := elastic.NewClient(ms.GetElasticURL(), nil, logger)
-	AssertOk(t, err, "failed to create elastic client")
 
 	return ms, apiServer, evtsMgr, veniceWriter, elasticClient
 }
@@ -258,7 +258,8 @@ func TestVeniceWriterWithEvtsMgrRestart(t *testing.T) {
 
 		// writers should be able to release all the holding events from the buffer
 		// run gRPC events manager server
-		if evtsMgrServer, err = evtsmgr.NewEventsManager(globals.EvtsMgr, evtsMgrURL, mr, logger); err != nil {
+		evtsMgrServer, err = evtsmgr.NewEventsManager(globals.EvtsMgr, evtsMgrURL, mr, logger, evtsmgr.WithElasticClient(elasticClient))
+		if err != nil {
 			log.Errorf("failed to start events manager on URL: %s, err: %v", evtsMgrURL, err)
 			return
 		}

@@ -36,6 +36,9 @@ const (
 	indexMaxBuffer    = (maxWriters * indexBatchSize)
 )
 
+// Option fills the optional params for Finder
+type Option func(*Indexer)
+
 // Indexer is an implementation of the indexer.Interface
 type Indexer struct {
 	sync.RWMutex
@@ -102,6 +105,13 @@ type Indexer struct {
 	cache cache.Interface
 }
 
+// WithElasticClient passes a custom client for Elastic
+func WithElasticClient(esClient elastic.ESClient) Option {
+	return func(fdr *Indexer) {
+		fdr.elasticClient = esClient
+	}
+}
+
 // WatchHandler is handler func for watch events on API-server objects
 type WatchHandler func(et kvstore.WatchEventType, obj interface{})
 
@@ -112,39 +122,13 @@ type indexRequest struct {
 }
 
 // NewIndexer instantiates a new indexer
-func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interface, cache cache.Interface, logger log.Logger) (Interface, error) {
+func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interface, cache cache.Interface, logger log.Logger, opts ...Option) (Interface, error) {
 
 	log.Debugf("Creating Indexer, apiserver-addr: %s", apiServerAddr)
-
-	// Initialize elastic client
-	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-		return elastic.NewClient("", rsr, logger.WithContext("submodule", "elastic"))
-	}, elasticWaitIntvl, maxElasticRetries)
-	if err != nil {
-		log.Errorf("Failed to create elastic client, err: %v", err)
-		return nil, err
-	}
-	log.Debugf("Created elastic client")
-	esClient := result.(elastic.ESClient)
-
-	// Initialize api client
-	result, err = utils.ExecuteWithRetry(func() (interface{}, error) {
-		return apiservice.NewGrpcAPIClient(globals.Spyglass, apiServerAddr, logger, rpckit.WithBalancer(balancer.New(rsr)))
-	}, apiSrvWaitIntvl, maxAPISrvRetries)
-	if err != nil {
-		log.Errorf("Failed to create api client, addr: %s err: %v",
-			apiServerAddr, err)
-		esClient.Close()
-		return nil, err
-	}
-	log.Debugf("Created API client")
-	apiClient := result.(apiservice.Services)
 
 	indexer := Indexer{
 		ctx:               ctx,
 		apiServerAddr:     apiServerAddr,
-		elasticClient:     esClient,
-		apiClient:         apiClient,
 		logger:            logger,
 		watchers:          make(map[string]kvstore.Watcher),
 		channels:          make(map[string]<-chan *kvstore.WatchEvent),
@@ -158,6 +142,38 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 		count:             0,
 		cache:             cache,
 	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&indexer)
+		}
+	}
+
+	if indexer.elasticClient == nil {
+		// Initialize elastic client
+		result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+			return elastic.NewAuthenticatedClient("", rsr, logger.WithContext("submodule", "elastic"))
+		}, elasticWaitIntvl, maxElasticRetries)
+		if err != nil {
+			log.Errorf("Failed to create elastic client, err: %v", err)
+			return nil, err
+		}
+		log.Debugf("Created elastic client")
+		indexer.elasticClient = result.(elastic.ESClient)
+	}
+
+	// Initialize api client
+	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+		return apiservice.NewGrpcAPIClient(globals.Spyglass, apiServerAddr, logger, rpckit.WithBalancer(balancer.New(rsr)))
+	}, apiSrvWaitIntvl, maxAPISrvRetries)
+	if err != nil {
+		log.Errorf("Failed to create api client, addr: %s err: %v",
+			apiServerAddr, err)
+		indexer.elasticClient.Close()
+		return nil, err
+	}
+	log.Debugf("Created API client")
+	indexer.apiClient = result.(apiservice.Services)
 
 	log.Infof("Created new indexer: {%+v}", &indexer)
 	return &indexer, nil

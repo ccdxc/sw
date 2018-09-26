@@ -1,0 +1,37 @@
+# This is the main Search Guard configuration file where authentication 
+# and authorization is defined.
+# 
+# You need to configure at least one authentication domain in the authc of this file.
+# An authentication domain is responsible for extracting the user credentials from 
+# the request and for validating them against an authentication backend like Active Directory for example. 
+#
+# If more than one authentication domain is configured the first one which succeeds wins. 
+# If all authentication domains fail then the request is unauthenticated.
+# In this case an exception is thrown and/or the HTTP status is set to 401.
+# 
+# After authentication authorization (authz) will be applied. There can be zero or more authorizers which collect
+# the roles from a given backend for the authenticated user.
+#
+# Both, authc and auth can be enabled/disabled separately for REST and TRANSPORT layer. Default is true for both.
+#        http_enabled: true
+#        transport_enabled: true
+#
+
+searchguard:
+  dynamic:
+    http:
+      anonymous_auth_enabled: false
+    authc:
+      clientcert_auth_domain:
+        http_enabled: true
+        transport_enabled: true
+        order: 1
+        http_authenticator:
+          type: clientcert
+          config:
+            username_attribute: cn #Use CN as user name
+          challenge: false
+        authentication_backend:
+          type: noop
+    authz:    
+

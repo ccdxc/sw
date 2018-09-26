@@ -4,6 +4,7 @@ package events
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -21,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
@@ -56,6 +58,8 @@ type tInfo struct {
 	evtsMgr             *evtsmgr.EventsManager       // events manager to write events to elastic
 	evtsProxy           *evtsproxy.EventsProxy       // events proxy to receive and distribute events
 	proxyEventsStoreDir string                       // local events store directory
+	signer              certs.CSRSigner              // function to sign CSRs for TLS
+	trustRoots          []*x509.Certificate          // trust roots to verify TLS certs
 }
 
 // setup helper function create evtsmgr, evtsproxy, etc. services
@@ -67,6 +71,12 @@ func (t *tInfo) setup(tst *testing.T) error {
 
 	t.logger = log.GetNewLogger(logConfig)
 	t.mockResolver = mockresolver.New()
+
+	t.signer, _, t.trustRoots, err = testutils.GetCAKit()
+	if err != nil {
+		log.Errorf("Error getting CA artifacts: %v", err)
+		return err
+	}
 
 	// start elasticsearch
 	if err = t.startElasticsearch(); err != nil {
@@ -89,7 +99,7 @@ func (t *tInfo) setup(tst *testing.T) error {
 	t.updateResolver(globals.APIServer, t.apiServerAddr)
 
 	// start events manager
-	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(testURL, t.mockResolver, t.logger)
+	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(testURL, t.mockResolver, t.logger, t.esClient)
 	if err != nil {
 		log.Errorf("failed to start events manager, err: %v", err)
 		return err
@@ -131,7 +141,7 @@ func (t *tInfo) teardown() {
 // createElasticClient helper function to create elastic client
 func (t *tInfo) createElasticClient() error {
 	var err error
-	t.esClient, err = testutils.CreateElasticClient(t.elasticsearchAddr, t.logger)
+	t.esClient, err = testutils.CreateElasticClient(t.elasticsearchAddr, nil, t.logger, t.signer, t.trustRoots)
 	return err
 }
 
@@ -142,7 +152,7 @@ func (t *tInfo) startElasticsearch() error {
 	log.Infof("starting elasticsearch")
 
 	t.elasticsearchName = uuid.NewV4().String()
-	t.elasticsearchAddr, err = testutils.StartElasticsearch(t.elasticsearchName)
+	t.elasticsearchAddr, err = testutils.StartElasticsearch(t.elasticsearchName, t.signer, t.trustRoots)
 	if err != nil {
 		return fmt.Errorf("failed to start elasticsearch, err: %v", err)
 	}

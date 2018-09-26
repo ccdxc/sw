@@ -23,6 +23,16 @@ var (
 	retryDelay = 2 * time.Second
 )
 
+// Option fills the optional params for Curator
+type Option func(*Curator)
+
+// WithElasticClient passes a custom client for Elastic
+func WithElasticClient(esClient elastic.ESClient) Option {
+	return func(c *Curator) {
+		c.esClient = esClient
+	}
+}
+
 // Curator represents elastic index manager service for
 //  - handling index retention and expiration (for now)
 //
@@ -75,7 +85,7 @@ type Config struct {
 }
 
 // NewCurator returns a new Curator service
-func NewCurator(config *Config) (Interface, error) {
+func NewCurator(config *Config, opts ...Option) (Interface, error) {
 
 	// Validate input
 	if config == nil {
@@ -91,6 +101,13 @@ func NewCurator(config *Config) (Interface, error) {
 		Config: *config,
 		stopCh: make(chan bool, 1),
 	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(c)
+		}
+	}
+
 	log.Debugf("Created curator, cfg: %+v", c.Config)
 	return c, nil
 }
@@ -129,7 +146,7 @@ func (c *Curator) scanIndices() {
 			// Initialize elastic client if required
 			if c.esClient == nil {
 				result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-					return elastic.NewClient(c.Config.ElasticAddr, c.Config.Resolver, c.Config.Logger)
+					return elastic.NewAuthenticatedClient(c.Config.ElasticAddr, c.Config.Resolver, c.Config.Logger)
 				}, retryDelay, maxRetries)
 
 				if err != nil {

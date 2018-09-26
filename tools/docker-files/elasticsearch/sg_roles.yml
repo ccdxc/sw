@@ -1,0 +1,10 @@
+# Allows everything, but no changes to searchguard configuration index
+sg_all_access:
+  readonly: true
+  cluster:
+    - UNLIMITED
+  indices:
+    '*':
+      '*':
+        - UNLIMITED
+

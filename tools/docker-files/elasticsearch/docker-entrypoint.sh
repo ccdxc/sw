@@ -10,6 +10,9 @@ env discovery.zen.minimum_master_nodes=$ELASTIC_MIN_MASTERS env
 
 echo "Setting permissions for data volume..."
 chown -R 1000:1000 /usr/share/elasticsearch/data
+echo "Setting permissions for auth config volumes..."
+chown -R 1000:1000 /usr/share/elasticsearch/config/auth-node
+chown -R 1000:1000 /usr/share/elasticsearch/config/auth-https
 
 # set network.host from PENS_MGMT_IP and launch elastic's entry script
 env network.host=$PENS_MGMT_IP discovery.zen.minimum_master_nodes=$ELASTIC_MIN_MASTERS /usr/local/bin/docker-entrypoint.sh

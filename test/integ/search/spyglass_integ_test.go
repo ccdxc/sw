@@ -4,6 +4,7 @@ package search
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -41,6 +42,8 @@ import (
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -104,6 +107,9 @@ type testInfo struct {
 	evtsProxy         *evtsproxy.EventsProxy
 	tmpEventsDir      string
 	pcache            pcache.Interface
+	esClient          elastic.ESClient    // elastic client
+	signer            certs.CSRSigner     // function to sign CSRs for TLS
+	trustRoots        []*x509.Certificate // trust roots to verify TLS certs
 }
 
 var tInfo testInfo
@@ -111,16 +117,28 @@ var tInfo testInfo
 func (tInfo *testInfo) setup(t *testing.T) error {
 	var err error
 
+	tInfo.signer, _, tInfo.trustRoots, err = testutils.GetCAKit()
+	if err != nil {
+		log.Errorf("Error getting CA artifacts: %v", err)
+		return err
+	}
+
 	// start elasticsearch
 	tInfo.elasticServerName = uuid.NewV4().String()
 	testutils.StopElasticsearch(tInfo.elasticServerName)
-	tInfo.elasticURL, err = testutils.StartElasticsearch(tInfo.elasticServerName)
+	tInfo.elasticURL, err = testutils.StartElasticsearch(tInfo.elasticServerName, tInfo.signer, tInfo.trustRoots)
 	if err != nil {
 		return fmt.Errorf("failed to start elasticsearch, err: %v", err)
 	}
 	tInfo.updateResolver(globals.ElasticSearch, tInfo.elasticURL) // add mock elastic service to mock resolver
 
-	if !testutils.IsEalsticClusterHealthy(tInfo.elasticURL) {
+	tInfo.esClient, err = testutils.CreateElasticClient(tInfo.elasticURL, tInfo.mockResolver, tInfo.l.WithContext("submodule", "elastic"), tInfo.signer, tInfo.trustRoots)
+	if err != nil {
+		log.Errorf("Error creating elastic client: %v", err)
+		return err
+	}
+
+	if !testutils.IsElasticClusterHealthy(tInfo.esClient) {
 		return fmt.Errorf("elasticsearch cluster not healthy")
 	}
 
@@ -128,7 +146,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	tInfo.pcache = pcache.NewCache(tInfo.l)
 
 	// start spyglass finder
-	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", tInfo.mockResolver, tInfo.pcache, tInfo.l)
+	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", tInfo.mockResolver, tInfo.pcache, tInfo.l, tInfo.esClient)
 	if err != nil {
 		return err
 	}
@@ -151,14 +169,14 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	}
 
 	// start spygalss indexer
-	idr, _, err := testutils.StartSpyglass("indexer", tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l)
+	idr, _, err := testutils.StartSpyglass("indexer", tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l, tInfo.esClient)
 	if err != nil {
 		return err
 	}
 	tInfo.idr = idr.(indexer.Interface)
 
 	// start evtsmgr
-	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(":0", tInfo.mockResolver, tInfo.l)
+	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(":0", tInfo.mockResolver, tInfo.l, tInfo.esClient)
 	if err != nil {
 		log.Errorf("failed to start events manager, err: %v", err)
 		return err
@@ -340,7 +358,7 @@ func TestSpyglass(t *testing.T) {
 	t.Logf("Creating and starting new indexer instance")
 	AssertEventually(t,
 		func() (bool, interface{}) {
-			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l)
+			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l, indexer.WithElasticClient(tInfo.esClient))
 			if err != nil {
 				t.Logf("Error creating indexer: %v", err)
 				return false, nil

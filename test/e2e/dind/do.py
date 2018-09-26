@@ -214,13 +214,23 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
             break
         time.sleep(3)
 
-# Copy credentials to acces Kubernetes ApiServer from node1 to node0,
+# Copy credentials to access Kubernetes ApiServer from node1 to node0,
 # so that Kubectl and other tools can access the Kubernetes cluster directly.
 def copyK8sAccessCredentials():
     tmpDir = tempfile.mkdtemp()
     try:
       runCommand("""docker cp node1:/var/lib/pensando/pki/kubernetes/apiserver-client/. {}""".format(tmpDir))
       runCommand("""docker cp {}/. node0:/root/.kube/auth""".format(tmpDir))
+    finally:
+      shutil.rmtree(tmpDir)
+
+# Copy credentials to access Elastic cluster from node1 to node0
+def copyElasticAccessCredentials():
+    tmpDir = tempfile.mkdtemp()
+    try:
+      runCommand("""docker cp node1:/var/lib/pensando/pki/shared/elastic-client-auth/. {}""".format(tmpDir))
+      runCommand("""docker exec node0 mkdir -p /var/lib/pensando/pki/shared/elastic-client-auth""")
+      runCommand("""docker cp {}/. node0:/var/lib/pensando/pki/shared/elastic-client-auth""".format(tmpDir))
     finally:
       shutil.rmtree(tmpDir)
 
@@ -274,6 +284,7 @@ def restartCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
 
     if not args.skipnode0:
       copyK8sAccessCredentials()
+      copyElasticAccessCredentials()
 
 parser = argparse.ArgumentParser()
 # these 4 below are used internally not to be directly executed by the caller
@@ -402,5 +413,6 @@ createCluster(nodeList, nodes + naplesNodes, ipList[0], quorumNames, clustervip,
 if not args.skipnode0:
     testMgmtNode.startNode()
     copyK8sAccessCredentials()
+    copyElasticAccessCredentials()
 
 sys.exit(0)

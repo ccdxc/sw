@@ -32,6 +32,7 @@ const (
 	ecParametersPemBlockType       = "EC PARAMETERS"
 	ecPrivateKeyPemBlockType       = "EC PRIVATE KEY"
 	rsaPrivateKeyPemBlockType      = "RSA PRIVATE KEY"
+	privateKeyPemBlockType         = "PRIVATE KEY"
 )
 
 type options struct {
@@ -125,6 +126,24 @@ func saveEcPrivateKey(pemfile io.Writer, privatekey *ecdsa.PrivateKey) error {
 
 	pemkey := &pem.Block{
 		Type:  ecPrivateKeyPemBlockType,
+		Bytes: outputKey}
+	return pem.Encode(pemfile, pemkey)
+}
+
+// SavePkcs8PrivateKey stores an RSA or ECDSA private key in PKCS#8 format (without a password)
+func SavePkcs8PrivateKey(outFile string, key crypto.PrivateKey) error {
+	pemfile, err := os.Create(outFile)
+	if err != nil {
+		return errors.Wrap(err, "Unable to create file during SavePkcs8PrivateKey")
+	}
+	defer pemfile.Close()
+	outputKey, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		return errors.Wrap(err, "Error marshaling PKCS8 private key")
+	}
+
+	pemkey := &pem.Block{
+		Type:  privateKeyPemBlockType,
 		Bytes: outputKey}
 	return pem.Encode(pemfile, pemkey)
 }

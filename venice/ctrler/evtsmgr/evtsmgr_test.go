@@ -82,7 +82,9 @@ func TestEventsManager(t *testing.T) {
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
 
-	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger)
+	ec, err := elastic.NewClient("", mockResolver, logger.WithContext("submodule", "elastic"))
+	tu.AssertOk(t, err, "failed to create elastic client")
+	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger, WithElasticClient(ec))
 	tu.AssertOk(t, err, "failed to create events manager")
 
 	defer evtsMgr.RPCServer.Stop()
@@ -123,7 +125,7 @@ func TestEventsManagerInstantiation(t *testing.T) {
 	addMockService(mockResolver, globals.ElasticSearch, "dummy-url")
 
 	// invalid elastic URL
-	_, err = NewEventsManager("server-name", "listen-url", mockResolver, logger)
+	_, err = elastic.NewClient("", mockResolver, logger.WithContext("submodule", "elastic"))
 	tu.Assert(t, strings.Contains(err.Error(), "no such host") || strings.Contains(err.Error(), "no Elasticsearch node available"), "expected failure, EventsManager init succeeded")
 }
 
@@ -147,7 +149,7 @@ func TestEventsElasticTemplate(t *testing.T) {
 			return true, nil
 		}, "failed to create elastic client", "20ms", "2m")
 
-	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger)
+	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger, WithElasticClient(esClient))
 	tu.AssertOk(t, err, "failed to create events manager")
 
 	err = evtsMgr.createEventsElasticTemplate(esClient)
@@ -166,7 +168,9 @@ func TestEventsMgrAlertPolicyCache(t *testing.T) {
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
 
-	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger)
+	ec, err := elastic.NewClient("", mockResolver, logger.WithContext("submodule", "elastic"))
+	tu.AssertOk(t, err, "failed to create elastic client")
+	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger, WithElasticClient(ec))
 	tu.AssertOk(t, err, "failed to create events manager")
 	defer evtsMgr.RPCServer.Stop()
 
@@ -224,7 +228,9 @@ func TestEventsMgrAlertCache(t *testing.T) {
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
 
-	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger)
+	ec, err := elastic.NewClient("", mockResolver, logger.WithContext("submodule", "elastic"))
+	tu.AssertOk(t, err, "failed to create elastic client")
+	evtsMgr, err := NewEventsManager(globals.EvtsMgr, testServerURL, mockResolver, logger, WithElasticClient(ec))
 	tu.AssertOk(t, err, "failed to create events manager")
 
 	alert := &monitoring.Alert{

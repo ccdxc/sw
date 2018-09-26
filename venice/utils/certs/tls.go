@@ -45,7 +45,7 @@ func StoreTLSCredentials(cert *x509.Certificate, key crypto.PrivateKey, caBundle
 
 	err := os.MkdirAll(dir, perm)
 	if err != nil {
-		return errors.Wrapf(err, "Error creating director: %v with perm %v", dir, perm)
+		return errors.Wrapf(err, "Error creating directory: %v with perm %v", dir, perm)
 	}
 
 	certPath, keyPath, caBundlePath := GetTLSCredentialsPaths(dir)

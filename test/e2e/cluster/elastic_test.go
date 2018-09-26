@@ -47,9 +47,9 @@ var _ = Describe("Elastic cluster test", func() {
 		logConfig := log.GetDefaultConfig("elastic_cluster_test")
 		Eventually(func() error {
 			var err error
-			esClient, err = elastic.NewClient("", mr, log.GetNewLogger(logConfig))
+			esClient, err = elastic.NewAuthenticatedClient("", mr, log.GetNewLogger(logConfig))
 			return err
-		}, 30, 1).Should(BeNil(), "failed to initialize elastic client")
+		}, 60, 1).Should(BeNil(), "failed to initialize elastic client")
 	})
 
 	It("Elastic cluster health should be green/yellow", func() {

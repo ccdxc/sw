@@ -31,6 +31,13 @@ var etcdClientCredsVolume = protos.ModuleSpec_Volume{
 	MountPath: globals.EtcdClientAuthDir,
 }
 
+// elasticClientCredsVolume is a reusable volume containing credentials for direct access to Elastic
+var elasticClientCredsVolume = protos.ModuleSpec_Volume{
+	Name:      "elastic-client-credentials",
+	HostPath:  globals.ElasticClientAuthDir,
+	MountPath: globals.ElasticClientAuthDir,
+}
+
 // logVolume is a reusable volume definition for Pensando logs.
 var logVolume = protos.ModuleSpec_Volume{
 	Name:      "logs",
@@ -118,6 +125,11 @@ var k8sModules = map[string]protos.Module{
 				},
 				logVolume,
 				eventsVolume,
+				{
+					Name:      "elastic-client-credentials",
+					HostPath:  globals.ElasticClientAuthDir,
+					MountPath: globals.FilebeatElasticClientAuthDir,
+				},
 			},
 		},
 	},
@@ -346,6 +358,18 @@ var k8sModules = map[string]protos.Module{
 					HostPath:  globals.ElasticDataVolumeDir,
 					MountPath: "/usr/share/elasticsearch/data",
 				},
+				// Volume definition for Elastic node authentication
+				{
+					Name:      "auth",
+					HostPath:  globals.ElasticNodeAuthDir,
+					MountPath: "/usr/share/elasticsearch/config/auth-node",
+				},
+				// Volume definition for Elastic node authentication
+				{
+					Name:      "https",
+					HostPath:  globals.ElasticHTTPSAuthDir,
+					MountPath: "/usr/share/elasticsearch/config/auth-https",
+				},
 			},
 		},
 	},
@@ -404,6 +428,7 @@ var k8sModules = map[string]protos.Module{
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
 				eventsVolume,
+				elasticClientCredsVolume,
 			},
 		},
 	},
@@ -433,6 +458,7 @@ var k8sModules = map[string]protos.Module{
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
 				eventsVolume,
+				elasticClientCredsVolume,
 			},
 		},
 	},

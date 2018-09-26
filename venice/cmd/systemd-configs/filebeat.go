@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -29,6 +30,16 @@ type FilebeatParams struct {
 
 	// ElasticIndex is the index where venice logs will be stored
 	ElasticIndex string
+
+	// TLSCertPath is the location of the file containing the certificate to authenticate to ES cluster
+	TLSCertPath string
+
+	// TLSCertPath is the location of the file containing the key to authenticate to ES cluster
+	TLSKeyPath string
+
+	// TLSCertPath is the location of the file containing the trust roots used to validate
+	// the certificate presented by the ES cluster
+	TLSCABundlePath string
 }
 
 const filebeatTemplate = `
@@ -62,9 +73,14 @@ output.elasticsearch:
   template.path: filebeat.template.json
 
   # Optional protocol and basic auth credentials.
-  #protocol: "https"
+  protocol: "https"
   #username: "elastic"
   #password: "changeme"
+  ssl.enabled: true
+  ssl.certificate_authorities: 
+    - {{.TLSCABundlePath}}
+  ssl.certificate: "{{.TLSCertPath}}" 
+  ssl.key: "{{.TLSKeyPath}}"
   index: "{{.ElasticIndex}}.%{+YYYY-MM-dd}"
 
 setup.template.name: "{{.ElasticIndex}}"
@@ -304,10 +320,15 @@ func GenerateFilebeatConfig(elasticServerAddrs []string) error {
 		buffer.WriteString(fmt.Sprintf("\"%s:%s\"", addr, globals.ElasticsearchRESTPort))
 	}
 	log.Debugf("Generating Filebeat config - Elastic Endpoints: %s", buffer.String())
+	tlsCertPath, tlsKeyPath, tlsCABundlePath := certs.GetTLSCredentialsPaths(globals.FilebeatElasticClientAuthDir)
+
 	fbParams := FilebeatParams{
 		LogDir:           "/var/log/pensando",
 		ElasticEndpoints: buffer.String(),
 		ElasticIndex:     fmt.Sprintf("%s.%s.%s", elastic.InternalIndexPrefix, globals.DefaultTenant, "systemlogs"),
+		TLSCertPath:      tlsCertPath,
+		TLSKeyPath:       tlsKeyPath,
+		TLSCABundlePath:  tlsCABundlePath,
 	}
 
 	t := template.New("Filebeat config template")

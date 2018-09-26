@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 
@@ -145,12 +146,20 @@ func StartAPIGateway(serverAddr string, backends map[string]string, skipServices
 }
 
 // StartSpyglass helper function to spyglass finder and indexer
-func StartSpyglass(service, apiServerAddr string, mr *mockresolver.ResolverClient, cache scache.Interface, logger log.Logger) (interface{}, string, error) {
+func StartSpyglass(service, apiServerAddr string, mr *mockresolver.ResolverClient, cache scache.Interface, logger log.Logger, esClient elastic.ESClient) (interface{}, string, error) {
+	var err error
+	if esClient == nil {
+		esClient, err = CreateElasticClient("", mr, logger.WithContext("submodule", "elastic"), nil, nil)
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to create Elastic client for %s, err: %v", service, err)
+		}
+	}
+
 	switch service {
 	case "finder": // create finder
 		log.Info("starting finder ...")
 		ctx := context.Background()
-		fdr, err := finder.NewFinder(ctx, "localhost:0", mr, cache, logger)
+		fdr, err := finder.NewFinder(ctx, "localhost:0", mr, cache, logger, finder.WithElasticClient(esClient))
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to create finder, err: %v", err)
 		}
@@ -174,7 +183,7 @@ func StartSpyglass(service, apiServerAddr string, mr *mockresolver.ResolverClien
 	case "indexer": // create the indexer
 		log.Info("starting indexer ...")
 		ctx := context.Background()
-		idr, err := indexer.NewIndexer(ctx, apiServerAddr, mr, cache, logger)
+		idr, err := indexer.NewIndexer(ctx, apiServerAddr, mr, cache, logger, indexer.WithElasticClient(esClient))
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to create indexer, err: %v", err)
 		}
@@ -190,10 +199,17 @@ func StartSpyglass(service, apiServerAddr string, mr *mockresolver.ResolverClien
 }
 
 // StartEvtsMgr helper function to start events manager
-func StartEvtsMgr(serverAddr string, mr *mockresolver.ResolverClient, logger log.Logger) (*evtsmgr.EventsManager, string, error) {
+func StartEvtsMgr(serverAddr string, mr *mockresolver.ResolverClient, logger log.Logger, esClient elastic.ESClient) (*evtsmgr.EventsManager, string, error) {
 	log.Infof("starting events manager")
 
-	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, serverAddr, mr, logger)
+	var err error
+	if esClient == nil {
+		esClient, err = elastic.NewClient("", mr, logger.WithContext("submodule", "elastic"))
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to create Elastic client for events manager, err: %v", err)
+		}
+	}
+	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, serverAddr, mr, logger, evtsmgr.WithElasticClient(esClient))
 	if err != nil {
 		return nil, "", fmt.Errorf("failed start events manager, err: %v", err)
 	}

@@ -105,7 +105,7 @@ func (tInfo *tInfo) setup() error {
 	tInfo.mockResolver.AddServiceInstance(si) // add mock elastic service to mock resolver
 
 	// start spyglass finder
-	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", tInfo.mockResolver, nil, tInfo.l)
+	fdr, fdrAddr, err := testutils.StartSpyglass("finder", "", tInfo.mockResolver, nil, tInfo.l, nil)
 	if err != nil {
 		return err
 	}

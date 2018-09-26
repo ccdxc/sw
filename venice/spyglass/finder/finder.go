@@ -46,6 +46,9 @@ const (
 // are either invalid or out of range.
 var ErrInvalidParams = errors.New("Invalid search parameters")
 
+// Option fills the optional params for Finder
+type Option func(*Finder)
+
 // Finder is an implementation of the finder.Interface
 type Finder struct {
 	sync.WaitGroup
@@ -58,8 +61,15 @@ type Finder struct {
 	cache         cache.Interface
 }
 
+// WithElasticClient passes a custom client for Elastic
+func WithElasticClient(esClient elastic.ESClient) Option {
+	return func(fdr *Finder) {
+		fdr.elasticClient = esClient
+	}
+}
+
 // NewFinder instantiates a new finder instance
-func NewFinder(ctx context.Context, finderAddr string, rsr resolver.Interface, cache cache.Interface, logger log.Logger) (Interface, error) {
+func NewFinder(ctx context.Context, finderAddr string, rsr resolver.Interface, cache cache.Interface, logger log.Logger, opts ...Option) (Interface, error) {
 
 	fdr := Finder{
 		ctx:        ctx,
@@ -67,6 +77,12 @@ func NewFinder(ctx context.Context, finderAddr string, rsr resolver.Interface, c
 		rsr:        rsr,
 		cache:      cache,
 		logger:     logger,
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&fdr)
+		}
 	}
 
 	log.Debugf("Created Finder {+%v}", &fdr)
@@ -85,15 +101,17 @@ func (fdr *Finder) Start() error {
 	}
 
 	// Initialize elastic client
-	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-		return elastic.NewClient("", fdr.rsr, fdr.logger.WithContext("submodule", "elastic"))
-	}, elasticWaitIntvl, maxElasticRetries)
-	if err != nil {
-		fdr.logger.Errorf("Failed to create elastic client, err: %v", err)
-		return err
+	if fdr.elasticClient == nil {
+		result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+			return elastic.NewAuthenticatedClient("", fdr.rsr, fdr.logger.WithContext("submodule", "elastic"))
+		}, elasticWaitIntvl, maxElasticRetries)
+		if err != nil {
+			fdr.logger.Errorf("Failed to create elastic client, err: %v", err)
+			return err
+		}
+		fdr.logger.Debug("Created Elastic client")
+		fdr.elasticClient = result.(elastic.ESClient)
 	}
-	fdr.logger.Debug("Created Elastic client")
-	fdr.elasticClient = result.(elastic.ESClient)
 
 	return nil
 }

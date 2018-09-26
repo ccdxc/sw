@@ -47,6 +47,9 @@ var (
 	}
 )
 
+// Option fills the optional params for EventsMgr
+type Option func(*EventsManager)
+
 // EventsManager instance of events manager; responsible for all aspects of events
 // including management of elastic connections.
 type EventsManager struct {
@@ -54,11 +57,19 @@ type EventsManager struct {
 	apiClient apiclient.Services   // api client
 	memDb     *memdb.MemDb         // memDb to store the alert policies and alerts
 	logger    log.Logger           // logger
+	esClient  elastic.ESClient     // elastic client
+}
+
+// WithElasticClient passes a custom client for Elastic
+func WithElasticClient(esClient elastic.ESClient) Option {
+	return func(em *EventsManager) {
+		em.esClient = esClient
+	}
 }
 
 // NewEventsManager returns a events manager/controller instance
 func NewEventsManager(serverName, serverURL string, resolverClient resolver.Interface,
-	logger log.Logger) (*EventsManager, error) {
+	logger log.Logger, opts ...Option) (*EventsManager, error) {
 	if utils.IsEmpty(serverName) || utils.IsEmpty(serverURL) || resolverClient == nil || logger == nil {
 		return nil, errors.New("all parameters are required")
 	}
@@ -67,26 +78,33 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 		logger: logger,
 		memDb:  memdb.NewMemDb(),
 	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(em)
+		}
+	}
 
 	// start watching alert policies and alerts; update the results in mem DB
 	go em.watchAPIServerEvents(resolverClient)
 
 	// create elastic client
-	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-		return elastic.NewClient("", resolverClient, em.logger.WithContext("submodule", "elastic-client"))
-	}, retryDelay, maxRetries)
-	if err != nil {
-		em.logger.Errorf("failed to create elastic client, err: %v", err)
-		return nil, err
+	if em.esClient == nil {
+		result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+			return elastic.NewAuthenticatedClient("", resolverClient, em.logger.WithContext("submodule", "elastic-client"))
+		}, retryDelay, maxRetries)
+		if err != nil {
+			em.logger.Errorf("failed to create elastic client, err: %v", err)
+			return nil, err
+		}
+		em.logger.Debugf("created elastic client")
+		em.esClient = result.(elastic.ESClient)
 	}
-	em.logger.Debugf("created elastic client")
-	esClient := result.(elastic.ESClient)
 
 	// create events template; once the template is created, elasticsearch automatically
 	// applies the properties for any new indices that's matching the pattern. As the index call
 	// automatically creates the index when it does not exists, we don't need to explicitly
 	// create daily events index.
-	if err = em.createEventsElasticTemplate(esClient); err != nil {
+	if err := em.createEventsElasticTemplate(em.esClient); err != nil {
 		em.logger.Errorf("failed to create events template in elastic, err: %v", err)
 		return nil, err
 	}
@@ -98,7 +116,7 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 	}
 
 	// create RPC server
-	em.RPCServer, err = rpcserver.NewRPCServer(serverName, serverURL, esClient, alertEngine)
+	em.RPCServer, err = rpcserver.NewRPCServer(serverName, serverURL, em.esClient, alertEngine)
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating RPC server")
 	}

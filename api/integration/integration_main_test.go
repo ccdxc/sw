@@ -25,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/pensando/sw/venice/utils/elastic"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -95,11 +96,17 @@ func startSpyglass() finder.Interface {
 	// add mock elastic service to mock resolver
 	rsr.AddServiceInstance(si)
 
+	esClient, err := elastic.NewClient(tinfo.esServer.GetElasticURL(), nil, tinfo.l.WithContext("submodule", "elastic"))
+	if err != nil {
+		log.Errorf("failed to create Elastic client for finder, err: %v", err)
+		return nil
+	}
 	fdr, err := finder.NewFinder(context.Background(),
 		"localhost:0",
 		rsr,
 		nil,
-		tinfo.l)
+		tinfo.l,
+		finder.WithElasticClient(esClient))
 	if err != nil {
 		log.Errorf("Error creating finder: %+v", err)
 		os.Exit(-1)

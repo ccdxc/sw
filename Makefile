@@ -190,7 +190,7 @@ helper-containers:
 	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/${BUILD_CONTAINER} .
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/${DIND_CONTAINER}  .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/${E2E_CONTAINER} .
-	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.4 .
+	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.5 .
 	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.1 .
 
 ui-container-helper:
@@ -275,22 +275,29 @@ test-debug-ui: install_box
 	docker rm -f venice-ui || :
 	docker run --name venice-ui -p 80:3000 -it -v "${PWD}:/go/src/github.com/pensando/sw" venice-ui:test-debug bash
 
-# Target to run on Mac to start kibana docker, this connects to the Elastic running on vagrant cluster
+# Target to start Kibana on a local machine and point it to a dind cluster.
+# Kibana UI is then available on localhost:5601
 start-kibana:
-	docker run --name kibana \
-	-e ELASTICSEARCH_URL=http://192.168.30.10:9200 \
+	docker cp node0:/var/lib/pensando/pki/shared/elastic-client-auth/ /tmp
+	docker run --rm --name kibana --network pen-dind-net \
+	-v /tmp/elastic-client-auth:/usr/share/kibana/config/auth \
+	-e ELASTICSEARCH_URL=https://192.168.30.11:9200 \
+	-e ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES="config/auth/ca-bundle.pem" \
+	-e ELASTICSEARCH_SSL_CERTIFICATE="config/auth/cert.pem" \
+	-e ELASTICSEARCH_SSL_KEY="config/auth/key.pem" \
 	-e xpack.security.enabled=false \
 	-e xpack.logstash.enabled=false \
 	-e xpack.graph.enable=false \
 	-e xpack.watcher.enabled=false \
 	-e xpack.ml.enabled=false \
 	-e xpack.monitoring.enabled=false \
-	-p 127.0.0.1:5601:5601 -d registry.test.pensando.io:5000/kibana:6.3.0
+	-p 5601:5601 -d registry.test.pensando.io:5000/kibana:6.3.0
 
 # Target to run on Mac to stop kibana docker
 stop-kibana:
 	docker stop kibana
 	docker rm kibana
+	rm -rf /tmp/elastic-client-auth
 
 # Dev environment targets
 dev:

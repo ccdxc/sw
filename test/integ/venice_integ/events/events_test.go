@@ -305,7 +305,7 @@ func TestEventsMgrRestart(t *testing.T) {
 		time.Sleep(1 * time.Second)
 
 		// writers should be able to release all the holding events from the buffer
-		testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger)
+		testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger, ti.esClient)
 		time.Sleep(1 * time.Second)
 
 		// stop all the recorders
@@ -343,7 +343,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	defer ti.teardown()
 
 	// start spyglass (backend service for events)
-	fdrTemp, fdrAddr, err := testutils.StartSpyglass("finder", "", ti.mockResolver, nil, ti.logger)
+	fdrTemp, fdrAddr, err := testutils.StartSpyglass("finder", "", ti.mockResolver, nil, ti.logger, ti.esClient)
 	AssertOk(t, err, "failed to start spyglass finder")
 	fdr := fdrTemp.(finder.Interface)
 	defer fdr.Stop()

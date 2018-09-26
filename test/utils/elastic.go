@@ -4,44 +4,40 @@ package utils
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/venice/cmd/credentials"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 var (
-	registryURL  = "registry.test.pensando.io:5000"
-	elasticImage = "elasticsearch:6.3.0"
-	elasticHost  = "127.0.0.1"
+	registryURL         = "registry.test.pensando.io:5000"
+	elasticImage        = "elasticsearch:6.3.0"
+	elasticClusterImage = "elasticsearch-cluster:v0.5"
+	elasticHost         = "127.0.0.1"
 )
 
-// elastic util funtions
-
-// IsEalsticClusterHealthy checks if the cluster is healthy or not
-func IsEalsticClusterHealthy(elasticsearchAddr string) bool {
-	esClient, err := createElasticClient(elasticsearchAddr, log.GetNewLogger(log.GetDefaultConfig("elastic_util")))
-	if err != nil {
-		return false
-	}
-	defer esClient.Close()
-
-	// check cluster health
-	return isElasticClusterHealthy(esClient)
-}
-
 // CreateElasticClient helper function to create elastic client
-func CreateElasticClient(elasticsearchAddr string, logger log.Logger) (elastic.ESClient, error) {
-	esClient, err := createElasticClient(elasticsearchAddr, logger)
+func CreateElasticClient(elasticsearchAddr string, resolverClient resolver.Interface, logger log.Logger, signer certs.CSRSigner, trustRoots []*x509.Certificate) (elastic.ESClient, error) {
+	esClient, err := createElasticClient(elasticsearchAddr, resolverClient, logger, signer, trustRoots)
 	if err != nil {
 		return nil, err
 	}
 
 	// check cluster health
-	if !isElasticClusterHealthy(esClient) {
+	if !IsElasticClusterHealthy(esClient) {
 		return nil, fmt.Errorf("elastic cluster not healthy")
 	}
 
@@ -49,7 +45,7 @@ func CreateElasticClient(elasticsearchAddr string, logger log.Logger) (elastic.E
 }
 
 // StartElasticsearch starts elasticsearch service
-func StartElasticsearch(name string) (string, error) {
+func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.Certificate) (string, error) {
 	log.Info("starting elasticsearch ..")
 
 	// set max_map_count; this is a must requirement to run elasticsearch
@@ -58,23 +54,49 @@ func StartElasticsearch(name string) (string, error) {
 		log.Errorf("failed to set max_map_count %s", out)
 	}
 
+	var authDir string
+	if signer != nil {
+		authDir = path.Join(os.TempDir(), fmt.Sprintf("%s-elastic-test", name))
+		os.MkdirAll(authDir, 0777) // pre-create to override default permissions
+		err := credentials.GenElasticHTTPSAuth(authDir, signer, trustRoots)
+		if err != nil {
+			return "", fmt.Errorf("Error creating credentials in dir %s: err: %v", authDir, err)
+		}
+	}
+
 	// same port needs to be exposed outside as inside to make sure underlying sniffer works given that the
 	// test is run ousite the elasticsearch container.
 	for port := 6000; port < 7000; port++ {
-		cmd := []string{
-			"run", "--rm", "-d", "-p", fmt.Sprintf("%d:%d", port, port),
-			fmt.Sprintf("--name=%s", name),
-			"-e", fmt.Sprintf("cluster.name=%s", name),
-			"-e", "xpack.security.enabled=false",
-			"-e", "xpack.monitoring.enabled=false",
-			"-e", "xpack.graph.enabled=false",
-			"-e", "xpack.watcher.enabled=false",
-			"-e", "xpack.logstash.enabled=false",
-			"-e", "xpack.ml.enabled=false",
-			"-e", "ES_JAVA_OPTS=-Xms512m -Xmx512m",
-			"-e", fmt.Sprintf("http.port=%d", port),
-			"-e", fmt.Sprintf("http.publish_host=%s", elasticHost),
-			fmt.Sprintf("%s/%s", registryURL, elasticImage)}
+		// If we have a CSRSigner we generate credentials and start the Venice-specific container with Elastic + TLS plugin
+		// otherwise we just start the stock Elastic container without auth
+		var cmd []string
+		if signer != nil {
+			cmd = []string{
+				"run", "--rm", "-d", "-p", fmt.Sprintf("%d:%d", port, port),
+				fmt.Sprintf("--name=%s", name),
+				"-e", fmt.Sprintf("cluster.name=%s", name),
+				"-e", "ES_JAVA_OPTS=-Xms512m -Xmx512m",
+				"-e", fmt.Sprintf("http.port=%d", port),
+				"-e", fmt.Sprintf("http.publish_host=%s", elasticHost),
+				"-v", fmt.Sprintf("%s:/usr/share/elasticsearch/config/auth-node:ro", authDir),
+				"-v", fmt.Sprintf("%s:/usr/share/elasticsearch/config/auth-https:ro", authDir),
+				fmt.Sprintf("%s/%s", registryURL, elasticClusterImage)}
+		} else {
+			cmd = []string{
+				"run", "--rm", "-d", "-p", fmt.Sprintf("%d:%d", port, port),
+				fmt.Sprintf("--name=%s", name),
+				"-e", fmt.Sprintf("cluster.name=%s", name),
+				"-e", "xpack.security.enabled=false",
+				"-e", "xpack.monitoring.enabled=false",
+				"-e", "xpack.graph.enabled=false",
+				"-e", "xpack.watcher.enabled=false",
+				"-e", "xpack.logstash.enabled=false",
+				"-e", "xpack.ml.enabled=false",
+				"-e", "ES_JAVA_OPTS=-Xms512m -Xmx512m",
+				"-e", fmt.Sprintf("http.port=%d", port),
+				"-e", fmt.Sprintf("http.publish_host=%s", elasticHost),
+				fmt.Sprintf("%s/%s", registryURL, elasticImage)}
+		}
 
 		// run the command
 		out, err := exec.Command("docker", cmd...).CombinedOutput()
@@ -112,6 +134,10 @@ func StopElasticsearch(name string) error {
 	}
 
 	log.Info("stopping elasticsearch ..")
+
+	authDir := path.Join(os.TempDir(), fmt.Sprintf("%s-elastic-test", name))
+	defer certs.DeleteTLSCredentials(authDir)
+	defer os.RemoveAll(authDir)
 
 	cmd := []string{"rm", "-f", name}
 
@@ -151,8 +177,8 @@ func GetElasticsearchAddress(name string) (string, error) {
 	return addr, nil
 }
 
-// helper function to check the cluster health
-func isElasticClusterHealthy(esClient elastic.ESClient) bool {
+// IsElasticClusterHealthy checks if the cluster is healthy or not
+func IsElasticClusterHealthy(esClient elastic.ESClient) bool {
 	healthy, err := esClient.IsClusterHealthy(context.Background())
 	if err != nil {
 		return false
@@ -162,9 +188,30 @@ func isElasticClusterHealthy(esClient elastic.ESClient) bool {
 }
 
 // helper function to create the client
-func createElasticClient(elasticsearchAddr string, logger log.Logger) (elastic.ESClient, error) {
+func createElasticClient(elasticsearchAddr string, resolverClient resolver.Interface, logger log.Logger, signer certs.CSRSigner, trustRoots []*x509.Certificate) (elastic.ESClient, error) {
 	var err error
 	var esClient elastic.ESClient
+
+	opts := []elastic.Option{}
+	if signer != nil {
+		authDir, err := ioutil.TempDir("", "elastic-client")
+		if err != nil {
+			return nil, fmt.Errorf("Error creating temp dir for credentials: %v", err)
+		}
+		defer os.RemoveAll(authDir)
+		err = credentials.GenElasticClientsAuth(authDir, signer, trustRoots)
+		if err != nil {
+			return nil, fmt.Errorf("Error generating Elastic client TLS credentials: %v", err)
+		}
+		tlsConfig, err := certs.LoadTLSCredentials(authDir)
+		if err != nil {
+			return nil, fmt.Errorf("Error accessing client credentials: %v", err)
+		}
+
+		tlsConfig.ServerName = globals.ElasticSearch + "-https"
+		transport := &http.Transport{TLSClientConfig: tlsConfig}
+		opts = append(opts, elastic.WithHTTPClient(&http.Client{Transport: transport}))
+	}
 
 	log.Infof("creating elasticsearch client using address: %v", elasticsearchAddr)
 
@@ -174,7 +221,7 @@ func createElasticClient(elasticsearchAddr string, logger log.Logger) (elastic.E
 		select {
 		case <-time.After(retryInterval):
 			if esClient == nil {
-				esClient, err = elastic.NewClient(elasticsearchAddr, nil, logger)
+				esClient, err = elastic.NewClient(elasticsearchAddr, resolverClient, logger, opts...)
 			}
 
 			// if the client is created, make sure the cluster is healthy
@@ -183,7 +230,7 @@ func createElasticClient(elasticsearchAddr string, logger log.Logger) (elastic.E
 				return esClient, nil
 			}
 
-			log.Infof("failed to create elasticsearch client, retrying")
+			log.Infof("failed to create elasticsearch client, err: %v, retrying", err)
 		case <-time.After(timeout):
 			if err != nil {
 				return nil, fmt.Errorf("failed to create elasticsearch client, err: %v", err)

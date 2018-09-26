@@ -30,7 +30,7 @@ var _ = Describe("events test", func() {
 		logConfig := log.GetDefaultConfig("e2e_events_test")
 		Eventually(func() error {
 			var err error
-			esClient, err = elastic.NewClient(esAddr, nil, log.GetNewLogger(logConfig))
+			esClient, err = elastic.NewAuthenticatedClient(esAddr, nil, log.GetNewLogger(logConfig))
 			return err
 		}, 30, 1).Should(BeNil(), "failed to initialize elastic client")
 	})

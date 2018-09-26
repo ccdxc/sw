@@ -49,5 +49,4 @@ mkdir -p /host/var/lib/pensando/pki/kubernetes/pen-kube-scheduler
 mkdir -p /host/var/lib/pensando/pki/kubernetes/pen-kube-controller-manager
 mkdir -p /host/var/lib/pensando/pki/kubernetes/service-accounts
 mkdir -p /host/var/lib/pensando/pki/kubernetes/pen-kubelet
-chmod -R 700 /host/var/lib/pensando/pki
 

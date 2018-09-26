@@ -50,6 +50,15 @@ const (
 	KubernetesServiceAccountsPKIDir   = KubernetesPKIDir + "/service-accounts"
 	// Kubernetes clients
 	KubernetesAPIServerClientPKIDir = KubernetesPKIDir + "/apiserver-client"
+	// Elastic instance-to-instance communication
+	ElasticNodeAuthDir = PKIDir + "/" + ElasticSearch + "-node"
+	// Elastic server-to-client communication
+	ElasticHTTPSAuthDir = PKIDir + "/" + ElasticSearch + "-https"
+	// Elastic clients
+	ElasticClientAuthDir = PKIDir + "/shared/elastic-client-auth"
+	// Filebeat does not run as root, so it has a hard time navigating the /var/lib/pki directory structure.
+	// Since it doesn't need anything else from pki, it's easier to mount Elastic credentials directly in the Filebeat directory
+	FilebeatElasticClientAuthDir = "/usr/share/filebeat/auth"
 
 	// Log direcory
 	LogDir = "/var/log/pensando"
