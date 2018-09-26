@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/credentials"
@@ -23,6 +24,7 @@ import (
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/nodewatcher"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/quorum/store"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -280,6 +282,16 @@ func StartNodeServices(nodeID, VirtualIP string) {
 	if env.AuthRPCServer == nil {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
+
+	node := &cluster.Node{
+		TypeMeta: api.TypeMeta{
+			Kind: "Node",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: nodeID,
+		},
+	}
+	nodewatcher.NewNodeWatcher(context.Background(), node, env.ResolverClient.(resolver.Interface), 30, env.Logger)
 }
 
 // OnStart restore state and start services as applicable

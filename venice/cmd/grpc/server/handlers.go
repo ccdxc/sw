@@ -12,6 +12,8 @@ import (
 
 	context "golang.org/x/net/context"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/credentials"
 	"github.com/pensando/sw/venice/cmd/env"
@@ -28,6 +30,7 @@ import (
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/nodewatcher"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/quorum/store"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -135,10 +138,11 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	}
 	env.ResolverClient = resolver.New(&resolver.Config{Name: req.NodeId, Servers: servers})
 
+	hostname := ""
 	// Check if quorum node.
 	if req.QuorumConfig != nil {
 		kvServers := make([]string, 0)
-		hostname, _ := os.Hostname()
+		hostname, _ = os.Hostname()
 		members := make([]quorum.Member, 0)
 		found := false
 		for _, member := range req.QuorumConfig.QuorumMembers {
@@ -300,6 +304,16 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	if shouldStartAuthServer {
 		go auth.RunAuthServer(":"+env.Options.GRPCAuthPort, nil)
 	}
+
+	node := &cluster.Node{
+		TypeMeta: api.TypeMeta{
+			Kind: "Node",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: hostname,
+		},
+	}
+	nodewatcher.NewNodeWatcher(context.Background(), node, env.ResolverClient.(resolver.Interface), 30, env.Logger)
 
 	return &grpc.ClusterJoinResp{}, nil
 }

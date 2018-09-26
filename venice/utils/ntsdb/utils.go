@@ -4,35 +4,26 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/pensando/sw/venice/utils/ref"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 func getKeys(obj interface{}, keys map[string]string) (string, error) {
-	refCtx := &ref.RfCtx{GetSubObj: ref.NilSubObj}
-	kvs := make(map[string]ref.FInfo)
-	ref.GetKvs(obj, refCtx, kvs)
-
-	keyNames := []string{"Tenant", "Namespace", "Kind", "Name"}
-	for _, key := range keyNames {
-		if v, ok := kvs[key]; ok {
-			if v.ValueStr[0] != "" {
-				keys[key] = v.ValueStr[0]
-			}
-		}
+	o, ok := obj.(runtime.Object)
+	if !ok {
+		return "", fmt.Errorf("Not a runtime object")
 	}
 
-	if len(keys) == 0 {
-		return "", fmt.Errorf("keys not found")
+	m, err := runtime.GetObjectMeta(o)
+	if err != nil {
+		return "", err
 	}
-	if _, ok := keys["Kind"]; !ok {
-		return "", fmt.Errorf("unable to find kind")
-	}
-	if _, ok := keys["Name"]; !ok {
-		return "", fmt.Errorf("unable to find name")
-	}
+	k := o.GetObjectKind()
+	keys["Tenant"] = m.Tenant
+	keys["Namespace"] = m.Namespace
+	keys["Name"] = m.Name
+	keys["Kind"] = k
 
-	tableName := keys["Kind"]
-	return tableName, nil
+	return k, nil
 }
 
 func fillFields(t *iTable, m interface{}) error {

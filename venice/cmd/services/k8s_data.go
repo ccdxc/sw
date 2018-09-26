@@ -571,6 +571,10 @@ var k8sModules = map[string]protos.Module{
 							Name: globals.Citadel,
 							Port: runtime.MustUint32(globals.CitadelRPCPort),
 						},
+						{
+							Name: globals.Collector,
+							Port: runtime.MustUint32(globals.CollectorRPCPort),
+						},
 					},
 				},
 			},

@@ -135,9 +135,9 @@ func TestOMetricsAPI(t *testing.T) {
 
 	// verify three points
 	tags := []map[string]string{
-		{"Tenant": "test", "Kind": t.Name(), "Name": "ucase1"},
-		{"Tenant": "test", "Kind": t.Name(), "Name": "ucase2"},
-		{"Tenant": "test", "Kind": t.Name(), "Name": "ucase3"},
+		{"Tenant": "test", "Namespace": "", "Kind": t.Name(), "Name": "ucase1"},
+		{"Tenant": "test", "Namespace": "", "Kind": t.Name(), "Name": "ucase2"},
+		{"Tenant": "test", "Namespace": "", "Kind": t.Name(), "Name": "ucase3"},
 	}
 	fields := []map[string]interface{}{
 		{
@@ -297,7 +297,7 @@ func TestHistogramCustomRangeOTable(t *testing.T) {
 	time.Sleep(3 * testSendInterval)
 
 	tags := []map[string]string{
-		{"Tenant": "test", "Kind": t.Name(), "Name": "tcase1"},
+		{"Tenant": "test", "Namespace": "", "Kind": t.Name(), "Name": "tcase1"},
 	}
 	fields := []map[string]interface{}{
 		{

@@ -28,4 +28,5 @@ const (
 	Vos                   = "pen-vos"
 	Aggregator            = "pen-aggregator"
 	Citadel               = "pen-citadel"
+	Collector             = "pen-collector"
 )

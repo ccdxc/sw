@@ -314,3 +314,7 @@ noverify = ["github.com/docker/docker"]
 [[constraint]]
   branch = "master"
   name = "github.com/pensando/test-infra-tracker"
+
+[[constraint]]
+  name = "github.com/shirou/gopsutil"
+  version = "2.18.7"

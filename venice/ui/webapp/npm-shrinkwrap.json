@@ -15897,7 +15897,7 @@
       "resolved": "https://registry.npmjs.org/phantomjs-prebuilt/-/phantomjs-prebuilt-2.1.16.tgz",
       "integrity": "sha1-79ISpKOWbTZHaE6ouniFSb4q7+8=",
       "requires": {
-        "es6-promise": "4.2.4",
+        "es6-promise": "4.2.5",
         "extract-zip": "1.6.7",
         "fs-extra": "1.0.0",
         "hasha": "2.2.0",
@@ -15909,9 +15909,9 @@
       },
       "dependencies": {
         "es6-promise": {
-          "version": "4.2.4",
-          "resolved": "https://registry.npmjs.org/es6-promise/-/es6-promise-4.2.4.tgz",
-          "integrity": "sha512-/NdNZVJg+uZgtm9eS3O6lrOLYmQag2DjdEXuPaHlZ6RuVqgqaVZfgYCepEIKsLqwdQArOPtC3XzRLqGGfT8KQQ=="
+          "version": "4.2.5",
+          "resolved": "https://registry.npmjs.org/es6-promise/-/es6-promise-4.2.5.tgz",
+          "integrity": "sha512-n6wvpdE43VFtJq+lUDYDBFUwV8TZbuGXLV4D6wKafg13ldznKsyEvatubnmUe31zcvelSzOHF+XbaT+Bl9ObDg=="
         }
       }
     },
