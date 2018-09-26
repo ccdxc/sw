@@ -3378,7 +3378,11 @@ static int ionic_v0_create_qp_cmd(struct ionic_ibdev *dev,
 	}
 
 	/* XXX sq/rq pg size might not be the same */
-	if (sq_buf->tbl_buf)
+	if (sq_buf->tbl_buf && rq_buf->tbl_buf)
+		admin.cmd.create_qp.host_pg_size =
+			min(BIT(sq_buf->page_size_log2),
+			    BIT(rq_buf->page_size_log2));
+	else if (sq_buf->tbl_buf)
 		admin.cmd.create_qp.host_pg_size = BIT(sq_buf->page_size_log2);
 	else if (sq_buf->tbl_buf)
 		admin.cmd.create_qp.host_pg_size = BIT(rq_buf->page_size_log2);
