@@ -73,6 +73,23 @@ struct cpdc_sgl *cpdc_get_sgl(struct per_core_resource *pc_res, bool per_block);
 pnso_error_t cpdc_put_sgl(struct per_core_resource *pc_res, bool per_block,
 		struct cpdc_sgl *sgl);
 
+/* TODO-batch: Fix the naming */
+struct cpdc_desc *cpdc_get_batch_bulk_desc(struct mem_pool *mpool);
+
+pnso_error_t cpdc_put_batch_bulk_desc(struct mem_pool *mpool,
+		struct cpdc_desc *desc);
+
+struct cpdc_desc *cpdc_get_batch_desc(struct service_info *svc_info);
+
+pnso_error_t cpdc_put_batch_desc(const struct service_info *svc_info,
+		struct cpdc_desc *desc);
+
+struct cpdc_desc *cpdc_get_desc_ex(struct service_info *svc_info,
+		bool per_block);
+
+pnso_error_t cpdc_put_desc_ex(const struct service_info *svc_info,
+		bool per_block, struct cpdc_desc *desc);
+
 uint32_t cpdc_get_desc_size(void);
 
 uint32_t cpdc_get_status_desc_size(void);
@@ -93,6 +110,8 @@ uint32_t cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		fill_desc_fn_t fill_desc_fn);
 
 struct service_deps *cpdc_get_service_deps(const struct service_info *svc_info);
+
+bool cpdc_is_service_in_batch(uint8_t flags);
 
 pnso_error_t cpdc_convert_desc_error(int error);
 

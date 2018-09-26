@@ -55,6 +55,41 @@ fill_hash_desc(uint32_t algo_type, uint32_t buf_len,
 	CPDC_PPRINT_DESC(desc);
 }
 
+pnso_error_t
+setup_batch_desc(struct service_info *svc_info,
+		struct cpdc_desc *hash_desc)
+{
+	pnso_error_t err = EINVAL;
+	struct service_batch_info *svc_batch_info;
+
+	svc_batch_info = &svc_info->si_batch_info;
+	OSAL_ASSERT(svc_batch_info->sbi_num_entries);
+
+	/* TODO-batch: remove this check ... */
+	if (svc_batch_info->sbi_num_entries == 0) {
+		OSAL_LOG_DEBUG("invalid # of entries in batch err: %d", err);
+		goto out;
+	}
+
+	/* indicate batch processing only for 1st entry in the batch */
+	if (svc_batch_info->sbi_index == 0) {
+		svc_info->si_seq_info.sqi_batch_mode = true;
+		svc_info->si_seq_info.sqi_batch_size =
+			svc_batch_info->sbi_num_entries;
+	}
+
+	svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
+			hash_desc, sizeof(*hash_desc));
+	if (!svc_info->si_seq_info.sqi_desc) {
+		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+		goto out;
+	}
+
+	err = PNSO_OK;
+out:
+	return err;
+}
+
 static pnso_error_t
 hash_setup(struct service_info *svc_info,
 		const struct service_params *svc_params)
@@ -63,7 +98,7 @@ hash_setup(struct service_info *svc_info,
 	struct pnso_hash_desc *pnso_hash_desc;
 	struct cpdc_desc *hash_desc;
 	struct cpdc_status_desc *status_desc;
-	struct cpdc_sgl *sgl;
+	struct cpdc_sgl *sgl = NULL;
 	struct per_core_resource *pc_res;
 	bool per_block;
 	uint16_t flags;
@@ -76,7 +111,7 @@ hash_setup(struct service_info *svc_info,
 	per_block = svc_is_dflag_pblock_enabled(flags);
 
 	pc_res = svc_info->si_pc_res;
-	hash_desc = cpdc_get_desc(pc_res, per_block);
+	hash_desc = cpdc_get_desc_ex(svc_info, per_block);
 	if (!hash_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain hash desc from pool err: %d!",
@@ -85,12 +120,14 @@ hash_setup(struct service_info *svc_info,
 	}
 
 	/* TODO: needed for p4+ sequencer, avoid using for entire block  */
-	sgl = cpdc_get_sgl(pc_res, per_block);
-	if (!sgl) {
-		err = ENOMEM;
-		OSAL_LOG_ERROR("cannot obtain hash sgl from pool! err: %d",
-					err);
-		goto out_hash_desc;
+	if (per_block) {
+		sgl = cpdc_get_sgl(pc_res, per_block);
+		if (!sgl) {
+			err = ENOMEM;
+			OSAL_LOG_ERROR("cannot obtain hash sgl from pool! err: %d",
+						err);
+			goto out_hash_desc;
+		}
 	}
 
 	status_desc = cpdc_get_status_desc(pc_res, per_block);
@@ -126,18 +163,29 @@ hash_setup(struct service_info *svc_info,
 	svc_info->si_num_tags = num_tags;
 	svc_info->si_p4_sgl = sgl;
 
-	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
-			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
-		if (num_tags > 1) {
-			svc_info->si_seq_info.sqi_batch_mode = true;
-			svc_info->si_seq_info.sqi_batch_size = num_tags;
-		}
-		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
-				hash_desc, sizeof(*hash_desc));
-		if (!svc_info->si_seq_info.sqi_desc) {
-			err = EINVAL;
-			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+	if (cpdc_is_service_in_batch(svc_info->si_flags)) {
+		err = setup_batch_desc(svc_info, hash_desc);
+		if (err) {
+			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
+					err);
 			goto out_status_desc;
+		}
+	} else {
+		if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+				(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
+			if (num_tags > 1) {
+				svc_info->si_seq_info.sqi_batch_mode = true;
+				svc_info->si_seq_info.sqi_batch_size = num_tags;
+			}
+			svc_info->si_seq_info.sqi_desc =
+				seq_setup_desc(svc_info, hash_desc,
+						sizeof(*hash_desc));
+			if (!svc_info->si_seq_info.sqi_desc) {
+				err = EINVAL;
+				OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
+						err);
+				goto out_status_desc;
+			}
 		}
 	}
 
@@ -153,14 +201,16 @@ out_status_desc:
 		OSAL_ASSERT(0);
 	}
 out_sgl_desc:
-	err = cpdc_put_sgl(pc_res, per_block, sgl);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return hash sgl to pool! err: %d",
-				err);
-		OSAL_ASSERT(0);
+	if (per_block) {
+		err = cpdc_put_sgl(pc_res, per_block, sgl);
+		if (err) {
+			OSAL_LOG_ERROR("failed to return hash sgl to pool! err: %d",
+					err);
+			OSAL_ASSERT(0);
+		}
 	}
 out_hash_desc:
-	err = cpdc_put_desc(pc_res, per_block, hash_desc);
+	err = cpdc_put_desc_ex(svc_info, per_block, hash_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return hash desc to pool! err: %d",
 				err);
@@ -183,7 +233,7 @@ hash_chain(struct chain_entry *centry)
 	svc_info = &centry->ce_svc_info;
 
 	if (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) {
-		OSAL_LOG_DEBUG("chaining not needed! si_type: %d si_flags: %d",
+		OSAL_LOG_DEBUG("lone service, chaining not needed! si_type: %d si_flags: %d",
 				svc_info->si_type, svc_info->si_flags);
 		goto done;
 	}
@@ -267,6 +317,7 @@ static pnso_error_t
 hash_poll(const struct service_info *svc_info)
 {
 	volatile struct cpdc_status_desc *status_desc;
+	int i;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -280,9 +331,15 @@ hash_poll(const struct service_info *svc_info)
 	 * temporarily; remove/readjust when sync/async/batch logic kicks-in
 	 *
 	 */
+#if 0
 	while (status_desc->csd_valid == 0)
 		osal_yield();
-
+#else
+	for (i = 0; i < 16; i++) {
+		osal_yield();
+		osal_yield();
+	}
+#endif
 	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;
 }
@@ -609,16 +666,18 @@ hash_teardown(struct service_info *svc_info)
 		OSAL_ASSERT(0);
 	}
 
-	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
-	err = cpdc_put_sgl(pc_res, per_block, sgl);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return hash sgl to pool! err: %d",
-				err);
-		OSAL_ASSERT(0);
+	if (per_block) {
+		sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
+		err = cpdc_put_sgl(pc_res, per_block, sgl);
+		if (err) {
+			OSAL_LOG_ERROR("failed to return hash sgl to pool! err: %d",
+					err);
+			OSAL_ASSERT(0);
+		}
 	}
 
 	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = cpdc_put_desc(pc_res, per_block, hash_desc);
+	err = cpdc_put_desc_ex(svc_info, per_block, hash_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return hash desc to pool! err: %d",
 				err);

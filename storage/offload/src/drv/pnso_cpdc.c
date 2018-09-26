@@ -19,6 +19,7 @@
  *	- rename/revisit 'objects in object'
  *	- move init/deinit of the following out of CPDC:
  *		MPOOL_TYPE_SERVICE_CHAIN*, MPOOL_TYPE_BATCH_*
+ *	- size SGL -- MPOOL_TYPE_SGL needs 4 times DESC/DESC_VEC
  *
  */
 #define PNSO_NUM_OBJECTS		128

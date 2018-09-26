@@ -28,6 +28,7 @@
 
 #include "pnso_api.h"
 #include "pnso_mpool.h"
+#include "pnso_batch.h"
 
 #pragma pack(push, 1)
 
@@ -312,6 +313,7 @@ struct per_core_resource {
 	struct queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
 
 	struct mem_pool *mpools[MPOOL_TYPE_MAX];
+	struct batch_info *batch_info;
 };
 
 struct res {

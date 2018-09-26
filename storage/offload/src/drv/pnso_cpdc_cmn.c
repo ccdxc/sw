@@ -43,6 +43,7 @@
  *	- check for per-block iterator, move into common and then refine
  *	- handle input len for per-block/entire buffer in setup and fill
  *	routines
+ *	- address cpdc_fill_per_block_desc_ex()
  *	- see embedded ones
  *
  */
@@ -295,6 +296,54 @@ cpdc_get_desc(struct per_core_resource *pc_res, bool per_block)
 	return (struct cpdc_desc *) mpool_get_object(mpool);
 }
 
+struct cpdc_desc *__attribute__((unused))
+cpdc_get_batch_desc(struct service_info *svc_info)
+{
+	struct service_batch_info *svc_batch_info;
+	struct cpdc_desc *desc;
+
+	svc_batch_info = &svc_info->si_batch_info;
+	desc = &svc_batch_info->u.sbi_cpdc_desc[svc_batch_info->sbi_index];
+
+	OSAL_LOG_DEBUG("num_entries: %d index: %d bulk_desc: 0x%llx desc: 0x%llx",
+			svc_batch_info->sbi_num_entries,
+			svc_batch_info->sbi_index,
+			(uint64_t) svc_batch_info->u.sbi_cpdc_desc,
+			(uint64_t) desc);
+	return desc;
+}
+
+struct cpdc_desc *__attribute__((unused))
+cpdc_get_desc_ex(struct service_info *svc_info, bool per_block)
+{
+	struct cpdc_desc *desc;
+	bool in_batch = false;
+
+	if (cpdc_is_service_in_batch(svc_info->si_flags))
+		in_batch = true;
+
+	desc =  in_batch ? cpdc_get_batch_desc(svc_info) :
+		cpdc_get_desc(svc_info->si_pc_res, per_block);
+
+	OSAL_ASSERT(desc);
+	return desc;
+}
+
+/* 'batch' is the caller, not the services ... */
+struct cpdc_desc *
+cpdc_get_batch_bulk_desc(struct mem_pool *mpool)
+{
+	struct cpdc_desc *desc;
+
+	desc = (struct cpdc_desc *) mpool_get_object(mpool);
+	if (!desc) {
+		OSAL_LOG_ERROR("cannot obtain cpdc bulk object from pool!");
+		return NULL;
+	}
+
+	return desc;
+}
+
 pnso_error_t
 cpdc_put_desc(struct per_core_resource *pc_res, bool per_block,
 		struct cpdc_desc *desc)
@@ -304,6 +353,82 @@ cpdc_put_desc(struct per_core_resource *pc_res, bool per_block,
 	mpool = per_block ? pc_res->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR] :
 		pc_res->mpools[MPOOL_TYPE_CPDC_DESC];
 
+	return mpool_put_object(mpool, desc);
+}
+
+pnso_error_t __attribute__((unused))
+cpdc_put_batch_desc(const struct service_info *svc_info, struct cpdc_desc *desc)
+{
+#if 0	/* TODO-batch: this should be a no-op, as the batcher to 'put' at exit */
+	pnso_error_t err = PNSO_OK;
+	struct service_batch_info *svc_batch_info;
+	struct per_core_resource *pc_res;
+
+	/* NOTE: should land here only for cp/dc */
+
+	svc_batch_info = &svc_info->si_batch_info;
+	OSAL_ASSERT(desc == &svc_batch_info->u.sbi_cpdc_desc[svc_batch_info->sbi_index]);
+
+	if (svc_batch_info->sbi_index) {
+		/* do nothing, as this desc is not the head */
+		OSAL_LOG_DEBUG("skip this cp/dc desc!! idx: %d desc: 0x%llx err: %d",
+				svc_batch_info->sbi_index,
+				(uint64_t) desc, err);
+		goto out;
+	}
+
+	/*
+	 * TODO-batch:
+	 *	for CP/DC this 'put' is okay, but per-block hash/checksum cache
+	 *	and pass the pool type
+	 *
+	 */
+	pc_res = svc_info->si_pc_res;
+	err = cpdc_put_desc(pc_res, false, desc);
+	if (err) {
+		OSAL_LOG_ERROR("failed to return cp/dc desc to pool! idx: %d desc: 0x%llx err: %d",
+				svc_batch_info->sbi_index,
+				(uint64_t) desc, err);
+		OSAL_ASSERT(0);
+	}
+
+out:
+	return err;
+#else
+	pnso_error_t err = PNSO_OK;
+	struct service_batch_info *svc_batch_info;
+
+	svc_batch_info = (struct service_batch_info *) &svc_info->si_batch_info;
+	OSAL_LOG_DEBUG("num_entries: %d index: %d bulk_desc: 0x%llx desc: 0x%llx",
+			svc_batch_info->sbi_num_entries,
+			svc_batch_info->sbi_index,
+			(uint64_t) svc_batch_info->u.sbi_cpdc_desc,
+			(uint64_t) desc);
+
+	return err;
+#endif
+}
+
+pnso_error_t __attribute__((unused))
+cpdc_put_desc_ex(const struct service_info *svc_info, bool per_block,
+		struct cpdc_desc *desc)
+{
+	pnso_error_t err;
+	bool in_batch = false;
+
+	if (cpdc_is_service_in_batch(svc_info->si_flags))
+		in_batch = true;
+
+	err =  in_batch ? cpdc_put_batch_desc(svc_info, desc) :
+		cpdc_put_desc(svc_info->si_pc_res, per_block, desc);
+
+	return err;
+}
+
+/* 'batch' is the caller, not the services ... */
+pnso_error_t
+cpdc_put_batch_bulk_desc(struct mem_pool *mpool, struct cpdc_desc *desc)
+{
 	return mpool_put_object(mpool, desc);
 }
 
@@ -508,4 +633,12 @@ cpdc_get_service_deps(const struct service_info *svc_info)
 	svc_deps = &chead->sc_svc_deps;
 
 	return svc_deps;
+}
+
+bool
+cpdc_is_service_in_batch(uint8_t flags)
+{
+	return ((flags & CHAIN_SFLAG_IN_BATCH) &&
+			((flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			 (flags & CHAIN_SFLAG_FIRST_SERVICE))) ? true : false;
 }

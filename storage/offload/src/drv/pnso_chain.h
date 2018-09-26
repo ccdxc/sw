@@ -62,6 +62,7 @@
 extern "C" {
 #endif
 
+#include "pnso_batch.h"
 #include "pnso_chain_params.h"
 #include "pnso_init.h"
 
@@ -69,6 +70,7 @@ extern "C" {
 #define CHAIN_SFLAG_LONE_SERVICE	(1 << 0)
 #define CHAIN_SFLAG_FIRST_SERVICE	(1 << 1)
 #define CHAIN_SFLAG_LAST_SERVICE	(1 << 2)
+#define CHAIN_SFLAG_IN_BATCH		(1 << 3)
 
 extern struct service_ops cp_ops;
 extern struct service_ops dc_ops;
@@ -131,6 +133,16 @@ struct sequencer_info {
 	uint16_t sqi_batch_size;
 	void *sqi_desc;      /* sequencer descriptor */
 	uint8_t *sqi_status_desc;
+};
+
+struct service_batch_info {
+	uint8_t sbi_mode;
+	uint16_t sbi_num_entries;
+	uint16_t sbi_index;
+	union {
+		struct cpdc_desc *sbi_cpdc_desc;
+		struct xts_desc *sbi_xts_desc;
+	} u;
 };
 
 /* TODO-chain:
@@ -199,6 +211,7 @@ struct service_info {
 	struct cpdc_sgl	*si_p4_sgl;	/* for per-block hash/checksum */
 
 	struct sequencer_info si_seq_info;
+	struct service_batch_info si_batch_info;
 
 	struct per_core_resource *si_pc_res;	/* to access lif/pool/etc. */
 	struct chain_entry *si_centry;	/* back pointer to chain entry */
@@ -282,6 +295,39 @@ void chn_execute_chain(struct service_chain *chain);
  *
  */
 void chn_destroy_chain(struct service_chain *chain);
+
+/**
+ * chn_build_batch_chain() -
+ * @batch_info:
+ * @page_entry:
+ * @batch_index:
+ * ...
+ *
+ * Return Value:
+ *
+ */
+pnso_error_t chn_build_batch_chain(struct batch_info *batch_info,
+		struct batch_page_entry *page_entry,
+		uint16_t batch_index, const completion_cb_t cb, void *cb_ctx,
+		void *pnso_poll_fn, void **pnso_poll_ctx);
+
+struct service_chain *chn_get_first_service_chain(
+		struct batch_info *batch_info);
+
+struct service_chain *chn_get_last_service_chain(
+		struct batch_info *batch_info);
+
+struct chain_entry *chn_get_first_centry(struct service_chain *chain);
+
+struct chain_entry *chn_get_last_centry(struct service_chain *chain);
+
+pnso_error_t chn_poll_all_services(struct service_chain *chain);
+
+void chn_read_write_result(struct service_chain *chain);
+
+void chn_update_overall_result(struct service_chain *chain);
+
+void chn_notify_caller(struct service_chain *chain);
 
 static inline bool
 chn_service_is_in_chain(const struct service_info *svc_info)

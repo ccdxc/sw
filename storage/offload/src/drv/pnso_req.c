@@ -10,6 +10,7 @@
 #include "pnso_svc.h"
 #include "pnso_req.h"
 #include "pnso_chain.h"
+#include "pnso_batch.h"
 
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
@@ -801,8 +802,90 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 
 	OSAL_LOG_DEBUG("exit!");
 	return err;
+
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
+}
+
+pnso_error_t
+pnso_add_to_batch(struct pnso_service_request *svc_req,
+		struct pnso_service_result *svc_res)
+{
+	pnso_error_t err;
+
+	OSAL_LOG_DEBUG("enter...");
+
+	REQ_PPRINT_REQUEST(svc_req);
+	REQ_PPRINT_RESULT(svc_res);
+
+	/* validate each service request */
+	err = validate_service_request(svc_req);
+	if (err) {
+		OSAL_LOG_ERROR("invalid service request specified! err: %d",
+				err);
+		goto out;
+	}
+
+	/* validate each service result */
+	err = validate_service_result(svc_res);
+	if (err) {
+		OSAL_LOG_ERROR("invalid service result specified! err: %d",
+				err);
+		goto out;
+	}
+
+	if (svc_req->num_services != svc_res->num_services) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("mismatch in # of services listed in request/result! req: %d res: %d err: %d",
+				svc_req->num_services, svc_res->num_services, err);
+		goto out;
+	}
+
+	/* TODO-req:
+	 *	sanitize cb, cb_ctx, etc. here and bail out from this layer
+	 *	before going deeper into other layers
+	 *
+	 */
+
+	err = bat_add_to_batch(svc_req, svc_res);
+	if (err)
+		goto out;
+
+	OSAL_LOG_DEBUG("exit!");
+	return err;
+
+out:
+	/* cleanup batch, if it was created for previous requests */
+	bat_destroy_batch();
+
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
+}
+
+pnso_error_t
+pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
+		void **pnso_poll_ctx)
+{
+	pnso_error_t err = EINVAL;
+
+	OSAL_LOG_DEBUG("enter...");
+
+	err = bat_flush_batch(cb, cb_ctx, pnso_poll_fn, pnso_poll_ctx);
+	if (err) {
+		OSAL_LOG_ERROR("flush request failed! err: %d", err);
+		goto out;
+	}
+
+	err = PNSO_OK;
+	OSAL_LOG_DEBUG("exit!");
+	return err;
+
+out:
+	/* cleanup batch, if it was created for previous requests */
+	bat_destroy_batch();
+
+	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 OSAL_EXPORT_SYMBOL(pnso_submit_request);
