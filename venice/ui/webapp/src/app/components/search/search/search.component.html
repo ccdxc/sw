@@ -8,9 +8,9 @@
                 <span *ngIf="!selectedItemTemplate" class="ui-autocomplete-token-label">{{field ? objectUtils.resolveFieldData(val, field): val}}</span>
                 <ng-container *ngTemplateOutlet="selectedItemTemplate; context: {$implicit: val}"></ng-container>
             </li>
-            <li class="ui-autocomplete-input-token" fxFlexFill>
-                <!-- search input will be disabled when guidedsearchMode is tree -->
-                <input #multiIn [attr.type]="type" [attr.id]="inputId" [disabled]="disabled || isInGuidedSearchMode" [attr.placeholder]="(value && value.length ? null : placeholder)"
+            <li class="ui-autocomplete-input-token" fxFlexFill >
+                <!-- search input will be disabled when guidedsearchMode is shown -->
+                <input #multiIn [attr.type]="type" [attr.id]="inputId" [disabled]="disabled"  [readonly]="isInGuidedSearchMode" [attr.placeholder]="(value && value.length ? null : placeholder)"
                     [attr.tabindex]="tabindex" (input)="onInput($event)" (click)="onInputClick($event)" (keydown)="onKeydown($event)"
                     (keyup)="onKeyup($event)" (focus)="onInputFocus($event)" (blur)="onInputBlur($event)" autocomplete="off" [ngStyle]="inputStyle"
                     class="ui-autocomplete-input-text">
@@ -18,12 +18,15 @@
         </ul>
         <i *ngIf="loading" class="ui-autocomplete-loader fa fa-circle-o-notch fa-spin fa-fw" fxFlex="26px"></i> 
         <i class="ui-autocomplete-token-icon-btn searchwidget-autocomplete-token-icon-rmAll  fa fa-fw fa-close " (click)="clearSearchInputText($event)"
+             (keydown)="($event.which ==13)? clearSearchInputText($event) : return "  tabindex="0" 
             *ngIf="showSearchIcons()" fxFlex="26px" title="Clear sarch input text"></i>
         <i class="ui-autocomplete-token-icon-icon-btn searchwidget-autocomplete-token-icon-search   fa fa-fw fa-search" (click)="onInvokeSearch($event, true)"
+            (keydown)="($event.which ==13)? onInvokeSearch($event, true) : return "  tabindex="0" 
             *ngIf="showSearchIcons()" fxFlex="26px" title="Click to see more suggestions"></i>
         <i class="ui-autocomplete-token-icon-btn searchwidget-autocomplete-token-icon-guided fa fa-fw  " 
             (click)="showGuidedSearch($event)"  [ngClass]="{'fa-chevron-down':!isInGuidedSearchMode,'fa-close':isInGuidedSearchMode}"  fxFlex="26px"
-            title="{{isInGuidedSearchMode? 'Close advanced search panel' : 'Advanced Search'}}" ></i> 
+            (keydown)="($event.which ==13)? showGuidedSearch($event) : return "  tabindex="0" 
+            title="{{isInGuidedSearchMode? 'Close advanced search panel' : 'Advanced Search'}}"  ></i> 
         
     </div>
     <div #panel class="ui-autocomplete-panel ui-widget-content ui-corner-all ui-shadow" [style.display]="overlayVisible ? 'block' : 'none'"

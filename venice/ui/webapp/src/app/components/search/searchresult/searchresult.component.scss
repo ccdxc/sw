@@ -93,9 +93,8 @@
 /** not data */
 .searchresult-empty-items-div {
   width: 100%;
-  height: 400px;
-  background: #fff;
-  margin-top: 20px;
+  min-height: 400px;
+  background: #fff;  
   border-radius: 1px;
   background-color: #ffffff;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
@@ -132,4 +131,8 @@
 
 .searchresult-empty-items-label-link {
   cursor: pointer;
+}
+
+.searchresult-error-span {
+  font-weight: 400;
 }

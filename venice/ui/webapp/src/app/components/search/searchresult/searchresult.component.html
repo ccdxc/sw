@@ -2,19 +2,24 @@
     <div *ngIf="!categories || categories.length==0">
         <div class="searchresult-empty-items-div">
             <div class="searchresult-empty-items-img"></div>
-            
-            <div class="searchresult-empty-items-message-div">    
-                <span class="searchresult-empty-items-label">No search result. Please try again.</span>            
+            <div class="searchresult-empty-items-message-div">
+                <span class="searchresult-empty-items-label">No search result. Please try again.</span>
                 <br/>
-                <span class="searchresult-empty-items-label"><a class="searchresult-empty-items-label-link" (click)="searchWithGrammarClick($event)" title="Show sample search text">To search with grammar  </a>- in:xxx is:yyy has:fieldname=zzz tag:labelname=www </span>
-                <span class="searchresult-empty-items-label">For example: in:Cluster is:Node has:meta.name=node1 tag:meta.labels.os=esx,storage=ssd </span>
+                <ng-container *ngTemplateOutlet="inputErrors"></ng-container>
+                <span class="searchresult-empty-items-label"><a class="searchresult-empty-items-label-link" (click)="searchWithGrammarClick($event )"
+                        title="Show sample search text">To search with grammar </a>- in:xxx is:yyy has:fieldname=zzz tag:labelname=www
+                </span>
+                <span class="searchresult-empty-items-label">For example: in:Cluster is:Node has:meta.name=node1 tag:meta.labels.os=esx,storage=ssd
+                </span>
                 <br/>
-                <span class="searchresult-empty-items-label">You can also use free form search. (input search string, then hit tab key and enter key.) </span>
-                <span class="searchresult-empty-items-label">You may want to use <a class="searchresult-empty-items-label-link" (click)="advanceSearchClick($event)" title="Open advance search panel">Advance Search</a>.  </span>
+                <span class="searchresult-empty-items-label">You can also use free form search. (input search string, then
+                    hit tab key and enter key.) </span>
+                <span class="searchresult-empty-items-label">You may want to use <a class="searchresult-empty-items-label-link"
+                        (click)="advanceSearchClick($event)" title="Open advance search panel">Advance Search</a>. </span>
             </div>
         </div>
     </div>
-    <app-pagebody>
+    <app-pagebody>        
         <app-penuitabs *ngIf="categories && categories.length>0" (selectedIndexChange)="onTabChange($event)">
             <app-penuitab title="{{getCategoryTitle(category)}}" [count]="getCategoryCount(category)" *ngFor="let category of categories">
                 <ng-template>
@@ -26,7 +31,8 @@
                                 <ng-template let-kind>
                                     <div class="searchresult-kind-template">
                                         <span class="searchresult-kind-template-name">{{kind.name}}</span>
-                                        <span class="searchresult-kind-template-badge badge">{{kind.value.entries.length}} </span>
+                                        <span class="searchresult-kind-template-badge badge">{{kind.value.entries.length}}
+                                        </span>
                                     </div>
                                 </ng-template>
 
@@ -39,15 +45,15 @@
                                     <a class="searchresult-button-category-kind-entry-link" (click)="onSearchResultEntryClick($event,category, entry)">{{entry.object.meta['self-link']}}</a>
                                 </div>
                                 <div class="searchresult-button-category-kind-entry-content">
-                                        <span class="searchresult-button-category-kind-entry-label-text">name: </span>  {{entry.object.meta.name}} 
+                                    <span class="searchresult-button-category-kind-entry-label-text">name: </span> {{entry.object.meta.name}}
                                 </div>
                                 <div class="searchresult-button-category-kind-entry-content">
-                                        <span class="searchresult-button-category-kind-entry-label-text">UUID: </span>  {{entry.object.meta.uuid}} 
+                                    <span class="searchresult-button-category-kind-entry-label-text">UUID: </span> {{entry.object.meta.uuid}}
                                 </div>
                                 <div class="searchresult-button-category-kind-entry-label">
                                     <span class="searchresult-button-category-kind-entry-label-text">labels: </span> {{displayLabels(entry)}}
-                                 </div>
-                                 <!-- in case it is an Event object, we display more information -->
+                                </div>
+                                <!-- in case it is an Event object, we display more information -->
                                 <div *ngIf="entry.object.kind=='Event'">
                                     <div *ngFor="let eventKey of getEventKeys(entry)">
                                         <div class="searchresult-button-category-kind-entry-label">
@@ -65,3 +71,20 @@
         </app-penuitabs>
     </app-pagebody>
 </div>
+
+<ng-template #inputErrors>
+    <div class="searchresult-inputErrors-div" *ngIf="getSearchInputErrors().length>0">       
+        <ng-container *ngTemplateOutlet="searchinput"></ng-container>
+        <div *ngFor="let message of getSearchInputErrors()">
+            <span class="searchresult-button-category-kind-entry-label-text searchresult-error-span">{{message}} </span>
+        </div>
+    </div>
+    <br/>
+</ng-template>
+
+<ng-template #searchinput>
+    <span class="searchresult-button-category-kind-entry-label-text searchresult-error-span">Your search input :
+        <a class="searchresult-empty-items-label-link" (click)="searchWithGrammarClick($event, getOriginalSearchInput())" title="Click to make search ">
+            {{getOriginalSearchInput()}} </a>
+    </span>
+</ng-template>

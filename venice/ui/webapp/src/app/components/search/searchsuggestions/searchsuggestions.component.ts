@@ -10,7 +10,7 @@ import { SearchUtil } from '@components/search/SearchUtil';
   styleUrls: ['./searchsuggestions.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class SearchsuggestionsComponent implements OnInit, OnChanges, AfterViewChecked {
+export class SearchsuggestionsComponent implements OnInit, OnChanges {
 
   @Input() suggestions: any[];
   @Output() suggestionItemClick: EventEmitter<any> = new EventEmitter();
@@ -35,13 +35,7 @@ export class SearchsuggestionsComponent implements OnInit, OnChanges, AfterViewC
     }
   }
 
-  ngAfterViewChecked() {
-    if (!this.highlightOption) {
-      setTimeout(() => {
-        this.hightlightListOption(0);
-      }, 1);
-    }
-  }
+
 
   findOptionIndex(option): number {
     let index = -1;

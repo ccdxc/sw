@@ -142,7 +142,10 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
     if (this.overlayVisible === true && !this.isInGuidedSearchMode && this._suggestionWidget && this._suggestionWidget.highlightOption) {
       if (this._suggestionWidget.highlightOption.searchType === SearchsuggestionTypes.INIT) {
         if (Utility.isEmpty(currentText)) {
-          this.setInputText(SearchUtil.getSearchInitPrefix(this._suggestionWidget.highlightOption)); // If we are in the init stage, we want to wait for user input
+           // If we are in the init stage, we want to set search input-string and invoke code to get suggestions.
+          this.setInputText(SearchUtil.getSearchInitPrefix(this._suggestionWidget.highlightOption));
+          this.searchsuggestions.length = 0;
+          this.search(null, this.getInputText());
           return;
         }
       } else {
@@ -150,18 +153,8 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
         const suggestion = this._suggestionWidget.highlightOption.name;  // suggustion looks like {name: "Alert", searchType: "is"}
         const hasHightLight = (this._suggestionWidget.findOptionIndex(this._suggestionWidget.highlightOption) > -1);  // check whether user pick a suggestion
         if (suggestion && this._suggestionWidget.highlightOption.searchType && hasHightLight) {  // make sure we are of "in" and "is"
-          if (Utility.isEmpty(currentText)) {
-            currentText = suggestion;
-          } else {
-            if (currentText.endsWith(':')) {
-              currentText = currentText + suggestion;  // from "is:" to "is:Node"
-            } else {
-              if (!currentText.endsWith(suggestion)) {
-                currentText = currentText + ',' + suggestion; // "is:Node" to "is:Node,Cluster"
-              }
-            }
-          }
-          this.setInputText(currentText);
+         currentText =  SearchUtil.buildSearchInputStringFromSuggestion(currentText, this._suggestionWidget.highlightOption.searchType, this._suggestionWidget.highlightOption );
+         this.setInputText(currentText);
         }
       }
     }
@@ -174,6 +167,7 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
       this.overlayVisible = false;
     }
   }
+
 
   /**
    * Override Super.API
@@ -238,6 +232,9 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
   onKeydown(event) {
     this.loading = false;
     if (this.isInGuidedSearchMode) {
+      if (event.which === SearchUtil.EVENT_KEY_ESCAPE) {
+        this.hide();
+      }
       return;
     }
     switch (event.which) {
@@ -379,7 +376,7 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
       const inputStr = this.getInputText();
       if (!Utility.isEmpty(inputStr)) {
         // We are openning up guieded-search panel. But a "SearchSpec" for guided-search widget
-        const typevalueList = SearchUtil.parseSearchStringToObjectList(inputStr);
+        const typevalueList = SearchUtil.compileSearchInputString(inputStr).list;
         this.guidesearchInput = SearchUtil.convertToSearchSpec(typevalueList);
       }
     }

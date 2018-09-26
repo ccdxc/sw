@@ -4,7 +4,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { Utility } from '@app/common/Utility';
 import { SearchUtil } from '@components/search/SearchUtil';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-
+import { SearchResultPayload } from '@app/components/search';
 
 import { SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
@@ -75,11 +75,11 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     this.categories = [];
 
     if (this._controllerService.LoginUserInfo) {
-      const data = this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA];
+      const data: SearchResultPayload = this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA];
       if (!data) {
         return;
       }
-      const result = data['result'];
+      const result = data.result;
       const searchSearchResponse = new SearchSearchResponse(result);
       this.searchSearchResponse = searchSearchResponse;
       const tenants = searchSearchResponse['aggregated-entries'].tenants;
@@ -94,7 +94,8 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
         for (let j = 0; j < catKeys.length; j++) {
           const catUIObj = {
             name: catKeys[j],
-            value: cat[catKeys[j]]
+            value: cat[catKeys[j]],
+            tenant: tenantKeys[i]
           };
           this.categories.push(catUIObj);
         }
@@ -119,10 +120,12 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   /**
    * This API serves html template. It invokes a SEARCH_SET_SEARCHSTRING_REQUEST message.  Global search box will response to it.
    * @param $event
+   * @param text
    */
-  searchWithGrammarClick($event) {
+  searchWithGrammarClick($event, text: string = null) {
+    const myText = (text) ? text : 'in:Cluster is:Node';
     const payload = {
-      text: 'in:Cluster is:Node'
+      text: myText
     };
     this._controllerService.publish(Eventtypes.SEARCH_SET_SEARCHSTRING_REQUEST, payload);
     return false;
@@ -137,8 +140,17 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     return false;
   }
 
-  getCategoryTitle(category) {
-    return category.name;
+  /**
+   * This function yields category title.
+   * If there are more tenants in search-response, we display tenant information.
+   * For exmaple
+   * default-Cluster, audi-Cluster ( default and audi are tenants)
+   */
+  getCategoryTitle(catUIObj) {
+    const tenants = this.searchSearchResponse['aggregated-entries'].tenants;
+    const tenantKeys = Object.keys(tenants);
+
+    return (tenantKeys.length > 1) ? catUIObj.tenant + '-' + catUIObj.name : catUIObj.name;
   }
 
   /**
@@ -259,4 +271,28 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     return list.join(', ');
   }
 
+  getSearchInputErrors(): string[] {
+    if (this._controllerService.LoginUserInfo) {
+      const data: SearchResultPayload = this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA];
+      if (data) {
+        const searchInput = data.searchstring;
+        const compiled = SearchUtil.compileSearchInputString(searchInput);
+        if (compiled.error) {
+          return compiled.error.messages;
+        }
+      }
+    }
+    return [];
+  }
+
+  getOriginalSearchInput(): string {
+    if (this._controllerService.LoginUserInfo) {
+      const data = this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA];
+      if (data) {
+        const searchInput = data['searched'];
+        return searchInput;
+      }
+    }
+    return null;
+  }
 }

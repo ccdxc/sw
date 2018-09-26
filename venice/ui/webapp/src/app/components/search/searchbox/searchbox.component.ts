@@ -1,14 +1,14 @@
-import { Component, OnInit, ViewChild, ViewEncapsulation, OnDestroy } from '@angular/core';
-import { SearchComponent } from '@app/components/search/search/search.component';
-
+import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { CommonComponent } from '@app/common.component';
 import { Utility } from '@app/common/Utility';
+import { CompileSearchInputStringResult, GuidedSearchCriteria, SearchExpression, SearchGrammarItem, SearchResultPayload, SearchSuggestion, SearchsuggestionTypes} from '@app/components/search';
+import { SearchComponent } from '@app/components/search/search/search.component';
 import { SearchUtil } from '@app/components/search/SearchUtil';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
-import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { SearchsuggestionTypes, SearchSuggestion, SearchSpec, SearchExpression, GuidedSearchCriteria } from '@app/components/search';
-import { SearchSearchResponse, SearchSearchRequest } from '@sdk/v1/models/generated/search';
+import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
+
 
 /**
  * This component provides the search service UI. It wraps a search-widget and invoke search to feed data to search-widget.
@@ -22,6 +22,7 @@ import { SearchSearchResponse, SearchSearchRequest } from '@sdk/v1/models/genera
  *    is: for kinds
  *    has: for fields
  *    tag: for labels
+ *    txt: for text
  *
  * For example, if user enters a string "in:cluster is:node has:name=node9,tenant=default tag:os=esx,storage=ssd”,
  *
@@ -62,8 +63,21 @@ import { SearchSearchResponse, SearchSearchRequest } from '@sdk/v1/models/genera
  * filterVeniceApplicationSearchSuggestions(..) // generates suggestions
  * onSeachInputClick(..)  // handles when user clicks on search-input box
  *
+ * onInvokeSearch(..) -> invokeSearch(..)  call back-end search REST API.
+ *                         -->  _callSearchRESTAPI(..) --> this._controllerService.publish(Eventtypes.SEARCH_RESULT_LOAD_REQUEST, payload); // pass information to search-result page.
  *
+ * Free-form texxt search
+ * text search. Say, input is
+ * case1.
+ * node1,leader => It means search text "node1" and "leader"
+ * node1 leader => It means search text "node1" or "leader"
+ * node1,leader pen => It means search text ("node1" && "leader") || ("pen)
  *
+ * =============
+ * User can use guided-search to query data. (learn from gmail search UI)
+ *
+ * Searchbox host search.component which host searchsugggestion.component and guidedsearch.component
+ * Searchresult.component displays search result.
  */
 
 
@@ -139,30 +153,24 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    */
   filterVeniceApplicationSearchSuggestions(event: any) {
     const searchstring = event.query;
-    let formattedString = SearchUtil.formatInputString(searchstring);
+    const formattedString = SearchUtil.formatInputString(searchstring);
     // We don't want to change user search input while user is typing. But we want to buidl suggestion using valid criteria in order to avoid search REST API error.
     if (formattedString.length > 2) {
-      formattedString = this.cleanupInputstring(formattedString);
       this.getVeniceApplicationSearchSuggestions(formattedString);
     }
     this._searchwidget.loading = false;
   }
 
   /**
-   * This a
+   * This a utility function.
    * @param value
    *
-   * handle cases like:
+   * It handles cases like:
    * in:cluster and hello, world is:wonder
    */
   protected parseInput(value: string): any {
     const inputstr = SearchUtil.formatInputString(value);
-    let output = [];
-    if (!SearchUtil.isSearchInputStartsWithGrammarTag(inputstr)) {
-      return output;
-    }
-    output = SearchUtil.parseSearchStringToObjectList(inputstr);
-    return output;
+    return SearchUtil.compileSearchInputString(inputstr).list;
   }
 
   /**
@@ -190,7 +198,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
 
 
   private buildInitSuggestions(): any {
-    this.searchSuggestions = this.buildInitSearchSuggestions();
+    this.searchSuggestions = SearchUtil.buildInitSearchSuggestions();
   }
 
   /**
@@ -198,17 +206,35 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
   * @param inputSearchString
   */
   protected getVeniceApplicationSearchSuggestions(inputSearchString: any) {
-    const searchGrammarGroup = this.parseInput(inputSearchString);  // parse search-string to see if it contains search-grammar keywords (in:, is:, etc)
-
-    let payload = null;
-    if (searchGrammarGroup.length === 0) {
-      payload = this.buildTextSearchPayload(inputSearchString);
-      const payloadJSON = JSON.stringify(payload);
-      this._callSearchRESTAPI(payloadJSON, inputSearchString);
+    const formattedString = SearchUtil.formatInputString(inputSearchString);
+    if (formattedString === 'in:') {
+      this.buildCategorySuggestions();
+    } else if (formattedString === 'is:') {
+      this.buildKindSuggestions();
     } else {
-      const tag = SearchUtil.getFirstLastSearchGrammarTag(inputSearchString);  // Say, the curretn input-string is 'in:cluster is:Node'.  We build a {'start':in, 'end', 'is'}
-      this.getSearchSuggestionsByGrammarTag(tag, searchGrammarGroup);    // base on 'in:cluster is:Node'. we make suggestions
+      this.invokeSearch(inputSearchString, true);
     }
+  }
+
+
+  private invokeSearch(inputSearchString: string, suggestionOnlyMode: boolean) {
+    const compiled: CompileSearchInputStringResult = SearchUtil.compileSearchInputString(inputSearchString);
+    const cleangrammarList = this.cleanupSearchInput(compiled.list);
+    let payload = null;
+    const newSearchInput = this.cleangrammarListToString(cleangrammarList);
+    if (Utility.isEmpty(newSearchInput)) {
+      // input can be "in:abc" - where abc is not a valid category
+      payload = this.buildTextSearchPayload(inputSearchString);
+    } else {
+      if (!suggestionOnlyMode) {
+        this.setSearchInputString(newSearchInput);
+      }
+      payload = this.buildComplexSearchPayload(cleangrammarList, inputSearchString);
+    }
+
+    const searchSearchRequest = new SearchSearchRequest(payload);
+    this._callSearchRESTAPI(searchSearchRequest, inputSearchString, suggestionOnlyMode);
+    return payload;
   }
 
   /**
@@ -272,21 +298,22 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    * Call REST API to fetch data.
    * Depending it is in suggestion-mode or search-result mode, we deal with response accordingly.
    */
-  private _callSearchRESTAPI(payloadJSON: string, searched: any, suggestionMode: boolean = true) {
-    this._searchService.PostQuery(this.buildSearchSearchRequest(payloadJSON)).subscribe(response => {
+  private _callSearchRESTAPI(searchSearchRequest: SearchSearchRequest, searchInputString: any, suggestionMode: boolean = true) {
+
+    this._searchService.PostQuery(searchSearchRequest).subscribe(response => {
       const status = response.statusCode;
       const body: SearchSearchResponse = response.body as SearchSearchResponse;
       this._searchwidget.loading = false;
       if (status === 200) {
         if (suggestionMode) {
-          this._processGlobalSearchResult(searched, body);  // response.body
+          this._processGlobalSearchResult(searchInputString, body);  // response.body
           this.displaySuggestionPanelVisible(true);
         } else {
-          const payload = {
+          const payload: SearchResultPayload = {
             id: 'searchresult',
-            result: response.body,
-            searched: searched,
-            searchrequest: payloadJSON
+            result: body,
+            searchstring: searchInputString,
+            searchrequest: searchSearchRequest
           };
           this._searchwidget.isInGuidedSearchMode = false; // close guided-search overlay panel
           this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA] = payload;
@@ -321,14 +348,13 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    * @param searched
    */
   protected buildTextSearchPayload(searched: string) {
+    const texts = (typeof searched === 'string') ? [searched] : searched;
     return {
       'max-results': 50,
       'query': {
         'texts': [
           {
-            'text': [
-              searched
-            ]
+            'text': texts
           }
         ]
       }
@@ -347,7 +373,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
       }
     };
     for (let i = 0; i < list.length; i++) {
-      const obj = list[i];
+      const obj: SearchGrammarItem = list[i];
       switch (obj.type) {
         case SearchsuggestionTypes.OP_IN:
           payload.query['categories'] = this.buildCategoriesPayload(obj);
@@ -365,6 +391,10 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
             'requirements': this.buildLabelsPayload(obj)
           };
           break;
+        case SearchsuggestionTypes.OP_TXT:
+          const texts = this.generateSearchTexts(obj);
+          payload.query['texts'] = texts;
+          break;
         default:
           console.log(this.getClassName() + 'buildComplexSearchPayload() does not recognize ' + searched);
           payload = this.buildTextSearchPayload(searched);
@@ -373,33 +403,48 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     return payload;
   }
 
+  private generateSearchTexts(obj: SearchGrammarItem): any {
+    // obj.value is "node1,default"
+    if (typeof obj.value === 'string') {
+      const str = obj.value  as string;
+      const texts = str.split(',');
+      const newList = [];
+      texts.filter((str1) => {
+        const myObj = {};
+        myObj['text'] = [str1];
+        newList.push(myObj);
+      });
+      return newList;
+    }
+    // obj.value is "[node1,defaul pen]"
+    if (Array.isArray(obj.value)) {
+      const newList = [];
+      const strList = [];
+      obj.value.filter ( (str1) => {
+        strList.length = 0;
+        const texts = str1.split(',');
+        texts.filter((str2) => {
+          strList.push(str2);
+        });
+        const myObj = {};
+        myObj['text'] = Utility.getLodash().cloneDeep(strList);
+        newList.push(myObj);
+      });
+      return newList;
+    }
+    return [];
+  }
+
   private buildCategoriesPayload(obj: any): any {
-    const output = [];
-    const values = obj.value.split(',');
-    for (let i = 0; i < values.length; i++) {
-      let exprStrCategory = values[i];
-      exprStrCategory = Utility.makeFirstLetterUppercase(exprStrCategory);
-      if (SearchUtil.isValidCategory(exprStrCategory)) {
-        output.push(exprStrCategory);
-      }
-    }
-    return output;
+      return SearchUtil.filterOutInvalidCategoryOrKind(obj, true);
   }
 
-  private buildKindsPayload(obj): any {
-    const output = [];
-    const values = obj.value.split(',');
-    for (let i = 0; i < values.length; i++) {
-      let exprStrKind = values[i];
-      exprStrKind = Utility.makeFirstLetterUppercase(exprStrKind);
-      if (SearchUtil.isValidKind(exprStrKind)) {
-        output.push(exprStrKind);
-      }
-    }
-    return output;
+  private buildKindsPayload(obj: SearchGrammarItem): any {
+    return SearchUtil.filterOutInvalidCategoryOrKind(obj, false);
   }
 
-  private buildFieldsPayload(obj): any {
+
+  private buildFieldsPayload(obj: SearchGrammarItem): any {
     return this.buildFieldsLabelsPayloadHelper(obj, true);
   }
 
@@ -410,11 +455,18 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
   buildFieldsLabelsPayloadHelper(obj: any, isField: boolean): any {
     const output = [];
     const values = obj.value.split(',');
+    let prevExp: SearchExpression = null;
+    // support case like "has:name=~Liz,test,tenant=default"
     for (let i = 0; i < values.length; i++) {
       const exprStr = values[i];
-      const expr = this.buildExpression(exprStr, isField);
+      const expr: SearchExpression = this.buildExpression(exprStr, isField);
       if (expr) {
         output.push(expr);
+        prevExp = expr;
+      } else {
+        if (prevExp) {
+          prevExp.values.push(exprStr);
+        }
       }
     }
     return output;
@@ -425,7 +477,9 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    */
   buildExpression(inputString: string, isField: boolean): SearchExpression {
     const searchExpression = SearchUtil.parseToExpression(inputString, isField);
-    searchExpression.key = SearchUtil.padKey(searchExpression.key, isField);
+    if (searchExpression) {
+      searchExpression.key = SearchUtil.padKey(searchExpression.key, isField);
+    }
     return searchExpression;
   }
 
@@ -480,7 +534,8 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
       outputList.push(
         {
           name: distinct[j],
-          count: map[distinct[j]]
+          count: map[distinct[j]],
+          searchType: SearchsuggestionTypes.OP_IS  // set searchType as "is"
         }
       );
     }
@@ -498,39 +553,11 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     if (Utility.isEmpty(this.getSearchInputString())) {
       return; // do nothing
     }
-    const grammarList = this.parseInput(searched);  // parse search-string to see if it contains search-grammar keywords (in:, is:, etc)
-    let payload = null;
-    // if (grammarList.length === 0 || !this.isSearchInputStartsWithGrammarTag(searched)) {
-    if (this.shouldRunTextSearch(searched)) {
-      payload = this.buildTextSearchPayload(searched);
-    } else {
-      const cleangrammarList = this.cleanupSearchInput(grammarList);
-      payload = this.buildComplexSearchPayload(cleangrammarList, searched);
-      const newSearchInput = this.cleangrammarListToString(cleangrammarList);
-      if (!Utility.isEmpty(newSearchInput)) {
-       this.setSearchInputString(newSearchInput);
-      } else {
-        // input can be "in:abc" - where abc is not a valid category
-        payload = this.buildTextSearchPayload(searched);
-      }
-    }
-    const payloadJSON = JSON.stringify(payload);
-    this._callSearchRESTAPI(payloadJSON, searched, mode);
+    this.invokeSearch(searched, mode);
   }
 
-  private cleangrammarListToString(cleangrammarList: any, isAllowEmpty: boolean = false) {
-    const strlist = [];
-    cleangrammarList.filter(obj => {
-      if (!Utility.isEmpty(obj.value)) {
-        strlist.push(obj.type + ':' + obj.value);
-      } else {
-        if (isAllowEmpty) {
-          strlist.push(obj.type + ':' + obj.value);
-        }
-      }
-    });
-    const newSearchInput = strlist.join(' ');
-    return newSearchInput;
+  private cleangrammarListToString(cleangrammarList: any, isAllowEmpty: boolean = false): string {
+    return SearchUtil.searchGrammarListToString(cleangrammarList, isAllowEmpty);
   }
 
   /**
@@ -548,7 +575,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     } else {
       const cleangrammarList = this.cleanupSearchInput(grammarList);
       const cleanString = this.cleangrammarListToString(cleangrammarList, true);
-      if (! Utility.isEmpty(cleanString)) {
+      if (!Utility.isEmpty(cleanString)) {
         outputString = cleanString;  // prevent input such as "is:,ahello " to mess up.
       }
     }
@@ -557,13 +584,13 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
   }
 
   /**
-   * This API clean up input string to ensure searched kind and category are valid.
+   * This API cleans up input string to ensure searched kind and category are valid.
    * For example
    * Input as in:Cluster,abc is:Node,world has:meta.name=node1,namespace=default tag:_category=Cluster  (abc, world are not valid)
    * to
    * in:Cluster is:Node has:meta.name=node1,namespace=default tag:_category=Cluster
    */
-  private cleanupSearchInput(inputlist: any[]): any {
+  private cleanupSearchInput(inputlist: SearchGrammarItem[]): any {
     const list = Utility.getLodash().cloneDeep(inputlist);
     for (let i = 0; i < list.length; i++) {
       const obj = list[i];
@@ -700,13 +727,12 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
   }
 
   protected handleSelectCategory(selection: any) {
-    const selectedOption = selection.name; // (selection.name) ? selection.name : selection.selectedOption;
-    this.updateSearchInputString(SearchsuggestionTypes.OP_IN, selection);
+    this.handleSelectHelper(SearchsuggestionTypes.OP_IN, selection);
   }
 
+
   protected handleSelectKind(selection) {
-    const selectedOption = selection.name; // (selection.name) ? selection.name : selection.selectedOption;
-    this.updateSearchInputString(SearchsuggestionTypes.OP_IS, selection);
+    this.handleSelectHelper(SearchsuggestionTypes.OP_IS, selection);
   }
 
   protected handleSelectField(selection) {
@@ -723,14 +749,22 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    * @param selection
    */
   protected handleSelectDefaults(selection: any) {
+    this.handleSelectHelper(SearchsuggestionTypes.OP_IS, selection);
+  }
+
+  protected handleSelectHelper(searchsuggestionTypes: SearchsuggestionTypes, selection: any) {
     if (selection.name) {
-      // Invoke get search result
-      this.setSearchInputString(SearchsuggestionTypes.OP_IS + ':' + selection.name);
-      this.searchByKind(selection, false);
+      const outputString = this.generateSearchInputStringFromSuggestion(searchsuggestionTypes, selection);
+      this.setSearchInputString(outputString);
+      this.invokeSearch(outputString, true);
       this.displaySuggestionPanelVisible(false);
     } else {
       return;
     }
+  }
+
+  protected generateSearchInputStringFromSuggestion(grammarTag: string, selection: any): string {
+    return SearchUtil.buildSearchInputStringFromSuggestion(this.getSearchInputString(), grammarTag, selection);
   }
 
   /**
@@ -754,8 +788,8 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
   protected searchByHelper(selection: SearchSuggestion, searchBy: string, suggestionMode: boolean = true) {
     const searchname = selection.name;
     const payload = this.buildSearchPayloadWithSuggestion(searchname, selection, searchBy);
-    const payloadJSON = JSON.stringify(payload);
-    this._callSearchRESTAPI(payloadJSON, searchname, suggestionMode);
+    const searchSearchRequest = new SearchSearchRequest(payload);
+    this._callSearchRESTAPI(searchSearchRequest, searchname, suggestionMode);
   }
 
   protected buildSearchPayloadWithSuggestion(search: any, selection: SearchSuggestion, querytype: string): any {
@@ -790,36 +824,6 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
 
   displaySelectedItemTooltip(item) {
     return this.displayItem(item);
-  }
-
-  protected buildInitSearchSuggestions(): any {
-    const list = [
-      {
-        name: 'category',
-        label: '(in: Monitoring, Cluster, Security, Network, etc)',
-        sample: 'in:cluster',
-        searchType: SearchsuggestionTypes.INIT
-      },
-      {
-        name: 'kind',
-        label: '(is: Events, Alert, Security-Group, Node, Tenant, etc)',
-        sample: 'is:node',
-        searchType: SearchsuggestionTypes.INIT
-      },
-      {
-        name: 'field',
-        label: '(has: name, tenant, etc)',
-        sample: 'has:name=node9',
-        searchType: SearchsuggestionTypes.INIT
-      },
-      {
-        name: 'label',
-        label: '(tag: os, storage, etc)',
-        sample: 'tag:os=esx',
-        searchType: SearchsuggestionTypes.INIT
-      }
-    ];
-    return list;
   }
 
   protected buildCategorySuggestions(): any {
@@ -878,9 +882,10 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     }
     const grammarList = this.parseInput(searchInputString);
     const payload = this.buildComplexSearchPayload(grammarList, searchInputString);
-    const payloadJSON = JSON.stringify(payload);
+
     this.setSearchInputString(searchInputString);
-    this._callSearchRESTAPI(payloadJSON, searchInputString, false);
+    const searchSearchRequest = new SearchSearchRequest(payload);
+    this._callSearchRESTAPI(searchSearchRequest, searchInputString, false);
   }
 
   private getSearchInputStringFromGuidedSearchCriteria(guidedSearchCriteria: GuidedSearchCriteria): string {

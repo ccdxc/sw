@@ -127,10 +127,10 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     const tagValues = this.parseExpressionList(inputConfig.tag, false);
 
     if (inValues) {
-      this.selectedCategories = this.populateHelper_Category(inValues); // inValues.split(',');
+      this.selectedCategories = this.populateHelper_Category(inValues);
     }
     if (isValues) {
-      this.selectedKinds = this.populateHelper_Kind(isValues); // isValues.split(',');
+      this.selectedKinds = this.populateHelper_Kind(isValues);
     }
 
     if (hasValues.length > 0) {
@@ -149,8 +149,9 @@ export class GuidesearchComponent implements OnInit, OnChanges {
 
   protected buildFieldFormControlList(searchExpressons: SearchExpression[]): FormControl[] {
     const list = [];
-    searchExpressons.filter((item) => {
-      const formControl = new FormControl({ keyFormControl: item.key, operatorFormControl: item.operator, valueFormControl: item.values.join(',') });
+    searchExpressons.forEach((item) => {
+      // We want to support multi-select as well as delimited string (xxx,yyy). So we use item.values instead of item.values.join(','). 
+      const formControl = new FormControl({ keyFormControl: item.key, operatorFormControl: item.operator, valueFormControl: (item.values) ? item.values : [] });
       list.push(formControl);
     });
     return list;
@@ -158,9 +159,9 @@ export class GuidesearchComponent implements OnInit, OnChanges {
 
   protected buildLabelFormControlList(searchExpressons: SearchExpression[]): FormControl[] {
     const list = [];
-    searchExpressons.filter((item) => {
+    searchExpressons.forEach((item) => {
       const op = item.operator;
-      const formControl = new FormControl({ keyFormControl: 'text', operatorFormControl: op, valueFormControl: item.values.join(','), keytextFormName: item.key });
+      const formControl = new FormControl({ keyFormControl: 'text', operatorFormControl: op, valueFormControl: (item.values) ? item.values : [], keytextFormName: item.key });
       list.push(formControl);
     });
     return list;
@@ -172,11 +173,18 @@ export class GuidesearchComponent implements OnInit, OnChanges {
       return [];
     }
     const values = inputSearchString.split(',');
+    let prevExp: SearchExpression = null;
+    // suppor case like "has:name=~Liz,test,tenant=default"
     for (let i = 0; i < values.length; i++) {
       const exprStr = values[i];
-      const expr = SearchUtil.parseToExpression(exprStr, isField);
+      const expr: SearchExpression = SearchUtil.parseToExpression(exprStr, isField);
       if (expr) {
         list.push(expr);
+        prevExp = expr;
+      } else {
+        if (prevExp) {
+          prevExp.values.push(exprStr);
+        }
       }
     }
     return list;
@@ -341,7 +349,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     const modelData: SearchModelField = SearchUtil.getModelInfoByKind(kind);
     let fieldData = [];
     const keys = Object.keys(modelData);
-    keys.filter((key) => {
+    keys.forEach((key) => {
         const keyData = this.getFieldDataHelper(kind, modelData, key);
         fieldData = fieldData.concat(keyData);
     });
