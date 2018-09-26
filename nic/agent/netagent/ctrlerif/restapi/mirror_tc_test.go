@@ -759,6 +759,124 @@ func prepareMirrorSessionFlowRuleIPAddrTestCases() []mirrorSessionCreateUpdateDe
 		},
 	}
 	testCases = append(testCases, tc)
+	// case2.5: SIP=NIL, destIPaddr, App/Port NIL, 1 rules for matching, one more rule added during modification
+	tc.cProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_*sip_dip_*appPort_1_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 128,
+			Enable:     true,
+			CaptureAt:  0,
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"10.1.1.2"},
+					},
+				},
+			},
+		},
+	}
+	tc.uProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_*sip_dip_*appPort_1_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 256, //Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"192.1.1.2"}, // modified
+					},
+				},
+				// rule added
+				{
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.2.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1010"},
+					},
+				},
+			},
+		},
+	}
+	tc.dProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_*sip_dip_*appPort_1_rule_added",
+		},
+	}
+	testCases = append(testCases, tc)
+	// case2.6: SIP=NIL, destIP=NILL, App/Port=NIL, 1 rules for matching, one more rule added during modification
+	tc.cProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_*sip_*dip_*appPort_1_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 128,
+			Enable:     true,
+			CaptureAt:  0,
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{},
+			},
+		},
+	}
+	tc.uProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_*sip_*dip_*appPort_1_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 256, //Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				// rule added
+				{
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1010"},
+					},
+				},
+			},
+		},
+	}
+	tc.dProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_*sip_*dip_*appPort_1_rule_added",
+		},
+	}
+	testCases = append(testCases, tc)
 
 	return testCases
 }
@@ -1017,6 +1135,246 @@ func prepareMirrorSessionFlowRuleIPSubnetTestCases() []mirrorSessionCreateUpdate
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "tc_sip_dip_proto_l4port_subnet_rule_added",
+		},
+	}
+
+	testCases = append(testCases, tc)
+	// case3.4: srcIPsubnet = any, destIPsubnet = any, ipProto, L4port, 2 rules for matching, one rule added
+	tc.cProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_sipAny_dipAny_proto_l4port_subnet_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 128,
+			Enable:     true,
+			CaptureAt:  0,
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+			},
+		},
+	}
+	tc.uProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_sipAny_dipAny_proto_l4port_subnet_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 256, //Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"}, // modified
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.3.2.0/24"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1010"},
+					},
+				},
+			},
+		},
+	}
+	tc.dProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_sipAny_dipAny_proto_l4port_subnet_rule_added",
+		},
+	}
+
+	testCases = append(testCases, tc)
+	// case3.5: srcIPsubnet = any, destIPsubnet = any, ipProto/L4port = any, 2 rules for matching, one rule added
+	tc.cProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_sipAny_dipAny_protoAny_l4portAny_subnet_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 128,
+			Enable:     true,
+			CaptureAt:  0,
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"any/any"},
+					},
+				},
+			},
+		},
+	}
+	tc.uProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_sipAny_dipAny_protoAny_l4portAny_subnet_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 256, //Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"}, // modified
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.3.2.0/24"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"any/any"},
+					},
+				},
+			},
+		},
+	}
+	tc.dProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_sipAny_dipAny_protoAny_l4portAny_subnet_rule_added",
+		},
+	}
+
+	testCases = append(testCases, tc)
+	// case3.6: srcIPsubnet = any, destIPsubnet = any, ipProto = TCP, L4port = any, 2 rules for matching, one rule added
+	tc.cProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_sipAny_dipAny_proto_l4portAny_subnet_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 128,
+			Enable:     true,
+			CaptureAt:  0,
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/any"},
+					},
+				},
+			},
+		},
+	}
+	tc.uProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_sipAny_dipAny_proto_l4portAny_subnet_rule_added",
+		},
+		Spec: tsproto.MirrorSessionSpec{
+			PacketSize: 256, //Modified
+			Enable:     true,
+			CaptureAt:  1, // Modified
+			Collectors: []tsproto.MirrorCollector{
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+			},
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"}, // modified
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"any"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.3.2.0/24"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/any"},
+					},
+				},
+			},
+		},
+	}
+	tc.dProto = &tsproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_sipAny_dipAny_proto_l4portAny_subnet_rule_added",
 		},
 	}
 

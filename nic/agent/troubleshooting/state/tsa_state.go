@@ -429,6 +429,10 @@ func getIPAddrDetails(ipAddr string) (bool, bool, bool) {
 
 func buildIPAddrDetails(ipaddr string) *types.IPAddrDetails {
 	var ip net.IP
+
+	if ipaddr == "any" {
+		ipaddr = "0.0.0.0/0"
+	}
 	isIpv4, isRange, isSubnet := getIPAddrDetails(ipaddr)
 	ipAddr := &types.IPAddrDetails{}
 	if !isRange {
@@ -511,6 +515,9 @@ func matchRuleSanityCheck(mirrorSession *tsproto.MirrorSession) bool {
 				}
 			} else if len(srcSelectors.IPAddresses) > 0 {
 				for _, ipAddr := range srcSelectors.IPAddresses {
+					if ipAddr == "any" {
+						continue
+					}
 					_, isRange, isSubnet := getIPAddrDetails(ipAddr)
 					if !isRange {
 						if !isSubnet {
@@ -555,6 +562,9 @@ func matchRuleSanityCheck(mirrorSession *tsproto.MirrorSession) bool {
 				}
 			} else if len(destSelectors.IPAddresses) > 0 {
 				for _, ipAddr := range destSelectors.IPAddresses {
+					if ipAddr == "any" {
+						continue
+					}
 					_, isRange, isSubnet := getIPAddrDetails(ipAddr)
 					if !isRange {
 						if !isSubnet {
@@ -588,10 +598,10 @@ func matchRuleSanityCheck(mirrorSession *tsproto.MirrorSession) bool {
 				// When Protocol is invalid or when port# is not specified
 				// fail sanity check.
 				for _, protoPort := range appSelectors.Ports {
-					if getProtocol(protoPort) == -1 {
+					if !strings.Contains(protoPort, "any") && getProtocol(protoPort) == -1 {
 						return false
 					}
-					if getPort(protoPort) == -1 {
+					if !strings.Contains(protoPort, "any") && getPort(protoPort) == -1 {
 						return false
 					}
 				}
@@ -658,8 +668,8 @@ func expandCompositeMatchRule(mirrorSession *tsproto.MirrorSession, rule *tsprot
 			}
 		}
 	} else {
-		srcIPs = append(srcIPs, buildIPAddrDetails("0/0"))
-		srcIPStrings = append(srcIPStrings, "0/0")
+		srcIPs = append(srcIPs, buildIPAddrDetails("0.0.0.0/0"))
+		srcIPStrings = append(srcIPStrings, "0.0.0.0/0")
 	}
 	if destSelectors != nil {
 		if len(destSelectors.Endpoints) > 0 {
@@ -696,25 +706,44 @@ func expandCompositeMatchRule(mirrorSession *tsproto.MirrorSession, rule *tsprot
 			}
 		}
 	} else {
-		destIPs = append(destIPs, buildIPAddrDetails("0/0"))
-		destIPStrings = append(destIPStrings, "0/0")
+		destIPs = append(destIPs, buildIPAddrDetails("0.0.0.0/0"))
+		destIPStrings = append(destIPStrings, "0.0.0.0/0")
 	}
 	if appSelectors != nil {
 		if len(appSelectors.Ports) > 0 {
 			// Ports specified by controller will be in the form
 			// "tcp/5000"
 			for _, protoPort := range appSelectors.Ports {
-				protoType := getProtocol(protoPort)
-				portNum := getPort(protoPort)
-				appPort := &types.AppPortDetails{
-					Ipproto: protoType,
-					L4port:  portNum,
+				protoAny := false
+				portAny := false
+				protoType := int32(0)
+				portNum := int32(0)
+				strs := strings.Split(protoPort, "/")
+				if !strings.Contains(strs[0], "any") {
+					protoType = getProtocol(protoPort)
+				} else {
+					protoAny = true
+				}
+				if len(strs) > 1 && !strings.Contains(strs[1], "any") {
+					portNum = getPort(protoPort)
+				} else {
+					portAny = true
+				}
+				appPort := &types.AppPortDetails{}
+				if !protoAny {
+					appPort.Ipproto = protoType
+				}
+				if !portAny {
+					appPort.L4port = portNum
 				}
 				appPorts = append(appPorts, appPort)
 			}
 		} else if len(appSelectors.Apps) > 0 {
 			//TODO: Handle Application selection later. "Ex: Redis"
 		}
+	} else {
+		appPort := &types.AppPortDetails{}
+		appPorts = append(appPorts, appPort)
 	}
 	return srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings
 }
@@ -1503,6 +1532,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 		log.Errorf("mirror session tenant is invalid")
 		return nil, nil, ErrInvalidMirrorSpec
 	}
+
 	for _, rule := range mirrorSession.Spec.MatchRules {
 		srcIPs, destIPs, srcMACs, destMACs, appPorts, srcIPStrings, destIPStrings := expandCompositeMatchRule(mirrorSession, &rule)
 		// Create protobuf requestMsgs on cross product of
@@ -1582,6 +1612,11 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 				KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 					KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
 						FlowmonitorruleId: ruleID,
+					},
+				},
+				VrfKeyHandle: &halproto.VrfKeyHandle{
+					KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+						VrfId: vrfID,
 					},
 				},
 				Match: &halproto.RuleMatch{
@@ -1691,6 +1726,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 		}
 		ReqMsgList = append(ReqMsgList, &ReqMsg)
 	}
+	log.Debugf("FMRule ReqMsg List %v  NewRuleIDs %v", ReqMsgList, newRuleIDs)
 	return ReqMsgList, newRuleIDs, nil
 }
 

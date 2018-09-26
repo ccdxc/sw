@@ -239,7 +239,7 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 		if err != nil {
 			log.Errorf("Error creating mirror session. Err: %v", err)
 		}
-		if hd.Kind == "hal" {
+		if hd.Kind.String() == "hal" {
 			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 				log.Errorf("HAL returned non OK status when creating mirror session. %v",
 					resp.Response[0].ApiStatus)
@@ -258,7 +258,7 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 			if err != nil {
 				log.Errorf("Error creating flow monitor rule. Err: %v", err)
 			}
-			if err == nil && hd.Kind == "hal" {
+			if err == nil && hd.Kind.String() == "hal" {
 				for _, Response := range resp.Response {
 					if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 						log.Errorf("Flow monitor rule error. HAL returned Err. %v",
@@ -278,7 +278,7 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 			if err != nil {
 				log.Errorf("Error creating drop monitor rule. Err: %v", err)
 			}
-			if err == nil && hd.Kind == "hal" {
+			if err == nil && hd.Kind.String() == "hal" {
 				for _, Response := range resp.Response {
 					if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 						log.Errorf("Drop monitor rule error. HAL returned Err. %v",
@@ -398,7 +398,7 @@ func (hd *Datapath) DeletePacketCaptureSession(mirrorSessionKey string, mirrorDe
 		if err != nil {
 			log.Errorf("Error deleting  mirror session. Err: %v", err)
 		}
-		if hd.Kind == "hal" {
+		if hd.Kind.String() == "hal" {
 			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 				log.Errorf("HAL returned non OK status when deleting  mirror session. %v",
 					resp.Response[0].ApiStatus)
@@ -416,7 +416,7 @@ func (hd *Datapath) UpdateFlowMonitorRule(flowRuleReqMsgList []*halproto.FlowMon
 		if err != nil {
 			log.Errorf("Error creating flow monitor rule. Err: %v", err)
 		}
-		if err == nil && hd.Kind == "hal" {
+		if err == nil && hd.Kind.String() == "hal" {
 			for _, Response := range resp.Response {
 				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 					log.Errorf("Flow monitor rule error. HAL returned Err. %v",
@@ -435,7 +435,7 @@ func (hd *Datapath) DeleteFlowMonitorRule(flowRuleDeleteReqMsgList []*halproto.F
 		if err != nil {
 			log.Errorf("Error deleting flow monitor rule. Err: %v", err)
 		}
-		if err == nil && hd.Kind == "hal" {
+		if err == nil && hd.Kind.String() == "hal" {
 			for _, Response := range resp.Response {
 				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 					log.Errorf("Flow monitor rule delete error. HAL returned Err. %v",
@@ -454,7 +454,7 @@ func (hd *Datapath) UpdateDropMonitorRule(dropRuleReqMsgList []*halproto.DropMon
 		if err != nil {
 			log.Errorf("Error creating drop monitor rule. Err: %v", err)
 		}
-		if err == nil && hd.Kind == "hal" {
+		if err == nil && hd.Kind.String() == "hal" {
 			for _, Response := range resp.Response {
 				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 					log.Errorf("Drop monitor rule error. HAL returned Err. %v",
@@ -473,7 +473,7 @@ func (hd *Datapath) DeleteDropMonitorRule(dropRuleDeleteReqMsgList []*halproto.D
 		if err != nil {
 			log.Errorf("Error deleting drop monitor rule. Err: %v", err)
 		}
-		if err == nil && hd.Kind == "hal" {
+		if err == nil && hd.Kind.String() == "hal" {
 			for _, Response := range resp.Response {
 				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 					log.Errorf("Drop monitor rule delete error. HAL returned Err. %v",
