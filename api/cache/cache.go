@@ -142,17 +142,18 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 	var watchStart time.Time
 	establishWatcher := func() {
 		watchStart = time.Now()
-		k := p.parent.pool.GetFromPool()
-		if k == nil {
-			p.parent.logger.Fatalf("cache could not find a KV conn to use [%s]", p.path)
-		}
+
 		if p.cancel != nil {
 			p.cancel()
 		}
-		kv := k.(kvstore.Interface)
 
 		p.ctx, p.cancel = context.WithCancel(ctx)
 		for {
+			k := p.parent.pool.GetFromPool()
+			if k == nil {
+				p.parent.logger.Fatalf("cache could not find a KV conn to use [%s]", p.path)
+			}
+			kv := k.(kvstore.Interface)
 			if p.lastVer == "0" || p.lastVer == "" {
 				into := struct {
 					api.TypeMeta
@@ -188,7 +189,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 		select {
 		case <-time.After(markSweepInterval):
 			p.parent.store.Sweep(p.path, updatefn)
-		case <-ctx.Done():
+		case <-p.ctx.Done():
 		}
 	}
 	if ctx.Err() != nil {
@@ -202,7 +203,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 	close(startCh)
 	for {
 		select {
-		case <-ctx.Done():
+		case <-p.ctx.Done():
 			p.parent.logger.Infof("received exit for prefix watcher")
 			return
 		case ev, ok := <-w.EventChan():
