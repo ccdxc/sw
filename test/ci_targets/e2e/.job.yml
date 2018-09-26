@@ -7,6 +7,7 @@ rebase: true
 
 warmd:
   target: [ "go", "run", "e2e.go" ]
+  repo_dir: "/import/src/github.com/pensando"
   create:
     image: build-30
     count: 1

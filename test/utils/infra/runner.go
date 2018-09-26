@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	scriptPath = "/tmp/git/pensando/sw/test/ci_targets/run.sh "
+	scriptPath = "/import/src/github.com/pensando/sw/test/ci_targets/run.sh "
 )
 
 var (

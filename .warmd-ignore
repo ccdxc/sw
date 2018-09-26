@@ -1,6 +1,1 @@
-nic/
-vendor/
 bazel-cache/
-dol/
-asset-build/
-.git

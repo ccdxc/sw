@@ -16,8 +16,7 @@ references:
   - venice/ui
 #Disabling as failing on top
 #  - test/suites/e2esanities
-#Disabling as CI infra is broken
-#  - test/ci_targets/e2e
+  - test/ci_targets/e2e
 #  - test/ci_targets/e2etelemetry
   - storage/offload
 dependencies:
@@ -28,5 +27,4 @@ dependencies:
   dol/test/networking : nic
   nic/agent: venice
   venice: test
-#Disabling as CI infra is broken
-#  test: test/ci_targets/e2e
+  test: test/ci_targets/e2e

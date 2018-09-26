@@ -1,5 +1,6 @@
 #!/bin/bash
-cd /tmp/git/pensando/sw
+export GOPATH="/import"
+cd $GOPATH/src/github.com/pensando/sw
 make $1
 if [ $? -ne 0 ]; then
   mkdir -p /tmp/ClusterLogs

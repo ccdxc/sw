@@ -8,9 +8,19 @@
       value: 262144
       sysctl_set: yes
 
+  - name: install ansible python library to disable SELinux
+    apt:
+      name: python-selinux
+      state: present
+
+  - name: install ansible python library to disable SELinux
+    apt:
+      name: selinux-policy-default
+      state: present
+
   - name: disable SELinux
-    shell: "setenforce 0"
-    become: true
+    selinux:
+      state: disabled
 
   - name: "check for docker"
     shell: "test -x /usr/bin/docker"
@@ -19,7 +29,7 @@
 
   - name: "install docker"
     shell: "curl -sSL https://get.docker.com | CHANNEL=stable sudo -E bash"
-    when: docker_exists|failed
+    when: docker_exists is failed
 
   - name: add vm to docker users
     shell: usermod -aG docker vm
@@ -48,3 +58,14 @@
     service:
       name: docker
       state: restarted
+
+  - name: create GOPATH root
+    file:
+      path: /import
+      state: directory
+      mode: 0755
+      owner: vm
+      group: vm
+
+  - name: set GOPATH
+    shell: echo "export GOPATH=/import" >> /home/vm/.bashrc
