@@ -10,8 +10,8 @@ ulimit -c unlimited
 cd /
 ifconfig lo up
 
-# Mount debugfs
-mount -t debugfs debugfs /sys/kernel/debug/
+# start memtun
+/platform/bin/memtun 0x13b000000 &
 
 # check for all the binaries
 if [[ ! -f $NIC_DIR/bin/hal ]]; then
@@ -42,9 +42,6 @@ $NIC_DIR/tools/start-hal-haps.sh "$FWD_MODE" "$PLATFORM"
 # start nicmgr
 $PLATFORM_DIR/tools/start-nicmgr-haps.sh "$FWD_MODE"
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - NICMGR failed to start!" && exit 1
-
-# start memtun
-/platform/bin/memtun 0x13b000000 &
 
 # Renice HAL & LINKMGR so other apps & kernel contexts can run
 renice 20 `pidof hal`
