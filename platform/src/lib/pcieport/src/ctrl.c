@@ -46,6 +46,17 @@ pcieport_mac_k_gen(pcieport_t *p)
 }
 
 static void
+pcieport_mac_k_pexconf(pcieport_t *p)
+{
+    const int pn = p->port;
+    u_int32_t pexconf[12];
+
+    pal_reg_rd32w(PXC_(CFG_C_MAC_K_PEXCONF, pn), pexconf, 12);
+    pexconf[2] &= ~(0x3 << 10); /* claim ASPM L0s, L1 not supported */
+    pal_reg_wr32w(PXC_(CFG_C_MAC_K_PEXCONF, pn), pexconf, 12);
+}
+
+static void
 pcieport_mac_k_pciconf(pcieport_t *p)
 {
     const int pn = p->port;
@@ -184,6 +195,7 @@ pcieport_hostconfig(pcieport_t *p)
 
     pcieport_mac_k_gen(p);
     pcieport_mac_k_rx_cred(p);
+    pcieport_mac_k_pexconf(p);
     pcieport_mac_k_pciconf(p);
     pcieport_mac_set_ids(p);
 
