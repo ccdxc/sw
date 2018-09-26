@@ -715,8 +715,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 
 	chain_params->ccp_status_addr_0 =
 		osal_virt_to_phy((void *) status_desc);
-	chain_params->ccp_pad_buf_addr =
-		(uint64_t) osal_virt_to_phy((void *) pad_buffer);
+	chain_params->ccp_pad_buf_addr = pad_buffer;
 	chain_params->ccp_pad_boundary_shift =
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 

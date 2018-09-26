@@ -27,15 +27,13 @@ alloc_pad_buffer(void)
 {
 	pnso_error_t err = EINVAL;
 
-	pad_buffer = osal_rmem_aligned_alloc(PNSO_MEM_ALIGN_PAGE,
+	pad_buffer = osal_rmem_aligned_calloc(PNSO_MEM_ALIGN_PAGE,
 			PNSO_MEM_ALIGN_PAGE);
 	if (pad_buffer <= 0) {
 		OSAL_LOG_ERROR("failed to allocate static pad buffer! err: %d",
 				err);
 		goto out;
 	}
-	/* TODO-chain: include rmem calloc/set fix that is in-flight */
-	// memset((void *) pad_buffer, 0, PNSO_MEM_ALIGN_PAGE);
 
 	err = PNSO_OK;
 	OSAL_LOG_ERROR("aligned pad buffer allocated and initialized! pad_buffer: 0x%llx",
