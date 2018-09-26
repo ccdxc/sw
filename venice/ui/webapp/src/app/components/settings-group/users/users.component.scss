@@ -1,0 +1,191 @@
+@import 'styles';
+@import 'global-mixins';
+
+.users {
+    font-family: 'Fira Sans Condensed';
+}
+
+.users-toolbar-button {
+    @include primary-font(16px, #ffffff);
+    height: 30px;
+    font-weight: 500;
+    text-align: center;
+    display: block;
+    padding: 0px 10px;
+    min-width:80px;
+}
+
+.user-panel-rolegroup-header-row-item {
+    height: 24px;
+    font-size: 20px;
+    font-weight: normal;
+    font-style: normal;
+    font-stretch: condensed;
+    line-height: normal;
+    letter-spacing: normal;
+    color: #676763;
+    margin-left: 10px;
+  }
+
+.usertemplate-div {
+  min-width: 423px;
+  height:auto;
+  background-color: #ffffff;
+  border: solid 1px #f0f0f0;
+  margin: 10px;
+  border-radius: 3px;
+  color: #676763;
+}
+
+.usertemplate-div-card {
+    color: #676763;
+}
+
+.usertemplate-div-card-icon-buttons-div {
+    display: flex;
+}
+
+ .users-adduser-button {
+    float: right;
+    margin: 8px 16px 8px 8px;
+}
+
+.users-adduser-button:disabled {
+    cursor: not-allowed ;
+    box-shadow: none ;
+    opacity: .25;
+}
+
+.usertemplate-div-editdelete-buttons-div {
+    display: flex;
+}
+
+.usertemplate-div-card-icon,
+.usertemplate-div-card-icon-operation-button  {
+    color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    border: 1px solid;    
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;    
+    
+}
+
+.usertemplate-div-card-icon.mat-icon-button {
+    background-color: #d1cec7;
+    opacity: 0.6;
+    margin: 5px;   
+    line-height: inherit;
+}
+
+.usertemplate-div-card-icon-operation-button.mat-icon-button{
+    
+    border-radius: 3px;
+    margin: 10px 5px 10px -10px;
+    vertical-align: middle;
+    line-height: initial;
+}
+
+
+
+.usertemplate-div-card-content-div {
+    margin-left:10px;
+}
+
+
+.usertemplate-div-card-username {
+   
+    height: auto;
+    margin: 0;
+    -ms-transform: rotate(0);
+    -webkit-transform: rotate(0);
+    transform: rotate(0);
+    font-weight: 500;
+    font-style: normal;
+    font-size: 16.0px;
+    color: rgba(103,103,99,1.0);
+    text-align: left;
+    line-height: 23.0px;
+}
+
+.usertemplate-div-card-roles {
+  
+    height: 20px;
+    width: auto;
+    margin: 0;
+    -ms-transform: rotate(0);
+    -webkit-transform: rotate(0);
+    transform: rotate(0);
+    font-weight: 400;
+    font-style: normal;
+    font-size: 16.0px;
+    color: rgba(103,103,99,1.0);
+    text-align: left;
+    line-height: 19.0px;
+}
+
+.usertemplate-div-card-createdtime {   
+   
+    height: auto;
+    width: auto;
+    margin: 0;
+    -ms-transform: rotate(0);
+    -webkit-transform: rotate(0);
+    transform: rotate(0);
+    font-weight: 400;
+    font-style: normal;
+    font-size: 12.0px;
+    color: rgba(170,170,167,1.0);
+    text-align: left;
+    line-height: 14.0px;
+}
+.usertemplate-div-card-icon-button {
+    background-color: #d1cec7;
+    color: #fff;
+    border-radius: 3px;
+    visibility:hidden;
+}
+
+.usertemplate-div-card-icon-button.usertemplate-UserEditMode {
+    visibility:visible;
+}
+
+.user-panel-div {
+    min-width : 425px;
+}
+
+.user-panel-div:hover .usertemplate-div-card-icon-button{
+    visibility:visible;
+}
+
+.users .usertemplate-div-card-edituser-div {
+    border-top: 1px solid #eee;
+    padding: 10px;
+}
+
+.users .usertemplate-rolegroup-header-edit-label {
+    min-width:100px;
+    padding: 8px 5px;
+}
+
+.users .user-edit-input-item {
+    padding: 3px !important;
+    margin: 5px;
+    text-indent: 8px;
+}
+
+.users .user-rolebinding-select{
+    height:28px !important;
+    padding-bottom: 0px !important;
+    margin-left: 5px;
+    margin-top: 5px;
+ }
+ 
+.user-rolebinding-select.ui-multiselect .ui-multiselect-label {    
+     padding: 3px 0px 0px 0px; 
+}
+
+.users .ui-multiselect-panel .ui-multiselect-item label {
+    font-weight: 500;
+}

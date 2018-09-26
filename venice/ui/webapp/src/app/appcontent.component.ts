@@ -13,7 +13,7 @@ import { Subject } from 'rxjs/Subject';
 
 import { CommonComponent } from './common.component';
 import { Utility } from './common/Utility';
-import { selectorSettings } from './components/settings';
+import { selectorSettings } from './components/settings-group';
 import { Eventtypes } from './enum/eventtypes.enum';
 import { ControllerService } from './services/controller.service';
 import { AlerttableService } from '@app/services/alerttable.service';
@@ -419,6 +419,11 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.navigate(['/monitoring', 'alertsevents']);
     this._rightSideNav.close();
 
+  }
+
+  settingsNavigate(route) {
+    this._rightSideNav.close();
+    this.navigate(route);
   }
 
   _componentSetup(component) {

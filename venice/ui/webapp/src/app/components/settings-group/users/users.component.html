@@ -1,0 +1,88 @@
+<div class="users">
+    <app-pagebody [icon]="usericon" title="Manage Users">
+        <div pagebody-options>
+            <button class="global-button-primary users-toolbar-button users-adduser-button" [disabled]="isToShowAddUserPanel" (click)="onAddUser($event, role)">Add
+                User
+            </button>
+        </div>
+        <div class="users-adduser-div" *ngIf="isToShowAddUserPanel" [@slideInOut] >
+            <app-newuser [authRoleBindings]="authRoleBindings" [rolebindingOptions]="rolebindingOptions" (formClose)="creationFormClose($event)"></app-newuser>
+        </div>
+        <div class="users-panel-content" *ngIf="authusers">
+            <div *ngFor="let role of getRoles()" class="user-panel-rolegroup">
+                <div class="user-panel-rolegroup-header">
+                    <div fxLayout="row wrap" fxLayoutAlign="start" class="user-panel-rolegroup-header-info-row">
+                        <div class="user-panel-rolegroup-header-row-item">{{role}}</div>
+                        <div class="user-panel-rolegroup-header-row-item">({{getRoleUsers(role).length}})</div>
+                    </div>
+                </div>
+                <div fxLayout="row wrap" fxLayoutAlign="start" class="user-panel-rolegroup-content">
+                    <!-- Arrange users in each row group-->
+                    <div class="user-panel-div" fxFlex="30%" *ngFor="let user of getRoleUsers(role)">
+                        <ng-container *ngTemplateOutlet="usertemplate; context:{item:user}"></ng-container>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </app-pagebody>
+</div>
+
+<ng-template #usertemplate let-user="item">
+    <div class="usertemplate-div">
+        <div class="usertemplate-div-card" fxLayout="row">
+            <div class="usertemplate-div-card-account-circle" fxFlex="none" fxLayout="column">
+                <button mat-icon-button class="usertemplate-div-card-icon">
+                    <mat-icon>person</mat-icon>
+                </button>
+            </div>
+            <div class="usertemplate-div-card-content-div" fxFlex fxLayout="column">
+                <div class="usertemplate-div-card-username">{{user?.spec.fullname}}</div>
+                <div class="usertemplate-div-card-roles">{{ user.status.roles? user.status.roles : 'Administor'}}</div>
+                <div class="usertemplate-div-card-createdtime">{{user?.meta["creation-time"] | date:'MM/dd/yyyy HH:mm a'}}</div>
+
+            </div>
+            <div class="usertemplate-div-editdelete-buttons-div" fxLayout="column" fxFlex="none">
+                <div class="usertemplate-div-card-icon-buttons-div" *ngIf="!isUserEditMode(user)">
+                    <div class="usertemplate-div-card-icon-div-edit" *ngIf="showEditButton(user)">
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-eidt-button" title="Update user">
+                            <mat-icon class="usertemplate-div-card-icon-button" (click)="onEditUser($event, user)">edit</mat-icon>
+                        </button>
+                    </div>
+                    <div class="usertemplate-div-card-icon-div-delete" *ngIf="showDeleteButton(user)">
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button  usertemplate-div-card-icon-delete-button" title="Delete user">
+                            <mat-icon class="usertemplate-div-card-icon-button" (click)="onDeleteUser($event, user)">delete</mat-icon>
+                        </button>
+                    </div>
+                </div>
+                <div class="usertemplate-div-card-icon-buttons-div" *ngIf="isUserEditMode(user)">
+                    <div class="usertemplate-div-card-icon-div-save" >
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-delete-button" title="Save user change">
+                            <mat-icon class="usertemplate-div-card-icon-button usertemplate-UserEditMode" (click)="onSaveEditUser($event, user)">save</mat-icon>
+                        </button>
+                    </div>
+                    <div class="usertemplate-div-card-icon-div-cancel">
+                        <button mat-icon-button class="usertemplate-div-card-icon-operation-button usertemplate-div-card-icon-eidt-button" title="Cancel user update">
+                            <mat-icon class="usertemplate-div-card-icon-button usertemplate-UserEditMode" (click)="onCancelEditUser($event, user)">cancel</mat-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="usertemplate-div-card-edituser-div" *ngIf="isUserEditMode(user)" [formGroup]="selectedAuthUser.$formGroup">
+            <div fxLayout="row wrap" fxLayoutAlign="start" class="usertemplate-rolegroup-header-edit-row" formGroupName="spec">
+                <div class="usertemplate-rolegroup-header-edit-label">New Roles:</div>
+                <p-multiSelect class="user-rolebinding" fxFlex="200px" styleClass="user-rolebinding-select" dataKey="meta.name" [options]="rolebindingOptions"
+                    (onChange)="onRolebindingChange($event)"></p-multiSelect>
+
+            </div>
+            <div fxLayout="row" formGroupName="spec" class="usertemplate-rolegroup-header-edit-row">
+                <div class="usertemplate-rolegroup-header-edit-label">New Password:</div>
+                <div class="usertemplate-rolegroup-header-add-property-value">
+                    <input fxFlex="200px" formControlName="password" class="user-edit-input-item user-edit-Password" [ngClass]="errorChecker.isErrorState(selectedAuthUser.$formGroup.get('spec.password')) ? 'error' : ''"
+                        spellcheck="false" type="password" pInputText placeholder="Password...">
+                </div>
+            </div>
+        </div>
+    </div>
+</ng-template>

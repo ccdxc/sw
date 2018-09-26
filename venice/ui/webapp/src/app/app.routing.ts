@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { SettingsComponent } from '@app/components/settings';
 import { AuthGuard } from '@app/services/authguard.service';
 import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
 import { RouteGuard } from '@app/services/routeguard.service';
@@ -50,10 +49,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings',
-        component: SettingsComponent,
-        data: {
-          title: 'Settings'
-        },
+        loadChildren: '@components/settings-group/settings-group.module#SettingsGroupModule',
       },
       {
         path: 'security',

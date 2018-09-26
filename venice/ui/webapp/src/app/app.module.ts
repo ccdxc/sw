@@ -28,6 +28,7 @@ import { NgIdleKeepaliveModule } from '@ng-idle/keepalive';
 import { ControllerService } from '@app/services/controller.service';
 import { AbstractService } from '@app/services/abstract.service';
 import { AuthService } from '@app/services/auth.service';
+import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { WorkloadService } from '@app/services/workload.service';
 import { WorkloadService as WorkloadServiceGen } from '@app/services/generated/workload.service';
 import { SearchService } from '@app/services/generated/search.service';
@@ -36,6 +37,7 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { AlerttableService } from '@app/services/alerttable.service';
+
 // Pensando UI components
 import { AppRoutingModule } from '@app/app.routing';
 import { AppComponent } from '@app/app.component';
@@ -44,7 +46,8 @@ import { CommonComponent } from '@app/common.component';
 
 // import VeniceUI modules so that they will load fast
 import { CoreModule } from '@app/core';
-import { SettingsModule } from '@app/components/settings';
+import { SettingsGroupModule } from '@app/components/settings-group/settings-group.module';
+import { DashboardModule } from '@app/components/dashboard';
 import { AlertlistModule } from '@app/components/alertlist';
 import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
@@ -111,7 +114,7 @@ import { EventsService } from '@app/services/events.service';
 
     // VeniceUI modules
     CoreModule,
-    SettingsModule,
+    SettingsGroupModule,
     AlertlistModule,
     SharedModule,
 
@@ -133,6 +136,7 @@ import { EventsService } from '@app/services/events.service';
     MonitoringService,
     SecurityService,
     WorkloadServiceGen,
+    AuthServiceGen,
     // Route Guards
     AuthGuard,
     RouteGuard,

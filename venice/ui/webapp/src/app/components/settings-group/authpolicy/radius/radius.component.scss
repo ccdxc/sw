@@ -1,0 +1,87 @@
+@import 'global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.radius-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  z-index:10;
+}
+
+.radius-create {
+  z-index: 20; // Needs to be higher than radius-overlay, but less
+               // than authpolicy overlay
+}
+
+.radius-toggle {
+  margin: 20px;
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+}
+
+.radius-title {
+  margin: 20px;
+  @include primary-font(18px, #676763, 500);
+}
+
+.radius-arrow {
+  color: #598cde;
+  margin: 20px;
+}
+
+.radius-fieldtitle,
+.radius-value {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.radius-user,
+.radius-user-object-class {
+  width: 155px;
+}
+
+.radius-servergroup {
+  margin: 0px 50px;
+  border-top: solid 1px #dddddd;
+}
+
+.radius-input-group {
+  margin-top: 2*$vertical-gutter;
+}
+
+.radius-server-certs {
+  margin: 0px 2*$horizontal-gutter;
+}
+
+.radius-test-connection-button {
+  margin: 4*$vertical-gutter 2*$horizontal-gutter;
+  padding: 4px 10px;
+  line-height: 25px;
+  // display: grid;
+}
+
+.radius-server-certs,
+.radius-test-connection-button {
+  margin-right: 4*$horizontal-gutter;
+}
+
+.radius-server-secret {
+  width: 250px;
+}
+
+.radius-and {
+  white-space: nowrap;
+    // margin-top: 2*$vertical-gutter;
+    color: #6ba0e5;
+    display: inline-block;
+    > span:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    > mat-icon:hover {
+        cursor: pointer;
+    }
+}

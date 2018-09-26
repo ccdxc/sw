@@ -1,0 +1,11 @@
+@import 'global-mixins';
+
+.local-group-title {
+  margin: 0px 20px;
+  @include primary-font(18px, #676763, 500);
+}
+
+.local-toggle {
+  margin: 0px 20px;
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+}

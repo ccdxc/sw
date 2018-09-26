@@ -1,0 +1,191 @@
+<div fxFlex="nogrow" fxLayout="row" class="authpolicy-group" [ngClass]="!radiusEditMode ? 'authpolicy-group-hover' : '' ">
+  <ng-container *ngIf="radiusData; else RadiusCreate">
+    <ng-container *ngTemplateOutlet="Radius"></ng-container>
+  </ng-container>
+</div> 
+
+<ng-template  #RadiusCreate>
+    <div class="radius-overlay"></div>
+    <div fxFlex fxLayout="column" fxLayoutAlign="center stretch">
+      <div fxFlex="nogrow" fxLayout="row">
+        <mat-slide-toggle fxFlex='nogrow' class="radius-toggle"></mat-slide-toggle>
+        <div class="radius-title">
+          Radius
+        </div>
+        <div fxFlex></div>
+        <div fxFlex="nogrow" class="global-button-primary authpolicy-button radius-create" (click)="createRadius()">
+          CREATE RADIUS AUTHENTICATOR
+        </div>
+      </div>
+    </div>
+  
+    <div fxFlex="nogrow" fxLayout="column">
+      <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-up">
+      </div>
+      <div fxFlex="60px"></div>
+      <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
+      </div>
+    </div>
+</ng-template>
+
+<ng-template #Radius>
+  <div fxFlex fxLayout="column">
+    <div fxFlex="nogrow" fxLayout="row" [formGroup]="radiusObject.$formGroup">
+      <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="radius-toggle"></mat-slide-toggle>
+      <div class="radius-title">
+        Radius
+      </div>
+  
+    </div>
+    <ng-container *ngTemplateOutlet="RadiusConfig"></ng-container>
+    <div fxFlex="40px"></div>
+  
+    <!-- Server setup -->
+    <div fxFlex fxLayout="row" [style.position]="'relative'">
+      <div fxFlex fxLayout="column">
+        <ng-container *ngIf="radiusEditMode">
+          <ng-container *ngTemplateOutlet="RadiusServers"></ng-container>
+        </ng-container>
+        <div fxFlex="40px"></div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="!radiusEditMode" fxFlex="nogrow" fxLayout="column">
+    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" fxLayoutGap="10px" class="authpolicy-arrow-up">
+      <!-- NOT EDIT MODE, SHOW EDIT BUTTON AND ARROW -->
+      <mat-icon *ngIf="isHover && !radiusEditMode" fxFlex="nogrow" (click)="toggleEdit()">
+        edit
+      </mat-icon>
+      <mat-icon *ngIf="!radiusEditMode && canRaiseAuthRank()" (click)="raiseAuthRank()">
+        arrow_upward
+      </mat-icon>
+    </div>
+    <div fxFlex fxLayout="row" fxLayoutAlign="end center">
+      <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}} </div>
+    </div>
+    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
+      <mat-icon fxFlex="nogrow" *ngIf="!radiusEditMode && canLowerAuthRank()" (click)="lowerAuthRank()">
+        arrow_downward
+      </mat-icon>
+    </div>
+  </div>
+  <!-- EDIT MODE, SHOW SAVE/CANCEL BUTTON -->
+  <div *ngIf="radiusEditMode" fxFlex="nogrow" fxLayout="row">
+    <div *ngIf="radiusEditMode" fxFlex="nogrow">
+      <div (click)="saveRadius()" class="global-button-primary authpolicy-save">SAVE</div>
+    </div>
+    <div *ngIf="radiusEditMode" fxFlex="nogrow">
+      <div (click)="cancelEdit()" class="global-button-neutral authpolicy-cancel">CANCEL</div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #RadiusConfig>
+  <div fxFlex fxLayout="row">
+    <div fxFlex="50px"></div>
+    <div fxFlex fxLayout="row wrap" fxLayoutGap="10px" [formGroup]="radiusObject.$formGroup">
+      <!-- INPUT GROUP 1 -->
+      <div fxFlex="nogrow" fxLayout="column" class="radius-input-group">
+        <div fxFlex="30px" class="radius-fieldtitle">CONFIG</div>
+        <div fxFlex fxLayout="row">
+          <!-- Field Title --> 
+          <div fxFlex="nogrow" fxLayout="column">
+            <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>NAS ID:</span>
+            </div>
+          </div>
+          <!-- Field Values - edit mode -->
+          <div fxFlex fxLayout="column" *ngIf="radiusEditMode">
+            <div fxFlex="30px" fxLayout="row" class="radius-value">
+              <input fxFlex="nogrow" formControlName="nas-id" class="radius-input" spellcheck="false" type="text"  pInputText  placeholder="">
+            </div>
+          </div>
+          <!-- Field Values - view mode -->
+          <div fxFlex fxLayout="column" *ngIf="!radiusEditMode">
+            <div fxFlex="30px" fxLayout="row" class="radius-fieldtitle radius-input" fxLayoutAlign="start center">
+              {{ radiusObject["nas-id"] }}
+            </div>
+          </div>
+  
+        </div>
+      </div>
+
+      <!-- INPUT GROUP 2 -->
+      <div  *ngIf="!radiusEditMode" fxFlex="nogrow" fxLayout="column wrap" class="radius-input-group">
+          <div fxFlex="30px" class="radius-fieldtitle">SERVERS</div>
+          <div fxFlex fxLayout="row">
+            <div fxFlex fxLayout="column" *ngFor="let server of radiusObject.servers">
+              <div fxFlex="30px" fxLayout="row" class="radius-fieldtitle radius-input" fxLayoutAlign="start center" fxLayoutGap="5px">
+                <mat-icon fxFlex="nogrow" class="authpolicy-lock">lock</mat-icon>
+                <div fxFlex="nogrow">
+                  {{ server.url }}
+                </div>
+              </div>
+            </div>
+    
+          </div>
+        </div>
+    </div>
+
+  </div>
+</ng-template>
+
+<ng-template #RadiusServers>
+    <div fxFlex fxLayout="column" class="radius-servergroup" [@slideInOut] 
+    *ngFor="let server of radiusObject.$formGroup.get('servers').controls; let index = index; let first = first" [formGroup]="server">
+    <div fxFlex="20px"></div>
+    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="space-between start">
+    <div fxFlex class="radius-fieldtitle">
+      SERVER CONFIGURATION
+    </div>
+    <div fxFlex="nogrow" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center" class="radius-and">
+        <span *ngIf="first" fxFlex="nogrow" (click)="addServer()">+ ADD</span>
+        <mat-icon *ngIf="radiusObject.$formGroup.get('servers').length > 1" fxFlex="nogrow" (click)="removeServer(index)" [style.color]="'#767676'">delete</mat-icon>
+    </div>
+    </div>
+    <div fxFlex="10px"></div>
+    <!-- <div fxFlex fxLayout="row"> -->
+
+    <div fxFlex fxLayout="row wrap">
+      <!-- GROUP 1 -->
+      <div fxFlex="nogrow" fxLayout="column" class="radius-input-group">
+        <div fxFlex="nogrow" fxLayout="row">
+          <!-- Field Title --> 
+          <div fxFlex="nogrow" fxLayout="column">
+            <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>Server/Port:</span>
+            </div>
+          </div>
+          <!-- Field Values -->
+          <div fxFlex fxLayout="column">
+            <div fxFlex="30px" fxLayout="row" class="radius-value">
+              <input fxFlex="nogrow" class="radius-input" formControlName="url" spellcheck="false" type="text"  pInputText  placeholder="">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div fxFlex="nogrow" fxLayout="column" class="radius-input-group">
+        <div fxFlex fxLayout="row">
+          <!-- Field Title --> 
+          <div fxFlex="nogrow" fxLayout="column">
+            <div class="radius-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>Server Secret:</span>
+            </div>
+          </div>
+          <!-- Field Values - edit mode -->
+          <div fxFlex fxLayout="column" *ngIf="radiusEditMode">
+            <div fxFlex="30px" fxLayout="row" class="radius-value">
+              <input fxFlex="nogrow" formControlName="secret" class="radius-input radius-server-secret" spellcheck="false" type="text"  pInputText  placeholder="">
+            </div>
+          </div>
+  
+        </div>
+      </div>
+        
+    </div>
+    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
+      <div fxFlex="nogrow" class="global-button-primary ldap-test-connection-button">TEST CONNECTION</div>
+    </div>
+</div>
+
+</ng-template>

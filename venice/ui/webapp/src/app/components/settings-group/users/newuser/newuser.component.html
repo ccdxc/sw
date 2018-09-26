@@ -1,0 +1,65 @@
+<div class="newuser" [formGroup]="newAuthUser.$formGroup">
+    <div fxLayout="row wrap" fxLayoutAlign="start" class="newuser-panel-rolegroup-header-add-row">
+        <div fxFlex="33" fxLayout="column">
+            <div fxLayout="row" formGroupName="spec">
+                <div class="newuser-panel-rolegroup-header-add-property-label">Full Name:</div>
+                <div class="newuser-panel-rolegroup-header-add-property-value">
+                    <input fxFlex="200px" formControlName="fullname" class="newuser-input-item newuser-fullname" spellcheck="false" type="text"
+                        pInputText placeholder="Full Name..." [ngClass]="errorChecker.isErrorState(newAuthUser.$formGroup.get('spec.fullname')) ? 'error' : ''">
+                </div>
+            </div>
+            <div fxLayout="row" formGroupName="spec">
+                <div class="newuser-panel-rolegroup-header-add-property-label">Email:</div>
+                <div class="newuser-panel-rolegroup-header-add-property-value ">
+                    <input fxFlex="200px" formControlName="email" class="newuser-input-item newuser-email" spellcheck="false" type="email" pInputText
+                        placeholder="Email" [ngClass]="errorChecker.isErrorState(newAuthUser.$formGroup.get('spec.email')) ? 'error' : ''">
+                </div>
+            </div>
+        </div>
+        <div fxFlex="33" fxLayout="column">
+            <div fxLayout="row" formGroupName="meta">
+                <div class="newuser-panel-rolegroup-header-add-property-label">Login Name:</div>
+                <div class="newuser-panel-rolegroup-header-add-property-value">
+                    <input fxFlex="200px" formControlName="name" class="newuser-input-item newuser-loginname" spellcheck="false" type="text"
+                        pInputText placeholder="Login Name..." [ngClass]="errorChecker.isErrorState(newAuthUser.$formGroup.get('meta.name')) ? 'error' : ''" >
+                </div>
+            </div>
+            <div fxLayout="row" formGroupName="spec">
+                <div class="newuser-panel-rolegroup-header-add-property-label">Password:</div>
+                <div class="newuser-panel-rolegroup-header-add-property-value">
+                    <input fxFlex="200px" formControlName="password" class="newuser-input-item newuser-Password" 
+                        [ngClass]="errorChecker.isErrorState(newAuthUser.$formGroup.get('spec.password')) ? 'error' : ''" spellcheck="false" type="password"
+                        pInputText placeholder="Password...">
+                </div>
+            </div>
+        </div>
+        <div fxFlex="33" fxLayout="column">
+            <div fxLayout="row" formGroupName="spec">
+                <div class="newuser-panel-rolegroup-header-add-property-label">Authentication Type:</div>
+                <div class="newuser-panel-rolegroup-header-add-property-value cluster-details-panel-leader-value">
+                    <input fxFlex="200px" formControlName="type" class="newuser-input-item newuser-type" spellcheck="false" type="text" readonly="true" value="LOACL"
+                        pInputText placeholder="LOCAL">
+                </div>
+            </div>
+            <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start" >
+                <div class="newuser-panel-rolegroup-header-add-property-label">Roles:</div> 
+                <!--ngModel will not work within FormGroup. Thus we use onChange to capture change-->
+                <p-multiSelect class="newuser-rolebinding" fxFlex="200px" styleClass="newuser-rolebinding-select" dataKey="meta.name"               
+                [options]="rolebindingOptions"
+                (onChange)="onRolebindingChange($event)"></p-multiSelect>
+            </div>
+            
+        </div>
+    </div>
+    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
+            <div fxFlex="nogrow">
+                <button (click)="onCancelAddUser($event, role)" tabindex="0" (keydown)="($event.which ==13)? onCancelAddUser($event) : return"
+                    class="global-button-neutral newuser-addnewuser newuser-addnewuser-clear">Cancel</button>
+            </div>
+            <div fxFlex="nogrow">
+                <button (click)="onSaveAddUser($event, role)" tabindex="0" (keydown)="($event.which ==13)? onSaveAddUser($event) : return "
+                    class="global-button-primary newuser-addnewuser newuser-addnewuser-save"
+                    [disabled]="!isAllInputsValidated()">Save</button>
+            </div>
+    </div>
+</div>

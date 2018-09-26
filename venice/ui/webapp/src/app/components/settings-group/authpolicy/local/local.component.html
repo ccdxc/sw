@@ -1,0 +1,27 @@
+<div fxFlex="nogrow" fxLayout="row" class="authpolicy-group authpolicy-group-hover">
+  <div fxFlex fxLayout="column" fxLayoutAlign="center start">
+    <div fxFlex="nogrow" fxLayout="row">
+      <mat-slide-toggle [checked]="localData?.enabled" fxFlex='nogrow' class="local-toggle"></mat-slide-toggle>
+      <div class="local-group-title">
+        Local
+      </div>
+    </div>
+  </div>
+
+  <div fxFlex="nogrow" fxLayout="column">
+    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-up">
+      <mat-icon *ngIf="canRaiseAuthRank()" (click)="raiseAuthRank()" fxFlex="nogrow" >
+        arrow_upward
+      </mat-icon>
+    </div>
+    <div fxFlex fxLayout="row" fxLayoutAlign="end center">
+      <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}} </div>
+    </div>
+    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
+      <mat-icon fxFlex="nogrow" *ngIf="canLowerAuthRank()" (click)="lowerAuthRank()">
+        arrow_downward
+      </mat-icon>
+    </div>
+  </div>
+
+</div> 

@@ -1,0 +1,144 @@
+@import 'global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.authpolicy-widget {
+  @include primary-font();
+  
+}
+
+.authpolicy-group {
+  border-bottom: solid 1px #dddddd;
+  border-top: solid 1px #dddddd;
+  border-radius: 2px;
+  position: relative;
+}
+
+.authpolicy-group-hover {
+  &:hover {
+    background: rgba(244, 249, 255, 1)
+  }
+}
+
+.authpolicy-toggle {
+  margin: 20px;
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+}
+
+.authpolicy-group-title {
+  margin: 20px;
+  @include primary-font(18px, #676763, 500);
+}
+
+.authpolicy-update-secret,
+.authpolicy-button,
+.authpolicy-save, 
+.authpolicy-cancel {
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: 20px 20px 20px 0px;
+}
+
+.authpolicy-update-secret {
+  margin: 0px;
+}
+
+.authpolicy-header {
+  @include primary-font(20px);
+  margin: 10px 20px;
+}
+
+.authpolicy-border {
+  border-top: solid 1px #dddddd;
+}
+
+
+// *********************************
+.authpolicy-authenticators-shadow {
+  background: #f7f7f7;
+}
+.authpolicy-group {
+  border-left: solid 1px #dddddd;
+}
+// ***********************************
+
+.authpolicy-panel-content-input {
+  margin-left: 20px;
+}
+
+.authpolicy-auth-description {
+  margin-bottom: 20px;
+  @include primary-font(16px, #484848);
+  
+  mat-form-field {
+    @include global-mat-form-field;
+    margin-top: 0px;
+  }
+}
+
+
+.authpolicy-rank {
+  @include primary-font(64px, #7db1ea);
+  margin: 0px 20px 0px 0px;
+}
+
+.authpolicy-arrow-up {
+  color: #6ba0e5;
+  margin: 20px 20px 0px 0px;
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.authpolicy-arrow-down {
+  color: #6ba0e5;
+  margin: 0px 20px 20px 0px;
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.authpolicy-fieldtitle,
+.authpolicy-value {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.authpolicy-user,
+.authpolicy-user-object-class {
+  width: 155px;
+}
+
+.authpolicy-ldap-certs {
+  margin: 0px 2*$horizontal-gutter;
+}
+
+.authpolicy-ldap-servergroup {
+  margin: 0px 50px;
+  border-top: solid 1px #dddddd;
+}
+
+.authpolicy-input-group {
+  margin: 0px 2*$horizontal-gutter;
+}
+
+.authpolicy-and {
+  white-space: nowrap;
+    color: #6ba0e5;
+    display: inline-block;
+    > span:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    > mat-icon:hover {
+        cursor: pointer;
+    }
+}
+
+.authpolicy-lock {
+  color: green;
+}
+
+.authpolicy-lock-open {
+  color: red;
+}

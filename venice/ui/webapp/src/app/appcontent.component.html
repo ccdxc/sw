@@ -40,11 +40,10 @@
                                 <mat-icon style="color: black">power_settings_new</mat-icon>
                                 <span>Logout</span>
                             </button>
-                        </mat-menu>
-                        <!-- Commenting out for August release -->
-                        <!-- <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')" class="hidden-sm-down">
+                        </mat-menu>                       
+                        <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')" class="hidden-sm-down">
                             <mat-icon>settings</mat-icon>
-                        </button> -->
+                        </button>
                     </div>
                 </mat-toolbar-row>
 
@@ -182,10 +181,22 @@
 </ng-template>
 
 <ng-template #sideNavSettings let-item="item">
-    <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
+    <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">       
+       <!-- comment out for GS0.3 -->
+       <!--  
         <button mat-icon-button routerLink="settings" class="hidden-sm-down">
             <mat-icon>settings</mat-icon>
             Themes and endpoints
+        </button>
+        -->
+        <!-- Material-Design sideNav will auto highlight the first button when open. Check scss to see style rules -->
+        <button mat-icon-button (click)="settingsNavigate(['/settings', 'authpolicy'])" class="hidden-sm-down">
+            <mat-icon>settings</mat-icon>
+            Authentication Policy
+        </button>
+        <button mat-icon-button (click)="settingsNavigate(['/settings', 'users'])" class="hidden-sm-down">
+            <mat-icon>person</mat-icon>
+                User Management
         </button>
     </div>
 </ng-template>

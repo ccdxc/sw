@@ -17,6 +17,9 @@
 
 /*********  Material design related overrides  *********/
 @mixin global-mat-toggle($toggleBar, $toggleThumb, $toggleBarChecked, $toggleThumbChecked) {
+  &.mat-disabled {
+    opacity: 0.4 !important;
+  }
   .mat-slide-toggle-content {
       @include primary-font();
   }
