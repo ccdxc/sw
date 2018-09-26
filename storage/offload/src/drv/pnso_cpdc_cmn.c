@@ -21,7 +21,6 @@
  * TODO:
  *	- add additional UTs for read/write status/result, as needed
  *	- reuse/common code (write_result, read_status, etc.)
- *	- u64 vs uint64_t
  *	- move validation routines from services to higher layer
  *
  * TODO-cp:
@@ -157,7 +156,7 @@ cpdc_pprint_desc(const struct cpdc_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cpdc_desc", (u64) desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "cpdc_desc", (uint64_t) desc);
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "cd_src", desc->cd_src);
 	OSAL_LOG_INFO("%30s: 0x%llx", "cd_dst", desc->cd_dst);
@@ -195,7 +194,8 @@ cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc)
 	if (!status_desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== status_desc", (u64) status_desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== status_desc",
+			(uint64_t) status_desc);
 
 	OSAL_LOG_INFO("%30s: %d", "csd_err", status_desc->csd_err);
 	OSAL_LOG_INFO("%30s: %d", "csd_valid", status_desc->csd_valid);
@@ -252,7 +252,7 @@ cpdc_release_sgl(struct cpdc_sgl *sgl)
 		err = mpool_put_object(cpdc_sgl_mpool, sgl);
 		if (err) {
 			OSAL_LOG_ERROR("failed to return cpdc sgl desc to pool! #: %2d sgl 0x%llx err: %d",
-					iter, (u64) sgl, err);
+					iter, (uint64_t) sgl, err);
 			OSAL_ASSERT(err);
 		}
 
@@ -512,7 +512,7 @@ out:
 
 /*
  * TODO-cpdc:
- * 	retire this to use _ex() version when per-block lone chksum is needed
+ *	retire this to use _ex() version when per-block lone chksum is needed
  *
  */
 uint32_t
@@ -543,7 +543,7 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 
 	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x%llx desc: 0x%llx status_desc: 0x%llx",
 			block_cnt, block_size, src_buf_len, flat_buf.buf,
-			(u64) desc, (u64) status_desc);
+			(uint64_t) desc, (uint64_t) status_desc);
 
 	desc_object_size = cpdc_get_desc_size();
 	status_object_size = cpdc_get_status_desc_size();
@@ -554,7 +554,8 @@ cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
 		len = buf_len > block_size ? block_size : buf_len;
 
 		OSAL_LOG_INFO("blk_num: %d buf: 0x%llx, len: %d desc: 0x%llx status_desc: 0x%llx",
-			i, (u64) buf, len, (u64) pb_desc, (u64) pb_status_desc);
+			i, (uint64_t) buf, len, (uint64_t) pb_desc,
+			(uint64_t) pb_status_desc);
 
 		fill_desc_fn(algo_type, len, true,
 				buf, pb_desc, pb_status_desc);
@@ -601,7 +602,7 @@ cpdc_fill_per_block_desc_ex(uint32_t algo_type, uint32_t block_size,
 
 	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x%llx desc: 0x%llx status_desc: 0x%llx",
 			block_cnt, block_size, src_buf_len, flat_buf.buf,
-			(u64) desc, (u64) status_desc);
+			(uint64_t) desc, (uint64_t) status_desc);
 
 	desc_object_size = cpdc_get_desc_size();
 	status_object_size = cpdc_get_status_desc_size();
@@ -617,8 +618,8 @@ cpdc_fill_per_block_desc_ex(uint32_t algo_type, uint32_t block_size,
 		pb_sgl->cs_len_0 = len;
 
 		OSAL_LOG_INFO("blk_num: %d buf: 0x%llx, len: %d desc: 0x%llx status_desc: 0x%llx sgl: 0x%llx",
-			i, (u64) buf, len,
-			(u64) pb_desc, (u64) pb_status_desc, (u64) pb_sgl);
+			i, (uint64_t) buf, len, (uint64_t) pb_desc,
+			(uint64_t) pb_status_desc, (uint64_t) pb_sgl);
 
 		fill_desc_fn(algo_type, len, false,
 				pb_sgl, pb_desc, pb_status_desc);

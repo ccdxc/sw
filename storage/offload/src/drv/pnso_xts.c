@@ -57,7 +57,7 @@ init_mpools(struct per_core_resource *pc_res)
 	 */
 	num_object_set = PNSO_NUM_OBJECTS;
 	num_objects = PNSO_NUM_OBJECTS_IN_OBJECT;
-	
+
 	pad_size = mpool_get_pad_size(sizeof(struct xts_aol),
 			PNSO_MEM_ALIGN_DESC);
 	object_size = (sizeof(struct xts_aol) +

@@ -100,7 +100,7 @@ validate_setup_input(const struct service_info *svc_info,
 
 	if (!svc_params->u.sp_hash_desc) {
 		OSAL_LOG_ERROR("invalid desc specified! desc: 0x%llx err: %d",
-				(u64) svc_params->u.sp_hash_desc, err);
+				(uint64_t) svc_params->u.sp_hash_desc, err);
 		return err;
 	}
 
@@ -545,7 +545,7 @@ hash_write_result_per_block(struct service_info *svc_info)
 
 		CPDC_PPRINT_STATUS_DESC(st_desc);
 		OSAL_LOG_INFO("tag: %d status_desc: 0x%llx hash: %*phN",
-			i, (u64) status_desc, 64,
+			i, (uint64_t) status_desc, 64,
 			svc_status->u.hash.tags[i].hash);
 
 		st_desc = cpdc_get_next_status_desc(st_desc,
@@ -605,7 +605,7 @@ hash_write_result_buffer(struct service_info *svc_info)
 			PNSO_HASH_TAG_LEN);
 
 	OSAL_LOG_INFO("tag: 0 status_desc: 0x%llx hash: %*phN",
-			(u64) status_desc, 64,
+			(uint64_t) status_desc, 64,
 			svc_status->u.hash.tags[0].hash);
 
 	err = PNSO_OK;

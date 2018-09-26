@@ -93,9 +93,10 @@ pprint_seq_info(const struct sequencer_info *seq_info)
 	OSAL_LOG_INFO("%30s: %d", "sqi_index", seq_info->sqi_index);
 	OSAL_LOG_INFO("%30s: %d", "sqi_batch_mode", seq_info->sqi_batch_mode);
 	OSAL_LOG_INFO("%30s: %d", "sqi_batch_size", seq_info->sqi_batch_size);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqi_sqi_desc", (u64) seq_info->sqi_desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "sqi_sqi_desc",
+			(uint64_t) seq_info->sqi_desc);
 	OSAL_LOG_INFO("%30s: 0x%llx", "sqi_status_desc",
-			(u64) seq_info->sqi_status_desc);
+			(uint64_t) seq_info->sqi_status_desc);
 }
 
 static void __attribute__((unused))
@@ -594,7 +595,7 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 	}
 
 	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x%llx  desc_size: %lu",
-			ring_id, index, (u64) src_desc, desc_size);
+			ring_id, index, (uint64_t) src_desc, desc_size);
 	PPRINT_SEQUENCER_DESC(seq_desc);
 
 	OSAL_LOG_DEBUG("exit!");
@@ -722,7 +723,8 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 
 	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x%llx status_desc: 0x%llx",
-			ring_id, index, (u64) cp_desc, (u64) status_desc);
+			ring_id, index, (uint64_t) cp_desc,
+			(uint64_t) status_desc);
 
 	PPRINT_SEQUENCER_INFO(seq_info);
 

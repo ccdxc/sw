@@ -102,7 +102,7 @@ validate_setup_input(const struct service_info *svc_info,
 
 	if (!svc_params->u.sp_chksum_desc) {
 		OSAL_LOG_ERROR("invalid desc specified! desc: 0x%llx err: %d",
-				(u64) svc_params->u.sp_chksum_desc, err);
+				(uint64_t) svc_params->u.sp_chksum_desc, err);
 		return err;
 	}
 
@@ -483,7 +483,7 @@ chksum_write_result_per_block(struct service_info *svc_info)
 
 		CPDC_PPRINT_STATUS_DESC(st_desc);
 		OSAL_LOG_INFO("tag: %d status_desc: 0x%llx chksum: %*phN",
-			i, (u64) st_desc, 8,
+			i, (uint64_t) st_desc, 8,
 			svc_status->u.chksum.tags[i].chksum);
 
 		st_desc = cpdc_get_next_status_desc(st_desc,
@@ -543,7 +543,7 @@ chksum_write_result_buffer(struct service_info *svc_info)
 			PNSO_CHKSUM_TAG_LEN);
 
 	OSAL_LOG_INFO("tag: 0 status_desc: 0x%llx chksum: %*phN",
-			(u64) status_desc, 8,
+			(uint64_t) status_desc, 8,
 			svc_status->u.chksum.tags[0].chksum);
 
 	err = PNSO_OK;

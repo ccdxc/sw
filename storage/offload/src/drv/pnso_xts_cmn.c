@@ -61,7 +61,7 @@ xts_pprint_desc(const struct xts_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "xts_desc", (u64) desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "xts_desc", (uint64_t) desc);
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "xd_src", desc->xd_in_aol);
 	OSAL_LOG_INFO("%30s: 0x%llx", "xd_dst", desc->xd_out_aol);

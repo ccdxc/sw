@@ -45,7 +45,7 @@ pprint_service_info(const struct service_info *svc_info)
 	if (!svc_info)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== svc_info",  (u64) svc_info);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== svc_info",  (uint64_t) svc_info);
 	OSAL_LOG_INFO("%30s: %d", "si_type", svc_info->si_type);
 	OSAL_LOG_INFO("%30s: %d", "si_flags", svc_info->si_flags);
 
@@ -53,16 +53,16 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_INFO("%30s: %d", "si_desc_flagss", svc_info->si_desc_flags);
 	OSAL_LOG_INFO("%30s: %d", "si_num_tags", svc_info->si_num_tags);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "si_desc",  (u64) svc_info->si_desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "si_desc",  (uint64_t) svc_info->si_desc);
 	OSAL_LOG_INFO("%30s: 0x%llx", "si_status_desc",
-			(u64) svc_info->si_status_desc);
+			(uint64_t) svc_info->si_status_desc);
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_src_sgl",
-			(u64) svc_info->si_src_sgl);
+			(uint64_t) svc_info->si_src_sgl);
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_dst_sgl",
-			(u64) svc_info->si_dst_sgl);
+			(uint64_t) svc_info->si_dst_sgl);
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_p4_sgl",
-			(u64) svc_info->si_p4_sgl);
+			(uint64_t) svc_info->si_p4_sgl);
 
 	/* TODO-chain: include service status and other members */
 }
@@ -74,11 +74,11 @@ pprint_chain_entry(const struct chain_entry *centry)
 		return;
 
 	/* chain entry */
-	OSAL_LOG_INFO("%30s: 0x%llx", "centry", (u64) centry);
+	OSAL_LOG_INFO("%30s: 0x%llx", "centry", (uint64_t) centry);
 	OSAL_LOG_INFO("%30s: 0x%llx", "centry->ce_chain_head",
-			      (u64) centry->ce_chain_head);
+			      (uint64_t) centry->ce_chain_head);
 	OSAL_LOG_INFO("%30s: 0x%llx", "centry->ce_next",
-			      (u64) centry->ce_next);
+			      (uint64_t) centry->ce_next);
 
 	/* basic service info */
 	OSAL_LOG_INFO("%30s: %d", "ce_svc_info->si_type",
@@ -86,7 +86,7 @@ pprint_chain_entry(const struct chain_entry *centry)
 	OSAL_LOG_INFO("%30s: %d", "ce_svc_info->si_flags",
 		      centry->ce_svc_info.si_flags);
 	OSAL_LOG_INFO("%30s: 0x%llx", "ce_svc_info->si_ops",
-		      (u64) &centry->ce_svc_info.si_ops);
+		      (uint64_t) &centry->ce_svc_info.si_ops);
 }
 
 static void __attribute__((unused))
@@ -414,7 +414,7 @@ chn_build_chain(struct pnso_service_request *svc_req,
 		svc_info->si_pc_res = chain->sc_pc_res;
 		svc_info->si_centry = centry;
 
-		/* TODO-chain: need to make this setup generic */ 
+		/* TODO-chain: need to make this setup generic */
 		if (i != 0)
 			setup_service_param_buffers(&req->svc[i], &svc_params,
 					interm_blist);
@@ -430,9 +430,9 @@ chn_build_chain(struct pnso_service_request *svc_req,
 		PPRINT_SERVICE_INFO(svc_info);
 
 		/*
-		 * TODO-chain: 
-		 * 	- set output buffer of compression service as input
-		 * 	buffer to hash; need to make it generic ...
+		 * TODO-chain:
+		 *	- set output buffer of compression service as input
+		 *	buffer to hash; need to make it generic ...
 		 *
 		 */
 		interm_blist = svc_params.sp_dst_blist;

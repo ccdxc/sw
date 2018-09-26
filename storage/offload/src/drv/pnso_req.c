@@ -37,7 +37,7 @@ pprint_crypto_desc(const struct pnso_crypto_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== crypto_desc", (u64) desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== crypto_desc", (uint64_t) desc);
 
 	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_INFO("%30s: %d", "rsvd", desc->rsvd);
@@ -51,7 +51,7 @@ pprint_cp_desc(const struct pnso_compression_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== cp_desc", (u64) desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== cp_desc", (uint64_t) desc);
 
 	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_INFO("%30s: %d", "flags", desc->flags);
@@ -66,7 +66,7 @@ pprint_dc_desc(const struct pnso_decompression_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== dc_desc", (u64) desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== dc_desc", (uint64_t) desc);
 
 	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_INFO("%30s: %d", "flags", desc->flags);
@@ -80,7 +80,7 @@ pprint_hash_desc(const struct pnso_hash_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== hash_desc", (u64) desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== hash_desc", (uint64_t) desc);
 
 	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_INFO("%30s: %d", "flags", desc->flags);
@@ -92,7 +92,7 @@ pprint_chksum_desc(const struct pnso_checksum_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== chksum_desc", (u64) desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== chksum_desc", (uint64_t) desc);
 
 	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_INFO("%30s: %d", "flags", desc->flags);
@@ -104,7 +104,7 @@ pprint_decompaction_desc(const struct pnso_decompaction_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== decompact_desc", (u64) desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== decompact_desc", (uint64_t) desc);
 
 	OSAL_LOG_INFO("%30s: %llu", "vvbn", (uint64_t) desc->vvbn);
 	OSAL_LOG_INFO("%30s: %d", "rsvd_1", desc->rsvd_1);
@@ -120,7 +120,7 @@ req_pprint_request(const struct pnso_service_request *req)
 	if (!req)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== pnso_service_request", (u64) req);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== pnso_service_request", (uint64_t) req);
 
 	OSAL_LOG_INFO("%30s: %d", "num_services", req->num_services);
 	for (i = 0; i < req->num_services; i++) {
@@ -193,7 +193,7 @@ req_pprint_result(const struct pnso_service_result *res)
 	if (!res)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== pnso_service_result", (u64) res);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== pnso_service_result", (uint64_t) res);
 
 	OSAL_LOG_INFO("%30s: %d", "err", res->err);
 
@@ -268,7 +268,7 @@ validate_req_compression_service(struct pnso_service *svc)
 	if (!svc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid service! svc: 0x%llx err: %d",
-				(u64) svc, err);
+				(uint64_t) svc, err);
 		OSAL_ASSERT(0);
 		goto out;
 	}
@@ -276,7 +276,7 @@ validate_req_compression_service(struct pnso_service *svc)
 	if (svc->svc_type != PNSO_SVC_TYPE_COMPRESS) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
-				(u64) svc, svc->svc_type, err);
+				(uint64_t) svc, svc->svc_type, err);
 		OSAL_ASSERT(0);
 		goto out;
 	}
@@ -294,7 +294,7 @@ validate_req_decompression_service(struct pnso_service *svc)
 	if (!svc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid service! svc: 0x%llx %d",
-				(u64) svc, err);
+				(uint64_t) svc, err);
 		OSAL_ASSERT(0);
 		goto out;
 	}
@@ -302,7 +302,7 @@ validate_req_decompression_service(struct pnso_service *svc)
 	if (svc->svc_type != PNSO_SVC_TYPE_DECOMPRESS) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
-				(u64) svc, svc->svc_type, err);
+				(uint64_t) svc, svc->svc_type, err);
 		OSAL_ASSERT(0);
 		goto out;
 	}
@@ -320,7 +320,7 @@ validate_req_hash_service(struct pnso_service *svc)
 	if (!svc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid service! svc: 0x%llx err: %d",
-				(u64) svc, err);
+				(uint64_t) svc, err);
 		OSAL_ASSERT(0);
 		goto out;
 	}
@@ -328,7 +328,7 @@ validate_req_hash_service(struct pnso_service *svc)
 	if (svc->svc_type != PNSO_SVC_TYPE_HASH) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
-				(u64) svc, svc->svc_type, err);
+				(uint64_t) svc, svc->svc_type, err);
 		OSAL_ASSERT(0);
 		goto out;
 	}
@@ -346,7 +346,7 @@ validate_req_chksum_service(struct pnso_service *svc)
 	if (!svc) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid service! svc: 0x%llx err: %d",
-				(u64) svc, err);
+				(uint64_t) svc, err);
 		OSAL_ASSERT(0);
 		goto out;
 	}
@@ -354,7 +354,7 @@ validate_req_chksum_service(struct pnso_service *svc)
 	if (svc->svc_type != PNSO_SVC_TYPE_CHKSUM) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
-				(u64) svc, svc->svc_type, err);
+				(uint64_t) svc, svc->svc_type, err);
 		OSAL_ASSERT(0);
 		goto out;
 	}
@@ -411,7 +411,7 @@ validate_res_compression_service(struct pnso_service_status *status)
 	if (!status->u.dst.sgl) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid dst buffer list specified for compression! sgl: 0x%llx err: %d",
-				(u64) status->u.dst.sgl, err);
+				(uint64_t) status->u.dst.sgl, err);
 		return err;
 	}
 
@@ -426,7 +426,7 @@ validate_res_decompression_service(struct pnso_service_status *status)
 	if (!status->u.dst.sgl) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid dst buffer list specified for decompression! sgl: 0x%llx err: %d",
-				(u64) status->u.dst.sgl, err);
+				(uint64_t) status->u.dst.sgl, err);
 		return err;
 	}
 
@@ -441,7 +441,7 @@ validate_res_hash_service(struct pnso_service_status *status)
 	if (!status->u.hash.tags) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid tags specified for hash! tags: 0x%llx err: %d",
-				(u64) status->u.hash.tags, err);
+				(uint64_t) status->u.hash.tags, err);
 		goto out;
 	}
 
@@ -458,7 +458,7 @@ validate_res_chksum_service(struct pnso_service_status *status)
 	if (!status->u.chksum.tags) {
 		err = EINVAL;
 		OSAL_LOG_ERROR("invalid tags specified for chksum! tags: 0x%llx err: %d",
-				(u64) status->u.chksum.tags, err);
+				(uint64_t) status->u.chksum.tags, err);
 		goto out;
 	}
 
@@ -496,13 +496,13 @@ validate_service_request(struct pnso_service_request *svc_req)
 
 	if (!svc_req) {
 		OSAL_LOG_ERROR("invalid service request specified! req: 0x%llx err: %d",
-				(u64) svc_req, err);
+				(uint64_t) svc_req, err);
 		goto out;
 	}
 
 	if (!svc_req->sgl) {
 		OSAL_LOG_ERROR("invalid sgl in service request specified! sgl: 0x%llx err: %d",
-				(u64) svc_req->sgl, err);
+				(uint64_t) svc_req->sgl, err);
 		goto out;
 	}
 
@@ -554,7 +554,7 @@ validate_service_result(struct pnso_service_result *svc_res)
 
 	if (!svc_res) {
 		OSAL_LOG_ERROR("invalid service result specified! res: 0x%llx err: %d",
-				(u64) svc_res, err);
+				(uint64_t) svc_res, err);
 		goto out;
 	}
 
