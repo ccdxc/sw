@@ -67,6 +67,8 @@ debug_cli/cli/.dir
 debug_cli/cli/.swig
 nic.tar
 nic.tgz
+host.tar
+host.tgz
 naples.tgz
 debug_cli/cli/cli.py
 debug_cli/cli/cli_wrap.cc

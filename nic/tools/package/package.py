@@ -3,7 +3,7 @@ from subprocess import call
 import sys
 import argparse
 
-output_dir   = 'fake_root_target'
+pwd          = os.getcwd()
 
 # common files for both x86_64 and aarch64
 files        = [ ]#'nic/tools/package/pack_common.txt' ]
@@ -14,6 +14,9 @@ strip_target = 1
 create_tgz   = 1
 objcopy_bin  = '/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-objcopy'
 strip_bin    = '/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-strip'
+output_dir   = pwd + '/fake_root_target/aarch64'
+tar_name     = 'nic'
+
 
 ###########################
 ##### CMDLINE PARSING #####
@@ -50,12 +53,14 @@ if args.target == 'sim':
     arm_pkg     = 0
     objcopy_bin = 'objcopy'
     strip_bin   = 'strip'
+    output_dir  = pwd + '/fake_root_target/x86_64'
     files.append('nic/tools/package/pack_sim.txt')
 elif args.target == 'zebu':
     print ("Packaging for zebu")
     arm_pkg     = 0
     objcopy_bin = 'objcopy'
     strip_bin   = 'strip'
+    output_dir  = pwd + '/fake_root_target/x86_64'
     files.append('nic/tools/package/pack_zebu.txt')
 elif args.target == 'arm-dev':
     print ("Packaging for arm-dev")
@@ -64,6 +69,15 @@ elif args.target == 'haps-dbg':
     print ("Packaging for haps-dbg")
     files.append('nic/tools/package/pack_haps.txt')
     files.append('nic/tools/package/pack_haps_dbg.txt')
+elif args.target == 'host':
+    print ("Packaging for host")
+    arm_pkg     = 0
+    objcopy_bin = 'objcopy'
+    strip_bin   = 'strip'
+    output_dir  = pwd + '/fake_root_target/x86_64'
+    tar_name    = 'host'
+    files = []
+    files.append('nic/tools/package/pack_host.txt')
 else:
     print ("Packaging for haps")
     files.append('nic/tools/package/pack_haps.txt')
@@ -156,13 +170,15 @@ if arm_pkg == 0:
 ##### create tar balls #####
 ############################
 
-print ("creating tar ball")
+print ("creating " + tar_name + " tar ball")
 
-cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -cf ../nic/nic.tar *'
+tar_output_dir = pwd + '/nic'
+
+cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -cf ' + tar_output_dir + '/' + tar_name + '.tar *'
 call(cmd, shell=True)
 
 # create tar.gz
 if create_tgz == 1:
-    print ("creating gzipped tar ball")
-    cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -czf ../nic/nic.tgz * && chmod 766 ../nic/nic.tgz'
+    print ("creating gzipped " + tar_name + " tar ball")
+    cmd = 'cd ' + output_dir + ' && tar --exclude=*.debug -czf ' + tar_output_dir + '/' + tar_name + '.tgz * && chmod 766 ' + tar_output_dir + '/' + tar_name + '.tgz'
     call(cmd, shell=True)

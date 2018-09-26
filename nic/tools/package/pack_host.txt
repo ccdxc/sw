@@ -1,0 +1,3 @@
+# package host specific files
+
+nic/obj/x86_64/agent/heimdall                         /nic/bin/

@@ -72,11 +72,7 @@ nic/build/aarch64/iris/bin/halctl                     /nic/bin/
 nic/build/aarch64/iris/bin/hal_scale_test             /nic/bin/
 
 # push configs to agent
-#nic/build/aarch64/iris/bin/heimdall                   /nic/bin/
-nic/build/aarch64/iris/bin/hal_access                 /nic/bin/
-nic/build/aarch64/iris/bin/netagent                   /nic/bin/
-nic/build/x86_64/iris/bin/heimdall                    /nic/x86_64/bin/
-
+nic/obj/aarch64/agent/heimdall                        /nic/bin/
 nic/e2etests/go/agent/configs/golden/golden_cfg.yml   /nic/conf/
 nic/e2etests/go/agent/configs/golden/generated        /nic/conf/generated/
 nic/obj/test-driver                                   /nic/bin

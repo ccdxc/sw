@@ -89,7 +89,11 @@ aarch64-libs-check:
     endif
 
 package-clean:
-	@rm -rf $(TOPDIR)/../fake_root_target
+    ifeq ($(ARCH),aarch64)
+		@rm -rf $(TOPDIR)/../fake_root_target/aarch64
+    else
+		@rm -rf $(TOPDIR)/../fake_root_target/x86_64
+    endif
 	@rm -f  $(TOPDIR)/nic.tgz
 	@rm -f  $(TOPDIR)/nic.tar
 
@@ -110,6 +114,14 @@ package-arm-dev: package-clean
 
 package-haps-dbg: package-clean
 	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target haps-dbg
+
+package-clean-host:
+	@rm -rf $(TOPDIR)/../fake_root_target/x86_64
+	@rm -f  $(TOPDIR)/host.tgz
+	@rm -f  $(TOPDIR)/host.tar
+
+package-host: package-clean-host
+	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target host --no-strip
 
 release:
     ifneq ($(ARCH),aarch64)

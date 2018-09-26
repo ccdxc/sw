@@ -173,9 +173,12 @@ nic: stages
 
 haps: stages
 	$(MAKE) package-tests
-	# package x86_64 heimdall for haps debug image
-	make ARCH=x86_64 -C $(TOPDIR) heimdall
 	$(MAKE) package-haps-dbg
+
+	# package x86_64 heimdall for host
+	make ARCH=x86_64 -C $(TOPDIR) heimdall
+
+	$(MAKE) package-host
 
 all: stages
 	$(MAKE) tests
