@@ -20,14 +20,14 @@
 /**
  * @brief Nexthop Types 
  */
-typedef enum oci_nh_type_t 
+typedef enum oci_nh_type_t_ 
 {
    OCI_NH_TYPE_NONE      = 0; /**< Invalid NH type */
    OCI_NH_TYPE_BLACKHOLE = 1; /**< Blackhole/Drop Route */
    OCI_NH_TYPE_GATEWAY   = 2; /**< Route to Gateway */
    OCI_NH_TYPE_REMOTE_EP = 3; /**< Remote EPs behind TEPs */
    OCI_NH_TYPE_REMOTE_TEP = 4; /**< Remote Server's Physical IP */
-}
+} oci_nh_type_t;
 
 /**
  * @brief Route key

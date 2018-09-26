@@ -55,7 +55,6 @@ typedef struct _oci_secrule_l4_match_t
         oci_secrule_l4_port_match_t port_match;    /**< Layer4 port match */
         oci_secrule_icmp_match_t icmp_match;       /**< ICMP match */
     };
-
 } oci_secrule_l4_match_t;
 
 /**
@@ -72,7 +71,7 @@ typedef struct _oci_sec_rule_match_t
 /**
  * @brief Security rule action
  */
-typedef struct _oci_secrule_action_t
+typedef enum _oci_secrule_action_t
 {
     SECRULE_ACTION_DENY = 0,    /**< Deny */
     SECRULE_ACTION_ALLOW,       /**< Allow */

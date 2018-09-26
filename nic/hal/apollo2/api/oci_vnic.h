@@ -24,9 +24,7 @@ typedef struct _oci_vnic_ip_t
 {
     oci_ip_addr_t private_ip;         /**< Private IP address */
     oci_ip_addr_t public_ip;          /**< Public IP address */
-    oci_ip_addr_t substrate_ip;       /**< Substrate IP address */
     uint32_t public_ip_valid:1;       /**< TRUE if public IP is valid */
-    uint32_t substrate_ip_valid:1;    /**< TRUE if substrate IP is valid */
 
 } oci_vnic_ip_t;
 

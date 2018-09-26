@@ -23,11 +23,12 @@ typedef enum _oci_class_id_t
     OCI_CLASS_ID_UNSPECIFIED      =  0,    /**< unspecified */
     OCI_CLASS_ID_VCN              =  1,    /**< vnc */
     OCI_CLASS_ID_SUBNET           =  2,    /**< subnet */
-    OCI_CLASS_ID_TUNNEL           =  3,    /**< tunnel */
+    OCI_CLASS_ID_TEP              =  3,    /**< tunnel */
     OCI_CLASS_ID_VNIC             =  4,    /**< vnic */
     OCI_CLASS_ID_ROUTE            =  5,    /**< route */
     OCI_CLASS_ID_SECRULE          =  6,    /**< security rule */
-    OCI_CLASS_ID_MAX              =  7,    /**< total number of class-id */
+    OCI_CLASS_SWITCHPORT          =  7,    /**< switchport params */
+    OCI_CLASS_ID_MAX              =  8,    /**< total number of class-id */
 
 } oci_class_id_t;
 
