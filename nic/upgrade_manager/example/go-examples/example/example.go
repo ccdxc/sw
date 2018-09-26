@@ -1,10 +1,14 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -141,6 +145,33 @@ func (usmh *upgradeStateMachineHdlrsCtx) HandleUpgStateAbort(upgCtx *upggosdk.Up
 }
 
 func main() {
+	// command line flags
+	var (
+		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, "upgrade-example")), "Redirect logs to file")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+	)
+	flag.Parse()
+	// Fill logger config params
+	logConfig := &log.Config{
+		Module:      "Example service",
+		Format:      log.JSONFmt,
+		Filter:      log.AllowInfoFilter,
+		Debug:       *debugflag,
+		CtxSelector: log.ContextAll,
+		LogToStdout: *logToStdoutFlag,
+		LogToFile:   true,
+		FileCfg: log.FileConfig{
+			Filename:   *logToFile,
+			MaxSize:    10,
+			MaxBackups: 3,
+			MaxAge:     7,
+		},
+	}
+
+	// Initialize logger config
+	log.SetConfig(logConfig)
+
 	s1 := &service{
 		name: "Example go Service",
 	}

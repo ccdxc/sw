@@ -58,7 +58,7 @@ public:
 
     void InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp);
 
-    void GetUpgCtx(delphi::objects::UpgStateReqPtr req);
+    bool GetUpgCtx(delphi::objects::UpgStateReqPtr req);
 
     virtual void OnMountComplete(void);
 };

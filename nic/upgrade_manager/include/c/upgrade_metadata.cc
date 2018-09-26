@@ -16,8 +16,8 @@ bool GetUpgCtxTablesFromMeta(UpgCtx& ctx,
     ptree             root;
 
     std::ifstream json_cfg(metafile.c_str());
-    read_json(json_cfg, root);
     try {
+        read_json(json_cfg, root);
         for (ptree::value_type table : root.get_child("tables")) {
             TableMeta tableMeta;
             memset(&tableMeta, 0, sizeof(TableMeta));
@@ -33,7 +33,7 @@ bool GetUpgCtxTablesFromMeta(UpgCtx& ctx,
             comps[componentMeta.name] = componentMeta;
         }
     } catch (std::exception const& e) {
-        UPG_LOG_DEBUG("Unable to parse upgrade_metadata.json %s", e.what());
+        UPG_LOG_DEBUG("Unable to parse upgrade_metadata.json {}", e.what());
         return false;
     }
     return true;
@@ -41,9 +41,10 @@ bool GetUpgCtxTablesFromMeta(UpgCtx& ctx,
 
 bool GetUpgCtxFromMeta(UpgCtx& ctx) {
     string metafile = "/sw/nic/upgrade_manager/meta/upgrade_metadata.json";
-    GetUpgCtxTablesFromMeta(ctx, metafile, ctx.preUpgTables, ctx.preUpgComps);
+    bool ret = true;
     //TODO: Fill postUpgTable
-    return true;
+    ret = GetUpgCtxTablesFromMeta(ctx, metafile, ctx.preUpgTables, ctx.preUpgComps);
+    return ret;
 }
 
 }

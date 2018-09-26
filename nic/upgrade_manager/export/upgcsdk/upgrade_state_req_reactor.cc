@@ -86,16 +86,18 @@ void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
     }
 }
 
-void UpgStateReqReact::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {
+bool UpgStateReqReact::GetUpgCtx(delphi::objects::UpgStateReqPtr req) {
     ctx.upgType = req->upgreqtype(); 
-    GetUpgCtxFromMeta(ctx);
+    return GetUpgCtxFromMeta(ctx);
 }
 
 // OnUpgStateReqCreate gets called when UpgStateReq object is created
 delphi::error UpgStateReqReact::OnUpgStateReqCreate(delphi::objects::UpgStateReqPtr req) {
     UPG_LOG_DEBUG("UpgStateReqReact UpgStateReq got created for {}/{}/{}", req, req->meta().ShortDebugString(), req->upgreqstate());
     //create the object
-    UpgStateReqReact::GetUpgCtx(req);
+    if (!GetUpgCtx(req)) {
+        return delphi::error("GetUpgCtxFromMeta failed");
+    }
     UPG_LOG_DEBUG("OnUpgStateReqCreate upgType {}", ctx.upgType);
     if (upgHdlrPtr_ && upgAppRespPtr_->CanInvokeHandler(req->upgreqstate(), ctx.upgType)) {
         upgAppRespPtr_->CreateUpgAppResp();
@@ -122,7 +124,9 @@ delphi::error UpgStateReqReact::OnUpgStateReqDelete(delphi::objects::UpgStateReq
 delphi::error UpgStateReqReact::OnUpgReqState(delphi::objects::UpgStateReqPtr req) {
     UPG_LOG_DEBUG("UpgStateReqReact UpgStateReq got modified with {}", req->upgreqstate());
     HdlrResp hdlrResp;
-    UpgStateReqReact::GetUpgCtx(req);
+    if (!GetUpgCtx(req)) {
+        return delphi::error("GetUpgCtxFromMeta failed");
+    }
     UPG_LOG_DEBUG("OnUpgReqState upgType {}", ctx.upgType);
     if (!upgHdlrPtr_) {
         UPG_LOG_ERROR("No handlers available");

@@ -225,7 +225,9 @@ delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
 delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     UPG_LOG_DEBUG("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
     CreateUpgradeMetrics();
-    GetUpgCtxFromMeta(ctx);
+    if (!GetUpgCtxFromMeta(ctx)) {
+        return delphi::error("GetUpgCtxFromMeta failed");
+    }
     ctx.upgType = req->upgreqtype();
     UpgReqStateType type = UpgStateCompatCheck;
     if (req->upgreqcmd() == IsUpgPossible) {
@@ -316,7 +318,9 @@ delphi::error UpgReqReact::AbortUpgrade() {
 // OnUpgReqCmd gets called when UpgReqCmd attribute changes
 delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     // start or abort?
-    GetUpgCtxFromMeta(ctx);
+    if (!GetUpgCtxFromMeta(ctx)) {
+        return delphi::error("GetUpgCtxFromMeta failed");
+    }
     if (req->upgreqcmd() == UpgStart) {
         ctx.upgType = req->upgreqtype();
         UPG_LOG_DEBUG("OnUpgReqCmd got upgType {}", ctx.upgType);
