@@ -22,7 +22,7 @@ clean:
 endif # BUILD_ARCH
 
 quiet_cmd_gendb = GEN     $@
-      cmd_gendb = ./builddb.pl $(ASIC_ROOT)/capri 0 0
+      cmd_gendb = perl -I$(ASIC_ROOT)/capri/verif/common/csr_gen ./builddb.pl $(ASIC_ROOT)/capri 0 0
 
 quiet_cmd_copydb = COPY    capviewdb.bin
       cmd_copydb = cp capviewdb.bin $@
