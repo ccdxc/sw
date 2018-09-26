@@ -3384,7 +3384,7 @@ static int ionic_v0_create_qp_cmd(struct ionic_ibdev *dev,
 			    BIT(rq_buf->page_size_log2));
 	else if (sq_buf->tbl_buf)
 		admin.cmd.create_qp.host_pg_size = BIT(sq_buf->page_size_log2);
-	else if (sq_buf->tbl_buf)
+	else if (rq_buf->tbl_buf)
 		admin.cmd.create_qp.host_pg_size = BIT(rq_buf->page_size_log2);
 	else
 		admin.cmd.create_qp.host_pg_size = BIT(23); /* up to 8M contiguous */
