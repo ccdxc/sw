@@ -1,0 +1,36 @@
+#! /usr/bin/python3
+import glob
+
+import iota.harness.infra.utils.ymlparser as ymlparser
+import iota.harness.infra.testsuite as testsuite
+import iota.harness.infra.svc as svc
+#import iota.harness.infra.store as store
+
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+
+class YmlObject(object):
+    def __init__(self, d):
+        for a, b in d.items():
+            if isinstance(b, (list, tuple)):
+                setattr(self, a, [YmlObject(x) if isinstance(x, dict) else x for x in b])
+            else:
+                setattr(self, a, YmlObject(b) if isinstance(b, dict) else b)
+
+def __discover_testsuites():
+    suites = []
+    expr = GlobalOptions.topdir + '/iota/test/**/*.testsuite'
+    for filename in glob.iglob(expr, recursive = True):
+        ydata = ymlparser.Parse(filename)
+        suites.append(ydata)
+    return suites
+
+def Main():
+    svc.Init()
+
+    # Parse all the testsuites
+    suites = __discover_testsuites()
+
+    for s in suites:
+        ts = testsuite.TestSuite(s)
+        ts.Main()
+    return

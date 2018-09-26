@@ -8,8 +8,7 @@ syntax = "proto3";
 package iotamodel;
 
 // Imports
-import "google/api/annotations.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import public "gogo.proto";
 
 // Common proto imports
 import public "req_types.proto";

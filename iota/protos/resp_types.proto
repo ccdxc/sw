@@ -8,85 +8,79 @@ syntax = "proto3";
 package iotamodel;
 
 // Imports
-import "google/api/annotations.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import public "gogo.proto";
+
 import "common.proto";
 
-
 message IotaAPIResponse{
-    enum APIResponseType {
+    enum APIStatus {
         API_STATUS_OK       = 0;
         API_BAD_REQUEST     = 1;
         API_SERVER_ERROR    = 2;
         API_AUTH_FAILURE    = 3;
     }
     // APIStatus captures call status
-    string APIStatus       = 1 [(venice.check) = "StrEnum(IotaAPIResponse.APIResponseTypee)",
-                                (gogoproto.jsontag) = "api-status,omitempty"];
-
+    APIStatus api_status = 1;
 }
 
 // ClusterHealthResponse captures the health of the cluster
 message ClusterHealthResponse {
     // Status captures the health of the cluster on a per node basis
-    repeated NodeStatus Status = 1 [(gogoproto.jsontag) = "status,omitempty"];
+    repeated NodeStatus status = 1;
 }
 
 // Node status captures the health of an individual node
 message NodeStatus {
-    enum HealthCodeType {
+    enum HealthCode {
         HEALTH_OK      = 0;
         NAPLES_DOWN    = 1;
         NODE_DOWN      = 2;
         APP_DOWN       = 3;
     }
     // API Response
-    IotaAPIResponse HealthCheckResponse   = 1 [(gogoproto.jsontag) = "api-status,omitempty"];
+    IotaAPIResponse api_response = 1;
 
     // Health captures individual node health
-    string Health   = 2 [(venice.check) = "StrEnum(NodeStatus.HealthCodeType)",
-                        (gogoproto.jsontag) = "health,omitempty"];
-
+    HealthCode      code = 2;
 }
 
 // InstantiateApp API Response
 message InstantiateAppResponse {
     // API Response
-    IotaAPIResponse InstantiateAppResponse = 1 [(gogoproto.jsontag) = "instantiate-app-response,omitempty"];
+    IotaAPIResponse api_response = 1;
 }
 
 // Instantiate Topology API Reponse
 message InstantiateTopoResponse {
     // API Response
-    IotaAPIResponse InstantiateTopoReponse = 1 [(gogoproto.jsontag) = "instantiate-topo-response,omitempty"];
+    IotaAPIResponse api_response = 1;
 }
 
 
 // AddNode API Response
 message AddNodeResponse {
     // API Response
-    IotaAPIResponse AddNodeReponse = 1 [(gogoproto.jsontag) = "add-node-response,omitempty"];
+    IotaAPIResponse api_response = 1;
 }
 
 // Generate Configs API Response
 message GeneratedConfigResponse {
-    IotaAPIResponse GeneratedConfigResponse     = 1 [(gogoproto.jsontag) = "api-status,omitemtpy"];
+    IotaAPIResponse api_response = 1;
 
     // Generated Configs
-    ConfigInfo ConfigInfo                       = 2 [(gogoproto.jsontag) = "configs,omitemtpy"];
+    ConfigInfo      configs = 2;
 }
 
 // Config Push API Response
 message ConfigPushResponse {
-    IotaAPIResponse ConfigPushResponse = 1 [(gogoproto.jsontag) = "api-status,omitemtpy"];
-
+    IotaAPIResponse api_response = 1;
 }
 
 // App Trigger API Response
 message TriggerAppResponse {
-    IotaAPIResponse APIStatus   = 1 [(gogoproto.jsontag) = "api-status,omitemtpy"];
-    string AppHandle            = 2 [(gogoproto.jsontag) = "app-handle,omitemtpy"];
-    string AppStdOut            = 3 [(gogoproto.jsontag) = "app-stdout,omitemtpy"];
-    uint32 ExitCode             = 4 [(gogoproto.jsontag) = "exit-code,omitemtpy"];
+    IotaAPIResponse     api_response = 1;
+    string              handle = 2;
+    string              stdout = 3;
+    string              stderr = 4;
+    int32               exitcode = 5;
 }
