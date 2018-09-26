@@ -48,9 +48,6 @@ osal_log_init(const enum osal_log_level level)
 {
 	pnso_error_t err = PNSO_OK;
 
-	if (g_osal_log_enabled)
-		return -EEXIST;
-
 	if ((level < OSAL_LOG_LEVEL_EMERGENCY) ||
 			(level > OSAL_LOG_LEVEL_DEBUG))
 		return -EINVAL;

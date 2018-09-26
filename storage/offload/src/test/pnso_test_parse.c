@@ -18,6 +18,7 @@
 
 struct {
 	pnso_submit_req_fn_t submit;
+	pnso_output_fn_t status_output;
 	pnso_alloc_fn_t alloc;
 	pnso_dealloc_fn_t dealloc;
 } g_hooks;
@@ -32,6 +33,20 @@ void pnso_test_free(void *ptr)
 	return g_hooks.dealloc(ptr);
 }
 
+#if 0
+#undef TEST_NODE
+#define TEST_NODE(name) #name
+static const char *node_type_to_name_list[NODE_MAX] = {
+	TEST_NODE_LIST
+};
+#endif
+
+#undef VALIDATION_TYPE
+#define VALIDATION_TYPE(name) #name
+static const char *validation_type_to_name_list[VALIDATION_TYPE_MAX] = {
+	VALIDATION_TYPE_LIST
+};
+
 /* global defaults */
 static struct test_desc default_desc = {
 	.node = { NODE_ROOT, 0, NULL, { NULL, NULL } },
@@ -39,7 +54,8 @@ static struct test_desc default_desc = {
 		.per_core_qdepth = 16,
 		.block_size = 4096 },
 	.output_file_prefix = "sim_",
-	.output_file_suffix = ".bin"
+	.output_file_suffix = ".bin",
+	.cpu_mask = 0xffffFFFF
 };
 
 /* testcase defaults */
@@ -96,11 +112,13 @@ static struct test_node *default_nodes_by_type[NODE_MAX] = {
 };
 
 void pnso_test_init_fns(pnso_submit_req_fn_t submit,
+			pnso_output_fn_t status_output,
 			pnso_alloc_fn_t alloc,
 			pnso_dealloc_fn_t dealloc,
 			pnso_realloc_fn_t reealloc)
 {
 	g_hooks.submit = submit;
+	g_hooks.status_output = status_output;
 	g_hooks.alloc = alloc;
 	g_hooks.dealloc = dealloc;
 
@@ -183,7 +201,6 @@ void test_free_desc(struct test_desc *desc)
 	FOR_EACH_NODE_SAFE(desc->tests) {
 		free_testcase((struct test_testcase *) node);
 	}
-	test_node_table_free_entries(&desc->output_file_table);
 
 	TEST_FREE(desc);
 }
@@ -293,6 +310,46 @@ static uint32_t safe_itoa(char *dst, uint32_t dst_len, uint32_t val)
 	return ret;
 }
 
+static uint32_t safe_strcpy_tolower(char *dst, const char *src, uint32_t max_len)
+{
+	uint32_t len;
+
+	if (dst == NULL)
+		return 0;
+
+	if (src == NULL) {
+		*dst = '\0';
+		return 0;
+	}
+
+	for (len = 0; src[len] != '\0' && len < (max_len -1); len++) {
+		dst[len] = tolower(src[len]);
+	}
+	dst[len] = '\0';
+
+	return len;
+}
+
+static uint32_t safe_strcpy(char *dst, const char *src, uint32_t max_len)
+{
+	uint32_t len;
+
+	if (dst == NULL)
+		return 0;
+
+	if (src == NULL) {
+		*dst = '\0';
+		return 0;
+	}
+
+	for (len = 0; src[len] != '\0' && len < (max_len -1); len++) {
+		dst[len] = src[len];
+	}
+	dst[len] = '\0';
+
+	return len;
+}
+
 static void dump_svc_chain(struct test_svc_chain *svc_chain)
 {
 	struct test_node *node;
@@ -344,6 +401,9 @@ static void dump_validation(struct test_validation *validation)
 	}
 	if (validation->file2[0]) {
 		PNSO_LOG_INFO("        File2 %s\n", validation->file2);
+	}
+	if (validation->pattern[0]) {
+		PNSO_LOG_INFO("        Pattern %s\n", validation->pattern);
 	}
 	if (validation->offset) {
 		PNSO_LOG_INFO("        Offset %u\n", validation->offset);
@@ -414,6 +474,7 @@ void test_dump_desc(struct test_desc *desc)
 	PNSO_LOG_INFO("Global params:\n");
 	PNSO_LOG_INFO("  per_core_qdepth %u\n", desc->init_params.per_core_qdepth);
 	PNSO_LOG_INFO("  block_size %u\n", desc->init_params.block_size);
+	PNSO_LOG_INFO("  cpu_mask 0x%lx\n", desc->cpu_mask);
 	PNSO_LOG_INFO("  output_file_prefix %s\n", desc->output_file_prefix);
 	PNSO_LOG_INFO("  output_file_suffix %s\n", desc->output_file_suffix);
 
@@ -890,6 +951,9 @@ static pnso_error_t fname(struct test_desc *root, struct test_node *parent, \
 
 FUNC_SET_INT(test_set_per_core_qdepth, root->init_params.per_core_qdepth, 1, USHRT_MAX)
 FUNC_SET_INT(test_set_block_size, root->init_params.block_size, 1, USHRT_MAX)
+FUNC_SET_INT(test_set_cpu_mask, root->cpu_mask, 1, ULONG_MAX)
+FUNC_SET_INT(test_set_limit_rate, root->limit_rate, 0, ULONG_MAX)
+FUNC_SET_INT(test_set_status_interval, root->status_interval, 0, USHRT_MAX)
 FUNC_SET_STRING(test_set_outfile_prefix, root->output_file_prefix,
 		TEST_MAX_FILE_PREFIX_LEN)
 FUNC_SET_STRING(test_set_outfile_suffix, root->output_file_suffix,
@@ -921,6 +985,7 @@ FUNC_SET_STRING(test_set_validation_file1, ((struct test_validation *)parent)->f
 		TEST_MAX_PATH_LEN)
 FUNC_SET_STRING(test_set_validation_file2, ((struct test_validation *)parent)->file2,
 		TEST_MAX_PATH_LEN)
+FUNC_SET_STRING(test_set_validation_pattern, ((struct test_validation *)parent)->pattern, TEST_MAX_PATTERN_LEN)
 FUNC_SET_PARAM(test_set_compare_type, ((struct test_validation *)parent)->cmp_type,
 	       g_cmp_type_map, 0, 0, COMPARE_TYPE_MAX-1)
 
@@ -1678,6 +1743,9 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ NULL,            "global_params",   NULL, NULL, NULL },
 	{ "global_params", "per_core_qdepth", NULL, test_set_per_core_qdepth, NULL },
 	{ "global_params", "block_size",      NULL, test_set_block_size, NULL },
+	{ "global_params", "cpu_mask",        NULL, test_set_cpu_mask, NULL },
+	{ "global_params", "limit_rate",      NULL, test_set_limit_rate, NULL },
+	{ "global_params", "status_interval", NULL, test_set_status_interval, NULL },
 	{ "global_params", "output_file_prefix", NULL, test_set_outfile_prefix, NULL },
 	{ "global_params", "output_file_suffix", NULL, test_set_outfile_suffix, NULL },
 	{ "global_params", "delete_output_files", NULL, test_set_delete_output_files, NULL },
@@ -1774,6 +1842,7 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ "data_compare",  "type",            NULL, test_set_compare_type, NULL, NULL },
 	{ "data_compare",  "file1",           NULL, test_set_validation_file1, NULL, NULL },
 	{ "data_compare",  "file2",           NULL, test_set_validation_file2, NULL, NULL },
+	{ "data_compare",  "pattern",         NULL, test_set_validation_pattern, NULL },
 	{ "data_compare",  "offset",          NULL, test_set_validation_data_offset, NULL, NULL },
 	{ "data_compare",  "len",             NULL, test_set_validation_data_len, NULL, NULL },
 
@@ -2112,5 +2181,98 @@ pnso_error_t pnso_test_parse_file(const char *fname, struct test_desc *desc)
 	TEST_FREE(buf);
 
 	return err;
+}
+
+#define TEST_MAX_VALIDATION_STAT_LEN 128
+static uint32_t validation_stats_to_yaml(const struct test_validation *validation, char *dst)
+{
+	uint32_t len = 0;
+	uint32_t max_len = TEST_MAX_VALIDATION_STAT_LEN;
+
+	if (validation->type  >= VALIDATION_TYPE_MAX)
+		return 0;
+
+	len += safe_strcpy(dst+len, "    { ", max_len-len);
+	len += safe_strcpy_tolower(dst+len, validation_type_to_name_list[validation->type], max_len-len);
+	len += safe_strcpy(dst+len, ": {\n", max_len-len);
+
+	len += safe_strcpy(dst+len, "        idx: ", max_len-len);
+	len += safe_itoa(dst+len, max_len-len, validation->node.idx);
+	len += safe_strcpy(dst+len, ",\n", max_len-len);
+
+	len += safe_strcpy(dst+len, "        success: ", max_len-len);
+	len += safe_itoa(dst+len, max_len-len, validation->rt_success_count);
+	len += safe_strcpy(dst+len, ",\n", max_len-len);
+
+	len += safe_strcpy(dst+len, "        failure: ", max_len-len);
+	len += safe_itoa(dst+len, max_len-len, validation->rt_failure_count);
+
+	len += safe_strcpy(dst+len, "\n    },\n", max_len-len);
+
+	return len;
+}
+
+#define TEST_MAX_STAT_NAME_LEN 32
+pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
+		uint64_t *stats, const char **stats_names, uint32_t stat_count,
+		bool output_validations)
+{
+	uint32_t i;
+	uint32_t len = 0;
+	uint32_t max_len = 64 + stat_count*(32 + TEST_MAX_STAT_NAME_LEN);
+	char *dst;
+
+	if (output_validations)
+		max_len += TEST_MAX_VALIDATION_STAT_LEN *
+				test_count_nodes(&testcase->validations);
+
+	dst = osal_alloc(max_len);
+	if (!dst)
+		return ENOMEM;
+
+	len += safe_strcpy(dst+len, "{tests: [{ test: {\n  idx: ", max_len-len);
+	len += safe_itoa(dst+len, max_len-len, testcase->node.idx);
+	len += safe_strcpy(dst+len, "\n  stats: {\n", max_len-len);
+	for (i = 0; i < stat_count; i++) {
+		if (len >= max_len-1)
+			goto nomem;
+		len += safe_strcpy(dst+len, "    ", max_len-len);
+		len += safe_strcpy(dst+len, stats_names[i], TEST_MAX_STAT_NAME_LEN);
+		len += safe_strcpy(dst+len, ": ", max_len-len);
+		len += safe_itoa(dst+len, max_len-len, stats[i]);
+		len += safe_strcpy(dst+len, ",\n", max_len-len);
+	}
+	if (len >= max_len-1)
+		goto nomem;
+
+	len += safe_strcpy(dst+len, "  }\n", max_len-len);
+
+	if (output_validations && testcase->validations.head) {
+		struct test_node *node;
+
+		len += safe_strcpy(dst+len, "  validations [\n", max_len-len);
+		FOR_EACH_NODE(testcase->validations) {
+			if (len+TEST_MAX_VALIDATION_STAT_LEN >= max_len-1)
+				goto nomem;
+			len += validation_stats_to_yaml((const struct test_validation *)(node), dst+len);
+		}
+		len += safe_strcpy(dst+len, "  ]\n", max_len-len);
+	}
+	if (len >= max_len-1)
+		goto nomem;
+
+	len += safe_strcpy(dst+len, "}}]}\n", max_len-len);
+
+	if (len >= max_len-1)
+		goto nomem;
+
+	g_hooks.status_output(dst);
+
+	osal_free(dst);
+	return PNSO_OK;
+
+nomem:
+	osal_free(dst);
+	return ENOMEM;
 }
 

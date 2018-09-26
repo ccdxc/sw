@@ -3,7 +3,7 @@ svc_chains:
       idx: 1
       input:
         pattern: ababababababababababababababababababababababababababababababababababababab1234
-        len: '$16block'
+        len: '$1block'
       ops:
         - compress:
             flags: 'zero_pad'
@@ -24,10 +24,19 @@ svc_chains:
 tests:
   - test:
       idx: 1
-      svc_chains: 1,2
+      svc_chains: 1
+      repeat: '$iter_low'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
+  - test:
+      idx: 2
+      svc_chains: 2
       repeat: '$iter_low'
       validations:
         - size_compare:
             idx: 1
             file1: '2_decompressed.bin'
-            val: '$16block'
+            val: '$1block'

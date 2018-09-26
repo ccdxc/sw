@@ -19,18 +19,22 @@ svc_chains:
         - decrypt:
             key_idx: 1
             output_file: '%test_id%_decrypted.bin'
-
 tests:
   - test:
       idx: 1
-      svc_chains: 1,2
+      svc_chains: 1
       repeat: 1
       validations:
         - size_compare:
             idx: 1
             file1: '1_encrypted.bin'
             val: '$2block'
+  - test:
+      idx: 2
+      svc_chains: 2
+      repeat: 1
+      validations:
         - size_compare:
             idx: 2
-            file1: '1_decrypted.bin'
+            file1: '2_decrypted.bin'
             val: '$2block'

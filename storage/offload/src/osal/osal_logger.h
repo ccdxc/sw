@@ -65,6 +65,7 @@ extern enum osal_log_level g_osal_log_level;
 	USPACE_LOG(stdout, OSAL_LOG_LEVEL_INFO, fmt, ##__VA_ARGS__)
 #define OSAL_LOG_DEBUG(fmt, ...)					\
 	USPACE_LOG(stdout, OSAL_LOG_LEVEL_DEBUG, fmt, ##__VA_ARGS__)
+#define OSAL_LOG printf
 #else
 #define KSPACE_LOG(...) printk(__VA_ARGS__)
 
@@ -92,6 +93,7 @@ extern enum osal_log_level g_osal_log_level;
 #define OSAL_LOG_DEBUG(fmt, ...)					\
 	KSPACE_LOG(KERN_DEBUG "%30s:%d:> " fmt, __func__, __LINE__,	\
 			##__VA_ARGS__)
+#define OSAL_LOG printk
 #endif
 
 /**

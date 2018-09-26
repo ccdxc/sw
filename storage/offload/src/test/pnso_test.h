@@ -7,14 +7,13 @@
 #ifndef __PNSO_TEST_H__
 #define __PNSO_TEST_H__
 
-#include <stdio.h>
+#include "pnso_api.h"
+#include "osal_logger.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-#include "pnso_api.h"
 
 #define TEST_OUTPUT_FLAG_APPEND 0x01
 #define TEST_OUTPUT_FLAG_TINY 0x02
@@ -31,11 +30,13 @@ typedef pnso_error_t (*pnso_submit_req_fn_t)(
 		pnso_poll_fn_t *poll_fn,
 		void **poll_ctx);
 
+typedef void (*pnso_output_fn_t)(const char *str);
 typedef void *(*pnso_alloc_fn_t)(size_t sz);
 typedef void (*pnso_dealloc_fn_t)(void *ptr);
 typedef void *(*pnso_realloc_fn_t)(void *ptr, size_t sz);
 
 void pnso_test_init_fns(pnso_submit_req_fn_t submit,
+			pnso_output_fn_t status_output,
 			pnso_alloc_fn_t alloc,
 			pnso_dealloc_fn_t dealloc,
 			pnso_realloc_fn_t realloc);
@@ -61,6 +62,8 @@ pnso_error_t test_write_file(const char *fname,
 pnso_error_t test_delete_file(const char *fname);
 pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed);
 int test_compare_files(const char *path1, const char *path2, uint32_t offset, uint32_t len);
+int test_compare_file_data(const char *path, uint32_t offset, uint32_t len,
+			   const uint8_t *pattern, uint32_t pat_len);
 
 void *pnso_test_alloc(size_t sz);
 void pnso_test_free(void *ptr);
@@ -69,12 +72,11 @@ void pnso_test_free(void *ptr);
 
 
 
-/* TODO */
-#define PNSO_LOG_ERROR printf
-#define PNSO_LOG_WARN  printf
-#define PNSO_LOG_INFO  printf
-#define PNSO_LOG_DEBUG printf
-#define PNSO_LOG_TRACE(a, ...)
+#define PNSO_LOG_ERROR OSAL_LOG_ERROR
+#define PNSO_LOG_WARN  OSAL_LOG_WARN
+#define PNSO_LOG_INFO  OSAL_LOG
+#define PNSO_LOG_DEBUG OSAL_LOG_DEBUG
+#define PNSO_LOG_TRACE OSAL_LOG_DEBUG
 
 #ifdef __cplusplus
 }  /* extern "C" */

@@ -12,12 +12,18 @@ cc_library(
     hdrs = [
         "pnso_test.h",
         "pnso_test_parse.h",
+        "pnso_test_desc.h",
+        "pnso_test_ctx.h",
     ],
-    includes = [ "." ],
+    includes = [
+        ".",
+        "../common",
+    ],
     deps = [
         "//storage/offload/third-party:yaml",
         "//storage/offload/src/sim:pnso_sim",
         "//storage/offload/src/osal:osal",
+        "//storage/offload:pnso_pbuf",
     ],
     copts = [
         "-xc",
@@ -29,7 +35,7 @@ cc_library(
 )
 
 cc_binary(
-    name = "pnso_test_main",
+    name = "pencake_sim",
     srcs = [ "pnso_test_main.c" ],
     deps = [
         "pnso_test_sim",

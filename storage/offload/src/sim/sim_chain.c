@@ -875,6 +875,7 @@ static pnso_error_t svc_exec_chksum_one_block(struct sim_svc_ctx *ctx,
 
 	OSAL_ASSERT(ctx->status.u.chksum.num_tags > block_idx);
 
+	memset(ctx->status.u.chksum.tags[block_idx].chksum, 0, PNSO_CHKSUM_TAG_LEN);
 	chksum_buf = ctx->status.u.chksum.tags[block_idx].chksum;
 
 	switch (ctx->cmd.u.chksum_desc.algo_type) {
