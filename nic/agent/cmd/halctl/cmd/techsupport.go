@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -28,6 +29,11 @@ func init() {
 
 func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	outFile = outDir + "/" + outFile
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	// remove the output directory if one exists
 	err := os.RemoveAll(outFile)

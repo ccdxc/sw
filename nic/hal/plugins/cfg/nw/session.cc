@@ -746,6 +746,11 @@ session_get (SessionGetRequest& req, SessionGetResponseMsg *response)
         SessionGetResponseMsg   *response;
     } ctxt = {0};
 
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        response->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_SESSION_NOT_FOUND;
+    }
+
     auto walk_func = [](void *entry, void *ctxt) {
         hal::session_t          *session = (session_t *)entry;
         SessionGetResponseMsg   *rsp = (SessionGetResponseMsg *)(\

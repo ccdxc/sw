@@ -53,6 +53,11 @@ func uplinkPcShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	var req *halproto.InterfaceGetRequest
 	if cmd.Flags().Changed("id") {
 		// Get specific if
@@ -98,6 +103,11 @@ func uplinkPcDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	var req *halproto.InterfaceGetRequest
 	if cmd.Flags().Changed("id") {

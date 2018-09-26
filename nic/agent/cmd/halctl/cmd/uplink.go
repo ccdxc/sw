@@ -55,6 +55,11 @@ func uplinkShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	var req *halproto.InterfaceGetRequest
 	if cmd.Flags().Changed("id") {
 		// Get specific if
@@ -101,6 +106,11 @@ func uplinkDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	var req *halproto.InterfaceGetRequest
 	if cmd.Flags().Changed("id") {

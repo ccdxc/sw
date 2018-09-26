@@ -107,6 +107,10 @@ func handleNwsecProfShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func nwsecProfShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 	handleNwsecProfShowCmd(cmd, nil)
 }
 
@@ -172,5 +176,9 @@ func handleNwsecPolicyShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func nwsecPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 	handleNwsecPolicyShowCmd(cmd, nil)
 }

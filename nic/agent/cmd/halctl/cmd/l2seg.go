@@ -76,6 +76,13 @@ func l2segShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewL2SegmentClient(c.ClientConn)
 
+	if len(args) > 0 {
+		if strings.Compare(args[0], "spec") != 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	}
+
 	var req *halproto.L2SegmentGetRequest
 	if cmd.Flags().Changed("id") {
 		req = &halproto.L2SegmentGetRequest{
@@ -122,6 +129,13 @@ func l2segShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
 	}
 	client := halproto.NewL2SegmentClient(c.ClientConn)
+
+	if len(args) > 0 {
+		if strings.Compare(args[0], "status") != 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	}
 
 	var req *halproto.L2SegmentGetRequest
 	if cmd.Flags().Changed("id") {
@@ -213,6 +227,12 @@ func handlel2segDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func l2segDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		if strings.Compare(args[0], "detail") != 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	}
 	handlel2segDetailShowCmd(cmd, nil)
 }
 

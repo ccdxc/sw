@@ -94,6 +94,11 @@ func tableInfoShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewTableClient(c.ClientConn)
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	var empty *halproto.Empty
 
 	// HAL call
@@ -125,6 +130,11 @@ func tableDumpShowCmdHandler(cmd *cobra.Command, args []string) {
 		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
 	}
 	client := halproto.NewTableClient(c.ClientConn)
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	var spec *halproto.TableSpec
 	spec = &halproto.TableSpec{

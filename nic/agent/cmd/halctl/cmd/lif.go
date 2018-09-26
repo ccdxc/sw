@@ -122,6 +122,13 @@ func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
 }
 
 func lifShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		if strings.Compare(args[0], "spec") != 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	}
+
 	if cmd.Flags().Changed("id") {
 		handleLifShowCmd(cmd, lifID, true, false)
 	} else {
@@ -130,6 +137,11 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func lifShowSpecCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	if cmd.Flags().Changed("id") {
 		handleLifShowCmd(cmd, lifSpecID, true, false)
 	} else {
@@ -138,6 +150,11 @@ func lifShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func lifShowStatusCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	if cmd.Flags().Changed("id") {
 		handleLifShowCmd(cmd, lifStatusID, false, true)
 	} else {
@@ -199,6 +216,11 @@ func handlelifDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func lifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	handlelifDetailShowCmd(cmd, nil)
 }
 

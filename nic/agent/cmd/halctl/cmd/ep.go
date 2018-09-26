@@ -63,6 +63,13 @@ func epShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
+	if len(args) > 0 {
+		if strings.Compare(args[0], "spec") != 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	}
+
 	client := halproto.NewEndpointClient(c.ClientConn)
 
 	var req *halproto.EndpointGetRequest
@@ -93,7 +100,6 @@ func epShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
-
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -101,6 +107,11 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	client := halproto.NewEndpointClient(c.ClientConn)
 
@@ -176,6 +187,11 @@ func handleEpDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func epDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	handleEpDetailShowCmd(cmd, nil)
 }
 

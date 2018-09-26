@@ -100,10 +100,22 @@ func nwShowCmdHandler(cmd *cobra.Command, spec bool, status bool) {
 }
 
 func nwShowSpecCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		if strings.Compare(args[0], "spec") != 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	}
+
 	nwShowCmdHandler(cmd, true, false)
 }
 
 func nwShowStatusCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	nwShowCmdHandler(cmd, false, true)
 }
 
@@ -149,6 +161,11 @@ func handleNwDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func nwDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	handleNwDetailShowCmd(cmd, nil)
 }
 

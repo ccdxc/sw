@@ -44,6 +44,11 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	client := halproto.NewPortClient(c.ClientConn)
 
 	var req *halproto.PortGetRequest
@@ -78,6 +83,11 @@ func portShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
 	}
 	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	client := halproto.NewPortClient(c.ClientConn)
 

@@ -100,6 +100,11 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	client := halproto.NewSessionClient(c.ClientConn)
 
 	var sessionGetReqMsg *halproto.SessionGetRequestMsg
@@ -358,6 +363,11 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	handleSessionDetailShowCmd(cmd, nil)
 }
 
@@ -592,6 +602,11 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
 	}
 	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	client := halproto.NewSessionClient(c.ClientConn)
 

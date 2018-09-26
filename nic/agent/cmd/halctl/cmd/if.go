@@ -73,6 +73,13 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
 
+	if len(args) > 0 {
+		if strings.Compare(args[0], "spec") != 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	}
+
 	var req *halproto.InterfaceGetRequest
 	if cmd.Flags().Changed("id") {
 		// Get specific if
@@ -119,6 +126,11 @@ func ifShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
 	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	var req *halproto.InterfaceGetRequest
 	if cmd.Flags().Changed("id") {
@@ -211,6 +223,11 @@ func handleIfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func ifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	handleIfDetailShowCmd(cmd, nil)
 }
 

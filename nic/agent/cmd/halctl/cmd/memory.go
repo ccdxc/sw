@@ -109,6 +109,11 @@ func slabShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	all := false
 	client := halproto.NewDebugClient(c.ClientConn)
 
@@ -189,6 +194,11 @@ func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	all := false
 	client := halproto.NewDebugClient(c.ClientConn)
 
@@ -242,6 +252,11 @@ func mtrackShowCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	client := halproto.NewDebugClient(c.ClientConn)
 
@@ -303,6 +318,11 @@ func mtrackDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	client := halproto.NewDebugClient(c.ClientConn)
 
@@ -529,6 +549,11 @@ func summaryShowCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	client := halproto.NewDebugClient(c.ClientConn)
 

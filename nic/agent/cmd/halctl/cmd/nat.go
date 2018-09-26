@@ -85,6 +85,11 @@ func natpoolShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewNatClient(c.ClientConn)
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	var req *halproto.NatPoolGetRequest
 	if cmd.Flags().Changed("handle") {
 		req = &halproto.NatPoolGetRequest{
@@ -129,6 +134,11 @@ func natpoolDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
 	}
 	client := halproto.NewNatClient(c.ClientConn)
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	var req *halproto.NatPoolGetRequest
 	if cmd.Flags().Changed("handle") {
@@ -175,6 +185,11 @@ func natmappingShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewNatClient(c.ClientConn)
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	// Get all Nat Mappings
 	req := &halproto.NatMappingGetRequest{}
 	natmappingGetReqMsg := &halproto.NatMappingGetRequestMsg{
@@ -209,6 +224,11 @@ func natmappingDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewNatClient(c.ClientConn)
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	// Get all Nat Mappings
 	req := &halproto.NatMappingGetRequest{}
 	natmappingGetReqMsg := &halproto.NatMappingGetRequestMsg{
@@ -242,6 +262,11 @@ func natpolicyShowCmdHandler(cmd *cobra.Command, args []string) {
 		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
 	}
 	client := halproto.NewNatClient(c.ClientConn)
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	// Get all Nat Mappings
 	req := &halproto.NatPolicyGetRequest{}

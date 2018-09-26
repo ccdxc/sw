@@ -54,6 +54,11 @@ func nhShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	client := halproto.NewNetworkClient(c.ClientConn)
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	var req *halproto.NexthopGetRequest
 	if cmd.Flags().Changed("id") {
 		req = &halproto.NexthopGetRequest{
@@ -98,6 +103,11 @@ func nhDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
 	}
 	client := halproto.NewNetworkClient(c.ClientConn)
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	var req *halproto.NexthopGetRequest
 	if cmd.Flags().Changed("id") {

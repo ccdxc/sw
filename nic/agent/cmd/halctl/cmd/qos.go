@@ -58,6 +58,11 @@ func qosShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := halproto.NewQOSClient(c.ClientConn)
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	var req *halproto.QosClassGetRequest
 	if cmd.Flags().Changed("qosgroup") {
 		if isQosGroupValid(qosGroup) != true {
@@ -186,6 +191,11 @@ func coppShowCmdHandler(cmd *cobra.Command, args []string) {
 	defer c.Close()
 
 	client := halproto.NewQOSClient(c.ClientConn)
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	var req *halproto.CoppGetRequest
 	if cmd.Flags().Changed("copptype") {

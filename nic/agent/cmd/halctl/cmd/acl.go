@@ -137,6 +137,11 @@ func handleACLShowCmd(cmd *cobra.Command, ofile *os.File) {
 }
 
 func aclDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
 	handleACLShowCmd(cmd, nil)
 }
 
@@ -149,6 +154,13 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	defer c.Close()
 
 	client := halproto.NewAclClient(c.ClientConn)
+
+	if len(args) > 0 {
+		if strings.Compare(args[0], "spec") != 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	}
 
 	var req *halproto.AclGetRequest
 	if cmd != nil && cmd.Flags().Changed("handle") {
@@ -483,6 +495,11 @@ func aclShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	defer c.Close()
 
 	client := halproto.NewAclClient(c.ClientConn)
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 
 	var req *halproto.AclGetRequest
 	if cmd != nil && cmd.Flags().Changed("handle") {
