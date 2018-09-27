@@ -440,7 +440,7 @@ void *sonic_q_consume_entry(struct queue *q, uint32_t *index)
 	return ptr;
 }
 
-void sonic_q_ringdb(struct queue *q, uint32_t index)
+u64 sonic_q_ringdb_data(struct queue *q, uint32_t index)
 {
 	struct doorbell db = {
 		.qid_lo = q->qid,
@@ -453,6 +453,12 @@ void sonic_q_ringdb(struct queue *q, uint32_t index)
 		 q->name, q->qid,
 		 index, (u64) q->db);
 
-	writeq(*(u64 *)&db, q->db);
+	return *((u64 *) &db);
 }
+
+void sonic_q_ringdb(struct queue *q, uint32_t index)
+{
+	writeq(sonic_q_ringdb_data(q, index), q->db);
+}
+
 

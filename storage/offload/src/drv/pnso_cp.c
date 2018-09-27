@@ -15,9 +15,7 @@
 
 #ifdef NDEBUG
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	PNSO_OK
-#define CPDC_PPRINT_DESC(d)
 #else
-#define CPDC_PPRINT_DESC(d)		cpdc_pprint_desc(d)
 #define CPDC_VALIDATE_SETUP_INPUT(i, p)	validate_setup_input(i, p)
 #endif
 
@@ -147,15 +145,15 @@ validate_setup_input(const struct service_info *svc_info,
 }
 
 static void
-fill_cp_desc(struct cpdc_desc *desc, void *src_buf, void *dst_buf,
-		struct cpdc_status_desc *status_desc, uint32_t src_buf_len,
-		uint16_t threshold_len)
+fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
+		struct cpdc_sgl *dst_sgl, struct cpdc_status_desc *status_desc,
+		uint32_t src_buf_len, uint16_t threshold_len)
 {
 	memset(desc, 0, sizeof(*desc));
 	memset(status_desc, 0, sizeof(*status_desc));
 
-	desc->cd_src = (uint64_t) osal_virt_to_phy(src_buf);
-	desc->cd_dst = (uint64_t) osal_virt_to_phy(dst_buf);
+	desc->cd_src = (uint64_t) osal_virt_to_phy(src_sgl);
+	desc->cd_dst = (uint64_t) osal_virt_to_phy(dst_sgl);
 
 	desc->u.cd_bits.cc_enabled = 1;
 	desc->u.cd_bits.cc_insert_header = 1;
@@ -284,19 +282,61 @@ static pnso_error_t
 compress_chain(struct chain_entry *centry)
 {
 	pnso_error_t err;
+	struct cpdc_desc *cp_desc;
+	struct cpdc_status_desc *status_desc;
+	struct service_info *svc_info, *next_svc_info;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(centry);
+	svc_info = &centry->ce_svc_info;
 
-	err = cpdc_common_chain(centry);
+	if (svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) {
+		OSAL_LOG_DEBUG("chaining not needed! si_type: %d si_flags: %d",
+				svc_info->si_type, svc_info->si_flags);
+		goto done;
+	}
+
+	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
+
+	/* TODO-chain: revisit to chain other services (ex: encrypt) */
+	err = seq_setup_cp_chain_params(centry, svc_info, cp_desc, status_desc);
 	if (err) {
-		OSAL_LOG_ERROR("failed to chain! err: %d", err);
+		OSAL_LOG_ERROR("failed to setup cp in chain! err: %d", err);
 		goto out;
 	}
 
-out:
+	if (centry->ce_next) {
+		next_svc_info = &centry->ce_next->ce_svc_info;
+		err = next_svc_info->si_ops.chain(centry->ce_next);
+		if (err) {
+			OSAL_LOG_ERROR("failed to chain next service after cp! err: %d",
+					err);
+			goto out;
+		}
+		OSAL_LOG_INFO("chaining of services after cp done!");
+	}
+
+	/* TODO-chain: revisit to chain other services (ex: encrypt) */
+	svc_info->si_seq_info.sqi_desc = seq_setup_cpdc_chain_desc(centry,
+			svc_info, cp_desc, sizeof(*cp_desc));
+	if (!svc_info->si_seq_info.sqi_desc) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+		goto out;
+	}
+
+	CPDC_PPRINT_DESC(cp_desc);
+	OSAL_LOG_INFO("setup of sequencer desc for cp chain done!");
+
+done:
+	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
+	return err;
+
+out:
+	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -317,7 +357,7 @@ compress_schedule(const struct service_info *svc_info)
 		OSAL_LOG_INFO("ring door bell <===");
 
 		seq_info = &svc_info->si_seq_info;
-		seq_ring_db(svc_info, seq_info->sqi_index);
+		seq_ring_db(svc_info);
 
 		err = PNSO_OK;
 	}
@@ -416,6 +456,7 @@ compress_write_result(struct service_info *svc_info)
 	pnso_error_t err = EINVAL;
 	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc;
+	struct service_deps *svc_deps;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -447,6 +488,11 @@ compress_write_result(struct service_info *svc_info)
 	}
 
 	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
+
+	/* next service may need 'len' */
+	svc_deps = cpdc_get_service_deps(svc_info);
+	if (svc_deps)
+		svc_deps->sd_dst_data_len = status_desc->csd_output_data_len;
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");

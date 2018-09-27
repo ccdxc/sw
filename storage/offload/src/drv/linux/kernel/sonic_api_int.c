@@ -163,6 +163,13 @@ static identity_t *sonic_get_identity(void)
 	return lif->sonic->ident;
 }
 
+uint16_t
+sonic_get_lif_id(void)
+{
+	identity_t *ident = sonic_get_identity();
+	return ident->dev.hw_lif_id_tbl[0];
+}
+
 #ifdef NDEBUG
 #define DBG_CHK_RING_ID(r)	PNSO_OK
 #else

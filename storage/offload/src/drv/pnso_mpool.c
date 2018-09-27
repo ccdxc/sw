@@ -21,6 +21,7 @@ const char __attribute__ ((unused)) *mem_pool_types[] = {
 	[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] = "CPDC STATUS DESC VECTOR",
 	[MPOOL_TYPE_XTS_DESC] = "XTS DESC",
 	[MPOOL_TYPE_XTS_AOL] = "XTS AOL",
+	[MPOOL_TYPE_XTS_AOL] = "XTS AOL VECTOR",
 	[MPOOL_TYPE_SERVICE_CHAIN] = "SERVICE CHAIN",
 	[MPOOL_TYPE_SERVICE_CHAIN_ENTRY] = "SERVICE CHAIN ENTRY",
 	[MPOOL_TYPE_MAX] = "Max (invalid)"
@@ -58,6 +59,7 @@ is_pool_type_valid(enum mem_pool_type mpool_type)
 	case MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR:
 	case MPOOL_TYPE_XTS_DESC:
 	case MPOOL_TYPE_XTS_AOL:
+	case MPOOL_TYPE_XTS_AOL_VECTOR:
 	case MPOOL_TYPE_SERVICE_CHAIN:
 	case MPOOL_TYPE_SERVICE_CHAIN_ENTRY:
 		return true;
@@ -178,7 +180,7 @@ mpool_create(enum mem_pool_type mpool_type,
 		objects[i] = obj;
 		OSAL_LOG_DEBUG("%30s[%d]: 0x%llx 0x%llx %u %u %u",
 			       "mpool->mp_dstack.mps_objects", i,
-			       (u64) &objects[i], (u64) objects[i],
+			       (uint64_t) &objects[i], (uint64_t) objects[i],
 			       object_size, pad_size, align_size);
 		obj += (object_size + pad_size);
 	}
@@ -187,7 +189,7 @@ mpool_create(enum mem_pool_type mpool_type,
 	*out_mpool = mpool;
 	OSAL_LOG_INFO("pool allocated. mpool_type: %d num_objects: %d object_size: %d align_size: %d pad_size: %d mpool: 0x%llx",
 		      mpool_type, num_objects, object_size,
-		      align_size, pad_size, (u64) mpool);
+		      align_size, pad_size, (uint64_t) mpool);
 
 	err = PNSO_OK;
 	return err;
@@ -214,7 +216,7 @@ mpool_destroy(struct mem_pool **mpoolp)
 
 	OSAL_LOG_INFO("pool deallocated. mpc_type: %d mpc_num_objects: %d mpool: 0x%llx",
 		      mpool->mp_config.mpc_type,
-		      mpool->mp_config.mpc_num_objects, (u64) mpool);
+		      mpool->mp_config.mpc_num_objects, (uint64_t) mpool);
 
 	/* TODO-mpool: for graceful exit, ensure stack top is back to full */
 	mpool->mp_magic = MPOOL_MAGIC_INVALID;
@@ -280,7 +282,7 @@ mpool_pprint(const struct mem_pool *mpool)
 	if (!mpool)
 		return;
 
-	OSAL_LOG_INFO("%-30s: 0x%llx", "mpool", (u64) mpool);
+	OSAL_LOG_INFO("%-30s: 0x%llx", "mpool", (uint64_t) mpool);
 	// OSAL_LOG_INFO("%-30s: %llx", "mpool->mp_magic", mpool->mp_magic);
 
 	OSAL_LOG_INFO("%-30s: %u:%s", "mpool->mp_config.mpc_type",
@@ -298,19 +300,19 @@ mpool_pprint(const struct mem_pool *mpool)
 			mpool->mp_config.mpc_pool_size);
 
 	OSAL_LOG_INFO("%-30s: 0x%llx", "mpool->mp_objects",
-			(u64) mpool->mp_objects);
+			(uint64_t) mpool->mp_objects);
 
 	OSAL_LOG_INFO("%-30s: %d", "mpool->mp_stack.mps_num_objects",
 			mpool->mp_stack.mps_num_objects);
 	OSAL_LOG_INFO("%-30s: %d", "mpool->mp_stack.mps_top",
 			mpool->mp_stack.mps_top);
 	OSAL_LOG_INFO("%-30s: 0x%llx", "mpool->mp_stack.mps_objects",
-			(u64) mpool->mp_stack.mps_objects);
+			(uint64_t) mpool->mp_stack.mps_objects);
 
 	objects = mpool->mp_stack.mps_objects;
 	for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
 		OSAL_LOG_DEBUG("%30s[%d]: 0x%llx 0x%llx",
 				"mpool->mp_stack.mps_objects", i,
-				(u64) &objects[i], (u64) objects[i]);
+				(uint64_t) &objects[i], (uint64_t) objects[i]);
 	}
 }

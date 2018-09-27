@@ -389,10 +389,10 @@ struct pnso_chksum_tag {
  * type.
  * @rsvd_1: specifies a 'reserved' field meant to be used by Pensando.
  * @hash: specifies a pointer to an allocated memory for number of
- * hashes as specified in 'num_hashes'.  When 'num_hashes' is 0, this
+ * hashes as specified in 'num_tags'.  When 'num_tags' is 0, this
  * parameter is NULL.
  * @chksum: specifies a pointer to an allocated memory for number of
- * checksums as specified in 'num_chksums'.  When 'num_chksums' is 0, this
+ * checksums as specified in 'num_tags'.  When 'num_tags' is 0, this
  * parameter is NULL.
  * @dst: specifies a sgl that to be used as output buffer for this service.
  * 'data_len' specifies the length of the data within the the sgl.
