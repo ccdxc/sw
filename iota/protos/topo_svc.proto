@@ -7,12 +7,7 @@
 syntax = "proto3";
 package iotamodel;
 
-// Imports
-import public "gogo.proto";
-
-// Common proto imports
-import public "req_types.proto";
-import public "resp_types.proto";
+import "types.proto";
 
 // ---------------------------- Topology API ----------------------------
 
@@ -20,23 +15,199 @@ import public "resp_types.proto";
 service TopologyApi {
     // InstantiateTopology is called by harness which assigns a personality to the node based on the topology.
     // This is a blocking call to the harness, The parallel instantiation across the nodes is handled internally.
-    rpc InstantiateTopology (ConfigTopologyInfo) returns (InstantiateTopoResponse) {};
 
-    // InstantiateApps creates a app on the specified node.
-    rpc InstantiateApps (App) returns (InstantiateAppResponse) {};
+    // Allocate Data VLANs will provide a list of available VLANs for the current test bed instance.
+    rpc AllocateDataVlans (DataNwMsg) returns (DataNwMsg) {};
 
-    // AddNode adds a node to the current topology
-    rpc AddNode(Node) returns (AddNodeResponse) {};
+    // AddNodes brings up the nodes with their corresponding personalities
+    rpc AddNodes (NodeMsg) returns (NodeMsg) {};
 
-    // Trigger calls the trigger function of the app.
-    rpc TriggerApp(App) returns (TriggerAppResponse) {};
+    // DeleteNodes removes a node from the e2e cluster
+    rpc DeleteNodes (NodeMsg) returns (NodeMsg) {};
 
-    // GetAppStdout returns the std out of an app which was run in the background.
-    rpc GetAppStdout(App) returns (TriggerAppResponse) {};
+    // GetNodes returns the topology information of all the nodes.
+    rpc GetNodes (NodeMsg) returns (NodeMsg) {};
 
-    // Harness queries cluster health prior to running a test case
-    rpc CheckClusterHealth(ConfigTopologyInfo) returns  (ClusterHealthResponse) {};
+    // AddWorkloads brings up a workload type on a given node
+    rpc AddWorkloads (WorkloadMsg) returns (WorkloadMsg) {};
 
-    // TODO Add Query API
-    // TODO Add Validator API
+    // DeleteWorkloads deletes a given workload
+    rpc DeleteWorkloads (WorkloadMsg) returns (WorkloadMsg) {};
+
+    // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
+    rpc Trigger(TriggerMsg) returns (TriggerMsg) {};
+
+    // CheckClusterHealth returns the cluster health
+    rpc CheckClusterHealth(NodeMsg) returns  (ClusterHealthMsg) {};
+
+}
+
+// Op defines topology operation
+enum Op {
+        NONE    = 0;
+        ADD     = 1;
+        DELETE  = 2;
+        GET     = 3;
+}
+
+// NodeInfo encapsulates all topology information for a given iota invocation
+message NodeMsg{
+    // API Response for the node
+    IotaAPIResponse api_response    = 1;
+
+    // Node operation
+    Op node_op                      = 2;
+
+    // List of nodes in the e2e cluster
+    repeated Node nodes             = 3;
+
+    // Set this to true during init time. This will essentially brings up the e2e cluster
+    bool make_cluster               = 4;
+}
+
+// Node captures personality details of an E2E node
+message Node {
+    enum PersonalityType {
+        PERSONALITY_NONE                = 0;
+        PERSONALITY_NAPLES              = 1;
+        PERSONALITY_VENICE              = 2;
+        PERSONALITY_NAPLES_WITH_QEMU    = 3;
+    }
+    // PersonalityType captures the node personality. naples node, venice node or qemu
+    PersonalityType     type            = 1;
+
+    // Image captures the the built artifacts that need to be loaded on the node depending on the personality type
+    string              image           = 2;
+
+    // IP Address of the node
+    string              ip_address      = 3;
+
+    // Node identifier
+    string              node_name       = 4;
+
+    // NodeStatus captures the details of the node action
+    IotaAPIResponse node_status         = 5;
+}
+
+message WorkloadMsg{
+    // API Response
+    IotaAPIResponse api_response        = 1;
+
+    // Workload Operation Type
+    Op workload_op                      = 2;
+
+    // List of workloads
+    repeated Workload workloads         = 3;
+
+}
+
+message Workload {
+    // Workload Identifier
+    string workload_name                    = 1;
+
+    // Node on which this needs to be spun up
+    string node_name                        = 2;
+
+    // Data VLAN for the workload
+    uint32 encap_vlan                       = 3;
+
+    // IPAddress of the workload. Represent this as a CIDR block. 10.0.0.1/16 will be
+    // interpreted as 10.0.0.1 is the IP of the workload container and it belongs to a /16 subnet.
+    string ip_address                       = 4;
+
+    // MAC Address of the workload
+    string mac_address                      = 5;
+
+    // Workload Status
+    IotaAPIResponse workload_status         = 6;
+}
+
+message TriggerMsg {
+    enum TriggerOp {
+        TYPE_NONE           = 0;
+        TX_PKT              = 1;
+        RX_PKT              = 2;
+        EXEC_CMDS           = 3;
+        TERMINATE_ALL_CMDS  = 4;
+
+    }
+    //API Status
+    IotaAPIResponse api_response            = 1;
+
+    // Type of the trigger operation
+    TriggerOp trigger_op                    = 2;
+
+    // Command Request params
+    repeated CommandReq command_req         = 3;
+
+    // Command Reponse params
+    repeated CommandResp command_resp       = 4;
+}
+
+message CommandReq {
+    enum CommandMode {
+        COMMAND_NONE        = 0;
+        COMMAND_FOREGROUND  = 1;
+        COMMAND_BACKGROUND  = 2;
+    }
+    // Whether to run the command in foreground or background
+    CommandMode     mode                = 1;
+
+    // Fully qualified command line that needs to be called
+    string          command_or_pkt      = 2;
+
+    // Workload name of the command
+    string          workload_name       = 3;
+
+}
+
+// CommandResp captures the response of a command
+message CommandResp {
+    // StdOut of the comamnd
+    string          command_stdout  = 1;
+
+    // StdErr of the command
+    string          command_stderr  = 2;
+
+    // Exit code of the command
+    uint32          exit_code       = 3;
+
+    // command handle. Useful only for background commands
+    string          command_handle  = 4;
+
+    // received packet for the command
+    string          rx_pkt          = 5;
+}
+
+// Captures the overall health of the e2e cluster
+message ClusterHealthMsg {
+    IotaAPIResponse api_response    = 1;
+    // Individual node health statuses
+    repeated NodeHealth health      = 2;
+}
+
+
+message NodeHealth {
+    enum HealthCode {
+        HEALTH_OK      = 0;
+        NAPLES_DOWN    = 1;
+        NODE_DOWN      = 2;
+        APP_DOWN       = 3;
+    }
+    // Name of the node
+    string  node_name        = 1;
+
+    // Health code of the node
+    HealthCode health_code   = 2;
+}
+
+message DataNwMsg {
+    // API Response
+    IotaAPIResponse api_response        = 1;
+
+    // Switch port id for the current test bed
+    uint32 switch_port_id               = 2;
+
+    // Allocated vlans based off of the port id
+    repeated uint32 allocated_vlans     = 3;
 }

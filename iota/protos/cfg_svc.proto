@@ -7,13 +7,8 @@
 syntax = "proto3";
 package iotamodel;
 
-// Imports.
-import public "gogo.proto";
 
-// Common proto imports
-import public "req_types.proto";
-import public "resp_types.proto";
-import "common.proto";
+import "types.proto";
 
 // ---------------------------- Config API ----------------------------
 // Config Management Service
@@ -21,12 +16,70 @@ service ConfigMgmtApi {
     // GenerateConfigs accepts the topology information and config information and auto generates the config that needs
     // to be pushed. The intent is to support only the user facing objects at NAPLES REST or Venice REST Level.
     // It also pushes the base config either to Venice/NAPLES REST Endpoint
-    rpc GenerateAndPushBaseConfigs (ConfigTopologyInfo) returns (GeneratedConfigResponse) {};
 
-    // PushConfig pushes a single modified object to the REST Endpoint and returns the push status.
-    // This method is expected to be used for test cases that want to modify an individual object during the context of the testcase run
-    rpc PushConfig(ConfigObject) returns (ConfigPushResponse) {};
+    rpc InitCfgService(InitConfigMsg) returns (InitConfigMsg) {};
+
+    rpc GenerateConfigs (GenerateConfigMsg) returns (ConfigMsg) {};
+
+    rpc PushConfig (ConfigMsg) returns (ConfigMsg) {};
 
     // Query API queries the base config to match any parameters
-    rpc QueryConfig(CfgQueryParameters) returns (ConfigObject) {};
+    rpc QueryConfig(ConfigQueryMsg) returns (ConfigMsg) {};
+}
+
+message InitConfigMsg{
+    enum EntrypointType {
+                ENTRYPOINT_NONE    = 0;
+                NAPLES_REST        = 1;
+                VENICE_REST        = 2;
+            }
+    // ConfigEntrypoint captures what object model configs to generate for a given testbed.
+    // Could either be venice object model or Agent object model
+    IotaAPIResponse api_response        = 1;
+    EntrypointType  entry_point_type    = 2;
+
+    repeated string endpoints           = 3;
+
+    repeated uint32 vlans               = 4;
+
+    repeated string endpoint_status     = 5;
+
+}
+message GenerateConfigMsg {
+    IotaAPIResponse api_response    = 1;
+    // Define config generation knobs here
+}
+
+message ConfigMsg {
+    IotaAPIResponse api_response            = 1;
+    repeated ConfigObject generated_configs = 2;
+}
+
+message ConfigObject {
+    enum CfgMethodType {
+        NONE            = 0;
+        CREATE          = 1;
+        UPDATE          = 2;
+        DELETE          = 3;
+    }
+    // Method indicates the REST method to call on the object.
+    CfgMethodType       method = 1;
+
+    // Config captures the Marshaled JSON object
+    string Config = 2;
+}
+
+message ConfigQueryMsg {
+    IotaAPIResponse api_response        = 1;
+    // Object Kind
+    string                  kind        = 2;
+
+    // MatchSelector accepts a multiple key value pair, with a default AND between them
+    repeated MatchSelector  selectors   = 3;
+}
+
+// Key Value pairs.
+message MatchSelector {
+    string key = 1;
+    string value = 2;
 }

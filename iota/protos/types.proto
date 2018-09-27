@@ -1,0 +1,12 @@
+syntax = "proto3";
+package iotamodel;
+
+message IotaAPIResponse{
+    enum APIResponseType {
+        API_STATUS_OK       = 0;
+        API_BAD_REQUEST     = 1;
+        API_SERVER_ERROR    = 2;
+    }
+    // APIStatus captures call status
+    APIResponseType api_status       = 1 ;
+}
