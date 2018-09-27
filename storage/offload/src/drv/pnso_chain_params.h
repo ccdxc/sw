@@ -51,15 +51,15 @@ struct next_db_spec {
 	uint64_t nds_data;
 };
 
-struct barco_spec {
-	uint64_t bs_ring_addr;
-	uint64_t bs_pndx_addr;
-	uint64_t bs_pndx_shadow_addr;
-	uint64_t bs_desc_addr;
-	uint8_t bs_desc_size;
-	uint8_t bs_pndx_size;
-	uint8_t bs_ring_size;
-	uint16_t bs_num_descs;
+struct ring_spec {
+	uint64_t rs_ring_addr;
+	uint64_t rs_pndx_addr;
+	uint64_t rs_pndx_shadow_addr;
+	uint64_t rs_desc_addr;
+	uint8_t rs_desc_size;
+	uint8_t rs_pndx_size;
+	uint8_t rs_ring_size;
+	uint16_t rs_num_descs;
 };
 
 struct sequencer_spec {
@@ -93,7 +93,7 @@ struct cpdc_chain_params {
 	struct sequencer_spec ccp_seq_spec;
 	union {
 		struct next_db_spec ccp_next_db_spec;
-		struct barco_spec ccp_barco_spec;
+		struct ring_spec ccp_ring_spec;
 	};
 	uint64_t ccp_status_addr_0;
 	uint64_t ccp_status_addr_1;
@@ -136,7 +136,7 @@ struct xts_chain_params {
 	struct sequencer_spec xcp_seq_spec;
 	union {
 		struct next_db_spec xcp_next_db_spec;
-		struct barco_spec xcp_barco_spec;
+		struct ring_spec xcp_ring_spec;
 	};
 	uint64_t xcp_status_addr_0;
 	uint64_t xcp_status_addr_1;

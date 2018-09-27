@@ -25,6 +25,7 @@
  *	related chains, focus for now is comp+hash bring-up.
  *	- revisit layer violations
  *	- storage_seq_p4pd. vs utils.h
+ *	- use cip_block_size to set  ccp_pad_boundary_shift
  *
  */
 #ifdef NDEBUG
@@ -103,7 +104,7 @@ static void __attribute__((unused))
 pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 {
 	const struct sequencer_spec *spec;
-	const struct barco_spec *barco_spec;
+	const struct ring_spec *ring_spec;
 	const struct cpdc_chain_params_command *cmd;
 
 	if (!chain_params)
@@ -129,24 +130,24 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 	OSAL_LOG_INFO("%30s: %d", "sqs_ret_seq_status_index",
 			spec->sqs_ret_seq_status_index);
 
-	barco_spec = &chain_params->ccp_barco_spec;
-	OSAL_LOG_INFO("%30s: 0x%llx", "barco_spec", (uint64_t) barco_spec);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bs_ring_addr",
-			barco_spec->bs_ring_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bs_pndx_addr",
-			barco_spec->bs_pndx_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bs_pndx_shadow_addr",
-			barco_spec->bs_pndx_shadow_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bs_desc_addr",
-			barco_spec->bs_desc_addr);
-	OSAL_LOG_INFO("%30s: %d", "bs_desc_size",
-			barco_spec->bs_desc_size);
-	OSAL_LOG_INFO("%30s: %d", "bs_pndx_size",
-			barco_spec->bs_pndx_size);
-	OSAL_LOG_INFO("%30s: %d", "bs_ring_size",
-			barco_spec->bs_ring_size);
-	OSAL_LOG_INFO("%30s: %d", "bs_num_descs",
-			barco_spec->bs_num_descs);
+	ring_spec = &chain_params->ccp_ring_spec;
+	OSAL_LOG_INFO("%30s: 0x%llx", "ring_spec", (uint64_t) ring_spec);
+	OSAL_LOG_INFO("%30s: 0x%llx", "rs_ring_addr",
+			ring_spec->rs_ring_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "rs_pndx_addr",
+			ring_spec->rs_pndx_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "rs_pndx_shadow_addr",
+			ring_spec->rs_pndx_shadow_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "rs_desc_addr",
+			ring_spec->rs_desc_addr);
+	OSAL_LOG_INFO("%30s: %d", "rs_desc_size",
+			ring_spec->rs_desc_size);
+	OSAL_LOG_INFO("%30s: %d", "rs_pndx_size",
+			ring_spec->rs_pndx_size);
+	OSAL_LOG_INFO("%30s: %d", "rs_ring_size",
+			ring_spec->rs_ring_size);
+	OSAL_LOG_INFO("%30s: %d", "rs_num_descs",
+			ring_spec->rs_num_descs);
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_status_addr_0",
 			chain_params->ccp_status_addr_0);
@@ -215,7 +216,7 @@ static void __attribute__((unused))
 pprint_xts_chain_params(const struct xts_chain_params *chain_params)
 {
 	const struct sequencer_spec *spec;
-	const struct barco_spec *barco_spec;
+	const struct ring_spec *ring_spec;
 	const struct xts_chain_params_command *cmd;
 
 	if (!chain_params)
@@ -241,24 +242,24 @@ pprint_xts_chain_params(const struct xts_chain_params *chain_params)
 	OSAL_LOG_INFO("%30s: %d", "sqs_ret_seq_status_index",
 			spec->sqs_ret_seq_status_index);
 
-	barco_spec = &chain_params->xcp_barco_spec;
-	OSAL_LOG_INFO("%30s: 0x%llx", "barco_spec", (uint64_t) barco_spec);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bs_ring_addr",
-			barco_spec->bs_ring_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bs_pndx_addr",
-			barco_spec->bs_pndx_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bs_pndx_shadow_addr",
-			barco_spec->bs_pndx_shadow_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "bs_desc_addr",
-			barco_spec->bs_desc_addr);
-	OSAL_LOG_INFO("%30s: %d", "bs_desc_size",
-			barco_spec->bs_desc_size);
-	OSAL_LOG_INFO("%30s: %d", "bs_pndx_size",
-			barco_spec->bs_pndx_size);
-	OSAL_LOG_INFO("%30s: %d", "bs_ring_size",
-			barco_spec->bs_ring_size);
-	OSAL_LOG_INFO("%30s: %d", "bs_num_descs",
-			barco_spec->bs_num_descs);
+	ring_spec = &chain_params->xcp_ring_spec;
+	OSAL_LOG_INFO("%30s: 0x%llx", "ring_spec", (uint64_t) ring_spec);
+	OSAL_LOG_INFO("%30s: 0x%llx", "rs_ring_addr",
+			ring_spec->rs_ring_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "rs_pndx_addr",
+			ring_spec->rs_pndx_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "rs_pndx_shadow_addr",
+			ring_spec->rs_pndx_shadow_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "rs_desc_addr",
+			ring_spec->rs_desc_addr);
+	OSAL_LOG_INFO("%30s: %d", "rs_desc_size",
+			ring_spec->rs_desc_size);
+	OSAL_LOG_INFO("%30s: %d", "rs_pndx_size",
+			ring_spec->rs_pndx_size);
+	OSAL_LOG_INFO("%30s: %d", "rs_ring_size",
+			ring_spec->rs_ring_size);
+	OSAL_LOG_INFO("%30s: %d", "rs_num_descs",
+			ring_spec->rs_num_descs);
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_status_addr_0",
 			chain_params->xcp_status_addr_0);
@@ -350,10 +351,10 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 		uint8_t *seq_status_desc)
 {
 	struct next_db_spec *next_db_spec;
-	struct barco_spec *barco_spec;
+	struct ring_spec *ring_spec;
 	struct cpdc_chain_params_command *cmd;
 
-	barco_spec = &chain_params->ccp_barco_spec;
+	ring_spec = &chain_params->ccp_ring_spec;
 	next_db_spec = &chain_params->ccp_next_db_spec;
 	cmd = &chain_params->ccp_cmd;
 
@@ -361,21 +362,21 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	// desc bytes 0-63
 	if (cmd->ccpc_next_db_action_barco_push) {
 		write_bit_fields(seq_status_desc, 0, 64,
-				barco_spec->bs_ring_addr);
+				ring_spec->rs_ring_addr);
 		write_bit_fields(seq_status_desc, 64, 64,
-				barco_spec->bs_desc_addr);
+				ring_spec->rs_desc_addr);
 		write_bit_fields(seq_status_desc, 128, 34,
-				barco_spec->bs_pndx_addr);
+				ring_spec->rs_pndx_addr);
 		write_bit_fields(seq_status_desc, 162, 34,
-				barco_spec->bs_pndx_shadow_addr);
+				ring_spec->rs_pndx_shadow_addr);
 		write_bit_fields(seq_status_desc, 196, 4,
-				barco_spec->bs_desc_size);
+				ring_spec->rs_desc_size);
 		write_bit_fields(seq_status_desc, 200, 3,
-				barco_spec->bs_pndx_size);
+				ring_spec->rs_pndx_size);
 		write_bit_fields(seq_status_desc, 203, 5,
-				barco_spec->bs_ring_size);
+				ring_spec->rs_ring_size);
 		write_bit_fields(seq_status_desc, 208, 10,
-				barco_spec->bs_num_descs);
+				ring_spec->rs_num_descs);
 	} else {
 		write_bit_fields(seq_status_desc, 0, 64,
 				next_db_spec->nds_addr);
@@ -451,10 +452,10 @@ fill_xts_seq_status(struct xts_chain_params *chain_params,
 		uint8_t *seq_status_desc)
 {
 	struct next_db_spec *next_db_spec;
-	struct barco_spec *barco_spec;
+	struct ring_spec *ring_spec;
 	struct xts_chain_params_command *cmd;
 
-	barco_spec = &chain_params->xcp_barco_spec;
+	ring_spec = &chain_params->xcp_ring_spec;
 	next_db_spec = &chain_params->xcp_next_db_spec;
 	cmd = &chain_params->xcp_cmd;
 
@@ -462,21 +463,21 @@ fill_xts_seq_status(struct xts_chain_params *chain_params,
 	// desc bytes 0-63
 	if (cmd->xcpc_next_db_action_barco_push) {
 		write_bit_fields(seq_status_desc, 0, 64,
-				barco_spec->bs_ring_addr);
+				ring_spec->rs_ring_addr);
 		write_bit_fields(seq_status_desc, 64, 64,
-				barco_spec->bs_desc_addr);
+				ring_spec->rs_desc_addr);
 		write_bit_fields(seq_status_desc, 128, 34,
-				barco_spec->bs_pndx_addr);
+				ring_spec->rs_pndx_addr);
 		write_bit_fields(seq_status_desc, 162, 34,
-				barco_spec->bs_pndx_shadow_addr);
+				ring_spec->rs_pndx_shadow_addr);
 		write_bit_fields(seq_status_desc, 196, 4,
-				barco_spec->bs_desc_size);
+				ring_spec->rs_desc_size);
 		write_bit_fields(seq_status_desc, 200, 3,
-				barco_spec->bs_pndx_size);
+				ring_spec->rs_pndx_size);
 		write_bit_fields(seq_status_desc, 203, 5,
-				barco_spec->bs_ring_size);
+				ring_spec->rs_ring_size);
 		write_bit_fields(seq_status_desc, 208, 10,
-				barco_spec->bs_num_descs);
+				ring_spec->rs_num_descs);
 	} else {
 		write_bit_fields(seq_status_desc, 0, 64,
 				next_db_spec->nds_addr);
@@ -749,13 +750,13 @@ hw_setup_hash_chain_params(struct chain_entry *centry,
 	struct service_chain *svc_chain;
 	struct cpdc_chain_params *chain_params;
 	struct sequencer_info *seq_info;
-	struct barco_spec *barco_spec;
+	struct ring_spec *ring_spec;
 
 	OSAL_LOG_INFO("enter ...");
 
 	svc_chain = centry->ce_chain_head;
 	chain_params = &svc_chain->sc_chain_params;
-	barco_spec = &chain_params->ccp_barco_spec;
+	ring_spec = &chain_params->ccp_ring_spec;
 
 	seq_info = &svc_info->si_seq_info;
 	ring_id = seq_info->sqi_ring_id;
@@ -767,14 +768,14 @@ hw_setup_hash_chain_params(struct chain_entry *centry,
 		goto out;
 	}
 
-	barco_spec->bs_ring_addr = ring->ring_base_pa;
-	barco_spec->bs_pndx_addr = ring->ring_pndx_pa;
-	barco_spec->bs_pndx_shadow_addr = ring->ring_shadow_pndx_pa;
-	barco_spec->bs_desc_addr = osal_virt_to_phy((void *) hash_desc);
-	barco_spec->bs_desc_size = (uint8_t) ilog2(ring->ring_desc_size);
-	barco_spec->bs_pndx_size = (uint8_t) ilog2(ring->ring_pndx_size);
-	barco_spec->bs_ring_size = (uint8_t) ilog2(ring->ring_size);
-	barco_spec->bs_num_descs = num_hash_blks;
+	ring_spec->rs_ring_addr = ring->ring_base_pa;
+	ring_spec->rs_pndx_addr = ring->ring_pndx_pa;
+	ring_spec->rs_pndx_shadow_addr = ring->ring_shadow_pndx_pa;
+	ring_spec->rs_desc_addr = osal_virt_to_phy((void *) hash_desc);
+	ring_spec->rs_desc_size = (uint8_t) ilog2(ring->ring_desc_size);
+	ring_spec->rs_pndx_size = (uint8_t) ilog2(ring->ring_pndx_size);
+	ring_spec->rs_ring_size = (uint8_t) ilog2(ring->ring_size);
+	ring_spec->rs_num_descs = num_hash_blks;
 
 	chain_params->ccp_sgl_vec_addr = osal_virt_to_phy((void *) sgl);
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
