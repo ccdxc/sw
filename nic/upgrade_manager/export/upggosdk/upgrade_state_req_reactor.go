@@ -74,14 +74,18 @@ func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrRe
 	}
 }
 
-func (ctx *upgstatereqctx) getUpgCtx(obj *upgrade.UpgStateReq) {
+func (ctx *upgstatereqctx) getUpgCtx(obj *upgrade.UpgStateReq) error {
 	upgCtx.upgType = obj.GetUpgReqType()
-	getUpgCtxFromMeta(&upgCtx)
+	return getUpgCtxFromMeta(&upgCtx)
 }
 
 func (ctx *upgstatereqctx) OnUpgStateReqCreate(obj *upgrade.UpgStateReq) {
 	log.Infof("OnUpgStateReqCreate called")
-	ctx.getUpgCtx(obj)
+	err := ctx.getUpgCtx(obj)
+	if err != nil {
+		log.Infof("getUpgCtxFromMeta failed")
+		return
+	}
 	if canInvokeHandler(ctx.sdkClient, ctx.appName, obj.GetUpgReqState()) {
 		createUpgAppResp(ctx.sdkClient, ctx.appName)
 		var hdlrResp HdlrResp
@@ -97,7 +101,11 @@ func (ctx *upgstatereqctx) OnUpgStateReqCreate(obj *upgrade.UpgStateReq) {
 func (ctx *upgstatereqctx) OnUpgStateReqUpdate(obj *upgrade.UpgStateReq) {
 	if obj.GetUpgReqState() != upgrade.UpgReqStateType_UpgStateTerminal {
 		log.Infof("===== Incoming Message =====")
-		ctx.getUpgCtx(obj)
+		err := ctx.getUpgCtx(obj)
+		if err != nil {
+			log.Infof("getUpgCtxFromMeta failed")
+			return
+		}
 		var hdlrResp HdlrResp
 		ctx.invokeAppHdlr(obj.GetUpgReqState(), &hdlrResp)
 		if hdlrResp.Resp != InProgress {
