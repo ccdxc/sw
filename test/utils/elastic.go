@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 	"time"
 
@@ -50,17 +51,30 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 
 	// set max_map_count; this is a must requirement to run elasticsearch
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
-	if out, err := exec.Command("sysctl", "-w", "vm.max_map_count=262144").CombinedOutput(); err != nil {
-		log.Errorf("failed to set max_map_count %s", out)
+	//
+	// this need to be set manually for docker for mac using the below commands:
+	// $ screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty
+	// $ sysctl -w vm.max_map_count=262144
+	//
+	if runtime.GOOS != "darwin" {
+		if out, err := exec.Command("sysctl", "-w", "vm.max_map_count=262144").CombinedOutput(); err != nil {
+			log.Errorf("failed to set max_map_count %s, err: %v", out, err)
+			return "", err
+		}
+	} else {
+		fmt.Println("\n++++++ run this one time setup commands from your mac if you haven't done yet +++++++\n" +
+			"screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty\n" +
+			"on the blank screen, press return and run: sysctl -w vm.max_map_count=262144")
+		fmt.Println()
 	}
 
 	var authDir string
 	if signer != nil {
-		authDir = path.Join(os.TempDir(), fmt.Sprintf("%s-elastic-test", name))
+		authDir = path.Join("/tmp", fmt.Sprintf("%s-elastic-test", name))
 		os.MkdirAll(authDir, 0777) // pre-create to override default permissions
 		err := credentials.GenElasticHTTPSAuth(authDir, signer, trustRoots)
 		if err != nil {
-			return "", fmt.Errorf("Error creating credentials in dir %s: err: %v", authDir, err)
+			return "", fmt.Errorf("error creating credentials in dir %s: err: %v", authDir, err)
 		}
 	}
 
