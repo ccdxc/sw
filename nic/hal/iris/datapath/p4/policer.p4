@@ -3,7 +3,7 @@
 /*****************************************************************************/
 header_type policer_metadata_t {
     fields {
-        rx_policer_color  : 1;
+        rx_policer_color  : 2;
         packet_len        : 16;
     }
 }

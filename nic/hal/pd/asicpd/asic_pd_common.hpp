@@ -67,6 +67,10 @@ hal_ret_t asicpd_program_table_thread_constant(uint32_t tableid,
 hal_ret_t asicpd_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
 hal_ret_t asicpd_deparser_init(void);
 hal_ret_t asicpd_program_hbm_table_base_addr(void);
+hal_ret_t asicpd_stats_addr_get (int tblid, uint32_t index,
+                       asicpd_stats_region_info_t *region_arr, int arrlen,
+                       hbm_addr_t *stats_addr_p);
+
 hal_ret_t asicpd_stats_region_init(asicpd_stats_region_info_t *region_arr,
                                    int arrlen);
 hal_ret_t asicpd_p4plus_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);

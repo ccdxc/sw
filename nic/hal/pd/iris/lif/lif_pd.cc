@@ -771,6 +771,104 @@ lif_pd_rx_policer_deprogram_hw (pd_lif_t *pd_lif)
     return ret;
 }
 
+
+typedef struct lif_pd_rx_policer_stats_s {
+    uint64_t permitted_bytes;
+    uint64_t permitted_packets;
+    uint64_t denied_bytes;
+    uint64_t denied_packets;
+} __PACK__ lif_pd_rx_policer_stats_t;
+
+#define RX_POLICER_STATS(_d, _arg) _d.rx_policer_action_action_u.rx_policer_action_rx_policer_action._arg
+static hal_ret_t
+lif_pd_populate_rx_policer_stats (qos::PolicerStats *stats_rsp, pd_lif_t *pd_lif)
+{
+    hal_ret_t                    ret = HAL_RET_OK;
+    lif_pd_rx_policer_stats_t    stats_0 = {0};
+    lif_pd_rx_policer_stats_t    stats_1 = {0};
+    hbm_addr_t                   stats_addr = 0;
+    sdk_ret_t                    sdk_ret;
+    lif_t                        *pi_lif = (lif_t *)pd_lif->pi_lif;
+    directmap                    *rx_policer_action_tbl= NULL;
+    rx_policer_action_actiondata d;
+
+    rx_policer_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER_ACTION);
+    HAL_ASSERT_RETURN((rx_policer_action_tbl != NULL), HAL_RET_ERR);
+
+    ret = hal_pd_stats_addr_get(P4TBL_ID_RX_POLICER_ACTION, 
+                                pd_lif->hw_lif_id, &stats_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error getting stats address for lif {} hw-id {}, ret {}",
+                      lif_get_lif_id(pi_lif), pd_lif->hw_lif_id, ret);
+        return ret;
+    }
+
+    ret = asic_mem_read(stats_addr, (uint8_t *)&stats_0, sizeof(stats_0));
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats for lif {} hw-id {}, ret {}",
+                      lif_get_lif_id(pi_lif), pd_lif->hw_lif_id, ret);
+        return ret;
+    }
+
+    // read the d-vector
+    sdk_ret = rx_policer_action_tbl->retrieve(pd_lif->hw_lif_id, &d);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error reading lif action entry lif {} hw-id {}, ret {}",
+                      lif_get_lif_id(pi_lif), pd_lif->hw_lif_id, ret);
+        return ret;
+    }
+    ret = asic_mem_read(stats_addr, (uint8_t *)&stats_1, sizeof(stats_1));
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats for lif {} hw-id {}, ret {}",
+                      lif_get_lif_id(pi_lif), pd_lif->hw_lif_id, ret);
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("Policer stat read lif {} hw_lif_id {} stats_addr {:#x} "
+                    "stats_0.permitted_packets {} "
+                    "stats_0.permitted_bytes {} "
+                    "stats_0.denied_packets {} "
+                    "stats_0.denied_bytes {} "
+                    "stats_1.permitted_packets {} "
+                    "stats_1.permitted_bytes {} "
+                    "stats_1.denied_packets {} "
+                    "stats_1.denied_bytes {} "
+                    "d.permitted_packets {} "
+                    "d.permitted_bytes {} "
+                    "d.denied_packets {} "
+                    "d.denied_bytes {} ",
+                    lif_get_lif_id(pi_lif), pd_lif->hw_lif_id, stats_addr,
+                    stats_0.permitted_packets ,
+                    stats_0.permitted_bytes ,
+                    stats_0.denied_packets ,
+                    stats_0.denied_bytes ,
+                    stats_1.permitted_packets ,
+                    stats_1.permitted_bytes ,
+                    stats_1.denied_packets ,
+                    stats_1.denied_bytes ,
+                    RX_POLICER_STATS(d,permitted_packets),
+                    RX_POLICER_STATS(d,permitted_bytes),
+                    RX_POLICER_STATS(d,denied_packets),
+                    RX_POLICER_STATS(d,denied_bytes));
+
+    if (stats_1.permitted_packets == stats_0.permitted_packets) {
+        stats_1.permitted_packets += RX_POLICER_STATS(d, permitted_packets);
+        stats_1.permitted_bytes += RX_POLICER_STATS(d, permitted_bytes);
+    }
+    if (stats_1.denied_packets == stats_0.denied_packets) {
+        stats_1.denied_packets += RX_POLICER_STATS(d, denied_packets);
+        stats_1.denied_bytes += RX_POLICER_STATS(d, denied_bytes);
+    }
+
+    stats_rsp->set_permitted_packets(stats_1.permitted_packets);
+    stats_rsp->set_permitted_bytes(stats_1.permitted_bytes);
+    stats_rsp->set_dropped_packets(stats_1.denied_packets);
+    stats_rsp->set_dropped_bytes(stats_1.denied_bytes);
+    return HAL_RET_OK;
+}
+#undef RX_POLICER_STATS
+
 //-----------------------------------------------------------------------------
 // Program Output Mapping Table
 //-----------------------------------------------------------------------------
@@ -988,6 +1086,22 @@ pd_lif_get (pd_func_args_t *pd_func_args)
     args->hw_lif_id = lif_pd->hw_lif_id;
 
     return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_lif_stats_get (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    pd_lif_stats_get_args_t *args = pd_func_args->pd_lif_stats_get;
+    lif_t                   *lif = args->lif;
+    pd_lif_t                *pd_lif = (pd_lif_t *)lif->pd_lif;
+    LifGetResponse          *rsp = args->rsp;
+
+    ret = lif_pd_populate_rx_policer_stats(
+                        rsp->mutable_stats()->mutable_rx_stats()->mutable_policer_stats(), 
+                        pd_lif);
+
+    return ret;
 }
 
 }    // namespace pd

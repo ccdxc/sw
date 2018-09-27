@@ -590,6 +590,32 @@ asicpd_program_hbm_table_base_addr (void)
 }
 
 hal_ret_t
+asicpd_stats_addr_get (int tblid, uint32_t index,
+                       asicpd_stats_region_info_t *region_arr, int arrlen,
+                       hbm_addr_t *stats_addr_p)
+{
+    p4pd_table_properties_t       tbl_ctx;
+    hbm_addr_t                    stats_base_addr;
+
+    stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
+
+    for (int i = 0; i < arrlen; i++) {
+        p4pd_table_properties_get(region_arr[i].tblid, &tbl_ctx);
+        if (tblid == region_arr[i].tblid) {
+            if (index < tbl_ctx.tabledepth) {
+                *stats_addr_p = stats_base_addr + 
+                                (index << region_arr[i].tbldepthshift);
+                return HAL_RET_OK;
+            } else {
+                return HAL_RET_ERR;
+            }
+        }
+        stats_base_addr += (tbl_ctx.tabledepth << region_arr[i].tbldepthshift);
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 asicpd_stats_region_init (asicpd_stats_region_info_t *region_arr, int arrlen)
 {
     p4pd_table_properties_t       tbl_ctx;

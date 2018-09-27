@@ -80,7 +80,7 @@ copp_pd_reset_copp_action_tbl (pd_copp_t *pd_copp, bool insert)
     sdk_ret_t       sdk_ret;
     copp_t          *pi_copp = pd_copp->pi_copp;
     directmap       *copp_action_tbl = NULL;
-    copp_actiondata d = {0};
+    copp_action_actiondata d = {0};
 
     copp_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP_ACTION);
     HAL_ASSERT_RETURN((copp_action_tbl != NULL), HAL_RET_ERR);
@@ -412,6 +412,104 @@ end:
     return ret;
 }
 
+typedef struct copp_pd_policer_stats_s {
+    uint64_t permitted_bytes;
+    uint64_t permitted_packets;
+    uint64_t denied_bytes;
+    uint64_t denied_packets;
+} __PACK__ copp_pd_policer_stats_t;
+
+#define COPP_STATS(_d, _arg) _d.copp_action_action_u.copp_action_copp_action._arg
+static hal_ret_t
+copp_pd_populate_policer_stats (qos::PolicerStats *stats_rsp, pd_copp_t *pd_copp)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    copp_pd_policer_stats_t stats_0 = {0};
+    copp_pd_policer_stats_t stats_1 = {0};
+    hbm_addr_t              stats_addr = 0;
+    sdk_ret_t               sdk_ret;
+    copp_t                  *pi_copp = pd_copp->pi_copp;
+    directmap               *copp_action_tbl = NULL;
+    copp_action_actiondata  d;
+
+    copp_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP_ACTION);
+    HAL_ASSERT_RETURN((copp_action_tbl != NULL), HAL_RET_ERR);
+
+    ret = hal_pd_stats_addr_get(P4TBL_ID_COPP_ACTION, 
+                                pd_copp->hw_policer_id, &stats_addr);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error getting stats address for copp {} hw-id {}, ret {}",
+                      pi_copp->key, pd_copp->hw_policer_id, ret);
+        return ret;
+    }
+
+    ret = asic_mem_read(stats_addr, (uint8_t *)&stats_0, sizeof(stats_0));
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats for copp {} hw-id {}, ret {}",
+                      pi_copp->key, pd_copp->hw_policer_id, ret);
+        return ret;
+    }
+
+    // read the d-vector
+    sdk_ret = copp_action_tbl->retrieve(pd_copp->hw_policer_id, &d);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error reading copp action entry copp {} hw-id {}, ret {}",
+                      pi_copp->key, pd_copp->hw_policer_id, ret);
+        return ret;
+    }
+    ret = asic_mem_read(stats_addr, (uint8_t *)&stats_1, sizeof(stats_1));
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats for copp {} hw-id {}, ret {}",
+                      pi_copp->key, pd_copp->hw_policer_id, ret);
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("Copp stat read copp {} hw_id {} stats_addr {:#x} "
+                    "stats_0.permitted_packets {} "
+                    "stats_0.permitted_bytes {} "
+                    "stats_0.denied_packets {} "
+                    "stats_0.denied_bytes {} "
+                    "stats_1.permitted_packets {} "
+                    "stats_1.permitted_bytes {} "
+                    "stats_1.denied_packets {} "
+                    "stats_1.denied_bytes {} "
+                    "d.permitted_packets {} "
+                    "d.permitted_bytes {} "
+                    "d.denied_packets {} "
+                    "d.denied_bytes {} ",
+                    pi_copp->key, pd_copp->hw_policer_id,
+                    stats_addr,
+                    stats_0.permitted_packets ,
+                    stats_0.permitted_bytes ,
+                    stats_0.denied_packets ,
+                    stats_0.denied_bytes ,
+                    stats_1.permitted_packets ,
+                    stats_1.permitted_bytes ,
+                    stats_1.denied_packets ,
+                    stats_1.denied_bytes ,
+                    COPP_STATS(d,permitted_packets),
+                    COPP_STATS(d,permitted_bytes),
+                    COPP_STATS(d,denied_packets),
+                    COPP_STATS(d,denied_bytes));
+
+    if (stats_1.permitted_packets == stats_0.permitted_packets) {
+        stats_1.permitted_packets += COPP_STATS(d, permitted_packets);
+        stats_1.permitted_bytes += COPP_STATS(d, permitted_bytes);
+    }
+    if (stats_1.denied_packets == stats_0.denied_packets) {
+        stats_1.denied_packets += COPP_STATS(d, denied_packets);
+        stats_1.denied_bytes += COPP_STATS(d, denied_bytes);
+    }
+
+    stats_rsp->set_permitted_packets(stats_1.permitted_packets);
+    stats_rsp->set_permitted_bytes(stats_1.permitted_bytes);
+    stats_rsp->set_dropped_packets(stats_1.denied_packets);
+    stats_rsp->set_dropped_bytes(stats_1.denied_bytes);
+    return HAL_RET_OK;
+}
+#undef COPP_STATS
+
 // ----------------------------------------------------------------------------
 // pd copp get
 // ----------------------------------------------------------------------------
@@ -426,6 +524,8 @@ pd_copp_get (pd_func_args_t *pd_func_args)
 
     auto copp_info = rsp->mutable_status()->mutable_epd_status();
     copp_info->set_hw_policer_idx(pd_copp->hw_policer_id);
+    ret = copp_pd_populate_policer_stats(
+                        rsp->mutable_stats()->mutable_policer_stats(), pd_copp);
 
     return ret;
 }

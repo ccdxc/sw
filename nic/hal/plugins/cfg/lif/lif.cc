@@ -1682,8 +1682,11 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
 static void
 lif_process_get (lif_t *lif, LifGetResponse *rsp)
 {
+    hal_ret_t ret;
     LifSpec  *spec     = NULL;
     uint64_t hw_lif_id = lif_hw_lif_id_get(lif);
+    pd::pd_lif_stats_get_args_t args   = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
 
     // fill in the config spec of this lif.
     spec = rsp->mutable_spec();
@@ -1702,6 +1705,10 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     spec->mutable_rss()->set_key(lif->rss.key, sizeof(lif->rss.key));
     spec->mutable_rss()->set_indir(lif->rss.indir, sizeof(lif->rss.indir));
 
+    spec->mutable_packet_filter()->set_receive_promiscuous(lif->packet_filters.receive_promiscuous);
+    spec->mutable_packet_filter()->set_receive_broadcast(lif->packet_filters.receive_broadcast);
+    spec->mutable_packet_filter()->set_receive_all_multicast(lif->packet_filters.receive_all_multicast);
+
     rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
     rsp->mutable_status()->set_lif_handle(lif->hal_handle);
     rsp->mutable_status()->set_lif_status(lif->admin_status);
@@ -1715,7 +1722,18 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
         entry->set_addr(lif_manager()->GetLIFQStateAddr(hw_lif_id, ent.type, 0));
     }
 
+    // Getting PD information
+    args.lif = lif;
+    args.rsp = rsp;
+    pd_func_args.pd_lif_stats_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_STATS_GET, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to do PD stats get for lif: {}. ret : {}",
+                      lif->lif_id, ret);
+    }
+
     rsp->set_api_status(types::API_STATUS_OK);
+    proto_msg_dump(*rsp);
 }
 
 static bool

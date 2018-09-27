@@ -641,6 +641,11 @@ pd_if_lif_update_args_init (pd_if_lif_update_args_t *args)
     return;
 }
 
+typedef struct pd_lif_stats_get_args_s {
+    lif_t *lif;
+    LifGetResponse *rsp;
+} __PACK__ pd_lif_stats_get_args_t;
+
 typedef struct pd_if_nwsec_update_args_s {
     l2seg_t         *l2seg;
     if_t            *intf;
@@ -3104,7 +3109,8 @@ typedef struct pd_quiesce_stop_args_s {
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET,    270, "PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET")\
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INFO_GET,    271, "PD_FUNC_ID_ACCEL_RGROUP_INFO_GET")\
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET, 272, "PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      273, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_LIF_STATS_GET,            273, "PD_FUNC_ID_LIF_STATS_GET")            \
+    ENTRY(PD_FUNC_ID_MAX,                      274, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3166,6 +3172,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_lif_mem_free);
         PD_UNION_ARGS_FIELD(pd_lif_make_clone);
         PD_UNION_ARGS_FIELD(pd_lif_get);
+        PD_UNION_ARGS_FIELD(pd_lif_stats_get);
 
         // if calls
         PD_UNION_ARGS_FIELD(pd_if_create);
@@ -3564,6 +3571,7 @@ PD_FUNCP_TYPEDEF(pd_lif_update);
 PD_FUNCP_TYPEDEF(pd_lif_mem_free);
 PD_FUNCP_TYPEDEF(pd_lif_make_clone);
 PD_FUNCP_TYPEDEF(pd_lif_get);
+PD_FUNCP_TYPEDEF(pd_lif_stats_get);
 
 // if calls
 PD_FUNCP_TYPEDEF(pd_if_create);
@@ -3984,6 +3992,7 @@ PD_FUNCP_TYPEDEF(pd_lif_update);
 PD_FUNCP_TYPEDEF(pd_lif_mem_free);
 PD_FUNCP_TYPEDEF(pd_lif_make_clone);
 PD_FUNCP_TYPEDEF(pd_lif_get);
+PD_FUNCP_TYPEDEF(pd_lif_stats_get);
 
 // if calls
 PD_FUNCP_TYPEDEF(pd_if_create);
@@ -4385,6 +4394,7 @@ typedef struct pd_call_s {
         PD_UNION_FIELD(pd_lif_mem_free);
         PD_UNION_FIELD(pd_lif_make_clone);
         PD_UNION_FIELD(pd_lif_get);
+        PD_UNION_FIELD(pd_lif_stats_get);
 
         // if pd calls
         PD_UNION_FIELD(pd_if_create);

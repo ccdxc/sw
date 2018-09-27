@@ -345,6 +345,8 @@ private:
 
 hal_ret_t delay_delete_to_slab(hal_slab_t slab_id, void *elem);
 
+hal_ret_t hal_pd_stats_addr_get(int tblid, uint32_t index,
+                                hbm_addr_t *stats_addr_p);
 } // namespace pd
 } // namespace hal
 

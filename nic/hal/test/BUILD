@@ -74,7 +74,7 @@ cc_binary(
         "@sdk//obj:sdk_pal",
     ],
     linkopts = [
-        "-lzmq",
+#"-lzmq",
         "-lpthread",
         "-pthread",
         "-lz",

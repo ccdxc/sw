@@ -119,6 +119,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_LIF_MEM_FREE, pd_lif_mem_free);
     PD_FUNC_LOAD(PD_FUNC_ID_LIF_MAKE_CLONE, pd_lif_make_clone);
     PD_FUNC_LOAD(PD_FUNC_ID_LIF_GET, pd_lif_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_LIF_STATS_GET, pd_lif_stats_get);
 
     // if pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_IF_CREATE, pd_if_create);

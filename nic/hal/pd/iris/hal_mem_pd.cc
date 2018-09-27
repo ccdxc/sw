@@ -61,6 +61,13 @@ namespace pd {
 
 class hal_state_pd *g_hal_state_pd;
 
+asicpd_stats_region_info_t g_stats_region_arr[] = {{P4TBL_ID_FLOW_STATS, 5},
+                                               {P4TBL_ID_RX_POLICER_ACTION, 5},
+                                               {P4TBL_ID_COPP_ACTION, 5},
+                                               {P4TBL_ID_TX_STATS, 6},
+                                               {P4TBL_ID_INGRESS_TX_STATS, 3}};
+int g_stats_region_arrlen = sizeof(g_stats_region_arr)/sizeof(asicpd_stats_region_info_t);
+
 //------------------------------------------------------------------------------
 // init() function to instantiate all the slabs
 //------------------------------------------------------------------------------
@@ -1090,17 +1097,11 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     ph2_args = pd_func_args->pd_mem_init_phase2;
     hal_cfg = ph2_args->hal_cfg;
 
-    asicpd_stats_region_info_t region_arr[] = {{P4TBL_ID_FLOW_STATS, 5},
-                                               {P4TBL_ID_RX_POLICER_ACTION, 5},
-                                               {P4TBL_ID_COPP_ACTION, 5},
-                                               {P4TBL_ID_TX_STATS, 6},
-                                               {P4TBL_ID_INGRESS_TX_STATS, 3}};
-    int arrlen = sizeof(region_arr)/sizeof(asicpd_stats_region_info_t);
-
     // Capri asic initializations
     // Initialize the p4pd stats region
     HAL_ASSERT(asicpd_p4plus_table_mpu_base_init(&p4pd_cfg) == HAL_RET_OK);
-    HAL_ASSERT(asicpd_stats_region_init(region_arr, arrlen) == HAL_RET_OK);
+    HAL_ASSERT(asicpd_stats_region_init(g_stats_region_arr, 
+                                        g_stats_region_arrlen) == HAL_RET_OK);
     HAL_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_table_init(hal_cfg) == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_recirc_init() == HAL_RET_OK);
@@ -1365,6 +1366,15 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
         pd_slab_delay_delete_cb(NULL, slab_id, elem);
     }
     return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_pd_stats_addr_get (int tblid, uint32_t index,
+                       hbm_addr_t *stats_addr_p)
+{
+    return asicpd_stats_addr_get(tblid, index, 
+                                 g_stats_region_arr, g_stats_region_arrlen,
+                                 stats_addr_p);
 }
 
 }    // namespace pd
