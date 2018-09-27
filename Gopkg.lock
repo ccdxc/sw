@@ -2607,6 +2607,7 @@
     "github.com/miekg/pkcs11",
     "github.com/minio/minio-go",
     "github.com/minio/minio/cmd",
+    "github.com/minio/minio/cmd/logger",
     "github.com/olivere/elastic",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
