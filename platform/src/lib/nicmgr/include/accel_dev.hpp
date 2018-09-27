@@ -47,19 +47,33 @@ enum {
 
 #define ACCEL_PHYS_ADDR_FIELD_GET(addr, pos, mask)      \
     (((addr) >> (pos)) & (mask))
-#define ACCEL_PHYS_ADDR_FIELD_SET(addr, pos, mask, val) \
-    addr |= (((uint64_t)((val) & (mask))) << (pos))
+#define ACCEL_PHYS_ADDR_FIELD_SET(pos, mask, val)       \
+    (((uint64_t)((val) & (mask))) << (pos))
     
 #define ACCEL_PHYS_ADDR_HOST_GET(addr)                  \
     ACCEL_PHYS_ADDR_FIELD_GET(addr, ACCEL_PHYS_ADDR_HOST_POS, ACCEL_PHYS_ADDR_HOST_MASK)
-#define ACCEL_PHYS_ADDR_HOST_SET(addr, host)            \
-    ACCEL_PHYS_ADDR_FIELD_SET(addr, ACCEL_PHYS_ADDR_HOST_POS, ACCEL_PHYS_ADDR_HOST_MASK, host)
+#define ACCEL_PHYS_ADDR_HOST_SET(host)                  \
+    ACCEL_PHYS_ADDR_FIELD_SET(ACCEL_PHYS_ADDR_HOST_POS, ACCEL_PHYS_ADDR_HOST_MASK, host)
     
 #define ACCEL_PHYS_ADDR_LIF_GET(addr)                   \
     ACCEL_PHYS_ADDR_FIELD_GET(addr, ACCEL_PHYS_ADDR_LIF_POS, ACCEL_PHYS_ADDR_LIF_MASK)
-#define ACCEL_PHYS_ADDR_LIF_SET(addr, lif)              \
-    ACCEL_PHYS_ADDR_FIELD_SET(addr, ACCEL_PHYS_ADDR_LIF_POS, ACCEL_PHYS_ADDR_LIF_MASK, lif)
+#define ACCEL_PHYS_ADDR_LIF_SET(lif)                    \
+    ACCEL_PHYS_ADDR_FIELD_SET(ACCEL_PHYS_ADDR_LIF_POS, ACCEL_PHYS_ADDR_LIF_MASK, lif)
     
+/*
+ * Local doorbell address formation
+ */
+#define DB_ADDR_BASE_LOCAL              0x8800000
+#define ACCEL_LIF_DBADDR_UPD            0x0b
+#define DB_UPD_SHFT                     17
+#define DB_LIF_SHFT                     6
+#define DB_TYPE_SHFT                    3
+#define ACCEL_LIF_LOCAL_DBADDR_SET(lif, qtype)          \
+    (((uint64_t)(lif) << DB_LIF_SHFT) |                 \
+    ((uint64_t)(qtype) << DB_TYPE_SHFT) |               \
+    ((uint64_t)(ACCEL_LIF_DBADDR_UPD) << DB_UPD_SHFT) | \
+    DB_ADDR_BASE_LOCAL)
+
 /**
  * Accelerator Device Spec
  */
@@ -221,6 +235,8 @@ private:
     enum DevcmdStatus _DevcmdSeqQueueControl(void *req, void *req_data,
                                              void *resp, void *resp_data,
                                              bool enable);
+    enum DevcmdStatus _DevcmdCryptoKeyUpdate(void *req, void *req_data,
+                                             void *resp, void *resp_data);
 
     uint64_t GetQstateAddr(uint8_t qtype, uint32_t qid);
 

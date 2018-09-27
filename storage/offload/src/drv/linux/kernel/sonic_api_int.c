@@ -9,22 +9,6 @@
 #include "osal_logger.h"
 #include "osal_assert.h"
 
-/*
- * Physical host address bit manipulation
- */
-#define SONIC_PHYS_ADDR_HOST_POS        63
-#define SONIC_PHYS_ADDR_HOST_MASK       0x1
-#define SONIC_PHYS_ADDR_LIF_POS         52
-#define SONIC_PHYS_ADDR_LIF_MASK        0x7ff
-
-#define SONIC_PHYS_ADDR_FIELD_VAL(pos, mask, val)	\
-	(((uint64_t)((val) & (mask))) << (pos))
-
-#define SONIC_PHYS_ADDR_HOST_VAL()   \
-	SONIC_PHYS_ADDR_FIELD_VAL(SONIC_PHYS_ADDR_HOST_POS, SONIC_PHYS_ADDR_HOST_MASK, 1)
-#define SONIC_PHYS_ADDR_LIF_VAL(lif) \
-	SONIC_PHYS_ADDR_FIELD_VAL(SONIC_PHYS_ADDR_LIF_POS, SONIC_PHYS_ADDR_LIF_MASK, lif)
-
 static identity_t *sonic_get_identity(void);
 
 static inline uint64_t
@@ -167,7 +151,14 @@ uint16_t
 sonic_get_lif_id(void)
 {
 	identity_t *ident = sonic_get_identity();
-	return ident->dev.hw_lif_id_tbl[0];
+	return ident->dev.lif_tbl[0].hw_lif_id;
+}
+
+uint64_t
+sonic_get_lif_local_dbaddr(void)
+{
+	identity_t *ident = sonic_get_identity();
+	return ident->dev.lif_tbl[0].hw_lif_local_dbaddr;
 }
 
 #ifdef NDEBUG
@@ -202,12 +193,13 @@ uint64_t sonic_hostpa_to_devpa(uint64_t hostpa)
 {
 	identity_t *ident = sonic_get_identity();
 
-	return hostpa | SONIC_PHYS_ADDR_HOST_VAL() |
-		SONIC_PHYS_ADDR_LIF_VAL(ident->dev.hw_lif_id_tbl[0]);
+	OSAL_ASSERT((hostpa & ident->dev.lif_tbl[0].hw_host_mask) == 0);
+	return hostpa | ident->dev.lif_tbl[0].hw_host_prefix;
 }
 
 uint64_t sonic_devpa_to_hostpa(uint64_t devpa)
 {
-	return devpa & ~(SONIC_PHYS_ADDR_HOST_VAL() |
-			SONIC_PHYS_ADDR_LIF_VAL(SONIC_PHYS_ADDR_LIF_MASK));
+	identity_t *ident = sonic_get_identity();
+
+	return devpa & ~ident->dev.lif_tbl[0].hw_host_mask;
 }

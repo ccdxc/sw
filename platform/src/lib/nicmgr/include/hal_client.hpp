@@ -17,6 +17,8 @@
 #include "multicast.grpc.pb.h"
 #include "rdma.grpc.pb.h"
 #include "accel_rgroup.grpc.pb.h"
+#include "crypto_keys.pb.h"
+#include "crypto_keys.grpc.pb.h"
 
 using namespace kh;
 using namespace types;
@@ -28,6 +30,7 @@ using namespace l2segment;
 using namespace multicast;
 using namespace rdma;
 using namespace accelRGroup;
+using namespace cryptokey;
 
 using namespace grpc;
 using namespace std;
@@ -285,6 +288,10 @@ public:
                             accel_rgroup_rindices_rsp_cb_t rsp_cb_func,
                             void *user_ctx,
                             uint32_t& ret_num_entries);
+  int crypto_key_index_update(uint32_t key_index,
+                              types::CryptoKeyType key_type,
+                              void *key,
+                              uint32_t key_size);
 
   /* Filter APIs */
   int FilterAdd(uint64_t lif_id, uint64_t mac, uint32_t vlan);
@@ -319,6 +326,7 @@ private:
   std::unique_ptr<Multicast::Stub> multicast_stub_;
   std::unique_ptr<Rdma::Stub> rdma_stub_;
   std::unique_ptr<AccelRGroup::Stub> accel_rgroup_stub_;
+  std::unique_ptr<CryptoKey::Stub> crypto_stub_;
 };
 
 #define   IB_QP_STATE        (1 << 0)

@@ -149,6 +149,8 @@ struct service_info {
 
 	struct cpdc_sgl	*si_src_sgl;	/* src input buffer converted to sgl */
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
+	struct crypto_aol *si_src_aol;	/* src input buffer converted to aol */
+	struct crypto_aol *si_dst_aol;	/* dst input buffer converted to aol */
 
 	struct cpdc_sgl	*si_p4_sgl;	/* for per-block hash/checksum */
 

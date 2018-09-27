@@ -82,6 +82,27 @@ struct queue_info Accel_PF::qinfo [NUM_QUEUE_TYPES] = {
     },
 };
 
+static types::CryptoKeyType crypto_key_type_tbl[] = {
+    [CMD_CRYPTO_KEY_TYPE_AES128] = types::CRYPTO_KEY_TYPE_AES128,
+    [CMD_CRYPTO_KEY_TYPE_AES256] = types::CRYPTO_KEY_TYPE_AES256,
+};
+
+/*
+ * Short lived crypto key accumulator
+ */
+typedef struct {
+    uint8_t     key_data[CMD_CRYPTO_KEY_PART_MAX][CMD_CRYPTO_KEY_PART_SIZE];
+    uint32_t    num_key_parts;
+} crypto_key_accum_t;
+
+typedef std::unordered_map<uint32_t,crypto_key_accum_t> accel_crypto_key_map_t;
+typedef accel_crypto_key_map_t::iterator                accel_crypto_key_iter_t;
+
+static accel_crypto_key_map_t   accel_crypto_key_map;
+
+static crypto_key_accum_t *crypto_key_accum_find_add(uint32_t key_index);
+static void crypto_key_accum_del(uint32_t key_index);
+
 static const std::string accel_pf_rgroup_name("Accel_PF_RGroup");
 static const std::vector<std::pair<const std::string,uint32_t>> accel_pf_ring_vec = {
     {"cp",      ACCEL_RING_CP},
@@ -341,6 +362,10 @@ Accel_PF::CmdHandler(void *req, void *req_data,
         status = this->_DevcmdSeqQueueInit(req, req_data, resp, resp_data);
         break;
 
+    case CMD_OPCODE_CRYPTO_KEY_UPDATE:
+        status = this->_DevcmdCryptoKeyUpdate(req, req_data, resp, resp_data);
+        break;
+
     case CMD_OPCODE_HANG_NOTIFY:
         NIC_LOG_INFO("lif{}: CMD_OPCODE_HANG_NOTIFY", info.hw_lif_id);
         status = DEVCMD_SUCCESS;
@@ -395,7 +420,6 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     identity_t      *rsp = (identity_t *)resp_data;
     identify_cpl_t  *cpl = (identify_cpl_t *)resp;
 
-    NIC_LOG_INFO("lif{} identity_dev size {}", info.hw_lif_id, (int)sizeof(rsp->dev));
     memset(&devcmd->data[0], 0, sizeof(devcmd->data));
 
     // TODO: Get these from hw
@@ -405,7 +429,14 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     // TODO: Get this from sw
     sprintf((char *)&rsp->dev.fw_version, "v0.0.1");
     rsp->dev.num_lifs = 1;
-    rsp->dev.hw_lif_id_tbl[0] = info.hw_lif_id;
+    memset(&rsp->dev.lif_tbl[0], 0, sizeof(identify_lif_t));
+    rsp->dev.lif_tbl[0].hw_lif_id = info.hw_lif_id;
+    rsp->dev.lif_tbl[0].hw_lif_local_dbaddr = 
+             ACCEL_LIF_LOCAL_DBADDR_SET(info.hw_lif_id, STORAGE_SEQ_QTYPE_SQ);
+    rsp->dev.lif_tbl[0].hw_host_prefix = ACCEL_PHYS_ADDR_HOST_SET(1) |
+                                         ACCEL_PHYS_ADDR_LIF_SET(info.hw_lif_id);
+    rsp->dev.lif_tbl[0].hw_host_mask = ACCEL_PHYS_ADDR_HOST_SET(ACCEL_PHYS_ADDR_HOST_MASK) |
+                                       ACCEL_PHYS_ADDR_LIF_SET(ACCEL_PHYS_ADDR_LIF_MASK);
     rsp->dev.db_pages_per_lif = 1;
     rsp->dev.admin_queues_per_lif = spec->adminq_count;
     rsp->dev.seq_queues_per_lif = spec->seq_created_count;
@@ -414,6 +445,11 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     memcpy(rsp->dev.accel_ring_tbl, spec->accel_ring_tbl,
            sizeof(rsp->dev.accel_ring_tbl));
     cpl->ver = IDENTITY_VERSION_1;
+
+    NIC_LOG_INFO("lif{} local_dbaddr {:#x} host_prefix {:#x} host_mask {:#x} size {}",
+                 info.hw_lif_id, rsp->dev.lif_tbl[0].hw_lif_local_dbaddr,
+                 rsp->dev.lif_tbl[0].hw_host_prefix, rsp->dev.lif_tbl[0].hw_host_mask,
+                 (int)sizeof(rsp->dev));
 
     return (DEVCMD_SUCCESS);
 }
@@ -545,7 +581,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     admin_qstate.host_queue = ACCEL_PHYS_ADDR_HOST_GET(cmd->ring_base);
     admin_qstate.ring_base = cmd->ring_base;
     if (admin_qstate.host_queue && !ACCEL_PHYS_ADDR_LIF_GET(cmd->ring_base)) {
-        ACCEL_PHYS_ADDR_LIF_SET(admin_qstate.ring_base, info.hw_lif_id);
+        admin_qstate.ring_base |= ACCEL_PHYS_ADDR_LIF_SET(info.hw_lif_id);
     }
     admin_qstate.ring_size = cmd->ring_size;
     admin_qstate.cq_ring_base = roundup(admin_qstate.ring_base + (64 << cmd->ring_size), 4096);
@@ -625,7 +661,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
     seq_qstate.wring_base = cmd->wring_base;
     if (ACCEL_PHYS_ADDR_HOST_GET(cmd->wring_base) && 
         !ACCEL_PHYS_ADDR_LIF_GET(cmd->wring_base)) {
-        ACCEL_PHYS_ADDR_LIF_SET(seq_qstate.wring_base, info.hw_lif_id);
+        seq_qstate.wring_base |= ACCEL_PHYS_ADDR_LIF_SET(info.hw_lif_id);
     }
 
     NIC_LOG_INFO("lif{}: qid {} qgroup {} wring_base {:#x} wring_size {} entry_size {}",
@@ -714,6 +750,73 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
     default:
         return (DEVCMD_ERROR);
         break;
+    }
+
+    return (DEVCMD_SUCCESS);
+}
+
+enum DevcmdStatus
+Accel_PF::_DevcmdCryptoKeyUpdate(void *req, void *req_data,
+                                 void *resp, void *resp_data)
+{
+    crypto_key_update_cmd_t     *cmd = (crypto_key_update_cmd_t *)req;
+    crypto_key_accum_t          *key_accum;
+    uint8_t                     *dst_key_data;
+    int                         ret_val;
+
+    NIC_LOG_INFO(" lif{}  key_index {} key_type {} key_size {} key_part {}",
+                 info.hw_lif_id, cmd->key_index, cmd->key_type,
+                 cmd->key_size, cmd->key_part);
+
+    if (cmd->key_type >= CMD_CRYPTO_KEY_TYPE_MAX) {
+        NIC_LOG_ERR("lif{}: unrecognized key_type {}", info.hw_lif_id,
+                    cmd->key_type);
+        return (DEVCMD_ERROR);
+    }
+
+    if (cmd->key_size > CMD_CRYPTO_KEY_PART_SIZE) {
+        NIC_LOG_ERR("lif{}: invalid key_size {}", info.hw_lif_id,
+                    cmd->key_size);
+        return (DEVCMD_ERROR);
+    }
+
+    if (cmd->key_part >= CMD_CRYPTO_KEY_PART_MAX) {
+        NIC_LOG_ERR("lif{}: invalid key_part {}", info.hw_lif_id,
+                    cmd->key_part);
+        return (DEVCMD_ERROR);
+    }
+
+    key_accum = crypto_key_accum_find_add(cmd->key_index);
+    if (!key_accum) {
+        NIC_LOG_ERR("lif{}: unable to obtain key accumulator for key_index {}",
+                    info.hw_lif_id, cmd->key_index);
+        return (DEVCMD_ERROR);
+    }
+
+    dst_key_data = &key_accum->key_data[cmd->key_part][0];
+    memcpy(dst_key_data, cmd->key_data, cmd->key_size);
+    if (CMD_CRYPTO_KEY_PART_SIZE - cmd->key_size) {
+        memset(dst_key_data + cmd->key_size, 0,
+               CMD_CRYPTO_KEY_PART_SIZE - cmd->key_size);
+    }
+
+    /*
+     * This devcmd assumes that each time the caller makes a key update, 
+     * all the key parts would eventually have been submitted.
+     */
+    key_accum->num_key_parts = std::min(key_accum->num_key_parts + 1,
+                                        (uint32_t)CMD_CRYPTO_KEY_PART_MAX);
+    if (cmd->trigger_update) {
+        ret_val = hal->crypto_key_index_update(cmd->key_index,
+                              crypto_key_type_tbl[cmd->key_type],
+                              &key_accum->key_data[0][0],
+                              key_accum->num_key_parts * CMD_CRYPTO_KEY_PART_SIZE);
+        crypto_key_accum_del(cmd->key_index);
+        if (ret_val) {
+            NIC_LOG_ERR("lif {}: failed to update crypto key for key_index {}",
+                        info.hw_lif_id, cmd->key_index);
+            return (DEVCMD_ERROR);
+        }
     }
 
     return (DEVCMD_SUCCESS);
@@ -1131,6 +1234,30 @@ timestamp(void)
 
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000000 + tv.tv_usec);
+}
+
+/*
+ * Crypto key accumulator
+ */
+static crypto_key_accum_t *
+crypto_key_accum_find_add(uint32_t key_index)
+{
+    std::pair<accel_crypto_key_iter_t,bool> iter;
+    crypto_key_accum_t empty_key_accum = {0};
+
+    try {
+        iter = accel_crypto_key_map.insert(std::make_pair(key_index,
+                                                          empty_key_accum));
+        return &iter.first->second;
+    } catch (std::exception& e) {
+        return nullptr;
+    }
+}
+
+static void
+crypto_key_accum_del(uint32_t key_index)
+{
+    accel_crypto_key_map.erase(key_index);
 }
 
 /*

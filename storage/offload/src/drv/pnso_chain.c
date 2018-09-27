@@ -61,6 +61,10 @@ pprint_service_info(const struct service_info *svc_info)
 			(uint64_t) svc_info->si_src_sgl);
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_dst_sgl",
 			(uint64_t) svc_info->si_dst_sgl);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_src_aol",
+			(uint64_t) svc_info->si_src_aol);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_dst_aol",
+			(uint64_t) svc_info->si_dst_aol);
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_p4_sgl",
 			(uint64_t) svc_info->si_p4_sgl);
 
@@ -270,7 +274,7 @@ chn_destroy_chain(struct service_chain *chain)
 		return;
 
 	OSAL_LOG_DEBUG("enter ...");
-	OSAL_LOG_INFO("chain: %p num_services: %d ", chain,
+	OSAL_LOG_INFO("chain: 0x%llx num_services: %d ", (uint64_t)chain,
 			chain->sc_num_services);
 
 	pc_res = chain->sc_pc_res;

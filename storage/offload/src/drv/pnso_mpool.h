@@ -11,7 +11,7 @@
  * fixed-size memory pools (mpool) for Pensando Storage Accelerators.
  *
  * There are few types of hardware descriptors, data structures, or buffers
- * (a.k.a. objects) heavily used in enabling the CPDC and XTS accelerator
+ * (a.k.a. objects) heavily used in enabling the CPDC and CRYPTO accelerator
  * functionality.  The goal of mpool is to prevent dynamic allocations and
  * deallocations of objects in IO path.  mpool attempts to maintain pools
  * of such objects aligned to a default or requested size, pre-allocated
@@ -43,7 +43,7 @@ extern "C" {
  *
  */
 /* unit of following constants is bytes */
-#define PNSO_MEM_ALIGN_DESC	64	/* cpdc/sgl/aol/xts desc */
+#define PNSO_MEM_ALIGN_DESC	64	/* cpdc/sgl/aol/crypto desc */
 #define PNSO_MEM_ALIGN_BUF	256
 #define PNSO_MEM_ALIGN_PAGE	4096
 
@@ -56,9 +56,10 @@ enum mem_pool_type {
 	MPOOL_TYPE_CPDC_SGL_VECTOR,
 	MPOOL_TYPE_CPDC_STATUS_DESC,
 	MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR,
-	MPOOL_TYPE_XTS_DESC,
-	MPOOL_TYPE_XTS_AOL,
-	MPOOL_TYPE_XTS_AOL_VECTOR,
+	MPOOL_TYPE_CRYPTO_DESC,
+	MPOOL_TYPE_CRYPTO_STATUS_DESC,
+	MPOOL_TYPE_CRYPTO_AOL,
+	MPOOL_TYPE_CRYPTO_AOL_VECTOR,
 	MPOOL_TYPE_SERVICE_CHAIN,
 	MPOOL_TYPE_SERVICE_CHAIN_ENTRY,
 	MPOOL_TYPE_MAX
@@ -71,7 +72,7 @@ struct mem_pool_stack {
 };
 
 struct mem_pool_config {
-	enum mem_pool_type mpc_type;	/* cpdc/xts/sgl/etc pool */
+	enum mem_pool_type mpc_type;	/* cpdc/crypto/sgl/etc pool */
 	uint32_t mpc_num_objects;	/* total number of objects */
 	uint32_t mpc_object_size;	/* size of an object */
 	uint32_t mpc_align_size;	/* object alignment size */
@@ -173,6 +174,8 @@ void mpool_pprint(const struct mem_pool *mpool);
 #else
 #define MPOOL_PPRINT(mpool) mpool_pprint(mpool)
 #endif
+
+const char *mem_pool_get_type_str(enum mem_pool_type mpool_type);
 
 #ifdef __cplusplus
 }

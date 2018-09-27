@@ -52,12 +52,6 @@
 	} while (0)
 #endif
 
-#define kDbAddrCapri	(0x8800000)
-#define kDbAddrUpdate	(0xB)
-#define kDbUpdateShift	(17)
-#define kDbLifShift	(6)
-#define kDbTypeShift	(3)
-
 extern uint64_t pad_buffer;
 
 static void __attribute__((unused))
@@ -647,7 +641,6 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 	struct accel_ring *ring;
 	struct lif *lif;
 	struct queue *q, *status_q;
-	uint16_t lif_id;
 
 	OSAL_LOG_INFO("enter ...");
 
@@ -672,7 +665,6 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 		OSAL_ASSERT(lif);
 		goto out;
 	}
-	lif_id = sonic_get_lif_id();
 
 	err = sonic_get_seq_sq(lif, qtype, &q);
 	if (err) {
@@ -701,11 +693,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 	seq_spec->sqs_seq_status_q = (uint64_t) status_q;
 	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for comp+hash */
 
-	cp_desc->cd_db_addr = kDbAddrCapri |
-		((uint64_t) kDbAddrUpdate << kDbUpdateShift) |
-		((uint64_t) lif_id << kDbLifShift) |
-		((uint64_t) status_q->qtype << kDbTypeShift);
-
+	cp_desc->cd_db_addr = sonic_get_lif_local_dbaddr();
 	cp_desc->cd_db_data = sonic_q_ringdb_data(status_q, index);
 	cp_desc->u.cd_bits.cc_db_on = 1;
 

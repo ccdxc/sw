@@ -262,7 +262,7 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
 
 	entry = sim_key_get_entry(key_idx, true);
 	if (!entry) {
-		return PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG;
+		return PNSO_ERR_CRYPTO_KEY_INDEX_OUT_OF_RANG;
 	}
 
 	if (entry->key_size < key_size) {
@@ -290,7 +290,7 @@ pnso_error_t sim_get_key_desc_idx(void **key1,
 
 	entry = sim_key_get_entry(key_idx, false);
 	if (!entry) {
-		return PNSO_ERR_XTS_KEY_NOT_REGISTERED;
+		return PNSO_ERR_CRYPTO_KEY_NOT_REGISTERED;
 	}
 
 	*key1 = entry->key1;

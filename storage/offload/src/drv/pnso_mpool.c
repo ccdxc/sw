@@ -19,18 +19,21 @@ const char __attribute__ ((unused)) *mem_pool_types[] = {
 	[MPOOL_TYPE_CPDC_SGL_VECTOR] = "CPDC SGL VECTOR",
 	[MPOOL_TYPE_CPDC_STATUS_DESC] = "CPDC STATUS DESC",
 	[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] = "CPDC STATUS DESC VECTOR",
-	[MPOOL_TYPE_XTS_DESC] = "XTS DESC",
-	[MPOOL_TYPE_XTS_AOL] = "XTS AOL",
-	[MPOOL_TYPE_XTS_AOL] = "XTS AOL VECTOR",
+	[MPOOL_TYPE_CRYPTO_DESC] = "CRYPTO DESC",
+	[MPOOL_TYPE_CRYPTO_STATUS_DESC] = "CRYPTO STATUS DESC",
+	[MPOOL_TYPE_CRYPTO_AOL] = "CRYPTO AOL",
+	[MPOOL_TYPE_CRYPTO_AOL_VECTOR] = "CRYPTO AOL VECTOR",
 	[MPOOL_TYPE_SERVICE_CHAIN] = "SERVICE CHAIN",
 	[MPOOL_TYPE_SERVICE_CHAIN_ENTRY] = "SERVICE CHAIN ENTRY",
 	[MPOOL_TYPE_MAX] = "Max (invalid)"
 };
 
-static inline const char *
-get_pool_type_str(enum mem_pool_type mpool_type)
+const char *
+mem_pool_get_type_str(enum mem_pool_type mpool_type)
 {
-	return mem_pool_types[mpool_type];
+	if (mpool_type < MPOOL_TYPE_MAX)
+		return mem_pool_types[mpool_type];
+	return "unknown";
 }
 
 #ifndef __KERNEL__
@@ -57,9 +60,10 @@ is_pool_type_valid(enum mem_pool_type mpool_type)
 	case MPOOL_TYPE_CPDC_SGL_VECTOR:
 	case MPOOL_TYPE_CPDC_STATUS_DESC:
 	case MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR:
-	case MPOOL_TYPE_XTS_DESC:
-	case MPOOL_TYPE_XTS_AOL:
-	case MPOOL_TYPE_XTS_AOL_VECTOR:
+	case MPOOL_TYPE_CRYPTO_DESC:
+	case MPOOL_TYPE_CRYPTO_STATUS_DESC:
+	case MPOOL_TYPE_CRYPTO_AOL:
+	case MPOOL_TYPE_CRYPTO_AOL_VECTOR:
 	case MPOOL_TYPE_SERVICE_CHAIN:
 	case MPOOL_TYPE_SERVICE_CHAIN_ENTRY:
 		return true;
@@ -287,7 +291,7 @@ mpool_pprint(const struct mem_pool *mpool)
 
 	OSAL_LOG_INFO("%-30s: %u:%s", "mpool->mp_config.mpc_type",
 			mpool->mp_config.mpc_type,
-			get_pool_type_str(mpool->mp_config.mpc_type));
+			mem_pool_get_type_str(mpool->mp_config.mpc_type));
 	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_num_objects",
 			mpool->mp_config.mpc_num_objects);
 	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_object_size",

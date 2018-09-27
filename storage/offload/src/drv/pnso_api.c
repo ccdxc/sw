@@ -8,6 +8,7 @@
 #include "osal_sys.h"
 
 #include "pnso_api.h"
+#include "pnso_crypto.h"
 
 /*
  * NOTE/TODO:
@@ -175,3 +176,12 @@ pnso_add_compression_algo_mapping(enum pnso_compression_type pnso_algo,
 
 	return PNSO_OK;
 }
+
+pnso_error_t pnso_set_key_desc_idx(const void *key1,
+				   const void *key2,
+				   uint32_t key_size,
+				   uint32_t key_idx)
+{
+	return crypto_key_index_update(key1, key2, key_size, key_idx);
+}
+
