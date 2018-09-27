@@ -182,9 +182,10 @@ mpool_create(enum mem_pool_type mpool_type,
 	obj = (char *) mpool->mp_objects;
 	for (i = 0; i < mpool->mp_config.mpc_num_objects; i++) {
 		objects[i] = obj;
-		OSAL_LOG_DEBUG("%30s[%d]: 0x%llx 0x%llx %u %u %u",
+		OSAL_LOG_DEBUG("%30s[%d]: 0x%llx 0x%llx 0x%llx %u %u %u",
 			       "mpool->mp_dstack.mps_objects", i,
 			       (uint64_t) &objects[i], (uint64_t) objects[i],
+			       (uint64_t) osal_virt_to_phy(objects[i]),
 			       object_size, pad_size, align_size);
 		obj += (object_size + pad_size);
 	}
