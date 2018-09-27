@@ -31,7 +31,7 @@ import _ "github.com/pensando/sw/venice/utils/apigen/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
 import api "github.com/pensando/sw/api"
 import _ "github.com/pensando/sw/api"
-import monitoring "github.com/pensando/sw/api/generated/monitoring"
+import monitoring1 "github.com/pensando/sw/api/generated/monitoring"
 
 import (
 	context "golang.org/x/net/context"
@@ -160,7 +160,7 @@ type FwlogPolicySpec struct {
 	// filter firewall logs for venice
 	Filter []string `protobuf:"bytes,1,rep,name=Filter" json:"filter,omitempty"`
 	// fwlog exports
-	Exports []*monitoring.FwlogExport `protobuf:"bytes,2,rep,name=Exports" json:"exports,omitempty"`
+	Exports []*monitoring1.FwlogExport `protobuf:"bytes,2,rep,name=Exports" json:"exports,omitempty"`
 }
 
 func (m *FwlogPolicySpec) Reset()                    { *m = FwlogPolicySpec{} }
@@ -175,7 +175,7 @@ func (m *FwlogPolicySpec) GetFilter() []string {
 	return nil
 }
 
-func (m *FwlogPolicySpec) GetExports() []*monitoring.FwlogExport {
+func (m *FwlogPolicySpec) GetExports() []*monitoring1.FwlogExport {
 	if m != nil {
 		return m.Exports
 	}
@@ -244,7 +244,7 @@ func (m *FlowExportPolicyEvent) GetPolicy() *FlowExportPolicy {
 }
 
 type FlowExportPolicySpec struct {
-	Targets []monitoring.FlowExportTarget `protobuf:"bytes,1,rep,name=Targets" json:"targets,omitempty"`
+	Targets []monitoring1.FlowExportTarget `protobuf:"bytes,1,rep,name=Targets" json:"targets,omitempty"`
 }
 
 func (m *FlowExportPolicySpec) Reset()                    { *m = FlowExportPolicySpec{} }
@@ -252,7 +252,7 @@ func (m *FlowExportPolicySpec) String() string            { return proto.Compact
 func (*FlowExportPolicySpec) ProtoMessage()               {}
 func (*FlowExportPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptorTpm, []int{9} }
 
-func (m *FlowExportPolicySpec) GetTargets() []monitoring.FlowExportTarget {
+func (m *FlowExportPolicySpec) GetTargets() []monitoring1.FlowExportTarget {
 	if m != nil {
 		return m.Targets
 	}
@@ -1740,7 +1740,7 @@ func (m *FwlogPolicySpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Exports = append(m.Exports, &monitoring.FwlogExport{})
+			m.Exports = append(m.Exports, &monitoring1.FwlogExport{})
 			if err := m.Exports[len(m.Exports)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2143,7 +2143,7 @@ func (m *FlowExportPolicySpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Targets = append(m.Targets, monitoring.FlowExportTarget{})
+			m.Targets = append(m.Targets, monitoring1.FlowExportTarget{})
 			if err := m.Targets[len(m.Targets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

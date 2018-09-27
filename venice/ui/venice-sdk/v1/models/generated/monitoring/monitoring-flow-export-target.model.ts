@@ -8,11 +8,13 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringFlowExportTarget_format,  } from './enums';
+import { MonitoringMatchRule, IMonitoringMatchRule } from './monitoring-match-rule.model';
 import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
 
 export interface IMonitoringFlowExportTarget {
     'interval'?: string;
     'format'?: MonitoringFlowExportTarget_format;
+    'match-rules'?: Array<IMonitoringMatchRule>;
     'exports'?: Array<IApiExportConfig>;
 }
 
@@ -20,6 +22,7 @@ export interface IMonitoringFlowExportTarget {
 export class MonitoringFlowExportTarget extends BaseModel implements IMonitoringFlowExportTarget {
     'interval': string = null;
     'format': MonitoringFlowExportTarget_format = null;
+    'match-rules': Array<MonitoringMatchRule> = null;
     /** Export contains export parameters. */
     'exports': Array<ApiExportConfig> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
@@ -30,6 +33,9 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
             enum: MonitoringFlowExportTarget_format,
             default: 'Ipfix',
             type: 'string'
+        },
+        'match-rules': {
+            type: 'object'
         },
         'exports': {
             description:  'Export contains export parameters.',
@@ -56,6 +62,7 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
     */
     constructor(values?: any) {
         super();
+        this['match-rules'] = new Array<MonitoringMatchRule>();
         this['exports'] = new Array<ApiExportConfig>();
         this.setValues(values);
     }
@@ -76,6 +83,9 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
             this['format'] = <MonitoringFlowExportTarget_format>  MonitoringFlowExportTarget.propInfo['format'].default;
         }
         if (values) {
+            this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', values['match-rules'], MonitoringMatchRule);
+        }
+        if (values) {
             this.fillModelArray<ApiExportConfig>(this, 'exports', values['exports'], ApiExportConfig);
         }
     }
@@ -88,8 +98,11 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
             this._formGroup = new FormGroup({
                 'interval': new FormControl(this['interval']),
                 'format': new FormControl(this['format'], [enumValidator(MonitoringFlowExportTarget_format), ]),
+                'match-rules': new FormArray([]),
                 'exports': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<MonitoringMatchRule>('match-rules', this['match-rules'], MonitoringMatchRule);
             // generate FormArray control elements
             this.fillFormArray<ApiExportConfig>('exports', this['exports'], ApiExportConfig);
         }
@@ -100,6 +113,7 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
         if (this._formGroup) {
             this._formGroup.controls['interval'].setValue(this['interval']);
             this._formGroup.controls['format'].setValue(this['format']);
+            this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', this['match-rules'], MonitoringMatchRule);
             this.fillModelArray<ApiExportConfig>(this, 'exports', this['exports'], ApiExportConfig);
         }
     }

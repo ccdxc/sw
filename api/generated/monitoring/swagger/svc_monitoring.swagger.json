@@ -12279,6 +12279,12 @@
           ],
           "default": "Ipfix"
         },
+        "match-rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringMatchRule"
+          }
+        },
         "exports": {
           "type": "array",
           "items": {

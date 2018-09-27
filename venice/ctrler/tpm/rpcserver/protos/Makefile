@@ -7,6 +7,7 @@ default: ${DEST} template
 
 %.pb.go: %.proto Makefile 
 	protoc -I/usr/local/include -I. -I../../../../../vendor -I${GOPATH}/src \
+	-I${GOPATH}/src/github.com/pensando/sw/api/protos \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         --gofast_out=plugins=grpc:. $<
@@ -17,6 +18,7 @@ default: ${DEST} template
 template: 
 	protoc -I/usr/local/include -I. -I../../../../../vendor -I${GOPATH}/src \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party \
+	-I${GOPATH}/src/github.com/pensando/sw/api/protos \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/tpa/ctrlerif/restapi/templates/rest.yml,log_dir=${NICDIR}/tmp,logtostderr=false,v=7:${NICDIR} *.proto
 	goimports -local "github.com/pensando/sw" -w ${NICFILES}

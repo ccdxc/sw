@@ -10,6 +10,7 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/export.proto";
+import "mirror.proto";
 
 // telemetry policies:
 //-------------------------------------------------------------------------------
@@ -144,8 +145,10 @@ message FlowExportTarget {
 
     string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportTarget.Formats)"];
 
+    repeated MatchRule  MatchRules = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
+
     // Export contains export parameters.
-    repeated api.ExportConfig Exports = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
+    repeated api.ExportConfig Exports = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
 
 }
 

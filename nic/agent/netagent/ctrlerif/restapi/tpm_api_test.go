@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	api "github.com/pensando/sw/api"
-	monitoring "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
