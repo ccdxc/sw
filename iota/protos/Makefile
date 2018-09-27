@@ -7,7 +7,9 @@ INCLUDES := -I. \
 SRCS := $(wildcard *.proto)
 
 default: pythongen
+	@mkdir -p ./gogen
 	protoc ${INCLUDES} --gofast_out=plugins=grpc:./gogen ${SRCS}
 
 pythongen:
+	@mkdir -p ./pygen
 	protoc ${INCLUDES} --python_out=plugins=grpc:./pygen ${SRCS}

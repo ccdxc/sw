@@ -1,8 +1,7 @@
 #! /usr/bin/python3
 import grpc
 
-import iota.protos.pygen.req_types_pb2 as req_types
-import iota.protos.pygen.resp_types_pb2 as resp_types
+import iota.protos.pygen.types_pb2 as types
 import iota.protos.pygen.cfg_svc_pb2 as cfg_svc
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
