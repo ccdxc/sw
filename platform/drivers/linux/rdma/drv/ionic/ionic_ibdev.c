@@ -3342,6 +3342,7 @@ static int ionic_v0_create_qp_cmd(struct ionic_ibdev *dev,
 				  struct ionic_tbl_buf *rq_buf,
 				  struct ib_qp_init_attr *attr)
 {
+	const u32 flags = to_ionic_qp_flags(0, !pd->ibpd.uobject);
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
 		/* XXX endian? */
@@ -3361,7 +3362,7 @@ static int ionic_v0_create_qp_cmd(struct ionic_ibdev *dev,
 			.qp_num = qp->qpid,
 			.sq_cq_num = send_cq->cqid,
 			.rq_cq_num = recv_cq->cqid,
-			/* XXX indicate qp privileges for frwr and rsvd lkey */
+			.flags = flags,
 		},
 	};
 	int rc;
@@ -3516,6 +3517,8 @@ static int ionic_v0_modify_qp_cmd(struct ionic_ibdev *dev,
 				  struct ib_qp_attr *attr,
 				  int mask)
 {
+	const u32 flags = to_ionic_qp_flags(attr->qp_access_flags,
+					    !qp->ibqp.uobject);
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
 		/* XXX endian? */
@@ -3532,6 +3535,7 @@ static int ionic_v0_modify_qp_cmd(struct ionic_ibdev *dev,
 			.rrq_depth = attr->max_rd_atomic,
 			.state = to_ionic_qp_modify_state(attr->qp_state,
 							  attr->cur_qp_state),
+			.flags = flags,
 		},
 	};
 	struct ib_ud_header *hdr = NULL;
