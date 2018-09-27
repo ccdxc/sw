@@ -84,6 +84,7 @@ typedef enum hal_obj_id_e {
     HAL_OBJ_ID_IPSEC_POLICY,
     HAL_OBJ_ID_TCP_PROXY_POLICY,
     HAL_OBJ_ID_FILTER,
+    HAL_OBJ_ID_FTE_SPAN,
     HAL_OBJ_ID_MAX                                // NOTE: must be the last
 } hal_obj_id_t;
 

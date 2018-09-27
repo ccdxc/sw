@@ -417,13 +417,12 @@ func printEvenUplinkStats(portIn []uint32, portOut []uint32) {
 func printUplinkNum() {
 	fmt.Print(" ")
 	fmt.Print(strings.Repeat(" ", 5))
-	spaceLine := strings.Repeat(" ", 9)
-	fmt.Print(spaceLine)
+	fmt.Print(strings.Repeat(" ", 10))
 
-	fmt.Printf("%c  0 %c", 11014, 11015) // Arrows
+	fmt.Printf("%c 0 %c", 11014, 11015) // Arrows
 	for i := 1; i < 9; i++ {
-		fmt.Print(strings.Repeat(" ", 7))
-		fmt.Printf("%c  %d %c", 11014, i, 11015) // Arrows
+		fmt.Print(strings.Repeat(" ", 8))
+		fmt.Printf("%c %d %c", 11014, i, 11015) // Arrows
 	}
 	fmt.Println()
 }

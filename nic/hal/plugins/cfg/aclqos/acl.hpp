@@ -43,15 +43,17 @@ namespace hal {
 
 #define HAL_MAX_ACLS 512
 
-#define ACL_IP_FRAGMENT_DROP_ENTRY_ID    0
-#define ACL_QUIESCE_ENTRY_ID             1
-#define ACL_EPLEARN_ENTRY_ID_BEGIN       2
-#define ACL_EPLEARN_ENTRY_ID_END         6
+#define ACL_FTE_SPAN_ENTRY_ID            0
+#define ACL_IP_FRAGMENT_DROP_ENTRY_ID    1
+#define ACL_QUIESCE_ENTRY_ID             2
+#define ACL_EPLEARN_ENTRY_ID_BEGIN       3
+#define ACL_EPLEARN_ENTRY_ID_END         7
 
-#define ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY    0
-#define ACL_QUIESCE_ENTRY_PRIORITY             1
-#define ACL_EPLEARN_ENTRY_PRIORITY_BEGIN       2
-#define ACL_EPLEARN_ENTRY_PRIORITY_END         6
+#define ACL_FTE_SPAN_PRIORITY                  0
+#define ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY    1
+#define ACL_QUIESCE_ENTRY_PRIORITY             2
+#define ACL_EPLEARN_ENTRY_PRIORITY_BEGIN       3
+#define ACL_EPLEARN_ENTRY_PRIORITY_END         7
 
 
 typedef struct acl_eth_match_spec_s {

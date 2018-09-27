@@ -18,6 +18,7 @@
 #include "nic/include/hal_mem.hpp"
 #include "sdk/periodic.hpp"
 #include "nic/fte/acl/acl.hpp"
+#include "nic/hal/src/debug/debug.hpp"
 
 #ifdef SHM
 #define slab_ptr_t        offset_ptr<slab>
@@ -145,6 +146,7 @@ public:
     slab *gft_exact_match_flow_entry_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY]); }
     slab *proxy_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY]); }
     slab *proxy_flow_info_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY_FLOW_INFO]); }
+    slab *fte_span_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_FTE_SPAN]); }
 
     slab *v4addr_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V4ADDR_LIST_ELEM]); }
     slab *v6addr_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V6ADDR_LIST_ELEM]); }
@@ -290,6 +292,9 @@ public:
     void *fte_stats(void) const { return fte_stats_; }
     void set_fte_stats(void *fte_stats) { fte_stats_ = fte_stats; }
 
+    void set_fte_span(fte_span_t *span) { fte_span_ = span; }
+    fte_span_t *fte_span(void) const { return fte_span_; }
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -349,6 +354,7 @@ private:
     if_id_t                 app_redir_if_id_;
     uint8_t                 max_data_threads_;
     hal_handle_t            default_securityprof_hdl_;
+    fte_span_t              *fte_span_;
 
     // Classic Mode:
     //  - Ucast packet from host, registered mac will be a MISS.
@@ -507,6 +513,7 @@ public:
     // get APIs for Proxy state
     slab *proxy_slab(void) const { return cfg_db_->proxy_slab(); }
     slab *proxy_flow_info_slab(void) const { return cfg_db_->proxy_flow_info_slab(); }
+    slab *fte_span_slab(void) const { return cfg_db_->fte_span_slab(); }
     ht *proxy_type_ht(void) const { return oper_db_->proxy_type_ht(); }
 
     // get API for infra VRF
@@ -627,6 +634,9 @@ public:
 
     void *fte_stats(void) const { return oper_db_->fte_stats(); }
     void set_fte_stats(void *fte_stats) { oper_db_->set_fte_stats(fte_stats); }
+
+    void set_fte_span(fte_span_t *span) { oper_db_->set_fte_span(span); }
+    fte_span_t *fte_span(void) const { return oper_db_->fte_span(); }
 
 private:
     // following come from shared memory or non-linux HBM memory

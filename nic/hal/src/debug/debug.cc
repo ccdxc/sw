@@ -352,12 +352,398 @@ thread_get (ThreadResponseMsg *response)
             ts_diff = sdk::timestamp_diff(&curr_ts, &hb_ts);
             sdk::timestamp_to_nsecs(&ts_diff, &diff_ns);
             rsp->mutable_status()->set_last_hb(diff_ns);
-            
+
             rsp->set_api_status(types::API_STATUS_OK);
         }
     }
 
     return HAL_RET_OK;
+}
+
+static inline fte_span_t *
+fte_span_alloc (void)
+{
+    fte_span_t    *fte_span;
+
+    fte_span = (fte_span_t *)g_hal_state->fte_span_slab()->alloc();
+    if (fte_span == NULL) {
+        return NULL;
+    }
+    return fte_span;
+}
+
+static inline fte_span_t *
+fte_span_init (fte_span_t *fte_span)
+{
+    if (!fte_span) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&fte_span->slock, PTHREAD_PROCESS_SHARED);
+
+    memset(fte_span, 0, sizeof(fte_span_t));
+
+    return fte_span;
+}
+
+static inline fte_span_t *
+fte_span_alloc_init (void)
+{
+    return fte_span_init(fte_span_alloc());
+}
+
+static inline hal_ret_t
+fte_span_free (fte_span_t *fte_span)
+{
+    HAL_SPINLOCK_DESTROY(&fte_span->slock);
+    hal::delay_delete_to_slab(HAL_SLAB_FTE_SPAN, fte_span);
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+fte_span_cleanup (fte_span_t *fte_span)
+{
+    fte_span_free(fte_span);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+validate_fte_span_create (FteSpanRequest& req,
+                          FteSpanResponse *rsp)
+{
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+fte_span_prepare_rsp (FteSpanResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
+{
+    rsp->set_api_status(hal_prepare_rsp(ret));
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+fte_span_init_from_spec (fte_span_t *fte_span, FteSpanRequest* req)
+{
+    fte_span->sel = req->selector();
+    fte_span->src_lport = req->src_lport();
+    fte_span->dst_lport = req->dst_lport();
+    fte_span->drop_reason = req->drop_reason();
+    fte_span->flow_lkup_dir = req->flow_lkup_dir();
+    fte_span->flow_lkup_type = req->flow_lkup_type();
+    fte_span->flow_lkup_vrf = req->flow_lkup_vrf();
+    fte_span->flow_lkup_src = req->flow_lkup_src();
+    fte_span->flow_lkup_dst = req->flow_lkup_dst();
+    fte_span->flow_lkup_proto = req->flow_lkup_proto();
+    fte_span->flow_lkup_sport = req->flow_lkup_sport();
+    fte_span->flow_lkup_dport = req->flow_lkup_dport();
+    fte_span->eth_dmac = req->eth_dmac();
+    fte_span->from_cpu = req->from_cpu();
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+fte_span_to_spec (FteSpanRequest* req, fte_span_t *fte_span)
+{
+    req->set_selector(fte_span->sel);
+    req->set_src_lport(fte_span->src_lport);
+    req->set_dst_lport(fte_span->dst_lport);
+    req->set_drop_reason(fte_span->drop_reason);
+    req->set_flow_lkup_dir(fte_span->flow_lkup_dir);
+    req->set_flow_lkup_type(fte_span->flow_lkup_type);
+    req->set_flow_lkup_vrf(fte_span->flow_lkup_vrf);
+    req->set_flow_lkup_src(fte_span->flow_lkup_src);
+    req->set_flow_lkup_dst(fte_span->flow_lkup_dst);
+    req->set_flow_lkup_proto(fte_span->flow_lkup_proto);
+    req->set_flow_lkup_sport(fte_span->flow_lkup_sport);
+    req->set_flow_lkup_dport(fte_span->flow_lkup_dport);
+    req->set_eth_dmac(fte_span->eth_dmac);
+    req->set_from_cpu(fte_span->from_cpu);
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+fte_span_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                        ret = HAL_RET_OK;
+    pd::pd_fte_span_create_args_t    pd_fte_span_args = { 0 };
+    dllist_ctxt_t                    *lnode = NULL;
+    dhl_entry_t                      *dhl_entry = NULL;
+    fte_span_t                       *fte_span = NULL;
+    pd::pd_func_args_t               pd_func_args = {0};
+
+    HAL_ASSERT(cfg_ctxt != NULL);
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    fte_span = (fte_span_t *)dhl_entry->obj;
+
+    // PD Call to allocate PD resources and HW programming
+    pd_fte_span_args.fte_span           = fte_span;
+    pd_func_args.pd_fte_span_create = &pd_fte_span_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FTE_SPAN_CREATE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create fte_span pd, err : {}", ret);
+    }
+    return ret;
+}
+
+static hal_ret_t
+fte_span_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                   ret        = HAL_RET_OK;
+    dllist_ctxt_t               *lnode     = NULL;
+    dhl_entry_t                 *dhl_entry = NULL;
+    fte_span_t                       *fte_span       = NULL;
+
+    HAL_ASSERT(cfg_ctxt != NULL);
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    fte_span = (fte_span_t *)dhl_entry->obj;
+
+    g_hal_state->set_fte_span(fte_span);
+
+    return ret;
+}
+
+hal_ret_t
+fte_span_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+fte_span_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t fte_span_create(FteSpanRequest& req,
+                          FteSpanResponse *rsp)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    fte_span_t      *fte_span = NULL;
+    dhl_entry_t     dhl_entry = { 0 };
+    cfg_op_ctxt_t   cfg_ctxt  = { 0 };
+
+    hal_api_trace(" API Begin: FTE Span create ");
+    proto_msg_dump(req);
+
+    ret = validate_fte_span_create(req, rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte span validation failed, err : {}", ret);
+        goto end;
+    }
+
+    if(g_hal_state->fte_span()) {
+        HAL_TRACE_ERR("Failed to create fte span, exists already");
+        ret = HAL_RET_ENTRY_EXISTS;
+        goto end;
+    }
+
+    fte_span = fte_span_alloc_init();
+    if (fte_span == NULL) {
+        HAL_TRACE_ERR("Failed to alloc/init fte_span");
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    ret = fte_span_init_from_spec(fte_span, &req);
+    if (ret != HAL_RET_OK)  {
+        HAL_TRACE_ERR("Failed to init fte_span from req");
+        goto end;
+    }
+
+    fte_span->hal_handle = hal_handle_alloc(HAL_OBJ_ID_FTE_SPAN);
+    if (fte_span->hal_handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("Failed to alloc handle for fte span");
+        rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
+        fte_span_cleanup(fte_span);
+        ret = HAL_RET_HANDLE_INVALID;
+        goto end;
+    }
+
+    // form ctxt and call infra add
+    dhl_entry.handle  = fte_span->hal_handle;
+    dhl_entry.obj     = fte_span;
+    cfg_ctxt.app_ctxt = NULL;
+    // cfg_ctxt.app_ctxt = &app_ctxt;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_add_obj(fte_span->hal_handle, &cfg_ctxt,
+                             fte_span_create_add_cb,
+                             fte_span_create_commit_cb,
+                             fte_span_create_abort_cb,
+                             fte_span_create_cleanup_cb);
+
+end:
+
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
+        if (fte_span) {
+            fte_span_cleanup(fte_span);
+            fte_span = NULL;
+        }
+        // HAL_API_STATS_INC(HAL_API_FTE_SPAN_CREATE_FAIL);
+    } else {
+        // HAL_API_STATS_INC(HAL_API_FTE_SPAN_CREATE_SUCCESS);
+    }
+
+    fte_span_prepare_rsp(rsp, ret, fte_span ? fte_span->hal_handle : HAL_HANDLE_INVALID);
+    return ret;
+}
+
+hal_ret_t
+validate_fte_span_update (FteSpanRequest& req,
+                          FteSpanResponse *rsp)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+fte_span_make_clone (fte_span_t *fte_span, fte_span_t **fte_span_clone)
+{
+    pd::pd_fte_span_make_clone_args_t args;
+    pd::pd_func_args_t                pd_func_args = {0};
+
+    *fte_span_clone = fte_span_alloc_init();
+    memcpy(*fte_span_clone, fte_span, sizeof(fte_span_t));
+
+    args.fte_span = fte_span;
+    args.clone = *fte_span_clone;
+    pd_func_args.pd_fte_span_make_clone = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_FTE_SPAN_MAKE_CLONE, &pd_func_args);
+
+    return HAL_RET_OK;
+}
+
+
+static hal_ret_t
+fte_span_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                        ret = HAL_RET_OK;
+    pd::pd_fte_span_update_args_t    pd_fte_span_args = { 0 };
+    dllist_ctxt_t                    *lnode = NULL;
+    dhl_entry_t                      *dhl_entry = NULL;
+    fte_span_t                       /**fte_span  = NULL, */*fte_span_clone = NULL;
+    pd::pd_func_args_t               pd_func_args = {0};
+
+    HAL_ASSERT(cfg_ctxt != NULL);
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    // fte_span = (fte_span_t *)dhl_entry->obj;
+    fte_span_clone = (fte_span_t *)dhl_entry->cloned_obj;
+
+    pd_fte_span_args.fte_span_clone = fte_span_clone;
+    pd_func_args.pd_fte_span_update = &pd_fte_span_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_FTE_SPAN_UPDATE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update fte_span pd, err : {}", ret);
+    }
+    return ret;
+}
+
+static hal_ret_t
+fte_span_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                   ret        = HAL_RET_OK;
+    dllist_ctxt_t               *lnode     = NULL;
+    dhl_entry_t                 *dhl_entry = NULL;
+    fte_span_t                  /**fte_span  = NULL, */*fte_span_clone = NULL;
+
+    HAL_ASSERT(cfg_ctxt != NULL);
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    // fte_span = (fte_span_t *)dhl_entry->obj;
+    fte_span_clone = (fte_span_t *)dhl_entry->cloned_obj;
+
+    g_hal_state->set_fte_span(fte_span_clone);
+
+    return ret;
+}
+
+hal_ret_t
+fte_span_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+fte_span_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+fte_span_update(FteSpanRequest& req,
+                FteSpanResponse *rsp)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    fte_span_t      *fte_span = g_hal_state->fte_span();
+    dhl_entry_t     dhl_entry = { 0 };
+    cfg_op_ctxt_t   cfg_ctxt  = { 0 };
+
+    hal_api_trace(" API Begin: FTE span update ");
+    proto_msg_dump(req);
+
+    ret = validate_fte_span_update(req, rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte span validation failed, err : {}", ret);
+        goto end;
+    }
+
+    fte_span_make_clone(fte_span, (fte_span_t **)&dhl_entry.cloned_obj);
+
+    ret = fte_span_init_from_spec((fte_span_t *)dhl_entry.cloned_obj, &req);
+    if (ret != HAL_RET_OK)  {
+        HAL_TRACE_ERR("Failed to init fte_span from req");
+        goto end;
+    }
+
+    // form ctxt and call infra update object
+    dhl_entry.handle  = fte_span->hal_handle;
+    dhl_entry.obj     = fte_span;
+    cfg_ctxt.app_ctxt = NULL;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_upd_obj(fte_span->hal_handle, &cfg_ctxt,
+                             fte_span_update_upd_cb,
+                             fte_span_update_commit_cb,
+                             fte_span_update_abort_cb,
+                             fte_span_update_cleanup_cb);
+
+end:
+
+    if (ret == HAL_RET_OK) {
+        // HAL_API_STATS_INC(HAL_API_FTE_SPAN_UPDATE_SUCCESS);
+    } else {
+        // HAL_API_STATS_INC(HAL_API_FTE_SPAN_UPDATE_FAIL);
+    }
+
+    fte_span_prepare_rsp(rsp, ret,
+                       fte_span ? fte_span->hal_handle : HAL_HANDLE_INVALID);
+    return ret;
+}
+
+hal_ret_t
+fte_span_get(FteSpanResponseMsg *rsp_msg)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    fte_span_t      *fte_span = g_hal_state->fte_span();
+
+    auto response = rsp_msg->add_response();
+    FteSpanRequest *req = response->mutable_request();
+
+    ret = fte_span_to_spec(req, fte_span);
+
+    response->set_api_status(types::API_STATUS_OK);
+
+    return ret;
 }
 
 }    // namespace hal

@@ -114,7 +114,8 @@ typedef enum hal_slab_e {
     HAL_SLAB_TLS_PROXY_CB                    = 102,
     HAL_SLAB_DPKT_LEARN                      = 103,
     HAL_SLAB_L2SEG_UPLINK_OIF_LIST           = 104,
-    HAL_SLAB_PI_MAX                          = 105,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_FTE_SPAN                        = 105,
+    HAL_SLAB_PI_MAX                          = 106,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,
@@ -157,9 +158,10 @@ typedef enum hal_slab_e {
     HAL_SLAB_GFT_EFE_PD                      = 1036,
     HAL_SLAB_IPSEC_SA_PD                     = 1037,
     HAL_SLAB_CRYPTO_PEND_REQ_PD              = 1038,
-    HAL_SLAB_PD_MAX                          = 1039,   // NOTE: MUST be last PD slab id
-    HAL_SLAB_RSVD                            = 1040,   // all non-delay delete slabs can use this
-    HAL_SLAB_MAX                             = 1041,
+    HAL_SLAB_FTE_SPAN_PD                     = 1039,
+    HAL_SLAB_PD_MAX                          = 1040,   // NOTE: MUST be last PD slab id
+    HAL_SLAB_RSVD                            = 1041,   // all non-delay delete slabs can use this
+    HAL_SLAB_MAX                             = 1042,
     HAL_SLAB_ALL                             = 0xFFFFFFFF,  // reserved and shouldn't be used
 } hal_slab_t;
 

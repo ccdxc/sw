@@ -431,6 +431,13 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       true, true, true, mmgr);
     HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FILTER] != NULL), false);
 
+	// initialize FTE Span
+	slabs_[HAL_SLAB_FTE_SPAN] =
+        slab::factory("FTE_SPAN", HAL_SLAB_FTE_SPAN,
+                      sizeof(hal::fte_span_t), 16,
+                      false, true, true, mmgr);
+    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_FTE_SPAN] != NULL), false);
+
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
         slabs_[HAL_SLAB_GFT_EXACT_MATCH_PROFILE] =
@@ -1232,6 +1239,7 @@ hal_oper_db::hal_oper_db()
     infra_vrf_handle_ = HAL_HANDLE_INVALID;
     event_mgr_ = NULL;
     memset(&mytep_ip_, 0, sizeof(mytep_ip_));
+    fte_span_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -1957,6 +1965,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_FILTER:
         g_hal_state->filter_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_FTE_SPAN:
+        g_hal_state->fte_span_slab()->free(elem);
         break;
 
     default:

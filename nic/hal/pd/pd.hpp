@@ -46,6 +46,7 @@ typedef struct pd_gft_hdr_xposition_profile_s pd_gft_hdr_xposition_profile_t;
 typedef struct pd_gft_exact_match_flow_entry_s pd_gft_exact_match_flow_entry_t;
 typedef struct pd_gft_emp_s pd_gft_emp_t;
 typedef struct pd_gft_efe_s pd_gft_efe_t;
+typedef struct pd_fte_span_s pd_fte_span_t;
 
 }    // namespace pd
 }    // namespace hal

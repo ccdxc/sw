@@ -421,6 +421,42 @@ func (mr *MockDebugClientMockRecorder) GenericOpn(ctx, in interface{}, opts ...i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenericOpn", reflect.TypeOf((*MockDebugClient)(nil).GenericOpn), varargs...)
 }
 
+// FteSpanGet mocks base method
+func (m *MockDebugClient) FteSpanGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FteSpanResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FteSpanGet", varargs...)
+	ret0, _ := ret[0].(*FteSpanResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FteSpanGet indicates an expected call of FteSpanGet
+func (mr *MockDebugClientMockRecorder) FteSpanGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FteSpanGet", reflect.TypeOf((*MockDebugClient)(nil).FteSpanGet), varargs...)
+}
+
+// FteSpanUpdate mocks base method
+func (m *MockDebugClient) FteSpanUpdate(ctx context.Context, in *FteSpanRequestMsg, opts ...grpc.CallOption) (*FteSpanResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FteSpanUpdate", varargs...)
+	ret0, _ := ret[0].(*FteSpanResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FteSpanUpdate indicates an expected call of FteSpanUpdate
+func (mr *MockDebugClientMockRecorder) FteSpanUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FteSpanUpdate", reflect.TypeOf((*MockDebugClient)(nil).FteSpanUpdate), varargs...)
+}
+
 // MockDebugServer is a mock of DebugServer interface
 type MockDebugServer struct {
 	ctrl     *gomock.Controller
@@ -637,4 +673,30 @@ func (m *MockDebugServer) GenericOpn(arg0 context.Context, arg1 *GenericOpnReque
 // GenericOpn indicates an expected call of GenericOpn
 func (mr *MockDebugServerMockRecorder) GenericOpn(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenericOpn", reflect.TypeOf((*MockDebugServer)(nil).GenericOpn), arg0, arg1)
+}
+
+// FteSpanGet mocks base method
+func (m *MockDebugServer) FteSpanGet(arg0 context.Context, arg1 *Empty) (*FteSpanResponseMsg, error) {
+	ret := m.ctrl.Call(m, "FteSpanGet", arg0, arg1)
+	ret0, _ := ret[0].(*FteSpanResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FteSpanGet indicates an expected call of FteSpanGet
+func (mr *MockDebugServerMockRecorder) FteSpanGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FteSpanGet", reflect.TypeOf((*MockDebugServer)(nil).FteSpanGet), arg0, arg1)
+}
+
+// FteSpanUpdate mocks base method
+func (m *MockDebugServer) FteSpanUpdate(arg0 context.Context, arg1 *FteSpanRequestMsg) (*FteSpanResponseMsg, error) {
+	ret := m.ctrl.Call(m, "FteSpanUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*FteSpanResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FteSpanUpdate indicates an expected call of FteSpanUpdate
+func (mr *MockDebugServerMockRecorder) FteSpanUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FteSpanUpdate", reflect.TypeOf((*MockDebugServer)(nil).FteSpanUpdate), arg0, arg1)
 }

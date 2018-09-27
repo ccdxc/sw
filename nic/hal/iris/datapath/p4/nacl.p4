@@ -72,7 +72,7 @@ action nacl_deny() {
 @pragma stage 3
 table nacl {
     reads {
-        // lkp_vrf identifies a segment and the vni/vlan derive a lkp_vrf. 
+        // lkp_vrf identifies a segment and the vni/vlan derive a lkp_vrf.
         // So these fields are not needed
         // vxlan.vni                                       : ternary;
         // vlan_tag.valid                                  : ternary;

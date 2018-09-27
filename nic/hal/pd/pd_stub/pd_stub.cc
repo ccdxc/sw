@@ -414,6 +414,13 @@ PD_FUNC_STUB(pd_capri_accel_rgroup_enable_set);
 PD_FUNC_STUB(pd_capri_accel_rgroup_pndx_set);
 PD_FUNC_STUB(pd_capri_accel_rgroup_info_get);
 PD_FUNC_STUB(pd_capri_accel_rgroup_indices_get);
+
+
+PD_FUNC_STUB(pd_fte_span_create);
+PD_FUNC_STUB(pd_fte_span_update);
+PD_FUNC_STUB(pd_fte_span_mem_free);
+PD_FUNC_STUB(pd_fte_span_make_clone);
+PD_FUNC_STUB(pd_fte_span_get);
 }   // namespace pd
 }   // namespace hal
 

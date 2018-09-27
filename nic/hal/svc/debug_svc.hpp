@@ -47,6 +47,10 @@ using debug::GenericOpnRequest;
 using debug::GenericOpnResponse;
 using debug::GenericOpnRequestMsg;
 using debug::GenericOpnResponseMsg;
+using debug::FteSpanRequestMsg;
+using debug::FteSpanResponseMsg;
+using debug::FteSpanRequest;
+using debug::FteSpanResponse;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -92,6 +96,13 @@ public:
     Status ThreadGet(ServerContext *context,
                      const Empty *req,
                      ThreadResponseMsg *rsp) override;
+    Status FteSpanGet(ServerContext *context,
+                      const Empty *req,
+                      FteSpanResponseMsg *rsp_msg) override;
+    Status FteSpanUpdate(ServerContext *context,
+                         const FteSpanRequestMsg *req_msg,
+                         FteSpanResponseMsg *rsp_msg);
+
 };
 
 #endif  // __DEBUG_SVC_HPP__

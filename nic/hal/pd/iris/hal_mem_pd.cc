@@ -49,6 +49,7 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 #include "nic/hal/pd/iris/event/hal_event_pd.hpp"
+#include "nic/hal/pd/iris/debug/debug_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -504,6 +505,14 @@ hal_state_pd::init(void)
                   hal::pd::proxyccb_pd_compute_hw_hash_func,
                   hal::pd::proxyccb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((proxyccb_hwid_ht_ != NULL), false);
+
+    // initialize fte span pd related data structures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_FTE_SPAN_PD)] =
+        slab::factory("FTE_SPAN_PD", HAL_SLAB_FTE_SPAN_PD,
+                      sizeof(hal::pd::pd_fte_span_t), 8,
+                      false, true, true);
+    HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_FTE_SPAN_PD)] != NULL),
+                      false);
 
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
@@ -1305,6 +1314,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_COPP_PD:
         g_hal_state_pd->copp_pd_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_FTE_SPAN_PD:
+        g_hal_state_pd->fte_span_slab()->free(elem);
         break;
 
     default:

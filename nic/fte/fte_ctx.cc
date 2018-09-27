@@ -211,6 +211,13 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
         HAL_TRACE_ERR("fte: failed to init ctx, err={}", ret);
         return ret;
     }
+
+    if (fte_span()) {
+        // TODO: Print packet and exit
+        HAL_TRACE_DEBUG("fte: fte-span packet.");
+        return HAL_RET_FTE_SPAN;
+    }
+
     cpu_rxhdr_ = cpu_rxhdr;
     pkt_ = pkt;
     pkt_len_ = pkt_len;

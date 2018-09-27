@@ -358,3 +358,35 @@ DebugServiceImpl::ThreadGet(ServerContext *context,
     hal::thread_get(rsp);
     return Status::OK;
 }
+
+Status
+DebugServiceImpl::FteSpanGet(ServerContext *context,
+                             const Empty *req,
+                             FteSpanResponseMsg *rsp_msg)
+{
+    HAL_TRACE_DEBUG("Received FTE span get");
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    // debug::FteSpanResponse *rsp = rsp_msg->add_response();
+    hal::fte_span_get(rsp_msg);
+    hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+Status
+DebugServiceImpl::FteSpanUpdate(ServerContext *context,
+                                const FteSpanRequestMsg *req_msg,
+                                FteSpanResponseMsg *rsp_msg)
+{
+    HAL_TRACE_DEBUG("Received FTE span update: req_size: {}", req_msg->request_size());
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    for (int i = 0; i < req_msg->request_size(); ++i) {
+        debug::FteSpanRequest req = req_msg->request(i);
+        debug::FteSpanResponse *rsp = rsp_msg->add_response();
+        hal::fte_span_update(req, rsp);
+    }
+
+    hal::hal_cfg_db_close();
+    return Status::OK;
+}

@@ -16,6 +16,7 @@ cc_library(
         "//nic/hal/lib:hal_lib_includes",
         "@sdk//obj:sdk_periodic",
         "//nic/fte:fte_includes",
+        "//nic/hal:hal_includes",
         "@sdk//obj:sdk_ht",
         "@sdk//obj:sdk_slab",
         "@sdk//obj:sdk_list",

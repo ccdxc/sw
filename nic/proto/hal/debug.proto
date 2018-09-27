@@ -34,7 +34,45 @@ service Debug {
   // generic debug operations
   // used only for linkmgr
   rpc GenericOpn(GenericOpnRequestMsg) returns (GenericOpnResponseMsg) {}
+
+  // FTE span
+  rpc FteSpanGet    (types.Empty) returns (FteSpanResponseMsg) {}
+  rpc FteSpanUpdate (FteSpanRequestMsg) returns (FteSpanResponseMsg) {}
+
 }
+
+
+// FTE Span
+message FteSpanRequest {
+  uint32                        selector         = 1;    // FTE Span Selectors. Each bit of type types.FTESpanMatchSelector
+  uint32                        src_lport        = 2;    // Source Lport
+  uint32                        dst_lport        = 3;    // Destination Lport
+  uint32                        drop_reason      = 4;    // Drop Reason
+  uint32                        flow_lkup_dir    = 5;    // Flow lookup Direction. 0: From Host, 1: From Uplink
+  uint32                        flow_lkup_type   = 6;    // Flow lookup Type.
+  uint32                        flow_lkup_vrf    = 7;    // Flow lookup Vrf
+  uint32                        flow_lkup_src    = 8;    // Flow lookup Src. IP/Mac
+  uint32                        flow_lkup_dst    = 9;    // Flow lookup Dst. IP/Mac
+  uint32                        flow_lkup_proto  = 10;    // Flow lookup Proto
+  uint32                        flow_lkup_sport  = 11;   // Flow lookup Sport
+  uint32                        flow_lkup_dport  = 12;   // Flow lookup Dport
+  uint64                        eth_dmac         = 13;   // Ethernet dmac
+  bool                          from_cpu         = 14;   // From CPU
+}
+
+message FteSpanRequestMsg {
+  repeated FteSpanRequest    request = 1;    // batched request
+}
+
+message FteSpanResponse {
+    types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+    FteSpanRequest   request    = 2;
+}
+
+message FteSpanResponseMsg {
+    repeated FteSpanResponse response = 1;
+}
+
 
 // -----------------------------------------------
 // Generic debug operation messages
@@ -157,7 +195,7 @@ message MemoryRawUpdateResponseMsg {
 
 // Captures the return data for registers
 message RegisterData {
-  string reg_name   = 1;   // Register name 
+  string reg_name   = 1;   // Register name
   string address    = 2;   // Register address
   string value      = 3;   // Register value
 }

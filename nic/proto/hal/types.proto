@@ -316,6 +316,7 @@ enum CpucbId {
     CPUCB_ID_NACL_REDIRECT = 3;
     CPUCB_ID_QUIESCE       = 4;
     CPUCB_ID_NACL_LOG      = 5;
+    CPUCB_ID_FTE_SPAN      = 6;
 }
 
 message DropReasons {
@@ -398,4 +399,21 @@ message RuleMatch {
   types.IPProtocol              protocol        = 7;     // Match protocol
   uint32                        ether_type      = 8;     // Match Ethertype
   AppMatch                      app_match       = 9;     // apps that the rules are matching
+}
+
+// FTE Span Match Selectors
+enum FTESpanMatchSelector {
+  SRC_LPORT             = 0;
+  DST_LPORT             = 1;
+  DROP_REASON           = 2;
+  FLOW_LKUP_DIR         = 3;
+  FLOW_LKUP_TYPE        = 4;
+  FLOW_LKUP_VRF         = 5;
+  FLOW_LKUP_SRC         = 6;
+  FLOW_LKUP_DST         = 7;
+  FLOW_LKUP_PROTO       = 8;
+  FLOW_LKUP_SPORT       = 9;
+  FLOW_LKUP_DPORT       = 10;
+  ETH_DMAC              = 11;
+  FROM_CPU              = 12;
 }

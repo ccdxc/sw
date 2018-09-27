@@ -281,7 +281,8 @@ do {                                                       \
     ENTRY(HAL_RET_TCP_PROXY_RULE_NOT_FOUND,   80,  "Tcp Proxy rule not found")          \
     ENTRY(HAL_RET_FILTER_NOT_FOUND,           81,  "filter not found")                  \
     ENTRY(HAL_RET_INVALID_CTRL_SESSION_OP,    82,  "Invalid op on ALG control session") \
-                                                                                     \
+    ENTRY(HAL_RET_FTE_SPAN,                   83,  "fte span packet")                   \
+                                                                                        \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)

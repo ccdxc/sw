@@ -444,6 +444,8 @@ void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
         stats_.tcp_close_pkts++;
     } else if (lifq == TLS_PROXY_LIFQ) {
         stats_.tls_proxy_pkts++;
+    } else if (lifq == FTE_SPAN_LIFQ) {
+        stats_.fte_span_pkts++;
     }
 }
 
@@ -487,8 +489,13 @@ void inst_t::process_arq()
         // Init ctx_t
         ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, iflow_, rflow_, feature_state_, num_features_);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
-            break;
+            if (ret == HAL_RET_FTE_SPAN) {
+                HAL_TRACE_DEBUG("fte: done processing span packet");
+                continue;
+            } else {
+                HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
+                break;
+            }
         }
 
         // process the packet and update flow table

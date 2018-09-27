@@ -110,6 +110,27 @@ hal_uplink_if_create (uint64_t if_id, uint32_t port_num)
     return HAL_RET_OK;
 }
 
+static hal_ret_t
+hal_fte_span_create()
+{
+    FteSpanRequest      req;
+    FteSpanResponse     rsp;
+    hal_ret_t           ret;
+
+    req.set_selector(0);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = fte_span_create(req, &rsp);
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG("FTE span create done.");
+    } else {
+        HAL_TRACE_DEBUG("FTE span create fail. err: {}", ret);
+    }
+    hal::hal_cfg_db_close();
+
+    return HAL_RET_OK;
+}
+
 // initialization routine for network module
 extern "C" hal_ret_t
 init (hal_cfg_t *hal_cfg)
@@ -127,6 +148,12 @@ init (hal_cfg_t *hal_cfg)
     // create cpu interface
     ret = hal_cpu_if_create(SERVICE_LIF_CPU);
     HAL_ABORT(ret == HAL_RET_OK);
+
+    // Create FTE span. Only for iris pipeline
+    if (hal_cfg->features == hal::HAL_FEATURE_SET_IRIS) {
+        ret = hal_fte_span_create();
+        HAL_ABORT(ret == HAL_RET_OK);
+    }
 
     return HAL_RET_OK;
 }

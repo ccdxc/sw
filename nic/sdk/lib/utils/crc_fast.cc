@@ -29,6 +29,7 @@ crcFast::init(uint8_t num_polys, bool thread_safe)
     if (crcTable_ == NULL) {
         return SDK_RET_OOM;
     }
+    // for (int i = 0; i < CRC_POLY_MAX; i++) {
     for (int i = 0; i < num_polys; i++) {
         crcTable_[i] = (uint32_t *)SDK_CALLOC(SDK_MEM_ALLOC_LIB_CRCFAST,
                                               256 * sizeof(crc));

@@ -456,6 +456,13 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET, pd_capri_accel_rgroup_pndx_set);
     PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_INFO_GET, pd_capri_accel_rgroup_info_get);
     PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET, pd_capri_accel_rgroup_indices_get);
+
+    // fte_span pd calls
+    PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_CREATE, pd_fte_span_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_UPDATE, pd_fte_span_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_MEM_FREE, pd_fte_span_mem_free);
+    PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_MAKE_CLONE, pd_fte_span_make_clone);
+    // PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_GET, pd_fte_span_get);
     return ret;
 }
 

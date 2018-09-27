@@ -1070,7 +1070,7 @@ p4pd_mirror_table_init (void)
 
     // Initialize for usable span session.
     data.actionid = MIRROR_DROP_MIRROR_ID;
-    for (idx = 0; idx < 8; idx++) {
+    for (idx = 0; idx < 7; idx++) {
         sdk_ret = dm->insert_withid(&data, idx);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
@@ -1079,6 +1079,20 @@ p4pd_mirror_table_init (void)
             return ret;
         }
     }
+
+    // Entry for FTE Span
+    data.actionid = MIRROR_LOCAL_SPAN_ID;
+    data.mirror_action_u.mirror_local_span.dst_lport = CPU_LPORT;
+    data.mirror_action_u.mirror_local_span.qid_en = 1;
+    data.mirror_action_u.mirror_local_span.qid = types::CPUCB_ID_FTE_SPAN;
+    sdk_ret = dm->insert_withid(&data, 7);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("mirror table initialization failed for idx : {}, err : {}",
+                      idx, ret);
+        return ret;
+    }
+
     return HAL_RET_OK;
 }
 

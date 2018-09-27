@@ -355,6 +355,7 @@ const lifqid_t QUIESCE_LIFQ   = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_QUIESC
 const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
 const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
 const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, 0, 0};
+const lifqid_t FTE_SPAN_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_FTE_SPAN};
 
 std::string hex_str(const uint8_t *buf, size_t sz);
 
@@ -426,7 +427,7 @@ typedef struct fte_flow_log_info_s {
 } fte_flow_log_info_t;
 
 // API to increment per-instance stats per feature
-void incr_inst_feature_stats (uint16_t feature_id, hal_ret_t rc=HAL_RET_OK, 
+void incr_inst_feature_stats (uint16_t feature_id, hal_ret_t rc=HAL_RET_OK,
                               bool set_rc=false);
 
 void incr_inst_fte_rx_stats (cpu_rxhdr_t *rxhdr, size_t pkt_len);
@@ -461,6 +462,7 @@ struct fte_stats_t {
     uint64_t              cflow_pkts;                  // Number of ALG control flow packets processed by this FTE
     uint64_t              tcp_close_pkts;              // Number of TCP close packets processed by this FTE
     uint64_t              tls_proxy_pkts;              // Number of TLS proxy packets processed by this FTE
+    uint64_t              fte_span_pkts;               // Number of FTE Span packets processed by this FTE
     uint64_t              softq_req;                   // Number of softq requests processed by this FTE
     uint64_t              queued_tx_pkts;              // Number of packets queued from this FTE to be transmitted
     uint64_t              fte_errors[HAL_RET_ERR];     // Number of FTE errors encountered
@@ -577,11 +579,11 @@ public:
 
     // return staus of the feature handler
     hal_ret_t feature_status() const { return feature_status_; }
-    void set_feature_status(hal_ret_t ret) { 
+    void set_feature_status(hal_ret_t ret) {
          if (ret != HAL_RET_OK)
              incr_inst_feature_stats(feature_id_, ret, true);
 
-         feature_status_ = ret; 
+         feature_status_ = ret;
     }
 
     // completion handlere rgistrations, registered handlers are called at the end of the
@@ -603,6 +605,7 @@ public:
     bool app_redir_pipeline() const { return (arm_lifq_.lif == APP_REDIR_LIFQ.lif); }
     bool tcp_proxy_pipeline() const { return (arm_lifq_.lif == TCP_PROXY_LIFQ.lif); }
     bool tcp_close() const { return (arm_lifq_ == TCP_CLOSE_LIFQ); }
+    bool fte_span() const { return (arm_lifq_ == FTE_SPAN_LIFQ); }
 
     bool valid_iflow() const { return valid_iflow_; }
     void set_valid_iflow(bool val) { valid_iflow_ = val; }
@@ -765,7 +768,7 @@ private:
     hal::flow_pgm_attrs_t iflow_attrs_list[MAX_STAGES];
     hal::flow_pgm_attrs_t rflow_attrs_list[MAX_STAGES];
     bool                  is_flow_swapped_;
-    
+
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t update_flow_table();
