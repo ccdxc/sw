@@ -9,6 +9,17 @@ namespace upgrade {
 
 using namespace std;
 
+typedef enum {
+    SUCCESS,
+    FAIL,
+    INPROGRESS
+} HdlrRespCode;
+
+typedef struct HdlrResp_ {
+    HdlrRespCode     resp;
+    string           errStr;
+} HdlrResp;
+
 class UpgHandler {
 public:
     UpgHandler() {}

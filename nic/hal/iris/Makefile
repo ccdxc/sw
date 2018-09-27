@@ -138,14 +138,14 @@ stage0: stage0_DEV csrlite agent_proto
 
 # lib building stage
 stage1_DEV: iris_asm asm capmodel build_proto sdk linkmgr
-stage1: stage1_DEV third-party agent delphi linkmgr
+stage1: stage1_DEV third-party agent delphi upgrade-manager linkmgr
 
 # app building stage
 stage2_DEV: platform hal pd
 stage2: stage2_DEV swig-cli hntap fte_sim iris-c
 
 # post build stage
-stage3: post-make halctl upgrade-manager
+stage3: post-make halctl
 
 iris_asm:
 	$(MAKE) AS_DEFINES=$(ASMOPTS) -C datapath/asm/iris

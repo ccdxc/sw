@@ -12,17 +12,6 @@ namespace upgrade {
 
 using namespace std;
 
-typedef enum {
-    SUCCESS,
-    FAIL,
-    INPROGRESS
-} HdlrRespCode;
-
-typedef struct HdlrResp_ {
-    HdlrRespCode     resp;
-    string           errStr;
-} HdlrResp;
-
 typedef bool (UpgPreStateHandler::*UpgPreStateFunc)(UpgCtx &ctx);
 typedef bool (UpgPostStateHandler::*UpgPostStateFunc)(UpgCtx &ctx);
 

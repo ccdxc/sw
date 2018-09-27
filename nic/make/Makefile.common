@@ -13,7 +13,7 @@ include $(TOPDIR)/make/Makefile.jobs
 ####################################################
 
 delphi:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/delphi
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/delphi/...
 
 delphi-test:
 	bazel test //nic/delphi/... --jobs=1 --cache_test_results=no --test_output=all
@@ -31,7 +31,7 @@ sysmgr:
 ###########################################################
 
 upgrade-manager:
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/upgrade_manager
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/upgrade_manager/...
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/move_planner
 
 package-size-check:

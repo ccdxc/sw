@@ -3,7 +3,8 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "upgrade_app_lib_includes",
     srcs = [],
-    hdrs = ["upgrade.hpp"],
+    hdrs = ["upgrade.hpp",
+            "upgrade_handler.hpp"],
 )
 
 # compile the reactor for apps
