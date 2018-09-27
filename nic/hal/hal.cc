@@ -205,6 +205,7 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // do HAL state initialization
     HAL_ABORT(hal_state_init(hal_cfg) == HAL_RET_OK);
+    HAL_ABORT(hal_main_thread_init(hal_cfg) == HAL_RET_OK);
 
     // do platform dependent init
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);

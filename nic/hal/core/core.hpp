@@ -21,6 +21,7 @@ hal_ret_t hal_logger_init(hal_cfg_t *hal_cfg);
 typedef void (*hal_sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 hal_ret_t hal_sig_init(hal_sig_handler_t sig_handler);
 void *periodic_thread_start(void *ctxt);
+hal_ret_t hal_main_thread_init(hal_cfg_t *hal_cfg);
 hal_ret_t hal_thread_init(hal_cfg_t *hal_cfg);
 void hal_thread_start(uint32_t thread_id, void *ctxt);
 sdk::lib::thread *hal_thread_get(uint32_t thread_id);

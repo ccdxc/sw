@@ -40,8 +40,8 @@ pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
     sdk_ret = tcam->retrieve(idx, &key, &key_mask, &data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to retrieve stats idx for: {}",
-                idx);
+        HAL_TRACE_ERR("Unable to retrieve stats at idx : {}, err : {}",
+                      idx, ret);
         goto end;
     }
 
@@ -49,13 +49,13 @@ pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
     sdk_ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to retrieve drop stats for entry: {}",
-                idx);
+        HAL_TRACE_ERR("Unable to retrieve drop stats at idx : {}, err : {}",
+                      idx, ret);
         goto end;
     }
 
     if (key.entry_inactive_drop_stats) {
-        HAL_TRACE_DEBUG("Drop stats entry is inactive for idx: {}", idx);
+        HAL_TRACE_DEBUG("Drop stats entry is inactive for idx : {}", idx);
         goto end;
     }
 
@@ -139,8 +139,8 @@ pd_system_populate_egress_drop_stats (EgressDropStatsEntry *stats_entry, uint8_t
     sdk_ret = tcam->retrieve(idx, &key, &key_mask, &data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to retrieve egress drop stats idx for: {}",
-                idx);
+        HAL_TRACE_ERR("Unable to retrieve egress drop stats at idx : {}, "
+                      "err : {}", idx, ret);
         goto end;
     }
 
@@ -148,8 +148,8 @@ pd_system_populate_egress_drop_stats (EgressDropStatsEntry *stats_entry, uint8_t
     sdk_ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to retrieve egress drop stats for entry: {}",
-                idx);
+        HAL_TRACE_ERR("Unable to retrieve egress drop stats at idx : {}, "
+                      "err : {}", idx, ret);
         goto end;
     }
 
@@ -459,7 +459,7 @@ pd_system_populate_table_stats (sys::TableStatsEntry *stats_entry,
 {
     hal_ret_t               ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("PD-System: Populating table stats");
+    //HAL_TRACE_DEBUG("PD-System: Populating table stats");
 
     if (id >= P4TBL_ID_INDEX_MIN && id <= P4TBL_ID_INDEX_MAX) {
         return pd_system_populate_index_table_stats(stats_entry,

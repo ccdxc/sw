@@ -2311,16 +2311,12 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
         }
     }
 
-    HAL_TRACE_DEBUG("Finished PI get");
-
-    // Getting PD information
     args.ep = ep;
     args.rsp = response;
     pd_func_args.pd_ep_get = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_GET, &pd_func_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to do PD get for Endpoint err: {}",
-                      ret);
+        HAL_TRACE_ERR("Unable to do PD get for Endpoint err: {}", ret);
     }
 
     response->set_api_status(types::API_STATUS_OK);
