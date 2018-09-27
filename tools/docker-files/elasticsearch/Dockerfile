@@ -1,4 +1,4 @@
-FROM registry.test.pensando.io:5000/elasticsearch:6.3.0
+FROM docker.elastic.co/elasticsearch/elasticsearch:6.3.2
 MAINTAINER "Vijayan Ramakrishnan" <vijayan@pensando.io>
 COPY docker-entrypoint.sh /
 RUN ["chmod", "+x", "/docker-entrypoint.sh"]
@@ -28,8 +28,8 @@ ENV searchguard.ssl.http.pemtrustedcas_filepath=auth-https/ca-bundle.pem
 ENV NODE_MASTER=true
 ENV NODE_DATA=true
 ENV HTTP_ENABLE=true
-RUN bin/elasticsearch-plugin install https://artifacts.elastic.co/downloads/elasticsearch-plugins/discovery-file/discovery-file-6.3.0.zip
-RUN bin/elasticsearch-plugin install -b com.floragunn:search-guard-6:6.3.0-23.0
+RUN bin/elasticsearch-plugin install https://artifacts.elastic.co/downloads/elasticsearch-plugins/discovery-file/discovery-file-6.3.2.zip
+RUN bin/elasticsearch-plugin install -b com.floragunn:search-guard-6:6.3.2-23.1
 COPY sg_config.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig
 COPY sg_roles.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig
 COPY sg_roles_mapping.yml /usr/share/elasticsearch/plugins/search-guard-6/sgconfig

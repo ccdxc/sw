@@ -24,9 +24,8 @@ import (
 )
 
 var (
-	registryURL         = "registry.test.pensando.io:5000"
-	elasticImage        = "elasticsearch:6.3.0"
-	elasticClusterImage = "elasticsearch-cluster:v0.5"
+	elasticImage        = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2"
+	elasticClusterImage = "registry.test.pensando.io:5000/elasticsearch-cluster:v0.6"
 	elasticHost         = "127.0.0.1"
 )
 
@@ -94,7 +93,7 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 				"-e", fmt.Sprintf("http.publish_host=%s", elasticHost),
 				"-v", fmt.Sprintf("%s:/usr/share/elasticsearch/config/auth-node:ro", authDir),
 				"-v", fmt.Sprintf("%s:/usr/share/elasticsearch/config/auth-https:ro", authDir),
-				fmt.Sprintf("%s/%s", registryURL, elasticClusterImage)}
+				elasticClusterImage}
 		} else {
 			cmd = []string{
 				"run", "--rm", "-d", "-p", fmt.Sprintf("%d:%d", port, port),
@@ -109,7 +108,7 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 				"-e", "ES_JAVA_OPTS=-Xms512m -Xmx512m",
 				"-e", fmt.Sprintf("http.port=%d", port),
 				"-e", fmt.Sprintf("http.publish_host=%s", elasticHost),
-				fmt.Sprintf("%s/%s", registryURL, elasticImage)}
+				elasticImage}
 		}
 
 		// run the command

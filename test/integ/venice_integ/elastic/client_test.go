@@ -46,7 +46,7 @@ var (
 
 	// test command line args
 	preserveEvents = flag.Bool("preserve-events", false, "Preserve events?")
-	skipESSetup    = flag.Bool("skip-es-setup", false, "Skip elasticsearc setup?")
+	skipESSetup    = flag.Bool("skip-es-setup", false, "Skip elasticsearch setup")
 	numEvents      = flag.Int("num-events", 5000, "Number of events to be indexed")
 	eventType      = flag.String("event-type", "NodeJoined", "Event type of the events")
 	severity       = flag.String("severity", "INFO", "Severity of the events")
@@ -115,7 +115,7 @@ func (e *elasticsearchTestSuite) TestElastic(c *C) {
 	if err != nil {
 		log.Fatal("failed to get elasticsearch version")
 	}
-	log.Infof("Elasticsearch version %s", esversion)
+	log.Infof("elasticsearch version %s", esversion)
 
 	// get a mapping with index pattern
 	mapping, err := mapper.ElasticMapper(eventObj, indexType, mapper.WithShardCount(1), mapper.WithReplicaCount(0),
