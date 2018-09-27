@@ -43,6 +43,43 @@
 #define CFG_MACF_(REG) \
     (CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_ ##REG## _FIELD_MASK)
 
+static const char *
+ltssm_str(const int ltssm)
+{
+    static const char *ltssm_strs[] = {
+        [0x00] = "detect.quiet",
+        [0x01] = "detect.active",
+        [0x02] = "polling.active",
+        [0x03] = "polling.compliance",
+        [0x04] = "polling.configuration",
+        [0x05] = "config.linkwidthstart",
+        [0x06] = "config.linkwidthaccept",
+        [0x07] = "config.lanenumwait",
+        [0x08] = "config.lanenumaccept",
+        [0x09] = "config.complete",
+        [0x0a] = "config.idle",
+        [0x0b] = "recovery.recieverlock",
+        [0x0c] = "recovery.equalization",
+        [0x0d] = "recovery.speed",
+        [0x0e] = "recovery.receiverconfig",
+        [0x0f] = "recovery.idle",
+        [0x10] = "L0",
+        [0x11] = "L0s",
+        [0x12] = "L1.entry",
+        [0x13] = "L1.idle",
+        [0x14] = "L2.idle",
+        [0x15] = "<reserved>",
+        [0x16] = "disable",
+        [0x17] = "loopback.entry",
+        [0x18] = "loopback.active",
+        [0x19] = "loopback.exit",
+        [0x1a] = "hotreset",
+    };
+    const int nstrs = sizeof(ltssm_strs) / sizeof(ltssm_strs[0]);
+    if (ltssm >= nstrs) return "unknown";
+    return ltssm_strs[ltssm];
+}
+
 static void
 linkpoll(int argc, char *argv[])
 {
@@ -111,9 +148,12 @@ linkpoll(int argc, char *argv[])
         if (nst.fifo_wr <= 2) nst.fifo_wr = 0;
         if (nst.fifo_rd <= 2) nst.fifo_rd = 0;
 
+        /* fold early detect states quiet/active, too many at start */
+        if (nst.ltssm_st == 1) nst.ltssm_st = 0;
+
         if (memcmp(&nst, &ost, sizeof(nst)) != 0) {
 
-            printf("%c%c%c%c%c %3u/%-3u %u\n",
+            printf("%c%c%c%c%c %3u/%-3u 0x%02x %s\n",
                    nst.perstn ? 'P' : '-',
                    nst.phystatus ? 'p' :'-',
                    nst.portgate ? 'g' : '-',
@@ -121,7 +161,8 @@ linkpoll(int argc, char *argv[])
                    nst.ltssm_en ? 'l' : '-',
                    nst.fifo_rd,
                    nst.fifo_wr,
-                   nst.ltssm_st);
+                   nst.ltssm_st,
+                   ltssm_str(nst.ltssm_st));
 
             ost = nst;
         }
