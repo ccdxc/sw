@@ -4307,20 +4307,18 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 		qp->sq_msn_prod = 0;
 		qp->sq_msn_cons = 0;
 		qp->sq_npg_cons = 0;
+		qp->sq_cmb_prod = 0;
 		qp->sq.prod = 0;
 		qp->sq.cons = 0;
 		spin_unlock_irqrestore(&qp->sq_lock, irqflags);
 	}
 
 	if (qp->has_rq) {
-		spin_lock_irqsave(&qp->sq_lock, irqflags);
-		qp->sq_flush = false;
-		qp->sq_msn_prod = 0;
-		qp->sq_msn_cons = 0;
-		qp->sq_npg_cons = 0;
-		qp->sq.prod = 0;
-		qp->sq.cons = 0;
-		spin_unlock_irqrestore(&qp->sq_lock, irqflags);
+		spin_lock_irqsave(&qp->rq_lock, irqflags);
+		qp->rq_flush = false;
+		qp->rq.prod = 0;
+		qp->rq.cons = 0;
+		spin_unlock_irqrestore(&qp->rq_lock, irqflags);
 	}
 }
 
