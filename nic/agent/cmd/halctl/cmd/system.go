@@ -35,9 +35,16 @@ var systemDetailShowCmd = &cobra.Command{
 
 var systemStatsShowCmd = &cobra.Command{
 	Use:   "statistics",
-	Short: "show system statistics [ingress-drop | egress-drop | fte | fte-txrx | table | api | pb | all] (Default: all)",
-	Long:  "show system statistics [ingress-drop | egress-drop | fte | fte-txrx | table | api | pb | all] (Default: all)",
+	Short: "show system statistics [fte | fte-txrx | table | api | pb | all] (Default: all)",
+	Long:  "show system statistics [fte | fte-txrx | table | api | pb | all] (Default: all)",
 	Run:   systemStatsShowCmdHandler,
+}
+
+var systemDropStatsShowCmd = &cobra.Command{
+	Use:   "drop",
+	Short: "show system statistics drop [ingress | egress | all] (Default: all)",
+	Long:  "show system statistics drop [ingress | egress | all] (Default: all)",
+	Run:   systemDropStatsShowCmdHandler,
 }
 
 var systemStatsTableShowCmd = &cobra.Command{
@@ -67,6 +74,7 @@ func init() {
 	systemShowCmd.AddCommand(threadShowCmd)
 	systemShowCmd.AddCommand(systemDetailShowCmd)
 	systemStatsShowCmd.AddCommand(systemStatsTableShowCmd)
+	systemStatsShowCmd.AddCommand(systemDropStatsShowCmd)
 	threadShowCmd.AddCommand(threadDetailShowCmd)
 }
 
@@ -111,7 +119,7 @@ func systemDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleSystemDetailShowCmd(cmd, nil)
 }
 
-func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
+func systemDropStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
@@ -124,35 +132,15 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Check the args
 	ingressDrop := false
 	egressDrop := false
-	table := false
-	fte := false
-	api := false
-	pb := false
-	fteTxRx := false
 
 	if len(args) > 0 {
-		if strings.Compare(args[0], "ingress-drop") == 0 {
+		if strings.Compare(args[0], "ingress") == 0 {
 			ingressDrop = true
-		} else if strings.Compare(args[0], "egress-drop") == 0 {
+		} else if strings.Compare(args[0], "egress") == 0 {
 			egressDrop = true
-		} else if strings.Compare(args[0], "table") == 0 {
-			table = true
-		} else if strings.Compare(args[0], "fte") == 0 {
-			fte = true
-		} else if strings.Compare(args[0], "api") == 0 {
-			api = true
-		} else if strings.Compare(args[0], "pb") == 0 {
-			pb = true
-		} else if strings.Compare(args[0], "fte-txrx") == 0 {
-			fteTxRx = true
 		} else if strings.Compare(args[0], "all") == 0 {
 			ingressDrop = true
 			egressDrop = true
-			table = true
-			fte = true
-			api = true
-			pb = true
-			fteTxRx = true
 		} else {
 			fmt.Printf("Invalid argument\n")
 			return
@@ -160,11 +148,6 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	} else {
 		ingressDrop = true
 		egressDrop = true
-		table = true
-		fte = true
-		api = true
-		pb = true
-		fteTxRx = true
 	}
 
 	// HAL call
@@ -200,6 +183,66 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		for _, entry := range resp.GetStats().GetEgressDropStats().DropEntries {
 			systemEgressDropStatsShowEntry(entry)
 		}
+	}
+}
+
+func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
+	}
+	client := halproto.NewSystemClient(c.ClientConn)
+
+	// Check the args
+	table := false
+	fte := false
+	api := false
+	pb := false
+	fteTxRx := false
+
+	if len(args) > 0 {
+		if strings.Compare(args[0], "table") == 0 {
+			table = true
+		} else if strings.Compare(args[0], "fte") == 0 {
+			fte = true
+		} else if strings.Compare(args[0], "api") == 0 {
+			api = true
+		} else if strings.Compare(args[0], "pb") == 0 {
+			pb = true
+		} else if strings.Compare(args[0], "fte-txrx") == 0 {
+			fteTxRx = true
+		} else if strings.Compare(args[0], "all") == 0 {
+			table = true
+			fte = true
+			api = true
+			pb = true
+			fteTxRx = true
+		} else {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	} else {
+		table = true
+		fte = true
+		api = true
+		pb = true
+		fteTxRx = true
+	}
+
+	// HAL call
+	var empty *halproto.Empty
+	resp, err := client.SystemGet(context.Background(), empty)
+	if err != nil {
+		log.Errorf("Getting System Stats failed. %v", err)
+		return
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		log.Errorf("HAL Returned non OK status. %v", resp.GetApiStatus())
+		return
 	}
 
 	if table {
