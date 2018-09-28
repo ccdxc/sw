@@ -16,8 +16,11 @@ service TopologyApi {
     // InstantiateTopology is called by harness which assigns a personality to the node based on the topology.
     // This is a blocking call to the harness, The parallel instantiation across the nodes is handled internally.
 
-    // Allocate Data VLANs will provide a list of available VLANs for the current test bed instance.
-    rpc AllocateDataVlans (DataNwMsg) returns (DataNwMsg) {};
+    // InitTestBed Allocate Data VLANs, copy over built artifacts and starts IOTA Agent on all the nodes
+    rpc InitTestBed (TestBedMsg) returns (TestBedMsg) {};
+
+    // CleanUpTestBed will ensure that any state left behind from the previous run is appropriately cleaned up.
+    rpc CleanUpTestBed(TestBedMsg) returns (TestBedMsg) {};
 
     // AddNodes brings up the nodes with their corresponding personalities
     rpc AddNodes (NodeMsg) returns (NodeMsg) {};
@@ -39,7 +42,6 @@ service TopologyApi {
 
     // CheckClusterHealth returns the cluster health
     rpc CheckClusterHealth(NodeMsg) returns  (ClusterHealthMsg) {};
-
 }
 
 // Op defines topology operation
@@ -201,13 +203,21 @@ message NodeHealth {
     HealthCode health_code   = 2;
 }
 
-message DataNwMsg {
+message TestBedMsg {
     // API Response
     IotaAPIResponse api_response        = 1;
 
     // Switch port id for the current test bed
     uint32 switch_port_id               = 2;
 
+    string naples_image                 = 3;
+
+    string venice_image                 = 4;
+
+    string driver_sources               = 6;
+
+    string iota_agent_image             = 7;
     // Allocated vlans based off of the port id
-    repeated uint32 allocated_vlans     = 3;
+    repeated uint32 allocated_vlans     = 8;
+
 }

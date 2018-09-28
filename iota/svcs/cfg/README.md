@@ -1,1 +1,0 @@
-IOTA Config Management Service

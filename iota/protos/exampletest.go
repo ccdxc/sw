@@ -183,11 +183,14 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 func setup(client iota.TopologyApiClient) (*iota.NodeMsg, []uint32, error) {
 
 	// Allocate VLANs
-	datanwMsg := &iota.DataNwMsg{
+	testBedMsg := &iota.TestBedMsg{
 		SwitchPortId: 1,
+		NaplesImage: "sw/nic/nic.tar",
+		VeniceImage: "venice.tar",
+		DriverSources: "platform/bsd.tar",
 	}
 
-	resp, err := client.AllocateDataVlans(context.Background(), datanwMsg)
+	resp, err := client.InitTestBed(context.Background(), testBedMsg)
 
 	if err != nil {
 		return nil, nil, err
