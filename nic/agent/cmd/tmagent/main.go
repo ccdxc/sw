@@ -4,12 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/pensando/sw/nic/agent/ipc"
 	ipcproto "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -20,19 +21,35 @@ import (
 var fwTable ntsdb.Table
 
 func main() {
-	var resolverURLs string
-	flagSet := flag.NewFlagSet("tmagent", flag.ContinueOnError)
-	flagSet.StringVar(&resolverURLs,
-		"resolver-urls",
-		":"+globals.CMDResolverPort,
-		"IP:Port of resolver")
 
-	err := flagSet.Parse(os.Args[1:])
+	var (
+		debugflag       = flag.Bool("debug", false, "Enable debug mode")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Tmagent)), "Redirect logs to file")
+		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
+		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
+		restURL         = flag.String("rest-url", ":"+globals.TmAGENTRestPort, "specify Agent REST URL")
+	)
+	flag.Parse()
 
-	if err != nil {
-		log.Errorf("Error %v parsing args", err)
-		os.Exit(1)
+	// Fill logger config params
+	logConfig := &log.Config{
+		Module:      globals.Tmagent,
+		Format:      log.JSONFmt,
+		Filter:      log.AllowInfoFilter,
+		Debug:       *debugflag,
+		CtxSelector: log.ContextAll,
+		LogToStdout: *logToStdoutFlag,
+		LogToFile:   true,
+		FileCfg: log.FileConfig{
+			Filename:   *logToFile,
+			MaxSize:    10,
+			MaxBackups: 3,
+			MaxAge:     7,
+		},
 	}
+
+	// Initialize logger config
+	log.SetConfig(logConfig)
 
 	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
 	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
@@ -41,7 +58,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	rList := strings.Split(resolverURLs, ",")
+	rList := strings.Split(*resolverURLs, ",")
 	cfg := &resolver.Config{
 		Name:    globals.Citadel,
 		Servers: rList,
@@ -63,6 +80,11 @@ func main() {
 	for ix := 0; ix < instCount; ix++ {
 		ipc := shm.IPCInstance()
 		go ipc.Receive(context.Background(), processFWEvent)
+	}
+
+	_, err = restapi.NewRestServer(*restURL)
+	if err != nil {
+		log.Errorf("Error creating the rest API server. Err: %v", err)
 	}
 
 	// wait forever

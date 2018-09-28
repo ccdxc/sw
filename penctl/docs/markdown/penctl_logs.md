@@ -23,6 +23,7 @@ penctl logs [flags]
 			Valid modules are:
 				nmd
 				netagent
+				tmagent
 
 ```
 

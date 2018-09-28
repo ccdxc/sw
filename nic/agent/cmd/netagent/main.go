@@ -140,6 +140,7 @@ func main() {
 		log.Printf("Reverse Proxy Router instantiated")
 		revproxy.AddRevProxyDest("api", globals.NmdRESTPort)
 		revproxy.AddRevProxyDest("monitoring", globals.NmdRESTPort)
+		revproxy.AddRevProxyDest("telemetry", globals.TmAGENTRestPort)
 		defer proxyRouter.Stop()
 	} else {
 		log.Fatalf("Could not start Reverse Proxy Router. Err: %v", err)

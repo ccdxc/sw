@@ -29,6 +29,7 @@ Options
 			Valid modules are:
 				nmd
 				netagent
+				tmagent
 
 
 Options inherited from parent commands

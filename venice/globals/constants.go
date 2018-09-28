@@ -164,4 +164,7 @@ const (
 
 	// objstore port
 	VosPort = "19001"
+
+	// tmagent port
+	TmAGENTRestPort = "9013"
 )

@@ -29,4 +29,5 @@ const (
 	Aggregator            = "pen-aggregator"
 	Citadel               = "pen-citadel"
 	Collector             = "pen-collector"
+	Tmagent               = "pen-tmagent"
 )
