@@ -14,12 +14,6 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 
-/*
- * TODO-req:
- *	- print SHA/checksum tags in req_pprint_result()
- *
- */
-
 #ifdef NDEBUG
 #define REQ_PPRINT_REQUEST(r)
 #define REQ_PPRINT_RESULT(r)
