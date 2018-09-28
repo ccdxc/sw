@@ -3619,6 +3619,8 @@ def capri_te_cfg_output(stage):
             else:
                 json_tbl_['mpu_pc_raw']['value'] = str(0)
 
+            if ct.is_raw or ct.is_raw_index:
+                json_tbl_['max_bypass_cnt']['value'] = str(16)
 
             json_tbl_['mpu_pc_ofst_err']['value'] = str(0)
             json_tbl_['mpu_vec']['value'] = '0xF'    # all mpus for scheduling
