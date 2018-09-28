@@ -306,6 +306,7 @@ parser.add_argument("-skipnode0", action='store_true', default=False, help="skip
 # by default docker bridge is created. But can also use macvlan so that ip address and ports are directly exposed off to a physical device
 parser.add_argument("-nettype", type=str, default="bridge",help="network type: valid values are bridge, macvlan")
 parser.add_argument("-first_venice_ip", type=str, default="192.168.30.11",help="First Venice IP")
+parser.add_argument("-first_naples_ip", type=str, default="192.168.30.21",help="First Naples IP")
 parser.add_argument("-num_naples", type=int, default=1, help="number of naples nodes")
 parser.add_argument("-num_quorum", type=int, default=1, help="number of quorum nodes")
 parser.add_argument("-num_nodes", type=int, default=1, help="number of venice nodes")
@@ -352,6 +353,8 @@ num_naples =  int(datastore.get("NumNaplesHosts", args.num_naples))
 test_mode = datastore.get("E2EMode", args.test_mode)
 first_venice_ipstr = datastore.get("FirstVeniceIP",args.first_venice_ip)
 first_venice_ip = ipaddr.IPv4Address(first_venice_ipstr)
+first_naples_ipstr = datastore.get("FirstNaplesIP",args.first_naples_ip)
+first_naples_ip = ipaddr.IPv4Address(first_naples_ipstr)
 
 quorumNames = []
 for i in range(1, num_quorum + 1):
@@ -375,7 +378,7 @@ for i in range(0, num_quorum):
 
 naplesIPs = []
 for i in range(0, num_naples):
-    naplesIPs.append("{}".format(first_venice_ip + i + num_nodes))
+    naplesIPs.append("{}".format(first_naples_ip + i))
 
 # this is a global index of all the containers running in the e2e system
 # node0 has containerIndex=0.
