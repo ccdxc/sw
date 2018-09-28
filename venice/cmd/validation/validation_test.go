@@ -33,11 +33,81 @@ func TestValidateCluster(t *testing.T) {
 				&cmd.ClusterStatus{},
 			),
 		},
-		"good-cluster": {
+		"good-cluster-with-dns-names": {
 			isExpectedFailure: false,
 			cluster: testCluster("foo",
 				&cmd.ClusterSpec{
 					QuorumNodes: []string{"node1", "node2", "node3"},
+					VirtualIP:   "192.168.30.10",
+				},
+				&cmd.ClusterStatus{},
+			),
+		},
+		"good-cluster-with-fqdns": {
+			isExpectedFailure: false,
+			cluster: testCluster("foo",
+				&cmd.ClusterSpec{
+					QuorumNodes: []string{"node1.pensando.io", "node2.pensando.io", "node3.pensando.io"},
+					VirtualIP:   "192.168.30.10",
+				},
+				&cmd.ClusterStatus{},
+			),
+		},
+		"good-cluster-with-ip-addrs": {
+			isExpectedFailure: false,
+			cluster: testCluster("foo",
+				&cmd.ClusterSpec{
+					QuorumNodes: []string{"192.168.30.11", "192.168.30.12", "192.168.30.13"},
+					VirtualIP:   "192.168.30.10",
+				},
+				&cmd.ClusterStatus{},
+			),
+		},
+		"good-cluster-with-mixed-ids": {
+			isExpectedFailure: false,
+			cluster: testCluster("foo",
+				&cmd.ClusterSpec{
+					QuorumNodes: []string{"node1", "192.168.30.12", "node3.pensando.io"},
+					VirtualIP:   "192.168.30.10",
+				},
+				&cmd.ClusterStatus{},
+			),
+		},
+		"good-cluster-with-empty-quorum-name": {
+			isExpectedFailure: true,
+			cluster: testCluster("foo",
+				&cmd.ClusterSpec{
+					QuorumNodes: []string{"node1", "", "node3"},
+					VirtualIP:   "192.168.30.10",
+				},
+				&cmd.ClusterStatus{},
+			),
+		},
+		"bad-cluster-with-invalid-quorum-name": {
+			isExpectedFailure: true,
+			cluster: testCluster("foo",
+				&cmd.ClusterSpec{
+					QuorumNodes: []string{"node1", "node2_2", "node3"},
+					VirtualIP:   "192.168.30.10",
+				},
+				&cmd.ClusterStatus{},
+			),
+		},
+		"bad-cluster-with-localhost-ip-address": {
+			isExpectedFailure: true,
+			cluster: testCluster("foo",
+				&cmd.ClusterSpec{
+					QuorumNodes: []string{"192.168.30.11", "192.168.30.12", "127.0.0.1"},
+					VirtualIP:   "192.168.30.10",
+				},
+				&cmd.ClusterStatus{},
+			),
+		},
+		"bad-cluster-with-broadcast-ip-address": {
+			isExpectedFailure: true,
+			cluster: testCluster("foo",
+				&cmd.ClusterSpec{
+					QuorumNodes: []string{"255.255.255.255", "192.168.30.12", "102.168.30.13"},
 					VirtualIP:   "192.168.30.10",
 				},
 				&cmd.ClusterStatus{},

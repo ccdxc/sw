@@ -10,7 +10,7 @@ type Interface interface {
 	RemoveFilebeatConfig()
 	GenerateKubeMasterConfig(apiServerAddr string) error
 	RemoveKubeMasterConfig()
-	GenerateElasticAuthConfig(mgmtAddr string) error
+	GenerateElasticAuthConfig(nodeID string) error
 	RemoveElasticAuthConfig()
 	GenerateElasticDiscoveryConfig(elasticServerAddrs []string) error
 	RemoveElasticDiscoveryConfig()
@@ -56,8 +56,8 @@ func (c *configs) GenerateElasticMgmtConfig(mgmtAddr string, quorumSize int) err
 func (c *configs) RemoveElasticMgmtConfig() {
 	RemoveElasticMgmtConfig()
 }
-func (c *configs) GenerateElasticAuthConfig(mgmtAddr string) error {
-	return GenerateElasticAuthConfig(mgmtAddr)
+func (c *configs) GenerateElasticAuthConfig(nodeID string) error {
+	return GenerateElasticAuthConfig(nodeID)
 }
 func (c *configs) RemoveElasticAuthConfig() {
 	RemoveElasticAuthConfig()

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"os"
 	"time"
 
 	"github.com/pensando/sw/api"
@@ -23,7 +22,6 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/nodewatcher"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/quorum/store"
@@ -38,7 +36,7 @@ const (
 	apiServerWaitTime     = time.Second
 )
 
-func waitForAPIAndStartServices() {
+func waitForAPIAndStartServices(nodeID string) {
 	ii := 0
 	for {
 		select {
@@ -64,25 +62,11 @@ func waitForAPIAndStartServices() {
 				continue
 			}
 
-			hostname, err := os.Hostname()
-			if err != nil {
-				if ii%10 == 0 {
-					log.Errorf("getting my Hostname fails with err %v for %v seconds", err, ii)
-				}
-				continue
-			}
-
 			found := false
 			for _, qn := range cl[0].Spec.QuorumNodes {
-				if qn == hostname {
+				if qn == nodeID {
 					found = true
 					break
-				}
-				if net.ParseIP(qn) != nil {
-					found, _ = netutils.IsAConfiguredIP(qn)
-					if found {
-						break
-					}
 				}
 			}
 			if found == false {
@@ -98,30 +82,17 @@ func waitForAPIAndStartServices() {
 }
 
 func isQuorumMember(c *utils.Cluster) (bool, string) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Errorf("Failed to determine hostname. error: %v", err)
-		return false, hostname
-	}
-
 	for _, member := range c.QuorumNodes {
-		if hostname == member {
-			return true, hostname
-		}
-		if net.ParseIP(member) != nil {
-			found, _ := netutils.IsAConfiguredIP(member)
-			if found {
-				hostname = member
-				return true, hostname
-			}
+		if c.NodeID == member {
+			return true, c.NodeID
 		}
 	}
-	log.Infof("skipping starting Quorum services as this node (%s) is not part of quorum (%s)", hostname, c.QuorumNodes)
+	log.Infof("skipping starting Quorum services as this node (%s) is not part of quorum (%s)", c.NodeID, c.QuorumNodes)
 	return false, ""
 }
 
 // StartQuorumServices starts services on quorum node
-func StartQuorumServices(c utils.Cluster, hostname string) {
+func StartQuorumServices(c utils.Cluster) {
 	log.Debugf("Starting Quorum services on startup")
 
 	qConfig := &quorum.Config{
@@ -129,18 +100,24 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 		ID:                c.UUID,
 		DataDir:           env.Options.KVStore.DataDir,
 		CfgFile:           env.Options.KVStore.ConfigFile,
-		MemberName:        hostname,
+		MemberName:        c.NodeID,
 		Existing:          true,
 		PeerAuthEnabled:   true,
 		ClientAuthEnabled: true,
 	}
 	qConfig.Members = append(qConfig.Members, quorum.Member{
-		Name:       hostname,
-		ClientURLs: []string{fmt.Sprintf("https://%s:%s", hostname, env.Options.KVStore.ClientPort)},
+		Name:       c.NodeID,
+		ClientURLs: []string{fmt.Sprintf("https://%s:%s", c.NodeID, env.Options.KVStore.ClientPort)},
 	})
 
+	// etcd can only bind to IP:pair ports. If we have a host name, we need to resolve
+	addrs, err := net.LookupHost(c.NodeID)
+	if err != nil {
+		log.Errorf("Failed to retrieve node: %v, error: %v", addrs[0], err)
+		return
+	}
+
 	var quorumIntf quorum.Interface
-	var err error
 	ii := 0
 	for ; ii < maxIters; ii++ {
 		quorumIntf, err = store.Start(qConfig)
@@ -219,7 +196,7 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 	}
 
 	// Create leader service before its users
-	env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
+	env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, c.NodeID)
 	env.SystemdService = services.NewSystemdService()
 	env.VipService = services.NewVIPService()
 	k8sConfig := services.K8sServiceConfig{
@@ -245,7 +222,7 @@ func StartQuorumServices(c utils.Cluster, hostname string) {
 	env.LeaderService.Start()
 	env.CfgWatcherService.Start()
 
-	go waitForAPIAndStartServices()
+	go waitForAPIAndStartServices(c.NodeID)
 
 	env.NodeService = services.NewNodeService(c.NodeID)
 	if err := env.NodeService.Start(); err != nil {
@@ -327,11 +304,11 @@ func OnStart() {
 		return
 	}
 	env.QuorumNodes = cluster.QuorumNodes
-	quorumMember, hostname := isQuorumMember(cluster)
+	quorumMember, _ := isQuorumMember(cluster)
 	if !quorumMember {
 		StartNodeServices(cluster.NodeID, cluster.VirtualIP)
 		return
 	}
 
-	StartQuorumServices(*cluster, hostname)
+	StartQuorumServices(*cluster)
 }

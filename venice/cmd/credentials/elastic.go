@@ -42,7 +42,7 @@ func storeElasticCredentials(dir string, perm os.FileMode, key crypto.PrivateKey
 }
 
 // GenElasticNodesAuth generates the credentials for an Elastic instance to authenticate itself to other cluster members.
-func GenElasticNodesAuth(dir string, csrSigner certs.CSRSigner, trustRoots []*x509.Certificate) error {
+func GenElasticNodesAuth(nodeID, dir string, csrSigner certs.CSRSigner, trustRoots []*x509.Certificate) error {
 	if csrSigner == nil {
 		return errors.New("Cannot generate Elastic credentials without a CSR signer")
 	}
@@ -51,8 +51,7 @@ func GenElasticNodesAuth(dir string, csrSigner certs.CSRSigner, trustRoots []*x5
 		return errors.Wrapf(err, "error generating private key")
 	}
 	name := globals.ElasticSearch + "-node"
-	hostname, ipaddrs := netutils.NameAndIPs()
-	csr, err := certs.CreateCSR(privateKey, &pkix.Name{CommonName: name}, append(hostname, name), ipaddrs)
+	csr, err := certs.CreateCSR(privateKey, &pkix.Name{CommonName: name}, []string{}, []net.IP{})
 	if err != nil {
 		return errors.Wrapf(err, "error generating csr")
 	}
@@ -65,9 +64,9 @@ func GenElasticNodesAuth(dir string, csrSigner certs.CSRSigner, trustRoots []*x5
 }
 
 // GenElasticHTTPSAuth generates the credentials for the Elastic server to authenticate itself to clients.
-// Some Elastic clients (Kibana for example) does not support P384, so we create a P256 certificate
-// specifically for HTTPs
-func GenElasticHTTPSAuth(dir string, csrSigner certs.CSRSigner, trustRoots []*x509.Certificate) error {
+// Some Elastic clients (Kibana for example) do not support P384, so we create a P256 certificate
+// specifically for HTTPs.
+func GenElasticHTTPSAuth(nodeID, dir string, csrSigner certs.CSRSigner, trustRoots []*x509.Certificate) error {
 	if csrSigner == nil {
 		return errors.New("Cannot generate Elastic credentials without a CSR signer")
 	}
@@ -75,9 +74,11 @@ func GenElasticHTTPSAuth(dir string, csrSigner certs.CSRSigner, trustRoots []*x5
 	if err != nil {
 		return errors.Wrapf(err, "error generating private key")
 	}
+	// include host name and corresponding IP address because client might be external to the cluster
+	dnsNames, ipAddrs := netutils.NameAndIPs()
+	dnsNames, ipAddrs = certs.AddNodeSANIDs(nodeID, dnsNames, ipAddrs)
 	name := globals.ElasticSearch + "-https"
-	hostname, ipaddrs := netutils.NameAndIPs()
-	csr, err := certs.CreateCSR(privateKey, &pkix.Name{CommonName: name}, append(hostname, name), ipaddrs)
+	csr, err := certs.CreateCSR(privateKey, &pkix.Name{CommonName: name}, append(dnsNames, name), ipAddrs)
 	if err != nil {
 		return errors.Wrapf(err, "error generating csr")
 	}
@@ -112,12 +113,12 @@ func GenElasticClientsAuth(dir string, csrSigner certs.CSRSigner, trustRoots []*
 
 // GenElasticAuth generate credentials for Elastic nodes to authenticate to each other and
 // for clients to authenticate to Eleastic nodes
-func GenElasticAuth(csrSigner certs.CSRSigner, trustRoots []*x509.Certificate) error {
-	err := GenElasticNodesAuth(globals.ElasticNodeAuthDir, csrSigner, trustRoots)
+func GenElasticAuth(nodeID string, csrSigner certs.CSRSigner, trustRoots []*x509.Certificate) error {
+	err := GenElasticNodesAuth(nodeID, globals.ElasticNodeAuthDir, csrSigner, trustRoots)
 	if err != nil {
 		return errors.Wrapf(err, "Error generating Elastic node credentials")
 	}
-	err = GenElasticHTTPSAuth(globals.ElasticHTTPSAuthDir, csrSigner, trustRoots)
+	err = GenElasticHTTPSAuth(nodeID, globals.ElasticHTTPSAuthDir, csrSigner, trustRoots)
 	if err != nil {
 		return errors.Wrapf(err, "Error generating Elastic node credentials")
 	}

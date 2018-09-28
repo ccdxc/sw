@@ -294,7 +294,7 @@ func (c *Configs) GenerateElasticMgmtConfig(mgmtAddr string, quorumSize int) err
 }
 
 // GenerateElasticAuthConfig is a mock implementation for Elastic auth config generation.
-func (c *Configs) GenerateElasticAuthConfig(mgmtAddr string) error {
+func (c *Configs) GenerateElasticAuthConfig(nodeID string) error {
 	return nil
 }
 

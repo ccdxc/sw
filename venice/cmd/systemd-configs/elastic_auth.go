@@ -12,14 +12,14 @@ import (
 )
 
 // GenerateElasticAuthConfig generates configuration file for elastic service
-func GenerateElasticAuthConfig(mgmtAddrs string) error {
+func GenerateElasticAuthConfig(nodeID string) error {
 	if env.CertMgr == nil {
 		return fmt.Errorf("Failed to generate Elastic auth config, CertMgr not available")
 	}
 	if !env.CertMgr.IsReady() {
 		return fmt.Errorf("Failed to generate Elastic auth config, CertMgr not ready")
 	}
-	return credentials.GenElasticAuth(env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
+	return credentials.GenElasticAuth(nodeID, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
 }
 
 // RemoveElasticAuthConfig removes elastic-discovery config file

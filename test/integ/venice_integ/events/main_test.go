@@ -48,18 +48,19 @@ var (
 
 // tInfo represents test info.
 type tInfo struct {
-	logger              log.Logger
-	mockResolver        *mockresolver.ResolverClient // resolver
-	esClient            elastic.ESClient             // elastic client to verify the results
-	elasticsearchAddr   string                       // elastic address
-	elasticsearchName   string                       // name of the elasticsearch server name; used to stop the server
-	apiServer           apiserver.Server             // venice API server
-	apiServerAddr       string                       // API server address
-	evtsMgr             *evtsmgr.EventsManager       // events manager to write events to elastic
-	evtsProxy           *evtsproxy.EventsProxy       // events proxy to receive and distribute events
-	proxyEventsStoreDir string                       // local events store directory
-	signer              certs.CSRSigner              // function to sign CSRs for TLS
-	trustRoots          []*x509.Certificate          // trust roots to verify TLS certs
+	logger               log.Logger
+	mockResolver         *mockresolver.ResolverClient // resolver
+	esClient             elastic.ESClient             // elastic client to verify the results
+	elasticsearchAddr    string                       // elastic address
+	elasticsearchName    string                       // name of the elasticsearch server name; used to stop the server
+	elasticsearchAuthDir string                       // name of the directory where Elastic credentials are stored
+	apiServer            apiserver.Server             // venice API server
+	apiServerAddr        string                       // API server address
+	evtsMgr              *evtsmgr.EventsManager       // events manager to write events to elastic
+	evtsProxy            *evtsproxy.EventsProxy       // events proxy to receive and distribute events
+	proxyEventsStoreDir  string                       // local events store directory
+	signer               certs.CSRSigner              // function to sign CSRs for TLS
+	trustRoots           []*x509.Certificate          // trust roots to verify TLS certs
 }
 
 // setup helper function create evtsmgr, evtsproxy, etc. services
@@ -126,7 +127,7 @@ func (t *tInfo) teardown() {
 		t.esClient.Close()
 	}
 
-	testutils.StopElasticsearch(t.elasticsearchName)
+	testutils.StopElasticsearch(t.elasticsearchName, t.elasticsearchAuthDir)
 
 	t.evtsMgr.RPCServer.Stop()
 	t.evtsProxy.RPCServer.Stop()
@@ -152,7 +153,7 @@ func (t *tInfo) startElasticsearch() error {
 	log.Infof("starting elasticsearch")
 
 	t.elasticsearchName = uuid.NewV4().String()
-	t.elasticsearchAddr, err = testutils.StartElasticsearch(t.elasticsearchName, t.signer, t.trustRoots)
+	t.elasticsearchAddr, t.elasticsearchAuthDir, err = testutils.StartElasticsearch(t.elasticsearchName, t.signer, t.trustRoots)
 	if err != nil {
 		return fmt.Errorf("failed to start elasticsearch, err: %v", err)
 	}

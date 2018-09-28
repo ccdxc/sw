@@ -5,11 +5,18 @@ import (
 	"net"
 	"reflect"
 
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 )
+
+// IsValidNodeIP returns true if the supplied IP address is valid for a cluster node.
+// IsGlobalUnicast returns (!ip.Equal(IPv4bcast) && !ip.IsUnspecified() && !ip.IsLoopback() && !ip.IsMulticast() && !ip.IsLinkLocalUnicast())
+func IsValidNodeIP(ip *net.IP) bool {
+	return ip.IsGlobalUnicast()
+}
 
 // ValidateObjectMeta validates the ObjectMeta.
 func ValidateObjectMeta(meta *api.ObjectMeta, fldPath *field.Path) field.ErrorList {
@@ -39,6 +46,21 @@ func ValidateClusterSpecQuorumNodes(nodes []string, fldPath *field.Path) field.E
 			allErrs = append(allErrs, field.Invalid(fldPath, nodes, fmt.Sprintf("duplicate quorum node %v", nodes[ii])))
 		}
 		nodeMap[nodes[ii]] = struct{}{}
+	}
+
+	// Each quorum node ID must be either a valid DNS name or an IP address
+	for _, n := range nodes {
+		if ip := net.ParseIP(n); ip != nil {
+			// quorum node ID is IP address
+			if !IsValidNodeIP(&ip) {
+				allErrs = append(allErrs, field.Invalid(fldPath, nodes, fmt.Sprintf("invalid IP address %v for quorum node", n)))
+			}
+		} else {
+			// quorum node ID is a DNS name
+			if len(validation.IsDNS1123Subdomain(n)) > 0 {
+				allErrs = append(allErrs, field.Invalid(fldPath, nodes, fmt.Sprintf("quorum node %v is not a valid DNS name or IP address", n)))
+			}
+		}
 	}
 
 	return allErrs

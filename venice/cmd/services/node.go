@@ -71,7 +71,7 @@ func (s *nodeService) Start() error {
 	s.enabled = true
 
 	s.configs.GenerateFilebeatConfig([]string{})
-	s.configs.GenerateElasticAuthConfig("")
+	s.configs.GenerateElasticAuthConfig(s.nodeID)
 	s.configs.GenerateElasticDiscoveryConfig([]string{})
 	s.configs.GenerateElasticMgmtConfig("", len(env.QuorumNodes))
 

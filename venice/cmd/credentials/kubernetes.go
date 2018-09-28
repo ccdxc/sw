@@ -14,7 +14,6 @@ import (
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
-	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 // GenKubeletCredentials generate credentials for the Kubelet to authenticate itself:
@@ -29,8 +28,11 @@ func GenKubeletCredentials(nodeID string, csrSigner certs.CSRSigner, trustRoots 
 
 	// Host IP and dns name must be included in the certificate so that clients
 	// recognize it as valid.
-	dnsNames, hostIPs := netutils.NameAndIPs()
-	err := certs.CreateTLSCredentials(globals.KubeletPKIDir, &kubeletSubj, dnsNames, hostIPs, trustRoots, csrSigner)
+	dnsNames := []string{globals.Kubelet}
+	ipAddrs := []net.IP{}
+	dnsNames, ipAddrs = certs.AddNodeSANIDs(nodeID, dnsNames, ipAddrs)
+
+	err := certs.CreateTLSCredentials(globals.KubeletPKIDir, &kubeletSubj, dnsNames, ipAddrs, trustRoots, csrSigner)
 	if err != nil {
 		return errors.Wrapf(err, "Error creating Kubelet credentials")
 	}
@@ -78,14 +80,17 @@ func GenKubernetesCredentials(nodeID string, csrSigner certs.CSRSigner, trustRoo
 	// This is the certificate that API Server serves to clients (including kubelet, scheduler,
 	// controller-manager), so it must have the right DNS name and/or IP address (VIP) for the host,
 	// otherwise the TLS handshake will fail.
-	// We always include host name and physical IPs and add VIPs if available.
-	apiServerNames, apiServerIPs := netutils.NameAndIPs()
+	// We use whatever node ID user has provided (hostname, FQDN or IP) and virtual IPs if available.
+	// "localhost" is needed by kube-controller-manager and kube-scheduler, as they try to connect to "localhost:6443"
+	dnsNames := []string{globals.KubeAPIServer, "localhost"}
+	ipAddrs := []net.IP{}
 	for _, i := range vips {
 		a := net.ParseIP(i)
 		if a != nil {
-			apiServerIPs = append(apiServerIPs, a)
+			ipAddrs = append(ipAddrs, a)
 		}
 	}
+	dnsNames, ipAddrs = certs.AddNodeSANIDs(nodeID, dnsNames, ipAddrs)
 
 	// It is also used as a client certificate when API Server contacts directly the kubelet or
 	// admission controllers. For that, it needs the right CN.
@@ -94,7 +99,7 @@ func GenKubernetesCredentials(nodeID string, csrSigner certs.CSRSigner, trustRoo
 		Organization: []string{"kubernetes"},
 	}
 
-	err := certs.CreateTLSCredentials(globals.KubernetesAPIServerPKIDir, &apiServerSubj, append(apiServerNames, globals.KubeAPIServer, "localhost"), apiServerIPs, trustRoots, csrSigner)
+	err := certs.CreateTLSCredentials(globals.KubernetesAPIServerPKIDir, &apiServerSubj, dnsNames, ipAddrs, trustRoots, csrSigner)
 	if err != nil {
 		return errors.Wrapf(err, "Error creating Kubernetes API Server credentials")
 	}

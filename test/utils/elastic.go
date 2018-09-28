@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
 	"runtime"
 	"strings"
 	"time"
@@ -45,7 +44,7 @@ func CreateElasticClient(elasticsearchAddr string, resolverClient resolver.Inter
 }
 
 // StartElasticsearch starts elasticsearch service
-func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.Certificate) (string, error) {
+func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.Certificate) (string, string, error) {
 	log.Info("starting elasticsearch ..")
 
 	// set max_map_count; this is a must requirement to run elasticsearch
@@ -58,7 +57,7 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 	if runtime.GOOS != "darwin" {
 		if out, err := exec.Command("sysctl", "-w", "vm.max_map_count=262144").CombinedOutput(); err != nil {
 			log.Errorf("failed to set max_map_count %s, err: %v", out, err)
-			return "", err
+			return "", "", err
 		}
 	} else {
 		fmt.Println("\n++++++ run this one time setup commands from your mac if you haven't done yet +++++++\n" +
@@ -69,11 +68,13 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 
 	var authDir string
 	if signer != nil {
-		authDir = path.Join("/tmp", fmt.Sprintf("%s-elastic-test", name))
-		os.MkdirAll(authDir, 0777) // pre-create to override default permissions
-		err := credentials.GenElasticHTTPSAuth(authDir, signer, trustRoots)
+		var err error
+		authDir, err = ioutil.TempDir("/tmp", fmt.Sprintf("%s-elastic-test", name))
+		os.Chmod(authDir, 0777) // override default permissions to allow cleanup
+		err = credentials.GenElasticHTTPSAuth("localhost", authDir, signer, trustRoots)
 		if err != nil {
-			return "", fmt.Errorf("error creating credentials in dir %s: err: %v", authDir, err)
+			os.RemoveAll(authDir)
+			return "", "", fmt.Errorf("error creating credentials in dir %s: err: %v", authDir, err)
 		}
 	}
 
@@ -117,7 +118,7 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 		// stop and retry if a container with the same name exists already
 		if strings.Contains(string(out), "Conflict") {
 			log.Errorf("conflicting names, retrying")
-			StopElasticsearch(name)
+			StopElasticsearch(name, authDir)
 			continue
 		}
 
@@ -128,27 +129,28 @@ func StartElasticsearch(name string, signer certs.CSRSigner, trustRoots []*x509.
 		}
 
 		if err != nil {
-			return "", fmt.Errorf("%s, err: %v", out, err)
+			os.RemoveAll(authDir)
+			return "", "", fmt.Errorf("%s, err: %v", out, err)
 		}
 
 		elasticAddr := fmt.Sprintf("%s:%d", elasticHost, port)
 		log.Infof("started elasticsearch: %s", elasticAddr)
 
-		return elasticAddr, nil
+		return elasticAddr, authDir, nil
 	}
 
-	return "", fmt.Errorf("exhausted all the ports from 6000-6999, failed to start elasticsearch")
+	os.RemoveAll(authDir)
+	return "", "", fmt.Errorf("exhausted all the ports from 6000-6999, failed to start elasticsearch")
 }
 
 // StopElasticsearch stops elasticsearch service
-func StopElasticsearch(name string) error {
+func StopElasticsearch(name, authDir string) error {
 	if len(strings.TrimSpace(name)) == 0 {
 		return nil
 	}
 
 	log.Info("stopping elasticsearch ..")
 
-	authDir := path.Join(os.TempDir(), fmt.Sprintf("%s-elastic-test", name))
 	defer certs.DeleteTLSCredentials(authDir)
 	defer os.RemoveAll(authDir)
 

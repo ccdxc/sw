@@ -24,6 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
 
@@ -497,4 +498,17 @@ func NewCertPool(certs []*x509.Certificate) *x509.CertPool {
 		cp.AddCert(c)
 	}
 	return cp
+}
+
+// AddNodeSANIDs adds the identifiers (DNS name and/or IP address) to be included in a certificate
+// based on node ID, if not already present
+func AddNodeSANIDs(nodeID string, dnsNames []string, ipAddrs []net.IP) ([]string, []net.IP) {
+	if ip := net.ParseIP(nodeID); ip != nil {
+		// nodeID is an IP address
+		ipAddrs = netutils.AppendIPIfNotPresent(ip, ipAddrs)
+	} else {
+		// nodeID is a DNS name
+		dnsNames = utils.AppendStringIfNotPresent(nodeID, dnsNames)
+	}
+	return dnsNames, ipAddrs
 }

@@ -20,7 +20,7 @@ ExecStart=/usr/pensando/bin/systemd-docker \
   $LIS_PEER_URLS --max-txn-ops 1024 \
   --peer-client-cert-auth --client-cert-auth  \
   $ETCD_CLIENT_CERT_FILE $ETCD_CLIENT_KEY_FILE $ETCD_CLIENT_TRUSTED_CA_FILE \
-  $ETCD_PEER_CERT_FILE $ETCD_PEER_KEY_FILE $ETCD_PEER_TRUSTED_CA_FILE
+  $ETCD_PEER_CERT_FILE $ETCD_PEER_KEY_FILE $ETCD_PEER_TRUSTED_CA_FILE $ETCD_PEER_CERT_ALLOWED_CN
 
 ExecStop=/usr/bin/docker stop -t 2 pen-etcd
 ExecStopPost=/usr/bin/docker rm -f pen-etcd

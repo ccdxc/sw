@@ -5,8 +5,6 @@ package server
 import (
 	"crypto"
 	"fmt"
-	"net"
-	"os"
 	"strings"
 	"time"
 
@@ -29,7 +27,6 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/nodewatcher"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/quorum/store"
@@ -138,22 +135,14 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	}
 	env.ResolverClient = resolver.New(&resolver.Config{Name: req.NodeId, Servers: servers})
 
-	hostname := ""
 	// Check if quorum node.
 	if req.QuorumConfig != nil {
 		kvServers := make([]string, 0)
-		hostname, _ = os.Hostname()
 		members := make([]quorum.Member, 0)
 		found := false
 		for _, member := range req.QuorumConfig.QuorumMembers {
-			if hostname == member.Name {
+			if req.NodeId == member.Name {
 				found = true
-			}
-			if !found && net.ParseIP(member.Name) != nil {
-				found, _ = netutils.IsAConfiguredIP(member.Name)
-				if found {
-					hostname = member.Name
-				}
 			}
 			members = append(members, quorum.Member{
 				Name:       member.Name,
@@ -163,7 +152,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			kvServers = append(kvServers, strings.Join(member.ClientUrls, ","))
 		}
 		if !found {
-			return nil, fmt.Errorf("%v received Join without itself in it", hostname)
+			return nil, fmt.Errorf("%v received Join without itself in it", req.NodeId)
 		}
 
 		qConfig := &quorum.Config{
@@ -171,7 +160,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			ID:         req.QuorumConfig.Id,
 			DataDir:    env.Options.KVStore.DataDir,
 			CfgFile:    env.Options.KVStore.ConfigFile,
-			MemberName: hostname,
+			MemberName: req.NodeId,
 			Existing:   false,
 			Members:    members,
 		}
@@ -257,7 +246,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.KVStore = kv
 		env.StateMgr = cache.NewStatemgr()
 		// Create leader service before its users
-		env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
+		env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, req.NodeId)
 		env.SystemdService = services.NewSystemdService()
 		env.VipService = services.NewVIPService()
 		env.MasterService = services.NewMasterService(services.WithK8sSvcMasterOption(env.K8sService),
@@ -310,7 +299,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 			Kind: "Node",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: hostname,
+			Name: req.NodeId,
 		},
 	}
 	nodewatcher.NewNodeWatcher(context.Background(), node, env.ResolverClient.(resolver.Interface), 30, env.Logger)

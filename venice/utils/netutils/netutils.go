@@ -114,10 +114,10 @@ func NameAndIPs() (names []string, ips []net.IP) {
 	return nameSliceFromMap(namesMap), ips
 }
 
-// findInterfaceForIP finds the interface on which the provided IP is present or
+// FindInterfaceForIP finds the interface on which the provided IP is present or
 // can be configured. It returns the interface, network and whether there is an
 // exact match.
-func findInterfaceForIP(ipAddr string) (*net.Interface, *net.IPNet, bool, error) {
+func FindInterfaceForIP(ipAddr string) (*net.Interface, *net.IPNet, bool, error) {
 	ip := net.ParseIP(ipAddr)
 	if ip == nil {
 		return nil, nil, false, fmt.Errorf("%v is not an IP address", ipAddr)
@@ -157,7 +157,7 @@ func findInterfaceForIP(ipAddr string) (*net.Interface, *net.IPNet, bool, error)
 
 // HasIP checks if the provided ip address is configured on any interface.
 func HasIP(ipAddr string) (bool, error) {
-	_, _, found, err := findInterfaceForIP(ipAddr)
+	_, _, found, err := FindInterfaceForIP(ipAddr)
 	return found, err
 }
 
@@ -196,7 +196,7 @@ func AddSecondaryIP(ipAddr string) error {
 	if ip == nil {
 		return fmt.Errorf("%v is not an IP address", ipAddr)
 	}
-	intf, network, found, err := findInterfaceForIP(ipAddr)
+	intf, network, found, err := FindInterfaceForIP(ipAddr)
 	if err != nil {
 		return err
 	}
@@ -224,7 +224,7 @@ func DeleteIP(ipAddr string) error {
 	if ip == nil {
 		return fmt.Errorf("%v is not an IP address", ipAddr)
 	}
-	intf, network, found, err := findInterfaceForIP(ipAddr)
+	intf, network, found, err := FindInterfaceForIP(ipAddr)
 	if err != nil {
 		return err
 	}
@@ -259,4 +259,15 @@ func (t *TestListenAddr) GetAvailablePort() error {
 	t.ListenURL = l.Addr()
 	t.Port = t.ListenURL.(*net.TCPAddr).Port
 	return nil
+}
+
+// AppendIPIfNotPresent adds the IP address to a slice if it is not already there
+// This is ok for small slices. For big slices, maintain an auxiliary map.
+func AppendIPIfNotPresent(ip net.IP, ips []net.IP) []net.IP {
+	for _, a := range ips {
+		if a.Equal(ip) {
+			return ips
+		}
+	}
+	return append(ips, ip)
 }

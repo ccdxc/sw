@@ -13,6 +13,7 @@ import (
 func makeQuorumConfig(uuid string, nodes []string) (*grpc.QuorumConfig, error) {
 	quorumMembers := make([]*grpc.QuorumMember, 0)
 	for ii := 0; ii < len(nodes); ii++ {
+		// Etcd requires IP:port pairs to bind to. If user provided a host name, we need to resolve.
 		addrs, err := net.LookupHost(nodes[ii])
 		if err != nil {
 			return nil, errors.NewBadRequest(fmt.Sprintf("Failed to lookup host %v, error: %v", nodes[ii], err))

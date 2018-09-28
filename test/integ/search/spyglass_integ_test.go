@@ -97,6 +97,7 @@ type testInfo struct {
 	apiGwAddr         string
 	elasticURL        string
 	elasticServerName string
+	elasticAuthDir    string
 	fdr               finder.Interface
 	fdrAddr           string
 	idr               indexer.Interface
@@ -125,8 +126,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 
 	// start elasticsearch
 	tInfo.elasticServerName = uuid.NewV4().String()
-	testutils.StopElasticsearch(tInfo.elasticServerName)
-	tInfo.elasticURL, err = testutils.StartElasticsearch(tInfo.elasticServerName, tInfo.signer, tInfo.trustRoots)
+	tInfo.elasticURL, tInfo.elasticAuthDir, err = testutils.StartElasticsearch(tInfo.elasticServerName, tInfo.signer, tInfo.trustRoots)
 	if err != nil {
 		return fmt.Errorf("failed to start elasticsearch, err: %v", err)
 	}
@@ -222,7 +222,7 @@ func (tInfo *testInfo) teardown() {
 	tInfo.fdr.Stop()
 
 	// stop elasticsearch
-	testutils.StopElasticsearch(tInfo.elasticServerName)
+	testutils.StopElasticsearch(tInfo.elasticServerName, tInfo.elasticAuthDir)
 
 	// stop apiGW
 	tInfo.apiGw.Stop()

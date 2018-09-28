@@ -53,6 +53,7 @@ const (
 	peerPrivKeyFileVar      = "ETCD_PEER_KEY_FILE"
 	peerClientCertReqdVar   = "ETCD_PEER_CLIENT_CERT_AUTH"
 	peerCATrustBundleVar    = "ETCD_PEER_TRUSTED_CA_FILE"
+	peerCertAllowedCNVar    = "ETCD_PEER_CERT_ALLOWED_CN"
 
 	// Parameters
 	nameParam                 = "--name"
@@ -72,6 +73,7 @@ const (
 	peerPrivKeyFileParam      = "--peer-key-file"         // File containing the private key for TLS between peers
 	peerClientCertReqdParam   = "--peer-client-cert-auth" // Flag specifying if peer client certificates are required
 	peerCATrustBundleParam    = "--peer-trusted-ca-file"  // File containing the CA bundle used to verify peer client certificates
+	peerCertAllowedCNParam    = "--peer-cert-allowed-cn"  // The CN expected in a peer certificate
 )
 
 // memberIndex returns -1 if member is cant be found
@@ -145,6 +147,7 @@ func createConfigFile(c *quorum.Config) error {
 		cfgMap[peerPrivKeyFileVar] = fmt.Sprintf("%s %s", peerPrivKeyFileParam, keyFilePath)
 		cfgMap[peerClientCertReqdVar] = fmt.Sprintf("%s", peerClientCertReqdParam)
 		cfgMap[peerCATrustBundleVar] = fmt.Sprintf("%s %s", peerCATrustBundleParam, caBundleFilePath)
+		cfgMap[peerCertAllowedCNVar] = fmt.Sprintf("%s %s", peerCertAllowedCNParam, globals.Etcd)
 	}
 
 	// Parameters for mTLS with clients

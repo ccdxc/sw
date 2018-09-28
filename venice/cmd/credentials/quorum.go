@@ -7,11 +7,15 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
+	"crypto/x509/pkix"
+	"net"
 
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/venice/cmd/validation"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/quorum"
 )
@@ -28,8 +32,46 @@ func SetQuorumInstanceAuth(c *quorum.Config, csrSigner certs.CSRSigner, trustRoo
 	if err != nil {
 		return errors.Wrapf(err, "error generating private key")
 	}
-	_, ipaddrs := netutils.NameAndIPs()
-	csr, err := certs.CreateCSR(kvsPrivKey, nil, []string{globals.Etcd, c.MemberName}, ipaddrs)
+
+	dnsNames := []string{globals.Etcd}
+	ipAddrs := []net.IP{}
+	// Etcd only binds to IP addresses, so to keep it simple clients also use IP addresses to connect
+	// If user gave a hostname, we need to put corresponding address in the certificate
+	addrs, err := net.LookupIP(c.MemberName)
+	if err == nil {
+		ipAddrs = append(ipAddrs, addrs[0])
+	}
+	dnsNames, ipAddrs = certs.AddNodeSANIDs(c.MemberName, dnsNames, ipAddrs)
+
+	// When an Etcd instance tries to connect to another, the server checks that either:
+	// - the IP address is present in the IP SANs of the certificates provided by the client
+	// - the IP address reverse-resolves to a name that is present in the DNS SANs
+	//
+	// If there are multiple addresses configured on the same interface, we may receive a packet
+	// with a SRC IP that is different from what user provided. To work around this issue, we
+	// find the network interface with the IP we know about and put in the certificate all
+	// the other IPs configured on that interface.
+	if len(ipAddrs) > 0 {
+		intf, _, found, err := netutils.FindInterfaceForIP(ipAddrs[0].String())
+		if err == nil && found {
+			otherAddrs, err := intf.Addrs()
+			if err == nil {
+				for _, otherAddr := range otherAddrs {
+					if ip, _, err := net.ParseCIDR(otherAddr.String()); err == nil {
+						if validation.IsValidNodeIP(&ip) {
+							ipAddrs = netutils.AppendIPIfNotPresent(ip, ipAddrs)
+						}
+					}
+				}
+			} else {
+				log.Errorf("Error getting addresses for interface %v: %v", intf.Name, err)
+			}
+		} else {
+			log.Errorf("Error getting same-interface addresses for IP address %v: %v", ipAddrs[0], err)
+		}
+	}
+
+	csr, err := certs.CreateCSR(kvsPrivKey, &pkix.Name{CommonName: globals.Etcd}, dnsNames, ipAddrs)
 	if err != nil {
 		return errors.Wrapf(err, "error generating csr")
 	}

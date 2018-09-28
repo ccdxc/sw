@@ -110,3 +110,14 @@ func CompareFloat(val1, val2 float64) int {
 		return 1
 	}
 }
+
+// AppendStringIfNotPresent appends a string to a slice if it is not already there
+// This is ok for small slices. For big slices, maintain an auxiliary map.
+func AppendStringIfNotPresent(s string, ss []string) []string {
+	for _, e := range ss {
+		if e == s {
+			return ss
+		}
+	}
+	return append(ss, s)
+}
