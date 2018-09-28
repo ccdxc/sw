@@ -401,7 +401,13 @@ e2e-turin: pull-assets
 	$(MAKE) -C nic package
 	$(MAKE) -C nic release
 	rm -rf nic.tar
-	$(MAKE) -C test
+
+e2e-venice:
+	$(MAKE) container-compile
+	$(MAKE) install
+
+e2e-iota: e2e-naples e2e-venice
+	$(MAKE) -C iota
 
 ui-framework:
 	npm version;

@@ -1,2 +1,4 @@
 __pycache__
-protos/*gen*
+protos/gogen*
+protos/pythongen*
+bin/

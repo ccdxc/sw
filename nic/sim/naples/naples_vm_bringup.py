@@ -38,7 +38,7 @@ HNTAP_CFG_FILE        = "hntap-cfg.json"
 HNTAP_QEMU_CFG_FILE   = "hntap-with-qemu-cfg.json"
 HNTAP_RESTART_CMD     = "/naples/nic/tools/restart-hntap.sh"
 HNTAP_TEMP_CFG_FILE   = "/tmp/hntap-cfg.json"
-    
+
 NAPLES_PORT_MAPS = {
     str(AGENT_PORT) + '/tcp': AGENT_PORT,
     str(SIM_PORT) + '/tcp':SIM_PORT
@@ -46,6 +46,7 @@ NAPLES_PORT_MAPS = {
 
 NAPLES_ENV = {"SMART_NIC_MODE" : "1"}
 QEMU_ENV   = {"WITH_QEMU": "1"}
+VENICE_IPS = {"VENICE_IPS" : ""}
 
 # Move it out to a configu
 _APP_IMAGES = [
@@ -156,32 +157,6 @@ def __initial_setup():
     __run_setup_cmds()
 
 
-def __setup_docker_network(args):
-    out = """Setting up docker network
-              Name : %s
-              Driver : %s
-              iprange : %s
-              subnet : %s
-              gateway : %s
-              parent : %s\n""" % (
-        args.nw_name, args.nw_driver, args.nw_ip_range,
-        args.nw_subnet, args.nw_gateway, args.nw_parent
-    )
-    print out
-    for nw in _DOCKER_CLIENT.networks.list():
-        if nw.name == args.nw_name:
-            print "Docker network %s already created" % args.nw_name
-            return nw
-    ipam_pool = docker.types.IPAMPool(subnet=args.nw_subnet,
-                                      gateway=args.nw_gateway,
-                                      iprange=args.nw_ip_range)
-    ipam_config = docker.types.IPAMConfig(pool_configs=[ipam_pool])
-    nw = _DOCKER_CLIENT.networks.create(name=args.nw_name, driver=args.nw_driver,
-                                        options={"parent": args.nw_parent},
-                                        ipam=ipam_config)
-    print "Docker network created successfully"
-    return nw
-
 
 def moveInterfaceToNs(intf, ns):
     cmd = ["ip", "link", "set",  intf, "netns",  ns,  "name",  intf]
@@ -202,45 +177,57 @@ def __move_data_intfs_to_naples_sim(container_obj, node_ip, data_intfs):
             print ("Failed to configure IP for intf : %s with  :%s" % (intf, node_ip))
             sys.exit(1)
         print ("Configure IP for intf : %s with  :%s" % (intf, node_ip))
-        
-    
+
+def __move_control_intf_to_naples_sim(container_obj,control_intf, control_ip):
+    pid = str(_DOCKER_API_CLIENT.inspect_container(container_obj.id)["State"]["Pid"])
+    moveInterfaceToNs(control_intf, pid)
+    cmd = ["ip", "netns", "exec", pid, "ifconfig", control_intf, control_ip + "/24", "up"]
+    if not RunShellCmd(cmd):
+        print ("Failed to configure IP for intf : %s with  :%s" % (control_intf, control_ip))
+        sys.exit(1)
+
+
+
 def __setup_hntap(container_obj, args):
     def __ip2int(ipstr): return struct.unpack('!I', socket.inet_aton(ipstr))[0]
 
     def __int2ip(n): return socket.inet_ntoa(struct.pack('!I', n))
-    
+
+    #TODO, logic has to be cleaned up.
     start_ip = __ip2int(args.tunnel_ip_start)
-    node_ip = __int2ip(start_ip + int(args.node_id) - 1)
-    
+    node_ip = args.data_ips[0]
+    if not node_ip:
+        node_ip = __int2ip(start_ip + int(args.node_id) - 1)
+
     __move_data_intfs_to_naples_sim(container_obj, node_ip, args.data_intfs)
-    
+
     hntapFile = None
     if args.with_qemu:
         hntapFile = NAPLES_CFG_DIR + "/" + HNTAP_QEMU_CFG_FILE
     else:
         hntapFile = NAPLES_CFG_DIR + "/" + HNTAP_CFG_FILE
-        
+
     cpCmd = ["docker", "cp", NAPLES_SIM_NAME + ":" + hntapFile, HNTAP_TEMP_CFG_FILE]
-    
+
     if not RunShellCmd(cpCmd):
         print "Error in coping hntap config file to host"
         sys.exit(1)
-    
+
     try:
         hntap_cfg = json.load(open(HNTAP_TEMP_CFG_FILE))
     except Exeception as ex:
         print "Error opening Json file :" + str(ex)
         sys.exit(1)
-    
+
     peerIPs = []
     for peer in range(0, args.node_cnt):
         if int(args.node_id) != peer + 1:
             peerIPs.append(__int2ip(start_ip + peer))
-                    
+
     if args.hntap_mode == "tunnel":
         #For Tunnel mode, just pick the first data interface.
         hntap_cfg["switch"] = {
-                                "tunnel-mode" : 
+                                "tunnel-mode" :
                                     {
                                         "out-interface" : args.data_intfs[0],
                                         "peers" : peerIPs
@@ -249,7 +236,7 @@ def __setup_hntap(container_obj, args):
     else:
         #For Pass through mode, associate each uplink interface to data interface.
         hntap_cfg["switch"] = {
-                                "passthrough-mode" : 
+                                "passthrough-mode" :
                                     {
                                         "uplink-map": {}
                                     }
@@ -259,26 +246,31 @@ def __setup_hntap(container_obj, args):
             if not intf["local"]:
                 hntap_cfg["switch"]["passthrough-mode"]["uplink-map"][intf["name"]] = args.data_intfs[i]
                 i += 1
-                
+
     with open(HNTAP_TEMP_CFG_FILE, "w") as fp:
         json.dump(hntap_cfg, fp)
-        
+
     cpCmd = ["docker", "cp", HNTAP_TEMP_CFG_FILE,  NAPLES_SIM_NAME + ":" + hntapFile]
     if not RunShellCmd(cpCmd):
         print "Error in coping hntap config to naples-sim"
         sys.exit(1)
-        
+
     cmd_to_run = [HNTAP_RESTART_CMD]
     container_obj.exec_run(cmd_to_run, detach=True, stdout=True, tty=False)
 
-def __setup_data_network(container_obj, args):
+def __setup_ns_for_container(container_obj):
     pid = str(_DOCKER_API_CLIENT.inspect_container(container_obj.id)["State"]["Pid"])
-    
     cmd = ["mkdir", "-p", "/var/run/netns"]
     RunShellCmd(cmd)
     cmd = ["ln", "-s",  "/proc/" + pid + "/ns/net" ,  "/var/run/netns/" + pid]
     RunShellCmd(cmd)
+
+def __setup_data_network(container_obj, args):
     __setup_hntap(container_obj, args)
+
+def __setup_control_network(container_obj, args):
+    if args.control_intf:
+        __move_control_intf_to_naples_sim(container_obj, args.control_intf, args.control_ip)
 
 # This is not being used for now.
 def __setup_ovs_data_network(args):
@@ -352,6 +344,10 @@ def __bringup_naples_container(args):
     print "Bringing up naples container...\n"
     if args.with_qemu:
         NAPLES_ENV.update(QEMU_ENV)
+    if args.venice_ips:
+        VENICE_IPS = {"VENICE_IPS" : args.venice_ips}
+        NAPLES_ENV.update(VENICE_IPS)
+
     naples_obj = _DOCKER_CLIENT.containers.run(NAPLES_IMAGE,
                                                name=NAPLES_SIM_NAME,
                                                privileged=True,
@@ -368,10 +364,11 @@ def __bringup_naples_container(args):
     __wait_for_agent_to_be_up()
     print "Nic container bring up was successfull"
 
-    nw = __setup_docker_network(args)
-    print "Connecting %s to docker network : %s" % (NAPLES_IMAGE, args.nw_name)
-    nw.connect(NAPLES_SIM_NAME)
-    print "Connected %s to docker network : %s" % (NAPLES_IMAGE, args.nw_name)
+
+    __setup_ns_for_container(naples_obj)
+    print "Setting control network for  %s " % (NAPLES_IMAGE)
+    __setup_control_network(naples_obj, args)
+    print "Setting control network   : %s  success" % (NAPLES_IMAGE)
     print "Setting uplink data network for  %s " % (NAPLES_IMAGE)
     __setup_data_network(naples_obj, args)
     print "Setting uplink data network  : %s  success" % (NAPLES_IMAGE)
@@ -410,16 +407,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--network-driver', dest='nw_driver', default="macvlan",
                         choices=["macvlan"], help='Network Driver for docker network')
+    parser.add_argument('--control-intf', dest='control_intf', default=None,
+                        help='Control interface to be used.')
+    parser.add_argument('--control-ip', dest='control_ip', default=None,
+                        help='Control Network IP to be used.')
+    parser.add_argument('--venice-ips', dest='venice_ips', default=None,
+                        help='Venice IPs for agent to connect to.')
     parser.add_argument('--data-intfs', dest='data_intfs', default=None,
                         help='List of data interfaces to be used.')
-    parser.add_argument('--network-name', dest='nw_name', default="control-net",
-                        help='Network Driver for docker network')
-    parser.add_argument('--network-subnet', dest='nw_subnet', default="11.1.1.0/24",
-                        help='Network subnet for docker network')
-    parser.add_argument('--network-ip-range', dest='nw_ip_range', default="11.1.1.32/27",
-                        help='Network ip range for docker network')
-    parser.add_argument('--network-gateway', dest='nw_gateway', default="11.1.1.254",
-                        help='Network gateway for docker network')
+    parser.add_argument('--data-ips', dest='data_ips', default=None,
+                        help='List of data IPs to be used.')
     parser.add_argument('--network-parent', dest='nw_parent', default="eth2",
                         help='Parent network for docker network')
     parser.add_argument('--ovs-br-name', dest='ovs_br_name', default="data-net",
@@ -441,6 +438,7 @@ def main():
     args = parser.parse_args()
 
     args.data_intfs = args.data_intfs.split(',')
+    args.data_ips = args.data_ips.split(',')
     if len(args.data_intfs) == 0:
         print "No data interfaces be specified..."
         sys.exit(1)
@@ -453,4 +451,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

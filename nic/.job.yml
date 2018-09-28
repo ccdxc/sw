@@ -111,20 +111,20 @@ rebase: true
 logfiles:
   - /sw/nic/nic_sanity_logs.tar.gz
 
-#warmd:
-#  target: [ "sh", "-c", "cd /sw && make e2e-turin && test/bin/e2e-turin test" ]
-#  create:
-#    image: build-38
-#    count: 2
-#    resources:
-#      cpus: 4
-#      memory: 8
-#      pvt-networks:
-#            - data
-#            - control
-#
-#  provision:
-#    username: vm
-#    password: vm
+warmd:
+  target: [ "sh", "-c", "cd /sw && make e2e-turin && test/bin/e2e-turin test" ]
+  create:
+    image: build-38
+    count: 5
+    resources:
+      cpus: 4
+      memory: 8
+      pvt-networks:
+            - data
+            - control
+
+  provision:
+    username: vm
+    password: vm
 #    # additional vars to pass to ansible.
 #    vars:

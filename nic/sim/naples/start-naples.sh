@@ -14,6 +14,8 @@ export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
 unset MODEL_ZMQ_TYPE_TCP
 export ZMQ_SOC_DIR=$NIC_DIR
 export DISABLE_AGING=1
+export CMD_RESOLVER_PORT=9009
+export NPM_RPC_PORT=9005
 
 if [ -z "$WITH_QEMU" ]; then
     WITH_QEMU=0
@@ -21,6 +23,21 @@ if [ -z "$WITH_QEMU" ]; then
 else
     WITH_QEMU=1
     echo "Running naples-sim with Qemu"
+fi
+
+if [ -z "$VENICE_IPS" ]; then
+    echo "Venice IPs are not specified for agent."
+else
+    echo "Venice IPs specified for agent."
+    IFS=', ' read -r -a array <<< $VENICE_IPS
+    NPM_URL="-npm ""${array[0]}":$NPM_RPC_PORT
+    RESOLVER_URLS="-resolver-urls "
+    for IP in "${array[@]}"
+    do
+        RESOLVER_URLS=$RESOLVER_URLS"$IP":$CMD_RESOLVER_PORT,
+    done
+    RESOLVER_URLS="${RESOLVER_URLS::-1}"
+    MANAGED_MODE="-mode managed"
 fi
 
 if [ -z "$SMART_NIC_MODE" ]; then
@@ -162,7 +179,7 @@ else
 fi
 
 echo "Starting netagent ..."
-"$NIC_DIR"/bin/netagent -hostif lo -logtofile $LOG_DIR/agent.log -datapath hal &
+"$NIC_DIR"/bin/netagent -hostif lo -logtofile $LOG_DIR/agent.log $RESOLVER_URLS $NPM_URL $MANAGED_MODE -datapath hal &
 
 echo "NAPLES services/processes up and running ..."
 

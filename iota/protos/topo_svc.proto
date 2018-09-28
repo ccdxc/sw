@@ -219,5 +219,8 @@ message TestBedMsg {
     string iota_agent_image             = 7;
     // Allocated vlans based off of the port id
     repeated uint32 allocated_vlans     = 8;
+    
+    repeated string ip_address          = 9;
 
+    string control_intf                 = 10;
 }

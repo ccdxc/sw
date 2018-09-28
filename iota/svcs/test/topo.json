@@ -1,0 +1,22 @@
+{
+    "Naples1" : {
+        "ipaddress" : "10.8.101.215",
+        "kind" : "naples"
+    },
+    "Naples2" : {
+        "ipaddress" : "10.8.101.214",
+        "kind" : "naples"
+    },
+    "venice1" : {
+        "ipaddress" : "10.8.101.213",
+        "kind" : "venice"
+    },
+    "venice2" : {
+        "ipaddress" : "10.8.101.216",
+        "kind" : "venice"
+    },
+    "venice3" : {
+        "ipaddress" : "10.8.101.217",
+        "kind" : "venice"
+    }
+}
