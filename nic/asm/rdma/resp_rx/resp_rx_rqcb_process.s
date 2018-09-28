@@ -221,6 +221,8 @@ process_write:
     // only first packet has reth header
     CAPRI_RESET_TABLE_1_ARG()
 
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, pad, CAPRI_APP_DATA_BTH_PAD)
+
     bcf [!c1], write_non_first_pkt
     CAPRI_SET_FIELD2_C(RQCB_TO_WRITE_P, load_reth, 1, !c1)  //BD Slot
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_WRITE_P, va, len, CAPRI_RXDMA_RETH_VA_R_KEY_LEN)
@@ -418,6 +420,8 @@ process_write_only:
 
     CAPRI_RESET_TABLE_1_ARG()
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_WRITE_P, va, len, CAPRI_RXDMA_RETH_VA_R_KEY_LEN)
+
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, pad, CAPRI_APP_DATA_BTH_PAD)
 
     bcf             [!c6], exit
     CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, remaining_payload_bytes, REM_PYLD_BYTES) //BD Slot

@@ -301,7 +301,8 @@ header_type resp_rx_rqcb_to_write_rkey_info_t {
         remaining_payload_bytes          :   16;
         load_reth                        :    1;
         incr_c_index                     :    1;
-        rsvd                             :   14;
+        pad                              :    2;
+        rsvd                             :   12;
     }
 }
 
@@ -1538,6 +1539,7 @@ action resp_rx_write_dummy_process () {
     modify_field(t1_s2s_rqcb_to_write_rkey_info_scr.remaining_payload_bytes, t1_s2s_rqcb_to_write_rkey_info.remaining_payload_bytes);
     modify_field(t1_s2s_rqcb_to_write_rkey_info_scr.load_reth, t1_s2s_rqcb_to_write_rkey_info.load_reth);
     modify_field(t1_s2s_rqcb_to_write_rkey_info_scr.incr_c_index, t1_s2s_rqcb_to_write_rkey_info.incr_c_index);
+    modify_field(t1_s2s_rqcb_to_write_rkey_info_scr.pad, t1_s2s_rqcb_to_write_rkey_info.pad);
     modify_field(t1_s2s_rqcb_to_write_rkey_info_scr.rsvd, t1_s2s_rqcb_to_write_rkey_info.rsvd);
 
 }

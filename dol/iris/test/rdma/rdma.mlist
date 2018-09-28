@@ -754,6 +754,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_WRITE_ONLY_PAD
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only
+        spec    : resp_rx_write_only_pad.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_WRITE_ONLY_RSVD_KEY
         enable  : True
         package : test.rdma

@@ -14,6 +14,7 @@ struct resp_rx_s1_t1_k k;
 #define KEY_ADDR r2
 #define RQCB0_ADDR r2
 #define GLOBAL_FLAGS r7
+#define DMA_CMD_BASE r4
 
 #define IN_P t1_s2s_rqcb_to_write_rkey_info
 #define TO_S_WB1_P      to_s5_wb1_info
@@ -68,10 +69,19 @@ done:
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, R_KEY)
     
-    IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_RING_DBELL)
+    IS_ANY_FLAG_SET(c4, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_RING_DBELL)
+    sne          c3, CAPRI_KEY_FIELD(IN_P, pad), r0
+    //if completion present OR pad non-zero, set cmdeop to 0
+    setcf        c2, [c4 | c3]
     // dma_cmd_start_index: 2, tbl_id: 1, acc_ctrl: REMOTE_WRITE, cmdeop: 0 or 1 depending on whether above flags are set
     CAPRI_SET_FIELD_RANGE2_C(RKEY_INFO_P, dma_cmd_start_index, dma_cmdeop, ((RESP_RX_DMA_CMD_PYLD_BASE << 12) | (TABLE_1 << 9) | (ACC_CTRL_REMOTE_WRITE << 1) | 0), c2)
     CAPRI_SET_FIELD_RANGE2_C(RKEY_INFO_P, dma_cmd_start_index, dma_cmdeop, ((RESP_RX_DMA_CMD_PYLD_BASE << 12) | (TABLE_1 << 9) | (ACC_CTRL_REMOTE_WRITE << 1) | 1), !c2)
+
+    //if completion not present and pad non-zero, overwrite the DMA_CMD_SKIP_PLD with cmd_eop=1, and skip=1
+    //it would have been originally written in _ext routine with cmd_eop=0, skip=1
+    setcf        c2, [!c4 & c3]
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
+    DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, c2)
 
     // set write back related params
     phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
