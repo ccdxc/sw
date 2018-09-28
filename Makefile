@@ -159,16 +159,12 @@ install:
 	cd bin && tar -cvf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
 
 deploy:
-	$(MAKE) container-compile
-	$(MAKE) fixtures
-	$(MAKE) install
+	$(MAKE) venice-image
 	$(MAKE) c-start
 
 cluster:
 	$(MAKE) build
-	$(MAKE) container-compile
-	$(MAKE) fixtures
-	$(MAKE) install
+	$(MAKE) venice-image
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}
 	tools/scripts/startSim.py
 
@@ -351,9 +347,7 @@ pull-assets:
 
 dind-cluster:
 	$(MAKE) dind-cluster-stop
-	$(MAKE) container-compile
-	$(MAKE) fixtures
-	$(MAKE) install
+	$(MAKE) venice-image
 	./test/e2e/dind/do.py -configFile ${E2E_CONFIG}
 
 dind-cluster-stop:
@@ -378,9 +372,7 @@ e2e-ui:
 
 # Target to run venice e2e a dind environment. Uses real HAL as Agent Datapath and starts HAL with model
 e2e-sanities:
-	$(MAKE) container-compile
-	$(MAKE) fixtures
-	$(MAKE) install
+	$(MAKE) venice-image
 	$(MAKE) -C nic e2e-sanity-build
 	./test/e2e/dind/do.py -configFile test/e2e/cluster/tb_config_sanities.json
 	@stty sane
@@ -390,9 +382,7 @@ e2e-sanities:
 
 # Target to run telemetry e2e test cases
 e2e-telemetry:
-	$(MAKE) container-compile
-	$(MAKE) fixtures
-	$(MAKE) install
+	$(MAKE) venice-image
 	$(MAKE) -C nic e2e-sanity-build
 	@echo "Setting up cluster..."
 	./test/e2e/dind/do.py -configFile test/e2e/telemetry/tb_config.json
@@ -430,7 +420,11 @@ ui-autogen:
 	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
 
 VENICE_RELEASE_TAG := v0.2
-venice-release:
+venice-image:
+	$(MAKE) container-compile
+	$(MAKE) fixtures
+	$(MAKE) install
+venice-release: venice-image
 	docker pull ${REGISTRY_URL}/${DIND_CONTAINER}
 	docker save -o bin/pen-dind.tar ${REGISTRY_URL}/${DIND_CONTAINER}
 	docker pull ${REGISTRY_URL}/${E2E_CONTAINER}
