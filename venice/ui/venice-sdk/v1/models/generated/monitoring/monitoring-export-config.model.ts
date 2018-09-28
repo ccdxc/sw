@@ -7,19 +7,19 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { ApiExternalCred, IApiExternalCred } from './api-external-cred.model';
+import { MonitoringExternalCred, IMonitoringExternalCred } from './monitoring-external-cred.model';
 
-export interface IApiExportConfig {
+export interface IMonitoringExportConfig {
     'destination'?: string;
     'transport'?: string;
-    'credentials'?: IApiExternalCred;
+    'credentials'?: IMonitoringExternalCred;
 }
 
 
-export class ApiExportConfig extends BaseModel implements IApiExportConfig {
+export class MonitoringExportConfig extends BaseModel implements IMonitoringExportConfig {
     'destination': string = null;
     'transport': string = null;
-    'credentials': ApiExternalCred = null;
+    'credentials': MonitoringExternalCred = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'destination': {
             type: 'string'
@@ -33,16 +33,16 @@ export class ApiExportConfig extends BaseModel implements IApiExportConfig {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ApiExportConfig.propInfo[propName];
+        return MonitoringExportConfig.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ApiExportConfig.propInfo[prop] != null &&
-                        ApiExportConfig.propInfo[prop].default != null &&
-                        ApiExportConfig.propInfo[prop].default != '');
+        return (MonitoringExportConfig.propInfo[prop] != null &&
+                        MonitoringExportConfig.propInfo[prop].default != null &&
+                        MonitoringExportConfig.propInfo[prop].default != '');
     }
 
     /**
@@ -51,7 +51,7 @@ export class ApiExportConfig extends BaseModel implements IApiExportConfig {
     */
     constructor(values?: any) {
         super();
-        this['credentials'] = new ApiExternalCred();
+        this['credentials'] = new MonitoringExternalCred();
         this.setValues(values);
     }
 
@@ -62,13 +62,13 @@ export class ApiExportConfig extends BaseModel implements IApiExportConfig {
     setValues(values: any): void {
         if (values && values['destination'] != null) {
             this['destination'] = values['destination'];
-        } else if (ApiExportConfig.hasDefaultValue('destination')) {
-            this['destination'] = ApiExportConfig.propInfo['destination'].default;
+        } else if (MonitoringExportConfig.hasDefaultValue('destination')) {
+            this['destination'] = MonitoringExportConfig.propInfo['destination'].default;
         }
         if (values && values['transport'] != null) {
             this['transport'] = values['transport'];
-        } else if (ApiExportConfig.hasDefaultValue('transport')) {
-            this['transport'] = ApiExportConfig.propInfo['transport'].default;
+        } else if (MonitoringExportConfig.hasDefaultValue('transport')) {
+            this['transport'] = MonitoringExportConfig.propInfo['transport'].default;
         }
         if (values) {
             this['credentials'].setValues(values['credentials']);

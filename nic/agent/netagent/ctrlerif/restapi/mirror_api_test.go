@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	api "github.com/pensando/sw/api"
+	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -40,7 +41,7 @@ func TestMirrorSessionPost(t *testing.T) {
 			PacketFilters: []string{"ALL_DROPS"},
 			CaptureAt:     0,
 			Collectors: []tsproto.MirrorCollector{
-				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
 		},
 	}
@@ -74,7 +75,7 @@ func TestMirrorSessionUpdate(t *testing.T) {
 			PacketFilters: []string{"ALL_DROPS"},
 			CaptureAt:     0,
 			Collectors: []tsproto.MirrorCollector{
-				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
 		},
 	}
@@ -96,7 +97,7 @@ func TestMirrorSessionUpdate(t *testing.T) {
 			PacketFilters: []string{"ALL_DROPS"},
 			CaptureAt:     1,
 			Collectors: []tsproto.MirrorCollector{
-				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
 		},
 	}
@@ -128,7 +129,7 @@ func TestMirrorSessionDelete(t *testing.T) {
 			PacketFilters: []string{"ALL_DROPS"},
 			CaptureAt:     0,
 			Collectors: []tsproto.MirrorCollector{
-				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
+				tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181"}},
 			},
 		},
 	}

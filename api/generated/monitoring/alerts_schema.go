@@ -259,9 +259,9 @@ var typesMapAlerts = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Format": api.Field{Name: "Format", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Target": api.Field{Name: "Target", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "target", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ExportConfig"},
+			"Target": api.Field{Name: "Target", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "target", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 
-			"Config": api.Field{Name: "Config", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.SyslogExportConfig"},
+			"Config": api.Field{Name: "Config", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SyslogExportConfig"},
 		},
 	},
 }

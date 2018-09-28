@@ -45,7 +45,7 @@ import (
                                 PacketFilters: []string{"ALL_DROPS"},
                                 CaptureAt: 0,
                                 Collectors: []tsproto.MirrorCollector{
-                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
+                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
                                 },
                             },
                         }
@@ -79,7 +79,7 @@ import (
                                 PacketFilters: []string{"ALL_DROPS"},
                                 CaptureAt: 0,
                                 Collectors: []tsproto.MirrorCollector{
-                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
+                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
                                 },
                             },
                         }
@@ -101,7 +101,7 @@ import (
                                 PacketFilters: []string{"ALL_DROPS"},
                                 CaptureAt: 1,
                                 Collectors: []tsproto.MirrorCollector{
-                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
+                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
                                 },
                             },
                         }
@@ -133,7 +133,7 @@ import (
                                 PacketFilters: []string{"ALL_DROPS"},
                                 CaptureAt: 0,
                                 Collectors: []tsproto.MirrorCollector{
-                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: api.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
+                                    tsproto.MirrorCollector{Type: "ERSPAN", ExportCfg: monitoring.ExportConfig{Destination: "10.10.10.1", Transport: "TCP/8181", }, },
                                 },
                             },
                         }

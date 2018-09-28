@@ -48,7 +48,7 @@ var typesMapMirror = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ExportConfig"},
+			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 		},
 	},
 	"monitoring.MirrorSession": &api.Struct{
@@ -80,7 +80,7 @@ var typesMapMirror = map[string]*api.Struct{
 
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.ExportConfig"},
+			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.ExportConfig"},
 
 			"MatchRule": api.Field{Name: "MatchRule", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: false, Slice: true, Map: false, Inline: true, FromInline: true, KeyType: "", Type: "monitoring.MatchRule"},
 
@@ -131,7 +131,7 @@ var typesMapMirror = map[string]*api.Struct{
 
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
-			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.ExportConfig"},
+			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "monitoring.ExportConfig"},
 
 			"MatchRule": api.Field{Name: "MatchRule", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: false, Slice: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "monitoring.MatchRule"},
 

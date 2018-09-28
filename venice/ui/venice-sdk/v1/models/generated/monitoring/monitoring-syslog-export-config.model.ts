@@ -8,13 +8,13 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface IApiSyslogExportConfig {
+export interface IMonitoringSyslogExportConfig {
     'facility-override'?: string;
     'prefix'?: string;
 }
 
 
-export class ApiSyslogExportConfig extends BaseModel implements IApiSyslogExportConfig {
+export class MonitoringSyslogExportConfig extends BaseModel implements IMonitoringSyslogExportConfig {
     'facility-override': string = null;
     'prefix': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
@@ -27,16 +27,16 @@ export class ApiSyslogExportConfig extends BaseModel implements IApiSyslogExport
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ApiSyslogExportConfig.propInfo[propName];
+        return MonitoringSyslogExportConfig.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ApiSyslogExportConfig.propInfo[prop] != null &&
-                        ApiSyslogExportConfig.propInfo[prop].default != null &&
-                        ApiSyslogExportConfig.propInfo[prop].default != '');
+        return (MonitoringSyslogExportConfig.propInfo[prop] != null &&
+                        MonitoringSyslogExportConfig.propInfo[prop].default != null &&
+                        MonitoringSyslogExportConfig.propInfo[prop].default != '');
     }
 
     /**
@@ -55,13 +55,13 @@ export class ApiSyslogExportConfig extends BaseModel implements IApiSyslogExport
     setValues(values: any): void {
         if (values && values['facility-override'] != null) {
             this['facility-override'] = values['facility-override'];
-        } else if (ApiSyslogExportConfig.hasDefaultValue('facility-override')) {
-            this['facility-override'] = ApiSyslogExportConfig.propInfo['facility-override'].default;
+        } else if (MonitoringSyslogExportConfig.hasDefaultValue('facility-override')) {
+            this['facility-override'] = MonitoringSyslogExportConfig.propInfo['facility-override'].default;
         }
         if (values && values['prefix'] != null) {
             this['prefix'] = values['prefix'];
-        } else if (ApiSyslogExportConfig.hasDefaultValue('prefix')) {
-            this['prefix'] = ApiSyslogExportConfig.propInfo['prefix'].default;
+        } else if (MonitoringSyslogExportConfig.hasDefaultValue('prefix')) {
+            this['prefix'] = MonitoringSyslogExportConfig.propInfo['prefix'].default;
         }
     }
 

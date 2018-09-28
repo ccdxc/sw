@@ -37,7 +37,7 @@ func TestFlowExportPolicyPost(t *testing.T) {
 			Targets: []monitoring.FlowExportTarget{{
 				Interval: "15s",
 				Format:   "IPFIX",
-				Exports: []api.ExportConfig{
+				Exports: []monitoring.ExportConfig{
 					{
 						Destination: "10.1.1.0",
 						Transport:   "UDP/2055",
@@ -67,7 +67,7 @@ func TestFlowExportPolicyDelete(t *testing.T) {
 			Targets: []monitoring.FlowExportTarget{{
 				Interval: "15s",
 				Format:   "IPFIX",
-				Exports: []api.ExportConfig{
+				Exports: []monitoring.ExportConfig{
 					{
 						Destination: "10.1.1.0",
 						Transport:   "UDP/2055",

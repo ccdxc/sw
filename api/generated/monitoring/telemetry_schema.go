@@ -57,19 +57,19 @@ var typesMapTelemetry = map[string]*api.Struct{
 
 			"MatchRules": api.Field{Name: "MatchRules", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "match-rules", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MatchRule"},
 
-			"Exports": api.Field{Name: "Exports", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "exports", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ExportConfig"},
+			"Exports": api.Field{Name: "Exports", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "exports", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 		},
 	},
 	"monitoring.FwlogExport": &api.Struct{
 		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogExport{}) },
 		Fields: map[string]api.Field{
-			"Targets": api.Field{Name: "Targets", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "targets", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ExportConfig"},
+			"Targets": api.Field{Name: "Targets", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "targets", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 
 			"Format": api.Field{Name: "Format", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Filter": api.Field{Name: "Filter", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-filter", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"SyslogConfig": api.Field{Name: "SyslogConfig", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "syslog-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.SyslogExportConfig"},
+			"SyslogConfig": api.Field{Name: "SyslogConfig", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "syslog-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SyslogExportConfig"},
 		},
 	},
 	"monitoring.FwlogPolicy": &api.Struct{

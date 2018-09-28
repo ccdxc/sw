@@ -77,7 +77,7 @@ func TestFindNumExports(t *testing.T) {
 
 		Interval: "15s",
 		Format:   "IPFIX",
-		Exports: []api.ExportConfig{
+		Exports: []monitoring.ExportConfig{
 			{
 				Destination: fmt.Sprintf("192.168.3.1"),
 				Transport:   "TCP/1234",
@@ -138,7 +138,7 @@ func TestValidatePolicy(t *testing.T) {
 				{
 					Interval: "15s",
 					Format:   "IPFIX",
-					Exports:  []api.ExportConfig{},
+					Exports:  []monitoring.ExportConfig{},
 				},
 			},
 		}}
@@ -154,7 +154,7 @@ func TestValidatePolicy(t *testing.T) {
 				{
 					Interval: "15s",
 					Format:   "IPFIX",
-					Exports: []api.ExportConfig{
+					Exports: []monitoring.ExportConfig{
 						{Transport: "TCP/1234"},
 					},
 				},
@@ -172,7 +172,7 @@ func TestValidatePolicy(t *testing.T) {
 				{
 					Interval: "15s",
 					Format:   "IPFIX",
-					Exports: []api.ExportConfig{
+					Exports: []monitoring.ExportConfig{
 						{
 							Destination: fmt.Sprintf("192.168.3.1"),
 						},
@@ -192,7 +192,7 @@ func TestValidatePolicy(t *testing.T) {
 				{
 					Interval: "15s",
 					Format:   "IPFIX",
-					Exports: []api.ExportConfig{
+					Exports: []monitoring.ExportConfig{
 						{
 							Destination: fmt.Sprintf("192.168.3.1"),
 							Transport:   "TCP/1234",
@@ -315,7 +315,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 					{
 						Interval: "15s",
 						Format:   "IPFIX",
-						Exports: []api.ExportConfig{
+						Exports: []monitoring.ExportConfig{
 							{
 								Destination: fmt.Sprintf("192.168.3.%d", 10+l),
 								Transport:   "TCP/1234",
@@ -349,7 +349,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 					{
 						Interval: "15s",
 						Format:   "IPFIX",
-						Exports: []api.ExportConfig{
+						Exports: []monitoring.ExportConfig{
 							{
 								Destination: fmt.Sprintf("192.168.3.%d", 10+l),
 								Transport:   "TCP/1234",
@@ -481,7 +481,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 				{
 					Interval: "15s",
 					Format:   "IPFIX",
-					Exports: []api.ExportConfig{
+					Exports: []monitoring.ExportConfig{
 						{
 							Destination: fmt.Sprintf("192.168.3.11"),
 							Transport:   "UDP/1234",
@@ -545,7 +545,7 @@ func TestNetagentInfo(t *testing.T) {
 				{
 					Interval: "15s",
 					Format:   "IPFIX",
-					Exports: []api.ExportConfig{
+					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "10.10.10.1",
 							Transport:   "UDP/1234",

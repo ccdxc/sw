@@ -9,9 +9,9 @@ import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/api/export.proto";
-import  "github.com/pensando/sw/api/protos/events.proto";
-import  "github.com/pensando/sw/api/fields/selector.proto";
+import "github.com/pensando/sw/api/protos/events.proto";
+import "github.com/pensando/sw/api/fields/selector.proto";
+import "export.proto";
 
 // -------------------------- Alert Object -------------------------------------
 // Alert is a notification to a user of a fault or condition that needs
@@ -350,14 +350,14 @@ message SNMPTrapServer {
 // Syslog export configuration
 message SyslogExport {
     // event export format, SYSLOG_BSD default
-    string Format                       = 1 [(venice.check) = "StrEnum(MonitoringExportFormat)",
+    string Format                   = 1 [(venice.check) = "StrEnum(MonitoringExportFormat)",
                                              (gogoproto.jsontag) = "format, omitempty"];
 
     // export target ip/port/protocol
-    api.ExportConfig Target             = 2 [(gogoproto.jsontag) = "target, omitempty"];
+    ExportConfig Target             = 2 [(gogoproto.jsontag) = "target, omitempty"];
 
     // syslog specific configuration
-    api.SyslogExportConfig Config       = 3 [(gogoproto.jsontag) = "config, omitempty"];
+    SyslogExportConfig Config       = 3 [(gogoproto.jsontag) = "config, omitempty"];
 }
 
 message AlertDestinationSpec {

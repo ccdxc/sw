@@ -45,6 +45,13 @@ export enum MonitoringEventExport_format {
     'SYSLOG_RFC5424' = "SYSLOG_RFC5424",
 }
 
+export enum MonitoringExternalCred_auth_type {
+    'AUTHTYPE_NONE' = "AUTHTYPE_NONE",
+    'AUTHTYPE_USERNAMEPASSWORD' = "AUTHTYPE_USERNAMEPASSWORD",
+    'AUTHTYPE_TOKEN' = "AUTHTYPE_TOKEN",
+    'AUTHTYPE_CERTS' = "AUTHTYPE_CERTS",
+}
+
 export enum MonitoringFlowExportTarget_format {
     'Ipfix' = "Ipfix",
 }
@@ -153,6 +160,13 @@ export enum MonitoringEventExport_format_uihint {
     'SYSLOG_RFC5424' = "RFC5424",
 }
 
+export enum MonitoringExternalCred_auth_type_uihint {
+    'AUTHTYPE_CERTS' = "Certs",
+    'AUTHTYPE_NONE' = "None",
+    'AUTHTYPE_TOKEN' = "Token",
+    'AUTHTYPE_USERNAMEPASSWORD' = "Username/Password",
+}
+
 export enum MonitoringFwlogExport_format_uihint {
     'SYSLOG_BSD' = "BSD",
     'SYSLOG_RFC5424' = "RFC5424",
@@ -248,6 +262,7 @@ export class AllEnums {
     MonitoringAlertStatus_severity = MonitoringAlertStatus_severity;
     MonitoringAuthConfig_algo = MonitoringAuthConfig_algo;
     MonitoringEventExport_format = MonitoringEventExport_format;
+    MonitoringExternalCred_auth_type = MonitoringExternalCred_auth_type;
     MonitoringFlowExportTarget_format = MonitoringFlowExportTarget_format;
     MonitoringFwlogExport_format = MonitoringFwlogExport_format;
     MonitoringFwlogExport_export_filter = MonitoringFwlogExport_export_filter;
@@ -266,6 +281,7 @@ export class AllEnums {
     MonitoringAlertSpec_state_uihint = MonitoringAlertSpec_state_uihint;
     MonitoringAlertStatus_severity_uihint = MonitoringAlertStatus_severity_uihint;
     MonitoringEventExport_format_uihint = MonitoringEventExport_format_uihint;
+    MonitoringExternalCred_auth_type_uihint = MonitoringExternalCred_auth_type_uihint;
     MonitoringFwlogExport_format_uihint = MonitoringFwlogExport_format_uihint;
     MonitoringFwlogExport_export_filter_uihint = MonitoringFwlogExport_export_filter_uihint;
     MonitoringFwlogSpec_filter_uihint = MonitoringFwlogSpec_filter_uihint;

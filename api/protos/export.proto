@@ -1,10 +1,23 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
 syntax = "proto3";
-package api;
+package monitoring;
 
 // Mandatory imports.
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+enum ExportAuthType {
+    // ui-hint: None
+    AUTHTYPE_NONE = 0;
+    // ui-hint: Username/Password
+    AUTHTYPE_USERNAMEPASSWORD = 1;
+    // ui-hint: Token
+    AUTHTYPE_TOKEN = 2;
+    // ui-hint: Certs
+    AUTHTYPE_CERTS = 3;
+}
 
 // ----------------------------- Export Config -----------------------------
 // Export Config specifies server address and user credentials
@@ -27,28 +40,31 @@ message ExportConfig {
 // TLS Client authentication, or Bearer Token based authentication. User is
 // expected to configure one of the methods
 message ExternalCred {
+    // AuthType is the authentication type used in this config
+    string AuthType = 1 [(gogoproto.jsontag) = "auth-type", (venice.check) = "StrEnum(ExportAuthType)"];
+
     // UserName is the login id to be used towards the external entity
-    string UserName = 1 [(gogoproto.jsontag) = "username,omitempty"];
+    string UserName = 2 [(gogoproto.jsontag) = "username,omitempty"];
 
     // Password is one time specified, not visibile on read operations
     // Only valid when UserName is defined
     // TBD: need to add (venice.secret) = "true" support for this
-    string Password = 2 [(gogoproto.jsontag) = "password,omitempty"];
+    string Password = 3 [(gogoproto.jsontag) = "password,omitempty"];
 
     // External entity supports bearer tokens for authentication and authorization
     // Token refresh is not supported using OAuth2
     // TBD: need to add (venice.secret) = "true" support for this
-    string BearerToken = 3 [(gogoproto.jsontag) = "bearer-token,omitempty"];
+    string BearerToken = 4 [(gogoproto.jsontag) = "bearer-token,omitempty"];
 
     // CertData holds PEM-encoded bytes (typically read from a client certificate file).
-    bytes CertData = 4 [(gogoproto.jsontag) = "cert-data,omitempty"];
+    bytes CertData = 5 [(gogoproto.jsontag) = "cert-data,omitempty"];
 
     // KeyData holds PEM-encoded bytes (typically read from a client certificate key file).
     // TBD: need to add (venice.secret) = "true" support for this
-    bytes KeyData = 5 [(gogoproto.jsontag) = "key-data,omitempty"];
+    bytes KeyData = 6 [(gogoproto.jsontag) = "key-data,omitempty"];
 
     // CaData holds PEM-encoded bytes (typically read from a root certificates bundle).
-    bytes CaData = 6 [(gogoproto.jsontag) = "ca-data,omitempty"];
+    bytes CaData = 7 [(gogoproto.jsontag) = "ca-data,omitempty"];
 }
 
 // syslog export configurations

@@ -187,13 +187,13 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 				},
 				{
 					Type: "ERSPAN",
-					ExportCfg: api.ExportConfig{
+					ExportCfg: monitoring.ExportConfig{
 						Destination: "111.1.1.1",
 					},
 				},
 				{
 					Type: "ERSPAN",
-					ExportCfg: api.ExportConfig{
+					ExportCfg: monitoring.ExportConfig{
 						Destination: "111.1.1.2",
 					},
 				},

@@ -8,20 +8,20 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringSyslogExport_format,  MonitoringSyslogExport_format_uihint  } from './enums';
-import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
-import { ApiSyslogExportConfig, IApiSyslogExportConfig } from './api-syslog-export-config.model';
+import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
+import { MonitoringSyslogExportConfig, IMonitoringSyslogExportConfig } from './monitoring-syslog-export-config.model';
 
 export interface IMonitoringSyslogExport {
     'format'?: MonitoringSyslogExport_format;
-    'target'?: IApiExportConfig;
-    'config'?: IApiSyslogExportConfig;
+    'target'?: IMonitoringExportConfig;
+    'config'?: IMonitoringSyslogExportConfig;
 }
 
 
 export class MonitoringSyslogExport extends BaseModel implements IMonitoringSyslogExport {
     'format': MonitoringSyslogExport_format = null;
-    'target': ApiExportConfig = null;
-    'config': ApiSyslogExportConfig = null;
+    'target': MonitoringExportConfig = null;
+    'config': MonitoringSyslogExportConfig = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'format': {
             enum: MonitoringSyslogExport_format_uihint,
@@ -55,8 +55,8 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
     */
     constructor(values?: any) {
         super();
-        this['target'] = new ApiExportConfig();
-        this['config'] = new ApiSyslogExportConfig();
+        this['target'] = new MonitoringExportConfig();
+        this['config'] = new MonitoringSyslogExportConfig();
         this.setValues(values);
     }
 

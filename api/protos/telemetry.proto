@@ -9,7 +9,7 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/api/export.proto";
+import "export.proto";
 import "mirror.proto";
 
 // telemetry policies:
@@ -90,7 +90,7 @@ enum FwlogFilter {
 // firewall log export config
 message FwlogExport {
     // Target contains ip/port/protocol
-    repeated api.ExportConfig Targets = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
+    repeated ExportConfig Targets = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "targets,omitempty"];
 
      // fwlog format, SYSLOG_BSD default
     string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(MonitoringExportFormat)"];
@@ -101,7 +101,7 @@ message FwlogExport {
     // configuration to use for syslog format
     // default facility is set to "local4", can be overridden with FacilityOverride
     // fwlog serverity is set to "Informational"
-    api.SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "syslog-config,omitempty"];
+    SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "syslog-config,omitempty"];
 }
 
 // Venice collects fwlog irrespective of the export config
@@ -148,8 +148,7 @@ message FlowExportTarget {
     repeated MatchRule  MatchRules = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
 
     // Export contains export parameters.
-    repeated api.ExportConfig Exports = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
-
+    repeated ExportConfig Exports = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
 }
 
 message FlowExportSpec {

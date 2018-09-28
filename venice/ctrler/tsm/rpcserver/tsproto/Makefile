@@ -4,6 +4,8 @@ default: restgen goimports
 	protoc -I/usr/local/include -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../../vendor/github.com/gogo/protobuf/protobuf \
 	--gofast_out=plugins=grpc:. mirror.proto
+	sed -i.bak_ 's/api\/protos/api\/generated\/monitoring/g' *.go
+	rm -f *.bak_
 
 restgen:
 	protoc -I. -I../../../../../vendor -I${GOPATH}/src -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party -I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \

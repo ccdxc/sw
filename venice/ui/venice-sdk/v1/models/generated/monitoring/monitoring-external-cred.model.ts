@@ -7,8 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { MonitoringExternalCred_auth_type,  MonitoringExternalCred_auth_type_uihint  } from './enums';
 
-export interface IApiExternalCred {
+export interface IMonitoringExternalCred {
+    'auth-type'?: MonitoringExternalCred_auth_type;
     'username'?: string;
     'password'?: string;
     'bearer-token'?: string;
@@ -18,7 +20,8 @@ export interface IApiExternalCred {
 }
 
 
-export class ApiExternalCred extends BaseModel implements IApiExternalCred {
+export class MonitoringExternalCred extends BaseModel implements IMonitoringExternalCred {
+    'auth-type': MonitoringExternalCred_auth_type = null;
     'username': string = null;
     'password': string = null;
     'bearer-token': string = null;
@@ -28,6 +31,11 @@ export class ApiExternalCred extends BaseModel implements IApiExternalCred {
     /** CaData holds PEM-encoded bytes (typically read from a root certificates bundle). */
     'ca-data': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'auth-type': {
+            enum: MonitoringExternalCred_auth_type_uihint,
+            default: 'AUTHTYPE_NONE',
+            type: 'string'
+        },
         'username': {
             type: 'string'
         },
@@ -51,16 +59,16 @@ export class ApiExternalCred extends BaseModel implements IApiExternalCred {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return ApiExternalCred.propInfo[propName];
+        return MonitoringExternalCred.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (ApiExternalCred.propInfo[prop] != null &&
-                        ApiExternalCred.propInfo[prop].default != null &&
-                        ApiExternalCred.propInfo[prop].default != '');
+        return (MonitoringExternalCred.propInfo[prop] != null &&
+                        MonitoringExternalCred.propInfo[prop].default != null &&
+                        MonitoringExternalCred.propInfo[prop].default != '');
     }
 
     /**
@@ -77,35 +85,40 @@ export class ApiExternalCred extends BaseModel implements IApiExternalCred {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
+        if (values && values['auth-type'] != null) {
+            this['auth-type'] = values['auth-type'];
+        } else if (MonitoringExternalCred.hasDefaultValue('auth-type')) {
+            this['auth-type'] = <MonitoringExternalCred_auth_type>  MonitoringExternalCred.propInfo['auth-type'].default;
+        }
         if (values && values['username'] != null) {
             this['username'] = values['username'];
-        } else if (ApiExternalCred.hasDefaultValue('username')) {
-            this['username'] = ApiExternalCred.propInfo['username'].default;
+        } else if (MonitoringExternalCred.hasDefaultValue('username')) {
+            this['username'] = MonitoringExternalCred.propInfo['username'].default;
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
-        } else if (ApiExternalCred.hasDefaultValue('password')) {
-            this['password'] = ApiExternalCred.propInfo['password'].default;
+        } else if (MonitoringExternalCred.hasDefaultValue('password')) {
+            this['password'] = MonitoringExternalCred.propInfo['password'].default;
         }
         if (values && values['bearer-token'] != null) {
             this['bearer-token'] = values['bearer-token'];
-        } else if (ApiExternalCred.hasDefaultValue('bearer-token')) {
-            this['bearer-token'] = ApiExternalCred.propInfo['bearer-token'].default;
+        } else if (MonitoringExternalCred.hasDefaultValue('bearer-token')) {
+            this['bearer-token'] = MonitoringExternalCred.propInfo['bearer-token'].default;
         }
         if (values && values['cert-data'] != null) {
             this['cert-data'] = values['cert-data'];
-        } else if (ApiExternalCred.hasDefaultValue('cert-data')) {
-            this['cert-data'] = ApiExternalCred.propInfo['cert-data'].default;
+        } else if (MonitoringExternalCred.hasDefaultValue('cert-data')) {
+            this['cert-data'] = MonitoringExternalCred.propInfo['cert-data'].default;
         }
         if (values && values['key-data'] != null) {
             this['key-data'] = values['key-data'];
-        } else if (ApiExternalCred.hasDefaultValue('key-data')) {
-            this['key-data'] = ApiExternalCred.propInfo['key-data'].default;
+        } else if (MonitoringExternalCred.hasDefaultValue('key-data')) {
+            this['key-data'] = MonitoringExternalCred.propInfo['key-data'].default;
         }
         if (values && values['ca-data'] != null) {
             this['ca-data'] = values['ca-data'];
-        } else if (ApiExternalCred.hasDefaultValue('ca-data')) {
-            this['ca-data'] = ApiExternalCred.propInfo['ca-data'].default;
+        } else if (MonitoringExternalCred.hasDefaultValue('ca-data')) {
+            this['ca-data'] = MonitoringExternalCred.propInfo['ca-data'].default;
         }
     }
 
@@ -115,6 +128,7 @@ export class ApiExternalCred extends BaseModel implements IApiExternalCred {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'auth-type': new FormControl(this['auth-type'], [enumValidator(MonitoringExternalCred_auth_type), ]),
                 'username': new FormControl(this['username']),
                 'password': new FormControl(this['password']),
                 'bearer-token': new FormControl(this['bearer-token']),
@@ -128,6 +142,7 @@ export class ApiExternalCred extends BaseModel implements IApiExternalCred {
 
     setFormGroupValues() {
         if (this._formGroup) {
+            this._formGroup.controls['auth-type'].setValue(this['auth-type']);
             this._formGroup.controls['username'].setValue(this['username']);
             this._formGroup.controls['password'].setValue(this['password']);
             this._formGroup.controls['bearer-token'].setValue(this['bearer-token']);

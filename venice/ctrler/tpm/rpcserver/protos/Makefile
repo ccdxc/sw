@@ -7,16 +7,18 @@ default: ${DEST} template
 
 %.pb.go: %.proto Makefile 
 	protoc -I/usr/local/include -I. -I../../../../../vendor -I${GOPATH}/src \
-	-I${GOPATH}/src/github.com/pensando/sw/api/protos \
+        -I${GOPATH}/src/github.com/pensando/sw/api/protos/ \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         --gofast_out=plugins=grpc:. $<
 	sed -i.bak_ 's/api\/protos/api\/generated\/monitoring/g' $@
+	sed -i.bak_ '/import _ "."/d' $@
 	rm -f *.bak_
 	goimports -local "github.com/pensando/sw" -w *.go
 
 template: 
 	protoc -I/usr/local/include -I. -I../../../../../vendor -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/pensando/sw/api/protos/ \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party \
 	-I${GOPATH}/src/github.com/pensando/sw/api/protos \
 	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \

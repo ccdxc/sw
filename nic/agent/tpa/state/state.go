@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	apiproto "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	agstate "github.com/pensando/sw/nic/agent/netagent/state"
@@ -236,7 +235,7 @@ func parsePortProto(src string) (halproto.IPProtocol, uint32, error) {
 }
 
 // createCollectorPolicy() create collector policy in HAL and return the key
-func (s *PolicyState) createCollectorPolicy(ctx context.Context, netMeta *networkMeta, fmtStr string, interval uint32, export *apiproto.ExportConfig) (uint64, error) {
+func (s *PolicyState) createCollectorPolicy(ctx context.Context, netMeta *networkMeta, fmtStr string, interval uint32, export *monitoring.ExportConfig) (uint64, error) {
 
 	objID, err := s.store.GetNextID(flowExportPolicyID)
 	if err != nil {

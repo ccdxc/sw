@@ -9,22 +9,22 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringEventExport_format,  MonitoringEventExport_format_uihint  } from './enums';
 import { FieldsSelector, IFieldsSelector } from './fields-selector.model';
-import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
-import { ApiSyslogExportConfig, IApiSyslogExportConfig } from './api-syslog-export-config.model';
+import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
+import { MonitoringSyslogExportConfig, IMonitoringSyslogExportConfig } from './monitoring-syslog-export-config.model';
 
 export interface IMonitoringEventExport {
     'format'?: MonitoringEventExport_format;
     'selector'?: IFieldsSelector;
-    'target'?: IApiExportConfig;
-    'syslog-config'?: IApiSyslogExportConfig;
+    'target'?: IMonitoringExportConfig;
+    'syslog-config'?: IMonitoringSyslogExportConfig;
 }
 
 
 export class MonitoringEventExport extends BaseModel implements IMonitoringEventExport {
     'format': MonitoringEventExport_format = null;
     'selector': FieldsSelector = null;
-    'target': ApiExportConfig = null;
-    'syslog-config': ApiSyslogExportConfig = null;
+    'target': MonitoringExportConfig = null;
+    'syslog-config': MonitoringSyslogExportConfig = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'format': {
             enum: MonitoringEventExport_format_uihint,
@@ -62,8 +62,8 @@ export class MonitoringEventExport extends BaseModel implements IMonitoringEvent
     constructor(values?: any) {
         super();
         this['selector'] = new FieldsSelector();
-        this['target'] = new ApiExportConfig();
-        this['syslog-config'] = new ApiSyslogExportConfig();
+        this['target'] = new MonitoringExportConfig();
+        this['syslog-config'] = new MonitoringSyslogExportConfig();
         this.setValues(values);
     }
 

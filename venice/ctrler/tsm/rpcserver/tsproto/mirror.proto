@@ -9,7 +9,7 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/api/export.proto";
+import "github.com/pensando/sw/api/protos/export.proto";
 //========================================================================================
 // Packet Mirroring
 //========================================================================================
@@ -66,7 +66,7 @@ message MirrorCollector {
     string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(MirrorCollector.PacketCollectorType)"];
 
     // Collector export information for ERSPAN. Not required for VENICE collector
-    api.ExportConfig    ExportCfg   = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
+    monitoring.ExportConfig    ExportCfg   = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
     string              PcapDirName = 3 [(gogoproto.jsontag) = "pcap-dir-name"];
 }
 

@@ -9,13 +9,13 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringFlowExportTarget_format,  } from './enums';
 import { MonitoringMatchRule, IMonitoringMatchRule } from './monitoring-match-rule.model';
-import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
+import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
 
 export interface IMonitoringFlowExportTarget {
     'interval'?: string;
     'format'?: MonitoringFlowExportTarget_format;
     'match-rules'?: Array<IMonitoringMatchRule>;
-    'exports'?: Array<IApiExportConfig>;
+    'exports'?: Array<IMonitoringExportConfig>;
 }
 
 
@@ -24,7 +24,7 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
     'format': MonitoringFlowExportTarget_format = null;
     'match-rules': Array<MonitoringMatchRule> = null;
     /** Export contains export parameters. */
-    'exports': Array<ApiExportConfig> = null;
+    'exports': Array<MonitoringExportConfig> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interval': {
             type: 'string'
@@ -63,7 +63,7 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
     constructor(values?: any) {
         super();
         this['match-rules'] = new Array<MonitoringMatchRule>();
-        this['exports'] = new Array<ApiExportConfig>();
+        this['exports'] = new Array<MonitoringExportConfig>();
         this.setValues(values);
     }
 
@@ -86,7 +86,7 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', values['match-rules'], MonitoringMatchRule);
         }
         if (values) {
-            this.fillModelArray<ApiExportConfig>(this, 'exports', values['exports'], ApiExportConfig);
+            this.fillModelArray<MonitoringExportConfig>(this, 'exports', values['exports'], MonitoringExportConfig);
         }
     }
 
@@ -104,7 +104,7 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
             // generate FormArray control elements
             this.fillFormArray<MonitoringMatchRule>('match-rules', this['match-rules'], MonitoringMatchRule);
             // generate FormArray control elements
-            this.fillFormArray<ApiExportConfig>('exports', this['exports'], ApiExportConfig);
+            this.fillFormArray<MonitoringExportConfig>('exports', this['exports'], MonitoringExportConfig);
         }
         return this._formGroup;
     }
@@ -114,7 +114,7 @@ export class MonitoringFlowExportTarget extends BaseModel implements IMonitoring
             this._formGroup.controls['interval'].setValue(this['interval']);
             this._formGroup.controls['format'].setValue(this['format']);
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', this['match-rules'], MonitoringMatchRule);
-            this.fillModelArray<ApiExportConfig>(this, 'exports', this['exports'], ApiExportConfig);
+            this.fillModelArray<MonitoringExportConfig>(this, 'exports', this['exports'], MonitoringExportConfig);
         }
     }
 }

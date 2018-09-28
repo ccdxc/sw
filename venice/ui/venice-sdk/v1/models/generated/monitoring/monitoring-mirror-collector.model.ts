@@ -8,17 +8,17 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorCollector_type,  MonitoringMirrorCollector_type_uihint  } from './enums';
-import { ApiExportConfig, IApiExportConfig } from './api-export-config.model';
+import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
 
 export interface IMonitoringMirrorCollector {
     'type'?: MonitoringMirrorCollector_type;
-    'export-config'?: IApiExportConfig;
+    'export-config'?: IMonitoringExportConfig;
 }
 
 
 export class MonitoringMirrorCollector extends BaseModel implements IMonitoringMirrorCollector {
     'type': MonitoringMirrorCollector_type = null;
-    'export-config': ApiExportConfig = null;
+    'export-config': MonitoringExportConfig = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'type': {
             enum: MonitoringMirrorCollector_type_uihint,
@@ -49,7 +49,7 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
     */
     constructor(values?: any) {
         super();
-        this['export-config'] = new ApiExportConfig();
+        this['export-config'] = new MonitoringExportConfig();
         this.setValues(values);
     }
 

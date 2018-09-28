@@ -22,9 +22,9 @@ var typesMapEventpolicy = map[string]*api.Struct{
 
 			"Selector": api.Field{Name: "Selector", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "selector", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "fields.Selector"},
 
-			"Target": api.Field{Name: "Target", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "target", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ExportConfig"},
+			"Target": api.Field{Name: "Target", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "target", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 
-			"SyslogConfig": api.Field{Name: "SyslogConfig", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "syslog-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.SyslogExportConfig"},
+			"SyslogConfig": api.Field{Name: "SyslogConfig", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "syslog-config", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SyslogExportConfig"},
 		},
 	},
 	"monitoring.EventPolicy": &api.Struct{

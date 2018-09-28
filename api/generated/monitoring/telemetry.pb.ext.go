@@ -378,6 +378,16 @@ func (m *FlowExportStatus) Validate(ver, path string, ignoreStatus bool) []error
 
 func (m *FlowExportTarget) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Exports {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sExports[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	for k, v := range m.MatchRules {
 		dlmtr := "."
 		if path == "" {
@@ -406,6 +416,16 @@ func (m *FlowExportTarget) Validate(ver, path string, ignoreStatus bool) []error
 
 func (m *FwlogExport) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Targets {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sTargets[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if vs, ok := validatorMapTelemetry["FwlogExport"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {

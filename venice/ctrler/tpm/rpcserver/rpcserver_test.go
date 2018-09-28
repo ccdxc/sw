@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	apiProtos "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/monitoring"
 	tpmProtos "github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 	vLog "github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -70,7 +70,7 @@ func TestWatchStatsPolicyError(t *testing.T) {
 }
 
 func TestWatchStatsError(t *testing.T) {
-	sp := map[string]*apiProtos.FwlogPolicy{
+	sp := map[string]*monitoring.FwlogPolicy{
 		"fwlog-1": {
 			TypeMeta:   api.TypeMeta{Kind: "StatsPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-1"},
@@ -109,7 +109,7 @@ func TestWatchStatsError(t *testing.T) {
 
 func TestWatchStatsPolicy(t *testing.T) {
 
-	sp := map[string]*apiProtos.StatsPolicy{
+	sp := map[string]*monitoring.StatsPolicy{
 		"stats-1": {
 			TypeMeta:   api.TypeMeta{Kind: "StatsPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "stats-1"},
@@ -167,26 +167,26 @@ func TestWatchStatsPolicy(t *testing.T) {
 }
 
 func TestWatchFwlogPolicy(t *testing.T) {
-	fp := map[string]*apiProtos.FwlogPolicy{
+	fp := map[string]*monitoring.FwlogPolicy{
 		"fwlog-1": {
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-1"},
-			Spec: apiProtos.FwlogSpec{
+			Spec: monitoring.FwlogSpec{
 				Filter: []string{
-					apiProtos.FwlogFilter_FWLOG_ACCEPT.String(),
-					apiProtos.FwlogFilter_FWLOG_DENY.String(),
+					monitoring.FwlogFilter_FWLOG_ACCEPT.String(),
+					monitoring.FwlogFilter_FWLOG_DENY.String(),
 				},
-				Exports: []*apiProtos.FwlogExport{
+				Exports: []*monitoring.FwlogExport{
 					{
-						Targets: []api.ExportConfig{
+						Targets: []monitoring.ExportConfig{
 							{
 								Destination: "collector1.test.com",
 								Transport:   "UDP/514",
 							},
 						},
-						Format: apiProtos.MonitoringExportFormat_SYSLOG_BSD.String(),
-						Filter: []string{apiProtos.FwlogFilter_FWLOG_ALL.String()},
-						SyslogConfig: &api.SyslogExportConfig{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Filter: []string{monitoring.FwlogFilter_FWLOG_ALL.String()},
+						SyslogConfig: &monitoring.SyslogExportConfig{
 							Prefix:           "prefix1",
 							FacilityOverride: "test-override1",
 						},
@@ -197,22 +197,22 @@ func TestWatchFwlogPolicy(t *testing.T) {
 		"fwlog-2": {
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "fwlog-2"},
-			Spec: apiProtos.FwlogSpec{
+			Spec: monitoring.FwlogSpec{
 				Filter: []string{
-					apiProtos.FwlogFilter_FWLOG_ACCEPT.String(),
-					apiProtos.FwlogFilter_FWLOG_DENY.String(),
+					monitoring.FwlogFilter_FWLOG_ACCEPT.String(),
+					monitoring.FwlogFilter_FWLOG_DENY.String(),
 				},
-				Exports: []*apiProtos.FwlogExport{
+				Exports: []*monitoring.FwlogExport{
 					{
-						Targets: []api.ExportConfig{
+						Targets: []monitoring.ExportConfig{
 							{
 								Destination: "collector2.test.com",
 								Transport:   "TCP/514",
 							},
 						},
-						Format: apiProtos.MonitoringExportFormat_SYSLOG_BSD.String(),
-						Filter: []string{apiProtos.FwlogFilter_FWLOG_ALL.String()},
-						SyslogConfig: &api.SyslogExportConfig{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Filter: []string{monitoring.FwlogFilter_FWLOG_ALL.String()},
+						SyslogConfig: &monitoring.SyslogExportConfig{
 							Prefix:           "prefix2",
 							FacilityOverride: "test-override2",
 						},
@@ -272,7 +272,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 }
 
 func TestFwlogError(t *testing.T) {
-	sp := map[string]*apiProtos.StatsPolicy{
+	sp := map[string]*monitoring.StatsPolicy{
 		"fwlog-1": {
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "stats-1"},
@@ -310,16 +310,16 @@ func TestFwlogError(t *testing.T) {
 
 func TestWatchFlowExportPolicy(t *testing.T) {
 
-	flow := map[string]*apiProtos.FlowExportPolicy{
+	flow := map[string]*monitoring.FlowExportPolicy{
 		"flow-1": {
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "flow-1"},
-			Spec: apiProtos.FlowExportSpec{
-				Targets: []apiProtos.FlowExportTarget{
+			Spec: monitoring.FlowExportSpec{
+				Targets: []monitoring.FlowExportTarget{
 					{
 						Interval: "60s",
 						Format:   "syslog_bsd",
-						Exports: []api.ExportConfig{
+						Exports: []monitoring.ExportConfig{
 							{
 								Destination: "collector1.test.com",
 								Transport:   "TCP/514",
@@ -332,12 +332,12 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 		"flow-2": {
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "flow-2"},
-			Spec: apiProtos.FlowExportSpec{
-				Targets: []apiProtos.FlowExportTarget{
+			Spec: monitoring.FlowExportSpec{
+				Targets: []monitoring.FlowExportTarget{
 					{
 						Interval: "100s",
 						Format:   "syslog_bsd",
-						Exports: []api.ExportConfig{
+						Exports: []monitoring.ExportConfig{
 							{
 								Destination: "collector2.test.com",
 								Transport:   "UDP/514",
@@ -394,7 +394,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 }
 
 func TestFlowExportError(t *testing.T) {
-	sp := map[string]*apiProtos.StatsPolicy{
+	sp := map[string]*monitoring.StatsPolicy{
 		"fwlog-1": {
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "exp-1"},

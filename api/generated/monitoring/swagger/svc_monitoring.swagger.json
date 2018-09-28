@@ -11135,57 +11135,6 @@
     }
   },
   "definitions": {
-    "apiExportConfig": {
-      "type": "object",
-      "properties": {
-        "destination": {
-          "type": "string",
-          "title": "IP address or URL of the collector/entity to which the data is to be exported"
-        },
-        "transport": {
-          "type": "string",
-          "title": "protocol and Port number where an external collector is gathering the data\nexample \"TCP/2055\""
-        },
-        "credentials": {
-          "$ref": "#/definitions/apiExternalCred",
-          "title": "Credentials provide secure access to the collector"
-        }
-      },
-      "title": "----------------------------- Export Config -----------------------------\nExport Config specifies server address and user credentials"
-    },
-    "apiExternalCred": {
-      "type": "object",
-      "properties": {
-        "username": {
-          "type": "string",
-          "title": "UserName is the login id to be used towards the external entity"
-        },
-        "password": {
-          "type": "string",
-          "title": "Password is one time specified, not visibile on read operations\nOnly valid when UserName is defined\nTBD: need to add (venice.secret) = \"true\" support for this"
-        },
-        "bearer-token": {
-          "type": "string",
-          "title": "External entity supports bearer tokens for authentication and authorization\nToken refresh is not supported using OAuth2\nTBD: need to add (venice.secret) = \"true\" support for this"
-        },
-        "cert-data": {
-          "type": "string",
-          "format": "byte",
-          "description": "CertData holds PEM-encoded bytes (typically read from a client certificate file)."
-        },
-        "key-data": {
-          "type": "string",
-          "format": "byte",
-          "title": "KeyData holds PEM-encoded bytes (typically read from a client certificate key file).\nTBD: need to add (venice.secret) = \"true\" support for this"
-        },
-        "ca-data": {
-          "type": "string",
-          "format": "byte",
-          "description": "CaData holds PEM-encoded bytes (typically read from a root certificates bundle)."
-        }
-      },
-      "title": "------------------------ ExternalCred Object ----------------------------\nExternalCred defines credentials required to access an external entity, such as\na stats collector, compute orchestration entity, or a syslog server.\nExternal entity may support a variety of methods, like username/password,\nTLS Client authentication, or Bearer Token based authentication. User is\nexpected to configure one of the methods"
-    },
     "apiListMeta": {
       "type": "object",
       "properties": {
@@ -11378,20 +11327,6 @@
         }
       },
       "description": "StatusResult contains possible statuses for a NIC."
-    },
-    "apiSyslogExportConfig": {
-      "type": "object",
-      "properties": {
-        "facility-override": {
-          "type": "string",
-          "title": "override default facility with this in exported logs"
-        },
-        "prefix": {
-          "type": "string",
-          "title": "add prefix in exported logs"
-        }
-      },
-      "title": "syslog export configurations"
     },
     "apiTimestamp": {
       "type": "object",
@@ -12136,11 +12071,11 @@
           "title": "export events matched by the selector"
         },
         "target": {
-          "$ref": "#/definitions/apiExportConfig",
+          "$ref": "#/definitions/monitoringExportConfig",
           "title": "export target ip/port/protocol"
         },
         "syslog-config": {
-          "$ref": "#/definitions/apiSyslogExportConfig",
+          "$ref": "#/definitions/monitoringSyslogExportConfig",
           "title": "syslog specific configuration"
         }
       },
@@ -12206,6 +12141,74 @@
     "monitoringEventPolicyStatus": {
       "type": "object",
       "title": "EventPolicyStatus"
+    },
+    "monitoringExportConfig": {
+      "type": "object",
+      "properties": {
+        "destination": {
+          "type": "string",
+          "title": "IP address or URL of the collector/entity to which the data is to be exported"
+        },
+        "transport": {
+          "type": "string",
+          "title": "protocol and Port number where an external collector is gathering the data\nexample \"TCP/2055\""
+        },
+        "credentials": {
+          "$ref": "#/definitions/monitoringExternalCred",
+          "title": "Credentials provide secure access to the collector"
+        }
+      },
+      "title": "----------------------------- Export Config -----------------------------\nExport Config specifies server address and user credentials"
+    },
+    "monitoringExternalCred": {
+      "type": "object",
+      "properties": {
+        "auth-type": {
+          "type": "string",
+          "enum": [
+            "AUTHTYPE_NONE",
+            "AUTHTYPE_USERNAMEPASSWORD",
+            "AUTHTYPE_TOKEN",
+            "AUTHTYPE_CERTS"
+          ],
+          "default": "AUTHTYPE_NONE",
+          "x-ui-hints": {
+            "AUTHTYPE_CERTS": "Certs",
+            "AUTHTYPE_NONE": "None",
+            "AUTHTYPE_TOKEN": "Token",
+            "AUTHTYPE_USERNAMEPASSWORD": "Username/Password"
+          },
+          "title": "AuthType is the authentication type used in this config"
+        },
+        "username": {
+          "type": "string",
+          "title": "UserName is the login id to be used towards the external entity"
+        },
+        "password": {
+          "type": "string",
+          "title": "Password is one time specified, not visibile on read operations\nOnly valid when UserName is defined\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "bearer-token": {
+          "type": "string",
+          "title": "External entity supports bearer tokens for authentication and authorization\nToken refresh is not supported using OAuth2\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "cert-data": {
+          "type": "string",
+          "format": "byte",
+          "description": "CertData holds PEM-encoded bytes (typically read from a client certificate file)."
+        },
+        "key-data": {
+          "type": "string",
+          "format": "byte",
+          "title": "KeyData holds PEM-encoded bytes (typically read from a client certificate key file).\nTBD: need to add (venice.secret) = \"true\" support for this"
+        },
+        "ca-data": {
+          "type": "string",
+          "format": "byte",
+          "description": "CaData holds PEM-encoded bytes (typically read from a root certificates bundle)."
+        }
+      },
+      "title": "------------------------ ExternalCred Object ----------------------------\nExternalCred defines credentials required to access an external entity, such as\na stats collector, compute orchestration entity, or a syslog server.\nExternal entity may support a variety of methods, like username/password,\nTLS Client authentication, or Bearer Token based authentication. User is\nexpected to configure one of the methods"
     },
     "monitoringFlowExportPolicy": {
       "type": "object",
@@ -12288,7 +12291,7 @@
         "exports": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/apiExportConfig"
+            "$ref": "#/definitions/monitoringExportConfig"
           },
           "description": "Export contains export parameters."
         }
@@ -12300,7 +12303,7 @@
         "targets": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/apiExportConfig"
+            "$ref": "#/definitions/monitoringExportConfig"
           },
           "title": "Target contains ip/port/protocol"
         },
@@ -12338,7 +12341,7 @@
           "title": "filter firewall logs, FWLOG_ALL default"
         },
         "syslog-config": {
-          "$ref": "#/definitions/apiSyslogExportConfig",
+          "$ref": "#/definitions/monitoringSyslogExportConfig",
           "title": "configuration to use for syslog format\ndefault facility is set to \"local4\", can be overridden with FacilityOverride\nfwlog serverity is set to \"Informational\""
         }
       },
@@ -12528,7 +12531,7 @@
           }
         },
         "export-config": {
-          "$ref": "#/definitions/apiExportConfig",
+          "$ref": "#/definitions/monitoringExportConfig",
           "title": "When collector type is Venice, collector export information is not required"
         }
       },
@@ -12821,15 +12824,29 @@
           "title": "event export format, SYSLOG_BSD default"
         },
         "target": {
-          "$ref": "#/definitions/apiExportConfig",
+          "$ref": "#/definitions/monitoringExportConfig",
           "title": "export target ip/port/protocol"
         },
         "config": {
-          "$ref": "#/definitions/apiSyslogExportConfig",
+          "$ref": "#/definitions/monitoringSyslogExportConfig",
           "title": "syslog specific configuration"
         }
       },
       "title": "Syslog export configuration"
+    },
+    "monitoringSyslogExportConfig": {
+      "type": "object",
+      "properties": {
+        "facility-override": {
+          "type": "string",
+          "title": "override default facility with this in exported logs"
+        },
+        "prefix": {
+          "type": "string",
+          "title": "add prefix in exported logs"
+        }
+      },
+      "title": "syslog export configurations"
     },
     "monitoringTimeWindow": {
       "type": "object",

@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/api/export.proto";
+import "export.proto";
 
 //========================================================================================
 // Packet Mirroring
@@ -71,7 +71,7 @@ message MirrorCollector {
     string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(PacketCollectorType)"];
 
     // When collector type is Venice, collector export information is not required
-    api.ExportConfig    ExportCfg   = 3 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
+    ExportConfig    ExportCfg   = 3 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
 }
 
 // Traffic Selection Rules

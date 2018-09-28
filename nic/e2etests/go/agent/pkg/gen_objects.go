@@ -510,7 +510,7 @@ func (c *Config) generateMirrorSessions(o *Object, manifestFile string) (*Object
 				Collectors: []tsproto.MirrorCollector{
 					{
 						Type: "ERSPAN",
-						ExportCfg: api.ExportConfig{
+						ExportCfg: monitoring.ExportConfig{
 							Destination: greTunDst,
 							Transport:   fmt.Sprintf("TCP/%d", portOffset+i),
 						},
@@ -610,7 +610,7 @@ func (c *Config) generateFlowExportPolicy(o *Object, manifestFile string) (*Obje
 					{
 						Interval: "15s",
 						Format:   "IPFIX",
-						Exports: []api.ExportConfig{
+						Exports: []monitoring.ExportConfig{
 							{
 								Destination: remoteEP,
 								Transport:   "UDP/2055",

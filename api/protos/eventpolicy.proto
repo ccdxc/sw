@@ -8,8 +8,8 @@ import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/api/export.proto";
 import "github.com/pensando/sw/api/fields/selector.proto";
+import "export.proto";
 
 // ------------------------------- Event Policy --------------------------------
 enum MonitoringExportFormat {
@@ -42,16 +42,16 @@ message EventPolicy {
 // Event export configurations
 message EventExport {
     // event export format, SYSLOG_BSD default
-    string Format                       = 1 [(venice.check) = "StrEnum(MonitoringExportFormat)", (gogoproto.jsontag) = "format, omitempty"];
+    string Format                   = 1 [(venice.check) = "StrEnum(MonitoringExportFormat)", (gogoproto.jsontag) = "format, omitempty"];
 
     // export events matched by the selector
-    fields.Selector Selector            = 2 [(gogoproto.jsontag) = "selector,omitempty"];
+    fields.Selector Selector        = 2 [(gogoproto.jsontag) = "selector,omitempty"];
 
     // export target ip/port/protocol
-    api.ExportConfig Target             = 3 [(gogoproto.jsontag) = "target,omitempty"];
+    ExportConfig Target             = 3 [(gogoproto.jsontag) = "target,omitempty"];
 
     // syslog specific configuration
-    api.SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "syslog-config,omitempty"];
+    SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "syslog-config,omitempty"];
 
     // each format can have it's own config
 }

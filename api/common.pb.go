@@ -6,7 +6,6 @@
 
 	It is generated from these files:
 		common.proto
-		export.proto
 		meta.proto
 
 	It has these top-level messages:
@@ -14,9 +13,6 @@
 		Filter
 		Spec
 		WatchSpec
-		ExportConfig
-		ExternalCred
-		SyslogExportConfig
 		Any
 		ListMeta
 		ListWatchOptions
