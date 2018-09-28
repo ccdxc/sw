@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    oci_vcn.h
+ * @file    oci_vcn.hpp
  *
  * @brief   This module defines OCI VCN interface
  */
@@ -20,7 +20,7 @@
 /**
  * @brief VCN Key
  */
-typedef struct _oci_vcn_key_t
+typedef struct oci_vcn_key_s
 {
     oci_vcn_id_t id;    /**< VNC ID */
 
@@ -29,7 +29,7 @@ typedef struct _oci_vcn_key_t
 /**
  * @brief VCN
  */
-typedef struct _oci_vcn_t
+typedef struct oci_vcn_s
 {
     oci_vcn_key_t key;      /**< VCN Key */
     oci_ip_prefix_t pfx;    /**< VCN CIDR block */

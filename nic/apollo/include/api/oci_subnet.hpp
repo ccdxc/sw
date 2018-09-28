@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    oci_subnet.h
+ * @file    oci_subnet.hpp
  *
  * @brief   This module defines OCI Subnet interface
  */
@@ -20,7 +20,7 @@
 /**
  * @brief Subnet Key
  */
-typedef struct _oci_subnet_key_t
+typedef struct oci_subnet_key_s
 {
     oci_vcn_id_t vcn_id;    /**< VCN ID */
     oci_subnet_id_t id;     /**< Subnet ID */
@@ -30,12 +30,13 @@ typedef struct _oci_subnet_key_t
 /**
  * @brief Subnet
  */
-typedef struct _oci_subnet_t
+typedef struct oci_subnet_s
 {
     oci_subnet_key_t key;    /**< Subnet key */
-    oci_ip_prefix_t  pfx;    /**< Subnet CIDR block */
-    oci_ip_addr_t    vr_ip;  /**< Virtual Router IP */
-    mac_addr_t       vr_mac; /**< Virtual Router Mac */
+    oci_ip_prefix_t pfx;     /**< Subnet CIDR block */
+    oci_ip_addr_t vr_ip;     /**< Virtual Router IP */
+    mac_addr_t vr_mac;       /**< Virtual Router Mac */
+
 } PACKED oci_subnet_t;
 
 /**

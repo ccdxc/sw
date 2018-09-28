@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    oci_tep.h
+ * @file    oci_tep.hpp
  *
  * @brief   This module defines OCI Tunnel interface
  */
@@ -20,7 +20,7 @@
 /**
  * @brief Defines tep type
  */
-typedef enum _oci_tep_type_t
+typedef enum oci_tep_type_e
 {
     OCI_TEP_TYPE_IPINIP_GRE,
 
@@ -29,7 +29,7 @@ typedef enum _oci_tep_type_t
 /**
  * @brief Tunnel Key
  */
-typedef struct _oci_tep_key_t
+typedef struct oci_tep_key_s
 {
     oci_ip4_t dst;    /**< Tunnel destination */
 
@@ -38,7 +38,7 @@ typedef struct _oci_tep_key_t
 /**
  * @brief Tunnel
  */
-typedef struct _oci_tep_t
+typedef struct oci_tep_s
 {
     oci_tep_key_t key;      /**< Tunnel key */
     oci_tep_type_t type;    /**< Tunnel type */

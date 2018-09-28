@@ -1,13 +1,13 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    oci_vnic.h
+ * @file    oci_vnic.hpp
  *
  * @brief   This module defines OCI VNIC interface
  */
 
-#if !defined (__OCI_VNIC_H_)
-#define __OCI_VNIC_H_
+#if !defined (__OCI_VNIC_HPP_)
+#define __OCI_VNIC_HPP_
 
 #include <oci_types.h>
 
@@ -20,7 +20,7 @@
 /**
  * @brief VNIC IP Information
  */
-typedef struct _oci_vnic_ip_t
+typedef struct oci_vnic_ip_s
 {
     oci_ip_addr_t private_ip;         /**< Private IP address */
     oci_ip_addr_t public_ip;          /**< Public IP address */
@@ -31,7 +31,7 @@ typedef struct _oci_vnic_ip_t
 /**
  * @brief VNIC Key
  */
-typedef struct _oci_vnic_key_t
+typedef struct oci_vnic_key_s
 {
     oci_vcn_id_t vcn_id;          /**< VCN ID */
     oci_subnet_id_t subnet_id;    /**< Subnet ID */
@@ -42,19 +42,22 @@ typedef struct _oci_vnic_key_t
 /**
  * @brief VNIC
  */
-typedef struct _oci_vnic_t
+typedef struct oci_vnic_s
 {
     oci_vnic_key_t key;                        /**< VNIC Key */
     oci_vlan_id_t vlan_id;                     /**< VLAN ID */
     oci_slot_id_t slot;                        /**< Virtual slot
                                                     (Encap: MPLS Tag) */
     oci_mac_t mac_addr;                        /**< MAC address */
-    oci_resource_pool_id_t resource_pool_od;   /**< resource pool this vnic is associated with */
+    oci_rsrc_pool_id_t rsrc_pool_id;           /**< Resource pool associated
+                                                    with this VNIC */
     oci_vnic_ip_t ip_info[MAX_IP_PER_VNIC];    /**< IP information */
     uint32_t src_dst_check : 1;                /**< TRUE if source/destination
                                                     check is enabled */
     uint32_t local : 1;                        /**< TRUE if vnic is local */
     oci_ip_addr_t tep;                         /**< Tunnel dst behind which the
+                                                    VNIC is present */
+
 } PACKED oci_vnic_t;
 
 /**
@@ -81,4 +84,4 @@ oci_status_t oci_vnic_delete (
 /**
  * @}
  */
-#endif /** __OCI_VNIC_H_ */
+#endif /** __OCI_VNIC_HPP_ */

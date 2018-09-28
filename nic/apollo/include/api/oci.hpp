@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    oci.h
+ * @file    oci.hpp
  *
  * @brief   This module defines an entry point into OCI API
  */
@@ -18,7 +18,7 @@
 /**
  * @brief Defined API sets have assigned IDs.
  */
-typedef enum _oci_class_id_t
+typedef enum oci_class_id_e
 {
     OCI_CLASS_ID_UNSPECIFIED      =  0,    /**< unspecified */
     OCI_CLASS_ID_VCN              =  1,    /**< vnc */
@@ -35,7 +35,7 @@ typedef enum _oci_class_id_t
 /**
  * @brief Defines log level
  */
-typedef enum _oci_log_level_t
+typedef enum oci_log_level_e
 {
     OCI_LOG_LEVEL_DEBUG            = 0,    /**< Log level debug */
     OCI_LOG_LEVEL_INFO             = 1,    /**< Log level info */

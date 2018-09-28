@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    oci_switchport.h
+ * @file    oci_switchport.hpp
  *
  * @brief   This module defines OCI SWITCHPORT interface
  */
@@ -20,11 +20,11 @@
 /**
  * @brief SWITCHPORT
  */
-typedef struct _oci_switchport_t
+typedef struct oci_switchport_s
 {
-    oci_ip_addr_t    switch_ip_addr;    /**< SWITCHPORT IP Address */
-    oci_mac_addr_t   switch_mac_addr; /**< SWITCHPORT Mac Addr */ 
-    oci_ip_addr_t    gateway_ip_addr;    /**< Gateway IP Address */
+    oci_ip_addr_t switch_ip_addr;      /**< SWITCHPORT IP Address */
+    oci_mac_addr_t switch_mac_addr;    /**< SWITCHPORT Mac Addr */ 
+    oci_ip_addr_t gateway_ip_addr;     /**< Gateway IP Address */
 } PACKED oci_switchport_t;
 
 /**
