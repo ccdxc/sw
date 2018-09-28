@@ -44,7 +44,7 @@ sfw_init_security_profile(hal_cfg_t *hal_cfg)
     prof.set_tcp_timeout(3600);
     prof.set_udp_timeout(30);
     prof.set_icmp_timeout(6);
-    prof.set_cnxn_tracking_en(false);
+    prof.set_cnxn_tracking_en(true);
     prof.set_ipsg_en(false);
     prof.set_tcp_rtt_estimate_en(false);
     prof.set_ip_normalization_en(true);
