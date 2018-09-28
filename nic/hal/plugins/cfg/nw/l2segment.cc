@@ -2360,6 +2360,9 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
     // fill config spec of this L2 segment
     rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
     rsp->mutable_spec()->mutable_key_or_handle()->set_segment_id(l2seg->seg_id);
+    if (l2seg->pinned_uplink != HAL_HANDLE_INVALID) {
+        rsp->mutable_spec()->mutable_pinned_uplink_if_key_handle()->set_interface_id(find_if_by_handle(l2seg->pinned_uplink)->if_id);
+    }
     rsp->mutable_spec()->set_segment_type(l2seg->segment_type);
     rsp->mutable_spec()->set_mcast_fwd_policy(l2seg->mcast_fwd_policy);
     rsp->mutable_spec()->set_bcast_fwd_policy(l2seg->bcast_fwd_policy);
