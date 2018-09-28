@@ -1525,6 +1525,7 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 		hdr->ip4.tos = ionic_set_ecn(grh->traffic_class);
 		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
 		hdr->ip4.ttl = grh->hop_limit;
+		hdr->ip4.tot_len = 65535;
 		hdr->ip4.saddr = *(const __be32 *)(sgid.raw + 12);
 		hdr->ip4.daddr = *(const __be32 *)(grh->dgid.raw + 12);
 	} else {
@@ -1588,6 +1589,7 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 		hdr->ip4.tos = ionic_set_ecn(grh->traffic_class);
 		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
 		hdr->ip4.ttl = grh->hop_limit;
+		hdr->ip4.tot_len = 65535;
 		hdr->ip4.saddr = *(const __be32 *)(grh->sgid_attr->gid.raw + 12);
 		hdr->ip4.daddr = *(const __be32 *)(grh->dgid.raw + 12);
 	} else {
