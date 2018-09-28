@@ -24,7 +24,7 @@
 
 /* Input data defaults */
 #define PNSO_TEST_BLOCK_SIZE	4096
-#define PNSO_TEST_BLOCK_COUNT	12
+#define PNSO_TEST_BLOCK_COUNT	1
 #define PNSO_TEST_DATA_SIZE (PNSO_TEST_BLOCK_SIZE * PNSO_TEST_BLOCK_COUNT)
 #define PNSO_TEST_DESC_SIZE	64
 #define PNSO_TEST_ALIGN_DESC(p)	\
@@ -54,7 +54,7 @@ static uint64_t iv_buf_pa;
 
 /* Thread and batching defaults */
 #define PNSO_TEST_THREAD_COUNT 1
-#define PNSO_TEST_BATCH_DEPTH 1
+#define PNSO_TEST_BATCH_DEPTH 2
 #define PNSO_TEST_SVC_COUNT 3
 #define PNSO_TEST_BUF_COUNT (PNSO_TEST_BATCH_DEPTH * PNSO_TEST_SVC_COUNT)
 
@@ -630,6 +630,49 @@ out:
 }
 
 static int
+verify_hash_batch_result(void)
+{
+	int err = 0;
+	size_t tid, bid, count;
+	struct thread_state *tstate;
+	struct req_state *rstate;
+	struct pnso_service_result *svc_res = NULL;
+
+	OSAL_LOG_INFO("verify batch/hash ...");
+
+	osal_yield();
+	count = 0;
+	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
+		tstate = &osal_test_threads[tid];
+		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
+			rstate = &tstate->reqs[bid];
+
+			svc_res = &rstate->res.res;
+			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_HASH) {
+				if (svc_res->svc[0].u.hash.num_tags) {
+					count++;
+					OSAL_LOG_INFO("IO: Batch/Hash done!  num_tags: %d count: %lu",
+						    svc_res->svc[0].u.hash.num_tags, count);
+				}
+			}
+
+			// deinit_buflist(&rstate->buflists[0]);
+		}
+	}
+
+	osal_yield();
+	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
+		OSAL_LOG_INFO("IO: Final batch/hash passed");
+	} else {
+		OSAL_LOG_ERROR("IO: Final batch/hash failed");
+		err = EINVAL;
+	}
+	osal_atomic_fetch_add(&tstate->test_done, 1);
+
+	return err;
+}
+
+static int
 verify_crypto_result(void)
 {
 	int i, err = 0;
@@ -971,6 +1014,53 @@ exec_cp_hash_per_block_req(struct thread_state *tstate)
 	}
 
 	return submit_requests(tstate);
+}
+
+static int
+exec_hash_batch_req(struct thread_state *tstate)
+{
+	int err;
+	size_t batch_id;
+	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
+	struct pnso_service_result *svc_res = NULL;
+
+	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
+		rstate = &tstate->reqs[batch_id];
+		init_buflist(&rstate->buflists[0], 'A');
+
+		svc_req = &rstate->req.req;
+		memset(svc_req, 0, sizeof(*svc_req));
+
+		svc_req->sgl = rstate->buflists[0].buflist;
+		svc_req->num_services = 1;
+		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_HASH);
+		svc_req->svc[0].u.hash_desc.flags = 0;	/* reset per block */
+
+		svc_res = &rstate->res.res;
+		memset(svc_res, 0, sizeof(*svc_res));
+
+		svc_res->num_services = 1;
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_HASH;
+		svc_res->svc[0].u.hash.tags = rstate->hash_tags;
+
+		err = pnso_add_to_batch(svc_req, svc_res);
+		if (err != 0) {
+			OSAL_LOG_ERROR("pnso_add_to_batch(svc %u) failed with %d\n",
+				 svc_req->svc[0].svc_type, err);
+			return err;
+		}
+	}
+
+	err = pnso_flush_batch(comp_cb, rstate, NULL, NULL);
+	if (err != 0) {
+		OSAL_LOG_ERROR("pnso_flush_batch(svc %u) failed with %d\n",
+			 svc_req->svc[0].svc_type, err);
+		return err;
+	}
+
+	return 0;
 }
 
 static int
@@ -1458,6 +1548,46 @@ error:
 }
 
 static int __attribute__((unused))
+exec_hash_batch_test(void *arg)
+{
+	int err;
+	struct thread_state *tstate = (struct thread_state *) arg;
+	int local_core_id = osal_get_coreid();
+
+	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
+		 osal_get_coreid());
+
+	err = exec_hash_batch_req(tstate);
+	if (err != 0) {
+		OSAL_LOG_ERROR("PNSO: Batch/Hash request submit FAILED");
+		goto error;
+	}
+
+	exec_req_and_wait(tstate);
+	OSAL_LOG_INFO("PNSO: Batch/Hash requests done, core %d",
+		 osal_get_coreid());
+
+	osal_yield();
+	if (osal_get_coreid() != local_core_id) {
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
+		err = EINVAL;
+		goto error;
+	}
+
+	err = verify_hash_batch_result();
+	if (err)
+		goto error;
+
+	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d", osal_get_coreid());
+	return 0;
+
+error:
+	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
+		       local_core_id, osal_get_coreid());
+	return err;
+}
+
+static int __attribute__((unused))
 exec_crypto_test(void *arg)
 {
 	int err;
@@ -1631,6 +1761,7 @@ static exec_test_fn_t exec_test_fn[] = {
 	exec_cp_crypto_dc_test,
 	set_test_params_num_buffers_dflt,
 	exec_cp_crypto_dc_test,
+	exec_hash_batch_test,
 };
 
 static int
