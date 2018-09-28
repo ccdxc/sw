@@ -245,3 +245,18 @@ cp  /home/saratk/gdbinit_arm  ~/.gdbinit
 # In gdb prompt, make sure shared libs are found. Else use set solib-seach-path to set the search path.
 info shared
 
+****************************
+* dumping interrupts
+****************************
+export NIC_DIR='/nic'
+export PLATFORM_DIR='/platform'
+export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk:$LD_LIBRARY_PATH
+ln -s /platform/lib/libedit.so /platform/lib/libedit.so.0
+LD_LIBRARY_PATH=$NICMGR_LIBRARY_PATH  /platform/bin/capview
+
+> read pb_pbc_hbm_hbm_port_0_cnt_hbm_truncate_no_drop
+0x0140c298: pb_pbc_hbm_hbm_port_0_cnt_hbm_truncate_no_drop
+  val: 0x0
+  Fields:
+    [ 15:0  ] count: 0x0
+

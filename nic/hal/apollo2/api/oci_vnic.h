@@ -49,6 +49,7 @@ typedef struct _oci_vnic_t
     oci_slot_id_t slot;                        /**< Virtual slot
                                                     (Encap: MPLS Tag) */
     oci_mac_t mac_addr;                        /**< MAC address */
+    oci_resource_pool_id_t resource_pool_od;   /**< resource pool this vnic is associated with */
     oci_vnic_ip_t ip_info[MAX_IP_PER_VNIC];    /**< IP information */
     uint32_t src_dst_check : 1;                /**< TRUE if source/destination
                                                     check is enabled */
@@ -57,7 +58,7 @@ typedef struct _oci_vnic_t
 } PACKED oci_vnic_t;
 
 /**
- * @brief Create VNIC 
+ * @brief Create VNIC
  *
  * @param[in] vnic VNIC information
  *

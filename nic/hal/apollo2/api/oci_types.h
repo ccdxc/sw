@@ -50,6 +50,7 @@ typedef uint32_t    oci_slot_id_t;    // 20 bit id
 typedef uint8_t     oci_mac_t[6];
 typedef uint32_t    oci_ip4_t;
 typedef uint8_t     oci_ip6_t[16];
+typedef uint64_t    oci_resource_pool_id_t;
 
 typedef struct _oci_timespec_t
 {
@@ -102,7 +103,6 @@ typedef struct _oci_s32_range_t
 typedef enum _oci_ip_addr_family_t
 {
     OCI_IP_ADDR_FAMILY_IPV4,
-
     OCI_IP_ADDR_FAMILY_IPV6
 
 } oci_ip_addr_family_t;

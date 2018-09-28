@@ -18,9 +18,9 @@
  */
 
 /**
- * @brief Nexthop Types 
+ * @brief Nexthop Types
  */
-typedef enum oci_nh_type_t_ 
+typedef enum oci_nh_type_t_
 {
    OCI_NH_TYPE_NONE      = 0; /**< Invalid NH type */
    OCI_NH_TYPE_BLACKHOLE = 1; /**< Blackhole/Drop Route */
@@ -44,10 +44,10 @@ typedef struct _oci_route_key_t
  */
 typedef struct _oci_route_t
 {
-    oci_route_key_t key;       /**< Route key */
-    oci_ip_addr_t   nh_ip;    /**< Next hop IP address */
-    oci_nh_type_t   nh_type; /**< Next Hop type */ 
-    oci_vcn_id_t    vcn_id; /**< Result VCN Id */
+    oci_route_key_t key;     /**< Route key */
+    oci_ip_addr_t   nh_ip;   /**< Next hop IP address */
+    oci_nh_type_t   nh_type; /**< Next Hop type */
+    oci_vcn_id_t    vcn_id;  /**< Result VCN Id */
 } oci_route_t;
 
 /**
@@ -80,7 +80,7 @@ typedef struct _oci_route_grp_t
 } PACKED oci_route_grp_t;
 
 /**
- * @brief Create route group 
+ * @brief Create route group
  *
  * @param[in] route_grp Route Group information
  *

@@ -50,7 +50,7 @@ oci_status_t oci_subnet_create (
 
 
 /**
- * @brief Delete Subnet 
+ * @brief Delete Subnet
  *
  * @param[in] subnet_key Subnet key
  *

@@ -18,7 +18,7 @@
  */
 
 /**
- * @brief Security Rule Direction 
+ * @brief Security Rule Direction
  */
 typedef enum oci_secrule_direction_t_
 {
@@ -101,7 +101,7 @@ typedef struct _oci_secrule_list_t
 } oci_secrule_list_t;
 
 /**
- * @brief Security rule list 
+ * @brief Security rule list
  */
 typedef struct _oci_secrule_list_t
 {
@@ -109,7 +109,7 @@ typedef struct _oci_secrule_list_t
 } PACKED oci_secrule_list_t;
 
 /**
- * @brief Create security rules group 
+ * @brief Create security rules group
  *
  * @param[in] secrule_list Security Rules Group information
  *
