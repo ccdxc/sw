@@ -137,7 +137,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
     if (!dep) {
         HAL_TRACE_DEBUG("dep not known");
     } else {
-        HAL_TRACE_DEBUG("sg count {}", sep->sgs.sg_id_cnt);
+        HAL_TRACE_DEBUG("sg count {}", dep->sgs.sg_id_cnt);
     }
         
 
