@@ -12,10 +12,10 @@ export MKDEFS   := ${NICDIR}/mkdefs
 include ${MKDEFS}/common.mk
 include ${MKINFRA}/config.mk
 
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := package
 .PHONY: all clean
 all: ${ALL_TARGETS} 
 
-clean:
+clean: package-clean
 	@rm -rf ${BLD_ARCH_DIR}
 	@rm -rf ${CLEAN_DIRS}

@@ -3,7 +3,7 @@
 #
 
 all:
-	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic
+	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic all
 
 TOPDIR = ..
 include $(TOPDIR)/make/Makefile.inc

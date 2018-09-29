@@ -87,7 +87,7 @@ targets:
   # iris-c gtests
   filter/gtest          : ["make", "jobd/filter/gtest"]
   
-  upgmgr:  ["sh", "-c", "cd /sw/nic && make && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all" ]
+  upgmgr:  ["sh", "-c", "cd /sw/nic && bazel build //nic/upgrade_manager/... && bazel test //nic/upgrade_manager/... --jobs 1 --cache_test_results=no --test_output=all" ]
   delphi:  ["sh", "-c", "cd /sw/nic && bazel build //nic/delphi/...  && cd $GOPATH/src/github.com/pensando/sw && go test -v ./nic/delphi/..." ]
   sysmgr:  ["sh", "-c", "cd /sw/nic && bazel build //nic/delphi/... && bazel build //nic/sysmgr/... && cd /sw/nic/sysmgr/test && ./test.sh" ]
   venice: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make checks && TRACKER_URL=\"tracker.test.pensando.io\" make unit-test-cover; ret=$? ; make sanity_logs ; exit $ret" ]

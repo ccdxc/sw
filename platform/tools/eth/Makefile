@@ -10,7 +10,7 @@ LBUILD_ARCHES = x86_64 aarch64
 LPREALL = deps
 
 deps:
-	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic
+	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic all
 
 LCXXFLAGS += \
 	-I $(TOPDIR)/../nic/include \

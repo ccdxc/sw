@@ -37,4 +37,6 @@ CMD_LINKER_FLAGS        := -pthread -rdynamic -no-canonical-prefixes \
                            -Wl,--build-id=md5 -Wl,--hash-style=gnu \
                            ${ARCH_LINKER_FLAGS}
 
+ifneq "$(dir ${MAKECMDGOALS})" "docker/"
 include ${MKINFRA}/generator.mk
+endif

@@ -393,7 +393,7 @@ e2e-telemetry:
 	#./test/e2e/dind/do.py -delete
 
 e2e-turin: pull-assets
-	$(MAKE) -C nic
+	$(MAKE) -C nic all
 	$(MAKE) -C platform sim
 	$(MAKE) -C nic package-sim
 	$(MAKE) -C nic release
