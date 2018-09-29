@@ -110,16 +110,18 @@ pprint_sgl(uint64_t sgl_pa)
 	if (!sgl)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cs_addr_0", sgl->cs_addr_0);
-	OSAL_LOG_INFO("%30s: %d", "cs_len_0", sgl->cs_len_0);
+	OSAL_LOG_INFO("%30s: 0x%llx ==> 0x%llx", "", (uint64_t) sgl, sgl_pa);
+	while (sgl) {
+		OSAL_LOG_INFO("%30s: 0x%llx/%d/%d 0x%llx/%d/%d 0x%llx/%d/%d",
+				"",
+				sgl->cs_addr_0, sgl->cs_len_0, sgl->cs_rsvd_0,
+				sgl->cs_addr_1, sgl->cs_len_1, sgl->cs_rsvd_1,
+				sgl->cs_addr_2, sgl->cs_len_2, sgl->cs_rsvd_2);
+		OSAL_LOG_INFO("%30s: 0x%llx/0x%llx", "",
+				sgl->cs_next, sgl->cs_rsvd_3);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cs_addr_1", sgl->cs_addr_1);
-	OSAL_LOG_INFO("%30s: %d", "cs_len_1", sgl->cs_len_1);
-
-	OSAL_LOG_INFO("%30s: 0x%llx", "cs_addr_2", sgl->cs_addr_2);
-	OSAL_LOG_INFO("%30s: %d", "cs_len_2", sgl->cs_len_2);
-
-	OSAL_LOG_INFO("%30s: 0x%llx", "cs_next", sgl->cs_next);
+		sgl = sgl->cs_next ? osal_phy_to_virt(sgl->cs_next) : NULL;
+	}
 }
 
 static void __attribute__((unused))
@@ -176,7 +178,7 @@ cpdc_pprint_desc(const struct cpdc_desc *desc)
 	OSAL_LOG_INFO("%30s: 0x%llx", "cd_otag_addr", desc->cd_otag_addr);
 	OSAL_LOG_INFO("%30s: %d", "cd_otag_data", desc->cd_otag_data);
 
-	OSAL_LOG_INFO("%32s: %d", "cd_status_data", desc->cd_status_data);
+	OSAL_LOG_INFO("%30s: %d", "cd_status_data", desc->cd_status_data);
 
 	if (desc->u.cd_bits.cc_src_is_list) {
 		OSAL_LOG_INFO("%30s: 0x%llx", "=== src_sgl", desc->cd_src);
@@ -291,12 +293,14 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		goto out;
 	}
 
+	i = 0;
 	count = buf_list->count;
 	while (count) {
 		sgl = (struct cpdc_sgl *) mpool_get_object(cpdc_sgl_mpool);
 		if (!sgl) {
 			err = ENOMEM;
-			OSAL_LOG_ERROR("cannot obtain cpdc sgl desc from pool! err: %d", err);
+			OSAL_LOG_ERROR("cannot obtain cpdc sgl desc from pool! err: %d",
+					err);
 			goto out;
 		}
 		memset(sgl, 0, sizeof(struct cpdc_sgl));
@@ -306,7 +310,6 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		else
 			sgl_prev->cs_next = (uint64_t) osal_virt_to_phy(sgl);
 
-		i = 0;
 		sgl->cs_addr_0 = buf_list->buffers[i].buf;
 		sgl->cs_len_0 = buf_list->buffers[i].len;
 		i++;
