@@ -9,8 +9,7 @@ import subprocess
 import threading
 
 paths = [
-    '/nic/gen/proto/',
-    '/nic/gen/proto/hal/',
+    '/nic/build/x86_64/iris/gen/proto/',
     '/nic'
 ]
 ws_top = os.path.dirname(sys.argv[0]) + '/../../'
@@ -85,7 +84,7 @@ def set_proxy_tls_bypass_mode(bypass_mode):
 
 def run_hntap():
     log = open(hntap_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-v6e2etest_hntap']
+    cmd = ['../nic/build/x86_64/iris/bin/nic_proxy_v6_e2etest_hntap']
     p = Popen(cmd, stdout=log, stderr=log)
     global hntap_process
     hntap_process = p
@@ -108,7 +107,7 @@ def run_hntap():
 
 def run_tls_server(tcp_port):
     log = open(tls_svr_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-v6e2etest_tls-server', tcp_port ]
+    cmd = ['../nic/build/x86_64/iris/bin/nic_proxy_e2etest_v6_tls_server', tcp_port ]
     p = Popen(cmd, stdout=log, stderr=log)
     global tls_svr_process
     tls_svr_process = p
@@ -119,7 +118,7 @@ def run_tls_server(tcp_port):
 
 def run_tcp_server(tcp_port):
     log = open(tcp_svr_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-v6e2etest_tcp-server', tcp_port ]
+    cmd = ['../nic/build/x86_64/iris/bin/nic_proxy_e2etest_v6_tcp_server', tcp_port ]
     p = Popen(cmd, stdout=log, stderr=log)
     global tcp_svr_process
     tcp_svr_process = p
@@ -131,7 +130,7 @@ def run_tcp_server(tcp_port):
 
 def run_tcp_client(tcp_port):
     log = open(tcp_clt_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-v6e2etest_tcp-client', '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world", '-m', 'from-host']
+    cmd = ['../nic/build/x86_64/iris/bin/nic_proxy_e2etest_v6_tcp_client', '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world", '-m', 'from-host']
     p = Popen(cmd, stdout=log, stderr=log)
     print("* Starting TCP Client on port %s, pid (%s)" % (tcp_port, str(p.pid)))
     print("    - Log file: " + tcp_clt_log + "\n")

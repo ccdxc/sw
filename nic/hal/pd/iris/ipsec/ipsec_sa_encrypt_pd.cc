@@ -11,7 +11,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
-#include "nic/gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h"
+#include "gen/p4gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h"
 
 namespace hal {
 namespace pd {

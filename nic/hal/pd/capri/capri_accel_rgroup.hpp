@@ -8,8 +8,7 @@
 #include <map>
 #include <unordered_map>
 #include "nic/include/accel_ring.h"
-#include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/types.pb.h"
 #include "nic/hal/src/internal/accel_rgroup.hpp"
 
 namespace hal {

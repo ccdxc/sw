@@ -6,8 +6,8 @@
 #define __TCP_PROXY_RXDMA_API_H__
 
 #include <stdint.h>
-#include "nic/gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h"
-#include "nic/gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h"
+#include "gen/p4gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h"
+#include "gen/p4gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
 #define P4PD_TCPCB_STAGE_ENTRY_OFFSET   64

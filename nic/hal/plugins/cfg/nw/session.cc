@@ -16,7 +16,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
-#include "sdk/timestamp.hpp"
+#include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 
@@ -2264,7 +2264,7 @@ session_set_tcp_state (session_t *session, hal::flow_role_t role,
     if (flow)
         flow->state = tcp_state;
 
-    HAL_TRACE_DEBUG("Updated tcp state to {}", tcp_state);
+    HAL_TRACE_DEBUG("Updated tcp state to {}", (uint32_t)tcp_state);
 }
 
 bool

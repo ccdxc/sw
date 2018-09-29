@@ -29,7 +29,7 @@
     "spec": {
       "ipv4-subnet": "177.75.132.62/24",
       "ipv4-gateway": "177.75.132.1",
-      "vlan-id": 1000
+      "vlan-id": 100
     },
     "status": {}
   },
@@ -46,7 +46,7 @@
     "spec": {
       "ipv4-subnet": "223.97.165.136/24",
       "ipv4-gateway": "223.97.165.1",
-      "vlan-id": 1001
+      "vlan-id": 101
     },
     "status": {}
   },
@@ -63,7 +63,7 @@
     "spec": {
       "ipv4-subnet": "112.211.249.111/24",
       "ipv4-gateway": "112.211.249.1",
-      "vlan-id": 1002
+      "vlan-id": 102
     },
     "status": {}
   },
@@ -80,7 +80,7 @@
     "spec": {
       "ipv4-subnet": "4.121.175.16/24",
       "ipv4-gateway": "4.121.175.1",
-      "vlan-id": 1003
+      "vlan-id": 103
     },
     "status": {}
   },
@@ -97,7 +97,7 @@
     "spec": {
       "ipv4-subnet": "170.22.196.91/24",
       "ipv4-gateway": "170.22.196.1",
-      "vlan-id": 1004
+      "vlan-id": 104
     },
     "status": {}
   },
@@ -114,7 +114,7 @@
     "spec": {
       "ipv4-subnet": "16.45.218.231/24",
       "ipv4-gateway": "16.45.218.1",
-      "vlan-id": 1005
+      "vlan-id": 105
     },
     "status": {}
   },
@@ -131,7 +131,7 @@
     "spec": {
       "ipv4-subnet": "91.39.142.142/24",
       "ipv4-gateway": "91.39.142.1",
-      "vlan-id": 1006
+      "vlan-id": 106
     },
     "status": {}
   },
@@ -148,7 +148,7 @@
     "spec": {
       "ipv4-subnet": "54.199.28.27/24",
       "ipv4-gateway": "54.199.28.1",
-      "vlan-id": 1007
+      "vlan-id": 107
     },
     "status": {}
   }

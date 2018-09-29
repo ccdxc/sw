@@ -4,7 +4,7 @@
 #define __HAL_CFG_DB_HPP__
 
 #include "nic/include/base.hpp"
-#include "sdk/list.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
 
 using sdk::lib::dllist_ctxt_t;
 
@@ -26,6 +26,10 @@ typedef enum cfg_op_e {
 typedef struct cfg_db_ctxt_s {
     bool                   cfg_db_open_;  // true if cfg db is opened
     cfg_op_t               cfg_op_;       // operation for which db is opened
+    cfg_db_ctxt_s() {
+        cfg_db_open_ = false;
+        cfg_op_ = CFG_OP_NONE;
+    }
 } __PACK__ cfg_db_ctxt_t;
 extern thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 

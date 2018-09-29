@@ -6,7 +6,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/nw/nic.hpp"
 
 namespace hal {

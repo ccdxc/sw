@@ -8,9 +8,9 @@
 #define __HAL_SVC_${hdr_def}_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "gen/hal/include/hal_api_stats.hpp"
 #include "grpc++/grpc++.h"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/types.pb.h"
 //:: if 'WS_TOP' not in os.environ:
 //::     # This should have been set, before invoking the template.
 //::     assert False
@@ -22,7 +22,7 @@
 //::
 //:: fileModule = importlib.import_module(fileName[:-3])
 //:: includeFileName = fileName[:-7]
-#include "nic/gen/proto/hal/${includeFileName}.grpc.pb.h"
+#include "gen/proto/${includeFileName}.grpc.pb.h"
 //::     # Remove the _pb2.py from file and store it for now.
 //:: for service in fileModule.DESCRIPTOR.services_by_name.items():
 //::     pkg = fileModule.DESCRIPTOR.package.lower()

@@ -27,9 +27,7 @@ def set_grpc_forward_channel(grpc_channel):
 proxyServer = grpc_server_start()
 //:: ws_top = ws_top  or os.path.abspath(os.path.dirname(sys.argv[0]) + '/..')
 //:: os.environ['WS_TOP'] = ws_top
-//:: fullpath = ws_top + '/nic/gen/proto/'
-//:: sys.path.insert(0, fullpath)
-//:: fullpath = ws_top + '/nic/gen/proto/hal/'
+//:: fullpath = ws_top + '/nic/build/x86_64/iris/gen/proto/'
 //:: sys.path.insert(0, fullpath)
 
 if 'WS_TOP' in os.environ:
@@ -39,7 +37,7 @@ else:
     ws_top = os.path.abspath(ws_top)
     os.environ['WS_TOP'] = ws_top
 
-fullpath = ws_top + '/nic/gen/proto/hal/'
+fullpath = ws_top + '/nic/build/x86_64/iris/gen/proto/'
 sys.path.insert(0, fullpath)
 
 //:: grpc_service_reg_str = ''

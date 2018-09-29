@@ -2,7 +2,7 @@
 #define __ENCAP_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/types.pb.h"
 
 // possible encap types
 typedef enum encap_type_e {

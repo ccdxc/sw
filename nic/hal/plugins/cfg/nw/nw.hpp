@@ -7,7 +7,7 @@
 
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
-#include "nic/gen/proto/hal/nw.pb.h"
+#include "gen/proto/nw.pb.h"
 #include "nic/include/ip.hpp"
 #include "nic/include/eth.hpp"
 

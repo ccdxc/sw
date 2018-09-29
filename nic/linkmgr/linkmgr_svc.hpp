@@ -7,8 +7,8 @@
 
 #include "nic/include/base.hpp"
 
-#include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/proto/hal/port.grpc.pb.h"
+#include "gen/proto/types.pb.h"
+#include "gen/proto/port.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

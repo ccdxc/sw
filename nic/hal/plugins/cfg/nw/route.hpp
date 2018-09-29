@@ -6,8 +6,8 @@
 #define __ROUTE_HPP__
 
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/proto/hal/nw.pb.h"
-#include "nic/gen/proto/hal/kh.pb.h"
+#include "gen/proto/nw.pb.h"
+#include "gen/proto/kh.pb.h"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/hal/plugins/cfg/nw/route_acl.hpp"
 

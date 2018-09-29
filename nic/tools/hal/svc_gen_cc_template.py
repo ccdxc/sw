@@ -12,7 +12,7 @@
 //::  plugin_files = ["ipsec", "gft", "l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast","nw", "acl", "dos", "l4lb", "tcp_proxy", "tls_proxy_cb2"]
 //::  new_plugin_files = {"nwsec":"sfw"}
 //::
-#include "nic/gen/hal/svc/${hdr_file}"
+#include "gen/hal/svc/${hdr_file}"
 //::
 //:: if 'WS_TOP' not in os.environ:
 //::     # This should have been set, before invoking the template.
@@ -22,9 +22,14 @@
 //:: ws_top = os.environ['WS_TOP']
 //:: fullpath = ws_top + '/nic/gen/proto/hal/'
 //:: sys.path.insert(0, fullpath)
+//:: api_stats_dir = ws_top + '/nic/gen/hal/include/'
+//:: if 'BLD_GEN_DIR' in os.environ:
+//::    api_stats_dir = os.environ['BLD_GEN_DIR'] + '/hal/include/'
+//:: #endif
 //::
 //:: def write_api_stats_enum(enumC, hal_name):
-//::     stats_file_path = ws_top + '/nic/gen/hal/include/hal_api_stats.hpp'
+//::     global api_stats_dir
+//::     stats_file_path = api_stats_dir + 'hal_api_stats.hpp'
 //::     stats_file = open(stats_file_path, "a")
 //::     hal_name_upper = hal_name.upper();
 //::     e1 = "ENTRY(HAL_API_"

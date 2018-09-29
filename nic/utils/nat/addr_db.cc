@@ -3,7 +3,7 @@
 #include "nic/utils/nat/addr_db.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/hal.hpp"
-#include "sdk/slab.hpp"
+#include "nic/sdk/include/sdk/slab.hpp"
 
 using sdk::lib::ht;
 using sdk::lib::slab;

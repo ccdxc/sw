@@ -11,7 +11,7 @@
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/src/utils/cfg_op_ctxt.hpp"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "gen/hal/include/hal_api_stats.hpp"
 #include "nat.hpp"
 
 

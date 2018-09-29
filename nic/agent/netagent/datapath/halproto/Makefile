@@ -1,10 +1,13 @@
 GEN_DIR = ${CURDIR}
 TOP_DIR = ../../../..
 LD_LIBRARY_PATH=$(TOP_DIR)/hal/third-party/google/x86_64/lib/
-HAL_PROTO_FILES = $(shell ls ${CURDIR}/../../../../proto/hal/ | grep .proto | tr " " "\n" | LC_ALL=C sort | tr "\n" " ")
-default:
-	$(MAKE) hal-proto
-	@for c in ${HAL_PROTO_FILES}; do printf "\n+++++++++++++++++ Generating Mocks For $${c} +++++++++++++++++\n"; mockgen -source=`basename $${c} .proto`.pb.go -destination=`basename $${c} .proto`_mock.go -package=halproto || exit 1; done
+HAL_PROTO_FILES = $(shell ls ${CURDIR}/../../../../proto/hal/ | grep .proto | grep -v module | tr " " "\n" | LC_ALL=C sort | tr "\n" " ")
+HAL_PB_GO_FILES = $(patsubst %.proto,%.pb.go,$(HAL_PROTO_FILES))
+HAL_MOCK_GO_FILES = $(patsubst %.pb.go,%_mock.go,$(HAL_PB_GO_FILES))
+$(info ${HAL_PB_GO_FILES})
+$(info ${HAL_MOCK_GO_FILES})
+default: hal-proto
+	for c in ${HAL_PROTO_FILES}; do printf "\n+++++++++++++++++ Generating Mocks For $${c} +++++++++++++++++\n"; mockgen -source=`basename $${c} .proto`.pb.go -destination=`basename $${c} .proto`_mock.go -package=halproto || exit 1; done
 	# Run go imports on mock files
 	goimports -w -l *mock.go
 

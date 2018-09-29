@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/base.hpp"
-#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
+#include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/pd/iris/mcast/oif_list_pd_mgr.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd.hpp"

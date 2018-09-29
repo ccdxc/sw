@@ -5,8 +5,8 @@
 #pragma once
 
 #include "nic/include/base.hpp"
-#include "sdk/ht.hpp"
-#include "sdk/twheel.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "nic/sdk/include/sdk/twheel.hpp"
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/fte/acl/ref.hpp"
 

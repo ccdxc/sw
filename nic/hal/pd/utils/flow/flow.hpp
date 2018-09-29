@@ -48,7 +48,7 @@
 #include <string>
 #include <map>
 #include <queue>
-#include "sdk/indexer.hpp"
+#include "nic/sdk/include/sdk/indexer.hpp"
 #include <boost/crc.hpp>
 #include "nic/include/hal_mem.hpp"
 #include "nic/utils/crc_fast/crc_fast.hpp"

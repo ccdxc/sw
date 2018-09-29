@@ -10,9 +10,7 @@ LBUILD_ARCHES = x86_64 aarch64
 LPREALL = deps
 
 deps:
-	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic sdk
-	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic -j4 gen_proto
-	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic/gen/proto/hal -j4
+	$(MAKE) ARCH=$(BUILD_ARCH) -C $(TOPDIR)/../nic
 
 LCXXFLAGS += \
 	-I $(TOPDIR)/../nic/include \
@@ -22,12 +20,13 @@ LCXXFLAGS += \
 
 LLDFLAGS = \
 	-L $(TOPDIR)/../nic/conf/sdk \
+	-L $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/lib \
 	$(NULL)
 
 SYSTEM_LIBRARIES = \
 	-ldl \
 	-lpthread \
-	-lpal \
+	-lsdkpal \
 	-llogger \
 	-lindexer \
 	$(NULL)

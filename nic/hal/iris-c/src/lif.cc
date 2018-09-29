@@ -4,11 +4,11 @@
 #include <iomanip>
 #include <grpc++/grpc++.h>
 
-#include "interface.grpc.pb.h"
+#include "gen/proto/interface.grpc.pb.h"
 
-#include "lif.hpp"
-#include "ethlif.hpp"
-#include "uplink.hpp"
+#include "nic/hal/iris-c/include/lif.hpp"
+#include "nic/hal/iris-c/include/ethlif.hpp"
+#include "nic/hal/iris-c/include/uplink.hpp"
 
 using namespace std;
 

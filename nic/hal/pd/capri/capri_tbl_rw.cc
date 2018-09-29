@@ -12,7 +12,7 @@
 #include <map>
 #include "nic/include/capri_common.h"
 
-#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/include/hal.hpp"

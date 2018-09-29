@@ -1,9 +1,9 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nwsec.hpp"
-#include "nic/gen/hal/svc/nwsec_svc_gen.hpp"
+#include "gen/hal/svc/nwsec_svc_gen.hpp"
 #include "nic/hal/svc/session_svc.hpp"
-#include "nic/gen/proto/hal/nwsec.pb.h"
+#include "gen/proto/nwsec.pb.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;

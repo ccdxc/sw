@@ -16,22 +16,22 @@ pd_func_t   *g_pd_funcs;
 void        *g_pd_so;
 void        *g_pd_stub_so;
 
+hal_ret_t
+hal_pd_stub_assert (pd_func_args_t *args)
+{
+    HAL_ASSERT(FALSE);
+    return HAL_RET_OK;
+}
+
 #define PD_FUNC_LOAD(PD_FUNC_ID, NAME)                                         \
 {                                                                              \
     g_pd_funcs[PD_FUNC_ID] =                                                   \
-        (pd_func_t)dlsym(g_pd_so, #NAME);                                      \
+        (pd_func_t)dlsym(RTLD_DEFAULT, #NAME);                                      \
     dlsym_error = dlerror();                                                   \
     if (dlsym_error) {                                                         \
         HAL_TRACE_DEBUG("Failed to load symbol from PD lib {}:{}", #NAME,      \
                         dlsym_error);                                          \
-        g_pd_funcs[PD_FUNC_ID] =                                               \
-            (pd_func_t)dlsym(g_pd_stub_so, #NAME);                             \
-        dlsym_error = dlerror();                                               \
-        if (dlsym_error) {                                                     \
-            HAL_TRACE_ERR("Failed to load symbol from PD stub lib {}:{}",      \
-                          #NAME, dlsym_error);                                 \
-            HAL_ASSERT(0);                                                     \
-        }                                                                      \
+        g_pd_funcs[PD_FUNC_ID] = hal_pd_stub_assert;                           \
     }                                                                          \
 }
 
@@ -483,27 +483,34 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
     std::string feature_pd_stub = "pd_stub";
     std::string pdlib_path, pdlib_stub_path;
 
-    pdlib_path = hal_cfg->cfg_path + "/" + feature_set + "/";
-    pdlib_stub_path = hal_cfg->cfg_path + "/" + feature_pd_stub + "/";
-    pdlib_path += "lib" + feature_set + ".so";
-    pdlib_stub_path += "lib" + feature_pd_stub + ".so";
+    //pdlib_path = hal_cfg->cfg_path + "/" + feature_set + "/";
+    //pdlib_stub_path = hal_cfg->cfg_path + "/" + feature_pd_stub + "/";
+    pdlib_path = "libpd_" + feature_set + ".so";
+    pdlib_stub_path = "lib" + feature_pd_stub + ".so";
 
-    HAL_TRACE_DEBUG("Loading pd lib: {}", pdlib_path);
-
+    HAL_TRACE_DEBUG("Using pd lib: {}", pdlib_path);
     // with deepbind, its taking the symbol the PD is taking from PI
     // void *so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_DEEPBIND);
-    g_pd_so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
+    g_pd_so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_NOLOAD);
     if (!g_pd_so) {
-        HAL_TRACE_ERR("dlopen failed {}:{}", pdlib_path, dlerror());
-        HAL_ASSERT(0);
+        HAL_TRACE_DEBUG("Loading pd lib: {}", pdlib_path);
+        g_pd_so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
+        if (!g_pd_so) {
+            HAL_TRACE_ERR("dlopen failed {}: {}", pdlib_path, dlerror());
+            HAL_ASSERT(0);
+        }
     }
 
     // open PD stub library
-    HAL_TRACE_DEBUG("Loading pd stub lib: {}", pdlib_stub_path);
-    g_pd_stub_so = dlopen(pdlib_stub_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
+    HAL_TRACE_DEBUG("Using pd stub lib: {}", pdlib_stub_path);
+    g_pd_stub_so = dlopen(pdlib_stub_path.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_NOLOAD);
     if (!g_pd_stub_so) {
-        HAL_TRACE_ERR("{} dlopen failed {}", pdlib_stub_path, dlerror());
-        HAL_ASSERT(0);
+        HAL_TRACE_DEBUG("Loading pd stub lib: {}", pdlib_stub_path);
+        g_pd_stub_so = dlopen(pdlib_stub_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
+        if (!g_pd_stub_so) {
+            HAL_TRACE_ERR("{} dlopen failed {}", pdlib_stub_path, dlerror());
+            HAL_ASSERT(0);
+        }
     }
 
     return ret;

@@ -1,7 +1,7 @@
-#include "sknobs.h"
-#include "sdk/types.hpp"
-#include "sdk/catalog.hpp"
-#include "cap_mx_api.h"
+#include "nic/model_sim/include/sknobs.h"
+#include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/include/sdk/catalog.hpp"
+#include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
 #include "cap_bx_api.h"
 #include "msg_man.h"
 

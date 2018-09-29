@@ -194,19 +194,6 @@ capri_p4_pgm_init (capri_cfg_t *cfg)
         return ret;
     }
 
-    // load the common p4plus program config
-    full_path =  std::string(cfg->cfg_path) + "/p4plus/pgm_bin";
-    // check if directory is present
-    if (access(full_path.c_str(), R_OK) < 0) {
-        HAL_TRACE_ERR("{} not present/no read permissions", full_path.c_str());
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
-    }
-    ret = capri_load_config((char *)full_path.c_str());
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to load config for {}", full_path);
-        return ret;
-    }
-
     return HAL_RET_OK;
 }
 
@@ -220,7 +207,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
     capri_prog_param_info_t    *symbols;
     int                        i = 0;
 
-    full_path =  std::string(cfg->cfg_path) + "/" + "p4plus_bin";
+    full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name + "/p4plus_bin";
     std::cerr << "full path " << full_path << std::endl;
     HAL_TRACE_DEBUG("P4+ ASM Binaries dir: {}", full_path.c_str());
 

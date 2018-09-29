@@ -4,7 +4,7 @@
 #include "nic/hal/plugins/cfg/lif/lif_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
-#include "nic/gen/proto/hal/interface.pb.h"
+#include "gen/proto/interface.pb.h"
 #include "nic/hal/pd/iris/nw/if_pd.hpp"
 #include "nic/hal/pd/iris/lif/lif_pd.hpp"
 #include "nic/hal/pd/iris/nw/enicif_pd.hpp"

@@ -6,7 +6,7 @@
 #define __HAL_CORE_HPP__
 
 #include <signal.h>
-#include "sdk/thread.hpp"
+#include "nic/sdk/include/sdk/thread.hpp"
 #include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 

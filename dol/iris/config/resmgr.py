@@ -128,7 +128,9 @@ NullMemHandle = MemHandle(0, 0)
 class HostMemory(object):
     def __init__(self):
         if not GlobalOptions.dryrun and GlobalOptions.hostmem:
-            path = os.path.join(os.environ['WS_TOP'], "bazel-bin/nic/utils/host_mem/libhost_mem.so")
+            path = os.path.join(os.environ['WS_TOP'], "nic/build/x86_64/iris/lib/libhost_mem.so")
+            if GlobalOptions.gft:
+                path = os.path.join(os.environ['WS_TOP'], "nic/build/x86_64/gft/lib/libhost_mem.so")
             self.lib = ctypes.CDLL(path, mode=ctypes.RTLD_GLOBAL)
             self.lib.alloc_host_mem.argtypes = [ctypes.c_uint64]
             self.lib.alloc_host_mem.restype = ctypes.c_void_p

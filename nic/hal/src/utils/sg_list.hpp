@@ -7,7 +7,7 @@
 #ifndef __SG_LIST_HPP__
 #define __SG_LIST_HPP__
 
-#include "sdk/list.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
 
 using sdk::lib::dllist_ctxt_t;
 

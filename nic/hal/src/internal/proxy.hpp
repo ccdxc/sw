@@ -5,10 +5,10 @@
 #ifndef __PROXY_HPP__
 #define __PROXY_HPP__
 
-#include "sdk/indexer.hpp"
+#include "nic/sdk/include/sdk/indexer.hpp"
 #include "nic/include/base.hpp"
-#include "sdk/ht.hpp"
-#include "nic/gen/proto/hal/proxy.pb.h"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "gen/proto/proxy.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 

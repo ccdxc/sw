@@ -6,7 +6,7 @@ import random
 
 paths = [
     '/mbt/',
-    '/nic/gen/proto/hal/',
+    '/nic/build/x86_64/iris/gen/proto/',
     '/dol/',
     '/dol/third_party/',
 ]

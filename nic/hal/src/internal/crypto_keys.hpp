@@ -7,8 +7,8 @@
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/proto/hal/crypto_keys.pb.h"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/crypto_keys.pb.h"
+#include "gen/proto/types.pb.h"
 
 
 using cryptokey::CryptoKeySpec;

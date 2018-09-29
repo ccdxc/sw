@@ -3,9 +3,9 @@
 
 #include "nic/include/base.hpp"
 #include <grpc++/grpc++.h>
-#include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/proto/hal/rdma.grpc.pb.h"
-#include "nic/gen/proto/hal/rdma.pb.h"
+#include "gen/proto/types.pb.h"
+#include "gen/proto/rdma.grpc.pb.h"
+#include "gen/proto/rdma.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/gen/hal/svc/l4lb_svc_gen.hpp"
+#include "gen/hal/svc/l4lb_svc_gen.hpp"
 #include "nic/hal/svc/session_svc.hpp"
 
 using grpc::Server;

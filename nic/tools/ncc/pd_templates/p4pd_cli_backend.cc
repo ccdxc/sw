@@ -28,14 +28,10 @@
  * p4pd.c
  * Pensando Systems
  */
-#include "nic/gen/proto/hal/debug.pb.h"
-#include "nic/gen/proto/hal/debug.grpc.pb.h"
+#include "gen/proto/debug.pb.h"
+#include "gen/proto/debug.grpc.pb.h"
 #include <grpc++/grpc++.h>
-//::        if pddict['pipeline'] != None:
-#include "nic/build/${pipeline}/gen/datapath/${hdrdir}/include/${p4prog}p4pd.h"
-//::        else:
-#include "nic/gen/${hdrdir}/include/${p4prog}p4pd.h"
-//::        #endif
+#include "gen/p4gen/${hdrdir}/include/${p4prog}p4pd.h"
 #include "nic/include/p4pd_utils.hpp"
 #include "nic/include/hal_pd_error.hpp"
 

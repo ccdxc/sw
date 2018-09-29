@@ -6,8 +6,8 @@
 #define __TABLE_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/gen/proto/hal/table.pb.h"
-#include "nic/gen/proto/hal/table.grpc.pb.h"
+#include "gen/proto/table.pb.h"
+#include "gen/proto/table.grpc.pb.h"
 
 using table::TableMetadataResponseMsg;
 using table::TableMetadata;

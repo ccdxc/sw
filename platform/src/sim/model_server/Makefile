@@ -22,12 +22,14 @@ LCFLAGS = \
 	-I ../libsimlib/include \
 	-I ../libsimdev/include \
 	-I ../../../../ \
+	-I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/gen/proto/ \
 	-I $(NIC)/hal/third-party/google/include \
 	-I $(NIC)/hal/third-party/grpc/include \
 	$(NULL)
 LCXXFLAGS = $(LCFLAGS)
 LLDFLAGS = \
 	-L $(NIC)/model_sim/libs \
+	-L $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/lib \
 	$(NULL)
 
 LIBRARIES = \
@@ -66,6 +68,8 @@ SYSTEM_LIBRARIES = \
 	-lcrypto \
 	-lpthread \
 	-ldl \
+	-l:libcrypto.so.1.0.2k \
+	-lssl \
 	-L$(NIC)/gen/x86_64/lib -lhalproto \
 	$(NIC)/hal/third-party/google/x86_64/lib/libprotobuf.so.14 \
 	-lz \

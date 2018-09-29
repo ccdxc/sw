@@ -7,10 +7,10 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/ip.hpp"
-#include "nic/gen/proto/hal/acl.pb.h"
-#include "nic/gen/proto/hal/kh.pb.h"
+#include "gen/proto/acl.pb.h"
+#include "gen/proto/kh.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 

@@ -6,7 +6,7 @@
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl_api.hpp"
-#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
+#include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"

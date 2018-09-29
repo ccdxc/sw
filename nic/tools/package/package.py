@@ -6,7 +6,7 @@ import argparse
 output_dir   = 'fake_root_target'
 
 # common files for both x86_64 and aarch64
-files        = [ 'nic/tools/package/pack_common.txt' ]
+files        = [ ]#'nic/tools/package/pack_common.txt' ]
 
 # default is aarch64 packaging and strip the libs and binaries
 arm_pkg      = 1

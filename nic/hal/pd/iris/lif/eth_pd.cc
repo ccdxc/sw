@@ -6,12 +6,12 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/base.hpp"
-#include "sdk/directmap.hpp"
+#include "nic/sdk/include/sdk/directmap.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/lif/eth_pd.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
-#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
-#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "gen/p4gen/p4/include/p4pd.h"
+#include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 
 #ifndef P4PD_CLI
 #include "nic/hal/pd/capri/capri_loader.h"

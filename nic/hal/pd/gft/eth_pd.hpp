@@ -5,7 +5,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 
 namespace hal {
 namespace pd {

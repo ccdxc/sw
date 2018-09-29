@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/gen/hal/svc/acl_svc_gen.hpp"
-#include "nic/gen/hal/svc/qos_svc_gen.hpp"
+#include "gen/hal/svc/acl_svc_gen.hpp"
+#include "gen/hal/svc/qos_svc_gen.hpp"
 #include "nic/hal/svc/session_svc.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl.hpp"

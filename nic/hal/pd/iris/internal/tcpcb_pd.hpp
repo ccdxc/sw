@@ -2,7 +2,7 @@
 #define __HAL_PD_TCPCB_HPP__
 
 #include "nic/include/base.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/tcp_common.h"
 

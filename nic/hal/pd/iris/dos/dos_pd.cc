@@ -1,6 +1,6 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
+#include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/dos/dos_pd.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"

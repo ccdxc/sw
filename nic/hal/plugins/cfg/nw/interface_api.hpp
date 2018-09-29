@@ -8,7 +8,7 @@
 #define __INTERFACE_API_HPP__
 
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "nic/gen/proto/hal/interface.pb.h"
+#include "gen/proto/interface.pb.h"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 

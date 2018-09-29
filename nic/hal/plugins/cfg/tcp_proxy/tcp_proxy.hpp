@@ -3,14 +3,14 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
-#include "nic/gen/proto/hal/tcp_proxy.pb.h"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "gen/proto/tcp_proxy.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
 #include "nic/hal/src/utils/utils.hpp"
-#include "nic/gen/proto/hal/proxy.grpc.pb.h"
+#include "gen/proto/proxy.grpc.pb.h"
 #include "nic/hal/src/internal/proxy.hpp"
 
 using sdk::lib::ht_ctxt_t;

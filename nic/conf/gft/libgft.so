@@ -1,1 +1,1 @@
-../../../bazel-bin/nic/hal/pd/gft/libgft.so
+../../build/x86_64/gft/lib/libpd_gft.so

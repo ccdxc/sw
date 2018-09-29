@@ -2,11 +2,11 @@
 #include <iostream>
 #include <grpc++/grpc++.h>
 
-#include "types.grpc.pb.h"
+#include "gen/proto/types.grpc.pb.h"
 
-#include "uplink.hpp"
-#include "vrf.hpp"
-#include "print.hpp"
+#include "nic/hal/iris-c/include/uplink.hpp"
+#include "nic/hal/iris-c/include/vrf.hpp"
+#include "nic/hal/iris-c/include/print.hpp"
 
 using namespace std;
 

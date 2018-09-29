@@ -1,4 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
-include ${MAKEDEFS}/pre.mk
-MODULE_TARGET = libmodelclient.so
-include ${MAKEDEFS}/post.mk
+include ${MKDEFS}/pre.mk
+MODULE_TARGET = libmodel_client.so
+MODULE_INCS   = ${TOPDIR}/nic/hal/third-party/zmq/include
+MODULE_LDLIBS = zmq
+include ${MKDEFS}/post.mk

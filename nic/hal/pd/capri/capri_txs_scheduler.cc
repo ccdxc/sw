@@ -22,7 +22,7 @@
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
 #include "nic/hal/pd/capri/capri_state.hpp"
-#include "sdk/utils.hpp"
+#include "nic/sdk/include/sdk/utils.hpp"
 
 #ifndef HAL_GTEST
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"

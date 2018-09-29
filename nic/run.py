@@ -69,10 +69,11 @@ os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib:/usr/local/lib64:asic/capri/mode
 os.environ["PKG_CONFIG_PATH"] = "/usr/local/lib/pkgconfig"
 
 #Path and executables
-model_executable = nic_dir + "/../bazel-bin/nic/model_sim/cap_model"
+bin_dir = nic_dir + '/build/x86_64/iris/bin/'
+model_executable = bin_dir + "cap_model"
 model_core_path  = nic_dir
 
-hal_executable = nic_dir + "/../bazel-bin/nic/hal/hal"
+hal_executable = bin_dir + "hal"
 hal_core_path = nic_dir
 
 def print_core(executable, core):
@@ -190,30 +191,31 @@ def run_model(args):
     global model_log
     if args.test_suf:
         model_log = nic_dir + "/logs_%s/model.log" % args.test_suf
-    os.environ["LD_LIBRARY_PATH"] = ".:../libs:/usr/local/lib:/usr/local/lib64:/home/asic/bin/tools/lib64"
-
-    #model_dir = nic_dir + "/model_sim/build"
-    model_dir = nic_dir + "/../bazel-bin/nic/model_sim"
-    os.chdir(model_dir)
-
-    log = open(model_log, "w")
-#    p = Popen(["sh", "run_model"], stdout=log, stderr=log)
+    os.environ["LD_LIBRARY_PATH"] = ".:/usr/local/lib:/usr/local/lib64:/home/asic/bin/tools/lib64"
     model_cmd = [ "./cap_model", "+PLOG_MAX_QUIT_COUNT=0", "+plog_add_scope=axi_trace" ]
     if args.modellogs:
         model_cmd.append("+plog=info")
         if args.gft or args.gft_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/gen/gft/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/gft/gen/p4gen/gft/dbg_out/model_debug.json")
         elif args.apollo_gtest:
             os.system("%s/tools/merge_model_debug.py --p4 apollo --rxdma apollo_rxdma --txdma apollo_txdma" % nic_dir)
-            model_cmd.append("+model_debug=" + nic_dir + "/gen/apollo/dbg_out/combined_model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apollo/gen/p4gen//apollo/dbg_out/model_debug.json")
         else:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/iris/gen/datapath/p4/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/iris/gen/p4gen/p4/dbg_out/model_debug.json")
     if args.coveragerun or args.asmcov:
         dump_file= nic_dir + "/coverage/asm_cov.dump"
         model_cmd.append("+mpu_cov_dump_file=" + dump_file)
         dump_dir= nic_dir + "/coverage/asm_out_all"
         model_cmd.append("+mpu_pc_cov_dump_dir=" + dump_dir)
 
+    global bin_dir
+    if args.gft or args.gft_gtest:
+        bin_dir = nic_dir + '/build/x86_64/gft/bin/'
+    elif args.apollo_gtest:
+        bin_dir = nic_dir + '/build/x86_64/apollo/bin/'
+
+    os.chdir(bin_dir)
+    log = open(model_log, "w")
     model_env = os.environ.copy()
     model_env["COVFILE"] = bullseye_model_cov_file
     p = Popen(model_cmd, stdout=log, stderr=log, env=model_env)
@@ -257,10 +259,10 @@ def run_hal(args):
     snort_dir = nic_dir + "/hal/third-party/snort3/export"
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.environ["LD_LIBRARY_PATH"] = "/home/asic/bin/tools/lib64:" + os.environ["LD_LIBRARY_PATH"]
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/" + ":" + snort_dir + "/x86_64/lib/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/sdk/obj/lib"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/sdk/obj/lib/external"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/hal/obj"
+    #os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/" + ":" + snort_dir + "/x86_64/lib/"
+    #os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/sdk/obj/lib"
+    #os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/sdk/obj/lib/external"
+    #os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/hal/obj"
     os.environ["SNORT_LUA_PATH"] = snort_dir + "/lua/"
     os.environ["LUA_PATH"] = snort_dir + "/lua/?.lua;;"
     os.environ["SNORT_DAQ_PATH"] = snort_dir + "/x86_64/lib/"
@@ -270,10 +272,12 @@ def run_hal(args):
     os.chdir(nic_dir)
 
     global hal_log
+    global bin_dir
     jsonfile = 'hal.json'
     if args.rtl:
         jsonfile = 'hal_rtl.json'
     if args.gft:
+        bin_dir = nic_dir + '/build/x86_64/gft/bin/'
         jsonfile = 'hal_gft.json'
 
     hal_log_dir = nic_dir
@@ -292,7 +296,7 @@ def run_hal(args):
         os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini")
 
     FNULL = open(os.devnull, 'w')
-    p = Popen(["../bazel-bin/nic/hal/hal", "--config", jsonfile], stdout=FNULL, stderr=FNULL)
+    p = Popen([bin_dir+'/hal', "--config", jsonfile], stdout=FNULL, stderr=FNULL)
     global hal_process
     hal_process = p
     print "* Starting HAL pid (" + str(p.pid) + ")"
@@ -346,9 +350,9 @@ def run_platform_model_server(args, standalone=False):
 # Run nicmgr
 def run_nicmgr(args, standalone=False):
     wait_for_hal()
-    bin_dir = nic_dir + "/../bazel-bin/platform/src/app/nicmgrd/src"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/platform/src/lib/nicmgr/src/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/gen/x86_64/lib/"
+    bin_dir = nic_dir + "/../platform/gen/x86_64/bin/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../platform/gen/x86_64/lib/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/build/x86_64/iris/lib/"
     os.chdir(bin_dir)
     cmd = ['./nicmgrd', '-c', os.path.join(nic_dir, '../platform/src/app/nicmgrd/etc/accel.json')]
 
@@ -394,7 +398,7 @@ def run_nicmgr_platform_model_server(args, standalone=False):
 # Run Storage DOL
 def run_storage_dol(port, args):
     wait_for_hal()
-    bin_dir = nic_dir + "/../bazel-bin/dol/iris/test/storage"
+    bin_dir = nic_dir + "/../nic/build/x86_64/iris/bin"
     if args.rtl:
         if args.storage_test:
             cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.storage_test, '--poll_interval', '3600', '--long_poll_interval', '3600']
@@ -434,9 +438,9 @@ def run_filter_gtest(args):
     #os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
     os.chdir(nic_dir)
     if args.classic is True:
-        cmd = ['../bazel-bin/nic/hal/iris-c/gtest/filter_test']
+        cmd = [bin_dir + '/iris_c_filter_test']
     else:
-        cmd = ['../bazel-bin/nic/hal/iris-c/gtest/filter_smart_test']
+        cmd = [bin_dir + '/iris_c_filter_smart_test']
     p = Popen(cmd)
     #p.communicate()
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -454,9 +458,8 @@ def run_span_gtest(args):
 # Run GFT tests
 def run_gft_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
     os.chdir(nic_dir)
-    cmd = ['../bazel-bin/nic/hal/test/gtests/gft_test']
+    cmd = ['build/x86_64/gft/bin/gft_test']
     p = Popen(cmd)
     #p.communicate()
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -464,9 +467,8 @@ def run_gft_test(args):
 # Run Apollo tests
 def run_apollo_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
     os.chdir(nic_dir)
-    cmd = ['../bazel-bin/nic/hal/test/gtests/apollo_test']
+    cmd = ['build/x86_64/apollo/bin/apollo_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -1158,7 +1160,7 @@ def main():
     # Get techsupport
     if args.feature in ['firewall']:
         os.chdir(halctl_dir)
-        os.system("go build && ./halctl show techsupport")
+        os.system(bin_dir+'/halctl show techsupport')
         os.chdir(nic_dir)
 
     if args.nocleanup:
@@ -1175,6 +1177,7 @@ def main():
         print "PASS: No errors found in " + model_log
     print "Status = %d" % status
     os.system("echo %d > .run.status" % status)
+    os.system("/sw/nic/tools/savelogs.sh")
     sys.exit(status)
 
 def signal_handler(signal, frame):

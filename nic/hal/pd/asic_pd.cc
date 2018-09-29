@@ -1,12 +1,12 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "sdk/thread.hpp"
+#include "nic/sdk/include/sdk/thread.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"
-#include "sdk/pal.hpp"
-#include "sdk/types.hpp"
+#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {

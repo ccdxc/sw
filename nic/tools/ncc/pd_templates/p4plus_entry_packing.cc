@@ -59,11 +59,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <assert.h>
-//::        if pddict['pipeline'] != None:
-#include "nic/build/${pipeline}/gen/datapath/${hdrdir}/include/${p4prog}p4pd.h"
-//::        else:
-#include "nic/gen/${hdrdir}/include/${p4prog}p4pd.h"
-//::        #endif
+#include "gen/p4gen/${hdrdir}/include/${p4prog}p4pd.h"
 #include "nic/include/p4pd_utils.hpp"
 
 char ${prefix}_tbl_names[__P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];

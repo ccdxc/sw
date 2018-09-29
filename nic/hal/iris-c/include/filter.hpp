@@ -4,12 +4,12 @@
 
 #include <vector>
 
-#include "hal.hpp"
-#include "lif.hpp"
-#include "enic.hpp"
-#include "endpoint.hpp"
-#include "multicast.hpp"
-#include "kh.grpc.pb.h"
+#include "nic/hal/iris-c/include/hal.hpp"
+#include "nic/hal/iris-c/include/lif.hpp"
+#include "nic/hal/iris-c/include/enic.hpp"
+#include "nic/hal/iris-c/include/endpoint.hpp"
+#include "nic/hal/iris-c/include/multicast.hpp"
+#include "gen/proto/kh.grpc.pb.h"
 
 #if 0
 // Have to be in sync with kh::FilterType

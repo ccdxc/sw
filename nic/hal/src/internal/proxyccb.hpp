@@ -7,9 +7,9 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
-#include "nic/gen/proto/hal/proxyccb.pb.h"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "gen/proto/proxyccb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/app_redir_shared.h"

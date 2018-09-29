@@ -1,4 +1,4 @@
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/types.pb.h"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"

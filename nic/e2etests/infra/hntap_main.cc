@@ -24,7 +24,7 @@
 #include "nic/e2etests/hntap/hntap_switch.hpp"
 
 #include <grpc++/grpc++.h>
-#include "nic/gen/proto/hal/interface.grpc.pb.h"
+#include "gen/proto/interface.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;

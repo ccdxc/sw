@@ -4,9 +4,9 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
-#include "sdk/slab.hpp"
-#include "sdk/ht.hpp"
-#include "sdk/catalog.hpp"
+#include "nic/sdk/include/sdk/slab.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "nic/sdk/include/sdk/catalog.hpp"
 
 using sdk::lib::slab;
 using sdk::lib::ht;

@@ -11,7 +11,7 @@
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
-#include "nic/gen/proxyr_txdma/include/proxyr_txdma_p4plus_ingress.h"
+#include "gen/p4gen/proxyr_txdma/include/proxyr_txdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
 /*

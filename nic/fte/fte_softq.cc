@@ -1,7 +1,7 @@
 #include <atomic>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "sdk/thread.hpp"
+#include "nic/sdk/include/sdk/thread.hpp"
 #include "fte_softq.hpp"
 
 namespace fte {

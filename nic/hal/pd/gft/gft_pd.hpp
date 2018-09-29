@@ -2,7 +2,7 @@
 #define __HAL_PD_GFT_HPP__
 
 #include "nic/include/base.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/pd/gft/gft_pd.hpp"
 
 using sdk::lib::ht_ctxt_t;

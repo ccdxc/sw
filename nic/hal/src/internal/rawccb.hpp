@@ -7,9 +7,9 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
-#include "nic/gen/proto/hal/rawccb.pb.h"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "gen/proto/rawccb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/app_redir_shared.h"
 

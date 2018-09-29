@@ -16,7 +16,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 //#include "nic/hal/pd/iris/nw/vrf_pd.hpp"
 #include "nic/hal/src/utils/cfg_op_ctxt.hpp"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "gen/hal/include/hal_api_stats.hpp"
 
 namespace hal {
 void *

@@ -91,3 +91,9 @@ TEST_F(tcp_buffer_test, insert_segment)
         EXPECT_EQ(result_.buff[i], input[i]) << "i=" << i;
     }
 }
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+

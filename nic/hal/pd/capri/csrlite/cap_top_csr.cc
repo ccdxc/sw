@@ -1,5 +1,5 @@
-#include "sdk/asic/capri/csrlite/cap_top_csr.hpp"
-#include "sdk/asic/capri/csrlite/cap_top_csr_defines.h"
+#include "nic/sdk/include/sdk/asic/capri/csrlite/cap_top_csr.hpp"
+#include "nic/sdk/include/sdk/asic/capri/csrlite/cap_top_csr_defines.h"
 
 namespace sdk {
 namespace lib {

@@ -4,8 +4,8 @@
 
 #include "nic/hal/core/core.hpp"
 #include "nic/hal/core/heartbeat/heartbeat.hpp"
-#include "sdk/periodic.hpp"
-#include "sdk/timestamp.hpp"
+#include "nic/sdk/include/sdk/periodic.hpp"
+#include "nic/sdk/include/sdk/timestamp.hpp"
 
 #define HAL_HEARTBEAT_SCAN_INTVL        2    // in seconds
 

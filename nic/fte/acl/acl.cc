@@ -1,6 +1,6 @@
 #include "nic/fte/acl/acl.hpp"
 #include "nic/fte/acl/acl_ctx.hpp"
-#include "sdk/lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 
 namespace acl {
 

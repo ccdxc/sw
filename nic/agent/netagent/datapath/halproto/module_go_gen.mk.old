@@ -1,0 +1,25 @@
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+include ${MKDEFS}/pre.mk
+MODULE_TARGET       = agent_halproto.proto
+MODULE_GEN_TYPES    = GO
+MODULE_PIPELINE     = iris
+MODULE_INCS         = ${MODULE_DIR} \
+                      ${TOPDIR}/nic \
+                      ${TOPDIR}/nic/proto/hal \
+                      ${TOPDIR}/vendor/github.com/gogo/protobuf/gogoproto \
+                      ${TOPDIR}/nic/hal/third-party/google/include \
+                      /usr/local/include
+MODULE_LDLIBS       = pthread
+MODULE_POSTGEN_MK   = module_mock_gen.mk
+MODULE_SRC_DIR      = ${TOPDIR}/nic/proto/hal
+MODULE_SRCS         = ${MODULE_SRC_DIR}/wring.proto
+#AGENT_PROTOS        = types.proto kh.proto eplearn.proto qos.proto \
+                      endpoint.proto interface.proto l2segment.proto \
+                      l4lb.proto nwsec.proto vrf.proto nw.proto \
+                      nat.proto telemetry.proto session.proto \
+                      ipsec.proto fwlog.proto internal.proto
+AGENT_PROTOS        := types.proto $(filter-out wring.proto,$(filter-out types.proto,$(notdir $(shell ls ${MODULE_SRC_DIR}/*.proto | LC_ALL=C sort))))
+#$(filter-out tcp_proxy.proto,$(notdir $(wildcard ${MODULE_SRC_DIR}/*.proto)))
+MODULE_PROTOC_GOFAST_OPTS = --proto_path=${MODULE_SRC_DIR} --gofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:${MODULE_DIR} ${AGENT_PROTOS}
+#MODULE_CLEAN_DIRS   = ${MODULE_DIR}/*.go
+include ${MKDEFS}/post.mk

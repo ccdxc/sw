@@ -7,7 +7,7 @@
 #ifndef __NAT_POL_HPP__
 #define __NAT_POL_HPP__
 
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/rule_match.hpp"
 

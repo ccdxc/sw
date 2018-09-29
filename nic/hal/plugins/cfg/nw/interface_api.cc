@@ -6,7 +6,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 
 namespace hal {

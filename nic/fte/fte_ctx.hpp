@@ -7,10 +7,10 @@
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/include/cpupkt_api.hpp"
 #include <netinet/ether.h>
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/types.pb.h"
 #include "nic/include/app_redir_headers.hpp"
 #include "nic/include/app_redir_shared.h"
-#include "nic/gen/proto/hal/fwlog.pb.h"
+#include "gen/proto/fwlog.pb.h"
 #include "nic/utils/agent_api/agent_api.hpp"
 #include "nic/fte/fte_core.hpp"
 

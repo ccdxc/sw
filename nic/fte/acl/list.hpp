@@ -2,7 +2,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/fte/acl/ref.hpp"
-#include "sdk/slab.hpp"
+#include "nic/sdk/include/sdk/slab.hpp"
 
 namespace acl {
 

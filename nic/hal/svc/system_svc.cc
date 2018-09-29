@@ -10,8 +10,8 @@
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/hal_cfg_db.hpp"
 #include "nic/hal/svc/system_svc.hpp"
-#include "nic/gen/proto/hal/system.pb.h"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/system.pb.h"
+#include "gen/proto/types.pb.h"
 #include "nic/hal/src/internal/system.hpp"
 
 Status

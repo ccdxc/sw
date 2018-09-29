@@ -1,6 +1,6 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/iris/datapath/p4/include/table_sizes.h"
-#include "sdk/tcam.hpp"
+#include "nic/sdk/include/sdk/tcam.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/internal/system_pd.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
@@ -13,8 +13,8 @@
 namespace hal {
 namespace pd {
 
-thread_local void *t_clock_delta_timer;
-thread_local void *t_clock_rollover_timer;
+thread_local void *t_clock_delta_timer = NULL;
+thread_local void *t_clock_rollover_timer = NULL;
 
 #define HAL_TIMER_ID_CLOCK_SYNC            0
 #define HAL_TIMER_ID_CLOCK_ROLLOVER        1

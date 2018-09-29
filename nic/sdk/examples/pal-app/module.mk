@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
-include ${MAKEDEFS}/pre.mk
+include ${MKDEFS}/pre.mk
 MODULE_TARGET = hal_access.bin
-MODULE_SOLIBS = pal logger
+MODULE_SOLIBS = sdkpal logger
 MODULE_LDLIBS = dl
-include ${MAKEDEFS}/post.mk
+include ${MKDEFS}/post.mk

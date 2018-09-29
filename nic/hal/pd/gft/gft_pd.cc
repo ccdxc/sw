@@ -1,13 +1,13 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/base.hpp"
-#include "nic/gen/gft/include/p4pd.h"
+#include "gen/p4gen/gft/include/p4pd.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
 #include "nic/hal/pd/gft/gft_pd.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/p4/gft/include/defines.h"
-#include "sdk/tcam.hpp"
+#include "nic/sdk/include/sdk/tcam.hpp"
 
 using sdk::table::tcam;
 

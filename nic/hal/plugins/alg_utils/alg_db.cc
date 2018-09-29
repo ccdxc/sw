@@ -2,7 +2,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#include "sdk/periodic.hpp"
+#include "nic/sdk/include/sdk/periodic.hpp"
 #include "alg_db.hpp"
 
 namespace hal {

@@ -3,7 +3,7 @@
 #ifndef __CAPRI_HPP__
 #define __CAPRI_HPP__
 
-#include "sdk/catalog.hpp"
+#include "nic/sdk/include/sdk/catalog.hpp"
 #include "nic/utils/bm_allocator/bm_allocator.hpp"
 
 #define CAPRI_REPL_ENTRY_WIDTH          (64)

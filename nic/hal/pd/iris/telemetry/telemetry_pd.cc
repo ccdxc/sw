@@ -6,7 +6,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
-#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
+#include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/hal/pd/iris/telemetry/telemetry_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"

@@ -5,10 +5,11 @@
 #ifndef __UTILS_HPP__
 #define __UTILS_HPP__
 
-#include "nic/gen/proto/hal/types.pb.h"
-#include "sdk/list.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/include/ip.hpp"
+
+#include "gen/proto/types.pb.h"
 
 using types::ApiStatus;
 using hal::utils::block_list;

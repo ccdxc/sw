@@ -9,7 +9,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/proto/hal/descriptor_aol.pb.h"
+#include "gen/proto/descriptor_aol.pb.h"
 
 using descraol::DescrAolSpec;
 using descraol::DescrAolRequest;

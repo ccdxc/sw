@@ -3,7 +3,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
-#include "nic/gen/proto/hal/interface.pb.h"
+#include "gen/proto/interface.pb.h"
 #include "nic/hal/pd/iris/nw/if_pd.hpp"
 #include "nic/hal/pd/iris/nw/tunnelif_pd.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"

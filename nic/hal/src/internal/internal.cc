@@ -5,7 +5,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/proto/hal/interface.grpc.pb.h"
+#include "gen/proto/interface.grpc.pb.h"
 #include "nic/hal/src/internal/internal.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"

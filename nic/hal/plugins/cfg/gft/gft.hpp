@@ -6,13 +6,13 @@
 #define __GFT_HPP__
 
 #include "nic/include/base.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/utils/block_list/block_list.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/proto/hal/kh.pb.h"
-#include "nic/gen/proto/hal/gft.pb.h"
+#include "gen/proto/kh.pb.h"
+#include "gen/proto/gft.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
 

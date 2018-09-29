@@ -5,10 +5,10 @@
 #include <iostream>
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "sdk/utils.hpp"
+#include "nic/sdk/include/sdk/utils.hpp"
 #include "nic/hal/core/core.hpp"
 #include "nic/hal/core/plugins.hpp"
-#include "sdk/periodic.hpp"
+#include "nic/sdk/include/sdk/periodic.hpp"
 
 namespace hal {
 

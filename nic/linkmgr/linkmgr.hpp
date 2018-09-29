@@ -7,9 +7,9 @@
 #ifndef __LINKMGR_HPP__
 #define __LINKMGR_HPP__
 
-#include "sdk/linkmgr.hpp"
+#include "nic/sdk/include/sdk/linkmgr.hpp"
 #include "nic/include/base.hpp"
-#include "nic/gen/proto/hal/debug.grpc.pb.h"
+#include "gen/proto/debug.grpc.pb.h"
 
 using debug::GenericOpnRequest;
 using debug::GenericOpnResponse;

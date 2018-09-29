@@ -11,7 +11,7 @@
 #include "nic/hal/plugins/cfg/lif/lif_api.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "gen/hal/include/hal_api_stats.hpp"
 
 namespace hal {
 

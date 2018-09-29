@@ -8,13 +8,14 @@
 #include "nic/include/base.hpp"
 #include "nic/include/eth.hpp"
 #include "nic/include/ip.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
-#include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
+
+#include "gen/proto/interface.pb.h"
 
 #define NUM_MAX_COSES 16
 // Size of RSS seed in bytes

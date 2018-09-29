@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/gen/hal/svc/multicast_svc_gen.hpp"
+#include "gen/hal/svc/multicast_svc_gen.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;

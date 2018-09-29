@@ -4,13 +4,13 @@
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
-#include "nic/gen/proto/hal/interface.pb.h"
+#include "gen/proto/interface.pb.h"
 #include "nic/hal/pd/gft/if_pd.hpp"
 #include "nic/hal/pd/gft/lif_pd.hpp"
 #include "nic/hal/pd/gft/enicif_pd.hpp"
 #include "nic/p4/gft/include/defines.h"
 #include "nic/hal/pd/gft/pd_utils.hpp"
-#include "sdk/tcam.hpp"
+#include "nic/sdk/include/sdk/tcam.hpp"
 
 namespace hal {
 namespace pd {

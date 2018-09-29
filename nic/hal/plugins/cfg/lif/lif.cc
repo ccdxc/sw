@@ -9,7 +9,7 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/gen/proto/hal/l2segment.pb.h"
+#include "gen/proto/l2segment.pb.h"
 #include "nic/hal/plugins/cfg/nw/filter.hpp"
 #include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/src/utils/utils.hpp"

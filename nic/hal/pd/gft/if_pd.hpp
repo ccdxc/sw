@@ -6,7 +6,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
-#include "nic/gen/gft/include/p4pd.h"
+#include "gen/p4gen/gft/include/p4pd.h"
 
 namespace hal {
 namespace pd {
@@ -14,6 +14,8 @@ namespace pd {
 struct pd_if_s {
 } __PACK__;
 
+// Utils
+uint8_t *memrev(uint8_t *block, size_t elnum);
 }   // namespace pd
 }   // namespace hal
 

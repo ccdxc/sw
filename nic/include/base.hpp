@@ -9,7 +9,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include "nic/include/trace.hpp"
-#include "sdk/base.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
 
 #define __IN__
 #define __OUT__

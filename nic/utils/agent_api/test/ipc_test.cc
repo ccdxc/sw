@@ -9,9 +9,9 @@
 #include <iostream>
 #include "nic/utils/agent_api/agent_api.hpp"
 #include "nic/utils/agent_api/shared_constants.h"
-#include "sdk/thread.hpp"
-#include "nic/gen/proto/hal/nwsec.pb.h"
-#include "nic/gen/proto/hal/fwlog.pb.h"
+#include "nic/sdk/include/sdk/thread.hpp"
+#include "gen/proto/nwsec.pb.h"
+#include "gen/proto/fwlog.pb.h"
 #define TEST_THREAD_COUNT 8
 #define TEST_ALLOC_SIZE 8
 #define TEST_IPC_SIZE 256 

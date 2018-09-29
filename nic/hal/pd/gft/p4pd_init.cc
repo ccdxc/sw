@@ -1,12 +1,12 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "nic/include/base.hpp"
-#include "nic/gen/gft/include/p4pd.h"
+#include "gen/p4gen/gft/include/p4pd.h"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/hal_pd.hpp"
 #include "nic/hal/pd/gft/efe_pd.hpp"
 #include "nic/hal/pd/gft/p4pd_defaults.hpp"
-#include "sdk/tcam.hpp"
+#include "nic/sdk/include/sdk/tcam.hpp"
 #include "nic/p4/rdma/include/rdma_defines.h"
 #include "nic/p4/include/common_defines.h"
 #include "nic/p4/gft/include/defines.h"

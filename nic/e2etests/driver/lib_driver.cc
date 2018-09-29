@@ -5,12 +5,12 @@
 #include <grpc++/grpc++.h>
 #include <zmq.h>
 
-#include "nic/gen/proto/hal/interface.grpc.pb.h"
+#include "gen/proto/interface.grpc.pb.h"
 #include "nic/model_sim/include/buf_hdr.h"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/utils/host_mem/host_mem.hpp"
 #include "nic/include/eth_common.h"
-#include "./lib_driver.hpp"
+#include "lib_driver.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;

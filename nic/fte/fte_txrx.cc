@@ -13,8 +13,8 @@
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
-#include "sdk/timestamp.hpp"
-#include "sdk/thread.hpp"
+#include "nic/sdk/include/sdk/timestamp.hpp"
+#include "nic/sdk/include/sdk/thread.hpp"
 
 namespace fte {
 

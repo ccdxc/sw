@@ -3,7 +3,7 @@
 #include "utils.hpp"
 #include "hal_if.hpp"
 #include "nicmgr_if.hpp"
-#include "lib_driver.hpp"
+#include "nic/e2etests/driver/lib_driver.hpp"
 
 #include <assert.h>
 #include <stdint.h>

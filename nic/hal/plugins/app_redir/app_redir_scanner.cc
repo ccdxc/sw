@@ -3,9 +3,9 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/include/hal.hpp"
-#include "sdk/periodic.hpp"
-#include "snort_api.h"
-#include "application_ids.h"
+#include "nic/sdk/include/sdk/periodic.hpp"
+#include "nic/hal/third-party/snort3/export/include/snort_api.h"
+#include "nic/hal/third-party/snort3/export/include/application_ids.h"
 #include "app_redir_scanner.hpp"
 #include "app_redir_ctx.hpp"
 #include <dlfcn.h>

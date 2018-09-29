@@ -8,12 +8,12 @@
 #include <map>
 #include <grpc++/grpc++.h>
 
-#include "vrf.grpc.pb.h"
-#include "interface.grpc.pb.h"
-#include "endpoint.grpc.pb.h"
-#include "l2segment.grpc.pb.h"
-#include "multicast.grpc.pb.h"
-#include "rdma.grpc.pb.h"
+#include "gen/proto/vrf.grpc.pb.h"
+#include "gen/proto/interface.grpc.pb.h"
+#include "gen/proto/endpoint.grpc.pb.h"
+#include "gen/proto/l2segment.grpc.pb.h"
+#include "gen/proto/multicast.grpc.pb.h"
+#include "gen/proto/rdma.grpc.pb.h"
 #include "nic/hal/iris-c/trace/trace.hpp"
 
 using grpc::Status;
@@ -89,7 +89,7 @@ public:
 
     // call this first to set the mode and create the channel
     // static std::shared_ptr<HalClient> GetInstance(enum ForwardingMode mode){};
-    static HalClient *Factory(enum ForwardingMode mode) {};
+    static HalClient *Factory(enum ForwardingMode mode) {return NULL;};
     static void Destroy(HalClient *hal_client);
 
     static HalClient *GetInstance();

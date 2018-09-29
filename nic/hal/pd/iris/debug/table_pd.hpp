@@ -3,7 +3,7 @@
 #ifndef __TABLE_PD_HPP__
 #define __TABLE_PD_HPP__
 
-#include "sdk/hbm_hash.hpp"
+#include "nic/sdk/include/sdk/hbm_hash.hpp"
 
 namespace hal {
 namespace pd {

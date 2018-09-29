@@ -6,11 +6,11 @@
 #include "nic/include/eth.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/gen/proto/hal/acl.pb.h"
+#include "gen/proto/acl.pb.h"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include <google/protobuf/util/json_util.h>
 

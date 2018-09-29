@@ -2,7 +2,7 @@
 #define _HAL_IF_HPP_
 
 #include <stdint.h>
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/types.pb.h"
 
 #define LIF_MAX_TYPES    8
 #define LIF_BASE_QUEUE_SIZE  5

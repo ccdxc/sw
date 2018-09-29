@@ -1,28 +1,21 @@
-.PHONY: clean iris gft apollo
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+.SUFFIXES:
+export ARCH     ?= x86_64
+export PIPELINE ?= iris
+export TOPDIR   := ${realpath ${CURDIR}/../}
+export NICDIR   := ${TOPDIR}/nic
+export SDKDIR   := ${NICDIR}/sdk
+export BLDTOP   := ${realpath .}
+export MKINFRA  := ${SDKDIR}/mkinfra
+export MKDEFS   := ${NICDIR}/mkdefs
 
-default: iris
+include ${MKDEFS}/common.mk
+include ${MKINFRA}/config.mk
 
-export TOPDIR 		:= ${CURDIR}
-export IRIS_DIR 	:= $(TOPDIR)/hal/iris
-export GFT_DIR 		:= $(TOPDIR)/hal/gft
-export APOLLO_DIR	:= $(TOPDIR)/hal/apollo2
-export TOPDIR_ABS 	:= $(realpath ${CURDIR})
-
-include $(TOPDIR)/make/Makefile.common
-
-iris:
-	@echo $(TOPDIR)
-	$(MAKE) -C $(IRIS_DIR)
-
-gft:
-	@echo $(TOPDIR)
-	$(MAKE) -C $(GFT_DIR)
-
-apollo:
-	@echo $(TOPDIR)
-	$(MAKE) -C $(APOLLO_DIR)
+.DEFAULT_GOAL := all
+.PHONY: all clean
+all: ${ALL_TARGETS} 
 
 clean:
-	$(MAKE) -C $(IRIS_DIR) clean
-	$(MAKE) -C $(GFT_DIR) clean
-	$(MAKE) -C $(APOLLO_DIR) clean
+	@rm -rf ${BLD_ARCH_DIR}
+	@rm -rf ${CLEAN_DIRS}

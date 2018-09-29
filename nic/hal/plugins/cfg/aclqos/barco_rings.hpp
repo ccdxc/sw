@@ -7,8 +7,8 @@
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/proto/hal/barco_rings.pb.h"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/barco_rings.pb.h"
+#include "gen/proto/types.pb.h"
 
 using std::string;
 using barcoRings::GetOpaqueTagAddrRequest;

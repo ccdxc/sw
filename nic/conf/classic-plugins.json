@@ -3,7 +3,7 @@
         {
             "name"      : "classic",
             "provider"  : "pensando.io",
-            "lib"       : "classic/libclassic.so",
+            "lib"       : "libplugin_classic.so",
             "init_func" : "classic_init",
             "exit_func" : "classic_exit",
             "auto_load" : "true",
@@ -13,7 +13,7 @@
         {
             "name"      : "lif",
             "provider"  : "pensando.io",
-            "lib"       : "lif/liblif.so",
+            "lib"       : "libcfg_plugin_lif.so",
             "init_func" : "lif_init",
             "exit_func" : "lif_exit",
             "auto_load" : "true"
@@ -21,14 +21,14 @@
         {
             "name"      : "nw",
             "provider"  : "pensando.io",
-            "lib"       : "nw/libnw.so",
+            "lib"       : "libcfg_plugin_nw.so",
             "auto_load" : "true",
             "deps"      : ["pensando.io/lif"]
         },
         {
             "name"      : "mcast",
             "provider"  : "pensando.io",
-            "lib"       : "mcast/libmcast.so",
+            "lib"       : "libcfg_plugin_mcast.so",
             "init_func" : "mcast_init",
             "exit_func" : "mcast_exit",
             "auto_load" : "true",

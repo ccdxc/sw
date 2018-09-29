@@ -5,11 +5,11 @@
 #include "nic/include/base.hpp"
 #include "nic/include/mtrack.hpp"
 #include "nic/hal/src/debug/debug.hpp"
-#include "sdk/slab.hpp"
-#include "sdk/catalog.hpp"
+#include "nic/sdk/include/sdk/slab.hpp"
+#include "nic/sdk/include/sdk/catalog.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
-#include "sdk/timestamp.hpp"
+#include "nic/sdk/include/sdk/timestamp.hpp"
 
 using sdk::lib::slab;
 

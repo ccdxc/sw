@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "nic/include/base.hpp"
-#include "sdk/catalog.hpp"
+#include "nic/sdk/include/sdk/catalog.hpp"
 
 // 320 bytes in one TM cell
 #define HAL_TM_CELL_SIZE            320

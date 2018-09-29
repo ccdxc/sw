@@ -10,10 +10,10 @@
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/fte/fte.hpp"
 #include "nic/include/hal_state.hpp"
-#include "sdk/ht.hpp"
-#include "sdk/twheel.hpp"
-#include "sdk/periodic.hpp"
-#include "../common/trans.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "nic/sdk/include/sdk/twheel.hpp"
+#include "nic/sdk/include/sdk/periodic.hpp"
+#include "nic/hal/plugins/eplearn/common/trans.hpp"
 
 #define HAL_MAX_DPKT_LEARN_TRANS 512
 #define DPKT_LEARN_TIMER_ID 253

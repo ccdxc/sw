@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include "sdk/pal.hpp"
+#include "nic/sdk/include/sdk/pal.hpp"
 
 #define SW_PRINT printf
 #define PLOG_API_MSG(f, ...) do {} while (0)

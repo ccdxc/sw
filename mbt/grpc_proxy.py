@@ -4,8 +4,7 @@ import os
 import sys
 import time
 paths = [
-    '/nic/gen/proto/',
-    '/nic/gen/proto/hal/',
+    '/nic/build/x86_64/iris/gen/proto/',
     '/nic/cli/', # To get tenjin_wrapper.
     '/mbt/'
 ]

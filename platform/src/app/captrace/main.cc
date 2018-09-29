@@ -10,7 +10,7 @@
 #include "mpu_trace.hpp"
 #include "sdk/pal.hpp"
 
-#include "nic/gen/proto/hal/debug.grpc.pb.h"
+#include "debug.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;

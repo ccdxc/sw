@@ -4,7 +4,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/ip.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/fte/fte.hpp"
 #include <netinet/if_ether.h>
 #include <arpa/inet.h>

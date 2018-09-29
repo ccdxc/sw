@@ -147,5 +147,17 @@ pd_if_make_clone (pd_func_args_t *pd_func_args)
     return ret;
 }
 
+uint8_t *memrev(uint8_t *block, size_t elnum)
+{
+    uint8_t *s, *t, tmp;
+
+    for (s = block, t = s + (elnum - 1); s < t; s++, t--) {
+        tmp = *s;
+        *s = *t;
+        *t = tmp;
+    }
+    return block;
+}
+
 }    // namespace pd
 }    // namespace hal

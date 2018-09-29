@@ -8,7 +8,6 @@ namespace utils {
 
 #define WIDTH           (8 * sizeof(crc))
 #define TOPBIT          (1 << (WIDTH - 1))
-#define CRC_POLY_MAX    5
 
 //------------------------------------------------------------------------------
 // initialize an instance of bitmap class

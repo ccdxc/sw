@@ -8,7 +8,7 @@
 #define __RULES_HPP__
 #include "nic/include/base.hpp"
 #include "nic/fte/acl/acl.hpp"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/types.pb.h"
 #include "addr_list.hpp"
 #include "port_list.hpp"
 #include "sg_list.hpp"

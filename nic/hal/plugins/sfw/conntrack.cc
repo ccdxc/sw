@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/fte/fte.hpp"
-#include "sdk/periodic.hpp"
+#include "nic/sdk/include/sdk/periodic.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 

@@ -1,0 +1,8 @@
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+include ${MKDEFS}/pre.mk
+MODULE_TARGET           = agent.goimports
+MODULE_PREREQS          = agent.mockgen
+MODULE_PIPELINE         = iris
+MODULE_GOIMPORTS_OPTS   = -w -l
+#MODULE_SRC_DIR          = ${MODULE_DIR}/proto/hal
+include ${MKDEFS}/post.mk

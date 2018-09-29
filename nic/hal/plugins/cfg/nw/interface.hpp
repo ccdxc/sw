@@ -8,15 +8,15 @@
 #include "nic/include/base.hpp"
 #include "nic/include/eth.hpp"
 #include "nic/include/ip.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"
-#include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 
+#include "gen/proto/interface.pb.h"
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 using hal::utils::bitmap;

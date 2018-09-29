@@ -5,7 +5,7 @@
 #pragma once
 #include "alg_db.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
-#include "sdk/list.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
 #include "nic/fte/fte_ctx.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/alg_utils/tcp_buffer.hpp"

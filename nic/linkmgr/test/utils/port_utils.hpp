@@ -4,7 +4,7 @@
 #define __LINKMGR_TEST_PORT_UTILS_HPP__
 
 #include "nic/include/base.hpp"
-#include "sdk/types.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
 
 int port_create(uint32_t port_id);
 
@@ -34,5 +34,4 @@ int port_get(uint32_t             port_id,
              bool                 auto_neg_enable  = false);
 
 int port_delete(uint32_t port_id);
-
 #endif // __LINKMGR_TEST_PORT_UTILS_HPP__

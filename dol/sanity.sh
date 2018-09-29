@@ -12,13 +12,7 @@ function ErrorCheckNExit() {
 }
 
 # Build the minimum targets required for dryrun.
-#cd ../nic/utils/host_mem && make && cd -
-cd /sw && make pull-assets && cd -
-cd ../nic/proto/ && make && cd -
-bazel build  //nic/utils/host_mem:host_mem
-#bazel build //nic/proto:all
-#bazel build //nic/proto/hal:all
-#bazel build //nic/proto/agents:all
+make -C /sw/nic libhost_mem.so hal.proto
 
 function DryRunSanity()
 {

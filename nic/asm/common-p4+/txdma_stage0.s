@@ -25,7 +25,9 @@
     .param      eth_tx_drop
     .param      esp_ipv4_tunnel_h2n_txdma_stage0
     .param      cpu_tx_stage0_start
+#ifndef GFT
     .param      ipfix_start
+#endif
     .param      resp_tx_rqcb_process
     .param      esp_ipv4_tunnel_n2h_txdma_stage0
     .param      adminq_fetch_desc

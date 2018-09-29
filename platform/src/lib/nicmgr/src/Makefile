@@ -24,7 +24,7 @@ LCFLAGS = \
 	-I $(TOPDIR)/../nic/include/ \
 	-I $(TOPDIR)/../nic/sdk/ \
 	-I $(TOPDIR)/../nic/sdk/include/ \
-	-I $(TOPDIR)/../nic/gen/proto/hal/ \
+	-I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/gen/proto/ \
 	-I $(TOPDIR)/../nic/hal/pd/capri/ \
 	-I $(TOPDIR)/../nic/third-party/boost/include/ \
 	-I $(TOPDIR)/../nic/hal/third-party/include/ \
@@ -57,6 +57,7 @@ LLDFLAGS = \
 	-L $(TOPDIR)/../nic/gen/$(BUILD_ARCH)/lib/ \
 	-L $(TOPDIR)/../nic/hal/third-party/grpc/$(BUILD_ARCH)/lib \
 	-L $(TOPDIR)/../nic/hal/third-party/google/$(BUILD_ARCH)/lib \
+	-L $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/lib/ \
 	$(NULL)
 
 SYSTEM_LIBRARIES = \

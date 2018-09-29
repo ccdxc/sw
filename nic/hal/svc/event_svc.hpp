@@ -5,8 +5,8 @@
 
 #include "nic/include/base.hpp"
 #include "grpc++/grpc++.h"
-#include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/proto/hal/event.grpc.pb.h"
+#include "gen/proto/types.pb.h"
+#include "gen/proto/event.grpc.pb.h"
 
 using event::Event;
 using event::EventRequest;

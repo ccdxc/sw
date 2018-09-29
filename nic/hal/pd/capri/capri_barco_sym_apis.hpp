@@ -2,7 +2,7 @@
 #define __CAPRI_BARCO_SYM_APIS_H__
 
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
-#include "nic/gen/proto/hal/crypto_apis.pb.h"
+#include "gen/proto/crypto_apis.pb.h"
 
 namespace hal {
 namespace pd {

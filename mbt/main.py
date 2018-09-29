@@ -6,8 +6,7 @@ import zmq
 import random
 
 paths = [
-    '/nic/gen/proto/',
-    '/nic/gen/proto/hal/',
+    '/nic/build/x86_64/iris/gen/proto/',
     '/nic/',
     '/dol/',
     '/dol/third_party/',

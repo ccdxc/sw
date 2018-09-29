@@ -154,11 +154,7 @@ bool plugin_manager_t::parse_plugin(const pt::ptree &tree, plugin_t *plugin,
     }
 
     if (auto lib = tree.get_optional<std::string>("lib")) {
-        if ((*lib)[0] == '/') {
-            plugin->lib =  *lib;
-        } else {
-            plugin->lib = plugin_path + "/" + *lib;
-        }
+        plugin->lib =  *lib;
     } else {
         HAL_TRACE_ERR("plugins::parse_plugin missing lib for plugin {}", plugin->name);
         return false;
@@ -437,11 +433,14 @@ bool plugin_manager_t::load_plugin(hal_cfg_t *hal_cfg, plugin_t *plugin)
     HAL_TRACE_INFO("plugins::load_plugin {} loading so {}",
                    plugin->name, plugin->lib);
 
-    void *so = dlopen(plugin->lib.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_DEEPBIND);
+    void *so = dlopen(plugin->lib.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_DEEPBIND|RTLD_NOLOAD);
     if (!so) {
-        HAL_TRACE_ERR("plugins: {} dlopen failed {}", plugin->lib, dlerror());
-        plugin->state = PLUGIN_STATE_LOAD_FAILED;
-        return false;
+        so = dlopen(plugin->lib.c_str(), RTLD_NOW|RTLD_GLOBAL|RTLD_DEEPBIND);
+        if (!so) {
+            HAL_TRACE_ERR("plugins: {} dlopen failed {}", plugin->lib, dlerror());
+            plugin->state = PLUGIN_STATE_LOAD_FAILED;
+            return false;
+        }
     }
 
     if (!load_symbols(so, plugin)) {

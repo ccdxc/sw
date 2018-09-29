@@ -6,7 +6,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
-#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
+#include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/src/internal/eth.hpp"

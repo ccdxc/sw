@@ -135,7 +135,7 @@ if [ $WITH_QEMU == 1 ]; then
 else
 # start NIC manager and allow it to create uplinks
     echo "Starting nicmgr ..."
-    "$NIC_DIR"/bin/nic_mgr_app
+    "$NIC_DIR"/bin/fake_nic_mgr
     if [ $? -ne 0 ]; then
         echo "Failed to start nic mgr"
         exit $?

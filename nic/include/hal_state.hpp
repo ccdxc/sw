@@ -3,20 +3,20 @@
 #ifndef  __HAL_STATE_HPP__
 #define  __HAL_STATE_HPP__
 
-#include "sdk/list.hpp"
-#include "sdk/catalog.hpp"
-#include "sdk/slab.hpp"
-#include "sdk/indexer.hpp"
-#include "sdk/ht.hpp"
-#include "sdk/timestamp.hpp"
-#include "sdk/shmmgr.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/catalog.hpp"
+#include "nic/sdk/include/sdk/slab.hpp"
+#include "nic/sdk/include/sdk/indexer.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "nic/sdk/include/sdk/timestamp.hpp"
+#include "nic/sdk/include/sdk/shmmgr.hpp"
 #include "nic/include/eventmgr.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/ip.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "sdk/periodic.hpp"
+#include "nic/sdk/include/sdk/periodic.hpp"
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 

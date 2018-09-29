@@ -1,6 +1,6 @@
 #include "nic/fte/acl/list.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "sdk/slab.hpp"
+#include "nic/sdk/include/sdk/slab.hpp"
 
 namespace acl {
 

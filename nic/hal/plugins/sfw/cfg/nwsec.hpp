@@ -6,13 +6,14 @@
 #define __NWSEC_HPP__
 
 #include "nic/include/base.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
-#include "nic/gen/proto/hal/nwsec.pb.h"
-#include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
+
+#include "gen/proto/nwsec.pb.h"
+#include "gen/proto/kh.pb.h"
 
 #define HAL_NWSEC_INVALID_SG_ID        uint32_t (~0)
 using sdk::lib::ht_ctxt_t;

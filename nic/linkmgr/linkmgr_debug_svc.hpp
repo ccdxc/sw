@@ -6,8 +6,8 @@
 #include "grpc++/grpc++.h"
 
 #include "nic/include/base.hpp"
-#include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/proto/hal/debug.grpc.pb.h"
+#include "gen/proto/types.pb.h"
+#include "gen/proto/debug.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

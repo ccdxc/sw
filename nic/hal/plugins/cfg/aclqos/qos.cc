@@ -5,11 +5,11 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/gen/proto/hal/qos.pb.h"
+#include "gen/proto/qos.pb.h"
 #include <google/protobuf/util/json_util.h>
 
 namespace hal {

@@ -8,12 +8,12 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
-#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
+#include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/iris/datapath/p4/include/table_sizes.h"
 #include "nic/hal/pd/cpupkt_api.hpp"
-#include "sdk/periodic.hpp"
+#include "nic/sdk/include/sdk/periodic.hpp"
 
 namespace hal {
 namespace pd {

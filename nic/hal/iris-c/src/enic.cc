@@ -2,10 +2,8 @@
 #include <iostream>
 #include <grpc++/grpc++.h>
 
-// #include "kh.grpc.pb.h"
-
-#include "enic.hpp"
-#include "ethlif.hpp"
+#include "nic/hal/iris-c/include/enic.hpp"
+#include "nic/hal/iris-c/include/ethlif.hpp"
 
 using namespace std;
 

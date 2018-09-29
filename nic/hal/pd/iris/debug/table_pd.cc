@@ -2,7 +2,7 @@
 
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/gen/proto/hal/table.pb.h"
+#include "gen/proto/table.pb.h"
 #include "nic/hal/pd/iris/debug/table_pd.hpp"
 
 using table::TableMetadataResponseMsg;

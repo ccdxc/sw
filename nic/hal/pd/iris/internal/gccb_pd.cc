@@ -8,7 +8,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/plugins/cfg/lif/lif_manager.hpp"
-#include "nic/gen/gc_txdma/include/gc_txdma_p4plus_ingress.h"
+#include "gen/p4gen/gc_txdma/include/gc_txdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/iris/internal/gccb_pd.hpp"
 

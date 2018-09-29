@@ -6,7 +6,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
-#include "sdk/slab.hpp"
+#include "nic/sdk/include/sdk/slab.hpp"
 #include "nic/fte/fte_ctx.hpp"
 
 using namespace fte;

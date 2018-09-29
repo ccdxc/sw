@@ -1,8 +1,9 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
-include ${MAKEDEFS}/pre.mk
+include ${MKDEFS}/pre.mk
 MODULE_TARGET   = rdma_aq_txdma.asmbin
 MODULE_PREREQS  = rdma.p4bin
-MODULE_INCS     = ${BLD_GEN_DIR}/rdma_aq_txdma/asm_out \
+MODULE_PIPELINE = iris gft
+MODULE_INCS     = ${BLD_P4GEN_DIR}/rdma_aq_txdma/asm_out \
                   ${MODULE_DIR}/../common/include \
                   ${MODULE_DIR}//include \
                   ${TOPDIR}/nic/asm/common-p4+/include \
@@ -10,4 +11,5 @@ MODULE_INCS     = ${BLD_GEN_DIR}/rdma_aq_txdma/asm_out \
                   ${TOPDIR}/nic/include \
                   ${TOPDIR}/nic
 MODULE_DEPS     = $(shell find ${MODULE_DIR} -name '*.h')
-include ${MAKEDEFS}/post.mk
+MODULE_BIN_DIR  = ${BLD_BIN_DIR}/p4pasm
+include ${MKDEFS}/post.mk

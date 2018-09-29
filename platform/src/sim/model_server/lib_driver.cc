@@ -10,9 +10,9 @@
 
 #include <pthread.h>
 
-#include <nic/gen/proto/hal/interface.grpc.pb.h>
-#include <nic/gen/proto/hal/internal.grpc.pb.h>
-#include <nic/gen/proto/hal/rdma.grpc.pb.h>
+#include <interface.grpc.pb.h>
+#include <internal.grpc.pb.h>
+#include <rdma.grpc.pb.h>
 
 #include "nic/model_sim/include/buf_hdr.h"
 #include "nic/model_sim/include/lib_model_client.h"

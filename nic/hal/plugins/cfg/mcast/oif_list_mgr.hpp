@@ -6,7 +6,7 @@
 #define __OIF_LIST_MGR_HPP__
 
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
-#include "nic/gen/proto/hal/interface.pb.h"
+#include "gen/proto/interface.pb.h"
 
 namespace hal {
 

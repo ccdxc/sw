@@ -6,7 +6,7 @@
 #define __HAL_HPP__
 
 #include <string>
-#include "sdk/thread.hpp"
+#include "nic/sdk/include/sdk/thread.hpp"
 #include "nic/include/base.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/hal_cfg.hpp"

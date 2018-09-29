@@ -11,13 +11,13 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/p4pd/p4pd_api.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
-#include "nic/gen/tcp_proxy_txdma/include/ingress_phv.h"
+#include "gen/p4gen/tcp_proxy_txdma/include/ingress_phv.h"
 #undef __INGRESS_PHV__
-#include "nic/gen/tcp_proxy_rxdma/include/ingress_phv.h"
+#include "gen/p4gen/tcp_proxy_rxdma/include/ingress_phv.h"
 #undef __INGRESS_PHV__
-#include "nic/build/iris/gen/datapath/p4/include/ingress_phv.h"
+#include "gen/p4gen/p4/include/ingress_phv.h"
 // FIXME: Need to fix an issue with generated egress_phv.h
-// #include "nic/build/iris/gen/datapath/p4/include/egress_phv.h"
+// #include "gen/p4gen/p4/include/egress_phv.h"
 
 namespace hal {
 namespace pd {

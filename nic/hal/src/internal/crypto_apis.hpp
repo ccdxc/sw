@@ -8,7 +8,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/proto/hal/crypto_apis.pb.h"
+#include "gen/proto/crypto_apis.pb.h"
 
 using cryptoapis::CryptoApiRequest;
 using cryptoapis::CryptoApiRequestMsg;

@@ -9,7 +9,7 @@
 #include <memory>
 #include <map>
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "nic/gen/proto/hal/rdma.pb.h"
+#include "gen/proto/rdma.pb.h"
 // #include "rdma_svc.hpp"
 #include "nic/utils/bm_allocator/bm_allocator.hpp"
 

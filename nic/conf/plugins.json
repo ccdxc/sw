@@ -3,7 +3,7 @@
         {
             "name"      : "network",
             "provider"  : "pensando.io",
-            "lib"       : "network/libnetwork.so",
+            "lib"       : "libplugin_network.so",
             "init_func" : "network_init",
             "exit_func" : "network_exit",
             "auto_load" : "true",
@@ -20,7 +20,7 @@
         {
             "name"      : "alg_utils",
             "provider"  : "pensando.io",
-            "lib"       : "alg_utils/libalg_utils.so",
+            "lib"       : "libplugin_alg_utils.so",
             "init_func" : "alg_utils_init",
             "exit_func" : "alg_utils_exit",
             "auto_load" : "true",
@@ -30,7 +30,7 @@
         {
             "name"      : "sfw",
             "provider"  : "pensando.io",
-            "lib"       : "sfw/libsfw.so",
+            "lib"       : "libplugin_sfw.so",
             "init_func" : "sfw_init",
             "exit_func" : "sfw_exit",
             "auto_load" : "true",
@@ -43,7 +43,7 @@
         {
             "name"      : "alg_sip",
             "provider"  : "pensando.io",
-            "lib"       : "alg_sip/libalg_sip.so",
+            "lib"       : "libplugin_alg_sip.so",
             "init_func" : "alg_sip_init",
             "exit_func" : "alg_sip_exit",
             "auto_load" : "true",
@@ -53,7 +53,7 @@
         {
             "name"      : "alg_tftp",
             "provider"  : "pensando.io",
-            "lib"       : "alg_tftp/libalg_tftp.so",
+            "lib"       : "libplugin_alg_tftp.so",
             "init_func" : "alg_tftp_init",
             "exit_func" : "alg_tftp_exit",
             "auto_load" : "true",
@@ -63,7 +63,7 @@
         {
             "name"      : "alg_dns",
             "provider"  : "pensando.io",
-            "lib"       : "alg_dns/libalg_dns.so",
+            "lib"       : "libplugin_alg_dns.so",
             "init_func" : "alg_dns_init",
             "exit_func" : "alg_dns_exit",
             "auto_load" : "true",
@@ -73,7 +73,7 @@
         {
             "name"      : "alg_rpc",
             "provider"  : "pensando.io",
-            "lib"       : "alg_rpc/libalg_rpc.so",
+            "lib"       : "libplugin_alg_rpc.so",
             "init_func" : "alg_rpc_init",
             "exit_func" : "alg_rpc_exit",
             "auto_load" : "true",
@@ -83,7 +83,7 @@
         {
             "name"      : "alg_rtsp",
             "provider"  : "pensando.io",
-            "lib"       : "alg_rtsp/libalg_rtsp.so",
+            "lib"       : "libplugin_alg_rtsp.so",
             "init_func" : "alg_rtsp_init",
             "exit_func" : "alg_rtsp_exit",
             "auto_load" : "true",
@@ -93,7 +93,7 @@
         {
             "name"      : "alg_ftp",
             "provider"  : "pensando.io",
-            "lib"       : "alg_ftp/libalg_ftp.so",
+            "lib"       : "libplugin_alg_ftp.so",
             "init_func" : "alg_ftp_init",
             "exit_func" : "alg_ftp_exit",
             "auto_load" : "true",
@@ -103,7 +103,7 @@
         {
             "name"      : "eplearn",
             "provider"  : "pensando.io",
-            "lib"       : "eplearn/libeplearn.so",
+            "lib"       : "libplugin_ep_learn.so",
             "init_func" : "eplearn_init",
             "exit_func" : "eplearn_exit",
             "auto_load" : "true",
@@ -113,7 +113,7 @@
         {
             "name"      : "lb",
             "provider"  : "pensando.io",
-            "lib"       : "lb/liblb.so",
+            "lib"       : "libplugin_lb.so",
             "init_func" : "lb_init",
             "exit_func" : "lb_exit",
             "auto_load" : "true",
@@ -123,7 +123,7 @@
         {
             "name"      : "nat",
             "provider"  : "pensando.io",
-            "lib"       : "nat/libnat.so",
+            "lib"       : "libplugin_nat.so",
             "init_func" : "nat_init",
             "exit_func" : "nat_exit",
             "auto_load" : "true",
@@ -133,7 +133,7 @@
         {
             "name"      : "dol",
             "provider"  : "pensando.io",
-            "lib"       : "dol/libdol.so",
+            "lib"       : "libplugin_dol.so",
             "init_func" : "dol_init",
             "exit_func" : "dol_exit",
             "auto_load" : "true",
@@ -143,7 +143,7 @@
         {
             "name"      : "proxy",
             "provider"  : "pensando.io",
-            "lib"       : "proxy/libproxyplugin.so",
+            "lib"       : "libplugin_proxy.so",
             "init_func" : "proxy_plugin_init",
             "exit_func" : "proxy_exit",
             "auto_load" : "true",
@@ -160,7 +160,7 @@
         {
             "name"      : "app-redir",
             "provider"  : "pensando.io",
-            "lib"       : "app_redir/libapp_redir.so",
+            "lib"       : "libplugin_app_redir.so",
             "init_func" : "app_redir_plugin_init",
             "exit_func" : "app_redir_plugin_exit",
             "thread_init_func" : "app_redir_thread_init",
@@ -177,7 +177,7 @@
         {
             "name"      : "lif",
             "provider"  : "pensando.io",
-            "lib"       : "lif/liblif.so",
+            "lib"       : "libcfg_plugin_lif.so",
             "init_func" : "lif_init",
             "exit_func" : "lif_exit",
             "auto_load" : "true"
@@ -185,7 +185,7 @@
         {
             "name"      : "nw",
             "provider"  : "pensando.io",
-            "lib"       : "nw/libnw.so",
+            "lib"       : "libcfg_plugin_nw.so",
             "thread_init_func" : "nw_thread_init",
             "auto_load" : "true",
             "deps"      : ["pensando.io/lif"]
@@ -193,7 +193,7 @@
         {
             "name"      : "aclqos",
             "provider"  : "pensando.io",
-            "lib"       : "aclqos/libaclqos.so",
+            "lib"       : "libcfg_plugin_aclqos.so",
             "init_func" : "aclqos_init",
             "exit_func" : "aclqos_exit",
             "auto_load" : "true",
@@ -202,7 +202,7 @@
         {
             "name"      : "natcfg",
             "provider"  : "pensando.io",
-            "lib"       : "natcfg/libnatcfg.so",
+            "lib"       : "libcfg_plugin_nat.so",
             "init_func" : "natcfg_init",
             "exit_func" : "natcfg_exit",
             "auto_load" : "true",
@@ -211,7 +211,7 @@
         {
             "name"      : "telemetrycfg",
             "provider"  : "pensando.io",
-            "lib"       : "telemetry/libtelemetrycfg.so",
+            "lib"       : "libcfg_plugin_telemetry.so",
             "init_func" : "telemetrycfg_init",
             "exit_func" : "telemetrycfg_exit",
             "auto_load" : "true",
@@ -220,7 +220,7 @@
         {
             "name"      : "telemetry",
             "provider"  : "pensando.io",
-            "lib"       : "telemetry/libtelemetry.so",
+            "lib"       : "libplugin_telemetry.so",
             "init_func" : "telemetry_init",
             "exit_func" : "telemetry_exit",
             "auto_load" : "true",
@@ -230,7 +230,7 @@
         {
             "name"      : "mcast",
             "provider"  : "pensando.io",
-            "lib"       : "mcast/libmcast.so",
+            "lib"       : "libcfg_plugin_mcast.so",
             "init_func" : "mcast_init",
             "exit_func" : "mcast_exit",
             "auto_load" : "true",
@@ -239,7 +239,7 @@
         {
             "name"      : "ipsec",
             "provider"  : "pensando.io",
-            "lib"       : "ipsec/libipsec.so",
+            "lib"       : "libcfg_plugin_ipsec.so",
             "init_func" : "ipsec_init",
             "exit_func" : "ipsec_exit",
             "auto_load" : "true",
@@ -248,7 +248,7 @@
         {
             "name"      : "gft",
             "provider"  : "pensando.io",
-            "lib"       : "gft/libgft.so",
+            "lib"       : "libcfg_plugin_gft.so",
             "init_func" : "gft_init",
             "exit_func" : "gft_exit",
             "auto_load" : "true",
@@ -257,7 +257,7 @@
         {
             "name"      : "doscfg",
             "provider"  : "pensando.io",
-            "lib"       : "doscfg/libdoscfg.so",
+            "lib"       : "libcfg_plugin_dos.so",
             "init_func" : "doscfg_init",
             "exit_func" : "doscfg_exit",
             "auto_load" : "true",
@@ -266,7 +266,7 @@
         {
             "name"      : "l4lbcfg",
             "provider"  : "pensando.io",
-            "lib"       : "l4lbcfg/libl4lbcfg.so",
+            "lib"       : "libcfg_plugin_l4lb.so",
             "init_func" : "l4lbcfg_init",
             "exit_func" : "l4lbcfg_exit",
             "auto_load" : "true",

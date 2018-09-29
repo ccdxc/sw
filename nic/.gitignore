@@ -39,8 +39,13 @@ hal/third-party/lkl/export/aarch64/
 hal/third-party/lkl/export/bin/
 hal/third-party/lkl/export/x86_64/
 hal/third-party/zmq/
-hal/third-party/google/
-hal/third-party/grpc/
+hal/third-party/google/aarch64/
+hal/third-party/google/include/
+hal/third-party/google/protobuf/
+hal/third-party/google/x86_64/
+hal/third-party/grpc/aarch64/
+hal/third-party/grpc/x86_64/
+hal/third-party/grpc/include/
 hal/third-party/crchack/bin/
 hal/obj/*.so
 third-party/googletest-release-1.8.0/googletest/make/*.a
@@ -69,3 +74,5 @@ debug_cli/cli/.dir
 debug_cli/cli/.swig
 mmap.bin
 build
+third-party/gflags/include
+third-party/gflags/x86_64

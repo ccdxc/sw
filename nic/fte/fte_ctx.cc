@@ -3,7 +3,7 @@
 #include "fte_flow.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
-#include "sdk/list.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/cpupkt_headers.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"

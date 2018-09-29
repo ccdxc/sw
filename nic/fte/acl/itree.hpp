@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nic/include/base.hpp"
-#include "sdk/slab.hpp"
+#include "nic/sdk/include/sdk/slab.hpp"
 #include "nic/fte/acl/ref.hpp"
 #include "nic/fte/acl/list.hpp"
 

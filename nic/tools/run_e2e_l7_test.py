@@ -10,8 +10,7 @@ import threading
 import signal
 
 paths = [
-    '/nic/gen/proto/',
-    '/nic/gen/proto/hal/',
+    '/nic/build/x86_64/iris/gen/proto/',
     '/nic'
 ]
 ws_top = os.path.dirname(sys.argv[0]) + '/../../'
@@ -65,7 +64,7 @@ def hal_init():
 
 def run_hntap():
     log = open(hntap_log, "w")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_hntap', '-n', '5']
+    cmd = ['../nic/build/x86_64/iris/bin/nic_proxy_e2etest_hntap', '-n', '5']
     p = Popen(cmd, stdout=log, stderr=log)
     global hntap_process
     hntap_process = p

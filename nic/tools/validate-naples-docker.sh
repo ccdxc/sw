@@ -155,5 +155,5 @@ create_namespaces
 # Check if the container is still healthy
 check_for_naples_health "$NAPLES_CID"
 docker exec "$NAPLES_CID" bash -c /naples/nic/tools/print-cores.sh
-
+/sw/nic/tools/savelogs.sh
 exit 0

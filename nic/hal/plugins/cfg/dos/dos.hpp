@@ -7,13 +7,14 @@
 #define __DOS_HPP__
 
 #include "nic/include/base.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
-#include "nic/gen/proto/hal/dos.pb.h"
-#include "nic/gen/proto/hal/kh.pb.h"
 #include "nic/include/pd.hpp"
+
+#include "gen/proto/dos.pb.h"
+#include "gen/proto/kh.pb.h"
 
 using dos::DoSPolicySpec;
 using dos::DoSPolicyStatus;

@@ -7,10 +7,10 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "nic/gen/proto/hal/nat.pb.h"
-#include "nic/gen/proto/hal/kh.pb.h"
+#include "gen/proto/nat.pb.h"
+#include "gen/proto/kh.pb.h"
 #include "nic/include/ip.hpp"
 #include "nic/include/l4.hpp"
 #include "nic/fte/acl/acl.hpp"

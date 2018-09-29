@@ -6,7 +6,7 @@
 #define __SYSTEM_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/gen/proto/hal/system.pb.h"
+#include "gen/proto/system.pb.h"
 
 using sys::ApiCounter;
 using sys::ApiStatsResponse;

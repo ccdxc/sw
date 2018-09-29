@@ -2,7 +2,7 @@
 
 #include "nic/hal/pd/iris/mcast/repl_decode.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "nic/build/iris/gen/datapath/p4/include/p4pd.h"
+#include "gen/p4gen/p4/include/p4pd.h"
 
 namespace hal {
 namespace pd {

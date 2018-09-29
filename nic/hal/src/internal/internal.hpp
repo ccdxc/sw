@@ -8,13 +8,13 @@
 #include "nic/include/base.hpp"
 #include "nic/include/eth.hpp"
 #include "nic/include/ip.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"
-#include "nic/gen/proto/hal/internal.pb.h"
+#include "gen/proto/internal.pb.h"
 #include "nic/hal/src/internal/internal.hpp"
-#include "nic/gen/proto/hal/fwlog.pb.h"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/fwlog.pb.h"
+#include "gen/proto/types.pb.h"
 
 namespace hal {
 

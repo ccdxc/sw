@@ -2,7 +2,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
-#include "sdk/utils.hpp"
+#include "nic/sdk/include/sdk/utils.hpp"
 
 namespace hal {
 namespace pd {

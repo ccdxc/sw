@@ -5,7 +5,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/ip.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 
 using sdk::lib::ht_ctxt_t;
 

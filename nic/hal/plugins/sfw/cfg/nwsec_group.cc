@@ -8,10 +8,10 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
-#include "nic/gen/proto/hal/nwsec.pb.h"
+#include "gen/proto/nwsec.pb.h"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 #include <google/protobuf/util/json_util.h>
 

@@ -8,7 +8,7 @@
 #include <rpc/pmap_prot.h>
 #include <rpc/pmap_rmt.h>
 #include "nic/include/hal_mem.hpp"
-#include "rpcb_prot.h"
+#include "nic/hal/third-party/libtirpc/export/rpcb_prot.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/plugins/sfw/core.hpp"
 #include "nic/hal/plugins/alg_utils/alg_db.hpp"

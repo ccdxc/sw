@@ -9,7 +9,7 @@ from infra.common.glopts import GlobalOptions
 import infra.common.objects as objects
 
 
-MODEL_DEBUG = 'nic/build/iris/gen/datapath/p4/dbg_out/model_debug.json'
+MODEL_DEBUG = 'nic/build/x86_64/iris/gen/p4gen/p4/dbg_out/model_debug.json'
 CRCHACK = 'nic/hal/third-party/crchack/bin/crchack -w32 -p04c11db7'
 RECIRC_LIMIT = 4
 

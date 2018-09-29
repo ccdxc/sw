@@ -2,9 +2,9 @@
 
 #include <getopt.h>
 #include <grpc++/grpc++.h>
-#include "nic/gen/proto/hal/types.grpc.pb.h"
-#include "nic/gen/proto/hal/port.grpc.pb.h"
-#include "nic/gen/proto/hal/debug.grpc.pb.h"
+#include "gen/proto/types.grpc.pb.h"
+#include "gen/proto/port.grpc.pb.h"
+#include "gen/proto/debug.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;

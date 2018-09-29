@@ -8,8 +8,8 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "gen/proto/types.pb.h"
+#include "gen/hal/include/hal_api_stats.hpp"
 #include "utils.hpp"
 #include "port_list.hpp"
 

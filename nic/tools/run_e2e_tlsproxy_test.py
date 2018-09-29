@@ -9,8 +9,7 @@ import subprocess
 import threading
 
 paths = [
-    '/nic/gen/proto/',
-    '/nic/gen/proto/hal/',
+    '/nic/build/x86_64/iris/gen/proto/',
     '/nic'
 ]
 ws_top = os.path.dirname(sys.argv[0]) + '/../../'
@@ -31,7 +30,7 @@ from subprocess import Popen, PIPE, call
 nic_tools_dir = os.path.dirname(sys.argv[0])
 nic_dir = nic_tools_dir + "/.."
 nic_dir = os.path.abspath(nic_dir)
-
+bin_dir = nic_dir + '/build/x86_64/iris/bin'
 print("NIC_DIR = ", nic_dir)
 if nic_dir is None:
     print("NIC dir is not set!")
@@ -98,7 +97,7 @@ def set_proxy_tls_bypass_mode(bypass_mode):
 
 def run_hntap(tcp_port, ul2ul_mode=0):
     log = open(hntap_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_hntap', '-p', tcp_port, '-m', str(ul2ul_mode)]
+    cmd = [bin_dir + '/nic_proxy_e2etest_hntap', '-p', tcp_port, '-m', str(ul2ul_mode)]
     p = Popen(cmd, stdout=log, stderr=log)
     global hntap_process
     hntap_process = p
@@ -122,11 +121,9 @@ def run_hntap(tcp_port, ul2ul_mode=0):
 def run_tls_server(tcp_port, cipher, certfile, keyfile, clientCAfile):
     log = open(tls_svr_log, "a")
     if not clientCAfile:
-        cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tls-server',
-                            tcp_port, cipher, certfile, keyfile]
+        cmd = [bin_dir + '/nic_proxy_e2etest_tls_server', tcp_port, cipher, certfile, keyfile]
     else:
-        cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tls-server',
-                            tcp_port, cipher, certfile, keyfile, clientCAfile]
+        cmd = [bin_dir + '/nic_proxy_e2etest_tls_server', tcp_port, cipher, certfile, keyfile, clientCAfile]
         
     p = Popen(cmd, stdout=log, stderr=log)
     global tls_svr_process
@@ -138,9 +135,9 @@ def run_tls_server(tcp_port, cipher, certfile, keyfile, clientCAfile):
 
 def run_tls_client(tcp_port, direction='from-host'):
     log = open(tls_clt_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tls-client',
-                 '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world",
-                 '-m', direction]
+    cmd = [bin_dir + '/nic_proxy_e2etest_tls_client'
+           '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world",
+           '-m', direction]
     p = Popen(cmd, stdout=log, stderr=log)
     print("* Starting TLS Client on port %s, pid (%s)" % (tcp_port, str(p.pid)))
     print("    - Log file: " + tls_clt_log + "\n")
@@ -150,7 +147,7 @@ def run_tls_client(tcp_port, direction='from-host'):
 
 def run_tcp_server(tcp_port, shut_down=0):
     log = open(tcp_svr_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-server', tcp_port, str(shut_down)]
+    cmd = [bin_dir + '/nic_proxy_e2etest_tcp_server', tcp_port, str(shut_down)]
     p = Popen(cmd, stdout=log, stderr=log)
     global tcp_svr_process
     tcp_svr_process = p
@@ -162,7 +159,7 @@ def run_tcp_server(tcp_port, shut_down=0):
 
 def run_tcp_client(tcp_port, direction='from-host', shut_down=0):
     log = open(tcp_clt_log, "a")
-    cmd = ['../bazel-bin/nic/e2etests/proxy/nic_proxy-e2etest_tcp-client', '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world", '-m', direction, '-s', str(shut_down)]
+    cmd = [bin_dir + '/nic_proxy_e2etest_tcp_client', '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world", '-m', direction, '-s', str(shut_down)]
     p = Popen(cmd, stdout=log, stderr=log)
     print("* Starting TCP Client on port %s, pid (%s)" % (tcp_port, str(p.pid)))
     print("    - Log file: " + tcp_clt_log + "\n")

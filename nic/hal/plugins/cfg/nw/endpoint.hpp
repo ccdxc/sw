@@ -6,13 +6,13 @@
 #define __ENDPOINT_HPP__
 
 #include "nic/include/base.hpp"
-#include "sdk/list.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
 #include "nic/include/ip.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
-#include "nic/gen/proto/hal/endpoint.pb.h"
-#include "nic/gen/proto/hal/eplearn.pb.h"
+#include "gen/proto/endpoint.pb.h"
+#include "gen/proto/eplearn.pb.h"
 #include "nic/include/pd.hpp"
 #include <netinet/ether.h>
 

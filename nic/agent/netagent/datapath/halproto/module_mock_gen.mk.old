@@ -1,0 +1,10 @@
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+include ${MKDEFS}/pre.mk
+MODULE_TARGET       = agent.mockgen
+MODULE_PREREQS      = agent.proto agent_halproto.proto
+MODULE_PIPELINE     = iris
+MODULE_MOCKGEN_OPTS = -package=halproto
+MODULE_POSTGEN_MK   = module_goimports.mk
+#MODULE_SRC_DIR      = ${MODULE_DIR}/proto/hal
+MODULE_SRCS         = $(filter-out ${MODULE_SRC_DIR}/event.pb.go,$(wildcard ${MODULE_SRC_DIR}/*.pb.go))
+include ${MKDEFS}/post.mk

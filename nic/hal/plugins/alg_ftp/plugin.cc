@@ -4,7 +4,7 @@
 
 #include "core.hpp"
 #include "utils.hpp"
-#include "sdk/slab.hpp"
+#include "nic/sdk/include/sdk/slab.hpp"
 #include "nic/include/hal_mem.hpp"
 
 namespace hal {

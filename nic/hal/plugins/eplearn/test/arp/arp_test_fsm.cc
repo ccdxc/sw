@@ -1,6 +1,6 @@
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
-#include "sdk/twheel.hpp"
+#include "nic/sdk/include/sdk/twheel.hpp"
 
 #include "nic/hal/plugins/eplearn/arp/arp_learn.hpp"
 #include "nic/hal/plugins/eplearn/arp/ndp_learn.hpp"
@@ -15,12 +15,12 @@
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/hal/plugins/cfg/nw/nic.hpp"
-#include "nic/gen/proto/hal/interface.pb.h"
-#include "nic/gen/proto/hal/l2segment.pb.h"
-#include "nic/gen/proto/hal/vrf.pb.h"
-#include "nic/gen/proto/hal/endpoint.pb.h"
-#include "nic/gen/proto/hal/nw.pb.h"
-#include "nic/gen/proto/hal/nic.pb.h"
+#include "gen/proto/interface.pb.h"
+#include "gen/proto/l2segment.pb.h"
+#include "gen/proto/vrf.pb.h"
+#include "gen/proto/endpoint.pb.h"
+#include "gen/proto/nw.pb.h"
+#include "gen/proto/nic.pb.h"
 
 #include <tins/tins.h>
 

@@ -26,3 +26,7 @@ nic/hal/third-party/tins/*
 nic/hal/third-party/pcap/*
 nic/hal/third-party/sknobs/*
 nic/hal/third-party/judy/*
+
+nic/third-party/gflags/include/*
+nic/third-party/gflags/x86_64/*
+nic/third-party/gflags/aarch64/*

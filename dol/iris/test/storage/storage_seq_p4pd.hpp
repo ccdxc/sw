@@ -1,7 +1,7 @@
 #ifndef __DOL_STORAGE_SEQ_P4PD_HPP__
 #define __DOL_STORAGE_SEQ_P4PD_HPP__
 
-#include "nic/gen/storage_seq/include/storage_seq_p4pd.h"
+#include "gen/p4gen/storage_seq/include/storage_seq_p4pd.h"
 
 /*
  * Default P4PD table width

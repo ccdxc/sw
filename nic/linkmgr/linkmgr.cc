@@ -3,14 +3,14 @@
 #include "grpc++/grpc++.h"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "sdk/pal.hpp"
+#include "nic/sdk/include/sdk/pal.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_debug_svc.hpp"
 #include "linkmgr_state.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "linkmgr_utils.hpp"
-#include "sdk/periodic.hpp"
+#include "nic/sdk/include/sdk/periodic.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;

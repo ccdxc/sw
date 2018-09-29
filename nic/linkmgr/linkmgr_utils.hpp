@@ -3,10 +3,10 @@
 #ifndef __LINKMGR_LINKMGR_UTILS_HPP__
 #define __LINKMGR_LINKMGR_UTILS_HPP__
 
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/types.pb.h"
 #include "nic/include/ip.hpp"
-#include "nic/gen/proto/hal/port.pb.h"
-#include "sdk/types.hpp"
+#include "gen/proto/port.pb.h"
+#include "nic/sdk/include/sdk/types.hpp"
 
 using types::ApiStatus;
 

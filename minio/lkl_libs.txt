@@ -1,3 +1,5 @@
 nic/hal/third-party/lkl/export/bin/liblkl.so
 nic/hal/third-party/lkl/export/x86_64/bin/liblkl.so
+nic/hal/third-party/lkl/export/x86_64/lib/liblkl.so
 nic/hal/third-party/lkl/export/aarch64/bin/liblkl.so
+nic/hal/third-party/lkl/export/aarch64/lib/liblkl.so

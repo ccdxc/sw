@@ -6,7 +6,7 @@
 #define __ACCEL_RGROUP_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/gen/proto/hal/accel_rgroup.pb.h"
+#include "gen/proto/accel_rgroup.pb.h"
 #include "nic/include/pd.hpp"
 
 using accelRGroup::AccelRGroupAddRequest;

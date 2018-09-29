@@ -6,7 +6,7 @@
 #define __DEBUG_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/gen/proto/hal/debug.pb.h"
+#include "gen/proto/debug.pb.h"
 
 using debug::MemTrackGetRequest;
 using debug::MemTrackGetResponseMsg;

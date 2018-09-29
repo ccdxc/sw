@@ -4,10 +4,10 @@
 #define __HAL_SVC_NIC_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/gen/hal/include/hal_api_stats.hpp"
+#include "gen/hal/include/hal_api_stats.hpp"
 #include "grpc++/grpc++.h"
-#include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/proto/hal/nic.grpc.pb.h"
+#include "gen/proto/types.pb.h"
+#include "gen/proto/nic.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

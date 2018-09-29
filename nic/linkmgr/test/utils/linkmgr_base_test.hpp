@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include "sdk/pal.hpp"
+#include "nic/sdk/include/sdk/pal.hpp"
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/linkmgr/linkmgr_src.hpp"

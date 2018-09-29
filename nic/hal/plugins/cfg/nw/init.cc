@@ -1,10 +1,10 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/gen/hal/svc/vrf_svc_gen.hpp"
-#include "nic/gen/hal/svc/l2segment_svc_gen.hpp"
-#include "nic/gen/hal/svc/nw_svc_gen.hpp"
+#include "gen/hal/svc/vrf_svc_gen.hpp"
+#include "gen/hal/svc/l2segment_svc_gen.hpp"
+#include "gen/hal/svc/nw_svc_gen.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
-#include "nic/gen/hal/svc/endpoint_svc_gen.hpp"
+#include "gen/hal/svc/endpoint_svc_gen.hpp"
 #include "nic/hal/svc/session_svc.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"

@@ -4,12 +4,12 @@
 // PI implementation for port service
 //----------------------------------------------------------------------------
 
-#include "sdk/port_mac.hpp"
-#include "sdk/port_serdes.hpp"
+#include "nic/sdk/include/sdk/port_mac.hpp"
+#include "nic/sdk/include/sdk/port_serdes.hpp"
 #include "linkmgr_src.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
-#include "cap_mx_api.h"
+#include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
 
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;

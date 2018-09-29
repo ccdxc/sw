@@ -7,12 +7,13 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
-#include "sdk/list.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
-#include "sdk/ht.hpp"
-#include "nic/gen/proto/hal/l2segment.pb.h"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/utils/utils.hpp"
+
+#include "gen/proto/l2segment.pb.h"
 
 using l2segment::L2SegmentDeleteRequest;
 using l2segment::MulticastFwdPolicy;

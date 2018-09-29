@@ -13,7 +13,7 @@ export HAL_PID=$!
 ./agent/netagent/scripts/wait-for-hal.sh
 
 #./tools/start-fake-nicmgr.sh > /dev/null 2>&1
-bazel run //nic/hal/test:nic_mgr_app
+./build/x86_64/iris/bin/fake_nic_mgr
 
 ./tools/start-agent.sh > /dev/null 2>&1 & export AGENT_PID=$!
 

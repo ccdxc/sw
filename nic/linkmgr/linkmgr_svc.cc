@@ -8,7 +8,7 @@
 #include "nic/include/trace.hpp"
 #include "nic/include/hal.hpp"
 
-#include "sdk/port_mac.hpp"
+#include "nic/sdk/include/sdk/port_mac.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_utils.hpp"

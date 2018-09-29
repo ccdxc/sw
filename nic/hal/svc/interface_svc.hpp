@@ -3,8 +3,8 @@
 
 #include "nic/include/base.hpp"
 #include "grpc++/grpc++.h"
-#include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/proto/hal/interface.grpc.pb.h"
+#include "gen/proto/types.pb.h"
+#include "gen/proto/interface.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

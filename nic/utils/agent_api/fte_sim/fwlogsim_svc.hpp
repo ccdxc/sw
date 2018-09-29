@@ -1,8 +1,8 @@
 #ifndef __FWLOGSIM_SVC_HPP__
 #define __FWLOGSIM_SVC_HPP__
 #include "grpc++/grpc++.h"
-#include "nic/gen/proto/hal/types.pb.h"
-#include "nic/gen/proto/hal/internal.grpc.pb.h"
+#include "gen/proto/types.pb.h"
+#include "gen/proto/internal.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

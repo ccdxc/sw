@@ -6,7 +6,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/types.pb.h"
 #include "utils.hpp"
 #include "addr_list.hpp"
 

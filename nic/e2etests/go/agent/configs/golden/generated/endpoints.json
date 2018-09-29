@@ -516,7 +516,7 @@
     "spec": {
       "network-name": "scale-nw-0",
       "interface-type": "lif",
-      "interface": "lif116",
+      "interface": "lif100",
       "ipv4-address": "177.75.132.4/32",
       "mac-address": "06:c3:32:b7:e6:da",
       "useg-vlan": 17
@@ -536,7 +536,7 @@
     "spec": {
       "network-name": "scale-nw-1",
       "interface-type": "lif",
-      "interface": "lif117",
+      "interface": "lif101",
       "ipv4-address": "223.97.165.4/32",
       "mac-address": "26:2c:4e:87:8f:66",
       "useg-vlan": 18
@@ -556,7 +556,7 @@
     "spec": {
       "network-name": "scale-nw-2",
       "interface-type": "lif",
-      "interface": "lif118",
+      "interface": "lif100",
       "ipv4-address": "112.211.249.4/32",
       "mac-address": "26:17:60:a8:9c:e0",
       "useg-vlan": 19
@@ -576,7 +576,7 @@
     "spec": {
       "network-name": "scale-nw-3",
       "interface-type": "lif",
-      "interface": "lif119",
+      "interface": "lif101",
       "ipv4-address": "4.121.175.4/32",
       "mac-address": "4a:f4:3f:30:48:17",
       "useg-vlan": 20
@@ -596,7 +596,7 @@
     "spec": {
       "network-name": "scale-nw-4",
       "interface-type": "lif",
-      "interface": "lif120",
+      "interface": "lif100",
       "ipv4-address": "170.22.196.4/32",
       "mac-address": "72:ed:48:1c:e1:23",
       "useg-vlan": 21
@@ -616,7 +616,7 @@
     "spec": {
       "network-name": "scale-nw-5",
       "interface-type": "lif",
-      "interface": "lif121",
+      "interface": "lif101",
       "ipv4-address": "16.45.218.4/32",
       "mac-address": "6e:f2:76:5f:68:9d",
       "useg-vlan": 22
@@ -636,7 +636,7 @@
     "spec": {
       "network-name": "scale-nw-6",
       "interface-type": "lif",
-      "interface": "lif122",
+      "interface": "lif100",
       "ipv4-address": "91.39.142.4/32",
       "mac-address": "22:5d:0e:de:64:bc",
       "useg-vlan": 23
@@ -656,7 +656,7 @@
     "spec": {
       "network-name": "scale-nw-7",
       "interface-type": "lif",
-      "interface": "lif123",
+      "interface": "lif101",
       "ipv4-address": "54.199.28.4/32",
       "mac-address": "5a:6c:c2:d3:2a:4b",
       "useg-vlan": 24
@@ -676,7 +676,7 @@
     "spec": {
       "network-name": "scale-nw-0",
       "interface-type": "lif",
-      "interface": "lif124",
+      "interface": "lif100",
       "ipv4-address": "177.75.132.5/32",
       "mac-address": "3a:13:5a:76:42:23",
       "useg-vlan": 25
@@ -696,7 +696,7 @@
     "spec": {
       "network-name": "scale-nw-1",
       "interface-type": "lif",
-      "interface": "lif125",
+      "interface": "lif101",
       "ipv4-address": "223.97.165.5/32",
       "mac-address": "72:f6:60:f7:2d:e5",
       "useg-vlan": 26
@@ -716,7 +716,7 @@
     "spec": {
       "network-name": "scale-nw-2",
       "interface-type": "lif",
-      "interface": "lif126",
+      "interface": "lif100",
       "ipv4-address": "112.211.249.5/32",
       "mac-address": "52:a4:dc:a0:29:5e",
       "useg-vlan": 27
@@ -736,7 +736,7 @@
     "spec": {
       "network-name": "scale-nw-3",
       "interface-type": "lif",
-      "interface": "lif127",
+      "interface": "lif101",
       "ipv4-address": "4.121.175.5/32",
       "mac-address": "46:3b:13:70:d5:a0",
       "useg-vlan": 28
@@ -756,7 +756,7 @@
     "spec": {
       "network-name": "scale-nw-4",
       "interface-type": "lif",
-      "interface": "lif128",
+      "interface": "lif100",
       "ipv4-address": "170.22.196.5/32",
       "mac-address": "3a:64:4a:f5:f5:71",
       "useg-vlan": 29
@@ -776,7 +776,7 @@
     "spec": {
       "network-name": "scale-nw-5",
       "interface-type": "lif",
-      "interface": "lif129",
+      "interface": "lif101",
       "ipv4-address": "16.45.218.5/32",
       "mac-address": "0e:9b:42:d8:3f:51",
       "useg-vlan": 30
@@ -796,7 +796,7 @@
     "spec": {
       "network-name": "scale-nw-6",
       "interface-type": "lif",
-      "interface": "lif130",
+      "interface": "lif100",
       "ipv4-address": "91.39.142.5/32",
       "mac-address": "3e:83:2a:9f:ba:e1",
       "useg-vlan": 31
@@ -816,7 +816,7 @@
     "spec": {
       "network-name": "scale-nw-7",
       "interface-type": "lif",
-      "interface": "lif131",
+      "interface": "lif101",
       "ipv4-address": "54.199.28.5/32",
       "mac-address": "6e:e8:1f:66:b3:72",
       "useg-vlan": 32

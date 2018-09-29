@@ -8,9 +8,9 @@
 #include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
 #include "nic/include/hal_lock.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
-#include "nic/gen/proto/hal/rawrcb.pb.h"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "gen/proto/rawrcb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/app_redir_shared.h"
 

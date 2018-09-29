@@ -8,8 +8,8 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/gen/proto/hal/telemetry.pb.h"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/telemetry.pb.h"
+#include "gen/proto/types.pb.h"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 

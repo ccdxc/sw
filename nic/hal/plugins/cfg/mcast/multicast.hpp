@@ -8,10 +8,10 @@
 #include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
 #include "nic/include/hal_state.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
-#include "nic/gen/proto/hal/multicast.pb.h"
+#include "gen/proto/multicast.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 

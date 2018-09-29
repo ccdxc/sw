@@ -1,8 +1,10 @@
 #!/bin/sh
 
-export NIC_DIR='/nic'
+TOOLS_DIR=`dirname $0`
+ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
+export NIC_DIR=`dirname $ABS_TOOLS_DIR`
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
-export HAL_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/conf/sdk:$NIC_DIR/conf/plugins/lif:$NIC_DIR/conf/linkmgr:$NIC_DIR/conf/sdk/external:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
+export HAL_LIBRARY_PATH=$NIC_DIR/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
 export HAL_LOG_FILE='/hal.log'
 export FWD_MODE="$1"

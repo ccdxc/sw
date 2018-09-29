@@ -7,9 +7,9 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/encap.hpp"
-#include "sdk/list.hpp"
-#include "sdk/ht.hpp"
-#include "nic/gen/proto/hal/ipseccb.pb.h"
+#include "nic/sdk/include/sdk/list.hpp"
+#include "nic/sdk/include/sdk/ht.hpp"
+#include "gen/proto/ipseccb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 

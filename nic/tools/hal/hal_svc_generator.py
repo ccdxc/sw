@@ -11,10 +11,22 @@ paths = [
 ws_top = os.path.dirname(sys.argv[0]) + '/../../../'
 ws_top = os.path.abspath(ws_top)
 
-svc_gen_dir   = ws_top + '/nic/gen/hal/svc/'
-proto_gen_dir = ws_top + '/nic/gen/proto/hal/'
+if 'BLD_SVCGEN_DIR' in os.environ:
+    svc_gen_dir = os.environ['BLD_SVCGEN_DIR'] + '/'
+else:
+    svc_gen_dir   = ws_top + '/nic/gen/hal/svc/'
+
+if 'BLD_PROTOGEN_DIR' in os.environ:
+    proto_gen_dir = os.environ['BLD_PROTOGEN_DIR'] + '/'
+else:
+    proto_gen_dir = ws_top + '/nic/gen/proto/hal/'
+
 template_dir  = ws_top + '/nic/tools/hal/'
-api_stats_dir = ws_top + '/nic/gen/hal/include/'
+
+if 'BLD_GEN_DIR' in os.environ:
+    api_stats_dir = os.environ['BLD_GEN_DIR'] + '/hal/include/'
+else:
+    api_stats_dir = ws_top + '/nic/gen/hal/include/'
 
 try:
     os.makedirs(svc_gen_dir)

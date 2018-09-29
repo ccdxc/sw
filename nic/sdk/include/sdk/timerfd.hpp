@@ -16,6 +16,11 @@ typedef struct timerfd_info_s {
     int         timer_fd;
     uint64_t    usecs;
     uint64_t    missed_wakeups;
+    timerfd_info_s() {
+        timer_fd = -1;
+        usecs = 0;
+        missed_wakeups = 0;
+    }
 } timerfd_info_t;
 
 void timerfd_init(timerfd_info_t *timerfd_info);

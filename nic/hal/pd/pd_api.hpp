@@ -36,7 +36,7 @@
 #include "nic/hal/plugins/cfg/lif/lif_manager_base.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
-#include "nic/gen/proto/hal/crypto_apis.grpc.pb.h"
+#include "gen/proto/crypto_apis.grpc.pb.h"
 
 namespace hal {
 namespace pd {

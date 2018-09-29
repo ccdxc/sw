@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nic/include/base.hpp"
-#include "nic/gen/proto/hal/types.pb.h"
+#include "gen/proto/types.pb.h"
 #include "nic/hal/src/internal/proxy.hpp"
 
 namespace hal {

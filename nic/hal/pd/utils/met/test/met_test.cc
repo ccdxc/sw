@@ -1,7 +1,7 @@
 #include "nic/hal/pd/utils/met/met.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "sdk/pal.hpp"
-#include "sdk/types.hpp"
+#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 

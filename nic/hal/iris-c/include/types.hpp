@@ -2,7 +2,7 @@
 #ifndef __TYPES_HPP__
 #define __TYPES_HPP__
 
-#include "kh.grpc.pb.h"
+#include "gen/proto/kh.grpc.pb.h"
 
 #define NUM_QUEUE_TYPES     8
 
