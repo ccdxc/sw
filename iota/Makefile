@@ -16,7 +16,7 @@ iota-proto:
 
 iota-agent:iota-proto
 	mkdir -p $(IOTA_AGENT_BIN_DIR)
-	cd $(IOTA_AGENT_DIR)/stub  &&  GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_DIR)/iota-agent-stub .
+	cd $(IOTA_AGENT_DIR)/server  &&  GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_DIR)/iota-agent .
 
 iota:iota-svc
 
