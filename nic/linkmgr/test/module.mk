@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET = port_client.gtest
+MODULE_TARGET = port_client.bin
 MODULE_PIPELINE = iris gft
 MODULE_SRCS   = ${MODULE_SRC_DIR}/port_client.cc
 MODULE_SOLIBS = halproto
