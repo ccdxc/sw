@@ -86,7 +86,7 @@ lb_initator_normlizaiton_return:
   scwlt        c4, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r4
   setcf.!c2    c2, [!c5 & c3 & c4]
   bcf          ![c1 & c2], lb_tcp_session_state_initiator_non_best
-  scwlt        c1, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
+  scwle        c1, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
   scwle.c1     c1, k.tcp_ackNo, d.u.tcp_session_state_info_d.rflow_tcp_seq_num
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_win_sz, k.tcp_window
@@ -306,9 +306,8 @@ lb_tss_i_syn_rcvd_1:
   .brend
 
 lb_tss_i_tcp_session_update:
-  scwlt        c1, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
-  scwle        c2, k.tcp_ackNo, d.u.tcp_session_state_info_d.rflow_tcp_seq_num
-  setcf        c1, [c1 & c2]
+  scwle        c1, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
+  scwle.c1     c2, k.tcp_ackNo, d.u.tcp_session_state_info_d.rflow_tcp_seq_num
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_win_sz, k.tcp_window
   phvwr        p.tcp_ackNo, r7
@@ -363,7 +362,7 @@ lb_responder_normalization_return:
   scwlt        c4, r7, r4
   setcf.!c2    c2, [!c5 & c3 & c4]
   bcf          ![c1 & c2], lb_tcp_session_state_responder_non_best
-  scwlt        c1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
+  scwle        c1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
   scwle.c1     c1, k.tcp_ackNo, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_win_sz, k.tcp_window
@@ -671,9 +670,8 @@ lb_tss_r_init_3:
   .brend
 
 lb_tss_r_tcp_session_update:
-  scwlt        c1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
-  scwle        c2, k.tcp_ackNo, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
-  setcf        c1, [c1 & c2]
+  scwle        c1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
+  scwle.c1     c2, k.tcp_ackNo, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_win_sz, k.tcp_window
   phvwr        p.tcp_seqNo, r7
