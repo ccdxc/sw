@@ -12,7 +12,7 @@ package: ${PKG_PREREQS}
 		${MAKE} package-clean
 		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py
     else
-		${MAKE} BUILD_ARCHES=x86_64 -C ${TOPDIR}/platform
+		#${MAKE} BUILD_ARCHES=x86_64 -C ${TOPDIR}/platform
 		${MAKE} package-clean
 		cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py --target sim --no-strip
     endif

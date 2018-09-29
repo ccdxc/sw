@@ -395,7 +395,7 @@ e2e-telemetry:
 e2e-turin: pull-assets
 	$(MAKE) -C nic all
 	$(MAKE) -C platform sim
-	$(MAKE) -C nic package-sim
+	$(MAKE) -C nic package
 	$(MAKE) -C nic release
 	rm -rf nic.tar
 	$(MAKE) -C test

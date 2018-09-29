@@ -214,7 +214,7 @@ jobd/dol/e2e/l7: ${JOBD_PREREQS}
 	${NICDIR}/run.py --topo proxy --feature proxy --config-only --e2e-l7-dol
 
 .PHONY: jobd/e2e/naples-sim
-jobd/e2e/naples-sim: ${JOBD_PREREQS}
+jobd/e2e/naples-sim: package
 	${NICDIR}/tools/release.sh
 	${NICDIR}/tools/validate-naples-docker.sh
 
@@ -233,7 +233,7 @@ jobd/make/nic:
 	${MAKE} PIPELINE=apollo ARCH=aarch64
 
 .PHONY: jobd/agent
-jobd/agent: ${JOBD_PREREQS}
+jobd/agent: package
 	${MAKE} -C ${GOPATH}/src/github.com/pensando/sw checks
 	${MAKE} release
 	go install github.com/pensando/sw/nic/agent/cmd/netagent
