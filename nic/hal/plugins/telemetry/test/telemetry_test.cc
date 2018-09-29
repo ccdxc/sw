@@ -50,7 +50,8 @@ protected:
                         to: { addr: g_eps[1].ip, plen: 32},
                         app: { proto:IPPROTO_TCP, dport_low: 22, dport_high: 22,
                         alg: nwsec::APP_SVC_NONE },
-                        mon_action: mon_action },
+                        mon_action: mon_action,
+                        collect: false },
         };
         flowmonh_ = add_flowmon_policy(vrfh_, rules);
 
@@ -60,10 +61,36 @@ protected:
                         to: { addr: g_eps[0].ip, plen: 32},
                         app: { proto:IPPROTO_TCP, dport_low: 22, dport_high: 22,
                         alg: nwsec::APP_SVC_NONE },
-                        mon_action: mon_action },
+                        mon_action: mon_action,
+                        collect: false },
         };
 
         flowmonh_ = add_flowmon_policy(vrfh_, rules2);
+        
+        telemetry::MonitorAction ipfix_action;
+        ipfix_action.add_action(telemetry::COLLECT_FLOW_STATS);
+        std::vector<v4_rule_t> rules3 = {
+            v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
+                        from: { addr: g_eps[0].ip, plen: 32 }, 
+                        to: { addr: g_eps[1].ip, plen: 32},
+                        app: { proto:IPPROTO_TCP, dport_low: 33, dport_high: 33,
+                        alg: nwsec::APP_SVC_NONE },
+                        mon_action: ipfix_action,
+                        collect: true },
+        };
+        flowmonh_ = add_flowmon_policy(vrfh_, rules3);
+
+        std::vector<v4_rule_t> rules4 = {
+            v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
+                        from: { addr: g_eps[1].ip, plen: 32 }, 
+                        to: { addr: g_eps[0].ip, plen: 32},
+                        app: { proto:IPPROTO_TCP, dport_low: 33, dport_high: 33,
+                        alg: nwsec::APP_SVC_NONE },
+                        mon_action: ipfix_action,
+                        collect: true },
+        };
+        flowmonh_ = add_flowmon_policy(vrfh_, rules4);
+
         fte_base_test::set_logging_disable(true);
     }
 
@@ -87,3 +114,19 @@ TEST_F(telemetry_test, mirror_action2)
     //CHECK_MIRROR_ACTION(eph2_, eph1_, 100, 1000, "ep1->ep2 100");
     //CHECK_MIRROR_ACTION(eph1_, eph2_, 100, 1000, "ep2->ep1 100");
 }
+
+TEST_F(telemetry_test, collect_action1)
+{
+    CHECK_COLLECT_ACTION(eph2_, eph1_, 33, 1000, "ep1->ep2 33");
+    //CHECK_MIRROR_ACTION(eph2_, eph1_, 100, 1000, "ep1->ep2 100");
+    //CHECK_MIRROR_ACTION(eph1_, eph2_, 100, 1000, "ep2->ep1 100");
+}
+
+TEST_F(telemetry_test, collect_action2)
+{
+    CHECK_COLLECT_ACTION(eph1_, eph2_, 33, 1000, "ep2->ep1 33");
+    //CHECK_MIRROR_ACTION(eph2_, eph1_, 100, 1000, "ep1->ep2 100");
+    //CHECK_MIRROR_ACTION(eph1_, eph2_, 100, 1000, "ep2->ep1 100");
+}
+
+

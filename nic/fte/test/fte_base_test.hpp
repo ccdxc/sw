@@ -70,6 +70,7 @@ public:
             hal::alg_opts                 alg_opt;
         } app;
         telemetry::MonitorAction mon_action;
+        bool collect;
     };
 	
     static uint32_t myrandom(uint32_t i) { return std::rand()%i;}
@@ -292,6 +293,25 @@ private:
     static std::map<hal_handle_t, ep_info_t> eps;
     static std::vector<dev_handle_t> handles;
 };
+
+#define CHECK_COLLECT_ACTION(dep, sep, dst_port, src_port, msg) {                   \
+        hal_ret_t ret;                                                         \
+        Tins::TCP tcp = Tins::TCP(dst_port, src_port);                         \
+        tcp.flags(Tins::TCP::SYN);                                             \
+        tcp.add_option(Tins::TCP::option(Tins::TCP::SACK_OK));                 \
+        tcp.add_option(Tins::TCP::option(Tins::TCP::NOP));                     \
+        tcp.mss(1200);                                                         \
+        ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, dep, sep, tcp);             \
+        EXPECT_EQ(ret, HAL_RET_OK)<< msg;                                      \
+        EXPECT_NE(ctx_.session(), nullptr)<< msg;                              \
+        EXPECT_NE(ctx_.session()->iflow, nullptr)<< msg;                       \
+        EXPECT_NE(ctx_.session()->rflow, nullptr)<< msg;                       \
+        EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.export_en, 1)<< msg;        \
+        EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.export_id1, 2)<< msg;       \
+        EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.export_id2, 0)<< msg;       \
+        EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.export_id3, 0)<< msg;       \
+        EXPECT_EQ(ctx_.session()->iflow->pgm_attrs.export_id4, 0)<< msg;       \
+    }
 
 #define CHECK_MIRROR_ACTION(dep, sep, dst_port, src_port, msg) {                   \
         hal_ret_t ret;                                                         \

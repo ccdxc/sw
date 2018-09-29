@@ -273,6 +273,10 @@ hal_handle_t fte_base_test::add_flowmon_policy(hal_handle_t vrfh, std::vector<ft
     for (auto &rule: rules) {
         types::RuleMatch *match = spec.mutable_match();
         *(spec.mutable_action()) = rule.mon_action;
+        if (rule.collect) {
+            kh::CollectorKeyHandle *ckh = spec.add_collector_key_handle();
+            ckh->set_collector_id(2);
+        }
 
         if (rule.to.addr) {
             types::IPPrefix *prefix = match->add_dst_address()->

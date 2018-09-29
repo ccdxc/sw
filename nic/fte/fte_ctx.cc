@@ -785,11 +785,11 @@ std::ostream& operator<<(std::ostream& os, const mirror_info_t& val)
 
 std::ostream& operator<<(std::ostream& os, const export_info_t& val)
 {
-    os << "{ export_en=" << (uint8_t)val.export_en;
-    os << " ,export_id1=" << (uint8_t)val.export_id1;
-    os << " ,export_id2=" << (uint8_t)val.export_id2;
-    os << " ,export_id3=" << (uint8_t)val.export_id3;
-    os << " ,export_id4=" << (uint8_t)val.export_id4;
+    os << "{ export_en=" << (uint32_t)val.export_en;
+    os << " ,export_id1=" << (uint32_t)val.export_id1;
+    os << " ,export_id2=" << (uint32_t)val.export_id2;
+    os << " ,export_id3=" << (uint32_t)val.export_id3;
+    os << " ,export_id4=" << (uint32_t)val.export_id4;
     return os << " }";
 }
 

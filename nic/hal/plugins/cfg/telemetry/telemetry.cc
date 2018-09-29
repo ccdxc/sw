@@ -454,10 +454,12 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
         }
         if (spec.action().action(0) == telemetry::COLLECT_FLOW_STATS) {
             /* Netflow or IPFIX action */
-            if (spec.action().agg_scheme(0) != telemetry::NONE) {
-                /* Aggregation scheme not supported */
-                HAL_TRACE_ERR("Aggregation is not supported {}", spec.action().agg_scheme(0));
-                return HAL_RET_INVALID_ARG;
+            if (spec.action().agg_scheme_size() > 0) {
+                if (spec.action().agg_scheme(0) != telemetry::NONE) {
+                    /* Aggregation scheme not supported */
+                    HAL_TRACE_ERR("Aggregation is not supported {}", spec.action().agg_scheme(0));
+                    return HAL_RET_INVALID_ARG;
+                }
             }
             /* Get collector info */
             int n = spec.collector_key_handle_size();
@@ -471,11 +473,12 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
                                MAX_COLLECTORS_PER_FLOW);
                 return HAL_RET_INVALID_ARG;
             }
+            HAL_TRACE_DEBUG("Collect action: num_collectors {}", n);
+            rule->action.num_collector = n;
             for (int i = 0; i < n; i++) {
                 rule->action.collectors[i] = spec.collector_key_handle(i).collector_id();
+                HAL_TRACE_DEBUG("Collector[{}]: {}", i, rule->action.collectors[i]);
             }
-            rule->action.num_collector = n;
-            HAL_TRACE_DEBUG("Collect action: num_collectors {}", n);
         }
     }
     return ret;

@@ -188,6 +188,7 @@ public:
         if (!memcmp(&export_info, &export_info_, sizeof(export_info_t))) {
             return HAL_RET_ENTRY_EXISTS;
         }
+        export_info_.export_en = export_info.export_en;
         export_info_.export_id1 = (export_info.export_en & (1 << 0)) ?
                                    export_info.export_id1 : 0;
         export_info_.export_id2 = (export_info.export_en & (1 << 1)) ?
