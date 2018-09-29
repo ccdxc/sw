@@ -8,14 +8,19 @@
 
 namespace api {
 
+using sdk::lib::slab;
+using sdk::lib::ht;
+using sdk::lib::indexer;
+
 /**
  * @brief Global internal VCN state
  */
 typedef struct oci_int_vcn_gstate_s
 {
-  /**< slab */
-  /**< hash table */
-} oci_vcn_gstate_t;
+    slab *int_vcn_slab;    /**< Memory slab */
+    ht *ht;                /**< Hash table root */
+
+} oci_int_vcn_gstate_t;
 
 /**
  * @brief Internal VCN structure
@@ -33,167 +38,211 @@ oci_int_vcn_gstate_t g_int_vcn_state;
  * @brief Initialize global internal VCN state
  */
 void
-oci_int_vcn_global_state_init (void)
+oci_g_int_vcn_state_init (void)
 {
 }
 
 
 /**
+ * @brief Add internal VCN to database
+ *
+ * @param[in] vcn Internal VCN  
+ */ 
+static inline sdk_ret_t
+oci_int_vcn_db_add (oci_int_vcn_t *vcn)
+{
+    return (g_int_vcn_state->ht()->insert_with_key(&vcn->key, vcn,
+                                                   vcn->ht_ctxt);
+}
+
+/**
+ * @brief Delete internal VCN from database
+ *
+ * @param[in] vcn_key Internal VCN key
+ */
+static inline oci_int_vcn_t *
+oci_int_vcn_db_del (oci_int_vnc_key_t *vcn_key)
+{
+    return (oci_int_vcn_t *)(g_int_vcn_state->ht()->remove(vcn_key));
+}
+
+/**
+ * @brief Lookup internal VCN in database
+ *
+ * @param[in] vcn_key Internal VCN key
+ */
+static inline oci_int_vnc_t *
+oci_int_vcn_db_lookup (oci_int_vcn_key_t *vcn_key)
+{
+    return (oci_int_vcn_t *)(g_int_vcn_state->ht()->lookup(vcn_key));
+}
+
+/**
  * @brief Allocate internal VCN structure
  *
- * @return Pointer to the allocated VCN struture, NULL if no memory
+ * @return Pointer to the allocated internal VCN, NULL if no memory
  */
 static inline oci_int_vcn_t *
 oci_int_vcn_alloc (void)
 {
-    return ((oci_int_vcn_t *)g_vcn_state->int_vcn_slab()->alloc());
+    return ((oci_int_vcn_t *)g_int_vcn_state->int_vcn_slab()->alloc());
 }
 
 /**
  * @brief Free internal VCN structure
  *
- * @param[in] vcn VCN information
+ * @param[in] vcn Internal VCN  
  */
 static inline void
-oci_int_vcn_free (oci_int_vcn_t *int_vcn)
+oci_int_vcn_free (oci_int_vcn_t *vcn)
 {
     sdk::delay_delete_to_slab(OCI_SLAB_INT_VCN, int_vcn);
 }
 
+/**
+ * @brief Initialize internal VCN structure
+ *
+ * @param[in] vcn Internal VCN
+ */
 static inline void
 oci_int_vcn_init (oci_int_vnc_t *vcn)
 {
-    PSD_SDK_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&vcn->slock, PTHREAD_PROCESS_SHARED);
 }
 
+/**
+ * @brief Uninitialize internal VCN structure
+ *
+ * @param[in] vcn Internal VCN
+ */
 static inline void
-nat_cfg_pol_uninit (nat_cfg_pol_t *pol)
+oci_int_vcn_uninit (oci_int_vcn_t *vcn)
 {
-    PSD_SDK_SPINLOCK_DESTROY(&pol->slock);
+    SDK_SPINLOCK_DESTROY(&vcn->slock);
 }
 
-static inline nat_cfg_pol_t *
-nat_cfg_pol_alloc_init (void)
+/**
+ * @brief Allocate and initialize internal VCN structure
+ *
+ * @return Pointer to the allocated and initialized internal VCN,
+ *         NULL if no memory
+ */
+static inline oci_int_vcn_t *
+oci_int_vcn_alloc_init (void)
 {
-    nat_cfg_pol_t *pol;
+    oci_int_vcn_t *vcn;
 
-    if ((pol = nat_cfg_pol_alloc()) ==  NULL)
+    if ((vcn = oci_int_vcn_alloc()) == NULL)
         return NULL;
 
-    nat_cfg_pol_init(pol);
-    return pol;
+    oci_int_vcn_init(vcn);
+    return vcn;
 }
 
+/**
+ * @brief Uninitialize and free internal VCN structure
+ *
+ * @param[in] vcn Internal VCN
+ */
 static inline void
-nat_cfg_pol_uninit_free (nat_cfg_pol_t *pol)
+oci_int_vcn_uninit_free (_In_ oci_int_vcn_t *vcn)
 {
-    nat_cfg_pol_uninit(pol);
-    nat_cfg_pol_free(pol);
+    oci_int_vcn_uninit(vcn);
+    oci_int_vcn_free(vcn);
 }
-
-static inline void
-nat_cfg_pol_cleanup (nat_cfg_pol_t *pol)
-{
-    if (pol) {
-        nat_cfg_rule_list_cleanup(&pol->rule_list);
-        nat_cfg_pol_uninit_free(pol);
-    }
-}
-
 
 /**
  * @brief Allocate and initialize internal VCN structure
  *
  * @param[in] vcn VCN information
- * @return #PSD_SDK_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
-static inline psd_sdk_status_t
+static inline sdk_ret_t
 oci_vcn_create_handle (_In_ oci_vcn_t *vcn)
 {
     oci_int_vcn_t *int_vcn;
 
-    return PSD_SDK_STATUS_SUCCESS;
+    return SDK_STATUS_SUCCESS;
 }
 
 /**
  * @brief Validate VNC API data
  *
  * @param[in] vcn VCN information
- * @return #PSD_SDK_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
-static inline psd_sdk_status_t
+static inline sdk_ret_t
 oci_vcn_create_validate (_In_ oci_vcn_t *vcn)
 {
-    return PSD_SDK_STATUS_SUCCESS;
+    return SDK_RET_OK;
 }
 
 /**
  * @brief Create VCN
  *
  * @param[in] vcn VCN information
- * @return #PSD_SDK_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
-psd_sdk_status_t
+sdk_ret_t
 oci_vcn_create (_In_ oci_vcn_t *vcn)
 {
-    psd_sdk_status_t st;
+    sdk_ret_t st;
 
-    if ((rv = oci_vcn_create_validate(vcn) != PSD_SDK_STATUS_SUCCESS))
+    if ((rv = oci_vcn_create_validate(vcn) != SDK_RET_OK))
         return st;
 
-    if ((rv = oci_vcn_create_handle(vcn)) != PSD_SDK_STATUS_SUCCESS)
+    if ((rv = oci_vcn_create_handle(vcn)) != SDK_RET_OK)
         return st;
 
-    return PSD_SDK_STATUS_SUCCESS;
+    return SDK_RET_OK;
 }
 
 /**
  * @brief Handle VCN delete API
  *
  * @param[in] vcn VCN information
- * @return #PSD_SDK_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
-static inline psd_sdk_status_t
+static inline sdk_ret_t
 oci_vcn_delete_handle (_In_ oci_vcn_t *vcn)
 {
     oci_int_vcn_t *int_vcn;
 
-    return PSD_SDK_STATUS_SUCCESS;
+    return SDK_RET_OK;
 }
 
 /**
  * @brief Validate VNC delete API
  *
  * @param[in] vcn_key VCN key information
- * @return #PSD_SDK_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
-static inline psd_sdk_status_t
+static inline sdk_ret_t
 oci_vcn_delete_validate (_In_ oci_vcn_key_t *vcn_key)
 {
-    return PSD_SDK_STATUS_SUCCESS;
+    return SDK_RET_OK;
 }
 
 /**
  * @brief Delete VCN
  *
  * @param[in] vcn_key VCN key
- * @return #PSD_SDK_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
-psd_sdk_status_t
+sdk_ret_t
 oci_vcn_delete (_In_ oci_vcn_key_t *vcn_key)
 {
-    psd_sdk_status_t rv;
+    sdk_ret_t rv;
     oci_vcn_t *vcn;
 
-    if ((rv = oci_vcn_delete_validate(vcn_key) != PSD_SDK_STATUS_SUCCESS)
+    if ((rv = oci_vcn_delete_validate(vcn_key) != SDK_RET_OK)
         return rv;
     
     if ((int_vcn = oci_int_vcn_lookup(vcn_key)) == NULL)
-        return PSD_SDK_STATUS_NOT_FOUND;
+        return SDK_RET_ENTRY_NOT_FOUND;
 
     if ((rv = oci_vcn_delete_handle(vcn_key) != OCIS_TAoci_vcn
-    return PSD_SDK_STATUS_SUCCESS;
+    return SDK_RET_OK;
 }
-
 
 }  // namespace api 
