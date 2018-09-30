@@ -1,23 +1,28 @@
 nic/conf                                                            /nic/conf/
-nic/build/aarch64/iris/bin/hal                                       /nic/bin/
-nic/build/aarch64/iris/bin/linkmgr                                   /nic/bin/
+nic/build/aarch64/iris/bin/hal                                      /nic/bin/
+nic/build/aarch64/iris/bin/linkmgr                                  /nic/bin/
 # linkmgr debug CLIs
-nic/build/aarch64/iris/bin/port_client                               /nic/bin
+nic/build/aarch64/iris/bin/port_client                              /nic/bin
+nic/build/aarch64/iris/bin/netagent                                 /nic/bin/
+nic/build/aarch64/iris/bin/heimdall                                 /nic/bin/
+# hal objects CLI
+nic/build/aarch64/iris/bin/halctl                                   /nic/bin/
+nic/build/aarch64/iris/bin/hal_test                                 /nic/bin/
+nic/build/aarch64/iris/bin/hal_access                               /nic/bin/
+nic/sdk/third-party/avago/aapl-2.6.6/build/aarch64/bin/aapl         /nic/bin/
 
-nic/build/aarch64/iris/lib/libAAPL.so                                /nic/lib/
-nic/build/aarch64/iris/lib/libagent_api.so                           /nic/lib/
-nic/build/aarch64/iris/lib/libasicpd.so                              /nic/lib/
-nic/build/aarch64/iris/lib/libbitmap.so                              /nic/lib/
-nic/build/aarch64/iris/lib/libblock_list.so                          /nic/lib/
-nic/build/aarch64/iris/lib/libbm_allocator.so                        /nic/lib/
-nic/build/aarch64/iris/lib/libcap*.so                                /nic/lib/
-nic/build/aarch64/iris/lib/libcatalog.so                             /nic/lib/
-nic/build/aarch64/iris/lib/libcfg_plugin*.so                         /nic/lib/
-nic/build/aarch64/iris/lib/libcommon_cc.so                           /nic/lib/
-nic/build/aarch64/iris/lib/libcore.so                                /nic/lib/
+nic/build/aarch64/iris/lib/libAAPL.so                               /nic/lib/
+nic/build/aarch64/iris/lib/libagent_api.so                          /nic/lib/
+nic/build/aarch64/iris/lib/libasicpd.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libbitmap.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libblock_list.so                         /nic/lib/
+nic/build/aarch64/iris/lib/libbm_allocator.so                       /nic/lib/
+nic/build/aarch64/iris/lib/libcap*.so                               /nic/lib/
+nic/build/aarch64/iris/lib/libcatalog.so                            /nic/lib/
+nic/build/aarch64/iris/lib/libcfg_plugin*.so                        /nic/lib/
+nic/build/aarch64/iris/lib/libcore.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libcrypto.so.1.1                          /nic/lib/
 nic/build/aarch64/iris/lib/libdirectmap.so                           /nic/lib/
-nic/build/aarch64/iris/lib/libe2e*.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libeventmgr.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libfsm.so                                 /nic/lib/
 nic/build/aarch64/iris/lib/libfte*.so                                /nic/lib/
@@ -29,13 +34,11 @@ nic/build/aarch64/iris/lib/libhal_svc.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libhash.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libhbmhash.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libheartbeat.so                           /nic/lib/
-nic/build/aarch64/iris/lib/libhntap_lib.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libhost_mem.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libht.so                                  /nic/lib/
 nic/build/aarch64/iris/lib/libindexer.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libisa.so                                 /nic/lib/
 nic/build/aarch64/iris/lib/libisc_dhcp.so                            /nic/lib/
-nic/build/aarch64/iris/lib/libJudy.so.1                              /nic/lib/
 nic/build/aarch64/iris/lib/liblink*.so                               /nic/lib/
 nic/build/aarch64/iris/lib/liblist.so                                /nic/lib/
 nic/build/aarch64/iris/lib/liblkl*.so                                /nic/lib/
@@ -47,7 +50,16 @@ nic/build/aarch64/iris/lib/libnat.so                                 /nic/lib/
 nic/build/aarch64/iris/lib/libp4pd*.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libpd*.so                                 /nic/lib/
 nic/build/aarch64/iris/lib/libperiodic.so                            /nic/lib/
-nic/build/aarch64/iris/lib/libplugin*.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libplugin_alg*.so                         /nic/lib/
+nic/build/aarch64/iris/lib/libplugin_app*.so                         /nic/lib/
+nic/build/aarch64/iris/lib/libplugin_classic.so                      /nic/lib/
+nic/build/aarch64/iris/lib/libplugin_ep*.so                          /nic/lib/
+nic/build/aarch64/iris/lib/libplugin_lb.so                           /nic/lib/
+nic/build/aarch64/iris/lib/libplugin_nat.so                          /nic/lib/
+nic/build/aarch64/iris/lib/libplugin_network.so                      /nic/lib/
+nic/build/aarch64/iris/lib/libplugin_proxy.so                        /nic/lib/
+nic/build/aarch64/iris/lib/libplugin_sfw*.so                         /nic/lib/
+nic/build/aarch64/iris/lib/libplugin_telemetry.so                    /nic/lib/
 nic/build/aarch64/iris/lib/libprint.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libprotobuf.so.14                         /nic/lib/
 nic/build/aarch64/iris/lib/libsdklinkmgr.so                          /nic/lib/
@@ -56,17 +68,28 @@ nic/build/aarch64/iris/lib/libshmmgr.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libsknobs.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libslab.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libssl.so.1.1                             /nic/lib/
-nic/build/aarch64/iris/lib/libstdc++.so.6                            /nic/lib/
 nic/build/aarch64/iris/lib/libtcam.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libthread.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libtimerfd.so                             /nic/lib/
-nic/build/aarch64/iris/lib/libtls_api.so                             /nic/lib/
-nic/build/aarch64/iris/lib/libtls_pse.so                             /nic/lib/
-nic/build/aarch64/iris/lib/libtop_csr_compile.so                     /nic/lib/
-nic/build/aarch64/iris/lib/libtrace.so                               /nic/lib/
-nic/build/aarch64/iris/lib/libtwheel.so                              /nic/lib/
-nic/build/aarch64/iris/lib/libutils.so                               /nic/lib/
-nic/build/aarch64/iris/lib/libzmq.so.3                               /nic/lib/
+nic/build/aarch64/iris/lib/libtls_api.so                            /nic/lib/
+nic/build/aarch64/iris/lib/libtls_pse.so                            /nic/lib/
+nic/build/aarch64/iris/lib/libtrace.so                              /nic/lib/
+nic/build/aarch64/iris/lib/libtwheel.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libutils.so                              /nic/lib/
+nic/build/aarch64/iris/lib/libAAPL.so                               /nic/lib/
+nic/hal/third-party/lkl/export/aarch64/bin/liblkl.so                /nic/lib/
+nic/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so     /nic/lib/
+nic/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so     /nic/lib/
+nic/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so        /nic/lib/
+nic/hal/third-party/openssl/aarch64/lib/libssl.so.1.1               /nic/lib/
+nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1            /nic/lib/
+nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14            /nic/lib/
+nic/third-party/libev/aarch64/lib/libev.so.4.0.0                    /nic/lib/
+nic/hal/third-party/sknobs/aarch64/lib/libsknobs.so                 /nic/lib/
+nic/hal/third-party/judy/aarch64/lib/libJudy.so.1                   /nic/lib/
+
+nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom                 /nic/conf/fw/
+nic/e2etests/go/agent/configs/golden                                /nic/conf/
 
 # CLI
 # nic/gen/common/cli/cli_frontend.py                                /nic/cli/
@@ -86,27 +109,8 @@ nic/build/aarch64/iris/lib/libzmq.so.3                               /nic/lib/
 # nic/gen/common_rxdma_actions/cli/common_rxdma_actions.py          /nic/cli/
 # nic/gen/common_rxdma_actions/cli/_common_rxdma_actions.so         /nic/cli/
 
-nic/hal/third-party/lkl/export/aarch64/bin/liblkl.so             /nic/lib/
-nic/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so  /nic/lib/
-nic/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so  /nic/lib/
-nic/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so     /nic/lib/
-nic/hal/third-party/openssl/aarch64/lib/libssl.so.1.1            /nic/lib/
-nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1         /nic/lib/
-nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14         /nic/lib/
-nic/third-party/libev/aarch64/lib/libev.so.4.0.0                 /nic/lib/
-nic/hal/third-party/sknobs/aarch64/lib/libsknobs.so              /nic/lib/
-nic/hal/third-party/judy/aarch64/lib/libJudy.so.1                /nic/lib/
-nic/sdk/third-party/avago/build/aarch64/lib/aapl/C/libAAPL.so    /nic/lib/
-nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom              /nic/conf/fw/
 platform/gen/aarch64/lib                                         /platform/lib/
-nic/tools/start-hal-haps.sh                                      /nic/tools/
-nic/tools/sysinit.sh                                             /nic/tools/
-nic/tools/sysreset.sh                                            /nic/tools/
-nic/tools/sysupdate.sh                                           /nic/tools/
-bazel-bin/nic/hal/test/hal_test                                  /nic/bin/
-nic/sdk/bazel-bin/examples/pal-app/hal_access                    /nic/bin/
 platform/gen/aarch64/bin                                         /platform/bin/
-nic/obj/aarch64/agent/netagent                                   /nic/bin/
 platform/tools/start-nicmgr-haps.sh                              /platform/tools/
 platform/src/third-party/lib/edit/aarch64/*.so                   /platform/lib/
 platform/src/third-party/lib/gmp/aarch64/*.so                    /platform/lib/
@@ -114,13 +118,14 @@ platform/src/third-party/lib/ncurses/aarch64/*.so                /platform/lib/
 platform/src/app/nicmgrd/etc/*.json                              /platform/etc/nicmgrd/
 platform/gen/aarch64/src/app/capview/builddb/capviewdb.bin       /platform/etc/
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                   /platform/
-nic/sdk/third-party/avago/aapl-2.6.6/build/aarch64/bin/aapl      /nic/bin/
-
-# hal objects CLI
-nic/obj/aarch64/agent/halctl                                     /nic/bin/
 
 # link scripts
 nic/tools/start-linkmgr-hw.sh                                    /nic/tools/
 nic/tools/port_init_100g.sh                                      /nic/tools/
 nic/tools/check_link.sh                                          /nic/tools/
 nic/tools/check_stats.sh                                         /nic/tools/
+nic/tools/start-hal-haps.sh                                      /nic/tools/
+nic/tools/sysinit.sh                                             /nic/tools/
+nic/tools/sysreset.sh                                            /nic/tools/
+nic/tools/sysupdate.sh                                           /nic/tools/
+

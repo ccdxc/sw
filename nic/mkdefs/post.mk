@@ -5,9 +5,9 @@ APPEND_COMMON := false
 ifeq "$(suffix ${MODULE_TARGET})" ".bin"
     APPEND_COMMON = true
 else ifeq "$(suffix ${MODULE_TARGET})" ".gtest"
-    ifeq "${MODULE_ARCH}" "x86_64 aarch64"
-        MODULE_ARCH := x86_64
-    endif
+    #ifeq "${MODULE_ARCH}" "x86_64 aarch64"
+    #    MODULE_ARCH := x86_64
+    #endif
     APPEND_COMMON = true
 endif
 

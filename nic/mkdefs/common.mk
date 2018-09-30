@@ -92,7 +92,6 @@ export NIC_HAL_DLOPEN_SOLIBS := cfg_plugin_nw \
                                 plugin_ep_learn \
                                 plugin_lb \
                                 plugin_nat \
-                                plugin_dol \
                                 plugin_proxy \
                                 plugin_telemetry \
                                 plugin_app_redir
