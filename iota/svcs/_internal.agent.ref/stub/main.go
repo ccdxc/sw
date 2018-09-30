@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -11,6 +10,7 @@ import (
 
 	pb "github.com/pensando/sw/iota/protos/gogen"
 	Globals "github.com/pensando/sw/iota/svcs/globals"
+	//agent "github.com/pensando/sw/iota-server/svcs/agent"
 )
 
 var grpcServer *grpc.Server
@@ -54,10 +54,10 @@ func (*iotaStubAgent) CheckHealth(context.Context, *pb.NodeHealth) (*pb.NodeHeal
 }
 
 //AgentInstance instance
-//var iotaAgent *iotaStubAgent
+var iotaAgent *iotaStubAgent
 
 //StartServer Start Grpc Server
-func StartServer(port int, iotaAgent pb.IotaAgentApiServer) {
+func StartServer(port int) {
 	//_ = os.Mkdir(agent.LogDir, 644)
 	// create a listener on TCP port 7777
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
@@ -88,23 +88,10 @@ func newiotaStubAgent() *iotaStubAgent {
 	return &iotaStubAgent{}
 }
 
-func main() {
-	var iotaAgent pb.IotaAgentApiServer
-
-	if *args.stubmode {
-		iotaAgent = newiotaStubAgent()
-	} else {
-		iotaAgent = newiotaAgent()
-	}
-	StartServer(Globals.AgentPort, iotaAgent)
-}
-
-type cmdArgs struct {
-	stubmode *bool
-}
-
-var args = cmdArgs{}
-
 func init() {
-	args.stubmode = flag.Bool("stubmode", true, "Stub mode")
+	iotaAgent = newiotaStubAgent()
+}
+
+func main() {
+	StartServer(Globals.IotaAgentPort)
 }

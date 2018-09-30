@@ -5,7 +5,5 @@ import (
 )
 
 func main() {
-	waitCh := make(chan bool)
 	server.StartIOTAService()
-	<-waitCh
 }

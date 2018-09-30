@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-const iotaDefaultPort  = "1337"
+const iotaDefaultPort  = "60000"
 
 func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 	var topoClient iota.TopologyApiClient
@@ -247,5 +247,5 @@ func createNewGRPCClient() (*rpckit.RPCClient, error) {
 		iotaPort = iotaDefaultPort
 	}
 	srvURL := "localhost" + ":" + iotaPort
-	return rpckit.NewRPCClient("iota", srvURL, rpckit.WithTLSProvider(nil))
+	return rpckit.NewRPCClient("iota-server", srvURL, rpckit.WithTLSProvider(nil))
 }

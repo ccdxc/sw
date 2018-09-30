@@ -1,4 +1,6 @@
-package common
+// +build ignore
+
+package agent
 
 import (
 	"errors"

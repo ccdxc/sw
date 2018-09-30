@@ -1,13 +1,16 @@
 default: all
 TOPDIR                          := $(GOPATH)/src/github.com/pensando/sw/iota
-export IOTA_AGENT_DIR           := ${TOPDIR}/svcs/agent
-export IOTA_SVCS_DIR            := ${TOPDIR}/svcs
-export IOTA_AGENT_BIN_DIR       := ${TOPDIR}/bin/iota-agent
-export IOTA_SVC_BIN_DIR         := ${TOPDIR}/bin
+export IOTA_CMD_DIR		:= ${TOPDIR}/svcs/cmd
+export IOTA_AGENT_DIR           := ${IOTA_CMD_DIR}/iota-agent
+export IOTA_SERVER_DIR		:= ${IOTA_CMD_DIR}/iota-server
 
-iota-svc:iota-agent iota-proto
-	mkdir -p $(IOTA_SVC_BIN_DIR)
-	cd $(IOTA_SVCS_DIR)/cmd/iota  && go build -ldflags="-s -w" -o $(IOTA_SVC_BIN_DIR)/iota-svc main.go
+export IOTA_BIN_DIR		:= ${TOPDIR}/bin
+export IOTA_SERVER_BIN_DIR	:= ${IOTA_BIN_DIR}/server
+export IOTA_AGENT_BIN_DIR	:= ${IOTA_BIN_DIR}/agent
+
+iota-server:iota-proto
+	mkdir -p $(IOTA_SERVER_BIN_DIR)
+	go build -ldflags="-s -w" -o $(IOTA_SERVER_BIN_DIR)/iota-server github.com/pensando/sw/iota/svcs/cmd/iota-server
 
 iota-proto:
 	mkdir -p $(TOPDIR)/protos/pygen
@@ -16,9 +19,15 @@ iota-proto:
 
 iota-agent:iota-proto
 	mkdir -p $(IOTA_AGENT_BIN_DIR)
-	cd $(IOTA_AGENT_DIR)/server  &&  GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_DIR)/iota-agent .
+	go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_DIR)/iota-agent github.com/pensando/sw/iota/svcs/cmd/iota-agent
 
-iota:iota-svc
+iota: iota-proto iota-agent iota-server
 
+.PHONY: test
+test:
+	cd ${TOPDIR}
+	go test -v ./...
+clean:
+	rm -rf ${IOTA_BIN_DIR}
 
 all: iota

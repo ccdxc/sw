@@ -6,31 +6,35 @@ import (
 	iota "github.com/pensando/sw/iota/protos/gogen"
 )
 
-type CfgServer struct{}
+// ConfigService implements config service API
+type ConfigService struct{}
 
-func NewConfigService() *CfgServer {
-	var cfgServer CfgServer
+// NewConfigServiceHandler returns an instance of config service
+func NewConfigServiceHandler() *ConfigService {
+	var cfgServer ConfigService
 	return &cfgServer
 }
 
 //InitCfgService initiates a config management service
-func (c CfgServer) InitCfgService(ctx context.Context, req *iota.InitConfigMsg) (resp *iota.InitConfigMsg, err error) {
-
-	return
+func (c *ConfigService) InitCfgService(ctx context.Context, req *iota.InitConfigMsg) (*iota.InitConfigMsg, error) {
+	resp := &iota.InitConfigMsg{}
+	return resp, nil
 }
 
-
 // GenerateConfigs generates base configs
-func (c *CfgServer) GenerateConfigs(ctx context.Context, req *iota.GenerateConfigMsg) (resp *iota.ConfigMsg, err error) {
-	return
+func (c *ConfigService) GenerateConfigs(ctx context.Context, req *iota.GenerateConfigMsg) (*iota.ConfigMsg, error) {
+	resp := &iota.ConfigMsg{}
+	return resp, nil
 }
 
 // PushConfig pushes the config
-func (c *CfgServer) PushConfig(ctx context.Context, req *iota.ConfigMsg) (resp *iota.ConfigMsg, err error) {
-	return
+func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*iota.ConfigMsg, error) {
+	resp := &iota.ConfigMsg{}
+	return resp, nil
 }
 
 // QueryConfig queries the configs
-func (c *CfgServer) QueryConfig(ctx context.Context, req *iota.ConfigQueryMsg) (resp *iota.ConfigMsg, err error) {
-	return
+func (c *ConfigService) QueryConfig(ctx context.Context, req *iota.ConfigQueryMsg) (*iota.ConfigMsg, error) {
+	resp := &iota.ConfigMsg{}
+	return resp, nil
 }

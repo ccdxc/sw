@@ -1,4 +1,4 @@
-package server
+package agent
 
 import (
 	"context"
@@ -27,7 +27,7 @@ const (
 
 var (
 	//LogDir for infra
-	LogDir = "/tmp/iota/"
+	LogDir = "/tmp/iota-server/"
 
 	//SrcVeniceDirectory Venice image source directory
 	SrcVeniceDirectory = "/sw/bin"
@@ -230,7 +230,7 @@ func (node *nodeEntity) Setup(ctx context.Context, errChannel chan error) {
 		if err != nil {
 			return errors.Wrap(err, "Copying agent binary failed on "+node.Name())
 		}
-		cmdStart = Globals.RemoteIotaDirectory + "/" + Globals.AgentExecName + " -port=" + strconv.Itoa(Globals.AgentPort)
+		cmdStart = Globals.RemoteIotaDirectory + "/" + Globals.AgentExecName + " -port=" + strconv.Itoa(Globals.IotaAgentPort)
 		fmt.Println("Executing cmd ", cmdStart)
 		ret, _, _ = node.Exec(cmdStart, true, true)
 		if ret != 0 {
@@ -240,11 +240,11 @@ func (node *nodeEntity) Setup(ctx context.Context, errChannel chan error) {
 		fmt.Println("Connecting to Agent..")
 
 		/*
-			if node.services, err = IotaAgent.InitNodeService(node.ipAddress, Globals.AgentPort); err != nil {
-				return errors.Wrap(err, "Error in Initializing node services : "+node.ipAddress+":"+strconv.Itoa(Globals.AgentPort))
+			if node.services, err = IotaAgent.InitNodeService(node.ipAddress, Globals.IotaAgentPort); err != nil {
+				return errors.Wrap(err, "Error in Initializing node services : "+node.ipAddress+":"+strconv.Itoa(Globals.IotaAgentPort))
 
 			} */
-		log.Println("Agent bring up successful on node : " + node.ipAddress + ":" + strconv.Itoa(Globals.AgentPort))
+		log.Println("Agent bring up successful on node : " + node.ipAddress + ":" + strconv.Itoa(Globals.IotaAgentPort))
 		return nil
 	}
 
@@ -294,9 +294,9 @@ func (node *nodeEntity) Teardown(ctx context.Context, errChannel chan error) {
 		cmd := "pkill -9 " + Globals.AgentExecName
 		ret, _, _ := node.Exec(cmd, true, false)
 		if ret != 0 {
-			node.logger.Println("Killing agent successful on node : " + node.ipAddress + ":" + strconv.Itoa(Globals.AgentPort))
+			node.logger.Println("Killing agent successful on node : " + node.ipAddress + ":" + strconv.Itoa(Globals.IotaAgentPort))
 		} else {
-			node.logger.Println("Killing agent failed on node : " + node.ipAddress + ":" + strconv.Itoa(Globals.AgentPort))
+			node.logger.Println("Killing agent failed on node : " + node.ipAddress + ":" + strconv.Itoa(Globals.IotaAgentPort))
 		}
 		return nil
 	}
@@ -459,7 +459,7 @@ var iotaAgentBinDir string
 
 func init() {
 	// Harcoding to GRPC agent type for now.
-	iotaAgentBinDir = os.Getenv("GOPATH") + "/src/github.com/pensando/sw/iota/bin/iota-agent"
+	iotaAgentBinDir = os.Getenv("GOPATH") + "/src/github.com/pensando/sw/iota-server/bin/iota-server-agent"
 	testScriptsDir = os.Getenv("GOPATH") + "/src/github.com/pensando/sw/tools/scripts"
 }
 

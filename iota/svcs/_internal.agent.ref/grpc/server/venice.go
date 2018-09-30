@@ -5,10 +5,11 @@ import (
 
 	context "golang.org/x/net/context"
 
+	"github.com/pkg/errors"
+
 	Common "github.com/pensando/sw/iota/common"
 	pb "github.com/pensando/sw/iota/svcs/agent/grpc/api/pb"
 	Globals "github.com/pensando/sw/iota/svcs/globals"
-	"github.com/pkg/errors"
 )
 
 // Venice is used to implement Naples Sim

@@ -52,7 +52,7 @@ enum Op {
         GET     = 3;
 }
 
-// NodeInfo encapsulates all topology information for a given iota invocation
+// NodeInfo encapsulates all topology information for a given iota-server invocation
 message NodeMsg{
     // API Response for the node
     IotaAPIResponse api_response    = 1;

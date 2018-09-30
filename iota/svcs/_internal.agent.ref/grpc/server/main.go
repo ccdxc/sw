@@ -26,7 +26,7 @@ var NaplesSimInstance *NaplesSim
 //VeniceInstance naples sim instance
 var VeniceInstance *Venice
 
-//StartServer Start Grpc Server
+//StartServer Start Grpc Service
 func StartServer(port int) {
 	_ = os.Mkdir(agent.LogDir, 644)
 	// create a listener on TCP port 7777
