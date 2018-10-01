@@ -1,10 +1,11 @@
 package types
 
 import (
+	"encoding/json"
 	"sync"
 
+	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/nic/agent/troubleshooting/protos"
 	tsproto "github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 )
@@ -27,6 +28,85 @@ type AppPortDetails struct {
 	L4port  int32
 }
 
+// DropRuleSpec specifies drop reason
+type DropRuleSpec struct {
+	DropReasons halproto.DropReasons
+}
+
+// DropMonitorObj maintains drop rule related id allocation and is storable in emdb
+type DropMonitorObj struct {
+	api.TypeMeta
+	api.ObjectMeta
+	Spec             DropRuleSpec
+	RuleID           uint64
+	MirrorSessionIDs []uint64
+}
+
+// Marshal provides data marshalling before storing in emdb
+func (m *DropMonitorObj) Marshal() (dAtA []byte, err error) {
+	return json.Marshal(*m)
+}
+
+// Unmarshal provides data marshalling before storing in emdb
+func (m *DropMonitorObj) Unmarshal(dAtA []byte) error {
+	return json.Unmarshal(dAtA, m)
+}
+
+// FlowMonitorRuleSpec specifies flow monitor rule spec
+type FlowMonitorRuleSpec struct {
+	SourceIP      string
+	DestIP        string
+	SourceMac     uint64
+	DestMac       uint64
+	EtherType     uint32
+	Protocol      uint32
+	SourceL4Port  uint32
+	DestL4Port    uint32
+	SourceGroupID uint64
+	DestGroupID   uint64
+	VrfID         uint64
+}
+
+// FlowMonitorObj maintains flow rule related id allocation and is storable in emdb
+type FlowMonitorObj struct {
+	api.TypeMeta
+	api.ObjectMeta
+	Spec             FlowMonitorRuleSpec
+	RuleID           uint64
+	MirrorSessionIDs []uint64
+}
+
+// Marshal provides data marshalling before storing in emdb
+func (m *FlowMonitorObj) Marshal() (dAtA []byte, err error) {
+	return json.Marshal(*m)
+}
+
+// Unmarshal provides data marshalling before storing in emdb
+func (m *FlowMonitorObj) Unmarshal(dAtA []byte) error {
+	return json.Unmarshal(dAtA, m)
+}
+
+// MirrorSessionObj maintains mirrorsession related id allocation and is storable in emdb
+type MirrorSessionObj struct {
+	api.TypeMeta
+	api.ObjectMeta
+	MirrorID           uint64
+	Created            bool
+	Handle             uint64
+	FlowMonitorRuleIDs []uint64
+	DropMonitorRuleIDs []uint64
+}
+
+// Marshal provides data marshalling before storing in emdb
+func (m *MirrorSessionObj) Marshal() (dAtA []byte, err error) {
+	return json.Marshal(*m)
+}
+
+// Unmarshal provides data marshalling before storing in emdb
+func (m *MirrorSessionObj) Unmarshal(dAtA []byte) error {
+	return json.Unmarshal(dAtA, m)
+}
+
 // FlowMonitorIPRuleDetails contains src, dest selection value, AppPort selection value.
 type FlowMonitorIPRuleDetails struct {
 	SrcIPObj     *IPAddrDetails
@@ -47,11 +127,11 @@ type FlowMonitorMACRuleDetails struct {
 type MirrorDB struct {
 	MirrorSessionDB        map[string]*tsproto.MirrorSession
 	MirrorSessionNameToID  map[string]uint64
-	MirrorSessionIDToObj   map[uint64]state.MirrorSessionObj
-	FlowMonitorRuleToID    map[state.FlowMonitorRuleSpec]uint64
-	FlowMonitorRuleIDToObj map[uint64]state.FlowMonitorObj
-	DropRuleToID           map[state.CopiedDropReasons]uint64
-	DropRuleIDToObj        map[uint64]state.DropMonitorObj
+	MirrorSessionIDToObj   map[uint64]MirrorSessionObj
+	FlowMonitorRuleToID    map[FlowMonitorRuleSpec]uint64
+	FlowMonitorRuleIDToObj map[uint64]FlowMonitorObj
+	DropRuleToID           map[halproto.DropReasons]uint64
+	DropRuleIDToObj        map[uint64]DropMonitorObj
 	AllocatedMirrorIds     map[uint64]bool
 }
 

@@ -14,7 +14,6 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	config "github.com/pensando/sw/nic/agent/netagent/protos"
 	netAgentState "github.com/pensando/sw/nic/agent/netagent/state"
-	"github.com/pensando/sw/nic/agent/troubleshooting/protos"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/utils/emstore"
@@ -167,23 +166,23 @@ func (tsa *Tagent) init(emdb emstore.Emstore, nodeUUID string, dp types.TsDatapa
 
 	tsa.DB.MirrorSessionDB = make(map[string]*tsproto.MirrorSession)
 	tsa.DB.MirrorSessionNameToID = make(map[string]uint64)
-	tsa.DB.MirrorSessionIDToObj = make(map[uint64]state.MirrorSessionObj)
-	tsa.DB.FlowMonitorRuleToID = make(map[state.FlowMonitorRuleSpec]uint64)
-	tsa.DB.FlowMonitorRuleIDToObj = make(map[uint64]state.FlowMonitorObj)
-	tsa.DB.DropRuleToID = make(map[state.CopiedDropReasons]uint64)
-	tsa.DB.DropRuleIDToObj = make(map[uint64]state.DropMonitorObj)
+	tsa.DB.MirrorSessionIDToObj = make(map[uint64]types.MirrorSessionObj)
+	tsa.DB.FlowMonitorRuleToID = make(map[types.FlowMonitorRuleSpec]uint64)
+	tsa.DB.FlowMonitorRuleIDToObj = make(map[uint64]types.FlowMonitorObj)
+	tsa.DB.DropRuleToID = make(map[halproto.DropReasons]uint64)
+	tsa.DB.DropRuleIDToObj = make(map[uint64]types.DropMonitorObj)
 	tsa.DB.AllocatedMirrorIds = make(map[uint64]bool)
 
 	if restart {
 		log.Infof("TS Agent restoring from localDB")
 		// Walk through all mirror session Objects stored in emstore DB and rebuild map DBs
-		listmirrorObj := state.MirrorSessionObj{
+		listmirrorObj := types.MirrorSessionObj{
 			TypeMeta: api.TypeMeta{Kind: "MonitorSessionObject"},
 		}
 		mirrorObjs, err := tsa.Store.List(&listmirrorObj)
 		if err == nil {
 			for _, storedMirrorObj := range mirrorObjs {
-				mirrorObj, ok := storedMirrorObj.(*state.MirrorSessionObj)
+				mirrorObj, ok := storedMirrorObj.(*types.MirrorSessionObj)
 				if !ok {
 					log.Errorf("Mirror session object retrieved from db cannot be used")
 					return ErrDbRead
@@ -195,13 +194,13 @@ func (tsa *Tagent) init(emdb emstore.Emstore, nodeUUID string, dp types.TsDatapa
 				tsa.DB.AllocatedMirrorIds[mirrorID] = true
 			}
 		}
-		listFlowRuleObj := state.FlowMonitorObj{
+		listFlowRuleObj := types.FlowMonitorObj{
 			TypeMeta: api.TypeMeta{Kind: "FlowMonitorRuleObject"},
 		}
 		flowRuleObjs, err := tsa.Store.List(&listFlowRuleObj)
 		if err == nil {
 			for _, storedFlowRuleObj := range flowRuleObjs {
-				flowRuleObj, ok := storedFlowRuleObj.(*state.FlowMonitorObj)
+				flowRuleObj, ok := storedFlowRuleObj.(*types.FlowMonitorObj)
 				if !ok {
 					log.Errorf("Flow monitor object retrieved from db cannot be used")
 					return ErrDbRead
@@ -211,19 +210,19 @@ func (tsa *Tagent) init(emdb emstore.Emstore, nodeUUID string, dp types.TsDatapa
 				tsa.DB.FlowMonitorRuleIDToObj[ruleID] = *flowRuleObj
 			}
 		}
-		listDropRuleObj := state.DropMonitorObj{
+		listDropRuleObj := types.DropMonitorObj{
 			TypeMeta: api.TypeMeta{Kind: "DropMonitorRuleObject"},
 		}
 		dropRuleObjs, err := tsa.Store.List(&listDropRuleObj)
 		if err == nil {
 			for _, storedDropRuleObj := range dropRuleObjs {
-				dropRuleObj, ok := storedDropRuleObj.(*state.DropMonitorObj)
+				dropRuleObj, ok := storedDropRuleObj.(*types.DropMonitorObj)
 				if !ok {
 					log.Errorf("Drop monitor object retrieved from db cannot be used")
 					return ErrDbRead
 				}
 				ruleID := dropRuleObj.RuleID
-				tsa.DB.DropRuleToID[dropRuleObj.Spec.CopiedDropReasons] = ruleID
+				tsa.DB.DropRuleToID[dropRuleObj.Spec.DropReasons] = ruleID
 				tsa.DB.DropRuleIDToObj[ruleID] = *dropRuleObj
 			}
 		}
@@ -283,7 +282,7 @@ func (tsa *Tagent) deleteMirrorSession(msName string) error {
 	return nil
 }
 
-func (tsa *Tagent) allocateDropRuleID(dropReason state.CopiedDropReasons) (uint64, bool, error) {
+func (tsa *Tagent) allocateDropRuleID(dropReason halproto.DropReasons) (uint64, bool, error) {
 	var ruleID uint64
 	var err error
 	allocated := false
@@ -302,7 +301,7 @@ func (tsa *Tagent) allocateDropRuleID(dropReason state.CopiedDropReasons) (uint6
 	return ruleID, allocated, nil
 }
 
-func (tsa *Tagent) allocateFlowMonitorRuleID(flowRule state.FlowMonitorRuleSpec) (uint64, bool, error) {
+func (tsa *Tagent) allocateFlowMonitorRuleID(flowRule types.FlowMonitorRuleSpec) (uint64, bool, error) {
 	var ruleID uint64
 	var err error
 	allocated := false
@@ -1058,7 +1057,7 @@ func checkIDContainment(IDs []uint64, ID uint64) (bool, int) {
 func (tsa *Tagent) buildDropRuleUpdateProtoObj(mirrorSession *tsproto.MirrorSession,
 	dropReason *halproto.DropReasons, updateDropRuleIDs []uint64) (*halproto.DropMonitorRuleSpec, error) {
 
-	ruleID, allocated, err := tsa.allocateDropRuleID(state.CopiedDropReasons(*dropReason))
+	ruleID, allocated, err := tsa.allocateDropRuleID(*dropReason)
 	if err != nil {
 		return nil, err
 	}
@@ -1107,7 +1106,7 @@ func (tsa *Tagent) buildDropRuleUpdateProtoObj(mirrorSession *tsproto.MirrorSess
 func (tsa *Tagent) buildDropRuleDeleteProtoObj(mirrorSession *tsproto.MirrorSession,
 	dropReason *halproto.DropReasons, deleteDropRuleIDs []uint64) (*halproto.DropMonitorRuleDeleteRequest, error) {
 
-	ruleID, allocated, err := tsa.allocateDropRuleID(state.CopiedDropReasons(*dropReason))
+	ruleID, allocated, err := tsa.allocateDropRuleID(*dropReason)
 	if err != nil {
 		return nil, err
 	}
@@ -1199,21 +1198,21 @@ func (tsa *Tagent) buildDropRuleCreateProtoObj(mirrorSession *tsproto.MirrorSess
 		log.Errorf("mirror session tenant is invalid")
 		return nil, 0, false, ErrInvalidMirrorSpec
 	}
-	ruleID, allocated, err := tsa.allocateDropRuleID(state.CopiedDropReasons(*dropReason))
+	ruleID, allocated, err := tsa.allocateDropRuleID(*dropReason)
 	if err != nil {
 		return nil, 0, false, err
 	}
 	if allocated {
 		// create drop rule using drop reason
-		dropRuleObj := state.DropMonitorObj{
+		dropRuleObj := types.DropMonitorObj{
 			TypeMeta: api.TypeMeta{Kind: "DropMonitorRuleObject"},
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    mirrorSession.ObjectMeta.Tenant,
 				Namespace: "",
 				Name:      "",
 			},
-			Spec: state.DropRuleSpec{
-				CopiedDropReasons: state.CopiedDropReasons(*dropReason),
+			Spec: types.DropRuleSpec{
+				DropReasons: *dropReason,
 			},
 			RuleID: ruleID,
 		}
@@ -1349,12 +1348,13 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 		updateReqMsg := halproto.FlowMonitorRuleRequestMsg{}
 		deleteReqMsg := halproto.FlowMonitorRuleDeleteRequestMsg{}
 		for _, ipFmRule := range ipFmRuleList {
-			flowRule := state.FlowMonitorRuleSpec{
+			flowRule := types.FlowMonitorRuleSpec{
 				SourceIP:     ipFmRule.SrcIPString,
 				DestIP:       ipFmRule.DestIPString,
 				Protocol:     uint32(ipFmRule.AppPortObj.Ipproto),
 				SourceL4Port: uint32(ipFmRule.AppPortObj.L4port),
 				DestL4Port:   uint32(ipFmRule.AppPortObj.L4port),
+				VrfID:        vrfID,
 			}
 			ruleID, allocated, err := tsa.allocateFlowMonitorRuleID(flowRule)
 			if err != nil {
@@ -1430,7 +1430,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 		}
 
 		for _, macRule := range macFmRuleList {
-			flowRule := state.FlowMonitorRuleSpec{
+			flowRule := types.FlowMonitorRuleSpec{
 				SourceIP:  "",
 				DestIP:    "",
 				SourceMac: macRule.SrcMAC,
@@ -1440,6 +1440,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *tsp
 				Protocol:     uint32(macRule.AppPortObj.Ipproto),
 				SourceL4Port: uint32(macRule.AppPortObj.L4port),
 				DestL4Port:   uint32(macRule.AppPortObj.L4port),
+				VrfID:        vrfID,
 			}
 			ruleID, allocated, err := tsa.allocateFlowMonitorRuleID(flowRule)
 			if err != nil {
@@ -1558,12 +1559,13 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 
 		ReqMsg := halproto.FlowMonitorRuleRequestMsg{}
 		for _, ipFmRule := range ipFmRuleList {
-			flowRule := state.FlowMonitorRuleSpec{
+			flowRule := types.FlowMonitorRuleSpec{
 				SourceIP:     ipFmRule.SrcIPString,
 				DestIP:       ipFmRule.DestIPString,
 				Protocol:     uint32(ipFmRule.AppPortObj.Ipproto),
 				SourceL4Port: uint32(ipFmRule.AppPortObj.L4port),
 				DestL4Port:   uint32(ipFmRule.AppPortObj.L4port),
+				VrfID:        vrfID,
 			}
 			ruleID, allocated, err := tsa.allocateFlowMonitorRuleID(flowRule)
 			if err != nil {
@@ -1571,7 +1573,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 			}
 			if allocated {
 				newRuleIDs = append(newRuleIDs, ruleID)
-				flowRuleObj := state.FlowMonitorObj{
+				flowRuleObj := types.FlowMonitorObj{
 					TypeMeta: api.TypeMeta{Kind: "FlowMonitorRuleObject"},
 					ObjectMeta: api.ObjectMeta{
 						Tenant:    mirrorSession.ObjectMeta.Tenant,
@@ -1634,7 +1636,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 		}
 
 		for _, macRule := range macFmRuleList {
-			flowRule := state.FlowMonitorRuleSpec{
+			flowRule := types.FlowMonitorRuleSpec{
 				SourceIP:  "",
 				DestIP:    "",
 				SourceMac: macRule.SrcMAC,
@@ -1644,6 +1646,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 				Protocol:     uint32(macRule.AppPortObj.Ipproto),
 				SourceL4Port: uint32(macRule.AppPortObj.L4port),
 				DestL4Port:   uint32(macRule.AppPortObj.L4port),
+				VrfID:        vrfID,
 			}
 			ruleID, allocated, err := tsa.allocateFlowMonitorRuleID(flowRule)
 			if err != nil {
@@ -1651,7 +1654,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 			}
 			if allocated {
 				newRuleIDs = append(newRuleIDs, ruleID)
-				flowRuleObj := state.FlowMonitorObj{
+				flowRuleObj := types.FlowMonitorObj{
 					TypeMeta: api.TypeMeta{Kind: "FlowMonitorRuleObject"},
 					ObjectMeta: api.ObjectMeta{
 						Tenant:    mirrorSession.ObjectMeta.Tenant,
@@ -1691,6 +1694,11 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *tsproto.Mirr
 				KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 					KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
 						FlowmonitorruleId: ruleID,
+					},
+				},
+				VrfKeyHandle: &halproto.VrfKeyHandle{
+					KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
+						VrfId: vrfID,
 					},
 				},
 				Match: &halproto.RuleMatch{
@@ -1798,7 +1806,7 @@ func (tsa *Tagent) createPacketCaptureSessionProtoObjs(mirrorSession *tsproto.Mi
 		}
 	}
 	if createMirrorSession {
-		tsa.DB.MirrorSessionIDToObj[sessID] = state.MirrorSessionObj{
+		tsa.DB.MirrorSessionIDToObj[sessID] = types.MirrorSessionObj{
 			TypeMeta:   api.TypeMeta{Kind: "MonitorSessionObject"},
 			ObjectMeta: mirrorSession.ObjectMeta,
 			Created:    false,
@@ -2001,7 +2009,7 @@ func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSes
 			for _, d := range mirrorProtoObjs.NewDropRuleIDs {
 				//clean up locally maintained map for this rule.
 				dropMonitorObj := tsa.DB.DropRuleIDToObj[d]
-				delete(tsa.DB.DropRuleToID, dropMonitorObj.Spec.CopiedDropReasons)
+				delete(tsa.DB.DropRuleToID, dropMonitorObj.Spec.DropReasons)
 				delete(tsa.DB.DropRuleIDToObj, d)
 			}
 			for _, f := range mirrorProtoObjs.NewFlowRuleIDs {
@@ -2021,7 +2029,7 @@ func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSes
 		}
 		for _, d := range deleteDropRuleIDs {
 			dropRuleObj := tsa.DB.DropRuleIDToObj[d]
-			delete(tsa.DB.DropRuleToID, dropRuleObj.Spec.CopiedDropReasons)
+			delete(tsa.DB.DropRuleToID, dropRuleObj.Spec.DropReasons)
 			delete(tsa.DB.DropRuleIDToObj, d)
 		}
 	}
@@ -2067,7 +2075,7 @@ func (tsa *Tagent) deletePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 		}
 		for _, d := range deleteDropRuleIDs {
 			dropRuleObj := tsa.DB.DropRuleIDToObj[d]
-			delete(tsa.DB.DropRuleToID, dropRuleObj.Spec.CopiedDropReasons)
+			delete(tsa.DB.DropRuleToID, dropRuleObj.Spec.DropReasons)
 			delete(tsa.DB.DropRuleIDToObj, d)
 		}
 		mirrorDeleteReq := halproto.MirrorSessionDeleteRequest{
