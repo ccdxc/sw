@@ -97,6 +97,102 @@ func (m *CryptoKeyCreateResponseMsg) GetResponse() []*CryptoKeyCreateResponse {
 	return nil
 }
 
+type CryptoKeyCreateWithIdRequest struct {
+	Meta          *ObjectMeta `protobuf:"bytes,1,opt,name=meta" json:"meta,omitempty"`
+	Keyindex      uint32      `protobuf:"varint,2,opt,name=keyindex,proto3" json:"keyindex,omitempty"`
+	AllowDupAlloc uint32      `protobuf:"varint,3,opt,name=allow_dup_alloc,json=allowDupAlloc,proto3" json:"allow_dup_alloc,omitempty"`
+}
+
+func (m *CryptoKeyCreateWithIdRequest) Reset()         { *m = CryptoKeyCreateWithIdRequest{} }
+func (m *CryptoKeyCreateWithIdRequest) String() string { return proto.CompactTextString(m) }
+func (*CryptoKeyCreateWithIdRequest) ProtoMessage()    {}
+func (*CryptoKeyCreateWithIdRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorCryptoKeys, []int{4}
+}
+
+func (m *CryptoKeyCreateWithIdRequest) GetMeta() *ObjectMeta {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *CryptoKeyCreateWithIdRequest) GetKeyindex() uint32 {
+	if m != nil {
+		return m.Keyindex
+	}
+	return 0
+}
+
+func (m *CryptoKeyCreateWithIdRequest) GetAllowDupAlloc() uint32 {
+	if m != nil {
+		return m.AllowDupAlloc
+	}
+	return 0
+}
+
+type CryptoKeyCreateWithIdRequestMsg struct {
+	Request []*CryptoKeyCreateWithIdRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *CryptoKeyCreateWithIdRequestMsg) Reset()         { *m = CryptoKeyCreateWithIdRequestMsg{} }
+func (m *CryptoKeyCreateWithIdRequestMsg) String() string { return proto.CompactTextString(m) }
+func (*CryptoKeyCreateWithIdRequestMsg) ProtoMessage()    {}
+func (*CryptoKeyCreateWithIdRequestMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorCryptoKeys, []int{5}
+}
+
+func (m *CryptoKeyCreateWithIdRequestMsg) GetRequest() []*CryptoKeyCreateWithIdRequest {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+type CryptoKeyCreateWithIdResponse struct {
+	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	Keyindex  uint32    `protobuf:"varint,2,opt,name=keyindex,proto3" json:"keyindex,omitempty"`
+}
+
+func (m *CryptoKeyCreateWithIdResponse) Reset()         { *m = CryptoKeyCreateWithIdResponse{} }
+func (m *CryptoKeyCreateWithIdResponse) String() string { return proto.CompactTextString(m) }
+func (*CryptoKeyCreateWithIdResponse) ProtoMessage()    {}
+func (*CryptoKeyCreateWithIdResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptorCryptoKeys, []int{6}
+}
+
+func (m *CryptoKeyCreateWithIdResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *CryptoKeyCreateWithIdResponse) GetKeyindex() uint32 {
+	if m != nil {
+		return m.Keyindex
+	}
+	return 0
+}
+
+type CryptoKeyCreateWithIdResponseMsg struct {
+	Response []*CryptoKeyCreateWithIdResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *CryptoKeyCreateWithIdResponseMsg) Reset()         { *m = CryptoKeyCreateWithIdResponseMsg{} }
+func (m *CryptoKeyCreateWithIdResponseMsg) String() string { return proto.CompactTextString(m) }
+func (*CryptoKeyCreateWithIdResponseMsg) ProtoMessage()    {}
+func (*CryptoKeyCreateWithIdResponseMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptorCryptoKeys, []int{7}
+}
+
+func (m *CryptoKeyCreateWithIdResponseMsg) GetResponse() []*CryptoKeyCreateWithIdResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
 type CryptoKeySpec struct {
 	Keyindex uint32        `protobuf:"varint,1,opt,name=keyindex,proto3" json:"keyindex,omitempty"`
 	KeyType  CryptoKeyType `protobuf:"varint,2,opt,name=key_type,json=keyType,proto3,enum=types.CryptoKeyType" json:"key_type,omitempty"`
@@ -107,7 +203,7 @@ type CryptoKeySpec struct {
 func (m *CryptoKeySpec) Reset()                    { *m = CryptoKeySpec{} }
 func (m *CryptoKeySpec) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeySpec) ProtoMessage()               {}
-func (*CryptoKeySpec) Descriptor() ([]byte, []int) { return fileDescriptorCryptoKeys, []int{4} }
+func (*CryptoKeySpec) Descriptor() ([]byte, []int) { return fileDescriptorCryptoKeys, []int{8} }
 
 func (m *CryptoKeySpec) GetKeyindex() uint32 {
 	if m != nil {
@@ -145,7 +241,7 @@ type CryptoKeyReadRequest struct {
 func (m *CryptoKeyReadRequest) Reset()                    { *m = CryptoKeyReadRequest{} }
 func (m *CryptoKeyReadRequest) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyReadRequest) ProtoMessage()               {}
-func (*CryptoKeyReadRequest) Descriptor() ([]byte, []int) { return fileDescriptorCryptoKeys, []int{5} }
+func (*CryptoKeyReadRequest) Descriptor() ([]byte, []int) { return fileDescriptorCryptoKeys, []int{9} }
 
 func (m *CryptoKeyReadRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -169,7 +265,7 @@ func (m *CryptoKeyReadRequestMsg) Reset()         { *m = CryptoKeyReadRequestMsg
 func (m *CryptoKeyReadRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*CryptoKeyReadRequestMsg) ProtoMessage()    {}
 func (*CryptoKeyReadRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorCryptoKeys, []int{6}
+	return fileDescriptorCryptoKeys, []int{10}
 }
 
 func (m *CryptoKeyReadRequestMsg) GetRequest() []*CryptoKeyReadRequest {
@@ -187,7 +283,7 @@ type CryptoKeyReadResponse struct {
 func (m *CryptoKeyReadResponse) Reset()                    { *m = CryptoKeyReadResponse{} }
 func (m *CryptoKeyReadResponse) String() string            { return proto.CompactTextString(m) }
 func (*CryptoKeyReadResponse) ProtoMessage()               {}
-func (*CryptoKeyReadResponse) Descriptor() ([]byte, []int) { return fileDescriptorCryptoKeys, []int{7} }
+func (*CryptoKeyReadResponse) Descriptor() ([]byte, []int) { return fileDescriptorCryptoKeys, []int{11} }
 
 func (m *CryptoKeyReadResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -211,7 +307,7 @@ func (m *CryptoKeyReadResponseMsg) Reset()         { *m = CryptoKeyReadResponseM
 func (m *CryptoKeyReadResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*CryptoKeyReadResponseMsg) ProtoMessage()    {}
 func (*CryptoKeyReadResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorCryptoKeys, []int{8}
+	return fileDescriptorCryptoKeys, []int{12}
 }
 
 func (m *CryptoKeyReadResponseMsg) GetResponse() []*CryptoKeyReadResponse {
@@ -226,10 +322,12 @@ type CryptoKeyUpdateRequest struct {
 	Key  *CryptoKeySpec `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
 }
 
-func (m *CryptoKeyUpdateRequest) Reset()                    { *m = CryptoKeyUpdateRequest{} }
-func (m *CryptoKeyUpdateRequest) String() string            { return proto.CompactTextString(m) }
-func (*CryptoKeyUpdateRequest) ProtoMessage()               {}
-func (*CryptoKeyUpdateRequest) Descriptor() ([]byte, []int) { return fileDescriptorCryptoKeys, []int{9} }
+func (m *CryptoKeyUpdateRequest) Reset()         { *m = CryptoKeyUpdateRequest{} }
+func (m *CryptoKeyUpdateRequest) String() string { return proto.CompactTextString(m) }
+func (*CryptoKeyUpdateRequest) ProtoMessage()    {}
+func (*CryptoKeyUpdateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptorCryptoKeys, []int{13}
+}
 
 func (m *CryptoKeyUpdateRequest) GetMeta() *ObjectMeta {
 	if m != nil {
@@ -253,7 +351,7 @@ func (m *CryptoKeyUpdateRequestMsg) Reset()         { *m = CryptoKeyUpdateReques
 func (m *CryptoKeyUpdateRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*CryptoKeyUpdateRequestMsg) ProtoMessage()    {}
 func (*CryptoKeyUpdateRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorCryptoKeys, []int{10}
+	return fileDescriptorCryptoKeys, []int{14}
 }
 
 func (m *CryptoKeyUpdateRequestMsg) GetRequest() []*CryptoKeyUpdateRequest {
@@ -272,7 +370,7 @@ func (m *CryptoKeyUpdateResponse) Reset()         { *m = CryptoKeyUpdateResponse
 func (m *CryptoKeyUpdateResponse) String() string { return proto.CompactTextString(m) }
 func (*CryptoKeyUpdateResponse) ProtoMessage()    {}
 func (*CryptoKeyUpdateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptorCryptoKeys, []int{11}
+	return fileDescriptorCryptoKeys, []int{15}
 }
 
 func (m *CryptoKeyUpdateResponse) GetApiStatus() ApiStatus {
@@ -297,7 +395,7 @@ func (m *CryptoKeyUpdateResponseMsg) Reset()         { *m = CryptoKeyUpdateRespo
 func (m *CryptoKeyUpdateResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*CryptoKeyUpdateResponseMsg) ProtoMessage()    {}
 func (*CryptoKeyUpdateResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorCryptoKeys, []int{12}
+	return fileDescriptorCryptoKeys, []int{16}
 }
 
 func (m *CryptoKeyUpdateResponseMsg) GetResponse() []*CryptoKeyUpdateResponse {
@@ -316,7 +414,7 @@ func (m *CryptoKeyDeleteRequest) Reset()         { *m = CryptoKeyDeleteRequest{}
 func (m *CryptoKeyDeleteRequest) String() string { return proto.CompactTextString(m) }
 func (*CryptoKeyDeleteRequest) ProtoMessage()    {}
 func (*CryptoKeyDeleteRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptorCryptoKeys, []int{13}
+	return fileDescriptorCryptoKeys, []int{17}
 }
 
 func (m *CryptoKeyDeleteRequest) GetMeta() *ObjectMeta {
@@ -341,7 +439,7 @@ func (m *CryptoKeyDeleteRequestMsg) Reset()         { *m = CryptoKeyDeleteReques
 func (m *CryptoKeyDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*CryptoKeyDeleteRequestMsg) ProtoMessage()    {}
 func (*CryptoKeyDeleteRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorCryptoKeys, []int{14}
+	return fileDescriptorCryptoKeys, []int{18}
 }
 
 func (m *CryptoKeyDeleteRequestMsg) GetRequest() []*CryptoKeyDeleteRequest {
@@ -360,7 +458,7 @@ func (m *CryptoKeyDeleteResponse) Reset()         { *m = CryptoKeyDeleteResponse
 func (m *CryptoKeyDeleteResponse) String() string { return proto.CompactTextString(m) }
 func (*CryptoKeyDeleteResponse) ProtoMessage()    {}
 func (*CryptoKeyDeleteResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptorCryptoKeys, []int{15}
+	return fileDescriptorCryptoKeys, []int{19}
 }
 
 func (m *CryptoKeyDeleteResponse) GetApiStatus() ApiStatus {
@@ -385,7 +483,7 @@ func (m *CryptoKeyDeleteResponseMsg) Reset()         { *m = CryptoKeyDeleteRespo
 func (m *CryptoKeyDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*CryptoKeyDeleteResponseMsg) ProtoMessage()    {}
 func (*CryptoKeyDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptorCryptoKeys, []int{16}
+	return fileDescriptorCryptoKeys, []int{20}
 }
 
 func (m *CryptoKeyDeleteResponseMsg) GetResponse() []*CryptoKeyDeleteResponse {
@@ -400,6 +498,10 @@ func init() {
 	proto.RegisterType((*CryptoKeyCreateRequestMsg)(nil), "cryptokey.CryptoKeyCreateRequestMsg")
 	proto.RegisterType((*CryptoKeyCreateResponse)(nil), "cryptokey.CryptoKeyCreateResponse")
 	proto.RegisterType((*CryptoKeyCreateResponseMsg)(nil), "cryptokey.CryptoKeyCreateResponseMsg")
+	proto.RegisterType((*CryptoKeyCreateWithIdRequest)(nil), "cryptokey.CryptoKeyCreateWithIdRequest")
+	proto.RegisterType((*CryptoKeyCreateWithIdRequestMsg)(nil), "cryptokey.CryptoKeyCreateWithIdRequestMsg")
+	proto.RegisterType((*CryptoKeyCreateWithIdResponse)(nil), "cryptokey.CryptoKeyCreateWithIdResponse")
+	proto.RegisterType((*CryptoKeyCreateWithIdResponseMsg)(nil), "cryptokey.CryptoKeyCreateWithIdResponseMsg")
 	proto.RegisterType((*CryptoKeySpec)(nil), "cryptokey.CryptoKeySpec")
 	proto.RegisterType((*CryptoKeyReadRequest)(nil), "cryptokey.CryptoKeyReadRequest")
 	proto.RegisterType((*CryptoKeyReadRequestMsg)(nil), "cryptokey.CryptoKeyReadRequestMsg")
@@ -427,6 +529,7 @@ const _ = grpc.SupportPackageIsVersion4
 
 type CryptoKeyClient interface {
 	CryptoKeyCreate(ctx context.Context, in *CryptoKeyCreateRequestMsg, opts ...grpc.CallOption) (*CryptoKeyCreateResponseMsg, error)
+	CryptoKeyCreateWithId(ctx context.Context, in *CryptoKeyCreateWithIdRequestMsg, opts ...grpc.CallOption) (*CryptoKeyCreateWithIdResponseMsg, error)
 	CryptoKeyRead(ctx context.Context, in *CryptoKeyReadRequestMsg, opts ...grpc.CallOption) (*CryptoKeyReadResponseMsg, error)
 	CryptoKeyUpdate(ctx context.Context, in *CryptoKeyUpdateRequestMsg, opts ...grpc.CallOption) (*CryptoKeyUpdateResponseMsg, error)
 	CryptoKeyDelete(ctx context.Context, in *CryptoKeyDeleteRequestMsg, opts ...grpc.CallOption) (*CryptoKeyDeleteResponseMsg, error)
@@ -443,6 +546,15 @@ func NewCryptoKeyClient(cc *grpc.ClientConn) CryptoKeyClient {
 func (c *cryptoKeyClient) CryptoKeyCreate(ctx context.Context, in *CryptoKeyCreateRequestMsg, opts ...grpc.CallOption) (*CryptoKeyCreateResponseMsg, error) {
 	out := new(CryptoKeyCreateResponseMsg)
 	err := grpc.Invoke(ctx, "/cryptokey.CryptoKey/CryptoKeyCreate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cryptoKeyClient) CryptoKeyCreateWithId(ctx context.Context, in *CryptoKeyCreateWithIdRequestMsg, opts ...grpc.CallOption) (*CryptoKeyCreateWithIdResponseMsg, error) {
+	out := new(CryptoKeyCreateWithIdResponseMsg)
+	err := grpc.Invoke(ctx, "/cryptokey.CryptoKey/CryptoKeyCreateWithId", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -480,6 +592,7 @@ func (c *cryptoKeyClient) CryptoKeyDelete(ctx context.Context, in *CryptoKeyDele
 
 type CryptoKeyServer interface {
 	CryptoKeyCreate(context.Context, *CryptoKeyCreateRequestMsg) (*CryptoKeyCreateResponseMsg, error)
+	CryptoKeyCreateWithId(context.Context, *CryptoKeyCreateWithIdRequestMsg) (*CryptoKeyCreateWithIdResponseMsg, error)
 	CryptoKeyRead(context.Context, *CryptoKeyReadRequestMsg) (*CryptoKeyReadResponseMsg, error)
 	CryptoKeyUpdate(context.Context, *CryptoKeyUpdateRequestMsg) (*CryptoKeyUpdateResponseMsg, error)
 	CryptoKeyDelete(context.Context, *CryptoKeyDeleteRequestMsg) (*CryptoKeyDeleteResponseMsg, error)
@@ -503,6 +616,24 @@ func _CryptoKey_CryptoKeyCreate_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CryptoKeyServer).CryptoKeyCreate(ctx, req.(*CryptoKeyCreateRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CryptoKey_CryptoKeyCreateWithId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CryptoKeyCreateWithIdRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CryptoKeyServer).CryptoKeyCreateWithId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cryptokey.CryptoKey/CryptoKeyCreateWithId",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CryptoKeyServer).CryptoKeyCreateWithId(ctx, req.(*CryptoKeyCreateWithIdRequestMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -568,6 +699,10 @@ var _CryptoKey_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CryptoKeyCreate",
 			Handler:    _CryptoKey_CryptoKeyCreate_Handler,
+		},
+		{
+			MethodName: "CryptoKeyCreateWithId",
+			Handler:    _CryptoKey_CryptoKeyCreateWithId_Handler,
 		},
 		{
 			MethodName: "CryptoKeyRead",
@@ -702,6 +837,132 @@ func (m *CryptoKeyCreateResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *CryptoKeyCreateWithIdRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CryptoKeyCreateWithIdRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Meta != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCryptoKeys(dAtA, i, uint64(m.Meta.Size()))
+		n2, err := m.Meta.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	if m.Keyindex != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintCryptoKeys(dAtA, i, uint64(m.Keyindex))
+	}
+	if m.AllowDupAlloc != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintCryptoKeys(dAtA, i, uint64(m.AllowDupAlloc))
+	}
+	return i, nil
+}
+
+func (m *CryptoKeyCreateWithIdRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CryptoKeyCreateWithIdRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintCryptoKeys(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *CryptoKeyCreateWithIdResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CryptoKeyCreateWithIdResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintCryptoKeys(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.Keyindex != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintCryptoKeys(dAtA, i, uint64(m.Keyindex))
+	}
+	return i, nil
+}
+
+func (m *CryptoKeyCreateWithIdResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CryptoKeyCreateWithIdResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintCryptoKeys(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func (m *CryptoKeySpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -760,11 +1021,11 @@ func (m *CryptoKeyReadRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintCryptoKeys(dAtA, i, uint64(m.Meta.Size()))
-		n2, err := m.Meta.MarshalTo(dAtA[i:])
+		n3, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n2
+		i += n3
 	}
 	if m.Keyindex != 0 {
 		dAtA[i] = 0x10
@@ -828,11 +1089,11 @@ func (m *CryptoKeyReadResponse) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintCryptoKeys(dAtA, i, uint64(m.Key.Size()))
-		n3, err := m.Key.MarshalTo(dAtA[i:])
+		n4, err := m.Key.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
+		i += n4
 	}
 	return i, nil
 }
@@ -886,21 +1147,21 @@ func (m *CryptoKeyUpdateRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintCryptoKeys(dAtA, i, uint64(m.Meta.Size()))
-		n4, err := m.Meta.MarshalTo(dAtA[i:])
+		n5, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n5
 	}
 	if m.Key != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintCryptoKeys(dAtA, i, uint64(m.Key.Size()))
-		n5, err := m.Key.MarshalTo(dAtA[i:])
+		n6, err := m.Key.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n6
 	}
 	return i, nil
 }
@@ -1012,11 +1273,11 @@ func (m *CryptoKeyDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintCryptoKeys(dAtA, i, uint64(m.Meta.Size()))
-		n6, err := m.Meta.MarshalTo(dAtA[i:])
+		n7, err := m.Meta.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n6
+		i += n7
 	}
 	if m.Keyindex != 0 {
 		dAtA[i] = 0x10
@@ -1158,6 +1419,58 @@ func (m *CryptoKeyCreateResponse) Size() (n int) {
 }
 
 func (m *CryptoKeyCreateResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovCryptoKeys(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CryptoKeyCreateWithIdRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Meta != nil {
+		l = m.Meta.Size()
+		n += 1 + l + sovCryptoKeys(uint64(l))
+	}
+	if m.Keyindex != 0 {
+		n += 1 + sovCryptoKeys(uint64(m.Keyindex))
+	}
+	if m.AllowDupAlloc != 0 {
+		n += 1 + sovCryptoKeys(uint64(m.AllowDupAlloc))
+	}
+	return n
+}
+
+func (m *CryptoKeyCreateWithIdRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovCryptoKeys(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *CryptoKeyCreateWithIdResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovCryptoKeys(uint64(m.ApiStatus))
+	}
+	if m.Keyindex != 0 {
+		n += 1 + sovCryptoKeys(uint64(m.Keyindex))
+	}
+	return n
+}
+
+func (m *CryptoKeyCreateWithIdResponseMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Response) > 0 {
@@ -1658,6 +1971,377 @@ func (m *CryptoKeyCreateResponseMsg) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Response = append(m.Response, &CryptoKeyCreateResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCryptoKeys(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCryptoKeys
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CryptoKeyCreateWithIdRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCryptoKeys
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CryptoKeyCreateWithIdRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CryptoKeyCreateWithIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Meta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCryptoKeys
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCryptoKeys
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Meta == nil {
+				m.Meta = &ObjectMeta{}
+			}
+			if err := m.Meta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Keyindex", wireType)
+			}
+			m.Keyindex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCryptoKeys
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Keyindex |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AllowDupAlloc", wireType)
+			}
+			m.AllowDupAlloc = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCryptoKeys
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AllowDupAlloc |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCryptoKeys(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCryptoKeys
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CryptoKeyCreateWithIdRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCryptoKeys
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CryptoKeyCreateWithIdRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CryptoKeyCreateWithIdRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCryptoKeys
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCryptoKeys
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &CryptoKeyCreateWithIdRequest{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCryptoKeys(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCryptoKeys
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CryptoKeyCreateWithIdResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCryptoKeys
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CryptoKeyCreateWithIdResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CryptoKeyCreateWithIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCryptoKeys
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Keyindex", wireType)
+			}
+			m.Keyindex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCryptoKeys
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Keyindex |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCryptoKeys(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCryptoKeys
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CryptoKeyCreateWithIdResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCryptoKeys
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CryptoKeyCreateWithIdResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CryptoKeyCreateWithIdResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCryptoKeys
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCryptoKeys
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &CryptoKeyCreateWithIdResponse{})
 			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3013,41 +3697,47 @@ var (
 func init() { proto.RegisterFile("crypto_keys.proto", fileDescriptorCryptoKeys) }
 
 var fileDescriptorCryptoKeys = []byte{
-	// 567 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcd, 0x6e, 0xd3, 0x40,
-	0x10, 0xce, 0x36, 0x15, 0x4d, 0x26, 0xb4, 0xb4, 0xab, 0x02, 0x8e, 0x0f, 0xc1, 0x2c, 0x54, 0x8a,
-	0x38, 0xa4, 0x92, 0x39, 0x21, 0x10, 0x08, 0xca, 0x0d, 0x45, 0x48, 0x4e, 0x91, 0x4a, 0x41, 0x0a,
-	0x6e, 0x32, 0x04, 0xe3, 0xd2, 0x18, 0xef, 0x56, 0xc2, 0x7d, 0x03, 0x0e, 0xdc, 0x79, 0x24, 0x8e,
-	0x3c, 0x02, 0x0a, 0x2f, 0x82, 0xbc, 0xeb, 0xb8, 0xfe, 0xd9, 0x26, 0x35, 0x52, 0x4f, 0xd9, 0x9f,
-	0xf9, 0x66, 0xbe, 0xf9, 0x66, 0x66, 0x63, 0xd8, 0x1a, 0x85, 0x51, 0x20, 0xa6, 0x43, 0x1f, 0x23,
-	0xde, 0x0b, 0xc2, 0xa9, 0x98, 0xd2, 0xa6, 0x3a, 0xf2, 0x31, 0x32, 0x5b, 0x22, 0x0a, 0x30, 0x39,
-	0x67, 0xcf, 0xe0, 0xd6, 0x9e, 0xbc, 0x79, 0x85, 0xd1, 0x5e, 0x88, 0xae, 0x40, 0x07, 0xbf, 0x9e,
-	0x22, 0x17, 0x74, 0x07, 0x56, 0xbf, 0xa0, 0x70, 0x0d, 0x62, 0x91, 0x6e, 0xcb, 0xde, 0xea, 0x29,
-	0xd4, 0xeb, 0xa3, 0xcf, 0x38, 0x12, 0x7d, 0x14, 0xae, 0x23, 0xaf, 0xd9, 0x01, 0xb4, 0xf5, 0x0e,
-	0xfa, 0x7c, 0x42, 0x1f, 0xc3, 0x5a, 0xa8, 0x76, 0x06, 0xb1, 0xea, 0xdd, 0x96, 0x7d, 0xb7, 0x97,
-	0xf2, 0xe8, 0xe9, 0x61, 0xce, 0x1c, 0xc1, 0x3e, 0xc2, 0xed, 0x92, 0x09, 0x0f, 0xa6, 0x27, 0x1c,
-	0xe9, 0x2e, 0x80, 0x1b, 0x78, 0x43, 0x2e, 0x5c, 0x71, 0xca, 0x25, 0xc3, 0x0d, 0x7b, 0x33, 0x61,
-	0xf8, 0x3c, 0xf0, 0x06, 0xf2, 0xdc, 0x69, 0xba, 0xf3, 0x25, 0x35, 0xa1, 0xe1, 0x63, 0xe4, 0x9d,
-	0x8c, 0xf1, 0x9b, 0xb1, 0x62, 0x91, 0xee, 0xba, 0x93, 0xee, 0xd9, 0x7b, 0x30, 0x2f, 0x88, 0x13,
-	0xa7, 0xf0, 0x14, 0x1a, 0x61, 0xb2, 0x4d, 0x72, 0x60, 0x8b, 0x72, 0x50, 0x96, 0x4e, 0x8a, 0x61,
-	0xdf, 0x09, 0xac, 0xa7, 0x56, 0x83, 0x00, 0x47, 0x39, 0x2e, 0x24, 0xcf, 0x85, 0xee, 0xca, 0xbb,
-	0x61, 0x9c, 0x89, 0xe4, 0xb9, 0x61, 0x6f, 0x27, 0x69, 0xa5, 0x3e, 0xf6, 0xa3, 0x00, 0x9d, 0x35,
-	0x5f, 0x2d, 0x68, 0x5b, 0x01, 0xb8, 0x77, 0x86, 0x46, 0x5d, 0x3a, 0x8b, 0xaf, 0x06, 0xde, 0x19,
-	0xd2, 0x4d, 0xa8, 0xfb, 0x18, 0x19, 0xab, 0x16, 0xe9, 0x5e, 0x77, 0xe2, 0x25, 0x7b, 0x0b, 0xdb,
-	0xa9, 0x1b, 0x07, 0xdd, 0x71, 0xb5, 0x52, 0x2f, 0x14, 0x71, 0x3f, 0x53, 0xac, 0x8c, 0xeb, 0x58,
-	0xc1, 0x47, 0xc5, 0x26, 0xb8, 0xa3, 0x13, 0x30, 0x03, 0x3a, 0x6f, 0x01, 0x01, 0x37, 0x0b, 0x06,
-	0xff, 0xdb, 0x00, 0x0f, 0x94, 0x18, 0x2b, 0x32, 0x43, 0x43, 0x47, 0x20, 0xae, 0x8d, 0x92, 0xe9,
-	0x00, 0x0c, 0x6d, 0xd4, 0x38, 0x99, 0x27, 0xa5, 0x76, 0xb0, 0x2e, 0xce, 0xa6, 0xd4, 0x0c, 0x7e,
-	0x66, 0xda, 0xde, 0x04, 0xe3, 0xca, 0xd3, 0x56, 0x31, 0x8d, 0xb6, 0x3e, 0xd8, 0xe5, 0x27, 0x33,
-	0x07, 0xd3, 0x4f, 0xe6, 0xdc, 0xe4, 0xaa, 0x27, 0x33, 0x1f, 0xa7, 0xc2, 0x64, 0xe6, 0x81, 0x99,
-	0x62, 0xbc, 0xcb, 0x14, 0xe3, 0x25, 0x1e, 0x63, 0xe5, 0x62, 0x2c, 0xa2, 0x9e, 0x15, 0x3f, 0xe7,
-	0xfc, 0xf2, 0xe2, 0xe7, 0x60, 0x7a, 0xf1, 0xe7, 0x26, 0x57, 0x2d, 0x7e, 0x3e, 0x4e, 0x05, 0xf1,
-	0xf3, 0xc0, 0x73, 0xf1, 0xed, 0x1f, 0x75, 0x68, 0xa6, 0x56, 0xf4, 0x03, 0xdc, 0x28, 0xbc, 0xa4,
-	0xf4, 0xfe, 0xd2, 0x7f, 0x8a, 0x3e, 0x9f, 0x98, 0x3b, 0xcb, 0xdf, 0xe2, 0x3e, 0x9f, 0xb0, 0x1a,
-	0x3d, 0xcc, 0xbc, 0xc2, 0xf1, 0x70, 0x52, 0xb6, 0xe4, 0x11, 0x8a, 0xbd, 0xdf, 0x5b, 0x36, 0xda,
-	0xca, 0x77, 0x96, 0xbd, 0xea, 0x36, 0x3d, 0xfb, 0xe2, 0x10, 0xea, 0xd9, 0x97, 0x1a, 0xbd, 0x10,
-	0x41, 0x49, 0xaa, 0x8f, 0x50, 0xec, 0x34, 0x7d, 0x84, 0x52, 0x35, 0x59, 0xed, 0x85, 0xf9, 0x6b,
-	0xd6, 0x21, 0xbf, 0x67, 0x1d, 0xf2, 0x67, 0xd6, 0x21, 0x3f, 0xff, 0x76, 0x6a, 0x87, 0x8d, 0x4f,
-	0xee, 0xb1, 0xfc, 0x46, 0x38, 0xba, 0x26, 0x7f, 0x1e, 0xfe, 0x0b, 0x00, 0x00, 0xff, 0xff, 0xdb,
-	0x21, 0x6d, 0x64, 0x57, 0x08, 0x00, 0x00,
+	// 666 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcd, 0x6e, 0xd3, 0x4c,
+	0x14, 0xad, 0xdb, 0xe8, 0x6b, 0x32, 0xf9, 0xd2, 0x9f, 0x51, 0x01, 0x27, 0x82, 0xd4, 0x0c, 0x14,
+	0xa2, 0x22, 0xa5, 0x52, 0x58, 0x21, 0x10, 0x28, 0x34, 0x1b, 0x84, 0x22, 0x24, 0xa7, 0x88, 0x52,
+	0x90, 0x82, 0x9b, 0x5c, 0x12, 0xe3, 0xd0, 0x18, 0x7b, 0x22, 0x70, 0x77, 0x2c, 0x79, 0x03, 0x1e,
+	0x89, 0x25, 0x8f, 0x80, 0xc2, 0x8b, 0xa0, 0xf1, 0x38, 0xce, 0xd8, 0x9e, 0xfc, 0x18, 0x91, 0x55,
+	0xc6, 0x33, 0xf7, 0xce, 0xbd, 0xe7, 0x9c, 0xeb, 0xe3, 0xa0, 0xdd, 0x8e, 0xe3, 0xd9, 0x74, 0xd8,
+	0xb6, 0xc0, 0x73, 0xab, 0xb6, 0x33, 0xa4, 0x43, 0x9c, 0xe3, 0x5b, 0x16, 0x78, 0xa5, 0x3c, 0xf5,
+	0x6c, 0x08, 0xf6, 0xc9, 0x13, 0x74, 0xf5, 0xd8, 0x3f, 0x79, 0x0e, 0xde, 0xb1, 0x03, 0x06, 0x05,
+	0x1d, 0x3e, 0x8d, 0xc0, 0xa5, 0xf8, 0x00, 0x65, 0x3e, 0x02, 0x35, 0x54, 0x45, 0x53, 0x2a, 0xf9,
+	0xda, 0x6e, 0x95, 0x67, 0xbd, 0x38, 0xff, 0x00, 0x1d, 0xda, 0x04, 0x6a, 0xe8, 0xfe, 0x31, 0x39,
+	0x45, 0x45, 0xf9, 0x05, 0x4d, 0xb7, 0x87, 0x1f, 0xa2, 0x4d, 0x87, 0x3f, 0xa9, 0x8a, 0xb6, 0x51,
+	0xc9, 0xd7, 0x6e, 0x56, 0xc3, 0x3e, 0xaa, 0xf2, 0x34, 0x7d, 0x92, 0x41, 0xde, 0xa3, 0x6b, 0x89,
+	0x10, 0xd7, 0x1e, 0x5e, 0xb8, 0x80, 0x8f, 0x10, 0x32, 0x6c, 0xb3, 0xed, 0x52, 0x83, 0x8e, 0x5c,
+	0xbf, 0xc3, 0xad, 0xda, 0x4e, 0xd0, 0x61, 0xdd, 0x36, 0x5b, 0xfe, 0xbe, 0x9e, 0x33, 0x26, 0x4b,
+	0x5c, 0x42, 0x59, 0x0b, 0x3c, 0xf3, 0xa2, 0x0b, 0x5f, 0xd4, 0x75, 0x4d, 0xa9, 0x14, 0xf4, 0xf0,
+	0x99, 0xbc, 0x45, 0xa5, 0x19, 0x75, 0x18, 0x84, 0xc7, 0x28, 0xeb, 0x04, 0x8f, 0x01, 0x06, 0x32,
+	0x0f, 0x03, 0x8f, 0xd4, 0xc3, 0x1c, 0xf2, 0x4d, 0x41, 0xd7, 0x63, 0x51, 0xaf, 0x4c, 0xda, 0x7f,
+	0xd6, 0x4d, 0xc7, 0xf3, 0x3c, 0x04, 0xf8, 0x0e, 0xda, 0x36, 0x06, 0x83, 0xe1, 0xe7, 0x76, 0x77,
+	0x64, 0xb7, 0xd9, 0xaa, 0xa3, 0x6e, 0xf8, 0x21, 0x05, 0x7f, 0xbb, 0x31, 0xb2, 0xeb, 0x6c, 0x93,
+	0x74, 0xd1, 0xfe, 0xbc, 0x56, 0x18, 0xdc, 0x7a, 0x5c, 0xb1, 0xbb, 0xb3, 0xd1, 0x46, 0x92, 0xa7,
+	0xba, 0x0d, 0xd0, 0x8d, 0x19, 0x81, 0xab, 0x50, 0xaf, 0x8f, 0xb4, 0xb9, 0xd5, 0x18, 0xa8, 0x46,
+	0x42, 0xc3, 0xca, 0x62, 0x54, 0x32, 0x25, 0x0b, 0x61, 0x6c, 0xcb, 0x86, 0x4e, 0xa4, 0x2f, 0x25,
+	0xa6, 0xc9, 0x91, 0x7f, 0xd6, 0x66, 0xa8, 0xfc, 0x9e, 0xb7, 0x6a, 0x7b, 0x01, 0xc4, 0xf0, 0x8e,
+	0x13, 0xcf, 0x06, 0x7d, 0xd3, 0xe2, 0x0b, 0x5c, 0xe4, 0x09, 0xae, 0x79, 0x09, 0x81, 0x7a, 0xec,
+	0xa8, 0x65, 0x5e, 0x02, 0xde, 0x41, 0x1b, 0x16, 0x78, 0x6a, 0x46, 0x53, 0x2a, 0xff, 0xeb, 0x6c,
+	0x49, 0x5e, 0xa3, 0xbd, 0xf0, 0x1a, 0x1d, 0x8c, 0x7f, 0x38, 0x4c, 0xe4, 0x44, 0x78, 0xed, 0x84,
+	0xab, 0x19, 0x8f, 0x0f, 0xe2, 0xc3, 0xb1, 0x2f, 0xa3, 0x51, 0x48, 0x9a, 0x0e, 0x05, 0x45, 0x57,
+	0x62, 0x01, 0x7f, 0x3b, 0x0c, 0x87, 0x9c, 0x8c, 0x75, 0x1f, 0xa1, 0x2a, 0x6b, 0x80, 0x69, 0xc3,
+	0x69, 0x3a, 0x45, 0xaa, 0xb4, 0x2a, 0x03, 0xf3, 0x28, 0x31, 0x14, 0xda, 0x6c, 0x34, 0x89, 0x61,
+	0xb0, 0x04, 0xdf, 0x7c, 0x69, 0x77, 0x53, 0xfb, 0x66, 0x4a, 0x18, 0x45, 0x79, 0xb1, 0xe5, 0x3d,
+	0x36, 0x92, 0x26, 0xf7, 0xd8, 0x49, 0xc8, 0xaa, 0x3d, 0x36, 0x5a, 0x27, 0x85, 0xc7, 0x46, 0x13,
+	0x05, 0x31, 0xde, 0x08, 0x62, 0x34, 0x60, 0x00, 0xa9, 0xc5, 0x98, 0xd7, 0xba, 0x48, 0x7e, 0xe4,
+	0xf2, 0xe5, 0xc9, 0x8f, 0xa4, 0xc9, 0xc9, 0x9f, 0x84, 0xac, 0x9a, 0xfc, 0x68, 0x9d, 0x14, 0xe4,
+	0x47, 0x13, 0xa7, 0xe4, 0xd7, 0xbe, 0x66, 0x50, 0x2e, 0x8c, 0xc2, 0xef, 0xd0, 0x76, 0xcc, 0x4f,
+	0xf1, 0xed, 0x85, 0xdf, 0xfc, 0xa6, 0xdb, 0x2b, 0x1d, 0x2c, 0xfe, 0xaa, 0x36, 0xdd, 0x1e, 0x59,
+	0xc3, 0x8e, 0xe0, 0x24, 0xa2, 0x63, 0xe3, 0xc3, 0x25, 0xbf, 0x54, 0xac, 0xda, 0xbd, 0x65, 0xfd,
+	0x9f, 0xd7, 0x3c, 0x13, 0x9c, 0x9f, 0x19, 0x02, 0x26, 0x0b, 0x8c, 0x8f, 0xd5, 0xb8, 0xb5, 0xc8,
+	0x4e, 0xf8, 0xdd, 0x22, 0x63, 0x7c, 0xc2, 0xe5, 0x8c, 0xc5, 0x5f, 0x7c, 0x39, 0x63, 0x89, 0x97,
+	0x2b, 0x56, 0x81, 0xcb, 0x28, 0xaf, 0x10, 0x9f, 0x6e, 0x79, 0x85, 0xc4, 0x04, 0x91, 0xb5, 0xa7,
+	0xa5, 0x1f, 0xe3, 0xb2, 0xf2, 0x73, 0x5c, 0x56, 0x7e, 0x8d, 0xcb, 0xca, 0xf7, 0xdf, 0xe5, 0xb5,
+	0xb3, 0x6c, 0xdf, 0x18, 0xf8, 0xff, 0x30, 0xcf, 0xff, 0xf3, 0x7f, 0xee, 0xff, 0x09, 0x00, 0x00,
+	0xff, 0xff, 0x52, 0x30, 0x52, 0x64, 0x95, 0x0a, 0x00, 0x00,
 }

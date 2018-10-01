@@ -53,6 +53,24 @@ func (mr *MockCryptoKeyClientMockRecorder) CryptoKeyCreate(ctx, in interface{}, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyCreate", reflect.TypeOf((*MockCryptoKeyClient)(nil).CryptoKeyCreate), varargs...)
 }
 
+// CryptoKeyCreateWithId mocks base method
+func (m *MockCryptoKeyClient) CryptoKeyCreateWithId(ctx context.Context, in *CryptoKeyCreateWithIdRequestMsg, opts ...grpc.CallOption) (*CryptoKeyCreateWithIdResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CryptoKeyCreateWithId", varargs...)
+	ret0, _ := ret[0].(*CryptoKeyCreateWithIdResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyCreateWithId indicates an expected call of CryptoKeyCreateWithId
+func (mr *MockCryptoKeyClientMockRecorder) CryptoKeyCreateWithId(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyCreateWithId", reflect.TypeOf((*MockCryptoKeyClient)(nil).CryptoKeyCreateWithId), varargs...)
+}
+
 // CryptoKeyRead mocks base method
 func (m *MockCryptoKeyClient) CryptoKeyRead(ctx context.Context, in *CryptoKeyReadRequestMsg, opts ...grpc.CallOption) (*CryptoKeyReadResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -141,6 +159,19 @@ func (m *MockCryptoKeyServer) CryptoKeyCreate(arg0 context.Context, arg1 *Crypto
 // CryptoKeyCreate indicates an expected call of CryptoKeyCreate
 func (mr *MockCryptoKeyServerMockRecorder) CryptoKeyCreate(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyCreate", reflect.TypeOf((*MockCryptoKeyServer)(nil).CryptoKeyCreate), arg0, arg1)
+}
+
+// CryptoKeyCreateWithId mocks base method
+func (m *MockCryptoKeyServer) CryptoKeyCreateWithId(arg0 context.Context, arg1 *CryptoKeyCreateWithIdRequestMsg) (*CryptoKeyCreateWithIdResponseMsg, error) {
+	ret := m.ctrl.Call(m, "CryptoKeyCreateWithId", arg0, arg1)
+	ret0, _ := ret[0].(*CryptoKeyCreateWithIdResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoKeyCreateWithId indicates an expected call of CryptoKeyCreateWithId
+func (mr *MockCryptoKeyServerMockRecorder) CryptoKeyCreateWithId(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoKeyCreateWithId", reflect.TypeOf((*MockCryptoKeyServer)(nil).CryptoKeyCreateWithId), arg0, arg1)
 }
 
 // CryptoKeyRead mocks base method
