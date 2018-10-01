@@ -1682,11 +1682,11 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc)
 			if (tmp_key_size != key->key1_len) {
 				PNSO_LOG_ERROR("key size %u doesn't match expected %u\n",
 					       tmp_key_size, key->key1_len);
-				return PNSO_ERR_XTS_WRONG_KEY_TYPE;
+				return PNSO_ERR_CRYPTO_WRONG_KEY_TYPE;
 			}
 			if (0 != memcmp(tmp_key, key->key1, tmp_key_size)) {
 				PNSO_LOG_ERROR("key data doesn't match\n");
-				return PNSO_ERR_XTS_KEY_NOT_REGISTERED;
+				return PNSO_ERR_CRYPTO_KEY_NOT_REGISTERED;
 			}
 		}
 #endif

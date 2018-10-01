@@ -35,18 +35,18 @@ pnso_error_t algo_openssl_encrypt_xts(void *scratch,
 		if (1 !=
 		    EVP_EncryptInit_ex(cipher_ctx, EVP_aes_128_xts(),
 				       0, 0, 0)) {
-			return PNSO_ERR_XTS_AXI_ERROR;
+			return PNSO_ERR_CRYPTO_AXI_ERROR;
 		}
 		break;
 	case 32:
 		if (1 !=
 		    EVP_EncryptInit_ex(cipher_ctx, EVP_aes_256_xts(),
 				       0, 0, 0)) {
-			return PNSO_ERR_XTS_AXI_ERROR;
+			return PNSO_ERR_CRYPTO_AXI_ERROR;
 		}
 		break;
 	default:
-		return PNSO_ERR_XTS_WRONG_KEY_TYPE;
+		return PNSO_ERR_CRYPTO_WRONG_KEY_TYPE;
 	}
 
 	memcpy(padded_key, key1, key_sz);
@@ -57,16 +57,16 @@ pnso_error_t algo_openssl_encrypt_xts(void *scratch,
 	}
 
 	if (1 != EVP_EncryptInit_ex(cipher_ctx, 0, 0, padded_key, iv)) {
-		return PNSO_ERR_XTS_AXI_ERROR;
+		return PNSO_ERR_CRYPTO_AXI_ERROR;
 	}
 
 	if (1 !=
 	    EVP_EncryptUpdate(cipher_ctx, output, &rlen, input,
 			      input_sz)) {
-		return PNSO_ERR_XTS_AXI_ERROR;
+		return PNSO_ERR_CRYPTO_AXI_ERROR;
 	}
 	if (rlen != input_sz) {
-		return PNSO_ERR_XTS_AXI_ERROR;
+		return PNSO_ERR_CRYPTO_AXI_ERROR;
 	}
 
 	*output_sz = (uint32_t) rlen;
@@ -89,18 +89,18 @@ pnso_error_t algo_decrypt_xts(void *scratch,
 		if (1 !=
 		    EVP_DecryptInit_ex(cipher_ctx, EVP_aes_128_xts(),
 				       0, 0, 0)) {
-			return PNSO_ERR_XTS_AXI_ERROR;
+			return PNSO_ERR_CRYPTO_AXI_ERROR;
 		}
 		break;
 	case 32:
 		if (1 !=
 		    EVP_DecryptInit_ex(cipher_ctx, EVP_aes_256_xts(),
 				       0, 0, 0)) {
-			return PNSO_ERR_XTS_AXI_ERROR;
+			return PNSO_ERR_CRYPTO_AXI_ERROR;
 		}
 		break;
 	default:
-		return PNSO_ERR_XTS_WRONG_KEY_TYPE;
+		return PNSO_ERR_CRYPTO_WRONG_KEY_TYPE;
 	}
 
 	memcpy(padded_key, key1, key_sz);
@@ -111,16 +111,16 @@ pnso_error_t algo_decrypt_xts(void *scratch,
 	}
 
 	if (1 != EVP_DecryptInit_ex(cipher_ctx, 0, 0, padded_key, iv)) {
-		return PNSO_ERR_XTS_AXI_ERROR;
+		return PNSO_ERR_CRYPTO_AXI_ERROR;
 	}
 
 	if (1 !=
 	    EVP_DecryptUpdate(cipher_ctx, output, &rlen, input,
 			      input_sz)) {
-		return PNSO_ERR_XTS_AXI_ERROR;
+		return PNSO_ERR_CRYPTO_AXI_ERROR;
 	}
 	if (rlen != input_sz) {
-		return PNSO_ERR_XTS_AXI_ERROR;
+		return PNSO_ERR_CRYPTO_AXI_ERROR;
 	}
 	*output_sz = (uint32_t) rlen;
 
