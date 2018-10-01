@@ -26,7 +26,7 @@ type PolicyAgent struct {
 }
 
 // NewPolicyAgent creates a new instance of telemetry policy agent
-func NewPolicyAgent(nodeUUID, dbName, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode, datapath string, netAgent *netagent.Nagent) (*PolicyAgent, error) {
+func NewPolicyAgent(nodeUUID string, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode, datapath string, netAgent *netagent.Nagent) (*PolicyAgent, error) {
 	log.Infof("starting policy agent node:%s ctrler:%s mode:%s", nodeUUID, ctrlerURL, mode)
 
 	agent := &PolicyAgent{
@@ -59,7 +59,7 @@ func NewPolicyAgent(nodeUUID, dbName, ctrlerURL string, resolverClient resolver.
 		agent.hal = mockdatapath.MockHal()
 	}
 
-	tpAgent, err := state.NewTpAgent(dbName, netAgent, agent.hal)
+	tpAgent, err := state.NewTpAgent(netAgent, agent.hal)
 	if err != nil {
 		log.Errorf("Error creating telemetry policy state, Err: %v", err)
 		return nil, err

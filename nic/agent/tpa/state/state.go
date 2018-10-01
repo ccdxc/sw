@@ -24,7 +24,6 @@ import (
 )
 
 const (
-	emDbPath                = "/tmp/naples-tpagent.db" // deleted on restart
 	flowExportPolicyID      = "flowExportPolicyId"
 	maxFlowExportCollectors = 16
 )
@@ -45,18 +44,9 @@ type networkMeta struct {
 }
 
 // NewTpAgent creates new telemetry policy agent state
-func NewTpAgent(dbPath string, netAgent *agstate.Nagent, halTm halproto.TelemetryClient) (*PolicyState, error) {
-	if dbPath == "" {
-		dbPath = emDbPath
-	}
-	mstore, err := emstore.NewEmstore(emstore.BoltDBType, dbPath)
-	if err != nil {
-		log.Errorf("failed to open db: %s, err: %v", dbPath, err)
-		return nil, err
-	}
-
+func NewTpAgent(netAgent *agstate.Nagent, halTm halproto.TelemetryClient) (*PolicyState, error) {
 	state := &PolicyState{
-		store:    mstore,
+		store:    netAgent.Store,
 		netAgent: netAgent,
 		hal:      halTm,
 	}
@@ -66,7 +56,6 @@ func NewTpAgent(dbPath string, netAgent *agstate.Nagent, halTm halproto.Telemetr
 
 // Close closes all policy agent resources
 func (s *PolicyState) Close() {
-	s.store.Close()
 }
 
 func (s *PolicyState) validateMeta(p *tpmprotos.FlowExportPolicy) error {

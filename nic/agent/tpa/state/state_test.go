@@ -3,6 +3,8 @@ package state
 import (
 	"testing"
 
+	"github.com/pensando/sw/venice/utils/emstore"
+
 	agstate "github.com/pensando/sw/nic/agent/netagent/state"
 	tu "github.com/pensando/sw/venice/utils/testutils"
 
@@ -23,6 +25,8 @@ import (
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 )
 
+const emDbPath = "/tmp/naples-tpagent.db"
+
 func cleanup(t *testing.T, ag *PolicyState) {
 	l, err := ag.store.List(&tpaprotos.FlowExportPolicyObj{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
@@ -39,13 +43,28 @@ func cleanup(t *testing.T, ag *PolicyState) {
 	os.Remove(emDbPath)
 }
 
+func createDataStore() (emstore.Emstore, error) {
+
+	mstore, err := emstore.NewEmstore(emstore.BoltDBType, emDbPath)
+	if err != nil {
+		return nil, err
+	}
+	return mstore, nil
+}
+
 func TestValidateMeta(t *testing.T) {
+
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
 	na := &agstate.Nagent{
 		TenantDB:    map[string]*netproto.Tenant{},
 		NamespaceDB: map[string]*netproto.Namespace{},
 		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
 	}
-	ag, err := NewTpAgent("", na, mockdatapath.MockHal())
+
+	ag, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -63,12 +82,18 @@ func TestValidateMeta(t *testing.T) {
 }
 
 func TestFindNumExports(t *testing.T) {
+
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
 	na := &agstate.Nagent{
 		TenantDB:    map[string]*netproto.Tenant{},
 		NamespaceDB: map[string]*netproto.Namespace{},
 		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
 	}
-	ag, err := NewTpAgent("", na, mockdatapath.MockHal())
+
+	ag, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -112,12 +137,17 @@ func TestFindNumExports(t *testing.T) {
 }
 
 func TestValidatePolicy(t *testing.T) {
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
 	na := &agstate.Nagent{
 		TenantDB:    map[string]*netproto.Tenant{},
 		NamespaceDB: map[string]*netproto.Namespace{},
 		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
 	}
-	ag, err := NewTpAgent("", na, mockdatapath.MockHal())
+
+	ag, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -209,12 +239,17 @@ func TestValidatePolicy(t *testing.T) {
 
 func TestNewTpAgent(t *testing.T) {
 
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
 	na := &agstate.Nagent{
 		TenantDB:    map[string]*netproto.Tenant{},
 		NamespaceDB: map[string]*netproto.Namespace{},
 		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
 	}
-	ag, err := NewTpAgent("", na, mockdatapath.MockHal())
+
+	ag, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
@@ -249,12 +284,16 @@ func TestNewTpAgent(t *testing.T) {
 }
 
 func TestCreateFlowExportPolicy(t *testing.T) {
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
 	na := &agstate.Nagent{
 		TenantDB:    map[string]*netproto.Tenant{},
 		NetworkDB:   map[string]*netproto.Network{},
 		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
 		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
 	}
 
 	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
@@ -300,7 +339,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent("", na, mockdatapath.MockHal())
+	s, err := NewTpAgent(na, mockdatapath.MockHal())
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, s)
 
@@ -390,12 +429,16 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 	defer c.Finish()
 	halMock := halproto.NewMockTelemetryClient(c)
 
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
 	na := &agstate.Nagent{
 		TenantDB:    map[string]*netproto.Tenant{},
 		NetworkDB:   map[string]*netproto.Network{},
 		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
 		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
 	}
 
 	key := na.Solver.ObjectKey(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "default"}, api.TypeMeta{Kind: "tenant"})
@@ -441,7 +484,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent("", na, halMock)
+	s, err := NewTpAgent(na, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -523,15 +566,19 @@ func TestNetagentInfo(t *testing.T) {
 	defer c.Finish()
 	halMock := halproto.NewMockTelemetryClient(c)
 
+	ds, err := createDataStore()
+	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
+
 	na := &agstate.Nagent{
 		TenantDB:    map[string]*netproto.Tenant{},
 		NetworkDB:   map[string]*netproto.Network{},
 		EndpointDB:  map[string]*netproto.Endpoint{},
 		NamespaceDB: map[string]*netproto.Namespace{},
 		Solver:      dependencies.NewDepSolver(),
+		Store:       ds,
 	}
 
-	s, err := NewTpAgent("", na, halMock)
+	s, err := NewTpAgent(na, halMock)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)

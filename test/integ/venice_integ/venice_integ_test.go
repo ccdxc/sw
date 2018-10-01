@@ -429,7 +429,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.tmpFiles = append(it.tmpFiles, n)
 
 		log.Infof("creating telemetry policy agent")
-		tpa, aerr := tpa.NewPolicyAgent(fmt.Sprintf("dummy-uuid-%d", i), n, globals.Tpm, rc, state.AgentMode_MANAGED, "mock", agent.NetworkAgent)
+		tpa, aerr := tpa.NewPolicyAgent(fmt.Sprintf("dummy-uuid-%d", i), globals.Tpm, rc, state.AgentMode_MANAGED, "mock", agent.NetworkAgent)
 		c.Assert(aerr, IsNil)
 		if tsa == nil {
 			c.Fatalf("cannot create telemetry policy agent. Err: %v", err)
