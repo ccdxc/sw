@@ -620,7 +620,7 @@ func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
 	for _, svc := range file.Services {
 		ver, err := reg.GetExtension("venice.apiVersion", svc)
 		if err != nil {
-			glog.V(1).Infof("unversioned service, ingnoring for svc manifest [%s](%s)", svc.Name, err)
+			glog.V(1).Infof("unversioned service, ingnoring for svc manifest [%s](%s)", *svc.Name, err)
 			continue
 		}
 		svcdef := serviceDef{
@@ -1411,7 +1411,7 @@ func getNestedMsgName(msg *descriptor.Message) (string, error) {
 }
 
 func isSpecStatusMessage(msg *descriptor.Message) bool {
-	glog.V(1).Infof("Check if SpecStatus message for %s", msg.Name)
+	glog.V(1).Infof("Check if SpecStatus message for %s", *msg.Name)
 	spec := false
 	status := false
 	for _, v := range msg.Fields {
@@ -1709,7 +1709,7 @@ func getCLITags(strct Struct, path string, msgMap map[string]Struct, m map[strin
 			if _, ok := m[fld.CLITag.tag]; ok {
 				// panic(fmt.Sprintf("duplicate tag [%s] at [%s]", fld.CLITag, fpath))
 				// Dont panic during initial development. Will panic in production
-				glog.V(1).Infof("Duplicate tag [%s] at [%s] Will CRASH&BURN", fld.CLITag, fpath)
+				glog.V(1).Infof("Duplicate tag [%v] at [%s] Will CRASH&BURN", fld.CLITag, fpath)
 			}
 			fld.CLITag.path = fpath
 			m[fld.CLITag.tag] = fld.CLITag

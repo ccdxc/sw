@@ -7,6 +7,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/keymgr"
 )
 
@@ -63,4 +64,49 @@ type NmdPlatformAPI interface {
 
 	// SmartNIC update api
 	UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.SmartNIC, error)
+}
+
+// ==================================================================================
+//	UpgMgr    <---------------- NMD <--------- Rollout
+//              UpgmgrAPI      RolloutAPI
+//
+//	UpgMgr    ----------------> NMD ---------> Rollout
+//              NmdRolloutAPI      RolloutCtrlAPI
+//
+
+// RolloutAPI is the API provided by NMD to Rollout
+type RolloutAPI interface {
+	GetPrimaryMAC() string
+	RegisterROCtrlClient(RolloutCtrlAPI) error
+	CreateUpdateSmartNICRollout(sro *protos.SmartNICRollout) error
+	DeleteSmartNICRollout(sro *protos.SmartNICRollout) error
+}
+
+// UpgMgrAPI is used by NMD for calling upgmgr in naples
+type UpgMgrAPI interface {
+	RegisterNMD(NmdRolloutAPI) error
+
+	StartDisruptiveUpgrade() error
+	StartUpgOnNextHostReboot() error
+	StartPreCheckDisruptive(version string) error
+	StartPreCheckForUpgOnNextHostReboot(version string) error
+}
+
+// NmdRolloutAPI is the API called by upgmgr agent to nmd
+type NmdRolloutAPI interface {
+	UpgSuccessful()
+	UpgFailed(errStrList *[]string)
+	UpgPossible()
+	UpgNotPossible(errStrList *[]string)
+	UpgAborted(errStrList *[]string)
+}
+
+// RolloutCtrlAPI is the API provided by Rollout Ctrler to NMD
+type RolloutCtrlAPI interface {
+	// WatchSmartNICRolloutUpdates establishes a watch on updates of SmartNICRollout objects
+	WatchSmartNICRolloutUpdates() error
+	// UpdateSmartNICRolloutStatus
+	UpdateSmartNICRolloutStatus(status *protos.SmartNICRolloutStatusUpdate) error
+	// Stop the watcher, client and free up any resources
+	Stop()
 }

@@ -21,6 +21,10 @@ func TestVeniceConfigFile(t *testing.T) {
 					"uuid" : "dummyuuid"
 				}
 			}
+		},
+		"Properties" : {
+			"prop1" : "y",
+			"Prop2" : "bla"
 		}
 	}`
 	if _, err := tmpfile.Write([]byte(content)); err != nil {
@@ -38,6 +42,14 @@ func TestVeniceConfigFile(t *testing.T) {
 	o := GetOverriddenModules(tmpfile.Name())
 	if len(o) != 1 && o["hello"].UUID != "dummyuuid" {
 		t.Fatalf("unexpected values for GetOverriddenModules. got %#v", o)
+	}
+	p := getConfigProperty(tmpfile.Name(), "prop1")
+	if p != "y" {
+		t.Fatalf("unexpected values for getConfigProperty. got %#v", p)
+	}
+	p = getConfigProperty("/some-non-existingfile", "prop1")
+	if p != "" {
+		t.Fatalf("unexpected values for getConfigProperty in non-existing file. got %#v", p)
 	}
 
 	d = GetDisabledModules("/some-non-existing-file")

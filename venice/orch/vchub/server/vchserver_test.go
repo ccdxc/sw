@@ -1058,7 +1058,7 @@ func wait4NwIFEvent(doneCh chan bool, ev orch.WatchEvent_EventType, mac, pg stri
 		if event.Event == ev {
 			for _, nwif := range ifs {
 				if nwif.Status.MacAddress == mac && nwif.Status.PortGroup == pg {
-					log.Info("||||Got create for %+v", nwif)
+					log.Infof("||||Got create for %+v", nwif)
 					doneCh <- true
 				}
 			}

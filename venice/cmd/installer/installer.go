@@ -42,6 +42,37 @@ const (
 	installerMetaFileName = "venice-install.json"
 )
 
+// PreCheck installation of given version
+func PreCheck(version string) error {
+	log.Debugf("About to download image")
+	imageName, err := DownloadImage(version)
+	if err != nil {
+		return fmt.Errorf("DownloadImage version %s name %s returned %v", version, imageName, err)
+	}
+	log.Debugf("About to Extract image")
+	err = ExtractImage(imageName)
+	if err != nil {
+		return fmt.Errorf("ExtractImage version %s name %s returned %v", version, imageName, err)
+	}
+	log.Debugf("About to remove downloaded image")
+	os.Remove(imageName)
+	log.Debugf("About to Preload image")
+	err = PreLoadImage()
+	if err != nil {
+		return fmt.Errorf("PreloadImage version %s name  %s returned  %v", version, imageName, err)
+	}
+	return nil
+}
+
+// RunVersion is called after PreCheck to actually load and run a given version
+func RunVersion(version string) error {
+	// TODO: check the version as needed
+
+	err := LoadAndInstallImage()
+	Cleanup()
+	return err
+}
+
 // DownloadImage downloads an image from minio and returns the local filename
 func DownloadImage(version string) (string, error) {
 	if err := os.RemoveAll(installerTmpDir); err != nil {
@@ -59,7 +90,7 @@ func DownloadImage(version string) (string, error) {
 // ExtractImage takes a locally downloaded image and extracts the contents
 func ExtractImage(filename string) error {
 	var err error
-	if _, err := exec.LookPath("tar"); err != nil {
+	if _, err = exec.LookPath("tar"); err != nil {
 		log.Errorf("LookPath failed during extract err %v", err)
 		return err
 	}
@@ -168,4 +199,12 @@ func LoadAndInstallImage() error {
 	}
 
 	return err
+}
+
+// Cleanup removes all downloaded/extracted image  contents
+func Cleanup() error {
+	if err := os.RemoveAll(installerTmpDir); err != nil {
+		return fmt.Errorf("Error %s during removeAll of %s", err, installerTmpDir)
+	}
+	return nil
 }

@@ -17,6 +17,8 @@ import (
 	rpc "google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 
+	"github.com/pensando/sw/nic/agent/nmd/upg"
+
 	api "github.com/pensando/sw/api"
 	apisrvCache "github.com/pensando/sw/api/cache"
 	apicache "github.com/pensando/sw/api/client"
@@ -174,9 +176,16 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 		log.Fatalf("Error creating platform agent. Err: %v", err)
 	}
 
+	// create a upgrade client with dummy interface to delphi
+	uc, err := upg.NewNaplesUpgradeClient(nil)
+	if err != nil {
+		log.Fatalf("Error creating Upgrade client . Err: %v", err)
+	}
+
 	r := resolver.New(&resolver.Config{Name: t.Name(), Servers: strings.Split(*resolverURL, ",")})
 	// create the new NMD
 	ag, err := nmd.NewAgent(pa,
+		uc,
 		dbPath,
 		hostID,
 		hostID,
@@ -188,7 +197,8 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 		"classic",
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,
-		r)
+		r,
+		nil)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 	}

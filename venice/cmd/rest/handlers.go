@@ -14,7 +14,6 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/installer"
 	"github.com/pensando/sw/venice/cmd/ops"
-	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	// Import utils/debug pkg to publish runtime stats as part of its pkg init
@@ -131,7 +130,6 @@ func ServiceListHandler(w http.ResponseWriter, req *http.Request) {
 // DebugUpgradeHandler is a debug handler during development of upgrade
 func DebugUpgradeHandler(w http.ResponseWriter, req *http.Request) {
 	// read the file for the updated list of services
-	services.ContainerInfoMap = utils.GetContainerInfo()
 	err := env.K8sService.UpgradeServices(utils.GetUpgradeOrder())
 	log.Debugf("UpgradeServices returned %s", err)
 }

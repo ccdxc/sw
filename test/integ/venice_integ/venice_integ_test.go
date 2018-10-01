@@ -29,6 +29,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	nmdproto "github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/nic/agent/nmd/upg"
 	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
@@ -203,10 +204,16 @@ func (it *veniceIntegSuite) startNmd(c *C) {
 		}
 		resolverClient := resolver.New(resolverCfg)
 
+		// create a upgrade client
+		uc, err := upg.NewNaplesUpgradeClient(nil)
+		if err != nil {
+			log.Fatalf("Error creating Upgrade client . Err: %v", err)
+		}
+
 		// create the new NMD
-		nmd, err := nmd.NewAgent(pa, dbPath, hostName, hostID, smartNICServerURL,
+		nmd, err := nmd.NewAgent(pa, uc, dbPath, hostName, hostID, smartNICServerURL,
 			"", restURL, "", "", "managed", globals.NicRegIntvl*time.Second,
-			globals.NicUpdIntvl*time.Second, resolverClient)
+			globals.NicUpdIntvl*time.Second, resolverClient, nil)
 		if err != nil {
 			c.Fatalf("Error creating NMD. Err: %v", err)
 		}

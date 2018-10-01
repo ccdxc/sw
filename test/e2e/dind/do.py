@@ -312,7 +312,7 @@ parser.add_argument("-num_quorum", type=int, default=1, help="number of quorum n
 parser.add_argument("-num_nodes", type=int, default=1, help="number of venice nodes")
 parser.add_argument("-test_mode", type=str, default="MOCK", help="Specify Agent datapath mode.")
 parser.add_argument("-configFile", default="tb_config.json", help="Configuration of the cluster")
-parser.add_argument("-custom_config_file", default="bin/venice_conf.json", help="custom Configuration of the cluster")
+parser.add_argument("-custom_config_file", default="bin/venice-conf.json", help="custom Configuration of the cluster")
 parser.add_argument("-restart", action='store_true', default=False, help="restart venice components in existing Cluster by loading new Pensando code")
 parser.add_argument("-delete", action='store_true', default=False, help="delete cluster by deleting containers")
 parser.add_argument("-stop", action='store_true', default=False, help="stop venice cluster but keep containers")

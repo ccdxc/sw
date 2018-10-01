@@ -167,4 +167,7 @@ const (
 
 	// tmagent port
 	TmAGENTRestPort = "9013"
+
+	// Rollout
+	RolloutRPCPort = "9015"
 )

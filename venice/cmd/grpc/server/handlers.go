@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/venice/cmd/rolloutclient"
+
 	context "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
@@ -107,8 +109,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	if err := utils.SaveCluster(&cl); err != nil {
 		return nil, err
 	}
-
-	services.ContainerInfoMap = utils.GetContainerInfo()
 
 	var shouldStartAuthServer = false
 	if req.CertMgrBundle != nil && !env.CertMgr.IsReady() {
@@ -261,9 +261,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.ServiceTracker = services.NewServiceTracker(env.ResolverService)
 		env.LeaderService.Register(env.ServiceTracker)
 
-		env.MasterService.Start()
-		env.LeaderService.Start()
-		env.CfgWatcherService.Start()
 	} else {
 		// Generate Kubelet credentials only. Try to continue anyway in case of failure.
 		err := credentials.GenKubeletCredentials(req.NodeId, env.CertMgr.Ca().Sign, env.CertMgr.Ca().TrustRoots())
@@ -284,6 +281,18 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	}
 
 	env.NodeService = services.NewNodeService(req.NodeId)
+	env.RolloutMgr = services.NewRolloutMgr()
+	env.RolloutMgr.Start()
+	env.VeniceRolloutClient = rolloutclient.NewVeniceRolloutClient(globals.Rollout, req.NodeId, env.ResolverClient, env.RolloutMgr)
+	env.VeniceRolloutClient.Start()
+
+	if req.QuorumConfig != nil {
+		env.ServiceRolloutClient = rolloutclient.NewServiceRolloutClient(globals.Rollout, req.NodeId, env.ResolverClient, env.RolloutMgr)
+		env.MasterService.Start()
+		env.LeaderService.Start()
+		env.CfgWatcherService.Start()
+	}
+
 	// Start node services. Currently we are running Node services on Quorum nodes also
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)

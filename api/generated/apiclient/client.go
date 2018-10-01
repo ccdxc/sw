@@ -13,6 +13,8 @@ import (
 	monitoringClient "github.com/pensando/sw/api/generated/monitoring/grpc/client"
 	network "github.com/pensando/sw/api/generated/network"
 	networkClient "github.com/pensando/sw/api/generated/network/grpc/client"
+	rollout "github.com/pensando/sw/api/generated/rollout"
+	rolloutClient "github.com/pensando/sw/api/generated/rollout/grpc/client"
 	security "github.com/pensando/sw/api/generated/security"
 	securityClient "github.com/pensando/sw/api/generated/security/grpc/client"
 	staging "github.com/pensando/sw/api/generated/staging"
@@ -37,6 +39,8 @@ type Services interface {
 	MonitoringV1() monitoring.MonitoringV1Interface
 	// Package is network and len of messages is 3
 	NetworkV1() network.NetworkV1Interface
+	// Package is rollout and len of messages is 1
+	RolloutV1() rollout.RolloutV1Interface
 	// Package is security and len of messages is 5
 	SecurityV1() security.SecurityV1Interface
 	// Package is staging and len of messages is 1
@@ -55,6 +59,7 @@ type apiGrpcServerClient struct {
 	aClusterV1    cluster.ClusterV1Interface
 	aMonitoringV1 monitoring.MonitoringV1Interface
 	aNetworkV1    network.NetworkV1Interface
+	aRolloutV1    rollout.RolloutV1Interface
 	aSecurityV1   security.SecurityV1Interface
 	aStagingV1    staging.StagingV1Interface
 	aWorkloadV1   workload.WorkloadV1Interface
@@ -83,6 +88,10 @@ func (a *apiGrpcServerClient) MonitoringV1() monitoring.MonitoringV1Interface {
 
 func (a *apiGrpcServerClient) NetworkV1() network.NetworkV1Interface {
 	return a.aNetworkV1
+}
+
+func (a *apiGrpcServerClient) RolloutV1() rollout.RolloutV1Interface {
+	return a.aRolloutV1
 }
 
 func (a *apiGrpcServerClient) SecurityV1() security.SecurityV1Interface {
@@ -114,6 +123,7 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 		aClusterV1:    clusterClient.NewGrpcCrudClientClusterV1(client.ClientConn, logger),
 		aMonitoringV1: monitoringClient.NewGrpcCrudClientMonitoringV1(client.ClientConn, logger),
 		aNetworkV1:    networkClient.NewGrpcCrudClientNetworkV1(client.ClientConn, logger),
+		aRolloutV1:    rolloutClient.NewGrpcCrudClientRolloutV1(client.ClientConn, logger),
 		aSecurityV1:   securityClient.NewGrpcCrudClientSecurityV1(client.ClientConn, logger),
 		aStagingV1:    stagingClient.NewGrpcCrudClientStagingV1(client.ClientConn, logger),
 		aWorkloadV1:   workloadClient.NewGrpcCrudClientWorkloadV1(client.ClientConn, logger),
@@ -129,6 +139,7 @@ type apiRestServerClient struct {
 	aClusterV1    cluster.ClusterV1Interface
 	aMonitoringV1 monitoring.MonitoringV1Interface
 	aNetworkV1    network.NetworkV1Interface
+	aRolloutV1    rollout.RolloutV1Interface
 	aSecurityV1   security.SecurityV1Interface
 	aStagingV1    staging.StagingV1Interface
 	aWorkloadV1   workload.WorkloadV1Interface
@@ -159,6 +170,10 @@ func (a *apiRestServerClient) NetworkV1() network.NetworkV1Interface {
 	return a.aNetworkV1
 }
 
+func (a *apiRestServerClient) RolloutV1() rollout.RolloutV1Interface {
+	return a.aRolloutV1
+}
+
 func (a *apiRestServerClient) SecurityV1() security.SecurityV1Interface {
 	return a.aSecurityV1
 }
@@ -182,6 +197,7 @@ func NewRestAPIClient(url string) (Services, error) {
 		aClusterV1:    clusterClient.NewRestCrudClientClusterV1(url),
 		aMonitoringV1: monitoringClient.NewRestCrudClientMonitoringV1(url),
 		aNetworkV1:    networkClient.NewRestCrudClientNetworkV1(url),
+		aRolloutV1:    rolloutClient.NewRestCrudClientRolloutV1(url),
 		aSecurityV1:   securityClient.NewRestCrudClientSecurityV1(url),
 		aStagingV1:    stagingClient.NewRestCrudClientStagingV1(url),
 		aWorkloadV1:   workloadClient.NewRestCrudClientWorkloadV1(url),
@@ -199,6 +215,7 @@ func NewStagedRestAPIClient(url string, bufferId string) (Services, error) {
 		aClusterV1:    clusterClient.NewStagedRestCrudClientClusterV1(url, bufferId),
 		aMonitoringV1: monitoringClient.NewStagedRestCrudClientMonitoringV1(url, bufferId),
 		aNetworkV1:    networkClient.NewStagedRestCrudClientNetworkV1(url, bufferId),
+		aRolloutV1:    rolloutClient.NewStagedRestCrudClientRolloutV1(url, bufferId),
 		aSecurityV1:   securityClient.NewStagedRestCrudClientSecurityV1(url, bufferId),
 		aStagingV1:    stagingClient.NewStagedRestCrudClientStagingV1(url, bufferId),
 		aWorkloadV1:   workloadClient.NewStagedRestCrudClientWorkloadV1(url, bufferId),

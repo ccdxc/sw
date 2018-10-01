@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/keymgr"
@@ -27,7 +28,7 @@ import (
 )
 
 // NewNMD returns a new NMD instance
-func NewNMD(platform PlatformAPI,
+func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
 	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, mode string,
 	regInterval, updInterval time.Duration) (*NMD, error) {
 
@@ -94,6 +95,7 @@ func NewNMD(platform PlatformAPI,
 		nodeUUID:         nodeUUID,
 		macAddr:          macAddr,
 		platform:         platform,
+		upgmgr:           upgmgr,
 		nic:              nil,
 		nicRegInterval:   regInterval,
 		isRegOngoing:     false,
@@ -106,11 +108,20 @@ func NewNMD(platform PlatformAPI,
 		stopNICReg:       make(chan bool, 1),
 		stopNICUpd:       make(chan bool, 1),
 		config:           config,
+		completedOps:     make(map[roprotos.SmartNICOpSpec]bool),
 	}
 
 	// register NMD with the platform agent
 	err = platform.RegisterNMD(&nm)
 	if err != nil {
+		// cleanup emstore and return
+		emdb.Close()
+		return nil, err
+	}
+
+	err = upgmgr.RegisterNMD(&nm)
+	if err != nil {
+		log.Fatalf("Error Registering NMD with upgmgr, err: %+v", err)
 		// cleanup emstore and return
 		emdb.Close()
 		return nil, err
@@ -166,6 +177,11 @@ func objectKey(meta api.ObjectMeta) string {
 // GetAgentID returns UUID of the NMD
 func (n *NMD) GetAgentID() string {
 	return n.nodeUUID
+}
+
+// GetPrimaryMAC returns primaryMac of NMD
+func (n *NMD) GetPrimaryMAC() string {
+	return n.config.Spec.PrimaryMac
 }
 
 // NaplesConfigHandler is the REST handler for Naples Config POST operation
@@ -359,5 +375,22 @@ func (n *NMD) setClusterCredentials(resp *grpc.NICAdmissionResponse) error {
 		}
 	}
 	n.tlsProvider.SetTrustRoots(trustRoots)
+	return nil
+}
+
+// RegisterROCtrlClient registers client of RolloutController to NMD
+func (n *NMD) RegisterROCtrlClient(rollout RolloutCtrlAPI) error {
+
+	n.Lock()
+	defer n.Unlock()
+
+	// ensure two clients dont register
+	if n.rollout != nil {
+		log.Fatalf("Attempt to register multiple rollout clients with NMD.")
+	}
+
+	// initialize rollout
+	n.rollout = rollout
+
 	return nil
 }

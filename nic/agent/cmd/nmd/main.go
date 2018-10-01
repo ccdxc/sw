@@ -14,6 +14,9 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
+	"github.com/pensando/sw/nic/agent/nmd/upg"
+	"github.com/pensando/sw/nic/delphi/gosdk"
+	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -40,6 +43,7 @@ func main() {
 		debugflag          = flag.Bool("debug", false, "Enable debug mode")
 		logToStdoutFlag    = flag.Bool("logtostdout", false, "enable logging to stdout")
 		logToFile          = flag.String("log-to-file", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Nmd)), "Path of the log file")
+		bypassDelphi       = flag.Bool("bypassdelphi", true, "Bypass Delphi")
 	)
 	flag.Parse()
 
@@ -104,8 +108,23 @@ func main() {
 		host = macAddr.String()
 	}
 
+	var delphiClient clientAPI.Client
+	if !*bypassDelphi {
+		dServ := nmd.NewDelphiService()
+		delphiClient, err = gosdk.NewClient(dServ)
+		if err != nil {
+			log.Fatalf("Error creating delphi client . Err: %v", err)
+		}
+	}
+
+	// create a upgrade client
+	uc, err := upg.NewNaplesUpgradeClient(delphiClient)
+	if err != nil {
+		log.Fatalf("Error creating Upgrade client . Err: %v", err)
+	}
+
 	// create the new NMD
-	nm, err := nmd.NewAgent(pa,
+	nm, err := nmd.NewAgent(pa, uc,
 		*nmdDbPath,
 		host,
 		macAddr.String(),
@@ -117,7 +136,8 @@ func main() {
 		*mode,
 		time.Duration(*regInterval)*time.Second,
 		time.Duration(*updInterval)*time.Second,
-		resolverClient)
+		resolverClient,
+		delphiClient)
 	if err != nil {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}

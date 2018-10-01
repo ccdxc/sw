@@ -14,6 +14,7 @@ import (
 	cluster "github.com/pensando/sw/api/generated/cluster"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	network "github.com/pensando/sw/api/generated/network"
+	rollout "github.com/pensando/sw/api/generated/rollout"
 	security "github.com/pensando/sw/api/generated/security"
 	staging "github.com/pensando/sw/api/generated/staging"
 	workload "github.com/pensando/sw/api/generated/workload"
@@ -112,6 +113,18 @@ func (m *MockServices) NetworkV1() network.NetworkV1Interface {
 // NetworkV1 indicates an expected call of NetworkV1
 func (mr *MockServicesMockRecorder) NetworkV1() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NetworkV1", reflect.TypeOf((*MockServices)(nil).NetworkV1))
+}
+
+// RolloutV1 mocks base method
+func (m *MockServices) RolloutV1() rollout.RolloutV1Interface {
+	ret := m.ctrl.Call(m, "RolloutV1")
+	ret0, _ := ret[0].(rollout.RolloutV1Interface)
+	return ret0
+}
+
+// RolloutV1 indicates an expected call of RolloutV1
+func (mr *MockServicesMockRecorder) RolloutV1() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RolloutV1", reflect.TypeOf((*MockServices)(nil).RolloutV1))
 }
 
 // SecurityV1 mocks base method

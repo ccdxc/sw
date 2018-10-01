@@ -135,7 +135,7 @@ func GetKubernetesClientTLSConfig() (*k8srest.TLSClientConfig, error) {
 func RemoveKubeletCredentials() error {
 	err := certs.DeleteTLSCredentials(globals.KubeletPKIDir)
 	if err != nil {
-		return errors.Wrapf(err, "Error removing Kubernetes credentials: %v")
+		return errors.Wrapf(err, "Error removing Kubernetes credentials: %v", err)
 	}
 	return err
 }

@@ -9,8 +9,10 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
+	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
@@ -26,6 +28,8 @@ type NMD struct {
 	macAddr  string          // Primary MAC addr
 	cmd      CmdAPI          // CMD API object
 	platform PlatformAPI     // Platform Agent object
+	rollout  RolloutCtrlAPI  // Rollout API Object
+	upgmgr   UpgMgrAPI       // Upgrade Manager API
 
 	config nmd.Naples    // Naples config received via REST
 	nic    *cmd.SmartNIC // SmartNIC object
@@ -47,6 +51,12 @@ type NMD struct {
 	remoteCertsURL string                            // URL where local process cert request are forwarder
 	certsProxy     *certsproxy.CertsProxy            // the CertsProxy instance
 	tlsProvider    *tlsproviders.KeyMgrBasedProvider // TLS provider holding cluster keys
+	// Rollout related stuff
+	completedOps  map[roprotos.SmartNICOpSpec]bool // the ops that were requested by spec and got completed
+	inProgressOps *roprotos.SmartNICOpSpec         // the ops thats currently in progress
+	pendingOps    []roprotos.SmartNICOpSpec        // the ops that will be executed after the current op is completed
+	opStatus      []roprotos.SmartNICOpStatus
+	objectMeta    api.ObjectMeta
 }
 
 // NaplesConfigResp is response to NaplesConfig request nmd.Naples

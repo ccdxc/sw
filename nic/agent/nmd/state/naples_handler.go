@@ -217,6 +217,7 @@ func (n *NMD) StartManagedMode() error {
 
 					// start watching objects
 					go n.cmd.WatchSmartNICUpdates()
+					go n.rollout.WatchSmartNICRolloutUpdates()
 
 					// Start certificates proxy
 					if n.certsListenURL != "" {
@@ -287,7 +288,7 @@ func (n *NMD) SendNICUpdates() error {
 			}
 
 			// Send nic status
-			log.Info("Sending NIC health update: %+v", nicObj)
+			log.Infof("Sending NIC health update: %+v", nicObj)
 			_, err := n.UpdateSmartNICReq(nicObj)
 			if err != nil {
 				log.Errorf("Error updating nic, name:%s  err: %+v",

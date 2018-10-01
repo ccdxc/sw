@@ -180,7 +180,7 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 							Schema:   putSchema,
 						},
 					}
-					glog.V(1).Infof("Put Parameters: ", putParams)
+					glog.V(1).Infof("Put Parameters: %v ", putParams)
 					deleteParams := []genswagger.SwaggerParameterObject{
 						{
 							Name:     "body",

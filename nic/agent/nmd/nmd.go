@@ -6,10 +6,28 @@ import (
 	"time"
 
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
+	"github.com/pensando/sw/nic/agent/nmd/rolloutif"
 	"github.com/pensando/sw/nic/agent/nmd/state"
+	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
+
+type delphiService struct {
+}
+
+func (d *delphiService) OnMountComplete() {
+	log.Infof("OnMountComplete() done for %s", d.Name())
+}
+
+func (d *delphiService) Name() string {
+	return "NMD delphi client"
+}
+
+// NewDelphiService returns Service object used to initialize delphi clients
+func NewDelphiService() clientAPI.Service {
+	return &delphiService{}
+}
 
 // Agent is the wrapper object that contains
 // NMD, CmdClient and Platform components
@@ -23,16 +41,25 @@ type Agent struct {
 
 	// Platform object
 	platform state.PlatformAPI
+
+	// Rollout controller client
+	roClient state.RolloutCtrlAPI
+
+	// Upgrademgr Interface
+	upgmgr state.UpgMgrAPI
+
+	delphiClient clientAPI.Client
 }
 
 // NewAgent creates an agent instance
-func NewAgent(platform state.PlatformAPI,
+func NewAgent(platform state.PlatformAPI, upgmgr state.UpgMgrAPI,
 	nmdDbPath, hostName, macAddr, cmdRegURL, cmdUpdURL, nmdListenURL, certsListenURL, cmdAuthCertsURL, mode string,
 	regInterval, updInterval time.Duration,
-	resolverClient resolver.Interface) (*Agent, error) {
+	resolverClient resolver.Interface,
+	delphiClient clientAPI.Client) (*Agent, error) {
 
 	// create new NMD instance
-	nm, err := state.NewNMD(platform, nmdDbPath, hostName, macAddr, nmdListenURL, certsListenURL, cmdAuthCertsURL, mode, regInterval, updInterval)
+	nm, err := state.NewNMD(platform, upgmgr, nmdDbPath, hostName, macAddr, nmdListenURL, certsListenURL, cmdAuthCertsURL, mode, regInterval, updInterval)
 	if err != nil {
 		log.Errorf("Error creating NMD. Err: %v", err)
 		return nil, err
@@ -47,11 +74,29 @@ func NewAgent(platform state.PlatformAPI,
 	}
 	log.Infof("CMD client {%+v} is running", cmdClient)
 
+	roClient, err := rolloutif.NewRoClient(nm, resolverClient)
+	if err != nil {
+		log.Errorf("Error creating Rollout Controller client. Err: %v", err)
+		return nil, err
+	}
+	log.Infof("Rollout client {%+v} is running", roClient)
+
 	// create the agent instance
 	ag := Agent{
-		nmd:       nm,
-		cmdClient: cmdClient,
-		platform:  platform,
+		nmd:          nm,
+		cmdClient:    cmdClient,
+		platform:     platform,
+		roClient:     roClient,
+		upgmgr:       upgmgr,
+		delphiClient: delphiClient,
+	}
+
+	if delphiClient != nil {
+		err = delphiClient.Dial()
+		if err != nil {
+			log.Errorf("Could not connect to delphi hub. Err: %v", err)
+			return nil, err
+		}
 	}
 
 	return &ag, nil
@@ -63,6 +108,7 @@ func (ag *Agent) Stop() {
 	log.Infof("NMD Stop")
 	// Stop NMD and CmdClient
 	ag.cmdClient.Stop()
+	ag.roClient.Stop()
 	ag.nmd.Stop()
 }
 

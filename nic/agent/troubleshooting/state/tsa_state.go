@@ -2107,7 +2107,7 @@ func (tsa *Tagent) CreatePacketCaptureSession(pcSession *tsproto.MirrorSession) 
 			log.Errorf("MirrorSession %+v already exists", oldMs)
 			return errors.New("MirrorSession already exists")
 		}
-		log.Info("Received duplicate mirror session create {%+v}", pcSession.Name)
+		log.Infof("Received duplicate mirror session create {%+v}", pcSession.Name)
 		return nil
 	}
 	if !pcSession.Spec.Enable {

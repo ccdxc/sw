@@ -29,6 +29,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	proto "github.com/pensando/sw/nic/agent/nmd/protos"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
+	"github.com/pensando/sw/nic/agent/nmd/upg"
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/cmd/cache"
@@ -180,6 +181,11 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmdInfo, error) {
 	if err != nil {
 		log.Fatalf("Error creating platform agent. Err: %v", err)
 	}
+	uc, err := upg.NewNaplesUpgradeClient(nil)
+	if err != nil {
+		log.Fatalf("Error creating Upgrade client . Err: %v", err)
+	}
+
 	var resolverClient resolver.Interface
 	if resolverURL != nil && *resolverURL != "" {
 		resolverCfg := &resolver.Config{
@@ -190,6 +196,7 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmdInfo, error) {
 	}
 	// create the new NMD
 	ag, err := nmd.NewAgent(pa,
+		uc,
 		dbPath,
 		hostID,
 		hostID,
@@ -201,7 +208,8 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmdInfo, error) {
 		*mode,
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,
-		resolverClient)
+		resolverClient,
+		nil)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 		return nil, err

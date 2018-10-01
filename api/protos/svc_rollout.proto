@@ -1,0 +1,22 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package rollout;
+
+import "rollout.proto";
+
+
+service RolloutV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix)           = "rollout";
+    option (venice.apiVersion)          = "v1";
+    option (venice.apiGrpcCrudService)  = "Rollout";
+
+    // Rollout Service
+    option (venice.apiRestService) = {
+        Object: "Rollout"
+        Method: ["put", "get", "delete", "post", "list", "watch"]
+    };
+
+}

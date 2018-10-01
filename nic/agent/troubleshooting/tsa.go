@@ -68,7 +68,7 @@ func NewTsAgent(dp types.TsDatapathAPI, dbPath, nodeUUID, ctrlerURL string, reso
 			log.Errorf("Error creating TroubleShooting client. Err: %v", err)
 			return nil, err
 		}
-		log.Info("TroubleShooting client {%+v} is running", tsClient)
+		log.Infof("TroubleShooting client {%+v} is running", tsClient)
 	}
 
 	agent := Agent{

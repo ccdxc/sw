@@ -78,8 +78,8 @@ func DeleteCluster() error {
 	return os.Remove(path.Join(env.Options.ConfigDir, env.Options.ClusterConfigFile))
 }
 
-// ContainerInfo has info about containers to run on venice
-//	to start with it has only image name.
+// ContainerInfo has info about containers to run on venice.
+//	To start with it has only image name.
 type ContainerInfo struct {
 	ImageName string
 }

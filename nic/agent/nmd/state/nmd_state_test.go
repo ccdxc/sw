@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
+	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
@@ -131,14 +132,14 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 				},
 				CaTrustChain: &certapi.CaTrustChain{
 					Certificates: []*certapi.Certificate{
-						&certapi.Certificate{
+						{
 							Certificate: cert.Raw,
 						},
 					},
 				},
 				TrustRoots: &certapi.TrustRoots{
 					Certificates: []*certapi.Certificate{
-						&certapi.Certificate{
+						{
 							Certificate: cert.Raw,
 						},
 					},
@@ -176,17 +177,79 @@ func (m *mockCtrler) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error)
 func (m *mockCtrler) WatchSmartNICUpdates() {
 }
 
+type mockRolloutCtrler struct {
+	sync.Mutex
+	status []roprotos.SmartNICOpStatus
+}
+
+func (f *mockRolloutCtrler) UpdateSmartNICRolloutStatus(status *roprotos.SmartNICRolloutStatusUpdate) error {
+	f.status = status.Status.OpStatus
+	log.Errorf("Got status %#v", f.status)
+	return nil
+}
+
+func (f *mockRolloutCtrler) WatchSmartNICRolloutUpdates() error {
+	return nil
+}
+func (f *mockRolloutCtrler) Stop() {
+}
+
+type mockUpgAgent struct {
+	n         NmdRolloutAPI
+	forceFail bool
+}
+
+func (f *mockUpgAgent) RegisterNMD(n NmdRolloutAPI) error {
+	f.n = n
+	return nil
+}
+func (f *mockUpgAgent) StartDisruptiveUpgrade() error {
+	if f.forceFail {
+		go f.n.UpgFailed(&[]string{"ForceFailDisruptive"})
+	} else {
+		go f.n.UpgSuccessful()
+	}
+	return nil
+}
+func (f *mockUpgAgent) StartUpgOnNextHostReboot() error {
+	if f.forceFail {
+		go f.n.UpgFailed(&[]string{"ForceFailUpgOnNextHostReboot"})
+	} else {
+		go f.n.UpgSuccessful()
+	}
+	return nil
+}
+func (f *mockUpgAgent) StartPreCheckDisruptive(version string) error {
+	if f.forceFail {
+		go f.n.UpgNotPossible(&[]string{"ForceFailpreCheckDisruptive"})
+	} else {
+		go f.n.UpgPossible()
+	}
+	return nil
+}
+func (f *mockUpgAgent) StartPreCheckForUpgOnNextHostReboot(version string) error {
+	if f.forceFail {
+		go f.n.UpgNotPossible(&[]string{"ForceFailpreCheckForUpgOnNextHostReboot"})
+	} else {
+		go f.n.UpgPossible()
+	}
+	return nil
+}
+
 // createNMD creates a NMD server
-func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mockCtrler) {
+func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mockCtrler, *mockUpgAgent, *mockRolloutCtrler) {
 	ag := &mockAgent{
 		nicDB: make(map[string]*cmd.SmartNIC),
 	}
 	ct := &mockCtrler{
 		nicDB: make(map[string]*cmd.SmartNIC),
 	}
+	roC := &mockRolloutCtrler{}
+	upgAgt := &mockUpgAgent{}
 
 	// create new NMD
 	nm, err := NewNMD(ag,
+		upgAgt,
 		dbPath,
 		nodeID,
 		nodeID,
@@ -198,14 +261,15 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 		globals.NicUpdIntvl*time.Second)
 	if err != nil {
 		log.Errorf("Error creating NMD. Err: %v", err)
-		return nil, nil, nil
+		return nil, nil, nil, nil, nil
 	}
 	Assert(t, nm.GetAgentID() == nodeID, "Failed to match nodeUUID", nm)
 
 	// fake CMD intf
 	nm.RegisterCMD(ct)
+	nm.RegisterROCtrlClient(roC)
 
-	return nm, ag, ct
+	return nm, ag, ct, upgAgt, roC
 }
 
 // stopNMD stops NMD server and optionally deleted emDB file
@@ -229,7 +293,7 @@ func TestSmartNICCreateUpdateDelete(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _ := createNMD(t, "", "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, "", "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, false)
 
@@ -276,7 +340,7 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -314,7 +378,7 @@ func TestNaplesDefaultClassicMode(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -356,7 +420,7 @@ func TestNaplesRestartClassicMode(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	f1 := func() (bool, interface{}) {
@@ -374,7 +438,7 @@ func TestNaplesRestartClassicMode(t *testing.T) {
 	stopNMD(t, nm, false)
 
 	// start/create NMD again, simulating restart
-	nm, _, _ = createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ = createNMD(t, emDBPath, "classic", nicKey1)
 	defer stopNMD(t, nm, true)
 
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
@@ -387,7 +451,7 @@ func TestNaplesManagedMode(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// Start NMD in managed mode
-	nm, _, _ := createNMD(t, emDBPath, "managed", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "managed", nicKey1)
 	defer stopNMD(t, nm, true)
 	Assert(t, (nm != nil), "Failed to start NMD in managed mode", nm)
 
@@ -439,7 +503,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -529,7 +593,7 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey2)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey2)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -597,7 +661,7 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey3)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey3)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -670,7 +734,7 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	var err error
@@ -713,7 +777,7 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 	stopNMD(t, nm, false)
 
 	// create NMD again, simulating restart
-	nm, _, _ = createNMD(t, emDBPath, "classic", "")
+	nm, _, _, _, _ = createNMD(t, emDBPath, "classic", "")
 	defer stopNMD(t, nm, true)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	AssertEventually(t, f2, "Failed to verify Managed Mode after Restart", string("10ms"), string("30s"))
@@ -726,6 +790,129 @@ func TestNaplesInvalidMode(t *testing.T) {
 	os.Remove(emDBPath)
 
 	// Negative test case, invalid mode
-	nm, _, _ := createNMD(t, emDBPath, "unknown", nicKey1)
+	nm, _, _, _, _ := createNMD(t, emDBPath, "unknown", nicKey1)
 	Assert(t, (nm == nil), "Invalid mode should have been rejected", nm)
+}
+
+func TestNaplesRollout(t *testing.T) {
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
+	// create nmd
+	t.Log("Create nmd")
+	nm, _, _, upgAg, roCtrl := createNMD(t, emDBPath, "classic", nicKey1)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+	Assert(t, (upgAg != nil), "Failed to create nmd", nm)
+	Assert(t, (roCtrl != nil), "Failed to create nmd", nm)
+
+	sro := roprotos.SmartNICRollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "SmartNICRollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: nm.GetPrimaryMAC(),
+		},
+		Spec: roprotos.SmartNICRolloutSpec{
+			Ops: []*roprotos.SmartNICOpSpec{
+				{
+					Op:      roprotos.SmartNICOp_SmartNICPreCheckForDisruptive,
+					Version: "ver1",
+				},
+			},
+		},
+	}
+
+	t.Log("Create ver1 PreCheckForDisruptive")
+	err := nm.CreateUpdateSmartNICRollout(&sro)
+	Assert(t, (err == nil), "CreateSmartNICRollout Failed")
+
+	// When venice asks for one Op, we expect that status should reflect that Op to be successful
+	f1 := func() (bool, interface{}) {
+		if len(roCtrl.status) == 1 && roCtrl.status[0].Op == roprotos.SmartNICOp_SmartNICPreCheckForDisruptive &&
+			roCtrl.status[0].Version == "ver1" {
+			return true, nil
+		}
+		return false, nil
+	}
+	AssertEventually(t, f1, "PreCheckForDisruptive failed to succeed")
+
+	// venice Adds another Op (typically doUpgrade) to existing one(PreCheck),
+	// we expect that status should reflect the second Op to be successful
+	// and the status should contain both the Ops as success
+	t.Log("ver1 DoDisruptive")
+	sro.Spec.Ops = append(sro.Spec.Ops, &roprotos.SmartNICOpSpec{
+		Op:      roprotos.SmartNICOp_SmartNICDisruptiveUpgrade,
+		Version: "ver1",
+	})
+	err = nm.CreateUpdateSmartNICRollout(&sro)
+	Assert(t, (err == nil), "CreateUpdateSmartNICRollout with Op: SmartNICOp_SmartNICDisruptiveUpgrade Failed")
+
+	f2 := func() (bool, interface{}) {
+		if len(roCtrl.status) == 2 &&
+			roCtrl.status[0].Op == roprotos.SmartNICOp_SmartNICPreCheckForDisruptive && roCtrl.status[0].Version == "ver1" &&
+			roCtrl.status[1].Op == roprotos.SmartNICOp_SmartNICDisruptiveUpgrade && roCtrl.status[1].Version == "ver1" {
+			return true, nil
+		}
+		return false, nil
+	}
+	AssertEventually(t, f2, "DisruptiveUpgrade failed")
+
+	// venice can always update with the same Spec as already informed before. This can happen say when the controller
+	// restarts before persisting status update from NIC. In such a case we expect the status to continue to succeed
+	t.Log("Updated spec with same contents again")
+	err = nm.CreateUpdateSmartNICRollout(&sro)
+	Assert(t, (err == nil), "CreateUpdateSmartNICRollout Spec with Same contents Failed")
+
+	f3 := func() (bool, interface{}) {
+		if len(roCtrl.status) == 2 &&
+			roCtrl.status[0].Op == roprotos.SmartNICOp_SmartNICPreCheckForDisruptive && roCtrl.status[0].Version == "ver1" &&
+			roCtrl.status[1].Op == roprotos.SmartNICOp_SmartNICDisruptiveUpgrade && roCtrl.status[1].Version == "ver1" {
+			return true, nil
+		}
+		return false, nil
+	}
+	AssertConsistently(t, f3, "SmartNICRollout second time with same Spec failed during NonDisruptive Upgrade", "100ms", "500ms")
+
+	t.Log("Update with ver2 Precheck and doUpgrade")
+	sro.Spec.Ops[0].Version = "ver2"
+	sro.Spec.Ops[1].Version = "ver2"
+	err = nm.CreateUpdateSmartNICRollout(&sro)
+	Assert(t, (err == nil), "Failed to update SmartNICRollout with new version in Spec")
+
+	f5 := func() (bool, interface{}) {
+		if len(roCtrl.status) == 2 &&
+			roCtrl.status[0].Op == roprotos.SmartNICOp_SmartNICPreCheckForDisruptive && roCtrl.status[0].Version == "ver2" && roCtrl.status[0].OpStatus == "success" &&
+			roCtrl.status[1].Op == roprotos.SmartNICOp_SmartNICDisruptiveUpgrade && roCtrl.status[1].Version == "ver2" && roCtrl.status[1].OpStatus == "success" {
+			return true, nil
+		}
+		return false, nil
+	}
+	AssertEventually(t, f5, "Version change and issuing 2 ops together caused failure")
+
+	upgAg.forceFail = true // Failure cases now
+	t.Log("Forcefail set. Updating  with ver3 Precheck and doUpgrade")
+
+	sro.Spec.Ops[0].Version = "ver3"
+	sro.Spec.Ops[1].Version = "ver3"
+	err = nm.CreateUpdateSmartNICRollout(&sro)
+	Assert(t, (err == nil), "Failed to update SmartNICRollout with new version in Spec")
+
+	f6 := func() (bool, interface{}) {
+		if len(roCtrl.status) == 2 &&
+			roCtrl.status[0].Op == roprotos.SmartNICOp_SmartNICPreCheckForDisruptive && roCtrl.status[0].Version == "ver3" && roCtrl.status[0].OpStatus == "failure" && roCtrl.status[0].Message == "ForceFailpreCheckDisruptive" &&
+			roCtrl.status[1].Op == roprotos.SmartNICOp_SmartNICDisruptiveUpgrade && roCtrl.status[1].Version == "ver3" && roCtrl.status[1].OpStatus == "failure" && roCtrl.status[1].Message == "ForceFailDisruptive" {
+			return true, nil
+		}
+		return false, nil
+	}
+	AssertEventually(t, f6, "Expecting fail but still succeeded")
+	// Even after this state is reached there should not be any further transitions
+	AssertConsistently(t, f6, "Expecting fail but still succeeded", "100ms", "3s")
+
+	// Finally a delete of Smartnic Rollout object should succeed
+	t.Log("Delete VeniceRollout")
+
+	err = nm.DeleteSmartNICRollout(&sro)
+	Assert(t, (err == nil), "DeleteSmartNICRollout Failed")
+
 }

@@ -54,7 +54,7 @@ func TestSaveAndReadRsaPrivateKey(t *testing.T) {
 
 func TestSaveAndReadEcPrivateKey(t *testing.T) {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
-	AssertOk(t, err, "GenerateKey fail. err: %s")
+	AssertOk(t, err, "GenerateKey fail. err: %s", err)
 	testSaveAndReadPrivateKey(privateKey, t)
 }
 

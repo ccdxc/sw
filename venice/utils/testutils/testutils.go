@@ -173,7 +173,6 @@ func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...strin
 				tb.Fatalf("\033[31m%s:%d: "+msg+msg2+"\033[39m\n\n",
 					append([]interface{}{filepath.Base(file), line})...)
 			}
-			return
 		}
 	}
 }

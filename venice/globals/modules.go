@@ -30,4 +30,5 @@ const (
 	Citadel               = "pen-citadel"
 	Collector             = "pen-collector"
 	Tmagent               = "pen-tmagent"
+	Rollout               = "pen-rollout"
 )

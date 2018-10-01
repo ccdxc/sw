@@ -39,7 +39,6 @@ func setupTestCluster(t *testing.T, tmpDir string) (*integration.ClusterV3, kvst
 	if err != nil {
 		t.Fatalf("Failed to create recorder, error: %v", err)
 	}
-
 	return cluster, store
 }
 

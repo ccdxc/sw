@@ -5,7 +5,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
-	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -585,7 +584,33 @@ var k8sModules = map[string]protos.Module{
 			},
 		},
 	},
+	// rollout
+	globals.Rollout: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Rollout,
+		},
+		Spec: protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
+			NumCopies: 1,
+			Submodules: []protos.ModuleSpec_Submodule{
+				{
+					Name:    globals.Rollout,
+					EnvVars: map[string]string{},
+					Args:    []string{},
+					Services: []protos.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.Rollout,
+							Port: runtime.MustUint32(globals.RolloutRPCPort),
+						},
+					},
+				},
+			},
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
+			},
+		},
+	},
 }
-
-// ContainerInfoMap is the map of name to containerInfo
-var ContainerInfoMap = map[string]utils.ContainerInfo{}

@@ -1,0 +1,173 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for rollout actions served by rollout mgr towards naples.
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package protos;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/common.proto";
+
+//============================ smartnic update ==========================================================
+
+enum SmartNICOp {
+    SmartNICPreCheckForUpgOnNextHostReboot  = 0;
+    SmartNICPreCheckForDisruptive           = 1;
+    SmartNICUpgOnNextHostReboot             = 2;
+    SmartNICDisruptiveUpgrade               = 3;
+
+}
+
+message SmartNICOpSpec {
+  SmartNICOp Op  = 1;
+  string Version   = 2;
+}
+
+message SmartNICRolloutSpec {
+  repeated SmartNICOpSpec Ops = 1;
+}
+
+enum AllowedStatus {
+  Success       = 0;
+  Fail          = 1;
+  InProgress    = 2;
+}
+
+message SmartNICOpStatus {
+  SmartNICOp Op  = 1;
+  string Version   = 2;
+  string OpStatus  = 3 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(AllowedStatus)", (gogoproto.jsontag)  = "opstatus,omitempty"];
+  string Message   = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = ",omitempty"];
+}
+
+message SmartNICRolloutStatus {
+  repeated SmartNICOpStatus OpStatus    = 1[(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+message SmartNICRollout {
+    api.TypeMeta            TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta          ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    SmartNICRolloutSpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+}
+
+message SmartNICRolloutEvent {
+    api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    SmartNICRollout SmartNICRollout = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
+}
+
+message SmartNICRolloutStatusUpdate {
+  api.ObjectMeta          ObjectMeta  = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"]; 
+  SmartNICRolloutStatus   Status      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
+}
+
+// SmartNICRolloutApi is used by NodeUpdateMgr to update each Naples SmartNIC
+service SmartNICRolloutApi {
+    rpc WatchSmartNICRollout (api.ObjectMeta) returns (stream SmartNICRolloutEvent) {};
+    rpc UpdateSmartNICRolloutStatus (SmartNICRolloutStatusUpdate) returns (api.Empty) {};
+}
+
+// === VeniceRollout : Rollout of each of the Venice nodes =========
+
+enum VeniceOp {
+  VenicePreCheck           = 0;
+  VeniceRunVersion         = 1;
+}
+
+message VeniceOpSpec {
+  VeniceOp  Op        = 1 ; 
+  string    Version   = 2 ;
+}
+
+message VeniceRolloutSpec {
+  repeated VeniceOpSpec Ops = 1;
+}
+
+message VeniceOpStatus {
+  VeniceOp Op  = 1;
+  string Version     = 2 ;
+  string OpStatus    = 3 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(AllowedStatus)", (gogoproto.jsontag)  = "opstatus,omitempty"];
+  string Message     = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = ",omitempty"];
+}
+
+message VeniceRolloutStatus {
+  repeated VeniceOpStatus OpStatus    = 1[(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+
+message VeniceRollout {
+    api.TypeMeta            TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta          ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    VeniceRolloutSpec       Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+}
+
+message VeniceRolloutEvent {
+    api.EventType EventType     = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    VeniceRollout VeniceRollout = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
+}
+
+
+message VeniceRolloutStatusUpdate {
+  api.ObjectMeta        ObjectMeta  = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"]; 
+  VeniceRolloutStatus  Status       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
+}
+
+// VeniceRolloutApi is used by VeniceUpdateMgr to update each Venice node
+service VeniceRolloutApi {
+    rpc WatchVeniceRollout (api.ObjectMeta) returns (stream VeniceRolloutEvent) {};
+    rpc UpdateVeniceRolloutStatus (VeniceRolloutStatusUpdate) returns (api.Empty) {};
+}
+
+
+// ========== ServiceRollout : Rollout of services in the cluster. This is a singleton object ======
+enum ServiceOp {
+  ServiceRunVersion         = 0; // We may have more operations in future
+}
+
+message ServiceOpSpec {
+  ServiceOp Op  = 1;
+  string Version      = 2;
+}
+
+message ServiceRolloutSpec {
+  repeated ServiceOpSpec Ops = 1;
+}
+
+message ServiceOpStatus {
+  ServiceOp Op  = 1;
+  string Version   = 2 ;
+  string OpStatus  = 3 [(gogoproto.nullable) = true, (venice.check) = "StrEnum(AllowedStatus)", (gogoproto.jsontag)  = "opstatus,omitempty"];
+  string Message   = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = ",omitempty"];
+}
+
+
+message ServiceRolloutStatus {
+      repeated ServiceOpStatus OpStatus      = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+message ServiceRollout {
+    api.TypeMeta            TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta          ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    ServiceRolloutSpec      Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+}
+
+message ServiceRolloutEvent {
+    api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    ServiceRollout ServiceRollout  = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
+}
+
+message ServiceRolloutStatusUpdate {
+  api.ObjectMeta        ObjectMeta  = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
+  ServiceRolloutStatus  Status    = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = ",omitempty"];
+}
+
+// ServiceRolloutApi is used by ServiceUpdateMgr to update Services in the cluster
+service ServiceRolloutApi {
+    rpc WatchServiceRollout (api.ObjectMeta) returns (stream ServiceRolloutEvent) {};
+    rpc UpdateServiceRolloutStatus (ServiceRolloutStatusUpdate) returns (api.Empty) {};
+}

@@ -13,6 +13,7 @@ metrics_query.proto metrics_query true
 mirror.proto monitoring true
 network.proto network true
 networkencryption.proto security true
+rollout.proto rollout true
 search.proto search true
 securitygroup.proto security true
 service.proto network true
@@ -24,6 +25,7 @@ svc_events.proto events false
 svc_metrics_query.proto metrics_query false
 svc_monitoring.proto monitoring true
 svc_network.proto network true
+svc_rollout.proto rollout true
 svc_search.proto search false
 svc_security.proto security true
 svc_staging.proto staging true

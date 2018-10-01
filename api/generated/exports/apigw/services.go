@@ -19,6 +19,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/monitoring/gateway"
 	// blank import to pull in network service into api gateway
 	_ "github.com/pensando/sw/api/generated/network/gateway"
+	// blank import to pull in rollout service into api gateway
+	_ "github.com/pensando/sw/api/generated/rollout/gateway"
 	// blank import to pull in search service into api gateway
 	_ "github.com/pensando/sw/api/generated/search/gateway"
 	// blank import to pull in security service into api gateway

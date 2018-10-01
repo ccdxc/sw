@@ -58,7 +58,7 @@ static_images = {
 
 # images which are compiled every time
 dynamic_images = [
-    "cmd", "apiserver", "apigw", "vchub", "npm", "vcsim", "netagent", "nmd", "collector", "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy", "aggregator", "vos", "citadel",
+    "cmd", "apiserver", "apigw", "vchub", "npm", "vcsim", "netagent", "nmd", "collector", "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy", "aggregator", "vos", "citadel", "rollout"
 ]
 
 # dictionary of module name(specified in venice/globals/modules.go )  to containerImage
@@ -94,7 +94,7 @@ for i in dynamic_images:
     # remove old images to conserve disk space on dev machines
     old_images = subprocess.check_output(["/bin/sh", "-c", '''docker images pen-{} --filter "before=pen-{}:latest" --format {} | sort | uniq '''.format(i, i, '{{.ID}}')])
     if old_images != "":
-        ExecuteCommand('''docker rmi -f ''' + old_images)
+        ExecuteCommand('''docker rmi -f ''' + ' '.join(old_images.split('\n')) )
 
 ExecuteCommand("docker save -o bin/tars/pen-netagent.tar pen-netagent:latest")
 

@@ -89,6 +89,19 @@
       "svc_network.proto"
     ]
   },
+  "rollout": {
+    "Svcs": {
+      "RolloutV1": {
+        "Version": "v1",
+        "Messages": [
+          "Rollout"
+        ]
+      }
+    },
+    "Files": [
+      "svc_rollout.proto"
+    ]
+  },
   "security": {
     "Svcs": {
       "SecurityV1": {

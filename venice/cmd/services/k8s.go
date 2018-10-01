@@ -103,6 +103,9 @@ func (k *k8sService) Start(client k8sclient.Interface, isLeader bool) {
 		delete(k8sModules, k)
 	}
 
+	// TODO: When CMD gets upgraded, the following API will return latest info. We should use the latest info after service upgrade.
+	// Till then We should use the old version (we may need to save the old version in kvstore and restore here)
+
 	// Image name is always taken from containerMap, if present
 	// Hence no need to specify the image name in override-config above
 	containerInfoMap := k.getContainerInfo()
@@ -562,26 +565,35 @@ func (k *k8sService) UpgradeServices(services []string) error {
 
 func upgradeDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 	dsConfig := createDaemonSetObject(module)
-	d, err := client.Extensions().DaemonSets(defaultNS).Update(dsConfig)
-	if err == nil {
-		log.Infof("Updated DaemonSet %+v", d)
-	} else {
-		log.Errorf("Failed to Updated DaemonSet %+v with error: %v", dsConfig, err)
+	var retval error
+	for numTries := 0; numTries < 5; numTries++ {
+		d, err := client.Extensions().DaemonSets(defaultNS).Update(dsConfig)
+		if err == nil {
+			log.Infof("Updated DaemonSet %+v", d)
+			return nil
+		}
+		retval = err
+		time.Sleep(time.Second)
 	}
 
-	return err
+	log.Errorf("Failed to Update DaemonSet %+v with error: %v", dsConfig, retval)
+	return retval
 }
 
 func upgradeDeployment(client k8sclient.Interface, module *protos.Module) error {
 	dConfig := createDeploymentObject(module)
-	d, err := client.Extensions().Deployments(defaultNS).Update(dConfig)
-	if err == nil {
-		log.Infof("Updated Deployment %+v", d)
-	} else {
-		log.Errorf("Failed to Updated Deployment %+v with error: %v", dConfig, err)
+	var retval error
+	for numTries := 0; numTries < 5; numTries++ {
+		d, err := client.Extensions().Deployments(defaultNS).Update(dConfig)
+		if err == nil {
+			log.Infof("Updated Deployment %+v", d)
+			return nil
+		}
+		retval = err
+		time.Sleep(time.Second)
 	}
-
-	return err
+	log.Errorf("Failed to Update Deployment %+v with error: %v", dConfig, retval)
+	return retval
 }
 
 func programKubeletRBAC(client k8sclient.Interface) error {

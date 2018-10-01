@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	certutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
+	"github.com/pensando/sw/venice/cmd/rolloutclient"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
@@ -182,9 +183,6 @@ func StartQuorumServices(c utils.Cluster) {
 
 	env.KVStore = kv
 
-	// TODO: Read from kv store instead of file here
-	services.ContainerInfoMap = utils.GetContainerInfo()
-
 	err = credentials.CheckKubernetesCredentials()
 	if err != nil {
 		log.Infof("Invalid Kubernetes credentials (%s), generating a new set", err)
@@ -228,6 +226,13 @@ func StartQuorumServices(c utils.Cluster) {
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
+
+	env.RolloutMgr = services.NewRolloutMgr()
+	env.RolloutMgr.Start()
+	env.VeniceRolloutClient = rolloutclient.NewVeniceRolloutClient(globals.Rollout, c.NodeID, env.ResolverClient, env.RolloutMgr)
+	env.VeniceRolloutClient.Start()
+	env.ServiceRolloutClient = rolloutclient.NewServiceRolloutClient(globals.Rollout, c.NodeID, env.ResolverClient, env.RolloutMgr)
+
 	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
 
 	if env.AuthRPCServer == nil {
@@ -253,6 +258,11 @@ func StartNodeServices(nodeID, VirtualIP string) {
 		servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDResolverPort))
 	}
 	env.ResolverClient = resolver.New(&resolver.Config{Name: nodeID, Servers: servers})
+	env.RolloutMgr = services.NewRolloutMgr()
+	env.RolloutMgr.Start()
+	env.VeniceRolloutClient = rolloutclient.NewVeniceRolloutClient(globals.Rollout, nodeID, env.ResolverClient, env.RolloutMgr)
+	env.VeniceRolloutClient.Start()
+
 	env.ServiceTracker = services.NewServiceTracker(nil)
 	env.ServiceTracker.Run(env.ResolverClient, env.NodeService)
 

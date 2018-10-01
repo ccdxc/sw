@@ -1,0 +1,193 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package rollout;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
+
+// Rollout (aka upgrade) is triggered by user by creating a Rollout object
+
+// RolloutSpec is the Spec of a Rollout
+message RolloutSpec {
+    //  New Version of the image to rollout to
+    string Version                              = 1 [(gogoproto.jsontag) = "version,inline"];
+
+    // Time, if specified, at which the rollout is supposed to start
+    api.Timestamp ScheduledStartTime            = 2 [(gogoproto.jsontag) = "scheduled-start-time,omitempty"];
+
+    // Duration, if specified, after which the rollout is supposed to stop, if not completed by that time
+    // Typically represents the end of Maintenance window
+    string Duration                             = 3 [(gogoproto.jsontag) = "duration,omitempty", (venice.check)="Duration()"];
+
+    // Strategy in which the nodes are upgraded - subject to other constraints below
+    enum StrategyType {
+        // fixed number of Nodes are upgraded in parallel
+        //ui-hint: Linear
+        LINEAR      = 0;
+
+        // Start off with small number of node upgrade. As upgrades progress, increase the
+        // number of nodes getting upgraded exponentially still maintaining the maximum number
+        // of nodes that are getting updated within limits below
+        //ui-hint: Exponential
+        EXPONENTIAL = 1;
+    }
+    string Strategy                             = 4 [(gogoproto.jsontag) = "strategy",
+                                                     (venice.check) = "StrEnum(RolloutSpec.StrategyType)"];
+
+    // MaxParallel is the maximum number of nodes getting updated at any time
+    // This setting is applicable only to SmartNICs.
+    // Controller nodes are always upgraded one after another.
+    uint32 MaxParallel                          = 5 [(gogoproto.jsontag) = "max-parallel"];
+
+    // After these many failures are observed during NIC upgrade, the rollout process stops
+    // This setting applies to smartNICs only.
+    // The controller nodes are rollout first and any failure there stops the rollout of SmartNICs
+    uint32 MaxNICFailuresBeforeAbort           = 6 [(gogoproto.jsontag) = "max-nic-failures-before-abort"];
+
+    // If specified, this is the sequence in which the SmartNICs are upgraded based on their labels.
+    // if a SmartNIC matches multiple constraints, the first one is used.
+    //  Any SmartNIC which does not match the constraints is upgraded at the end.
+    // This order is mainly for the smartNICs on Hosts
+    // Controller nodes are always rollout one after other
+    repeated labels.Selector OrderConstraints   = 7 [(gogoproto.jsontag) = "order-constraints,omitempty"];
+
+    // When Set to true, the current rollout is suspended. Existing Nodes/Services/SmartNICs in the middle of rollout continue
+    //  rollout execution but any Nodes/Services/SmartNICs which has not started Rollout will not be scheduled one.
+    bool Suspend                                = 8 [(gogoproto.jsontag) = "suspend,omitempty"];
+
+    // Dont upgrade Controller but only upgrade SmartNICs
+    bool SmartNICsOnly                          = 9 [(gogoproto.jsontag) = "smartnics-only,omitempty"];
+
+    // When SmartNICMustMatchConstraint is true, Any smartNIC which does not match OrderConstraints does not go through rollout
+    bool SmartNICMustMatchConstraint            = 10 [(gogoproto.jsontag) = "smartnic-must-match-constraint,omitempty"];
+
+    // By default the upgrade is Disruptive. However the API can specify the type of upgrade
+    enum SmartNICUpgradeType {
+        //ui-hint: Disruptive
+        Disruptive          = 0;
+        //ui-hint: OnNextHostReboot
+        OnNextHostReboot    = 1;
+    }
+    string UpgradeType                          = 11 [(gogoproto.jsontag) = "upgrade-type",
+                                                    (venice.check) = "StrEnum(RolloutSpec.SmartNICUpgradeType)"];
+}
+
+// RolloutPhase gives details of status of Rollout on each Node/Service/SmartNIC
+message RolloutPhase {
+    // Name of the Node, Service or SmartNIC
+    string Name                         = 1 [ (gogoproto.jsontag) = "name,inline"];
+
+    // These are valid conditions of rollout component (node or service)
+    enum Phases {
+        // Pre rollout check (enough disk space, image download, validation,)
+        //ui-hint: PreCheck
+        PRE_CHECK           = 0;
+
+        // The dependencies are met (dependent nodes/services are at needed versions)
+        //ui-hint: DependenciesCheck
+        DEPENDENCIES_CHECK  = 1;
+
+        // Among the various nodes getting upgraded in parallel, waiting for this node's turn.
+        //ui-hint: WaitingForTurn
+        WAITING_FOR_TURN    = 2;
+
+        // Component is undergoing rollout - Either node is rebooting or service is restarting
+        //ui-hint: Processing
+        PROGRESSING         = 3;
+
+        // new revision is ready and available for service
+        //ui-hint: Complete
+        COMPLETE            = 4;
+
+        // Node/Component is in failure state
+        //ui-hint: Fail
+        FAIL                = 5;
+    }
+
+    // Phase indicates a certain rollout phase/condition
+    string Phase                        = 2 [(gogoproto.nullable) = true,
+                                             (venice.check) = "StrEnum(RolloutPhase.Phases)",
+                                             (gogoproto.jsontag) = "phase,omitempty"];
+
+    // The time of starting the rollout for this node/service. 
+    // This does not include the pre-check which can happen way before the actual rollout.
+    api.Timestamp StartTime             = 3 [(gogoproto.nullable) = true,
+                                             (gogoproto.jsontag) = "start-time,omitempty"];
+
+    // Time at which rollout completed for this node/service
+    api.Timestamp EndTime              = 4 [(gogoproto.nullable) = true,
+                                             (gogoproto.jsontag) = "end-time,omitempty"];
+
+    // The reason for the Phase last transition, if any
+    string Reason                       = 5 [(gogoproto.nullable) = true,
+                                             (gogoproto.jsontag) = "reason,omitempty"];
+
+    // A detailed message indicating details about the transition.
+    string Message                      = 6 [(gogoproto.nullable) = true,
+                                             (gogoproto.jsontag) = "message,omitempty"];
+}
+
+// Rollout Status gives the status of the rollout at the top level as well as details of
+//  individual components
+message RolloutStatus {
+
+    // Rollout status of Controller Node
+    repeated RolloutPhase ControllerNodesStatus         = 1 [(gogoproto.nullable) = true,
+                                                             (gogoproto.jsontag) = "controller-nodes-status,omitempty"];
+
+    // Rollout status of Various Controller Services
+    repeated RolloutPhase ControllerServicesStatus      = 2 [(gogoproto.nullable) = true,
+                                                             (gogoproto.jsontag) = "controller-services-status,omitempty"];
+
+    // Rollout status of SmartNICs in the cluster. Has entries for SmartNICs on Controller nodes as well as workload nodes
+    // The entries are group by parallelism based on the order-constraints and max-parallel specified by the user.
+    repeated RolloutPhase SmartNICsStatus               = 3 [(gogoproto.nullable) = true,
+                                                             (gogoproto.jsontag) = "smartnics-status,omitempty"];
+
+    // Current overall state of rollout
+    enum RolloutOperationalState {
+      PROGRESSING           = 0;  // Rollout is in progress
+      FAILURE               = 1;  // Rollout aborted after failure threshold reached
+      SUCCESS               = 2;  // Rollout completed successfully with failures, if any, less than threshold
+      SCHEDULED             = 3;  // Rollout is scheduled to start in Future time
+      SUSPENDED             = 4;  // User has suspended rollout
+      SUSPEND_IN_PROGRESS   = 5;  // Waiting for a terminal state for the pause to complete
+      DEADLINE_EXCEEDED     = 6;  // Rollout could not be completed before the deadline specified by the user
+    }
+    string OperationalState                               = 4 [(venice.check) = "StrEnum(RolloutStatus.RolloutOperationalState)",
+                                                             (gogoproto.jsontag) = "state,omitempty"];
+
+    // Heuristic value of percentage completion of the rollout
+    uint32 CompletionPercentage                           = 5 [(gogoproto.jsontag) = "completion-percent,omitempty"];
+
+    // Start time of Rollout
+    api.Timestamp StartTime                               = 6 [(gogoproto.jsontag) = "start-time,omitempty"];
+
+    // End time of Rollout
+    api.Timestamp EndTime                                 = 7 [(gogoproto.jsontag) = "end-time,omitempty"];
+
+    // Version of the cluster before the start of rollout
+    string PreviousVersion                                = 8 [(gogoproto.jsontag) = "prev-version,omitempty"];
+}
+
+// Rollout object captures the admin's intent and status of the software version running on the cluster
+//  It is incorrect to have two different Rollouts active at the same time
+message Rollout {
+    option (venice.objectPrefix)  = {Collection: "rollout"};
+    api.TypeMeta T                = 1 [(gogoproto.embed) = true,
+                                       (gogoproto.nullable) = false,
+                                       (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O              = 2 [(gogoproto.embed) = true,
+                                       (gogoproto.nullable) = false,
+                                       (gogoproto.jsontag) = "meta,omitempty"];
+    RolloutSpec Spec              = 3 [(gogoproto.nullable) = false,
+                                       (gogoproto.jsontag) = "spec,omitempty"];
+    RolloutStatus Status          = 4 [(gogoproto.nullable) = false,
+                                       (gogoproto.jsontag) = "status,omitempty"];
+}

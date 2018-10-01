@@ -19,6 +19,7 @@ import { EventsEvent } from './events';
 import { NetworkNetwork } from './network';
 import { NetworkService } from './network';
 import { NetworkLbPolicy } from './network';
+import { RolloutRollout } from './rollout';
 import { SecuritySecurityGroup } from './security';
 import { SecuritySGPolicy } from './security';
 import { SecurityApp } from './security';
@@ -56,6 +57,9 @@ export const CategoryMapping  = {
     "Network" : new NetworkNetwork(),
     "Service" : new NetworkService(),
     "LbPolicy" : new NetworkLbPolicy(),
+  },
+  "Rollout" : {
+    "Rollout" : new RolloutRollout(),
   },
   "Security" : {
     "SecurityGroup" : new SecuritySecurityGroup(),

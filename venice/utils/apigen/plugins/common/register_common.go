@@ -485,7 +485,7 @@ func parseDefault(in string) (string, string, error) {
 		glog.V(1).Infof("parseDefaulter - No version specified [%s]", in)
 	} else {
 		if in[index-1] == '\\' {
-			glog.V(1).Info("parseDefaulter - escaped : ignoring.. [%s]", in)
+			glog.V(1).Infof("parseDefaulter - escaped : ignoring.. [%s]", in)
 		} else {
 			ver = in[:index]
 			val = in[index+1:]

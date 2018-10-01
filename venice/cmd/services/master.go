@@ -236,6 +236,10 @@ func (m *masterService) startLeaderServices() error {
 
 	// observe pod events and record events accordingly
 	m.resolverSvc.Register(m.resolverSvcObserver)
+	// should only be running on leader node
+	if env.ServiceRolloutClient != nil {
+		env.ServiceRolloutClient.Start()
+	}
 
 	// Start elastic curator service
 	if m.esCuratorSvc != nil {
@@ -268,6 +272,10 @@ func (m *masterService) Stop() {
 
 // caller holds the lock
 func (m *masterService) stopLeaderServices() {
+	if env.ServiceRolloutClient != nil {
+		env.ServiceRolloutClient.Stop()
+	}
+
 	m.k8sSvc.Stop()
 	for ii := range masterServices {
 		if err := m.sysSvc.StopUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {

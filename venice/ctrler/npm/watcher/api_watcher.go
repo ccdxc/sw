@@ -104,7 +104,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		if !w.stopped() {
 			w.tenantWatcher <- evt
 		} else {
-			log.Infof("Watcher is shutting down. Could not add {v}", evt)
+			log.Infof("Watcher is shutting down. Could not add {%v}", evt)
 		}
 	}
 
@@ -124,7 +124,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		if !w.stopped() {
 			w.netWatcher <- evt
 		} else {
-			log.Infof("Watcher is shutting down. Could not add {v}", evt)
+			log.Infof("Watcher is shutting down. Could not add {%v}", evt)
 		}
 	}
 
@@ -144,7 +144,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		if !w.stopped() {
 			w.sgWatcher <- evt
 		} else {
-			log.Infof("Watcher is shutting down. Could not add {v}", evt)
+			log.Infof("Watcher is shutting down. Could not add {%v}", evt)
 		}
 	}
 
@@ -164,7 +164,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 		if !w.stopped() {
 			w.sgPolicyWatcher <- evt
 		} else {
-			log.Infof("Watcher is shutting down. Could not add {v}", evt)
+			log.Infof("Watcher is shutting down. Could not add {%v}", evt)
 		}
 	}
 

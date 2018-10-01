@@ -74,7 +74,7 @@ func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 				},
 				Address: []*halproto.Address{
 					{
-						addrRange,
+						Address: addrRange,
 					},
 				},
 			},
@@ -162,7 +162,7 @@ func (hd *Datapath) UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 				},
 				Address: []*halproto.Address{
 					{
-						addrRange,
+						Address: addrRange,
 					},
 				},
 			},

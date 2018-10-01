@@ -238,7 +238,7 @@ func SGPolicyCreateHandler(w http.ResponseWriter, req *http.Request) (int, strin
 		v, err := findUUIDByName("SGPolicy", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -442,7 +442,7 @@ func ClusterCreateHandler(w http.ResponseWriter, req *http.Request) (int, string
 		v, err := findUUIDByName("cluster", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -646,7 +646,7 @@ func EndpointCreateHandler(w http.ResponseWriter, req *http.Request) (int, strin
 		v, err := findUUIDByName("endpoint", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -850,7 +850,7 @@ func LbPolicyCreateHandler(w http.ResponseWriter, req *http.Request) (int, strin
 		v, err := findUUIDByName("lbPolicy", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -1054,7 +1054,7 @@ func NetworkCreateHandler(w http.ResponseWriter, req *http.Request) (int, string
 		v, err := findUUIDByName("network", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -1258,7 +1258,7 @@ func NodeCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
 		v, err := findUUIDByName("node", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -1462,7 +1462,7 @@ func PermissionCreateHandler(w http.ResponseWriter, req *http.Request) (int, str
 		v, err := findUUIDByName("permission", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -1666,7 +1666,7 @@ func RoleCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
 		v, err := findUUIDByName("role", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -1870,7 +1870,7 @@ func SecurityGroupCreateHandler(w http.ResponseWriter, req *http.Request) (int, 
 		v, err := findUUIDByName("securityGroup", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -2074,7 +2074,7 @@ func ServiceCreateHandler(w http.ResponseWriter, req *http.Request) (int, string
 		v, err := findUUIDByName("service", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -2278,7 +2278,7 @@ func SmartNICCreateHandler(w http.ResponseWriter, req *http.Request) (int, strin
 		v, err := findUUIDByName("smartNIC", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -2482,7 +2482,7 @@ func TenantCreateHandler(w http.ResponseWriter, req *http.Request) (int, string)
 		v, err := findUUIDByName("tenant", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v
@@ -2686,7 +2686,7 @@ func UserCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
 		v, err := findUUIDByName("user", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v

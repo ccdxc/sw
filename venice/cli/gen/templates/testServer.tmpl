@@ -101,7 +101,7 @@ func {{title $obj.Name}}CreateHandler(w http.ResponseWriter, req *http.Request) 
 		v, err := findUUIDByName("{{$obj.Name}}", objName)
 		if err == nil {
 			if objUUID != "" && v != objUUID {
-				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				log.Infof("name '%s' is already used by uuid '%s'\n", objName, v)
 				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
 			}
 			objUUID = v

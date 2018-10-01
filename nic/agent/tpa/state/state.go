@@ -636,7 +636,7 @@ func (s *PolicyState) GetFlowExportPolicy(tx context.Context, p *tpmprotos.FlowE
 
 	flowExp, ok := dbr.(*tpaprotos.FlowExportPolicyObj)
 	if !ok {
-		log.Errorf("invalid type %v in getflow export, %+v", reflect.TypeOf(dbr))
+		log.Errorf("invalid type %v in getflow export", reflect.TypeOf(dbr))
 		return nil, fmt.Errorf("failed to read data from flow export policy")
 	}
 

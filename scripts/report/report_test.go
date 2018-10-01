@@ -285,7 +285,6 @@ func TestCoverageIgnore(t *testing.T) {
 	err = tgt.getCoveragePercent([]byte(testCovIgnoreZeroCov))
 	AssertOk(t, err, "coverage parsing expected to pass")
 	AssertEquals(t, 100.0, tgt.Coverage, "Expected coverage 100%% for missing test files")
-
 }
 
 func TestTrackerBasic(t *testing.T) {

@@ -1,11 +1,14 @@
 package types
 
 import (
+	"context"
+
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
+	rolloutproto "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -330,5 +333,69 @@ type ServiceTracker interface {
 	Run(interface{}, NodeService)
 
 	// Stop the service
+	Stop()
+}
+
+// VeniceRolloutHandler is called by VeniceRolloutClient in response to watch events from RolloutController
+type VeniceRolloutHandler interface {
+	// CreateVeniceRollout is handler for Create events
+	CreateVeniceRollout(*rolloutproto.VeniceRollout)
+	// UpdateVeniceRollout is for update
+	UpdateVeniceRollout(*rolloutproto.VeniceRollout)
+	// DeleteVeniceRollout for delete
+	DeleteVeniceRollout(*rolloutproto.VeniceRollout)
+
+	// RegisterVeniceStatusWriter to register the writer for venice rollout status
+	RegisterVeniceStatusWriter(VeniceRolloutStatusWriter)
+	// UnregisterVeniceStatusWriter to unregister the writer for venice rollout status
+	UnregisterVeniceStatusWriter(VeniceRolloutStatusWriter)
+}
+
+// VeniceRolloutStatusWriter is implemented by VeniceRolloutClient to write the status to RolloutController (for requests received from RolloutController)
+type VeniceRolloutStatusWriter interface {
+	WriteStatus(context.Context, *rolloutproto.VeniceRolloutStatusUpdate)
+}
+
+// VeniceRolloutClient is client to Rollout Controller for Venice objects
+type VeniceRolloutClient interface {
+	VeniceRolloutStatusWriter
+	Start()
+	Stop()
+}
+
+// ServiceRolloutHandler is called by ServiceRolloutClient in response to watch events from RolloutController
+type ServiceRolloutHandler interface {
+	// CreateServiceRollout is handler for Create events
+	CreateServiceRollout(*rolloutproto.ServiceRollout)
+	// UpdateServiceRollout is for update
+	UpdateServiceRollout(*rolloutproto.ServiceRollout)
+	// DeleteServiceRollout for delete
+	DeleteServiceRollout(*rolloutproto.ServiceRollout)
+
+	// RegisterServiceStatusWriter to register the writer for service rollout status
+	RegisterServiceStatusWriter(ServiceRolloutStatusWriter)
+	// UnregisterServiceStatusWriter to unregister the writer for service rollout status
+	UnregisterServiceStatusWriter(ServiceRolloutStatusWriter)
+}
+
+// ServiceRolloutStatusWriter is implemented by ServiceRolloutClient to write the status to RolloutController (for requests received from RolloutController)
+type ServiceRolloutStatusWriter interface {
+	WriteServiceStatus(context.Context, *rolloutproto.ServiceRolloutStatusUpdate)
+}
+
+// ServiceRolloutClient is client to Rollout Controller for Service objects
+type ServiceRolloutClient interface {
+	ServiceRolloutStatusWriter
+	Start()
+	Stop()
+}
+
+// RolloutMgr is requested by VeniceRolloutClient and ServiceRolloutClient to do upgrades of either the Venice node or the Services
+type RolloutMgr interface {
+	VeniceRolloutHandler
+	ServiceRolloutHandler
+	// Start the RolloutMgr - and take any actions based on commands from RolloutController (thru VeniceRolloutClient)
+	Start()
+	// Stop the Rollmgr
 	Stop()
 }
