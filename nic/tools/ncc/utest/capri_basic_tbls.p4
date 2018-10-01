@@ -64,9 +64,18 @@ header_type ipv6_t {
         dstAddr : 128;
     }
 }
+
+header_type control_meta_t {
+    fields {
+        a : 8;
+        b : 8;
+    }
+}
+metadata control_meta_t control_meta;
 // Capri specific headers
 header cap_phv_intr_global_t capri_intrinsic;                                                       
 metadata cap_phv_intr_p4_t capri_p4_intrinsic;                                                      
+
 
 header ethernet_t ethernet;
 //@pragma pa_header_union xgress ipv6
@@ -88,6 +97,7 @@ parser start {
 
 parser parse_ethernet {
     extract(ethernet);
+    //set_metadata(control_meta.a, latest.etherType);
     return select(latest.etherType) {
         ETHERTYPE_IPV4: parse_ipv4;
         ETHERTYPE_IPV6: parse_ipv6;
@@ -145,6 +155,7 @@ table A_hash {
 
 action update_ipv4() {
     modify_field(ipv4.identification, 0x900d);
+    //modify_field(control_meta.a, ipv4.ttl);
 }
 
 action update_ipv6() {
@@ -188,11 +199,25 @@ table D_mpu_only {
     }
 }    
 
+action act_e() {
+    modify_field(capri_p4_intrinsic.frame_size, control_meta.b);
+}
+
+table E_meta_key {
+    reads { 
+        control_meta.a : exact;
+    }
+    actions {
+        act_e;
+    }
+}
+
 control ingress {
     apply(D_mpu_only);
     apply(C_idx);
     apply(B_tcam);
     apply(A_hash);
+    apply(E_meta_key);
 }
 
 control egress {

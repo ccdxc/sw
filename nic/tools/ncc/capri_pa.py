@@ -821,14 +821,57 @@ class capri_gress_pa:
                     # find last header
                     key_hdr = cf.get_p4_hdr()
 
+            '''
+            # XXX this code causes problem for overflow tables in apollo program
             if insert_cf == None:
+                # table does not use any header fields as key
+                # look for any header in input fields
+                for cf in tbl.input_fields:
+                    if cf.is_meta or cf.is_hv:
+                        continue
+                    cf_idx = self.field_order.index(cf)
+                    if kidx < 0:
+                        kidx = cf_idx
+                        insert_cf = cf
+                        key_hdr = cf.get_p4_hdr()
+                    elif cf_idx > kidx and tbl.is_hash_table():
+                        kidx = cf_idx
+                        insert_cf = cf
+                        # find last header
+                        key_hdr = cf.get_p4_hdr()
+            '''
+
+            if key_hdr != None:
+                hidx = self.hdr_fld_order.index(key_hdr)
+            else:
+                self.logger.debug("%s:No header flds in the key/input, Adding table meta fields to the end of hdr_fld_order" % (tname))
+                hidx = len(self.hdr_fld_order)-1
+                # ideally we can continue further but this is # not working with iris - keymaker problem - need to debug XXX
                 continue
-
-            hidx = self.hdr_fld_order.index(key_hdr)
-
-            for cf in tbl.meta_fields:
+            
+            # keep keys at the end since insertion is reversing the order
+            tbl_meta_fields = sorted(tbl.meta_fields, key=lambda k: k.is_key)
+            for cf in tbl_meta_fields:
+                add_to_list = False
                 if not cf.is_intrinsic and cf not in self.hdr_fld_order:
-                    self.hdr_fld_order.insert(hidx+1, cf)
+                    # do not add to hdr_fld order if this meta fld is unioned with another
+                    # (not-syn) header field - this can happen due to i2e header
+                    if cf in self.fld_unions:
+                        for uf in self.fld_unions[cf][0]:
+                            if uf == cf:
+                                continue
+                            if not uf.is_meta and uf not in self.hdr_fld_order and not is_synthetic_header(uf.p4_fld.instance):
+                                # header field is not added yet
+                                break
+                            else:
+                                add_to_list = True
+                                break
+                    else:
+                        add_to_list = True
+
+                if add_to_list == False:
+                    continue
+                self.hdr_fld_order.insert(hidx+1, cf)
                 if cf in self.field_order:
                     continue # placed by parser, cannot move
                 if cf.is_intrinsic or cf.is_hv:
@@ -841,12 +884,19 @@ class capri_gress_pa:
                     if kidx > insert_tbl_meta_flds[cf][1]:
                         insert_tbl_meta_flds[cf] = (insert_cf, kidx)
 
+        if len(insert_tbl_meta_flds) == 0:
+            return
+
         insert_tbl_meta_flds = sorted(insert_tbl_meta_flds.items(), key=lambda k: k[1][1],
                                         reverse = True)
 
         for tcf, ins in insert_tbl_meta_flds:
             cfidx = ins[1]
             i_cf = ins[0]
+            if i_cf == None:
+                self.field_order.append(tcf)
+                continue
+
             assert self.field_order.index(i_cf) == cfidx, pdb.set_trace() # makes it slow
             hdr = i_cf.get_p4_hdr()
             idx = cfidx
@@ -1003,8 +1053,8 @@ class capri_gress_pa:
             elif f in self.fld_unions:
                 if self.fld_unions[f][1]:
                     # destination is set
-                    self.logger.debug("Dest is set for fld %s -> %s" % \
-                        (f.hfname, self.fld_unions[f][1].hfname))
+                    self.logger.debug("%s:Dest is set for fld %s -> %s" % \
+                        (self.d.name, f.hfname, self.fld_unions[f][1].hfname))
                     continue
                 if is_synthetic_header(f.p4_fld.instance):
                     continue
@@ -2242,7 +2292,8 @@ class capri_gress_pa:
             # Relocating table k,i fields
             justify = JUSTIFY_LEFT
             if hf in self.i2e_fields or \
-                ((hf.is_key or hf.is_input) and hf.storage_size() >= 4):
+                ((hf.is_key or hf.is_input) and hf.storage_size() >= 4) or \
+                hf.is_fld_union_storage:
                 align = 8
             else:
                 align = 0
@@ -2501,6 +2552,10 @@ class capri_gress_pa:
                 if n_hf.is_parser_extracted:
                     alignment = 8
                     justify = JUSTIFY_RIGHT
+
+                if n_hf.is_fld_union_storage:
+                    # this handles syn header fld unions
+                    alignment = 8
 
             if use_last_hdr_bit:
                 start_loc = last_hdr_bit
