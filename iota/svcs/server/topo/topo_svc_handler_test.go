@@ -64,12 +64,12 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	var tbMsg iota.TestBedMsg
 
 	//tbMsg.IpAddress = []string{"10.8.102.91", "10.8.102.94", "10.8.102.95", "10.8.102.90", "10.8.102.93", "10.8.102.92"}
-	//tbMsg.IpAddress = []string{"10.8.102.91"}
+	tbMsg.IpAddress = []string{"10.8.102.98"}
 	tbMsg.SwitchPortId = 1
 	tbMsg.User = "vm"
 	tbMsg.Passwd = "vm"
 
-	tbMsg.NaplesImage = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/nic.tgz", os.Getenv("GOPATH"))
+	tbMsg.NaplesImage = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/obj/images/naples-release-v1.tgz", os.Getenv("GOPATH"))
 	tbMsg.VeniceImage = fmt.Sprintf("%s/src/github.com/pensando/sw/bin/venice.tgz", os.Getenv("GOPATH"))
 
 	resp, err := topoClient.InitTestBed(context.Background(), &tbMsg)
@@ -84,6 +84,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	}
 }
 
+/*
 func TestTopologyService_CleanUpTestBed(t *testing.T) {
 	t.Parallel()
 	var tbMsg iota.TestBedMsg
@@ -167,3 +168,4 @@ func TestTopologyService_CheckClusterHealth(t *testing.T) {
 		t.Errorf("CheckClusterHealth call failed. Err: %v", err)
 	}
 }
+*/

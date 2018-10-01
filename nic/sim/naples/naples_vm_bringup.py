@@ -172,7 +172,7 @@ def __move_data_intfs_to_naples_sim(container_obj, node_ip, data_intfs):
     pid = str(_DOCKER_API_CLIENT.inspect_container(container_obj.id)["State"]["Pid"])
     for intf in data_intfs:
         moveInterfaceToNs(intf, pid)
-        cmd = ["ip", "netns", "exec", pid, "ifconfig", data_intfs[0], node_ip + "/24", "up"]
+        cmd = ["ip", "netns", "exec", pid, "ifconfig", data_intfs[0], node_ip, "up"]
         if not RunShellCmd(cmd):
             print ("Failed to configure IP for intf : %s with  :%s" % (intf, node_ip))
             sys.exit(1)
@@ -181,7 +181,7 @@ def __move_data_intfs_to_naples_sim(container_obj, node_ip, data_intfs):
 def __move_control_intf_to_naples_sim(container_obj,control_intf, control_ip):
     pid = str(_DOCKER_API_CLIENT.inspect_container(container_obj.id)["State"]["Pid"])
     moveInterfaceToNs(control_intf, pid)
-    cmd = ["ip", "netns", "exec", pid, "ifconfig", control_intf, control_ip + "/24", "up"]
+    cmd = ["ip", "netns", "exec", pid, "ifconfig", control_intf, control_ip, "up"]
     if not RunShellCmd(cmd):
         print ("Failed to configure IP for intf : %s with  :%s" % (control_intf, control_ip))
         sys.exit(1)
@@ -219,13 +219,10 @@ def __setup_hntap(container_obj, args):
         print "Error opening Json file :" + str(ex)
         sys.exit(1)
 
-    peerIPs = []
-    for peer in range(0, args.node_cnt):
-        if int(args.node_id) != peer + 1:
-            peerIPs.append(__int2ip(start_ip + peer))
 
     if args.hntap_mode == "tunnel":
         #For Tunnel mode, just pick the first data interface.
+        peerIPs = [ ip.split("/")[0] for ip in args.naples_ips if ip != args.data_intfs[0] ]
         hntap_cfg["switch"] = {
                                 "tunnel-mode" :
                                     {
@@ -413,6 +410,8 @@ def main():
                         help='Control Network IP to be used.')
     parser.add_argument('--venice-ips', dest='venice_ips', default=None,
                         help='Venice IPs for agent to connect to.')
+    parser.add_argument('--naples-ips', dest='naples_ips', default=None,
+                        help='Naples IPs for for tunneled mode interaction')
     parser.add_argument('--data-intfs', dest='data_intfs', default=None,
                         help='List of data interfaces to be used.')
     parser.add_argument('--data-ips', dest='data_ips', default=None,
@@ -439,6 +438,7 @@ def main():
 
     args.data_intfs = args.data_intfs.split(',')
     args.data_ips = args.data_ips.split(',')
+    args.naples_ips = args.naples_ips.split(',')
     if len(args.data_intfs) == 0:
         print "No data interfaces be specified..."
         sys.exit(1)

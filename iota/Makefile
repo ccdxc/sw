@@ -7,6 +7,7 @@ export IOTA_SERVER_DIR		:= ${IOTA_CMD_DIR}/iota-server
 export IOTA_BIN_DIR		:= ${TOPDIR}/bin
 export IOTA_SERVER_BIN_DIR	:= ${IOTA_BIN_DIR}/server
 export IOTA_AGENT_BIN_DIR	:= ${IOTA_BIN_DIR}/agent
+export IOTA_AGENT_TEST_BIN_DIR := ${IOTA_BIN_DIR}/agent/test
 
 iota-server:iota-proto
 	mkdir -p $(IOTA_SERVER_BIN_DIR)
@@ -19,7 +20,9 @@ iota-proto:
 
 iota-agent:iota-proto
 	mkdir -p $(IOTA_AGENT_BIN_DIR)
+	mkdir -p $(IOTA_AGENT_TEST_BIN_DIR)
 	go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_DIR)/iota_agent github.com/pensando/sw/iota/svcs/cmd/iota-agent
+	go build -ldflags="-s -w" -o $(IOTA_AGENT_TEST_BIN_DIR)/iota-agent-test github.com/pensando/sw/iota/svcs/agent/test
 
 iota: iota-proto iota-agent iota-server
 
