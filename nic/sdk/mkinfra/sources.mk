@@ -93,7 +93,6 @@ ${BLD_LIB_DIR}/$(notdir ${2}): ${2}
 	${AT}mkdir -p $$(dir $$@)
 	${NAT}${AT}echo ${NAME_SYMLINK} $$@
 	${AT}ln -sf $$(abspath $$<) $$(abspath $$@)
-	${AT}touch $$@
 endef
 
 define ADD_SRC_EXPORT_BIN_RULE
@@ -101,7 +100,6 @@ ${BLD_BIN_DIR}/$(notdir ${2}): $${${1}_EXPORT_DIR}/bin/${2} $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)
 	${NAT}${AT}echo ${NAME_SYMLINK} $$@
 	${AT}ln -sf $$(abspath $$<) $$(abspath $$@)
-	${AT}touch $$@
 endef
 
 define ADD_SRC_RULE

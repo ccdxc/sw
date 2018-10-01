@@ -108,11 +108,13 @@ for input_file in files:
 
         items = line.split()
         directory = output_dir + '/' + items[1]
-        if not os.path.exists(directory):
-            print ('Creating dir: ' + directory)
-            os.makedirs(directory)
+        if items[1][-1] == '/':
+            if not os.path.exists(directory):
+                print ('Creating dir: ' + directory)
+                os.makedirs(directory)
 
         if (os.path.isdir(items[0])):
+            print('Copying dir: ' + items[0] + '/*  --> ' + directory) 
             cmd = 'cp -rL ' + items[0] + '/* ' + directory
             call(cmd, shell=True)
         else:
