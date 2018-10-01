@@ -43,6 +43,7 @@ import { AppcontentComponent } from '@app/appcontent.component';
 import { SearchService } from '@app/services/generated/search.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { SharedModule } from '@app/components/shared/shared.module';
 
 
 describe('AppcontentComponent', () => {
@@ -68,7 +69,8 @@ describe('AppcontentComponent', () => {
         AlertlistModule,
         LoginModule,
         NgIdleKeepaliveModule.forRoot(),
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        SharedModule
       ],
       providers: [
         ControllerService,

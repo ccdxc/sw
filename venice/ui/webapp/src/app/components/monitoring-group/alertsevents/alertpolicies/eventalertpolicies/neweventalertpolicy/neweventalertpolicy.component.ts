@@ -1,16 +1,15 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Validators, FormControl, FormGroup, FormArray } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
+import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { IApiStatus, IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec, MonitoringAlertStatus } from '@sdk/v1/models/generated/monitoring';
+import { IApiStatus, IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec, FieldsRequirement } from '@sdk/v1/models/generated/monitoring';
 import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs/Observable';
-import { RepeaterData, ValueType } from 'web-app-framework';
-import { Validators } from '@angular/forms';
-import { SearchSearchQuery_kinds } from '@sdk/v1/models/generated/search';
 
 @Component({
   selector: 'app-neweventalertpolicy',
@@ -20,42 +19,13 @@ import { SearchSearchQuery_kinds } from '@sdk/v1/models/generated/search';
   encapsulation: ViewEncapsulation.None,
 })
 export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
+  @ViewChild('fieldSelector') fieldSelector: FieldselectorComponent;
   newPolicy: MonitoringAlertPolicy;
 
   @Input() isInline: boolean = false;
-  @Input() policyData: any;
+  @Input() policyData: IMonitoringAlertPolicy;
   @Input() destinations: IMonitoringAlertDestination[] = [];
   @Output() formClose: EventEmitter<any> = new EventEmitter();
-
-
-  repeaterOptions: RepeaterData[] = [
-    {
-      key: { label: 'severity', value: 'severity' },
-      operators: [
-        { label: 'Equals', value: 'Equals' },
-        { label: 'NotEquals', value: 'NotEquals' }
-      ],
-      values: Utility.convertEnumToSelectItem(MonitoringAlertStatus.propInfo['severity'].enum),
-      valueType: ValueType.multiSelect
-    },
-    {
-      key: { label: 'kind', value: 'kind' },
-      operators: [
-        { label: 'Equals', value: 'Equals' },
-        { label: 'NotEquals', value: 'NotEquals' }
-      ],
-      values: Utility.convertEnumToSelectItem(SearchSearchQuery_kinds),
-      valueType: ValueType.multiSelect
-    },
-    {
-      key: { label: 'name', value: 'name' },
-      operators: [
-        { label: 'Equals', value: 'Equals' },
-        { label: 'NotEquals', value: 'NotEquals' }
-      ],
-      valueType: ValueType.inputField
-    },
-  ];
 
   alertOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringAlertPolicySpec.propInfo['severity'].enum);
 
@@ -64,6 +34,8 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
   oldButtons: ToolbarButton[] = [];
 
   errorChecker = new ErrorStateMatcher();
+
+  destinationsControl: FormControl;
 
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService
@@ -74,7 +46,10 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
       this.newPolicy = new MonitoringAlertPolicy(this.policyData);
     } else {
       this.newPolicy = new MonitoringAlertPolicy();
+      // Remove once Sanjay adds better defaults to the swagger
+      this.newPolicy.spec.enable = true;
     }
+    this.destinationsControl = new FormControl(this.newPolicy.spec.destinations);
 
     if (this.isInline) {
       // disable name field
@@ -141,25 +116,47 @@ export class NeweventalertpolicyComponent implements OnInit, AfterViewInit {
 
   savePolicy() {
     // Submit to server
+    // Read in correct format from the field selector
+    const policy = new MonitoringAlertPolicy(this.newPolicy.getValues());
+    const specControl = policy.$formGroup.get('spec') as FormGroup;
+    // populating destinations
+    // Making the values form groups
+    let destinationValues = this.destinationsControl.value;
+    destinationValues = destinationValues.map((item) => {
+      return new FormControl(item);
+    });
+    specControl.removeControl('destinations');
+    specControl.addControl('destinations', new FormArray(destinationValues));
+
+
+    // Making the values form groups
+    let fieldSelectorValues = this.fieldSelector.getValuesWithValueFormAsArray();
+    fieldSelectorValues = fieldSelectorValues.map((item) => {
+      return new FieldsRequirement(item).$formGroup;
+    });
+    // To reset a form array, we have to delete the old and readd
+    specControl.removeControl('requirements');
+    specControl.addControl('requirements', new FormArray(fieldSelectorValues));
     let handler: Observable<{ body: IMonitoringAlertPolicy | IApiStatus | Error, statusCode: number }>;
     if (this.isInline) {
-      handler = this._monitoringService.UpdateAlertPolicy(this.newPolicy.meta.name, this.newPolicy);
+      handler = this._monitoringService.UpdateAlertPolicy(this.newPolicy.meta.name, policy);
     } else {
-      handler = this._monitoringService.AddAlertPolicy(this.newPolicy);
+      handler = this._monitoringService.AddAlertPolicy(policy);
     }
 
-    handler.subscribe((response) => {
-      const status = response.statusCode;
-      if (status === 200) {
-        if (!this.isInline) {
-          // Need to reset the toolbar that we changed
-          this.setPreviousToolbar();
+    handler.subscribe(
+      (response) => {
+        this.cancelPolicy();
+      },
+      (error) => {
+        // TODO: Error handling
+        if (error.body instanceof Error) {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
-        this.formClose.emit();
-      } else {
-        console.log(response.body);
       }
-    });
+    );
   }
 
   cancelPolicy() {

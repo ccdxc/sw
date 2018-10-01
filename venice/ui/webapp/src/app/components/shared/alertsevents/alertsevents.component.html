@@ -1,9 +1,9 @@
 <div style="height:100%">
   <!-- Since we are resizing lazy rendered tables manually, it needs to be called
         when tabs change so it knows to resize itself -->
-  <mat-tab-group *ngIf="!hideAlerts; else EventsTableTemplate" [disableRipple]="true" (selectedIndexChange)="lazyRenderWrapper?.resizeTable()" fxFlex>
+  <mat-tab-group [disableRipple]="true" (selectedIndexChange)="lazyRenderWrapper?.resizeTable()" fxFlex>
     <mat-tab label="ALERTS">
-      <ng-container *ngTemplateOutlet="AlertTable; context:{tab:'alerts'}"></ng-container>
+      <ng-container *ngTemplateOutlet="AlertsTableTemplate"></ng-container>
     </mat-tab>
     <mat-tab label="EVENTS">
       <ng-container *ngTemplateOutlet="EventsTableTemplate"></ng-container>
@@ -64,10 +64,10 @@
                 <mat-icon *ngIf="rowData.severity === 'CRITICAL'" fxFlex="nogrow" class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
                 <mat-icon *ngIf="rowData.severity === 'WARNING'" fxFlex="nogrow" class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
                 <mat-icon *ngIf="rowData.severity === 'INFO'" fxFlex="nogrow" class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
-                <div style="display: inline"> {{ severityEnum[rowData.severity] }} </div>
+                <div style="display: inline; margin-left: 25px"> {{ severityEnum[rowData.severity] }} </div>
             </ng-container>
             <ng-container *ngSwitchCase="'source'" >
-              <span style="display: block"> {{ rowData.source['node-name'] }}  :  {{ rowData.source.component }} </span>
+              <span *ngIf="rowData.source != null" style="display: block"> {{ rowData.source['node-name'] }}  :  {{ rowData.source.component }} </span>
             </ng-container>
             <ng-container *ngSwitchDefault>
               {{displayColumn(rowData, col)}}
@@ -81,83 +81,71 @@
   </div>
 </ng-template>
 
-<ng-template #AlertTable>
-  <p-table class="global-primeng-table" [columns]="alertCols" [value]="alerts" [(selection)]="selectedAlerts" dataKey="id" [rows]="15" [scrollable]="true" scrollHeight="800px"#alerttable
-    [responsive]="true" [loading]="loading" [resizableColumns]="true">
-     <!-- Table Caption -->
-     <ng-template pTemplate="caption">
-       <div class="alertsevents-header-div">
-         <div class="alertsevents-main-menu">
-           <div class="alertsevents-main-menu-number-front-group-div">
-             <mat-icon>notifications </mat-icon>
-             <span class="alertsevents-main-menu-label">
-               All Alerts ({{alertnumber.total | number}})
-             </span>
-             <button *ngIf="selectedAlerts.length>0" type="button" class="btn alertseventsrecord-header-button" (click)="onAlerttableDeleteMultiRecords($event)"
-               title="Delete">
-               <i class="fa fa-trash alertseventsrecord-header-button-icon"></i>Delete
-             </button>
-             <button *ngIf="selectedAlerts.length>0" type="button" class="btn alertseventsrecord-header-button" (click)="onAlerttableArchiveMultiRecords($event)"
-               title="Archive">
-               <i class="fa fa-archive alertseventsrecord-header-button-icon"></i>Archive
-             </button>
-           </div>
-           <div class="alertsevents-main-menu-number-back-group-div">
-             <span class="alertsevents-main-menu-number alertsevents-main-menu-number-total" (click)="onAlertNumberClick($event, 'total')">All</span>
-             <span class="alertsevents-main-menu-number alertsevents-main-menu-number-critical" (click)="onAlertNumberClick($event, 'critical')"
-               *ngIf="alertnumber.critical>0">{{alertnumber.critical}}</span>
-             <span class="alertsevents-main-menu-number alertsevents-main-menu-number-warning" (click)="onAlertNumberClick($event, 'warning')"
-               *ngIf="alertnumber.warning>0">{{alertnumber.warning}}</span>
-             <span class="alertsevents-main-menu-number alertsevents-main-menu-number-info" (click)="onAlertNumberClick($event, 'info')" *ngIf="alertnumber.warning>0">{{alertnumber.info}}</span>
-           </div>
-         </div>
-       </div>
-     </ng-template>
-     <!-- Table Header -->
-     <ng-template pTemplate="header" let-columns>
-       <tr>
-         <th style="width: 2.25em">
-           <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-         </th>
-         <th *ngFor="let col of alertCols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-            {{col.header}}
-            <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
-        </th>
-         <th class="alertsevents-column-action">
-           Actions
-         </th>
-       </tr>
-     </ng-template>
-     <!-- Table Body -->
-     <ng-template pTemplate="body" let-rowData let-alert>
-       <tr [pSelectableRow]="rowData">
-         <td style="width: 2.25em">
-           <p-tableCheckbox [value]="alert"></p-tableCheckbox>
-         </td>
-         <td *ngFor="let col of alertCols" [ngSwitch]="col.field" [class]="col.class">
-           <button *ngSwitchCase="'date'" type="button" class="btn btn-link alertseventsrecord-date-row" (click)="onAlertClick($event,alert)">
-             {{alert.date | date:'MM-dd-yyyy HH:mm a'}}
-           </button>
-           <ng-container *ngSwitchCase="'severity'" >
-            <span class="alertseventsrecord-icon" [ngClass]="getAlertItemIconClass(alert)">&nbsp;</span> {{alert.severity}}
-           </ng-container>
-           <ng-container *ngSwitchDefault>
-            {{rowData[col.field]}}
-           </ng-container>
-        </td>
-         <td class="alertsevents-column-action">
-           <div class="alertseventsrecord-column-action-div">
-             <button type="button" class="btn btn-link alertseventsrecord-column-action-icon" (click)="onAlerttableArchiveRecord($event, alert)"
-               title="Archive">
-               <mat-icon>folder_open</mat-icon>
-             </button>
-             <button type="button" class="btn btn-link alertseventsrecord-column-action-icon" (click)="onAlerttableDeleteRecord($event, alert)"
-               title="Delete">
-               <mat-icon>delete</mat-icon>
-             </button>
-           </div>
-         </td>
-       </tr>
-     </ng-template>
-   </p-table>
-</ng-template>
+<ng-template #AlertsTableTemplate>
+    <div fxFlex class="alertsevents-events-table">
+      <app-lazyrender [data]="filteredAlerts" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
+        <p-table #eventTable class="global-primeng-table-lazyload" [columns]="alertCols" 
+                  dataKey="meta.name" [responsive]="true" 
+                  [loading]="alertLoading" [resizableColumns]="true">
+          <!-- Table Caption -->
+          <ng-template pTemplate="caption">
+            <app-tableheader title="Alerts" [count]="filteredAlerts.length" [total]="alerts.length" [icon]="alertsIcon" width="250px">
+              <div fxFlex></div>
+              <div class="global-button global-alert-neutral alertsevents-main-menu-number " 
+                    (click)="onAlertNumberClick('total')">All</div>
+              <div class="global-button global-alert-critical alertsevents-main-menu-number " 
+                    (click)="onAlertNumberClick('CRITICAL')"
+                    *ngIf="alertNumbers.CRITICAL>0">{{ alertNumbers.CRITICAL }}</div>
+              <div class="global-button global-alert-warning alertsevents-main-menu-number " 
+                    (click)="onAlertNumberClick('WARNING')"
+                    *ngIf="alertNumbers.WARNING>0">{{ alertNumbers.WARNING }}</div>
+              <div class="global-button global-alert-info alertsevents-main-menu-number " 
+                    (click)="onAlertNumberClick('INFO')" 
+                    *ngIf="alertNumbers.INFO>0">{{ alertNumbers.INFO }}</div>
+            </app-tableheader>
+          </ng-template>
+        <!-- Table Header -->
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th *ngFor="let col of alertCols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
+               {{col.header}}
+               <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
+            </th>
+          </tr>
+        </ng-template>
+        <!-- Table Body -->
+        <ng-template pTemplate="body" let-rowData>
+          <tr>
+            <td *ngFor="let col of alertCols" [ngSwitch]="col.field" [class]="col.class">
+              <div *ngSwitchCase="'meta.mod-time'" class="alertseventsrecord-date-row">
+                {{rowData.meta['mod-time'] | PrettyDate }}
+              </div>
+              <div *ngSwitchCase="'meta.creation-time'" class="alertseventsrecord-date-row">
+                {{rowData.meta['creation-time'] | PrettyDate }}
+              </div>
+              <ng-container *ngSwitchCase="'status.severity'" >
+                  <mat-icon *ngIf="rowData.status.severity === 'CRITICAL'" fxFlex="nogrow" class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
+                  <mat-icon *ngIf="rowData.status.severity === 'WARNING'" fxFlex="nogrow" class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
+                  <mat-icon *ngIf="rowData.status.severity === 'INFO'" fxFlex="nogrow" class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
+                  <div style="display: inline; margin-left: 25px"> {{ severityEnum[rowData.status.severity] }} </div>
+              </ng-container>
+              <div *ngSwitchCase="'status.source'">
+                <div *ngIf="rowData.status.source != null" style="display: inline"> {{ rowData.status.source['node-name'] }}  :  {{ rowData.status.source.component }} </div>
+              </div>
+              <ng-container *ngSwitchDefault>
+                {{displayColumn(rowData, col)}}
+              </ng-container>
+           </td>
+           <td class="global-column-action">
+              <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+                  <mat-icon *ngIf="rowData.spec.state !== 'RESOLVED'" title="Resolve Alert" class="global-table-action-icon" (click)="resolveAlert(rowData)">done</mat-icon>
+                  <mat-icon *ngIf="rowData.spec.state !== 'ACKNOWLEDGED'" title="Acknowledge Alert" class="global-table-action-icon alertsevents-acknowledge-icon" (click)="acknowledgeAlert(rowData)">archive</mat-icon>
+                  <mat-icon *ngIf="rowData.spec.state !== 'OPEN'" title="Mark Alert as Open" class="global-table-action-icon alertsevents-open-icon" (click)="openAlert(rowData)">priority_high</mat-icon>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        </p-table>
+      </app-lazyrender>
+    </div>
+  </ng-template>

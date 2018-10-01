@@ -18,6 +18,8 @@ import { AlertseventsComponent } from '@app/components/shared/alertsevents/alert
 import { PrimengModule } from '@app/lib/primeng.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { WhitespaceTrimDirective } from '@app/components/shared/directives/whitespacetrim.directive';
+import { FieldselectorComponent } from './fieldselector/fieldselector.component';
+import { WidgetsModule } from 'web-app-framework';
 
 @NgModule({
   imports: [
@@ -27,7 +29,7 @@ import { WhitespaceTrimDirective } from '@app/components/shared/directives/white
     PrimengModule,
     ReactiveFormsModule,
     FormsModule,
-
+    WidgetsModule
   ],
   declarations: [PagebodyComponent,
     SpinnerComponent,
@@ -41,7 +43,8 @@ import { WhitespaceTrimDirective } from '@app/components/shared/directives/white
     LazyrenderComponent,
     PrettyDatePipe,
     AlertseventsComponent,
-    WhitespaceTrimDirective
+    WhitespaceTrimDirective,
+    FieldselectorComponent
   ],
   exports: [
     PagebodyComponent,
@@ -56,7 +59,8 @@ import { WhitespaceTrimDirective } from '@app/components/shared/directives/white
     LazyrenderComponent,
     PrettyDatePipe,
     AlertseventsComponent,
-    WhitespaceTrimDirective
+    WhitespaceTrimDirective,
+    FieldselectorComponent
   ]
 })
 export class SharedModule { }

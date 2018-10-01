@@ -33,20 +33,13 @@
 }
 
 .eventalertpolicies-icon {
-  width: 16px;
-  height: 16px;
-  font-size: 16px;
-  margin-right: 5px;
+  position: absolute;
+  top: 8px;
+  font-size: 18px;
 }
 
 .eventalertpolicies-column-action-div {
   display: inline-flex;
-}
-
-.eventalertpolicies-record-column-action-icon {
-  margin: auto 5px;
-  padding: 0px;
-  color: #676763;
 }
 
 .eventalertpolicies-column-action {
@@ -55,13 +48,25 @@
 
 .eventalertpolicies-column-name {
   width: 20%;
-  max-width: 200px !important;
 }
 
 .eventalertpolicies-column-severity {
-  width: 100px !important;
+  width: 150px !important;
 }
 
+.eventalertpolicies-column-totalhits,
+.eventalertpolicies-column-openalerts {
+  width: 10%
+}
+
+.eventalertpolicies-column-acknowledgedalerts {
+  width: 100px;
+}
+
+// This column also includes the action items so we add an extra 100 px
+th.eventalertpolicies-column-acknowledgedalerts {
+  width: 200px !important;
+}
 
 .eventalertpolicies-rowexpand {
   overflow: hidden;

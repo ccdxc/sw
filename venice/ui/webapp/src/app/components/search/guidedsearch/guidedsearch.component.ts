@@ -1,10 +1,11 @@
-import { Component, EventEmitter, OnInit, Output, ViewChild, ViewEncapsulation, Input, OnChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormArray, FormControl } from '@angular/forms';
 import { Animations } from '@app/animations';
-import { SearchUtil } from '@app/components/search/SearchUtil';
 import { Utility } from '@app/common/Utility';
-import { RepeaterComponent, RepeaterData, ValueType, RepeaterItem } from 'web-app-framework';
-import { SearchSpec, SearchExpression, SearchModelField, GuidedSearchCriteria } from '@app/components/search';
+import { GuidedSearchCriteria, SearchExpression, SearchSpec, SearchModelField } from '@app/components/search';
+import { SearchUtil } from '@app/components/search/SearchUtil';
+import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
+import { RepeaterComponent, RepeaterData, ValueType } from 'web-app-framework';
 
 @Component({
   selector: 'app-guidedsearch',
@@ -15,7 +16,7 @@ import { SearchSpec, SearchExpression, SearchModelField, GuidedSearchCriteria } 
 })
 export class GuidesearchComponent implements OnInit, OnChanges {
 
-  @ViewChild('fieldRepeater') fieldRepeater: RepeaterComponent;
+  @ViewChild('fieldRepeater') fieldRepeater: FieldselectorComponent;
   @ViewChild('labelRepeater') labelRepeater: RepeaterComponent;
 
   selectedCategories: any[] = [];
@@ -96,7 +97,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
   populateHelper_Kind(isValues: string): any {
     const list = isValues.split(',');
     const output = [];
-    list.filter( (kind) => {
+    list.filter((kind) => {
       if (SearchUtil.isValidKind(kind)) {
         output.push(kind);
       }
@@ -107,7 +108,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
   populateHelper_Category(inValues: string): any {
     const list = inValues.split(',');
     const output = [];
-    list.filter( (kind) => {
+    list.filter((kind) => {
       if (SearchUtil.isValidCategory(kind)) {
         output.push(kind);
       }
@@ -123,8 +124,6 @@ export class GuidesearchComponent implements OnInit, OnChanges {
   protected populate(inputConfig: SearchSpec) {
     const inValues = inputConfig.in;
     const isValues = inputConfig.is;
-    const hasValues = this.parseExpressionList(inputConfig.has, true);
-    const tagValues = this.parseExpressionList(inputConfig.tag, false);
 
     if (inValues) {
       this.selectedCategories = this.populateHelper_Category(inValues);
@@ -132,6 +131,10 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     if (isValues) {
       this.selectedKinds = this.populateHelper_Kind(isValues);
     }
+
+    const isEvent = this.selectedKinds.includes('Event');
+    const hasValues = this.parseExpressionList(inputConfig.has, true, isEvent);
+    const tagValues = this.parseExpressionList(inputConfig.tag, false);
 
     if (hasValues.length > 0) {
       const list = this.buildFieldFormControlList(hasValues);
@@ -150,7 +153,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
   protected buildFieldFormControlList(searchExpressons: SearchExpression[]): FormControl[] {
     const list = [];
     searchExpressons.forEach((item) => {
-      // We want to support multi-select as well as delimited string (xxx,yyy). So we use item.values instead of item.values.join(','). 
+      // We want to support multi-select as well as delimited string (xxx,yyy). So we use item.values instead of item.values.join(',').
       const formControl = new FormControl({ keyFormControl: item.key, operatorFormControl: item.operator, valueFormControl: (item.values) ? item.values : [] });
       list.push(formControl);
     });
@@ -167,7 +170,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     return list;
   }
 
-  protected parseExpressionList(inputSearchString: any, isField: boolean): SearchExpression[] {
+  protected parseExpressionList(inputSearchString: any, isField: boolean, isEvent = false): SearchExpression[] {
     const list = [];
     if (!inputSearchString) {
       return [];
@@ -386,7 +389,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
   }
 
   getFieldOperators(kind: string, key: string, subKey: string): any[] {
-   return SearchUtil.getOperators(kind, key, subKey);
+   return SearchUtil.getOperators(kind, [key, subKey]);
   }
 
   getMetaOperators(item: any): any[] {
@@ -401,34 +404,5 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     return this.getMetaOperators(item);
   }
 
-  /**
-   * Buidl place-holder text for repeater-item
-   *
-   * @param repeater
-   * @param keyFormName
-   */
-  buildFieldValuePlaceholder(repeater: RepeaterItem, keyFormName: string) {
-    // TODO: may change this once we have enhanced category-mapping.ts
-    const key = repeater.formGroup.value[keyFormName];
-    if (key.startsWith(SearchUtil.SEARCHFIELD_META)) {
-      if (key.indexOf('time') > -1) {
-        return 'YYYY-MM-DDTHH:mm:ss.sssZ';
-      }
-    }
-    if (key.startsWith(SearchUtil.SEARCHFIELD_SPEC)) {
-      if (key.indexOf('-ip') >  -1) {
-        return 'xxx.xxx.xxx.xxx';
-      }
-    }
-    if (key.startsWith(SearchUtil.SEARCHFIELD_STATUS)) {
-      if (key.indexOf('time') > -1 ) {
-        return 'YYYY-MM-DDTHH:mm:ss.sssZ';
-      }
-      if (key.indexOf('date') > -1 ) {
-        return 'YYYY-MM-DD';
-      }
-    }
-    return key;
-  }
 
 }

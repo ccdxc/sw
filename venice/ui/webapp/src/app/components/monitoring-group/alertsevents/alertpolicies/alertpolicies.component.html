@@ -5,16 +5,6 @@
         <app-eventalertpolicies #tabContent [policies]="eventPolicies" [destinations]="destinations"></app-eventalertpolicies>
       </ng-template>
     </app-penuitab>
-    <app-penuitab title="METRIC ALERT POLICIES">
-      <ng-template>
-        <app-alert-metricpolicy></app-alert-metricpolicy>
-      </ng-template>
-    </app-penuitab>
-    <app-penuitab title="OBJECT ALERT POLICIES">
-      <ng-template>
-        <app-alert-objectpolicy></app-alert-objectpolicy>
-      </ng-template>
-    </app-penuitab>
     <app-penuitab title="DESTINATIONS" [count]="destinations?.length">
       <ng-template>
         <app-destinations #tabContent [destinationData]="destinations"></app-destinations>

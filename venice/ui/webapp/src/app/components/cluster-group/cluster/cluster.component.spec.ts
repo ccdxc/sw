@@ -26,6 +26,7 @@ import { AlerttableService } from '@app/services/alerttable.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
 
 @Component({
   template: ''
@@ -50,7 +51,7 @@ describe('ClusterComponent', () => {
         NoopAnimationsModule,
         SharedModule,
         MaterialdesignModule,
-        PrimengModule
+        PrimengModule,
       ],
       providers: [
         ControllerService,
@@ -61,7 +62,8 @@ describe('ClusterComponent', () => {
         AlerttableService,
         EventsService,
         UIConfigsService,
-        SearchService
+        SearchService,
+        MonitoringService
       ]
     })
       .compileComponents();

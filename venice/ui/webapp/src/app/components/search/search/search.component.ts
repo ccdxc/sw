@@ -378,6 +378,9 @@ export class SearchComponent extends AutoComplete implements OnInit, OnChanges {
         // We are openning up guieded-search panel. But a "SearchSpec" for guided-search widget
         const typevalueList = SearchUtil.compileSearchInputString(inputStr).list;
         this.guidesearchInput = SearchUtil.convertToSearchSpec(typevalueList);
+      } else {
+        // Resetting values
+        this.guidesearchInput = null;
       }
     }
   }

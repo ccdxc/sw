@@ -39,6 +39,7 @@ import { SearchboxComponent } from '@app/components/search/searchbox/searchbox.c
 import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
 import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
 import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
+import { SharedModule } from '@app/components/shared/shared.module';
 
 describe('AppComponent', () => {
   beforeEach(() => {
@@ -52,27 +53,28 @@ describe('AppComponent', () => {
         GuidesearchComponent,
       ],
       imports: [
-                // Other modules...
-                HttpClientTestingModule,
-                RouterTestingModule,
-                FormsModule,
-                PrimengModule,
-                MaterialdesignModule,
-                WidgetsModule,
-                CoreModule,
-                AlertlistModule,
-                LoginModule,
-                NgIdleKeepaliveModule.forRoot()
-            ],
+        // Other modules...
+        HttpClientTestingModule,
+        RouterTestingModule,
+        FormsModule,
+        PrimengModule,
+        MaterialdesignModule,
+        WidgetsModule,
+        CoreModule,
+        AlertlistModule,
+        LoginModule,
+        SharedModule,
+        NgIdleKeepaliveModule.forRoot()
+      ],
       providers: [
-            ControllerService,
-            AlerttableService,
-            AuthService,
-            LogService,
-            LogPublishersService,
-            Store,
-            OverlayContainer,
-        ],
+        ControllerService,
+        AlerttableService,
+        AuthService,
+        LogService,
+        LogPublishersService,
+        Store,
+        OverlayContainer,
+      ],
     });
 
     TestBed.compileComponents();

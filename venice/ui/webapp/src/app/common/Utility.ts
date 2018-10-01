@@ -621,35 +621,37 @@ export class Utility {
     if (fields == null) {
       return null;
     }
-    if (typeof fields === 'string') {
-      fields = fields.split('.');
-    }
     let value = inputObject;
-    let propHelper;
     let uiHintMap;
     if (useUIHints && inputObject.getPropInfo != null) {
       // We have an object from venice-sdk, so we can find its property info
-      propHelper = inputObject;
+      uiHintMap = this.getNestedPropInfo(inputObject, fields).enum;
     }
-    for (let i = 0; i < fields.length; i++) {
-      if (propHelper != null) {
-        if (i === fields.length - 1) {
-          // We are the last value, so we are potentially just before a leaf
-          // We check the prop info at this level.
-          if (propHelper.getPropInfo != null && propHelper.getPropInfo(fields[i]) != null && propHelper.getPropInfo(fields[i]).enum) {
-            uiHintMap = propHelper.getPropInfo(fields[i]).enum;
-          }
-        } else {
-          propHelper = inputObject[fields[i]];
-        }
-      }
-      value = value[fields[i]];
-    }
-
+    value = _.get(inputObject, fields);
     if (uiHintMap != null) {
       value = uiHintMap[value];
     }
     return value;
+  }
+
+  /**
+   * Gets the propinfo for the given key.
+   */
+  public static getNestedPropInfo(instance: any, keys: string | Array<string>) {
+    if (keys == null) {
+      return null;
+    }
+    if (typeof keys === 'string') {
+      keys = keys.split('.');
+    }
+    const parent = _.get(instance, keys.slice(0, -1));
+    let propInfo = null;
+    if (parent != null) {
+      propInfo = parent.getPropInfo(keys[keys.length - 1]);
+    } else {
+      propInfo = instance.getPropInfo(keys[keys.length - 1]);
+    }
+    return propInfo;
   }
 
   public static convertEnumToSelectItem(enumVal: object): SelectItem[] {

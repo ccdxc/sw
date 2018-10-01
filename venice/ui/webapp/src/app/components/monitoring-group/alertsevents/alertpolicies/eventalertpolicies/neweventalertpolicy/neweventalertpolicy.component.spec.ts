@@ -13,6 +13,7 @@ import { MatIconRegistry } from '@angular/material';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
+import { SharedModule } from '@app/components/shared/shared.module';
 
 describe('NeweventalertpolicyComponent', () => {
   let component: NeweventalertpolicyComponent;
@@ -29,7 +30,8 @@ describe('NeweventalertpolicyComponent', () => {
         PrimengModule,
         WidgetsModule,
         MaterialdesignModule,
-        RouterTestingModule
+        RouterTestingModule,
+        SharedModule
       ],
       providers: [
         ControllerService,

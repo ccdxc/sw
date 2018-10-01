@@ -38,6 +38,34 @@
   }
 }
 
+@mixin global-mat-radio($mat-radio-size) {
+  // Container for radio circles and ripple.
+  .mat-radio-container {
+    width: $mat-radio-size;
+    height: $mat-radio-size;
+  }
+  
+  // The outer circle for the radio, always present.
+  .mat-radio-outer-circle {
+    height: $mat-radio-size;
+    width: $mat-radio-size;
+  }
+  
+  // The inner circle for the radio, shown when checked.
+  .mat-radio-inner-circle {
+    height: $mat-radio-size;
+    width: $mat-radio-size;
+  
+    .mat-radio-checked & {
+      @include cdk-high-contrast {
+        // Since we use a background color to render the circle, it won't be
+        // displayed in high contrast mode. Use a border as a fallback.
+        border: solid $mat-radio-size / 2;
+      }
+    }
+  }
+}
+
 /**
   * This is a mixin so that it will override Material's css rules
   * when it is included in a css rule on that page 

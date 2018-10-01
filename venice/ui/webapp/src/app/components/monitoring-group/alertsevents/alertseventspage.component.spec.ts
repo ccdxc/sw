@@ -22,6 +22,7 @@ import { AlertseventspageComponent } from './alertseventspage.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { EventsService } from '@app/services/events.service';
 import { SearchService } from '@app/services/generated/search.service';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
 
 
 @Component({
@@ -29,7 +30,7 @@ import { SearchService } from '@app/services/generated/search.service';
 })
 class DummyComponent { }
 
-describe('AlertseventsComponent', () => {
+describe('AlertseventspageComponent', () => {
   let component: AlertseventspageComponent;
   let fixture: ComponentFixture<AlertseventspageComponent>;
 
@@ -56,7 +57,8 @@ describe('AlertseventsComponent', () => {
         MatIconRegistry,
         UIConfigsService,
         EventsService,
-        SearchService
+        SearchService,
+        MonitoringService
       ]
     })
       .compileComponents();

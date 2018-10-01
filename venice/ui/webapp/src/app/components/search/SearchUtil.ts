@@ -14,26 +14,27 @@ export class SearchUtil {
   public static EVENT_KEY_TAB = 9;
   public static EVENT_KEY_ESCAPE = 27;
 
+  public static SEARCHFIELD_HIDDEN = ['kind', 'api-version'];
   public static SEARCHFIELD_META = 'meta';
   public static SEARCHFIELD_SPEC = 'spec';
   public static SEARCHFIELD_STATUS = 'status';
 
   public static META_ATTRIBUTES = ['name', 'tenant', 'generation-id', 'resource-version',  'uuid',  'creation-time', 'mod-time', 'namespace', 'self-link'];
 
+  // For the backend, equal expects only one value, while in can support multiple
+  // The UI hides this distinction and shows equal, but allows user to select multiple if they wish to.
   public static stringOperators = [
-    { label: 'equals', value: 'equals' },
-    { label: 'not equals', value: 'not equals' },
-    { label: 'in', value: 'in' },
-    { label: 'not in', value: 'not in' }
+    { label: 'equals', value: 'in' },
+    { label: 'not equals', value: 'not in' },
   ];
 
   public static numberOperators = [
-    { label: 'equals', value: 'equals' },
-    { label: 'not equals', value: 'not equals' },
-    { label: 'greater than', value: 'gt' },
-    { label: 'greater than equal', value: 'gte' },
-    { label: 'less than', value: 'lt' },
-    { label: 'less than equal', value: 'lte' }
+    { label: '=', value: 'equals' },
+    { label: '!=', value: 'not equals' },
+    { label: '>', value: 'gt' },
+    { label: '>=', value: 'gte' },
+    { label: '<', value: 'lt' },
+    { label: '<=', value: 'lte' }
   ];
 
   public static booleanOperators = [
@@ -162,11 +163,14 @@ export class SearchUtil {
     if (!instance) {
       return null;
     }
-    const obj: SearchModelField = {
-      meta: instance[this.SEARCHFIELD_META] ? Object.keys(instance[this.SEARCHFIELD_META]) : [],
-      spec: instance[this.SEARCHFIELD_SPEC] ? Object.keys(instance[this.SEARCHFIELD_SPEC]) : [],
-      status: instance[this.SEARCHFIELD_STATUS] ? Object.keys(instance[this.SEARCHFIELD_STATUS]) : [],
-    };
+
+    const obj = instance;
+    // Removing keys that shouldn't be seen by user
+    this.SEARCHFIELD_HIDDEN.forEach(field => {
+      if (field in obj) {
+        delete obj[field];
+      }
+    });
     return obj;
   }
 
@@ -310,7 +314,7 @@ export class SearchUtil {
 
     const catValues = (inValue) ? inValue.split(',') : null;
     const kindValues = (isValue) ? isValue.split(',') : null;
-    
+
     if (catValues) {
       error.in = this.examineCategoryOrKind(catValues, true).error.in;
     }
@@ -573,8 +577,10 @@ export class SearchUtil {
    *  operator: '=',
    *  values: = ['ssd']
    * }
+   *
+   * For events, we don't want to append spec or meta as many of the properties are inlined.
    */
-  public static parseToExpression(inputString: string, isField: boolean): SearchExpression {
+  public static parseToExpression(inputString: string, isField: boolean, isEvent = false): SearchExpression {
     const operators = SearchUtil.SEARCH_FIELD_OPERATORS;
     const searchExpression: SearchExpression = { key: null, operator: null, values: null };
     for (let i = 0; i < operators.length; i++) {
@@ -582,7 +588,7 @@ export class SearchUtil {
       if (inputString.indexOf(op.operator) >= 0) {
         const strs = inputString.split(op.operator);
         // cases sensitive.
-        searchExpression.key = this.padKey(strs[0], isField);
+        searchExpression.key = this.padKey(strs[0], isField, isEvent);
         searchExpression.operator = op.searchoperator;
         searchExpression.values = [strs[1].trim()];
       }
@@ -596,17 +602,17 @@ export class SearchUtil {
    * @param key
    * @param subKey
    */
-  public static getOperators(kind: string, key: string, subKey: string): any[] {
+   public static getOperators(kind: string, keys: string[]): any[] {
     const category = this.findCategoryByKind(kind);
+    const _ = Utility.getLodash();
     if (!category) {
-      Utility.getLodash().union(SearchUtil.stringOperators, SearchUtil.numberOperators);
+      _.union(SearchUtil.stringOperators, SearchUtil.numberOperators);
     }
     const instance = CategoryMapping[category][kind];
     if (!instance) {
-      return Utility.getLodash().union(SearchUtil.stringOperators, SearchUtil.numberOperators);
+      return _.union(SearchUtil.stringOperators, SearchUtil.numberOperators);
     }
-    // e.g  instance['meta'].getPropInfo('tenant'), instance is ClusterCluster object
-    const propInfo = instance[key].getPropInfo(subKey);
+    const propInfo = Utility.getNestedPropInfo(instance, keys);
     if (!propInfo) {
       return Utility.getLodash().union(SearchUtil.stringOperators, SearchUtil.numberOperators);
     } else {
@@ -661,15 +667,21 @@ export class SearchUtil {
    *     }
    *   ]
    * }
+   *
+   * For events, we don't want to append spec or meta as many of the properties are inlined.
+   *
    * @param inputString
    * @param isField
    */
-  public static padKey(inputString: string, isField: boolean): string {
+  public static padKey(inputString: string, isField: boolean, isEvent = false): string {
     if (!inputString) {
       return inputString;
     }
     if (isField) {
-      if (inputString.startsWith(SearchUtil.SEARCHFIELD_META) || inputString.startsWith(SearchUtil.SEARCHFIELD_STATUS) || inputString.startsWith(SearchUtil.SEARCHFIELD_STATUS)) {
+      if (inputString.startsWith(SearchUtil.SEARCHFIELD_META) ||
+        inputString.startsWith(SearchUtil.SEARCHFIELD_STATUS) ||
+        inputString.startsWith(SearchUtil.SEARCHFIELD_STATUS) ||
+        isEvent) {
         return inputString;
       }
       const metaORspec = this.isMetaAttribute(inputString) ? 'meta' : 'spec';

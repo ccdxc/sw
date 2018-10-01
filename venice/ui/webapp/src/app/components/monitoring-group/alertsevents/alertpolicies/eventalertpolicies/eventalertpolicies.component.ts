@@ -6,8 +6,9 @@ import { Table } from 'primeng/table';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { TabcontentComponent } from 'web-app-framework';
-import { MonitoringAlertPolicy, FieldsRequirement_operator, MonitoringAlertDestination, IMonitoringAlertPolicy } from '@sdk/v1/models/generated/monitoring';
+import { MonitoringAlertPolicy, FieldsRequirement_operator, MonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicySpec_severity_uihint } from '@sdk/v1/models/generated/monitoring';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { EventsEvent } from '@sdk/v1/models/generated/events';
 
 
 @Component({
@@ -28,6 +29,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     matIcon: 'notifications'
   };
   globalFilterFields: string[] = ['meta.name', 'spec.destinations', 'spec.severity'];
+  severityEnum = MonitoringAlertPolicySpec_severity_uihint;
 
   eventAlertPolicies: any;
   selectedEventAlertPolicies: any;
@@ -42,11 +44,11 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     { field: 'spec.severity', header: 'Severity', class: 'eventalertpolicies-column-severity', sortable: false },
     { field: 'status.total-hits', header: 'Total Hits', class: 'eventalertpolicies-column-totalhits', sortable: false },
     { field: 'status.open-alerts', header: 'Open', class: 'eventalertpolicies-column-openalerts', sortable: false },
-    { field: 'status.acknowledged-alerts', header: 'Acknowledged', class: 'eventalertpolicies-column-acknowledgealerts', sortable: false }
+    { field: 'status.acknowledged-alerts', header: 'Acknowledged', class: 'eventalertpolicies-column-acknowledgedalerts', sortable: false, isLast: true }
   ];
 
   creatingMode: boolean = false;
-  editingMode: boolean = false;
+  showEditingForm: boolean = false;
 
   // If we receive new data, but the display is frozen (user editing),
   // this should be set to true so that when user exits editing, we can update the display
@@ -93,7 +95,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
 
   createNewPolicy() {
     // If a row is expanded, we shouldnt be able to open a create new policy form
-    if (!this.editingMode) {
+    if (!this.isInEditMode()) {
       this.creatingMode = true;
       this.editMode.emit(true);
     }
@@ -130,7 +132,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
   ngDoCheck() {
     const changes = this.arrayDiffers.diff(this.policies);
     if (changes) {
-      if (this.editingMode) {
+      if (this.isInEditMode()) {
         this.hasNewData = true;
       } else {
         this.setRowData();
@@ -175,14 +177,20 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
         case FieldsRequirement_operator.gt:
           ret += '>';
           break;
+        case FieldsRequirement_operator.gte:
+          ret += '>=';
+          break;
+        case FieldsRequirement_operator.lte:
+          ret += '<=';
+          break;
         case FieldsRequirement_operator.lt:
           ret += '<';
           break;
-        case FieldsRequirement_operator.notIn:
-          ret += 'Not In';
-          break;
         case FieldsRequirement_operator.in:
-          ret += 'In';
+          ret += '=';
+          break;
+        case FieldsRequirement_operator.notIn:
+          ret += '!=';
           break;
         default:
           ret += req.operator;
@@ -191,12 +199,17 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
       ret += ' ';
 
       if (req.values != null) {
-        // Using v instead of value to not shadow the earlier value
-        req.values.forEach((v) => {
-          ret += v + ', ';
-        });
-        // Subtract last comma and space
-        ret = ret.slice(0, ret.length - 2);
+        let values = [];
+        const enumInfo = Utility.getNestedPropInfo(new EventsEvent(), req.key).enum;
+        if (enumInfo != null) {
+          values = req.values.map((item) => {
+            if (enumInfo[item] != null) {
+              return enumInfo[item];
+            }
+            return item;
+          });
+        }
+        ret += values.join(' or ');
       }
       retArr.push(ret);
     });
@@ -209,7 +222,10 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     const column = col.field;
     switch (column) {
       case 'spec.destinations':
-        return JSON.stringify(value, null, 2);
+        if (value != null) {
+          return value.join(' ');
+        }
+        return '';
       default:
         return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
     }
@@ -220,19 +236,24 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     if (this.creatingMode) {
       return;
     }
-    if (!this.editingMode) {
+    if (!this.isInEditMode()) {
+      // Entering edit mode
       this.eventAlertPoliciesTable.toggleRow(eventalertpolicy, event);
       this.expandedRowData = eventalertpolicy;
       this.editMode.emit(true);
-      this.editingMode = true;
+      this.showEditingForm = true;
       this.shouldEnableButtons = false;
     } else {
-      this.editingMode = false;
+      this.showEditingForm = false;
       this.editMode.emit(false);
       this.shouldEnableButtons = true;
       // We don't untoggle the row here, it will happen when rowExpandAnimationComplete
       // is called.
     }
+  }
+
+  isInEditMode() {
+    return this.expandedRowData != null;
   }
 
   /**
@@ -247,7 +268,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
    * @param  $event Angular animation end event
    */
   rowExpandAnimationComplete($event) {
-    if (!this.editingMode) {
+    if (!this.showEditingForm) {
       // we are exiting the row expand
       this.eventAlertPoliciesTable.toggleRow(this.expandedRowData, event);
       this.expandedRowData = null;
@@ -262,7 +283,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
 
   onDeleteRecord(event, eventalertpolicy: IMonitoringAlertPolicy) {
     // Should not be able to delete any record while we are editing
-    if (this.editingMode) {
+    if (this.isInEditMode()) {
       return;
     }
     this._monitoringService.DeleteAlertPolicy(eventalertpolicy.meta.name);

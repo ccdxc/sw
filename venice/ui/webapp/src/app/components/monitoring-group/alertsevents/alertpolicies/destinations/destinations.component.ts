@@ -36,10 +36,12 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
   expandedRowData: IMonitoringAlertDestination;
 
   cols: any[] = [
-    { field: 'meta.name', header: 'Policy Name', class: 'destinationpolicy-column-name', sortable: true },
-    { field: 'spec.email-list', header: 'Email List', class: 'destinationpolicy-column-email-list', sortable: true },
-    { field: 'spec.snmp-trap-servers', header: 'SNMP TRAP Servers', class: 'destinationpolicy-column-snmp_trap_servers', sortable: false },
-    { field: 'status.total-notifications-sent', header: 'Total Notication Sent', class: 'destinationpolicy-column-total-notifications-sent', sortable: false },
+    { field: 'meta.name', header: 'Policy Name', class: 'destinations-column-name', sortable: true },
+    { field: 'spec.syslog-servers', header: 'Syslog Servers', class: 'destinations-column-syslog', sortable: false },
+    { field: 'status.total-notifications-sent', header: 'Notications Sent', class: 'destinations-column-notifications-sent', sortable: false, isLast: true },
+    // Following fields are currently not supported
+    // { field: 'spec.email-list', header: 'Email List', class: 'destinationpolicy-column-email-list', sortable: true },
+    // { field: 'spec.snmp-trap-servers', header: 'SNMP TRAP Servers', class: 'destinationpolicy-column-snmp_trap_servers', sortable: false },
   ];
 
   creatingMode: boolean = false;
@@ -149,6 +151,8 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
     const value = Utility.getObjectValueByPropertyPath(alerteventpolicies, fields);
     const column = col.field;
     switch (column) {
+      case 'spec.syslog-servers':
+        return value.map(item => item.target.destination).join(', ');
       case 'spec.email-list':
         return JSON.stringify(value, null, 2);
       case 'spec.snmp-trap-servers':

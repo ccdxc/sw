@@ -372,6 +372,9 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
       'query': {
       }
     };
+    // We evaluate the has operations last so that we
+    // know if the object kind is an event or not.
+    const fieldRequirementIndexes = [];
     for (let i = 0; i < list.length; i++) {
       const obj: SearchGrammarItem = list[i];
       switch (obj.type) {
@@ -382,9 +385,8 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
           payload.query['kinds'] = this.buildKindsPayload(obj);
           break;
         case SearchsuggestionTypes.OP_HAS:
-          payload.query['fields'] = {
-            'requirements': this.buildFieldsPayload(obj)
-          };
+          fieldRequirementIndexes.push(i);
+
           break;
         case SearchsuggestionTypes.OP_TAG:
           payload.query['labels'] = {
@@ -400,6 +402,15 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
           payload = this.buildTextSearchPayload(searched);
       }
     }
+    fieldRequirementIndexes.forEach((index) => {
+      const obj = list[index];
+      const isEvent = payload.query['kinds'] != null &&
+        payload.query['kinds'].length === 1 &&
+        payload.query['kinds'][0] === 'Event';
+      payload.query['fields'] = {
+        'requirements': this.buildFieldsPayload(obj, isEvent)
+      };
+    });
     return payload;
   }
 
@@ -443,23 +454,22 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     return SearchUtil.filterOutInvalidCategoryOrKind(obj, false);
   }
 
-
-  private buildFieldsPayload(obj: SearchGrammarItem): any {
-    return this.buildFieldsLabelsPayloadHelper(obj, true);
+  private buildFieldsPayload(obj, isEvent = false): any {
+    return this.buildFieldsLabelsPayloadHelper(obj, true, isEvent);
   }
 
   private buildLabelsPayload(obj): any {
     return this.buildFieldsLabelsPayloadHelper(obj, false);
   }
 
-  buildFieldsLabelsPayloadHelper(obj: any, isField: boolean): any {
+  buildFieldsLabelsPayloadHelper(obj: any, isField: boolean, isEvent = false): any {
     const output = [];
     const values = obj.value.split(',');
     let prevExp: SearchExpression = null;
     // support case like "has:name=~Liz,test,tenant=default"
     for (let i = 0; i < values.length; i++) {
       const exprStr = values[i];
-      const expr: SearchExpression = this.buildExpression(exprStr, isField);
+      const expr = this.buildExpression(exprStr, isField, isEvent);
       if (expr) {
         output.push(expr);
         prevExp = expr;
@@ -475,11 +485,8 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
   /**
    * Build expression for searching "field" and "label".
    */
-  buildExpression(inputString: string, isField: boolean): SearchExpression {
-    const searchExpression = SearchUtil.parseToExpression(inputString, isField);
-    if (searchExpression) {
-      searchExpression.key = SearchUtil.padKey(searchExpression.key, isField);
-    }
+  buildExpression(inputString: string, isField: boolean, isEvent = false): SearchExpression {
+    const searchExpression = SearchUtil.parseToExpression(inputString, isField, isEvent);
     return searchExpression;
   }
 

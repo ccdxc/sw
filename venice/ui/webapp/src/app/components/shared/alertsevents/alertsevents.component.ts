@@ -1,20 +1,23 @@
-import { Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, Input } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
+import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { ControllerService } from '@app/services/controller.service';
 import { EventsService } from '@app/services/events.service';
-import { EventsEvent_severity, EventsEvent_severity_uihint, IEventsEvent, IApiListWatchOptions } from '@sdk/v1/models/generated/events';
-import { Table } from 'primeng/table';
-import { Subscription } from 'rxjs/Subscription';
-import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { SearchService } from '@app/services/generated/search.service';
-import { SearchSearchQuery, SearchSearchRequest, SearchSearchQuery_kinds, FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchTextRequirement } from '@sdk/v1/models/generated/search';
-import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { FormControl } from '@angular/forms';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { EventsEvent_severity, EventsEvent_severity_uihint, IApiListWatchOptions, IEventsEvent } from '@sdk/v1/models/generated/events';
+import { IApiStatus, MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity } from '@sdk/v1/models/generated/monitoring';
+import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchQuery_kinds, SearchSearchRequest, SearchTextRequirement } from '@sdk/v1/models/generated/search';
+import { Table } from 'primeng/table';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
+import { Subscription } from 'rxjs/Subscription';
 
 /**
  * Renders two tabs that displays an alerts table and an events table.
@@ -34,9 +37,6 @@ import 'rxjs/add/operator/distinctUntilChanged';
   encapsulation: ViewEncapsulation.None
 })
 export class AlertseventsComponent extends BaseComponent implements OnInit, OnDestroy {
-  // Feature Flags
-  hideAlerts: boolean = this.uiconfigsService.isObjectDisabled('Alerts');
-
   @ViewChild('alerttable') alertTurboTable: Table;
   @ViewChild('eventTable') eventTable: Table;
   @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
@@ -96,29 +96,44 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   currentEventSeverityFilter = null;
 
   // ALERTS
+  // Used for the table - when true there is a loading icon displayed
+  alertsLoading = false;
+
+  // Used for processing watch stream events
+  alertsEventUtility: HttpEventUtility;
+
+  // Holds all alerts
+  alerts: ReadonlyArray<MonitoringAlert> = [];
+
+  // holds a subset (possibly all) of this.alerts
+  // This are the alerts that will be displayed
+  filteredAlerts: ReadonlyArray<MonitoringAlert> = [];
   alertCols: any[] = [
-    { field: 'date', header: 'Date', class: 'alertsevents-column-date', sortable: true },
-    { field: 'name', header: 'Name', class: 'alertsevents-column-name', sortable: false },
-    { field: 'severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false },
-    { field: 'message', header: 'Message', class: 'alertsevents-column-message', sortable: false },
-    { field: 'policy', header: 'Policy', class: 'alertsevents-column-policy', sortable: false },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'alertsevents-column-date', sortable: false },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: false },
+    { field: 'status.severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false },
+    { field: 'status.message', header: 'Message', class: 'alertsevents-column-message', sortable: false },
+    { field: 'spec.state', header: 'State', class: 'alertsevents-column-state', sortable: false },
+    { field: 'status.source', header: 'Source Node & Component', class: 'alerts-column-source', sortable: false, isLast: true },
   ];
-  alerts: any;
-  selectedAlerts: any = [];
 
+  // Selected alerts
+  selectedAlerts: any[];
 
-  protected alertnumber = {
-    total: 0,
-    critical: 0,
-    warning: 0,
-    info: 0
+  // Will hold mapping from severity types to counts
+  protected alertNumbers = {
   };
+
+  // The current alert severity filter, set to null if it is on All.
+  currentAlertSeverityFilter;
 
   constructor(protected _controllerService: ControllerService,
     protected _alerttableService: AlerttableService,
     protected uiconfigsService: UIConfigsService,
     protected searchService: SearchService,
-    protected eventsService: EventsService) {
+    protected eventsService: EventsService,
+    protected monitoringService: MonitoringService
+  ) {
     super(_controllerService);
   }
 
@@ -182,18 +197,36 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   }
 
   getAlerts() {
-    const payload = '';
-    this._alerttableService.getAlerts(payload).subscribe(
-      data => {
-        this.alerts = data;
-        this.alertnumber = Utility.computeAlertNumbers(this.alerts);
+    this.alertsEventUtility = new HttpEventUtility(MonitoringAlert);
+    this.alerts = this.alertsEventUtility.array;
+    const subscription = this.monitoringService.WatchAlert().subscribe(
+      response => {
+        const body: any = response.body;
+        this.alertsEventUtility.processEvents(body);
+        // Reset counters
+        Object.keys(MonitoringAlertStatus_severity).forEach(severity => {
+          this.alertNumbers[severity] = 0;
+        });
+        this.alerts.forEach(alert => {
+          this.alertNumbers[alert.status.severity] += 1;
+        });
+        if (this.currentAlertSeverityFilter == null) {
+          this.filteredAlerts = this.alerts;
+        } else {
+          this.filteredAlerts =
+            this.alerts.filter(item => item.status.severity === this.currentAlertSeverityFilter);
+        }
       },
-      err => {
-        this.successMessage = '';
-        this.errorMessage = 'Failed to get items! ' + err;
-        this.error(err);
+      error => {
+        // TODO: Error handling
+        if (error.body instanceof Error) {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+        }
       }
     );
+    this.subscriptions.push(subscription);
   }
 
   displayColumn(data, col): any {
@@ -206,26 +239,6 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     }
   }
 
-  /**
-   * This api serves html template
-   */
-  getAlertItemIconClass(record: IEventsEvent) {
-    return 'global-alert-' + record.severity.toLowerCase();
-  }
-
-  /**
-   * This api serves html template
-   */
-  onAlerttableArchiveRecord($event, alert) {
-    console.log('AlerttableComponent.onAlerttableArchiveRecord()', alert);
-  }
-
-  /**
-   * This api serves html template
-   */
-  onAlerttableDeleteRecord($event, alert) {
-    console.log('AlerttableComponent.onAlerttableDeleteRecord()', alert);
-  }
 
   /**
    * This API serves html template.
@@ -245,6 +258,21 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     if (<any>false) {
       // TODO: Add support for searching for events through elastic
       this.invokeEventsSearch();
+    }
+  }
+
+  /**
+   * This API serves html template.
+   * It will filter events displayed in table
+   */
+  onAlertNumberClick(severityType: string) {
+    if (severityType === 'total') {
+      this.currentAlertSeverityFilter = null;
+      // remove severity filter if it exists
+    } else {
+      this.currentAlertSeverityFilter = severityType;
+      this.filteredAlerts =
+        this.alerts.filter(item => item.status.severity === this.currentAlertSeverityFilter);
     }
   }
 
@@ -313,31 +341,44 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   }
 
   /**
-   * This API serves html template.
-   * It will filter alerts displayed in list
+   * Submits an HTTP request to mark the alert as resolved
+   * @param alert Alert to resolve
    */
-  onAlertNumberClick(event, alertType: string) {
-    if (alertType === 'total') {
-      this.alertTurboTable.filter('', 'severity', 'equals');
-    } else {
-      this.alertTurboTable.filter(alertType, 'severity', 'equals');
-    }
+  resolveAlert(alert: MonitoringAlert) {
+    this.updateAlertState(alert, MonitoringAlertSpec_state.RESOLVED);
+  }
+
+  acknowledgeAlert(alert) {
+    this.updateAlertState(alert, MonitoringAlertSpec_state.ACKNOWLEDGED);
+  }
+
+  openAlert(alert) {
+    this.updateAlertState(alert, MonitoringAlertSpec_state.OPEN);
   }
 
   /**
-   * This API serves html template.
-   * It will delete selected alerts
+   * Submits an HTTP request to update the state of the alert
+   * @param alert Alert to resolve
    */
-  onAlerttableDeleteMultiRecords($event) {
-    console.log('AlerttableComponent.onAlerttableDeleteMultiRecords()', this.selectedAlerts);
-  }
-
-  /**
-  * This API serves html template.
-  *  It will archive selected alerts
-  */
-  onAlerttableArchiveMultiRecords($event) {
-    console.log('AlerttableComponent.onAlerttableArchiveMultiRecords()', this.selectedAlerts);
+  updateAlertState(alert: MonitoringAlert, newState: MonitoringAlertSpec_state) {
+    // Create copy so that when we modify it doesn't
+    // change the view
+    const payload = new MonitoringAlert(alert);
+    payload.spec.state = newState;
+    const subscription = this.monitoringService.UpdateAlert(payload.meta.name, payload).subscribe(
+      response => {
+        // TODO: Notification of successful action
+      },
+      error => {
+        // TODO: Error handling
+        if (error.body instanceof Error) {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+        } else {
+          console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+        }
+      }
+    );
+    this.subscriptions.push(subscription);
   }
 
   ngOnDestroy() {

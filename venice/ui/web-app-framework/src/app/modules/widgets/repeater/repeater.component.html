@@ -7,7 +7,8 @@
                       (onChange)="keyDropdownChange(repeater)" 
                       [formControlName]="keyFormName" 
                       [options]="keyOptions"
-                      [filter]="keyDropdownFilter">
+                      [filter]="keyDropdownFilter"
+                      appendTo="body">
           </p-dropdown>
           <input class="repeater-input" *ngIf="isToUseInputField(repeater)" 
                                         (input)="emitValues()" 
@@ -22,7 +23,8 @@
           <p-dropdown [styleClass]="styleClass" 
                       (onChange)="emitValues()" 
                       [formControlName]="operatorFormName" 
-                      [options]="keyToOperator[repeater.formGroup.value[keyFormName]]">
+                      [options]="keyToOperator[repeater.formGroup.value[keyFormName]]"
+                      appendTo="body">
           </p-dropdown>
       </div>
       <!-- Value -->
@@ -31,7 +33,8 @@
                       [styleClass]="styleClass" 
                       (onChange)="emitValues()" 
                       [formControlName]="valueFormName" 
-                      [options]="keyToValues[repeater.formGroup.value[keyFormName]]">
+                      [options]="keyToValues[repeater.formGroup.value[keyFormName]]"
+                      appendTo="body">
           </p-dropdown>
           <p-multiSelect *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] =='multiSelect'"
                           [styleClass]="styleClass" 
@@ -40,7 +43,8 @@
                           [showToggleAll]="false" 
                           [filter]="false" 
                           [formControlName]="valueFormName" 
-                          [options]="keyToValues[repeater.formGroup.value[keyFormName]]">
+                          [options]="keyToValues[repeater.formGroup.value[keyFormName]]"
+                          appendTo="body">
           </p-multiSelect>
           <input class="repeater-input" *ngIf="keyToValueType[repeater.formGroup.value[keyFormName]] == 'inputField'" 
                                         (input)="emitValues()" 

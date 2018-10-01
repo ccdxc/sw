@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, SimpleChanges, OnChanges } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup } from '@angular/forms';
 import { SelectItem } from 'primeng/primeng';
 import { RepeaterData, RepeaterItem, ValueType } from './index';
@@ -38,7 +38,7 @@ import { RepeaterData, RepeaterItem, ValueType } from './index';
   styleUrls: ['./repeater.component.css'],
   encapsulation: ViewEncapsulation.None,
 })
-export class RepeaterComponent implements OnInit {
+export class RepeaterComponent implements OnInit, OnChanges {
   // The data for filling the reactive dropdown options
   @Input() data: RepeaterData[] = [];
 
@@ -58,17 +58,19 @@ export class RepeaterComponent implements OnInit {
   @Input() buildKeyPlaceholder: (repeater: RepeaterItem, keyFormName: string) => string = null;
   @Input() buildValuePlaceholder: (repeater: RepeaterItem, keyFormName: string) => string = null;
 
+  @Input() styleClass: string;
+
   // Emits all the repeater values whenever there is a change
   @Output() repeaterValues: EventEmitter<any> = new EventEmitter();
 
   idCount = 0; // Counter so that newly created repeaters never have conflicting ids
-  repeaterList: RepeaterItem[] = [];
-  keyOptions: SelectItem[] = []; // Holds all key options
+  repeaterList: RepeaterItem[];
+  keyOptions: SelectItem[]; // Holds all key options
 
-  keyToOperator: { [key: string]: SelectItem[] } = {};
-  keyToValues: { [key: string]: SelectItem[] } = {};
-  keyToValueType: { [key: string]: ValueType } = {};
-  keyToValueHintText: { [key: string]: string } = {};
+  keyToOperator: { [key: string]: SelectItem[] };
+  keyToValues: { [key: string]: SelectItem[] };
+  keyToValueType: { [key: string]: ValueType };
+  keyToValueHintText: { [key: string]: string };
 
 
 
@@ -79,6 +81,25 @@ export class RepeaterComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Unpacking data and setting maps for filling in options
+    this.initData();
+  }
+
+  initData() {
+    this.idCount = 0;
+    this.repeaterList = [];
+    this.keyOptions = [];
+
+    this.keyToOperator = {};
+    this.keyToValues = {};
+    this.keyToValueType = {};
+    this.keyToValueHintText = {};
+
+    if (this.data == null || this.data.length === 0) {
+      console.error('No repeater data was given');
+      return;
+    }
+
     // Unpacking data and setting maps for filling in options
     this.data.forEach((d) => {
       this.keyOptions.push(d.key);
@@ -105,6 +126,14 @@ export class RepeaterComponent implements OnInit {
       } catch (error) {
         throw error;
       }
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.data) {
+      // Since the options have all changed, we reset
+      // the entire component
+      this.initData();
     }
   }
 
@@ -227,7 +256,7 @@ export class RepeaterComponent implements OnInit {
   }
 
   removeFormArray(repeater: RepeaterItem) {
-    if ( this.formArray && repeater.formArrayIndex >= 0) {
+    if (this.formArray && repeater.formArrayIndex >= 0) {
       this.formArray.controls.splice(repeater.formArrayIndex, 1);
     }
   }

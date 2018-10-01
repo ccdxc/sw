@@ -123,6 +123,31 @@
     }
   }
 
+  // Following are used for having action items 
+  // that appear on row hover
+  .global-column-action {
+    width: 100px;
+  }
+
+  .global-column-action-icon-container {
+    position: absolute;
+    top: 0px;
+  }
+
+  .global-table-action-icon {
+    font-size: 25px;
+    height: 36px;
+    width: 36px;
+    padding-left: 6px;
+    padding-top: 5px;
+    cursor: pointer;
+    &:hover {
+      color: black;
+      background-color: rgba(black, 0.12);
+      border-radius: 50%;
+    }
+  }
+
   /*********  Prime NG overrides  *********/
   %primeng-table {
     .ui-table {
@@ -147,7 +172,17 @@
         background-color: white;
         color: #767676;
         height: 36px;
-        vertical-align: text-top;
+        vertical-align: middle;
+
+        // Making the action icons only appear on hover
+        .global-table-action-icon {
+          opacity: 0;
+        }
+        
+        &:hover .global-table-action-icon {
+          opacity: 1;
+        }
+
 
         > td {
           border-left: none;
@@ -158,6 +193,7 @@
           // Needed so row height doesn't change
           // Row height needs to be fixed for virtual scroll
           white-space: nowrap;
+          position: relative;
         }
 
         &:hover {

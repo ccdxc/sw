@@ -24,10 +24,18 @@
   @include penui-primeng-multiselect($theme);
 }
 
-.default-theme {
+// Allows for styling of components that are outside attached to 
+// the body, but breaks angular styling capabilites
+// TODO: fix theming capability
+.pensando-ui {
   @include angular-material-theme($custom-theme);
   @include component-themes($custom-theme);
 }
+
+// .default-theme {
+//   @include angular-material-theme($custom-theme);
+//   // @include component-themes($custom-theme);
+// }
 
 .light-theme {
   @include angular-material-theme($veniceui-light-theme);

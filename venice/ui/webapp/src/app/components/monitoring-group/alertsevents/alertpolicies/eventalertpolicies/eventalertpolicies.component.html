@@ -1,5 +1,5 @@
 <div fxLayout="column" class="eventalertpolicies-widget">
-    <app-neweventalertpolicy [@slideInOut] [destinations]="destinations" (formClose)="creationFormClose()" fxFlex="noshrink" *ngIf="creatingMode"></app-neweventalertpolicy>
+    <app-neweventalertpolicy [@slideInOut] [destinations]="destinations" (formClose)="creationFormClose()" fxFlex="none" *ngIf="creatingMode"></app-neweventalertpolicy>
     <div fxFlex class="eventalertpolicies-tablecontainer">
       <ng-container *ngTemplateOutlet="Header"></ng-container>
       <ng-container *ngTemplateOutlet="Table"></ng-container>
@@ -22,18 +22,15 @@
 <ng-template #Table>
     <p-table class="global-primeng-table" [columns]="cols" [value]="eventAlertPolicies" 
              [(selection)]="selectedEventAlertPolicies" dataKey="meta.name" [rows]="15" 
-             [scrollable]="true" scrollHeight="800px" #eventAlertPoliciesTable
+             [scrollable]="true" #eventAlertPoliciesTable
              [globalFilterFields]="globalFilterFields"
              [responsive]="true" [loading]="loading" [resizableColumns]="true"  rowExpandMode="single">
        <!-- Table Header -->
        <ng-template pTemplate="header" let-columns>
          <tr>
-           <th *ngFor="let col of cols; " [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
+           <th *ngFor="let col of cols; " [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
               {{col.header}}
               <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
-          </th>
-           <th class="alertsevents-column-action">
-             Actions
           </th>
          </tr>
        </ng-template>
@@ -47,7 +44,7 @@
                 <mat-icon *ngIf="rowData.spec.severity === 'CRITICAL'" fxFlex="nogrow" class="eventalertpolicies-icon global-alert-critical-icon">error</mat-icon>
                 <mat-icon *ngIf="rowData.spec.severity === 'WARNING'" fxFlex="nogrow" class="eventalertpolicies-icon global-alert-warning-icon">error</mat-icon>
                 <mat-icon *ngIf="rowData.spec.severity === 'INFO'" fxFlex="nogrow" class="eventalertpolicies-icon global-alert-info-icon">notifications</mat-icon>
-                <div fxFlex="nogrow" style="margin-top: 2px"> {{ rowData.spec.severity}} </div>
+                <div fxFlex="nogrow" style="margin-left: 25px"> {{ severityEnum[rowData.spec.severity] }} </div>
               </div>
             </ng-container>
             <ng-container *ngSwitchCase="'spec.requirements'">
@@ -59,24 +56,18 @@
               {{displayColumn(eventalertpolicy, col)}}
              </ng-container>
           </td>
-           <td class="eventalertpolicies-column-action">
-             <div class="eventalertpolicies-record-column-action-div">
-               <button type="button" class="btn btn-link eventalertpolicies-record-column-action-icon" (click)="onUpdateRecord($event, eventalertpolicy)"
-                         title="Edit">
-                <mat-icon>edit</mat-icon>
-               </button>
-               <button type="button" [ngClass]="editingMode ? 'global-button-disabled' : ''" class="btn btn-link eventalertpolicies-record-column-action-icon" (click)="onDeleteRecord($event, eventalertpolicy)"
-                      title="Delete">
-                <mat-icon>delete</mat-icon>
-               </button>
-             </div>
-           </td>
+          <td class="global-column-action">
+            <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+              <mat-icon title="Edit policy" class="global-table-action-icon" (click)="onUpdateRecord($event, eventalertpolicy)">edit</mat-icon>
+              <mat-icon title="Delete policy" class="global-table-action-icon" (click)="onDeleteRecord($event, eventalertpolicy)">delete</mat-icon>
+            </div>
+          </td>
          </tr>
        </ng-template>
        <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
          <tr class="eventalertpolicies-rowexpand-tr">
               <td [attr.colspan]="columns.length + 1">
-                <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="editingMode" class="eventalertpolicies-rowexpand">
+                <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="showEditingForm" class="eventalertpolicies-rowexpand">
                   <app-neweventalertpolicy [policyData]="rowData" [destinations]="destinations" [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-neweventalertpolicy>
                 </div>
               </td>

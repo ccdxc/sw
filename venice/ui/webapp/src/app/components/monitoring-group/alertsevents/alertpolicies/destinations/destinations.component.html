@@ -27,35 +27,25 @@
        <!-- Table Header -->
        <ng-template pTemplate="header" let-columns>
          <tr>
-           <th *ngFor="let col of cols; " [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
+           <th *ngFor="let col of cols; " [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
               {{col.header}}
               <p-sortIcon *ngIf="col.sortable" style="float: right;" [field]="col.field"></p-sortIcon>
-          </th>
-           <th class="destinations-column-action">
-             Actions
           </th>
          </tr>
        </ng-template>
        <!-- Table Body -->
        <ng-template pTemplate="body" let-rowData>
          <tr [ngClass]="expandedRowData?.meta.name === rowData.meta.name ? 'destinations-rowhighlight': ''" [pSelectableRow]="rowData">
-           
            <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
-             <ng-container *ngSwitchDefault>
+            <ng-container *ngSwitchDefault>
               {{displayColumn(rowData, col)}}
-             </ng-container>
+            </ng-container>
           </td>
-           <td class="destinations-column-action">
-             <div class="destinations-record-column-action-div">
-               <button type="button" class="btn btn-link destinations-record-column-action-icon" (click)="onUpdateRecord($event, rowData)"
-                 title="Archive">
-                 <mat-icon>edit</mat-icon>
-               </button>
-               <button type="button" class="btn btn-link destinations-record-column-action-icon" (click)="onDeleteRecord($event, rowData)"
-                 title="Delete">
-                 <mat-icon>delete</mat-icon>
-               </button>
-             </div>
+           <td class="global-column-action">
+              <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+              <mat-icon title="Edit destination" class="global-table-action-icon" (click)="onUpdateRecord($event, rowData)">edit</mat-icon>
+              <mat-icon title="Delete destination" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+              </div>
            </td>
          </tr>
        </ng-template>

@@ -1,14 +1,22 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { FormArray, Validators } from '@angular/forms';
-import { ErrorStateMatcher } from '@angular/material';
+import { ErrorStateMatcher, MatRadioChange } from '@angular/material';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { IApiStatus, IMonitoringAlertDestination, MonitoringAlertDestination, MonitoringAuthConfig, MonitoringPrivacyConfig, MonitoringSNMPTrapServer } from '@sdk/v1/models/generated/monitoring';
+import { IApiStatus, IMonitoringAlertDestination, MonitoringAlertDestination, MonitoringAuthConfig, MonitoringPrivacyConfig, MonitoringSNMPTrapServer, MonitoringSyslogExport } from '@sdk/v1/models/generated/monitoring';
 import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs/Observable';
+
+// Creating manually, this will come from venice-sdk once Ranjith's proto changes go in
+enum CredentialMethod {
+  AUTHTYPE_NONE = 'None',
+  'AUTHTYPE_USERNAMEPASSWORD' = 'Username/Password',
+  AUTHTYPE_TOKEN = 'Token',
+  AUTHTYPE_CERTS = 'Certs'
+}
 
 @Component({
   selector: 'app-newdestination',
@@ -18,6 +26,7 @@ import { Observable } from 'rxjs/Observable';
   encapsulation: ViewEncapsulation.None
 })
 export class NewdestinationComponent implements OnInit, AfterViewInit {
+  enableSnmpTrap: boolean = false;
 
   newDestination: MonitoringAlertDestination;
 
@@ -31,6 +40,13 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
 
   encryptAlgoOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringPrivacyConfig.propInfo['algo'].enum);
 
+  syslogFormatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExport.propInfo['format'].enum);
+
+  syslogCredentialOptions: SelectItem[] = Utility.convertEnumToSelectItem(CredentialMethod);
+
+  // This field should eventually come from the from group once the necessary proto changes go in
+  selectedCredentialMethod = 'AUTHTYPE_USERNAMEPASSWORD';
+
   oldButtons: ToolbarButton[] = [];
 
   errorChecker = new ErrorStateMatcher();
@@ -38,6 +54,7 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService
   ) { }
+
 
   ngOnInit() {
     if (this.destinationData != null) {
@@ -53,11 +70,20 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
       // Name field can't be blank
       this.newDestination.$formGroup.get(['meta', 'name']).setValidators(Validators.required);
     }
+    // Check if there is a syslog server config,
+    // if not, we need to add one so that it shows in the form
+    const syslogs = this.newDestination.$formGroup.get(['spec', 'syslog-servers']) as FormArray;
+    if (syslogs.length === 0) {
+      syslogs.insert(0, new MonitoringSyslogExport().$formGroup);
+    }
+
     // Check if there is a snmp trap server config,
     // if not, we need to add one so that it shows in the form
-    const snmpArray = this.newDestination.$formGroup.get(['spec', 'snmp-trap-servers']) as FormArray;
-    if (snmpArray.length === 0) {
-      snmpArray.insert(0, new MonitoringSNMPTrapServer().$formGroup);
+    if (this.enableSnmpTrap) {
+      const snmpArray = this.newDestination.$formGroup.get(['spec', 'snmp-trap-servers']) as FormArray;
+      if (snmpArray.length === 0) {
+        snmpArray.insert(0, new MonitoringSNMPTrapServer().$formGroup);
+      }
     }
   }
 
@@ -91,6 +117,10 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
     } else {
       return 'global-button-disabled';
     }
+  }
+
+  getSelectedCredentialMethod(syslog: any): string {
+    return syslog.value.target.credentials['auth-type'];
   }
 
   /**
@@ -143,6 +173,18 @@ export class NewdestinationComponent implements OnInit, AfterViewInit {
 
   removeSnmpTrapConfig(index) {
     const snmpFormArray = this.newDestination.$formGroup.get(['spec', 'snmp-trap-servers']) as FormArray;
+    if (snmpFormArray.length > 1) {
+      snmpFormArray.removeAt(index);
+    }
+  }
+
+  addSyslogConfig() {
+    const snmpArray = this.newDestination.$formGroup.get(['spec', 'syslog-servers']) as FormArray;
+    snmpArray.insert(0, new MonitoringSyslogExport().$formGroup);
+  }
+
+  removeSyslogConfig(index) {
+    const snmpFormArray = this.newDestination.$formGroup.get(['spec', 'syslog-servers']) as FormArray;
     if (snmpFormArray.length > 1) {
       snmpFormArray.removeAt(index);
     }

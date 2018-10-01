@@ -1,14 +1,23 @@
 @import 'global-mixins';
+@import 'default-theme.scss';
+@import '~web-app-framework/theme.scss';
 
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
 .neweventalertpolicy-container {
+    border-bottom: 6px solid #6ba0e5;
+    background: white;
+    &:hover {
+        background: white;
+    }
+}
+
+.neweventalertpolicy-content {
     background: white;
     min-height: 180px;
     margin-top: 4* $vertical-gutter;
     @include primary-font();
-    border-bottom: 6px solid #6ba0e5;
 }
 
 .neweventalertpolicy-font  {

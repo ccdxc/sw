@@ -2,7 +2,7 @@
  Angular imports
  ------------------*/
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { Component, DebugElement } from '@angular/core';
+import { Component } from '@angular/core';
 import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
@@ -22,7 +22,6 @@ import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrende
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { EventsService } from '@app/services/events.service';
 import { EventsService as EventsServiceGen } from '@app/services/generated/events.service';
-import { SharedModule } from '@app/components/shared/shared.module';
 import { SearchService } from '@app/services/generated/search.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { WhitespaceTrimDirective } from '@app/components/shared/directives/whitespacetrim.directive';
@@ -33,6 +32,7 @@ import { EventsEvent, EventsEventAttributes_severity_uihint } from '@sdk/v1/mode
 import { Eventsv1Service } from '@sdk/v1/services/generated/eventsv1.service';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
 
 
 @Component({
@@ -67,7 +67,6 @@ describe('AlertseventsComponent', () => {
   let component: AlertseventsComponent;
   let fixture: ComponentFixture<AlertseventsComponent>;
   let eventsService: EventsService;
-  let uiConfigService: UIConfigsService;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
@@ -101,7 +100,8 @@ describe('AlertseventsComponent', () => {
         Eventsv1Service,
         AlerttableService,
         SearchService,
-        UIConfigsService
+        UIConfigsService,
+        MonitoringService
       ]
     })
       .compileComponents();
@@ -109,58 +109,62 @@ describe('AlertseventsComponent', () => {
 
   beforeEach(() => {
     eventsService = TestBed.get(EventsService);
-    uiConfigService = TestBed.get(UIConfigsService);
     spyOn(eventsService, 'pollEvents').and.returnValue(observer);
-    // Currently setting alerts to always disabled in testing
-    spyOn(uiConfigService, 'isObjectDisabled').and.returnValue(true);
     fixture = TestBed.createComponent(AlertseventsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  it('should have events in the table', () => {
+  it('should have events in the table', async(() => {
     expect(eventsService.pollEvents).toHaveBeenCalledWith('alertsevents', {});
-    expect(uiConfigService.isObjectDisabled).toHaveBeenCalledWith('Alerts');
+    // Switch to the events tab
+    const tabs = fixture.debugElement.queryAll(By.css('.mat-tab-label'));
+    expect(tabs.length).toBe(2);
+    tabs[1].nativeElement.click();
+    // tabs[1].children[0].nativeElement.click();
+    fixture.detectChanges();
+    fixture.whenRenderingDone().then(() => {
+      // Table should be blank right now
+      const eventsContainer = fixture.debugElement.query(By.css('.mat-tab-body-active .alertsevents-events-table'));
+      const title = eventsContainer.query(By.css('.mat-tab-body-active .tableheader-title'));
+      expect(title.nativeElement.textContent).toContain('Events (0)');
 
-    // Table should be blank right now
-    const eventsContainer = fixture.debugElement.query(By.css('.alertsevents-events-table'));
-    const title = eventsContainer.query(By.css('.tableheader-title'));
-    expect(title.nativeElement.textContent).toContain('Events (0)');
+      // Checking table header
+      const headers = eventsContainer.query(By.css('thead tr'));
+      headers.children.forEach((col, index) => {
+        expect(col.nativeElement.textContent).toContain(component.eventCols[index].header);
+      });
 
-    // Checking table header
-    const headers = eventsContainer.query(By.css('thead tr'));
-    headers.children.forEach((col, index) => {
-      expect(col.nativeElement.textContent).toContain(component.eventCols[index].header);
+      // Checking that table is blank
+      let tableBody = eventsContainer.query(By.css('.mat-tab-body-active .ui-table-scrollable-body-table tbody'));
+      expect(tableBody.children.length).toBe(0);
+
+      // Table has one event
+      observer.next(poll1);
+      fixture.detectChanges();
+
+      // Checking that the table entry is there
+      tableBody = eventsContainer.query(By.css('.mat-tab-body-active .ui-table-scrollable-body-table tbody'));
+      expect(tableBody.children.length).toBe(1);
+      const caseMap = {
+        'severity': (field, rowData, rowIndex) => {
+          expect(field.children.length).toBe(2);
+          if (rowData.severity === 'INFO') {
+            expect(field.children[0].nativeElement.textContent).toContain('notifications');
+          } else {
+            expect(field.children[0].nativeElement.textContent).toContain('error');
+          }
+          expect(field.children[1].nativeElement.textContent)
+            .toContain(EventsEventAttributes_severity_uihint[rowData.severity],
+              'severity column did not match');
+        },
+        'source': (field, rowData, rowIndex) => {
+          expect(field.nativeElement.textContent).toContain(
+            rowData.source['node-name'] + '  :  ' + rowData.source.component, 'source column did not match');
+        }
+      };
+      TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
     });
 
-    // Checking that table is blank
-    let tableBody = eventsContainer.query(By.css('.ui-table-scrollable-body-table tbody'));
-    expect(tableBody.children.length).toBe(0);
-
-    // Table has one event
-    observer.next(poll1);
-    fixture.detectChanges();
-
-    // Checking that the table entry is there
-    tableBody = eventsContainer.query(By.css('.ui-table-scrollable-body-table tbody'));
-    expect(tableBody.children.length).toBe(1);
-    const caseMap = {
-      'severity': (field, rowData, rowIndex) => {
-        expect(field.children.length).toBe(2);
-        if (rowData.severity === 'INFO') {
-          expect(field.children[0].nativeElement.textContent).toContain('notifications');
-        } else {
-          expect(field.children[0].nativeElement.textContent).toContain('error');
-        }
-        expect(field.children[1].nativeElement.textContent)
-          .toContain(EventsEventAttributes_severity_uihint[rowData.severity],
-            'severity column did not match');
-      },
-      'source': (field, rowData, rowIndex) => {
-        expect(field.nativeElement.textContent).toContain(
-          rowData.source['node-name'] + '  :  ' + rowData.source.component, 'source column did not match');
-      }
-    };
-    TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
-  });
+  }));
 });

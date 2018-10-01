@@ -4,29 +4,37 @@
 @mixin penui-primeng-inputtext($theme) {
   $matchColor : #6ba0e5;
   $errorColor : #e57553;
+
   input.ui-inputtext,
   textarea.ui-inputtext {
-    box-shadow: none !important;
-    background: rgb(247, 247, 247);
-    padding: 10px;
+    padding-left: 10px;
     border-radius: 2px;
-    resize: none;
     &:hover, &:focus {
       border-radius: 2px;
       background-color: #ffffff !important;
       border: solid 1px $matchColor !important;
     }
-
     &:focus {
       box-shadow: inset 5px 0 0 0 $matchColor !important;
     }
-
     &.error {
       box-shadow: inset 5px 0 0 0 $errorColor !important;
       border-radius: 2px;
       background-color: #ffffff !important;
       border: solid 1px $errorColor !important;
     }
+  }
+
+  input.ui-inputtext:not(.ui-dropdown-filter),
+  textarea.ui-inputtext:not(.ui-dropdown-filter) {
+    font-size: 16px;
+    font-family: "Fira Sans Condensed" !important;
+    line-height: normal !important;
+    box-shadow: none !important;
+    background: rgb(247, 247, 247);
+    padding: 10px;
+    border-radius: 2px;
+    resize: none;
   }
 }
 
@@ -37,7 +45,76 @@
   $matchColor: #6ba0e5;
   $fontColor: currentColor;
   $matchFontColor: $matchColor;
+
+  .ui-dropdown-label {
+    // Disabling primeng transitions so that the elements change color in sync
+    background: rgb(247, 247, 247) !important;
+    padding-left: 10px !important; // creates a 5px margin from the box shadow inset once its added
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+  }
+
+  .ui-dropdown-trigger {
+    background: transparent !important;
+    border-left: none !important;
+  }
+
+  .ui-dropdown-panel {
+    border-radius: 2px !important;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.3) !important;
+    background-color: #ffffff !important;
+    border: solid 1px $matchColor !important;
+    .ui-dropdown-list {
+      padding: 0px !important;
+      // Margin changing is to prevent text from moving when the blue bar appears
+      .ui-dropdown-item {
+        color: $fontColor !important;
+        margin-left: 5px !important;
+      }
+    }
+
+    .ui-state-highlight  {
+      background: none !important;
+      border-left: 5px $matchColor solid !important;
+      border-top-left-radius: 0px !important;
+      border-bottom-left-radius: 0px !important;
+  
+      // Margin changing is to prevent text from moving when the blue bar appears
+      &.ui-dropdown-item {
+        color: $matchFontColor !important;
+        margin-left: 0px !important;
+      }
+    }
+  }
+
+  p-dropdown > div:hover,
+  p-dropdown > div.ui-state-focus,
+  .ui-dropdown-open {
+    .ui-dropdown-label, &.ui-state-default  {
+      background: white !important;
+    }
+    box-shadow: none !important;
+    border-radius: 2px !important;
+    background-color: #ffffff !important;
+    border: solid 1px $matchColor !important;
+  }
+
+  // adds the left blue selection border
+  .ui-dropdown-open {
+    box-shadow: inset 5px 0 0 0 $matchColor !important;
+    .ui-dropdown-label {
+      box-shadow: inset 5px 0 0 0 $matchColor !important;
+      border-top-left-radius: 0px !important;
+      border-bottom-left-radius: 0px !important;
+    }
+  }
+
   p-dropdown > div {
+    font-size: 16px;
+    font-family: "Fira Sans Condensed" !important;
+    line-height: normal !important;
     width: 100% !important;
     height: 100%;
     border-radius: 2px;
@@ -53,69 +130,7 @@
     &.ui-state-default {
       background: rgb(247, 247, 247) !important;
     }
-
-    .ui-dropdown-label {
-      // Disabling primeng transitions so that the elements change color in sync
-      background: rgb(247, 247, 247) !important;
-      padding-left: 10px; // creates a 5px margin from the box shadow inset once its added
-      -webkit-transition: none !important;
-      -moz-transition: none !important;
-      -o-transition: none !important;
-      transition: none !important;
-    }
-
-    .ui-dropdown-trigger {
-      background: transparent !important;
-      border-left: none;
-    }
-
-    .ui-dropdown-panel {
-      border-radius: 2px;
-      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.3);
-      background-color: #ffffff;
-      border: solid 1px $matchColor;
-      .ui-dropdown-list {
-        padding: 0px;
-        // Margin changing is to prevent text from moving when the blue bar appears
-        .ui-dropdown-item {
-          color: $fontColor;
-          margin-left: 5px;
-        }
-      }
-    }
-
-    &:hover, &.ui-state-focus, &.ui-dropdown-open {
-      .ui-dropdown-label, &.ui-state-default  {
-        background: white !important;
-      }
-      box-shadow: none;
-      border-radius: 2px;
-      background-color: #ffffff;
-      border: solid 1px $matchColor !important;
-    }
-
-    // adds the left blue selection border
-    &.ui-dropdown-open {
-      box-shadow: inset 5px 0 0 0 $matchColor;
-      .ui-dropdown-label {
-        box-shadow: inset 5px 0 0 0 $matchColor;
-        border-top-left-radius: 0px;
-        border-bottom-left-radius: 0px;
-      }
-    }
-
-    .ui-state-highlight  {
-      background: none;
-      border-left: 5px $matchColor solid !important;
-      border-top-left-radius: 0px;
-      border-bottom-left-radius: 0px;
-
-      // Margin changing is to prevent text from moving when the blue bar appears
-      &.ui-dropdown-item {
-        color: $matchFontColor !important;
-        margin-left: 0px !important;
-      }
-    }
+    
   }
 }
 
@@ -126,82 +141,97 @@
 @mixin penui-primeng-multiselect($theme) {
   $matchColor: #6ba0e5;
   $fontColor: currentColor;
+
+  // Hiding Primeng's menu header
+  .ui-multiselect-header {
+    display: none !important;
+  }
+
+  // Setting background color of the selection view label
+  .ui-multiselect-label {
+    font-weight: 400 !important;
+    background: rgb(247, 247, 247) !important;
+    color: $fontColor !important;
+    padding-left: 10px !important; // This is to create a 5px margin from the box shadow inset once its added
+  }
+
+  // Setting background color of the selection view trigger icon
+  .ui-multiselect-trigger {
+    background: rgb(247, 247, 247) !important;
+    border-left: none !important;
+  }
+
+  // Styling the dropdown menu
+  .ui-multiselect-panel {
+    border-radius: 2px !important;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.3) !important;
+    background-color: #ffffff !important;
+    border: solid 1px $matchColor !important;
+    .ui-multiselect-item label {
+      font-weight: 400 !important;
+    }
+    // Removing the blue shadow highlighting that primeng adds
+    .ui-state-focus {
+      box-shadow: none !important;
+    }
+  }
+
+  // Changing color of the check box
+  .ui-multiselect-panel .ui-chkbox-box.ui-state-active {
+    background: $matchColor !important;
+    border: solid 1px $matchColor !important;
+  }
+
+  // Changing the highlight and font color in the dropdown menu
+  .ui-multiselect-panel .ui-state-highlight  {
+    background: none !important;
+    color: currentColor !important;
+  }
+
+  // adding border highlighting and changing background to white when the 
+  // mulitselect is hovered on or focused
+  p-multiSelect > div:hover,
+  p-multiSelect > div.ui-state-focus,
+  .ui-multiselect-open {
+    .ui-multiselect-label, .ui-multiselect-trigger, &.ui-state-default  {
+      background: white !important;
+    }
+    box-shadow: none !important;
+    border-radius: 2px !important;
+    background-color: #ffffff !important;
+    border: solid 1px $matchColor !important;
+  }
+
   p-multiSelect > div {
+    font-family: "Fira Sans Condensed" !important;
+    line-height: normal !important;
     width: 100% !important;
     height: 100%;
+    font-size: 16px;
     background: rgb(247, 247, 247);
     border-radius: 2px;
-    // Hiding Primeng's menu header
-    .ui-multiselect-header {
-      display: none;
-    }
-    
-    // Setting background color of the selection view label
-    .ui-multiselect-label {
-      background: rgb(247, 247, 247) !important;
-      color: $fontColor;
-      padding-left: 10px !important; // This is to create a 5px margin from the box shadow inset once its added
-    }
 
-    // Setting background color of the selection view trigger icon
-    &.ui-multiselect .ui-multiselect-trigger {
-      background: rgb(247, 247, 247) !important;
-      border-left: none;
-    }
-
-    // Styling the dropdown menu
-    .ui-multiselect-panel {
-      border-radius: 2px;
-      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.3);
-      background-color: #ffffff;
-      border: solid 1px $matchColor;
-    }
-
-    // Removing the blue shadow highlighting that primeng adds
     &.ui-state-focus {
       box-shadow: none;
     }
 
-    // Changing color of the check box
-    .ui-chkbox-box.ui-state-active {
-      background: $matchColor;
-      border: solid 1px $matchColor;
-    }
-
-    // Changing the highlight and font color in the dropdown menu
-    .ui-state-highlight  {
-      background: none;
-      color: currentColor;
-    }
-
-    // adding border highlighting and changing background to white when the 
-    // mulitselect is hovered on or focused
-    &:hover, &.ui-state-focus, &.ui-multiselect-open {
-      .ui-multiselect-label, .ui-multiselect-trigger, &.ui-state-default  {
-        background: white !important;
-      }
-      box-shadow: none;
-      border-radius: 2px;
-      background-color: #ffffff;
-      border: solid 1px $matchColor !important;
-    }
-
     // adds the left blue selection border
     &.ui-multiselect-open {
-      border-radius: 2px;
+      border-radius: 2px !important;
 
       border: solid 1px $matchColor !important;
       box-shadow: inset 5px 0 0 0 $matchColor !important;
 
       .ui-multiselect-label {
         box-shadow: inset 5px 0 0 0 $matchColor !important;
-        border-top-left-radius: 0px;
-        border-bottom-left-radius: 0px;
+        border-top-left-radius: 0px !important;
+        border-bottom-left-radius: 0px !important;
       }
 
-      &.ui-multiselect .ui-multiselect-trigger {
+      .ui-multiselect-trigger {
         background-color: #ffffff !important;
       }
     }
+    
   }
 }

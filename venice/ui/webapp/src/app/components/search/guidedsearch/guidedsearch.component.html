@@ -52,13 +52,11 @@
             ></i> 
         </div>
         <div class="guidesearch-field-selected-fields-content-div" *ngIf="isToSelectField">
-            <app-repeater  #fieldRepeater [data]="getFieldData()"
-                           (repeaterValues)="handleFieldRepeaterData($event)" 
-                           [formArray]="fieldFormArray" 
-                           [keyDropdownFilter]="true"
-                           [buildValuePlaceholder]="buildFieldValuePlaceholder"
-                           >
-            </app-repeater>
+            <app-fieldselector #fieldRepeater [kind]="(this.selectedKinds && this.selectedKinds[0]) ? this.selectedKinds[0] : null"
+                               (repeaterValues)="handleFieldRepeaterData($event)" 
+                               [formArray]="fieldFormArray" 
+                              >
+            </app-fieldselector>
         </div>
       </div>
   </div>

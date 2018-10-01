@@ -1,0 +1,12 @@
+<app-repeater  #fieldRepeater 
+                [data]="fieldData"
+                [formArray]="formArray" 
+                [keyDropdownFilter]="true"
+                [buildValuePlaceholder]="buildFieldValuePlaceholder"
+                [keyFormName]="keyFormName"
+                [operatorFormName]="operatorFormName"
+                [valueFormName]="valueFormName"
+                [keytextFormName]="keytextFormName"
+                (repeaterValues)="emitRepeaterValues($event)" 
+                >
+</app-repeater>

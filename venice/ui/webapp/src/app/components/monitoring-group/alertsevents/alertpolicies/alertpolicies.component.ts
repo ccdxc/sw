@@ -3,7 +3,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { BaseComponent } from '@app/components/base/base.component';
-import { IMonitoringAlertDestination, IMonitoringAlertPolicy, IApiStatus } from '@sdk/v1/models/generated/monitoring';
+import { IMonitoringAlertDestination, IMonitoringAlertPolicy, IApiStatus, MonitoringAlertPolicy, MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Subscription } from 'rxjs/Subscription';
 
@@ -54,7 +54,7 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
   }
 
   getAlertPolicies() {
-    this.eventPoliciesEventUtility = new HttpEventUtility(null, false,
+    this.eventPoliciesEventUtility = new HttpEventUtility(MonitoringAlertPolicy, false,
       (policy) => {
         return policy.spec.resource === 'Event';
       }
@@ -93,7 +93,7 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
   }
 
   getDestinations() {
-    this.destinationsEventUtility = new HttpEventUtility();
+    this.destinationsEventUtility = new HttpEventUtility(MonitoringAlertDestination);
     this.destinations = this.destinationsEventUtility.array;
     const subscription = this._monitoringService.WatchAlertDestination().subscribe(
       (response) => {

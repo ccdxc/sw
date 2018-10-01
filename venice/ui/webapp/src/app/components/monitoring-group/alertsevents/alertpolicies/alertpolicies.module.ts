@@ -33,7 +33,8 @@ import { NeweventalertpolicyComponent } from '@app/components/monitoring-group/a
 
     AlertPoliciesRoutingModule,
     SharedModule,
-    WidgetsModule
+    WidgetsModule,
+    SharedModule
   ],
   declarations: [AlertpoliciesComponent,
     ObjectpolicyComponent,

@@ -32,18 +32,13 @@
   }
 }
 
-.destinations-column-action-div {
-  display: inline-flex;
+.destinations-column-notifications-sent {
+  width: 300px;
 }
 
-.destinations-record-column-action-icon {
-  margin: auto 5px;
-  padding: 0px;
-  color: #676763;
-}
-
-.destinations-column-action {
-  width: 100px !important;
+// This column header also includes the action items column so we add an extra 100 px
+th.destinations-column-notifications-sent {
+  width: 400px !important;
 }
 
 .destinations-rowexpand {
