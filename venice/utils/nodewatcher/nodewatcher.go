@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/minio/minio/cmd/logger"
+	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 
 	"github.com/pensando/sw/api"
@@ -30,6 +31,7 @@ type nodeMetrics struct {
 	MemFree        api.Gauge
 	MemUsed        api.Gauge
 	MemUsedPercent api.Gauge
+	CPUUsedPercent api.Gauge
 }
 
 // nodewatcher monitors system resources. It can run on Venice Nodes or on NAPLES.
@@ -97,12 +99,19 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 				w.logger.Errorf("Node Watcher: failed to read virtual memory info, error: %v", err)
 				continue
 			}
-			w.logger.Infof("Node Watcher: sending new metrics %+v", vmstat)
 			w.metricObj.MemAvailable.Set(float64(vmstat.Available), t)
 			w.metricObj.MemFree.Set(float64(vmstat.Free), t)
 			w.metricObj.MemUsed.Set(float64(vmstat.Used), t)
 			w.metricObj.MemTotal.Set(float64(vmstat.Total), t)
 			w.metricObj.MemUsedPercent.Set(float64(vmstat.UsedPercent), t)
+
+			cpuPercent, err := cpu.Percent(0, false)
+			if err != nil {
+				w.logger.Errorf("Node Watcher: failed to read cpu percent, error: %v", err)
+				continue
+			}
+			w.metricObj.CPUUsedPercent.Set(cpuPercent[0], t)
+			w.logger.Debugf("Node Watcher: recording new metrics, mem used %v%%, cpu used %v%%", vmstat.UsedPercent, cpuPercent[0])
 		}
 	}
 }
