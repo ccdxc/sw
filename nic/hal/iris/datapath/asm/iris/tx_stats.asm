@@ -6,7 +6,7 @@
 #define TX_UCAST_BYTES_OVERFLOW_OFFSET  0
 #define TX_MCAST_BYTES_OVERFLOW_OFFSET  (TX_UCAST_BYTES_OVERFLOW_OFFSET + 16)
 #define TX_BCAST_BYTES_OVERFLOW_OFFSET  (TX_UCAST_BYTES_OVERFLOW_OFFSET + 32)
-#define TX_EGRESS_DROPS_OVERFLOW_OFFSET (TX_UCAST_BYTES_OVERFLOW_OFFSET + 46)
+#define TX_EGRESS_DROPS_OVERFLOW_OFFSET (TX_UCAST_BYTES_OVERFLOW_OFFSET + 48)
 
 struct tx_stats_k k;
 struct tx_stats_d d;
@@ -50,10 +50,10 @@ tx_stats:
   .brend
 
 tx_egress_drops:
-  add         r6, d.tx_stats_d.tx_egress_drops, 1
-  bgti        r6, 0xF, tx_egress_drops_overflow
+  add         r7, d.tx_stats_d.tx_egress_drops, 1
+  bgti        r7, 0xF, tx_egress_drops_overflow
   add         r4, r0, k.control_metadata_src_lif, 6
-  tblwr.e     d.tx_stats_d.tx_egress_drops, r6
+  tblwr.e     d.tx_stats_d.tx_egress_drops, r7
   nop
 
 tx_ucast_overflow:

@@ -181,7 +181,7 @@ TEST_F(copp_test, test3)
     spec.Clear();
     spec.mutable_key_or_handle()->set_copp_type(copp_type);
     // Update to a PPS policer
-    spec.mutable_policer()->mutable_pps_policer()->set_packets_per_sec(500);
+    spec.mutable_policer()->mutable_pps_policer()->set_packets_per_sec(5000);
     spec.mutable_policer()->mutable_pps_policer()->set_burst_packets(20);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

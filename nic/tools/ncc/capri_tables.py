@@ -6117,18 +6117,18 @@ class capri_table_manager:
         timers['scale'] = [0 for d in xgress]
         for d in xgress:
             num_entries = 0
-            cycles_per_4ms = int(float(capri_model['match_action']['te_consts']['base_clock_freq']) * 0.004)
+            cycles_per_250us = int(float(capri_model['match_action']['te_consts']['base_clock_freq']) * 0.000250)
             for ctable in self.gress_tm[d].tables.values():
                 if ctable.is_rate_limit_en or ctable.is_policer:
                     num_entries = num_entries + ctable.num_entries
-            min_cycles_reqd = num_entries * 8
-            assert min_cycles_reqd < cycles_per_4ms, "Too many policer/rate-limiter entries to support 4ms refresh"
-            cycles_per_4ms = cycles_per_4ms >> 1
+            min_cycles_reqd = num_entries * 16
+            assert min_cycles_reqd < cycles_per_250us, "Too many policer/rate-limiter entries to support 250us refresh"
+            cycles_per_250us = cycles_per_250us >> 1
             timers['scale'][d] = 0
-            while cycles_per_4ms & 0xFFFFFFFFFFFF0000L:
-                cycles_per_4ms = cycles_per_4ms >> 1
+            while cycles_per_250us & 0xFFFFFFFFFFFF0000L:
+                cycles_per_250us = cycles_per_250us >> 1
                 timers['scale'][d] = timers['scale'][d] + 1
-            timers['value'][d] = cycles_per_4ms
+            timers['value'][d] = cycles_per_250us
 
         return timers
 

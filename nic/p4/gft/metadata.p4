@@ -79,7 +79,7 @@ header_type flow_act_metadata_t {
     fields {
         //flow_index        : 20;
         flow_index          : 16;
-        policer_index       : 14;
+        policer_index       : 13;
         overflow_lkp        : 1;
         tx_ethernet_dst     : 48;
     }

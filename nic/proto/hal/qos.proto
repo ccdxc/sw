@@ -25,12 +25,12 @@ service QOS {
 }
 
 message PolicerPPSSpec {
-  uint32 packets_per_sec = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:250-2000000000}"];    // Packets-per-second rate (range max is about 1Tbps)
+  uint32 packets_per_sec = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:4000-2000000000}"];    // Packets-per-second rate (range max is about 1Tbps)
   uint32 burst_packets   = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-2000000000}"];    // Packet burst to absorb
 }
 
 message PolicerBPSSpec {
-  uint64 bytes_per_sec = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:250-125000000000}"];    // rate for this policer in bytes-per-second (range max is about 1Tbps)
+  uint64 bytes_per_sec = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:4000-125000000000}"];    // rate for this policer in bytes-per-second (range max is about 1Tbps)
   uint64 burst_bytes   = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:0-125000000000}"];    // Burst size allowed for the policer in bytes
 }
 
