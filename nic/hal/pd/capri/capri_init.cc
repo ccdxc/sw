@@ -32,6 +32,8 @@
 #include "nic/asic/capri/verif/apis/cap_stg_api.h"
 #include "nic/asic/capri/verif/apis/cap_wa_api.h"
 #include "nic/hal/pd/capri/capri_quiesce.hpp"
+#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "nic/asic/capri/model/cap_prd/cap_prd_csr.h"
 
 #define P4PLUS_SYMBOLS_MAX  129
 
@@ -936,6 +938,28 @@ capri_cache_init (capri_cfg_t *cfg)
     return ret;
 }
 
+
+/*
+ * ASIC teams wants to disable Error recovery of Seq ID check pRDMA, 
+ * as this recovery path is not tested thoroughly, and we might be
+ * runing into for an outstanding issue is suspicion.
+ * Disabling from HAL for now, but Helen will commit this
+ * into prd_asic_init api called from HAL, then this will be removed
+ */ 
+static hal_ret_t
+capri_prd_init()
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pr_csr_t &pr_csr = cap0.pr.pr;
+
+    pr_csr.prd.cfg_ctrl.read();
+    pr_csr.prd.cfg_ctrl.pkt_phv_sync_err_recovery_en(0);
+    pr_csr.prd.cfg_ctrl.write();
+    HAL_TRACE_DEBUG("Disabled pkt_phv_sync_err_recovery_en in pr_prd_cfg_ctrl");
+    return HAL_RET_OK;
+}
+
+
 hal_ret_t
 capri_repl_init (capri_cfg_t *cfg)
 {
@@ -1198,6 +1222,10 @@ capri_init (capri_cfg_t *cfg = NULL)
 
     if (ret == HAL_RET_OK) {
         ret = hal::pd::capri_quiesce_init();
+    }
+
+    if (ret == HAL_RET_OK) {
+        ret = capri_prd_init();
     }
 
     return ret;
