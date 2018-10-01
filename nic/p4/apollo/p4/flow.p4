@@ -10,10 +10,50 @@ action flow_hash(entry_valid, flow_index, flow_role,
         modify_field(control_metadata.flow_index, flow_index);
         modify_field(control_metadata.flow_role, flow_role);
 
-        // if hardware register indicates miss, compare hints and setup
-        // to perform lookup in overflow table
-        modify_field(control_metadata.flow_ohash_lkp, TRUE);
-        modify_field(service_header.flow_ohash, scratch_metadata.flow_hint);
+        // if hardware register indicates miss, compare hashes with r1
+        // (scratch_metadata.flow_hash) and setup lookup in overflow table
+        modify_field(scratch_metadata.flow_hash,
+                     scratch_metadata.flow_hash);
+        modify_field(scratch_metadata.hint_valid, FALSE);
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.flow_hash == hash1)) {
+            modify_field(scratch_metadata.flow_hint, hint1);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.flow_hash == hash2)) {
+            modify_field(scratch_metadata.flow_hint, hint2);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.flow_hash == hash3)) {
+            modify_field(scratch_metadata.flow_hint, hint3);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.flow_hash == hash4)) {
+            modify_field(scratch_metadata.flow_hint, hint4);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.flow_hash == hash5)) {
+            modify_field(scratch_metadata.flow_hint, hint5);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        modify_field(scratch_metadata.flag, more_hashes);
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.flag == TRUE)) {
+            modify_field(scratch_metadata.flow_hint, more_hints);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+
+        if (scratch_metadata.hint_valid == TRUE) {
+            modify_field(control_metadata.flow_ohash_lkp, TRUE);
+            modify_field(service_header.flow_ohash, scratch_metadata.flow_hint);
+        } else {
+            modify_field(service_header.flow_done, TRUE);
+            modify_field(control_metadata.flow_index, 0);
+        }
     } else {
         modify_field(service_header.flow_done, TRUE);
         modify_field(control_metadata.flow_index, 0);
@@ -25,13 +65,6 @@ action flow_hash(entry_valid, flow_index, flow_role,
     modify_field(scratch_metadata.flow_hash, hash3);
     modify_field(scratch_metadata.flow_hash, hash4);
     modify_field(scratch_metadata.flow_hash, hash5);
-    modify_field(scratch_metadata.flow_hint, hint1);
-    modify_field(scratch_metadata.flow_hint, hint2);
-    modify_field(scratch_metadata.flow_hint, hint3);
-    modify_field(scratch_metadata.flow_hint, hint4);
-    modify_field(scratch_metadata.flow_hint, hint5);
-    modify_field(scratch_metadata.flag, more_hashes);
-    modify_field(scratch_metadata.flow_hint, more_hints);
 }
 
 @pragma stage 2

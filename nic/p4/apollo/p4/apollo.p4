@@ -55,7 +55,7 @@ control ingress {
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
-    remote_vnic_mapping();
+    remote_vnic_mapping_tx();
     egress_vnic_info();
     mirror();
     rewrite();

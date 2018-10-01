@@ -11,16 +11,14 @@ struct phv_                     p;
 remote_vnic_mapping_tx_info:
     bbne        d.remote_vnic_mapping_tx_info_d.entry_valid, TRUE, \
                     remote_vnic_mapping_tx_miss
-    // Set bit 31 for overflow hash lookup to work
+    // Set bit 31 for overflow hash lookup
     ori         r7, r0, 0x80000000
     bcf         [c1], remote_vnic_mapping_tx_hit
 
-    // Set recirc. This can be cleared out in oflow action if there is match.
-    phvwr       p.egress_service_header_valid, 1
     //hint1
     seq         c1, r1[31:21], d.remote_vnic_mapping_tx_info_d.hash1
-    or          r2, d.remote_vnic_mapping_tx_info_d.hint1_sbit10_ebit17, \
-                    d.remote_vnic_mapping_tx_info_d.hint1_sbit0_ebit9, 10
+    or          r2, d.remote_vnic_mapping_tx_info_d.hint1_sbit9_ebit17, \
+                    d.remote_vnic_mapping_tx_info_d.hint1_sbit0_ebit8, 9
     sne         c2, r2, r0
     bcf         [c1&c2], remote_vnic_mapping_tx_hash_hit
     add         r7, r7, r2
@@ -65,17 +63,17 @@ remote_vnic_mapping_tx_info:
     bcf         [c1&c2], remote_vnic_mapping_tx_hash_hit
     add         r7, r7, d.remote_vnic_mapping_tx_info_d.more_hints
 remote_vnic_mapping_tx_miss:
-    phvwr.e     p.egress_service_header_remote_vnic_mapping_done, TRUE
+    phvwr.e     p.egress_service_header_remote_vnic_mapping_tx_done, TRUE
     nop
 
 remote_vnic_mapping_tx_hit:
     phvwr.e     p.txdma_to_p4e_header_nexthop_index, \
                     d.remote_vnic_mapping_tx_info_d.nexthop_index
-    phvwr       p.egress_service_header_remote_vnic_mapping_done, TRUE
+    phvwr       p.egress_service_header_remote_vnic_mapping_tx_done, TRUE
 
 remote_vnic_mapping_tx_hash_hit:
-    phvwr.e     p.egress_service_header_remote_vnic_mapping_ohash, r7
-    phvwr       p.control_metadata_remote_vnic_mapping_ohash_lkp, TRUE
+    phvwr.e     p.egress_service_header_remote_vnic_mapping_tx_ohash, r7
+    phvwr       p.control_metadata_remote_vnic_mapping_tx_ohash_lkp, TRUE
 
 /*****************************************************************************/
 /* error function                                                            */

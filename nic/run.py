@@ -199,7 +199,7 @@ def run_model(args):
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/gft/gen/p4gen/gft/dbg_out/model_debug.json")
         elif args.apollo_gtest:
             os.system("%s/tools/merge_model_debug.py --p4 apollo --rxdma apollo_rxdma --txdma apollo_txdma" % nic_dir)
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apollo/gen/p4gen//apollo/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apollo/gen/p4gen//apollo/dbg_out/combined_model_debug.json")
         else:
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/iris/gen/p4gen/p4/dbg_out/model_debug.json")
     if args.coveragerun or args.asmcov:

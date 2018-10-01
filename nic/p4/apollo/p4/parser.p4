@@ -47,7 +47,8 @@ header udp_t udp_0;
 @pragma pa_header_union egress vxlan_0 gre_0
 header vxlan_t vxlan_0;
 header gre_t gre_0;
-header mpls_t mpls_0[MPLS_DEPTH];
+header mpls_t mpls_src_0;
+header mpls_t mpls_dst_0;
 header erspan_header_t3_t erspan_0;
 
 // layer 1
@@ -57,10 +58,11 @@ header vlan_tag_t ctag_1;
 header ipv4_t ipv4_1;
 header ipv6_t ipv6_1;
 header udp_t udp_1;
-@pragma pa_header_union ingress vxlan_1
+@pragma pa_header_union ingress vxlan_1 gre_1
 header vxlan_t vxlan_1;
 header gre_t gre_1;
-header mpls_t mpls[MPLS_DEPTH];
+header mpls_t mpls_src;
+header mpls_t mpls_dst;
 
 // layer 2
 header ethernet_t ethernet_2;
@@ -158,12 +160,10 @@ parser parse_ipv4_1 {
 }
 
 parser parse_ipv4_in_ip_1 {
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_IP_IN_IP);
     return parse_ipv4_2;
 }
 
 parser parse_ipv6_in_ip_1 {
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_IP_IN_IP);
     return parse_ipv6_2;
 }
 
@@ -214,31 +214,37 @@ parser parse_gre_1 {
 }
 
 parser parse_gre_ipv4_1 {
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_GRE);
     return parse_ipv4_2;
 }
 
 parser parse_gre_ipv6_1 {
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_GRE);
     return parse_ipv6_2;
 }
 
 parser parse_vxlan_1 {
     extract(vxlan_1);
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_VXLAN);
     return parse_ethernet_2;
 }
 
 parser parse_mpls {
-    extract(mpls[next]);
-    return select(latest.bos) {
-        0 : parse_mpls;
-        1 : parse_mpls_bos;
-        default: ingress;
+    return select(current(23, 1)) {
+        0 : parse_mpls_src_dst;
+        default : parse_mpls_dst;
     }
 }
 
-parser parse_mpls_bos {
+parser parse_mpls_src_dst {
+    extract(mpls_src);
+    extract(mpls_dst);
+    return parse_mpls_payload;
+}
+
+parser parse_mpls_dst {
+    extract(mpls_dst);
+    return parse_mpls_payload;
+}
+
+parser parse_mpls_payload {
     return select(current(0, 4)) {
         0x4 : parse_mpls_inner_ipv4;
         0x6 : parse_mpls_inner_ipv6;
@@ -247,17 +253,14 @@ parser parse_mpls_bos {
 }
 
 parser parse_eompls {
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_MPLS_L2VPN);
     return parse_ethernet_2;
 }
 
 parser parse_mpls_inner_ipv4 {
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_MPLS_L3VPN);
     return parse_ipv4_2;
 }
 
 parser parse_mpls_inner_ipv6 {
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_MPLS_L3VPN);
     return parse_ipv6_2;
 }
 
@@ -423,9 +426,9 @@ parser deparse_egress {
      * Tx Traffic:
      *     The pkts will be extracted to eth_1, ctag_1, ip_1, tcp
      *     Remove the eth_1 and ctag_1 header
-     *     Add eth_0, ip_0, gre_0 and mpls_0 header.
+     *     Add eth_0, ip_0, gre_0, mpls_src_0 and mpls_dst_0 header.
      *     So outgoing traffic will have
-     *       eth_0, ip_0, gre_0, mpls_0, ip_1, tcp
+     *       eth_0, ip_0, gre_0, mpls_src_0, mpls_dst_0, ip_1, tcp
      *
      * Rx Traffic:
      *     The pkts will be extracted to eth_1, ip_1, gre_1, mpls, ip_2, tcp
@@ -443,8 +446,8 @@ parser deparse_egress {
     extract(vxlan_0);
     extract(gre_0);
     extract(erspan_0);
-    extract(mpls_0[0]);
-    extract(mpls_0[1]);
+    extract(mpls_src_0);
+    extract(mpls_dst_0);
 
     return parse_packet;
 }

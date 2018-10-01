@@ -65,9 +65,9 @@ action tunneled_nonip_packet() {
 @pragma stage 0
 table key_native {
     reads {
-        tunnel_metadata.tunnel_type : ternary;
         ipv4_1.valid                : ternary;
         ipv6_1.valid                : ternary;
+        ethernet_2.valid            : ternary;
         ipv4_2.valid                : ternary;
         ipv6_2.valid                : ternary;
     }
@@ -83,9 +83,9 @@ table key_native {
 @pragma stage 0
 table key_tunneled {
     reads {
-        tunnel_metadata.tunnel_type : ternary;
         ipv4_1.valid                : ternary;
         ipv6_1.valid                : ternary;
+        ethernet_2.valid            : ternary;
         ipv4_2.valid                : ternary;
         ipv6_2.valid                : ternary;
     }
@@ -98,7 +98,19 @@ table key_tunneled {
     size : KEY_MAPPING_TABLE_SIZE;
 }
 
+action service_header_info() {
+    if (service_header.valid == TRUE) {
+        modify_field(control_metadata.local_ip_mapping_ohash_lkp,
+                     ~service_header.local_ip_mapping_done);
+        modify_field(control_metadata.remote_vnic_mapping_rx_ohash_lkp,
+                     ~service_header.remote_vnic_mapping_rx_done);
+        modify_field(control_metadata.flow_ohash_lkp,
+                     ~service_header.flow_done);
+    }
+}
+
 action init_config() {
+    service_header_info();
     if (capri_intrinsic.tm_iport != TM_PORT_DMA) {
         subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
                  CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
@@ -113,24 +125,7 @@ table init_config {
     }
 }
 
-action service_header_info() {
-    modify_field(control_metadata.local_ip_mapping_ohash_lkp,
-            ~service_header.local_ip_mapping_done);
-    modify_field(control_metadata.flow_ohash_lkp,
-            ~service_header.flow_done);
-}
-
-@pragma stage 0
-table service_header {
-    actions {
-        service_header_info;
-    }
-}
-
 control key_init {
-    if (service_header.valid == TRUE) {
-        apply(service_header);
-    }
     apply(key_native);
     apply(key_tunneled);
     apply(init_config);

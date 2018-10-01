@@ -27,31 +27,20 @@ header_type vnic_metadata_t {
     }
 }
 
-header_type rvpath_metadata_t {
-    fields {
-        tep_index     : 10;
-    }
-}
-
-header_type tunnel_metadata_t {
-    fields {
-        tunnel_type : 8;
-    }
-}
-
 header_type control_metadata_t {
     fields {
-        mapping_lkp_addr                : 128;
-        local_ip_mapping_ohash_lkp      : 1;
-        remote_vnic_mapping_ohash_lkp   : 1;
-        skip_flow_lkp                   : 1;
-        flow_ohash_lkp                  : 1;
-        flow_index                      : 23;
-        flow_role                       : 1;
-        span_copy                       : 1;
-        direction                       : 1;
-        p4i_drop_reason                 : 32;
-        p4e_drop_reason                 : 32;
+        mapping_lkp_addr                    : 128;
+        local_ip_mapping_ohash_lkp          : 1;
+        remote_vnic_mapping_rx_ohash_lkp    : 1;
+        remote_vnic_mapping_tx_ohash_lkp    : 1;
+        skip_flow_lkp                       : 1;
+        flow_ohash_lkp                      : 1;
+        flow_index                          : 23;
+        flow_role                           : 1;
+        span_copy                           : 1;
+        direction                           : 1;
+        p4i_drop_reason                     : 32;
+        p4e_drop_reason                     : 32;
     }
 }
 
@@ -90,8 +79,8 @@ header_type scratch_metadata_t {
         epoch               : 32;
         local_ip_hash       : 15;
         local_ip_hint       : 14;
-        remote_vnic_hash    : 11;
-        remote_vnic_hint    : 18;
+        vnic_mapping_hash   : 12;
+        vnic_mapping_hint   : 18;
         ipv4_src            : 32;
         flow_hash           : 8;
         flow_hint           : 21;
@@ -110,6 +99,7 @@ header_type scratch_metadata_t {
         tcp_state           : 4;
         tcp_flags           : 8;
         flow_stats_addr     : 34;
+        hint_valid          : 1;
 
         subnet_id           : 16;
         snat                : 1;
@@ -139,10 +129,8 @@ header_type scratch_metadata_t {
 
 metadata key_metadata_t         key_metadata;
 metadata vnic_metadata_t        vnic_metadata;
-metadata rvpath_metadata_t      rvpath_metadata;
 metadata control_metadata_t     control_metadata;
 metadata rewrite_metadata_t     rewrite_metadata;
-metadata tunnel_metadata_t      tunnel_metadata;
 metadata policer_metadata_t     policer_metadata;
 metadata nat_metadata_t         nat_metadata;
 

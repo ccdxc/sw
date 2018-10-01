@@ -8,10 +8,14 @@ action nacl_permit() {
 @pragma stage 2
 table nacl {
     reads {
-        key_metadata.dst : ternary;
-        key_metadata.src : ternary;
-        key_metadata.sport : ternary;
-        key_metadata.dport : ternary;
+        control_metadata.direction      : ternary;
+        vnic_metadata.local_vnic_tag    : ternary;
+        key_metadata.ktype              : ternary;
+        key_metadata.dst                : ternary;
+        key_metadata.src                : ternary;
+        key_metadata.proto              : ternary;
+        key_metadata.sport              : ternary;
+        key_metadata.dport              : ternary;
     }
     actions {
         nacl_permit;

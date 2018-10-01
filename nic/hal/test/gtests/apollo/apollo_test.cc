@@ -301,10 +301,16 @@ key_native_init(void) {
 
     index = 0;
     data.actionid = KEY_NATIVE_NATIVE_IPV4_PACKET_ID;
-    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_NONE;
-    mask.tunnel_metadata_tunnel_type_mask = 0xff;
     key.ipv4_1_valid = 1;
+    key.ipv6_1_valid = 0;
+    key.ethernet_2_valid = 0;
+    key.ipv4_2_valid = 0;
+    key.ipv6_2_valid = 0;
     mask.ipv4_1_valid_mask = 1;
+    mask.ipv6_1_valid_mask = 1;
+    mask.ethernet_2_valid_mask = 1;
+    mask.ipv4_2_valid_mask = 1;
+    mask.ipv6_2_valid_mask = 1;
 
     entry_write(tbl_id, index, &key, &mask, &data, false, 0);
 }
@@ -318,15 +324,21 @@ key_tunneled_init(void) {
     uint32_t index;
 
     memset(&key, 0, sizeof(key));
-    memset(&mask, 0, sizeof(mask));
+    memset(&mask, 0xFF, sizeof(mask));
     memset(&data, 0, sizeof(data));
 
     index = 0;
     data.actionid = KEY_TUNNELED_TUNNELED_IPV4_PACKET_ID;
-    key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_MPLS_L3VPN;
-    mask.tunnel_metadata_tunnel_type_mask = 0xff;
+    key.ipv4_1_valid = 0;
+    key.ipv6_1_valid = 0;
+    key.ethernet_2_valid = 0;
     key.ipv4_2_valid = 1;
+    key.ipv6_2_valid = 0;
+    mask.ipv4_1_valid_mask = 0;
+    mask.ipv6_1_valid_mask = 0;
+    mask.ethernet_2_valid_mask = 1;
     mask.ipv4_2_valid_mask = 1;
+    mask.ipv6_2_valid_mask = 1;
 
     entry_write(tbl_id, index, &key, &mask, &data, false, 0);
 }
@@ -372,7 +384,7 @@ vnic_rx_init() {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.mpls_0_label = g_local_slot_id;
+    key.mpls_dst_label = g_local_slot_id;
     data.actionid = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check = true;

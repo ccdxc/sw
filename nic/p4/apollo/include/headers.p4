@@ -124,22 +124,24 @@ header_type mpls_t {
 header_type service_header_t {
     fields {
         local_ip_mapping_ohash : 32;
+        remote_vnic_mapping_rx_ohash : 32;
         flow_ohash : 32;
 
         epoch : 32;
 
-        pad1 : 6;
+        pad1 : 5;
         local_ip_mapping_done : 1;
+        remote_vnic_mapping_rx_done : 1;
         flow_done : 1;
     }
 }
 
 header_type egress_service_header_t {
     fields {
-        remote_vnic_mapping_ohash   : 32;
+        remote_vnic_mapping_tx_ohash : 32;
 
-        pad1                        : 7;
-        remote_vnic_mapping_done    : 1;
+        pad1 : 7;
+        remote_vnic_mapping_tx_done : 1;
     }
 }
 

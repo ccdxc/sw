@@ -5,6 +5,7 @@
 #define VNIC_IP_MAPPING_TABLE_SIZE                          131072      // 128K
 #define VNIC_IP_MAPPING_OHASH_TABLE_SIZE                    16384       // 16K
 #define REMOTE_VNIC_MAPPINGS_RX_TABLE_SIZE                  1048576     // 1M
+#define REMOTE_VNIC_MAPPINGS_RX_OHASH_TABLE_SIZE            262144      // 256K
 #define TEP_TABLE_SIZE                                      1024        // 1K
 #define FLOW_TABLE_SIZE                                     16777216    // 16M
 #define FLOW_OHASH_TABLE_SIZE                               2097152     // 2M
@@ -19,7 +20,6 @@
 #define MIRROR_SESSION_TABLE_SIZE                           256
 
 // Resource pool tables
-#define RESOURCE_POOL_AGG_TABLE_SIZE                        1024        // 1K
 #define RESOURCE_POOL_CLASSIFIED_TABLE_SIZE                 1024        // 1K
 #define RESOURCE_POOL_CLASSIFIED_OTCAM_TABLE_SIZE           128
 #define AGG_POLICER_TABLE_SIZE                              1024        // 1K

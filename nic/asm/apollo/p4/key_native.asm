@@ -28,14 +28,13 @@ native_ipv4_packet:
 native_ipv6_packet:
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV6
     phvwr           p.key_metadata_src, k.{ipv6_1_srcAddr_sbit0_ebit31...ipv6_1_srcAddr_sbit64_ebit127}
-    or              r1, k.ipv6_1_dstAddr_sbit112_ebit127, k.ipv6_1_dstAddr_sbit0_ebit111, 16
-    phvwr           p.key_metadata_dst, r1
+    phvwr           p.key_metadata_dst[127:8], k.ipv6_1_dstAddr_sbit0_ebit119
+    phvwr           p.key_metadata_dst[7:0], k.ipv6_1_dstAddr_sbit120_ebit127
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_1_dstPort
     phvwr.e         p.key_metadata_proto, k.ipv6_1_nextHdr
     phvwr           p.control_metadata_mapping_lkp_addr, k.{ipv6_1_srcAddr_sbit0_ebit31...ipv6_1_srcAddr_sbit64_ebit127}
-
 
 .align
 native_nonip_packet:

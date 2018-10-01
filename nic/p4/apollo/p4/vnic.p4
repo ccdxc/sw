@@ -75,7 +75,7 @@ action local_vnic_info_rx(local_vnic_tag, vcn_id, skip_src_dst_check,
         drop_packet();
     }
 
-    modify_field(vnic_metadata.src_slot_id, mpls[1].label);
+    modify_field(vnic_metadata.src_slot_id, mpls_src.label);
     local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
                            resource_group_1, resource_group_2,
                            0, 0, slacl_addr_1, slacl_addr_2, epoch1, epoch2);
@@ -99,7 +99,7 @@ table local_vnic_by_vlan_tx {
 @pragma stage 0
 table local_vnic_by_slot_rx {
     reads {
-        mpls[0].label : exact;
+        mpls_dst.label : exact;
     }
     actions {
         local_vnic_info_rx;
@@ -111,7 +111,7 @@ table local_vnic_by_slot_rx {
 @pragma overflow_table local_vnic_by_slot_rx
 table local_vnic_by_slot_rx_otcam {
     reads {
-        mpls[0].label : ternary;
+        mpls_dst.label : ternary;
     }
     actions {
         local_vnic_info_rx;
@@ -135,8 +135,8 @@ action egress_local_vnic_info_rx(vr_mac, overlay_mac, overlay_vlan_id,
     remove_header(ipv4_1);
     remove_header(ipv6_1);
     remove_header(gre_1);
-    remove_header(mpls[0]);
-    remove_header(mpls[1]);
+    remove_header(mpls_src);
+    remove_header(mpls_dst);
 
     // Add header towards host
     add_header(ethernet_0);

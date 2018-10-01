@@ -3,7 +3,8 @@
 /*****************************************************************************/
 action ingress_to_rxdma() {
     if ((service_header.local_ip_mapping_done == FALSE) or
-        (service_header.flow_done == FALSE)) {
+        (service_header.flow_done == FALSE) or
+        (service_header.remote_vnic_mapping_rx_done == FALSE)) {
         add_header(service_header);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
     } else {

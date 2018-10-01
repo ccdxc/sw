@@ -31,9 +31,9 @@ action tep_tx(dipo, dmac)
     add_header(ethernet_0);
     add_header(ipv4_0);
     add_header(gre_0);
-    add_header(mpls_0[0]);
+    add_header(mpls_dst_0);
     if (rewrite_metadata.encap_type == VNIC_ENCAP) {
-        add_header(mpls_0[1]);
+        add_header(mpls_src_0);
     }
 
     modify_field(ethernet_0.dstAddr, dmac);
@@ -56,13 +56,13 @@ action tep_tx(dipo, dmac)
     modify_field(ipv4_0.srcAddr, rewrite_metadata.mytep_ip);
     // TODO setup the ip, gre and mpls headers correctly
     modify_field(gre_0.proto, ETHERTYPE_MPLS_UNICAST);
-    modify_field(mpls_0[0].label, rewrite_metadata.dst_slot_id);
+    modify_field(mpls_dst_0.label, rewrite_metadata.dst_slot_id);
     if (rewrite_metadata.encap_type == VNIC_ENCAP) {
-        modify_field(mpls_0[1].label, p4e_apollo_i2e.src_slot_id);
-        modify_field(mpls_0[1].bos, 1);
+        modify_field(mpls_src_0.label, p4e_apollo_i2e.src_slot_id);
+        modify_field(mpls_src_0.bos, 1);
         add_to_field(scratch_metadata.ip_totallen, 4);
     } else {
-        modify_field(mpls_0[0].bos, 1);
+        modify_field(mpls_dst_0.bos, 1);
     }
 
     modify_field(ipv4_0.totalLen, scratch_metadata.ip_totallen);
@@ -74,7 +74,7 @@ action tep_tx(dipo, dmac)
 @pragma stage 3
 table tep_tx {
     reads {
-        rewrite_metadata.tep_index      : exact;
+        rewrite_metadata.tep_index  : exact;
     }
     actions {
         tep_tx;

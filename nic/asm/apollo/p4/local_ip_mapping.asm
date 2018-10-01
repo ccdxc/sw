@@ -11,9 +11,11 @@ struct phv_ p;
 local_ip_mapping_info:
     bbne        d.local_ip_mapping_info_d.entry_valid, TRUE, \
                     local_ip_mapping_miss
+
     // Set bit 31 for overflow hash lookup to work
     ori         r2, r0, 0x80000000
     bcf         [c1], local_ip_mapping_hit
+
     // Check hash1 and hint1
     seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash1
     sne         c2, d.local_ip_mapping_info_d.hint1, r0
@@ -72,14 +74,14 @@ local_ip_mapping_info:
 local_ip_mapping_miss:
     seq         c1, k.vnic_metadata_skip_src_dst_check, FALSE
     phvwr.c1    p.control_metadata_p4i_drop_reason[DROP_SRC_DST_CHECK_FAIL], 1
-    nop.e
+    phvwr.e     p.service_header_local_ip_mapping_done, TRUE
     phvwr.c1    p.capri_intrinsic_drop, TRUE
 
 local_ip_mapping_hit:
     seq         c1, d.local_ip_mapping_info_d.vcn_id_valid, TRUE
     phvwr.c1    p.vnic_metadata_vcn_id, d.local_ip_mapping_info_d.vcn_id
     seq         c2, k.control_metadata_direction, RX_FROM_SWITCH
-    seq.c2      c2, k.mpls_0_valid, TRUE
+    seq.c2      c2, k.mpls_dst_valid, TRUE
     seq.c2      c2, d.local_ip_mapping_info_d.ip_type, IP_TYPE_PUBLIC
     phvwr.c2    p.p4i_apollo_i2e_dnat_required, TRUE
     or          r1, d.local_ip_mapping_info_d.xlate_index_sbit14_ebit16, \
