@@ -26,7 +26,8 @@ req_tx_sqlkey_rsvd_lkey_process:
      DMA_CMD_I_BASE_GET(r3, r6, REQ_TX_DMA_CMD_START_FLIT_ID, K_SGE_DMA_CMD_START_INDEX)
 
      // setup mem2pkt cmd to transfer data from host memory to pkt payload
-     DMA_MEM2PKT_SETUP(r3, c2, K_SGE_BYTES, K_SGE_VA)
+     // it is assumed to be host_addr all the time
+     DMA_MEM2PKT_SETUP(r3, c0, K_SGE_BYTES, K_SGE_VA)
 
      add        r1, K_SGE_INDEX, r0
      CAPRI_SET_TABLE_I_VALID(r1, 0)

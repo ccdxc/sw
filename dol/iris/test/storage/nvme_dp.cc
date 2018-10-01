@@ -216,7 +216,7 @@ int setup_one_io_buffer(int index) {
   // Register IO Buffer with ROCE using identity mapping. 
   // No remote access => only LKey (based on base value + offset).
   RdmaMemRegister(io_buf_base_addr->pa(), io_buf_base_addr->pa(), kIOBufEntrySize,
-                  send_lkey << 8, write_back_rkey << 8, true);
+                  send_lkey << 8, write_back_rkey << 8, true, io_buf_base_addr->is_mem_type_host_mem());
 
 
   // Fill the write wqe

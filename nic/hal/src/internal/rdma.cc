@@ -652,6 +652,7 @@ rdma_alloc_lkey (RdmaAllocLkeySpec& spec, RdmaAllocLkeyResponse *rsp)
     lkey_entry_p->pt_base = g_pt_base[lif];
     lkey_entry_p->num_pt_entries_rsvd = spec.num_pt_entries_rsvd();
     lkey_entry_p->flags = (MR_FLAG_INV_EN | MR_FLAG_UKEY_EN | MR_FLAG_MW_EN);
+    lkey_entry_p->host_addr = spec.host_addr();
 
     rdma_key_entry_write(lif, lkey, lkey_entry_p);
 
@@ -1689,9 +1690,10 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
 
 
     HAL_TRACE_DEBUG("{}: Inputs: cq_num: {} cq_wqe_size: {} num_cq_wqes: {} eq_id: {}"
-                    " hostmem_pg_size: {} cq_lkey: {} wakeup_dpath: {}", __FUNCTION__, spec.cq_num(),
+                    " hostmem_pg_size: {} cq_lkey: {} wakeup_dpath: {} host_addr: {}", 
+                    __FUNCTION__, spec.cq_num(),
                     spec.cq_wqe_size(), spec.num_cq_wqes(), spec.eq_id(), spec.hostmem_pg_size(),
-                    spec.cq_lkey(), spec.wakeup_dpath());
+                    spec.cq_lkey(), spec.wakeup_dpath(), spec.host_addr());
 
     if (spec.wakeup_dpath()) {
         HAL_TRACE_DEBUG("Inputs - Wakeup LIF: {}, QTYPE: {}, QID: {}, RING_ID: {}",
@@ -1738,6 +1740,8 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.arm = 0;   // Dont arm by default, only Arm it for tests which post/validate EQ
     cqcb.sarm = 0;  
 
+    cqcb.host_addr = spec.host_addr();
+
     cqcb.wakeup_dpath
         = spec.wakeup_dpath();
     cqcb.wakeup_lif = spec.wakeup_lif();
@@ -1748,6 +1752,10 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     int log_num_pages = cqcb.log_num_wqes + cqcb.log_wqe_size - cqcb.log_cq_page_size;
     rdma_pt_entry_read(lif, cq_pt_base, &cqcb.pt_pa);
     rdma_pt_entry_read(lif, cq_pt_base+1, &cqcb.pt_next_pa);
+    if (cqcb.host_addr) {
+        cqcb.pt_pa |= 0x8000000000000000;
+        cqcb.pt_next_pa |= 0x8000000000000000;
+    }
     cqcb.pt_pg_index = 0;
     cqcb.pt_next_pg_index = 1UL & (( 1 << log_num_pages) - 1) ;
 

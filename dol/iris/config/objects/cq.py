@@ -85,6 +85,7 @@ class CqObject(base.ConfigObjectBase):
         req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
         req_spec.cq_wqe_size = self.cqwqe_size
         req_spec.num_cq_wqes = self.num_cq_wqes
+        req_spec.host_addr = 1
         req_spec.hostmem_pg_size = self.hostmem_pg_size
         req_spec.cq_va_pages_phy_addr[:] = self.cq_slab.phy_address
 

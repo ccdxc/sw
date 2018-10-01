@@ -561,7 +561,8 @@ header_type req_tx_lkey_to_ptseg_info_t {
         pt_bytes                         :   16;
         dma_cmd_start_index              :    8;
         sge_index                        :    8;
-        pad                              :   91;
+        host_addr                        :    1;
+        pad                              :   90;
     }
 }
 
@@ -1704,6 +1705,7 @@ action req_tx_sqptseg_process_t0 () {
     modify_field(t0_s2s_lkey_to_ptseg_info_scr.pt_bytes, t0_s2s_lkey_to_ptseg_info.pt_bytes);
     modify_field(t0_s2s_lkey_to_ptseg_info_scr.dma_cmd_start_index, t0_s2s_lkey_to_ptseg_info.dma_cmd_start_index);
     modify_field(t0_s2s_lkey_to_ptseg_info_scr.sge_index, t0_s2s_lkey_to_ptseg_info.sge_index);
+    modify_field(t0_s2s_lkey_to_ptseg_info_scr.host_addr, t0_s2s_lkey_to_ptseg_info.host_addr);
     modify_field(t0_s2s_lkey_to_ptseg_info_scr.pad, t0_s2s_lkey_to_ptseg_info.pad);
 
 }
@@ -1741,6 +1743,7 @@ action req_tx_sqptseg_process_t1 () {
     modify_field(t1_s2s_lkey_to_ptseg_info_scr.pt_bytes, t1_s2s_lkey_to_ptseg_info.pt_bytes);
     modify_field(t1_s2s_lkey_to_ptseg_info_scr.dma_cmd_start_index, t1_s2s_lkey_to_ptseg_info.dma_cmd_start_index);
     modify_field(t1_s2s_lkey_to_ptseg_info_scr.sge_index, t1_s2s_lkey_to_ptseg_info.sge_index);
+    modify_field(t1_s2s_lkey_to_ptseg_info_scr.host_addr, t1_s2s_lkey_to_ptseg_info.host_addr);
     modify_field(t1_s2s_lkey_to_ptseg_info_scr.pad, t1_s2s_lkey_to_ptseg_info.pad);
 
 }

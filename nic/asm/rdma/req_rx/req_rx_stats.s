@@ -42,7 +42,7 @@ req_rx_stats_process:
     bcf              [c5 | c4], done
     setcf.c3         c3, [c2 | c1] //BD Slot
 
-    tblmincri.c2     d.num_read_resp_pkts, MASK_32, 1
+    tblmincri        d.num_read_resp_pkts, MASK_32, 1
     tblmincri.c3     d.num_read_resp_msgs, MASK_16, 1
 
     //ignoring this update for ACK and ATOMIC_ACK and tracking only for read responses

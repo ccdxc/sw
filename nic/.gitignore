@@ -78,3 +78,4 @@ mmap.bin
 build
 third-party/gflags/include
 third-party/gflags/x86_64
+model.json

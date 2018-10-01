@@ -48,6 +48,8 @@ req_tx_bktrack_sqpt_process:
     sll            r2, r2, CAPRI_LOG_SIZEOF_U64_BITS
     // big-endian
     tblrdp.dx      r2, r2, 0, CAPRI_SIZEOF_U64_BITS
+    or             r2, r2, 1, 63
+    or             r2, r2, K_GLOBAL_LIF, 52
 
     //wqe_p = (void *)(*page_addr_p + sqcb_to_pt_info_p->page_offset)
     add            r1, r2, r1

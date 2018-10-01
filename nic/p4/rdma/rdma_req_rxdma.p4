@@ -140,6 +140,7 @@ header_type req_rx_cqcb_to_pt_info_t {
         page_seg_offset                  :    8;
         cq_id                            :   24;
         fire_eqcb                        :    1;
+        host_addr                        :    1;
         no_translate                     :    1;
         no_dma                           :    1;
         cqcb_addr                        :   34;
@@ -148,7 +149,7 @@ header_type req_rx_cqcb_to_pt_info_t {
         report_error                     :    1;
         eqe_type                         :    3;
         eqe_code                         :    4;
-        pad                              :   17;
+        pad                              :   16;
     }
 }
 
@@ -1226,6 +1227,7 @@ action req_rx_cqpt_process () {
     modify_field(t2_s2s_cqcb_to_pt_info_scr.page_seg_offset, t2_s2s_cqcb_to_pt_info.page_seg_offset);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.cq_id, t2_s2s_cqcb_to_pt_info.cq_id);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.fire_eqcb, t2_s2s_cqcb_to_pt_info.fire_eqcb);
+    modify_field(t2_s2s_cqcb_to_pt_info_scr.host_addr, t2_s2s_cqcb_to_pt_info.host_addr);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.no_translate, t2_s2s_cqcb_to_pt_info.no_translate);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.no_dma, t2_s2s_cqcb_to_pt_info.no_dma);
     modify_field(t2_s2s_cqcb_to_pt_info_scr.cqcb_addr, t2_s2s_cqcb_to_pt_info.cqcb_addr);

@@ -117,7 +117,8 @@ header_type resp_tx_rkey_to_ptseg_info_t {
         dma_cmd_start_index              :    8;
         log_page_size                    :    5;
         tbl_id                           :    2;
-        pad                              :   81;
+        host_addr                        :    1;
+        pad                              :   80;
     }
 }
 
@@ -692,6 +693,7 @@ action resp_tx_rsqptseg_process () {
     modify_field(t0_s2s_rkey_to_ptseg_info_scr.dma_cmd_start_index, t0_s2s_rkey_to_ptseg_info.dma_cmd_start_index);
     modify_field(t0_s2s_rkey_to_ptseg_info_scr.log_page_size, t0_s2s_rkey_to_ptseg_info.log_page_size);
     modify_field(t0_s2s_rkey_to_ptseg_info_scr.tbl_id, t0_s2s_rkey_to_ptseg_info.tbl_id);
+    modify_field(t0_s2s_rkey_to_ptseg_info_scr.host_addr, t0_s2s_rkey_to_ptseg_info.host_addr);
     modify_field(t0_s2s_rkey_to_ptseg_info_scr.pad, t0_s2s_rkey_to_ptseg_info.pad);
 
 }

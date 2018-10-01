@@ -17,7 +17,8 @@ struct req_tx_lkey_to_ptseg_info_t {
     pt_bytes                     : 16;
     dma_cmd_start_index          : 8;
     sge_index                    : 8;
-    pad                          : 91;
+    host_addr                    : 1;
+    pad                          : 90;
 };
 
 struct req_tx_to_stage_2_t {

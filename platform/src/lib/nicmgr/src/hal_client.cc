@@ -1429,6 +1429,7 @@ int HalClient::CreateCQ(uint32_t lif_id,
     spec->set_cq_wqe_size(cq_wqe_size);
     spec->set_num_cq_wqes(num_cq_wqes);
     spec->set_hostmem_pg_size(host_page_size);
+    spec->set_host_addr(1);
 
     //Set the va to pa translations.
     for (int i = 0; i < (int)pt_size; i++) {

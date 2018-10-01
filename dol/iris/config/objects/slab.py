@@ -36,6 +36,7 @@ class SlabObject(base.ConfigObjectBase):
         self.phy_address = []
         for i in range(0, self.size, self.page_size):
             phy_addr = resmgr.HostMemoryAllocator.v2p(self.address + i)
+            phy_addr = phy_addr & 0x7fffffffffffffff
             self.phy_address.append(phy_addr)
             
         self.Show()

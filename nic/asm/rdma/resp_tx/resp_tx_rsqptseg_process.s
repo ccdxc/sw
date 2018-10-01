@@ -21,6 +21,7 @@ struct resp_tx_s4_t0_k k;
 #define IN_P t0_s2s_rkey_to_ptseg_info
 
 #define K_PT_SEG_OFFSET CAPRI_KEY_RANGE(IN_P, pt_seg_offset_sbit0_ebit7, pt_seg_offset_sbit24_ebit31)
+#define K_HOST_ADDR CAPRI_KEY_FIELD(IN_P, host_addr)
 
 %%
 
@@ -59,6 +60,7 @@ transfer_loop:
     // r2 has page ptr, add page offset for DMA addr
     add                 DMA_ADDR, DMA_ADDR, PAGE_OFFSET
     
+    crestore            [c1], K_HOST_ADDR, 0x1
     DMA_MEM2PKT_SETUP(DMA_CMD_BASE, c1, DMA_BYTES, DMA_ADDR)
     
     add                 PAGE_OFFSET, r0, r0

@@ -1421,7 +1421,8 @@ typedef struct cqcb_s {
     uint64_t  pt_next_pa;
     uint64_t  pt_pa;
 
-    uint8_t   pad[2];
+    uint16_t  pad:15;
+    uint16_t  host_addr:1;
     uint16_t  pt_next_pg_index;
     uint16_t  pt_pg_index;
 

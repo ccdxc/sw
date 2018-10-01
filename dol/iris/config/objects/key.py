@@ -41,6 +41,7 @@ class KeyObject(base.ConfigObjectBase):
         req_spec.lkey = self.lkey
         req_spec.rkey = self.rkey
         req_spec.num_pt_entries_rsvd = self.num_pt_entries
+        req_spec.host_addr = 1
         self.Show()
 
     def ProcessHALResponse(self, req_spec, resp_spec):

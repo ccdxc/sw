@@ -175,6 +175,7 @@ invoke_pt:
 
     CAPRI_SET_FIELD2(PTSEG_INFO_P, dma_cmd_start_index, RESP_TX_DMA_CMD_PYLD_BASE)
     CAPRI_SET_FIELD2(PTSEG_INFO_P, log_page_size, d.log_page_size)
+    CAPRI_SET_FIELD2(PTSEG_INFO_P, host_addr, d.host_addr)
 
 add_headers:
 

@@ -20,8 +20,8 @@ struct resp_rx_s7_t2_k k;
     #c3: no_translate
     
 #define IN_P t2_s2s_cqcb_to_pt_info
-#define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pt_next_pg_index_sbit0_ebit2, pt_next_pg_index_sbit11_ebit15)
-#define K_CQCB_ADDR CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit4, cqcb_addr_sbit29_ebit33)
+#define K_PA_NEXT_INDEX   CAPRI_KEY_RANGE(IN_P, pt_next_pg_index_sbit0_ebit1, pt_next_pg_index_sbit10_ebit15)
+#define K_CQCB_ADDR CAPRI_KEY_RANGE(IN_P, cqcb_addr_sbit0_ebit3, cqcb_addr_sbit28_ebit33)
 #define K_EQCB_ADDR CAPRI_KEY_RANGE(IN_P, eqcb_addr_sbit0_ebit2, eqcb_addr_sbit27_ebit33)
 
 %%
@@ -31,7 +31,8 @@ struct resp_rx_s7_t2_k k;
 resp_rx_cqpt_process:
 
     bbeq            CAPRI_KEY_FIELD(IN_P, report_error), 1, fire_eqcb
-    crestore [c3, c2], CAPRI_KEY_RANGE(IN_P, no_translate, no_dma), 0x3 //BD Slot
+    //host_addr, no_translate, no_dma
+    crestore [c4, c3, c2], CAPRI_KEY_RANGE(IN_P, host_addr, no_dma), 0x7 //BD Slot
 
     bcf             [c2 & c3], fire_eqcb
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_CQ) //BD slot
@@ -41,8 +42,8 @@ resp_rx_cqpt_process:
     sll             PAGE_ADDR_P, PAGE_ADDR_P, CAPRI_LOG_SIZEOF_U64_BITS
 
     tblrdp.dx       PAGE_ADDR_P, PAGE_ADDR_P, 0, CAPRI_SIZEOF_U64_BITS
-    or              PAGE_ADDR_P, PAGE_ADDR_P, 1, 63
-    or              PAGE_ADDR_P, PAGE_ADDR_P, K_GLOBAL_LIF, 52
+    or.c4           PAGE_ADDR_P, PAGE_ADDR_P, 1, 63
+    or.c4           PAGE_ADDR_P, PAGE_ADDR_P, K_GLOBAL_LIF, 52
     
     // Lets cache the translated page physical address
     // *cq_cb->pt_next_pa = page_addr_p

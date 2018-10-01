@@ -125,7 +125,8 @@ fire_cqpt:
     // now r3 has page_p to load
 
     mfspr       CQCB_ADDR, spr_tbladdr
-    phvwr       CAPRI_PHV_FIELD(CQ_PT_INFO_P, cqcb_addr), CQCB_ADDR
+    phvwrpair   CAPRI_PHV_FIELD(CQ_PT_INFO_P, host_addr), d.host_addr, \
+                CAPRI_PHV_FIELD(CQ_PT_INFO_P, cqcb_addr), CQCB_ADDR
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_cqpt_process, PAGE_INDEX)
 

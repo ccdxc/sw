@@ -13,6 +13,7 @@ struct req_tx_s5_t0_k k;
 #define K_DMA_CMD_START_INDEX CAPRI_KEY_RANGE(IN_P, dma_cmd_start_index_sbit0_ebit2, dma_cmd_start_index_sbit3_ebit7)
 #define K_PT_BYTES CAPRI_KEY_RANGE(IN_P, pt_bytes_sbit0_ebit2, pt_bytes_sbit11_ebit15)
 #define K_SGE_INDEX CAPRI_KEY_RANGE(IN_P, sge_index_sbit0_ebit2, sge_index_sbit3_ebit7)
+#define K_HOST_ADDR CAPRI_KEY_FIELD(IN_P, host_addr)
 
 %%
 
@@ -43,6 +44,7 @@ ptseg_loop:
     // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_I_BASE_GET(r7, r6, REQ_TX_DMA_CMD_START_FLIT_ID, r3)
 
+    crestore      [c2], K_HOST_ADDR, 0x1
     // phy_addr_p = page[page_id] + page_offset
     sll        r6, r1, CAPRI_LOG_SIZEOF_U64_BITS
     // big-endian

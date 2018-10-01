@@ -60,7 +60,8 @@ struct cqcb_t {
 
     pt_pg_index: 16;
     pt_next_pg_index: 16;
-    pad: 16;
+    host_addr: 1;
+    pad: 15;
 
     pt_pa: 64;
     pt_next_pa: 64;

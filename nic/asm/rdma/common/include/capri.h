@@ -985,11 +985,10 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 #define DMA_PHV2PKT_SETUP_C(_base_r, _start, _end, _cf)         \
     phvwrpi._cf       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2PKT_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << PHV2PKT_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << PHV2PKT_PHV_START_OFFSET) | (DMA_CMD_TYPE_PHV2PKT << PHV2PKT_CMDTYPE_OFFSET); \
 
-#define DMA_PKT2MEM_SETUP(_base_r, _cf, _size, _addr) \
+#define DMA_PKT2MEM_SETUP(_base_r, _cf_host_addr, _size, _addr) \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, size), sizeof(DMA_CMD_PKT2MEM_T.size), _size; \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, addr), sizeof(DMA_CMD_PKT2MEM_T.addr), _addr; \
-    seq         _cf, _addr[63], 1; \
-    phvwrp._cf  _base_r, offsetof(DMA_CMD_PKT2MEM_T, host_addr), sizeof(DMA_CMD_PKT2MEM_T.host_addr), 1; \
+    phvwrp._cf_host_addr  _base_r, offsetof(DMA_CMD_PKT2MEM_T, host_addr), sizeof(DMA_CMD_PKT2MEM_T.host_addr), 1; \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, cmdtype), sizeof(DMA_CMD_PKT2MEM_T.cmdtype), DMA_CMD_TYPE_PKT2MEM;
 
 #define DMA_PKT2MEM_SETUP_OVERRIDE_LIF(_base_r, _cf_host_addr, _size, _addr, _cf_override_lif, _override_lif) \
@@ -1010,11 +1009,10 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, addr), sizeof(DMA_CMD_PKT2MEM_T.addr), _addr; \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PKT2MEM_T, host_addr, cmdtype), (1 << PKT2MEM_HOST_ADDR_OFFSET) | (DMA_CMD_TYPE_PKT2MEM << PKT2MEM_CMDTYPE_OFFSET)
 
-#define DMA_MEM2PKT_SETUP(_base_r, _cf, _size, _addr)                                                    \
+#define DMA_MEM2PKT_SETUP(_base_r, _cf_host_addr, _size, _addr)                                                    \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, size), sizeof(DMA_CMD_MEM2PKT_T.size), _size;       \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, addr), sizeof(DMA_CMD_MEM2PKT_T.addr), _addr;       \
-    seq         _cf, _addr[63], 1;                                                                       \
-    phvwrp._cf  _base_r, offsetof(DMA_CMD_MEM2PKT_T, host_addr), sizeof(DMA_CMD_MEM2PKT_T.host_addr), 1;   \
+    phvwrp._cf_host_addr  _base_r, offsetof(DMA_CMD_MEM2PKT_T, host_addr), sizeof(DMA_CMD_MEM2PKT_T.host_addr), 1;   \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, cmdtype), sizeof(DMA_CMD_MEM2PKT_T.cmdtype), DMA_CMD_TYPE_MEM2PKT;
 
 #define DMA_HBM_MEM2PKT_SETUP(_base_r, _size, _addr)                                                                    \

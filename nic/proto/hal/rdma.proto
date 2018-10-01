@@ -210,7 +210,8 @@ message RdmaCqSpec {
   uint32                   wakeup_qtype    = 11;   // Wake up Qtype
   uint32                   wakeup_qid      = 12;   // Wake up QID
   uint32                   wakeup_ring_id  = 13;   // Wake up RING_ID
-  repeated uint64          cq_va_pages_phy_addr = 14;  // Virtual memory pages's
+  bool                     host_addr       = 14;   // Host/NIC address
+  repeated uint64          cq_va_pages_phy_addr = 15;  // Virtual memory pages's
                                                        // phy addr
 }
 
@@ -305,6 +306,7 @@ message RdmaAllocLkeySpec {
   uint32                   lkey                 = 5;    // Lkey for this memory
   uint32                   rkey                 = 6;    // Rkey for this memory
   uint32                   num_pt_entries_rsvd  = 7;    // Size of PBL resources to be allocated
+  bool                     host_addr            = 8;    // Host/NIC Address
 }
 
 // RdmaAllocLkeyRequestMsg is batched request used to create/update of Rdma QPs

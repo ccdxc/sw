@@ -412,7 +412,7 @@ void AllocRdmaMem() {
 }
 
 void RdmaMemRegister(uint64_t va, uint64_t pa, uint32_t len, uint32_t lkey,
-                     uint32_t rkey, bool remote) {
+                     uint32_t rkey, bool remote, bool is_host_mem) {
   rdma::RdmaMemRegRequestMsg req;
   rdma::RdmaMemRegResponseMsg resp;
   rdma::RdmaMemRegSpec *mr = req.add_request();
@@ -423,6 +423,7 @@ void RdmaMemRegister(uint64_t va, uint64_t pa, uint32_t len, uint32_t lkey,
   mr->set_len(len);
   mr->set_ac_local_wr(true);
   mr->set_lkey(lkey);
+  mr->set_host_addr(is_host_mem);
   if (remote) {
     mr->set_rkey(rkey);
     mr->set_ac_remote_wr(true);
@@ -442,7 +443,7 @@ void RdmaMemRegister(uint64_t va, uint64_t pa, uint32_t len, uint32_t lkey,
 }
 
 void RdmaMemRegister(dp_mem_t *mem, uint32_t len, uint32_t lkey, uint32_t rkey, bool remote) {
-  RdmaMemRegister(mem->va(), mem->pa(), len, lkey, rkey, remote);
+  RdmaMemRegister(mem->va(), mem->pa(), len, lkey, rkey, remote, mem->is_mem_type_host_mem());
 }
 
 void CreateCQ(uint32_t cq_num, uint64_t pa, uint32_t len, bool is_targetCQ) {
@@ -455,6 +456,7 @@ void CreateCQ(uint32_t cq_num, uint64_t pa, uint32_t len, bool is_targetCQ) {
   cq->set_cq_wqe_size(kCQWQESize);
   cq->set_num_cq_wqes(kNumCQWQEs);
   cq->set_hostmem_pg_size(4096);
+  cq->set_host_addr(false);
 
   uint32_t size_done = 0;
   while (size_done < len) {
@@ -771,7 +773,8 @@ void RegisterTargetRcvBufs() {
   }
 
   RdmaMemRegister(target_rcv_buf_va->va(), target_rcv_buf_va->pa(), 
-                  kR2NNumBufs * kR2NBufSize, kTargetRcvBuf1LKey << 8, kTargetRcvBuf1RKey << 8, true);
+                  kR2NNumBufs * kR2NBufSize, kTargetRcvBuf1LKey << 8, kTargetRcvBuf1RKey << 8, true,
+                  target_rcv_buf_va->is_mem_type_host_mem());
 
   // Post all buffers
   for (int i = 0; i < (int) kR2NNumBufs; i++) {
@@ -824,7 +827,8 @@ void RegisterInitiatorRcvBufs() {
   }
 
   RdmaMemRegister(initiator_rcv_buf_va->va(), initiator_rcv_buf_va->pa(), 
-                  kR2NNumBufs * kR2NBufSize, kInitiatorRcvBuf1LKey << 8, kInitiatorRcvBuf1RKey << 8, true);
+                  kR2NNumBufs * kR2NBufSize, kInitiatorRcvBuf1LKey << 8, kInitiatorRcvBuf1RKey << 8, true,
+                  initiator_rcv_buf_va->is_mem_type_host_mem());
   // Init the initiator recv buffer pointer
   // Post all buffers
   for (int i = 0; i < (int) kR2NNumBufs; i++) {
@@ -870,7 +874,8 @@ void SendSmallUspaceBuf() {
   //uint32_t data_len = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
   uint32_t data_len = kR2NBufSize;
   // Register R2N buf memory. Only LKey, no remote access.
-  RdmaMemRegister(r2n_buf_va->va(), r2n_buf_va->pa(), kR2NBufSize, SendBufLKey << 8, 0, false);
+  RdmaMemRegister(r2n_buf_va->va(), r2n_buf_va->pa(), kR2NBufSize, SendBufLKey << 8, 0, false, 
+                  r2n_buf_va->is_mem_type_host_mem());
   sqwqe->write_bit_fields(192, 32, (uint64_t)data_len);  // data len
   // write the SGE
   sqwqe->write_bit_fields(256, 64, r2n_buf_va->va());  // SGE-va, same as pa
@@ -899,7 +904,8 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
   uint32_t data_len = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
 
   // Register R2N buf memory. Only LKey, no remote access.
-  RdmaMemRegister(r2n_hbm_buf_pa->va(), r2n_hbm_buf_pa->pa(), kR2NBufSize, SendBufLKey << 8, 0, false);
+  RdmaMemRegister(r2n_hbm_buf_pa->va(), r2n_hbm_buf_pa->pa(), kR2NBufSize, SendBufLKey << 8, 0, false,
+                  r2n_hbm_buf_pa->is_mem_type_host_mem());
 
   // Initialize the write data buffer (of size 4K) at an offset from the NVME backend
   // command
@@ -956,7 +962,7 @@ int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
   // Register R2N buf memory. Only LKey, no remote access.
   uint32_t data_len = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
   RdmaMemRegister(r2n_buf->va(), r2n_buf->pa(), kR2NBufSize, 
-                  SendBufLKey << 8, 0, false);
+                  SendBufLKey << 8, 0, false, r2n_buf->is_mem_type_host_mem());
 
   // For the send wqe
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
@@ -1016,7 +1022,8 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   tests::form_read_cmd_no_buf(*nvme_cmd_ptr, slba);
 
   // Register it with RDMA.
-  RdmaMemRegister(r2n_buf_va->va(), r2n_buf_va->pa(), kR2NBufSize, SendBufLKey << 8, 0, false);
+  RdmaMemRegister(r2n_buf_va->va(), r2n_buf_va->pa(), kR2NBufSize, SendBufLKey << 8, 0, false,
+                  r2n_buf_va->is_mem_type_host_mem());
 
   // Initialize helper fields
   uint32_t r2n_data_len = sizeof(r2n::r2n_buf_t) - offsetof(r2n::r2n_buf_t, cmd_buf);
@@ -1043,7 +1050,8 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   dp_mem_t *r2n_hbm_buf_pa = new dp_mem_t(1, kR2NBufSize, DP_MEM_ALIGN_PAGE);
   // Register the HBM buffer with RDMA
   RdmaMemRegister(r2n_hbm_buf_pa->va(), r2n_hbm_buf_pa->pa(), kR2NBufSize, 
-                  WriteBackBufLKey << 8, WriteBackBufRKey << 8, true);
+                  WriteBackBufLKey << 8, WriteBackBufRKey << 8, true, 
+                  r2n_hbm_buf_pa->is_mem_type_host_mem());
 
 
   // For the RDMA send WQE
@@ -1123,12 +1131,13 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
 
   // Register R2N buf memory. Only LKey, no remote access.
   RdmaMemRegister(r2n_send_buf->va(), r2n_send_buf->pa(), kR2NBufSize, 
-                  SendBufLKey << 8, 0, false);
+                  SendBufLKey << 8, 0, false, r2n_send_buf->is_mem_type_host_mem());
 
   // Register the buffer for the write back data for the read command with RDMA
   uint32_t r2n_data_len = sizeof(r2n::r2n_buf_t) - offsetof(r2n::r2n_buf_t, cmd_buf);
   RdmaMemRegister(r2n_write_buf->va(), r2n_write_buf->pa(), kR2NBufSize, 
-                  WriteBackBufLKey << 8, WriteBackBufRKey << 8, true);
+                  WriteBackBufLKey << 8, WriteBackBufRKey << 8, true,
+                  r2n_write_buf->is_mem_type_host_mem());
 
   // For the RDMA send WQE
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);

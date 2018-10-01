@@ -74,7 +74,7 @@ uint32_t get_rdma_pvm_roce_tgt_sq();
 uint32_t get_rdma_pvm_roce_tgt_cq();
 
 void RdmaMemRegister(uint64_t va, uint64_t pa, uint32_t len, uint32_t lkey,
-                     uint32_t rkey, bool remote);
+                     uint32_t rkey, bool remote, bool is_host_mem);
 void RdmaMemRegister(dp_mem_t *mem, uint32_t lkey, uint32_t rkey, bool remote);
 
 

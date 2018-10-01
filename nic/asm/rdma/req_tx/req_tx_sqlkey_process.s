@@ -104,6 +104,7 @@ set_arg:
      CAPRI_GET_TABLE_0_OR_1_ARG(req_tx_phv_t, r7, c1)
      CAPRI_SET_FIELD(r7, INFO_OUT_T, pt_offset, r5)
      CAPRI_SET_FIELD(r7, INFO_OUT_T, log_page_size, d.log_page_size)
+     CAPRI_SET_FIELD(r7, INFO_OUT_T, host_addr, d.host_addr)
      //CAPRI_SET_FIELD(r7, INFO_OUT_T, pt_bytes, K_SGE_BYTES)
      //CAPRI_SET_FIELD(r7, INFO_OUT_T, dma_cmd_start_index, K_DMA_CMD_START_INDEX)
      //CAPRI_SET_FIELD(r7, INFO_OUT_T, sge_index, K_SGE_INDEX)
