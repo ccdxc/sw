@@ -59,6 +59,10 @@ err_completion:
     add            r1, FIELD_OFFSET(sqcb0_t, state), r1
     DMA_HBM_PHV2MEM_SETUP(r7, service, state, r1)
 
+    // If state is SQD_ON_ERR do not ring CNP ring id until all pending responses
+    // are acked and QP is moved to ERR state
+    bcf            [!c1], exit
+
     // doorbell to inc CNP ring's p_index so that TXDMA is triggered to send Flush
     // feedback for RQ. This is fenced on state update in sqcb0 such that when
     // doorbell evals CNP ring and schedules req_tx stage0 sqcb0's state is guaranteed

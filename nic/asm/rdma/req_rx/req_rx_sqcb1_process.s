@@ -57,7 +57,6 @@ req_rx_sqcb1_process:
     // messages (msn) matches total number of messages sent out (max_ssn -1)
     seq            c1, d.state, QP_STATE_RTS // Branch Delay Slot
     bcf            [!c1], check_state
-    tblwr.c1       d.sq_drained, 0
 
     // copy cur_timestamp loaded in r4 into phv to DMA ack_timestamp
     // into sqcb2 for valid aeth packet

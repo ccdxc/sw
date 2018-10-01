@@ -31,6 +31,11 @@ req_rx_sqcb1_write_back_process:
     seq            c1, r1[4:2], STAGE_4
     bcf            [!c1], bubble_to_next_stage
 
+    // check if qp is already in error disable state. if so, drop the phv instead of recirc
+    sle             c2, d.state, QP_STATE_ERR
+    bcf             [c2], drop_response
+    CAPRI_SET_TABLE_2_VALID(0)  //BD Slot
+
     seq            c1, K_MY_TOKEN_ID, d.nxt_to_go_token_id // Branch Delay Slot
     bcf            [!c1], recirc_for_turn
 
@@ -71,7 +76,6 @@ req_rx_sqcb1_write_back_process:
 
 post_cq:
     bbne           K_POST_CQ, 1, check_bktrack
-    CAPRI_SET_TABLE_2_VALID(0) // Branch Delay Slot
 
     // Re-load err_retry, rnr_retry counter and set rnr_timeout to 0 if
     // outstanding request is cleared. Otherwise, keep decrementing the
@@ -104,14 +108,15 @@ post_bktrack_ring:
     phvwr          p.db_data2, r2.dx
     DMA_HBM_PHV2MEM_SETUP(r6, db_data2, db_data2, r1)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
-    seq            c1, CAPRI_KEY_FIELD(IN_P, post_cq), 0
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, c1)
+    sslt           c1, r0, CAPRI_KEY_FIELD(IN_P, post_cq), K_REMAINING_PAYLOAD_BYTES
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r6, !c1)
     tblwr          d.bktrack_in_progress, 1
 
 check_sq_drain:
      // check for any unacknowledged requests if in drain state
      slt           c1, d.state, QP_STATE_SQD
      bcf           [c1], exit
+     tblwr.c1      d.sq_drained, 0
 
      sub           r1, d.max_ssn, 1 // Branch Delay Slot
      mincr         r1, 24, r0

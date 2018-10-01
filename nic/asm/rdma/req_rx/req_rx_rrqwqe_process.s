@@ -318,9 +318,13 @@ implicit_nak:
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
 
     // If ack msn in implicit nak is already acked' do not post CQ
-    scwlt24        c1, K_MSN, r2
-    phvwr.e        CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_bktrack), 1
-    phvwr.c1       CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
+    scwlt24        c2, K_MSN, r2
+    phvwr.c2       CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
+    phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_bktrack), 1
+
+    // set cmd_eop if skip_to_eop cmd exists and cq is not posted
+    setcf.e        c1, [c1 & !c2]
+    DMA_SKIP_CMD_SETUP_C(r3, 1 /* CMD_EOP */, 1 /* SKIP_TO_EOP */, c1)
 
 invalid_syndrome:
 invalid_rsp_msn:
