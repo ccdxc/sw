@@ -2299,17 +2299,19 @@ HalClient::crypto_key_index_update(uint32_t key_index,
                                    void *key,
                                    uint32_t key_size)
 {
-    CryptoKeyCreateRequestMsg     create_req_msg;
-    CryptoKeyCreateResponseMsg    create_rsp_msg;
-    CryptoKeyUpdateRequestMsg     update_req_msg;
-    CryptoKeyUpdateResponseMsg    update_rsp_msg;
-    ClientContext                 context;
-    ClientContext                 context2;
-    Status                        status;
+    CryptoKeyCreateWithIdRequestMsg     create_req_msg;
+    CryptoKeyCreateWithIdResponseMsg    create_rsp_msg;
+    CryptoKeyUpdateRequestMsg           update_req_msg;
+    CryptoKeyUpdateResponseMsg          update_rsp_msg;
+    ClientContext                       context;
+    ClientContext                       context2;
+    Status                              status;
 
-    create_req_msg.add_request();
-    status = crypto_stub_->CryptoKeyCreate(&context, create_req_msg,
-                                           &create_rsp_msg);
+    auto create_req = create_req_msg.add_request();
+    create_req->set_keyindex(key_index);
+    create_req->set_allow_dup_alloc(true);
+    status = crypto_stub_->CryptoKeyCreateWithId(&context, create_req_msg,
+                                                 &create_rsp_msg);
     if (!status.ok()) {
         NIC_FUNC_ERR("GRPC create status {} {}", status.error_code(),
                      status.error_message());

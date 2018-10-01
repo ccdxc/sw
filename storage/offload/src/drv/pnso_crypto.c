@@ -54,7 +54,7 @@ init_mpools(struct per_core_resource *pc_res)
 
 	mpool_type = MPOOL_TYPE_CRYPTO_AOL;
 	err = mpool_create(mpool_type, num_objects,
-			sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
+			sizeof(struct crypto_aol), PNSO_MEM_ALIGN_AOL,
 			&pc_res->mpools[mpool_type]);
 	if (err)
 		goto out;

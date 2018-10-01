@@ -474,44 +474,55 @@ int sonic_crypto_key_index_update(const void *key1,
 {
 	int err;
 	struct lif *lif = sonic_get_lif();
-	struct sonic_admin_ctx ctx = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+	struct sonic_admin_ctx ctx0 = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx0.work),
 		.cmd.crypto_key_update = {
 			.opcode = CMD_OPCODE_CRYPTO_KEY_UPDATE,
 			.key_index = key_index,
 			.key_size = key_size,
+			.key_part = CMD_CRYPTO_KEY_PART0,
+		},
+	};
+	struct sonic_admin_ctx ctx1 = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx1.work),
+		.cmd.crypto_key_update = {
+			.opcode = CMD_OPCODE_CRYPTO_KEY_UPDATE,
+			.key_index = key_index,
+			.key_size = key_size,
+			.key_part = CMD_CRYPTO_KEY_PART1,
 		},
 	};
 
 	dev_info(lif->sonic->dev, "crypto_key_update.key_index %u\n",
-		 ctx.cmd.crypto_key_update.key_index);
+		 ctx0.cmd.crypto_key_update.key_index);
 	dev_info(lif->sonic->dev, "crypto_key_update.key_size %u\n",
-		 ctx.cmd.crypto_key_update.key_size);
+		 ctx0.cmd.crypto_key_update.key_size);
 
 	switch (key_size) {
 
 	case CMD_CRYPTO_KEY_SIZE_AES128:
-		ctx.cmd.crypto_key_update.key_type = CMD_CRYPTO_KEY_TYPE_AES128;
+		ctx0.cmd.crypto_key_update.key_type = CMD_CRYPTO_KEY_TYPE_AES128;
 		break;
 
 	case CMD_CRYPTO_KEY_SIZE_AES256:
-		ctx.cmd.crypto_key_update.key_type = CMD_CRYPTO_KEY_TYPE_AES256;
+		ctx0.cmd.crypto_key_update.key_type = CMD_CRYPTO_KEY_TYPE_AES256;
 		break;
 
         default:
 		dev_err(lif->sonic->dev, "invalid key_size %u\n",
-			ctx.cmd.crypto_key_update.key_size);
+			ctx0.cmd.crypto_key_update.key_size);
 		return EINVAL;
 	}
 
-	memcpy(ctx.cmd.crypto_key_update.key_data, key1, key_size);
-        ctx.cmd.crypto_key_update.key_part = CMD_CRYPTO_KEY_PART0;
-	err = sonic_adminq_post_wait(lif, &ctx);
+	memcpy(ctx0.cmd.crypto_key_update.key_data, key1, key_size);
+	err = sonic_adminq_post_wait(lif, &ctx0);
 	if (!err) {
-                ctx.cmd.crypto_key_update.key_part = CMD_CRYPTO_KEY_PART1;
-                ctx.cmd.crypto_key_update.trigger_update = true;
-                memcpy(ctx.cmd.crypto_key_update.key_data, key2, key_size);
-                err = sonic_adminq_post_wait(lif, &ctx);
+                ctx1.cmd.crypto_key_update.key_type =
+			  ctx0.cmd.crypto_key_update.key_type;
+                ctx1.cmd.crypto_key_update.key_part = CMD_CRYPTO_KEY_PART1;
+                ctx1.cmd.crypto_key_update.trigger_update = true;
+                memcpy(ctx1.cmd.crypto_key_update.key_data, key2, key_size);
+                err = sonic_adminq_post_wait(lif, &ctx1);
 	}
 	return err;
 }

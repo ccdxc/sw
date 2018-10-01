@@ -26,6 +26,9 @@
 #define PNSO_TEST_BLOCK_SIZE	4096
 #define PNSO_TEST_BLOCK_COUNT	12
 #define PNSO_TEST_DATA_SIZE (PNSO_TEST_BLOCK_SIZE * PNSO_TEST_BLOCK_COUNT)
+#define PNSO_TEST_DESC_SIZE	64
+#define PNSO_TEST_ALIGN_DESC(p)	\
+	(typeof(p))(((uint64_t)(p) + PNSO_TEST_DESC_SIZE - 1) & ~((uint64_t)(PNSO_TEST_DESC_SIZE - 1)))
 
 /* Compression defaults */
 #define PNSO_TEST_CP_HDR_ALGO_VER 123
@@ -569,6 +572,7 @@ verify_crypto_result(void)
 
 	OSAL_LOG_INFO("verify crypto ...");
 
+	osal_yield();
 	count = 0;
 	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
 		tstate = &osal_test_threads[tid];
@@ -596,6 +600,7 @@ verify_crypto_result(void)
 		}
 	}
 
+	osal_yield();
 	if (count == (PNSO_TEST_BATCH_DEPTH*PNSO_TEST_THREAD_COUNT)) {
 		OSAL_LOG_INFO("IO: Final memcmp passed");
 	} else {
@@ -1340,6 +1345,7 @@ exec_crypto_test(void *arg)
 	OSAL_LOG_INFO("PNSO: decryption requests done, core %d",
 		 osal_get_coreid());
 
+	osal_yield();
 	err = verify_crypto_result();
 	if (err)
 		goto error;
@@ -1357,12 +1363,18 @@ error:
 static pnso_error_t
 init_crypto(void)
 {
-	void *iv_buf;
+	uint8_t *iv_buf;
 	pnso_error_t err;
 
-	iv_buf = osal_aligned_alloc(64, sizeof(iv_src));
-	memcpy(iv_buf, iv_src, sizeof(iv_src));
-        iv_buf_pa = osal_virt_to_phy(iv_buf);
+	/*
+	 * Temp workaround for osal_aligned_alloc not correctly aligning iv_buf
+	 * (which is no more than 16 bytes long) on a 64-byte boundary.
+	 */
+	iv_buf = osal_aligned_alloc(PNSO_TEST_BLOCK_SIZE, PNSO_TEST_BLOCK_SIZE);
+	memcpy(PNSO_TEST_ALIGN_DESC(iv_buf), iv_src, sizeof(iv_src));
+	iv_buf_pa = PNSO_TEST_ALIGN_DESC(osal_virt_to_phy(iv_buf));
+	OSAL_LOG_INFO("crypto iv_buf 0x%llx iv_buf_pa 0x%llx",
+		      (uint64_t)iv_buf, iv_buf_pa);
 	if ((err = pnso_set_key_desc_idx(crypto_key1, crypto_key2,
 					 sizeof(crypto_key1),
 					 PNSO_TEST_CRYPTO_KEY_IDX)) != 0) {

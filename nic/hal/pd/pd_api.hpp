@@ -2189,6 +2189,11 @@ typedef struct pd_crypto_alloc_key_args_s {
     int32_t *key_idx;
 } __PACK__ pd_crypto_alloc_key_args_t;
 
+typedef struct pd_crypto_alloc_key_withid_args_s {
+    int32_t key_idx;
+    bool allow_dup_alloc;
+} __PACK__ pd_crypto_alloc_key_withid_args_t;
+
 typedef struct pd_crypto_free_key_args_s {
     int32_t key_idx;
 } __PACK__ pd_crypto_free_key_args_t;
@@ -3137,7 +3142,8 @@ typedef struct pd_fte_span_make_clone_args_s {
     ENTRY(PD_FUNC_ID_FTE_SPAN_GET,             276, "PD_FUNC_ID_FTE_SPAN_GET")\
     ENTRY(PD_FUNC_ID_FTE_SPAN_MEM_FREE,        277, "PD_FUNC_ID_FTE_SPAN_MEM_FREE")\
     ENTRY(PD_FUNC_ID_FTE_SPAN_MAKE_CLONE,      278, "PD_FUNC_ID_FTE_SPAN_MAKE_CLONE")\
-    ENTRY(PD_FUNC_ID_MAX,                      279, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID,  279, "PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID")\
+    ENTRY(PD_FUNC_ID_MAX,                      280, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3399,6 +3405,7 @@ typedef struct pd_func_args_s {
 
         // crypto
         PD_UNION_ARGS_FIELD(pd_crypto_alloc_key);
+        PD_UNION_ARGS_FIELD(pd_crypto_alloc_key_withid);
         PD_UNION_ARGS_FIELD(pd_crypto_free_key);
         PD_UNION_ARGS_FIELD(pd_crypto_write_key);
         PD_UNION_ARGS_FIELD(pd_crypto_read_key);
@@ -3810,6 +3817,7 @@ PD_FUNCP_TYPEDEF(pd_descriptor_aol_get);
 
 // crypto
 PD_FUNCP_TYPEDEF(pd_crypto_alloc_key);
+PD_FUNCP_TYPEDEF(pd_crypto_alloc_key_withid);
 PD_FUNCP_TYPEDEF(pd_crypto_free_key);
 PD_FUNCP_TYPEDEF(pd_crypto_write_key);
 PD_FUNCP_TYPEDEF(pd_crypto_read_key);

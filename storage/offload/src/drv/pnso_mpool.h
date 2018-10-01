@@ -43,8 +43,9 @@ extern "C" {
  *
  */
 /* unit of following constants is bytes */
-#define PNSO_MEM_ALIGN_DESC	64	/* cpdc/sgl/aol/crypto desc */
+#define PNSO_MEM_ALIGN_DESC	64	/* cpdc/sgl/crypto desc */
 #define PNSO_MEM_ALIGN_BUF	256
+#define PNSO_MEM_ALIGN_AOL	512
 #define PNSO_MEM_ALIGN_PAGE	4096
 
 /* Different types of objects */

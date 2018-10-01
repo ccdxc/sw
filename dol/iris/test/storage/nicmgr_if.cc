@@ -176,7 +176,7 @@ nicmgr_if_identify(uint64_t *ret_seq_lif,
         identity = (identity_t *)dev_cmd->data;
         printf("%s num_lifs %u hw_lif_id 0x%lx db_pages_per_lif %u "
                "admin_queues_per_lif %u seq_queues_per_lif %u\n", __FUNCTION__,
-               identity->dev.num_lifs, identity->dev.hw_lif_id_tbl[0], 
+               identity->dev.num_lifs, identity->dev.lif_tbl[0].hw_lif_id, 
                identity->dev.db_pages_per_lif, identity->dev.admin_queues_per_lif,
                identity->dev.seq_queues_per_lif);
         if (!identity->dev.num_lifs || !identity->dev.db_pages_per_lif) {
@@ -184,7 +184,7 @@ nicmgr_if_identify(uint64_t *ret_seq_lif,
             return -1;
         }
 
-        seq_hw_lif_id = identity->dev.hw_lif_id_tbl[0];
+        seq_hw_lif_id = identity->dev.lif_tbl[0].hw_lif_id;
         if (ret_accel_ring_tbl) {
             if (accel_ring_tbl_size < sizeof(identity->dev.accel_ring_tbl)) {
                 printf("%s accel_ring_tbl_size %u less than required size %d\n",
