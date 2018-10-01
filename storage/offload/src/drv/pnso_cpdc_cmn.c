@@ -22,6 +22,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 #include "pnso_utils.h"
+#include "pnso_seq.h"
 
 /*
  * TODO:
@@ -359,46 +360,13 @@ cpdc_put_desc(struct per_core_resource *pc_res, bool per_block,
 pnso_error_t __attribute__((unused))
 cpdc_put_batch_desc(const struct service_info *svc_info, struct cpdc_desc *desc)
 {
-#if 0	/* TODO-batch: this should be a no-op, as the batcher to 'put' at exit */
-	pnso_error_t err = PNSO_OK;
-	struct service_batch_info *svc_batch_info;
-	struct per_core_resource *pc_res;
-
-	/* NOTE: should land here only for cp/dc */
-
-	svc_batch_info = &svc_info->si_batch_info;
-	OSAL_ASSERT(desc == &svc_batch_info->u.sbi_cpdc_desc[svc_batch_info->sbi_index]);
-
-	if (svc_batch_info->sbi_index) {
-		/* do nothing, as this desc is not the head */
-		OSAL_LOG_DEBUG("skip this cp/dc desc!! idx: %d desc: 0x%llx err: %d",
-				svc_batch_info->sbi_index,
-				(uint64_t) desc, err);
-		goto out;
-	}
-
-	/*
-	 * TODO-batch:
-	 *	for CP/DC this 'put' is okay, but per-block hash/checksum cache
-	 *	and pass the pool type
-	 *
-	 */
-	pc_res = svc_info->si_pc_res;
-	err = cpdc_put_desc(pc_res, false, desc);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return cp/dc desc to pool! idx: %d desc: 0x%llx err: %d",
-				svc_batch_info->sbi_index,
-				(uint64_t) desc, err);
-		OSAL_ASSERT(0);
-	}
-
-out:
-	return err;
-#else
 	pnso_error_t err = PNSO_OK;
 	struct service_batch_info *svc_batch_info;
 
 	svc_batch_info = (struct service_batch_info *) &svc_info->si_batch_info;
+
+	/* do nothing */
+
 	OSAL_LOG_DEBUG("num_entries: %d index: %d bulk_desc: 0x%llx desc: 0x%llx",
 			svc_batch_info->sbi_num_entries,
 			svc_batch_info->sbi_index,
@@ -406,7 +374,6 @@ out:
 			(uint64_t) desc);
 
 	return err;
-#endif
 }
 
 pnso_error_t __attribute__((unused))
@@ -641,4 +608,32 @@ cpdc_is_service_in_batch(uint8_t flags)
 	return ((flags & CHAIN_SFLAG_IN_BATCH) &&
 			((flags & CHAIN_SFLAG_LONE_SERVICE) ||
 			 (flags & CHAIN_SFLAG_FIRST_SERVICE))) ? true : false;
+}
+
+pnso_error_t
+cpdc_setup_batch_desc(struct service_info *svc_info, struct cpdc_desc *desc)
+{
+	pnso_error_t err = EINVAL;
+	struct service_batch_info *svc_batch_info;
+
+	svc_batch_info = &svc_info->si_batch_info;
+	OSAL_ASSERT(svc_batch_info->sbi_num_entries);
+
+	/* indicate batch processing only for 1st entry in the batch */
+	if (svc_batch_info->sbi_index == 0) {
+		svc_info->si_seq_info.sqi_batch_mode = true;
+		svc_info->si_seq_info.sqi_batch_size =
+			svc_batch_info->sbi_num_entries;
+	}
+
+	svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
+			desc, sizeof(*desc));
+	if (!svc_info->si_seq_info.sqi_desc) {
+		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
+		goto out;
+	}
+
+	err = PNSO_OK;
+out:
+	return err;
 }
