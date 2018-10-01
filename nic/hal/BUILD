@@ -67,14 +67,14 @@ cc_library(
         "hal.cc",
         "hal_state.cc",
         "hal_obj.cc",
-    ] + 
+    ] +
     glob(["src/stats/*.cc"]) +
     glob(["src/debug/*.cc"]) +
     glob(["src/internal/*.cc"]) +
     glob(["src/utils/*.cc"]),
     hdrs = [
         "hal.hpp",
-    ] + 
+    ] +
     glob(["src/stats/*.hpp"]) +
     glob(["src/debug/*.hpp"]) +
     glob(["src/internal/*.hpp"]) +
@@ -152,7 +152,7 @@ cc_library(
 cc_library(
     name = "hal_includes",
     srcs = [],
-    hdrs = ["hal.hpp"] + 
+    hdrs = ["hal.hpp"] +
         glob(["plugins/cfg/nw/*.hpp"]) +
         glob(["plugins/cfg/aclqos/*.hpp"]) +
         glob(["src/stats/*.hpp"]) +

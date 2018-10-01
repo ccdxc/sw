@@ -219,3 +219,8 @@ extern log *g_syslog_logger;
                                         ##__VA_ARGS__);                        \
     }                                                                          \
 
+#define HAL_TRACE_FLUSH()                                                      \
+    if (unlikely(hal::utils::hal_logger())) {                                  \
+        hal::utils::hal_logger()->flush();                                     \
+    }                                                                          \
+

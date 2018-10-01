@@ -214,6 +214,15 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
         // Nothing to match. Eff. disable the entry
         key.entry_inactive_nacl = 1;
         mask.entry_inactive_nacl_mask = 0x1;
+        // Only for Testing, uncomment so that every packet is spanned to FTE
+#if 0
+        key.entry_inactive_nacl = 0;
+        mask.entry_inactive_nacl_mask = 0x1;
+
+        data.actionid = NACL_NACL_PERMIT_ID;
+        data.nacl_action_u.nacl_nacl_permit.ingress_mirror_en = 1;
+        data.nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;
+#endif
     } else {
         key.entry_inactive_nacl = 0;
         mask.entry_inactive_nacl_mask = 0x1;
@@ -297,7 +306,7 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
 
         data.actionid = NACL_NACL_PERMIT_ID;
         data.nacl_action_u.nacl_nacl_permit.ingress_mirror_en = 1;
-        data.nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;;
+        data.nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;
     }
 
     if (oper == TABLE_OPER_INSERT) {

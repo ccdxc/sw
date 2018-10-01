@@ -24,6 +24,7 @@ cc_library(
         "//nic/hal/plugins/cfg/lif:lif_includes",
         "//nic/hal/iris/datapath/p4/include:p4_iris_includes",
         "//nic/p4/common:p4_common_includes",
+        "//nic/hal/third-party/packet_parser"
     ],
     alwayslink = 1,
 )
@@ -54,7 +55,7 @@ cc_test(
     name = "fte_test",
     srcs = glob(["test/*.cc", "test/*.hpp"]),
     linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
-    deps = [ "//nic/utils/agent_api:agent_api", 
+    deps = [ "//nic/utils/agent_api:agent_api",
              "//nic/hal/plugins/sfw:sfw_pkt_utils",
              "//nic/hal/plugins/sfw:sfw",
              "//nic/e2etests:e2etest-lib",

@@ -1,3 +1,5 @@
+#include "nic/hal/third-party/packet_parser/packet_parser.h"
+#include "nic/hal/third-party/packet_parser/packet_to_string.h"
 #include "fte.hpp"
 #include "fte_ctx.hpp"
 #include "fte_flow.hpp"
@@ -212,11 +214,34 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
         return ret;
     }
 
-    if (fte_span()) {
-        // TODO: Print packet and exit
-        HAL_TRACE_DEBUG("fte: fte-span packet.");
-        return HAL_RET_FTE_SPAN;
-    }
+     if (fte_span()) {
+         // TODO: Print packet and exit
+         struct packet *packet = packet_new(pkt_len);
+         char *error = NULL;
+         memcpy(packet->buffer, pkt, pkt_len);
+         enum packet_parse_result_t result =
+             (packet_parse_result_t)parse_packet(packet, pkt_len, PACKET_LAYER_2_ETHERNET,
+                                                 &error);
+         if (result != PACKET_OK || error != NULL) {
+             HAL_TRACE_ERR("Unable to parse packet. result: {}, error: {}",
+                           result, error);
+             packet_free(packet);
+             return HAL_RET_FTE_SPAN;
+         }
+         // HAL_ASSERT(result == PACKET_OK);
+         // HAL_ASSERT(error == NULL);
+
+         char *dump = NULL;
+         // int status = packet_to_string(packet, DUMP_SHORT, &dump, &error);
+         int status = packet_to_string(packet, DUMP_VERBOSE, &dump, &error);
+         HAL_ASSERT(status == STATUS_OK);
+         HAL_ASSERT(error == NULL);
+
+         HAL_TRACE_DEBUG("fte: fte-span packet: {}", dump);
+         free(dump);
+         packet_free(packet);
+         return HAL_RET_FTE_SPAN;
+     }
 
     cpu_rxhdr_ = cpu_rxhdr;
     pkt_ = pkt;

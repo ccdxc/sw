@@ -61,14 +61,14 @@ export NIC_CSR_INCS := ${TOPDIR}/nic/asic/capri/model/cap_top \
     ${TOPDIR}/nic/model_sim/include
 
 export NIC_COMMON_LDLIBS_x86_64     := zmq
-export NIC_COMMON_LDLIBS_aarch64    := 
+export NIC_COMMON_LDLIBS_aarch64    :=
 export NIC_COMMON_LDLIBS            := pthread z m rt Judy dl ${NIC_COMMON_LDLIBS_${ARCH}}
 
 export NIC_COMMON_FLAGS := -pthread -rdynamic
 
 export NIC_SDK_SOLIBS   := print list slab shmmgr mmgr sdkpal \
     ht indexer logger thread utils periodic twheel directmap \
-    hash hbmhash tcam timerfd catalog 
+    hash hbmhash tcam timerfd catalog
 
 export NIC_HAL_DLOPEN_SOLIBS := cfg_plugin_nw \
                                 cfg_plugin_aclqos \
@@ -95,7 +95,7 @@ export NIC_HAL_DLOPEN_SOLIBS := cfg_plugin_nw \
                                 plugin_proxy \
                                 plugin_telemetry \
                                 plugin_app_redir
- 
+
 export NIC_HAL_PROTO_SOLIBS := halproto hal_svc_gen hal_svc
 export NIC_HAL_CFG_PLUGIN_SOLIBS := cfg_plugin_tcp_proxy \
                                     cfg_plugin_tls_proxy
@@ -103,8 +103,8 @@ export NIC_HAL_PLUGIN_SOLIBS := plugin_classic \
                                 plugin_ep_learn_common \
                                 plugin_sfw_pkt_utils \
                                 isc_dhcp
-                                
-   
+
+
 export NIC_HAL_UTILS_SOLIBS := bitmap block_list nat eventmgr \
     trace mtrack fsm bm_allocator
 
@@ -144,9 +144,10 @@ export NIC_THIRDPARTY_LKL_LDLIBS := lkl
 export NIC_THIRDPARTY_SSL_LDLIBS := ssl crypto
 export NIC_THIRDPARTY_GOOGLE_LDLIBS := :libprotobuf.so.14 grpc++_reflection \
        grpc++ grpc_unsecure grpc++_unsecure
+export NIC_THIRDPARTY_PACKET_PARSER_LDLIBS := packet_parser
 
 # ==========================================================================
-#                        HAL Binary/Gtest Libs 
+#                        HAL Binary/Gtest Libs
 # ==========================================================================
 export NIC_HAL_PLUGIN_SOLIBS:= ${NIC_HAL_PLUGIN_SOLIBS} \
                                ${NIC_HAL_DLOPEN_SOLIBS} \
@@ -168,13 +169,14 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_SSL_LDLIBS} \
                                ${NIC_THIRDPARTY_LKL_LDLIBS} \
+                               ${NIC_THIRDPARTY_PACKET_PARSER_LDLIBS} \
                                ${NIC_CAPSIM_LDLIBS} \
                                ${NIC_LINKMGR_LDLIBS} \
                                ${NIC_COMMON_LDLIBS}
 
 export NIC_HAL_GTEST_SOLIBS := ${NIC_HAL_ALL_SOLIBS} haltestutils
 export NIC_HAL_GTEST_LDLIBS := ${NIC_HAL_ALL_LDLIBS}
-export NIC_HAL_GTEST_WO_MAIN_LDLIBS := 
+export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=
 
 # ==========================================================================
 #                        Pipeline Specific Defs
