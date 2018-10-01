@@ -9,7 +9,8 @@
 #if !defined (__OCI_VCN_H_)
 #define __OCI_VCN_H_
 
-#include <oci_types.h>
+#include "nic/include/ip.hpp"
+#include "nic/apollo/include/api/oci_types.hpp"
 
 /**
  * @defgroup OCI_VCN - Virtual Cloud Network specific API definitions
@@ -32,7 +33,7 @@ typedef struct oci_vcn_key_s
 typedef struct oci_vcn_s
 {
     oci_vcn_key_t key;      /**< VCN Key */
-    oci_ip_prefix_t pfx;    /**< VCN CIDR block */
+    ip_prefix_t pfx;        /**< VCN CIDR block */
 
 } PACKED oci_vcn_t;
 
@@ -43,7 +44,7 @@ typedef struct oci_vcn_s
  *
  * @return #OCI_STATUS_SUCCESS on success, failure status code on error
  */
-oci_status_t oci_vcn_create (
+sdk_ret_t oci_vcn_create (
         _In_ oci_vcn_t *vcn);
 
 
@@ -54,7 +55,7 @@ oci_status_t oci_vcn_create (
  *
  * @return #OCI_STATUS_SUCCESS on success, failure status code on error
  */
-oci_status_t oci_vcn_delete (
+sdk_ret_t oci_vcn_delete (
         _In_ oci_vcn_key_t *vcn_key);
 
 /**

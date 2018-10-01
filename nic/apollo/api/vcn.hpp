@@ -10,6 +10,10 @@
 #if !defined (__VCN_HPP_)
 #define __VCN_HPP_
 
+#include "nic/sdk/include/sdk/ht.hpp"
+
+using sdk::lib::ht_ctxt_t;
+
 namespace api {
 
 /**
@@ -23,9 +27,10 @@ namespace api {
 typedef struct oci_int_vcn_s
 {
     oci_vcn_key_t key;    /**< VCN Key */
-    uint16_t id;          /**< Internal ID */
+    uint32_t id;          /**< Internal ID */
+    ht_ctxt_t ht_ctxt;    /**< Hash table context */
 
-} PACKED oci_vcn_t;
+} PACKED oci_int_vcn_t;
 
 /** * @} */ // end of OCI_INT_VCN
 

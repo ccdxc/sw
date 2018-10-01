@@ -9,7 +9,8 @@
 #if !defined (__OCI_SUBNET_H_)
 #define __OCI_SUBNET_H_
 
-#include <oci_types.h>
+#include "nic/include/ip.hpp"
+#include "nic/apollo/include/api/oci_types.hpp"
 
 /**
  * @defgroup OCI_SUBNET - Subnet specific API definitions
@@ -33,8 +34,8 @@ typedef struct oci_subnet_key_s
 typedef struct oci_subnet_s
 {
     oci_subnet_key_t key;    /**< Subnet key */
-    oci_ip_prefix_t pfx;     /**< Subnet CIDR block */
-    oci_ip_addr_t vr_ip;     /**< Virtual Router IP */
+    ip_prefix_t pfx;         /**< Subnet CIDR block */
+    ip_addr_t vr_ip;         /**< Virtual Router IP */
     mac_addr_t vr_mac;       /**< Virtual Router Mac */
 
 } PACKED oci_subnet_t;
@@ -46,7 +47,7 @@ typedef struct oci_subnet_s
  *
  * @return #OCI_STATUS_SUCCESS on success, failure status code on error
  */
-oci_status_t oci_subnet_create (
+sdk_ret_t oci_subnet_create (
         _In_ oci_subnet_t *subnet);
 
 
@@ -57,7 +58,7 @@ oci_status_t oci_subnet_create (
  *
  * @return #OCI_STATUS_SUCCESS on success, failure status code on error
  */
-oci_status_t oci_subnet_delete (
+sdk_ret_t oci_subnet_delete (
         _In_ oci_subnet_key_t *subnet_key);
 
 /**

@@ -9,7 +9,8 @@
 #if !defined (__OCI_TEP_H_)
 #define __OCI_TEP_H_
 
-#include <oci_types.h>
+#include "nic/include/ip.hpp"
+#include <nic/apollo/include/api/oci_types.hpp>
 
 /**
  * @defgroup OCI_TEP - Tunnel specific API definitions
@@ -31,7 +32,7 @@ typedef enum oci_tep_type_e
  */
 typedef struct oci_tep_key_s
 {
-    oci_ip4_t dst;    /**< Tunnel destination */
+    ipv4_addr_t dst;    /**< Tunnel destination */
 
 } PACKED oci_tep_key_t;
 
@@ -52,7 +53,7 @@ typedef struct oci_tep_s
  *
  * @return #OCI_STATUS_SUCCESS on success, failure status code on error
  */
-oci_status_t oci_tep_create (
+sdk_ret_t oci_tep_create (
         _In_ oci_tep_t *tep);
 
 
@@ -63,7 +64,7 @@ oci_status_t oci_tep_create (
  *
  * @return #OCI_STATUS_SUCCESS on success, failure status code on error
  */
-oci_status_t oci_tep_delete (
+sdk_ret_t oci_tep_delete (
         _In_ oci_tep_key_t *tep_key);
 
 /**

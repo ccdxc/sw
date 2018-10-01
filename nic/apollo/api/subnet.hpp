@@ -10,6 +10,10 @@
 #if !defined (__SUBNET_HPP_)
 #define __SUBNET_HPP_
 
+#include "nic/sdk/include/sdk/ht.hpp"
+
+using sdk::lib::ht_ctxt_t;
+
 namespace api {
 
 /**
@@ -22,10 +26,11 @@ namespace api {
  */
 typedef struct oci_int_subnet_s
 {
-    oci_sbunet_key_t key;    /**< SUBNET Key */
-    uint16_t id;             /**< Internal ID */
+    oci_subnet_key_t key;    /**< SUBNET Key */
+    uint32_t id;             /**< Internal ID */
+    ht_ctxt_t ht_ctxt;       /**< Hash table context */
 
-} PACKED oci_subnet_t;
+} PACKED oci_int_subnet_t;
 
 /** * @} */ // end of OCI_INT_SUBNET
 

@@ -6,11 +6,19 @@
  * @brief   This file deals with OCI TEP API handling
  */
 
+#include <stdio.h>
+#include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/include/sdk/indexer.hpp"
+#include "nic/apollo/include/api/oci_tep.hpp"
+#include "nic/apollo/api/tep.hpp"
+
+using namespace sdk;
+
 namespace api {
 
-using sdk::lib::slab;
-using sdk::lib::ht;
-using sdk::lib::indexer;
+static inline void oci_int_tep_db_init (void);
 
 /**
  * @defgroup OCI_INT_TEP - Internal TEP
@@ -23,13 +31,16 @@ using sdk::lib::indexer;
  * @{
  */
 
+#define  OCI_INT_TEP_ID_MAX  1024
+
 /**
  * @brief oci_int_gstate
  */
 typedef struct oci_int_tep_gstate_s
 {
-    slab *slab[MAX];    /**< Memory slab */
-    ht *ht;             /**< Hash table root */
+    //slab *slab[MAX];   /**< Memory slab */
+    sdk::lib::ht *ht;              /**< Hash table root */
+    sdk::lib::indexer *id_idxr;    /**< Indexer to allocate internal id */
 
 } oci_int_tep_gstate_t;
 
@@ -41,7 +52,12 @@ oci_int_tep_gstate_t g_int_tep_state;
 void
 oci_g_int_tep_state_init (void)
 {
-    //TODO: Indexer, slab and ht init
+    //TODO: slab init
+
+    oci_int_tep_db_init();
+
+    g_int_tep_state.id_idxr = sdk::lib::indexer::factory(OCI_INT_TEP_ID_MAX);
+    SDK_ASSERT_RETURN_VOID(g_int_tep_state.id_idxr != NULL);
 }
 
 /** @} */ // end of OCI_INT_TEP_GSTATE
@@ -52,27 +68,63 @@ oci_g_int_tep_state_init (void)
  * @{
  */
 
+
+static void *
+oci_int_tep_key_func_get (void *entry)
+{
+    oci_int_tep_t *int_tep = (oci_int_tep_t *)entry;
+    return (void *)&(int_tep->key);
+}
+
+static uint32_t
+oci_int_tep_hash_func_compute (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(oci_tep_key_t)) % ht_size;
+}
+
+static bool
+oci_int_tep_key_func_compare (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(oci_tep_key_t)))
+        return true;
+
+    return false;
+}
+
+/**
+ * @brief Initialize internal TEP database
+ */
+static inline void
+oci_int_tep_db_init (void)
+{
+    g_int_tep_state.ht = sdk::lib::ht::factory(
+        OCI_INT_TEP_ID_MAX >> 1, oci_int_tep_key_func_get,
+        oci_int_tep_hash_func_compute, oci_int_tep_key_func_compare);
+    SDK_ASSERT_RETURN_VOID(g_int_tep_state.ht != NULL);
+}
+
 /**
  * @brief Add internal TEP to database
  *
  * @param[in] tep Internal TEP  
  */ 
 static inline sdk_ret_t
-oci_int_tep_db_add (oci_int_tep_t *tep)
+oci_int_tep_db_add (oci_int_tep_t *int_tep)
 {
-    return (g_int_tep_state->ht()->insert_with_key(&tep->key, tep,
-                                                   tep->ht_ctxt);
+    return (g_int_tep_state.ht->insert_with_key(&int_tep->key, int_tep,
+                                                &int_tep->ht_ctxt));
 }
 
 /**
  * @brief Delete internal TEP from database
  *
- * @param[in] tep_key Internal TEP key
+ * @param[in] tep_key TEP key
  */
 static inline oci_int_tep_t *
-oci_int_tep_db_del (oci_int_vnc_key_t *tep_key)
+oci_int_tep_db_del (oci_tep_key_t *tep_key)
 {
-    return (oci_int_tep_t *)(g_int_tep_state->ht()->remove(tep_key));
+    return (oci_int_tep_t *)(g_int_tep_state.ht->remove(tep_key));
 }
 
 /**
@@ -80,10 +132,10 @@ oci_int_tep_db_del (oci_int_vnc_key_t *tep_key)
  *
  * @param[in] tep_key Internal TEP key
  */
-static inline oci_int_vnc_t *
-oci_int_tep_db_lookup (oci_int_tep_key_t *tep_key)
+static inline oci_int_tep_t *
+oci_int_tep_db_lookup (oci_tep_key_t *tep_key)
 {
-    return (oci_int_tep_t *)(g_int_tep_state->ht()->lookup(tep_key));
+    return (oci_int_tep_t *)(g_int_tep_state.ht->lookup(tep_key));
 }
 
 /** @} */ // end of OCI_INT_TEP_DB
@@ -102,31 +154,40 @@ oci_int_tep_db_lookup (oci_int_tep_key_t *tep_key)
 static inline oci_int_tep_t *
 oci_int_tep_alloc (void)
 {
-    return ((oci_int_tep_t *)g_int_tep_state->int_tep_slab()->alloc());
+//    return ((oci_int_tep_t *)g_int_tep_state->int_tep_slab()->alloc());
+    return NULL;
 }
 
 /**
  * @brief Free internal TEP structure
  *
- * @param[in] tep Internal TEP  
+ * @param[in] int_tep Internal TEP
  */
 static inline void
-oci_int_tep_free (oci_int_tep_t *tep)
+oci_int_tep_free (oci_int_tep_t *int_tep)
 {
-    sdk::delay_delete_to_slab(OCI_SLAB_INT_TEP, int_tep);
+//    sdk::delay_delete_to_slab(OCI_SLAB_INT_TEP, int_tep);
 }
 
 /**
  * @brief Initialize internal TEP structure
  *
- * @param[in] tep Internal TEP
+ * @param[in] int_tep Internal TEP
+ * @param[in] tep TEP
  */
-static inline void
-oci_int_tep_init (oci_int_vnc_t *int_tep, oci_tep_t *tep)
+static inline sdk_ret_t
+oci_int_tep_init (oci_int_tep_t *int_tep, oci_tep_t *tep)
 {
-    SDK_SPINLOCK_INIT(&int_tep->slock, PTHREAD_PROCESS_SHARED);
+    //SDK_SPINLOCK_INIT(&int_tep->slock, PTHREAD_PROCESS_SHARED);
     memcpy(&int_tep->key, &tep->key, sizeof(oci_tep_key_t));
-    //TODO: Get a index from indexer
+
+    int_tep->ht_ctxt.reset();
+
+    if (g_int_tep_state.id_idxr->alloc(&int_tep->id) !=
+        sdk::lib::indexer::SUCCESS)
+        return SDK_RET_NO_RESOURCE;
+
+    return SDK_RET_OK;
 }
 
 /**
@@ -137,8 +198,8 @@ oci_int_tep_init (oci_int_vnc_t *int_tep, oci_tep_t *tep)
 static inline void
 oci_int_tep_uninit (oci_int_tep_t *int_tep)
 {
-    SDK_SPINLOCK_DESTROY(&int_tep->slock);
-    //TODO: Release a index to indexer
+    //SDK_SPINLOCK_DESTROY(&int_tep->slock);
+    g_int_tep_state.id_idxr->free(int_tep->id);
 }
 
 /**
@@ -156,7 +217,7 @@ oci_int_tep_alloc_init (oci_tep_t *tep)
         return NULL;
 
     oci_int_tep_init(int_tep, tep);
-    return tep;
+    return int_tep;
 }
 
 /**
@@ -193,7 +254,7 @@ oci_tep_create_handle (_In_ oci_tep_t *tep)
     oci_int_tep_t *int_tep;
 
     if ((int_tep = oci_int_tep_alloc_init(tep)) == NULL)
-        return SDK_RET_NO_MEM;
+        return SDK_RET_OOM;
 
     return SDK_RET_OK;
 }
@@ -222,7 +283,7 @@ oci_tep_create (_In_ oci_tep_t *tep)
 {
     sdk_ret_t rv;
 
-    if ((rv = oci_tep_create_validate(tep) != SDK_RET_OK))
+    if ((rv = oci_tep_create_validate(tep)) != SDK_RET_OK)
         return rv;
 
     if ((rv = oci_tep_create_handle(tep)) != SDK_RET_OK)
@@ -243,7 +304,7 @@ oci_tep_delete_handle (_In_ oci_tep_key_t *tep_key)
     oci_int_tep_t *int_tep;
 
     if ((int_tep = oci_int_tep_db_del(tep_key)) == NULL)
-        return SDK_RET_NOT_FOUND;
+        return SDK_RET_ENTRY_NOT_FOUND;
 
     oci_int_tep_uninit_free(int_tep);
 
@@ -273,7 +334,6 @@ sdk_ret_t
 oci_tep_delete (_In_ oci_tep_key_t *tep_key)
 {
     sdk_ret_t rv;
-    oci_tep_t *tep;
 
     if ((rv = oci_tep_delete_validate(tep_key)) != SDK_RET_OK)
         return rv;

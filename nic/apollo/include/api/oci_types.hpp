@@ -24,7 +24,7 @@
 #define _Inout_
 #define PACKED __attribute__((__packed__))
 
-typedef uint64_t  oci_vnc_id_t;
+typedef uint64_t  oci_vcn_id_t;
 typedef uint64_t  oci_subnet_id_t;
 typedef uint64_t  oci_vnic_id_t;
 typedef uint64_t  oci_rule_id_t;

@@ -6,11 +6,19 @@
  * @brief   This file deals with OCI VCN API handling
  */
 
+#include <stdio.h>
+#include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/pal.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/include/sdk/indexer.hpp"
+#include "nic/apollo/include/api/oci_vcn.hpp"
+#include "nic/apollo/api/vcn.hpp"
+
+using namespace sdk;
+
 namespace api {
 
-using sdk::lib::slab;
-using sdk::lib::ht;
-using sdk::lib::indexer;
+static inline void oci_int_vcn_db_init (void);
 
 /**
  * @defgroup OCI_INT_VCN - Internal VCN
@@ -23,13 +31,16 @@ using sdk::lib::indexer;
  * @{
  */
 
+#define  OCI_INT_VCN_ID_MAX  1024
+
 /**
  * @brief oci_int_gstate
  */
 typedef struct oci_int_vcn_gstate_s
 {
-    slab *slab[MAX];    /**< Memory slab */
-    ht *ht;             /**< Hash table root */
+    //slab *slab[MAX];   /**< Memory slab */
+    sdk::lib::ht *ht;              /**< Hash table root */
+    sdk::lib::indexer *id_idxr;    /**< Indexer to allocate internal id */
 
 } oci_int_vcn_gstate_t;
 
@@ -41,7 +52,12 @@ oci_int_vcn_gstate_t g_int_vcn_state;
 void
 oci_g_int_vcn_state_init (void)
 {
-    //TODO: Indexer, slab and ht init
+    //TODO: slab init
+
+    oci_int_vcn_db_init();
+
+    g_int_vcn_state.id_idxr = sdk::lib::indexer::factory(OCI_INT_VCN_ID_MAX);
+    SDK_ASSERT_RETURN_VOID(g_int_vcn_state.id_idxr != NULL);
 }
 
 /** @} */ // end of OCI_INT_VCN_GSTATE
@@ -52,27 +68,63 @@ oci_g_int_vcn_state_init (void)
  * @{
  */
 
+
+static void *
+oci_int_vcn_key_func_get (void *entry)
+{
+    oci_int_vcn_t *int_vcn = (oci_int_vcn_t *)entry;
+    return (void *)&(int_vcn->key);
+}
+
+static uint32_t
+oci_int_vcn_hash_func_compute (void *key, uint32_t ht_size)
+{
+    return sdk::lib::hash_algo::fnv_hash(key, sizeof(oci_vcn_key_t)) % ht_size;
+}
+
+static bool
+oci_int_vcn_key_func_compare (void *key1, void *key2)
+{
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(oci_vcn_key_t)))
+        return true;
+
+    return false;
+}
+
+/**
+ * @brief Initialize internal VCN database
+ */
+static inline void
+oci_int_vcn_db_init (void)
+{
+    g_int_vcn_state.ht = sdk::lib::ht::factory(
+        OCI_INT_VCN_ID_MAX >> 1, oci_int_vcn_key_func_get,
+        oci_int_vcn_hash_func_compute, oci_int_vcn_key_func_compare);
+    SDK_ASSERT_RETURN_VOID(g_int_vcn_state.ht != NULL);
+}
+
 /**
  * @brief Add internal VCN to database
  *
  * @param[in] vcn Internal VCN  
  */ 
 static inline sdk_ret_t
-oci_int_vcn_db_add (oci_int_vcn_t *vcn)
+oci_int_vcn_db_add (oci_int_vcn_t *int_vcn)
 {
-    return (g_int_vcn_state->ht()->insert_with_key(&vcn->key, vcn,
-                                                   vcn->ht_ctxt);
+    return (g_int_vcn_state.ht->insert_with_key(&int_vcn->key, int_vcn,
+                                                &int_vcn->ht_ctxt));
 }
 
 /**
  * @brief Delete internal VCN from database
  *
- * @param[in] vcn_key Internal VCN key
+ * @param[in] vcn_key VCN key
  */
 static inline oci_int_vcn_t *
-oci_int_vcn_db_del (oci_int_vnc_key_t *vcn_key)
+oci_int_vcn_db_del (oci_vcn_key_t *vcn_key)
 {
-    return (oci_int_vcn_t *)(g_int_vcn_state->ht()->remove(vcn_key));
+    return (oci_int_vcn_t *)(g_int_vcn_state.ht->remove(vcn_key));
 }
 
 /**
@@ -80,10 +132,10 @@ oci_int_vcn_db_del (oci_int_vnc_key_t *vcn_key)
  *
  * @param[in] vcn_key Internal VCN key
  */
-static inline oci_int_vnc_t *
-oci_int_vcn_db_lookup (oci_int_vcn_key_t *vcn_key)
+static inline oci_int_vcn_t *
+oci_int_vcn_db_lookup (oci_vcn_key_t *vcn_key)
 {
-    return (oci_int_vcn_t *)(g_int_vcn_state->ht()->lookup(vcn_key));
+    return (oci_int_vcn_t *)(g_int_vcn_state.ht->lookup(vcn_key));
 }
 
 /** @} */ // end of OCI_INT_VCN_DB
@@ -102,31 +154,40 @@ oci_int_vcn_db_lookup (oci_int_vcn_key_t *vcn_key)
 static inline oci_int_vcn_t *
 oci_int_vcn_alloc (void)
 {
-    return ((oci_int_vcn_t *)g_int_vcn_state->int_vcn_slab()->alloc());
+//    return ((oci_int_vcn_t *)g_int_vcn_state->int_vcn_slab()->alloc());
+    return NULL;
 }
 
 /**
  * @brief Free internal VCN structure
  *
- * @param[in] vcn Internal VCN  
+ * @param[in] int_vcn Internal VCN
  */
 static inline void
-oci_int_vcn_free (oci_int_vcn_t *vcn)
+oci_int_vcn_free (oci_int_vcn_t *int_vcn)
 {
-    sdk::delay_delete_to_slab(OCI_SLAB_INT_VCN, int_vcn);
+//    sdk::delay_delete_to_slab(OCI_SLAB_INT_VCN, int_vcn);
 }
 
 /**
  * @brief Initialize internal VCN structure
  *
- * @param[in] vcn Internal VCN
+ * @param[in] int_vcn Internal VCN
+ * @param[in] vcn VCN
  */
-static inline void
-oci_int_vcn_init (oci_int_vnc_t *int_vcn, oci_vcn_t *vcn)
+static inline sdk_ret_t
+oci_int_vcn_init (oci_int_vcn_t *int_vcn, oci_vcn_t *vcn)
 {
-    SDK_SPINLOCK_INIT(&int_vcn->slock, PTHREAD_PROCESS_SHARED);
+    //SDK_SPINLOCK_INIT(&int_vcn->slock, PTHREAD_PROCESS_SHARED);
     memcpy(&int_vcn->key, &vcn->key, sizeof(oci_vcn_key_t));
-    //TODO: Get a index from indexer
+
+    int_vcn->ht_ctxt.reset();
+
+    if (g_int_vcn_state.id_idxr->alloc(&int_vcn->id) !=
+        sdk::lib::indexer::SUCCESS)
+        return SDK_RET_NO_RESOURCE;
+
+    return SDK_RET_OK;
 }
 
 /**
@@ -137,8 +198,8 @@ oci_int_vcn_init (oci_int_vnc_t *int_vcn, oci_vcn_t *vcn)
 static inline void
 oci_int_vcn_uninit (oci_int_vcn_t *int_vcn)
 {
-    SDK_SPINLOCK_DESTROY(&int_vcn->slock);
-    //TODO: Release a index to indexer
+    //SDK_SPINLOCK_DESTROY(&int_vcn->slock);
+    g_int_vcn_state.id_idxr->free(int_vcn->id);
 }
 
 /**
@@ -156,7 +217,7 @@ oci_int_vcn_alloc_init (oci_vcn_t *vcn)
         return NULL;
 
     oci_int_vcn_init(int_vcn, vcn);
-    return vcn;
+    return int_vcn;
 }
 
 /**
@@ -193,7 +254,7 @@ oci_vcn_create_handle (_In_ oci_vcn_t *vcn)
     oci_int_vcn_t *int_vcn;
 
     if ((int_vcn = oci_int_vcn_alloc_init(vcn)) == NULL)
-        return SDK_RET_NO_MEM;
+        return SDK_RET_OOM;
 
     return SDK_RET_OK;
 }
@@ -222,7 +283,7 @@ oci_vcn_create (_In_ oci_vcn_t *vcn)
 {
     sdk_ret_t rv;
 
-    if ((rv = oci_vcn_create_validate(vcn) != SDK_RET_OK))
+    if ((rv = oci_vcn_create_validate(vcn)) != SDK_RET_OK)
         return rv;
 
     if ((rv = oci_vcn_create_handle(vcn)) != SDK_RET_OK)
@@ -243,7 +304,7 @@ oci_vcn_delete_handle (_In_ oci_vcn_key_t *vcn_key)
     oci_int_vcn_t *int_vcn;
 
     if ((int_vcn = oci_int_vcn_db_del(vcn_key)) == NULL)
-        return SDK_RET_NOT_FOUND;
+        return SDK_RET_ENTRY_NOT_FOUND;
 
     oci_int_vcn_uninit_free(int_vcn);
 
@@ -273,7 +334,6 @@ sdk_ret_t
 oci_vcn_delete (_In_ oci_vcn_key_t *vcn_key)
 {
     sdk_ret_t rv;
-    oci_vcn_t *vcn;
 
     if ((rv = oci_vcn_delete_validate(vcn_key)) != SDK_RET_OK)
         return rv;
