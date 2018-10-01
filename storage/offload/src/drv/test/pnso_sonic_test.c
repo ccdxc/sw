@@ -55,6 +55,7 @@ static uint64_t iv_buf_pa;
 /* Thread and batching defaults */
 #define PNSO_TEST_THREAD_COUNT 1
 #define PNSO_TEST_BATCH_DEPTH 2
+#define PNSO_TEST_CHAIN_SVC_COUNT 2
 #define PNSO_TEST_SVC_COUNT 3
 #define PNSO_TEST_BUF_COUNT (PNSO_TEST_BATCH_DEPTH * PNSO_TEST_SVC_COUNT)
 
@@ -533,8 +534,9 @@ verify_cp_hash_result(void)
 					count++;
 					OSAL_LOG_INFO("IO: CP done! src_len: %d dst_len: %d",
 							src_len, svc_res->svc[0].u.dst.data_len);
+				} else
 					goto out;
-				}
+
 			}
 
 			if (svc_res->svc[1].svc_type == PNSO_SVC_TYPE_HASH) {
@@ -598,8 +600,8 @@ verify_cp_hash_per_block_result(void)
 					count++;
 					OSAL_LOG_INFO("IO: CP done! src_len: %d dst_len: %d",
 							src_len, svc_res->svc[0].u.dst.data_len);
+				} else
 					goto out;
-				}
 			}
 
 			if (svc_res->svc[1].svc_type == PNSO_SVC_TYPE_HASH) {
@@ -706,8 +708,8 @@ verify_cp_hash_batch_result(void)
 					count++;
 					OSAL_LOG_INFO("IO: CP done! src_len: %d dst_len: %d",
 							src_len, svc_res->svc[0].u.dst.data_len);
+				} else
 					goto out;
-				}
 			}
 
 			if (svc_res->svc[1].svc_type == PNSO_SVC_TYPE_HASH) {
@@ -733,47 +735,6 @@ out:
 	}
 	osal_atomic_fetch_add(&tstate->test_done, 1);
 
-	return err;
-}
-
-static int __attribute__((unused))
-exec_cp_hash_batch_test(void *arg)
-{
-	int err;
-	struct thread_state *tstate = (struct thread_state *) arg;
-	int local_core_id = osal_get_coreid();
-
-	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
-		 osal_get_coreid());
-
-	err = exec_cp_hash_batch_req(tstate);
-	if (err) {
-		OSAL_LOG_ERROR("PNSO: Batch-CP/Hash request submit FAILED");
-		goto error;
-	}
-
-	exec_req_and_wait(tstate);
-	OSAL_LOG_INFO("PNSO: Batch-CP/Hash request done, core %d",
-		 osal_get_coreid());
-
-	osal_yield();
-	if (osal_get_coreid() != local_core_id) {
-		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
-		err = EINVAL;
-		goto error;
-	}
-
-	err = verify_cp_hash_batch_result();
-	if (err)
-		goto error;
-
-	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d",
-			osal_get_coreid());
-	return 0;
-
-error:
-	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
-		       local_core_id, osal_get_coreid());
 	return err;
 }
 
@@ -822,6 +783,72 @@ verify_crypto_result(void)
 		OSAL_LOG_INFO("IO: Final memcmp passed");
 	} else {
 		OSAL_LOG_ERROR("IO: Final memcmp failed");
+		err = EINVAL;
+	}
+	osal_atomic_fetch_add(&tstate->test_done, 1);
+
+	return err;
+}
+
+static int
+verify_cp_hash_per_block_batch_result(void)
+{
+	int err = 0;
+	size_t tid, bid, count;
+	struct thread_state *tstate;
+	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
+	struct pnso_service_result *svc_res = NULL;
+	uint32_t src_len;
+
+	OSAL_LOG_INFO("verify Batch-CP/Hash (per-block) ...");
+
+	osal_yield();
+	count = 0;
+	for (tid = 0; tid < PNSO_TEST_THREAD_COUNT; tid++) {
+		tstate = &osal_test_threads[tid];
+		for (bid = 0; bid < PNSO_TEST_BATCH_DEPTH; bid++) {
+			rstate = &tstate->reqs[bid];
+
+			svc_res = &rstate->res.res;
+			if (svc_res->err) {
+				OSAL_LOG_INFO("IO: Batch-CP/Hash (per-block) failed! err: %d",
+						svc_res->err);
+				goto out;
+			}
+
+			if (svc_res->svc[0].svc_type == PNSO_SVC_TYPE_COMPRESS) {
+				svc_req = &rstate->req.req;
+				src_len = pbuf_get_buffer_list_len(svc_req->sgl);
+				if (svc_res->svc[0].u.dst.data_len < src_len) {
+					count++;
+					OSAL_LOG_INFO("IO: CP done! src_len: %d dst_len: %d",
+							src_len, svc_res->svc[0].u.dst.data_len);
+				} else
+					goto out;
+			}
+
+			if (svc_res->svc[1].svc_type == PNSO_SVC_TYPE_HASH) {
+				if (svc_res->svc[1].u.hash.num_tags >= 1) {
+					count++;
+					OSAL_LOG_INFO("IO: Hash done!  num_tags: %d count: %lu",
+						    svc_res->svc[0].u.hash.num_tags, count);
+				} else
+					goto out;
+			}
+
+			// deinit_buflist(&rstate->buflists[0]);
+			// deinit_buflist(&rstate->buflists[1]);
+		}
+	}
+
+out:
+	osal_yield();
+	if (count == (PNSO_TEST_THREAD_COUNT * PNSO_TEST_BATCH_DEPTH *
+				PNSO_TEST_CHAIN_SVC_COUNT)) {
+		OSAL_LOG_INFO("IO: Final Batch-CP/Hash (per-block) passed");
+	} else {
+		OSAL_LOG_ERROR("IO: Final Batch-CP/Hash (per-block) failed");
 		err = EINVAL;
 	}
 	osal_atomic_fetch_add(&tstate->test_done, 1);
@@ -1149,6 +1176,60 @@ exec_hash_batch_req(struct thread_state *tstate)
 		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_HASH;
 		svc_res->svc[0].u.hash.tags = rstate->hash_tags;
+
+		err = pnso_add_to_batch(svc_req, svc_res);
+		if (err) {
+			OSAL_LOG_ERROR("pnso_add_to_batch(svc %u) failed with %d\n",
+				 svc_req->svc[0].svc_type, err);
+			return err;
+		}
+	}
+
+	err = pnso_flush_batch(comp_cb, rstate, NULL, NULL);
+	if (err) {
+		OSAL_LOG_ERROR("pnso_flush_batch(svc %u) failed with %d\n",
+			 svc_req->svc[0].svc_type, err);
+		return err;
+	}
+
+	return 0;
+}
+
+static int
+exec_cp_hash_per_block_batch_req(struct thread_state *tstate)
+{
+	int err;
+	size_t batch_id;
+	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
+	struct pnso_service_result *svc_res = NULL;
+
+	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
+		rstate = &tstate->reqs[batch_id];
+
+		init_buflist(&rstate->buflists[0], 'A');
+		init_buflist(&rstate->buflists[1], 'B');
+
+		svc_req = &rstate->req.req;
+		memset(svc_req, 0, sizeof(*svc_req));
+
+		svc_res = &rstate->res.res;
+		memset(svc_res, 0, sizeof(*svc_res));
+
+		svc_req->num_services = 2;
+		svc_res->num_services = 2;
+
+		svc_req->sgl = rstate->buflists[0].buflist;
+
+		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_COMPRESS);
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
+		svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
+
+		init_svc_desc(&svc_req->svc[1], PNSO_SVC_TYPE_HASH);
+		memset(&svc_res->svc[1], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[1].svc_type = PNSO_SVC_TYPE_HASH;
+		svc_res->svc[1].u.hash.tags = rstate->hash_tags;
 
 		err = pnso_add_to_batch(svc_req, svc_res);
 		if (err) {
@@ -1864,6 +1945,88 @@ error:
 	return err;
 }
 
+static int __attribute__((unused))
+exec_cp_hash_batch_test(void *arg)
+{
+	int err;
+	struct thread_state *tstate = (struct thread_state *) arg;
+	int local_core_id = osal_get_coreid();
+
+	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
+		 osal_get_coreid());
+
+	err = exec_cp_hash_batch_req(tstate);
+	if (err) {
+		OSAL_LOG_ERROR("PNSO: Batch-CP/Hash request submit FAILED");
+		goto error;
+	}
+
+	exec_req_and_wait(tstate);
+	OSAL_LOG_INFO("PNSO: Batch-CP/Hash request done, core %d",
+		 osal_get_coreid());
+
+	osal_yield();
+	if (osal_get_coreid() != local_core_id) {
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
+		err = EINVAL;
+		goto error;
+	}
+
+	err = verify_cp_hash_batch_result();
+	if (err)
+		goto error;
+
+	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d",
+			osal_get_coreid());
+	return 0;
+
+error:
+	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
+		       local_core_id, osal_get_coreid());
+	return err;
+}
+
+static int __attribute__((unused))
+exec_cp_hash_per_block_batch_test(void *arg)
+{
+	int err;
+	struct thread_state *tstate = (struct thread_state *) arg;
+	int local_core_id = osal_get_coreid();
+
+	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
+		 osal_get_coreid());
+
+	err = exec_cp_hash_per_block_batch_req(tstate);
+	if (err) {
+		OSAL_LOG_ERROR("PNSO: Batch-CP/Hash (per_block) request submit FAILED");
+		goto error;
+	}
+
+	exec_req_and_wait(tstate);
+	OSAL_LOG_INFO("PNSO: Batch-CP/Hash (per_block) request done, core %d",
+		 osal_get_coreid());
+
+	osal_yield();
+	if (osal_get_coreid() != local_core_id) {
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
+		err = EINVAL;
+		goto error;
+	}
+
+	err = verify_cp_hash_per_block_batch_result();
+	if (err)
+		goto error;
+
+	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d",
+			osal_get_coreid());
+	return 0;
+
+error:
+	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
+		       local_core_id, osal_get_coreid());
+	return err;
+}
+
 static pnso_error_t
 init_crypto(void)
 {
@@ -1910,7 +2073,7 @@ init_cp_hdr_fmt(void)
 typedef int (*exec_test_fn_t)(void *arg);
 
 static exec_test_fn_t exec_test_fn[] = {
-	exec_cp_dc_test,
+	// exec_cp_dc_test,
 	// exec_hash_test,
 	// exec_hash_per_block_test,
 	// exec_chksum_test,
@@ -1923,8 +2086,8 @@ static exec_test_fn_t exec_test_fn[] = {
 	set_test_params_num_buffers_dflt,
 	exec_cp_crypto_dc_test,
 	// exec_hash_batch_test,
-	// exec_hash_batch_test,
 	// exec_cp_hash_batch_test,
+	// exec_cp_hash_per_block_batch_test,
 	// exec_cp_hash_per_block_batch_test,
 };
 
