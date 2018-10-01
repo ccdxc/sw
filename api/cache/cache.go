@@ -202,6 +202,9 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 	p.Unlock()
 	close(startCh)
 	for {
+		if w == nil { // check this before entering the select loop to prevent panic
+			return
+		}
 		select {
 		case <-p.ctx.Done():
 			p.parent.logger.Infof("received exit for prefix watcher")
