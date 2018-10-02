@@ -27,11 +27,18 @@ typedef struct oci_vcn_key_s
 
 } PACKED oci_vcn_key_t;
 
+typedef enum oci_vcn_type_e
+{
+    OCI_VCN_TYPE_SUBSTRATE = 0,    /**< substrate VCN */
+    OCI_VCN_TYPE_TENANT    = 1,    /**< tenant/customer VCN */
+} oci_vcn_type_t;
+
 /**
  * @brief VCN
  */
 typedef struct oci_vcn_s
 {
+    oci_vcn_type_t type;    /**< VCN type */
     oci_vcn_key_t key;      /**< VCN Key */
     ip_prefix_t pfx;        /**< VCN CIDR block */
 

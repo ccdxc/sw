@@ -46,7 +46,7 @@ typedef struct oci_route_s
 {
     oci_route_key_t key;      /**< Route key */
     oci_ip_addr_t nh_ip;      /**< Next hop IP address */
-    oci_nh_type_t nh_type;    /**< Next Hop type */ 
+    oci_nh_type_t nh_type;    /**< Next Hop type */
     oci_vcn_id_t vcn_id;      /**< Result VCN Id */
 
 } PACKED oci_route_t;
