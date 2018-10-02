@@ -20,14 +20,17 @@ message NaplesConfig {
     // Data IP to use for tunneled mode for now
     repeated string data_ips     = 3;
 
+    // Naples IP to use for tunneled mode for now
+    repeated string naples_ips   = 4;
+
     // Data Interfaces to configure
-    repeated string data_intfs   = 4;
+    repeated string data_intfs   = 5;
 
     // Venice IPs to use, if specified agent will come up im managed mode.
-    repeated string venice_ips   = 5;
+    repeated string venice_ips   = 6;
 
     // Specifies whether pass through mode or not.
-    bool pass_through_mode       = 6; // Pass Through mode
+    bool pass_through_mode       = 7; // Pass Through mode
 }
 
 message VeniceNode {
