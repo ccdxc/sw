@@ -1,0 +1,28 @@
+meta:
+    name: 3Naples_3Venice
+    description: 3 Naples + 3 Venice Topology
+
+nodes:
+    - node: node1
+      name: naples1
+      role: PERSONALITY_NAPLES
+
+    - node: node2
+      name: naples2
+      role: PERSONALITY_NAPLES
+
+    - node: node3
+      name: naples3
+      role: PERSONALITY_NAPLES_WITH_QEMU
+
+    - node: node4
+      name: venice1
+      role: PERSONALITY_VENICE
+
+    - node: node5
+      name: venice2
+      role: PERSONALITY_VENICE
+
+    - node: node6
+      name: venice3
+      role: PERSONALITY_VENICE

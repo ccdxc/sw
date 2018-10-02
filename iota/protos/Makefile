@@ -1,10 +1,12 @@
+TOPDIR := $(abspath ../../)
 INCLUDES := -I. \
-			-I../../vendor \
+			-I${TOPDIR}/vendor \
 			-I${GOPATH}/src \
-			-I../../vendor/github.com/pensando/grpc-gateway/third_party \
-			-I../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+			-I${TOPDIR}/vendor/github.com/pensando/grpc-gateway/third_party \
+			-I${TOPDIR}/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 
 SRCS := $(wildcard *.proto)
+GRPC_PYTHON_PLUGIN_PATH ?= $(TOPDIR)/nic/hal/third-party/grpc/x86_64/bin/grpc_python_plugin
 
 default: pythongen
 	@mkdir -p ./gogen
@@ -12,4 +14,4 @@ default: pythongen
 
 pythongen:
 	@mkdir -p ./pygen
-	protoc ${INCLUDES} --python_out=plugins=grpc:./pygen ${SRCS}
+	protoc ${INCLUDES} --python_out=./pygen --grpc_out=./pygen --plugin=protoc-gen-grpc=${GRPC_PYTHON_PLUGIN_PATH} ${SRCS}

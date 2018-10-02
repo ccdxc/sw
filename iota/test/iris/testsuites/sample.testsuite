@@ -5,11 +5,13 @@ meta:
 packages:
     - iota.test.iris
 
-setup:
-    - step      : bringup.topology_bringup
-      topology  : iota/test/topologies/3Naples_3Venice_1Other.topology
-    - step      : bringup.generate_base_config
-      
+images:
+    naples  : /sw/nic/nic.tgz
+    venice  : /sw/venice.tgz
+    drivers : /sw/platform/drivers.tgz
+    iagent  : /sw/iota/agent.tgz
+
+topology: test/iris/topologies/3Naples_3Venice.topology
 
 common:
     verifs:
@@ -17,6 +19,9 @@ common:
         -   step    : verif.utils.verify_topology_health
 
 testcases:
+    -   name    : GenerateConfig 
+        testcase: bringup.generate_base_config
+
     -   name    : PushBaseConfig
         testcase: testcases.config.push_base_config
         verifs  :

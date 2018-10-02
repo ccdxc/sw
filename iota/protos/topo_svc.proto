@@ -67,14 +67,15 @@ message NodeMsg{
     bool make_cluster               = 4;
 }
 
+enum PersonalityType {
+    PERSONALITY_NONE                = 0;
+    PERSONALITY_NAPLES              = 1;
+    PERSONALITY_VENICE              = 2;
+    PERSONALITY_NAPLES_WITH_QEMU    = 3;
+}
+
 // Node captures personality details of an E2E node
 message Node {
-    enum PersonalityType {
-        PERSONALITY_NONE                = 0;
-        PERSONALITY_NAPLES              = 1;
-        PERSONALITY_VENICE              = 2;
-        PERSONALITY_NAPLES_WITH_QEMU    = 3;
-    }
     // PersonalityType captures the node personality. naples node, venice node or qemu
     PersonalityType     type            = 1;
 

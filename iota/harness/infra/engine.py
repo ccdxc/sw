@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 import glob
 
-import iota.harness.infra.utils.ymlparser as ymlparser
+import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.testsuite as testsuite
 import iota.harness.infra.svc as svc
 #import iota.harness.infra.store as store
@@ -20,8 +20,8 @@ def __discover_testsuites():
     suites = []
     expr = GlobalOptions.topdir + '/iota/test/**/*.testsuite'
     for filename in glob.iglob(expr, recursive = True):
-        ydata = ymlparser.Parse(filename)
-        suites.append(ydata)
+        data = parser.YmlParse(filename)
+        suites.append(data)
     return suites
 
 def Main():

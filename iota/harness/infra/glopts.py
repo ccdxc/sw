@@ -17,7 +17,7 @@ parser.add_argument('--testsuite', dest='testsuite', default=None,
                     help='Run single Testsuite.')
 parser.add_argument('--coverage', dest='coverage',
                     action='store_true', help='Collect code coverage data.')
-parser.add_argument('--svcport', dest='svcport', default=55555,
+parser.add_argument('--svcport', dest='svcport', default=60000,
                     help='IOTA Service Port.')
 GlobalOptions = parser.parse_args()
 

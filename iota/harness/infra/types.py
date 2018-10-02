@@ -3,10 +3,8 @@ import iota.harness.infra.utils.utils   as utils
 
 __status = [
     'SUCCESS',
-    'ERROR',
-    'ABORT',
-    'INVALID_INPUT',
-    'NULL_INPUT',
+    'FAILURE',
+    'INVALID_ARG',
     'RETRY',
 ]
 status = utils.List2Enum(__status)
