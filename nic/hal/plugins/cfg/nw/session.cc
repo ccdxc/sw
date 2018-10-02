@@ -1802,6 +1802,10 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     session_age_cb_args_t args;
 
+    // We dont have any sessions yet - bail
+    if (!g_hal_state->session_hal_handle_ht()->num_entries())
+        return;
+
     args.num_ctx = (uint8_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_AGE_ARGS,
                                    (sizeof(uint8_t)*HAL_MAX_DATA_THREAD));
     HAL_ASSERT(args.num_ctx != NULL);
@@ -1853,7 +1857,10 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
                                   process_hal_periodic_tkle,
                                   (void *)args.tctx_list[fte_id]);
             HAL_ASSERT(ret == HAL_RET_OK);
-        }
+        } else {
+            // Nothing was queued - so we can cleanup the alloced memory
+            HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE, args.tctx_list[fte_id]); 
+        } 
 
         if (args.num_del_sess[fte_id]) {
             // We should never end up in a case where num_del_sess is set but
@@ -1864,6 +1871,9 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
                                   (void *)args.session_list[fte_id]);
             HAL_ASSERT(ret == HAL_RET_OK);
 
+        } else {
+            // Nothing was queued - so we can cleanup the alloced memory
+            HAL_FREE(HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE, args.session_list[fte_id]);
         }
     }
 

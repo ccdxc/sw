@@ -326,8 +326,8 @@ inst_t::softq_enqueue(softq_fn_t fn, void *data)
 {
     sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
 
-    HAL_TRACE_DEBUG("fte: softq enqueue fte.{} fn={:p} data={:p}",
-                    id_, (void*)fn, data);
+    //HAL_TRACE_DEBUG("fte: softq enqueue fte.{} fn={:p} data={:p}",
+    //                id_, (void*)fn, data);
 
     // try indefinatly until queued successfully
     while(softq_->enqueue((void *)fn, data) == false) {
@@ -351,7 +351,7 @@ void inst_t::process_softq()
         stats_.softq_req++;
         stats_.cps++;
 
-        HAL_TRACE_DEBUG("fte: softq dequeue fn={:p} data={:p} softq_req={}", op, data, stats_.softq_req);
+        //HAL_TRACE_DEBUG("fte: softq dequeue fn={:p} data={:p} softq_req={}", op, data, stats_.softq_req);
         (*(softq_fn_t)op)(data);
     }
 }
@@ -528,8 +528,6 @@ fte_stats_t inst_t::get_stats(bool clear_on_read)
 
     if (clear_on_read)
         bzero(&stats_, sizeof(fte_stats_t));
-
-    HAL_TRACE_DEBUG("Clear on read: {} stats: {}", clear_on_read, stats_);
 
     return stats;
 }
