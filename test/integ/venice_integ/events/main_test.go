@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	es "github.com/olivere/elastic"
 	uuid "github.com/satori/go.uuid"
@@ -59,15 +60,17 @@ type tInfo struct {
 	evtsMgr              *evtsmgr.EventsManager       // events manager to write events to elastic
 	evtsProxy            *evtsproxy.EventsProxy       // events proxy to receive and distribute events
 	proxyEventsStoreDir  string                       // local events store directory
+	dedupInterval        time.Duration                // events dedup interval
+	batchInterval        time.Duration                // events batch interval
 	signer               certs.CSRSigner              // function to sign CSRs for TLS
 	trustRoots           []*x509.Certificate          // trust roots to verify TLS certs
 }
 
 // setup helper function create evtsmgr, evtsproxy, etc. services
+
 func (t *tInfo) setup(tst *testing.T) error {
 	var err error
 	logConfig := log.GetDefaultConfig("events_test")
-	//logConfig.Debug = true
 	logConfig.Format = log.JSONFmt
 
 	t.logger = log.GetNewLogger(logConfig)
@@ -77,6 +80,14 @@ func (t *tInfo) setup(tst *testing.T) error {
 	if err != nil {
 		log.Errorf("Error getting CA artifacts: %v", err)
 		return err
+	}
+
+	if t.dedupInterval == 0 {
+		t.dedupInterval = 10 * time.Second
+	}
+
+	if t.batchInterval == 0 {
+		t.batchInterval = 100 * time.Millisecond
 	}
 
 	// start elasticsearch
@@ -109,7 +120,7 @@ func (t *tInfo) setup(tst *testing.T) error {
 	t.updateResolver(globals.EvtsMgr, evtsMgrURL)
 
 	// start events proxy
-	evtsProxy, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(testURL, t.mockResolver, t.logger)
+	evtsProxy, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(testURL, t.mockResolver, t.logger, t.dedupInterval, t.batchInterval)
 	if err != nil {
 		log.Errorf("failed to start events proxy, err: %v", err)
 		return err
@@ -133,7 +144,7 @@ func (t *tInfo) teardown() {
 	t.evtsProxy.RPCServer.Stop()
 	t.apiServer.Stop()
 
-	// remove the local persisitent events store
+	// remove the local persistent events store
 	log.Infof("removing events store %s", t.proxyEventsStoreDir)
 
 	os.RemoveAll(t.proxyEventsStoreDir)

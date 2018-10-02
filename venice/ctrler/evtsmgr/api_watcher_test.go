@@ -19,8 +19,9 @@ import (
 )
 
 type mockMonitoringV1 struct {
-	mAlert       monitoring.MonitoringV1AlertInterface
-	mAlertPolicy monitoring.MonitoringV1AlertPolicyInterface
+	mAlert            monitoring.MonitoringV1AlertInterface
+	mAlertPolicy      monitoring.MonitoringV1AlertPolicyInterface
+	mAlertDestination monitoring.MonitoringV1AlertDestinationInterface
 }
 
 func (m *mockMonitoringV1) StatsPolicy() monitoring.MonitoringV1StatsPolicyInterface {
@@ -42,7 +43,7 @@ func (m *mockMonitoringV1) AlertPolicy() monitoring.MonitoringV1AlertPolicyInter
 	return m.mAlertPolicy
 }
 func (m *mockMonitoringV1) AlertDestination() monitoring.MonitoringV1AlertDestinationInterface {
-	return nil
+	return m.mAlertDestination
 }
 func (m *mockMonitoringV1) MirrorSession() monitoring.MonitoringV1MirrorSessionInterface {
 	return nil
@@ -67,10 +68,12 @@ func TestAPIWatchEvents(t *testing.T) {
 	opts := &api.ListWatchOptions{}
 
 	mMonitoring := &mockMonitoringV1{}
-	mAlertPolicy := mockapi.NewMockMonitoringV1AlertPolicyInterface(ctrl)
 	mAlert := mockapi.NewMockMonitoringV1AlertInterface(ctrl)
-	mMonitoring.mAlertPolicy = mAlertPolicy
+	mAlertPolicy := mockapi.NewMockMonitoringV1AlertPolicyInterface(ctrl)
+	mAlertDestination := mockapi.NewMockMonitoringV1AlertDestinationInterface(ctrl)
 	mMonitoring.mAlert = mAlert
+	mMonitoring.mAlertPolicy = mAlertPolicy
+	mMonitoring.mAlertDestination = mAlertDestination
 
 	mapi := mockapi.NewMockServices(ctrl)
 	evtsMgr.apiClient = mapi
@@ -90,16 +93,27 @@ func TestAPIWatchEvents(t *testing.T) {
 	err = evtsMgr.processEvents(parentCtx)
 	Assert(t, err != nil, "missed alert watch failure")
 
+	// fail alert destionation WATCH
+	mWatcher = mockkvs.NewMockWatcher(ctrl)
+	mWatcher.EXPECT().EventChan().Return(nil).Times(2)
+	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mAlert.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mAlertDestination.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("alert destination watch failed")).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(3)
+	err = evtsMgr.processEvents(parentCtx)
+	Assert(t, err != nil, "missed alert destination watch failure")
+
 	// fail on invalid alert policy WATCH event
 	mAPWatcher := mockkvs.NewMockWatcher(ctrl) // alert policy watch chan
 	apCh := make(chan *kvstore.WatchEvent)
 	defer close(apCh)
 	mAPWatcher.EXPECT().EventChan().Return(apCh).Times(1)
-	mAWatcher := mockkvs.NewMockWatcher(ctrl) // alert watch chan
-	mAWatcher.EXPECT().EventChan().Return(nil).Times(1)
+	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert destionation and alerts
+	mWatcher.EXPECT().EventChan().Return(nil).Times(2)
 	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mAPWatcher, nil).Times(1)
-	mAlert.EXPECT().Watch(ctx, opts).Return(mAWatcher, nil).Times(1)
-	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(2)
+	mAlert.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(3)
 	go func() { // send some watch events for alert policy
 		tick := time.NewTimer(1 * time.Second)
 		for {
@@ -122,15 +136,16 @@ func TestAPIWatchEvents(t *testing.T) {
 	Assert(t, err != nil && strings.Contains(err.Error(), "invalid watch event type"), "missed invalid watch event") // this should fail on the final invalid event
 
 	// fail on invalid alert WATCH event
-	mAPWatcher = mockkvs.NewMockWatcher(ctrl) // alert policy watch chan
-	mAPWatcher.EXPECT().EventChan().Return(nil).Times(1)
-	mAWatcher = mockkvs.NewMockWatcher(ctrl) // alert watch chan
+	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert policy and alert destionation
+	mWatcher.EXPECT().EventChan().Return(nil).Times(2)
+	mAWatcher := mockkvs.NewMockWatcher(ctrl) // alert watch chan
 	aCh := make(chan *kvstore.WatchEvent)
 	defer close(aCh)
 	mAWatcher.EXPECT().EventChan().Return(aCh).Times(1)
-	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mAPWatcher, nil).Times(1)
 	mAlert.EXPECT().Watch(ctx, opts).Return(mAWatcher, nil).Times(1)
-	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(2)
+	mAlertPolicy.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mAlertDestination.EXPECT().Watch(ctx, opts).Return(mWatcher, nil).Times(1)
+	mapi.EXPECT().MonitoringV1().Return(mMonitoring).Times(3)
 	go func() { // send some watch events for alert
 		tick := time.NewTimer(1 * time.Second)
 		for {

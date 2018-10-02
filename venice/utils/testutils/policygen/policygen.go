@@ -17,6 +17,32 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
+// CreateAlertDestinationObj helper function to create alert destionation object with the given params.
+func CreateAlertDestinationObj(tenant, namespace, name string, syslogServers []*monitoring.SyslogExport) *monitoring.AlertDestination {
+	creationTime, _ := types.TimestampProto(time.Now())
+
+	alertDest := &monitoring.AlertDestination{
+		TypeMeta: api.TypeMeta{Kind: "AlertDestination"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			UUID:      name,
+			Tenant:    tenant,
+			Namespace: namespace,
+			CreationTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+		},
+		Spec: monitoring.AlertDestinationSpec{
+			SyslogServers: syslogServers,
+		},
+	}
+
+	return alertDest
+}
+
 // CreateAlertObj helper function to create alert obj
 func CreateAlertObj(tenant, namespace, name, state, message string, alertPolicy *monitoring.AlertPolicy,
 	evt *evtsapi.Event, matchedRequirements []*monitoring.MatchedRequirement) *monitoring.Alert {
@@ -68,7 +94,8 @@ func CreateAlertObj(tenant, namespace, name, state, message string, alertPolicy 
 }
 
 // CreateAlertPolicyObj helper function to create alert policy object with the given params.
-func CreateAlertPolicyObj(tenant, namespace, name, resource string, severity evtsapi.SeverityLevel, message string, requirements []*fields.Requirement) *monitoring.AlertPolicy {
+func CreateAlertPolicyObj(tenant, namespace, name, resource string, severity evtsapi.SeverityLevel, message string,
+	requirements []*fields.Requirement, destinations []string) *monitoring.AlertPolicy {
 	creationTime, _ := types.TimestampProto(time.Now())
 
 	return &monitoring.AlertPolicy{
@@ -94,6 +121,7 @@ func CreateAlertPolicyObj(tenant, namespace, name, resource string, severity evt
 			Message:      message,
 			Requirements: requirements,
 			Enable:       true,
+			Destinations: destinations,
 			// TODO: add other parameters(persisstence duration, clear duration, destionations, etc.) when required
 		},
 	}

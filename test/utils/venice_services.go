@@ -218,7 +218,7 @@ func StartEvtsMgr(serverAddr string, mr *mockresolver.ResolverClient, logger log
 }
 
 // StartEvtsProxy helper function to start events proxy
-func StartEvtsProxy(serverAddr string, mr *mockresolver.ResolverClient, logger log.Logger) (*evtsproxy.EventsProxy, string, string, error) {
+func StartEvtsProxy(serverAddr string, mr *mockresolver.ResolverClient, logger log.Logger, dedupInterval, batchInterval time.Duration) (*evtsproxy.EventsProxy, string, string, error) {
 	log.Infof("starting events proxy")
 
 	if len(mr.GetURLs(globals.EvtsMgr)) == 0 {
@@ -232,7 +232,7 @@ func StartEvtsProxy(serverAddr string, mr *mockresolver.ResolverClient, logger l
 	}
 
 	evtsProxy, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, serverAddr,
-		mr.GetURLs(globals.EvtsMgr)[0], nil, 10*time.Second, 100*time.Millisecond, proxyEventsStoreDir,
+		mr.GetURLs(globals.EvtsMgr)[0], nil, dedupInterval, batchInterval, proxyEventsStoreDir,
 		[]evtsproxy.WriterType{evtsproxy.Venice}, logger)
 	if err != nil {
 		return nil, "", "", fmt.Errorf("failed start events proxy, err: %v", err)

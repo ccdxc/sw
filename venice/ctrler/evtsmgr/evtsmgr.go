@@ -215,6 +215,18 @@ func (em *EventsManager) processEvents(parentCtx context.Context) error {
 		Dir:  reflect.SelectRecv,
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
+	// watch alert destination
+	watcher, err = em.apiClient.MonitoringV1().AlertDestination().Watch(ctx, opts)
+	if err != nil {
+		em.logger.Errorf("failed to watch alerts, err: %v", err)
+		return err
+	}
+
+	watchList[len(selCases)] = "alertDestination"
+	selCases = append(selCases, reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(watcher.EventChan())})
+
 	// ctx done
 	watchList[len(selCases)] = "ctx-canceled"
 	selCases = append(selCases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ctx.Done())})
@@ -239,6 +251,8 @@ func (em *EventsManager) processEvents(parentCtx context.Context) error {
 			em.processAlertPolicy(event.Type, obj)
 		case *monitoring.Alert:
 			em.processAlert(event.Type, obj)
+		case *monitoring.AlertDestination:
+			em.processAlertDestination(event.Type, obj)
 		default:
 			em.logger.Errorf("invalid watch event type received from {%s}, %+v", watchList[id], event)
 			return fmt.Errorf("invalid watch event type")
@@ -275,5 +289,21 @@ func (em *EventsManager) processAlert(eventType kvstore.WatchEventType, alert *m
 	default:
 		em.logger.Errorf("invalid alert watch event, type %s policy %+v", eventType, alert)
 		return fmt.Errorf("invalid alert watch event")
+	}
+}
+
+// helper to process alert destinations
+func (em *EventsManager) processAlertDestination(eventType kvstore.WatchEventType, alertDest *monitoring.AlertDestination) error {
+	em.logger.Infof("processing alert destination watch event: {%s} {%#v} ", eventType, alertDest)
+	switch eventType {
+	case kvstore.Created:
+		return em.memDb.AddObject(alertDest)
+	case kvstore.Updated:
+		return em.memDb.UpdateObject(alertDest)
+	case kvstore.Deleted:
+		return em.memDb.DeleteObject(alertDest)
+	default:
+		em.logger.Errorf("invalid alert destination watch event, type %s policy %+v", eventType, alertDest)
+		return fmt.Errorf("invalid alert destination watch event")
 	}
 }

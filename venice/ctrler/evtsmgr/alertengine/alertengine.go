@@ -3,7 +3,6 @@ package alertengine
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine/exporter"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -30,28 +30,49 @@ var (
 	maxRetry = 5
 )
 
+//
 // Module responsible for converting events to alerts.
 // 1. Runs inline with events manager.
+//
 // 2. Any error that occurs while processing alert policies against each event
 //    will be ignored. Alert will be generated in the next run when the same event is received (again, best effort).
+//
 // 3. Overlapping alert policies will trigger multiple alerts for the same event.
+//
 // 4. Event based alerts are not auto resolvable. So, this module will only create, no further
 //    monitoring is done to auto-resolve.
+//
 // 5. There can be only one outstanding alert for an objRef (tenant, namespace, kind and name) by single alert policy.
+//
 // 6. If evt.objRef == nil, we could end up with multiple alerts for the same event (if it keeps happening) as there is no way
 //    detect duplicate alert.
-
-// TODO:
-// 1. handle alert delivery (Alert Destination)
+//
+// 7. Exports the generated alert to the list of destinations from the given alert policy.
+//
+// Example syslog message:
+// BSD format - msg: `alert.message - json(alert attributes map)`
+//  <10>2018-09-26T12:14:56-07:00 host1 pen-events[24208]: DUMMYEVENT-3-CRITICAL - {\"meta\":{\"creation-time\":\"2018-09-26 19:14:55.968942 +0000 UTC\",
+//  \"mod-time\":\"2018-09-26 19:14:55.968942 +0000 UTC\",\"name\":\"93d40499-196d-49fd-9154-ef1d5e0bf52b\",\"namespace\":\"default\",\"tenant\":\"default\",\"uuid\":\"93d40499-196d-49fd-9154-ef1d5e0bf52b\"},
+//  \"spec\":{\"state\":\"OPEN\"},\"status\":{\"event-uri\":\"/events/v1/events/c4bac3ed-7216-4771-97bb-27b16fbd72f4\",\"message\":\"DUMMYEVENT-3-CRITICAL\",\"severity\":\"CRITICAL\"},
+//  \"status.object-ref\":{\"kind\":\"Node\",\"name\":\"qaJaB\",\"namespace\":\"default\",\"tenant\":\"default\",\"uri\":\"\"},\"status.reason\":{\"policy-id\":\"71f016e3-51bc-430d-9aea-7e5886a0ec96\"},
+//  \"status.source\":{\"component\":\"5f51d9b1-3e50-400b-b0fe-6e19ce528f2a\",\"node-name\":\"test-node\"},\"type\":{\"kind\":\"Alert\"}}"
+//
+// RFC5424 format - msg: alert.message, msgID: alert.UUID, structured data: stringify(alert attributes map)
+//  <10>1 2018-09-26T12:14:56-07:00 host1 pen-events 24208 93d40499-196d-49fd-9154-ef1d5e0bf52b [status message=\"DUMMYEVENT-3-CRITICAL\" event-uri=\"/events/v1/events/c4bac3ed-7216-4771-97bb-27b16fbd72f4\"
+//  severity=\"CRITICAL\"][status.reason policy-id=\"71f016e3-51bc-430d-9aea-7e5886a0ec96\"][status.source component=\"5f51d9b1-3e50-400b-b0fe-6e19ce528f2a\" node-name=\"test-node\"][status.object-ref namespace=\"default\"
+//  kind=\"Node\" name=\"qaJaB\" uri=\"\" tenant=\"default\"][type kind=\"Alert\"][meta mod-time=\"2018-09-26 19:14:55.968942 +0000 UTC\" name=\"93d40499-196d-49fd-9154-ef1d5e0bf52b\" uuid=\"93d40499-196d-49fd-9154-ef1d5e0bf52b\"
+//  tenant=\"default\" namespace=\"default\" creation-time=\"2018-09-26 19:14:55.968942 +0000 UTC\"][spec state=\"OPEN\"] DUMMYEVENT-3-CRITICAL"
+//
 
 // AlertEngine represents the events alerts engine which is responsible fo converting
 // events to alerts based on the event based alert policies.
 type alertEngineImpl struct {
 	sync.Mutex
-	logger         log.Logger         // logger
-	resolverClient resolver.Interface // to connect with apiserver to fetch alert policies; and send alerts
-	memDb          *memdb.MemDb       // in-memory db/cache
-	apiClient      apiclient.Services // API server client
+	logger         log.Logger              // logger
+	resolverClient resolver.Interface      // to connect with apiserver to fetch alert policies; and send alerts
+	memDb          *memdb.MemDb            // in-memory db/cache
+	apiClient      apiclient.Services      // API server client
+	exporter       *exporter.AlertExporter // exporter to export alerts to different destinations
 }
 
 // NewAlertEngine creates the new events alert engine.
@@ -72,6 +93,9 @@ func NewAlertEngine(memDb *memdb.MemDb, logger log.Logger, resolverClient resolv
 		ae.logger.Errorf("failed to create API client, err: %v", err)
 		return nil, err
 	}
+
+	// create alert exporter
+	ae.exporter = exporter.NewAlertExporter(memDb, ae.apiClient, logger.WithContext("submodule", "alert_exporter"))
 
 	return ae, nil
 }
@@ -112,6 +136,8 @@ func (a *alertEngineImpl) Stop() {
 			a.logger.Errorf("failed to close API client, err: %v", err)
 		}
 	}
+
+	a.exporter.Stop() // this will stop any exports that're in line
 }
 
 // runPolicy helper function to run the given policy against event. Also, it updates
@@ -124,10 +150,10 @@ func (a *alertEngineImpl) runPolicy(ap *monitoring.AlertPolicy, evt *evtsapi.Eve
 			a.logger.Errorf("failed to create alert for event: %v, err: %v", evt.GetUUID(), err)
 		}
 
-		if created { // update total hits and open alerts count
-			err = a.updateAlertPolicy(ap.GetObjectMeta(), 1, 1)
-		} else { // update only hits, alert exists already, (source.nodeName, event.Type, event.Severity)
-			err = a.updateAlertPolicy(ap.GetObjectMeta(), 1, 0)
+		if created {
+			err = a.updateAlertPolicy(ap.GetObjectMeta(), 1, 1) // update total hits and open alerts count
+		} else {
+			err = a.updateAlertPolicy(ap.GetObjectMeta(), 1, 0) //update only hits, alert exists already, (source.nodeName, event.Type, event.Severity)
 		}
 
 		return err
@@ -200,12 +226,17 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 		return false, err
 	}, 60*time.Millisecond, maxRetry)
 
+	if alertCreated.(bool) { // export alert
+		if err := a.exporter.Export(alertPolicy.Spec.GetDestinations(), alert); err != nil {
+			log.Errorf("failed to export alert %v to destinations %v, err: %v", alert.GetObjectMeta(), alertPolicy.Spec.GetDestinations(), err)
+		}
+	}
+
 	return alertCreated.(bool), err
 }
 
 // updateAlertPolicy helper function to update total hits and open alerts count on the alert policy.
 func (a *alertEngineImpl) updateAlertPolicy(meta *api.ObjectMeta, incrementTotalHitsBy, incrementOpenAlertsBy int) error {
-	fmt.Println("updating policy", meta.Name)
 	_, err := utils.ExecuteWithRetry(func() (interface{}, error) {
 		a.Lock() // to avoid racing updates
 		defer a.Unlock()

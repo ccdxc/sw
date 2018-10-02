@@ -1,6 +1,8 @@
 package alertengine
 
-import evtsapi "github.com/pensando/sw/api/generated/events"
+import (
+	evtsapi "github.com/pensando/sw/api/generated/events"
+)
 
 // Interface represents the alert engine responsible for triggering alerts
 // based on the events and event based alert policies.

@@ -10,6 +10,13 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
+// event types
+const (
+	CreateEvent memdb.EventType = memdb.CreateEvent
+	UpdateEvent memdb.EventType = memdb.UpdateEvent
+	DeleteEvent memdb.EventType = memdb.DeleteEvent
+)
+
 // MemDb in-memory database to store policy objects and alerts
 type MemDb struct {
 	*memdb.Memdb
@@ -135,6 +142,30 @@ func (m *MemDb) GetAlerts(filters ...FilterFn) []*monitoring.Alert {
 	}
 
 	return alerts
+}
+
+// GetAlertDestination returns the alert destionation matching the given name
+func (m *MemDb) GetAlertDestination(name string) *monitoring.AlertDestination {
+	for _, alertD := range m.ListObjects("AlertDestination") {
+		ad := alertD.(*monitoring.AlertDestination)
+		if ad.GetName() == name {
+			return ad
+		}
+	}
+
+	return nil
+}
+
+// WatchAlertDestinations returns the watcher to watch for alert destionation events
+func (m *MemDb) WatchAlertDestinations() chan memdb.Event {
+	watchChan := make(chan memdb.Event, memdb.WatchLen)
+	m.WatchObjects("AlertDestination", watchChan)
+	return watchChan
+}
+
+// StopWatchAlertDestinations stops the alert destionation watcher
+func (m *MemDb) StopWatchAlertDestinations(watchChan chan memdb.Event) {
+	m.StopWatchObjects("AlertDestination", watchChan)
 }
 
 // NewMemDb creates a new mem DB

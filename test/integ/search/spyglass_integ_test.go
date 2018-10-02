@@ -185,7 +185,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	tInfo.updateResolver(globals.EvtsMgr, evtsMgrURL)
 
 	// start evtsproxy
-	evtsProxy, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(":0", tInfo.mockResolver, tInfo.l)
+	evtsProxy, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(":0", tInfo.mockResolver, tInfo.l, 10*time.Second, 100*time.Millisecond)
 	if err != nil {
 		log.Errorf("failed to start events proxy, err: %v", err)
 		return err
