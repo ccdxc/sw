@@ -8,7 +8,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "gen/proto/acl.pb.h"
 #include "gen/proto/kh.pb.h"
 #include "nic/include/pd.hpp"

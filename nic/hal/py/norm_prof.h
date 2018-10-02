@@ -9,7 +9,7 @@
 #define __NORM_PROF_H__
 
 #include "nic/include/base.hpp"
-#include "nic/include/eth.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 
 // --------------------------------------------------------------------------------
 // NORM_PROF key

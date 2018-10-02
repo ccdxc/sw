@@ -16,7 +16,7 @@
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/include/base.hpp"
-#include "nic/include/encap.hpp"
+#include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/pd.hpp"

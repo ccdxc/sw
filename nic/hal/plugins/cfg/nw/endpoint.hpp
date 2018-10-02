@@ -7,7 +7,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"

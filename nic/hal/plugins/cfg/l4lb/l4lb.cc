@@ -9,7 +9,7 @@
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/plugins/cfg/l4lb/l4lb.hpp"
-#include "nic/include/eth.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include <netinet/ether.h>
 #include "nic/include/pd_api.hpp"
 

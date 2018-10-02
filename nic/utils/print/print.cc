@@ -1,6 +1,6 @@
 #include "nic/include/base.hpp"
-#include "nic/include/eth.hpp"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 
 //------------------------------------------------------------------------------
 // thread safe helper to stringify MAC address

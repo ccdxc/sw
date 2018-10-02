@@ -3,7 +3,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"
-#include "nic/include/eth.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 
 using hal::pd::pd_rw_entry_key_t;
 using hal::pd::pd_rw_entry_t;

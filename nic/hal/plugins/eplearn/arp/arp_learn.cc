@@ -5,7 +5,7 @@
 #include "arp_trans.hpp"
 #include "arp_learn.hpp"
 #include "nic/hal/plugins/eplearn/eplearn.hpp"
-#include "nic/include/eth.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/fte/utils/packet_utils.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/include/cpupkt_api.hpp"

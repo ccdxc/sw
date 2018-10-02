@@ -4,7 +4,7 @@
 
 #include "arp_trans.hpp"
 #include "ndp_learn.hpp"
-#include "nic/include/eth.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/include/pkt_hdrs.hpp"
 
 namespace hal {

@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/eth.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"

@@ -7,7 +7,7 @@
 
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/utils/block_list/block_list.hpp"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 
 #include "gen/proto/types.pb.h"
 

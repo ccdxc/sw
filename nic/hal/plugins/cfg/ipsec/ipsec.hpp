@@ -2,7 +2,7 @@
 #define __IPSEC_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/encap.hpp"
+#include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "gen/proto/ipsec.pb.h"

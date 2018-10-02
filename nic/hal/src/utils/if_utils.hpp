@@ -17,7 +17,7 @@
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl.hpp"
 #include "gen/proto/types.pb.h"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 
 namespace hal {
 

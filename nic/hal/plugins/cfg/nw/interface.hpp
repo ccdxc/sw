@@ -6,8 +6,8 @@
 #define __INTERFACE_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/eth.hpp"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/include/bitmap.hpp"

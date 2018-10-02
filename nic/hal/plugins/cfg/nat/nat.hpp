@@ -11,7 +11,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "gen/proto/nat.pb.h"
 #include "gen/proto/kh.pb.h"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/include/l4.hpp"
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/utils/addr_list.hpp"

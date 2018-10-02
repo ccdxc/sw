@@ -12,7 +12,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 
 #include "gen/proto/vrf.pb.h"

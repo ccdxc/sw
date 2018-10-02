@@ -14,7 +14,7 @@
 #include "nic/include/bitmap.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/sdk/include/sdk/periodic.hpp"
 #include "nic/fte/acl/acl.hpp"

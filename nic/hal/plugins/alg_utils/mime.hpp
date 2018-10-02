@@ -9,7 +9,7 @@
 #pragma once
 
 #include "nic/include/base.hpp"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 
 namespace hal {
 namespace plugins {

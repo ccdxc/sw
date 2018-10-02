@@ -5,7 +5,7 @@
 #include "nic/hal/plugins/cfg/mcast/multicast.hpp"
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/include/base.hpp"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"

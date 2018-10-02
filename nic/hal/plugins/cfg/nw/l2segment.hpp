@@ -6,7 +6,7 @@
 #define __L2SEGMENT_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/encap.hpp"
+#include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"

@@ -2,7 +2,7 @@
 
 #include <time.h>
 #include "nic/include/base.hpp"
-#include "nic/include/eth.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"

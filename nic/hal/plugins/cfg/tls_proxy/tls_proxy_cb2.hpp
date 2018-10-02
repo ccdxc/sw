@@ -6,7 +6,7 @@
 #define __TLS_PROXY_CB2_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/encap.hpp"
+#include "nic/sdk/include/sdk/encap.hpp"
 #include "nic/sdk/include/sdk/list.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "gen/proto/tls_proxy_cb2.pb.h"

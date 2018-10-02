@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/ht.hpp"
 #include "nic/fte/fte.hpp"
 #include <netinet/if_ether.h>
