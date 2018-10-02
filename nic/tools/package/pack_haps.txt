@@ -24,6 +24,7 @@ nic/build/aarch64/iris/bin/hal_test                                 /nic/bin/
 nic/build/aarch64/iris/bin/hal_access                               /nic/bin/
 nic/sdk/third-party/avago/aapl-2.6.6/build/aarch64/bin/aapl         /nic/bin/
 
+nic/build/aarch64/iris/lib/libpacket_parser.so                      /nic/lib/
 nic/build/aarch64/iris/lib/libAAPL.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libagent_api.so                          /nic/lib/
 nic/build/aarch64/iris/lib/libasicpd.so                             /nic/lib/

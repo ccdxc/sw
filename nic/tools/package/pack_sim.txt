@@ -5,6 +5,7 @@ nic/build/x86_64/iris/bin/linkmgr                                   /nic/bin/
 # linkmgr debug CLIs
 nic/build/x86_64/iris/bin/port_client                               /nic/bin
 
+nic/build/x86_64/iris/lib/libpacket_parser.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libAAPL.so                                /nic/lib/
 nic/build/x86_64/iris/lib/libagent_api.so                           /nic/lib/
 nic/build/x86_64/iris/lib/libasicpd.so                              /nic/lib/
