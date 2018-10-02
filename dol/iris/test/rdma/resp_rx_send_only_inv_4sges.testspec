@@ -24,11 +24,11 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
    - packet:
         id          : IN_PKT    # Input packet 
-        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1000,pkt_num=0
+        payloadsize : ref://testcase/packets/id=BASE_PKT/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_IETH,v6=ETH_IPV6_UDP_BTH_IETH
         icrc        : True
         encaps      :   
@@ -60,7 +60,7 @@ packets:
             ieth:
                 r_key   : ref://testcase/pvtdata/inv_r_key
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
    - packet:
         id          : EXP_PKT    # Expected Ack packet
@@ -96,7 +96,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
 
 buffers:

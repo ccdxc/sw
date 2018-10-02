@@ -20,23 +20,23 @@ selectors:
 packets:
    - packet:
         id          : CURR_PAYLOAD # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
    - packet:
         id          : ORIG_PAYLOAD # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
    - packet:
         id          : IN_PKT    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : ref://testcase/packets/id=ORIG_PAYLOAD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         encaps      :   
@@ -106,7 +106,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
 
 buffers:

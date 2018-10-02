@@ -20,23 +20,23 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT1 # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : BASE_PKT2 # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : SEND_ONLY_1 # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : ref://testcase/packets/id=BASE_PKT1/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :
@@ -66,11 +66,11 @@ packets:
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=0
                 a       : 1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT1/rawbytes
 
     - packet:
         id          : SEND_ONLY_2 # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : ref://testcase/packets/id=BASE_PKT2/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :
@@ -100,7 +100,7 @@ packets:
                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
                 a       : 1                
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT2/rawbytes
 
     - packet:
         id          : ACK_PKT # Base packet

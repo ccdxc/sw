@@ -24,7 +24,7 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
    - packet:
         id          : BASE_LAST_PKT # Base packet
@@ -32,11 +32,11 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
    - packet:
         id          : IN_FIRST_PKT    # Input packet - first
-        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1600,pkt_num=0
+        payloadsize : ref://testcase/packets/id=BASE_FIRST_PKT/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         encaps      :   
@@ -69,11 +69,11 @@ packets:
                 dma_len : 1600
                 r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_FIRST_PKT/rawbytes
 
    - packet:
         id          : IN_LAST_PKT    # Input packet - last
-        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1600,pkt_num=1
+        payloadsize : ref://testcase/packets/id=BASE_LAST_PKT/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -103,7 +103,7 @@ packets:
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=1
                 a       : 1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_LAST_PKT/rawbytes
 
    - packet:
         id          : EXP_PKT    # Expected Ack packet
@@ -139,7 +139,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
 
 buffers:

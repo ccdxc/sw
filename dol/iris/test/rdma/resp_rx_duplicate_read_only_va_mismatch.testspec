@@ -20,11 +20,19 @@ selectors:
 packets:
    - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
+
+   - packet:
+        id          : READ_RSP_PKT_PYLD
+        payloadsize : 64
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : pattern-random://0/255/1
 
    - packet:
         id          : READ_REQ_PKT
@@ -136,7 +144,7 @@ packets:
 
    - packet:
         id          : READ_RSP_PKT    # Output packet, Reverse all fields from the IN_PKT
-        payloadsize : ref://testcase/packets/id=BASE_PKT/size
+        payloadsize : ref://testcase/packets/id=READ_RSP_PKT_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         encaps      :   
@@ -168,7 +176,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                data    : ref://testcase/packets/id=READ_RSP_PKT_PYLD/rawbytes
 
    - packet:
         id          : ACK_PKT 
@@ -212,8 +220,8 @@ buffers:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 1024
            segments:
-               - size    : 64
-                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+               - size    : ref://testcase/packets/id=READ_RSP_PKT_PYLD/size
+                 data    : ref://testcase/packets/id=READ_RSP_PKT_PYLD/rawbytes
 
     - buffer:
         id      : RQ_BUF

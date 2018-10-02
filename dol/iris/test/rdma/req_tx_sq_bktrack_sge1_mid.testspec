@@ -36,7 +36,7 @@ packets:
 
     - packet:
         id          : SEND_LAST_PYLD # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -166,7 +166,7 @@ packets:
 
     - packet:
         id          : SEND_LAST # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : ref://testcase/packets/id=SEND_LAST_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -270,7 +270,7 @@ packets:
 
     - packet:
         id          : WRITE_LAST # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : ref://testcase/packets/id=WRITE_LAST_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :

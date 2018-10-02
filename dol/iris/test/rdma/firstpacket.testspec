@@ -16,7 +16,7 @@ selectors:
 packets:
     - packet:
         id          : PKT1     # Input packet 1
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
@@ -39,7 +39,7 @@ packets:
                 opcode  : 4
                 destqp  : 1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
 trigger:
     packets:

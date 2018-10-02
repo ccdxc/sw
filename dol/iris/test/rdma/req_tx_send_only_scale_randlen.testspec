@@ -22,7 +22,6 @@ packets:
     - packet:
         id          : BASE_PKT # Base packet
         scale       : True
-        #payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         # Set random length for HW stress tests
         payloadsize : callback://rdma/rdma/GetRandomPacketLen
         template    : ref://factory/packets/id=PAYLOAD

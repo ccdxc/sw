@@ -20,7 +20,7 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 16  # 16 bytes of inline data
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -28,7 +28,7 @@ packets:
 
     - packet:
         id          : EXP_PKT # Base packet
-        payloadsize : 16  # 16 bytes of inline data
+        payloadsize : ref://testcase/packets/id=BASE_PKT/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :

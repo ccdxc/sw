@@ -101,7 +101,6 @@ packets:
          headers     :
              payload:
                  data    : ref://testcase/pvtdata/orig_data_list
-#ref://factory/payloads/id=PAYLOAD_FF64/data
 
 buffers:
     - buffer:

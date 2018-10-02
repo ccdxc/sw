@@ -107,7 +107,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=2 #NAK_CODE_REM_ACC_ERR
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
 descriptors:
     - descriptor:

@@ -75,15 +75,15 @@ packets:
                                                                    
     - packet:
          id          : READ_RESP_ONLY_PYLD # Receive payload
-         payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+         payloadsize : 64
          template    : ref://factory/packets/id=PAYLOAD
          headers     :
              payload:
-                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                 data    : pattern-random://0/255/1
     
     - packet:
         id          : READ_RESP_ONLY_BASE # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         headers     :

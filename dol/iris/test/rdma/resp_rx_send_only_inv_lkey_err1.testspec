@@ -24,11 +24,11 @@ packets:
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
    - packet:
         id          : IN_PKT    # Input packet 
-        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=600,pkt_num=0
+        payloadsize : ref://testcase/packets/id=BASE_PKT/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -57,7 +57,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
    - packet:
         id          : EXP_PKT    # Expected Nak packet
@@ -93,7 +93,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=3 #NAK_CODE_REM_OP_ERR
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
 buffers:
     - buffer:

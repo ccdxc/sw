@@ -21,7 +21,7 @@ selectors:
 packets:
    - packet:
         id          : IN_PKT_BASE    # Base for Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         headers     :
@@ -48,7 +48,7 @@ packets:
                 psn     : callback://rdma/rdma/GetRqPreEpsn
                 a       : 1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
    - packet:
         id          : IN_PKT    # Input packet 
@@ -105,7 +105,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=3 #NAK_CODE_REM_OP_ERR
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
 buffers:
     - buffer:

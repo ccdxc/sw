@@ -20,15 +20,15 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
     - packet:
         id          : EXP_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : ref://testcase/packets/id=BASE_PKT/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         encaps      :   
@@ -63,7 +63,7 @@ packets:
                 dma_len : ref://testcase/packets/id=BASE_PKT/size
                 r_key   : ref://testcase/pvtdata/r_key
             payload:
-               data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+               data    : ref://testcase/packets/id=BASE_PKT/rawbytes
             udp_options :
                options :
                     #- kind   : MSS

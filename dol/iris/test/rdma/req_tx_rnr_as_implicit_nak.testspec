@@ -20,7 +20,7 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT1 # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -28,7 +28,7 @@ packets:
 
     - packet:
         id          : BASE_PKT2 # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -185,7 +185,7 @@ packets:
 
     - packet:
          id          : READ_RESP_LAST_PYLD # Receive payload
-         payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+         payloadsize : 64
          template    : ref://factory/packets/id=PAYLOAD
          headers     :
              payload:
@@ -193,7 +193,7 @@ packets:
 
     - packet:
          id          : READ_RESP_FIRST    # Receive packet 
-         payloadsize : 1024
+         payloadsize : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/size
          template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          icrc        : True
          encaps      :
@@ -229,7 +229,7 @@ packets:
 
     - packet:
          id          : READ_RESP_LAST     # Receive packet 
-         payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+         payloadsize : ref://testcase/packets/id=READ_RESP_LAST_PYLD/size
          template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
          icrc        : True
          encaps      :

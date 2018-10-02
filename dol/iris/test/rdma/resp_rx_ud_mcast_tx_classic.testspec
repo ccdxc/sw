@@ -21,7 +21,7 @@ selectors:
 packets:
    - packet:
         id          : BASE_PKT
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : 64
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_DETH,v6=ETH_IPV6_UDP_BTH_DETH
         icrc        : True
         encaps      :   
@@ -53,7 +53,7 @@ packets:
                 qkey    : 19088743   #For mcast, use global qkey 0x01234567
                 srcqp   : ref://testcase/config/rdmasession/rqp/id
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
 
    - packet:
        id          : TX_PKT_ENIC     # Input packet

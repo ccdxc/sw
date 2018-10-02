@@ -19,12 +19,28 @@ selectors:
 
 packets:
    - packet:
-        id          : BASE_PKT # Base packet
-        payloadsize : 2112
+        id          : READ_RSP_PKT1_PYLD
+        payloadsize : 1024
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
+
+   - packet:
+        id          : READ_RSP_PKT2_PYLD
+        payloadsize : 1024
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : pattern-random://0/255/1
+
+   - packet:
+        id          : READ_RSP_PKT3_PYLD
+        payloadsize : 64
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : pattern-random://0/255/1
 
    - packet:
         id          : IN_PKT    # First packet
@@ -67,7 +83,7 @@ packets:
 
    - packet:
         id          : EXP_PKT1    # Output packet, Reverse all fields from the IN_PKT
-        payloadsize : 1024
+        payloadsize : ref://testcase/packets/id=READ_RSP_PKT1_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         encaps      :   
@@ -99,11 +115,11 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=READ_RSP_PKT1_PYLD/rawbytes
 
    - packet:
         id          : EXP_PKT2    # Output packet, Reverse all fields from the IN_PKT
-        payloadsize : 1024
+        payloadsize : ref://testcase/packets/id=READ_RSP_PKT2_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -133,11 +149,11 @@ packets:
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=1  #Resp should carry PSN from Req + 1
             # no aeth for middle packet
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=READ_RSP_PKT2_PYLD/rawbytes
 
    - packet:
         id          : EXP_PKT3    # Output packet, Reverse all fields from the IN_PKT
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : ref://testcase/packets/id=READ_RSP_PKT3_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         encaps      :   
@@ -169,7 +185,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=READ_RSP_PKT3_PYLD/rawbytes
 
 buffers:
     - buffer:
@@ -179,8 +195,12 @@ buffers:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 1024
            segments:
-               - size    : 2112
-                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+               - size    : ref://testcase/packets/id=READ_RSP_PKT1_PYLD/size
+                 data    : ref://testcase/packets/id=READ_RSP_PKT1_PYLD/rawbytes
+               - size    : ref://testcase/packets/id=READ_RSP_PKT2_PYLD/size
+                 data    : ref://testcase/packets/id=READ_RSP_PKT2_PYLD/rawbytes
+               - size    : ref://testcase/packets/id=READ_RSP_PKT3_PYLD/size
+                 data    : ref://testcase/packets/id=READ_RSP_PKT3_PYLD/rawbytes
 
 trigger:
     packets:

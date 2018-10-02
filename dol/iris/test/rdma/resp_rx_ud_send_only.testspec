@@ -19,8 +19,16 @@ selectors:
 
 packets:
    - packet:
+        id          : BASE_PYLD
+        payloadsize : 64
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : pattern-random://0/255/1
+
+   - packet:
         id          : IN_PKT    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : ref://testcase/packets/id=BASE_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_DETH,v6=ETH_IPV6_UDP_BTH_DETH
         icrc        : True
         encaps      :   
@@ -52,11 +60,11 @@ packets:
                 qkey    : ref://testcase/config/rdmasession/lqp/id
                 srcqp   : ref://testcase/config/rdmasession/rqp/id
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PYLD/rawbytes
 
    - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : 64
+        payloadsize : ref://testcase/packets/id=BASE_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ROCE_UD_IPV4,v6=ROCE_UD_IPV6
         headers     :
             ipv4:
@@ -76,7 +84,7 @@ packets:
                 hlim    : 64
                 plen    : 96 #from the IN_PKT
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://testcase/packets/id=BASE_PYLD/rawbytes
                
 buffers:
     - buffer:
@@ -86,7 +94,7 @@ buffers:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=IN_PKT/size
+               - size    : ref://testcase/packets/id=BASE_PKT/size
                  data    : None
 
     - buffer:

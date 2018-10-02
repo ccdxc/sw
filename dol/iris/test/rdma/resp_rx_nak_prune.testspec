@@ -20,11 +20,27 @@ selectors:
 packets:
    - packet:
         id          : BASE_PKT # Base packet
-        payloadsize :  ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize :  64
         template    :  ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : pattern-random://0/255/1
+
+   - packet:
+        id          : BASE_PKT2 # Base packet
+        payloadsize :  64
+        template    :  ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : pattern-random://0/255/1
+
+   - packet:
+        id          :  READ_RSP_PKT_PYLD
+        payloadsize :  64
+        template    :  ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : pattern-random://0/255/1
 
    - packet:
         id          : IN_FIRST_PKT    # Input packet
@@ -167,7 +183,7 @@ packets:
 
    - packet:
         id          : IN_SECOND_PKT    # Input packet 
-        payloadsize : ref://testcase/packets/id=BASE_PKT/size
+        payloadsize : ref://testcase/packets/id=BASE_PKT2/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
         icrc        : True
         encaps      :   
@@ -197,7 +213,7 @@ packets:
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=2
                 a       : 1
             payload:
-                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                data    : ref://testcase/packets/id=BASE_PKT2/rawbytes
 
    - packet:
         id          : EXP_NAK_PKT    # Expected Nak packet
@@ -233,7 +249,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=0 #NAK_CODE_SEQ_ERR
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=2
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
    - packet:
         id          : EXP_FIRST_ACK_PKT    # Expected Ack packet
@@ -269,11 +285,11 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
    - packet:
         id          : READ_RSP_PKT    # Output packet, Reverse all fields from the IN_PKT
-        payloadsize : ref://testcase/packets/id=BASE_PKT/size
+        payloadsize : ref://testcase/packets/id=READ_RSP_PKT_PYLD/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         encaps      :
@@ -305,7 +321,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=2
             payload:
-                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                data    : ref://testcase/packets/id=READ_RSP_PKT_PYLD/rawbytes
 
    - packet:
         id          : EXP_DUP_ACK_PKT    # Expected Ack packet
@@ -341,7 +357,7 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=2
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
    - packet:
         id          : EXP_SECOND_ACK_PKT    # Expected Ack packet
@@ -377,9 +393,19 @@ packets:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=3
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : None
 
 buffers:
+    - buffer:
+        id      : BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 1024
+           segments:
+               - size    : ref://testcase/packets/id=READ_RSP_PKT_PYLD/size
+                 data    : ref://testcase/packets/id=READ_RSP_PKT_PYLD/rawbytes
+
     - buffer:
         id      : RQ_BUF
         template: ref://factory/templates/id=RDMA_BUFFER
@@ -399,6 +425,26 @@ buffers:
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT/size
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+    - buffer:
+        id      : RQ_BUF2
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 64
+           segments:
+               - size    : ref://testcase/packets/id=BASE_PKT2/size
+                 data    : None
+
+    - buffer:
+        id      : EXP_RQ_BUF2
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : None
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=BASE_PKT2/size
+                 data    : ref://testcase/packets/id=BASE_PKT2/rawbytes
 
 descriptors:
     - descriptor:
@@ -424,7 +470,32 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=RQ_BUF/address
                   len : ref://testcase/buffers/id=RQ_BUF/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+
+    - descriptor:
+        id      : RQ_DESC2
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF2/address
+                  len : ref://testcase/buffers/id=RQ_BUF2/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+
+    - descriptor:
+        id      : EXP_RQ_DESC2
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            buff: ref://testcase/buffers/id=EXP_RQ_BUF2
+            wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
+            num_sges: 1
+
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF2/address
+                  len : ref://testcase/buffers/id=RQ_BUF2/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
 
     - descriptor:
         id      : EXP_CQ_DESC
@@ -544,7 +615,7 @@ session:
             # post a receive descriptor
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=RQ_DESC
+                    object  : ref://testcase/descriptors/id=RQ_DESC2
                     ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
 
             doorbell:
@@ -561,7 +632,7 @@ session:
             # expect receive buffer transfer and completion posting
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_RQ_DESC
+                    object  : ref://testcase/descriptors/id=EXP_RQ_DESC2
                     ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC2
