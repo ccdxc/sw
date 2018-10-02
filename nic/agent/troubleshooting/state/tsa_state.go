@@ -47,22 +47,12 @@ var ErrDbRead = errors.New("Error retrieving object from database")
 var nAgent *netAgentState.Nagent
 
 // NewTsAgent creates new troubleshooting agent
-func NewTsAgent(dp types.TsDatapathAPI, mode config.AgentMode, dbPath, nodeUUID string, na *netAgentState.Nagent) (*Tagent, error) {
+func NewTsAgent(dp types.TsDatapathAPI, mode config.AgentMode, nodeUUID string, na *netAgentState.Nagent) (*Tagent, error) {
 	var tsa Tagent
-	var emdb emstore.Emstore
 	var err error
 
 	nAgent = na
-
-	if dbPath == "" {
-		emdb, err = emstore.NewEmstore(emstore.MemStoreType, "TsAgentDB")
-	} else {
-		emdb, err = emstore.NewEmstore(emstore.BoltDBType, dbPath)
-	}
-	if err != nil {
-		log.Errorf("Error opening the embedded db. Err: %v", err)
-		return nil, err
-	}
+	emdb := na.Store
 
 	restart := false
 
@@ -122,7 +112,6 @@ func (tsa *Tagent) RegisterCtrlerIf(ctrlerif types.CtrlerAPI) error {
 
 // Stop stops the agent
 func (tsa *Tagent) Stop() error {
-	tsa.Store.Close()
 	return nil
 }
 

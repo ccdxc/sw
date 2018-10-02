@@ -52,11 +52,11 @@ type Agent struct {
 }
 
 // NewTsAgent creates troubleshooting agent instance
-func NewTsAgent(dp types.TsDatapathAPI, dbPath, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode, na *netAgentState.Nagent) (*Agent, error) {
+func NewTsAgent(dp types.TsDatapathAPI, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode, na *netAgentState.Nagent) (*Agent, error) {
 
 	var tsClient *ctrlerif.TsClient
 
-	tsAgent, err := state.NewTsAgent(dp, mode, dbPath, nodeUUID, na)
+	tsAgent, err := state.NewTsAgent(dp, mode, nodeUUID, na)
 	if err != nil {
 		log.Errorf("Error creating trouble shooting agent, Err: %v", err)
 		return nil, err

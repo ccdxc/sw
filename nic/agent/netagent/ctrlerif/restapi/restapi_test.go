@@ -67,7 +67,7 @@ func setup() (*RestServer, error) {
 		log.Errorf("Could not create troubleshooting HAL datapath. Kind: %v, Error %v", datapathKind, err)
 		return nil, err
 	}
-	tsagent, err := tsstate.NewTsAgent(tsdp, protos.AgentMode_CLASSIC, "", "dummy-node-uuid", nagent)
+	tsagent, err := tsstate.NewTsAgent(tsdp, protos.AgentMode_CLASSIC, "dummy-node-uuid", nagent)
 	if err != nil {
 		log.Errorf("Could not create ts troubleshooting agent")
 		return nil, err

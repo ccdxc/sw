@@ -155,7 +155,7 @@ func main() {
 		ag.RestServer = restServer
 	} else {
 
-		tsa, err := troubleshooting.NewTsAgent(tsdp, "/tmp/naples-TsAgent.db", macAddr.String(), *tpmURL, resolverClient, agMode, ag.NetworkAgent)
+		tsa, err := troubleshooting.NewTsAgent(tsdp, macAddr.String(), *tpmURL, resolverClient, agMode, ag.NetworkAgent)
 		if err != nil {
 			log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 		}
