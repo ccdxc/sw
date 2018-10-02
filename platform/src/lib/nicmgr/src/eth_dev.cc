@@ -121,10 +121,14 @@ Eth::Eth(HalClient *hal_client, void *dev_spec)
 {
     uint64_t lif_handle, enic_handle;
     vector<uint64_t> l2seg_ids;
+    uint64_t    hbm_addr;
+    uint32_t    hbm_size;
 
     hal = hal_client;
     spec = (struct eth_devspec *)dev_spec;
 
+    memset(&pci_resources, 0, sizeof(pci_resources));
+    
     // Create LIF
     qinfo[ETH_QTYPE_RX].entries = (uint32_t)log2(spec->rxq_count);
     qinfo[ETH_QTYPE_TX].entries = (uint32_t)log2(spec->txq_count);
@@ -171,6 +175,41 @@ Eth::Eth(HalClient *hal_client, void *dev_spec)
         }
     }
 
+    /*
+     * Create the HBM resident queue memory region for RDMA and register 
+     * that memory with PCIe BAR2
+     */
+
+    if (spec->enable_rdma) {
+#define LLQ_HBM_HANDLE "rdma-hbm-queue"
+#define HBM_ADDR_ALIGN(addr, sz)                              \
+        (((addr) + ((uint64_t)(sz) - 1)) & ~((uint64_t)(sz) - 1))
+        
+        if (hal->AllocHbmAddress(LLQ_HBM_HANDLE, &hbm_addr, &hbm_size)) {
+            NIC_LOG_ERR("Failed to get HBM base for {}", LLQ_HBM_HANDLE);
+            return;
+        }
+        // hal/pd/capri/capri_hbm.cc stores size in KB;
+        hbm_size *= 1024;
+
+        // First, ensure size is a power of 2, then per PCIe BAR mapping
+        // requirement, align the region on its natural boundary, i.e.,
+        // if size is 64MB then the region must be aligned on a 64MB boundary!
+        // This means we could potentially waste half of the space if
+        // the region was not already aligned.
+        assert(hbm_size && !(hbm_size & (hbm_size - 1)));
+        if (hbm_addr & (hbm_size - 1)) {
+            hbm_size /= 2;
+            hbm_addr = HBM_ADDR_ALIGN(hbm_addr, hbm_size);
+        }
+
+        pci_resources.cmbpa = hbm_addr;
+        pci_resources.cmbsz = hbm_size;
+        NIC_LOG_INFO("HBM address for RDMA LLQ memory {:#x} size {} bytes", pci_resources.cmbpa, pci_resources.cmbsz);
+
+        MEM_SET(pci_resources.cmbpa, 0, hbm_size);        
+    }
+    
     lif_handle = hal->LifCreate(spec->lif_id, qinfo, &info,
                                 spec->uplink_id,
                                 spec->enable_rdma, spec->pte_count,
@@ -203,7 +242,6 @@ Eth::Eth(HalClient *hal_client, void *dev_spec)
     name = string_format("eth{}", spec->lif_id);
 
     // Configure PCI resources
-    memset(&pci_resources, 0, sizeof(pci_resources));
     pci_resources.lif_valid = 1;
     pci_resources.lif = info.hw_lif_id;
     pci_resources.intrb = spec->intr_base;
@@ -216,6 +254,7 @@ Eth::Eth(HalClient *hal_client, void *dev_spec)
     MEM_SET(pci_resources.devcmdpa, 0, 4096);
     MEM_SET(pci_resources.devcmddbpa, 0, 4096);
 
+    
     // Init Devcmd Region
     // TODO: mmap instead of calloc after porting to real pal
     devcmd = (struct dev_cmd_regs *)calloc(1, sizeof(struct dev_cmd_regs));

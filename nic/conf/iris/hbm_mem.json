@@ -408,6 +408,11 @@
         {
             "name": "mpu-trace",
             "size_kb" : 32768
+        },
+        {
+            "name": "rdma-hbm-queue",
+            "size_kb" : 32768,
+            "cache": "p4plus-all"
         }
     ]
 }
