@@ -6,6 +6,7 @@
 #define __DEBUG_HPP__
 
 #include "nic/include/base.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "gen/proto/debug.pb.h"
 
 using debug::MemTrackGetRequest;
@@ -29,19 +30,21 @@ typedef struct fte_span_s {
     hal_spinlock_t              slock;
     // types::FTESpanMatchSelector sel;
     uint32_t                    sel;
+    types::IPAddressFamily      ip_family;
     uint32_t                    src_lport;
     uint32_t                    dst_lport;
     uint32_t                    drop_reason;
     uint32_t                    flow_lkup_dir;
     uint32_t                    flow_lkup_type;
     uint32_t                    flow_lkup_vrf;
-    uint32_t                    flow_lkup_src;
-    uint32_t                    flow_lkup_dst;
+    ipvx_addr_t                 flow_lkup_src;
+    ipvx_addr_t                 flow_lkup_dst;
     uint32_t                    flow_lkup_proto;
     uint32_t                    flow_lkup_sport;
     uint32_t                    flow_lkup_dport;
     uint64_t                    eth_dmac;
     bool                        from_cpu;
+    bool                        is_egress;
 
     void                        *pd;
 

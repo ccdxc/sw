@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"reflect"
 
@@ -25,29 +26,15 @@ var (
 	flowLookupDir   uint32
 	flowLookupType  uint32
 	flowLookupVrf   uint32
-	flowLookupSrc   uint32
-	flowLookupDst   uint32
+	flowLookupSrc   string
+	flowLookupDst   string
 	flowLookupProto uint32
 	flowLookupSport uint32
 	flowLookupDport uint32
 	ethDmac         uint64
 	fromCPU         bool
+	isEgress        bool
 	isDisable       bool
-
-	srcLportSpecified        bool
-	dstLportSpecified        bool
-	dropReasonSpecified      bool
-	flowLookupDirSpecified   bool
-	flowLookupTypeSpecified  bool
-	flowLookupVrfSpecified   bool
-	flowLookupSrcSpecified   bool
-	flowLookupDstSpecified   bool
-	flowLookupProtoSpecified bool
-	flowLookupSportSpecified bool
-	flowLookupDportSpecified bool
-	ethDmacSpecified         bool
-	fromCPUSpecified         bool
-	isDisableSpecified       bool
 )
 
 var fteSpanDebugCmd = &cobra.Command{
@@ -82,13 +69,14 @@ func init() {
 	fteSpanDebugCmd.Flags().Uint32Var(&flowLookupDir, "dir", 0, "Specify flow lookup dir. 0: From Host, 1: From Uplink")
 	fteSpanDebugCmd.Flags().Uint32Var(&flowLookupType, "type", 0, "Specify flow type. 0: None, 1: Mac, 2: v4, 3: v6, 4: From VM Bounce, 5: To VM Bounce")
 	fteSpanDebugCmd.Flags().Uint32Var(&flowLookupVrf, "vrf", 0, "Specify vrf (flow lookup id)")
-	fteSpanDebugCmd.Flags().Uint32Var(&flowLookupSrc, "src", 0, "Specify flow source")
-	fteSpanDebugCmd.Flags().Uint32Var(&flowLookupDst, "dst", 0, "Specify flow destination")
+	fteSpanDebugCmd.Flags().StringVar(&flowLookupSrc, "src", "0.0.0.0", "Specify flow source")
+	fteSpanDebugCmd.Flags().StringVar(&flowLookupDst, "dst", "0.0.0.0", "Specify flow destination")
 	fteSpanDebugCmd.Flags().Uint32Var(&flowLookupProto, "proto", 0, "Specify flow proto")
 	fteSpanDebugCmd.Flags().Uint32Var(&flowLookupSport, "sport", 0, "Specify flow sport")
 	fteSpanDebugCmd.Flags().Uint32Var(&flowLookupDport, "dport", 0, "Specify flow dport")
 	fteSpanDebugCmd.Flags().Uint64Var(&ethDmac, "dmac", 0, "Specify ethernet dmac")
 	fteSpanDebugCmd.Flags().BoolVar(&fromCPU, "from-cpu", false, "Specify from cpu flag")
+	fteSpanDebugCmd.Flags().BoolVar(&isEgress, "is-egress", false, "Enable egress span")
 }
 
 func fteSpanShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -166,71 +154,74 @@ func fteSpanDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := halproto.NewDebugClient(c.ClientConn)
 
-	srcLportSpecified = false
-	dstLportSpecified = false
-	dropReasonSpecified = false
-	flowLookupDirSpecified = false
-	flowLookupTypeSpecified = false
-	flowLookupVrfSpecified = false
-	flowLookupSrcSpecified = false
-	flowLookupDstSpecified = false
-	flowLookupProtoSpecified = false
-	flowLookupSportSpecified = false
-	flowLookupDportSpecified = false
-	ethDmacSpecified = false
-	fromCPUSpecified = false
-
 	var sel uint32
 	if cmd.Flags().Changed("slport") {
-		srcLportSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_SRC_LPORT))
 	}
 	if cmd.Flags().Changed("dlport") {
-		dstLportSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_DST_LPORT))
 	}
 	if cmd.Flags().Changed("drop") {
-		dropReasonSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_DROP_REASON))
 	}
 	if cmd.Flags().Changed("dir") {
-		flowLookupDirSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_FLOW_LKUP_DIR))
 	}
 	if cmd.Flags().Changed("type") {
-		flowLookupTypeSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_FLOW_LKUP_TYPE))
 	}
 	if cmd.Flags().Changed("vrf") {
-		flowLookupVrfSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_FLOW_LKUP_VRF))
 	}
+	var flowSrcProto *halproto.IPAddress
 	if cmd.Flags().Changed("src") {
-		flowLookupSrcSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_FLOW_LKUP_SRC))
+		ip := net.ParseIP(flowLookupSrc)
+		if ip == nil {
+			fmt.Printf("Wrong IP address format for source: %s", flowLookupSrc)
+			os.Exit(1)
+		}
+		if ip.To4() != nil {
+			flowSrcProto = &halproto.IPAddress{
+				IpAf: halproto.IPAddressFamily_IP_AF_INET,
+				V4OrV6: &halproto.IPAddress_V4Addr{
+					V4Addr: utils.IP2Int(ip),
+				},
+			}
+		}
+		// TODO: Handle IPv6
 	}
+	var flowDstProto *halproto.IPAddress
 	if cmd.Flags().Changed("dst") {
-		flowLookupDstSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_FLOW_LKUP_DST))
+		ip := net.ParseIP(flowLookupDst)
+		if ip == nil {
+			fmt.Printf("Wrong IP address format for destination: %s", flowLookupDst)
+			os.Exit(1)
+		}
+		if ip.To4() != nil {
+			flowDstProto = &halproto.IPAddress{
+				IpAf: halproto.IPAddressFamily_IP_AF_INET,
+				V4OrV6: &halproto.IPAddress_V4Addr{
+					V4Addr: utils.IP2Int(ip),
+				},
+			}
+		}
+		// TODO: Handle IPv6
 	}
 	if cmd.Flags().Changed("proto") {
-		flowLookupProtoSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_FLOW_LKUP_PROTO))
 	}
 	if cmd.Flags().Changed("sport") {
-		flowLookupSportSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_FLOW_LKUP_SPORT))
 	}
 	if cmd.Flags().Changed("dport") {
-		flowLookupDportSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_FLOW_LKUP_DPORT))
 	}
 	if cmd.Flags().Changed("dmac") {
-		ethDmacSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_ETH_DMAC))
 	}
 	if cmd.Flags().Changed("from-cpu") {
-		fromCPUSpecified = true
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_FROM_CPU))
 	}
 
@@ -242,13 +233,14 @@ func fteSpanDebugCmdHandler(cmd *cobra.Command, args []string) {
 		FlowLkupDir:   flowLookupDir,
 		FlowLkupType:  flowLookupType,
 		FlowLkupVrf:   flowLookupVrf,
-		FlowLkupSrc:   flowLookupSrc,
-		FlowLkupDst:   flowLookupDst,
+		FlowLkupSrc:   flowSrcProto,
+		FlowLkupDst:   flowDstProto,
 		FlowLkupProto: flowLookupProto,
 		FlowLkupSport: flowLookupSport,
 		FlowLkupDport: flowLookupDport,
 		EthDmac:       ethDmac,
 		FromCpu:       fromCPU,
+		IsEgress:      isEgress,
 	}
 	fteSpanReqMsg := &halproto.FteSpanRequestMsg{
 		Request: []*halproto.FteSpanRequest{req},

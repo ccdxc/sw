@@ -7,6 +7,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "kh.proto";
 
 package debug;
 option go_package="halproto";
@@ -51,13 +52,15 @@ message FteSpanRequest {
   uint32                        flow_lkup_dir    = 5;    // Flow lookup Direction. 0: From Host, 1: From Uplink
   uint32                        flow_lkup_type   = 6;    // Flow lookup Type.
   uint32                        flow_lkup_vrf    = 7;    // Flow lookup Vrf
-  uint32                        flow_lkup_src    = 8;    // Flow lookup Src. IP/Mac
-  uint32                        flow_lkup_dst    = 9;    // Flow lookup Dst. IP/Mac
-  uint32                        flow_lkup_proto  = 10;    // Flow lookup Proto
+  types.IPAddress               flow_lkup_src    = 8;    // Flow lookup Src. IP/Mac
+  types.IPAddress               flow_lkup_dst    = 9;    // Flow lookup Dst. IP/Mac
+  uint32                        flow_lkup_proto  = 10;   // Flow lookup Proto
   uint32                        flow_lkup_sport  = 11;   // Flow lookup Sport
   uint32                        flow_lkup_dport  = 12;   // Flow lookup Dport
   uint64                        eth_dmac         = 13;   // Ethernet dmac
   bool                          from_cpu         = 14;   // From CPU
+  bool                          is_egress        = 15;   // Enable egress span
+  kh.InterfaceKeyHandle         egress_if        = 16;   // Egress span on this interface
 }
 
 message FteSpanRequestMsg {

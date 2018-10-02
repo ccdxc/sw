@@ -227,6 +227,10 @@ static int icmpv4_packet_to_string(FILE *s, struct packet *packet,
 	fprintf(s, "icmpv4");
 
 	/* TODO(ncardwell): print type, code; use tables from icmp_packet.c */
+
+	if (format == DUMP_VERBOSE)
+		packet_buffer_to_string(s, packet);
+
 	return STATUS_OK;
 }
 
@@ -235,6 +239,10 @@ static int icmpv6_packet_to_string(FILE *s, struct packet *packet,
 {
 	fprintf(s, "icmpv6");
 	/* TODO(ncardwell): print type, code; use tables from icmp_packet.c */
+
+	if (format == DUMP_VERBOSE)
+		packet_buffer_to_string(s, packet);
+
 	return STATUS_OK;
 }
 

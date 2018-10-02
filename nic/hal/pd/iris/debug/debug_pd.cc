@@ -264,13 +264,18 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
                 ~(mask.flow_lkp_metadata_lkp_vrf_mask & 0);
         }
 
-        // TODO: Fix for Ipv6. Check acl_pd.cc
+        // TODO: Fix for Ipv6. Check acl_pd.cc. Also check session_pd.cc p4pd_add_flow_hash_table_entry
         if (fte_span->sel & (1 << types::FLOW_LKUP_SRC)) {
-
+            memcpy(key.flow_lkp_metadata_lkp_src, fte_span->flow_lkup_src.v6_addr.addr8,
+                   IP6_ADDR8_LEN);
+            memset(mask.flow_lkp_metadata_lkp_src_mask, 0xFF, IP6_ADDR8_LEN);
         }
 
-        // TODO: Fix for IPv6. Check acl_pd.cc
+        // TODO: Fix for Ipv6. Check acl_pd.cc. Also check session_pd.cc p4pd_add_flow_hash_table_entry
         if (fte_span->sel & (1 << types::FLOW_LKUP_DST)) {
+            memcpy(key.flow_lkp_metadata_lkp_dst, fte_span->flow_lkup_dst.v6_addr.addr8,
+                   IP6_ADDR8_LEN);
+            memset(mask.flow_lkp_metadata_lkp_dst_mask, 0xFF, IP6_ADDR8_LEN);
         }
 
         if (fte_span->sel & (1 << types::FLOW_LKUP_PROTO)) {
@@ -305,8 +310,13 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
         }
 
         data.actionid = NACL_NACL_PERMIT_ID;
-        data.nacl_action_u.nacl_nacl_permit.ingress_mirror_en = 1;
-        data.nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;
+        if (fte_span->is_egress) {
+            data.nacl_action_u.nacl_nacl_permit.egress_mirror_en = 1;
+            data.nacl_action_u.nacl_nacl_permit.egress_mirror_session_id = 0x1 << 7;
+        } else {
+            data.nacl_action_u.nacl_nacl_permit.ingress_mirror_en = 1;
+            data.nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;
+        }
     }
 
     if (oper == TABLE_OPER_INSERT) {

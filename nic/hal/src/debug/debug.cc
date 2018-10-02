@@ -431,13 +431,15 @@ fte_span_init_from_spec (fte_span_t *fte_span, FteSpanRequest* req)
     fte_span->flow_lkup_dir = req->flow_lkup_dir();
     fte_span->flow_lkup_type = req->flow_lkup_type();
     fte_span->flow_lkup_vrf = req->flow_lkup_vrf();
-    fte_span->flow_lkup_src = req->flow_lkup_src();
-    fte_span->flow_lkup_dst = req->flow_lkup_dst();
+    fte_span->ip_family = req->flow_lkup_src().ip_af();
+    fte_span->flow_lkup_src.v4_addr = req->flow_lkup_src().v4_addr();
+    fte_span->flow_lkup_dst.v4_addr = req->flow_lkup_dst().v4_addr();
     fte_span->flow_lkup_proto = req->flow_lkup_proto();
     fte_span->flow_lkup_sport = req->flow_lkup_sport();
     fte_span->flow_lkup_dport = req->flow_lkup_dport();
     fte_span->eth_dmac = req->eth_dmac();
     fte_span->from_cpu = req->from_cpu();
+    fte_span->is_egress = req->is_egress();
 
     return HAL_RET_OK;
 }
@@ -452,13 +454,15 @@ fte_span_to_spec (FteSpanRequest* req, fte_span_t *fte_span)
     req->set_flow_lkup_dir(fte_span->flow_lkup_dir);
     req->set_flow_lkup_type(fte_span->flow_lkup_type);
     req->set_flow_lkup_vrf(fte_span->flow_lkup_vrf);
-    req->set_flow_lkup_src(fte_span->flow_lkup_src);
-    req->set_flow_lkup_dst(fte_span->flow_lkup_dst);
+    req->mutable_flow_lkup_src()->set_ip_af(fte_span->ip_family);
+    req->mutable_flow_lkup_src()->set_v4_addr(fte_span->flow_lkup_src.v4_addr);
+    req->mutable_flow_lkup_dst()->set_v4_addr(fte_span->flow_lkup_dst.v4_addr);
     req->set_flow_lkup_proto(fte_span->flow_lkup_proto);
     req->set_flow_lkup_sport(fte_span->flow_lkup_sport);
     req->set_flow_lkup_dport(fte_span->flow_lkup_dport);
     req->set_eth_dmac(fte_span->eth_dmac);
     req->set_from_cpu(fte_span->from_cpu);
+    req->set_is_egress(fte_span->is_egress);
 
     return HAL_RET_OK;
 }
@@ -495,7 +499,7 @@ fte_span_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_ret_t                   ret        = HAL_RET_OK;
     dllist_ctxt_t               *lnode     = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    fte_span_t                       *fte_span       = NULL;
+    fte_span_t                  *fte_span  = NULL;
 
     HAL_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
