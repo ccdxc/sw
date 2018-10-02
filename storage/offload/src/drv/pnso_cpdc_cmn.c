@@ -361,22 +361,20 @@ cpdc_get_batch_bulk_desc(struct mem_pool *mpool)
 	return desc;
 }
 
-static pnso_error_t
-put_desc(struct per_core_resource *pcr, bool per_block,
-		struct cpdc_desc *desc)
+static void 
+put_desc(struct per_core_resource *pcr, bool per_block, struct cpdc_desc *desc)
 {
 	struct mem_pool *mpool;
 
 	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR] :
 		pcr->mpools[MPOOL_TYPE_CPDC_DESC];
 
-	return mpool_put_object(mpool, desc);
+	mpool_put_object(mpool, desc);
 }
 
-static pnso_error_t
+static void
 put_batch_desc(const struct service_info *svc_info, struct cpdc_desc *desc)
 {
-	pnso_error_t err = PNSO_OK;
 	struct service_batch_info *svc_batch_info;
 
 	svc_batch_info = (struct service_batch_info *) &svc_info->si_batch_info;
@@ -388,31 +386,28 @@ put_batch_desc(const struct service_info *svc_info, struct cpdc_desc *desc)
 			svc_batch_info->sbi_desc_idx,
 			(uint64_t) svc_batch_info->u.sbi_cpdc_desc,
 			(uint64_t) desc);
-
-	return err;
 }
 
-pnso_error_t __attribute__((unused))
+void
 cpdc_put_desc(const struct service_info *svc_info, bool per_block,
 		struct cpdc_desc *desc)
 {
-	pnso_error_t err;
 	bool in_batch = false;
 
 	if (cpdc_is_service_in_batch(svc_info->si_flags))
 		in_batch = true;
 
-	err = in_batch ? put_batch_desc(svc_info, desc) :
+	if (in_batch)
+		put_batch_desc(svc_info, desc);
+	else
 		put_desc(svc_info->si_pcr, per_block, desc);
-
-	return err;
 }
 
 /* 'batch' is the caller, not the services ... */
-pnso_error_t
+void
 cpdc_put_batch_bulk_desc(struct mem_pool *mpool, struct cpdc_desc *desc)
 {
-	return mpool_put_object(mpool, desc);
+	mpool_put_object(mpool, desc);
 }
 
 struct cpdc_status_desc *
@@ -426,7 +421,7 @@ cpdc_get_status_desc(struct per_core_resource *pcr, bool per_block)
 	return (struct cpdc_status_desc *) mpool_get_object(mpool);
 }
 
-pnso_error_t
+void
 cpdc_put_status_desc(struct per_core_resource *pcr, bool per_block,
 		struct cpdc_status_desc *desc)
 {
@@ -435,7 +430,7 @@ cpdc_put_status_desc(struct per_core_resource *pcr, bool per_block,
 	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR] :
 		pcr->mpools[MPOOL_TYPE_CPDC_STATUS_DESC];
 
-	return mpool_put_object(mpool, desc);
+	mpool_put_object(mpool, desc);
 }
 
 struct cpdc_sgl *
@@ -449,7 +444,7 @@ cpdc_get_sgl(struct per_core_resource *pcr, bool per_block)
 	return (struct cpdc_sgl *) mpool_get_object(mpool);
 }
 
-pnso_error_t
+void
 cpdc_put_sgl(struct per_core_resource *pcr, bool per_block,
 		struct cpdc_sgl *sgl)
 {
@@ -458,7 +453,7 @@ cpdc_put_sgl(struct per_core_resource *pcr, bool per_block,
 	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CPDC_SGL_VECTOR] :
 		pcr->mpools[MPOOL_TYPE_CPDC_SGL];
 
-	return mpool_put_object(mpool, sgl);
+	mpool_put_object(mpool, sgl);
 }
 
 pnso_error_t

@@ -491,10 +491,7 @@ pc_res_mpool_object_put(const struct per_core_resource *pcr,
 
 	if (obj) {
 		mpool = pc_res_mpool_get(pcr, type);
-		if (mpool && mpool_put_object(mpool, obj)) {
-			OSAL_LOG_ERROR("cannot return pcr object to pool %s",
-					mpool_get_type_str(type));
-		}
+		mpool_put_object(mpool, obj);
 	}
 }
 

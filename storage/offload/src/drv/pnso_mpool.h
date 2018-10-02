@@ -163,11 +163,10 @@ void *mpool_get_object(struct mem_pool *mpool);
  * @object:	[in]	specifies the pointer to the object.
  *
  * Return Value:
- *	PNSO_OK	- on success
- *	-EINVAL	- on invalid input parameters
+ *	None
  *
  */
-pnso_error_t mpool_put_object(struct mem_pool *mpool, void *object);
+void mpool_put_object(struct mem_pool *mpool, void *object);
 
 /**
  * mpool_get_pad_size() - returns the number of padding-bytes for the specified

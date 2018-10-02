@@ -164,19 +164,9 @@ compress_setup(struct service_info *svc_info,
 	return err;
 
 out_status_desc:
-	err = cpdc_put_status_desc(pcr, false, status_desc);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
-				err);
-		OSAL_ASSERT(0);
-	}
+	cpdc_put_status_desc(pcr, false, status_desc);
 out_cp_desc:
-	err = cpdc_put_desc(svc_info, false, cp_desc);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return cp desc to pool! err: %d",
-				err);
-		OSAL_ASSERT(0);
-	}
+	cpdc_put_desc(svc_info, false, cp_desc);
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -430,7 +420,6 @@ out:
 static void
 compress_teardown(struct service_info *svc_info)
 {
-	pnso_error_t err;
 	struct cpdc_desc *cp_desc;
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pcr;
@@ -446,20 +435,10 @@ compress_teardown(struct service_info *svc_info)
 	pcr = svc_info->si_pcr;
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	err = cpdc_put_status_desc(pcr, false, status_desc);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return status desc to pool! status_desc: %p err: %d",
-				status_desc, err);
-		OSAL_ASSERT(0);
-	}
+	cpdc_put_status_desc(pcr, false, status_desc);
 
 	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = cpdc_put_desc(svc_info, false, cp_desc);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return cp desc to pool! cp_desc: %p err: %d",
-				cp_desc, err);
-		OSAL_ASSERT(0);
-	}
+	cpdc_put_desc(svc_info, false, cp_desc);
 
 	seq_cleanup_cpdc_chain(svc_info);
 

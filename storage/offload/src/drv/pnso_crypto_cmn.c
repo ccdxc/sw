@@ -371,7 +371,7 @@ crypto_get_batch_bulk_desc(struct mem_pool *mpool)
 	return desc;
 }
 
-static pnso_error_t
+static void
 put_desc(struct per_core_resource *pcr, bool per_block,
 		struct crypto_desc *desc)
 {
@@ -380,14 +380,13 @@ put_desc(struct per_core_resource *pcr, bool per_block,
 	mpool = per_block ? pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR] :
 		pcr->mpools[MPOOL_TYPE_CRYPTO_DESC];
 
-	return mpool_put_object(mpool, desc);
+	mpool_put_object(mpool, desc);
 }
 
-static pnso_error_t
+static void
 put_batch_desc(const struct service_info *svc_info,
 		struct crypto_desc *desc)
 {
-	pnso_error_t err = PNSO_OK;
 	struct service_batch_info *svc_batch_info;
 
 	svc_batch_info = (struct service_batch_info *) &svc_info->si_batch_info;
@@ -399,28 +398,25 @@ put_batch_desc(const struct service_info *svc_info,
 			svc_batch_info->sbi_desc_idx,
 			(uint64_t) svc_batch_info->u.sbi_crypto_desc,
 			(uint64_t) desc);
-
-	return err;
 }
 
-pnso_error_t
+void
 crypto_put_desc(const struct service_info *svc_info, bool per_block,
 		struct crypto_desc *desc)
 {
-	pnso_error_t err;
 	bool in_batch = false;
 
 	if (putil_is_service_in_batch(svc_info->si_flags))
 		in_batch = true;
 
-	err = in_batch ? put_batch_desc(svc_info, desc) :
+	if (in_batch)
+		put_batch_desc(svc_info, desc);
+	else
 		put_desc(svc_info->si_pcr, per_block, desc);
-
-	return err;
 }
 
 /* 'batch' is the caller, not the services ... */
-pnso_error_t
+void
 crypto_put_batch_bulk_desc(struct mem_pool *mpool, struct crypto_desc *desc)
 {
 	return mpool_put_object(mpool, desc);

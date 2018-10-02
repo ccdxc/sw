@@ -460,7 +460,6 @@ init_service_info(enum pnso_service_type svc_type,
 void
 chn_destroy_chain(struct service_chain *chain)
 {
-	pnso_error_t err;
 	struct per_core_resource *pcr;
 	struct mem_pool *svc_chain_mpool;
 	struct mem_pool *svc_chain_entry_mpool;
@@ -495,23 +494,12 @@ chn_destroy_chain(struct service_chain *chain)
 
 		sc_next = sc_entry->ce_next;
 
-		err = mpool_put_object(svc_chain_entry_mpool, sc_entry);
-		if (err) {
-			OSAL_LOG_ERROR("failed to return service chain entry object to pool! err: %d",
-				err);
-			OSAL_ASSERT(0);
-		}
+		mpool_put_object(svc_chain_entry_mpool, sc_entry);
 		sc_entry = sc_next;
 	}
 	OSAL_ASSERT(i == chain->sc_num_services);
 
-	err = mpool_put_object(svc_chain_mpool, chain);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return service chain object to pool! err: %d",
-				err);
-		OSAL_ASSERT(0);
-	}
-
+	mpool_put_object(svc_chain_mpool, chain);
 	OSAL_LOG_DEBUG("exit!");
 }
 

@@ -48,6 +48,7 @@ mpool_get_type_str(enum mem_pool_type mpool_type)
 {
 	if (mpool_type_is_valid(mpool_type))
 		return mem_pool_types[mpool_type];
+
 	return "unknown";
 }
 
@@ -375,28 +376,30 @@ mpool_get_object(struct mem_pool *mpool)
 	return object;
 }
 
-pnso_error_t
+void
 mpool_put_object(struct mem_pool *mpool, void *object)
 {
-	pnso_error_t err = ENOTEMPTY;
 	struct mem_pool_stack *mem_stack;
 
 	if (!mpool || !object)
-		return EINVAL;
+		return;
 
 	if (!is_pool_valid(mpool))
-		return EINVAL;
+		return;
 
 	MPOOL_VALIDATE_OBJECT(mpool, object);
 
 	mem_stack = &mpool->mp_stack;
-	if (mem_stack->mps_top < mem_stack->mps_num_objects) {
-		mem_stack->mps_objects[mem_stack->mps_top] = object;
-		mem_stack->mps_top++;
-		err = PNSO_OK;
+	if (mem_stack->mps_top >= mem_stack->mps_num_objects) {
+		OSAL_LOG_ERROR("cannot return object to pool! object: 0x%llx type: %s",
+				(uint64_t) object,
+				mpool_get_type_str(mpool->mp_config.mpc_type));
+		OSAL_ASSERT(0);
+		return;
 	}
 
-	return err;
+	mem_stack->mps_objects[mem_stack->mps_top] = object;
+	mem_stack->mps_top++;
 }
 
 void __attribute__ ((unused))
@@ -428,9 +431,9 @@ mpool_pprint(const struct mem_pool *mpool)
 			mpool->mp_config.mpc_pad_size);
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_pool_size",
 			mpool->mp_config.mpc_pool_size);
-	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_num_allocs",
+	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_num_allocs",
 			mpool->mp_config.mpc_num_allocs);
-	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_page_size",
+	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_page_size",
 			mpool->mp_config.mpc_page_size);
 
 	OSAL_LOG_DEBUG("%-30s: 0x" PRIx64, "mpool->mp_objects",

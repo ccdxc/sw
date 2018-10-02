@@ -124,13 +124,10 @@ put_mpool_batch_object(enum mem_pool_type pool_type, void *p)
 		goto out;
 	}
 
-	err  = (pool_type == MPOOL_TYPE_BATCH_PAGE) ?
-			mpool_put_object(batch_page_mpool, p) :
-			mpool_put_object(batch_info_mpool, p);
-	if (err) {
-		OSAL_ASSERT(0);
-		goto out;
-	}
+	if (pool_type == MPOOL_TYPE_BATCH_PAGE)
+		mpool_put_object(batch_page_mpool, p);
+	else
+		mpool_put_object(batch_info_mpool, p);
 
 	OSAL_LOG_DEBUG("returned batch page/info object to mpool. pool_type: %d",
 			pool_type);

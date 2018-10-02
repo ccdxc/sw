@@ -60,22 +60,21 @@ pnso_error_t cpdc_update_service_info_sgls(struct service_info *svc_info);
 struct cpdc_status_desc *cpdc_get_status_desc(struct per_core_resource *pcr,
 		bool per_block);
 
-pnso_error_t cpdc_put_status_desc(struct per_core_resource *pcr,
+void cpdc_put_status_desc(struct per_core_resource *pcr,
 		bool per_block, struct cpdc_status_desc *desc);
 
 struct cpdc_sgl *cpdc_get_sgl(struct per_core_resource *pcr, bool per_block);
 
-pnso_error_t cpdc_put_sgl(struct per_core_resource *pcr, bool per_block,
+void cpdc_put_sgl(struct per_core_resource *pcr, bool per_block,
 		struct cpdc_sgl *sgl);
 
 struct cpdc_desc *cpdc_get_batch_bulk_desc(struct mem_pool *mpool);
 
-pnso_error_t cpdc_put_batch_bulk_desc(struct mem_pool *mpool,
-		struct cpdc_desc *desc);
+void cpdc_put_batch_bulk_desc(struct mem_pool *mpool, struct cpdc_desc *desc);
 
 struct cpdc_desc *cpdc_get_desc(struct service_info *svc_info, bool per_block);
 
-pnso_error_t cpdc_put_desc(const struct service_info *svc_info,
+void cpdc_put_desc(const struct service_info *svc_info,
 		bool per_block, struct cpdc_desc *desc);
 
 uint32_t cpdc_get_desc_size(void);

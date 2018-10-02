@@ -133,19 +133,9 @@ decompress_setup(struct service_info *svc_info,
 	return err;
 
 out_status_desc:
-	err = cpdc_put_status_desc(pcr, false, status_desc);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return status desc to pool! err: %d",
-				err);
-		OSAL_ASSERT(0);
-	}
+	cpdc_put_status_desc(pcr, false, status_desc);
 out_dc_desc:
-	err = cpdc_put_desc(svc_info, false, dc_desc);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return dc desc to pool! err: %d",
-				err);
-		OSAL_ASSERT(0);
-	}
+	cpdc_put_desc(svc_info, false, dc_desc);
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
@@ -308,7 +298,6 @@ out:
 static void
 decompress_teardown(struct service_info *svc_info)
 {
-	pnso_error_t err;
 	struct cpdc_desc *dc_desc;
 	struct cpdc_status_desc *status_desc;
 	struct per_core_resource *pcr;
@@ -329,20 +318,10 @@ decompress_teardown(struct service_info *svc_info)
 	pcr = svc_info->si_pcr;
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
-	err = cpdc_put_status_desc(pcr, false, status_desc);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return status desc to pool! status_desc: %p err: %d",
-				status_desc, err);
-		OSAL_ASSERT(0);
-	}
+	cpdc_put_status_desc(pcr, false, status_desc);
 
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = cpdc_put_desc(svc_info, false, dc_desc);
-	if (err) {
-		OSAL_LOG_ERROR("failed to return dc desc to pool! dc_desc: %p err: %d",
-				dc_desc, err);
-		OSAL_ASSERT(0);
-	}
+	cpdc_put_desc(svc_info, false, dc_desc);
 
 	OSAL_LOG_DEBUG("exit!");
 }
