@@ -126,6 +126,19 @@ func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (int, error)
 				return numExports, err
 			}
 		}
+
+		val, err := time.ParseDuration(t.Interval)
+		if err != nil {
+			return 0, fmt.Errorf("invalid interval format %s", err)
+		}
+
+		if val < time.Second {
+			return 0, fmt.Errorf("too small interval %s", t.Interval)
+		}
+
+		if val > 24*time.Hour {
+			return 0, fmt.Errorf("too large interval %s", t.Interval)
+		}
 	}
 
 	return numExports, nil
@@ -379,16 +392,18 @@ func (s *PolicyState) createFlowMonitorRule(ctx context.Context, meta *networkMe
 	flowMon := &tpaprotos.FlowMonitorObj{}
 	dbFlowExp.FlowMonObj = append(dbFlowExp.FlowMonObj, flowMon)
 
-	interval, err := time.ParseDuration(target.Interval)
+	duration, err := time.ParseDuration(target.Interval)
 	if err != nil {
 		return fmt.Errorf("invalid interval %s", target.Interval)
 	}
+
+	interval := uint32(duration.Seconds()) // convert to seconds
 
 	var collectorKeys []*halproto.CollectorKeyHandle
 
 	for i := 0; i < len(target.Exports); i++ {
 		// configure collector policy
-		collectorKey, err := s.createCollectorPolicy(ctx, meta, strings.ToUpper(target.Format), uint32(interval), &target.Exports[i])
+		collectorKey, err := s.createCollectorPolicy(ctx, meta, strings.ToUpper(target.Format), interval, &target.Exports[i])
 		if err != nil {
 			log.Errorf("failed to create collector policy for %s, %+v, error:%s ", dbFlowExp.P.Name, target.Exports[i], err)
 			return fmt.Errorf("failed to create policy, %s", err)

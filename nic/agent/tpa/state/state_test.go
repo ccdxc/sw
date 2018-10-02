@@ -137,6 +137,7 @@ func TestFindNumExports(t *testing.T) {
 }
 
 func TestValidatePolicy(t *testing.T) {
+	destAddr := "192.168.3.1"
 	ds, err := createDataStore()
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
 
@@ -204,7 +205,7 @@ func TestValidatePolicy(t *testing.T) {
 					Format:   "IPFIX",
 					Exports: []monitoring.ExportConfig{
 						{
-							Destination: fmt.Sprintf("192.168.3.1"),
+							Destination: destAddr,
 						},
 					},
 				},
@@ -224,7 +225,7 @@ func TestValidatePolicy(t *testing.T) {
 					Format:   "IPFIX",
 					Exports: []monitoring.ExportConfig{
 						{
-							Destination: fmt.Sprintf("192.168.3.1"),
+							Destination: destAddr,
 							Transport:   "TCP/1234",
 						},
 					},
@@ -235,6 +236,46 @@ func TestValidatePolicy(t *testing.T) {
 	c, err := ag.validatePolicy(pol)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to find num exports"))
 	tu.Assert(t, c == 1, fmt.Sprintf("expected num exports: 1, got %d", c))
+
+	// check interval
+	pol = &tpmprotos.FlowExportPolicy{
+		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
+		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
+		Spec: tpmprotos.FlowExportPolicySpec{
+			Targets: []monitoring.FlowExportTarget{
+				{
+					Format: "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: destAddr,
+							Transport:   "TCP/1234",
+						},
+					},
+				},
+			},
+		}}
+
+	testInterval := []struct {
+		interval string
+		pass     bool
+	}{
+		{interval: "15ns", pass: false},
+		{interval: "15us", pass: false},
+		{interval: "15µs", pass: false},
+		{interval: "999ms", pass: false},
+		{interval: "25h", pass: false},
+		{interval: "1s", pass: true},
+	}
+
+	for _, i := range testInterval {
+		pol.Spec.Targets[0].Interval = i.interval
+		_, err = ag.validatePolicy(pol)
+		if i.pass {
+			tu.AssertOk(t, err, fmt.Sprintf("failed to validate interval: %s", pol.Spec.Targets[0].Interval))
+		} else {
+			tu.Assert(t, err != nil, fmt.Sprintf("didnt fail interval: %s", pol.Spec.Targets[0].Interval))
+		}
+	}
 }
 
 func TestNewTpAgent(t *testing.T) {
@@ -264,7 +305,7 @@ func TestNewTpAgent(t *testing.T) {
 
 	obj, err := ag.store.Read(pol)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to read export policy"))
-	rp, ok := obj.((*tpaprotos.FlowExportPolicyObj))
+	rp, ok := obj.(*tpaprotos.FlowExportPolicyObj)
 	tu.Assert(t, ok == true, fmt.Sprintf("invalid export policy %+v", obj))
 	tu.Assert(t, rp == pol, fmt.Sprintf("export policy  didn't match, %+v, %+v", rp, pol))
 
