@@ -20,6 +20,8 @@ p4plus_app_prep:
 p4plus_app_prep2:
   sne         c1, k.control_metadata_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC
   bcf         [c1], p4plus_app_non_classic
+  phvwr.!c1   p.p4_to_p4plus_classic_nic_l2_pkt_type, \
+                k.flow_lkp_metadata_pkt_type
 
   seq         c1, k.inner_ipv4_valid, TRUE
   seq         c2, k.inner_ipv6_valid, TRUE
