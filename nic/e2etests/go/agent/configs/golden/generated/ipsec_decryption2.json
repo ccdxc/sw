@@ -1,10 +1,10 @@
 [
   {
-    "kind": "IPSecSAEncrypt",
+    "kind": "IPSecSADecrypt",
     "meta": {
-      "name": "ipsec-encrypt-sa1",
+      "name": "ipsec-decrypt-sa1",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "scale-vrf-2",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -13,21 +13,19 @@
       "protocol": "ESP",
       "authentication-algorithm": "AES_GCM",
       "authentication-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-      "encryption-algorithm": "AES_GCM_256",
-      "encryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-      "local-gateway-ip": "112.211.249.4",
-      "remote-gateway-ip": "112.211.249.2",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
       "spi": 1,
-      "tep-namespace": "scale-vrf-2"
+      "tep-namespace": "scale-vrf-0"
     },
     "status": {}
   },
   {
-    "kind": "IPSecSAEncrypt",
+    "kind": "IPSecSADecrypt",
     "meta": {
-      "name": "ipsec-encrypt-sa2",
+      "name": "ipsec-decrypt-sa2",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "scale-vrf-2",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -36,21 +34,19 @@
       "protocol": "ESP",
       "authentication-algorithm": "AES_GCM",
       "authentication-key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-      "encryption-algorithm": "AES_GCM_256",
-      "encryption-key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-      "local-gateway-ip": "112.211.249.4",
-      "remote-gateway-ip": "112.211.249.2",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
       "spi": 2,
-      "tep-namespace": "scale-vrf-2"
+      "tep-namespace": "scale-vrf-0"
     },
     "status": {}
   },
   {
-    "kind": "IPSecSAEncrypt",
+    "kind": "IPSecSADecrypt",
     "meta": {
-      "name": "ipsec-encrypt-sa3",
+      "name": "ipsec-decrypt-sa3",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "scale-vrf-2",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -59,21 +55,19 @@
       "protocol": "ESP",
       "authentication-algorithm": "AES_GCM",
       "authentication-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-      "encryption-algorithm": "AES_GCM_256",
-      "encryption-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-      "local-gateway-ip": "112.211.249.4",
-      "remote-gateway-ip": "112.211.249.2",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
       "spi": 3,
-      "tep-namespace": "scale-vrf-2"
+      "tep-namespace": "scale-vrf-0"
     },
     "status": {}
   },
   {
-    "kind": "IPSecSAEncrypt",
+    "kind": "IPSecSADecrypt",
     "meta": {
-      "name": "ipsec-encrypt-sa4",
+      "name": "ipsec-decrypt-sa4",
       "tenant": "default",
-      "namespace": "scale-vrf-0",
+      "namespace": "scale-vrf-2",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -82,12 +76,10 @@
       "protocol": "ESP",
       "authentication-algorithm": "AES_GCM",
       "authentication-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
-      "encryption-algorithm": "AES_GCM_256",
-      "encryption-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
-      "local-gateway-ip": "112.211.249.4",
-      "remote-gateway-ip": "112.211.249.2",
+      "decryption-algorithm": "AES_GCM_256",
+      "decryption-key": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
       "spi": 4,
-      "tep-namespace": "scale-vrf-2"
+      "tep-namespace": "scale-vrf-0"
     },
     "status": {}
   }
