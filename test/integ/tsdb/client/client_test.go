@@ -174,66 +174,80 @@ type endpointMetric struct {
 }
 
 func TestOTableAPI(t *testing.T) {
-	dbName := t.Name() + "_db"
-	measName := t.Name()
+	for try := 0; try < 3; try++ {
+		dbName := t.Name() + "_db"
+		measName := t.Name()
 
-	// setup tsdb, collector
-	ts := NewSuite(":0", t.Name(), dbName)
-	defer ts.TearDown()
+		// setup tsdb, collector
+		ts := NewSuite(":0", t.Name(), dbName)
+		defer ts.TearDown()
 
-	// ensure that we start with empty backend
-	res, err := ts.cs.Query(dbName, fmt.Sprintf("SELECT * FROM %s", measName))
-	Assert(t, err == nil, "Expected no error")
-	Assert(t, len(res[0].Series) == 0, "Expected empty result")
+		// ensure that we start with empty backend
+		res, err := ts.cs.Query(dbName, fmt.Sprintf("SELECT * FROM %s", measName))
+		Assert(t, err == nil, "Expected no error")
+		Assert(t, len(res[0].Series) == 0, "Expected empty result")
 
-	// push metrics
-	ep := &endpoint{}
-	ep.TypeMeta.Kind = t.Name()
-	ep.ObjectMeta.Tenant = testTenant
-	ep.ObjectMeta.Name = "ep1"
-	table, err := ntsdb.NewOTable(ep, &ep.epm, &ntsdb.TableOpts{})
-	AssertOk(t, err, "unable to create table")
+		// push metrics
+		ep := &endpoint{}
+		ep.TypeMeta.Kind = t.Name()
+		ep.ObjectMeta.Tenant = testTenant
+		ep.ObjectMeta.Name = "ep1"
+		table, err := ntsdb.NewOTable(ep, &ep.epm, &ntsdb.TableOpts{})
+		AssertOk(t, err, "unable to create table")
 
-	ts1 := time.Now()
-	ep.epm.OutgoingConns.Add(32)
-	ep.epm.IncomingConns.Add(43)
-	ep.epm.Bandwidth.Set(608.2, ts1)
-	ep.epm.PacketErrors.Add(12)
-	ep.epm.Violations.Inc()
-	ep.epm.LinkUp.Set(true, ts1)
-	ep.epm.WorkloadName.Set("test-workload", ts1)
-	ep.epm.RxPacketSize.AddSample(154)
-	ep.epm.TxPacketSize.AddSample(4096)
-	ep.epm.RxBandwidth.AddSample(23.4)
-	ep.epm.TxBandwidth.AddSample(9066.32)
-	table.Delete()
+		ts1 := time.Now()
+		ep.epm.OutgoingConns.Add(32)
+		ep.epm.IncomingConns.Add(43)
+		ep.epm.Bandwidth.Set(608.2, ts1)
+		ep.epm.PacketErrors.Add(12)
+		ep.epm.Violations.Inc()
+		ep.epm.LinkUp.Set(true, ts1)
+		ep.epm.WorkloadName.Set("test-workload", ts1)
+		ep.epm.RxPacketSize.AddSample(154)
+		ep.epm.TxPacketSize.AddSample(4096)
+		ep.epm.RxBandwidth.AddSample(23.4)
+		ep.epm.TxBandwidth.AddSample(9066.32)
+		table.Delete()
 
-	// verify metrics in tsdb
-	time.Sleep(50 * testSendInterval)
-	tt := collectorinteg.NewTimeTable(measName)
-	tags := map[string]string{
-		"Tenant": testTenant,
-		"Kind":   t.Name(),
-		"Name":   "ep1",
+		// If time has wrapped by millisecond just in the middle of the above writes, retry.
+		// This is because the test assumes one record with all the fields in the same millisecond
+		ts2 := time.Now()
+		if collectorinteg.InfluxTS(ts1, time.Millisecond) != collectorinteg.InfluxTS(ts2, time.Millisecond) {
+			t.Log("Restarting test since time wrapped in the middle of writing metrics")
+			continue
+		}
+
+		// verify metrics in tsdb
+		time.Sleep(50 * testSendInterval)
+		tt := collectorinteg.NewTimeTable(measName)
+		tags := map[string]string{
+			"Tenant": testTenant,
+			"Kind":   t.Name(),
+			"Name":   "ep1",
+		}
+		fields := map[string]interface{}{
+			"OutgoingConns":          int64(32),
+			"IncomingConns":          int64(43),
+			"Bandwidth":              float64(608.2),
+			"PacketErrors":           int64(12),
+			"Violations":             int64(1),
+			"LinkUp":                 true,
+			"WorkloadName":           "test-workload",
+			"RxPacketSize_256":       int64(1),
+			"TxPacketSize_16384":     int64(1),
+			"RxBandwidth_totalValue": float64(23.4),
+			"RxBandwidth_totalCount": int64(1),
+			"TxBandwidth_totalValue": float64(9066.32),
+			"TxBandwidth_totalCount": int64(1),
+		}
+		tt.AddRow(collectorinteg.InfluxTS(ts1, time.Millisecond), tags, fields)
+
+		AssertEventually(t, func() (bool, interface{}) {
+			return validate(ts, dbName, measName, tt)
+		}, "mismatching metrics", "1s", "5s")
+
+		return
 	}
-	fields := map[string]interface{}{
-		"OutgoingConns":          int64(32),
-		"IncomingConns":          int64(43),
-		"Bandwidth":              float64(608.2),
-		"PacketErrors":           int64(12),
-		"Violations":             int64(1),
-		"LinkUp":                 true,
-		"WorkloadName":           "test-workload",
-		"RxPacketSize_256":       int64(1),
-		"TxPacketSize_16384":     int64(1),
-		"RxBandwidth_totalValue": float64(23.4),
-		"RxBandwidth_totalCount": int64(1),
-		"TxBandwidth_totalValue": float64(9066.32),
-		"TxBandwidth_totalCount": int64(1),
-	}
-	tt.AddRow(collectorinteg.InfluxTS(ts1, time.Millisecond), tags, fields)
+	t.Log("Even after 3 retries could not complete the test since time wrapped in the middle of writing metrics")
 
-	AssertEventually(t, func() (bool, interface{}) {
-		return validate(ts, dbName, measName, tt)
-	}, "mismatching metrics", "1s", "5s")
 }
