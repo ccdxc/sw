@@ -599,6 +599,7 @@ TEST_F(ipsec_encrypt_test, test1)
     decrypt_spec.mutable_decryption_key()->set_key("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
     decrypt_spec.set_salt(0xbbbbbbbb);
     decrypt_spec.set_spi(0);
+    decrypt_spec.mutable_tep_vrf()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::ipsec_sadecrypt_create(decrypt_spec, &decrypt_resp);
     hal::hal_cfg_db_close();
@@ -615,6 +616,7 @@ TEST_F(ipsec_encrypt_test, test1)
     decrypt_spec.mutable_decryption_key()->set_key("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     decrypt_spec.set_salt(0xbbbbbbbb);
     decrypt_spec.set_spi(0);
+    decrypt_spec.mutable_tep_vrf()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::ipsec_sadecrypt_update(decrypt_spec, &decrypt_resp);
     hal::hal_cfg_db_close();

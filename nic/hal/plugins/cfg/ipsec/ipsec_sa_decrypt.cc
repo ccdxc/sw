@@ -89,7 +89,9 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
         goto cleanup;
     }
 
-    vrf = vrf_lookup_by_id(spec.key_or_handle().vrf_key_or_handle().vrf_id());
+    //vrf = vrf_lookup_by_id(spec.key_or_handle().vrf_key_or_handle().vrf_id());
+    vrf = vrf_lookup_by_id(spec.tep_vrf().vrf_id());
+
     if (vrf) {
         HAL_TRACE_DEBUG("vrf success id = {}", vrf->vrf_id);
     } else {
@@ -224,7 +226,8 @@ ipsec_sadecrypt_update (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     ipsec->spi = spec.spi();
     ipsec->new_spi = spec.rekey_spi();
 
-    vrf = vrf_lookup_by_handle(spec.tep_vrf().vrf_handle());
+    //vrf = vrf_lookup_by_handle(spec.tep_vrf().vrf_handle());
+    vrf = vrf_lookup_by_id(spec.tep_vrf().vrf_id());
     if (vrf) {
         ipsec->vrf_handle = spec.tep_vrf().vrf_handle();
         ipsec->vrf = vrf->vrf_id;
