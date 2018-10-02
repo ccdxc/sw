@@ -42,7 +42,7 @@ pprint_crypto_desc(const struct pnso_crypto_desc *desc)
 	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
 	OSAL_LOG_INFO("%30s: %d", "rsvd", desc->rsvd);
 	OSAL_LOG_INFO("%30s: %d", "key_desc_idx", desc->key_desc_idx);
-	OSAL_LOG_INFO("%30s: 0x%llx", "key_desc_idx", desc->iv_addr);
+	OSAL_LOG_INFO("%30s: 0x%llx", "iv_addr", desc->iv_addr);
 }
 
 static void __attribute__((unused))
@@ -210,6 +210,7 @@ req_pprint_result(const struct pnso_service_result *res)
 		switch (res->svc[i].svc_type) {
 		case PNSO_SVC_TYPE_ENCRYPT:
 		case PNSO_SVC_TYPE_DECRYPT:
+			break;
 		case PNSO_SVC_TYPE_COMPRESS:
 		case PNSO_SVC_TYPE_DECOMPRESS:
 		case PNSO_SVC_TYPE_DECOMPACT:
@@ -249,15 +250,53 @@ validate_req_dummy_service(struct pnso_service *svc)
 static pnso_error_t
 validate_req_encryption_service(struct pnso_service *svc)
 {
-	OSAL_ASSERT(0);
-	return EINVAL;
+	pnso_error_t err;
+
+	if (!svc) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("invalid service! svc: 0x%llx err: %d",
+				(uint64_t) svc, err);
+		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	if (svc->svc_type != PNSO_SVC_TYPE_ENCRYPT) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
+				(uint64_t) svc, svc->svc_type, err);
+		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	err = PNSO_OK;
+out:
+	return err;
 }
 
 static pnso_error_t
 validate_req_decryption_service(struct pnso_service *svc)
 {
-	OSAL_ASSERT(0);
-	return EINVAL;
+	pnso_error_t err;
+
+	if (!svc) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("invalid service! svc: 0x%llx %d",
+				(uint64_t) svc, err);
+		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	if (svc->svc_type != PNSO_SVC_TYPE_DECRYPT) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
+				(uint64_t) svc, svc->svc_type, err);
+		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	err = PNSO_OK;
+out:
+	return err;
 }
 
 static pnso_error_t
@@ -392,15 +431,13 @@ validate_res_dummy_service(struct pnso_service_status *status)
 static pnso_error_t
 validate_res_encryption_service(struct pnso_service_status *status)
 {
-	OSAL_ASSERT(0);
-	return EINVAL;
+	return PNSO_OK;
 }
 
 static pnso_error_t
 validate_res_decryption_service(struct pnso_service_status *status)
 {
-	OSAL_ASSERT(0);
-	return EINVAL;
+	return PNSO_OK;
 }
 
 static pnso_error_t

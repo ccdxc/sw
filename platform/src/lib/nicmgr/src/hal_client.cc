@@ -34,6 +34,7 @@ using namespace endpoint;
 using namespace l2segment;
 using namespace multicast;
 using namespace accelRGroup;
+using namespace cryptokey;
 
 using namespace grpc;
 using namespace std;
@@ -64,6 +65,7 @@ HalClient::HalClient(enum ForwardingMode fwd_mode)
     multicast_stub_ = Multicast::NewStub(channel);
     rdma_stub_ = Rdma::NewStub(channel);
     accel_rgroup_stub_ = AccelRGroup::NewStub(channel);
+    crypto_stub_ = CryptoKey::NewStub(channel);
     this->fwd_mode = fwd_mode;
 }
 
@@ -2292,3 +2294,57 @@ HalClient::AccelRGroupIndicesGet(const std::string& rgroup_name,
     return 0;
 }
 
+int
+HalClient::crypto_key_index_update(uint32_t key_index,
+                                   types::CryptoKeyType key_type,
+                                   void *key,
+                                   uint32_t key_size)
+{
+    CryptoKeyCreateWithIdRequestMsg     create_req_msg;
+    CryptoKeyCreateWithIdResponseMsg    create_rsp_msg;
+    CryptoKeyUpdateRequestMsg           update_req_msg;
+    CryptoKeyUpdateResponseMsg          update_rsp_msg;
+    ClientContext                       context;
+    ClientContext                       context2;
+    Status                              status;
+
+    auto create_req = create_req_msg.add_request();
+    create_req->set_keyindex(key_index);
+    create_req->set_allow_dup_alloc(true);
+    status = crypto_stub_->CryptoKeyCreateWithId(&context, create_req_msg,
+                                                 &create_rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC create status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+
+    auto create_rsp = create_rsp_msg.response(0);
+    if (create_rsp.keyindex() != key_index) {
+        NIC_FUNC_ERR("GRPC create expected key_index {} actual {}",
+                     key_index, create_rsp.keyindex());
+        return -1;
+    }
+
+    auto update_req = update_req_msg.add_request();
+    auto update_spec = update_req->mutable_key();
+    update_spec->set_key(key, key_size);
+    update_spec->set_keyindex(key_index);
+    update_spec->set_key_size(key_size);
+    update_spec->set_key_type(key_type);
+
+    status = crypto_stub_->CryptoKeyUpdate(&context2, update_req_msg,
+                                           &update_rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC update status {} {}", status.error_code(),
+                     status.error_message());
+        return -1;
+    }
+    auto update_rsp = update_rsp_msg.response(0);
+    if (update_rsp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API update status {} key_index {}",
+                     update_rsp.api_status(), key_index);
+        return -1;
+    }
+    return 0;
+}

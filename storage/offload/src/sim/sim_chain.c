@@ -669,7 +669,7 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 	    sim_get_key_desc_idx((void **) &key1, (void **) &key2,
 				 &key_size,
 				 ctx->cmd.u.crypto_desc.key_desc_idx)) {
-		return PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG;
+		return PNSO_ERR_CRYPTO_KEY_INDEX_OUT_OF_RANG;
 	}
 
 	memset(ctx->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
@@ -680,7 +680,7 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 		break;
 	case PNSO_CRYPTO_TYPE_XTS:
 		if (key_size != 16 && key_size != 32) {
-			rc = PNSO_ERR_XTS_WRONG_KEY_TYPE;
+			rc = PNSO_ERR_CRYPTO_WRONG_KEY_TYPE;
 			break;
 		}
 #ifdef OPENSSL
@@ -705,7 +705,7 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 	case PNSO_CRYPTO_TYPE_GCM:
 	default:
 		svc_exec_noop(ctx, opaque);
-		rc = PNSO_ERR_XTS_WRONG_KEY_TYPE; /* TODO: ALGO_INVALID */
+		rc = PNSO_ERR_CRYPTO_WRONG_KEY_TYPE; /* TODO: ALGO_INVALID */
 		break;
 	}
 
@@ -727,7 +727,7 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 	    sim_get_key_desc_idx((void **) &key1, (void **) &key2,
 				 &key_size,
 				 ctx->cmd.u.crypto_desc.key_desc_idx)) {
-		return PNSO_ERR_XTS_KEY_INDEX_OUT_OF_RANG;
+		return PNSO_ERR_CRYPTO_KEY_INDEX_OUT_OF_RANG;
 	}
 
 	memset(ctx->sess->scratch.cmd, 0, CMD_SCRATCH_SZ);
@@ -738,7 +738,7 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 		break;
 	case PNSO_CRYPTO_TYPE_XTS:
 		if (key_size != 16 && key_size != 32) {
-			rc = PNSO_ERR_XTS_WRONG_KEY_TYPE;
+			rc = PNSO_ERR_CRYPTO_WRONG_KEY_TYPE;
 			break;
 		}
 #ifdef OPENSSL
@@ -763,7 +763,7 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 	case PNSO_CRYPTO_TYPE_GCM:
 	default:
 		svc_exec_noop(ctx, opaque);
-		rc = PNSO_ERR_XTS_WRONG_KEY_TYPE; /* TODO: ALGO_INVALID */
+		rc = PNSO_ERR_CRYPTO_WRONG_KEY_TYPE; /* TODO: ALGO_INVALID */
 		break;
 	}
 

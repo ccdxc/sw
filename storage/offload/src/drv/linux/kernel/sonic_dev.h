@@ -355,6 +355,10 @@ void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index);
 void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct queue *adminq,
 			       unsigned int index, unsigned int lif_index,
 			       unsigned int intr_index);
+int sonic_crypto_key_index_update(const void *key1,
+				  const void *key2,
+				  uint32_t key_size,
+				  uint32_t key_index);
 
 char *sonic_dev_asic_name(u8 asic_type);
 struct doorbell __iomem *sonic_db_map(struct sonic_dev *idev, struct queue *q);

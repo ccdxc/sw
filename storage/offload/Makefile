@@ -46,7 +46,6 @@ $(SONICSIM)-y += src/osal/test/osal_test.o
 
 SONIC = sonic
 SONIC_INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/kernel src/drv/test
-NIC_INCDIR = $(SW_DIR)/nic/include
 
 $(SONIC)-y = src/drv/pnso_mpool.o
 $(SONIC)-y += src/drv/pnso_api.o
@@ -58,10 +57,9 @@ $(SONIC)-y += src/drv/pnso_chksum.o
 $(SONIC)-y += src/drv/pnso_hash.o
 $(SONIC)-y += src/drv/pnso_cpdc.o
 $(SONIC)-y += src/drv/pnso_cpdc_cmn.o
-$(SONIC)-y += src/drv/pnso_encrypt.o
-$(SONIC)-y += src/drv/pnso_decrypt.o
-$(SONIC)-y += src/drv/pnso_xts_cmn.o
-$(SONIC)-y += src/drv/pnso_xts.o
+$(SONIC)-y += src/drv/pnso_crypto.o
+$(SONIC)-y += src/drv/pnso_crypto_ops.o
+$(SONIC)-y += src/drv/pnso_crypto_cmn.o
 $(SONIC)-y += src/drv/pnso_decompact.o
 $(SONIC)-y += src/drv/pnso_seq.o
 $(SONIC)-y += src/drv/pnso_seq_hw.o
@@ -89,7 +87,6 @@ sonic-sim: sonic-sim-var modules-compile
 
 sonic-var: $(eval obj-m += $(SONIC).o) 
 sonic-var: $(eval ccflags-y += $(SONIC_INCDIRS:%=-I$(PWD)/%))
-sonic-var: $(eval ccflags-y += -I$(NIC_INCDIR))
 sonic-var: $(eval ccflags-y += -I$(KERN_DIR)/include/linux)
 sonic-var: $(eval ccflags-y += -DHAPS)
 sonic-var: $(eval ccflags-y += -DENABLE_PNSO_SONIC_TEST)

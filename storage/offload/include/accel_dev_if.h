@@ -34,8 +34,9 @@ enum cmd_opcode {
 	CMD_OPCODE_ADMINQ_INIT		= 4,
 	CMD_OPCODE_SEQ_QUEUE_INIT	= 5,
 	CMD_OPCODE_SEQ_QUEUE_ENABLE	= 6,
-	CMD_OPCODE_SEQ_QUEUE_DISABLE= 7,
-	CMD_OPCODE_HANG_NOTIFY		= 8,
+	CMD_OPCODE_SEQ_QUEUE_DISABLE    = 7,
+	CMD_OPCODE_CRYPTO_KEY_UPDATE    = 8,
+	CMD_OPCODE_HANG_NOTIFY		= 9,
 
 	CMD_OPCODE_SEQ_QUEUE_DUMP	= 0xf0,
 };
@@ -128,6 +129,28 @@ typedef struct identify_cmd {
 	uint32_t    rsvd2[13];
 } identify_cmd_t;
 
+enum os_type {
+	OS_TYPE_LINUX   = 1,
+	OS_TYPE_WIN     = 2,
+	OS_TYPE_DPDK    = 3,
+	OS_TYPE_FREEBSD = 4,
+	OS_TYPE_IXPE    = 5,
+};
+
+/**
+ * identify_lif_t - identify LIF info
+ * @hw_lif_id: hardware LIF ID
+ * @hw_lif_local_dbaddr: LIF local doorbell address
+ * @hw_host_prefix: prefix for making a host address
+ * @hw_host_mask: mask for making a host address
+ */
+typedef struct identify_lif {
+    uint64_t        hw_lif_id;
+    uint64_t        hw_lif_local_dbaddr;
+    uint64_t        hw_host_prefix;
+    uint64_t        hw_host_mask;
+} identify_lif_t;
+
 /**
  * identify_cpl_t - Driver/device identify command completion
  * @status: The status of the command.  Values for status are:
@@ -141,14 +164,6 @@ typedef struct identify_cpl {
 	uint16_t    ver;
 	uint16_t    rsvd2[5];
 } identify_cpl_t;
-
-enum os_type {
-	OS_TYPE_LINUX   = 1,
-	OS_TYPE_WIN     = 2,
-	OS_TYPE_DPDK    = 3,
-	OS_TYPE_FREEBSD = 4,
-	OS_TYPE_IXPE    = 5,
-};
 
 /**
  * identity_t - 4096 bytes of driver/device identity information
@@ -210,7 +225,7 @@ typedef union identity {
 		uint32_t        intr_coal_div;
 		uint64_t        cm_base_pa;
 		accel_ring_t    accel_ring_tbl[ACCEL_RING_ID_MAX];
-		uint64_t        hw_lif_id_tbl[0];
+		identify_lif_t  lif_tbl[0];
 	} dev;
 	uint32_t words[1024];
 } identity_t;
@@ -343,6 +358,60 @@ typedef struct seq_queue_init_cpl {
 	uint32_t    rsvd3;
 } seq_queue_init_cpl_t;
 
+/**
+ * crypto_key_update_cmd_t - Crypto key update command
+ * @opcode:       opcode = 4
+ * @pid:          Process ID
+ * @key_index:    key index
+ * @key_type:     key index
+ * @key_data:     key data
+ */
+
+enum cmd_crypto_key_type {
+	CMD_CRYPTO_KEY_TYPE_AES128   = 0,
+	CMD_CRYPTO_KEY_TYPE_AES256   = 1,
+	CMD_CRYPTO_KEY_TYPE_MAX      = 2
+};
+
+/*
+ * Note: when a key exceeds the key_data size below (32 bytes), the update
+ * can be broken up into multiple parts.
+ */
+enum cmd_crypto_key_part {
+	CMD_CRYPTO_KEY_PART0         = 0,
+	CMD_CRYPTO_KEY_PART1         = 1,
+	CMD_CRYPTO_KEY_PART_MAX      = 2
+};
+
+#define CMD_CRYPTO_KEY_SIZE_AES128   16
+#define CMD_CRYPTO_KEY_SIZE_AES256   32
+#define CMD_CRYPTO_KEY_PART_SIZE     CMD_CRYPTO_KEY_SIZE_AES256
+
+typedef struct crypto_key_update_cmd {
+	uint16_t    opcode;
+	uint16_t    rsvd0;
+	uint32_t    key_index;
+	uint8_t     key_type;
+	uint8_t     key_part       :3,
+                    trigger_update :1,
+                    rsvd1          :4;
+	uint16_t    key_size;
+	uint8_t     key_data[CMD_CRYPTO_KEY_PART_SIZE];
+	uint32_t    rsvd2[5];
+} crypto_key_update_cmd_t;
+
+/**
+ * crypto_key_update_cpl_t - Admin queue init command completion
+ * @status:  The status of the command.  Values for status are:
+ *              0 = Successful completion
+ * @qid:     Queue ID
+ * @qtype:   Queue type
+ */
+typedef struct crypto_key_update_cpl {
+	uint32_t    status  :8,
+	            rsvd    :24;
+	uint32_t    rsvd2[3];
+} crypto_key_update_cpl_t;
 
 /**
  * hang_notify_cmd_t - Hang notify command
@@ -422,13 +491,15 @@ typedef union adminq_cmd {
 	seq_queue_init_cmd_t    seq_queue_init;
 	seq_queue_control_cmd_t seq_queue_control;
 	seq_queue_dump_cmd_t    seq_queue_dump;
+	crypto_key_update_cmd_t crypto_key_update;
 } adminq_cmd_t;
 
 typedef union adminq_cpl {
 	admin_cpl_t             cpl;
-	nop_cpl_t                nop;
+	nop_cpl_t               nop;
 	seq_queue_init_cpl_t    seq_queue_init;
 	seq_queue_dump_cpl_t    seq_queue_dump;
+	crypto_key_update_cpl_t crypto_key_update;
 } adminq_cpl_t;
 
 #endif /* _ACCEL_DEV_IF_H_ */

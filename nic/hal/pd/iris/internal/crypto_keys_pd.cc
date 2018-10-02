@@ -40,6 +40,37 @@ pd_crypto_alloc_key(pd_func_args_t *pd_func_args)
     return ret;
 }
 
+hal_ret_t
+pd_crypto_alloc_key_withid(pd_func_args_t *pd_func_args)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd_crypto_alloc_key_withid_args_t *args = pd_func_args->pd_crypto_alloc_key_withid;
+    indexer::status     is = indexer::SUCCESS;
+    uint64_t            key_addr = 0;
+    int32_t key_idx = args->key_idx;
+
+    is = g_hal_state_pd->crypto_pd_keys_idxr()->alloc_withid(key_idx);
+    if (is != indexer::SUCCESS) {
+        if (is == indexer::DUPLICATE_ALLOC) {
+            if (!args->allow_dup_alloc) {
+                HAL_TRACE_ERR("SessKey: duplicate key_idx {}", key_idx);
+                return HAL_RET_ENTRY_EXISTS;
+            }
+        } else {
+            HAL_TRACE_ERR("SessKey: Failed to allocate key memory");
+            return HAL_RET_NO_RESOURCE;
+        }
+    }
+    /* Setup the key descriptor with the corresponding key memory
+    *  Currently statically carved and associated
+    */
+    key_addr = key_mem_base + (key_idx * CRYPTO_KEY_SIZE_MAX);
+    capri_barco_init_key(key_idx, key_addr);
+    HAL_TRACE_DEBUG("SessKey:{}: Allocated key memory @ index: {}",
+                    __FUNCTION__, key_idx);
+    return ret;
+}
+
 
 // hal_ret_t pd_crypto_free_key(int32_t key_idx)
 hal_ret_t pd_crypto_free_key(pd_func_args_t *pd_func_args)

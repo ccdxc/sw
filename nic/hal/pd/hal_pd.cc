@@ -321,6 +321,7 @@ hal_pd_load_symbols (void)
 
     // crypto
     PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_ALLOC_KEY, pd_crypto_alloc_key);
+    PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID, pd_crypto_alloc_key_withid);
     PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_FREE_KEY, pd_crypto_free_key);
     PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_WRITE_KEY, pd_crypto_write_key);
     PD_FUNC_LOAD(PD_FUNC_ID_CRYPTO_READ_KEY, pd_crypto_read_key);

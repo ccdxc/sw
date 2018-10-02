@@ -35,6 +35,29 @@ hal_ret_t   cryptokey_create(cryptokey::CryptoKeyCreateRequest &request,
     return ret;
 }
 
+hal_ret_t   cryptokeycreatewith_id(cryptokey::CryptoKeyCreateWithIdRequest &request,
+        cryptokey::CryptoKeyCreateWithIdResponse *response)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd::pd_crypto_alloc_key_withid_args_t args;
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    args.key_idx = request.keyindex();
+    args.allow_dup_alloc = request.allow_dup_alloc();
+    pd_func_args.pd_crypto_alloc_key_withid = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        response->set_api_status(ret == HAL_RET_ENTRY_EXISTS ? 
+                                 types::API_STATUS_EXISTS_ALREADY :
+                                 types::API_STATUS_OUT_OF_MEM);
+    }
+    else {
+        response->set_api_status(types::API_STATUS_OK);
+        response->set_keyindex(args.key_idx);
+    }
+    return ret;
+}
+
 hal_ret_t   cryptokey_read(cryptokey::CryptoKeyReadRequest &request,
         cryptokey::CryptoKeyReadResponse *response)
 {

@@ -51,6 +51,7 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 		{ CMD_OPCODE_SEQ_QUEUE_DISABLE, "CMD_OPCODE_SEQ_QUEUE_DISABLE" },
 		{ CMD_OPCODE_HANG_NOTIFY, "CMD_OPCODE_HANG_NOTIFY" },
 		{ CMD_OPCODE_SEQ_QUEUE_DUMP, "CMD_OPCODE_SEQ_QUEUE_DUMP" },
+		{ CMD_OPCODE_CRYPTO_KEY_UPDATE, "CMD_OPCODE_CRYPTO_KEY_UPDATE" },
 		{ 0, 0 }, /* keep last */
 	};
 	struct cmds *cmd = cmds;
@@ -466,6 +467,65 @@ void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index)
 	sonic_dev_cmd_go(idev, &cmd);
 }
 
+int sonic_crypto_key_index_update(const void *key1,
+				  const void *key2,
+				  uint32_t key_size,
+				  uint32_t key_index)
+{
+	int err;
+	struct lif *lif = sonic_get_lif();
+	struct sonic_admin_ctx ctx0 = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx0.work),
+		.cmd.crypto_key_update = {
+			.opcode = CMD_OPCODE_CRYPTO_KEY_UPDATE,
+			.key_index = key_index,
+			.key_size = key_size,
+			.key_part = CMD_CRYPTO_KEY_PART0,
+		},
+	};
+	struct sonic_admin_ctx ctx1 = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx1.work),
+		.cmd.crypto_key_update = {
+			.opcode = CMD_OPCODE_CRYPTO_KEY_UPDATE,
+			.key_index = key_index,
+			.key_size = key_size,
+			.key_part = CMD_CRYPTO_KEY_PART1,
+		},
+	};
+
+	dev_info(lif->sonic->dev, "crypto_key_update.key_index %u\n",
+		 ctx0.cmd.crypto_key_update.key_index);
+	dev_info(lif->sonic->dev, "crypto_key_update.key_size %u\n",
+		 ctx0.cmd.crypto_key_update.key_size);
+
+	switch (key_size) {
+
+	case CMD_CRYPTO_KEY_SIZE_AES128:
+		ctx0.cmd.crypto_key_update.key_type = CMD_CRYPTO_KEY_TYPE_AES128;
+		break;
+
+	case CMD_CRYPTO_KEY_SIZE_AES256:
+		ctx0.cmd.crypto_key_update.key_type = CMD_CRYPTO_KEY_TYPE_AES256;
+		break;
+
+        default:
+		dev_err(lif->sonic->dev, "invalid key_size %u\n",
+			ctx0.cmd.crypto_key_update.key_size);
+		return EINVAL;
+	}
+
+	memcpy(ctx0.cmd.crypto_key_update.key_data, key1, key_size);
+	err = sonic_adminq_post_wait(lif, &ctx0);
+	if (!err) {
+                ctx1.cmd.crypto_key_update.key_type =
+			  ctx0.cmd.crypto_key_update.key_type;
+                ctx1.cmd.crypto_key_update.key_part = CMD_CRYPTO_KEY_PART1;
+                ctx1.cmd.crypto_key_update.trigger_update = true;
+                memcpy(ctx1.cmd.crypto_key_update.key_data, key2, key_size);
+                err = sonic_adminq_post_wait(lif, &ctx1);
+	}
+	return err;
+}
 
 module_init(sonic_init_module);
 module_exit(sonic_cleanup_module);

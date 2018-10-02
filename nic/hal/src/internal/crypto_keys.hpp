@@ -18,6 +18,11 @@ using cryptokey::CryptoKeyCreateRequestMsg;
 using cryptokey::CryptoKeyCreateResponse;
 using cryptokey::CryptoKeyCreateResponseMsg;
 
+using cryptokey::CryptoKeyCreateWithIdRequest;
+using cryptokey::CryptoKeyCreateWithIdRequestMsg;
+using cryptokey::CryptoKeyCreateWithIdResponse;
+using cryptokey::CryptoKeyCreateWithIdResponseMsg;
+
 using cryptokey::CryptoKeyReadRequest;
 using cryptokey::CryptoKeyReadRequestMsg;
 using cryptokey::CryptoKeyReadResponse;
@@ -47,6 +52,9 @@ typedef struct crypto_key_s {
 
 hal_ret_t   cryptokey_create(cryptokey::CryptoKeyCreateRequest &request,
         cryptokey::CryptoKeyCreateResponse *response);
+
+hal_ret_t   cryptokeycreatewith_id(cryptokey::CryptoKeyCreateWithIdRequest &request,
+        cryptokey::CryptoKeyCreateWithIdResponse *response);
 
 hal_ret_t   cryptokey_read(cryptokey::CryptoKeyReadRequest &request,
         cryptokey::CryptoKeyReadResponse *response);

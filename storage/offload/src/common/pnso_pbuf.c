@@ -363,19 +363,21 @@ void __attribute__((unused))
 pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 {
 	struct pnso_flat_buffer *flat_buf;
+	char *p;
 	uint32_t i;
 
 	if (!buf_list)
 		return;
 
-	OSAL_LOG_INFO("buf_list: %p count: %d\n", buf_list, buf_list->count);
+	OSAL_LOG_INFO("buf_list: 0x%llx count: %d\n", (uint64_t)buf_list, buf_list->count);
 
 	for (i = 0; i < buf_list->count; i++) {
 		flat_buf = (struct pnso_flat_buffer *) &buf_list->buffers[i];
+		p = (char *)flat_buf->buf;
 
 		/* print only limited number of characters */
-		OSAL_LOG_INFO("#%2d: flat_buf: %p len: %d buf: %.4s\n",
-				i, flat_buf, flat_buf->len,
-				(char *) flat_buf->buf);
+		OSAL_LOG_INFO("#%2d: flat_buf: 0x%llx len: %d buf: %c%c%c%c\n",
+				i, (uint64_t)flat_buf, flat_buf->len,
+				p[0], p[1], p[2], p[3]);
 	}
 }

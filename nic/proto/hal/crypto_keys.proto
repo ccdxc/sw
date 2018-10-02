@@ -11,6 +11,7 @@ option go_package="halproto";
 
 service CryptoKey {
     rpc CryptoKeyCreate (CryptoKeyCreateRequestMsg) returns (CryptoKeyCreateResponseMsg) {}
+    rpc CryptoKeyCreateWithId (CryptoKeyCreateWithIdRequestMsg) returns (CryptoKeyCreateWithIdResponseMsg) {}
     rpc CryptoKeyRead (CryptoKeyReadRequestMsg) returns (CryptoKeyReadResponseMsg) {}
     rpc CryptoKeyUpdate (CryptoKeyUpdateRequestMsg) returns (CryptoKeyUpdateResponseMsg) {}
     rpc CryptoKeyDelete (CryptoKeyDeleteRequestMsg) returns (CryptoKeyDeleteResponseMsg) {}
@@ -29,6 +30,22 @@ message CryptoKeyCreateResponse {
 }
 message CryptoKeyCreateResponseMsg {
     repeated CryptoKeyCreateResponse response   = 1;
+}
+
+message CryptoKeyCreateWithIdRequest {
+  types.ObjectMeta      meta                    = 1;    // common object meta
+  uint32                keyindex                = 2;
+  uint32                allow_dup_alloc         = 3;
+}
+message CryptoKeyCreateWithIdRequestMsg {
+    repeated CryptoKeyCreateWithIdRequest request = 1;
+}
+message CryptoKeyCreateWithIdResponse {
+  types.ApiStatus       api_status              = 1;    // API status code
+  uint32                keyindex                = 2;
+}
+message CryptoKeyCreateWithIdResponseMsg {
+    repeated CryptoKeyCreateWithIdResponse response   = 1;
 }
 
 message CryptoKeySpec {

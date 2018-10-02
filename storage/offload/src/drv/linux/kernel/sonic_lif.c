@@ -31,7 +31,7 @@
 #include "osal_mem.h"
 
 #include "pnso_cpdc.h"
-#include "pnso_xts.h"
+#include "pnso_crypto.h"
 
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 				 void *cb_arg)
@@ -390,7 +390,7 @@ static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 		cpdc_deinit_accelerator(lif->res.pc_res[i]);
 
 		sonic_crypto_qs_deinit(lif->res.pc_res[i]);
-		xts_deinit_accelerator(lif->res.pc_res[i]);
+		crypto_deinit_accelerator(lif->res.pc_res[i]);
 	}
 }
 
@@ -474,6 +474,7 @@ static int sonic_cpdc_q_init(struct per_core_resource *res, struct queue *q,
 	err = sonic_q_alloc(res->lif, q, num_descs, desc_size, true);
 	if (err)
 		return err;
+
 	err = sonic_q_init(res->lif, &res->lif->sonic->idev, q,
 			   res->lif->seq_q_index++, "cpdc",
 			   num_descs, desc_size, pid);
@@ -663,7 +664,7 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 {
 	int err;
 	struct cpdc_init_params cpdc_init_params;
-	struct xts_init_params xts_init_params;
+	struct crypto_init_params crypto_init_params;
 
 	/* Initialize local driver structures */
 	res->lif = lif;
@@ -697,7 +698,7 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 	if (err)
 		goto done;
 
-	err = xts_init_accelerator(&xts_init_params, res);
+	err = crypto_init_accelerator(&crypto_init_params, res);
 	if (err)
 		goto done;
 
