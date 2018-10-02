@@ -1393,6 +1393,7 @@ int HalClient::CreateMR(uint64_t lif_id, uint32_t pd, uint64_t va, uint64_t leng
     spec->set_lkey(l_key);
     spec->set_rkey(r_key);
     spec->set_hostmem_pg_size(page_size);
+    spec->set_host_addr(1);
 
     for (int i = 0; i < (int)pt_size; i++) {
         spec->add_va_pages_phy_addr(pt_table[i]);
