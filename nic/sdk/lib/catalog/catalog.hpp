@@ -172,6 +172,8 @@ public:
     bool         enabled   (uint32_t port);
     uint32_t     mac_id    (uint32_t port, uint32_t lane);
     uint32_t     mac_ch    (uint32_t port, uint32_t lane);
+    uint32_t     asic_port_to_mac_id (uint32_t asic, uint32_t asic_port);
+    uint32_t     asic_port_to_mac_ch (uint32_t asic, uint32_t asic_port);
     uint32_t     sbus_addr (uint32_t port, uint32_t lane);
     port_fec_type_t  port_fec_type (uint32_t port);
 

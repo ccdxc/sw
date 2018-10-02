@@ -50,11 +50,12 @@
         { "port_num" : "3", "type" : "mgmt", "num_lanes" : "1", "breakout_modes" : [] }
     ],
 
-    "num_uplink_ports" : "2",
+    "num_uplink_ports" : "3",
     "uplink_ports"     :
     [
         {"port_num" : "1", "asic" : "0", "asic_port" : "0" , "speed" : "100G", "num_lanes" : "4", "type" : "eth",  "enabled": "false", "fec": "fc" },
-        {"port_num" : "2", "asic" : "0", "asic_port" : "4" , "speed" : "100G", "num_lanes" : "4", "type" : "eth",  "enabled": "false", "fec": "fc" }
+        {"port_num" : "2", "asic" : "0", "asic_port" : "4" , "speed" : "100G", "num_lanes" : "4", "type" : "eth",  "enabled": "false", "fec": "fc" },
+        {"port_num" : "3", "asic" : "0", "asic_port" : "8" , "speed" : "1G",   "num_lanes" : "1", "type" : "mgmt", "enabled": "true",  "fec": "none" }
     ],
 
     "bx" : {

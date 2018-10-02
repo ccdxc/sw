@@ -131,8 +131,8 @@ linkmgr_uplink_create(uint32_t uplink_port)
 //------------------------------------------------------------------------------
 // create uplink ports in the catalog file
 //------------------------------------------------------------------------------
-static hal_ret_t
-linkmgr_uplinks_create()
+hal_ret_t
+linkmgr_uplinks_create (void)
 {
     uint32_t  uplink_port = 0;
     hal_ret_t ret = HAL_RET_OK;

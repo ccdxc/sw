@@ -675,6 +675,18 @@ catalog::enabled(uint32_t port)
 }
 
 uint32_t
+catalog::asic_port_to_mac_id(uint32_t asic, uint32_t asic_port)
+{
+    return catalog_db_.asics[asic].ports[asic_port].mac_id;
+}
+
+uint32_t
+catalog::asic_port_to_mac_ch(uint32_t asic, uint32_t asic_port)
+{
+    return catalog_db_.asics[asic].ports[asic_port].mac_ch;
+}
+
+uint32_t
 catalog::mac_id(uint32_t port, uint32_t lane)
 {
     catalog_uplink_port_t *catalog_uplink_port_p = uplink_port(port);

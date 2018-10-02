@@ -71,7 +71,9 @@ if [[ "$FWD_MODE" != "classic" ]]; then
 fi
 
 if [[ "$PLATFORM" == 'hw' ]]; then
-    $NIC_DIR/tools/port_init_100g.sh
+    # enable ports 1 and 2
+    $NIC_DIR/tools/port_op.sh --update --port 1 --enable 1
+    $NIC_DIR/tools/port_op.sh --update --port 2 --enable 1
 fi
 
 echo "All processes brought up, please check ..."

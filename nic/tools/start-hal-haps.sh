@@ -25,7 +25,7 @@ fi
 if [[ "$PLATFORM" != "hw" ]]; then
     LD_LIBRARY_PATH=$HAL_LIBRARY_PATH $NIC_DIR/bin/hal -c hal_haps.json > $HAL_LOG_FILE 2>&1 &
 else
-    LD_LIBRARY_PATH=$HAL_LIBRARY_PATH $NIC_DIR/bin/hal -c hal_hw.json -p catalog_100g.json > $HAL_LOG_FILE 2>&1 &
+    LD_LIBRARY_PATH=$HAL_LIBRARY_PATH $NIC_DIR/bin/hal -c hal_hw.json -p catalog_hw.json > $HAL_LOG_FILE 2>&1 &
 fi
 [[ $? -ne 0 ]] && echo "Failed to start HAL!" && exit 1
 

@@ -135,10 +135,11 @@ platform/drivers/linux/eth/ionic/ionic_mnic.ko                      /platform/
 # link scripts
 nic/tools/start-linkmgr-hw.sh                                       /nic/tools/
 nic/tools/port_init_100g.sh                                         /nic/tools/
+nic/tools/port_op.sh                                                /nic/tools/
 nic/tools/check_link.sh                                             /nic/tools/
 nic/tools/check_stats.sh                                            /nic/tools/
+
 nic/tools/start-hal-haps.sh                                         /nic/tools/
 nic/tools/sysinit.sh                                                /nic/tools/
 nic/tools/sysreset.sh                                               /nic/tools/
 nic/tools/sysupdate.sh                                              /nic/tools/
-

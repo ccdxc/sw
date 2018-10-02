@@ -10,6 +10,8 @@
 namespace sdk {
 namespace linkmgr {
 
+#define MAX_PORT_LINKUP_RETRIES 20
+
 sdk_ret_t
 linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data);
 

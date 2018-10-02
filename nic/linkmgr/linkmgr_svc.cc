@@ -21,6 +21,9 @@ hal_ret_to_api_status (hal_ret_t hal_ret)
     case HAL_RET_OK:
         return types::API_STATUS_OK;
 
+    case HAL_RET_PORT_NOT_FOUND:
+        return types::API_STATUS_NOT_FOUND;
+
     case HAL_RET_ENTRY_EXISTS:
         return types::API_STATUS_EXISTS_ALREADY;
 
@@ -67,14 +70,43 @@ port_type_fp (uint32_t port)
     return linkmgr::catalog()->port_type_fp(port);
 }
 
+static uint32_t
+asic_port_to_mac_id (uint32_t asic, uint32_t asic_port) {
+    return linkmgr::catalog()->asic_port_to_mac_id(asic, asic_port);
+}
+
+static uint32_t
+asic_port_to_mac_ch (uint32_t asic, uint32_t asic_port) {
+    return linkmgr::catalog()->asic_port_to_mac_ch(asic, asic_port);
+}
+
+static uint32_t
+port_num_to_asic_num (uint32_t port_num)
+{
+    return 0;
+}
+
+static uint32_t
+port_num_to_asic_port (uint32_t port_num)
+{
+    return port_num - 1;
+}
+
 static void
 populate_port_create_args (PortSpec& spec, port_args_t *args)
 {
+    uint32_t asic      = 0;
+    uint32_t asic_port = 0;
+
     sdk::linkmgr::port_args_init(args);
 
     args->port_num        = spec.key_or_handle().port_id();
-    args->mac_id          = spec.mac_id();
-    args->mac_ch          = spec.mac_ch();
+
+    asic                  = port_num_to_asic_num(args->port_num);
+    asic_port             = port_num_to_asic_port(args->port_num);
+
+    args->mac_id          = asic_port_to_mac_id(asic, asic_port);
+    args->mac_ch          = asic_port_to_mac_ch(asic, asic_port);
     args->num_lanes       = spec.num_lanes();
     args->auto_neg_enable = spec.auto_neg_enable();
     args->debounce_time   = spec.debounce_time();

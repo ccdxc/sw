@@ -6,7 +6,7 @@ export LD_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/conf/sdk:$NIC_DIR/conf/linkmgr:$NIC
 # start linkmgr
 ulimit -c unlimited
 # start linkmgr
-$GDB $NIC_DIR/bin/linkmgr -c linkmgr_hw.json -p catalog_100g.json 2>&1 > /run.log &
+$GDB $NIC_DIR/bin/linkmgr -c linkmgr_hw.json -p catalog_hw.json 2>&1 > /run.log &
 
 sleep 10
 

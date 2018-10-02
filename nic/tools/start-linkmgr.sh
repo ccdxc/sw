@@ -17,4 +17,4 @@ fi
 
 echo "catalog: $catalog_file"
 
-$GDB $NIC_DIR/build/x86_64/iris/bin/cap_model -p $catalog_file
+$GDB $NIC_DIR/build/x86_64/iris/bin/linkmgr -p $catalog_file

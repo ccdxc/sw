@@ -8,6 +8,7 @@
 #include "timer_cb.hpp"
 #include "include/sdk/periodic.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
+#include "spidev.h"
 
 namespace sdk {
 namespace linkmgr {
@@ -517,6 +518,9 @@ port::port_link_sm_process(void)
                 this->link_debounce_timer_ = NULL;
             }
 
+            // remove from link poll timer if present
+            port_link_poll_timer_delete(this);
+
             this->bringup_timer_val_ = 0;
 
             // set operational status as down
@@ -533,6 +537,9 @@ port::port_link_sm_process(void)
             port_mac_soft_reset(true);
             port_mac_enable(false);
             port_mac_stats_reset(true);
+
+            // reset number of link bringup retries
+            set_num_retries(0);
 
             SDK_PORT_TRACE(this, "Disabled");
 
@@ -857,6 +864,8 @@ port::port_init(linkmgr_cfg_t *cfg)
                         sbus_addr,
                         sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
     }
+
+    spidev_init();
 
     return rc;
 }

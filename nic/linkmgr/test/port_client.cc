@@ -43,14 +43,24 @@ typedef enum port_op_e {
 } port_op_t;
 
 typedef struct port_info_s {
-    bool                 an_enable;
-    uint8_t              num_lanes;
     uint32_t             port_id;
-    uint32_t             db_time;
     port_op_t            op;
     port::PortSpeed      speed;
-    port::PortFecType    fec_type;
+    uint32_t             mac_id;
+    uint32_t             mac_ch;
+    uint8_t              num_lanes;
+    port::PortType       port_type;
     port::PortAdminState admin_state;
+    port::PortFecType    fec_type;
+    uint32_t             db_time;
+    uint32_t             mtu;
+    bool                 an_enable;
+
+    // bool to track updates
+    bool                 update_an;
+    bool                 update_mtu;
+    bool                 update_db_time;
+    bool                 port_id_set;
 } port_info_t;
 
 typedef struct debug_info_s {
@@ -65,15 +75,11 @@ port_info_t  port_info;
 debug_info_t debug_info;
 uint64_t     vrf_id = 1;
 bool         invoke_debug  = false;
-bool         port_id_set   = false;
 std::string  svc_endpoint_ = "localhost:50054";
 
-port::PortOperStatus port_oper_status = port::PORT_OPER_STATUS_NONE;
-port::PortType       port_type        = port::PORT_TYPE_NONE;
-port::PortAdminState port_admin_state = port::PORT_ADMIN_STATE_NONE;
-port::PortSpeed      port_speed       = port::PORT_SPEED_NONE;
-
 #define MAX_MAC_STATS 89
+#define PRINT_LOG(format, ...) \
+    printf(format"\n", __VA_ARGS__);
 
 std::string mac_stats[MAX_MAC_STATS] = {
     "Frames Received OK",
@@ -177,15 +183,23 @@ print_port_info(void)
               << std::endl
               << "speed: " << port_info.speed
               << std::endl
-              << "admin_state: " << port_info.admin_state
+              << "mac_id: " << port_info.mac_id
+              << std::endl
+              << "mac_ch: " << port_info.mac_ch
               << std::endl
               << "num_lanes: " << static_cast<int>(port_info.num_lanes)
               << std::endl
-              << "an_enable: " << port_info.an_enable
+              << "port_type: " << port_info.port_type
+              << std::endl
+              << "admin_state: " << port_info.admin_state
               << std::endl
               << "fec_type: " << port_info.fec_type
               << std::endl
               << "db_time: " << port_info.db_time
+              << std::endl
+              << "mtu: " << port_info.mtu
+              << std::endl
+              << "an_enable: " << port_info.an_enable
               << std::endl;
 }
 
@@ -219,10 +233,6 @@ public:
                 return true;
 
             case types::API_STATUS_NOT_FOUND:
-                std::cout << "Port "
-                          << port_id
-                          << " not found"
-                          << std::endl;
                 return false;
 
             case types::API_STATUS_EXISTS_ALREADY:
@@ -253,6 +263,9 @@ public:
         spec->set_num_lanes(port_info->num_lanes);
         spec->set_port_type(::port::PORT_TYPE_ETH);
         spec->set_admin_state(port_info->admin_state);
+        spec->set_fec_type(port_info->fec_type);
+        spec->set_mac_id(port_info->mac_id);
+        spec->set_mac_ch(port_info->mac_ch);
 
         status = port_stub_->PortCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {
@@ -276,23 +289,94 @@ public:
     }
 
     int port_update(port_info_t *port_info) {
+        ClientContext       get_context;
+        PortGetRequest      *get_req;
+        PortGetRequestMsg   get_req_msg;
+        PortGetResponseMsg  get_rsp_msg;
         PortSpec            *spec;
         PortRequestMsg      req_msg;
         PortResponseMsg     rsp_msg;
         ClientContext       context;
         Status               status;
 
-        spec = req_msg.add_request();
+        if (port_info->port_id_set == false) {
+            std::cout << "port not specified" << std::endl;
+            return -1;
+        }
 
+        // get the port details
+        get_req = get_req_msg.add_request();
+        get_req->mutable_key_or_handle()->set_port_id(port_info->port_id);
+
+        status = port_stub_->PortGet(&context, get_req_msg, &get_rsp_msg);
+        if (status.ok()) {
+            PortGetResponse get_response = get_rsp_msg.response(0);
+
+            // params which cannot be updated
+            port_info->mac_id = get_response.spec().mac_id();
+            port_info->mac_ch = get_response.spec().mac_ch();
+            port_info->num_lanes = get_response.spec().num_lanes();
+            port_info->port_type = get_response.spec().port_type();
+
+            // params which can be updated
+
+            if (port_info->admin_state == port::PORT_ADMIN_STATE_NONE) {
+                port_info->admin_state = get_response.spec().admin_state();
+            } else {
+                PRINT_LOG("port: %d, udpating admin_state: %d",
+                          port_info->port_id, port_info->admin_state);
+            }
+
+            if (port_info->speed == port::PORT_SPEED_NONE) {
+                port_info->speed = get_response.spec().port_speed();
+            } else {
+                PRINT_LOG("port: %d, udpating speed: %d",
+                          port_info->port_id, port_info->speed);
+            }
+
+            if (port_info->fec_type == port::PORT_FEC_TYPE_NONE) {
+                port_info->fec_type = get_response.spec().fec_type();
+            } else {
+                PRINT_LOG("port: %d, udpating fec_type: %d",
+                          port_info->port_id, port_info->fec_type);
+            }
+
+            if (port_info->update_db_time == false) {
+                port_info->db_time = get_response.spec().debounce_time();
+            } else {
+                PRINT_LOG("port: %d, udpating db_time: %d",
+                          port_info->port_id, port_info->db_time);
+            }
+
+            if (port_info->update_an == false) {
+                port_info->an_enable = get_response.spec().auto_neg_enable();
+            } else {
+                PRINT_LOG("port: %d, udpating an_enable: %d",
+                          port_info->port_id, port_info->an_enable);
+            }
+
+            if (port_info->update_mtu == false) {
+                port_info->mtu = get_response.spec().mtu();
+            } else {
+                PRINT_LOG("port: %d, udpating mtu: %d",
+                          port_info->port_id, port_info->mtu);
+            }
+        } else {
+            std::cout << "Failed to get port: " << port_info->port_id
+                      << std::endl;
+            return -1;
+        }
+
+        spec = req_msg.add_request();
         spec->mutable_key_or_handle()->set_port_id(port_info->port_id);
-        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->set_port_speed(port_info->speed);
         spec->set_admin_state(port_info->admin_state);
         spec->set_fec_type(port_info->fec_type);
         spec->set_debounce_time(port_info->db_time);
+        spec->set_mtu(port_info->mtu);
         spec->set_auto_neg_enable(port_info->an_enable);
 
-        status = port_stub_->PortUpdate(&context, req_msg, &rsp_msg);
+        status = port_stub_->PortUpdate(&get_context, req_msg, &rsp_msg);
         if (status.ok()) {
             if (port_handle_api_status(
                     rsp_msg.response(0).api_status(), port_info->port_id) == true) {
@@ -323,7 +407,7 @@ public:
 
         req = req_msg.add_request();
 
-        if (port_id_set == true) {
+        if (port_info->port_id_set == true) {
             req->mutable_key_or_handle()->set_port_id(port_info->port_id);
             req->mutable_meta()->set_vrf_id(vrf_id);
         }
@@ -355,7 +439,13 @@ public:
                       << " Num lanes: "
                       << rsp_msg.response(i).spec().num_lanes() << std::endl
                       << " Fec Type: "
-                      << rsp_msg.response(i).spec().fec_type() << std::endl;
+                      << rsp_msg.response(i).spec().fec_type() << std::endl
+                      << " Debounce Time: "
+                      << rsp_msg.response(i).spec().debounce_time() << std::endl
+                      << " MTU: "
+                      << rsp_msg.response(i).spec().mtu() << std::endl
+                      << " AutoNeg: "
+                      << rsp_msg.response(i).spec().auto_neg_enable() << std::endl;
 
                     for (int j = 0; j < MAX_MAC_STATS; ++j) {
                         printf("%-41s: %lu\n",
@@ -363,9 +453,12 @@ public:
                                rsp_msg.response(i).
                                        stats().mac_stats(j).count());
                     }
-                }
-                else {
-                    break;
+                } else {
+                    std::cout << "Port Get failed for port "
+                              << port_info->port_id
+                              << " , status = "
+                              << rsp_msg.response(0).api_status()
+                              << std::endl;
                 }
             }   // for
 
@@ -520,11 +613,23 @@ parse_port_speed(int speed)
             return port::PORT_SPEED_10G;
 
         default:
-            return port::PORT_SPEED_100G;
+            return port::PORT_SPEED_NONE;
 
     }
 
-    return port::PORT_SPEED_100G;
+    return port::PORT_SPEED_NONE;
+}
+
+static port::PortType
+parse_port_type(char *port_type)
+{
+    if (!(strcmp(port_type, "eth"))) {
+        return port::PORT_TYPE_ETH;
+    } else if (!(strcmp(port_type, "mgmt"))) {
+        return port::PORT_TYPE_MGMT;
+    }
+
+    return port::PORT_TYPE_NONE;
 }
 
 static port::PortFecType
@@ -570,31 +675,38 @@ static int
 parse_options(int argc, char **argv)
 {
     int oc = 0;
+    int option_index = 0;
 	struct option longopts[] = {
+	   { "create",       no_argument,       NULL, 'c' },
+	   { "get",          no_argument,       NULL, 'r' },
+	   { "update",       no_argument,       NULL, 'u' },
+	   { "delete",       no_argument,       NULL, 'd' },
+	   { "dry_run",      no_argument,       NULL, 't' },
+	   { "help",         no_argument,       NULL, 'h' },
 	   { "port",         required_argument, NULL, 'p' },
-	   { "create",       optional_argument, NULL, 'c' },
-	   { "get",          optional_argument, NULL, 'r' },
-	   { "update",       optional_argument, NULL, 'u' },
-	   { "delete",       optional_argument, NULL, 'd' },
-	   { "speed",        optional_argument, NULL, 's' },
-	   { "admin_state",  optional_argument, NULL, 'e' },
-	   { "fec_type",     optional_argument, NULL, 'f' },
-	   { "db_time",      optional_argument, NULL, 'b' },
-	   { "an_enable",    optional_argument, NULL, 'a' },
-	   { "num_lanes",    optional_argument, NULL, 'n' },
-	   { "dry_run",      optional_argument, NULL, 't' },
-	   { "debug_op",     optional_argument, NULL, 'o' },
-	   { "debug_val1",   optional_argument, NULL, 'w' },
-	   { "debug_val2",   optional_argument, NULL, 'x' },
-	   { "debug_val3",   optional_argument, NULL, 'y' },
-	   { "debug_val4",   optional_argument, NULL, 'z' },
-	   { "svc_endpoint", optional_argument, NULL, 'g' },
-	   { "help",         optional_argument, NULL, 'h' },
+	   { "speed",        required_argument, NULL,  0  },
+	   { "admin_state",  required_argument, NULL,  0  },
+	   { "mac_id",       required_argument, NULL,  0  },
+	   { "mac_ch",       required_argument, NULL,  0  },
+	   { "num_lanes",    required_argument, NULL,  0  },
+	   { "port_type",    required_argument, NULL,  0  },
+	   { "fec_type",     required_argument, NULL,  0  },
+	   { "db_time",      required_argument, NULL,  0  },
+	   { "an_enable",    required_argument, NULL,  0  },
+	   { "mtu",          required_argument, NULL,  0  },
+	   { "debug_op",     required_argument, NULL, 'o' },
+	   { "debug_val1",   required_argument, NULL, 'w' },
+	   { "debug_val2",   required_argument, NULL, 'x' },
+	   { "debug_val3",   required_argument, NULL, 'y' },
+	   { "debug_val4",   required_argument, NULL, 'z' },
+	   { "svc_endpoint", required_argument, NULL, 'g' },
 	   { 0,              0,                 0,     0 }
 	};
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":p:cruds:e:f:b:a:n:to:w:x:y:z:g:hW;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv,
+                             ":crudthp:0:o:w:x:y:z:g:W;",
+                             longopts, &option_index)) != -1) {
         switch (oc) {
         case 'p':
             if (optarg) {
@@ -604,7 +716,7 @@ parse_options(int argc, char **argv)
                 print_usage(argv);
                 exit(1);
             }
-            port_id_set = true;
+            port_info.port_id_set = true;
             break;
 
         case 'c':
@@ -623,61 +735,36 @@ parse_options(int argc, char **argv)
             port_info.op = PORT_OP_DELETE;
             break;
 
-        case 's':
+        case 0:
             if (optarg) {
-                port_info.speed = parse_port_speed(atoi(optarg));
+                if (!strcmp("speed", longopts[option_index].name)) {
+                    port_info.speed = parse_port_speed(atoi(optarg));
+                } else if (!strcmp("admin_state",
+                                   longopts[option_index].name)) {
+                    port_info.admin_state = parse_admin_state(optarg);
+                } else if (!strcmp("mac_id",    longopts[option_index].name)) {
+                    port_info.mac_id      = atoi(optarg);
+                } else if (!strcmp("mac_ch",    longopts[option_index].name)) {
+                    port_info.mac_ch      = atoi(optarg);
+                } else if (!strcmp("num_lanes", longopts[option_index].name)) {
+                    port_info.num_lanes   = atoi(optarg);
+                } else if (!strcmp("port_type",  longopts[option_index].name)) {
+                    port_info.port_type   = parse_port_type(optarg);
+                } else if (!strcmp("fec_type",  longopts[option_index].name)) {
+                    port_info.fec_type    = parse_fec_type(optarg);
+                } else if (!strcmp("db_time",   longopts[option_index].name)) {
+                    port_info.update_db_time = true;
+                    port_info.db_time     = atoi(optarg);
+                } else if (!strcmp("an_enable", longopts[option_index].name)) {
+                    port_info.update_an = true;
+                    port_info.an_enable   = parse_an(atoi(optarg));
+                } else if (!strcmp("mtu", longopts[option_index].name)) {
+                    port_info.update_mtu = true;
+                    port_info.mtu   = parse_an(atoi(optarg));
+                }
             } else {
-                fprintf(stderr, "speed not specified\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
-
-        case 'e':
-            if (optarg) {
-                port_info.admin_state = parse_admin_state(optarg);
-            } else {
-                fprintf(stderr, "admin_state not specified\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
-
-        case 'f':
-            if (optarg) {
-                port_info.fec_type = parse_fec_type(optarg);
-            } else {
-                fprintf(stderr, "fec_type not specified\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
-
-        case 'b':
-            if (optarg) {
-                port_info.db_time = atoi(optarg);
-            } else {
-                fprintf(stderr, "db_time not specified\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
-
-        case 'a':
-            if (optarg) {
-                port_info.an_enable = parse_an(atoi(optarg));
-            } else {
-                fprintf(stderr, "an_enable not specified\n");
-                print_usage(argv);
-                exit(1);
-            }
-            break;
-
-        case 'n':
-            if (optarg) {
-                port_info.num_lanes = atoi(optarg);
-            } else {
-                fprintf(stderr, "num_lanes not specified\n");
+                fprintf(stderr, "%s not specified\n",
+                        longopts[option_index].name);
                 print_usage(argv);
                 exit(1);
             }

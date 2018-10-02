@@ -4,6 +4,7 @@
 #include "include/sdk/periodic.hpp"
 #include "linkmgr.hpp"
 #include "linkmgr_state.hpp"
+#include "linkmgr_internal.hpp"
 #include "port.hpp"
 #include "timer_cb.hpp"
 
@@ -275,6 +276,7 @@ port_event_disable (linkmgr_entry_data_t *data)
 static sdk_ret_t
 port_bringup_timer (linkmgr_entry_data_t *data)
 {
+    uint32_t  retries = 0;
     sdk_ret_t ret     = SDK_RET_OK;
     port      *port_p = (port *)data->ctxt;
 
@@ -285,8 +287,20 @@ port_bringup_timer (linkmgr_entry_data_t *data)
 
     // if the bringup timer has expired, reset and try again
     if (port_p->bringup_timer_expired() == true) {
+        retries = port_p->num_retries();
+
+        // port disable resets num_retries
         ret = port_p->port_disable();
-        ret = port_p->port_enable();
+
+        // Enable port only if max retries is not reached
+        if (retries < MAX_PORT_LINKUP_RETRIES) {
+            port_p->set_num_retries(retries + 1);
+            ret = port_p->port_enable();
+        } else {
+            // TODO notify upper layers?
+            SDK_TRACE_DEBUG("Max retries: %d reached for port: %d",
+                            MAX_PORT_LINKUP_RETRIES, port_p->port_num());
+        }
     } else {
         ret = port_p->port_link_sm_process();
     }
@@ -674,6 +688,16 @@ port_update (void *pd_p, port_args_t *args)
         configured = true;
     }
 
+    if (args->admin_state != port_admin_state_t::PORT_ADMIN_STATE_NONE &&
+        args->admin_state != port_p->admin_state()) {
+        SDK_TRACE_DEBUG("admin_state updated. new: %d, old: %d",
+                        args->admin_state, port_p->admin_state());
+        // Do not update admin_state here
+        // port_disable following configured=true will update it
+        configured = true;
+    }
+
+    // FEC_TYPE_NONE is valid
     if (args->fec_type != port_p->fec_type()) {
         SDK_TRACE_DEBUG("fec updated. new: %d, old: %d",
                         args->fec_type, port_p->fec_type());
@@ -681,6 +705,7 @@ port_update (void *pd_p, port_args_t *args)
         configured = true;
     }
 
+    // MTU 0 is invalid
     if (args->mtu != 0 &&
         args->mtu != port_p->mtu()) {
         SDK_TRACE_DEBUG("mtu updated. new: %d, old: %d",

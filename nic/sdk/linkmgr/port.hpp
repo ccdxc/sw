@@ -109,6 +109,9 @@ public:
         this->serdes_fns_ = serdes_fns;
     }
 
+    uint32_t num_retries(void) { return this->num_retries_; }
+    void set_num_retries(uint32_t retries) { this->num_retries_ = retries; }
+
     sdk_ret_t port_enable(void);
     sdk_ret_t port_disable(void);
     sdk_ret_t port_link_sm_process(void);
@@ -250,6 +253,8 @@ private:
 
     mac_fn_t              *mac_fns_;                  // mac functions
     serdes_fn_t           *serdes_fns_;               // serdes functions
+
+    uint32_t              num_retries_;               // max linkup retries
 
     sdk::types::cable_type_t cable_type_;             // cable type
 
