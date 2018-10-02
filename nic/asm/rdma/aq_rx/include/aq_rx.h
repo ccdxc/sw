@@ -22,8 +22,9 @@
 #define AQ_RX_DMA_CMD_WAKEUP_DPATH  AQ_RX_DMA_CMD_EQ
 #define AQ_RX_DMA_CMD_EQ_INT      (AQ_RX_MAX_DMA_CMDS - 1)
 
-#define AQ_RX_DMA_CMD_CREATE_QP_CB    (AQ_RX_MAX_DMA_CMDS - 6)
-#define AQ_RX_DMA_CMD_CREATE_QP_RQPT  (AQ_RX_MAX_DMA_CMDS - 5)
+#define AQ_RX_DMA_CMD_CREATE_QP_CB    (AQ_RX_MAX_DMA_CMDS - 5)
+#define AQ_RX_DMA_CMD_CREATE_QP_RQPT_DST  (AQ_RX_MAX_DMA_CMDS - 6)
+#define AQ_RX_DMA_CMD_CREATE_QP_RQPT_SRC  (AQ_RX_MAX_DMA_CMDS - 7)
 
 #define AQ_RX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi) \
     CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
@@ -51,7 +52,7 @@ struct aq_rx_phv_t {
     /* flit 9 */
     union {
         struct aq_rx_dma_cmds_flit_t flit_9;
-        struct rqcb0_t rqcb0;
+        struct rqcb2_t rqcb2;
     };
      
     /* flit 8 */
@@ -63,7 +64,7 @@ struct aq_rx_phv_t {
     /* flit 7 */
     union {
         struct aq_rx_dma_cmds_flit_t flit_7;
-        struct rqcb2_t rqcb2;
+        struct rqcb0_t rqcb0;
     };
 
     /* flit 6 */

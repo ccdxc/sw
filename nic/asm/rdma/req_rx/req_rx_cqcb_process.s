@@ -155,7 +155,7 @@ no_translate_dma:
 do_dma:
 
     // CQE_P = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
-    add             CQE_P, d.pt_pa, PAGE_OFFSET
+    add             CQE_P, d.{pt_pa}.dx, PAGE_OFFSET
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqe, cqe, CQE_P)

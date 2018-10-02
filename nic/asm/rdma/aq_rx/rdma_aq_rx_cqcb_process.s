@@ -157,7 +157,7 @@ do_dma:
     sll             r1, r1, d.log_wqe_size
 
     // cqe_p = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
-    add             r1, d.pt_pa, r1
+    add             r1, d.{pt_pa}.dx, r1
 
     DMA_CMD_STATIC_BASE_GET(r2, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_CQ)    
     DMA_PHV2MEM_SETUP(r2, c1, cqe, cqe, r1)    

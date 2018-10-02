@@ -14,18 +14,18 @@ struct common_p4plus_stage0_app_header_table_k k;
     
 #define K_OP k.{rdma_aq_feedback_op_sbit0_ebit6,rdma_aq_feedback_op_sbit7_ebit7}
 #define K_PD k.{rdma_aq_feedback_qp_pd_sbit0_ebit15,rdma_aq_feedback_qp_pd_sbit16_ebit31}
-#define K_RQ_MAP_COUNT k.{rdma_aq_feedback_qp_rq_map_count_sbit0_ebit7,rdma_aq_feedback_qp_rq_map_count_sbit8_ebit31}
+#define K_RQ_MAP_COUNT k.rdma_aq_feedback_qp_rq_map_count
 #define K_RQ_DMA_ADDR k.{rdma_aq_feedback_qp_rq_dma_addr_sbit0_ebit15...rdma_aq_feedback_qp_rq_dma_addr_sbit48_ebit63}
+#define K_RQ_CQ_ID k.{rdma_aq_feedback_qp_rq_cq_id_sbit0_ebit7...rdma_aq_feedback_qp_rq_cq_id_sbit16_ebit23}
 
 #define K_RQ_ID k.{rdma_aq_feedback_qp_rq_id_sbit0_ebit15,rdma_aq_feedback_qp_rq_id_sbit16_ebit23}
-#define K_RQ_MAP_COUNT k.{rdma_aq_feedback_qp_rq_map_count_sbit0_ebit7,rdma_aq_feedback_qp_rq_map_count_sbit8_ebit31}
     
 %%
 
     .param      rdma_aq_rx_cqcb_process
     .param      rdma_aq_rx_wqe_process
     .param      rdma_resp_rx_stage0
-    .param      tx_dummy
+    .param      rx_dummy
 .align
 rdma_aq_rx_aqcb_process:
 
@@ -94,10 +94,11 @@ create_qp:
     //RQCB1
 
     phvwr       p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state
-    phvwrpair   p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RTS
-    phvwrpair   p.rqcb1.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb1.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0]
+    phvwrpair   p.rqcb1.log_rq_page_size, k.rdma_aq_feedback_qp_rq_page_size_log2[4:0], p.rqcb1.state, QP_STATE_RTS 
+    phvwrpair   p.rqcb1.log_wqe_size, k.rdma_aq_feedback_qp_rq_stride_log2[4:0], p.rqcb1.log_num_wqes , k.rdma_aq_feedback_qp_rq_depth_log2[4:0] 
     phvwrpair   p.rqcb1.serv_type, k.rdma_aq_feedback_qp_rq_type_state[2:0], p.rqcb1.pd, K_PD
-    phvwr       p.rqcb1.cq_id, k.rdma_aq_feedback_qp_rq_cq_id
+    phvwr       p.rqcb1.cq_id, K_RQ_CQ_ID
+
 
     //RQCB2
     
@@ -108,7 +109,7 @@ create_qp:
     
     //populate the PC in RQCB0, RQCB1
     addi        r4, r0, rdma_resp_rx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
-    addi        r3, r0, tx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
+    addi        r3, r0, rx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     sub         r4, r4, r3
     phvwr       p.rqcb0.intrinsic.pc, r4
     phvwr       p.rqcb1.pc, r4
@@ -119,12 +120,14 @@ create_qp:
      * do the rest of the create_qp work (setting up DMA of RQCB & RQPT) in
      * stage1.
      */
-    CAPRI_RESET_TABLE_3_ARG() //BD Slot
+
+    CAPRI_RESET_TABLE_3_ARG() 
     phvwrpair   CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_id), K_RQ_ID, CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_tbl_index), k.rdma_aq_feedback_qp_rq_tbl_index
+
     phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_map_count), K_RQ_MAP_COUNT
     phvwr       CAPRI_PHV_FIELD(AQCB_TO_WQE_P, rq_dma_addr), K_RQ_DMA_ADDR
 
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_wqe_process, r0) 
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_wqe_process, r0) 
 
     b           aq_feedback
     nop

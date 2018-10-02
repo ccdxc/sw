@@ -94,11 +94,11 @@ header_type phv_global_common_t {
         lif                              :   11;
         qid                              :   24;
         qtype                            :    3;
-        cb_addr                          :   28;
+        cb_addr                          :   25;
         pt_base_addr_page_id             :   22;
         log_num_pt_entries               :    5;
         _feedback                        :    1;
-        _rsvd0                           :   34;
+        _rsvd0                           :   37;
     }
 }
 

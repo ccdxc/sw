@@ -3630,14 +3630,18 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 			.type_state = state,
 			.id_ver = cpu_to_le32(qp->qpid | ver),
 			.mod_qp = {
-				.attr_mask = cpu_to_le32(mask),
+				.attr_mask = cpu_to_be32(mask),
 				.access_flags = cpu_to_le32(flags),
 				.rq_psn = attr->rq_psn,
 				.sq_psn = attr->sq_psn,
 				.rate_limit_kbps = cpu_to_le32(attr->rate_limit),
 				.rsq_depth = attr->max_dest_rd_atomic,
 				.rrq_depth = attr->max_rd_atomic,
-				.pmtu = attr->path_mtu,
+                /* 
+                 * dont we need to check validity of pmtu??? 
+                 * See the encoding of pmtu
+                 */
+				.pmtu = (attr->path_mtu + 7),
 				.retry = attr->retry_cnt | (attr->rnr_retry << 4),
 				.rnr_timer = attr->min_rnr_timer,
 				.retry_timeout = attr->timeout,

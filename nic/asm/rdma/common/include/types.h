@@ -40,7 +40,8 @@
 #define LOG_SIZEOF_CQCB_T   6   // 2^6 = 64 Bytes
 #define LOG_CB_UNIT_SIZE_BYTES 6
 #define CB_UNIT_SIZE_BYTES  64
-#define CB3_OFFSET_BYTES (3 * 64)
+#define CB3_OFFSET_BYTES    (3 * 64)
+#define PAGE_SIZE_4K        4096
 
 #define LOG_SIZEOF_EQCB_T   6   // 2^6 = 64 Bytes
 
@@ -1286,11 +1287,11 @@ struct rdma_aq_feedback_t {
             rq_depth_log2: 8;
             rq_stride_log2: 8;
             rq_page_size_log2: 8;
-            rq_tbl_index: 32;
-            rq_map_count: 32;
-            pd:           32;
+            rq_tbl_index:  32;
+            rq_map_count:  32;
+            pd:            32;
             rq_type_state: 8;
-            rq_id        : 24;
+            rsvd:          24;
         } create_qp;
         pad: 176;
     };
@@ -1340,6 +1341,14 @@ struct resp_bt_info_t {
     len: 32;
 };
 
+#define IBV_QP_STATE_RESET      0
+#define IBV_QP_STATE_INIT       1
+#define IBV_QP_STATE_RTR        2
+#define IBV_QP_STATE_RTS        3
+#define IBV_QP_STATE_SQD        4
+#define IBV_QP_STATE_SQ_ERR     5
+#define IBV_QP_STATE_ERR        6
+#define IBV_QP_STATE_SQD_ON_ERR 7
 
 // the state numbers are assigned this way so that assembly code can use 
 // single < or > operation for fast path checks
@@ -1370,6 +1379,8 @@ struct resp_bt_info_t {
 #define AQ_STATS_DUMP_TYPE_QP   0
 #define AQ_STATS_DUMP_TYPE_CQ   1
 #define AQ_STATS_DUMP_TYPE_EQ   2
+#define AQ_STATS_DUMP_TYPE_PT   3
+#define AQ_STATS_DUMP_TYPE_KT   4
 
 struct aqwqe_t {
 	op: 8;

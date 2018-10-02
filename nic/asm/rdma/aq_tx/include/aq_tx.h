@@ -19,12 +19,19 @@
 #define TOTAL_DMA_CMD_BITS 16 * 16 * 8 // (cmds * dma_cmd_size * bits_per_byte) 
 
 #define AQ_TX_DMA_CMD_RDMA_FEEDBACK (AQ_TX_MAX_DMA_CMDS -1)  // This should be at the end
-#define AQ_TX_DMA_CMD_CREATE_CQ_CB  (AQ_TX_MAX_DMA_CMDS -2)
-#define AQ_TX_DMA_CMD_CREATE_CQ_PT_DST  (AQ_TX_MAX_DMA_CMDS -3)
-#define AQ_TX_DMA_CMD_CREATE_CQ_PT_SRC  (AQ_TX_MAX_DMA_CMDS -4)
+
+#define AQ_TX_DMA_CMD_CREATE_CQCB_PT_DST  (AQ_TX_MAX_DMA_CMDS - 2)
+#define AQ_TX_DMA_CMD_CREATE_CQCB_PT_SRC  (AQ_TX_MAX_DMA_CMDS - 3 )
+#define AQ_TX_DMA_CMD_CREATE_CQ_PT_DST  (AQ_TX_MAX_DMA_CMDS - 4)
+#define AQ_TX_DMA_CMD_CREATE_CQ_PT_SRC  (AQ_TX_MAX_DMA_CMDS - 5)
+#define AQ_TX_DMA_CMD_CREATE_CQ_CB  (AQ_TX_MAX_DMA_CMDS - 6)
 
 #define AQ_TX_DMA_CMD_CREATE_QP_CB    (AQ_TX_MAX_DMA_CMDS -2)
-#define AQ_TX_DMA_CMD_CREATE_QP_SQPT  (AQ_TX_MAX_DMA_CMDS -3)
+#define AQ_TX_DMA_CMD_CREATE_QP_SQPT_DST  (AQ_TX_MAX_DMA_CMDS -3)
+#define AQ_TX_DMA_CMD_CREATE_QP_SQPT_SRC  (AQ_TX_MAX_DMA_CMDS -4)
+
+#define AQ_TX_DMA_CMD_MOD_QP_AH_DST    (AQ_TX_MAX_DMA_CMDS - 2)
+#define AQ_TX_DMA_CMD_MOD_QP_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 3)
 
 #define AQ_TX_DMA_CMD_STATS_DUMP_4 (AQ_TX_MAX_DMA_CMDS - 2)
 #define AQ_TX_DMA_CMD_STATS_DUMP_3 (AQ_TX_MAX_DMA_CMDS - 3)
@@ -87,7 +94,7 @@ struct aq_tx_phv_t {
         /* flit 8 */
     union {
         struct aq_tx_dma_cmds_flit_t flit_8;
-        struct sqcb0_t sqcb0;
+        struct sqcb2_t sqcb2;
     };
      
         /* flit 7 */
@@ -100,7 +107,7 @@ struct aq_tx_phv_t {
     union {
         struct aq_tx_dma_cmds_flit_t flit_6;
         struct key_entry_t key;
-        struct sqcb2_t sqcb2;
+        struct sqcb0_t sqcb0;
         struct cqcb_t  cqcb;
     };
 
@@ -121,5 +128,4 @@ struct aq_tx_phv_t {
         struct phv_ common;
     };
 };
-
 #endif //__AQ_TX_H

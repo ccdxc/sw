@@ -148,6 +148,7 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_LOG_SIZEOF_U64 3  // 2^3 = 8 bytes = sizeof(u64)
 #define CAPRI_LOG_SIZEOF_U64_BITS (CAPRI_LOG_SIZEOF_U64 + LOG_BITS_PER_BYTE) // 2^6 = 64 bits = 8 bytes = sizeof(u64)
 #define CAPRI_SIZEOF_U64_BITS 64
+#define CAPRI_SIZEOF_U64_BYTES 8
 
 #define CAPRI_FLIT_SIZE         64 // Bytes
 #define CAPRI_FLIT_SIZE_BITS    (CAPRI_FLIT_SIZE * BITS_PER_BYTE)     

@@ -6,9 +6,9 @@
 #include "types.h"
 
 struct aq_tx_phv_t p;
-struct aq_tx_s5_t0_k k;
+struct aq_tx_s6_t0_k k;
 
-#define IN_TO_S_P to_s5_info
+#define IN_TO_S_P to_s6_info
     
 #define K_COMMON_GLOBAL_QID CAPRI_KEY_RANGE(phv_global_common, qid_sbit0_ebit4, qid_sbit21_ebit23)
 #define K_COMMON_GLOBAL_QTYPE CAPRI_KEY_FIELD(phv_global_common, qtype)
@@ -22,7 +22,7 @@ struct aq_tx_s5_t0_k k;
 rdma_aq_tx_feedback_process:
 
     mfspr         r1, spr_mpuid
-    seq           c1, r1[4:2], STAGE_5
+    seq           c1, r1[4:2], STAGE_6
     bcf           [!c1], bubble_to_next_stage
 
     phvwr       p.rdma_feedback.feedback_type, RDMA_AQ_FEEDBACK
@@ -41,6 +41,10 @@ rdma_aq_tx_feedback_process:
 
     // dma_cmd[0] : addr2 - p4_intr, p4_rxdma_intr, rdma_feedback
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, p4_intr, rdma_feedback, 1)
+
+    //Needed these as slit 5 overlaps with t3_s2s
+    phvwri      p.p4_to_p4plus.table0_valid, 0
+    phvwri      p.p4_intr.recirc, 0
 
     phvwrpair   p.p4_intr_rxdma.intr_qid, K_COMMON_GLOBAL_QID, p.p4_intr_rxdma.intr_qtype, K_COMMON_GLOBAL_QTYPE
     phvwr       p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA

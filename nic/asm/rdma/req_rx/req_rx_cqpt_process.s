@@ -43,7 +43,7 @@ req_rx_cqpt_process:
     // Lets cache the translated page physical address
     // *cq_cb->pt_next_pa = page_addr_p
     add             CQCB_PA_ADDR, K_CQCB_ADDR, FIELD_OFFSET(cqcb_t, pt_next_pa) 
-    memwr.d         CQCB_PA_ADDR, PAGE_ADDR_P
+    memwr.dx         CQCB_PA_ADDR, PAGE_ADDR_P
     add             CQCB_PA_INDEX, K_CQCB_ADDR, FIELD_OFFSET(cqcb_t, pt_next_pg_index)
     memwr.h         CQCB_PA_INDEX, K_PA_NEXT_INDEX
 

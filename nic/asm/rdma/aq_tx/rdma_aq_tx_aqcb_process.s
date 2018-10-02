@@ -9,7 +9,7 @@ struct aq_tx_phv_t p;
 struct aqcb_t d;
 struct aq_tx_s0_t0_k k;
 
-#define TO_FEEDBACK_P to_s5_info
+#define TO_FEEDBACK_P to_s6_info
     
 %%
 

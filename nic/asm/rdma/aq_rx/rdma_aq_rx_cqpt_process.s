@@ -28,7 +28,7 @@ rdma_aq_rx_cqpt_process:
     crestore [c3, c2], CAPRI_KEY_RANGE(IN_P, no_translate, no_dma), 0x3 //BD Slot
 
     bcf             [c2 & c3], fire_eqcb
-    DMA_CMD_STATIC_BASE_GET(r2, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_EQ_INT)
+    nop
     
     //page_addr_p = (u64 *) (d_p + sizeof(u64) * cqcb_to_pt_info_p->page_seg_offset);
     sub             PAGE_ADDR_P, (HBM_NUM_PT_ENTRIES_PER_CACHE_LINE-1), K_PAGE_SEG_OFFSET
@@ -41,7 +41,7 @@ rdma_aq_rx_cqpt_process:
     // Lets cache the translated page physical address
     // *cq_cb->pt_next_pa = page_addr_p
     add             CQCB_PA_ADDR, K_CQCB_ADDR, offsetof(struct cqcb_t, pt_next_pa) 
-    memwr.d         CQCB_PA_ADDR, PAGE_ADDR_P
+    memwr.dx         CQCB_PA_ADDR, PAGE_ADDR_P
     add             CQCB_PA_INDEX, K_CQCB_ADDR, offsetof(struct cqcb_t, pt_next_pg_index)
     memwr.h         CQCB_PA_INDEX, K_PA_NEXT_INDEX
 
@@ -56,8 +56,8 @@ rdma_aq_rx_cqpt_process:
 fire_eqcb:    
 
     bbeq        CAPRI_KEY_FIELD(IN_P, fire_eqcb), 1, cqpt_exit
-    nop
-
+    DMA_CMD_STATIC_BASE_GET(r2, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_AQ_BUSY)
+    
     DMA_SET_WR_FENCE(struct capri_dma_cmd_phv2mem_t, r2)
     DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, r2)
 

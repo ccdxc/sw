@@ -1752,6 +1752,7 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     int log_num_pages = cqcb.log_num_wqes + cqcb.log_wqe_size - cqcb.log_cq_page_size;
     rdma_pt_entry_read(lif, cq_pt_base, &cqcb.pt_pa);
     rdma_pt_entry_read(lif, cq_pt_base+1, &cqcb.pt_next_pa);
+
     if (cqcb.host_addr) {
         cqcb.pt_pa |= 0x8000000000000000;
         cqcb.pt_next_pa |= 0x8000000000000000;
@@ -1760,6 +1761,11 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.pt_next_pg_index = 1UL & (( 1 << log_num_pages) - 1) ;
 
     HAL_TRACE_DEBUG("{}: LIF: {}: pt_pa: {:#x}: pt_next_pa: {:#x}: pt_pa_index: {}: pt_next_pa_index: {}: log_num_pages: {}", __FUNCTION__, lif, cqcb.pt_pa, cqcb.pt_next_pa, cqcb.pt_pg_index, cqcb.pt_next_pg_index, log_num_pages);
+
+    /* store  pt_pa & pt_next_pa in little endian. So need an extra memrev */
+    memrev((uint8_t*)&cqcb.pt_pa, sizeof(uint64_t));
+    memrev((uint8_t*)&cqcb.pt_next_pa, sizeof(uint64_t));
+
     cqcb.proxy_pindex = 0;
     cqcb.proxy_s_pindex = 0;
 

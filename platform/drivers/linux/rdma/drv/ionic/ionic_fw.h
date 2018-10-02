@@ -557,7 +557,7 @@ struct ionic_v1_admin_wqe {
 			__le64		rq_dma_addr;
 		} qp;
 		struct {
-			__le32		attr_mask;
+			__be32		attr_mask;
 			__le32		access_flags;
 			__le32		rq_psn;
 			__le32		sq_psn;
@@ -617,17 +617,17 @@ struct ionic_v1_admin_query_qp {
 enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_NOOP,
     IONIC_V1_ADMIN_DEBUG = 12,
-    
 	/* TODO: move ops up as they are assigned opcode numbers in fw */
 	IONIC_V1_ADMIN_IMPL_BY_DRIVER = 50,
+	IONIC_V1_ADMIN_CREATE_CQ,    // = 1,
+	IONIC_V1_ADMIN_CREATE_QP,    // = 2,
+	IONIC_V1_ADMIN_CREATE_MR,    // = 3,
+	IONIC_V1_ADMIN_DESTROY_MR,   // = 6,
+	IONIC_V1_ADMIN_MODIFY_QP,    // = 9,
+    
 	IONIC_V1_ADMIN_STATS_HDRS,
 	IONIC_V1_ADMIN_STATS_VALS,
-	IONIC_V1_ADMIN_CREATE_MR,
-	IONIC_V1_ADMIN_DESTROY_MR,
-	IONIC_V1_ADMIN_CREATE_CQ,
 	IONIC_V1_ADMIN_DESTROY_CQ,
-	IONIC_V1_ADMIN_CREATE_QP,
-	IONIC_V1_ADMIN_MODIFY_QP,
 	IONIC_V1_ADMIN_DESTROY_QP,
 	IONIC_V1_ADMIN_CREATE_AH,
 	IONIC_V1_ADMIN_DESTROY_AH,
