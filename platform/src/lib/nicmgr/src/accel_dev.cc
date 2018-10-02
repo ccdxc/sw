@@ -22,11 +22,14 @@
 #include "hal_client.hpp"
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
+#include "capri_hbm.hpp"
+#include "capri_barco_crypto.hpp"
 
 // Amount of time to wait for sequencer queues to be quiesced
 #define ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US    5000000
 #define ACCEL_DEV_RING_OP_QUIESCE_TIME_US       1000000
 #define ACCEL_DEV_ALL_RINGS_MAX_QUIESCE_TIME_US (10 * ACCEL_DEV_RING_OP_QUIESCE_TIME_US)
+#define ACCEL_DEV_NUM_CRYPTO_KEYS_MIN           512     // arbitrary low water mark
 
 // Invoke a function for each and every HW ring
 #define ACCEL_DEV_FOR_EACH_RING_INVOKE(csr, func, arg)      \
@@ -148,9 +151,31 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     uint64_t    lif_handle;
     uint64_t    hbm_addr;
     uint32_t    hbm_size;
+    uint32_t    num_keys_max;
 
     hal = hal_client;
     spec = (accel_devspec_t *)dev_spec;
+
+    // Locate HBM region dedicated to crypto keys
+    if (hal->AllocHbmAddress(CAPRI_BARCO_KEY_DESC, &hbm_addr, &hbm_size)) {
+        NIC_LOG_ERR("Failed to get HBM base for {}", CAPRI_BARCO_KEY_DESC);
+        return;
+    }
+
+    // hal/pd/capri/capri_hbm.cc stores size in KB;
+    // split the key region and use the second half for accel device.
+    hbm_size *= 1024;
+    num_keys_max = std::min(hbm_size / (CMD_CRYPTO_KEY_PART_SIZE *
+                                        CMD_CRYPTO_KEY_PART_MAX),
+                            (uint32_t)CRYPTO_KEY_COUNT_MAX);
+    crypto_key_idx_base = num_keys_max / 2;
+    NIC_LOG_INFO("Key region size {} bytes crypto_key_idx_base {}",
+                 hbm_size, crypto_key_idx_base);
+    if (crypto_key_idx_base < ACCEL_DEV_NUM_CRYPTO_KEYS_MIN) {
+        NIC_LOG_ERR("crypto_key_idx_base {} too small, expected at least {}",
+                    crypto_key_idx_base, ACCEL_DEV_NUM_CRYPTO_KEYS_MIN);
+        return;
+    }
 
     // Locate HBM region dedicated to STORAGE_SEQ_HBM_HANDLE
     memset(&pci_resources, 0, sizeof(pci_resources));
@@ -158,8 +183,6 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
         NIC_LOG_ERR("Failed to get HBM base for {}", STORAGE_SEQ_HBM_HANDLE);
         return;
     }
-
-    // hal/pd/capri/capri_hbm.cc stores size in KB;
     hbm_size *= 1024;
 
     // First, ensure size is a power of 2, then per PCIe BAR mapping
@@ -437,6 +460,7 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
                                          ACCEL_PHYS_ADDR_LIF_SET(info.hw_lif_id);
     rsp->dev.lif_tbl[0].hw_host_mask = ACCEL_PHYS_ADDR_HOST_SET(ACCEL_PHYS_ADDR_HOST_MASK) |
                                        ACCEL_PHYS_ADDR_LIF_SET(ACCEL_PHYS_ADDR_LIF_MASK);
+    rsp->dev.lif_tbl[0].hw_key_idx_base = crypto_key_idx_base;
     rsp->dev.db_pages_per_lif = 1;
     rsp->dev.admin_queues_per_lif = spec->adminq_count;
     rsp->dev.seq_queues_per_lif = spec->seq_created_count;

@@ -9,6 +9,7 @@
 #include "pnso_mpool.h"
 #include "pnso_chain.h"
 #include "pnso_crypto.h"
+#include "sonic_api_int.h"
 
 /*
  * TODO-crypto:
@@ -139,5 +140,6 @@ crypto_key_index_update(const void *key1,
 			uint32_t key_size,
 			uint32_t key_idx)
 {
-	return sonic_crypto_key_index_update(key1, key2, key_size, key_idx);
+	return sonic_crypto_key_index_update(key1, key2, key_size,
+					     sonic_get_crypto_key_idx(key_idx));
 }

@@ -143,12 +143,14 @@ enum os_type {
  * @hw_lif_local_dbaddr: LIF local doorbell address
  * @hw_host_prefix: prefix for making a host address
  * @hw_host_mask: mask for making a host address
+ * @hw_key_idx_base: crypto key index base
  */
 typedef struct identify_lif {
     uint64_t        hw_lif_id;
     uint64_t        hw_lif_local_dbaddr;
     uint64_t        hw_host_prefix;
     uint64_t        hw_host_mask;
+    uint32_t        hw_key_idx_base;
 } identify_lif_t;
 
 /**
