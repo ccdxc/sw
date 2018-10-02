@@ -163,7 +163,7 @@ aligned_pt:
     srlv        r5, r3, LOG_PT_SEG_SIZE
     //add         r6, r0, r3
     mincr       PT_OFFSET, LOG_PT_SEG_SIZE, r0
-    add         PT_SEG_P, MY_PT_BASE_ADDR, r5, CAPRI_LOG_SIZEOF_U64
+    add         PT_SEG_P, MY_PT_BASE_ADDR, r5, (CAPRI_LOG_SIZEOF_U64 + LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE)
 
 invoke_pt:
 
