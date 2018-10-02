@@ -7,14 +7,15 @@ import re
 import json
 
 # Globals
-customer_color="red"
+customer_color="yellow"
+default_color  ="red"
+defaultColor = "blue"
+customer_regexp="babayaga"
 if len(sys.argv) == 2:
    customer_regexp  = sys.argv[1];
 elif len(sys.argv) == 3:
    customer_regexp  = sys.argv[1];
    customer_color = sys.argv[2];    
-else:
-   customer_regexp ="";
 nic_dir = os.getcwd()
 
 print "\n\n   parse.gui.py <regex> <color>"
@@ -48,21 +49,22 @@ print "- DOL Log file: " + dol_log
 symbols = { 'address': 'name' }
 
 redColorWords= [\
- "^\[\s+\d+\]\:.*violation.*"\
-,"^\[\s+\d+\]\:.*abort.*"\
-,"^\[\s+\d+\]\:.*error.*"\
-,"^\[\s+\d+\]\:.*err.*"\
-,"^\[\s+\d+\]\:.*fatal.*"\
+ "^\[\s+\d+\]\:.*violation.*:"\
+,"^\[\s+\d+\]\:.*abort.*:"\
+,"^\[\s+\d+\]\:.*error.*:"\
+,"^\[\s+\d+\]\:.*err.*:"\
+,"^\[\s+\d+\]\:.*fatal.*:"\
 ];
 
 
 
-combinedRedColor = "(" + ")|(".join(redColorWords) + ")"
-combinedRegExp = "(" + ")|(".join(customer_regexp) + ")"
-combinedRedColor = combinedRedColor+"|("+customer_regexp+")"
-print "+ RegExp that will be highlighted:\n " + combinedRedColor
-print "+ Color - " + customer_color
-print "+ This tool generates JSON file from model.log and capri_loader.conf. That JSON file"
+defaultRegexColor = "(" + ")|(".join(redColorWords) + ")"
+inputRegexColor =customer_regexp
+print "+ RegExp that will be highlighted:\n " 
+print "+ Color : Regex\n "
+print "+ "+ default_color + " : "+ defaultRegexColor  
+print "+ "+ customer_color + " : "+ inputRegexColor
+print "\n+ This tool generates JSON file from model.log and capri_loader.conf. That JSON file"
 print "   will be used to generate HTML D3 based graph for easy navigation"
 print "   all question and requestes please forward to rami@pensando.io"
 
@@ -83,6 +85,7 @@ def build_symbols():
             continue
         symbols['0x'+fields[1].upper()] =  fields[0][0:-4]
     return
+
 
 # parse_logs and create a new file with symbols resolved
 def parse_logs():
@@ -198,13 +201,6 @@ levelIIIIregex= [\
 ,"^\# "\
 ];
 
-redColorWords= [\
- "^\[\s+\d+\]\:.*violation.*"\
-,"^\[\s+\d+\]\:.*abort.*"\
-,"^\[\s+\d+\]\:.*error.*"\
-,"^\[\s+\d+\]\:.*err.*"\
-,"^\[\s+\d+\]\:.*fatal.*"\
-];
 
 def parse_csv():
     print "* Starting CSV Parse....."
@@ -234,6 +230,98 @@ def parse_csv():
     return
 
 # jsoncsv parse
+def parse_json_advance():
+	print "* Starting JSON Parse....."
+	modelfile  = open(model1_log, "r")
+	os.remove(model_json) if os.path.exists(model_json) else None
+	modeljson  = open(model_json, "a+")
+	combinedLevel0regex = "(" + ")|(".join(levelIregex) + ")"
+	combinedLevel1regex = "(" + ")|(".join(levelIIregex) + ")"
+	combinedLevel2regex = "(" + ")|(".join(levelIIIregex) + ")"
+	combinedLevel3regex = "(" + ")|(".join(levelIIIIregex) + ")"
+	heads=[None]*10;
+	root={};
+	root["name"]="non"
+	root["children"]=[];
+        line =json.dumps(root, ensure_ascii=False)
+	currentLevel=0;
+	newlineIndex=0;
+	for linenum, line in enumerate(modelfile):
+		colorMatch=""
+		debugLine="."
+		item={};
+		if re.match(combinedLevel0regex, line, re.I):
+			newlineIndex=0;
+                        debugLine="+"
+                elif re.match(combinedLevel1regex, line, re.I):
+			debugLine="+"
+                        newlineIndex=1;
+                elif re.match(combinedLevel2regex, line, re.I):
+                        debugLine="++"
+                        newlineIndex=2;
+                elif re.match(combinedLevel3regex, line, re.I):
+                        debugLine="+++"
+                        newlineIndex=3;
+		else:
+			newlineIndex=-1; #nothing
+			continue;
+		if re.match(defaultRegexColor, line, re.I):
+			colorMatch=default_color;
+                if re.match(inputRegexColor, line, re.I):
+                        colorMatch=customer_color;
+
+		item["name"]=line
+		item["line"]=newlineIndex
+                item["size"]=0.5
+		item["children"]=[]
+		item["colorCode"]=defaultColor #ADD SUPPORT FOR CUSTMER CODES
+		if (newlineIndex!=currentLevel):
+			for i in range (0,newlineIndex):
+				if (heads[i]==None):
+					titem={};
+					titem["name"]="EMPTY LEVEL"+str(i);
+                                        titem["line"]="EMPTY"+str(i);
+                                        titem["size"]=0.5;
+                                        titem["colorCode"]=defaultColor;
+                                        titem["children"]=[];
+					heads[i]=titem;
+					if (i!=0):
+						heads[i-1]["children"].append(titem);
+					else:
+						root["children"].append(titem);
+						
+					heads[i]=titem
+		heads[newlineIndex]=item;
+                if (newlineIndex!=0) :
+			heads[newlineIndex-1]["children"].append(item);
+		elif (newlineIndex==0) :
+			root["children"].append(item);
+		currentLevel=newlineIndex;
+		if (colorMatch!=""):
+                        item["colorCode"]=colorMatch
+			for i in range (0,newlineIndex):
+				if (heads[i]!=None):
+					heads[i]["colorCode"]=colorMatch
+                                        heads[i]["size"]+=0.5
+
+		
+#for
+#	print root  
+	line =json.dumps(root, ensure_ascii=False)
+	modeljson.write(line)
+	modeljson.close()
+	modelfile.close()
+	# prepare sorted inscount file
+	print "+ JSON file was generated successfully. Please enable HTTP server through the following command:"
+	print "      python -m SimpleHTTPServer XXYY &"
+	print "\n\n PLEASE USE CHROME to browse the resutls, as other browser does not support correct color scheme"
+	import socket
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	s.connect(("www.google.com", 80))
+	ip = s.getsockname()[0]
+	s.close()
+	print "   http://"+ip+":XXYY/"
+	return
 
 def parse_json():
     print "* Starting JSON Parse....."
@@ -281,31 +369,25 @@ def parse_json():
             if rawLevelII!={} :
                 if "children" not in rawLevelI :
                     rawLevelI["children"]=[] 
-#                rawLevelII["colorCode"]="blue";                
-#		rawLevelI["colorCode"]="blue";
 		if lev2Color==1:
-		    rawLevelII["colorCode"]=customer_color;
+		    rawLevelI["colorCode"]=customer_color;
 		    rawLevelII["colorCode"]=customer_color;
                 lev1Color=lev2Color|lev1Color;
  		rawLevelI["children"].append(rawLevelII);
-                rawLevelII={}
+                print "closing II", rawLevelII["name"]
+		rawLevelII={}
                 lev2Color=0
 		rawLevelIII={}
             rawLevelII["name"]=line
             rawLevelII["size"]=1
-# 	    rawLevelII["colorCode"]="blue"
 	    if re.match(combinedRedColor, line, re.I):
-#	        print "!!Error pattern Found!! rawLevelII" 	
-
 		lev2Color=1
             	rawLevelII["colorCode"]=customer_color
             rawLevelII["line"]=linenum
+            print "++Level 2 " ,rawLevelII["name"];
         elif re.match(combinedLevelIIIregex, line, re.I):
             if rawLevelIII!={} :
-		#rawLevelIII["colorCode"]=lev4Color;
                 if rawLevelII!={} :
-#                    rawLevelIII["colorCode"]="blue";
-#		    rawLevelII["colorCode"]="blue";
                     if lev3Color==1:
                        rawLevelIII["colorCode"]=customer_color;
 		       rawLevelII["colorCode"]=customer_color;
@@ -318,27 +400,21 @@ def parse_json():
                         rawLevelI["children"]=[]
                     rawLevelI["children"].append(rawLevelIII);
 		lev3Color=0
+	        print "closing III", rawLevelIII["name"]
 		rawLevelIII={}
             rawLevelIII["name"]=line
             rawLevelIII["size"]=1
-           # rawLevelIII["colorCode"]="blue"
             if re.match(combinedRedColor, line, re.I):
-              #  print "!!Error pattern Found!! rawLevelIII", line 
                 lev3Color=1
                 rawLevelIII["colorCode"]=customer_color
-#  	    else:
-#                rawLevelIII["colorCode"]="blue"
             rawLevelIII["line"]=linenum
+            print "+++Level 3 " ,rawLevelIII
         elif re.match(combinedLevelIIIIregex, line, re.I):
             if rawLevelIIII!={} :
-               # rawLevelIIII["colorCode"]=lev4Color;
                 if rawLevelIII!={} :
-#                    rawLevelIIII["colorCode"]="blue";
-#		    rawLevelIII["colorCode"]="blue";
                     if lev4Color==1:
                         rawLevelIIII["colorCode"]=customer_color;
 			rawLevelIII["colorCode"]=customer_color;
-                       # print "Marked Red "
                     lev3Color=lev4Color|lev3Color;
                     if "children" not in rawLevelIII :
                         rawLevelIII["children"]=[]
@@ -351,13 +427,10 @@ def parse_json():
 		rawLevelIIII={}
             rawLevelIIII["name"]=line
             rawLevelIIII["line"]=linenum
-#            rawLevelIIII["colorCode"]="blue"
             rawLevelIIII["size"]=1
             if re.match(combinedRedColor, line, re.I):
-               # print "!!Error pattern Found!! rawLevelIIII "
                 lev4Color=1
                 rawLevelIIII["colorCode"]=customer_color
-           # rawLevelIIII["children"]=[]
     if rawLevelIIII!={} :
         if rawLevelIII!={} :
             rawLevelIIII["colorCode"]= customer_color if lev4Color else "";
@@ -379,7 +452,6 @@ def parse_json():
         if "children" not in rawLevelI :
             rawLevelI["children"]=[]
         rawLevelI["children"].append(rawLevelII);
-      #  print "Added in the end", rawLevelII["name"]
     if rawLevelI!={} :
         rawLevelI["colorCode"]=customer_color if lev1Color else "";
         rawLevel0["children"].append(rawLevelI);
@@ -405,7 +477,7 @@ def parse_json():
 def main():
     build_symbols()
     parse_logs()
-    parse_json()
-    
+    parse_json_advance() 
+#    parse_json()
 if __name__ == "__main__":
     main()

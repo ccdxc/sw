@@ -39,7 +39,7 @@ opacity: 3;
 
 var m = [20, 120, 20, 120],
     w = 3480 - m[1] - m[3],
-    h = 6600 - m[0] - m[2],
+    h = 2600 - m[0] - m[2],
     i = 0,
     root;
 
@@ -161,6 +161,7 @@ function update(source) {
 
   nodeUpdate.select("circle")
       .attr("r", 4.5)
+      .attr("r", function(d) { return (d.size); })
       .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
   nodeUpdate.select("text")
