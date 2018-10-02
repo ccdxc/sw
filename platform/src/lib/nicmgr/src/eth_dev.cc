@@ -207,7 +207,7 @@ Eth::Eth(HalClient *hal_client, void *dev_spec)
         pci_resources.cmbsz = hbm_size;
         NIC_LOG_INFO("HBM address for RDMA LLQ memory {:#x} size {} bytes", pci_resources.cmbpa, pci_resources.cmbsz);
 
-        MEM_SET(pci_resources.cmbpa, 0, hbm_size);        
+        //MEM_SET(pci_resources.cmbpa, 0, hbm_size);        
     }
     
     lif_handle = hal->LifCreate(spec->lif_id, qinfo, &info,
