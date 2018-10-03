@@ -209,7 +209,14 @@ func TestEventsProxyRestart(t *testing.T) {
 
 			// proxy won't be able to accept any events for 2s
 			time.Sleep(1 * time.Second)
-			testutils.StartEvtsProxy(proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval)
+			evtsProxy, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval)
+			if err != nil {
+				log.Errorf("failed to start events proxy, err: %v", err)
+				continue
+			}
+			ti.evtsProxy = evtsProxy
+			ti.proxyEventsStoreDir = tmpProxyDir
+			ti.updateResolver(globals.EvtsProxy, evtsProxyURL)
 		}
 
 		// let the recorders send some events after the proxy restart
@@ -436,63 +443,63 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			expResponse: &expectedResponse{
 				numEvents: 9,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType1,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType1,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType1,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType3,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType3,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType3,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
@@ -509,21 +516,21 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			expResponse: &expectedResponse{
 				numEvents: 3,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType1,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType3,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
@@ -539,21 +546,21 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			expResponse: &expectedResponse{
 				numEvents: 3,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType1,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType3,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
@@ -570,7 +577,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			expResponse: &expectedResponse{
 				numEvents: 1,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
@@ -587,63 +594,63 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			expResponse: &expectedResponse{
 				numEvents: 9,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType1,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType1,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType1,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType3,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType3,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType3,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
@@ -660,7 +667,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			expResponse: &expectedResponse{
 				numEvents: 1,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
@@ -677,7 +684,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			expResponse: &expectedResponse{
 				numEvents: 1,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): &evtsapi.Event{
+					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventType2,
 							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
