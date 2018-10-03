@@ -83,7 +83,7 @@ pt_aligned_access:
      // pt_seg_p = (u64 *)my_pt_base_addr + ((transfer_offset /lkey_info_p->page_size) / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)
      srlv         r2, r2, r4
      b            set_arg
-     add          r3, r3, r2, CAPRI_LOG_SIZEOF_U64  // Branch Delay Slot
+     add          r3, r3, r2, (CAPRI_LOG_SIZEOF_U64 + LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE)  // Branch Delay Slot
      //add          r3, r3, r2, LOG_HBM_CACHE_LINE_SIZE
 
 pt_unaligned_access:
