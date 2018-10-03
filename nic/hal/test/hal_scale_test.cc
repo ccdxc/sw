@@ -749,7 +749,6 @@ public:
         spec->set_conn_track_en(false);
         spec->set_tcp_ts_option(false);
         spec->set_tcp_sack_perm_option(false);
-        spec->set_iflow_syn_ack_delta(0);
         flow = spec->mutable_initiator_flow();
         flow->mutable_flow_key()->mutable_v4_key()->set_sip(sip);
         flow->mutable_flow_key()->mutable_v4_key()->set_dip(dip);
@@ -757,6 +756,7 @@ public:
         flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_sport(sport);
         flow->mutable_flow_key()->mutable_v4_key()->mutable_tcp_udp()->set_dport(dport);
         flow->mutable_flow_data()->mutable_flow_info()->set_flow_action(action);
+        flow->mutable_flow_data()->mutable_conn_track_info()->set_iflow_syn_ack_delta(0);
 
         flow = spec->mutable_responder_flow();
         flow->mutable_flow_key()->mutable_v4_key()->set_sip(dip);

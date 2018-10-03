@@ -19,6 +19,7 @@
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 using telemetry::MirrorSessionSpec;
 using session::FlowInfo;
@@ -27,6 +28,7 @@ using session::FlowKeyICMPInfo;
 using session::FlowData;
 using session::ConnTrackInfo;
 using session::FlowStats;
+using session::ConnTrackExceptions;
 using sys::FTEStats;
 using sys::FTEFeatureStats;
 using sys::FTEError;
@@ -483,13 +485,50 @@ flow_icmp_to_flow_icmp_spec(flow_t *flow, FlowKeyICMPInfo *icmp)
 static void
 flow_data_to_flow_data_spec(flow_t *flow, FlowData *flow_data)
 {
-    FlowInfo *flow_info = flow_data->mutable_flow_info();
+    FlowInfo             *flow_info = flow_data->mutable_flow_info();
+
     flow_info->set_flow_action((session::FlowAction)(flow->config.action));
     flow_info->set_nat_type((session::NatType)(flow->config.nat_type));
     ip_addr_to_spec(flow_info->mutable_nat_sip(), &flow->config.nat_sip);
     ip_addr_to_spec(flow_info->mutable_nat_dip(), &flow->config.nat_dip);
     flow_info->set_nat_sport(flow->config.nat_sport);
     flow_info->set_nat_dport(flow->config.nat_dport);
+}
+
+static void
+flow_state_to_connection_track_response(flow_state_t *flow, ConnTrackInfo *conn_info)
+{
+    ConnTrackExceptions  *exceptions = conn_info->mutable_exceptions();
+
+    // Set Connection Tracking info
+    conn_info->set_flow_create_ts(flow->create_ts);
+    conn_info->set_flow_packets(flow->packets);
+    conn_info->set_flow_bytes(flow->bytes);
+    conn_info->set_tcp_seq_num(flow->tcp_seq_num);
+    conn_info->set_tcp_ack_num(flow->tcp_ack_num);
+    conn_info->set_tcp_win_sz(flow->tcp_win_sz);
+    conn_info->set_tcp_win_scale(flow->tcp_win_scale);
+    conn_info->set_tcp_mss(flow->tcp_mss);
+    conn_info->set_tcp_sack_perm_option_sent(flow->tcp_sack_perm_option_sent);
+    conn_info->set_iflow_syn_ack_delta(flow->syn_ack_delta);
+    conn_info->set_tcp_ws_option_sent(flow->tcp_ws_option_sent);
+    conn_info->set_tcp_ts_option_sent(flow->tcp_ts_option_sent);
+
+    // Set Connection Tracking Exceptions
+    exceptions->set_tcp_syn_retransmit(flow->exception_bmap&TCP_SYN_REXMIT);
+    exceptions->set_tcp_win_zero_drop(flow->exception_bmap&TCP_WIN_ZERO_DROP);
+    exceptions->set_tcp_full_retransmit(flow->exception_bmap&TCP_FULL_REXMIT);
+    exceptions->set_tcp_partial_overlap(flow->exception_bmap&TCP_PARTIAL_OVERLAP);
+    exceptions->set_tcp_packet_reorder(flow->exception_bmap&TCP_PACKET_REORDER);
+    exceptions->set_tcp_out_of_window(flow->exception_bmap&TCP_OUT_OF_WINDOW);
+    exceptions->set_tcp_invalid_ack_num(flow->exception_bmap&TCP_ACK_ERR);
+    exceptions->set_tcp_normalization_drop(flow->exception_bmap&TCP_NORMALIZATION_DROP);
+    exceptions->set_tcp_split_handshake_detected(flow->exception_bmap&TCP_SPLIT_HANDSHAKE_DETECTED);
+    exceptions->set_tcp_data_after_fin(flow->exception_bmap&TCP_DATA_AFTER_FIN);
+    exceptions->set_tcp_non_rst_pkt_after_rst(flow->exception_bmap&TCP_NON_RST_PKT_AFTER_RST);
+    exceptions->set_tcp_invalid_first_pkt_from_responder(flow->exception_bmap&TCP_INVALID_RESPONDER_FIRST_PKT);
+    exceptions->set_tcp_unexpected_pkt(flow->exception_bmap&TCP_UNEXPECTED_PKT);
+    exceptions->set_tcp_rst_with_invalid_ack_num(flow->exception_bmap&TCP_RST_WITH_INVALID_ACK_NUM);
 }
 
 static void
@@ -542,6 +581,7 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
     response->mutable_spec()->mutable_meta()->set_vrf_id(vrf->vrf_id);
     response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
     response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
+    response->mutable_spec()->set_tcp_sack_perm_option(session->config.tcp_sack_perm_option);
 
     flow_to_flow_spec(session->iflow,
                       response->mutable_spec()->mutable_initiator_flow());
@@ -589,6 +629,10 @@ session_state_to_session_get_response (session_t *session,
     flow_state_to_flow_stats_response(&session_state->iflow_state,
          response->mutable_stats()->mutable_initiator_flow_stats());
 
+    flow_state_to_connection_track_response(&session_state->iflow_state,
+         response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
+         mutable_conn_track_info());
+
     if (session->rflow) {
         HAL_TRACE_DEBUG("valid rflow session");
         // rflow age
@@ -603,6 +647,10 @@ session_state_to_session_get_response (session_t *session,
 
         flow_state_to_flow_stats_response(&session_state->rflow_state,
                 response->mutable_stats()->mutable_responder_flow_stats());
+
+        flow_state_to_connection_track_response(&session_state->rflow_state,
+           response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+           mutable_conn_track_info());
     }
 
     return;
@@ -1353,7 +1401,7 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
         return HAL_RET_ERR;
     }
 
-    if (key.dir == hal::FLOW_DIR_FROM_UPLINK) {
+    if (key.dir == FLOW_DIR_FROM_UPLINK) {
         cpu_header->src_lif = hal::SERVICE_LIF_CPU;
         if (flow->pgm_attrs.use_vrf) {
             pd::pd_vrf_get_fromcpu_vlanid_args_t args;

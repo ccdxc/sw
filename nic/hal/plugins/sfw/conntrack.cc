@@ -246,7 +246,13 @@ conntrack_exec(fte::ctx_t& ctx)
         if (ctx.protobuf_request()) {
             net_conntrack_extract_session_state_from_spec(&flowupd.flow_state,
                                             ctx.sess_spec()->initiator_flow().flow_data());
-            flowupd.flow_state.syn_ack_delta = ctx.sess_spec()->iflow_syn_ack_delta();
+
+            if (ctx.sess_spec()->initiator_flow().has_flow_data() &&
+                ctx.sess_spec()->initiator_flow().flow_data().has_conn_track_info()) {
+                flowupd.flow_state.syn_ack_delta = 
+                            ctx.sess_spec()->initiator_flow().flow_data().conn_track_info().\
+                                  iflow_syn_ack_delta();
+            }
         } else {
             const fte::cpu_rxhdr_t *rxhdr = ctx.cpu_rxhdr();
             flowupd.flow_state.state = session::FLOW_TCP_STATE_INIT;
