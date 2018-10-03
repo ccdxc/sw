@@ -62,7 +62,7 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		path, err := ioutil.TempDir("", fmt.Sprintf("tstore-%d-", idx))
 		AssertOk(t, err, "Error creating tmp dir")
 		defer os.RemoveAll(path)
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:720%d", idx), path)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path)
 		AssertOk(t, err, "Error creating nodes")
 	}
 
@@ -71,14 +71,6 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx))
 		AssertOk(t, err, "Error creating broker")
 	}
-
-	// try making some calls while cluster is not ready, they should fail
-	err = brokers[0].CreateDatabase(context.Background(), "db0")
-	Assert(t, (err != nil), "Creating database suceeded while cluster is not ready")
-	err = brokers[0].WritePoints(context.Background(), "db0", []models.Point{})
-	Assert(t, (err != nil), "writing points suceeded while cluster is not ready")
-	_, err = brokers[0].ExecuteQuery(context.Background(), "db0", "SELECT * FROM cpu0")
-	Assert(t, (err != nil), "executing query suceeded while cluster is not ready")
 
 	// wait till all the shards are created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -154,10 +146,10 @@ func TestBrokerKstoreBasic(t *testing.T) {
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create a temp dir
-		path, err := ioutil.TempDir("", fmt.Sprintf("tstore-%d-", idx))
+		path, err := ioutil.TempDir("", fmt.Sprintf("kstore-%d-", idx))
 		AssertOk(t, err, "Error creating tmp dir")
 		defer os.RemoveAll(path)
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:720%d", idx), path)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path)
 		AssertOk(t, err, "Error creating nodes")
 	}
 
@@ -311,10 +303,10 @@ func TestBrokerBenchmark(t *testing.T) {
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create a temp dir
-		path, err := ioutil.TempDir("", fmt.Sprintf("tstore-%d-", idx))
+		path, err := ioutil.TempDir("", fmt.Sprintf("broker-%d-", idx))
 		AssertOk(t, err, "Error creating tmp dir")
 		defer os.RemoveAll(path)
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:701%d", idx), path)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path)
 		AssertOk(t, err, "Error creating nodes")
 	}
 

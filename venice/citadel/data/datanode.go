@@ -106,6 +106,9 @@ func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string) (*DN
 		return nil, err
 	}
 
+	// If nodeURL was passed with :0, then update the nodeURL to the real URL
+	nodeURL = rpcSrv.GetListenURL()
+
 	// create a data node
 	dn := DNode{
 		nodeUUID:   nodeUUID,
