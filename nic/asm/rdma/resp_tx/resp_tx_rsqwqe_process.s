@@ -28,6 +28,8 @@ struct resp_tx_s2_t0_k k;
 
 #define IN_P t0_s2s_rqcb2_to_rsqwqe_info
 
+#define K_SPEC_PSN  CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23)
+
 %%
     .param      resp_tx_rsqrkey_process
     .param      resp_tx_dcqcn_enforce_process
@@ -39,7 +41,11 @@ resp_tx_rsqwqe_process:
     nop // BD Slot
     
 process_atomic:
-    add         BTH_OPCODE, RDMA_PKT_OPC_ATOMIC_ACK, CAPRI_KEY_FIELD(IN_P, serv_type), BTH_OPC_SVC_SHIFT
+    seq         c1, K_SPEC_PSN, r0
+    # we expect to generate only one response packet for atomic requests, hence only spec_psn = 0
+    # is the only valid speculation. All other speculations should be dropped.
+    bcf         [!c1], drop_phv
+    add         BTH_OPCODE, RDMA_PKT_OPC_ATOMIC_ACK, CAPRI_KEY_FIELD(IN_P, serv_type), BTH_OPC_SVC_SHIFT //BD Slot
     phvwrpair   p.bth.opcode, BTH_OPCODE, p.bth.psn, d.psn
 
    // phv_p->bth.pkey = 0xffff
@@ -85,7 +91,7 @@ process_read:
     seq         c3, d.read.len, 0
     
     add         CURR_PSN, r0, d.psn
-    add         r2, r0, CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23)
+    add         r2, r0, K_SPEC_PSN
     // now r2 has psn offset within msg, i.e. spec_psn
     mincr       CURR_PSN, 24, r2
     // CURR_PSN is offset by spec_psn if read_rsp is in progress
@@ -191,7 +197,7 @@ next:
                 CAPRI_PHV_FIELD(RKEY_INFO_P, header_template_addr), \
                 CAPRI_KEY_FIELD(IN_P, header_template_addr) 
 
-    phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, curr_read_rsp_psn), CAPRI_KEY_RANGE(IN_P, curr_read_rsp_psn_sbit0_ebit7, curr_read_rsp_psn_sbit16_ebit23), \
+    phvwrpair   CAPRI_PHV_FIELD(RKEY_INFO_P, curr_read_rsp_psn), K_SPEC_PSN, \
                 CAPRI_PHV_FIELD(RKEY_INFO_P, log_pmtu), CAPRI_KEY_FIELD(IN_P, log_pmtu)
 
     CAPRI_SET_FIELD2(RKEY_INFO_P, header_template_size, CAPRI_KEY_FIELD(IN_P, header_template_size))
