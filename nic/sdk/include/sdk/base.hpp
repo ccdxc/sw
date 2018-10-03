@@ -19,6 +19,10 @@ namespace sdk {
 #define TRUE                                         1
 #define FALSE                                        0
 
+#define _In_
+#define _Out_
+#define _Inout_
+
 #define likely(x)           __builtin_expect(!!(x), 1)
 #define unlikely(x)         __builtin_expect(!!(x), 0)
 

@@ -19,11 +19,6 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
-#define _In_
-#define _Out_
-#define _Inout_
-#define PACKED __attribute__((__packed__))
-
 typedef uint64_t  oci_vcn_id_t;
 typedef uint64_t  oci_subnet_id_t;
 typedef uint64_t  oci_vnic_id_t;

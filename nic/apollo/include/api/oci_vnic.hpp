@@ -20,30 +20,25 @@
 /**
  * @brief VNIC IP Information
  */
-typedef struct oci_vnic_ip_s
-{
-    oci_ip_addr_t private_ip;         /**< Private IP address */
-    oci_ip_addr_t public_ip;          /**< Public IP address */
-    uint32_t public_ip_valid:1;       /**< TRUE if public IP is valid */
-
+typedef struct oci_vnic_ip_s {
+    oci_ip_addr_t private_ip;      /**< Private IP address */
+    oci_ip_addr_t public_ip;       /**< Public IP address */
+    uint32_t public_ip_valid:1;    /**< TRUE if public IP is valid */
 } oci_vnic_ip_t;
 
 /**
  * @brief VNIC Key
  */
-typedef struct oci_vnic_key_s
-{
+typedef struct oci_vnic_key_s {
     oci_vcn_id_t vcn_id;          /**< VCN ID */
     oci_subnet_id_t subnet_id;    /**< Subnet ID */
     oci_vnic_id_t id;             /**< VNIC ID */
-
-} PACKED oci_vnic_key_t;
+} __PACK__ oci_vnic_key_t;
 
 /**
  * @brief VNIC
  */
-typedef struct oci_vnic_s
-{
+typedef struct oci_vnic_s {
     oci_vnic_key_t key;                        /**< VNIC Key */
     oci_vlan_id_t vlan_id;                     /**< VLAN ID */
     oci_slot_id_t slot;                        /**< Virtual slot
@@ -55,20 +50,19 @@ typedef struct oci_vnic_s
     uint32_t src_dst_check : 1;                /**< TRUE if source/destination
                                                     check is enabled */
     uint32_t local : 1;                        /**< TRUE if vnic is local */
-    oci_ip_addr_t tep;                         /**< Tunnel dst behind which the
+    ipv4_addr_t tep;                           /**< Tunnel dst behind which the
                                                     VNIC is present */
-
-} PACKED oci_vnic_t;
+} __PACK__ oci_vnic_t;
 
 /**
  * @brief Create VNIC
  *
  * @param[in] vnic VNIC information
  *
- * @return #OCI_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
 oci_status_t oci_vnic_create (
-        _In_ oci_vnic_t *vnic);
+    _In_ oci_vnic_t *vnic);
 
 
 /**
@@ -76,10 +70,10 @@ oci_status_t oci_vnic_create (
  *
  * @param[in] vnic_key VNIC key
  *
- * @return #OCI_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
 oci_status_t oci_vnic_delete (
-        _In_ oci_vnic_key_t *vnic_key);
+    _In_ oci_vnic_key_t *vnic_key);
 
 /**
  * @}

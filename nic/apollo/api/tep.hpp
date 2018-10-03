@@ -24,13 +24,11 @@ namespace api {
 /**
  * @brief Internal TEP structure
  */
-typedef struct oci_int_tep_s
-{
+typedef struct oci_int_tep_s {
     oci_tep_key_t key;    /**< TEP Key */
     uint32_t id;          /**< Internal ID */
     ht_ctxt_t ht_ctxt;    /**< Hash table context */
-
-} PACKED oci_int_tep_t;
+} __PACK__ oci_int_tep_t;
 
 /** * @} */ // end of OCI_INT_TEP
 

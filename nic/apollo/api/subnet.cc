@@ -69,7 +69,6 @@ oci_g_int_subnet_state_init (void)
  * @{
  */
 
-
 static void *
 oci_int_subnet_key_func_get (void *entry)
 {

@@ -20,22 +20,21 @@
 /**
  * @brief SWITCHPORT
  */
-typedef struct oci_switchport_s
-{
+typedef struct oci_switchport_s {
     oci_ip_addr_t switch_ip_addr;      /**< SWITCHPORT IP Address */
     oci_mac_addr_t switch_mac_addr;    /**< SWITCHPORT Mac Addr */ 
     oci_ip_addr_t gateway_ip_addr;     /**< Gateway IP Address */
-} PACKED oci_switchport_t;
+} __PACK__ oci_switchport_t;
 
 /**
  * @brief Create SWITCHPORT
  *
  * @param[in] switchport SWITCHPORT information
  *
- * @return #OCI_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
 oci_status_t oci_switchport_create (
-        _In_ oci_switchport_t *switchport);
+    _In_ oci_switchport_t *switchport);
 
 
 /**
@@ -43,10 +42,10 @@ oci_status_t oci_switchport_create (
  *
  * @param[in] switchport SWITCHPORT 
  *
- * @return #OCI_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
 oci_status_t oci_switchport_delete (
-        _In_ oci_switchport_t *switchport);
+    _In_ oci_switchport_t *switchport);
 
 /**
  * @}

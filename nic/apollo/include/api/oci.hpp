@@ -18,8 +18,7 @@
 /**
  * @brief Defined API sets have assigned IDs.
  */
-typedef enum oci_class_id_e
-{
+typedef enum oci_class_id_e {
     OCI_CLASS_ID_UNSPECIFIED      =  0,    /**< unspecified */
     OCI_CLASS_ID_VCN              =  1,    /**< vnc */
     OCI_CLASS_ID_SUBNET           =  2,    /**< subnet */
@@ -29,21 +28,18 @@ typedef enum oci_class_id_e
     OCI_CLASS_ID_SECRULE          =  6,    /**< security rule */
     OCI_CLASS_SWITCHPORT          =  7,    /**< switchport params */
     OCI_CLASS_ID_MAX              =  8,    /**< total number of class-id */
-
 } oci_class_id_t;
 
 /**
  * @brief Defines log level
  */
-typedef enum oci_log_level_e
-{
+typedef enum oci_log_level_e {
     OCI_LOG_LEVEL_DEBUG            = 0,    /**< Log level debug */
     OCI_LOG_LEVEL_INFO             = 1,    /**< Log level info */
     OCI_LOG_LEVEL_NOTICE           = 2,    /**< Log level notice */
     OCI_LOG_LEVEL_WARN             = 3,    /**< Log level warn */
     OCI_LOG_LEVEL_ERROR            = 4,    /**< Log level error */
     OCI_LOG_LEVEL_CRITICAL         = 5     /**< Log level critical */
-
 } oci_log_level_t;
 
 /**
@@ -54,11 +50,11 @@ typedef enum oci_log_level_e
  * @param[in] oci_api_id OCI CLASS ID
  * @param[in] log_level Log level
  *
- * @return #OCI_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
 oci_status_t oci_log_set(
-        _In_ oci_class_id_t oci_class_id,
-        _In_ oci_log_level_t log_level);
+    _In_ oci_class_id_t oci_class_id,
+    _In_ oci_log_level_t log_level);
 
 /**
  * @}

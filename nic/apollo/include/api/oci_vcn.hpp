@@ -9,7 +9,7 @@
 #if !defined (__OCI_VCN_H_)
 #define __OCI_VCN_H_
 
-#include "nic/include/ip.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/include/api/oci_types.hpp"
 
 /**
@@ -21,14 +21,11 @@
 /**
  * @brief VCN Key
  */
-typedef struct oci_vcn_key_s
-{
+typedef struct oci_vcn_key_s {
     oci_vcn_id_t id;    /**< VNC ID */
+} __PACK__ oci_vcn_key_t;
 
-} PACKED oci_vcn_key_t;
-
-typedef enum oci_vcn_type_e
-{
+typedef enum oci_vcn_type_e {
     OCI_VCN_TYPE_SUBSTRATE = 0,    /**< substrate VCN */
     OCI_VCN_TYPE_TENANT    = 1,    /**< tenant/customer VCN */
 } oci_vcn_type_t;
@@ -36,23 +33,21 @@ typedef enum oci_vcn_type_e
 /**
  * @brief VCN
  */
-typedef struct oci_vcn_s
-{
+typedef struct oci_vcn_s {
     oci_vcn_type_t type;    /**< VCN type */
     oci_vcn_key_t key;      /**< VCN Key */
     ip_prefix_t pfx;        /**< VCN CIDR block */
-
-} PACKED oci_vcn_t;
+} __PACK__ oci_vcn_t;
 
 /**
  * @brief Create VCN
  *
  * @param[in] vcn VCN information
  *
- * @return #OCI_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t oci_vcn_create (
-        _In_ oci_vcn_t *vcn);
+    _In_ oci_vcn_t *vcn);
 
 
 /**
@@ -60,10 +55,10 @@ sdk_ret_t oci_vcn_create (
  *
  * @param[in] vcn_key VCN key
  *
- * @return #OCI_STATUS_SUCCESS on success, failure status code on error
+ * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t oci_vcn_delete (
-        _In_ oci_vcn_key_t *vcn_key);
+    _In_ oci_vcn_key_t *vcn_key);
 
 /**
  * @}

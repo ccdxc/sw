@@ -24,13 +24,11 @@ namespace api {
 /**
  * @brief Internal VCN structure
  */
-typedef struct oci_int_vcn_s
-{
+typedef struct oci_int_vcn_s {
     oci_vcn_key_t key;    /**< VCN Key */
     uint32_t id;          /**< Internal ID */
     ht_ctxt_t ht_ctxt;    /**< Hash table context */
-
-} PACKED oci_int_vcn_t;
+} __PACK__ oci_int_vcn_t;
 
 /** * @} */ // end of OCI_INT_VCN
 
