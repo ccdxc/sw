@@ -34,13 +34,13 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 
 	// Instantiate Topology
 	topoResp, allocatedVlans, err := setup(topoClient)
-	if err != nil || topoResp.ApiResponse.ApiStatus != iota.IotaAPIResponse_API_STATUS_OK {
+	if err != nil || topoResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		t.Errorf("Test case set up failed. Err: %v", err)
 	}
 
 	// Check Cluster Health Here.
 	healthResp, err := topoClient.CheckClusterHealth(context.Background(), topoResp)
-	if healthResp.ApiResponse.ApiStatus != iota.IotaAPIResponse_API_STATUS_OK {
+	if healthResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		t.Errorf("Failed to check health of the cluster. Err: %v", healthResp.ApiResponse)
 	}
 	for _, h := range healthResp.Health {
@@ -56,7 +56,7 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 		Vlans: allocatedVlans,
 	}
 	cfgInitResp, err := cfgClient.InitCfgService(context.Background(), cfgMsg)
-	if err != nil || cfgInitResp.ApiResponse.ApiStatus != iota.IotaAPIResponse_API_STATUS_OK {
+	if err != nil || cfgInitResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		t.Errorf("Config service Init failed. API Status: %v , Err: %v", cfgInitResp.ApiResponse.ApiStatus, err)
 	}
 
@@ -67,7 +67,7 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 	cfgGenResp, err := cfgClient.GenerateConfigs(context.Background(), genCfgMsg)
 	// You can do anything with the generated configs. Edit the same and ask to be pushed, or push the generated base configs as is.
 	// Or you can choose to build the cfgGenResp to be pushed.
-	//generatedConfigs := cfgGenResp.GeneratedConfigs
+	//generatedConfigs := cfgGenResp.Configs
 
 	pushCfgResp, err := cfgClient.PushConfig(context.Background(), cfgGenResp)
 
@@ -118,17 +118,19 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 
 	appResp, err := topoClient.AddWorkloads(context.Background(), wrkLd)
 
-	if err != nil || appResp.ApiResponse.ApiStatus != iota.IotaAPIResponse_API_STATUS_OK {
+	if err != nil || appResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		t.Errorf("Failed to instantiate Apps. %v", err)
 	}
 	epIP := appResp.Workloads[0].IpAddress
 
-	pingCmd := fmt.Sprintf("ping -c 5 %v", epIP)
+	pingCmd := &iota.Command_Command {
+        Command: fmt.Sprintf("ping -c 5 %v", epIP),
+    }
 	trigMsg := &iota.TriggerMsg{
-		TriggerOp: iota.TriggerMsg_EXEC_CMDS,
-		CommandReq: []*iota.CommandReq{
+		TriggerOp: iota.TriggerOp_EXEC_CMDS,
+		Commands: []*iota.Command{
 			{
-				Mode: iota.CommandReq_COMMAND_FOREGROUND,
+				Mode: iota.CommandMode_COMMAND_FOREGROUND,
 				CommandOrPkt: pingCmd,
 				WorkloadName: "ping-app",
 			},
@@ -138,18 +140,18 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 	// Trigger App
 	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
 
-	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.IotaAPIResponse_API_STATUS_OK {
+	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		t.Errorf("Failed to trigger a ping. API Status: %v | Err: %v", triggerResp.ApiResponse.ApiStatus, err)
 	}
 
-	if triggerResp.CommandResp[0].ExitCode == 0 {
-		t.Errorf("Ping trigger failed. Expected the ping to fail, but it passed instead. %v", triggerResp.CommandResp[0].ExitCode)
+	if triggerResp.Commands[0].ExitCode == 0 {
+		t.Errorf("Ping trigger failed. Expected the ping to fail, but it passed instead. %v", triggerResp.Commands[0].ExitCode)
 	}
 
 
 	// Change the rule to permit and push
 
-	for idx, sgp := range cfgObj.GeneratedConfigs {
+	for idx, sgp := range cfgObj.Configs {
 		err = json.Unmarshal([]byte(sgp.Config), sgPolicy)
 		if err != nil {
 			// Decide how to handle the error. Fail or Skip or ignore.
@@ -159,7 +161,7 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 
 		b, _  := json.Marshal(sgPolicy)
 		sgp.Config = string(b)
-		cfgObj.GeneratedConfigs[idx] = sgp
+		cfgObj.Configs[idx] = sgp
 	}
 
 	pushCfgResp, err = cfgClient.PushConfig(context.Background(), cfgGenResp)
@@ -171,12 +173,12 @@ func TestVeniceTypeE2E_FW_PERMIT_AND_DENY(t *testing.T) {
 	// Trigger App
 	triggerResp, err = topoClient.Trigger(context.Background(), trigMsg)
 
-	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.IotaAPIResponse_API_STATUS_OK {
+	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		t.Errorf("Failed to trigger a ping. API Status: %v | Err: %v", triggerResp.ApiResponse.ApiStatus, err)
 	}
 
-	if triggerResp.CommandResp[0].ExitCode != 0 {
-		t.Errorf("Ping trigger failed. Expected the ping to pass on a permit rule, but it failed instead. %v", triggerResp.CommandResp[0].ExitCode)
+	if triggerResp.Commands[0].ExitCode != 0 {
+		t.Errorf("Ping trigger failed. Expected the ping to pass on a permit rule, but it failed instead. %v", triggerResp.Commands[0].ExitCode)
 	}
 }
 
@@ -201,33 +203,33 @@ func setup(client iota.TopologyApiClient) (*iota.NodeMsg, []uint32, error) {
 		NodeOp: iota.Op_ADD,
 		Nodes: []*iota.Node{
 			{
-				Type: iota.Node_PERSONALITY_VENICE,
+				Type: iota.PersonalityType_PERSONALITY_VENICE,
 				Image: "venice.tgz",
 				IpAddress: "10.10.10.1",
 			},
 			{
-				Type: iota.Node_PERSONALITY_VENICE,
+				Type: iota.PersonalityType_PERSONALITY_VENICE,
 				Image: "venice.tgz",
 				IpAddress: "10.10.10.2",
 			},
 			{
-				Type: iota.Node_PERSONALITY_VENICE,
+				Type: iota.PersonalityType_PERSONALITY_VENICE,
 				Image: "venice.tgz",
 				IpAddress: "10.10.10.3",
 
 			},
-			{	Type: iota.Node_PERSONALITY_NAPLES,
+			{	Type: iota.PersonalityType_PERSONALITY_NAPLES,
 				Image: "nic.tar",
 				IpAddress: "10.10.10.4",
 
 			},
-			{	Type: iota.Node_PERSONALITY_NAPLES,
+			{	Type: iota.PersonalityType_PERSONALITY_NAPLES,
 				Image: "nic.tar",
 				IpAddress: "10.10.10.5",
 
 			},
 			{
-				Type: iota.Node_PERSONALITY_NAPLES_WITH_QEMU,
+				Type: iota.PersonalityType_PERSONALITY_NAPLES_WITH_QEMU,
 				Image: "bsd_driver.tar",
 				IpAddress: "10.10.10.6",
 			},

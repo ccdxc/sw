@@ -1,0 +1,54 @@
+{
+  "Selection": {
+    "Request": {
+      "Sequence": {
+        "ID": 114,
+        "Name": "deploy",
+        "Trace": {
+          "ID": 102,
+          "Name": "trace",
+          "Trace": null
+        }
+      },
+      "ReapTimeout": 10800000000000,
+      "PvtNetworks": null,
+      "Resources": {
+        "CPUs": 4,
+        "Memory": 8,
+        "PvtNws": null,
+        "Disk": 64,
+        "Networks": null
+      },
+      "VMWare": {
+        "Host": "10.8.4.21",
+        "Datastore": "nvme0"
+      },
+      "Deploy": {
+        "VMPrefix": "test",
+        "Count": 2,
+        "ImageName": "build-18"
+      },
+      "CPUAffinity": [
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        44
+      ]
+    },
+    "Host": "10.8.4.21",
+    "Sidecar": "10.8.50.60",
+    "Vlans": null
+  },
+  "Instances": {
+    "test-0-deploy-114": "10.0.0.1",
+    "test-0-deploy-115": "10.0.0.2",
+    "test-0-deploy-116": "10.0.0.3",
+    "test-0-deploy-117": "10.0.0.4",
+    "test-0-deploy-118": "10.0.0.5",
+    "test-0-deploy-119": "10.0.0.6"
+  }
+}

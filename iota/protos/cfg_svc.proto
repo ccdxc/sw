@@ -50,17 +50,17 @@ message GenerateConfigMsg {
 }
 
 message ConfigMsg {
-    IotaAPIResponse api_response            = 1;
-    repeated ConfigObject generated_configs = 2;
+    IotaAPIResponse api_response    = 1;
+    repeated ConfigObject configs   = 2;
 }
 
+enum CfgMethodType {
+    CFG_METHOD_NONE     = 0;
+    CFG_METHOD_CREATE   = 1;
+    CFG_METHOD_UPDATE   = 2;
+    CFG_METHOD_DELETE   = 3;
+}
 message ConfigObject {
-    enum CfgMethodType {
-        NONE            = 0;
-        CREATE          = 1;
-        UPDATE          = 2;
-        DELETE          = 3;
-    }
     // Method indicates the REST method to call on the object.
     CfgMethodType       method = 1;
 
@@ -68,13 +68,20 @@ message ConfigObject {
     string Config = 2;
 }
 
+enum CfgDbView {
+    CFG_DB_VIEW_NONE    = 0;
+    CFG_DB_VIEW_CFG_SVC = 1;
+    CFG_DB_VIEW_TESTBED = 2;
+}
 message ConfigQueryMsg {
-    IotaAPIResponse api_response        = 1;
+    IotaAPIResponse         api_response    = 1;
+    // View on which this query should operate
+    CfgDbView               view            = 2;
     // Object Kind
-    string                  kind        = 2;
+    string                  kind            = 3;
 
     // MatchSelector accepts a multiple key value pair, with a default AND between them
-    repeated MatchSelector  selectors   = 3;
+    repeated MatchSelector  selectors       = 4;
 }
 
 // Key Value pairs.

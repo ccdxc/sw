@@ -1,29 +1,54 @@
 meta:
-    suite       : sample
+    name        : sample
     description : Sample Test Suite
 
 packages:
     - iota.test.iris
 
+# Section: 'images'
+#   List of images to used by this testsuite.
+#   This is a MANDATORY section with atleast 1 image entry.
 images:
-    naples  : /sw/nic/nic.tgz
-    venice  : /sw/venice.tgz
-    drivers : /sw/platform/drivers.tgz
-    iagent  : /sw/iota/agent.tgz
+    - /sw/nic/nic.tgz
+    - /sw/venice.tgz
+    - /sw/platform/drivers.tgz
+    - /sw/iota/agent.tgz
 
-topology: test/iris/topologies/3Naples_3Venice.topology
+# Section: 'setup'
+#   List of actions to be taken during the setup phase.
+#   This is a MANDATORY section with atleast 'topology'
+setup:
+    # 'topology' is a MANDATORY parameter.
+    topology: test/iris/topologies/3Naples_3Venice.topology
+    
+    # 'config' is an OPTIONAL section.
+    #   This section can be used to generate/push config 
+    #   before the testcases start.
+    #   Each step will be invoked in the order below.
+    config  : 
+        # Invokes: iota/test/iris/bringup/generate_base_config.py
+        - step : bringup.generate_base_config
+          spec : test/iris/baseconfig/sample_baseconfig.spec
 
+# Section: 'common'
+# List of common actions to be invoked during test phase.
+#   'verifs' species the list of steps to be appended to each
+#   testcase's verification steps.
 common:
     verifs:
         -   step    : verif.utils.verify_cores
         -   step    : verif.utils.verify_topology_health
 
+# Section: 'testcases'
+# List of testcases. Following are the well-known attributes of this section.
+#   'name'      : Name of the testcases (MANDATORY)
+#   'testcase'  : Testcase module. (MANDATORY)
+#   'verifs'    : Verification steps (OPTIONAL)
+#   <all-others>: Opaque to infra, passed to testcase module as native attributes
+#                 of the 'tc'(testcase) object.
 testcases:
-    -   name    : GenerateConfig 
-        testcase: bringup.generate_base_config
-
     -   name    : PushBaseConfig
-        testcase: testcases.config.push_base_config
+        testcase: testcases.config.push_config
         verifs  :
             -   step    : verif.config.verify_config_venice    # Verify at Venice Level
             -   step    : verif.config.verify_config_agent     # Verify at Agent Level
@@ -52,5 +77,8 @@ testcases:
             -   step    : verif.operstate.verify_stats_hw
             -   step    : verif.operstate.verify_syslogs
 
+# Section 'teardown'
+# List of cleanup/collect actions
+# This section is 'OPTIONAL'
 teardown:
     - step      : verif.utils.collect_logs_and_cores

@@ -16,11 +16,13 @@ for p in paths:
 
 # This import will parse all the command line options.
 import iota.harness.infra.glopts as glopts
+glopts.GlobalOptions.topdir = topdir
+
 import iota.harness.infra.types as types
-from iota.harness.infra.utils.logger import Logger as Logger
 import iota.harness.infra.utils.timeprofiler as timeprofiler
 import iota.harness.infra.engine as engine
-glopts.GlobalOptions.topdir = topdir
+
+from iota.harness.infra.utils.logger import Logger as Logger
 
 overall_timer = timeprofiler.TimeProfiler()
 overall_timer.Start()

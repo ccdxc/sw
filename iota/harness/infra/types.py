@@ -20,3 +20,12 @@ __level = {
     7: 'MAX'
 }
 loglevel = utils.Dict2Enum(__level)
+
+__result = [
+    'PASS',
+    'FAIL',
+]
+result = utils.List2Enum(__result)
+
+HEADER_SUMMARY = "=" * 90
+FORMAT_TESTCASE_SUMMARY = "%-72s %-7s %-8s"

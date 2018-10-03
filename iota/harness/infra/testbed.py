@@ -3,11 +3,12 @@ import pdb
 
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.parser as parser
-import iota.harness.infra.svc as svc
+import iota.harness.api as api
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
 
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from iota.harness.infra.utils.logger import Logger as Logger
 
 class _Testbed:
@@ -20,19 +21,19 @@ class _Testbed:
         return
 
     def __read_warmd_json(self):
-        self.tbspec = parser.JsonParse("/tmp/warmd.json")
+        self.tbspec = parser.JsonParse(GlobalOptions.testbed_json)
         return
     
     def __prepare_TestBedMsg(self, ts):
         msg = topo_pb2.TestBedMsg()
         if not ts:
             return msg
-
-        msg.switch_port_id = int(self.tbspec.n3k.port)
-        msg.naples_image = ts.GetImages().naples
-        msg.venice_image = ts.GetImages().venice
-        msg.driver_sources = ts.GetImages().drivers
-        msg.iota_agent_image = ts.GetImages().iagent
+        if getattr(self.tbspec, 'n3k', None):
+            msg.switch_port_id = int(self.tbspec.n3k.port)
+        #msg.naples_image = ts.GetImages().naples
+        #msg.venice_image = ts.GetImages().venice
+        #msg.driver_sources = ts.GetImages().drivers
+        #msg.iota_agent_image = ts.GetImages().iagent
 
         for k,v in self.tbspec.Instances.__dict__.items():
             msg.ip_address.append(v)
@@ -41,7 +42,7 @@ class _Testbed:
 
     def __cleanup_testbed(self):
         msg = self.__prepare_TestBedMsg(self.prev_ts)
-        resp = svc.CleanupTestbed(msg)
+        resp = api.CleanupTestbed(msg)
         if resp.api_response.api_status != types_pb2.API_STATUS_OK:
             Logger.error("Failed to initialize testbed: ",
                          types_pb2.APIResponseType.Name(resp.api_response.api_status))
@@ -51,7 +52,7 @@ class _Testbed:
 
     def __init_testbed(self):
         msg = self.__prepare_TestBedMsg(self.curr_ts)
-        resp = svc.InitTestbed(msg)
+        resp = api.InitTestbed(msg)
         if resp.api_response.api_status != types_pb2.API_STATUS_OK:
             Logger.error("Failed to initialize testbed: ",
                          types_pb2.APIResponseType.Name(resp.api_response.api_status))

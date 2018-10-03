@@ -5,6 +5,8 @@ import importlib
 
 from iota.harness.infra.utils.logger import Logger
 
+import iota.harness.infra.types as types
+
 def Import(modname, packages = []):
     for pkg in packages:
         imp_path = "%s.%s" % (pkg, modname)
@@ -14,6 +16,13 @@ def Import(modname, packages = []):
     Logger.error("Failed to import module: %s in packages: " % modname, packages)
     assert(0)
     return None
+
+def RunCallback(module, attr, required, args):
+    cb = getattr(module, attr, None)
+    if required:
+        assert(cb)
+    if not cb: return types.status.SUCCESS
+    return cb(args)
 
 '''
 UNUSED

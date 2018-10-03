@@ -1,19 +1,19 @@
 #! /usr/bin/python3
 
-import iota.harness.api as api
+from iota.harness.api import *
 
 def Setup(tc):
-    api.logger.info("Setup.")
-    return api.types.SUCCESS
+    Logger.info("Setup.")
+    return types.status.SUCCESS
 
 def Trigger(tc):
-    api.logger.info("Trigger.")
-    return api.types.SUCCESS
+    Logger.info("Trigger.")
+    return types.status.SUCCESS
 
 def Verify(tc):
-    api.logger.info("Verify.")
-    return api.types.SUCCESS
+    Logger.info("Verify.")
+    return types.status.SUCCESS
 
 def Teardown(tc):
-    api.logger.info("Teardown.")
-    return api.types.SUCCESS
+    Logger.info("Teardown.")
+    return types.status.SUCCESS

@@ -19,6 +19,10 @@ parser.add_argument('--coverage', dest='coverage',
                     action='store_true', help='Collect code coverage data.')
 parser.add_argument('--svcport', dest='svcport', default=60000,
                     help='IOTA Service Port.')
+parser.add_argument('--testbed-json', dest='testbed_json', default="/tmp/warmd.json",
+                    help='Testbed JSON file')
+parser.add_argument('--no-keep-going', dest='no_keep_going',
+                    action='store_true', help='Stop on first error.')
 GlobalOptions = parser.parse_args()
 
 def __validate():

@@ -3,7 +3,7 @@ import glob
 
 import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.testsuite as testsuite
-import iota.harness.infra.svc as svc
+import iota.harness.api as api
 #import iota.harness.infra.store as store
 
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -25,7 +25,7 @@ def __discover_testsuites():
     return suites
 
 def Main():
-    svc.Init()
+    api.Init()
 
     # Parse all the testsuites
     suites = __discover_testsuites()

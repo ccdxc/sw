@@ -6,7 +6,6 @@ enum APIResponseType {
     API_BAD_REQUEST     = 1;
     API_SERVER_ERROR    = 2;
 }
-
 message IotaAPIResponse{
     // APIStatus captures call status
     APIResponseType api_status       = 1 ;

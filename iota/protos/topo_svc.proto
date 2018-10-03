@@ -73,7 +73,6 @@ enum PersonalityType {
     PERSONALITY_VENICE              = 2;
     PERSONALITY_NAPLES_WITH_QEMU    = 3;
 }
-
 // Node captures personality details of an E2E node
 message Node {
     // PersonalityType captures the node personality. naples node, venice node or qemu
@@ -125,15 +124,15 @@ message Workload {
     IotaAPIResponse workload_status         = 6;
 }
 
-message TriggerMsg {
-    enum TriggerOp {
-        TYPE_NONE           = 0;
-        TX_PKT              = 1;
-        RX_PKT              = 2;
-        EXEC_CMDS           = 3;
-        TERMINATE_ALL_CMDS  = 4;
+enum TriggerOp {
+    TYPE_NONE           = 0;
+    TX_PKT              = 1;
+    RX_PKT              = 2;
+    EXEC_CMDS           = 3;
+    TERMINATE_ALL_CMDS  = 4;
+}
 
-    }
+message TriggerMsg {
     //API Status
     IotaAPIResponse api_response            = 1;
 
@@ -141,45 +140,42 @@ message TriggerMsg {
     TriggerOp trigger_op                    = 2;
 
     // Command Request params
-    repeated CommandReq command_req         = 3;
-
-    // Command Reponse params
-    repeated CommandResp command_resp       = 4;
+    repeated Command    commands            = 3;
 }
 
-message CommandReq {
-    enum CommandMode {
-        COMMAND_NONE        = 0;
-        COMMAND_FOREGROUND  = 1;
-        COMMAND_BACKGROUND  = 2;
-    }
+enum CommandMode {
+    COMMAND_NONE        = 0;
+    COMMAND_FOREGROUND  = 1;
+    COMMAND_BACKGROUND  = 2;
+}
+message Command {
     // Whether to run the command in foreground or background
     CommandMode     mode                = 1;
 
     // Fully qualified command line that needs to be called
-    string          command_or_pkt      = 2;
+    oneof command_or_pkt {
+        string          command     = 2;
+        string          packet      = 3;
+    }
 
     // Workload name of the command
-    string          workload_name       = 3;
-
-}
-
-// CommandResp captures the response of a command
-message CommandResp {
+    string          workload_name   = 4;
+    
+    // ================ Output Parameters ===================
     // StdOut of the comamnd
-    string          command_stdout  = 1;
+    string          stdout          = 5;
 
     // StdErr of the command
-    string          command_stderr  = 2;
+    string          stderr          = 6;
 
     // Exit code of the command
-    uint32          exit_code       = 3;
+    uint32          exit_code       = 7;
 
     // command handle. Useful only for background commands
-    string          command_handle  = 4;
+    string          handle          = 8;
 
     // received packet for the command
-    string          rx_pkt          = 5;
+    string          rx_pkt          = 9;
 }
 
 // Captures the overall health of the e2e cluster
