@@ -199,4 +199,25 @@
 #define GRE_PROTO_NVGRE                0x20006558
 #define GRE_PROTO_ERSPAN_T3            0x22EB   /* Type III version 2 */
 
+/*****************************************************************************/
+/* Queue types                                                               */
+/*****************************************************************************/
+#define Q_TYPE_RXQ                     0
+#define Q_TYPE_TXQ                     1
+#define Q_TYPE_ADMINQ                  2
+#define Q_TYPE_RDMA_SQ                 3
+#define Q_TYPE_RDMA_RQ                 4
+#define Q_TYPE_RDMA_CQ                 5
+#define Q_TYPE_RDMA_EQ                 6
+
+/*****************************************************************************/
+/* LIF stats offsets                                                         */
+/*****************************************************************************/
+#define LIF_STATS_TX_UCAST_OFFSET                   256
+#define LIF_STATS_TX_MCAST_OFFSET                   272
+#define LIF_STATS_TX_BCAST_OFFSET                   304
+#define LIF_STATS_TX_UCAST_DROP_OFFSET              320
+#define LIF_STATS_TX_MCAST_DROP_OFFSET              336
+#define LIF_STATS_TX_BCAST_DROP_OFFSET              352
+
 #endif //__P4_COMMON_DEFINES_H__

@@ -9,7 +9,7 @@
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "nic/p4/include/common_defines.h"
+#include "nic/p4/common/defines.h"
 #include "nic/p4/rdma/include/rdma_defines.h"
 #include "nic/hal/iris/datapath/p4/include/table_sizes.h"
 #include "nic/hal/pd/iris/nw/rw_pd.hpp"

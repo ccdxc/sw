@@ -163,19 +163,6 @@ typedef struct lif_init_attr_s {
     uint32_t max_keys;
 } lif_init_attr_t;
 
-typedef enum q_type_s {
-    Q_TYPE_RXQ,
-    Q_TYPE_TXQ,
-    Q_TYPE_ADMINQ,
-    Q_TYPE_SQ,
-    Q_TYPE_RQ,
-    Q_TYPE_CQ,
-    Q_TYPE_EQ,
-    Q_TYPE_MAX
-} q_type_t;
-
-
-
 #define ACC_CTRL_LOCAL_WRITE        0x1
 #define ACC_CTRL_REMOTE_WRITE       0x2
 #define ACC_CTRL_REMOTE_READ        0x4

@@ -1,6 +1,6 @@
 #include "req_tx.h"
 #include "rqcb.h"
-#include "common_defines.h"
+#include "nic/p4/common/defines.h"
 
 struct req_tx_phv_t p;
 struct dcqcn_cb_t d;

@@ -597,13 +597,13 @@ asicpd_stats_addr_get (int tblid, uint32_t index,
     p4pd_table_properties_t       tbl_ctx;
     hbm_addr_t                    stats_base_addr;
 
-    stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
+    stats_base_addr = get_start_offset(CAPRI_HBM_REG_P4_ATOMIC_STATS);
 
     for (int i = 0; i < arrlen; i++) {
         p4pd_table_properties_get(region_arr[i].tblid, &tbl_ctx);
         if (tblid == region_arr[i].tblid) {
             if (index < tbl_ctx.tabledepth) {
-                *stats_addr_p = stats_base_addr + 
+                *stats_addr_p = stats_base_addr +
                                 (index << region_arr[i].tbldepthshift);
                 return HAL_RET_OK;
             } else {
@@ -624,13 +624,14 @@ asicpd_stats_region_init (asicpd_stats_region_info_t *region_arr, int arrlen)
     uint64_t                      stats_region_size;
     uint64_t                      bit31_base = 0;
 
-    stats_region_start = stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
-    stats_region_size = (get_size_kb(JP4_ATOMIC_STATS) << 10);
+    stats_region_start = stats_base_addr =
+        get_start_offset(CAPRI_HBM_REG_P4_ATOMIC_STATS);
+    stats_region_size = (get_size_kb(CAPRI_HBM_REG_P4_ATOMIC_STATS) << 10);
 
     // reset bit 31 (saves one ASM instruction)
-    bit31_base = stats_region_start & (1<<31);
-    stats_region_start &= 0x7FFFFFFF;
-    stats_base_addr &= 0x7FFFFFFF;
+    bit31_base = stats_region_start & ((uint64_t)1<<31);
+    stats_region_start &= ~((uint64_t)1 << 31);
+    stats_base_addr &= ~((uint64_t)1 << 31);
 
     for (int i = 0; i < arrlen; i++) {
         p4pd_table_properties_get(region_arr[i].tblid, &tbl_ctx);

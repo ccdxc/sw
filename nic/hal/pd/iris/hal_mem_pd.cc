@@ -64,9 +64,7 @@ class hal_state_pd *g_hal_state_pd;
 
 asicpd_stats_region_info_t g_stats_region_arr[] = {{P4TBL_ID_FLOW_STATS, 5},
                                                {P4TBL_ID_RX_POLICER_ACTION, 5},
-                                               {P4TBL_ID_COPP_ACTION, 5},
-                                               {P4TBL_ID_TX_STATS, 6},
-                                               {P4TBL_ID_INGRESS_TX_STATS, 3}};
+                                               {P4TBL_ID_COPP_ACTION, 5}};
 int g_stats_region_arrlen = sizeof(g_stats_region_arr)/sizeof(asicpd_stats_region_info_t);
 
 //------------------------------------------------------------------------------
@@ -1051,6 +1049,31 @@ hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
     return ret;
 }
 
+static hal_ret_t
+hal_pd_lif_stats_region_init (void)
+{
+    p4pd_table_properties_t     tbl_ctx;
+    p4pd_error_t                rc;
+    uint64_t                    stats_base_addr;
+
+    stats_base_addr = get_start_offset(CAPRI_HBM_REG_LIF_STATS);
+    // reset bit 31 (saves one ASM instruction)
+    stats_base_addr &= ~((uint64_t)1 << 31);
+
+    rc = p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
+    HAL_ASSERT(rc == P4PD_SUCCESS);
+    capri_table_constant_write(stats_base_addr,
+                               tbl_ctx.stage, tbl_ctx.stage_tableid,
+                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+
+    rc = p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
+    HAL_ASSERT(rc == P4PD_SUCCESS);
+    capri_table_constant_write(stats_base_addr,
+                               tbl_ctx.stage, tbl_ctx.stage_tableid,
+                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+
+    return HAL_RET_OK;
+}
 
 //------------------------------------------------------------------------------
 // one time memory related initialization for HAL
@@ -1092,7 +1115,6 @@ pd_mem_init (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
 {
-    // pd_mem_init_phase2_args_t *args = pd_func_args->pd_mem_init_phase2;
     p4pd_cfg_t    p4pd_cfg = {
         .table_map_cfg_file  = "iris/capri_p4_table_map.json",
         .p4pd_pgm_name       = "iris",
@@ -1106,11 +1128,10 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     ph2_args = pd_func_args->pd_mem_init_phase2;
     hal_cfg = ph2_args->hal_cfg;
 
-    // Capri asic initializations
-    // Initialize the p4pd stats region
     HAL_ASSERT(asicpd_p4plus_table_mpu_base_init(&p4pd_cfg) == HAL_RET_OK);
-    HAL_ASSERT(asicpd_stats_region_init(g_stats_region_arr, 
+    HAL_ASSERT(asicpd_stats_region_init(g_stats_region_arr,
                                         g_stats_region_arrlen) == HAL_RET_OK);
+    HAL_ASSERT(hal_pd_lif_stats_region_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_table_init(hal_cfg) == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_recirc_init() == HAL_RET_OK);
@@ -1385,7 +1406,7 @@ hal_ret_t
 hal_pd_stats_addr_get (int tblid, uint32_t index,
                        hbm_addr_t *stats_addr_p)
 {
-    return asicpd_stats_addr_get(tblid, index, 
+    return asicpd_stats_addr_get(tblid, index,
                                  g_stats_region_arr, g_stats_region_arrlen,
                                  stats_addr_p);
 }

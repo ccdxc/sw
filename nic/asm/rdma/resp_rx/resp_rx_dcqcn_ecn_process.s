@@ -2,7 +2,7 @@
 #include "resp_rx.h"
 #include "sqcb.h"
 #include "common_phv.h"
-#include "common_defines.h"
+#include "nic/p4/common/defines.h"
 
 struct resp_rx_phv_t p;
 struct dcqcn_cb_t d;

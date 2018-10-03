@@ -8,7 +8,7 @@
 #include "nic/hal/pd/gft/p4pd_defaults.hpp"
 #include "nic/sdk/include/sdk/tcam.hpp"
 #include "nic/p4/rdma/include/rdma_defines.h"
-#include "nic/p4/include/common_defines.h"
+#include "nic/p4/common/defines.h"
 #include "nic/p4/gft/include/defines.h"
 
 using sdk::table::tcam;

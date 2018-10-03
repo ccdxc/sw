@@ -3,7 +3,6 @@
 #include "rqcb.h"
 #include "types.h"
 #include "common_phv.h"
-#include "common_defines.h"
 #include "nic/p4/common/defines.h"
 
 struct resp_tx_phv_t p;

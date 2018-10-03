@@ -1,5 +1,4 @@
 #include "capri.h"
-#include "common_defines.h"
 #include "nic/p4/common/defines.h"
 #include "req_tx.h"
 #include "sqcb.h"

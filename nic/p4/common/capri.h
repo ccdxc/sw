@@ -46,6 +46,6 @@
 /*****************************************************************************/
 /* TM reserved queues                                                        */
 /*****************************************************************************/
-#define TM_P4_RECIRC_QUEUE          23 /* Recirc queue in the P4 ports */
+#define TM_P4_RECIRC_QUEUE             23 /* Recirc queue in the P4 ports */
 
 #endif

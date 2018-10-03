@@ -2,7 +2,7 @@
 #include "INGRESS_p.h"
 #include "CSUM_INGRESS.h"
 #include "../../p4/gft/include/defines.h"
-#include "../../p4/include/common_defines.h"
+#include "../../p4/common/defines.h"
 
 struct rx_roce_k k;
 struct rx_roce_d d;

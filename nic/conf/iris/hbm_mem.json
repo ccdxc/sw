@@ -259,12 +259,17 @@
             "size_kb": 1
         },
         {
+            "name": "lif_stats",
+            "size_kb": 1024,
+            "reset": true
+        },
+        {
             "name": "p4_program",
             "size_kb": 64
         },
         {
-            "name": "atomic_stats",
-            "size_kb": 131072,
+            "name": "p4_atomic_stats",
+            "size_kb": 33792,
             "reset": true
         },
         {

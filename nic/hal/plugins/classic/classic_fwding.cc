@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include <net/ethernet.h>
-#include "nic/p4/include/common_defines.h"
+#include "nic/p4/common/defines.h"
 #include "nic/fte/fte.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/include/pd_api.hpp"

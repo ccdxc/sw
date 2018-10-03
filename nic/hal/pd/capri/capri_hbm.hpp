@@ -6,8 +6,6 @@
 
 #define CAPRI_INVALID_OFFSET 0xFFFFFFFFFFFFFFFF
 
-#define JP4_ATOMIC_STATS         "atomic_stats"
-
 #define JKEY_REGIONS             "regions"
 #define JKEY_REGION_NAME         "name"
 #define JKEY_SIZE_KB             "size_kb"
@@ -66,6 +64,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 #define JP4_REPL            "mcast_repl"
 #define JP4_IPFIX           "ipfix"
 
+#define CAPRI_HBM_REG_P4_ATOMIC_STATS    "p4_atomic_stats"
+#define CAPRI_HBM_REG_LIF_STATS          "lif_stats"
 #define CAPRI_HBM_REG_FLOW_HASH          "flow_hash"
 #define CAPRI_HBM_REG_NMDR_RX            "nmdr-rx"
 #define CAPRI_HBM_REG_NMDR_TX            "nmdr-tx"

@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /* Ingress drops per LIF                                                     */
 /*****************************************************************************/
-action ingress_tx_stats(tx_ingress_drops) {
+action ingress_tx_stats() {
     tcp_options_fixup();
     add_header(capri_p4_intrinsic);
 
@@ -25,16 +25,27 @@ action ingress_tx_stats(tx_ingress_drops) {
     }
 
     if (capri_intrinsic.drop == TRUE) {
-        modify_field(scratch_metadata.tx_drop_count, tx_ingress_drops);
+        modify_field(scratch_metadata.src_lif, control_metadata.src_lif);
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
     }
 }
 
 @pragma stage 5
-@pragma table_write
 table ingress_tx_stats {
-    reads {
-        control_metadata.src_lif : exact;
-    }
     actions {
         ingress_tx_stats;
     }
@@ -290,37 +301,45 @@ control process_stats {
 /*****************************************************************************/
 /* Stats per LIF - accounted in the egress pipeline                          */
 /*****************************************************************************/
-action tx_stats(tx_ucast_pkts, tx_mcast_pkts, tx_bcast_pkts,
-                tx_ucast_bytes, tx_mcast_bytes, tx_bcast_bytes,
-                tx_egress_drops) {
-
+action tx_stats() {
+    modify_field(scratch_metadata.src_lif, control_metadata.src_lif);
     if (capri_intrinsic.drop == TRUE) {
-        modify_field(scratch_metadata.tx_drop_count, tx_egress_drops);
-    }
-    modify_field(scratch_metadata.stats_bytes, capri_p4_intrinsic.packet_len);
-    if ((capri_intrinsic.drop == FALSE) and
-        (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST)) {
-        modify_field(scratch_metadata.stats_packets, tx_ucast_pkts);
-        modify_field(scratch_metadata.stats_bytes, tx_ucast_bytes);
-    }
-    if ((capri_intrinsic.drop == FALSE) and
-        (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST)) {
-        modify_field(scratch_metadata.stats_packets, tx_mcast_pkts);
-        modify_field(scratch_metadata.stats_bytes, tx_mcast_bytes);
-    }
-    if ((capri_intrinsic.drop == FALSE) and
-        (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST)) {
-        modify_field(scratch_metadata.stats_packets, tx_bcast_pkts);
-        modify_field(scratch_metadata.stats_bytes, tx_bcast_bytes);
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
+    } else {
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) {
+            add_to_field(scratch_metadata.stats_packets, 1);
+            modify_field(scratch_metadata.stats_bytes,
+                         capri_p4_intrinsic.packet_len);
+        }
     }
 }
 
 @pragma stage 5
-@pragma table_write
 table tx_stats {
-    reads {
-        control_metadata.src_lif : exact;
-    }
     actions {
         tx_stats;
     }

@@ -21,46 +21,6 @@
 #define CSUM_HDR_UDP_OPT_OCS           0
 
 /*****************************************************************************/
-/* P4+ app types                                                             */
-/*****************************************************************************/
-#define P4PLUS_APPTYPE_DEFAULT         0
-#define P4PLUS_APPTYPE_CLASSIC_NIC     1
-#define P4PLUS_APPTYPE_RDMA            2
-#define P4PLUS_APPTYPE_TCPTLS          3
-#define P4PLUS_APPTYPE_IPSEC           4
-#define P4PLUS_APPTYPE_STORAGE         5
-#define P4PLUS_APPTYPE_TELEMETRY       6
-#define P4PLUS_APPTYPE_CPU             7
-#define P4PLUS_APPTYPE_RAW_REDIR       8
-#define P4PLUS_APPTYPE_P4PT            9
-#define P4PLUS_APPTYPE_MIN             P4PLUS_APPTYPE_DEFAULT
-#define P4PLUS_APPTYPE_MAX             P4PLUS_APPTYPE_P4PT
-
-/*****************************************************************************/
-/* P4+ to P4 flags                                                           */
-/*****************************************************************************/
-#define P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID             0x01
-#define P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN            0x02
-#define P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO        0x04
-#define P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN           0x08
-#define P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG          0x10
-#define P4PLUS_TO_P4_FLAGS_COMPUTE_L4_CSUM          0x20
-#define P4PLUS_TO_P4_FLAGS_COMPUTE_INNER_L4_CSUM    0x40
-#define P4PLUS_TO_P4_FLAGS_LKP_INST                 0x80
-
-/*****************************************************************************/
-/* P4+ to P4 flags (same as above, but specify bit positions)                */
-/*****************************************************************************/
-#define P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID_BIT_POS             0
-#define P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN_BIT_POS            1
-#define P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO_BIT_POS        2
-#define P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN_BIT_POS           3
-#define P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG_BIT_POS          4
-#define P4PLUS_TO_P4_FLAGS_COMPUTE_L4_CSUM_BIT_POS          5
-#define P4PLUS_TO_P4_FLAGS_COMPUTE_INNER_L4_CSUM_BIT_POS    6
-#define P4PLUS_TO_P4_FLAGS_LKP_INST_BIT_POS                 7
-
-/*****************************************************************************/
 /* Match types                                                               */
 /*****************************************************************************/
 #define MATCH_ETHERNET_DST             0x00000001

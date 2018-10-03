@@ -185,7 +185,7 @@ hbm_get_addr_for_stat_index (p4pd_table_id table_id,
     hbm_addr_t  stats_base_addr;
     p4pd_table_properties_t  tbl_ctx;
 
-    stats_base_addr =  get_start_offset(JP4_ATOMIC_STATS);
+    stats_base_addr =  get_start_offset(CAPRI_HBM_REG_P4_ATOMIC_STATS);
     stats_base_addr &= ~((uint64_t)0x80000000);
 
     switch (table_id) {

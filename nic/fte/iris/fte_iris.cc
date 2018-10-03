@@ -937,7 +937,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         }
 
 
-        pkt_info->p4plus_header.p4plus_app_id = hal::P4PLUS_APPTYPE_CPU;
+        pkt_info->p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
 
         hal::pd::pd_cpupkt_send_args_t args;
         hal::pd::pd_func_args_t pd_func_args = {0};

@@ -495,7 +495,7 @@ capri_p4p_asm_init (capri_cfg_t *cfg)
         symbols[i].params[0].name = P4_FLOW_STATS_BASE;
         symbols[i].params[0].val = offset;
         symbols[i].params[1].name = P4_FLOW_ATOMIC_STATS_BASE;
-        symbols[i].params[1].val = get_start_offset(JP4_ATOMIC_STATS);
+        symbols[i].params[1].val = get_start_offset(CAPRI_HBM_REG_P4_ATOMIC_STATS);
         i++;
     }
 
