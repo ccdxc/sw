@@ -120,8 +120,11 @@ message Workload {
     // MAC Address of the workload
     string mac_address                      = 5;
 
+    // Interface to which workload needs to be attached.
+    string interface                        = 6;
+
     // Workload Status
-    IotaAPIResponse workload_status         = 6;
+    IotaAPIResponse workload_status         = 7;
 }
 
 enum TriggerOp {
@@ -160,7 +163,7 @@ message Command {
 
     // Workload name of the command
     string          workload_name   = 4;
-    
+
     // ================ Output Parameters ===================
     // StdOut of the comamnd
     string          stdout          = 5;
@@ -216,7 +219,7 @@ message TestBedMsg {
     string iota_agent_image             = 7;
     // Allocated vlans based off of the port id
     repeated uint32 allocated_vlans     = 8;
-    
+
     repeated string ip_address          = 9;
 
     string control_intf                 = 10;
