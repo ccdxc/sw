@@ -774,21 +774,28 @@ parser parse_udp_1_split {
 
 parser parse_gre_1 {
     extract(gre_1);
+    set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_GRE);
     return select(latest.C, latest.R, latest.K, latest.S, latest.s,
                   latest.recurse, latest.flags, latest.ver, latest.proto) {
         ETHERTYPE_IPV4 : parse_gre_ipv4_1;
         ETHERTYPE_IPV6 : parse_gre_ipv6_1;
-        default: ingress;
+        default: no_gre_tunnel_ingress;
     }
 }
 
+parser no_gre_tunnel_ingress {
+    set_metadata(tunnel_metadata.tunnel_type_1, 0);
+    return ingress;
+}
+
 parser parse_gre_ipv4_1 {
-    set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_GRE);
+    // following set_meta causes phv allocation problem for tunnel_type_1 (parser flit violation)
+    //set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_GRE);
     return parse_ipv4_2;
 }
 
 parser parse_gre_ipv6_1 {
-    set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_GRE);
+    //set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_GRE);
     return parse_ipv6_2;
 }
 

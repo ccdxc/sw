@@ -1146,8 +1146,11 @@ class capri_parser:
                                 (self.d.name, s.name, cfield.hfname))
 
                         cfield.is_parser_extracted = True
-                        if cfield not in self.extracted_fields:
-                            self.extracted_fields.append(cfield)
+                        if cfield in self.extracted_fields:
+                            # move it to the last occurance of this field
+                            cidx = self.extracted_fields.index(cfield)
+                            self.extracted_fields.pop(cidx)
+                        self.extracted_fields.append(cfield)
                         if cfield not in s.meta_extracted_fields:
                             self.logger.debug("%s:%s:meta_field %s" % \
                                 (self.d.name, s.name, cfield.hfname))
@@ -3481,9 +3484,10 @@ class capri_parser:
                 if cs.deparse_only:
                     continue
                 for hdr in cs.headers:
-                    if hdr in self.ohi:
-                        continue
                     hdr_phv_bit = self.be.pa.get_hdr_phv_start(hdr, self.d)
+                    if hdr_phv_bit < 0:
+                        # ohi header
+                        continue
                     cs_flit = hdr_phv_bit/flit_sz
                     if cs_flit < last_flit:
                         self.logger.critical( \
@@ -3497,7 +3501,7 @@ class capri_parser:
                     if cs_flit < last_flit:
                         self.logger.critical( \
                         "%s:Flit violation at %s phv %d, cs %s last_cs %s last_flit %d on path:\n %s" % \
-                            (self.d.name, hdr.name, hdr_phv_bit, cs.name, last_cs.name, last_flit, path))
+                            (self.d.name, cf.hfname, cf.phv_bit, cs.name, last_cs.name, last_flit, path))
                         assert 0, pdb.set_trace()
                         return True
 

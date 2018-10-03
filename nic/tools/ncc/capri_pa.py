@@ -852,6 +852,8 @@ class capri_gress_pa:
             # keep keys at the end since insertion is reversing the order
             tbl_meta_fields = sorted(tbl.meta_fields, key=lambda k: k.is_key)
             for cf in tbl_meta_fields:
+                if cf.is_parser_extracted:
+                    continue
                 add_to_list = False
                 if not cf.is_intrinsic and cf not in self.hdr_fld_order:
                     # do not add to hdr_fld order if this meta fld is unioned with another
