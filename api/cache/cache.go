@@ -181,6 +181,9 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 			case <-time.After(kvWatcherRetryInterval):
 				continue
 			case <-p.ctx.Done():
+				p.parent.logger.Infof("Context is cancelled returning")
+				// w is a typed nil, explicitly set to nil so check can pass in the outer for loop.
+				w = nil
 				return
 			}
 		}
