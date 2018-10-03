@@ -25,6 +25,21 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
+// APIGroup is an API Group name
+type APIGroup string
+
+const (
+	GroupAuth       APIGroup = "auth"
+	GroupBookstore  APIGroup = "bookstore"
+	GroupCluster    APIGroup = "cluster"
+	GroupMonitoring APIGroup = "monitoring"
+	GroupNetwork    APIGroup = "network"
+	GroupRollout    APIGroup = "rollout"
+	GroupSecurity   APIGroup = "security"
+	GroupStaging    APIGroup = "staging"
+	GroupWorkload   APIGroup = "workload"
+)
+
 // Services is list of all services exposed by the client ---
 type Services interface {
 	Close() error

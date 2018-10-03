@@ -13,3 +13,7 @@ import (
 var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
+
+const KindBuffer ObjKind = "Buffer"
+const KindClearAction ObjKind = "ClearAction"
+const KindCommitAction ObjKind = "CommitAction"

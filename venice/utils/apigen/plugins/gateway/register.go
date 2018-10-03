@@ -17,14 +17,14 @@ import (
 
 	gogoproto "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
-	descriptor "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
+	"github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
 	"github.com/pensando/sw/venice/globals"
-	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
+	"github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
-	common "github.com/pensando/sw/venice/utils/apigen/plugins/common"
+	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
 
 var (
@@ -1487,8 +1487,10 @@ type cliInfo struct {
 
 // Struct represents the schema details of a field
 type Struct struct {
-	CLITags map[string]cliInfo
-	Fields  map[string]Field
+	Kind     string
+	APIGroup string
+	CLITags  map[string]cliInfo
+	Fields   map[string]Field
 	// keys is used to keep a stable order of Fields when generating the schema. This is
 	//  a ordered set of keys in the Fielda map and follows the order in the corresponding
 	//  slice in DescriptorProto.
@@ -1775,13 +1777,18 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 	ret := make(map[string]Struct)
 	var keys []string
 	for _, msg := range file.Messages {
+		var kind, group string
+		if isSpecStatusMessage(msg) {
+			kind = *msg.Name
+			group = file.GoPkg.Name
+		}
 		fqname := pkg + "." + *msg.Name
 		if len(msg.Outers) > 0 {
 			fqname = msg.Outers[0] + "." + *msg.Name
 			fqname = strings.TrimPrefix(fqname, ".")
 			fqname = pkg + "." + fqname
 		}
-		node := Struct{CLITags: make(map[string]cliInfo), Fields: make(map[string]Field), mapEntry: isMapEntry(msg)}
+		node := Struct{Kind: kind, APIGroup: group, CLITags: make(map[string]cliInfo), Fields: make(map[string]Field), mapEntry: isMapEntry(msg)}
 		for _, fld := range msg.Fields {
 			f, err := genField(fqname, fld, file)
 			if err != nil {
@@ -1846,7 +1853,7 @@ func getMsgMap(file *descriptor.File) (string, error) {
 		if s.mapEntry {
 			ret = fmt.Sprintf("%s\n\"%s\": &%vStruct{\n Fields: map[string]%vField {", ret, k, pkg, pkg)
 		} else {
-			ret = fmt.Sprintf("%s\n\"%s\": &%vStruct{\n GetTypeFn: func() reflect.Type { return reflect.TypeOf(%s{}) }, \nFields: map[string]%vField {", ret, k, pkg, objPath, pkg)
+			ret = fmt.Sprintf("%s\n\"%s\": &%vStruct{\n Kind: \"%s\", APIGroup: \"%s\", GetTypeFn: func() reflect.Type { return reflect.TypeOf(%s{}) }, \nFields: map[string]%vField {", ret, k, pkg, s.Kind, s.APIGroup, objPath, pkg)
 		}
 
 		for _, k1 := range s.keys {

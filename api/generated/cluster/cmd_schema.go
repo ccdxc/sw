@@ -16,7 +16,7 @@ import (
 var typesMapCmd = map[string]*api.Struct{
 
 	"cluster.Cluster": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Cluster{}) },
+		Kind: "Cluster", APIGroup: "cluster", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Cluster{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -46,7 +46,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.ClusterAuthBootstrapRequest": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterAuthBootstrapRequest{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterAuthBootstrapRequest{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -58,7 +58,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.ClusterSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterSpec{}) },
 		Fields: map[string]api.Field{
 			"QuorumNodes": api.Field{Name: "QuorumNodes", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "quorum-nodes", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -70,7 +70,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.ClusterStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClusterStatus{}) },
 		Fields: map[string]api.Field{
 			"Leader": api.Field{Name: "Leader", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "leader", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -86,7 +86,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.Host": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Host{}) },
+		Kind: "Host", APIGroup: "cluster", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Host{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -112,19 +112,19 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.HostIntfSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostIntfSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostIntfSpec{}) },
 		Fields: map[string]api.Field{
 			"MacAddrs": api.Field{Name: "MacAddrs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addrs", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.HostIntfStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostIntfStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostIntfStatus{}) },
 		Fields: map[string]api.Field{
 			"IpAddrs": api.Field{Name: "IpAddrs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addrs", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.HostSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostSpec{}) },
 		Fields: map[string]api.Field{
 			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "cluster.HostIntfSpec"},
 		},
@@ -137,7 +137,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.HostStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(HostStatus{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -156,7 +156,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.Node": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Node{}) },
+		Kind: "Node", APIGroup: "cluster", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Node{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -184,7 +184,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.NodeCondition": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeCondition{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeCondition{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -198,11 +198,11 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.NodeSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeSpec{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeSpec{}) },
+		Fields: map[string]api.Field{},
 	},
 	"cluster.NodeStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(NodeStatus{}) },
 		Fields: map[string]api.Field{
 			"Phase": api.Field{Name: "Phase", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "phase", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -212,7 +212,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.PortCondition": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortCondition{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortCondition{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -226,13 +226,13 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.PortSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortSpec{}) },
 		Fields: map[string]api.Field{
 			"MacAddress": api.Field{Name: "MacAddress", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.PortStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PortStatus{}) },
 		Fields: map[string]api.Field{
 			"MacAddrs": api.Field{Name: "MacAddrs", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-addrs", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -242,7 +242,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.SmartNIC": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNIC{}) },
+		Kind: "SmartNIC", APIGroup: "cluster", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNIC{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -276,7 +276,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.SmartNICCondition": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICCondition{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICCondition{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -290,7 +290,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.SmartNICSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICSpec{}) },
 		Fields: map[string]api.Field{
 			"Phase": api.Field{Name: "Phase", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "phase", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -302,7 +302,7 @@ var typesMapCmd = map[string]*api.Struct{
 		},
 	},
 	"cluster.SmartNICStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SmartNICStatus{}) },
 		Fields: map[string]api.Field{
 			"Conditions": api.Field{Name: "Conditions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "conditions", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.SmartNICCondition"},
 

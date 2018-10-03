@@ -13,3 +13,8 @@ import (
 var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
+
+const KindAuthenticationPolicy ObjKind = "AuthenticationPolicy"
+const KindRole ObjKind = "Role"
+const KindRoleBinding ObjKind = "RoleBinding"
+const KindUser ObjKind = "User"

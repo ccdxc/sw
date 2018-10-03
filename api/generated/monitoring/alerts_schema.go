@@ -16,7 +16,7 @@ import (
 var typesMapAlerts = map[string]*api.Struct{
 
 	"monitoring.Alert": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Alert{}) },
+		Kind: "Alert", APIGroup: "monitoring", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Alert{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -49,7 +49,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AlertDestination": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertDestination{}) },
+		Kind: "AlertDestination", APIGroup: "monitoring", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertDestination{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -79,7 +79,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AlertDestinationSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertDestinationSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertDestinationSpec{}) },
 		Fields: map[string]api.Field{
 			"EmailList": api.Field{Name: "EmailList", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "email-list", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -89,13 +89,13 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AlertDestinationStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertDestinationStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertDestinationStatus{}) },
 		Fields: map[string]api.Field{
 			"totalNotificationsSent": api.Field{Name: "totalNotificationsSent", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "total-notifications-sent", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 		},
 	},
 	"monitoring.AlertPolicy": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertPolicy{}) },
+		Kind: "AlertPolicy", APIGroup: "monitoring", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertPolicy{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -127,7 +127,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AlertPolicySpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertPolicySpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertPolicySpec{}) },
 		Fields: map[string]api.Field{
 			"Resource": api.Field{Name: "Resource", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -149,7 +149,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AlertPolicyStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertPolicyStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertPolicyStatus{}) },
 		Fields: map[string]api.Field{
 			"TotalHits": api.Field{Name: "TotalHits", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "total-hits", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 
@@ -159,7 +159,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AlertReason": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertReason{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertReason{}) },
 		Fields: map[string]api.Field{
 			"MatchedRequirements": api.Field{Name: "MatchedRequirements", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "matched-requirements", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MatchedRequirement"},
 
@@ -167,7 +167,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AlertSource": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertSource{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertSource{}) },
 		Fields: map[string]api.Field{
 			"Component": api.Field{Name: "Component", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "component", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -175,13 +175,13 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AlertSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertSpec{}) },
 		Fields: map[string]api.Field{
 			"State": api.Field{Name: "State", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "state", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.AlertStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertStatus{}) },
 		Fields: map[string]api.Field{
 			"Severity": api.Field{Name: "Severity", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "severity", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -201,7 +201,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AuditInfo": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuditInfo{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuditInfo{}) },
 		Fields: map[string]api.Field{
 			"User": api.Field{Name: "User", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -209,7 +209,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AuthConfig": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthConfig{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthConfig{}) },
 		Fields: map[string]api.Field{
 			"Algo": api.Field{Name: "Algo", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "algo", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -217,7 +217,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.MatchedRequirement": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchedRequirement{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchedRequirement{}) },
 		Fields: map[string]api.Field{
 			"Requirement": api.Field{Name: "Requirement", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "fields.Requirement"},
 
@@ -231,7 +231,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.PrivacyConfig": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PrivacyConfig{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PrivacyConfig{}) },
 		Fields: map[string]api.Field{
 			"Algo": api.Field{Name: "Algo", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "algo", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -239,7 +239,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.SNMPTrapServer": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SNMPTrapServer{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SNMPTrapServer{}) },
 		Fields: map[string]api.Field{
 			"Host": api.Field{Name: "Host", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -255,7 +255,7 @@ var typesMapAlerts = map[string]*api.Struct{
 		},
 	},
 	"monitoring.SyslogExport": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SyslogExport{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SyslogExport{}) },
 		Fields: map[string]api.Field{
 			"Format": api.Field{Name: "Format", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

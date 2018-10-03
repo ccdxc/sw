@@ -11,19 +11,19 @@ import "reflect"
 var typesMapMeta = map[string]*Struct{
 
 	"api.Any": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Any{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Any{}) },
 		Fields: map[string]Field{
 			"Object": Field{Name: "Object", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "google.protobuf.Any"},
 		},
 	},
 	"api.ListMeta": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ListMeta{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ListMeta{}) },
 		Fields: map[string]Field{
 			"ResourceVersion": Field{Name: "ResourceVersion", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-version", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"api.ListWatchOptions": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ListWatchOptions{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ListWatchOptions{}) },
 		Fields: map[string]Field{
 			"O": Field{Name: "O", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
 
@@ -39,7 +39,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.ObjectMeta": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectMeta{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectMeta{}) },
 		Fields: map[string]Field{
 			"Name": Field{Name: "Name", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -70,7 +70,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.ObjectRef": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectRef{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ObjectRef{}) },
 		Fields: map[string]Field{
 			"Tenant": Field{Name: "Tenant", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -84,7 +84,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.Status": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Status{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Status{}) },
 		Fields: map[string]Field{
 			"T": Field{Name: "T", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -98,19 +98,19 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.StatusResult": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatusResult{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatusResult{}) },
 		Fields: map[string]Field{
 			"Str": Field{Name: "Str", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"api.Timestamp": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Timestamp{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Timestamp{}) },
 		Fields: map[string]Field{
 			"Time": Field{Name: "Time", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "google.protobuf.Timestamp"},
 		},
 	},
 	"api.TypeMeta": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TypeMeta{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TypeMeta{}) },
 		Fields: map[string]Field{
 			"Kind": Field{Name: "Kind", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -118,7 +118,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.WatchEvent": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchEvent{}) },
 		Fields: map[string]Field{
 			"Type": Field{Name: "Type", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -126,7 +126,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.WatchEventList": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchEventList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchEventList{}) },
 		Fields: map[string]Field{
 			"Events": Field{Name: "Events", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.WatchEvent"},
 		},

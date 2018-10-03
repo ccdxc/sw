@@ -16,7 +16,7 @@ import (
 var typesMapX509 = map[string]*api.Struct{
 
 	"security.Certificate": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Certificate{}) },
+		Kind: "Certificate", APIGroup: "security", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Certificate{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -43,7 +43,7 @@ var typesMapX509 = map[string]*api.Struct{
 		},
 	},
 	"security.CertificateSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CertificateSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CertificateSpec{}) },
 		Fields: map[string]api.Field{
 			"Description": api.Field{Name: "Description", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "description", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -55,7 +55,7 @@ var typesMapX509 = map[string]*api.Struct{
 		},
 	},
 	"security.CertificateStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CertificateStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CertificateStatus{}) },
 		Fields: map[string]api.Field{
 			"Validity": api.Field{Name: "Validity", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "validity", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

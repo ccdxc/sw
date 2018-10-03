@@ -10,6 +10,12 @@ import (
     {{$key}}Client "github.com/pensando/sw/api/generated/{{$key}}/grpc/client"{{end}}
 )
 
+// APIGroup is an API Group name
+type APIGroup string
+const ( {{range $key, $value := $pkgs}}
+Group{{title $key}} APIGroup = "{{$key}}" {{end}}
+)
+
 // Services is list of all services exposed by the client ---
 type Services interface {
     Close() error

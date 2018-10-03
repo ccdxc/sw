@@ -13,3 +13,7 @@ import (
 var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
+
+const KindAlert ObjKind = "Alert"
+const KindAlertDestination ObjKind = "AlertDestination"
+const KindAlertPolicy ObjKind = "AlertPolicy"

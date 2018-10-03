@@ -16,7 +16,7 @@ import (
 var typesMapSecuritygroup = map[string]*api.Struct{
 
 	"security.SecurityGroup": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityGroup{}) },
+		Kind: "SecurityGroup", APIGroup: "security", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityGroup{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -41,7 +41,7 @@ var typesMapSecuritygroup = map[string]*api.Struct{
 		},
 	},
 	"security.SecurityGroupSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityGroupSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityGroupSpec{}) },
 		Fields: map[string]api.Field{
 			"WorkloadSelector": api.Field{Name: "WorkloadSelector", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workload-selector", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Selector"},
 
@@ -51,7 +51,7 @@ var typesMapSecuritygroup = map[string]*api.Struct{
 		},
 	},
 	"security.SecurityGroupStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityGroupStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityGroupStatus{}) },
 		Fields: map[string]api.Field{
 			"Workloads": api.Field{Name: "Workloads", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

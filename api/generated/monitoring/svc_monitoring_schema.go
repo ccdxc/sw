@@ -16,7 +16,7 @@ import (
 var typesMapSvc_monitoring = map[string]*api.Struct{
 
 	"monitoring.AlertDestinationList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertDestinationList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertDestinationList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -26,7 +26,7 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AlertList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -36,7 +36,7 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AlertPolicyList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertPolicyList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AlertPolicyList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -46,13 +46,13 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AutoMsgAlertDestinationWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertDestinationWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertDestinationWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgAlertDestinationWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgAlertDestinationWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertDestinationWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertDestinationWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -60,13 +60,13 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AutoMsgAlertPolicyWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertPolicyWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertPolicyWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgAlertPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgAlertPolicyWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertPolicyWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -74,13 +74,13 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AutoMsgAlertWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgAlertWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgAlertWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgAlertWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -88,13 +88,13 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AutoMsgEventPolicyWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgEventPolicyWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgEventPolicyWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgEventPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgEventPolicyWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgEventPolicyWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgEventPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -102,13 +102,13 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AutoMsgFlowExportPolicyWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFlowExportPolicyWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFlowExportPolicyWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgFlowExportPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgFlowExportPolicyWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFlowExportPolicyWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFlowExportPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -116,13 +116,13 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AutoMsgFwlogPolicyWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFwlogPolicyWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFwlogPolicyWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgFwlogPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgFwlogPolicyWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFwlogPolicyWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgFwlogPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -130,13 +130,13 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AutoMsgMirrorSessionWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgMirrorSessionWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgMirrorSessionWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgMirrorSessionWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgMirrorSessionWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgMirrorSessionWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgMirrorSessionWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -144,13 +144,13 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AutoMsgStatsPolicyWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStatsPolicyWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStatsPolicyWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgStatsPolicyWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgStatsPolicyWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStatsPolicyWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStatsPolicyWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -158,13 +158,13 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.AutoMsgTroubleshootingSessionWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTroubleshootingSessionWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTroubleshootingSessionWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgTroubleshootingSessionWatchHelper.WatchEvent"},
 		},
 	},
 	"monitoring.AutoMsgTroubleshootingSessionWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTroubleshootingSessionWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTroubleshootingSessionWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -172,7 +172,7 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.EventPolicyList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicyList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicyList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -182,7 +182,7 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.FlowExportPolicyList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportPolicyList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportPolicyList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -192,7 +192,7 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.FwlogPolicyList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogPolicyList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogPolicyList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -202,7 +202,7 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.MirrorSessionList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorSessionList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -212,7 +212,7 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.StatsPolicyList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsPolicyList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsPolicyList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -222,7 +222,7 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 		},
 	},
 	"monitoring.TroubleshootingSessionList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSessionList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TroubleshootingSessionList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 

@@ -27,6 +27,8 @@ var (
 	errNotFound        = errors.New("not found")
 )
 
+type ObjKind string
+
 var apisrv apiserver.Server
 
 // FIXME: add HTTP handler here.

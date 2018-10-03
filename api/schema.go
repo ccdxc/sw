@@ -32,6 +32,8 @@ type Field struct {
 
 // Struct represents the schema details of a field
 type Struct struct {
+	Kind      string
+	APIGroup  string
 	Fields    map[string]Field // Refers to to Field Object in Schema
 	Tags      map[string]string
 	GetTypeFn func() reflect.Type

@@ -13,3 +13,5 @@ import (
 var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
+
+const KindService ObjKind = "Service"

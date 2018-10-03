@@ -57,12 +57,23 @@ func TestSchemaNewEmpty(t *testing.T) {
 func TestSchemaTypes(t *testing.T) {
 	types := map[string]*api.Struct{
 		"test.Type1": &api.Struct{
+			Kind:     "TestKind1",
+			APIGroup: "TestGroup1",
 			Fields: map[string]api.Field{
 				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
 				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
 		},
 		"test.Type2": &api.Struct{
+			Kind:     "TestKind2",
+			APIGroup: "TestGroup1",
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+		},
+		"test.Type3": &api.Struct{
+			Kind:     "TestKind3",
+			APIGroup: "TestGroup2",
 			Fields: map[string]api.Field{
 				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
 			},
@@ -98,6 +109,55 @@ func TestSchemaTypes(t *testing.T) {
 	}
 	if _, ok := n.FindFieldByJSONTag("dummy1"); ok {
 		t.Fatalf("Found field dummy1")
+	}
+	expKinds := map[string][]string{
+		"TestGroup1": {"TestKind1", "TestKind2"},
+		"TestGroup2": {"TestKind3"},
+	}
+	kinds := schema.Kinds()
+	if len(kinds) != len(expKinds) {
+		t.Fatalf("unexpected number of entries in Kinds() want: %d got: %d", len(expKinds), len(kinds))
+	}
+	for k, v := range kinds {
+		v1, ok := expKinds[k]
+		if !ok {
+			t.Fatalf("key not expected %v", k)
+		}
+		if len(v1) != len(v) {
+			t.Fatalf("unexpected number of entries for grou[%v] got: %v want:%v", k, len(v), len(v1))
+		}
+		for i := range v {
+			for j := range v1 {
+				if v[i] == v1[j] {
+					v1[j] = "FOUND"
+				}
+			}
+		}
+		for i := range v1 {
+			if v1[i] != "FOUND" {
+				t.Fatalf("Not found [%v]", v1[i])
+			}
+		}
+	}
+
+	cases := map[string]string{
+		"TestKind1": "test.Type1", "TestKind2": "test.Type2", "TestKind3": "test.Type3", "DummyUnknown": "",
+	}
+	for k, v := range cases {
+		r := schema.Kind2SchemaType(k)
+		if r != v {
+			t.Errorf("returned Type did not match [%v] [%v]", r, v)
+		}
+	}
+
+	cases = map[string]string{
+		"TestKind1": "TestGroup1", "TestKind2": "TestGroup1", "TestKind3": "TestGroup2", "UnknownKind": "",
+	}
+	for k, v := range cases {
+		r := schema.Kind2APIGroup(k)
+		if r != v {
+			t.Errorf("returned Group did not match [%v] [%v]", r, v)
+		}
 	}
 }
 

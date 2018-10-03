@@ -4,13 +4,39 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	govldtr "github.com/asaskevich/govalidator"
+
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // DummyVar is used to avoid import unused errors
 type DummyVar bool
+
+// kindsMap maintains a map of the Kind to api group, initialized the first time
+//  it is used.
+var (
+	kindsMap     map[string]string
+	groupMap     map[string][]string
+	kindsMapOnce sync.Once
+)
+
+func populateKindsMap() {
+	schema := runtime.GetDefaultScheme()
+	groupMap = schema.Kinds()
+	kindsMap = make(map[string]string)
+	for k, v := range groupMap {
+		for _, v1 := range v {
+			if _, ok := kindsMap[v1]; ok {
+				log.Fatalf("duplicate kind registrated [%v]", v1)
+			}
+			kindsMap[v1] = k
+		}
+	}
+}
 
 // convInt is a utility function to get convert string to integer
 func convInt(in string) (int64, bool) {
@@ -330,4 +356,26 @@ func ProtoPort(i interface{}) bool {
 		return strProtoPortVldtr(port)
 	}
 	return false
+}
+
+// ValidKind validates that the kind is one of the registered Kinds
+func ValidKind(i interface{}) bool {
+	in, ok := i.(string)
+	if !ok {
+		return false
+	}
+	kindsMapOnce.Do(populateKindsMap)
+	_, ok = kindsMap[in]
+	return ok
+}
+
+// ValidGroup validates the API group is one of the known groups
+func ValidGroup(i interface{}) bool {
+	in, ok := i.(string)
+	if !ok {
+		return false
+	}
+	kindsMapOnce.Do(populateKindsMap)
+	_, ok = groupMap[in]
+	return ok
 }

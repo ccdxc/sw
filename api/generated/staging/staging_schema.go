@@ -16,7 +16,7 @@ import (
 var typesMapStaging = map[string]*api.Struct{
 
 	"staging.Buffer": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Buffer{}) },
+		Kind: "Buffer", APIGroup: "staging", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Buffer{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -70,13 +70,13 @@ var typesMapStaging = map[string]*api.Struct{
 		},
 	},
 	"staging.BufferSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(BufferSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(BufferSpec{}) },
 		Fields: map[string]api.Field{
 			"Contact": api.Field{Name: "Contact", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"staging.BufferStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(BufferStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(BufferStatus{}) },
 		Fields: map[string]api.Field{
 			"ValidationResult": api.Field{Name: "ValidationResult", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "validation-result", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -86,7 +86,7 @@ var typesMapStaging = map[string]*api.Struct{
 		},
 	},
 	"staging.ClearAction": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClearAction{}) },
+		Kind: "ClearAction", APIGroup: "staging", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClearAction{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -139,13 +139,13 @@ var typesMapStaging = map[string]*api.Struct{
 		},
 	},
 	"staging.ClearRequest": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClearRequest{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClearRequest{}) },
 		Fields: map[string]api.Field{
 			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "items", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "staging.ItemId"},
 		},
 	},
 	"staging.ClearResponse": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClearResponse{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ClearResponse{}) },
 		Fields: map[string]api.Field{
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -153,7 +153,7 @@ var typesMapStaging = map[string]*api.Struct{
 		},
 	},
 	"staging.CommitAction": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CommitAction{}) },
+		Kind: "CommitAction", APIGroup: "staging", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CommitAction{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -204,11 +204,11 @@ var typesMapStaging = map[string]*api.Struct{
 		},
 	},
 	"staging.CommitRequest": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CommitRequest{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CommitRequest{}) },
+		Fields: map[string]api.Field{},
 	},
 	"staging.CommitResponse": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CommitResponse{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CommitResponse{}) },
 		Fields: map[string]api.Field{
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -216,7 +216,7 @@ var typesMapStaging = map[string]*api.Struct{
 		},
 	},
 	"staging.Item": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Item{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Item{}) },
 		Fields: map[string]api.Field{
 			"ItemId": api.Field{Name: "ItemId", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "staging.ItemId"},
 
@@ -228,7 +228,7 @@ var typesMapStaging = map[string]*api.Struct{
 		},
 	},
 	"staging.ItemId": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ItemId{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ItemId{}) },
 		Fields: map[string]api.Field{
 			"URI": api.Field{Name: "URI", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "uri", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -236,7 +236,7 @@ var typesMapStaging = map[string]*api.Struct{
 		},
 	},
 	"staging.ValidationError": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ValidationError{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ValidationError{}) },
 		Fields: map[string]api.Field{
 			"ItemId": api.Field{Name: "ItemId", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "staging.ItemId"},
 

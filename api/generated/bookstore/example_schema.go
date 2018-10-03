@@ -16,7 +16,7 @@ import (
 var typesMapExample = map[string]*api.Struct{
 
 	"bookstore.ApplyDiscountReq": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ApplyDiscountReq{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ApplyDiscountReq{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -50,13 +50,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.AutoMsgBookWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgBookWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgBookWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "bookstore.AutoMsgBookWatchHelper.WatchEvent"},
 		},
 	},
 	"bookstore.AutoMsgBookWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgBookWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgBookWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -64,13 +64,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.AutoMsgCouponWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgCouponWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgCouponWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "bookstore.AutoMsgCouponWatchHelper.WatchEvent"},
 		},
 	},
 	"bookstore.AutoMsgCouponWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgCouponWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgCouponWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -78,13 +78,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.AutoMsgCustomerWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgCustomerWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgCustomerWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "bookstore.AutoMsgCustomerWatchHelper.WatchEvent"},
 		},
 	},
 	"bookstore.AutoMsgCustomerWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgCustomerWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgCustomerWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -92,13 +92,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.AutoMsgOrderWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgOrderWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgOrderWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "bookstore.AutoMsgOrderWatchHelper.WatchEvent"},
 		},
 	},
 	"bookstore.AutoMsgOrderWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgOrderWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgOrderWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -106,13 +106,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.AutoMsgPublisherWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgPublisherWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgPublisherWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "bookstore.AutoMsgPublisherWatchHelper.WatchEvent"},
 		},
 	},
 	"bookstore.AutoMsgPublisherWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgPublisherWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgPublisherWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -120,13 +120,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.AutoMsgStoreWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStoreWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStoreWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "bookstore.AutoMsgStoreWatchHelper.WatchEvent"},
 		},
 	},
 	"bookstore.AutoMsgStoreWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStoreWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStoreWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -134,7 +134,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.Book": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Book{}) },
+		Kind: "Book", APIGroup: "bookstore", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Book{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -192,7 +192,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.BookEdition": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(BookEdition{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(BookEdition{}) },
 		Fields: map[string]api.Field{
 			"Errata": api.Field{Name: "Errata", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "errata", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -209,7 +209,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.BookList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(BookList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(BookList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -219,7 +219,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.BookReview": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(BookReview{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(BookReview{}) },
 		Fields: map[string]api.Field{
 			"Date": api.Field{Name: "Date", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "date", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
@@ -227,7 +227,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.BookSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(BookSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(BookSpec{}) },
 		Fields: map[string]api.Field{
 			"ISBNId": api.Field{Name: "ISBNId", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -252,13 +252,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.BookStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(BookStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(BookStatus{}) },
 		Fields: map[string]api.Field{
 			"Inventory": api.Field{Name: "Inventory", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 		},
 	},
 	"bookstore.Coupon": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Coupon{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Coupon{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -292,7 +292,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.CouponList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CouponList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CouponList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -302,7 +302,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.Customer": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Customer{}) },
+		Kind: "Customer", APIGroup: "bookstore", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Customer{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -357,7 +357,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.CustomerList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -367,7 +367,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.CustomerPersonalInfo": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerPersonalInfo{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerPersonalInfo{}) },
 		Fields: map[string]api.Field{
 			"SSN": api.Field{Name: "SSN", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ssn", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -375,7 +375,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.CustomerSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerSpec{}) },
 		Fields: map[string]api.Field{
 			"Address": api.Field{Name: "Address", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -387,13 +387,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.CustomerStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerStatus{}) },
 		Fields: map[string]api.Field{
 			"AccountStatus": api.Field{Name: "AccountStatus", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "account-status", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"bookstore.Order": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Order{}) },
+		Kind: "Order", APIGroup: "bookstore", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Order{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -447,7 +447,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.OrderItem": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(OrderItem{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(OrderItem{}) },
 		Fields: map[string]api.Field{
 			"ISBNId": api.Field{Name: "ISBNId", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -455,7 +455,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.OrderList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(OrderList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(OrderList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -465,7 +465,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.OrderSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(OrderSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(OrderSpec{}) },
 		Fields: map[string]api.Field{
 			"Id": api.Field{Name: "Id", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -473,7 +473,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.OrderStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(OrderStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(OrderStatus{}) },
 		Fields: map[string]api.Field{
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -483,7 +483,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.OutageRequest": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(OutageRequest{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(OutageRequest{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -517,7 +517,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.Publisher": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Publisher{}) },
+		Kind: "Publisher", APIGroup: "bookstore", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Publisher{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -569,7 +569,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.PublisherList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PublisherList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PublisherList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -579,7 +579,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.PublisherSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PublisherSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PublisherSpec{}) },
 		Fields: map[string]api.Field{
 			"Id": api.Field{Name: "Id", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "id", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -589,11 +589,11 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.PublisherStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PublisherStatus{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PublisherStatus{}) },
+		Fields: map[string]api.Field{},
 	},
 	"bookstore.RestockRequest": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RestockRequest{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RestockRequest{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -627,7 +627,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.RestockResponse": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RestockResponse{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RestockResponse{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -663,7 +663,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.Store": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Store{}) },
+		Kind: "Store", APIGroup: "bookstore", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Store{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -714,7 +714,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.StoreList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(StoreList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StoreList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -724,13 +724,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.StoreSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(StoreSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StoreSpec{}) },
 		Fields: map[string]api.Field{
 			"Contact": api.Field{Name: "Contact", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"bookstore.StoreStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(StoreStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StoreStatus{}) },
 		Fields: map[string]api.Field{
 			"CurrentOutages": api.Field{Name: "CurrentOutages", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},

@@ -16,7 +16,7 @@ import (
 var typesMapTenant = map[string]*api.Struct{
 
 	"cluster.Tenant": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Tenant{}) },
+		Kind: "Tenant", APIGroup: "cluster", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Tenant{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -38,14 +38,14 @@ var typesMapTenant = map[string]*api.Struct{
 		},
 	},
 	"cluster.TenantSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantSpec{}) },
 		Fields: map[string]api.Field{
 			"AdminUser": api.Field{Name: "AdminUser", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admin-user", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.TenantStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantStatus{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TenantStatus{}) },
+		Fields: map[string]api.Field{},
 	},
 }
 

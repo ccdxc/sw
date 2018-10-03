@@ -16,13 +16,13 @@ import (
 var typesMapSvc_staging = map[string]*api.Struct{
 
 	"staging.AutoMsgBufferWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgBufferWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgBufferWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "staging.AutoMsgBufferWatchHelper.WatchEvent"},
 		},
 	},
 	"staging.AutoMsgBufferWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgBufferWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgBufferWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -30,7 +30,7 @@ var typesMapSvc_staging = map[string]*api.Struct{
 		},
 	},
 	"staging.BufferList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(BufferList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(BufferList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 

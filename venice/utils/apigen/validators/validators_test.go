@@ -1,6 +1,11 @@
 package impl
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/utils/runtime"
+)
 
 func TestStrLen(t *testing.T) {
 	str := "Abcdefghijklmnopqrstuvwzyz"
@@ -227,6 +232,54 @@ func TestDuration(t *testing.T) {
 	for _, c := range badCases {
 		if ok := Duration(c); ok {
 			t.Errorf("Undetected error in %v", c)
+		}
+	}
+}
+
+func TestValidKind(t *testing.T) {
+	types := map[string]*api.Struct{
+		"test.Type1": &api.Struct{
+			Kind:     "TestKind1",
+			APIGroup: "TestGroup1",
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+		},
+		"test.Type2": &api.Struct{
+			Kind:     "TestKind2",
+			APIGroup: "TestGroup1",
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+		},
+		"test.Type3": &api.Struct{
+			Kind:     "TestKind3",
+			APIGroup: "TestGroup2",
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+		},
+	}
+	schema := runtime.GetDefaultScheme()
+	schema.AddSchema(types)
+	cases := map[string]bool{
+		"TestKind1": true, "TestKind2": true, "TestKind3": true, "testKind": false, "Dummy": false,
+	}
+	for k, v := range cases {
+		r := ValidKind(k)
+		if r != v {
+			t.Errorf("ValidKind(%v) did not match want[%v] got [%v]", k, v, r)
+		}
+	}
+
+	cases = map[string]bool{
+		"TestGroup1": true, "TestGroup2": true, "UnknownGroup": false, "testGroup1": false,
+	}
+	for k, v := range cases {
+		r := ValidGroup(k)
+		if r != v {
+			t.Errorf("ValidKind(%v) did not match want[%v] got [%v]", k, v, r)
 		}
 	}
 }

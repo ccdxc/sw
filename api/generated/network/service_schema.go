@@ -16,7 +16,7 @@ import (
 var typesMapService = map[string]*api.Struct{
 
 	"network.Service": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Service{}) },
+		Kind: "Service", APIGroup: "network", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Service{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -49,7 +49,7 @@ var typesMapService = map[string]*api.Struct{
 		},
 	},
 	"network.ServiceSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ServiceSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ServiceSpec{}) },
 		Fields: map[string]api.Field{
 			"WorkloadSelector": api.Field{Name: "WorkloadSelector", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workload-labels", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -65,13 +65,13 @@ var typesMapService = map[string]*api.Struct{
 		},
 	},
 	"network.ServiceStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(ServiceStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ServiceStatus{}) },
 		Fields: map[string]api.Field{
 			"Workloads": api.Field{Name: "Workloads", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workloads", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"network.TLSClientPolicySpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSClientPolicySpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSClientPolicySpec{}) },
 		Fields: map[string]api.Field{
 			"CertificatesSelector": api.Field{Name: "CertificatesSelector", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tls-client-certificates-selector", Pointer: true, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
 
@@ -88,7 +88,7 @@ var typesMapService = map[string]*api.Struct{
 		},
 	},
 	"network.TLSServerPolicySpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSServerPolicySpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSServerPolicySpec{}) },
 		Fields: map[string]api.Field{
 			"Certificates": api.Field{Name: "Certificates", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tls-server-certificates", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

@@ -16,7 +16,7 @@ import (
 var typesMapEventpolicy = map[string]*api.Struct{
 
 	"monitoring.EventExport": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventExport{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventExport{}) },
 		Fields: map[string]api.Field{
 			"Format": api.Field{Name: "Format", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "format", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -28,7 +28,7 @@ var typesMapEventpolicy = map[string]*api.Struct{
 		},
 	},
 	"monitoring.EventPolicy": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicy{}) },
+		Kind: "EventPolicy", APIGroup: "monitoring", GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicy{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -50,14 +50,14 @@ var typesMapEventpolicy = map[string]*api.Struct{
 		},
 	},
 	"monitoring.EventPolicySpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicySpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicySpec{}) },
 		Fields: map[string]api.Field{
 			"Exports": api.Field{Name: "Exports", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "exports", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.EventExport"},
 		},
 	},
 	"monitoring.EventPolicyStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicyStatus{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(EventPolicyStatus{}) },
+		Fields: map[string]api.Field{},
 	},
 }
 

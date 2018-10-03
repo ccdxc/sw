@@ -16,7 +16,7 @@ import (
 var typesMapTelemetry = map[string]*api.Struct{
 
 	"monitoring.FlowExportPolicy": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportPolicy{}) },
+		Kind: "FlowExportPolicy", APIGroup: "monitoring", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportPolicy{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -39,17 +39,17 @@ var typesMapTelemetry = map[string]*api.Struct{
 		},
 	},
 	"monitoring.FlowExportSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportSpec{}) },
 		Fields: map[string]api.Field{
 			"Targets": api.Field{Name: "Targets", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "targets", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.FlowExportTarget"},
 		},
 	},
 	"monitoring.FlowExportStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportStatus{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportStatus{}) },
+		Fields: map[string]api.Field{},
 	},
 	"monitoring.FlowExportTarget": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportTarget{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FlowExportTarget{}) },
 		Fields: map[string]api.Field{
 			"Interval": api.Field{Name: "Interval", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interval", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -61,7 +61,7 @@ var typesMapTelemetry = map[string]*api.Struct{
 		},
 	},
 	"monitoring.FwlogExport": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogExport{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogExport{}) },
 		Fields: map[string]api.Field{
 			"Targets": api.Field{Name: "Targets", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "targets", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 
@@ -73,7 +73,7 @@ var typesMapTelemetry = map[string]*api.Struct{
 		},
 	},
 	"monitoring.FwlogPolicy": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogPolicy{}) },
+		Kind: "FwlogPolicy", APIGroup: "monitoring", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogPolicy{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -98,7 +98,7 @@ var typesMapTelemetry = map[string]*api.Struct{
 		},
 	},
 	"monitoring.FwlogSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogSpec{}) },
 		Fields: map[string]api.Field{
 			"RetentionTime": api.Field{Name: "RetentionTime", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "retention-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -108,11 +108,11 @@ var typesMapTelemetry = map[string]*api.Struct{
 		},
 	},
 	"monitoring.FwlogStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogStatus{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogStatus{}) },
+		Fields: map[string]api.Field{},
 	},
 	"monitoring.StatsPolicy": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsPolicy{}) },
+		Kind: "StatsPolicy", APIGroup: "monitoring", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsPolicy{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -136,7 +136,7 @@ var typesMapTelemetry = map[string]*api.Struct{
 		},
 	},
 	"monitoring.StatsSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsSpec{}) },
 		Fields: map[string]api.Field{
 			"CompactionInterval": api.Field{Name: "CompactionInterval", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "compaction-interval ", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -146,8 +146,8 @@ var typesMapTelemetry = map[string]*api.Struct{
 		},
 	},
 	"monitoring.StatsStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsStatus{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsStatus{}) },
+		Fields: map[string]api.Field{},
 	},
 }
 

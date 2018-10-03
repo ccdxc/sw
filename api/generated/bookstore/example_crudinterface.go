@@ -15,6 +15,12 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
+const KindBook ObjKind = "Book"
+const KindCustomer ObjKind = "Customer"
+const KindOrder ObjKind = "Order"
+const KindPublisher ObjKind = "Publisher"
+const KindStore ObjKind = "Store"
+
 // BookstoreV1OrderInterface exposes the CRUD methods for Order
 type BookstoreV1OrderInterface interface {
 	Create(ctx context.Context, in *Order) (*Order, error)

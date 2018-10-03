@@ -15,7 +15,8 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-
+{{range .Messages}}{{if isSpecStatusMessage .}}
+const Kind{{.Name}} ObjKind = "{{.Name}}" {{end}}{{end}}
 
 {{range .Services}}{{$svc := . }}{{$srvname := .Name}}{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}
 {{$crudobjs := getSvcCrudObjects .}}{{range $crudobjs}}

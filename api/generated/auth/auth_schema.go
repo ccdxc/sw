@@ -16,7 +16,7 @@ import (
 var typesMapAuth = map[string]*api.Struct{
 
 	"auth.AuthenticationPolicy": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicy{}) },
+		Kind: "AuthenticationPolicy", APIGroup: "auth", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicy{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -57,7 +57,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.AuthenticationPolicySpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicySpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicySpec{}) },
 		Fields: map[string]api.Field{
 			"Authenticators": api.Field{Name: "Authenticators", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "authenticators", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.Authenticators"},
 
@@ -65,11 +65,11 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.AuthenticationPolicyStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicyStatus{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicyStatus{}) },
+		Fields: map[string]api.Field{},
 	},
 	"auth.Authenticators": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Authenticators{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Authenticators{}) },
 		Fields: map[string]api.Field{
 			"AuthenticatorOrder": api.Field{Name: "AuthenticatorOrder", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "authenticator-order", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -81,7 +81,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.Ldap": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Ldap{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Ldap{}) },
 		Fields: map[string]api.Field{
 			"Enabled": api.Field{Name: "Enabled", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enabled", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
@@ -97,7 +97,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.LdapAttributeMapping": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(LdapAttributeMapping{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(LdapAttributeMapping{}) },
 		Fields: map[string]api.Field{
 			"User": api.Field{Name: "User", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "user", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -115,7 +115,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.LdapServer": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(LdapServer{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(LdapServer{}) },
 		Fields: map[string]api.Field{
 			"Url": api.Field{Name: "Url", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "url", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -123,13 +123,13 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.Local": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Local{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Local{}) },
 		Fields: map[string]api.Field{
 			"Enabled": api.Field{Name: "Enabled", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enabled", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"auth.PasswordCredential": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(PasswordCredential{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(PasswordCredential{}) },
 		Fields: map[string]api.Field{
 			"Username": api.Field{Name: "Username", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "username", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -139,7 +139,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.Permission": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Permission{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Permission{}) },
 		Fields: map[string]api.Field{
 			"ResourceTenant": api.Field{Name: "ResourceTenant", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-tenant", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -155,7 +155,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.Radius": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Radius{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Radius{}) },
 		Fields: map[string]api.Field{
 			"Enabled": api.Field{Name: "Enabled", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enabled", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
@@ -165,7 +165,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.RadiusServer": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RadiusServer{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RadiusServer{}) },
 		Fields: map[string]api.Field{
 			"Url": api.Field{Name: "Url", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "url", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -177,7 +177,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.Role": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Role{}) },
+		Kind: "Role", APIGroup: "auth", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Role{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -204,7 +204,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.RoleBinding": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBinding{}) },
+		Kind: "RoleBinding", APIGroup: "auth", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBinding{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -228,7 +228,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.RoleBindingSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBindingSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBindingSpec{}) },
 		Fields: map[string]api.Field{
 			"Users": api.Field{Name: "Users", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "users", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -238,21 +238,21 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.RoleBindingStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBindingStatus{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleBindingStatus{}) },
+		Fields: map[string]api.Field{},
 	},
 	"auth.RoleSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleSpec{}) },
 		Fields: map[string]api.Field{
 			"Permissions": api.Field{Name: "Permissions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "permissions", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.Permission"},
 		},
 	},
 	"auth.RoleStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleStatus{}) },
-		Fields:    map[string]api.Field{},
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoleStatus{}) },
+		Fields: map[string]api.Field{},
 	},
 	"auth.TLSOptions": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSOptions{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(TLSOptions{}) },
 		Fields: map[string]api.Field{
 			"StartTLS": api.Field{Name: "StartTLS", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-tls", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
@@ -264,7 +264,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.User": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(User{}) },
+		Kind: "User", APIGroup: "auth", GetTypeFn: func() reflect.Type { return reflect.TypeOf(User{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
@@ -292,7 +292,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.UserSpec": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(UserSpec{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(UserSpec{}) },
 		Fields: map[string]api.Field{
 			"Fullname": api.Field{Name: "Fullname", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "fullname", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -304,7 +304,7 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 	},
 	"auth.UserStatus": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(UserStatus{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(UserStatus{}) },
 		Fields: map[string]api.Field{
 			"Roles": api.Field{Name: "Roles", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "roles", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

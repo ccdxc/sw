@@ -16,13 +16,13 @@ import (
 var typesMapSvc_rollout = map[string]*api.Struct{
 
 	"rollout.AutoMsgRolloutWatchHelper": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgRolloutWatchHelper{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgRolloutWatchHelper{}) },
 		Fields: map[string]api.Field{
 			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "rollout.AutoMsgRolloutWatchHelper.WatchEvent"},
 		},
 	},
 	"rollout.AutoMsgRolloutWatchHelper.WatchEvent": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgRolloutWatchHelper_WatchEvent{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgRolloutWatchHelper_WatchEvent{}) },
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -30,7 +30,7 @@ var typesMapSvc_rollout = map[string]*api.Struct{
 		},
 	},
 	"rollout.RolloutList": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(RolloutList{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RolloutList{}) },
 		Fields: map[string]api.Field{
 			"T": api.Field{Name: "T", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 

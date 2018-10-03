@@ -15,7 +15,7 @@ import (
 var typesMapSelector = map[string]*api.Struct{
 
 	"labels.Requirement": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Requirement{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Requirement{}) },
 		Fields: map[string]api.Field{
 			"Key": api.Field{Name: "Key", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "key", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -25,7 +25,7 @@ var typesMapSelector = map[string]*api.Struct{
 		},
 	},
 	"labels.Selector": &api.Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Selector{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Selector{}) },
 		Fields: map[string]api.Field{
 			"Requirements": api.Field{Name: "Requirements", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "requirements", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Requirement"},
 		},
