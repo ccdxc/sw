@@ -226,12 +226,13 @@ message Permission {
         FwlogPolicy             = 25; // ui-hint: FwlogPolicy
         FlowExportPolicy        = 26; // ui-hint: FlowExportPolicy
         MirrorSession           = 27; // ui-hint: MirrorSession
+        MetricsQuery            = 28; // ui-hint: MetricsQuery
 
         // User management related resources
-        User                    = 28; // ui-hint: User
-        AuthenticationPolicy    = 29; // ui-hint: AuthenticationPolicy
-        Role                    = 30; // ui-hint: Role
-        RoleBinding             = 31; // ui-hint: RoleBinding
+        User                    = 29; // ui-hint: User
+        AuthenticationPolicy    = 30; // ui-hint: AuthenticationPolicy
+        Role                    = 31; // ui-hint: Role
+        RoleBinding             = 32; // ui-hint: RoleBinding
     }
 
     // ActionType is an action on a resource that a permission allows

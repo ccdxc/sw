@@ -7,11 +7,14 @@ Input file: metrics_query.proto
 package metrics_query
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -21,47 +24,8 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
-// Clone clones the object into into or creates one of into is nil
-func (m *AggregatorFunction) Clone(into interface{}) (interface{}, error) {
-	var out *AggregatorFunction
-	var ok bool
-	if into == nil {
-		out = &AggregatorFunction{}
-	} else {
-		out, ok = into.(*AggregatorFunction)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AggregatorFunction) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *FilterSpec) Clone(into interface{}) (interface{}, error) {
-	var out *FilterSpec
-	var ok bool
-	if into == nil {
-		out = &FilterSpec{}
-	} else {
-		out, ok = into.(*FilterSpec)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *FilterSpec) Defaults(ver string) bool {
-	return false
-}
+var _ validators.DummyVar
+var validatorMapMetrics_query = make(map[string]map[string][]func(string, interface{}) error)
 
 // Clone clones the object into into or creates one of into is nil
 func (m *MetricSpec) Clone(into interface{}) (interface{}, error) {
@@ -81,7 +45,13 @@ func (m *MetricSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *MetricSpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Function = "NONE"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -148,13 +118,13 @@ func (m *QueryResponse) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *QueryResponse_Row) Clone(into interface{}) (interface{}, error) {
-	var out *QueryResponse_Row
+func (m *QueryResult) Clone(into interface{}) (interface{}, error) {
+	var out *QueryResult
 	var ok bool
 	if into == nil {
-		out = &QueryResponse_Row{}
+		out = &QueryResult{}
 	} else {
-		out, ok = into.(*QueryResponse_Row)
+		out, ok = into.(*QueryResult)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
@@ -164,28 +134,7 @@ func (m *QueryResponse_Row) Clone(into interface{}) (interface{}, error) {
 }
 
 // Default sets up the defaults for the object
-func (m *QueryResponse_Row) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *QueryResponse_Series) Clone(into interface{}) (interface{}, error) {
-	var out *QueryResponse_Series
-	var ok bool
-	if into == nil {
-		out = &QueryResponse_Series{}
-	} else {
-		out, ok = into.(*QueryResponse_Series)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *m
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *QueryResponse_Series) Defaults(ver string) bool {
+func (m *QueryResult) Defaults(ver string) bool {
 	return false
 }
 
@@ -207,6 +156,31 @@ func (m *QuerySpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *QuerySpec) Defaults(ver string) bool {
+	var ret bool
+	if m.Metrics != nil {
+		ret = m.Metrics.Defaults(ver) || ret
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *ResultSeries) Clone(into interface{}) (interface{}, error) {
+	var out *ResultSeries
+	var ok bool
+	if into == nil {
+		out = &ResultSeries{}
+	} else {
+		out, ok = into.(*ResultSeries)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *ResultSeries) Defaults(ver string) bool {
 	return false
 }
 
@@ -233,16 +207,6 @@ func (m *TimeRange) Defaults(ver string) bool {
 
 // Validators
 
-func (m *AggregatorFunction) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *FilterSpec) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
 func (m *MetricSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Tags != nil {
@@ -255,18 +219,31 @@ func (m *MetricSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
+	if vs, ok := validatorMapMetrics_query["MetricSpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapMetrics_query["MetricSpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
 func (m *ObjectSelector) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	if m.Labels != nil {
+	if m.Selector != nil {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := path + dlmtr + "Labels"
-		if errs := m.Labels.Validate(ver, npath, ignoreStatus); errs != nil {
+		npath := path + dlmtr + "Selector"
+		if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -283,12 +260,7 @@ func (m *QueryResponse) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
-func (m *QueryResponse_Row) Validate(ver, path string, ignoreStatus bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *QueryResponse_Series) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *QueryResult) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
@@ -305,16 +277,20 @@ func (m *QuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
-	if m.Object != nil {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := path + dlmtr + "Object"
-		if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
-			ret = append(ret, errs...)
-		}
+
+	dlmtr := "."
+	if path == "" {
+		dlmtr = ""
 	}
+	npath := path + dlmtr + "ObjectSelector"
+	if errs := m.ObjectSelector.Validate(ver, npath, ignoreStatus); errs != nil {
+		ret = append(ret, errs...)
+	}
+	return ret
+}
+
+func (m *ResultSeries) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
 	return ret
 }
 
@@ -328,5 +304,17 @@ func (m *TimeRange) Validate(ver, path string, ignoreStatus bool) []error {
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes()
+
+	validatorMapMetrics_query = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapMetrics_query["MetricSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapMetrics_query["MetricSpec"]["all"] = append(validatorMapMetrics_query["MetricSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*MetricSpec)
+
+		if _, ok := TsdbFunctionType_value[m.Function]; !ok {
+			return errors.New("MetricSpec.Function did not match allowed strings")
+		}
+		return nil
+	})
 
 }

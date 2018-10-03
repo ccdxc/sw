@@ -7,15 +7,13 @@ Input file: metrics_query.proto
 
 The following Messages are defined.
 
-  AggregatorFunction
-  FilterSpec
   MetricSpec
   ObjectSelector
   PaginationSpec
   QueryResponse
-  QueryResponse_Row
-  QueryResponse_Series
+  QueryResult
   QuerySpec
+  ResultSeries
   TimeRange
 
 The following Services and Methods are defined.

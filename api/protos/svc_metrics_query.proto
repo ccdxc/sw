@@ -10,28 +10,27 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "metrics_query.proto";
 
-// fileGrpcDest is the gRPC destination for this service
-option (venice.fileGrpcDest) = "pen-aggregator";
+// gRPC destination for this service
+option (venice.fileGrpcDest) = "pen-citadel";
 // fileApiServerBacked should be set to false to indicate that the set of services defined in this
 // file are not backed by the API server.
 option (venice.fileApiServerBacked) = false;
+option (venice.fileCategory) = "metrics";
 
 // MetricsQuery service API
 service MetricsV1 {
-    option (venice.apiPrefix) = "metrics";
+    option (venice.apiPrefix) = "";
 
     // API Version.
     option (venice.apiVersion) = "v1";
 
-    // In the example below a query like
-    //    http://<...>/venice/v1/metrics/query
-    //  generates a RPC call Query
+    //  Query is the telemetry metrics query RPC, http://localhost:9000/metrics/v1/query
     rpc Query (QuerySpec) returns (QueryResponse) {
         option (google.api.http) = {
-            post: "/metrics"
+            post: "/query"
             body: "*"
             additional_bindings {
-                get: "/metrics"
+                get: "/query"
             }
         };
     }

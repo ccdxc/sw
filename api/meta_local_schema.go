@@ -17,7 +17,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.Interface": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Interface{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Interface{}) },
 		Fields: map[string]Field{
 			"Str": Field{Name: "Str", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -31,7 +31,7 @@ var typesMapMeta = map[string]*Struct{
 		},
 	},
 	"api.InterfaceSlice": &Struct{
-		GetTypeFn: func() reflect.Type { return reflect.TypeOf(InterfaceSlice{}) },
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(InterfaceSlice{}) },
 		Fields: map[string]Field{
 			"Values": Field{Name: "Values", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Interface"},
 		},

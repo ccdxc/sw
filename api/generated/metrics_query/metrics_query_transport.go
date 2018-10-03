@@ -17,74 +17,6 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
-func encodeHTTPAggregatorFunction(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPAggregatorFunction(_ context.Context, r *http.Request) (interface{}, error) {
-	var req AggregatorFunction
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqAggregatorFunction encodes GRPC request
-func EncodeGrpcReqAggregatorFunction(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AggregatorFunction)
-	return req, nil
-}
-
-// DecodeGrpcReqAggregatorFunction decodes GRPC request
-func DecodeGrpcReqAggregatorFunction(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*AggregatorFunction)
-	return req, nil
-}
-
-// EncodeGrpcRespAggregatorFunction encodes GRC response
-func EncodeGrpcRespAggregatorFunction(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespAggregatorFunction decodes GRPC response
-func DecodeGrpcRespAggregatorFunction(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-func encodeHTTPFilterSpec(ctx context.Context, req *http.Request, request interface{}) error {
-	return encodeHTTPRequest(ctx, req, request)
-}
-
-func decodeHTTPFilterSpec(_ context.Context, r *http.Request) (interface{}, error) {
-	var req FilterSpec
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-// EncodeGrpcReqFilterSpec encodes GRPC request
-func EncodeGrpcReqFilterSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FilterSpec)
-	return req, nil
-}
-
-// DecodeGrpcReqFilterSpec decodes GRPC request
-func DecodeGrpcReqFilterSpec(ctx context.Context, request interface{}) (interface{}, error) {
-	req := request.(*FilterSpec)
-	return req, nil
-}
-
-// EncodeGrpcRespFilterSpec encodes GRC response
-func EncodeGrpcRespFilterSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
-// DecodeGrpcRespFilterSpec decodes GRPC response
-func DecodeGrpcRespFilterSpec(ctx context.Context, response interface{}) (interface{}, error) {
-	return response, nil
-}
-
 func encodeHTTPMetricSpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -221,6 +153,40 @@ func DecodeGrpcRespQueryResponse(ctx context.Context, response interface{}) (int
 	return response, nil
 }
 
+func encodeHTTPQueryResult(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPQueryResult(_ context.Context, r *http.Request) (interface{}, error) {
+	var req QueryResult
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqQueryResult encodes GRPC request
+func EncodeGrpcReqQueryResult(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*QueryResult)
+	return req, nil
+}
+
+// DecodeGrpcReqQueryResult decodes GRPC request
+func DecodeGrpcReqQueryResult(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*QueryResult)
+	return req, nil
+}
+
+// EncodeGrpcRespQueryResult encodes GRC response
+func EncodeGrpcRespQueryResult(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespQueryResult decodes GRPC response
+func DecodeGrpcRespQueryResult(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPQuerySpec(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -252,6 +218,40 @@ func EncodeGrpcRespQuerySpec(ctx context.Context, response interface{}) (interfa
 
 // DecodeGrpcRespQuerySpec decodes GRPC response
 func DecodeGrpcRespQuerySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPResultSeries(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPResultSeries(_ context.Context, r *http.Request) (interface{}, error) {
+	var req ResultSeries
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqResultSeries encodes GRPC request
+func EncodeGrpcReqResultSeries(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ResultSeries)
+	return req, nil
+}
+
+// DecodeGrpcReqResultSeries decodes GRPC request
+func DecodeGrpcReqResultSeries(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*ResultSeries)
+	return req, nil
+}
+
+// EncodeGrpcRespResultSeries encodes GRC response
+func EncodeGrpcRespResultSeries(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespResultSeries decodes GRPC response
+func DecodeGrpcRespResultSeries(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

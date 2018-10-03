@@ -6,7 +6,7 @@ import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { IMetrics_queryQueryResponse,Metrics_queryQuerySpec } from '../../models/generated/metrics_query';
 
 @Injectable()
-export class Metricsv1Service extends AbstractService {
+export class Metrics_queryv1Service extends AbstractService {
   constructor(protected _http: HttpClient) {
     super(_http);
   }
@@ -19,19 +19,15 @@ export class Metricsv1Service extends AbstractService {
     return this.constructor.name;
   }
 
-  /** In the example below a query like
-   http://<...>/venice/v1/metrics/query
- generates a RPC call Query */
+  /** Query is the telemetry metrics query RPC, http://localhost:9000/metrics/v1/query */
   public GetQuery_1(queryParam: any = null):Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/metrics/v1/metrics';
+    let url = this['baseUrlAndPort'] + '/metrics/v1/query';
     return this.invokeAJAXGetCall(url, queryParam, 'GetQuery_1') as Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}>;
   }
   
-  /** In the example below a query like
-   http://<...>/venice/v1/metrics/query
- generates a RPC call Query */
+  /** Query is the telemetry metrics query RPC, http://localhost:9000/metrics/v1/query */
   public PostQuery(body: Metrics_queryQuerySpec):Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/metrics/v1/metrics';
+    let url = this['baseUrlAndPort'] + '/metrics/v1/query';
     return this.invokeAJAXPostCall(url, body.getValues(), 'PostQuery') as Observable<{body: IMetrics_queryQueryResponse | Error, statusCode: number}>;
   }
   

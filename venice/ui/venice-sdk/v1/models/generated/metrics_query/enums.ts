@@ -13,10 +13,9 @@ export enum LabelsRequirement_operator {
     'notIn' = "notIn",
 }
 
-export enum Metrics_queryAggregatorFunctionType_metrics_queryAggregatorFunctionType {
-    'Sum' = "Sum",
-    'Mean' = "Mean",
-    'Delta' = "Delta",
+export enum Metrics_queryMetricSpec_function {
+    'NONE' = "NONE",
+    'MEAN' = "MEAN",
 }
 
 
@@ -57,7 +56,7 @@ export class AllEnums {
     }
 
     LabelsRequirement_operator = LabelsRequirement_operator;
-    Metrics_queryAggregatorFunctionType_metrics_queryAggregatorFunctionType = Metrics_queryAggregatorFunctionType_metrics_queryAggregatorFunctionType;
+    Metrics_queryMetricSpec_function = Metrics_queryMetricSpec_function;
 
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;
 }

@@ -126,13 +126,14 @@ const (
 	// Kibana
 	KibanaRESTPort = "5601"
 
-	// Influx
-	InfluxHTTPPort    = "8086"
-	InfluxAdminPort   = "8083"
-	CollectorRPCPort  = "10777"
-	AggregatorAPIPort = "10778"
-	CitadelRPCPort    = "7000"
-	CitadelHTTPPort   = "7086"
+	// Citadel
+	InfluxHTTPPort      = "8086"
+	InfluxAdminPort     = "8083"
+	CollectorRPCPort    = "10777"
+	AggregatorAPIPort   = "10778"
+	CitadelRPCPort      = "7000"
+	CitadelHTTPPort     = "7086"
+	CitadelQueryRPCPort = "7087"
 
 	// KV Store keys
 	RootPrefix       = "/venice"        // Root for all venice objects

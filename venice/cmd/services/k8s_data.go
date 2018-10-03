@@ -86,7 +86,7 @@ var k8sModules = map[string]protos.Module{
 							Port: runtime.MustUint32(globals.APIGwRESTPort),
 						},
 					},
-					Args: []string{"-resolver-urls", "$RESOLVER_URLS", "-skip", "metrics_query"},
+					Args: []string{"-resolver-urls", "$RESOLVER_URLS"},
 				},
 			},
 			Volumes: []protos.ModuleSpec_Volume{
@@ -568,7 +568,7 @@ var k8sModules = map[string]protos.Module{
 					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Citadel,
-							Port: runtime.MustUint32(globals.CitadelRPCPort),
+							Port: runtime.MustUint32(globals.CitadelQueryRPCPort),
 						},
 						{
 							Name: globals.Collector,

@@ -16,9 +16,9 @@
     "application/json"
   ],
   "paths": {
-    "/configs/metrics/v1/metrics": {
+    "/metrics/v1/query": {
       "get": {
-        "summary": "In the example below a query like\n   http://\u003c...\u003e/venice/v1/metrics/query\n generates a RPC call Query",
+        "summary": "Query is the telemetry metrics query RPC, http://localhost:9000/metrics/v1/query",
         "operationId": "GetQuery_1",
         "responses": {
           "200": {
@@ -30,28 +30,35 @@
         },
         "parameters": [
           {
-            "name": "object.kind",
+            "name": "T.kind",
             "description": "Kind represents the type of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "object.name",
+            "name": "T.api-version",
+            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.name",
             "description": "Name is the name of the API object.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "object.tenant",
+            "name": "meta.tenant",
             "description": "Tenant the object belongs to.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "object.namespace",
+            "name": "meta.namespace",
             "description": "Namespace the object belongs to.",
             "in": "query",
             "required": false,
@@ -73,7 +80,7 @@
           },
           {
             "name": "metrics.fields",
-            "description": "Fields select the metric fields to be included in the result\nEmpty will include all fields.",
+            "description": "Fields select the metric fields to be included in the result\nEmpty will include all fields, must contain at least one non-tag field.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -82,15 +89,8 @@
             }
           },
           {
-            "name": "filter.min",
-            "description": "Values below the Min are omitted from the response.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "filter.max",
-            "description": "Values above the Max are omitted from the response.",
+            "name": "metrics.function",
+            "description": "Functions specify an operation function to be applied, example mean()/min()/max().",
             "in": "query",
             "required": false,
             "type": "string"
@@ -113,11 +113,11 @@
           }
         ],
         "tags": [
-          "metrics/v1"
+          "metrics_query/v1"
         ]
       },
       "post": {
-        "summary": "In the example below a query like\n   http://\u003c...\u003e/venice/v1/metrics/query\n generates a RPC call Query",
+        "summary": "Query is the telemetry metrics query RPC, http://localhost:9000/metrics/v1/query",
         "operationId": "PostQuery",
         "responses": {
           "200": {
@@ -138,36 +138,42 @@
           }
         ],
         "tags": [
-          "metrics/v1"
+          "metrics_query/v1"
         ]
       }
     }
   },
   "definitions": {
-    "QueryResponseRow": {
+    "apiInterface": {
+      "type": "object",
+      "properties": {
+        "Str": {
+          "type": "string"
+        },
+        "Int64": {
+          "type": "string",
+          "format": "int64"
+        },
+        "Bool": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "Float": {
+          "type": "number",
+          "format": "double"
+        },
+        "Interfaces": {
+          "$ref": "#/definitions/apiInterfaceSlice"
+        }
+      }
+    },
+    "apiInterfaceSlice": {
       "type": "object",
       "properties": {
         "Values": {
           "type": "array",
           "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "QueryResponseSeries": {
-      "type": "object",
-      "properties": {
-        "Columns": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Rows": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/QueryResponseRow"
+            "$ref": "#/definitions/apiInterface"
           }
         }
       }
@@ -368,6 +374,20 @@
         }
       }
     },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "api-version": {
+          "type": "string",
+          "title": "APIVersion defines the version of the API object. This can only be set by the server"
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
     "apiWatchEvent": {
       "type": "object",
       "properties": {
@@ -450,38 +470,6 @@
       },
       "description": "Selector is used to select objects by labels. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
     },
-    "metrics_queryAggregatorFunction": {
-      "type": "object",
-      "properties": {
-        "function": {
-          "$ref": "#/definitions/metrics_queryAggregatorFunctionType"
-        }
-      },
-      "title": "AggregatorFunction specifies an aggregation operation to perform on a\nmetric"
-    },
-    "metrics_queryAggregatorFunctionType": {
-      "type": "string",
-      "enum": [
-        "Sum",
-        "Mean",
-        "Delta"
-      ],
-      "default": "Sum"
-    },
-    "metrics_queryFilterSpec": {
-      "type": "object",
-      "properties": {
-        "min": {
-          "type": "string",
-          "title": "Values below the Min are omitted from the response"
-        },
-        "max": {
-          "type": "string",
-          "title": "Values above the Max are omitted from the response"
-        }
-      },
-      "description": "FilterSpec specifies what values must be muted."
-    },
     "metrics_queryMetricSpec": {
       "type": "object",
       "properties": {
@@ -494,18 +482,16 @@
           "items": {
             "type": "string"
           },
-          "title": "Fields select the metric fields to be included in the result\nEmpty will include all fields"
+          "title": "Fields select the metric fields to be included in the result\nEmpty will include all fields, must contain at least one non-tag field"
         },
-        "functions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/metrics_queryAggregatorFunction"
-          },
-          "title": "Functions specify an aggregator function to be applied to the\nseries"
-        },
-        "filter": {
-          "$ref": "#/definitions/metrics_queryFilterSpec",
-          "title": "Filter specifies which values should be exlcluded from the\nresponse"
+        "function": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "MEAN"
+          ],
+          "default": "NONE",
+          "title": "Functions specify an operation function to be applied, example mean()/min()/max()"
         }
       },
       "title": "MetricSpec specifies a selector for metrics within the selected\nobjects. It consists of a tag selector, list of fields, ordered\nlist of aggregator functions and a FilterSpec"
@@ -513,10 +499,6 @@
     "metrics_queryObjectSelector": {
       "type": "object",
       "properties": {
-        "kind": {
-          "type": "string",
-          "description": "Kind represents the type of the API object."
-        },
         "name": {
           "type": "string",
           "description": "Name is the name of the API object."
@@ -529,9 +511,9 @@
           "type": "string",
           "description": "Namespace the object belongs to."
         },
-        "labels": {
+        "selector": {
           "$ref": "#/definitions/labelsSelector",
-          "description": "Labels is a selector expression that selects one or more objects\nbased on attached labels."
+          "title": "Selector is an expression that selects one or more points"
         }
       },
       "title": "ObjectSelector selects one or more objects of the same Kind\nfor the metrics query"
@@ -555,19 +537,41 @@
     "metrics_queryQueryResponse": {
       "type": "object",
       "properties": {
-        "serieslist": {
+        "results": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/QueryResponseSeries"
+            "$ref": "#/definitions/metrics_queryQueryResult"
           }
         }
       },
-      "title": "QueryResponse contains\ncolumns -- essentially the header of the matrix\nrows that contain values for each of the columns"
+      "title": "QueryResponse is the response send out"
+    },
+    "metrics_queryQueryResult": {
+      "type": "object",
+      "properties": {
+        "statement_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "series": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/metrics_queryResultSeries"
+          }
+        }
+      },
+      "title": "QueryResult contains tsdb series from citadel query"
     },
     "metrics_queryQuerySpec": {
       "type": "object",
       "properties": {
-        "object": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
           "$ref": "#/definitions/metrics_queryObjectSelector",
           "title": "ObjectSelectot selects one or more objects of the same kind for query"
         },
@@ -585,6 +589,28 @@
         }
       },
       "title": "QuerySpec requires a structured body consisting of:\n    -  Object Selector (selects one more more objects of same Kind)\n    -  Time Range (for the time series)\n    -  A set of Metric Specs\n    -  A pagination spec"
+    },
+    "metrics_queryResultSeries": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "columns list all available fields in tsdb"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiInterfaceSlice"
+          },
+          "title": "values contain field values received frpm tsdb, it is in the form of [][]interface{}"
+        }
+      }
     },
     "metrics_queryTimeRange": {
       "type": "object",

@@ -10,31 +10,22 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 
 export interface IMetrics_queryObjectSelector {
-    'kind'?: string;
     'name'?: string;
     'tenant'?: string;
     'namespace'?: string;
-    'labels'?: ILabelsSelector;
+    'selector'?: ILabelsSelector;
 }
 
 
 export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_queryObjectSelector {
-    /** Kind represents the type of the API object. */
-    'kind': string = null;
     /** Name is the name of the API object. */
     'name': string = null;
     /** Tenant the object belongs to. */
     'tenant': string = null;
     /** Namespace the object belongs to. */
     'namespace': string = null;
-    /** Labels is a selector expression that selects one or more objects
-    based on attached labels. */
-    'labels': LabelsSelector = null;
+    'selector': LabelsSelector = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'kind': {
-            description:  'Kind represents the type of the API object.',
-            type: 'string'
-        },
         'name': {
             description:  'Name is the name of the API object.',
             type: 'string'
@@ -47,8 +38,7 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
             description:  'Namespace the object belongs to.',
             type: 'string'
         },
-        'labels': {
-            description:  'Labels is a selector expression that selects one or more objects based on attached labels.',
+        'selector': {
             type: 'object'
         },
     }
@@ -72,7 +62,7 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
     */
     constructor(values?: any) {
         super();
-        this['labels'] = new LabelsSelector();
+        this['selector'] = new LabelsSelector();
         this.setValues(values);
     }
 
@@ -81,11 +71,6 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values && values['kind'] != null) {
-            this['kind'] = values['kind'];
-        } else if (Metrics_queryObjectSelector.hasDefaultValue('kind')) {
-            this['kind'] = Metrics_queryObjectSelector.propInfo['kind'].default;
-        }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
         } else if (Metrics_queryObjectSelector.hasDefaultValue('name')) {
@@ -102,7 +87,7 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
             this['namespace'] = Metrics_queryObjectSelector.propInfo['namespace'].default;
         }
         if (values) {
-            this['labels'].setValues(values['labels']);
+            this['selector'].setValues(values['selector']);
         }
     }
 
@@ -112,11 +97,10 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
                 'name': new FormControl(this['name']),
                 'tenant': new FormControl(this['tenant']),
                 'namespace': new FormControl(this['namespace']),
-                'labels': this['labels'].$formGroup,
+                'selector': this['selector'].$formGroup,
             });
         }
         return this._formGroup;
@@ -124,11 +108,10 @@ export class Metrics_queryObjectSelector extends BaseModel implements IMetrics_q
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['name'].setValue(this['name']);
             this._formGroup.controls['tenant'].setValue(this['tenant']);
             this._formGroup.controls['namespace'].setValue(this['namespace']);
-            this['labels'].setFormGroupValues();
+            this['selector'].setFormGroupValues();
         }
     }
 }

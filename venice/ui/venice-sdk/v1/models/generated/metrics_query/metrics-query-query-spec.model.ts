@@ -13,7 +13,9 @@ import { Metrics_queryMetricSpec, IMetrics_queryMetricSpec } from './metrics-que
 import { Metrics_queryPaginationSpec, IMetrics_queryPaginationSpec } from './metrics-query-pagination-spec.model';
 
 export interface IMetrics_queryQuerySpec {
-    'object'?: IMetrics_queryObjectSelector;
+    'kind'?: string;
+    'api-version'?: string;
+    'meta'?: IMetrics_queryObjectSelector;
     'time'?: IMetrics_queryTimeRange;
     'metrics'?: IMetrics_queryMetricSpec;
     'pagination'?: IMetrics_queryPaginationSpec;
@@ -21,12 +23,20 @@ export interface IMetrics_queryQuerySpec {
 
 
 export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQuerySpec {
-    'object': Metrics_queryObjectSelector = null;
+    'kind': string = null;
+    'api-version': string = null;
+    'meta': Metrics_queryObjectSelector = null;
     'time': Metrics_queryTimeRange = null;
     'metrics': Metrics_queryMetricSpec = null;
     'pagination': Metrics_queryPaginationSpec = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'object': {
+        'kind': {
+            type: 'string'
+        },
+        'api-version': {
+            type: 'string'
+        },
+        'meta': {
             type: 'object'
         },
         'time': {
@@ -59,7 +69,7 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
     */
     constructor(values?: any) {
         super();
-        this['object'] = new Metrics_queryObjectSelector();
+        this['meta'] = new Metrics_queryObjectSelector();
         this['time'] = new Metrics_queryTimeRange();
         this['metrics'] = new Metrics_queryMetricSpec();
         this['pagination'] = new Metrics_queryPaginationSpec();
@@ -71,8 +81,18 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
+        if (values && values['kind'] != null) {
+            this['kind'] = values['kind'];
+        } else if (Metrics_queryQuerySpec.hasDefaultValue('kind')) {
+            this['kind'] = Metrics_queryQuerySpec.propInfo['kind'].default;
+        }
+        if (values && values['api-version'] != null) {
+            this['api-version'] = values['api-version'];
+        } else if (Metrics_queryQuerySpec.hasDefaultValue('api-version')) {
+            this['api-version'] = Metrics_queryQuerySpec.propInfo['api-version'].default;
+        }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['meta'].setValues(values['meta']);
         }
         if (values) {
             this['time'].setValues(values['time']);
@@ -91,7 +111,9 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'object': this['object'].$formGroup,
+                'kind': new FormControl(this['kind']),
+                'api-version': new FormControl(this['api-version']),
+                'meta': this['meta'].$formGroup,
                 'time': this['time'].$formGroup,
                 'metrics': this['metrics'].$formGroup,
                 'pagination': this['pagination'].$formGroup,
@@ -102,7 +124,9 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this['object'].setFormGroupValues();
+            this._formGroup.controls['kind'].setValue(this['kind']);
+            this._formGroup.controls['api-version'].setValue(this['api-version']);
+            this['meta'].setFormGroupValues();
             this['time'].setFormGroupValues();
             this['metrics'].setFormGroupValues();
             this['pagination'].setFormGroupValues();

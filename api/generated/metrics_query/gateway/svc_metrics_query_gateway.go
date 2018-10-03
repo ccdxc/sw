@@ -120,7 +120,7 @@ func (e *sMetricsV1GwService) CompleteRegistration(ctx context.Context,
 	apigw := apigwpkg.MustGetAPIGateway()
 	// IP:port destination or service discovery key.
 
-	grpcaddr := "pen-aggregator"
+	grpcaddr := "pen-citadel"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
 
@@ -154,7 +154,7 @@ func (e *sMetricsV1GwService) CompleteRegistration(ctx context.Context,
 				muxMutex.Unlock()
 				if err == nil {
 					logger.InfoLog("msg", "registered service metrics_query.MetricsV1")
-					m.Handle("/configs/metrics/v1/", http.StripPrefix("/configs/metrics/v1", mux))
+					m.Handle("/metrics/v1/", http.StripPrefix("/metrics/v1", mux))
 					return
 				} else {
 					err = errors.Wrap(err, "failed to register")
@@ -180,7 +180,7 @@ func (e *sMetricsV1GwService) newClient(ctx context.Context, grpcAddr string, rs
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	} else {
 
-		opts = append(opts, rpckit.WithRemoteServerName("pen-aggregator"))
+		opts = append(opts, rpckit.WithRemoteServerName("pen-citadel"))
 	}
 
 	if !devmode {
@@ -213,5 +213,5 @@ func init() {
 	apigw := apigwpkg.MustGetAPIGateway()
 
 	svcMetricsV1 := sMetricsV1GwService{}
-	apigw.Register("metrics_query.MetricsV1", "metrics/", &svcMetricsV1)
+	apigw.Register("metrics_query.MetricsV1", "/", &svcMetricsV1)
 }

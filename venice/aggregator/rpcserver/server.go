@@ -2,21 +2,16 @@ package rpcserver
 
 import (
 	"fmt"
-	"strings"
 
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/metrics_query"
-	"github.com/pensando/sw/venice/aggregator/server"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 
-	"github.com/influxdata/influxdb/query"
 	"github.com/influxdata/influxdb/services/meta"
-	"github.com/influxdata/influxql"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -65,50 +60,51 @@ func (a *AggRPCSrv) Stop() {
 
 // Query implements the grpc method
 func (a *AggRPCSrv) Query(c context.Context, qs *metrics_query.QuerySpec) (*metrics_query.QueryResponse, error) {
-	// based on the query spec, build an influx query.
-	iQuery, err := InfluxQuery(qs)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, qStr := range iQuery {
-		log.Infof("Influx Query: %s", qStr)
-	}
-	p := influxql.NewParser(strings.NewReader(iQuery[0]))
-	// Parse query from query string.
-	q, err := p.ParseQuery()
-	if err != nil {
-		return nil, errors.Wrap(err, "Parsing query")
-	}
-
-	// Query all shards and write to our cache before executing the query
-	qc := server.NewQueryContext(a.metaClient)
-	err = qc.Space.GatherPoints(q.Statements[0], objMetricsDB)
-	if err != nil {
-		return nil, err
-	}
-
-	// Execute query.
-	opts := query.ExecutionOptions{
-		Database: objMetricsDB,
-		ReadOnly: true,
-	}
-	closing := make(chan struct{})
-	results := qc.QueryExecutor.ExecuteQuery(q, opts, closing)
-	var qr metrics_query.QueryResponse
-	for r := range results {
-		for _, row := range r.Series {
-			series := &metrics_query.QueryResponse_Series{
-				Columns: row.Columns,
-				Rows:    getSeriesRows(row.Values),
-			}
-			qr.SeriesList = append(qr.SeriesList, series)
-
+	/*
+		// based on the query spec, build an influx query.
+		iQuery, err := InfluxQuery(qs)
+		if err != nil {
+			return nil, err
 		}
-	}
-	//TODO implement math functions
 
-	return &qr, nil
+		for _, qStr := range iQuery {
+			log.Infof("Influx Query: %s", qStr)
+		}
+		p := influxql.NewParser(strings.NewReader(iQuery[0]))
+		// Parse query from query string.
+		q, err := p.ParseQuery()
+		if err != nil {
+			return nil, errors.Wrap(err, "Parsing query")
+		}
+
+		// Query all shards and write to our cache before executing the query
+		qc := server.NewQueryContext(a.metaClient)
+		err = qc.Space.GatherPoints(q.Statements[0], objMetricsDB)
+		if err != nil {
+			return nil, err
+		}
+
+		// Execute query.
+		opts := query.ExecutionOptions{
+			Database: objMetricsDB,
+			ReadOnly: true,
+		}
+		closing := make(chan struct{})
+		results := qc.QueryExecutor.ExecuteQuery(q, opts, closing)
+		var qr metrics_query.QueryResponse
+		for r := range results {
+			for _, row := range r.Series {
+				series := &metrics_query.ResultSeries{
+					Columns: row.Columns,
+					Rows:    getSeriesRows(row.Values),
+				}
+				qr.Series = append(qr.Series, series)
+
+			}
+		}
+		//TODO implement math functions
+	*/
+	return nil, nil
 
 }
 
@@ -117,17 +113,19 @@ func (a *AggRPCSrv) AutoWatchSvcMetricsV1(lwo *api.ListWatchOptions, s metrics_q
 	return fmt.Errorf("Not implemented")
 }
 
-func getSeriesRows(values [][]interface{}) []*metrics_query.QueryResponse_Row {
-	var out []*metrics_query.QueryResponse_Row
+/*
+func getSeriesRows(values [][]interface{}) []*metrics_query.Row {
+	var out []*metrics_query.Row
 
-	for _, v := range values {
-		qrRow := metrics_query.QueryResponse_Row{}
-		for _, vv := range v {
-			qrRow.Values = append(qrRow.Values, fmt.Sprintf("%v", vv))
-		}
-
-		out = append(out, &qrRow)
-	}
+	//for _, v := range values {
+	//	qrRow := metrics_query.Row{}
+	//	for _, vv := range v {
+	//		qrRow.Values = append(qrRow.Values, fmt.Sprintf("%v", vv))
+	//	}
+	//
+	//		out = append(out, &qrRow)
+	//	}
 
 	return out
 }
+*/

@@ -17,9 +17,15 @@ type keylist []*tproto.Key
 
 // ClusterCheck checks if the cluster shardmap is empty
 func (br *Broker) ClusterCheck() error {
-	cl := br.GetCluster(meta.ClusterTypeKstore)
+	cl := br.GetCluster(meta.ClusterTypeTstore)
 	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
 		return fmt.Errorf("Shard map is empty, cl: %+v", cl)
+	}
+
+	for _, s := range cl.ShardMap.Shards {
+		if s.NumReplicas == 0 {
+			return fmt.Errorf("empty replica in  %+v", s)
+		}
 	}
 	return nil
 }

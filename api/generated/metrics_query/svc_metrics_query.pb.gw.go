@@ -190,9 +190,9 @@ func RegisterMetricsV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 }
 
 var (
-	pattern_MetricsV1_Query_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"metrics"}, ""))
+	pattern_MetricsV1_Query_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"query"}, ""))
 
-	pattern_MetricsV1_Query_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"metrics"}, ""))
+	pattern_MetricsV1_Query_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"query"}, ""))
 )
 
 var (

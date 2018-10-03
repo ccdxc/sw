@@ -7,17 +7,17 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { QueryResponseSeries, IQueryResponseSeries } from './query-response-series.model';
+import { Metrics_queryQueryResult, IMetrics_queryQueryResult } from './metrics-query-query-result.model';
 
 export interface IMetrics_queryQueryResponse {
-    'serieslist'?: Array<IQueryResponseSeries>;
+    'results'?: Array<IMetrics_queryQueryResult>;
 }
 
 
 export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_queryQueryResponse {
-    'serieslist': Array<QueryResponseSeries> = null;
+    'results': Array<Metrics_queryQueryResult> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'serieslist': {
+        'results': {
             type: 'object'
         },
     }
@@ -41,7 +41,7 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
     */
     constructor(values?: any) {
         super();
-        this['serieslist'] = new Array<QueryResponseSeries>();
+        this['results'] = new Array<Metrics_queryQueryResult>();
         this.setValues(values);
     }
 
@@ -51,7 +51,7 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
     */
     setValues(values: any): void {
         if (values) {
-            this.fillModelArray<QueryResponseSeries>(this, 'serieslist', values['serieslist'], QueryResponseSeries);
+            this.fillModelArray<Metrics_queryQueryResult>(this, 'results', values['results'], Metrics_queryQueryResult);
         }
     }
 
@@ -61,17 +61,17 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'serieslist': new FormArray([]),
+                'results': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<QueryResponseSeries>('serieslist', this['serieslist'], QueryResponseSeries);
+            this.fillFormArray<Metrics_queryQueryResult>('results', this['results'], Metrics_queryQueryResult);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<QueryResponseSeries>(this, 'serieslist', this['serieslist'], QueryResponseSeries);
+            this.fillModelArray<Metrics_queryQueryResult>(this, 'results', this['results'], Metrics_queryQueryResult);
         }
     }
 }

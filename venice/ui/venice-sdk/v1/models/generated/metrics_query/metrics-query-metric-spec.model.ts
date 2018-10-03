@@ -8,14 +8,12 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
-import { Metrics_queryAggregatorFunction, IMetrics_queryAggregatorFunction } from './metrics-query-aggregator-function.model';
-import { Metrics_queryFilterSpec, IMetrics_queryFilterSpec } from './metrics-query-filter-spec.model';
+import { Metrics_queryMetricSpec_function,  } from './enums';
 
 export interface IMetrics_queryMetricSpec {
     'tags'?: ILabelsSelector;
     'fields'?: Array<string>;
-    'functions'?: Array<IMetrics_queryAggregatorFunction>;
-    'filter'?: IMetrics_queryFilterSpec;
+    'function'?: Metrics_queryMetricSpec_function;
 }
 
 
@@ -23,8 +21,7 @@ export class Metrics_queryMetricSpec extends BaseModel implements IMetrics_query
     /** Tags select a metric based on tags attached to the metric. */
     'tags': LabelsSelector = null;
     'fields': Array<string> = null;
-    'functions': Array<Metrics_queryAggregatorFunction> = null;
-    'filter': Metrics_queryFilterSpec = null;
+    'function': Metrics_queryMetricSpec_function = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'tags': {
             description:  'Tags select a metric based on tags attached to the metric.',
@@ -33,11 +30,10 @@ export class Metrics_queryMetricSpec extends BaseModel implements IMetrics_query
         'fields': {
             type: 'Array<string>'
         },
-        'functions': {
-            type: 'object'
-        },
-        'filter': {
-            type: 'object'
+        'function': {
+            enum: Metrics_queryMetricSpec_function,
+            default: 'NONE',
+            type: 'string'
         },
     }
 
@@ -62,8 +58,6 @@ export class Metrics_queryMetricSpec extends BaseModel implements IMetrics_query
         super();
         this['tags'] = new LabelsSelector();
         this['fields'] = new Array<string>();
-        this['functions'] = new Array<Metrics_queryAggregatorFunction>();
-        this['filter'] = new Metrics_queryFilterSpec();
         this.setValues(values);
     }
 
@@ -78,11 +72,10 @@ export class Metrics_queryMetricSpec extends BaseModel implements IMetrics_query
         if (values) {
             this.fillModelArray<string>(this, 'fields', values['fields']);
         }
-        if (values) {
-            this.fillModelArray<Metrics_queryAggregatorFunction>(this, 'functions', values['functions'], Metrics_queryAggregatorFunction);
-        }
-        if (values) {
-            this['filter'].setValues(values['filter']);
+        if (values && values['function'] != null) {
+            this['function'] = values['function'];
+        } else if (Metrics_queryMetricSpec.hasDefaultValue('function')) {
+            this['function'] = <Metrics_queryMetricSpec_function>  Metrics_queryMetricSpec.propInfo['function'].default;
         }
     }
 
@@ -94,13 +87,10 @@ export class Metrics_queryMetricSpec extends BaseModel implements IMetrics_query
             this._formGroup = new FormGroup({
                 'tags': this['tags'].$formGroup,
                 'fields': new FormArray([]),
-                'functions': new FormArray([]),
-                'filter': this['filter'].$formGroup,
+                'function': new FormControl(this['function'], [enumValidator(Metrics_queryMetricSpec_function), ]),
             });
             // generate FormArray control elements
             this.fillFormArray<string>('fields', this['fields']);
-            // generate FormArray control elements
-            this.fillFormArray<Metrics_queryAggregatorFunction>('functions', this['functions'], Metrics_queryAggregatorFunction);
         }
         return this._formGroup;
     }
@@ -109,8 +99,7 @@ export class Metrics_queryMetricSpec extends BaseModel implements IMetrics_query
         if (this._formGroup) {
             this['tags'].setFormGroupValues();
             this.fillModelArray<string>(this, 'fields', this['fields']);
-            this.fillModelArray<Metrics_queryAggregatorFunction>(this, 'functions', this['functions'], Metrics_queryAggregatorFunction);
-            this['filter'].setFormGroupValues();
+            this._formGroup.controls['function'].setValue(this['function']);
         }
     }
 }

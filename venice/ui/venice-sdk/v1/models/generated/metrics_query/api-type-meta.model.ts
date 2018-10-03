@@ -8,35 +8,37 @@ import { minValueValidator, maxValueValidator, enumValidator } from './validator
 import { BaseModel, PropInfoItem } from './base-model';
 
 
-export interface IMetrics_queryFilterSpec {
-    'min'?: string;
-    'max'?: string;
+export interface IApiTypeMeta {
+    'kind'?: string;
+    'api-version'?: string;
 }
 
 
-export class Metrics_queryFilterSpec extends BaseModel implements IMetrics_queryFilterSpec {
-    'min': string = null;
-    'max': string = null;
+export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
+    /** Kind represents the type of the API object. */
+    'kind': string = null;
+    'api-version': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'min': {
+        'kind': {
+            description:  'Kind represents the type of the API object.',
             type: 'string'
         },
-        'max': {
+        'api-version': {
             type: 'string'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return Metrics_queryFilterSpec.propInfo[propName];
+        return ApiTypeMeta.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (Metrics_queryFilterSpec.propInfo[prop] != null &&
-                        Metrics_queryFilterSpec.propInfo[prop].default != null &&
-                        Metrics_queryFilterSpec.propInfo[prop].default != '');
+        return (ApiTypeMeta.propInfo[prop] != null &&
+                        ApiTypeMeta.propInfo[prop].default != null &&
+                        ApiTypeMeta.propInfo[prop].default != '');
     }
 
     /**
@@ -53,15 +55,15 @@ export class Metrics_queryFilterSpec extends BaseModel implements IMetrics_query
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
-        if (values && values['min'] != null) {
-            this['min'] = values['min'];
-        } else if (Metrics_queryFilterSpec.hasDefaultValue('min')) {
-            this['min'] = Metrics_queryFilterSpec.propInfo['min'].default;
+        if (values && values['kind'] != null) {
+            this['kind'] = values['kind'];
+        } else if (ApiTypeMeta.hasDefaultValue('kind')) {
+            this['kind'] = ApiTypeMeta.propInfo['kind'].default;
         }
-        if (values && values['max'] != null) {
-            this['max'] = values['max'];
-        } else if (Metrics_queryFilterSpec.hasDefaultValue('max')) {
-            this['max'] = Metrics_queryFilterSpec.propInfo['max'].default;
+        if (values && values['api-version'] != null) {
+            this['api-version'] = values['api-version'];
+        } else if (ApiTypeMeta.hasDefaultValue('api-version')) {
+            this['api-version'] = ApiTypeMeta.propInfo['api-version'].default;
         }
     }
 
@@ -71,8 +73,8 @@ export class Metrics_queryFilterSpec extends BaseModel implements IMetrics_query
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'min': new FormControl(this['min']),
-                'max': new FormControl(this['max']),
+                'kind': new FormControl(this['kind']),
+                'api-version': new FormControl(this['api-version']),
             });
         }
         return this._formGroup;
@@ -80,8 +82,8 @@ export class Metrics_queryFilterSpec extends BaseModel implements IMetrics_query
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this._formGroup.controls['min'].setValue(this['min']);
-            this._formGroup.controls['max'].setValue(this['max']);
+            this._formGroup.controls['kind'].setValue(this['kind']);
+            this._formGroup.controls['api-version'].setValue(this['api-version']);
         }
     }
 }

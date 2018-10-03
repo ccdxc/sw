@@ -35,14 +35,14 @@ func (s *smetrics_queryMetrics_queryBackend) regMsgsFunc(l log.Logger, scheme *r
 	l.Infof("registering message for smetrics_queryMetrics_queryBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"metrics_query.AggregatorFunction": apisrvpkg.NewMessage("metrics_query.AggregatorFunction"),
-		"metrics_query.FilterSpec":         apisrvpkg.NewMessage("metrics_query.FilterSpec"),
-		"metrics_query.MetricSpec":         apisrvpkg.NewMessage("metrics_query.MetricSpec"),
-		"metrics_query.ObjectSelector":     apisrvpkg.NewMessage("metrics_query.ObjectSelector"),
-		"metrics_query.PaginationSpec":     apisrvpkg.NewMessage("metrics_query.PaginationSpec"),
-		"metrics_query.QueryResponse":      apisrvpkg.NewMessage("metrics_query.QueryResponse"),
-		"metrics_query.QuerySpec":          apisrvpkg.NewMessage("metrics_query.QuerySpec"),
-		"metrics_query.TimeRange":          apisrvpkg.NewMessage("metrics_query.TimeRange"),
+		"metrics_query.MetricSpec":     apisrvpkg.NewMessage("metrics_query.MetricSpec"),
+		"metrics_query.ObjectSelector": apisrvpkg.NewMessage("metrics_query.ObjectSelector"),
+		"metrics_query.PaginationSpec": apisrvpkg.NewMessage("metrics_query.PaginationSpec"),
+		"metrics_query.QueryResponse":  apisrvpkg.NewMessage("metrics_query.QueryResponse"),
+		"metrics_query.QueryResult":    apisrvpkg.NewMessage("metrics_query.QueryResult"),
+		"metrics_query.QuerySpec":      apisrvpkg.NewMessage("metrics_query.QuerySpec"),
+		"metrics_query.ResultSeries":   apisrvpkg.NewMessage("metrics_query.ResultSeries"),
+		"metrics_query.TimeRange":      apisrvpkg.NewMessage("metrics_query.TimeRange"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

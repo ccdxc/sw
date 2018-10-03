@@ -7,31 +7,32 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiInterface, IApiInterface } from './api-interface.model';
 
-export interface IQueryResponseRow {
-    'Values'?: Array<string>;
+export interface IApiInterfaceSlice {
+    'Values'?: Array<IApiInterface>;
 }
 
 
-export class QueryResponseRow extends BaseModel implements IQueryResponseRow {
-    'Values': Array<string> = null;
+export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
+    'Values': Array<ApiInterface> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'Values': {
-            type: 'Array<string>'
+            type: 'object'
         },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return QueryResponseRow.propInfo[propName];
+        return ApiInterfaceSlice.propInfo[propName];
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (QueryResponseRow.propInfo[prop] != null &&
-                        QueryResponseRow.propInfo[prop].default != null &&
-                        QueryResponseRow.propInfo[prop].default != '');
+        return (ApiInterfaceSlice.propInfo[prop] != null &&
+                        ApiInterfaceSlice.propInfo[prop].default != null &&
+                        ApiInterfaceSlice.propInfo[prop].default != '');
     }
 
     /**
@@ -40,7 +41,7 @@ export class QueryResponseRow extends BaseModel implements IQueryResponseRow {
     */
     constructor(values?: any) {
         super();
-        this['Values'] = new Array<string>();
+        this['Values'] = new Array<ApiInterface>();
         this.setValues(values);
     }
 
@@ -50,7 +51,7 @@ export class QueryResponseRow extends BaseModel implements IQueryResponseRow {
     */
     setValues(values: any): void {
         if (values) {
-            this.fillModelArray<string>(this, 'Values', values['Values']);
+            this.fillModelArray<ApiInterface>(this, 'Values', values['Values'], ApiInterface);
         }
     }
 
@@ -63,14 +64,14 @@ export class QueryResponseRow extends BaseModel implements IQueryResponseRow {
                 'Values': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<string>('Values', this['Values']);
+            this.fillFormArray<ApiInterface>('Values', this['Values'], ApiInterface);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
-            this.fillModelArray<string>(this, 'Values', this['Values']);
+            this.fillModelArray<ApiInterface>(this, 'Values', this['Values'], ApiInterface);
         }
     }
 }

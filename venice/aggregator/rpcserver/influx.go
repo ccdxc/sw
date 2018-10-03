@@ -26,11 +26,11 @@ func InfluxQuery(qs *metrics_query.QuerySpec) ([]string, error) {
 		return nil, fmt.Errorf("No metrics specified")
 	}
 
-	is.measurement = qs.Object.Kind
+	is.measurement = qs.Kind
 	is.fields = " * " // send everying for now
 	// TODO incorporate tenant/ns/name
-	if qs.Object.Labels != nil {
-		labelSel, err := qs.Object.Labels.PrintSQL()
+	if qs.Selector != nil {
+		labelSel, err := qs.Selector.PrintSQL()
 		if err != nil {
 			return nil, err
 		}

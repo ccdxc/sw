@@ -11,16 +11,24 @@ import (
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
 
+	"errors"
+	"time"
+
+	"golang.org/x/net/context"
+
 	"github.com/pensando/sw/venice/citadel/broker"
 	"github.com/pensando/sw/venice/citadel/collector"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
 	"github.com/pensando/sw/venice/citadel/data"
 	"github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
+	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 )
+
+const maxRetry = 120
 
 func main() {
 	// command line flags
@@ -28,6 +36,7 @@ func main() {
 		kvstoreURL      = flag.String("kvstore", "", "KVStore URL where etcd is accessible")
 		nodeURL         = flag.String("url", "", "listen URL where citadel's gRPC server runs")
 		httpURL         = flag.String("http", ":"+globals.CitadelHTTPPort, "HTTP server URL where citadel's REST api is available")
+		queryURL        = flag.String("query-url", ":"+globals.CitadelQueryRPCPort, "HTTP server URL where citadel's metrics query api is available")
 		nodeUUID        = flag.String("uuid", "", "Node UUID (unique identifier for this citadel instance)")
 		dbPath          = flag.String("db", "/tmp/tstore/", "DB path where citadel's data will be stored")
 		collectorURL    = flag.String("collector-url", fmt.Sprintf(":%s", globals.CollectorRPCPort), "listen URL where citadel metrics collector's gRPC server runs")
@@ -94,6 +103,15 @@ func main() {
 		log.Fatalf("Error creating broker. Err: %v", err)
 	}
 
+	if err := checkClusterHealth(br); err != nil {
+		log.Fatalf("%s", err)
+	}
+
+	// create default db
+	if err := br.CreateDatabase(context.Background(), "default"); err != nil {
+		log.Fatalf("failed to create default db %s", err)
+	}
+
 	log.Infof("Datanode %+v and broker %+v are running", dn, br)
 
 	// start the http server
@@ -114,8 +132,24 @@ func main() {
 
 	log.Infof("%s is running {%+v}", globals.Citadel, srv)
 
+	qsrv, err := query.NewQueryService(*queryURL, br)
+
+	log.Infof("query server is listening on %+v", qsrv)
+
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)
 	// wait forever
 	<-waitCh
+}
+
+func checkClusterHealth(br *broker.Broker) error {
+	// wait till cluster is ready
+	for i := 0; i < maxRetry; i++ {
+		if err := br.ClusterCheck(); err == nil {
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
+
+	return errors.New("cluster check failed")
 }
