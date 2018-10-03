@@ -237,9 +237,10 @@ public:
                uint16_t num_rrq_wqes, uint8_t pd_num,
                uint32_t sq_cq_num, uint32_t rq_cq_num, uint32_t page_size,
                uint32_t pmtu,
-               int service,
+               int service, int flags,
                uint32_t sq_pt_size,
-               uint32_t pt_size, uint64_t *pt_table);
+               uint32_t pt_size, uint64_t *pt_table,
+               uint64_t cmb_bar_base, uint64_t cmb_bar_size);
 
   int ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
                uint32_t dest_qp_num, uint32_t q_key,

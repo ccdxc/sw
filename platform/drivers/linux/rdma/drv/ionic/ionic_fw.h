@@ -100,11 +100,14 @@ enum ionic_qp_flags {
 	IONIC_QPF_REMOTE_ATOMIC		= BIT(3),
 	IONIC_QPF_MW_BIND		= BIT(4),
 
-	/* bits that determine qp permissions */
+	/* bits that determine other qp behavior */
+	IONIC_QPF_SQ_CMB		= BIT(13),
+	IONIC_QPF_RQ_CMB		= BIT(14),
 	IONIC_QPF_PRIVILEGED		= BIT(15),
 };
 
-static inline int to_ionic_qp_flags(int access, bool privileged)
+static inline int to_ionic_qp_flags(int access, bool sq_is_cmb, bool rq_is_cmb,
+				    bool privileged)
 {
 	int flags = 0;
 
@@ -122,6 +125,12 @@ static inline int to_ionic_qp_flags(int access, bool privileged)
 
 	if (access & IB_ACCESS_MW_BIND)
 		flags |= IONIC_QPF_MW_BIND;
+
+	if (sq_is_cmb)
+		flags |= IONIC_QPF_SQ_CMB;
+
+	if (rq_is_cmb)
+		flags |= IONIC_QPF_RQ_CMB;
 
 	if (privileged)
 		flags |= IONIC_QPF_PRIVILEGED;

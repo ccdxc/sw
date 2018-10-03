@@ -326,6 +326,9 @@ struct ionic_qp {
 	struct ionic_rq_meta	*rq_meta;
 	struct ionic_rq_meta	*rq_meta_head;
 
+	void			__iomem *rq_cmb_ptr;
+	u16			rq_cmb_prod;
+
 	/* infrequently accessed, keep at end */
 	bool			sq_is_cmb;
 	int			sq_cmb_order;
@@ -335,6 +338,12 @@ struct ionic_qp {
 
 	struct ib_umem		*sq_umem;
 	struct ionic_tbl_res	sq_res;
+
+	bool			rq_is_cmb;
+	int			rq_cmb_order;
+	u32			rq_cmb_pgid;
+	phys_addr_t		rq_cmb_addr;
+	struct ionic_mmap_info	rq_cmb_mmap;
 
 	struct ib_umem		*rq_umem;
 	struct ionic_tbl_res	rq_res;

@@ -1515,8 +1515,9 @@ Eth::_CmdCreateQP(void *req, void *req_data, void *resp, void *resp_data)
                   cmd->num_rq_wqes, cmd->num_rsq_wqes,
                   cmd->num_rrq_wqes, cmd->pd,
                   cmd->sq_cq_num, cmd->rq_cq_num, cmd->host_pg_size,
-                  cmd->pmtu, cmd->service,
-                  cmd->sq_pt_size, cmd->pt_size, pt_table);
+                  cmd->pmtu, cmd->service, cmd->flags,
+                  cmd->sq_pt_size, cmd->pt_size, pt_table,
+                  pci_resources.cmbpa, pci_resources.cmbsz);
 
     return (DEVCMD_SUCCESS);
 }

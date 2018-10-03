@@ -145,6 +145,9 @@ struct ionic_qp {
 	struct ionic_queue	rq;
 	struct ionic_rq_meta	*rq_meta;
 	struct ionic_rq_meta	*rq_meta_head;
+
+	void			*rq_cmb_ptr;
+	uint16_t		rq_cmb_prod;
 };
 
 struct ionic_ah {

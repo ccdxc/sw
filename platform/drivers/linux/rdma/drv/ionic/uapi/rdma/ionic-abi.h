@@ -36,7 +36,7 @@
 #include <linux/types.h>
 
 /* XXX make abi version 1 for release */
-#define IONIC_ABI_VERSION	5
+#define IONIC_ABI_VERSION	6
 
 struct ionic_ctx_req {
 	__u32 fallback;
@@ -95,6 +95,7 @@ struct ionic_qp_resp {
 	__u32 qpid;
 	__u32 rsvd;
 	__aligned_u64 sq_cmb_offset;
+	__aligned_u64 rq_cmb_offset;
 };
 
 struct ionic_srq_req {

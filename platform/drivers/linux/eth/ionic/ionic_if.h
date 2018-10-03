@@ -1372,7 +1372,7 @@ struct create_qp_cmd {
 	u16 pd;
 	u16 lif_id;
 	u8  service;
-	u8  flags;
+	u8  rsvd;
 	u32 pmtu;
 	u32 qp_num;
 	u32 sq_cq_num;
@@ -1386,7 +1386,8 @@ struct create_qp_cmd {
 	u64 pt_base_addr;
 	u32 pt_size;
 	u32 sq_pt_size;
-	u32 rsvd2[2];
+	u32 flags;
+	u32 rsvd2[1];
 };
 
 /**

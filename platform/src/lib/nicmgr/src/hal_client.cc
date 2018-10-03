@@ -1460,9 +1460,10 @@ int HalClient::CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
                         uint16_t num_rrq_wqes, uint8_t pd_num,
                         uint32_t sq_cq_num, uint32_t rq_cq_num, uint32_t page_size,
                         uint32_t pmtu,
-                        int service,
+                        int service, int flags,
                         uint32_t sq_pt_size,
-                        uint32_t pt_size, uint64_t *pt_table)
+                        uint32_t pt_size, uint64_t *pt_table,
+                        uint64_t cmb_bar_base, uint64_t cmb_bar_size)
 {
     ClientContext context;
     RdmaQpRequestMsg request;
@@ -1487,8 +1488,49 @@ int HalClient::CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
     spec->set_rq_cq_num(rq_cq_num);
     spec->set_num_sq_pages(sq_pt_size);
 
-    for (uint32_t i = 0; i < pt_size; i++) {
+    uint64_t cmb_offset;
+    uint32_t i = 0;
+
+    /* send queue in controller memory */
+    if (flags & (1<<13)) {
+        NIC_FUNC_INFO("qp send queue in controller memory bar");
+
+        cmb_offset = pt_table[i++];
+
+        if (cmb_offset + sq_wqe_size * num_sq_wqes > cmb_bar_size) {
+            NIC_FUNC_ERR("sqcmb out of range");
+            return -1;
+        }
+
+        spec->set_num_sq_pages(0);
+        spec->set_sq_base_addr(cmb_bar_base + cmb_offset);
+        spec->set_sq_in_nic_memory(true);
+    }
+
+    /* receive queue in controller memory, will be the last "page" */
+    if (flags & (1<<14)) {
+        assert(pt_size);
+        --pt_size;
+    }
+
+    /* queues in host memory */
+    for (; i < pt_size; i++) {
         spec->add_va_pages_phy_addr(pt_table[i]);
+    }
+
+    /* receive queue in controller memory */
+    if (flags & (1<<14)) {
+        NIC_FUNC_INFO("qp receive queue in controller memory bar");
+
+        cmb_offset = pt_table[i++];
+
+        if (cmb_offset + rq_wqe_size * num_rq_wqes > cmb_bar_size) {
+            NIC_FUNC_ERR("rqcmb out of range");
+            return -1;
+        }
+
+        spec->set_rq_base_addr(cmb_bar_base + cmb_offset);
+        spec->set_rq_in_nic_memory(true);
     }
 
     Status status = rdma_stub_->RdmaQpCreate(&context, request, &response);

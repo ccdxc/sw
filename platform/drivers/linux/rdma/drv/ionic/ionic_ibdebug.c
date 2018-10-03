@@ -64,7 +64,7 @@ static void ionic_umem_dump(struct seq_file *s, struct ib_umem *umem)
 		pagedma = sg_dma_address(sg);
 		pg_end += sg_dma_len(sg) >> umem->page_shift;
 		for (; pg_i < pg_end; ++pg_i) {
-			seq_printf(s, "%#llx\n", BIT_ULL(63) | pagedma);
+			seq_printf(s, "%#llx\n", pagedma);
 			pagedma += BIT_ULL(umem->page_shift);
 		}
 	}
@@ -939,6 +939,13 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 			ionic_umem_show(s, "rq.", qp->rq_umem);
 
 		ionic_tbl_res_show(s, "rq.", &qp->rq_res);
+
+		seq_printf(s, "rq_is_cmb:\t%d\n", qp->rq_is_cmb);
+		if (qp->rq_is_cmb) {
+			seq_printf(s, "rq_cmb_order:\t%d\n", qp->rq_cmb_order);
+			seq_printf(s, "rq_cmb_pgid:\t%d\n", qp->rq_cmb_pgid);
+			seq_printf(s, "rq_cmb_addr:\t%#llx\n", (u64)qp->rq_cmb_addr);
+		}
 	}
 
 	return 0;

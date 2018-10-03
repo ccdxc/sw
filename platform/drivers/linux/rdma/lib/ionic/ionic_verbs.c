@@ -778,6 +778,9 @@ static int ionic_qp_rq_init(struct ionic_ctx *ctx, struct ionic_qp *qp,
 	if (rc)
 		goto err_rq;
 
+	qp->rq_cmb_ptr = NULL;
+	qp->rq_cmb_prod = 0;
+
 	qp->rq_meta = calloc((uint32_t)qp->rq.mask + 1,
 			     sizeof(*qp->rq_meta));
 	if (!qp->rq_meta) {
@@ -883,6 +886,16 @@ static struct ibv_qp *ionic_create_qp_ex(struct ibv_context *ibctx,
 		}
 	}
 
+	if (resp.rq_cmb_offset) {
+		qp->rq_cmb_ptr = ionic_map_device(qp->rq.size,
+						  ctx->vctx.context.cmd_fd,
+						  resp.rq_cmb_offset);
+		if (!qp->rq_cmb_ptr) {
+			rc = errno;
+			goto err_cmb;
+		}
+	}
+
 	qp->qpid = resp.qpid;
 	ionic_queue_dbell_init(&qp->sq, qp->qpid);
 	ionic_queue_dbell_init(&qp->rq, qp->qpid);
@@ -952,6 +965,7 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 		qp->sq_msn_prod = 0;
 		qp->sq_msn_cons = 0;
 		qp->sq_npg_cons = 0;
+		qp->sq_cmb_prod = 0;
 		qp->sq.prod = 0;
 		qp->sq.cons = 0;
 		ionic_spin_unlock(ctx, &qp->sq_lock);
@@ -962,6 +976,7 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 		qp->rq_flush = false;
 		qp->rq.prod = 0;
 		qp->rq.cons = 0;
+		qp->rq_cmb_prod = 0;
 		ionic_spin_unlock(ctx, &qp->rq_lock);
 	}
 }
@@ -1051,6 +1066,7 @@ static int ionic_destroy_qp(struct ibv_qp *ibqp)
 	}
 
 	ionic_unmap(qp->sq_cmb_ptr, qp->sq.size);
+	ionic_unmap(qp->rq_cmb_ptr, qp->rq.size);
 
 	pthread_spin_destroy(&qp->rq_lock);
 	pthread_spin_destroy(&qp->sq_lock);
@@ -1747,7 +1763,7 @@ static int ionic_prep_one_ud(struct ionic_qp *qp,
 	return rc;
 }
 
-static void ionic_post_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
+static void ionic_post_send_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
 {
 	void *cmb_ptr;
 	void *wqe_ptr;
@@ -1778,6 +1794,52 @@ static void ionic_post_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
 	}
 
 	qp->sq_cmb_prod = end;
+}
+
+static void ionic_post_recv_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
+{
+	void *cmb_ptr;
+	void *wqe_ptr;
+	uint32_t stride;
+	uint16_t pos, end;
+	uint8_t stride_log2;
+
+	stride_log2 = qp->rq.stride_log2;
+
+	pos = qp->rq_cmb_prod;
+	end = qp->rq.prod;
+
+	if (pos > end) {
+		cmb_ptr = qp->rq_cmb_ptr + ((size_t)pos << stride_log2);
+		wqe_ptr = ionic_queue_at(&qp->rq, pos);
+
+		stride = (uint32_t)(qp->rq.mask - pos + 1) << stride_log2;
+		mmio_wc_start();
+		mmio_memcpy_x64(cmb_ptr, wqe_ptr, stride);
+		mmio_flush_writes();
+
+		pos = 0;
+
+		ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
+				 qp->rq.dbell | pos);
+	}
+
+	if (pos < end) {
+		cmb_ptr = qp->rq_cmb_ptr + ((size_t)pos << stride_log2);
+		wqe_ptr = ionic_queue_at(&qp->rq, pos);
+
+		stride = (uint32_t)(end - pos) << stride_log2;
+		mmio_wc_start();
+		mmio_memcpy_x64(cmb_ptr, wqe_ptr, stride);
+		mmio_flush_writes();
+
+		pos = end;
+
+		ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
+				 qp->rq.dbell | pos);
+	}
+
+	qp->rq_cmb_prod = end;
 }
 
 static int ionic_post_send_common(struct ionic_ctx *ctx,
@@ -1840,7 +1902,7 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 out:
 	if (likely(qp->sq.prod != old_prod)) {
 		if (qp->sq_cmb_ptr) {
-			ionic_post_cmb(ctx, qp);
+			ionic_post_send_cmb(ctx, qp);
 		} else {
 			udma_to_device_barrier();
 			ionic_dbg(ctx, "dbell qtype %d val %#lx",
@@ -1962,11 +2024,15 @@ static int ionic_post_recv_common(struct ionic_ctx *ctx,
 
 out:
 	if (likely(qp->rq.prod != old_prod)) {
-		udma_to_device_barrier();
-		ionic_dbg(ctx, "dbell qtype %d val %#lx",
-			  ctx->rq_qtype, ionic_queue_dbell_val(&qp->rq));
-		ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
-				 ionic_queue_dbell_val(&qp->rq));
+		if (qp->rq_cmb_ptr) {
+			ionic_post_recv_cmb(ctx, qp);
+		} else {
+			udma_to_device_barrier();
+			ionic_dbg(ctx, "dbell qtype %d val %#lx",
+				  ctx->rq_qtype, ionic_queue_dbell_val(&qp->rq));
+			ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
+					 ionic_queue_dbell_val(&qp->rq));
+		}
 	}
 
 	flush = qp->rq_flush;
