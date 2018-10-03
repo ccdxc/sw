@@ -71,8 +71,7 @@ hdr_update:
     
     //setup DMA in this stage but do CB updates in later stages.
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MOD_QP_AH_SRC)
-    or          r7, d.{mod_qp.dma_addr}.dx, 0x1, 63
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, r7)
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.{mod_qp.dma_addr}.dx)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MOD_QP_AH_DST)
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r5)
     

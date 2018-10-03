@@ -11,6 +11,7 @@ struct aq_tx_s1_t0_k k;
 
 #define IN_TO_S_P to_s1_info
 
+#define PHV_GLOBAL_COMMON_P phv_global_common
     
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_SQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, sqcb_base_addr_hi) 
@@ -126,8 +127,7 @@ reg_mr:
     nop
     
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_PT_SRC)
-    or          r4, d.{mr.dma_addr}.dx, 0x1, 63
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r3, r4)
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r3, d.{mr.dma_addr}.dx)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_PT_DST)
 
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r3, r5)
@@ -138,8 +138,7 @@ mr_skip_dma_pt:
 
     //copy      the phy address of a single page directly.
     //TODO: how     do we ensure this memwr is completed by the time we generate CQ for admin cmd.
-    or          r2, d.{mr.dma_addr}.dx, 0x1, 63
-    memwr.dx    r5, r2 //BD slot
+    memwr.d    r5, d.mr.dma_addr //BD slot
 
 mr_no_skip_dma_pt: 
 
@@ -196,8 +195,7 @@ create_cq:
     //Setup DMA to copy PT translations from host to HBM
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_PT_SRC)    
 
-    or          r2, d.{cq.dma_addr}.dx, 0x1, 63
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, r2)
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.{cq.dma_addr}.dx)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_PT_DST)        
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r3)
 
@@ -205,7 +203,7 @@ create_cq:
     //Setup     DMA for first two translations in cqcb for optimized lookup
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQCB_PT_SRC)    
 
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, (2*CAPRI_SIZEOF_U64_BYTES), r2)
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, (2*CAPRI_SIZEOF_U64_BYTES), d.{cq.dma_addr}.dx)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQCB_PT_DST)        
 
     add r1, r1, FIELD_OFFSET(cqcb_t, pt_pa)
@@ -220,9 +218,8 @@ cq_skip_dma_pt:
 
     //copy      the phy address of a single page directly.
     //TODO: how     do we ensure this memwr is completed by the time we generate CQ for admin cmd.
-    or          r2, d.{cq.dma_addr}.dx, 0x1, 63
-    memwr.dx    r3, r2 //BD slot
-    phvwr       p.cqcb.pt_pa, r2.dx
+    memwr.d    r3, d.cq.dma_addr //BD slot
+    phvwr       p.cqcb.pt_pa, d.cq.dma_addr
     phvwrpair   p.cqcb.pt_pg_index, 0, p.cqcb.pt_next_pg_index, 0x1ff
     
 cq_no_skip_dma_pt: 
@@ -296,8 +293,7 @@ create_qp:
 
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_QP_SQPT_SRC)
 
-    or          r2, d.{qp.sq_dma_addr}.dx, 0x1, 63    
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, r2)
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.{qp.sq_dma_addr}.dx)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_QP_SQPT_DST)
     DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r3)
 
@@ -308,8 +304,7 @@ qp_skip_dma_pt:
 
     //copy      the phy address of a single page directly.
     //TODO: how     do we ensure this memwr is completed by the time we generate CQ for admin cmd.
-    or          r2, d.{qp.sq_dma_addr}.dx, 0x1, 63    
-    memwr.dx    r3, r2 //BD slot
+    memwr.d    r3, d.qp.sq_dma_addr //BD slot
 
 qp_no_skip_dma_pt: 
     
@@ -383,8 +378,7 @@ pt_dump:
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
     DMA_HBM_MEM2MEM_SRC_SETUP(r6, PAGE_SIZE_4K, r4)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
-    or          r3, d.{stats.dma_addr}.dx, 0x1, 63 
-    DMA_HOST_MEM2MEM_DST_SETUP(r6, PAGE_SIZE_4K, r3) 
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, PAGE_SIZE_4K, d.{stats.dma_addr}.dx) 
     
     b           prepare_feedback
     nop
@@ -403,8 +397,7 @@ qp_dump:
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
     DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB3_OFFSET_BYTES, r1)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
-    or          r3, d.{stats.dma_addr}.dx, 0x1, 63 
-    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB3_OFFSET_BYTES, r3) 
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB3_OFFSET_BYTES, d.{stats.dma_addr}.dx) 
 
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_3)
     DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB3_OFFSET_BYTES, r2)
@@ -423,8 +416,7 @@ cq_dump:
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
     DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB_UNIT_SIZE_BYTES, r1)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
-    or r2, d.{stats.dma_addr}.dx, 0x1, 63
-    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB_UNIT_SIZE_BYTES, r2)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB_UNIT_SIZE_BYTES, d.{stats.dma_addr}.dx)
     
     b           prepare_feedback
     nop
@@ -437,8 +429,7 @@ eq_dump:
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
     DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB_UNIT_SIZE_BYTES, r1)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
-    or r2, d.{stats.dma_addr}.dx, 0x1, 63
-    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB_UNIT_SIZE_BYTES, r2)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB_UNIT_SIZE_BYTES, d.{stats.dma_addr}.dx)
     
     b           prepare_feedback
     nop

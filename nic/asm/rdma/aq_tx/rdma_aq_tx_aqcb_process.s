@@ -55,8 +55,9 @@ rdma_aq_tx_aqcb_process:
 
         phvwr       CAPRI_PHV_FIELD(TO_FEEDBACK_P, cq_num), d.cq_id
 
-        // Compute WQE address
+        // Compute WQE address & encode
         add         r3, d.phy_base_addr, AQ_C_INDEX_HX, AQ_WQE_T_LOG_SIZE_BYTES
+
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_wqe_process, r3)
 
         /* increment the cindex */

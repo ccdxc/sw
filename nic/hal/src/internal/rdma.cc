@@ -1832,7 +1832,7 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
     memset(&eqcb, 0, sizeof(eqcb_t));
     // EQ does not need scheduling, so set one less (meaning #rings as zero)
     eqcb.ring_header.total_rings = MAX_EQ_RINGS - 1;
-    eqcb.eqe_base_addr = spec.eqe_base_addr_phy();
+    eqcb.eqe_base_addr = spec.eqe_base_addr_phy() | (1UL << 63) | ((uint64_t)lif << 52);
     eqcb.log_wqe_size = log2(eqwqe_size);
     eqcb.log_num_wqes = log2(num_eq_wqes);
     eqcb.int_enabled = 1;
@@ -1897,7 +1897,7 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     aqcb.log_wqe_size = spec.log_wqe_size();
     aqcb.log_num_wqes = spec.log_num_wqes();
     aqcb.aq_id = spec.aq_num();
-    aqcb.phy_base_addr = spec.phy_base_addr();
+    aqcb.phy_base_addr = spec.phy_base_addr() | (1UL << 63) | ((uint64_t)lif << 52);
     aqcb.cq_id = spec.cq_num();
     aqcb.cqcb_addr = lif_manager()->GetLIFQStateAddr(lif, Q_TYPE_RDMA_CQ, spec.cq_num());
     
