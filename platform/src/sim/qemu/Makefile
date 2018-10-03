@@ -18,7 +18,6 @@ all: $(QEMU) apply-patch configure build
 clean:
 	$(RM) -r $(QEMU) $(QEMU)-old $(QEMU)-new
 	$(RM) .patched .configured
-	$(RM) $(QEMU_TARBALL)
 
 endif # BUILD_ARCH
 

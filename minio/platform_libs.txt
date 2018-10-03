@@ -1,3 +1,5 @@
 platform/src/third-party/lib/gmp/*
 platform/src/third-party/lib/ncurses/*
 platform/src/third-party/lib/edit/*
+platform/src/third-party/app/pciutils/pciutils-3.5.6.tar.gz
+platform/src/sim/qemu/qemu-2.9.0.tar.xz

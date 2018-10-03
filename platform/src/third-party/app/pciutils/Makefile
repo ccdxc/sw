@@ -22,7 +22,6 @@ all: build genprogs
 
 clean:
 	$(RM) -r $(PCIUTILS) $(PCIUTILS)-orig
-	$(RM) $(PCIUTILS_TARBALL)
 	$(RM) $(GENPROGS)
 
 endif # BUILD_ARCH
