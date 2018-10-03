@@ -216,6 +216,7 @@ private:
     pciehdevice_resources_t     pci_resources;
 
     // Oher states
+    uint32_t                    crypto_key_idx_base;
     uint32_t                    seq_qid_init_high;  // highest seq qid initialized
 
     const struct lif_info       *nicmgr_lif_info;

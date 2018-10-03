@@ -25,6 +25,7 @@ LCFLAGS = \
 	-I $(TOPDIR)/../nic/sdk/ \
 	-I $(TOPDIR)/../nic/sdk/include/ \
 	-I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/gen/proto/ \
+	-I $(TOPDIR)/../nic/build/${BUILD_ARCH}/iris/ \
 	-I $(TOPDIR)/../nic/hal/pd/capri/ \
 	-I $(TOPDIR)/../nic/third-party/boost/include/ \
 	-I $(TOPDIR)/../nic/hal/third-party/include/ \

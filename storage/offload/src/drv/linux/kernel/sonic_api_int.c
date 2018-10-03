@@ -161,6 +161,13 @@ sonic_get_lif_local_dbaddr(void)
 	return ident->dev.lif_tbl[0].hw_lif_local_dbaddr;
 }
 
+uint32_t
+sonic_get_crypto_key_idx(uint32_t user_key_idx)
+{
+	identity_t *ident = sonic_get_identity();
+	return ident->dev.lif_tbl[0].hw_key_idx_base + user_key_idx;
+}
+
 #ifdef NDEBUG
 #define DBG_CHK_RING_ID(r)	PNSO_OK
 #else

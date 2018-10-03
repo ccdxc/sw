@@ -30,6 +30,7 @@ cc_binary(
                   "-Inic/asic/capri/model/cap_txs",
                   "-Inic/asic/capri/model/cap_top",
                   "-Inic/hal/pd/capri",
+                  "-Inic/build/${BUILD_ARCH}/iris",
         ],
         linkopts = [
                 "-lpthread",

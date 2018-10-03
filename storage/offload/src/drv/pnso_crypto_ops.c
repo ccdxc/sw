@@ -14,6 +14,7 @@
 #include "pnso_crypto_cmn.h"
 #include "pnso_seq.h"
 #include "pnso_utils.h"
+#include "sonic_api_int.h"
 
 static enum crypto_algo_cmd_hi   crypto_algo_cmd_hi_tbl[PNSO_CRYPTO_TYPE_MAX] = {
 	[PNSO_CRYPTO_TYPE_XTS] = CRYPTO_ALGO_CMD_HI_AES_XTS,
@@ -91,7 +92,8 @@ crypto_desc_fill(struct service_info *svc_info,
 			    crypto_algo_cmd_lo_tbl[pnso_crypto_desc->algo_type];
 	crypto_desc->cd_cmd.cc_token_4 =
 			    crypto_algo_cmd_hi_tbl[pnso_crypto_desc->algo_type];
-	crypto_desc->cd_key_desc_idx = pnso_crypto_desc->key_desc_idx;
+	crypto_desc->cd_key_desc_idx = 
+		     sonic_get_crypto_key_idx(pnso_crypto_desc->key_desc_idx);
 
 	crypto_desc->cd_iv_addr = pnso_crypto_desc->iv_addr;
 	crypto_desc->cd_status_addr = osal_virt_to_phy(status_desc);
