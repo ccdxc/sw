@@ -32,8 +32,7 @@
 #include "osal_mem.h"
 #include "osal_assert.h"
 
-#include "pnso_cpdc.h"
-#include "pnso_crypto.h"
+#include "pnso_init.h"
 
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 				 void *cb_arg)
@@ -387,12 +386,10 @@ static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 {
 	int i;
 
+	pnso_deinit();
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
 		sonic_cpdc_qs_deinit(lif->res.pc_res[i]);
-		cpdc_deinit_accelerator(lif->res.pc_res[i]);
-
 		sonic_crypto_qs_deinit(lif->res.pc_res[i]);
-		crypto_deinit_accelerator(lif->res.pc_res[i]);
 	}
 }
 
@@ -667,8 +664,6 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 					    int seq_q_count)
 {
 	int err;
-	struct cpdc_init_params cpdc_init_params;
-	struct crypto_init_params crypto_init_params;
 
 	/* Initialize local driver structures */
 	res->lif = lif;
@@ -696,14 +691,6 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 		goto done;
 
 	err = sonic_lif_crypto_seq_qs_control(res, CMD_OPCODE_SEQ_QUEUE_ENABLE);
-	if (err)
-		goto done;
-
-	err = cpdc_init_accelerator(&cpdc_init_params, res);
-	if (err)
-		goto done;
-
-	err = crypto_init_accelerator(&crypto_init_params, res);
 	if (err)
 		goto done;
 
@@ -885,14 +872,16 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 	return 0;
 }
 
-struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
+uint32_t sonic_get_num_per_core_res(struct lif *lif)
 {
-	int err = -ENOSPC;
-	int pc_res_idx = -1;
-	int core_id;
+	return lif->sonic->num_per_core_resources;
+}
 
-	core_id = osal_get_coreid();
-	OSAL_ASSERT(core_id >= 0 && core_id < OSAL_MAX_CORES);
+struct per_core_resource *sonic_core_id_get_per_core_res(struct lif *lif, int core_id)
+{
+	int err;
+	int pc_res_idx;
+
 	pc_res_idx = lif->res.core_to_res_map[core_id];
 	if (pc_res_idx < 0) {
 		err = assign_per_core_res_id(lif, core_id);
@@ -906,6 +895,14 @@ struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
 	}
 
 	return lif->res.pc_res[pc_res_idx];
+}
+
+struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
+{
+	int core_id = osal_get_coreid();
+
+	OSAL_ASSERT(core_id >= 0 && core_id < OSAL_MAX_CORES);
+	return sonic_core_id_get_per_core_res(lif, core_id);
 }
 
 int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
@@ -987,6 +984,33 @@ sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 	}
 
 	return 0;
+}
+
+void
+sonic_put_seq_statusq(struct queue *q)
+{
+	struct per_core_resource *pc_res;
+	unsigned long *bmp;
+	int max = 0;
+
+	if (q) {
+		pc_res = q->pc_res;
+		switch (q->qtype) {
+		case SONIC_QTYPE_CPDC_STATUS:
+			bmp = pc_res->cpdc_seq_status_qs_bmp;
+			max = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
+			break;
+		case SONIC_QTYPE_CRYPTO_STATUS:
+			bmp = pc_res->crypto_seq_status_qs_bmp;
+			max = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
+			break;
+		default:
+			return;
+			break;
+		}
+
+		clear_bit(q->qid, bmp);
+	}
 }
 
 struct lif *sonic_get_lif(void)

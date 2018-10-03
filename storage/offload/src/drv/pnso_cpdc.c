@@ -63,7 +63,8 @@ deinit_mpools(struct per_core_resource *pc_res)
 }
 
 static pnso_error_t
-init_mpools(struct per_core_resource *pc_res)
+init_mpools(struct pc_res_init_params *pc_init,
+	    struct per_core_resource *pc_res)
 {
 	pnso_error_t err;
 	uint32_t num_objects, num_object_set, object_size, pad_size;
@@ -71,7 +72,7 @@ init_mpools(struct per_core_resource *pc_res)
 
 	OSAL_ASSERT(pc_res);
 
-	num_objects = PNSO_NUM_OBJECTS;
+	num_objects = pc_init->max_seq_sq_descs;
 	mpool_type = MPOOL_TYPE_CPDC_DESC;
 	err = mpool_create(mpool_type, num_objects,
 			sizeof(struct cpdc_desc), PNSO_MEM_ALIGN_DESC,
@@ -112,7 +113,7 @@ init_mpools(struct per_core_resource *pc_res)
 	 * i.e. set of objects to be in contiguous memory
 	 *
 	 */
-	num_object_set = PNSO_NUM_OBJECTS;
+	num_object_set = pc_init->max_seq_sq_descs;
 	num_objects = PNSO_NUM_OBJECTS_IN_OBJECT;
 	pad_size = mpool_get_pad_size(sizeof(struct cpdc_desc),
 			PNSO_MEM_ALIGN_DESC);
@@ -149,6 +150,15 @@ init_mpools(struct per_core_resource *pc_res)
 	if (err)
 		goto out;
 
+	mpool_type = MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS;
+	err = mpool_create(mpool_type, num_objects,
+			sizeof(struct cpdc_status_desc), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[mpool_type]);
+	if (err)
+		goto out;
+        pc_init->rmem_total_pages -= 
+                mpool_get_object_num_allocs(pc_res->mpools[mpool_type]);
+
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CPDC_DESC]);
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR]);
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CPDC_SGL]);
@@ -157,6 +167,7 @@ init_mpools(struct per_core_resource *pc_res)
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CPDC_STATUS_DESC_VECTOR]);
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN]);
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_SERVICE_CHAIN_ENTRY]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS]);
 
 	return PNSO_OK;
 
@@ -167,19 +178,19 @@ out:
 }
 
 pnso_error_t
-cpdc_init_accelerator(const struct cpdc_init_params *init_params,
+cpdc_init_accelerator(struct pc_res_init_params *pc_init,
 		struct per_core_resource *pc_res)
 {
 	pnso_error_t err;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	OSAL_ASSERT(init_params);
+	OSAL_ASSERT(pc_init);
 	OSAL_ASSERT(pc_res);
 
 	/* TODO-cpdc: use init params */
 
-	err = init_mpools(pc_res);
+	err = init_mpools(pc_init, pc_res);
 	if (err)
 		goto out_mpools;
 

@@ -80,14 +80,25 @@ static uint64_t sonic_api_get_rmem(int order)
 	struct sonic_dev *idev = sonic_get_idev();
 	int ret;
 
-	spin_lock(&idev->hbm_inuse_lock);
-	ret = bitmap_find_free_region(idev->hbm_inuse, idev->hbm_npages, order);
-	spin_unlock(&idev->hbm_inuse_lock);
+	while (true) {
+		spin_lock(&idev->hbm_inuse_lock);
+		ret = bitmap_find_free_region(idev->hbm_inuse,
+ 					      idev->hbm_npages, order);
+		spin_unlock(&idev->hbm_inuse_lock);
 
-	if (ret < 0) {
-		OSAL_LOG_ERROR("rmem bitmap_find_free_region failed ret: %d",
-				ret);
-		return 0;
+		if (ret < 0) {
+			OSAL_LOG_ERROR("rmem bitmap_find_free_region "
+				       "failed ret: %d", ret);
+			return SONIC_RMEM_ADDR_INVALID;
+		}
+
+		/*
+		 * Note that rmem address 0 is a valid address but to get the
+		 * same common denomitator with kernel memory, we won't use
+		 * that address and won't bother with ever freeing it.
+		 */
+		if (sonic_rmem_addr_valid(ret))
+			break;
 	}
 
 	return sonic_rmem_pgid_to_pgaddr((uint32_t)ret);
@@ -102,6 +113,16 @@ static void sonic_api_put_rmem(uint32_t pgid, int order)
 	spin_unlock(&idev->hbm_inuse_lock);
 }
 
+uint32_t sonic_rmem_total_pages_get(void)
+{
+	return sonic_get_idev()->hbm_npages;
+}
+
+uint32_t sonic_rmem_page_size_get(void)
+{
+	return PAGE_SIZE;
+}
+
 uint64_t sonic_rmem_alloc(size_t size)
 {
 	return sonic_api_get_rmem(sonic_rmem_page_order(size));
@@ -111,41 +132,42 @@ uint64_t sonic_rmem_calloc(size_t size)
 {
 	uint64_t pgaddr = sonic_rmem_alloc(size);
 
-	if (pgaddr) {
+	if (sonic_rmem_addr_valid(pgaddr))
 		sonic_rmem_set(pgaddr, 0, size);
-	}
 	return pgaddr;
 }
 
 void sonic_rmem_free(uint64_t pgaddr, size_t size)
 {
-	sonic_api_put_rmem(sonic_rmem_pgaddr_to_pgid(pgaddr), sonic_rmem_page_order(size));
+	if (sonic_rmem_addr_valid(pgaddr))
+		sonic_api_put_rmem(sonic_rmem_pgaddr_to_pgid(pgaddr),
+				   sonic_rmem_page_order(size));
 }
 
 void sonic_rmem_set(uint64_t pgaddr, uint8_t val, size_t size)
 {
+	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr) &&
+		    (size <= PAGE_SIZE));
 	memset_io(sonic_rmem_pgaddr_to_iomem(pgaddr), val, size);
 }
 
 void sonic_rmem_read(void *dst, uint64_t pgaddr, size_t size)
 {
-	OSAL_ASSERT(size <= PAGE_SIZE);
+	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr) &&
+		    (size <= PAGE_SIZE));
 	memcpy_fromio(dst, sonic_rmem_pgaddr_to_iomem(pgaddr), size);
 }
 
 void sonic_rmem_write(uint64_t pgaddr, const void *src, size_t size)
 {
-	OSAL_ASSERT(size <= PAGE_SIZE);
+	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr) &&
+		    (size <= PAGE_SIZE));
 	memcpy_toio(sonic_rmem_pgaddr_to_iomem(pgaddr), src, size);
 }
 
 static identity_t *sonic_get_identity(void)
 {
-	struct lif *lif = sonic_get_lif();
-
-	if (lif == NULL)
-		return NULL;
-	return lif->sonic->ident;
+	return sonic_get_lif()->sonic->ident;
 }
 
 uint16_t

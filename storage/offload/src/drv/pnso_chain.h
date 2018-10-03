@@ -100,6 +100,10 @@ struct service_ops {
 
 	/* chain the service(s) */
 	pnso_error_t (*chain)(struct chain_entry *centry);
+	pnso_error_t (*sub_chain_from_cpdc)(struct service_info *svc_info,
+                                            struct cpdc_chain_params *cpdc_chain);
+	pnso_error_t (*sub_chain_from_crypto)(struct service_info *svc_info,
+                                              struct crypto_chain_params *crypto_chain);
 
 	/* a NULL-op for all services except the first within the chain */
 	pnso_error_t (*schedule)(const struct service_info *svc_info);
@@ -120,6 +124,7 @@ struct service_ops {
 struct sequencer_info {
 	uint32_t sqi_ring_id;	/* CPDC hot/cold, XTS, etc.  */
 	uint16_t sqi_qtype;
+	uint16_t sqi_status_qtype;
 	uint16_t sqi_index;
 	uint8_t sqi_batch_mode;
 	uint16_t sqi_batch_size;
@@ -136,6 +141,17 @@ struct service_deps {
 	uint32_t sd_dst_data_len;	/* for compressed output buffer len */
 };
 
+struct interm_buf_list {
+	enum mem_pool_type blist_type;
+	enum mem_pool_type buf_type;
+	union {
+		struct pnso_buffer_list blist;
+		uint8_t b[sizeof(struct pnso_buffer_list) +
+			  sizeof(struct pnso_flat_buffer)];
+	};
+        void *buf_obj;
+};
+
 struct service_info {
 	uint8_t si_type;
 	uint8_t	si_flags;		/* service flags (SFLAGS) */
@@ -143,14 +159,22 @@ struct service_info {
 	uint16_t si_block_size;
 	uint16_t si_desc_flags;		/* caller supplied desc flags */
 	uint32_t si_num_tags;		/* for tracking # of hash or checksum */
+	uint32_t si_src_len;
+	uint32_t si_dst_len;
 
 	void *si_desc;			/* desc of cp/dc/encrypt/etc. */
 	void *si_status_desc;		/* status desc of cp/dc/encrypt/etc. */
+	void *si_istatus_desc;		/* intermediate status desc */
 
 	struct cpdc_sgl	*si_src_sgl;	/* src input buffer converted to sgl */
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
 	struct crypto_aol *si_src_aol;	/* src input buffer converted to aol */
 	struct crypto_aol *si_dst_aol;	/* dst input buffer converted to aol */
+
+	union {
+		struct cpdc_chain_params   si_cpdc_chain;
+		struct crypto_chain_params si_crypto_chain;
+	};
 
 	struct cpdc_sgl	*si_p4_sgl;	/* for per-block hash/checksum */
 
@@ -161,6 +185,9 @@ struct service_info {
 
 	struct service_ops si_ops;
 	struct pnso_service_status *si_svc_status;
+	struct interm_buf_list *si_iblist;
+	struct pnso_buffer_list *si_dst_blist;
+	struct chain_sgl_pdma *si_sgl_pdma;
 };
 
 struct chain_entry {
@@ -176,7 +203,6 @@ struct service_chain {
 	struct pnso_service_result *sc_res;	/* caller supplied result */
 
 	struct per_core_resource *sc_pc_res;	/* to access pool/etc. */
-	struct cpdc_chain_params sc_chain_params; /* to interface with P4+ */
 	struct service_deps sc_svc_deps;	/* to share dependent params */
 
 	completion_cb_t	sc_req_cb;	/* caller supplied call-back */
@@ -235,6 +261,31 @@ void chn_execute_chain(struct service_chain *chain);
  *
  */
 void chn_destroy_chain(struct service_chain *chain);
+
+static inline bool
+chn_service_is_in_chain(struct service_info *svc_info)
+{
+	return !(svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE);
+}
+
+static inline bool
+chn_service_is_first(struct service_info *svc_info)
+{
+	return !!(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE);
+}
+
+static inline bool
+chn_service_is_last(struct service_info *svc_info)
+{
+	return !!(svc_info->si_flags & CHAIN_SFLAG_LAST_SERVICE);
+}
+
+static inline bool
+chn_service_has_sub_chain(struct service_info *svc_info)
+{
+	return chn_service_is_in_chain(svc_info) &&
+	       !chn_service_is_last(svc_info);
+}
 
 #ifdef __cplusplus
 }

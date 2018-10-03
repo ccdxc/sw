@@ -52,10 +52,14 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("%30s: %d", "si_block_size", svc_info->si_block_size);
 	OSAL_LOG_DEBUG("%30s: %d", "si_desc_flagss", svc_info->si_desc_flags);
 	OSAL_LOG_DEBUG("%30s: %d", "si_num_tags", svc_info->si_num_tags);
+	OSAL_LOG_DEBUG("%30s: %d", "si_src_len", svc_info->si_src_len);
+	OSAL_LOG_DEBUG("%30s: %d", "si_dst_len", svc_info->si_dst_len);
 
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "si_desc",  (uint64_t) svc_info->si_desc);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "si_status_desc",
 			(uint64_t) svc_info->si_status_desc);
+	OSAL_LOG_INFO("%30s: 0x%llx", "si_istatus_desc",
+			(uint64_t) svc_info->si_istatus_desc);
 
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== si_src_sgl",
 			(uint64_t) svc_info->si_src_sgl);
@@ -67,6 +71,12 @@ pprint_service_info(const struct service_info *svc_info)
 			(uint64_t) svc_info->si_dst_aol);
 	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== si_p4_sgl",
 			(uint64_t) svc_info->si_p4_sgl);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_iblist",
+			(uint64_t) svc_info->si_iblist);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_dst_blist",
+			(uint64_t) svc_info->si_dst_blist);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_sgl_pdma",
+			(uint64_t) svc_info->si_sgl_pdma);
 
 	/* TODO-chain: include service status and other members */
 }
@@ -216,26 +226,31 @@ init_service_info(enum pnso_service_type svc_type,
 		svc_info->si_ops = encrypt_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_XTS0;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CRYPTO_ENC_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CRYPTO_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECRYPT:
 		svc_info->si_ops = decrypt_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_XTS1;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CRYPTO_DEC_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CRYPTO_STATUS;
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 		svc_info->si_ops = cp_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		svc_info->si_ops = dc_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_DC;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_HASH:
 		svc_info->si_ops = hash_ops;
 		svc_info->si_seq_info.sqi_ring_id = ACCEL_RING_CP_HOT;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_info->si_ops = chksum_ops;
@@ -243,6 +258,7 @@ init_service_info(enum pnso_service_type svc_type,
 		/* TODO-chain: rolling back to previous PR setting DCq failed */
 		// svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		svc_info->si_seq_info.sqi_status_qtype = SONIC_QTYPE_CPDC_STATUS;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	case PNSO_SVC_TYPE_NONE:
@@ -433,23 +449,9 @@ chn_build_chain(struct pnso_service_request *svc_req,
 
 		PPRINT_SERVICE_INFO(svc_info);
 
-		/*
-		 * TODO-chain:
-		 *	- set output buffer of compression service as input
-		 *	buffer to hash; need to make it generic ...
-		 *
-		 */
-		interm_blist = svc_params.sp_dst_blist;
+		interm_blist = svc_info->si_dst_blist;
 	}
 	chain->sc_req_id = osal_atomic_fetch_add(&g_req_id, 1);
-
-	/* chain the services  */
-	centry = chain->sc_entry;
-	svc_info = &centry->ce_svc_info;
-
-	err = svc_info->si_ops.chain(centry);
-	if (err)
-		goto out_free_chain;
 
 	/* execute the chain  */
 	chn_execute_chain(chain);
@@ -492,6 +494,7 @@ chn_execute_chain(struct service_chain *chain)
 	pnso_error_t err;
 	struct chain_entry *sc_entry;
 	struct chain_entry *ce_first, *ce_last;
+	struct service_info *svc_info;
 	struct service_ops *svc_ops;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -504,6 +507,13 @@ chn_execute_chain(struct service_chain *chain)
 
 	sc_entry = chain->sc_entry;
 	while (sc_entry) {
+
+		/* chain the services  */
+		svc_info = &sc_entry->ce_svc_info;
+		err = svc_info->si_ops.chain(sc_entry);
+		if (err)
+			goto out;
+
 		ce_last = sc_entry;
 		sc_entry = sc_entry->ce_next;
 	}

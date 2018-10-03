@@ -6,6 +6,8 @@
 #ifndef __PNSO_SEQ_H__
 #define __PNSO_SEQ_H__
 
+#include "pnso_crypto.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -28,6 +30,8 @@ void *seq_setup_cpdc_chain_desc(struct chain_entry *centry,
 		struct service_info *svc_info,
 		const void *src_desc, size_t desc_size);
 
+void  *seq_setup_crypto_chain(struct service_info *svc_info,
+			struct crypto_desc *desc);
 #ifdef __cplusplus
 }
 #endif

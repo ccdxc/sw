@@ -6,6 +6,8 @@
 #ifndef __PNSO_CHAIN_PARAMS_H__
 #define __PNSO_CHAIN_PARAMS_H__
 
+#include "sonic_dev.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -63,8 +65,8 @@ struct ring_spec {
 };
 
 struct sequencer_spec {
-	uint64_t sqs_seq_q;
-	uint64_t sqs_seq_status_q;
+	struct queue *sqs_seq_q;
+	struct queue *sqs_seq_status_q;
 	uint64_t sqs_seq_next_q;
 	uint64_t sqs_seq_next_status_q;
 	uint64_t sqs_ret_doorbell_addr;
@@ -77,7 +79,7 @@ struct cpdc_chain_params_command {
 	uint16_t ccpc_status_dma_en:1;
 	uint16_t ccpc_next_doorbell_en:1;
 	uint16_t ccpc_intr_en:1;
-	uint16_t ccpc_next_db_action_barco_push:1;
+	uint16_t ccpc_next_db_action_ring_push:1;
 	uint16_t ccpc_stop_chain_on_error:1;
 	uint16_t ccpc_chain_alt_desc_on_error:1;
 	uint16_t ccpc_aol_pad_en:1;
@@ -117,45 +119,60 @@ struct cpdc_chain_params {
 	struct cpdc_chain_params_command ccp_cmd;
 };
 
-struct xts_chain_params_command {
-	uint16_t xcpc_status_dma_en:1;
-	uint16_t xcpc_next_doorbell_en:1;
-	uint16_t xcpc_intr_en:1;
-	uint16_t xcpc_next_db_action_barco_push:1;
-	uint16_t xcpc_stop_chain_on_error:1;
-	uint16_t xcpc_comp_len_update_en:1;
-	uint16_t xcpc_comp_sgl_src_en:1;
-	uint16_t xcpc_comp_sgl_src_vec_en:1;
-	uint16_t xcpc_sgl_sparse_format_en:1;
-	uint16_t xcpc_sgl_pdma_en:1;
-	uint16_t xcpc_sgl_pdma_len_from_desc:1;
-	uint16_t xcpc_desc_vec_push_en:1;
+struct crypto_chain_params_command {
+	uint16_t ccpc_status_dma_en:1;
+	uint16_t ccpc_next_doorbell_en:1;
+	uint16_t ccpc_intr_en:1;
+	uint16_t ccpc_next_db_action_ring_push:1;
+	uint16_t ccpc_stop_chain_on_error:1;
+	uint16_t ccpc_comp_len_update_en:1;
+	uint16_t ccpc_comp_sgl_src_en:1;
+	uint16_t ccpc_comp_sgl_src_vec_en:1;
+	uint16_t ccpc_sgl_sparse_format_en:1;
+	uint16_t ccpc_sgl_pdma_en:1;
+	uint16_t ccpc_sgl_pdma_len_from_desc:1;
+	uint16_t ccpc_desc_vec_push_en:1;
 };
 
-struct xts_chain_params {
-	struct sequencer_spec xcp_seq_spec;
+struct crypto_chain_params {
+	struct sequencer_spec ccp_seq_spec;
 	union {
-		struct next_db_spec xcp_next_db_spec;
-		struct ring_spec xcp_ring_spec;
+		struct next_db_spec ccp_next_db_spec;
+		struct ring_spec ccp_ring_spec;
 	};
-	uint64_t xcp_status_addr_0;
-	uint64_t xcp_status_addr_1;
+	uint64_t ccp_status_addr_0;
+	uint64_t ccp_status_addr_1;
 
-	uint64_t xcp_decr_buf_addr;
-	uint64_t xcp_comp_sgl_src_addr;
-	uint64_t xcp_sgl_pdma_dst_addr;
+	uint64_t ccp_crypto_buf_addr;
+	uint64_t ccp_comp_sgl_src_addr;
+	uint64_t ccp_sgl_pdma_dst_addr;
 
-	uint64_t xcp_intr_addr;
-	uint32_t xcp_intr_data;
+	uint64_t ccp_intr_addr;
+	uint32_t ccp_intr_data;
 
-	uint16_t xcp_status_len;
-	uint16_t xcp_data_len;
+	uint16_t ccp_status_len;
+	uint16_t ccp_data_len;
 
-	uint8_t  xcp_status_offset_0;
-	uint8_t  xcp_blk_boundary_shift;
+	uint8_t  ccp_status_offset_0;
+	uint8_t  ccp_blk_boundary_shift;
 
-	struct xts_chain_params_command xcp_cmd;
+	struct crypto_chain_params_command ccp_cmd;
 };
+
+/*
+ * SGL PDMA pamameters
+ */
+#define SGL_PDMA_TUPLE_MAX_LEN	((1 << 14) - 1)
+
+struct chain_sgl_pdma_tuple {
+	uint64_t	addr;
+	uint32_t	len;
+} __attribute__((packed));
+
+struct chain_sgl_pdma {
+	struct chain_sgl_pdma_tuple tuple[4];
+	uint64_t                    pad[2];
+} __attribute__((packed));
 
 #ifdef __cplusplus
 }

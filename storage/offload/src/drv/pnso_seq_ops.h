@@ -9,6 +9,7 @@
 #include "osal.h"
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
+#include "pnso_crypto.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,6 +30,9 @@ struct sequencer_ops {
 			struct service_info *svc_info,
 			struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl,
 			uint32_t num_hash_blks);
+
+	void *(*setup_crypto_chain)(struct service_info *svc_info,
+			struct crypto_desc *desc);
 
 	void * (*setup_cpdc_chain_desc)(struct chain_entry *centry,
 		struct service_info *svc_info,

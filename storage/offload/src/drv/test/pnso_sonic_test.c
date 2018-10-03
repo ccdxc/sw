@@ -1467,6 +1467,11 @@ body(void)
 	init_params.per_core_qdepth = 16;
 	init_params.block_size = PNSO_TEST_BLOCK_SIZE;
 
+	if ((err = pnso_init(&init_params)) != 0) {
+		OSAL_LOG_ERROR("PNSO: pnso_init failed");
+		goto finit;
+	}
+
 	if ((err = init_crypto()) != 0) {
 		OSAL_LOG_ERROR("PNSO: init_crypto failed");
 		goto finit;

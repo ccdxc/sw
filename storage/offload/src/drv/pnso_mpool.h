@@ -6,6 +6,10 @@
 #ifndef __PNSO_MPOOL_H__
 #define __PNSO_MPOOL_H__
 
+#include "osal_assert.h"
+#include "osal_mem.h"
+#include "sonic_api_int.h"
+
 /*
  * This file contain constants, declarations and functions to manage the
  * fixed-size memory pools (mpool) for Pensando Storage Accelerators.
@@ -43,9 +47,9 @@ extern "C" {
  *
  */
 /* unit of following constants is bytes */
+#define PNSO_MEM_ALIGN_NONE	0
 #define PNSO_MEM_ALIGN_DESC	64	/* cpdc/sgl desc */
 #define PNSO_MEM_ALIGN_BUF	256
-#define PNSO_MEM_ALIGN_AOL	512
 #define PNSO_MEM_ALIGN_PAGE	4096
 
 /* Different types of objects */
@@ -61,8 +65,16 @@ enum mem_pool_type {
 	MPOOL_TYPE_CRYPTO_STATUS_DESC,
 	MPOOL_TYPE_CRYPTO_AOL,
 	MPOOL_TYPE_CRYPTO_AOL_VECTOR,
+	MPOOL_TYPE_INTERM_BUF_LIST,
+	MPOOL_TYPE_CHAIN_SGL_PDMA,
 	MPOOL_TYPE_SERVICE_CHAIN,
 	MPOOL_TYPE_SERVICE_CHAIN_ENTRY,
+
+	/* All rmem types start from this range onward */
+	MPOOL_TYPE_RMEM_START,
+	MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS = MPOOL_TYPE_RMEM_START,
+	MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS,
+	MPOOL_TYPE_RMEM_INTERM_BUF,
 	MPOOL_TYPE_MAX
 };
 
@@ -74,11 +86,13 @@ struct mem_pool_stack {
 
 struct mem_pool_config {
 	enum mem_pool_type mpc_type;	/* cpdc/crypto/sgl/etc pool */
+	uint32_t mpc_num_allocs;	/* total number of object allocs */
 	uint32_t mpc_num_objects;	/* total number of objects */
 	uint32_t mpc_object_size;	/* size of an object */
 	uint32_t mpc_align_size;	/* object alignment size */
 	uint32_t mpc_pad_size;		/* from object and align size */
 	uint32_t mpc_pool_size;		/* total pool size */
+	uint32_t mpc_page_size;		/* page size, if any */
 };
 
 struct mem_pool {
@@ -177,6 +191,81 @@ void mpool_pprint(const struct mem_pool *mpool);
 #endif
 
 const char *mem_pool_get_type_str(enum mem_pool_type mpool_type);
+
+static inline bool
+mpool_type_is_valid(enum mem_pool_type mpool_type)
+{
+	return (mpool_type != MPOOL_TYPE_NONE) && (mpool_type < MPOOL_TYPE_MAX);
+}
+
+static inline bool
+mpool_type_is_rmem(enum mem_pool_type mpool_type)
+{
+	return mpool_type >= MPOOL_TYPE_RMEM_START;
+}
+
+static inline uint64_t
+mpool_get_object_phy_addr(enum mem_pool_type mpool_type,
+			  void *object)
+{
+	if (mpool_type_is_rmem(mpool_type))
+		return (uint64_t)object;
+	else
+		return osal_virt_to_phy(object);
+}
+
+static inline void
+mpool_clear_object(struct mem_pool *mpool,
+                   void *object)
+{
+	if (mpool_type_is_rmem(mpool->mp_config.mpc_type))
+		sonic_rmem_set((uint64_t)object, 0,
+				mpool->mp_config.mpc_object_size);
+	else
+		memset(object, 0, mpool->mp_config.mpc_object_size);
+}
+
+static inline uint32_t
+mpool_get_object_size(struct mem_pool *mpool)
+{
+	return mpool->mp_config.mpc_object_size;
+}
+
+static inline uint32_t
+mpool_get_object_count(struct mem_pool *mpool)
+{
+	return mpool->mp_config.mpc_num_objects;
+}
+
+static inline uint32_t
+mpool_get_object_page_size(struct mem_pool *mpool)
+{
+	return mpool->mp_config.mpc_page_size;
+}
+
+static inline uint32_t
+mpool_get_object_pad_size(struct mem_pool *mpool)
+{
+	return mpool->mp_config.mpc_pad_size;
+}
+
+static inline uint32_t
+mpool_get_object_num_allocs(struct mem_pool *mpool)
+{
+	return mpool->mp_config.mpc_num_allocs;
+}
+
+/*
+ * Ensure there's no loss of significant bits converting
+ * from uint64_t to void *.
+ */
+static inline void
+mpool_void_ptr_check(uint64_t v)
+{
+	void *p = (void *)v; 
+	OSAL_ASSERT((sizeof(void *) >= sizeof(uint64_t)) ||
+		    ((uint64_t)p == v));
+}
 
 #ifdef __cplusplus
 }

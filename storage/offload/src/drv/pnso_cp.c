@@ -207,7 +207,7 @@ compress_chain(struct chain_entry *centry)
 
 	if (centry->ce_next) {
 		next_svc_info = &centry->ce_next->ce_svc_info;
-		err = next_svc_info->si_ops.chain(centry->ce_next);
+		err = next_svc_info->si_ops.sub_chain_from_cpdc(next_svc_info, &svc_info->si_cpdc_chain);
 		if (err) {
 			OSAL_LOG_ERROR("failed to chain next service after cp! err: %d",
 					err);

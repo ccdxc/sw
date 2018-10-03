@@ -53,3 +53,11 @@ seq_setup_cpdc_chain_desc(struct chain_entry *centry,
 	return g_sequencer_ops->setup_cpdc_chain_desc(centry, svc_info,
 			src_desc, desc_size);
 }
+
+void *
+seq_setup_crypto_chain(struct service_info *svc_info,
+			struct crypto_desc *desc)
+{
+	return g_sequencer_ops->setup_crypto_chain(svc_info, desc);
+}
+

@@ -25,7 +25,13 @@ struct crypto_aol *
 crypto_aol_packed_get(const struct per_core_resource *pc_res,
 		      const struct pnso_buffer_list *buf_list,
 		      uint32_t *ret_total_len);
+struct crypto_aol *
+crypto_aol_sparse_get(const struct per_core_resource *pc_res,
+		      uint32_t block_size,
+		      const struct pnso_buffer_list *buf_list,
+		      uint32_t *ret_total_len);
 void crypto_aol_put(const struct per_core_resource *pc_res,
+		    enum mem_pool_type mpool_type,
 		    struct crypto_aol *aol);
 pnso_error_t crypto_desc_status_convert(uint64_t status);
 
