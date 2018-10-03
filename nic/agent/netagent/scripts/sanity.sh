@@ -3,6 +3,7 @@
 function cleanup {
   pkill cap_model
   pkill hal
+  $GOPATH/src/github.com/pensando/sw/nic/tools/savelogs.sh
   exit $1
 
 }
@@ -24,4 +25,3 @@ fi
 go test -v ./test/integ/venice_integ -run TestVeniceInteg -datapath=hal -agents=1 || cleanup $?
 go test -v ./test/integ/npminteg/... || cleanup $?
 cleanup
-$GOPATH/src/github.com/pensando/sw/nic/tools/savelogs.sh
