@@ -1999,25 +1999,10 @@ session_init (hal_cfg_t *hal_cfg)
 
     g_hal_state->set_fte_stats((void *)fte_stats);    
 
-    // Disable aging when FTE is disabled
-    if (getenv("DISABLE_AGING")) {
-        return HAL_RET_OK;
-    }
-
     // wait until the periodic thread is ready
     while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
-    t_session_timer =
-        sdk::lib::timer_schedule(HAL_TIMER_ID_SESSION_AGEOUT,            // timer_id
-                                      HAL_SESSION_AGE_SCAN_INTVL,
-                                      (void *)0,    // ctxt
-                                      session_age_walk_cb, true);
-    if (!t_session_timer) {
-        return HAL_RET_ERR;
-    }
-    HAL_TRACE_DEBUG("Started session aging periodic timer with {}ms invl",
-                    HAL_SESSION_AGE_SCAN_INTVL);
 
     t_fte_stats_timer =
         sdk::lib::timer_schedule(HAL_TIMER_ID_FTE_STATS,            // timer_id
@@ -2029,6 +2014,21 @@ session_init (hal_cfg_t *hal_cfg)
     }
     HAL_TRACE_DEBUG("Started fte stats periodic timer with {}ms invl",
                     HAL_FTE_STATS_TIMER_INTVL);
+
+    // Disable aging when FTE is disabled
+    if (getenv("DISABLE_AGING")) {
+        return HAL_RET_OK;
+    }
+    t_session_timer =
+        sdk::lib::timer_schedule(HAL_TIMER_ID_SESSION_AGEOUT,            // timer_id
+                                      HAL_SESSION_AGE_SCAN_INTVL,
+                                      (void *)0,    // ctxt
+                                      session_age_walk_cb, true);
+    if (!t_session_timer) {
+        return HAL_RET_ERR;
+    }
+    HAL_TRACE_DEBUG("Started session aging periodic timer with {}ms invl",
+                    HAL_SESSION_AGE_SCAN_INTVL);
 
     return HAL_RET_OK;
 }

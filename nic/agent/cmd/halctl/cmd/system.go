@@ -289,8 +289,8 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if fteTxRx {
-		fmt.Println("\nFTE TxRx Stats:")
-		fteTxRxStatsShow(resp.GetStats())
+		fmt.Println("\nFTE TxRx Stats: Disabled")
+		//fteTxRxStatsShow(resp.GetStats())
 	}
 
 	if pb {
