@@ -5,6 +5,7 @@
  */
 #include "osal.h"
 #include "pnso_api.h"
+#include "sonic_api_int.h"
 
 #include "pnso_pbuf.h"
 #include "pnso_mpool.h"
@@ -18,7 +19,7 @@ crypto_pprint_aol(uint64_t aol_pa)
 {
 	const struct crypto_aol *aol;
 
-	aol = (const struct crypto_aol *) osal_phy_to_virt(aol_pa);
+	aol = (const struct crypto_aol *) sonic_phy_to_virt(aol_pa);
 	while (aol) {
 		OSAL_LOG_INFO("%30s: 0x%llx", "ca_addr_0", aol->ca_addr_0);
 		OSAL_LOG_INFO("%30s: %d", "ca_off_0", aol->ca_off_0);
@@ -34,7 +35,7 @@ crypto_pprint_aol(uint64_t aol_pa)
 
 		OSAL_LOG_INFO("%30s: 0x%llx", "ca_next", aol->ca_next);
 		OSAL_LOG_INFO("%30s: 0x%llx", "ca_rsvd", aol->ca_rsvd);
-		aol = aol->ca_next ? osal_phy_to_virt(aol->ca_next) : NULL;
+		aol = aol->ca_next ? sonic_phy_to_virt(aol->ca_next) : NULL;
 	}
 }
 
@@ -127,7 +128,7 @@ crypto_aol_packed_get(const struct per_core_resource *pc_res,
 		if (!aol_head)
 			aol_head = aol;
 		else
-			aol_prev->ca_next = osal_virt_to_phy(aol);
+			aol_prev->ca_next = sonic_virt_to_phy(aol);
 		aol_prev = aol;
 	}
 
@@ -144,7 +145,7 @@ crypto_aol_put(const struct per_core_resource *pc_res,
 	struct crypto_aol *aol_next;
 
 	while (aol) {
-		aol_next = aol->ca_next ? osal_phy_to_virt(aol->ca_next) :
+		aol_next = aol->ca_next ? sonic_phy_to_virt(aol->ca_next) :
 					  NULL;
 		pc_res_mpool_object_put(pc_res, MPOOL_TYPE_CRYPTO_AOL,
 					(void *)aol);

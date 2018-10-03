@@ -6,6 +6,8 @@
 #include "osal.h"
 #include "pnso_api.h"
 
+#include "sonic_api_int.h"
+
 #include "pnso_mpool.h"
 #include "pnso_pbuf.h"
 #include "pnso_chain.h"
@@ -115,7 +117,7 @@ fill_hash_desc(uint32_t algo_type, uint32_t buf_len,
 	memset(desc, 0, sizeof(*desc));
 	memset(status_desc, 0, sizeof(*status_desc));
 
-	desc->cd_src = (uint64_t) osal_virt_to_phy(src_buf);
+	desc->cd_src = (uint64_t) sonic_virt_to_phy(src_buf);
 
 	desc->u.cd_bits.cc_enabled = 0;
 	desc->u.cd_bits.cc_src_is_list = flat_buf ? 0 : 1;
@@ -133,7 +135,7 @@ fill_hash_desc(uint32_t algo_type, uint32_t buf_len,
 	}
 
 	desc->cd_datain_len = buf_len;
-	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_desc);
+	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_HASH_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);

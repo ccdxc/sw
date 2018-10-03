@@ -26,8 +26,6 @@ void *osal_realloc(void *ptr, size_t size);
 char *osal_strdup(const char *str);
 uint64_t osal_virt_to_phy(void *ptr);
 void *osal_phy_to_virt(uint64_t phy);
-uint64_t osal_hostpa_to_devpa(uint64_t hostpa);
-uint64_t osal_devpa_to_hostpa(uint64_t devpa);
 
 uint64_t osal_rmem_alloc(size_t size);
 uint64_t osal_rmem_calloc(size_t size);

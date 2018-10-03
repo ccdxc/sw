@@ -7,6 +7,7 @@
 
 #include "sonic_dev.h"
 #include "sonic_lif.h"
+#include "sonic_api_int.h"
 
 #include "osal.h"
 #include "pnso_api.h"
@@ -106,7 +107,7 @@ pprint_sgl(uint64_t sgl_pa)
 {
 	const struct cpdc_sgl *sgl;
 
-	sgl = (const struct cpdc_sgl *) osal_phy_to_virt(sgl_pa);
+	sgl = (const struct cpdc_sgl *) sonic_phy_to_virt(sgl_pa);
 	if (!sgl)
 		return;
 
@@ -120,7 +121,7 @@ pprint_sgl(uint64_t sgl_pa)
 		OSAL_LOG_INFO("%30s: 0x%llx/0x%llx", "",
 				sgl->cs_next, sgl->cs_rsvd_3);
 
-		sgl = sgl->cs_next ? osal_phy_to_virt(sgl->cs_next) : NULL;
+		sgl = sgl->cs_next ? sonic_phy_to_virt(sgl->cs_next) : NULL;
 	}
 }
 
@@ -246,9 +247,8 @@ cpdc_release_sgl(struct cpdc_sgl *sgl)
 	iter = 0;
 	while (sgl) {
 		sgl_next = sgl->cs_next ?
-			(struct cpdc_sgl *) osal_phy_to_virt(sgl->cs_next) :
+			(struct cpdc_sgl *) sonic_phy_to_virt(sgl->cs_next) :
 			NULL;
-		sgl->cs_next = 0;
 		iter++;
 
 		err = mpool_put_object(cpdc_sgl_mpool, sgl);
@@ -308,9 +308,10 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		if (!sgl_head)
 			sgl_head = sgl;
 		else
-			sgl_prev->cs_next = (uint64_t) osal_virt_to_phy(sgl);
+			sgl_prev->cs_next = (uint64_t) sonic_virt_to_phy(sgl);
 
-		sgl->cs_addr_0 = buf_list->buffers[i].buf;
+		sgl->cs_addr_0 =
+			sonic_hostpa_to_devpa(buf_list->buffers[i].buf);
 		sgl->cs_len_0 = buf_list->buffers[i].len;
 		i++;
 		count--;
@@ -321,7 +322,8 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		}
 
 		if (count && buf_list->buffers[i].len) {
-			sgl->cs_addr_1 = buf_list->buffers[i].buf;
+			sgl->cs_addr_1 =
+				sonic_hostpa_to_devpa(buf_list->buffers[i].buf);
 			sgl->cs_len_1 = buf_list->buffers[i].len;
 			i++;
 			count--;
@@ -331,7 +333,8 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		}
 
 		if (count && buf_list->buffers[i].len) {
-			sgl->cs_addr_2 = buf_list->buffers[i].buf;
+			sgl->cs_addr_2 =
+				sonic_hostpa_to_devpa(buf_list->buffers[i].buf);
 			sgl->cs_len_2 = buf_list->buffers[i].len;
 			i++;
 			count--;
@@ -617,7 +620,7 @@ cpdc_fill_per_block_desc_ex(uint32_t algo_type, uint32_t block_size,
 		len = buf_len > block_size ? block_size : buf_len;
 
 		memset(pb_sgl, 0, sizeof(struct cpdc_sgl));
-		pb_sgl->cs_addr_0 = osal_virt_to_phy(buf);
+		pb_sgl->cs_addr_0 = sonic_virt_to_phy(buf);
 		pb_sgl->cs_len_0 = len;
 
 		OSAL_LOG_INFO("blk_num: %d buf: 0x%llx, len: %d desc: 0x%llx status_desc: 0x%llx sgl: 0x%llx",

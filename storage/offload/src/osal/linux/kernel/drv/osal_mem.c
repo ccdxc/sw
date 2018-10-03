@@ -105,32 +105,12 @@ void osal_rmem_write(uint64_t ptr, const void *src, size_t size)
 
 uint64_t osal_virt_to_phy(void *ptr)
 {
-	uint64_t pa;
-
 	OSAL_ASSERT(ptr);
-
-	pa = virt_to_phys(ptr);
-
-	return osal_hostpa_to_devpa(pa);
+	return virt_to_phys(ptr);
 }
 
 void *osal_phy_to_virt(uint64_t phy)
 {
-	uint64_t pa;
-
 	OSAL_ASSERT(phy);
-
-	pa = osal_devpa_to_hostpa(phy);
-
-	return phys_to_virt((phys_addr_t) pa);
-}
-
-uint64_t osal_hostpa_to_devpa(uint64_t hostpa)
-{
-	return sonic_hostpa_to_devpa(hostpa);
-}
-
-uint64_t osal_devpa_to_hostpa(uint64_t devpa)
-{
-	return sonic_devpa_to_hostpa(devpa);
+	return phys_to_virt((phys_addr_t) phy);
 }

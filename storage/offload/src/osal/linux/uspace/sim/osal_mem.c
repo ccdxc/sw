@@ -28,12 +28,12 @@ char *osal_strdup(const char *str)
 
 uint64_t osal_virt_to_phy(void* ptr) 
 {
-  return (uint64_t)ptr;
+	return (uint64_t)ptr;
 }
 
 void* osal_phy_to_virt(uint64_t phy) 
 {
-  return (void *)phy;
+	return (void *)phy;
 }
 
 uint64_t osal_rmem_alloc(size_t size) 
@@ -77,14 +77,4 @@ void osal_rmem_write(uint64_t ptr, const void *src, size_t size)
 void osal_rmem_free(uint64_t ptr, size_t size) 
 {
 	return free((void*)ptr);
-}
-
-uint64_t osal_hostpa_to_devpa(uint64_t hostpa)
-{
-	return hostpa;
-}
-
-uint64_t osal_devpa_to_hostpa(uint64_t devpa)
-{
-	return devpa;
 }

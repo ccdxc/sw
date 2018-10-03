@@ -59,13 +59,3 @@ void *osal_phy_to_virt(uint64_t phy)
 {
 	return (void*)phy;
 }
-
-uint64_t osal_hostpa_to_devpa(uint64_t hostpa)
-{
-	return hostpa;
-}
-
-uint64_t osal_devpa_to_hostpa(uint64_t devpa)
-{
-	return devpa;
-}

@@ -6,6 +6,8 @@
 #include "osal.h"
 #include "pnso_api.h"
 
+#include "sonic_api_int.h"
+
 #include "pnso_mpool.h"
 #include "pnso_pbuf.h"
 #include "pnso_chain.h"
@@ -79,8 +81,8 @@ crypto_desc_fill(struct service_info *svc_info,
 	memset(crypto_desc, 0, sizeof(*crypto_desc));
 	memset(status_desc, 0, sizeof(*status_desc));
 
-	crypto_desc->cd_in_aol = osal_virt_to_phy(svc_info->si_src_aol);
-	crypto_desc->cd_out_aol = osal_virt_to_phy(svc_info->si_dst_aol);
+	crypto_desc->cd_in_aol = sonic_virt_to_phy(svc_info->si_src_aol);
+	crypto_desc->cd_out_aol = sonic_virt_to_phy(svc_info->si_dst_aol);
 
 	OSAL_ASSERT(pnso_crypto_desc->algo_type < PNSO_CRYPTO_TYPE_MAX);
 	crypto_desc->cd_db_data = CRYPTO_ENCRYPT_CPL_DATA;
@@ -96,7 +98,7 @@ crypto_desc_fill(struct service_info *svc_info,
 		     sonic_get_crypto_key_idx(pnso_crypto_desc->key_desc_idx);
 
 	crypto_desc->cd_iv_addr = pnso_crypto_desc->iv_addr;
-	crypto_desc->cd_status_addr = osal_virt_to_phy(status_desc);
+	crypto_desc->cd_status_addr = sonic_virt_to_phy(status_desc);
 	crypto_desc->cd_db_addr = crypto_desc->cd_status_addr +
 				  sizeof(status_desc->csd_err);
 

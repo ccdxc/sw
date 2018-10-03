@@ -3,6 +3,8 @@
  * All rights reserved.
  *
  */
+#include "sonic_api_int.h"
+
 #include "pnso_utils.h"
 
 void
@@ -81,7 +83,7 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 			break;
 		}
 		len = iter->cur_len > max_len ? max_len : iter->cur_len;
-		*ret_addr = iter->cur_addr;
+		*ret_addr = sonic_hostpa_to_devpa(iter->cur_addr);
 		*ret_len = len;
 		iter->cur_addr += len;
 		iter->cur_len -= len;

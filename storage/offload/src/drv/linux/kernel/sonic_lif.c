@@ -24,6 +24,7 @@
 #include "sonic.h"
 #include "sonic_bus.h"
 #include "sonic_dev.h"
+#include "sonic_api_int.h"
 #include "sonic_lif.h"
 #include "sonic_debugfs.h"
 #include "osal_logger.h"
@@ -991,7 +992,8 @@ static int sonic_lif_seq_q_init(struct queue *q)
 			.host_wrings = 1,
 			.entry_size = ilog2(q->desc_size),
 			.wring_size = ilog2(q->num_descs),
-			.wring_base = (dma_addr_t)osal_hostpa_to_devpa((uint64_t)q->base_pa),
+			.wring_base = (dma_addr_t)
+				sonic_hostpa_to_devpa((uint64_t) q->base_pa),
 		},
 	};
 	int err;

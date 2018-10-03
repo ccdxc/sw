@@ -6,6 +6,8 @@
 #include "osal.h"
 #include "pnso_api.h"
 
+#include "sonic_api_int.h"
+
 #include "pnso_mpool.h"
 #include "pnso_pbuf.h"
 #include "pnso_chain.h"
@@ -152,8 +154,8 @@ fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
 	memset(desc, 0, sizeof(*desc));
 	memset(status_desc, 0, sizeof(*status_desc));
 
-	desc->cd_src = (uint64_t) osal_virt_to_phy(src_sgl);
-	desc->cd_dst = (uint64_t) osal_virt_to_phy(dst_sgl);
+	desc->cd_src = (uint64_t) sonic_virt_to_phy(src_sgl);
+	desc->cd_dst = (uint64_t) sonic_virt_to_phy(dst_sgl);
 
 	desc->u.cd_bits.cc_enabled = 1;
 	desc->u.cd_bits.cc_insert_header = 1;
@@ -165,7 +167,7 @@ fill_cp_desc(struct cpdc_desc *desc, struct cpdc_sgl *src_sgl,
 		(src_buf_len == MAX_CPDC_SRC_BUF_LEN) ? 0 : src_buf_len;
 	desc->cd_threshold_len = threshold_len;
 
-	desc->cd_status_addr = (uint64_t) osal_virt_to_phy(status_desc);
+	desc->cd_status_addr = (uint64_t) sonic_virt_to_phy(status_desc);
 	desc->cd_status_data = CPDC_CP_STATUS_DATA;
 
 	CPDC_PPRINT_DESC(desc);
@@ -393,6 +395,7 @@ compress_read_status(const struct service_info *svc_info)
 	struct cpdc_status_desc *status_desc;
 	struct cpdc_sgl	*dst_sgl;
 	struct pnso_compression_header *cp_hdr;
+	uint64_t cp_hdr_pa;
 	uint16_t datain_len;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -411,8 +414,9 @@ compress_read_status(const struct service_info *svc_info)
 	if (cp_desc->u.cd_bits.cc_enabled &&
 			cp_desc->u.cd_bits.cc_insert_header) {
 		dst_sgl = svc_info->si_dst_sgl;
+		cp_hdr_pa = sonic_devpa_to_hostpa(dst_sgl->cs_addr_0);
 		cp_hdr = (struct pnso_compression_header *)
-			osal_phy_to_virt(dst_sgl->cs_addr_0);
+			sonic_phy_to_virt(cp_hdr_pa);
 
 		/* TODO-cp: verify hard-coded CP version, etc. */
 
