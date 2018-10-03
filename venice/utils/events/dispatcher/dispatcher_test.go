@@ -1032,22 +1032,31 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 
 	expTime := time.Now().Add(1 * time.Second) // after exipry
 	prevCount := uint32(0)
-	for {
-		time.Sleep(15 * time.Millisecond) // for batch and processing at the writer
-		evt := mockWriter.GetEventByUUID(evtUUID)
-		if evt == nil {
-			continue
-		}
-		if evt.GetCount() >= prevCount { // event updates
-			prevCount = evt.GetCount()
-			continue
-		}
 
-		if time.Until(expTime).Seconds() < 0 { // expired
-			Assert(t, evt.GetCount() > 0 && evt.GetCount() < 10, "new event should be created after expiry: %v", evt.GetCount())
-			close(stopUpdatingEvents)
-			wg.Wait()
-			return
+	testTimeoutC := time.After(2 * time.Second)
+	for {
+		select {
+		case <-testTimeoutC:
+			t.Fatalf("test timedout waiting to exit from busy loop")
+		case <-time.After(15 * time.Millisecond): // for batch and processing at the writer
+			evt := mockWriter.GetEventByUUID(evtUUID)
+			if evt == nil {
+				t.Log("evt is nil")
+				continue
+			}
+			if evt.GetCount() >= prevCount { // event updates
+				prevCount = evt.GetCount()
+				t.Logf("prevCount is %d when restarting the loop", prevCount)
+				continue
+			}
+
+			if time.Until(expTime).Seconds() < 0 { // expired
+				t.Logf("prevCount is %d After expiration time", prevCount)
+				Assert(t, evt.GetCount() > 0 && evt.GetCount() < 10, "new event should be created after expiry: %v", evt.GetCount())
+				close(stopUpdatingEvents)
+				wg.Wait()
+				return
+			}
 		}
 	}
 }

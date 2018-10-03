@@ -314,11 +314,12 @@ func (d *dispatcherImpl) notifyWriters() {
 			d.eventsBatcher.clear()
 
 			offset, err := d.eventsStore.GetCurrentOffset()
+			d.Unlock()
+
 			if err != nil {
 				d.logger.Errorf("failed to get the offset from events store to distribute events; skipping distribute, err: %v", err)
 				continue
 			}
-			d.Unlock()
 
 			d.distributeEvents(evts, offset)
 		case <-d.shutdown:

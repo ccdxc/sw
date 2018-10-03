@@ -410,7 +410,11 @@ func (e *etcdStore) ListFiltered(ctx context.Context, prefix string, into runtim
 // the watch from. If fromVersion is 0, it will return the existing object and
 // watch for changes from the returned version.
 func (e *etcdStore) Watch(ctx context.Context, key string, fromVersion string) (kvstore.Watcher, error) {
-	return e.newWatcher(ctx, key, fromVersion)
+	w, err := e.newWatcher(ctx, key, fromVersion)
+	if err != nil {
+		return nil, err
+	}
+	return w, nil
 }
 
 // PrefixWatch watches changes on all objects corresponding to a prefix key.
@@ -419,14 +423,22 @@ func (e *etcdStore) Watch(ctx context.Context, key string, fromVersion string) (
 // version.
 // TODO: Filter objects
 func (e *etcdStore) PrefixWatch(ctx context.Context, prefix string, fromVersion string) (kvstore.Watcher, error) {
-	return e.newPrefixWatcher(ctx, prefix, fromVersion)
+	w, err := e.newPrefixWatcher(ctx, prefix, fromVersion)
+	if err != nil {
+		return nil, err
+	}
+	return w, nil
 }
 
 // WatchFiltered watches changes on all objects with filters specified
 // by opts applied.
 func (e *etcdStore) WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (kvstore.Watcher, error) {
 	// Filtering is no supported. Fallback to PrefixWatch
-	return e.PrefixWatch(ctx, key, opts.ResourceVersion)
+	w, err := e.PrefixWatch(ctx, key, opts.ResourceVersion)
+	if err != nil {
+		return nil, err
+	}
+	return w, nil
 }
 
 // Contest creates a new contender in an election. name is the name of the
@@ -435,7 +447,11 @@ func (e *etcdStore) WatchFiltered(ctx context.Context, key string, opts api.List
 // refresh. If the leader does not update the lease for ttl duration, a new
 // election is performed.
 func (e *etcdStore) Contest(ctx context.Context, name string, id string, ttl uint64) (kvstore.Election, error) {
-	return e.newElection(ctx, name, id, int(ttl))
+	el, err := e.newElection(ctx, name, id, int(ttl))
+	if err != nil {
+		return nil, err
+	}
+	return el, nil
 }
 
 // NewTxn creates a new transaction object.
