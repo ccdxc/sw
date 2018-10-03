@@ -678,6 +678,8 @@ func checkValidators(file *descriptor.File, msgmap map[string]bool, name string)
 	}
 	glog.Infof(" checkValidators on %s", name)
 	found := false
+	// add in map with temp value to handle recursion.
+	msgmap[name] = found
 	for _, fld := range m.Fields {
 		_, err := reg.GetExtension("venice.check", fld)
 		if err == nil {
@@ -947,6 +949,8 @@ func checkStorageTransformers(file *descriptor.File, msgmap map[string]bool, nam
 	}
 	glog.Infof(" checkStorageTransformers on %s", name)
 	found := false
+	// add in map with temp value to handle recursion.
+	msgmap[name] = found
 	for _, fld := range m.Fields {
 		_, err := reg.GetExtension("venice.storageTransformer", fld)
 		if err == nil {

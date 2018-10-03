@@ -14,6 +14,8 @@
 		Spec
 		WatchSpec
 		Any
+		Interface
+		InterfaceSlice
 		ListMeta
 		ListWatchOptions
 		ObjectMeta

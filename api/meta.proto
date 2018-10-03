@@ -114,6 +114,20 @@ message StatusResult {
   string Str = 1;
 }
 
+message InterfaceSlice {
+  repeated Interface Values = 1;
+}
+
+message Interface {
+  oneof Value {
+    string Str = 1;
+    int64 Int64 = 2;
+    bool Bool = 3;
+    double Float = 4;
+    InterfaceSlice Interfaces = 5;
+  }
+}
+
 // Status is returned for calls that dont return objects.
 message Status {
   TypeMeta T          = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ""];

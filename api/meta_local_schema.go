@@ -16,6 +16,26 @@ var typesMapMeta = map[string]*Struct{
 			"Object": Field{Name: "Object", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "google.protobuf.Any"},
 		},
 	},
+	"api.Interface": &Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(Interface{}) },
+		Fields: map[string]Field{
+			"Str": Field{Name: "Str", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Int64": Field{Name: "Int64", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT64"},
+
+			"Bool": Field{Name: "Bool", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+
+			"Float": Field{Name: "Float", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_DOUBLE"},
+
+			"Interfaces": Field{Name: "Interfaces", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.InterfaceSlice"},
+		},
+	},
+	"api.InterfaceSlice": &Struct{
+		GetTypeFn: func() reflect.Type { return reflect.TypeOf(InterfaceSlice{}) },
+		Fields: map[string]Field{
+			"Values": Field{Name: "Values", CLITag: CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Interface"},
+		},
+	},
 	"api.ListMeta": &Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(ListMeta{}) },
 		Fields: map[string]Field{
