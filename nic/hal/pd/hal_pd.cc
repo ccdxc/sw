@@ -424,6 +424,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, pd_conv_hw_clock_to_sw_clock);
     PD_FUNC_LOAD(PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, pd_conv_sw_clock_to_hw_clock);
     PD_FUNC_LOAD(PD_FUNC_ID_CLOCK_DELTA_COMP, pd_clock_delta_comp);
+    PD_FUNC_LOAD(PD_FUNC_ID_CLOCK_DETAIL_GET, pd_clock_detail_get); 
 
     // gft
     PD_FUNC_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE,
@@ -550,6 +551,19 @@ hal_pd_clock_delta_comp_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal_pd_call(PD_FUNC_ID_CLOCK_DELTA_COMP, &pd_func_args) == HAL_RET_OK);
 
     return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_pd_clock_detail_get_init (hal_cfg_t *hal_cfg)
+{
+    pd_clock_detail_get_args_t     clock_detail_args;
+    pd_func_args_t                 pd_func_args = { 0 };
+
+    pd_func_args.pd_clock_detail_get = &clock_detail_args;
+    HAL_ABORT(hal_pd_call(PD_FUNC_ID_CLOCK_DETAIL_GET, &pd_func_args) == HAL_RET_OK);
+
+    return HAL_RET_OK;
+
 }
 
 //------------------------------------------------------------------------------

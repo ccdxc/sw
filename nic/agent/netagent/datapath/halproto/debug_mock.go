@@ -385,6 +385,24 @@ func (mr *MockDebugClientMockRecorder) ThreadGet(ctx, in interface{}, opts ...in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ThreadGet", reflect.TypeOf((*MockDebugClient)(nil).ThreadGet), varargs...)
 }
 
+// ClockGet mocks base method
+func (m *MockDebugClient) ClockGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ClockResponse, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ClockGet", varargs...)
+	ret0, _ := ret[0].(*ClockResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClockGet indicates an expected call of ClockGet
+func (mr *MockDebugClientMockRecorder) ClockGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClockGet", reflect.TypeOf((*MockDebugClient)(nil).ClockGet), varargs...)
+}
+
 // FlushLogs mocks base method
 func (m *MockDebugClient) FlushLogs(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FlushLogsResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -647,6 +665,19 @@ func (m *MockDebugServer) ThreadGet(arg0 context.Context, arg1 *Empty) (*ThreadR
 // ThreadGet indicates an expected call of ThreadGet
 func (mr *MockDebugServerMockRecorder) ThreadGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ThreadGet", reflect.TypeOf((*MockDebugServer)(nil).ThreadGet), arg0, arg1)
+}
+
+// ClockGet mocks base method
+func (m *MockDebugServer) ClockGet(arg0 context.Context, arg1 *Empty) (*ClockResponse, error) {
+	ret := m.ctrl.Call(m, "ClockGet", arg0, arg1)
+	ret0, _ := ret[0].(*ClockResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClockGet indicates an expected call of ClockGet
+func (mr *MockDebugServerMockRecorder) ClockGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClockGet", reflect.TypeOf((*MockDebugServer)(nil).ClockGet), arg0, arg1)
 }
 
 // FlushLogs mocks base method

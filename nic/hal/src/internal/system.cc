@@ -530,7 +530,6 @@ system_get (SystemResponse *rsp)
             goto end;
         }
 
-       
         // Session Summary get
         system_session_summary_get(rsp);
         if (ret != HAL_RET_OK) {

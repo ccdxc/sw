@@ -29,6 +29,7 @@ service Debug {
   rpc TraceUpdate(TraceRequestMsg) returns (TraceResponseMsg){}
   rpc TraceGet(types.Empty) returns (TraceResponseMsg) {}
   rpc ThreadGet(types.Empty) returns (ThreadResponseMsg) {}
+  rpc ClockGet(types.Empty)  returns (ClockResponse) {}
 
   rpc FlushLogs(types.Empty) returns (FlushLogsResponseMsg) {}
 
@@ -447,4 +448,23 @@ message FlushLogsResponse {
 // Flush logs response message
 message FlushLogsResponseMsg {
   repeated FlushLogsResponse    response = 1;
+}
+
+message ClockSpec {
+  uint64  hardware_clock      = 1; // Hardware clock in nanoseconds
+  uint64  software_delta      = 2; // Computed software delta in nanoseconds
+  uint64  software_clock      = 3; // Software clock after the delta has been applied
+}
+
+message ClockStatus {
+}
+
+message ClockStats {
+}
+
+message ClockResponse {
+  types.ApiStatus   api_status         = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  ClockSpec         spec               = 2;    // Clock Info
+  ClockStatus       status             = 3;    // clock status
+  ClockStats        stats              = 4;    // clock stats
 }

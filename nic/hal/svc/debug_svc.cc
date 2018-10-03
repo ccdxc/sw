@@ -390,3 +390,13 @@ DebugServiceImpl::FteSpanUpdate(ServerContext *context,
     hal::hal_cfg_db_close();
     return Status::OK;
 }
+
+Status
+DebugServiceImpl::ClockGet(ServerContext *context,
+                           const Empty *req,
+                           ClockResponse *rsp)
+{
+    HAL_TRACE_DEBUG("Received clock get");
+    hal::clock_get(rsp);
+    return Status::OK;
+}

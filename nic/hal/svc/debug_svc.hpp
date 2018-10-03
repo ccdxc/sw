@@ -51,6 +51,7 @@ using debug::FteSpanRequestMsg;
 using debug::FteSpanResponseMsg;
 using debug::FteSpanRequest;
 using debug::FteSpanResponse;
+using debug::ClockResponse;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -102,7 +103,9 @@ public:
     Status FteSpanUpdate(ServerContext *context,
                          const FteSpanRequestMsg *req_msg,
                          FteSpanResponseMsg *rsp_msg);
-
+    Status ClockGet(ServerContext *context,
+                    const Empty *req,
+                    ClockResponse *rsp);
 };
 
 #endif  // __DEBUG_SVC_HPP__

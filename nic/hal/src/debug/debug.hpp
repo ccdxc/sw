@@ -23,6 +23,7 @@ using debug::FteSpanRequestMsg;
 using debug::FteSpanResponseMsg;
 using debug::FteSpanRequest;
 using debug::FteSpanResponse;
+using debug::ClockResponse;
 
 namespace hal {
 
@@ -73,6 +74,7 @@ hal_ret_t fte_span_create(FteSpanRequest& req,
 hal_ret_t fte_span_update(FteSpanRequest& req,
                           FteSpanResponse *rsp);
 hal_ret_t fte_span_get(FteSpanResponseMsg *rsp_msg);
+hal_ret_t clock_get(ClockResponse *response);
 
 }    // namespace hal
 

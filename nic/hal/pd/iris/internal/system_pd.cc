@@ -543,6 +543,31 @@ pd_conv_sw_clock_to_hw_clock (pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
+//--------------------------------------------------------------------------------------
+// Get the clock details: hw clock, delta maintained and sw clock at the given instant
+//---------------------------------------------------------------------------------------
+hal_ret_t
+pd_clock_detail_get (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    uint64_t                            hw_ns = 0;
+    pd_clock_detail_get_args_t         *args = pd_func_args->pd_clock_detail_get;
+    pd_conv_hw_clock_to_sw_clock_args_t conv_args = {0};
+    pd_func_args_t                      conv_func_args;
+ 
+    // Read hw time
+    capri_tm_get_clock_tick(&hw_ns);
+    args->hw_clock = HW_CLOCK_TICK_TO_NS(hw_ns);
+    args->sw_delta = g_hal_state_pd->clock_delta();
+
+    conv_args.hw_tick = args->hw_clock;
+    conv_args.sw_ns = &args->sw_clock;
+    conv_func_args.pd_conv_hw_clock_to_sw_clock = &conv_args;
+    ret = pd_conv_hw_clock_to_sw_clock(&conv_func_args);
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // compute delta between sw and hw clock
 //----------------------------------------------------------------------

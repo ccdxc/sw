@@ -2827,6 +2827,12 @@ typedef struct pd_conv_sw_clock_to_hw_clock_args_s {
 typedef struct pd_clock_delta_comp_args_s {
 } __PACK__ pd_clock_delta_comp_args_t;
 
+typedef struct pd_clock_detail_get_args_s {
+    uint64_t   hw_clock;
+    uint64_t   sw_delta;
+    uint64_t   sw_clock;
+} __PACK__ pd_clock_detail_get_args_t;
+
 // slab
 typedef struct pd_get_slab_args_s {
     hal_slab_t slab_id;
@@ -3143,7 +3149,8 @@ typedef struct pd_fte_span_make_clone_args_s {
     ENTRY(PD_FUNC_ID_FTE_SPAN_MEM_FREE,        277, "PD_FUNC_ID_FTE_SPAN_MEM_FREE")\
     ENTRY(PD_FUNC_ID_FTE_SPAN_MAKE_CLONE,      278, "PD_FUNC_ID_FTE_SPAN_MAKE_CLONE")\
     ENTRY(PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID,  279, "PD_FUNC_ID_CRYPTO_ALLOC_KEY_WITHID")\
-    ENTRY(PD_FUNC_ID_MAX,                      280, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_CLOCK_DETAIL_GET,         280, "PD_FUNC_ID_CLOCK_DETAIL_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      281, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3519,6 +3526,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_conv_hw_clock_to_sw_clock);
         PD_UNION_ARGS_FIELD(pd_conv_sw_clock_to_hw_clock);
         PD_UNION_ARGS_FIELD(pd_clock_delta_comp);
+        PD_UNION_ARGS_FIELD(pd_clock_detail_get);
 
         // slab
         PD_UNION_ARGS_FIELD(pd_get_slab);
@@ -3940,6 +3948,7 @@ PD_FUNCP_TYPEDEF(pd_gft_exact_match_flow_entry_make_clone);
 PD_FUNCP_TYPEDEF(pd_conv_hw_clock_to_sw_clock);
 PD_FUNCP_TYPEDEF(pd_conv_sw_clock_to_hw_clock);
 PD_FUNCP_TYPEDEF(pd_clock_delta_comp);
+PD_FUNCP_TYPEDEF(pd_clock_detail_get);
 
 // slab
 PD_FUNCP_TYPEDEF(pd_get_slab);

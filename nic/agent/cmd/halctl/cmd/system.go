@@ -33,6 +33,13 @@ var systemDetailShowCmd = &cobra.Command{
 	Run:   systemDetailShowCmdHandler,
 }
 
+var systemClockShowCmd = &cobra.Command{
+	Use:   "clock",
+	Short: "show system clock Information",
+	Long:  "show system clock Information",
+	Run:   systemClockShowCmdHandler,
+}
+
 var systemStatsShowCmd = &cobra.Command{
 	Use:   "statistics",
 	Short: "show system statistics [fte | fte-txrx | table | api | pb | all] (Default: all)",
@@ -73,6 +80,7 @@ func init() {
 	systemShowCmd.AddCommand(systemStatsShowCmd)
 	systemShowCmd.AddCommand(threadShowCmd)
 	systemShowCmd.AddCommand(systemDetailShowCmd)
+	systemShowCmd.AddCommand(systemClockShowCmd)
 	systemStatsShowCmd.AddCommand(systemStatsTableShowCmd)
 	systemStatsShowCmd.AddCommand(systemDropStatsShowCmd)
 	threadShowCmd.AddCommand(threadDetailShowCmd)
@@ -315,6 +323,36 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			egrIn, egrOut,
 			uplinkIn, uplinkOut)
 	}
+}
+
+func systemClockShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		os.Exit(1)
+	}
+	client := halproto.NewDebugClient(c.ClientConn)
+
+	var empty *halproto.Empty
+
+	// HAL call
+	resp, err := client.ClockGet(context.Background(), empty)
+	if err != nil {
+		log.Errorf("Clock get failed. %v", err)
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		log.Errorf("HAL Returned non OK status. %v", resp.GetApiStatus())
+		return
+	}
+
+	spec := resp.GetSpec()
+	fmt.Println("\nSystem Clock Information:")
+	fmt.Printf("\n%s%-15d\n", "Hardware Clock (in nanoseconds)    :", spec.GetHardwareClock())
+	fmt.Printf("%s%-15d\n", "Software Delta                     :", spec.GetSoftwareDelta())
+	fmt.Printf("%s%-15d\n", "Software Clock (in nanoseconds)    :", spec.GetSoftwareClock())
 }
 
 func pbStatsShow(dmaIn uint32, dmaOut uint32,
@@ -791,7 +829,7 @@ func fteTxRxStatsShow(stats *halproto.Stats) {
 		return
 	}
 
-	fmt.Printf("%s%d\n", "Flow-miss Packets		: ", ftestats.GetFlowMissPkts())
+	fmt.Printf("%s%-15d\n", "Flow-miss Packets		: ", ftestats.GetFlowMissPkts())
 	fmt.Printf("%s%-15d\n", "Redir Packets			: ", ftestats.GetRedirPkts())
 	fmt.Printf("%s%-15d\n", "Ctrlflow Packets		: ", ftestats.GetCflowPkts())
 	fmt.Printf("%s%-15d\n", "TCP Close Packets		: ", ftestats.GetTcpClosePkts())

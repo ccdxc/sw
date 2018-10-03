@@ -299,7 +299,7 @@ flush_logs (FlushLogsResponse *rsp)
 }
 
 //------------------------------------------------------------------------------
-// process a flush_logs request
+// process thread get request
 //------------------------------------------------------------------------------
 hal_ret_t
 thread_get (ThreadResponseMsg *response)
@@ -747,6 +747,28 @@ fte_span_get(FteSpanResponseMsg *rsp_msg)
 
     response->set_api_status(types::API_STATUS_OK);
 
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// process clock get request
+//------------------------------------------------------------------------------
+hal_ret_t
+clock_get(ClockResponse *response)
+{
+    hal_ret_t                      ret = HAL_RET_OK;
+    pd::pd_func_args_t             pd_func_args = {0};
+    pd::pd_clock_detail_get_args_t clock_args;
+
+    pd_func_args.pd_clock_detail_get = &clock_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_CLOCK_DETAIL_GET, &pd_func_args);
+  
+    response->mutable_spec()->set_hardware_clock(clock_args.hw_clock);
+    response->mutable_spec()->set_software_delta(clock_args.sw_delta);
+    response->mutable_spec()->set_software_clock(clock_args.sw_clock);
+
+    response->set_api_status(types::API_STATUS_OK);
+ 
     return ret;
 }
 
