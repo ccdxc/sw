@@ -12,6 +12,10 @@ HEIMDALL_SCALE_CONFIG=$HEIMDALL_SCALE_CONFIG_DIR/scale_cfg.yml
 SIM_DEVICE_JSON=$HEIMDALL_GOLDEN_CONFIG_DIR/sim_device.json
 UPLINK_MAP_JSON=$HEIMDALL_GOLDEN_CONFIG_DIR/uplink_map.json
 
+function cleanup {
+  $GOPATH/src/github.com/pensando/sw/nic/tools/savelogs.sh
+  exit $1
+}
 
 echo "Starting Heimdall run in default (host-pinned) mode"
 
@@ -21,7 +25,7 @@ go run $HEIMDALL_RUN run --device-file $SIM_DEVICE_JSON  --config-file $HEIMDALL
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Pushing configuration to agent failed!"
-   exit $OUT
+   cleanup $OUT
 fi
 
 echo "Starting Traffic Tests..."
@@ -33,7 +37,7 @@ go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON --config-file $HEIMD
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Host-Host traffic test failed"
-   exit $OUT
+   cleanup $OUT
 fi
 
 echo "Starting Host-Network Traffic tests.."
@@ -43,7 +47,7 @@ go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON  --uplink-map $UPLIN
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Host-Network traffic test failed"
-   exit $OUT
+   cleanup $OUT
 fi
 
 
@@ -55,7 +59,7 @@ go run $HEIMDALL_RUN run --config-file $HEIMDALL_GOLDEN_CONFIG --enable-sim --sm
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Pushing configuration to agent failed!"
-   exit $OUT
+   cleanup $OUT
 fi
 
 
@@ -65,7 +69,7 @@ go run $HEIMDALL_RUN traffic --uplink-map $UPLINK_MAP_JSON --config-file $HEIMDA
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Network-Network traffic test failed"
-   exit $OUT
+   cleanup $OUT
 fi
 
 
@@ -75,7 +79,7 @@ go run $HEIMDALL_RUN run --device-file $SIM_DEVICE_JSON --config-file $HEIMDALL_
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Pushing configuration to agent failed!"
-   exit $OUT
+   cleanup $OUT
 fi
 
 
@@ -84,7 +88,7 @@ go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON --config-file $HEIMD
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Host-Host traffic test failed"
-   exit $OUT
+   cleanup $OUT
 fi
 
 go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON  --uplink-map $UPLINK_MAP_JSON --config-file $HEIMDALL_GOLDEN_CONFIG --sim-mode
@@ -92,7 +96,7 @@ go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON  --uplink-map $UPLIN
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Host-Network traffic test failed"
-   exit $OUT
+   cleanup $OUT
 fi
 
 
@@ -104,7 +108,8 @@ go run $HEIMDALL_RUN run --config-file $HEIMDALL_SCALE_CONFIG --enable-sim --vla
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Pushing configuration to agent failed!"
-   exit $OUT
+   cleanup $OUT
 fi
 
 echo "Scale sanity passed..."
+cleanup 0
