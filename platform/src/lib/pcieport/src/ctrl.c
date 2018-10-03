@@ -157,6 +157,38 @@ pcieport_mac_unreset(pcieport_t *p)
     return 0;
 }
 
+static void
+pcieport_run_script(const char *name, const int port)
+{
+    char path[80];
+
+#ifdef __aarch64__
+    snprintf(path, sizeof(path), "/mnt/%s", name);
+    if (access(path, X_OK) == 0) system(path);
+
+    snprintf(path, sizeof(path), "/mnt/%s-%d", name, port);
+    if (access(path, X_OK) == 0) system(path);
+
+    snprintf(path, sizeof(path), "/tmp/%s", name);
+    if (access(path, X_OK) == 0) system(path);
+
+    snprintf(path, sizeof(path), "/tmp/%s-%d", name, port);
+    if (access(path, X_OK) == 0) system(path);
+#else
+    snprintf(path, sizeof(path), "./%s", name);
+    if (access(path, X_OK) == 0) system(path);
+
+    snprintf(path, sizeof(path), "./%s-%d", name, port);
+    if (access(path, X_OK) == 0) system(path);
+#endif
+}
+
+static void
+pcieport_poweron_script(pcieport_t *p)
+{
+    pcieport_run_script("pcie-poweron", p->port);
+}
+
 static int
 pcieport_hostconfig(pcieport_t *p)
 {
@@ -198,6 +230,8 @@ pcieport_hostconfig(pcieport_t *p)
     pcieport_mac_k_pexconf(p);
     pcieport_mac_k_pciconf(p);
     pcieport_mac_set_ids(p);
+
+    pcieport_poweron_script(p);
 
     /* now ready to unreset mac */
     if (pcieport_mac_unreset(p) < 0) {
@@ -289,10 +323,56 @@ pcieport_validate_hostconfig(pcieport_t *p)
 }
 
 static int
+pcieport_parse_cap(char *cap, int *gen, int *width)
+{
+    if (sscanf(cap, "gen%dx%d", gen, width) == 2) {
+        if (*gen >= 1 && *gen <= 4 &&
+            *width >= 1 && *width <= 16) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int
+pcieport_getenv_cap(int port, int *gen, int *width)
+{
+    char envar[40];
+    char *env;
+
+    snprintf(envar, sizeof(envar), "PCIEPORT%d_CAP", port);
+    env = getenv(envar);
+    if (env && pcieport_parse_cap(env, gen, width)) {
+        return 1;
+    }
+
+    snprintf(envar, sizeof(envar), "PCIEPORT_CAP");
+    env = getenv(envar);
+    if (env && pcieport_parse_cap(env, gen, width)) {
+        return 1;
+    }
+
+    return 0;
+}
+
+static void
+pcieport_default_cap(pcieport_t *p, int *gen, int *width)
+{
+    /* check envar for override */
+    if (!pcieport_getenv_cap(p->port, gen, width)) {
+        /* no envar, provide defaults */
+        *gen = pal_is_asic() ? 4 : 1;
+        *width = pal_is_asic() ? 16 : 4;
+    }
+}
+
+static int
 pcieport_cmd_hostconfig(pcieport_t *p, void *arg)
 {
     pcieport_hostconfig_t *pcfg = arg;
-    int r;
+    int r, default_gen, default_width;
+
+    pcieport_default_cap(p, &default_gen, &default_width);
 
     /*
      * Use caller's param defaults if provided.
@@ -308,10 +388,10 @@ pcieport_cmd_hostconfig(pcieport_t *p, void *arg)
      * Provide default params for any unspecified.
      */
     if (p->cap_gen == 0) {
-        p->cap_gen = pal_is_asic() ? 4 : 1;
+        p->cap_gen = default_gen;
     }
     if (p->cap_width == 0) {
-        p->cap_width = pal_is_asic() ? 16 : 4;
+        p->cap_width = default_width;
     }
     if (p->subvendorid == 0) {
         p->subvendorid = PCI_VENDOR_ID_PENSANDO;
