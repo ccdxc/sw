@@ -6,4 +6,4 @@ config IONIC
 	tristate "Pensando Ethernet NIC Support"
 	depends on PCI && X86_64
 	---help---
-	  This enables the support for the Pensado Ethernet NIC.
+	  This enables the support for the Pensando Ethernet NIC.
