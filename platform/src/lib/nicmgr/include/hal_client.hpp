@@ -234,7 +234,7 @@ public:
   int CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
                uint16_t rq_wqe_size, uint16_t num_sq_wqes,
                uint16_t num_rq_wqes, uint16_t num_rsq_wqes,
-               uint16_t num_rrq_wqes, uint8_t pd_num,
+               uint16_t num_rrq_wqes, uint32_t pd_num,
                uint32_t sq_cq_num, uint32_t rq_cq_num, uint32_t page_size,
                uint32_t pmtu,
                int service, int flags,
