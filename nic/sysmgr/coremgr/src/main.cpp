@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     while (true) {
         char buffer[CHUNK_SIZE];
         ssize_t n = read(STDIN_FILENO, buffer, CHUNK_SIZE);
-        if (n == 0) 
+        if (n <= 0) 
         {
             gzclose(out);
             return 0;
