@@ -68,6 +68,7 @@ nic/build/aarch64/iris/lib/libtrace.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libtwheel.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libutils.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libzmq.so.3                               /nic/lib/
+nic/build/aarch64/iris/lib/libhaltestutils.so                        /nic/lib/
 
 nic/build/aarch64/iris/bin/halctl                     /nic/bin/
 nic/build/aarch64/iris/bin/hal_scale_test             /nic/bin/
@@ -80,3 +81,6 @@ nic/obj/test-driver                                   /nic/bin
 nic/e2etests/go/naples_cfg/e2e.cfg                    /nic/conf/test_driver/
 nic/e2etests/go/naples_cfg/scale.topo                 /nic/conf/test_driver/
 nic/e2etests/go/agent/configs/scale.yml               /nic/conf/test_driver/
+
+nic/sdk/third-party/googletest-release-1.8.0/googletest/make/aarch64/libgtest.so /platform/lib/
+nic/sdk/third-party/googletest-release-1.8.0/googletest/make/aarch64/libgtest_without_main.so /platform/lib/

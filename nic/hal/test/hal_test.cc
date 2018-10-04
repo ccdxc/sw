@@ -3156,6 +3156,7 @@ main (int argc, char** argv)
         return 0;
     } else if (bypass_tls) {
         hclient.bypass_tls();
+        return 0;
     } else if (tcpcb_get) {
         hclient.tcpcb_get(tcpcb_id);
         return 0;
