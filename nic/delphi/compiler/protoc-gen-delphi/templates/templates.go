@@ -152,6 +152,8 @@ private:
     delphi::metrics::CounterPtr   {{.GetName}}_;
     {{else if (eq .GetTypeName ".delphi.Gauge") }}
     delphi::metrics::GaugePtr     {{.GetName}}_;
+    {{else if (eq .GetTypeName ".delphi.ObjectMeta") }}
+    delphi::ObjectMeta            {{.GetName}}_;
     {{else}} {{ ThrowError "Invalid field type for" $fileName $msgName .GetName .GetCppTypeName }}
     {{end}}
     {{end}}

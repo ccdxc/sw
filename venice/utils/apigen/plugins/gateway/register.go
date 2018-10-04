@@ -2119,6 +2119,8 @@ func init() {
 	reg.RegisterFunc("isTenanted", isTenanted)
 	reg.RegisterFunc("isObjTenanted", isObjTenanted)
 	reg.RegisterFunc("getProxyPaths", getProxyPaths)
+	reg.RegisterFunc("HasSuffix", strings.HasSuffix)
+	reg.RegisterFunc("ToLower", strings.ToLower)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

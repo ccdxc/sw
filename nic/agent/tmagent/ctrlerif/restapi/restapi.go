@@ -29,6 +29,12 @@ type Response struct {
 
 type routeAddFunc func(*mux.Router, *RestServer)
 
+var prefixRoutes map[string]routeAddFunc
+
+func init() {
+	prefixRoutes = make(map[string]routeAddFunc)
+}
+
 // NewRestServer creates a new HTTP server servicg REST api
 func NewRestServer(listenURL string) (*RestServer, error) {
 	// create server instance
@@ -43,7 +49,6 @@ func NewRestServer(listenURL string) (*RestServer, error) {
 
 	// setup the top level routes
 	router := mux.NewRouter()
-	prefixRoutes := map[string]routeAddFunc{}
 
 	for prefix, subRouter := range prefixRoutes {
 		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
