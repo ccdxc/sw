@@ -7,6 +7,8 @@
 #include "nic/hal/plugins/network/net_plugin.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
+
 
 namespace hal {
 namespace plugins {
@@ -49,10 +51,13 @@ is_multicast_dmac(fte::ctx_t &ctx) {
 static inline hal_ret_t
 update_src_if(fte::ctx_t&ctx)
 {
-    bool src_local = (ctx.sep() && ctx.sep()->ep_flags & EP_FLAGS_LOCAL);
-    bool dst_local = (ctx.dep() && ctx.dep()->ep_flags & EP_FLAGS_LOCAL);
+    bool src_local = 0; (ctx.sep() && ctx.sep()->ep_flags & EP_FLAGS_LOCAL);
+    bool dst_local = 0; 
     bool broadcast_pkt = is_broadcast(ctx);
     bool mcast_dmac = is_multicast_dmac(ctx);
+
+    src_local = ((ctx.sep() && ctx.sep()->ep_flags & EP_FLAGS_LOCAL) || (hal::is_mytep(*(ctx.svrf()), (&ctx.key().sip)))); 
+    dst_local =  (ctx.dep() && ctx.dep()->ep_flags & EP_FLAGS_LOCAL);
     if_t *sif;
 
     if (broadcast_pkt) {

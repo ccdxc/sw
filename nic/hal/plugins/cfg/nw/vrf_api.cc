@@ -29,4 +29,13 @@ end:
     return NULL;
 }
 
+
+// ----------------------------------------------------------------------------
+// Returns if the ip is my tep ip 
+// ----------------------------------------------------------------------------
+bool
+is_mytep (vrf_t& vrf, const ipvx_addr_t *ipaddr)
+{
+    return (memcmp(ipaddr, &vrf.mytep_ip.addr, sizeof(ipvx_addr_t)) == 0);
+}
 }

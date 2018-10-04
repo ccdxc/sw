@@ -9,7 +9,8 @@
 
 namespace hal {
 
-vrf_t *vrf_get_infra_vrf();
+vrf_t *vrf_get_infra_vrf(void);
+bool is_mytep(vrf_t& vrf, const ipvx_addr_t *ipaddr);
 
 } // namespace hal
 
