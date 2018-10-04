@@ -21,167 +21,57 @@
 
 namespace pt = boost::property_tree;
 
-static capri_hbm_region_t *hbm_regions_;
-static int num_hbm_regions_;
+using sdk::platform::capri;
+
+capri g_capri;
 
 hal_ret_t
 capri_hbm_parse (capri_cfg_t *cfg)
 {
-    pt::ptree               json_pt;
+    sdk_ret_t      sdk_ret;
     std::string             full_path;
-    capri_hbm_region_t      *reg;
 
     // makeup the full file path
     full_path =  cfg->cfg_path + "/" + cfg->pgm_name +
                      "/" + std::string("hbm_mem.json");
-
-    HAL_TRACE_DEBUG("HBM memory config file : {}", full_path.c_str());
-    // make sure cfg file exists
-    if (access(full_path.c_str(), R_OK) < 0) {
-        HAL_TRACE_ERR("{} not_present/no_read_permissions", full_path.c_str());
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
-    }
-
-    std::ifstream hbm_json(full_path.c_str());
-
-    // Reading from file
-    read_json(hbm_json, json_pt);
-
-    boost::optional<pt::ptree&>reg_pt = json_pt.get_child_optional(JKEY_REGIONS);
-    if (!reg_pt) {
-        return HAL_RET_ERR;
-    }
-
-    num_hbm_regions_ = json_pt.get_child(JKEY_REGIONS).size();
-    hbm_regions_ = (capri_hbm_region_t *)
-        HAL_CALLOC(hal::HAL_MEM_ALLOC_PD, num_hbm_regions_ * sizeof(capri_hbm_region_t));
-    if (!hbm_regions_) {
-        return HAL_RET_OOM;
-    }
-
-    int idx = 0;
-    uint64_t offset = 0;
-    BOOST_FOREACH(pt::ptree::value_type &p4_tbl, json_pt.get_child(JKEY_REGIONS)) {
-        reg = hbm_regions_ + idx;
-        std::string reg_name = p4_tbl.second.get<std::string>(JKEY_REGION_NAME);
-        std::string cache_pipe_name = p4_tbl.second.get<std::string>(JKEY_CACHE_PIPE, "null");
-        reg->reset = p4_tbl.second.get<bool>(JKEY_RESET_REGION, false);
-        if (cache_pipe_name == "p4ig") {
-            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4IG;
-        } else if (cache_pipe_name == "p4eg") {
-            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4EG;
-        } else if (cache_pipe_name == "p4plus-txdma") {
-            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA;
-        } else if (cache_pipe_name == "p4plus-rxdma") {
-            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA;
-        } else if (cache_pipe_name == "p4plus-all") {
-            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_P4PLUS_ALL;
-        } else {
-            reg->cache_pipe = CAPRI_HBM_CACHE_PIPE_NONE;
-        }
-        strcpy(reg->mem_reg_name, reg_name.c_str());
-        reg->size_kb = p4_tbl.second.get<int>(JKEY_SIZE_KB);
-        reg->start_offset = offset;
-
-        HAL_TRACE_DEBUG("region : {}, size : {}kb, reset : {}, "
-                        "start : {:#x}, end : {:#x}",
-                        reg->mem_reg_name, reg->size_kb, reg->reset,
-                        HBM_OFFSET(reg->start_offset),
-                        HBM_OFFSET(reg->start_offset + reg->size_kb * 1024));
-
-        offset += reg->size_kb * 1024;
-        idx++;
-    }
-
-    return HAL_RET_OK;
+    sdk_ret = g_capri.capri_hbm_parse(full_path.c_str());
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 hbm_addr_t
 get_hbm_base (void)
 {
-    return HBM_OFFSET(0);
+    return g_capri.get_hbm_base();
 }
 
 hbm_addr_t
 get_hbm_offset (const char *reg_name)
 {
-    capri_hbm_region_t *reg;
-
-    for (int i = 0; i < num_hbm_regions_; i++) {
-        reg = &hbm_regions_[i];
-        if (!strcmp(reg->mem_reg_name, reg_name)) {
-            return (reg->start_offset);
-        }
-    }
-
-    return CAPRI_INVALID_OFFSET;
+    return g_capri.get_hbm_offset(reg_name);
 }
 
 hbm_addr_t
 get_start_offset (const char *reg_name)
 {
-    capri_hbm_region_t      *reg;
-
-    for (int i = 0; i < num_hbm_regions_; i++) {
-        reg = &hbm_regions_[i];
-        if (!strcmp(reg->mem_reg_name, reg_name)) {
-            return (HBM_OFFSET(reg->start_offset));
-        }
-    }
-
-    return CAPRI_INVALID_OFFSET;
+    return g_capri.get_start_offset(reg_name);
 }
 
 uint32_t
 get_size_kb (const char *reg_name)
 {
-    capri_hbm_region_t      *reg;
-
-    for (int i = 0; i < num_hbm_regions_; i++) {
-        reg = &hbm_regions_[i];
-        if (!strcmp(reg->mem_reg_name, reg_name)) {
-            return reg->size_kb;
-        }
-    }
-
-    return 0;
+    return g_capri.get_size_kb(reg_name);
 }
 
 capri_hbm_region_t *
 get_hbm_region (char *reg_name)
 {
-    capri_hbm_region_t      *reg;
-
-    for (int i = 0; i < num_hbm_regions_; i++) {
-        reg = &hbm_regions_[i];
-        if (!strcmp(reg->mem_reg_name, reg_name)) {
-            return reg;
-        }
-    }
-    return NULL;
+    return g_capri.get_hbm_region(reg_name);
 }
 
 capri_hbm_region_t *
 get_hbm_region_by_address (uint64_t addr)
 {
-    capri_hbm_region_t      *reg;
-
-    for (int i = 0; i < num_hbm_regions_; i++) {
-        reg = &hbm_regions_[i];
-
-        /*
-        HAL_TRACE_DEBUG("Region: {}, Size_KB: {}, Start:{:#x} End:{:#x}, addr: {:#x}",
-                        reg->mem_reg_name, reg->size_kb,
-                        HBM_OFFSET(reg->start_offset),
-                        HBM_OFFSET(reg->start_offset + reg->size_kb * 1024), addr);
-        */
-
-        if ((addr >= HBM_OFFSET(reg->start_offset)) &&
-            (addr < HBM_OFFSET(reg->start_offset + (reg->size_kb * 1024)))) {
-            return reg;
-        }
-    }
-    return NULL;
+    return g_capri.get_hbm_region_by_address(addr);
 }
 
 void
@@ -194,8 +84,8 @@ reset_hbm_regions (void)
     if (hal_cfg &&
         ((hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HAPS) ||
          (hal_cfg->platform_mode == hal::HAL_PLATFORM_MODE_HW))) {
-        for (int i = 0; i < num_hbm_regions_; i++) {
-            reg = &hbm_regions_[i];
+        for (int i = 0; i < g_capri.num_hbm_regions(); i++) {
+            reg = g_capri.hbm_region(i);
             if (reg->reset) {
                 HAL_TRACE_DEBUG("Resetting {} hbm region", reg->mem_reg_name);
                 hal::pd::asic_mem_write(HBM_OFFSET(reg->start_offset),
@@ -400,13 +290,13 @@ capri_hbm_cache_regions_init (void)
     uint32_t                p4plus_pcie_filter_idx = 0;
     uint32_t                p4plus_db_filter_idx = 0;
 
-    for (int i = 0; i < num_hbm_regions_; i++) {
-        reg = &hbm_regions_[i];
-        if (reg->cache_pipe == CAPRI_HBM_CACHE_PIPE_NONE) {
+    for (int i = 0; i < g_capri.num_hbm_regions(); i++) {
+        reg = g_capri.hbm_region(i);
+        if (reg->cache_pipe == sdk::platform::CAPRI_HBM_CACHE_PIPE_NONE) {
             continue;
         }
 
-        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4IG) {
+        if (reg->cache_pipe & sdk::platform::CAPRI_HBM_CACHE_PIPE_P4IG) {
             HAL_TRACE_DEBUG("Programming {} to P4IG cache(region 1), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4ig_filter_idx);
@@ -414,7 +304,7 @@ capri_hbm_cache_regions_init (void)
             p4ig_filter_idx++;
         }
 
-        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4EG) {
+        if (reg->cache_pipe & sdk::platform::CAPRI_HBM_CACHE_PIPE_P4EG) {
             HAL_TRACE_DEBUG("Programming {} to P4EG cache(region 2), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4eg_filter_idx);
@@ -422,7 +312,7 @@ capri_hbm_cache_regions_init (void)
             p4eg_filter_idx++;
         }
 
-        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA) {
+        if (reg->cache_pipe & sdk::platform::CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA) {
             HAL_TRACE_DEBUG("Programming {} to P4PLUS TXDMA cache(region 3), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_txdma_filter_idx);
@@ -430,7 +320,7 @@ capri_hbm_cache_regions_init (void)
             p4plus_txdma_filter_idx++;
         }
 
-        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA) {
+        if (reg->cache_pipe & sdk::platform::CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA) {
             HAL_TRACE_DEBUG("Programming {} to P4PLUS RXDMA cache(region 0), "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_rxdma_filter_idx);
@@ -438,7 +328,7 @@ capri_hbm_cache_regions_init (void)
             p4plus_rxdma_filter_idx++;
         }
 
-        if (reg->cache_pipe & CAPRI_HBM_CACHE_PIPE_P4PLUS_PCIE_DB) {
+        if (reg->cache_pipe & sdk::platform::CAPRI_HBM_CACHE_PIPE_P4PLUS_PCIE_DB) {
             HAL_TRACE_DEBUG("Programming {} to PCIE, "
                             "start={} size={} index={}", reg->mem_reg_name,
                             HBM_OFFSET(reg->start_offset), reg->size_kb, p4plus_pcie_filter_idx);

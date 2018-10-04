@@ -49,6 +49,7 @@ nic/build/x86_64/iris/lib/libperiodic.so                            /nic/lib/
 nic/build/x86_64/iris/lib/libplugin*.so                             /nic/lib/
 nic/build/x86_64/iris/lib/libprint.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libprotobuf.so.14                         /nic/lib/
+nic/build/x86_64/iris/lib/libsdkcapri.so                            /nic/lib/
 nic/build/x86_64/iris/lib/libsdklinkmgr.so                          /nic/lib/
 nic/build/x86_64/iris/lib/libsdkpal.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libshmmgr.so                              /nic/lib/

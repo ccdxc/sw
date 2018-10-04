@@ -1,48 +1,19 @@
 #ifndef __CAPRI_HBM_HPP__
 #define __CAPRI_HBM_HPP__
 
-#define CAPRI_HBM_MEM_REG_NAME_MAX_LEN 80
-#define CARPI_HBM_MEM_NUM_MEM_REGS 128
+#include "nic/sdk/include/sdk/platform/capri/capri.hpp"
 
-#define CAPRI_INVALID_OFFSET 0xFFFFFFFFFFFFFFFF
-
-#define JKEY_REGIONS             "regions"
-#define JKEY_REGION_NAME         "name"
-#define JKEY_SIZE_KB             "size_kb"
-#define JKEY_CACHE_PIPE          "cache"
-#define JKEY_RESET_REGION        "reset"
-#define JKEY_START_OFF           "start_offset"
+using sdk::platform::capri_hbm_region_t;
+using sdk::platform::capri_hbm_cache_pipe_t;
 
 #define JP4_PRGM                 "p4_program"
 #define JP4PLUS_PRGM             "p4plus_program"
 #define JLIF_QSTATE              "qstate"
 #define JTIMERS                  "timers"
 
-#define HBM_OFFSET(x)       CAPRI_HBM_OFFSET(x)
-
 #include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
-
-typedef enum capri_hbm_cache_pipe_s {
-    // Note: Values are used in bitmap
-    CAPRI_HBM_CACHE_PIPE_NONE       = 0,
-    CAPRI_HBM_CACHE_PIPE_P4IG       = 1,
-    CAPRI_HBM_CACHE_PIPE_P4EG       = 2,
-    CAPRI_HBM_CACHE_PIPE_P4IG_P4EG  = 3,
-    CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA     = 4,
-    CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA     = 8,
-    CAPRI_HBM_CACHE_PIPE_P4PLUS_PCIE_DB   = 16,
-    CAPRI_HBM_CACHE_PIPE_P4PLUS_ALL       = 28,  // TxDMA + RxDMA + PCIE + DB blocks
-} capri_hbm_cache_pipe_t;
-
-typedef struct capri_hbm_region_s {
-    char                    mem_reg_name[CAPRI_HBM_MEM_REG_NAME_MAX_LEN];
-    uint32_t                size_kb;
-    uint64_t                start_offset;
-    capri_hbm_cache_pipe_t  cache_pipe;
-    bool                    reset;    // true to bzero this region during init
-} capri_hbm_region_t;
 
 hal_ret_t capri_hbm_parse(capri_cfg_t *cfg);
 capri_hbm_region_t *get_hbm_region(char *name);
@@ -54,12 +25,6 @@ void reset_hbm_regions(void);
 int32_t capri_hbm_read_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 int32_t capri_hbm_write_mem(uint64_t addr, const uint8_t *buf, uint32_t size);
 
-#define JKEY_REGIONS        "regions"
-#define JKEY_REGION_NAME    "name"
-#define JKEY_SIZE_KB        "size_kb"
-#define JKEY_START_OFF      "start_offset"
-
-#define JP4_PRGM            "p4_program"
 #define JP4_SEMAPHORE       "semaphore"
 #define JP4_REPL            "mcast_repl"
 #define JP4_IPFIX           "ipfix"

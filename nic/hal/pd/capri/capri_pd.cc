@@ -83,11 +83,11 @@ pd_capri_hbm_read_mem (pd_func_args_t *pd_func_args)
 static p4plus_cache_action_t
 capri_hbm_cache_pipe_to_action (capri_hbm_cache_pipe_t cache_pipe)
 {
-    if (cache_pipe == CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA) {
+    if (cache_pipe == sdk::platform::CAPRI_HBM_CACHE_PIPE_P4PLUS_RXDMA) {
         return (P4PLUS_CACHE_INVALIDATE_RXDMA);
-    } else if (cache_pipe == CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA) {
+    } else if (cache_pipe == sdk::platform::CAPRI_HBM_CACHE_PIPE_P4PLUS_TXDMA) {
         return (P4PLUS_CACHE_INVALIDATE_TXDMA);
-    } else if (cache_pipe == CAPRI_HBM_CACHE_PIPE_P4PLUS_ALL) {
+    } else if (cache_pipe == sdk::platform::CAPRI_HBM_CACHE_PIPE_P4PLUS_ALL) {
         return (P4PLUS_CACHE_INVALIDATE_BOTH);
     }
     return (P4PLUS_CACHE_ACTION_NONE);
