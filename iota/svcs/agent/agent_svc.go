@@ -3,14 +3,14 @@ package agent
 import (
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/pensando/sw/venice/utils/log"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
 )
 
 // IOTAAgentListenURL is the default URL for IOTA Agent
-var IOTAAgentListenURL = fmt.Sprintf("localhost:%d", common.IotaAgentPort)
+var IOTAAgentListenURL = fmt.Sprintf(":%d", common.IotaAgentPort)
 
 // StartIOTAAgent starts IOTA Agent
 func StartIOTAAgent(stubMode *bool) {

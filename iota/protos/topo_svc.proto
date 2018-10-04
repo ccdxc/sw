@@ -210,17 +210,27 @@ message TestBedMsg {
     // Switch port id for the current test bed
     uint32 switch_port_id               = 2;
 
+    // NAPLES tarball to copy on the remote nodes
     string naples_image                 = 3;
 
+    // Venice tarball to copy on the remote nodes
     string venice_image                 = 4;
 
+    // Driver sources to copy on the remote nodes
     string driver_sources               = 6;
 
-    string iota_agent_image             = 7;
     // Allocated vlans based off of the port id
-    repeated uint32 allocated_vlans     = 8;
+    repeated uint32 allocated_vlans     = 7;
 
-    repeated string ip_address          = 9;
+    // List of node IP addresses
+    repeated string ip_address          = 8;
 
-    string control_intf                 = 10;
+    // Control Interface to use
+    string control_intf                 = 9;
+
+    // Username for logging into the nodes
+    string user                         = 10;
+
+    // Password for logging into the nodes
+    string pass                         = 11;
 }

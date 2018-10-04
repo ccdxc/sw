@@ -10,7 +10,7 @@ export IOTA_AGENT_BIN_DIR	:= ${IOTA_BIN_DIR}/agent
 
 iota-server:iota-proto
 	mkdir -p $(IOTA_SERVER_BIN_DIR)
-	go build -ldflags="-s -w" -o $(IOTA_SERVER_BIN_DIR)/iota-server github.com/pensando/sw/iota/svcs/cmd/iota-server
+	go build -ldflags="-s -w" -o $(IOTA_SERVER_BIN_DIR)/iota_server github.com/pensando/sw/iota/svcs/cmd/iota-server
 
 iota-proto:
 	mkdir -p $(TOPDIR)/protos/pygen
@@ -19,7 +19,7 @@ iota-proto:
 
 iota-agent:iota-proto
 	mkdir -p $(IOTA_AGENT_BIN_DIR)
-	go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_DIR)/iota-agent github.com/pensando/sw/iota/svcs/cmd/iota-agent
+	go build -ldflags="-s -w" -o $(IOTA_AGENT_BIN_DIR)/iota_agent github.com/pensando/sw/iota/svcs/cmd/iota-agent
 
 iota: iota-proto iota-agent iota-server
 

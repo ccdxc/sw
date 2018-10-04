@@ -5,7 +5,7 @@ package agent
 import (
 	"context"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/pensando/sw/venice/utils/log"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 )

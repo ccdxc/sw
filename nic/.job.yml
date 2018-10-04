@@ -112,13 +112,13 @@ logfiles:
   - /sw/nic/nic_sanity_logs.tar.gz
 
 warmd:
-  target: [ "sh", "-c", "cd /sw && make e2e-turin && test/bin/e2e-turin test" ]
+  target: [ "sh", "-c", "cd /sw && sleep 3000000" ]
   create:
     image: build-38
-    count: 5
+    count: 6
     resources:
-      cpus: 4
-      memory: 8
+      cpus: 8
+      memory: 16
       pvt-networks:
             - data
             - control

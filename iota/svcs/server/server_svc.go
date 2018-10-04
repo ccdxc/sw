@@ -3,10 +3,12 @@ package server
 import (
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/pensando/sw/venice/utils/log"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
+	"github.com/pensando/sw/iota/svcs/server/cfg"
+	"github.com/pensando/sw/iota/svcs/server/topo"
 )
 
 // IOTAListenURL is the default URL for IOTA Service
@@ -19,8 +21,8 @@ func StartIOTAService() {
 		log.Errorf("Could not start IOTA Service. Err: %v", err)
 	}
 
-	topoHandler := NewTopologyServiceHandler()
-	cfgHandler := NewConfigServiceHandler()
+	topoHandler := topo.NewTopologyServiceHandler()
+	cfgHandler := cfg.NewConfigServiceHandler()
 
 	iota.RegisterTopologyApiServer(serverSvc.Srv, topoHandler)
 	iota.RegisterConfigMgmtApiServer(serverSvc.Srv, cfgHandler)

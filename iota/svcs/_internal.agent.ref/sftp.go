@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/pkg/sftp"
-	"github.com/sirupsen/logrus"
+	"github.com/pensando/sw/venice/utils/log"
 	"golang.org/x/crypto/ssh"
 )
 
