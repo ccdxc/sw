@@ -1,0 +1,12 @@
+# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
+include ${MKDEFS}/pre.mk
+MODULE_TARGET   = libhal_upgrade.so
+MODULE_PIPELINE = iris
+MODULE_SRCS     = ${MODULE_SRC_DIR}/upgrade.cc
+MODULE_INCS     = ${TOPDIR}/nic/hal/iris/upgrade/ \
+				  ${TOPDIR}/nic/hal/delphi/ \
+				  ${TOPDIR}/nic/hal/sysmgr/ \
+				  ${TOPDIR}/bazel-genfiles/ \
+				  ${TOPDIR}/nic/third-party/libev/include/
+include ${MKDEFS}/post.mk
