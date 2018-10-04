@@ -524,7 +524,7 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
     HAL_ASSERT(l4_sess != NULL);
 
     if (!status) {
-        if (l4_sess && l4_sess->isCtrl == TRUE) {
+        if (l4_sess && l4_sess->isCtrl == true) {
             g_rpc_state->cleanup_app_session(l4_sess->app_session);
         } else { /* Cleanup data session */
             g_rpc_state->cleanup_l4_sess(l4_sess);
@@ -754,7 +754,7 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                 uint32_t            epm_offset=0;
                 msrpc_req_hdr_t     msrpc_req;
                 msrpc_epm_req_hdr_t epm_req;
-                msrpc_twr_p_t       twr_arr;
+                msrpc_twr_p_t       *twr_arr;
           
                 epm_offset = __parse_msrpc_req_hdr(&pkt[pgm_offset], (pkt_len-pgm_offset), 
                                               &msrpc_req, rpc_info->msrpc_64bit, rpc_info);
@@ -773,17 +773,17 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
 
                 HAL_TRACE_DEBUG("Parsed EPM REQ Header: {}", epm_req);
 
-                twr_arr = epm_req.twr.twr_arr;
-                if (twr_arr.num_floors > MSRPC_DEFAULT_FLOORS) {
-                    for (idx=0; idx<twr_arr.num_floors; idx++) {
-                        if (twr_arr.flrs[idx].protocol == EPM_PROTO_CN ||
-                            twr_arr.flrs[idx].protocol == EPM_PROTO_DG) {
+                twr_arr = &epm_req.twr.twr_arr;
+                if (twr_arr->num_floors > MSRPC_DEFAULT_FLOORS) {
+                    for (idx=0; idx<twr_arr->num_floors; idx++) {
+                        if (twr_arr->flrs[idx].protocol == EPM_PROTO_CN ||
+                            twr_arr->flrs[idx].protocol == EPM_PROTO_DG) {
                             rpc_info->call_id = rpc_hdr.call_id;
                             memcpy(&rpc_info->uuid,
-                                               &twr_arr.flrs[0].uuid, UUID_BYTES);
-                            rpc_info->vers = twr_arr.flrs[0].version;
+                                               &twr_arr->flrs[0].uuid, UUID_BYTES);
+                            rpc_info->vers = twr_arr->flrs[0].version;
                             rpc_info->prot =
-                                       (twr_arr.flrs[idx].protocol == EPM_PROTO_CN)?\
+                                       (twr_arr->flrs[idx].protocol == EPM_PROTO_CN)?\
                                            IP_PROTO_TCP:IP_PROTO_UDP;
                         }
                     }
@@ -797,7 +797,7 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                 uint32_t            epm_offset=0;
                 msrpc_rsp_hdr_t     msrpc_rsp;
                 msrpc_epm_rsp_hdr_t epm_rsp;
-                msrpc_twr_p_t       twr_arr;
+                msrpc_twr_p_t      *twr_arr;
 
                 epm_offset = __parse_msrpc_rsp_hdr(&pkt[pgm_offset], 
                                                  (pkt_len-pgm_offset), &msrpc_rsp, rpc_info);
@@ -815,22 +815,22 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                 }
                 HAL_TRACE_DEBUG("Parsed EPM RSP Header: {}", epm_rsp);
 
-                twr_arr = epm_rsp.twr.twr_arr;
+                twr_arr = &epm_rsp.twr.twr_arr;
                 if (rpc_info->call_id == rpc_hdr.call_id &&
-                    (!memcmp(&twr_arr.flrs[0].uuid, &rpc_info->uuid, UUID_BYTES))) {
+                    (!memcmp(&twr_arr->flrs[0].uuid, &rpc_info->uuid, UUID_BYTES))) {
                     // Check only if we have information beyond the default headers
-                    if (twr_arr.num_floors > MSRPC_DEFAULT_FLOORS) {
-                        for (idx=0; idx<twr_arr.num_floors; idx++) {
-                            if (twr_arr.flrs[idx].protocol == EPM_PROTO_TCP ||
-                                twr_arr.flrs[idx].protocol == EPM_PROTO_UDP) {
-                                rpc_info->dport = twr_arr.flrs[idx].port;
+                    if (twr_arr->num_floors > MSRPC_DEFAULT_FLOORS) {
+                        for (idx=0; idx<twr_arr->num_floors; idx++) {
+                            if (twr_arr->flrs[idx].protocol == EPM_PROTO_TCP ||
+                                twr_arr->flrs[idx].protocol == EPM_PROTO_UDP) {
+                                rpc_info->dport = twr_arr->flrs[idx].port;
                                 HAL_TRACE_DEBUG("Setting Dport: {}", rpc_info->dport);
-                            } else if (twr_arr.flrs[idx].protocol == EPM_PROTO_IP) {
+                            } else if (twr_arr->flrs[idx].protocol == EPM_PROTO_IP) {
                                // If the IP address is not filled in we assume that the sender is the
                                // server and use that.
-                               if (!twr_arr.flrs[idx].ip.v4_addr)
-                                   twr_arr.flrs[idx].ip = ctx->key().sip;
-                               rpc_info->ip.v4_addr = twr_arr.flrs[idx].ip.v4_addr;
+                               if (!twr_arr->flrs[idx].ip.v4_addr)
+                                   twr_arr->flrs[idx].ip = ctx->key().sip;
+                               rpc_info->ip.v4_addr = twr_arr->flrs[idx].ip.v4_addr;
                             }
                         }
                     }
@@ -1000,14 +1000,13 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
     } else if (l4_sess && l4_sess->info && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
         uint8_t *pkt = ctx.pkt(); 
         rpc_info = (rpc_info_t *)l4_sess->info;
-        if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN | TCP_FLAG_ACK)) ==
-                     (TCP_FLAG_SYN | TCP_FLAG_ACK)) {
+
+        if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
             // Set up TCP buffer for RFLOW
             l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
-                                        htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
-                                        NULL, parse_msrpc_cn_control_flow);
-        }
-
+                                          htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
+                                           NULL, parse_msrpc_cn_control_flow);
+        } 
         if (l4_sess->isCtrl == true && ctx.key().proto == IP_PROTO_TCP) {
             /*
              * This will only be executed for control channel packets that

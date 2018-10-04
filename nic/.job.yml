@@ -26,7 +26,7 @@ targets:
   dol/fte               : ["make", "jobd/dol/fte"]
   dol/fte2              : ["make", "jobd/dol/fte2"]
   dol/ftevxlan          : ["make", "jobd/dol/ftevxlan"]
-  #dol/alg               : ["make", "jobd/dol/alg"]
+  dol/alg               : ["make", "jobd/dol/alg"]
   dol/norm              : ["make", "jobd/dol/norm"]
   dol/eth               : ["make", "jobd/dol/eth"]
   dol/acl               : ["make", "jobd/dol/acl"]
@@ -61,7 +61,7 @@ targets:
   mbt/base              : ["make", "jobd/mbt/base"]
   mbt/networking        : ["make", "jobd/mbt/networking"]
   mbt/firewall          : ["make", "jobd/mbt/firewall"]
-  #mbt/alg               : ["make", "jobd/mbt/alg"]
+  mbt/alg               : ["make", "jobd/mbt/alg"]
   
   # ====================== Make Infra Tests ===========================
   #make/sdk              : ["make", "jobd/make/sdk"]
