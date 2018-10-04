@@ -249,7 +249,7 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, int qinst_index, types::W
     }
 
     // Verify that the queue inst is not already registered
-    if(ctxt_qinfo->qinst_info[queue_id] != NULL) {
+    if(ctxt_qinfo->qinst_info[qinst_index] != NULL) {
         HAL_TRACE_ERR("queue inst is already registered: type: {}, inst: {}", type, queue_id);
         return HAL_RET_OK;
     }

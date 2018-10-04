@@ -534,15 +534,15 @@ fte_stats_t inst_t::get_stats(bool clear_on_read)
 
 fte_txrx_stats_t inst_t::get_txrx_stats(bool clear_on_read)
 {
-    //int      qindex = 0;
-    //uint8_t  queue_id = id_;
+    int      qindex = 0;
+    uint8_t  queue_id = id_;
     //Get stats from the ctx
-    //hal::pd::cpupkt_ctxt_t *ctx = arm_ctx_;
-
+    hal::pd::cpupkt_ctxt_t *ctx = arm_ctx_;
+    uint8_t  qinst = 0;  // For ARQ,ASCQ - qinst is always 0.
+                         // For ASQ it is queueid
     //Fill common data
     fte_txrx_stats_t txrx_stats;
 
-#if 0
     txrx_stats.flow_miss_pkts = stats_.flow_miss_pkts;
     txrx_stats.redirect_pkts = stats_.redirect_pkts;
     txrx_stats.cflow_pkts    = stats_.cflow_pkts;
@@ -552,22 +552,23 @@ fte_txrx_stats_t inst_t::get_txrx_stats(bool clear_on_read)
     //Get RX stats
     for (uint8_t i = 0; i < ctx->rx.num_queues; i++) {
         txrx_stats.qinfo[qindex].type  = ctx->rx.queue[i].type;
-        txrx_stats.qinfo[qindex].inst.ctr = ctx->rx.queue[i].qinst_info[queue_id]->ctr;
-        txrx_stats.qinfo[qindex].inst.queue_id = ctx->rx.queue[i].qinst_info[queue_id]->queue_id;
-        txrx_stats.qinfo[qindex].inst.base_addr = ctx->rx.queue[i].qinst_info[queue_id]->base_addr;
-        txrx_stats.qinfo[qindex].inst.pc_index  = ctx->rx.queue[i].qinst_info[queue_id]->pc_index;
-        txrx_stats.qinfo[qindex].inst.pc_index_addr = ctx->rx.queue[i].qinst_info[queue_id]->pc_index_addr;
+        txrx_stats.qinfo[qindex].inst.ctr = ctx->rx.queue[i].qinst_info[qinst]->ctr;
+        txrx_stats.qinfo[qindex].inst.queue_id = ctx->rx.queue[i].qinst_info[qinst]->queue_id;
+        txrx_stats.qinfo[qindex].inst.base_addr = ctx->rx.queue[i].qinst_info[qinst]->base_addr;
+        txrx_stats.qinfo[qindex].inst.pc_index  = ctx->rx.queue[i].qinst_info[qinst]->pc_index;
+        txrx_stats.qinfo[qindex].inst.pc_index_addr = ctx->rx.queue[i].qinst_info[qinst]->pc_index_addr;
         qindex++;
     }
 
     //GET Tx stats
     int index = types::WRING_TYPE_ASQ;  // pollmode driver uses wring type as index
+    qinst = queue_id; //Same as fte id
     txrx_stats.qinfo[qindex].type = ctx->tx.queue[index].type;
-    txrx_stats.qinfo[qindex].inst.ctr = ctx->tx.queue[index].qinst_info[queue_id]->ctr;
-    txrx_stats.qinfo[qindex].inst.queue_id = ctx->tx.queue[index].qinst_info[queue_id]->queue_id;
-    txrx_stats.qinfo[qindex].inst.base_addr = ctx->tx.queue[index].qinst_info[queue_id]->base_addr;
-    txrx_stats.qinfo[qindex].inst.pc_index  = ctx->tx.queue[index].qinst_info[queue_id]->pc_index;
-    txrx_stats.qinfo[qindex].inst.pc_index_addr = ctx->tx.queue[index].qinst_info[queue_id]->pc_index_addr;
+    txrx_stats.qinfo[qindex].inst.ctr = ctx->tx.queue[index].qinst_info[qinst]->ctr;
+    txrx_stats.qinfo[qindex].inst.queue_id = ctx->tx.queue[index].qinst_info[qinst]->queue_id;
+    txrx_stats.qinfo[qindex].inst.base_addr = ctx->tx.queue[index].qinst_info[qinst]->base_addr;
+    txrx_stats.qinfo[qindex].inst.pc_index  = ctx->tx.queue[index].qinst_info[qinst]->pc_index;
+    txrx_stats.qinfo[qindex].inst.pc_index_addr = ctx->tx.queue[index].qinst_info[qinst]->pc_index_addr;
 
     // Fill common info
     //
@@ -581,7 +582,6 @@ fte_txrx_stats_t inst_t::get_txrx_stats(bool clear_on_read)
     txrx_stats.glinfo.cpu_tx_page_cindex = args.cpu_tx_page_cindex;
     txrx_stats.glinfo.cpu_tx_descr_pindex = args.cpu_tx_descr_pindex;
     txrx_stats.glinfo.cpu_tx_descr_cindex = args.cpu_tx_descr_cindex;
-#endif
     return txrx_stats;
 
 }
