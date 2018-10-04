@@ -232,5 +232,5 @@ message TestBedMsg {
     string user                         = 10;
 
     // Password for logging into the nodes
-    string pass                         = 11;
+    string passwd                         = 11;
 }

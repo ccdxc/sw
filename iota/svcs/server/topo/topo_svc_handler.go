@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/pensando/sw/iota/svcs/common"
+
 	"golang.org/x/crypto/ssh"
 
-	log "github.com/pensando/sw/venice/utils/log"
 	"golang.org/x/sync/errgroup"
+
+	log "github.com/pensando/sw/venice/utils/log"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/server/topo/testbed"
@@ -42,7 +45,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	}
 	ts.TestBedInfo.AllocatedVlans = vlans
 
-	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.User, ts.TestBedInfo.Pass)
+	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.User, ts.TestBedInfo.Passwd)
 
 	// Run init
 	initTestBed := func(ctx context.Context) error {
@@ -59,9 +62,15 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 				NodeName:  nodeName,
 				IpAddress: ipAddress,
 			}
+			copyArtifacts := []string{
+				common.IotaAgentBinaryPath,
+				ts.TestBedInfo.VeniceImage,
+				ts.TestBedInfo.NaplesImage,
+				//ts.TestBedInfo.DriverSources,
+			}
 
 			pool.Go(func() error {
-				return n.InitNode(ts.SSHConfig)
+				return n.InitNode(ts.SSHConfig, copyArtifacts)
 			})
 		}
 		return pool.Wait()

@@ -3,10 +3,12 @@ package runner
 import (
 	"bytes"
 	"fmt"
+	"io"
+
+	"golang.org/x/crypto/ssh"
+
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/venice/utils/log"
-	"golang.org/x/crypto/ssh"
-	"io"
 )
 
 // Runner implements all remote to command execution functions
@@ -22,8 +24,8 @@ func NewRunner(c *ssh.ClientConfig) *Runner {
 	return runner
 }
 
-
-func (r *Runner) Run(ipPort, command string, cmdMode  int) error {
+// Run runs a command either in foreground on on background
+func (r *Runner) Run(ipPort, command string, cmdMode int) error {
 	client, err := ssh.Dial("tcp", ipPort, r.SSHClientConfig)
 	if client == nil || err != nil {
 		log.Errorf("Runner | Run on node %v failed, Err: %v", ipPort, err)
@@ -41,7 +43,7 @@ func (r *Runner) Run(ipPort, command string, cmdMode  int) error {
 	ptyModes := ssh.TerminalModes{
 		ssh.TTY_OP_ISPEED: 14400,
 		ssh.TTY_OP_OSPEED: 14400,
-		ssh.ECHO: 0,
+		ssh.ECHO:          0,
 	}
 
 	if err := session.RequestPty("xterm", 80, 40, ptyModes); err != nil {

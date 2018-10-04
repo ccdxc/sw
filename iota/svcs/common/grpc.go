@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net"
 
-	log "github.com/pensando/sw/venice/utils/log"
 	"google.golang.org/grpc"
+
+	log "github.com/pensando/sw/venice/utils/log"
 )
 
 // GRPCServer captures the GRPC Server for a service

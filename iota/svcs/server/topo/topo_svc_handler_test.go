@@ -67,7 +67,10 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	//tbMsg.IpAddress = []string{"10.8.102.91"}
 	tbMsg.SwitchPortId = 1
 	tbMsg.User = "vm"
-	tbMsg.Pass = "vm"
+	tbMsg.Passwd = "vm"
+
+	tbMsg.NaplesImage = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/nic.tgz", os.Getenv("GOPATH"))
+	tbMsg.VeniceImage = fmt.Sprintf("%s/src/github.com/pensando/sw/bin/venice.tgz", os.Getenv("GOPATH"))
 
 	resp, err := topoClient.InitTestBed(context.Background(), &tbMsg)
 	if resp == nil || err != nil {

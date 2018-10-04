@@ -2,11 +2,13 @@ package copier
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/pkg/sftp"
-	log "github.com/pensando/sw/venice/utils/log"
 	"golang.org/x/crypto/ssh"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // Copier implements all remote to/from copy functions
@@ -22,19 +24,9 @@ func NewCopier(c *ssh.ClientConfig) *Copier {
 	return copier
 }
 
-// Copy copies from the source file to a dest file on a remote node
-func (c *Copier) Copy(ipPort, absSrcFile, absDstFile string) error {
-	log.Infof("Copier | CopyTo initiating copy... | Src: %v, Dst: %v, Node: %v", absSrcFile, absDstFile, ipPort)
-	//srcDir,  := filepath.Split(absSrcFile)
-	dstDir, _ := filepath.Split(absDstFile)
-
-	// Check for the validity of source file
-	out, err := ioutil.ReadFile(absSrcFile)
-	if err!= nil {
-		log.Errorf("Copier | CopyTo could not read the source file. | SrcFile: %v, Node: %v, Err: %v", absSrcFile, ipPort, err)
-		return err
-	}
-
+// Copy copies the source files to the remote destination
+func (c *Copier) Copy(ipPort, dstDir string, files []string) error {
+	//fmt.Println("ANCALAGON: ", files)
 	client, err := ssh.Dial("tcp", ipPort, c.SSHClientConfig)
 	if client == nil || err != nil {
 		log.Errorf("Copier | CopyTo node %v failed, Err: %v", ipPort, err)
@@ -48,7 +40,6 @@ func (c *Copier) Copy(ipPort, absSrcFile, absDstFile string) error {
 		return err
 	}
 	defer sftp.Close()
-
 	// check if dst dir exists
 	if _, err := sftp.Lstat(dstDir); err != nil {
 		err = sftp.Mkdir(dstDir)
@@ -56,19 +47,43 @@ func (c *Copier) Copy(ipPort, absSrcFile, absDstFile string) error {
 			log.Errorf("Copier | CopyTo failed to creating remote directory. | Dir: %v, Node: %v, Err: %v", dstDir, ipPort, err)
 		}
 	}
+	for _, absSrcFile := range files {
+		//// Preflight checks
+		if len(absSrcFile) == 0 {
+			// Nothing to do here
+			continue
+		}
+		//
+		//pool.Go(func() error {
+		if _, err := os.Stat(absSrcFile); err != nil {
+			log.Errorf("Copier | CopyTo could not find the file %v. Err: %v", absSrcFile, err)
+			return err
+		}
+		_, srcFile := filepath.Split(absSrcFile)
+		absDstFile := filepath.Join(dstDir, srcFile)
+		log.Infof("Copier | CopyTo initiating copy... | Src: %v, Dst: %v, Node: %v", absSrcFile, absDstFile, ipPort)
 
-	f, err := sftp.Create(absDstFile)
-	if err != nil {
-		log.Errorf("Copier | CopyTo failed to create remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
-		return err
+		// Check for the validity of source file
+		out, err := ioutil.ReadFile(absSrcFile)
+		if err != nil {
+			log.Errorf("Copier | CopyTo could not read the source file. | SrcFile: %v, Node: %v, Err: %v", absSrcFile, ipPort, err)
+			return err
+		}
+
+		f, err := sftp.Create(absDstFile)
+		if err != nil {
+			log.Errorf("Copier | CopyTo failed to create remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
+			return err
+		}
+		f.Chmod(0766)
+
+		if _, err := f.Write(out); err != nil {
+			log.Errorf("Copier | CopyTo failed to write the remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
+			return err
+		}
+		f.Close()
 	}
-	f.Chmod(0766)
 
-	if _, err := f.Write(out); err != nil {
-		log.Errorf("Copier | CopyTo failed to write the remote file. | File: %v, Node: %v, Err: %v", absDstFile, ipPort, err)
-		return err
-	}
-
-	defer f.Close()
 	return nil
+
 }
