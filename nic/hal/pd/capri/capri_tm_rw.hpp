@@ -275,29 +275,30 @@ capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats);
 hal_ret_t
 capri_tm_periodic_stats_update(void);
 
-typedef struct tm_pb_debug_buffer_drop_stats_s {
-  uint32_t intrinsic_drop_count;            // Pkts dropped due to intrinsic drop bit being set
-  uint32_t discarded_count;                 // Pkts dropped due to error
-  uint32_t admitted_count;                  // Errored pkts admitted to buffering
-  uint32_t out_of_cells_drop_count;         // Pkts dropped due to cell exhaustion (first cell)
-  uint32_t out_of_cells_drop_count_2;       // Pkts dropped due to cell exhaustion (subsequent cell)
-  uint32_t out_of_credit_drop_count;        // Pkts dropped due to cell-credits exhaustion
-  uint32_t truncation_drop_count;           // Pkts dropped due to size bigger than the configured MTU
-  uint32_t port_disabled_drop_count;        // Pkts dropped due to port disable
-  uint32_t copy_to_cpu_tail_drop_count;     // Copy-to-cpu pkts tail dropped
-  uint32_t span_tail_drop_count;            // Span pkts tail dropped
-  uint32_t min_size_violation_drop_count;   // Pkts dropped due to lesser than min size
-  uint32_t enqueue_error_drop_count;        // Pkts dropped due to enqueue to reserved queues
-  uint32_t invalid_port_drop_count;         // Pkts dropped due to destined to invalid ports
-  uint32_t invalid_output_queue_drop_count; // Pkts dropped due to destined to invalid output queues
+typedef enum {
+   BUFFER_INTRINSIC_DROP = 0,        // Pkts dropped due to intrinsic drop bit being set
+   BUFFER_DISCARDED,                 // Pkts dropped due to error
+   BUFFER_ADMITTED,                  // Errored pkts admitted to buffering
+   BUFFER_OUT_OF_CELLS_DROP,         // Pkts dropped due to cell exhaustion (first cell)
+   BUFFER_OUT_OF_CELLS_DROP_2,       // Pkts dropped due to cell exhaustion (subsequent cell)
+   BUFFER_OUT_OF_CREDIT_DROP,        // Pkts dropped due to cell-credits exhaustion
+   BUFFER_TRUNCATION_DROP,           // Pkts dropped due to size bigger than the configured MTU
+   BUFFER_PORT_DISABLED_DROP,        // Pkts dropped due to port disable
+   BUFFER_COPY_TO_CPU_TAIL_DROP,     // Copy-to-cpu pkts tail dropped
+   BUFFER_SPAN_TAIL_DROP,            // Span pkts tail dropped
+   BUFFER_MIN_SIZE_VIOLATION_DROP,   // Pkts dropped due to lesser than min size
+   BUFFER_ENQUEUE_ERROR_DROP,        // Pkts dropped due to enqueue to reserved queues
+   BUFFER_INVALID_PORT_DROP,         // Pkts dropped due to destined to invalid ports
+   BUFFER_INVALID_OUTPUT_QUEUE_DROP, // Pkts dropped due to destined to invalid output queues
+   BUFFER_DROP_MAX,
 } tm_pb_debug_buffer_drop_stats_t;
 
 typedef struct tm_pb_debug_buffer_stats_s {
-  uint32_t          sop_count_in;              // Count of start-of-packets in
-  uint32_t          eop_count_in;              // Count of end-of-packets in
-  uint32_t          sop_count_out;             // Count of start-of-packets out
-  uint32_t          eop_count_out;             // Count of end-of-packets out
-  tm_pb_debug_buffer_drop_stats_t drop_counts; // Drop counts
+  uint32_t          sop_count_in;                 // Count of start-of-packets in
+  uint32_t          eop_count_in;                 // Count of end-of-packets in
+  uint32_t          sop_count_out;                // Count of start-of-packets out
+  uint32_t          eop_count_out;                // Count of end-of-packets out
+  uint32_t          drop_counts[BUFFER_DROP_MAX]; // Drop counts
 } tm_pb_debug_buffer_stats_t;
 
 typedef struct oflow_fifo_drop_stats_s {

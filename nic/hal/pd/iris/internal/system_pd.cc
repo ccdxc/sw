@@ -674,20 +674,13 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
         port_stats->mutable_buffer_stats()->set_eop_count_in(debug_stats.buffer_stats.eop_count_in);
         port_stats->mutable_buffer_stats()->set_sop_count_out(debug_stats.buffer_stats.sop_count_out);
         port_stats->mutable_buffer_stats()->set_eop_count_out(debug_stats.buffer_stats.eop_count_out);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_intrinsic_drop_count(debug_stats.buffer_stats.drop_counts.intrinsic_drop_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_discarded_count(debug_stats.buffer_stats.drop_counts.discarded_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_admitted_count(debug_stats.buffer_stats.drop_counts.admitted_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_out_of_cells_drop_count(debug_stats.buffer_stats.drop_counts.out_of_cells_drop_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_out_of_cells_drop_count_2(debug_stats.buffer_stats.drop_counts.out_of_cells_drop_count_2);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_out_of_credit_drop_count(debug_stats.buffer_stats.drop_counts.out_of_credit_drop_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_truncation_drop_count(debug_stats.buffer_stats.drop_counts.truncation_drop_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_port_disabled_drop_count(debug_stats.buffer_stats.drop_counts.port_disabled_drop_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_copy_to_cpu_tail_drop_count(debug_stats.buffer_stats.drop_counts.copy_to_cpu_tail_drop_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_span_tail_drop_count(debug_stats.buffer_stats.drop_counts.span_tail_drop_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_min_size_violation_drop_count(debug_stats.buffer_stats.drop_counts.min_size_violation_drop_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_enqueue_error_drop_count(debug_stats.buffer_stats.drop_counts.enqueue_error_drop_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_invalid_port_drop_count(debug_stats.buffer_stats.drop_counts.invalid_port_drop_count);
-        port_stats->mutable_buffer_stats()->mutable_drop_counts()->set_invalid_output_queue_drop_count(debug_stats.buffer_stats.drop_counts.invalid_output_queue_drop_count);
+
+        auto drop_stats = port_stats->mutable_buffer_stats()->mutable_drop_counts();
+        for (int i = BUFFER_INTRINSIC_DROP; i < BUFFER_DROP_MAX; i ++) {
+            auto drop_stats_entry = drop_stats->add_stats_entries();
+            drop_stats_entry->set_reasons(sys::BufferDropReasons(i));
+            drop_stats_entry->set_drop_count(debug_stats.buffer_stats.drop_counts[i]);
+        }
 
         port_stats->mutable_oflow_fifo_stats()->set_sop_count_in(debug_stats.oflow_fifo_stats.sop_count_in);
         port_stats->mutable_oflow_fifo_stats()->set_eop_count_in(debug_stats.oflow_fifo_stats.eop_count_in);

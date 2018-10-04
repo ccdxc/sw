@@ -49,8 +49,8 @@ var systemStatsShowCmd = &cobra.Command{
 
 var systemDropStatsShowCmd = &cobra.Command{
 	Use:   "drop",
-	Short: "show system statistics drop [ingress | egress | all] (Default: all)",
-	Long:  "show system statistics drop [ingress | egress | all] (Default: all)",
+	Short: "show system statistics drop [ingress | egress | pb | all] (Default: all)",
+	Long:  "show system statistics drop [ingress | egress | pb | all] (Default: all)",
 	Run:   systemDropStatsShowCmdHandler,
 }
 
@@ -140,15 +140,19 @@ func systemDropStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Check the args
 	ingressDrop := false
 	egressDrop := false
+	pbDrop := false
 
 	if len(args) > 0 {
 		if strings.Compare(args[0], "ingress") == 0 {
 			ingressDrop = true
 		} else if strings.Compare(args[0], "egress") == 0 {
 			egressDrop = true
+		} else if strings.Compare(args[0], "pb") == 0 {
+			pbDrop = true
 		} else if strings.Compare(args[0], "all") == 0 {
 			ingressDrop = true
 			egressDrop = true
+			pbDrop = true
 		} else {
 			fmt.Printf("Invalid argument\n")
 			return
@@ -156,6 +160,7 @@ func systemDropStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	} else {
 		ingressDrop = true
 		egressDrop = true
+		pbDrop = true
 	}
 
 	// HAL call
@@ -191,6 +196,38 @@ func systemDropStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		for _, entry := range resp.GetStats().GetEgressDropStats().DropEntries {
 			systemEgressDropStatsShowEntry(entry)
 		}
+	}
+
+	if pbDrop {
+		// Print Header
+		fmt.Println("\nSystem Packet Buffer Drop Stats:")
+		systemPbDropStatsShowHeader()
+
+		// Print System Packet Buffer Drop Stats
+		for _, portEntry := range resp.GetStats().GetPacketBufferStats().GetPortStats() {
+			systemPbDropStatsShowPortEntry(portEntry)
+		}
+	}
+}
+
+func systemPbDropStatsShowHeader() {
+	hdrLine := strings.Repeat("-", 50)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-8s%-9s%-26s%-5s\n",
+		"PortNum", "PortType", "Reason", "Count")
+	fmt.Println(hdrLine)
+}
+
+func systemPbDropStatsShowPortEntry(entry *halproto.PacketBufferPortStats) {
+	portType := strings.ToLower(strings.Replace(entry.GetPacketBufferPort().GetPortType().String(),
+		"PACKET_BUFFER_PORT_TYPE_", "", -1))
+	portNum := entry.GetPacketBufferPort().GetPortNum()
+
+	for _, dropStatsEntry := range entry.GetBufferStats().GetDropCounts().GetStatsEntries() {
+		fmt.Printf("%-8d%-9s%-26s%-5d\n",
+			portNum, portType,
+			strings.ToLower(strings.Replace(dropStatsEntry.GetReasons().String(), "_", " ", -1)),
+			dropStatsEntry.GetDropCount())
 	}
 }
 

@@ -2709,20 +2709,21 @@ capri_tm_get_pb_debug_stats(tm_port_t port,
     debug_stats->buffer_stats.eop_count_in = pbc_csr.cnt_flits[port].eop_in().convert_to<uint32_t>();
     debug_stats->buffer_stats.sop_count_out = pbc_csr.cnt_flits[port].sop_out().convert_to<uint32_t>();
     debug_stats->buffer_stats.eop_count_out = pbc_csr.cnt_flits[port].eop_out().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.intrinsic_drop_count = pbc_csr.sat_write_error[port].intrinsic_drop().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.discarded_count = pbc_csr.sat_write_error[port].discarded().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.admitted_count = pbc_csr.sat_write_error[port].admitted().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.out_of_cells_drop_count = pbc_csr.sat_write_error[port].out_of_cells().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.out_of_cells_drop_count_2 = pbc_csr.sat_write_error[port].out_of_cells1().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.out_of_credit_drop_count = pbc_csr.sat_write_error[port].out_of_credit().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.truncation_drop_count = pbc_csr.sat_write_error[port].truncation().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.port_disabled_drop_count = pbc_csr.sat_write_error[port].port_disabled().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.copy_to_cpu_tail_drop_count = pbc_csr.sat_write_error[port].tail_drop_cpu().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.span_tail_drop_count = pbc_csr.sat_write_error[port].tail_drop_span().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.min_size_violation_drop_count = pbc_csr.sat_write_error[port].min_size_viol().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.enqueue_error_drop_count = pbc_csr.sat_write_error[port].enqueue().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.invalid_port_drop_count = pbc_csr.sat_write_error[port].port_range().convert_to<uint32_t>();
-    debug_stats->buffer_stats.drop_counts.invalid_output_queue_drop_count = pbc_csr.sat_write_error[port].oq_range().convert_to<uint32_t>();
+
+    debug_stats->buffer_stats.drop_counts[BUFFER_INTRINSIC_DROP] = pbc_csr.sat_write_error[port].intrinsic_drop().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_DISCARDED] = pbc_csr.sat_write_error[port].discarded().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_ADMITTED] = pbc_csr.sat_write_error[port].admitted().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_OUT_OF_CELLS_DROP] = pbc_csr.sat_write_error[port].out_of_cells().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_OUT_OF_CELLS_DROP_2] = pbc_csr.sat_write_error[port].out_of_cells1().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_OUT_OF_CREDIT_DROP] = pbc_csr.sat_write_error[port].out_of_credit().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_TRUNCATION_DROP] = pbc_csr.sat_write_error[port].truncation().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_PORT_DISABLED_DROP] = pbc_csr.sat_write_error[port].port_disabled().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_COPY_TO_CPU_TAIL_DROP] = pbc_csr.sat_write_error[port].tail_drop_cpu().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_SPAN_TAIL_DROP] = pbc_csr.sat_write_error[port].tail_drop_span().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_MIN_SIZE_VIOLATION_DROP] = pbc_csr.sat_write_error[port].min_size_viol().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_ENQUEUE_ERROR_DROP] = pbc_csr.sat_write_error[port].enqueue().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_INVALID_PORT_DROP] = pbc_csr.sat_write_error[port].port_range().convert_to<uint32_t>();
+    debug_stats->buffer_stats.drop_counts[BUFFER_INVALID_OUTPUT_QUEUE_DROP] = pbc_csr.sat_write_error[port].oq_range().convert_to<uint32_t>();
 
     if (reset) {
         pbc_csr.cnt_flits[port].all(0);

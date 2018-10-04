@@ -131,7 +131,34 @@ message DropStatsEntry {
 
 message EgressDropStatsEntry {
   types.EgressDropReasons   reasons                 = 1;    // drop reasons
-  uint64              drop_count                    = 2;    // drop count for multiple drop reasons
+  uint64                    drop_count              = 2;    // drop count for multiple drop reasons
+}
+
+// BufferDropStats captures instantaneous drop counts due to buffering drops
+enum BufferDropReasons {
+   INTRINSIC_DROP            = 0;     // Pkts dropped due to intrinsic drop bit being set
+   DISCARDED                 = 1;     // Pkts dropped due to error
+   ADMITTED                  = 2;     // Errored pkts admitted to buffering
+   OUT_OF_CELLS_DROP         = 3;     // Pkts dropped due to cell exhaustion (first cell)
+   OUT_OF_CELLS_DROP_2       = 4;     // Pkts dropped due to cell exhaustion (subsequent cell)
+   OUT_OF_CREDIT_DROP        = 5;     // Pkts dropped due to cell-credits exhaustion
+   TRUNCATION_DROP           = 6;     // Pkts dropped due to size bigger than the configured MTU
+   PORT_DISABLED_DROP        = 7;     // Pkts dropped due to port disable
+   COPY_TO_CPU_TAIL_DROP     = 8;     // Copy-to-cpu pkts tail dropped
+   SPAN_TAIL_DROP            = 9;     // Span pkts tail dropped
+   MIN_SIZE_VIOLATION_DROP   = 10;    // Pkts dropped due to lesser than min size
+   ENQUEUE_ERROR_DROP        = 11;    // Pkts dropped due to enqueue to reserved queues
+   INVALID_PORT_DROP         = 12;    // Pkts dropped due to destined to invalid ports
+   INVALID_OUTPUT_QUEUE_DROP = 13;    // Pkts dropped due to destined to invalid output queues
+}
+
+message BufferDropStatsEntry {
+  BufferDropReasons   reasons                 = 1;    // drop reasons
+  uint32              drop_count              = 2;    // drop count for multiple drop reasons
+}
+
+message BufferDropStats {
+  repeated BufferDropStatsEntry     stats_entries = 1;
 }
 
 // Table types
@@ -160,24 +187,6 @@ message TableStatsEntry {
 // TableStats is container for statistics of all tables in the data path
 message TableStats {
   repeated TableStatsEntry    table_stats           = 1;
-}
-
-// BufferDropStats captures instantaneous drop counts due to buffering drops
-message BufferDropStats {
-  uint32 intrinsic_drop_count            = 1;     // Pkts dropped due to intrinsic drop bit being set
-  uint32 discarded_count                 = 2;     // Pkts dropped due to error
-  uint32 admitted_count                  = 3;     // Errored pkts admitted to buffering
-  uint32 out_of_cells_drop_count         = 4;     // Pkts dropped due to cell exhaustion (first cell)
-  uint32 out_of_cells_drop_count_2       = 5;     // Pkts dropped due to cell exhaustion (subsequent cell)
-  uint32 out_of_credit_drop_count        = 6;     // Pkts dropped due to cell-credits exhaustion
-  uint32 truncation_drop_count           = 7;     // Pkts dropped due to size bigger than the configured MTU
-  uint32 port_disabled_drop_count        = 8;     // Pkts dropped due to port disable
-  uint32 copy_to_cpu_tail_drop_count     = 9;     // Copy-to-cpu pkts tail dropped
-  uint32 span_tail_drop_count            = 10;    // Span pkts tail dropped
-  uint32 min_size_violation_drop_count   = 11;    // Pkts dropped due to lesser than min size
-  uint32 enqueue_error_drop_count        = 12;    // Pkts dropped due to enqueue to reserved queues
-  uint32 invalid_port_drop_count         = 13;    // Pkts dropped due to destined to invalid ports
-  uint32 invalid_output_queue_drop_count = 14;    // Pkts dropped due to destined to invalid output queues
 }
 
 // BufferStats captures instantaneous counters of the buffering module
