@@ -286,6 +286,9 @@ DebugServiceImpl::MpuTraceUpdate(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto request = req->request(i);
         hal::mpu_trace_enable(request, rsp);
+        HAL_TRACE_DEBUG("REQ {}: wrap- {} reset- {} enable- {} instr- {} kd- {} traceenable- {}",
+                         i, request.spec().wrap(), request.spec().reset(), request.spec().enable(),
+                         request.spec().instructions(), request.spec().table_key(), request.spec().trace_enable());
     }
 
     return Status::OK;

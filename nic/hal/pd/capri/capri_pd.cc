@@ -433,8 +433,11 @@ capri_p4_ingress_mpu_trace_enable(uint32_t stage_id,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    HAL_TRACE_DEBUG ("INGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d}",
-                     stage_id, mpu, base_addr, enable, reset);
+    HAL_TRACE_DEBUG ("INGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+                     stage_id, mpu, base_addr, enable, reset, wrap);
+    HAL_TRACE_DEBUG ("INGRESS: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+                     trace_enable, phv_debug, phv_error, watch_pc, table_key);
+    HAL_TRACE_DEBUG ("INGRESS: instructions {:d} buf_size {:d}", instructions, buf_size);
 
     // TODO max check on mpu and stage_id
 
@@ -480,8 +483,11 @@ capri_p4_egress_mpu_trace_enable(uint32_t stage_id,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    HAL_TRACE_DEBUG ("EGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d}",
-                     stage_id, mpu, base_addr, enable, reset);
+    HAL_TRACE_DEBUG ("EGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+                     stage_id, mpu, base_addr, enable, reset, wrap);
+    HAL_TRACE_DEBUG ("EGRESS: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+                     trace_enable, phv_debug, phv_error, watch_pc, table_key);
+    HAL_TRACE_DEBUG ("EGRESS: instructions {:d} buf_size {:d}", instructions, buf_size);
 
     // TODO max check on mpu and stage_id
 
@@ -527,8 +533,11 @@ capri_p4p_txdma_mpu_trace_enable(uint32_t stage_id,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    HAL_TRACE_DEBUG ("EGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d}",
-                     stage_id, mpu, base_addr, enable, reset);
+    HAL_TRACE_DEBUG ("TXDMA: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+                     stage_id, mpu, base_addr, enable, reset, wrap);
+    HAL_TRACE_DEBUG ("TXDMA: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+                     trace_enable, phv_debug, phv_error, watch_pc, table_key);
+    HAL_TRACE_DEBUG ("TXDMA: instructions {:d} buf_size {:d}", instructions, buf_size);
 
     // TODO max check on mpu and stage_id
 
@@ -574,8 +583,11 @@ capri_p4p_rxdma_mpu_trace_enable(uint32_t stage_id,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    HAL_TRACE_DEBUG ("EGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d}",
-                     stage_id, mpu, base_addr, enable, reset);
+    HAL_TRACE_DEBUG ("RXDMA: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+                     stage_id, mpu, base_addr, enable, reset, wrap);
+    HAL_TRACE_DEBUG ("RXDMA: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+                     trace_enable, phv_debug, phv_error, watch_pc, table_key);
+    HAL_TRACE_DEBUG ("RXDMA: instructions {:d} buf_size {:d}", instructions, buf_size);
 
     // TODO max check on mpu and stage_id
 

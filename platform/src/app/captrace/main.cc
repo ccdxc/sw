@@ -85,7 +85,7 @@ int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
     int ret = 0;
     char * line = NULL;
     size_t len = 0;
-    char *token;
+    char *token, *option, *value;
     char *pipeline_name;
     int stage;
     int mpu;
@@ -180,54 +180,66 @@ int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
 
         // Parse and validate options
         do {
-            token = strtok(NULL, ",");
-            if (token == NULL) {
+            option = strtok(NULL, "=");
+            if (option == NULL) {
                 break;
             }
 
-            token = strtok(NULL, "=");
-            if (token == NULL) {
+            value = strtok(NULL, ",");
+            if (value == NULL) {
                 break;
             }
 
             col_num++;
-            switch (trace_options[std::string((const char *)token)]) {
+            //printf("CAP-DEBUG: Option '%s' Value %s !\n", option, value);
+            switch (trace_options[std::string((const char *)option)]) {
             case 0:
-                printf("Invalid option '%s' ... ignoring!\n", token);
+                printf("Invalid option '%s' ... ignoring!\n", option);
                 break;
             case 1:
-                trace_enable = true;
+                if (atoi(value) != 0) {
+                    trace_enable = true;
+                }
                 break;
             case 2:
-                phv_debug = true;
+                if (atoi(value) != 0) {
+                    phv_debug = true;
+                }
                 break;
             case 3:
-                phv_error = true;
+                if (atoi(value) != 0) {
+                    phv_error = true;
+                }
                 break;
             case 4:
-                table_key_enable = true;
+                if (atoi(value) != 0) {
+                    table_key_enable = true;
+                }
                 break;
             case 5:
-                instr_enable = true;
+                if (atoi(value) != 0) {
+                    instr_enable = true;
+                }
                 break;
             case 6:
-                wrap = true;
+                if (atoi(value) != 0) {
+                    wrap = true;
+                }
                 break;
             case 7:
-                watch_pc = strtoul(strtok(NULL, "="), NULL, 16);
+                watch_pc = strtoul(value, NULL, 16);
                 break;
             case 8:
-                trace_addr = strtoul(strtok(NULL, "="), NULL, 16);
+                trace_addr = strtoul(value, NULL, 16);
                 break;
             case 9:
-                trace_size = atoi(strtok(NULL, "="));
+                trace_size = atoi(value);
                 assert(trace_size > 0);
                 break;
             default:
-                printf("Invalid option '%s' ... ignoring!\n", token);
+                printf("Invalid option '%s' ... ignoring!\n", option);
                 break;
             }
-
         } while(token != NULL);
 
         for (int p = 1; p <= MAX_NUM_PIPELINE; p++) {
