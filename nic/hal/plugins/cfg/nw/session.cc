@@ -578,7 +578,7 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
     vrf_t   *vrf = vrf_lookup_by_handle(session->vrf_handle);
 
     response->mutable_status()->set_session_handle(session->hal_handle);
-    response->mutable_spec()->mutable_meta()->set_vrf_id(vrf->vrf_id);
+    response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf->vrf_id);
     response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
     response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
     response->mutable_spec()->set_tcp_sack_perm_option(session->config.tcp_sack_perm_option);

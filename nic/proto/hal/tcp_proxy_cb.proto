@@ -93,8 +93,7 @@ message TcpCbResponseMsg {
 
 // TcpCbDeleteRequest is used to delete a tcpcb
 message TcpCbDeleteRequest {
-  types.ObjectMeta        meta          = 1;    // object meta
-  TcpCbKeyHandle     key_or_handle = 2;    // TcpCb key or handle
+  TcpCbKeyHandle     key_or_handle = 1;    // TcpCb key or handle
 }
 
 // TcpCbDeleteRequestMsg is used to delete a batch of tcpcbs
@@ -109,8 +108,7 @@ message TcpCbDeleteResponseMsg {
 
 // TcpCbGetRequest is used to get information about a tcpcb
 message TcpCbGetRequest {
-  types.ObjectMeta          meta          = 1;    // object meta
-  TcpCbKeyHandle            key_or_handle = 2;    // TcpCb key or handle
+  TcpCbKeyHandle            key_or_handle = 1;    // TcpCb key or handle
 }
 
 // TcpCbGetRequestMsg is batched GET requests for tcpcbs

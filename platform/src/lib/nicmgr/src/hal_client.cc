@@ -337,7 +337,6 @@ HalClient::L2SegmentCreate(uint64_t vrf_id, uint64_t l2seg_id, uint16_t vlan_id)
     }
 
     spec = req_msg.add_request();
-    spec->mutable_meta()->set_vrf_id(vrf_id);
     spec->mutable_key_or_handle()->set_segment_id(l2seg_id);
     spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
     spec->set_mcast_fwd_policy(::l2segment::MULTICAST_FWD_POLICY_FLOOD);
@@ -1042,7 +1041,6 @@ HalClient::MulticastGroupGet(uint64_t group,
     ostream os(&buf);
 
     req = req_msg.add_request();
-    req->mutable_meta()->set_vrf_id(vrf_id);
     req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
     req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
 
@@ -1099,7 +1097,6 @@ HalClient::MulticastGroupCreate(uint64_t group,
 
     // Create the group
     spec = req_msg.add_request();
-    spec->mutable_meta()->set_vrf_id(vrf_id);
     spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
     spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
     status = multicast_stub_->MulticastEntryCreate(&context, req_msg, &rsp_msg);
@@ -1147,7 +1144,6 @@ HalClient::MulticastGroupDelete(uint64_t group,
     }
 
     req = req_msg.add_request();
-    req->mutable_meta()->set_vrf_id(vrf_id);
     req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
     req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
     status = multicast_stub_->MulticastEntryDelete(&context, req_msg, &rsp_msg);
@@ -1191,7 +1187,6 @@ HalClient::MulticastGroupUpdate(uint64_t group,
     }
 
     spec = req_msg.add_request();
-    spec->mutable_meta()->set_vrf_id(vrf_id);
     spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
     spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(group);
     for (auto it = oifs_list.cbegin(); it != oifs_list.cend(); it++) {

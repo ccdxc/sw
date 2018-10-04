@@ -50,7 +50,6 @@ message DeviceResponseMsg {
 }
 
 message DeviceGetRequest {
-  types.ObjectMeta  meta        = 1;    // object meta
 }
 
 message DeviceGetRequestMsg {

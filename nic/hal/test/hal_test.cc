@@ -316,7 +316,6 @@ public:
 
         spec = req_msg.add_request();
         spec->mutable_key_or_handle()->set_port_id(port_id);
-        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->set_port_speed(::port::PORT_SPEED_25G);
         spec->set_num_lanes(1);
         spec->set_port_type(::port::PORT_TYPE_ETH);
@@ -355,7 +354,6 @@ public:
 
         spec = req_msg.add_request();
         spec->mutable_key_or_handle()->set_port_id(port_id);
-        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->set_port_speed(speed);
         spec->set_admin_state(admin_state);
 
@@ -390,7 +388,6 @@ public:
 
         req = req_msg.add_request();
         req->mutable_key_or_handle()->set_port_id(port_id);
-        req->mutable_meta()->set_vrf_id(vrf_id);
 
         // port get
         status = port_stub_->PortGet(&context, req_msg, &rsp_msg);
@@ -453,7 +450,6 @@ public:
 
         req = req_msg.add_request();
         req->mutable_key_or_handle()->set_port_id(port_id);
-        req->mutable_meta()->set_vrf_id(vrf_id);
 
         // port get
         status = port_stub_->PortDelete(&context, req_msg, &rsp_msg);
@@ -1160,7 +1156,7 @@ public:
         FlowSpec     *flow;
 
         spec = req_msg.add_request();
-        spec->mutable_meta()->set_vrf_id(vrf_id);
+        spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
         spec->set_session_id(session_id);
         spec->set_conn_track_en(false);
         spec->set_tcp_ts_option(false);
@@ -1430,7 +1426,6 @@ public:
         Status                  status;
 
         spec = req_msg.add_request();
-        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->mutable_key_or_handle()->set_segment_id(l2segment_id);
         nw_kh = spec->add_network_key_handle();
         nw_kh->set_nw_handle(nw_handle);
@@ -1603,7 +1598,6 @@ public:
         Status                  status;
 
         spec = req_msg.add_request();
-        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->mutable_key_or_handle()->set_interface_id(tunnel_if_id);
         spec->set_type(::intf::IfType::IF_TYPE_TUNNEL);
         spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
@@ -1637,7 +1631,6 @@ public:
         Status                        status; \
         ClientContext                 context; \
         spec = req_msg.add_request(); \
-        spec->mutable_meta()->set_vrf_id(vrf_id); \
         spec->mutable_key_or_handle()->set_dropmonitorrule_id(dropmon_rule_id); \
         auto ms_kh = spec->add_ms_key_handle(); \
         ms_kh->set_mirrorsession_id(mirror_session_id); \
@@ -1806,7 +1799,7 @@ public:
 
         for (int i = 0; i < num_entries; i++) {
             spec = req_msg.add_request();
-            spec->mutable_meta()->set_vrf_id(vrf_id);
+            spec->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
             spec->mutable_spec()->set_proxy_type(types::PROXY_TYPE_TCP);
             spec->set_proxy_en(proxy_enable);
             spec->set_alloc_qid(true);
@@ -2836,7 +2829,6 @@ gft_proto_size_check (void)
               << match_flow_spec->ByteSizeLong()
               << std::endl;
 
-    match_flow_spec->mutable_meta()->set_vrf_id(max_uint64());
     match_flow_spec->set_table_type(gft::GFT_TABLE_TYPE_EXACT_MATCH_EGRESS);
     match_flow_spec->mutable_key_or_handle()->set_flow_entry_id(max_uint64());
     match_flow_spec->mutable_exact_match_profile()->set_profile_id(max_uint64());

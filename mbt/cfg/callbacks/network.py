@@ -10,7 +10,6 @@ def PreCreateCb(data, req_spec, resp_spec):
 def PostCreateCb(data, req_spec, resp_spec):
     global nw_cust_obj
     data.exp_data.spec = req_spec.request[0]
-    data.exp_data.spec.ClearField("meta")
     if req_spec.request[0].key_or_handle.nw_key.ip_prefix.address.ip_af == types_pb2.IP_AF_INET6:
         if (req_spec.request[0].key_or_handle.nw_key.ip_prefix.address.v6_addr,
                 req_spec.request[0].key_or_handle.nw_key.ip_prefix.prefix_len) not in msg.IPv6GenList:

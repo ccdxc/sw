@@ -102,7 +102,6 @@ TEST_F(ftp_test, ftp_session)
     CHECK_DENY_TCP(client_eph, server_eph, 37075, 2001, "c:2001 -> s:37075");
 
     req.set_session_handle(session->hal_handle);
-    req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
     ret = hal::session_get(req, &rsp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_EQ(rsp.response(0).status().alg(), nwsec::APP_SVC_FTP);
@@ -200,7 +199,6 @@ TEST_F(ftp_test, ftp_session_allow_mismatch)
     CHECK_DENY_TCP(client_eph, server_eph1, 37075, 2001, "c:2001 -> s:37075");
 
     req.set_session_handle(session->hal_handle);
-    req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
     ret = hal::session_get(req, &rsp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_EQ(rsp.response(0).status().alg(), nwsec::APP_SVC_FTP);

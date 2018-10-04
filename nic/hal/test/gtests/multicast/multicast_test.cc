@@ -210,7 +210,6 @@ TEST_F(multicast_test, test1)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create
-    mc_spec.mutable_meta()->set_vrf_id(VRF_ID1);
     mc_spec.mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(L2SEGMENT_ID);
     mc_spec.add_oif_key_handles()->set_interface_id(ENIC_IF_ID1);
     mc_spec.add_oif_key_handles()->set_interface_id(ENIC_IF_ID2);
@@ -224,7 +223,6 @@ TEST_F(multicast_test, test1)
     }
 
     // Specific Query
-    mc_get_req.mutable_meta()->set_vrf_id(VRF_ID1);
     for (int i = 0; i < NUM_MCAST_ENTRIES; i++) {
         mc_get_req.mutable_key_or_handle()->set_multicast_handle(handles[i]);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -237,7 +235,6 @@ TEST_F(multicast_test, test1)
     }
 
     // Generic Query
-    mc_get_req.mutable_meta()->set_vrf_id(VRF_ID1);
     mc_get_req.clear_key_or_handle();
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::multicastentry_get(mc_get_req, &mc_get_rsp);
@@ -249,7 +246,6 @@ TEST_F(multicast_test, test1)
     }
 
     // Update
-    mc_upd.mutable_meta()->set_vrf_id(VRF_ID1);
     mc_upd.add_oif_key_handles()->set_interface_id(ENIC_IF_ID2);
     mc_upd.add_oif_key_handles()->set_interface_id(ENIC_IF_ID3);
     for (int i = 0; i < NUM_MCAST_ENTRIES; i++) {
@@ -261,7 +257,6 @@ TEST_F(multicast_test, test1)
     }
 
     // Delete
-    mc_del_req.mutable_meta()->set_vrf_id(VRF_ID1);
     for (int i = 0; i < NUM_MCAST_ENTRIES; i++) {
         mc_del_req.mutable_key_or_handle()->set_multicast_handle(handles[i]);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -301,7 +296,6 @@ TEST_F(multicast_test, test2)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create
-    mc_spec.mutable_meta()->set_vrf_id(VRF_ID1);
     mc_spec.mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(L2SEGMENT_ID);
     mc_spec.add_oif_key_handles()->set_interface_id(ENIC_IF_ID1);
     mc_spec.add_oif_key_handles()->set_interface_id(ENIC_IF_ID2);
@@ -315,7 +309,6 @@ TEST_F(multicast_test, test2)
     }
 
     // Specific Query
-    mc_get_req.mutable_meta()->set_vrf_id(VRF_ID1);
     mc_get_req.mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(L2SEGMENT_ID);
     for (int i = 0; i < NUM_MCAST_ENTRIES; i++) {
         mc_get_req.mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(MCAST_BASE_MAC + i);
@@ -329,7 +322,6 @@ TEST_F(multicast_test, test2)
     }
 
     // Generic Query
-    mc_get_req.mutable_meta()->set_vrf_id(VRF_ID1);
     mc_get_req.clear_key_or_handle();
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::multicastentry_get(mc_get_req, &mc_get_rsp);
@@ -341,7 +333,6 @@ TEST_F(multicast_test, test2)
     }
 
     // Update
-    mc_upd.mutable_meta()->set_vrf_id(VRF_ID1);
     mc_upd.mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(L2SEGMENT_ID);
     mc_upd.add_oif_key_handles()->set_interface_id(ENIC_IF_ID2);
     mc_upd.add_oif_key_handles()->set_interface_id(ENIC_IF_ID3);
@@ -354,7 +345,6 @@ TEST_F(multicast_test, test2)
     }
 
     // Delete
-    mc_del_req.mutable_meta()->set_vrf_id(VRF_ID1);
     mc_del_req.mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(L2SEGMENT_ID);
     for (int i = 0; i < NUM_MCAST_ENTRIES; i++) {
         mc_del_req.mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(MCAST_BASE_MAC + i);

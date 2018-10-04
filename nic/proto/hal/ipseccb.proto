@@ -85,8 +85,7 @@ message IpsecCbResponseMsg {
 
 // IpsecCbDeleteRequest is used to delete a ipseccb
 message IpsecCbDeleteRequest {
-  types.ObjectMeta        meta          = 1;    // object meta
-  IpsecCbKeyHandle     key_or_handle = 2;    // IpsecCb key or handle
+  IpsecCbKeyHandle     key_or_handle = 1;    // IpsecCb key or handle
 }
 
 // IpsecCbDeleteRequestMsg is used to delete a batch of ipseccbs
@@ -101,8 +100,7 @@ message IpsecCbDeleteResponseMsg {
 
 // IpsecCbGetRequest is used to get information about a ipseccb
 message IpsecCbGetRequest {
-  types.ObjectMeta          meta          = 1;    // object meta
-  IpsecCbKeyHandle            key_or_handle = 2;    // IpsecCb key or handle
+  IpsecCbKeyHandle            key_or_handle = 1;    // IpsecCb key or handle
 }
 
 // IpsecCbGetRequestMsg is batched GET requests for ipseccbs

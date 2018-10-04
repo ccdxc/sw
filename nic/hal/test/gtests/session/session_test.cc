@@ -194,7 +194,7 @@ TEST_F(session_test, test1)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_vrf_id(1);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     sess_spec.set_session_id(1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -422,7 +422,7 @@ TEST_F(session_test, test2)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_vrf_id(2);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     sess_spec.set_session_id(2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -451,7 +451,7 @@ TEST_F(session_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create Session for coll
-    sess_spec2.mutable_meta()->set_vrf_id(2);
+    sess_spec2.mutable_vrf_key_handle()->set_vrf_id(2);
     sess_spec2.set_session_id(3);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip3);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip4);
@@ -651,7 +651,7 @@ TEST_F(session_test, test3)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_vrf_id(3);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(3);
     sess_spec.set_session_id(3);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_ip_af(types::IP_AF_INET6);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_v6_addr(ipv6_ip1);
@@ -815,7 +815,7 @@ TEST_F(session_test, test4)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_vrf_id(4);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(4);
     sess_spec.set_session_id(4);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -843,7 +843,7 @@ TEST_F(session_test, test4)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    sess_spec2.mutable_meta()->set_vrf_id(4);
+    sess_spec2.mutable_vrf_key_handle()->set_vrf_id(4);
     sess_spec2.set_session_id(5);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -995,7 +995,7 @@ TEST_F(session_test, test5)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_vrf_id(5);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     sess_spec.set_session_id(6);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -1167,7 +1167,7 @@ TEST_F(session_test, test6)
 
     // Create Session
     // CIP -> VIP ==> CIP -> PIP :: DNAT
-    sess_spec.mutable_meta()->set_vrf_id(6);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(6);
     sess_spec.set_session_id(61);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -1334,7 +1334,7 @@ TEST_F(session_test, test7)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_vrf_id(7);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(7);
     sess_spec.set_session_id(71);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -1508,13 +1508,13 @@ TEST_F(session_test, test8)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create l4lb
-    l4lb_spec.mutable_meta()->set_vrf_id(8);
     l4lb_spec.mutable_key_or_handle()->mutable_service_key()->mutable_service_ip_address()->
         set_ip_af(types::IP_AF_INET);
     l4lb_spec.mutable_key_or_handle()->mutable_service_key()->mutable_service_ip_address()->
         set_v4_addr(ip2);
     l4lb_spec.mutable_key_or_handle()->mutable_service_key()->set_ip_protocol((l4lb::L4LBProtocol)types::IPPROTO_TCP);
     l4lb_spec.mutable_key_or_handle()->mutable_service_key()->set_service_port(1000);
+    l4lb_spec.mutable_vrf_key_handle()->set_vrf_id(8);
     l4lb_spec.set_service_mac(0x111111001235);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l4lbservice_create(l4lb_spec, &l4lb_rsp);
@@ -1524,7 +1524,7 @@ TEST_F(session_test, test8)
 
     // Create Session
     // CIP -> VIP ==> CIP -> PIP :: DNAT
-    sess_spec.mutable_meta()->set_vrf_id(8);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(8);
     sess_spec.set_session_id(81);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -1697,7 +1697,7 @@ TEST_F(session_test, test9)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_vrf_id(9);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(9);
     sess_spec.set_session_id(133);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -1891,7 +1891,7 @@ TEST_F(session_test, test10)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_vrf_id(10);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(10);
     sess_spec.set_session_id(10);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_ip_af(types::IP_AF_INET6);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_v6_addr(ipv6_ip1);

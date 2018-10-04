@@ -258,7 +258,6 @@ public:
 
         spec = req_msg.add_request();
         spec->mutable_key_or_handle()->set_port_id(port_info->port_id);
-        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->set_port_speed(port_info->speed);
         spec->set_num_lanes(port_info->num_lanes);
         spec->set_port_type(::port::PORT_TYPE_ETH);
@@ -409,7 +408,6 @@ public:
 
         if (port_info->port_id_set == true) {
             req->mutable_key_or_handle()->set_port_id(port_info->port_id);
-            req->mutable_meta()->set_vrf_id(vrf_id);
         }
 
         // port get
@@ -532,7 +530,6 @@ public:
 
         req = req_msg.add_request();
         req->mutable_key_or_handle()->set_port_id(port_info->port_id);
-        req->mutable_meta()->set_vrf_id(vrf_id);
 
         // port get
         status = port_stub_->PortDelete(&context, req_msg, &rsp_msg);

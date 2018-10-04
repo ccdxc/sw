@@ -46,7 +46,7 @@ ctx_t::extract_flow_key()
 
     // if it is a grpc req extract key from spec
     if (sess_spec_) {
-        return extract_flow_key_from_spec(sess_spec_->meta().vrf_id(),
+        return extract_flow_key_from_spec(sess_spec_->vrf_key_handle().vrf_id(),
                                           &key_,
                                           sess_spec_->initiator_flow().flow_key());
     }
@@ -350,7 +350,7 @@ ctx_t::create_session()
     // read rkey from spec
     if (protobuf_request()) {
         if (sess_spec_->has_responder_flow()) {
-            ret = extract_flow_key_from_spec(sess_spec_->meta().vrf_id(),
+            ret = extract_flow_key_from_spec(sess_spec_->vrf_key_handle().vrf_id(),
                                              &rkey_,
                                              sess_spec_->responder_flow().flow_key());
 

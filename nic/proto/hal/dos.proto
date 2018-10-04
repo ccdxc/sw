@@ -7,6 +7,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "kh.proto";
 
 package dos;
 option go_package="halproto";
@@ -97,7 +98,7 @@ message EgressDoSPolicy {
 // DoSPolicy object and the clients are expected to pass the handle for
 // Get/Modify/Delete calls. Note that there is no identifier for this object
 message DoSPolicySpec {
-  types.ObjectMeta           meta              = 1;    // object meta
+  kh.VrfKeyHandle            vrf_key_handle    = 1;    // vrf key or handle
   IngressDoSPolicy           ingress_policy    = 2;    // ingress policy
   EgressDoSPolicy            egress_policy     = 3;    // egress policy
   fixed64                    dos_handle        = 4;    // dos policy handle
@@ -127,8 +128,7 @@ message DoSPolicyResponseMsg {
 
 // DoSRequest is used to delete a DoS
 message DoSPolicyDeleteRequest {
-  types.ObjectMeta  meta           = 1;    // object meta
-  fixed64           dos_handle     = 2;    // object handle
+  fixed64           dos_handle        = 1;    // object handle
 }
 
 // DoSPolicyDeleteRequestMsg is used to delete a batch of security groups
@@ -148,8 +148,7 @@ message DoSPolicyDeleteResponseMsg {
 
 // DoSGetRequest is used to get information about a DoS
 message DoSPolicyGetRequest {
-  types.ObjectMeta  meta           = 1;    // object meta
-  fixed64           dos_handle     = 2;    // object handle
+  fixed64           dos_handle        = 1;    // object handle
 }
 
 // DoSPolicyGetRequestMsg is batched GET request for DoS

@@ -12,7 +12,6 @@ import (
 func (hd *Datapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// build security group message
 	sgs := halproto.SecurityGroupSpec{
-		Meta: &halproto.ObjectMeta{},
 		KeyOrHandle: &halproto.SecurityGroupKeyHandle{
 			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
 				SecurityGroupId: sg.Status.SecurityGroupID,
@@ -42,7 +41,6 @@ func (hd *Datapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 func (hd *Datapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	// build security group message
 	sgs := halproto.SecurityGroupSpec{
-		Meta: &halproto.ObjectMeta{},
 		KeyOrHandle: &halproto.SecurityGroupKeyHandle{
 			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
 				SecurityGroupId: sg.Status.SecurityGroupID,
@@ -72,7 +70,6 @@ func (hd *Datapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 func (hd *Datapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	// build security group message
 	sgdel := halproto.SecurityGroupDeleteRequest{
-		Meta: &halproto.ObjectMeta{},
 		KeyOrHandle: &halproto.SecurityGroupKeyHandle{
 			KeyOrHandle: &halproto.SecurityGroupKeyHandle_SecurityGroupId{
 				SecurityGroupId: sg.Status.SecurityGroupID,

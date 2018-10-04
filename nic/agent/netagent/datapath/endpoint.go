@@ -153,7 +153,6 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
 		KeyOrHandle:   &epHandle,
-		Meta:          &halproto.ObjectMeta{},
 		EndpointAttrs: &epAttrs,
 		VrfKeyHandle:  &vrfKey,
 	}
@@ -253,7 +252,6 @@ func (hd *Datapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 
 	// build endpoint message
 	epUpdateReq := halproto.EndpointUpdateRequest{
-		Meta:          &halproto.ObjectMeta{},
 		KeyOrHandle:   &epHandle,
 		EndpointAttrs: &epAttrs,
 	}
@@ -447,7 +445,6 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 
 	// build endpoint message
 	epinfo := halproto.EndpointSpec{
-		Meta:          &halproto.ObjectMeta{},
 		KeyOrHandle:   &epHandle,
 		EndpointAttrs: &epAttrs,
 		VrfKeyHandle: &halproto.VrfKeyHandle{
@@ -551,7 +548,6 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 
 	// build endpoint message
 	epUpdateReq := halproto.EndpointUpdateRequest{
-		Meta:          &halproto.ObjectMeta{},
 		KeyOrHandle:   &epHandle,
 		EndpointAttrs: &epAttrs,
 	}

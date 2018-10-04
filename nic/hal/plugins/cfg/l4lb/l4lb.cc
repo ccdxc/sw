@@ -67,8 +67,8 @@ l4lb_compare_handle_key_func(void *key1, void *key2)
 static hal_ret_t
 validate_l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
 {
-    if (!spec.has_meta() ||
-        spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (!spec.has_vrf_key_handle() ||
+        spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -104,7 +104,7 @@ l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
     pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_TRACE_DEBUG("PI-L4LBService:{}: L4LB Create for vrf: {}", __FUNCTION__,
-                    spec.meta().vrf_id());
+                    spec.vrf_key_handle().vrf_id());
 
 
     ret = validate_l4lbservice_create(spec, rsp);
@@ -113,7 +113,7 @@ l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
     }
 
     // fetch the vrf information
-    tid = spec.meta().vrf_id();
+    tid = spec.vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
         ret = HAL_RET_INVALID_ARG;

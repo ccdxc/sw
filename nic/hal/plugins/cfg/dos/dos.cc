@@ -402,7 +402,7 @@ dospolicy_create (dos::DoSPolicySpec& spec,
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("{}: creating dos policy for ten id {}", __FUNCTION__,
-                    spec.meta().vrf_id());
+                    spec.vrf_key_handle().vrf_id());
 
     // check if dos policy exists already, and reject if one is found
     if (find_dos_policy_by_handle(spec.dos_handle())) {
@@ -432,7 +432,7 @@ dospolicy_create (dos::DoSPolicySpec& spec,
         goto end;
     }
     // fetch the vrf information
-    tid = spec.meta().vrf_id();
+    tid = spec.vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
     if (vrf == NULL) {
         ret = HAL_RET_VRF_NOT_FOUND;
@@ -476,8 +476,8 @@ validate_dos_policy_update (DoSPolicySpec & spec, DoSPolicyResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
-    if (!spec.has_meta() ||
-        spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (!spec.has_vrf_key_handle() ||
+        spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         HAL_TRACE_ERR("pi-ep:{}:vrf id not valid",
                       __FUNCTION__);
         return HAL_RET_VRF_ID_INVALID;

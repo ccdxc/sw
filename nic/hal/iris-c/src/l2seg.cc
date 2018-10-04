@@ -53,7 +53,6 @@ L2Segment::L2Segment(Vrf *vrf, uint16_t vlan)
                     vrf->GetId(), vlan, id);
 
     req = req_msg.add_request();
-    req->mutable_meta()->set_vrf_id(vrf->GetId());
     req->mutable_key_or_handle()->set_segment_id(id);
     //req->mutable_vrf_key_handle()->set_vrf_handle(vrf->GetHandle());
     req->mutable_vrf_key_handle()->set_vrf_id(vrf->GetId());
@@ -172,7 +171,6 @@ L2Segment::TriggerHalUpdate()
     l2segment::L2SegmentResponseMsg     rsp_msg;
 
     req = req_msg.add_request();
-    req->mutable_meta()->set_vrf_id(vrf->GetId());
     req->mutable_key_or_handle()->set_segment_id(id);
     req->mutable_vrf_key_handle()->set_vrf_id(vrf->GetId());
     req->set_mcast_fwd_policy(l2segment::MulticastFwdPolicy::MULTICAST_FWD_POLICY_FLOOD);

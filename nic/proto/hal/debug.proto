@@ -210,8 +210,7 @@ message MemTrackSpec {
 
 // MemTrackGetRequest is request msg with allocation id that info is requested for
 message MemTrackGetRequest {
-  types.ObjectMeta      meta             = 1;    // object meta
-  MemTrackSpec          spec             = 2;    // qualifiers
+  MemTrackSpec          spec             = 1;    // qualifiers
 }
 
 // MemTrackGetRequestMsg is batched MemTrackGetRequest
@@ -270,8 +269,7 @@ message SlabStats {
 
 // SlabGetRequest is GET request per slab
 message SlabGetRequest {
-  types.ObjectMeta      meta = 1;    // object meta
-  uint32 id                  = 2;    // slab identifier
+  uint32 id                  = 1;    // slab identifier
 }
 
 // SlabGetResponse is batched GET request
@@ -375,8 +373,7 @@ enum TraceLevel {
 }
 
 message TraceSpec {
-  types.ObjectMeta    meta        = 1;    // common object meta
-  TraceLevel          trace_level = 2;    // trace level to set to
+  TraceLevel          trace_level = 1;    // trace level to set to
 }
 
 message TraceRequestMsg {

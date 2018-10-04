@@ -496,16 +496,12 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
     HAL_TRACE_DEBUG("PI-FlowMonitorRule create");
     flowmonrule_spec_dump(spec);
     rule_id = spec.key_or_handle().flowmonitorrule_id();
-    vrf_id = spec.meta().vrf_id();
+    vrf_id = spec.vrf_key_handle().vrf_id();
     if (vrf_id == HAL_VRF_ID_INVALID) {
-        vrf_id = spec.vrf_key_handle().vrf_id();
-        if (vrf_id == HAL_VRF_ID_INVALID) {
-            rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-            HAL_TRACE_ERR("Invalid vrf. Vrf in meta {} vrf in key_handle {}",
-                          spec.meta().vrf_id(), spec.vrf_key_handle().vrf_id());
-            ret = HAL_RET_INVALID_ARG;
-            goto end;
-        }
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        HAL_TRACE_ERR("Invalid vrf {}", spec.vrf_key_handle().vrf_id());
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
     }
     if (rule_id >= MAX_FLOW_MONITOR_RULES) {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);

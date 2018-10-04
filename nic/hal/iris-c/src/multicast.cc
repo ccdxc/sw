@@ -49,7 +49,6 @@ Multicast::Multicast(L2Segment *l2seg, mac_t mac)
     this->l2seg = l2seg;
 
     spec = req_msg.add_request();
-    spec->mutable_meta()->set_vrf_id(l2seg->GetVrf()->GetId());
     spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
     spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(mac);
 
@@ -79,7 +78,6 @@ Multicast::~Multicast()
     multicast::MulticastEntryDeleteResponseMsg rsp_msg;
 
     req = req_msg.add_request();
-    req->mutable_meta()->set_vrf_id(l2seg->GetVrf()->GetId());
     req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
     req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(mac);
 
@@ -128,7 +126,6 @@ Multicast::TriggerHal()
     multicast::MulticastEntryResponseMsg rsp_msg;
 
     spec = req_msg.add_request();
-    spec->mutable_meta()->set_vrf_id(l2seg->GetVrf()->GetId());
     spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
     spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(mac);
     for (auto it = enic_refs.cbegin(); it != enic_refs.cend(); it++) {

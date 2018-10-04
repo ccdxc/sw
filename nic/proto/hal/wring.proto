@@ -28,11 +28,10 @@ message WRingKeyHandle {
 
 // WRingSpec captures all the WRing level configuration
 message WRingSpec {
-  types.ObjectMeta      meta                      = 1;    // common object meta
-  WRingKeyHandle        key_or_handle             = 2;
-  types.WRingType       type                      = 3;
-  uint32                pi                        = 4;
-  uint32                ci                        = 5;
+  WRingKeyHandle        key_or_handle             = 1;
+  types.WRingType       type                      = 2;
+  uint32                pi                        = 3;
+  uint32                ci                        = 4;
 }
 
 // WRingRequestMsg is batched add or modify wring request
@@ -58,8 +57,7 @@ message WRingResponseMsg {
 
 // WRingDeleteRequest is used to delete a wring
 message WRingDeleteRequest {
-  types.ObjectMeta   meta          = 1;    // object meta
-  WRingKeyHandle     key_or_handle = 2;    // WRing key or handle
+  WRingKeyHandle     key_or_handle = 1;    // WRing key or handle
 }
 
 // WRingDeleteRequestMsg is used to delete a batch of wrings
@@ -74,10 +72,9 @@ message WRingDeleteResponseMsg {
 
 // WRingGetRequest is used to get information about a wring
 message WRingGetEntriesRequest {
-  types.ObjectMeta     meta          = 1;    // object meta
-  WRingKeyHandle       key_or_handle = 2;    // WRing key or handle
-  types.WRingType      type          = 3;    // Wring Type
-  uint32               index         = 4;    // Index of the slot in the ring
+  WRingKeyHandle       key_or_handle = 1;    // WRing key or handle
+  types.WRingType      type          = 2;    // Wring Type
+  uint32               index         = 3;    // Index of the slot in the ring
 }
 
 // WRingGetEntriesRequestMsg is batched GET requests for wrings

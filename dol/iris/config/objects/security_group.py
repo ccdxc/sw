@@ -73,7 +73,6 @@ class SecurityGroupObject(base.ConfigObjectBase):
         return AgentSecurityGroupObject(self)
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.vrf_id = self.tenant.id
         req_spec.key_or_handle.security_group_id = self.id
         return
 

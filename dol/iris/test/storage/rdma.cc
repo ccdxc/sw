@@ -259,7 +259,7 @@ int CreateSession(uint32_t ten_id, uint32_t session_id, uint32_t ip_addr1, uint3
   session::SessionResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
-  req->mutable_meta()->set_vrf_id(ten_id);
+  req->mutable_vrf_key_handle()->set_vrf_id(ten_id);
   req->set_session_id(session_id);
   req->mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip_addr1);
   req->mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip_addr2);

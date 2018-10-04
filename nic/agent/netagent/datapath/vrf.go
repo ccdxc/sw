@@ -19,9 +19,6 @@ func (hd *Datapath) CreateVrf(vrfID uint64, vrfType string) error {
 	}
 
 	vrfSpec := halproto.VrfSpec{
-		Meta: &halproto.ObjectMeta{
-			VrfId: vrfID,
-		},
 		KeyOrHandle: &halproto.VrfKeyHandle{
 			KeyOrHandle: &halproto.VrfKeyHandle_VrfId{
 				VrfId: vrfID,
@@ -94,11 +91,7 @@ func (hd *Datapath) DeleteVrf(vrfID uint64) error {
 
 // UpdateVrf deletes a tenant
 func (hd *Datapath) UpdateVrf(vrfID uint64) error {
-	vrfSpec := halproto.VrfSpec{
-		Meta: &halproto.ObjectMeta{
-			VrfId: vrfID,
-		},
-	}
+	vrfSpec := halproto.VrfSpec{}
 	vrfReqMsg := halproto.VrfRequestMsg{
 		Request: []*halproto.VrfSpec{&vrfSpec},
 	}

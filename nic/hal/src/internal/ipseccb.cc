@@ -212,7 +212,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->mutable_ipseccb_status()->set_ipseccb_handle(ipseccb->hal_handle);
 
-    sess_spec.mutable_meta()->set_vrf_id(1);
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_ip_proto(types::IPPROTO_ESP);

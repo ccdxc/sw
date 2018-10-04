@@ -267,7 +267,6 @@ func (s *PolicyState) createCollectorPolicy(ctx context.Context, netMeta *networ
 
 	var req []*halproto.CollectorSpec
 	req = append(req, &halproto.CollectorSpec{
-		Meta: &halproto.ObjectMeta{VrfId: netMeta.vrf},
 		KeyOrHandle: &halproto.CollectorKeyHandle{
 			KeyOrHandle: &halproto.CollectorKeyHandle_CollectorId{
 				CollectorId: objID,
@@ -322,7 +321,6 @@ func (s *PolicyState) deleteCollectorPolicy(ctx context.Context, netMeta *networ
 	}
 
 	req = append(req, &halproto.CollectorDeleteRequest{
-		Meta: &halproto.ObjectMeta{VrfId: netMeta.vrf},
 		KeyOrHandle: &halproto.CollectorKeyHandle{
 			KeyOrHandle: &halproto.CollectorKeyHandle_CollectorId{
 				CollectorId: key,

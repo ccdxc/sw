@@ -191,7 +191,7 @@ message FlowSpec {
 // SessionSpec represents a full session with forward and reverse flow
 // It is possible to have a session with just one flow (for L2 mcast/bcast)
 message SessionSpec {
-  types.ObjectMeta     meta                   = 1;    // object meta
+  kh.VrfKeyHandle      vrf_key_handle         = 1;
   // session_id is unique session identifier
   fixed32              session_id             = 2 [(gogoproto.moretags) = "venice:key"];
   bool                 conn_track_en          = 3;   // TRUE if connection tracking is ON
@@ -286,11 +286,10 @@ message SessionResponseMsg {
 
 // SessionDeleteRequest is used to delete a session
 message SessionDeleteRequest {
-  types.ObjectMeta    meta           = 1;    // object meta
   // session_handle is the handle of the session
   oneof get_by {
-      fixed64             session_handle = 2 [(gogoproto.moretags) = "venice:key"];
-      SessionFilter       session_filter  = 3;
+      fixed64             session_handle  = 1 [(gogoproto.moretags) = "venice:key"];
+      SessionFilter       session_filter  = 2;
   }
 }
 
@@ -322,11 +321,10 @@ message SessionFilter {
 
 // SessionGetRequest  is used to get information about a session
 message SessionGetRequest {
-  types.ObjectMeta    meta           = 1;    // object meta
   // session_handle is the handle of the session
   oneof get_by {
-      fixed64             session_handle = 2 [(gogoproto.moretags) = "venice:key"];
-      SessionFilter       session_filter  = 3;
+      fixed64             session_handle  = 1 [(gogoproto.moretags) = "venice:key"];
+      SessionFilter       session_filter  = 2;
   }
 }
 

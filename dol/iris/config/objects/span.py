@@ -81,7 +81,6 @@ class SpanSessionObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, reqspec):
         if isinstance(reqspec, telemetry_pb2.MirrorSessionSpec):
-            reqspec.meta.vrf_id = self.tenant.id
             reqspec.vrf_key_handle.vrf_id = self.tenant.id
             reqspec.key_or_handle.mirrorsession_id = self.id
             reqspec.snaplen = self.snaplen

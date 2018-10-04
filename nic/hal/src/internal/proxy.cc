@@ -678,31 +678,31 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
     vrf_t*       vrf = NULL;
     vrf_id_t     tid = 0;
 
-    if(!req.has_meta()){
-        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        HAL_TRACE_ERR("no meta found");
-        return HAL_RET_INVALID_ARG;
-    }
-
-    if (req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
-        HAL_TRACE_ERR("vrf {}", req.meta().vrf_id());
-        return HAL_RET_INVALID_ARG;
-    }
-
-    tid = req.meta().vrf_id();
-    vrf = vrf_lookup_by_id(tid);
-    if(vrf == NULL) {
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-        HAL_TRACE_ERR("vrf {} not found", tid);
-        return HAL_RET_INVALID_ARG;
-    }
-
     if(!req.has_spec() ||
        req.spec().proxy_type() == types::PROXY_TYPE_NONE) {
        rsp->set_api_status(types::API_STATUS_PROXY_TYPE_INVALID);
         HAL_TRACE_ERR("no proxy_type found");
        return HAL_RET_INVALID_ARG;
+    }
+
+    if(!req.spec().has_vrf_key_handle()) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        HAL_TRACE_ERR("no vrf id found");
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (req.spec().vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        HAL_TRACE_ERR("vrf {}", req.spec().vrf_key_handle().vrf_id());
+        return HAL_RET_INVALID_ARG;
+    }
+
+    tid = req.spec().vrf_key_handle().vrf_id();
+    vrf = vrf_lookup_by_id(tid);
+    if(vrf == NULL) {
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        HAL_TRACE_ERR("vrf {} not found", tid);
+        return HAL_RET_INVALID_ARG;
     }
 
     return HAL_RET_OK;
@@ -851,7 +851,7 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
         return ret;
     }
 
-    tid = req.meta().vrf_id();
+    tid = req.spec().vrf_key_handle().vrf_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
 
     // ignore direction for the flow.
@@ -902,24 +902,23 @@ validate_proxy_get_flow_info_request(proxy::ProxyGetFlowInfoRequest& req,
     vrf_t*       vrf = NULL;
     vrf_id_t     tid = 0;
 
-    if(!req.has_meta() ||
-        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+    if (!req.has_spec() ||
+       req.spec().proxy_type() == types::PROXY_TYPE_NONE) {
+       rsp->set_api_status(types::API_STATUS_PROXY_TYPE_INVALID);
+       return HAL_RET_INVALID_ARG;
+    }
+
+    if (req.spec().vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
-    tid = req.meta().vrf_id();
+    tid = req.spec().vrf_key_handle().vrf_id();
     vrf = vrf_lookup_by_id(tid);
-    if(vrf == NULL) {
+    if (vrf == NULL) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         HAL_TRACE_ERR("vrf {} not found", tid);
         return HAL_RET_INVALID_ARG;
-    }
-
-    if(!req.has_spec() ||
-       req.spec().proxy_type() == types::PROXY_TYPE_NONE) {
-       rsp->set_api_status(types::API_STATUS_PROXY_TYPE_INVALID);
-       return HAL_RET_INVALID_ARG;
     }
 
     return HAL_RET_OK;
@@ -960,7 +959,7 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
         return ret;
     }
 
-    tid = req.meta().vrf_id();
+    tid = req.spec().vrf_key_handle().vrf_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
 
     pfi = proxy_get_flow_info(req.spec().proxy_type(), &flow_key);
@@ -972,7 +971,6 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
 
     proxy = pfi->proxy;
 
-    *(rsp->mutable_meta()) = req.meta();
     rsp->set_proxy_type(proxy->type);
     *(rsp->mutable_flow_key()) = req.flow_key();;
     rsp->set_lif_id(proxy->meta->lif_info[0].lif_id);

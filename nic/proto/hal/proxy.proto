@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "kh.proto";
 import "session.proto";
 
 package proxy;
@@ -30,7 +31,7 @@ message ProxyKeyHandle {
 
 // ProxySpec captures all the proxy level configuration
 message ProxySpec {
-  types.ObjectMeta      meta                       = 1;    // common object meta
+  kh.VrfKeyHandle       vrf_key_handle             = 1;
   ProxyKeyHandle        key_or_handle              = 2;    // proxy being enable/updated
   types.ProxyType       proxy_type                 = 3;
   uint32                proxy_qtype                = 4;
@@ -59,8 +60,7 @@ message ProxyResponseMsg {
 
 // ProxyDisableRequest is used to delete a proxy
 message ProxyDisableRequest {
-  types.ObjectMeta        meta          = 1;    // object meta
-  ProxyKeyHandle          key_or_handle = 2;    // Proxy key or handle
+  ProxyKeyHandle          key_or_handle = 1;    // Proxy key or handle
 }
 
 // ProxyDisableRequestMsg is used to delete a batch of proxy 
@@ -75,8 +75,7 @@ message ProxyDisableResponseMsg {
 
 // ProxyGetRequest is used to get information about a proxy
 message ProxyGetRequest {
-  types.ObjectMeta          meta          = 1;    // object meta
-  ProxyKeyHandle            key_or_handle = 2;    // Proxy key or handle
+  ProxyKeyHandle            key_or_handle = 1;    // Proxy key or handle
 }
 
 // ProxyGetRequestMsg is batched GET requests for proxys
@@ -128,14 +127,13 @@ message TlsProxyFlowConfig {
 }
 
 message ProxyFlowConfigRequest {
-    types.ObjectMeta    meta            = 1; // object meta
-    ProxySpec           spec            = 2; // Specify the type of proxy service 
-    session.FlowKey     flow_key        = 3; // Flow key to identify a flow 
-    bool                proxy_en        = 4; // Enable/disable proxy service for a flow
-    session.FlowData    flow_data       = 5; // flow data
-    bool                alloc_qid       = 6; // false: disable Qid allocation
-    IpsecFlowConfig     ipsec_config    = 7; // IPSEC specific configuration
-    TlsProxyFlowConfig  tls_proxy_config = 8; // TLS Proxy specific configuration
+    ProxySpec           spec             = 1; // Specify the type of proxy service 
+    session.FlowKey     flow_key         = 2; // Flow key to identify a flow 
+    bool                proxy_en         = 3; // Enable/disable proxy service for a flow
+    session.FlowData    flow_data        = 4; // flow data
+    bool                alloc_qid        = 5; // false: disable Qid allocation
+    IpsecFlowConfig     ipsec_config     = 6; // IPSEC specific configuration
+    TlsProxyFlowConfig  tls_proxy_config = 7; // TLS Proxy specific configuration
 }
 
 message ProxyFlowConfigRequestMsg {
@@ -143,10 +141,9 @@ message ProxyFlowConfigRequestMsg {
 }
 
 message ProxyGetFlowInfoRequest {
-    types.ObjectMeta    meta        = 1;    // object meta
-    ProxySpec           spec        = 2;    // Specify the type of proxy service 
-    session.FlowKey     flow_key    = 3;    // identify a flow 
-    session.FlowData    flow_data   = 5;
+    ProxySpec           spec        = 1;    // Specify the type of proxy service 
+    session.FlowKey     flow_key    = 2;    // identify a flow 
+    session.FlowData    flow_data   = 3;
 }
 
 message ProxyGetFlowInfoRequestMsg {
@@ -155,13 +152,12 @@ message ProxyGetFlowInfoRequestMsg {
 
 message ProxyGetFlowInfoResponse {
     types.ApiStatus     api_status         = 1;    // API status code
-    types.ObjectMeta    meta               = 2;    // object meta
-    types.ProxyType     proxy_type         = 3;    // type of proxy service
-    session.FlowKey     flow_key           = 4;    // identifies a flow
-    uint32              lif_id             = 5;    // Hardware and software lif id for this flow
-    uint32              qtype              = 6;    // Queue Type (value can be 0-8)
-    uint32              qid1               = 7;    // Allocated QID for flow instance 0 (e.g. h-Flow)
-    uint32              qid2               = 8;    // Allocated QID for flow instance 1 ( e.g. n-Flow)
+    types.ProxyType     proxy_type         = 2;    // type of proxy service
+    session.FlowKey     flow_key           = 3;    // identifies a flow
+    uint32              lif_id             = 4;    // Hardware and software lif id for this flow
+    uint32              qtype              = 5;    // Queue Type (value can be 0-8)
+    uint32              qid1               = 6;    // Allocated QID for flow instance 0 (e.g. h-Flow)
+    uint32              qid2               = 7;    // Allocated QID for flow instance 1 ( e.g. n-Flow)
 }
 
 message ProxyGetFlowInfoResponseMsg {

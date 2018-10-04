@@ -237,7 +237,6 @@ public:
 
         spec = req_msg.add_request();
         spec->mutable_key_or_handle()->set_port_id(port_id);
-        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->set_port_speed(::port::PORT_SPEED_25G);
         spec->set_num_lanes(1);
         spec->set_port_type(::port::PORT_TYPE_ETH);
@@ -276,7 +275,6 @@ public:
 
         spec = req_msg.add_request();
         spec->mutable_key_or_handle()->set_port_id(port_id);
-        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->set_port_speed(speed);
         spec->set_admin_state(admin_state);
 
@@ -311,7 +309,6 @@ public:
 
         req = req_msg.add_request();
         req->mutable_key_or_handle()->set_port_id(port_id);
-        req->mutable_meta()->set_vrf_id(vrf_id);
 
         // port get
         status = port_stub_->PortGet(&context, req_msg, &rsp_msg);
@@ -374,7 +371,6 @@ public:
 
         req = req_msg.add_request();
         req->mutable_key_or_handle()->set_port_id(port_id);
-        req->mutable_meta()->set_vrf_id(vrf_id);
 
         // port get
         status = port_stub_->PortDelete(&context, req_msg, &rsp_msg);
@@ -744,7 +740,7 @@ public:
         Status                    status;
 
         spec = req_msg.add_request();
-        spec->mutable_meta()->set_vrf_id(vrf_id);
+        spec->mutable_vrf_key_handle()->set_vrf_id(vrf_id);
         spec->set_session_id(session_id);
         spec->set_conn_track_en(false);
         spec->set_tcp_ts_option(false);
@@ -919,7 +915,6 @@ public:
         Status                  status;
 
         spec = req_msg.add_request();
-        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->mutable_key_or_handle()->set_segment_id(l2segment_id);
         nw_kh = spec->add_network_key_handle();
         nw_kh->set_nw_handle(nw_handle);
@@ -951,7 +946,6 @@ public:
         Status                          status;
 
         spec = req_msg.add_request();
-        spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->mutable_key_or_handle()->set_segment_id(l2segment_id);
         status = l2seg_stub_->L2SegmentDelete(&context, req_msg, &rsp_msg);
         if (status.ok()) {

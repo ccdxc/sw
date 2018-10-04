@@ -323,7 +323,6 @@ class TenantObject(base.ConfigObjectBase):
         return self.obj_helper_sg.GetRemote()
 
     def PrepareHALRequestSpec(self, reqspec):
-        reqspec.meta.vrf_id          = self.id
         reqspec.key_or_handle.vrf_id = self.id
         if self.security_profile:
             reqspec.security_key_handle.profile_handle = self.security_profile.hal_handle
@@ -347,7 +346,6 @@ class TenantObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.meta.vrf_id = self.id
         get_req_spec.key_or_handle.vrf_id = self.id
         return
 

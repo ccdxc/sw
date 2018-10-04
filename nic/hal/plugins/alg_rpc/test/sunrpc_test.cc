@@ -144,7 +144,6 @@ TEST_F(rpc_test, sunrpc_session)
     CHECK_DENY_TCP(server_eph, client_eph, 32776, 59374, "c:59374 -> s:32776");
 
     req.set_session_handle(session->hal_handle);
-    req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
     ret = hal::session_get(req, &rsp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_EQ(rsp.response(0).status().alg(), nwsec::APP_SVC_SUN_RPC);

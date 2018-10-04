@@ -53,7 +53,6 @@ TEST_F(dns_test, dns_session)
     EXPECT_EQ(ctx_.session(), session);
 
     req.set_session_handle(session->hal_handle);
-    req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
     ret = hal::session_get(req, &rsp);
     EXPECT_NE(ret, HAL_RET_OK);
 }

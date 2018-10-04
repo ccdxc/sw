@@ -69,7 +69,6 @@ class CollectorObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, reqspec):
         #pdb.set_trace()
-        reqspec.meta.vrf_id = self.tenant.id
         reqspec.vrf_key_handle.vrf_id = self.tenant.id
         reqspec.key_or_handle.collector_id = self.id
         reqspec.encap.encap_type = haldefs.common.ENCAP_TYPE_DOT1Q

@@ -122,7 +122,6 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
-		Meta: &halproto.ObjectMeta{},
 		KeyOrHandle: &halproto.L2SegmentKeyHandle{
 			KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
 				SegmentId: nw.Status.NetworkID,
@@ -221,7 +220,6 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 func (hd *Datapath) UpdateNetwork(nw *netproto.Network, ns *netproto.Namespace) error {
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
-		Meta: &halproto.ObjectMeta{},
 		KeyOrHandle: &halproto.L2SegmentKeyHandle{
 			KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
 				SegmentId: nw.Status.NetworkID,
@@ -264,7 +262,6 @@ func (hd *Datapath) DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 	}
 	// build the segment message
 	seg := halproto.L2SegmentDeleteRequest{
-		Meta: &halproto.ObjectMeta{},
 		KeyOrHandle: &halproto.L2SegmentKeyHandle{
 			KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
 				SegmentId: nw.Status.NetworkID,

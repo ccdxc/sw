@@ -17,9 +17,6 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 		lifReqMsg := &halproto.LifRequestMsg{
 			Request: []*halproto.LifSpec{
 				{
-					Meta: &halproto.ObjectMeta{
-						VrfId: ns.Status.NamespaceID,
-					},
 					KeyOrHandle: &halproto.LifKeyHandle{
 						KeyOrHandle: &halproto.LifKeyHandle_LifId{
 							LifId: intf.Status.InterfaceID,
@@ -40,9 +37,6 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 
 	case "UPLINK":
 		ifSpec = &halproto.InterfaceSpec{
-			Meta: &halproto.ObjectMeta{
-				VrfId: ns.Status.NamespaceID,
-			},
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
 					InterfaceId: intf.Status.InterfaceID,
@@ -53,9 +47,6 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 
 	case "ENIC":
 		ifSpec = &halproto.InterfaceSpec{
-			Meta: &halproto.ObjectMeta{
-				VrfId: ns.Status.NamespaceID,
-			},
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
 					InterfaceId: intf.Status.InterfaceID,
@@ -117,9 +108,6 @@ func (hd *Datapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Names
 		lifDelReqMsg := &halproto.LifDeleteRequestMsg{
 			Request: []*halproto.LifDeleteRequest{
 				{
-					Meta: &halproto.ObjectMeta{
-						VrfId: ns.Status.NamespaceID,
-					},
 					KeyOrHandle: &halproto.LifKeyHandle{
 						KeyOrHandle: &halproto.LifKeyHandle_LifId{
 							LifId: intf.Status.InterfaceID,
@@ -145,9 +133,6 @@ func (hd *Datapath) DeleteInterface(intf *netproto.Interface, ns *netproto.Names
 
 	case "UPLINK":
 		ifDelReq = &halproto.InterfaceDeleteRequest{
-			Meta: &halproto.ObjectMeta{
-				VrfId: ns.Status.NamespaceID,
-			},
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
 					InterfaceId: intf.Status.InterfaceID,
@@ -185,9 +170,6 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Names
 		lifReqMsg := &halproto.LifRequestMsg{
 			Request: []*halproto.LifSpec{
 				{
-					Meta: &halproto.ObjectMeta{
-						VrfId: ns.Status.NamespaceID,
-					},
 					KeyOrHandle: &halproto.LifKeyHandle{
 						KeyOrHandle: &halproto.LifKeyHandle_LifId{
 							LifId: intf.Status.InterfaceID,
@@ -208,9 +190,6 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Names
 
 	case "UPLINK":
 		ifSpec = &halproto.InterfaceSpec{
-			Meta: &halproto.ObjectMeta{
-				VrfId: ns.Status.NamespaceID,
-			},
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
 					InterfaceId: intf.Status.InterfaceID,
@@ -221,9 +200,6 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Names
 
 	case "ENIC":
 		ifSpec = &halproto.InterfaceSpec{
-			Meta: &halproto.ObjectMeta{
-				VrfId: ns.Status.NamespaceID,
-			},
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
 					InterfaceId: intf.Status.InterfaceID,

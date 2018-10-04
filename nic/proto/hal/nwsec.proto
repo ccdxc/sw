@@ -102,47 +102,46 @@ enum NormalizationAction {
 // }
 //------------------------------------------------------------------------------
 message SecurityProfileSpec {
-  types.ObjectMeta             meta                               = 1;    // common object meta
-  kh.SecurityProfileKeyHandle  key_or_handle                      = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityProfileKeyHandle  key_or_handle                      = 1 [(gogoproto.moretags) = "venice:key"];
 
-  uint32                       session_idle_timeout               = 3 [(gogoproto.moretags) = "range:30-172800, venice:default=90"];
-  uint32                       tcp_cnxn_setup_timeout             = 4 [(gogoproto.moretags) = "range:1-60, venice:default=30"];
-  uint32                       tcp_close_timeout                  = 5 [(gogoproto.moretags) = "range:1-300, venice:default=15"];
-  uint32                       tcp_half_closed_timeout            = 6 [(gogoproto.moretags) = "range:1-600, venice:default=120"];
-  uint32                       ip_normalize_ttl                   = 7 [(gogoproto.moretags) = "range:0-255, venice:default=0"];
-  uint32                       tcp_drop_timeout                   = 8 [(gogoproto.moretags) = "range:1-300, venice:default=90"];
-  uint32                       udp_drop_timeout                   = 9 [(gogoproto.moretags) = "range:1-172800, venice:default=60"];
-  uint32                       icmp_drop_timeout                  = 10 [(gogoproto.moretags) = "range:1-300, venice:default=60"];
-  uint32                       drop_timeout                       = 11 [(gogoproto.moretags) = "range:1-300, venice:default=60"];
-  uint32                       tcp_timeout                        = 12 [(gogoproto.moretags) = "range:1-172800, venice:default=3600"];
-  uint32                       udp_timeout                        = 13 [(gogoproto.moretags) = "range:1-172800, venice:default=30"];
-  uint32                       icmp_timeout                       = 14 [(gogoproto.moretags) = "range:1-172800, venice:default=6"];
+  uint32                       session_idle_timeout               = 2 [(gogoproto.moretags) = "range:30-172800, venice:default=90"];
+  uint32                       tcp_cnxn_setup_timeout             = 3 [(gogoproto.moretags) = "range:1-60, venice:default=30"];
+  uint32                       tcp_close_timeout                  = 4 [(gogoproto.moretags) = "range:1-300, venice:default=15"];
+  uint32                       tcp_half_closed_timeout            = 5 [(gogoproto.moretags) = "range:1-600, venice:default=120"];
+  uint32                       ip_normalize_ttl                   = 6 [(gogoproto.moretags) = "range:0-255, venice:default=0"];
+  uint32                       tcp_drop_timeout                   = 7 [(gogoproto.moretags) = "range:1-300, venice:default=90"];
+  uint32                       udp_drop_timeout                   = 8 [(gogoproto.moretags) = "range:1-172800, venice:default=60"];
+  uint32                       icmp_drop_timeout                  = 9 [(gogoproto.moretags) = "range:1-300, venice:default=60"];
+  uint32                       drop_timeout                       = 10 [(gogoproto.moretags) = "range:1-300, venice:default=60"];
+  uint32                       tcp_timeout                        = 11 [(gogoproto.moretags) = "range:1-172800, venice:default=3600"];
+  uint32                       udp_timeout                        = 12 [(gogoproto.moretags) = "range:1-172800, venice:default=30"];
+  uint32                       icmp_timeout                       = 13 [(gogoproto.moretags) = "range:1-172800, venice:default=6"];
 
-  bool                         cnxn_tracking_en                   = 15 [(gogoproto.moretags) = "venice:default=true"];
-  bool                         ipsg_en                            = 16 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         tcp_rtt_estimate_en                = 17 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_normalization_en                = 18 [(gogoproto.moretags) = "venice:default=true"];
-  bool                         tcp_normalization_en               = 19 [(gogoproto.moretags) = "venice:default=true"];
-  bool                         icmp_normalization_en              = 20 [(gogoproto.moretags) = "venice:default=true"];
-  bool                         ip_reassembly_en                   = 21 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         cnxn_tracking_en                   = 14 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         ipsg_en                            = 15 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         tcp_rtt_estimate_en                = 16 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_normalization_en                = 17 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         tcp_normalization_en               = 18 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         icmp_normalization_en              = 19 [(gogoproto.moretags) = "venice:default=true"];
+  bool                         ip_reassembly_en                   = 20 [(gogoproto.moretags) = "venice:default=false"];
 
   // IP normalization knobs
-  bool                         ip_ttl_change_detect_en            = 22 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_src_guard_en                    = 23 [(gogoproto.moretags) = "venice:default=false"];
-  NormalizationAction          ip_rsvd_flags_action               = 24 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_DROP"];
-  NormalizationAction          ip_df_action                       = 25 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_ALLOW"];
-  NormalizationAction          ip_options_action                  = 26 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_ALLOW"];
-  NormalizationAction          ip_invalid_len_action              = 27 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_TRIM"];
-  bool                         ip_spoof_pkt_drop                  = 28 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_loose_src_routing_pkt_drop      = 29 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_malformed_option_pkt_drop       = 30 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_record_route_option_pkt_drop    = 31 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_strict_src_routing_pkt_drop     = 32 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_ts_option_pkt_drop              = 33 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_unknown_option_pkt_drop         = 34 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_stream_id_option_pkt_drop       = 35 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_rsvd_fld_set_pkt_drop           = 36 [(gogoproto.moretags) = "venice:default=false"];
-  bool                         ip_clear_df_bit                    = 37 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_ttl_change_detect_en            = 21 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_src_guard_en                    = 22 [(gogoproto.moretags) = "venice:default=false"];
+  NormalizationAction          ip_rsvd_flags_action               = 23 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_DROP"];
+  NormalizationAction          ip_df_action                       = 24 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_ALLOW"];
+  NormalizationAction          ip_options_action                  = 25 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_ALLOW"];
+  NormalizationAction          ip_invalid_len_action              = 26 [(gogoproto.moretags) = "venice:default=nwsec.NormalizationAction.NORM_ACTION_TRIM"];
+  bool                         ip_spoof_pkt_drop                  = 27 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_loose_src_routing_pkt_drop      = 28 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_malformed_option_pkt_drop       = 29 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_record_route_option_pkt_drop    = 30 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_strict_src_routing_pkt_drop     = 31 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_ts_option_pkt_drop              = 32 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_unknown_option_pkt_drop         = 33 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_stream_id_option_pkt_drop       = 34 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_rsvd_fld_set_pkt_drop           = 35 [(gogoproto.moretags) = "venice:default=false"];
+  bool                         ip_clear_df_bit                    = 36 [(gogoproto.moretags) = "venice:default=false"];
 
   // IPv6 knobs
   bool                         ipv6_anycast_src_drop              = 40 [(gogoproto.moretags) = "venice:default=false"];;
@@ -261,9 +260,8 @@ message SecurityProfileResponseMsg {
 
 // SecurityProfileDeleteRequest is used to delete a SecurityProfile profile
 message SecurityProfileDeleteRequest {
-  types.ObjectMeta            meta          = 1;    // object meta
   // key_or_handle is to identify SecurityProfile being deleted
-  kh.SecurityProfileKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityProfileKeyHandle key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityProfileDeleteRequestMsg is used to delete a batch of SecurityProfile profiles
@@ -284,9 +282,8 @@ message SecurityProfileDeleteResponseMsg {
 
 // SecurityProfileGetRequest is used to get information about a L2 Segment
 message SecurityProfileGetRequest {
-  types.ObjectMeta             meta          = 1;    // object meta
   // key_or_handle is the security profile's identifier for retrieval
-  kh.SecurityProfileKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityProfileKeyHandle key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityProfileGetRequestMsg is batched GET request for SecurityProfile profiles
@@ -359,10 +356,9 @@ message SGPolicy {
 // session in the slow path, either a drop flow will be installed or packet will
 // be dropped without creating drop flow
 message SecurityGroupPolicySpec {
-  types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
-  SGPolicy                        policy_rules   = 3;    // ingress policy
+  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"];
+  SGPolicy                        policy_rules   = 2;    // ingress policy
 }
 
 // SecurityGroupPolicyRequestMsg is batched add or modify security group policy request
@@ -388,9 +384,8 @@ message SecurityGroupPolicyResponseMsg {
 
 // SecurityGroupPolicyDeleteRequest is used to delete a security group policy
 message SecurityGroupPolicyDeleteRequest {
-  types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityGroupDeleteRequestMsg is used to delete a batch of security group policies.
@@ -409,9 +404,8 @@ message SecurityGroupPolicyDeleteResponseMsg {
 
 // SecurityGroupPolicyGetRequest is used to get information about a security group policy
 message SecurityGroupPolicyGetRequest {
-  types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityGroupPolicyKeyHandle key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityGroupGetRequestMsg is batched GET request for security group policies
@@ -439,9 +433,8 @@ message SecurityGroupPolicyGetResponseMsg {
 }
 
 message SecurityGroupSpec {
-  types.ObjectMeta          meta          = 1; // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityGroupKeyHandle key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityGroupRequestMsg is batched add or modify security group policy request
@@ -467,9 +460,8 @@ message SecurityGroupResponseMsg {
 
 // SecurityGroupDeleteRequest is used to delete a security group
 message SecurityGroupDeleteRequest {
-  types.ObjectMeta          meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityGroupKeyHandle key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityGroupDeleteRequestMsg is used to delete a batch of security groups
@@ -485,9 +477,8 @@ message SecurityGroupDeleteResponseMsg {
 
 // SecurityGroupGetRequest is used to get information about a security group
 message SecurityGroupGetRequest {
-  types.ObjectMeta          meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  kh.SecurityGroupKeyHandle key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityGroupKeyHandle key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityGroupGetRequestMsg is batched GET request for security groups
@@ -593,9 +584,8 @@ message SecurityRule {
 
 // SecurityPolicySpec that contains set of SecurityRules
 message SecurityPolicySpec {
-  types.ObjectMeta              meta                   = 1;
-  kh.SecurityPolicyKeyHandle    policy_key_or_handle   = 2[(gogoproto.moretags) = "venice:key"];      // Policy Name that identifies the security Policy
-  repeated SecurityRule         rule                   = 3;      // List of security rules
+  kh.SecurityPolicyKeyHandle    policy_key_or_handle   = 1[(gogoproto.moretags) = "venice:key"];      // Policy Name that identifies the security Policy
+  repeated SecurityRule         rule                   = 2;      // List of security rules
 }
 
 // SecurityPolicyRequestMsg is batched add or modify security policy request
@@ -619,8 +609,7 @@ message SecurityPolicyResponseMsg {
 
 // SecurityPolicyDeleteRequest is used to delete a security rule
 message SecurityPolicyDeleteRequest {
-  types.ObjectMeta                meta                  = 1; // object meta
-  kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 2 [(gogoproto.moretags) = "venice:key"]; // policy_handle
+  kh.SecurityPolicyKeyHandle      policy_key_or_handle  = 1 [(gogoproto.moretags) = "venice:key"]; // policy_handle
 }
 
 // SecurityPolicyDeleteRequestMsg is used to delete a batch of security policy
@@ -639,9 +628,8 @@ message SecurityPolicyDeleteResponseMsg {
 
 // SecurityPolicyGet is used to get information about a security policy
 message SecurityPolicyGetRequest {
-  types.ObjectMeta              meta          = 1; // object meta
   // key_or_handle is the security policy's unique identifier
-  kh.SecurityPolicyKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityPolicyKeyHandle    key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // SecurityPolicyGetRequestMsg is batched GET request for security policy

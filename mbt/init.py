@@ -20,7 +20,6 @@ def infra_vrf_init(api, req_msg_type):
 
     vrf_spec = req_msg.request.add()
 
-    vrf_spec.meta.vrf_id = 1
     vrf_spec.key_or_handle.vrf_id = 1
     #vrf_spec.security_key_handle.profile_id = 1
     vrf_spec.vrf_type = types_pb2.VRF_TYPE_INFRA

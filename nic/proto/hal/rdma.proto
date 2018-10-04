@@ -51,36 +51,35 @@ enum RdmaServiceType {
 //**********************    Queue Pair  ********************************//
 // RdmaQp object
 message RdmaQpSpec {
-  types.ObjectMeta         meta            = 1;    // object meta
-  uint32                   qp_num          = 2;    // qp number
-  uint32                   hw_lif_id       = 3;    // hw lif id
-  uint32                   sq_wqe_size     = 4;    // SQWQE size
-  uint32                   rq_wqe_size     = 5;    // RQWQE size
-  uint32                   num_sq_wqes     = 6;    // Num SQWQEs
-  uint32                   num_rq_wqes     = 7;    // Num RQWQEs
-  uint32                   num_rsq_wqes    = 8;    // Num RSQWQEs
-  uint32                   num_rrq_wqes    = 9;    // Num RRQWQEs
-  uint32                   pd              = 10;   // Protection domain
-  uint32                   pmtu            = 11;   // Path MTU
-  uint32                   hostmem_pg_size = 12;   // Host Memory Page Size
-  RdmaServiceType          svc             = 13;   // RDMA service type
-  bool                     atomic_enabled  = 14;   // enable Atomic Ops
-  uint32                   sq_lkey         = 15;   // SQ's lkey
-  uint32                   rq_lkey         = 16;   // RQ's lkey
-  uint32                   rq_cq_num       = 17;   // RQ's CQ Number
-  uint32                   sq_cq_num       = 18;   // SQ's CQ Number
-  bool                     immdt_as_dbell  = 19;   // Use immdt data to ring dbell
-  bool                     sq_in_nic_memory= 20;   // Allocate SQ in NIC Memory
+  uint32                   qp_num          = 1;    // qp number
+  uint32                   hw_lif_id       = 2;    // hw lif id
+  uint32                   sq_wqe_size     = 3;    // SQWQE size
+  uint32                   rq_wqe_size     = 4;    // RQWQE size
+  uint32                   num_sq_wqes     = 5;    // Num SQWQEs
+  uint32                   num_rq_wqes     = 6;    // Num RQWQEs
+  uint32                   num_rsq_wqes    = 7;    // Num RSQWQEs
+  uint32                   num_rrq_wqes    = 8;    // Num RRQWQEs
+  uint32                   pd              = 9;   // Protection domain
+  uint32                   pmtu            = 10;   // Path MTU
+  uint32                   hostmem_pg_size = 11;   // Host Memory Page Size
+  RdmaServiceType          svc             = 12;   // RDMA service type
+  bool                     atomic_enabled  = 13;   // enable Atomic Ops
+  uint32                   sq_lkey         = 14;   // SQ's lkey
+  uint32                   rq_lkey         = 15;   // RQ's lkey
+  uint32                   rq_cq_num       = 16;   // RQ's CQ Number
+  uint32                   sq_cq_num       = 17;   // SQ's CQ Number
+  bool                     immdt_as_dbell  = 18;   // Use immdt data to ring dbell
+  bool                     sq_in_nic_memory= 19;   // Allocate SQ in NIC Memory
   // if sq_in_nic_memory and sq_base_addr == NULL, HAL will allocate
-  uint64                   sq_base_addr    = 21;   
-  bool                     rq_in_nic_memory= 22;   // Allocate RQ in NIC Memory
+  uint64                   sq_base_addr    = 20;   
+  bool                     rq_in_nic_memory= 21;   // Allocate RQ in NIC Memory
   // if rq_in_nic_memory and rq_base_addr == NULL, HAL will allocate
-  uint64                   rq_base_addr    = 23;   
-  fixed64                  if_handle       = 24;   // EP's/ENIC's interface
+  uint64                   rq_base_addr    = 22;   
+  fixed64                  if_handle       = 23;   // EP's/ENIC's interface
                                                    // handle
-  repeated uint64          va_pages_phy_addr = 25;  // Virtual memory pages's
+  repeated uint64          va_pages_phy_addr = 24;  // Virtual memory pages's
                                                        // phy addr
-  uint32                   num_sq_pages      = 26;  // rq num PT entries
+  uint32                   num_sq_pages      = 25;  // rq num PT entries
   //repeated uint64          rq_va_pages_phy_addr = 25;  // Virtual memory pages's
                                                        // phy addr
   //uint32                   num_rq_pages      = 26;  // rq num PT entries
@@ -140,18 +139,17 @@ enum RdmaQpUpdateOper {
 //****************   Update Queue Pair  ********************************//
 // RdmaQpUpdate object
 message RdmaQpUpdateSpec {
-  types.ObjectMeta         meta            = 1;    // object meta
-  uint32                   qp_num          = 2;    // QP number
-  uint32                   hw_lif_id       = 3;    // hw lif id
-  RdmaQpUpdateOper         oper            = 4;    // type of Update operation
-  uint32                   dst_qp_num      = 5;    // Dest QP value
-  bytes                    header_template = 6;    // Header Vector Params
-  uint32                   q_key           = 7;    // Q_KEY
-  uint32                   e_psn           = 8;
-  uint32                   tx_psn          = 9;
-  uint32                   ahid            = 10;
-  uint32                   pmtu            = 11;
-  uint32                   qstate          = 12;
+  uint32                   qp_num          = 1;    // QP number
+  uint32                   hw_lif_id       = 2;    // hw lif id
+  RdmaQpUpdateOper         oper            = 3;    // type of Update operation
+  uint32                   dst_qp_num      = 4;    // Dest QP value
+  bytes                    header_template = 5;    // Header Vector Params
+  uint32                   q_key           = 6;    // Q_KEY
+  uint32                   e_psn           = 7;
+  uint32                   tx_psn          = 8;
+  uint32                   ahid            = 9;
+  uint32                   pmtu            = 10;
+  uint32                   qstate          = 11;
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs
@@ -173,10 +171,9 @@ message RdmaQpUpdateResponseMsg {
 //**********************    Address Handle  ********************************//
 // RdmaAh object
 message RdmaAhSpec {
-  types.ObjectMeta         meta            = 1;    // object meta
-  uint64                   ahid            = 2;
-  uint32                   hw_lif_id       = 3;    // hw lif id
-  bytes                    header_template = 4;    // Header Vector Params
+  uint64                   ahid            = 1;
+  uint32                   hw_lif_id       = 2;    // hw lif id
+  bytes                    header_template = 3;    // Header Vector Params
 }
 
 // RdmaAhRequestmsg is batched request used to create/update of Rdma QPs
@@ -197,21 +194,20 @@ message RdmaAhResponseMsg {
 //**********************   Completion Queue  *****************************//
 // RdmaCq object
 message RdmaCqSpec {
-  types.ObjectMeta         meta            = 1;    // object meta
-  uint32                   cq_num          = 2;    // CQ Number
-  uint32                   hw_lif_id       = 3;    // LIF id
-  uint32                   cq_wqe_size     = 4;    // CQWQE size
-  uint32                   num_cq_wqes     = 5;    // Num CQWQEs
-  uint32                   hostmem_pg_size = 6;    // Path MTU
-  uint32                   cq_lkey         = 7;    // CQ's lkey
-  uint32                   eq_id           = 8;    // EQ id
-  bool                     wakeup_dpath    = 9;    // Wake up of Datapath thread required
-  uint32                   wakeup_lif      = 10;   // Wake up LIF
-  uint32                   wakeup_qtype    = 11;   // Wake up Qtype
-  uint32                   wakeup_qid      = 12;   // Wake up QID
-  uint32                   wakeup_ring_id  = 13;   // Wake up RING_ID
-  bool                     host_addr       = 14;   // Host/NIC address
-  repeated uint64          cq_va_pages_phy_addr = 15;  // Virtual memory pages's
+  uint32                   cq_num          = 1;    // CQ Number
+  uint32                   hw_lif_id       = 2;    // LIF id
+  uint32                   cq_wqe_size     = 3;    // CQWQE size
+  uint32                   num_cq_wqes     = 4;    // Num CQWQEs
+  uint32                   hostmem_pg_size = 5;    // Path MTU
+  uint32                   cq_lkey         = 6;    // CQ's lkey
+  uint32                   eq_id           = 7;    // EQ id
+  bool                     wakeup_dpath    = 8;    // Wake up of Datapath thread required
+  uint32                   wakeup_lif      = 9;   // Wake up LIF
+  uint32                   wakeup_qtype    = 10;   // Wake up Qtype
+  uint32                   wakeup_qid      = 11;   // Wake up QID
+  uint32                   wakeup_ring_id  = 12;   // Wake up RING_ID
+  bool                     host_addr       = 13;   // Host/NIC address
+  repeated uint64          cq_va_pages_phy_addr = 14;  // Virtual memory pages's
                                                        // phy addr
 }
 
@@ -234,13 +230,12 @@ message RdmaCqResponseMsg {
 //**********************   Event Queue  *****************************//
 // RdmaEq object
 message RdmaEqSpec {
-  types.ObjectMeta         meta               = 1;    // object meta
-  uint32                   eq_id              = 2;    // EQ Number
-  uint32                   hw_lif_id          = 3;    // LIF id
-  uint32                   eq_wqe_size        = 4;    // EQWQE size
-  uint32                   num_eq_wqes        = 5;    // Num EQWQEs
-  uint64                   eqe_base_addr_phy  = 6;    // EQE's base addres- physical
-  uint32                   int_num            = 7;    // Interrupt num
+  uint32                   eq_id              = 1;    // EQ Number
+  uint32                   hw_lif_id          = 2;    // LIF id
+  uint32                   eq_wqe_size        = 3;    // EQWQE size
+  uint32                   num_eq_wqes        = 4;    // Num EQWQEs
+  uint64                   eqe_base_addr_phy  = 5;    // EQE's base addres- physical
+  uint32                   int_num            = 6;    // Interrupt num
 }
 
 // RdmaEqRequestMsg is batched request used to create/update of Rdma QPs
@@ -262,22 +257,21 @@ message RdmaEqResponseMsg {
 //**********************   Memory Registratin(MR)  *********************//
 // RdmaMemReg object
 message RdmaMemRegSpec {
-  types.ObjectMeta         meta            = 1;    // object meta
-  uint64                   hw_lif_id       = 2;    // Hardware Lif Id
-  uint32                   pd              = 3;    // Protection domain
-  uint64                   va              = 4;    // Virtual address
-  uint32                   len             = 5;    // Length of memory
-  bool                     ac_local_wr     = 6;    // Acc control/permissions
-  bool                     ac_remote_wr    = 7;    // Acc control/permissions
-  bool                     ac_remote_rd    = 8;    // Acc control/permissions
-  bool                     ac_remote_atomic= 9;    // Acc control/permissions
-  uint32                   lkey            = 10;   // Lkey for this memory
-  uint32                   rkey            = 11;   // Rkey for this memory
-  uint32                   hostmem_pg_size = 12;   // Host Memory Page Size
-  uint32                   override_lif    = 13;   // Override LIF value
-  bool                     override_lif_vld  = 14; // Override LIF valid
-  bool                     host_addr         = 15; // Host/NIC Address
-  repeated uint64          va_pages_phy_addr = 16;  // Virtual memory pages's phy addr     
+  uint64                   hw_lif_id       = 1;    // Hardware Lif Id
+  uint32                   pd              = 2;    // Protection domain
+  uint64                   va              = 3;    // Virtual address
+  uint32                   len             = 4;    // Length of memory
+  bool                     ac_local_wr     = 5;    // Acc control/permissions
+  bool                     ac_remote_wr    = 6;    // Acc control/permissions
+  bool                     ac_remote_rd    = 7;    // Acc control/permissions
+  bool                     ac_remote_atomic= 8;    // Acc control/permissions
+  uint32                   lkey            = 9;   // Lkey for this memory
+  uint32                   rkey            = 10;   // Rkey for this memory
+  uint32                   hostmem_pg_size = 11;   // Host Memory Page Size
+  uint32                   override_lif    = 12;   // Override LIF value
+  bool                     override_lif_vld  = 13; // Override LIF valid
+  bool                     host_addr         = 14; // Host/NIC Address
+  repeated uint64          va_pages_phy_addr = 15;  // Virtual memory pages's phy addr     
 }
 
 // RdmaMemRegRequestMsg is batched request used to create/update of Rdma QPs
@@ -299,14 +293,13 @@ message RdmaMemRegResponseMsg {
 //**********************   Allocate L_Key  *********************//
 // RdmaAllocLkey object
 message RdmaAllocLkeySpec {
-  types.ObjectMeta         meta                 = 1;    // object meta
-  uint64                   hw_lif_id            = 2;    // Hardware Lif Id
-  uint32                   pd                   = 3;    // Protection domain
-  bool                     remote_access        = 4;    // Remote access requested
-  uint32                   lkey                 = 5;    // Lkey for this memory
-  uint32                   rkey                 = 6;    // Rkey for this memory
-  uint32                   num_pt_entries_rsvd  = 7;    // Size of PBL resources to be allocated
-  bool                     host_addr            = 8;    // Host/NIC Address
+  uint64                   hw_lif_id            = 1;    // Hardware Lif Id
+  uint32                   pd                   = 2;    // Protection domain
+  bool                     remote_access        = 3;    // Remote access requested
+  uint32                   lkey                 = 4;    // Lkey for this memory
+  uint32                   rkey                 = 5;    // Rkey for this memory
+  uint32                   num_pt_entries_rsvd  = 6;    // Size of PBL resources to be allocated
+  bool                     host_addr            = 7;    // Host/NIC Address
 }
 
 // RdmaAllocLkeyRequestMsg is batched request used to create/update of Rdma QPs
@@ -333,16 +326,15 @@ enum RdmaMemoryWindowType {
 }
 
 message RdmaMemWindowSpec {
-  types.ObjectMeta         meta            = 1;    // object meta
-  uint64                   hw_lif_id       = 2;    // Hardware Lif Id
-  uint32                   pd              = 3;    // Protection domain
-  RdmaMemoryWindowType     mw_type         = 4;    // memory window type
-  bool                     ac_remote_wr    = 5;    // Acc control/permissions
-  bool                     ac_remote_rd    = 6;    // Acc control/permissions
-  bool                     ac_remote_atomic= 7;    // Acc control/permissions
-  uint32                   rkey            = 8;   // Rkey for this memory
-  uint32                   override_lif    = 9;   // Override LIF value
-  bool                     override_lif_vld  = 10; // Override LIF valid
+  uint64                   hw_lif_id       = 1;    // Hardware Lif Id
+  uint32                   pd              = 2;    // Protection domain
+  RdmaMemoryWindowType     mw_type         = 3;    // memory window type
+  bool                     ac_remote_wr    = 4;    // Acc control/permissions
+  bool                     ac_remote_rd    = 5;    // Acc control/permissions
+  bool                     ac_remote_atomic= 6;    // Acc control/permissions
+  uint32                   rkey            = 7;   // Rkey for this memory
+  uint32                   override_lif    = 8;   // Override LIF value
+  bool                     override_lif_vld  = 9; // Override LIF valid
 }
 
 // RdmaMemWindowRequestMsg is batched request used to create/update of Rdma QPs
@@ -364,13 +356,12 @@ message RdmaMemWindowResponseMsg {
 // RdmaAQCreate
 
 message RdmaAqSpec {
-  types.ObjectMeta         meta            = 1;    // object meta
-  uint32                   aq_num          = 2;    // aq number
-  uint32                   hw_lif_id       = 3;    // hw lif id
-  uint32                   log_wqe_size    = 4;    // WQE size
-  uint32                   log_num_wqes    = 5;    // Num WQEs
-  uint32                   cq_num          = 6;    // CQ Number
-  uint64                   phy_base_addr   = 7;    // physical address base of AQ
+  uint32                   aq_num          = 1;    // aq number
+  uint32                   hw_lif_id       = 2;    // hw lif id
+  uint32                   log_wqe_size    = 3;    // WQE size
+  uint32                   log_num_wqes    = 4;    // Num WQEs
+  uint32                   cq_num          = 5;    // CQ Number
+  uint64                   phy_base_addr   = 6;    // physical address base of AQ
 }
 
 // RdmaAQRequestMsg is batched request used to create of Rdma AQs

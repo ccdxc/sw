@@ -33,9 +33,8 @@ enum EventOp {
 
 // EventSpec captures the event of interest to the app
 message EventRequest {
-    types.ObjectMeta    meta            = 1;    // common object meta
-    EventId             event_id        = 2;    // event of interest
-    EventOp             event_operation = 3;    // subscribe or unsubscribe
+    EventId             event_id        = 1;    // event of interest
+    EventOp             event_operation = 2;    // subscribe or unsubscribe
 }
 
 message EndpointEvent {

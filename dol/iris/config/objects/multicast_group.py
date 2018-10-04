@@ -123,8 +123,6 @@ class MulticastGroupObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.vrf_id = self.segment.tenant.id
-        
         req_spec.key_or_handle.key.l2segment_key_handle.segment_id = self.segment.id
         if self.IsMacGroup():
             req_spec.key_or_handle.key.mac.group = self.group.getnum()

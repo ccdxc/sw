@@ -22,13 +22,12 @@ service Vrf {
 
 // VrfSpec captures all the vrf level configuration
 message VrfSpec {
-  types.ObjectMeta               meta                = 1;    // common object meta
   // key_or_handle is vrf's unique identifier
-  kh.VrfKeyHandle                key_or_handle       = 2 [(gogoproto.moretags) = "venice:key"];
-  kh.SecurityProfileKeyHandle    security_key_handle = 3 [(gogoproto.moretags) = "venice:ref"];    // security profile, if any
-  types.VrfType                  vrf_type            = 4 [(gogoproto.moretags) = "venice:immutable,venice:mandatory"];
-  types.IPAddress                mytep_ip            = 5;    // Local VTEP IP address for vxlan tunnels
-  types.IPPrefix                 gipo_prefix         = 6;    // GIPo prefix
+  kh.VrfKeyHandle                key_or_handle       = 1 [(gogoproto.moretags) = "venice:key"];
+  kh.SecurityProfileKeyHandle    security_key_handle = 2 [(gogoproto.moretags) = "venice:ref"];    // security profile, if any
+  types.VrfType                  vrf_type            = 3 [(gogoproto.moretags) = "venice:immutable,venice:mandatory"];
+  types.IPAddress                mytep_ip            = 4;    // Local VTEP IP address for vxlan tunnels
+  types.IPPrefix                 gipo_prefix         = 5;    // GIPo prefix
 }
 
 // VrfRequestMsg is batched add or modify vrf request
@@ -75,9 +74,8 @@ message VrfResponseMsg {
 
 // VrfDeleteRequest is used to delete a vrf
 message VrfDeleteRequest {
-  types.ObjectMeta                  meta          = 1;    // object meta
   // key_or_handle is vrf's unique identifier
-  kh.VrfKeyHandle          key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.VrfKeyHandle          key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // VrfDeleteResponse is response to VrfDeleteRequest
@@ -98,8 +96,7 @@ message VrfDeleteResponseMsg {
 
 // VrfGetRequest is used to get information about a vrf
 message VrfGetRequest {
-  types.ObjectMeta  meta                = 1;    // object meta
-  kh.VrfKeyHandle   key_or_handle       = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.VrfKeyHandle   key_or_handle       = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // VrfGetRequestMsg is batched GET requests for vrfs

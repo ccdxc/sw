@@ -47,7 +47,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
         logger.info("Configuring proxy for the flow with label: " + self.session.iflow.label)
         if self.session.iflow.label == 'TCP-PROXY' or self.session.iflow.label == 'TCP-PROXY-E2E' or \
             self.session.iflow.label == 'PROXY-REDIR':
-            req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.vrf_key_handle.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
             req_spec.spec.proxy_type = 1
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
@@ -59,7 +59,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'RAW-REDIR' or self.session.iflow.label == 'RAW-REDIR-FLOW-MISS' or \
              self.session.iflow.label == 'RAW-REDIR-KNOWN-APPID':
-            req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.vrf_key_handle.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 4
             req_spec.spec.proxy_type = 7
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
@@ -67,7 +67,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
                 req_spec.alloc_qid = True
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'RAW-REDIR-SPAN' or self.session.iflow.label == 'RAW-REDIR-SPAN-FLOW-MISS':
-            req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.vrf_key_handle.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 7
             req_spec.spec.proxy_type = 10
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
@@ -75,7 +75,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
                 req_spec.alloc_qid = False
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'PROXY-REDIR-E2E':
-            req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.vrf_key_handle.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 6
             req_spec.spec.proxy_type = 9
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
@@ -83,7 +83,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
                 req_spec.alloc_qid = True
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'PROXY-REDIR-SPAN-E2E':
-            req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.vrf_key_handle.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 8
             req_spec.spec.proxy_type = 11
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
@@ -92,7 +92,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'ESP-PROXY':
             logger.info("Configuring esp ipsec proxy for the flow with label: " + self.session.iflow.label)
-            req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.vrf_key_handle.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
             req_spec.spec.proxy_type = 3
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
@@ -102,7 +102,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
             self.session.iflow.PrepareHALRequestSpec(req_spec)
         elif self.session.iflow.label == 'IPSEC-PROXY':
             logger.info("Configuring host ipsec proxy for the flow with label: " + self.session.iflow.label)
-            req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.vrf_key_handle.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
             req_spec.spec.proxy_type = 3
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':

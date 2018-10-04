@@ -190,7 +190,6 @@ message EndpointL2Key {
 message EndpointL3Key {
   VrfKeyHandle      vrf_key_handle = 1 [(gogoproto.moretags) = "venice:ref"];;    // VRF key or handle
   types.IPAddress   ip_address = 2;    // IP address of the endpoint
-                                       // NOTE: vrf information is taken from meta
 }
 
 // Endpoint can be uniquely identified by its L2 or one of its L3 keys

@@ -151,9 +151,6 @@ func handleMirrorSessionCreateFailure(hd *Datapath, vrfID uint64, db *types.Mirr
 		ReqMsg := halproto.DropMonitorRuleDeleteRequestMsg{}
 		for _, ruleSpec := range halConsumedDropRule.Request {
 			dropDeleteRule := halproto.DropMonitorRuleDeleteRequest{
-				Meta: &halproto.ObjectMeta{
-					VrfId: vrfID,
-				},
 				KeyOrHandle: &halproto.DropMonitorRuleKeyHandle{
 					KeyOrHandle: &halproto.DropMonitorRuleKeyHandle_DropmonitorruleId{
 						DropmonitorruleId: ruleSpec.KeyOrHandle.GetDropmonitorruleId(),
@@ -168,9 +165,6 @@ func handleMirrorSessionCreateFailure(hd *Datapath, vrfID uint64, db *types.Mirr
 		FlowReqMsg := halproto.FlowMonitorRuleDeleteRequestMsg{}
 		for _, ruleSpec := range halConsumedFlowRule.Request {
 			flowDeleteRule := halproto.FlowMonitorRuleDeleteRequest{
-				Meta: &halproto.ObjectMeta{
-					VrfId: vrfID,
-				},
 				KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle{
 					KeyOrHandle: &halproto.FlowMonitorRuleKeyHandle_FlowmonitorruleId{
 						FlowmonitorruleId: ruleSpec.KeyOrHandle.GetFlowmonitorruleId(),
@@ -186,9 +180,6 @@ func handleMirrorSessionCreateFailure(hd *Datapath, vrfID uint64, db *types.Mirr
 		MirrorReqMsg := halproto.MirrorSessionDeleteRequestMsg{}
 		for _, mirrorSess := range halConsumedMirrorSession.Request {
 			mirrorDelReq := halproto.MirrorSessionDeleteRequest{
-				Meta: &halproto.ObjectMeta{
-					VrfId: vrfID,
-				},
 				KeyOrHandle: &halproto.MirrorSessionKeyHandle{
 					KeyOrHandle: &halproto.MirrorSessionKeyHandle_MirrorsessionId{
 						MirrorsessionId: mirrorSess.KeyOrHandle.GetMirrorsessionId(),

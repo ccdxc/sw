@@ -176,7 +176,7 @@ class SessionObject(base.ConfigObjectBase):
         return self.initiator.IsMAC()
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.vrf_id = self.initiator.ep.tenant.id
+        req_spec.vrf_key_handle.vrf_id = self.initiator.ep.tenant.id
 
         req_spec.session_id = self.id
         if self.IsTCP():
@@ -212,7 +212,6 @@ class SessionObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.meta.vrf_id = self.initiator.ep.tenant.id
         get_req_spec.session_handle = self.hal_handle
         return
 

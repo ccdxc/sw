@@ -108,12 +108,11 @@ enum SoftwarePhvPipeline {
 
 // SoftwarePhvStatus represents the current status of the PHVs
 message SoftwarePhvStatus {
-  types.ObjectMeta      meta              = 1;    // common object meta
-  SoftwarePhvPipeline   pipeline          = 2;    // pipeline to inject into
-  bool                  enabled           = 3;    // PHV injection is enabled
-  bool                  done              = 4;    // PHV injection is done
-  uint32                current_cntr      = 5;    // current counter
-  uint32                inject_cntr       = 6;    // injected PHV counter
+  SoftwarePhvPipeline   pipeline          = 1;    // pipeline to inject into
+  bool                  enabled           = 2;    // PHV injection is enabled
+  bool                  done              = 3;    // PHV injection is done
+  uint32                current_cntr      = 4;    // current counter
+  uint32                inject_cntr       = 5;    // injected PHV counter
 }
 
 // SoftwarePhvResponse is generic response 
@@ -128,8 +127,7 @@ message SoftwarePhvResponseMsg {
 
 // SoftwarePhvGetRequest is used to get information about a PHV
 message SoftwarePhvGetRequest {
-  types.ObjectMeta      meta             = 1;    // object meta
-  SoftwarePhvPipeline   pipeline         = 2;    // pipeline to inject into
+  SoftwarePhvPipeline   pipeline         = 1;    // pipeline to inject into
 }
 
 // SoftwarePhvGetRequestMsg is batched GET request for PHV
@@ -152,8 +150,7 @@ message SoftwarePhvGetResponseMsg {
 
 // SoftwarePhvInject is the packet inject spec
 message SoftwarePhvInject {
-  types.ObjectMeta      meta             = 1;    // object meta
-  SoftwarePhvPipeline   pipeline         = 2;    // pipeline to inject into
+  SoftwarePhvPipeline   pipeline         = 1;    // pipeline to inject into
 }
 
 // SoftwarePhvInjectMsg is the inject message

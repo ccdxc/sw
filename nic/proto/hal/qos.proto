@@ -92,14 +92,13 @@ message QosMarking {
 
 // QosClass specification
 message QosClassSpec {
-  types.ObjectMeta     meta             = 1;    // object meta
   // key_or_handle is QosClass's key or handle
-  kh.QosClassKeyHandle key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
-  uint32               mtu              = 3 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:1500-9216}"];    // MTU
-  QosPFC               pfc              = 4;    // PFC configuration
-  QosSched             sched            = 5 [(gogoproto.moretags) = "venice:mandatory"];    // Scheduling configuration
-  QosUplinkClassMap    uplink_class_map = 6;    // Class map for class derivation on uplinks
-  QosMarking           marking          = 7;    // Marking policy for host-to-network traffic
+  kh.QosClassKeyHandle key_or_handle    = 1 [(gogoproto.moretags) = "venice:key"];
+  uint32               mtu              = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:1500-9216}"];    // MTU
+  QosPFC               pfc              = 3;    // PFC configuration
+  QosSched             sched            = 4 [(gogoproto.moretags) = "venice:mandatory"];    // Scheduling configuration
+  QosUplinkClassMap    uplink_class_map = 5;    // Class map for class derivation on uplinks
+  QosMarking           marking          = 6;    // Marking policy for host-to-network traffic
 }
 
 // QosClassRequestMsg is batched request to create/update the QosClasss
@@ -161,9 +160,8 @@ message QosClassResponseMsg {
 
 // QosClassDeleteRequest  is used to delete a QosClass object
 message QosClassDeleteRequest {
-  types.ObjectMeta     meta          = 1;    // object meta
   // key_or_handle is to identify QosClass being deleted
-  kh.QosClassKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.QosClassKeyHandle key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // QosClassDeleteRequestMsg is used to delete a batch of QosClasss
@@ -206,9 +204,8 @@ message QosClassStats {
 
 // QosClassGetRequest is used to get information about a QosClass
 message QosClassGetRequest {
-  types.ObjectMeta     meta          = 1;    // object meta
   // key_or_handle is to identify QosClass being deleted
-  kh.QosClassKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.QosClassKeyHandle key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // Batched request message to get the stats about a batch of QosClasss
@@ -231,9 +228,8 @@ message QosClassGetResponseMsg {
 
 // Specifications of a Copp
 message CoppSpec {
-  types.ObjectMeta meta          = 1;    // object meta
   // key_or_handle is Copp's unique identifier
-  kh.CoppKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.CoppKeyHandle key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
   PolicerSpec      policer       = 3 [(gogoproto.moretags) = "venice:mandatory"];    // Policer specification
 }
 
@@ -272,9 +268,8 @@ message CoppResponseMsg {
 
 // CoppDeleteRequest  is used to delete a Copp object
 message CoppDeleteRequest {
-  types.ObjectMeta meta          = 1;    // object meta
   // key_or_handle is to identify Copp being deleted
-  kh.CoppKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.CoppKeyHandle key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 // CoppDeleteRequestMsg is used to delete a batch of Copps
@@ -300,9 +295,8 @@ message CoppStats {
 
 // CoppGetRequest is used to get information about a Copp
 message CoppGetRequest {
-  types.ObjectMeta meta          = 1;    // object meta
   // key_or_handle is Copp's unique identifier
-  kh.CoppKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:key"];
+  kh.CoppKeyHandle key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
 }
 
 message CoppGetRequestMsg {

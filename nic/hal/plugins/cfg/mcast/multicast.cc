@@ -416,13 +416,6 @@ static hal_ret_t
 validate_mc_entry_create(MulticastEntrySpec& spec,
                          MulticastEntryResponse *rsp)
 {
-    // must have meta set
-    if (!spec.has_meta()) {
-        HAL_TRACE_ERR("Meta not set in request");
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
     // must have key-handle set
     if (!spec.has_key_or_handle() || !spec.key_or_handle().has_key()) {
         HAL_TRACE_ERR("mc_entry key not set in create request");
@@ -731,13 +724,6 @@ static hal_ret_t
 validate_mc_entry_delete(MulticastEntryDeleteRequest& req,
                          MulticastEntryDeleteResponse *rsp)
 {
-    // must have meta set
-    if (!req.has_meta()) {
-        HAL_TRACE_ERR("Meta not set");
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
     // must have key-handle set
     if (!req.has_key_or_handle()) {
         HAL_TRACE_ERR("Key_or_handle not set");
@@ -962,13 +948,6 @@ static hal_ret_t
 validate_mc_entry_update(MulticastEntrySpec& req,
                          MulticastEntryResponse *rsp)
 {
-    // must have meta set
-    if (!req.has_meta()) {
-        HAL_TRACE_ERR("Meta not set");
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
     // must have key-handle set
     if (!req.has_key_or_handle()) {
         HAL_TRACE_ERR("Key_or_handle not set");
@@ -1254,8 +1233,6 @@ mc_entry_get_fill_rsp(MulticastEntryGetResponse *rsp,
         goto end;
     }
 
-    rsp->mutable_spec()->mutable_meta()->set_vrf_id(
-        vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
     rsp->mutable_spec()->mutable_key_or_handle()->mutable_key()->
         mutable_l2segment_key_handle()->set_segment_id(l2seg->seg_id);
 

@@ -54,8 +54,7 @@ message CpuCbResponseMsg {
 
 // CpuCbDeleteRequest is used to delete a cpucb
 message CpuCbDeleteRequest {
-  types.ObjectMeta        meta          = 1;    // object meta
-  CpuCbKeyHandle     key_or_handle = 2;    // CpuCb key or handle
+  CpuCbKeyHandle     key_or_handle = 1;    // CpuCb key or handle
 }
 
 // CpuCbDeleteRequestMsg is used to delete a batch of cpucbs
@@ -74,8 +73,7 @@ message CpuCbDeleteResponseMsg {
 
 // CpuCbGetRequest is used to get information about a cpucb
 message CpuCbGetRequest {
-  types.ObjectMeta          meta          = 1;    // object meta
-  CpuCbKeyHandle            key_or_handle = 2;    // CpuCb key or handle
+  CpuCbKeyHandle            key_or_handle = 1;    // CpuCb key or handle
 }
 
 // CpuCbGetRequestMsg is batched GET requests for cpucbs

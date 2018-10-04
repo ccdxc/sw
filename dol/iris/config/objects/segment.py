@@ -418,7 +418,6 @@ class SegmentObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.meta.vrf_id = self.tenant.id
         get_req_spec.key_or_handle.l2segment_handle = self.hal_handle
         get_req_spec.vrf_key_handle.vrf_id = self.tenant.id
         return

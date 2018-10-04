@@ -44,7 +44,6 @@ TEST_F(tftp_test, tftp_session)
     EXPECT_EQ(ctx_.flow_log(hal::FLOW_ROLE_INITIATOR)->alg, nwsec::APP_SVC_TFTP);
 
     req.set_session_handle(session->hal_handle);
-    req.mutable_meta()->set_vrf_id(ctx_.svrf()->vrf_id);
     ret = hal::session_get(req, &rsp);
     EXPECT_EQ(ret, HAL_RET_OK);
     EXPECT_EQ(rsp.response(0).status().alg(), nwsec::APP_SVC_TFTP);

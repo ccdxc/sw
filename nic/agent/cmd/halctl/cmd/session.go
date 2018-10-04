@@ -433,7 +433,7 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 	case *halproto.FlowKey_V4Key:
 		keyType = "IPv4"
 		v4Key := flowKey.GetV4Key()
-		sessionID = spec.GetMeta().GetVrfId()
+		sessionID = spec.GetVrfKeyHandle().GetVrfId()
 		srcID = flowKey.GetSrcVrfId()
 		dstID = flowKey.GetDstVrfId()
 		if srcID == 0 {
@@ -483,7 +483,7 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 	case *halproto.FlowKey_V6Key:
 		keyType = "IPv6"
 		v6Key := flowKey.GetV6Key()
-		sessionID = spec.GetMeta().GetVrfId()
+		sessionID = spec.GetVrfKeyHandle().GetVrfId()
 		srcID = flowKey.GetSrcVrfId()
 		dstID = flowKey.GetDstVrfId()
 		if srcID == 0 {
