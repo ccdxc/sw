@@ -27,7 +27,8 @@ import (
 	// run{{.GetName}}ListHandler is the List Handler for {{.GetName}}
 	func (s *RestServer) run{{.GetName}}ListHandler(r *http.Request) (interface{}, error){
 		log.Infof("Got GET LIST request")
-		return nil, nil
+		res := fmt.Sprintf("Got GET LIST request")
+		return res, nil
 	}
 
 	// run{{.GetName}}GetHandler is the Get Handler for {{.GetName}}
@@ -42,7 +43,8 @@ import (
 		o.Meta.Kind = "{{.GetName}}"
 		o.Meta.Key = mux.Vars(r)["Meta.Name"]
 		log.Infof("Got GET request %s/%s", o.Meta.Kind, o.Meta.Key)
-		return nil, nil
+		res := fmt.Sprintf("Got GET request %s/%s", o.Meta.Kind, o.Meta.Key)
+		return res, nil
 	}
     {{end}}
 {{end}}

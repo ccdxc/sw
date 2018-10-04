@@ -7,6 +7,7 @@
 package restapi
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -31,7 +32,8 @@ func addUpgradeMetricsAPIRoutes(r *mux.Router, srv *RestServer) {
 // runUpgradeMetricsListHandler is the List Handler for UpgradeMetrics
 func (s *RestServer) runUpgradeMetricsListHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET LIST request")
-	return nil, nil
+	res := fmt.Sprintf("Got GET LIST request")
+	return res, nil
 }
 
 // runUpgradeMetricsGetHandler is the Get Handler for UpgradeMetrics
@@ -46,5 +48,6 @@ func (s *RestServer) runUpgradeMetricsGetHandler(r *http.Request) (interface{}, 
 	o.Meta.Kind = "UpgradeMetrics"
 	o.Meta.Key = mux.Vars(r)["Meta.Name"]
 	log.Infof("Got GET request %s/%s", o.Meta.Kind, o.Meta.Key)
-	return nil, nil
+	res := fmt.Sprintf("Got GET request %s/%s", o.Meta.Kind, o.Meta.Key)
+	return res, nil
 }

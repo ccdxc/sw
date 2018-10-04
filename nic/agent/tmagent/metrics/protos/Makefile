@@ -3,14 +3,18 @@ DEST := $(SRC:%.proto=%.pb.go)
 NAMES = $(notdir $(basename $(SRC)))
 NICDIR := ${GOPATH}/src/github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi
 NICFILES := ${NICDIR}/${NAMES}_api.go
+PENDIR := ${GOPATH}/src/github.com/pensando/sw/penctl/cmd
+PENFILES := ${PENDIR}/${NAMES}.go
 
 $(info $$NICDIR: ${NICDIR})
+$(info $$PENDIR: ${PENDIR})
 $(info $$NAMES: ${NAMES})
 $(info $$SRC: ${SRC})
 $(info $$DEST: ${DEST})
 $(info $$NICFILES: ${NICFILES})
+$(info $$PENFILES: ${PENFILES})
 
-default: ${DEST} template
+default: ${DEST} template penctl_template
 
 %.pb.go: %.proto Makefile 
 	mkdir -p ${NICDIR}
@@ -39,6 +43,17 @@ template:
 	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi/templates/rest.yml,log_dir=${NICDIR}/tmp,logtostderr=false,v=7:${NICDIR} $(SRC)
 	goimports -local "github.com/pensando/sw" -w ${NICFILES}
 
+penctl_template:
+	protoc -I/usr/local/include -I. -I../../../../../vendor -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/pensando/sw/api/protos/ \
+        -I${GOPATH}/src/github.com/pensando/sw/ \
+        -I${GOPATH}/src/github.com/pensando/sw/api/ \
+	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party \
+	-I${GOPATH}/src/github.com/pensando/sw/api/protos \
+	-I../../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/penctl/cmd/metrics/templates/rest.yml,log_dir=${PENDIR}/tmp,logtostderr=false,v=7:${PENDIR} $(SRC)
+	goimports -local "github.com/pensando/sw" -w ${PENFILES}
+
+
 clean:
-	rm -f *.pb.go
 	rm -f ${NICFILES}

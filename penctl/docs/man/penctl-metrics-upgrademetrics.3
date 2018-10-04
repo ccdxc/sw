@@ -5,32 +5,28 @@
 
 .SH NAME
 .PP
-penctl\-logs \- Show logs from Naples
+penctl\-metrics\-upgrademetrics \- Show UpgradeMetrics from Naples
 
 
 .SH SYNOPSIS
 .PP
-\fBpenctl logs [flags]\fP
+\fBpenctl metrics upgrademetrics [flags]\fP
 
 
 .SH DESCRIPTION
 .ti 0
 \l'\n(.lu'
 
-.SH Show Module Logs From Naples
+.SH Show UpgradeMetrics From Naples
 
 .SH OPTIONS
 .PP
 \fB\-h\fP, \fB\-\-help\fP[=false]
-    help for logs
+    help for upgrademetrics
 
 .PP
-\fB\-m\fP, \fB\-\-module\fP=""
-    Module to show logs for
-            Valid modules are:
-                nmd
-                netagent
-                tmagent
+\fB\-n\fP, \fB\-\-name\fP=""
+    Name/Key for metrics object
 
 
 .SH OPTIONS INHERITED FROM PARENT COMMANDS
@@ -53,4 +49,4 @@ penctl\-logs \- Show logs from Naples
 
 .SH SEE ALSO
 .PP
-\fBpenctl(3)\fP
+\fBpenctl\-metrics(3)\fP

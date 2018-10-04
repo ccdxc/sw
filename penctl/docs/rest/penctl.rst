@@ -31,6 +31,7 @@ SEE ALSO
 
 * `penctl events <penctl_events.rst>`_ 	 - Show events from Naples
 * `penctl logs <penctl_logs.rst>`_ 	 - Show logs from Naples
+* `penctl metrics <penctl_metrics.rst>`_ 	 - Show metrics from Naples
 * `penctl mode <penctl_mode.rst>`_ 	 - Set Naples to Managed mode
 * `penctl ssh <penctl_ssh.rst>`_ 	 - SSH Commands to Naples
 
