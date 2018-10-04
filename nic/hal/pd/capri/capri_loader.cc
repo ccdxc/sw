@@ -6,12 +6,18 @@
  * capri_loader.cc: Implementation of APIs for MPU program loader
  */
 
+#include <assert.h>
+#include <boost/unordered_map.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <vector>
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include <assert.h>
 #include "nic/include/asic_pd.hpp"
-#include <boost/unordered_map.hpp>
-#include <vector>
+
+namespace pt = boost::property_tree;
+
+#define LDD_INFO_FILE_NAME    "mpu_prog_info.json"
 
 /* TODO: Declaring these as globals for now. Figure out usage and define
  *       these appropriately.
@@ -529,6 +535,52 @@ capri_program_to_base_addr(const char *handle,
     return -1;
 }
 
+static int
+capri_dump_program_info (const char *filename)
+{
+    capri_loader_ctx_t      *ctx;
+    capri_program_info_t    *program_info;
+    pt::ptree               root, programs, program;
+    MpuSymbol               *symbol;
+
+    for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
+        if ((ctx = loader_instances[it->first]) != NULL) {
+            HAL_TRACE_DEBUG("Listing programs for handle name {}", it->first);
+            program_info = ctx->program_info;
+            for (int i = 0; i < ctx->num_programs; i++) {
+                pt::ptree    symbols;
+                program.put("name", program_info[i].name.c_str());
+                program.put("base_addr", program_info[i].base_addr);
+                program.put("end_addr",
+                            ((program_info[i].base_addr +
+                              program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1);
+                for (int j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
+                    pt::ptree    sym;
+                    symbol = program_info[i].prog.symtab.get_byid(j);
+                    if ((symbol != NULL) && (symbol->type == MPUSYM_LABEL) &&
+                        symbol->val) {
+                        sym.put("name", symbol->name.c_str());
+                        sym.put("addr", program_info[i].base_addr + symbol->val);
+                        symbols.push_back(std::make_pair("", sym));
+                        sym.clear();
+                    }
+                }
+                program.add_child("symbols", symbols);
+                programs.push_back(std::make_pair("", program));
+                program.clear();
+                symbols.clear();
+            }
+        } else {
+            HAL_TRACE_DEBUG("Cannot listing programs for handle name {}",
+                            it->first);
+        }
+    }
+    root.add_child("programs", programs);
+    pt::write_json(LDD_INFO_FILE_NAME, root);
+
+    return 0;
+}
+
 /**
  * capri_list_program_addr: List each program's name, start address and end address
  *
@@ -537,12 +589,17 @@ capri_program_to_base_addr(const char *handle,
  * Return: 0 on success, < 0 on failure
  */
 int
-capri_list_program_addr(const char *filename)
+capri_list_program_addr (const char *filename)
 {
     capri_loader_ctx_t *ctx;
     capri_program_info_t *program_info;
     FILE *fp = NULL;
     MpuSymbol *symbol;
+
+    // dump ldd info in json format
+    // TODO: the folowing text format should go away once tools are migrated
+    // to consume the json output
+    capri_dump_program_info(NULL);
 
     /* Input check  */
     if ((!filename) || (!(fp = fopen(filename, "w+")))) {
@@ -577,5 +634,6 @@ capri_list_program_addr(const char *filename)
                             it->first);
         }
     }
-  return 0;
+
+    return 0;
 }

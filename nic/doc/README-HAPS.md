@@ -231,16 +231,15 @@ iperf -u -c 10.10.1.2 -i 1 -l 64 -t 28800 -b1G -e 2>&1 > client.log &
 >
 
 ****************************
-* decoding cores from haps
+* decoding cores from haps/hw
 ****************************
 
 cd <WS>
 
 # path to shared lib and sysroot
-cp  /home/saratk/gdbinit_arm  ~/.gdbinit
-
 # run below cmd from ‘sw’ dir
-/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gdb bazel-bin/nic/hal/hal -c <core_file>
+/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gdb nic/build/aarch64/iris/bin/hal core
+set solib-search-path nic/build/aarch64/iris/lib/
 
 # In gdb prompt, make sure shared libs are found. Else use set solib-seach-path to set the search path.
 info shared
