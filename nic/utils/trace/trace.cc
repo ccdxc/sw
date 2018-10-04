@@ -44,8 +44,8 @@ hal_trace_level (void)
 const size_t log::k_async_qsize_ = 64 * 1024;    // must be power of 2
 const spdlog::async_overflow_policy log::k_async_overflow_policy_ = spdlog::async_overflow_policy::discard_log_msg;
 const std::chrono::milliseconds log::k_flush_intvl_ms_ = std::chrono::milliseconds(10);
-const size_t log::k_max_file_size_ = 30*1024*1024;
-const size_t log::k_max_files_ = 20;
+const size_t log::k_max_file_size_ = 10*1024*1024;
+const size_t log::k_max_files_ = 10;
 
 // logger class methods
 spdlog::level::level_enum
