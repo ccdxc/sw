@@ -180,7 +180,6 @@ func TestOTableAPI(t *testing.T) {
 
 		// setup tsdb, collector
 		ts := NewSuite(":0", t.Name(), dbName)
-		defer ts.TearDown()
 
 		// ensure that we start with empty backend
 		res, err := ts.cs.Query(dbName, fmt.Sprintf("SELECT * FROM %s", measName))
@@ -214,6 +213,7 @@ func TestOTableAPI(t *testing.T) {
 		ts2 := time.Now()
 		if collectorinteg.InfluxTS(ts1, time.Millisecond) != collectorinteg.InfluxTS(ts2, time.Millisecond) {
 			t.Log("Restarting test since time wrapped in the middle of writing metrics")
+			ts.TearDown()
 			continue
 		}
 
@@ -246,6 +246,7 @@ func TestOTableAPI(t *testing.T) {
 			return validate(ts, dbName, measName, tt)
 		}, "mismatching metrics", "1s", "5s")
 
+		ts.TearDown()
 		return
 	}
 	t.Log("Even after 3 retries could not complete the test since time wrapped in the middle of writing metrics")
