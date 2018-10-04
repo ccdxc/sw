@@ -102,28 +102,6 @@ func (t *txn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
 					ret.Responses = append(ret.Responses, kvstore.TxnOpResponse{Oper: kvstore.OperDelete, Key: string(kv.Key[:]), Obj: into})
 				}
 			}
-		case *pb.ResponseOp_ResponsePut:
-			if item := r.GetResponsePut(); item != nil {
-				if item.PrevKv != nil {
-					into, err := t.store.codec.Decode(item.PrevKv.Value[:], nil)
-					t.store.objVersioner.SetVersion(into, uint64(item.Header.Revision))
-					if err != nil {
-						return ret, errors.Wrap(err, "Update failed")
-					}
-					ret.Responses = append(ret.Responses, kvstore.TxnOpResponse{Oper: kvstore.OperUpdate, Key: string(item.PrevKv.Key[:]), Obj: into})
-				}
-			}
-		case *pb.ResponseOp_ResponseRange:
-			if item := r.GetResponseRange(); item != nil {
-				for _, kv := range item.Kvs {
-					into, err := t.store.codec.Decode(kv.Value[:], nil)
-					t.store.objVersioner.SetVersion(into, uint64(kv.Version))
-					if err != nil {
-						return ret, errors.Wrap(err, "Get failed")
-					}
-					ret.Responses = append(ret.Responses, kvstore.TxnOpResponse{Oper: kvstore.OperGet, Key: string(kv.Key[:]), Obj: into})
-				}
-			}
 		}
 	}
 

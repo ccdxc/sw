@@ -85,7 +85,6 @@ func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 		TestWatchExisting,
 		TestWatchFromVersion,
 		TestBufferedWatch,
-		// TestWatchVersion,   this test is state store specific
 		TestCancelWatch,
 		TestElection,
 		TestElectionRestartContender,
@@ -445,6 +444,27 @@ func TestList(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCle
 	t.Logf("List succeeded")
 }
 
+// tmpType is an Object but not API Object
+// This object type should not be allowed to be stored in kvstore
+type tmpType struct {
+	api.TypeMeta
+}
+
+// Returns the kind of the object.
+func (t tmpType) GetObjectKind() string {
+	return "tmpType"
+}
+
+// Returns the API version of the object.
+func (t tmpType) GetObjectAPIVersion() string {
+	return "v1"
+}
+
+// Clone is a dummy implementation
+func (t tmpType) Clone(into interface{}) (interface{}, error) {
+	return t, nil
+}
+
 // TestWatch tests the watch for Created, Updated and Deleted events on an object.
 func TestWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
 	cluster, store := setupTestCluster(t, cSetup, sSetup)
@@ -476,6 +496,11 @@ func TestWatch(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCl
 	}
 
 	expectWatchEvent(t, evCh, kvstore.Deleted, obj)
+
+	if err = store.Create(context.Background(), TestKey, tmpType{}); err == nil {
+		t.Fatalf("Able to store a non-API object")
+	}
+
 	w.Stop()
 
 	t.Logf("Watch of Created, Updated, Deleted events succeeded")
@@ -974,6 +999,9 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 	obj2 := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj2"}}
 
 	txn1 := store.NewTxn()
+	if !txn1.IsEmpty() {
+		t.Fatal("A new transaction is not empty")
+	}
 	if err := txn1.Create(obj1.Name, obj1); err != nil {
 		t.Fatalf("Failed to create obj1 in txn with error: %v", err)
 	}
@@ -999,6 +1027,7 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 	if err := txn2.Update(obj2.Name, obj2, kvstore.Compare(kvstore.WithVersion(obj2.Name), "=", obj2.ResourceVersion)); err != nil {
 		t.Fatalf("Failed to update obj2 in with error: %v", err)
 	}
+	txn2.AddComparator(kvstore.Compare(kvstore.WithVersion(obj2.Name), "=", obj2.ResourceVersion))
 	if _, err := txn2.Commit(context.Background()); err != nil {
 		t.Fatalf("Failed to commit txn with multiple Updates with error: %v", err)
 	} else if obj1.ResourceVersion == oldVersion {
