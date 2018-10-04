@@ -22,6 +22,11 @@ objects:
   count: 1
   rest-endpoint: "/api/security/policies/"
   spec-file: "generated/16_rules.json"
+- kind: Tunnel
+  name: scale-gre-tunnel
+  count: 8
+  rest-endpoint: "/api/tunnels/"
+  spec-file: "generated/tunnels.json"
 #- kind: IPSecSAEncrypt
 #  name: scale-ipsec-encrypt-sa
 #  count: 4
@@ -38,17 +43,12 @@ objects:
 #  rest-endpoint: "/api/ipsec/policies/"
 #  spec-file: "generated/ipsec_policies.json"
 
-# TODO Uncomment this section while validating mirror sessions and tunnels in dev
+# TODO Uncomment this section while validating mirror sessions and ipfix in dev
 #- kind: FlowExportPolicy
 #  name: scale-flow-export-ipfix
 #  count: 8
 #  rest-endpoint: "/api/telemetry/flowexports/"
 #  spec-file: "generated/flow_export_policies.json"
-#- kind: Tunnel
-#  name: scale-gre-tunnel
-#  count: 8
-#  rest-endpoint: "/api/tunnels/"
-#  spec-file: "generated/tunnels.json"
 #- kind: MirrorSession
 #  name: scale-mirror
 #  rest-endpoint: "/api/mirror/sessions/"
