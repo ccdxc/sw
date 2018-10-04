@@ -3,4 +3,5 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = agent_halproto.submake
 MODULE_PIPELINE = iris
 MODULE_DIR      := ${GOPATH}/src/github.com/pensando/sw/nic/${MODULE_DIR}
+MODULE_DEPS     := $(wildcard ${NICDIR}/proto/hal/*.proto)
 include ${MKDEFS}/post.mk
