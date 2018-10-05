@@ -89,6 +89,7 @@ func (m *AuthenticationPolicy) Defaults(ver string) bool {
 	m.Tenant, m.Namespace = "", ""
 	var ret bool
 	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -133,7 +134,20 @@ func (m *AuthenticationPolicyStatus) Clone(into interface{}) (interface{}, error
 
 // Default sets up the defaults for the object
 func (m *AuthenticationPolicyStatus) Defaults(ver string) bool {
-	return false
+	var ret bool
+	for k := range m.LdapServers {
+		if m.LdapServers[k] != nil {
+			i := m.LdapServers[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	for k := range m.RadiusServers {
+		if m.RadiusServers[k] != nil {
+			i := m.RadiusServers[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -229,6 +243,33 @@ func (m *LdapServer) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *LdapServer) Defaults(ver string) bool {
 	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *LdapServerStatus) Clone(into interface{}) (interface{}, error) {
+	var out *LdapServerStatus
+	var ok bool
+	if into == nil {
+		out = &LdapServerStatus{}
+	} else {
+		out, ok = into.(*LdapServerStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *LdapServerStatus) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Result = "Connect_Success"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -354,6 +395,36 @@ func (m *RadiusServer) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.AuthMethod = "PAP"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *RadiusServerStatus) Clone(into interface{}) (interface{}, error) {
+	var out *RadiusServerStatus
+	var ok bool
+	if into == nil {
+		out = &RadiusServerStatus{}
+	} else {
+		out, ok = into.(*RadiusServerStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *RadiusServerStatus) Defaults(ver string) bool {
+	var ret bool
+	if m.Server != nil {
+		ret = m.Server.Defaults(ver) || ret
+	}
+	ret = true
+	switch ver {
+	default:
+		m.Result = "Connect_Success"
 	}
 	return ret
 }
@@ -621,6 +692,17 @@ func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []e
 	if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
 		ret = append(ret, errs...)
 	}
+	if !ignoreStatus {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -640,6 +722,26 @@ func (m *AuthenticationPolicySpec) Validate(ver, path string, ignoreStatus bool)
 
 func (m *AuthenticationPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.LdapServers {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sLdapServers[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	for k, v := range m.RadiusServers {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sRadiusServers[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -683,6 +785,24 @@ func (m *LdapAttributeMapping) Validate(ver, path string, ignoreStatus bool) []e
 
 func (m *LdapServer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	return ret
+}
+
+func (m *LdapServerStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if vs, ok := validatorMapAuth["LdapServerStatus"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapAuth["LdapServerStatus"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -738,6 +858,34 @@ func (m *RadiusServer) Validate(ver, path string, ignoreStatus bool) []error {
 			}
 		}
 	} else if vs, ok := validatorMapAuth["RadiusServer"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *RadiusServerStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Server != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Server"
+		if errs := m.Server.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	if vs, ok := validatorMapAuth["RadiusServerStatus"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapAuth["RadiusServerStatus"]["all"]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
 				ret = append(ret, err)
@@ -908,6 +1056,16 @@ func init() {
 		return nil
 	})
 
+	validatorMapAuth["LdapServerStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAuth["LdapServerStatus"]["all"] = append(validatorMapAuth["LdapServerStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*LdapServerStatus)
+
+		if _, ok := LdapServerStatus_LdapResult_value[m.Result]; !ok {
+			return errors.New("LdapServerStatus.Result did not match allowed strings")
+		}
+		return nil
+	})
+
 	validatorMapAuth["Permission"] = make(map[string][]func(string, interface{}) error)
 	validatorMapAuth["Permission"]["all"] = append(validatorMapAuth["Permission"]["all"], func(path string, i interface{}) error {
 		m := i.(*Permission)
@@ -935,6 +1093,16 @@ func init() {
 
 		if _, ok := Radius_AuthMethod_value[m.AuthMethod]; !ok {
 			return errors.New("RadiusServer.AuthMethod did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapAuth["RadiusServerStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAuth["RadiusServerStatus"]["all"] = append(validatorMapAuth["RadiusServerStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*RadiusServerStatus)
+
+		if _, ok := RadiusServerStatus_RadiusResult_value[m.Result]; !ok {
+			return errors.New("RadiusServerStatus.Result did not match allowed strings")
 		}
 		return nil
 	})

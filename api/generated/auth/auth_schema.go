@@ -33,7 +33,7 @@ var typesMapAuth = map[string]*api.Struct{
 
 		CLITags: map[string]api.CLIInfo{
 			"api-version":                   api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"auth-method":                   api.CLIInfo{Path: "Spec.Authenticators.Radius.Servers[].AuthMethod", Skip: false, Insert: "", Help: ""},
+			"auth-method":                   api.CLIInfo{Path: "Status.RadiusServers[].Server.AuthMethod", Skip: false, Insert: "", Help: ""},
 			"authenticator-order":           api.CLIInfo{Path: "Spec.Authenticators.AuthenticatorOrder", Skip: false, Insert: "", Help: ""},
 			"base-dn":                       api.CLIInfo{Path: "Spec.Authenticators.Ldap.BaseDN", Skip: false, Insert: "", Help: ""},
 			"bind-dn":                       api.CLIInfo{Path: "Spec.Authenticators.Ldap.BindDN", Skip: false, Insert: "", Help: ""},
@@ -44,14 +44,16 @@ var typesMapAuth = map[string]*api.Struct{
 			"group":                         api.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.Group", Skip: false, Insert: "", Help: ""},
 			"group-object-class":            api.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.GroupObjectClass", Skip: false, Insert: "", Help: ""},
 			"kind":                          api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"message":                       api.CLIInfo{Path: "Status.RadiusServers[].Message", Skip: false, Insert: "", Help: ""},
 			"nas-id":                        api.CLIInfo{Path: "Spec.Authenticators.Radius.NasID", Skip: false, Insert: "", Help: ""},
-			"secret":                        api.CLIInfo{Path: "Spec.Secret", Skip: false, Insert: "", Help: ""},
-			"server-name":                   api.CLIInfo{Path: "Spec.Authenticators.Ldap.Servers[].TLSOptions.ServerName", Skip: false, Insert: "", Help: ""},
-			"skip-server-cert-verification": api.CLIInfo{Path: "Spec.Authenticators.Ldap.Servers[].TLSOptions.SkipServerCertVerification", Skip: false, Insert: "", Help: ""},
-			"start-tls":                     api.CLIInfo{Path: "Spec.Authenticators.Ldap.Servers[].TLSOptions.StartTLS", Skip: false, Insert: "", Help: ""},
+			"result":                        api.CLIInfo{Path: "Status.RadiusServers[].Result", Skip: false, Insert: "", Help: ""},
+			"secret":                        api.CLIInfo{Path: "Status.RadiusServers[].Server.Secret", Skip: false, Insert: "", Help: ""},
+			"server-name":                   api.CLIInfo{Path: "Status.LdapServers[].Server.TLSOptions.ServerName", Skip: false, Insert: "", Help: ""},
+			"skip-server-cert-verification": api.CLIInfo{Path: "Status.LdapServers[].Server.TLSOptions.SkipServerCertVerification", Skip: false, Insert: "", Help: ""},
+			"start-tls":                     api.CLIInfo{Path: "Status.LdapServers[].Server.TLSOptions.StartTLS", Skip: false, Insert: "", Help: ""},
 			"tenant":                        api.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.Tenant", Skip: false, Insert: "", Help: ""},
-			"trusted-certs":                 api.CLIInfo{Path: "Spec.Authenticators.Radius.Servers[].TrustedCerts", Skip: false, Insert: "", Help: ""},
-			"url":                           api.CLIInfo{Path: "Spec.Authenticators.Radius.Servers[].Url", Skip: false, Insert: "", Help: ""},
+			"trusted-certs":                 api.CLIInfo{Path: "Status.RadiusServers[].Server.TrustedCerts", Skip: false, Insert: "", Help: ""},
+			"url":                           api.CLIInfo{Path: "Status.RadiusServers[].Server.Url", Skip: false, Insert: "", Help: ""},
 			"user":                          api.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.User", Skip: false, Insert: "", Help: ""},
 			"user-object-class":             api.CLIInfo{Path: "Spec.Authenticators.Ldap.AttributeMapping.UserObjectClass", Skip: false, Insert: "", Help: ""},
 		},
@@ -66,7 +68,11 @@ var typesMapAuth = map[string]*api.Struct{
 	},
 	"auth.AuthenticationPolicyStatus": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(AuthenticationPolicyStatus{}) },
-		Fields: map[string]api.Field{},
+		Fields: map[string]api.Field{
+			"LdapServers": api.Field{Name: "LdapServers", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ldap-servers", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.LdapServerStatus"},
+
+			"RadiusServers": api.Field{Name: "RadiusServers", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "radius-servers", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.RadiusServerStatus"},
+		},
 	},
 	"auth.Authenticators": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Authenticators{}) },
@@ -122,6 +128,16 @@ var typesMapAuth = map[string]*api.Struct{
 			"TLSOptions": api.Field{Name: "TLSOptions", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tls-options", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.TLSOptions"},
 		},
 	},
+	"auth.LdapServerStatus": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(LdapServerStatus{}) },
+		Fields: map[string]api.Field{
+			"Result": api.Field{Name: "Result", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "result", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Server": api.Field{Name: "Server", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "server", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.LdapServer"},
+		},
+	},
 	"auth.Local": &api.Struct{
 		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Local{}) },
 		Fields: map[string]api.Field{
@@ -174,6 +190,16 @@ var typesMapAuth = map[string]*api.Struct{
 			"AuthMethod": api.Field{Name: "AuthMethod", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-method", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"TrustedCerts": api.Field{Name: "TrustedCerts", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "trusted-certs", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"auth.RadiusServerStatus": &api.Struct{
+		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(RadiusServerStatus{}) },
+		Fields: map[string]api.Field{
+			"Result": api.Field{Name: "Result", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "result", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Server": api.Field{Name: "Server", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "server", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.RadiusServer"},
 		},
 	},
 	"auth.Role": &api.Struct{

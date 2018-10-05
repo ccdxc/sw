@@ -54,3 +54,43 @@ func getConnection(addr string, tlsOptions *auth.TLSOptions) (connection, error)
 	}
 	return conn, nil
 }
+
+// ConnectionChecker abstracts out LDAP connection check
+type ConnectionChecker interface {
+	// Connect checks if connection to LDAP is successful
+	Connect(addr string, tlsOptions *auth.TLSOptions) (bool, error)
+	// Bind checks if bind credentials are valid
+	Bind(addr string, tlsOptions *auth.TLSOptions, bindDN, bindPassword string) (bool, error)
+}
+
+type connectionChecker struct {
+	connGetter connectionGetter
+}
+
+func (c *connectionChecker) Connect(addr string, tlsOptions *auth.TLSOptions) (bool, error) {
+	conn, err := c.connGetter(addr, tlsOptions)
+	if err != nil {
+		return false, err
+	}
+	conn.Close()
+	return true, nil
+}
+
+func (c *connectionChecker) Bind(addr string, tlsOptions *auth.TLSOptions, bindDN, bindPassword string) (bool, error) {
+	conn, err := c.connGetter(addr, tlsOptions)
+	if err != nil {
+		return false, err
+	}
+	defer conn.Close()
+	if err := conn.Bind(bindDN, bindPassword); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// NewConnectionChecker returns an implementation of ConnnectionChecker to test ldap connections
+func NewConnectionChecker() ConnectionChecker {
+	return &connectionChecker{
+		connGetter: getConnection,
+	}
+}

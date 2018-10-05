@@ -380,6 +380,130 @@
         ]
       }
     },
+    "/configs/auth/v1/authn-policy/LdapBindCheck": {
+      "post": {
+        "operationId": "LdapBindCheck",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authAuthenticationPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authAuthenticationPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "auth/v1"
+        ]
+      }
+    },
+    "/configs/auth/v1/authn-policy/LdapConnectionCheck": {
+      "post": {
+        "operationId": "LdapConnectionCheck",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authAuthenticationPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authAuthenticationPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "auth/v1"
+        ]
+      }
+    },
     "/configs/auth/v1/role-bindings": {
       "get": {
         "summary": "List RoleBinding objects",
@@ -3785,6 +3909,20 @@
     },
     "authAuthenticationPolicyStatus": {
       "type": "object",
+      "properties": {
+        "ldap-servers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authLdapServerStatus"
+          }
+        },
+        "radius-servers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authRadiusServerStatus"
+          }
+        }
+      },
       "title": "status part of authentication policy object"
     },
     "authAuthenticators": {
@@ -3976,6 +4114,30 @@
         }
       }
     },
+    "authLdapServerStatus": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "string",
+          "enum": [
+            "Connect_Success",
+            "Connect_Failure",
+            "Bind_Success",
+            "Bind_Failure"
+          ],
+          "default": "Connect_Success",
+          "title": "Result indicates if ldap check was successful"
+        },
+        "message": {
+          "type": "string",
+          "title": "Message contains error message in case of failed check or a success message"
+        },
+        "server": {
+          "$ref": "#/definitions/authLdapServer",
+          "title": "LdapServer contains the ldap server configuration that was checked"
+        }
+      }
+    },
     "authLocal": {
       "type": "object",
       "properties": {
@@ -4152,6 +4314,28 @@
         "trusted-certs": {
           "type": "string",
           "title": "TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. It is\nused in PEAP and EAP_TTLS auth methods"
+        }
+      }
+    },
+    "authRadiusServerStatus": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "string",
+          "enum": [
+            "Connect_Success",
+            "Connect_Failure"
+          ],
+          "default": "Connect_Success",
+          "title": "Result indicates if radius check was successful"
+        },
+        "message": {
+          "type": "string",
+          "title": "Message contains error message in case of failed check or a success message"
+        },
+        "server": {
+          "$ref": "#/definitions/authRadiusServer",
+          "title": "RadiusServer contains the radius server configuration that was checked"
         }
       }
     },

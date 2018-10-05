@@ -13,442 +13,155 @@ import (
 
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
-
-	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	_ "github.com/pensando/sw/api/hooks/apiserver"
 )
 
-const (
-	ldapServer           = "openldap"
-	referralServer       = "openldapref"
-	ldapUser             = "testuser"
-	ldapUserGroupDN      = "cn=Administrators,dc=pensando,dc=io"
-	ldapUserPassword     = "pensando"
-	referralUser         = "testReferral"
-	referralUserDN       = "cn=testReferral,dc=pensando,dc=io"
-	referralUserGroupDN  = "cn=AdministratorsReferral,dc=pensando,dc=io"
-	referralUserPassword = "pensando"
-)
+func getOpenLdapConfig() *LdapConfig {
+	return &LdapConfig{
+		ServerName: "0a7af420ff67",
+		TrustedCerts: `-----BEGIN CERTIFICATE-----
+MIIC/TCCAoOgAwIBAgIUF58P7j/wJUrJXKM1LVlrWRaAc8wwCgYIKoZIzj0EAwMw
+gZYxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxBMUEgQ2FyIFdhc2gxJDAiBgNVBAsT
+G0luZm9ybWF0aW9uIFRlY2hub2xvZ3kgRGVwLjEUMBIGA1UEBxMLQWxidXF1ZXJx
+dWUxEzARBgNVBAgTCk5ldyBNZXhpY28xHzAdBgNVBAMTFmRvY2tlci1saWdodC1i
+YXNlaW1hZ2UwHhcNMTcxMjEzMjIyNDAwWhcNMTgxMjEzMjIyNDAwWjCBjDELMAkG
+A1UEBhMCVVMxEzARBgNVBAgTCk5ldyBNZXhpY28xFDASBgNVBAcTC0FsYnVxdWVy
+cXVlMRUwEwYDVQQKEwxBMUEgQ2FyIFdhc2gxJDAiBgNVBAsTG0luZm9ybWF0aW9u
+IFRlY2hub2xvZ3kgRGVwLjEVMBMGA1UEAxMMMGE3YWY0MjBmZjY3MHYwEAYHKoZI
+zj0CAQYFK4EEACIDYgAE0kmi9mFmxknKd5nDSTG/aIzTvJ3Uza7kNJzNP8+F9Fsb
+F9A2N0uDcGuEYZfDwfwHcoUIw/+1kNy+endSrAipOYSEZN91bOdGAOzZE+JsrLhW
+yS3MrFIUviI1qevigvJwo4GZMIGWMA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAU
+BggrBgEFBQcDAQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUOJFK
+TNnQJCm5qhClodH6dCz3zkswHwYDVR0jBBgwFoAUT6XpeiVcMBicYtOXhbpQsoeu
+bvgwFwYDVR0RBBAwDoIMMGE3YWY0MjBmZjY3MAoGCCqGSM49BAMDA2gAMGUCMQCC
+wNQ0bAkWU27WgzOhn0m7wh87W2U9NX0xJLGNDFsjwfn26uagp46V4h2UKVICe98C
+MFB3stnk7Lfr/w/14951n5lek97eDTodYfiF4UxeqL386krQ6eduscPIrin1114r
+0w==
+-----END CERTIFICATE-----`,
+		URL:                       tinfo.ldapAddr,
+		BaseDN:                    "DC=pensando,DC=io",
+		BindDN:                    "CN=admin,DC=pensando,DC=io",
+		BindPassword:              "pensando",
+		UserAttribute:             "cn",
+		UserObjectClassAttribute:  "organizationalPerson",
+		GroupAttribute:            "ou",
+		GroupObjectClassAttribute: "groupOfNames",
+		TenantAttribute:           "l",
+		ReferralServer:            "openldap",
+		LdapServer:                "openldapref",
+		LdapUser:                  "testuser",
+		LdapUserGroupsDN:          []string{"cn=Administrators,dc=pensando,dc=io"},
+		LdapUserPassword:          "pensando",
+		ReferralUser:              "testReferral",
+		ReferralUserDN:            "cn=testReferral,dc=pensando,dc=io",
+		ReferralUserGroupDN:       "cn=AdministratorsReferral,dc=pensando,dc=io",
+		ReferralUserPassword:      "pensando",
+	}
+}
 
-func setupLdap() {
+func setupOpenLdap() {
 	var err error
+	config := getOpenLdapConfig()
 	// start ldap server
-	tinfo.ldapAddr, err = StartLdapServer(ldapServer)
+	tinfo.ldapAddr, err = StartOpenLdapServer(config.LdapServer)
 	if err != nil {
 		log.Errorf("Error creating LDAP Server: %v", err)
 		os.Exit(-1)
 	}
 	// start referral server
-	tinfo.referralAddr, err = StartLdapServer(referralServer)
+	tinfo.referralAddr, err = StartOpenLdapServer(config.ReferralServer)
 	if err != nil {
-		StopLdapServer(ldapServer)
+		StopOpenLdapServer(config.LdapServer)
 		log.Errorf("Error creating referral LDAP Server: %v", err)
 		os.Exit(-1)
 	}
 	// create test ldap user
-	err = CreateLdapUser(tinfo.ldapAddr, ldapUser, ldapUserPassword, testTenant, []string{ldapUserGroupDN})
+	err = CreateLdapUser(tinfo.ldapAddr, config.LdapUser, config.LdapUserPassword, testTenant, config.LdapUserGroupsDN)
 	if err != nil {
-		shutdownLdap()
+		shutdownOpenLdap()
 		log.Errorf("Error creating test ldap user: %v", err)
 		os.Exit(-1)
 	}
 	// create testReferral ldap user in referral server
-	err = CreateLdapUser(tinfo.referralAddr, referralUser, referralUserPassword, testTenant, []string{referralUserGroupDN})
+	err = CreateLdapUser(tinfo.referralAddr, config.ReferralUser, config.ReferralUserPassword, testTenant, []string{config.ReferralUserGroupDN})
 	if err != nil {
-		shutdownLdap()
+		shutdownOpenLdap()
 		log.Errorf("Error creating test ldap user: %v", err)
 		os.Exit(-1)
 	}
 	// create testReferral ldap group in referral server
-	err = CreateGroup(tinfo.referralAddr, referralUserGroupDN, []string{ldapUserGroupDN}, []string{referralUserDN})
+	err = CreateGroup(tinfo.referralAddr, config.ReferralUserGroupDN, config.LdapUserGroupsDN, []string{config.ReferralUserDN})
 	if err != nil {
-		shutdownLdap()
+		shutdownOpenLdap()
 		log.Errorf("Error creating testReferral ldap group in referral server: %v", err)
 		os.Exit(-1)
 	}
 	// create referral entry in ldap server
-	err = CreateReferral(tinfo.ldapAddr, referralUser, "ldap://"+tinfo.referralAddr+"/"+BaseDN)
+	err = CreateReferral(tinfo.ldapAddr, config.ReferralUser, "ldap://"+tinfo.referralAddr+"/"+config.BaseDN)
 	if err != nil {
-		shutdownLdap()
+		shutdownOpenLdap()
 		log.Errorf("Error creating testReferral referral entry in ldap server: %v", err)
 		os.Exit(-1)
 	}
 }
 
-func shutdownLdap() {
-	StopLdapServer(ldapServer)
-	StopLdapServer(referralServer)
-}
-
-// authenticationPoliciesData returns ldap configs to test TLS and non TLS connections
-func authenticationPoliciesData() map[string]*auth.Ldap {
-	ldapdata := make(map[string]*auth.Ldap)
-	ldapdata["TLS Enabled"] = &auth.Ldap{
-		Enabled: true,
-		Servers: []*auth.LdapServer{
-			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
-				},
-			},
-		},
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             UserAttribute,
-			UserObjectClass:  UserObjectClassAttribute,
-			Group:            GroupAttribute,
-			GroupObjectClass: GroupObjectClassAttribute,
-		},
-	}
-	ldapdata["TLS Skip Server Verification"] = &auth.Ldap{
-		Enabled: true,
-		Servers: []*auth.LdapServer{
-			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: true,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
-				},
-			},
-		},
-
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             UserAttribute,
-			UserObjectClass:  UserObjectClassAttribute,
-			Group:            GroupAttribute,
-			GroupObjectClass: GroupObjectClassAttribute,
-		},
-	}
-	ldapdata["Without TLS"] = &auth.Ldap{
-		Enabled: true,
-		Servers: []*auth.LdapServer{
-			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS: false,
-				},
-			},
-		},
-
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             UserAttribute,
-			UserObjectClass:  UserObjectClassAttribute,
-			Group:            GroupAttribute,
-			GroupObjectClass: GroupObjectClassAttribute,
-		},
-	}
-
-	return ldapdata
-}
-
-// createDefaultAuthenticationPolicy creates an authentication policy with LDAP with TLS enabled
-func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
-	return MustCreateAuthenticationPolicy(tinfo.apicl,
-		&auth.Local{
-			Enabled: true,
-		}, &auth.Ldap{
-			Enabled: true,
-			Servers: []*auth.LdapServer{
-				{
-					Url: tinfo.ldapAddr,
-					TLSOptions: &auth.TLSOptions{
-						StartTLS:                   true,
-						SkipServerCertVerification: false,
-						ServerName:                 ServerName,
-						TrustedCerts:               TrustedCerts,
-					},
-				},
-			},
-
-			BaseDN:       BaseDN,
-			BindDN:       BindDN,
-			BindPassword: BindPassword,
-			AttributeMapping: &auth.LdapAttributeMapping{
-				User:             UserAttribute,
-				UserObjectClass:  UserObjectClassAttribute,
-				Group:            GroupAttribute,
-				GroupObjectClass: GroupObjectClassAttribute,
-				Tenant:           TenantAttribute,
-			},
-		})
+func shutdownOpenLdap() {
+	config := getOpenLdapConfig()
+	StopOpenLdapServer(config.LdapServer)
+	StopOpenLdapServer(config.ReferralServer)
 }
 
 func TestAuthenticate(t *testing.T) {
 	t.Skip()
-	for testtype, ldapconf := range authenticationPoliciesData() {
-		_, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, ldapconf)
-		if err != nil {
-			t.Errorf("err %s in CreateAuthenticationPolicy", err)
-			return
-		}
-		// create password authenticator
-		authenticator := ldap.NewLdapAuthenticator(ldapconf)
-
-		// authenticate
-		autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
-		DeleteAuthenticationPolicy(tinfo.apicl)
-
-		Assert(t, ok, fmt.Sprintf("[%v] Unsuccessful ldap user authentication", testtype))
-		Assert(t, autheduser.Name == ldapUser, fmt.Sprintf("[%v] User returned by ldap authenticator didn't match user being authenticated", testtype))
-		Assert(t, autheduser.Spec.GetType() == auth.UserSpec_EXTERNAL.String(), fmt.Sprintf("[%v] User created is not of type EXTERNAL", testtype))
-		Assert(t, autheduser.Status.GetUserGroups()[0] == ldapUserGroupDN,
-			fmt.Sprintf("[%v] Incorrect user group returned, expected [%s], got [%s]", testtype, ldapUserGroupDN, autheduser.Status.GetUserGroups()[0]))
-		AssertOk(t, err, fmt.Sprintf("[%v] Error authenticating user", testtype))
-	}
-
+	config := getOpenLdapConfig()
+	testAuthenticate(t, config)
 }
 
 func TestIncorrectPasswordAuthentication(t *testing.T) {
 	t.Skip()
-	policy := createDefaultAuthenticationPolicy()
-	defer DeleteAuthenticationPolicy(tinfo.apicl)
-
-	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: "wrongpassword"})
-
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned while authenticating with wrong password")
-	Assert(t, err != nil, "No error returned while authenticating with wrong password")
+	config := getOpenLdapConfig()
+	testIncorrectPasswordAuthentication(t, config)
 }
 
 func TestIncorrectUserAuthentication(t *testing.T) {
 	t.Skip()
-	policy := createDefaultAuthenticationPolicy()
-	defer DeleteAuthenticationPolicy(tinfo.apicl)
-
-	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: "test1", Password: "password"})
-
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned while authenticating with incorrect username")
-	Assert(t, err != nil, "No error returned while authenticating with incorrect username")
-	Assert(t, err == ldap.ErrNoneOrMultipleUserEntries, "Incorrect error type returned")
-
+	config := getOpenLdapConfig()
+	testIncorrectUserAuthentication(t, config)
 }
 
 func TestMissingLdapAttributeMapping(t *testing.T) {
 	t.Skip()
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
-		Servers: []*auth.LdapServer{
-			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
-				},
-			},
-		},
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
-	})
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(tinfo.apicl)
-
-	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Missing LDAP Attribute Mapping")
-	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Missing LDAP Attribute Mapping")
+	config := getOpenLdapConfig()
+	testMissingLdapAttributeMapping(t, config)
 }
 
 func TestIncorrectLdapAttributeMapping(t *testing.T) {
 	t.Skip()
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
-		Servers: []*auth.LdapServer{
-			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
-				},
-			},
-		},
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             "cn",
-			UserObjectClass:  "organization",
-			Group:            "ou",
-			GroupObjectClass: "groupOfNames",
-		},
-	})
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(tinfo.apicl)
-
-	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect LDAP Attribute Mapping")
-	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect LDAP Attribute Mapping")
+	config := getOpenLdapConfig()
+	testIncorrectLdapAttributeMapping(t, config)
 }
 
 func TestIncorrectBaseDN(t *testing.T) {
 	t.Skip()
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
-		Servers: []*auth.LdapServer{
-			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
-				},
-			},
-		},
-		BaseDN:       "DC=pensandoo,DC=io",
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             UserAttribute,
-			UserObjectClass:  UserObjectClassAttribute,
-			Group:            GroupAttribute,
-			GroupObjectClass: GroupObjectClassAttribute,
-		},
-	})
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(tinfo.apicl)
-
-	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect Base DN")
-	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect Base DN")
+	config := getOpenLdapConfig()
+	testIncorrectBaseDN(t, config)
 }
 
 func TestIncorrectBindPassword(t *testing.T) {
 	t.Skip()
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
-		Servers: []*auth.LdapServer{
-			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
-				},
-			},
-		},
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: "wrongbindpassword",
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             UserAttribute,
-			UserObjectClass:  UserObjectClassAttribute,
-			Group:            GroupAttribute,
-			GroupObjectClass: GroupObjectClassAttribute,
-		},
-	})
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(tinfo.apicl)
-
-	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect Bind Password")
-	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect Bind Password")
+	config := getOpenLdapConfig()
+	testIncorrectBindPassword(t, config)
 }
 
 func TestDisabledLdapAuthenticator(t *testing.T) {
 	t.Skip()
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: false,
-		Servers: []*auth.LdapServer{
-			{
-				Url: tinfo.ldapAddr,
-				TLSOptions: &auth.TLSOptions{
-					StartTLS:                   true,
-					SkipServerCertVerification: false,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
-				},
-			},
-		},
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
-		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             UserAttribute,
-			UserObjectClass:  UserObjectClassAttribute,
-			Group:            GroupAttribute,
-			GroupObjectClass: GroupObjectClassAttribute,
-		},
-	})
-
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(tinfo.apicl)
-
-	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: ldapUser, Password: ldapUserPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with disabled LDAP authenticator")
-	AssertOk(t, err, "Error returned with disabled LDAP authenticator")
+	config := getOpenLdapConfig()
+	testDisabledLdapAuthenticator(t, config)
 }
 
 func TestReferral(t *testing.T) {
 	t.Skip()
-	for testtype, ldapconf := range authenticationPoliciesData() {
+	config := getOpenLdapConfig()
+	for testtype, ldapconf := range authenticationPoliciesData(config) {
 		_, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, ldapconf)
 		if err != nil {
 			t.Errorf("err %s in CreateAuthenticationPolicy", err)
@@ -458,15 +171,17 @@ func TestReferral(t *testing.T) {
 		authenticator := ldap.NewLdapAuthenticator(ldapconf)
 
 		// authenticate
-		autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: referralUser, Password: referralUserPassword})
+		autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: config.ReferralUser, Password: config.ReferralUserPassword})
 		DeleteAuthenticationPolicy(tinfo.apicl)
 
 		Assert(t, ok, fmt.Sprintf("[%v] Unsuccessful ldap user authentication", testtype))
-		Assert(t, autheduser.Name == referralUser, fmt.Sprintf("[%v] User returned by ldap authenticator didn't match user being authenticated", testtype))
+		Assert(t, autheduser.Name == config.ReferralUser, fmt.Sprintf("[%v] User returned by ldap authenticator didn't match user being authenticated", testtype))
 		Assert(t, autheduser.Spec.GetType() == auth.UserSpec_EXTERNAL.String(), fmt.Sprintf("[%v] User created is not of type EXTERNAL", testtype))
 		returnedGroups := autheduser.Status.GetUserGroups()
 		sort.Strings(returnedGroups)
-		expectedGroups := []string{ldapUserGroupDN, referralUserGroupDN}
+		var expectedGroups []string
+		expectedGroups = append(expectedGroups, config.LdapUserGroupsDN...)
+		expectedGroups = append(expectedGroups, config.ReferralUserGroupDN)
 		sort.Strings(expectedGroups)
 		Assert(t, reflect.DeepEqual(autheduser.Status.GetUserGroups(), expectedGroups),
 			fmt.Sprintf("[%v] Incorrect user group returned, expected [%v], got [%v]", testtype, expectedGroups, returnedGroups))

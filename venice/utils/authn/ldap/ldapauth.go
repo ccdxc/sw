@@ -59,7 +59,7 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 		return nil, false, err
 	}
 
-	// Create/update external user
+	// Create external user
 	return authn.CreateExternalUser(ldapCredential.Username,
 		entry.GetAttributeValue(a.ldapConfig.GetAttributeMapping().GetTenant()),
 		entry.GetAttributeValue(a.ldapConfig.GetAttributeMapping().GetFullname()),
@@ -81,7 +81,9 @@ func (a *authenticator) bind(username, password string) (*ldap.Entry, []string, 
 		a.ldapConfig.GetAttributeMapping().GetTenant(),
 		a.ldapConfig.GetAttributeMapping().GetGroup(),
 		a.ldapConfig.GetAttributeMapping().GetEmail(),
-		a.ldapConfig.GetAttributeMapping().GetFullname()}, func(referral string, conn connection, sr *ldap.SearchResult) (bool, error) {
+		a.ldapConfig.GetAttributeMapping().GetFullname(),
+		PrimaryGroupID,
+		ObjectSid}, func(referral string, conn connection, sr *ldap.SearchResult) (bool, error) {
 
 		if len(sr.Entries) == 0 && len(sr.Referrals) > 0 {
 			log.Debugf("Referrals returned for user [%q] for search filter [%q]: %v", username, a.defaultUserSearchFilter(username), sr.Referrals)
@@ -105,14 +107,20 @@ func (a *authenticator) bind(username, password string) (*ldap.Entry, []string, 
 
 		log.Debugf("ldapauth: Successfully authenticated user [%s], ldap entry [%q]", username, sr.Entries[0].DN)
 
+		// for handling Active Directory primary group
+		primaryGrp, err := a.getADPrimaryGroup(referral, server.TLSOptions, sr.Entries[0])
+		if err != nil {
+			log.Infof("User entry [%q] has no primary group attribute defined for referral [%q]", sr.Entries[0].DN, referral)
+		} else {
+			groups = append(groups, primaryGrp)
+		}
 		// Recursively fetch all groups that this user is member of
-		groups = sr.Entries[0].GetAttributeValues(a.ldapConfig.GetAttributeMapping().GetGroup())
+		groups = append(groups, sr.Entries[0].GetAttributeValues(a.ldapConfig.GetAttributeMapping().GetGroup())...)
 		if len(groups) == 0 {
 			log.Errorf("User entry [%q] has no group attributes defined for attribute mapping [%q]", sr.Entries[0].DN, a.ldapConfig.GetAttributeMapping().GetGroup())
 			return false, authn.ErrNoGroupMembership
 		}
 		log.Debugf("User entry [%q] is member of groups [%v]", sr.Entries[0].DN, groups)
-		var err error
 		groups, err = a.getLdapGroups(referral, server.TLSOptions, groups)
 		if err != nil {
 			return false, err

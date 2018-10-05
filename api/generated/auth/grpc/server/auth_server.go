@@ -243,11 +243,13 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		"auth.Ldap":                       apisrvpkg.NewMessage("auth.Ldap"),
 		"auth.LdapAttributeMapping":       apisrvpkg.NewMessage("auth.LdapAttributeMapping"),
 		"auth.LdapServer":                 apisrvpkg.NewMessage("auth.LdapServer"),
+		"auth.LdapServerStatus":           apisrvpkg.NewMessage("auth.LdapServerStatus"),
 		"auth.Local":                      apisrvpkg.NewMessage("auth.Local"),
 		"auth.PasswordCredential":         apisrvpkg.NewMessage("auth.PasswordCredential"),
 		"auth.Permission":                 apisrvpkg.NewMessage("auth.Permission"),
 		"auth.Radius":                     apisrvpkg.NewMessage("auth.Radius"),
 		"auth.RadiusServer":               apisrvpkg.NewMessage("auth.RadiusServer"),
+		"auth.RadiusServerStatus":         apisrvpkg.NewMessage("auth.RadiusServerStatus"),
 		"auth.Role": apisrvpkg.NewMessage("auth.Role").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := auth.Role{}

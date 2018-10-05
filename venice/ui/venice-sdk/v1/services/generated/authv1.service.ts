@@ -37,6 +37,16 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body.getValues(), 'UpdateAuthenticationPolicy') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  public LdapBindCheck(body: AuthAuthenticationPolicy):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/LdapBindCheck';
+    return this.invokeAJAXPostCall(url, body.getValues(), 'LdapBindCheck') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  public LdapConnectionCheck(body: AuthAuthenticationPolicy):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/LdapConnectionCheck';
+    return this.invokeAJAXPostCall(url, body.getValues(), 'LdapConnectionCheck') as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List RoleBinding objects */
   public ListRoleBinding_1(queryParam: any = null):Observable<{body: IAuthRoleBindingList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings';

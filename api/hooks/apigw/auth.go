@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
@@ -26,6 +27,7 @@ type authHooks struct {
 	authGetter       manager.AuthGetter
 	permissionGetter rbac.PermissionGetter
 	bootstrapper     bootstrapper.Bootstrapper
+	ldapChecker      ldap.ConnectionChecker
 	logger           log.Logger
 }
 
@@ -159,6 +161,60 @@ func (a *authHooks) userCreateCheck(ctx context.Context, in interface{}) (contex
 	return ctx, in, false, nil
 }
 
+// ldapConnectionCheck pre-call hook checks if connection succeeds to LDAP
+func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+	a.logger.DebugLog("msg", "APIGw ldapConnectionCheck hook called")
+	obj, ok := in.(*auth.AuthenticationPolicy)
+	if !ok {
+		return ctx, in, true, errors.New("invalid input type")
+	}
+	obj.Status.LdapServers = nil
+	config := obj.Spec.Authenticators.Ldap
+	for _, server := range config.Servers {
+		_, err := a.ldapChecker.Connect(server.Url, server.TLSOptions)
+		status := &auth.LdapServerStatus{
+			Server: server,
+		}
+		if err != nil {
+			a.logger.Errorf("error connecting to LDAP [%s]: %v", server.Url, err)
+			status.Message = err.Error()
+			status.Result = auth.LdapServerStatus_Connect_Failure.String()
+		} else {
+			status.Message = "ldap connection check successful"
+			status.Result = auth.LdapServerStatus_Connect_Success.String()
+		}
+		obj.Status.LdapServers = append(obj.Status.LdapServers, status)
+	}
+	return ctx, obj, true, nil
+}
+
+// ldapBindCheck pre-call hook checks if bind on LDAP connection succeeds
+func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+	a.logger.DebugLog("msg", "APIGw ldapBindCheck hook called")
+	obj, ok := in.(*auth.AuthenticationPolicy)
+	if !ok {
+		return ctx, in, true, errors.New("invalid input type")
+	}
+	obj.Status.LdapServers = nil
+	config := obj.Spec.Authenticators.Ldap
+	for _, server := range config.Servers {
+		ok, err := a.ldapChecker.Bind(server.Url, server.TLSOptions, config.BindDN, config.BindPassword)
+		status := &auth.LdapServerStatus{
+			Server: server,
+		}
+		if err != nil || !ok {
+			a.logger.Errorf("bind failed for ldap [%s]: %v", server.Url, err)
+			status.Message = fmt.Sprintf("bind failed for ldap: %v", err)
+			status.Result = auth.LdapServerStatus_Bind_Failure.String()
+		} else {
+			status.Message = "ldap bind successful"
+			status.Result = auth.LdapServerStatus_Bind_Success.String()
+		}
+		obj.Status.LdapServers = append(obj.Status.LdapServers, status)
+	}
+	return ctx, obj, true, nil
+}
+
 func (a *authHooks) registerRemovePasswordHook(svc apigw.APIGatewayService) error {
 	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
 	for _, oper := range opers {
@@ -214,6 +270,14 @@ func (a *authHooks) registerAuthBootstrapHook(svc apigw.APIGatewayService) error
 		}
 		prof.AddPreAuthNHook(a.authBootstrap)
 	}
+	methods := []string{"LdapConnectionCheck", "LdapBindCheck"}
+	for _, method := range methods {
+		prof, err := svc.GetServiceProfile(method)
+		if err != nil {
+			return err
+		}
+		prof.AddPreAuthNHook(a.authBootstrap)
+	}
 	return nil
 }
 
@@ -264,6 +328,24 @@ func (a *authHooks) registerUserCreateCheckHook(svc apigw.APIGatewayService) err
 	return nil
 }
 
+func (a *authHooks) registerLdapConnectionCheckHook(svc apigw.APIGatewayService) error {
+	prof, err := svc.GetServiceProfile("LdapConnectionCheck")
+	if err != nil {
+		return err
+	}
+	prof.AddPreCallHook(a.ldapConnectionCheck)
+	return nil
+}
+
+func (a *authHooks) registerLdapBindCheckHook(svc apigw.APIGatewayService) error {
+	prof, err := svc.GetServiceProfile("LdapBindCheck")
+	if err != nil {
+		return err
+	}
+	prof.AddPreCallHook(a.ldapBindCheck)
+	return nil
+}
+
 func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
 	grpcaddr := globals.APIServer
@@ -272,6 +354,7 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 		authGetter:       manager.GetAuthGetter(globals.APIGw, grpcaddr, gw.GetResolver(), apigw.TokenExpInDays*24*60*60),
 		permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver()),
 		bootstrapper:     bootstrapper.GetBootstrapper(),
+		ldapChecker:      ldap.NewConnectionChecker(),
 		logger:           l,
 	}
 
@@ -304,7 +387,17 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 
 	// register hook for preventing user creation if local auth is disabled
-	return r.registerUserCreateCheckHook(svc)
+	if err := r.registerUserCreateCheckHook(svc); err != nil {
+		return err
+	}
+
+	// register pre-call hook for ldap connection check
+	if err := r.registerLdapConnectionCheckHook(svc); err != nil {
+		return err
+	}
+
+	// register pre-call hook for ldap bind check
+	return r.registerLdapBindCheckHook(svc)
 }
 
 func init() {

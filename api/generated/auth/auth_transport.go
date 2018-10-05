@@ -255,6 +255,40 @@ func DecodeGrpcRespLdapServer(ctx context.Context, response interface{}) (interf
 	return response, nil
 }
 
+func encodeHTTPLdapServerStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPLdapServerStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req LdapServerStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqLdapServerStatus encodes GRPC request
+func EncodeGrpcReqLdapServerStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LdapServerStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqLdapServerStatus decodes GRPC request
+func DecodeGrpcReqLdapServerStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*LdapServerStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespLdapServerStatus encodes GRC response
+func EncodeGrpcRespLdapServerStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespLdapServerStatus decodes GRPC response
+func DecodeGrpcRespLdapServerStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPLocal(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -422,6 +456,40 @@ func EncodeGrpcRespRadiusServer(ctx context.Context, response interface{}) (inte
 
 // DecodeGrpcRespRadiusServer decodes GRPC response
 func DecodeGrpcRespRadiusServer(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRadiusServerStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRadiusServerStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RadiusServerStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRadiusServerStatus encodes GRPC request
+func EncodeGrpcReqRadiusServerStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RadiusServerStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqRadiusServerStatus decodes GRPC request
+func DecodeGrpcReqRadiusServerStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RadiusServerStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespRadiusServerStatus encodes GRC response
+func EncodeGrpcRespRadiusServerStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRadiusServerStatus decodes GRPC response
+func DecodeGrpcRespRadiusServerStatus(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

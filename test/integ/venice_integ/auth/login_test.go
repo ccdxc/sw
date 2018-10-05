@@ -11,14 +11,14 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/log"
 
-	"github.com/pensando/sw/api/login"
 	. "github.com/pensando/sw/test/utils"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
-	"github.com/pensando/sw/venice/utils/authz"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -368,35 +368,35 @@ func TestUserStatus(t *testing.T) {
 }
 
 func TestLdapLogin(t *testing.T) {
-	t.Skip()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
 		Tenant:   testTenant,
 	}
+	config := getADConfig()
 	ldapConf := &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
 			{
-				Url: tinfo.ldapAddr,
+				Url: config.URL,
 				TLSOptions: &auth.TLSOptions{
 					StartTLS:                   true,
 					SkipServerCertVerification: false,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
+					ServerName:                 config.ServerName,
+					TrustedCerts:               config.TrustedCerts,
 				},
 			},
 		},
 
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
+		BaseDN:       config.BaseDN,
+		BindDN:       config.BindDN,
+		BindPassword: config.BindPassword,
 		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             UserAttribute,
-			UserObjectClass:  UserObjectClassAttribute,
-			Group:            GroupAttribute,
-			GroupObjectClass: GroupObjectClassAttribute,
-			Tenant:           TenantAttribute,
+			User:             config.UserAttribute,
+			UserObjectClass:  config.UserObjectClassAttribute,
+			Group:            config.GroupAttribute,
+			GroupObjectClass: config.GroupObjectClassAttribute,
+			Tenant:           config.TenantAttribute,
 		},
 	}
 	// create tenant and admin user
@@ -405,8 +405,8 @@ func TestLdapLogin(t *testing.T) {
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
 	ldapUserCred := &auth.PasswordCredential{
-		Username: ldapUser,
-		Password: ldapUserPassword,
+		Username: config.LdapUser,
+		Password: config.LdapUserPassword,
 	}
 
 	currtime := time.Now()
@@ -414,17 +414,17 @@ func TestLdapLogin(t *testing.T) {
 	if err != nil {
 		panic("error creating rest client")
 	}
-	MustCreateRoleBinding(tinfo.apicl, "LdapAdminRoleBinding", testTenant, globals.AdminRole, nil, []string{ldapUserGroupDN})
+	MustCreateRoleBinding(tinfo.apicl, "LdapAdminRoleBinding", testTenant, globals.AdminRole, nil, config.LdapUserGroupsDN)
 	defer MustDeleteRoleBinding(tinfo.apicl, "LdapAdminRoleBinding", testTenant)
 	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, ldapUserCred)
 	AssertOk(t, err, "unable to get logged in context")
 	// test GET user
 	var user *auth.User
 	AssertEventually(t, func() (bool, interface{}) {
-		user, err = restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: ldapUser, Tenant: testTenant})
+		user, err = restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: config.LdapUser, Tenant: testTenant})
 		return err == nil, nil
 	}, "unable to fetch user")
-	defer MustDeleteUser(tinfo.apicl, ldapUser, testTenant)
+	defer MustDeleteUser(tinfo.apicl, config.LdapUser, testTenant)
 	Assert(t, user.Spec.Type == auth.UserSpec_EXTERNAL.String(), "unexpected user type: %s", user.Spec.Type)
 	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
 	logintime, err := user.Status.LastSuccessfulLogin.Time()
@@ -436,35 +436,35 @@ func TestLdapLogin(t *testing.T) {
 }
 
 func TestUsernameConflict(t *testing.T) {
-	t.Skip()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
 		Tenant:   testTenant,
 	}
+	config := getADConfig()
 	ldapConf := &auth.Ldap{
 		Enabled: true,
 		Servers: []*auth.LdapServer{
 			{
-				Url: tinfo.ldapAddr,
+				Url: config.URL,
 				TLSOptions: &auth.TLSOptions{
 					StartTLS:                   true,
 					SkipServerCertVerification: false,
-					ServerName:                 ServerName,
-					TrustedCerts:               TrustedCerts,
+					ServerName:                 config.ServerName,
+					TrustedCerts:               config.TrustedCerts,
 				},
 			},
 		},
 
-		BaseDN:       BaseDN,
-		BindDN:       BindDN,
-		BindPassword: BindPassword,
+		BaseDN:       config.BaseDN,
+		BindDN:       config.BindDN,
+		BindPassword: config.BindPassword,
 		AttributeMapping: &auth.LdapAttributeMapping{
-			User:             UserAttribute,
-			UserObjectClass:  UserObjectClassAttribute,
-			Group:            GroupAttribute,
-			GroupObjectClass: GroupObjectClassAttribute,
-			Tenant:           TenantAttribute,
+			User:             config.UserAttribute,
+			UserObjectClass:  config.UserObjectClassAttribute,
+			Group:            config.GroupAttribute,
+			GroupObjectClass: config.GroupObjectClassAttribute,
+			Tenant:           config.TenantAttribute,
 		},
 	}
 	// create tenant and admin user
@@ -473,11 +473,11 @@ func TestUsernameConflict(t *testing.T) {
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
 	ldapUserCred := &auth.PasswordCredential{
-		Username: ldapUser,
-		Password: ldapUserPassword,
+		Username: config.LdapUser,
+		Password: config.LdapUserPassword,
 	}
 	// create local user with same name as ldap user
-	MustCreateTestUser(tinfo.apicl, ldapUser, testPassword, testTenant)
+	MustCreateTestUser(tinfo.apicl, config.LdapUser, testPassword, testTenant)
 	var resp *http.Response
 	var statusCode int
 	AssertEventually(t, func() (bool, interface{}) {
@@ -488,7 +488,7 @@ func TestUsernameConflict(t *testing.T) {
 		}
 		return err == nil && statusCode == http.StatusConflict, err
 	}, fmt.Sprintf("for username conflict expected status code [%d], got [%d]", http.StatusConflict, statusCode))
-	MustDeleteUser(tinfo.apicl, ldapUser, testTenant)
+	MustDeleteUser(tinfo.apicl, config.LdapUser, testTenant)
 	// ldap login should succeed after local user is deleted
 	AssertEventually(t, func() (bool, interface{}) {
 		var err error
@@ -498,10 +498,108 @@ func TestUsernameConflict(t *testing.T) {
 		}
 		return err == nil && statusCode == http.StatusOK, err
 	}, fmt.Sprintf("login request after deletion of local user with same name should succeed, Status code: %d", statusCode))
-	defer MustDeleteUser(tinfo.apicl, ldapUser, testTenant)
+	defer MustDeleteUser(tinfo.apicl, config.LdapUser, testTenant)
 	var user auth.User
 	AssertOk(t, json.NewDecoder(resp.Body).Decode(&user), "unable to decode user from http response")
 	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_LDAP.String(),
 		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_LDAP.String(), user.Status.Authenticators[0]))
 	Assert(t, user.Spec.Type == auth.UserSpec_EXTERNAL.String(), fmt.Sprintf("expected external user type, got [%s]", user.Spec.Type))
+}
+
+func TestLdapChecks(t *testing.T) {
+	config := getADConfig()
+	ldapConf := &auth.Ldap{
+		Enabled: true,
+		Servers: []*auth.LdapServer{
+			{
+				Url: config.URL,
+				TLSOptions: &auth.TLSOptions{
+					StartTLS:                   true,
+					SkipServerCertVerification: false,
+					ServerName:                 config.ServerName,
+					TrustedCerts:               config.TrustedCerts,
+				},
+			},
+		},
+
+		BaseDN:       config.BaseDN,
+		BindDN:       config.BindDN,
+		BindPassword: config.BindPassword,
+		AttributeMapping: &auth.LdapAttributeMapping{
+			User:             config.UserAttribute,
+			UserObjectClass:  config.UserObjectClassAttribute,
+			Group:            config.GroupAttribute,
+			GroupObjectClass: config.GroupObjectClassAttribute,
+			Tenant:           config.TenantAttribute,
+		},
+	}
+	MustCreateCluster(tinfo.apicl)
+	defer MustDeleteCluster(tinfo.apicl)
+	// create authentication policy
+	MustCreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, ldapConf)
+	defer MustDeleteAuthenticationPolicy(tinfo.apicl)
+	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
+	if err != nil {
+		panic("error creating rest client")
+	}
+	var policy *auth.AuthenticationPolicy
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = restcl.AuthV1().AuthenticationPolicy().Get(context.TODO(), &api.ObjectMeta{})
+		if err != nil {
+			log.Errorf("unable to fetch auth policy, Err: %v", err)
+		}
+		return err == nil, nil
+	}, "unable to fetch auth policy")
+	// connection check
+	var retpolicy *auth.AuthenticationPolicy
+	AssertEventually(t, func() (bool, interface{}) {
+		retpolicy, err = restcl.AuthV1().AuthenticationPolicy().LdapConnectionCheck(context.TODO(), policy)
+		if err != nil {
+			log.Errorf("unable to check ldap connection, Err: %v", err)
+		}
+		return err == nil, nil
+	}, "unable to check ldap connection")
+	Assert(t, len(retpolicy.Status.LdapServers) == 1, fmt.Sprintf("unexpected number of ldap servers status: %d", len(retpolicy.Status.LdapServers)))
+	Assert(t, retpolicy.Status.LdapServers[0].Result == auth.LdapServerStatus_Connect_Success.String(), "expected ldap connection check to succeed")
+	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Servers[0].Url,
+		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
+	// bind check
+	AssertEventually(t, func() (bool, interface{}) {
+		retpolicy, err = restcl.AuthV1().AuthenticationPolicy().LdapBindCheck(context.TODO(), policy)
+		if err != nil {
+			log.Errorf("unable to check bind on ldap connection, Err: %v", err)
+		}
+		return err == nil, nil
+	}, "unable to check bind on ldap connection")
+	Assert(t, len(retpolicy.Status.LdapServers) == 1, fmt.Sprintf("unexpected number of ldap servers status: %d", len(retpolicy.Status.LdapServers)))
+	Assert(t, retpolicy.Status.LdapServers[0].Result == auth.LdapServerStatus_Bind_Success.String(), "expected ldap bind check to succeed")
+	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Servers[0].Url,
+		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
+	// check incorrect bind password
+	policy.Spec.Authenticators.Ldap.BindPassword = "incorrectpasswd"
+	AssertEventually(t, func() (bool, interface{}) {
+		retpolicy, err = restcl.AuthV1().AuthenticationPolicy().LdapBindCheck(context.TODO(), policy)
+		if err != nil {
+			log.Errorf("unable to check bind on ldap connection, Err: %v", err)
+		}
+		return err == nil, nil
+	}, "unable to check bind on ldap connection")
+	Assert(t, len(retpolicy.Status.LdapServers) == 1, fmt.Sprintf("unexpected number of ldap servers status: %d", len(retpolicy.Status.LdapServers)))
+	Assert(t, retpolicy.Status.LdapServers[0].Result == auth.LdapServerStatus_Bind_Failure.String(), "expected ldap bind check to fail")
+	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Servers[0].Url,
+		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
+	policy.Spec.Authenticators.Ldap.BindPassword = config.BindPassword
+	// check connection failure
+	policy.Spec.Authenticators.Ldap.Servers[0].Url = "unknown:333"
+	AssertEventually(t, func() (bool, interface{}) {
+		retpolicy, err = restcl.AuthV1().AuthenticationPolicy().LdapConnectionCheck(context.TODO(), policy)
+		if err != nil {
+			log.Errorf("unable to check bind on ldap connection, Err: %v", err)
+		}
+		return err == nil, nil
+	}, "unable to check bind on ldap connection")
+	Assert(t, len(retpolicy.Status.LdapServers) == 1, fmt.Sprintf("unexpected number of ldap servers status: %d", len(retpolicy.Status.LdapServers)))
+	Assert(t, retpolicy.Status.LdapServers[0].Result == auth.LdapServerStatus_Connect_Failure.String(), "expected ldap connection check to fail")
+	Assert(t, retpolicy.Status.LdapServers[0].Server.Url == policy.Spec.Authenticators.Ldap.Servers[0].Url,
+		fmt.Sprintf("expected ldap url [%s], got [%s] in ldap server status", policy.Spec.Authenticators.Ldap.Servers[0].Url, retpolicy.Status.LdapServers[0].Server.Url))
 }

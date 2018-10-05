@@ -309,6 +309,34 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lAutoUpdateUserEndpoint = trace.ClientEndPoint("AuthV1:AutoUpdateUser")(lAutoUpdateUserEndpoint)
 	}
+	var lLdapBindCheckEndpoint endpoint.Endpoint
+	{
+		lLdapBindCheckEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"LdapBindCheck",
+			auth.EncodeGrpcReqAuthenticationPolicy,
+			auth.DecodeGrpcRespAuthenticationPolicy,
+			&auth.AuthenticationPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lLdapBindCheckEndpoint = trace.ClientEndPoint("AuthV1:LdapBindCheck")(lLdapBindCheckEndpoint)
+	}
+	var lLdapConnectionCheckEndpoint endpoint.Endpoint
+	{
+		lLdapConnectionCheckEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"LdapConnectionCheck",
+			auth.EncodeGrpcReqAuthenticationPolicy,
+			auth.DecodeGrpcRespAuthenticationPolicy,
+			&auth.AuthenticationPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lLdapConnectionCheckEndpoint = trace.ClientEndPoint("AuthV1:LdapConnectionCheck")(lLdapConnectionCheckEndpoint)
+	}
 	return auth.EndpointsAuthV1Client{
 		Client: auth.NewAuthV1Client(conn),
 
@@ -332,6 +360,8 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		AutoUpdateRoleEndpoint:                 lAutoUpdateRoleEndpoint,
 		AutoUpdateRoleBindingEndpoint:          lAutoUpdateRoleBindingEndpoint,
 		AutoUpdateUserEndpoint:                 lAutoUpdateUserEndpoint,
+		LdapBindCheckEndpoint:                  lLdapBindCheckEndpoint,
+		LdapConnectionCheckEndpoint:            lLdapConnectionCheckEndpoint,
 	}
 }
 
@@ -617,6 +647,24 @@ func (a *grpcObjAuthV1AuthenticationPolicy) Watch(ctx context.Context, options *
 	return lw, nil
 }
 
+func (a *grpcObjAuthV1AuthenticationPolicy) LdapConnectionCheck(ctx context.Context, in *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{LdapConnectionCheck AuthenticationPolicy AuthenticationPolicy}", "oper", "LdapConnectionCheck")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.LdapConnectionCheck(nctx, in)
+}
+
+func (a *grpcObjAuthV1AuthenticationPolicy) LdapBindCheck(ctx context.Context, in *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{LdapBindCheck AuthenticationPolicy AuthenticationPolicy}", "oper", "LdapBindCheck")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.LdapBindCheck(nctx, in)
+}
+
 func (a *grpcObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
@@ -695,6 +743,19 @@ func (a *restObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) 
 	default:
 		return false
 	}
+}
+
+func (a *restObjAuthV1AuthenticationPolicy) LdapConnectionCheck(ctx context.Context, in *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.LdapConnectionCheckAuthenticationPolicy(ctx, in)
+}
+func (a *restObjAuthV1AuthenticationPolicy) LdapBindCheck(ctx context.Context, in *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.LdapBindCheckAuthenticationPolicy(ctx, in)
 }
 
 type grpcObjAuthV1Role struct {

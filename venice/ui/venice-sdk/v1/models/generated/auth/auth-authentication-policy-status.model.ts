@@ -7,13 +7,25 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, enumValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { AuthLdapServerStatus, IAuthLdapServerStatus } from './auth-ldap-server-status.model';
+import { AuthRadiusServerStatus, IAuthRadiusServerStatus } from './auth-radius-server-status.model';
 
 export interface IAuthAuthenticationPolicyStatus {
+    'ldap-servers'?: Array<IAuthLdapServerStatus>;
+    'radius-servers'?: Array<IAuthRadiusServerStatus>;
 }
 
 
 export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAuthenticationPolicyStatus {
+    'ldap-servers': Array<AuthLdapServerStatus> = null;
+    'radius-servers': Array<AuthRadiusServerStatus> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
+        'ldap-servers': {
+            type: 'object'
+        },
+        'radius-servers': {
+            type: 'object'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -35,6 +47,8 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
     */
     constructor(values?: any) {
         super();
+        this['ldap-servers'] = new Array<AuthLdapServerStatus>();
+        this['radius-servers'] = new Array<AuthRadiusServerStatus>();
         this.setValues(values);
     }
 
@@ -43,6 +57,12 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any): void {
+        if (values) {
+            this.fillModelArray<AuthLdapServerStatus>(this, 'ldap-servers', values['ldap-servers'], AuthLdapServerStatus);
+        }
+        if (values) {
+            this.fillModelArray<AuthRadiusServerStatus>(this, 'radius-servers', values['radius-servers'], AuthRadiusServerStatus);
+        }
     }
 
 
@@ -51,13 +71,21 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'ldap-servers': new FormArray([]),
+                'radius-servers': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<AuthLdapServerStatus>('ldap-servers', this['ldap-servers'], AuthLdapServerStatus);
+            // generate FormArray control elements
+            this.fillFormArray<AuthRadiusServerStatus>('radius-servers', this['radius-servers'], AuthRadiusServerStatus);
         }
         return this._formGroup;
     }
 
     setFormGroupValues() {
         if (this._formGroup) {
+            this.fillModelArray<AuthLdapServerStatus>(this, 'ldap-servers', this['ldap-servers'], AuthLdapServerStatus);
+            this.fillModelArray<AuthRadiusServerStatus>(this, 'radius-servers', this['radius-servers'], AuthRadiusServerStatus);
         }
     }
 }

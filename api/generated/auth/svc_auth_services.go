@@ -39,6 +39,8 @@ type ServiceAuthV1Client interface {
 	AutoUpdateRole(ctx context.Context, t *Role) (*Role, error)
 	AutoUpdateRoleBinding(ctx context.Context, t *RoleBinding) (*RoleBinding, error)
 	AutoUpdateUser(ctx context.Context, t *User) (*User, error)
+	LdapBindCheck(ctx context.Context, t *AuthenticationPolicy) (*AuthenticationPolicy, error)
+	LdapConnectionCheck(ctx context.Context, t *AuthenticationPolicy) (*AuthenticationPolicy, error)
 
 	AutoWatchUser(ctx context.Context, in *api.ListWatchOptions) (AuthV1_AutoWatchUserClient, error)
 	AutoWatchAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions) (AuthV1_AutoWatchAuthenticationPolicyClient, error)
@@ -70,6 +72,8 @@ type ServiceAuthV1Server interface {
 	AutoUpdateRole(ctx context.Context, t Role) (Role, error)
 	AutoUpdateRoleBinding(ctx context.Context, t RoleBinding) (RoleBinding, error)
 	AutoUpdateUser(ctx context.Context, t User) (User, error)
+	LdapBindCheck(ctx context.Context, t AuthenticationPolicy) (AuthenticationPolicy, error)
+	LdapConnectionCheck(ctx context.Context, t AuthenticationPolicy) (AuthenticationPolicy, error)
 
 	AutoWatchUser(in *api.ListWatchOptions, stream AuthV1_AutoWatchUserServer) error
 	AutoWatchAuthenticationPolicy(in *api.ListWatchOptions, stream AuthV1_AutoWatchAuthenticationPolicyServer) error

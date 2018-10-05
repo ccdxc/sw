@@ -35,6 +35,8 @@ type AuthV1AuthenticationPolicyInterface interface {
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*AuthenticationPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiserver.APIOperType) bool
+	LdapConnectionCheck(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error)
+	LdapBindCheck(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error)
 }
 
 // AuthV1RoleInterface exposes the CRUD methods for Role

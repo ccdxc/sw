@@ -14,11 +14,13 @@ The following Messages are defined.
   Ldap
   LdapAttributeMapping
   LdapServer
+  LdapServerStatus
   Local
   PasswordCredential
   Permission
   Radius
   RadiusServer
+  RadiusServerStatus
   Role
   RoleBinding
   RoleBindingSpec

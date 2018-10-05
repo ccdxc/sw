@@ -58,6 +58,8 @@ type EndpointsAuthV1Client struct {
 	AutoUpdateRoleEndpoint                 endpoint.Endpoint
 	AutoUpdateRoleBindingEndpoint          endpoint.Endpoint
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
+	LdapBindCheckEndpoint                  endpoint.Endpoint
+	LdapConnectionCheckEndpoint            endpoint.Endpoint
 }
 
 // EndpointsAuthV1RestClient is the REST client
@@ -92,6 +94,8 @@ type EndpointsAuthV1RestClient struct {
 	AutoWatchRoleBindingEndpoint           endpoint.Endpoint
 	AutoWatchSvcAuthV1Endpoint             endpoint.Endpoint
 	AutoWatchUserEndpoint                  endpoint.Endpoint
+	LdapBindCheckEndpoint                  endpoint.Endpoint
+	LdapConnectionCheckEndpoint            endpoint.Endpoint
 }
 
 // MiddlewareAuthV1Server adds middle ware to the server
@@ -121,6 +125,8 @@ type EndpointsAuthV1Server struct {
 	AutoUpdateRoleEndpoint                 endpoint.Endpoint
 	AutoUpdateRoleBindingEndpoint          endpoint.Endpoint
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
+	LdapBindCheckEndpoint                  endpoint.Endpoint
+	LdapConnectionCheckEndpoint            endpoint.Endpoint
 
 	watchHandlerUser                 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerAuthenticationPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
@@ -405,6 +411,34 @@ func (e EndpointsAuthV1Client) AutoUpdateUser(ctx context.Context, in *User) (*U
 
 type respAuthV1AutoUpdateUser struct {
 	V   User
+	Err error
+}
+
+// LdapBindCheck is endpoint for LdapBindCheck
+func (e EndpointsAuthV1Client) LdapBindCheck(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
+	resp, err := e.LdapBindCheckEndpoint(ctx, in)
+	if err != nil {
+		return &AuthenticationPolicy{}, err
+	}
+	return resp.(*AuthenticationPolicy), nil
+}
+
+type respAuthV1LdapBindCheck struct {
+	V   AuthenticationPolicy
+	Err error
+}
+
+// LdapConnectionCheck is endpoint for LdapConnectionCheck
+func (e EndpointsAuthV1Client) LdapConnectionCheck(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
+	resp, err := e.LdapConnectionCheckEndpoint(ctx, in)
+	if err != nil {
+		return &AuthenticationPolicy{}, err
+	}
+	return resp.(*AuthenticationPolicy), nil
+}
+
+type respAuthV1LdapConnectionCheck struct {
+	V   AuthenticationPolicy
 	Err error
 }
 
@@ -872,6 +906,50 @@ func MakeAuthV1AutoUpdateUserEndpoint(s ServiceAuthV1Server, logger log.Logger) 
 	return trace.ServerEndpoint("AuthV1:AutoUpdateUser")(f)
 }
 
+// LdapBindCheck implementation on server Endpoint
+func (e EndpointsAuthV1Server) LdapBindCheck(ctx context.Context, in AuthenticationPolicy) (AuthenticationPolicy, error) {
+	resp, err := e.LdapBindCheckEndpoint(ctx, in)
+	if err != nil {
+		return AuthenticationPolicy{}, err
+	}
+	return *resp.(*AuthenticationPolicy), nil
+}
+
+// MakeAuthV1LdapBindCheckEndpoint creates  LdapBindCheck endpoints for the service
+func MakeAuthV1LdapBindCheckEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*AuthenticationPolicy)
+		v, err := s.LdapBindCheck(ctx, *req)
+		return respAuthV1LdapBindCheck{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:LdapBindCheck")(f)
+}
+
+// LdapConnectionCheck implementation on server Endpoint
+func (e EndpointsAuthV1Server) LdapConnectionCheck(ctx context.Context, in AuthenticationPolicy) (AuthenticationPolicy, error) {
+	resp, err := e.LdapConnectionCheckEndpoint(ctx, in)
+	if err != nil {
+		return AuthenticationPolicy{}, err
+	}
+	return *resp.(*AuthenticationPolicy), nil
+}
+
+// MakeAuthV1LdapConnectionCheckEndpoint creates  LdapConnectionCheck endpoints for the service
+func MakeAuthV1LdapConnectionCheckEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*AuthenticationPolicy)
+		v, err := s.LdapConnectionCheck(ctx, *req)
+		return respAuthV1LdapConnectionCheck{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:LdapConnectionCheck")(f)
+}
+
 func (e EndpointsAuthV1Server) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) error {
 	return e.svcWatchHandlerAuthV1(in, stream)
 }
@@ -961,6 +1039,8 @@ func MakeAuthV1ServerEndpoints(s ServiceAuthV1Server, logger log.Logger) Endpoin
 		AutoUpdateRoleEndpoint:                 MakeAuthV1AutoUpdateRoleEndpoint(s, logger),
 		AutoUpdateRoleBindingEndpoint:          MakeAuthV1AutoUpdateRoleBindingEndpoint(s, logger),
 		AutoUpdateUserEndpoint:                 MakeAuthV1AutoUpdateUserEndpoint(s, logger),
+		LdapBindCheckEndpoint:                  MakeAuthV1LdapBindCheckEndpoint(s, logger),
+		LdapConnectionCheckEndpoint:            MakeAuthV1LdapConnectionCheckEndpoint(s, logger),
 
 		watchHandlerUser:                 MakeAutoWatchUserEndpoint(s, logger),
 		watchHandlerAuthenticationPolicy: MakeAutoWatchAuthenticationPolicyEndpoint(s, logger),
@@ -1257,6 +1337,32 @@ func (m loggingAuthV1MiddlewareClient) AutoUpdateUser(ctx context.Context, in *U
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateUser", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateUser(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) LdapBindCheck(ctx context.Context, in *AuthenticationPolicy) (resp *AuthenticationPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "LdapBindCheck", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.LdapBindCheck(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) LdapConnectionCheck(ctx context.Context, in *AuthenticationPolicy) (resp *AuthenticationPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "LdapConnectionCheck", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.LdapConnectionCheck(ctx, in)
 	return
 }
 
@@ -1587,6 +1693,32 @@ func (m loggingAuthV1MiddlewareServer) AutoUpdateUser(ctx context.Context, in Us
 	resp, err = m.next.AutoUpdateUser(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) LdapBindCheck(ctx context.Context, in AuthenticationPolicy) (resp AuthenticationPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "LdapBindCheck", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.LdapBindCheck(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) LdapConnectionCheck(ctx context.Context, in AuthenticationPolicy) (resp AuthenticationPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "LdapConnectionCheck", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.LdapConnectionCheck(ctx, in)
+	return
+}
 
 func (m loggingAuthV1MiddlewareServer) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) (err error) {
 	defer func(begin time.Time) {
@@ -1763,6 +1895,16 @@ func makeURIAuthV1AutoUpdateRoleBindingUpdateOper(in *RoleBinding) string {
 //
 func makeURIAuthV1AutoUpdateUserUpdateOper(in *User) string {
 	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name)
+}
+
+//
+func makeURIAuthV1LdapBindCheckCreateOper(in *AuthenticationPolicy) string {
+	return fmt.Sprint("/configs/auth/v1", "/authn-policy/LdapBindCheck")
+}
+
+//
+func makeURIAuthV1LdapConnectionCheckCreateOper(in *AuthenticationPolicy) string {
+	return fmt.Sprint("/configs/auth/v1", "/authn-policy/LdapConnectionCheck")
 }
 
 // AutoAddUser CRUD method for User
@@ -1953,6 +2095,46 @@ func (r *EndpointsAuthV1RestClient) AutoListAuthenticationPolicy(ctx context.Con
 func (r *EndpointsAuthV1RestClient) AutoWatchAuthenticationPolicy(ctx context.Context, stream AuthV1_AutoWatchAuthenticationPolicyClient) (kvstore.Watcher, error) {
 	// XXX-TODO(sanjayt): Add a Rest client handler with chunker
 	return nil, nil
+}
+
+func (r *EndpointsAuthV1RestClient) LdapConnectionCheckAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIAuthV1LdapConnectionCheckCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1LdapConnectionCheck(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*AuthenticationPolicy), err
+}
+
+func (r *EndpointsAuthV1RestClient) LdapBindCheckAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIAuthV1LdapBindCheckCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespAuthV1LdapBindCheck(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*AuthenticationPolicy), err
 }
 
 // AutoAddRole CRUD method for Role

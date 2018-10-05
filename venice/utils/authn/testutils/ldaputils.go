@@ -58,8 +58,52 @@ MFB3stnk7Lfr/w/14951n5lek97eDTodYfiF4UxeqL386krQ6eduscPIrin1114r
 	TenantAttribute = "l"
 )
 
-// StartLdapServer starts OpenLDAP container with the specified name and returns host:port string
-func StartLdapServer(name string) (string, error) {
+// LdapConfig to define config for AD or OpenLdap
+type LdapConfig struct {
+	// ServerName is name in TLS certificate of LDAP server
+	ServerName string
+	// TrustedCerts is the TLS certificate of LDAP server
+	TrustedCerts string
+	// URL is Ldap URL to connect to
+	URL string
+	// BaseDN is the subtree in LDAP hierarchy to search for user and groups
+	BaseDN string
+	// BindDN is the admin user DN
+	BindDN string
+	// BindPassword is the admin user password
+	BindPassword string
+	// UserAttribute is an attribute type of user entry where username is stored
+	UserAttribute string
+	// UserObjectClassAttribute is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search
+	UserObjectClassAttribute string
+	// GroupAttribute is an attribute type of user entry where group DNs are stored
+	GroupAttribute string
+	// GroupObjectClassAttribute is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search
+	GroupObjectClassAttribute string
+	// TenantAttribute is an attribute type of user entry where tenant information is stored
+	TenantAttribute string
+	// LdapServer is name of the LDAP server process
+	LdapServer string
+	// LdapUser is ldap username
+	LdapUser string
+	// LdapUserGroupsDN are groups DN to which the user belongs to
+	LdapUserGroupsDN []string
+	// LdapUserPassword is ldap user password
+	LdapUserPassword string
+	// ReferralServer is name of the LDAP referral server process
+	ReferralServer string
+	// ReferralUser is ldap referral username
+	ReferralUser string
+	// ReferralUserDN is ldap referral user DN
+	ReferralUserDN string
+	// ReferralUserGroupDN is group DN to which ldap referral user belongs to
+	ReferralUserGroupDN string
+	// ReferralUserPassword is ldap referral user password
+	ReferralUserPassword string
+}
+
+// StartOpenLdapServer starts OpenLDAP container with the specified name and returns host:port string
+func StartOpenLdapServer(name string) (string, error) {
 	log.Infof("starting openldap container [%s]", name)
 	for port := 49152; port < 65535; port++ {
 		cmd := []string{
@@ -77,7 +121,7 @@ func StartLdapServer(name string) (string, error) {
 		// stop and retry if a container with the same name exists already
 		if strings.Contains(string(out), "Conflict") {
 			log.Errorf("conflicting names, retrying")
-			StopLdapServer(name)
+			StopOpenLdapServer(name)
 			continue
 		}
 
@@ -101,7 +145,7 @@ func StartLdapServer(name string) (string, error) {
 			return true, nil
 		}) {
 			log.Errorf("failed to get connection to openldap [%s], err: %v", ldapAddr, err)
-			StopLdapServer(ldapAddr)
+			StopOpenLdapServer(ldapAddr)
 			return "", err
 		}
 		return ldapAddr, nil
@@ -110,8 +154,8 @@ func StartLdapServer(name string) (string, error) {
 	return "", fmt.Errorf("exhausted all the ports from 49512-65534, failed to start openldap server")
 }
 
-// StopLdapServer stops OpenLDAP container with the specified name
-func StopLdapServer(name string) error {
+// StopOpenLdapServer stops OpenLDAP container with the specified name
+func StopOpenLdapServer(name string) error {
 	if len(strings.TrimSpace(name)) == 0 {
 		return nil
 	}

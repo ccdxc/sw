@@ -45,6 +45,8 @@ type grpcServerAuthV1 struct {
 	AutoUpdateRoleHdlr                 grpctransport.Handler
 	AutoUpdateRoleBindingHdlr          grpctransport.Handler
 	AutoUpdateUserHdlr                 grpctransport.Handler
+	LdapBindCheckHdlr                  grpctransport.Handler
+	LdapConnectionCheckHdlr            grpctransport.Handler
 }
 
 // MakeGRPCServerAuthV1 creates a GRPC server for AuthV1 service
@@ -193,6 +195,20 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			DecodeGrpcReqUser,
 			EncodeGrpcRespUser,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateUser", logger)))...,
+		),
+
+		LdapBindCheckHdlr: grpctransport.NewServer(
+			endpoints.LdapBindCheckEndpoint,
+			DecodeGrpcReqAuthenticationPolicy,
+			EncodeGrpcRespAuthenticationPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("LdapBindCheck", logger)))...,
+		),
+
+		LdapConnectionCheckHdlr: grpctransport.NewServer(
+			endpoints.LdapConnectionCheckEndpoint,
+			DecodeGrpcReqAuthenticationPolicy,
+			EncodeGrpcRespAuthenticationPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("LdapConnectionCheck", logger)))...,
 		),
 	}
 }
@@ -553,6 +569,42 @@ func decodeHTTPrespAuthV1AutoUpdateUser(_ context.Context, r *http.Response) (in
 		return nil, errorDecoder(r)
 	}
 	var resp User
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) LdapBindCheck(ctx oldcontext.Context, req *AuthenticationPolicy) (*AuthenticationPolicy, error) {
+	_, resp, err := s.LdapBindCheckHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1LdapBindCheck).V
+	return &r, resp.(respAuthV1LdapBindCheck).Err
+}
+
+func decodeHTTPrespAuthV1LdapBindCheck(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AuthenticationPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) LdapConnectionCheck(ctx oldcontext.Context, req *AuthenticationPolicy) (*AuthenticationPolicy, error) {
+	_, resp, err := s.LdapConnectionCheckHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1LdapConnectionCheck).V
+	return &r, resp.(respAuthV1LdapConnectionCheck).Err
+}
+
+func decodeHTTPrespAuthV1LdapConnectionCheck(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AuthenticationPolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }

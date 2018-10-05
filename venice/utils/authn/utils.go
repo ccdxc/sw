@@ -5,11 +5,15 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/venice/globals"
 )
 
 // CreateExternalUser creates in memory external user object
 func CreateExternalUser(username, tenant, fullname, email string, groups []string, authenticator auth.Authenticators_AuthenticatorType) (*auth.User, bool, error) {
-
+	// assigning default tenant if external store doesn't return tenant information
+	if tenant == "" {
+		tenant = globals.DefaultTenant
+	}
 	// Create external user
 	objMeta := &api.ObjectMeta{
 		Name:   username,

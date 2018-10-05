@@ -12,6 +12,13 @@ export enum AuthAuthenticators_authenticator_order {
     'RADIUS' = "RADIUS",
 }
 
+export enum AuthLdapServerStatus_result {
+    'Connect_Success' = "Connect_Success",
+    'Connect_Failure' = "Connect_Failure",
+    'Bind_Success' = "Bind_Success",
+    'Bind_Failure' = "Bind_Failure",
+}
+
 export enum AuthPermission_resource_kind {
     'AllResourceKinds' = "AllResourceKinds",
     'APIEndpoint' = "APIEndpoint",
@@ -61,6 +68,11 @@ export enum AuthRadiusServer_auth_method {
     'PAP' = "PAP",
     'PEAP_MSCHAPv2' = "PEAP_MSCHAPv2",
     'EAP_TTLS_PAP' = "EAP_TTLS_PAP",
+}
+
+export enum AuthRadiusServerStatus_result {
+    'Connect_Success' = "Connect_Success",
+    'Connect_Failure' = "Connect_Failure",
 }
 
 export enum AuthUserSpec_type {
@@ -165,9 +177,11 @@ export class AllEnums {
     }
 
     AuthAuthenticators_authenticator_order = AuthAuthenticators_authenticator_order;
+    AuthLdapServerStatus_result = AuthLdapServerStatus_result;
     AuthPermission_resource_kind = AuthPermission_resource_kind;
     AuthPermission_actions = AuthPermission_actions;
     AuthRadiusServer_auth_method = AuthRadiusServer_auth_method;
+    AuthRadiusServerStatus_result = AuthRadiusServerStatus_result;
     AuthUserSpec_type = AuthUserSpec_type;
     AuthUserStatus_authenticators = AuthUserStatus_authenticators;
 

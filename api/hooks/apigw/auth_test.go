@@ -14,13 +14,13 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apigw/pkg/mocks"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/utils/authz"
-	"github.com/pensando/sw/venice/utils/log"
-
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/manager"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
+	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -219,13 +219,24 @@ func TestAuthnRegistration(t *testing.T) {
 	// test authn hooks
 	ids := []serviceID{
 		{"AuthenticationPolicy", apiserver.CreateOper},
+		{"AuthenticationPolicy", apiserver.UpdateOper},
+		{"AuthenticationPolicy", apiserver.GetOper},
 		{"User", apiserver.CreateOper},
+		{"User", apiserver.GetOper},
 		{"RoleBinding", apiserver.CreateOper},
+		{"RoleBinding", apiserver.UpdateOper},
+		{"RoleBinding", apiserver.GetOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
 		AssertOk(t, err, "error getting service profile for [%s] [%s]", id.kind, id.action)
 		Assert(t, len(prof.PreAuthNHooks()) == 1, fmt.Sprintf("unexpected number of pre authn hooks [%d] for [%s] [%s] profile", len(prof.PreAuthNHooks()), id.kind, id.action))
+	}
+	methods := []string{"LdapConnectionCheck", "LdapBindCheck"}
+	for _, method := range methods {
+		prof, err := svc.GetServiceProfile(method)
+		AssertOk(t, err, "error getting service profile for method [%s]", method)
+		Assert(t, len(prof.PreAuthNHooks()) == 1, fmt.Sprintf("unexpected number of pre authn hooks [%d] for [%s] profile", len(prof.PreAuthNHooks()), method))
 	}
 	// test error
 	svc = mocks.NewFakeAPIGwService(l, true)
@@ -720,4 +731,186 @@ func TestAuthBootstrap(t *testing.T) {
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
 	}
 
+}
+
+func TestLdapConnectionCheck(t *testing.T) {
+	authpolicy := &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "AuthenticationPolicy",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Ldap: &auth.Ldap{
+					Enabled: true,
+					Servers: []*auth.LdapServer{
+						{
+							Url: "localhost:389",
+							TLSOptions: &auth.TLSOptions{
+								StartTLS:                   true,
+								SkipServerCertVerification: false,
+								ServerName:                 "testserver",
+								TrustedCerts:               "certs",
+							},
+						},
+					},
+
+					BaseDN:       "DC=io,DC=pensando",
+					BindDN:       "DN=admin",
+					BindPassword: "password",
+					AttributeMapping: &auth.LdapAttributeMapping{
+						User:             "samAccount",
+						UserObjectClass:  "user",
+						Group:            "group",
+						GroupObjectClass: "ou",
+					},
+				},
+				Local: &auth.Local{
+					Enabled: true,
+				},
+				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+			},
+		},
+	}
+	tests := []struct {
+		name        string
+		in          interface{}
+		connChecker ldap.ConnectionChecker
+		status      *auth.LdapServerStatus
+		err         error
+	}{
+		{
+			name:        "invalid object",
+			in:          &struct{ name string }{name: "invalid object type"},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status:      nil,
+			err:         errors.New("invalid input type"),
+		},
+		{
+			name:        "successful ldap connection",
+			in:          authpolicy,
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Connect_Success.String(),
+			},
+			err: nil,
+		},
+		{
+			name:        "failed ldap connection",
+			in:          authpolicy,
+			connChecker: ldap.NewMockConnectionChecker(ldap.ConnectionError),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Connect_Failure.String(),
+			},
+			err: nil,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+	for _, test := range tests {
+		r.ldapChecker = test.connChecker
+		_, out, skipCall, err := r.ldapConnectionCheck(context.TODO(), test.in)
+		Assert(t, skipCall, fmt.Sprintf("[%s] test failed, expected skipCall to be true", test.name))
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
+		if err == nil {
+			policy, ok := out.(*auth.AuthenticationPolicy)
+			Assert(t, ok, fmt.Sprintf("[%s] test failed, expected AuthenticationPolicy object", test.name))
+			Assert(t, len(policy.Status.LdapServers) == 1, fmt.Sprintf("[%s] test failed, unexpected number of ldap servers", test.name))
+			Assert(t, policy.Status.LdapServers[0].Result == test.status.Result,
+				fmt.Sprintf("[%s] test failed, expected result [%s], got [%s]", test.name, test.status.Result, policy.Status.LdapServers[0].Result))
+		}
+	}
+}
+
+func TestLdapBindCheck(t *testing.T) {
+	authpolicy := &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "AuthenticationPolicy",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Ldap: &auth.Ldap{
+					Enabled: true,
+					Servers: []*auth.LdapServer{
+						{
+							Url: "localhost:389",
+							TLSOptions: &auth.TLSOptions{
+								StartTLS:                   true,
+								SkipServerCertVerification: false,
+								ServerName:                 "testserver",
+								TrustedCerts:               "certs",
+							},
+						},
+					},
+
+					BaseDN:       "DC=io,DC=pensando",
+					BindDN:       "DN=admin",
+					BindPassword: "password",
+					AttributeMapping: &auth.LdapAttributeMapping{
+						User:             "samAccount",
+						UserObjectClass:  "user",
+						Group:            "group",
+						GroupObjectClass: "ou",
+					},
+				},
+				Local: &auth.Local{
+					Enabled: true,
+				},
+				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+			},
+		},
+	}
+	tests := []struct {
+		name        string
+		in          interface{}
+		connChecker ldap.ConnectionChecker
+		status      *auth.LdapServerStatus
+		err         error
+	}{
+		{
+			name:        "invalid object",
+			in:          &struct{ name string }{name: "invalid object type"},
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status:      nil,
+			err:         errors.New("invalid input type"),
+		},
+		{
+			name:        "failed ldap bind",
+			in:          authpolicy,
+			connChecker: ldap.NewMockConnectionChecker(ldap.IncorrectBindDN),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Bind_Failure.String(),
+			},
+			err: nil,
+		},
+		{
+			name:        "successful ldap bind",
+			in:          authpolicy,
+			connChecker: ldap.NewMockConnectionChecker(ldap.SuccessfulAuth),
+			status: &auth.LdapServerStatus{
+				Result: auth.LdapServerStatus_Bind_Success.String(),
+			},
+			err: nil,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+	for _, test := range tests {
+		r.ldapChecker = test.connChecker
+		_, out, skipCall, err := r.ldapBindCheck(context.TODO(), test.in)
+		Assert(t, skipCall, fmt.Sprintf("[%s] test failed, expected skipCall to be true", test.name))
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
+		if err == nil {
+			policy, ok := out.(*auth.AuthenticationPolicy)
+			Assert(t, ok, fmt.Sprintf("[%s] test failed, expected AuthenticationPolicy object", test.name))
+			Assert(t, len(policy.Status.LdapServers) == 1, fmt.Sprintf("[%s] test failed, unexpected number of ldap servers", test.name))
+			Assert(t, policy.Status.LdapServers[0].Result == test.status.Result,
+				fmt.Sprintf("[%s] test failed, expected result [%s], got [%s]", test.name, test.status.Result, policy.Status.LdapServers[0].Result))
+		}
+	}
 }

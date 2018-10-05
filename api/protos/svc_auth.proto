@@ -23,19 +23,35 @@ service AuthV1 {
     option (venice.apiGrpcCrudService) = "RoleBinding";
 
     option (venice.apiRestService) = {
-         Object: "User"
-         Method: [ "get", "put", "delete", "post", "list" ]
-     };
+        Object: "User"
+        Method: [ "get", "put", "delete", "post", "list" ]
+    };
     option (venice.apiRestService) = {
-         Object: "AuthenticationPolicy"
-         Method: [ "get", "put", "post" ]
-     };
+        Object: "AuthenticationPolicy"
+        Method: [ "get", "put", "post" ]
+    };
+    // Action to test ldap connection with the passed in AuthenticationPolicy object. It doesn't test ldap config in AuthenticationPolicy
+    // already saved in API server. If user wants to test saved config, then user will have to fetch it first and use it with this action.
+    option (venice.apiAction) = {
+        Object: "AuthenticationPolicy"
+        Action: "LdapConnectionCheck"
+        Request: "AuthenticationPolicy"
+        Response: "AuthenticationPolicy"
+    };
+    // Action to test ldap bind with the passed in AuthenticationPolicy object. It doesn't test ldap config  in AuthenticationPolicy
+    // already saved in API server. If user wants to test saved config, then user will have to fetch it first and use it with this action.
+    option (venice.apiAction) = {
+        Object: "AuthenticationPolicy"
+        Action: "LdapBindCheck"
+        Request: "AuthenticationPolicy"
+        Response: "AuthenticationPolicy"
+    };
     option (venice.apiRestService) = {
-          Object: "Role"
-          Method: [ "get", "put", "delete", "post", "list" ]
-      };
+        Object: "Role"
+        Method: [ "get", "put", "delete", "post", "list" ]
+    };
     option (venice.apiRestService) = {
-          Object: "RoleBinding"
-          Method: [ "get", "put", "delete", "post", "list" ]
-      };
+        Object: "RoleBinding"
+        Method: [ "get", "put", "delete", "post", "list" ]
+    };
 }

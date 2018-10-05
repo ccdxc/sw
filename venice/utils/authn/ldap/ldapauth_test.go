@@ -1,349 +1,69 @@
 package ldap
 
 import (
-	"errors"
 	"fmt"
-	"os"
 	"reflect"
 	"sort"
 	"testing"
 
 	"gopkg.in/ldap.v2"
 
-	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
-	evtsapi "github.com/pensando/sw/api/generated/events"
-	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authn"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
-	"github.com/pensando/sw/venice/utils/events/recorder"
-	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
-	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 )
 
-// testcase drives the mock ldap connection
-type testcase string
-
-const (
-	successfulAuth          testcase = "successful authentication"
-	incorrectReferralFormat testcase = "incorrect referral format"
-	incorrectBindDN         testcase = "incorrect bind DN"
-	failedSearch            testcase = "failed search"
-	incorrectUserPassword   testcase = "incorrect user password"
-	nonExistentUser         testcase = "non existent user"
-	noGroupMembership       testcase = "user is not a member of any group"
-	connectionError         testcase = "connection failure"
-	groupReferral           testcase = "group referral"
-	loopReferral            testcase = "loop in referral"
-	groupHierarchy          testcase = "group hierarchy"
-	userReferral            testcase = "user referral"
-)
-
-const (
-	apisrvURL            = "localhost:0"
-	ldapURL              = "localhost:389"
-	testUser             = "test"
-	testPassword         = "pensando"
-	testUserDN           = "CN=" + testUser + "," + BaseDN
-	networkAdminGroupDN  = "CN=NetworkAdmin," + BaseDN
-	securityAdminGroupDN = "CN=SecurityAdmin," + BaseDN
-	referralAddr         = "localhost:3089"
-	groupReferralURL     = "ldap://" + referralAddr + "/" + networkAdminGroupDN + "??base"
-	loopReferralURL      = "ldap://" + ldapURL + "/" + networkAdminGroupDN + "??base"
-	userReferralURL      = "ldap://" + referralAddr + "/" + BaseDN + "??sub"
-)
-
-var (
-	apicl      apiclient.Services
-	apiSrv     apiserver.Server
-	apiSrvAddr string
-
-	logger = log.WithContext("Pkg", "ldap_test")
-
-	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "ldap_test"},
-		EvtTypes:      evtsapi.GetEventTypes(),
-		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
-)
-
-func TestMain(m *testing.M) {
-	setup()
-	code := m.Run()
-	shutdown()
-	os.Exit(code)
-}
-
-func setup() {
-	var err error
-	// api server
-	apiSrv, apiSrvAddr, err = serviceutils.StartAPIServer(apisrvURL, "ldap_test", logger)
-	if err != nil {
-		panic("Unable to start API Server")
-	}
-
-	// api server client
-	apicl, err = apiclient.NewGrpcAPIClient("ldap_test", apiSrvAddr, logger)
-	if err != nil {
-		panic("Error creating api client")
-	}
-}
-
-func shutdown() {
-	//stop api server
-	apiSrv.Stop()
-}
-
-// createDefaultAuthenticationPolicy creates an authentication policy with LDAP with TLS enabled
-func createDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
-	return MustCreateAuthenticationPolicy(apicl,
-		&auth.Local{
-			Enabled: true,
-		}, &auth.Ldap{
-			Enabled: true,
-			Servers: []*auth.LdapServer{
-				{
-					Url: ldapURL,
-					TLSOptions: &auth.TLSOptions{
-						StartTLS:                   true,
-						SkipServerCertVerification: false,
-						ServerName:                 ServerName,
-						TrustedCerts:               TrustedCerts,
-					},
-				},
-			},
-
-			BaseDN:       BaseDN,
-			BindDN:       BindDN,
-			BindPassword: BindPassword,
-			AttributeMapping: &auth.LdapAttributeMapping{
-				User:             UserAttribute,
-				UserObjectClass:  UserObjectClassAttribute,
-				Group:            GroupAttribute,
-				GroupObjectClass: GroupObjectClassAttribute,
-			},
-		})
-}
-
-func getMockConnectionGetter(tc testcase) connectionGetter {
-	switch tc {
-	case connectionError:
-		return func(string, *auth.TLSOptions) (connection, error) {
-			return nil, errors.New("ldap connection error")
-		}
-	}
-	return func(addr string, options *auth.TLSOptions) (connection, error) {
-		return newMockConnection(tc, addr), nil
-	}
-}
-
-type mockConnection struct {
-	tc   testcase
-	addr string
-}
-
-func (m *mockConnection) Bind(username, password string) error {
-	switch m.tc {
-	case incorrectBindDN:
-		return errors.New("incorrect bind DN")
-	case incorrectUserPassword:
-		if username != BindDN {
-			return errors.New("incorrect user password")
-		}
-	}
-	return nil
-}
-
-func (m *mockConnection) Search(sr *ldap.SearchRequest) (*ldap.SearchResult, error) {
-	switch m.tc {
-	case failedSearch:
-		return nil, errors.New("search failed")
-	case nonExistentUser:
-		return &ldap.SearchResult{}, nil
-	case noGroupMembership:
-		return &ldap.SearchResult{
-			Entries: []*ldap.Entry{
-				{
-					DN: sr.BaseDN,
-				},
-			},
-		}, nil
-	case groupReferral:
-		switch sr.BaseDN {
-		// if group search
-		case networkAdminGroupDN:
-			// if addr is referred LDAP for group info then return group entry
-			if m.addr == referralAddr {
-				return &ldap.SearchResult{
-					Entries: []*ldap.Entry{
+// getDefaultAuthenticationPolicy gets an authentication policy with LDAP with TLS enabled
+func getDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
+	// authn policy object
+	return &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "AuthenticationPolicy",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Ldap: &auth.Ldap{
+					Enabled: true,
+					Servers: []*auth.LdapServer{
 						{
-							DN: sr.BaseDN,
-						},
-					},
-				}, nil
-			}
-			// else return a referral for group entry
-			return &ldap.SearchResult{
-				Entries:   []*ldap.Entry{},
-				Referrals: []string{groupReferralURL},
-			}, nil
-			// if user search
-		default:
-			return &ldap.SearchResult{
-				Entries: []*ldap.Entry{
-					{
-						DN: testUserDN,
-						Attributes: []*ldap.EntryAttribute{
-							ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
-						},
-					},
-				},
-			}, nil
-		}
-	case loopReferral:
-		switch sr.BaseDN {
-		// if group search
-		case networkAdminGroupDN:
-			// if addr is referred LDAP for group info then loop to original LDAP
-			if m.addr == referralAddr {
-				return &ldap.SearchResult{
-					Entries:   []*ldap.Entry{},
-					Referrals: []string{loopReferralURL},
-				}, nil
-			}
-			// else return a referral for group entry
-			return &ldap.SearchResult{
-				Entries:   []*ldap.Entry{},
-				Referrals: []string{groupReferralURL},
-			}, nil
-			// if user search
-		default:
-			return &ldap.SearchResult{
-				Entries: []*ldap.Entry{
-					{
-						DN: testUserDN,
-						Attributes: []*ldap.EntryAttribute{
-							ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
-						},
-					},
-				},
-			}, nil
-		}
-	case successfulAuth:
-		switch sr.BaseDN {
-		// if group search
-		case networkAdminGroupDN:
-			return &ldap.SearchResult{
-				Entries: []*ldap.Entry{
-					{
-						DN: sr.BaseDN,
-					},
-				},
-			}, nil
-			// if user search
-		case BaseDN:
-			return &ldap.SearchResult{
-				Entries: []*ldap.Entry{
-					{
-						DN: testUserDN,
-						Attributes: []*ldap.EntryAttribute{
-							ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
-						},
-					},
-				},
-			}, nil
-		}
-	case groupHierarchy:
-		switch sr.BaseDN {
-		// if NetworkAdmin group search
-		case networkAdminGroupDN:
-			return &ldap.SearchResult{
-				Entries: []*ldap.Entry{
-					{
-						DN: sr.BaseDN,
-						Attributes: []*ldap.EntryAttribute{
-							ldap.NewEntryAttribute(GroupAttribute, []string{securityAdminGroupDN}),
-						},
-					},
-				},
-			}, nil
-			// if SecurityAdmin group search
-		case securityAdminGroupDN:
-			return &ldap.SearchResult{
-				Entries: []*ldap.Entry{
-					{
-						DN:         sr.BaseDN,
-						Attributes: []*ldap.EntryAttribute{},
-					},
-				},
-			}, nil
-			// if user search
-		case BaseDN:
-			return &ldap.SearchResult{
-				Entries: []*ldap.Entry{
-					{
-						DN: testUserDN,
-						Attributes: []*ldap.EntryAttribute{
-							ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
-						},
-					},
-				},
-			}, nil
-		}
-	case userReferral:
-		switch sr.BaseDN {
-		// if group search
-		case BaseDN:
-			// if addr is referred LDAP for user info then return user entry
-			if m.addr == referralAddr {
-				return &ldap.SearchResult{
-					Entries: []*ldap.Entry{
-						{
-							DN: testUserDN,
-							Attributes: []*ldap.EntryAttribute{
-								ldap.NewEntryAttribute(GroupAttribute, []string{networkAdminGroupDN}),
+							Url: ldapURL,
+							TLSOptions: &auth.TLSOptions{
+								StartTLS:                   true,
+								SkipServerCertVerification: false,
+								ServerName:                 ServerName,
+								TrustedCerts:               TrustedCerts,
 							},
 						},
 					},
-				}, nil
-			}
-			// else return a referral for user entry
-			return &ldap.SearchResult{
-				Entries:   []*ldap.Entry{},
-				Referrals: []string{userReferralURL},
-			}, nil
-			// if user search
-		case networkAdminGroupDN:
-			return &ldap.SearchResult{
-				Entries: []*ldap.Entry{
-					{
-						DN: networkAdminGroupDN,
+
+					BaseDN:       BaseDN,
+					BindDN:       BindDN,
+					BindPassword: BindPassword,
+					AttributeMapping: &auth.LdapAttributeMapping{
+						User:             UserAttribute,
+						UserObjectClass:  UserObjectClassAttribute,
+						Group:            GroupAttribute,
+						GroupObjectClass: GroupObjectClassAttribute,
 					},
 				},
-			}, nil
-		}
-	}
-	return &ldap.SearchResult{}, nil
-}
-
-func (m *mockConnection) Close() {}
-
-func newMockConnection(tc testcase, addr string) *mockConnection {
-	return &mockConnection{
-		tc:   tc,
-		addr: addr,
+				Local: &auth.Local{
+					Enabled: true,
+				},
+				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+			},
+		},
 	}
 }
 
 func TestBind(t *testing.T) {
 	tests := []struct {
-		name     testcase
+		name     Testcase
 		url      string
 		username string
 		password string
@@ -352,7 +72,7 @@ func TestBind(t *testing.T) {
 		err      error
 	}{
 		{
-			name:     incorrectReferralFormat,
+			name:     IncorrectReferralFormat,
 			url:      "incorrect referral",
 			username: testUser,
 			password: testPassword,
@@ -361,7 +81,7 @@ func TestBind(t *testing.T) {
 			err:      ErrNoneOrMultipleUserEntries,
 		},
 		{
-			name:     incorrectReferralFormat,
+			name:     IncorrectReferralFormat,
 			url:      "", // to test no host name in url
 			username: testUser,
 			password: testPassword,
@@ -370,7 +90,7 @@ func TestBind(t *testing.T) {
 			err:      ErrNoneOrMultipleUserEntries,
 		},
 		{
-			name:     incorrectBindDN,
+			name:     IncorrectBindDN,
 			url:      ldapURL,
 			username: testUser,
 			password: testPassword,
@@ -379,7 +99,7 @@ func TestBind(t *testing.T) {
 			err:      ErrNoneOrMultipleUserEntries,
 		},
 		{
-			name:     incorrectUserPassword,
+			name:     IncorrectUserPassword,
 			url:      ldapURL,
 			username: testUser,
 			password: "wrongPassword",
@@ -388,7 +108,7 @@ func TestBind(t *testing.T) {
 			err:      ErrNoneOrMultipleUserEntries,
 		},
 		{
-			name:     nonExistentUser,
+			name:     NonExistentUser,
 			url:      ldapURL,
 			username: "non existent",
 			password: testPassword,
@@ -397,7 +117,7 @@ func TestBind(t *testing.T) {
 			err:      ErrNoneOrMultipleUserEntries,
 		},
 		{
-			name:     noGroupMembership,
+			name:     NoGroupMembership,
 			url:      ldapURL,
 			username: testUser,
 			password: testPassword,
@@ -406,7 +126,7 @@ func TestBind(t *testing.T) {
 			err:      authn.ErrNoGroupMembership,
 		},
 		{
-			name:     connectionError,
+			name:     ConnectionError,
 			url:      ldapURL,
 			username: testUser,
 			password: testPassword,
@@ -415,7 +135,7 @@ func TestBind(t *testing.T) {
 			err:      ErrNoServerAvailable,
 		},
 		{
-			name:     failedSearch,
+			name:     FailedSearch,
 			url:      ldapURL,
 			username: testUser,
 			password: testPassword,
@@ -424,7 +144,7 @@ func TestBind(t *testing.T) {
 			err:      ErrNoneOrMultipleUserEntries,
 		},
 		{
-			name:     groupReferral,
+			name:     GroupReferral,
 			url:      ldapURL,
 			username: testUser,
 			password: testPassword,
@@ -438,7 +158,7 @@ func TestBind(t *testing.T) {
 			err:    nil,
 		},
 		{
-			name:     loopReferral,
+			name:     LoopReferral,
 			url:      ldapURL,
 			username: testUser,
 			password: testPassword,
@@ -447,7 +167,7 @@ func TestBind(t *testing.T) {
 			err:      ErrNoneOrMultipleGroupEntries,
 		},
 		{
-			name:     groupHierarchy,
+			name:     GroupHierarchy,
 			url:      ldapURL,
 			username: testUser,
 			password: testPassword,
@@ -461,7 +181,7 @@ func TestBind(t *testing.T) {
 			err:    nil,
 		},
 		{
-			name:     userReferral,
+			name:     UserReferral,
 			url:      ldapURL,
 			username: testUser,
 			password: testPassword,
@@ -516,11 +236,10 @@ func TestBind(t *testing.T) {
 }
 
 func TestAuthenticate(t *testing.T) {
-	policy := createDefaultAuthenticationPolicy()
-	defer DeleteAuthenticationPolicy(apicl)
+	policy := getDefaultAuthenticationPolicy()
 	authenticator := &authenticator{
 		ldapConfig:      policy.Spec.Authenticators.Ldap,
-		getConnectionFn: getMockConnectionGetter(successfulAuth),
+		getConnectionFn: getMockConnectionGetter(SuccessfulAuth),
 	}
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
 	Assert(t, ok, "Unsuccessful ldap user authentication")
