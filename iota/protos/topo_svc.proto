@@ -109,8 +109,11 @@ message NaplesConfig {
     // Control ip to use
     string control_ip            = 2;
 
+    // Data interfaces to use
+    string data_intfs            = 3;
+
     // Venice IPs to use, if specified agent will come up im managed mode.
-    repeated string venice_ips   = 6;
+    repeated string venice_ips   = 4;
 
 }
 
