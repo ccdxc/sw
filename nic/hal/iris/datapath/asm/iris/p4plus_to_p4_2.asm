@@ -23,6 +23,7 @@ f_p4plus_to_p4_2:
 
   // update compute checksum flags (classic nic)
   seq           c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC
+  seq.!c1       c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
   bcf           [!c1], f_p4plus_to_p4_2_other_apps
   crestore      [c2-c1], k.{p4plus_to_p4_compute_inner_l4_csum,\
                             p4plus_to_p4_compute_l4_csum}, 0x3

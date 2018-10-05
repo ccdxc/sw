@@ -416,7 +416,7 @@ app_redir_pkt_check_tx_enqueue(fte::ctx_t& ctx)
     memset(&p4_header, 0, sizeof(p4_header));
     cpu_header.flags = redir_ctx.redir_flags();
     cpu_header.src_lif = cpu_rxhdr->src_lif;
-    p4_header.flags |= P4PLUS_TO_P4_FLAGS_LKP_INST;
+    p4_header.lkp_inst = 1;
 
     /*
      * Enqueue packet without app redirect headers

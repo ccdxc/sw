@@ -111,7 +111,6 @@ hal_inject_arp_request_pkt(const l2seg_t *segment,
 
     cpu_hdr.src_lif = SERVICE_LIF_CPU_BYPASS;
 
-    p4plus_hdr.flags = 0;
     p4plus_hdr.p4plus_app_id = P4PLUS_APPTYPE_CPU;
 
     l2_args.l2seg = (l2seg_t*)(segment);
@@ -145,7 +144,6 @@ hal_inject_arp_response_pkt(const l2seg_t *segment,
 
     cpu_hdr.src_lif = SERVICE_LIF_CPU_BYPASS;
 
-    p4plus_hdr.flags = 0;
     p4plus_hdr.p4plus_app_id = P4PLUS_APPTYPE_CPU;
 
     l2_args.l2seg = (l2seg_t*)(segment);

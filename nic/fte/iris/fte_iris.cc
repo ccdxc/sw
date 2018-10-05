@@ -903,7 +903,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     HAL_TRACE_DEBUG("fte: feature={} queued txpkt lkp_inst={} src_lif={} vlan={} "
                     "dest_lifq={} ring={} wring={} pkt={:p} len={}",
                     feature_name_,
-                    pkt_info->p4plus_header.flags & P4PLUS_TO_P4_FLAGS_LKP_INST,
+                    pkt_info->p4plus_header.lkp_inst,
                     pkt_info->cpu_header.src_lif,
                     pkt_info->cpu_header.hw_vlan_id,
                     pkt_info->lifq, pkt_info->ring_number, pkt_info->wring_type,
@@ -933,9 +933,8 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
                         pkt_info->pkt, pkt_info->pkt_len);
 
         if ( istage_ > 0 ){
-            pkt_info->p4plus_header.flags |=  P4PLUS_TO_P4_FLAGS_LKP_INST;
+            pkt_info->p4plus_header.lkp_inst = 1;
         }
-
 
         pkt_info->p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
 

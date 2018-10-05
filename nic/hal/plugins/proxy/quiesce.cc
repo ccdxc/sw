@@ -44,7 +44,6 @@ quiesce_transmit_pkt(void* data)
     hal::pd::cpu_to_p4plus_header_t cpu_header = {};
     hal::pd::p4plus_to_p4_header_t  p4plus_header = {};
 
-    p4plus_header.flags = 0;
     p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
     cpu_header.src_lif = hal::SERVICE_LIF_CPU;
     cpu_header.hw_vlan_id = 0;

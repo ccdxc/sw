@@ -1651,7 +1651,6 @@ build_and_send_tcp_pkt (void *data)
     }
 
     // Fill in P4Plus and CPU header info
-    p4plus_header.flags = 0;
     p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
     cpu_header.src_lif = hal::SERVICE_LIF_CPU;
     cpu_header.l2_offset = 0;

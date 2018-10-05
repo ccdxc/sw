@@ -258,6 +258,8 @@ net_sfw_generate_reject_pkt(ctx_t& ctx, bool status)
     p4plus_hdr.flow_index_valid = 1;
     p4plus_hdr.flow_index = g_cpu_bypass_flowid;
     p4plus_hdr.dst_lport_valid = 1;
+    p4plus_hdr.compute_l4_csum = 1;
+    p4plus_hdr.compute_ip_csum = 1;
 
     // Get the reverse flow forwarding info
     rflow = ctx.flow(hal::FLOW_ROLE_RESPONDER);

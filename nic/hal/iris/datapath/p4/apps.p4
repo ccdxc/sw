@@ -686,7 +686,8 @@ action f_p4plus_to_p4_2() {
 
     // update checksum/icrc compute flags
     modify_field(scratch_metadata.size8, 0);
-    if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CLASSIC_NIC) {
+    if ((p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CLASSIC_NIC) or
+        (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CPU)) {
         if (p4plus_to_p4.compute_ip_csum == 1) {
             bit_or(scratch_metadata.size8, scratch_metadata.size8,
                    (1 << CHECKSUM_CTL_IP_CHECKSUM));
@@ -715,7 +716,7 @@ action f_p4plus_to_p4_2() {
             if ((udp.valid == TRUE) or (tcp.valid == TRUE) or
                 (icmp.valid == TRUE)) {
                 bit_or(scratch_metadata.size8, scratch_metadata.size8,
-                        (1 << CHECKSUM_CTL_L4_CHECKSUM));
+                       (1 << CHECKSUM_CTL_L4_CHECKSUM));
             }
         }
     }

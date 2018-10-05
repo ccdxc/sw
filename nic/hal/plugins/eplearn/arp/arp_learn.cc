@@ -243,7 +243,6 @@ proxy_arp_build_cpu_p4_plus_header(fte::ctx_t &ctx,
 
     send_cpu_hdr.src_lif = SERVICE_LIF_CPU_BYPASS;
 
-    p4plus_hdr.flags = 0;
     p4plus_hdr.p4plus_app_id = P4PLUS_APPTYPE_CPU;
 
     /* This seems to be not required for now.
