@@ -597,7 +597,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     // start the asic-rw thread
     HAL_TRACE_DEBUG("Starting asic-rw thread ...");
     hal_thread =
-        hal_thread_create(std::string("asic-rw").c_str(),
+        hal_thread_create(std::string("asicrw").c_str(),
                           HAL_THREAD_ID_ASIC_RW,
                           sdk::lib::THREAD_ROLE_CONTROL,
                           0x0,    // use all control cores

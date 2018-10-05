@@ -9,7 +9,6 @@
 #include "nic/hal/core/core.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/apollo2/hal_state.hpp"
-//#include "nic/include/hal_pd.hpp"
 #include "nic/hal/core/plugins.hpp"
 #include "nic/fte/fte_core.hpp"
 #include "nic/sdk/include/sdk/periodic.hpp"

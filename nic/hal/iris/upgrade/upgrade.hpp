@@ -15,19 +15,17 @@ using upgrade::UpgHandler;
 namespace hal {
 namespace upgrade {
 
-class hal_upg_hndlr : public UpgHandler {
+class upgrade_handler : public UpgHandler {
 public:
-    hal_upg_hndlr();
-    HdlrResp HandleUpgStateCompatCheck(UpgCtx& upgCtx);
-    HdlrResp HandleUpgStateLinkDown(UpgCtx& upgCtx);
-    HdlrResp HandleUpgStateDataplaneDowntimeStart(UpgCtx& upgCtx);
-    HdlrResp HandleUpgStatePostBinRestart(UpgCtx& upgCtx);
-    HdlrResp HandleUpgStateLinkUp(UpgCtx& upgCtx);
-    HdlrResp HandleUpgStateIsSystemReady(UpgCtx& upgCtx);
-    void HandleUpgStateSuccess(UpgCtx& upgCtx);
-    void HandleUpgStateFailed(UpgCtx& upgCtx);
-    HdlrResp HandleUpgStateCleanup(UpgCtx& upgCtx);
-    void HandleUpgStateAbort(UpgCtx& upgCtx);
+    upgrade_handler() {}
+    HdlrResp CompatCheckHandler(UpgCtx& upgCtx);
+    HdlrResp ProcessQuiesceHandler(UpgCtx& upgCtx);
+    HdlrResp LinkDownHandler(UpgCtx& upgCtx);
+    HdlrResp LinkUpHandler(UpgCtx& upgCtx);
+    HdlrResp PostRestartHandler(UpgCtx& upgCtx);
+    HdlrResp DataplaneDowntimeStartHandler(UpgCtx& upgCtx)
+    void SuccessHandler(UpgCtx& upgCtx);
+    void AbortHandler(UpgCtx& upgCtx);
 };
 
 } // namespace upgrade

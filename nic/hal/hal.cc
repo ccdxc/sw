@@ -26,6 +26,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/utils/agent_api/agent_api.hpp"
 #include "nic/hal/core/heartbeat/heartbeat.hpp"
+#include "nic/hal/iris/delphi/delphi.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -35,10 +36,12 @@ extern "C" void __gcov_flush(void);
 #define HAL_GCOV_FLUSH()     { }
 #endif
 
+using sdk::linkmgr::linkmgr_cfg_t;
+
 namespace hal {
 
 // process globals
-// TODO: clean this up and make thread store static to core
+// TODO: clean this up
 extern bool      gl_super_user;
 
 //------------------------------------------------------------------------------
@@ -161,18 +164,41 @@ hal_platform_mode_to_sdk_platform_type (hal_platform_mode_t platform_mode)
     return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
 }
 
+#if 0
+//------------------------------------------------------------------------------
+// bring up delphi thread
+//------------------------------------------------------------------------------
+static hal_ret_t
+hal_delphi_thread_init (hal_cfg_t *hal_cfg)
+{
+    int                 thread_prio, sched_policy;
+    sdk::lib::thread    *hal_thread;
+
+    sched_policy = gl_super_user ? SCHED_RR : SCHED_OTHER;
+    thread_prio = sched_get_priority_max(sched_policy);
+    hal_thread = hal_thread_create(std::string("delphic").c_str(),
+                                   HAL_THREAD_ID_DELPHI_CLIENT,
+                                   sdk::lib::THREAD_ROLE_CONTROL,
+                                   0x0,    // use all control cores
+                                   delphi::delphi_client_start,
+                                   thread_prio, sched_policy,
+                                   NULL);
+    HAL_ABORT(hal_thread != NULL);
+    return HAL_RET_OK;
+}
+#endif
+
 //------------------------------------------------------------------------------
 // init function for HAL
 //------------------------------------------------------------------------------
 hal_ret_t
 hal_init (hal_cfg_t *hal_cfg)
 {
-    int                tid;
-    char               *user    = NULL;
-    sdk::lib::catalog  *catalog = NULL;
-    hal_ret_t          ret      = HAL_RET_OK;
-
-    sdk::linkmgr::linkmgr_cfg_t  sdk_cfg;
+    int                  tid;
+    char                 *user    = NULL;
+    sdk::lib::catalog    *catalog = NULL;
+    hal_ret_t            ret      = HAL_RET_OK;
+    linkmgr_cfg_t        sdk_cfg;
 
     // check to see if HAL is running with root permissions
     user = getenv("USER");
@@ -264,6 +290,8 @@ hal_init (hal_cfg_t *hal_cfg)
         return HAL_RET_ERR;
     }
     // sdk::linkmgr::linkmgr_event_wait();
+
+    //HAL_ABORT(hal_delphi_thread_init(hal_cfg) == HAL_RET_OK);
 
     // start monitoring HAL heartbeat
     hal::hb::heartbeat_init();

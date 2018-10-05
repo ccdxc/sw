@@ -15,7 +15,7 @@ namespace hal {
 using boost::property_tree::ptree;
 
 static sdk::lib::thread    *g_hal_threads[HAL_THREAD_ID_MAX];
-bool                gl_super_user = false;
+bool                       gl_super_user = false;
 
 //------------------------------------------------------------------------------
 // initialize all the signal handlers
@@ -217,7 +217,7 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
         return HAL_RET_ERR;
     }
 
-    // set core affinity
+    // compute core affinity
     CPU_ZERO(&cpus);
     cores_mask = hal_cfg->control_cores_mask;
     while (cores_mask != 0) {
@@ -225,25 +225,35 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
         cores_mask = cores_mask & (cores_mask - 1);
     }
 
+    // and set the core affinity
     rv = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
     if (rv != 0) {
         HAL_TRACE_ERR("pthread_attr_setaffinity_np failure, err : {}", rv);
         return HAL_RET_ERR;
     }
 
+    // switch to real-time scheduling
     if (gl_super_user) {
-        HAL_TRACE_DEBUG("Started by root, switching to real-time scheduling");
+        HAL_TRACE_DEBUG("Switching to real-time scheduling");
         sched_param.sched_priority = sched_get_priority_max(SCHED_RR);
         rv = sched_setscheduler(0, SCHED_RR, &sched_param);
         if (rv != 0) {
             HAL_TRACE_ERR("sched_setscheduler failure, err : {}", rv);
             return HAL_RET_ERR;
         }
+    } else {
+        HAL_TRACE_DEBUG("Switching to real-time scheduling");
+        sched_param.sched_priority = sched_get_priority_max(SCHED_OTHER);
+        rv = sched_setscheduler(0, SCHED_OTHER, &sched_param);
+        if (rv != 0) {
+            HAL_TRACE_ERR("sched_setscheduler failure, err : {}", rv);
+            return HAL_RET_ERR;
+        }
     }
 
-    // create a thread object for this main thread
+    // create a placeholder thread object for this main thread
     hal_thread =
-        hal_thread_create(std::string("cfg-thread").c_str(),
+        hal_thread_create(std::string("cfg").c_str(),
                           HAL_THREAD_ID_CFG,
                           sdk::lib::THREAD_ROLE_CONTROL,
                           0x0,    // use all control cores
@@ -265,14 +275,19 @@ hal_ret_t
 hal_thread_init (hal_cfg_t *hal_cfg)
 {
     uint32_t            i, tid;
-    int                 thread_prio;
+    int                 rt_thread_prio, rt_sched_policy;
+    int                 thread_prio, sched_policy;
     char                thread_name[16];
     uint64_t            data_cores_mask = hal_cfg->data_cores_mask;
     uint64_t            cores_mask = 0x0;
     sdk::lib::thread    *hal_thread;
 
     // spawn data core threads and pin them to their cores
-    thread_prio = sched_get_priority_max(SCHED_FIFO);
+    rt_sched_policy = gl_super_user ? SCHED_FIFO : SCHED_OTHER;
+    rt_thread_prio = sched_get_priority_max(rt_sched_policy);
+    assert(rt_thread_prio >= 0);
+    sched_policy = gl_super_user ? SCHED_RR : SCHED_OTHER;
+    thread_prio = sched_get_priority_max(sched_policy);
     assert(thread_prio >= 0);
 
     if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
@@ -281,14 +296,13 @@ hal_thread_init (hal_cfg_t *hal_cfg)
             cores_mask = 1 << (ffsl(data_cores_mask) - 1);
             tid = HAL_THREAD_ID_FTE_MIN + i;
             HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
-            snprintf(thread_name, sizeof(thread_name), "fte-core-%u",
+            snprintf(thread_name, sizeof(thread_name), "fte-%u",
                      ffsl(data_cores_mask) - 1);
             hal_thread =
                 hal_thread_create(static_cast<const char *>(thread_name),
                                   tid, sdk::lib::THREAD_ROLE_DATA,
                                   cores_mask, fte_pkt_loop_start,
-                                  thread_prio,
-                                  gl_super_user ? SCHED_FIFO : SCHED_OTHER,
+                                  rt_thread_prio, rt_sched_policy,
                                   hal_cfg);
             HAL_ABORT(hal_thread != NULL);
             data_cores_mask = data_cores_mask & (data_cores_mask-1);
@@ -297,13 +311,12 @@ hal_thread_init (hal_cfg_t *hal_cfg)
 
     // spawn periodic thread that does background tasks
     hal_thread =
-        hal_thread_create(std::string("periodic-thread").c_str(),
+        hal_thread_create(std::string("periodic").c_str(),
                           HAL_THREAD_ID_PERIODIC,
                           sdk::lib::THREAD_ROLE_CONTROL,
                           0x0,    // use all control cores
                           periodic_thread_start,
-                          sched_get_priority_max(SCHED_RR),
-                          gl_super_user ? SCHED_RR : SCHED_OTHER,
+                          thread_prio, sched_policy,
                           NULL);
     HAL_ABORT(hal_thread != NULL);
     hal_thread->start(hal_thread);

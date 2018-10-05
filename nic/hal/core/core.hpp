@@ -49,6 +49,7 @@ enum {
     HAL_TIMER_ID_STATS,
     HAL_TIMER_ID_INFRA_MAX                = 16,
 };
+extern bool gl_super_user;
 
 }    // namespace hal
 

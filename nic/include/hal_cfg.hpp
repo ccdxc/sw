@@ -9,13 +9,14 @@
 namespace hal {
 
 enum {
-    HAL_THREAD_ID_MIN        = 0,
-    HAL_THREAD_ID_CFG        = HAL_THREAD_ID_MIN,
-    HAL_THREAD_ID_PERIODIC   = 1,
-    HAL_THREAD_ID_FTE_MIN    = 2,
-    HAL_THREAD_ID_FTE_MAX    = 4,
-    HAL_THREAD_ID_ASIC_RW    = 5,
-    HAL_THREAD_ID_MAX        = 6,
+    HAL_THREAD_ID_MIN           = 0,
+    HAL_THREAD_ID_CFG           = HAL_THREAD_ID_MIN,
+    HAL_THREAD_ID_PERIODIC      = 1,
+    HAL_THREAD_ID_FTE_MIN       = 2,
+    HAL_THREAD_ID_FTE_MAX       = 4,
+    HAL_THREAD_ID_ASIC_RW       = 5,
+    HAL_THREAD_ID_DELPHI_CLIENT = 6,
+    HAL_THREAD_ID_MAX           = 7,
 };
 
 #define HAL_MAX_NAME_STR  16

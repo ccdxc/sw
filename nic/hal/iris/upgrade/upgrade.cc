@@ -10,94 +10,93 @@ namespace hal {
 
 namespace upgrade {
 
-// Constructor method
+//------------------------------------------------------------------------------
+// constructor method
+//------------------------------------------------------------------------------
 hal_upg_hndlr::hal_upg_hndlr()
 {
-    HAL_TRACE_DEBUG("Placeholder");
 }
 
-// Perform compat check
+//------------------------------------------------------------------------------
+// perform compat check
+//------------------------------------------------------------------------------
 HdlrResp
-hal_upg_hndlr::HandleUpgStateCompatCheck(UpgCtx& upgCtx)
+hal_upg_hndlr::CompatCheckHandler(UpgCtx& upgCtx)
+{
+    HAL_TRACE_DEBUG("[upgrade] Handling compat checks msg ...");
+    return HdlrResp(SUCCESS, "");
+}
+
+//------------------------------------------------------------------------------
+// perform quiesce start
+//------------------------------------------------------------------------------
+HdlrResp
+hal_upg_hndlr::ProcessQuiesceHandler(UpgCtx& upgCtx)
+{
+    HAL_TRACE_DEBUG("[upgrade] Handling queiesce msg ...");
+    return HdlrResp(SUCCESS, "");
+}
+
+//------------------------------------------------------------------------------
+// bring link down
+//------------------------------------------------------------------------------
+HdlrResp
+hal_upg_hndlr::LinkDownHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {};
-    HAL_TRACE_DEBUG("Placeholder");
+    HAL_TRACE_DEBUG("[upgrade] Handling link down msg ...");
     return resp;
 }
 
-// Bring link-down
+//------------------------------------------------------------------------------
+// bring link up
+//------------------------------------------------------------------------------
 HdlrResp
-hal_upg_hndlr::HandleUpgStateLinkDown(UpgCtx& upgCtx)
+hal_upg_hndlr::LinkUpHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {};
-    HAL_TRACE_DEBUG("Placeholder");
+    HAL_TRACE_DEBUG("[upgrade] Handling link up msg ...");
     return resp;
 }
 
-// Bring data plane down
+//------------------------------------------------------------------------------
+// post restart handling
+//------------------------------------------------------------------------------
 HdlrResp
-hal_upg_hndlr::HandleUpgStateDataplaneDowntimeStart(UpgCtx& upgCtx)
+hal_upg_hndlr::PostRestartHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {};
-    HAL_TRACE_DEBUG("Placeholder");
+    HAL_TRACE_DEBUG("[upgrade] Handling post restart msg ...");
     return resp;
 }
 
-// Post-binary restart handling
+//------------------------------------------------------------------------------
+// bring data plane down
+//------------------------------------------------------------------------------
 HdlrResp
-hal_upg_hndlr::HandleUpgStatePostBinRestart(UpgCtx& upgCtx)
+hal_upg_hndlr::DataplaneDowntimeStartHandler(UpgCtx& upgCtx)
 {
     HdlrResp resp = {};
-    HAL_TRACE_DEBUG("Placeholder");
+    HAL_TRACE_DEBUG("[upgrade] Handling dataplane down msg ...");
     return resp;
 }
 
-// Bring link-up
-HdlrResp
-hal_upg_hndlr::HandleUpgStateLinkUp(UpgCtx& upgCtx)
-{
-    HdlrResp resp = {};
-    HAL_TRACE_DEBUG("Placeholder");
-    return resp;
-}
-
-// Is system ready
-HdlrResp
-hal_upg_hndlr::HandleUpgStateIsSystemReady(UpgCtx& upgCtx)
-{
-    HdlrResp resp = {};
-    HAL_TRACE_DEBUG("Placeholder");
-    return resp;
-}
-
-// Handle upgrade success
+//------------------------------------------------------------------------------
+// handle upgrade success by releasing any transient state we are holding
+//------------------------------------------------------------------------------
 void
-hal_upg_hndlr::HandleUpgStateSuccess(UpgCtx& upgCtx)
+hal_upg_hndlr::SuccessHandler(UpgCtx& upgCtx)
 {
-    HAL_TRACE_DEBUG("Placeholder");
+    HAL_TRACE_DEBUG("[upgrade] Handling success msg ...");
 }
 
-// Handle upgrade failure
+//------------------------------------------------------------------------------
+// handle upgrade abort
+//------------------------------------------------------------------------------
 void
-hal_upg_hndlr::HandleUpgStateFailed(UpgCtx& upgCtx)
+hal_upg_hndlr::AbortHandler(UpgCtx& upgCtx)
 {
-    HAL_TRACE_DEBUG("Placeholder");
-}
-
-// Handle upgrade state cleanup
-HdlrResp
-hal_upg_hndlr::HandleUpgStateCleanup(UpgCtx& upgCtx)
-{
-    HdlrResp resp = {};
-    HAL_TRACE_DEBUG("Placeholder");
-    return resp;
-}
-
-// Handle upgrade abort
-void
-hal_upg_hndlr::HandleUpgStateAbort(UpgCtx& upgCtx)
-{
-    HAL_TRACE_DEBUG("Placeholder");
+    HAL_TRACE_DEBUG("[upgrade] Handling abort msg ...");
 }
 
 } // namespace upgrade

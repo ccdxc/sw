@@ -9,5 +9,6 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/hal.cc \
                   $(wildcard ${MODULE_SRC_DIR}/src/debug/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/src/internal/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/src/utils/*.cc)
-MODULE_INCS     = ${TOPDIR}/nic/hal/third-party/openssl/include
+MODULE_INCS     = ${TOPDIR}/nic/hal/third-party/openssl/include \
+				  ${TOPDIR}/nic/hal/iris/deplhi
 include ${MKDEFS}/post.mk
