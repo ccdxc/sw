@@ -5,6 +5,7 @@
       "name": "scale-gre-tunnel-0",
       "tenant": "default",
       "namespace": "scale-vrf-0",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -22,6 +23,7 @@
       "name": "scale-gre-tunnel-1",
       "tenant": "default",
       "namespace": "scale-vrf-1",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -39,6 +41,7 @@
       "name": "scale-gre-tunnel-2",
       "tenant": "default",
       "namespace": "scale-vrf-2",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -56,6 +59,7 @@
       "name": "scale-gre-tunnel-3",
       "tenant": "default",
       "namespace": "scale-vrf-3",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -73,6 +77,7 @@
       "name": "scale-gre-tunnel-4",
       "tenant": "default",
       "namespace": "scale-vrf-0",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -90,6 +95,7 @@
       "name": "scale-gre-tunnel-5",
       "tenant": "default",
       "namespace": "scale-vrf-1",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -107,6 +113,7 @@
       "name": "scale-gre-tunnel-6",
       "tenant": "default",
       "namespace": "scale-vrf-2",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },
@@ -124,6 +131,7 @@
       "name": "scale-gre-tunnel-7",
       "tenant": "default",
       "namespace": "scale-vrf-3",
+      "generation-id": "",
       "creation-time": "1970-01-01T00:00:00Z",
       "mod-time": "1970-01-01T00:00:00Z"
     },

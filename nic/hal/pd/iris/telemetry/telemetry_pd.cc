@@ -445,8 +445,10 @@ end:
 }
 
 #define PROGRAM_DROP_STATS_TABLE(arg1, arg2) \
-    ret = program_drop_stats_actiondata_table(&data, sessid_bitmap, arg1, arg2); \
-    if (ret != HAL_RET_OK) goto end;
+    if (arg1) { \
+        ret = program_drop_stats_actiondata_table(&data, sessid_bitmap, arg1, arg2); \
+        if (ret != HAL_RET_OK) goto end; \
+    }
 
 hal_ret_t
 pd_drop_monitor_rule_create(pd_func_args_t *pd_func_args)
