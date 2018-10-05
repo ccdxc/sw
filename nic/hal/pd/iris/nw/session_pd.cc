@@ -323,7 +323,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     } else {
         d.actionid = FLOW_INFO_FLOW_INFO_ID;
     }
-    
+
     if (flow_attrs->export_en) {
         d.flow_info_action_u.flow_info_flow_info.export_id1 =
                                              flow_attrs->export_id1;
@@ -387,11 +387,18 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
         d.flow_info_action_u.flow_info_flow_info.rewrite_index = flow_attrs->rw_idx;
     }
     // TODO: if we are doing routing, then set ttl_dec to TRUE
-    d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
+    if ((role == FLOW_ROLE_INITIATOR && !aug) ||
+        (role == FLOW_ROLE_RESPONDER && aug)) {
+        // Assuming aug flows are either send to uplink or receive from uplink
+        d.flow_info_action_u.flow_info_flow_info.flow_conn_track = true;
+    } else {
+        d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
+    }
     d.flow_info_action_u.flow_info_flow_info.flow_ttl = 64;
     d.flow_info_action_u.flow_info_flow_info.flow_role = flow_attrs->role;
     d.flow_info_action_u.flow_info_flow_info.session_state_index =
-        session->config.conn_track_en ? sess_pd->session_state_idx : 0;
+        d.flow_info_action_u.flow_info_flow_info.flow_conn_track ?
+        sess_pd->session_state_idx : 0;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     sdk::timestamp_to_nsecs(&ts, &sw_ns);
     clock_args.hw_tick = &hw_tick;
@@ -482,7 +489,7 @@ p4pd_del_flow_info_table_entries (pd_session_t *session_pd)
             HAL_TRACE_ERR("rflow flow info table entry delete failed, "
                           "idx : {}, err : {}",
                           session_pd->rflow.flow_stats_hw_id, ret);
-         }                    
+         }
     }
 
     return ret;
@@ -674,7 +681,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             ret = HAL_RET_OK;
         }
         if (ret != HAL_RET_OK) {
-            return ret; 
+            return ret;
         }
         if (session_pd->rflow_aug_valid && \
             !session_pd->rflow_aug.flow_hash_hw_id) {
@@ -697,7 +704,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                 ret = HAL_RET_OK;
             }
             if (ret != HAL_RET_OK) {
-                p4pd_del_flow_hash_table_entry(session_pd->rflow.flow_hash_hw_id); 
+                p4pd_del_flow_hash_table_entry(session_pd->rflow.flow_hash_hw_id);
                 return ret;
             }
         }
@@ -724,7 +731,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         if (ret != HAL_RET_OK) {
             if (session_pd->rflow_valid) {
                 p4pd_del_flow_hash_table_entry(session_pd->rflow.flow_hash_hw_id);
-                if (session_pd->rflow_aug_valid) 
+                if (session_pd->rflow_aug_valid)
                     p4pd_del_flow_hash_table_entry(session_pd->rflow_aug.flow_hash_hw_id);
             }
         }
@@ -852,6 +859,12 @@ pd_session_create (pd_func_args_t *pd_func_args)
     ret = p4pd_add_flow_stats_table_entries(session_pd);
     if (ret != HAL_RET_OK) {
         return ret;
+    }
+
+    // HACK: Only for TCP proxy we are disabling connection tracking.
+    //       Have to disable once we make TCP proxy work with connection tracking
+    if (session_pd->iflow_aug_valid || session_pd->rflow_aug_valid) {
+        args->session->config.conn_track_en = false;
     }
 
     // if connection tracking is on, add flow state entry for this session
