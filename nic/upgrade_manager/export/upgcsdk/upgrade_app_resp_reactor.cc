@@ -73,55 +73,55 @@ void UpgAppRespReact::InvokeAgentHandler(delphi::objects::UpgAppRespPtr resp, Up
     switch (resp->upgapprespval()) {
         case UpgStateCompatCheckRespPass:
         case UpgStateCompatCheckRespFail:
-            upgAgentHandler_->UpgStateCompatCheckCompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->CompatCheckCompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateProcessQuiesceRespPass:
         case UpgStateProcessQuiesceRespFail:
-            upgAgentHandler_->UpgStateProcessQuiesceCompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->ProcessQuiesceCompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStatePostBinRestartRespPass:
         case UpgStatePostBinRestartRespFail:
-            upgAgentHandler_->UpgStatePostBinRestartCompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->PostRestartCompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateDataplaneDowntimePhase1RespPass:
         case UpgStateDataplaneDowntimePhase1RespFail:
-            upgAgentHandler_->UpgStateDataplaneDowntimePhase1CompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->DataplaneDowntimePhase1CompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateDataplaneDowntimePhase2RespPass:
         case UpgStateDataplaneDowntimePhase2RespFail:
-            upgAgentHandler_->UpgStateDataplaneDowntimePhase2CompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->DataplaneDowntimePhase2CompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateDataplaneDowntimePhase3RespPass:
         case UpgStateDataplaneDowntimePhase3RespFail:
-            upgAgentHandler_->UpgStateDataplaneDowntimePhase3CompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->DataplaneDowntimePhase3CompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateDataplaneDowntimePhase4RespPass:
         case UpgStateDataplaneDowntimePhase4RespFail:
-            upgAgentHandler_->UpgStateDataplaneDowntimePhase4CompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->DataplaneDowntimePhase4CompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateCleanupRespPass:
         case UpgStateCleanupRespFail:
-            upgAgentHandler_->UpgStateCleanupCompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->CleanupCompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateAbortRespPass:
         case UpgStateAbortRespFail:
-            upgAgentHandler_->UpgStateAbortedCompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->AbortedCompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateLinkDownRespPass:
         case UpgStateLinkDownRespFail:
-            upgAgentHandler_->UpgStateLinkDownCompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->LinkDownCompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateLinkUpRespPass:
         case UpgStateLinkUpRespFail:
-            upgAgentHandler_->UpgStateLinkUpCompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->LinkUpCompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateDataplaneDowntimeStartRespPass:
         case UpgStateDataplaneDowntimeStartRespFail:
-            upgAgentHandler_->UpgStateDataplaneDowntimeStartCompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->DataplaneDowntimeStartCompletionHandler(hdlrResp, resp->key());
             break;
         case UpgStateIsSystemReadyRespPass:
         case UpgStateIsSystemReadyRespFail:
-            upgAgentHandler_->UpgStateIsSystemReadyCompletionHandler(hdlrResp, resp->key());
+            upgAgentHandler_->IsSystemReadyCompletionHandler(hdlrResp, resp->key());
             break;
         default:
             break;

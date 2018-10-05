@@ -86,8 +86,8 @@ func (u *NaplesUpgClient) StartPreCheckForUpgOnNextHostReboot(version string) er
 
 // === AppHandlers ===
 
-// HandleUpgStateCompatCheck handles compat checks and replies to upgrade manager
-func (u *NaplesUpgClient) HandleUpgStateCompatCheck(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// CompatCheckHandler handles compat checks and replies to upgrade manager
+func (u *NaplesUpgClient) CompatCheckHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -95,17 +95,17 @@ func (u *NaplesUpgClient) HandleUpgStateCompatCheck(upgCtx *upggosdk.UpgCtx) upg
 	return hdlrResp
 }
 
-// HandleUpgStatePostBinRestart is called after Binaries Restarted
-func (u *NaplesUpgClient) HandleUpgStatePostBinRestart(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// PostRestartHandler is called after Binaries Restarted
+func (u *NaplesUpgClient) PostRestartHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
-	log.Infof("HandleStatePostBinRestart called")
+	log.Infof("HandleStatePostRestart called")
 	return hdlrResp
 }
 
-// HandleUpgStateProcessQuiesce to Quiesce traffic - Mainly for data traffic..
-func (u *NaplesUpgClient) HandleUpgStateProcessQuiesce(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// ProcessQuiesceHandler to Quiesce traffic - Mainly for data traffic..
+func (u *NaplesUpgClient) ProcessQuiesceHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -113,8 +113,8 @@ func (u *NaplesUpgClient) HandleUpgStateProcessQuiesce(upgCtx *upggosdk.UpgCtx) 
 	return hdlrResp
 }
 
-// HandleUpgStateLinkDown - when link goes down
-func (u *NaplesUpgClient) HandleUpgStateLinkDown(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// LinkDownHandler - when link goes down
+func (u *NaplesUpgClient) LinkDownHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -122,8 +122,8 @@ func (u *NaplesUpgClient) HandleUpgStateLinkDown(upgCtx *upggosdk.UpgCtx) upggos
 	return hdlrResp
 }
 
-// HandleUpgStateDataplaneDowntimeStart is applicable mainly for datapath component
-func (u *NaplesUpgClient) HandleUpgStateDataplaneDowntimeStart(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// DataplaneDowntimeStartHandler is applicable mainly for datapath component
+func (u *NaplesUpgClient) DataplaneDowntimeStartHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -131,8 +131,8 @@ func (u *NaplesUpgClient) HandleUpgStateDataplaneDowntimeStart(upgCtx *upggosdk.
 	return hdlrResp
 }
 
-// HandleUpgStateDataplaneDowntimePhase1 is applicable mainly for datapath component
-func (u *NaplesUpgClient) HandleUpgStateDataplaneDowntimePhase1(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// DataplaneDowntimePhase1Handler is applicable mainly for datapath component
+func (u *NaplesUpgClient) DataplaneDowntimePhase1Handler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -140,8 +140,8 @@ func (u *NaplesUpgClient) HandleUpgStateDataplaneDowntimePhase1(upgCtx *upggosdk
 	return hdlrResp
 }
 
-// HandleUpgStateDataplaneDowntimePhase2 is applicable mainly for datapath component
-func (u *NaplesUpgClient) HandleUpgStateDataplaneDowntimePhase2(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// DataplaneDowntimePhase2Handler is applicable mainly for datapath component
+func (u *NaplesUpgClient) DataplaneDowntimePhase2Handler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -149,8 +149,8 @@ func (u *NaplesUpgClient) HandleUpgStateDataplaneDowntimePhase2(upgCtx *upggosdk
 	return hdlrResp
 }
 
-// HandleUpgStateDataplaneDowntimePhase3 is applicable mainly for datapath component
-func (u *NaplesUpgClient) HandleUpgStateDataplaneDowntimePhase3(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// DataplaneDowntimePhase3Handler is applicable mainly for datapath component
+func (u *NaplesUpgClient) DataplaneDowntimePhase3Handler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -158,8 +158,8 @@ func (u *NaplesUpgClient) HandleUpgStateDataplaneDowntimePhase3(upgCtx *upggosdk
 	return hdlrResp
 }
 
-// HandleUpgStateDataplaneDowntimePhase4 is applicable mainly for datapath component
-func (u *NaplesUpgClient) HandleUpgStateDataplaneDowntimePhase4(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// DataplaneDowntimePhase4Handler is applicable mainly for datapath component
+func (u *NaplesUpgClient) DataplaneDowntimePhase4Handler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -167,8 +167,8 @@ func (u *NaplesUpgClient) HandleUpgStateDataplaneDowntimePhase4(upgCtx *upggosdk
 	return hdlrResp
 }
 
-// HandleUpgStateCleanup cleans up any upgrade state
-func (u *NaplesUpgClient) HandleUpgStateCleanup(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// CleanupHandler cleans up any upgrade state
+func (u *NaplesUpgClient) CleanupHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -176,26 +176,26 @@ func (u *NaplesUpgClient) HandleUpgStateCleanup(upgCtx *upggosdk.UpgCtx) upggosd
 	return hdlrResp
 }
 
-// HandleUpgStateSuccess is called after upgrade is declared success
-func (u *NaplesUpgClient) HandleUpgStateSuccess(upgCtx *upggosdk.UpgCtx) {
+// SuccessHandler is called after upgrade is declared success
+func (u *NaplesUpgClient) SuccessHandler(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("HandleStateUpgSuccess called")
 	return
 }
 
-// HandleUpgStateFailed is called after upgrade is declared failure
-func (u *NaplesUpgClient) HandleUpgStateFailed(upgCtx *upggosdk.UpgCtx) {
+// FailedHandler is called after upgrade is declared failure
+func (u *NaplesUpgClient) FailedHandler(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("HandleStateUpgFailed called")
 	return
 }
 
-// HandleUpgStateAbort is called when upgrade is aborted
-func (u *NaplesUpgClient) HandleUpgStateAbort(upgCtx *upggosdk.UpgCtx) {
+// AbortHandler is called when upgrade is aborted
+func (u *NaplesUpgClient) AbortHandler(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("HandleStateUpgAborted called")
 	return
 }
 
-// HandleUpgStateIsSystemReady is called when ...
-func (u *NaplesUpgClient) HandleUpgStateIsSystemReady(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// IsSystemReadyHandler is called when ...
+func (u *NaplesUpgClient) IsSystemReadyHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -203,8 +203,8 @@ func (u *NaplesUpgClient) HandleUpgStateIsSystemReady(upgCtx *upggosdk.UpgCtx) u
 	return hdlrResp
 }
 
-// HandleUpgStateLinkUp is called when ...
-func (u *NaplesUpgClient) HandleUpgStateLinkUp(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+// LinkUpHandler is called when ...
+func (u *NaplesUpgClient) LinkUpHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
@@ -239,67 +239,67 @@ func (u *NaplesUpgClient) UpgNotPossible(ctx *upggosdk.UpgCtx, errStrList *[]str
 	u.nmd.UpgNotPossible(errStrList)
 }
 
-// UpgStateCompatCheckCompletionHandler is called after Compat check is completed
-func (u *NaplesUpgClient) UpgStateCompatCheckCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//CompatCheckCompletionHandler is called after Compat check is completed
+func (u *NaplesUpgClient) CompatCheckCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateCompatCheckCompletionHandlergot called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateProcessQuiesceCompletionHandler is called after Quiesceing
-func (u *NaplesUpgClient) UpgStateProcessQuiesceCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//ProcessQuiesceCompletionHandler is called after Quiesceing
+func (u *NaplesUpgClient) ProcessQuiesceCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateProcessQuiesceCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateLinkDownCompletionHandler is called after linkdown
-func (u *NaplesUpgClient) UpgStateLinkDownCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//LinkDownCompletionHandler is called after linkdown
+func (u *NaplesUpgClient) LinkDownCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateLinkDownCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStatePostBinRestartCompletionHandler is called after Binaries Restarted
-func (u *NaplesUpgClient) UpgStatePostBinRestartCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
-	log.Infof("UpgStatePostBinRestartCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
+//PostRestartCompletionHandler is called after Binaries Restarted
+func (u *NaplesUpgClient) PostRestartCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+	log.Infof("UpgStatePostRestartCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateDataplaneDowntimePhase1CompletionHandler is called after phase1 completed
-func (u *NaplesUpgClient) UpgStateDataplaneDowntimePhase1CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//DataplaneDowntimePhase1CompletionHandler is called after phase1 completed
+func (u *NaplesUpgClient) DataplaneDowntimePhase1CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateDataplaneDowntimePhase1CompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateDataplaneDowntimePhase2CompletionHandler is called after phase2 completed
-func (u *NaplesUpgClient) UpgStateDataplaneDowntimePhase2CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//DataplaneDowntimePhase2CompletionHandler is called after phase2 completed
+func (u *NaplesUpgClient) DataplaneDowntimePhase2CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateDataplaneDowntimePhase2CompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateDataplaneDowntimePhase3CompletionHandler is called after phase3 completed
-func (u *NaplesUpgClient) UpgStateDataplaneDowntimePhase3CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//DataplaneDowntimePhase3CompletionHandler is called after phase3 completed
+func (u *NaplesUpgClient) DataplaneDowntimePhase3CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateDataplaneDowntimePhase3CompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateDataplaneDowntimePhase4CompletionHandler is called after phase4 completed
-func (u *NaplesUpgClient) UpgStateDataplaneDowntimePhase4CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//DataplaneDowntimePhase4CompletionHandler is called after phase4 completed
+func (u *NaplesUpgClient) DataplaneDowntimePhase4CompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateDataplaneDowntimePhase4CompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateCleanupCompletionHandler is called after cleanup is completed
-func (u *NaplesUpgClient) UpgStateCleanupCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//CleanupCompletionHandler is called after cleanup is completed
+func (u *NaplesUpgClient) CleanupCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateCleanupCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateAbortCompletionHandler is called upgrade is aborted
-func (u *NaplesUpgClient) UpgStateAbortCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//AbortCompletionHandler is called upgrade is aborted
+func (u *NaplesUpgClient) AbortCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateAbortCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateDataplaneDowntimeStartCompletionHandler is called when DataplaneDowntimeStart is completed
-func (u *NaplesUpgClient) UpgStateDataplaneDowntimeStartCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//DataplaneDowntimeStartCompletionHandler is called when DataplaneDowntimeStart is completed
+func (u *NaplesUpgClient) DataplaneDowntimeStartCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateDataplaneDowntimeStartCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateIsSystemReadyCompletionHandler is called when IsSystemReady is completed
-func (u *NaplesUpgClient) UpgStateIsSystemReadyCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//IsSystemReadyCompletionHandler is called when IsSystemReady is completed
+func (u *NaplesUpgClient) IsSystemReadyCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateIsSystemReadyCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }
 
-// UpgStateLinkUpCompletionHandler is called when IsSystemReady is completed
-func (u *NaplesUpgClient) UpgStateLinkUpCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
+//LinkUpCompletionHandler is called when IsSystemReady is completed
+func (u *NaplesUpgClient) LinkUpCompletionHandler(resp *upggosdk.HdlrResp, svcName string) {
 	log.Infof("UpgStateLinkUpCompletionHandler got called with status %d error %s for service %s", resp.Resp, resp.ErrStr, svcName)
 }

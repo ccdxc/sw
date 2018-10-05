@@ -106,57 +106,57 @@ func (ctx *upgapprespctx) invokeAgentHandler(obj *upgrade.UpgAppResp) {
 	getAppResp(obj, &hdlrResp)
 	switch obj.GetUpgAppRespVal() {
 	case upgrade.UpgStateRespType_UpgStateCompatCheckRespPass:
-		ctx.agentHdlrs.UpgStateCompatCheckCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.CompatCheckCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateCompatCheckRespFail:
-		ctx.agentHdlrs.UpgStateCompatCheckCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.CompatCheckCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateProcessQuiesceRespPass:
-		ctx.agentHdlrs.UpgStateProcessQuiesceCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.ProcessQuiesceCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateProcessQuiesceRespFail:
-		ctx.agentHdlrs.UpgStateProcessQuiesceCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.ProcessQuiesceCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateLinkUpRespPass:
-		ctx.agentHdlrs.UpgStateLinkUpCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.LinkUpCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateLinkUpRespFail:
-		ctx.agentHdlrs.UpgStateLinkUpCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.LinkUpCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateLinkDownRespPass:
-		ctx.agentHdlrs.UpgStateLinkDownCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.LinkDownCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateLinkDownRespFail:
-		ctx.agentHdlrs.UpgStateLinkDownCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.LinkDownCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStatePostBinRestartRespPass:
-		ctx.agentHdlrs.UpgStatePostBinRestartCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.PostRestartCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStatePostBinRestartRespFail:
-		ctx.agentHdlrs.UpgStatePostBinRestartCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.PostRestartCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimeStartRespPass:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimeStartCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.DataplaneDowntimeStartCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimeStartRespFail:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimeStartCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.DataplaneDowntimeStartCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase1RespPass:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase1CompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.DataplaneDowntimePhase1CompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase1RespFail:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase1CompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.DataplaneDowntimePhase1CompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase2RespPass:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase2CompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.DataplaneDowntimePhase2CompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase2RespFail:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase2CompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.DataplaneDowntimePhase2CompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase3RespPass:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase3CompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.DataplaneDowntimePhase3CompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase3RespFail:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase3CompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.DataplaneDowntimePhase3CompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase4RespPass:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase4CompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.DataplaneDowntimePhase4CompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateDataplaneDowntimePhase4RespFail:
-		ctx.agentHdlrs.UpgStateDataplaneDowntimePhase4CompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.DataplaneDowntimePhase4CompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateIsSystemReadyRespPass:
-		ctx.agentHdlrs.UpgStateIsSystemReadyCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.IsSystemReadyCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateIsSystemReadyRespFail:
-		ctx.agentHdlrs.UpgStateIsSystemReadyCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.IsSystemReadyCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateCleanupRespPass:
-		ctx.agentHdlrs.UpgStateCleanupCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.CleanupCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateCleanupRespFail:
-		ctx.agentHdlrs.UpgStateCleanupCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.CleanupCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateAbortRespPass:
-		ctx.agentHdlrs.UpgStateAbortCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.AbortCompletionHandler(&hdlrResp, obj.GetKey())
 	case upgrade.UpgStateRespType_UpgStateAbortRespFail:
-		ctx.agentHdlrs.UpgStateAbortCompletionHandler(&hdlrResp, obj.GetKey())
+		ctx.agentHdlrs.AbortCompletionHandler(&hdlrResp, obj.GetKey())
 	}
 }
 

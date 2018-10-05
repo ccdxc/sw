@@ -43,18 +43,18 @@ class NMDSvcHandler : public UpgHandler {
 public:
     NMDSvcHandler() {}
 
-    HdlrResp HandleUpgStateCompatCheck(UpgCtx& upgCtx) {
-        //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do HandleUpgStateDataplaneDowntimePhase1"};
-        //UPG_LOG_DEBUG("UpgHandler HandleUpgStateCompatCheck called for the NMDHandleUpgStateCompatCheck. Returning FAIL!");
+    HdlrResp CompatCheckHandler(UpgCtx& upgCtx) {
+        //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do DataplaneDowntimePhase1"};
+        //UPG_LOG_DEBUG("UpgHandler CompatCheck called for the NMDCompatCheck. Returning FAIL!");
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        UPG_LOG_DEBUG("UpgHandler HandleUpgStateCompatCheck called for the NMDHandleUpgStateCompatCheck. Returning SUCCESS");
+        UPG_LOG_DEBUG("UpgHandler CompatCheck called for the NMDCompatCheck. Returning SUCCESS");
         return resp;
     }
 
-    HdlrResp HandleUpgStateDataplaneDowntimePhase1(UpgCtx& upgCtx) {
+    HdlrResp DataplaneDowntimePhase1Handler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do HandleUpgStateDataplaneDowntimePhase1"};
-        UPG_LOG_DEBUG("UpgHandler HandleUpgStateDataplaneDowntimePhase1 called for the SVC!!");
+        //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do DataplaneDowntimePhase1"};
+        UPG_LOG_DEBUG("UpgHandler DataplaneDowntimePhase1 called for the SVC!!");
         return resp;
     }
 };

@@ -11,77 +11,77 @@ namespace upgrade {
 
 using namespace std;
 
-bool UpgPostStateHandler::PostUpgStateCompatCheckHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPostStateHandler PostUpgStateCompatCheck returning");
+bool UpgPostStateHandler::PostCompatCheckHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostCompatCheck returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStatePostBinRestartHandler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostPostBinRestartHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostPostBinRestart returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateProcessQuiesceHandler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostProcessQuiesceHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostProcessesQuiesced returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateLinkDownHandler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostLinkDownHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler Link Down returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateLinkUpHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPostStateHandler PostUpgStateLinkUpHandler returning");
+bool UpgPostStateHandler::PostLinkUpHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostLinkUpHandler returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateDataplaneDowntimeStartHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPostStateHandler PostUpgStateDataplaneDowntimeStartHandler returning");
+bool UpgPostStateHandler::PostDataplaneDowntimeStartHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimeStartHandler returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase1 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase2Handler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostDataplaneDowntimePhase2Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase2 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase3Handler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostDataplaneDowntimePhase3Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase3 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimePhase4 returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateIsSystemReadyHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPostStateHandler PostUpgStateIsSystemReadyHandler returning");
+bool UpgPostStateHandler::PostIsSystemReadyHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostIsSystemReadyHandler returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateCleanupHandler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostCleanupHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostCleanup returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateSuccessHandler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostSuccessHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSuccess returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateFailedHandler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostFailedHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostFailed returning");
     return true;
 }
 
-bool UpgPostStateHandler::PostUpgStateAbortHandler(UpgCtx &ctx) {
+bool UpgPostStateHandler::PostAbortHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostAborted returning");
     return true;
 }

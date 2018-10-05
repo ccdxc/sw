@@ -16,7 +16,7 @@ ExUpgSvc::ExUpgSvc(delphi::SdkPtr sk, string name) {
     sdk_ = sk;
     svcName_ = name;
 
-    upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<ExSvcHandler>(), name, NON_AGENT);
+    upgsdk_ = make_shared<UpgSdk>(sdk_, make_shared<ExSvcHandler>(), name, NON_AGENT, nullptr);
 
     UPG_LOG_DEBUG("Example upgrade service constructor got called");
 }

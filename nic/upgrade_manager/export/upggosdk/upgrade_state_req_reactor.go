@@ -19,58 +19,58 @@ func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrRe
 	switch reqType {
 	case upgrade.UpgReqStateType_UpgStateUpgPossible:
 		log.Infof("Upgrade: Pre-upgrade check for UpgStateUpgPossible")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateCompatCheck(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.CompatCheckHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateCompatCheck:
 		log.Infof("Upgrade: Pre-upgrade check")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateCompatCheck(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.CompatCheckHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateLinkDown:
 		log.Infof("Upgrade: Link Down")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateLinkDown(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.LinkDownHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateLinkUp:
 		log.Infof("Upgrade: Link Up")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateLinkUp(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.LinkUpHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStatePostBinRestart:
 		log.Infof("Upgrade: Post-binary restart")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStatePostBinRestart(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.PostRestartHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateProcessQuiesce:
 		log.Infof("Upgrade: Processes Quiesced")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateProcessQuiesce(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.ProcessQuiesceHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimeStart:
 		log.Infof("Upgrade: Dataplane Downtime Start")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimeStart(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.DataplaneDowntimeStartHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase1:
 		log.Infof("Upgrade: Dataplane Downtime Phase1 Start")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase1(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.DataplaneDowntimePhase1Handler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase2:
 		log.Infof("Upgrade: Dataplane Downtime Phase2 Start")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase2(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.DataplaneDowntimePhase2Handler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase3:
 		log.Infof("Upgrade: Dataplane Downtime Phase3 Start")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase3(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.DataplaneDowntimePhase3Handler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase4:
 		log.Infof("Upgrade: Dataplane Downtime Phase4 Start")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateDataplaneDowntimePhase4(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.DataplaneDowntimePhase4Handler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateIsSystemReady:
 		log.Infof("Upgrade: Is System Ready")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateIsSystemReady(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.IsSystemReadyHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateCleanup:
 		log.Infof("Upgrade: Cleanup Request Received")
-		*hdlrResp = ctx.appHdlrs.HandleUpgStateCleanup(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.CleanupHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateSuccess:
 		log.Infof("Upgrade: Succeeded")
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-		ctx.appHdlrs.HandleUpgStateSuccess(&upgCtx)
+		ctx.appHdlrs.SuccessHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateFailed:
 		log.Infof("Upgrade: Failed")
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-		ctx.appHdlrs.HandleUpgStateFailed(&upgCtx)
+		ctx.appHdlrs.FailedHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateAbort:
 		log.Infof("Upgrade: Aborted")
 		hdlrResp.Resp = Success
 		hdlrResp.ErrStr = ""
-		ctx.appHdlrs.HandleUpgStateAbort(&upgCtx)
+		ctx.appHdlrs.AbortHandler(&upgCtx)
 	}
 }
 

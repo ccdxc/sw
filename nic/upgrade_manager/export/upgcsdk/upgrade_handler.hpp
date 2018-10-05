@@ -27,76 +27,76 @@ public:
      * Applications are expected to perform compat check 
      *     and let Upgrade manager know if Upgrade is allowed or not
      */
-    virtual HdlrResp HandleUpgStateCompatCheck(UpgCtx& upgCtx);
+    virtual HdlrResp CompatCheckHandler(UpgCtx& upgCtx);
     /*
      * Applications are expected to perform any quiescing needed in control plane.
      * Here, NMD-like agents are expected to stop accepting 
      *     any configurations from their north-bound agents
      */
-    virtual HdlrResp HandleUpgStateProcessQuiesce(UpgCtx& upgCtx);
+    virtual HdlrResp ProcessQuiesceHandler(UpgCtx& upgCtx);
     /*
      * LinkMgr is expected to bring link-down for disruptive upgrade
      */
-    virtual HdlrResp HandleUpgStateLinkDown(UpgCtx& upgCtx);
+    virtual HdlrResp LinkDownHandler(UpgCtx& upgCtx);
     /*
      * LinkMgr is expected to bring link-up for disruptive upgrade
      */
-    virtual HdlrResp HandleUpgStateLinkUp(UpgCtx& upgCtx);
+    virtual HdlrResp LinkUpHandler(UpgCtx& upgCtx);
     /*
      * Applications are expected to do any post-binary restart handling here.
      */
-    virtual HdlrResp HandleUpgStatePostBinRestart(UpgCtx& upgCtx);
+    virtual HdlrResp PostRestartHandler(UpgCtx& upgCtx);
     /*
      * At this stage, for disruptive upgrade,
      *   NicMgr and HAL together are expected to bring the dataplane down
      */
-    virtual HdlrResp HandleUpgStateDataplaneDowntimeStart(UpgCtx& upgCtx);
+    virtual HdlrResp DataplaneDowntimeStartHandler(UpgCtx& upgCtx);
     /*
      * At this stage, for disruptive upgrade,
      *   NicMgr and HAL together are expected to do post-link-up processing
      */
-    virtual HdlrResp HandleUpgStateIsSystemReady(UpgCtx& upgCtx);
+    virtual HdlrResp IsSystemReadyHandler(UpgCtx& upgCtx);
     /*
      * At this stage, following is expected:
      * 1. FTE is supposed to disable flow-miss
      * 2. Dataplane is quiesced
      */
-    virtual HdlrResp HandleUpgStateDataplaneDowntimePhase1(UpgCtx& upgCtx);
+    virtual HdlrResp DataplaneDowntimePhase1Handler(UpgCtx& upgCtx);
     /*
      * At this stage, following is expected:
      * 1. AdminQ comes up after transforming its relevant data to new format
      */
-    virtual HdlrResp HandleUpgStateDataplaneDowntimePhase2(UpgCtx& upgCtx);
+    virtual HdlrResp DataplaneDowntimePhase2Handler(UpgCtx& upgCtx);
     /*
      * At this stage, following is expected:
      * 1. All table data transformed to new format
      * 2. All table base addresses fixed up
      * 3. Programs in pipeline are ready to go
      */
-    virtual HdlrResp HandleUpgStateDataplaneDowntimePhase3(UpgCtx& upgCtx);
+    virtual HdlrResp DataplaneDowntimePhase3Handler(UpgCtx& upgCtx);
     /*
      * At this stage, following is expected:
      * 1. Dataplane is re-enabled
      * 2. FTE flow-miss re-enabled
      */
-    virtual HdlrResp HandleUpgStateDataplaneDowntimePhase4(UpgCtx& upgCtx);
+    virtual HdlrResp DataplaneDowntimePhase4Handler(UpgCtx& upgCtx);
     /*
      * At this stage, following is expected:
      * 1. Cleanup any state needed
      */
-    virtual HdlrResp HandleUpgStateCleanup(UpgCtx& upgCtx);
+    virtual HdlrResp CleanupHandler(UpgCtx& upgCtx);
     /*
      * Handle upgrade success
      */
-    virtual void HandleUpgStateSuccess(UpgCtx& upgCtx);
+    virtual void SuccessHandler(UpgCtx& upgCtx);
     /*
      * Handle upgrade failed
      */
-    virtual void HandleUpgStateFailed(UpgCtx& upgCtx);
+    virtual void FailedHandler(UpgCtx& upgCtx);
     /*
      * Handle upgrade aborted
      */
-    virtual void HandleUpgStateAbort(UpgCtx& upgCtx);
+    virtual void AbortHandler(UpgCtx& upgCtx);
 };
 typedef std::shared_ptr<UpgHandler> UpgHandlerPtr;
 

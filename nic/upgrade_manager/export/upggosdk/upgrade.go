@@ -45,19 +45,19 @@ type HdlrResp struct {
 
 //AgentHandlers agents to implement this
 type AgentHandlers interface {
-	UpgStateCompatCheckCompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateProcessQuiesceCompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateLinkDownCompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateLinkUpCompletionHandler(resp *HdlrResp, svcName string)
-	UpgStatePostBinRestartCompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateDataplaneDowntimeStartCompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateDataplaneDowntimePhase1CompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateDataplaneDowntimePhase2CompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateDataplaneDowntimePhase3CompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateDataplaneDowntimePhase4CompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateIsSystemReadyCompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateCleanupCompletionHandler(resp *HdlrResp, svcName string)
-	UpgStateAbortCompletionHandler(resp *HdlrResp, svcName string)
+	CompatCheckCompletionHandler(resp *HdlrResp, svcName string)
+	ProcessQuiesceCompletionHandler(resp *HdlrResp, svcName string)
+	LinkDownCompletionHandler(resp *HdlrResp, svcName string)
+	LinkUpCompletionHandler(resp *HdlrResp, svcName string)
+	PostRestartCompletionHandler(resp *HdlrResp, svcName string)
+	DataplaneDowntimeStartCompletionHandler(resp *HdlrResp, svcName string)
+	DataplaneDowntimePhase1CompletionHandler(resp *HdlrResp, svcName string)
+	DataplaneDowntimePhase2CompletionHandler(resp *HdlrResp, svcName string)
+	DataplaneDowntimePhase3CompletionHandler(resp *HdlrResp, svcName string)
+	DataplaneDowntimePhase4CompletionHandler(resp *HdlrResp, svcName string)
+	IsSystemReadyCompletionHandler(resp *HdlrResp, svcName string)
+	CleanupCompletionHandler(resp *HdlrResp, svcName string)
+	AbortCompletionHandler(resp *HdlrResp, svcName string)
 
 	UpgSuccessful()
 	UpgFailed(errStrList *[]string)
@@ -89,21 +89,21 @@ type UpgCtx struct {
 
 //UpgAppHandlers all upgrade applications to implement this
 type UpgAppHandlers interface {
-	HandleUpgStateCompatCheck(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStatePostBinRestart(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateProcessQuiesce(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateLinkDown(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateLinkUp(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateDataplaneDowntimeStart(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateDataplaneDowntimePhase1(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateDataplaneDowntimePhase2(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateDataplaneDowntimePhase3(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateDataplaneDowntimePhase4(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateIsSystemReady(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateCleanup(upgCtx *UpgCtx) HdlrResp
-	HandleUpgStateSuccess(upgCtx *UpgCtx)
-	HandleUpgStateFailed(upgCtx *UpgCtx)
-	HandleUpgStateAbort(upgCtx *UpgCtx)
+	CompatCheckHandler(upgCtx *UpgCtx) HdlrResp
+	PostRestartHandler(upgCtx *UpgCtx) HdlrResp
+	ProcessQuiesceHandler(upgCtx *UpgCtx) HdlrResp
+	LinkDownHandler(upgCtx *UpgCtx) HdlrResp
+	LinkUpHandler(upgCtx *UpgCtx) HdlrResp
+	DataplaneDowntimeStartHandler(upgCtx *UpgCtx) HdlrResp
+	DataplaneDowntimePhase1Handler(upgCtx *UpgCtx) HdlrResp
+	DataplaneDowntimePhase2Handler(upgCtx *UpgCtx) HdlrResp
+	DataplaneDowntimePhase3Handler(upgCtx *UpgCtx) HdlrResp
+	DataplaneDowntimePhase4Handler(upgCtx *UpgCtx) HdlrResp
+	IsSystemReadyHandler(upgCtx *UpgCtx) HdlrResp
+	CleanupHandler(upgCtx *UpgCtx) HdlrResp
+	SuccessHandler(upgCtx *UpgCtx)
+	FailedHandler(upgCtx *UpgCtx)
+	AbortHandler(upgCtx *UpgCtx)
 }
 
 // UpgSdk is the main Upgrade SDK API

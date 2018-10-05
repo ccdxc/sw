@@ -10,67 +10,67 @@ namespace upgrade {
 
 using namespace std;
 
-void UpgAgentHandler::UpgStateCompatCheckCompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::CompatCheckCompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Pre Upgrade Check completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateProcessQuiesceCompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::ProcessQuiesceCompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Process quiesce completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateLinkDownCompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::LinkDownCompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Link down completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateLinkUpCompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::LinkUpCompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Link up completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStatePostBinRestartCompletionHandler(HdlrResp &resp, string svcName) {
-    UPG_LOG_DEBUG("Post Bin Restart completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
+void UpgAgentHandler::PostRestartCompletionHandler(HdlrResp &resp, string svcName) {
+    UPG_LOG_DEBUG("Post Restart completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaneDowntimePhase1CompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::DataplaneDowntimePhase1CompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaneDowntimePhase2CompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::DataplaneDowntimePhase2CompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaneDowntimePhase3CompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::DataplaneDowntimePhase3CompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaneDowntimePhase4CompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::DataplaneDowntimePhase4CompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Dataplane downtime completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateDataplaneDowntimeStartCompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::DataplaneDowntimeStartCompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Dataplane downtime start completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateCleanupCompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::CleanupCompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Cleanup completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateAbortedCompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::AbortedCompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Aborted completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::UpgStateIsSystemReadyCompletionHandler(HdlrResp &resp, string svcName) {
+void UpgAgentHandler::IsSystemReadyCompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("IsSystemReady completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }

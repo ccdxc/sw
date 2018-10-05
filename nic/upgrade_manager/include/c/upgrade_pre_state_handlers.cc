@@ -12,32 +12,32 @@ namespace upgrade {
 
 using namespace std;
 
-bool UpgPreStateHandler::PreUpgStateCompatCheckHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPreStateHandler PrePreUpgState returning");
+bool UpgPreStateHandler::PreCompatCheckHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PrePre returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStatePostBinRestartHandler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PrePostBinRestartHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PrePostBinRestart returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateProcessQuiesceHandler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreProcessQuiesceHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreProcessQuiesce returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateLinkDownHandler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreLinkDownHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler Link Down returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateLinkUpHandler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreLinkUpHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler Link Up returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreDataplaneDowntimePhase1Handler(UpgCtx &ctx) {
     //TODO move to goto PostDataplaneDowntimePhase1
     if (planner::plan_and_move("/sw/nic/move_planner/hal_mem.json",
                                "/sw/nic/move_planner/hal_mem_after.json",
@@ -49,47 +49,47 @@ bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx) 
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase2Handler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreDataplaneDowntimePhase2Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreDataplaneDowntimePhase2 returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase3Handler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreDataplaneDowntimePhase3Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreDataplaneDowntimePhase3 returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreDataplaneDowntimePhase4 returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateDataplaneDowntimeStartHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPreStateHandler PreUpgStateDataplaneDowntimeStartHandler returning");
+bool UpgPreStateHandler::PreDataplaneDowntimeStartHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PreDataplaneDowntimeStartHandler returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateIsSystemReadyHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPreStateHandler PreUpgStateIsSystemReadyHandler returning");
+bool UpgPreStateHandler::PreIsSystemReadyHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PreIsSystemReadyHandler returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateCleanupHandler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreCleanupHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreCleanup returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateSuccessHandler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreSuccessHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreUpgSuccess returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateFailedHandler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreFailedHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreUpgFailed returning");
     return true;
 }
 
-bool UpgPreStateHandler::PreUpgStateAbortHandler(UpgCtx &ctx) {
+bool UpgPreStateHandler::PreAbortHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreUpgAborted returning");
     return true;
 }

@@ -39,22 +39,11 @@ typedef std::shared_ptr<ExUpgSvc> ExUpgSvcPtr;
 class ExSvcHandler : public UpgHandler {
 public:
     ExSvcHandler(){}
-    HdlrResp UpgStateReqCreate(UpgCtx& upgCtx) {
-        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        UPG_LOG_DEBUG("UpgHandler UpgStateReqCreate called for the SVC!");
-        return resp;
-    }
 
-    HdlrResp UpgStateReqDelete(UpgCtx& upgCtx) {
-        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        UPG_LOG_DEBUG("UpgHandler UpgStateReqDelete called for the SVC!");
-        return resp;
-    }
-
-    HdlrResp HandleUpgStateProcessQuiesce(UpgCtx& upgCtx) {
+    HdlrResp ProcessQuiesceHandler(UpgCtx& upgCtx) {
         //HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        UPG_LOG_DEBUG("UpgHandler HandleUpgStateProcessQuiesce called for the SVC!");
+        UPG_LOG_DEBUG("UpgHandler ProcessQuiesce called for the SVC!");
 
         UPG_LOG_DEBUG("UpgType {}", upgCtx.upgType);
         int version;
@@ -80,26 +69,26 @@ public:
         return resp;
     }
 
-    HdlrResp HandleUpgStateDataplaneDowntimePhase1(UpgCtx& upgCtx) {
+    HdlrResp DataplaneDowntimePhase1Handler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        //HdlrResp resp = {.resp=FAIL, .errStr="LALALALA: Example could not do HandleUpgStateDataplaneDowntimePhase1"};
-        UPG_LOG_DEBUG("UpgHandler HandleUpgStateDataplaneDowntimePhase1 called for the SVC!");
+        //HdlrResp resp = {.resp=FAIL, .errStr="LALALALA: Example could not do DataplaneDowntimePhase1"};
+        UPG_LOG_DEBUG("UpgHandler DataplaneDowntimePhase1 called for the SVC!");
         return resp;
     }
 
-    HdlrResp HandleUpgStateCleanup(UpgCtx& upgCtx) {
+    HdlrResp CleanupHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        UPG_LOG_DEBUG("UpgHandler HandleUpgStateCleanup called for the SVC!");
+        UPG_LOG_DEBUG("UpgHandler Cleanup called for the SVC!");
         return resp;
     }
 
-    void HandleUpgStateSuccess(UpgCtx& upgCtx) {
-        UPG_LOG_DEBUG("UpgHandler HandleUpgStateSuccess called for the SVC!");
+    void SuccessHandler(UpgCtx& upgCtx) {
+        UPG_LOG_DEBUG("UpgHandler Success called for the SVC!");
         return;
     }
 
-    void HandleUpgStateFailed(UpgCtx& upgCtx) {
-        UPG_LOG_DEBUG("UpgHandler HandleUpgStateFailed called for the SVC!");
+    void FailedHandler(UpgCtx& upgCtx) {
+        UPG_LOG_DEBUG("UpgHandler Failed called for the SVC!");
         return;
     }
 };

@@ -158,8 +158,8 @@ void InitStateMachineVector(void) {
                 "Perform Compat Check to see if upgrade is possible", 
                 "Compat check passed. Upgrade is possible.", 
                 "Compat check failed. Upgrade is not possible.",
-                &UpgPreStateHandler::PreUpgStateCompatCheckHandler,
-                &UpgPostStateHandler::PostUpgStateCompatCheckHandler
+                &UpgPreStateHandler::PreCompatCheckHandler,
+                &UpgPostStateHandler::PostCompatCheckHandler
                };
 
     NonDisruptiveUpgradeStateMachine[UpgStateCompatCheck] = 
@@ -173,8 +173,8 @@ void InitStateMachineVector(void) {
                 "Perform Compat Check", 
                 "Compat check passed", 
                 "Compat check failed",
-                &UpgPreStateHandler::PreUpgStateCompatCheckHandler,
-                &UpgPostStateHandler::PostUpgStateCompatCheckHandler
+                &UpgPreStateHandler::PreCompatCheckHandler,
+                &UpgPostStateHandler::PostCompatCheckHandler
                };
     NonDisruptiveUpgradeStateMachine[UpgStateProcessQuiesce] = 
                {
@@ -187,8 +187,8 @@ void InitStateMachineVector(void) {
                 "Quiesce Processes Pre-Restart", 
                 "Process Quiesce Pass", 
                 "Process Quiesce Fail",
-                &UpgPreStateHandler::PreUpgStateProcessQuiesceHandler,
-                &UpgPostStateHandler::PostUpgStateProcessQuiesceHandler
+                &UpgPreStateHandler::PreProcessQuiesceHandler,
+                &UpgPostStateHandler::PostProcessQuiesceHandler
                };
     NonDisruptiveUpgradeStateMachine[UpgStatePostBinRestart] = 
                {
@@ -201,8 +201,8 @@ void InitStateMachineVector(void) {
                 "Post Process Restart", 
                 "Post Process Restart Pass", 
                 "Post Process Restart Fail",
-                &UpgPreStateHandler::PreUpgStatePostBinRestartHandler,
-                &UpgPostStateHandler::PostUpgStatePostBinRestartHandler
+                &UpgPreStateHandler::PrePostBinRestartHandler,
+                &UpgPostStateHandler::PostPostBinRestartHandler
                };
     NonDisruptiveUpgradeStateMachine[UpgStateDataplaneDowntimePhase1] =
                {
@@ -215,8 +215,8 @@ void InitStateMachineVector(void) {
                 "Dataplane Downtime Phase1 Start",
                 "Dataplane Downtime Phase1 Success",
                 "Dataplane Downtime Phase1 Fail",
-                &UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase1Handler,
-                &UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase1Handler
+                &UpgPreStateHandler::PreDataplaneDowntimePhase1Handler,
+                &UpgPostStateHandler::PostDataplaneDowntimePhase1Handler
                };
     NonDisruptiveUpgradeStateMachine[UpgStateDataplaneDowntimePhase2] =
                {
@@ -229,8 +229,8 @@ void InitStateMachineVector(void) {
                 "Dataplane Downtime Phase2 Start",
                 "Dataplane Downtime Phase2 Success",
                 "Dataplane Downtime Phase2 Fail",
-                &UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase2Handler,
-                &UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase2Handler
+                &UpgPreStateHandler::PreDataplaneDowntimePhase2Handler,
+                &UpgPostStateHandler::PostDataplaneDowntimePhase2Handler
                };
     NonDisruptiveUpgradeStateMachine[UpgStateDataplaneDowntimePhase3] =
                {
@@ -243,8 +243,8 @@ void InitStateMachineVector(void) {
                 "Dataplane Downtime Phase3 Start",
                 "Dataplane Downtime Phase3 Success",
                 "Dataplane Downtime Phase3 Fail",
-                &UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase3Handler,
-                &UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase3Handler
+                &UpgPreStateHandler::PreDataplaneDowntimePhase3Handler,
+                &UpgPostStateHandler::PostDataplaneDowntimePhase3Handler
                };
     NonDisruptiveUpgradeStateMachine[UpgStateDataplaneDowntimePhase4] =
                {
@@ -257,8 +257,8 @@ void InitStateMachineVector(void) {
                 "Dataplane Downtime Phase4 Start",
                 "Dataplane Downtime Phase4 Success",
                 "Dataplane Downtime Phase4 Fail",
-                &UpgPreStateHandler::PreUpgStateDataplaneDowntimePhase4Handler,
-                &UpgPostStateHandler::PostUpgStateDataplaneDowntimePhase4Handler
+                &UpgPreStateHandler::PreDataplaneDowntimePhase4Handler,
+                &UpgPostStateHandler::PostDataplaneDowntimePhase4Handler
                };
     NonDisruptiveUpgradeStateMachine[UpgStateSuccess] = 
                {
@@ -271,8 +271,8 @@ void InitStateMachineVector(void) {
                 "Upgrade Success", 
                 "", 
                 "",
-                &UpgPreStateHandler::PreUpgStateSuccessHandler,
-                &UpgPostStateHandler::PostUpgStateSuccessHandler
+                &UpgPreStateHandler::PreSuccessHandler,
+                &UpgPostStateHandler::PostSuccessHandler
                };
     NonDisruptiveUpgradeStateMachine[UpgStateFailed] = 
                {
@@ -285,8 +285,8 @@ void InitStateMachineVector(void) {
                 "Upgrade Fail", 
                 "", 
                 "",
-                &UpgPreStateHandler::PreUpgStateFailedHandler,
-                &UpgPostStateHandler::PostUpgStateFailedHandler
+                &UpgPreStateHandler::PreFailedHandler,
+                &UpgPostStateHandler::PostFailedHandler
                 };
     NonDisruptiveUpgradeStateMachine[UpgStateCleanup] =
                {
@@ -299,8 +299,8 @@ void InitStateMachineVector(void) {
                 "Cleanup State",
                 "Cleanup Pass",
                 "Cleanup Fail",
-                &UpgPreStateHandler::PreUpgStateCleanupHandler,
-                &UpgPostStateHandler::PostUpgStateCleanupHandler
+                &UpgPreStateHandler::PreCleanupHandler,
+                &UpgPostStateHandler::PostCleanupHandler
                };
     NonDisruptiveUpgradeStateMachine[UpgStateAbort] = 
                {
@@ -313,8 +313,8 @@ void InitStateMachineVector(void) {
                 "Upgrade Aborted State", 
                 "Upgrade Aborted Pass", 
                 "Upgrade Aborted Fail",
-                &UpgPreStateHandler::PreUpgStateAbortHandler,
-                &UpgPostStateHandler::PostUpgStateAbortHandler
+                &UpgPreStateHandler::PreAbortHandler,
+                &UpgPostStateHandler::PostAbortHandler
                };
 
     DisruptiveUpgradeStateMachine[UpgStateCompatCheck] = 
@@ -328,8 +328,8 @@ void InitStateMachineVector(void) {
                 "Perform Compat Check", 
                 "Compat check passed", 
                 "Compat check failed",
-                &UpgPreStateHandler::PreUpgStateCompatCheckHandler,
-                &UpgPostStateHandler::PostUpgStateCompatCheckHandler
+                &UpgPreStateHandler::PreCompatCheckHandler,
+                &UpgPostStateHandler::PostCompatCheckHandler
                };
     DisruptiveUpgradeStateMachine[UpgStateLinkDown] =
                {
@@ -342,8 +342,8 @@ void InitStateMachineVector(void) {
                 "Link Down",
                 "Link Down Pass",
                 "Link Down Fail",
-                &UpgPreStateHandler::PreUpgStateLinkDownHandler,
-                &UpgPostStateHandler::PostUpgStateLinkDownHandler
+                &UpgPreStateHandler::PreLinkDownHandler,
+                &UpgPostStateHandler::PostLinkDownHandler
                };
     DisruptiveUpgradeStateMachine[UpgStateDataplaneDowntimeStart] =
                {
@@ -356,8 +356,8 @@ void InitStateMachineVector(void) {
                 "Dataplane Downtime Start",
                 "Dataplane Downtime Success",
                 "Dataplane Downtime Fail",
-                &UpgPreStateHandler::PreUpgStateDataplaneDowntimeStartHandler,
-                &UpgPostStateHandler::PostUpgStateDataplaneDowntimeStartHandler
+                &UpgPreStateHandler::PreDataplaneDowntimeStartHandler,
+                &UpgPostStateHandler::PostDataplaneDowntimeStartHandler
                };
     DisruptiveUpgradeStateMachine[UpgStatePostBinRestart] =
                {
@@ -370,8 +370,8 @@ void InitStateMachineVector(void) {
                 "Post Process Restart",
                 "Post Process Restart Pass",
                 "Post Process Restart Fail",
-                &UpgPreStateHandler::PreUpgStatePostBinRestartHandler,
-                &UpgPostStateHandler::PostUpgStatePostBinRestartHandler
+                &UpgPreStateHandler::PrePostBinRestartHandler,
+                &UpgPostStateHandler::PostPostBinRestartHandler
                };
     DisruptiveUpgradeStateMachine[UpgStateLinkUp] =
                {
@@ -384,8 +384,8 @@ void InitStateMachineVector(void) {
                 "Link Up",
                 "Link Up Pass",
                 "Link Up Fail",
-                &UpgPreStateHandler::PreUpgStateLinkUpHandler,
-                &UpgPostStateHandler::PostUpgStateLinkUpHandler
+                &UpgPreStateHandler::PreLinkUpHandler,
+                &UpgPostStateHandler::PostLinkUpHandler
                };
     DisruptiveUpgradeStateMachine[UpgStateIsSystemReady] = 
                {
@@ -398,8 +398,8 @@ void InitStateMachineVector(void) {
                 "Is System Ready", 
                 "Is System Ready Pass", 
                 "Is System Ready Fail",
-                &UpgPreStateHandler::PreUpgStateIsSystemReadyHandler,
-                &UpgPostStateHandler::PostUpgStateIsSystemReadyHandler
+                &UpgPreStateHandler::PreIsSystemReadyHandler,
+                &UpgPostStateHandler::PostIsSystemReadyHandler
                };
     DisruptiveUpgradeStateMachine[UpgStateSuccess] = 
                {
@@ -412,8 +412,8 @@ void InitStateMachineVector(void) {
                 "Upgrade Success", 
                 "", 
                 "",
-                &UpgPreStateHandler::PreUpgStateSuccessHandler,
-                &UpgPostStateHandler::PostUpgStateSuccessHandler
+                &UpgPreStateHandler::PreSuccessHandler,
+                &UpgPostStateHandler::PostSuccessHandler
                };
     DisruptiveUpgradeStateMachine[UpgStateFailed] = 
                {
@@ -426,8 +426,8 @@ void InitStateMachineVector(void) {
                 "Upgrade Fail", 
                 "", 
                 "",
-                &UpgPreStateHandler::PreUpgStateFailedHandler,
-                &UpgPostStateHandler::PostUpgStateFailedHandler
+                &UpgPreStateHandler::PreFailedHandler,
+                &UpgPostStateHandler::PostFailedHandler
                 };
     DisruptiveUpgradeStateMachine[UpgStateCleanup] =
                {
@@ -440,8 +440,8 @@ void InitStateMachineVector(void) {
                 "Cleanup State",
                 "Cleanup Pass",
                 "Cleanup Fail",
-                &UpgPreStateHandler::PreUpgStateCleanupHandler,
-                &UpgPostStateHandler::PostUpgStateCleanupHandler
+                &UpgPreStateHandler::PreCleanupHandler,
+                &UpgPostStateHandler::PostCleanupHandler
                };
     DisruptiveUpgradeStateMachine[UpgStateAbort] = 
                {
@@ -454,8 +454,8 @@ void InitStateMachineVector(void) {
                 "Upgrade Aborted State", 
                 "Upgrade Aborted Pass", 
                 "Upgrade Aborted Fail",
-                &UpgPreStateHandler::PreUpgStateAbortHandler,
-                &UpgPostStateHandler::PostUpgStateAbortHandler
+                &UpgPreStateHandler::PreAbortHandler,
+                &UpgPostStateHandler::PostAbortHandler
                };
 }
 }

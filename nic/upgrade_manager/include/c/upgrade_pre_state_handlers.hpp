@@ -13,21 +13,21 @@ using namespace std;
 class UpgPreStateHandler {
 public:
     UpgPreStateHandler() {}
-    bool PreUpgStateCompatCheckHandler(UpgCtx &ctx);
-    bool PreUpgStatePostBinRestartHandler(UpgCtx &ctx);
-    bool PreUpgStateProcessQuiesceHandler(UpgCtx &ctx);
-    bool PreUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx);
-    bool PreUpgStateDataplaneDowntimePhase2Handler(UpgCtx &ctx);
-    bool PreUpgStateDataplaneDowntimePhase3Handler(UpgCtx &ctx);
-    bool PreUpgStateDataplaneDowntimePhase4Handler(UpgCtx &ctx);
-    bool PreUpgStateCleanupHandler(UpgCtx &ctx);
-    bool PreUpgStateSuccessHandler(UpgCtx &ctx);
-    bool PreUpgStateFailedHandler(UpgCtx &ctx);
-    bool PreUpgStateAbortHandler(UpgCtx &ctx);
-    bool PreUpgStateLinkDownHandler(UpgCtx &ctx);
-    bool PreUpgStateLinkUpHandler(UpgCtx &ctx);
-    bool PreUpgStateDataplaneDowntimeStartHandler(UpgCtx &ctx);
-    bool PreUpgStateIsSystemReadyHandler(UpgCtx &ctx);
+    bool PreCompatCheckHandler(UpgCtx &ctx);
+    bool PrePostBinRestartHandler(UpgCtx &ctx);
+    bool PreProcessQuiesceHandler(UpgCtx &ctx);
+    bool PreDataplaneDowntimePhase1Handler(UpgCtx &ctx);
+    bool PreDataplaneDowntimePhase2Handler(UpgCtx &ctx);
+    bool PreDataplaneDowntimePhase3Handler(UpgCtx &ctx);
+    bool PreDataplaneDowntimePhase4Handler(UpgCtx &ctx);
+    bool PreCleanupHandler(UpgCtx &ctx);
+    bool PreSuccessHandler(UpgCtx &ctx);
+    bool PreFailedHandler(UpgCtx &ctx);
+    bool PreAbortHandler(UpgCtx &ctx);
+    bool PreLinkDownHandler(UpgCtx &ctx);
+    bool PreLinkUpHandler(UpgCtx &ctx);
+    bool PreDataplaneDowntimeStartHandler(UpgCtx &ctx);
+    bool PreIsSystemReadyHandler(UpgCtx &ctx);
 };
 typedef std::shared_ptr<UpgPreStateHandler> UpgPreStateHandlerPtr;
 

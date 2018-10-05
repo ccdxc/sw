@@ -13,21 +13,21 @@ using namespace std;
 class UpgPostStateHandler {
 public:
     UpgPostStateHandler() {}
-    bool PostUpgStateCompatCheckHandler(UpgCtx &ctx);
-    bool PostUpgStatePostBinRestartHandler(UpgCtx &ctx);
-    bool PostUpgStateProcessQuiesceHandler(UpgCtx &ctx);
-    bool PostUpgStateDataplaneDowntimePhase1Handler(UpgCtx &ctx);
-    bool PostUpgStateDataplaneDowntimePhase2Handler(UpgCtx &ctx);
-    bool PostUpgStateDataplaneDowntimePhase3Handler(UpgCtx &ctx);
-    bool PostUpgStateDataplaneDowntimePhase4Handler(UpgCtx &ctx);
-    bool PostUpgStateCleanupHandler(UpgCtx &ctx);
-    bool PostUpgStateSuccessHandler(UpgCtx &ctx);
-    bool PostUpgStateFailedHandler(UpgCtx &ctx);
-    bool PostUpgStateAbortHandler(UpgCtx &ctx);
-    bool PostUpgStateLinkDownHandler(UpgCtx &ctx);
-    bool PostUpgStateLinkUpHandler(UpgCtx &ctx);
-    bool PostUpgStateDataplaneDowntimeStartHandler(UpgCtx &ctx);
-    bool PostUpgStateIsSystemReadyHandler(UpgCtx &ctx);
+    bool PostCompatCheckHandler(UpgCtx &ctx);
+    bool PostPostBinRestartHandler(UpgCtx &ctx);
+    bool PostProcessQuiesceHandler(UpgCtx &ctx);
+    bool PostDataplaneDowntimePhase1Handler(UpgCtx &ctx);
+    bool PostDataplaneDowntimePhase2Handler(UpgCtx &ctx);
+    bool PostDataplaneDowntimePhase3Handler(UpgCtx &ctx);
+    bool PostDataplaneDowntimePhase4Handler(UpgCtx &ctx);
+    bool PostCleanupHandler(UpgCtx &ctx);
+    bool PostSuccessHandler(UpgCtx &ctx);
+    bool PostFailedHandler(UpgCtx &ctx);
+    bool PostAbortHandler(UpgCtx &ctx);
+    bool PostLinkDownHandler(UpgCtx &ctx);
+    bool PostLinkUpHandler(UpgCtx &ctx);
+    bool PostDataplaneDowntimeStartHandler(UpgCtx &ctx);
+    bool PostIsSystemReadyHandler(UpgCtx &ctx);
 };
 typedef std::shared_ptr<UpgPostStateHandler> UpgPostStateHandlerPtr;
 

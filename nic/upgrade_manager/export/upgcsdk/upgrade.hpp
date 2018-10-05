@@ -42,9 +42,6 @@ class UpgSdk {
     delphi::error CanPerformUpgrade(UpgType upgType);
 
 public:
-    UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent);
-    UpgSdk(delphi::SdkPtr sk, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah);
-    UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent);
     UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah);
     void SendAppRespSuccess(void);
     void SendAppRespFail(string str);
