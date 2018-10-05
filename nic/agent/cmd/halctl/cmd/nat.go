@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -15,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -81,7 +81,8 @@ func natpoolShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNatClient(c.ClientConn)
 
@@ -110,7 +111,8 @@ func natpoolShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.NatPoolGet(context.Background(), natpoolGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting NAT Pool failed. %v", err)
+		fmt.Printf("Getting NAT Pool failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -119,7 +121,7 @@ func natpoolShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Routes
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		natpoolShowOneResp(resp)
@@ -131,7 +133,8 @@ func natpoolDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNatClient(c.ClientConn)
 
@@ -160,13 +163,14 @@ func natpoolDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.NatPoolGet(context.Background(), natpoolGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting NAT Pool failed. %v", err)
+		fmt.Printf("Getting NAT Pool failed. %v\n", err)
+		return
 	}
 
 	// Print Routes
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -181,7 +185,8 @@ func natmappingShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNatClient(c.ClientConn)
 
@@ -199,7 +204,8 @@ func natmappingShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.NatMappingGet(context.Background(), natmappingGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting NAT Mapping failed. %v", err)
+		fmt.Printf("Getting NAT Mapping failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -208,7 +214,7 @@ func natmappingShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Routes
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		natmappingShowOneResp(resp)
@@ -220,7 +226,8 @@ func natmappingDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNatClient(c.ClientConn)
 
@@ -238,13 +245,14 @@ func natmappingDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.NatMappingGet(context.Background(), natmappingGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting NAT Mapping failed. %v", err)
+		fmt.Printf("Getting NAT Mapping failed. %v\n", err)
+		return
 	}
 
 	// Print Routes
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -259,7 +267,8 @@ func natpolicyShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNatClient(c.ClientConn)
 
@@ -277,13 +286,14 @@ func natpolicyShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.NatPolicyGet(context.Background(), natmappingGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting NAT Mapping failed. %v", err)
+		fmt.Printf("Getting NAT Mapping failed. %v\n", err)
+		return
 	}
 
 	// Print NAT Policies
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)

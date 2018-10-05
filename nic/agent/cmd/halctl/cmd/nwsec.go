@@ -15,7 +15,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -59,7 +58,8 @@ func handleNwsecProfShowCmd(cmd *cobra.Command, ofile *os.File) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNwSecurityClient(c.ClientConn)
 
@@ -83,20 +83,21 @@ func handleNwsecProfShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// HAL call
 	respMsg, err := client.SecurityProfileGet(context.Background(), secProfGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Security Profile failed. %v", err)
+		fmt.Printf("Getting Security Profile failed. %v\n", err)
+		return
 	}
 
 	// Print Security Profiles
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		if ofile != nil {
 			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-				log.Errorf("Failed to write to file %s, err : %v",
+				fmt.Printf("Failed to write to file %s, err : %v\n",
 					ofile.Name(), err)
 			}
 		} else {
@@ -119,7 +120,8 @@ func handleNwsecPolicyShowCmd(cmd *cobra.Command, ofile *os.File) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNwSecurityClient(c.ClientConn)
 
@@ -151,13 +153,14 @@ func handleNwsecPolicyShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// HAL call
 	respMsg, err := client.SecurityPolicyGet(context.Background(), secPolicyGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Security Policy failed. %v", err)
+		fmt.Printf("Getting Security Policy failed. %v\n", err)
+		return
 	}
 
 	// Print Security Profiles
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			fmt.Println("Policy Show not ok")
 			continue
 		}
@@ -165,7 +168,7 @@ func handleNwsecPolicyShowCmd(cmd *cobra.Command, ofile *os.File) {
 		b, _ := yaml.Marshal(respType.Interface())
 		if ofile != nil {
 			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-				log.Errorf("Failed to write to file %s, err : %v",
+				fmt.Printf("Failed to write to file %s, err : %v\n",
 					ofile.Name(), err)
 			}
 		} else {

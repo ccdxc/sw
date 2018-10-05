@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/spf13/cobra"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -48,23 +48,19 @@ func init() {
 	coppShowCmd.Flags().Uint64Var(&coppHandle, "handle", 0, "Specify copp handle")
 }
 
-func qosShowCmdHandler(cmd *cobra.Command, args []string) {
+func handleQosShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
 
 	client := halproto.NewQOSClient(c.ClientConn)
 
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
-
 	var req *halproto.QosClassGetRequest
-	if cmd.Flags().Changed("qosgroup") {
+	if cmd != nil && cmd.Flags().Changed("qosgroup") {
 		if isQosGroupValid(qosGroup) != true {
 			fmt.Printf("Invalid argument\n")
 			return
@@ -77,7 +73,7 @@ func qosShowCmdHandler(cmd *cobra.Command, args []string) {
 				},
 			},
 		}
-	} else if cmd.Flags().Changed("handle") {
+	} else if cmd != nil && cmd.Flags().Changed("handle") {
 		// Get specific qos class
 		req = &halproto.QosClassGetRequest{
 			KeyOrHandle: &halproto.QosClassKeyHandle{
@@ -97,19 +93,36 @@ func qosShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.QosClassGet(context.Background(), qosGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting qos class failed. %v", err)
+		fmt.Printf("Getting qos class failed. %v\n", err)
+		return
 	}
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				fmt.Printf("Failed to write to file %s, err : %v\n",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
 	}
+}
+
+func qosShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	handleQosShowCmd(cmd, nil)
 }
 
 func isQosGroupValid(qosGroup string) bool {
@@ -182,23 +195,19 @@ func inputToQosGroup(qosGroup string) halproto.QosGroup {
 	}
 }
 
-func coppShowCmdHandler(cmd *cobra.Command, args []string) {
+func handleCoppShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
 
 	client := halproto.NewQOSClient(c.ClientConn)
 
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
-
 	var req *halproto.CoppGetRequest
-	if cmd.Flags().Changed("copptype") {
+	if cmd != nil && cmd.Flags().Changed("copptype") {
 		if isCoppTypeValid(coppType) != true {
 			fmt.Printf("Invalid argument\n")
 			return
@@ -211,7 +220,7 @@ func coppShowCmdHandler(cmd *cobra.Command, args []string) {
 				},
 			},
 		}
-	} else if cmd.Flags().Changed("handle") {
+	} else if cmd != nil && cmd.Flags().Changed("handle") {
 		// Get specific copp
 		req = &halproto.CoppGetRequest{
 			KeyOrHandle: &halproto.CoppKeyHandle{
@@ -231,20 +240,37 @@ func coppShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.CoppGet(context.Background(), ifGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting copp failed. %v", err)
+		fmt.Printf("Getting copp failed. %v\n", err)
+		return
 	}
 
 	// Print copp
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				fmt.Printf("Failed to write to file %s, err : %v\n",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
 	}
+}
+
+func coppShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	handleCoppShowCmd(cmd, nil)
 }
 
 func isCoppTypeValid(coppType string) bool {

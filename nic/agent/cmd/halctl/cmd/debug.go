@@ -7,12 +7,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -80,7 +80,8 @@ func traceShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -91,13 +92,14 @@ func traceShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.TraceGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Getting Trace failed. %v", err)
+		fmt.Printf("Getting Trace failed. %v\n", err)
+		return
 	}
 
 	// Print Trace Level
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		traceShowResp(resp)
@@ -109,7 +111,8 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -138,13 +141,14 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.TraceUpdate(context.Background(), traceReqMsg)
 	if err != nil {
-		log.Errorf("Set trace level failed. %v", err)
+		fmt.Printf("Set trace level failed. %v\n", err)
+		return
 	}
 
 	// Print Trace Level
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		traceShowResp(resp)
@@ -198,7 +202,8 @@ func flushLogsDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -209,13 +214,14 @@ func flushLogsDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.FlushLogs(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Flushing logs failed. %v", err)
+		fmt.Printf("Flushing logs failed. %v\n", err)
+		return
 	}
 
 	// Print Response
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		if cmd != nil {
@@ -228,7 +234,8 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -267,7 +274,8 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	_, err = client.SecurityProfileUpdate(context.Background(), reqMsg)
 	if err != nil {
-		log.Errorf("Set conn tracking failed. %v", err)
+		fmt.Printf("Set conn tracking failed. %v\n", err)
+		return
 	}
 
 	// Get security profile
@@ -289,13 +297,14 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	getRespMsg, err := client.SecurityProfileGet(context.Background(), getReqMsg)
 	if err != nil {
-		log.Errorf("Get conn tracking failed. %v", err)
+		fmt.Printf("Get conn tracking failed. %v\n", err)
+		return
 	}
 
 	// Print Conn Tracking
 	for _, getResp := range getRespMsg.Response {
 		if getResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", getResp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", getResp.ApiStatus)
 			continue
 		}
 		fmt.Printf("Connection Tracking is %s\n", getConnTrack(getResp))

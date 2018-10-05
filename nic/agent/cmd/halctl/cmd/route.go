@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -15,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var routeShowCmd = &cobra.Command{
@@ -42,7 +42,8 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNetworkClient(c.ClientConn)
 
@@ -61,7 +62,8 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.RouteGet(context.Background(), routeGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Route failed. %v", err)
+		fmt.Printf("Getting Route failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -70,7 +72,7 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Routes
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		routeShowOneResp(resp)
@@ -82,7 +84,8 @@ func routeDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNetworkClient(c.ClientConn)
 
@@ -101,13 +104,14 @@ func routeDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.RouteGet(context.Background(), routeGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Route failed. %v", err)
+		fmt.Printf("Getting Route failed. %v\n", err)
+		return
 	}
 
 	// Print Routes
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)

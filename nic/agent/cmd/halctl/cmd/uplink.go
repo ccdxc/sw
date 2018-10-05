@@ -16,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -50,10 +49,12 @@ func uplinkShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	defer c.Close()
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
@@ -81,7 +82,8 @@ func uplinkShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting if failed. %v", err)
+		fmt.Printf("Getting if failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -90,22 +92,23 @@ func uplinkShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print IFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		uplinkShowOneResp(resp)
 	}
-	c.Close()
 }
 
 func uplinkDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	defer c.Close()
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
@@ -133,13 +136,14 @@ func uplinkDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting if failed. %v", err)
+		fmt.Printf("Getting if failed. %v\n", err)
+		return
 	}
 
 	// Print IFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -147,7 +151,6 @@ func uplinkDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Println(string(b))
 		fmt.Println("---")
 	}
-	c.Close()
 }
 
 func uplinkShowHeader(cmd *cobra.Command, args []string) {

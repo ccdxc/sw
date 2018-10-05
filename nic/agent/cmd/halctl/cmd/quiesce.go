@@ -7,12 +7,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var quiesceCmd = &cobra.Command{
@@ -46,7 +46,8 @@ func quiesceStartCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewInternalClient(c.ClientConn)
 
@@ -60,7 +61,7 @@ func quiesceStartCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	_, err = client.QuiesceStart(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Getting Table Metadata failed. %v", err)
+		fmt.Printf("Getting Table Metadata failed. %v\n", err)
 		return
 	}
 }
@@ -70,7 +71,8 @@ func quiesceStopCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewInternalClient(c.ClientConn)
 
@@ -84,7 +86,7 @@ func quiesceStopCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	_, err = client.QuiesceStop(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Getting Table Metadata failed. %v", err)
+		fmt.Printf("Getting Table Metadata failed. %v\n", err)
 		return
 	}
 }

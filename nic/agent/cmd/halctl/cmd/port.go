@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -15,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var portShowCmd = &cobra.Command{
@@ -36,18 +36,14 @@ func init() {
 	showCmd.AddCommand(portShowCmd)
 }
 
-func portShowCmdHandler(cmd *cobra.Command, args []string) {
+func handlePortShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
-
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
 
 	client := halproto.NewPortClient(c.ClientConn)
 
@@ -61,26 +57,44 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.PortGet(context.Background(), portGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Port failed. %v", err)
+		fmt.Printf("Getting Port failed. %v\n", err)
+		return
 	}
 
 	// Print EPs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
-		fmt.Println(string(b))
-		fmt.Println("---")
+		if ofile != nil {
+			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+				fmt.Printf("Failed to write to file %s, err : %v\n",
+					ofile.Name(), err)
+			}
+		} else {
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		}
 	}
+}
+
+func portShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+	handlePortShowCmd(cmd, nil)
 }
 
 func portShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -101,7 +115,8 @@ func portShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.PortGet(context.Background(), portGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Port failed. %v", err)
+		fmt.Printf("Getting Port failed. %v\n", err)
+		return
 	}
 
 	// Print header
@@ -110,7 +125,8 @@ func portShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Statistics
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
 		}
 		portShowStatsOneResp(resp)
 	}

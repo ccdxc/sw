@@ -17,7 +17,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -77,7 +76,8 @@ func handleACLShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -114,19 +114,20 @@ func handleACLShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// HAL call
 	respMsg, err := client.AclGet(context.Background(), aclGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting acl failed. %v", err)
+		fmt.Printf("Getting acl failed. %v\n", err)
+		return
 	}
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		if ofile != nil {
 			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-				log.Errorf("Failed to write to file %s, err : %v",
+				fmt.Printf("Failed to write to file %s, err : %v\n",
 					ofile.Name(), err)
 			}
 		} else {
@@ -149,7 +150,8 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -193,14 +195,15 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.AclGet(context.Background(), aclGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting acl failed. %v", err)
+		fmt.Printf("Getting acl failed. %v\n", err)
+		return
 	}
 
 	// Print eth acl rules
 	aclShowSpecEthHeader()
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		aclShowSpecOneResp(resp, true, false, false, false, false)
@@ -210,7 +213,7 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	aclShowSpecIPHeader()
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		aclShowSpecOneResp(resp, false, true, false, false, false)
@@ -220,7 +223,7 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	aclShowSpecTCPHeader()
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		aclShowSpecOneResp(resp, false, false, true, false, false)
@@ -230,7 +233,7 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	aclShowSpecUDPHeader()
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		aclShowSpecOneResp(resp, false, false, false, true, false)
@@ -240,7 +243,7 @@ func aclShowCmdHandler(cmd *cobra.Command, args []string) {
 	aclShowSpecIcmpHeader()
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		aclShowSpecOneResp(resp, false, false, false, false, true)
@@ -490,7 +493,8 @@ func aclShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	defer c.Close()
 
@@ -532,7 +536,8 @@ func aclShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.AclGet(context.Background(), aclGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting acl failed. %v", err)
+		fmt.Printf("Getting acl failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -540,7 +545,7 @@ func aclShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		aclShowStatusOneResp(resp)

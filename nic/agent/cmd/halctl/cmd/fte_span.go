@@ -16,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -84,7 +83,8 @@ func fteSpanShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 
 	client := halproto.NewDebugClient(c.ClientConn)
@@ -92,12 +92,13 @@ func fteSpanShowCmdHandler(cmd *cobra.Command, args []string) {
 	var empty *halproto.Empty
 	respMsg, err := client.FteSpanGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Getting if failed. %v", err)
+		fmt.Printf("Getting if failed. %v\n", err)
+		return
 	}
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -105,7 +106,6 @@ func fteSpanShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Println(string(b) + "\n")
 		fmt.Println("---")
 	}
-	c.Close()
 }
 
 func fteSpanDebugDisableCmdHandler(cmd *cobra.Command, args []string) {
@@ -113,7 +113,8 @@ func fteSpanDebugDisableCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 
 	client := halproto.NewDebugClient(c.ClientConn)
@@ -128,14 +129,14 @@ func fteSpanDebugDisableCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.FteSpanUpdate(context.Background(), fteSpanReqMsg)
 	if err != nil {
-		log.Errorf("FTE Span update failed. %v", err)
-		os.Exit(1)
+		fmt.Printf("FTE Span update failed. %v\n", err)
+		return
 	}
 
 	// Print Tables: For now its only one at a time
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 	}
@@ -149,7 +150,8 @@ func fteSpanDebugCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 
 	client := halproto.NewDebugClient(c.ClientConn)
@@ -249,14 +251,14 @@ func fteSpanDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.FteSpanUpdate(context.Background(), fteSpanReqMsg)
 	if err != nil {
-		log.Errorf("FTE Span update failed. %v", err)
-		os.Exit(1)
+		fmt.Printf("FTE Span update failed. %v\n", err)
+		return
 	}
 
 	// Print Tables: For now its only one at a time
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 	}

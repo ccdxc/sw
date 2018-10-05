@@ -16,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -73,7 +72,8 @@ func vrfShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewVrfClient(c.ClientConn)
 
@@ -97,7 +97,8 @@ func vrfShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.VrfGet(context.Background(), vrfGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting vrf failed. %v", err)
+		fmt.Printf("Getting vrf failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -106,7 +107,7 @@ func vrfShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 	// Print vrfs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		vrfShowOneResp(resp)
@@ -118,7 +119,8 @@ func vrfShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewVrfClient(c.ClientConn)
 
@@ -142,13 +144,14 @@ func vrfShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.VrfGet(context.Background(), vrfGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting vrf failed. %v", err)
+		fmt.Printf("Getting vrf failed. %v\n", err)
+		return
 	}
 
 	// Print vrfs
 	for i, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		if i == 0 {
@@ -164,7 +167,8 @@ func handleVrfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewVrfClient(c.ClientConn)
 
@@ -188,19 +192,21 @@ func handleVrfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// HAL call
 	respMsg, err := client.VrfGet(context.Background(), vrfGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting vrf failed. %v", err)
+		fmt.Printf("Getting vrf failed. %v\n", err)
+		return
 	}
 
 	// Print vrfs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		if ofile != nil {
 			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-				log.Errorf("Failed to write to file %s, err : %v",
+				fmt.Printf("Failed to write to file %s, err : %v\n",
 					ofile.Name(), err)
 			}
 		} else {

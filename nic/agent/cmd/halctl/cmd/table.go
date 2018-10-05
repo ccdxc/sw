@@ -14,7 +14,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -90,7 +89,8 @@ func tableInfoShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewTableClient(c.ClientConn)
 
@@ -104,12 +104,12 @@ func tableInfoShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.TableMetadataGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Getting Table Metadata failed. %v", err)
+		fmt.Printf("Getting Table Metadata failed. %v\n", err)
 		return
 	}
 
 	if respMsg.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-		log.Errorf("HAL Returned non OK status. %v", respMsg.ApiStatus)
+		fmt.Printf("HAL Returned non OK status. %v\n", respMsg.ApiStatus)
 		return
 	}
 
@@ -127,7 +127,8 @@ func tableDumpShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewTableClient(c.ClientConn)
 
@@ -176,8 +177,8 @@ func tableDumpShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.TableGet(context.Background(), tableReqMsg)
 	if err != nil {
-		log.Errorf("Getting Table failed. %v", err)
-		os.Exit(1)
+		fmt.Printf("Getting Table failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -186,7 +187,7 @@ func tableDumpShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Tables: For now its only one at a time
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		tableShowOneResp(resp)

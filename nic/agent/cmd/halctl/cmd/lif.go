@@ -16,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -70,9 +69,12 @@ func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	defer c.Close()
 
 	var req *halproto.LifGetRequest
 	if id != 0 {
@@ -96,7 +98,8 @@ func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
 	// HAL call
 	respMsg, err := client.LifGet(context.Background(), lifGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Lif failed. %v", err)
+		fmt.Printf("Getting Lif failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -109,7 +112,7 @@ func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
 	// Print LIFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		if spec == true {
@@ -118,7 +121,6 @@ func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
 			lifShowStatusOneResp(resp)
 		}
 	}
-	c.Close()
 }
 
 func lifShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -166,9 +168,12 @@ func handlelifDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	defer c.Close()
 
 	var req *halproto.LifGetRequest
 	if cmd != nil && cmd.Flags().Changed("id") {
@@ -191,20 +196,21 @@ func handlelifDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// HAL call
 	respMsg, err := client.LifGet(context.Background(), lifGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Lif failed. %v", err)
+		fmt.Printf("Getting Lif failed. %v\n", err)
+		return
 	}
 
 	// Print LIFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		if ofile != nil {
 			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-				log.Errorf("Failed to write to file %s, err : %v",
+				fmt.Printf("Failed to write to file %s, err : %v\n",
 					ofile.Name(), err)
 			}
 		} else {
@@ -212,7 +218,6 @@ func handlelifDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 			fmt.Println("---")
 		}
 	}
-	c.Close()
 }
 
 func lifDetailShowCmdHandler(cmd *cobra.Command, args []string) {

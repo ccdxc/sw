@@ -17,7 +17,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var systemShowCmd = &cobra.Command{
@@ -91,7 +90,7 @@ func handleSystemDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	client := halproto.NewSystemClient(c.ClientConn)
@@ -100,12 +99,12 @@ func handleSystemDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	var empty *halproto.Empty
 	resp, err := client.SystemGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Getting System Stats failed. %v", err)
+		fmt.Printf("Getting System Stats failed. %v\n", err)
 		return
 	}
 
 	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
-		log.Errorf("HAL Returned non OK status. %v", resp.GetApiStatus())
+		fmt.Printf("HAL Returned non OK status. %v\n", resp.GetApiStatus())
 		return
 	}
 
@@ -114,7 +113,7 @@ func handleSystemDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	b, _ := yaml.Marshal(respType.Interface())
 	if ofile != nil {
 		if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-			log.Errorf("Failed to write to file %s, err : %v",
+			fmt.Printf("Failed to write to file %s, err : %v\n",
 				ofile.Name(), err)
 		}
 	} else {
@@ -132,7 +131,7 @@ func systemDropStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	client := halproto.NewSystemClient(c.ClientConn)
@@ -167,12 +166,12 @@ func systemDropStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	var empty *halproto.Empty
 	resp, err := client.SystemGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Getting System Stats failed. %v", err)
+		fmt.Printf("Getting System Stats failed. %v\n", err)
 		return
 	}
 
 	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
-		log.Errorf("HAL Returned non OK status. %v", resp.GetApiStatus())
+		fmt.Printf("HAL Returned non OK status. %v\n", resp.GetApiStatus())
 		return
 	}
 
@@ -236,7 +235,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	client := halproto.NewSystemClient(c.ClientConn)
@@ -281,12 +280,12 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	var empty *halproto.Empty
 	resp, err := client.SystemGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Getting System Stats failed. %v", err)
+		fmt.Printf("Getting System Stats failed. %v\n", err)
 		return
 	}
 
 	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
-		log.Errorf("HAL Returned non OK status. %v", resp.GetApiStatus())
+		fmt.Printf("HAL Returned non OK status. %v\n", resp.GetApiStatus())
 		return
 	}
 
@@ -304,7 +303,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	if api {
 		respMsg, err := client.ApiStatsGet(context.Background(), empty)
 		if err != nil {
-			log.Errorf("Getting API Stats failed. %v", err)
+			fmt.Printf("Getting API Stats failed. %v\n", err)
 			return
 		}
 
@@ -367,7 +366,7 @@ func systemClockShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	client := halproto.NewDebugClient(c.ClientConn)
@@ -377,11 +376,12 @@ func systemClockShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	resp, err := client.ClockGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Clock get failed. %v", err)
+		fmt.Printf("Clock get failed. %v\n", err)
+		return
 	}
 
 	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
-		log.Errorf("HAL Returned non OK status. %v", resp.GetApiStatus())
+		fmt.Printf("HAL Returned non OK status. %v\n", resp.GetApiStatus())
 		return
 	}
 
@@ -1004,7 +1004,7 @@ func threadShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	client := halproto.NewDebugClient(c.ClientConn)
@@ -1014,7 +1014,8 @@ func threadShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.ThreadGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Thread get failed. %v", err)
+		fmt.Printf("Thread get failed. %v\n", err)
+		return
 	}
 
 	threadShowHeader()
@@ -1022,7 +1023,7 @@ func threadShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print Response
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		threadShowEntry(resp)
@@ -1054,7 +1055,7 @@ func threadDetailShow(ofile *os.File) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	client := halproto.NewDebugClient(c.ClientConn)
@@ -1064,20 +1065,21 @@ func threadDetailShow(ofile *os.File) {
 	// HAL call
 	respMsg, err := client.ThreadGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Thread get failed. %v", err)
+		fmt.Printf("Thread get failed. %v\n", err)
+		return
 	}
 
 	// Print Response
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		if ofile != nil {
 			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-				log.Errorf("Failed to write to file %s, err : %v",
+				fmt.Printf("Failed to write to file %s, err : %v\n",
 					ofile.Name(), err)
 			}
 		} else {

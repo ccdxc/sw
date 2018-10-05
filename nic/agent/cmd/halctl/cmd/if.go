@@ -16,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -69,9 +68,12 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	defer c.Close()
 
 	if len(args) > 0 {
 		if strings.Compare(args[0], "spec") != 0 {
@@ -101,7 +103,8 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting if failed. %v", err)
+		fmt.Printf("Getting if failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -110,19 +113,19 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print IFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		ifShowOneResp(resp)
 	}
-	c.Close()
 }
 
 func ifShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
 	defer c.Close()
@@ -153,7 +156,8 @@ func ifShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting if failed. %v", err)
+		fmt.Printf("Getting if failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -162,7 +166,7 @@ func ifShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// Print IFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		ifShowStatusOneResp(resp)
@@ -173,9 +177,12 @@ func handleIfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	defer c.Close()
 
 	var req *halproto.InterfaceGetRequest
 	if cmd != nil && cmd.Flags().Changed("id") {
@@ -198,20 +205,21 @@ func handleIfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// HAL call
 	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting if failed. %v", err)
+		fmt.Printf("Getting if failed. %v\n", err)
+		return
 	}
 
 	// Print IFs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		if ofile != nil {
 			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-				log.Errorf("Failed to write to file %s, err : %v",
+				fmt.Printf("Failed to write to file %s, err : %v\n",
 					ofile.Name(), err)
 			}
 		} else {
@@ -219,7 +227,6 @@ func handleIfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 			fmt.Println("---")
 		}
 	}
-	c.Close()
 }
 
 func ifDetailShowCmdHandler(cmd *cobra.Command, args []string) {

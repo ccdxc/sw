@@ -16,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var nwShowCmd = &cobra.Command{
@@ -59,7 +58,8 @@ func nwShowCmdHandler(cmd *cobra.Command, spec bool, status bool) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNetworkClient(c.ClientConn)
 
@@ -72,7 +72,8 @@ func nwShowCmdHandler(cmd *cobra.Command, spec bool, status bool) {
 	// HAL call
 	respMsg, err := client.NetworkGet(context.Background(), networkGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Network failed. %v", err)
+		fmt.Printf("Getting Network failed. %v\n", err)
+		return
 	}
 
 	// Print Header
@@ -87,7 +88,7 @@ func nwShowCmdHandler(cmd *cobra.Command, spec bool, status bool) {
 	// Print NHs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		if spec == true {
@@ -124,7 +125,8 @@ func handleNwDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		log.Fatalf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
 	}
 	client := halproto.NewNetworkClient(c.ClientConn)
 
@@ -137,20 +139,21 @@ func handleNwDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// HAL call
 	respMsg, err := client.NetworkGet(context.Background(), networkGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Network failed. %v", err)
+		fmt.Printf("Getting Network failed. %v\n", err)
+		return
 	}
 
 	// Print NHs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		if ofile != nil {
 			if _, err := ofile.WriteString(string(b)); err != nil {
-				log.Errorf("Failed to write to file %s, err : %v",
+				fmt.Printf("Failed to write to file %s, err : %v\n",
 					ofile.Name(), err)
 			}
 		} else {

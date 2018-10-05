@@ -5,8 +5,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var tsShowCmd = &cobra.Command{
@@ -38,21 +36,21 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// remove the output directory if one exists
 	err := os.RemoveAll(outFile)
 	if err != nil {
-		log.Errorf("Failed to remove directory %s, err : %v", outFile, err)
+		fmt.Printf("Failed to remove directory %s, err : %v\n", outFile, err)
 		os.Exit(1)
 	}
 
 	// create a new directory
 	err = os.MkdirAll(outDir, 0777)
 	if err != nil {
-		log.Errorf("Failed to create directory %s, err : %v", outDir, err)
+		fmt.Printf("Failed to create directory %s, err : %v\n", outDir, err)
 		os.Exit(1)
 	}
 
 	// create the o/p file
 	ofile, err := os.OpenFile(outFile, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
 	if err != nil {
-		log.Errorf("Failed to create output file %s, err : %v", outFile, err)
+		fmt.Printf("Failed to create output file %s, err : %v\n", outFile, err)
 		os.Exit(1)
 	}
 
@@ -79,6 +77,12 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleSessionDetailShowCmd(nil, ofile)
 	ofile.WriteString("ACL information\n\n")
 	handleACLShowCmd(nil, ofile)
+	//	ofile.WriteString("Port information\n\n")
+	//	handlePortShowCmd(nil, ofile)
+	ofile.WriteString("QoS information\n\n")
+	handleQosShowCmd(nil, ofile)
+	ofile.WriteString("Copp information\n\n")
+	handleCoppShowCmd(nil, ofile)
 	ofile.WriteString("Memory information\n\n")
 	allMemoryShowHandler(ofile)
 	ofile.WriteString("Thread information\n\n")

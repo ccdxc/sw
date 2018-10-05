@@ -16,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var epShowCmd = &cobra.Command{
@@ -58,8 +57,8 @@ func epShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
-		os.Exit(1)
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		return
 	}
 	defer c.Close()
 
@@ -82,7 +81,7 @@ func epShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.EndpointGet(context.Background(), epGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Endpoint failed. %v", err)
+		fmt.Printf("Getting Endpoint failed. %v\n", err)
 		return
 	}
 
@@ -92,7 +91,7 @@ func epShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print endpoints
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		epShowOneResp(resp)
@@ -103,8 +102,8 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
-		os.Exit(1)
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		return
 	}
 	defer c.Close()
 
@@ -125,7 +124,7 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.EndpointGet(context.Background(), epGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Endpoint failed. %v", err)
+		fmt.Printf("Getting Endpoint failed. %v\n", err)
 		return
 	}
 
@@ -135,7 +134,7 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print EPs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		epStatusShowOneResp(resp)
@@ -146,8 +145,8 @@ func handleEpDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
-		os.Exit(1)
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		return
 	}
 	defer c.Close()
 
@@ -163,20 +162,21 @@ func handleEpDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	// HAL call
 	respMsg, err := client.EndpointGet(context.Background(), epGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting Endpoint failed. %v", err)
+		fmt.Printf("Getting Endpoint failed. %v\n", err)
 		return
 	}
 
 	// Print EPs
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
 		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		if ofile != nil {
 			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-				log.Errorf("Failed to write to file %s, err : %v",
+				fmt.Printf("Failed to write to file %s, err : %v\n",
 					ofile.Name(), err)
 			}
 		} else {

@@ -16,7 +16,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -104,7 +103,7 @@ func slabShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	defer c.Close()
@@ -142,7 +141,8 @@ func slabShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.SlabGet(context.Background(), slabGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting slab failed. %v", err)
+		fmt.Printf("Getting slab failed. %v\n", err)
+		return
 	}
 
 	// Print header
@@ -152,7 +152,8 @@ func slabShowCmdHandler(cmd *cobra.Command, args []string) {
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			if all == false {
-				log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				return
 			}
 			continue
 		}
@@ -189,7 +190,7 @@ func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	defer c.Close()
@@ -227,13 +228,15 @@ func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.SlabGet(context.Background(), slabGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting slab failed. %v", err)
+		fmt.Printf("Getting slab failed. %v\n", err)
+		return
 	}
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			if all == false {
-				log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+				fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+				return
 			}
 			continue
 		}
@@ -248,7 +251,7 @@ func mtrackShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	defer c.Close()
@@ -276,7 +279,8 @@ func mtrackShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.MemTrackGet(context.Background(), mtrackGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting mtrack failed. %v", err)
+		fmt.Printf("Getting mtrack failed. %v\n", err)
+		return
 	}
 
 	// Print header
@@ -285,7 +289,7 @@ func mtrackShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print mtrack
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		mtrackShowResp(resp)
@@ -314,7 +318,7 @@ func mtrackDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	defer c.Close()
@@ -342,12 +346,13 @@ func mtrackDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.MemTrackGet(context.Background(), mtrackGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting mtrack failed. %v", err)
+		fmt.Printf("Getting mtrack failed. %v\n", err)
+		return
 	}
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -362,7 +367,7 @@ func hashShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	defer c.Close()
@@ -374,7 +379,7 @@ func hashShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.HashTableGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Getting mtrack failed. %v", err)
+		fmt.Printf("Getting mtrack failed. %v\n", err)
 	}
 
 	// Print header
@@ -383,7 +388,7 @@ func hashShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print hash
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		hashShowResp(resp)
@@ -415,7 +420,7 @@ func hashDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	defer c.Close()
@@ -427,13 +432,13 @@ func hashDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.HashTableGet(context.Background(), empty)
 	if err != nil {
-		log.Errorf("Getting hash table failed. %v", err)
+		fmt.Printf("Getting hash table failed. %v\n", err)
 	}
 
 	// Print hash table
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", resp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(resp)
@@ -448,7 +453,7 @@ func allMemoryShowHandler(ofile *os.File) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	defer c.Close()
@@ -469,7 +474,8 @@ func allMemoryShowHandler(ofile *os.File) {
 	// HAL call
 	sRespMsg, err := client.SlabGet(context.Background(), slabGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting slab failed. %v", err)
+		fmt.Printf("Getting slab failed. %v\n", err)
+		return
 	}
 
 	for _, sResp := range sRespMsg.Response {
@@ -479,7 +485,7 @@ func allMemoryShowHandler(ofile *os.File) {
 		respType := reflect.ValueOf(sResp)
 		b, _ := yaml.Marshal(respType.Interface())
 		if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-			log.Errorf("Failed to write to file %s, err : %v",
+			fmt.Printf("Failed to write to file %s, err : %v\n",
 				ofile.Name(), err)
 		}
 	}
@@ -499,18 +505,19 @@ func allMemoryShowHandler(ofile *os.File) {
 	// HAL call
 	mRespMsg, err := client.MemTrackGet(context.Background(), mtrackGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting mtrack failed. %v", err)
+		fmt.Printf("Getting mtrack failed. %v\n", err)
+		return
 	}
 
 	for _, mResp := range mRespMsg.Response {
 		if mResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL Returned non OK status. %v", mResp.ApiStatus)
+			fmt.Printf("HAL Returned non OK status. %v\n", mResp.ApiStatus)
 			continue
 		}
 		respType := reflect.ValueOf(mResp)
 		b, _ := yaml.Marshal(respType.Interface())
 		if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-			log.Errorf("Failed to write to file %s, err : %v",
+			fmt.Printf("Failed to write to file %s, err : %v\n",
 				ofile.Name(), err)
 		}
 	}
@@ -522,19 +529,19 @@ func allMemoryShowHandler(ofile *os.File) {
 		// HAL call
 		hRespMsg, err := client.HashTableGet(context.Background(), empty)
 		if err != nil {
-			log.Errorf("Getting hash table failed. %v", err)
+			fmt.Printf("Getting hash table failed. %v\n", err)
 		}
 
 		// Print hash table
 		for _, hResp := range hRespMsg.Response {
 			if hResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				log.Errorf("HAL Returned non OK status. %v", hResp.ApiStatus)
+				fmt.Printf("HAL Returned non OK status. %v\n", hResp.ApiStatus)
 				continue
 			}
 			respType := reflect.ValueOf(hResp)
 			b, _ := yaml.Marshal(respType.Interface())
 			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-				log.Errorf("Failed to write to file %s, err : %v",
+				fmt.Printf("Failed to write to file %s, err : %v\n",
 					ofile.Name(), err)
 			}
 		}
@@ -545,7 +552,7 @@ func summaryShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		log.Errorf("Could not connect to the HAL. Is HAL Running?")
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
 	defer c.Close()
@@ -571,7 +578,8 @@ func summaryShowCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	sRespMsg, err := client.SlabGet(context.Background(), slabGetReqMsg)
 	if err != nil {
-		log.Errorf("Getting slab failed. %v", err)
+		fmt.Printf("Getting slab failed. %v\n", err)
+		return
 	}
 
 	var memSlabHeld uint32
