@@ -288,21 +288,25 @@ validate_req_dummy_service(struct pnso_service *svc)
 static pnso_error_t
 validate_req_encryption_service(struct pnso_service *svc)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
+	struct pnso_crypto_desc *pnso_encrypt_desc;
 
 	if (!svc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service! svc: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid service! svc: 0x%llx err: %d",
 				(uint64_t) svc, err);
-		OSAL_ASSERT(0);
 		goto out;
 	}
 
 	if (svc->svc_type != PNSO_SVC_TYPE_ENCRYPT) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
+		OSAL_LOG_DEBUG("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
 				(uint64_t) svc, svc->svc_type, err);
-		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	pnso_encrypt_desc = (struct pnso_crypto_desc *) &svc->u.crypto_desc;
+	if (!svc_is_crypto_desc_valid(pnso_encrypt_desc)) {
+		OSAL_LOG_DEBUG("invalid crypto/encrypt desc specified! err: %d",
+				err);
 		goto out;
 	}
 
@@ -314,21 +318,25 @@ out:
 static pnso_error_t
 validate_req_decryption_service(struct pnso_service *svc)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
+	struct pnso_crypto_desc *pnso_decrypt_desc;
 
 	if (!svc) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service! svc: 0x%llx %d",
+		OSAL_LOG_DEBUG("invalid service! svc: 0x%llx %d",
 				(uint64_t) svc, err);
-		OSAL_ASSERT(0);
 		goto out;
 	}
 
 	if (svc->svc_type != PNSO_SVC_TYPE_DECRYPT) {
-		err = EINVAL;
-		OSAL_LOG_ERROR("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
+		OSAL_LOG_DEBUG("invalid service type specified! svc: 0x%llx svc_type: %d err: %d",
 				(uint64_t) svc, svc->svc_type, err);
-		OSAL_ASSERT(0);
+		goto out;
+	}
+
+	pnso_decrypt_desc = (struct pnso_crypto_desc *) &svc->u.crypto_desc;
+	if (!svc_is_crypto_desc_valid(pnso_decrypt_desc)) {
+		OSAL_LOG_DEBUG("invalid crypto/decrypt desc specified! err: %d",
+				err);
 		goto out;
 	}
 
@@ -480,19 +488,7 @@ validate_res_dummy_service(struct pnso_service_status *status)
 }
 
 static pnso_error_t
-validate_res_encryption_service(struct pnso_service_status *status)
-{
-	return PNSO_OK;
-}
-
-static pnso_error_t
-validate_res_decryption_service(struct pnso_service_status *status)
-{
-	return PNSO_OK;
-}
-
-static pnso_error_t
-validate_res_compression_service(struct pnso_service_status *status)
+validate_res_status(struct pnso_service_status *status)
 {
 	pnso_error_t err = EINVAL;
 	struct pnso_buffer_list *sgl;
@@ -500,7 +496,7 @@ validate_res_compression_service(struct pnso_service_status *status)
 
 	sgl = status->u.dst.sgl;
 	if (!sgl) {
-		OSAL_LOG_DEBUG("invalid dst buffer list specified for compression! sgl: 0x%llx err: %d",
+		OSAL_LOG_DEBUG("invalid dst buffer list specified! sgl: 0x%llx err: %d",
 				(uint64_t) sgl, err);
 		goto out;
 	}
@@ -532,33 +528,67 @@ out:
 }
 
 static pnso_error_t
+validate_res_encryption_service(struct pnso_service_status *status)
+{
+	pnso_error_t err = EINVAL;
+
+	err = validate_res_status(status);
+	if (err) {
+		OSAL_LOG_DEBUG("invalid output params specified for encryption! err: %d",
+				err);
+		goto out;
+	}
+
+	err = PNSO_OK;
+out:
+	return err;
+}
+
+static pnso_error_t
+validate_res_decryption_service(struct pnso_service_status *status)
+{
+	pnso_error_t err = EINVAL;
+
+	err = validate_res_status(status);
+	if (err) {
+		OSAL_LOG_DEBUG("invalid output params specified for decryption! err: %d",
+				err);
+		goto out;
+	}
+
+	err = PNSO_OK;
+out:
+	return err;
+}
+
+static pnso_error_t
+validate_res_compression_service(struct pnso_service_status *status)
+{
+	pnso_error_t err = EINVAL;
+
+	err = validate_res_status(status);
+	if (err) {
+		OSAL_LOG_DEBUG("invalid output params specified for compression! err: %d",
+				err);
+		goto out;
+	}
+
+	err = PNSO_OK;
+out:
+	return err;
+}
+
+static pnso_error_t
 validate_res_decompression_service(struct pnso_service_status *status)
 {
 	pnso_error_t err = EINVAL;
-	struct pnso_buffer_list *sgl;
-	size_t len;
 
-	sgl = status->u.dst.sgl;
-	if (!sgl) {
-		OSAL_LOG_DEBUG("invalid dst buffer list specified for decompression! sgl: 0x%llx err: %d",
-				(uint64_t) sgl, err);
+	err = validate_res_status(status);
+	if (err) {
+		OSAL_LOG_DEBUG("invalid output params specified for decompression! err: %d",
+				err);
 		goto out;
 	}
-
-	if (sgl->count < 1) {
-		OSAL_LOG_DEBUG("invalid # of buffers in res sgl specified! count: %d err: %d",
-				sgl->count, err);
-		goto out;
-	}
-
-	len = pbuf_get_buffer_list_len(sgl);
-	if (len == 0 || len > MAX_CPDC_DST_BUF_LEN) {
-		OSAL_LOG_DEBUG("invalid len in res sgl specified! len: %zu err: %d",
-				len, err);
-		goto out;
-	}
-
-	/* TODO-req: check alignment */
 
 	err = PNSO_OK;
 out:
@@ -762,10 +792,17 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	/* build service chain */
 	err = chn_build_chain(svc_req, svc_res, cb, cb_ctx,
 			pnso_poll_fn, pnso_poll_ctx);
+	if (err) {
+		OSAL_LOG_ERROR("failed to submit the request! err: %d", err);
+		goto out;
+	}
 
 	REQ_PPRINT_RESULT(svc_res);
 
 	OSAL_LOG_DEBUG("exit!");
+	return err;
+out:
+	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
 OSAL_EXPORT_SYMBOL(pnso_submit_request);

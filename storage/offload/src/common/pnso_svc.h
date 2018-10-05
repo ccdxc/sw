@@ -11,6 +11,8 @@ extern "C" {
 #endif
 
 /* service descriptor validation routines */
+bool svc_is_crypto_desc_valid(const struct pnso_crypto_desc *desc);
+
 bool svc_is_cp_desc_valid(const struct pnso_compression_desc *desc);
 
 bool svc_is_dc_desc_valid(const struct pnso_decompression_desc *desc);

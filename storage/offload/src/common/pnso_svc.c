@@ -9,6 +9,30 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 
+bool
+svc_is_crypto_desc_valid(const struct pnso_crypto_desc *desc)
+{
+	pnso_error_t err = EINVAL;
+
+	if ((desc->algo_type == PNSO_CRYPTO_TYPE_NONE) ||
+	    (desc->algo_type >= PNSO_CRYPTO_TYPE_MAX)) {
+		OSAL_LOG_ERROR("invalid algo_type %u specified! err: %d",
+				desc->algo_type, err);
+		return false;
+	}
+
+	if (!desc->iv_addr) {
+		OSAL_LOG_ERROR("invalid iv_addr 0x%llx specified! err: %d",
+				desc->iv_addr, err);
+		return false;
+	}
+
+	OSAL_LOG_DEBUG("crypto desc is valid algo_type: %hu", desc->algo_type);
+
+	return true;
+}
+
+/* -------------------------------------------------------------------------- */
 static inline bool
 is_cp_algo_type_valid(uint16_t algo_type)
 {
@@ -52,7 +76,7 @@ svc_is_cp_desc_valid(const struct pnso_compression_desc *desc)
 		return false;
 	}
 
-	OSAL_LOG_INFO("compression desc is valid algo_type: %hu threshold_len: %hu flags: %hu",
+	OSAL_LOG_DEBUG("compression desc is valid algo_type: %hu threshold_len: %hu flags: %hu",
 			desc->algo_type, desc->threshold_len, desc->flags);
 
 	return true;
@@ -89,7 +113,7 @@ svc_is_dc_desc_valid(const struct pnso_decompression_desc *desc)
 		return false;
 	}
 
-	OSAL_LOG_INFO("decompression desc is valid algo_type: %hu flags: %hu",
+	OSAL_LOG_DEBUG("decompression desc is valid algo_type: %hu flags: %hu",
 			desc->algo_type, desc->flags);
 
 	return true;
@@ -140,7 +164,7 @@ svc_is_hash_desc_valid(const struct pnso_hash_desc *desc)
 		return false;
 	}
 
-	OSAL_LOG_INFO("hash desc is valid algo_type: %hu flags: %hu",
+	OSAL_LOG_DEBUG("hash desc is valid algo_type: %hu flags: %hu",
 			desc->algo_type, desc->flags);
 
 	return true;
@@ -193,7 +217,7 @@ svc_is_chksum_desc_valid(const struct pnso_checksum_desc *desc)
 		return false;
 	}
 
-	OSAL_LOG_INFO("chksum desc is valid algo_type: %hu flags: %hu",
+	OSAL_LOG_DEBUG("chksum desc is valid algo_type: %hu flags: %hu",
 			desc->algo_type, desc->flags);
 
 	return true;
