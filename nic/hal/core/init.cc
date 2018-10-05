@@ -468,6 +468,9 @@ hal_sdk_init (void)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// make sure given data and control cores are subset of total available cores
+//------------------------------------------------------------------------------
 hal_ret_t
 hal_cores_validate (uint64_t sys_core,
                     uint64_t control_core,

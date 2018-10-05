@@ -135,6 +135,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
     in.close();
 
 end:
+
     HAL_TRACE_DEBUG("NIC forwarding mode : {}\n",
                     hal_cfg->forwarding_mode);
 
