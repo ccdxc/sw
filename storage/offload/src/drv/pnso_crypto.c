@@ -99,7 +99,7 @@ crypto_init_accelerator(const struct crypto_init_params *init_params,
 {
 	pnso_error_t err;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(init_params);
 	OSAL_ASSERT(pc_res);
@@ -125,13 +125,13 @@ out_mpools:
 void
 crypto_deinit_accelerator(struct per_core_resource *pc_res)
 {
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(pc_res);
 
 	deinit_mpools(pc_res);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 }
 
 pnso_error_t

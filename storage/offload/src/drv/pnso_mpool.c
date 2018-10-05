@@ -287,31 +287,31 @@ mpool_pprint(const struct mem_pool *mpool)
 	if (!mpool)
 		return;
 
-	OSAL_LOG_INFO("%-30s: 0x%llx", "mpool", (uint64_t) mpool);
-	// OSAL_LOG_INFO("%-30s: %llx", "mpool->mp_magic", mpool->mp_magic);
+	OSAL_LOG_DEBUG("%-30s: 0x%llx", "mpool", (uint64_t) mpool);
+	// OSAL_LOG_DEBUG("%-30s: %llx", "mpool->mp_magic", mpool->mp_magic);
 
-	OSAL_LOG_INFO("%-30s: %u:%s", "mpool->mp_config.mpc_type",
+	OSAL_LOG_DEBUG("%-30s: %u:%s", "mpool->mp_config.mpc_type",
 			mpool->mp_config.mpc_type,
 			mem_pool_get_type_str(mpool->mp_config.mpc_type));
-	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_num_objects",
+	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_num_objects",
 			mpool->mp_config.mpc_num_objects);
-	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_object_size",
+	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_object_size",
 			mpool->mp_config.mpc_object_size);
-	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_align_size",
+	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_align_size",
 			mpool->mp_config.mpc_align_size);
-	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_pad_size",
+	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_pad_size",
 			mpool->mp_config.mpc_pad_size);
-	OSAL_LOG_INFO("%-30s: %u", "mpool->mp_config.mpc_pool_size",
+	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_pool_size",
 			mpool->mp_config.mpc_pool_size);
 
-	OSAL_LOG_INFO("%-30s: 0x%llx", "mpool->mp_objects",
+	OSAL_LOG_DEBUG("%-30s: 0x%llx", "mpool->mp_objects",
 			(uint64_t) mpool->mp_objects);
 
-	OSAL_LOG_INFO("%-30s: %d", "mpool->mp_stack.mps_num_objects",
+	OSAL_LOG_DEBUG("%-30s: %d", "mpool->mp_stack.mps_num_objects",
 			mpool->mp_stack.mps_num_objects);
-	OSAL_LOG_INFO("%-30s: %d", "mpool->mp_stack.mps_top",
+	OSAL_LOG_DEBUG("%-30s: %d", "mpool->mp_stack.mps_top",
 			mpool->mp_stack.mps_top);
-	OSAL_LOG_INFO("%-30s: 0x%llx", "mpool->mp_stack.mps_objects",
+	OSAL_LOG_DEBUG("%-30s: 0x%llx", "mpool->mp_stack.mps_objects",
 			(uint64_t) mpool->mp_stack.mps_objects);
 
 	objects = mpool->mp_stack.mps_objects;

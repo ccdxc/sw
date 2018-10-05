@@ -7,9 +7,9 @@
 #define CRYPTO_PPRINT_DESC(d)
 #else
 #define CRYPTO_PPRINT_DESC(d)						       \
-	OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+	OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 	crypto_pprint_desc(d);						       \
-	OSAL_LOG_INFO("%.*s", 30, "=========================================");
+	OSAL_LOG_DEBUG("%.*s", 30, "=========================================");
 #endif
 
 /* status reported by hardware */

@@ -349,7 +349,7 @@ compress_schedule(const struct service_info *svc_info)
 	const struct sequencer_info *seq_info;
 	bool ring_db;
 
-	OSAL_LOG_INFO("enter ... ");
+	OSAL_LOG_DEBUG("enter ... ");
 
 	OSAL_ASSERT(svc_info);
 

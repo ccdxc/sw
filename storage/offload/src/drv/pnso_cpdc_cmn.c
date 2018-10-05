@@ -111,14 +111,14 @@ pprint_sgl(uint64_t sgl_pa)
 	if (!sgl)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx ==> 0x%llx", "", (uint64_t) sgl, sgl_pa);
+	OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x%llx", "", (uint64_t) sgl, sgl_pa);
 	while (sgl) {
-		OSAL_LOG_INFO("%30s: 0x%llx/%d/%d 0x%llx/%d/%d 0x%llx/%d/%d",
+		OSAL_LOG_DEBUG("%30s: 0x%llx/%d/%d 0x%llx/%d/%d 0x%llx/%d/%d",
 				"",
 				sgl->cs_addr_0, sgl->cs_len_0, sgl->cs_rsvd_0,
 				sgl->cs_addr_1, sgl->cs_len_1, sgl->cs_rsvd_1,
 				sgl->cs_addr_2, sgl->cs_len_2, sgl->cs_rsvd_2);
-		OSAL_LOG_INFO("%30s: 0x%llx/0x%llx", "",
+		OSAL_LOG_DEBUG("%30s: 0x%llx/0x%llx", "",
 				sgl->cs_next, sgl->cs_rsvd_3);
 
 		sgl = sgl->cs_next ? sonic_phy_to_virt(sgl->cs_next) : NULL;
@@ -131,26 +131,26 @@ pprint_cpdc_cmd(const struct cpdc_cmd *cmd)
 	if (!cmd)
 		return;
 
-	OSAL_LOG_INFO("%30s: %d", "cc_enabled", cmd->cc_enabled);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_enabled", cmd->cc_enabled);
 
-	OSAL_LOG_INFO("%30s: %d", "cc_header_present", cmd->cc_header_present);
-	OSAL_LOG_INFO("%30s: %d", "cc_insert_header", cmd->cc_insert_header);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_header_present", cmd->cc_header_present);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_insert_header", cmd->cc_insert_header);
 
-	OSAL_LOG_INFO("%30s: %d", "cc_db_on", cmd->cc_db_on);
-	OSAL_LOG_INFO("%30s: %d", "cc_otag_on", cmd->cc_otag_on);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_db_on", cmd->cc_db_on);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_otag_on", cmd->cc_otag_on);
 
-	OSAL_LOG_INFO("%30s: %d", "cc_src_is_list", cmd->cc_src_is_list);
-	OSAL_LOG_INFO("%30s: %d", "cc_dst_is_list", cmd->cc_dst_is_list);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_src_is_list", cmd->cc_src_is_list);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_dst_is_list", cmd->cc_dst_is_list);
 
-	OSAL_LOG_INFO("%30s: %d", "cc_chksum_verify_enabled",
+	OSAL_LOG_DEBUG("%30s: %d", "cc_chksum_verify_enabled",
 			cmd->cc_chksum_verify_enabled);
-	OSAL_LOG_INFO("%30s: %d", "cc_chksum_adler", cmd->cc_chksum_adler);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_chksum_adler", cmd->cc_chksum_adler);
 
-	OSAL_LOG_INFO("%30s: %d", "cc_hash_enabled", cmd->cc_hash_enabled);
-	OSAL_LOG_INFO("%30s: %d", "cc_hash_type", cmd->cc_hash_type);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_hash_enabled", cmd->cc_hash_enabled);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_hash_type", cmd->cc_hash_type);
 
-	OSAL_LOG_INFO("%30s: %d", "cc_integrity_src", cmd->cc_integrity_src);
-	OSAL_LOG_INFO("%30s: %d", "cc_integrity_type", cmd->cc_integrity_type);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_integrity_src", cmd->cc_integrity_src);
+	OSAL_LOG_DEBUG("%30s: %d", "cc_integrity_type", cmd->cc_integrity_type);
 }
 
 void __attribute__((unused))
@@ -159,34 +159,33 @@ cpdc_pprint_desc(const struct cpdc_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cpdc_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "cpdc_desc", (uint64_t) desc);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cd_src", desc->cd_src);
-	OSAL_LOG_INFO("%30s: 0x%llx", "cd_dst", desc->cd_dst);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_src", desc->cd_src);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_dst", desc->cd_dst);
 
-	OSAL_LOG_INFO("%30s:", "=== cpdc_cmd");
+	OSAL_LOG_DEBUG("%30s:", "=== cpdc_cmd");
 	pprint_cpdc_cmd(&desc->u.cd_bits);
 
-	OSAL_LOG_INFO("%30s: %d", "cd_datain_len", desc->cd_datain_len);
-	OSAL_LOG_INFO("%30s: %d", "cd_extended_len", desc->cd_extended_len);
-	OSAL_LOG_INFO("%30s: %d", "cd_threshold_len", desc->cd_threshold_len);
+	OSAL_LOG_DEBUG("%30s: %d", "cd_datain_len", desc->cd_datain_len);
+	OSAL_LOG_DEBUG("%30s: %d", "cd_extended_len", desc->cd_extended_len);
+	OSAL_LOG_DEBUG("%30s: %d", "cd_threshold_len", desc->cd_threshold_len);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cd_status_addr", desc->cd_status_addr);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_status_addr", desc->cd_status_addr);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cd_db_addr", desc->cd_db_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "cd_db_data", desc->cd_db_data);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_db_addr", desc->cd_db_addr);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_db_data", desc->cd_db_data);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cd_otag_addr", desc->cd_otag_addr);
-	OSAL_LOG_INFO("%30s: %d", "cd_otag_data", desc->cd_otag_data);
-
-	OSAL_LOG_INFO("%30s: %d", "cd_status_data", desc->cd_status_data);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "cd_otag_addr", desc->cd_otag_addr);
+	OSAL_LOG_DEBUG("%30s: %d", "cd_otag_data", desc->cd_otag_data);
+	OSAL_LOG_DEBUG("%30s: %d", "cd_status_data", desc->cd_status_data);
 
 	if (desc->u.cd_bits.cc_src_is_list) {
-		OSAL_LOG_INFO("%30s: 0x%llx", "=== src_sgl", desc->cd_src);
+		OSAL_LOG_DEBUG("%30s: 0x%llx", "=== src_sgl", desc->cd_src);
 		pprint_sgl(desc->cd_src);
 	}
 	if (desc->u.cd_bits.cc_dst_is_list) {
-		OSAL_LOG_INFO("%30s: 0x%llx", "=== dst_sgl", desc->cd_dst);
+		OSAL_LOG_DEBUG("%30s: 0x%llx", "=== dst_sgl", desc->cd_dst);
 		pprint_sgl(desc->cd_dst);
 	}
 }
@@ -197,17 +196,17 @@ cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc)
 	if (!status_desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== status_desc",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== status_desc",
 			(uint64_t) status_desc);
 
-	OSAL_LOG_INFO("%30s: %d", "csd_err", status_desc->csd_err);
-	OSAL_LOG_INFO("%30s: %d", "csd_valid", status_desc->csd_valid);
+	OSAL_LOG_DEBUG("%30s: %d", "csd_err", status_desc->csd_err);
+	OSAL_LOG_DEBUG("%30s: %d", "csd_valid", status_desc->csd_valid);
 
-	OSAL_LOG_INFO("%30s: %d", "csd_output_data_len",
+	OSAL_LOG_DEBUG("%30s: %d", "csd_output_data_len",
 			status_desc->csd_output_data_len);
-	OSAL_LOG_INFO("%30s: %d", "csd_partial_data",
+	OSAL_LOG_DEBUG("%30s: %d", "csd_partial_data",
 			status_desc->csd_partial_data);
-	OSAL_LOG_INFO("%30s: 0x%llx", "csd_integrity_data",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "csd_integrity_data",
 			status_desc->csd_integrity_data);
 
 	/* TODO-cpdc: print SHA */
