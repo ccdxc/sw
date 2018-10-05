@@ -14,3 +14,12 @@
 [submodule "nic/sdk/third-party/avago/aapl"]
 	path = nic/sdk/third-party/avago/aapl
 	url = git@github.com:pensando/aapl.git
+[submodule "nic/third-party/libconfig"]
+	path = nic/third-party/libconfig
+	url = git@github.com:pensando/libconfig
+[submodule "nic/third-party/odp"]
+	path = nic/third-party/odp
+	url = git@github.com:pensando/odp
+[submodule "nic/third-party/ofp"]
+	path = nic/third-party/ofp
+	url = git@github.com:pensando/ofp
