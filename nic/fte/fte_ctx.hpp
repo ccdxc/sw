@@ -681,6 +681,8 @@ public:
     bool force_delete() { return force_delete_; }
     void set_force_delete(bool val) { force_delete_ = val; }
     void set_use_vrf(hal::vrf_t *vrf) {use_vrf_ = vrf; }
+    bool l3_tunnel_flow() { return l3_tunnel_flow_; }
+    void set_l3_tunnel_flow(bool l3_tunnel_flow) { l3_tunnel_flow_ = l3_tunnel_flow; }
     void set_flow_lkupid(uint32_t flow_lookup_id) { flow_lkupid_ = flow_lookup_id; }
     fte_flow_log_info_t* flow_log(hal::flow_role_t role=hal::FLOW_ROLE_NONE) {
         if (role == hal::FLOW_ROLE_NONE) role = role_;
@@ -753,6 +755,7 @@ private:
     hal_handle_t          sep_handle_;
     hal_handle_t          dep_handle_;
     uint32_t              flow_lkupid_;
+    bool                  l3_tunnel_flow_;
     pipeline_event_t      event_;
     bool                  update_session_;
     fte_flow_log_info_t   iflow_log_[MAX_STAGES];

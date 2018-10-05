@@ -55,6 +55,20 @@ update_rewrite_info(fte::ctx_t&ctx)
         }
     }
 
+    if ((ctx.sl2seg() == ctx.dl2seg())  && (ctx.l3_tunnel_flow() == TRUE)) {
+        HAL_TRACE_DEBUG("l3-tunnel flow always route");
+        dmac = hal::ep_get_mac_addr(ctx.dep());
+        smac = hal::ep_get_rmac(ctx.dep(), ctx.dl2seg());
+
+        flowupd.header_rewrite.flags.dec_ttl = true;
+        if (MAC_TO_UINT64(*dmac) != 0) {
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, *(ether_addr *)dmac);
+        }
+        if (MAC_TO_UINT64(*smac) != 0) {
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, smac, *(ether_addr *)smac);
+        }
+    }
+
     // VLAN rewrite
     if (ctx.dif()->if_type != intf::IF_TYPE_TUNNEL) {
         if_l2seg_get_encap(ctx.dif(), ctx.dl2seg(), &vlan_valid, &vlan_id);

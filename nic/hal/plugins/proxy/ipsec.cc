@@ -230,6 +230,7 @@ ipsec_process_initiator_plain_flow(fte::ctx_t&ctx)
             flowupd.fwding.lport = args.lport_id; 
             HAL_TRACE_DEBUG("Updating encrypt result qid {}, lport {}", flowupd.fwding.qid, flowupd.fwding.lport);
         }
+        ctx.set_l3_tunnel_flow(TRUE);
         ret = ctx.update_flow(flowupd);
         ctx.set_feature_status(ret);
         ipsec_info->vrf = ctx.key().dvrf_id; 
@@ -294,6 +295,7 @@ ipsec_process_uplink_esp_flow(fte::ctx_t&ctx)
         HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
             rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 
             rule_cfg->action.sa_action_dec_handle);
+        ctx.set_l3_tunnel_flow(TRUE);
         if (rule_cfg->action.sa_action == ipsec::IpsecSAActionType::IPSEC_SA_ACTION_TYPE_DECRYPT) {
             HAL_TRACE_DEBUG("Result type Decrypt with qid {}", rule_cfg->action.sa_action_dec_handle);
             flowupd.fwding.qid = rule_cfg->action.sa_action_dec_handle;
@@ -394,6 +396,7 @@ ipsec_process_rflow(fte::ctx_t&ctx)
                 flowupd.fwding.qid = rule_cfg->action.sa_action_enc_handle;
                 flowupd.fwding.qtype = 0;
             }
+            ctx.set_l3_tunnel_flow(TRUE);
             flowupd.fwding.qid_en = true;
             flowupd.fwding.lport = args.lport_id; 
             ret = ctx.update_flow(flowupd);
