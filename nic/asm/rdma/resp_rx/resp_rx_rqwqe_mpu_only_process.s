@@ -6,11 +6,14 @@
 struct resp_rx_phv_t p;
 struct resp_rx_s2_t0_k k;
 
+#define IN_P  to_s2_ext_hdr_info
+
 #define GLOBAL_FLAGS        r7
 
 %%
 
     .param  resp_rx_rqwqe_process
+    .param  resp_rx_rqwqe_opt_process
     .param  resp_rx_rqwqe_wrid_process
 
 .align
@@ -25,7 +28,13 @@ resp_rx_rqwqe_mpu_only_process:
     bcf              [c1], rqwqe_wrid
     nop // BD Slot
 
+    bbeq             CAPRI_KEY_FIELD(IN_P, send_sge_opt), 1, rqwqe_opt
+    nop // BD Slot
+
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_PC_E(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process)
 
 rqwqe_wrid:
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_PC_E(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_wrid_process)
+
+rqwqe_opt:
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_PC_E(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_opt_process)

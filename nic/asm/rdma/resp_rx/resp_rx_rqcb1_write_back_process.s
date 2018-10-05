@@ -90,9 +90,10 @@ resp_rx_rqcb1_write_back_process:
     # c1: atomic
     tblwr.c1        d.busy, 0
 
+    seq         c2, CAPRI_KEY_FIELD(IN_TO_S_P, send_sge_opt), 1
     // updates for multi-packet case
-    tblwr       d.current_sge_offset, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit16_ebit31)
-    tblwr       d.current_sge_id, CAPRI_KEY_FIELD(IN_TO_S_P, current_sge_id)
+    tblwr.!c2   d.current_sge_offset, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit16_ebit31)
+    tblwr.!c2   d.current_sge_id, CAPRI_KEY_FIELD(IN_TO_S_P, current_sge_id)
     crestore    [c3, c2], CAPRI_KEY_RANGE(IN_TO_S_P, update_wqe_ptr, update_num_sges), 0x3
     #c3 - update_wqe_ptr
     #c2 - update_num_sges

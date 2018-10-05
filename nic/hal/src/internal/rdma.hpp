@@ -1181,6 +1181,11 @@ typedef struct bt_info_s {
     uint32_t    read_or_atomic : 1;
 } PACKED bt_info_t;
 
+typedef struct send_fml_s {
+    uint32_t    spec_psn: 24;
+    uint32_t    rsvd: 8;
+} PACKED send_fml_t;
+
 #define RQ_RING_ID            RING_ID_0
 #define RSQ_RING_ID           RING_ID_1
 #define ACK_NAK_RING_ID       RING_ID_2
@@ -1241,7 +1246,10 @@ typedef struct rqcb1_s {
     uint16_t    proxy_cindex;
     uint8_t     num_sges;
     uint8_t     current_sge_id;
-    uint32_t    current_sge_offset;
+    union {
+        uint32_t    current_sge_offset;
+        send_fml_t  send_info;
+    };
     uint64_t    curr_wqe_ptr;
     uint8_t     rsq_pindex;
     uint32_t    bt_in_progress : 8;

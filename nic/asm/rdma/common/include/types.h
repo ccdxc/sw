@@ -1341,6 +1341,11 @@ struct resp_bt_info_t {
     len: 32;
 };
 
+struct resp_rx_send_fml_t {
+    spec_psn: 24;
+    rsvd:      8;
+};
+
 #define IBV_QP_STATE_RESET      0
 #define IBV_QP_STATE_INIT       1
 #define IBV_QP_STATE_RTR        2

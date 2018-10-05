@@ -20,6 +20,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define TO_S_ATOMIC_INFO_P to_s1_atomic_info
 #define WQE_INFO_P t0_s2s_rqcb_to_wqe_info
 #define TO_S_RKEY_P to_s2_ext_hdr_info
+#define TO_S_RQWQE_MPU_P to_s2_ext_hdr_info
 #define TO_S_LKEY_P to_s4_lkey_info
 #define TO_S_CQCB_P to_s6_cqcb_info
 
@@ -33,6 +34,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define NEW_RSQ_P_INDEX r6
 
 #define WORK_NOT_DONE_RECIRC_CNT_MAX    8
+#define WQE_SIZE_2_SGES                 6
 
 %%
     .param    resp_rx_rqpt_process
@@ -158,8 +160,11 @@ skip_cnp_receive:
     // recirc packet with reason other than work_not_done
     // recirc packets with any other reason do not come here
     bcf         [c2 & !c7], skip_token_id_check
+    seq.c7      c7, d.log_wqe_size, WQE_SIZE_2_SGES // BD Slot
+    // c7: send FML with 64 byte WQE
 
 token_id_check:
+    bcf         [c2 & c7], skip_token_id_check
     // Slow path: token id check is mandatory
     // if fresh packet with send FML, OR
     // recirc packet with reason work_not_done
@@ -192,14 +197,14 @@ process_send_write_fml:
     //  using c5 in below code, make sure its not used
     
     // last packet should be at least 1 byte
-    beq.c3      REM_PYLD_BYTES, r0, inv_req_nak     
-    nop
+    beq.c3      REM_PYLD_BYTES, r0, inv_req_nak
+    nop // BD Slot
 
     // first/middle packets should be of pmtu size
     sne         c7, r1, REM_PYLD_BYTES
     bcf.c7      [c1|c2], inv_req_nak
-    
-    phvwr       p.s1.ack_info.psn, d.e_psn
+
+    phvwr       p.s1.ack_info.psn, d.e_psn // BD Slot
     // increment e_psn
     tblmincri   d.e_psn, 24, 1
 
@@ -264,15 +269,28 @@ wr_skip_immdt_as_dbell:
 process_send:
     //  c6: immdt, c5: write, c4: send, c3: last, c2: middle, c1: first
 
+    seq         c4, d.log_wqe_size, WQE_SIZE_2_SGES 
+    // c4: send_sge_opt
+    bcf         [!c4], send_sge_non_opt
+    tblmincri.c4    d.send_info.spec_psn, 24, 1 // BD Slot
+
+    CAPRI_SET_FIELD2(TO_S_RQWQE_MPU_P, send_sge_opt, 1)
+    CAPRI_SET_FIELD2(TO_S_WB1_P, send_sge_opt, 1)
+
+    b           send_sge_opt
+    // if 2 SGE's and FIRST packet, set spec_psn to 0
+    tblwr.c1    d.send_info.spec_psn, 0 // BD Slot
+
+send_sge_non_opt:
     // check if rnr case for Send First
-    seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
+    seq         c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
     bcf.c7      [c1], process_rnr
-    
+
     // populate PD in lkey's to_stage
     CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd)
     phvwr       CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable
 
-    crestore [c7, c6, c5], r7, (RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT)   //BD Slot
+    crestore    [c7, c6, c5], r7, (RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT)
     // c7: completion, c6: inv_rkey, c5: immdt
 
     // if SEND_FIRST, we simply need to checkout a descriptor
@@ -296,7 +314,7 @@ send_check_immdt:
     bcf         [!c5], send_in_progress
     seq         c7, d.immdt_as_dbell, 1     //BD Slot
     bcf         [!c7], send_skip_immdt_as_dbell
-    phvwr.!c7   p.cqe.recv_flags.imm_data_vld, 1     //BD Slot
+    phvwr.!c7   p.cqe.recv_flags.imm_data_vld, 1 // BD Slot
 
     //handle immdt_as_dbell
     and         r7, r7, ~(RESP_RX_FLAG_IMMDT)
@@ -321,6 +339,8 @@ send_skip_immdt_as_dbell:
 send_in_progress:
     // load rqcb3 to get wrid
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 3)
+    // if send FML, and last pkt, increment spec_c_index
+    tblmincri.c3.f SPEC_RQ_C_INDEX, d.log_num_wqes, 1
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb3_in_progress_process, r5)
 
     CAPRI_RESET_TABLE_0_ARG()
@@ -346,15 +366,21 @@ process_only_rd_atomic:
     phvwrpair   p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID, p.cqe.type, CQE_TYPE_RECV //BD Slot
 
 /******  Logic for SEND_ONLY packets ******/
+// send SGE opt is same as send only since
+// all packets in the multi packet msg will 
+// branch to rc_checkout and load rqpt_process
+// or dummy_rqpt
+send_sge_opt:
 process_send_only:
     
     // check if rnr case for Send Only
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
-    bcf			[c7], process_rnr
+    bcf        [c7], process_rnr
 
     // populate PD in lkey's to_stage
-    CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd)
-    phvwr       CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable
+    CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd) // BD Slot
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_WQE_P, spec_psn), d.send_info.spec_psn, \
+                CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable
 
     // handle immdiate data and inv_r_key
     crestore    [c7, c6], r7, (RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT) // BD Slot
@@ -818,12 +844,15 @@ process_ud:
 ud_checkout:
 rc_checkout:
 
+    IS_ANY_FLAG_SET(c7, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
+    // c7: last or only
+ 
     // checkout a descriptor
     add         r1, r0, SPEC_RQ_C_INDEX
 
     bbne        d.rq_in_hbm, 1, pt_process
     // flush the last tblwr in this path
-    tblmincri.f SPEC_RQ_C_INDEX, d.log_num_wqes, 1 //BD Slot
+    tblmincri.c7.f SPEC_RQ_C_INDEX, d.log_num_wqes, 1 //BD Slot
 
     sll         r2, r1, d.log_wqe_size
     add         r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
@@ -831,7 +860,8 @@ rc_checkout:
     CAPRI_RESET_TABLE_0_ARG()
     phvwrpair   CAPRI_PHV_FIELD(WQE_INFO_P, remaining_payload_bytes), REM_PYLD_BYTES, \
                 CAPRI_PHV_FIELD(WQE_INFO_P, curr_wqe_ptr), r2
-    CAPRI_SET_FIELD2(WQE_INFO_P, dma_cmd_index, RESP_RX_DMA_CMD_PYLD_BASE)
+    phvwrpair   CAPRI_PHV_FIELD(WQE_INFO_P, dma_cmd_index), RESP_RX_DMA_CMD_PYLD_BASE, \
+                CAPRI_PHV_FIELD(WQE_INFO_P, log_pmtu), d.log_pmtu
 
     //MPU only
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_dummy_rqpt_process, r0)
@@ -867,11 +897,10 @@ pt_process:
     CAPRI_RESET_TABLE_0_ARG()
     phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, page_seg_offset), r5, \
                 CAPRI_PHV_FIELD(INFO_OUT1_P, page_offset), r1
-    CAPRI_SET_FIELD2(INFO_OUT1_P, remaining_payload_bytes, REM_PYLD_BYTES)
-
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqpt_process, r3)
-    nop.e
-    nop
+    phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, remaining_payload_bytes), REM_PYLD_BYTES, \
+                CAPRI_PHV_FIELD(INFO_OUT1_P, log_pmtu), d.log_pmtu
+                
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqpt_process, r3)
 
 phv_drop:
     phvwr.e     p.common.p4_intr_global_drop, 1

@@ -38,11 +38,14 @@ resp_rx_rqpt_process:
 
     CAPRI_RESET_TABLE_0_ARG()
 
-    CAPRI_SET_FIELD2(INFO_OUT1_P, curr_wqe_ptr, r3)
     phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, remaining_payload_bytes), \
                 CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15), \
-                CAPRI_PHV_FIELD(INFO_OUT1_P, dma_cmd_index), \
-                RESP_RX_DMA_CMD_PYLD_BASE
+                CAPRI_PHV_FIELD(INFO_OUT1_P, curr_wqe_ptr), r3
+
+    phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, dma_cmd_index), \
+                RESP_RX_DMA_CMD_PYLD_BASE, \
+                CAPRI_PHV_FIELD(INFO_OUT1_P, log_pmtu), \
+                CAPRI_KEY_FIELD(IN_P, log_pmtu)
 
     // invoke rqwqe mpu only
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqwqe_mpu_only_process, r3)

@@ -160,7 +160,10 @@ struct rqcb1_t {
     // multi-packet send variables
     // written by S4, read by S0/S1 
     curr_wqe_ptr: 64;
-    current_sge_offset: 32;
+    union {
+        current_sge_offset: 32;
+        struct resp_rx_send_fml_t send_info; // rw 32 bits
+    };
     current_sge_id: 8;
     num_sges: 8;
 
