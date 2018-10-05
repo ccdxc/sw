@@ -73,6 +73,7 @@ enum PersonalityType {
     PERSONALITY_VENICE              = 2;
     PERSONALITY_NAPLES_WITH_QEMU    = 3;
 }
+
 // Node captures personality details of an E2E node
 message Node {
     // PersonalityType captures the node personality. naples node, venice node or qemu
@@ -87,9 +88,54 @@ message Node {
     // Node identifier
     string              node_name       = 4;
 
+    // Node specific configs
+    oneof node_info {
+        // naples
+        NaplesConfig    naples_config  = 5;
+
+        VeniceConfig    venice_config  = 6;
+    }
+
     // NodeStatus captures the details of the node action
-    IotaAPIResponse node_status         = 5;
+    IotaAPIResponse node_status         = 7;
 }
+
+
+message NaplesConfig {
+
+    // Control interface to use
+    string control_intf          = 1;
+
+    // Control ip to use
+    string control_ip            = 2;
+
+    // Venice IPs to use, if specified agent will come up im managed mode.
+    repeated string venice_ips   = 6;
+
+}
+
+message VenicePeer {
+
+    // hostname of peer node
+    string  host_name   = 1;
+
+    // ip of the peer node
+    string  ip_address  = 2;
+}
+
+message VeniceConfig {
+
+    // Control interface to use
+    string control_intf               = 1;
+
+    // Control ip to use
+    string control_ip                 = 2;
+
+    // Peers to add host name entries.
+    repeated VenicePeer venice_peers  = 3;
+
+}
+
 
 message WorkloadMsg{
     // API Response
