@@ -405,39 +405,39 @@ public:
 
    // create few uplinks and return the handle for the 1st one
     int uplinks_create(uint64_t if_id_start, uint32_t num_uplinks) {
-        InterfaceSpec           *spec;
-        InterfaceRequestMsg     req_msg;
-        InterfaceResponseMsg    rsp_msg;
-        ClientContext           context;
-        Status                  status;
-        static uint64_t         port_num = 1;
-
-        for (uint32_t i = 0; i < num_uplinks; i++) {
-            spec = req_msg.add_request();
-            spec->mutable_key_or_handle()->set_interface_id(if_id_start++);
-            spec->set_type(::intf::IfType::IF_TYPE_UPLINK);
-            spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
-            spec->mutable_if_uplink_info()->set_port_num(port_num++);
-        }
-        status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
-        if (status.ok()) {
-            for (uint32_t i = 0; i < num_uplinks; i++) {
-                assert(rsp_msg.response(i).api_status() == types::API_STATUS_OK);
-                std::cout << "Uplink interface create succeeded, handle = "
-                          << rsp_msg.response(i).status().if_handle()
-                          << std::endl;
-                if (rsp_msg.response(i).status().if_handle() == 0) {
-                    return -1;
-                }
-                uplink_hdls[i] = rsp_msg.response(i).status().if_handle();
-            }
-        } else {
-            for (uint32_t i = 0; i < num_uplinks; i++) {
-                std::cout << "Uplink interface create failed, error = "
-                          << rsp_msg.response(i).api_status()
-                          << std::endl;
-            }
-        }
+//        InterfaceSpec           *spec;
+//        InterfaceRequestMsg     req_msg;
+//        InterfaceResponseMsg    rsp_msg;
+//        ClientContext           context;
+//        Status                  status;
+//        static uint64_t         port_num = 1;
+//
+//        for (uint32_t i = 0; i < num_uplinks; i++) {
+//            spec = req_msg.add_request();
+//            spec->mutable_key_or_handle()->set_interface_id(if_id_start++);
+//            spec->set_type(::intf::IfType::IF_TYPE_UPLINK);
+//            spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+//            spec->mutable_if_uplink_info()->set_port_num(port_num++);
+//        }
+//        status = intf_stub_->InterfaceCreate(&context, req_msg, &rsp_msg);
+//        if (status.ok()) {
+//            for (uint32_t i = 0; i < num_uplinks; i++) {
+//                assert(rsp_msg.response(i).api_status() == types::API_STATUS_OK);
+//                std::cout << "Uplink interface create succeeded, handle = "
+//                          << rsp_msg.response(i).status().if_handle()
+//                          << std::endl;
+//                if (rsp_msg.response(i).status().if_handle() == 0) {
+//                    return -1;
+//                }
+//                uplink_hdls[i] = rsp_msg.response(i).status().if_handle();
+//            }
+//        } else {
+//            for (uint32_t i = 0; i < num_uplinks; i++) {
+//                std::cout << "Uplink interface create failed, error = "
+//                          << rsp_msg.response(i).api_status()
+//                          << std::endl;
+//            }
+//        }
 
         return 0;
     }

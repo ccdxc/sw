@@ -10,7 +10,7 @@ import (
 )
 
 // CreateInterface creates an interface
-func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, ns *netproto.Namespace) error {
+func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Interface, port *netproto.Port, ns *netproto.Namespace) error {
 	var ifSpec *halproto.InterfaceSpec
 	switch intf.Spec.Type {
 	case "LIF":
@@ -36,6 +36,11 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 		return nil
 
 	case "UPLINK":
+		var portID uint32
+		portID = 1
+		if port.Status.PortID == 5 {
+			portID = 2
+		}
 		ifSpec = &halproto.InterfaceSpec{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
 				KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
@@ -43,6 +48,11 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 				},
 			},
 			Type: halproto.IfType_IF_TYPE_UPLINK,
+			IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
+				IfUplinkInfo: &halproto.IfUplinkInfo{
+					PortNum: uint32(portID),
+				},
+			},
 		}
 
 	case "ENIC":
@@ -228,10 +238,9 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface, ns *netproto.Names
 }
 
 // ListInterfaces returns the lisg of lifs and uplinks from the datapath
-func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
+func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.PortInfoGetResponseMsg, error) {
 	if hd.Kind == "hal" {
 		lifReq := &halproto.LifGetRequest{}
-		var uplinks halproto.InterfaceGetResponseMsg
 		lifReqMsg := &halproto.LifGetRequestMsg{
 			Request: []*halproto.LifGetRequest{
 				lifReq,
@@ -245,26 +254,70 @@ func (hd *Datapath) ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.Int
 			return nil, nil, nil
 		}
 
-		// get all interfaces
-		ifReq := &halproto.InterfaceGetRequest{}
-		ifReqMsg := &halproto.InterfaceGetRequestMsg{
-			Request: []*halproto.InterfaceGetRequest{ifReq},
+		// get all ports
+		portReq := &halproto.PortInfoGetRequest{}
+		portReqMsg := &halproto.PortInfoGetRequestMsg{
+			Request: []*halproto.PortInfoGetRequest{portReq},
 		}
-		intfs, err := hd.Hal.Ifclient.InterfaceGet(context.Background(), ifReqMsg)
+		ports, err := hd.Hal.PortClient.PortInfoGet(context.Background(), portReqMsg)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		// return only the uplinks
-		for _, intf := range intfs.Response {
-			if intf.Spec.Type == halproto.IfType_IF_TYPE_UPLINK {
-				uplinks.Response = append(uplinks.Response, intf)
+		// return all the ports
+		for _, p := range ports.Response {
+			if p.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				return nil, nil, ErrHALNotOK
 			}
 		}
-		return lifs, &uplinks, err
+		return lifs, ports, err
 	}
 
 	// ToDo Remove the List Mock prior to FCS
-	lifs, uplinks, err := generateMockHwState()
-	return lifs, uplinks, err
+	lifs, ports, err := generateMockHwState()
+	return lifs, ports, err
+}
+
+// CreatePort will create a Port Object in HAL
+func (hd *Datapath) CreatePort(port *netproto.Port) error {
+	portSpeed, autoNegEnable := hd.convertPortSpeed(port.Spec.Speed)
+	portType, fecType := hd.convertPortTypeFec(port.Spec.Type)
+	portReqMsg := &halproto.PortRequestMsg{
+		Request: []*halproto.PortSpec{
+			{
+				KeyOrHandle: &halproto.PortKeyHandle{
+					KeyOrHandle: &halproto.PortKeyHandle_PortId{
+						PortId: uint32(port.Status.PortID),
+					},
+				},
+				AdminState:    halproto.PortAdminState_PORT_ADMIN_STATE_UP,
+				PortSpeed:     portSpeed,
+				PortType:      portType,
+				NumLanes:      port.Spec.Lanes,
+				AutoNegEnable: autoNegEnable,
+				FecType:       fecType,
+			},
+		},
+	}
+
+	// create port object
+	if hd.Kind == "hal" {
+		resp, err := hd.Hal.PortClient.PortCreate(context.Background(), portReqMsg)
+		if err != nil {
+			log.Errorf("Error creating tunnel interface. Err: %v", err)
+			return err
+		}
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+
+			return ErrHALNotOK
+		}
+	} else {
+		_, err := hd.Hal.PortClient.PortCreate(context.Background(), portReqMsg)
+		if err != nil {
+			log.Errorf("Error creating port. Err: %v", err)
+			return err
+		}
+	}
+	return nil
 }

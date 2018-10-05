@@ -929,6 +929,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         // mac_cfg_haps(cfg->cfg_path);
         break;
 
+    case platform_type_t::PLATFORM_TYPE_SIM:
     case platform_type_t::PLATFORM_TYPE_MOCK:
         // Faults and Sync is mocked
         mac_fn->mac_cfg         = &mac_cfg_hw;
@@ -950,7 +951,6 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_mgmt_fn->mac_stats_get   = &mac_mgmt_stats_get_hw;
         break;
 
-    case platform_type_t::PLATFORM_TYPE_SIM:
     case platform_type_t::PLATFORM_TYPE_ZEBU:
     case platform_type_t::PLATFORM_TYPE_HW:
         mac_fn->mac_cfg         = &mac_cfg_hw;

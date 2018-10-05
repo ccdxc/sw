@@ -4,6 +4,8 @@
 #include "nic/linkmgr/linkmgr_src.hpp"
 
 using linkmgr::g_linkmgr_state;
+using hal::CFG_OP_READ;
+using hal::CFG_OP_WRITE;
 
 int port_create(uint32_t port_id)
 {
@@ -34,7 +36,7 @@ int port_create(uint32_t port_id)
     // admin status
     args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
 
-    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+    linkmgr::g_linkmgr_state->cfg_db_open(CFG_OP_WRITE);
 
     ret = linkmgr::port_create(&args, &hal_handle);
 
@@ -73,7 +75,7 @@ int port_update(uint32_t            port_id,
         args.num_lanes = num_lanes;
     }
 
-    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+    linkmgr::g_linkmgr_state->cfg_db_open(CFG_OP_WRITE);
 
     ret = linkmgr::port_update(&args);
 
@@ -105,7 +107,7 @@ int port_get(uint32_t             port_id,
 
     args.port_num = port_id;
 
-    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_READ);
+    linkmgr::g_linkmgr_state->cfg_db_open(CFG_OP_READ);
 
     ret = linkmgr::port_get(&args);
 
@@ -232,7 +234,7 @@ int port_delete(uint32_t port_id)
 
     args.port_num = port_id;
 
-    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+    linkmgr::g_linkmgr_state->cfg_db_open(CFG_OP_WRITE);
 
     ret = linkmgr::port_delete(&args);
 

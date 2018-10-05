@@ -14,6 +14,11 @@
 #include "linkmgr_utils.hpp"
 #include "linkmgr_internal.hpp"
 
+using hal::hal_cfg_db_open;
+using hal::hal_cfg_db_close;
+using hal::CFG_OP_WRITE;
+using hal::CFG_OP_READ;
+
 static ::types::ApiStatus
 hal_ret_to_api_status (hal_ret_t hal_ret)
 {
@@ -41,9 +46,9 @@ hal_ret_to_api_status (hal_ret_t hal_ret)
 }
 
 static uint32_t
-sbus_addr (uint32_t port, uint32_t lane)
+sbus_addr (uint32_t asic, uint32_t asic_port, uint32_t lane)
 {
-    return linkmgr::catalog()->sbus_addr(port, lane);
+    return linkmgr::catalog()->sbus_addr(asic, asic_port, lane);
 }
 
 static uint32_t
@@ -122,7 +127,7 @@ populate_port_create_args (PortSpec& spec, port_args_t *args)
         linkmgr::port_fec_type_spec_to_sdk_port_fec_type(spec.fec_type());
 
     for (uint32_t i = 0; i < spec.num_lanes(); ++i) {
-        args->sbus_addr[i] = sbus_addr(spec.key_or_handle().port_id(), i);
+        args->sbus_addr[i] = sbus_addr(asic, asic_port, i);
     }
 }
 
@@ -192,7 +197,7 @@ PortServiceImpl::PortCreate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    hal_cfg_db_open(CFG_OP_WRITE);
 
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
@@ -212,7 +217,7 @@ PortServiceImpl::PortCreate(ServerContext *context,
         response->set_api_status(hal_ret_to_api_status(hal_ret));
     }
 
-    hal::hal_cfg_db_close();
+    hal_cfg_db_close();
 
     return Status::OK;
 }
@@ -292,7 +297,7 @@ PortServiceImpl::PortUpdate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    hal_cfg_db_open(CFG_OP_WRITE);
 
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
@@ -313,7 +318,7 @@ PortServiceImpl::PortUpdate(ServerContext *context,
         response->set_api_status(hal_ret_to_api_status(hal_ret));
     }
 
-    hal::hal_cfg_db_close();
+    hal_cfg_db_close();
 
     return Status::OK;
 }
@@ -350,7 +355,7 @@ PortServiceImpl::PortDelete(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    hal_cfg_db_open(CFG_OP_WRITE);
 
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
@@ -373,7 +378,7 @@ PortServiceImpl::PortDelete(ServerContext *context,
         response->set_api_status(hal_ret_to_api_status(hal_ret));
     }
 
-    hal::hal_cfg_db_close();
+    hal_cfg_db_close();
 
     return Status::OK;
 }
@@ -466,7 +471,7 @@ PortServiceImpl::PortGet(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
-    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal_cfg_db_open(CFG_OP_READ);
 
     for (i = 0; i < nreqs; i++) {
         auto request = req->request(i);
@@ -481,7 +486,7 @@ PortServiceImpl::PortGet(ServerContext *context,
         populate_port_get_response(request, rsp);
     }
 
-    hal::hal_cfg_db_close();
+    hal_cfg_db_close();
 
     return Status::OK;
 }
@@ -571,14 +576,14 @@ PortServiceImpl::PortInfoGet(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
-    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    hal_cfg_db_open(CFG_OP_READ);
 
     for (i = 0; i < nreqs; i++) {
         auto request = req->request(i);
         port_info_get(request, rsp);
     }
 
-    hal::hal_cfg_db_close();
+    hal_cfg_db_close();
 
     return Status::OK;
 }

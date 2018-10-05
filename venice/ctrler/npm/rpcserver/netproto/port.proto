@@ -59,6 +59,12 @@ message PortSpec {
         BREAKOUT_2X50G  = 3;
     }
 
+    enum PortType {
+        TYPE_NONE       = 0;
+        TYPE_ETHERNET   = 1;
+        TYPE_MANAGEMENT = 2;
+    }
+
     enum IFStatus {
         NONE    = 0;
         UP      = 1;
@@ -66,18 +72,23 @@ message PortSpec {
     }
 
 
-    // Port Speed
+    // Port Speed.
     string Speed            = 1 [(venice.check) = "StrEnum(PortSpec.PortSpeed",
                                  (gogoproto.jsontag) = "speed,omitempty"];
 
-
+    // Type of Port. Either TYPE_ETHERNET or TYPE_MANAGEMENT.
+    string Type             = 2 [(venice.check) = "StrEnum(PortStatus.PortType)",
+                                 (gogoproto.jsontag) = "type,omitempty"];
     // Port Breakout Mode
-    string BreakoutMode     = 2  [(venice.check) = "StrEnum(PortSpec.PortBreakout",
+    string BreakoutMode     = 3  [(venice.check) = "StrEnum(PortSpec.PortBreakout",
                                   (gogoproto.jsontag) = "breakout-mode,omitempty"];
 
-    // AdminStatus of the overlay port.
-    string AdminStatus      = 3 [(venice.check) = "StrEnum(PortStatus.IFStatus)",
+    // AdminStatus of the port.
+    string AdminStatus      = 4 [(venice.check) = "StrEnum(PortStatus.IFStatus)",
                                  (gogoproto.jsontag) = "admin-status,omitempty"];
+
+    // Number of Lanes on the port.
+    uint32 Lanes             = 5 [(gogoproto.jsontag) = "lanes,omitempty"];
 }
 
 // Port Status

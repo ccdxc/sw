@@ -27,6 +27,7 @@ type Hal struct {
 	Tnclient             halproto.VrfClient
 	Natclient            halproto.NatClient
 	IPSecclient          halproto.IpsecClient
+	PortClient           halproto.PortClient
 	TCPProxyPolicyClient halproto.TcpProxyClient
 }
 
@@ -43,6 +44,7 @@ type mockClients struct {
 	MockNatClient      *halproto.MockNatClient
 	MockIPSecClient    *halproto.MockIpsecClient
 	MockTCPProxyClient *halproto.MockTcpProxyClient
+	MockPortClient     *halproto.MockPortClient
 }
 
 // DB holds all the state information.

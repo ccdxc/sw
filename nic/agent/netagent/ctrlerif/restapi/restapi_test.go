@@ -445,22 +445,6 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		},
 	}
 
-	uplink := netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "preCreatedUplink",
-		},
-		Spec: netproto.InterfaceSpec{
-			Type:        "UPLINK",
-			AdminStatus: "UP",
-		},
-		Status: netproto.InterfaceStatus{
-			OperStatus: "UP",
-		},
-	}
-
 	enic := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
@@ -480,12 +464,6 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 	err = nagent.CreateInterface(&lif)
 	if err != nil {
 		log.Errorf("Failed to create LIF. {%v}", lif)
-		return
-	}
-
-	err = nagent.CreateInterface(&uplink)
-	if err != nil {
-		log.Errorf("Failed to create uplink. {%v}", uplink)
 		return
 	}
 

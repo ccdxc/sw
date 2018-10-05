@@ -33,7 +33,7 @@ echo "HAL WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
 
 while [ 1 ]
 do
-    OUTPUT="$(tail $HAL_LOG_FILE 2>&1 | grep "gRPC server listening on")"
+    OUTPUT="$(cat $HAL_LOG_FILE 2>&1 | grep "gRPC server listening on")"
     if [[ ! -z "$OUTPUT" ]]; then
         break
     fi

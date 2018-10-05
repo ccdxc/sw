@@ -4,6 +4,8 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "gen/proto/types.pb.h"
+
 namespace hal {
 
 uint64_t               hal_handle = 1;
@@ -67,6 +69,18 @@ hal_handle_id_ht (void)
     return NULL;
 }
 
+hal_ret_t
+hal_cfg_db_open(cfg_op_t cfg_op)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_cfg_db_close(void)
+{
+    return HAL_RET_OK;
+}
+
 void
 hal_handle_cfg_db_lock (bool readlock, bool lock)
 {
@@ -97,6 +111,11 @@ hal_destroy (void)
     return HAL_RET_OK;
 }
 
+types::ApiStatus
+hal_prepare_rsp (hal_ret_t ret)
+{
+    return types::API_STATUS_OK;
+}
 
 namespace pd {
 

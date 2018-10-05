@@ -812,8 +812,6 @@ port::port_init(linkmgr_cfg_t *cfg)
     char        *cfg_path    = std::getenv("HAL_CONFIG_PATH");
     std::string cfg_file     = "fw/" + serdes_fw_file();
 
-    linkmgr_csr_init();
-
     rc = port_mac_fn_init(cfg);
     if (rc != SDK_RET_OK) {
         SDK_TRACE_ERR("port mac init failed");

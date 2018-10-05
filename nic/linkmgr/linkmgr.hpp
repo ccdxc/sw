@@ -9,10 +9,7 @@
 
 #include "nic/sdk/include/sdk/linkmgr.hpp"
 #include "nic/include/base.hpp"
-#include "gen/proto/debug.grpc.pb.h"
 
-using debug::GenericOpnRequest;
-using debug::GenericOpnResponse;
 using sdk::linkmgr::port_args_t;
 
 namespace linkmgr {
@@ -31,11 +28,6 @@ hal_ret_t port_delete(port_args_t *port_args);
 hal_ret_t port_get(port_args_t *port_args);
 hal_ret_t port_get_all(port_get_cb_t port_get_cb, void *ctxt);
 
-hal_ret_t
-linkmgr_generic_debug_opn(GenericOpnRequest& req,
-                          GenericOpnResponse *resp);
-
 }    // namespace linkmgr
 
 #endif    // __LINKMGR_HPP__
-

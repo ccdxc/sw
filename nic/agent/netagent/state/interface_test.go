@@ -42,19 +42,6 @@ func TestInterfacesCreateDelete(t *testing.T) {
 		},
 	}
 
-	// uplink
-	uplink := &netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testUplink",
-		},
-		Spec: netproto.InterfaceSpec{
-			Type: "UPLINK",
-		},
-	}
-
 	// create lif
 	err := ag.CreateInterface(lif)
 	AssertOk(t, err, "Error creating lif")
@@ -69,16 +56,9 @@ func TestInterfacesCreateDelete(t *testing.T) {
 	AssertOk(t, err, "ENIC was not found in DB")
 	Assert(t, intf.Name == "testEnic", "Enic names did not match", intf)
 
-	// create uplink
-	err = ag.CreateInterface(uplink)
-	AssertOk(t, err, "Error creating uplink")
-	intf, err = ag.FindInterface(uplink.ObjectMeta)
-	AssertOk(t, err, "Uplink was not found in DB")
-	Assert(t, intf.Name == "testUplink", "Tenant names did not match", intf)
-
 	// verify list api works
 	intfList := ag.ListInterface()
-	Assert(t, len(intfList) == 3+existingIfLen, "Incorrect number of interfaces")
+	Assert(t, len(intfList) == 2+existingIfLen, "Incorrect number of interfaces")
 
 	// delete lif
 	err = ag.DeleteInterface(lif.Tenant, lif.Namespace, lif.Name)
@@ -91,12 +71,6 @@ func TestInterfacesCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error deleting ENIC")
 	intf, err = ag.FindInterface(enic.ObjectMeta)
 	Assert(t, err != nil, "ENIC found despite delete")
-
-	// delete uplink
-	err = ag.DeleteInterface(uplink.Tenant, uplink.Namespace, uplink.Name)
-	AssertOk(t, err, "Error creating uplink")
-	intf, err = ag.FindInterface(uplink.ObjectMeta)
-	Assert(t, err != nil, "Uplink found despite delete")
 
 	// verify list api works returns 0.
 	intfList = ag.ListInterface()
@@ -145,23 +119,6 @@ func TestInterfaceUpdate(t *testing.T) {
 		},
 	}
 
-	// uplink
-	uplink := &netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testUplink",
-		},
-		Spec: netproto.InterfaceSpec{
-			Type:        "UPLINK",
-			AdminStatus: "UP",
-		},
-		Status: netproto.InterfaceStatus{
-			OperStatus: "UP",
-		},
-	}
-
 	// create lif
 	err := ag.CreateInterface(lif)
 	AssertOk(t, err, "Error creating lif")
@@ -175,13 +132,6 @@ func TestInterfaceUpdate(t *testing.T) {
 	intf, err = ag.FindInterface(enic.ObjectMeta)
 	AssertOk(t, err, "ENIC was not found in DB")
 	Assert(t, intf.Name == "testEnic", "Enic names did not match", intf)
-
-	// create uplink
-	err = ag.CreateInterface(uplink)
-	AssertOk(t, err, "Error creating uplink")
-	intf, err = ag.FindInterface(uplink.ObjectMeta)
-	AssertOk(t, err, "Uplink was not found in DB")
-	Assert(t, intf.Name == "testUplink", "Tenant names did not match", intf)
 
 	// update interfaces statuses to be down
 	downLif := &netproto.Interface{
@@ -208,18 +158,6 @@ func TestInterfaceUpdate(t *testing.T) {
 		},
 	}
 
-	downUplink := &netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testUplink",
-		},
-		Spec: netproto.InterfaceSpec{
-			AdminStatus: "DOWN",
-		},
-	}
-
 	// update lif
 	err = ag.UpdateInterface(downLif)
 	AssertOk(t, err, "Error updating lif")
@@ -234,16 +172,9 @@ func TestInterfaceUpdate(t *testing.T) {
 	AssertOk(t, err, "ENIC not found in DB")
 	AssertEquals(t, "DOWN", intf.Spec.AdminStatus, "Expected ENIC to be down")
 
-	// update uplink
-	err = ag.UpdateInterface(downUplink)
-	AssertOk(t, err, "Error updating uplink")
-	intf, err = ag.FindInterface(downUplink.ObjectMeta)
-	AssertOk(t, err, "Uplink not found in DB")
-	AssertEquals(t, "DOWN", intf.Spec.AdminStatus, "Expected Uplink to be down")
-
 	// verify list api works.
 	intfList := ag.ListInterface()
-	Assert(t, len(intfList) == 3+existingIfLen, "Incorrect number of interfaces")
+	Assert(t, len(intfList) == 2+existingIfLen, "Incorrect number of interfaces")
 }
 
 func TestDuplicateInterfaceCreate(t *testing.T) {

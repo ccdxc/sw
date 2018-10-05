@@ -7,8 +7,8 @@ MODULE_SOLIBS = linkmgr_test_utils bm_allocator \
                 hal_lib agent_api linkmgr_src block_list \
                 list shmmgr slab ht timerfd periodic halproto \
                 linkmgr_src sdklinkmgr \
-                linkmgr_libsrc linkmgrcsr linkmgrcsr_helpers \
-                linkmgr_capricsr_int \
+                linkmgr_libsrc linkmgrcsr  \
+                capri_csrint \
                 logger thread twheel sdkpal catalog utils mtrack trace
 MODULE_LDLIBS = ${NIC_HAL_ALL_LDLIBS}
 MODULE_FLAGS  = -pthread -rdynamic

@@ -9,6 +9,7 @@
 #include "nic/hal/core/core.hpp"
 #include "nic/hal/core/plugins.hpp"
 #include "nic/sdk/include/sdk/periodic.hpp"
+#include "nic/linkmgr/linkmgr.hpp"
 
 namespace hal {
 
@@ -538,6 +539,70 @@ hal_logger_init (hal_cfg_t *hal_cfg)
                            hal::utils::trace_debug);
 
     return HAL_RET_OK;
+}
+
+// TODO remove duplicate in asic_pd
+platform_type_t
+hal_platform_mode_to_sdk_platform_type (hal_platform_mode_t platform_mode)
+{
+    switch(platform_mode) {
+    case HAL_PLATFORM_MODE_SIM:
+    case HAL_PLATFORM_MODE_RTL:
+        return sdk::types::platform_type_t::PLATFORM_TYPE_SIM;
+
+    case HAL_PLATFORM_MODE_HW:
+    case HAL_PLATFORM_MODE_HAPS:
+        return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
+
+    case HAL_PLATFORM_MODE_MOCK:
+        return sdk::types::platform_type_t::PLATFORM_TYPE_MOCK;
+
+    default:
+        break;
+    }
+
+    return sdk::types::platform_type_t::PLATFORM_TYPE_HW;
+}
+
+//------------------------------------------------------------------------------
+// initialize port control operations
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_linkmgr_init (hal_cfg_t *hal_cfg)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    /* skip linkmgr init for apollo until compilation for
+     * apollo-gtest is resolved
+     */
+
+#ifndef APOLLO
+    // Enable linkmgr only for sim/mock
+    if (hal_cfg->platform_mode == HAL_PLATFORM_MODE_SIM ||
+        hal_cfg->platform_mode == HAL_PLATFORM_MODE_MOCK ||
+        hal_cfg->platform_mode == HAL_PLATFORM_MODE_HW) {
+
+        sdk::linkmgr::linkmgr_cfg_t sdk_cfg;
+        memset(&sdk_cfg, 0, sizeof(sdk_cfg));
+
+        sdk_cfg.platform_type  =
+                hal_platform_mode_to_sdk_platform_type(hal_cfg->platform_mode);
+        sdk_cfg.cfg_path       = hal_cfg->cfg_path.c_str();
+        sdk_cfg.catalog        = hal_cfg->catalog;
+        sdk_cfg.server_builder = hal_cfg->server_builder;
+
+        ret = linkmgr::linkmgr_init(&sdk_cfg);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("linkmgr init failed");
+            return ret;
+        }
+
+        // start the linkmgr control thread
+        sdk::linkmgr::linkmgr_start();
+    }
+#endif
+
+    return ret;
 }
 
 }    // namespace hal

@@ -10,7 +10,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/include/asic_pd.hpp"
-#include "nic/linkmgr/linkmgr.hpp"
+#include "nic/linkmgr/linkmgr_debug.hpp"
 
 // TODO: we don't seem to be using these ??
 #include <vector>

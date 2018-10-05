@@ -17,6 +17,7 @@ hal_ret_t hal_sdk_init(void);
 hal_ret_t hal_cores_validate(uint64_t sys_core,
                              uint64_t control_core, uint64_t data_core);
 hal_ret_t hal_logger_init(hal_cfg_t *hal_cfg);
+hal_ret_t hal_linkmgr_init(hal_cfg_t *hal_cfg);
 // signal handler type
 typedef void (*hal_sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 hal_ret_t hal_sig_init(hal_sig_handler_t sig_handler);
