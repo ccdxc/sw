@@ -455,15 +455,17 @@ del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
 
     if (sep == NULL) {
        sep = find_ep_by_handle(session->sep_handle);
-       HAL_ABORT(sep != NULL);
-    }
-    if (dep == NULL) {
-       dep = find_ep_by_handle(session->dep_handle);
-       HAL_ABORT(dep != NULL);
     }
 
-    ep_del_session(sep, session);
-    ep_del_session(dep, session);
+    if (dep == NULL) {
+       dep = find_ep_by_handle(session->dep_handle);
+    }
+
+    if (sep)
+        ep_del_session(sep, session);
+
+    if (dep)
+        ep_del_session(dep, session);
 }
 
 
