@@ -27,6 +27,11 @@ objects:
   count: 8
   rest-endpoint: "/api/tunnels/"
   spec-file: "generated/tunnels.json"
+- kind: TCPProxyPolicy
+  name: scale-tcp-proxy
+  count: 1
+  rest-endpoint: "/api/tcp/proxies/"
+  spec-file: "generated/tcp_proxy_policies.json"
 #- kind: IPSecSAEncrypt
 #  name: scale-ipsec-encrypt-sa
 #  count: 4

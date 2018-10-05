@@ -343,7 +343,11 @@ tcp_proxy_cfg_rule_action_spec_extract (const tcp_proxy::TcpProxyAction& spec,
     hal_ret_t ret = HAL_RET_OK;
     action->tcp_proxy_action = spec.tcp_proxy_action_type();
     action->proxy_type = spec.proxy_type();
-    if (spec.proxy_type() == types::PROXY_TYPE_TCP) {
+    if (spec.proxy_type() == types::PROXY_TYPE_NONE) {
+	action->proxy_type = types::PROXY_TYPE_TCP;
+        HAL_TRACE_DEBUG("PROXY_TYPE_TCP: Policy Defaulting to TCP ")
+    }
+    else if (spec.proxy_type() == types::PROXY_TYPE_TCP) {
         HAL_TRACE_DEBUG("PROXY_TYPE_TCP: Policy")
     } else if (spec.proxy_type() == types::PROXY_TYPE_TLS) {
         HAL_TRACE_DEBUG("PROXY_TYPE_TLS: Policy")
