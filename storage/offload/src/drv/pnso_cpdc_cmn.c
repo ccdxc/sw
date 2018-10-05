@@ -516,69 +516,8 @@ out:
 	return err;
 }
 
-/*
- * TODO-cpdc:
- *	retire this to use _ex() version when per-block lone chksum is needed
- *
- */
 uint32_t
 cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
-		uint32_t src_buf_len, struct cpdc_sgl *src_sgl,
-		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc,
-		fill_desc_fn_t fill_desc_fn)
-{
-	struct cpdc_desc *pb_desc;
-	struct cpdc_status_desc *pb_status_desc;
-	struct pnso_flat_buffer flat_buf;
-	uint32_t desc_object_size, status_object_size;
-	uint32_t len, block_cnt, buf_len, i = 0;
-	char *buf;
-
-	/*
-	 * per-block support assumes the input buffer will be mapped to a
-	 * flat buffer and for 8-blocks max.  Memory for this flat buffer
-	 * should come from HBM memory.
-	 *
-	 */
-	flat_buf.len = src_buf_len;
-	flat_buf.buf = (uint64_t) osal_phy_to_virt(src_sgl->cs_addr_0);
-
-	block_cnt = pbuf_get_flat_buffer_block_count(&flat_buf, block_size);
-	pb_desc = desc;
-	pb_status_desc = status_desc;
-
-	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x%llx desc: 0x%llx status_desc: 0x%llx",
-			block_cnt, block_size, src_buf_len, flat_buf.buf,
-			(uint64_t) desc, (uint64_t) status_desc);
-
-	desc_object_size = cpdc_get_desc_size();
-	status_object_size = cpdc_get_status_desc_size();
-
-	buf_len = src_buf_len;
-	for (i = 0; buf_len && (i < block_cnt); i++) {
-		buf = (char *) flat_buf.buf + (i * block_size);
-		len = buf_len > block_size ? block_size : buf_len;
-
-		OSAL_LOG_INFO("blk_num: %d buf: 0x%llx, len: %d desc: 0x%llx status_desc: 0x%llx",
-			i, (uint64_t) buf, len, (uint64_t) pb_desc,
-			(uint64_t) pb_status_desc);
-
-		fill_desc_fn(algo_type, len, true,
-				buf, pb_desc, pb_status_desc);
-		buf_len -= len;
-
-		pb_desc = get_next_desc(pb_desc, desc_object_size);
-
-		pb_status_desc = cpdc_get_next_status_desc(pb_status_desc,
-				status_object_size);
-	}
-
-	OSAL_LOG_INFO("per-block src_buf_len: %d num_tags: %d", src_buf_len, i);
-	return i;
-}
-
-uint32_t
-cpdc_fill_per_block_desc_ex(uint32_t algo_type, uint32_t block_size,
 		uint32_t src_buf_len, struct pnso_buffer_list *src_blist,
 		struct cpdc_sgl *sgl, struct cpdc_desc *desc,
 		struct cpdc_status_desc *status_desc,

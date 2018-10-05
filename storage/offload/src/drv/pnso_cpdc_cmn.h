@@ -92,11 +92,6 @@ typedef void (*fill_desc_fn_t) (uint32_t algo_type,
 		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc);
 
 uint32_t cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
-		uint32_t src_buf_len, struct cpdc_sgl *src_sgl,
-		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc,
-		fill_desc_fn_t fill_desc_fn);
-
-uint32_t cpdc_fill_per_block_desc_ex(uint32_t algo_type, uint32_t block_size,
 		uint32_t src_buf_len, struct pnso_buffer_list *src_blist,
 		struct cpdc_sgl *sgl, struct cpdc_desc *desc,
 		struct cpdc_status_desc *status_desc,

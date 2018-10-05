@@ -199,7 +199,7 @@ hash_setup(struct service_info *svc_info,
 
 	src_blist_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
 	if (per_block) {
-		num_tags = cpdc_fill_per_block_desc_ex(pnso_hash_desc->algo_type,
+		num_tags = cpdc_fill_per_block_desc(pnso_hash_desc->algo_type,
 				svc_info->si_block_size, src_blist_len,
 				svc_params->sp_src_blist, sgl,
 				hash_desc, status_desc, fill_hash_desc);
