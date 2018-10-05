@@ -147,7 +147,7 @@ sqcb_writeback:
 
     CAPRI_RESET_TABLE_0_ARG()
 
-    //phvwr CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, in_progress), 1
+    phvwr CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, in_progress), 1
     phvwr.c6 CAPRI_PHV_FIELD(SQCB0_WRITE_BACK_P, bktrack_in_progress), 1
 
     srl            r1, r1, LOG_SIZEOF_SGE_T_BITS

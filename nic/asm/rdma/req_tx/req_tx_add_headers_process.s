@@ -462,7 +462,6 @@ cb1_byte_update:
     SQCB0_ADDR_GET(r2)
     // on top of it, set need_credits flag is conditionally
     add.c5         r5, r5, SQCB0_NEED_CREDITS_FLAG
-    or             r5, r5, CAPRI_KEY_FIELD(IN_P, in_progress), SQCB0_IN_PROGRESS_BIT_OFFSET
     add            r3, r2, FIELD_OFFSET(sqcb0_t, cb1_byte)
     memwr.b        r3, r5
 

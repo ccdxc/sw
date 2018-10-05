@@ -935,20 +935,19 @@ typedef enum rdma_qp_state_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t  rsvd_cb1_flags: 4;
+    uint8_t  rsvd_cb1_flags: 5;
     uint8_t  frpmr_in_progress: 1;
     uint8_t  need_credits: 1;
-    uint8_t  in_progress: 1;
     uint8_t  cb1_busy: 1;
 
     uint16_t busy: 1;        //tx
     uint16_t li_fence:1;
     uint16_t fence:1;
     uint16_t color: 1;
-    uint16_t poll_in_progress: 1;
-    uint16_t retry_timer_on: 1;
+    uint16_t rsvd_flag: 1;
     uint16_t bktrack_in_progress:1;
-    uint16_t dcqcn_rl_failure:1;
+    uint8_t  in_progress: 1;
+    uint16_t priv_oper_enable: 1; //tx
 
     uint16_t rsvd_stage_flags: 7;
     uint16_t  sq_drained: 1;
@@ -968,14 +967,15 @@ typedef struct sqcb0_s {
     uint16_t state: 4;
     uint32_t service: 4;
 
-    uint16_t priv_oper_enable: 1; //tx
-    uint16_t disable_e2e_fc: 1;//tx
+    uint16_t dcqcn_rl_failure:1;
     uint16_t signalled_completion: 1;//rx
     uint16_t poll_for_work: 1;
     uint32_t log_num_wqes: 5;
     uint32_t log_wqe_size: 5;
     uint32_t log_sq_page_size:5;
     uint32_t log_pmtu:5;           //tx
+    uint16_t poll_in_progress: 1;
+
     uint32_t pd;
     uint32_t header_template_addr;
     union {

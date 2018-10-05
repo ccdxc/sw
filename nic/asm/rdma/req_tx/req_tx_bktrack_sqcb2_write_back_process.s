@@ -65,7 +65,6 @@ req_tx_bktrack_sqcb2_write_back_process:
      add            r2, FIELD_OFFSET(sqcb0_t, cb1_byte), r1
      tblwr          d.need_credits, 0
      tblwr          d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
-     or             r1, r0, CAPRI_KEY_FIELD(IN_P, in_progress), SQCB0_IN_PROGRESS_BIT_OFFSET
      memwr.b        r2, r1
 
      CAPRI_SET_TABLE_1_VALID(0)

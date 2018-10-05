@@ -270,14 +270,15 @@ class RdmaSQstate(Packet):
         XIntField("pt_base_addr/sq_hbm_base_addr", 0),
         XIntField("sqcb0_header_template_addr", 0),
         IntField("pd", 0),
+
+        BitField("poll_in_progress", 0, 1),
         BitField("log_pmtu", 0xa, 5),
         BitField("log_sq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
         BitField("poll_for_work", 0, 1),
         BitField("signalled_completion", 0, 1),
-        BitField("disable_e2e_fc", 0, 1),
-        BitField("priv_oper_enable", 0, 1),
+        BitField("dcqcn_rl_failure", 0, 1),
 
         BitField("serv_type", 0, 4),
         BitField("flush_rq", 0, 1),
@@ -297,20 +298,19 @@ class RdmaSQstate(Packet):
         BitField("sqcb0_sq_drained", 0, 1),
         BitField("rsvd_state_flags", 0, 7),
 
-        BitField("dcqcn_rl_failure", 0, 1),
+        BitField("priv_oper_enable", 0, 1),
+        BitField("in_progress", 0, 1),
         BitField("sqcb0_bktrack_in_progress", 0, 1),
-        BitField("retry_timer_on", 0, 1),
-        BitField("poll_in_progress", 0, 1),
+        BitField("rsvd_flag", 0, 1),
         BitField("color", 0, 1),
         BitField("fence", 0, 1),
         BitField("li_fence", 0, 1),
         BitField("busy", 0, 1),
 
         BitField("cb1_busy", 0, 1),
-        BitField("in_progress", 0, 1),
         BitField("need_credits", 0, 1),
         BitField("frpmr_in_progress", 0, 1),
-        BitField("rsvd_cb1_flags", 0, 4),
+        BitField("rsvd_cb1_flags", 0, 5),
         
 
         # SQCB1 

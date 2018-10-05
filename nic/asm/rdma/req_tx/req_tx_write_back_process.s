@@ -44,6 +44,7 @@ req_tx_write_back_process:
 
 write_back:
     tblwr         d.busy, CAPRI_KEY_FIELD(IN_P, busy)
+    tblwr         d.in_progress, CAPRI_KEY_FIELD(IN_P, in_progress)
     tblwr         d.num_sges, K_NUM_SGES
     tblwr         d.current_sge_id, K_CURRENT_SGE_ID
     tblwr         d.current_sge_offset, K_CURRENT_SGE_OFFSET
