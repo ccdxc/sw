@@ -51,7 +51,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
-	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, NodeName: "naples"}
+	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "eth1",
 		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
 		VeniceIps: []string{"10.1.1.3/24"}}}
@@ -63,7 +63,7 @@ func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
 
-	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, NodeName: "naples"}
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -71,7 +71,7 @@ func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 
 	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add node failed")
 
-	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, NodeName: "naples"}
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	resp, err = agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -89,7 +89,7 @@ func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 	}
 	TestUtils.Assert(t, iotaNodeHealth.GetHealthCode() != iota.NodeHealth_HEALTH_OK, "Node health not ok!")
 
-	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, NodeName: "naples"}
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	nodeResp, err = agentClient.DeleteNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Delete Node call failed. Err: %v", err)
@@ -100,7 +100,7 @@ func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 
 func TestAgentService_Node_Venice_Add_Delete(t *testing.T) {
 
-	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, NodeName: "venice"}
+	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, Name: "venice"}
 	iotaNode.NodeInfo = &iota.Node_VeniceConfig{VeniceConfig: &iota.VeniceConfig{ControlIntf: "eth1",
 		ControlIp: "10.1.1.3/24", VenicePeers: []*iota.VenicePeer{&iota.VenicePeer{HostName: "test", IpAddress: "1.2.3.4/24"},
 			&iota.VenicePeer{HostName: "Test", IpAddress: "1.2.3.4/24"}}}}
@@ -112,7 +112,7 @@ func TestAgentService_Node_Venice_Add_Delete(t *testing.T) {
 
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
 
-	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, NodeName: "venice"}
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, Name: "venice"}
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -140,7 +140,7 @@ func TestAgentService_Node_Venice_Add_Delete(t *testing.T) {
 
 	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete workload success!")
 
-	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, NodeName: "venice"}
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, Name: "venice"}
 	resp, err = agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -148,7 +148,7 @@ func TestAgentService_Node_Venice_Add_Delete(t *testing.T) {
 
 	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Duplicate add node success!")
 
-	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, NodeName: "venice"}
+	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, Name: "venice"}
 	nodeResp, err = agentClient.DeleteNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Delete Node call failed. Err: %v", err)
@@ -173,7 +173,7 @@ func TestAgentService_Workload_Add_Delete(t *testing.T) {
 
 	TestUtils.Assert(t, workloadResp.GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Add workload success!")
 
-	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, NodeName: "naples"}
+	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)

@@ -25,6 +25,7 @@ func NewAgentService() *Service {
 // AddNode brings up the node with the personality
 func (agent *Service) AddNode(ctx context.Context, in *iota.Node) (*iota.Node, error) {
 
+	log.Errorf("Receivied ADD Node Msg: %v", in)
 	/* Check if the node running an instance */
 	if agent.node != nil {
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil

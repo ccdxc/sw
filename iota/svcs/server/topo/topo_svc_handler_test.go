@@ -63,8 +63,8 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	t.Parallel()
 	var tbMsg iota.TestBedMsg
 
-	//tbMsg.IpAddress = []string{"10.8.102.91", "10.8.102.94", "10.8.102.95", "10.8.102.90", "10.8.102.93", "10.8.102.92"}
-	tbMsg.IpAddress = []string{"10.8.102.98"}
+	tbMsg.IpAddress = []string{"10.8.102.123", "10.8.102.124", "10.8.102.125", "10.8.102.126", "10.8.102.127", "10.8.102.128"}
+	//tbMsg.IpAddress = []string{"10.8.102.91"}
 	tbMsg.SwitchPortId = 1
 	tbMsg.User = "vm"
 	tbMsg.Passwd = "vm"
@@ -80,6 +80,126 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 
 	if len(resp.AllocatedVlans) != common.VlansPerTestBed {
 		t.Errorf("Allocated VLANs did not match. Expected: %d, Actual: %d", common.VlansPerTestBed, len(resp.AllocatedVlans))
+		t.FailNow()
+	}
+
+	nodeMsg := iota.NodeMsg{}
+	nodes := []*iota.Node{
+		{
+			Type:      iota.PersonalityType_PERSONALITY_VENICE,
+			Image:     "venice.tgz",
+			Name:      "venice-node-1",
+			IpAddress: "10.8.102.123",
+			NodeInfo: &iota.Node_VeniceConfig{
+				VeniceConfig: &iota.VeniceConfig{
+					ControlIntf: "eth1",
+					ControlIp:   "42.42.42.1",
+					VenicePeers: []*iota.VenicePeer{
+						{
+							HostName:  "venice-node-2",
+							IpAddress: "10.8.102.124",
+						},
+						{
+							HostName:  "venice-node-3",
+							IpAddress: "10.8.102.125",
+						},
+					},
+				},
+			},
+		},
+		{
+			Type:      iota.PersonalityType_PERSONALITY_VENICE,
+			Image:     "venice.tgz",
+			Name:      "venice-node-2",
+			IpAddress: "10.8.102.124",
+			NodeInfo: &iota.Node_VeniceConfig{
+				VeniceConfig: &iota.VeniceConfig{
+					ControlIntf: "eth1",
+					ControlIp:   "42.42.42.2",
+					VenicePeers: []*iota.VenicePeer{
+						{
+							HostName:  "venice-node-1",
+							IpAddress: "10.8.102.123",
+						},
+						{
+							HostName:  "venice-node-3",
+							IpAddress: "10.8.102.125",
+						},
+					},
+				},
+			},
+		},
+		{
+			Type:      iota.PersonalityType_PERSONALITY_VENICE,
+			Image:     "venice.tgz",
+			Name:      "venice-node-3",
+			IpAddress: "10.8.102.125",
+			NodeInfo: &iota.Node_VeniceConfig{
+				VeniceConfig: &iota.VeniceConfig{
+					ControlIntf: "eth1",
+					ControlIp:   "42.42.42.3",
+					VenicePeers: []*iota.VenicePeer{
+						{
+							HostName:  "venice-node-2",
+							IpAddress: "10.8.102.124",
+						},
+						{
+							HostName:  "venice-node-1",
+							IpAddress: "10.8.102.123",
+						},
+					},
+				},
+			},
+		},
+		{
+			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
+			Image:     "naples-release-v1.tgz",
+			Name:      "naples-node-1",
+			IpAddress: "10.8.102.126",
+			NodeInfo: &iota.Node_NaplesConfig{
+				NaplesConfig: &iota.NaplesConfig{
+					ControlIntf: "eth1",
+					ControlIp:   "42.42.42.4",
+					DataIntfs:   []string{"eth2"},
+					VeniceIps:   []string{"10.8.102.123", "10.8.102.124", "10.8.102.125"},
+				},
+			},
+		}, {
+			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
+			Image:     "naples-release-v1.tgz",
+			Name:      "naples-node-2",
+			IpAddress: "10.8.102.127",
+			NodeInfo: &iota.Node_NaplesConfig{
+				NaplesConfig: &iota.NaplesConfig{
+					ControlIntf: "eth1",
+					ControlIp:   "42.42.42.5",
+					DataIntfs:   []string{"eth2"},
+					VeniceIps:   []string{"10.8.102.123", "10.8.102.124", "10.8.102.125"},
+				},
+			},
+		},
+		{
+			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
+			Name:      "naples-node-3",
+			Image:     "naples-release-v1.tgz",
+			IpAddress: "10.8.102.128",
+			NodeInfo: &iota.Node_NaplesConfig{
+				NaplesConfig: &iota.NaplesConfig{
+					ControlIntf: "eth1",
+					ControlIp:   "42.42.42.6",
+					DataIntfs:   []string{"eth2"},
+					VeniceIps:   []string{"10.8.102.123", "10.8.102.124", "10.8.102.125"},
+				},
+			},
+		},
+	}
+	nodeMsg.Nodes = nodes
+	nodeMsg.NodeOp = iota.Op_ADD
+
+	time.Sleep(time.Second * 1)
+	_, err = topoClient.AddNodes(context.Background(), &nodeMsg)
+	if err != nil {
+		t.Errorf("AddNodes call failed. Err: %v", err)
 		t.FailNow()
 	}
 }
@@ -99,6 +219,47 @@ func TestTopologyService_CleanUpTestBed(t *testing.T) {
 func TestTopologyService_AddNodes(t *testing.T) {
 	t.Parallel()
 	var nodeMsg iota.NodeMsg
+	//]string{"10.8.102.91", "10.8.102.94", "10.8.102.95", "10.8.102.90", "10.8.102.93", "10.8.102.92"}
+
+	nodes := []*iota.Node{
+		{
+			Type:      iota.PersonalityType_PERSONALITY_VENICE,
+			Image:     "venice.tgz",
+			Name:      "venice-node-1",
+			IpAddress: "10.8.102.91",
+		},
+		{
+			Type:      iota.PersonalityType_PERSONALITY_VENICE,
+			Image:     "venice.tgz",
+			Name:      "venice-node-1",
+			IpAddress: "10.8.102.94",
+		},
+		{
+			Type:      iota.PersonalityType_PERSONALITY_VENICE,
+			Image:     "venice.tgz",
+			Name:      "venice-node-1",
+			IpAddress: "10.8.102.95",
+		},
+		{
+			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
+			Image:     "nic.tgz",
+			Name:      "venice-node-1",
+			IpAddress: "10.8.102.90",
+		}, {
+			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
+			Image:     "nic.tgz",
+			Name:      "venice-node-1",
+			IpAddress: "10.8.102.93",
+		},
+		{
+			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
+			Image:     "nic.tgz",
+			Name:      "venice-node-1",
+			IpAddress: "10.8.102.92",
+		},
+	}
+	nodeMsg.Nodes = nodes
+	nodeMsg.NodeOp = iota.Op_ADD
 
 	_, err := topoClient.AddNodes(context.Background(), &nodeMsg)
 	if err != nil {

@@ -4,5 +4,8 @@ import (
 	iota "github.com/pensando/sw/iota/protos/gogen"
 )
 
-// Node wraps an iota Node
-type Node iota.Node
+// TestNode wraps an iota TestNode
+type TestNode struct {
+	Node        *iota.Node
+	AgentClient iota.IotaAgentApiClient
+}

@@ -11,7 +11,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	log "github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/log"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/server/topo/testbed"
@@ -19,11 +19,9 @@ import (
 
 // TopologyService implements topology service API
 type TopologyService struct {
-	//pool errgroup.Group
 	SSHConfig   *ssh.ClientConfig
 	TestBedInfo *iota.TestBedMsg //server
-	Nodes       []*testbed.Node
-	//topoCtx TopoContext
+	Nodes       []*testbed.TestNode
 }
 
 // NewTopologyServiceHandler Topo service handle
@@ -58,15 +56,19 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 				log.Errorf("TOPO SVC | InitTestBed | Invalid IP Address format. %v", ipAddress)
 				return fmt.Errorf("invalid ip address format. %v", ipAddress)
 			}
-			n := testbed.Node{
-				NodeName:  nodeName,
-				IpAddress: ipAddress,
+
+			n := testbed.TestNode{
+				Node: &iota.Node{
+					IpAddress: ipAddress,
+					Name:      nodeName,
+				},
 			}
+
+			ts.Nodes = append(ts.Nodes, &n)
 			copyArtifacts := []string{
 				common.IotaAgentBinaryPath,
 				ts.TestBedInfo.VeniceImage,
 				ts.TestBedInfo.NaplesImage,
-				//ts.TestBedInfo.DriverSources,
 			}
 
 			pool.Go(func() error {
@@ -86,25 +88,52 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 // CleanUpTestBed cleans up a testbed
 func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	resp := iota.TestBedMsg{}
-	//var entities []Entity
-	//for _, ip := range req.IpAddress {
-	//	entities = append(entities, NewNodeEntity(ip, ip, ts.logger))
-	//}
-	//if err := ts.topoCtx.CleanUpTestBed(entities); err != nil {
-	//	ts.log("Error in cleaning up test bed : " + err.Error())
-	//	return &iota-server.TestBedMsg{ApiResponse: &iota-server.IotaAPIResponse{ApiStatus: iota-server.IotaAPIResponse_API_STATUS_OK}}, nil
-	//}
-	//
-	//ts.log("Succesfully cleaned up test bed")
-	//return &iota-server.TestBedMsg{ApiResponse: &iota-server.IotaAPIResponse{ApiStatus: iota-server.IotaAPIResponse_API_STATUS_OK}}, nil
 	return &resp, nil
 }
 
 // AddNodes adds nodes to the topology
 func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
-	resp := &iota.NodeMsg{}
+	// Prep Topo
+	for idx, n := range req.Nodes {
+		svcName := n.Name
+		agentURL := fmt.Sprintf("%s:%d", n.IpAddress, common.IotaAgentPort)
+		c, err := common.CreateNewGRPCClient(svcName, agentURL)
 
-	return resp, nil
+		if err != nil {
+			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Name, err)
+			return nil, err
+		}
+
+		ts.Nodes[idx] = &testbed.TestNode{
+			Node:        n,
+			AgentClient: iota.NewIotaAgentApiClient(c.Client),
+		}
+	}
+
+	if req.NodeOp != iota.Op_ADD {
+		log.Errorf("TOPO SVC | AddNodes | AddNodes call failed")
+	}
+
+	// Add nodes
+	addNodes := func(ctx context.Context) error {
+		pool, ctx := errgroup.WithContext(ctx)
+
+		for _, node := range ts.Nodes {
+			node := node
+			pool.Go(func() error {
+				return node.AddNode()
+			})
+		}
+		return pool.Wait()
+	}
+	err := addNodes(context.Background())
+	if err != nil {
+		log.Errorf("TOPO SVC | AddNodes |AddNodes Call Failed. %v", err)
+		return nil, err
+	}
+
+	// TODO return fully formed resp here
+	return req, nil
 }
 
 // DeleteNodes deletes a node from the topology

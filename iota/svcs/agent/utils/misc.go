@@ -344,5 +344,5 @@ func restHelper(method string, url string, data *[]byte) error {
 	return nil
 }
 
-//RestHelper
+//RestHelper is a wrapper for rest
 var RestHelper = restHelper

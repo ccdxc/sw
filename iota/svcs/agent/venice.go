@@ -4,10 +4,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	Common "github.com/pensando/sw/iota/svcs/common"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -69,8 +70,8 @@ func (venice *veniceNode) bringUpVenice(image string, hostname string,
 
 //Init initalize node type
 func (venice *veniceNode) Init(in *iota.Node) (*iota.Node, error) {
-	venice.iotaNode.name = in.GetNodeName()
-	venice.log("Bring up request received for : " + in.GetNodeName())
+	venice.iotaNode.name = in.GetName()
+	venice.log("Bring up request received for : " + in.GetName())
 
 	veniceNodes := []venicePeerNode{}
 
@@ -78,7 +79,7 @@ func (venice *veniceNode) Init(in *iota.Node) (*iota.Node, error) {
 		veniceNodes = append(veniceNodes, venicePeerNode{hostname: node.GetHostName(),
 			ip: node.GetIpAddress()})
 	}
-	if err := venice.bringUpVenice(in.GetImage(), in.GetNodeName(),
+	if err := venice.bringUpVenice(in.GetImage(), in.GetName(),
 		in.GetVeniceConfig().GetControlIntf(), in.GetVeniceConfig().GetControlIp(),
 		veniceNodes); err != nil {
 		venice.log("Venice bring up failed.")

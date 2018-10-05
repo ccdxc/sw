@@ -12,17 +12,18 @@ import (
 )
 
 // InitNode initializes an iota test node. It copies over IOTA Agent binary and starts it on the remote node
-func (n *Node) InitNode(c *ssh.ClientConfig, artifacts []string) error {
-	log.Infof("TOPO SVC | InitTestBed | Running init for Node: %v, IPAddress: %v", n.NodeName, n.IpAddress)
+func (n *TestNode) InitNode(c *ssh.ClientConfig, artifacts []string) error {
+	log.Infof("TOPO SVC | InitTestBed | Running init for TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
 	// Copy Agent Binary to the remote node
 	if err := n.CopyTo(c, artifacts); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | Failed to copy agent binary: %v, to Node: %v, at IPAddress: %v", constants.IotaAgentBinaryPath, n.NodeName, n.IpAddress)
+		log.Errorf("TOPO SVC | InitTestBed | Failed to copy agent binary: %v, to TestNode: %v, at IPAddress: %v", constants.IotaAgentBinaryPath, n.Node.Name, n.Node.IpAddress)
 		return err
 	}
 
-	log.Infof("TOPO SVC | InitTestBed | Starting IOTA Agent on Node: %v, IPAddress: %v", n.NodeName, n.IpAddress)
-	if err := n.StartAgent(constants.DstIotaAgentBinary, c); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | Failed to start agent binary: %v, on Node: %v, at IPAddress: %v", constants.IotaAgentBinaryPath, n.NodeName, n.IpAddress)
+	log.Infof("TOPO SVC | InitTestBed | Starting IOTA Agent on TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
+	sudoAgtCmd := fmt.Sprintf("sudo %s", constants.DstIotaAgentBinary)
+	if err := n.StartAgent(sudoAgtCmd, c); err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Failed to start agent binary: %v, on TestNode: %v, at IPAddress: %v", constants.IotaAgentBinaryPath, n.Node.Name, n.Node.IpAddress)
 		return err
 	}
 
@@ -30,26 +31,26 @@ func (n *Node) InitNode(c *ssh.ClientConfig, artifacts []string) error {
 }
 
 // CopyTo copies a file to the node
-func (n *Node) CopyTo(cfg *ssh.ClientConfig, files []string) error {
+func (n *TestNode) CopyTo(cfg *ssh.ClientConfig, files []string) error {
 	copier := copier.NewCopier(cfg)
-	addr := fmt.Sprintf("%s:%d", n.IpAddress, constants.SSHPort)
+	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
 	if err := copier.Copy(addr, constants.DstIotaAgentDir, files); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | CopyTo node %v failed, IPAddress: %v , Err: %v", n.NodeName, n.IpAddress, err)
-		return fmt.Errorf("CopyTo node failed, Node: %v, IPAddress: %v , Err: %v", n.NodeName, n.IpAddress, err)
+		log.Errorf("TOPO SVC | InitTestBed | CopyTo node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+		return fmt.Errorf("CopyTo node failed, TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 	}
 
 	return nil
 }
 
 // StartAgent starts IOTA agent on the remote node
-func (n *Node) StartAgent(command string, cfg *ssh.ClientConfig) error {
+func (n *TestNode) StartAgent(command string, cfg *ssh.ClientConfig) error {
 	runner := runner.NewRunner(cfg)
-	addr := fmt.Sprintf("%s:%d", n.IpAddress, constants.SSHPort)
+	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
 
 	if err := runner.Run(addr, command, constants.RunCommandBackground); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | StartAgent on node %v failed, IPAddress: %v , Err: %v", n.NodeName, n.IpAddress, err)
-		return fmt.Errorf("StartAgent on node failed. Node: %v, IPAddress: %v , Err: %v", n.NodeName, n.IpAddress, err)
+		log.Errorf("TOPO SVC | InitTestBed | StartAgent on node %v failed, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
+		return fmt.Errorf("StartAgent on node failed. TestNode: %v, IPAddress: %v , Err: %v", n.Node.Name, n.Node.IpAddress, err)
 	}
 	return nil
 }

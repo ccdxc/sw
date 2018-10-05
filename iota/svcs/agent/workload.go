@@ -3,8 +3,9 @@ package agent
 import (
 	"strconv"
 
-	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	"github.com/pkg/errors"
+
+	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 )
 
 const (

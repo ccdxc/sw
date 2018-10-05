@@ -57,7 +57,7 @@ func getNode(nodeFile string, nodeName string) (*iota.Node, error) {
 
 	if nodeData["kind"] == "naples" {
 		iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES,
-			NodeName: nodeName, Image: "naples-release-v1.tgz"}
+			Name: nodeName, Image: "naples-release-v1.tgz"}
 		dataIntfs := []string{}
 		dataIPs := []string{}
 		naplesIPs := []string{}
@@ -88,7 +88,7 @@ func getNode(nodeFile string, nodeName string) (*iota.Node, error) {
 				IpAddress: nodeInfo["ip"].(string)}
 			veniceNodes = append(veniceNodes, node)
 		}
-		iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, NodeName: nodeName, Image: "venice.tgz"}
+		iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, Name: nodeName, Image: "venice.tgz"}
 		iotaNode.NodeInfo = &iota.Node_VeniceConfig{VeniceConfig: &iota.VeniceConfig{
 			ControlIntf: nodeData["control-intf"].(string),
 			ControlIp:   nodeData["control-ip"].(string)}}

@@ -86,7 +86,7 @@ message Node {
     string              ip_address      = 3;
 
     // Node identifier
-    string              node_name       = 4;
+    string              name            = 4;
 
     // Node specific configs
     oneof node_info {
