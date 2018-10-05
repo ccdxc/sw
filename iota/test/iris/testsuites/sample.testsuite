@@ -9,10 +9,9 @@ packages:
 #   List of images to used by this testsuite.
 #   This is a MANDATORY section with atleast 1 image entry.
 images:
-    - /sw/nic/nic.tgz
-    - /sw/venice.tgz
-    - /sw/platform/drivers.tgz
-    - /sw/iota/agent.tgz
+    naples: /sw/nic/nic.tgz
+    venice: /sw/venice.tgz
+    drivers: /sw/platform/drivers.tgz
 
 # Section: 'setup'
 #   List of actions to be taken during the setup phase.
