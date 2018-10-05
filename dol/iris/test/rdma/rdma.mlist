@@ -950,12 +950,20 @@ modules:
         spec    : resp_rx_write_first_mid_last_imm_rnr.testspec
         ignore  : False
 
+#    - module:
+#        name    : RDMA_RX_ATOMIC_RNR
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_atomic_rnr
+#        spec    : resp_rx_atomic_rnr.testspec
+#        ignore  : False
+
     - module:
-        name    : RDMA_RX_ATOMIC_RNR
+        name    : RDMA_RX_ATOMIC_NAK
         enable  : True
         package : test.rdma
-        module  : resp_rx_atomic_rnr
-        spec    : resp_rx_atomic_rnr.testspec
+        module  : resp_rx_atomic_nak
+        spec    : resp_rx_atomic_nak.testspec
         ignore  : False
 
     # commenting this out because recirc count is set to 1

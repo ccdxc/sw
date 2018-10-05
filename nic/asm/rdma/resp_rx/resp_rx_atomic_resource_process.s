@@ -15,6 +15,7 @@ struct resp_rx_s1_t1_k k;
 #define DMA_CMD_BASE r5
 #define DB_ADDR r4
 #define DB_DATA r1
+#define GLOBAL_FLAGS r7
 
 #define FILL_PATTERN_W      0x01010101
 #define FILL_PATTERN_H      0x0101   
@@ -23,6 +24,7 @@ struct resp_rx_s1_t1_k k;
 #define IN_P        t1_s2s_rqcb_to_read_atomic_rkey_info
 #define IN_TO_S_P   to_s1_atomic_info
 #define TO_S_WB1_P  to_s5_wb1_info
+#define TO_S_CQCB_P to_s6_cqcb_info
 
 #define K_RSQWQE_PTR CAPRI_KEY_FIELD(IN_TO_S_P, rsqwqe_ptr)
 #define K_ATOMIC_RKEY_INFO_VA CAPRI_KEY_FIELD(IN_P, va)
@@ -34,6 +36,7 @@ struct resp_rx_s1_t1_k k;
     .param  rdma_pcie_atomic_base_addr
     .param  resp_rx_recirc_mpu_only_process
     .param  resp_rx_rqrkey_process
+    .param  resp_rx_rqcb1_write_back_mpu_only_process
 
 .align
 resp_rx_atomic_resource_process:
@@ -90,7 +93,7 @@ check_uw_uh:
 next:
     // did we reach end ? 
     // since we are comparing r1 before incrementing by 64, check with 448
-    beqi        r1, 448, nak_rnr
+    beqi        r1, 448, error_completion
     add         r1, r1, 64  //BD Slot
     b           loop
     nop         //BD Slot
@@ -179,6 +182,7 @@ exit:
     nop.e
     nop
 
+#if 0
 nak_rnr:
     /* When atomic resources are not available,
        fire an mpu only program which will eventually set table 0 valid bit to 1 prior to recirc
@@ -189,4 +193,24 @@ nak_rnr:
 
     phvwr.e     p.common.p4_intr_recirc, 1
     phvwr       p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_ATOMIC_RNR
+#endif
 
+error_completion:
+
+    // set error disable flag 
+    // turn on ACK req bit when error disabling QP
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_ACK_REQ
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
+
+    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, async_event_or_error), 1
+    phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_P, async_event_or_error), 1
+    phvwrpair   p.s1.eqwqe.code, EQE_CODE_QP_ERR, p.s1.eqwqe.type, EQE_TYPE_QP
+    phvwr       p.s1.eqwqe.qid, K_GLOBAL_QID
+
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
+    phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
+
+    CAPRI_SET_TABLE_1_VALID(0)
+    // invoke mpu only program since we are in stage 2, and wb is loaded in stage 5
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)

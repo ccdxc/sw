@@ -103,8 +103,11 @@ skip_roce_opt_parsing:
     // every fresh packet gets a unique token id 
     tbladd    d.token_id, 1 
 
+#if 0
     // recirc if busy==1 or work_not_done_recirc_cnt !=0
     bbeq    d.busy, 1, recirc_wait_for_turn
+#endif
+
     seq     c1, d.work_not_done_recirc_cnt, 0 // BD Slot
 
     bcf     [!c1], recirc_wait_for_turn
@@ -576,12 +579,15 @@ process_atomic:
     bcf            [c1], inv_req_nak
     CAPRI_SET_FIELD2(RQCB_TO_RD_ATOMIC_P, read_or_atomic, RSQ_OP_TYPE_ATOMIC) // BD Slot
 
+#if 0
     /* Only atomic requests update the busy bit
        Set busy bit so that other requests
        don't end up modifying e_psn, RSQ pindex etc
        before atomic errors out in stage 1
      */ 
     tblwr           d.busy, 1
+#endif
+
     tblwr           d.rsq_pindex, NEW_RSQ_P_INDEX
     // increment e_psn
     // flush the last tblwr in this path
