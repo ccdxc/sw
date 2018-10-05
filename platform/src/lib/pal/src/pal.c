@@ -14,9 +14,14 @@
 #include <sys/mman.h>
 
 #include "pal.h"
+#include "pal_mm.h"
 #include "pal_impl.h"
 
 static pal_data_t pal_data;
+
+void pal_init(char *application_name) {
+   pal_mm_init(application_name);
+}
 
 pal_data_t *
 pal_get_data(void)
@@ -24,9 +29,11 @@ pal_get_data(void)
     pal_data_t *pd = &pal_data;
     if (!pd->memopen) {
 #ifdef __aarch64__
-        pd->memfd = open("/dev/mem", O_RDWR);
+        /* Making all accesses to /dev/mem UNCACHED for now */
+        pd->memfd = open("/dev/mem", O_RDWR | O_SYNC);
         assert(pd->memfd >= 0);
 #endif
+	pd->regions = NULL;
         pd->memopen = 1;
     }
     return pd;

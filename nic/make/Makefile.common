@@ -134,6 +134,8 @@ release-clean:
 platform:
     ifeq ($(ARCH),aarch64)
 		cd $(TOPDIR)/../platform && $(PATH_OPTS) make $(BUILD_OPTS)
+		@mkdir -p $(TOPDIR)/sdk/obj/lib/external
+		@install -m 755 $(TOPDIR)/../platform/gen/aarch64/lib/libpal.so $(TOPDIR)/sdk/obj/lib/external
     endif
 
 platform-clean:

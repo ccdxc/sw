@@ -131,7 +131,7 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
     resp_tail = 0;
 
     invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_REQ]);
-    READ_MEM(info.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req));
+    READ_MEM(info.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
 
     qstate_req.p_index0 = req_head;
     qstate_req.c_index0 = req_tail;
@@ -147,15 +147,15 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
 
     for (int i = 0; i < ring_size; i++) {
         WRITE_MEM(req_ring_base + (sizeof(struct nicmgr_req_desc) * i),
-             (uint8_t *)tmp, sizeof(tmp));
+             (uint8_t *)tmp, sizeof(tmp), 0);
     }
 
-    WRITE_MEM(info.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req));
+    WRITE_MEM(info.qstate_addr[NICMGR_QTYPE_REQ], (uint8_t *)&qstate_req, sizeof(qstate_req), 0);
     invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_REQ]);
 
 
     invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_RESP]);
-    READ_MEM(info.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp));
+    READ_MEM(info.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp), 0);
 
     qstate_resp.p_index0 = resp_head;
     qstate_resp.c_index0 = resp_tail;
@@ -171,10 +171,10 @@ DeviceManager::DeviceManager(enum ForwardingMode fwd_mode)
 
     for (int i = 0; i < ring_size; i++) {
         WRITE_MEM(resp_ring_base + (sizeof(struct nicmgr_resp_desc) * i),
-            (uint8_t *)tmp, sizeof(tmp));
+            (uint8_t *)tmp, sizeof(tmp), 0);
     }
 
-    WRITE_MEM(info.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp));
+    WRITE_MEM(info.qstate_addr[NICMGR_QTYPE_RESP], (uint8_t *)&qstate_resp, sizeof(qstate_resp), 0);
     invalidate_txdma_cacheline(info.qstate_addr[NICMGR_QTYPE_RESP]);
 }
 
@@ -497,10 +497,10 @@ DeviceManager::AdminQPoll()
     invalidate_txdma_cacheline(req_qstate_addr);
 
     READ_MEM(req_qstate_addr + offsetof(struct eth_admin_qstate, p_index0),
-             (uint8_t *)&p_index0, sizeof(p_index0));
+             (uint8_t *)&p_index0, sizeof(p_index0), 0);
 
     READ_MEM(req_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
-             (uint8_t *)&c_index0, sizeof(c_index0));
+             (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
     if (req_tail != c_index0) {
 
@@ -509,7 +509,7 @@ DeviceManager::AdminQPoll()
 
         // Read nicmgr request descriptor
         req_desc_addr = req_ring_base + (sizeof(req_desc) * req_tail);
-        READ_MEM(req_desc_addr, (uint8_t *)&req_desc, sizeof(req_desc));
+        READ_MEM(req_desc_addr, (uint8_t *)&req_desc, sizeof(req_desc), 0);
 
         NIC_LOG_INFO("request: lif {} qtype {} qid {} comp_index {}"
                " adminq_qstate_addr {:#x} desc_addr {:#x}",
@@ -536,10 +536,10 @@ DeviceManager::AdminQPoll()
         invalidate_txdma_cacheline(req_qstate_addr);
 
         READ_MEM(req_qstate_addr + offsetof(struct eth_admin_qstate, p_index0),
-                 (uint8_t *)&p_index0, sizeof(p_index0));
+                 (uint8_t *)&p_index0, sizeof(p_index0), 0);
 
         READ_MEM(req_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
-                 (uint8_t *)&c_index0, sizeof(c_index0));
+                 (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
         NIC_LOG_INFO("request: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, req_head, req_tail);
@@ -548,10 +548,10 @@ DeviceManager::AdminQPoll()
         invalidate_txdma_cacheline(resp_qstate_addr);
 
         READ_MEM(resp_qstate_addr + offsetof(struct eth_admin_qstate, p_index0),
-                 (uint8_t *)&p_index0, sizeof(p_index0));
+                 (uint8_t *)&p_index0, sizeof(p_index0), 0);
 
         READ_MEM(resp_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
-                 (uint8_t *)&c_index0, sizeof(c_index0));
+                 (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
         NIC_LOG_INFO("response: PRE: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, resp_head, resp_tail);
@@ -570,7 +570,7 @@ DeviceManager::AdminQPoll()
                resp_desc.comp_index, resp_desc.adminq_qstate_addr,
                resp_desc_addr);
 
-        WRITE_MEM(resp_desc_addr, (uint8_t *)&resp_desc, sizeof(resp_desc));
+        WRITE_MEM(resp_desc_addr, (uint8_t *)&resp_desc, sizeof(resp_desc), 0);
 
         // Ring doorbell to update the PI and run nicmgr response program
         resp_tail = (resp_tail + 1) & (ring_size - 1);
@@ -581,10 +581,10 @@ DeviceManager::AdminQPoll()
         invalidate_txdma_cacheline(resp_qstate_addr);
 
         READ_MEM(resp_qstate_addr + offsetof(struct eth_admin_qstate, p_index0),
-                 (uint8_t *)&p_index0, sizeof(p_index0));
+                 (uint8_t *)&p_index0, sizeof(p_index0), 0);
 
         READ_MEM(resp_qstate_addr + offsetof(struct eth_admin_qstate, c_index0),
-                 (uint8_t *)&c_index0, sizeof(c_index0));
+                 (uint8_t *)&c_index0, sizeof(c_index0), 0);
 
         NIC_LOG_INFO("response: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
                p_index0, c_index0, resp_head, resp_tail);

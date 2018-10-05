@@ -1270,8 +1270,12 @@ void dump_qstate(int idle_check, int verbose, int qid, u_int64_t qaddr)
 {
   u_int8_t buf[64];
 
+#ifdef __aarch64__
+  rd_mem(qaddr, buf, 64, MATTR_UNCACHED);
+#elif
   rd_mem(qaddr, buf, 64);
-  
+#endif
+
   typedef struct {
       uint8_t     pc_offset;
       uint8_t     rsvd0;

@@ -14,9 +14,9 @@ typedef struct pal_rwvectors_s {
                              uint32_t *data,
                              uint32_t num_words);
     pal_ret_t   (*mem_read)(uint64_t addr, uint8_t *data,
-                            uint32_t size);
+                            uint32_t size, uint32_t flags);
     pal_ret_t   (*mem_write)(uint64_t addr, uint8_t *data,
-                             uint32_t size);
+                             uint32_t size, uint32_t flags);
     pal_ret_t   (*ring_doorbell)(uint64_t addr, uint64_t data);
     pal_ret_t   (*step_cpu_pkt)(const uint8_t* pkt, size_t pkt_len);
 
@@ -24,6 +24,9 @@ typedef struct pal_rwvectors_s {
                                                  uint64_t *virtual_addr);
     pal_ret_t   (*virtual_addr_to_physical_addr)(uint64_t virtual_addr,
                                                  uint64_t *phy_addr);
+
+    pal_ret_t   (*mem_set)(const uint64_t pa, uint8_t c,
+                           const uint32_t sz, uint32_t flags);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {

@@ -7,7 +7,8 @@ SOURCES = \
 	pal.c \
 	reg.c \
 	mem.c \
-	region.c \
+	mmap_region.c \
+        pal_mm.c \
 	trace.c \
 	$(NULL)
 
@@ -16,6 +17,7 @@ LCFLAGS += \
 	-I $(ASIC_ROOT)/capri/model/cap_top \
 	-I $(ASIC_ROOT)/capri/model/cap_top/csr_defines \
 	-I ../include \
+	-fno-tree-loop-distribute-patterns \
 	$(NULL)
 
 TOPDIR = ../../../..

@@ -8,7 +8,7 @@ cc_binary(
         "hal_access.cc",
     ],
     deps = [
-        "//lib/pal:pal",
+        "//lib/pal:sdkpal",
         "//lib/logger:logger",
     ],
     linkopts = [

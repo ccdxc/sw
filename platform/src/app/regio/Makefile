@@ -11,4 +11,7 @@ SOURCES = \
 	main.c \
 	$(NULL)
 
+LCFLAGS = -I $(TOPDIR)/src/lib/pal/include
+LIBRARIES = -lpal
+
 include $(TOPDIR)/make/Makefile.inc

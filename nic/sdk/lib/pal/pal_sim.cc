@@ -90,8 +90,9 @@ pal_sim_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words)
     return PAL_RET_OK;
 }
 
+/* Note: The flags are ignored for model */
 pal_ret_t
-pal_sim_mem_read (uint64_t addr, uint8_t * data, uint32_t size)
+pal_sim_mem_read (uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags)
 {
     if (!(*gl_sim_vecs.read_mem)(addr, data, size)) {
         return PAL_RET_NOK;
@@ -99,12 +100,46 @@ pal_sim_mem_read (uint64_t addr, uint8_t * data, uint32_t size)
     return PAL_RET_OK;
 }
 
+/* Note: The flags are ignored for model */
 pal_ret_t
-pal_sim_mem_write (uint64_t addr, uint8_t * data, uint32_t size)
+pal_sim_mem_write (uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags)
 {
     if (!(*gl_sim_vecs.write_mem)(addr, data, size)) {
         return PAL_RET_NOK;
     }
+    return PAL_RET_OK;
+}
+
+/* Note: The flags are ignored for model */
+pal_ret_t
+pal_sim_mem_set (uint64_t addr, uint8_t data, uint32_t size, uint32_t flags)
+{
+    uint32_t i = 0;
+
+    /* We could recycle i, but choosing this instead for understandability */
+    uint32_t bytes_written = 0;
+    uint8_t buffer[8];
+
+    /* Prepare a buffer of size 8 bytes */
+    for(i = 0; i < 8; i++) {
+	buffer[i] = data;
+    }
+
+    /* Perform writes of 8 byte length */
+    for (bytes_written = 0;
+         bytes_written < size;
+         bytes_written = bytes_written + 8) {
+    	if (!(*gl_sim_vecs.write_mem)(addr + bytes_written, buffer, 8)) {
+            return PAL_RET_NOK;
+    	}
+    }
+
+    if (!(*gl_sim_vecs.write_mem)(addr + bytes_written,
+                                  buffer,
+                                  (size - bytes_written) % 8)) {
+        return PAL_RET_NOK;
+    }
+
     return PAL_RET_OK;
 }
 
@@ -152,6 +187,7 @@ pal_sim_init_rwvectors (void)
     gl_pal_info.rwvecs.reg_write = pal_sim_reg_write;
     gl_pal_info.rwvecs.mem_read = pal_sim_mem_read;
     gl_pal_info.rwvecs.mem_write = pal_sim_mem_write;
+    gl_pal_info.rwvecs.mem_set = pal_sim_mem_set;
     gl_pal_info.rwvecs.ring_doorbell = pal_sim_ring_doorbell;
     gl_pal_info.rwvecs.step_cpu_pkt = pal_sim_step_cpu_pkt;
     gl_pal_info.rwvecs.physical_addr_to_virtual_addr =

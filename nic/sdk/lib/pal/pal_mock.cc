@@ -21,13 +21,19 @@ pal_mock_reg_write(uint64_t addr, uint32_t *data, uint32_t num_words)
 }
 
 pal_ret_t
-pal_mock_mem_read (uint64_t addr, uint8_t * data, uint32_t size)
+pal_mock_mem_read (uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags)
 {
     return PAL_RET_OK;
 }
 
 pal_ret_t
-pal_mock_mem_write (uint64_t addr, uint8_t * data, uint32_t size)
+pal_mock_mem_write (uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags)
+{
+    return PAL_RET_OK;
+}
+
+pal_ret_t
+pal_mock_mem_set (uint64_t addr, uint8_t c, uint32_t size, uint32_t flags)
 {
     return PAL_RET_OK;
 }
@@ -61,6 +67,7 @@ pal_mock_init_rwvectors (void)
     gl_pal_info.rwvecs.reg_write     = pal_mock_reg_write;
     gl_pal_info.rwvecs.mem_read      = pal_mock_mem_read;
     gl_pal_info.rwvecs.mem_write     = pal_mock_mem_write;
+    gl_pal_info.rwvecs.mem_set     = pal_mock_mem_set;
     gl_pal_info.rwvecs.ring_doorbell = pal_mock_ring_doorbell;
     gl_pal_info.rwvecs.physical_addr_to_virtual_addr =
                             pal_mock_physical_addr_to_virtual_addr;

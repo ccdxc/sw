@@ -58,15 +58,21 @@ pal_reg_write(uint64_t addr, uint32_t *data, uint32_t num_words)
 }
 
 pal_ret_t
-pal_mem_read (uint64_t addr, uint8_t *data, uint32_t size)
+pal_mem_read (uint64_t addr, uint8_t *data, uint32_t size, uint32_t flags)
 {
-    return gl_pal_info.rwvecs.mem_read(addr, data, size);
+    return gl_pal_info.rwvecs.mem_read(addr, data, size, flags);
 }
 
 pal_ret_t
-pal_mem_write (uint64_t addr, uint8_t *data, uint32_t size)
+pal_mem_write (uint64_t addr, uint8_t *data, uint32_t size, uint32_t flags)
 {
-    return gl_pal_info.rwvecs.mem_write(addr, data, size);
+    return gl_pal_info.rwvecs.mem_write(addr, data, size, flags);
+}
+
+pal_ret_t
+pal_mem_set (uint64_t addr, uint8_t data, uint32_t size, uint32_t flags)
+{
+    return gl_pal_info.rwvecs.mem_set(addr, data, size, flags);
 }
 
 pal_ret_t

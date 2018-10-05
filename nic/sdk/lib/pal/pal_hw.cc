@@ -1,222 +1,138 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include <sys/mman.h>
-#include <fcntl.h>
 #include <dlfcn.h>
+#include <unistd.h>
 #include "lib/pal/pal.hpp"
 #include "lib/pal/pal_internal.hpp"
 
 namespace sdk {
 namespace lib {
 
+static void *gl_lib_handle;
 extern pal_info_t   gl_pal_info;
+typedef void (*hw_init_fn_t)(char *application_name);
+typedef void (*reg_read_fn_t)(uint64_t addr, uint32_t *data, uint32_t nw);
+typedef void (*reg_write_fn_t)(uint64_t addr, uint32_t *data, uint32_t nw);
+typedef int (*mem_read_fn_t)(uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags);
+typedef int (*mem_write_fn_t)(uint64_t addr, uint8_t * data, uint32_t size, uint32_t flags);
+typedef bool (*ring_doorbell_fn_t)(uint64_t addr, uint64_t data);
+typedef uint64_t (*mem_vtop_fn_t)(const void *va);
+typedef void *(*mem_ptov_fn_t)(const uint64_t pa);
+typedef int (*memset_fn_t)(const uint64_t pa, uint8_t c, const size_t sz, uint32_t flags);
 
-#define NELEMS(_arr) sizeof(_arr)/sizeof(_arr[0])
+typedef struct pal_hw_vectors_s {
+    hw_init_fn_t	    hw_init;
+    reg_read_fn_t           reg_read;
+    reg_write_fn_t          reg_write;
+    mem_read_fn_t           mem_read;
+    mem_write_fn_t          mem_write;
+    mem_vtop_fn_t           mem_vtop;
+    mem_ptov_fn_t           mem_ptov;
+    memset_fn_t		    mem_set;
+} pal_hw_vectors_t;
 
-pal_mmap_regions_t
-pal_mmap_regions[] = {
-    {
-        // Registers
-        .phy_addr_base = 0x01000000,
-        .size          = 0x6effffff,
-    },
-    {
-        // 3GB of HBM
-        .phy_addr_base = 0xC0000000,
-        .size          = 0xC0000000,
-    }
-};
+static pal_hw_vectors_t   gl_hw_vecs;
 
-inline pal_ret_t
+static pal_ret_t
+pal_init_hw_vectors (void)
+{
+    gl_hw_vecs.hw_init = (hw_init_fn_t)dlsym(gl_lib_handle, "pal_init");
+    SDK_ASSERT(gl_hw_vecs.hw_init);
+
+    gl_hw_vecs.reg_read = (reg_read_fn_t)dlsym(gl_lib_handle, "pal_reg_rd32w");
+    SDK_ASSERT(gl_hw_vecs.reg_read);
+
+    gl_hw_vecs.reg_write = (reg_write_fn_t)dlsym(gl_lib_handle, "pal_reg_wr32w");
+    SDK_ASSERT(gl_hw_vecs.reg_write);
+
+    gl_hw_vecs.mem_read = (mem_read_fn_t)dlsym(gl_lib_handle, "pal_mem_rd");
+    SDK_ASSERT(gl_hw_vecs.mem_read);
+
+    gl_hw_vecs.mem_write = (mem_write_fn_t)dlsym(gl_lib_handle, "pal_mem_wr");
+    SDK_ASSERT(gl_hw_vecs.mem_read);
+
+    gl_hw_vecs.mem_vtop = (mem_vtop_fn_t)dlsym(gl_lib_handle, "pal_mem_vtop");
+    SDK_ASSERT(gl_hw_vecs.mem_vtop);
+
+    gl_hw_vecs.mem_ptov = (mem_ptov_fn_t)dlsym(gl_lib_handle, "pal_mem_ptov");
+    SDK_ASSERT(gl_hw_vecs.mem_ptov);
+
+    gl_hw_vecs.mem_set = (memset_fn_t)dlsym(gl_lib_handle, "pal_memset");
+    SDK_ASSERT(gl_hw_vecs.mem_set);
+
+    return PAL_RET_OK;
+}
+
+static inline pal_ret_t
 pal_hw_physical_addr_to_virtual_addr(uint64_t phy_addr,
                                      uint64_t *virtual_addr)
 {
-    uint32_t i      = 0;
-    uint64_t offset = 0;
-
-    for (i = 0; i < NELEMS(pal_mmap_regions); i++) {
-        if (phy_addr >= pal_mmap_regions[i].phy_addr_base &&
-            phy_addr < pal_mmap_regions[i].phy_addr_base +
-                       pal_mmap_regions[i].size) {
-
-            offset = phy_addr - pal_mmap_regions[i].phy_addr_base;
-            *virtual_addr = pal_mmap_regions[i].virtual_addr_base + offset;
-
-            return PAL_RET_OK;
-        }
-    }
-
-    return PAL_RET_NOK;
+    *virtual_addr = (uint64_t) (*gl_hw_vecs.mem_ptov)(phy_addr);
+    return PAL_RET_OK;
 }
 
-inline pal_ret_t
+static inline pal_ret_t
 pal_hw_virtual_addr_to_physical_addr(uint64_t virtual_addr,
                                      uint64_t *phy_addr)
 {
-    uint32_t i      = 0;
-    uint64_t offset = 0;
-
-    for (i = 0; i < NELEMS(pal_mmap_regions); i++) {
-        if (virtual_addr >= pal_mmap_regions[i].virtual_addr_base &&
-            virtual_addr < pal_mmap_regions[i].virtual_addr_base +
-                       pal_mmap_regions[i].size) {
-
-            offset = virtual_addr - pal_mmap_regions[i].virtual_addr_base;
-            *phy_addr = pal_mmap_regions[i].phy_addr_base + offset;
-
-            return PAL_RET_OK;
-        }
-    }
-
-    return PAL_RET_NOK;
-}
-
-pal_ret_t
-pal_hw_reg_read(uint64_t addr, uint32_t *data, uint32_t num_words)
-{
-    uint64_t mmap_addr = 0x0;
-
-    pal_ret_t ret = pal_hw_physical_addr_to_virtual_addr(addr, &mmap_addr);
-
-    if (ret != PAL_RET_OK) {
-        SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
-                        __FUNCTION__, addr);
-        return PAL_RET_NOK;
-    }
-
-    uint32_t *mmap_addr_word = (uint32_t *)mmap_addr;
-
-    for (uint32_t word = 0; word < num_words; ++word, ++mmap_addr_word) {
-        data[word] = *mmap_addr_word;
-    }
-
-    return PAL_RET_OK;
-}
-
-pal_ret_t
-pal_hw_reg_write(uint64_t addr, uint32_t *data, uint32_t num_words)
-{
-    uint64_t mmap_addr = 0x0;
-
-    pal_ret_t ret = pal_hw_physical_addr_to_virtual_addr(addr, &mmap_addr);
-
-    if (ret != PAL_RET_OK) {
-        SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
-                        __FUNCTION__, addr);
-        return PAL_RET_NOK;
-    }
-
-    uint32_t *mmap_addr_word = (uint32_t *)mmap_addr;
-
-    for (uint32_t word = 0; word < num_words; ++word, ++mmap_addr_word) {
-        *mmap_addr_word = data[word];
-    }
-
-    return PAL_RET_OK;
-}
-
-pal_ret_t
-pal_hw_mem_read (uint64_t addr, uint8_t * data, uint32_t size)
-{
-    uint64_t mmap_addr = 0x0;
-
-    pal_ret_t ret = pal_hw_physical_addr_to_virtual_addr(addr, &mmap_addr);
-
-    if (ret != PAL_RET_OK) {
-        SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
-                        __FUNCTION__, addr);
-        return PAL_RET_NOK;
-    }
-
-    for (uint32_t i = 0; i < size; i++) {
-        data[i] = ((uint8_t *)mmap_addr)[i];
-    }
-
-    return PAL_RET_OK;
-}
-
-pal_ret_t
-pal_hw_mem_write (uint64_t addr, uint8_t * data, uint32_t size)
-{
-    uint64_t mmap_addr = 0x0;
-
-    pal_ret_t ret = pal_hw_physical_addr_to_virtual_addr(addr, &mmap_addr);
-
-    if (ret != PAL_RET_OK) {
-        SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
-                        __FUNCTION__, addr);
-        return PAL_RET_NOK;
-    }
-
-    if (data) {
-        for (uint32_t i = 0; i < size; i++) {
-            ((uint8_t *)mmap_addr)[i] = data[i];
-        }
-    } else {
-        for (uint32_t i = 0; i < size; i++) {
-            ((uint8_t *)mmap_addr)[i] = 0;
-        }
-    }
-
-    return PAL_RET_OK;
-}
-
-pal_ret_t
-pal_hw_ring_doorbell (uint64_t addr, uint64_t data)
-{
-    uint64_t mmap_addr = 0x0;
-
-    SDK_TRACE_DEBUG("%s: addr: 0x%x, data: 0x%x\n", __FUNCTION__, addr, data);
-
-    addr += 0x8000000;
-
-    pal_ret_t ret = pal_hw_physical_addr_to_virtual_addr(addr, &mmap_addr);
-
-    if (ret != PAL_RET_OK) {
-        SDK_TRACE_DEBUG("%s Invalid access. phy_addr: 0x%x\n",
-                        __FUNCTION__, addr);
-        return PAL_RET_NOK;
-    }
-
-    *(uint64_t*)mmap_addr = data;
-
+    *phy_addr = (*gl_hw_vecs.mem_vtop)((void*) virtual_addr);
     return PAL_RET_OK;
 }
 
 static pal_ret_t
-pal_hw_mmap_device (void)
+pal_hw_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words)
 {
-    uint32_t i = 0;
-    int devfd = open("/dev/mem", O_RDWR|O_SYNC);
-
-    if (devfd < 0) {
-        SDK_TRACE_ERR("Failed to open /dev/mem");
-        return PAL_RET_NOK;
-    }
-
-    for (i = 0; i < NELEMS(pal_mmap_regions); i++) {
-        pal_mmap_regions[i].virtual_addr_base =
-                    (uint64_t)mmap(NULL,
-                                   pal_mmap_regions[i].size,
-                                   PROT_READ|PROT_WRITE,
-                                   MAP_SHARED,
-                                   devfd,
-                                   pal_mmap_regions[i].phy_addr_base);
-        SDK_TRACE_DEBUG("MMAP Info fixed: phy_addr_base:0x%x size:%u virtual_addr_base:0x%x",
-                        pal_mmap_regions[i].phy_addr_base,
-                        pal_mmap_regions[i].size,
-                        pal_mmap_regions[i].virtual_addr_base);
-
-        if (pal_mmap_regions[i].virtual_addr_base == 0) {
-            SDK_TRACE_ERR("Failed to mmap /dev/mem");
-            return PAL_RET_NOK;
-        }
-    }
-
+    (*gl_hw_vecs.reg_read)(addr, data, num_words); 
+    
     return PAL_RET_OK;
 }
 
-pal_ret_t
+static pal_ret_t
+pal_hw_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words)
+{
+    (*gl_hw_vecs.reg_write)(addr, data, num_words);
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_hw_mem_read (uint64_t addr, uint8_t *data, uint32_t size, uint32_t flags)
+{
+    (*gl_hw_vecs.mem_read)(addr, data, size, flags);
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_hw_mem_write (uint64_t addr, uint8_t *data, uint32_t size, uint32_t flags)
+{
+    (*gl_hw_vecs.mem_write)(addr, data, size, flags);
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_hw_ring_doorbell (uint64_t addr, uint64_t data)
+{
+    uint64_t pa_doorbell = addr + 0x8000000;
+
+    (*gl_hw_vecs.reg_write)(pa_doorbell, (uint32_t*) &data, 2);
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_hw_memset (uint64_t pa, uint8_t c, uint32_t sz, uint32_t flags)
+{
+    uint32_t size_written = 0;
+
+    size_written = (*gl_hw_vecs.mem_set)(pa, c, sz, flags);
+
+    if (size_written != sz) {
+	return PAL_RET_NOK;
+    }
+    
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
 pal_hw_init_rwvectors (void)
 {
     gl_pal_info.rwvecs.reg_read = pal_hw_reg_read;
@@ -225,10 +141,21 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_write = pal_hw_mem_write;
     gl_pal_info.rwvecs.ring_doorbell = pal_hw_ring_doorbell;
     gl_pal_info.rwvecs.physical_addr_to_virtual_addr =
-                            pal_hw_physical_addr_to_virtual_addr;
+                        pal_hw_physical_addr_to_virtual_addr;
     gl_pal_info.rwvecs.virtual_addr_to_physical_addr =
-                            pal_hw_virtual_addr_to_physical_addr;
+                        pal_hw_virtual_addr_to_physical_addr;
+    gl_pal_info.rwvecs.mem_set = pal_hw_memset;
 
+    pal_init_hw_vectors();
+
+    return PAL_RET_OK;
+}
+
+static pal_ret_t
+pal_hw_dlopen (void)
+{
+    gl_lib_handle = dlopen("libpal.so", RTLD_NOW | RTLD_GLOBAL);
+    SDK_ASSERT(gl_lib_handle);
     return PAL_RET_OK;
 }
 
@@ -237,14 +164,16 @@ pal_hw_init (void)
 {
     pal_ret_t   rv;
 
+    rv = pal_hw_dlopen();
+    SDK_ASSERT(IS_PAL_API_SUCCESS(rv));
+
     rv = pal_hw_init_rwvectors();
     SDK_ASSERT(IS_PAL_API_SUCCESS(rv));
 
-    rv = pal_hw_mmap_device();
-    SDK_ASSERT(IS_PAL_API_SUCCESS(rv));
 
     return PAL_RET_OK;
 }
 
 }    // namespace lib
 }    // namespace sdk
+

@@ -21,11 +21,7 @@
 #define PAL_REGSZ       (1 << 20)
 #define PAL_REGBASE     (~(PAL_REGSZ - 1))
 
-typedef struct pal_region_s {
-    u_int64_t pa;
-    u_int64_t sz;
-    void *va;
-} pal_region_t;
+static pal_mmap_region_t *pr_recent = NULL;
 
 static u_int64_t
 pr_align(const u_int64_t pa)
@@ -48,26 +44,29 @@ mapfd(int fd, const off_t off, const size_t sz)
     const int prot = PROT_READ | PROT_WRITE;
     const int mapflags = MAP_SHARED;
     void *va = mmap(NULL, sz, prot, mapflags, fd, off);
+
     assert(va != (void *)-1);
     return va;
 }
 
 #ifdef __aarch64__
 static void *
-pr_map(pal_region_t *pr)
+pr_map(pal_mmap_region_t *pr)
 {
     pal_data_t *pd = pal_get_data();
     pr->va = mapfd(pd->memfd, pr->pa, pr->sz);
+    pr->mapped = 1;
     return pr->va;
 }
 
 #else
 
 static void *
-pr_map(pal_region_t *pr)
+pr_map(pal_mmap_region_t *pr)
 {
     const char *home = getenv("HOME");
-    const int oflags = O_RDWR | O_CREAT;
+    /* Make all accesses uncached by adding the O_SYNC flag */
+    const int oflags = O_RDWR | O_CREAT | O_SYNC;
     char path[128];
     char z = 0;
     int fd;
@@ -91,75 +90,123 @@ pr_map(pal_region_t *pr)
 }
 #endif
 
-static pal_region_t *
+static pal_mmap_region_t *
 pr_new(const u_int64_t pa, const u_int64_t sz)
 {
     pal_data_t *pd = pal_get_data();
-    pal_region_t *pr;
+    pal_mmap_region_t *pr;
 
-    pr = realloc(pd->regions, (pd->nregions + 1) * sizeof(pal_region_t));
+    pr = (pal_mmap_region_t*) malloc(sizeof(pal_mmap_region_t));
     assert(pr);
-    pd->regions = pr;
-    pr = &pd->regions[pd->nregions++];
     memset(pr, 0, sizeof(*pr));
+    pr->next = pd->regions;
+    pr->prev = NULL;
+    
+    if (pd->regions) {
+        pd->regions->prev = pr;
+    }
+
+    pd->regions = pr;
     pr->pa = pr_align(pa);
     pr->sz = pr_span(pa, sz);
+    pd->nregions++;
     return pr;
 }
 
-static pal_region_t *
+static pal_mmap_region_t *
 pr_findpa(const u_int64_t pa, const u_int64_t sz)
 {
     pal_data_t *pd = pal_get_data();
-    pal_region_t *pr = pd->regions;
-    int i;
+    pal_mmap_region_t *pr = pd->regions;
 
-    for (i = 0; i < pd->nregions; i++, pr++) {
-        if (pr->pa <= pa && pa + sz < pr->pa + pr->sz) {
+    while(pr != NULL) {
+        if (pr->pa <= pa && pa + sz < pr->pa + pr->sz && pr->mapped) {
             return pr;
         }
+	pr = pr->next;
     }
+
     return NULL;
 }
 
-static pal_region_t *
+static pal_mmap_region_t *
 pr_findva(const void *va, const u_int64_t sz)
 {
     pal_data_t *pd = pal_get_data();
-    pal_region_t *pr = pd->regions;
-    int i;
+    pal_mmap_region_t *pr = pd->regions;
 
-    for (i = 0; i < pd->nregions; i++, pr++) {
+    while(pr != NULL) {
         if (pr->va <= va && va + sz < pr->va + pr->sz) {
             return pr;
         }
+	pr = pr->next;
     }
     return NULL;
 }
 
-pal_region_t *
-pr_getpa(const u_int64_t pa, const u_int64_t sz)
+pal_mmap_region_t *
+pr_getpa(const u_int64_t pa, const u_int64_t sz, u_int8_t access)
 {
-    pal_region_t *pr = pr_findpa(pa, sz);
-    if (pr == NULL) {
+    pal_mmap_region_t *pr = pr_findpa(pa, sz);
+    if (pr == NULL && access == FREEACCESS) {
         pr = pr_new(pa, sz);
-        pr_map(pr);
+    	pr_map(pr);
     }
+
     return pr;
 }
 
 void *
-pr_ptov(const u_int64_t pa, const u_int64_t sz)
+pr_ptov(const u_int64_t pa, const u_int64_t sz, u_int8_t access)
 {
-    pal_region_t *pr = pr_getpa(pa, sz);
-    assert(pr != NULL);
-    return pr->va + (pa - pr->pa);
+    pal_mmap_region_t *pr = NULL;
+
+    if (pr_recent != NULL &&
+        pr_recent-> mapped &&
+        pa >= pr_recent->pa &&
+        pa < pr_recent->pa + pr_recent->sz &&
+        pa + sz < pr_recent->pa + pr_recent->sz) { 
+	pr = pr_recent;
+    } else {
+        pr = pr_getpa(pa, sz, access);
+        /*Cache the recent pal_mmap_region_t result */
+        pr_recent = pr;
+    }
+
+    if (pr == NULL) {
+	return NULL;
+    } else {
+	return pr->va + (pa - pr->pa);
+    }
 }
 
 u_int64_t
 pr_vtop(const void *va, const u_int64_t sz)
 {
-    pal_region_t *pr = pr_findva(va, sz);
+    pal_mmap_region_t *pr = pr_findva(va, sz);
     assert(pr != NULL);
     return pr->pa + (va - pr->va);
+}
+
+void
+pr_mem_unmap(void *va)
+{
+    pal_data_t *pd = pal_get_data();
+    pal_mmap_region_t *pr = pr_findva(va, 4);
+    pr->mapped = 0;
+    munmap(va, pr->sz);    
+
+    if (pr->next) {
+        pr->next->prev = pr->prev;
+    }
+
+    if (pr->prev) {
+	pr->prev->next = pr->next;
+    }
+
+    if (pd->regions == pr) {
+	pd->regions = pr->next;
+    }
+
+    free(pr);
 }

@@ -1,8 +1,6 @@
-
 /*
  * Copyright (c) 2017, Pensando Systems Inc.
  */
-
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <stdio.h>
@@ -11,6 +9,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <libgen.h>
+#include "pal.h"
 
 static const char *progname;
 
@@ -27,32 +26,12 @@ exit_usage(void)
     exit(1);
 }
 
-typedef enum {
-    MATTR_DEVICE,
-    MATTR_UNCACHED,
-    MATTR_CACHED
-} mattr_t;
-
 static void *
-get_mempage(off_t offs, mattr_t mattr)
+get_mempage(off_t offs, u_int32_t mattr)
 {
-    const char path[] = "/dev/mem";
-    int flags = O_RDWR;
     void *p;
-    int fd;
+    p = pal_mem_map(offs, getpagesize(), mattr);
 
-    // Only cached/uncached when using /dev/mem
-    // Even then, cached is only valid for addresses the kernel knows about
-    if (mattr == MATTR_DEVICE || mattr == MATTR_UNCACHED) {
-        flags |= O_SYNC;
-    }
-    fd = open(path, flags, 0);
-    if (fd < 0) {
-        perror(path);
-        return NULL;
-    }
-    p = mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE, MAP_SHARED, fd, offs);
-    close(fd);
     if (p == (void *)-1) {
         perror("mmap");
         return NULL;
@@ -61,7 +40,7 @@ get_mempage(off_t offs, mattr_t mattr)
 }
 
 static volatile uint32_t *
-mem_getptr(uint64_t addr, mattr_t mattr)
+mem_getptr(uint64_t addr, u_int32_t mattr)
 {
     int pgsz = getpagesize();
     off_t base;
@@ -78,38 +57,16 @@ mem_getptr(uint64_t addr, mattr_t mattr)
 }
 
 static int
-mem_read32(uint64_t addr, mattr_t mattr, uint32_t *valp)
+mem_read32(uint64_t addr, u_int32_t mattr, uint32_t *valp)
 {
-    int pgsz = getpagesize();
-    off_t base;
-    int offs;
-    void *p;
-
-    base = addr & -pgsz;
-    offs = addr & (pgsz - 1);
-    p = get_mempage(base, mattr);
-    if (p == NULL) {
-        return -1;
-    }
-    *valp = *(volatile uint32_t *)((char *)p + offs);
+    pal_mem_rd(addr, (void*)valp, 4, mattr);
     return 0;
 }
 
 static int
-mem_write32(uint64_t addr, mattr_t mattr, uint32_t val)
+mem_write32(uint64_t addr, u_int32_t mattr, uint32_t val)
 {
-    int pgsz = getpagesize();
-    off_t base;
-    int offs;
-    void *p;
-
-    base = addr & -pgsz;
-    offs = addr & (pgsz - 1);
-    p = get_mempage(base, mattr);
-    if (p == NULL) {
-        return -1;
-    }
-    *(volatile uint32_t *)((char *)p + offs) = val;
+    pal_mem_wr(addr, (void*) &val, 4, MATTR_UNCACHED);
     return 0;
 }
 
@@ -181,7 +138,7 @@ cm_pollregwrite(int argc, char *argv[])
 }
 
 static int
-do_read(int argc, char *argv[], mattr_t mattr)
+do_read(int argc, char *argv[], u_int32_t mattr)
 {
     uint64_t addr;
     uint32_t val;
@@ -202,7 +159,7 @@ do_read(int argc, char *argv[], mattr_t mattr)
 }
 
 static int
-do_write(int argc, char *argv[], mattr_t mattr)
+do_write(int argc, char *argv[], u_int32_t mattr)
 {
     uint64_t addr;
     uint32_t val;
@@ -237,7 +194,7 @@ cm_writereg(int argc, char *argv[])
 static int
 cm_readmem(int argc, char *argv[])
 {
-    mattr_t mattr = MATTR_CACHED;
+    u_int32_t mattr = MATTR_CACHED;
 
     if (argc > 1 && strcmp(argv[1], "--uncached") == 0) {
         mattr = MATTR_UNCACHED;
@@ -250,7 +207,7 @@ cm_readmem(int argc, char *argv[])
 static int
 cm_writemem(int argc, char *argv[])
 {
-    mattr_t mattr = MATTR_CACHED;
+    u_int32_t mattr = MATTR_CACHED;
 
     if (argc > 1 && strcmp(argv[1], "--uncached") == 0) {
         mattr = MATTR_UNCACHED;
@@ -263,13 +220,12 @@ cm_writemem(int argc, char *argv[])
 static int
 cm_memcat(int argc, char *argv[])
 {
-    mattr_t mattr = MATTR_CACHED;
+    u_int32_t mattr = MATTR_CACHED;
     uint32_t len, val;
     uint64_t addr;
     char *p;
 
     if (argc > 1 && strcmp(argv[1], "--uncached") == 0) {
-        mattr = MATTR_UNCACHED;
         --argc;
         ++argv;
     }
@@ -323,3 +279,4 @@ main(int argc, char *argv[])
     }
     return ret;
 }
+

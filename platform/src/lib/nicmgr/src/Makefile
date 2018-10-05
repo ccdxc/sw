@@ -76,7 +76,7 @@ SYSTEM_LIBRARIES = \
 ifeq ($(BUILD_ARCH), "x86_64")
 	SYSTEM_LIBRARIES += -lpal
 else
-	LIBRARIES += -l libpal
+	LIBRARIES += -lpal
 endif
 
 TOPDIR = ../../../..

@@ -251,15 +251,15 @@ Eth::Eth(HalClient *hal_client, void *dev_spec)
     // TODO: Need an allocator for this
     pci_resources.devcmdpa = DEVCMD_BASE + (info.hw_lif_id * 4096 * 2);
     pci_resources.devcmddbpa = pci_resources.devcmdpa + 4096;
-    MEM_SET(pci_resources.devcmdpa, 0, 4096);
-    MEM_SET(pci_resources.devcmddbpa, 0, 4096);
+    MEM_SET(pci_resources.devcmdpa, 0, 4096, 0);
+    MEM_SET(pci_resources.devcmddbpa, 0, 4096, 0);
 
     
     // Init Devcmd Region
     // TODO: mmap instead of calloc after porting to real pal
     devcmd = (struct dev_cmd_regs *)calloc(1, sizeof(struct dev_cmd_regs));
     devcmd->signature = DEV_CMD_SIGNATURE;
-    WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd));
+    WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd), 0);
 
     NIC_LOG_INFO("lif{}: Devcmd PA {:#x} DevcmdDB PA {:#x}", info.hw_lif_id,
            pci_resources.devcmdpa, pci_resources.devcmddbpa);
@@ -326,10 +326,10 @@ Eth::DevcmdPoll()
     }
 #endif
 
-    READ_MEM(pci_resources.devcmddbpa, (uint8_t *)&db, sizeof(db));
+    READ_MEM(pci_resources.devcmddbpa, (uint8_t *)&db, sizeof(db), 0);
     if (db.v) {
         WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)&db_clear,
-                    sizeof(db_clear));
+                    sizeof(db_clear), 0);
         NIC_LOG_INFO("{} lif{} active", __FUNCTION__, info.hw_lif_id);
         DevcmdHandler();
     }
@@ -342,7 +342,7 @@ Eth::DevcmdHandler()
 
     // read devcmd region
     READ_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd,
-             sizeof(struct dev_cmd_regs));
+             sizeof(struct dev_cmd_regs), 0);
 
     if (devcmd->done != 0) {
         NIC_LOG_ERR("lif{}: Devcmd done is set before processing command, opcode = {}",
@@ -364,7 +364,7 @@ Eth::DevcmdHandler()
     if (status == DEVCMD_SUCCESS) {
         WRITE_MEM(pci_resources.devcmdpa + offsetof(struct dev_cmd_regs, data),
                   (uint8_t *)devcmd + offsetof(struct dev_cmd_regs, data),
-                  sizeof(devcmd->data));
+                  sizeof(devcmd->data), 0);
     }
 
 devcmd_done:
@@ -374,12 +374,12 @@ devcmd_done:
     // write completion
     WRITE_MEM(pci_resources.devcmdpa + offsetof(struct dev_cmd_regs, comp),
               (uint8_t *)devcmd + offsetof(struct dev_cmd_regs, comp),
-              sizeof(devcmd->comp));
+              sizeof(devcmd->comp), 0);
 
     // write done
     WRITE_MEM(pci_resources.devcmdpa + offsetof(struct dev_cmd_regs, done),
               (uint8_t *)devcmd + offsetof(struct dev_cmd_regs, done),
-              sizeof(devcmd->done));
+              sizeof(devcmd->done), 0);
 }
 
 enum DevcmdStatus
@@ -619,7 +619,8 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
         }
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, p_index0),
                   (uint8_t *)(&qstate) + offsetof(eth_rx_qstate_t, p_index0),
-                  sizeof(qstate) - offsetof(eth_rx_qstate_t, p_index0));
+                  sizeof(qstate) - offsetof(eth_rx_qstate_t, p_index0),
+		  0);
         invalidate_rxdma_cacheline(addr);
     }
 
@@ -632,7 +633,8 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
         }
         WRITE_MEM(addr + offsetof(eth_tx_qstate_t, p_index0),
                   (uint8_t *)(&qstate) + offsetof(eth_tx_qstate_t, p_index0),
-                  sizeof(qstate) - offsetof(eth_tx_qstate_t, p_index0));
+                  sizeof(qstate) - offsetof(eth_tx_qstate_t, p_index0),
+		  0);
         invalidate_txdma_cacheline(addr);
     }
 
@@ -645,7 +647,8 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
         }
         WRITE_MEM(addr + offsetof(eth_admin_qstate_t, p_index0),
                   (uint8_t *)(&qstate) + offsetof(eth_admin_qstate_t, p_index0),
-                  sizeof(qstate) - offsetof(eth_admin_qstate_t, p_index0));
+                  sizeof(qstate) - offsetof(eth_admin_qstate_t, p_index0),
+		  0);
         invalidate_txdma_cacheline(addr);
     }
 
@@ -701,7 +704,7 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (DEVCMD_ERROR);
     }
 
-    READ_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate));
+    READ_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
     //NOTE: admin_qstate.cosA is ignored for Admin Queues. Db should ring on cosB.
     admin_qstate.cosA = 0;
     //NOTE: admin_qstate.cosB is set by HAL LifCreate
@@ -724,7 +727,7 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     admin_qstate.cq_ring_base = roundup(admin_qstate.ring_base + (64 << cmd->ring_size), 4096);
     admin_qstate.intr_assert_addr = intr_assert_addr(pci_resources.intrb + cmd->intr_index);
     admin_qstate.nicmgr_qstate_addr = 0xc0084000;
-    WRITE_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate));
+    WRITE_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
 
     invalidate_txdma_cacheline(addr);
 
@@ -775,7 +778,7 @@ Eth::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (DEVCMD_ERROR);
     }
 
-    READ_MEM(addr, (uint8_t *)&tx_qstate, sizeof(tx_qstate));
+    READ_MEM(addr, (uint8_t *)&tx_qstate, sizeof(tx_qstate), 0);
     tx_qstate.cosA = cmd->cos;
     //NOTE: tx_qstate.cosB is ignored for TX queues.
     tx_qstate.host = 1;
@@ -797,7 +800,7 @@ Eth::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
     tx_qstate.intr_assert_addr = intr_assert_addr(pci_resources.intrb + cmd->intr_index);
     tx_qstate.sg_ring_base = roundup(tx_qstate.cq_ring_base + (16 << cmd->ring_size), 4096);
     tx_qstate.spurious_db_cnt = 0;
-    WRITE_MEM(addr, (uint8_t *)&tx_qstate, sizeof(tx_qstate));
+    WRITE_MEM(addr, (uint8_t *)&tx_qstate, sizeof(tx_qstate), 0);
 
     invalidate_txdma_cacheline(addr);
 
@@ -847,7 +850,7 @@ Eth::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (DEVCMD_ERROR);
     }
 
-    READ_MEM(addr, (uint8_t *)&rx_qstate, sizeof(rx_qstate));
+    READ_MEM(addr, (uint8_t *)&rx_qstate, sizeof(rx_qstate), 0);
     rx_qstate.cosA = 0;
     rx_qstate.cosB = 0;
     rx_qstate.host = 1;
@@ -868,7 +871,7 @@ Eth::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     rx_qstate.cq_ring_base = roundup(rx_qstate.ring_base + (16 << cmd->ring_size), 4096);
     rx_qstate.intr_assert_addr = intr_assert_addr(pci_resources.intrb + cmd->intr_index);
     rx_qstate.rss_type = 0;
-    WRITE_MEM(addr, (uint8_t *)&rx_qstate, sizeof(rx_qstate));
+    WRITE_MEM(addr, (uint8_t *)&rx_qstate, sizeof(rx_qstate), 0);
 
     invalidate_rxdma_cacheline(addr);
 
@@ -959,7 +962,7 @@ Eth::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
                 info.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value));
+        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value), 0);
         invalidate_rxdma_cacheline(addr);
         break;
     case ETH_QTYPE_TX:
@@ -974,7 +977,7 @@ Eth::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
                 info.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value));
+        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value), 0);
         invalidate_txdma_cacheline(addr);
         break;
     case ETH_QTYPE_ADMIN:
@@ -989,7 +992,7 @@ Eth::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
                 info.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value));
+        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value), 0);
         invalidate_txdma_cacheline(addr);
         break;
     default:
@@ -1034,7 +1037,7 @@ Eth::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
                 info.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value));
+        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value), 0);
         invalidate_rxdma_cacheline(addr);
         break;
     case ETH_QTYPE_TX:
@@ -1049,7 +1052,7 @@ Eth::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
                 info.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value));
+        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value), 0);
         invalidate_txdma_cacheline(addr);
         break;
     case ETH_QTYPE_ADMIN:
@@ -1064,7 +1067,7 @@ Eth::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
                 info.hw_lif_id, cmd->qid);
             return (DEVCMD_ERROR);
         }
-        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value));
+        WRITE_MEM(addr + 16, (uint8_t *)&value, sizeof(value), 0);
         invalidate_txdma_cacheline(addr);
         break;
     default:
@@ -1414,7 +1417,7 @@ Eth::_CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data)
                 info.hw_lif_id, qid);
             return (DEVCMD_ERROR);
         }
-        WRITE_MEM(addr + offsetof(eth_rx_qstate_t, rss_type), (uint8_t *)&rss_type, sizeof(rss_type));
+        WRITE_MEM(addr + offsetof(eth_rx_qstate_t, rss_type), (uint8_t *)&rss_type, sizeof(rss_type), 0);
         invalidate_rxdma_cacheline(addr);
     }
 
@@ -1613,7 +1616,7 @@ Eth::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
                     info.hw_lif_id+ cmd->lif_id, cmd->qid_ver);
         return (DEVCMD_ERROR);
     }
-    WRITE_MEM(addr, (uint8_t *)&eqcb, sizeof(eqcb));
+    WRITE_MEM(addr, (uint8_t *)&eqcb, sizeof(eqcb), 0);
     invalidate_rxdma_cacheline(addr);
     invalidate_txdma_cacheline(addr);
     

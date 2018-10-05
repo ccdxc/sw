@@ -166,7 +166,7 @@ pciehw_openmem(pciehw_t *phw)
         pciehsys_log("$PCIEHW_ADDR override 0x%"PRIx64"\n", pciehw_pa);
     }
 
-    pciehwmem = pal_mem_map(pciehw_pa, sizeof(pciehw_mem_t));
+    pciehwmem = pal_mem_map(pciehw_pa, sizeof(pciehw_mem_t), MATTR_UNCACHED);
     if (pciehwmem == NULL) {
         return -1;
     }

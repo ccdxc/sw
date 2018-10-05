@@ -154,7 +154,7 @@ pciehw_barrd_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
     u_int64_t pa = ientry->info.direct_addr;
     size_t sz = ientry->info.direct_size;
 
-    pal_mem_rd(pa, ientry->data, sz);
+    pal_mem_rd(pa, ientry->data, sz, 0);
     pciehw_indirect_complete(ientry);
 }
 
@@ -172,7 +172,7 @@ pciehw_barwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
     u_int64_t pa = ientry->info.direct_addr;
     size_t sz = ientry->info.direct_size;
 
-    pal_mem_wr(pa, &stlp->data, sz);
+    pal_mem_wr(pa, &stlp->data, sz, 0);
     pciehw_indirect_complete(ientry);
 }
 

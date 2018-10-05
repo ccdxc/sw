@@ -213,7 +213,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                         ACCEL_DEV_PAGE_SIZE));
     pci_resources.devcmdpa = ACCEL_DEV_PAGE_ALIGN(hbm_addr);
     pci_resources.devcmddbpa = pci_resources.devcmdpa + ACCEL_DEV_PAGE_SIZE;
-    WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)blank_page, ACCEL_DEV_PAGE_SIZE);
+    WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)blank_page, ACCEL_DEV_PAGE_SIZE, 0);
 
     static_assert(sizeof(dev_cmd_regs_t) == ACCEL_DEV_PAGE_SIZE);
     static_assert((offsetof(dev_cmd_regs_t, cmd) % 4) == 0);
@@ -257,7 +257,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     // Init Devcmd Region
     devcmd = (dev_cmd_regs_t *)calloc(1, sizeof(dev_cmd_regs_t));
     devcmd->signature = DEV_CMD_SIGNATURE;
-    WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd));
+    WRITE_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(*devcmd), 0);
 
     NIC_LOG_INFO("lif{}: Devcmd PA {:#x} DevcmdDB PA {:#x}", info.hw_lif_id,
         pci_resources.devcmdpa, pci_resources.devcmddbpa);
@@ -308,11 +308,11 @@ Accel_PF::DevcmdPoll()
     dev_cmd_db_t    db_clear = {0};
 
     db.v = 0;
-    READ_MEM(pci_resources.devcmddbpa, (uint8_t *)&db, sizeof(db));
+    READ_MEM(pci_resources.devcmddbpa, (uint8_t *)&db, sizeof(db), 0);
     if (db.v) {
         NIC_LOG_INFO("lif{} active", info.hw_lif_id);
         DevcmdHandler();
-        WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)&db_clear, sizeof(db_clear));
+        WRITE_MEM(pci_resources.devcmddbpa, (uint8_t *)&db_clear, sizeof(db_clear), 0);
     }
 #endif
 }
@@ -323,7 +323,7 @@ Accel_PF::DevcmdHandler()
     enum DevcmdStatus   status = DEVCMD_SUCCESS;
 
     // read devcmd region
-    READ_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(dev_cmd_regs_t));
+    READ_MEM(pci_resources.devcmdpa, (uint8_t *)devcmd, sizeof(dev_cmd_regs_t), 0);
 
     if (devcmd->done) {
         NIC_LOG_ERR("lif{}: Devcmd done is set before processing command, opcode = {}",
@@ -345,7 +345,7 @@ Accel_PF::DevcmdHandler()
     if (status == DEVCMD_SUCCESS) {
         WRITE_MEM(pci_resources.devcmdpa + offsetof(dev_cmd_regs_t, data),
                   (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, data),
-                  sizeof(devcmd->data));
+                  sizeof(devcmd->data), 0);
     }
     _PostDevcmdDone(status);
 }
@@ -428,12 +428,12 @@ Accel_PF::_PostDevcmdDone(enum DevcmdStatus status)
     // write completion
     WRITE_MEM(pci_resources.devcmdpa + offsetof(dev_cmd_regs_t, cpl),
               (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, cpl),
-              sizeof(devcmd->cpl));
+              sizeof(devcmd->cpl), 0);
 
     // write done
     WRITE_MEM(pci_resources.devcmdpa + offsetof(dev_cmd_regs_t, done),
               (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, done),
-              sizeof(devcmd->done));
+              sizeof(devcmd->done), 0);
 }
 
 enum DevcmdStatus
@@ -493,9 +493,9 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
     for (qid = 0; qid < spec->seq_created_count; qid++) {
         qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, abort),
-                  (uint8_t *)&abort, sizeof(abort));
+                  (uint8_t *)&abort, sizeof(abort), 0);
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
-                  (uint8_t *)&enable, sizeof(enable));
+                  (uint8_t *)&enable, sizeof(enable), 0);
         invalidate_txdma_cacheline(qstate_addr);
     }
 
@@ -503,7 +503,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
         qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_ADMIN, qid);
         WRITE_MEM(qstate_addr + offsetof(eth_admin_qstate_t, p_index0),
                   (uint8_t *)blank_qstate + offsetof(eth_admin_qstate_t, p_index0),
-                  sizeof(blank_qstate) - offsetof(eth_admin_qstate_t, p_index0));
+                  sizeof(blank_qstate) - offsetof(eth_admin_qstate_t, p_index0), 0);
         invalidate_txdma_cacheline(qstate_addr);
     }
 
@@ -524,7 +524,8 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
                      (uint8_t *)&seq_qstate.p_ndx,
                      (offsetof(storage_seq_qstate_t, abort) - 
                       offsetof(storage_seq_qstate_t, p_ndx) +
-                      sizeof(seq_qstate.abort)));
+                      sizeof(seq_qstate.abort)),
+                      0);
 
             // As part of abort, P4+ would set c_ndx = p_ndx
             if (seq_qstate.c_ndx != seq_qstate.p_ndx) {
@@ -588,7 +589,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
 
     addr = GetQstateAddr(STORAGE_SEQ_QTYPE_ADMIN, cmd->index);
 
-    READ_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate));
+    READ_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
     //NOTE: admin_qstate.cosA is ignored for Admin Queues. Db should ring on cosB.
     admin_qstate.cosA = 0;
     //NOTE: admin_qstate.cosB is set by HAL LifCreate
@@ -615,7 +616,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
         NIC_LOG_INFO("lif{}: nicmgr_qstate_addr RX {:#x}", info.hw_lif_id,
             admin_qstate.nicmgr_qstate_addr);
     }
-    WRITE_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate));
+    WRITE_MEM(addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
 
     invalidate_txdma_cacheline(addr);
 
@@ -671,7 +672,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
 
     qstate_addr = GetQstateAddr(STORAGE_SEQ_QTYPE_SQ, qid);
     seq_qid_init_high = std::max(seq_qid_init_high, qid);
-    READ_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate));
+    READ_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate), 0);
 
     seq_qstate.cosA = cmd->cos;
     //NOTE: seq_qstate.cosB is ignored for TX queues.
@@ -713,7 +714,7 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
         seq_qstate.desc1_next_pc_valid = true;
     }
 
-    WRITE_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate));
+    WRITE_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate), 0);
     invalidate_txdma_cacheline(qstate_addr);
 
     cpl->qid = qid;
@@ -758,7 +759,7 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
         }
         qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
-                  (uint8_t *)&value, sizeof(value));
+                  (uint8_t *)&value, sizeof(value), 0);
         invalidate_txdma_cacheline(qstate_addr);
         break;
     case STORAGE_SEQ_QTYPE_ADMIN:
@@ -768,7 +769,7 @@ Accel_PF::_DevcmdSeqQueueControl(void *req, void *req_data,
             return (DEVCMD_ERROR);
         }
         qstate_addr = GetQstateAddr(cmd->qtype, cmd->qid);
-        WRITE_MEM(qstate_addr + 16, (uint8_t *)&value, sizeof(value));
+        WRITE_MEM(qstate_addr + 16, (uint8_t *)&value, sizeof(value), 0);
         invalidate_txdma_cacheline(qstate_addr);
         break;
     default:

@@ -17,7 +17,7 @@
 
 #define READ_MEM        sdk::lib::pal_mem_read
 #define WRITE_MEM       sdk::lib::pal_mem_write
-#define MEM_SET(pa, val, sz) { \
+#define MEM_SET(pa, val, sz, flags) { \
     uint8_t v = val; \
     for (size_t i = 0; i < sz; i += sizeof(v)) { \
         sdk::lib::pal_mem_write(pa + i, &v, sizeof(v)); \

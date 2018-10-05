@@ -64,7 +64,7 @@ cc_binary(
                 "//nic/hal/core:core_includes",
                 "//nic/fte:fte_includes",
                 "@sdk//:sdk_headers",
-                "@sdk//lib/pal:pal",
+                "@sdk//lib/pal:sdkpal",
                 "@sdk//lib/indexer:indexer",
                 "@sdk//lib/logger:logger",
         ],

@@ -17,11 +17,11 @@ SOURCES = \
 	log.cc \
 	main.cc \
 	parse.cc \
-	regio.cc \
 	$(NULL)
 
 LCXXFLAGS = \
 	-I ../include \
+	-I $(TOPDIR)/src/lib/pal/include \
 	$(NULL)
 
 ifeq ("$(BUILD_ARCH)", "aarch64")
@@ -38,6 +38,7 @@ LLDFLAGS = \
 	-L$(TOPDIR)/src/third-party/lib/ncurses/$(BUILD_ARCH) \
 	$(NULL)
 
-SYSTEM_LIBRARIES = -lgmp -ledit -lncurses
+SYSTEM_LIBRARIES = -lgmp -ledit -lncurses 
+LIBRARIES = -lpal
 
 include $(TOPDIR)/make/Makefile.inc

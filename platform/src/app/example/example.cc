@@ -42,9 +42,9 @@ main(int argc, char *argv[])
     //
 
     // read, modify, write
-    pal_mem_rd(0xa0000000, buf, bufsz);
+    pal_mem_rd(0xa0000000, buf, bufsz, MATTR_UNCACHED);
     buf[0] = 0;
-    pal_mem_wr(0xa0000000, buf, bufsz);
+    pal_mem_wr(0xa0000000, buf, bufsz, MATTR_UNCACHED);
 
     exit(0);
 }

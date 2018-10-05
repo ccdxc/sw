@@ -53,7 +53,7 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-    va = pal_mem_map(pa, size);
+    va = pal_mem_map(pa, size, MATTR_UNCACHED);
     if (va == NULL) {
         fprintf(stderr, "palmem: pal_mem_map failed\n");
         exit(1);

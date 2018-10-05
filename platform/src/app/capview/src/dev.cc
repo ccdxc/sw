@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <setjmp.h>
 #include "dev.h"
+#include "pal.h"
 
 static uint8_t tx;
 
@@ -51,7 +52,7 @@ dev_read(uint32_t *wp, uint64_t addr, int count)
 #ifdef __aarch64__
     raddr = addr;
     for (int i = 0; i < count; i++) {
-        wp[i] = regio_readl(raddr);
+        wp[i] = pal_reg_rd32(addr);
         raddr += 4;
     }
 #else
@@ -77,7 +78,7 @@ dev_write(const uint32_t *wp, uint64_t addr, int count)
 #ifdef __aarch64__
     waddr = addr;
     for (int i = 0; i < count; i++) {
-        regio_writel(waddr, wp[i]);
+	pal_reg_wr32(waddr, wp[i]);
         waddr += 4;
     }
 #endif
