@@ -1,28 +1,25 @@
 #!/usr/bin/env bash
 
 # check_for_naples_health checks if the naples-v1 container is unhealthy. If it exceeds MAX_RETRIES it will exit 1
-# MAX_RETRIES guards the maximum time we wait for NAPLES Container to change state to healthy.
-# It waits for a total of 2**(MAX_RETRIES) - 1 seconds
 NAPLES_CONTAINER_NAME="naples-v1"
-MAX_RETRIES=16
+MAX_RETRIES=128
 NAPLES_HEALTHY=-1
 health="unhealthy"
-i=0
+i=MAX_RETRIES
 echo "Checking for NAPLES Sim Container Health Start: `date +%x_%H:%M:%S:%N`"
-until (( NAPLES_HEALTHY == 0 )) || (( i == MAX_RETRIES ))
+until (( NAPLES_HEALTHY == 0 )) || (( i == 0 ))
 do
-	timeout="$((2 ** i))"
-	echo "Checking if the naples container is healthy. Sleeping for $timeout seconds..."
-	sleep "$timeout"
+	echo "Checking if the naples container is healthy. Sleeping for 10 seconds..."
+	sleep 10
 	health=$(docker inspect -f '{{.State.Health.Status}}' "$NAPLES_CONTAINER_NAME")
 	if [ "$health" == "healthy" ]; then
 	    echo "NAPLES Container is healthy"
 	    NAPLES_HEALTHY=0
 	fi
-	let "i++"
+	let "i--"
 done
 
-if [ "$i" -eq "$MAX_RETRIES" ]; then
+if [ "$i" -eq "0" ]; then
 	echo "NAPLES Container is unhealthy"
 	cat /root/naples/data/logs/start-naples.log
 	docker exec "$NAPLES_CONTAINER_NAME" bash -c /naples/nic/tools/print-cores.sh
