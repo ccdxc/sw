@@ -733,26 +733,39 @@ func (infraCtx *infraCtx) bringUp() error {
 }
 
 func (infraCtx *infraCtx) CleanUp() error {
-
-	wg := sync.WaitGroup{}
-	entities := infraCtx.FindRemoteEntity("")
-	errChannel := make(chan error, len(entities))
-	for _, entity := range entities {
-		ctx, cancel := context.WithTimeout(context.Background(), NodeTeardownTimeout)
-		defer cancel()
-		fmt.Println("Teardown ", entity.Name())
-		go entity.teardown(ctx, errChannel)
-	}
-	wg.Wait()
-
-	for i := 0; i < len(entities); i++ {
-		if err := <-errChannel; err != nil {
-			/* Report and continue */
-			log.Printf("Error in teardown %v\n", err)
+	ch := make(chan interface{})
+	go func() {
+		wg := sync.WaitGroup{}
+		entities := infraCtx.FindRemoteEntity("")
+		errChannel := make(chan error, len(entities))
+		for _, entity := range entities {
+			wg.Add(1)
+			go func(entity RemoteEntity) {
+				ctx, cancel := context.WithTimeout(context.Background(), NodeTeardownTimeout)
+				defer cancel()
+				fmt.Println("Teardown ", entity.Name())
+				entity.teardown(ctx, errChannel)
+				wg.Done()
+			}(entity)
 		}
-	}
+		wg.Wait()
 
-	infraCtx.resetVMEntities()
+		for i := 0; i < len(entities); i++ {
+			if err := <-errChannel; err != nil {
+				/* Report and continue */
+				log.Printf("Error in teardown %v\n", err)
+			}
+		}
+
+		infraCtx.resetVMEntities()
+		close(ch)
+	}()
+
+	select {
+	case <-time.After(NodeTeardownTimeout + 5*time.Second):
+		log.Printf("Timeout in teardown")
+	case <-ch:
+	}
 
 	_ = os.RemoveAll(RemoteInfraDirectory)
 	return nil

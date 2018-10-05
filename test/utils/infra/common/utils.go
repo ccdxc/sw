@@ -190,9 +190,10 @@ func RunSSHCommand(SSHHandle *ssh.Client, cmd string, sudo bool, bg bool, logger
 	var stdoutBuf, stderrBuf bytes.Buffer
 	sshSession, err := SSHHandle.NewSession()
 	if err != nil {
-		logger.Println("SSH session creation failed!")
+		logger.Printf("SSH session creation failed! %s", err)
 		return -1, nil, nil
 	}
+	defer sshSession.Close()
 
 	modes := ssh.TerminalModes{
 		ssh.ECHO:          0,     // disable echoing
