@@ -98,27 +98,27 @@ func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf stri
 	return nil
 }
 
-func (naples *naplesNode) init(in *iota.IotaNode, withQemu bool) (resp *iota.IotaNode, err error) {
+func (naples *naplesNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, err error) {
 
-	naples.iotaNode.name = in.GetNode().GetNodeName()
+	naples.iotaNode.name = in.GetNodeName()
 	naples.worloadMap = make(map[string]workload)
-	naples.log("Bring up request received for : " + in.GetNode().GetNodeName())
-	if err := naples.bringUpNaples(in.GetNode().GetNodeName(),
-		in.Node.GetImage(), in.GetNaplesConfig().GetControlIntf(),
+	naples.log("Bring up request received for : " + in.GetNodeName())
+	if err := naples.bringUpNaples(in.GetNodeName(),
+		in.GetImage(), in.GetNaplesConfig().GetControlIntf(),
 		in.GetNaplesConfig().GetControlIp(),
-		in.GetNaplesConfig().GetDataIntfs(), in.GetNaplesConfig().GetDataIps(), in.GetNaplesConfig().GetNaplesIps(),
-		in.GetNaplesConfig().GetVeniceIps(), withQemu, in.GetNaplesConfig().GetPassThroughMode()); err != nil {
+		in.GetNaplesConfig().GetDataIntfs(), nil, nil,
+		in.GetNaplesConfig().GetVeniceIps(), withQemu, true); err != nil {
 		resp := "Naples bring up failed : " + err.Error()
 		naples.log(resp)
-		return &iota.IotaNode{Node: &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}}, err
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
 	}
 	naples.log("Naples bring up succesfull")
 
-	return &iota.IotaNode{Node: &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}}, nil
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
 }
 
 //Init initalize node type
-func (naples *naplesNode) Init(in *iota.IotaNode) (resp *iota.IotaNode, err error) {
+func (naples *naplesNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 	return naples.init(in, false)
 }
 
@@ -132,8 +132,22 @@ func (naples *naplesNode) AddWorkload(in *iota.Workload) (*iota.Workload, error)
 		return resp, nil
 	}
 
-	naples.worloadMap[in.GetWorkloadName()] = newWorkload()
+	wload := newWorkload()
 	naples.logger.Printf("Added workload : %s", in.GetWorkloadName())
+	if err := wload.BringUp(in.GetWorkloadName(), workloadImage); err != nil {
+		naples.logger.Errorf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
+		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		return resp, nil
+	}
+	naples.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
+	naples.worloadMap[in.GetWorkloadName()] = wload
+
+	if err := wload.AttachInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpAddress(), int(in.GetEncapVlan())); err != nil {
+		naples.logger.Errorf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
+		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		return resp, nil
+	}
+	naples.logger.Printf("Attachinng interface to workload : %s done", in.GetWorkloadName())
 	resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
 	return resp, nil
 }
@@ -213,7 +227,7 @@ func (naples *naplesNode) NodeType() iota.PersonalityType {
 }
 
 //Init initalize node type
-func (naples *naplesQemuNode) Init(in *iota.IotaNode) (resp *iota.IotaNode, err error) {
+func (naples *naplesQemuNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 	return naples.init(in, true)
 }
 

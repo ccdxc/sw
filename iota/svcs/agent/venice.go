@@ -68,27 +68,27 @@ func (venice *veniceNode) bringUpVenice(image string, hostname string,
 }
 
 //Init initalize node type
-func (venice *veniceNode) Init(in *iota.IotaNode) (*iota.IotaNode, error) {
-	venice.iotaNode.name = in.GetNode().GetNodeName()
-	venice.log("Bring up request received for : " + in.GetNode().GetNodeName())
+func (venice *veniceNode) Init(in *iota.Node) (*iota.Node, error) {
+	venice.iotaNode.name = in.GetNodeName()
+	venice.log("Bring up request received for : " + in.GetNodeName())
 
 	veniceNodes := []venicePeerNode{}
 
-	for _, node := range in.GetVeniceConfig().GetVeniceNodes() {
+	for _, node := range in.GetVeniceConfig().GetVenicePeers() {
 		veniceNodes = append(veniceNodes, venicePeerNode{hostname: node.GetHostName(),
 			ip: node.GetIpAddress()})
 	}
-	if err := venice.bringUpVenice(in.Node.GetImage(), in.GetVeniceConfig().GetHostName(),
+	if err := venice.bringUpVenice(in.GetImage(), in.GetNodeName(),
 		in.GetVeniceConfig().GetControlIntf(), in.GetVeniceConfig().GetControlIp(),
 		veniceNodes); err != nil {
 		venice.log("Venice bring up failed.")
-		return &iota.IotaNode{Node: &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}}, err
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
 
 	}
 
 	venice.log("Venice bring script up successful.")
 
-	return &iota.IotaNode{Node: &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}}, nil
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
 }
 
 // AddWorkload brings up a workload type on a given node

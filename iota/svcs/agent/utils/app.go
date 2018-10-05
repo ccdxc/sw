@@ -75,9 +75,8 @@ func (intf *Interface) PrintInterfaceInformation() {
 }
 
 //SetIPAddress Set ip address
-func (intf *Interface) SetIPAddress(address string, prefixlen int) error {
+func (intf *Interface) SetIPAddress(address string) error {
 	intf.IPAddress = address
-	intf.PrefixLen = prefixlen
 	return nil
 }
 
@@ -228,8 +227,7 @@ func (ns *NS) SetMacAddress(intfName string, macAddress string, vlan int) error 
 }
 
 //SetIPAddress set ip address of the interface
-func (ns *NS) SetIPAddress(intfName string, ipAddress string,
-	prefixLen int, vlan int) error {
+func (ns *NS) SetIPAddress(intfName string, ipAddress string, vlan int) error {
 	intf := ns._Interfaces[intfName]
 	if intf == nil {
 		return errors.New("Primary Interface not found")
@@ -240,11 +238,11 @@ func (ns *NS) SetIPAddress(intfName string, ipAddress string,
 			return errors.New("Vlan interface not found")
 		}
 	}
-	cmd := []string{"ifconfig", intf.Name, ipAddress + "/" + strconv.Itoa(prefixLen)}
+	cmd := []string{"ifconfig", intf.Name, ipAddress}
 	if stdout, err := ns.RunCommand(cmd, 0, false); err != nil {
 		return errors.Wrap(err, stdout)
 	}
-	return intf.SetIPAddress(ipAddress, prefixLen)
+	return intf.SetIPAddress(ipAddress)
 }
 
 //AddArpEntry add arp entry

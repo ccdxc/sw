@@ -21,8 +21,8 @@ func NewAgentStubService() *StubService {
 }
 
 // AddNode brings up the node with the personality
-func (*StubService) AddNode(ctx context.Context, req *iota.IotaNode) (*iota.IotaNode, error) {
-	resp := &iota.IotaNode{}
+func (*StubService) AddNode(ctx context.Context, req *iota.Node) (*iota.Node, error) {
+	resp := &iota.Node{}
 	return resp, nil
 }
 

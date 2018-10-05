@@ -23,15 +23,15 @@ func NewAgentService() *Service {
 }
 
 // AddNode brings up the node with the personality
-func (agent *Service) AddNode(ctx context.Context, in *iota.IotaNode) (*iota.IotaNode, error) {
+func (agent *Service) AddNode(ctx context.Context, in *iota.Node) (*iota.Node, error) {
 
 	/* Check if the node running an instance */
-	if agent.node != nil || in.GetNode() == nil {
-		return &iota.IotaNode{Node: &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}}, nil
+	if agent.node != nil {
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 	}
 
-	if agent.node = newIotaNode(in.GetNode().Type); agent.node == nil {
-		return &iota.IotaNode{Node: &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}}, nil
+	if agent.node = newIotaNode(in.Type); agent.node == nil {
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 
 	}
 

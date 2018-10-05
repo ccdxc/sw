@@ -18,7 +18,7 @@ const (
 
 //IotaNode interface
 type IotaNode interface {
-	Init(*iota.IotaNode) (*iota.IotaNode, error)
+	Init(*iota.Node) (*iota.Node, error)
 
 	// DeleteNode, remove the personaltiy set
 	Destroy(*iota.Node) (*iota.Node, error)
