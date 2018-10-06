@@ -15,13 +15,15 @@ class _Testbed:
     def __init__(self):
         self.curr_ts = None     # Current Testsuite
         self.prev_ts = None     # Previous Testsute
+        self.__node_ips = []
 
         self.__read_warmd_json()
-        self.__node_ips = []
         return
 
     def __read_warmd_json(self):
         self.tbspec = parser.JsonParse(GlobalOptions.testbed_json)
+        for k,v in self.tbspec.Instances.__dict__.items():
+            self.__node_ips.append(v)
         return
     
     def __prepare_TestBedMsg(self, ts):
@@ -34,12 +36,12 @@ class _Testbed:
         msg.venice_image = ts.GetImages().venice
         msg.driver_sources = ts.GetImages().drivers
 
+        # TBD: Get it from warmd.json
         msg.user = "vm"
         msg.passwd = "vm"
 
-        for k,v in self.tbspec.Instances.__dict__.items():
-            msg.ip_address.append(v)
-            self.__node_ips.append(v)
+        for node_ip in self.__node_ips:
+            msg.ip_address.append(node_ip)
         return msg
 
     def __cleanup_testbed(self):

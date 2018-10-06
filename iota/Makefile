@@ -32,5 +32,7 @@ test:
 	go test -v ./...
 clean:
 	rm -rf ${IOTA_BIN_DIR}
+	rm -rf $(TOPDIR)/protos/pygen
+	rm -rf $(TOPDIR)/protos/gogen
 
 all: iota

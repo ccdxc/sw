@@ -8,6 +8,7 @@ import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.utils.loader as loader
 import iota.harness.api as api
 import iota.harness.infra.testcase as testcase
+import iota.harness.infra.topology as topology
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
@@ -44,7 +45,7 @@ class TestSuite:
         if not topospec:
             Logger.error("Error: No topology specified in the testsuite.")
             assert(0)
-        self.__topology = parser.YmlParse(self.__spec.setup.topology)
+        self.__topology = topology.Topology(topospec)
         return types.status.SUCCESS
 
     def __resolve_setup_config(self):
@@ -66,34 +67,11 @@ class TestSuite:
             return ret
         return types.status.SUCCESS
 
-    def __setup_topology(self):
-        Logger.info("Adding Nodes:")
-        req = topo_pb2.NodeMsg()
-        req.node_op = topo_pb2.ADD
-        
-        for n in self.__topology.nodes:
-            node_req = req.nodes.add()
-            node_req.type = topo_pb2.PersonalityType.Value(n.role)
-            n.ip_address = Testbed.ReserveNodeIpAddress()
-            node_req.ip_address = n.ip_address
-            node_req.node_name = n.name
-            Logger.info("- %s: %s (%s)" % (n.name, n.ip_address, n.role))
-
-        resp = api.AddNodes(req)
-        if resp.api_response.api_status != types_pb2.API_STATUS_OK:
-            Logger.error("Failed to add Nodes: ",
-                         types_pb2.APIResponseType.Name(resp.api_response.api_status))
-            for n in resp.nodes:
-                Logger.error(" - %s: " % types_pb2.APIResponseType.Name(n.node_status))
-            return types.status.FAILURE
-
-        return types.status.SUCCESS
-
     def __setup_config(self):
         return types.status.SUCCESS
 
     def __setup(self):
-        ret = self.__setup_topology()
+        ret = self.__topology.Setup()
         if ret != types.status.SUCCESS:
             return ret
 
