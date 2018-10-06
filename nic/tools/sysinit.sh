@@ -60,6 +60,10 @@ if [[ "$FWD_MODE" != "classic" ]]; then
 
     $NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
     [[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
+else
+    # create 100G ports in classic mode
+    $NIC_DIR/tools/port_op.sh --create --port 1 --speed 100 --enable 1
+    $NIC_DIR/tools/port_op.sh --create --port 5 --speed 100 --enable 1
 fi
 
 echo "All processes brought up, please check ..."
