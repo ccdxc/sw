@@ -71,7 +71,7 @@ class TestSuite:
         return types.status.SUCCESS
 
     def __setup(self):
-        ret = self.__topology.Setup()
+        ret = self.__topology.Setup(self)
         if ret != types.status.SUCCESS:
             return ret
 

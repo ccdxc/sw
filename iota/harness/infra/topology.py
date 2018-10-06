@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import os
 
 from iota.harness.infra.testbed import Testbed as Testbed
 from iota.harness.infra.utils.logger import Logger as Logger
@@ -22,9 +23,9 @@ class Node(object):
         self.__role = topo_pb2.PersonalityType.Value(spec.role)
 
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
-        self.__control_intf = "eth0"
+        self.__control_intf = "eth1"
 
-        self.__data_intfs = [ "eth1", "eth2" ]
+        self.__data_intfs = [ "eth2" ]
         Logger.info("- New Node: %s: %s (%s)" % (spec.name, self.__ip_address, spec.role))
         return
 
@@ -37,15 +38,16 @@ class Node(object):
     def ControlIp(self):
         return self.__control_ip
 
-    def AddToNodeMsg(self, msg, topology):
+    def AddToNodeMsg(self, msg, topology, testsuite):
         msg.type = self.__role
         msg.image = ""
         msg.ip_address = self.__ip_address
-        msg.node_name = self.__name
+        msg.name = self.__name
 
         if self.Role() == topo_pb2.PERSONALITY_VENICE:
             msg.venice_config.control_intf = self.__control_intf
             msg.venice_config.control_ip = str(self.__control_ip)
+            msg.image = os.path.basename(testsuite.GetImages().venice)
             for n in topology.Nodes():
                 if n == self: continue
                 if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
@@ -55,6 +57,7 @@ class Node(object):
         else:
             msg.naples_config.control_intf = self.__control_intf
             msg.naples_config.control_ip = str(self.__control_ip)
+            msg.image = os.path.basename(testsuite.GetImages().naples)
             for data_intf in self.__data_intfs:
                 msg.naples_config.data_intfs.append(data_intf)
 
@@ -78,14 +81,14 @@ class Topology(object):
     def Nodes(self):
         return self.__nodes
 
-    def Setup(self):
+    def Setup(self, testsuite):
         Logger.info("Adding Nodes:")
         req = topo_pb2.NodeMsg()
         req.node_op = topo_pb2.ADD
         
         for node in self.__nodes:
             msg = req.nodes.add()
-            ret = node.AddToNodeMsg(msg, self)
+            ret = node.AddToNodeMsg(msg, self, testsuite)
             assert(ret == types.status.SUCCESS)
 
         resp = api.AddNodes(req)

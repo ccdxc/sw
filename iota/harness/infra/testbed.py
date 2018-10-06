@@ -16,7 +16,8 @@ class _Testbed:
         self.curr_ts = None     # Current Testsuite
         self.prev_ts = None     # Previous Testsute
         self.__node_ips = []
-
+        
+        self.__ipidx = 0
         self.__read_warmd_json()
         return
 
@@ -75,9 +76,9 @@ class _Testbed:
         return status
 
     def ReserveNodeIpAddress(self):
-        if len(self.__node_ips):
-            node_ip = self.__node_ips[0]
-            del self.__node_ips[0]
+        if len(self.__node_ips) and self.__ipidx < len(self.__node_ips):
+            node_ip = self.__node_ips[self.__ipidx]
+            self.__ipidx += 1
         else:
             Logger.error("No Nodes available in Testbed.")
             assert(0)

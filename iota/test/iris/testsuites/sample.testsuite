@@ -9,8 +9,8 @@ packages:
 #   List of images to used by this testsuite.
 #   This is a MANDATORY section with atleast 1 image entry.
 images:
-    naples: /sw/nic/nic.tgz
-    venice: /sw/venice.tgz
+    naples: /sw/nic/obj/images/naples-release-v1.tgz
+    venice: /sw/bin/venice.tgz
     drivers: /sw/platform/drivers.tgz
 
 # Section: 'setup'
