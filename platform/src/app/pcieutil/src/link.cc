@@ -8,6 +8,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <inttypes.h>
+#include <sys/time.h>
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
@@ -80,6 +81,15 @@ ltssm_str(const int ltssm)
     return ltssm_strs[ltssm];
 }
 
+static u_int64_t
+gettimestamp(void)
+{
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000000 + tv.tv_usec;
+}
+
 static void
 linkpoll(int argc, char *argv[])
 {
@@ -93,6 +103,7 @@ linkpoll(int argc, char *argv[])
         unsigned int fifo_rd:8;
         unsigned int fifo_wr:8;
     } ost, nst;
+    u_int64_t otm, ntm;
     int port, polltm_us, opt;
 
     port = 0;
@@ -112,16 +123,18 @@ linkpoll(int argc, char *argv[])
         }
     }
 
-    printf("perstn\n");
-    printf("|phystatus\n");
-    printf("||portgate_open\n");
-    printf("|||cfg_retry\n");
-    printf("||||ltssm_en\n");
-    printf("|||||  fifo\n");
-    printf("Ppgrl  rd/wr  ltssm\n");
+    printf("              perstn\n");
+    printf("              |phystatus\n");
+    printf("              ||portgate_open\n");
+    printf("              |||cfg_retry\n");
+    printf("              ||||ltssm_en\n");
+    printf("              |||||  fifo\n");
+    printf(" +time (sec)  Ppgrl  rd/wr  ltssm\n");
 
     memset(&ost, 0, sizeof(ost));
     memset(&nst, 0, sizeof(nst));
+    otm = 0;
+    ntm = 0;
     while (1) {
         const u_int32_t sta_rst = pal_reg_rd32(PXC_(STA_C_PORT_RST, port));
         const u_int32_t sta_mac = pal_reg_rd32(PXC_(STA_C_PORT_MAC, port));
@@ -152,8 +165,11 @@ linkpoll(int argc, char *argv[])
         if (nst.ltssm_st == 1) nst.ltssm_st = 0;
 
         if (memcmp(&nst, &ost, sizeof(nst)) != 0) {
+            ntm = gettimestamp();
+            if (otm == 0) otm = ntm;
 
-            printf("%c%c%c%c%c %3u/%-3u 0x%02x %s\n",
+            printf("[+%010.6lf] %c%c%c%c%c %3u/%-3u 0x%02x %s\n",
+                   (ntm - otm) / 1000000.0,
                    nst.perstn ? 'P' : '-',
                    nst.phystatus ? 'p' :'-',
                    nst.portgate ? 'g' : '-',
@@ -165,6 +181,7 @@ linkpoll(int argc, char *argv[])
                    ltssm_str(nst.ltssm_st));
 
             ost = nst;
+            otm = ntm;
         }
 
         if (polltm_us) usleep(polltm_us);
