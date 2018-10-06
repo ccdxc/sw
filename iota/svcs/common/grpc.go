@@ -3,11 +3,10 @@ package common
 import (
 	"fmt"
 	"net"
-	"time"
 
 	"google.golang.org/grpc"
 
-	log "github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // GRPCServer captures the GRPC Server for a service
@@ -50,7 +49,7 @@ func CreateNewGRPCServer(svcName, URL string) (*GRPCServer, error) {
 // CreateNewGRPCClient creates a new GRPC Client
 func CreateNewGRPCClient(svcName, URL string) (*GRPCClient, error) {
 	log.Infof("Creating a new GRPC Client for service, %v. Dialing %v", svcName, URL)
-	conn, err := grpc.Dial(URL, grpc.WithInsecure(), grpc.WithTimeout(3*time.Second))
+	conn, err := grpc.Dial(URL, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Errorf("Error creating GRPC Client for %v. Err: %v", URL, err)
 		return nil, fmt.Errorf("error creating GRPC Client for %v. Err: %v", URL, err)
