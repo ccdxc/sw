@@ -196,7 +196,6 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	nodeMsg.Nodes = nodes
 	nodeMsg.NodeOp = iota.Op_ADD
 
-	time.Sleep(time.Second * 1)
 	_, err = topoClient.AddNodes(context.Background(), &nodeMsg)
 	if err != nil {
 		t.Errorf("AddNodes call failed. Err: %v", err)

@@ -36,6 +36,23 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	var err error
 	ts.TestBedInfo = req
 
+	// Preflight checks
+	if len(req.IpAddress) == 0 {
+		log.Errorf("TOPO SVC | InitTestBed | No IP Addresses present. Err: %v", ts.TestBedInfo.SwitchPortId, err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		return req, fmt.Errorf("request message doesn't have any ip addresses")
+	}
+
+	if len(req.User) == 0 || len(req.Passwd) == 0 {
+		log.Errorf("TOPO SVC | InitTestBed | User creds to access the vms are missing.")
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		return req, fmt.Errorf("user creds are missing to access the VMs")
+	}
+
+	if len(req.ControlIntf) == 0 {
+		log.Errorf("")
+	}
+
 	// Allocate VLANs for the test bed
 	if vlans, err = testbed.AllocateVLANS(ts.TestBedInfo.SwitchPortId); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Could not allocate VLANS from the switchport id: %d, Err: %v", ts.TestBedInfo.SwitchPortId, err)
@@ -72,6 +89,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 			}
 
 			pool.Go(func() error {
+				n := n
 				return n.InitNode(ts.SSHConfig, copyArtifacts)
 			})
 		}
