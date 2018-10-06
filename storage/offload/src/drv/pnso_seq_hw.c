@@ -62,7 +62,7 @@ pprint_seq_desc(const struct sequencer_desc *desc)
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "seq_desc", (uint64_t) desc);
 	OSAL_LOG_INFO("%30s: 0x%llx", "seq_desc_pa",
-			osal_virt_to_phy((void *) desc));
+			sonic_virt_to_phy((void *) desc));
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "sd_desc_addr", desc->sd_desc_addr);
 	OSAL_LOG_INFO("%30s: 0x%llx", "sd_pndx_addr", desc->sd_pndx_addr);
@@ -576,7 +576,7 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 
 	memset(seq_desc, 0, sizeof(*seq_desc));
 	seq_desc->sd_desc_addr =
-		cpu_to_be64(osal_virt_to_phy((void *) src_desc));
+		cpu_to_be64(sonic_virt_to_phy((void *) src_desc));
 	seq_desc->sd_pndx_addr = cpu_to_be64(ring->ring_pndx_pa);
 	seq_desc->sd_pndx_shadow_addr = cpu_to_be64(ring->ring_shadow_pndx_pa);
 	seq_desc->sd_ring_addr = cpu_to_be64(ring->ring_base_pa);
@@ -703,7 +703,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 	chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 
 	chain_params->ccp_status_addr_0 =
-		osal_virt_to_phy((void *) status_desc);
+		sonic_virt_to_phy((void *) status_desc);
 	chain_params->ccp_pad_buf_addr = pad_buffer;
 	chain_params->ccp_pad_boundary_shift =
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
@@ -759,13 +759,13 @@ hw_setup_hash_chain_params(struct chain_entry *centry,
 	ring_spec->rs_ring_addr = ring->ring_base_pa;
 	ring_spec->rs_pndx_addr = ring->ring_pndx_pa;
 	ring_spec->rs_pndx_shadow_addr = ring->ring_shadow_pndx_pa;
-	ring_spec->rs_desc_addr = osal_virt_to_phy((void *) hash_desc);
+	ring_spec->rs_desc_addr = sonic_virt_to_phy((void *) hash_desc);
 	ring_spec->rs_desc_size = (uint8_t) ilog2(ring->ring_desc_size);
 	ring_spec->rs_pndx_size = (uint8_t) ilog2(ring->ring_pndx_size);
 	ring_spec->rs_ring_size = (uint8_t) ilog2(ring->ring_size);
 	ring_spec->rs_num_descs = num_hash_blks;
 
-	chain_params->ccp_sgl_vec_addr = osal_virt_to_phy((void *) sgl);
+	chain_params->ccp_sgl_vec_addr = sonic_virt_to_phy((void *) sgl);
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
 	/*

@@ -23,6 +23,7 @@
 #include <linux/slab.h>
 
 #include "sonic_dev.h"
+#include "sonic_api_int.h"
 #include "osal_mem.h"
 
 /* BAR0 resources
@@ -155,7 +156,8 @@ void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct queue *adminq,
 		.adminq_init.intr_index = intr_index,
 		.adminq_init.lif_index = lif_index,
 		.adminq_init.ring_size = ilog2(adminq->num_descs),
-		.adminq_init.ring_base = (dma_addr_t)osal_hostpa_to_devpa(adminq->base_pa),
+		.adminq_init.ring_base =
+			(dma_addr_t) sonic_hostpa_to_devpa(adminq->base_pa),
 	};
 
 	//printk(KERN_ERR "adminq_init.pid %d\n", cmd.adminq_init.pid);

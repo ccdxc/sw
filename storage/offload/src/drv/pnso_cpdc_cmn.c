@@ -7,6 +7,7 @@
 
 #include "sonic_dev.h"
 #include "sonic_lif.h"
+#include "sonic_api_int.h"
 
 #include "osal.h"
 #include "pnso_api.h"
@@ -106,20 +107,22 @@ pprint_sgl(uint64_t sgl_pa)
 {
 	const struct cpdc_sgl *sgl;
 
-	sgl = (const struct cpdc_sgl *) osal_phy_to_virt(sgl_pa);
+	sgl = (const struct cpdc_sgl *) sonic_phy_to_virt(sgl_pa);
 	if (!sgl)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cs_addr_0", sgl->cs_addr_0);
-	OSAL_LOG_INFO("%30s: %d", "cs_len_0", sgl->cs_len_0);
+	OSAL_LOG_INFO("%30s: 0x%llx ==> 0x%llx", "", (uint64_t) sgl, sgl_pa);
+	while (sgl) {
+		OSAL_LOG_INFO("%30s: 0x%llx/%d/%d 0x%llx/%d/%d 0x%llx/%d/%d",
+				"",
+				sgl->cs_addr_0, sgl->cs_len_0, sgl->cs_rsvd_0,
+				sgl->cs_addr_1, sgl->cs_len_1, sgl->cs_rsvd_1,
+				sgl->cs_addr_2, sgl->cs_len_2, sgl->cs_rsvd_2);
+		OSAL_LOG_INFO("%30s: 0x%llx/0x%llx", "",
+				sgl->cs_next, sgl->cs_rsvd_3);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cs_addr_1", sgl->cs_addr_1);
-	OSAL_LOG_INFO("%30s: %d", "cs_len_1", sgl->cs_len_1);
-
-	OSAL_LOG_INFO("%30s: 0x%llx", "cs_addr_2", sgl->cs_addr_2);
-	OSAL_LOG_INFO("%30s: %d", "cs_len_2", sgl->cs_len_2);
-
-	OSAL_LOG_INFO("%30s: 0x%llx", "cs_next", sgl->cs_next);
+		sgl = sgl->cs_next ? sonic_phy_to_virt(sgl->cs_next) : NULL;
+	}
 }
 
 static void __attribute__((unused))
@@ -176,7 +179,7 @@ cpdc_pprint_desc(const struct cpdc_desc *desc)
 	OSAL_LOG_INFO("%30s: 0x%llx", "cd_otag_addr", desc->cd_otag_addr);
 	OSAL_LOG_INFO("%30s: %d", "cd_otag_data", desc->cd_otag_data);
 
-	OSAL_LOG_INFO("%32s: %d", "cd_status_data", desc->cd_status_data);
+	OSAL_LOG_INFO("%30s: %d", "cd_status_data", desc->cd_status_data);
 
 	if (desc->u.cd_bits.cc_src_is_list) {
 		OSAL_LOG_INFO("%30s: 0x%llx", "=== src_sgl", desc->cd_src);
@@ -244,9 +247,8 @@ cpdc_release_sgl(struct cpdc_sgl *sgl)
 	iter = 0;
 	while (sgl) {
 		sgl_next = sgl->cs_next ?
-			(struct cpdc_sgl *) osal_phy_to_virt(sgl->cs_next) :
+			(struct cpdc_sgl *) sonic_phy_to_virt(sgl->cs_next) :
 			NULL;
-		sgl->cs_next = 0;
 		iter++;
 
 		err = mpool_put_object(cpdc_sgl_mpool, sgl);
@@ -291,12 +293,14 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		goto out;
 	}
 
+	i = 0;
 	count = buf_list->count;
 	while (count) {
 		sgl = (struct cpdc_sgl *) mpool_get_object(cpdc_sgl_mpool);
 		if (!sgl) {
 			err = ENOMEM;
-			OSAL_LOG_ERROR("cannot obtain cpdc sgl desc from pool! err: %d", err);
+			OSAL_LOG_ERROR("cannot obtain cpdc sgl desc from pool! err: %d",
+					err);
 			goto out;
 		}
 		memset(sgl, 0, sizeof(struct cpdc_sgl));
@@ -304,10 +308,10 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		if (!sgl_head)
 			sgl_head = sgl;
 		else
-			sgl_prev->cs_next = (uint64_t) osal_virt_to_phy(sgl);
+			sgl_prev->cs_next = (uint64_t) sonic_virt_to_phy(sgl);
 
-		i = 0;
-		sgl->cs_addr_0 = buf_list->buffers[i].buf;
+		sgl->cs_addr_0 =
+			sonic_hostpa_to_devpa(buf_list->buffers[i].buf);
 		sgl->cs_len_0 = buf_list->buffers[i].len;
 		i++;
 		count--;
@@ -318,7 +322,8 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		}
 
 		if (count && buf_list->buffers[i].len) {
-			sgl->cs_addr_1 = buf_list->buffers[i].buf;
+			sgl->cs_addr_1 =
+				sonic_hostpa_to_devpa(buf_list->buffers[i].buf);
 			sgl->cs_len_1 = buf_list->buffers[i].len;
 			i++;
 			count--;
@@ -328,7 +333,8 @@ populate_sgl(const struct pnso_buffer_list *buf_list)
 		}
 
 		if (count && buf_list->buffers[i].len) {
-			sgl->cs_addr_2 = buf_list->buffers[i].buf;
+			sgl->cs_addr_2 =
+				sonic_hostpa_to_devpa(buf_list->buffers[i].buf);
 			sgl->cs_len_2 = buf_list->buffers[i].len;
 			i++;
 			count--;
@@ -510,69 +516,8 @@ out:
 	return err;
 }
 
-/*
- * TODO-cpdc:
- *	retire this to use _ex() version when per-block lone chksum is needed
- *
- */
 uint32_t
 cpdc_fill_per_block_desc(uint32_t algo_type, uint32_t block_size,
-		uint32_t src_buf_len, struct cpdc_sgl *src_sgl,
-		struct cpdc_desc *desc, struct cpdc_status_desc *status_desc,
-		fill_desc_fn_t fill_desc_fn)
-{
-	struct cpdc_desc *pb_desc;
-	struct cpdc_status_desc *pb_status_desc;
-	struct pnso_flat_buffer flat_buf;
-	uint32_t desc_object_size, status_object_size;
-	uint32_t len, block_cnt, buf_len, i = 0;
-	char *buf;
-
-	/*
-	 * per-block support assumes the input buffer will be mapped to a
-	 * flat buffer and for 8-blocks max.  Memory for this flat buffer
-	 * should come from HBM memory.
-	 *
-	 */
-	flat_buf.len = src_buf_len;
-	flat_buf.buf = (uint64_t) osal_phy_to_virt(src_sgl->cs_addr_0);
-
-	block_cnt = pbuf_get_flat_buffer_block_count(&flat_buf, block_size);
-	pb_desc = desc;
-	pb_status_desc = status_desc;
-
-	OSAL_LOG_INFO("block_cnt: %d block_size: %d src_buf_len: %d buf: 0x%llx desc: 0x%llx status_desc: 0x%llx",
-			block_cnt, block_size, src_buf_len, flat_buf.buf,
-			(uint64_t) desc, (uint64_t) status_desc);
-
-	desc_object_size = cpdc_get_desc_size();
-	status_object_size = cpdc_get_status_desc_size();
-
-	buf_len = src_buf_len;
-	for (i = 0; buf_len && (i < block_cnt); i++) {
-		buf = (char *) flat_buf.buf + (i * block_size);
-		len = buf_len > block_size ? block_size : buf_len;
-
-		OSAL_LOG_INFO("blk_num: %d buf: 0x%llx, len: %d desc: 0x%llx status_desc: 0x%llx",
-			i, (uint64_t) buf, len, (uint64_t) pb_desc,
-			(uint64_t) pb_status_desc);
-
-		fill_desc_fn(algo_type, len, true,
-				buf, pb_desc, pb_status_desc);
-		buf_len -= len;
-
-		pb_desc = get_next_desc(pb_desc, desc_object_size);
-
-		pb_status_desc = cpdc_get_next_status_desc(pb_status_desc,
-				status_object_size);
-	}
-
-	OSAL_LOG_INFO("per-block src_buf_len: %d num_tags: %d", src_buf_len, i);
-	return i;
-}
-
-uint32_t
-cpdc_fill_per_block_desc_ex(uint32_t algo_type, uint32_t block_size,
 		uint32_t src_buf_len, struct pnso_buffer_list *src_blist,
 		struct cpdc_sgl *sgl, struct cpdc_desc *desc,
 		struct cpdc_status_desc *status_desc,
@@ -614,7 +559,7 @@ cpdc_fill_per_block_desc_ex(uint32_t algo_type, uint32_t block_size,
 		len = buf_len > block_size ? block_size : buf_len;
 
 		memset(pb_sgl, 0, sizeof(struct cpdc_sgl));
-		pb_sgl->cs_addr_0 = osal_virt_to_phy(buf);
+		pb_sgl->cs_addr_0 = sonic_virt_to_phy(buf);
 		pb_sgl->cs_len_0 = len;
 
 		OSAL_LOG_INFO("blk_num: %d buf: 0x%llx, len: %d desc: 0x%llx status_desc: 0x%llx sgl: 0x%llx",

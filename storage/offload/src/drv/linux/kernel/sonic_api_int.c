@@ -6,6 +6,7 @@
 #include "sonic_dev.h"
 #include "sonic_lif.h"
 #include "sonic_api_int.h"
+#include "osal_mem.h"
 #include "osal_logger.h"
 #include "osal_assert.h"
 
@@ -209,4 +210,28 @@ uint64_t sonic_devpa_to_hostpa(uint64_t devpa)
 	identity_t *ident = sonic_get_identity();
 
 	return devpa & ~ident->dev.lif_tbl[0].hw_host_mask;
+}
+
+uint64_t
+sonic_virt_to_phy(void *ptr)
+{
+	uint64_t pa;
+
+	OSAL_ASSERT(ptr);
+
+	pa = osal_virt_to_phy(ptr);
+
+	return sonic_hostpa_to_devpa(pa);
+}
+
+void *
+sonic_phy_to_virt(uint64_t phy)
+{
+	uint64_t pa;
+
+	OSAL_ASSERT(phy);
+
+	pa = sonic_devpa_to_hostpa(phy);
+
+	return osal_phy_to_virt(pa);
 }

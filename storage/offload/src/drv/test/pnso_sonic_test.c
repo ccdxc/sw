@@ -1406,7 +1406,7 @@ init_cp_hdr_fmt(void)
 typedef int (*exec_test_fn_t)(void *arg);
 
 static exec_test_fn_t exec_test_fn[] = {
-	// exec_cp_dc_test,
+	exec_cp_dc_test,
 	// exec_hash_test,
 	// exec_hash_per_block_test,
 	// exec_chksum_test,
