@@ -140,14 +140,15 @@ func (naples *naplesNode) AddWorkload(in *iota.Workload) (*iota.Workload, error)
 		return resp, nil
 	}
 	naples.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
-	naples.worloadMap[in.GetWorkloadName()] = wload
 
 	if err := wload.AttachInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpAddress(), int(in.GetEncapVlan())); err != nil {
 		naples.logger.Errorf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+		wload.TearDown()
 		return resp, nil
 	}
 	naples.logger.Printf("Attachinng interface to workload : %s done", in.GetWorkloadName())
+	naples.worloadMap[in.GetWorkloadName()] = wload
 	resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
 	return resp, nil
 }

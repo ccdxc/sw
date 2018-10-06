@@ -172,7 +172,12 @@ def __move_data_intfs_to_naples_sim(container_obj, node_ip, data_intfs):
     pid = str(_DOCKER_API_CLIENT.inspect_container(container_obj.id)["State"]["Pid"])
     for intf in data_intfs:
         moveInterfaceToNs(intf, pid)
-        cmd = ["ip", "netns", "exec", pid, "ifconfig", data_intfs[0], node_ip, "up"]
+        cmd = None
+        if node_ip:
+            cmd = ["ip", "netns", "exec", pid, "ifconfig", data_intfs[0], node_ip, "up"]
+        else:
+            cmd = ["ip", "netns", "exec", pid, "ifconfig", data_intfs[0], "up"]
+
         if not RunShellCmd(cmd):
             print ("Failed to configure IP for intf : %s with  :%s" % (intf, node_ip))
             sys.exit(1)
@@ -194,10 +199,12 @@ def __setup_hntap(container_obj, args):
     def __int2ip(n): return socket.inet_ntoa(struct.pack('!I', n))
 
     #TODO, logic has to be cleaned up.
-    start_ip = __ip2int(args.tunnel_ip_start)
-    node_ip = args.data_ips[0]
-    if not node_ip:
-        node_ip = __int2ip(start_ip + int(args.node_id) - 1)
+    node_ip = None
+    if args.hntap_mode == "tunnel":
+        start_ip = __ip2int(args.tunnel_ip_start)
+        node_ip = args.data_ips[0]
+        if not node_ip:
+            node_ip = __int2ip(start_ip + int(args.node_id) - 1)
 
     __move_data_intfs_to_naples_sim(container_obj, node_ip, args.data_intfs)
 
@@ -242,7 +249,8 @@ def __setup_hntap(container_obj, args):
         for intf in hntap_cfg["devices"]:
             if not intf["local"]:
                 hntap_cfg["switch"]["passthrough-mode"]["uplink-map"][intf["name"]] = args.data_intfs[i]
-                i += 1
+                if len(args.data_intfs) == i + 1:
+                    break
 
     with open(HNTAP_TEMP_CFG_FILE, "w") as fp:
         json.dump(hntap_cfg, fp)
@@ -436,12 +444,14 @@ def main():
                         choices=["tunnel", "passthrough"], help='Hntap Mode to run in naples sim')
     args = parser.parse_args()
 
-    args.data_intfs = args.data_intfs.split(',')
-    args.data_ips = args.data_ips.split(',')
-    args.naples_ips = args.naples_ips.split(',')
+    if args.data_ips:
+        args.data_ips = args.data_ips.split(',')
+    if args.data_ips:
+        args.naples_ips = args.naples_ips.split(',')
     if len(args.data_intfs) == 0:
         print "No data interfaces be specified..."
         sys.exit(1)
+    args.data_intfs = args.data_intfs.split(',')
     __reset(args)
     __initial_setup()
     __pull_app_docker_images()

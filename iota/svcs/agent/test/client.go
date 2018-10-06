@@ -64,12 +64,14 @@ func getNode(nodeFile string, nodeName string) (*iota.Node, error) {
 		for _, intf := range nodeData["data-intfs"].([]interface{}) {
 			dataIntfs = append(dataIntfs, intf.(string))
 		}
-		for _, intf := range nodeData["data-ips"].([]interface{}) {
-			dataIPs = append(dataIPs, intf.(string))
-		}
+		if _, ok := nodeData["data-ips"]; ok {
+			for _, intf := range nodeData["data-ips"].([]interface{}) {
+				dataIPs = append(dataIPs, intf.(string))
+			}
 
-		for _, intf := range nodeData["naples-ips"].([]interface{}) {
-			naplesIPs = append(naplesIPs, intf.(string))
+			for _, intf := range nodeData["naples-ips"].([]interface{}) {
+				naplesIPs = append(naplesIPs, intf.(string))
+			}
 		}
 
 		iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{

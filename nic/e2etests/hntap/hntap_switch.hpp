@@ -227,7 +227,9 @@ public:
         HntapPassThroughIntfSwitch *passThroughIntf  = getPassThroughIntf(dev_handle->name);
         if (passThroughIntf == nullptr) {
             TLOG("Pass through interface not specified...\n");
-            assert(0);
+            return;
+            /* Should assert as config is invalid */
+           //assert(0);
         }
         TLOG("Adding dev handle %s to %s\n",
                 dev_handle->name, passThroughIntf->uplink_intf.c_str());

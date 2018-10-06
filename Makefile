@@ -395,7 +395,7 @@ e2e-telemetry:
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
 
-e2e-turin: pull-assets
+e2e-naples: pull-assets
 	$(MAKE) -C nic all
 	$(MAKE) -C platform sim
 	$(MAKE) -C nic package
