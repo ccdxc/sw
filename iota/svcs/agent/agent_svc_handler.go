@@ -5,8 +5,9 @@ import (
 	"io"
 	"os"
 
-	iota "github.com/pensando/sw/iota/protos/gogen"
 	log "github.com/sirupsen/logrus"
+
+	iota "github.com/pensando/sw/iota/protos/gogen"
 )
 
 // Service implements agent service APIs

@@ -100,10 +100,10 @@ func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf stri
 
 func (naples *naplesNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, err error) {
 
-	naples.iotaNode.name = in.GetNodeName()
+	naples.iotaNode.name = in.GetName()
 	naples.worloadMap = make(map[string]workload)
-	naples.logger.Println("Bring up request received for : " + in.GetNodeName())
-	if err := naples.bringUpNaples(in.GetNodeName(),
+	naples.logger.Println("Bring up request received for : " + in.GetName())
+	if err := naples.bringUpNaples(in.GetName(),
 		in.GetImage(), in.GetNaplesConfig().GetControlIntf(),
 		in.GetNaplesConfig().GetControlIp(),
 		in.GetNaplesConfig().GetDataIntfs(), nil, nil,
