@@ -2,8 +2,6 @@ package agent
 
 import (
 	"fmt"
-	"io"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 
@@ -40,25 +38,19 @@ type IotaNode interface {
 
 	//Type
 	NodeName() string
+
+	//Set log
+	SetLogger(*log.Logger)
 }
 
 //Base implementations for all node
 type iotaNode struct {
 	name   string
-	logger *log.Logger // Logger for each entity.
+	logger *log.Logger
 }
 
-func (s *iotaNode) log(msg interface{}) {
-
-	if s.logger == nil {
-		s.logger = log.New()
-		file, err := os.OpenFile(agentDir+"/"+s.name+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-		if err != nil {
-			log.Fatalln("Failed to open log file", "file.txt", ":", err)
-		}
-		s.logger.Out = io.MultiWriter(file, os.Stdout)
-	}
-	s.logger.Println(msg)
+func (s *iotaNode) SetLogger(logger *log.Logger) {
+	s.logger = logger
 }
 
 func (s *iotaNode) NodeName() string {

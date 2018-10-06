@@ -2,16 +2,17 @@ package agent
 
 import (
 	"context"
+	"io"
 	"os"
 
-	log "github.com/pensando/sw/venice/utils/log"
-
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	log "github.com/sirupsen/logrus"
 )
 
 // Service implements agent service APIs
 type Service struct {
-	node IotaNode
+	node   IotaNode
+	logger *log.Logger
 }
 
 // NewAgentService returns an instance of Agent stub service
@@ -19,27 +20,45 @@ func NewAgentService() *Service {
 	log.Info("IOTA Agent Started")
 	os.Mkdir(agentDir, 0777)
 	var agentServer Service
+	agentServer.init()
+
 	return &agentServer
+}
+
+func (agent *Service) init() {
+
+	agent.logger = log.New()
+	file, err := os.OpenFile(agentDir+"/"+"agent.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalln("Failed to open log file", "file.txt", ":", err)
+	}
+	agent.logger.Out = io.MultiWriter(file, os.Stdout)
+
+	agent.logger.Println("Agent initialized...")
 }
 
 // AddNode brings up the node with the personality
 func (agent *Service) AddNode(ctx context.Context, in *iota.Node) (*iota.Node, error) {
 
-	log.Errorf("Receivied ADD Node Msg: %v", in)
+	agent.logger.Printf("Received add node :%v", in)
 	/* Check if the node running an instance */
 	if agent.node != nil {
+		agent.logger.Errorf("Node already has personality type : %s", agent.node.NodeType())
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 	}
 
 	if agent.node = newIotaNode(in.Type); agent.node == nil {
+		agent.logger.Errorf("Personality type not supported %d", in.Type)
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 
 	}
 
+	agent.node.SetLogger(agent.logger)
 	resp, err := agent.node.Init(in)
 
 	if err != nil {
 		/* Init file and no point pretentding to have a personality */
+		agent.logger.Errorf("Personality Init failed for type %d", in.Type)
 		agent.node = nil
 	}
 
@@ -50,10 +69,13 @@ func (agent *Service) AddNode(ctx context.Context, in *iota.Node) (*iota.Node, e
 func (agent *Service) DeleteNode(ctx context.Context, in *iota.Node) (*iota.Node, error) {
 
 	/* Check if the node running an instance */
+	agent.logger.Printf("Received delete node :%v", in)
 	if agent.node == nil {
+		agent.logger.Errorf("Delete Node received with no personality set : %d", in.Type)
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 	}
 
+	agent.logger.Println("Deleting node personality : %s", agent.node.NodeType())
 	resp, err := agent.node.Destroy(in)
 
 	/* Unset ethe personality */
@@ -66,7 +88,9 @@ func (agent *Service) DeleteNode(ctx context.Context, in *iota.Node) (*iota.Node
 func (agent *Service) AddWorkload(ctx context.Context, in *iota.Workload) (*iota.Workload, error) {
 
 	/* Check if the node running an instance to add a workload */
+	agent.logger.Printf("Received Add workload : %v", in)
 	if agent.node == nil || agent.node.NodeName() != in.GetNodeName() {
+		agent.logger.Println("Invalid workload add request received")
 		return &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 	}
 
@@ -75,8 +99,10 @@ func (agent *Service) AddWorkload(ctx context.Context, in *iota.Workload) (*iota
 
 // DeleteWorkload deletes a given workload
 func (agent *Service) DeleteWorkload(ctx context.Context, in *iota.Workload) (*iota.Workload, error) {
+	agent.logger.Printf("Received delete workload : %v", in)
 	/* Check if the node running an instance to add a workload */
 	if agent.node == nil || agent.node.NodeName() != in.GetNodeName() {
+		agent.logger.Println("Invalid workload delete request received")
 		return &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 	}
 
@@ -84,9 +110,13 @@ func (agent *Service) DeleteWorkload(ctx context.Context, in *iota.Workload) (*i
 }
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
-func (*Service) Trigger(context.Context, *iota.TriggerMsg) (*iota.TriggerMsg, error) {
-	return nil, nil
+func (agent *Service) Trigger(ctx context.Context, in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+	/* Check if the node running an instance to add a workload */
+	if agent.node == nil {
+		return &iota.TriggerMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
+	}
 
+	return agent.node.Trigger(in)
 }
 
 // CheckHealth returns the cluster health

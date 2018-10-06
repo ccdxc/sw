@@ -247,10 +247,9 @@ def __setup_hntap(container_obj, args):
                                }
         i = 0
         for intf in hntap_cfg["devices"]:
-            if not intf["local"]:
+            if not intf["local"]  and (i + 1 <= len(args.data_intfs)):
                 hntap_cfg["switch"]["passthrough-mode"]["uplink-map"][intf["name"]] = args.data_intfs[i]
-                if len(args.data_intfs) == i + 1:
-                    break
+                i += 1
 
     with open(HNTAP_TEMP_CFG_FILE, "w") as fp:
         json.dump(hntap_cfg, fp)

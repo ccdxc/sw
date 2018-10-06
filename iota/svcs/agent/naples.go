@@ -38,12 +38,12 @@ func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf stri
 		return err
 	}
 	dir, _ := os.Getwd()
-	naples.log("Untar image : " + dir + "/" + image)
+	naples.logger.Println("Untar image : " + dir + "/" + image)
 	untar := []string{"tar", "-xvzf", image}
 	if _, stdout, err := Utils.Run(untar, 0, false, false, nil); err != nil {
 		return errors.Wrap(err, stdout)
 	}
-	naples.log("Untar successfull")
+	naples.logger.Println("Untar successfull")
 	env := []string{"NAPLES_HOME=" + Common.DstIotaAgentDir}
 	cmd := []string{"sudo", "-E", "python", naplesVMBringUpScript,
 		"--data-intfs", strings.Join(dataIntfs, ",")}
@@ -82,12 +82,12 @@ func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf stri
 	}
 
 	if retCode, stdout, err := Utils.Run(cmd, nodeAddTimeout, false, false, env); err != nil || retCode != 0 {
-		naples.log(stdout)
-		naples.log("Naples bring script up failed.")
+		naples.logger.Println(stdout)
+		naples.logger.Println("Naples bring script up failed.")
 		return err
 	}
 
-	naples.log("Naples bring script up succesfull.")
+	naples.logger.Println("Naples bring script up succesfull.")
 
 	var err error
 	if naples.container, err = Utils.GetContainer(naplesSimName, "", naplesSimName); err != nil {
@@ -100,19 +100,19 @@ func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf stri
 
 func (naples *naplesNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, err error) {
 
-	naples.iotaNode.name = in.GetName()
+	naples.iotaNode.name = in.GetNodeName()
 	naples.worloadMap = make(map[string]workload)
-	naples.log("Bring up request received for : " + in.GetName())
-	if err := naples.bringUpNaples(in.GetName(),
+	naples.logger.Println("Bring up request received for : " + in.GetNodeName())
+	if err := naples.bringUpNaples(in.GetNodeName(),
 		in.GetImage(), in.GetNaplesConfig().GetControlIntf(),
 		in.GetNaplesConfig().GetControlIp(),
 		in.GetNaplesConfig().GetDataIntfs(), nil, nil,
 		in.GetNaplesConfig().GetVeniceIps(), withQemu, true); err != nil {
 		resp := "Naples bring up failed : " + err.Error()
-		naples.log(resp)
+		naples.logger.Println(resp)
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
 	}
-	naples.log("Naples bring up succesfull")
+	naples.logger.Println("Naples bring up succesfull")
 
 	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
 }
@@ -127,7 +127,7 @@ func (naples *naplesNode) AddWorkload(in *iota.Workload) (*iota.Workload, error)
 
 	naples.logger.Printf("Adding workload : %s", in.GetWorkloadName())
 	if _, ok := naples.worloadMap[in.GetWorkloadName()]; ok {
-		naples.log("Trying to add workload which already exists")
+		naples.logger.Println("Trying to add workload which already exists")
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}
 		return resp, nil
 	}
@@ -157,7 +157,7 @@ func (naples *naplesNode) AddWorkload(in *iota.Workload) (*iota.Workload, error)
 func (naples *naplesNode) DeleteWorkload(in *iota.Workload) (*iota.Workload, error) {
 	naples.logger.Printf("Deleteing workload : %s", in.GetWorkloadName())
 	if _, ok := naples.worloadMap[in.GetWorkloadName()]; !ok {
-		naples.log("Trying to delete workload which does not exist")
+		naples.logger.Println("Trying to delete workload which does not exist")
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}
 		return resp, nil
 	}
