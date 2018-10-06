@@ -51,7 +51,7 @@ is_multicast_dmac(fte::ctx_t &ctx) {
 static inline hal_ret_t
 update_src_if(fte::ctx_t&ctx)
 {
-    bool src_local = 0; (ctx.sep() && ctx.sep()->ep_flags & EP_FLAGS_LOCAL);
+    bool src_local = 0;
     bool dst_local = 0; 
     bool broadcast_pkt = is_broadcast(ctx);
     bool mcast_dmac = is_multicast_dmac(ctx);

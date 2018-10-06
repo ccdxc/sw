@@ -130,17 +130,17 @@ pd_table_kind_get_from_id (uint32_t table_id, table::TableKind *kind)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
-    if (table_id >= P4TBL_ID_INDEX_MIN && table_id < P4TBL_ID_INDEX_MAX) {
+    if (table_id >= P4TBL_ID_INDEX_MIN && table_id <= P4TBL_ID_INDEX_MAX) {
         *kind = table::TABLE_INDEX;
         return ret;
     }
 
-    if (table_id >= P4TBL_ID_TCAM_MIN && table_id < P4TBL_ID_TCAM_MAX) {
+    if (table_id >= P4TBL_ID_TCAM_MIN && table_id <= P4TBL_ID_TCAM_MAX) {
         *kind = table::TABLE_TCAM;
         return ret;
     }
 
-    if (table_id >= P4TBL_ID_HASH_OTCAM_MIN && table_id < P4TBL_ID_HASH_OTCAM_MAX) {
+    if (table_id >= P4TBL_ID_HASH_OTCAM_MIN && table_id <= P4TBL_ID_HASH_OTCAM_MAX) {
         *kind = table::TABLE_HASH;
         return ret;
     }
