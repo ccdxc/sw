@@ -209,7 +209,7 @@ crypto_schedule(const struct service_info *svc_info)
 	const struct sequencer_info *seq_info;
 	bool ring_db;
 
-	OSAL_LOG_INFO("enter ... ");
+	OSAL_LOG_DEBUG("enter ... ");
 
 	ring_db = svc_info->si_flags & (CHAIN_SFLAG_LONE_SERVICE |
 					CHAIN_SFLAG_FIRST_SERVICE);

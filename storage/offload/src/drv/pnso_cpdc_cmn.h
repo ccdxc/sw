@@ -34,9 +34,9 @@ struct pnso_compression_header {
 #else
 #define CPDC_PPRINT_DESC(d)						       \
 	do {								\
-		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 		cpdc_pprint_desc(d);					\
-		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 	} while (0)
 #define CPDC_PPRINT_STATUS_DESC(d)	cpdc_pprint_status_desc(d)
 #endif

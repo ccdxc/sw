@@ -37,12 +37,12 @@ pprint_crypto_desc(const struct pnso_crypto_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== crypto_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== crypto_desc", (uint64_t) desc);
 
-	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
-	OSAL_LOG_INFO("%30s: %d", "rsvd", desc->rsvd);
-	OSAL_LOG_INFO("%30s: %d", "key_desc_idx", desc->key_desc_idx);
-	OSAL_LOG_INFO("%30s: 0x%llx", "iv_addr", desc->iv_addr);
+	OSAL_LOG_DEBUG("%30s: %d", "algo_type", desc->algo_type);
+	OSAL_LOG_DEBUG("%30s: %d", "rsvd", desc->rsvd);
+	OSAL_LOG_DEBUG("%30s: %d", "key_desc_idx", desc->key_desc_idx);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "iv_addr", desc->iv_addr);
 }
 
 static void __attribute__((unused))
@@ -51,13 +51,13 @@ pprint_cp_desc(const struct pnso_compression_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== cp_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== cp_desc", (uint64_t) desc);
 
-	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
-	OSAL_LOG_INFO("%30s: %d", "flags", desc->flags);
-	OSAL_LOG_INFO("%30s: %d", "threshold_len",
+	OSAL_LOG_DEBUG("%30s: %d", "algo_type", desc->algo_type);
+	OSAL_LOG_DEBUG("%30s: %d", "flags", desc->flags);
+	OSAL_LOG_DEBUG("%30s: %d", "threshold_len",
 			desc->threshold_len);
-	OSAL_LOG_INFO("%30s: %d", "hdr_fmt_idx", desc->hdr_fmt_idx);
+	OSAL_LOG_DEBUG("%30s: %d", "hdr_fmt_idx", desc->hdr_fmt_idx);
 }
 
 static void __attribute__((unused))
@@ -66,12 +66,12 @@ pprint_dc_desc(const struct pnso_decompression_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== dc_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== dc_desc", (uint64_t) desc);
 
-	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
-	OSAL_LOG_INFO("%30s: %d", "flags", desc->flags);
-	OSAL_LOG_INFO("%30s: %d", "hdr_fmt_idx", desc->hdr_fmt_idx);
-	OSAL_LOG_INFO("%30s: %d", "rsvd", desc->rsvd);
+	OSAL_LOG_DEBUG("%30s: %d", "algo_type", desc->algo_type);
+	OSAL_LOG_DEBUG("%30s: %d", "flags", desc->flags);
+	OSAL_LOG_DEBUG("%30s: %d", "hdr_fmt_idx", desc->hdr_fmt_idx);
+	OSAL_LOG_DEBUG("%30s: %d", "rsvd", desc->rsvd);
 }
 
 static void __attribute__((unused))
@@ -80,10 +80,10 @@ pprint_hash_desc(const struct pnso_hash_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== hash_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== hash_desc", (uint64_t) desc);
 
-	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
-	OSAL_LOG_INFO("%30s: %d", "flags", desc->flags);
+	OSAL_LOG_DEBUG("%30s: %d", "algo_type", desc->algo_type);
+	OSAL_LOG_DEBUG("%30s: %d", "flags", desc->flags);
 }
 
 static void __attribute__((unused))
@@ -92,10 +92,10 @@ pprint_chksum_desc(const struct pnso_checksum_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== chksum_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== chksum_desc", (uint64_t) desc);
 
-	OSAL_LOG_INFO("%30s: %d", "algo_type", desc->algo_type);
-	OSAL_LOG_INFO("%30s: %d", "flags", desc->flags);
+	OSAL_LOG_DEBUG("%30s: %d", "algo_type", desc->algo_type);
+	OSAL_LOG_DEBUG("%30s: %d", "flags", desc->flags);
 }
 
 static void __attribute__((unused))
@@ -104,12 +104,12 @@ pprint_decompaction_desc(const struct pnso_decompaction_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== decompact_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== decompact_desc", (uint64_t) desc);
 
-	OSAL_LOG_INFO("%30s: %llu", "vvbn", (uint64_t) desc->vvbn);
-	OSAL_LOG_INFO("%30s: %d", "rsvd_1", desc->rsvd_1);
-	OSAL_LOG_INFO("%30s: %d", "hdr_fmt_idx", desc->hdr_fmt_idx);
-	OSAL_LOG_INFO("%30s: %d", "rsvd_2", desc->rsvd_2);
+	OSAL_LOG_DEBUG("%30s: %llu", "vvbn", (uint64_t) desc->vvbn);
+	OSAL_LOG_DEBUG("%30s: %d", "rsvd_1", desc->rsvd_1);
+	OSAL_LOG_DEBUG("%30s: %d", "hdr_fmt_idx", desc->hdr_fmt_idx);
+	OSAL_LOG_DEBUG("%30s: %d", "rsvd_2", desc->rsvd_2);
 }
 
 void __attribute__((unused))
@@ -120,15 +120,15 @@ req_pprint_request(const struct pnso_service_request *req)
 	if (!req)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== pnso_service_request", (uint64_t) req);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== pnso_service_request", (uint64_t) req);
 
-	OSAL_LOG_INFO("%30s: %d", "num_services", req->num_services);
+	OSAL_LOG_DEBUG("%30s: %d", "num_services", req->num_services);
 	for (i = 0; i < req->num_services; i++) {
-		OSAL_LOG_INFO("%30s: %d", "service #", i+1);
+		OSAL_LOG_DEBUG("%30s: %d", "service #", i+1);
 
-		OSAL_LOG_INFO("%30s: %d", "svc_type",
+		OSAL_LOG_DEBUG("%30s: %d", "svc_type",
 				req->svc[i].svc_type);
-		OSAL_LOG_INFO("%30s: %d", "rsvd", req->svc[i].rsvd);
+		OSAL_LOG_DEBUG("%30s: %d", "rsvd", req->svc[i].rsvd);
 
 		switch (req->svc[i].svc_type) {
 		case PNSO_SVC_TYPE_ENCRYPT:
@@ -170,7 +170,7 @@ pprint_hash_tags(const struct pnso_hash_tag *tags, uint32_t num_tags)
 		return;
 
 	for (i = 0; i < num_tags; i++)
-		OSAL_LOG_INFO("%30s: %*phN", "hash", 64, tags[i].hash);
+		OSAL_LOG_DEBUG("%30s: %*phN", "hash", 64, tags[i].hash);
 }
 
 static void __attribute__((unused))
@@ -182,7 +182,7 @@ pprint_chksum_tags(const struct pnso_chksum_tag *tags, uint32_t num_tags)
 		return;
 
 	for (i = 0; i < num_tags; i++)
-		OSAL_LOG_INFO("%30s: %*phN", "checksum", 8, tags[i].chksum);
+		OSAL_LOG_DEBUG("%30s: %*phN", "checksum", 8, tags[i].chksum);
 }
 
 void __attribute__((unused))
@@ -193,18 +193,18 @@ req_pprint_result(const struct pnso_service_result *res)
 	if (!res)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "=== pnso_service_result", (uint64_t) res);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "=== pnso_service_result", (uint64_t) res);
 
-	OSAL_LOG_INFO("%30s: %d", "err", res->err);
+	OSAL_LOG_DEBUG("%30s: %d", "err", res->err);
 
-	OSAL_LOG_INFO("%30s: %d", "num_services", res->num_services);
+	OSAL_LOG_DEBUG("%30s: %d", "num_services", res->num_services);
 	for (i = 0; i < res->num_services; i++) {
-		OSAL_LOG_INFO("%30s: %d", "service #", i+1);
+		OSAL_LOG_DEBUG("%30s: %d", "service #", i+1);
 
-		OSAL_LOG_INFO("%30s: %d", "err", res->svc[i].err);
-		OSAL_LOG_INFO("%30s: %d", "svc_type",
+		OSAL_LOG_DEBUG("%30s: %d", "err", res->svc[i].err);
+		OSAL_LOG_DEBUG("%30s: %d", "svc_type",
 				res->svc[i].svc_type);
-		OSAL_LOG_INFO("%30s: %d", "rsvd_1",
+		OSAL_LOG_DEBUG("%30s: %d", "rsvd_1",
 				res->svc[i].rsvd_1);
 
 		switch (res->svc[i].svc_type) {
@@ -214,23 +214,23 @@ req_pprint_result(const struct pnso_service_result *res)
 		case PNSO_SVC_TYPE_COMPRESS:
 		case PNSO_SVC_TYPE_DECOMPRESS:
 		case PNSO_SVC_TYPE_DECOMPACT:
-			OSAL_LOG_INFO("%30s: %d", "data_len",
+			OSAL_LOG_DEBUG("%30s: %d", "data_len",
 					res->svc[i].u.dst.data_len);
 			break;
 		case PNSO_SVC_TYPE_HASH:
-			OSAL_LOG_INFO("%30s: %d", "num_tags",
+			OSAL_LOG_DEBUG("%30s: %d", "num_tags",
 					res->svc[i].u.hash.num_tags);
 			pprint_hash_tags(res->svc[i].u.hash.tags,
 					res->svc[i].u.hash.num_tags);
-			OSAL_LOG_INFO("%30s: %d", "rsvd_2",
+			OSAL_LOG_DEBUG("%30s: %d", "rsvd_2",
 					res->svc[i].u.hash.rsvd_2);
 			break;
 		case PNSO_SVC_TYPE_CHKSUM:
-			OSAL_LOG_INFO("%30s: %d", "num_tags",
+			OSAL_LOG_DEBUG("%30s: %d", "num_tags",
 					res->svc[i].u.chksum.num_tags);
 			pprint_chksum_tags(res->svc[i].u.chksum.tags,
 					res->svc[i].u.chksum.num_tags);
-			OSAL_LOG_INFO("%30s: %d", "rsvd_3",
+			OSAL_LOG_DEBUG("%30s: %d", "rsvd_3",
 					res->svc[i].u.chksum.rsvd_3);
 			break;
 		default:

@@ -37,17 +37,17 @@
 #define PPRINT_SEQUENCER_DESC(d)	pprint_seq_desc(d)
 #define PPRINT_SEQUENCER_INFO(sqi)					\
 	do {								\
-		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 		pprint_seq_info(sqi);					\
 	} while (0)
 #define PPRINT_CPDC_CHAIN_PARAMS(cp)					\
 	do {								\
-		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 		pprint_cpdc_chain_params(cp);				\
 	} while (0)
 #define PPRINT_XTS_CHAIN_PARAMS(cp)					\
 	do {								\
-		OSAL_LOG_INFO("%.*s", 30, "=========================================");\
+		OSAL_LOG_DEBUG("%.*s", 30, "=========================================");\
 		pprint_xts_chain_params(cp);				\
 	} while (0)
 #endif
@@ -60,21 +60,21 @@ pprint_seq_desc(const struct sequencer_desc *desc)
 	if (!desc)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "seq_desc", (uint64_t) desc);
-	OSAL_LOG_INFO("%30s: 0x%llx", "seq_desc_pa",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "seq_desc", (uint64_t) desc);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "seq_desc_pa",
 			sonic_virt_to_phy((void *) desc));
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "sd_desc_addr", desc->sd_desc_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sd_pndx_addr", desc->sd_pndx_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sd_pndx_shadow_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sd_desc_addr", desc->sd_desc_addr);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sd_pndx_addr", desc->sd_pndx_addr);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sd_pndx_shadow_addr",
 			desc->sd_pndx_shadow_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sd_ring_addr", desc->sd_ring_addr);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sd_ring_addr", desc->sd_ring_addr);
 
-	OSAL_LOG_INFO("%30s: %d", "sd_desc_size", desc->sd_desc_size);
-	OSAL_LOG_INFO("%30s: %d", "sd_pndx_size", desc->sd_pndx_size);
-	OSAL_LOG_INFO("%30s: %d", "sd_ring_size", desc->sd_ring_size);
-	OSAL_LOG_INFO("%30s: %d", "sd_batch_mode", desc->sd_batch_mode);
-	OSAL_LOG_INFO("%30s: %d", "sd_batch_size", desc->sd_batch_size);
+	OSAL_LOG_DEBUG("%30s: %d", "sd_desc_size", desc->sd_desc_size);
+	OSAL_LOG_DEBUG("%30s: %d", "sd_pndx_size", desc->sd_pndx_size);
+	OSAL_LOG_DEBUG("%30s: %d", "sd_ring_size", desc->sd_ring_size);
+	OSAL_LOG_DEBUG("%30s: %d", "sd_batch_mode", desc->sd_batch_mode);
+	OSAL_LOG_DEBUG("%30s: %d", "sd_batch_size", desc->sd_batch_size);
 }
 
 static void __attribute__((unused))
@@ -83,14 +83,14 @@ pprint_seq_info(const struct sequencer_info *seq_info)
 	if (!seq_info)
 		return;
 
-	OSAL_LOG_INFO("%30s: %d", "sqi_ring_id", seq_info->sqi_ring_id);
-	OSAL_LOG_INFO("%30s: %d", "sqi_qtype", seq_info->sqi_qtype);
-	OSAL_LOG_INFO("%30s: %d", "sqi_index", seq_info->sqi_index);
-	OSAL_LOG_INFO("%30s: %d", "sqi_batch_mode", seq_info->sqi_batch_mode);
-	OSAL_LOG_INFO("%30s: %d", "sqi_batch_size", seq_info->sqi_batch_size);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqi_sqi_desc",
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_ring_id", seq_info->sqi_ring_id);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_qtype", seq_info->sqi_qtype);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_index", seq_info->sqi_index);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_mode", seq_info->sqi_batch_mode);
+	OSAL_LOG_DEBUG("%30s: %d", "sqi_batch_size", seq_info->sqi_batch_size);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqi_sqi_desc",
 			(uint64_t) seq_info->sqi_desc);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqi_status_desc",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqi_status_desc",
 			(uint64_t) seq_info->sqi_status_desc);
 }
 
@@ -104,105 +104,105 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 	if (!chain_params)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "cpdc_chain_params",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "cpdc_chain_params",
 			(uint64_t) chain_params);
 
 	spec = &chain_params->ccp_seq_spec;
-	OSAL_LOG_INFO("%30s: 0x%llx", "sequencer_spec", (uint64_t) spec);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_q",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sequencer_spec", (uint64_t) spec);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_q",
 			spec->sqs_seq_q);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_status_q",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_status_q",
 			spec->sqs_seq_status_q);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_next_q",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_q",
 			spec->sqs_seq_next_q);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_next_status_q",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_status_q",
 			spec->sqs_seq_next_status_q);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_ret_doorbell_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_ret_doorbell_addr",
 			spec->sqs_ret_doorbell_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_ret_doorbell_data",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_ret_doorbell_data",
 			spec->sqs_ret_doorbell_data);
-	OSAL_LOG_INFO("%30s: %d", "sqs_ret_seq_status_index",
+	OSAL_LOG_DEBUG("%30s: %d", "sqs_ret_seq_status_index",
 			spec->sqs_ret_seq_status_index);
 
 	ring_spec = &chain_params->ccp_ring_spec;
-	OSAL_LOG_INFO("%30s: 0x%llx", "ring_spec", (uint64_t) ring_spec);
-	OSAL_LOG_INFO("%30s: 0x%llx", "rs_ring_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ring_spec", (uint64_t) ring_spec);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_ring_addr",
 			ring_spec->rs_ring_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "rs_pndx_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_pndx_addr",
 			ring_spec->rs_pndx_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "rs_pndx_shadow_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_pndx_shadow_addr",
 			ring_spec->rs_pndx_shadow_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "rs_desc_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_desc_addr",
 			ring_spec->rs_desc_addr);
-	OSAL_LOG_INFO("%30s: %d", "rs_desc_size",
+	OSAL_LOG_DEBUG("%30s: %d", "rs_desc_size",
 			ring_spec->rs_desc_size);
-	OSAL_LOG_INFO("%30s: %d", "rs_pndx_size",
+	OSAL_LOG_DEBUG("%30s: %d", "rs_pndx_size",
 			ring_spec->rs_pndx_size);
-	OSAL_LOG_INFO("%30s: %d", "rs_ring_size",
+	OSAL_LOG_DEBUG("%30s: %d", "rs_ring_size",
 			ring_spec->rs_ring_size);
-	OSAL_LOG_INFO("%30s: %d", "rs_num_descs",
+	OSAL_LOG_DEBUG("%30s: %d", "rs_num_descs",
 			ring_spec->rs_num_descs);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_status_addr_0",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_status_addr_0",
 			chain_params->ccp_status_addr_0);
-	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_status_addr_1",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_status_addr_1",
 			chain_params->ccp_status_addr_1);
-	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_comp_buf_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_comp_buf_addr",
 			chain_params->ccp_comp_buf_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_alt_buf_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_alt_buf_addr",
 			chain_params->ccp_alt_buf_addr);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_aol_src_vec_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_aol_src_vec_addr",
 			chain_params->ccp_aol_src_vec_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_aol_dst_vec_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_aol_dst_vec_addr",
 			chain_params->ccp_aol_dst_vec_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_sgl_vec_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_sgl_vec_addr",
 			chain_params->ccp_sgl_vec_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_pad_buf_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_pad_buf_addr",
 			chain_params->ccp_pad_buf_addr);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "ccp_intr_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ccp_intr_addr",
 			chain_params->ccp_intr_addr);
-	OSAL_LOG_INFO("%30s: %d", "ccp_intr_data",
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_intr_data",
 			chain_params->ccp_intr_data);
-	OSAL_LOG_INFO("%30s: %d", "ccp_status_len",
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_status_len",
 			chain_params->ccp_status_len);
-	OSAL_LOG_INFO("%30s: %d", "ccp_data_len",
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_data_len",
 			chain_params->ccp_data_len);
 
-	OSAL_LOG_INFO("%30s: %d", "ccp_status_offset_0",
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_status_offset_0",
 			chain_params->ccp_status_offset_0);
-	OSAL_LOG_INFO("%30s: %d", "ccp_pad_boundary_shift",
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_pad_boundary_shift",
 			chain_params->ccp_pad_boundary_shift);
 
 	cmd = &chain_params->ccp_cmd;
-	OSAL_LOG_INFO("%30s: %d", "ccpc_data_len_from_desc",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_data_len_from_desc",
 			cmd->ccpc_data_len_from_desc);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_status_dma_en",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_status_dma_en",
 			cmd->ccpc_status_dma_en);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_next_doorbell_en",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_next_doorbell_en",
 			cmd->ccpc_next_doorbell_en);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_intr_en",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_intr_en",
 			cmd->ccpc_intr_en);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_next_db_action_barco_push",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_next_db_action_barco_push",
 			cmd->ccpc_next_db_action_barco_push);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_stop_chain_on_error",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_stop_chain_on_error",
 			cmd->ccpc_stop_chain_on_error);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_chain_alt_desc_on_error",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_chain_alt_desc_on_error",
 			cmd->ccpc_chain_alt_desc_on_error);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_aol_pad_en",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_aol_pad_en",
 			cmd->ccpc_aol_pad_en);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_sgl_pad_en",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_pad_en",
 			cmd->ccpc_sgl_pad_en);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_sgl_sparse_format_en",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_sparse_format_en",
 			cmd->ccpc_sgl_sparse_format_en);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_sgl_pdma_en",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_pdma_en",
 			cmd->ccpc_sgl_pdma_en);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_sgl_pdma_pad_only",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_pdma_pad_only",
 			cmd->ccpc_sgl_pdma_pad_only);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_sgl_pdma_alt_src_on_error",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_pdma_alt_src_on_error",
 			cmd->ccpc_sgl_pdma_alt_src_on_error);
-	OSAL_LOG_INFO("%30s: %d", "ccpc_desc_vec_push_en",
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_desc_vec_push_en",
 			cmd->ccpc_desc_vec_push_en);
 }
 
@@ -216,90 +216,90 @@ pprint_xts_chain_params(const struct xts_chain_params *chain_params)
 	if (!chain_params)
 		return;
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "xts_chain_params",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "xts_chain_params",
 			(uint64_t) chain_params);
 
 	spec = &chain_params->xcp_seq_spec;
-	OSAL_LOG_INFO("%30s: 0x%llx", "sequencer_spec", (uint64_t) spec);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_q",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sequencer_spec", (uint64_t) spec);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_q",
 			spec->sqs_seq_q);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_status_q",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_status_q",
 			spec->sqs_seq_status_q);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_next_q",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_q",
 			spec->sqs_seq_next_q);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_seq_next_status_q",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_seq_next_status_q",
 			spec->sqs_seq_next_status_q);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_ret_doorbell_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_ret_doorbell_addr",
 			spec->sqs_ret_doorbell_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "sqs_ret_doorbell_data",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "sqs_ret_doorbell_data",
 			spec->sqs_ret_doorbell_data);
-	OSAL_LOG_INFO("%30s: %d", "sqs_ret_seq_status_index",
+	OSAL_LOG_DEBUG("%30s: %d", "sqs_ret_seq_status_index",
 			spec->sqs_ret_seq_status_index);
 
 	ring_spec = &chain_params->xcp_ring_spec;
-	OSAL_LOG_INFO("%30s: 0x%llx", "ring_spec", (uint64_t) ring_spec);
-	OSAL_LOG_INFO("%30s: 0x%llx", "rs_ring_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "ring_spec", (uint64_t) ring_spec);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_ring_addr",
 			ring_spec->rs_ring_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "rs_pndx_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_pndx_addr",
 			ring_spec->rs_pndx_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "rs_pndx_shadow_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_pndx_shadow_addr",
 			ring_spec->rs_pndx_shadow_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "rs_desc_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "rs_desc_addr",
 			ring_spec->rs_desc_addr);
-	OSAL_LOG_INFO("%30s: %d", "rs_desc_size",
+	OSAL_LOG_DEBUG("%30s: %d", "rs_desc_size",
 			ring_spec->rs_desc_size);
-	OSAL_LOG_INFO("%30s: %d", "rs_pndx_size",
+	OSAL_LOG_DEBUG("%30s: %d", "rs_pndx_size",
 			ring_spec->rs_pndx_size);
-	OSAL_LOG_INFO("%30s: %d", "rs_ring_size",
+	OSAL_LOG_DEBUG("%30s: %d", "rs_ring_size",
 			ring_spec->rs_ring_size);
-	OSAL_LOG_INFO("%30s: %d", "rs_num_descs",
+	OSAL_LOG_DEBUG("%30s: %d", "rs_num_descs",
 			ring_spec->rs_num_descs);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_status_addr_0",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_status_addr_0",
 			chain_params->xcp_status_addr_0);
-	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_status_addr_1",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_status_addr_1",
 			chain_params->xcp_status_addr_1);
-	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_decr_buf_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_decr_buf_addr",
 			chain_params->xcp_decr_buf_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_comp_sgl_src_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_comp_sgl_src_addr",
 			chain_params->xcp_comp_sgl_src_addr);
-	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_sgl_pdma_dst_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_sgl_pdma_dst_addr",
 			chain_params->xcp_sgl_pdma_dst_addr);
 
-	OSAL_LOG_INFO("%30s: 0x%llx", "xcp_intr_addr",
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "xcp_intr_addr",
 			chain_params->xcp_intr_addr);
-	OSAL_LOG_INFO("%30s: %d", "xcp_intr_data",
+	OSAL_LOG_DEBUG("%30s: %d", "xcp_intr_data",
 			chain_params->xcp_intr_data);
 
-	OSAL_LOG_INFO("%30s: %d", "xcp_status_offset_0",
+	OSAL_LOG_DEBUG("%30s: %d", "xcp_status_offset_0",
 			chain_params->xcp_status_offset_0);
-	OSAL_LOG_INFO("%30s: %d", "xcp_blk_boundary_shift",
+	OSAL_LOG_DEBUG("%30s: %d", "xcp_blk_boundary_shift",
 			chain_params->xcp_blk_boundary_shift);
 
 	cmd = &chain_params->xcp_cmd;
-	OSAL_LOG_INFO("%30s: %d", "xcpc_status_dma_en",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_status_dma_en",
 			cmd->xcpc_status_dma_en);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_next_doorbell_en",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_next_doorbell_en",
 			cmd->xcpc_next_doorbell_en);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_intr_en",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_intr_en",
 			cmd->xcpc_intr_en);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_next_db_action_barco_push",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_next_db_action_barco_push",
 			cmd->xcpc_next_db_action_barco_push);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_stop_chain_on_error",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_stop_chain_on_error",
 			cmd->xcpc_stop_chain_on_error);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_comp_len_update_en",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_comp_len_update_en",
 			cmd->xcpc_comp_len_update_en);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_comp_sgl_src_en",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_comp_sgl_src_en",
 			cmd->xcpc_comp_sgl_src_en);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_comp_sgl_src_vec_en",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_comp_sgl_src_vec_en",
 			cmd->xcpc_comp_sgl_src_vec_en);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_sgl_sparse_format_en",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_sgl_sparse_format_en",
 			cmd->xcpc_sgl_sparse_format_en);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_sgl_pdma_en",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_sgl_pdma_en",
 			cmd->xcpc_sgl_pdma_en);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_sgl_pdma_len_from_desc",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_sgl_pdma_len_from_desc",
 			cmd->xcpc_sgl_pdma_len_from_desc);
-	OSAL_LOG_INFO("%30s: %d", "xcpc_desc_vec_push_en",
+	OSAL_LOG_DEBUG("%30s: %d", "xcpc_desc_vec_push_en",
 			cmd->xcpc_desc_vec_push_en);
 }
 
@@ -642,7 +642,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 	struct lif *lif;
 	struct queue *q, *status_q;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	svc_chain = centry->ce_chain_head;
 	chain_params = &svc_chain->sc_chain_params;
@@ -717,7 +717,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 	PPRINT_SEQUENCER_INFO(seq_info);
 
 	err = PNSO_OK;
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 
 out:
@@ -740,7 +740,7 @@ hw_setup_hash_chain_params(struct chain_entry *centry,
 	struct sequencer_info *seq_info;
 	struct ring_spec *ring_spec;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	svc_chain = centry->ce_chain_head;
 	chain_params = &svc_chain->sc_chain_params;
@@ -777,7 +777,7 @@ hw_setup_hash_chain_params(struct chain_entry *centry,
 	PPRINT_SEQUENCER_INFO(seq_info);
 
 	err = PNSO_OK;
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return err;
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
@@ -795,7 +795,7 @@ hw_setup_cpdc_chain_desc(struct chain_entry *centry,
 	struct sequencer_info *seq_info;
 	struct sequencer_desc *seq_desc;
 
-	OSAL_LOG_INFO("enter ...");
+	OSAL_LOG_DEBUG("enter ...");
 
 	svc_chain = centry->ce_chain_head;
 	chain_params = &svc_chain->sc_chain_params;
@@ -814,7 +814,7 @@ hw_setup_cpdc_chain_desc(struct chain_entry *centry,
 
 	PPRINT_SEQUENCER_INFO(seq_info);
 
-	OSAL_LOG_INFO("exit!");
+	OSAL_LOG_DEBUG("exit!");
 	return seq_desc;
 
 out:
