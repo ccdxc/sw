@@ -380,9 +380,11 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 			err = EINVAL;
 			OSAL_LOG_DEBUG("failed to build batch of chains! idx: %d err: %d",
 					idx, err);
+			PAS_INC_NUM_CHAIN_FAILURES(batch_info->bi_pcr);
 			goto out;
 		}
 		page_entry->bpe_chain = chain;
+		PAS_INC_NUM_CHAINS(batch_info->bi_pcr);
 	}
 	batch_info->bi_chain_exists = true;
 

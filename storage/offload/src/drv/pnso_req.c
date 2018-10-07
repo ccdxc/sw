@@ -961,8 +961,15 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 	pnso_error_t err = EINVAL;
 	struct request_params req_params;
 	uint32_t req_flags = 0;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
+	spinlock_t mlock;
+
+	PAS_START_PERF();
 
 	OSAL_LOG_DEBUG("enter...");
+
+	spin_lock_init(&mlock);
+	spin_lock_irq(&mlock);
 
 	err = get_request_mode(cb, cb_ctx, pnso_poll_fn,
 			pnso_poll_ctx, &req_flags);
@@ -980,10 +987,14 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 		OSAL_LOG_ERROR("flush request failed! err: %d", err);
 		goto out;
 	}
+	PAS_INC_NUM_BATCHES(pcr);
 
 	/* TODO-batch: temp hack to free-up batch in sync mode */
 	if (!cb)
 		bat_destroy_batch();
+
+	spin_unlock_irq(&mlock);
+	PAS_END_PERF(pcr);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
@@ -992,6 +1003,11 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 out:
 	/* cleanup batch, if it was created for previous requests */
 	bat_destroy_batch();
+
+	PAS_INC_NUM_BATCH_FAILURES(pcr);
+
+	spin_unlock_irq(&mlock);
+	PAS_END_PERF(pcr);
 
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
