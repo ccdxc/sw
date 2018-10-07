@@ -142,6 +142,9 @@ compress_setup(struct service_info *svc_info,
 		goto out_status_desc;
 	}
 
+	PAS_INC_NUM_CP_REQUESTS(pcr);
+	PAS_INC_NUM_CP_BYTES_IN(pcr, svc_info->si_src_blist.len);
+
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! service initialized!");
 	return err;
@@ -386,6 +389,8 @@ compress_write_result(struct service_info *svc_info)
 	}
 
 	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
+	PAS_INC_NUM_CP_BYTES_OUT(svc_info->si_pcr,
+			status_desc->csd_output_data_len);
 
 	/* next service may need 'len' */
 	svc_deps = cpdc_get_service_deps(svc_info);

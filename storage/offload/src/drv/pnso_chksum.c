@@ -126,6 +126,7 @@ chksum_setup(struct service_info *svc_info,
 		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
 		goto out_status_desc;
 	}
+	PAS_INC_NUM_CHKSUM_REQUESTS(pcr);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! service initialized!");
@@ -382,6 +383,7 @@ chksum_write_result_per_block(struct service_info *svc_info)
 		st_desc = cpdc_get_next_status_desc(st_desc,
 				status_object_size);
 	}
+	PAS_INC_NUM_CHKSUMS(svc_info->si_pcr, svc_info->si_num_tags);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");
@@ -438,6 +440,8 @@ chksum_write_result_buffer(struct service_info *svc_info)
 	OSAL_LOG_INFO("tag: 0 status_desc: 0x" PRIx64 " chksum: %*phN",
 			(uint64_t) status_desc, 8,
 			svc_status->u.chksum.tags[0].chksum);
+
+	PAS_INC_NUM_CHKSUMS(svc_info->si_pcr, 1);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");

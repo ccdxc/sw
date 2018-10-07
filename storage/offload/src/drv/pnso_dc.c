@@ -96,8 +96,9 @@ decompress_setup(struct service_info *svc_info,
 	src_buf_len = pbuf_get_buffer_list_len(svc_params->sp_src_blist);
 	dst_buf_len = pbuf_get_buffer_list_len(svc_params->sp_dst_blist);
 
-	fill_dc_desc(dc_desc, svc_info->si_src_sgl.sgl, svc_info->si_dst_sgl.sgl,
-			status_desc, src_buf_len, dst_buf_len);
+	fill_dc_desc(dc_desc, svc_info->si_src_sgl.sgl,
+			svc_info->si_dst_sgl.sgl, status_desc,
+			src_buf_len, dst_buf_len);
 	clear_dc_header_present(flags, dc_desc);
 
 	svc_info->si_type = PNSO_SVC_TYPE_DECOMPRESS;
@@ -110,6 +111,9 @@ decompress_setup(struct service_info *svc_info,
 		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
 		goto out_status_desc;
 	}
+
+	PAS_INC_NUM_DC_REQUESTS(pcr);
+	PAS_INC_NUM_DC_BYTES_IN(pcr, src_buf_len);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! service initialized!");
@@ -268,6 +272,8 @@ decompress_write_result(struct service_info *svc_info)
 	}
 
 	svc_status->u.dst.data_len = status_desc->csd_output_data_len;
+	PAS_INC_NUM_DC_BYTES_OUT(svc_info->si_pcr,
+			status_desc->csd_output_data_len);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");

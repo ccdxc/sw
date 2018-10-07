@@ -14,6 +14,7 @@
 
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
+#include "pnso_utils.h"
 
 #ifdef NDEBUG
 #define REQ_PPRINT_REQUEST(r)
@@ -796,6 +797,7 @@ static void
 submit_chain(struct request_params *req_params)
 {
 	pnso_error_t err;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct service_chain *chain = NULL;
 
 	chain = chn_create_chain(req_params);
@@ -805,11 +807,13 @@ submit_chain(struct request_params *req_params)
 				err);
 		goto out;
 	}
+	PAS_INC_NUM_CHAINS(pcr);
 
 	err = chn_execute_chain(chain);
 	if (err) {
 		OSAL_LOG_ERROR("failed to complete request/chain! err: %d",
 				err);
+		PAS_INC_NUM_CHAIN_FAILURES(pcr);
 		goto out;
 	}
 
@@ -829,8 +833,16 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	pnso_error_t err;
 	struct request_params req_params;
 	uint32_t req_flags = 0;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
+	spinlock_t mlock;
+
+	PAS_START_PERF();
+	PAS_INC_NUM_REQUESTS(pcr);
 
 	OSAL_LOG_DEBUG("enter...");
+
+	spin_lock_init(&mlock);
+	spin_lock_irq(&mlock);
 
 	REQ_PPRINT_REQUEST(svc_req);
 	REQ_PPRINT_RESULT(svc_res);
@@ -875,9 +887,18 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	REQ_PPRINT_RESULT(svc_res);
 
 	OSAL_LOG_DEBUG("exit!");
+
+	spin_unlock_irq(&mlock);
+	PAS_END_PERF(pcr);
+
 	return err;
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
+
+	PAS_INC_NUM_REQUEST_FAILURES(pcr);
+	spin_unlock_irq(&mlock);
+	PAS_END_PERF(pcr);
+
 	return err;
 }
 OSAL_EXPORT_SYMBOL(pnso_submit_request);

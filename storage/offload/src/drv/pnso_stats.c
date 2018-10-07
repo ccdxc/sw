@@ -17,7 +17,6 @@ pprint_pnso_stats(struct pnso_api_stats *stats)
 
 	OSAL_LOG_NOTICE("%30s: 0x%llx", "=== stats", (uint64_t) stats);
 
-
 	OSAL_LOG_NOTICE("%30s: %llu", "pas_num_requests",
 			stats->pas_num_requests);
 	OSAL_LOG_NOTICE("%30s: %llu", "pas_num_services",

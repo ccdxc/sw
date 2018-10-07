@@ -127,6 +127,7 @@ hash_setup(struct service_info *svc_info,
 		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
 		goto out_status_desc;
 	}
+	PAS_INC_NUM_HASH_REQUESTS(pcr);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! service initialized!");
@@ -443,6 +444,7 @@ hash_write_result_per_block(struct service_info *svc_info)
 		st_desc = cpdc_get_next_status_desc(st_desc,
 				status_object_size);
 	}
+	PAS_INC_NUM_HASHES(svc_info->si_pcr, num_tags);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");
@@ -495,6 +497,7 @@ hash_write_result_buffer(struct service_info *svc_info)
 	memcpy(svc_status->u.hash.tags[0].hash,
 			status_desc->csd_sha,
 			PNSO_HASH_TAG_LEN);
+	PAS_INC_NUM_HASHES(svc_info->si_pcr, 1);
 
 	OSAL_LOG_INFO("tag: 0 status_desc: 0x" PRIx64 " hash: %*phN",
 			(uint64_t) status_desc, 64,

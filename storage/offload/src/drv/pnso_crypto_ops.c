@@ -105,7 +105,9 @@ crypto_desc_fill(struct service_info *svc_info,
 	crypto_desc->cd_key_desc_idx =
 		     sonic_get_crypto_key_idx(pnso_crypto_desc->key_desc_idx);
 
-	crypto_desc->cd_iv_addr = sonic_hostpa_to_devpa(pnso_crypto_desc->iv_addr);
+	crypto_desc->cd_iv_addr =
+		sonic_hostpa_to_devpa(pnso_crypto_desc->iv_addr);
+
 	crypto_desc->cd_db_addr = crypto_desc->cd_status_addr +
 				  sizeof(status_desc->csd_err);
 
@@ -240,6 +242,11 @@ crypto_setup(struct service_info *svc_info,
 	err = crypto_setup_seq_desc(svc_info, svc_info->si_desc);
 	if (err)
 		return err;
+
+	if (svc_info->si_type == PNSO_SVC_TYPE_ENCRYPT)
+		PAS_INC_NUM_ENC_REQUESTS(svc_info->si_pcr);
+	else
+		PAS_INC_NUM_DEC_REQUESTS(svc_info->si_pcr);
 
 	return PNSO_OK;
 }

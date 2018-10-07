@@ -13,6 +13,7 @@
 #include "pnso_pbuf.h"
 #include "pnso_chain.h"
 #include "pnso_cpdc.h"
+#include "pnso_stats.h"
 #include "pnso_utils.h"
 
 /*
@@ -610,6 +611,7 @@ chn_create_chain(struct request_params *req_params)
 		PPRINT_SERVICE_INFO(svc_info);
 
 		interm_blist = svc_info->si_dst_blist;
+		PAS_INC_NUM_SERVICES(pcr);
 	}
 	chain->sc_req_id = osal_atomic_fetch_add(&g_req_id, 1);
 
@@ -664,9 +666,11 @@ pnso_error_t
 chn_execute_chain(struct service_chain *chain)
 {
 	pnso_error_t err = EINVAL;
+	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct chain_entry *sc_entry;
 	struct chain_entry *ce_first, *ce_last;
 	struct service_ops *svc_ops;
+	PAS_INIT_HW_PERF();
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -690,6 +694,7 @@ chn_execute_chain(struct service_chain *chain)
 			       ce_first->ce_svc_info.si_type, err);
 		goto out;
 	}
+	PAS_START_HW_PERF();
 
 	/* wait for 'last' service completion */
 	sc_entry = ce_last;
@@ -697,15 +702,18 @@ chn_execute_chain(struct service_chain *chain)
 	if (err)
 		OSAL_LOG_ERROR("service failed to poll svc_type: %d err: %d",
 			       ce_last->ce_svc_info.si_type, err);
+	PAS_END_HW_PERF(pcr);
 
 	/* update status of individual service(s) */
 	sc_entry = chain->sc_entry;
 	while (sc_entry) {
 		svc_ops = &sc_entry->ce_svc_info.si_ops;
 		err = svc_ops->read_status(&sc_entry->ce_svc_info);
-		if (err)
+		if (err) {
 			OSAL_LOG_ERROR("read status failed svc_type: %d err: %d",
 				       sc_entry->ce_svc_info.si_type, err);
+			PAS_INC_NUM_SERVICE_FAILURES(pcr);
+		}
 
 		err = svc_ops->write_result(&sc_entry->ce_svc_info);
 		if (err)
