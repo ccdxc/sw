@@ -1786,12 +1786,14 @@
   revision = "f0d19b6901ade831d5a3204edc0d6a7d6457fbb2"
 
 [[projects]]
-  digest = "1:9c24a5104820f4997839671b93ae98efb6a3ed400991e33e5fbf16af1085b4ad"
+  digest = "1:850e4270ee9e797d1d10547d4fa6c39bfc00c56c40358aac92ed1dd4391846b1"
   name = "github.com/shirou/gopsutil"
   packages = [
     "cpu",
+    "disk",
     "internal/common",
     "mem",
+    "net",
   ]
   pruneopts = "NUT"
   revision = "8048a2e9c5773235122027dd585cf821b2af1249"
@@ -2608,7 +2610,6 @@
     "github.com/miekg/pkcs11",
     "github.com/minio/minio-go",
     "github.com/minio/minio/cmd",
-    "github.com/minio/minio/cmd/logger",
     "github.com/olivere/elastic",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
@@ -2635,7 +2636,9 @@
     "github.com/russross/blackfriday",
     "github.com/satori/go.uuid",
     "github.com/shirou/gopsutil/cpu",
+    "github.com/shirou/gopsutil/disk",
     "github.com/shirou/gopsutil/mem",
+    "github.com/shirou/gopsutil/net",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/spf13/cobra/doc",
