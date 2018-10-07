@@ -989,6 +989,8 @@ tcp_transmit_pkt(unsigned char* pkt,
         cpu_header.hw_vlan_id = src_vlan_id;
         cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
         p4plus_header.lkp_inst = 1;
+        p4plus_header.compute_l4_csum = 1;
+        p4plus_header.compute_ip_csum = 1;
 
         gl_ctx->queue_txpkt(pkt, len, &cpu_header, &p4plus_header);
     } else {

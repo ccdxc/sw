@@ -581,7 +581,8 @@ SSLHelper::init_pse_engine()
         HAL_ASSERT_RETURN(0, HAL_RET_ERR);
     }
 
-    eng_path =  std::string(cfg_path) + "/openssl/engine/libpse.so";
+    //eng_path =  std::string(cfg_path) + "/openssl/engine/libpse.so";
+    eng_path =  "/nic/lib/libtls_pse.so";
     HAL_TRACE_DEBUG("Loading pensando engine from path: {}", eng_path);
 
     if(!ENGINE_ctrl_cmd_string(engine, "SO_PATH", eng_path.c_str(), 0)) {

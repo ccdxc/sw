@@ -102,6 +102,7 @@ nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14            /nic/lib/
 nic/third-party/libev/aarch64/lib/libev.so.4.0.0                    /nic/lib/
 nic/hal/third-party/sknobs/aarch64/lib/libsknobs.so                 /nic/lib/
 nic/hal/third-party/judy/aarch64/lib/libJudy.so.1                   /nic/lib/
+nic/build/aarch64/iris/lib/libhaltestutils.so                        /nic/lib/
 
 nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom                 /nic/conf/fw/
 nic/e2etests/go/agent/configs/golden                                /nic/conf/
@@ -145,3 +146,6 @@ nic/tools/start-hal-haps.sh                                         /nic/tools/
 nic/tools/sysinit.sh                                                /nic/tools/
 nic/tools/sysreset.sh                                               /nic/tools/
 nic/tools/sysupdate.sh                                              /nic/tools/
+
+nic/sdk/third-party/googletest-release-1.8.0/googletest/make/aarch64/libgtest.so /platform/lib/
+nic/sdk/third-party/googletest-release-1.8.0/googletest/make/aarch64/libgtest_without_main.so /platform/lib/

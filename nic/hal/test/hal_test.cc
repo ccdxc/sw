@@ -248,6 +248,7 @@ using tcp_proxy::TcpProxyRuleSpec;
 using tcp_proxy::TcpProxyRuleResponseMsg;
 using tcp_proxy::TcpProxyRuleMatchSpec;
 using types::IPAddressObj;
+using types::L4PortRange;
 
 std::string  hal_svc_endpoint_     = "localhost:50054";
 std::string  linkmgr_svc_endpoint_ = "localhost:50053";
@@ -2049,8 +2050,13 @@ public:
             uint64_t vrf_id,
             in_addr_t src_address_start,
             in_addr_t src_address_end,
+            uint16_t  src_port_range_start,
+            uint16_t  src_port_range_end,
             in_addr_t dst_address_start,
-            in_addr_t dst_address_end)
+            in_addr_t dst_address_end,
+            uint16_t  dst_port_range_start,
+            uint16_t  dst_port_range_end
+            )
     {
 
         TcpProxyRuleMatchSpec       *rm_spec;
@@ -2067,9 +2073,7 @@ public:
 
         /* TcpProxyRuleMatchSpec: RuleMatch */
         IPAddressObj                *src_addr;
-#ifdef USE_DST_ADDRESS_MATCH
         IPAddressObj                *dst_addr;
-#endif
 
         /* SRC Address Range */
         src_addr = rm_spec->mutable_match()->add_src_address();
@@ -2079,18 +2083,25 @@ public:
         src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_ip_af(types::IP_AF_INET);
         src_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_v4_addr(ntohl(src_address_end));
 
-#ifdef USE_DST_ADDRESS_MATCH
+        /* SRC Port Range */
+        L4PortRange                 *src_port_range;
+        src_port_range = rm_spec->mutable_match()->mutable_app_match()->mutable_port_info()->add_src_port_range();
+        src_port_range->set_port_low(src_port_range_start);
+        src_port_range->set_port_high(src_port_range_end);
+
         /* DST Address Range */
         dst_addr = rm_spec->mutable_match()->add_dst_address();
         dst_addr->set_type(types::IP_ADDRESS_IPV4_ANY);
         dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_ip_af(types::IP_AF_INET);
-        dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_v4_addr(dst_address_start);
+        dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_low_ipaddr()->set_v4_addr(ntohl(dst_address_start));
         dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_ip_af(types::IP_AF_INET);
-        dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_v4_addr(dst_address_end);
-#else
-        (void)dst_address_start;
-        (void)dst_address_end;
-#endif
+        dst_addr->mutable_address()->mutable_range()->mutable_ipv4_range()->mutable_high_ipaddr()->set_v4_addr(ntohl(dst_address_end));
+
+        /* DST Port Range */
+        L4PortRange                 *dst_port_range;
+        dst_port_range = rm_spec->mutable_match()->mutable_app_match()->mutable_port_info()->add_dst_port_range();
+        dst_port_range->set_port_low(dst_port_range_start);
+        dst_port_range->set_port_high(dst_port_range_end);
 
         rm_spec->mutable_match()->set_protocol(types::IPPROTO_TCP);
 
@@ -2104,8 +2115,13 @@ public:
             uint64_t vrf_id,
             in_addr_t src_address_start,
             in_addr_t src_address_end,
+            uint16_t  src_port_range_start,
+            uint16_t  src_port_range_end,
             in_addr_t dst_address_start,
-            in_addr_t dst_address_end)
+            in_addr_t dst_address_end,
+            uint16_t  dst_port_range_start,
+            uint16_t  dst_port_range_end
+            )
     {
         TcpProxyRuleRequestMsg      req_msg;
         TcpProxyRuleSpec            *req;
@@ -2116,7 +2132,7 @@ public:
 
         req = req_msg.add_request();
 
-        if (tcp_proxy_policy_rule_match_setup(req, &rule_match_spec, vrf_id, src_address_start, src_address_end, dst_address_start, dst_address_end)) {
+        if (tcp_proxy_policy_rule_match_setup(req, &rule_match_spec, vrf_id, src_address_start, src_address_end, src_port_range_start, src_port_range_end, dst_address_start, dst_address_end, dst_port_range_start, dst_port_range_end)) {
             std::cout << "Policy rule match setup failed" << std::endl;
             return -1;
         }
@@ -2141,8 +2157,12 @@ public:
             uint64_t                    vrf_id,
             in_addr_t                   src_address_start,
             in_addr_t                   src_address_end,
+            uint16_t                    src_port_range_start,
+            uint16_t                    src_port_range_end,
             in_addr_t                   dst_address_start,
             in_addr_t                   dst_address_end,
+            uint16_t                    dst_port_range_start,
+            uint16_t                    dst_port_range_end,
             uint32_t                    sign_key_idx,
             uint32_t                    decrypt_key_idx,
             uint32_t                    cert_idx)
@@ -2156,7 +2176,7 @@ public:
 
         req = req_msg.add_request();
 
-        if (tcp_proxy_policy_rule_match_setup(req, &rule_match_spec, vrf_id, src_address_start, src_address_end, dst_address_start, dst_address_end)) {
+        if (tcp_proxy_policy_rule_match_setup(req, &rule_match_spec, vrf_id, src_address_start, src_address_end, src_port_range_start, src_port_range_end, dst_address_start, dst_address_end, dst_port_range_start, dst_port_range_end)) {
             std::cout << "Policy rule match setup failed" << std::endl;
             return -1;
         }
@@ -2194,15 +2214,25 @@ public:
             uint64_t vrf_id, 
             in_addr_t src_range_start,
             in_addr_t src_range_end,
+            uint16_t  src_port_range_start,
+            uint16_t  src_port_range_end,
             in_addr_t dst_range_start,
-            in_addr_t dst_range_end)
+            in_addr_t dst_range_end,
+            uint16_t  dst_port_range_start,
+            uint16_t  dst_port_range_end
+            )
     {
         if (tcp_proxy_policy_add(
                 vrf_id,
                 src_range_start,
                 src_range_end,
+                src_port_range_start,
+                src_port_range_end,
                 dst_range_start,
-                dst_range_end)) {
+                dst_range_end,
+                dst_port_range_start,
+                dst_port_range_end
+                )) {
             std::cout << "Failed to setup Proxy Policy";
             return -1;
         }
@@ -2215,8 +2245,13 @@ public:
             uint64_t vrf_id, 
             in_addr_t src_range_start,
             in_addr_t src_range_end,
+            uint16_t  src_port_range_start,
+            uint16_t  src_port_range_end,
             in_addr_t dst_range_start,
-            in_addr_t dst_range_end)
+            in_addr_t dst_range_end,
+            uint16_t  dst_port_range_start,
+            uint16_t  dst_port_range_end
+            )
     {
         uint32_t        sign_key_idx;
         uint32_t        cert_idx = 1;
@@ -2243,8 +2278,12 @@ public:
                 vrf_id,
                 src_range_start,
                 src_range_end,
+                src_port_range_start,
+                src_port_range_end,
                 dst_range_start,
                 dst_range_end,
+                dst_port_range_start,
+                dst_port_range_end,
                 sign_key_idx,
                 0,
                 cert_idx)) {
@@ -2258,8 +2297,13 @@ public:
             uint64_t vrf_id, 
             in_addr_t src_range_start,
             in_addr_t src_range_end,
+            uint16_t  src_port_range_start,
+            uint16_t  src_port_range_end,
             in_addr_t dst_range_start,
-            in_addr_t dst_range_end)
+            in_addr_t dst_range_end,
+            uint16_t  dst_port_range_start,
+            uint16_t  dst_port_range_end
+            )
     {
         uint32_t        sign_key_idx;
         uint32_t        cert_idx = 1;
@@ -2285,8 +2329,12 @@ public:
                 vrf_id,
                 src_range_start,
                 src_range_end,
+                src_port_range_start,
+                src_port_range_end,
                 dst_range_start,
                 dst_range_end,
+                dst_port_range_start,
+                dst_port_range_end,
                 sign_key_idx,
                 0,
                 cert_idx)) {
@@ -2300,8 +2348,13 @@ public:
             uint64_t vrf_id, 
             in_addr_t src_range_start,
             in_addr_t src_range_end,
+            uint16_t  src_port_range_start,
+            uint16_t  src_port_range_end,
             in_addr_t dst_range_start,
-            in_addr_t dst_range_end)
+            in_addr_t dst_range_end,
+            uint16_t  dst_port_range_start,
+            uint16_t  dst_port_range_end
+            )
     {
         uint32_t        sign_key_idx;
         uint32_t        decrypt_key_idx;
@@ -2328,8 +2381,12 @@ public:
                 vrf_id,
                 src_range_start,
                 src_range_end,
+                src_port_range_start,
+                src_port_range_end,
                 dst_range_start,
                 dst_range_end,
+                dst_port_range_start,
+                dst_port_range_end,
                 sign_key_idx,
                 decrypt_key_idx,
                 cert_idx)) {
@@ -2343,8 +2400,13 @@ public:
             uint64_t vrf_id, 
             in_addr_t src_range_start,
             in_addr_t src_range_end,
+            uint16_t  src_port_range_start,
+            uint16_t  src_port_range_end,
             in_addr_t dst_range_start,
-            in_addr_t dst_range_end)
+            in_addr_t dst_range_end,
+            uint16_t  dst_port_range_start,
+            uint16_t  dst_port_range_end
+            )
     {
         uint32_t        sign_key_idx;
         uint32_t        decrypt_key_idx;
@@ -2370,8 +2432,12 @@ public:
                 vrf_id,
                 src_range_start,
                 src_range_end,
+                src_port_range_start,
+                src_port_range_end,
                 dst_range_start,
                 dst_range_end,
+                dst_port_range_start,
+                dst_port_range_end,
                 sign_key_idx,
                 decrypt_key_idx,
                 cert_idx)) {
@@ -2878,11 +2944,16 @@ int proxy_parse_args(int argc, char** argv,
         uint64_t *vrf_id, 
         in_addr_t *src_range_start,
         in_addr_t *src_range_end,
+        uint16_t  *src_port_range_start,
+        uint16_t  *src_port_range_end,
         in_addr_t *dst_range_start,
-        in_addr_t *dst_range_end)
+        in_addr_t *dst_range_end,
+        uint16_t  *dst_port_range_start,
+        uint16_t  *dst_port_range_end
+        )
 {
-    if (argc!= 7) {
-        std::cout << "Usage:" <<  argv[0]  << " <VRF id> <SRC IP Address Range Start> <SRC IP Address Range End> <DST IP Address Range Start> <DST IP Address Range End>" << std::endl;
+    if (argc!= 11) {
+        std::cout << "Usage:" <<  argv[0]  << " <VRF id> <SRC IP Address Range Start> <SRC IP Address Range End> <SRC Port Range Start> <SRC Port Range End> <DST IP Address Range Start> <DST IP Address Range End> <DST Port Range Start> <DST Port Range End>" << std::endl;
         return -1;
     }
 
@@ -2905,17 +2976,46 @@ int proxy_parse_args(int argc, char** argv,
         return -1;
     }
 
-    *dst_range_start = inet_addr(argv[5]);
+    errno = 0;
+    *src_port_range_start = strtoul(argv[5], NULL, 10);
+    if ((*src_port_range_start == ULONG_MAX) && (errno == ERANGE)) {
+        std::cout << "Failed to extract SRC Port Range Start from the parameters" << std::endl;
+        return -1;
+    }
+
+    errno = 0;
+    *src_port_range_end = strtoul(argv[6], NULL, 10);
+    if ((*src_port_range_end == ULONG_MAX) && (errno == ERANGE)) {
+        std::cout << "Failed to extract SRC Port Range End from the parameters" << std::endl;
+        return -1;
+    }
+
+    *dst_range_start = inet_addr(argv[7]);
     if (*dst_range_start == INADDR_NONE) {
         std::cout << "Failed to extract DST Range Start from the parameters" << std::endl;
         return -1;
     }
 
-    *dst_range_end = inet_addr(argv[6]);
+    *dst_range_end = inet_addr(argv[8]);
     if (*dst_range_end == INADDR_NONE) {
         std::cout << "Failed to extract DST Range End from the parameters" << std::endl;
         return -1;
     }
+
+    errno = 0;
+    *dst_port_range_start = strtoul(argv[5], NULL, 10);
+    if ((*dst_port_range_start == ULONG_MAX) && (errno == ERANGE)) {
+        std::cout << "Failed to extract DST Port Range Start from the parameters" << std::endl;
+        return -1;
+    }
+
+    errno = 0;
+    *dst_port_range_end = strtoul(argv[6], NULL, 10);
+    if ((*dst_port_range_end == ULONG_MAX) && (errno == ERANGE)) {
+        std::cout << "Failed to extract DST Port Range End from the parameters" << std::endl;
+        return -1;
+    }
+
     return 0;
 }
 
@@ -2972,8 +3072,13 @@ main (int argc, char** argv)
     uint64_t  proxy_vrf_id;
     in_addr_t src_range_start;
     in_addr_t src_range_end;
+    uint16_t  src_port_range_start;
+    uint16_t  src_port_range_end;
     in_addr_t dst_range_start;
     in_addr_t dst_range_end;
+    uint16_t  dst_port_range_start;
+    uint16_t  dst_port_range_end;
+
 
     bool qos_class_create = false;
     uint32_t qos_group = 1;
@@ -3064,8 +3169,13 @@ main (int argc, char** argv)
                         &proxy_vrf_id, 
                         &src_range_start,
                         &src_range_end,
+                        &src_port_range_start,
+                        &src_port_range_end,
                         &dst_range_start,
-                        &dst_range_end))
+                        &dst_range_end,
+                        &dst_port_range_start,
+                        &dst_port_range_end
+                        ))
             {
                 return -1;
             }
@@ -3078,8 +3188,13 @@ main (int argc, char** argv)
                         &proxy_vrf_id, 
                         &src_range_start,
                         &src_range_end,
+                        &src_port_range_start,
+                        &src_port_range_end,
                         &dst_range_start,
-                        &dst_range_end))
+                        &dst_range_end,
+                        &dst_port_range_start,
+                        &dst_port_range_end
+                        ))
             {
                 return -1;
             }
@@ -3092,8 +3207,13 @@ main (int argc, char** argv)
                         &proxy_vrf_id, 
                         &src_range_start,
                         &src_range_end,
+                        &src_port_range_start,
+                        &src_port_range_end,
                         &dst_range_start,
-                        &dst_range_end))
+                        &dst_range_end,
+                        &dst_port_range_start,
+                        &dst_port_range_end
+                        ))
             {
                 return -1;
             }
@@ -3106,8 +3226,13 @@ main (int argc, char** argv)
                         &proxy_vrf_id, 
                         &src_range_start,
                         &src_range_end,
+                        &src_port_range_start,
+                        &src_port_range_end,
                         &dst_range_start,
-                        &dst_range_end))
+                        &dst_range_end,
+                        &dst_port_range_start,
+                        &dst_port_range_end
+                        ))
             {
                 return -1;
             }
@@ -3244,8 +3369,13 @@ main (int argc, char** argv)
                     vrf_id, 
                     src_range_start,
                     src_range_end,
+                    src_port_range_start,
+                    src_port_range_end,
                     dst_range_start,
-                    dst_range_end)) {
+                    dst_range_end,
+                    dst_port_range_start,
+                    dst_port_range_end
+                    )) {
                 return -1;
             }
             else {
@@ -3260,8 +3390,12 @@ main (int argc, char** argv)
                     if (hclient.tcp_tls_proxy_client_ecdsa_flow_setup(proxy_vrf_id,
                             src_range_start,
                             src_range_end,
+                            src_port_range_start,
+                            src_port_range_end,
                             dst_range_start,
-                            dst_range_end
+                            dst_range_end,
+                            dst_port_range_start,
+                            dst_port_range_end
                             )) {
                         return -1;
                     }
@@ -3273,8 +3407,12 @@ main (int argc, char** argv)
                     if (hclient.tcp_tls_proxy_client_rsa_flow_setup(proxy_vrf_id,
                             src_range_start,
                             src_range_end,
+                            src_port_range_start,
+                            src_port_range_end,
                             dst_range_start,
-                            dst_range_end
+                            dst_range_end,
+                            dst_port_range_start,
+                            dst_port_range_end
                             )) {
                         return -1;
                     }
