@@ -648,7 +648,7 @@ public:
         types::L4PortRange *port_range = app->mutable_port_info()->add_dst_port_range();
         port_range->set_port_low(1000);
         port_range->set_port_high(2000);
-        
+
         types::L4PortRange *src_port_range = app->mutable_port_info()->add_src_port_range();
         src_port_range->set_port_low(100);
         src_port_range->set_port_high(200);
@@ -663,6 +663,30 @@ public:
             return rsp_msg.response(0).policy_status().security_policy_handle();
         }
         std::cout << "Security Policy create failed, error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return 0;
+    }
+
+    uint64_t security_profile_update(uint64_t prof_id) {
+        SecurityProfileSpec           *spec;
+        SecurityProfileRequestMsg     req_msg;
+        SecurityProfileResponseMsg    rsp_msg;
+        ClientContext     context;
+        Status            status;
+
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->set_profile_id(prof_id);
+
+        status = sg_stub_->SecurityProfileUpdate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            assert(rsp_msg.response(0).api_status() == types::API_STATUS_OK);
+            std::cout << "Security Profile update succeeded, handle = "
+                      << rsp_msg.response(0).profile_status().profile_handle()
+                      << std::endl;
+            return rsp_msg.response(0).profile_status().profile_handle();
+        }
+        std::cout << "Security Profile update failed, error = "
                   << rsp_msg.response(0).api_status()
                   << std::endl;
         return 0;
@@ -794,13 +818,13 @@ public:
         auto get_rsp = get_rsp_msg.response(0);
 
         std::cout << "Lif Rx policer stats" << std::endl;
-        std::cout << "permitted_packets " << 
+        std::cout << "permitted_packets " <<
             get_rsp.stats().rx_stats().policer_stats().permitted_packets() << std::endl;
-        std::cout << "permitted_bytes " << 
+        std::cout << "permitted_bytes " <<
             get_rsp.stats().rx_stats().policer_stats().permitted_bytes() << std::endl;
-        std::cout << "dropped_packets " << 
+        std::cout << "dropped_packets " <<
             get_rsp.stats().rx_stats().policer_stats().dropped_packets() << std::endl;
-        std::cout << "dropped_bytes " << 
+        std::cout << "dropped_bytes " <<
             get_rsp.stats().rx_stats().policer_stats().dropped_bytes() << std::endl;
 
         spec = req_msg.add_request();
@@ -813,7 +837,7 @@ public:
             } else {
                 spec->mutable_tx_policer()->mutable_pps_policer()->set_packets_per_sec(rate);
                 spec->mutable_tx_policer()->mutable_pps_policer()->set_burst_packets(burst);
-            }        
+            }
         } else {
             if (is_rx) {
                 spec->mutable_rx_policer()->mutable_bps_policer()->set_bytes_per_sec(rate);
@@ -2008,7 +2032,7 @@ public:
                     types::CRYPTO_ASYM_KEY_TYPE_RSA);
             *sign_key_idx =
                 rsp_msg.response(0).setup_priv_key().rsa_key_info().sign_key_idx();
-            *decrypt_key_idx = 
+            *decrypt_key_idx =
             rsp_msg.response(0).setup_priv_key().rsa_key_info().decrypt_key_idx();
         }
         else {
@@ -2211,7 +2235,7 @@ public:
     }
 
     int tcp_proxy_flow_setup(
-            uint64_t vrf_id, 
+            uint64_t vrf_id,
             in_addr_t src_range_start,
             in_addr_t src_range_end,
             uint16_t  src_port_range_start,
@@ -2238,11 +2262,11 @@ public:
         }
         return 0;
     }
-                
+
 
 
     int tcp_tls_proxy_client_ecdsa_flow_setup(
-            uint64_t vrf_id, 
+            uint64_t vrf_id,
             in_addr_t src_range_start,
             in_addr_t src_range_end,
             uint16_t  src_port_range_start,
@@ -2294,7 +2318,7 @@ public:
     }
 
     int tcp_tls_proxy_server_ecdsa_flow_setup(
-            uint64_t vrf_id, 
+            uint64_t vrf_id,
             in_addr_t src_range_start,
             in_addr_t src_range_end,
             uint16_t  src_port_range_start,
@@ -2345,7 +2369,7 @@ public:
     }
 
     int tcp_tls_proxy_client_rsa_flow_setup(
-            uint64_t vrf_id, 
+            uint64_t vrf_id,
             in_addr_t src_range_start,
             in_addr_t src_range_end,
             uint16_t  src_port_range_start,
@@ -2397,7 +2421,7 @@ public:
     }
 
     int tcp_tls_proxy_server_rsa_flow_setup(
-            uint64_t vrf_id, 
+            uint64_t vrf_id,
             in_addr_t src_range_start,
             in_addr_t src_range_end,
             uint16_t  src_port_range_start,
@@ -2447,15 +2471,15 @@ public:
         return 0;
     }
 
-    void qos_class_create(uint32_t qos_group, uint32_t pcp, 
+    void qos_class_create(uint32_t qos_group, uint32_t pcp,
                           uint32_t dscp, uint32_t strict, uint32_t rate_or_dwrr) {
         QosClassSpec        *spec;
         QosClassRequestMsg  req_msg;
         QosClassResponseMsg rsp_msg;
         ClientContext       context;
         Status              status;
-        
-        std::cout << "Qos class create with " 
+
+        std::cout << "Qos class create with "
                   << qos_group << " "
                   << pcp << " "
                   << dscp << " "
@@ -2940,8 +2964,8 @@ gft_proto_size_check (void)
               << std::endl;
 }
 
-int proxy_parse_args(int argc, char** argv, 
-        uint64_t *vrf_id, 
+int proxy_parse_args(int argc, char** argv,
+        uint64_t *vrf_id,
         in_addr_t *src_range_start,
         in_addr_t *src_range_end,
         uint16_t  *src_port_range_start,
@@ -3040,6 +3064,7 @@ main (int argc, char** argv)
     bool         session_create = false;
     bool         session_create_cache_test = false;
     bool         system_get = false;
+    bool         sec_prof_reset_default = false;
     bool         ep_create = false;
     bool         config = false;
     int          count = 1;
@@ -3100,6 +3125,8 @@ main (int argc, char** argv)
             size_check = true;
         } else if (!strcmp(argv[1], "system_get")) {
             system_get = true;
+        } else if (!strcmp(argv[1], "def_sec_prof_reset")) {
+            sec_prof_reset_default = true;
         } else if (!strcmp(argv[1], "ep_create")) {
             ep_create = true;
         } else if (!strcmp(argv[1], "ep_delete_test")) {
@@ -3165,8 +3192,8 @@ main (int argc, char** argv)
         } else if (!strcmp(argv[1], "tcp-proxy")) {
             proxy_agent_if = true;
             proxy_type = types::PROXY_TYPE_TCP;
-            if (proxy_parse_args(argc, argv, 
-                        &proxy_vrf_id, 
+            if (proxy_parse_args(argc, argv,
+                        &proxy_vrf_id,
                         &src_range_start,
                         &src_range_end,
                         &src_port_range_start,
@@ -3184,8 +3211,8 @@ main (int argc, char** argv)
             proxy_type = types::PROXY_TYPE_TLS;
             proxy_srv = true;
             key_type = types::CRYPTO_ASYM_KEY_TYPE_ECDSA;
-            if (proxy_parse_args(argc, argv, 
-                        &proxy_vrf_id, 
+            if (proxy_parse_args(argc, argv,
+                        &proxy_vrf_id,
                         &src_range_start,
                         &src_range_end,
                         &src_port_range_start,
@@ -3203,8 +3230,8 @@ main (int argc, char** argv)
             proxy_type = types::PROXY_TYPE_TLS;
             proxy_srv = false;
             key_type = types::CRYPTO_ASYM_KEY_TYPE_ECDSA;
-            if (proxy_parse_args(argc, argv, 
-                        &proxy_vrf_id, 
+            if (proxy_parse_args(argc, argv,
+                        &proxy_vrf_id,
                         &src_range_start,
                         &src_range_end,
                         &src_port_range_start,
@@ -3222,8 +3249,8 @@ main (int argc, char** argv)
             proxy_type = types::PROXY_TYPE_TLS;
             proxy_srv = false;
             key_type = types::CRYPTO_ASYM_KEY_TYPE_RSA;
-            if (proxy_parse_args(argc, argv, 
-                        &proxy_vrf_id, 
+            if (proxy_parse_args(argc, argv,
+                        &proxy_vrf_id,
                         &src_range_start,
                         &src_range_end,
                         &src_port_range_start,
@@ -3256,6 +3283,9 @@ main (int argc, char** argv)
         return 0;
     } else if (system_get == true) {
         hclient.system_get();
+        return 0;
+    } else if (sec_prof_reset_default == true) {
+        hclient.security_profile_update(1);
         return 0;
     } else if (proxy_create) {
         hclient.proxy_enable(types::PROXY_TYPE_TCP);
@@ -3366,7 +3396,7 @@ main (int argc, char** argv)
 
         if (proxy_type == types::PROXY_TYPE_TCP) {
             if (hclient.tcp_proxy_flow_setup(
-                    vrf_id, 
+                    vrf_id,
                     src_range_start,
                     src_range_end,
                     src_port_range_start,

@@ -386,6 +386,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     if (flow_attrs->rw_act != REWRITE_NOP_ID) {
         d.flow_info_action_u.flow_info_flow_info.rewrite_index = flow_attrs->rw_idx;
     }
+#if 0
     // TODO: if we are doing routing, then set ttl_dec to TRUE
     if ((role == FLOW_ROLE_INITIATOR && !aug) ||
         (role == FLOW_ROLE_RESPONDER && aug)) {
@@ -394,6 +395,8 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     } else {
         d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
     }
+#endif
+    d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
     d.flow_info_action_u.flow_info_flow_info.flow_ttl = 64;
     d.flow_info_action_u.flow_info_flow_info.flow_role = flow_attrs->role;
     d.flow_info_action_u.flow_info_flow_info.session_state_index =
