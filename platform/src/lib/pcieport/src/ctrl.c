@@ -158,28 +158,38 @@ pcieport_mac_unreset(pcieport_t *p)
 }
 
 static void
+pcieport_system(const char *path)
+{
+    int r;
+
+    pciehsys_log("running %s:\n", path);
+    r = system(path);
+    if (r) pciehsys_error("%s: failed %d\n", path, r);
+}
+
+static void
 pcieport_run_script(const char *name, const int port)
 {
     char path[80];
 
 #ifdef __aarch64__
     snprintf(path, sizeof(path), "/mnt/%s", name);
-    if (access(path, X_OK) == 0) system(path);
+    if (access(path, X_OK) == 0) pcieport_system(path);
 
     snprintf(path, sizeof(path), "/mnt/%s-%d", name, port);
-    if (access(path, X_OK) == 0) system(path);
+    if (access(path, X_OK) == 0) pcieport_system(path);
 
     snprintf(path, sizeof(path), "/tmp/%s", name);
-    if (access(path, X_OK) == 0) system(path);
+    if (access(path, X_OK) == 0) pcieport_system(path);
 
     snprintf(path, sizeof(path), "/tmp/%s-%d", name, port);
-    if (access(path, X_OK) == 0) system(path);
+    if (access(path, X_OK) == 0) pcieport_system(path);
 #else
     snprintf(path, sizeof(path), "./%s", name);
-    if (access(path, X_OK) == 0) system(path);
+    if (access(path, X_OK) == 0) pcieport_system(path);
 
     snprintf(path, sizeof(path), "./%s-%d", name, port);
-    if (access(path, X_OK) == 0) system(path);
+    if (access(path, X_OK) == 0) pcieport_system(path);
 #endif
 }
 
