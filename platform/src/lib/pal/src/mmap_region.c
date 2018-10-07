@@ -85,6 +85,7 @@ pr_map(pal_mmap_region_t *pr)
 
     /* map the entire file */
     pr->va = mapfd(fd, 0, pr->sz);
+    pr->mapped = 1;
     (void)close(fd);
     return pr->va;
 }
