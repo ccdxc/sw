@@ -549,11 +549,24 @@ flush_rq:
 
 process_sq_drain:
     // Flush all wqes in SQ ring below drain cindex in SQD or SQD_ON_ERR state.
-    // If spec_cindex is above drain cindex but its not SQ ring event, then
-    // process the event otherwise cease SQ processing. Eventually upon
-    // receiving acks for all the drained wqes an asynchronous event
-    // will be raised to notify driver about drain completion.
-    sle            c7, SPEC_SQ_C_INDEX, d.sqd_cindex
+    // If spec_cindex is above drain cindex but its not SQ ring event, or
+    // if TxDMA is in the middle of processing multi-packet (in_progress),
+    // fence, frpmr etc, then process the event otherwise cease SQ processing.
+    // Eventually upon receiving acks for all the drained wqes an asynchronous
+    // event will be raised to notify driver about drain completion.
+
+    // To determine if spec_sq_cindex is <= sqd_cindex, find out which index
+    // has advanced closer to sq_p_index. If spec_sq_c_index is farther from
+    // sq_p_index than sqd_c_index, then continue with draining wqes
+    // ((sq_p_index - sqd_c_index) & log_num_wqes) <=
+    //                             ((sq_p_index - spec_sq_c_index) & log_num_wqes)
+    sub            r1, SQ_P_INDEX, d.sqd_cindex
+    mincr          r1, d.log_num_wqes, r0
+
+    sub            r2, SQ_P_INDEX, SPEC_SQ_C_INDEX
+    mincr          r2, d.log_num_wqes, r0
+
+    sle            c7, r1, r2
     seq            c2, d.in_progress, 1
     seq            c3, d.fence, 1
     seq            c4, d.frpmr_in_progress, 1

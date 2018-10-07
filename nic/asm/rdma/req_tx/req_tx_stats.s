@@ -28,6 +28,9 @@ req_tx_stats_process:
 
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
 
+    seq              c1, CAPRI_KEY_FIELD(IN_P, sq_drain), 1
+    tblmincri.c1.e   d.num_sq_drains, MASK_16, 1
+
     bbeq             CAPRI_KEY_FIELD(IN_P, npg), 1, handle_npg_stats
     crestore         [c4, c3, c2, c1], GLOBAL_FLAGS, (REQ_TX_FLAG_INV_RKEY | REQ_TX_FLAG_ATOMIC_FNA | REQ_TX_FLAG_ATOMIC_CSWAP | REQ_TX_FLAG_READ_REQ) //BD Slot
 

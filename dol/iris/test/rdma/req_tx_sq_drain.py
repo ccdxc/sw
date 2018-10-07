@@ -198,12 +198,9 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index0', tc.pvtdata.sq_post_qstate, 'c_index0'):
             return False
 
-        #TODO Currnetly when async event is raised no completion is posted
-        # so this verification is failing.. Commented out until this support
-        # is added to cqcb_process
         # validate cqcb pindex and color
-        #if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC1'):
-        #    return False
+        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC1'):
+            return False
 
         # verify affiliated async event for SQ Drain
         if not ValidateAsyncEQChecks(tc):

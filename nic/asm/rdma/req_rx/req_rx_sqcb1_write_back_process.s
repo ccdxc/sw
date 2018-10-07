@@ -81,13 +81,13 @@ post_cq:
     // outstanding request is cleared. Otherwise, keep decrementing the
     // err_retry_count upon retrans timer expiry or NAK (seq_err) or
     // implicit NAK, or rnr_retry_count upon rnr timer expiry
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_REXMIT_PSN) // Branch Delay Slot
-    DMA_HBM_PHV2MEM_PHV_END_SETUP(r6, rnr_retry_ctr)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN) // Branch Delay Slot
+    DMA_HBM_PHV2MEM_PHV_END_SETUP(r6, rnr_timeout)
 
-    SQCB2_ADDR_GET(r1)
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RNR_TIMEOUT)
-    add            r2, r1, SQCB2_RNR_TIMEOUT_OFFSET
-    DMA_HBM_PHV2MEM_SETUP(r6, rnr_timeout, rnr_timeout, r2)
+    //SQCB2_ADDR_GET(r1)
+    //DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_RNR_TIMEOUT)
+    //add            r2, r1, SQCB2_RNR_TIMEOUT_OFFSET
+    //DMA_HBM_PHV2MEM_SETUP(r6, rnr_timeout, rnr_timeout, r2)
 
     // Hardcode table id 2 for CQCB process
     CAPRI_RESET_TABLE_2_ARG()
@@ -121,7 +121,10 @@ check_sq_drain:
      sub           r1, d.max_ssn, 1 // Branch Delay Slot
      mincr         r1, 24, r0
      seq           c2, d.msn, r1
-     bcf           [!c2], exit
+     seq           c1, d.sq_drained, 1
+     // Drain is complete upon receiving sq_drain feedback from TxDMA
+     // AND all pending responses are acked
+     bcf           [!c2 | !c1], exit
 
      // If QP is in QP_STATE_SQD_ON_ERR and all acks have been received then
      // move QP to QP_STATE_ERR and trigger TXDMA to send flush feedback to RQ
@@ -129,14 +132,12 @@ check_sq_drain:
      bcf           [c1], error_disable_exit
      nop           // Branch Delay Slot
 
-     // Do not raise SQ drain async event if either async_notify is not requested
-     // by user or if sq_drain feedback has not been received from TxDMA
-     crestore      [c2, c1], d.{sq_drained...sqd_async_notify_enable}, 0x3
-     bcf           [!c1 | !c2], exit
+     // Do not raise SQ drain async event if async_notify is not requested
+     bbne          d.sqd_async_notify_enable, 1, exit
      // if QP_STATE_SQD, post async event and notify driver about drain completion
-     phvwr         p.eqwqe.qid, K_GLOBAL_QID
-     phvwrpair.e   p.eqwqe.code, EQE_CODE_QP_SQ_DRAIN, p.eqwqe.type, EQE_TYPE_QP
-     phvwr         CAPRI_PHV_FIELD(TO_S6_P, async_event_or_error), 1
+     phvwr         p.async_eqwqe.qid, K_GLOBAL_QID // Branch Delay Slot
+     phvwrpair.e   p.async_eqwqe.code, EQE_CODE_QP_SQ_DRAIN, p.async_eqwqe.type, EQE_TYPE_QP
+     phvwr         CAPRI_PHV_FIELD(TO_S6_P, async_event), 1
 
 bubble_to_next_stage:
      seq           c1, r1[4:2], STAGE_3

@@ -268,7 +268,7 @@ create_qp:
     // TODO Default should enable credits and set as part of connection negotiation
     phvwr       p.sqcb2.disable_credits, 1
     phvwrpair   p.{sqcb2.err_retry_ctr, sqcb2.rnr_retry_ctr}, (0x7<<3|0x7), p.sqcb2.lsn, 0
-    phvwrpair   p.sqcb2.lsn_rx, 0, p.sqcb2.lsn_tx, 0
+    phvwrpair   p.sqcb2.lsn_tx, 0, p.sqcb2.lsn_rx, 0
 
     //          TODO: Move RSQ/RRQ allocation to modify_qp frm create_qp
     //          TODO: Move pmtu setup to modify_qp

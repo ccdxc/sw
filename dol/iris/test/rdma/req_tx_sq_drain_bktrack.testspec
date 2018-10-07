@@ -656,14 +656,10 @@ session:
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
         expect:
-        #TODO Currnetly when async event is raised no completion is posted
-        # so this verification is failing.. Commented out until this support
-        # is added to cqcb_process
-            #descriptors:
-            #    - descriptor:
-            #        object  : ref://testcase/descriptors/id=EXP_CQ_DESC1
-            #        ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
             descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC1
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_EQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/async_eq/rings/id=EQ

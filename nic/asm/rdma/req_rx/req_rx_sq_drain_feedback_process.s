@@ -45,9 +45,9 @@ req_rx_sq_drain_feedback_process:
     bcf           [c1 | !c2], exit
 
     // if QP_STATE_SQD, post async event and notify driver about drain completion
-    phvwr       p.eqwqe.qid, K_GLOBAL_QID // Branch Delay Slot
-    phvwrpair   p.eqwqe.code, EQE_CODE_QP_SQ_DRAIN, p.eqwqe.type, EQE_TYPE_QP
-    phvwr       CAPRI_PHV_FIELD(TO_S6_P, async_event_or_error), 1
+    phvwr       p.async_eqwqe.qid, K_GLOBAL_QID // Branch Delay Slot
+    phvwrpair   p.async_eqwqe.code, EQE_CODE_QP_SQ_DRAIN, p.async_eqwqe.type, EQE_TYPE_QP
+    phvwr       CAPRI_PHV_FIELD(TO_S6_P, async_event), 1
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_cqcb_process, r0)
 
 bubble_to_next_stage:

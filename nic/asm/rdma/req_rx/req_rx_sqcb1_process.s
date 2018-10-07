@@ -197,11 +197,11 @@ check_msn:
     add            r3, CAPRI_APP_DATA_AETH_SYNDROME, r0 // Branch Delay Slot
 
     bcf            [!c1], process_aeth
-    IS_MASKED_VAL_EQUAL_B(c5, r3, SYNDROME_MASK, ACK_SYNDROME) // Branch Delay Slot
+    IS_MASKED_VAL_EQUAL_B(c6, r3, SYNDROME_MASK, ACK_SYNDROME) // Branch Delay Slot
 
 check_duplicate_resp:
     // bth.psn < sqcb1_p->rexmit_psn, duplicate and not unsolicited p_ack, drop
-    bcf            [!c2 | !c5], duplicate_resp
+    bcf            [!c2 | !c6], duplicate_resp
 
     // unsolicited ack i.e. duplicate of most recent p_ack is allowed
     sub            r4, d.rexmit_psn, -1  // Branch Delay Slot
@@ -210,14 +210,15 @@ check_duplicate_resp:
     bcf            [!c3], duplicate_resp
 
 process_aeth:
-    sne.c5         c5, CAPRI_APP_DATA_AETH_SYNDROME[4:0], 0x1F // Branch Delay Slot
-    bcf            [!c5], post_rexmit_psn
+    sne.c6         c6, CAPRI_APP_DATA_AETH_SYNDROME[4:0], 0x1F // Branch Delay Slot
+    // Skip LSN update if not AETH hdr or AETH hdr but not ACK syndrome in the response
+    bcf            [!c6], post_rexmit_psn
 
     DECODE_ACK_SYNDROME_CREDITS(r2, CAPRI_APP_DATA_AETH_SYNDROME, c1)
     mincr          r2, 24, CAPRI_APP_DATA_AETH_MSN
 post_msn_credits:
     // get DMA cmd entry based on dma_cmd_index
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN)
     // dma_cmd - msn and credits
     add            r4, r7, SQCB2_LSN_RX_OFFSET
     DMA_HBM_PHV2MEM_SETUP(r6, lsn, lsn, r4)
@@ -242,9 +243,12 @@ post_msn_credits:
 post_rexmit_psn:
     phvwr          p.err_retry_ctr, d.err_retry_count
     bcf            [c3], unsolicited_ack
-    phvwr          p.rnr_retry_ctr, d.rnr_retry_count
+    phvwr          p.rnr_retry_ctr, d.rnr_retry_count // Branch Delay Slot
 
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_REXMIT_PSN)
+    bcf            [c6], set_arg
+    DMA_HBM_PHV2MEM_PHV_END_SETUP_C(r6, ack_timestamp, c6) // Branch Delay Slot
+
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN)
     add            r4, r7, SQCB2_REXMIT_PSN_OFFSET
     // if valid ack, update rexmit_psn as well as ack timestamp, err_retry_ctr
     // and rnr_retry_ctr in sqcb2

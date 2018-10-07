@@ -99,7 +99,8 @@
 
 #define rx_table_s7_t2_action req_rx_cqpt_process
 
-#define rx_table_s7_t1_action req_rx_eqcb_process
+#define rx_table_s7_t0_action req_rx_eqcb_process_t0
+#define rx_table_s7_t1_action req_rx_eqcb_process_t1
 
 #define rx_table_s7_t3_action req_rx_stats_process
 
@@ -237,7 +238,8 @@ header_type req_rx_to_stage_cq_info_t {
         cqcb_base_addr_hi                :   24;
         log_num_cq_entries               :    4;
         bth_se                           :    1;
-        async_event_or_error             :    1;
+        async_error_event                :    1;
+        async_event                      :    1;
         state                            :    3;
     }
 }
@@ -320,7 +322,9 @@ header_type req_rx_rrqlkey_to_ptseg_info_t {
 
 header_type req_rx_cqcb_to_eq_info_t {
     fields {
-        pad                              :  160;
+        async_eq                         :  1;
+        cmd_eop                          :  1;
+        pad                              :  158;
     }
 }
 
@@ -520,7 +524,7 @@ metadata req_rx_to_stage_stats_info_t to_s7_stats_info_scr;
 
 //Table-0
 
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb1_to_rrqwqe_info t0_s2s_rrqwqe_to_sge_info t0_s2s_rrqsge_to_lkey_info t0_s2s_rrqlkey_to_ptseg_info t0_s2s_sqcb1_to_sge_recirc_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb1_to_rrqwqe_info t0_s2s_rrqwqe_to_sge_info t0_s2s_rrqsge_to_lkey_info t0_s2s_rrqlkey_to_ptseg_info t0_s2s_sqcb1_to_sge_recirc_info t0_s2s_cqcb_to_eq_info
 
 metadata req_rx_sqcb1_to_rrqwqe_info_t t0_s2s_sqcb1_to_rrqwqe_info;
 @pragma scratch_metadata
@@ -541,6 +545,10 @@ metadata req_rx_rrqsge_to_lkey_info_t t0_s2s_rrqsge_to_lkey_info_scr;
 metadata req_rx_rrqlkey_to_ptseg_info_t t0_s2s_rrqlkey_to_ptseg_info;
 @pragma scratch_metadata
 metadata req_rx_rrqlkey_to_ptseg_info_t t0_s2s_rrqlkey_to_ptseg_info_scr;
+
+metadata req_rx_cqcb_to_eq_info_t t0_s2s_cqcb_to_eq_info;
+@pragma scratch_metadata
+metadata req_rx_cqcb_to_eq_info_t t0_s2s_cqcb_to_eq_info_scr;
 
 //Table-1
 
@@ -1193,7 +1201,8 @@ action req_rx_cqcb_process_s5 () {
     modify_field(to_s5_cq_info_scr.cqcb_base_addr_hi, to_s5_cq_info.cqcb_base_addr_hi);
     modify_field(to_s5_cq_info_scr.log_num_cq_entries, to_s5_cq_info.log_num_cq_entries);
     modify_field(to_s5_cq_info_scr.bth_se, to_s5_cq_info.bth_se);
-    modify_field(to_s5_cq_info_scr.async_event_or_error, to_s5_cq_info.async_event_or_error);
+    modify_field(to_s5_cq_info_scr.async_event, to_s5_cq_info.async_event);
+    modify_field(to_s5_cq_info_scr.async_error_event, to_s5_cq_info.async_error_event);
     modify_field(to_s5_cq_info_scr.state, to_s5_cq_info.state);
 
     // stage to stage
@@ -1210,7 +1219,8 @@ action req_rx_cqcb_process_s6 () {
     modify_field(to_s6_cq_info_scr.cqcb_base_addr_hi, to_s6_cq_info.cqcb_base_addr_hi);
     modify_field(to_s6_cq_info_scr.log_num_cq_entries, to_s6_cq_info.log_num_cq_entries);
     modify_field(to_s6_cq_info_scr.bth_se, to_s6_cq_info.bth_se);
-    modify_field(to_s6_cq_info_scr.async_event_or_error, to_s6_cq_info.async_event_or_error);
+    modify_field(to_s6_cq_info_scr.async_event, to_s6_cq_info.async_event);
+    modify_field(to_s6_cq_info_scr.async_error_event, to_s6_cq_info.async_error_event);
     modify_field(to_s6_cq_info_scr.state, to_s6_cq_info.state);
 
     // stage to stage
@@ -1250,13 +1260,27 @@ action req_rx_dcqcn_ecn_process () {
     modify_field(t3_s2s_ecn_info_scr.pad, t3_s2s_ecn_info.pad);
 
 }
-action req_rx_eqcb_process () {
+action req_rx_eqcb_process_t0 () {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
 
     // stage to stage
+    modify_field(t0_s2s_cqcb_to_eq_info_scr.async_eq, t0_s2s_cqcb_to_eq_info.async_eq);
+    modify_field(t0_s2s_cqcb_to_eq_info_scr.cmd_eop, t0_s2s_cqcb_to_eq_info.cmd_eop);
+    modify_field(t0_s2s_cqcb_to_eq_info_scr.pad, t0_s2s_cqcb_to_eq_info.pad);
+
+}
+action req_rx_eqcb_process_t1 () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t1_s2s_cqcb_to_eq_info_scr.async_eq, t1_s2s_cqcb_to_eq_info.async_eq);
+    modify_field(t1_s2s_cqcb_to_eq_info_scr.cmd_eop, t1_s2s_cqcb_to_eq_info.cmd_eop);
     modify_field(t1_s2s_cqcb_to_eq_info_scr.pad, t1_s2s_cqcb_to_eq_info.pad);
 
 }

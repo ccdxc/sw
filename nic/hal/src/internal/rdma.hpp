@@ -1078,8 +1078,8 @@ typedef struct sqcb2_s {
     uint64_t last_ack_or_req_ts:48;
 
     uint32_t rexmit_psn:24;
-    uint32_t lsn_tx:24;
     uint32_t lsn_rx:24;
+    uint32_t lsn_tx:24;
 
     uint32_t service:4;
     uint32_t roce_opt_mss_enable:1;

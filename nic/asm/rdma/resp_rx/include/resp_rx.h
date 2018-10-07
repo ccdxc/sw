@@ -61,18 +61,22 @@
 
 #define RESP_RX_DMA_CMD_RD_ATOMIC_EQ                3
 #define RESP_RX_DMA_CMD_RD_ATOMIC_EQ_INT            4
+#define RESP_RX_DMA_CMD_RD_ATOMIC_ASYNC_EQ          3 // Set same as completion eq for now
+#define RESP_RX_DMA_CMD_RD_ATOMIC_ASYNC_EQ_INT      4 // Set same as completion eq_int for now
 
 #define RESP_RX_DMA_CMD_PYLD_BASE_END 14
 
-#define RESP_RX_DMA_CMD_START       0
-#define RESP_RX_DMA_CMD_ACK         0
-#define RESP_RX_DMA_CMD_ACK_DB      1
-#define RESP_RX_DMA_CMD_SKIP_PLD    (RESP_RX_MAX_DMA_CMDS - 6)
-#define RESP_RX_DMA_CMD_RSVD1       (RESP_RX_MAX_DMA_CMDS - 5)
+#define RESP_RX_DMA_CMD_START          0
+#define RESP_RX_DMA_CMD_ACK            0
+#define RESP_RX_DMA_CMD_ACK_DB         1
+#define RESP_RX_DMA_CMD_SKIP_PLD       (RESP_RX_MAX_DMA_CMDS - 6)
+#define RESP_RX_DMA_CMD_RSVD1          (RESP_RX_MAX_DMA_CMDS - 5)
 #define RESP_RX_DMA_CMD_IMMDT_AS_DBELL (RESP_RX_MAX_DMA_CMDS - 4)
-#define RESP_RX_DMA_CMD_CQ          (RESP_RX_MAX_DMA_CMDS - 3)
-#define RESP_RX_DMA_CMD_EQ          (RESP_RX_MAX_DMA_CMDS - 2)
-#define RESP_RX_DMA_CMD_EQ_INT      (RESP_RX_MAX_DMA_CMDS - 1)
+#define RESP_RX_DMA_CMD_CQ             (RESP_RX_MAX_DMA_CMDS - 3)
+#define RESP_RX_DMA_CMD_EQ             (RESP_RX_MAX_DMA_CMDS - 2)
+#define RESP_RX_DMA_CMD_EQ_INT         (RESP_RX_MAX_DMA_CMDS - 1)
+#define RESP_RX_DMA_CMD_ASYNC_EQ       (RESP_RX_MAX_DMA_CMDS - 2) // Set same as completion eq for now
+#define RESP_RX_DMA_CMD_ASYNC_EQ_INT   (RESP_RX_MAX_DMA_CMDS - 1) // Set same as completion eq_int for now
 //wakeup dpath and EQ are mutually exclusive
 #define RESP_RX_DMA_CMD_WAKEUP_DPATH RESP_RX_DMA_CMD_EQ
 

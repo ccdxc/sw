@@ -27,7 +27,7 @@ struct resp_rx_s1_t1_k k;
 #define TO_S_CQCB_P to_s6_cqcb_info
 
 #define K_RSQWQE_PTR CAPRI_KEY_FIELD(IN_TO_S_P, rsqwqe_ptr)
-#define K_ATOMIC_RKEY_INFO_VA CAPRI_KEY_FIELD(IN_P, va)
+#define K_ATOMIC_RKEY_INFO_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit8_ebit63)
 #define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
 #define K_RSQ_PINDEX CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15)
 
@@ -203,8 +203,8 @@ error_completion:
     or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_ACK_REQ
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
 
-    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, async_event_or_error), 1
-    phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_P, async_event_or_error), 1
+    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, async_or_async_error_event), 1
+    phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_P, async_error_event), 1
     phvwrpair   p.s1.eqwqe.code, EQE_CODE_QP_ERR, p.s1.eqwqe.type, EQE_TYPE_QP
     phvwr       p.s1.eqwqe.qid, K_GLOBAL_QID
 

@@ -29,7 +29,7 @@ struct key_entry_aligned_t d;
 #define IN_P t1_s2s_rkey_info
 #define IN_TO_S_P to_s2_ext_hdr_info
 
-#define K_VA CAPRI_KEY_FIELD(IN_P, va)
+#define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit8_ebit63)
 #define K_ACC_CTRL CAPRI_KEY_RANGE(IN_P, acc_ctrl_sbit0_ebit4, acc_ctrl_sbit5_ebit7)
 
 %%
@@ -187,8 +187,8 @@ error_completion:
     IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION)
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_READ_REQ|RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP)
 
-    phvwr.!c1   CAPRI_PHV_FIELD(TO_S_WB1_P, async_event_or_error), 1
-    phvwr.!c1   CAPRI_PHV_FIELD(TO_S_CQCB_P, async_event_or_error), 1
+    phvwr.!c1   CAPRI_PHV_FIELD(TO_S_WB1_P, async_or_async_error_event), 1
+    phvwr.!c1   CAPRI_PHV_FIELD(TO_S_CQCB_P, async_error_event), 1
     phvwrpair.!c1 p.s1.eqwqe.code, EQE_CODE_QP_ERR_ACCESS, p.s1.eqwqe.type, EQE_TYPE_QP
     phvwr.!c1   p.s1.eqwqe.qid, K_GLOBAL_QID
 

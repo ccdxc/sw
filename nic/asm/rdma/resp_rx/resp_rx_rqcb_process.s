@@ -739,12 +739,12 @@ wr_only_zero_len_inv_req_nak:
 
 inv_req_nak:
 
-    phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_P, async_event_or_error), 1
+    phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_P, async_error_event), 1
     phvwrpair   p.s1.eqwqe.code, EQE_CODE_QP_ERR_REQEST, p.s1.eqwqe.type, EQE_TYPE_QP
     phvwr       p.s1.eqwqe.qid, CAPRI_RXDMA_INTRINSIC_QID
 
     phvwrpair   CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1, \
-                CAPRI_PHV_FIELD(TO_S_WB1_P, async_event_or_error), 1
+                CAPRI_PHV_FIELD(TO_S_WB1_P, async_or_async_error_event), 1
 
     bbeq        d.nak_prune, 1, skip_nak
     // turn off ACK req bit here. if nak needs to be sent, we will turn it on below

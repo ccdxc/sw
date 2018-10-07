@@ -29,7 +29,7 @@ struct key_entry_aligned_t d;
 #define IN_P t1_s2s_key_info
 #define IN_TO_S_P to_s4_lkey_info
 
-#define K_VA CAPRI_KEY_FIELD(IN_P, va)
+#define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit8_ebit63)
 #define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
 #define K_CURR_SGE_OFFSET CAPRI_KEY_FIELD(IN_P, current_sge_offset)
 

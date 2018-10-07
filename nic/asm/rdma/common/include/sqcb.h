@@ -196,8 +196,8 @@ struct sqcb2_t {
     roce_opt_mss_enable            : 1;  // RO S5
     service                        : 4;  // RO S5
 
-    lsn_rx                         : 24; // RO S1 (WO RXDMA)
     lsn_tx                         : 24; // RW S5
+    lsn_rx                         : 24; // RO S1 (WO RXDMA)
     rexmit_psn                     : 24; // RO S1 (WO RXDMA)
 
     last_ack_or_req_ts             : 48; // RW S5 (WO RXDMA)
@@ -226,7 +226,7 @@ struct sqcb2_t {
     fence                          : 1;  // WO S5, RO S1
     li_fence                       : 1;  // WO S5, RO S1
     fence_done                     : 1;  // RW S1, WO S5
-    curr_op_type                   : 5; // RW S5
+    curr_op_type                   : 5;  // RW S5
 
     exp_rsp_psn                    : 24; // RW S5
     //Temporary use for DOL - ROCE UDP options
@@ -261,7 +261,8 @@ struct sqcb4_t {
     num_inline_req:16;
     num_timeout_local_ack:16;
     num_timeout_rnr:16;
-    pad: 128;
+    num_sq_drains:16;
+    pad: 112;
 };
 
 struct sqcb5_t {

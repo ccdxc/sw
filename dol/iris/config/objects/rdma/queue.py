@@ -374,8 +374,8 @@ class RdmaSQstate(Packet):
         BitField("roce_opt_mss_enable", 0, 1),
         BitField("service", 0, 4),
 
-        X3BytesField("lsn_rx", 0),
         X3BytesField("lsn_tx", 0),
+        X3BytesField("lsn_rx", 0),
         X3BytesField("sqcb2_rexmit_psn", 0),
      
         BitField("last_ack_or_req_ts", 0, 48),

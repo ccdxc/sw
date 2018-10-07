@@ -199,7 +199,7 @@ descriptors:
             wrid   : 0
             qid: ref://testcase/config/rdmasession/lqp/id
             status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
-            color  : callback://rdma/rdma/GetCQExpColor/entries=2
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
             error  : 1
             type   : 3 #CQE_TYPE_SEND_NPG
 

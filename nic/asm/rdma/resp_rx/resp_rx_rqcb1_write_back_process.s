@@ -28,7 +28,7 @@ struct rqcb1_t d;
 #define TO_S_CQCB_P to_s6_cqcb_info
 
 #define K_CURR_WQE_PTR CAPRI_KEY_FIELD(IN_TO_S_P, curr_wqe_ptr)
-#define K_ASYNC_EVENT_OR_ERROR CAPRI_KEY_FIELD(IN_TO_S_P, async_event_or_error)
+#define K_ASYNC_OR_ASYNC_ERROR_EVENT CAPRI_KEY_FIELD(IN_TO_S_P, async_or_async_error_event)
 #define K_INV_RKEY CAPRI_KEY_RANGE(IN_P, inv_r_key_sbit0_ebit15, inv_r_key_sbit24_ebit31)
 
 %%
@@ -107,8 +107,8 @@ check_completion:
     // dummy tblwr to flush
     tblwr.f     d.busy, d.busy
 
-    // load cqcb only if completion flag is set OR async_event_or_error posting is needed
-    crestore [c1], K_ASYNC_EVENT_OR_ERROR, 0x1
+    // load cqcb only if completion flag is set OR async_event or async_error_event posting is needed
+    crestore [c1], K_ASYNC_OR_ASYNC_ERROR_EVENT, 0x1
     // if completion is not set, inv_rkey is not set either
     bbeq.!c1 K_GLOBAL_FLAG(_completion), 0, check_ack_nak
     RESP_RX_CQCB_ADDR_GET(CQCB_ADDR, d.cq_id) //BD Slot

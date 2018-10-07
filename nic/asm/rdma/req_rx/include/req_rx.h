@@ -17,21 +17,21 @@
 #define REQ_RX_DMA_CMD_START_FLIT_ID       7 // flits 8-11 are used for dma cmds
 #define REQ_RX_DMA_CMD_START_FLIT_CMD_ID   1
 #define REQ_RX_DMA_CMD_START               1
-#define REQ_RX_DMA_CMD_LSN                 1
+#define REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN   1
 //#define REQ_RX_DMA_CMD_SQ_DB               2
 #define REQ_RX_DMA_CMD_RQ_FLUSH_DB         2
-#define REQ_RX_DMA_CMD_REXMIT_PSN          2
 #define REQ_RX_DMA_CMD_BKTRACK_DB          3
-#define REQ_RX_DMA_CMD_RNR_TIMEOUT         4
-#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 3
-#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_END   15
-#define REQ_RX_DMA_CMD_SKIP_TO_EOP         (REQ_RX_MAX_DMA_CMDS - 5)
-#define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 4)
-#define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 3)
-#define REQ_RX_DMA_CMD_EQ_ASYNC            (REQ_RX_MAX_DMA_CMDS - 2)
+//#define REQ_RX_DMA_CMD_RNR_TIMEOUT         4
+#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 2
+#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_END   14
+#define REQ_RX_DMA_CMD_SKIP_TO_EOP         (REQ_RX_MAX_DMA_CMDS - 6)
+#define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 5)
+#define REQ_RX_DMA_CMD_EQ                  (REQ_RX_MAX_DMA_CMDS - 4)
 //wakeup dpath and EQ are mutually exclusive
 #define REQ_RX_DMA_CMD_WAKEUP_DPATH        REQ_RX_DMA_CMD_EQ
-#define REQ_RX_DMA_CMD_EQ_INTR             (REQ_RX_MAX_DMA_CMDS - 1)
+#define REQ_RX_DMA_CMD_EQ_INTR             (REQ_RX_MAX_DMA_CMDS - 3)
+#define REQ_RX_DMA_CMD_ASYNC_EQ            (REQ_RX_MAX_DMA_CMDS - 2)
+#define REQ_RX_DMA_CMD_ASYNC_EQ_INTR       (REQ_RX_MAX_DMA_CMDS - 1)
 
 // phv 
 struct req_rx_phv_t {
@@ -60,7 +60,8 @@ struct req_rx_phv_t {
     dma_cmd7                : 128;
 
     //flit 7
-    rsvd4                   : 40;
+    rsvd4                   : 16;
+    lsn                     : 24;
     rexmit_psn              : 24;
     ack_timestamp           : 48;
     err_retry_ctr           : 4;
@@ -74,9 +75,14 @@ struct req_rx_phv_t {
     service                 : 4;
     flush_rq                : 1;
     state                   : 3;
-    lsn                     : 24;
-    rsvd1                   : 8;
-    db_data2                : 64;
+    rsvd1                   : 32;
+    union {
+        struct {
+            async_int_assert_data : 32;
+            struct eqwqe_t async_eqwqe;
+        };
+        db_data2                : 64;
+    };
     db_data1                : 64;
     union {
         struct {

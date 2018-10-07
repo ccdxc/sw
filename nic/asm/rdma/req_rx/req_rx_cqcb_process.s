@@ -23,14 +23,16 @@ struct cqcb_t d;
 #define DB_DATA             r2
 #define NUM_LOG_WQE         r2    
  
-#define CQ_PT_INFO_P    t2_s2s_cqcb_to_pt_info
-#define CQ_EQ_INFO_P    t1_s2s_cqcb_to_eq_info
+#define CQ_PT_INFO_P          t2_s2s_cqcb_to_pt_info
+#define CQ_EQ_INFO_P          t1_s2s_cqcb_to_eq_info
+#define CQ_ASYNC_EQ_INFO_P    t0_s2s_cqcb_to_eq_info
 
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
 #define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
 #define K_BTH_SE CAPRI_KEY_FIELD(IN_TO_S_P, bth_se)
-#define K_ASYNC_EVENT_OR_ERROR CAPRI_KEY_FIELD(IN_TO_S_P, async_event_or_error)
-#define K_QP_STATE CAPRI_KEY_RANGE(IN_TO_S_P, state_sbit0_ebit1, state_sbit2_ebit2)
+#define K_ASYNC_ERROR_EVENT CAPRI_KEY_FIELD(IN_TO_S_P, async_error_event)
+#define K_ASYNC_EVENT CAPRI_KEY_FIELD(IN_TO_S_P, async_event)
+#define K_QP_STATE CAPRI_KEY_RANGE(IN_TO_S_P, state_sbit0_ebit0, state_sbit1_ebit2)
 
 #define K_CQ_ID CAPRI_KEY_RANGE(IN_P, cq_id_sbit0_ebit7, cq_id_sbit8_ebit23)
 #define K_CQE_TYPE CAPRI_KEY_FIELD(IN_P, cqe_type)
@@ -48,17 +50,18 @@ req_rx_cqcb_process:
     mfspr            r1, spr_mpuid
     seq              c1, r1[4:2], STAGE_6
     bcf              [!c1], bubble_to_next_stage
-
-    bbeq             d.cq_full, 1, error_disable_qp_using_recirc
     seq              c1, CQ_PROXY_PINDEX, 0 //BD Slot
 
-    bbeq             K_ASYNC_EVENT_OR_ERROR, 1, report_async
+    bbeq             d.cq_full, 1, error_disable_qp_using_recirc
+
+    seq              c6, K_ASYNC_EVENT, 1 // BD Slot
+    bbeq             K_ASYNC_ERROR_EVENT, 1, report_async
 
     #check for CQ full
     seq              c5, CQ_PROXY_PINDEX, CQ_C_INDEX //BD Slot
     bbeq.c5          d.cq_full_hint, 1, report_cqfull_error
 
-    add             R_CQ_PROXY_PINDEX, CQ_PROXY_PINDEX, 0 //BD Slot
+    add              R_CQ_PROXY_PINDEX, CQ_PROXY_PINDEX, 0 //BD Slot
 
     // flip the color if cq is wrap around
     tblmincri.c1    CQ_COLOR, 1, 1
@@ -187,7 +190,10 @@ eqcb_setup:
     phvwr       p.eqwqe.qid, d.cq_id
 
     CAPRI_RESET_TABLE_1_ARG()
-    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) //Exit Slot
+    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5)
+    phvwr.!c6.e CAPRI_PHV_FIELD(CQ_EQ_INFO_P, cmd_eop), 1
+    bcf         [c6], report_async
+    nop         // Branch Delay Slot
 
 skip_eqcb:
 eval_wakeup:
@@ -199,16 +205,14 @@ eval_wakeup:
     PREPARE_DOORBELL_INC_PINDEX(d.wakeup_lif, d.wakeup_qtype, d.wakeup_qid, d.wakeup_ring_id, r1, r2)
     phvwr          p.wakeup_dpath_data, r2.dx
     DMA_HBM_PHV2MEM_SETUP(r6, wakeup_dpath_data, wakeup_dpath_data, r1)
-    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_phv2mem_t, r6)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
-    nop.e
-    nop
 
 skip_wakeup:
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
-    DMA_SET_END_OF_CMDS_E(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
-    nop //Exit Slot
+    bcf            [c6], report_async
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ) // Branch Delay Slot
 
+    DMA_SET_END_OF_CMDS_E(struct capri_dma_cmd_phv2mem_t, DMA_CMD_BASE)
+    nop // Exit Slot
 
 bubble_to_next_stage:
     seq         c1, r1[4:2], STAGE_5
@@ -221,19 +225,20 @@ bubble_to_next_stage:
 
 report_cqfull_error:
  
-    phvwrpair   p.eqwqe.code, EQE_CODE_CQ_ERR_FULL, p.eqwqe.type, EQE_TYPE_CQ
-    phvwr       p.eqwqe.qid, d.cq_id
+    phvwrpair   p.async_eqwqe.code, EQE_CODE_CQ_ERR_FULL, p.async_eqwqe.type, EQE_TYPE_CQ
+    phvwr       p.async_eqwqe.qid, d.cq_id
 
     tblwr.f     d.cq_full, 1
 
 report_async:
     //PHV->eq_info is filled with appropriate error type and code by this time
 
-    CAPRI_RESET_TABLE_1_ARG()
+    CAPRI_RESET_TABLE_0_ARG()
+    phvwr          CAPRI_PHV_FIELD(CQ_ASYNC_EQ_INFO_P, async_eq), 1
 
     REQ_RX_EQCB_ADDR_GET(r5, r2, RDMA_EQ_ID_ASYNC, K_CQCB_BASE_ADDR_HI, K_LOG_NUM_CQ_ENTRIES)
-    CAPRI_SET_TABLE_2_VALID(0)
-    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) //Exit Slot
+    CAPRI_SET_TABLE_2_VALID_C(!c6, 0)
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_rx_eqcb_process, r5) //Exit Slot
 
 error_disable_qp_using_recirc:
 
@@ -241,7 +246,7 @@ error_disable_qp_using_recirc:
     seq         c1, K_QP_STATE, QP_STATE_ERR
     bcf         [c1], skip_recirc_error_disable
     //fill the eqwqe
-    phvwrpair   p.eqwqe.code, EQE_CODE_QP_ERR, p.eqwqe.type, EQE_TYPE_QP    //BD Slot
+    phvwrpair   p.async_eqwqe.code, EQE_CODE_QP_ERR, p.async_eqwqe.type, EQE_TYPE_QP    //BD Slot
 
     //clear the completion flag in GLOBAL_FLAGS, so it won't invoke cqcb_process again on recirc
     phvwr       p.common.p4_intr_recirc, 1
@@ -258,7 +263,7 @@ error_disable_qp_using_recirc:
 skip_recirc_error_disable:
     //post ASYCN EQ error on QP
     b           report_async
-    phvwr       p.eqwqe.qid, K_GLOBAL_QID //BD Slot
+    phvwr       p.async_eqwqe.qid, K_GLOBAL_QID //BD Slot
 
 exit:
     nop.e
