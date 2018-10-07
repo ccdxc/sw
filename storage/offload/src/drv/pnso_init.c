@@ -17,6 +17,7 @@
 #include "pnso_crypto.h"
 #include "pnso_chain.h"
 #include "pnso_chain_params.h"
+#include "pnso_stats.h"
 
 uint64_t pad_buffer;
 static bool pnso_initialized;
@@ -147,6 +148,7 @@ pnso_deinit(void)
 	num_pc_res = sonic_get_num_per_core_res(lif);
 	for (i = 0; i < num_pc_res; i++) {
 		pcr = sonic_get_per_core_res_by_res_id(lif, i);
+		pas_show_stats(&pcr->pnso_api_stats);
 		pc_res_deinit(pcr);
 	}
 
@@ -157,27 +159,35 @@ pnso_deinit(void)
 }
 
 static pnso_error_t
-pc_res_init(struct pc_res_init_params *pc_init,
-	    struct per_core_resource *pcr)
+pc_res_init(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 {
 	pnso_error_t err;
 
 	if (!is_power_of_2(pc_init->pnso_init.block_size) ||
-	    !is_power_of_2(pc_init->rmem_page_size)) {
-
-		OSAL_LOG_ERROR("block_size or rmem_page_size not power of 2");
-		return EINVAL;
+			!is_power_of_2(pc_init->rmem_page_size)) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("block_size or rmem_page_size not power of 2! err: %d",
+				err);
+		goto out;
 	}
 
 	if (!sonic_rmem_avail_pages_get()) {
-		OSAL_LOG_ERROR("no rmem pages left");
-		return ENOMEM;
+		err = ENOMEM;
+		OSAL_LOG_ERROR("no rmem pages left! err: %d", err);
+		goto out;
 	}
 
 	err = cpdc_init_accelerator(pc_init, pcr);
-	if (err == PNSO_OK)
-		err = crypto_init_accelerator(pc_init, pcr);
+	if (err)
+		goto out;
 
+	err = crypto_init_accelerator(pc_init, pcr);
+	if (err)
+		goto out;
+
+	pas_init(&pcr->pnso_api_stats);
+
+out:
 	return err;
 }
 

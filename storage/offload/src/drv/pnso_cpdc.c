@@ -37,8 +37,7 @@ deinit_mpools(struct per_core_resource *pcr)
 }
 
 static pnso_error_t
-init_mpools(struct pc_res_init_params *pc_init,
-	    struct per_core_resource *pcr)
+init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 {
 	pnso_error_t err;
 	uint32_t num_objects;

@@ -69,6 +69,7 @@ $(SONIC)-y += src/drv/pnso_decompact.o
 $(SONIC)-y += src/drv/pnso_seq.o
 $(SONIC)-y += src/drv/pnso_seq_hw.o
 $(SONIC)-y += src/drv/pnso_utils.o
+$(SONIC)-y += src/drv/pnso_stats.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_bus_pci.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_dev.o
 $(SONIC)-y += src/drv/linux/kernel/sonic_lif.o

@@ -28,6 +28,7 @@
 
 #include "pnso_api.h"
 #include "pnso_mpool.h"
+#include "pnso_stats.h"
 #include "pnso_batch.h"
 
 #pragma pack(push, 1)
@@ -314,6 +315,7 @@ struct per_core_resource {
 
 	struct mem_pool *mpools[MPOOL_TYPE_MAX];
 	struct batch_info *batch_info;
+	struct pnso_api_stats pnso_api_stats;
 };
 
 struct res {
