@@ -82,7 +82,10 @@ do {                                                       \
 // SDK_DEFINE_ENUM(sample_enum_t, SAMPLE_ENUM_ENTRIES)
 //------------------------------------------------------------------------------
 #define _SDK_ENUM_FIELD(_name, _val, _desc) _name = _val,
+#define _SDK_ENUM_STR(_name, _val, _desc)                               \
+            inline const char *_name ## _str() {return _desc; }
 #define _SDK_ENUM_CASE(_name, _val, _desc) case _name: return os << #_desc;
+#define _SDK_ENUM_CASE_STR(_name, _val, _desc) case _name: return #_name;
 
 #define SDK_DEFINE_ENUM(_type, _entries)                                \
     typedef enum { _entries(_SDK_ENUM_FIELD) } _type;                   \
@@ -91,6 +94,16 @@ do {                                                       \
             _entries(_SDK_ENUM_CASE);                                   \
         }                                                               \
         return os;                                                      \
+    }                                                                   \
+    _entries(_SDK_ENUM_STR)
+
+#define SDK_DEFINE_ENUM_TO_STR(_typ, _entries)                          \
+    inline const char *_entries##_str(_typ c)                           \
+    {                                                                   \
+        switch (c) {                                                    \
+            _entries(_SDK_ENUM_CASE_STR);                               \
+        }                                                               \
+        return "uknown";                                                \
     }
 
 //------------------------------------------------------------------------------
@@ -123,11 +136,12 @@ do {                                                       \
     ENTRY(SDK_RET_RETRY,                      11,   "retry the operation")       \
     ENTRY(SDK_RET_NOOP,                       12,   "No operation performed")    \
     ENTRY(SDK_RET_DUPLICATE_FREE,             13,   "duplicate free")            \
-    ENTRY(SDK_RET_HBM_HASH_COLL,              14,   "HBM Hash Table Collision")  \
-    ENTRY(SDK_RET_MAX,                        15,   "sdk_ret_max")               \
+    ENTRY(SDK_RET_HBM_HASH_COLL,              14,   "hbm hash table collision")  \
+    ENTRY(SDK_RET_MAX,                        15,   "max return value")          \
     ENTRY(SDK_RET_ERR,                        255,  "catch all generic error")
 
 SDK_DEFINE_ENUM(sdk_ret_t, SDK_RET_ENTRIES)
+SDK_DEFINE_ENUM_TO_STR(sdk_ret_t, SDK_RET_ENTRIES)
 #undef SDK_RET_ENTRIES
 
 }    // namespace sdk

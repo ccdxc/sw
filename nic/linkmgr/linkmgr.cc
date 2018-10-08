@@ -86,7 +86,7 @@ sbus_addr (uint32_t port, uint32_t lane)
 }
 
 static hal_ret_t
-linkmgr_uplink_create(uint32_t uplink_port)
+linkmgr_uplink_create (uint32_t uplink_port)
 {
     hal_ret_t     ret        = HAL_RET_OK;
     port_args_t   args       = {0};
@@ -267,7 +267,7 @@ linkmgr_thread_init (void)
 }
 
 hal_ret_t
-linkmgr_csr_init(void)
+linkmgr_csr_init (void)
 {
     // register hal cpu interface
     auto cpu_if = new cpu_hal_if("cpu", "all");

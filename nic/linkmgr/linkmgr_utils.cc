@@ -165,7 +165,7 @@ port_fec_type_spec_to_sdk_port_fec_type (::port::PortFecType fec_type)
 }
 
 ::port::PortOperStatus
-sdk_port_oper_st_to_port_oper_st_spec(port_oper_status_t oper_st)
+sdk_port_oper_st_to_port_oper_st_spec (port_oper_status_t oper_st)
 {
     switch (oper_st) {
     case port_oper_status_t::PORT_OPER_STATUS_UP:
@@ -181,7 +181,7 @@ sdk_port_oper_st_to_port_oper_st_spec(port_oper_status_t oper_st)
 }
 
 ::port::PortBreakoutMode
-sdk_port_breakout_mode_to_port_breakout_mode_spec(
+sdk_port_breakout_mode_to_port_breakout_mode_spec (
                             port_breakout_mode_t breakout_mode)
 {
     switch(breakout_mode) {

@@ -27,6 +27,7 @@ hal_ret_t port_update(port_args_t *port_args);
 hal_ret_t port_delete(port_args_t *port_args);
 hal_ret_t port_get(port_args_t *port_args);
 hal_ret_t port_get_all(port_get_cb_t port_get_cb, void *ctxt);
+hal_ret_t port_disable(uint32_t port_num = 0);
 
 }    // namespace linkmgr
 

@@ -395,7 +395,7 @@ populate_port_get_response_spec (port_args_t *port_args,
     PortSpec  *spec  = NULL;
     PortStats *stats = NULL;
 
-    PortGetResponseMsg *rsp      = (PortGetResponseMsg*) ctxt;
+    PortGetResponseMsg *rsp      = (PortGetResponseMsg *) ctxt;
     PortGetResponse    *response = rsp->add_response();
 
     if (hal_ret == HAL_RET_OK) {

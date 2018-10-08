@@ -780,10 +780,8 @@ port_delete (void *pd_p)
 sdk_ret_t
 port_get (void *pd_p, port_args_t *args)
 {
-    sdk_ret_t ret     = SDK_RET_OK;
     port      *port_p = (port *)pd_p;
 
-    SDK_TRACE_DEBUG("port get");
     args->port_type   = port_p->port_type();
     args->port_speed  = port_p->port_speed();
     args->admin_state = port_p->admin_state();
@@ -798,7 +796,7 @@ port_get (void *pd_p, port_args_t *args)
 
     port_p->port_mac_stats_get (args->stats_data);
 
-    return ret;
+    return SDK_RET_OK;
 }
 
 #if 0

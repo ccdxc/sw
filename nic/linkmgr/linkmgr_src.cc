@@ -454,7 +454,7 @@ port_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 // Note: Infra make clone as original by replacing original pointer by clone.
 //------------------------------------------------------------------------------
 hal_ret_t
-port_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
+port_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     // port update doesn't create a clone obj
     return HAL_RET_OK;
@@ -823,6 +823,75 @@ port_get (port_args_t *port_args)
     return hal_ret;
 }
 
+//------------------------------------------------------------------------------
+// given a port object, disable the port
+//------------------------------------------------------------------------------
+static hal_ret_t
+port_disable (port_t *port_p)
+{
+    sdk_ret_t      sdk_ret;
+    port_args_t    port_args;
+
+    sdk::linkmgr::port_args_init(&port_args);
+    sdk_ret = sdk::linkmgr::port_get(port_p->pd_p, &port_args);
+    if (sdk_ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to get pd for port: {}, err: {}",
+                      port_p->port_num, sdk_ret);
+        return hal_sdk_ret_to_hal_ret(sdk_ret);
+    }
+
+    port_args.port_type = port_type_t::PORT_TYPE_NONE;
+    port_args.num_lanes = 0;
+    port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+    sdk_ret = sdk::linkmgr::port_update(port_p->pd_p, &port_args);
+    if (sdk_ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to disable port {}, err : {}",
+                      port_p->port_num, sdk_ret);
+        return hal_sdk_ret_to_hal_ret(sdk_ret);
+    }
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// callback to disable port
+//------------------------------------------------------------------------------
+static bool
+port_disable_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t    *entry;
+    port_t                      *port_p;
+
+    entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    port_p = (port_t *)hal_handle_get_obj(entry->handle_id);
+    port_disable(port_p);
+    return false;    // continue the walk
+}
+
+//------------------------------------------------------------------------------
+// administratively bring all ports down
+// port_num is 0 implies all ports should be brought down
+//------------------------------------------------------------------------------
+hal_ret_t
+port_disable (uint32_t port_num)
+{
+    kh::PortKeyHandle    kh;
+    port_t               *port_p;
+
+    if (port_num == 0) {
+        g_linkmgr_state->port_id_ht()->walk(port_disable_cb, NULL); 
+    } else {
+        kh.set_port_id(port_num);
+        port_p = port_lookup_key_or_handle(kh);
+        if (port_p == NULL) {
+            HAL_TRACE_ERR("Failed to find port {}", port_num);
+            return HAL_RET_ERR;
+        }
+        port_disable(port_p);
+    }
+    return HAL_RET_OK;
+}
+
 static void*
 linkmgr_aacs_start (void* ctxt)
 {
@@ -831,7 +900,7 @@ linkmgr_aacs_start (void* ctxt)
 }
 
 static hal_ret_t
-start_aacs_server(int port)
+start_aacs_server (int port)
 {
     int    thread_prio = 0, thread_id = 0;
 
@@ -868,12 +937,12 @@ start_aacs_server(int port)
 }
 
 static void
-stop_aacs_server(void)
+stop_aacs_server (void)
 {
 }
 
 hal_ret_t
-linkmgr_generic_debug_opn(GenericOpnRequest& req, GenericOpnResponse *resp)
+linkmgr_generic_debug_opn (GenericOpnRequest& req, GenericOpnResponse *resp)
 {
     port_t        *pi_p        = NULL;
     port_args_t   port_args    = { 0 };
