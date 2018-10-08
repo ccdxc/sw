@@ -379,7 +379,7 @@ func (ctr *Container) CheckProcessRunning(process string) bool {
 }
 
 //RunCommand run command on the container
-func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, shell bool) (int, string, string, error) {
+func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, shell bool) (int32, string, string, error) {
 
 	if shell {
 		cmd = []string{"sh", "-c", strings.Join(cmd, " ")}
@@ -430,7 +430,7 @@ func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, 
 		}
 	}
 
-	return retCode, b.String(), "", err
+	return ((int32)(retCode)), b.String(), "", err
 }
 
 func bringUpAppContainer(name string, registry string) (*string, error) {

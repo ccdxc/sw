@@ -191,8 +191,12 @@ message TriggerMsg {
     // Type of the trigger operation
     TriggerOp trigger_op                    = 2;
 
+
+    // Node on which trigger needs to be executed
+    string node_name                        = 3;
+
     // Command Request params
-    repeated Command    commands            = 3;
+    repeated Command    commands            = 4;
 }
 
 enum CommandMode {
@@ -221,7 +225,7 @@ message Command {
     string          stderr          = 6;
 
     // Exit code of the command
-    uint32          exit_code       = 7;
+    int32          exit_code        = 7;
 
     // command handle. Useful only for background commands
     string          handle          = 8;

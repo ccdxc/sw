@@ -170,8 +170,48 @@ func (naples *naplesNode) DeleteWorkload(in *iota.Workload) (*iota.Workload, err
 }
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
-func (naples *naplesNode) Trigger(*iota.TriggerMsg) (*iota.TriggerMsg, error) {
-	return nil, nil
+func (naples *naplesNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+	naples.logger.Println("Trigger message received.")
+
+	validate := func() error {
+		switch in.TriggerOp {
+		case iota.TriggerOp_EXEC_CMDS:
+		case iota.TriggerOp_TX_PKT:
+			naples.logger.Errorf("Tx Pkt trigger not supported yet")
+			return errors.New("Not supported")
+		case iota.TriggerOp_RX_PKT:
+			naples.logger.Errorf("Rx Pkt trigger not supported yet")
+			return errors.New("Not supported")
+		case iota.TriggerOp_TERMINATE_ALL_CMDS:
+			naples.logger.Errorf("Terminate all commands trigger not supported yet")
+			return errors.New("Not supported")
+		}
+
+		for _, cmd := range in.Commands {
+			if _, ok := naples.worloadMap[cmd.GetWorkloadName()]; !ok {
+				naples.logger.Errorf("Workload %s does not exist on node %s", cmd.GetWorkloadName(), naples.NodeName())
+				return errors.New("Invalid request")
+			}
+		}
+		return nil
+	}
+
+	if err := validate(); err != nil {
+		return &iota.TriggerMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
+	}
+
+	for _, cmd := range in.Commands {
+		var err error
+		cmd.ExitCode, cmd.Stdout, cmd.Stderr, err = naples.worloadMap[cmd.GetWorkloadName()].RunCommand(strings.Split(cmd.GetCommand(), " "), 0, false, true)
+		naples.logger.Println("Command error :", err)
+		naples.logger.Println("Command exit code :", cmd.ExitCode)
+		naples.logger.Println("Command stdout :", cmd.Stdout)
+		naples.logger.Println("Command stderr:", cmd.Stderr)
+	}
+
+	naples.logger.Println("Completed running trigger.")
+	in.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
+	return in, nil
 }
 
 func (naples *naplesNode) allNaplesProcessRunning() bool {
@@ -257,8 +297,8 @@ func (naples *naplesQemuNode) Trigger(*iota.TriggerMsg) (*iota.TriggerMsg, error
 }
 
 // CheckHealth returns the node health
-func (naples *naplesQemuNode) CheckHealth(*iota.NodeHealth) (*iota.NodeHealth, error) {
-	return nil, nil
+func (naples *naplesQemuNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth, error) {
+	return naples.naplesNode.CheckHealth(in)
 }
 
 //NodeType return node type

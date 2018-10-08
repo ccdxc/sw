@@ -4,11 +4,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	Common "github.com/pensando/sw/iota/svcs/common"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -106,7 +105,8 @@ func (venice *veniceNode) DeleteWorkload(*iota.Workload) (*iota.Workload, error)
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
 func (venice *veniceNode) Trigger(*iota.TriggerMsg) (*iota.TriggerMsg, error) {
-	return nil, nil
+	venice.logger.Println("Venice node does not support trigger.")
+	return &iota.TriggerMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 }
 
 // CheckHealth returns the node health

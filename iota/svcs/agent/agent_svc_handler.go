@@ -8,6 +8,8 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
+
+	"github.com/pensando/sw/iota/svcs/common"
 )
 
 // Service implements agent service APIs
@@ -19,7 +21,6 @@ type Service struct {
 // NewAgentService returns an instance of Agent stub service
 func NewAgentService() *Service {
 	log.Info("IOTA Agent Started")
-	os.Mkdir(agentDir, 0777)
 	var agentServer Service
 	agentServer.init()
 
@@ -29,7 +30,7 @@ func NewAgentService() *Service {
 func (agent *Service) init() {
 
 	agent.logger = log.New()
-	file, err := os.OpenFile(agentDir+"/"+"agent.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := os.OpenFile(common.DstIotaAgentDir+"/"+"agent.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open log file", "file.txt", ":", err)
 	}
@@ -112,8 +113,10 @@ func (agent *Service) DeleteWorkload(ctx context.Context, in *iota.Workload) (*i
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
 func (agent *Service) Trigger(ctx context.Context, in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
+	agent.logger.Printf("Trigger messasge received : %v", in)
 	/* Check if the node running an instance to add a workload */
-	if agent.node == nil {
+	if agent.node == nil || agent.node.NodeName() != in.GetNodeName() {
+		agent.logger.Println("Invalid trigger message received on unintialized node")
 		return &iota.TriggerMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 	}
 

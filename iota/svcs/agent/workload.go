@@ -3,9 +3,8 @@ package agent
 import (
 	"strconv"
 
-	"github.com/pkg/errors"
-
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -14,7 +13,7 @@ const (
 
 type workload interface {
 	BringUp(name string, image string) error
-	RunCommand(cmd []string, timeout uint32, background bool, shell bool) (int, string, string, error)
+	RunCommand(cmd []string, timeout uint32, background bool, shell bool) (int32, string, string, error)
 	AttachInterface(name string, macAddress string, ipaddress string, vlan int) error
 	IsWorkloadHealthy() bool
 	TearDown()
@@ -74,8 +73,8 @@ func (app *containerWorkload) AttachInterface(name string, macAddress string, ip
 	return nil
 }
 
-func (app *containerWorkload) RunCommand(cmd []string, timeout uint32, background bool, shell bool) (int, string, string, error) {
-	return 0, "", "", nil
+func (app *containerWorkload) RunCommand(cmd []string, timeout uint32, background bool, shell bool) (int32, string, string, error) {
+	return app.containerHandle.RunCommand(cmd, timeout, background, shell)
 }
 
 func (app *containerWorkload) IsWorkloadHealthy() bool {

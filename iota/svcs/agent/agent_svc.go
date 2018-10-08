@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	agentDir       = "/tmp/iota-agent"
 	nodeAddTimeout = 300
 )
 
