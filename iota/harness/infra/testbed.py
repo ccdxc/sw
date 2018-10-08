@@ -51,6 +51,7 @@ class _Testbed:
         if resp.api_response.api_status != types_pb2.API_STATUS_OK:
             Logger.error("Failed to initialize testbed: ",
                          types_pb2.APIResponseType.Name(resp.api_response.api_status))
+            Logger.error("               error message: ", resp.api_response.error_msg)
             return types.status.FAILURE
         self.data_vlans = None
         return types.status.SUCCESS
@@ -61,6 +62,7 @@ class _Testbed:
         if resp.api_response.api_status != types_pb2.API_STATUS_OK:
             Logger.error("Failed to initialize testbed: ",
                          types_pb2.APIResponseType.Name(resp.api_response.api_status))
+            Logger.error("               error message: ", resp.api_response.error_msg)
             return types.status.FAILURE
         self.data_vlans = resp.allocated_vlans
         return types.status.SUCCESS

@@ -95,6 +95,7 @@ class Topology(object):
         if resp.api_response.api_status != types_pb2.API_STATUS_OK:
             Logger.error("Failed to add Nodes: ",
                          types_pb2.APIResponseType.Name(resp.api_response.api_status))
+            Logger.error("      error message: ", resp.api_response.error_msg)
             for n in resp.nodes:
                 Logger.error(" - %s: " % types_pb2.APIResponseType.Name(n.node_status))
             return types.status.FAILURE
