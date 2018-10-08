@@ -97,11 +97,11 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 					VenicePeers: []*iota.VenicePeer{
 						{
 							HostName:  "venice-node-2",
-							IpAddress: "10.8.102.124",
+							IpAddress: "42.42.42.2",
 						},
 						{
 							HostName:  "venice-node-3",
-							IpAddress: "10.8.102.125",
+							IpAddress: "42.42.42.3",
 						},
 					},
 				},
@@ -119,11 +119,11 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 					VenicePeers: []*iota.VenicePeer{
 						{
 							HostName:  "venice-node-1",
-							IpAddress: "10.8.102.123",
+							IpAddress: "42.42.42.1",
 						},
 						{
 							HostName:  "venice-node-3",
-							IpAddress: "10.8.102.125",
+							IpAddress: "42.42.42.3",
 						},
 					},
 				},
@@ -141,11 +141,11 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 					VenicePeers: []*iota.VenicePeer{
 						{
 							HostName:  "venice-node-2",
-							IpAddress: "10.8.102.124",
+							IpAddress: "42.42.42.1",
 						},
 						{
 							HostName:  "venice-node-1",
-							IpAddress: "10.8.102.123",
+							IpAddress: "42.42.42.2",
 						},
 					},
 				},
@@ -199,6 +199,34 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	_, err = topoClient.AddNodes(context.Background(), &nodeMsg)
 	if err != nil {
 		t.Errorf("AddNodes call failed. Err: %v", err)
+		t.FailNow()
+	}
+
+	workloads := []*iota.Workload{
+		{
+			WorkloadName: "ping-app-1",
+			NodeName:     "naples-node-1",
+			EncapVlan:    6,
+			IpAddress:    "177.75.132.4",
+			MacAddress:   "06:c3:32:b7:e6:da",
+		},
+		{
+			WorkloadName: "ping-app-2",
+			NodeName:     "naples-node-2",
+			EncapVlan:    6,
+			IpAddress:    "170.22.196.4",
+			MacAddress:   "72:ed:48:1c:e1:23",
+		},
+	}
+
+	wrkloadMsg := iota.WorkloadMsg{
+		WorkloadOp: iota.Op_ADD,
+		Workloads:  workloads,
+	}
+
+	_, err = topoClient.AddWorkloads(context.Background(), &wrkloadMsg)
+	if err != nil {
+		t.Errorf("AddWorkloads call failed. Err: %v", err)
 		t.FailNow()
 	}
 }

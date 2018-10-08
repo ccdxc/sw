@@ -40,13 +40,15 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	if len(req.IpAddress) == 0 {
 		log.Errorf("TOPO SVC | InitTestBed | No IP Addresses present. Err: %v", ts.TestBedInfo.SwitchPortId, err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-		return req, fmt.Errorf("request message doesn't have any ip addresses")
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("request message doesn't have any ip addresses")
+		return req, nil
 	}
 
 	if len(req.User) == 0 || len(req.Passwd) == 0 {
 		log.Errorf("TOPO SVC | InitTestBed | User creds to access the vms are missing.")
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-		return req, fmt.Errorf("user creds are missing to access the VMs")
+		req.ApiResponse.ErrorMsg = "user creds are missing to access the VMs"
+		return req, nil
 	}
 
 	if len(req.ControlIntf) == 0 {
@@ -56,7 +58,8 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	// Allocate VLANs for the test bed
 	if vlans, err = testbed.AllocateVLANS(ts.TestBedInfo.SwitchPortId); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Could not allocate VLANS from the switchport id: %d, Err: %v", ts.TestBedInfo.SwitchPortId, err)
-		return nil, fmt.Errorf("could not allocate VLANS from the switchport id: %d. Err: %v", ts.TestBedInfo.SwitchPortId, err)
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("could not allocate VLANS from the switchport id: %d. Err: %v", ts.TestBedInfo.SwitchPortId, err)
+		return req, nil
 	}
 	ts.TestBedInfo.AllocatedVlans = vlans
 
@@ -111,6 +114,13 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 
 // AddNodes adds nodes to the topology
 func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+	if req.NodeOp != iota.Op_ADD {
+		log.Errorf("TOPO SVC | AddNodes | AddNodes call failed")
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("AddNodes API must specify Add operation. Found: %v", req.NodeOp)
+		return req, nil
+	}
+
 	// Prep Topo
 	for idx, n := range req.Nodes {
 		svcName := n.Name
@@ -126,10 +136,6 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 			Node:        n,
 			AgentClient: iota.NewIotaAgentApiClient(c.Client),
 		}
-	}
-
-	if req.NodeOp != iota.Op_ADD {
-		log.Errorf("TOPO SVC | AddNodes | AddNodes call failed")
 	}
 
 	// Add nodes
@@ -168,9 +174,46 @@ func (ts *TopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) (*io
 
 // AddWorkloads adds a workload on a given node
 func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
-	resp := &iota.WorkloadMsg{}
+	if req.WorkloadOp != iota.Op_ADD {
+		log.Errorf("TOPO SVC | AddWorkloads | AddWorkloads call failed")
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("AddWorkloads must specify Op_Add for workload op. Found: %v", req.WorkloadOp)
+		return req, nil
+	}
 
-	return resp, nil
+	for _, w := range req.Workloads {
+		for idx, n := range ts.Nodes {
+			if w.NodeName == n.Node.Name {
+				ts.Nodes[idx].Workload = w
+			} else {
+				ts.Nodes[idx].Workload = nil
+			}
+		}
+	}
+
+	// Add workloads
+	addWorkloads := func(ctx context.Context) error {
+		pool, ctx := errgroup.WithContext(ctx)
+
+		for _, node := range ts.Nodes {
+			node := node
+			if node.Workload != nil {
+				pool.Go(func() error {
+					return node.AddWorkload()
+				})
+			}
+
+		}
+		return pool.Wait()
+	}
+	err := addWorkloads(context.Background())
+	if err != nil {
+		log.Errorf("TOPO SVC | AddWorkloads |AddWorkloads Call Failed. %v", err)
+		return nil, err
+	}
+
+	// TODO return fully formed resp here
+	return req, nil
 }
 
 // DeleteWorkloads deletes a workload

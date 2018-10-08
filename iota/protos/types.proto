@@ -9,4 +9,5 @@ enum APIResponseType {
 message IotaAPIResponse{
     // APIStatus captures call status
     APIResponseType api_status       = 1 ;
+    string          error_msg        = 2;
 }

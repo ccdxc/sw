@@ -7,5 +7,6 @@ import (
 // TestNode wraps an iota TestNode
 type TestNode struct {
 	Node        *iota.Node
+	Workload    *iota.Workload
 	AgentClient iota.IotaAgentApiClient
 }
