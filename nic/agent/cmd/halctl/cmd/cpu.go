@@ -30,6 +30,20 @@ var cpuShowCmd = &cobra.Command{
 	Run:   cpuShowCmdHandler,
 }
 
+var cpuSpecShowCmd = &cobra.Command{
+	Use:   "spec",
+	Short: "show CPU interface spec information",
+	Long:  "show CPU interface object spec information",
+	Run:   cpuShowCmdHandler,
+}
+
+var cpuStatusShowCmd = &cobra.Command{
+	Use:   "status",
+	Short: "show CPU interface status information",
+	Long:  "show CPU interface object status information",
+	Run:   cpuShowStatusCmdHandler,
+}
+
 var cpuDetailShowCmd = &cobra.Command{
 	Use:   "detail",
 	Short: "show detailed CPU interface information",
@@ -39,13 +53,15 @@ var cpuDetailShowCmd = &cobra.Command{
 
 func init() {
 	ifShowCmd.AddCommand(cpuShowCmd)
+	cpuShowCmd.AddCommand(cpuSpecShowCmd)
+	cpuShowCmd.AddCommand(cpuStatusShowCmd)
 	cpuShowCmd.AddCommand(cpuDetailShowCmd)
 
 	cpuShowCmd.Flags().Uint64Var(&cpuID, "id", 1, "Specify if-id")
 	cpuDetailShowCmd.Flags().Uint64Var(&cpuDetailID, "id", 1, "Specify if-id")
 }
 
-func cpuShowCmdHandler(cmd *cobra.Command, args []string) {
+func handleCPUShowCmd(cmd *cobra.Command, spec bool, status bool) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -55,11 +71,6 @@ func cpuShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewInterfaceClient(c.ClientConn)
 
 	defer c.Close()
-
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
 
 	var req *halproto.InterfaceGetRequest
 	if cmd.Flags().Changed("id") {
@@ -87,7 +98,11 @@ func cpuShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Header
-	cpuShowHeader(cmd, args)
+	if spec == true {
+		cpuShowHeader()
+	} else if status == true {
+		cpuShowStatusHeader()
+	}
 
 	// Print IFs
 	for _, resp := range respMsg.Response {
@@ -95,8 +110,30 @@ func cpuShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
-		cpuShowOneResp(resp)
+		if spec == true {
+			cpuShowOneResp(resp)
+		} else if status == true {
+			cpuShowStatusOneResp(resp)
+		}
 	}
+}
+
+func cpuShowStatusCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	handleCPUShowCmd(cmd, false, true)
+}
+
+func cpuShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	handleCPUShowCmd(cmd, true, false)
 }
 
 func cpuDetailShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -153,15 +190,38 @@ func cpuDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func cpuShowHeader(cmd *cobra.Command, args []string) {
+func cpuShowStatusHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:    Interface ID         Handle:  IF's handle\n")
-	fmt.Printf("Ifype: Interface type       LportId: IF's Lport\n")
+	fmt.Printf("Handle:  IF's handle        Status:  IF's status\n")
+	fmt.Printf("LportId: IF's Lport\n")
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 30)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-10s%-10s\n",
+		"Handle", "Status", "LportId")
+	fmt.Println(hdrLine)
+}
+
+func cpuShowStatusOneResp(resp *halproto.InterfaceGetResponse) {
+	ifType := resp.GetSpec().GetType()
+	if ifType != halproto.IfType_IF_TYPE_CPU {
+		return
+	}
+	fmt.Printf("%-10d%-10s%-10d\n",
+		resp.GetStatus().GetIfHandle(),
+		strings.ToLower(strings.Replace(resp.GetStatus().GetIfStatus().String(), "IF_STATUS_", "", -1)),
+		resp.GetStatus().GetCpuInfo().GetCpuLportId())
+}
+
+func cpuShowHeader() {
+	fmt.Printf("\n")
+	fmt.Printf("Id:      Interface ID         IfType: Interface type\n")
+	fmt.Printf("Status:  IF's status          LifId: LIF's ID\n")
 	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 40)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-10s%-10s%-10s%-10s\n",
-		"Id", "Handle", "IfType", "LportId")
+		"Id", "IfType", "Status", "LifID")
 	fmt.Println(hdrLine)
 }
 
@@ -170,9 +230,9 @@ func cpuShowOneResp(resp *halproto.InterfaceGetResponse) {
 	if ifType != halproto.IfType_IF_TYPE_CPU {
 		return
 	}
-	fmt.Printf("%-10d%-10d%-10s%-10d\n",
+	fmt.Printf("%-10d%-10s%-10s%-10d\n",
 		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
-		resp.GetStatus().GetIfHandle(),
 		ifTypeToStr(ifType),
-		resp.GetStatus().GetCpuInfo().GetCpuLportId())
+		strings.ToLower(strings.Replace(resp.GetSpec().GetAdminStatus().String(), "IF_STATUS_", "", -1)),
+		resp.GetSpec().GetIfCpuInfo().GetLifKeyOrHandle().GetLifId())
 }

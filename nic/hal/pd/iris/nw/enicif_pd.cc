@@ -180,12 +180,28 @@ pd_enicif_get (pd_if_get_args_t *args)
     if_t                    *hal_if = args->hal_if;
     pd_enicif_t             *enicif_pd = (pd_enicif_t *)hal_if->pd_if;
     InterfaceGetResponse    *rsp = args->rsp;
+    dllist_ctxt_t           *lnode = NULL;
+    if_l2seg_entry_t        *entry = NULL;
 
     auto enic_info = rsp->mutable_status()->mutable_enic_info();
     enic_info->set_enic_lport_id(enicif_pd->enic_lport_id);
-    enic_info->set_inp_prop_mac_vlan_idx_host(enicif_pd->inp_prop_mac_vlan_idx_host);
-    enic_info->set_inp_prop_mac_vlan_idx_net(enicif_pd->inp_prop_mac_vlan_idx_upl);
-    enic_info->set_inp_prop_nat_l2seg_classic(enicif_pd->inp_prop_native_l2seg_clsc);
+    if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
+        auto smart_enic_info = enic_info->mutable_smart_enic_info();
+
+        smart_enic_info->set_inp_prop_mac_vlan_idx_host(enicif_pd->inp_prop_mac_vlan_idx_host);
+        smart_enic_info->set_inp_prop_mac_vlan_idx_net(enicif_pd->inp_prop_mac_vlan_idx_upl);
+    } else {
+        auto classic_enic_info = enic_info->mutable_classic_enic_info();
+        classic_enic_info->set_inp_prop_nat_l2seg_classic(enicif_pd->inp_prop_native_l2seg_clsc);
+        dllist_for_each(lnode, &(hal_if->l2seg_list_clsc_head)) {
+            entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
+            auto member_info = classic_enic_info->add_membership_info();
+            pd_if_l2seg_entry_t *pd_entry = (pd_if_l2seg_entry_t *)(entry->pd);
+
+            member_info->mutable_l2segment_key_or_handle()->set_l2segment_handle(entry->l2seg_handle);
+            member_info->set_inp_prop_idx(pd_entry->inp_prop_idx);
+        }
+    }
 
     return ret;
 }

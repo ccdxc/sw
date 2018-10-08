@@ -34,6 +34,20 @@ var enicShowCmd = &cobra.Command{
 	// Run:   enicShowCmdHandler,
 }
 
+var enicSpecShowCmd = &cobra.Command{
+	Use:   "spec",
+	Short: "show spec information about enic interface",
+	Long:  "show spec information about enic interface object",
+	Run:   enicShowCmdHandler,
+}
+
+var enicStatusShowCmd = &cobra.Command{
+	Use:   "status",
+	Short: "show status information about enic interface",
+	Long:  "show status information about enic interface object",
+	Run:   enicShowStatusCmdHandler,
+}
+
 var enicDetailShowCmd = &cobra.Command{
 	Use:   "detail",
 	Short: "show detailed information about enic interface",
@@ -43,13 +57,17 @@ var enicDetailShowCmd = &cobra.Command{
 
 func init() {
 	ifShowCmd.AddCommand(enicShowCmd)
+	enicShowCmd.AddCommand(enicSpecShowCmd)
+	enicShowCmd.AddCommand(enicStatusShowCmd)
 	enicShowCmd.AddCommand(enicDetailShowCmd)
 
 	enicShowCmd.Flags().Uint64Var(&enicID, "id", 1, "Specify if-id")
+	enicSpecShowCmd.Flags().Uint64Var(&enicID, "id", 1, "Specify if-id")
+	enicStatusShowCmd.Flags().Uint64Var(&enicID, "id", 1, "Specify if-id")
 	enicDetailShowCmd.Flags().Uint64Var(&enicDetailID, "id", 1, "Specify if-id")
 }
 
-func enicShowCmdHandler(cmd *cobra.Command, args []string) {
+func handleEnicShowStatusCmd(cmd *cobra.Command, spec bool, status bool) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -59,11 +77,6 @@ func enicShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewInterfaceClient(c.ClientConn)
 
 	defer c.Close()
-
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
 
 	var req *halproto.InterfaceGetRequest
 	if cmd.Flags().Changed("id") {
@@ -91,7 +104,11 @@ func enicShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Header
-	enicShowHeader(cmd, args)
+	if spec == true {
+		enicShowHeader()
+	} else if status == true {
+		enicShowStatusHeader()
+	}
 
 	// Print IFs
 	for _, resp := range respMsg.Response {
@@ -99,8 +116,30 @@ func enicShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
-		enicShowOneResp(resp)
+		if spec == true {
+			enicShowOneResp(resp)
+		} else if status == true {
+			enicShowStatusOneResp(resp)
+		}
 	}
+}
+
+func enicShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	handleEnicShowStatusCmd(cmd, true, false)
+}
+
+func enicShowStatusCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	handleEnicShowStatusCmd(cmd, false, true)
 }
 
 func enicDetailShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -157,17 +196,69 @@ func enicDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
-func enicShowHeader(cmd *cobra.Command, args []string) {
+func enicShowStatusHeader() {
+	fmt.Printf("\n")
+	fmt.Printf("Handle:  IF's handle          Status:    IF's status\n")
+	fmt.Printf("LportId: LPort ID             UplnkHndl: Uplink IF handle\n")
+	fmt.Printf("MacVlanIdxHost:  Input prop. Mac Vlan table idx from host packets\n")
+	fmt.Printf("MacVlanIdxNet:   Input prop. Mac Vlan table idx from network packets\n")
+	fmt.Printf("NatL2SegClassic: Input prop. table idx for native l2seg. Classic mode\n")
+	fmt.Printf("L2SegMmbrInfo:   L2seg membership info for Enic. Classic mode\n")
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 104)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-10s%-10s%-10s%-16s%-16s%-16s%-16s\n",
+		"Handle", "Status", "LportId", "UplnkHndl", "MacVlanIdxHost", "MacVlanIdxNet", "NatL2SegClassic", "L2SegMmbrInfo")
+	fmt.Println(hdrLine)
+}
+
+func enicShowStatusOneResp(resp *halproto.InterfaceGetResponse) {
+	ifType := resp.GetSpec().GetType()
+	if ifType != halproto.IfType_IF_TYPE_ENIC {
+		return
+	}
+
+	fmt.Printf("%-10d%-10s%-10d%-10d%-16d%-16d%-16d",
+		resp.GetStatus().GetIfHandle(),
+		strings.ToLower(strings.Replace(resp.GetStatus().GetIfStatus().String(), "IF_STATUS_", "", -1)),
+		resp.GetStatus().GetEnicInfo().GetEnicLportId(),
+		resp.GetStatus().GetEnicInfo().GetUplinkIfHandle(),
+		resp.GetStatus().GetEnicInfo().GetSmartEnicInfo().GetInpPropMacVlanIdxHost(),
+		resp.GetStatus().GetEnicInfo().GetSmartEnicInfo().GetInpPropMacVlanIdxNet(),
+		resp.GetStatus().GetEnicInfo().GetClassicEnicInfo().GetInpPropNatL2SegClassic())
+
+	memberStr := ""
+	first := true
+	count := 0
+	for _, member := range resp.GetStatus().GetEnicInfo().GetClassicEnicInfo().GetMembershipInfo() {
+		if first == true {
+			memberStr += fmt.Sprintf("%d/%d", member.GetL2SegmentKeyOrHandle().GetL2SegmentHandle(), member.GetInpPropIdx())
+			first = false
+		} else {
+			memberStr += fmt.Sprintf(", %d/%d", member.GetL2SegmentKeyOrHandle().GetL2SegmentHandle(), member.GetInpPropIdx())
+		}
+		count++
+		if count == 3 {
+			count = 0
+			memberStr += fmt.Sprintf("\n%-88s", " ")
+		}
+	}
+	memberStr += "\n"
+	fmt.Printf("%-16s", memberStr)
+	fmt.Printf("\n")
+}
+
+func enicShowHeader() {
 	fmt.Printf("\n")
 	fmt.Printf("Id:     Interface ID         Handle: IF's handle\n")
 	fmt.Printf("Ifype:  Interface type       EType:  Enic type\n")
 	fmt.Printf("EL2seg: Enic's l2seg         Emac:   Enic's mac\n")
 	fmt.Printf("Encap:  Enic's encap         ELif:   Enic's Lif\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 90)
+	hdrLine := strings.Repeat("-", 80)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-20s%-10s%-10s\n",
-		"Id", "Handle", "IfType", "EType", "EL2seg", "Emac", "Eencap", "ELif")
+	fmt.Printf("%-10s%-10s%-10s%-10s%-20s%-10s%-10s\n",
+		"Id", "IfType", "EType", "EL2seg", "Emac", "Eencap", "ELif")
 	fmt.Println(hdrLine)
 }
 
@@ -177,9 +268,8 @@ func enicShowOneResp(resp *halproto.InterfaceGetResponse) {
 		return
 	}
 	enicType := resp.GetSpec().GetIfEnicInfo().GetEnicType()
-	fmt.Printf("%-10d%-10d%-10s%-10s",
+	fmt.Printf("%-10d%-10s%-10s",
 		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
-		resp.GetStatus().GetIfHandle(),
 		ifTypeToStr(ifType),
 		enicTypeToStr(enicType))
 

@@ -399,7 +399,7 @@ func (h *halCtlSuite) TestUplinksGet(c *C) {
 		resp, err = h.getUplinks(ifGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get Uplinks")
-	AssertEquals(c, true, strings.Contains(resp, "2         0"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "2         Uplink"), fmt.Sprintf("halctl returned: %v", resp))
 	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 
@@ -422,7 +422,7 @@ func (h *halCtlSuite) TestUplinkPCsGet(c *C) {
 		resp, err = h.getUplinkPCs(ifGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get Uplinks")
-	AssertEquals(c, true, strings.Contains(resp, "3         0"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "3         UplinkPC"), fmt.Sprintf("halctl returned: %v", resp))
 	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 
@@ -445,7 +445,7 @@ func (h *halCtlSuite) TestEnicsGet(c *C) {
 		resp, err = h.getEnics(ifGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get Enics")
-	AssertEquals(c, true, strings.Contains(resp, "4         0"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "4         Enic"), fmt.Sprintf("halctl returned: %v", resp))
 }
 
 /*
@@ -491,7 +491,7 @@ func (h *halCtlSuite) TestCPUGet(c *C) {
 		resp, err = h.getCPU(ifGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get CPU")
-	AssertEquals(c, true, strings.Contains(resp, "6         0"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "6         CPU"), fmt.Sprintf("halctl returned: %v", resp))
 }
 
 /*
