@@ -936,6 +936,13 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
     seq          _cf, _addr[63], 1;                      \
     phvwrp._cf   _base_r, offsetof(DMA_CMD_PHV2MEM_T, host_addr), sizeof(DMA_CMD_PHV2MEM_T.host_addr), 1; \
 
+//Variation to specify a flag to say if it is host memory or not instead of
+//gleaning bit 63 from address which need not be true in many cases.
+#define DMA_PHV2MEM_SETUP2(_base_r, _host_cf, _start, _end, _addr)            \
+    phvwrpi       _base_r, offsetof(DMA_CMD_PHV2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2MEM_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << PHV2MEM_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << PHV2MEM_PHV_START_OFFSET) | (DMA_CMD_TYPE_PHV2MEM << PHV2MEM_CMDTYPE_OFFSET); \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \
+    phvwrp._host_cf   _base_r, offsetof(DMA_CMD_PHV2MEM_T, host_addr), sizeof(DMA_CMD_PHV2MEM_T.host_addr), 1; \
+
 #define DMA_HBM_PHV2MEM_SETUP(_base_r, _start, _end, _addr)        \
     phvwrpi       _base_r, offsetof(DMA_CMD_PHV2MEM_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2MEM_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << PHV2MEM_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << PHV2MEM_PHV_START_OFFSET) | (DMA_CMD_TYPE_PHV2MEM << PHV2MEM_CMDTYPE_OFFSET); \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \

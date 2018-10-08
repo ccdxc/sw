@@ -156,7 +156,9 @@ do_dma:
     add             CQE_P, d.{pt_pa}.dx, PAGE_OFFSET
 
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_CQ)
-    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, cqe, cqe, CQE_P)
+
+    seq         c1, d.host_addr, 1
+    DMA_PHV2MEM_SETUP2(DMA_CMD_BASE, c1, cqe, cqe, CQE_P)
     
 cq_done:
 eqcb_eval:

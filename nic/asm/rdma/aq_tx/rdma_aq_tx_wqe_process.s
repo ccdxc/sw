@@ -95,6 +95,9 @@ reg_mr:
     add         r3, d.{mr.length}.dx, r0
     phvwr       p.key.len, r3[31:0]
     phvwr       p.key.log_page_size, d.mr.page_size_log2
+
+    //TODO: ideally host_addr bit should come from driver.
+    phvwr       p.key.host_addr, 1
     add         r2, d.{mr.tbl_index}.wx, r0
     add         r3, d.{mr.va}.dx, r0
     phvwrpair   p.key.base_va, r3, p.key.pt_base, r2
@@ -188,6 +191,9 @@ create_cq:
     phvwr       p.cqcb.cq_id, r2[23:0]
     phvwr       p.cqcb.eq_id, d.cq.eq_id[23:0]
 
+//TODO:  host_addr should come from driver
+    phvwr       p.cqcb.host_addr, 1
+    
     add         r4, r0, d.{cq.map_count}.wx, CAPRI_LOG_SIZEOF_U64
     beqi        r4, 1<<CAPRI_LOG_SIZEOF_U64, cq_skip_dma_pt
     nop

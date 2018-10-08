@@ -1754,8 +1754,8 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     rdma_pt_entry_read(lif, cq_pt_base+1, &cqcb.pt_next_pa);
 
     if (cqcb.host_addr) {
-        cqcb.pt_pa |= 0x8000000000000000;
-        cqcb.pt_next_pa |= 0x8000000000000000;
+        cqcb.pt_pa |= ((1UL << 63)  | (uint64_t)lif << 52);
+        cqcb.pt_next_pa |= ((1UL << 63) | (uint64_t)lif << 52);
     }
     cqcb.pt_pg_index = 0;
     cqcb.pt_next_pg_index = 1UL & (( 1 << log_num_pages) - 1) ;

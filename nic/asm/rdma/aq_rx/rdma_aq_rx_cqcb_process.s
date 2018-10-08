@@ -160,7 +160,8 @@ do_dma:
     add             r1, d.{pt_pa}.dx, r1
 
     DMA_CMD_STATIC_BASE_GET(r2, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_CQ)    
-    DMA_PHV2MEM_SETUP(r2, c1, cqe, cqe, r1)    
+    seq         c1, d.host_addr, 1
+    DMA_PHV2MEM_SETUP2(r2, c1, cqe, cqe, r1)
 
 incr_pindex: 
 

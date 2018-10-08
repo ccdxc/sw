@@ -1826,7 +1826,8 @@ HalClient::RDMACreateCQ(uint64_t lif_id,
     cq_spec->set_cq_lkey(0);
     cq_spec->set_eq_id(eq_num);
     cq_spec->add_cq_va_pages_phy_addr(pa);
-
+    cq_spec->set_host_addr(1);
+    
     status = rdma_stub_->RdmaCqCreate(&context, cq_request, &cq_response);
     if (status.ok()) {
         RdmaCqResponse rsp = cq_response.response(0);

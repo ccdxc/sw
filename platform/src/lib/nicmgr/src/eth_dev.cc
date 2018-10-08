@@ -1593,7 +1593,7 @@ Eth::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
     memset(&eqcb, 0, sizeof(eqcb_t));
     // EQ does not need scheduling, so set one less (meaning #rings as zero)
     eqcb.ring_header.total_rings = MAX_EQ_RINGS - 1;
-    eqcb.eqe_base_addr = cmd->dma_addr;
+    eqcb.eqe_base_addr = cmd->dma_addr | (1UL << 63) | ((uint64_t)(info.hw_lif_id + cmd->lif_id) << 52);
     eqcb.log_wqe_size = cmd->stride_log2;
     eqcb.log_num_wqes = cmd->depth_log2;
     eqcb.int_enabled = 1;
@@ -1620,16 +1620,6 @@ Eth::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
     invalidate_rxdma_cacheline(addr);
     invalidate_txdma_cacheline(addr);
     
-#if 0
-    /*
-     * moving the devcmd implementation out of HAL
-     */
-    hal->RDMACreateEQ(info.hw_lif_id + cmd->lif_id,
-                        cmd->qid_ver,
-                        1u << cmd->depth_log2, 1u << cmd->stride_log2,
-                        cmd->dma_addr, cmd->cid);
-#endif
-
     return (DEVCMD_SUCCESS);
 }
 
