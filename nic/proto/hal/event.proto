@@ -42,16 +42,10 @@ message EndpointEvent {
   uint64     mac_address       = 2;
 }
 
-message PortEvent {
-  fixed32               port_id = 1;
-  port.PortOperStatus   status  = 2;    // operational state of port
-}
-
 message EventResponse {
   types.ApiStatus      api_status = 1;    // API status code
   EventId              event_id   = 2;
   oneof event_info {
       EndpointEvent    ep_event   = 3;    // Endpoint event
-      PortEvent        port_event = 4;    // Port event
   }
 }

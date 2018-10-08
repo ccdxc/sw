@@ -11,7 +11,6 @@
 using event::Event;
 using event::EventRequest;
 using event::EndpointEvent;
-using event::PortEvent;
 using event::EventResponse;
 
 using grpc::Status;
@@ -21,7 +20,7 @@ class EventServiceImpl final : public Event::Service {
 public:
     Status EventListen(ServerContext *context,
                        grpc::ServerReaderWriter<EventResponse,
-                                                EventRequest> *stream) override;
+                       EventRequest> *stream) override;
 };
 
 #endif    // __EVENT_SVC_HPP__

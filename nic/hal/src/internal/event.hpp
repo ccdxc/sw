@@ -12,7 +12,6 @@
 
 using event::EventRequest;
 using event::EndpointEvent;
-using event::PortEvent;
 using event::EventResponse;
 
 namespace hal {
@@ -21,7 +20,7 @@ namespace hal {
 
 hal_ret_t handle_event_request(EventRequest *req,
                                grpc::ServerReaderWriter<EventResponse,
-                                                        EventRequest> *stream);
+                               EventRequest> *stream);
 
 }    // namespace hal
 

@@ -23,10 +23,10 @@ service Port {
 
 // Port breakout modes
 enum PortBreakoutMode {
-    PORT_BREAKOUT_MODE_NONE  = 0;
-    PORT_BREAKOUT_MODE_4x25G = 1;
-    PORT_BREAKOUT_MODE_4x10G = 2;
-    PORT_BREAKOUT_MODE_2x50G = 3;
+  PORT_BREAKOUT_MODE_NONE  = 0;
+  PORT_BREAKOUT_MODE_4x25G = 1;
+  PORT_BREAKOUT_MODE_4x10G = 2;
+  PORT_BREAKOUT_MODE_2x50G = 3;
 }
 
 // PortOperStatus reflects the current status of the port
@@ -38,33 +38,33 @@ enum PortOperStatus {
 
 // PortAdminState specifies if the port is enabled (admin up) or disabled (admin down)
 enum PortAdminState {
-    PORT_ADMIN_STATE_NONE = 0;   // port admin state not configured
-    PORT_ADMIN_STATE_DOWN = 1;   // port is admin disabled
-    PORT_ADMIN_STATE_UP   = 2;   // port is admin enabled
+  PORT_ADMIN_STATE_NONE = 0;   // port admin state not configured
+  PORT_ADMIN_STATE_DOWN = 1;   // port is admin disabled
+  PORT_ADMIN_STATE_UP   = 2;   // port is admin enabled
 }
 
 // PortType specifies the type of port
 enum PortType {
-    PORT_TYPE_NONE = 0;  // port type not configured
-    PORT_TYPE_ETH  = 1;  // port carries ethernet traffic
-    PORT_TYPE_MGMT = 2;  // port carries mgmt ethernet traffic
+  PORT_TYPE_NONE = 0;  // port type not configured
+  PORT_TYPE_ETH  = 1;  // port carries ethernet traffic
+  PORT_TYPE_MGMT = 2;  // port carries mgmt ethernet traffic
 }
 
 // PortSpeed specifies the speed of the port
 enum PortSpeed {
-    PORT_SPEED_NONE = 0;     // port speed not configured
-    PORT_SPEED_1G   = 1;     // port speed is 1Gbps
-    PORT_SPEED_10G  = 2;     // port speed is 10Gbps
-    PORT_SPEED_25G  = 3;     // port speed is 25Gbps
-    PORT_SPEED_40G  = 4;     // port speed is 40Gbps
-    PORT_SPEED_50G  = 5;     // port speed is 50Gbps
-    PORT_SPEED_100G = 6;     // port speed is 100Gbps
+  PORT_SPEED_NONE = 0;     // port speed not configured
+  PORT_SPEED_1G   = 1;     // port speed is 1Gbps
+  PORT_SPEED_10G  = 2;     // port speed is 10Gbps
+  PORT_SPEED_25G  = 3;     // port speed is 25Gbps
+  PORT_SPEED_40G  = 4;     // port speed is 40Gbps
+  PORT_SPEED_50G  = 5;     // port speed is 50Gbps
+  PORT_SPEED_100G = 6;     // port speed is 100Gbps
 }
 
 enum PortFecType {
-    PORT_FEC_TYPE_NONE = 0;  // Disable FEC
-    PORT_FEC_TYPE_FC   = 1;  // Enable FireCode FEC
-    PORT_FEC_TYPE_RS   = 2;  // Enable ReedSolomon FEC
+  PORT_FEC_TYPE_NONE = 0;  // Disable FEC
+  PORT_FEC_TYPE_FC   = 1;  // Enable FireCode FEC
+  PORT_FEC_TYPE_RS   = 2;  // Enable ReedSolomon FEC
 }
 
 // PortSpec message is used to do add/mod properties of a port
@@ -296,3 +296,12 @@ message PortInfoGetResponseMsg {
   repeated PortInfoGetResponse  response = 1;    // batched get response
 }
 
+//------------------------------------------------------------------------------
+// port related events
+//------------------------------------------------------------------------------
+message PortEvent {
+  kh.PortKeyHandle  key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
+  PortOperStatus    oper_status   = 2;
+  PortAdminState    admin_status  = 3;
+  string            msg           = 4;    // message with relevant information about the event
+}
