@@ -32,15 +32,14 @@ message MakeClusterMsg {
     string endpoint                     = 1;
     string config                       = 2;
     IotaAPIResponse api_response        = 3;
-
 }
 
+enum EntrypointType {
+    ENTRYPOINT_NONE    = 0;
+    NAPLES_REST        = 1;
+    VENICE_REST        = 2;
+}
 message InitConfigMsg{
-    enum EntrypointType {
-                ENTRYPOINT_NONE    = 0;
-                NAPLES_REST        = 1;
-                VENICE_REST        = 2;
-            }
     // ConfigEntrypoint captures what object model configs to generate for a given testbed.
     // Could either be venice object model or Agent object model
     IotaAPIResponse api_response        = 1;

@@ -1,8 +1,8 @@
 #! /usr/bin/python3
 import pdb
-from iota.harness.infra.testbed import Testbed as Testbed
 from iota.harness.infra.utils.logger import Logger as Logger
 
+import iota.harness.infra.store as store
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.utils.loader as loader
@@ -25,6 +25,9 @@ class TestSuite:
 
     def GetImages(self):
         return self.__spec.images
+
+    def GetTopology(self):
+        return self.__topology
 
     def __resolve_testcases(self):
         for tc_spec in self.__spec.testcases:
@@ -68,6 +71,7 @@ class TestSuite:
         return types.status.SUCCESS
 
     def __setup_config(self):
+        loader.RunCallback(self.__tc, 'Setup', True, None)
         return types.status.SUCCESS
 
     def __setup(self):
@@ -102,7 +106,7 @@ class TestSuite:
         Logger.info("Running Testsuite: %s" % self.__spec.meta.name)
         
         # Initialize Testbed for this testsuite
-        Testbed.InitForTestsuite(self)
+        store.GetTestbed().InitForTestsuite(self)
 
         self.__setup()
 

@@ -9,9 +9,7 @@ def Setup(tc):
     req.view = cfg_svc_pb2.CFG_DB_VIEW_CFG_SVC
     req.kind = "*"
     resp = api.QueryConfig(req)
-    if resp.api_response.api_status != types_pb2.API_STATUS_OK:
-        Logger.error("Failed to query config: ",
-                     types_pb2.APIResponseType.Name(resp.api_response.api_status))
+    if resp == None:    
         return api.types.status.FAILURE
 
     # Store the config objects in testcase.
@@ -25,10 +23,8 @@ def Trigger(tc):
         req.configs.append(cfg_object)
 
     resp = api.PushConfig(req)
-    if resp.api_response.api_status != types_pb2.API_STATUS_OK:
-        Logger.error("Failed to query config: ",
-                     types_pb2.APIResponseType.Name(resp.api_response.api_status))
-        return types.status.FAILURE
+    if resp == None:
+        return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def Verify(tc):
@@ -37,14 +33,12 @@ def Verify(tc):
     req.view = cfg_svc_pb2.CFG_DB_VIEW_TESTBED
     req.kind = "*"
     resp = api.QueryConfig(req)
-    if resp.api_response.api_status != types_pb2.API_STATUS_OK:
-        Logger.error("Failed to query config: ",
-                     types_pb2.APIResponseType.Name(resp.api_response.api_status))
+    if resp == None:
         return api.types.status.FAILURE
 
     # Validate that testbed view is same as that of config service.
     if resp.configs != tc.cfg_objects:
-        Logger.error("Testbed config != Service config: ")
+        api.Logger.error("Testbed config != Service config: ")
         return types.status.FAILURE
     return api.types.status.SUCCESS
 

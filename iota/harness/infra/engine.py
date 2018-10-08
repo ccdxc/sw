@@ -3,6 +3,7 @@ import glob
 
 import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.testsuite as testsuite
+import iota.harness.infra.testbed as testbed
 import iota.harness.api as api
 #import iota.harness.infra.store as store
 

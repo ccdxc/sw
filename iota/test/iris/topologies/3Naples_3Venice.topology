@@ -13,7 +13,7 @@ nodes:
 
     - node: node3
       name: naples3
-      role: PERSONALITY_NAPLES_WITH_QEMU
+      role: PERSONALITY_NAPLES
 
     - node: node4
       name: venice1

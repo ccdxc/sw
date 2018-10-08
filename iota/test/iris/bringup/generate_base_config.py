@@ -1,5 +1,38 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+import iota.protos.pygen.cfg_svc_pb2 as cfg_svc_pb2
+import iota.protos.pygen.types_pb2 as types_pb2
+
+def __init_config():
+    api.Logger.info("Initializing Config Service.")
+    req = cfg_svc_pb2.InitConfigMsg()
+    req.entry_point_type = cfg_svc_pb2.VENICE_REST
+    for venice_ip in api.GetVeniceMgmtIpAddresses():
+        req.endpoints.append("%s:10001" % venice_ip)
+    for data_vlan in api.GetDataVlans():
+        req.vlans.append(data_vlan)
+    resp = api.InitCfgService()
+    if resp == None:
+        return api.types.status.FAILURE
+    
+    return api.types.status.SUCCESS
+
+def __generate_config():
+    api.Logger.info("Generating Configuration.")
+    req = cfg_svc_pb2.GenerateConfigMsg()
+    resp = api.GenerateConfigs()
+    if resp == None:
+        return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
+
 def Main(step):
-    api.logger.info("Step: Generate Base Config")
-    return
+    ret = __init_config()
+    if ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+
+    ret = __generate_config()
+    if ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+    
+    return api.types.status.SUCCESS

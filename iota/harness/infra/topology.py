@@ -1,9 +1,9 @@
 #! /usr/bin/python3
 import os
 
-from iota.harness.infra.testbed import Testbed as Testbed
 from iota.harness.infra.utils.logger import Logger as Logger
 
+import iota.harness.infra.store as store
 import iota.harness.infra.resmgr as resmgr
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.parser as parser
@@ -19,7 +19,7 @@ class Node(object):
     def __init__(self, spec):
         self.__spec = spec
         self.__name = spec.name
-        self.__ip_address = Testbed.ReserveNodeIpAddress()
+        self.__ip_address = store.GetTestbed().ReserveNodeIpAddress()
         self.__role = topo_pb2.PersonalityType.Value(spec.role)
 
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
@@ -35,8 +35,11 @@ class Node(object):
     def Role(self):
         return self.__role
 
-    def ControlIp(self):
+    def ControlIpAddress(self):
         return self.__control_ip
+
+    def MgmtIpAddress(self):
+        return self.__ip_address
 
     def AddToNodeMsg(self, msg, topology, testsuite):
         msg.type = self.__role
@@ -49,17 +52,19 @@ class Node(object):
             msg.venice_config.control_ip = str(self.__control_ip)
             msg.image = os.path.basename(testsuite.GetImages().venice)
             for n in topology.Nodes():
-                if n == self: continue
                 if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
                 peer_msg = msg.venice_config.venice_peers.add()
                 peer_msg.host_name = n.Name()
-                peer_msg.ip_address = str(n.ControlIp())
+                peer_msg.ip_address = str(n.ControlIpAddress())
         else:
             msg.naples_config.control_intf = self.__control_intf
             msg.naples_config.control_ip = str(self.__control_ip)
             msg.image = os.path.basename(testsuite.GetImages().naples)
             for data_intf in self.__data_intfs:
                 msg.naples_config.data_intfs.append(data_intf)
+            for n in topology.Nodes():
+                if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
+                msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
 
         return types.status.SUCCESS
 
@@ -99,3 +104,10 @@ class Topology(object):
             for n in resp.nodes:
                 Logger.error(" - %s: " % types_pb2.APIResponseType.Name(n.node_status))
             return types.status.FAILURE
+
+    def GetVeniceMgmtIpAddresses(self):
+        ips = []
+        for n in self.__nodes:
+            if n.Role() == topo_pb2.PERSONALITY_VENICE:
+                ips.append(n.MgmtIpAddress())
+        return ips

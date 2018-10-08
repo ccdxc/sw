@@ -4,6 +4,7 @@ import pdb
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.parser as parser
 import iota.harness.api as api
+import iota.harness.infra.store as store
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
@@ -20,6 +21,9 @@ class _Testbed:
         self.__ipidx = 0
         self.__read_warmd_json()
         return
+
+    def GetCurrentTestsuite(self):
+        return self.curr_ts
 
     def __read_warmd_json(self):
         self.tbspec = parser.JsonParse(GlobalOptions.testbed_json)
@@ -86,4 +90,11 @@ class _Testbed:
             assert(0)
         return node_ip
 
-Testbed = _Testbed()
+    def GetDataVlans(self):
+        resp = []
+        for v in self.data_vlans:
+            resp.append(v)
+        return resp
+
+__testbed = _Testbed()
+store.SetTestbed(__testbed)

@@ -3,11 +3,12 @@ import grpc
 
 from iota.harness.infra.utils.logger import Logger as Logger
 
-import iota.protos.pygen.types_pb2 as types
+import iota.protos.pygen.types_pb2 as types_pb2
 import iota.protos.pygen.cfg_svc_pb2 as cfg_svc
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 import iota.protos.pygen.topo_svc_pb2_grpc as topo_svc_grpc
 
+import iota.harness.infra.store as store
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.utils as utils
 
@@ -35,6 +36,11 @@ def Init():
 def __rpc(req, rpcfn):
     utils.LogMessageContents("Request", req, Logger.debug)
     resp = rpcfn(req)
+    if resp.api_response.api_status != types_pb2.API_STATUS_OK:
+        Logger.error("Error: ",
+                     types_pb2.APIResponseType.Name(resp.api_response.api_status),
+                     resp.api_response.error_msg)
+        return None
     utils.LogMessageContents("Response", resp, Logger.debug)
     return resp
 
@@ -67,3 +73,9 @@ def QueryConfig(req):
     global CfgSvcStub
     Logger.info("Query Config:")
     return __rpc(req, CfgSvcStub.QueryConfig)
+
+def GetVeniceMgmtIpAddresses():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVeniceMgmtIpAddresses()
+
+def GetDataVlans():
+    return store.GetTestbed().GetDataVlans()
