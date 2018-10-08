@@ -10,6 +10,7 @@ SSHCMD = "sshpass -p vm ssh -o StrictHostKeyChecking=no vm@"
 commands = [
     "systemctl stop pen-cmd",
     "docker rm -fv \$(docker ps -aq)",
+    "docker system prune -f",
     "rm /etc/hosts",
     "pkill iota*",
     "rm -rf /tmp/iota*",
