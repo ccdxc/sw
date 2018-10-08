@@ -306,7 +306,7 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		replIndices,
 		resp.GetStats().GetNumEndpoints(),
 		ifStr,
-		resp.GetSpec().GetPinnedUplinkIfKeyHandle())
+		resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId())
 
 }
 
