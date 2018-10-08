@@ -3027,14 +3027,14 @@ int proxy_parse_args(int argc, char** argv,
     }
 
     errno = 0;
-    *dst_port_range_start = strtoul(argv[5], NULL, 10);
+    *dst_port_range_start = strtoul(argv[9], NULL, 10);
     if ((*dst_port_range_start == ULONG_MAX) && (errno == ERANGE)) {
         std::cout << "Failed to extract DST Port Range Start from the parameters" << std::endl;
         return -1;
     }
 
     errno = 0;
-    *dst_port_range_end = strtoul(argv[6], NULL, 10);
+    *dst_port_range_end = strtoul(argv[10], NULL, 10);
     if ((*dst_port_range_end == ULONG_MAX) && (errno == ERANGE)) {
         std::cout << "Failed to extract DST Port Range End from the parameters" << std::endl;
         return -1;
