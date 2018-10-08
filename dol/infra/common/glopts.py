@@ -91,6 +91,10 @@ parser.add_argument('--agent', dest='agent', action='store_true',
                     help='Start DOL with Agent')
 parser.add_argument('--savepcap', dest='savepcap', action='store_true',
                     help='Save all the packets to PCAP instead.')
+parser.add_argument('--save-tc-pcap', dest='save_tc_pcap', action='store_true',
+                    help='Save per testcase PCAP files.')
+parser.add_argument('--pcapdir', dest='pcapdir',
+                    help='PCAP Directory.')
 parser.add_argument('--naplescontainer', dest='naples_container', action='store_true',
                     help='Nic running(hal,model) inside container.')
 

@@ -97,7 +97,7 @@ class DolTriggerEngineObject(TriggerEngineObject):
                 ring.Post(descr)
         return
 
-    def __trigger_packets(self, step):
+    def __trigger_packets(self, tc, step):
         if step.trigger.packets == None:
             return
 
@@ -108,7 +108,7 @@ class DolTriggerEngineObject(TriggerEngineObject):
             logger.info("Sending Input Packet:%s of Length:%d on Port:%d" %\
                         (p.packet.GID(), len(rawpkt), port))
             if GlobalOptions.savepcap:
-                PacketCollector.Save(p.packet.GetScapyPacket(), port)
+                PacketCollector.Save(tc.GID(), p.packet.GetScapyPacket(), port)
             else:
                 ModelConnector.Transmit(rawpkt, port)
         return
@@ -150,7 +150,7 @@ class DolTriggerEngineObject(TriggerEngineObject):
         self.__trigger_delay(step)
         self.__trigger_descriptors(tc, step)
         self.__ring_doorbell(step)
-        self.__trigger_packets(step)
+        self.__trigger_packets(tc, step)
         tc.TriggerCallback()
         return
 

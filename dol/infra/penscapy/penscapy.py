@@ -817,3 +817,91 @@ bind_layers(MSRPC_CN_HDR, MSRPC_RSP_HDR, ptype=2)
 bind_layers(MSRPC_CN_HDR, MSRPC_BIND_RSP, ptype=12)
 bind_layers(MSRPC_CN_HDR, MSRPC_BIND_REQ, ptype=14)
 bind_layers(MSRPC_CN_HDR, MSRPC_BIND_RSP, ptype=15)
+
+class RawPacketParser:
+    def __init__(self):
+        return
+
+    def __parse_ether(self, rawpkt):
+        pkt = Ether(rawpkt)
+        return pkt
+
+    def __get_raw_hdr(self, pkt):
+        if Raw in pkt:
+            return pkt[Raw]
+        if Padding in pkt:
+            return pkt[Padding]
+        return None
+
+    def __process_pendol(self, rawbytes):
+        if rawbytes is None:
+            return None
+
+        if len(rawbytes) < PENDOL_LENGTH:
+            return PAYLOAD(rawbytes)
+
+        pdoffset = len(rawbytes) - PENDOL_LENGTH
+        pdbytes = rawbytes[pdoffset:]
+        rawbytes = rawbytes[:pdoffset]
+        pen = PENDOL(pdbytes)
+        if pen.sig != PENDOL_SIGNATURE:
+            return PAYLOAD(rawbytes)
+        return PAYLOAD(rawbytes) / pen
+
+    def __process_crc(self, rawbytes):
+        '''
+        length = len(rawbytes)
+        if length < CRC_LENGTH:
+            return Raw(rawbytes)
+
+        # CRC is always present, process it first.
+        crcoffset = length - CRC_LENGTH
+        crcbytes = rawbytes[crcoffset:]
+        nxthdrs = CRC(crcbytes)
+        
+        rawbytes = rawbytes[:crcoffset]
+        if len(rawbytes) == 0:
+            # Only CRC is present in payload.
+            return nxthdrs
+        '''
+        return
+
+    def __process_nxthdrs(self, rawhdr, padding):
+        raw_bytes = bytes(rawhdr) if rawhdr else None
+        # Lets check if PENDOL header is present.
+        nxthdrs = self.__process_pendol(raw_bytes)
+        padding = PADDING(bytes(padding)) if padding else padding
+        if nxthdrs:
+            nxthdrs = nxthdrs / padding if padding else nxthdrs
+            return nxthdrs
+        return padding
+
+    def __process_raw_bytes(self, pkt):
+        rawhdr = pkt[Raw] if Raw in pkt else None
+        padding = pkt[Padding] if Padding in pkt else None
+        if rawhdr is None and padding is None:
+            return pkt
+
+        if rawhdr:
+            rawhdr.underlayer.remove_payload()
+            rawhdr.remove_payload()
+
+        if padding:
+            padding.remove_payload()
+            if padding.underlayer:
+                padding.underlayer.remove_payload()
+
+        nxthdrs = self.__process_nxthdrs(rawhdr, padding)
+        pkt = pkt / nxthdrs
+        return pkt
+
+    def __process_vxlan(self, pkt):
+        if VXLAN in pkt:
+            pkt[VXLAN].underlayer.sport = 0
+        return
+
+    def Parse(self, rawpkt):
+        pkt = self.__parse_ether(rawpkt)
+        pkt = self.__process_raw_bytes(pkt)
+        self.__process_vxlan(pkt) 
+        return pkt

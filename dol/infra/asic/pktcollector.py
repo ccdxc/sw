@@ -20,15 +20,25 @@ class PacketCollectorObject:
     def __init_db_entry(self, key):
         if key not in self.pktsdb:
             self.pktsdb[key] = []
-            self.pcapfiles[key] = "%s_packets.pcap" % key
+            if GlobalOptions.pcapdir:
+                self.pcapfiles[key] = "%s/%s_packets.pcap" % (GlobalOptions.pcapdir, key)
+            else:
+                self.pcapfiles[key] = "%s_packets.pcap" % (key)
         return
 
-    def Save(self, pkt, port):
+    def Save(self, tcid, pkt, port):
         logger.info("Saving Input Packet of Length:%d on Port:%d to PCAP" %\
                     (len(pkt), port))
         key = "uplink%d" % port
         self.__init_db_entry(key)
         self.pktsdb[key].append(pkt)
+
+        if GlobalOptions.save_tc_pcap:
+            logger.info("Saving Input Packet of Length:%d on tcid:%d to PCAP" %\
+                        (len(pkt), tcid))
+            key = "TC%06d" % tcid
+            self.__init_db_entry(key)
+            self.pktsdb[key].append(pkt)
         return
 
     def SaveTx(self, rawpkt, lif):
