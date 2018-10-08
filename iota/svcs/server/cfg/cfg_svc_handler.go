@@ -15,6 +15,10 @@ func NewConfigServiceHandler() *ConfigService {
 	return &cfgServer
 }
 
+func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMsg) (*iota.MakeClusterMsg, error) {
+	return req, nil
+}
+
 //InitCfgService initiates a config management service
 func (c *ConfigService) InitCfgService(ctx context.Context, req *iota.InitConfigMsg) (*iota.InitConfigMsg, error) {
 	resp := &iota.InitConfigMsg{}

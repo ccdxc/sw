@@ -12,18 +12,27 @@ import "types.proto";
 // ---------------------------- Config API ----------------------------
 // Config Management Service
 service ConfigMgmtApi {
-    // GenerateConfigs accepts the topology information and config information and auto generates the config that needs
-    // to be pushed. The intent is to support only the user facing objects at NAPLES REST or Venice REST Level.
-    // It also pushes the base config either to Venice/NAPLES REST Endpoint
+
+    rpc MakeCluster(MakeClusterMsg) returns (MakeClusterMsg) {};
 
     rpc InitCfgService(InitConfigMsg) returns (InitConfigMsg) {};
 
+    // GenerateConfigs accepts the topology information and config information and auto generates the config that needs
+    // to be pushed. The intent is to support only the user facing objects at NAPLES REST or Venice REST Level.
+    // It also pushes the base config either to Venice/NAPLES REST Endpoint
     rpc GenerateConfigs (GenerateConfigMsg) returns (ConfigMsg) {};
 
     rpc PushConfig (ConfigMsg) returns (ConfigMsg) {};
 
     // Query API queries the base config to match any parameters
     rpc QueryConfig(ConfigQueryMsg) returns (ConfigMsg) {};
+}
+
+message MakeClusterMsg {
+    string endpoint                     = 1;
+    string config                       = 2;
+    IotaAPIResponse api_response        = 3;
+
 }
 
 message InitConfigMsg{
