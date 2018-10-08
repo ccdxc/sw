@@ -4,7 +4,7 @@
 #define __DELPHI_CLIENT_HPP__
 
 #include "nic/hal/iris/upgrade/upgrade.hpp"
-#include "nic/hal/sysmgr/sysmgr.hpp"
+#include "nic/hal/iris/sysmgr/sysmgr.hpp"
 #include "bazel-genfiles/nic/upgrade_manager/upgrade/upgrade.delphi.hpp"
 
 namespace hal {

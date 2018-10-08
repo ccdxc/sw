@@ -10,12 +10,11 @@
 namespace hal {
 namespace hb {
 
-// API invoked by all threads spawned by infra to punch heartbeat
-// and declare that the thread is still alive
-void heartbeat_punch(void);
-
 // initialization function to register callback with periodic thread
 hal_ret_t heartbeat_init(void);
+
+// is_hal_healthy return true if HAL is healthy or else false
+bool is_hal_healthy(void);
 
 }    // namespace hb
 }    // namespace hal

@@ -3,11 +3,12 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/hal/iris/upgrade/upgrade.hpp"
-#include "nic/include/trace.hpp"
 #include "nic/include/base.hpp"
+#include "nic/include/trace.hpp"
+#include "nic/hal/pd/pd_api.hpp"
+#include "nic/linkmgr/linkmgr.hpp"
 
 namespace hal {
-
 namespace upgrade {
 
 //------------------------------------------------------------------------------
@@ -33,7 +34,13 @@ hal_upg_hndlr::CompatCheckHandler(UpgCtx& upgCtx)
 HdlrResp
 hal_upg_hndlr::ProcessQuiesceHandler(UpgCtx& upgCtx)
 {
+    hal_ret_t    ret;
+
     HAL_TRACE_DEBUG("[upgrade] Handling queiesce msg ...");
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_START, NULL);
+    if (ret != HAL_RET_OK) {
+        return HdlrResp(FAIL, std::string(HAL_RET_ENTRIES_str));
+    }
     return HdlrResp(SUCCESS, "");
 }
 
@@ -43,11 +50,17 @@ hal_upg_hndlr::ProcessQuiesceHandler(UpgCtx& upgCtx)
 HdlrResp
 hal_upg_hndlr::LinkDownHandler(UpgCtx& upgCtx)
 {
-    HdlrResp resp = {};
+    hal_ret_t    ret;
+
     HAL_TRACE_DEBUG("[upgrade] Handling link down msg ...");
-    return resp;
+    ret = linkmgr::port_disable(0);
+    if (ret != HAL_RET_OK) {
+        return HdlrResp(FAIL, std::string(HAL_RET_ENTRIES_str))
+    }
+    return HdlrResp(SUCCESS, "");
 }
 
+#if 0
 //------------------------------------------------------------------------------
 // bring link up
 //------------------------------------------------------------------------------
@@ -98,7 +111,7 @@ hal_upg_hndlr::AbortHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling abort msg ...");
 }
+#endif
 
-} // namespace upgrade
-
-} // namespace hal
+}    // namespace upgrade
+}    // namespace hal

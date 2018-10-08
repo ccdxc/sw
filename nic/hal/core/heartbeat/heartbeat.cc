@@ -13,6 +13,7 @@ namespace hal {
 namespace hb {
 
 static void *g_hb_timer;
+static bool g_hal_health;
 
 //------------------------------------------------------------------------------
 // callback invoked periodically to check for the health of the HAL threads
@@ -34,9 +35,12 @@ heartbeat_monitor_cb (void *timer, uint32_t timer_id, void *ctxt)
                               //hal_thread->name(),
                               //ts_diff.tv_sec,
                               //ts_diff.tv_nsec/TIME_NSECS_PER_MSEC);
+                g_hal_health = false;
+                break;
             }
         }
     }
+    g_hal_health = true;
     return;
 }
 
@@ -61,15 +65,6 @@ heartbeat_init (void)
     HAL_TRACE_DEBUG("Started HAL heart beat monitoring timer with {}s intvl",
                     HAL_HEARTBEAT_SCAN_INTVL);
     return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// punch heartbeat for the current thread
-//------------------------------------------------------------------------------
-void
-heartbeat_punch (void)
-{
-    return;
 }
 
 }    // namespace hb
