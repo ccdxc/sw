@@ -100,6 +100,15 @@ $(PENCAKE)-y += src/osal/linux/kernel/osal_atomic.o
 $(PENCAKE)-y += src/osal/linux/kernel/osal_thread.o
 $(PENCAKE)-y += src/osal/linux/kernel/osal_mem.o
 
+$(PENCAKE)-y += third-party/libyaml/src/api.o
+$(PENCAKE)-y += third-party/libyaml/src/dumper.o
+$(PENCAKE)-y += third-party/libyaml/src/emitter.o
+$(PENCAKE)-y += third-party/libyaml/src/loader.o
+$(PENCAKE)-y += third-party/libyaml/src/parser.o
+$(PENCAKE)-y += third-party/libyaml/src/reader.o
+$(PENCAKE)-y += third-party/libyaml/src/scanner.o
+$(PENCAKE)-y += third-party/libyaml/src/writer.o
+
 KERN_DIR ?= /lib/modules/$(shell uname -r)/build
 
 sonic-sim-var: $(eval obj-m += $(SONICSIM).o)
