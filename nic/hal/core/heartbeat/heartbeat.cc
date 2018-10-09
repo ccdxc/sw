@@ -36,7 +36,7 @@ heartbeat_monitor_cb (void *timer, uint32_t timer_id, void *ctxt)
                               //ts_diff.tv_sec,
                               //ts_diff.tv_nsec/TIME_NSECS_PER_MSEC);
                 g_hal_health = false;
-                break;
+                return;
             }
         }
     }
@@ -65,6 +65,15 @@ heartbeat_init (void)
     HAL_TRACE_DEBUG("Started HAL heart beat monitoring timer with {}s intvl",
                     HAL_HEARTBEAT_SCAN_INTVL);
     return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// Check if hal is healthy
+//------------------------------------------------------------------------------
+bool
+is_hal_healthy (void)
+{
+    return g_hal_health;
 }
 
 }    // namespace hb
