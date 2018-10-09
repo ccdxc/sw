@@ -135,7 +135,7 @@ def run_tls_server(tcp_port, cipher, certfile, keyfile, clientCAfile):
 
 def run_tls_client(tcp_port, direction='from-host'):
     log = open(tls_clt_log, "a")
-    cmd = [bin_dir + '/nic_proxy_e2etest_tls_client'
+    cmd = [bin_dir + '/nic_proxy_e2etest_tls_client',
            '-p', tcp_port, '-d', nic_dir + "/e2etests/proxy/hello-world",
            '-m', direction]
     p = Popen(cmd, stdout=log, stderr=log)

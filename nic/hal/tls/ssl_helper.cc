@@ -582,12 +582,17 @@ SSLHelper::init_pse_engine()
     }
 
     //eng_path =  std::string(cfg_path) + "/openssl/engine/libpse.so";
-    eng_path =  "/nic/lib/libtls_pse.so";
+    if (hal::g_hal_cfg.platform_mode == HAL_PLATFORM_MODE_HW ||
+        hal::g_hal_cfg.platform_mode == HAL_PLATFORM_MODE_HAPS) {
+        eng_path = "/nic/lib/libtls_pse.so";
+    } else {
+        eng_path = "/sw/nic/build/x86_64/iris/lib/libtls_pse.so";
+    }
     HAL_TRACE_DEBUG("Loading pensando engine from path: {}", eng_path);
 
     if(!ENGINE_ctrl_cmd_string(engine, "SO_PATH", eng_path.c_str(), 0)) {
-        HAL_TRACE_ERR("SO_PATH failed!!");
-        return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
+       HAL_TRACE_ERR("SSL: SO_PATH pensando engine load failed!!");
+       return HAL_RET_OPENSSL_ENGINE_NOT_FOUND;
     }
 
     if(!ENGINE_ctrl_cmd_string(engine, "ID", "pse", 0)) {

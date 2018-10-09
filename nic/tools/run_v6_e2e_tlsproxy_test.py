@@ -262,10 +262,10 @@ def main():
     log = open(hntap_log, "w")
     log.close()
  
-    status = run_test(1, "TLS Proxy", str(80), 0)
+    status = run_test(1, "IPv6 TLS Proxy", str(80), 0)
     if status == 0:
         time.sleep(5)
-        status = run_test(2, "TCP Proxy", str(81), 1)
+        status = run_test(2, "IPv6 TCP Proxy", str(81), 1)
     #Enable when L7 support is reinstated in P4+ TCP Proxy
     #if status == 0:
     #    # Run TCP/TLS proxy with app redirect E2E
