@@ -451,9 +451,9 @@ u64 sonic_q_ringdb_data(struct queue *q, uint32_t index)
 		.p_index = index,
 	};
 
-	printk(KERN_ERR "sonic_q_ringdb ring doorbell name %s qid %d ring 0 p_index %d db 0x%llx\n",
-		 q->name, q->qid,
-		 index, (u64) q->db);
+	//printk(KERN_DEBUG "sonic_q_ringdb ring doorbell name %s qid %d ring 0 p_index %d db 0x%llx\n",
+	//	 q->name, q->qid,
+	//	 index, (u64) q->db);
 
 	return *((u64 *) &db);
 }

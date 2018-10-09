@@ -249,15 +249,6 @@ struct test_testcase {
 	struct test_node_list validations;
 };
 
-struct test_node_file {
-	struct test_node node;
-	uint64_t checksum;
-	uint64_t padded_checksum;
-	uint32_t file_size;
-	uint32_t padded_size;
-	char filename[TEST_MAX_FULL_PATH_LEN+1];
-};
-
 #define TEST_ALIAS_MAX_NAME_LEN 32
 #define TEST_ALIAS_MAX_VAL_LEN 80
 struct test_alias {
@@ -274,7 +265,7 @@ struct test_desc {
 	uint32_t status_interval;
 	char output_file_prefix[TEST_MAX_FILE_PREFIX_LEN];
 	char output_file_suffix[TEST_MAX_FILE_PREFIX_LEN];
-	bool delete_output_files;
+	bool store_output_files;
 	struct test_node_list aliases;
 	struct test_node_list svc_chains;
 	struct test_node_list crypto_keys;

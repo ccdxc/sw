@@ -188,33 +188,6 @@ pnso_error_t test_delete_file(const char *fname)
 	return PNSO_OK;
 }
 
-/* Fill buflist with random values */
-pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed)
-{
-	size_t i, j;
-	uint32_t rnum = 0;
-	uint8_t *dst;
-
-	srand(seed);
-
-	for (i = 0; i < buflist->count; i++) {
-		if (!buflist->buffers[i].len) {
-			continue;
-		}
-
-
-		dst = (uint8_t *) buflist->buffers[i].buf;
-		for (j = 0; j < buflist->buffers[i].len; j++) {
-			if ((j % 4) == 0) {
-				rnum = rand();
-			}
-			dst[j] = (rnum >> ((j % 4) * 8)) & 0xff;
-		}
-	}
-
-	return PNSO_OK;
-}
-
 #define TEST_FREAD_SIZE 4096
 
 int test_compare_files(const char *path1, const char *path2,

@@ -6,6 +6,7 @@
 #include "osal_errno.h"
 #include "osal_mem.h"
 #include "osal_sys.h"
+#include "osal_setup.h"
 
 #include "pnso_api.h"
 #include "pnso_crypto.h"
@@ -163,6 +164,7 @@ pnso_register_compression_header_format(
 
 	return PNSO_OK;
 }
+OSAL_EXPORT_SYMBOL(pnso_register_compression_header_format);
 
 /* Assumes mapping is 1:1 */
 pnso_error_t
@@ -176,6 +178,7 @@ pnso_add_compression_algo_mapping(enum pnso_compression_type pnso_algo,
 
 	return PNSO_OK;
 }
+OSAL_EXPORT_SYMBOL(pnso_add_compression_algo_mapping);
 
 pnso_error_t pnso_set_key_desc_idx(const void *key1,
 				   const void *key2,
@@ -184,4 +187,27 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
 {
 	return crypto_key_index_update(key1, key2, key_size, key_idx);
 }
+OSAL_EXPORT_SYMBOL(pnso_set_key_desc_idx);
 
+/* TODO: these are just stubs, so that linking with dependent libraries passes */
+pnso_error_t pnso_init(struct pnso_init_params *init_params)
+{
+	return 0;
+}
+OSAL_EXPORT_SYMBOL(pnso_init);
+
+pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
+		struct pnso_service_result *svc_res)
+{
+	return EINVAL;
+}
+OSAL_EXPORT_SYMBOL(pnso_add_to_batch);
+
+pnso_error_t pnso_flush_batch(completion_cb_t cb,
+		void *cb_ctx,
+		pnso_poll_fn_t *pnso_poll_fn,
+		void **pnso_poll_ctx)
+{
+	return EINVAL;
+}
+OSAL_EXPORT_SYMBOL(pnso_flush_batch);

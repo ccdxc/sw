@@ -494,7 +494,11 @@ hash_read_status(const struct service_info *svc_info)
 	err = per_block ? hash_read_status_per_block(svc_info) :
 		hash_read_status_buffer(svc_info);
 
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	if (!err) {
+		OSAL_LOG_DEBUG("exit!");
+	} else {
+		OSAL_LOG_ERROR("exit! err: %d", err);
+	}
 	return err;
 }
 
@@ -633,7 +637,11 @@ hash_write_result(struct service_info *svc_info)
 	err = per_block ? hash_write_result_per_block(svc_info) :
 		hash_write_result_buffer(svc_info);
 
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	if (!err) {
+		OSAL_LOG_DEBUG("exit!");
+	} else {
+		OSAL_LOG_ERROR("exit! err: %d", err);
+	}
 	return err;
 }
 

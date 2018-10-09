@@ -303,8 +303,8 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 	cur_svc = &svc_ctxs[0];
 	cur_svc->input.buf = (uint64_t) sess->scratch.data[scratch_bank];
 	cur_svc->input.len = sess->scratch.data_sz;
-	cur_svc->input.len = sim_memcpy_list_to_flat_buf(&cur_svc->input,
-							 svc_req->sgl);
+	cur_svc->input.len = sim_memcpy_pa_list_to_flat_buf(&cur_svc->input,
+							    svc_req->sgl);
 	cur_svc->is_first = 1;
 
 	for (svc_i = 0; svc_i < svc_req->num_services; svc_i++) {
@@ -353,7 +353,7 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 					rc = ENOMEM;
 					/* TODO: need generic PNSO error */
 				} else {
-					sim_memcpy_flat_buf_to_list(
+					sim_memcpy_flat_buf_to_pa_list(
 						status->u.dst.sgl,
 						&cur_svc->output);
 				}

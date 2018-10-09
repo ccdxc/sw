@@ -677,3 +677,4 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 	OSAL_LOG_DEBUG("exit!");
 	return err;
 }
+OSAL_EXPORT_SYMBOL(pnso_submit_request);

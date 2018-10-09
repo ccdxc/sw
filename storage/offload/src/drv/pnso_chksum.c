@@ -449,7 +449,11 @@ chksum_read_status(const struct service_info *svc_info)
 	err = per_block ? chksum_read_status_per_block(svc_info) :
 		chksum_read_status_buffer(svc_info);
 
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	if (!err) {
+		OSAL_LOG_DEBUG("exit!");
+	} else {
+		OSAL_LOG_ERROR("exit! err: %d", err);
+	}
 	return err;
 }
 
@@ -588,7 +592,11 @@ chksum_write_result(struct service_info *svc_info)
 	err = per_block ? chksum_write_result_per_block(svc_info) :
 		chksum_write_result_buffer(svc_info);
 
-	OSAL_LOG_ERROR("exit! err: %d", err);
+	if (!err) {
+		OSAL_LOG_DEBUG("exit!");
+	} else {
+		OSAL_LOG_ERROR("exit! err: %d", err);
+	}
 	return err;
 }
 

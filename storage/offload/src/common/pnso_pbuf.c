@@ -230,6 +230,71 @@ out:
 	return NULL;
 }
 
+uint32_t
+pbuf_copy_buffer_list(const struct pnso_buffer_list *src_buf_list,
+		      struct pnso_buffer_list *dst_buf_list)
+{
+	uint32_t ret;
+	uint32_t copy_len;
+	uint32_t src_buf_offset;
+	uint32_t dst_buf_offset;
+	size_t src_i;
+	size_t dst_i;
+	const struct pnso_flat_buffer *src_buf;
+	struct pnso_flat_buffer *dst_buf;
+
+	if (!src_buf_list || !src_buf_list->count)
+		return 0;
+
+	if (!dst_buf_list || !dst_buf_list->count)
+		return 0;
+
+	ret = 0;
+	dst_i = 0;
+	dst_buf = &dst_buf_list->buffers[dst_i++];
+	dst_buf_offset = 0;
+	for (src_i = 0; src_i < src_buf_list->count; src_i++) {
+		src_buf = &src_buf_list->buffers[src_i];
+		src_buf_offset = 0;
+		while (src_buf_offset < src_buf->len) {
+			copy_len = src_buf->len - src_buf_offset;
+			if (copy_len > (dst_buf->len - dst_buf_offset))
+				copy_len = dst_buf->len - dst_buf_offset;
+			if (copy_len) {
+				memcpy((uint8_t*)dst_buf->buf+dst_buf_offset,
+				       (uint8_t*)src_buf->buf+src_buf_offset,
+				       copy_len);
+				ret += copy_len;
+				src_buf_offset += copy_len;
+				dst_buf_offset += copy_len;
+				if (dst_buf_offset >= dst_buf->len) {
+					dst_buf = &dst_buf_list->buffers[dst_i++];
+					dst_buf_offset = 0;
+					if (dst_i >= dst_buf_list->count ||
+					    dst_buf->len == 0) {
+						/* no more space in dst_buf_list */
+						goto done;
+					}
+				}
+			} else {
+				goto done;
+			}
+		}
+	}
+
+	/* truncate dst length to match src */
+	while (dst_i <= dst_buf_list->count) {
+		if (dst_buf_offset < dst_buf->len) {
+			dst_buf->len = dst_buf_offset;
+		}
+		dst_buf = &dst_buf_list->buffers[dst_i++];
+		dst_buf_offset = 0;
+	}
+
+done:
+	return ret;
+}
+
 size_t
 pbuf_get_buffer_list_len(const struct pnso_buffer_list *buf_list)
 {
@@ -379,5 +444,6 @@ pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 		OSAL_LOG_INFO("#%2d: flat_buf: 0x%llx len: %d buf: %c%c%c%c\n",
 				i, (uint64_t)flat_buf, flat_buf->len,
 				p[0], p[1], p[2], p[3]);
+		break;
 	}
 }

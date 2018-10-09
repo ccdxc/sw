@@ -518,6 +518,8 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 			ring_id, ring->ring_size);
 		goto done;
 	}
+	dev_info(res->lif->sonic->dev, "get_seq_q_desc_count: hw ring %u: q_entries_per_core=%u.\n",
+		 ring_id, *desc_count);
 
 	err = 0;
 

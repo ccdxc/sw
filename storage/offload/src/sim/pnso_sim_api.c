@@ -7,11 +7,16 @@
 #include "osal_errno.h"
 #include "osal_mem.h"
 #include "osal_sys.h"
+#include "osal_setup.h"
 
 #include "sim.h"
 #include "sim_chain.h"
 #include "sim_util.h"
 #include "sim_worker.h"
+
+#ifndef ENABLE_PNSO_SONIC_TEST
+OSAL_LICENSE("Dual BSD/GPL");
+#endif
 
 struct pnso_init_params g_init_params;
 
@@ -38,6 +43,7 @@ pnso_error_t pnso_init(struct pnso_init_params *init_params)
 
 	return rc;
 }
+OSAL_EXPORT_SYMBOL(pnso_init);
 
 pnso_error_t pnso_register_compression_header_format(
 		struct pnso_compression_header_format *cp_hdr_fmt,
@@ -102,6 +108,7 @@ pnso_error_t pnso_register_compression_header_format(
 
 	return PNSO_OK;
 }
+OSAL_EXPORT_SYMBOL(pnso_register_compression_header_format);
 
 /* Assumes mapping is 1:1 */
 pnso_error_t pnso_add_compression_algo_mapping(
@@ -114,6 +121,7 @@ pnso_error_t pnso_add_compression_algo_mapping(
 	sim_set_algo_mapping(pnso_algo, header_algo);
 	return PNSO_OK;
 }
+OSAL_EXPORT_SYMBOL(pnso_add_compression_algo_mapping);
 
 pnso_error_t pnso_sim_thread_init(int core_id)
 {
@@ -126,6 +134,7 @@ pnso_error_t pnso_sim_thread_init(int core_id)
 	rc = sim_start_worker_thread(core_id);
 	return rc;
 }
+OSAL_EXPORT_SYMBOL(pnso_sim_thread_init);
 
 void pnso_sim_thread_finit(int core_id)
 {
@@ -133,6 +142,7 @@ void pnso_sim_thread_finit(int core_id)
 		sim_finit_session(core_id);
 	}
 }
+OSAL_EXPORT_SYMBOL(pnso_sim_thread_finit);
 
 /* Free resources used by sim.  Assumes no worker threads running. */
 void pnso_sim_finit(void)
@@ -146,6 +156,7 @@ void pnso_sim_finit(void)
 	sim_key_store_finit();
 	/* TODO: free request memory */
 }
+OSAL_EXPORT_SYMBOL(pnso_sim_finit);
 
 pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
 		struct pnso_service_result *svc_res)
@@ -162,6 +173,7 @@ pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
 	return sim_sq_enqueue(core_id, svc_req, svc_res,
 			      NULL, NULL, NULL, false);
 }
+OSAL_EXPORT_SYMBOL(pnso_add_to_batch);
 
 pnso_error_t pnso_flush_batch(completion_cb_t cb,
 		void *cb_ctx,
@@ -192,6 +204,7 @@ pnso_error_t pnso_flush_batch(completion_cb_t cb,
 	}
 	return rc;
 }
+OSAL_EXPORT_SYMBOL(pnso_flush_batch);
 
 pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 				 struct pnso_service_result *svc_res,
@@ -229,4 +242,33 @@ pnso_error_t pnso_submit_request(struct pnso_service_request *svc_req,
 
 	return rc;
 }
+OSAL_EXPORT_SYMBOL(pnso_submit_request);
 
+
+#ifdef __KERNEL__
+#ifndef ENABLE_PNSO_SONIC_TEST
+static int
+sim_init(void)
+{
+	return 0;
+}
+
+static int
+sim_fini(void)
+{
+	pnso_sim_finit();
+	return 0;
+}
+
+static int
+body(void)
+{
+	return 0;
+}
+
+osal_init_fn_t init_fp = sim_init;
+osal_init_fn_t fini_fp = sim_fini;
+
+OSAL_SETUP(init_fp, body, fini_fp);
+#endif
+#endif

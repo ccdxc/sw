@@ -40,12 +40,15 @@ void pnso_test_init_fns(pnso_submit_req_fn_t submit,
 			pnso_alloc_fn_t alloc,
 			pnso_dealloc_fn_t dealloc,
 			pnso_realloc_fn_t realloc);
+void pnso_test_shutdown(void);
+void pnso_test_set_shutdown_complete(void);
 struct test_desc *pnso_test_desc_alloc(void);
 void pnso_test_desc_free(struct test_desc *desc);
 pnso_error_t pnso_test_parse_file(const char *fname, struct test_desc *desc);
 pnso_error_t pnso_test_parse_buf(const unsigned char *buf, size_t buf_len,
 				 struct test_desc *desc);
 pnso_error_t pnso_test_run_all(struct test_desc *desc);
+pnso_error_t pnso_run_unit_tests(struct test_desc *desc);
 
 void test_dump_desc(struct test_desc *desc);
 void test_dump_yaml_desc_tree(void);
@@ -65,9 +68,18 @@ int test_compare_files(const char *path1, const char *path2, uint32_t offset, ui
 int test_compare_file_data(const char *path, uint32_t offset, uint32_t len,
 			   const uint8_t *pattern, uint32_t pat_len);
 
+/* Functions in pnso_test_util.c */
+uint32_t safe_itoa(char *dst, uint32_t dst_len, uint64_t val);
+uint32_t safe_strcpy_tolower(char *dst, const char *src, uint32_t max_len);
+uint32_t safe_strcpy(char *dst, const char *src, uint32_t max_len);
+int safe_strcmp(const char *str1, const char *str2);
+long long safe_strtoll(const char *val);
+
 void *pnso_test_alloc(size_t sz);
+void *pnso_test_alloc_aligned(size_t alignment, size_t sz);
 void pnso_test_free(void *ptr);
 #define TEST_ALLOC pnso_test_alloc
+#define TEST_ALLOC_ALIGNED pnso_test_alloc_aligned
 #define TEST_FREE pnso_test_free
 
 
@@ -76,7 +88,7 @@ void pnso_test_free(void *ptr);
 #define PNSO_LOG_WARN  OSAL_LOG_WARN
 #define PNSO_LOG_INFO  OSAL_LOG
 #define PNSO_LOG_DEBUG OSAL_LOG_DEBUG
-#define PNSO_LOG_TRACE OSAL_LOG_DEBUG
+#define PNSO_LOG_TRACE(...)
 
 #ifdef __cplusplus
 }  /* extern "C" */

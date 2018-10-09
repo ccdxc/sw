@@ -26,9 +26,7 @@ cc_library(
         select({
             "//conditions:default": 
                 glob(["linux/uspace/*.c"]) +
-                glob(["linux/uspace/*.h"]) +
-                glob(["linux/uspace/sim/*.c"]) + 
-                glob(["linux/uspace/sim/*.h"]),
+                glob(["linux/uspace/*.h"]),
             ":user_dol" : [
             ],
         }),

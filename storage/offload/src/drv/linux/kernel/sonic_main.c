@@ -390,8 +390,12 @@ static int __init sonic_init_module(void)
 	err = sonic_bus_register_driver();
 	if (err)
 		return err;
-
+	
+#ifdef ENABLE_PNSO_SONIC_TEST
 	return body();
+#else
+	return 0;
+#endif
 }
 
 static void __exit sonic_cleanup_module(void)
