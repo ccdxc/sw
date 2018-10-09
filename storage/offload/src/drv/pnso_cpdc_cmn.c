@@ -104,7 +104,6 @@ cpdc_common_read_status(struct cpdc_desc *desc,
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
 	return err;
-
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;

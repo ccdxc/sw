@@ -283,7 +283,6 @@ static pnso_error_t
 hash_poll(const struct service_info *svc_info)
 {
 	volatile struct cpdc_status_desc *status_desc;
-	int i;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -299,13 +298,13 @@ hash_poll(const struct service_info *svc_info)
 	 */
 #if 0
 	while (status_desc->csd_valid == 0)
-		osal_yield();
+		;
 #else
-	for (i = 0; i < 16; i++) {
+	int i;
+	for (i = 0; i < 16; i++)
 		osal_yield();
-		osal_yield();
-	}
 #endif
+
 	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;
 }

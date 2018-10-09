@@ -301,8 +301,14 @@ compress_poll(const struct service_info *svc_info)
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
 
+#if 0
 	while (status_desc->csd_valid == 0)
+		;
+#else
+	int i;
+	for (i = 0; i < 16; i++)
 		osal_yield();
+#endif
 
 	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;
