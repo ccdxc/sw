@@ -1548,7 +1548,12 @@ Eth::_CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data)
                   cmd->dest_qp_num, cmd->q_key,
                   cmd->e_psn, cmd->sq_psn,
                   cmd->header_template_ah_id, cmd->header_template_size,
-                  header, cmd->path_mtu, cmd->state);
+                  header, cmd->path_mtu, cmd->state,
+                  cmd->cur_qstate, cmd->en_sqd_async_notify,
+                  cmd->access_flags, cmd->timeout,
+                  cmd->retry_cnt, cmd->rnr_retry,
+                  cmd->max_qp_rd_atomic, cmd->min_rnr_timer,
+                  cmd->max_dest_rd_atomic);
 
     return (DEVCMD_SUCCESS);
 }

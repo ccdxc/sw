@@ -147,7 +147,10 @@ struct rqcb1_t {
                       // rw by S0
                       
     e_psn: 24;        //rw by S0
-    rsvd3: 8;
+    rsvd3: 5;
+    ac_remote_wr: 1;        //written by AQ in S4
+    ac_remote_rd: 1;        //written by AQ in S4
+    ac_remote_atomic: 1;    //written by AQ in S4
 
     msn:24;                 //rw by S0 ?
     header_template_size: 8;    //Ronly

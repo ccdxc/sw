@@ -209,15 +209,15 @@ class QpObject(base.ConfigObjectBase):
 
             req_spec.qp_num = self.id
             req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
-            req_spec.oper = self.modify_qp_oper
-            if req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QPN:
+            req_spec.attr_mask = (1 << self.modify_qp_oper)
+            if self.modify_qp_oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QPN:
                req_spec.dst_qp_num = self.dst_qp
-            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QKEY:
+            elif self.modify_qp_oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_QKEY:
                req_spec.q_key = self.q_key
-            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV:
+            elif self.modify_qp_oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_AV:
                req_spec.header_template = bytes(self.HdrTemplate)
                req_spec.ahid = self.ah_handle
-            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_STATE:
+            elif self.modify_qp_oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_STATE:
                req_spec.qstate = self.qstate
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -263,8 +263,8 @@ class QpObject(base.ConfigObjectBase):
         elif req_spec.__class__.__name__ == "RdmaQpUpdateSpec":
 
             logger.info("Resp for RdmaQpUpdateSpec, "
-                           "QP: %s PD: %s oper: %d" %\
-                            (self.GID(), self.pd.GID(), req_spec.oper))
+                           "QP: %s PD: %s attr_mask: %d" %\
+                            (self.GID(), self.pd.GID(), req_spec.attr_mask))
 
 
         #logger.ShowScapyObject(self.sq_cq.qstate.data)

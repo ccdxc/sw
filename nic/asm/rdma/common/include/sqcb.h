@@ -110,7 +110,9 @@ struct sqcb0_t {
     num_sges                      : 8;  // WO S5, RO S0
 
     sq_drained                    : 1; // RW S5, RW S0
-    rsvd_state_flags              : 7;
+    ac_local_wr                   : 1; // RW S5
+    ac_mw_bind                    : 1; // RW S5
+    rsvd_state_flags              : 5;
 
     priv_oper_enable              : 1;  // RO
     in_progress                   : 1;  // WO S5, RO S0
