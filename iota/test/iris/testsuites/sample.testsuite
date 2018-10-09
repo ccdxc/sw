@@ -25,6 +25,8 @@ setup:
     #   before the testcases start.
     #   Each step will be invoked in the order below.
     config  : 
+        # Invokes: iota/test/iris/bringup/make_venice_cluster.py
+        - step : bringup.make_venice_cluster
         # Invokes: iota/test/iris/bringup/generate_base_config.py
         - step : bringup.generate_base_config
           spec : test/iris/baseconfig/sample_baseconfig.spec

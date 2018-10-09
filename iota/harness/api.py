@@ -74,8 +74,26 @@ def QueryConfig(req):
     Logger.info("Query Config:")
     return __rpc(req, CfgSvcStub.QueryConfig)
 
+def InitCfgService(req):
+    global CfgSvcStub
+    Logger.info("Init Config Service:")
+    return __rpc(req, CfgSvcStub.InitCfgService)
+
+def GenerateConfigs(req):
+    global CfgSvcStub
+    Logger.info("Generate Configs:")
+    return __rpc(req, CfgSvcStub.GenerateConfigs)
+
+def MakeCluster(req):
+    global CfgSvcStub
+    Logger.info("Make Cluster:")
+    return __rpc(req, CfgSvcStub.MakeCluster)
+
 def GetVeniceMgmtIpAddresses():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVeniceMgmtIpAddresses()
 
 def GetDataVlans():
     return store.GetTestbed().GetDataVlans()
+
+def GetVeniceHostnames():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVeniceHostnames()

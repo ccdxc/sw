@@ -105,9 +105,18 @@ class Topology(object):
                 Logger.error(" - %s: " % types_pb2.APIResponseType.Name(n.node_status))
             return types.status.FAILURE
 
+        return types.status.SUCCESS
+
     def GetVeniceMgmtIpAddresses(self):
         ips = []
         for n in self.__nodes:
             if n.Role() == topo_pb2.PERSONALITY_VENICE:
                 ips.append(n.MgmtIpAddress())
+        return ips
+
+    def GetVeniceHostnames(self):
+        ips = []
+        for n in self.__nodes:
+            if n.Role() == topo_pb2.PERSONALITY_VENICE:
+                ips.append(n.Name())
         return ips

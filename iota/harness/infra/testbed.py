@@ -42,8 +42,8 @@ class _Testbed:
         msg.driver_sources = ts.GetImages().drivers
 
         # TBD: Get it from warmd.json
-        msg.user = "vm"
-        msg.passwd = "vm"
+        msg.user = self.tbspec.Provision.Username
+        msg.passwd = self.tbspec.Provision.Password
 
         for node_ip in self.__node_ips:
             msg.ip_address.append(node_ip)

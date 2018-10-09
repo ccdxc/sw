@@ -11,7 +11,7 @@ def __init_config():
         req.endpoints.append("%s:10001" % venice_ip)
     for data_vlan in api.GetDataVlans():
         req.vlans.append(data_vlan)
-    resp = api.InitCfgService()
+    resp = api.InitCfgService(req)
     if resp == None:
         return api.types.status.FAILURE
     
@@ -20,7 +20,7 @@ def __init_config():
 def __generate_config():
     api.Logger.info("Generating Configuration.")
     req = cfg_svc_pb2.GenerateConfigMsg()
-    resp = api.GenerateConfigs()
+    resp = api.GenerateConfigs(req)
     if resp == None:
         return api.types.status.FAILURE
 
