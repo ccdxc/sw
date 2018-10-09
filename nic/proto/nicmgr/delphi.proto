@@ -4,9 +4,13 @@ package nicmgr;
 
 import "nic/delphi/proto/delphi/delphi.proto";
 
+message QstateAddr {
+    uint64 qstate_addr = 1;
+}
+
 message LifInfo {
     uint64 hw_lif_id = 1;
-    repeated uint64 qstate_addr = 2;
+    repeated QstateAddr qstate_addr = 2;
 }
 
 message Vlans {

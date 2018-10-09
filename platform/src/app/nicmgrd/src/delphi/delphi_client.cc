@@ -18,5 +18,10 @@ NicMgrService::NicMgrService(delphi::SdkPtr sk, string name) {
 
 }
 
-
+void NicMgrService::OnMountComplete() {
+    LogInfo("On mount complete got called");
+    // Delphi Object Iterator here
+    //
+    nicmgr::EthDeviceInfoPtr eth_dev_obj = delphi::objects::EthDeviceInfo::FindObject(sdk_);
+      
 }

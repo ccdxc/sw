@@ -45,7 +45,7 @@ private:
 public:
     NicMgrService(delphi::SdkPtr sk);
     NicMgrService(delphi::SdkPtr sk, string name);
-
+    void OnMountComplete();
     virtual string Name() { return svcName_; }
     
     void OnMountComplete(void) {

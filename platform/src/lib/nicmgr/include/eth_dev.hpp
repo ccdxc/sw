@@ -130,6 +130,7 @@ public:
     struct dev_cmd_regs *devcmd;
     void DevcmdPoll();
     void DevcmdHandler();
+    //void DevObjSave();
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
         void *resp, void *resp_data);
 private:
