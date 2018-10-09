@@ -362,7 +362,7 @@ start_qemu() {
 }
 
 start_bsd() {
-    QEMU_EXTRA= QEMU_IMAGE="$QEMU_IMAGE_BSD" start_qemu
+    QEMU_EXTRA="$QEMU_EXTRA_BSD" QEMU_IMAGE="$QEMU_IMAGE_BSD" start_qemu
 }
 
 monitor_qemu() {

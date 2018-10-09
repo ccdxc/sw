@@ -1,7 +1,7 @@
 #!/bin/sh
 # Set OS_DIR to point to FreeBSD source code.
 # example OS_DIR=/home/anish/freebsd
-OS_DIR=
+: ${OS_DIR:=/usr/src}
 
 if [ -z ${OS_DIR}]
 then
@@ -9,14 +9,15 @@ then
 	exit 1
 fi
 
+make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -C ionic clean cleandepend
+make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -C ionic 
+
 if [ ! -f ionic/ionic.ko ]
 then
 	echo Failed to build ionic.ko
 	exit 1
 fi
 
-make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -C ionic clean cleandepend
-make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -C ionic 
 
 kldload ionic/ionic.ko
 

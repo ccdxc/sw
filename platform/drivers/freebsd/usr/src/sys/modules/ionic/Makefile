@@ -1,5 +1,6 @@
-# $FreeBSD: todo version tag $
-.PATH:	${SRCTOP}/sys/dev/ionic/ionic_eth
+.PATH:	${.CURDIR}/../../dev/ionic/ionic_eth
+
+.include <bsd.own.mk>
 
 KMOD=ionic
 SRCS= \
