@@ -71,7 +71,6 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		hal.Natclient = halproto.NewNatClient(hal.client.ClientConn)
 		hal.IPSecclient = halproto.NewIpsecClient(hal.client.ClientConn)
 		hal.TCPProxyPolicyClient = halproto.NewTcpProxyClient(hal.client.ClientConn)
-		hal.PortClient = halproto.NewPortClient(hal.client.ClientConn)
 		haldp.Hal = hal
 		return &haldp, nil
 	}
@@ -88,7 +87,6 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		MockNatClient:      halproto.NewMockNatClient(hal.mockCtrl),
 		MockIPSecClient:    halproto.NewMockIpsecClient(hal.mockCtrl),
 		MockTCPProxyClient: halproto.NewMockTcpProxyClient(hal.mockCtrl),
-		MockPortClient:     halproto.NewMockPortClient(hal.mockCtrl),
 	}
 
 	hal.Epclient = hal.MockClients.MockEpclient
@@ -102,7 +100,6 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 	hal.Natclient = hal.MockClients.MockNatClient
 	hal.IPSecclient = hal.MockClients.MockIPSecClient
 	hal.TCPProxyPolicyClient = hal.MockClients.MockTCPProxyClient
-	hal.PortClient = hal.MockClients.MockPortClient
 	haldp.Hal = hal
 	haldp.Hal.setExpectations()
 	return &haldp, nil
@@ -182,12 +179,6 @@ func (hd *Hal) setExpectations() {
 	hd.MockClients.MockTCPProxyClient.EXPECT().TcpProxyRuleCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockTCPProxyClient.EXPECT().TcpProxyRuleUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	hd.MockClients.MockTCPProxyClient.EXPECT().TcpProxyRuleDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-
-	hd.MockClients.MockPortClient.EXPECT().PortCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockPortClient.EXPECT().PortUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockPortClient.EXPECT().PortDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockPortClient.EXPECT().PortInfoGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-
 }
 
 func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {

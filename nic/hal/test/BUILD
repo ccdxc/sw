@@ -9,8 +9,6 @@ cc_library(
     ],
     deps = [
         "//nic/include:base_includes",
-	"//nic:gen_proto_includes",
-        "//nic:google_includes",
         "//nic/hal/lib:hal_lib_includes",
         "//nic/hal/core:core_includes",
         "//nic:spdlog",

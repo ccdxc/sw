@@ -593,12 +593,6 @@ cc_library(
     name = "liblinkmgr",
     srcs = [
         "conf/linkmgr/liblinkmgr.so",
-    ],
-)
-
-cc_library(
-    name = "liblinkmgr_csr",
-    srcs = [
         "conf/linkmgr/liblinkmgr_csr.so"
     ],
 )

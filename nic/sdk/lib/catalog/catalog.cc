@@ -724,9 +724,6 @@ catalog::sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
     uint32_t l_asic_num  = 0;
     uint32_t l_asic_port = 0;
 
-    return catalog_db_.asics[asic_num].
-                       ports[asic_port + lane].sbus_addr;
-
     // TODO work around until port pd structure is
     // updated to hold asic number and asic port
     for (l_asic_num = 0; l_asic_num < MAX_ASICS; ++l_asic_num) {

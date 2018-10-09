@@ -783,7 +783,7 @@ func createEndpoint(baseURL string) error {
 		Spec: netproto.EndpointSpec{
 			NetworkName:   "kg1",
 			InterfaceType: "uplink",
-			Interface:     "uplink128",
+			Interface:     "uplink1",
 			IPv4Address:   "10.0.2.1/16",
 			MacAddress:    "00:22:0A:00:02:01",
 			NodeUUID:      "GWUUID",
@@ -800,7 +800,7 @@ func createEndpoint(baseURL string) error {
 		Spec: netproto.EndpointSpec{
 			NetworkName:   "kg2",
 			InterfaceType: "uplink",
-			Interface:     "uplink129",
+			Interface:     "uplink2",
 			IPv4Address:   "10.0.2.1/16",
 			MacAddress:    "00:22:0A:00:02:01",
 			NodeUUID:      "GWUUID",
@@ -817,7 +817,7 @@ func createEndpoint(baseURL string) error {
 		Spec: netproto.EndpointSpec{
 			NetworkName:   "public",
 			InterfaceType: "uplink",
-			Interface:     "uplink129",
+			Interface:     "uplink2",
 			IPv4Address:   "20.1.1.1/16",
 			MacAddress:    "00:22:14:01:01:01",
 			NodeUUID:      "GWUUID",
@@ -912,7 +912,7 @@ func createRoute(baseURL string) error {
 		},
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "10.0.0.0/16",
-			Interface: "uplink128",
+			Interface: "uplink1",
 			GatewayIP: "10.0.2.1",
 		},
 	}
@@ -926,7 +926,7 @@ func createRoute(baseURL string) error {
 		},
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "10.0.0.0/16",
-			Interface: "uplink129",
+			Interface: "uplink2",
 			GatewayIP: "10.0.2.1",
 		},
 	}
@@ -940,7 +940,7 @@ func createRoute(baseURL string) error {
 		},
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "20.0.0.0/16",
-			Interface: "uplink129",
+			Interface: "uplink2",
 			GatewayIP: "20.1.1.1",
 		},
 	}

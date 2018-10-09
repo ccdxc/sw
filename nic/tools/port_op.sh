@@ -10,7 +10,7 @@ ulimit -c unlimited
 set -o errexit -o pipefail -o noclobber -o nounset
 
 PORT_CLIENT=$NIC_DIR/bin/port_client
-GRPC_PORT=localhost:50054
+GRPC_PORT=localhost:50053
 GDB=
 
 OPTIONS=crudp:s:e:ith
@@ -116,7 +116,7 @@ if [[ "$create" == "1" ]]; then
         fec=none
     fi
 
-    if [[ $port == "5" ]]; then
+    if [[ $port == "2" ]]; then
         mac_id=1
     fi
 
@@ -128,11 +128,7 @@ if [[ "$create" == "1" ]]; then
 fi
 
 if [[ "$get" == "1" ]]; then
-    if [[ "$port" == "0" ]];then
-        CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --get $dry_run"
-    else
-        CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --get -p $port $dry_run"
-    fi
+    CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --get -p $port $dry_run"
 fi
 
 if [[ "$update" == "1" ]]; then

@@ -168,87 +168,61 @@ func (hd *Datapath) convertAppProtocol(protocol string) halproto.IPProtocol {
 }
 
 // ToDo Remove Mock code prior to FCS. This is needed only for UT
-func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.PortInfoGetResponseMsg, error) {
-	mockLifs := &halproto.LifGetResponseMsg{
-		Response: []*halproto.LifGetResponse{
-			{
-				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
-				Spec: &halproto.LifSpec{
-					KeyOrHandle: &halproto.LifKeyHandle{
-						KeyOrHandle: &halproto.LifKeyHandle_LifId{
-							LifId: 1,
-						},
+func generateMockHwState() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error) {
+	var lifs halproto.LifGetResponseMsg
+	var uplinks halproto.InterfaceGetResponseMsg
+
+	mockLifs := []*halproto.LifGetResponse{
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.LifSpec{
+				KeyOrHandle: &halproto.LifKeyHandle{
+					KeyOrHandle: &halproto.LifKeyHandle_LifId{
+						LifId: 1,
 					},
 				},
 			},
-			{
-				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
-				Spec: &halproto.LifSpec{
-					KeyOrHandle: &halproto.LifKeyHandle{
-						KeyOrHandle: &halproto.LifKeyHandle_LifId{
-							LifId: 2,
-						},
+		},
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.LifSpec{
+				KeyOrHandle: &halproto.LifKeyHandle{
+					KeyOrHandle: &halproto.LifKeyHandle_LifId{
+						LifId: 2,
 					},
 				},
 			},
 		},
 	}
+	lifs.Response = append(lifs.Response, mockLifs...)
 
-	mockPorts := &halproto.PortInfoGetResponseMsg{
-		Response: []*halproto.PortInfoGetResponse{
-			{
-				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
-				Spec: &halproto.PortInfoSpec{
-					NumLanes: 4,
-					KeyOrHandle: &halproto.PortKeyHandle{
-						KeyOrHandle: &halproto.PortKeyHandle_PortId{
-							PortId: 1,
-						},
+	mockUplinks := []*halproto.InterfaceGetResponse{
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: 1,
 					},
-					BreakoutModes: []halproto.PortBreakoutMode{
-						halproto.PortBreakoutMode_PORT_BREAKOUT_MODE_4x25G,
-						halproto.PortBreakoutMode_PORT_BREAKOUT_MODE_2x50G,
-						halproto.PortBreakoutMode_PORT_BREAKOUT_MODE_4x10G,
-					},
-					PortType: halproto.PortType_PORT_TYPE_ETH,
 				},
+				Type: halproto.IfType_IF_TYPE_UPLINK,
 			},
-			{
-				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
-				Spec: &halproto.PortInfoSpec{
-					NumLanes: 4,
-					KeyOrHandle: &halproto.PortKeyHandle{
-						KeyOrHandle: &halproto.PortKeyHandle_PortId{
-							PortId: 2,
-						},
+		},
+		{
+			ApiStatus: halproto.ApiStatus_API_STATUS_OK,
+			Spec: &halproto.InterfaceSpec{
+				KeyOrHandle: &halproto.InterfaceKeyHandle{
+					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+						InterfaceId: 2,
 					},
-					BreakoutModes: []halproto.PortBreakoutMode{
-						halproto.PortBreakoutMode_PORT_BREAKOUT_MODE_4x25G,
-						halproto.PortBreakoutMode_PORT_BREAKOUT_MODE_2x50G,
-						halproto.PortBreakoutMode_PORT_BREAKOUT_MODE_4x10G,
-					},
-					PortType: halproto.PortType_PORT_TYPE_ETH,
 				},
-			},
-			{
-				ApiStatus: halproto.ApiStatus_API_STATUS_OK,
-				Spec: &halproto.PortInfoSpec{
-					NumLanes: 1,
-					KeyOrHandle: &halproto.PortKeyHandle{
-						KeyOrHandle: &halproto.PortKeyHandle_PortId{
-							PortId: 3,
-						},
-					},
-					BreakoutModes: []halproto.PortBreakoutMode{
-						halproto.PortBreakoutMode_PORT_BREAKOUT_MODE_NONE,
-					},
-					PortType: halproto.PortType_PORT_TYPE_MGMT,
-				},
+				Type: halproto.IfType_IF_TYPE_UPLINK,
 			},
 		},
 	}
+	uplinks.Response = append(uplinks.Response, mockUplinks...)
 
-	return mockLifs, mockPorts, nil
+	return &lifs, &uplinks, nil
 }
 
 // convertIPs converts ip addresses in Octet, IPMask and Hyphen separated IP Range to HAL IP Address Objects
@@ -442,41 +416,4 @@ func (hd *Datapath) convertIfAdminStatus(status string) (halproto.IfStatus, erro
 		return halproto.IfStatus_IF_STATUS_DOWN, fmt.Errorf("invalid admin status type. %v", status)
 	}
 
-}
-
-func (hd *Datapath) convertPortSpeed(speed string) (halPortSpeed halproto.PortSpeed, autoNeg bool) {
-	switch speed {
-	case "SPEED_1G":
-		halPortSpeed = halproto.PortSpeed_PORT_SPEED_1G
-	case "SPEED_10G":
-		halPortSpeed = halproto.PortSpeed_PORT_SPEED_10G
-	case "SPEED_25G":
-		halPortSpeed = halproto.PortSpeed_PORT_SPEED_25G
-	case "SPEED_40G":
-		halPortSpeed = halproto.PortSpeed_PORT_SPEED_40G
-	case "SPEED_50G":
-		halPortSpeed = halproto.PortSpeed_PORT_SPEED_50G
-	case "SPEED_100G":
-		halPortSpeed = halproto.PortSpeed_PORT_SPEED_100G
-	case "SPEED_AUTONEG":
-		halPortSpeed = halproto.PortSpeed_PORT_SPEED_NONE
-		autoNeg = true
-	default:
-		halPortSpeed = halproto.PortSpeed_PORT_SPEED_NONE
-	}
-	return
-}
-
-func (hd *Datapath) convertPortTypeFec(portType string) (halPortType halproto.PortType, halFecType halproto.PortFecType) {
-	switch portType {
-	case "TYPE_ETHERNET":
-		halPortType = halproto.PortType_PORT_TYPE_ETH
-		halFecType = halproto.PortFecType_PORT_FEC_TYPE_FC
-	case "TYPE_MANAGEMENT":
-		halPortType = halproto.PortType_PORT_TYPE_MGMT
-		halFecType = halproto.PortFecType_PORT_FEC_TYPE_NONE
-	default:
-		halPortType = halproto.PortType_PORT_TYPE_NONE
-	}
-	return
 }

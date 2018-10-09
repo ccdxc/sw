@@ -1,4 +1,3 @@
-#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include "include/sdk/platform/capri/capri.hpp"
 #include "boost/foreach.hpp"

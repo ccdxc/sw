@@ -107,7 +107,7 @@ import (
                                     WorkloadUUID:   "testWorkloadUUID",
                                     NetworkName:    "preCreatedNetwork",
                                     InterfaceType:  "UPLINK",
-                                    Interface:      "uplink128",
+                                    Interface:      "uplink1",
                                     NodeUUID:   "dummy-node-uuid",
                                     IPv4Address:    "10.1.1.0/24",
                                 },
@@ -317,7 +317,7 @@ import (
                                                        },
                                                        Spec: netproto.{{title $crudObject}}Spec{
                                                        IPPrefix: "10.1.1.0/24",
-                                                       Interface: "uplink129",
+                                                       Interface: "uplink2",
                                                        GatewayIP: "10.1.1.1",
                                                    },
                                                 }
@@ -608,7 +608,7 @@ import (
 
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
-                                                                       Interface: "uplink129",
+                                                                       Interface: "uplink2",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
                                     TypeMeta: api.TypeMeta{Kind: "{{title $crudObject}}"},
@@ -733,7 +733,7 @@ import (
                                 			                              WorkloadUUID: "updatedWorkloadUUID",
                                 			                              NetworkName:  "preCreatedNetwork",
                                                                     InterfaceType:  "UPLINK",
-                                                                    Interface:      "uplink128",
+                                                                    Interface:      "uplink1",
                                                                     NodeUUID:   "dummy-node-uuid",
                                                                     IPv4Address:    "10.1.1.0/24",
                                 		                            }
@@ -855,7 +855,7 @@ import (
                             {{else if strEq $crudObject "Interface"}}
                                 var actual{{title $crudObject}}Spec netproto.{{title $crudObject}}Spec
                                 updated{{title $crudObject}}Spec := netproto.{{title $crudObject}}Spec{
-                                                                       Type: "ENIC",
+                                                                       Type: "UPLINK",
                                                                        AdminStatus: "UP",
                                                                     }
                                 {{lower .}}Data := netproto.{{title $crudObject}}{
@@ -1127,7 +1127,7 @@ import (
                                     WorkloadUUID:   "testWorkloadUUID",
                                     NetworkName:    "preCreatedNetwork",
                                     InterfaceType:  "UPLINK",
-                                    Interface:      "uplink128",
+                                    Interface:      "uplink1",
                                     NodeUUID:   "dummy-node-uuid",
                                     IPv4Address:    "10.1.1.0/24",
                                 },

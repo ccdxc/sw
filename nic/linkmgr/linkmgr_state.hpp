@@ -12,8 +12,6 @@ using sdk::lib::slab;
 using sdk::lib::ht;
 using hal::cfg_op_t;
 using hal::hal_obj_id_t;
-using hal::HAL_OBJ_ID_MAX;
-using hal::hal_slab_t;
 
 namespace linkmgr {
 
@@ -55,7 +53,7 @@ private:
         uint32_t        obj_sz;
     } __PACK__ obj_meta_t;
 
-    obj_meta_t    obj_meta_[HAL_OBJ_ID_MAX];
+    obj_meta_t    obj_meta_[hal::HAL_OBJ_ID_MAX];
 };
 
 // memory slabs and any other memory manager state
@@ -64,7 +62,7 @@ public:
     static mem_db *factory(void);
     ~mem_db();
 
-    slab *get_slab(hal_slab_t slab_id);
+    slab *get_slab(hal::hal_slab_t slab_id);
 
     slab *hal_handle_slab(void) const { return hal_handle_slab_; }
     slab *hal_handle_ht_entry_slab(void) const { return hal_handle_ht_entry_slab_; }

@@ -117,7 +117,7 @@ func TestInterfaceUpdate(t *testing.T) {
 
 	var actualInterfaceSpec netproto.InterfaceSpec
 	updatedInterfaceSpec := netproto.InterfaceSpec{
-		Type:        "ENIC",
+		Type:        "UPLINK",
 		AdminStatus: "UP",
 	}
 	putData := netproto.Interface{

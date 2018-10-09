@@ -7,8 +7,35 @@
 #include "nic/asic/capri/model/cap_mx/cap_mx_csr.h"
 #include "nic/asic/capri/model/cap_bx/cap_bx_csr.h"
 #include "cap_blk_reg_model.h"
+#include "cap_top_csr.h"
+#include "cap_csr_py_if.h"
+#include "cpu_hal_if.h"
+#include "cpu.h"
 
 mac_profile_t mx[MAX_MAC];
+
+sdk_ret_t
+linkmgr_csr_init(void)
+{
+    // skip csr init for HAPS
+    // if (platform_type() == platform_type_t::PLATFORM_TYPE_HAPS) {
+    //     return HAL_RET_OK;
+    // }
+
+    // register hal cpu interface
+    auto cpu_if = new cpu_hal_if("cpu", "all");
+    cpu::access()->add_if("cpu_if", cpu_if);
+    cpu::access()->set_cur_if_name("cpu_if");
+
+    // Register at top level all MRL classes.
+    cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
+
+    cap0_ptr->init(0);
+    CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
+    register_chip_inst("cap0", 0, 0);
+
+    return sdk::SDK_RET_OK;
+}
 
 void cap_mx_soft_reset(int chip_id, int inst_id) {
    cap_mx_set_soft_reset(chip_id, inst_id, 0xf);

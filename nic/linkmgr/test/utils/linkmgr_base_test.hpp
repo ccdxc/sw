@@ -12,14 +12,11 @@
 using sdk::SDK_RET_OK;
 using boost::property_tree::ptree;
 using sdk::types::platform_type_t;
-using hal::utils::trace_init;
-using hal::utils::trace_debug;
 
 namespace linkmgr {
     extern hal_ret_t linkmgr_parse_cfg(const char *cfgfile,
                                        linkmgr::linkmgr_cfg_t *linkmgr_cfg);
     extern hal_ret_t linkmgr_thread_init (void);
-    extern hal_ret_t linkmgr_csr_init(void);
 }
 
 int
@@ -61,8 +58,8 @@ linkmgr_initialize (const char c_file[])
     linkmgr::linkmgr_cfg_t       linkmgr_cfg;
 
     // Initialize the logger
-    trace_init("linkmgr", sdk::lib::thread::control_cores_mask(),
-                           true, "linkmgr.log", trace_debug);
+    hal::utils::trace_init("linkmgr", sdk::lib::thread::control_cores_mask(),
+                           true, "linkmgr.log", hal::utils::trace_debug);
     sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
 
     sdk::lib::thread::control_cores_mask_set(0x1);
@@ -93,8 +90,6 @@ linkmgr_initialize (const char c_file[])
     sdk_cfg.cfg_path = cfg_path;
     sdk_cfg.catalog  = catalog;
 
-    linkmgr::linkmgr_csr_init();
-
     ret_hal = linkmgr::linkmgr_init(&sdk_cfg);
     if (ret_hal != HAL_RET_OK) {
         HAL_TRACE_ERR("linkmgr init failed");
@@ -102,7 +97,7 @@ linkmgr_initialize (const char c_file[])
     }
 
     // start the linkmgr control thread
-    sdk::linkmgr::linkmgr_start();
+    sdk::linkmgr::linkmgr_event_wait();
 
     printf("LINKMGR Initialized\n");
 }

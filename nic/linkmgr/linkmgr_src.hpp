@@ -16,7 +16,6 @@
 using hal::hal_handle_id_ht_entry_t;
 using hal::hal_handle_get_from_handle_id;
 using hal::hal_handle_get_obj;
-using hal::HAL_OBJ_ID_PORT;
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
 
@@ -117,7 +116,7 @@ find_port_by_id (port_num_t port_num)
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(
-                entry->handle_id)->obj_id() == HAL_OBJ_ID_PORT);
+                entry->handle_id)->obj_id() == hal::HAL_OBJ_ID_PORT);
         pi_p = (port_t *)hal_handle_get_obj(entry->handle_id);
         return pi_p;
     }
@@ -138,7 +137,7 @@ find_port_by_handle (hal_handle_t handle)
                          handle);
         return NULL;
     }
-    if (hal_handle->obj_id() != HAL_OBJ_ID_PORT) {
+    if (hal_handle->obj_id() != hal::HAL_OBJ_ID_PORT) {
         HAL_TRACE_DEBUG("failed to find port with handle: {}",
                          handle);
         return NULL;
@@ -152,6 +151,7 @@ bool     port_id_compare_key_func(void *key1, void *key2);
 
 hal_ret_t linkmgr_global_init(linkmgr_cfg_t*);
 sdk::lib::thread *current_thread(void);
+hal_ret_t linkmgr_csr_init(void);
 
 }    // namespace linkmgr
 

@@ -128,7 +128,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 		}
 		// Ensure the ID is non-overlapping with existing hw interfaces. Allcate IDs from 10000 onwards.
 		// Since HAL has some predefined interfaces which overlaps at 1K interfaces
-		enicID = enicID + uplinkOffset + 10000
+		enicID = enicID + maxNumUplinks + 10000
 		// save the enic id in the ep status for deletions
 		ep.Status.EnicID = enicID
 		intfInfo, err = na.Datapath.CreateLocalEndpoint(ep, nw, sgs, lifID, enicID, ns)

@@ -44,7 +44,7 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 		log.Errorf("Could not allocate tunnel id. {%+v}", err)
 		return err
 	}
-	tun.Status.TunnelID = tunnelID + uplinkOffset + 10000
+	tun.Status.TunnelID = tunnelID + maxNumUplinks + 10000
 
 	// create it in datapath
 	err = na.Datapath.CreateTunnel(tun, ns)

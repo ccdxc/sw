@@ -253,7 +253,7 @@ linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data)
 }
 
 void
-linkmgr_start (void)
+linkmgr_event_wait (void)
 {
     int thread_id = LINKMGR_THREAD_ID_CTRL;
     g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);

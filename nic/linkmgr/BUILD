@@ -12,7 +12,6 @@ cc_library(
     name = "linkmgr_includes",
     hdrs = [
         "linkmgr.hpp",
-        "linkmgr_debug.hpp",
     ]
 )
 
@@ -134,7 +133,6 @@ cc_library(
         "//nic:libaapl",
         "//nic/linkmgr:linkmgr_includes",
         "//nic:liblinkmgr",
-        "//nic:liblinkmgr_csr",
 
         "@sdk//obj:sdk_linkmgr",
         "@sdk//obj:sdk_logger",

@@ -50,7 +50,7 @@ func TestRoutePost(t *testing.T) {
 		},
 		Spec: netproto.RouteSpec{
 			IPPrefix:  "10.1.1.0/24",
-			Interface: "uplink129",
+			Interface: "uplink2",
 			GatewayIP: "10.1.1.1",
 		},
 	}
@@ -115,7 +115,7 @@ func TestRouteUpdate(t *testing.T) {
 
 	var actualRouteSpec netproto.RouteSpec
 	updatedRouteSpec := netproto.RouteSpec{
-		Interface: "uplink129",
+		Interface: "uplink2",
 	}
 	putData := netproto.Route{
 		TypeMeta: api.TypeMeta{Kind: "Route"},

@@ -1,14 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 PKG_PREREQS:= all
 
-platform-clean:
-    ifeq ($(ARCH),aarch64)
-		cd ${TOPDIR}/platform && make BUILD_ARCHES=aarch64 clean
-    else
-		cd ${TOPDIR}/platform && make BUILD_ARCHES=x86_64 clean
-    endif
-
-package-clean: platform-clean
+package-clean:
 	@rm -rf $(NICDIR)/../fake_root_target
 	@rm -f  $(NICDIR)/nic.tgz
 	@rm -f  $(NICDIR)/nic.tar

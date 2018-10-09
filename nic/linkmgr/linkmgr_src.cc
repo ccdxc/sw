@@ -13,10 +13,6 @@
 
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
-using hal::HAL_MEM_ALLOC_LINKMGR;
-using hal::HAL_OBJ_ID_PORT;
-using hal::hal_handle_free;
-using hal::hal_prepare_rsp;
 using sdk::lib::dllist_add;
 using sdk::lib::dllist_reset;
 using sdk::linkmgr::port_args_t;
@@ -60,7 +56,7 @@ svc_reg (ServerBuilder *server_builder,
         return HAL_RET_ERR;
     }
 
-    LINKMGR_CALLOC(port_svc, HAL_MEM_ALLOC_LINKMGR, PortServiceImpl);
+    LINKMGR_CALLOC(port_svc, hal::HAL_MEM_ALLOC_LINKMGR, PortServiceImpl);
 
     if (port_svc != NULL) {
         server_builder->RegisterService(port_svc);
@@ -69,7 +65,7 @@ svc_reg (ServerBuilder *server_builder,
     }
 
     if (process_mode == true) {
-        LINKMGR_CALLOC(debug_svc, HAL_MEM_ALLOC_LINKMGR, DebugServiceImpl);
+        LINKMGR_CALLOC(debug_svc, hal::HAL_MEM_ALLOC_LINKMGR, DebugServiceImpl);
 
         if (debug_svc != NULL) {
             server_builder->RegisterService(debug_svc);
@@ -293,7 +289,7 @@ port_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     // remove the object
-    hal_handle_free(hal_handle_id);
+    hal::hal_handle_free(hal_handle_id);
 
     // free PI port
     port_free(pi_p);
@@ -319,7 +315,7 @@ port_prepare_rsp (PortResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle_id)
     if (ret == HAL_RET_OK && hal_handle_id != 0) {
         //rsp->mutable_status()->set_port_handle(hal_handle_id);
     }
-    rsp->set_api_status(hal_prepare_rsp(ret));
+    rsp->set_api_status(hal::hal_prepare_rsp(ret));
 
     return HAL_RET_OK;
 }
@@ -355,7 +351,7 @@ port_create (port_args_t *port_args, hal_handle_t *hal_handle)
         return HAL_RET_OOM;
     }
 
-    pi_p->hal_handle_id = hal_handle_alloc(HAL_OBJ_ID_PORT);
+    pi_p->hal_handle_id = hal_handle_alloc(hal::HAL_OBJ_ID_PORT);
     if (pi_p->hal_handle_id == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("Failed to alloc handle for port: {}",
                        port_args->port_num);
@@ -684,7 +680,7 @@ port_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // b. Remove object from handle id based hash table
-    hal_handle_free(hal_handle);
+    hal::hal_handle_free(hal_handle);
 
     // c. Free PI port
     port_free(pi_p);
@@ -927,7 +923,7 @@ start_aacs_server (int port)
 
     int *int_port = NULL;
 
-    LINKMGR_CALLOC(int_port, HAL_MEM_ALLOC_LINKMGR, int);
+    LINKMGR_CALLOC(int_port, hal::HAL_MEM_ALLOC_LINKMGR, int);
 
     *int_port = port;
 
@@ -1426,3 +1422,23 @@ linkmgr_generic_debug_opn (GenericOpnRequest& req, GenericOpnResponse *resp)
 }
 
 }    // namespace linkmgr
+
+extern "C" {
+
+uint32_t jtag_wr (unsigned char chip,
+                  unsigned long long int reg_addr,
+                  uint32_t *sbus_data,
+                  unsigned long long int flag)
+{
+    return 0;
+}
+
+uint32_t jtag_rd (unsigned char chip,
+                  unsigned long long int reg_addr,
+                  uint32_t sbus_data,
+                  unsigned long long int flag)
+{
+    return 0;
+}
+
+}   // extern "C"
