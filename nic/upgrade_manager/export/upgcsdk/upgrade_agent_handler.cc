@@ -55,36 +55,38 @@ void UpgAgentHandler::DataplaneDowntimePhase4CompletionHandler(HdlrResp &resp, s
     return;
 }
 
-void UpgAgentHandler::DataplaneDowntimeStartCompletionHandler(HdlrResp &resp, string svcName) {
-    UPG_LOG_DEBUG("Dataplane downtime start completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
-    return;
-}
-
-void UpgAgentHandler::CleanupCompletionHandler(HdlrResp &resp, string svcName) {
-    UPG_LOG_DEBUG("Cleanup completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
-    return;
-}
-
 void UpgAgentHandler::AbortedCompletionHandler(HdlrResp &resp, string svcName) {
     UPG_LOG_DEBUG("Aborted completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
-void UpgAgentHandler::IsSystemReadyCompletionHandler(HdlrResp &resp, string svcName) {
-    UPG_LOG_DEBUG("IsSystemReady completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
+void UpgAgentHandler::HostDownCompletionHandler(HdlrResp &resp, string svcName) {
+    UPG_LOG_DEBUG("Host Down completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
+    return;
+}
+
+void UpgAgentHandler::HostUpCompletionHandler(HdlrResp &resp, string svcName) {
+    UPG_LOG_DEBUG("Host Up completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
+    return;
+}
+
+void UpgAgentHandler::PostHostDownCompletionHandler(HdlrResp &resp, string svcName) {
+    UPG_LOG_DEBUG("Post-Host Down completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
+    return;
+}
+
+void UpgAgentHandler::PostLinkUpCompletionHandler(HdlrResp &resp, string svcName) {
+    UPG_LOG_DEBUG("Post-Link Up completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
+    return;
+}
+
+void UpgAgentHandler::SaveStateCompletionHandler(HdlrResp &resp, string svcName) {
+    UPG_LOG_DEBUG("Save State completed with status {} error {} for service {}", resp.resp, resp.errStr, svcName);
     return;
 }
 
 void UpgAgentHandler::UpgSuccessful(void) {
     UPG_LOG_DEBUG("Upgrade completed with status successfully!!!!");
-    return;
-}
-
-void UpgAgentHandler::UpgFailed(vector<string> &errStrList) {
-    UPG_LOG_DEBUG("Upgrade failed!!!!");
-    for (uint i=0; i<errStrList.size(); i++) {
-        UPG_LOG_DEBUG("Application failed response: {}", errStrList[i]);
-    }
     return;
 }
 
@@ -99,6 +101,13 @@ void UpgAgentHandler::UpgNotPossible(UpgCtx &ctx, vector<string> &errStrList) {
 void UpgAgentHandler::UpgPossible(UpgCtx &ctx) {
     UPG_LOG_DEBUG("Upgrade Possible!!!!");
     return;
+}
+
+void UpgAgentHandler::UpgFailed(vector<string> &errStrList) {
+    UPG_LOG_DEBUG("Upgrade failed!!!!");
+    for (uint i=0; i<errStrList.size(); i++) {
+        UPG_LOG_DEBUG("Application failed response: {}", errStrList[i]);
+    }
 }
 
 void UpgAgentHandler::UpgAborted(vector<string> &errStrList) {

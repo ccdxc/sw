@@ -65,12 +65,12 @@ TEST_F(UpgradeReactorTest, UpgStateMachineTestNonDisruptive) {
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
                         UpgStateProcessQuiesceRespPass) << "UpgAppResp object has wrong oper state";
 
-    req->set_upgreqstate(UpgStatePostBinRestart);
+    req->set_upgreqstate(UpgStatePostRestart);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
-                        UpgStatePostBinRestartRespPass) << "UpgAppResp object has wrong oper state";
+                        UpgStatePostRestartRespPass) << "UpgAppResp object has wrong oper state";
 
     req->set_upgreqstate(UpgStateDataplaneDowntimePhase1);
     sdk_->QueueUpdate(req);
@@ -106,14 +106,6 @@ TEST_F(UpgradeReactorTest, UpgStateMachineTestNonDisruptive) {
 
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
                         UpgStateSuccessRespPass) << "UpgAppResp object has wrong oper state";
-
-    req->set_upgreqstate(UpgStateCleanup);
-    sdk_->QueueUpdate(req);
-    usleep(1000 * 100);
-
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
-                        UpgStateCleanupRespPass) << "UpgAppResp object has wrong oper state";
-
 }
 
 TEST_F(UpgradeReactorTest, UpgStateMachineTestDisruptive) {
@@ -145,19 +137,40 @@ TEST_F(UpgradeReactorTest, UpgStateMachineTestDisruptive) {
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
                         UpgStateLinkDownRespPass) << "UpgAppResp object has wrong oper state";
 
-    req->set_upgreqstate(UpgStateDataplaneDowntimeStart);
+    req->set_upgreqstate(UpgStateHostDown);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
-                        UpgStateDataplaneDowntimeStartRespPass) << "UpgAppResp object has wrong oper state";
+                        UpgStateHostDownRespPass) << "UpgAppResp object has wrong oper state";
 
-    req->set_upgreqstate(UpgStatePostBinRestart);
+    req->set_upgreqstate(UpgStatePostHostDown);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
-                        UpgStatePostBinRestartRespPass) << "UpgAppResp object has wrong oper state";
+                        UpgStatePostHostDownRespPass) << "UpgAppResp object has wrong oper state";
+
+    req->set_upgreqstate(UpgStateSaveState);
+    sdk_->QueueUpdate(req);
+    usleep(1000 * 100);
+
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
+                        UpgStateSaveStateRespPass) << "UpgAppResp object has wrong oper state";
+
+    req->set_upgreqstate(UpgStatePostRestart);
+    sdk_->QueueUpdate(req);
+    usleep(1000 * 100);
+
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
+                        UpgStatePostRestartRespPass) << "UpgAppResp object has wrong oper state";
+
+    req->set_upgreqstate(UpgStateHostUp);
+    sdk_->QueueUpdate(req);
+    usleep(1000 * 100);
+
+    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
+                        UpgStateHostUpRespPass) << "UpgAppResp object has wrong oper state";
 
     req->set_upgreqstate(UpgStateLinkUp);
     sdk_->QueueUpdate(req);
@@ -166,12 +179,12 @@ TEST_F(UpgradeReactorTest, UpgStateMachineTestDisruptive) {
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
                         UpgStateLinkUpRespPass) << "UpgAppResp object has wrong oper state";
 
-    req->set_upgreqstate(UpgStateIsSystemReady);
+    req->set_upgreqstate(UpgStatePostLinkUp);
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
-                        UpgStateIsSystemReadyRespPass) << "UpgAppResp object has wrong oper state";
+                        UpgStatePostLinkUpRespPass) << "UpgAppResp object has wrong oper state";
 
     req->set_upgreqstate(UpgStateSuccess);
     sdk_->QueueUpdate(req);
@@ -179,14 +192,6 @@ TEST_F(UpgradeReactorTest, UpgStateMachineTestDisruptive) {
 
     ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
                         UpgStateSuccessRespPass) << "UpgAppResp object has wrong oper state";
-
-    req->set_upgreqstate(UpgStateCleanup);
-    sdk_->QueueUpdate(req);
-    usleep(1000 * 100);
-
-    ASSERT_EQ_EVENTUALLY(delphi::objects::UpgAppResp::FindObject(sdk_, appresp)->upgapprespval(),
-                        UpgStateCleanupRespPass) << "UpgAppResp object has wrong oper state";
-
 }
 
 TEST_F(UpgradeReactorTest, UpgStateMachineAbortTestNonDisruptive) {

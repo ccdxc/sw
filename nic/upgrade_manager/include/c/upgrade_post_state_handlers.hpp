@@ -14,20 +14,22 @@ class UpgPostStateHandler {
 public:
     UpgPostStateHandler() {}
     bool PostCompatCheckHandler(UpgCtx &ctx);
-    bool PostPostBinRestartHandler(UpgCtx &ctx);
+    bool PostPostRestartHandler(UpgCtx &ctx);
     bool PostProcessQuiesceHandler(UpgCtx &ctx);
+    bool PostLinkDownHandler(UpgCtx &ctx);
+    bool PostLinkUpHandler(UpgCtx &ctx);
     bool PostDataplaneDowntimePhase1Handler(UpgCtx &ctx);
     bool PostDataplaneDowntimePhase2Handler(UpgCtx &ctx);
     bool PostDataplaneDowntimePhase3Handler(UpgCtx &ctx);
     bool PostDataplaneDowntimePhase4Handler(UpgCtx &ctx);
-    bool PostCleanupHandler(UpgCtx &ctx);
     bool PostSuccessHandler(UpgCtx &ctx);
     bool PostFailedHandler(UpgCtx &ctx);
     bool PostAbortHandler(UpgCtx &ctx);
-    bool PostLinkDownHandler(UpgCtx &ctx);
-    bool PostLinkUpHandler(UpgCtx &ctx);
-    bool PostDataplaneDowntimeStartHandler(UpgCtx &ctx);
-    bool PostIsSystemReadyHandler(UpgCtx &ctx);
+    bool PostHostDowntHandler(UpgCtx &ctx);
+    bool PostHostUpHandler(UpgCtx &ctx);
+    bool PostPostHostDownHandler(UpgCtx &ctx);
+    bool PostPostLinkUpHandler(UpgCtx &ctx);
+    bool PostSaveStateHandler(UpgCtx &ctx);
 };
 typedef std::shared_ptr<UpgPostStateHandler> UpgPostStateHandlerPtr;
 

@@ -17,8 +17,8 @@ bool UpgPreStateHandler::PreCompatCheckHandler(UpgCtx &ctx) {
     return true;
 }
 
-bool UpgPreStateHandler::PrePostBinRestartHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPreStateHandler PrePostBinRestart returning");
+bool UpgPreStateHandler::PrePostRestartHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PrePostRestart returning");
     return true;
 }
 
@@ -64,21 +64,6 @@ bool UpgPreStateHandler::PreDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
     return true;
 }
 
-bool UpgPreStateHandler::PreDataplaneDowntimeStartHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPreStateHandler PreDataplaneDowntimeStartHandler returning");
-    return true;
-}
-
-bool UpgPreStateHandler::PreIsSystemReadyHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPreStateHandler PreIsSystemReadyHandler returning");
-    return true;
-}
-
-bool UpgPreStateHandler::PreCleanupHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPreStateHandler PreCleanup returning");
-    return true;
-}
-
 bool UpgPreStateHandler::PreSuccessHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreUpgSuccess returning");
     return true;
@@ -91,6 +76,31 @@ bool UpgPreStateHandler::PreFailedHandler(UpgCtx &ctx) {
 
 bool UpgPreStateHandler::PreAbortHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PreUpgAborted returning");
+    return true;
+}
+
+bool UpgPreStateHandler::PreHostDownHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PreHostDownHandler returning");
+    return true;
+}
+
+bool UpgPreStateHandler::PreHostUpHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PreHostUpHandler returning");
+    return true;
+}
+
+bool UpgPreStateHandler::PrePostHostDownHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PrePostHostDownHandler returning");
+    return true;
+}
+
+bool UpgPreStateHandler::PrePostLinkUpHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PrePostLinkUpHandler returning");
+    return true;
+}
+
+bool UpgPreStateHandler::PreSaveStateHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPreStateHandler PreSaveStateHandler returning");
     return true;
 }
 

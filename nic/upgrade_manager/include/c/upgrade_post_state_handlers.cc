@@ -16,8 +16,8 @@ bool UpgPostStateHandler::PostCompatCheckHandler(UpgCtx &ctx) {
     return true;
 }
 
-bool UpgPostStateHandler::PostPostBinRestartHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPostStateHandler PostPostBinRestart returning");
+bool UpgPostStateHandler::PostPostRestartHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostPostRestart returning");
     return true;
 }
 
@@ -33,11 +33,6 @@ bool UpgPostStateHandler::PostLinkDownHandler(UpgCtx &ctx) {
 
 bool UpgPostStateHandler::PostLinkUpHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostLinkUpHandler returning");
-    return true;
-}
-
-bool UpgPostStateHandler::PostDataplaneDowntimeStartHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPostStateHandler PostDataplaneDowntimeStartHandler returning");
     return true;
 }
 
@@ -61,16 +56,6 @@ bool UpgPostStateHandler::PostDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
     return true;
 }
 
-bool UpgPostStateHandler::PostIsSystemReadyHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPostStateHandler PostIsSystemReadyHandler returning");
-    return true;
-}
-
-bool UpgPostStateHandler::PostCleanupHandler(UpgCtx &ctx) {
-    UPG_LOG_DEBUG("UpgPostStateHandler PostCleanup returning");
-    return true;
-}
-
 bool UpgPostStateHandler::PostSuccessHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSuccess returning");
     return true;
@@ -86,4 +71,28 @@ bool UpgPostStateHandler::PostAbortHandler(UpgCtx &ctx) {
     return true;
 }
 
+bool UpgPostStateHandler::PostHostDowntHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostHostDownt returning");
+    return true;
+}
+
+bool UpgPostStateHandler::PostHostUpHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostHostUp returning");
+    return true;
+}
+
+bool UpgPostStateHandler::PostPostHostDownHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostPostHostDown returning");
+    return true;
+}
+
+bool UpgPostStateHandler::PostPostLinkUpHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostPostLinkUp returning");
+    return true;
+}
+
+bool UpgPostStateHandler::PostSaveStateHandler(UpgCtx &ctx) {
+    UPG_LOG_DEBUG("UpgPostStateHandler PostSaveState returning");
+    return true;
+}
 } // namespace upgrade

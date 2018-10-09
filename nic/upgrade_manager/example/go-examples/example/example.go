@@ -67,14 +67,46 @@ func (usmh *upgradeStateMachineHdlrsCtx) LinkUpHandler(upgCtx *upggosdk.UpgCtx) 
 	return hdlrResp
 }
 
-func (usmh *upgradeStateMachineHdlrsCtx) DataplaneDowntimeStartHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+func (usmh *upgradeStateMachineHdlrsCtx) HostUpHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	//hdlrResp.Resp = upggosdk.InProgress
 	hdlrResp.ErrStr = ""
 	//hdlrResp.Resp = upggosdk.Fail
 	//hdlrResp.ErrStr = "TATATA"
-	log.Infof("DataplaneDowntimeStart called")
+	log.Infof("HostUp called")
+	return hdlrResp
+}
+
+func (usmh *upgradeStateMachineHdlrsCtx) HostDownHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	hdlrResp.ErrStr = ""
+	log.Infof("HostDown called")
+	return hdlrResp
+}
+
+func (usmh *upgradeStateMachineHdlrsCtx) PostHostDownHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	hdlrResp.ErrStr = ""
+	log.Infof("PostHostDown called")
+	return hdlrResp
+}
+
+func (usmh *upgradeStateMachineHdlrsCtx) SaveStateHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	hdlrResp.ErrStr = ""
+	log.Infof("SaveState called")
+	return hdlrResp
+}
+
+func (usmh *upgradeStateMachineHdlrsCtx) PostLinkUpHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	hdlrResp.ErrStr = ""
+	log.Infof("PostLinkUp called")
 	return hdlrResp
 }
 
@@ -110,22 +142,6 @@ func (usmh *upgradeStateMachineHdlrsCtx) DataplaneDowntimePhase4Handler(upgCtx *
 	hdlrResp.Resp = upggosdk.Success
 	hdlrResp.ErrStr = ""
 	log.Infof("DataplaneDowntimePhase4 called")
-	return hdlrResp
-}
-
-func (usmh *upgradeStateMachineHdlrsCtx) IsSystemReadyHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
-	var hdlrResp upggosdk.HdlrResp
-	hdlrResp.Resp = upggosdk.Success
-	hdlrResp.ErrStr = ""
-	log.Infof("IsSystemReady called")
-	return hdlrResp
-}
-
-func (usmh *upgradeStateMachineHdlrsCtx) CleanupHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
-	var hdlrResp upggosdk.HdlrResp
-	hdlrResp.Resp = upggosdk.Success
-	hdlrResp.ErrStr = ""
-	log.Infof("Cleanup called")
 	return hdlrResp
 }
 

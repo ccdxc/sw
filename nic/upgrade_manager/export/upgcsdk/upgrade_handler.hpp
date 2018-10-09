@@ -26,6 +26,7 @@ public:
     /*
      * Applications are expected to perform compat check 
      *     and let Upgrade manager know if Upgrade is allowed or not
+     * (aka. PreUpgradeHandler()
      */
     virtual HdlrResp CompatCheckHandler(UpgCtx& upgCtx);
     /*
@@ -39,23 +40,9 @@ public:
      */
     virtual HdlrResp LinkDownHandler(UpgCtx& upgCtx);
     /*
-     * LinkMgr is expected to bring link-up for disruptive upgrade
-     */
-    virtual HdlrResp LinkUpHandler(UpgCtx& upgCtx);
-    /*
      * Applications are expected to do any post-binary restart handling here.
      */
     virtual HdlrResp PostRestartHandler(UpgCtx& upgCtx);
-    /*
-     * At this stage, for disruptive upgrade,
-     *   NicMgr and HAL together are expected to bring the dataplane down
-     */
-    virtual HdlrResp DataplaneDowntimeStartHandler(UpgCtx& upgCtx);
-    /*
-     * At this stage, for disruptive upgrade,
-     *   NicMgr and HAL together are expected to do post-link-up processing
-     */
-    virtual HdlrResp IsSystemReadyHandler(UpgCtx& upgCtx);
     /*
      * At this stage, following is expected:
      * 1. FTE is supposed to disable flow-miss
@@ -81,17 +68,45 @@ public:
      */
     virtual HdlrResp DataplaneDowntimePhase4Handler(UpgCtx& upgCtx);
     /*
-     * At this stage, following is expected:
-     * 1. Cleanup any state needed
+     * During this phase
+     * 1. link down is propagated to devices
+     * 2. inidicate down to pipeline by disabling queue state
+     * 3. await for pipeline until it is complete
+     * 4. HOST_DOWN event is raised for rest of the system
      */
-    virtual HdlrResp CleanupHandler(UpgCtx& upgCtx);
+    virtual HdlrResp HostDownHandler(UpgCtx& upgCtx);
+    /*
+     * During this phase scheduler should be shut down
+     */
+    virtual HdlrResp PostHostDownHandler(UpgCtx& upgCtx);
+    /*
+     * During this phase apps are supposed to save their state, if any
+     */
+    virtual HdlrResp SaveStateHandler(UpgCtx& upgCtx);
+    /*
+     * During this phase
+     * 1. device queues need to be enabled
+     * 2. HOST_UP event is raised
+     */
+    virtual HdlrResp HostUpHandler(UpgCtx& upgCtx);
+    /*
+     * At this stage, links are brought up including:
+     * 1. enabling scheduler
+     * 2. bringing up links
+     * 3. sending link up notifications
+     */
+    virtual HdlrResp LinkUpHandler(UpgCtx& upgCtx);
+    /*
+     * During this phase DEVICE_UP is notified to the host side (driver)
+     */
+    virtual HdlrResp PostLinkUpHandler(UpgCtx& upgCtx);
     /*
      * Handle upgrade success
      */
     virtual void SuccessHandler(UpgCtx& upgCtx);
-    /*
-     * Handle upgrade failed
-     */
+     /*
+      * Handle upgrade failed
+      */
     virtual void FailedHandler(UpgCtx& upgCtx);
     /*
      * Handle upgrade aborted

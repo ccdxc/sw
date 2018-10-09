@@ -40,7 +40,7 @@ class ExSvcHandler : public UpgHandler {
 public:
     ExSvcHandler(){}
 
-    HdlrResp ProcessQuiesceHandler(UpgCtx& upgCtx) {
+    HdlrResp CompatCheckHandler(UpgCtx& upgCtx) {
         //HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         UPG_LOG_DEBUG("UpgHandler ProcessQuiesce called for the SVC!");
@@ -69,10 +69,10 @@ public:
         return resp;
     }
 
-    HdlrResp DataplaneDowntimePhase1Handler(UpgCtx& upgCtx) {
+    HdlrResp PostRestartHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         //HdlrResp resp = {.resp=FAIL, .errStr="LALALALA: Example could not do DataplaneDowntimePhase1"};
-        UPG_LOG_DEBUG("UpgHandler DataplaneDowntimePhase1 called for the SVC!");
+        UPG_LOG_DEBUG("UpgHandler PostRestartHandler called for the SVC!");
         return resp;
     }
 

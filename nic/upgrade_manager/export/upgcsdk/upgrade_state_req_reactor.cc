@@ -21,21 +21,13 @@ void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
             UPG_LOG_DEBUG("Upgrade: Pre-upgrade check");
             hdlrResp = upgHdlrPtr_->CompatCheckHandler(ctx);
             break;
-        case UpgStatePostBinRestart:
+        case UpgStatePostRestart:
             UPG_LOG_DEBUG("Upgrade: Post-binary restart");
             hdlrResp = upgHdlrPtr_->PostRestartHandler(ctx);
             break;
         case UpgStateLinkUp:
             UPG_LOG_DEBUG("Upgrade: Link Up");
             hdlrResp = upgHdlrPtr_->LinkUpHandler(ctx);
-            break;
-        case UpgStateDataplaneDowntimeStart:
-            UPG_LOG_DEBUG("Upgrade: Dataplane Downtime Start");
-            hdlrResp = upgHdlrPtr_->DataplaneDowntimeStartHandler(ctx);
-            break;
-        case UpgStateIsSystemReady:
-            UPG_LOG_DEBUG("Upgrade: Is System Ready");
-            hdlrResp = upgHdlrPtr_->IsSystemReadyHandler(ctx);
             break;
         case UpgStateProcessQuiesce:
             UPG_LOG_DEBUG("Upgrade: Processes Quiesced");
@@ -61,9 +53,25 @@ void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
             UPG_LOG_DEBUG("Upgrade: Dataplane Downtime Phase4 ");
             hdlrResp = upgHdlrPtr_->DataplaneDowntimePhase4Handler(ctx);
             break;
-        case UpgStateCleanup:
-            UPG_LOG_DEBUG("Upgrade: Cleanup Request Received");
-            hdlrResp = upgHdlrPtr_->CleanupHandler(ctx);
+        case UpgStateHostDown:
+            UPG_LOG_DEBUG("Upgrade: Host Down");
+            hdlrResp = upgHdlrPtr_->HostDownHandler(ctx);
+            break;
+        case UpgStateHostUp:
+            UPG_LOG_DEBUG("Upgrade: Host Up");
+            hdlrResp = upgHdlrPtr_->HostUpHandler(ctx);
+            break;
+        case UpgStatePostHostDown:
+            UPG_LOG_DEBUG("Upgrade: Post Host Down");
+            hdlrResp = upgHdlrPtr_->PostHostDownHandler(ctx);
+            break;
+        case UpgStatePostLinkUp:
+            UPG_LOG_DEBUG("Upgrade: Post Link Up");
+            hdlrResp = upgHdlrPtr_->PostLinkUpHandler(ctx);
+            break;
+        case UpgStateSaveState:
+            UPG_LOG_DEBUG("Upgrade: Save State");
+            hdlrResp = upgHdlrPtr_->SaveStateHandler(ctx);
             break;
         case UpgStateSuccess:
             UPG_LOG_DEBUG("Upgrade: Succeeded");

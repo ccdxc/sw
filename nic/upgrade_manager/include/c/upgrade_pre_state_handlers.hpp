@@ -14,20 +14,22 @@ class UpgPreStateHandler {
 public:
     UpgPreStateHandler() {}
     bool PreCompatCheckHandler(UpgCtx &ctx);
-    bool PrePostBinRestartHandler(UpgCtx &ctx);
+    bool PrePostRestartHandler(UpgCtx &ctx);
     bool PreProcessQuiesceHandler(UpgCtx &ctx);
     bool PreDataplaneDowntimePhase1Handler(UpgCtx &ctx);
     bool PreDataplaneDowntimePhase2Handler(UpgCtx &ctx);
     bool PreDataplaneDowntimePhase3Handler(UpgCtx &ctx);
     bool PreDataplaneDowntimePhase4Handler(UpgCtx &ctx);
-    bool PreCleanupHandler(UpgCtx &ctx);
     bool PreSuccessHandler(UpgCtx &ctx);
     bool PreFailedHandler(UpgCtx &ctx);
     bool PreAbortHandler(UpgCtx &ctx);
     bool PreLinkDownHandler(UpgCtx &ctx);
     bool PreLinkUpHandler(UpgCtx &ctx);
-    bool PreDataplaneDowntimeStartHandler(UpgCtx &ctx);
-    bool PreIsSystemReadyHandler(UpgCtx &ctx);
+    bool PreHostDownHandler(UpgCtx &ctx);
+    bool PreHostUpHandler(UpgCtx &ctx);
+    bool PrePostHostDownHandler(UpgCtx &ctx);
+    bool PrePostLinkUpHandler(UpgCtx &ctx);
+    bool PreSaveStateHandler(UpgCtx &ctx);
 };
 typedef std::shared_ptr<UpgPreStateHandler> UpgPreStateHandlerPtr;
 

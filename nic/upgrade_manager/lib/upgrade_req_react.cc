@@ -32,7 +32,7 @@ UpgReqStateType UpgReqReact::GetNextState(void) {
     UpgReqStateType  reqType;
     auto reqStatus = findUpgStateReq();
     reqType = reqStatus->upgreqstate();
-    if (GetAppRespFail() && (reqType != UpgStateFailed) && (reqType != UpgStateCleanup)) {
+    if (GetAppRespFail() && (reqType != UpgStateFailed)) {
         UPG_LOG_DEBUG("Some application(s) responded with failure");
         if (upgReqType_ == IsUpgPossible) {
             UPG_LOG_DEBUG("Going to respond back to IsUpgPossible");
@@ -50,20 +50,22 @@ bool UpgReqReact::IsRespTypeFail(UpgStateRespType type) {
     switch (type) {
         case UpgStateCompatCheckRespFail:
         case UpgStateProcessQuiesceRespFail:
-        case UpgStatePostBinRestartRespFail:
+        case UpgStatePostRestartRespFail:
         case UpgStateLinkDownRespFail:
         case UpgStateLinkUpRespFail:
-        case UpgStateDataplaneDowntimeStartRespFail:
         case UpgStateDataplaneDowntimePhase1RespFail:
         case UpgStateDataplaneDowntimePhase2RespFail:
         case UpgStateDataplaneDowntimePhase3RespFail:
         case UpgStateDataplaneDowntimePhase4RespFail:
-        case UpgStateIsSystemReadyRespFail:
-        case UpgStateCleanupRespFail:
         case UpgStateSuccessRespFail:
         case UpgStateFailedRespFail:
         case UpgStateAbortRespFail:
         case UpgStateUpgPossibleRespFail:
+        case UpgStateHostDownRespFail:
+        case UpgStateHostUpRespFail:
+        case UpgStatePostHostDownRespFail:
+        case UpgStatePostLinkUpRespFail:
+        case UpgStateSaveStateRespFail:
             ret = true;
         default:
             break;

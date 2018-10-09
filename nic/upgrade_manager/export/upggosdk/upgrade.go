@@ -50,14 +50,16 @@ type AgentHandlers interface {
 	LinkDownCompletionHandler(resp *HdlrResp, svcName string)
 	LinkUpCompletionHandler(resp *HdlrResp, svcName string)
 	PostRestartCompletionHandler(resp *HdlrResp, svcName string)
-	DataplaneDowntimeStartCompletionHandler(resp *HdlrResp, svcName string)
 	DataplaneDowntimePhase1CompletionHandler(resp *HdlrResp, svcName string)
 	DataplaneDowntimePhase2CompletionHandler(resp *HdlrResp, svcName string)
 	DataplaneDowntimePhase3CompletionHandler(resp *HdlrResp, svcName string)
 	DataplaneDowntimePhase4CompletionHandler(resp *HdlrResp, svcName string)
-	IsSystemReadyCompletionHandler(resp *HdlrResp, svcName string)
-	CleanupCompletionHandler(resp *HdlrResp, svcName string)
 	AbortCompletionHandler(resp *HdlrResp, svcName string)
+	HostDownCompletionHandler(resp *HdlrResp, svcName string)
+	HostUpCompletionHandler(resp *HdlrResp, svcName string)
+	PostHostDownCompletionHandler(resp *HdlrResp, svcName string)
+	PostLinkUpCompletionHandler(resp *HdlrResp, svcName string)
+	SaveStateCompletionHandler(resp *HdlrResp, svcName string)
 
 	UpgSuccessful()
 	UpgFailed(errStrList *[]string)
@@ -94,13 +96,15 @@ type UpgAppHandlers interface {
 	ProcessQuiesceHandler(upgCtx *UpgCtx) HdlrResp
 	LinkDownHandler(upgCtx *UpgCtx) HdlrResp
 	LinkUpHandler(upgCtx *UpgCtx) HdlrResp
-	DataplaneDowntimeStartHandler(upgCtx *UpgCtx) HdlrResp
 	DataplaneDowntimePhase1Handler(upgCtx *UpgCtx) HdlrResp
 	DataplaneDowntimePhase2Handler(upgCtx *UpgCtx) HdlrResp
 	DataplaneDowntimePhase3Handler(upgCtx *UpgCtx) HdlrResp
 	DataplaneDowntimePhase4Handler(upgCtx *UpgCtx) HdlrResp
-	IsSystemReadyHandler(upgCtx *UpgCtx) HdlrResp
-	CleanupHandler(upgCtx *UpgCtx) HdlrResp
+	HostUpHandler(upgCtx *UpgCtx) HdlrResp
+	HostDownHandler(upgCtx *UpgCtx) HdlrResp
+	PostHostDownHandler(upgCtx *UpgCtx) HdlrResp
+	SaveStateHandler(upgCtx *UpgCtx) HdlrResp
+	PostLinkUpHandler(upgCtx *UpgCtx) HdlrResp
 	SuccessHandler(upgCtx *UpgCtx)
 	FailedHandler(upgCtx *UpgCtx)
 	AbortHandler(upgCtx *UpgCtx)

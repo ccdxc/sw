@@ -58,12 +58,6 @@ HdlrResp UpgHandler::DataplaneDowntimePhase4Handler(UpgCtx& upgCtx) {
     return resp;
 }
 
-HdlrResp UpgHandler::CleanupHandler(UpgCtx& upgCtx) {
-    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    UPG_LOG_DEBUG("UpgHandler Cleanup not implemented by service");
-    return resp;
-}
-
 void UpgHandler::SuccessHandler(UpgCtx& upgCtx) {
     UPG_LOG_DEBUG("UpgHandler Success not implemented by service");
     return;
@@ -85,15 +79,33 @@ HdlrResp UpgHandler::LinkUpHandler(UpgCtx& upgCtx) {
     return resp;
 }
 
-HdlrResp UpgHandler::DataplaneDowntimeStartHandler(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HostDownHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    UPG_LOG_DEBUG("UpgHandler DataplaneDowntimeStart not implemented by service");
+    UPG_LOG_DEBUG("UpgHandler HostDown not implemented by service");
     return resp;
 }
 
-HdlrResp UpgHandler::IsSystemReadyHandler(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::HostUpHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    UPG_LOG_DEBUG("UpgHandler IsSystemReady not implemented by service");
+    UPG_LOG_DEBUG("UpgHandler HostUp not implemented by service");
+    return resp;
+}
+
+HdlrResp UpgHandler::PostHostDownHandler(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    UPG_LOG_DEBUG("UpgHandler PostHostDown not implemented by service");
+    return resp;
+}
+
+HdlrResp UpgHandler::SaveStateHandler(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    UPG_LOG_DEBUG("UpgHandler SaveState not implemented by service");
+    return resp;
+}
+
+HdlrResp UpgHandler::PostLinkUpHandler(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    UPG_LOG_DEBUG("UpgHandler PostLinkUp not implemented by service");
     return resp;
 }
 

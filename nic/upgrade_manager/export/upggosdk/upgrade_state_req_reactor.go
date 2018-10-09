@@ -29,15 +29,12 @@ func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrRe
 	case upgrade.UpgReqStateType_UpgStateLinkUp:
 		log.Infof("Upgrade: Link Up")
 		*hdlrResp = ctx.appHdlrs.LinkUpHandler(&upgCtx)
-	case upgrade.UpgReqStateType_UpgStatePostBinRestart:
+	case upgrade.UpgReqStateType_UpgStatePostRestart:
 		log.Infof("Upgrade: Post-binary restart")
 		*hdlrResp = ctx.appHdlrs.PostRestartHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateProcessQuiesce:
 		log.Infof("Upgrade: Processes Quiesced")
 		*hdlrResp = ctx.appHdlrs.ProcessQuiesceHandler(&upgCtx)
-	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimeStart:
-		log.Infof("Upgrade: Dataplane Downtime Start")
-		*hdlrResp = ctx.appHdlrs.DataplaneDowntimeStartHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase1:
 		log.Infof("Upgrade: Dataplane Downtime Phase1 Start")
 		*hdlrResp = ctx.appHdlrs.DataplaneDowntimePhase1Handler(&upgCtx)
@@ -50,12 +47,21 @@ func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrRe
 	case upgrade.UpgReqStateType_UpgStateDataplaneDowntimePhase4:
 		log.Infof("Upgrade: Dataplane Downtime Phase4 Start")
 		*hdlrResp = ctx.appHdlrs.DataplaneDowntimePhase4Handler(&upgCtx)
-	case upgrade.UpgReqStateType_UpgStateIsSystemReady:
-		log.Infof("Upgrade: Is System Ready")
-		*hdlrResp = ctx.appHdlrs.IsSystemReadyHandler(&upgCtx)
-	case upgrade.UpgReqStateType_UpgStateCleanup:
-		log.Infof("Upgrade: Cleanup Request Received")
-		*hdlrResp = ctx.appHdlrs.CleanupHandler(&upgCtx)
+	case upgrade.UpgReqStateType_UpgStateHostDown:
+		log.Infof("Upgrade: Host Down")
+		*hdlrResp = ctx.appHdlrs.HostDownHandler(&upgCtx)
+	case upgrade.UpgReqStateType_UpgStateHostUp:
+		log.Infof("Upgrade: Host Up")
+		*hdlrResp = ctx.appHdlrs.HostUpHandler(&upgCtx)
+	case upgrade.UpgReqStateType_UpgStatePostHostDown:
+		log.Infof("Upgrade: Post Host Down")
+		*hdlrResp = ctx.appHdlrs.PostHostDownHandler(&upgCtx)
+	case upgrade.UpgReqStateType_UpgStatePostLinkUp:
+		log.Infof("Upgrade: Post Link Up")
+		*hdlrResp = ctx.appHdlrs.PostLinkUpHandler(&upgCtx)
+	case upgrade.UpgReqStateType_UpgStateSaveState:
+		log.Infof("Upgrade: Save State")
+		*hdlrResp = ctx.appHdlrs.SaveStateHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateSuccess:
 		log.Infof("Upgrade: Succeeded")
 		hdlrResp.Resp = Success

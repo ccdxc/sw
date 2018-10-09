@@ -21,22 +21,24 @@ enum UpgRespType {
 enum UpgReqStateType {
     UpgStateCompatCheck                       = 0;
     UpgStateProcessQuiesce                    = 1;
-    UpgStatePostBinRestart                    = 2;
+    UpgStatePostRestart                       = 2;
     UpgStateDataplaneDowntimePhase1           = 3;
     UpgStateDataplaneDowntimePhase2           = 4;
     UpgStateDataplaneDowntimePhase3           = 5;
     UpgStateDataplaneDowntimePhase4           = 6;
-    UpgStateCleanup                           = 7;
-    UpgStateSuccess                           = 8;
-    UpgStateFailed                            = 9;
-    UpgStateAbort                             = 10;
-    UpgStateUpgPossible                       = 11;
-    UpgStateLinkDown                          = 12;
-    UpgStateLinkUp                            = 13;
-    UpgStateDataplaneDowntimeStart            = 14;
-    UpgStateIsSystemReady                     = 15;
+    UpgStateSuccess                           = 7;
+    UpgStateFailed                            = 8;
+    UpgStateAbort                             = 9;
+    UpgStateUpgPossible                       = 10;
+    UpgStateLinkDown                          = 11;
+    UpgStateLinkUp                            = 12;
+    UpgStateHostDown                          = 13;
+    UpgStateHostUp                            = 14;
+    UpgStatePostHostDown                      = 15;
+    UpgStatePostLinkUp                        = 16;
+    UpgStateSaveState                         = 17;
     //Always to be last
-    UpgStateTerminal                          = 16;
+    UpgStateTerminal                          = 18;
 }
 
 // Upgrade State Response Status
@@ -45,8 +47,8 @@ enum UpgStateRespType {
     UpgStateCompatCheckRespFail                       = 1;
     UpgStateProcessQuiesceRespPass                    = 2;
     UpgStateProcessQuiesceRespFail                    = 3;
-    UpgStatePostBinRestartRespPass                    = 4;
-    UpgStatePostBinRestartRespFail                    = 5;
+    UpgStatePostRestartRespPass                       = 4;
+    UpgStatePostRestartRespFail                       = 5;
     UpgStateDataplaneDowntimePhase1RespPass           = 6;
     UpgStateDataplaneDowntimePhase1RespFail           = 7;
     UpgStateDataplaneDowntimePhase2RespPass           = 8;
@@ -55,24 +57,28 @@ enum UpgStateRespType {
     UpgStateDataplaneDowntimePhase3RespFail           = 11;
     UpgStateDataplaneDowntimePhase4RespPass           = 12;
     UpgStateDataplaneDowntimePhase4RespFail           = 13;
-    UpgStateCleanupRespPass                           = 14;
-    UpgStateCleanupRespFail                           = 15;
-    UpgStateSuccessRespPass                           = 16;
-    UpgStateSuccessRespFail                           = 17;
-    UpgStateFailedRespPass                            = 18;
-    UpgStateFailedRespFail                            = 19;
-    UpgStateAbortRespPass                             = 20;
-    UpgStateAbortRespFail                             = 21;
-    UpgStateUpgPossibleRespPass                       = 22;
-    UpgStateUpgPossibleRespFail                       = 23;
-    UpgStateLinkDownRespPass                          = 24;
-    UpgStateLinkDownRespFail                          = 25;
-    UpgStateLinkUpRespPass                            = 26;
-    UpgStateLinkUpRespFail                            = 27;
-    UpgStateDataplaneDowntimeStartRespPass            = 28;
-    UpgStateDataplaneDowntimeStartRespFail            = 29;
-    UpgStateIsSystemReadyRespPass                     = 30;
-    UpgStateIsSystemReadyRespFail                     = 31;
+    UpgStateSuccessRespPass                           = 14;
+    UpgStateSuccessRespFail                           = 15;
+    UpgStateFailedRespPass                            = 16;
+    UpgStateFailedRespFail                            = 17;
+    UpgStateAbortRespPass                             = 18;
+    UpgStateAbortRespFail                             = 19;
+    UpgStateUpgPossibleRespPass                       = 20;
+    UpgStateUpgPossibleRespFail                       = 21;
+    UpgStateLinkDownRespPass                          = 22;
+    UpgStateLinkDownRespFail                          = 23;
+    UpgStateLinkUpRespPass                            = 24;
+    UpgStateLinkUpRespFail                            = 25;
+    UpgStateHostDownRespPass                          = 26;
+    UpgStateHostDownRespFail                          = 27;
+    UpgStateHostUpRespPass                            = 28;
+    UpgStateHostUpRespFail                            = 29;
+    UpgStatePostHostDownRespPass                      = 30;
+    UpgStatePostHostDownRespFail                      = 31;
+    UpgStatePostLinkUpRespPass                        = 32;
+    UpgStatePostLinkUpRespFail                        = 33;
+    UpgStateSaveStateRespPass                         = 34;
+    UpgStateSaveStateRespFail                         = 35;
 }
 
 enum UpgType {

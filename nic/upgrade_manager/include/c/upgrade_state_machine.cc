@@ -31,12 +31,9 @@ UpgReqStateType UpgStateRespTypeToUpgReqStateType(UpgStateRespType type) {
     case UpgStateProcessQuiesceRespPass:
     case UpgStateProcessQuiesceRespFail:
         return UpgStateProcessQuiesce;
-    case UpgStatePostBinRestartRespPass:
-    case UpgStatePostBinRestartRespFail:
-        return UpgStatePostBinRestart;
-    case UpgStateDataplaneDowntimeStartRespPass:
-    case UpgStateDataplaneDowntimeStartRespFail:
-        return UpgStateDataplaneDowntimeStart;
+    case UpgStatePostRestartRespPass:
+    case UpgStatePostRestartRespFail:
+        return UpgStatePostRestart;
     case UpgStateDataplaneDowntimePhase1RespPass:
     case UpgStateDataplaneDowntimePhase1RespFail:
         return UpgStateDataplaneDowntimePhase1;
@@ -49,12 +46,6 @@ UpgReqStateType UpgStateRespTypeToUpgReqStateType(UpgStateRespType type) {
     case UpgStateDataplaneDowntimePhase4RespPass:
     case UpgStateDataplaneDowntimePhase4RespFail:
         return UpgStateDataplaneDowntimePhase4;
-    case UpgStateIsSystemReadyRespPass:
-    case UpgStateIsSystemReadyRespFail:
-        return UpgStateIsSystemReady;
-    case UpgStateCleanupRespPass:
-    case UpgStateCleanupRespFail:
-        return UpgStateCleanup;
     case UpgStateSuccessRespPass:
     case UpgStateSuccessRespFail:
         return UpgStateSuccess;
@@ -67,6 +58,21 @@ UpgReqStateType UpgStateRespTypeToUpgReqStateType(UpgStateRespType type) {
     case UpgStateUpgPossibleRespPass:
     case UpgStateUpgPossibleRespFail:
         return UpgStateUpgPossible;
+    case UpgStateHostDownRespPass:
+    case UpgStateHostDownRespFail:
+        return UpgStateHostDown;
+    case UpgStateHostUpRespPass:
+    case UpgStateHostUpRespFail:
+        return UpgStateHostUp;
+    case UpgStatePostHostDownRespPass:
+    case UpgStatePostHostDownRespFail:
+        return UpgStatePostHostDown;
+    case UpgStatePostLinkUpRespPass:
+    case UpgStatePostLinkUpRespFail:
+        return UpgStatePostLinkUp;
+    case UpgStateSaveStateRespPass:
+    case UpgStateSaveStateRespFail:
+        return UpgStateSaveState;
     default:
         UPG_LOG_FATAL("Should never come here");
         return UpgStateTerminal;
@@ -109,20 +115,22 @@ bool UpgRespStatePassType(UpgStateRespType type) {
     switch (type) {
     case UpgStateCompatCheckRespPass:
     case UpgStateProcessQuiesceRespPass:
-    case UpgStatePostBinRestartRespPass:
+    case UpgStatePostRestartRespPass:
     case UpgStateDataplaneDowntimePhase1RespPass:
     case UpgStateDataplaneDowntimePhase2RespPass:
     case UpgStateDataplaneDowntimePhase3RespPass:
     case UpgStateDataplaneDowntimePhase4RespPass:
-    case UpgStateDataplaneDowntimeStartRespPass:
-    case UpgStateCleanupRespPass:
     case UpgStateSuccessRespPass:
     case UpgStateFailedRespPass:
     case UpgStateAbortRespPass:
     case UpgStateUpgPossibleRespPass:
     case UpgStateLinkDownRespPass:
     case UpgStateLinkUpRespPass:
-    case UpgStateIsSystemReadyRespPass:
+    case UpgStateHostDownRespPass:
+    case UpgStateHostUpRespPass:
+    case UpgStatePostHostDownRespPass:
+    case UpgStatePostLinkUpRespPass:
+    case UpgStateSaveStateRespPass:
         return true;
     default:
         UPG_LOG_DEBUG("Got failed UpgRespStatePassType {}", type);
@@ -179,7 +187,7 @@ void InitStateMachineVector(void) {
     NonDisruptiveUpgradeStateMachine[UpgStateProcessQuiesce] = 
                {
                 UpgStateProcessQuiesce, 
-                UpgStatePostBinRestart,
+                UpgStatePostRestart,
                 UpgStateProcessQuiesceRespPass, 
                 UpgStateProcessQuiesceRespFail, 
                 "Sending pass to upg-mgr for Process Quiesced message", 
@@ -190,19 +198,19 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreProcessQuiesceHandler,
                 &UpgPostStateHandler::PostProcessQuiesceHandler
                };
-    NonDisruptiveUpgradeStateMachine[UpgStatePostBinRestart] = 
+    NonDisruptiveUpgradeStateMachine[UpgStatePostRestart] = 
                {
-                UpgStatePostBinRestart, 
+                UpgStatePostRestart, 
                 UpgStateDataplaneDowntimePhase1, 
-                UpgStatePostBinRestartRespPass, 
-                UpgStatePostBinRestartRespFail, 
+                UpgStatePostRestartRespPass, 
+                UpgStatePostRestartRespFail, 
                 "Sending pass to upg-mgr for Post-Binary Restart message", 
                 "Sending fail to upg-mgr for Post-Binary Restart message", 
                 "Post Process Restart", 
                 "Post Process Restart Pass", 
                 "Post Process Restart Fail",
-                &UpgPreStateHandler::PrePostBinRestartHandler,
-                &UpgPostStateHandler::PostPostBinRestartHandler
+                &UpgPreStateHandler::PrePostRestartHandler,
+                &UpgPostStateHandler::PostPostRestartHandler
                };
     NonDisruptiveUpgradeStateMachine[UpgStateDataplaneDowntimePhase1] =
                {
@@ -263,7 +271,7 @@ void InitStateMachineVector(void) {
     NonDisruptiveUpgradeStateMachine[UpgStateSuccess] = 
                {
                 UpgStateSuccess, 
-                UpgStateCleanup, 
+                UpgStateTerminal, 
                 UpgStateSuccessRespPass, 
                 UpgStateSuccessRespFail, 
                 "Sending pass to upg-mgr after upgrade success message", 
@@ -277,7 +285,7 @@ void InitStateMachineVector(void) {
     NonDisruptiveUpgradeStateMachine[UpgStateFailed] = 
                {
                 UpgStateFailed, 
-                UpgStateCleanup, 
+                UpgStateTerminal, 
                 UpgStateFailedRespPass, 
                 UpgStateFailedRespFail, 
                 "Sending pass to upg-mgr after upgrade fail message", 
@@ -288,20 +296,6 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreFailedHandler,
                 &UpgPostStateHandler::PostFailedHandler
                 };
-    NonDisruptiveUpgradeStateMachine[UpgStateCleanup] =
-               {
-                UpgStateCleanup,
-                UpgStateTerminal,
-                UpgStateCleanupRespPass,
-                UpgStateCleanupRespPass,
-                "Sending pass to upg-mgr after cleaning up stale state",
-                "Sending fail to upg-mgr after cleaning up stale state",
-                "Cleanup State",
-                "Cleanup Pass",
-                "Cleanup Fail",
-                &UpgPreStateHandler::PreCleanupHandler,
-                &UpgPostStateHandler::PostCleanupHandler
-               };
     NonDisruptiveUpgradeStateMachine[UpgStateAbort] = 
                {
                 UpgStateAbort, 
@@ -334,7 +328,7 @@ void InitStateMachineVector(void) {
     DisruptiveUpgradeStateMachine[UpgStateLinkDown] =
                {
                 UpgStateLinkDown,
-                UpgStateDataplaneDowntimeStart,
+                UpgStateHostDown,
                 UpgStateLinkDownRespPass,
                 UpgStateLinkDownRespFail,
                 "Sending pass to upg-mgr for Link Down message",
@@ -345,38 +339,80 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreLinkDownHandler,
                 &UpgPostStateHandler::PostLinkDownHandler
                };
-    DisruptiveUpgradeStateMachine[UpgStateDataplaneDowntimeStart] =
+    DisruptiveUpgradeStateMachine[UpgStateHostDown] =
                {
-                UpgStateDataplaneDowntimeStart,
-                UpgStatePostBinRestart,
-                UpgStateDataplaneDowntimeStartRespPass,
-                UpgStateDataplaneDowntimeStartRespFail,
-                "Sending pass to upg-mgr for Dataplane Downtime Start message",
-                "Sending fail to upg-mgr for Dataplane Downtime Start message",
-                "Dataplane Downtime Start",
-                "Dataplane Downtime Success",
-                "Dataplane Downtime Fail",
-                &UpgPreStateHandler::PreDataplaneDowntimeStartHandler,
-                &UpgPostStateHandler::PostDataplaneDowntimeStartHandler
+                UpgStateHostDown,
+                UpgStatePostHostDown,
+                UpgStateHostDownRespPass,
+                UpgStateHostDownRespFail,
+                "Sending pass to upg-mgr for Host Down message",
+                "Sending fail to upg-mgr for Host Down message",
+                "Host Down",
+                "Host Down Success",
+                "Host Down Fail",
+                &UpgPreStateHandler::PreHostDownHandler,
+                &UpgPostStateHandler::PostPostHostDownHandler
                };
-    DisruptiveUpgradeStateMachine[UpgStatePostBinRestart] =
+    DisruptiveUpgradeStateMachine[UpgStatePostHostDown] =
                {
-                UpgStatePostBinRestart,
-                UpgStateLinkUp,
-                UpgStatePostBinRestartRespPass,
-                UpgStatePostBinRestartRespFail,
+                UpgStatePostHostDown,
+                UpgStateSaveState,
+                UpgStatePostHostDownRespPass,
+                UpgStatePostHostDownRespFail,
+                "Sending pass to upg-mgr for Post Host Down message",
+                "Sending fail to upg-mgr for Post Host Down message",
+                "Post Host Down",
+                "Post Host Down Success",
+                "Post Host Down Fail",
+                &UpgPreStateHandler::PrePostHostDownHandler,
+                &UpgPostStateHandler::PostPostHostDownHandler
+               };
+    DisruptiveUpgradeStateMachine[UpgStateSaveState] =
+               {
+                UpgStateSaveState,
+                UpgStatePostRestart,
+                UpgStateSaveStateRespPass,
+                UpgStateSaveStateRespFail,
+                "Sending pass to upg-mgr for Save State message",
+                "Sending fail to upg-mgr for Save State message",
+                "Save State",
+                "Save State Success",
+                "Save State Fail",
+                &UpgPreStateHandler::PreSaveStateHandler,
+                &UpgPostStateHandler::PostSaveStateHandler
+               };
+    DisruptiveUpgradeStateMachine[UpgStatePostRestart] =
+               {
+                UpgStatePostRestart,
+                UpgStateHostUp,
+                UpgStatePostRestartRespPass,
+                UpgStatePostRestartRespFail,
                 "Sending pass to upg-mgr for Post-Binary Restart message",
                 "Sending fail to upg-mgr for Post-Binary Restart message",
                 "Post Process Restart",
                 "Post Process Restart Pass",
                 "Post Process Restart Fail",
-                &UpgPreStateHandler::PrePostBinRestartHandler,
-                &UpgPostStateHandler::PostPostBinRestartHandler
+                &UpgPreStateHandler::PrePostRestartHandler,
+                &UpgPostStateHandler::PostPostRestartHandler
+               };
+    DisruptiveUpgradeStateMachine[UpgStateHostUp] =
+               {
+                UpgStateHostUp,
+                UpgStateLinkUp,
+                UpgStateHostUpRespPass,
+                UpgStateHostUpRespFail,
+                "Sending pass to upg-mgr for Host Up message",
+                "Sending fail to upg-mgr for Host Up message",
+                "Host Up",
+                "Host Up Pass",
+                "Host Up Fail",
+                &UpgPreStateHandler::PreHostUpHandler,
+                &UpgPostStateHandler::PostHostUpHandler
                };
     DisruptiveUpgradeStateMachine[UpgStateLinkUp] =
                {
                 UpgStateLinkUp,
-                UpgStateIsSystemReady,
+                UpgStatePostLinkUp,
                 UpgStateLinkUpRespPass,
                 UpgStateLinkUpRespFail,
                 "Sending pass to upg-mgr for Link Up message",
@@ -387,24 +423,24 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreLinkUpHandler,
                 &UpgPostStateHandler::PostLinkUpHandler
                };
-    DisruptiveUpgradeStateMachine[UpgStateIsSystemReady] = 
+    DisruptiveUpgradeStateMachine[UpgStatePostLinkUp] = 
                {
-                UpgStateIsSystemReady, 
+                UpgStatePostLinkUp, 
                 UpgStateSuccess,
-                UpgStateIsSystemReadyRespPass, 
-                UpgStateIsSystemReadyRespFail, 
-                "Sending pass to upg-mgr for Is System Ready message", 
-                "Sending fail to upg-mgr for Is System Ready message", 
-                "Is System Ready", 
-                "Is System Ready Pass", 
-                "Is System Ready Fail",
-                &UpgPreStateHandler::PreIsSystemReadyHandler,
-                &UpgPostStateHandler::PostIsSystemReadyHandler
+                UpgStatePostLinkUpRespPass, 
+                UpgStatePostLinkUpRespFail, 
+                "Sending pass to upg-mgr for Post Link Up message", 
+                "Sending fail to upg-mgr for Post Link Up message", 
+                "Post Link Up", 
+                "Post Link Up Pass", 
+                "Post Link Up Fail",
+                &UpgPreStateHandler::PrePostLinkUpHandler,
+                &UpgPostStateHandler::PostPostLinkUpHandler
                };
     DisruptiveUpgradeStateMachine[UpgStateSuccess] = 
                {
                 UpgStateSuccess, 
-                UpgStateCleanup, 
+                UpgStateTerminal, 
                 UpgStateSuccessRespPass, 
                 UpgStateSuccessRespFail, 
                 "Sending pass to upg-mgr after upgrade success message", 
@@ -418,7 +454,7 @@ void InitStateMachineVector(void) {
     DisruptiveUpgradeStateMachine[UpgStateFailed] = 
                {
                 UpgStateFailed, 
-                UpgStateCleanup, 
+                UpgStateTerminal, 
                 UpgStateFailedRespPass, 
                 UpgStateFailedRespFail, 
                 "Sending pass to upg-mgr after upgrade fail message", 
@@ -429,20 +465,6 @@ void InitStateMachineVector(void) {
                 &UpgPreStateHandler::PreFailedHandler,
                 &UpgPostStateHandler::PostFailedHandler
                 };
-    DisruptiveUpgradeStateMachine[UpgStateCleanup] =
-               {
-                UpgStateCleanup,
-                UpgStateTerminal,
-                UpgStateCleanupRespPass,
-                UpgStateCleanupRespPass,
-                "Sending pass to upg-mgr after cleaning up stale state",
-                "Sending fail to upg-mgr after cleaning up stale state",
-                "Cleanup State",
-                "Cleanup Pass",
-                "Cleanup Fail",
-                &UpgPreStateHandler::PreCleanupHandler,
-                &UpgPostStateHandler::PostCleanupHandler
-               };
     DisruptiveUpgradeStateMachine[UpgStateAbort] = 
                {
                 UpgStateAbort, 

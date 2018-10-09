@@ -28,10 +28,12 @@ public:
     virtual void DataplaneDowntimePhase2CompletionHandler(HdlrResp &resp, string svcName);
     virtual void DataplaneDowntimePhase3CompletionHandler(HdlrResp &resp, string svcName);
     virtual void DataplaneDowntimePhase4CompletionHandler(HdlrResp &resp, string svcName);
-    virtual void DataplaneDowntimeStartCompletionHandler(HdlrResp &resp, string svcName);
-    virtual void IsSystemReadyCompletionHandler(HdlrResp &resp, string svcName);
-    virtual void CleanupCompletionHandler(HdlrResp &resp, string svcName);
     virtual void AbortedCompletionHandler(HdlrResp &resp, string svcName);
+    virtual void HostDownCompletionHandler(HdlrResp &resp, string svcName);
+    virtual void HostUpCompletionHandler(HdlrResp &resp, string svcName);
+    virtual void PostHostDownCompletionHandler(HdlrResp &resp, string svcName);
+    virtual void PostLinkUpCompletionHandler(HdlrResp &resp, string svcName);
+    virtual void SaveStateCompletionHandler(HdlrResp &resp, string svcName);
 
     /*
      * All the following APIs are invoked for agents.

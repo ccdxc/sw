@@ -94,61 +94,67 @@ type UpgReqStateType int32
 const (
 	UpgReqStateType_UpgStateCompatCheck             UpgReqStateType = 0
 	UpgReqStateType_UpgStateProcessQuiesce          UpgReqStateType = 1
-	UpgReqStateType_UpgStatePostBinRestart          UpgReqStateType = 2
+	UpgReqStateType_UpgStatePostRestart             UpgReqStateType = 2
 	UpgReqStateType_UpgStateDataplaneDowntimePhase1 UpgReqStateType = 3
 	UpgReqStateType_UpgStateDataplaneDowntimePhase2 UpgReqStateType = 4
 	UpgReqStateType_UpgStateDataplaneDowntimePhase3 UpgReqStateType = 5
 	UpgReqStateType_UpgStateDataplaneDowntimePhase4 UpgReqStateType = 6
-	UpgReqStateType_UpgStateCleanup                 UpgReqStateType = 7
-	UpgReqStateType_UpgStateSuccess                 UpgReqStateType = 8
-	UpgReqStateType_UpgStateFailed                  UpgReqStateType = 9
-	UpgReqStateType_UpgStateAbort                   UpgReqStateType = 10
-	UpgReqStateType_UpgStateUpgPossible             UpgReqStateType = 11
-	UpgReqStateType_UpgStateLinkDown                UpgReqStateType = 12
-	UpgReqStateType_UpgStateLinkUp                  UpgReqStateType = 13
-	UpgReqStateType_UpgStateDataplaneDowntimeStart  UpgReqStateType = 14
-	UpgReqStateType_UpgStateIsSystemReady           UpgReqStateType = 15
+	UpgReqStateType_UpgStateSuccess                 UpgReqStateType = 7
+	UpgReqStateType_UpgStateFailed                  UpgReqStateType = 8
+	UpgReqStateType_UpgStateAbort                   UpgReqStateType = 9
+	UpgReqStateType_UpgStateUpgPossible             UpgReqStateType = 10
+	UpgReqStateType_UpgStateLinkDown                UpgReqStateType = 11
+	UpgReqStateType_UpgStateLinkUp                  UpgReqStateType = 12
+	UpgReqStateType_UpgStateHostDown                UpgReqStateType = 13
+	UpgReqStateType_UpgStateHostUp                  UpgReqStateType = 14
+	UpgReqStateType_UpgStatePostHostDown            UpgReqStateType = 15
+	UpgReqStateType_UpgStatePostLinkUp              UpgReqStateType = 16
+	UpgReqStateType_UpgStateSaveState               UpgReqStateType = 17
 	// Always to be last
-	UpgReqStateType_UpgStateTerminal UpgReqStateType = 16
+	UpgReqStateType_UpgStateTerminal UpgReqStateType = 18
 )
 
 var UpgReqStateType_name = map[int32]string{
 	0:  "UpgStateCompatCheck",
 	1:  "UpgStateProcessQuiesce",
-	2:  "UpgStatePostBinRestart",
+	2:  "UpgStatePostRestart",
 	3:  "UpgStateDataplaneDowntimePhase1",
 	4:  "UpgStateDataplaneDowntimePhase2",
 	5:  "UpgStateDataplaneDowntimePhase3",
 	6:  "UpgStateDataplaneDowntimePhase4",
-	7:  "UpgStateCleanup",
-	8:  "UpgStateSuccess",
-	9:  "UpgStateFailed",
-	10: "UpgStateAbort",
-	11: "UpgStateUpgPossible",
-	12: "UpgStateLinkDown",
-	13: "UpgStateLinkUp",
-	14: "UpgStateDataplaneDowntimeStart",
-	15: "UpgStateIsSystemReady",
-	16: "UpgStateTerminal",
+	7:  "UpgStateSuccess",
+	8:  "UpgStateFailed",
+	9:  "UpgStateAbort",
+	10: "UpgStateUpgPossible",
+	11: "UpgStateLinkDown",
+	12: "UpgStateLinkUp",
+	13: "UpgStateHostDown",
+	14: "UpgStateHostUp",
+	15: "UpgStatePostHostDown",
+	16: "UpgStatePostLinkUp",
+	17: "UpgStateSaveState",
+	18: "UpgStateTerminal",
 }
 var UpgReqStateType_value = map[string]int32{
 	"UpgStateCompatCheck":             0,
 	"UpgStateProcessQuiesce":          1,
-	"UpgStatePostBinRestart":          2,
+	"UpgStatePostRestart":             2,
 	"UpgStateDataplaneDowntimePhase1": 3,
 	"UpgStateDataplaneDowntimePhase2": 4,
 	"UpgStateDataplaneDowntimePhase3": 5,
 	"UpgStateDataplaneDowntimePhase4": 6,
-	"UpgStateCleanup":                 7,
-	"UpgStateSuccess":                 8,
-	"UpgStateFailed":                  9,
-	"UpgStateAbort":                   10,
-	"UpgStateUpgPossible":             11,
-	"UpgStateLinkDown":                12,
-	"UpgStateLinkUp":                  13,
-	"UpgStateDataplaneDowntimeStart":  14,
-	"UpgStateIsSystemReady":           15,
-	"UpgStateTerminal":                16,
+	"UpgStateSuccess":                 7,
+	"UpgStateFailed":                  8,
+	"UpgStateAbort":                   9,
+	"UpgStateUpgPossible":             10,
+	"UpgStateLinkDown":                11,
+	"UpgStateLinkUp":                  12,
+	"UpgStateHostDown":                13,
+	"UpgStateHostUp":                  14,
+	"UpgStatePostHostDown":            15,
+	"UpgStatePostLinkUp":              16,
+	"UpgStateSaveState":               17,
+	"UpgStateTerminal":                18,
 }
 
 func (x UpgReqStateType) String() string {
@@ -164,8 +170,8 @@ const (
 	UpgStateRespType_UpgStateCompatCheckRespFail             UpgStateRespType = 1
 	UpgStateRespType_UpgStateProcessQuiesceRespPass          UpgStateRespType = 2
 	UpgStateRespType_UpgStateProcessQuiesceRespFail          UpgStateRespType = 3
-	UpgStateRespType_UpgStatePostBinRestartRespPass          UpgStateRespType = 4
-	UpgStateRespType_UpgStatePostBinRestartRespFail          UpgStateRespType = 5
+	UpgStateRespType_UpgStatePostRestartRespPass             UpgStateRespType = 4
+	UpgStateRespType_UpgStatePostRestartRespFail             UpgStateRespType = 5
 	UpgStateRespType_UpgStateDataplaneDowntimePhase1RespPass UpgStateRespType = 6
 	UpgStateRespType_UpgStateDataplaneDowntimePhase1RespFail UpgStateRespType = 7
 	UpgStateRespType_UpgStateDataplaneDowntimePhase2RespPass UpgStateRespType = 8
@@ -174,24 +180,28 @@ const (
 	UpgStateRespType_UpgStateDataplaneDowntimePhase3RespFail UpgStateRespType = 11
 	UpgStateRespType_UpgStateDataplaneDowntimePhase4RespPass UpgStateRespType = 12
 	UpgStateRespType_UpgStateDataplaneDowntimePhase4RespFail UpgStateRespType = 13
-	UpgStateRespType_UpgStateCleanupRespPass                 UpgStateRespType = 14
-	UpgStateRespType_UpgStateCleanupRespFail                 UpgStateRespType = 15
-	UpgStateRespType_UpgStateSuccessRespPass                 UpgStateRespType = 16
-	UpgStateRespType_UpgStateSuccessRespFail                 UpgStateRespType = 17
-	UpgStateRespType_UpgStateFailedRespPass                  UpgStateRespType = 18
-	UpgStateRespType_UpgStateFailedRespFail                  UpgStateRespType = 19
-	UpgStateRespType_UpgStateAbortRespPass                   UpgStateRespType = 20
-	UpgStateRespType_UpgStateAbortRespFail                   UpgStateRespType = 21
-	UpgStateRespType_UpgStateUpgPossibleRespPass             UpgStateRespType = 22
-	UpgStateRespType_UpgStateUpgPossibleRespFail             UpgStateRespType = 23
-	UpgStateRespType_UpgStateLinkDownRespPass                UpgStateRespType = 24
-	UpgStateRespType_UpgStateLinkDownRespFail                UpgStateRespType = 25
-	UpgStateRespType_UpgStateLinkUpRespPass                  UpgStateRespType = 26
-	UpgStateRespType_UpgStateLinkUpRespFail                  UpgStateRespType = 27
-	UpgStateRespType_UpgStateDataplaneDowntimeStartRespPass  UpgStateRespType = 28
-	UpgStateRespType_UpgStateDataplaneDowntimeStartRespFail  UpgStateRespType = 29
-	UpgStateRespType_UpgStateIsSystemReadyRespPass           UpgStateRespType = 30
-	UpgStateRespType_UpgStateIsSystemReadyRespFail           UpgStateRespType = 31
+	UpgStateRespType_UpgStateSuccessRespPass                 UpgStateRespType = 14
+	UpgStateRespType_UpgStateSuccessRespFail                 UpgStateRespType = 15
+	UpgStateRespType_UpgStateFailedRespPass                  UpgStateRespType = 16
+	UpgStateRespType_UpgStateFailedRespFail                  UpgStateRespType = 17
+	UpgStateRespType_UpgStateAbortRespPass                   UpgStateRespType = 18
+	UpgStateRespType_UpgStateAbortRespFail                   UpgStateRespType = 19
+	UpgStateRespType_UpgStateUpgPossibleRespPass             UpgStateRespType = 20
+	UpgStateRespType_UpgStateUpgPossibleRespFail             UpgStateRespType = 21
+	UpgStateRespType_UpgStateLinkDownRespPass                UpgStateRespType = 22
+	UpgStateRespType_UpgStateLinkDownRespFail                UpgStateRespType = 23
+	UpgStateRespType_UpgStateLinkUpRespPass                  UpgStateRespType = 24
+	UpgStateRespType_UpgStateLinkUpRespFail                  UpgStateRespType = 25
+	UpgStateRespType_UpgStateHostDownRespPass                UpgStateRespType = 26
+	UpgStateRespType_UpgStateHostDownRespFail                UpgStateRespType = 27
+	UpgStateRespType_UpgStateHostUpRespPass                  UpgStateRespType = 28
+	UpgStateRespType_UpgStateHostUpRespFail                  UpgStateRespType = 29
+	UpgStateRespType_UpgStatePostHostDownRespPass            UpgStateRespType = 30
+	UpgStateRespType_UpgStatePostHostDownRespFail            UpgStateRespType = 31
+	UpgStateRespType_UpgStatePostLinkUpRespPass              UpgStateRespType = 32
+	UpgStateRespType_UpgStatePostLinkUpRespFail              UpgStateRespType = 33
+	UpgStateRespType_UpgStateSaveStateRespPass               UpgStateRespType = 34
+	UpgStateRespType_UpgStateSaveStateRespFail               UpgStateRespType = 35
 )
 
 var UpgStateRespType_name = map[int32]string{
@@ -199,8 +209,8 @@ var UpgStateRespType_name = map[int32]string{
 	1:  "UpgStateCompatCheckRespFail",
 	2:  "UpgStateProcessQuiesceRespPass",
 	3:  "UpgStateProcessQuiesceRespFail",
-	4:  "UpgStatePostBinRestartRespPass",
-	5:  "UpgStatePostBinRestartRespFail",
+	4:  "UpgStatePostRestartRespPass",
+	5:  "UpgStatePostRestartRespFail",
 	6:  "UpgStateDataplaneDowntimePhase1RespPass",
 	7:  "UpgStateDataplaneDowntimePhase1RespFail",
 	8:  "UpgStateDataplaneDowntimePhase2RespPass",
@@ -209,32 +219,36 @@ var UpgStateRespType_name = map[int32]string{
 	11: "UpgStateDataplaneDowntimePhase3RespFail",
 	12: "UpgStateDataplaneDowntimePhase4RespPass",
 	13: "UpgStateDataplaneDowntimePhase4RespFail",
-	14: "UpgStateCleanupRespPass",
-	15: "UpgStateCleanupRespFail",
-	16: "UpgStateSuccessRespPass",
-	17: "UpgStateSuccessRespFail",
-	18: "UpgStateFailedRespPass",
-	19: "UpgStateFailedRespFail",
-	20: "UpgStateAbortRespPass",
-	21: "UpgStateAbortRespFail",
-	22: "UpgStateUpgPossibleRespPass",
-	23: "UpgStateUpgPossibleRespFail",
-	24: "UpgStateLinkDownRespPass",
-	25: "UpgStateLinkDownRespFail",
-	26: "UpgStateLinkUpRespPass",
-	27: "UpgStateLinkUpRespFail",
-	28: "UpgStateDataplaneDowntimeStartRespPass",
-	29: "UpgStateDataplaneDowntimeStartRespFail",
-	30: "UpgStateIsSystemReadyRespPass",
-	31: "UpgStateIsSystemReadyRespFail",
+	14: "UpgStateSuccessRespPass",
+	15: "UpgStateSuccessRespFail",
+	16: "UpgStateFailedRespPass",
+	17: "UpgStateFailedRespFail",
+	18: "UpgStateAbortRespPass",
+	19: "UpgStateAbortRespFail",
+	20: "UpgStateUpgPossibleRespPass",
+	21: "UpgStateUpgPossibleRespFail",
+	22: "UpgStateLinkDownRespPass",
+	23: "UpgStateLinkDownRespFail",
+	24: "UpgStateLinkUpRespPass",
+	25: "UpgStateLinkUpRespFail",
+	26: "UpgStateHostDownRespPass",
+	27: "UpgStateHostDownRespFail",
+	28: "UpgStateHostUpRespPass",
+	29: "UpgStateHostUpRespFail",
+	30: "UpgStatePostHostDownRespPass",
+	31: "UpgStatePostHostDownRespFail",
+	32: "UpgStatePostLinkUpRespPass",
+	33: "UpgStatePostLinkUpRespFail",
+	34: "UpgStateSaveStateRespPass",
+	35: "UpgStateSaveStateRespFail",
 }
 var UpgStateRespType_value = map[string]int32{
 	"UpgStateCompatCheckRespPass":             0,
 	"UpgStateCompatCheckRespFail":             1,
 	"UpgStateProcessQuiesceRespPass":          2,
 	"UpgStateProcessQuiesceRespFail":          3,
-	"UpgStatePostBinRestartRespPass":          4,
-	"UpgStatePostBinRestartRespFail":          5,
+	"UpgStatePostRestartRespPass":             4,
+	"UpgStatePostRestartRespFail":             5,
 	"UpgStateDataplaneDowntimePhase1RespPass": 6,
 	"UpgStateDataplaneDowntimePhase1RespFail": 7,
 	"UpgStateDataplaneDowntimePhase2RespPass": 8,
@@ -243,24 +257,28 @@ var UpgStateRespType_value = map[string]int32{
 	"UpgStateDataplaneDowntimePhase3RespFail": 11,
 	"UpgStateDataplaneDowntimePhase4RespPass": 12,
 	"UpgStateDataplaneDowntimePhase4RespFail": 13,
-	"UpgStateCleanupRespPass":                 14,
-	"UpgStateCleanupRespFail":                 15,
-	"UpgStateSuccessRespPass":                 16,
-	"UpgStateSuccessRespFail":                 17,
-	"UpgStateFailedRespPass":                  18,
-	"UpgStateFailedRespFail":                  19,
-	"UpgStateAbortRespPass":                   20,
-	"UpgStateAbortRespFail":                   21,
-	"UpgStateUpgPossibleRespPass":             22,
-	"UpgStateUpgPossibleRespFail":             23,
-	"UpgStateLinkDownRespPass":                24,
-	"UpgStateLinkDownRespFail":                25,
-	"UpgStateLinkUpRespPass":                  26,
-	"UpgStateLinkUpRespFail":                  27,
-	"UpgStateDataplaneDowntimeStartRespPass":  28,
-	"UpgStateDataplaneDowntimeStartRespFail":  29,
-	"UpgStateIsSystemReadyRespPass":           30,
-	"UpgStateIsSystemReadyRespFail":           31,
+	"UpgStateSuccessRespPass":                 14,
+	"UpgStateSuccessRespFail":                 15,
+	"UpgStateFailedRespPass":                  16,
+	"UpgStateFailedRespFail":                  17,
+	"UpgStateAbortRespPass":                   18,
+	"UpgStateAbortRespFail":                   19,
+	"UpgStateUpgPossibleRespPass":             20,
+	"UpgStateUpgPossibleRespFail":             21,
+	"UpgStateLinkDownRespPass":                22,
+	"UpgStateLinkDownRespFail":                23,
+	"UpgStateLinkUpRespPass":                  24,
+	"UpgStateLinkUpRespFail":                  25,
+	"UpgStateHostDownRespPass":                26,
+	"UpgStateHostDownRespFail":                27,
+	"UpgStateHostUpRespPass":                  28,
+	"UpgStateHostUpRespFail":                  29,
+	"UpgStatePostHostDownRespPass":            30,
+	"UpgStatePostHostDownRespFail":            31,
+	"UpgStatePostLinkUpRespPass":              32,
+	"UpgStatePostLinkUpRespFail":              33,
+	"UpgStateSaveStateRespPass":               34,
+	"UpgStateSaveStateRespFail":               35,
 }
 
 func (x UpgStateRespType) String() string {
@@ -549,485 +567,6 @@ func (m *UpgradeMetrics_) GetUpgNotPossible() *delphi.Counter {
 
 type delphiWrapper interface {
 	bubbleSave()
-}
-
-type UpgApp struct {
-	sdkClient clientApi.Client
-	parent    delphiWrapper
-	meta      *delphi.ObjectMeta
-	key       string
-}
-
-func (o *UpgApp) GetMeta() *delphi.ObjectMeta {
-	return o.meta
-}
-
-func (o *UpgApp) SetMeta(val *delphi.ObjectMeta) {
-	o.meta = val
-	o.bubbleSave()
-}
-
-func (o *UpgApp) GetKey() string {
-	return o.key
-}
-
-func (o *UpgApp) SetKey(val string) {
-	o.key = val
-	o.bubbleSave()
-}
-
-func (o *UpgApp) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *UpgApp) save() {
-	if o.GetKeyString() != "" {
-		o.sdkClient.SetObject(o)
-	}
-}
-
-func (o *UpgApp) Delete() {
-	o.sdkClient.DeleteObject(o)
-}
-
-func NewUpgApp(sdkClient clientApi.Client) *UpgApp {
-	w := &UpgApp{}
-	w.sdkClient = sdkClient
-	w.meta = &delphi.ObjectMeta{
-		Kind: "UpgApp",
-	}
-	return w
-}
-
-func NewUpgAppWithKey(sdkClient clientApi.Client, key string) *UpgApp {
-	w := NewUpgApp(sdkClient)
-	w.SetKey(key)
-	return w
-}
-
-func GetUpgApp(sdkClient clientApi.Client, key string) *UpgApp {
-	lookupKey := fmt.Sprintf("%v", key)
-	b := sdkClient.GetObject("UpgApp", lookupKey)
-	if b == nil {
-		return nil
-	}
-	o, ok := b.(*UpgApp)
-	if !ok {
-		panic("Couldn't cast to UpgApp")
-	}
-	return o
-}
-
-func childNewUpgApp(parent delphiWrapper, sdkClient clientApi.Client) *UpgApp {
-	w := NewUpgApp(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func childNewUpgAppWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *UpgApp) *UpgApp {
-	w := childNewUpgApp(parent, sdkClient)
-	w.key = value.key
-	return w
-}
-
-func (o *UpgApp) GetProtoMsg() *UpgApp_ {
-	return &UpgApp_{
-		Meta: o.meta,
-		Key:  o.key,
-	}
-}
-
-func (o *UpgApp) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func (obj *UpgApp) GetKeyString() string {
-	return fmt.Sprintf("%v", (obj.key))
-}
-
-func (obj *UpgApp) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
-	for _, r := range rl {
-		rctr, ok := r.(UpgAppReactor)
-		if ok == false {
-			panic("Not a Reactor")
-		}
-		if op == delphi.ObjectOperation_SetOp {
-			if oldObj == nil {
-				rctr.OnUpgAppCreate(obj)
-			} else {
-				rctr.OnUpgAppUpdate(obj)
-			}
-		} else {
-			rctr.OnUpgAppDelete(obj)
-		}
-	}
-}
-
-type UpgAppReactor interface {
-	OnUpgAppCreate(obj *UpgApp)
-	OnUpgAppUpdate(obj *UpgApp)
-	OnUpgAppDelete(obj *UpgApp)
-}
-
-func (obj *UpgApp) GetPath() string {
-	return "UpgApp" + "|" + obj.GetKeyString()
-}
-
-func newUpgAppFromMessage(msg *UpgApp_) *UpgApp {
-	return &UpgApp{
-		meta: msg.Meta,
-		key:  msg.Key,
-	}
-}
-
-func upgAppFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
-	var msg UpgApp_
-	err := proto.Unmarshal(data, &msg)
-	if err != nil {
-		return nil, err
-	}
-	w := newUpgAppFromMessage(&msg)
-	w.sdkClient = sdkClient
-	return w, nil
-}
-
-func UpgAppMount(client clientApi.Client, mode delphi.MountMode) {
-	client.MountKind("UpgApp", mode)
-}
-
-func UpgAppMountKey(client clientApi.Client, key string, mode delphi.MountMode) {
-	keyString := fmt.Sprintf("%v", key)
-	client.MountKindKey("UpgApp", keyString, mode)
-}
-
-func UpgAppWatch(client clientApi.Client, reactor UpgAppReactor) {
-	client.WatchKind("UpgApp", reactor)
-}
-
-type UpgAppIterator struct {
-	objects []clientApi.BaseObject
-	cur     int
-}
-
-func (i *UpgAppIterator) Next() *UpgApp {
-	if i.cur >= len(i.objects) {
-		return nil
-	}
-	obj, ok := i.objects[i.cur].(*UpgApp)
-	if !ok {
-		panic("Cast error")
-	}
-	i.cur++
-	return obj
-}
-
-func UpgAppList(client clientApi.Client) *UpgAppIterator {
-	return &UpgAppIterator{
-		objects: client.List("UpgApp"),
-		cur:     0,
-	}
-}
-
-type UpgradeMetrics struct {
-	sdkClient        clientApi.Client
-	parent           delphiWrapper
-	meta             *delphi.ObjectMeta
-	key              uint32
-	isUpgPossible    *delphi.Counter
-	disruptiveUpg    *delphi.Counter
-	nonDisruptiveUpg *delphi.Counter
-	successfulUpg    *delphi.Counter
-	failedUpg        *delphi.Counter
-	abortedUpg       *delphi.Counter
-	numRegApps       *delphi.Gauge
-	upgPossible      *delphi.Counter
-	upgNotPossible   *delphi.Counter
-}
-
-func (o *UpgradeMetrics) GetMeta() *delphi.ObjectMeta {
-	return o.meta
-}
-
-func (o *UpgradeMetrics) SetMeta(val *delphi.ObjectMeta) {
-	o.meta = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) GetKey() uint32 {
-	return o.key
-}
-
-func (o *UpgradeMetrics) SetKey(val uint32) {
-	o.key = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) GetIsUpgPossible() *delphi.Counter {
-	return o.isUpgPossible
-}
-
-func (o *UpgradeMetrics) SetIsUpgPossible(val *delphi.Counter) {
-	o.isUpgPossible = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) GetDisruptiveUpg() *delphi.Counter {
-	return o.disruptiveUpg
-}
-
-func (o *UpgradeMetrics) SetDisruptiveUpg(val *delphi.Counter) {
-	o.disruptiveUpg = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) GetNonDisruptiveUpg() *delphi.Counter {
-	return o.nonDisruptiveUpg
-}
-
-func (o *UpgradeMetrics) SetNonDisruptiveUpg(val *delphi.Counter) {
-	o.nonDisruptiveUpg = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) GetSuccessfulUpg() *delphi.Counter {
-	return o.successfulUpg
-}
-
-func (o *UpgradeMetrics) SetSuccessfulUpg(val *delphi.Counter) {
-	o.successfulUpg = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) GetFailedUpg() *delphi.Counter {
-	return o.failedUpg
-}
-
-func (o *UpgradeMetrics) SetFailedUpg(val *delphi.Counter) {
-	o.failedUpg = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) GetAbortedUpg() *delphi.Counter {
-	return o.abortedUpg
-}
-
-func (o *UpgradeMetrics) SetAbortedUpg(val *delphi.Counter) {
-	o.abortedUpg = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) GetNumRegApps() *delphi.Gauge {
-	return o.numRegApps
-}
-
-func (o *UpgradeMetrics) SetNumRegApps(val *delphi.Gauge) {
-	o.numRegApps = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) GetUpgPossible() *delphi.Counter {
-	return o.upgPossible
-}
-
-func (o *UpgradeMetrics) SetUpgPossible(val *delphi.Counter) {
-	o.upgPossible = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) GetUpgNotPossible() *delphi.Counter {
-	return o.upgNotPossible
-}
-
-func (o *UpgradeMetrics) SetUpgNotPossible(val *delphi.Counter) {
-	o.upgNotPossible = val
-	o.bubbleSave()
-}
-
-func (o *UpgradeMetrics) bubbleSave() {
-	if o.parent != nil {
-		o.parent.bubbleSave()
-	} else {
-		o.save()
-	}
-}
-
-func (o *UpgradeMetrics) save() {
-	if o.GetKeyString() != "" {
-		o.sdkClient.SetObject(o)
-	}
-}
-
-func (o *UpgradeMetrics) Delete() {
-	o.sdkClient.DeleteObject(o)
-}
-
-func NewUpgradeMetrics(sdkClient clientApi.Client) *UpgradeMetrics {
-	w := &UpgradeMetrics{}
-	w.sdkClient = sdkClient
-	w.meta = &delphi.ObjectMeta{
-		Kind: "UpgradeMetrics",
-	}
-	return w
-}
-
-func NewUpgradeMetricsWithKey(sdkClient clientApi.Client, key uint32) *UpgradeMetrics {
-	w := NewUpgradeMetrics(sdkClient)
-	w.SetKey(key)
-	return w
-}
-
-func GetUpgradeMetrics(sdkClient clientApi.Client, key uint32) *UpgradeMetrics {
-	lookupKey := fmt.Sprintf("%v", key)
-	b := sdkClient.GetObject("UpgradeMetrics", lookupKey)
-	if b == nil {
-		return nil
-	}
-	o, ok := b.(*UpgradeMetrics)
-	if !ok {
-		panic("Couldn't cast to UpgradeMetrics")
-	}
-	return o
-}
-
-func childNewUpgradeMetrics(parent delphiWrapper, sdkClient clientApi.Client) *UpgradeMetrics {
-	w := NewUpgradeMetrics(sdkClient)
-	w.parent = parent
-	return w
-}
-
-func childNewUpgradeMetricsWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *UpgradeMetrics) *UpgradeMetrics {
-	w := childNewUpgradeMetrics(parent, sdkClient)
-	w.key = value.key
-	w.isUpgPossible = value.isUpgPossible
-	w.disruptiveUpg = value.disruptiveUpg
-	w.nonDisruptiveUpg = value.nonDisruptiveUpg
-	w.successfulUpg = value.successfulUpg
-	w.failedUpg = value.failedUpg
-	w.abortedUpg = value.abortedUpg
-	w.numRegApps = value.numRegApps
-	w.upgPossible = value.upgPossible
-	w.upgNotPossible = value.upgNotPossible
-	return w
-}
-
-func (o *UpgradeMetrics) GetProtoMsg() *UpgradeMetrics_ {
-	return &UpgradeMetrics_{
-		Meta:             o.meta,
-		Key:              o.key,
-		IsUpgPossible:    o.isUpgPossible,
-		DisruptiveUpg:    o.disruptiveUpg,
-		NonDisruptiveUpg: o.nonDisruptiveUpg,
-		SuccessfulUpg:    o.successfulUpg,
-		FailedUpg:        o.failedUpg,
-		AbortedUpg:       o.abortedUpg,
-		NumRegApps:       o.numRegApps,
-		UpgPossible:      o.upgPossible,
-		UpgNotPossible:   o.upgNotPossible,
-	}
-}
-
-func (o *UpgradeMetrics) GetMessage() proto.Message {
-	return o.GetProtoMsg()
-}
-
-func (obj *UpgradeMetrics) GetKeyString() string {
-	return fmt.Sprintf("%v", (obj.key))
-}
-
-func (obj *UpgradeMetrics) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
-	for _, r := range rl {
-		rctr, ok := r.(UpgradeMetricsReactor)
-		if ok == false {
-			panic("Not a Reactor")
-		}
-		if op == delphi.ObjectOperation_SetOp {
-			if oldObj == nil {
-				rctr.OnUpgradeMetricsCreate(obj)
-			} else {
-				rctr.OnUpgradeMetricsUpdate(obj)
-			}
-		} else {
-			rctr.OnUpgradeMetricsDelete(obj)
-		}
-	}
-}
-
-type UpgradeMetricsReactor interface {
-	OnUpgradeMetricsCreate(obj *UpgradeMetrics)
-	OnUpgradeMetricsUpdate(obj *UpgradeMetrics)
-	OnUpgradeMetricsDelete(obj *UpgradeMetrics)
-}
-
-func (obj *UpgradeMetrics) GetPath() string {
-	return "UpgradeMetrics" + "|" + obj.GetKeyString()
-}
-
-func newUpgradeMetricsFromMessage(msg *UpgradeMetrics_) *UpgradeMetrics {
-	return &UpgradeMetrics{
-		meta:             msg.Meta,
-		key:              msg.Key,
-		isUpgPossible:    msg.IsUpgPossible,
-		disruptiveUpg:    msg.DisruptiveUpg,
-		nonDisruptiveUpg: msg.NonDisruptiveUpg,
-		successfulUpg:    msg.SuccessfulUpg,
-		failedUpg:        msg.FailedUpg,
-		abortedUpg:       msg.AbortedUpg,
-		numRegApps:       msg.NumRegApps,
-		upgPossible:      msg.UpgPossible,
-		upgNotPossible:   msg.UpgNotPossible,
-	}
-}
-
-func upgradeMetricsFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
-	var msg UpgradeMetrics_
-	err := proto.Unmarshal(data, &msg)
-	if err != nil {
-		return nil, err
-	}
-	w := newUpgradeMetricsFromMessage(&msg)
-	w.sdkClient = sdkClient
-	return w, nil
-}
-
-func UpgradeMetricsMount(client clientApi.Client, mode delphi.MountMode) {
-	client.MountKind("UpgradeMetrics", mode)
-}
-
-func UpgradeMetricsMountKey(client clientApi.Client, key uint32, mode delphi.MountMode) {
-	keyString := fmt.Sprintf("%v", key)
-	client.MountKindKey("UpgradeMetrics", keyString, mode)
-}
-
-func UpgradeMetricsWatch(client clientApi.Client, reactor UpgradeMetricsReactor) {
-	client.WatchKind("UpgradeMetrics", reactor)
-}
-
-type UpgradeMetricsIterator struct {
-	objects []clientApi.BaseObject
-	cur     int
-}
-
-func (i *UpgradeMetricsIterator) Next() *UpgradeMetrics {
-	if i.cur >= len(i.objects) {
-		return nil
-	}
-	obj, ok := i.objects[i.cur].(*UpgradeMetrics)
-	if !ok {
-		panic("Cast error")
-	}
-	i.cur++
-	return obj
-}
-
-func UpgradeMetricsList(client clientApi.Client) *UpgradeMetricsIterator {
-	return &UpgradeMetricsIterator{
-		objects: client.List("UpgradeMetrics"),
-		cur:     0,
-	}
 }
 
 type UpgReq struct {
@@ -1779,6 +1318,485 @@ func UpgAppRespList(client clientApi.Client) *UpgAppRespIterator {
 	}
 }
 
+type UpgApp struct {
+	sdkClient clientApi.Client
+	parent    delphiWrapper
+	meta      *delphi.ObjectMeta
+	key       string
+}
+
+func (o *UpgApp) GetMeta() *delphi.ObjectMeta {
+	return o.meta
+}
+
+func (o *UpgApp) SetMeta(val *delphi.ObjectMeta) {
+	o.meta = val
+	o.bubbleSave()
+}
+
+func (o *UpgApp) GetKey() string {
+	return o.key
+}
+
+func (o *UpgApp) SetKey(val string) {
+	o.key = val
+	o.bubbleSave()
+}
+
+func (o *UpgApp) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *UpgApp) save() {
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
+}
+
+func (o *UpgApp) Delete() {
+	o.sdkClient.DeleteObject(o)
+}
+
+func NewUpgApp(sdkClient clientApi.Client) *UpgApp {
+	w := &UpgApp{}
+	w.sdkClient = sdkClient
+	w.meta = &delphi.ObjectMeta{
+		Kind: "UpgApp",
+	}
+	return w
+}
+
+func NewUpgAppWithKey(sdkClient clientApi.Client, key string) *UpgApp {
+	w := NewUpgApp(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
+func GetUpgApp(sdkClient clientApi.Client, key string) *UpgApp {
+	lookupKey := fmt.Sprintf("%v", key)
+	b := sdkClient.GetObject("UpgApp", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*UpgApp)
+	if !ok {
+		panic("Couldn't cast to UpgApp")
+	}
+	return o
+}
+
+func childNewUpgApp(parent delphiWrapper, sdkClient clientApi.Client) *UpgApp {
+	w := NewUpgApp(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func childNewUpgAppWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *UpgApp) *UpgApp {
+	w := childNewUpgApp(parent, sdkClient)
+	w.key = value.key
+	return w
+}
+
+func (o *UpgApp) GetProtoMsg() *UpgApp_ {
+	return &UpgApp_{
+		Meta: o.meta,
+		Key:  o.key,
+	}
+}
+
+func (o *UpgApp) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func (obj *UpgApp) GetKeyString() string {
+	return fmt.Sprintf("%v", (obj.key))
+}
+
+func (obj *UpgApp) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(UpgAppReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if oldObj == nil {
+				rctr.OnUpgAppCreate(obj)
+			} else {
+				rctr.OnUpgAppUpdate(obj)
+			}
+		} else {
+			rctr.OnUpgAppDelete(obj)
+		}
+	}
+}
+
+type UpgAppReactor interface {
+	OnUpgAppCreate(obj *UpgApp)
+	OnUpgAppUpdate(obj *UpgApp)
+	OnUpgAppDelete(obj *UpgApp)
+}
+
+func (obj *UpgApp) GetPath() string {
+	return "UpgApp" + "|" + obj.GetKeyString()
+}
+
+func newUpgAppFromMessage(msg *UpgApp_) *UpgApp {
+	return &UpgApp{
+		meta: msg.Meta,
+		key:  msg.Key,
+	}
+}
+
+func upgAppFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg UpgApp_
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	w := newUpgAppFromMessage(&msg)
+	w.sdkClient = sdkClient
+	return w, nil
+}
+
+func UpgAppMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("UpgApp", mode)
+}
+
+func UpgAppMountKey(client clientApi.Client, key string, mode delphi.MountMode) {
+	keyString := fmt.Sprintf("%v", key)
+	client.MountKindKey("UpgApp", keyString, mode)
+}
+
+func UpgAppWatch(client clientApi.Client, reactor UpgAppReactor) {
+	client.WatchKind("UpgApp", reactor)
+}
+
+type UpgAppIterator struct {
+	objects []clientApi.BaseObject
+	cur     int
+}
+
+func (i *UpgAppIterator) Next() *UpgApp {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*UpgApp)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func UpgAppList(client clientApi.Client) *UpgAppIterator {
+	return &UpgAppIterator{
+		objects: client.List("UpgApp"),
+		cur:     0,
+	}
+}
+
+type UpgradeMetrics struct {
+	sdkClient        clientApi.Client
+	parent           delphiWrapper
+	meta             *delphi.ObjectMeta
+	key              uint32
+	isUpgPossible    *delphi.Counter
+	disruptiveUpg    *delphi.Counter
+	nonDisruptiveUpg *delphi.Counter
+	successfulUpg    *delphi.Counter
+	failedUpg        *delphi.Counter
+	abortedUpg       *delphi.Counter
+	numRegApps       *delphi.Gauge
+	upgPossible      *delphi.Counter
+	upgNotPossible   *delphi.Counter
+}
+
+func (o *UpgradeMetrics) GetMeta() *delphi.ObjectMeta {
+	return o.meta
+}
+
+func (o *UpgradeMetrics) SetMeta(val *delphi.ObjectMeta) {
+	o.meta = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) GetKey() uint32 {
+	return o.key
+}
+
+func (o *UpgradeMetrics) SetKey(val uint32) {
+	o.key = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) GetIsUpgPossible() *delphi.Counter {
+	return o.isUpgPossible
+}
+
+func (o *UpgradeMetrics) SetIsUpgPossible(val *delphi.Counter) {
+	o.isUpgPossible = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) GetDisruptiveUpg() *delphi.Counter {
+	return o.disruptiveUpg
+}
+
+func (o *UpgradeMetrics) SetDisruptiveUpg(val *delphi.Counter) {
+	o.disruptiveUpg = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) GetNonDisruptiveUpg() *delphi.Counter {
+	return o.nonDisruptiveUpg
+}
+
+func (o *UpgradeMetrics) SetNonDisruptiveUpg(val *delphi.Counter) {
+	o.nonDisruptiveUpg = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) GetSuccessfulUpg() *delphi.Counter {
+	return o.successfulUpg
+}
+
+func (o *UpgradeMetrics) SetSuccessfulUpg(val *delphi.Counter) {
+	o.successfulUpg = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) GetFailedUpg() *delphi.Counter {
+	return o.failedUpg
+}
+
+func (o *UpgradeMetrics) SetFailedUpg(val *delphi.Counter) {
+	o.failedUpg = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) GetAbortedUpg() *delphi.Counter {
+	return o.abortedUpg
+}
+
+func (o *UpgradeMetrics) SetAbortedUpg(val *delphi.Counter) {
+	o.abortedUpg = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) GetNumRegApps() *delphi.Gauge {
+	return o.numRegApps
+}
+
+func (o *UpgradeMetrics) SetNumRegApps(val *delphi.Gauge) {
+	o.numRegApps = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) GetUpgPossible() *delphi.Counter {
+	return o.upgPossible
+}
+
+func (o *UpgradeMetrics) SetUpgPossible(val *delphi.Counter) {
+	o.upgPossible = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) GetUpgNotPossible() *delphi.Counter {
+	return o.upgNotPossible
+}
+
+func (o *UpgradeMetrics) SetUpgNotPossible(val *delphi.Counter) {
+	o.upgNotPossible = val
+	o.bubbleSave()
+}
+
+func (o *UpgradeMetrics) bubbleSave() {
+	if o.parent != nil {
+		o.parent.bubbleSave()
+	} else {
+		o.save()
+	}
+}
+
+func (o *UpgradeMetrics) save() {
+	if o.GetKeyString() != "" {
+		o.sdkClient.SetObject(o)
+	}
+}
+
+func (o *UpgradeMetrics) Delete() {
+	o.sdkClient.DeleteObject(o)
+}
+
+func NewUpgradeMetrics(sdkClient clientApi.Client) *UpgradeMetrics {
+	w := &UpgradeMetrics{}
+	w.sdkClient = sdkClient
+	w.meta = &delphi.ObjectMeta{
+		Kind: "UpgradeMetrics",
+	}
+	return w
+}
+
+func NewUpgradeMetricsWithKey(sdkClient clientApi.Client, key uint32) *UpgradeMetrics {
+	w := NewUpgradeMetrics(sdkClient)
+	w.SetKey(key)
+	return w
+}
+
+func GetUpgradeMetrics(sdkClient clientApi.Client, key uint32) *UpgradeMetrics {
+	lookupKey := fmt.Sprintf("%v", key)
+	b := sdkClient.GetObject("UpgradeMetrics", lookupKey)
+	if b == nil {
+		return nil
+	}
+	o, ok := b.(*UpgradeMetrics)
+	if !ok {
+		panic("Couldn't cast to UpgradeMetrics")
+	}
+	return o
+}
+
+func childNewUpgradeMetrics(parent delphiWrapper, sdkClient clientApi.Client) *UpgradeMetrics {
+	w := NewUpgradeMetrics(sdkClient)
+	w.parent = parent
+	return w
+}
+
+func childNewUpgradeMetricsWithValue(parent delphiWrapper, sdkClient clientApi.Client, value *UpgradeMetrics) *UpgradeMetrics {
+	w := childNewUpgradeMetrics(parent, sdkClient)
+	w.key = value.key
+	w.isUpgPossible = value.isUpgPossible
+	w.disruptiveUpg = value.disruptiveUpg
+	w.nonDisruptiveUpg = value.nonDisruptiveUpg
+	w.successfulUpg = value.successfulUpg
+	w.failedUpg = value.failedUpg
+	w.abortedUpg = value.abortedUpg
+	w.numRegApps = value.numRegApps
+	w.upgPossible = value.upgPossible
+	w.upgNotPossible = value.upgNotPossible
+	return w
+}
+
+func (o *UpgradeMetrics) GetProtoMsg() *UpgradeMetrics_ {
+	return &UpgradeMetrics_{
+		Meta:             o.meta,
+		Key:              o.key,
+		IsUpgPossible:    o.isUpgPossible,
+		DisruptiveUpg:    o.disruptiveUpg,
+		NonDisruptiveUpg: o.nonDisruptiveUpg,
+		SuccessfulUpg:    o.successfulUpg,
+		FailedUpg:        o.failedUpg,
+		AbortedUpg:       o.abortedUpg,
+		NumRegApps:       o.numRegApps,
+		UpgPossible:      o.upgPossible,
+		UpgNotPossible:   o.upgNotPossible,
+	}
+}
+
+func (o *UpgradeMetrics) GetMessage() proto.Message {
+	return o.GetProtoMsg()
+}
+
+func (obj *UpgradeMetrics) GetKeyString() string {
+	return fmt.Sprintf("%v", (obj.key))
+}
+
+func (obj *UpgradeMetrics) TriggerEvent(oldObj clientApi.BaseObject, op delphi.ObjectOperation, rl []clientApi.BaseReactor) {
+	for _, r := range rl {
+		rctr, ok := r.(UpgradeMetricsReactor)
+		if ok == false {
+			panic("Not a Reactor")
+		}
+		if op == delphi.ObjectOperation_SetOp {
+			if oldObj == nil {
+				rctr.OnUpgradeMetricsCreate(obj)
+			} else {
+				rctr.OnUpgradeMetricsUpdate(obj)
+			}
+		} else {
+			rctr.OnUpgradeMetricsDelete(obj)
+		}
+	}
+}
+
+type UpgradeMetricsReactor interface {
+	OnUpgradeMetricsCreate(obj *UpgradeMetrics)
+	OnUpgradeMetricsUpdate(obj *UpgradeMetrics)
+	OnUpgradeMetricsDelete(obj *UpgradeMetrics)
+}
+
+func (obj *UpgradeMetrics) GetPath() string {
+	return "UpgradeMetrics" + "|" + obj.GetKeyString()
+}
+
+func newUpgradeMetricsFromMessage(msg *UpgradeMetrics_) *UpgradeMetrics {
+	return &UpgradeMetrics{
+		meta:             msg.Meta,
+		key:              msg.Key,
+		isUpgPossible:    msg.IsUpgPossible,
+		disruptiveUpg:    msg.DisruptiveUpg,
+		nonDisruptiveUpg: msg.NonDisruptiveUpg,
+		successfulUpg:    msg.SuccessfulUpg,
+		failedUpg:        msg.FailedUpg,
+		abortedUpg:       msg.AbortedUpg,
+		numRegApps:       msg.NumRegApps,
+		upgPossible:      msg.UpgPossible,
+		upgNotPossible:   msg.UpgNotPossible,
+	}
+}
+
+func upgradeMetricsFactory(sdkClient clientApi.Client, data []byte) (clientApi.BaseObject, error) {
+	var msg UpgradeMetrics_
+	err := proto.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	w := newUpgradeMetricsFromMessage(&msg)
+	w.sdkClient = sdkClient
+	return w, nil
+}
+
+func UpgradeMetricsMount(client clientApi.Client, mode delphi.MountMode) {
+	client.MountKind("UpgradeMetrics", mode)
+}
+
+func UpgradeMetricsMountKey(client clientApi.Client, key uint32, mode delphi.MountMode) {
+	keyString := fmt.Sprintf("%v", key)
+	client.MountKindKey("UpgradeMetrics", keyString, mode)
+}
+
+func UpgradeMetricsWatch(client clientApi.Client, reactor UpgradeMetricsReactor) {
+	client.WatchKind("UpgradeMetrics", reactor)
+}
+
+type UpgradeMetricsIterator struct {
+	objects []clientApi.BaseObject
+	cur     int
+}
+
+func (i *UpgradeMetricsIterator) Next() *UpgradeMetrics {
+	if i.cur >= len(i.objects) {
+		return nil
+	}
+	obj, ok := i.objects[i.cur].(*UpgradeMetrics)
+	if !ok {
+		panic("Cast error")
+	}
+	i.cur++
+	return obj
+}
+
+func UpgradeMetricsList(client clientApi.Client) *UpgradeMetricsIterator {
+	return &UpgradeMetricsIterator{
+		objects: client.List("UpgradeMetrics"),
+		cur:     0,
+	}
+}
+
 type StringArray struct {
 	parent delphiWrapper
 	values []string
@@ -1832,12 +1850,12 @@ func init() {
 	proto.RegisterType((*UpgAppResp_)(nil), "upgrade.UpgAppResp_")
 	proto.RegisterType((*UpgApp_)(nil), "upgrade.UpgApp_")
 	proto.RegisterType((*UpgradeMetrics_)(nil), "upgrade.UpgradeMetrics_")
-	clientApi.RegisterFactory("UpgApp", upgAppFactory)
-	clientApi.RegisterFactory("UpgradeMetrics", upgradeMetricsFactory)
 	clientApi.RegisterFactory("UpgReq", upgReqFactory)
 	clientApi.RegisterFactory("UpgResp", upgRespFactory)
 	clientApi.RegisterFactory("UpgStateReq", upgStateReqFactory)
 	clientApi.RegisterFactory("UpgAppResp", upgAppRespFactory)
+	clientApi.RegisterFactory("UpgApp", upgAppFactory)
+	clientApi.RegisterFactory("UpgradeMetrics", upgradeMetricsFactory)
 	proto.RegisterEnum("upgrade.UpgReqType", UpgReqType_name, UpgReqType_value)
 	proto.RegisterEnum("upgrade.UpgRespType", UpgRespType_name, UpgRespType_value)
 	proto.RegisterEnum("upgrade.UpgReqStateType", UpgReqStateType_name, UpgReqStateType_value)
@@ -1848,68 +1866,70 @@ func init() {
 func init() { proto.RegisterFile("nic/upgrade_manager/upgrade/upgrade.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 1003 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0xcd, 0x72, 0x1b, 0x45,
-	0x10, 0xf6, 0x5a, 0xb2, 0x25, 0xb5, 0x2c, 0x69, 0x3c, 0xfe, 0x93, 0xed, 0x24, 0x36, 0x22, 0x65,
-	0x8c, 0xa8, 0xd8, 0x15, 0x39, 0x90, 0x2a, 0x73, 0xc1, 0x91, 0x81, 0x72, 0x85, 0x18, 0xb3, 0x8a,
-	0xa8, 0xe2, 0x94, 0x1a, 0x4b, 0x83, 0xbc, 0x44, 0xda, 0x1d, 0x76, 0x56, 0xa1, 0x7c, 0xa3, 0x38,
-	0xf1, 0x06, 0xb9, 0x72, 0xe4, 0xc0, 0x13, 0xe4, 0x65, 0x78, 0x15, 0x6a, 0x7a, 0x77, 0x47, 0xb3,
-	0xca, 0xea, 0xc7, 0xc0, 0xc9, 0x9a, 0xfe, 0x7e, 0xa6, 0xa7, 0xa7, 0x7b, 0x6a, 0x0d, 0x1f, 0xbb,
-	0x4e, 0xe7, 0x78, 0x28, 0x7a, 0x3e, 0xeb, 0xf2, 0x57, 0x03, 0xe6, 0xb2, 0x1e, 0xf7, 0xe3, 0x75,
-	0xfc, 0xf7, 0x48, 0xf8, 0x5e, 0xe0, 0xd1, 0x5c, 0xb4, 0xdc, 0x79, 0xa8, 0x34, 0x5d, 0xde, 0x17,
-	0x37, 0xce, 0x31, 0x42, 0xf1, 0x22, 0xfc, 0x13, 0xd2, 0x6b, 0x7f, 0x59, 0x90, 0x6b, 0x8b, 0x9e,
-	0xcd, 0x7f, 0x7e, 0x45, 0x0f, 0x20, 0xfb, 0x82, 0x07, 0xac, 0x6a, 0xed, 0x5b, 0x87, 0xc5, 0x06,
-	0x3d, 0x8a, 0x88, 0xdf, 0x5e, 0xff, 0xc4, 0x3b, 0x81, 0x42, 0x6c, 0xc4, 0xe9, 0x53, 0x28, 0x84,
-	0x92, 0xe6, 0xa0, 0x5b, 0x5d, 0xdc, 0xb7, 0x0e, 0xcb, 0x8d, 0xb5, 0xa3, 0x38, 0x8b, 0x10, 0x79,
-	0x79, 0x2b, 0xf8, 0xb3, 0xec, 0xaf, 0x6f, 0x6b, 0x96, 0x3d, 0xe2, 0xd2, 0xcf, 0x00, 0x46, 0x70,
-	0x35, 0x83, 0x4a, 0x62, 0x2a, 0x0d, 0x99, 0xc1, 0x3c, 0xcd, 0xab, 0xc8, 0xef, 0x6f, 0x6b, 0x56,
-	0xed, 0x0f, 0x0b, 0xf2, 0x08, 0x48, 0x31, 0x7f, 0xbe, 0xa7, 0xd1, 0xb6, 0x52, 0x7c, 0xcf, 0xfa,
-	0x51, 0xc2, 0xeb, 0xc9, 0x84, 0xa5, 0x78, 0x6f, 0x6b, 0x64, 0xd3, 0x03, 0x28, 0x47, 0xab, 0xaf,
-	0x98, 0xd3, 0x6f, 0x05, 0x7e, 0x35, 0xb3, 0x9f, 0x39, 0x2c, 0xd8, 0x63, 0x51, 0x23, 0xc5, 0x77,
-	0x16, 0xac, 0xb4, 0x45, 0xaf, 0x15, 0xb0, 0x80, 0xdf, 0xa9, 0xac, 0x5f, 0x40, 0x31, 0x3c, 0x33,
-	0x4a, 0xa3, 0x3c, 0xab, 0x63, 0x85, 0x45, 0xcc, 0xc8, 0xd5, 0x94, 0xfc, 0x0f, 0xf5, 0x7d, 0x67,
-	0x61, 0x12, 0x67, 0x42, 0xdc, 0xad, 0xc4, 0x04, 0x32, 0xcf, 0xf9, 0x2d, 0xe6, 0x5c, 0xb0, 0xd5,
-	0x4f, 0xfa, 0x25, 0x94, 0x46, 0x46, 0xaa, 0xee, 0x61, 0x3a, 0xdb, 0x66, 0x3a, 0x51, 0x8d, 0x12,
-	0xc5, 0x4f, 0xaa, 0xe8, 0x43, 0xd3, 0x46, 0x95, 0x3f, 0x8b, 0x5b, 0x24, 0x83, 0xa7, 0x28, 0xad,
-	0x5d, 0x60, 0x2b, 0x9f, 0x89, 0xff, 0x92, 0x77, 0x64, 0xf5, 0x67, 0x16, 0x2a, 0xed, 0x30, 0xd1,
-	0x17, 0x3c, 0xf0, 0x9d, 0x8e, 0xfc, 0x57, 0x9e, 0xa5, 0xb0, 0x16, 0x9f, 0x42, 0xe9, 0x42, 0xb6,
-	0x45, 0xef, 0xca, 0x93, 0xd2, 0xb9, 0xee, 0x87, 0x57, 0x53, 0x6c, 0x54, 0x62, 0x8b, 0xa6, 0x37,
-	0x74, 0x03, 0xee, 0xdb, 0x49, 0x96, 0x92, 0x9d, 0x3b, 0xd2, 0x1f, 0x8a, 0xc0, 0x79, 0xc3, 0xdb,
-	0xa2, 0x87, 0x67, 0x4f, 0x93, 0x25, 0x58, 0xf4, 0x73, 0x20, 0x97, 0x9e, 0x9b, 0x54, 0x2e, 0xa5,
-	0x2b, 0xdf, 0x23, 0xaa, 0x3d, 0x5b, 0xc3, 0x4e, 0x87, 0x4b, 0xf9, 0xe3, 0xb0, 0xaf, 0x94, 0xcb,
-	0x13, 0xf6, 0x4c, 0xb0, 0xe8, 0x23, 0x28, 0xa8, 0x49, 0xe0, 0x5d, 0x25, 0xc9, 0xa5, 0x4b, 0x46,
-	0x0c, 0x7a, 0x0c, 0x70, 0x76, 0xed, 0xf9, 0x41, 0xc8, 0xcf, 0xa7, 0xf3, 0x0d, 0x0a, 0x7d, 0x04,
-	0x70, 0x39, 0x1c, 0xd8, 0x5c, 0xdd, 0xae, 0xac, 0x16, 0x50, 0x50, 0x8a, 0x05, 0x5f, 0xb3, 0x61,
-	0x8f, 0xdb, 0x06, 0x81, 0x3e, 0xc6, 0x2e, 0xd6, 0xe5, 0x86, 0xf4, 0x0d, 0x4c, 0x0e, 0x7d, 0x8a,
-	0x83, 0x7e, 0xe9, 0x05, 0x5a, 0x55, 0x4c, 0x57, 0x8d, 0xd1, 0xea, 0xcf, 0xcd, 0xa1, 0xa3, 0x65,
-	0x80, 0x0b, 0xf7, 0x0d, 0xeb, 0x3b, 0xdd, 0xe6, 0xa0, 0x4b, 0x16, 0xe8, 0x0a, 0xbe, 0x57, 0xad,
-	0x80, 0xf9, 0x01, 0xb1, 0xa2, 0x15, 0x9e, 0x8b, 0x2c, 0xd2, 0xd5, 0xb1, 0xb6, 0x20, 0x99, 0xfa,
-	0x0f, 0xd1, 0x1b, 0x10, 0x8e, 0x04, 0xad, 0xe8, 0xe5, 0x15, 0x93, 0x92, 0x2c, 0x18, 0x01, 0x55,
-	0x4c, 0x62, 0x51, 0x82, 0x8f, 0x8d, 0x0a, 0xc4, 0xae, 0x9b, 0x40, 0xa3, 0x48, 0xd2, 0xfa, 0xef,
-	0x0c, 0xb6, 0xb4, 0xf9, 0x86, 0xd0, 0x2d, 0x58, 0x8b, 0xc7, 0xb0, 0xe9, 0x0d, 0x04, 0x0b, 0x9a,
-	0x37, 0xbc, 0xf3, 0x9a, 0x2c, 0xd0, 0x1d, 0xd8, 0x8c, 0x81, 0x2b, 0xdf, 0x53, 0x17, 0xfd, 0xdd,
-	0xd0, 0xe1, 0xb2, 0xc3, 0x89, 0x95, 0xc0, 0x3c, 0x19, 0x3c, 0x73, 0x5c, 0x9b, 0x4b, 0x3c, 0xe0,
-	0x22, 0xfd, 0x10, 0xf6, 0x62, 0xec, 0x9c, 0x05, 0x4c, 0xf4, 0x99, 0xcb, 0xcf, 0xbd, 0x5f, 0xdc,
-	0xc0, 0x19, 0xf0, 0xab, 0x1b, 0x26, 0xf9, 0x63, 0x92, 0x99, 0x4d, 0x6a, 0x90, 0xec, 0x6c, 0xd2,
-	0x09, 0x59, 0x9a, 0x4d, 0x7a, 0x42, 0x96, 0xe9, 0x1a, 0x9e, 0x3b, 0x3c, 0x64, 0x9f, 0x33, 0x77,
-	0x28, 0x48, 0xce, 0x0c, 0x46, 0x9d, 0x4c, 0xf2, 0x94, 0x62, 0x0f, 0x60, 0x30, 0xec, 0x55, 0x52,
-	0x50, 0x97, 0x14, 0xc7, 0xc2, 0x0a, 0x83, 0x59, 0x35, 0xb3, 0xc4, 0x45, 0xba, 0x0e, 0x24, 0x06,
-	0xbe, 0x71, 0xdc, 0xd7, 0x2a, 0x13, 0xb2, 0x62, 0xba, 0xaa, 0x68, 0x5b, 0x90, 0x12, 0xad, 0xc1,
-	0x83, 0x89, 0x89, 0x87, 0xcd, 0x52, 0xa6, 0xdb, 0xb0, 0x11, 0x73, 0x2e, 0x64, 0xeb, 0x56, 0x06,
-	0x7c, 0x60, 0x73, 0xd6, 0xbd, 0x25, 0x15, 0x73, 0xa3, 0x97, 0xdc, 0x1f, 0x38, 0x2e, 0xeb, 0x13,
-	0x52, 0xff, 0xad, 0x30, 0x0a, 0xeb, 0x16, 0xda, 0x83, 0xdd, 0x94, 0x2b, 0x36, 0x5a, 0x6a, 0x32,
-	0x21, 0x6a, 0x31, 0x23, 0xd7, 0x64, 0x2f, 0x68, 0x93, 0xc5, 0xe9, 0x1c, 0xf4, 0xc9, 0x24, 0x38,
-	0x89, 0xbe, 0xd1, 0x3e, 0xd9, 0xe9, 0x1c, 0xf4, 0x59, 0xa2, 0x9f, 0xc0, 0x47, 0x33, 0x7a, 0x4c,
-	0x1b, 0x2e, 0xcf, 0x49, 0x46, 0xe7, 0xdc, 0x6c, 0x72, 0x43, 0x3b, 0xe7, 0xe7, 0x24, 0xa3, 0x73,
-	0x61, 0x36, 0xf9, 0x44, 0x3b, 0xc3, 0x9c, 0x64, 0x74, 0x2e, 0xce, 0x26, 0x3f, 0xd1, 0xce, 0x2b,
-	0x73, 0x92, 0xd1, 0xb9, 0x44, 0x77, 0x61, 0x6b, 0x6c, 0x6e, 0xb4, 0x53, 0x79, 0x02, 0x88, 0xca,
-	0x8a, 0x09, 0x46, 0xc3, 0xa5, 0x95, 0x64, 0x02, 0x88, 0xca, 0x55, 0xf3, 0x6d, 0x09, 0x27, 0x50,
-	0x0b, 0x69, 0x3a, 0x86, 0xba, 0x35, 0x73, 0x56, 0x70, 0x4a, 0xb5, 0x6c, 0x3d, 0x15, 0x42, 0xd5,
-	0x86, 0xd9, 0xfa, 0xc6, 0x20, 0x6b, 0xed, 0xe6, 0x14, 0x02, 0x3a, 0x6c, 0xd1, 0x7b, 0x50, 0x1d,
-	0x9f, 0x78, 0x2d, 0xaf, 0x4e, 0x42, 0x51, 0xbb, 0x6d, 0x9e, 0x27, 0x7c, 0x17, 0xb4, 0x72, 0x27,
-	0x1d, 0x43, 0xdd, 0x2e, 0xad, 0xc3, 0xc1, 0xf4, 0xb7, 0x43, 0xfb, 0xdc, 0x9b, 0x8f, 0x8b, 0xbe,
-	0xf7, 0xe9, 0x07, 0x70, 0x3f, 0xf5, 0xbd, 0xd1, 0x76, 0x0f, 0xa6, 0x52, 0xd0, 0x65, 0xaf, 0x7e,
-	0x8a, 0x1f, 0x61, 0xf8, 0xf4, 0x6c, 0xc0, 0x6a, 0xf4, 0x73, 0xf4, 0x8d, 0x41, 0x16, 0x68, 0x15,
-	0xd6, 0xa3, 0x70, 0xe2, 0xeb, 0x83, 0x58, 0xd7, 0xcb, 0xf8, 0x3f, 0xc9, 0xc9, 0x3f, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0x31, 0xb3, 0xe0, 0xaa, 0xef, 0x0c, 0x00, 0x00,
+	// 1030 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0xcd, 0x72, 0x1a, 0x47,
+	0x10, 0xd6, 0x0a, 0x24, 0xa0, 0x11, 0x30, 0x6a, 0xfd, 0xa1, 0x1f, 0x4b, 0x04, 0xbb, 0x1c, 0x45,
+	0x29, 0x4b, 0x65, 0xe4, 0xc4, 0x55, 0xca, 0x25, 0x0a, 0xca, 0x8f, 0xca, 0xb1, 0x42, 0x90, 0x49,
+	0x55, 0x4e, 0xae, 0x15, 0x4c, 0xd0, 0xc6, 0xc0, 0x4e, 0x76, 0x07, 0xa5, 0x7c, 0xcb, 0x31, 0x6f,
+	0xe0, 0x6b, 0x8e, 0x39, 0xe4, 0x09, 0xfc, 0x28, 0x79, 0x95, 0x5c, 0x52, 0xd3, 0xbb, 0x3b, 0xcc,
+	0xa2, 0x45, 0xe0, 0xc4, 0x27, 0x31, 0xfd, 0xfd, 0x4c, 0x4f, 0x4f, 0x4f, 0xd7, 0x0a, 0x3e, 0x1a,
+	0x38, 0xed, 0xa3, 0xa1, 0xe8, 0x7a, 0x76, 0x87, 0xbf, 0xec, 0xdb, 0x03, 0xbb, 0xcb, 0xbd, 0x68,
+	0x1d, 0xfd, 0x3d, 0x14, 0x9e, 0x2b, 0x5d, 0xcc, 0x84, 0xcb, 0xad, 0x07, 0x4a, 0xd3, 0xe1, 0x3d,
+	0x71, 0xed, 0x1c, 0x11, 0x14, 0x2d, 0x82, 0x3f, 0x01, 0xbd, 0xfa, 0x97, 0x05, 0x99, 0x96, 0xe8,
+	0x36, 0xf9, 0x2f, 0x2f, 0xf1, 0x21, 0xa4, 0x9f, 0x73, 0x69, 0x97, 0xad, 0x8a, 0xb5, 0x9f, 0xaf,
+	0xe1, 0x61, 0x48, 0xfc, 0xee, 0xea, 0x67, 0xde, 0x96, 0x0a, 0x69, 0x12, 0x8e, 0x4f, 0x21, 0x17,
+	0x48, 0xea, 0xfd, 0x4e, 0x79, 0xbe, 0x62, 0xed, 0x17, 0x6b, 0x2b, 0x87, 0x51, 0x16, 0x01, 0xf2,
+	0xe2, 0xb5, 0xe0, 0x5f, 0xa4, 0x7f, 0x7b, 0x53, 0xb5, 0x9a, 0x23, 0x2e, 0x7e, 0x0a, 0x30, 0x82,
+	0xcb, 0x29, 0x52, 0x32, 0x53, 0x69, 0xc8, 0x0c, 0xe6, 0x49, 0x56, 0x45, 0x7e, 0x7f, 0x53, 0xb5,
+	0xaa, 0x7f, 0x58, 0x90, 0x25, 0xc0, 0x17, 0xb3, 0xe7, 0x7b, 0x12, 0x6e, 0xeb, 0x8b, 0x1f, 0xec,
+	0x5e, 0x98, 0xf0, 0x6a, 0x3c, 0x61, 0x5f, 0xdc, 0xda, 0x9a, 0xd8, 0xf8, 0x10, 0x8a, 0xe1, 0xea,
+	0x2b, 0xdb, 0xe9, 0x5d, 0x4a, 0xaf, 0x9c, 0xaa, 0xa4, 0xf6, 0x73, 0xcd, 0xb1, 0xa8, 0x91, 0xe2,
+	0x5b, 0x0b, 0x96, 0x5a, 0xa2, 0x7b, 0x29, 0x6d, 0xc9, 0xdf, 0xa9, 0xac, 0x9f, 0x43, 0x3e, 0x38,
+	0x33, 0x49, 0xc3, 0x3c, 0xcb, 0x63, 0x85, 0x25, 0xcc, 0xc8, 0xd5, 0x94, 0xbc, 0x87, 0xfa, 0xbe,
+	0xb5, 0x28, 0x89, 0x53, 0x21, 0xde, 0xad, 0xc4, 0x0c, 0x52, 0xcf, 0xf8, 0x6b, 0xca, 0x39, 0xd7,
+	0x54, 0x3f, 0xf1, 0x4b, 0x28, 0x8c, 0x8c, 0x54, 0xdd, 0x83, 0x74, 0x36, 0xcd, 0x74, 0xc2, 0x1a,
+	0xc5, 0x8a, 0x1f, 0x57, 0xe1, 0x03, 0xd3, 0x46, 0x95, 0x3f, 0x4d, 0x5b, 0xc4, 0x83, 0x27, 0x24,
+	0xad, 0x9e, 0x53, 0x2b, 0x9f, 0x8a, 0xff, 0x93, 0x77, 0x68, 0xf5, 0x67, 0x1a, 0x4a, 0xad, 0x20,
+	0xd1, 0xe7, 0x5c, 0x7a, 0x4e, 0xdb, 0xff, 0x4f, 0x9e, 0x85, 0xa0, 0x16, 0x9f, 0x40, 0xe1, 0xdc,
+	0x6f, 0x89, 0x6e, 0xc3, 0xf5, 0x7d, 0xe7, 0xaa, 0x17, 0x5c, 0x4d, 0xbe, 0x56, 0x8a, 0x2c, 0xea,
+	0xee, 0x70, 0x20, 0xb9, 0xd7, 0x8c, 0xb3, 0x94, 0xec, 0xcc, 0xf1, 0xbd, 0xa1, 0x90, 0xce, 0x0d,
+	0x6f, 0x89, 0x2e, 0x9d, 0x3d, 0x49, 0x16, 0x63, 0xe1, 0x67, 0xc0, 0x2e, 0xdc, 0x41, 0x5c, 0xb9,
+	0x90, 0xac, 0xbc, 0x45, 0x54, 0x7b, 0x5e, 0x0e, 0xdb, 0x6d, 0xee, 0xfb, 0x3f, 0x0d, 0x7b, 0x4a,
+	0xb9, 0x38, 0x61, 0xcf, 0x18, 0x0b, 0x1f, 0x41, 0x4e, 0xbd, 0x04, 0xde, 0x51, 0x92, 0x4c, 0xb2,
+	0x64, 0xc4, 0xc0, 0x23, 0x80, 0xd3, 0x2b, 0xd7, 0x93, 0x01, 0x3f, 0x9b, 0xcc, 0x37, 0x28, 0xf8,
+	0x08, 0xe0, 0x62, 0xd8, 0x6f, 0x72, 0x75, 0xbb, 0x7e, 0x39, 0x47, 0x82, 0x42, 0x24, 0xf8, 0xda,
+	0x1e, 0x76, 0x79, 0xd3, 0x20, 0xe0, 0x63, 0xea, 0x62, 0x5d, 0x6e, 0x48, 0xde, 0xc0, 0xe4, 0xe0,
+	0x53, 0x7a, 0xe8, 0x17, 0xae, 0xd4, 0xaa, 0x7c, 0xb2, 0x6a, 0x8c, 0x76, 0xf0, 0xcc, 0x7c, 0x74,
+	0x58, 0x04, 0x38, 0x1f, 0xdc, 0xd8, 0x3d, 0xa7, 0x53, 0xef, 0x77, 0xd8, 0x1c, 0x2e, 0xd1, 0xbc,
+	0xba, 0x94, 0xb6, 0x27, 0x99, 0x15, 0xae, 0xe8, 0x5c, 0x6c, 0x1e, 0x97, 0xc7, 0xda, 0x82, 0xa5,
+	0x0e, 0x7e, 0x0c, 0x67, 0x40, 0xf0, 0x24, 0xb0, 0xa4, 0x97, 0x0d, 0xdb, 0xf7, 0xd9, 0x9c, 0x11,
+	0x50, 0xc5, 0x64, 0x16, 0x32, 0x1a, 0x36, 0x2a, 0x10, 0xb9, 0xae, 0x03, 0x86, 0x91, 0xb8, 0xf5,
+	0x3f, 0x29, 0x6a, 0x69, 0x73, 0x86, 0xe0, 0x06, 0xac, 0x44, 0xcf, 0xb0, 0xee, 0xf6, 0x85, 0x2d,
+	0xeb, 0xd7, 0xbc, 0xfd, 0x8a, 0xcd, 0xe1, 0x16, 0xac, 0x47, 0x40, 0xc3, 0x73, 0xd5, 0x45, 0x7f,
+	0x3f, 0x74, 0xb8, 0xdf, 0xe6, 0xcc, 0x32, 0x45, 0x0d, 0xd7, 0x97, 0x4d, 0xee, 0xd3, 0xe9, 0xe6,
+	0xf1, 0x3e, 0xec, 0x45, 0xc0, 0x99, 0x2d, 0x6d, 0xd1, 0xb3, 0x07, 0xfc, 0xcc, 0xfd, 0x75, 0x20,
+	0x9d, 0x3e, 0x6f, 0x5c, 0xdb, 0x3e, 0x7f, 0xcc, 0x52, 0xd3, 0x49, 0x35, 0x96, 0x9e, 0x4e, 0x3a,
+	0x66, 0x0b, 0xd3, 0x49, 0x4f, 0xd8, 0x22, 0xae, 0xd0, 0xa1, 0x89, 0x14, 0x76, 0x2c, 0xcb, 0x20,
+	0xd2, 0x5d, 0x53, 0x30, 0xe8, 0x49, 0x96, 0x55, 0x97, 0x11, 0xc5, 0x82, 0x4a, 0xe6, 0xcc, 0x83,
+	0x9a, 0xa5, 0x04, 0x5c, 0x05, 0x16, 0x01, 0xdf, 0x3a, 0x83, 0x57, 0x6a, 0x53, 0x96, 0x37, 0x5d,
+	0x55, 0xb4, 0x25, 0xd8, 0x92, 0xc9, 0xfc, 0xc6, 0xf5, 0x25, 0x31, 0x0b, 0x26, 0x53, 0x45, 0x5b,
+	0x82, 0x15, 0xb1, 0x0c, 0xab, 0x66, 0x55, 0x35, 0xbb, 0x14, 0x5e, 0xa8, 0x46, 0x42, 0x6f, 0x86,
+	0x6b, 0xb0, 0xac, 0x8f, 0x66, 0xdf, 0x70, 0xfa, 0xc1, 0x96, 0xcd, 0x2d, 0x5f, 0x70, 0xaf, 0xef,
+	0x0c, 0xec, 0x1e, 0xc3, 0x83, 0xbf, 0x73, 0xa3, 0xb0, 0x6e, 0xaf, 0x3d, 0xd8, 0x4e, 0xb8, 0x7e,
+	0xa3, 0xdd, 0x26, 0x13, 0xc2, 0xf6, 0xab, 0xc2, 0x6e, 0x72, 0x9f, 0x68, 0x93, 0xf9, 0xbb, 0x39,
+	0xe4, 0x93, 0x32, 0x37, 0x32, 0x7a, 0x4a, 0x9b, 0xa4, 0xef, 0x20, 0x90, 0xc3, 0x02, 0x7e, 0x0c,
+	0x1f, 0x4e, 0x69, 0x3e, 0xed, 0xb6, 0x38, 0x23, 0x99, 0x9c, 0x33, 0xd3, 0xc9, 0x35, 0xed, 0x9c,
+	0x9d, 0x91, 0x4c, 0xce, 0xb9, 0xe9, 0xe4, 0x63, 0xed, 0x0c, 0x33, 0x92, 0xc9, 0x39, 0x3f, 0x9d,
+	0xfc, 0x44, 0x3b, 0x2f, 0xcd, 0x48, 0x26, 0xe7, 0x02, 0x6e, 0xc3, 0xc6, 0xd8, 0x83, 0xd2, 0x4e,
+	0xc5, 0x09, 0x20, 0x29, 0x4b, 0xe6, 0x4c, 0x09, 0x5e, 0x9d, 0x16, 0xb2, 0x64, 0x8c, 0x74, 0xcb,
+	0xb8, 0x09, 0x6b, 0xb1, 0x97, 0xa9, 0x65, 0x98, 0x08, 0x91, 0x6a, 0xc5, 0x6c, 0x18, 0xe3, 0xf1,
+	0x6a, 0xed, 0xea, 0x1d, 0x04, 0x72, 0x58, 0xc3, 0x1d, 0x28, 0x8f, 0xbf, 0x72, 0x2d, 0x5f, 0x9f,
+	0x84, 0x92, 0x76, 0xc3, 0x3c, 0x4f, 0xf0, 0x5e, 0xb5, 0xb2, 0x9c, 0x8c, 0x91, 0x6e, 0xd3, 0x74,
+	0x8d, 0x26, 0x80, 0x56, 0x6e, 0x4d, 0x42, 0x49, 0xbb, 0x6d, 0xfa, 0x06, 0x53, 0x45, 0x2b, 0x77,
+	0x92, 0x31, 0xd2, 0xdd, 0xc3, 0x0a, 0xec, 0x24, 0x4d, 0x1e, 0xad, 0xde, 0xbd, 0x8b, 0x41, 0x1e,
+	0x7b, 0xb8, 0x0b, 0x5b, 0xb7, 0x67, 0x94, 0x76, 0xa8, 0x4c, 0xc6, 0x49, 0xff, 0x01, 0xde, 0x83,
+	0xcd, 0x5b, 0xb3, 0x4c, 0xcb, 0xab, 0x13, 0x61, 0x52, 0xdf, 0x3f, 0x38, 0xa1, 0x0f, 0x3f, 0x1a,
+	0x69, 0xc1, 0x50, 0x54, 0x3f, 0x47, 0xdf, 0x35, 0x6c, 0x2e, 0x9c, 0xae, 0x2a, 0x1c, 0xfb, 0xe2,
+	0x61, 0xd6, 0xd5, 0x22, 0xfd, 0x1f, 0x74, 0xfc, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6e, 0x50,
+	0x14, 0x34, 0x63, 0x0d, 0x00, 0x00,
 }

@@ -51,10 +51,10 @@ public:
         return resp;
     }
 
-    HdlrResp DataplaneDowntimePhase1Handler(UpgCtx& upgCtx) {
+    HdlrResp PostRestartHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do DataplaneDowntimePhase1"};
-        UPG_LOG_DEBUG("UpgHandler DataplaneDowntimePhase1 called for the SVC!!");
+        //HdlrResp resp = {.resp=FAIL, .errStr="BABABABA: NMD could not do PostRestart"};
+        UPG_LOG_DEBUG("UpgHandler PostRestart called for the SVC!!");
         return resp;
     }
 };
