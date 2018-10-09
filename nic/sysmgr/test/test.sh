@@ -1,9 +1,12 @@
 #!/bin/sh
 
+rm -f *.log
+
 bazel test //nic/sysmgr/... --jobs 1 --cache_test_results=no --test_output=all
 RET_1=$?
 
-rm -f *.log
+pushd /usr/src/github.com/pensando/sw/nic/sysmgr/goexample && go build && popd
+
 timeout 60s /sw/bazel-bin/nic/sysmgr/src/sysmgr_test
 RET_2=$?
 
