@@ -87,8 +87,8 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 			ts.Nodes = append(ts.Nodes, &n)
 			copyArtifacts := []string{
 				common.IotaAgentBinaryPath,
-				//ts.TestBedInfo.VeniceImage,
-				//ts.TestBedInfo.NaplesImage,
+				ts.TestBedInfo.VeniceImage,
+				ts.TestBedInfo.NaplesImage,
 			}
 
 			pool.Go(func() error {
