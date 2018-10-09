@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/iota/svcs/server/cfg"
+
 	"github.com/pensando/sw/venice/utils/netutils"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -14,6 +16,7 @@ import (
 )
 
 var topoClient iota.TopologyApiClient
+var cfgClient iota.ConfigMgmtApiClient
 var topoServerURL string
 
 func startTopoService() {
@@ -30,10 +33,19 @@ func startTopoService() {
 		fmt.Printf("Could not start IOTA Service. Err: %v\n", err)
 		os.Exit(1)
 	}
+	//cfgSvc, err := common.CreateNewGRPCServer("Config Server", topoServerURL)
+	//if err != nil {
+	//	fmt.Printf("Could not start IOTA Service. Err: %v\n", err)
+	//	os.Exit(1)
+	//}
 
 	topoHandler := NewTopologyServiceHandler()
 
 	iota.RegisterTopologyApiServer(topoSvc.Srv, topoHandler)
+
+	cfgHandler := cfg.NewConfigServiceHandler()
+
+	iota.RegisterConfigMgmtApiServer(topoSvc.Srv, cfgHandler)
 
 	topoSvc.Start()
 }
@@ -53,6 +65,7 @@ func TestMain(m *testing.M) {
 	}
 
 	topoClient = iota.NewTopologyApiClient(c.Client)
+	cfgClient = iota.NewConfigMgmtApiClient(c.Client)
 
 	runTests := m.Run()
 	os.Exit(runTests)
@@ -63,7 +76,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	t.Parallel()
 	var tbMsg iota.TestBedMsg
 
-	tbMsg.IpAddress = []string{"10.8.102.123", "10.8.102.124", "10.8.102.125", "10.8.102.126", "10.8.102.127", "10.8.102.128"}
+	tbMsg.IpAddress = []string{"10.8.102.174", "10.8.102.179", "10.8.102.180", "10.8.102.176", "10.8.102.185", "10.8.102.183"}
 	//tbMsg.IpAddress = []string{"10.8.102.91"}
 	tbMsg.SwitchPortId = 1
 	tbMsg.User = "vm"
@@ -89,12 +102,16 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_VENICE,
 			Image:     "venice.tgz",
 			Name:      "venice-node-1",
-			IpAddress: "10.8.102.123",
+			IpAddress: "10.8.102.174",
 			NodeInfo: &iota.Node_VeniceConfig{
 				VeniceConfig: &iota.VeniceConfig{
 					ControlIntf: "eth1",
 					ControlIp:   "42.42.42.1",
 					VenicePeers: []*iota.VenicePeer{
+						{
+							HostName:  "venice-node-1",
+							IpAddress: "42.42.42.1",
+						},
 						{
 							HostName:  "venice-node-2",
 							IpAddress: "42.42.42.2",
@@ -111,7 +128,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_VENICE,
 			Image:     "venice.tgz",
 			Name:      "venice-node-2",
-			IpAddress: "10.8.102.124",
+			IpAddress: "10.8.102.179",
 			NodeInfo: &iota.Node_VeniceConfig{
 				VeniceConfig: &iota.VeniceConfig{
 					ControlIntf: "eth1",
@@ -120,6 +137,10 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 						{
 							HostName:  "venice-node-1",
 							IpAddress: "42.42.42.1",
+						},
+						{
+							HostName:  "venice-node-2",
+							IpAddress: "42.42.42.2",
 						},
 						{
 							HostName:  "venice-node-3",
@@ -133,19 +154,23 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_VENICE,
 			Image:     "venice.tgz",
 			Name:      "venice-node-3",
-			IpAddress: "10.8.102.125",
+			IpAddress: "10.8.102.180",
 			NodeInfo: &iota.Node_VeniceConfig{
 				VeniceConfig: &iota.VeniceConfig{
 					ControlIntf: "eth1",
 					ControlIp:   "42.42.42.3",
 					VenicePeers: []*iota.VenicePeer{
 						{
-							HostName:  "venice-node-2",
+							HostName:  "venice-node-1",
 							IpAddress: "42.42.42.1",
 						},
 						{
-							HostName:  "venice-node-1",
+							HostName:  "venice-node-2",
 							IpAddress: "42.42.42.2",
+						},
+						{
+							HostName:  "venice-node-3",
+							IpAddress: "42.42.42.3",
 						},
 					},
 				},
@@ -155,20 +180,20 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
 			Image:     "naples-release-v1.tgz",
 			Name:      "naples-node-1",
-			IpAddress: "10.8.102.126",
+			IpAddress: "10.8.102.176",
 			NodeInfo: &iota.Node_NaplesConfig{
 				NaplesConfig: &iota.NaplesConfig{
 					ControlIntf: "eth1",
 					ControlIp:   "42.42.42.4",
 					DataIntfs:   []string{"eth2"},
-					VeniceIps:   []string{"10.8.102.123", "10.8.102.124", "10.8.102.125"},
+					VeniceIps: []string{"42.42.42.1", "142.42.42.2", "42.42.42.3	"},
 				},
 			},
 		}, {
 			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
 			Image:     "naples-release-v1.tgz",
 			Name:      "naples-node-2",
-			IpAddress: "10.8.102.127",
+			IpAddress: "10.8.102.185",
 			NodeInfo: &iota.Node_NaplesConfig{
 				NaplesConfig: &iota.NaplesConfig{
 					ControlIntf: "eth1",
@@ -182,7 +207,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			Type:      iota.PersonalityType_PERSONALITY_NAPLES,
 			Name:      "naples-node-3",
 			Image:     "naples-release-v1.tgz",
-			IpAddress: "10.8.102.128",
+			IpAddress: "10.8.102.183",
 			NodeInfo: &iota.Node_NaplesConfig{
 				NaplesConfig: &iota.NaplesConfig{
 					ControlIntf: "eth1",
@@ -202,6 +227,43 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		t.FailNow()
 	}
 
+	clusterObj := `{
+ "kind": "Cluster",
+ "api-version": "v1",
+ "meta": {
+   "name": "e2eCluster"
+ },
+ "spec": {
+   "auto-admit-nics": true,
+   "quorum-nodes": [
+     "venice-node-1",
+     "venice-node-2",
+     "venice-node-3"
+   ],
+ }
+}`
+
+	clusterMsg := &iota.MakeClusterMsg{
+		Endpoint: "10.8.102.174:9001",
+		Config:   clusterObj,
+	}
+
+	_, err = cfgClient.MakeCluster(context.Background(), clusterMsg)
+	if err != nil {
+		t.Errorf("MakeCluster call failed. Err: %v", err)
+		t.FailNow()
+	}
+
+	//c := cluster.Cluster{
+	//	TypeMeta: api.TypeMeta{Kind: "cluster", APIVersion: "v1"},
+	//	ObjectMeta: api.ObjectMeta{
+	//		Name: "e2e-cluster",
+	//	},
+	//	Spec: cluster.ClusterSpec{
+	//		QuorumNodes: []string {"venice-node-1", "venice-node-2", "venice-node-3"},
+	//		AutoAdmitNICs: true,
+	//	},
+	//}
 	workloads := []*iota.Workload{
 		{
 			WorkloadName: "ping-app-1",
@@ -209,6 +271,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			EncapVlan:    6,
 			IpAddress:    "177.75.132.4",
 			MacAddress:   "06:c3:32:b7:e6:da",
+			Interface:    "lif100",
 		},
 		{
 			WorkloadName: "ping-app-2",
@@ -216,6 +279,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 			EncapVlan:    6,
 			IpAddress:    "170.22.196.4",
 			MacAddress:   "72:ed:48:1c:e1:23",
+			Interface:    "lif100",
 		},
 	}
 

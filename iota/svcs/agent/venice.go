@@ -4,10 +4,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	Common "github.com/pensando/sw/iota/svcs/common"
-	"github.com/pkg/errors"
 )
 
 const (
