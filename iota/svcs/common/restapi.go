@@ -12,6 +12,7 @@ import (
 // HTTPPost does an HTTP Post to the URL
 func HTTPPost(url string, jsonStr string) (string, error) {
 
+	url = fmt.Sprintf("http://%s", url)
 	// Perform HTTP POST operation
 	res, err := http.Post(url, "application/json", strings.NewReader(jsonStr))
 	if err != nil {

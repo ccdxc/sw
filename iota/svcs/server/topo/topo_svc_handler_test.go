@@ -186,7 +186,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 					ControlIntf: "eth1",
 					ControlIp:   "42.42.42.4",
 					DataIntfs:   []string{"eth2"},
-					VeniceIps: []string{"42.42.42.1", "142.42.42.2", "42.42.42.3	"},
+					VeniceIps: []string{"42.42.42.1", "142.42.42.2", "42.42.42.3"},
 				},
 			},
 		}, {
@@ -199,7 +199,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 					ControlIntf: "eth1",
 					ControlIp:   "42.42.42.5",
 					DataIntfs:   []string{"eth2"},
-					VeniceIps:   []string{"10.8.102.123", "10.8.102.124", "10.8.102.125"},
+					VeniceIps: []string{"42.42.42.1", "142.42.42.2", "42.42.42.3"},
 				},
 			},
 		},
@@ -213,7 +213,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 					ControlIntf: "eth1",
 					ControlIp:   "42.42.42.6",
 					DataIntfs:   []string{"eth2"},
-					VeniceIps:   []string{"10.8.102.123", "10.8.102.124", "10.8.102.125"},
+					VeniceIps: []string{"42.42.42.1", "142.42.42.2", "42.42.42.3"},
 				},
 			},
 		},
@@ -228,23 +228,23 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	}
 
 	clusterObj := `{
- "kind": "Cluster",
- "api-version": "v1",
- "meta": {
-   "name": "e2eCluster"
- },
- "spec": {
-   "auto-admit-nics": true,
-   "quorum-nodes": [
-     "venice-node-1",
-     "venice-node-2",
-     "venice-node-3"
-   ],
- }
+  "kind": "Cluster",
+  "api-version": "v1",
+  "meta": {
+    "name": "e2eCluster"
+  },
+  "spec": {
+    "quorum-nodes": [
+      "venice-node-1",
+      "venice-node-2",
+      "venice-node-3"
+    ],
+    "auto-admit-nics": true
+  }
 }`
 
 	clusterMsg := &iota.MakeClusterMsg{
-		Endpoint: "10.8.102.174:9001",
+		Endpoint: "10.8.102.174:9001/api/v1/cluster",
 		Config:   clusterObj,
 	}
 
@@ -254,16 +254,6 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 		t.FailNow()
 	}
 
-	//c := cluster.Cluster{
-	//	TypeMeta: api.TypeMeta{Kind: "cluster", APIVersion: "v1"},
-	//	ObjectMeta: api.ObjectMeta{
-	//		Name: "e2e-cluster",
-	//	},
-	//	Spec: cluster.ClusterSpec{
-	//		QuorumNodes: []string {"venice-node-1", "venice-node-2", "venice-node-3"},
-	//		AutoAdmitNICs: true,
-	//	},
-	//}
 	workloads := []*iota.Workload{
 		{
 			WorkloadName: "ping-app-1",

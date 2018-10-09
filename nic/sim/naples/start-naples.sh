@@ -30,7 +30,7 @@ if [ -z "$VENICE_IPS" ]; then
 else
     echo "Venice IPs specified for agent."
     IFS=', ' read -r -a array <<< $VENICE_IPS
-    NPM_URL="-npm ""${array[0]}":$NPM_RPC_PORT
+    NPM_URL="-npm pen-npm"
     RESOLVER_URLS="-resolver-urls "
     for IP in "${array[@]}"
     do

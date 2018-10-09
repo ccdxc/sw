@@ -20,6 +20,7 @@ func NewConfigServiceHandler() *ConfigService {
 // MakeCluster brings up venice cluster
 func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMsg) (*iota.MakeClusterMsg, error) {
 	resp, err := common.HTTPPost(req.Endpoint, req.Config)
+	fmt.Println("BALERION: ", resp)
 
 	if err != nil {
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
