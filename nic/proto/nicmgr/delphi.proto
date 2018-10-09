@@ -1,0 +1,42 @@
+
+syntax =" proto3";
+package nicmgr;
+
+import "nic/delphi/proto/delphi/delphi.proto";
+
+message LifInfo {
+    uint64 hw_lif_id = 1;
+    repeated uint64 qstate_addr = 2;
+}
+
+message Vlans {
+    uint32 vlan = 1;
+}
+
+message MacAddrs {
+    uint64 mac_addr = 1;
+}
+
+message MacAddrVlans {
+    uint32 vlan = 1;
+    uint64 mac_addr = 2;
+}
+
+
+message EthDeviceInfo {
+    delphi.ObjectMeta          Meta = 1;
+    uint64                     Key = 2; //uuid from json ??
+    LifInfo                    lif = 3;
+    uint32                     rss_type = 4;
+    string                     rss_key = 5;
+    string                     rss_indir = 6;
+    repeated    MacAddrs       mac_addrs = 7;
+    repeated    Vlans          vlans = 8;
+    repeated    MacAddrVlans   mac_addr_vlans = 9;
+    //pciehdev_t  - not reqd
+    // pciehdevice_resources_t - not reqd
+    // endpoints - required ??
+}
+
+    
+
