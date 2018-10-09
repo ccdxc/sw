@@ -49,6 +49,7 @@
     "eth_dev" : [
         {
             "name" : "eth0",
+            "dev_uuid" : 1,
             "rxq_count" : 16,
             "txq_count" : 16,
             "eq_count" : 1,
@@ -78,6 +79,7 @@
         },
         {
             "name" : "eth1",
+            "dev_uuid" : 2,
             "rxq_count" : 16,
             "txq_count" : 16,
             "eq_count" : 1,

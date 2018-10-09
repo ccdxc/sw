@@ -135,6 +135,8 @@ enum DeviceType
  * Eth Device Spec
  */
 struct eth_devspec {
+    // Delphi Object Key
+    uint64_t dev_uuid;
     // FWD
     uint32_t uplink_id;
     uint64_t vrf_id;
