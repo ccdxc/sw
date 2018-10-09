@@ -1000,7 +1000,7 @@ TEST_F(enicif_test, test6)
 }
 
 // ----------------------------------------------------------------------------
-// Create enic with lif
+// Create enic without lif
 // ----------------------------------------------------------------------------
 TEST_F(enicif_test, test7)
 {
@@ -1131,6 +1131,143 @@ TEST_F(enicif_test, test7)
     ep_spec.mutable_vrf_key_handle()->set_vrf_id(7);
     ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(701);
     ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(IF_ID_OFFSET + 71);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x0000DEADBEEF);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec, &ep_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
+// ----------------------------------------------------------------------------
+// Create enic without lif and call internal update
+// ----------------------------------------------------------------------------
+TEST_F(enicif_test, test8)
+{
+    hal_ret_t                ret;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
+    InterfaceSpec            if_spec;
+    InterfaceResponse        if_rsp;
+    LifSpec                  lif_spec;
+    LifResponse              lif_rsp;
+    L2SegmentSpec            l2seg_spec;
+    L2SegmentResponse        l2seg_rsp;
+    EndpointSpec             ep_spec;
+    EndpointResponse         ep_rsp;
+    hal::if_t                *hal_if, *new_hal_if;
+    hal::lif_t               *lif;
+    ::google::protobuf::uint32  ip1 = 0x0a000003;
+    ::google::protobuf::uint32  ip2 = 0x0a000004;
+
+    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(8);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create Uplink If
+    if_spec.set_type(intf::IF_TYPE_UPLINK);
+    if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 80);
+    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create Uplink If -2
+    if_spec.Clear();
+    if_spec.set_type(intf::IF_TYPE_UPLINK);
+    if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 81);
+    if_spec.mutable_if_uplink_info()->set_port_num(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create a lif
+    lif_spec.mutable_key_or_handle()->set_lif_id(81);
+    lif_spec.mutable_pinned_uplink_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 80);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    lif_spec.mutable_key_or_handle()->set_lif_id(82);
+    lif_spec.mutable_pinned_uplink_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 81);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create l2segment
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(8);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(801);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(801);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create micro seg enic
+    if_spec.Clear();
+    if_spec.set_type(intf::IF_TYPE_ENIC);
+    // if_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(71);
+    if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 81);
+    if_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(801);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x0000DEADBEEF);
+    if_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(80);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create Endpoint
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(8);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(801);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(IF_ID_OFFSET + 81);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x0001DEADBEEF);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec, &ep_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update enic
+    hal_if = hal::find_if_by_id(IF_ID_OFFSET + 81);
+    lif = hal::find_lif_by_id(81);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::enic_update_lif(hal_if, lif, &new_hal_if);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    hal_if = new_hal_if;
+    lif = hal::find_lif_by_id(82);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::enic_update_lif(hal_if, lif, &new_hal_if);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    hal_if = new_hal_if;
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::enic_update_lif(hal_if, NULL, &new_hal_if);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create EP
+    // Create Endpoint
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(8);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(801);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(IF_ID_OFFSET + 81);
     ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x0000DEADBEEF);
     ep_spec.mutable_endpoint_attrs()->add_ip_address();
     ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);

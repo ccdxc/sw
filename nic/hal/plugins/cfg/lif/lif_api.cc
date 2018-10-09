@@ -37,6 +37,9 @@ lif_get_pinned_if (lif_t *lif, if_t **uplink_if)
     hal_handle_t        uplink_hdl = HAL_HANDLE_INVALID;
     hal_ret_t           ret = HAL_RET_OK;
 
+    if (!lif) {
+        goto end;
+    }
     uplink_hdl = lif->pinned_uplink;
 
     if (uplink_hdl != HAL_HANDLE_INVALID) {

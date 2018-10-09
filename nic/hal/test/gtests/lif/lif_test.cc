@@ -60,6 +60,11 @@ TEST_F(lif_test, test1)
     printf("ret: %d\n", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    uint32_t hw_lif_id = rsp.status().hw_lif_id();
+    hal::lif_t *lif = hal::find_lif_by_hw_lif_id(hw_lif_id);
+    HAL_TRACE_DEBUG("Printing Lif after hw_lif_id call: hw_lif_id: {}, lif: {}", hw_lif_id,
+                    hal::lif_keyhandle_to_str(lif));
+
     spec.set_vlan_strip_en(0);
     spec.mutable_rx_policer()->mutable_bps_policer()->set_bytes_per_sec(20000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

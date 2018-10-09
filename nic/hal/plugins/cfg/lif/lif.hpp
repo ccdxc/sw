@@ -98,6 +98,11 @@ typedef struct lif_s {
     void                *pd_lif;
 } __PACK__ lif_t;
 
+typedef struct lif_get_from_hw_lif_id_ctxt_s {
+    uint32_t hw_lif_id;
+    lif_t *lif;
+} lif_get_from_hw_lif_id_ctxt_t;
+
 typedef struct lif_hal_info_s {
     bool        with_hw_lif_id;
     uint32_t    hw_lif_id;
@@ -184,6 +189,8 @@ hal_ret_t lif_update(LifSpec& spec, LifResponse *rsp);
 hal_ret_t lif_delete(LifDeleteRequest& req,
                      LifDeleteResponse *rsp);
 hal_ret_t lif_get(LifGetRequest& req, LifGetResponseMsg *rsp);
+
+lif_t *find_lif_by_hw_lif_id (uint32_t hw_lif_id);
 
 }    // namespace hal
 

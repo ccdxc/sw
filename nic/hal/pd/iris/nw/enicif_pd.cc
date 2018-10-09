@@ -1403,7 +1403,8 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
 
     memset(&data, 0, sizeof(data));
 
-    if (args && args->lif_change && args->new_lif) {
+    // if (args && args->lif_change && args->new_lif) {
+    if (args && args->lif_change) {
         pd_lif = (pd_lif_t *)lif_get_pd_lif(args->new_lif);
     } else {
         pd_lif = pd_enicif_get_pd_lif(pd_enicif);

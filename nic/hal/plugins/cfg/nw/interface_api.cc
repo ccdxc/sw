@@ -34,7 +34,10 @@ lif_set_pd_lif (lif_t *pi_lif, void *pd_lif)
 void *
 lif_get_pd_lif (lif_t *pi_lif)
 {
-    return pi_lif->pd_lif;
+    if (pi_lif) {
+        return pi_lif->pd_lif;
+    }
+    return NULL;
 }
 
 qos_class_t *

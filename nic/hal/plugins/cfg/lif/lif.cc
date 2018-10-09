@@ -134,6 +134,55 @@ find_lif_by_id (lif_id_t lif_id)
     return NULL;
 }
 
+static inline uint64_t
+lif_hw_lif_id_get (lif_t *lif)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    pd::pd_lif_get_args_t hwlifid_args;
+    memset(&hwlifid_args, 0, sizeof(pd::pd_lif_get_args_t));
+
+    hwlifid_args.lif = lif;
+    pd_func_args.pd_lif_get = &hwlifid_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_GET, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get hw_lif_id for lif {}", lif->lif_id);
+    }
+
+    return hwlifid_args.hw_lif_id;
+}
+
+
+static bool
+lif_get_from_hw_lif_id_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t        *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    lif_get_from_hw_lif_id_ctxt_t   *lif_ctxt = (lif_get_from_hw_lif_id_ctxt_t *)ctxt;
+    lif_t                           *lif             = NULL;
+
+    lif = (lif_t *)hal_handle_get_obj(entry->handle_id);
+    uint32_t hw_lif_id = lif_hw_lif_id_get(lif);
+    if (lif_ctxt->hw_lif_id == hw_lif_id) {
+        lif_ctxt->lif = lif;
+        return true;    // returning true stops the walk
+    }
+
+    // returning false, walks through.
+    return false;
+}
+
+lif_t *
+find_lif_by_hw_lif_id (uint32_t hw_lif_id)
+{
+    lif_get_from_hw_lif_id_ctxt_t lif_ctxt = {0};
+
+    lif_ctxt.hw_lif_id = hw_lif_id;
+    g_hal_state->lif_id_ht()->walk(lif_get_from_hw_lif_id_ht_cb, &lif_ctxt);
+
+    return lif_ctxt.lif;
+}
+
 lif_t *
 find_lif_by_handle (hal_handle_t handle)
 {
@@ -152,25 +201,6 @@ find_lif_by_handle (hal_handle_t handle)
         return NULL;
     }
     return (lif_t *)hal_handle->obj();
-}
-
-static inline uint64_t
-lif_hw_lif_id_get (lif_t *lif)
-{
-    hal_ret_t ret = HAL_RET_OK;
-    pd::pd_func_args_t          pd_func_args = {0};
-
-    pd::pd_lif_get_args_t hwlifid_args;
-    memset(&hwlifid_args, 0, sizeof(pd::pd_lif_get_args_t));
-
-    hwlifid_args.lif = lif;
-    pd_func_args.pd_lif_get = &hwlifid_args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_GET, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get hw_lif_id for lif {}", lif->lif_id);
-    }
-
-    return hwlifid_args.hw_lif_id;
 }
 
 //------------------------------------------------------------------------------

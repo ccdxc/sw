@@ -1192,8 +1192,8 @@ if_make_clone (if_t *hal_if, if_t **if_clone)
 //------------------------------------------------------------------------------
 hal_ret_t
 enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
-                                   if_update_app_ctxt_t *app_ctxt,
-                                   bool *has_changed)
+                                 if_update_app_ctxt_t *app_ctxt,
+                                 bool *has_changed)
 {
     hal_ret_t       ret = HAL_RET_OK;
     hal_handle_t    lif_handle = HAL_HANDLE_INVALID;
@@ -2124,6 +2124,74 @@ if_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
 }
+
+hal_ret_t
+enic_update_lif (if_t *hal_if,
+                 lif_t *new_lif,
+                 if_t **new_hal_if)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    if_update_app_ctxt_t    app_ctxt = {0};
+    cfg_op_ctxt_t           cfg_ctxt = { 0 };
+    dhl_entry_t             dhl_entry = { 0 };
+
+
+    hal_api_trace(" API Begin: Interface update ");
+
+    if (!hal_if || !new_hal_if) {
+        HAL_TRACE_ERR("Invalid args. ");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Enic update of lif. if_id: {}, new_lif_id: {}",
+                    hal_if->if_id, new_lif ? new_lif->lif_id : 0);
+
+    if (hal_if->if_type != intf::IF_TYPE_ENIC) {
+        HAL_TRACE_ERR("Can't update lif on non-enic if. type: {}",
+                      IfType_Name(hal_if->if_type));
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    // Check if lif has chnanged.
+    if ((!new_lif && hal_if->lif_handle == HAL_HANDLE_INVALID) ||
+        (new_lif && hal_if->lif_handle == new_lif->hal_handle)) {
+        HAL_TRACE_DEBUG("No change in lif. noop. handle: {}",
+                        hal_if->lif_handle);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Updating lif handle: {} -> {}", hal_if->lif_handle,
+                    new_lif ? new_lif->hal_handle : HAL_HANDLE_INVALID);
+
+    app_ctxt.lif_change = true;
+    app_ctxt.lif = new_lif;
+
+    if_make_clone(hal_if, (if_t **)&dhl_entry.cloned_obj);
+    *new_hal_if = (if_t *)dhl_entry.cloned_obj;
+
+    // form ctxt and call infra update object
+    dhl_entry.handle = hal_if->hal_handle;
+    dhl_entry.obj = hal_if;
+    cfg_ctxt.app_ctxt = &app_ctxt;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_upd_obj(hal_if->hal_handle, &cfg_ctxt,
+                             if_update_upd_cb,
+                             if_update_commit_cb,
+                             if_update_abort_cb,
+                             if_update_cleanup_cb);
+
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update Enic. err: {}", ret);
+    }
+
+end:
+    return ret;
+}
+
 
 //------------------------------------------------------------------------------
 // process a interface update request
