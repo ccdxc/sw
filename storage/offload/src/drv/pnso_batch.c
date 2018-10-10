@@ -396,6 +396,7 @@ build_batch(struct batch_info *batch_info,
 		goto out;
 	}
 
+	PPRINT_BATCH_INFO(batch_info);
 	num_entries = batch_info->bi_num_entries;
 	for (idx = 0; idx < num_entries; idx++) {
 		batch_page = GET_PAGE(batch_info, idx);
@@ -468,7 +469,7 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 	page_entry->bpe_res = svc_res;
 	batch_info->bi_num_entries++;
 
-	PPRINT_BATCH_INFO(batch_info);
+	// PPRINT_BATCH_INFO(batch_info);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");

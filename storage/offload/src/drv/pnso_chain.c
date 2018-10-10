@@ -56,7 +56,7 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("%30s: %d", "si_flags", svc_info->si_flags);
 
 	OSAL_LOG_DEBUG("%30s: %d", "si_block_size", svc_info->si_block_size);
-	OSAL_LOG_DEBUG("%30s: %d", "si_desc_flagss", svc_info->si_desc_flags);
+	OSAL_LOG_DEBUG("%30s: %d", "si_desc_flags", svc_info->si_desc_flags);
 	OSAL_LOG_DEBUG("%30s: %d", "si_num_tags", svc_info->si_num_tags);
 
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_desc",  (uint64_t) svc_info->si_desc);
@@ -87,6 +87,13 @@ pprint_service_info(const struct service_info *svc_info)
 			(uint64_t) svc_info->si_dst_blist.len);
 	OSAL_LOG_INFO("%30s: 0x" PRIx64, "=== si_sgl_pdma",
 			(uint64_t) svc_info->si_sgl_pdma);
+
+	OSAL_LOG_DEBUG("%30s: %d", "sbi_mode",
+			svc_info->si_batch_info.sbi_mode);
+	OSAL_LOG_DEBUG("%30s: %d", "sbi_num_entries",
+			svc_info->si_batch_info.sbi_num_entries);
+	OSAL_LOG_DEBUG("%30s: %d", "sbi_index",
+			svc_info->si_batch_info.sbi_index);
 
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_pc_res",
 			(uint64_t) svc_info->si_pc_res);
@@ -127,7 +134,7 @@ pprint_chain(const struct service_chain *chain)
 	if (!chain)
 		return;
 
-	OSAL_LOG_DEBUG("%30s: %p", "chain", chain);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "chain", (uint64_t) chain);
 	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_req_id", chain->sc_req_id);
 	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_num_services",
 			chain->sc_num_services);
@@ -138,30 +145,32 @@ pprint_chain(const struct service_chain *chain)
 		OSAL_LOG_DEBUG("%30s: %d", "service: #", ++i);
 
 		/* chain entry */
-		OSAL_LOG_DEBUG("%30s: %p", "chain->sc_entry", sc_entry);
-		OSAL_LOG_DEBUG("%30s: %p", "chain->sc_entry->ce_chain_head",
-			      sc_entry->ce_chain_head);
-		OSAL_LOG_DEBUG("%30s: %p", "chain->sc_entry->ce_next",
-			      sc_entry->ce_next);
+		OSAL_LOG_DEBUG("%30s: 0x%llx", "chain->sc_entry",
+				(uint64_t) sc_entry);
+		OSAL_LOG_DEBUG("%30s: 0x%llx", "chain->sc_entry->ce_chain_head",
+			      (uint64_t) sc_entry->ce_chain_head);
+		OSAL_LOG_DEBUG("%30s: 0x%llx", "chain->sc_entry->ce_next",
+			      (uint64_t) sc_entry->ce_next);
 
 		/* service info */
 		OSAL_LOG_DEBUG("%30s: %d", "ce_svc_info->si_type",
 			      sc_entry->ce_svc_info.si_type);
 		OSAL_LOG_DEBUG("%30s: %d", "ce_svc_info->si_flags",
 			      sc_entry->ce_svc_info.si_flags);
-		OSAL_LOG_DEBUG("%30s: %p", "ce_svc_info->si_ops",
-			      &sc_entry->ce_svc_info.si_ops);
+		OSAL_LOG_DEBUG("%30s: 0x%llx", "ce_svc_info->si_ops",
+			      (uint64_t) &sc_entry->ce_svc_info.si_ops);
 
 		sc_entry = sc_entry->ce_next;
 	}
 
-	OSAL_LOG_DEBUG("%30s: %p", "chain->sc_req_cb", chain->sc_req_cb);
-	OSAL_LOG_DEBUG("%30s: %p", "chain->sc_req_cb_ctx",
-			chain->sc_req_cb_ctx);
-	OSAL_LOG_DEBUG("%30s: %p", "chain->sc_req_poll_fn",
-			chain->sc_req_poll_fn);
-	OSAL_LOG_DEBUG("%30s: %p", "chain->sc_req_poll_ctx",
-			chain->sc_req_poll_ctx);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "chain->sc_req_cb",
+			(uint64_t) chain->sc_req_cb);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "chain->sc_req_cb_ctx",
+			(uint64_t) chain->sc_req_cb_ctx);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "chain->sc_req_poll_fn",
+			(uint64_t) chain->sc_req_poll_fn);
+	OSAL_LOG_DEBUG("%30s: 0x%llx", "chain->sc_req_poll_ctx",
+			(uint64_t) chain->sc_req_poll_ctx);
 }
 
 struct service_chain *
