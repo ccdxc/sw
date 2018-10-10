@@ -52,7 +52,7 @@ dev_read(uint32_t *wp, uint64_t addr, int count)
 #ifdef __aarch64__
     raddr = addr;
     for (int i = 0; i < count; i++) {
-        wp[i] = pal_reg_rd32(addr);
+        wp[i] = pal_reg_rd32(raddr);
         raddr += 4;
     }
 #else
