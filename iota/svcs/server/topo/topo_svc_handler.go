@@ -184,9 +184,7 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 	for _, w := range req.Workloads {
 		for idx, n := range ts.Nodes {
 			if w.NodeName == n.Node.Name {
-				ts.Nodes[idx].Workload = w
-			} else {
-				ts.Nodes[idx].Workload = nil
+				ts.Nodes[idx].Workloads = append(ts.Nodes[idx].Workloads, w)
 			}
 		}
 	}
@@ -197,12 +195,10 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 
 		for _, node := range ts.Nodes {
 			node := node
-			if node.Workload != nil {
-				pool.Go(func() error {
-					return node.AddWorkload()
-				})
-			}
-
+			//for range node.Workloads {
+			pool.Go(func() error {
+				return node.AddWorkload()
+			})
 		}
 		return pool.Wait()
 	}
