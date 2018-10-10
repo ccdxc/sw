@@ -1429,18 +1429,6 @@ struct create_qp_comp {
  * @sq_psn:        initial send side psn
  * @header_template: header tempalte
  * @header_template_size: header template size
- * @header_template_ah_id: header template/address handle entry index
- * @path_mtu:       path_mtu for this QP
- * @qstate:         qstate
- * @cur_qstate:     verify if qstate is same as this value
- * @en_sqd_async_notify: enable/disable async notify upon sq drain
- * @access_flags:   modify various access flags
- * @timeout:        set retransmit timeout value
- * @retry_cnt:      number of timeout retries
- * @rnr_retry:      number of RNR retries before failing
- * @max_qp_rd_atomic: number of outstanding read/atomic as initiator(rrq_depth)
- * @min_rnr_timer:  timeout value to be used when RNR
- * @max_dest_rd_atomic: number of outstanding read/atomic as target(rsq_depth)
  */
 struct modify_qp_cmd {
 	u16 opcode;
@@ -1455,17 +1443,9 @@ struct modify_qp_cmd {
 	u32 header_template_size;
 	u32 header_template_ah_id;
 	u32 path_mtu;
-    u8 qstate;
-    u8 cur_qstate;
-    u8 en_sqd_async_notify;
-    u8 access_flags;
-    u8 timeout;
-    u8 retry_cnt;
-    u8 rnr_retry;
-    u8 max_qp_rd_atomic;
-    u8 min_rnr_timer;
-    u8 max_dest_rd_atomic;
-	u8 rsvd[6];
+    u8 rrq_depth;
+    u8 rsq_depth;
+    u8 rsvd[14];
 };
 
 /**

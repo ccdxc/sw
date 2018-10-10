@@ -1576,56 +1576,197 @@ int HalClient::ModifyQP(uint64_t lif_id, uint32_t qp_num, uint32_t attr_mask,
                         uint32_t dest_qp_num, uint32_t q_key,
                         uint32_t e_psn, uint32_t sq_psn,
                         uint32_t header_template_ah_id, uint32_t header_template_size,
-                        unsigned char *header, uint32_t pmtu, 
-                        uint8_t qstate, uint8_t cur_qstate,
-                        uint8_t en_sqd_async_notify, int access_flags,
-                        uint8_t timeout, uint8_t retry_cnt, 
-                        uint8_t rnr_retry, uint8_t max_qp_rd_atomic, 
-                        uint8_t min_rnr_timer, uint8_t max_dest_rd_atomic)
+                        unsigned char *header, uint32_t pmtu, uint8_t qstate)
 {
+    if (attr_mask & IB_QP_AV) {
+        ClientContext context;
+        RdmaQpUpdateRequestMsg request;
+        RdmaQpUpdateResponseMsg response;
 
-    ClientContext context;
-    RdmaQpUpdateRequestMsg request;
-    RdmaQpUpdateResponseMsg response;
+        RdmaQpUpdateSpec *spec = request.add_request();
 
-    RdmaQpUpdateSpec *spec = request.add_request();
+        spec->set_qp_num(qp_num);
+        spec->set_hw_lif_id(lif_id);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_AV);
 
-    spec->set_qp_num(qp_num);
-    spec->set_hw_lif_id(lif_id);
-    spec->set_attr_mask(attr_mask);
-    spec->set_cur_state(cur_qstate);
-    spec->set_qstate(qstate);
-    spec->set_en_sqd_async_notify(en_sqd_async_notify);
-    spec->set_access_flags(access_flags);
-    spec->set_q_key(q_key);
-    spec->set_header_template(header, header_template_size);
-    spec->set_ahid(header_template_ah_id);
-    spec->set_pmtu(pmtu);
-    spec->set_timeout(timeout);
-    spec->set_retry_cnt(retry_cnt);
-    spec->set_rnr_retry(rnr_retry);
-    spec->set_e_psn(e_psn);
-    spec->set_max_qp_rd_atomic(max_qp_rd_atomic);
-    spec->set_min_rnr_timer(min_rnr_timer);
-    spec->set_tx_psn(sq_psn);
-    spec->set_max_dest_rd_atomic(max_dest_rd_atomic);
-    spec->set_dst_qp_num(dest_qp_num);
+        spec->set_header_template(header, header_template_size);
+        spec->set_ahid(header_template_ah_id);
 
-    Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
-    if (status.ok()) {
-        RdmaQpUpdateResponse rsp = response.response(0);
-        if (rsp.api_status() != types::API_STATUS_STATE_MISMATCH) {
-            NIC_FUNC_INFO("API status {}", rsp.api_status());
-            return -1;
-        } else if (rsp.api_status() != types::API_STATUS_OK) {
-            NIC_FUNC_ERR("API status {}", rsp.api_status());
-            return -1;
+        Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
+        if (status.ok()) {
+            RdmaQpUpdateResponse rsp = response.response(0);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                return -1;
+            } else {
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
+            }
         } else {
-            NIC_FUNC_INFO("API status {}", rsp.api_status());
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
+            return -1;
         }
-    } else {
-        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
-        return -1;
+    }
+
+    if (attr_mask & IB_QP_DEST_QPN) {
+        ClientContext context;
+        RdmaQpUpdateRequestMsg request;
+        RdmaQpUpdateResponseMsg response;
+
+        RdmaQpUpdateSpec *spec = request.add_request();
+
+        spec->set_qp_num(qp_num);
+        spec->set_hw_lif_id(lif_id);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_DEST_QPN);
+        spec->set_dst_qp_num(dest_qp_num);
+
+        Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
+        if (status.ok()) {
+            RdmaQpUpdateResponse rsp = response.response(0);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                return -1;
+            } else {
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
+            }
+        } else {
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
+            return -1;
+        }
+    }
+
+    if (attr_mask & IB_QP_RQ_PSN) {
+        ClientContext context;
+        RdmaQpUpdateRequestMsg request;
+        RdmaQpUpdateResponseMsg response;
+
+        RdmaQpUpdateSpec *spec = request.add_request();
+
+        spec->set_qp_num(qp_num);
+        spec->set_hw_lif_id(lif_id);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_RQ_PSN);
+        spec->set_e_psn(e_psn);
+
+        Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
+        if (status.ok()) {
+            RdmaQpUpdateResponse rsp = response.response(0);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                return -1;
+            } else {
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
+            }
+        } else {
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
+            return -1;
+        }
+    }
+
+    if (attr_mask & IB_QP_SQ_PSN) {
+        ClientContext context;
+        RdmaQpUpdateRequestMsg request;
+        RdmaQpUpdateResponseMsg response;
+
+        RdmaQpUpdateSpec *spec = request.add_request();
+
+        spec->set_qp_num(qp_num);
+        spec->set_hw_lif_id(lif_id);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_SQ_PSN);
+        spec->set_tx_psn(sq_psn);
+
+        Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
+        if (status.ok()) {
+            RdmaQpUpdateResponse rsp = response.response(0);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                return -1;
+            } else {
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
+            }
+        } else {
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
+            return -1;
+        }
+    }
+
+    if (attr_mask & IB_QP_QKEY) {
+        ClientContext context;
+        RdmaQpUpdateRequestMsg request;
+        RdmaQpUpdateResponseMsg response;
+
+        RdmaQpUpdateSpec *spec = request.add_request();
+
+        spec->set_qp_num(qp_num);
+        spec->set_hw_lif_id(lif_id);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_QKEY);
+        spec->set_q_key(q_key);
+
+        Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
+        if (status.ok()) {
+            RdmaQpUpdateResponse rsp = response.response(0);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                return -1;
+            } else {
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
+            }
+        } else {
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
+            return -1;
+        }
+    }
+
+    if (attr_mask & IB_QP_PATH_MTU) {
+        ClientContext context;
+        RdmaQpUpdateRequestMsg request;
+        RdmaQpUpdateResponseMsg response;
+
+        RdmaQpUpdateSpec *spec = request.add_request();
+
+        spec->set_qp_num(qp_num);
+        spec->set_hw_lif_id(lif_id);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_PATH_MTU);
+        spec->set_pmtu(pmtu);
+
+        Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
+        if (status.ok()) {
+            RdmaQpUpdateResponse rsp = response.response(0);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                return -1;
+            } else {
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
+            }
+        } else {
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
+            return -1;
+        }
+    }
+
+    if (attr_mask & IB_QP_STATE) {
+        ClientContext context;
+        RdmaQpUpdateRequestMsg request;
+        RdmaQpUpdateResponseMsg response;
+
+        RdmaQpUpdateSpec *spec = request.add_request();
+
+        spec->set_qp_num(qp_num);
+        spec->set_hw_lif_id(lif_id);
+        spec->set_oper(RDMA_UPDATE_QP_OPER_SET_STATE);
+        spec->set_qstate(qstate);
+
+        Status status = rdma_stub_->RdmaQpUpdate(&context, request, &response);
+        if (status.ok()) {
+            RdmaQpUpdateResponse rsp = response.response(0);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                NIC_FUNC_ERR("API status {}", rsp.api_status());
+                return -1;
+            } else {
+                NIC_FUNC_INFO("API status {}", rsp.api_status());
+            }
+        } else {
+            NIC_FUNC_ERR("GRPC status {} {}", status.error_code(), status.error_message());
+            return -1;
+        }
     }
 
     return 0;

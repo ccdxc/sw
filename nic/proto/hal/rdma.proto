@@ -136,19 +136,6 @@ enum RdmaQpUpdateOper {
     RDMA_UPDATE_QP_OPER_SET_RATE_LIMIT = 25; //rate-limit
 }
  
-//In alignment with ib_access_flags
-enum RdmaQpAccessFlags {
-    RDMA_QP_ACCESS_NONE          = 0;
-    RDMA_QP_ACCESS_LOCAL_WRITE   = 1;
-    RDMA_QP_ACCESS_REMOTE_WRITE  = 2;
-    RDMA_QP_ACCESS_REMOTE_READ   = 4;
-    RDMA_QP_ACCESS_REMOTE_ATOMIC = 8;
-    RDMA_QP_ACCESS_MW_BIND       = 16;
-    RDMA_QP_ZERO_BASED           = 32;
-    RDMA_QP_ACCESS_ON_DEMAND     = 64;
-    RDMA_QP_ACCESS_HUGETLB       = 128;
-}
-
 //****************   Update Queue Pair  ********************************//
 // RdmaQpUpdate object
 message RdmaQpUpdateSpec {
@@ -163,16 +150,6 @@ message RdmaQpUpdateSpec {
   uint32                   ahid            = 9;
   uint32                   pmtu            = 10;
   uint32                   qstate          = 11;
-  uint32                   cur_state       = 12;
-  uint32                   en_sqd_async_notify = 13;
-  uint32                   timeout         = 14;
-  uint32                   retry_cnt       = 15;
-  uint32                   rnr_retry       = 16;
-  uint32                   max_qp_rd_atomic= 17;
-  uint32                   min_rnr_timer   = 18;
-  uint32                   max_dest_rd_atomic = 19;
-  uint32                   access_flags    = 20;
-  uint32                   attr_mask       = 21;
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs

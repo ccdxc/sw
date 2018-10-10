@@ -949,9 +949,7 @@ typedef struct sqcb0_s {
     uint8_t  in_progress: 1;
     uint16_t priv_oper_enable: 1; //tx
 
-    uint16_t rsvd_stage_flags: 5;
-    uint16_t ac_mw_bind: 1;
-    uint16_t ac_local_wr: 1;
+    uint16_t rsvd_stage_flags: 7;
     uint16_t  sq_drained: 1;
 
     uint8_t  num_sges;
@@ -1258,10 +1256,7 @@ typedef struct rqcb1_s {
     uint32_t    cq_id : 24;
     uint32_t    header_template_size : 8;
     uint32_t    msn : 24;
-    uint8_t     ac_remote_atomic: 1;
-    uint8_t     ac_remote_rd: 1;
-    uint8_t     ac_remote_wr: 1;
-    uint32_t    rsvd3 : 5;
+    uint32_t    rsvd3 : 8;
     uint32_t    e_psn : 24;
     uint16_t    spec_cindex;
     uint8_t     rsvd2 : 7;
@@ -1275,7 +1270,7 @@ typedef struct rqcb1_s {
     uint8_t     immdt_as_dbell : 1;
     uint8_t     cache : 1;
     uint8_t     srq_enabled : 1;
-    uint8_t     work_not_done_recirc_cnt: 8;
+    uint8_t     rsvd4: 8;
     uint8_t     nxt_to_go_token_id : 8;
     uint8_t     token_id : 8;
     uint32_t    header_template_addr;

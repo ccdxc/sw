@@ -154,10 +154,7 @@ class RdmaRQstate(Packet):
         LEShortField("spec_cindex", 0),
 
         X3BytesField("e_psn", 0),
-        BitField("rqcb1_rsvd3", 0, 5),
-        BitField("ac_remote_wr", 0, 1),
-        BitField("ac_remote_rd", 0, 1),
-        BitField("ac_remote_atomic", 0, 1),
+        ByteField("rqcb1_rsvd3", 0),
 
         X3BytesField("msn", 0),
         ByteField("header_template_size", 0),
@@ -299,9 +296,7 @@ class RdmaSQstate(Packet):
         ByteField("num_sges", 0),
 
         BitField("sqcb0_sq_drained", 0, 1),
-        BitField("ac_local_wr", 0, 1),
-        BitField("ac_mw_bind", 0, 1),
-        BitField("rsvd_state_flags", 0, 5),
+        BitField("rsvd_state_flags", 0, 7),
 
         BitField("priv_oper_enable", 0, 1),
         BitField("in_progress", 0, 1),

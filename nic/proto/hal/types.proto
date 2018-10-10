@@ -87,7 +87,6 @@ enum ApiStatus {
   API_STATUS_L2_SEGMENT_TYPE_INVALID      = 51;    // L2 Segment set to invalide type
   API_STATUS_NAT_POOL_KEY_INVALID         = 52;    // invalid NAT pool key
   API_STATUS_NAT_MAPPING_KEY_INVALID      = 53;    // invalid NAT mapping key
-  API_STATUS_STATE_MISMATCH               = 54;    // State doesn't match
 }
 
 // common meta object that is part of all other top level objects

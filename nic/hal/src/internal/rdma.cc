@@ -1519,24 +1519,21 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 {
     uint32_t     lif = spec.hw_lif_id();
     uint32_t     qp_num = spec.qp_num();
-    uint32_t     attr_mask = spec.attr_mask();
-    uint32_t     oper = 0;
+    uint32_t     oper = spec.oper();
     sqcb_t       sqcb;
     sqcb_t       *sqcb_p = &sqcb;
     rqcb_t       rqcb;
     rqcb_t       *rqcb_p = &rqcb;
     uint64_t     header_template_addr;
     uint64_t     pad_size;
-    uint8_t      qstate;
-    uint8_t      cur_state;
-    types::ApiStatus api_status = types::API_STATUS_OK;
+    uint8_t      state;
 
     pd::pd_capri_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-LIF:{}: RDMA QP Update for lif {} QID {} attr_mask {}",
-                    __FUNCTION__, lif, qp_num, attr_mask);
+    HAL_TRACE_DEBUG("PI-LIF:{}: RDMA QP Update for lif {} QID {} oper type {}",
+                    __FUNCTION__, lif, qp_num, oper);
 
     HAL_TRACE_DEBUG("{}: Inputs: dst_qp: {}", __FUNCTION__,
                     spec.dst_qp_num());
@@ -1550,8 +1547,6 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
                     spec.pmtu());
     HAL_TRACE_DEBUG("{}: Inputs: qstate: {}", __FUNCTION__,
                     spec.qstate());
-    HAL_TRACE_DEBUG("{}: Inputs: cur_state: {}", __FUNCTION__,
-                    spec.cur_state());
 
     // Read sqcb from HW
     memset(sqcb_p, 0, sizeof(sqcb_t));
@@ -1566,230 +1561,116 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
     memrev((uint8_t*)&rqcb_p->rqcb0, sizeof(rqcb0_t));
     memrev((uint8_t*)&rqcb_p->rqcb1, sizeof(rqcb1_t));
 
-    if (attr_mask & (1 << rdma::RDMA_UPDATE_QP_OPER_SET_CUR_STATE)) {
+    switch (oper) {
 
-        // XXX: Check cur_qp_state before moving qp to new state
-        cur_state = rdma_qp_state_from_ionic(uint8_t(spec.cur_state() & QP_STATE_MASK));
+        case rdma::RDMA_UPDATE_QP_OPER_SET_STATE:
+            // XXX: Check cur_qp_state before moving qp to new state
+            state = rdma_qp_state_from_ionic(uint8_t(spec.qstate() & QP_STATE_MASK));
+            sqcb_p->sqcb0.state = sqcb_p->sqcb1.state = state;
+            rqcb_p->rqcb0.state = rqcb_p->rqcb1.state = state;
 
-        HAL_TRACE_DEBUG("{}: Update: Checking qp_state : qp_cur_state: {}, spec_cur_state: {}", 
-                        __FUNCTION__, sqcb_p->sqcb0.state, cur_state);
-        if (sqcb_p->sqcb0.state != cur_state) {
-            api_status = types::API_STATUS_STATE_MISMATCH;
-        }
-    }
+            HAL_TRACE_DEBUG("{}: Update: Setting qp_state to: {}", __FUNCTION__, state);
+        break;
 
-    oper = attr_mask & (attr_mask - 1);
+        case rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QPN:
+            rqcb_p->rqcb0.dst_qp = spec.dst_qp_num();
+            sqcb_p->sqcb2.dst_qp = spec.dst_qp_num();
 
-    oper = 0;
+            HAL_TRACE_DEBUG("{}: Update: Setting dst_qp to: {}", __FUNCTION__,
+                    spec.dst_qp_num());
+        break;
 
-    while ((attr_mask) && (api_status == types::API_STATUS_OK)) {
+        case rdma::RDMA_UPDATE_QP_OPER_SET_RQ_PSN:
+            rqcb_p->rqcb1.e_psn = spec.e_psn();
+            HAL_TRACE_DEBUG("{}: Update: Setting e_psn to: {}", __FUNCTION__,
+                            spec.e_psn());
+            break;
 
-        if (attr_mask & 0x1) {
+        case rdma::RDMA_UPDATE_QP_OPER_SET_SQ_PSN:
+            sqcb_p->sqcb2.tx_psn = spec.tx_psn();
+            sqcb_p->sqcb2.exp_rsp_psn = (sqcb_p->sqcb2.tx_psn - 1);
+            sqcb_p->sqcb1.tx_psn = sqcb_p->sqcb2.tx_psn;
+            sqcb_p->sqcb1.max_tx_psn = sqcb_p->sqcb2.tx_psn;
+            sqcb_p->sqcb1.rexmit_psn = spec.tx_psn();
+            HAL_TRACE_DEBUG("{}: Update: Setting tx_psn to: {}", __FUNCTION__,
+                            spec.tx_psn());
+            break;
 
-            switch (oper) {
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_CUR_STATE:
-                    continue;
-                break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_STATE:
-                    qstate = rdma_qp_state_from_ionic(uint8_t(spec.qstate() & QP_STATE_MASK));
-                    sqcb_p->sqcb0.state = sqcb_p->sqcb1.state = qstate;
-                    rqcb_p->rqcb0.state = rqcb_p->rqcb1.state = qstate;
-        
-                    HAL_TRACE_DEBUG("{}: Update: Setting qp_state to: {}", __FUNCTION__, qstate);
-                break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_EN_SQD_ASYNC_NOTIFY:
-                    sqcb_p->sqcb1.sqd_async_notify_enable = spec.en_sqd_async_notify();
-        
-                    HAL_TRACE_DEBUG("{}: Update: Setting en_sqd_async_notify to: {}", __FUNCTION__, 
-                                    spec.en_sqd_async_notify());
-                break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_ACCESS_FLAGS:
-                    sqcb_p->sqcb0.ac_local_wr = spec.access_flags() & rdma::RDMA_QP_ACCESS_LOCAL_WRITE;
-                    sqcb_p->sqcb0.ac_mw_bind = spec.access_flags() & rdma::RDMA_QP_ACCESS_MW_BIND;
-                    rqcb_p->rqcb1.ac_remote_wr = spec.access_flags() & rdma::RDMA_QP_ACCESS_REMOTE_WRITE;
-                    rqcb_p->rqcb1.ac_remote_rd = spec.access_flags() & rdma::RDMA_QP_ACCESS_REMOTE_READ;
-                    rqcb_p->rqcb1.ac_remote_atomic = spec.access_flags() & rdma::RDMA_QP_ACCESS_REMOTE_ATOMIC;
-        
-                    HAL_TRACE_DEBUG("{}: Update: Setting ac_local_wr to: {}", __FUNCTION__, sqcb_p->sqcb0.ac_local_wr);
-                    HAL_TRACE_DEBUG("{}: Update: Setting ac_mw_bind to: {}", __FUNCTION__, sqcb_p->sqcb0.ac_mw_bind);
-                    HAL_TRACE_DEBUG("{}: Update: Setting ac_remote_wr to: {}", __FUNCTION__, rqcb_p->rqcb1.ac_remote_wr);
-                    HAL_TRACE_DEBUG("{}: Update: Setting ac_remote_rd to: {}", __FUNCTION__, rqcb_p->rqcb1.ac_remote_rd);
-                    HAL_TRACE_DEBUG("{}: Update: Setting ac_remote_atomic to: {}", __FUNCTION__, rqcb_p->rqcb1.ac_remote_atomic);
+        case rdma::RDMA_UPDATE_QP_OPER_SET_QKEY:
+            rqcb_p->rqcb0.q_key = spec.q_key();
+            rqcb_p->rqcb1.q_key = rqcb_p->rqcb0.q_key;
+            sqcb_p->sqcb2.q_key = spec.q_key();
+            HAL_TRACE_DEBUG("{}: Update: Setting q_key to: {}", __FUNCTION__,
+                            spec.q_key());
+            break;
 
-                    if (spec.access_flags() & (rdma::RDMA_QP_ZERO_BASED |
-                                               rdma::RDMA_QP_ACCESS_ON_DEMAND |
-                                               rdma::RDMA_QP_ACCESS_HUGETLB)) {
-                        api_status = types::API_STATUS_INVALID_ARG;
-                        HAL_TRACE_DEBUG("{}: Unsupported modify_qp access_flags {}. Rejecting", __FUNCTION__, spec.access_flags());
-                    }
-                        
-                break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_QKEY:
-                    rqcb_p->rqcb0.q_key = spec.q_key();
-                    rqcb_p->rqcb1.q_key = rqcb_p->rqcb0.q_key;
-                    sqcb_p->sqcb2.q_key = spec.q_key();
-                    HAL_TRACE_DEBUG("{}: Update: Setting q_key to: {}", __FUNCTION__,
-                                    spec.q_key());
-                    break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_AV:
-        
-                    header_template_addr = rdma_lif_at_base_addr(lif);
-        
-                    pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
-                    if (pad_size & ((1 << HDR_TEMP_ADDR_SHIFT) - 1)) {
-                        pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
-                    }
-        
-                    header_template_addr = (uint64_t)(((uint8_t*) header_template_addr)
-                                           + (spec.ahid() * pad_size));
-        
-                    sqcb_p->sqcb0.header_template_addr = header_template_addr >> HDR_TEMP_ADDR_SHIFT;
-                    sqcb_p->sqcb1.header_template_addr = sqcb_p->sqcb0.header_template_addr;
-                    sqcb_p->sqcb2.header_template_addr = sqcb_p->sqcb0.header_template_addr;
-        
-                    rqcb_p->rqcb0.header_template_addr = sqcb_p->sqcb0.header_template_addr;
-                    rqcb_p->rqcb1.header_template_addr = rqcb_p->rqcb0.header_template_addr;
-        
-                    sqcb_p->sqcb1.header_template_size = spec.header_template().size();
-                    sqcb_p->sqcb2.header_template_size = sqcb_p->sqcb1.header_template_size;
-                    rqcb_p->rqcb0.header_template_size = spec.header_template().size();
-                    rqcb_p->rqcb1.header_template_size = rqcb_p->rqcb0.header_template_size;
-        
-                    ah_entry_t ah_entry;
-        
-                    ah_entry.ah_size = std::min(sizeof(header_template_t), spec.header_template().size());
-                    memcpy(&ah_entry.hdr_tmp, (uint8_t *)spec.header_template().c_str(), ah_entry.ah_size);
-        
-                    args.addr = (uint64_t)header_template_addr;
-                    args.buf = (uint8_t *)&ah_entry;
-                    args.size =  sizeof(ah_entry_t);
-                    pd_func_args.pd_capri_hbm_write_mem = &args;
-                    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
-        
-                    HAL_TRACE_DEBUG("{}: Update: Setting header_template content @addr: {} to: {}",
-                                    __FUNCTION__, header_template_addr, spec.header_template());
-        
-                    HAL_TRACE_DEBUG("{}: Update: Setting rqcb/sqcb header_template_size to {}, {}",
-                                    __FUNCTION__, rqcb_p->rqcb1.header_template_size, sqcb_p->sqcb1.header_template_size);
-                break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_PATH_MTU:
-                    sqcb_p->sqcb0.log_pmtu = log2(spec.pmtu());
-                    sqcb_p->sqcb1.log_pmtu = sqcb_p->sqcb0.log_pmtu;
-        
-                    rqcb.rqcb0.log_pmtu = log2(spec.pmtu());
-                    rqcb.rqcb1.log_pmtu = rqcb.rqcb0.log_pmtu;
-                    HAL_TRACE_DEBUG("{}: Update: Setting path_mtu to: {}", __FUNCTION__,
-                                    spec.pmtu());
-                    break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_TIMEOUT:
-                    sqcb_p->sqcb2.local_ack_timeout = spec.timeout();
-        
-                    HAL_TRACE_DEBUG("{}: Update: Setting timeout to: {}", __FUNCTION__,
-                                    spec.timeout());
-                    break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_RETRY_CNT:
-                    sqcb_p->sqcb1.err_retry_count = spec.retry_cnt();
-                    sqcb_p->sqcb2.err_retry_ctr = spec.retry_cnt();
-        
-                    HAL_TRACE_DEBUG("{}: Update: Setting retry_cnt to: {}", __FUNCTION__,
-                                    spec.retry_cnt());
-                    break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_RNR_RETRY:
-                    sqcb_p->sqcb1.rnr_retry_count = spec.rnr_retry();
-                    sqcb_p->sqcb2.rnr_retry_ctr = spec.rnr_retry();
-        
-                    HAL_TRACE_DEBUG("{}: Update: Setting rnr_retry to: {}", __FUNCTION__,
-                                    spec.rnr_retry());
-                    break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_RQ_PSN:
-                    rqcb_p->rqcb1.e_psn = spec.e_psn();
-                    HAL_TRACE_DEBUG("{}: Update: Setting e_psn to: {}", __FUNCTION__,
-                                    spec.e_psn());
-                    break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_MAX_QP_RD_ATOMIC:
-                    //TBD
-                    HAL_TRACE_DEBUG("{}: TBD - Update: Setting max_qp_rd_atomic/rsq_size to: {}", __FUNCTION__,
-                                    spec.max_qp_rd_atomic());
-                    break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_MIN_RNR_TIMER:
-                    rqcb_p->rqcb2.rnr_timeout = spec.min_rnr_timer();
-                    HAL_TRACE_DEBUG("{}: Update: Setting min_rnr_timer to: {}", __FUNCTION__, 
-                                    spec.min_rnr_timer());
-                                    
-                break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_SQ_PSN:
-                    sqcb_p->sqcb2.tx_psn = spec.tx_psn();
-                    sqcb_p->sqcb2.exp_rsp_psn = (sqcb_p->sqcb2.tx_psn - 1);
-                    sqcb_p->sqcb1.tx_psn = sqcb_p->sqcb2.tx_psn;
-                    sqcb_p->sqcb1.max_tx_psn = sqcb_p->sqcb2.tx_psn;
-                    sqcb_p->sqcb1.rexmit_psn = spec.tx_psn();
-                    HAL_TRACE_DEBUG("{}: Update: Setting tx_psn to: {}", __FUNCTION__,
-                                    spec.tx_psn());
-                    break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_MAX_DEST_RD_ATOMIC:
-                    //TBD
-                    HAL_TRACE_DEBUG("{}: TBD - Update: Setting max_dest_rd_atomic/rrq_size to: {}", __FUNCTION__,
-                                    spec.max_dest_rd_atomic());
-                    break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QPN:
-                    rqcb_p->rqcb0.dst_qp = spec.dst_qp_num();
-                    sqcb_p->sqcb2.dst_qp = spec.dst_qp_num();
-        
-                    HAL_TRACE_DEBUG("{}: Update: Setting dst_qp to: {}", __FUNCTION__,
-                            spec.dst_qp_num());
-                break;
-        
-                case rdma::RDMA_UPDATE_QP_OPER_SET_PKEY_INDEX:
-                case rdma::RDMA_UPDATE_QP_OPER_SET_PORT:
-                case rdma::RDMA_UPDATE_QP_OPER_SET_ALT_PATH:
-                case rdma::RDMA_UPDATE_QP_OPER_SET_PATH_MIG_STATE:
-                case rdma::RDMA_UPDATE_QP_OPER_SET_CAP:
-                case rdma::RDMA_UPDATE_QP_OPER_SET_RESERVED1:
-                case rdma::RDMA_UPDATE_QP_OPER_SET_RESERVED2:
-                case rdma::RDMA_UPDATE_QP_OPER_SET_RESERVED3:
-                case rdma::RDMA_UPDATE_QP_OPER_SET_RESERVED4:
-                case rdma::RDMA_UPDATE_QP_OPER_SET_RATE_LIMIT:
-                default:
-                    api_status = types::API_STATUS_INVALID_ARG;
-                    HAL_TRACE_DEBUG("{}: Unsupported modify_qp code {}. Rejecting", __FUNCTION__, oper)
-                break;
+        case rdma::RDMA_UPDATE_QP_OPER_SET_PATH_MTU:
+            sqcb_p->sqcb0.log_pmtu = log2(spec.pmtu());
+            sqcb_p->sqcb1.log_pmtu = sqcb_p->sqcb0.log_pmtu;
+
+            rqcb.rqcb0.log_pmtu = log2(spec.pmtu());
+            rqcb.rqcb1.log_pmtu = rqcb.rqcb0.log_pmtu;
+            HAL_TRACE_DEBUG("{}: Update: Setting path_mtu to: {}", __FUNCTION__,
+                            spec.pmtu());
+            break;
+
+        case rdma::RDMA_UPDATE_QP_OPER_SET_AV:
+
+            header_template_addr = rdma_lif_at_base_addr(lif);
+
+            pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
+            if (pad_size & ((1 << HDR_TEMP_ADDR_SHIFT) - 1)) {
+                pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
             }
-        }
 
-        oper++;
-        attr_mask = attr_mask >> 1;
+            header_template_addr = (uint64_t)(((uint8_t*) header_template_addr)
+                                   + (spec.ahid() * pad_size));
+
+            sqcb_p->sqcb0.header_template_addr = header_template_addr >> HDR_TEMP_ADDR_SHIFT;
+            sqcb_p->sqcb1.header_template_addr = sqcb_p->sqcb0.header_template_addr;
+            sqcb_p->sqcb2.header_template_addr = sqcb_p->sqcb0.header_template_addr;
+
+            rqcb_p->rqcb0.header_template_addr = sqcb_p->sqcb0.header_template_addr;
+            rqcb_p->rqcb1.header_template_addr = rqcb_p->rqcb0.header_template_addr;
+
+            sqcb_p->sqcb1.header_template_size = spec.header_template().size();
+            sqcb_p->sqcb2.header_template_size = sqcb_p->sqcb1.header_template_size;
+            rqcb_p->rqcb0.header_template_size = spec.header_template().size();
+            rqcb_p->rqcb1.header_template_size = rqcb_p->rqcb0.header_template_size;
+
+            ah_entry_t ah_entry;
+
+            ah_entry.ah_size = std::min(sizeof(header_template_t), spec.header_template().size());
+            memcpy(&ah_entry.hdr_tmp, (uint8_t *)spec.header_template().c_str(), ah_entry.ah_size);
+
+            args.addr = (uint64_t)header_template_addr;
+            args.buf = (uint8_t *)&ah_entry;
+            args.size =  sizeof(ah_entry_t);
+            pd_func_args.pd_capri_hbm_write_mem = &args;
+            pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
+
+            HAL_TRACE_DEBUG("{}: Update: Setting header_template content @addr: {} to: {}",
+                            __FUNCTION__, header_template_addr, spec.header_template());
+
+            HAL_TRACE_DEBUG("{}: Update: Setting rqcb/sqcb header_template_size to {}, {}",
+                            __FUNCTION__, rqcb_p->rqcb1.header_template_size, sqcb_p->sqcb1.header_template_size);
+        break;
+
+        default:
+        break;
     }
 
-    if (api_status == types::API_STATUS_OK) {
-        // Convert and write SQCB to HBM
-        memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
-        memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
-        memrev((uint8_t*)&sqcb_p->sqcb2, sizeof(sqcb2_t));
-        lif_manager()->WriteQState(lif, Q_TYPE_RDMA_SQ, spec.qp_num(), (uint8_t *)sqcb_p, sizeof(sqcb_t));
-    
-        // Convert and write RQCB to HBM
-        memrev((uint8_t*)&rqcb_p->rqcb0, sizeof(rqcb0_t));
-        memrev((uint8_t*)&rqcb_p->rqcb1, sizeof(rqcb1_t));
-        lif_manager()->WriteQState(lif, Q_TYPE_RDMA_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
-    }
+    // Convert and write SQCB to HBM
+    memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
+    memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
+    memrev((uint8_t*)&sqcb_p->sqcb2, sizeof(sqcb2_t));
+    lif_manager()->WriteQState(lif, Q_TYPE_RDMA_SQ, spec.qp_num(), (uint8_t *)sqcb_p, sizeof(sqcb_t));
 
-    rsp->set_api_status(api_status);
+    // Convert and write RQCB to HBM
+    memrev((uint8_t*)&rqcb_p->rqcb0, sizeof(rqcb0_t));
+    memrev((uint8_t*)&rqcb_p->rqcb1, sizeof(rqcb1_t));
+    lif_manager()->WriteQState(lif, Q_TYPE_RDMA_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
+
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
 
     return (HAL_RET_OK);

@@ -246,12 +246,7 @@ public:
                uint32_t dest_qp_num, uint32_t q_key,
                uint32_t e_psn, uint32_t sq_psn,
                uint32_t header_template_ah_id, uint32_t header_template_size,
-               unsigned char *header, uint32_t pmtu, 
-               uint8_t qstate, uint8_t cur_qstate,
-               uint8_t en_sqd_async_notify, int qp_access_flags,
-               uint8_t timeout, uint8_t retry_cnt, 
-               uint8_t rnr_retry, uint8_t max_qp_rd_atomic, 
-               uint8_t min_rnr_timer, uint8_t max_dest_rd_atomic);
+               unsigned char *header, uint32_t pmtu, uint8_t qstate);
 
   int CreateAh(uint64_t lif_id, uint32_t ah_id, uint32_t pd_id,
                uint32_t header_template_size, unsigned char *header);
@@ -335,33 +330,14 @@ private:
   std::unique_ptr<CryptoKey::Stub> crypto_stub_;
 };
 
-#define   IB_QP_STATE              (1 << 0)
-#define   IB_QP_CUR_STATE          (1 << 1)
-#define   IB_QP_EN_SQD_ASYNC_NOTIFY (1 << 2)
-#define   IB_QP_ACCESS_FLAGS       (1 << 3)
-#define   IB_QP_PKEY_INDEX         (1 << 4)
-#define   IB_QP_PORT               (1 << 5)
-#define   IB_QP_QKEY               (1 << 6)
-#define   IB_QP_AV                 (1 << 7)
-#define   IB_QP_PATH_MTU           (1 << 8)
-#define   IB_QP_TIMEOUT            (1 << 9)
-#define   IB_QP_RETRY_CNT          (1 << 10)
-#define   IB_QP_RNR_RETRY          (1 << 11)
-#define   IB_QP_RQ_PSN             (1 << 12)
-#define   IB_QP_MAX_QP_RD_ATOMIC   (1 << 13)
-#define   IB_QP_ALT_PATH           (1 << 14)
-#define   IB_QP_MIN_RNR_TIMER      (1 << 15)
-#define   IB_QP_SQ_PSN             (1 << 16)
-#define   IB_QP_MAX_DEST_RD_ATOMIC (1 << 17)
-#define   IB_QP_PATH_MIG_STATE     (1 << 18)
-#define   IB_QP_CAP                (1 << 19)
-#define   IB_QP_DEST_QPN           (1 << 20)
-#define   IB_QP_RESERVED1          (1 << 21)
-#define   IB_QP_RESERVED2          (1 << 22)
-#define   IB_QP_RESERVED3          (1 << 23)
-#define   IB_QP_RESERVED4          (1 << 24)
-#define   IB_QP_RATE_LIMIT         (1 << 25)
-
+#define   IB_QP_STATE        (1 << 0)
+#define   IB_QP_QKEY         (1 << 6)
+#define   IB_QP_AV           (1 << 7)
+#define   IB_QP_PATH_MTU     (1 << 8)
+#define   IB_QP_DEST_QPN     (1 << 20)
+#define   IB_QP_RQ_PSN       (1 << 12)
+#define   IB_QP_SQ_PSN       (1 << 16)
+ 
 #define   AC_LOCAL_WRITE       0x1
 #define   AC_REMOTE_WRITE      0x2
 #define   AC_REMOTE_READ       0x4
