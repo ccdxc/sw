@@ -807,6 +807,7 @@ out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
+OSAL_EXPORT_SYMBOL(pnso_submit_request);
 
 pnso_error_t
 pnso_add_to_batch(struct pnso_service_request *svc_req,
@@ -862,6 +863,7 @@ out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
+OSAL_EXPORT_SYMBOL(pnso_add_to_batch);
 
 pnso_error_t
 pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
@@ -888,4 +890,4 @@ out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
-OSAL_EXPORT_SYMBOL(pnso_submit_request);
+OSAL_EXPORT_SYMBOL(pnso_flush_batch);

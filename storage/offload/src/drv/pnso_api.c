@@ -188,20 +188,3 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
 	return crypto_key_index_update(key1, key2, key_size, key_idx);
 }
 OSAL_EXPORT_SYMBOL(pnso_set_key_desc_idx);
-
-/* TODO: these are just stubs, so that linking with dependent libraries passes */
-pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
-		struct pnso_service_result *svc_res)
-{
-	return EINVAL;
-}
-OSAL_EXPORT_SYMBOL(pnso_add_to_batch);
-
-pnso_error_t pnso_flush_batch(completion_cb_t cb,
-		void *cb_ctx,
-		pnso_poll_fn_t *pnso_poll_fn,
-		void **pnso_poll_ctx)
-{
-	return EINVAL;
-}
-OSAL_EXPORT_SYMBOL(pnso_flush_batch);
