@@ -221,9 +221,42 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 
 // Trigger triggers a workload
 func (ts *TopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
-	resp := &iota.TriggerMsg{}
+	if req.TriggerOp == iota.TriggerOp_TYPE_NONE {
+		log.Errorf("TOPO SVC | Trigger | Trigger call failed")
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Trigger must specify TriggerOp for workload op. Found: %v", req.TriggerOp)
+		return req, nil
+	}
 
-	return resp, nil
+	for idx, n := range ts.Nodes {
+		if req.NodeName == n.Node.Name {
+			ts.Nodes[idx].TriggerInfo = req
+		}
+	}
+
+	// Triggers
+	triggers := func(ctx context.Context) error {
+		pool, ctx := errgroup.WithContext(ctx)
+
+		for _, node := range ts.Nodes {
+			node := node
+			if node.Node.Name == req.NodeName {
+				pool.Go(func() error {
+					return node.Trigger()
+				})
+			}
+
+		}
+		return pool.Wait()
+	}
+	err := triggers(context.Background())
+	if err != nil {
+		log.Errorf("TOPO SVC | Trigger | Trigger Call Failed. %v", err)
+		return nil, err
+	}
+
+	// TODO return fully formed resp here
+	return req, nil
 }
 
 // CheckClusterHealth checks the e2e cluster health
