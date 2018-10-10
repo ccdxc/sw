@@ -1048,7 +1048,8 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 					svc_status->u.hash.tags = TEST_ALLOC(
 						get_max_output_len_by_type(
 							svc->svc.svc_type,
-							svc->output_flags));
+							svc->output_flags,
+							input_len));
 					if (!svc_status->u.hash.tags) {
 						PNSO_LOG_TRACE(
 							"Out of memory for output tags\n");
@@ -1060,14 +1061,21 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 						MAX_OUTPUT_BUF_COUNT;
 				}
 			} else if (!svc_status->u.dst.sgl) {
+				uint32_t output_len =
+					get_max_output_len_by_type(
+							svc->svc.svc_type,
+							svc->output_flags,
+							input_len);
+
+				output_len = roundup_len(output_len,
+					batch_ctx->desc->init_params.block_size);
 				svc_status->u.dst.sgl =
 					test_alloc_buffer_list(
 						(svc->output_flags &
 						 TEST_OUTPUT_FLAG_TINY) ? 1 :
-						MAX_OUTPUT_BUF_COUNT,
-						get_max_output_len_by_type(
-							svc->svc.svc_type,
-							svc->output_flags));
+						(output_len /
+						 batch_ctx->desc->init_params.block_size),
+						output_len);
 				if (!svc_status->u.dst.sgl) {
 					PNSO_LOG_TRACE(
 						"Out of memory for output_buf\n");
@@ -1099,6 +1107,8 @@ static const char *testcase_stats_names[TESTCASE_STATS_COUNT] = {
 	"elapsed_time",
 	"total_latency",
 	"avg_latency",
+	"min_latency",
+	"max_latency",
 	"in_bytes_per_sec",
 	"out_bytes_per_sec",
 	"svcs_per_sec",
@@ -1173,9 +1183,18 @@ static void aggregate_testcase_stats(struct testcase_stats *ts1,
 				     uint64_t elapsed_time)
 {
 	uint32_t i;
+	uint64_t ns;
 
 	ts1->elapsed_time = elapsed_time;
 	ts1->agg_stats.total_latency += ts2->agg_stats.total_latency;
+	if (ts1->agg_stats.min_latency == 0 ||
+	    ts1->agg_stats.min_latency > ts2->agg_stats.total_latency) {
+		ts1->agg_stats.min_latency = ts2->agg_stats.total_latency;
+	}
+	if (ts1->agg_stats.max_latency == 0 ||
+	    ts1->agg_stats.max_latency < ts2->agg_stats.total_latency) {
+		ts1->agg_stats.max_latency = ts2->agg_stats.total_latency;
+	}
 	for (i = 0; i < 2; i++) {
 		ts1->io_stats[i].svcs += ts2->io_stats[i].svcs;
 		ts1->io_stats[i].reqs += ts2->io_stats[i].reqs;
@@ -1189,16 +1208,21 @@ static void aggregate_testcase_stats(struct testcase_stats *ts1,
 		ts1->agg_stats.avg_latency = ts1->agg_stats.total_latency /
 				ts1->io_stats[1].batches;
 	}
+#if 1
+	ns = ts1->agg_stats.total_latency;
+#else
+	ns = elapsed_time;
+#endif
 	ts1->agg_stats.in_bytes_per_sec = calculate_bytes_per_sec(
-		       ts1->io_stats[0].bytes, elapsed_time);
+		       ts1->io_stats[0].bytes, ns);
 	ts1->agg_stats.out_bytes_per_sec = calculate_bytes_per_sec(
-		       ts1->io_stats[1].bytes, elapsed_time);
+		       ts1->io_stats[1].bytes, ns);
 	ts1->agg_stats.svcs_per_sec = calculate_bytes_per_sec(
-		       ts1->io_stats[1].svcs, elapsed_time);
+		       ts1->io_stats[1].svcs, ns);
 	ts1->agg_stats.reqs_per_sec = calculate_bytes_per_sec(
-		       ts1->io_stats[1].reqs, elapsed_time);
+		       ts1->io_stats[1].reqs, ns);
 	ts1->agg_stats.batches_per_sec = calculate_bytes_per_sec(
-		       ts1->io_stats[1].batches, elapsed_time);
+		       ts1->io_stats[1].batches, ns);
 }
 
 static bool is_compare_true(uint16_t cmp_type, int cmp)
@@ -1662,17 +1686,19 @@ static int worker_loop(void *param)
 {
 	struct worker_context *ctx = (struct worker_context *) param;
 	struct batch_context *batch_ctx;
-	int core_id;
 
 	while (!osal_thread_should_stop(&ctx->worker_thread)) {
 		batch_ctx = worker_queue_dequeue(ctx->submit_q);
 		if (batch_ctx) {
-			core_id = osal_get_coreid();
+#ifdef __KERNEL__
+			int core_id = osal_get_coreid();
+
 			if (core_id != ctx->worker_thread.core_id) {
 				PNSO_LOG_ERROR("Unexpected core_id %d for worker on core %d.\n",
 					       core_id, ctx->worker_thread.core_id);
 				return -1;
 			}
+#endif
 			run_testcase_batch(batch_ctx);
 		}
 		osal_yield();

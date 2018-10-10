@@ -30,29 +30,38 @@ enum {
 #define DEFAULT_BLOCK_SIZE 4096
 #define MAX_INPUT_BUF_COUNT 1024
 #define MAX_OUTPUT_BUF_COUNT (MAX_OUTPUT_BUF_LEN / 4096)
+#define MAX_COMPRESSION_FACTOR 10
 
 static inline uint32_t get_max_output_len_by_type(uint16_t svc_type,
-						  uint32_t output_flags)
+						  uint32_t output_flags,
+						  uint32_t input_len)
 {
 	switch (svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
 		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return DEFAULT_BLOCK_SIZE;
+		} else if (output_flags & TEST_OUTPUT_FLAG_JUMBO) {
+			return MAX_OUTPUT_BUF_LEN;
 		} else {
-			return 64 * 1024;
+			return input_len;
 		}
 	case PNSO_SVC_TYPE_COMPRESS:
 		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return DEFAULT_BLOCK_SIZE;
-		} else {
+		} else if (output_flags & TEST_OUTPUT_FLAG_JUMBO) {
 			return MAX_OUTPUT_BUF_LEN;
+		} else {
+			return input_len;
 		}
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return DEFAULT_BLOCK_SIZE;
-		} else {
+		} else if ((output_flags & TEST_OUTPUT_FLAG_JUMBO) ||
+			   (input_len * MAX_COMPRESSION_FACTOR > MAX_OUTPUT_BUF_LEN)) {
 			return MAX_OUTPUT_BUF_LEN;
+		} else {
+			return input_len * MAX_COMPRESSION_FACTOR;
 		}
 	case PNSO_SVC_TYPE_HASH:
 		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
@@ -71,7 +80,7 @@ static inline uint32_t get_max_output_len_by_type(uint16_t svc_type,
 		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return PNSO_CHKSUM_TAG_LEN;
 		} else {
-			return 64 * 1024;
+			return MAX_OUTPUT_BUF_LEN;
 		}
 	}
 }
@@ -114,6 +123,8 @@ struct testcase_aggregate_stats {
 	/* calculated only in aggregate */
 	uint64_t total_latency;
 	uint64_t avg_latency;
+	uint64_t min_latency;
+	uint64_t max_latency;
 	uint64_t in_bytes_per_sec;
 	uint64_t out_bytes_per_sec;
 	uint64_t svcs_per_sec;

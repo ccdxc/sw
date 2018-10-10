@@ -20,6 +20,19 @@
 #endif
 
 
+uint32_t roundup_block_count(uint32_t len, uint32_t block_size)
+{
+	if (!block_size)
+		block_size = 1;
+
+	return (len + block_size - 1) / block_size;
+}
+
+uint32_t roundup_len(uint32_t len, uint32_t block_size)
+{
+	return roundup_block_count(len, block_size) * block_size;
+}
+
 /* Fill buflist with random values */
 pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed)
 {

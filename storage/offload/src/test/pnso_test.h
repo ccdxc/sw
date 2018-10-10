@@ -16,7 +16,8 @@ extern "C"
 #endif
 
 #define TEST_OUTPUT_FLAG_APPEND 0x01
-#define TEST_OUTPUT_FLAG_TINY 0x02
+#define TEST_OUTPUT_FLAG_TINY   0x02
+#define TEST_OUTPUT_FLAG_JUMBO  0x04
 
 /* Full definition in pnso_test_parse.h */
 struct test_desc;
@@ -69,6 +70,8 @@ int test_compare_file_data(const char *path, uint32_t offset, uint32_t len,
 			   const uint8_t *pattern, uint32_t pat_len);
 
 /* Functions in pnso_test_util.c */
+uint32_t roundup_block_count(uint32_t len, uint32_t block_size);
+uint32_t roundup_len(uint32_t len, uint32_t block_size);
 uint32_t safe_itoa(char *dst, uint32_t dst_len, uint64_t val);
 uint32_t safe_strcpy_tolower(char *dst, const char *src, uint32_t max_len);
 uint32_t safe_strcpy(char *dst, const char *src, uint32_t max_len);
