@@ -8,6 +8,7 @@ sys.path.insert(0, topdir)
 
 SSHCMD = "sshpass -p vm ssh -o StrictHostKeyChecking=no vm@"
 commands = [
+    "/tmp/iota/INSTALL.sh --clean-only",
     "systemctl stop pen-cmd",
     "docker rm -fv \$(docker ps -aq)",
     "docker system prune -f",
@@ -15,6 +16,8 @@ commands = [
     "pkill iota*",
     "rm -rf /tmp/iota*",
     "docker ps",
+    "docker rmi -f \$(docker images -aq)",
+    "rm -rf /var/run/naples"
 ]
 
 import iota.harness.infra.utils.parser as parser

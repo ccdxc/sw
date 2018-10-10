@@ -20,7 +20,7 @@ json_object = {
 def Main(step):
     req = cfg_svc_pb2.MakeClusterMsg()
     venice_ips = api.GetVeniceMgmtIpAddresses()
-    req.endpoint = "%s:9001" % venice_ips[0]
+    req.endpoint = "%s:9001/api/v1/cluster" % venice_ips[0]
     venice_names = api.GetVeniceHostnames()
     for vn in venice_names:
         json_object["spec"]["quorum-nodes"].append(vn)

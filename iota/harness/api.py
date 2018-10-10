@@ -6,11 +6,11 @@ from iota.harness.infra.utils.logger import Logger as Logger
 import iota.protos.pygen.types_pb2 as types_pb2
 import iota.protos.pygen.cfg_svc_pb2 as cfg_svc
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
-import iota.protos.pygen.topo_svc_pb2_grpc as topo_svc_grpc
 
 import iota.harness.infra.store as store
 import iota.harness.infra.types as types
 import iota.harness.infra.utils.utils as utils
+import iota.harness.infra.utils.parser as parser
 
 from iota.harness.infra.glopts import GlobalOptions
 
@@ -58,6 +58,11 @@ def AddNodes(req):
     global TopoSvcStub
     Logger.info("Add Nodes:")
     return __rpc(req, TopoSvcStub.AddNodes)
+
+def AddWorkloads(req):
+    global TopoSvcStub
+    Logger.info("Add Workloads:")
+    return __rpc(req, TopoSvcStub.AddWorkloads)
 
 def Trigger(req):
     global TopoSvcStub

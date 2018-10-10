@@ -25,7 +25,7 @@ class Node(object):
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
         self.__control_intf = "eth1"
 
-        self.__data_intfs = [ "eth2" ]
+        self.__data_intfs = [ "eth2", "eth3" ]
         Logger.info("- New Node: %s: %s (%s)" % (spec.name, self.__ip_address, spec.role))
         return
 
@@ -62,9 +62,9 @@ class Node(object):
             msg.image = os.path.basename(testsuite.GetImages().naples)
             for data_intf in self.__data_intfs:
                 msg.naples_config.data_intfs.append(data_intf)
-            for n in topology.Nodes():
-                if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
-                msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
+            #for n in topology.Nodes():
+            #    if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
+            #    msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
 
         return types.status.SUCCESS
 

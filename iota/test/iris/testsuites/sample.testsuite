@@ -30,6 +30,7 @@ setup:
         # Invokes: iota/test/iris/bringup/generate_base_config.py
         - step : bringup.generate_base_config
           spec : test/iris/baseconfig/sample_baseconfig.spec
+        #- step : bringup.push_static_config
 
 # Section: 'common'
 # List of common actions to be invoked during test phase.
