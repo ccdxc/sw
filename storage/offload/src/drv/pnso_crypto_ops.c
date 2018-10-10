@@ -97,7 +97,7 @@ crypto_desc_fill(struct service_info *svc_info,
 	crypto_desc->cd_key_desc_idx = 
 		     sonic_get_crypto_key_idx(pnso_crypto_desc->key_desc_idx);
 
-	crypto_desc->cd_iv_addr = pnso_crypto_desc->iv_addr;
+	crypto_desc->cd_iv_addr = sonic_hostpa_to_devpa(pnso_crypto_desc->iv_addr);
 	crypto_desc->cd_status_addr = sonic_virt_to_phy(status_desc);
 	crypto_desc->cd_db_addr = crypto_desc->cd_status_addr +
 				  sizeof(status_desc->csd_err);
