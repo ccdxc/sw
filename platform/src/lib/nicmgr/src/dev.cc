@@ -277,7 +277,7 @@ DeviceManager::LoadConfig(string path)
                 NIC_LOG_ERR("lif{}: Failed to allocate interrupts", info.hw_lif_id);
                 return -1;
             }
-            eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
+
             eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
             eth_spec->txq_count = val.get<uint64_t>("txq_count");
             eth_spec->eq_count = val.get<uint64_t>("eq_count");
@@ -331,7 +331,6 @@ DeviceManager::LoadConfig(string path)
                 return -1;
             }
 
-            eth_spec->dev_uuid = val.get<uint64_t>("dev_uuid");
             eth_spec->rxq_count = val.get<uint64_t>("rxq_count");
             eth_spec->txq_count = val.get<uint64_t>("txq_count");
             eth_spec->eq_count = val.get<uint64_t>("eq_count");
