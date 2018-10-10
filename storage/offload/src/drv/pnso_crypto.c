@@ -63,10 +63,6 @@ init_mpools(struct pc_res_init_params *pc_init,
 				sizeof(struct crypto_status_desc),
 				&pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
 	if (!err) {
-		pc_init->rmem_total_pages -= 
-			mpool_get_object_num_allocs(
-				pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
-
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC]);
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);

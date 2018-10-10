@@ -36,12 +36,12 @@ seq_setup_cp_chain_params(struct chain_entry *centry,
 }
 
 pnso_error_t
-seq_setup_hash_chain_params(struct chain_entry *centry,
+seq_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
 			struct service_info *svc_info,
 			struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl,
 			uint32_t num_hash_blks)
 {
-	return g_sequencer_ops->setup_hash_chain_params(centry, svc_info,
+	return g_sequencer_ops->setup_hash_chain_params(chain_params, svc_info,
 			hash_desc, sgl, num_hash_blks);
 }
 
@@ -54,6 +54,12 @@ seq_setup_cpdc_chain_desc(struct chain_entry *centry,
 			src_desc, desc_size);
 }
 
+void
+seq_cleanup_cpdc_chain(const struct service_info *svc_info)
+{
+	g_sequencer_ops->cleanup_cpdc_chain(svc_info);
+}
+
 void *
 seq_setup_crypto_chain(struct service_info *svc_info,
 			struct crypto_desc *desc)
@@ -61,3 +67,8 @@ seq_setup_crypto_chain(struct service_info *svc_info,
 	return g_sequencer_ops->setup_crypto_chain(svc_info, desc);
 }
 
+void
+seq_cleanup_crypto_chain(const struct service_info *svc_info)
+{
+	g_sequencer_ops->cleanup_crypto_chain(svc_info);
+}

@@ -22,6 +22,20 @@ decompact_chain(struct chain_entry *centry)
 }
 
 static pnso_error_t
+decompact_sub_chain_from_cpdc(struct service_info *svc_info,
+			      struct cpdc_chain_params *cpdc_chain)
+{
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
+decompact_sub_chain_from_crypto(struct service_info *svc_info,
+			        struct crypto_chain_params *crypto_chain)
+{
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
 decompact_schedule(const struct service_info *svc_info)
 {
 	return EOPNOTSUPP;
@@ -54,6 +68,8 @@ decompact_teardown(const struct service_info *svc_info)
 struct service_ops decompact_ops = {
 	.setup = decompact_setup,
 	.chain = decompact_chain,
+	.sub_chain_from_cpdc = decompact_sub_chain_from_cpdc,
+	.sub_chain_from_crypto = decompact_sub_chain_from_crypto,
 	.schedule = decompact_schedule,
 	.poll = decompact_poll,
 	.read_status = decompact_read_status,

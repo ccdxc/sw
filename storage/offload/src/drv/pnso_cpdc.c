@@ -156,8 +156,6 @@ init_mpools(struct pc_res_init_params *pc_init,
 			&pc_res->mpools[mpool_type]);
 	if (err)
 		goto out;
-        pc_init->rmem_total_pages -= 
-                mpool_get_object_num_allocs(pc_res->mpools[mpool_type]);
 
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CPDC_DESC]);
 	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CPDC_DESC_VECTOR]);

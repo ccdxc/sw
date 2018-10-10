@@ -207,7 +207,8 @@ compress_chain(struct chain_entry *centry)
 
 	if (centry->ce_next) {
 		next_svc_info = &centry->ce_next->ce_svc_info;
-		err = next_svc_info->si_ops.sub_chain_from_cpdc(next_svc_info, &svc_info->si_cpdc_chain);
+		err = next_svc_info->si_ops.sub_chain_from_cpdc(next_svc_info,
+								&svc_info->si_cpdc_chain);
 		if (err) {
 			OSAL_LOG_ERROR("failed to chain next service after cp! err: %d",
 					err);
@@ -216,7 +217,6 @@ compress_chain(struct chain_entry *centry)
 		OSAL_LOG_INFO("chaining of services after cp done!");
 	}
 
-	/* TODO-chain: revisit to chain other services (ex: encrypt) */
 	svc_info->si_seq_info.sqi_desc = seq_setup_cpdc_chain_desc(centry,
 			svc_info, cp_desc, sizeof(*cp_desc));
 	if (!svc_info->si_seq_info.sqi_desc) {
@@ -236,6 +236,26 @@ done:
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
+}
+
+static pnso_error_t
+compress_sub_chain_from_cpdc(struct service_info *svc_info,
+			     struct cpdc_chain_params *cpdc_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
+compress_sub_chain_from_crypto(struct service_info *svc_info,
+			       struct crypto_chain_params *crypto_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t
@@ -444,12 +464,16 @@ compress_teardown(const struct service_info *svc_info)
 		OSAL_ASSERT(0);
 	}
 
+	seq_cleanup_cpdc_chain(svc_info);
+
 	OSAL_LOG_DEBUG("exit!");
 }
 
 struct service_ops cp_ops = {
 	.setup = compress_setup,
 	.chain = compress_chain,
+	.sub_chain_from_cpdc = compress_sub_chain_from_cpdc,
+	.sub_chain_from_crypto = compress_sub_chain_from_crypto,
 	.schedule = compress_schedule,
 	.poll = compress_poll,
 	.read_status = compress_read_status,

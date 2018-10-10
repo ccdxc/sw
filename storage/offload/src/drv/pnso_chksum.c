@@ -197,6 +197,26 @@ out:
 }
 
 static pnso_error_t
+chksum_sub_chain_from_cpdc(struct service_info *svc_info,
+			   struct cpdc_chain_params *cpdc_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
+chksum_sub_chain_from_crypto(struct service_info *svc_info,
+			     struct crypto_chain_params *crypto_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
 chksum_schedule(const struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
@@ -550,6 +570,8 @@ chksum_teardown(const struct service_info *svc_info)
 struct service_ops chksum_ops = {
 	.setup = chksum_setup,
 	.chain = chksum_chain,
+	.sub_chain_from_cpdc = chksum_sub_chain_from_cpdc,
+	.sub_chain_from_crypto = chksum_sub_chain_from_crypto,
 	.schedule = chksum_schedule,
 	.poll = chksum_poll,
 	.read_status = chksum_read_status,

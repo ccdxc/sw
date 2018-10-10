@@ -211,7 +211,7 @@ mpool_get_object_phy_addr(enum mem_pool_type mpool_type,
 	if (mpool_type_is_rmem(mpool_type))
 		return (uint64_t)object;
 	else
-		return osal_virt_to_phy(object);
+		return sonic_virt_to_phy(object);
 }
 
 static inline void

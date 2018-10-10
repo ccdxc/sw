@@ -20,7 +20,6 @@
  */
 struct pc_res_init_params {
 	struct pnso_init_params pnso_init;
-	uint32_t rmem_total_pages;
 	uint32_t rmem_page_size;
 	uint32_t max_seq_sq_descs;
 };

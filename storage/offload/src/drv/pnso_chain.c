@@ -155,14 +155,12 @@ setup_service_param_buffers(struct pnso_service *pnso_svc,
 		struct pnso_buffer_list *interm_blist)
 {
 	switch (pnso_svc->svc_type) {
-	case PNSO_SVC_TYPE_ENCRYPT:
-	case PNSO_SVC_TYPE_DECRYPT:
-		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
-		break;
 	case PNSO_SVC_TYPE_HASH:
+	case PNSO_SVC_TYPE_ENCRYPT:
+	case PNSO_SVC_TYPE_DECRYPT:
 		svc_params->sp_src_blist = interm_blist;
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:

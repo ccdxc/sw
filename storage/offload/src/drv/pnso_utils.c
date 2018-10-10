@@ -23,7 +23,7 @@ ring_spec_info_fill(uint32_t ring_id,
 		spec->rs_desc_size = (uint8_t) ilog2(ring->ring_desc_size);
 		spec->rs_pndx_size = (uint8_t) ilog2(ring->ring_pndx_size);
 		spec->rs_ring_size = (uint8_t) ilog2(ring->ring_size);
-		spec->rs_desc_addr = osal_virt_to_phy(desc);
+		spec->rs_desc_addr = sonic_virt_to_phy(desc);
 		spec->rs_num_descs = num_descs;
         	return PNSO_OK;
 	}
@@ -151,9 +151,8 @@ pc_res_interm_buf_list_get(const struct per_core_resource *pc_res,
 
 			/* Note that rmem_obj address is already physical */
 			iblist->blist.count = 1;
-			iblist->blist.buffers[0].buf = mpool_type_is_rmem(buf_type) ?
-						       (uint64_t)iblist->buf_obj :
-						        osal_virt_to_phy(iblist->buf_obj);
+			iblist->blist.buffers[0].buf = mpool_get_object_phy_addr(buf_type,
+									iblist->buf_obj);
 			iblist->blist.buffers[0].len = buf_size;
 			return iblist;
 		}
@@ -255,7 +254,7 @@ pc_res_mpool_object_put(const struct per_core_resource *pc_res,
 	struct mem_pool *mpool;
 
 	mpool = pc_res_mpool_get(pc_res, type);
-	if (mpool) {
+	if (mpool && obj) {
 		if (mpool_put_object(mpool, obj)) {
 			OSAL_LOG_ERROR("cannot return pc_res object to pool %s",
 					mem_pool_get_type_str(type));

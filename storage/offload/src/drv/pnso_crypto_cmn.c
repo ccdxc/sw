@@ -91,6 +91,7 @@ crypto_pprint_desc(const struct crypto_desc *desc)
 struct crypto_aol *
 crypto_aol_packed_get(const struct per_core_resource *pc_res,
 		      const struct pnso_buffer_list *buf_list,
+		      enum mem_pool_type *ret_mpool_type,
 		      uint32_t *ret_total_len)
 {
 	struct buffer_list_iter buffer_list_iter;
@@ -100,6 +101,7 @@ crypto_aol_packed_get(const struct per_core_resource *pc_res,
 	struct crypto_aol *aol;
 
 	iter = buffer_list_iter_init(&buffer_list_iter, buf_list);
+	*ret_mpool_type = MPOOL_TYPE_CRYPTO_AOL;
 	*ret_total_len = 0;
 	while (iter) {
 		aol = pc_res_mpool_object_get(pc_res, MPOOL_TYPE_CRYPTO_AOL);
@@ -139,6 +141,7 @@ struct crypto_aol *
 crypto_aol_sparse_get(const struct per_core_resource *pc_res,
 		      uint32_t block_size,
 		      const struct pnso_buffer_list *buf_list,
+		      enum mem_pool_type *ret_mpool_type,
 		      uint32_t *ret_total_len)
 {
 	struct buffer_list_iter buffer_list_iter;
@@ -149,6 +152,8 @@ crypto_aol_sparse_get(const struct per_core_resource *pc_res,
 	uint32_t cur_count;
 
 	OSAL_ASSERT(is_power_of_2(block_size));
+	*ret_mpool_type = MPOOL_TYPE_CRYPTO_AOL_VECTOR;
+	*ret_total_len = 0;
 	aol_vec_head = pc_res_mpool_object_get_with_count(pc_res,
 				MPOOL_TYPE_CRYPTO_AOL_VECTOR, &vec_count);
 	if (!aol_vec_head) {
@@ -158,7 +163,6 @@ crypto_aol_sparse_get(const struct per_core_resource *pc_res,
 
 	iter = buffer_list_iter_init(&buffer_list_iter, buf_list);
 	aol_vec = aol_vec_head;
-	*ret_total_len = 0;
 	cur_count = 0;
 	while (iter && (cur_count < vec_count)) {
 		memset(aol_vec, 0, sizeof(*aol_vec));

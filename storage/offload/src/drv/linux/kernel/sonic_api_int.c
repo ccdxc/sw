@@ -42,7 +42,7 @@ sonic_rmem_offset_to_pgid(uint64_t offset)
 static inline int
 sonic_rmem_page_order(size_t size)
 {
-	return size / PAGE_SIZE;
+	return ((size + PAGE_SIZE - 1) / PAGE_SIZE) - 1;
 }
 
 static inline uint64_t
@@ -78,44 +78,57 @@ sonic_rmem_pgaddr_to_iomem(uint64_t pgaddr)
 static uint64_t sonic_api_get_rmem(int order)
 {
 	struct sonic_dev *idev = sonic_get_idev();
+	uint64_t pgaddr = SONIC_RMEM_ADDR_INVALID;
 	int ret;
 
 	while (true) {
 		spin_lock(&idev->hbm_inuse_lock);
 		ret = bitmap_find_free_region(idev->hbm_inuse,
- 					      idev->hbm_npages, order);
-		spin_unlock(&idev->hbm_inuse_lock);
-
+					      idev->hbm_npages, order);
 		if (ret < 0) {
+			spin_unlock(&idev->hbm_inuse_lock);
 			OSAL_LOG_ERROR("rmem bitmap_find_free_region "
 				       "failed ret: %d", ret);
 			return SONIC_RMEM_ADDR_INVALID;
 		}
+		idev->hbm_nallocs += 1 << order;
+		spin_unlock(&idev->hbm_inuse_lock);
 
 		/*
 		 * Note that rmem address 0 is a valid address but to get the
 		 * same common denomitator with kernel memory, we won't use
 		 * that address and won't bother with ever freeing it.
 		 */
-		if (sonic_rmem_addr_valid(ret))
+		pgaddr = sonic_rmem_pgid_to_pgaddr((uint32_t)ret);
+		if (sonic_rmem_addr_valid(pgaddr))
 			break;
 	}
 
-	return sonic_rmem_pgid_to_pgaddr((uint32_t)ret);
+	return pgaddr;
 }
 
 static void sonic_api_put_rmem(uint32_t pgid, int order)
 {
 	struct sonic_dev *idev = sonic_get_idev();
 
+	OSAL_ASSERT(pgid < idev->hbm_npages);
 	spin_lock(&idev->hbm_inuse_lock);
 	bitmap_release_region(idev->hbm_inuse, pgid, order);
+        idev->hbm_nallocs -= 1 << order;
 	spin_unlock(&idev->hbm_inuse_lock);
 }
 
 uint32_t sonic_rmem_total_pages_get(void)
 {
 	return sonic_get_idev()->hbm_npages;
+}
+
+uint32_t sonic_rmem_avail_pages_get(void)
+{
+	struct sonic_dev *idev = sonic_get_idev();
+
+	OSAL_ASSERT(idev->hbm_npages >= idev->hbm_nallocs);
+	return idev->hbm_npages - idev->hbm_nallocs;
 }
 
 uint32_t sonic_rmem_page_size_get(void)
@@ -125,6 +138,7 @@ uint32_t sonic_rmem_page_size_get(void)
 
 uint64_t sonic_rmem_alloc(size_t size)
 {
+	OSAL_ASSERT(size == PAGE_SIZE);
 	return sonic_api_get_rmem(sonic_rmem_page_order(size));
 }
 

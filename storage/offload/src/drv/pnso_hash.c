@@ -177,7 +177,6 @@ hash_chain(struct chain_entry *centry)
 {
 	pnso_error_t err;
 	struct service_info *svc_info;
-	struct cpdc_desc *hash_desc;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -190,8 +189,29 @@ hash_chain(struct chain_entry *centry)
 		goto done;
 	}
 
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	err = EOPNOTSUPP;
+	OSAL_LOG_ERROR("exit! err: %d", err);
+	return err;
+done:
+	err = PNSO_OK;
+	OSAL_LOG_DEBUG("exit!");
+	return err;
+}
+
+static pnso_error_t
+hash_sub_chain_from_cpdc(struct service_info *svc_info,
+			 struct cpdc_chain_params *cpdc_chain)
+{
+	pnso_error_t err;
+	struct cpdc_desc *hash_desc;
+
+	OSAL_LOG_DEBUG("enter ...");
+
 	hash_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = seq_setup_hash_chain_params(centry, svc_info, hash_desc,
+	err = seq_setup_hash_chain_params(cpdc_chain, svc_info, hash_desc,
 			svc_info->si_p4_sgl, svc_info->si_num_tags);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup hash in chain! err: %d", err);
@@ -199,7 +219,6 @@ hash_chain(struct chain_entry *centry)
 	}
 	CPDC_PPRINT_DESC(hash_desc);
 
-done:
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
 	return err;
@@ -207,6 +226,16 @@ done:
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
+}
+
+static pnso_error_t
+hash_sub_chain_from_crypto(struct service_info *svc_info,
+			   struct crypto_chain_params *crypto_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t
@@ -603,6 +632,8 @@ hash_teardown(const struct service_info *svc_info)
 struct service_ops hash_ops = {
 	.setup = hash_setup,
 	.chain = hash_chain,
+	.sub_chain_from_cpdc = hash_sub_chain_from_cpdc,
+	.sub_chain_from_crypto = hash_sub_chain_from_crypto,
 	.schedule = hash_schedule,
 	.poll = hash_poll,
 	.read_status = hash_read_status,

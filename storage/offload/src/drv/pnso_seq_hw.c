@@ -755,7 +755,7 @@ out:
 }
 
 static pnso_error_t
-hw_setup_hash_chain_params(struct chain_entry *centry,
+hw_setup_hash_chain_params(struct cpdc_chain_params *chain_params,
 		struct service_info *svc_info,
 		struct cpdc_desc *hash_desc, struct cpdc_sgl *sgl,
 		uint32_t num_hash_blks)
@@ -764,15 +764,11 @@ hw_setup_hash_chain_params(struct chain_entry *centry,
 	struct accel_ring *ring;
 	uint32_t ring_id;
 
-	struct service_chain *svc_chain;
-	struct cpdc_chain_params *chain_params;
 	struct sequencer_info *seq_info;
 	struct ring_spec *ring_spec;
 
 	OSAL_LOG_DEBUG("enter ...");
 
-	svc_chain = centry->ce_chain_head;
-	chain_params = &svc_info->si_cpdc_chain;
 	ring_spec = &chain_params->ccp_ring_spec;
 
 	seq_info = &svc_info->si_seq_info;
@@ -851,6 +847,15 @@ out:
 	return NULL;
 }
 
+static void
+hw_cleanup_cpdc_chain(const struct service_info *svc_info)
+{
+	const struct cpdc_chain_params *cpdc_chain = &svc_info->si_cpdc_chain;
+
+	if (cpdc_chain->ccp_seq_spec.sqs_seq_status_q)
+		sonic_put_seq_statusq(cpdc_chain->ccp_seq_spec.sqs_seq_status_q);
+}
+
 static void *
 hw_setup_crypto_chain(struct service_info *svc_info,
 		      struct crypto_desc *desc)
@@ -899,11 +904,22 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 	return seq_desc;
 }
 
+static void
+hw_cleanup_crypto_chain(const struct service_info *svc_info)
+{
+	const struct crypto_chain_params *crypto_chain = &svc_info->si_crypto_chain;
+
+	if (crypto_chain->ccp_seq_spec.sqs_seq_status_q)
+		sonic_put_seq_statusq(crypto_chain->ccp_seq_spec.sqs_seq_status_q);
+}
+
 const struct sequencer_ops hw_seq_ops = {
 	.setup_desc = hw_setup_desc,
 	.ring_db = hw_ring_db,
 	.setup_cp_chain_params = hw_setup_cp_chain_params,
 	.setup_hash_chain_params = hw_setup_hash_chain_params,
 	.setup_cpdc_chain_desc = hw_setup_cpdc_chain_desc,
+	.cleanup_cpdc_chain = hw_cleanup_cpdc_chain,
 	.setup_crypto_chain = hw_setup_crypto_chain,
+	.cleanup_crypto_chain = hw_cleanup_crypto_chain,
 };

@@ -94,7 +94,7 @@ crypto_desc_fill(struct service_info *svc_info,
 		    mpool_get_object_phy_addr(MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
 					      svc_info->si_istatus_desc);
         else
-		crypto_desc->cd_status_addr = osal_virt_to_phy(status_desc);
+		crypto_desc->cd_status_addr = sonic_virt_to_phy(status_desc);
 
 	crypto_desc->cd_in_aol = sonic_virt_to_phy(svc_info->si_src_aol);
 	crypto_desc->cd_out_aol = sonic_virt_to_phy(svc_info->si_dst_aol);
@@ -174,17 +174,21 @@ crypto_src_dst_aol_fill(struct service_info *svc_info,
 	     chn_service_is_first(svc_info)) {
 		svc_info->si_src_aol = 
 			crypto_aol_packed_get(pc_res, svc_params->sp_src_blist,
+					      &svc_info->si_src_mpool_type,
 					      &svc_info->si_src_len);
 		svc_info->si_dst_aol = 
 			crypto_aol_packed_get(pc_res, svc_info->si_dst_blist,
+					      &svc_info->si_dst_mpool_type,
 					      &svc_info->si_dst_len);
 	} else {
 		svc_info->si_src_aol = 
 			crypto_aol_sparse_get(pc_res, svc_info->si_block_size,
-				svc_params->sp_src_blist, &svc_info->si_src_len);
+				svc_params->sp_src_blist, &svc_info->si_src_mpool_type,
+				&svc_info->si_src_len);
 		svc_info->si_dst_aol = 
 			crypto_aol_sparse_get(pc_res, svc_info->si_block_size,
-				svc_info->si_dst_blist, &svc_info->si_dst_len);
+				svc_info->si_dst_blist, &svc_info->si_dst_mpool_type,
+				&svc_info->si_dst_len);
 	}
 
 	if (!svc_info->si_src_aol || !svc_info->si_dst_aol) {
@@ -287,7 +291,7 @@ crypto_chain(struct chain_entry *centry)
 		crypto_chain->ccp_crypto_buf_addr = iblist->blist.buffers[0].buf;
 		crypto_chain->ccp_data_len = iblist->blist.buffers[0].len;
 		crypto_chain->ccp_sgl_pdma_dst_addr =
-				osal_virt_to_phy(svc_info->si_sgl_pdma);
+				sonic_virt_to_phy(svc_info->si_sgl_pdma);
 		crypto_chain->ccp_cmd.ccpc_sgl_pdma_en = true;
 		crypto_chain->ccp_cmd.ccpc_sgl_pdma_len_from_desc = true;
 
@@ -295,7 +299,7 @@ crypto_chain(struct chain_entry *centry)
 		  mpool_get_object_phy_addr(MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
 					    svc_info->si_istatus_desc);
 		crypto_chain->ccp_status_addr_1 =
-			osal_virt_to_phy(svc_info->si_status_desc);
+			sonic_virt_to_phy(svc_info->si_status_desc);
 		crypto_chain->ccp_status_len = sizeof(struct crypto_status_desc);
 		crypto_chain->ccp_cmd.ccpc_status_dma_en = true;
 		crypto_chain->ccp_cmd.ccpc_stop_chain_on_error = true;
@@ -320,8 +324,8 @@ static pnso_error_t
 crypto_sub_chain_from_cpdc(struct service_info *svc_info,
 			   struct cpdc_chain_params *cpdc_chain)
 {
-	cpdc_chain->ccp_aol_src_vec_addr = osal_virt_to_phy(svc_info->si_src_aol);
-	cpdc_chain->ccp_aol_dst_vec_addr = osal_virt_to_phy(svc_info->si_dst_aol);
+	cpdc_chain->ccp_aol_src_vec_addr = sonic_virt_to_phy(svc_info->si_src_aol);
+	cpdc_chain->ccp_aol_dst_vec_addr = sonic_virt_to_phy(svc_info->si_dst_aol);
 	cpdc_chain->ccp_cmd.ccpc_aol_pad_en = !!cpdc_chain->ccp_pad_buf_addr;
 	cpdc_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	cpdc_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
@@ -411,14 +415,10 @@ crypto_write_result(struct service_info *svc_info)
 static void
 crypto_teardown(const struct service_info *svc_info)
 {
-	const struct crypto_chain_params *crypto_chain = &svc_info->si_crypto_chain;
-	enum mem_pool_type aol_type;
-
-	aol_type = !chn_service_is_in_chain(svc_info) ||
-		   chn_service_is_first(svc_info) ? MPOOL_TYPE_CRYPTO_AOL :
-						    MPOOL_TYPE_CRYPTO_AOL_VECTOR;
-	crypto_aol_put(svc_info->si_pc_res, aol_type, svc_info->si_dst_aol);
-	crypto_aol_put(svc_info->si_pc_res, aol_type, svc_info->si_src_aol);
+	crypto_aol_put(svc_info->si_pc_res, svc_info->si_src_mpool_type,
+		       svc_info->si_src_aol);
+	crypto_aol_put(svc_info->si_pc_res, svc_info->si_dst_mpool_type,
+		       svc_info->si_dst_aol);
 	pc_res_mpool_object_put(svc_info->si_pc_res, MPOOL_TYPE_CRYPTO_STATUS_DESC,
 				svc_info->si_status_desc);
 	pc_res_mpool_object_put(svc_info->si_pc_res, MPOOL_TYPE_CRYPTO_DESC,
@@ -429,9 +429,7 @@ crypto_teardown(const struct service_info *svc_info)
 				svc_info->si_istatus_desc);
 	pc_res_sgl_pdma_put(svc_info->si_pc_res,
 			    svc_info->si_sgl_pdma);
-
-	if (crypto_chain->ccp_seq_spec.sqs_seq_status_q)
-		sonic_put_seq_statusq(crypto_chain->ccp_seq_spec.sqs_seq_status_q);
+	seq_cleanup_crypto_chain(svc_info);
 }
 
 struct service_ops encrypt_ops = {

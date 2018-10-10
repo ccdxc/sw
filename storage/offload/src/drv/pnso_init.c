@@ -36,14 +36,13 @@ pnso_init(struct pnso_init_params *pnso_init)
 	struct per_core_resource	*pc_res;
 	struct pc_res_init_params	pc_init;
 	uint32_t			num_pc_res;
-	uint32_t			total_bufs;
+	uint32_t			avail_bufs;
 	uint32_t			pc_num_bufs;
 	uint32_t			i;
 	pnso_error_t			err = PNSO_OK;
 
 	memset(&pc_init, 0, sizeof(pc_init));
 	pc_init.pnso_init = *pnso_init;
-	pc_init.rmem_total_pages = sonic_rmem_total_pages_get();
 	pc_init.rmem_page_size = sonic_rmem_page_size_get();
 	pc_init.max_seq_sq_descs = min((uint32_t)pnso_init->per_core_qdepth,
 				       pc_res_max_seq_sq_descs_get(lif));
@@ -64,17 +63,18 @@ pnso_init(struct pnso_init_params *pnso_init)
 	/*
 	 * Calculate remaining total rmem bufs
 	 */
+	avail_bufs = sonic_rmem_avail_pages_get();
 	if (pc_init.pnso_init.block_size < pc_init.rmem_page_size)
-		total_bufs = (pc_init.rmem_page_size /
+		avail_bufs = (pc_init.rmem_page_size /
 			      pc_init.pnso_init.block_size) *
-			     pc_init.rmem_total_pages;
+			     avail_bufs;
 	else
-		total_bufs = pc_init.rmem_total_pages /
+		avail_bufs = avail_bufs  /
 			     (pc_init.pnso_init.block_size /
 			      pc_init.rmem_page_size);
-	pc_num_bufs = total_bufs / num_pc_res;
-	OSAL_LOG_INFO("total_bufs %u pc_num_bufs %u", total_bufs, pc_num_bufs);
-	OSAL_ASSERT(total_bufs && pc_num_bufs);
+	pc_num_bufs = avail_bufs / num_pc_res;
+	OSAL_LOG_INFO("avail_bufs %u pc_num_bufs %u", avail_bufs, pc_num_bufs);
+	OSAL_ASSERT(avail_bufs && pc_num_bufs);
 
 	/*
 	 * Pass 2: use the calculated pc_num_bufs to allocate
@@ -111,7 +111,7 @@ pnso_pc_res_init(struct pc_res_init_params *pc_init,
 
 	OSAL_ASSERT(is_power_of_2(pc_init->pnso_init.block_size) &&
 		    is_power_of_2(pc_init->rmem_page_size));
-	OSAL_ASSERT(pc_init->rmem_total_pages);
+	OSAL_ASSERT(sonic_rmem_avail_pages_get());
 
 	err = cpdc_init_accelerator(pc_init, pc_res);
 	if (err == PNSO_OK) {
@@ -145,7 +145,7 @@ pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
 	OSAL_ASSERT(num_buf_vecs);
 
 	err = mpool_create(MPOOL_TYPE_RMEM_INTERM_BUF, num_buf_vecs,
-			   num_buf_vecs * pc_init->pnso_init.block_size,
+			   PNSO_NOMINAL_NUM_BUFS * pc_init->pnso_init.block_size,
 			   PNSO_MEM_ALIGN_NONE,
 			   &pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
 	if (!err)

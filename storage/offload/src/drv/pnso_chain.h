@@ -170,6 +170,8 @@ struct service_info {
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
 	struct crypto_aol *si_src_aol;	/* src input buffer converted to aol */
 	struct crypto_aol *si_dst_aol;	/* dst input buffer converted to aol */
+	enum mem_pool_type si_src_mpool_type;
+	enum mem_pool_type si_dst_mpool_type;
 
 	union {
 		struct cpdc_chain_params   si_cpdc_chain;

@@ -112,7 +112,8 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 	uint32_t total_size;
 
 	mpool->mp_config.mpc_num_allocs = 0;
-	if (mpool->mp_config.mpc_pool_size == 0)
+        total_size = mpool->mp_config.mpc_pool_size;
+	if (total_size == 0)
 		return NULL;
         
 	/*
@@ -130,19 +131,22 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 		return NULL;
 	}
 
-        total_size = mpool->mp_config.mpc_pool_size;
-	first_rmem = sonic_rmem_alloc(mpool->mp_config.mpc_page_size);
-	curr_rmem = first_rmem;
-	prev_rmem = 0;
-	while (true) {
+	first_rmem = SONIC_RMEM_ADDR_INVALID;
+	prev_rmem  = SONIC_RMEM_ADDR_INVALID;
+	while (total_size) {
+		curr_rmem = sonic_rmem_alloc(mpool->mp_config.mpc_page_size);
 		if (!sonic_rmem_addr_valid(curr_rmem)) {
-			OSAL_LOG_ERROR("failed to allocate rmem objects for pool %s",
-				       mem_pool_get_type_str(mpool->mp_config.mpc_type));
+			OSAL_LOG_ERROR("pool %s failed after %u allocs remaining size %u",
+				       mem_pool_get_type_str(mpool->mp_config.mpc_type),
+				       mpool->mp_config.mpc_num_allocs, total_size);
 			goto error;
 		}
 
 		mpool_void_ptr_check(curr_rmem);
-		if (prev_rmem && 
+		if (!sonic_rmem_addr_valid(first_rmem))
+			first_rmem = curr_rmem;
+
+		if (sonic_rmem_addr_valid(prev_rmem) && 
                     ((curr_rmem - mpool->mp_config.mpc_page_size) != prev_rmem)) {
 			OSAL_LOG_ERROR("unexpected non-contiguous alloc curr_rmem 0x%llx "
 				       "prev_rmem 0x%llx", curr_rmem, prev_rmem);
@@ -150,12 +154,9 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 			goto error;
 		}
 		mpool->mp_config.mpc_num_allocs++;
-		if (total_size <= mpool->mp_config.mpc_page_size)
-			break;
-
-                total_size -= mpool->mp_config.mpc_page_size;
 		prev_rmem = curr_rmem;
-		curr_rmem = sonic_rmem_alloc(mpool->mp_config.mpc_page_size);
+                total_size = total_size > mpool->mp_config.mpc_page_size ?
+			     total_size - mpool->mp_config.mpc_page_size : 0;
 	}
 
 	return (void *)first_rmem;
@@ -170,14 +171,14 @@ error:
 static void
 mpool_destroy_rmem_objects(struct mem_pool *mpool)
 {
-	uint64_t first_rmem;
+	uint64_t rmem;
 
 	if (mpool->mp_objects) {
 		OSAL_ASSERT(mpool->mp_config.mpc_num_allocs);
-		first_rmem = (uint64_t)mpool->mp_objects;
+		rmem = (uint64_t)mpool->mp_objects;
 		while (mpool->mp_config.mpc_num_allocs--) {
-			sonic_rmem_free(first_rmem, mpool->mp_config.mpc_page_size);
-			first_rmem += mpool->mp_config.mpc_page_size;
+			sonic_rmem_free(rmem, mpool->mp_config.mpc_page_size);
+			rmem += mpool->mp_config.mpc_page_size;
 		}
 		mpool->mp_objects = NULL;
 	}
@@ -268,22 +269,22 @@ mpool_create(enum mem_pool_type mpool_type,
 		OSAL_LOG_DEBUG("%30s[%d]: 0x%llx 0x%llx 0x%llx %u %u %u",
 			       "mpool->mp_dstack.mps_objects", i,
 			       (uint64_t) &objects[i], (uint64_t) objects[i],
-			       (uint64_t) osal_virt_to_phy(objects[i]),
+			       (uint64_t) mpool_get_object_phy_addr(mpool_type, objects[i]),
 			       object_size, mpool->mp_config.mpc_pad_size, align_size);
 		obj += (object_size + mpool->mp_config.mpc_pad_size);
 	}
 	mpool->mp_stack.mps_top = mpool->mp_config.mpc_num_objects;
 
 	*out_mpool = mpool;
-	OSAL_LOG_INFO("pool allocated. mpool_type: %d num_objects: %d object_size: %d align_size: %d pad_size: %d mpool: 0x%llx",
-		      mpool_type, num_objects, object_size,
+	OSAL_LOG_INFO("pool allocated. mpool_type: %s num_objects: %d object_size: %d align_size: %d pad_size: %d mpool: 0x%llx",
+		      mem_pool_get_type_str(mpool_type), num_objects, object_size,
 		      align_size, mpool->mp_config.mpc_pad_size, (uint64_t) mpool);
 
 	err = PNSO_OK;
 	return err;
 out:
-	OSAL_LOG_ERROR("failed to allocate pool!  mpool_type: %d num_objects: %d object_size: %d align_size: %d",
-			mpool_type, num_objects, object_size, align_size);
+	OSAL_LOG_ERROR("failed to allocate pool!  mpool_type: %s num_objects: %d object_size: %d align_size: %d",
+			mem_pool_get_type_str(mpool_type), num_objects, object_size, align_size);
 	if (mpool)
 		mpool_destroy(&mpool);
 	return err;
@@ -299,8 +300,8 @@ mpool_destroy(struct mem_pool **mpoolp)
 
 	mpool = *mpoolp;
 
-	OSAL_LOG_INFO("pool deallocated. mpc_type: %d mpc_num_objects: %d mpool: 0x%llx",
-		      mpool->mp_config.mpc_type,
+	OSAL_LOG_INFO("pool deallocated. mpc_type: %s mpc_num_objects: %d mpool: 0x%llx",
+		      mem_pool_get_type_str(mpool->mp_config.mpc_type),
 		      mpool->mp_config.mpc_num_objects, (uint64_t) mpool);
 
 	/* TODO-mpool: for graceful exit, ensure stack top is back to full */

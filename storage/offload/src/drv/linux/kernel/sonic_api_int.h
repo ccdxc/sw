@@ -13,6 +13,7 @@ sonic_rmem_addr_valid(uint64_t addr)
 }
 
 uint32_t sonic_rmem_total_pages_get(void);
+uint32_t sonic_rmem_avail_pages_get(void);
 uint32_t sonic_rmem_page_size_get(void);
 uint64_t sonic_rmem_alloc(size_t size);
 uint64_t sonic_rmem_calloc(size_t size);

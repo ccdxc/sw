@@ -15,6 +15,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
 #include "pnso_seq.h"
+#include "pnso_utils.h"
 
 static inline void
 clear_dc_header_present(uint16_t flags, struct cpdc_desc *desc)
@@ -161,6 +162,27 @@ decompress_chain(struct chain_entry *centry)
 out:
 	OSAL_LOG_DEBUG("exit!");
 	return err;
+}
+
+static pnso_error_t
+decompress_sub_chain_from_cpdc(struct service_info *svc_info,
+			       struct cpdc_chain_params *cpdc_chain)
+{
+	/*
+	 * This is supportable when there's a valid use case.
+	 */
+	return EOPNOTSUPP;
+}
+
+static pnso_error_t
+decompress_sub_chain_from_crypto(struct service_info *svc_info,
+			         struct crypto_chain_params *crypto_chain)
+{
+	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
+	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
+	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring_id,
+				   &crypto_chain->ccp_ring_spec,
+				   svc_info->si_desc, 1);
 }
 
 static pnso_error_t
@@ -322,6 +344,8 @@ decompress_teardown(const struct service_info *svc_info)
 struct service_ops dc_ops = {
 	.setup = decompress_setup,
 	.chain = decompress_chain,
+	.sub_chain_from_cpdc = decompress_sub_chain_from_cpdc,
+	.sub_chain_from_crypto = decompress_sub_chain_from_crypto,
 	.schedule = decompress_schedule,
 	.poll = decompress_poll,
 	.read_status = decompress_read_status,
