@@ -13,7 +13,7 @@ extern "C" {
 #define MAX_PAGE_ENTRIES_SHIFT_BITS	(4)	/* 16 entries per page */
 #define MAX_PAGE_ENTRIES		(1 << MAX_PAGE_ENTRIES_SHIFT_BITS)
 #define MAX_NUM_PAGES			(32)	/* 512 entries per batch */
-#define MAX_NUM_ENTRIES			(MAX_NUM_PAGES * MAX_PAGE_ENTRIES)
+#define MAX_NUM_BATCH_ENTRIES		(MAX_NUM_PAGES * MAX_PAGE_ENTRIES)
 
 #define GET_NUM_PAGES_ACTIVE(n)	\
 	((n + MAX_PAGE_ENTRIES - 1) / MAX_PAGE_ENTRIES)

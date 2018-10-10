@@ -453,7 +453,7 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 		}
 	}
 
-	if (batch_info->bi_num_entries >= MAX_NUM_ENTRIES) {
+	if (batch_info->bi_num_entries >= MAX_NUM_BATCH_ENTRIES) {
 		OSAL_LOG_DEBUG("batch limit reached! num_entries: %d err: %d",
 				batch_info->bi_num_entries, err);
 		goto out_batch;
@@ -469,7 +469,7 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 	page_entry->bpe_res = svc_res;
 	batch_info->bi_num_entries++;
 
-	// PPRINT_BATCH_INFO(batch_info);
+	PPRINT_BATCH_INFO(batch_info);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");
