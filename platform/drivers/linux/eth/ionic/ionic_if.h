@@ -1436,6 +1436,7 @@ struct modify_qp_cmd {
     u8 rsq_depth;
     u8 state;
     u8 rsvd[3];
+	u16 flags;
     u8 rsvd2[8];
 };
 
