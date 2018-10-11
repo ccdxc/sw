@@ -41,6 +41,8 @@ tunneled_ipv4_packet_common:
   phvwrpair     p.l3_metadata_ip_frag, k.l3_metadata_inner_ip_frag, \
                      p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
 
+  seq           c1, k.roce_bth_valid, TRUE
+  phvwr.c1      p.flow_lkp_metadata_lkp_sport, r0
   phvwr         p.flow_lkp_metadata_lkp_proto, k.inner_ipv4_protocol
   phvwr.e       p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
   phvwr.f       p.tunnel_metadata_tunnel_terminate, 1
@@ -63,6 +65,8 @@ tunneled_ipv6_packet_common:
   phvwr         p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
 
+  seq           c1, k.roce_bth_valid, TRUE
+  phvwr.c1      p.flow_lkp_metadata_lkp_sport, r0
   phvwr         p.flow_lkp_metadata_lkp_proto, k.l3_metadata_inner_ipv6_ulp
   phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
   phvwrpair.e   p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr, \

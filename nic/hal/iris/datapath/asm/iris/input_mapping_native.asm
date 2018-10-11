@@ -46,9 +46,11 @@ native_ipv4_packet_common:
 
   bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
 
+  seq           c1, k.roce_bth_valid, TRUE
+  cmov          r1, c1, r0, k.udp_srcPort
+  or            r1, r1, k.udp_dstPort, 16
   seq           c1, k.ipv4_protocol, IP_PROTO_UDP
-  phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
-                    p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
+  phvwr.c1      p.{flow_lkp_metadata_lkp_dport,flow_lkp_metadata_lkp_sport}, r1
   phvwr.e       p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
   phvwr.f       p.l4_metadata_tcp_data_len, r7
 
@@ -70,9 +72,11 @@ native_ipv6_packet_common:
   sub           r7, k.ipv6_payloadLen, k.tcp_dataOffset, 2
   phvwr         p.l4_metadata_tcp_data_len, r7
 
+  seq           c1, k.roce_bth_valid, TRUE
+  cmov          r1, c1, r0, k.udp_srcPort
+  or            r1, r1, k.udp_dstPort, 16
   seq           c1, k.l3_metadata_ipv6_ulp, IP_PROTO_UDP
-  phvwrpair.c1  p.flow_lkp_metadata_lkp_dport, k.udp_dstPort, \
-                    p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
+  phvwr.c1      p.{flow_lkp_metadata_lkp_dport,flow_lkp_metadata_lkp_sport}, r1
 
   phvwr         p.flow_lkp_metadata_lkp_src, k.{ipv6_srcAddr_sbit0_ebit31, \
                                                 ipv6_srcAddr_sbit32_ebit127}

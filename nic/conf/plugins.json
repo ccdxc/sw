@@ -14,6 +14,7 @@
                 "fwding-pre-stage",
                 "tunnel",
                 "qos",
+                "rdma",
                 "ingress-checks"
             ]
         },
@@ -300,6 +301,7 @@
                 "pensando.io/lb:lb",
                 "pensando.io/nat:nat",
                 "pensando.io/network:qos",
+                "pensando.io/network:rdma",
                 "pensando.io/proxy:ipsec",
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
@@ -320,6 +322,7 @@
                 "pensando.io/sfw:sfw",
                 "pensando.io/app-redir:app-redir-appid",
                 "pensando.io/network:qos",
+                "pensando.io/network:rdma",
                 "pensando.io/network:fwding-pre-stage",
                 "pensando.io/network:stage-marker",
                 "pensando.io/sfw:sfw",

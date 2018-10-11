@@ -463,6 +463,13 @@ ctx_t::update_flow(const flow_update_t& flowupd,
             LOG_FLOW_UPDATE(lkp_info);
         }
         break;
+
+    case FLOWUPD_LKP_KEY:
+        ret = flow->set_key(flowupd.key);
+        if (ret == HAL_RET_OK) {
+            LOG_FLOW_UPDATE(key);
+        }
+        break;
     }
 
     if (ret == HAL_RET_OK)  {

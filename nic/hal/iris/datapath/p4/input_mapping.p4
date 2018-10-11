@@ -26,6 +26,9 @@ action tunneled_ipv4_packet() {
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
     modify_field(l4_metadata.tcp_data_len,
                  (inner_ipv4.totalLen - ((inner_ipv4.ihl + tcp.dataOffset) * 4)));
+    if (roce_bth.valid == TRUE) {
+        modify_field(flow_lkp_metadata.lkp_sport, 0);
+    }
     set_packet_type(inner_ethernet.dstAddr);
 }
 
@@ -39,6 +42,9 @@ action tunneled_ipv6_packet() {
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
     modify_field(l4_metadata.tcp_data_len,
                  (inner_ipv6.payloadLen - (tcp.dataOffset) * 4));
+    if (roce_bth.valid == TRUE) {
+        modify_field(flow_lkp_metadata.lkp_sport, 0);
+    }
     set_packet_type(inner_ethernet.dstAddr);
 }
 
@@ -84,11 +90,14 @@ action native_ipv4_packet() {
         modify_field(flow_lkp_metadata.lkp_proto, IP_PROTO_IPSEC_ESP);
     } else {
         if (ipv4.protocol == IP_PROTO_UDP) {
-            modify_field(flow_lkp_metadata.lkp_sport, udp.srcPort);
+            if (roce_bth.valid == TRUE) {
+                modify_field(flow_lkp_metadata.lkp_sport, 0);
+            } else {
+                modify_field(flow_lkp_metadata.lkp_sport, udp.srcPort);
+            }
             modify_field(flow_lkp_metadata.lkp_dport, udp.dstPort);
         }
     }
-
     set_packet_type(ethernet.dstAddr);
 }
 
@@ -103,7 +112,11 @@ action native_ipv6_packet() {
     modify_field(l4_metadata.tcp_data_len,
                  (ipv6.payloadLen - (tcp.dataOffset) * 4));
     if (ipv6.nextHdr == IP_PROTO_UDP) {
-        modify_field(flow_lkp_metadata.lkp_sport, udp.srcPort);
+        if (roce_bth.valid == TRUE) {
+            modify_field(flow_lkp_metadata.lkp_sport, 0);
+        } else {
+            modify_field(flow_lkp_metadata.lkp_sport, udp.srcPort);
+        }
         modify_field(flow_lkp_metadata.lkp_dport, udp.dstPort);
     }
     set_packet_type(ethernet.dstAddr);
@@ -136,7 +149,7 @@ table input_mapping_tunneled {
     reads {
         entry_inactive.input_mapping : ternary;
         tunnel_metadata.tunnel_type  : ternary;
-        mpls[0].valid                : ternary;
+        roce_bth.valid               : ternary;
         ipv4.valid                   : ternary;
         ipv6.valid                   : ternary;
         inner_ipv4.valid             : ternary;
@@ -160,7 +173,7 @@ table input_mapping_native {
     reads {
         entry_inactive.input_mapping : ternary;
         tunnel_metadata.tunnel_type  : ternary;
-        mpls[0].valid                : ternary;
+        roce_bth.valid               : ternary;
         ipv4.valid                   : ternary;
         ipv6.valid                   : ternary;
         inner_ipv4.valid             : ternary;

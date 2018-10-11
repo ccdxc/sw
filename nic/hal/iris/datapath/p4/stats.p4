@@ -126,9 +126,6 @@ action drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
     modify_field(scratch_metadata.flag, inner_ipv6_options_blob.valid);
     modify_field(scratch_metadata.flag, inner_ipv6.valid);
     modify_field(scratch_metadata.flag, inner_ethernet.valid);
-    modify_field(scratch_metadata.flag, mpls[2].valid);
-    modify_field(scratch_metadata.flag, mpls[1].valid);
-    modify_field(scratch_metadata.flag, mpls[0].valid);
     modify_field(scratch_metadata.flag, vxlan.valid);
     modify_field(scratch_metadata.flag, genv.valid);
     modify_field(scratch_metadata.flag, vxlan_gpe.valid);
