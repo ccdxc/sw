@@ -152,32 +152,34 @@ message WorkloadMsg{
 
 }
 
-enum WorkloadType {
-    WORKLOAD_TYPE_NONE    = 0;
-    WORKLOAD_TYPE_VSWITCH = 1;
-    WORKLOAD_TYPE_SRIOV   = 2; 
+
+enum InterfaceType {
+    INTERFACE_TYPE_NONE  = 0;
+    INTERFACE_TYPE_VSS   = 1;
+    INTERFACE_TYPE_SRIOV = 2;
 }
 
 message Workload {
-    WorkloadType    type                    = 1;
     // Workload Identifier
-    string workload_name                    = 2;
+    string workload_name                    = 1;
 
     // Node on which this needs to be spun up
-    string node_name                        = 3;
+    string node_name                        = 2;
 
     // Data VLAN for the workload
-    uint32 encap_vlan                       = 4;
+    uint32 encap_vlan                       = 3;
 
     // IPAddress of the workload. Represent this as a CIDR block. 10.0.0.1/16 will be
     // interpreted as 10.0.0.1 is the IP of the workload container and it belongs to a /16 subnet.
-    string ip_address                       = 5;
+    string ip_address                       = 4;
 
     // MAC Address of the workload
-    string mac_address                      = 6;
+    string mac_address                      = 5;
 
     // Interface to which workload needs to be attached.
-    string interface                        = 7;
+    string interface                        = 6;
+
+    InterfaceType interface_type            = 7;
 
     // Workload Status
     IotaAPIResponse workload_status         = 8;

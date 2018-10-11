@@ -1,6 +1,9 @@
 package agent
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -14,17 +17,22 @@ import (
 const (
 	naplesSimName         = "naples-sim"
 	naplesVMBringUpScript = "naples_vm_bringup.py"
+	naplesCfgDir          = "/naples/nic/conf"
+	hntapCfgFile          = "hntap-cfg.json"
+	hntapProcessName      = "nic_infra_hntap"
 )
 
 var (
 	naplesProcessess = [...]string{"hal", "netagent", "nic_infra_hntap", "cap_model"}
+	hntapCfgTempFile = "/tmp/hntap-cfg.json"
 )
 
 type naplesNode struct {
 	iotaNode
-	simName    string
-	container  *Utils.Container
-	worloadMap map[string]workload
+	simName         string
+	container       *Utils.Container
+	worloadMap      map[string]workload
+	passThroughMode bool
 }
 
 type naplesQemuNode struct {
@@ -34,6 +42,9 @@ type naplesQemuNode struct {
 func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf string,
 	ctrlIP string, dataIntfs []string, dataIPs []string, naplesIPs []string,
 	veniceIPs []string, withQemu bool, passThroughMode bool) error {
+
+	curDir, _ := os.Getwd()
+	defer os.Chdir(curDir)
 	if err := os.Chdir(Common.DstIotaAgentDir); err != nil {
 		return err
 	}
@@ -44,7 +55,7 @@ func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf stri
 		return errors.Wrap(err, stdout)
 	}
 	naples.logger.Println("Untar successfull")
-	env := []string{"NAPLES_HOME=" + Common.DstIotaAgentDir}
+	env := []string{"NAPLES_HOME=" + Common.DstIotaAgentDir, "NAPLES_DATA_DIR=" + Common.DstIotaAgentDir}
 	cmd := []string{"sudo", "-E", "python", naplesVMBringUpScript,
 		"--data-intfs", strings.Join(dataIntfs, ",")}
 
@@ -90,11 +101,12 @@ func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf stri
 	naples.logger.Println("Naples bring script up succesfull.")
 
 	var err error
-	if naples.container, err = Utils.GetContainer(naplesSimName, "", naplesSimName); err != nil {
+	if naples.container, err = Utils.GetContainer(naplesSimName, "", naplesSimName, ""); err != nil {
 		return errors.Wrap(err, "Naples sim not running!")
 	}
 
 	naples.simName = name
+	naples.passThroughMode = passThroughMode
 	return nil
 }
 
@@ -122,6 +134,88 @@ func (naples *naplesNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 	return naples.init(in, false)
 }
 
+func (naples *naplesNode) configureWorkloadInHntap(in *iota.Workload) error {
+
+	if !naples.passThroughMode {
+		/* no configuraiton if not in pass through mode */
+		return nil
+	}
+	hntapFile := naplesCfgDir + "/" + hntapCfgFile
+
+	cpCmd := []string{"docker", "cp", naplesSimName + ":" + hntapFile, hntapCfgTempFile}
+
+	if retCode, stdout, err := Utils.Run(cpCmd, 0, false, false, nil); err != nil || retCode != 0 {
+		naples.logger.Println(stdout)
+		naples.logger.Println("Hntap copy failed")
+		return err
+	}
+
+	fmt.Println(hntapCfgTempFile)
+
+	dir, _ := os.Getwd()
+	fmt.Println(dir)
+	file, e := ioutil.ReadFile(hntapCfgTempFile)
+	if e != nil {
+		naples.logger.Error("Error in reading hntap file")
+		return errors.Wrap(e, "Error opening hntap cfg file")
+	}
+
+	var hntapData map[string]interface{}
+	var err error
+
+	err = json.Unmarshal(file, &hntapData)
+	if err != nil {
+		naples.logger.Errorf("Error in unmarshaling hntap cfg file")
+		return errors.Wrap(err, "Error in unmarshalling hntap cfg file")
+	}
+
+	if _, ok := hntapData["switch"]; !ok {
+		naples.logger.Errorf("No switch section in hntap")
+		return errors.New("Switch section not found in hntap cfg file")
+	}
+
+	switchData := hntapData["switch"].(map[string]interface{})
+	if _, ok := switchData["passthrough-mode"]; !ok {
+		naples.logger.Errorf("No passthrough section in hntap")
+		return errors.New("Passthrough mode section not found")
+	}
+
+	passThroughModeData := switchData["passthrough-mode"].(map[string]interface{})
+	if _, ok := passThroughModeData["allowed-macs"]; !ok {
+		naples.logger.Errorf("No allowed-macs section in hntap")
+		return errors.New("Allowed Macs section not found")
+	}
+
+	allowedMacs := passThroughModeData["allowed-macs"].([]interface{})
+
+	passThroughModeData["allowed-macs"] = append(allowedMacs, in.GetMacAddress())
+
+	hntapJSON, _ := json.Marshal(hntapData)
+	if err := ioutil.WriteFile(hntapCfgTempFile, hntapJSON, 0644); err != nil {
+		naples.logger.Println("Error in hntap file write")
+		return errors.New("Allowed Macs section not found")
+	}
+
+	cpCmd = []string{"docker", "cp", hntapCfgTempFile, naplesSimName + ":" + hntapFile}
+	if retCode, stdout, err := Utils.Run(cpCmd, 0, false, false, nil); err != nil || retCode != 0 {
+		naples.logger.Println(stdout)
+		naples.logger.Println("Hntap copy failed")
+		return err
+	}
+
+	noitfyHntapCmd := []string{"pkill", "-SIGUSR1", hntapProcessName}
+	if naples.container != nil {
+		if retCode, _, _, _ := naples.container.RunCommand(noitfyHntapCmd, 0, false, false); retCode != 0 {
+			naples.logger.Println("Error in sending signal to Hntap")
+			return errors.New("Error in sending hntap signal")
+		}
+	}
+
+	naples.logger.Println("Update hntap configuration for the workload")
+
+	return nil
+}
+
 // AddWorkload brings up a workload type on a given node
 func (naples *naplesNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 
@@ -141,14 +235,33 @@ func (naples *naplesNode) AddWorkload(in *iota.Workload) (*iota.Workload, error)
 	}
 	naples.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
 
-	if err := wload.AttachInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpAddress(), int(in.GetEncapVlan())); err != nil {
-		naples.logger.Errorf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
+	if in.GetEncapVlan() != 0 {
+		if err := wload.AddInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpAddress(), int(in.GetEncapVlan())); err != nil {
+			naples.logger.Errorf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
+			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
+			wload.TearDown()
+			return resp, nil
+		}
+	}
+
+	/* For SRIOV case, move the parent interface inside the workload so that it is not shared */
+	if in.GetInterfaceType() == iota.InterfaceType_INTERFACE_TYPE_SRIOV {
+		wload.MoveInterface(in.GetInterface())
+	}
+
+	naples.logger.Printf("Attaching interface to workload : %s done", in.GetWorkloadName())
+
+	if err := naples.configureWorkloadInHntap(in); err != nil {
+		naples.logger.Errorf("Error in configuring workload to hntap", err.Error())
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}
 		wload.TearDown()
 		return resp, nil
+
 	}
-	naples.logger.Printf("Attachinng interface to workload : %s done", in.GetWorkloadName())
+
 	naples.worloadMap[in.GetWorkloadName()] = wload
+
+	/* Notify Hntap of the workload */
 	resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}
 	return resp, nil
 }

@@ -407,6 +407,7 @@ func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, 
 	hResp, err := ctr.client.ContainerExecAttach(ctr.ctx, resp.ID,
 		types.ExecConfig{})
 
+	defer hResp.Close()
 	if err != nil {
 		return -1, "", "", err
 	}
@@ -433,7 +434,7 @@ func (ctr *Container) RunCommand(cmd []string, timeout uint32, background bool, 
 	return ((int32)(retCode)), b.String(), "", err
 }
 
-func bringUpAppContainer(name string, registry string) (*string, error) {
+func bringUpAppContainer(name string, registry string, mountTarget string) (*string, error) {
 	opts := types.ImagePullOptions{}
 	out, err := _DockerClient.ImagePull(_DockerCtx,
 		registry, opts)
@@ -441,7 +442,15 @@ func bringUpAppContainer(name string, registry string) (*string, error) {
 		return nil, err
 	}
 	io.Copy(os.Stdout, out)
-	os.Mkdir(os.Getenv("HOME")+"/"+name, 0644)
+
+	mountDir := ""
+	if mountTarget == "" {
+		mountDir = os.Getenv("HOME") + "/" + name
+	} else {
+		mountDir = mountTarget + "/" + name
+	}
+	os.Mkdir(mountDir, 0777)
+
 	resp, err := _DockerClient.ContainerCreate(_DockerCtx, &container.Config{
 		Image:           registry,
 		NetworkDisabled: true,
@@ -453,7 +462,7 @@ func bringUpAppContainer(name string, registry string) (*string, error) {
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeBind,
-				Source: os.Getenv("HOME") + "/" + name,
+				Source: mountDir,
 				Target: "/home/",
 			},
 		}},
@@ -474,7 +483,7 @@ func bringUpAppContainer(name string, registry string) (*string, error) {
 
 //NewContainer Create a new instance
 func NewContainer(name string,
-	registry string, containerID string) (*Container, error) {
+	registry string, containerID string, mount string) (*Container, error) {
 	_container := new(Container)
 	_container.client = _DockerClient
 	_container.ctx = _DockerCtx
@@ -485,7 +494,7 @@ func NewContainer(name string,
 		_container.ctrID = containerID
 		_container.NS.Init(false)
 	} else {
-		id, cErr := bringUpAppContainer(name, registry)
+		id, cErr := bringUpAppContainer(name, registry, mount)
 		if cErr != nil {
 			return nil, cErr
 		}

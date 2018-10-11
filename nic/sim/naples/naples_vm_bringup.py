@@ -22,7 +22,7 @@ _DOCKER_API_CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
 AGENT_PORT = 9007
 SIM_PORT =   777
-NAPLES_DATA_DIR = "/var/run/naples/"
+NAPLES_DATA_DIR = os.environ.get("NAPLES_DATA_DIR") or "/var/run/naples/"
 NAPLES_OVERLAY_CONFIG_DIR = "/home/vagrant/configs/config_vxlan_overlay"
 NAPLES_IPSEC_CONFIG_DIR = "/home/vagrant/configs/config_ipsec"
 NAPLES_TCP_PROXY_CONFIG_DIR = "/home/vagrant/configs/config_tcp_proxy"
@@ -242,7 +242,8 @@ def __setup_hntap(container_obj, args):
         hntap_cfg["switch"] = {
                                 "passthrough-mode" :
                                     {
-                                        "uplink-map": {}
+                                        "uplink-map": {},
+                                        "allowed-macs":[]
                                     }
                                }
         i = 0

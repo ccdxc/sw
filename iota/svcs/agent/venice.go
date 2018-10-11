@@ -4,11 +4,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	Common "github.com/pensando/sw/iota/svcs/common"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -36,6 +35,8 @@ func (venice *veniceNode) bringUpVenice(image string, hostname string,
 		}
 	}
 
+	curDir, _ := os.Getwd()
+	defer os.Chdir(curDir)
 	os.Chdir(Common.DstIotaAgentDir)
 	venice.logger.Println("Untar image : " + image)
 	untar := []string{"tar", "-xvzf", image}
@@ -43,16 +44,16 @@ func (venice *veniceNode) bringUpVenice(image string, hostname string,
 		return errors.Wrap(err, stdout)
 	}
 
+	setHostname := []string{"hostnamectl", "set-hostname", hostname}
+	if _, stdout, err := utils.Run(setHostname, 0, false, false, nil); err != nil {
+		venice.logger.Println("Setting hostname failed")
+		return errors.Wrap(err, stdout)
+	}
+
 	venice.logger.Println("Running Install Script : " + veniceStartScript)
 	install := []string{"./" + veniceStartScript, "--clean"}
 	if _, stdout, err := utils.Run(install, 0, false, false, nil); err != nil {
 		venice.logger.Println("Running Install Script failed : " + veniceStartScript)
-		return errors.Wrap(err, stdout)
-	}
-
-	setHostname := []string{"hostnamectl", "set-hostname", hostname}
-	if _, stdout, err := utils.Run(setHostname, 0, false, false, nil); err != nil {
-		venice.logger.Println("Setting hostname failed")
 		return errors.Wrap(err, stdout)
 	}
 

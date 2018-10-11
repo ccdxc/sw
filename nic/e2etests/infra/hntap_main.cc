@@ -55,6 +55,8 @@ extern uint16_t hntap_port;
 extern bool hntap_drop_rexmit;
 extern bool hntap_go_thru_model;
 
+const char*cfg_file = nullptr;
+HntapPassThroughSwitch *passThroughswitch = NULL;
 
 
 const unsigned char lif_mac_addr_start[]  = { 0x00, 0x02, 0x00, 0x00, 0x01, 0x01};
@@ -134,6 +136,64 @@ hntapPassThroughSwitchInit() {
     return new HntapPassThroughSwitch();
 }
 
+static void load_passthrough_config(const char*cfg_file);
+
+static void
+signalHandler( int signum ) {
+   TLOG("*************HNTAP Reloading Config begin *************\n");
+   load_passthrough_config(cfg_file);
+   TLOG("*************HNTAP Reloading Config end   *************\n");
+}
+
+static int
+str2mac(const char* mac, mac_address_t &out){
+    if( 6 == sscanf( mac, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+            &out[0], &out[1], &out[2],&out[3], &out[4], &out[5] ) ){
+        return 0;
+    }else{
+        return 1;
+    }
+}
+
+static void
+load_passthrough_config(const char*cfg_file) {
+
+    ptree pt;
+    int   ret;
+    mac_address_t allowed_mac;
+    std::list<mac_address_t> allowedMacs;
+
+    if (passThroughswitch == nullptr) {
+        TLOG("Hntap not in pass through mode, no config reload.");
+        return;
+    }
+    std::ifstream json_cfg(cfg_file);
+    read_json(json_cfg, pt);
+    boost::optional< ptree& > hswitch_cfg =  pt.get_child_optional("switch");
+    if (hswitch_cfg) {
+      ptree& hswitchCfg  = hswitch_cfg.get();
+      boost::optional< ptree& > passthrough_cfg =  hswitchCfg.get_child_optional("passthrough-mode");
+      if (passthrough_cfg) {
+          // This should be called after uplink map.
+          ptree& passthroughCfg  = passthrough_cfg.get();
+          boost::optional< ptree& > allowed_macs =  passthroughCfg.get_child_optional("allowed-macs");
+          if (allowed_macs) {
+              for (auto& allowedMac : passthroughCfg.get_child("allowed-macs")) {
+                  std::string strMac = allowedMac.second.get_value<std::string>();
+                  ret = str2mac(strMac.c_str(), allowed_mac);
+                  if (ret != 0) {
+                      TLOG("Invalid mac adddress : %s", (strMac.c_str()));
+                      assert(0);
+                  }
+                  TLOG("Read Allowed mac adddress : %s\n", (strMac.c_str()));
+                  allowedMacs.push_back(allowed_mac);
+              }
+              passThroughswitch->AddAllowedMacs(allowedMacs);
+          }
+      }
+    }
+}
+
 int main(int argv, char *argc[])
 {
   dev_handle_t* host_tap_hdl = nullptr;
@@ -143,14 +203,13 @@ int main(int argv, char *argc[])
   setlinebuf(stderr);
   dev_handle_t **dev_handles;
   ptree             pt;
-  const char*cfg_file = nullptr;
   std::string    svc_endpoint;
   char mac_addr_str[20];
   const unsigned char *mac_addr;
   HntapSwitchBase *hswitch = NULL;
-  HntapPassThroughSwitch *passThroughswitch = NULL;
   std::string hswitchOutIntf;
   std::list<std::string>peers;
+  std::list<mac_address_t> allowedMacs;
 
   grpc_init();
   if (getenv("HAL_GRPC_PORT")) {
@@ -227,6 +286,8 @@ int main(int argv, char *argc[])
               for (auto& uplinkMap :  passthroughCfg.get_child("uplink-map")) {
                   passThroughswitch->AddUplinkMap(uplinkMap.first, uplinkMap.second.data());
               }
+              // This should be called after uplink map.
+              load_passthrough_config(cfg_file);
               hswitch = passThroughswitch;
           }
       } else {
@@ -316,6 +377,8 @@ int main(int argv, char *argc[])
                   dev_handle_pairs[i][1]);
       }
   }
+
+  signal(SIGUSR1, signalHandler);
   hntap_work_loop(dev_handles, dev_handle_cnt, true, hswitch);
   return(0);
 }

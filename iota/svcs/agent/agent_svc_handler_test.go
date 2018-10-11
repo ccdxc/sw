@@ -21,7 +21,7 @@ func stubRunCmd(cmdArgs []string, timeout int, background bool, shell bool,
 }
 
 func stubGetContainer(name string,
-	registry string, containerID string) (*Utils.Container, error) {
+	registry string, containerID string, mountDir string) (*Utils.Container, error) {
 	return nil, nil
 }
 
@@ -166,6 +166,8 @@ func TestAgentService_Workload_Add_Delete(t *testing.T) {
 	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
 	workload.EncapVlan = 500
 	workload.IpAddress = "1.1.1.1/24"
+	hntapCfgTempFile = "test/hntap-cfg.json"
+	workloadDir = "/tmp"
 	workloadResp, err := agentClient.AddWorkload(context.Background(), &workload)
 	if err != nil {
 		t.Errorf("Add Workload call failed. Err: %v", err)

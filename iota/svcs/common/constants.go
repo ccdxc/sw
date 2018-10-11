@@ -25,6 +25,9 @@ const (
 
 	// DstIotaAgentDir captures the top level dir where all the agent copies happen
 	DstIotaAgentDir = "/tmp/iota"
+
+	// DstIotaWorkloadsDir has all workload related data for each workload
+	DstIotaWorkloadsDir = DstIotaAgentDir + "/workloads"
 )
 
 // incrementing constants. List all constants whose value you don't care here

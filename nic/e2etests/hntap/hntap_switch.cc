@@ -7,6 +7,7 @@
 
 #include "nic/e2etests/hntap/hntap_switch.hpp"
  #include <linux/if_packet.h>
+#include "nic/e2etests/lib/packet.hpp"
 
 #define BUF_SIZE 9126
 #define HSWITCH_SEND_PORT 12345
@@ -139,41 +140,143 @@ void* HntapSwitch::ReceiverThread(void *arg) {
    pthread_exit(NULL);
 }
 
+
+bool HntapPassThroughIntfSwitch::isAllowedMac(mac_addr_t macAddr) {
+    std::map<mac_address_t,bool>::iterator it;
+
+    mac_address_t mac;
+    for (unsigned int i = 0; i < sizeof(mac_addr_t); i++) {
+        mac[i] = macAddr[i];
+    }
+    it = allowed_macs.find(mac);
+
+    return (it != allowed_macs.end()) ? it->second : false;
+
+}
+
+static bool
+is_broadcast(mac_addr_t mac_addr) {
+
+    for (int i = 0; i < ETHER_ADDR_LEN; i++) {
+        if (mac_addr[i] != 0xff) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+union {
+        struct cmsghdr  cmsg;
+        char            buf[CMSG_SPACE(sizeof(struct tpacket_auxdata))];
+} cmsg_buf;
+
+
+#define VLAN_VALID(hdr, hv)     ((hv)->tp_vlan_tci != 0 || ((hdr)->tp_status & TP_STATUS_VLAN_VALID))
+#define VLAN_TPID(hdr, hv)     (((hv)->tp_vlan_tpid || ((hdr)->tp_status & TP_STATUS_VLAN_TPID_VALID)) ? (hv)->tp_vlan_tpid : ETH_P_8021Q)
+
+int
+read_vlan_tag(struct msghdr *msg_hdr, uint16_t *tpid, uint16_t* vlan_id) {
+   struct cmsghdr *cmsg;
+   struct tpacket_auxdata *aux;
+
+    for (cmsg = CMSG_FIRSTHDR(msg_hdr); cmsg; cmsg = CMSG_NXTHDR(msg_hdr, cmsg)) {
+            if (cmsg->cmsg_len < CMSG_LEN(sizeof(struct tpacket_auxdata)) ||
+                cmsg->cmsg_level != SOL_PACKET ||
+                cmsg->cmsg_type != PACKET_AUXDATA) {
+                    /*
+                     * This isn't a PACKET_AUXDATA auxiliary
+                     * data item.
+                     */
+                    continue;
+            }
+            aux = (struct tpacket_auxdata *)CMSG_DATA(cmsg);
+            if (!VLAN_VALID(aux, aux)) {
+                    /*
+                     * There is no VLAN information in the
+                     * auxiliary data.
+                     */
+                    continue;
+            } else {
+                 *tpid = htons(VLAN_TPID(aux, aux));
+                 *vlan_id = htons(aux->tp_vlan_tci);
+                 return 0;
+            }
+     }
+
+    return -1;
+}
+
 void* HntapPassThroughIntfSwitch::ReceiverThread(void *arg) {
    struct HntapPassThroughIntfSwitch *hswitch = (struct HntapPassThroughIntfSwitch*)arg;
-   //int numbytes;
+   int numbytes;
    uint8_t buf[BUF_SIZE];
-
+   uint8_t new_buf[BUF_SIZE];
+   uint8_t *final_buf;
+   mac_addr_t macAddr;
+   mac_addr_t smacAddr;
+   struct ether_header *eth;
    struct sockaddr_ll  address;
    uint8_t dest[ETH_ALEN] = {0x08, 0x00, 0x27, 0xbf, 0x95, 0xfd};
-
-
    struct msghdr msg;
    struct iovec iov[1];
-    address.sll_ifindex = this->if_index;
-    address.sll_halen = ETH_ALEN;
-    memcpy(address.sll_addr, dest, ETH_ALEN);
-    bzero(&msg, sizeof(struct msghdr));
-    msg.msg_iov = &iov[0];
+   uint16_t vlan_tpid, vlan_id;
+
+   address.sll_ifindex = this->if_index;
+   address.sll_halen = ETH_ALEN;
+   memcpy(address.sll_addr, dest, ETH_ALEN);
+   bzero(&msg, sizeof(struct msghdr));
+   msg.msg_iov = &iov[0];
    msg.msg_iovlen = 1;
    msg.msg_name = &address;
    msg.msg_namelen = sizeof(address);
    iov[0].iov_base=buf;
    iov[0].iov_len=BUF_SIZE;
 
-   TLOG("Starting Receiver Thread on socket...\n");
+   msg.msg_control    = &cmsg_buf;
+   msg.msg_controllen = sizeof(cmsg_buf);
+
+   TLOG("Starting Receiver Thread on socket : %d (%s) \n", this->sock,
+           this->uplink_intf.c_str());
    while(1) {
 
-       uint32_t size = recvmsg(hswitch->sock, &msg, 0);
-       if (size <= 0) {
-           continue;
+       numbytes = recvmsg(hswitch->sock, &msg, 0);
+        if (numbytes <= 0) {
+            continue;
+        }
+
+       eth = (struct ether_header*)(buf);
+       memcpy(&macAddr, eth->ether_dhost, sizeof(macAddr));
+       memcpy(&smacAddr, eth->ether_shost, sizeof(macAddr));
+       /* Make sure Smac is not one which is present in this host
+        * It could be possible as we are in promiscuous mode.
+        * Allow only broadcast and allowed macs only.
+        */
+       if (!this->isAllowedMac(smacAddr)  &&
+                   (is_broadcast(macAddr)  ||
+                       this->isAllowedMac(macAddr))) {
+
+           final_buf = buf;
+           if (read_vlan_tag(&msg, &vlan_tpid, &vlan_id) == 0) {
+               TLOG("Vlan ID read successfully :%d (%d)\n", vlan_id, vlan_tpid);
+               memcpy(new_buf, buf, sizeof(ether_header));
+               vlan_header_t *vlan_hdr =  (vlan_header_t*)(new_buf);
+               vlan_hdr->tpid = vlan_tpid;
+               vlan_hdr->vlan_tag = vlan_id;
+               vlan_hdr->etype = ((struct ether_header*)(buf))->ether_type;
+               memcpy(new_buf + sizeof(vlan_header_t),
+                       buf + sizeof(struct ether_header), numbytes - sizeof(ether_header));
+               final_buf = new_buf;
+               numbytes = numbytes + 4;
+           }
+           TLOG("Received %d bytes from : %d (%s) \n",
+               numbytes, hswitch->sock, this->uplink_intf.c_str());
+           hswitch->ProcessUplinkReceivedPacket(final_buf, numbytes);
+       } else {
+           //TLOG("Dropping Received %d bytes from : %d (%s) \n",
+           //    numbytes, hswitch->sock, this->uplink_intf.c_str());
        }
-
-       TLOG("Received %d bytes from : %s : %d\n",
-               size, this->uplink_intf.c_str(), hswitch->sock);
-       hswitch->ProcessUplinkReceivedPacket(buf, size);
    }
-
 
    pthread_exit(NULL);
 }
@@ -383,6 +486,15 @@ HntapPassThroughIntfSwitch::HntapPassThroughIntfSwitch(std::string intfName) {
 
 void HntapPassThroughIntfSwitch::ProcessUplinkReceivedPacket(const unsigned char *pkt, uint32_t len) {
 
+    struct ether_header *eth = (struct ether_header*)(pkt);
+    mac_addr_t macAddr;
+
+    memcpy(&macAddr, eth->ether_shost, sizeof(macAddr));
+    this->parent->UpdateRemoteMac(macAddr);
+
+    TLOG("Sending Pkt from Uplink to model :%d(%s) \n", this->sock,
+            this->uplink_intf.c_str());
+    dump_pkt((char *)pkt, len);
     hntap_model_send_process(this->uplink_dev, (char*)pkt, len);
 }
 
@@ -394,6 +506,7 @@ void HntapPassThroughIntfSwitch::ProcessPacketFromModelUplink(dev_handle_t *dev_
     uint8_t dest[ETH_ALEN] = {0x08, 0x00, 0x27, 0xbf, 0x95, 0xfd};
     struct msghdr msg;
     struct iovec iov[1];
+    int send_len;
 
     assert(dev_handle == this->uplink_dev);
 
@@ -408,11 +521,22 @@ void HntapPassThroughIntfSwitch::ProcessPacketFromModelUplink(dev_handle_t *dev_
     iov[0].iov_base = (void*)pkt;
     iov[0].iov_len = len;
 
+    struct sockaddr_ll sadr_ll;
+    sadr_ll.sll_ifindex = this->if_index; // index of interface
+    sadr_ll.sll_halen = 6; // length of destination mac address
+    sadr_ll.sll_addr[0] = dest[0];
+    sadr_ll.sll_addr[1] = dest[1];
+    sadr_ll.sll_addr[2] = dest[2];
+    sadr_ll.sll_addr[3] = dest[3];
+    sadr_ll.sll_addr[4] = dest[4];
+    sadr_ll.sll_addr[5] = dest[5];
 
-    TLOG("Sending Pkt from : %s %d \n", this->uplink_intf.c_str(), this->sock);
-    if (sendmsg(this->sock, &msg, 0) < 0) {
+    TLOG("Sending Pkt from model :%d(%s) \n", this->sock,
+            this->uplink_intf.c_str());
+    dump_pkt((char *)pkt, len);
+    send_len = sendto(this->sock, pkt,len, 0,(const struct sockaddr*)&sadr_ll,sizeof(struct sockaddr_ll));
+    if( send_len<0 ) {
         TLOG("sendto() error %d %d %d\n", errno, this->sock, len);
         assert(0);
     }
-
 }

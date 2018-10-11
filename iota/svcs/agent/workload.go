@@ -3,19 +3,24 @@ package agent
 import (
 	"strconv"
 
-	"github.com/pkg/errors"
-
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
+	Common "github.com/pensando/sw/iota/svcs/common"
+	"github.com/pkg/errors"
 )
 
 const (
 	workloadImage = "registry.test.pensando.io:5000/pensando/nic/e2e:2.0"
 )
 
+var (
+	workloadDir = Common.DstIotaWorkloadsDir
+)
+
 type workload interface {
 	BringUp(name string, image string) error
 	RunCommand(cmd []string, timeout uint32, background bool, shell bool) (int32, string, string, error)
-	AttachInterface(name string, macAddress string, ipaddress string, vlan int) error
+	AddInterface(name string, macAddress string, ipaddress string, vlan int) error
+	MoveInterface(name string) error
 	IsWorkloadHealthy() bool
 	TearDown()
 }
@@ -30,7 +35,7 @@ func vlanIntf(name string, vlan int) string {
 
 func (app *containerWorkload) BringUp(name string, image string) error {
 	var err error
-	app.containerHandle, err = Utils.NewContainer(name, image, "")
+	app.containerHandle, err = Utils.NewContainer(name, image, "", workloadDir)
 	return err
 }
 
@@ -38,7 +43,22 @@ func (app *containerWorkload) AddVlanInterface(parentIntf string, parentMacAddre
 	return "", nil
 }
 
-func (app *containerWorkload) AttachInterface(name string, macAddress string, ipaddress string, vlan int) error {
+func (app *containerWorkload) MoveInterface(name string) error {
+
+	ifconfigCmd := []string{"ifconfig", name, "up"}
+	if retCode, stdout, _ := Utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
+		return errors.Errorf("Could not bring up parent interface %s : %s", name, stdout)
+	}
+
+	if err := app.containerHandle.AttachInterface(name); err != nil {
+		return errors.Wrap(err, "Interface attach failed")
+	}
+
+	return nil
+
+}
+
+func (app *containerWorkload) AddInterface(name string, macAddress string, ipaddress string, vlan int) error {
 
 	ifconfigCmd := []string{"ifconfig", name, "up"}
 	if retCode, stdout, _ := Utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {

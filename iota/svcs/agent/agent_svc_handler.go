@@ -36,6 +36,7 @@ func (agent *Service) init() {
 	}
 	agent.logger.Out = io.MultiWriter(file, os.Stdout)
 
+	os.Mkdir(common.DstIotaWorkloadsDir, 0644)
 	agent.logger.Println("Agent initialized...")
 }
 

@@ -17,10 +17,10 @@ import (
 )
 
 var (
-	nodeFile, iotaSvcIP                 string
-	iotaSvcPort                         int
-	perosanlity, nodeName, workloadName string
-	add, delete                         bool
+	nodeFile, iotaSvcIP                          string
+	iotaSvcPort                                  int
+	perosanlity, nodeName, workloadName, cfgFile string
+	add, delete                                  bool
 )
 
 //newIotaAgentClient returns instance of new app agent client.
@@ -257,6 +257,24 @@ var workloadCmd = &cobra.Command{
 	},
 }
 
+var configCmd = &cobra.Command{
+	Use:   "config",
+	Short: "Push configuration",
+	RunE: func(cmd *cobra.Command, args []string) error {
+
+		cfg := GetAgentConfig(cfgFile)
+
+		if cfg == nil {
+			return errors.New("Could not read configuraiton")
+		}
+
+		ConfigureNaples(cfg)
+
+		fmt.Println("Configured naples")
+		return nil
+	},
+}
+
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "iota-agent-client",
@@ -272,6 +290,7 @@ func Execute() {
 	RootCmd.AddCommand(personalityCmd)
 	RootCmd.AddCommand(healthCmd)
 	RootCmd.AddCommand(workloadCmd)
+	RootCmd.AddCommand(configCmd)
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -299,4 +318,6 @@ func init() {
 	workloadCmd.Flags().BoolVarP(&delete, "delete", "d", false, "Delete workload")
 	workloadCmd.Flags().StringVarP(&iotaSvcIP, "iota-ip", "i", "localhost", "Iota Svc IP")
 	workloadCmd.Flags().IntVarP(&iotaSvcPort, "iota-port", "p", Globals.IotaAgentPort, "Iota agent port")
+
+	configCmd.Flags().StringVarP(&cfgFile, "cfgfile", "", "", "Cfg file to push")
 }
