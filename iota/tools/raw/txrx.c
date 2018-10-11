@@ -1,6 +1,7 @@
 #include "common.h"
+#include <assert.h>
 
-static int gl_test_duration;
+static int gl_test_duration = 10;
 
 int
 add_new_packet (int index, const uint8_t *pkt, uint32_t len)
@@ -23,16 +24,61 @@ read_data_file ()
     const uint8_t       *packet;   
     int                 pkt_index = 0;
     pcap_t              *handler = NULL;
+    int                 count = 0;
     
     handler = pcap_open_offline(glopts.pcapfile, errbuff);
 
     while (pcap_next_ex(handler, &header, &packet) >= 0) {
-        LOG_DEBUG("Packet # %i", pkt_index);
-        LOG_DEBUG("Packet size: %d bytes", header->len);
+        LOG_INFO("Packet # %i", pkt_index);
+        LOG_INFO("Packet size: %d bytes", header->len);
         add_new_packet(pkt_index, packet, header->len);
+#if 0
+        count = send(glinfo.fd, packet, header->len, 0);
+        if (count != header->len) {
+            perror("Failed to send packet");
+            printf("Failed to send packet: count: %d, header_len: %d\n",
+                   count, header->len);
+        }
+#endif
         pkt_index++;
     }
 }
+
+int
+init_iovec ()
+{
+    bzero(&glinfo.iovecs, sizeof(glinfo.iovecs));
+
+    for (int i = 0; i < glinfo.num_pkts; i++) {
+        glinfo.iovecs[i].iov_base = glinfo.pktinfo[i].pkt;
+        glinfo.iovecs[i].iov_len = glinfo.pktinfo[i].len;
+    }
+
+    return 0;
+}
+
+int
+init_mmsg ()
+{
+    bzero(&glinfo.mmsgs, sizeof(glinfo.mmsgs));
+    init_iovec();    
+
+    for (int i = 0; i < glinfo.num_pkts; i++) {
+        struct mmsghdr *msg = &glinfo.mmsgs[i];
+
+        msg->msg_hdr.msg_iov = &(glinfo.iovecs[i]);
+        msg->msg_hdr.msg_iovlen = 1;
+        msg->msg_hdr.msg_name = &glinfo.address;
+        msg->msg_hdr.msg_namelen = sizeof(glinfo.address);
+        msg->msg_hdr.msg_control = NULL;
+        msg->msg_hdr.msg_controllen = 0;
+        msg->msg_hdr.msg_flags = 0;
+    }
+
+    return 0;
+}
+
+
 
 int
 init_destination_address ()
@@ -53,33 +99,6 @@ prepare_message ()
 }
 
 int
-init_sender_iovecs ()
-{
-    int i = 0;
-    int pktindex = 0;
-
-    if (glinfo.num_pkts < MAX_NUM_PKTS) {
-        // If we have less than 1K packets, fill the remaining iovecs,
-        // with same packets.
-        LOG_DEBUG("NumPkts:%d < MaxPkts:%d", glinfo.num_pkts, MAX_NUM_PKTS);
-        for (i = glinfo.num_pkts; i < MAX_NUM_PKTS; i++) {
-            glinfo.pktinfo[i].len = glinfo.pktinfo[pktindex].len;
-            memcpy(glinfo.pktinfo[i].pkt, glinfo.pktinfo[pktindex].pkt,
-                   MAX_PKT_SIZE);
-            pktindex = (pktindex + 1) % glinfo.num_pkts;
-        }
-        glinfo.num_pkts = MAX_NUM_PKTS;
-        LOG_DEBUG("Updating NumPkts to %d", glinfo.num_pkts);
-    }
-
-    for (i = 0; i < MAX_NUM_PKTS; i++) {
-        glinfo.iovecs[i].iov_len = glinfo.pktinfo[i].len;
-    }
-
-    return 0;
-}
-
-int
 is_timeout ()
 {
     clock_gettime(CLOCK_REALTIME, &glinfo.end_tspec);
@@ -96,28 +115,23 @@ start_sender ()
 {
     read_data_file();
     prepare_message();
-    init_sender_iovecs();
+    init_mmsg();
 
-    while (1) {
-        for (int i = 0; i < MAX_NUM_PKTS / NUM_PKTS_PER_SEND; i++) {
-            int count = sendmmsg(glinfo.fd, 
-                                 glinfo.mmsgs + i * NUM_PKTS_PER_SEND,
-                                 NUM_PKTS_PER_SEND, 0);
-            if (count < 0) {
-                perror("sendmmsg");
-                exit(1);
-            }
-            LOG_DEBUG("%d Packets sent successfully.", NUM_PKTS_PER_SEND);
+    for (int i = 0; i < glinfo.num_pkts; i++) {
+        int count = sendmmsg(glinfo.fd, glinfo.mmsgs, glinfo.num_pkts, 0);
+        if (count < 0) {
+            perror("sendmmsg");
+            exit(1);
         }
-        
-        glinfo.total_pkts += MAX_NUM_PKTS;
-        glinfo.total_bytes += (MAX_NUM_PKTS * glinfo.pktinfo[0].len); 
-
-        if (is_timeout()) {
-            return 0;
-        }
+        LOG_INFO("%d Packets sent successfully.", NUM_PKTS_PER_SEND);
     }
+    
+    glinfo.total_pkts += MAX_NUM_PKTS;
+    glinfo.total_bytes += (MAX_NUM_PKTS * glinfo.pktinfo[0].len); 
 
+    if (is_timeout()) {
+        return 0;
+    }
     return 0;
 }
 
@@ -159,10 +173,10 @@ start_receiver ()
             exit(1);
         }
 
-        LOG_DEBUG("Received %d packets.", count);
+        LOG_INFO("Received %d packets.", count);
         //print_raw_buffer(buffer, count);
         for (int i = 0; i < count; i++) {
-            LOG_DEBUG(" - Packet#%d: Length:%d", i, glinfo.mmsgs[i].msg_len);
+            LOG_INFO(" - Packet#%d: Length:%d", i, glinfo.mmsgs[i].msg_len);
             glinfo.total_bytes += glinfo.mmsgs[i].msg_len;
 
             glinfo.mmsgs[i].msg_hdr.msg_flags = 0;
@@ -209,7 +223,7 @@ start_tests ()
         LOG_ERROR("Sender or Receiver not specified.");
     }
 
-    print_stats();
+    //print_stats();
 
     return 0;
 }
@@ -220,7 +234,7 @@ main (int argc, char *argv[])
 {
     int                 ret = 0;
     
-    gl_test_duration = atoi(getenv("TEST_DURATION"));
+    //gl_test_duration = atoi(getenv("TEST_DURATION"));
 
     parse_args(argc, argv);
     

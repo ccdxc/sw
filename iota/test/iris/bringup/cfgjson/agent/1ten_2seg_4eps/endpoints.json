@@ -33,7 +33,7 @@
         "spec": {
           "network-name": "nw0",
           "interface-type": "lif",
-          "interface": "lif100",
+          "interface": "lif101",
           "ipv4-address": "177.75.132.101/32",
           "mac-address": "7a:19:12:b5:b3:d2",
           "useg-vlan": 1002

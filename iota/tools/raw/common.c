@@ -83,39 +83,6 @@ error_exit:
 }
 
 int
-init_iovec ()
-{
-    bzero(&glinfo.iovecs, sizeof(glinfo.iovecs));
-
-    for (int i = 0; i < MAX_NUM_PKTS; i++) {
-        glinfo.iovecs[i].iov_base = glinfo.pktinfo[i].pkt;
-        glinfo.iovecs[i].iov_len = MAX_PKT_SIZE;
-    }
-
-    return 0;
-}
-
-int
-init_mmsg ()
-{
-    bzero(&glinfo.mmsgs, sizeof(glinfo.mmsgs));
-    
-    for (int i = 0; i < MAX_NUM_PKTS; i++) {
-        struct mmsghdr *msg = &glinfo.mmsgs[i];
-
-        msg->msg_hdr.msg_iov = &(glinfo.iovecs[i]);
-        msg->msg_hdr.msg_iovlen = 1;
-        msg->msg_hdr.msg_name = &glinfo.address;
-        msg->msg_hdr.msg_namelen = sizeof(glinfo.address);
-        msg->msg_hdr.msg_control = NULL;
-        msg->msg_hdr.msg_controllen = 0;
-        msg->msg_hdr.msg_flags = 0;
-    }
-
-    return 0;
-}
-
-int
 init_glinfo ()
 {
     struct ifreq    req;
@@ -125,7 +92,7 @@ init_glinfo ()
 
     bzero(&glinfo, sizeof(glinfo));
     
-    glinfo.loglevel = LOG_LEVEL_ERROR;
+    glinfo.loglevel = LOG_LEVEL_INFO;
     if (glopts.loglevel != LOG_LEVEL_NONE) {
         glinfo.loglevel = glopts.loglevel;
     }
@@ -211,9 +178,6 @@ init_glinfo ()
             exit(1);
         }
     }
-
-    init_iovec();
-    init_mmsg();
 
     return 0;
 }
