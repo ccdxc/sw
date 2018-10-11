@@ -418,7 +418,55 @@ asic_port_cfg (uint32_t port_num,
 }
 
 //------------------------------------------------------------------------------
-// ASIC read-write thread's forever loop to server read and write requests from
+// logger init for asic rw
+//------------------------------------------------------------------------------
+hal::utils::log *
+asic_rw_logger_init (void)
+{
+    std::string         logfile;
+    char                *logdir;
+    struct stat         st = { 0 };
+    hal::utils::log     *asic_rw_logger;
+
+    logdir = std::getenv("HAL_LOG_DIR");
+    if (!logdir) {
+        // log in the current dir
+        logfile = std::string("./asicrw.log");
+    } else {
+        // check if this log dir exists
+        if (stat(logdir, &st) == -1) {
+            // doesn't exist, try to create
+            if (mkdir(logdir, 0755) < 0) {
+                fprintf(stderr,
+                        "Log directory %s/ doesn't exist, failed to create one\n",
+                        logdir);
+                return NULL;
+            }
+        } else {
+            // log dir exists, check if we have write permissions
+            if (access(logdir, W_OK) < 0) {
+                // don't have permissions to create this directory
+                fprintf(stderr,
+                        "No permissions to create log file in %s\n",
+                        logdir);
+                return NULL;
+            }
+        }
+        logfile = logdir + std::string("/asicrw.log");
+    }
+
+    asic_rw_logger =
+        hal::utils::log::factory("asicrw", 0x1, hal::utils::log_mode_sync,
+                                 false, logfile.c_str(),
+                                 hal::utils::trace_debug,
+                                 hal::utils::log_none);
+    HAL_ASSERT(asic_rw_logger != NULL);
+
+    return asic_rw_logger;
+}
+
+//------------------------------------------------------------------------------
+// asic read-write thread's forever loop to server read and write requests from
 // other HAL threads
 //------------------------------------------------------------------------------
 static void
@@ -430,7 +478,9 @@ asic_rw_loop (void *ctxt)
     pal_ret_t           rv        = PAL_RET_OK;
     asic_rw_entry_t     *rw_entry = NULL;
     sdk::lib::thread    *curr_thread = (sdk::lib::thread *)ctxt;
+    hal::utils::log     *asic_rw_logger;
 
+    asic_rw_logger = asic_rw_logger_init();
     while (TRUE) {
         work_done = false;
         for (qid = 0; qid < HAL_THREAD_ID_MAX; qid++) {
@@ -442,6 +492,14 @@ asic_rw_loop (void *ctxt)
             // found a read/write request to serve
             cindx = g_asic_rw_workq[qid].cindx;
             rw_entry = &g_asic_rw_workq[qid].entries[cindx];
+
+            asic_rw_logger->logger()->debug("[{}:{}] qid : {}, opn : {}, "
+                                            "addr : {:#x}, len : {}",
+                                            __func__, __LINE__, qid,
+                                            rw_entry->opn, rw_entry->addr,
+                                            rw_entry->len);
+            asic_rw_logger->flush();
+
             switch (rw_entry->opn) {
             case HAL_ASIC_RW_OPERATION_MEM_READ:
                 rv = sdk::lib::pal_mem_read(rw_entry->addr, rw_entry->data,

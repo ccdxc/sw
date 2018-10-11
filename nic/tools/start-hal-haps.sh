@@ -6,13 +6,13 @@ export NIC_DIR=`dirname $ABS_TOOLS_DIR`
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export HAL_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/../platform/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
-export HAL_LOG_FILE='/hal.log'
+export HAL_LOG_FILE='/hal.stdout'
 export FWD_MODE="$1"
 export PLATFORM="$2"
 export DISABLE_AGING=1
 
 # Remove logs
-rm -f /hal.log*
+rm -f /hal.log* $HAL_LOG_FILE
 
 ulimit -c unlimited
 
@@ -33,7 +33,7 @@ echo "HAL WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
 
 while [ 1 ]
 do
-    OUTPUT="$(tail $HAL_LOG_FILE 2>&1 | grep "gRPC server listening on")"
+    OUTPUT="$(cat /hal.log 2>&1 | grep "gRPC server listening on")"
     if [[ ! -z "$OUTPUT" ]]; then
         break
     fi
