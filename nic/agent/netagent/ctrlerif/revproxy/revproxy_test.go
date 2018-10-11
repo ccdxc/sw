@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -36,6 +37,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("Could not start Rev Proxy Server. Error: %v", err)
 	}
+	time.Sleep(2 * time.Second)
 
 	testCode := m.Run()
 	defer srv1.httpServer.Shutdown(nil)
