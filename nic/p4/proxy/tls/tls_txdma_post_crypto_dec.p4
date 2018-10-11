@@ -324,9 +324,6 @@ action tls_bsq_consume(TLSCB_0_PARAMS_NON_STG0) {
     /* To Stage 5 fields */
     GENERATE_TO_S5_K
 
-    /* D vector */
-    GENERATE_TLSCB_0_D_NON_STG0
-
 }
 
 /* Stage 5 table 3 action */

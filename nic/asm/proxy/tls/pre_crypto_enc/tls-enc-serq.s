@@ -38,10 +38,15 @@ tls_enc_pre_crypto_process:
     sll         r2, r1, CAPRI_BSQ_RING_SLOT_SIZE_SHFT
     add         r1, r2, d.{u.read_tls_stg0_d.recq_base}.wx
 
+    tblmincri       d.u.read_tls_stg0_d.recq_pi, CAPRI_BSQ_RING_SLOTS_SHIFT ,1
+
+    add         r6, r0, d.{u.read_tls_stg0_d.ci_0}.hx
+    sll         r6, r6, NIC_SERQ_ENTRY_SIZE_SHIFT
+
+    tblmincri.f   d.{u.read_tls_stg0_d.ci_0}.hx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+
     /* Setting up DMA command due to accessibility to recq_[base, pi] information */
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_bsq_slot_dma_cmd, r1, bsq_slot_desc, bsq_slot_desc)
-
-    tblmincri       d.u.read_tls_stg0_d.recq_pi, CAPRI_BSQ_RING_SLOTS_SHIFT ,1
 
     /* Dst too far apart for phvwrpair */
     phvwr       p.tls_global_phv_debug_dol, d.u.read_tls_stg0_d.debug_dol
@@ -63,11 +68,6 @@ tls_enc_pre_crypto_process:
                 p.tls_global_phv_qstate_addr,                       \
                     k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}[31:0]
 
-    add         r6, r0, d.{u.read_tls_stg0_d.ci_0}.hx
-    sll         r6, r6, NIC_SERQ_ENTRY_SIZE_SHIFT
-
-    tblmincri.f   d.{u.read_tls_stg0_d.ci_0}.hx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
-
     seq         c4, d.{u.read_tls_stg0_d.ci_0}.hx, d.{u.read_tls_stg0_d.pi_0}.hx
     bcf         [!c4], tls_enc_pre_crypto_process_skip_serq_dbell
     nop
@@ -88,13 +88,6 @@ tls_enc_pre_crypto_process_skip_serq_dbell:
     phvwr       p.to_s1_serq_ci, d.{u.read_tls_stg0_d.ci_0}.hx
     phvwr       p.to_s1_serq_prod_ci_addr, d.u.read_tls_stg0_d.serq_prod_ci_addr
 
-#if 0
-    /* TODO: The TCP CB does not support the SERQ CI shadow yet */
-    /* Update TCP-CB SERQ Shadow CI */
-    tblmincri   d.u.read_tls_stg0_d.sw_serq_ci, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
-    memwr.h     d.u.read_tls_stg0_d.serq_prod_ci_addr, d.u.read_tls_stg0_d.sw_serq_ci
-#endif
-	
     add         r3, r6, d.u.read_tls_stg0_d.serq_base
 
 table_read_DESC:

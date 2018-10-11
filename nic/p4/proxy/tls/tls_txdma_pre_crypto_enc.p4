@@ -412,9 +412,6 @@ action tls_serq_consume(TLSCB_0_PARAMS_NON_STG0) {
     /* To Stage 3 fields */
     modify_field(to_s3_scratch.serq_ci, to_s3.serq_ci);
 
-    /* D vector */
-    GENERATE_TLSCB_0_D_NON_STG0
-
 }
 
 /*

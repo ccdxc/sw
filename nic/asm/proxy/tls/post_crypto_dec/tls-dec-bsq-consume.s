@@ -17,8 +17,7 @@
         
 struct tx_table_s5_t0_k k                  ;
 struct phv_ p	;
-struct tx_table_s5_t0_tls_bsq_consume_d d;
-	
+
 %%
 	.param      tls_dec_post_read_odesc
         

@@ -51,7 +51,7 @@ tls_dec_post_read_odesc:
     bcf         [c1 & !c2], tls_dec_queue_l7q
     nop
 
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_queue_sesq_process,
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_queue_sesq_process,
                            k.tls_global_phv_qstate_addr,
                        	   TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
 

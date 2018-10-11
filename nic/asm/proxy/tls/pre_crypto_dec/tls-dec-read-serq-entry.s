@@ -75,7 +75,7 @@ tls_dec_pkt_descriptor_process:
     sub         r1, r1, TLS_AES_GCM_AUTH_TAG_SIZE
     phvwr       p.barco_desc_auth_tag_addr, r1.dx
 
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_rx_serq_process,
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_rx_serq_process,
                                  k.tls_global_phv_qstate_addr, TLS_TCB_CONFIG,
                                  TABLE_SIZE_512_BITS)
 
@@ -110,7 +110,7 @@ tls_dec_pkt_descriptor_ccm_process:
     sub         r1, r1, TLS_AES_GCM_AUTH_TAG_SIZE
     phvwr       p.barco_desc_auth_tag_addr, r1.dx
 
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_rx_serq_process,
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_rx_serq_process,
                                  k.tls_global_phv_qstate_addr, TLS_TCB_CONFIG,
                                  TABLE_SIZE_512_BITS)
     nop.e

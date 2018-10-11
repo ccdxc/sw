@@ -33,9 +33,7 @@ tls_enc_rx_serq_process:
 
 
 table_read_serq_consume:
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_enc_serq_consume_process,
-                                 k.tls_global_phv_qstate_addr, TLS_TCB_OFFSET,
-                                 TABLE_SIZE_512_BITS)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tls_enc_serq_consume_process)
         
 tls_rx_serq_process_enc_done:
         nop.e

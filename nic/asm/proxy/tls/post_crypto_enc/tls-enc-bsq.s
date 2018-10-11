@@ -41,6 +41,10 @@ tls_enc_post_crypto_process:
     phvwr       p.tls_global_phv_sesq_pi, d.u.read_tls_stg0_d.sw_sesq_pi
     tblmincri   d.u.read_tls_stg0_d.sw_sesq_pi, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
 
+    /* Increment CI in stage 0 */
+    tbladd.f    d.{u.read_tls_stg0_d.ci_1}.hx, 1
+
+
     phvwr       p.tls_global_phv_debug_dol, d.u.read_tls_stg0_d.debug_dol
 
     /*
@@ -57,9 +61,6 @@ tls_enc_post_crypto_process:
     phvwrpair   p.tls_global_phv_qstate_addr,               \
                     k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}[31:0], \
                 p.tls_global_phv_fid, k.p4_txdma_intr_qid[15:0]
-
-    /* Increment CI in stage 0 */
-    tbladd.f    d.{u.read_tls_stg0_d.ci_1}.hx, 1
 
     /*
      * Check if pi == ci, in which case we need to ring the BSQ doorbell later.

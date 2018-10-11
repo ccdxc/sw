@@ -38,7 +38,7 @@ tls_enc_read_serq_entry_process:
     addi    r2, r2, PKT_DESC_AOL_OFFSET
 
 table_read_rx_serq_enc: 
-	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_rx_serq_process,
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_enc_rx_serq_process,
 	                    k.tls_global_phv_qstate_addr, TLS_TCB_CONFIG,
                         TABLE_SIZE_512_BITS)
 

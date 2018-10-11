@@ -49,7 +49,7 @@ table_read_QUEUE_BRQ:
      * and use as 'PIDX_SET' instead of using the 'PIDX_INC' auto-increment feature
      * of the doorbell, for better performance.
      */
-    tbladd.f    d.{u.tls_bld_brq5_d.sw_bsq_pi}.hx, 1
+    tbladd      d.{u.tls_bld_brq5_d.sw_bsq_pi}.hx, 1
     add         r6, r0, d.{u.tls_bld_brq5_d.sw_bsq_pi}.hx
     CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, r6)
     phvwrpair   p.barco_desc_doorbell_address, r4.dx,   \
@@ -64,7 +64,7 @@ table_read_QUEUE_BRQ:
     nop
         
     phvwr       p.s4_s6_t0_phv_aad_seq_num, d.u.tls_bld_brq5_d.sequence_no
-    tbladd      d.u.tls_bld_brq5_d.sequence_no, 1
+    tbladd.f    d.u.tls_bld_brq5_d.sequence_no, 1
 
     add         r2, r0, k.{to_s5_idesc}
     addi        r1, r0, NTLS_AAD_SIZE
@@ -109,7 +109,7 @@ tls_dec_bld_barco_req_ccm_process:
     /* FIXME: Misnomer, this is actually the sequence number */
     phvwrpair   p.ccm_header_with_aad_B_1_aad_size, r1, \
                 p.ccm_header_with_aad_B_1_aad_seq_num, d.u.tls_bld_brq5_d.sequence_no
-    tbladd      d.u.tls_bld_brq5_d.sequence_no, 1
+    tbladd.f    d.u.tls_bld_brq5_d.sequence_no, 1
 
 
     // PHV is already zeroed out

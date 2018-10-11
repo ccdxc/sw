@@ -35,9 +35,7 @@ tls_dec_read_desc_process:
     phvwri.c1    p.tls_global_phv_flags_barco_op_failed, 1
 
 table_read_bsq_consume:
-	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_bsq_consume_process,
-                          k.tls_global_phv_qstate_addr,
-	                      TLS_TCB_OFFSET, TABLE_SIZE_512_BITS)
+	CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tls_dec_bsq_consume_process)
 
 tls_read_desc_process_done:
 	nop.e

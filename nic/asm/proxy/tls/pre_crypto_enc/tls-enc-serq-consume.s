@@ -18,7 +18,6 @@
         
 struct tx_table_s3_t0_k k                  ;
 struct phv_ p	;
-struct tx_table_s3_t0_d d;
 	
 %%
 	.param      tls_enc_bld_barco_req_process
