@@ -5,25 +5,31 @@
 
 .SH NAME
 .PP
-penctl \- Pensando CLIs
+penctl\-core\-get \- Get a core from Naples
 
 
 .SH SYNOPSIS
 .PP
-\fBpenctl [flags]\fP
+\fBpenctl core get [flags]\fP
 
 
 .SH DESCRIPTION
 .ti 0
 \l'\n(.lu'
 
-.SH Pensando Management CLIs
+.SH Get a Core From Naples
 
 .SH OPTIONS
 .PP
 \fB\-h\fP, \fB\-\-help\fP[=false]
-    help for penctl
+    help for get
 
+.PP
+\fB\-p\fP, \fB\-\-path\fP=""
+    Path to copy files to
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
 .PP
 \fB\-j\fP, \fB\-\-json\fP[=false]
     display in json format
@@ -43,4 +49,4 @@ penctl \- Pensando CLIs
 
 .SH SEE ALSO
 .PP
-\fBpenctl\-core(3)\fP, \fBpenctl\-events(3)\fP, \fBpenctl\-logs(3)\fP, \fBpenctl\-metrics(3)\fP, \fBpenctl\-mode(3)\fP, \fBpenctl\-ssh(3)\fP
+\fBpenctl\-core(3)\fP

@@ -21,6 +21,8 @@ const (
 	ConfigURL = "/api/v1/naples/"
 	// MonitoringURL in URL to fetch logs and other diags from nic in classic mode
 	MonitoringURL = "/monitoring/v1/naples/"
+	// CoresURL in URL to fetch cores from nic in classic mode
+	CoresURL = "/cores/v1/naples/"
 
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped

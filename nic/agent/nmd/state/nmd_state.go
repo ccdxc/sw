@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -271,8 +273,11 @@ func (n *NMD) StartRestServer() error {
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
 	t2.HandleFunc("/api/{*}", unknownAction)
 
+	router.Methods("DELETE").Subrouter().HandleFunc(CoresURL+"{*}", httputils.MakeHTTPHandler(n.NaplesCoreDeleteHandler))
+
 	router.PathPrefix(MonitoringURL + "logs/").Handler(http.StripPrefix(MonitoringURL+"logs/", http.FileServer(http.Dir(globals.LogDir))))
 	router.PathPrefix(MonitoringURL + "events/").Handler(http.StripPrefix(MonitoringURL+"events/", http.FileServer(http.Dir(globals.EventsDir))))
+	router.PathPrefix(CoresURL).Handler(http.StripPrefix(CoresURL, http.FileServer(http.Dir(globals.CoresDir))))
 
 	// create listener
 	listener, err := net.Listen("tcp", n.listenURL)
@@ -393,4 +398,16 @@ func (n *NMD) RegisterROCtrlClient(rollout RolloutCtrlAPI) error {
 	n.rollout = rollout
 
 	return nil
+}
+
+// NaplesCoreDeleteHandler is the REST handler for Naples delete core file operation
+func (n *NMD) NaplesCoreDeleteHandler(r *http.Request) (interface{}, error) {
+	resp := NaplesConfigResp{}
+	file := globals.CoresDir + strings.TrimPrefix(r.URL.Path, CoresURL)
+	err := os.Remove(file)
+	if err != nil {
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+	return resp, nil
 }

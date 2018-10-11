@@ -63,8 +63,11 @@ const (
 	// Log direcory
 	LogDir = "/var/log/pensando"
 
-	// Events directoty
+	// Events directory
 	EventsDir = "/var/lib/pensando/events"
+
+	// Cores directory
+	CoresDir = "/var/cores/"
 
 	//Reverse Proxy Router Port
 	RevProxyPort = "8888"

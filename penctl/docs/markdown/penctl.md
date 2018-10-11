@@ -22,6 +22,7 @@ Pensando CLIs
 ```
 
 ### SEE ALSO
+* [penctl core](penctl_core.md)	 - Cores on Naples
 * [penctl events](penctl_events.md)	 - Show events from Naples
 * [penctl logs](penctl_logs.md)	 - Show logs from Naples
 * [penctl metrics](penctl_metrics.md)	 - Show metrics from Naples
