@@ -360,6 +360,13 @@ def __bringup_naples_container(args):
                                                environment=NAPLES_ENV,
                                                ports=NAPLES_PORT_MAPS,
                                                volumes=NAPLES_VOLUME_MOUNTS)
+    __setup_ns_for_container(naples_obj)
+    print "Setting control network for  %s " % (NAPLES_IMAGE)
+
+    __setup_control_network(naples_obj, args)
+    print "Setting control network   : %s  success" % (NAPLES_IMAGE)
+
+
     print "Wating for naples sim to be up"
     time.sleep(5)
     __wait_for_naples_sim_to_be_up()
@@ -369,10 +376,6 @@ def __bringup_naples_container(args):
     print "Nic container bring up was successfull"
 
 
-    __setup_ns_for_container(naples_obj)
-    print "Setting control network for  %s " % (NAPLES_IMAGE)
-    __setup_control_network(naples_obj, args)
-    print "Setting control network   : %s  success" % (NAPLES_IMAGE)
     print "Setting uplink data network for  %s " % (NAPLES_IMAGE)
     __setup_data_network(naples_obj, args)
     print "Setting uplink data network  : %s  success" % (NAPLES_IMAGE)

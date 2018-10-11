@@ -82,8 +82,8 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	tbMsg.User = "vm"
 	tbMsg.Passwd = "vm"
 
-	tbMsg.NaplesImage = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/obj/images/naples-release-v1.tgz", os.Getenv("GOPATH"))
-	tbMsg.VeniceImage = fmt.Sprintf("%s/src/github.com/pensando/sw/bin/venice.tgz", os.Getenv("GOPATH"))
+	//tbMsg.NaplesImage = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/obj/images/naples-release-v1.tgz", os.Getenv("GOPATH"))
+	//tbMsg.VeniceImage = fmt.Sprintf("%s/src/github.com/pensando/sw/bin/venice.tgz", os.Getenv("GOPATH"))
 
 	resp, err := topoClient.InitTestBed(context.Background(), &tbMsg)
 	if resp == nil || err != nil {
@@ -186,7 +186,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 					ControlIntf: "eth1",
 					ControlIp:   "42.42.42.4",
 					DataIntfs:   []string{"eth2"},
-					VeniceIps:   []string{"42.42.42.1", "142.42.42.2", "42.42.42.3"},
+					VeniceIps: []string{"42.42.42.1", "42.42.42.2", "42.42.42.3"},
 				},
 			},
 		}, {
@@ -199,7 +199,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 					ControlIntf: "eth1",
 					ControlIp:   "42.42.42.5",
 					DataIntfs:   []string{"eth2"},
-					VeniceIps:   []string{"42.42.42.1", "142.42.42.2", "42.42.42.3"},
+					VeniceIps: []string{"42.42.42.1", "42.42.42.2", "42.42.42.3"},
 				},
 			},
 		},
@@ -213,7 +213,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 					ControlIntf: "eth1",
 					ControlIp:   "42.42.42.6",
 					DataIntfs:   []string{"eth2"},
-					VeniceIps:   []string{"42.42.42.1", "142.42.42.2", "42.42.42.3"},
+					VeniceIps: []string{"42.42.42.1", "42.42.42.2", "42.42.42.3"},
 				},
 			},
 		},
@@ -224,7 +224,7 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 	_, err = topoClient.AddNodes(context.Background(), &nodeMsg)
 	if err != nil {
 		t.Errorf("AddNodes call failed. Err: %v", err)
-		t.FailNow()
+		//t.FailNow()
 	}
 
 	clusterObj := `{

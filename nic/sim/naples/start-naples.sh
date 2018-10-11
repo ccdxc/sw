@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "Bringing up NAPLES services/processes ..."
+set -x
 
 export VER=v1
 export NIC_DIR=/naples/nic
@@ -15,6 +16,7 @@ unset MODEL_ZMQ_TYPE_TCP
 export ZMQ_SOC_DIR=$NIC_DIR
 export DISABLE_AGING=1
 export CMD_RESOLVER_PORT=9009
+export CMD_GRPC_UNAUTH_PORT=9002
 export NPM_RPC_PORT=9005
 
 if [ -z "$WITH_QEMU" ]; then
@@ -34,9 +36,11 @@ else
     RESOLVER_URLS="-resolver-urls "
     for IP in "${array[@]}"
     do
-        RESOLVER_URLS=$RESOLVER_URLS"$IP":$CMD_RESOLVER_PORT,
+        export CMD_URL="$IP"
+        break
+#        RESOLVER_URLS="$RESOLVER_URLS$IP:$CMD_RESOLVER_PORT "
     done
-    RESOLVER_URLS="${RESOLVER_URLS::-1}"
+#    RESOLVER_URLS="${RESOLVER_URLS::-1}"
     MANAGED_MODE="-mode managed"
 fi
 
@@ -179,8 +183,10 @@ else
 fi
 
 echo "Starting netagent ..."
-"$NIC_DIR"/bin/netagent -hostif lo -logtofile $LOG_DIR/agent.log $RESOLVER_URLS $NPM_URL $MANAGED_MODE -datapath hal &
+"$NIC_DIR"/bin/netagent -hostif eth1 -logtofile $LOG_DIR/agent.log -resolver-urls "$CMD_URL":"$CMD_RESOLVER_PORT" $NPM_URL $MANAGED_MODE -datapath hal -disabletsa &
 
+echo "Starting nmd ..."
+"$NIC_DIR"/bin/nmd  -cmdregistration "$CMD_URL":"$CMD_GRPC_UNAUTH_PORT" -cmdupdates "$CMD_URL":"$CMD_RESOLVER_PORT" -cmdcerts "$CMD_URL":"$CMD_RESOLVER_PORT" -hostif eth1 -hostname $(hostname) --log-to-file $LOG_DIR/nmd.log -resolver "$CMD_URL":"$CMD_RESOLVER_PORT" -mode managed &
 echo "NAPLES services/processes up and running ..."
 
 # keep the container running
