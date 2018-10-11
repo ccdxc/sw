@@ -75,7 +75,6 @@ hash_setup(struct service_info *svc_info,
 	flags = pnso_hash_desc->flags;
 	per_block = svc_is_dflag_pblock_enabled(flags);
 
-	pc_res = svc_info->si_pc_res;
 	hash_desc = cpdc_get_desc_ex(svc_info, per_block);
 	if (!hash_desc) {
 		err = ENOMEM;
@@ -86,6 +85,7 @@ hash_setup(struct service_info *svc_info,
 
 	/* TODO: needed for p4+ sequencer, avoid using for entire block  */
 	// if (per_block) {
+		pc_res = svc_info->si_pc_res;
 		sgl = cpdc_get_sgl(pc_res, per_block);
 		if (!sgl) {
 			err = ENOMEM;
@@ -307,7 +307,6 @@ hash_poll(const struct service_info *svc_info)
 		// osal_yield();
 	}
 #endif
-
 
 	OSAL_LOG_DEBUG("exit!");
 	return PNSO_OK;

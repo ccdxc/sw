@@ -76,8 +76,7 @@ chksum_setup(struct service_info *svc_info,
 	flags = pnso_chksum_desc->flags;
 	per_block = svc_is_chksum_per_block_enabled(flags);
 
-	pc_res = svc_info->si_pc_res;
-	chksum_desc = cpdc_get_desc(pc_res, per_block);
+	chksum_desc = cpdc_get_desc_ex(svc_info, per_block);
 	if (!chksum_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain chksum desc from pool err: %d!",
@@ -85,6 +84,7 @@ chksum_setup(struct service_info *svc_info,
 		goto out;
 	}
 
+	pc_res = svc_info->si_pc_res;
 	sgl = cpdc_get_sgl(pc_res, per_block);
 	if (!sgl) {
 		err = ENOMEM;
@@ -104,7 +104,8 @@ chksum_setup(struct service_info *svc_info,
 	if (per_block) {
 		num_tags =
 			cpdc_fill_per_block_desc(pnso_chksum_desc->algo_type,
-					svc_info->si_block_size, svc_info->si_src_blist.len,
+					svc_info->si_block_size,
+					svc_info->si_src_blist.len,
 					svc_params->sp_src_blist, sgl,
 					chksum_desc, status_desc,
 					fill_chksum_desc);
@@ -116,8 +117,9 @@ chksum_setup(struct service_info *svc_info,
 			goto out_status_desc;
 		}
 
-		fill_chksum_desc(pnso_chksum_desc->algo_type, svc_info->si_src_blist.len,
-				false, svc_info->si_src_sgl.sgl,
+		fill_chksum_desc(pnso_chksum_desc->algo_type,
+				svc_info->si_src_blist.len, false,
+				svc_info->si_src_sgl.sgl,
 				chksum_desc, status_desc);
 		num_tags = 1;
 	}
@@ -129,19 +131,30 @@ chksum_setup(struct service_info *svc_info,
 	svc_info->si_num_tags = num_tags;
 	svc_info->si_p4_sgl = sgl;
 
-	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
-			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
-		if (num_tags) {
-			svc_info->si_seq_info.sqi_batch_mode = true;
-			svc_info->si_seq_info.sqi_batch_size = num_tags;
-		}
-		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
-				chksum_desc, sizeof(*chksum_desc));
-		if (!svc_info->si_seq_info.sqi_desc) {
-			err = EINVAL;
-			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
+	if (cpdc_is_service_in_batch(svc_info->si_flags)) {
+		err = cpdc_setup_batch_desc(svc_info, chksum_desc);
+		if (err) {
+			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
 					err);
 			goto out_status_desc;
+		}
+	} else {
+		if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+				(svc_info->si_flags &
+				 CHAIN_SFLAG_FIRST_SERVICE)) {
+			if (num_tags > 1) {
+				svc_info->si_seq_info.sqi_batch_mode = true;
+				svc_info->si_seq_info.sqi_batch_size = num_tags;
+			}
+			svc_info->si_seq_info.sqi_desc =
+				seq_setup_desc(svc_info,
+				chksum_desc, sizeof(*chksum_desc));
+			if (!svc_info->si_seq_info.sqi_desc) {
+				err = EINVAL;
+				OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
+						err);
+				goto out_status_desc;
+			}
 		}
 	}
 
@@ -164,7 +177,7 @@ out_sgl_desc:
 		OSAL_ASSERT(0);
 	}
 out_chksum_desc:
-	err = cpdc_put_desc(pc_res, per_block, chksum_desc);
+	err = cpdc_put_desc_ex(svc_info, per_block, chksum_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return chksum desc to pool! err: %d",
 				err);
@@ -351,6 +364,7 @@ chksum_read_status_buffer(const struct service_info *svc_info)
 		goto out;
 
 	svc_status->u.chksum.num_tags = svc_info->si_num_tags;
+
 	OSAL_LOG_DEBUG("exit! status verification success!");
 	return err;
 
@@ -565,7 +579,7 @@ chksum_teardown(struct service_info *svc_info)
 	}
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = cpdc_put_desc(pc_res, per_block, chksum_desc);
+	err = cpdc_put_desc_ex(svc_info, per_block, chksum_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return chksum desc to pool! err: %d",
 				err);

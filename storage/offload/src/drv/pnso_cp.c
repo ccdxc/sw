@@ -102,7 +102,6 @@ compress_setup(struct service_info *svc_info,
 	flags = pnso_cp_desc->flags;
 	threshold_len = pnso_cp_desc->threshold_len;
 
-	pc_res = svc_info->si_pc_res;
 	cp_desc = cpdc_get_desc_ex(svc_info, false);
 	if (!cp_desc) {
 		err = ENOMEM;
@@ -110,6 +109,7 @@ compress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
+	pc_res = svc_info->si_pc_res;
 	status_desc = cpdc_get_status_desc(pc_res, false);
 	if (!status_desc) {
 		err = ENOMEM;
@@ -125,8 +125,9 @@ compress_setup(struct service_info *svc_info,
 		goto out_status_desc;
 	}
 
-	fill_cp_desc(cp_desc, svc_info->si_src_sgl.sgl, svc_info->si_dst_sgl.sgl,
-			status_desc, svc_info->si_src_blist.len, threshold_len);
+	fill_cp_desc(cp_desc, svc_info->si_src_sgl.sgl,
+			svc_info->si_dst_sgl.sgl, status_desc,
+			svc_info->si_src_blist.len, threshold_len);
 	clear_insert_header(flags, cp_desc);
 	pad_buffer_with_zeroes(flags, svc_params->sp_src_blist);
 
@@ -270,7 +271,7 @@ compress_schedule(const struct service_info *svc_info)
 	const struct sequencer_info *seq_info;
 	bool ring_db;
 
-	OSAL_LOG_DEBUG("enter ... ");
+	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
 

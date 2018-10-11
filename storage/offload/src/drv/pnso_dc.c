@@ -70,14 +70,14 @@ decompress_setup(struct service_info *svc_info,
 		svc_params->u.sp_dc_desc;
 	flags = pnso_dc_desc->flags;
 
-	pc_res = svc_info->si_pc_res;
-	dc_desc = cpdc_get_desc(pc_res, false);
+	dc_desc = cpdc_get_desc_ex(svc_info, false);
 	if (!dc_desc) {
 		err = ENOMEM;
 		OSAL_LOG_ERROR("cannot obtain dc desc from pool! err: %d", err);
 		goto out;
 	}
 
+	pc_res = svc_info->si_pc_res;
 	status_desc = cpdc_get_status_desc(pc_res, false);
 	if (!status_desc) {
 		err = ENOMEM;
@@ -105,15 +105,26 @@ decompress_setup(struct service_info *svc_info,
 	svc_info->si_desc = dc_desc;
 	svc_info->si_status_desc = status_desc;
 
-	if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
-			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)) {
-		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
-				dc_desc, sizeof(*dc_desc));
-		if (!svc_info->si_seq_info.sqi_desc) {
-			err = EINVAL;
-			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
+	if (cpdc_is_service_in_batch(svc_info->si_flags)) {
+		err = cpdc_setup_batch_desc(svc_info, dc_desc);
+		if (err) {
+			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
 					err);
 			goto out_status_desc;
+		}
+	} else {
+		if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+				(svc_info->si_flags &
+				 CHAIN_SFLAG_FIRST_SERVICE)) {
+			svc_info->si_seq_info.sqi_desc =
+				seq_setup_desc(svc_info,
+					dc_desc, sizeof(*dc_desc));
+			if (!svc_info->si_seq_info.sqi_desc) {
+				err = EINVAL;
+				OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
+						err);
+				goto out_status_desc;
+			}
 		}
 	}
 
@@ -129,7 +140,7 @@ out_status_desc:
 		OSAL_ASSERT(0);
 	}
 out_dc_desc:
-	err = cpdc_put_desc(pc_res, false, dc_desc);
+	err = cpdc_put_desc_ex(svc_info, false, dc_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return dc desc to pool! err: %d",
 				err);
@@ -265,7 +276,7 @@ decompress_read_status(const struct service_info *svc_info)
 	return err;
 
 out:
-	OSAL_LOG_ERROR("exit! err:%d", err);
+	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 
@@ -348,7 +359,7 @@ decompress_teardown(struct service_info *svc_info)
 	}
 
 	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
-	err = cpdc_put_desc(pc_res, false, dc_desc);
+	err = cpdc_put_desc_ex(svc_info, false, dc_desc);
 	if (err) {
 		OSAL_LOG_ERROR("failed to return dc desc to pool! dc_desc: %p err: %d",
 				dc_desc, err);
