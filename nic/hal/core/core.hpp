@@ -34,6 +34,7 @@ sdk::lib::thread *hal_thread_create(const char *name, uint32_t thread_id,
 sdk::lib::thread *hal_get_current_thread(void);
 sdk::lib::thread *hal_get_thread(uint32_t thread_id);
 hal_ret_t hal_thread_add(sdk::lib::thread *hal_thread);
+int hal_thread_priority(sdk::lib::thread_role_t role);
 hal_ret_t hal_wait(void);
 hal_ret_t hal_thread_destroy(void);
 

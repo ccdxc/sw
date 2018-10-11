@@ -11,7 +11,6 @@ namespace pt = boost::property_tree;
 namespace sdk {
 namespace platform {
 
-
 sdk_ret_t
 capri::capri_hbm_parse (const char *hbm_mem_json_file)
 {

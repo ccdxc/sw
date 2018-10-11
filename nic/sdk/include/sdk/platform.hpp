@@ -7,9 +7,19 @@
 #ifndef __SDK_PLATFORM_HPP__
 #define __SDK_PLATFORM_HPP__
 
+#define SDK_INVALID_HBM_ADDRESS    ((uint64_t) 0xFFFFFFFFFFFFFFFF)
+
 #define CACHE_LINE_SIZE                       64
 #define CACHE_LINE_SIZE_SHIFT                  6
 #define CACHE_LINE_SIZE_MASK                   (CACHE_LINE_SIZE - 1)
 
-#endif    // __SDK_BASE_HPP__
+namespace sdk {
+namespace platform {
+
+typedef uint64_t    hbm_addr_t;
+
+}    // namespace platform
+}    // namespace sdk
+
+#endif    // __SDK_PLATFORM_HPP__
 

@@ -5,10 +5,7 @@
 //------------------------------------------------------------------------------
 
 syntax = "proto3";
-
 import "types.proto";
-import "port.proto";
-
 package event;
 option go_package="halproto";
 

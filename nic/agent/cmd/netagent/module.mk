@@ -4,6 +4,5 @@ MODULE_TARGET   := netagent.gobin
 MODULE_PREREQS  := agent_halproto.submake
 MODULE_PIPELINE := iris
 MODULE_FLAGS    := -ldflags="-s -w"
-MODULE_DEPS     := $(wildcard ${MODULE_SRC_DIR}/*.go) \
-                   $(wildcard ${NICDIR}/agent/netagent/datapath/halproto/*.go)
+MODULE_DEPS     := $(shell find ${NICDIR}/agent/ -name '*.go')
 include ${MKDEFS}/post.mk

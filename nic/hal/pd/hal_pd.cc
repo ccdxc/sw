@@ -602,7 +602,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
                           sdk::lib::THREAD_ROLE_CONTROL,
                           0x0,    // use all control cores
                           hal::pd::asic_rw_start,
-                          sched_get_priority_max(SCHED_RR),
+                          hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL),
                           gl_super_user ? SCHED_RR : SCHED_OTHER,
                           hal_cfg);
     HAL_ABORT(hal_thread != NULL);

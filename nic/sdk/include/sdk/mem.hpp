@@ -18,6 +18,7 @@ enum {
     SDK_MEM_ALLOC_LIB_SLAB,
     SDK_MEM_ALLOC_LIB_THREAD,
     SDK_MEM_ALLOC_LIB_TWHEEL,
+    SDK_MEM_ALLOC_LIB_PLATFORM,
 };
 
 static inline void *

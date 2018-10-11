@@ -79,4 +79,4 @@ build
 third-party/gflags/include
 third-party/gflags/x86_64
 model.json
-ldd.json
+mpu_prog_info.json

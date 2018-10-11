@@ -176,6 +176,34 @@ hal_thread_add (sdk::lib::thread *hal_thread)
 }
 
 //------------------------------------------------------------------------------
+// compute the thread's scheduling policy & priority, given its role
+// TODO: should we just use SCHED_OTHER for all control threads and return
+//       default priority ? asic-rw can bump it up a bit after calling this API
+//------------------------------------------------------------------------------
+int
+hal_thread_priority (sdk::lib::thread_role_t role)
+{
+    int    prio, sched_policy;
+
+    if (role == sdk::lib::THREAD_ROLE_DATA) {
+        sched_policy = gl_super_user ? SCHED_FIFO : SCHED_OTHER;
+    } else {
+        sched_policy = gl_super_user ? SCHED_RR : SCHED_OTHER;
+    }
+    if (gl_super_user) {
+        if (sched_policy == SCHED_FIFO) {
+            prio = sched_get_priority_max(SCHED_FIFO);
+        } else if (sched_policy == SCHED_RR) {
+            prio = sched_get_priority_max(SCHED_RR);
+        }
+    } else {
+        // all threads run with SCHED_OTHER policy
+        prio = sched_get_priority_max(SCHED_OTHER);
+    }
+    return prio;
+}
+
+//------------------------------------------------------------------------------
 // wrapper API to create HAL threads
 //------------------------------------------------------------------------------
 sdk::lib::thread *
@@ -233,22 +261,18 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
     }
 
     // switch to real-time scheduling
+    sched_param.sched_priority =
+        hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL);
     if (gl_super_user) {
         HAL_TRACE_DEBUG("Switching to real-time scheduling");
-        sched_param.sched_priority = sched_get_priority_max(SCHED_RR);
         rv = sched_setscheduler(0, SCHED_RR, &sched_param);
-        if (rv != 0) {
-            HAL_TRACE_ERR("sched_setscheduler failure, err : {}", rv);
-            return HAL_RET_ERR;
-        }
     } else {
         HAL_TRACE_DEBUG("Switching to real-time scheduling");
-        sched_param.sched_priority = sched_get_priority_max(SCHED_OTHER);
         rv = sched_setscheduler(0, SCHED_OTHER, &sched_param);
-        if (rv != 0) {
-            HAL_TRACE_ERR("sched_setscheduler failure, err : {}", rv);
-            return HAL_RET_ERR;
-        }
+    }
+    if (rv != 0) {
+        HAL_TRACE_ERR("sched_setscheduler failure, err : {}", rv);
+        return HAL_RET_ERR;
     }
 
     // create a placeholder thread object for this main thread
@@ -275,8 +299,7 @@ hal_ret_t
 hal_thread_init (hal_cfg_t *hal_cfg)
 {
     uint32_t            i, tid;
-    int                 rt_thread_prio, rt_sched_policy;
-    int                 thread_prio, sched_policy;
+    int                 sched_policy, rt_sched_policy;
     char                thread_name[16];
     uint64_t            data_cores_mask = hal_cfg->data_cores_mask;
     uint64_t            cores_mask = 0x0;
@@ -284,11 +307,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
 
     // spawn data core threads and pin them to their cores
     rt_sched_policy = gl_super_user ? SCHED_FIFO : SCHED_OTHER;
-    rt_thread_prio = sched_get_priority_max(rt_sched_policy);
-    assert(rt_thread_prio >= 0);
     sched_policy = gl_super_user ? SCHED_RR : SCHED_OTHER;
-    thread_prio = sched_get_priority_max(sched_policy);
-    assert(thread_prio >= 0);
 
     if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
         for (i = 0; i < hal_cfg->num_data_threads; i++) {
@@ -302,7 +321,8 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                 hal_thread_create(static_cast<const char *>(thread_name),
                                   tid, sdk::lib::THREAD_ROLE_DATA,
                                   cores_mask, fte_pkt_loop_start,
-                                  rt_thread_prio, rt_sched_policy,
+                                  hal_thread_priority(sdk::lib::THREAD_ROLE_DATA),
+                                  rt_sched_policy,
                                   hal_cfg);
             HAL_ABORT(hal_thread != NULL);
             data_cores_mask = data_cores_mask & (data_cores_mask-1);
@@ -316,7 +336,8 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                           sdk::lib::THREAD_ROLE_CONTROL,
                           0x0,    // use all control cores
                           periodic_thread_start,
-                          thread_prio, sched_policy,
+                          hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL),
+                          sched_policy,
                           NULL);
     HAL_ABORT(hal_thread != NULL);
     hal_thread->start(hal_thread);
@@ -382,7 +403,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
     std::ifstream json_cfg(cfg_file.c_str());
     read_json(json_cfg, pt);
     try {
-    std::string mode = pt.get<std::string>("mode");
+        std::string mode = pt.get<std::string>("mode");
         if (mode == "sim") {
             hal_cfg->platform_mode = HAL_PLATFORM_MODE_SIM;
         } else if (mode == "hw") {
