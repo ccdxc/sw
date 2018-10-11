@@ -15,8 +15,8 @@ warmd:
     image: build-38
     count: 2
     resources:
-      cpus: 4
-      memory: 8
+      cpus: 8
+      memory: 16
       pvt-networks:
             - data
             - control
