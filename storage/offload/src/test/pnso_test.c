@@ -1025,7 +1025,10 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 			break;
 		case PNSO_SVC_TYPE_ENCRYPT:
 		case PNSO_SVC_TYPE_DECRYPT:
-			/* TODO: iv_data_len */
+			if (svc->u.crypto.iv_data) {
+				req_ctx->svc_req.svc[i].u.crypto_desc.iv_addr =
+					osal_virt_to_phy(svc->u.crypto.iv_data);
+			}
 			break;
 		default:
 			break;
@@ -1041,6 +1044,12 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 		struct test_svc *svc = (struct test_svc *) node;
 		struct pnso_service_status *svc_status = &req_ctx->svc_res.svc[i];
 		svc_status->svc_type = svc->svc.svc_type; /* TODO: needed? */
+		if (svc->svc.svc_type == PNSO_SVC_TYPE_ENCRYPT ||
+		    svc->svc.svc_type == PNSO_SVC_TYPE_DECRYPT) {
+			/* TODO: remove hack */
+			svc_status->u.dst.data_len = input_len;
+		}
+
 		if (svc->output_path[0]) {
 			if (svc->svc.svc_type == PNSO_SVC_TYPE_HASH ||
 			    svc->svc.svc_type == PNSO_SVC_TYPE_CHKSUM) {
@@ -1208,11 +1217,13 @@ static void aggregate_testcase_stats(struct testcase_stats *ts1,
 		ts1->agg_stats.avg_latency = ts1->agg_stats.total_latency /
 				ts1->io_stats[1].batches;
 	}
-#if 1
-	ns = ts1->agg_stats.total_latency;
-#else
-	ns = elapsed_time;
-#endif
+
+	if (ts1->agg_stats.total_latency &&
+	    ts1->agg_stats.total_latency < elapsed_time) {
+		ns = ts1->agg_stats.total_latency;
+	} else {
+		ns = elapsed_time;
+	}
 	ts1->agg_stats.in_bytes_per_sec = calculate_bytes_per_sec(
 		       ts1->io_stats[0].bytes, ns);
 	ts1->agg_stats.out_bytes_per_sec = calculate_bytes_per_sec(
@@ -1880,15 +1891,15 @@ static pnso_error_t start_worker_threads(struct testcase_context *ctx)
 	return err;
 }
 
-static bool need_rate_limit(struct testcase_context *ctx)
+static bool need_rate_limit(struct testcase_context *ctx, uint64_t elapsed_time)
 {
 	uint64_t in_rate, out_rate;
 
 	if (ctx->desc->limit_rate == 0)
 		return false;
 
-	in_rate = calculate_bytes_per_sec(ctx->stats.io_stats[0].bytes, ctx->stats.elapsed_time);
-	out_rate = calculate_bytes_per_sec(ctx->stats.io_stats[1].bytes, ctx->stats.elapsed_time);
+	in_rate = calculate_bytes_per_sec(ctx->stats.io_stats[0].bytes, elapsed_time);
+	out_rate = calculate_bytes_per_sec(ctx->stats.io_stats[1].bytes, elapsed_time);
 
 	return (in_rate > ctx->desc->limit_rate || out_rate > ctx->desc->limit_rate);
 }
@@ -1911,6 +1922,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	uint64_t last_active_ts = 0;
 	uint64_t cur_ts;
 	uint64_t idle_time = 0;
+	uint64_t elapsed_time = 0;
 	uint64_t rate_limit_loop_count = 0;
 	uint64_t max_idle_time = 0;
 	uint64_t loop_count = 0;
@@ -1941,7 +1953,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	/* Submit batches to each worker thread in turn, until done */
 	worker_id = 0;
 	last_active_ts = osal_get_clock_nsec();
-	ctx->start_time = osal_get_clock_nsec();
+	ctx->start_time = last_active_ts;
 	next_status_time = desc->status_interval;
 	PNSO_LOG_DEBUG("DEBUG: entering testcase while loop\n");
 	while (req_completion_count < testcase->repeat) {
@@ -1966,20 +1978,20 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		if ((batch_ctx = worker_queue_dequeue(worker_ctx->complete_q))) {
 			PNSO_LOG_DEBUG("DEBUG: batch completed, batch_count %llu\n",
 				(unsigned long long) batch_completion_count+1);
+			last_active_ts = osal_get_clock_nsec();
 			batch_ctx_p2v(batch_ctx);
 			/* process finished batch, and restore to freelist */
 			run_batch_validation(batch_ctx);
 			calculate_completion_stats(batch_ctx);
 			aggregate_testcase_stats(&ctx->stats, &batch_ctx->stats,
-					osal_get_clock_nsec() - ctx->start_time);
+					last_active_ts - ctx->start_time);
 			worker_queue_enqueue(ctx->batch_ctx_freelist, batch_ctx);
-			last_active_ts = osal_get_clock_nsec();
 			batch_completion_count++;
 			req_completion_count += testcase->batch_depth;
 		} else if (osal_atomic_read(&g_shutdown) ||
 			   (req_submit_count >= testcase->repeat)) {
 			/* No more requests to submit */
-		} else if (need_rate_limit(ctx)) {
+		} else if (need_rate_limit(ctx, elapsed_time)) {
 			/* skip idle timeout during active rate limiting */
 //			last_active_ts = osal_get_clock_nsec();
 			rate_limit_loop_count++;
@@ -2008,7 +2020,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			cur_ts = osal_get_clock_nsec();
 
 			/* Update elapsed_time */
-			ctx->stats.elapsed_time = cur_ts - ctx->start_time;
+			elapsed_time = cur_ts - ctx->start_time;
 
 			/* Break out if nothing's happening */
 			idle_time = cur_ts - last_active_ts;
@@ -2023,7 +2035,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 
 			/* Check whether it's time to output stats */
 			if (desc->status_interval) {
-				if ((ctx->stats.elapsed_time / OSAL_NSEC_PER_SEC) > next_status_time) {
+				if ((elapsed_time / OSAL_NSEC_PER_SEC) > next_status_time) {
 					pnso_test_stats_to_yaml(testcase,
 						(uint64_t*) (&ctx->stats),
 						testcase_stats_names,
@@ -2042,19 +2054,19 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	PNSO_LOG_DEBUG("DEBUG: exiting testcase while loop\n");
 
 	/* Final tally for stats */
-	ctx->stats.elapsed_time = osal_get_clock_nsec() - ctx->start_time;
+	elapsed_time = osal_get_clock_nsec() - ctx->start_time;
 	pnso_test_stats_to_yaml(testcase,
 				(uint64_t*) (&ctx->stats),
 				testcase_stats_names,
 				TESTCASE_STATS_COUNT,
 				true);
 
-	PNSO_LOG_INFO("Testcase %u %s: status %d, elapsed_time %llu, "
+	PNSO_LOG_INFO("Testcase %u %s: status %d, elapsed_time %llums, "
 		       "req_submit_count %llu, max_idle_time_ns %llu, "
 		       "batch_submit_count %llu, batch_completion_count %llu, "
 		       "rate_limit_loops %llu\n",
 		       testcase->node.idx, testcase->name, err,
-		       (unsigned long long) (ctx->stats.elapsed_time /
+		       (unsigned long long) (elapsed_time /
 					     OSAL_NSEC_PER_MSEC),
 		       (unsigned long long) req_submit_count,
 		       (unsigned long long) max_idle_time,

@@ -1088,7 +1088,8 @@ static pnso_error_t test_set_crypto_iv_data(struct test_desc *root,
 
 	/* Parse hex data */
 	len = (strlen(val)/2) + 1;
-	svc->u.crypto.iv_data = (uint8_t*) TEST_ALLOC(len);
+	/* TODO: reduce alignment to 64 once aligned alloc works */
+	svc->u.crypto.iv_data = (uint8_t*) TEST_ALLOC_ALIGNED(4096, len);
 	err = parse_hex(val, svc->u.crypto.iv_data, &len);
 	if (err != PNSO_OK) {
 		PNSO_LOG_ERROR("Invalid hex data for crypto iv_data\n");

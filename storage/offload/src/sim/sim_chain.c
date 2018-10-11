@@ -662,6 +662,7 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 				     void *opaque)
 {
 	pnso_error_t rc = PNSO_OK;
+	uint8_t *iv_data;
 	uint8_t *key1, *key2;
 	uint32_t key_size;
 
@@ -683,10 +684,11 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 			rc = PNSO_ERR_CRYPTO_WRONG_KEY_TYPE;
 			break;
 		}
+		iv_data = (uint8_t *)
+			osal_phy_to_virt(ctx->cmd.u.crypto_desc.iv_addr);
 #ifdef OPENSSL
 		rc = algo_openssl_encrypt_xts(ctx->sess->scratch.cmd,
-				key1, key2, key_size,
-				(uint8_t *) ctx->cmd.u.crypto_desc.iv_addr,
+				key1, key2, key_size, iv_data,
 				(uint8_t *) ctx->input.buf,
 				ctx->input.len,
 				(uint8_t *) ctx->output.buf,
@@ -694,8 +696,7 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 #else
 		/* In-place encryption */
 		rc = algo_encrypt_aes_xts(ctx->sess->scratch.cmd,
-				key1, key2, key_size,
-				(uint8_t *) ctx->cmd.u.crypto_desc.iv_addr,
+				key1, key2, key_size, iv_data,
 				(uint8_t *) ctx->input.buf, ctx->input.len);
 		if (rc == PNSO_OK) {
 			ctx->output = ctx->input;
@@ -720,6 +721,7 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 				     void *opaque)
 {
 	pnso_error_t rc = PNSO_OK;
+	uint8_t *iv_data;
 	uint8_t *key1, *key2;
 	uint32_t key_size;
 
@@ -741,10 +743,11 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 			rc = PNSO_ERR_CRYPTO_WRONG_KEY_TYPE;
 			break;
 		}
+		iv_data = (uint8_t *)
+			osal_phy_to_virt(ctx->cmd.u.crypto_desc.iv_addr);
 #ifdef OPENSSL
 		rc = algo_openssl_decrypt_xts(ctx->sess->scratch.cmd,
-				key1, key2, key_size,
-				(uint8_t *) ctx->cmd.u.crypto_desc.iv_addr,
+				key1, key2, key_size, iv_data,
 				(uint8_t *) ctx->input.buf,
 				ctx->input.len,
 				(uint8_t *) ctx->output.buf,
@@ -752,8 +755,7 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 #else
 		/* In-place decryption */
 		rc = algo_decrypt_aes_xts(ctx->sess->scratch.cmd,
-				key1, key2, key_size,
-				(uint8_t *) ctx->cmd.u.crypto_desc.iv_addr,
+				key1, key2, key_size, iv_data,
 				(uint8_t *) ctx->input.buf, ctx->input.len);
 		if (rc == PNSO_OK) {
 			ctx->output = ctx->input;
