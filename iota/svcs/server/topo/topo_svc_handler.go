@@ -200,6 +200,8 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 		}
 	}
 
+	log.Infof("TOPO SVC | DEBUG | STATE | %v", ts.Nodes)
+
 	// Add workloads
 	addWorkloads := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)

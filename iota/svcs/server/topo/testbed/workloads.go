@@ -11,6 +11,7 @@ import (
 // AddWorkload adds a workload on the node
 func (n *TestNode) AddWorkload() error {
 	for _, w := range n.Workloads {
+		log.Infof("TOPO SVC | DEBUG | STATE | WORKLOAD: %v", w)
 		resp, err := n.AgentClient.AddWorkload(context.Background(), w)
 		log.Infof("TOPO SVC | DEBUG | AddWorkload Agent . Received Response Msg: %v", resp)
 
