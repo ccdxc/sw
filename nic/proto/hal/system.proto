@@ -273,19 +273,24 @@ message FTEFeatureStats {
   repeated FTEError        drop_reason  = 3;
 } 
 
+// per FTE Stats
+message FTEStatsInfo {
+  uint64                   conn_per_second   = 1;
+  uint64                   flow_miss_pkts    = 2;
+  uint64                   redir_pkts        = 3;
+  uint64                   cflow_pkts        = 4;
+  uint64                   tcp_close_pkts    = 5;
+  uint64                   tls_proxy_pkts    = 6;
+  uint64                   softq_reqs        = 7;
+  uint64                   queued_tx_pkts    = 8;
+  repeated FTEError        fte_errors        = 9;
+  repeated FTEFeatureStats feature_stats     = 10;
+}
+
 // FTE Global Stats
 message FTEStats {
   types.ApiStatus          api_status        = 1;
-  uint64                   conn_per_second   = 2;
-  uint64                   flow_miss_pkts    = 3;
-  uint64                   redir_pkts        = 4;
-  uint64                   cflow_pkts        = 5;
-  uint64                   tcp_close_pkts    = 6;
-  uint64                   tls_proxy_pkts    = 7;
-  uint64                   softq_reqs        = 8;
-  uint64                   queued_tx_pkts    = 9;
-  repeated FTEError        fte_errors        = 10;
-  repeated FTEFeatureStats feature_stats     = 11;
+  repeated FTEStatsInfo    fte_stats_info    = 2;
 }
 
 // Session Summary Stats

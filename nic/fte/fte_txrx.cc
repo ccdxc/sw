@@ -63,6 +63,7 @@ private:
     void process_arq();
     void process_softq();
     void ctx_mem_init();
+    void compute_cps();
 };
 
 //------------------------------------------------------------------------------
@@ -74,6 +75,13 @@ static inst_t *g_inst_list[hal::MAX_FTE_THREADS];
 // FTE instance of current thread
 //------------------------------------------------------------------------------
 thread_local inst_t *t_inst;
+
+//-----------------------------------------------------------------------------
+ // FTE thread local variables
+ // ----------------------------------------------------------------------------
+thread_local timespec_t t_old_ts; 
+thread_local timespec_t t_cur_ts;
+thread_local uint64_t t_rx_pkts;
 
 //------------------------------------------------------------------------------
 // FTE main pkt loop
@@ -351,7 +359,7 @@ void inst_t::process_softq()
     if (softq_->dequeue(&op, &data)) {
         //Increment stats
         stats_.softq_req++;
-        stats_.cps++;
+        compute_cps();
 
         //HAL_TRACE_DEBUG("fte: softq dequeue fn={:p} data={:p} softq_req={}", op, data, stats_.softq_req);
         (*(softq_fn_t)op)(data);
@@ -428,13 +436,41 @@ void inst_t::incr_fte_error(hal_ret_t rc)
 }
 
 //-----------------------------------------------------------------------------
+ // Compute Connections per second
+ //-----------------------------------------------------------------------------
+ void inst_t::compute_cps(void)
+ {
+     sdk::timespec_t temp_ts;
+     uint64_t         time_diff;
+
+     // Get the current timestamp
+     HAL_GET_SYSTEM_CLOCK(&t_cur_ts);
+  
+     temp_ts = t_cur_ts;
+     sdk::timestamp_subtract(&temp_ts, &t_old_ts);
+     sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
+
+     if (time_diff > TIME_NSECS_PER_SEC) {
+         stats_.cps = t_rx_pkts; 
+         t_old_ts = t_cur_ts;
+         t_rx_pkts = 1;
+     } else if (time_diff == TIME_NSECS_PER_SEC) {
+         stats_.cps = ++t_rx_pkts;
+         t_old_ts = t_cur_ts;
+     } else {
+         t_rx_pkts++;
+     }
+     
+ }
+
+//-----------------------------------------------------------------------------
 // Update Rx Counters based on the queue
 // ----------------------------------------------------------------------------
 void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
 {
     lifqid_t lifq = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
-    stats_.cps++;
+    compute_cps();
 
     if (lifq == FLOW_MISS_LIFQ) {
         stats_.flow_miss_pkts++;

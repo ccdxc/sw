@@ -140,6 +140,8 @@ do {                                                       \
 
 #define HAL_ASSERT(cond)                             __HAL_ASSERT__(cond)
 #define HAL_NOP                                      ((void) FALSE)
+#define HAL_GET_SYSTEM_CLOCK(_val)   \
+    clock_gettime(CLOCK_MONOTONIC, _val);
 
 //-----------------------------------------------------------------------------
 // X-Macro for defining enums (generates enum definition and string formatter)
@@ -176,7 +178,7 @@ do {                                                       \
         switch (c) {                                                    \
             _entries(_ENUM_CASE_STR);                                   \
         }                                                               \
-        return "uknown";                                                \
+        return "unknown";                                                \
     }                                                                   \
 
 //------------------------------------------------------------------------------

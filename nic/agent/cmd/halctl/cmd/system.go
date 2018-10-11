@@ -858,21 +858,12 @@ func systemTableStatsShowEntry(entry *halproto.TableStatsEntry) {
 
 func fteTxRxStatsShow(stats *halproto.Stats) {
 	var pmdstats *halproto.PMDStats
-	var ftestats *halproto.FTEStats
 
-	ftestats = stats.GetFteStats()
 	pmdstats = stats.GetPmdStats()
 	if pmdstats == nil {
 		return
 	}
 
-	fmt.Printf("%s%-15d\n", "Flow-miss Packets		: ", ftestats.GetFlowMissPkts())
-	fmt.Printf("%s%-15d\n", "Redir Packets			: ", ftestats.GetRedirPkts())
-	fmt.Printf("%s%-15d\n", "Ctrlflow Packets		: ", ftestats.GetCflowPkts())
-	fmt.Printf("%s%-15d\n", "TCP Close Packets		: ", ftestats.GetTcpClosePkts())
-	fmt.Printf("%s%-15d\n", "TLS Proxy Packets		: ", ftestats.GetTlsProxyPkts())
-	fmt.Printf("%s%-15d\n", "Queued Tx Packets		: ", ftestats.GetQueuedTxPkts())
-	fmt.Printf("\n")
 	var fteid int
 	if pmdstats.FteInfo == nil {
 		return
@@ -922,47 +913,55 @@ func fteStatsShow(stats *halproto.Stats) {
 		return
 	}
 
-	fmt.Printf("\n%s%-15d\n", "Connection per-second		:", ftestats.GetConnPerSecond())
-	fmt.Printf("%s%-15d\n", "Flow-miss Packets		:", ftestats.GetFlowMissPkts())
-	fmt.Printf("%s%-15d\n", "Redir Packets			:", ftestats.GetRedirPkts())
-	fmt.Printf("%s%-15d\n", "Cflow Packets			:", ftestats.GetCflowPkts())
-	fmt.Printf("%s%-15d\n", "TCP Close Packets		:", ftestats.GetTcpClosePkts())
-	fmt.Printf("%s%-15d\n", "TLS Proxy Packets		:", ftestats.GetTlsProxyPkts())
-	fmt.Printf("%s%-15d\n", "Softq Reqs			:", ftestats.GetSoftqReqs())
-	fmt.Printf("%s%-15d\n", "Queued Tx Packets		:", ftestats.GetQueuedTxPkts())
-	fmt.Printf("\n%s\n", "FTE Error Count: ")
-	hdrLine := strings.Repeat("-", 56)
-	fmt.Println(hdrLine)
-	fmt.Printf("%25s%25s\n", "Error Type", "Drop Count")
-	fmt.Println(hdrLine)
-	if ftestats.FteErrors != nil {
-		for _, fteerr := range ftestats.FteErrors {
-			if fteerr != nil {
-				if fteerr.GetCount() != 0 {
-					fmt.Printf("%25s%25d\n", fteerr.GetFteError(), fteerr.GetCount())
-				}
-			}
-		}
-	}
+	var fteid int
 
-	fmt.Printf("\n%s\n", "FTE Feature Stats:")
-	hdrLines := strings.Repeat("-", 100)
-	fmt.Println(hdrLines)
-	fmt.Printf("%25s%25s%25s%25s\n", "Feature Name", "Drop Count", "Drop Reason", "Drops per-reason")
-	fmt.Println(hdrLines)
-	if ftestats.FeatureStats != nil {
-		for _, featurestats := range ftestats.FeatureStats {
-			if featurestats != nil {
-				fmt.Printf("%25s%25d", featurestats.GetFeatureName(), featurestats.GetDropPkts())
-				for _, fteerr := range featurestats.DropReason {
+	for _, ftestatsinfo := range ftestats.FteStatsInfo {
+		fmt.Printf("\n%s\n", strings.Repeat("-", 15))
+		fmt.Printf("%s%-3d\n", "FTE ID   : ", fteid)
+		fmt.Printf("%s\n", strings.Repeat("-", 15))
+		fmt.Printf("\n%s%-15d\n", "Connection per-second		:", ftestatsinfo.GetConnPerSecond())
+		fmt.Printf("%s%-15d\n", "Flow-miss Packets		:", ftestatsinfo.GetFlowMissPkts())
+		fmt.Printf("%s%-15d\n", "Redir Packets			:", ftestatsinfo.GetRedirPkts())
+		fmt.Printf("%s%-15d\n", "Cflow Packets			:", ftestatsinfo.GetCflowPkts())
+		fmt.Printf("%s%-15d\n", "TCP Close Packets		:", ftestatsinfo.GetTcpClosePkts())
+		fmt.Printf("%s%-15d\n", "TLS Proxy Packets		:", ftestatsinfo.GetTlsProxyPkts())
+		fmt.Printf("%s%-15d\n", "Softq Reqs			:", ftestatsinfo.GetSoftqReqs())
+		fmt.Printf("%s%-15d\n", "Queued Tx Packets		:", ftestatsinfo.GetQueuedTxPkts())
+		fmt.Printf("\n%s\n", "FTE Error Count: ")
+		hdrLine := strings.Repeat("-", 56)
+		fmt.Println(hdrLine)
+		fmt.Printf("%25s%25s\n", "Error Type", "Drop Count")
+		fmt.Println(hdrLine)
+		if ftestatsinfo.FteErrors != nil {
+			for _, fteerr := range ftestatsinfo.FteErrors {
+				if fteerr != nil {
 					if fteerr.GetCount() != 0 {
 						fmt.Printf("%25s%25d\n", fteerr.GetFteError(), fteerr.GetCount())
 					}
 				}
 			}
+		}
+
+		fmt.Printf("\n%s\n", "FTE Feature Stats:")
+		hdrLines := strings.Repeat("-", 100)
+		fmt.Println(hdrLines)
+		fmt.Printf("%25s%25s%25s%25s\n", "Feature Name", "Drop Count", "Drop Reason", "Drops per-reason")
+		fmt.Println(hdrLines)
+		if ftestatsinfo.FeatureStats != nil {
+			for _, featurestats := range ftestatsinfo.FeatureStats {
+				if featurestats != nil {
+					fmt.Printf("%25s%25d", featurestats.GetFeatureName(), featurestats.GetDropPkts())
+					for _, fteerr := range featurestats.DropReason {
+						if fteerr.GetCount() != 0 {
+							fmt.Printf("%25s%25d\n", fteerr.GetFteError(), fteerr.GetCount())
+						}
+					}
+				}
+				fmt.Printf("\n")
+			}
 			fmt.Printf("\n")
 		}
-		fmt.Printf("\n")
+		fteid++
 	}
 }
 

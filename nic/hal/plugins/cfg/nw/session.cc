@@ -32,6 +32,7 @@ using session::ConnTrackExceptions;
 using sys::FTEStats;
 using sys::FTEFeatureStats;
 using sys::FTEError;
+using sys::FTEStatsInfo;
 using sys::SystemResponse;
 using sys::SessionSummaryStats;
 using sys::PMDStats;
@@ -47,7 +48,6 @@ using namespace sdk::lib;
 namespace hal {
 
 thread_local void *t_session_timer;
-thread_local void *t_fte_stats_timer;
 session_stats_t  g_session_stats = {};
 
 
@@ -1935,86 +1935,19 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     sdk::lib::timer_update(timer, reinterpret_cast<void *>(bucket));
 }
 
-static inline void
-update_fte_stats (fte::fte_stats_t *stats, fte::fte_stats_t &val) 
-{
-    HAL_ATOMIC_INC_UINT64(&stats->cps, val.cps);
-    HAL_ATOMIC_INC_UINT64(&stats->flow_miss_pkts, val.flow_miss_pkts);
-    HAL_ATOMIC_INC_UINT64(&stats->redirect_pkts, val.redirect_pkts);
-    HAL_ATOMIC_INC_UINT64(&stats->cflow_pkts, val.cflow_pkts);
-    HAL_ATOMIC_INC_UINT64(&stats->tcp_close_pkts, val.tcp_close_pkts);
-    HAL_ATOMIC_INC_UINT64(&stats->softq_req, val.softq_req);
-    HAL_ATOMIC_INC_UINT64(&stats->queued_tx_pkts, val.queued_tx_pkts);
-    for (uint8_t idx=0; idx<HAL_RET_ERR; idx++)
-        HAL_ATOMIC_INC_UINT64(&stats->fte_errors[idx], val.fte_errors[idx]);
-    for (uint8_t idx=0; idx<fte::get_num_features(); idx++) {
-        HAL_ATOMIC_INC_UINT64(&stats->feature_stats[idx].drop_pkts,
-                                           val.feature_stats[idx].drop_pkts);
-        for (uint8_t rc=0; rc<HAL_RET_ERR; rc++)
-            HAL_ATOMIC_INC_UINT64(&stats->feature_stats[idx].drop_reason[rc],
-                                            val.feature_stats[idx].drop_reason[rc]);
-    }
-}
-
-//------------------------------------------------------------------------------
-// callback invoked by the HAL periodic thread for FTE CPS computation
-//------------------------------------------------------------------------------
-static void
-fte_stats_collect_cb (void *timer, uint32_t timer_id, void *ctxt)
-{
-    uint64_t          cps = 0;
-    fte::fte_stats_t  stats = {};
-    fte::fte_stats_t  *g_stats = (fte::fte_stats_t *)ctxt;
-
-    stats.cps = 0;
-    HAL_ATOMIC_STORE_UINT64(&g_stats->cps, &stats.cps);
-    for (uint32_t i = 0; i < hal::g_hal_cfg.num_data_threads; i++) {
-        stats += fte::fte_stats_get(i, true);
-        cps += stats.cps;
-    }
-
-    update_fte_stats(g_stats, stats);
-
-    //HAL_TRACE_DEBUG("Stats: {} g_stats: {}", stats, *g_stats); 
-
-    // Compute cps from the cumulative # of packets received from
-    // each FTE. We collect it every 10s and get an approximate
-    // value per second.
-    stats.cps = (cps/HAL_FTE_STATS_TIMER_INTVL_SECS);
-    HAL_ATOMIC_STORE_UINT64(&g_stats->cps, &stats.cps);
-}
-
 //------------------------------------------------------------------------------
 // initialize the session management module
 //------------------------------------------------------------------------------
 hal_ret_t
 session_init (hal_cfg_t *hal_cfg)
 {
-    fte::fte_stats_t *fte_stats = NULL;
 
     g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_threads);
-
-    // Initialize Global counters
-    fte_stats = (fte::fte_stats_t *)HAL_CALLOC(HAL_MEM_ALLOC_FTE_STATS, sizeof(fte::fte_stats_t));
-    HAL_ASSERT(fte_stats != NULL);
-
-    g_hal_state->set_fte_stats((void *)fte_stats);    
 
     // wait until the periodic thread is ready
     while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
-
-    t_fte_stats_timer =
-        sdk::lib::timer_schedule(HAL_TIMER_ID_FTE_STATS,            // timer_id
-                                      HAL_FTE_STATS_TIMER_INTVL,
-                                      (void *)fte_stats,    // ctxt
-                                      fte_stats_collect_cb, true);
-    if (!t_fte_stats_timer) {
-        return HAL_RET_ERR;
-    }
-    HAL_TRACE_DEBUG("Started fte stats periodic timer with {}ms invl",
-                    HAL_FTE_STATS_TIMER_INTVL);
 
     // Disable aging when FTE is disabled
     if (getenv("DISABLE_AGING")) {
@@ -2386,19 +2319,6 @@ system_fte_txrx_stats_get(SystemResponse *rsp)
 
     PMDStats          *pmd_stats = NULL;
 
-    FTEStats          *fte_stats = NULL;
-    fte::fte_stats_t  *stats = (fte::fte_stats_t *)g_hal_state->fte_stats();
-    fte::fte_stats_t   g_fte_stats = *stats;
-
-    fte_stats = rsp->mutable_stats()->mutable_fte_stats();
-
-
-    fte_stats->set_flow_miss_pkts(g_fte_stats.flow_miss_pkts);
-    fte_stats->set_redir_pkts(g_fte_stats.redirect_pkts);
-    fte_stats->set_cflow_pkts(g_fte_stats.cflow_pkts);
-    fte_stats->set_tcp_close_pkts(g_fte_stats.tcp_close_pkts);
-    fte_stats->set_tls_proxy_pkts(g_fte_stats.tls_proxy_pkts);
-    fte_stats->set_queued_tx_pkts(g_fte_stats.queued_tx_pkts);
 
     HAL_TRACE_DEBUG("Gathering fte txrx stats ");
     pmd_stats = rsp->mutable_stats()->mutable_pmd_stats();
@@ -2449,49 +2369,50 @@ system_fte_txrx_stats_get(SystemResponse *rsp)
 hal_ret_t
 system_fte_stats_get(SystemResponse *rsp)
 {
-    FTEStats          *fte_stats = NULL;
-    fte::fte_stats_t  *stats = (fte::fte_stats_t *)g_hal_state->fte_stats();
-    fte::fte_stats_t   g_fte_stats = *stats;
-
-    fte_stats = rsp->mutable_stats()->mutable_fte_stats();
-
-
-    fte_stats->set_conn_per_second(g_fte_stats.cps);
-    fte_stats->set_flow_miss_pkts(g_fte_stats.flow_miss_pkts);
-    fte_stats->set_redir_pkts(g_fte_stats.redirect_pkts);
-    fte_stats->set_cflow_pkts(g_fte_stats.cflow_pkts);
-    fte_stats->set_tcp_close_pkts(g_fte_stats.tcp_close_pkts);
-    fte_stats->set_tls_proxy_pkts(g_fte_stats.tls_proxy_pkts);
-    fte_stats->set_softq_reqs(g_fte_stats.softq_req);
-    fte_stats->set_queued_tx_pkts(g_fte_stats.queued_tx_pkts);
+    FTEStats          *fte_global_stats = NULL;
+    FTEStatsInfo      *fte_stats = NULL;
+    fte::fte_stats_t   per_fte_stats;
 
     HAL_TRACE_DEBUG("Gathering fte stats ");
+    fte_global_stats = rsp->mutable_stats()->mutable_fte_stats();
+    for (uint32_t i = 0; i < hal::g_hal_cfg.num_data_threads; i++) {
+        per_fte_stats = fte::fte_stats_get(i);
+        fte_stats = fte_global_stats->add_fte_stats_info();
 
-    for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
-        if (std::strcmp(HAL_RET_ENTRIES_str((hal_ret_t)idx), "unknown")) {
-            FTEError   *fte_err = fte_stats->add_fte_errors();
+        fte_stats->set_conn_per_second(per_fte_stats.cps);
+        fte_stats->set_flow_miss_pkts(per_fte_stats.flow_miss_pkts);
+        fte_stats->set_redir_pkts(per_fte_stats.redirect_pkts);
+        fte_stats->set_cflow_pkts(per_fte_stats.cflow_pkts);
+        fte_stats->set_tcp_close_pkts(per_fte_stats.tcp_close_pkts);
+        fte_stats->set_tls_proxy_pkts(per_fte_stats.tls_proxy_pkts);
+        fte_stats->set_softq_reqs(per_fte_stats.softq_req);
+        fte_stats->set_queued_tx_pkts(per_fte_stats.queued_tx_pkts);
 
-            fte_err->set_count(g_fte_stats.fte_errors[idx]);
-            fte_err->set_fte_error(HAL_RET_ENTRIES_str((hal_ret_t)idx));
-        }
-    }
-
-    for (uint8_t feature=0; feature<fte::get_num_features(); feature++) {
-        FTEFeatureStats *feature_stat = fte_stats->add_feature_stats();
-        std::string      feature_name = fte::feature_id_to_name(feature);
-
-        feature_stat->set_feature_name(feature_name.substr(feature_name.find(":")+1));
-        feature_stat->set_drop_pkts(g_fte_stats.feature_stats[feature].drop_pkts);
         for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
             if (std::strcmp(HAL_RET_ENTRIES_str((hal_ret_t)idx), "unknown")) {
-                FTEError   *fte_err = feature_stat->add_drop_reason();
-        
-                fte_err->set_count(g_fte_stats.feature_stats[feature].drop_reason[idx]);
+                FTEError   *fte_err = fte_stats->add_fte_errors();
+
+                fte_err->set_count(per_fte_stats.fte_errors[idx]);
                 fte_err->set_fte_error(HAL_RET_ENTRIES_str((hal_ret_t)idx));
             }
         }
-    }
 
+        for (uint8_t feature=0; feature<fte::get_num_features(); feature++) {
+             FTEFeatureStats *feature_stat = fte_stats->add_feature_stats();
+             std::string      feature_name = fte::feature_id_to_name(feature);
+
+             feature_stat->set_feature_name(feature_name.substr(feature_name.find(":")+1));
+             feature_stat->set_drop_pkts(per_fte_stats.feature_stats[feature].drop_pkts);
+             for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
+                 if (std::strcmp(HAL_RET_ENTRIES_str((hal_ret_t)idx), "unknown")) {
+                     FTEError   *fte_err = feature_stat->add_drop_reason();
+        
+                     fte_err->set_count(per_fte_stats.feature_stats[feature].drop_reason[idx]);
+                     fte_err->set_fte_error(HAL_RET_ENTRIES_str((hal_ret_t)idx));
+                }
+             }
+        }
+    }
     return HAL_RET_OK;
 }
 
