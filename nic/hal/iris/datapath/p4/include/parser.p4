@@ -2039,7 +2039,25 @@ field_list_calculation complete_checksum_ipv6 {
     output_width : 16;
 }
 
+
+field_list complete_checksum_vlan {
+    vlan_tag.pcp;
+    payload;
+}
+@pragma checksum update_len capri_deparser_len.udp_opt_l2_checksum_len
+//Share checksum engine among udp-option csum computation and l2_checksum
+//as one is used in packet towards uplink and other in packet towards host.
+@pragma checksum update_share udp_opt_ocs.chksum, p4_to_p4plus_classic_nic.csum
+field_list_calculation complete_checksum_vlan {
+    input {
+        complete_checksum_vlan;
+    }
+    algorithm : l2_complete_csum; // Used to indicate L2 Complete Csum
+    output_width : 16;
+}
+
 calculated_field p4_to_p4plus_classic_nic.csum {
+    update complete_checksum_vlan if (valid(vlan_tag));
     update complete_checksum_ipv4 if (valid(ipv4));
     update complete_checksum_ipv6 if (valid(ipv6));
 }

@@ -152,10 +152,7 @@ def GetL2Checksum(tc, obj, args=None):
     pkt = spktobj.spkt
     if not GetIsIP(tc, obj, args):
         return 0
-    if pkt.haslayer(Dot1Q):
-        chksum = (checksum(bytes(pkt[Dot1Q].payload)) ^ -1) & 0xffff
-    else:
-        chksum = (checksum(bytes(pkt[Ether].payload)) ^ -1) & 0xffff
+    chksum = (checksum(bytes(pkt[Ether].payload)) ^ -1) & 0xffff
     return struct.unpack('<H', struct.pack('>H', chksum))[0]
 
 

@@ -26,10 +26,6 @@ p4plus_app_prep2:
   seq         c1, k.inner_ipv4_valid, TRUE
   seq         c2, k.inner_ipv6_valid, TRUE
 
-  // l2 checksum (CHECKSUM_COMPLETE)
-  phvwrpair   p.ipv4_l2csum, k.ipv4_valid, p.ipv6_l2csum, k.ipv6_valid
-  phvwr       p.p4_to_p4plus_classic_nic_l2csum, TRUE
-
   seq         c3, k.inner_ethernet_valid, TRUE
   bcf         [c1|c2|c3], p4plus_app_classic_nic_tunneled
   seq         c4, k.ipv4_valid, TRUE

@@ -2227,6 +2227,17 @@ class Checksum:
 
         DeParserCsumEngineObj.CsumUnitAllocationFinalize()
 
+        covered_csum_units = set()
+        update_cal_fieldlist = self.update_cal_fieldlist if parser.d == xgress.INGRESS \
+                                              else self.eg_update_cal_fieldlist
+        for calfldobj in update_cal_fieldlist:
+            covered_csum_units.add(calfldobj.DeParserCsumObjGet().CsumUnitNumGet())
+        for calfldobj in l2_csum_cal_fieldlist_update:
+            l2csum_unit = calfldobj.DeParserCsumObjGet().CsumUnitNumGet()
+            for cunit in covered_csum_units:
+                if cunit != l2csum_unit:
+                    calfldobj.DeParserCsumObjGet().CsumInnerCsumResultInclude(cunit)
+
     def L2CompleteCsumDeParserHwConfigObjs(self, deparser, hv_fld_slots):
         hw_csum_obj = [] # list of csumobj that need to be programmed in HW
                          # without repeatation and maintaining Banyan contrainst.

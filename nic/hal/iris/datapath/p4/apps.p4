@@ -175,8 +175,6 @@ action f_p4plus_app_classic_nic_prep() {
                          (control_metadata.checksum_results & (1 << CSUM_HDR_TCP)));
         }
     }
-
-    // l2 checksum (CHECKSUM_COMPLETE) : code in ASM only
 }
 
 action p4plus_app_classic_nic() {

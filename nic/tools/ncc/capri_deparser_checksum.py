@@ -596,7 +596,7 @@ class DeParserCalField:
 
     def DeparserCsumConfigMatrixRowLog(self, is_phdr):
         if not is_phdr:
-            pstr = '{:32s}{:5d}{:7d}{:7d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}{:5d}'\
+            pstr = '{:32s}{:5d}{:7d}{:7d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6X}{:5d}'\
                    '{:5d}{:5d}{:5d}\n'.format(self.csum_hdr_obj.csum_hv_str,
                                        self.csum_hdr_obj.CsumUnitNumGet(),
                                        self.csum_hdr_obj.CsumHvBitNumGet(),
@@ -614,7 +614,7 @@ class DeParserCalField:
                                        self.csum_profile_obj.csum_loc_adj,
                                        self.csum_profile_obj.add_len)
         if is_phdr:
-            pstr = '{:32s}{:5d}{:7d}{:7d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}'\
+            pstr = '{:32s}{:5d}{:7d}{:7d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6X}'\
                     '\n'.format(self.phdr_csum_hdr_obj.csum_hv_str,
                                 self.phdr_csum_hdr_obj.CsumUnitNumGet(),
                                 self.phdr_csum_hdr_obj.CsumHvBitNumGet(),

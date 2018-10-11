@@ -20,36 +20,45 @@ p4plus_app_default:
 .align
 p4plus_app_classic_nic:
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
-  phvwr       p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
+  phvwr         p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
   // r7 : packet_len
-  or          r7, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
-  sub         r6, r7, 14
-  seq         c1, k.vlan_tag_valid, TRUE
-  sub.c1      r6, r6, 4
-  seq.c1      c1, k.control_metadata_vlan_strip, TRUE
-  bcf         [!c1], p4plus_app_classic_nic_no_vlan_strip
-  phvwr.c1    p.p4_to_p4plus_classic_nic_vlan_valid, TRUE
-  phvwr       p.ethernet_etherType, k.vlan_tag_etherType
-  add         r1, k.vlan_tag_vid_sbit4_ebit11, k.vlan_tag_vid_sbit0_ebit3, 8
-  phvwrpair   p.{p4_to_p4plus_classic_nic_vlan_pcp...p4_to_p4plus_classic_nic_vlan_dei}, \
-                 k.{vlan_tag_pcp...vlan_tag_dei}, \
-                 p.p4_to_p4plus_classic_nic_vlan_vid, r1
-  phvwr       p.vlan_tag_valid, FALSE
-  sub         r7, r7, 4
+  or            r7, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                    k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  phvwr         p.p4_to_p4plus_classic_nic_l2csum, TRUE
+
+  seq           c1, k.vlan_tag_valid, TRUE
+  seq           c2, k.control_metadata_vlan_strip, TRUE
+  bcf           ![c1&c2], p4plus_app_classic_nic_no_vlan_strip
+  add           r1, k.vlan_tag_vid_sbit4_ebit11, k.vlan_tag_vid_sbit0_ebit3, 8
+  phvwr         p.p4_to_p4plus_classic_nic_vlan_valid, TRUE
+  phvwr         p.ethernet_etherType, k.vlan_tag_etherType
+  phvwrpair     p.{p4_to_p4plus_classic_nic_vlan_pcp...p4_to_p4plus_classic_nic_vlan_dei}, \
+                    k.{vlan_tag_pcp...vlan_tag_dei}, \
+                    p.p4_to_p4plus_classic_nic_vlan_vid, r1
+  phvwr         p.vlan_tag_valid, FALSE
+  sub           r7, r7, 4
+  // l2 checksum (CHECKSUM_COMPLETE)
+  b             p4plus_app_classic_nic_post_vlan_strip
+  phvwrpair     p.ipv4_l2csum, k.ipv4_valid, p.ipv6_l2csum, k.ipv6_valid
 
 p4plus_app_classic_nic_no_vlan_strip:
-  phvwrpair   p.p4_to_p4plus_classic_nic_valid, TRUE, \
-              p.capri_rxdma_intrinsic_valid, TRUE
-  phvwrpair   p.capri_deparser_len_udp_opt_l2_checksum_len, r6, \
-              p.p4_to_p4plus_classic_nic_p4plus_app_id, \
-              k.control_metadata_p4plus_app_id[3:0]
-  phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
-              (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
-              P4PLUS_CLASSIC_NIC_HDR_SZ)
-  phvwrpair.e p.capri_rxdma_intrinsic_qid, k.control_metadata_qid, \
-              p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
-  phvwr.f     p.p4_to_p4plus_classic_nic_packet_len, r7
+  // l2 checksum (CHECKSUM_COMPLETE)
+  phvwr.c1      p.vlan_tag_l2csum, TRUE
+  phvwrpair.!c1 p.ipv4_l2csum, k.ipv4_valid, p.ipv6_l2csum, k.ipv6_valid
+
+p4plus_app_classic_nic_post_vlan_strip:
+  sub           r6, r7, 14
+  phvwrpair     p.p4_to_p4plus_classic_nic_valid, TRUE, \
+                p.capri_rxdma_intrinsic_valid, TRUE
+  phvwrpair     p.capri_deparser_len_udp_opt_l2_checksum_len, r6, \
+                p.p4_to_p4plus_classic_nic_p4plus_app_id, \
+                k.control_metadata_p4plus_app_id[3:0]
+  phvwr         p.capri_rxdma_intrinsic_rx_splitter_offset, \
+                (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                P4PLUS_CLASSIC_NIC_HDR_SZ)
+  phvwrpair.e   p.capri_rxdma_intrinsic_qid, k.control_metadata_qid, \
+                p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
+  phvwr.f       p.p4_to_p4plus_classic_nic_packet_len, r7
 
 .align
 p4plus_app_tcp_proxy:
