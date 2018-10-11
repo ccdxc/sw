@@ -105,8 +105,33 @@ void sigchld_handler(__attribute__((unused)) int sig)
     errno = saved_errno;
 }
 
+// Ignore the Quit Signal since it's what we send to the children to kill them
 void sigquit_handler(__attribute__((unused)) int sig)
 {
+}
+
+void sigterm_handler(__attribute__((unused)) int sig)
+{
+    // Kill our children
+    kill(-getpid(), SIGQUIT);
+    printf("Got SIGTERM, exiting\n");
+    exit(-1);
+}
+
+void sigint_handler(__attribute__((unused)) int sig)
+{
+    // Kill our children
+    kill(-getpid(), SIGQUIT);
+    printf("Got SIGINT, exiting\n");
+    exit(-1);
+}
+
+void sigsegv_handler(__attribute__((unused)) int sig)
+{
+    // Kill our children
+    kill(-getpid(), SIGQUIT);
+    printf("Got SIGSEGV, exiting\n");
+    exit(-1);
 }
 
 void install_sigchld_handler()
@@ -272,6 +297,9 @@ int main()
 
     install_sigchld_handler();
     signal(SIGQUIT, sigquit_handler);
+    signal(SIGTERM, sigterm_handler);
+    signal(SIGSEGV, sigsegv_handler);
+    signal(SIGINT, sigint_handler);
 
     pthread_t delphi_thread;
     pthread_create(&delphi_thread, NULL, delphi_thread_run, NULL);
