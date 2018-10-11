@@ -142,7 +142,7 @@ func TestRegression(t *testing.T) {
 	f := func() (bool, interface{}) {
 		numSeries, err := getCount(ts, dbName, measName)
 		AssertOk(t, err, "error getting count from db")
-		if numSeries == nIters {
+		if numSeries >= nIters {
 			return true, nil
 		}
 		fmt.Printf("Expected %d records, Got %d instead\n", nIters, numSeries)
