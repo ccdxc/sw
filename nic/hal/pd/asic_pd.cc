@@ -488,7 +488,6 @@ asic_rw_loop (void *ctxt)
                 // no read/write requests
                 continue;
             }
-
             // found a read/write request to serve
             cindx = g_asic_rw_workq[qid].cindx;
             rw_entry = &g_asic_rw_workq[qid].entries[cindx];

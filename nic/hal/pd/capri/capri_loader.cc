@@ -542,6 +542,7 @@ capri_dump_program_info (const char *filename)
     capri_program_info_t    *program_info;
     pt::ptree               root, programs, program;
     MpuSymbol               *symbol;
+    char                    numbuf[32];
 
     for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
         if ((ctx = loader_instances[it->first]) != NULL) {
@@ -551,9 +552,16 @@ capri_dump_program_info (const char *filename)
                 pt::ptree    symbols;
                 program.put("name", program_info[i].name.c_str());
                 program.put("base_addr", program_info[i].base_addr);
+		snprintf(numbuf, sizeof(numbuf), "0x%lx",
+			 program_info[i].base_addr);
+		program.put("base_addr_hex", numbuf);
                 program.put("end_addr",
                             ((program_info[i].base_addr +
                               program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1);
+		snprintf(numbuf, sizeof(numbuf), "0x%lx",
+			 ((program_info[i].base_addr +
+			   program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1);
+		program.put("end_addr_hex", numbuf);
                 for (int j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
                     pt::ptree    sym;
                     symbol = program_info[i].prog.symtab.get_byid(j);
@@ -561,6 +569,9 @@ capri_dump_program_info (const char *filename)
                         symbol->val) {
                         sym.put("name", symbol->name.c_str());
                         sym.put("addr", program_info[i].base_addr + symbol->val);
+			snprintf(numbuf, sizeof(numbuf), "0x%lx",
+				 program_info[i].base_addr + symbol->val);
+			sym.put("addr_hex", numbuf);
                         symbols.push_back(std::make_pair("", sym));
                         sym.clear();
                     }
