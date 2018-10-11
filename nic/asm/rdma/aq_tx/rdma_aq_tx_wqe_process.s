@@ -258,7 +258,8 @@ create_qp:
     add         r2, d.{qp.sq_cq_id}.wx, r0
     phvwr       p.sqcb1.cq_id, r2[23:0]
     phvwr       p.sqcb1.state, QP_STATE_RTS
-
+    phvwr       p.sqcb1.pd, d.{qp.pd_id}.wx
+    
     phvwr       p.sqcb1.service, d.type_state[3:0]
     phvwr       p.sqcb1.ssn, 1
     phvwr       p.sqcb1.max_ssn, 1
@@ -409,7 +410,7 @@ qp_dump:
     DMA_HBM_MEM2MEM_SRC_SETUP(r6, CB3_OFFSET_BYTES, r2)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_4)
     add         r3, r3, CB3_OFFSET_BYTES
-    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB3_OFFSET_BYTES, r3)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, CB3_OFFSET_BYTES, d.{stats.dma_addr}.dx)
 
     b           prepare_feedback
     nop

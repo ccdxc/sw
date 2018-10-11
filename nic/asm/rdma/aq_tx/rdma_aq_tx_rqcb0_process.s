@@ -30,7 +30,7 @@ rsq_base:
     bbne        CAPRI_KEY_FIELD(IN_P, rsq_valid), 1, state
     nop
     
-    tblwr       d.rsq_base_addr, CAPRI_KEY_RANGE(IN_P, rsq_base_addr_sbit0_ebit2, rsq_base_addr_sbit3_ebit26)
+    tblwr       d.rsq_base_addr, CAPRI_KEY_RANGE(IN_P, rsq_base_addr_sbit0_ebit2, rsq_base_addr_sbit27_ebit31)
     tblwr       d.log_rsq_size, CAPRI_KEY_RANGE(IN_P, rsq_depth_log2_sbit0_ebit2, rsq_depth_log2_sbit3_ebit4)
     
 state:

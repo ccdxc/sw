@@ -61,7 +61,7 @@ rdma_aq_tx_aqcb_process:
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_wqe_process, r3)
 
         /* increment the cindex */
-        tblmincri   AQ_C_INDEX_HX, 16, 1
+        tblmincri   AQ_C_INDEX_HX, d.log_num_wqes, 1
 
         nop.e
         nop
