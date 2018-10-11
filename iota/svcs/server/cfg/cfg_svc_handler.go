@@ -6,6 +6,7 @@ import (
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // ConfigService implements config service API
@@ -19,6 +20,8 @@ func NewConfigServiceHandler() *ConfigService {
 
 // MakeCluster brings up venice cluster
 func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMsg) (*iota.MakeClusterMsg, error) {
+	log.Infof("CFG SVC | DEBUG | MakeCluster. Received Request Msg: %v", req)
+
 	resp, err := common.HTTPPost(req.Endpoint, req.Config)
 	fmt.Println("BALERION: ", resp)
 
@@ -32,24 +35,32 @@ func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMs
 
 //InitCfgService initiates a config management service
 func (c *ConfigService) InitCfgService(ctx context.Context, req *iota.InitConfigMsg) (*iota.InitConfigMsg, error) {
+	log.Infof("CFG SVC | DEBUG | InitCfgService. Received Request Msg: %v", req)
+
 	resp := &iota.InitConfigMsg{}
 	return resp, nil
 }
 
 // GenerateConfigs generates base configs
 func (c *ConfigService) GenerateConfigs(ctx context.Context, req *iota.GenerateConfigMsg) (*iota.ConfigMsg, error) {
+	log.Infof("CFG SVC | DEBUG | GenerateConfigs. Received Request Msg: %v", req)
+
 	resp := &iota.ConfigMsg{}
 	return resp, nil
 }
 
 // PushConfig pushes the config
 func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*iota.ConfigMsg, error) {
+	log.Infof("CFG SVC | DEBUG | PushConfig. Received Request Msg: %v", req)
+
 	resp := &iota.ConfigMsg{}
 	return resp, nil
 }
 
 // QueryConfig queries the configs
 func (c *ConfigService) QueryConfig(ctx context.Context, req *iota.ConfigQueryMsg) (*iota.ConfigMsg, error) {
+	log.Infof("CFG SVC | DEBUG | QueryConfig. Received Request Msg: %v", req)
+
 	resp := &iota.ConfigMsg{}
 	return resp, nil
 }

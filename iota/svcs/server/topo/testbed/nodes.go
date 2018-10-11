@@ -11,6 +11,8 @@ import (
 // AddNode adds a node to the topology
 func (n *TestNode) AddNode() error {
 	resp, err := n.AgentClient.AddNode(context.Background(), n.Node)
+	log.Infof("TOPO SVC | DEBUG | AddNode Agent . Received Response Msg: %v", resp)
+
 	if err != nil {
 		log.Errorf("Adding node %v failed. Err: %v", n.Node.Name, err)
 		return err

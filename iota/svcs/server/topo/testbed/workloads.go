@@ -12,6 +12,8 @@ import (
 func (n *TestNode) AddWorkload() error {
 	for _, w := range n.Workloads {
 		resp, err := n.AgentClient.AddWorkload(context.Background(), w)
+		log.Infof("TOPO SVC | DEBUG | AddWorkload Agent . Received Response Msg: %v", resp)
+
 		if err != nil {
 			log.Errorf("Adding workload on node %v failed. Err: %v", n.Node.Name, err)
 			return err
