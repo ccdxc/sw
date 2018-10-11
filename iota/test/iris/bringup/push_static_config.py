@@ -70,7 +70,7 @@ def __add_workloads():
         ep_msg.ip_address = __prepare_ip_address_str_for_endpoint(ep)
         ep_msg.mac_address = getattr(ep.spec, 'mac-address')
         ep_msg.interface = ep.spec.interface
-        ep_msg.type = topo_svc.WORKLOAD_TYPE_SRIOV
+        ep_msg.interface_type = topo_svc.INTERFACE_TYPE_SRIOV
         resp = api.AddWorkloads(req)
 
 def Main(step):

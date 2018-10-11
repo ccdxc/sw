@@ -97,7 +97,9 @@ message Node {
     }
 
     // NodeStatus captures the details of the node action
-    IotaAPIResponse node_status         = 7;
+    IotaAPIResponse     node_status    = 7;
+
+    string              node_uuid      = 8;
 }
 
 
