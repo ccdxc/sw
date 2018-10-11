@@ -533,8 +533,6 @@ size_t __parse_ftp_rsp(void *ctxt, uint8_t *payload, size_t data_len) {
 
     memset (&cmd, 0, sizeof(ftp_search_t));
 
-    uint8_t buff = ctx->is_flow_swapped()?0:1;
-    l4_sess->tcpbuf[buff]->update_data_handler(__parse_ftp_req);
     prev_state = info->state;
     if (info->state < FTP_MAX_RSP)
         cmd = ftp_rsp[info->state];
@@ -596,7 +594,8 @@ size_t __parse_ftp_rsp(void *ctxt, uint8_t *payload, size_t data_len) {
             add_expected_flow(*ctx, l4_sess, info);
         }
     }
- 
+
+    info->callback = __parse_ftp_req; 
     return data_len;
 }
 
@@ -638,8 +637,7 @@ size_t __parse_ftp_req(void *ctxt, uint8_t *payload, size_t data_len) {
          * Found a match -- update the callback
          * and wait for a response
          */
-        uint8_t buff = ctx->is_flow_swapped()?0:1;
-        l4_sess->tcpbuf[buff]->update_data_handler(__parse_ftp_rsp); 
+        info->callback = __parse_ftp_rsp; 
         if (info->add_exp_flow) {
             add_expected_flow(*ctx, l4_sess, info);
         }

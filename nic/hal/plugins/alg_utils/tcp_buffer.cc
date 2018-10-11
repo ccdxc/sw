@@ -31,6 +31,9 @@ tcp_buffer_t::factory (uint32_t seq_start, void *handler_ctx, data_handler_t han
     entry->data_handler_ = handler;
     entry->handler_ctx_ = handler_ctx;
 
+    HAL_TRACE_DEBUG("Init TCP buffer with seq_start: {} data handler: {:p} handle_ctx: {:p}",
+                     entry->cur_seq_, (void *)entry->data_handler_, (void *)entry->handler_ctx_);
+
     return entry;
 }
 
@@ -49,11 +52,6 @@ void tcp_buffer_t::free ()
     slab_->free(this);
 }
 
-void tcp_buffer_t::update_data_handler (data_handler_t handler)
-{
-    data_handler_ = handler;
-}
-
 //------------------------------------------------------------------------
 // Helper to insert the segment given the FTE context and data handler
 //------------------------------------------------------------------------
@@ -65,7 +63,8 @@ tcp_buffer_t::insert_segment (fte::ctx_t &ctx, data_handler_t handler)
     uint8_t  *pkt = ctx.pkt();
 
     handler_ctx_ = &ctx;
-    HAL_TRACE_DEBUG("Packet len: {} payload offset: {}", ctx.pkt_len(), ctx.cpu_rxhdr()->payload_offset);
+    data_handler_ = handler;
+    HAL_TRACE_DEBUG("Packet len: {} payload offset: {} data handler: {}", ctx.pkt_len(), ctx.cpu_rxhdr()->payload_offset);
     HAL_TRACE_DEBUG("seq: {} curr_seq: {} payload_len: {}", seq, cur_seq_, payload_len);
     return insert_segment(seq, &pkt[ctx.cpu_rxhdr()->payload_offset], payload_len);
 }

@@ -209,8 +209,13 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
     key.dport = rpc_info->dport;
     key.proto = (types::IPProtocol)rpc_info->prot;
     key.flow_type = (rpc_info->addr_family == IP_PROTO_IPV6)?FLOW_TYPE_V6:FLOW_TYPE_V4;
-    ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session,
+    if (!timeout) {
+        ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session,
+                                                  key, &exp_flow);
+    } else {
+        ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session,
                                                   key, &exp_flow, true, timeout, true);
+    }
     HAL_ASSERT(ret == HAL_RET_OK);
     exp_flow->entry.handler = expected_flow_handler;
     exp_flow->alg = l4_sess->alg;

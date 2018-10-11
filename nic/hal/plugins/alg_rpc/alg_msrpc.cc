@@ -1002,6 +1002,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
         rpc_info = (rpc_info_t *)l4_sess->info;
 
         if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
+            HAL_TRACE_DEBUG("Setting up buffer for rflow");
             // Set up TCP buffer for RFLOW
             l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
                                           htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
