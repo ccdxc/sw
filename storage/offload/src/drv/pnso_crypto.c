@@ -16,12 +16,15 @@
 #define CRYPTO_NUM_DESCS_PER_AOL_VEC	INTERM_BUF_MAX_NUM_BUFS
 #define CRYPTO_NUM_DESCS_PER_SGL_VEC	INTERM_BUF_MAX_NUM_BUFS
 
+#define PNSO_NUM_OBJECTS_IN_OBJECT	16
+
 static void
 deinit_mpools(struct per_core_resource *pc_res)
 {
-	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_SGL_VECTOR]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
+	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR]);
+	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC]);
@@ -29,56 +32,85 @@ deinit_mpools(struct per_core_resource *pc_res)
 
 static pnso_error_t
 init_mpools(struct pc_res_init_params *pc_init,
-	    struct per_core_resource *pc_res)
+		struct per_core_resource *pc_res)
 {
 	pnso_error_t err;
+	uint32_t num_objects;
+	enum mem_pool_type mpool_type;
 
-	err = mpool_create(MPOOL_TYPE_CRYPTO_DESC, pc_init->max_seq_sq_descs,
-				MPOOL_VEC_ELEM_SINGLE, sizeof(struct crypto_desc),
-				PNSO_MEM_ALIGN_DESC,
-				&pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC]);
-	if (!err)
-		err = mpool_create(MPOOL_TYPE_CRYPTO_STATUS_DESC,
-				pc_init->max_seq_sq_descs,
-				MPOOL_VEC_ELEM_SINGLE,
-				sizeof(struct crypto_status_desc),
-				sizeof(struct crypto_status_desc),
-				&pc_res->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
-	if (!err)
-		err = mpool_create(MPOOL_TYPE_CRYPTO_AOL,
-				pc_init->max_seq_sq_descs,
-				MPOOL_VEC_ELEM_SINGLE,
-				sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
-				&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);
-	if (!err)
-		err = mpool_create(MPOOL_TYPE_CRYPTO_AOL_VECTOR,
-				pc_init->max_seq_sq_descs,
-				CRYPTO_NUM_DESCS_PER_AOL_VEC,
-				sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
-				&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
+	num_objects = pc_init->max_seq_sq_descs;
 
-	if (!err)
-		err = mpool_create(MPOOL_TYPE_CRYPTO_SGL_VECTOR,
-				pc_init->max_seq_sq_descs,
-				CRYPTO_NUM_DESCS_PER_SGL_VEC,
-				sizeof(struct cpdc_sgl), PNSO_MEM_ALIGN_DESC,
-				&pc_res->mpools[MPOOL_TYPE_CRYPTO_SGL_VECTOR]);
+	mpool_type = MPOOL_TYPE_CRYPTO_DESC;
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
+				sizeof(struct crypto_desc), PNSO_MEM_ALIGN_DESC,
+				&pc_res->mpools[mpool_type]);
+	if (err)
+		goto out;
 
-	if (!err)
-		err = mpool_create(MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
-				pc_init->max_seq_sq_descs,
-				MPOOL_VEC_ELEM_SINGLE,
+	mpool_type = MPOOL_TYPE_CRYPTO_STATUS_DESC;
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 				sizeof(struct crypto_status_desc),
 				sizeof(struct crypto_status_desc),
-				&pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
-	if (!err) {
-		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC]);
-		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
-		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);
-		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
-		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_SGL_VECTOR]);
-		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
-	}
+				&pc_res->mpools[mpool_type]);
+	if (err)
+		goto out;
+
+	mpool_type = MPOOL_TYPE_CRYPTO_AOL;
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
+			sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[mpool_type]);
+	if (err)
+		goto out;
+
+	mpool_type = MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS;
+	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
+			sizeof(struct crypto_status_desc),
+			sizeof(struct crypto_status_desc),
+			&pc_res->mpools[mpool_type]);
+	if (err)
+		goto out;
+
+	/*
+	 * following pools are for special type of objects
+	 * i.e. set of objects to be in contiguous memory
+	 *
+	 */
+	mpool_type = MPOOL_TYPE_CRYPTO_DESC_VECTOR;
+	err = mpool_create(mpool_type, num_objects, PNSO_NUM_OBJECTS_IN_OBJECT,
+			sizeof(struct crypto_desc), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[mpool_type]);
+	if (err)
+		goto out;
+
+	mpool_type = MPOOL_TYPE_CRYPTO_AOL_VECTOR;
+	err = mpool_create(mpool_type, num_objects,
+			CRYPTO_NUM_DESCS_PER_AOL_VEC,
+			sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[mpool_type]);
+	if (err)
+		goto out;
+
+	mpool_type = MPOOL_TYPE_CRYPTO_SGL_VECTOR;
+	err = mpool_create(mpool_type, num_objects,
+			CRYPTO_NUM_DESCS_PER_SGL_VEC,
+			sizeof(struct cpdc_sgl), PNSO_MEM_ALIGN_DESC,
+			&pc_res->mpools[mpool_type]);
+	if (err)
+		goto out;
+
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
+	MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_SGL_VECTOR]);
+
+	return PNSO_OK;
+
+out:
+	OSAL_LOG_ERROR("failed to allocate pool! mpool_type: %d num_objects: %d err: %d",
+			mpool_type, num_objects, err);
 	return err;
 }
 
@@ -88,16 +120,30 @@ crypto_init_accelerator(struct pc_res_init_params *pc_init,
 {
 	pnso_error_t err;
 
+	OSAL_LOG_DEBUG("enter ...");
+
 	err = init_mpools(pc_init, pc_res);
 	if (err)
-		deinit_mpools(pc_res);
+		goto out_mpools;
+
+	OSAL_LOG_DEBUG("exit!");
+	return err;
+
+out_mpools:
+	deinit_mpools(pc_res);
+
+	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 
 void
 crypto_deinit_accelerator(struct per_core_resource *pc_res)
 {
+	OSAL_LOG_DEBUG("enter ...");
+
 	deinit_mpools(pc_res);
+
+	OSAL_LOG_DEBUG("exit!");
 }
 
 pnso_error_t
