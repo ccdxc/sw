@@ -112,6 +112,7 @@ struct test_crypto_key {
 #define TEST_MAX_BATCH_COUNT_TOTAL (TEST_MAX_BATCH_COUNT_PER_CORE * TEST_MAX_CORE_COUNT)
 //#define TEST_MAX_BATCH_MASK ((1 << TEST_MAX_BATCH_COUNT_PER_CORE) - 1)
 #define TEST_MAX_BATCH_DEPTH 512
+#define TEST_MAX_RANDOM_LEN 4096
 
 enum {
 	FILE_FORMAT_RANDOM,
@@ -127,6 +128,7 @@ struct test_input_desc {
 	uint32_t max_block_size;
 	uint32_t block_count;
 	uint32_t random_seed;
+	uint32_t random_len;
 	char pattern[TEST_MAX_PATTERN_LEN];
 	char pathname[TEST_MAX_PATH_LEN];
 };

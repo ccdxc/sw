@@ -194,26 +194,13 @@ static const uint8_t *get_normalized_pattern(const char *pat,
 pnso_error_t test_fill_pattern(struct pnso_buffer_list *buflist,
 			       const char *pat, uint32_t pat_len)
 {
-	size_t i, j, pat_i;
-	uint8_t *dst;
 	uint8_t hex_pat[TEST_MAX_PATTERN_LEN];
 
 	if (pat_len > TEST_MAX_PATTERN_LEN)
 		pat_len = TEST_MAX_PATTERN_LEN;
 	pat = (const char *) get_normalized_pattern(pat, hex_pat, &pat_len);
 
-	pat_i = 0;
-	for (i = 0; i < buflist->count; i++) {
-		if (!buflist->buffers[i].len) {
-			continue;
-		}
-
-		dst = (uint8_t *) buflist->buffers[i].buf;
-		for (j = 0; j < buflist->buffers[i].len; j++) {
-			dst[j] = (uint8_t) pat[pat_i % pat_len];
-			pat_i++;
-		}
-	}
+	test_fill_buflist(buflist, pat, pat_len);
 
 	return PNSO_OK;
 }
@@ -285,7 +272,7 @@ static pnso_error_t test_read_input(const char *path,
 		uint32_t pat_len = strnlen(input_desc->pattern, TEST_MAX_PATTERN_LEN);
 		err = test_fill_pattern(buflist, input_desc->pattern, pat_len);
 	} else {
-		err = test_fill_random(buflist, input_desc->random_seed);
+		err = test_fill_random(buflist, input_desc->random_seed, input_desc->random_len);
 	}
 	return err;
 }

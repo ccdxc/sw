@@ -13,7 +13,7 @@
 #include "osal_errno.h"
 #include "pnso_test.h"
 
-void status_output_func(const char *status)
+void status_output_func(const char *status, void *opaque)
 {
 	printf("%s", status);
 }

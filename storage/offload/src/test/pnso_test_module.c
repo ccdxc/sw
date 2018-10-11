@@ -23,6 +23,11 @@ static long batch = -1;
 module_param(batch, long, 0444);
 MODULE_PARM_DESC(batch, "default batch count");
 
+static char *mode = NULL;
+module_param(mode, charp, 0444);
+MODULE_PARM_DESC(mode, "mode is sync, async, or poll");
+
+
 static osal_thread_t g_main_thread;
 
 static int
@@ -46,7 +51,7 @@ pnso_test_mod_fini(void)
 }
 
 static void
-status_output_func(const char *status)
+status_output_func(const char *status, void *opaque)
 {
 	OSAL_LOG(status);
 }
@@ -60,8 +65,9 @@ static const unsigned char default_global_yaml[] =
 "  #status_interval: 5\n"
 "alias: 'key1=abcd1234ABCD1234abcd1234ABCD1234'\n"
 "alias: 'iv1=000102030405060708090a0b0c0d0e0f'\n"
-"alias: 'default_repeat=100000'\n"
+"alias: 'default_repeat=1'\n"
 "alias: 'default_batch=1'\n"
+"alias: 'default_mode=sync'\n"
 "\n";
 
 static const unsigned char default_test_input[] =
@@ -97,6 +103,8 @@ static const unsigned char default_test_input[] =
 "      input:\n"
 "        #pattern: abcdefghijklm\n"
 "        pattern: a\n"
+"        #random_seed: 123\n"
+"        #random_len: 64\n"
 "        len: 4096\n"
 "      ops:\n"
 "        - compress:\n"
@@ -116,7 +124,8 @@ static const unsigned char default_test_input[] =
 "  - svc_chain:\n"
 "      idx: 3\n"
 "      input:\n"
-"        file: 'decompressed.bin'\n"
+"        pattern: a\n"
+"        len: 4096\n"
 "      ops:\n"
 "        - hash:\n"
 "            algo_type: 'sha2_256'\n"
@@ -125,7 +134,8 @@ static const unsigned char default_test_input[] =
 "  - svc_chain:\n"
 "      idx: 4\n"
 "      input:\n"
-"        file: 'decompressed.bin'\n"
+"        pattern: a\n"
+"        len: 4096\n"
 "      ops:\n"
 "        - chksum:\n"
 "            algo_type: 'crc32c'\n"
@@ -173,7 +183,7 @@ static const unsigned char default_test_input[] =
 "      #repeat: 0\n"
 "      repeat: '$default_repeat'\n"
 "      batch_depth: '$default_batch'\n"
-"      mode: sync\n"
+"      mode: '$default_mode'\n"
 "      validations:\n"
 "        - retcode_compare:\n"
 "            idx: 1\n"
@@ -186,7 +196,7 @@ static const unsigned char default_test_input[] =
 "      #repeat: 0\n"
 "      repeat: '$default_repeat'\n"
 "      batch_depth: '$default_batch'\n"
-"      mode: sync\n"
+"      mode: '$default_mode'\n"
 "      validations:\n"
 "        - retcode_compare:\n"
 "            idx: 1\n"
@@ -208,7 +218,7 @@ static const unsigned char default_test_input[] =
 "      #repeat: 0\n"
 "      repeat: '$default_repeat'\n"
 "      batch_depth: '$default_batch'\n"
-"      mode: sync\n"
+"      mode: '$default_mode'\n"
 "      validations:\n"
 "        - retcode_compare:\n"
 "            idx: 1\n"
@@ -221,7 +231,7 @@ static const unsigned char default_test_input[] =
 "      #repeat: 0\n"
 "      repeat: '$default_repeat'\n"
 "      batch_depth: '$default_batch'\n"
-"      mode: sync\n"
+"      mode: '$default_mode'\n"
 "      validations:\n"
 "        - retcode_compare:\n"
 "            idx: 1\n"
@@ -234,7 +244,7 @@ static const unsigned char default_test_input[] =
 "      repeat: 0\n"
 "      #repeat: '$default_repeat'\n"
 "      batch_depth: '$default_batch'\n"
-"      mode: sync\n"
+"      mode: '$default_mode'\n"
 "      validations:\n"
 "        - retcode_compare:\n"
 "            idx: 1\n"
@@ -251,7 +261,7 @@ static const unsigned char default_test_input[] =
 "      #repeat: 0\n"
 "      repeat: '$default_repeat'\n"
 "      batch_depth: '$default_batch'\n"
-"      mode: sync\n"
+"      mode: '$default_mode'\n"
 "      validations:\n"
 "        - retcode_compare:\n"
 "            idx: 1\n"
@@ -268,7 +278,7 @@ static const unsigned char default_test_input[] =
 "      #repeat: 0\n"
 "      repeat: '$default_repeat'\n"
 "      batch_depth: '$default_batch'\n"
-"      mode: sync\n"
+"      mode: '$default_mode'\n"
 "      validations:\n"
 "        - retcode_compare:\n"
 "            idx: 1\n"
@@ -283,14 +293,18 @@ static const unsigned char default_test_input[] =
 
 #define MAX_ALIAS_STR_LEN 128
 /* Return length of generated alias string */
-static uint32_t generate_alias_yaml(char *dst, const char *name, long val)
+static uint32_t generate_alias_yaml(char *dst, const char *name, long val_num, const char *val_str)
 {
 	uint32_t len = 0;
 
 	len += safe_strcpy(dst+len, "alias: '", MAX_ALIAS_STR_LEN-len);
 	len += safe_strcpy(dst+len, name, MAX_ALIAS_STR_LEN-len);
 	len += safe_strcpy(dst+len, "=", MAX_ALIAS_STR_LEN-len);
-	len += safe_itoa(dst+len, MAX_ALIAS_STR_LEN-len, val);
+	if (val_str) {
+		len += safe_strcpy(dst+len, val_str, MAX_ALIAS_STR_LEN-len);
+	} else {
+		len += safe_itoa(dst+len, MAX_ALIAS_STR_LEN-len, val_num);
+	}
 	len += safe_strcpy(dst+len, "'\n", MAX_ALIAS_STR_LEN-len);
 
 	return len;
@@ -327,13 +341,13 @@ body(void *not_used)
 			goto done;
 		}
 	}
-	if (repeat >= 0 || batch >= 0) {
+	if (repeat >= 0 || batch >= 0 || mode != NULL) {
 		uint32_t len = 0;
 		char alias_str[MAX_ALIAS_STR_LEN+1] = "";
 
 		if (repeat >= 0) {
 			len = generate_alias_yaml(alias_str, "default_repeat",
-						  repeat);
+						  repeat, NULL);
 			PNSO_LOG_WARN("module param repeat: %s\n", alias_str);
 			err = pnso_test_parse_buf(alias_str, len, cfg);
 			if (err) {
@@ -344,11 +358,22 @@ body(void *not_used)
 		}
 		if (batch >= 0) {
 			len = generate_alias_yaml(alias_str, "default_batch",
-						  batch);
+						  batch, NULL);
 			PNSO_LOG_WARN("module param batch: %s\n", alias_str);
 			err = pnso_test_parse_buf(alias_str, len, cfg);
 			if (err) {
 				PNSO_LOG_ERROR("Failed to parse default batch string '%s'\n",
+					       alias_str);
+				goto done;
+			}
+		}
+		if (mode) {
+			len = generate_alias_yaml(alias_str, "default_mode",
+						  0, mode);
+			PNSO_LOG_WARN("module param mode: %s\n", alias_str);
+			err = pnso_test_parse_buf(alias_str, len, cfg);
+			if (err) {
+				PNSO_LOG_ERROR("Failed to parse default mode string '%s'\n",
 					       alias_str);
 				goto done;
 			}

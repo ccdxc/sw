@@ -862,6 +862,7 @@ FUNC_SET_INT(test_set_idx, parent->idx, 1, UINT_MAX)
 FUNC_SET_STRING(test_set_svc_chain_name, ((struct test_svc_chain *)parent)->name,
 		TEST_MAX_NAME_LEN)
 FUNC_SET_INT(test_set_input_random, ((struct test_svc_chain *)parent)->input.random_seed, 0, UINT_MAX)
+FUNC_SET_INT(test_set_input_random_len, ((struct test_svc_chain *)parent)->input.random_len, 0, TEST_MAX_RANDOM_LEN)
 FUNC_SET_INT(test_set_input_offset, ((struct test_svc_chain *)parent)->input.offset, 1, UINT_MAX)
 FUNC_SET_INT(test_set_input_len, ((struct test_svc_chain *)parent)->input.len, 1, UINT_MAX)
 FUNC_SET_INT(test_set_input_min_block, ((struct test_svc_chain *)parent)->input.min_block_size, 0, UINT_MAX)
@@ -1668,6 +1669,7 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ "svc_chain",     "ops",             NULL, NULL, NULL },
 
 	{ "input",         "random",          NULL, test_set_input_random, NULL },
+	{ "input",         "random_len",      NULL, test_set_input_random_len, NULL },
 	{ "input",         "offset",          NULL, test_set_input_offset, NULL },
 	{ "input",         "len",             NULL, test_set_input_len, NULL },
 	{ "input",         "file",            NULL, test_set_input_file, NULL },
@@ -2109,7 +2111,7 @@ static uint32_t validation_stats_to_yaml(const struct test_validation *validatio
 	len += safe_strcpy(dst+len, "        failure: ", max_len-len);
 	len += safe_itoa(dst+len, max_len-len, validation->rt_failure_count);
 
-	len += safe_strcpy(dst+len, "\n    },\n", max_len-len);
+	len += safe_strcpy(dst+len, "\n    }},\n", max_len-len);
 
 	return len;
 }
@@ -2134,11 +2136,13 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 
 	len += safe_strcpy(dst+len, "{tests: [{ test: {\n  idx: ", max_len-len);
 	len += safe_itoa(dst+len, max_len-len, testcase->node.idx);
+	len += safe_strcpy(dst+len, ",\n", max_len-len);
 	if (testcase->name[0]) {
-		len += safe_strcpy(dst+len, "\n  name: ", max_len-len);
+		len += safe_strcpy(dst+len, "  name: \"", max_len-len);
 		len += safe_strcpy(dst+len, testcase->name, max_len-len);
+		len += safe_strcpy(dst+len, "\",\n", max_len-len);
 	}
-	len += safe_strcpy(dst+len, "\n  stats: {\n", max_len-len);
+	len += safe_strcpy(dst+len, "  stats: {\n", max_len-len);
 	for (i = 0; i < stat_count; i++) {
 		if (len >= max_len-1)
 			goto nomem;
@@ -2146,24 +2150,33 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 		len += safe_strcpy(dst+len, stats_names[i], TEST_MAX_STAT_NAME_LEN);
 		len += safe_strcpy(dst+len, ": ", max_len-len);
 		len += safe_itoa(dst+len, max_len-len, stats[i]);
-		len += safe_strcpy(dst+len, ",\n", max_len-len);
+		if (i < stat_count-1) {
+			len += safe_strcpy(dst+len, ",\n", max_len-len);
+		} else {
+			/* Last stat, no comma needed */
+			len += safe_strcpy(dst+len, "\n", max_len-len);
+		}
 	}
 	if (len >= max_len-1)
 		goto nomem;
 
-	len += safe_strcpy(dst+len, "  }\n", max_len-len);
-
 	if (output_validations && testcase->validations.head) {
 		struct test_node *node;
 
-		len += safe_strcpy(dst+len, "  validations [\n", max_len-len);
+		len += safe_strcpy(dst+len, "  },\n", max_len-len);
+		len += safe_strcpy(dst+len, "  validations: [\n", max_len-len);
 		FOR_EACH_NODE(testcase->validations) {
 			if (len+TEST_MAX_VALIDATION_STAT_LEN >= max_len-1)
 				goto nomem;
 			len += validation_stats_to_yaml((const struct test_validation *)(node), dst+len);
 		}
-		len += safe_strcpy(dst+len, "  ]\n", max_len-len);
+		/* remove last ",\n" */
+		len -= 2;
+		len += safe_strcpy(dst+len, "\n  ]\n", max_len-len);
+	} else {
+		len += safe_strcpy(dst+len, "  }\n", max_len-len);
 	}
+
 	if (len >= max_len-1)
 		goto nomem;
 
@@ -2172,7 +2185,7 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 	if (len >= max_len-1)
 		goto nomem;
 
-	g_hooks.status_output(dst);
+	g_hooks.status_output(dst, NULL);
 
 	TEST_FREE(dst);
 	return PNSO_OK;

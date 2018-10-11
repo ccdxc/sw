@@ -33,8 +33,31 @@ uint32_t roundup_len(uint32_t len, uint32_t block_size)
 	return roundup_block_count(len, block_size) * block_size;
 }
 
+/* fill buflist with a repeat of the given data */
+void test_fill_buflist(struct pnso_buffer_list *buflist,
+		       const uint8_t *data, uint32_t data_len)
+{
+	size_t i, j, data_i;
+	uint8_t *dst;
+
+	data_i = 0;
+	for (i = 0; i < buflist->count; i++) {
+		if (!buflist->buffers[i].len) {
+			continue;
+		}
+
+		dst = (uint8_t *) buflist->buffers[i].buf;
+		for (j = 0; j < buflist->buffers[i].len; j++) {
+			dst[j] = (uint8_t) data[data_i % data_len];
+			data_i++;
+		}
+	}
+}
+
+static uint8_t random_data[4096];
+
 /* Fill buflist with random values */
-pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed)
+pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed, uint32_t random_len)
 {
 	size_t i, j;
 	uint32_t rnum = 0;
@@ -42,11 +65,23 @@ pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed)
 
 	pnso_srand(seed);
 
+	if (random_len) {
+		if (random_len > sizeof(random_data))
+			random_len = sizeof(random_data);
+
+		for (i = 0; i < random_len; i += sizeof(uint32_t)) {
+			rnum = pnso_rand();
+			*(uint32_t*)(random_data+i) = rnum;
+		}
+
+		test_fill_buflist(buflist, random_data, random_len);
+		return PNSO_OK;
+	}
+
 	for (i = 0; i < buflist->count; i++) {
 		if (!buflist->buffers[i].len) {
 			continue;
 		}
-
 
 		dst = (uint8_t *) buflist->buffers[i].buf;
 		for (j = 0; j < buflist->buffers[i].len; j++) {

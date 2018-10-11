@@ -31,7 +31,7 @@ typedef pnso_error_t (*pnso_submit_req_fn_t)(
 		pnso_poll_fn_t *poll_fn,
 		void **poll_ctx);
 
-typedef void (*pnso_output_fn_t)(const char *str);
+typedef void (*pnso_output_fn_t)(const char *str, void *opaque);
 typedef void *(*pnso_alloc_fn_t)(size_t sz);
 typedef void (*pnso_dealloc_fn_t)(void *ptr);
 typedef void *(*pnso_realloc_fn_t)(void *ptr, size_t sz);
@@ -64,7 +64,9 @@ pnso_error_t test_write_file(const char *fname,
 			     const struct pnso_buffer_list *buflist,
 			     uint32_t flen, uint32_t flags);
 pnso_error_t test_delete_file(const char *fname);
-pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed);
+void test_fill_buflist(struct pnso_buffer_list *buflist,
+		       const uint8_t *data, uint32_t data_len);
+pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed, uint32_t random_len);
 int test_compare_files(const char *path1, const char *path2, uint32_t offset, uint32_t len);
 int test_compare_file_data(const char *path, uint32_t offset, uint32_t len,
 			   const uint8_t *pattern, uint32_t pat_len);
