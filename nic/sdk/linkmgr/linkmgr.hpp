@@ -10,6 +10,9 @@
 namespace sdk {
 namespace linkmgr {
 
+typedef void (*port_event_notify_t)(uint32_t port_num,
+                                    port_event_t port_event);
+
 typedef enum linkmgr_thread_id_e {
     LINKMGR_THREAD_ID_CTRL,
     LINKMGR_THREAD_ID_PERIODIC,
@@ -19,11 +22,12 @@ typedef enum linkmgr_thread_id_e {
 } linkmgr_thread_id_t;
 
 typedef struct linkmgr_cfg_s {
-    platform_type_t   platform_type;
-    sdk::lib::catalog *catalog;
-    void              *server_builder;
-    const char        *cfg_path;
-    bool              process_mode;
+    platform_type_t     platform_type;
+    sdk::lib::catalog   *catalog;
+    void                *server_builder;
+    const char          *cfg_path;
+    port_event_notify_t port_event_cb;
+    bool                process_mode;
 } __PACK__ linkmgr_cfg_t;
 extern linkmgr_cfg_t g_linkmgr_cfg;
 

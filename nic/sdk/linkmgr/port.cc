@@ -765,6 +765,11 @@ port::port_event_notify(port_event_t event)
     default:
         break;
     }
+
+    if (g_linkmgr_cfg.port_event_cb) {
+        g_linkmgr_cfg.port_event_cb(port_num(), event);
+    }
+
     return SDK_RET_OK;
 }
 

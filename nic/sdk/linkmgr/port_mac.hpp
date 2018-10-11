@@ -9,7 +9,7 @@
 namespace sdk {
 namespace linkmgr {
 
-#define MAX_MAC_STATS 90
+#define MAX_MAC_STATS 89
 
 typedef struct mac_info_s {
     uint32_t mac_id;
