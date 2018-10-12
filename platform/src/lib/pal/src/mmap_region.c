@@ -124,7 +124,7 @@ pr_findpa(const u_int64_t pa, const u_int64_t sz)
         if (pr->pa <= pa && pa + sz < pr->pa + pr->sz && pr->mapped) {
             return pr;
         }
-	pr = pr->next;
+        pr = pr->next;
     }
 
     return NULL;
@@ -140,7 +140,7 @@ pr_findva(const void *va, const u_int64_t sz)
         if (pr->va <= va && va + sz < pr->va + pr->sz) {
             return pr;
         }
-	pr = pr->next;
+        pr = pr->next;
     }
     return NULL;
 }
@@ -151,7 +151,7 @@ pr_getpa(const u_int64_t pa, const u_int64_t sz, u_int8_t access)
     pal_mmap_region_t *pr = pr_findpa(pa, sz);
     if (pr == NULL && access == FREEACCESS) {
         pr = pr_new(pa, sz);
-    	pr_map(pr);
+            pr_map(pr);
     }
 
     return pr;
@@ -167,7 +167,7 @@ pr_ptov(const u_int64_t pa, const u_int64_t sz, u_int8_t access)
         pa >= pr_recent->pa &&
         pa < pr_recent->pa + pr_recent->sz &&
         pa + sz < pr_recent->pa + pr_recent->sz) { 
-	pr = pr_recent;
+        pr = pr_recent;
     } else {
         pr = pr_getpa(pa, sz, access);
         /*Cache the recent pal_mmap_region_t result */
@@ -175,9 +175,9 @@ pr_ptov(const u_int64_t pa, const u_int64_t sz, u_int8_t access)
     }
 
     if (pr == NULL) {
-	return NULL;
+        return NULL;
     } else {
-	return pr->va + (pa - pr->pa);
+        return pr->va + (pa - pr->pa);
     }
 }
 
@@ -195,18 +195,18 @@ pr_mem_unmap(void *va)
     pal_data_t *pd = pal_get_data();
     pal_mmap_region_t *pr = pr_findva(va, 4);
     pr->mapped = 0;
-    munmap(va, pr->sz);    
+    munmap(pr->va, pr->sz);    
 
     if (pr->next) {
         pr->next->prev = pr->prev;
     }
 
     if (pr->prev) {
-	pr->prev->next = pr->next;
+        pr->prev->next = pr->next;
     }
 
     if (pd->regions == pr) {
-	pd->regions = pr->next;
+        pd->regions = pr->next;
     }
 
     free(pr);
