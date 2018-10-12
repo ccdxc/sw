@@ -73,6 +73,8 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleNwsecPolicyShowCmd(nil, ofile)
 	ofile.WriteString("Endpoint information\n\n")
 	handleEpDetailShowCmd(nil, ofile)
+	ofile.WriteString("Port information\n\n")
+	handlePortDetailShowCmd(nil, ofile)
 	ofile.WriteString("Session information\n\n")
 	handleSessionDetailShowCmd(nil, ofile)
 	ofile.WriteString("ACL information\n\n")
