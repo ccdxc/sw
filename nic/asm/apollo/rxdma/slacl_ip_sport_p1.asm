@@ -6,7 +6,7 @@ struct phv_                 p;
 
 %%
 
-slacl_ipv4_sport_p1:
+slacl_ip_sport_p1:
     nop.e
     nop
 
@@ -15,6 +15,6 @@ slacl_ipv4_sport_p1:
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-slacl_ipv4_sport_p1_error:
+slacl_ip_sport_p1_error:
     nop.e
     nop

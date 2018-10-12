@@ -8,9 +8,9 @@ struct slacl_proto_dport_lpm_s0_k   k;
 %%
 
 slacl_proto_dport_lpm_s0:
-    add     r1, k.{slacl_metadata_proto_dport_addr_sbit0_ebit1, \
-                   slacl_metadata_proto_dport_addr_sbit2_ebit33}, 1, 6
-    phvwr   p.slacl_metadata_proto_dport_addr, r1
+    add     r1, k.{slacl_metadata_proto_dport_table_addr_sbit0_ebit1, \
+                   slacl_metadata_proto_dport_table_addr_sbit2_ebit33}, 1, 6
+    phvwr   p.slacl_metadata_proto_dport_table_addr, r1
     nop.e
     nop
 

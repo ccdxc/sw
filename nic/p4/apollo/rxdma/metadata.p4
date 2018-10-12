@@ -3,22 +3,25 @@
 
 header_type slacl_metadata_t {
     fields {
-        pad0                 : 6;
-        sport_addr           : 34;
-        pad1                 : 6;
-        ipv4_addr            : 34;
-        pad2                 : 6;
-        proto_dport_addr     : 34;
-        pad3                 : 6;
-        p1_addr              : 34;
-        pad4                 : 6;
-        p2_addr              : 34;
-        pad5                 : 1;
-        sport_class_id       : 7;
-        proto_dport_class_id : 8;
-        pad6                 : 4;
-        ipv4_class_id        : 10;
-        p1_class_id          : 10;
+        pad0                    : 6;
+        sport_table_addr        : 34;
+        pad1                    : 6;
+        ipv4_table_addr         : 34;
+        pad2                    : 6;
+        proto_dport_table_addr  : 34;
+        pad3                    : 6;
+        p1_table_addr           : 34;
+        pad4                    : 6;
+        p2_table_addr           : 34;
+        pad5                    : 1;
+        sport_class_id          : 7;
+        proto_dport_class_id    : 8;
+        pad6                    : 4;
+        ip_class_id             : 10;
+        p1_class_id             : 10;
+        ipv4_lpm_s2_offset      : 16;
+        pad7                    : 72;
+        ip                      : 128;
     }
 }
 
@@ -27,14 +30,13 @@ header_type scratch_metadata_t {
         in_packets      : 64;
         in_bytes        : 64;
         rule_id         : 10;
-        class_ids       : 510;
         class_id10      : 10;
-        class_id8       : 8;
-        class_pad       : 2;
+        class_id16      : 16;
         qid             : 24;
         dma_size        : 16;
         slacl_result    : 2;
         data512         : 512;
+        ipv4_addr       : 32;
     }
 }
 
@@ -54,10 +56,11 @@ header_type udp_scratch_metadata_t {
 }
 header_type udp_flow_metadata_t {
     fields {
-        zero            : 1;
-        pad0            : 3;
-        udp_qid_tbl_idx : 12;   // stg_id | udp_oflow_index[10:0]
-        udp_flow_qid    : 8;
+        zero                : 1;
+        udp_flow_lkp_result : 2;
+        pad0                : 1;
+        udp_qid_tbl_idx     : 12;   // stg_id | udp_oflow_index[10:0]
+        udp_flow_qid        : 8;
     }
 }
 header_type toeplitz_seed_t {
@@ -134,7 +137,7 @@ metadata qstate_txdma_fte_q_t   scratch_qstate_txdma_fte_q;
 metadata udp_scratch_metadata_t udp_scratch;
 
 @pragma dont_trim
-metadata udp_flow_metadata_t    udp_flow_meta;
+metadata udp_flow_metadata_t    udp_flow_metadata;
 
 metadata toeplitz_result_t      hash_results;
 
@@ -169,4 +172,3 @@ metadata doorbell_data_t    doorbell_data;
 metadata dma_cmd_pkt2mem_t dma_cmd_pkt2mem;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_phv2mem;
-

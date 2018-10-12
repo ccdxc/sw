@@ -147,8 +147,6 @@ header_type egress_service_header_t {
 
 header_type predicate_header_t {
     fields {
-        // Keep the txdma_drop_event as the msb so that copying d-vector
-        // into the PHV in txdma read_control is simpler
         txdma_drop_event      : 1;
         pad0                  : 5;
         lpm_bypass            : 1;
@@ -158,36 +156,38 @@ header_type predicate_header_t {
 
 header_type p4_to_rxdma_header_t {
     fields {
-        udp_flow_lkp_continue : 1;
-        slacl_bypass          : 1;
-        slacl_result          : 2; // (sf,sl) encoded value
-        udp_flow_lkp_result   : 2;
-        slacl_base_addr       : 34;
-        local_vnic_tag        : 16;
+        udp_flow_lkp_continue   : 1;
+        slacl_bypass            : 1;
+        slacl_result            : 2;    // (sf,sl) encoded value
+        udp_flow_lkp_result     : 2;
+        slacl_base_addr         : 34;
+        local_vnic_tag          : 16;
 
-        slacl_ipv4          : 32;
-        ip_proto            : 8;
-        l4_sport            : 16;
-        l4_dport            : 16;
+        udp_flow_hash_lkp       : 1;    // Must never be set
+        udp_queue_enable        : 1;    // True = subject packet to udp flow
+                                        // queueing, could be either flow miss
+                                        // or flow_state == queueing
 
-        udp_flow_hash_lkp   : 1;    // Must never be set
-        udp_queue_enable    : 1;    // True = subject packet to udp flow queueing, could be either flow miss or flow_state == queueing
-        udp_queue_drain     : 1;
-        udp_queue_delete    : 1;
-        udp_flow_hit        : 1;    // flow hit, flow_state == queuing
-        fte_rss_enable      : 1;
-        udp_q_counter       : 10;   // packets received while flow entry is in 'queuing' state, 0 indicates flow miss
+        pad                     : 11;
+        direction               : 1;
+        udp_queue_drain         : 1;
+        fte_rss_enable          : 1;
 
-        udp_oflow_index     : 32;
-        udp_flow_qid        : 8;    // qid - useful when drain is set
+        udp_oflow_index         : 32;
+        udp_flow_qid            : 8;    // qid - useful when drain is set
 
-        pad2                : 12;
-        flow_ktype          : 4;
-        flow_src            : 128;
-        flow_dst            : 128;
-        flow_proto          : 8;
-        flow_dport          : 16;
-        flow_sport          : 16;
+        flow_src                : 128;
+        flow_dst                : 128;
+        flow_proto              : 8;
+        flow_dport              : 16;
+        flow_sport              : 16;
+        flow_ktype              : 4;
+
+        udp_queue_delete        : 1;
+        udp_flow_hit            : 1;    // flow hit, flow_state == queuing
+        udp_q_counter           : 10;   // packets received while flow entry
+                                        // is in 'queuing' state, 0 indicates
+                                        // flow miss
     }
 }
 
@@ -206,9 +206,6 @@ header_type p4_to_txdma_header_t {
         pad2            : 2;
         payload_len     : 14;
         lpm_dst         : 128;
-        // TODO: padding vcn_id to 16 bits so as to unionize it with
-        // vnic_metadata.vcn_id . Add pragmas to any index tables using
-        // this
         vcn_id          : 16;
     }
 }

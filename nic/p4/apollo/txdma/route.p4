@@ -10,13 +10,17 @@
 #define s0_name              route_lpm_s0
 #define s1_name              route_lpm_s1
 #define s2_name              route_lpm_s2
+#define s2_name_ext          route_lpm_s2_ext
 #define key_field            scratch_metadata.v4_addr
 #define res_field            scratch_metadata.nh_index
 #define key                  p4_to_txdma_header.lpm_dst
 #define next_addr            p4_to_txdma_header.lpm_addr
 #define s2_offset            txdma_control.lpm_s2_offset
-#define curr_addr            p4_to_txdma_header.lpm_addr
+#define base_addr            p4_to_txdma_header.lpm_addr
 #define result               txdma_to_p4e_header.nexthop_index
+
+action route_lpm_s2_ext() {
+}
 
 #include "../include/lpm.h"
 

@@ -230,7 +230,6 @@ capri_load_mpu_programs (const char *handle,
                         program_info[i].prog.complete,
                         program_info[i].prog.symtab.size(),
                         program_info[i].base_addr, program_info[i].size);
-        program_info[i].prog.symtab.dump();
 
         /* Check to see if the program that is loaded is present in the
          * list of programs for which parameters are specified via input

@@ -9,7 +9,7 @@ action udp_flow_info() {
     //      - continue = True : check following slots for pull-up
     //modify_field(udp_scratch.entry_valid, entry_valid);
     modify_field(udp_scratch.udp_flow_lkp_result,
-                 p4_to_rxdma_header.udp_flow_lkp_result);
+                 udp_flow_metadata.udp_flow_lkp_result);
     modify_field(udp_scratch.udp_flow_hit, p4_to_rxdma_header.udp_flow_hit);
     modify_field(p4_to_rxdma_header.udp_flow_lkp_continue, 1);
 
@@ -20,7 +20,7 @@ action udp_flow_info() {
     //  NOP, continue = True
     //modify_field(udp_scratch.entry_valid, entry_valid);
     modify_field(udp_scratch.udp_flow_lkp_result,
-                 p4_to_rxdma_header.udp_flow_lkp_result);
+                 udp_flow_metadata.udp_flow_lkp_result);
     modify_field(p4_to_rxdma_header.udp_flow_lkp_continue, 1);
 
     // valid entry - occupied by this flow
@@ -42,8 +42,8 @@ action udp_flow_info() {
     modify_field(udp_scratch.udp_q_counter, p4_to_rxdma_header.udp_q_counter);
     modify_field(p4_to_rxdma_header.udp_flow_lkp_continue, 0);
     modify_field(udp_scratch.udp_flow_lkp_result,
-                 p4_to_rxdma_header.udp_flow_lkp_result);
-    modify_field(udp_flow_meta.udp_qid_tbl_idx, 1);
+                 udp_flow_metadata.udp_flow_lkp_result);
+    modify_field(udp_flow_metadata.udp_qid_tbl_idx, 1);
 }
 
 @pragma stage 0
@@ -190,7 +190,7 @@ table udp_flow_qid_allocator{
     // single entry SRAM table
     reads {
         // define a key that is always zero
-        udp_flow_meta.zero : exact;
+        udp_flow_metadata.zero : exact;
     }
     actions {
         qid_alloc_free;
@@ -199,7 +199,7 @@ table udp_flow_qid_allocator{
 }
 action qid_alloc_free(qid_bitmap) {
     modify_field(udp_scratch.qid_bitmap, qid_bitmap);
-    modify_field(udp_flow_meta.udp_flow_qid, 1 /* for allocated qid*/);
+    modify_field(udp_flow_metadata.udp_flow_qid, 1 /* for allocated qid*/);
 }
 
 @pragma stage 4
@@ -208,7 +208,7 @@ action qid_alloc_free(qid_bitmap) {
 table udp_flow_qid_update_virtual {
     // this is physically the same table as udp_flow_qid_update
     reads {
-        udp_flow_meta.udp_qid_tbl_idx : exact;
+        udp_flow_metadata.udp_qid_tbl_idx : exact;
     }
     actions {
         read_update_qid;
@@ -222,7 +222,7 @@ table udp_flow_qid_update_virtual {
 @pragma index_table
 table udp_flow_qid_update {
     reads {
-        udp_flow_meta.udp_qid_tbl_idx : exact;
+        udp_flow_metadata.udp_qid_tbl_idx : exact;
     }
     actions {
         read_update_qid;
@@ -232,7 +232,7 @@ table udp_flow_qid_update {
 
 action read_update_qid(qid) {
     // read when this is a pullup case, update when allocated
-    modify_field(udp_flow_meta.udp_flow_qid, qid);
+    modify_field(udp_flow_metadata.udp_flow_qid, qid);
 }
 
 control udp_flow_queuing {

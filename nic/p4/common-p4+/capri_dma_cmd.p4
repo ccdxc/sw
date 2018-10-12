@@ -90,7 +90,7 @@ header_type dma_cmd_mem2mem_t {
 
 #define DMA_COMMAND_MEM2MEM_FILL(_dma_cmd_m2m_src, _dma_cmd_m2m_dst, _src_addr, _src_host, _dst_addr, _dst_host, _size, _cache, _fence, _barrier) \
     modify_field(_dma_cmd_m2m_src.dma_cmd_type, DMA_CMD_TYPE_MEM2MEM); \
-    modify_field(_dma_cmd_m2m_src.dma_cmd_mem2mem_type, DMA_CMD_TYPE_MEM2MEM_TYPE_SRC); \ 
+    modify_field(_dma_cmd_m2m_src.dma_cmd_mem2mem_type, DMA_CMD_TYPE_MEM2MEM_TYPE_SRC); \
     modify_field(_dma_cmd_m2m_src.dma_cmd_addr, _src_addr); \
     modify_field(_dma_cmd_m2m_src.dma_cmd_host_addr, _src_host); \
     modify_field(_dma_cmd_m2m_src.dma_cmd_size, _size); \
@@ -98,13 +98,13 @@ header_type dma_cmd_mem2mem_t {
     modify_field(_dma_cmd_m2m_src.dma_cmd_wr_fence, _fence); \
     modify_field(_dma_cmd_m2m_src.dma_cmd_barrier, _barrier); \
     modify_field(_dma_cmd_m2m_dst.dma_cmd_type, DMA_CMD_TYPE_MEM2MEM); \
-    modify_field(_dma_cmd_m2m_src.dma_cmd_mem2mem_type, DMA_CMD_TYPE_MEM2MEM_TYPE_DST); \ 
+    modify_field(_dma_cmd_m2m_src.dma_cmd_mem2mem_type, DMA_CMD_TYPE_MEM2MEM_TYPE_DST); \
     modify_field(_dma_cmd_m2m_dst.dma_cmd_addr, _dst_addr); \
     modify_field(_dma_cmd_m2m_dst.dma_cmd_host_addr, _dst_host); \
     modify_field(_dma_cmd_m2m_dst.dma_cmd_size, _size); \
     modify_field(_dma_cmd_m2m_dst.dma_cmd_cache, _cache); \
     modify_field(_dma_cmd_m2m_dst.dma_cmd_wr_fence, _fence); \
-    modify_field(_dma_cmd_m2m_dst.dma_cmd_barrier, _barrier); 
+    modify_field(_dma_cmd_m2m_dst.dma_cmd_barrier, _barrier);
 
 header_type dma_cmd_generic_t {
     fields {

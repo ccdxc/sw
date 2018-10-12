@@ -116,4 +116,3 @@ lessthan0:
     phvwr.e    next_addr,  r1                        //next_addr = curr_addr+r1
     phvwr      s2_offset,  LPM_S2_BLOCK0_OFFSET
     // Total 15 instructions; 4 branch delay slot waste
-

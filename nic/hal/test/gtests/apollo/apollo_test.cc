@@ -578,7 +578,6 @@ TEST_F(apollo_test, test1) {
     capri_cfg_t cfg;
     sdk::lib::catalog *catalog;
 
-
     p4pd_cfg_t p4pd_cfg = {
         .table_map_cfg_file  = "apollo/capri_p4_table_map.json",
         .p4pd_pgm_name       = "apollo_p4",
@@ -607,6 +606,7 @@ TEST_F(apollo_test, test1) {
     }
 
     printf("Connecting to ASIC SIM\n");
+    hal::hal_sdk_init();
     hal::utils::trace_init("hal", 0, true, "hal.log", hal::utils::trace_debug);
     ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
     ASSERT_NE(ret, -1);

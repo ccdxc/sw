@@ -14,7 +14,6 @@ nop:
 
 .align
 tunneled_ipv4_packet:
-    phvwr           p.p4_to_rxdma_header_slacl_ipv4, k.ipv4_2_dstAddr
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV4
     phvwr           p.key_metadata_src, k.ipv4_2_srcAddr
     phvwr           p.key_metadata_dst, k.ipv4_2_dstAddr
@@ -25,7 +24,8 @@ tunneled_ipv4_packet:
 .align
 tunneled_ipv6_packet:
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV6
-    phvwr           p.key_metadata_src, k.{ipv6_2_srcAddr_sbit0_ebit31...ipv6_2_srcAddr_sbit64_ebit127}
+    phvwr           p.key_metadata_src, \
+                        k.{ipv6_2_srcAddr_sbit0_ebit31...ipv6_2_srcAddr_sbit64_ebit127}
     phvwr           p.key_metadata_dst, k.ipv6_2_dstAddr
     phvwr.e         p.key_metadata_proto, k.ipv6_2_nextHdr
     phvwr           p.control_metadata_mapping_lkp_addr, k.ipv6_2_dstAddr

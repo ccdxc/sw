@@ -79,7 +79,7 @@ table toeplitz_seed {
     reads {
         // define a key that is always zero, single entry index table in sram
         // typically this is per lif, but in BIW mode there is only one lif
-        udp_flow_meta.zero : exact;
+        udp_flow_metadata.zero : exact;
     }
     actions {
         toeplitz_seed_init;
