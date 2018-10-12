@@ -158,10 +158,16 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	err := addNodes(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | AddNodes |AddNodes Call Failed. %v", err)
-		return nil, err
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("AddNodes Returned the error. Err: %v", err)
+		return req, err
 	}
 
-	// TODO return fully formed resp here
+	for idx, node := range ts.Nodes {
+		req.Nodes[idx] = node.Node
+	}
+
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
 }
 

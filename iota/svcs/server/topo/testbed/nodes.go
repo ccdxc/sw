@@ -22,5 +22,6 @@ func (n *TestNode) AddNode() error {
 		log.Errorf("Adding node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.NodeStatus.ApiStatus)
 		return fmt.Errorf("adding node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.NodeStatus.ApiStatus)
 	}
+	n.Node.NodeUuid = resp.NodeUuid
 	return nil
 }
