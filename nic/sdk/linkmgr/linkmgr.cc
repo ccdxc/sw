@@ -788,11 +788,18 @@ port_get (void *pd_p, port_args_t *args)
     args->mac_id      = port_p->mac_id();
     args->mac_ch      = port_p->mac_ch();
     args->num_lanes   = port_p->num_lanes();
-    args->oper_status = port_p->oper_status();
     args->fec_type    = port_p->fec_type();
     args->mtu         = port_p->mtu();
     args->debounce_time = port_p->debounce_time();
     args->auto_neg_enable = port_p->auto_neg_enable();
+
+    // TODO send live link status until poll timer is reduced
+    // args->oper_status = port_p->oper_status();
+    if (port_p->port_link_status() == true) {
+        args->oper_status = port_oper_status_t::PORT_OPER_STATUS_UP;
+    } else {
+        args->oper_status = port_oper_status_t::PORT_OPER_STATUS_DOWN;
+    }
 
     port_p->port_mac_stats_get (args->stats_data);
 
