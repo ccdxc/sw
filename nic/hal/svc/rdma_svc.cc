@@ -21,11 +21,13 @@ RdmaServiceImpl::RdmaQpCreate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         hal::rdma_qp_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -43,11 +45,13 @@ RdmaServiceImpl::RdmaQpUpdate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         hal::rdma_qp_update(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -85,11 +89,13 @@ RdmaServiceImpl::RdmaCqCreate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         hal::rdma_cq_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -107,11 +113,13 @@ RdmaServiceImpl::RdmaAqCreate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         hal::rdma_aq_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -129,11 +137,13 @@ RdmaServiceImpl::RdmaEqCreate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         hal::rdma_eq_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -150,11 +160,13 @@ RdmaServiceImpl::RdmaMemReg(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         hal::rdma_memory_register(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -171,11 +183,13 @@ RdmaServiceImpl::RdmaAllocLkey(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         hal::rdma_alloc_lkey(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -193,11 +207,13 @@ RdmaServiceImpl::RdmaMemWindow(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         hal::rdma_memory_window_alloc(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -215,10 +231,12 @@ RdmaServiceImpl::RdmaAhCreate(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
         hal::rdma_ah_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
