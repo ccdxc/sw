@@ -124,6 +124,7 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 		       const struct service_params *svc_params)
 {
 	const struct per_core_resource	*pc_res = svc_info->si_pc_res;
+	struct service_buf_list		orig_dst_blist;
 
 	/*
 	 * Produce output to intermediate buffers if there is a chain subordinate.
@@ -136,7 +137,8 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 			OSAL_LOG_ERROR("failed to obtain intermediate buffers");
 			return ENOMEM;
 		}
-		svc_info->si_dst_blist = &svc_info->si_iblist->blist;
+		svc_info->si_dst_blist.sbl_type = SERVICE_BUF_LIST_TYPE_RMEM;
+		svc_info->si_dst_blist.sbl_blist = &svc_info->si_iblist->blist;
 
 		svc_info->si_istatus_desc =
 		    pc_res_mpool_object_get(pc_res,
@@ -146,14 +148,14 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 			return ENOMEM;
 		}
 
+		orig_dst_blist.sbl_type = SERVICE_BUF_LIST_TYPE_DFLT;
+		orig_dst_blist.sbl_blist = svc_params->sp_dst_blist;
 		svc_info->si_sgl_pdma =
-		    pc_res_sgl_pdma_packed_get(pc_res, svc_params->sp_dst_blist);
+		    pc_res_sgl_pdma_packed_get(pc_res, &orig_dst_blist);
 		if (!svc_info->si_sgl_pdma) {
 			OSAL_LOG_ERROR("failed to obtain chain SGL for PDMA");
 			return ENOMEM;
 		}
-	} else {
-		svc_info->si_dst_blist = svc_params->sp_dst_blist;
 	}
 	return PNSO_OK;
 }
@@ -163,6 +165,7 @@ crypto_src_dst_aol_fill(struct service_info *svc_info,
 			const struct service_params *svc_params)
 {
 	const struct per_core_resource	*pc_res = svc_info->si_pc_res;
+	bool use_packed_aol;
 
 	/*
 	 * 1) First in chain or the only service: enter the src/dst buf into AOLs
@@ -170,27 +173,37 @@ crypto_src_dst_aol_fill(struct service_info *svc_info,
 	 * 2) Part of a chain (and is not first): use a sparse vector of AOLs
 	 *    for the src/dst buf info to facilitate sequencer padding.
 	 */
-	if (!chn_service_is_in_chain(svc_info) ||
-	     chn_service_is_first(svc_info)) {
+	use_packed_aol = !chn_service_is_in_chain(svc_info) ||
+			 chn_service_is_first(svc_info);
+	if (use_packed_aol) {
 		svc_info->si_src_aol = 
-			crypto_aol_packed_get(pc_res, svc_params->sp_src_blist,
-					      &svc_info->si_src_mpool_type,
+			crypto_aol_packed_get(pc_res, &svc_info->si_src_blist,
+					      &svc_info->si_src_aol_mptype,
 					      &svc_info->si_src_len);
-		svc_info->si_dst_aol = 
-			crypto_aol_packed_get(pc_res, svc_info->si_dst_blist,
-					      &svc_info->si_dst_mpool_type,
-					      &svc_info->si_dst_len);
 	} else {
 		svc_info->si_src_aol = 
-			crypto_aol_sparse_get(pc_res, svc_info->si_block_size,
-				svc_params->sp_src_blist, &svc_info->si_src_mpool_type,
+			crypto_aol_vec_sparse_get(pc_res, svc_info->si_block_size,
+				&svc_info->si_src_blist, &svc_info->si_src_aol_mptype,
 				&svc_info->si_src_len);
-		svc_info->si_dst_aol = 
-			crypto_aol_sparse_get(pc_res, svc_info->si_block_size,
-				svc_info->si_dst_blist, &svc_info->si_dst_mpool_type,
-				&svc_info->si_dst_len);
 	}
 
+	/*
+	 * Fix up intermediate buffer list length before making dst aol
+	 */
+	if (svc_info->si_iblist)
+		svc_info->si_iblist->blist.buffers[0].len = svc_info->si_src_len;
+
+	if (use_packed_aol) {
+		svc_info->si_dst_aol = 
+			crypto_aol_packed_get(pc_res, &svc_info->si_dst_blist,
+					      &svc_info->si_dst_aol_mptype,
+					      &svc_info->si_dst_len);
+	} else {
+		svc_info->si_dst_aol = 
+			crypto_aol_vec_sparse_get(pc_res, svc_info->si_block_size,
+				&svc_info->si_dst_blist, &svc_info->si_dst_aol_mptype,
+				&svc_info->si_dst_len);
+	}
 	if (!svc_info->si_src_aol || !svc_info->si_dst_aol) {
 		return ENOMEM;
 	}
@@ -202,14 +215,6 @@ crypto_src_dst_aol_fill(struct service_info *svc_info,
 		OSAL_LOG_ERROR("length error: src_len %u dst_len %u",
 				svc_info->si_src_len, svc_info->si_dst_len);
 		return EINVAL;
-	}
-
-	/*
-	 * Fix up intermediate buffer list length.
-	 */
-	if (svc_info->si_iblist) {
-                svc_info->si_iblist->blist.buffers[0].len = svc_info->si_src_len;
-                svc_info->si_dst_len = svc_info->si_src_len;
 	}
 
 	return PNSO_OK;
@@ -284,6 +289,7 @@ crypto_chain(struct chain_entry *centry)
 	struct crypto_chain_params	*crypto_chain = &svc_info->si_crypto_chain;
 	struct interm_buf_list		*iblist;
 	struct service_info		*svc_next;
+	uint32_t			len;
 	pnso_error_t			err;
 
 	if (chn_service_has_sub_chain(svc_info)) {
@@ -294,6 +300,7 @@ crypto_chain(struct chain_entry *centry)
 				sonic_virt_to_phy(svc_info->si_sgl_pdma);
 		crypto_chain->ccp_cmd.ccpc_sgl_pdma_en = true;
 		crypto_chain->ccp_cmd.ccpc_sgl_pdma_len_from_desc = true;
+                SGL_PDMA_PPRINT(crypto_chain->ccp_sgl_pdma_dst_addr);
 
 		crypto_chain->ccp_status_addr_0 =
 		  mpool_get_object_phy_addr(MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
@@ -303,6 +310,26 @@ crypto_chain(struct chain_entry *centry)
 		crypto_chain->ccp_status_len = sizeof(struct crypto_status_desc);
 		crypto_chain->ccp_cmd.ccpc_status_dma_en = true;
 		crypto_chain->ccp_cmd.ccpc_stop_chain_on_error = true;
+
+		if (svc_info->si_type == PNSO_SVC_TYPE_DECRYPT) {
+			svc_info->si_src_sgl = 
+				pc_res_sgl_vec_packed_get(svc_info->si_pc_res, 
+				    svc_info->si_block_size, &svc_info->si_dst_blist,
+				    MPOOL_TYPE_CRYPTO_SGL_VECTOR, &len);
+			if (!svc_info->si_src_sgl) {
+				OSAL_LOG_ERROR("failed to setup chain decrypt");
+				return EINVAL;
+			}
+
+			crypto_chain->ccp_cmd.ccpc_comp_len_update_en = true;
+			crypto_chain->ccp_cmd.ccpc_comp_sgl_src_en = true;
+			crypto_chain->ccp_cmd.ccpc_comp_sgl_src_vec_en = true;
+			crypto_chain->ccp_blk_boundary_shift =
+				(uint8_t)ilog2(svc_info->si_block_size);
+			crypto_chain->ccp_comp_sgl_src_addr =
+				sonic_virt_to_phy(svc_info->si_src_sgl);
+		}
+
 
 		OSAL_ASSERT(centry->ce_next);
 		svc_next = &centry->ce_next->ce_svc_info;
@@ -327,6 +354,7 @@ crypto_sub_chain_from_cpdc(struct service_info *svc_info,
 	cpdc_chain->ccp_aol_src_vec_addr = sonic_virt_to_phy(svc_info->si_src_aol);
 	cpdc_chain->ccp_aol_dst_vec_addr = sonic_virt_to_phy(svc_info->si_dst_aol);
 	cpdc_chain->ccp_cmd.ccpc_aol_pad_en = !!cpdc_chain->ccp_pad_buf_addr;
+	cpdc_chain->ccp_cmd.ccpc_sgl_pad_en = cpdc_chain->ccp_cmd.ccpc_sgl_pdma_pad_only;
 	cpdc_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	cpdc_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring_id,
@@ -415,9 +443,12 @@ crypto_write_result(struct service_info *svc_info)
 static void
 crypto_teardown(const struct service_info *svc_info)
 {
-	crypto_aol_put(svc_info->si_pc_res, svc_info->si_src_mpool_type,
+	CRYPTO_PPRINT_DESC(svc_info->si_desc);
+        SGL_PDMA_PPRINT(svc_info->si_crypto_chain.ccp_sgl_pdma_dst_addr);
+
+	crypto_aol_put(svc_info->si_pc_res, svc_info->si_src_aol_mptype,
 		       svc_info->si_src_aol);
-	crypto_aol_put(svc_info->si_pc_res, svc_info->si_dst_mpool_type,
+	crypto_aol_put(svc_info->si_pc_res, svc_info->si_dst_aol_mptype,
 		       svc_info->si_dst_aol);
 	pc_res_mpool_object_put(svc_info->si_pc_res, MPOOL_TYPE_CRYPTO_STATUS_DESC,
 				svc_info->si_status_desc);
@@ -429,6 +460,8 @@ crypto_teardown(const struct service_info *svc_info)
 				svc_info->si_istatus_desc);
 	pc_res_sgl_pdma_put(svc_info->si_pc_res,
 			    svc_info->si_sgl_pdma);
+	pc_res_sgl_vec_put(svc_info->si_pc_res, MPOOL_TYPE_CRYPTO_SGL_VECTOR,
+			   svc_info->si_src_sgl);
 	seq_cleanup_crypto_chain(svc_info);
 }
 

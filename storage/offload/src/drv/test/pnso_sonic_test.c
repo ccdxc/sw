@@ -62,6 +62,8 @@ static uint64_t iv_buf_pa;
 struct pnso_multi_buflist {
 	struct pnso_buffer_list *buflist;
 	uint8_t data[PNSO_TEST_DATA_SIZE];	/* TODO: */
+	uint32_t alloc_count;
+	uint32_t alloc_len;
 };
 
 struct pnso_multi_service_request {
@@ -116,16 +118,26 @@ comp_cb(void *arg1, struct pnso_service_result *svc_res)
 }
 
 static void
-init_buflist(struct pnso_multi_buflist *mbuf, char fill_byte)
+init_buflist_with_count(struct pnso_multi_buflist *mbuf, char fill_byte, uint32_t count)
 {
 	uint32_t i;
 
-	mbuf->buflist = pbuf_aligned_alloc_buffer_list(PNSO_TEST_BLOCK_COUNT,
-			PNSO_TEST_BLOCK_SIZE, PNSO_TEST_BLOCK_SIZE);
+	if (!count)
+		count = PNSO_TEST_BLOCK_COUNT;
+
+	if (mbuf->buflist) {
+		mbuf->buflist->count = min(count, mbuf->alloc_count);
+	} else {
+		mbuf->buflist = pbuf_aligned_alloc_buffer_list(count,
+				PNSO_TEST_BLOCK_SIZE, PNSO_TEST_BLOCK_SIZE);
+		mbuf->alloc_count = count;
+		mbuf->alloc_len = mbuf->buflist->buffers[0].len;
+	}
 	for (i = 0; i < mbuf->buflist->count; i++) {
 		memset((void *) mbuf->buflist->buffers[i].buf,
 				fill_byte, PNSO_TEST_BLOCK_SIZE);
-		 fill_byte++;
+		mbuf->buflist->buffers[i].len = mbuf->alloc_len;
+		fill_byte++;
 	}
 	pbuf_pprint_buffer_list(mbuf->buflist);
 	pbuf_convert_buffer_list_v2p(mbuf->buflist);
@@ -135,8 +147,15 @@ init_buflist(struct pnso_multi_buflist *mbuf, char fill_byte)
 }
 
 static void
+init_buflist(struct pnso_multi_buflist *mbuf, char fill_byte)
+{
+	init_buflist_with_count(mbuf, fill_byte, 0);
+}
+
+static void
 deinit_buflist(struct pnso_multi_buflist *mbuf)
 {
+	mbuf->buflist->count = mbuf->alloc_count;
 	pbuf_free_buffer_list(mbuf->buflist);
 }
 
@@ -589,7 +608,7 @@ verify_crypto_result(void)
 			pbuf_pprint_buffer_list(rstate->buflists[2].buflist);
 
 			cmp_success = true;
-			for (i = 0; cmp_success && i < PNSO_TEST_BLOCK_COUNT; i++) {
+			for (i = 0; cmp_success && i < rstate->buflists[0].buflist->count; i++) {
 				if (memcmp((void *)rstate->buflists[0].buflist->buffers[i].buf,
 					   (void *)rstate->buflists[2].buflist->buffers[i].buf,
 					   rstate->buflists[0].buflist->buffers[i].len)) {
@@ -963,6 +982,92 @@ exec_decrypt_req(struct thread_state *tstate)
 		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
 		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_DECRYPT;
 		svc_res->svc[0].u.dst.sgl = rstate->buflists[2].buflist;
+	}
+
+	return submit_requests(tstate);
+}
+
+static int
+exec_cp_encrypt_req(struct thread_state *tstate)
+{
+	size_t batch_id;
+	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
+	struct pnso_service_result *svc_res = NULL;
+
+	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
+		rstate = &tstate->reqs[batch_id];
+
+		init_buflist_with_count(&rstate->buflists[0], 'A', 2);
+		init_buflist_with_count(&rstate->buflists[1], 'B', 2);
+		init_buflist_with_count(&rstate->buflists[2], 'C', 2);
+                init_buflist_with_count(&rstate->buflists[3], 'D', 2);
+
+		svc_req = &rstate->req.req;
+		memset(svc_req, 0, sizeof(*svc_req));
+	
+		svc_res = &rstate->res.res;
+		memset(svc_res, 0, sizeof(*svc_res));
+
+		svc_req->num_services = 2;
+		svc_res->num_services = 2;
+
+		svc_req->sgl = rstate->buflists[0].buflist;
+
+		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_COMPRESS);
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_COMPRESS;
+		svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
+		svc_req->svc[0].u.cp_desc.threshold_len = 
+			(rstate->buflists[0].buflist->count * PNSO_TEST_BLOCK_SIZE) - 8;
+
+		init_svc_desc(&svc_req->svc[1], PNSO_SVC_TYPE_ENCRYPT);
+		memset(&svc_res->svc[1], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[1].svc_type = PNSO_SVC_TYPE_ENCRYPT;
+		svc_res->svc[1].u.dst.sgl = rstate->buflists[3].buflist;
+	}
+
+	return submit_requests(tstate);
+}
+
+static int
+exec_decrypt_dc_req(struct thread_state *tstate)
+{
+	size_t batch_id;
+	struct req_state *rstate;
+	struct pnso_service_request *svc_req = NULL;
+	struct pnso_service_result *svc_res = NULL;
+	uint32_t data_len;
+
+	for (batch_id = 0; batch_id < PNSO_TEST_BATCH_DEPTH; batch_id++) {
+		rstate = &tstate->reqs[batch_id];
+		svc_req = &rstate->req.req;
+		svc_res = &rstate->res.res;
+
+		data_len = ((svc_res->svc[0].u.dst.data_len + PNSO_TEST_BLOCK_SIZE - 1) / 
+		            PNSO_TEST_BLOCK_SIZE) * PNSO_TEST_BLOCK_SIZE;
+
+		memset(svc_req, 0, sizeof(*svc_req));
+		memset(svc_res, 0, sizeof(*svc_res));
+
+		pbuf_convert_buffer_list_p2v(rstate->buflists[3].buflist);
+		fixup_dc_buffer(rstate->buflists[3].buflist, data_len);
+		pbuf_pprint_buffer_list(rstate->buflists[3].buflist);
+		pbuf_convert_buffer_list_v2p(rstate->buflists[3].buflist);
+
+		svc_req->sgl = rstate->buflists[3].buflist;
+		svc_req->num_services = 2;
+		svc_res->num_services = 2;
+
+		init_svc_desc(&svc_req->svc[0], PNSO_SVC_TYPE_DECRYPT);
+		memset(&svc_res->svc[0], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[0].svc_type = PNSO_SVC_TYPE_DECRYPT;
+		svc_res->svc[0].u.dst.sgl = rstate->buflists[1].buflist;
+
+		init_svc_desc(&svc_req->svc[1], PNSO_SVC_TYPE_DECOMPRESS);
+		memset(&svc_res->svc[1], 0, sizeof(struct pnso_service_status));
+		svc_res->svc[1].svc_type = PNSO_SVC_TYPE_DECOMPRESS;
+		svc_res->svc[1].u.dst.sgl = rstate->buflists[2].buflist;
 	}
 
 	return submit_requests(tstate);
@@ -1362,6 +1467,64 @@ error:
 	return err;
 }
 
+static int __attribute__((unused))
+exec_cp_crypto_dc_test(void *arg)
+{
+	int err;
+	struct thread_state *tstate = (struct thread_state *) arg;
+	int local_core_id = osal_get_coreid();
+
+	OSAL_LOG_INFO("PNSO: starting worker thread on core %d",
+		 osal_get_coreid());
+
+	/* Submit cp-encryption requests */
+	err = exec_cp_encrypt_req(tstate);
+	if (err != 0) {
+		OSAL_LOG_ERROR("PNSO: encryption request submit FAILED");
+		goto error;
+	}
+
+	exec_req_and_wait(tstate);
+	OSAL_LOG_INFO("PNSO: cp-encryption requests done, core %d",
+		 osal_get_coreid());
+
+	osal_yield();
+	if (osal_get_coreid() != local_core_id) {
+		OSAL_LOG_ERROR("PNSO: ERROR core id changed unexpectedly");
+		err = EINVAL;
+		goto error;
+	}
+
+	/* TODO: two requests involved, so decrement to keep the count intact */
+	osal_atomic_fetch_sub(
+			&tstate->reqs[PNSO_TEST_BATCH_DEPTH-1].req_done, 1);
+
+	/* Submit decryption-dc requests */
+	err = exec_decrypt_dc_req(tstate);
+	if (err != 0) {
+		OSAL_LOG_ERROR("PNSO: decryption-dc request submit FAILED");
+		goto error;
+	}
+
+	exec_req_and_wait(tstate);
+	OSAL_LOG_INFO("PNSO: decryption-dc requests done, core %d",
+		 osal_get_coreid());
+
+	osal_yield();
+	err = verify_crypto_result();
+	if (err)
+		goto error;
+
+	OSAL_LOG_INFO("PNSO: Worker thread finished, core %d",
+			osal_get_coreid());
+	return 0;
+
+error:
+	OSAL_LOG_ERROR("PNSO: Worker thread failed, core %d or %d",
+		       local_core_id, osal_get_coreid());
+	return err;
+}
+
 static pnso_error_t
 init_crypto(void)
 {
@@ -1408,14 +1571,15 @@ init_cp_hdr_fmt(void)
 typedef int (*exec_test_fn_t)(void *arg);
 
 static exec_test_fn_t exec_test_fn[] = {
-	exec_cp_dc_test,
+	//exec_cp_dc_test,
 	// exec_hash_test,
 	// exec_hash_per_block_test,
 	// exec_chksum_test,
 	// exec_chksum_per_block_test,
 	// exec_cp_hash_test,
 	// exec_cp_hash_per_block_test,
-	exec_crypto_test,
+	//exec_crypto_test,
+	exec_cp_crypto_dc_test,
 };
 
 static int

@@ -274,8 +274,12 @@ pprint_crypto_chain_params(const struct crypto_chain_params *chain_params)
 
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_status_offset_0",
 			chain_params->ccp_status_offset_0);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_status_len",
+			chain_params->ccp_status_len);
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_blk_boundary_shift",
 			chain_params->ccp_blk_boundary_shift);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_data_len",
+			chain_params->ccp_data_len);
 
 	cmd = &chain_params->ccp_cmd;
 	OSAL_LOG_DEBUG("%30s: %d", "ccpc_status_dma_en",
@@ -738,6 +742,7 @@ hw_setup_cp_chain_params(struct chain_entry *centry,
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
+	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 
 	OSAL_LOG_INFO("ring_id: %u index: %u src_desc: 0x%llx status_desc: 0x%llx",
 			ring_id, index, (uint64_t) cp_desc,

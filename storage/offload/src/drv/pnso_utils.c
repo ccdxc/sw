@@ -31,13 +31,76 @@ ring_spec_info_fill(uint32_t ring_id,
 	return EINVAL;
 }
 
+struct cpdc_sgl *
+pc_res_sgl_vec_packed_get(const struct per_core_resource *pc_res,
+			  uint32_t block_size,
+			  const struct service_buf_list *svc_blist,
+			  enum mem_pool_type vec_type,
+			  uint32_t *ret_total_len)
+{
+	struct buffer_list_iter buffer_list_iter;
+	struct buffer_list_iter *iter;
+	struct cpdc_sgl *sgl_vec_head;
+	struct cpdc_sgl *sgl_vec;
+	uint32_t vec_count;
+	uint32_t cur_count;
+
+	*ret_total_len = 0;
+	sgl_vec_head = pc_res_mpool_object_get_with_count(pc_res, vec_type,
+							  &vec_count);
+	if (!sgl_vec_head) {
+		OSAL_LOG_ERROR("cannot obtain sgl_vec from pool %s",
+                               mem_pool_get_type_str(vec_type));
+		goto out;
+	}
+
+	iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
+	sgl_vec = sgl_vec_head;
+	cur_count = 0;
+	while (iter && (cur_count < vec_count)) {
+		memset(sgl_vec, 0, sizeof(*sgl_vec));
+		iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&sgl_vec->cs_addr_0, &sgl_vec->cs_len_0);
+		if (iter)
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&sgl_vec->cs_addr_1, &sgl_vec->cs_len_1);
+		if (iter)
+			iter = buffer_list_iter_addr_len_get(iter, block_size,
+					&sgl_vec->cs_addr_2, &sgl_vec->cs_len_2);
+		*ret_total_len += sgl_vec->cs_len_0 + sgl_vec->cs_len_1 +
+				  sgl_vec->cs_len_2;
+
+		sgl_vec++;
+		cur_count++;
+	}
+
+	if (iter) {
+		OSAL_LOG_ERROR("buffer_list total length exceeds SGL vector, "
+			       "current_len %u", *ret_total_len);
+		goto out;
+        }
+
+	return sgl_vec_head;
+out:
+	pc_res_mpool_object_put(pc_res, vec_type, sgl_vec_head);
+	return NULL;
+}
+
+void
+pc_res_sgl_vec_put(const struct per_core_resource *pc_res,
+		   enum mem_pool_type vec_type,
+		   struct cpdc_sgl *sgl_vec)
+{
+	pc_res_mpool_object_put(pc_res, vec_type, sgl_vec);
+}
+
 /*
  * Format a packed chain SGL for PDMA purposes. Note that TxDMA mem2mem has
  * a transfer limit so each SGL addr/len must be within this limit.
  */
 struct chain_sgl_pdma *
 pc_res_sgl_pdma_packed_get(const struct per_core_resource *pc_res,
-			   const struct pnso_buffer_list *buf_list)
+			   const struct service_buf_list *svc_blist)
 {
 	struct chain_sgl_pdma	*sgl_pdma;
 	struct buffer_list_iter	buffer_list_iter;
@@ -48,7 +111,7 @@ pc_res_sgl_pdma_packed_get(const struct per_core_resource *pc_res,
 	sgl_pdma = pc_res_mpool_object_get(pc_res, MPOOL_TYPE_CHAIN_SGL_PDMA);
 	if (sgl_pdma) {
 		memset(sgl_pdma, 0, sizeof(*sgl_pdma));
-		iter = buffer_list_iter_init(&buffer_list_iter, buf_list);
+		iter = buffer_list_iter_init(&buffer_list_iter, svc_blist);
 		for (i = 0; iter && (i < ARRAY_SIZE(sgl_pdma->tuple)); i++) {
 			iter = buffer_list_iter_addr_len_get(iter, 
 				SGL_PDMA_TUPLE_MAX_LEN, &sgl_pdma->tuple[i].addr,
@@ -78,14 +141,19 @@ pc_res_sgl_pdma_put(const struct per_core_resource *pc_res,
 
 struct buffer_list_iter *
 buffer_list_iter_init(struct buffer_list_iter *iter,
-                      const struct pnso_buffer_list *buf_list)
+                      const struct service_buf_list *svc_blist)
 {
+	const struct pnso_buffer_list *buf_list = svc_blist->sbl_blist;
+
 	memset(iter, 0, sizeof(*iter));
+	iter->blist_type = svc_blist->sbl_type;
 	if (buf_list->count) {
 		iter->cur_count = buf_list->count;
 		iter->cur_list = &buf_list->buffers[0];
 		iter->cur_len = iter->cur_list->len;
-		iter->cur_addr = iter->cur_list->buf;
+		iter->cur_addr = iter->blist_type == SERVICE_BUF_LIST_TYPE_DFLT ?
+				 sonic_hostpa_to_devpa(iter->cur_list->buf) :
+			         iter->cur_list->buf;
 		return iter;
 	}
 	return NULL;
@@ -97,7 +165,9 @@ buffer_list_iter_next(struct buffer_list_iter *iter)
 	if (iter->cur_list && --iter->cur_count) {
 		iter->cur_list++;
 		iter->cur_len = iter->cur_list->len;
-		iter->cur_addr = iter->cur_list->buf;
+		iter->cur_addr = iter->blist_type == SERVICE_BUF_LIST_TYPE_DFLT ?
+				 sonic_hostpa_to_devpa(iter->cur_list->buf) :
+			         iter->cur_list->buf;
 		return iter;
 	}
 	return NULL;
@@ -124,7 +194,7 @@ buffer_list_iter_addr_len_get(struct buffer_list_iter *iter,
 			break;
 		}
 		len = iter->cur_len > max_len ? max_len : iter->cur_len;
-		*ret_addr = sonic_hostpa_to_devpa(iter->cur_addr);
+		*ret_addr = iter->cur_addr;
 		*ret_len = len;
 		iter->cur_addr += len;
 		iter->cur_len -= len;
@@ -145,14 +215,14 @@ pc_res_interm_buf_list_get(const struct per_core_resource *pc_res,
 		memset(iblist, 0, sizeof(*iblist));
 		iblist->blist_type = blist_type;
 		iblist->buf_type = buf_type;
-		iblist->buf_obj = pc_res_mpool_object_get_with_size(pc_res, buf_type,
-                                                                    &buf_size);
-		if (iblist->buf_obj) {
+		iblist->ibuf = pc_res_mpool_object_get_with_size(pc_res, buf_type,
+                                                                 &buf_size);
+		if (iblist->ibuf) {
 
 			/* Note that rmem_obj address is already physical */
 			iblist->blist.count = 1;
 			iblist->blist.buffers[0].buf = mpool_get_object_phy_addr(buf_type,
-									iblist->buf_obj);
+									iblist->ibuf);
 			iblist->blist.buffers[0].len = buf_size;
 			return iblist;
 		}
@@ -167,8 +237,8 @@ pc_res_interm_buf_list_put(const struct per_core_resource *pc_res,
                            struct interm_buf_list *iblist)
 {
 	if (iblist) {
-		if (iblist->buf_obj)
-			pc_res_mpool_object_put(pc_res, iblist->buf_type, iblist->buf_obj);
+		if (iblist->ibuf)
+			pc_res_mpool_object_put(pc_res, iblist->buf_type, iblist->ibuf);
 		pc_res_mpool_object_put(pc_res, iblist->blist_type, iblist);
         }
 }
@@ -262,4 +332,22 @@ pc_res_mpool_object_put(const struct per_core_resource *pc_res,
 	}
 }
 
+void
+pprint_chain_sgl_pdma(uint64_t sgl_pa)
+{
+	const struct chain_sgl_pdma *sgl;
+	const struct chain_sgl_pdma_tuple *tuple;
+
+	if (sgl_pa) {
+		sgl = (const struct chain_sgl_pdma *) sonic_phy_to_virt(sgl_pa);
+		OSAL_LOG_DEBUG("%30s: 0x%llx ==> 0x%llx", "", (uint64_t)sgl, sgl_pa);
+		tuple = sgl->tuple;
+		OSAL_LOG_DEBUG("%30s: 0x%llx/%d 0x%llx/%d 0x%llx/%d "
+				"0x%llx/%d", "",
+				tuple[0].addr, tuple[0].len,
+				tuple[1].addr, tuple[1].len,
+				tuple[2].addr, tuple[2].len,
+				tuple[3].addr, tuple[3].len);
+	}
+}
 

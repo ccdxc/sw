@@ -441,6 +441,7 @@ compress_teardown(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
+	CPDC_PPRINT_DESC(svc_info->si_desc);
 
 	cpdc_release_sgl(svc_info->si_dst_sgl);
 	cpdc_release_sgl(svc_info->si_src_sgl);

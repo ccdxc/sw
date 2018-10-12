@@ -73,8 +73,10 @@ pprint_service_info(const struct service_info *svc_info)
 			(uint64_t) svc_info->si_p4_sgl);
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_iblist",
 			(uint64_t) svc_info->si_iblist);
+	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_src_blist",
+			(uint64_t) svc_info->si_src_blist.sbl_blist);
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_dst_blist",
-			(uint64_t) svc_info->si_dst_blist);
+			(uint64_t) svc_info->si_dst_blist.sbl_blist);
 	OSAL_LOG_INFO("%30s: 0x%llx", "=== si_sgl_pdma",
 			(uint64_t) svc_info->si_sgl_pdma);
 
@@ -152,18 +154,18 @@ pprint_chain(const struct service_chain *chain)
 static pnso_error_t
 setup_service_param_buffers(struct pnso_service *pnso_svc,
 		struct service_params *svc_params,
+		struct service_info *svc_info,
 		struct pnso_buffer_list *interm_blist)
 {
 	switch (pnso_svc->svc_type) {
 	case PNSO_SVC_TYPE_COMPRESS:
-		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
 	case PNSO_SVC_TYPE_HASH:
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
-		svc_params->sp_src_blist = interm_blist;
-		break;
 	case PNSO_SVC_TYPE_CHKSUM:
+		if (chn_service_is_in_chain(svc_info) && !chn_service_is_first(svc_info))
+			svc_params->sp_src_blist = interm_blist;
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
 	case PNSO_SVC_TYPE_NONE:
@@ -172,6 +174,10 @@ setup_service_param_buffers(struct pnso_service *pnso_svc,
 		return EINVAL;
 	}
 
+	svc_info->si_src_blist.sbl_type = SERVICE_BUF_LIST_TYPE_DFLT;
+	svc_info->si_src_blist.sbl_blist = svc_params->sp_src_blist;
+	svc_info->si_dst_blist.sbl_type = SERVICE_BUF_LIST_TYPE_DFLT;
+	svc_info->si_dst_blist.sbl_blist = svc_params->sp_dst_blist;
 	return PNSO_OK;
 }
 
@@ -425,6 +431,10 @@ chn_build_chain(struct pnso_service_request *svc_req,
 			centry_prev->ce_next = centry;
 		centry_prev = centry;
 
+		if (!(svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE))
+			if (i+1 == chain->sc_num_services)
+				svc_info->si_flags |= CHAIN_SFLAG_LAST_SERVICE;
+
 		init_service_params(req, &res->svc[i],
 				&req->svc[i], &svc_params);
 
@@ -432,22 +442,16 @@ chn_build_chain(struct pnso_service_request *svc_req,
 		svc_info->si_pc_res = chain->sc_pc_res;
 		svc_info->si_centry = centry;
 
-		/* TODO-chain: need to make this setup generic */
-		if (i != 0)
-			setup_service_param_buffers(&req->svc[i], &svc_params,
-					interm_blist);
+		setup_service_param_buffers(&req->svc[i], &svc_params,
+					svc_info, interm_blist);
 
 		err = svc_info->si_ops.setup(svc_info, &svc_params);
 		if (err)
 			goto out_free_chain;
 
-		if (!(svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE))
-			if (i+1 == chain->sc_num_services)
-				svc_info->si_flags |= CHAIN_SFLAG_LAST_SERVICE;
-
 		PPRINT_SERVICE_INFO(svc_info);
 
-		interm_blist = svc_info->si_dst_blist;
+		interm_blist = svc_info->si_dst_blist.sbl_blist;
 	}
 	chain->sc_req_id = osal_atomic_fetch_add(&g_req_id, 1);
 

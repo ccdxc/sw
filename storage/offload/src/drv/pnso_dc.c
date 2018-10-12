@@ -178,6 +178,14 @@ static pnso_error_t
 decompress_sub_chain_from_crypto(struct service_info *svc_info,
 			         struct crypto_chain_params *crypto_chain)
 {
+	struct cpdc_desc *dc_desc;
+
+	if (crypto_chain->ccp_cmd.ccpc_comp_sgl_src_en) {
+		dc_desc = svc_info->si_desc;
+		dc_desc->cd_src = crypto_chain->ccp_comp_sgl_src_addr;
+		dc_desc->u.cd_bits.cc_src_is_list = true;
+		CPDC_PPRINT_DESC(dc_desc);
+	}
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring_id,
@@ -315,6 +323,7 @@ decompress_teardown(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
+	CPDC_PPRINT_DESC(svc_info->si_desc);
 
 	cpdc_release_sgl(svc_info->si_dst_sgl);
 	cpdc_release_sgl(svc_info->si_src_sgl);

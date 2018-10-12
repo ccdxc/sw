@@ -149,7 +149,18 @@ struct interm_buf_list {
 		uint8_t b[sizeof(struct pnso_buffer_list) +
 			  sizeof(struct pnso_flat_buffer)];
 	};
-        void *buf_obj;
+        void *ibuf;
+};
+
+enum service_buf_list_type {
+	SERVICE_BUF_LIST_TYPE_HOST,
+	SERVICE_BUF_LIST_TYPE_RMEM,
+	SERVICE_BUF_LIST_TYPE_DFLT = SERVICE_BUF_LIST_TYPE_HOST
+};
+
+struct service_buf_list {
+	enum service_buf_list_type sbl_type;
+	struct pnso_buffer_list    *sbl_blist;
 };
 
 struct service_info {
@@ -170,8 +181,8 @@ struct service_info {
 	struct cpdc_sgl	*si_dst_sgl;	/* dst input buffer converted to sgl */
 	struct crypto_aol *si_src_aol;	/* src input buffer converted to aol */
 	struct crypto_aol *si_dst_aol;	/* dst input buffer converted to aol */
-	enum mem_pool_type si_src_mpool_type;
-	enum mem_pool_type si_dst_mpool_type;
+	enum mem_pool_type si_src_aol_mptype;
+	enum mem_pool_type si_dst_aol_mptype;
 
 	union {
 		struct cpdc_chain_params   si_cpdc_chain;
@@ -187,8 +198,9 @@ struct service_info {
 
 	struct service_ops si_ops;
 	struct pnso_service_status *si_svc_status;
+	struct service_buf_list si_src_blist;
+	struct service_buf_list si_dst_blist;
 	struct interm_buf_list *si_iblist;
-	struct pnso_buffer_list *si_dst_blist;
 	struct chain_sgl_pdma *si_sgl_pdma;
 };
 

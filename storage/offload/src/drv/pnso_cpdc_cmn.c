@@ -603,7 +603,8 @@ cpdc_update_service_info_sgls(struct service_info *svc_info,
 		goto out_sgl;
 	}
 	svc_info->si_dst_sgl = sgl;
-	svc_info->si_dst_blist = svc_params->sp_dst_blist;
+	svc_info->si_dst_blist.sbl_type = SERVICE_BUF_LIST_TYPE_DFLT;
+	svc_info->si_dst_blist.sbl_blist = svc_params->sp_dst_blist;
 
 	return err;
 

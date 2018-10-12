@@ -23,15 +23,15 @@ pnso_error_t crypto_update_service_info_aols(struct service_info *svc_info,
 		const struct service_params *svc_params);
 struct crypto_aol *
 crypto_aol_packed_get(const struct per_core_resource *pc_res,
-		      const struct pnso_buffer_list *buf_list,
+		      const struct service_buf_list *svc_blist,
 		      enum mem_pool_type *ret_mpool_type,
 		      uint32_t *ret_total_len);
 struct crypto_aol *
-crypto_aol_sparse_get(const struct per_core_resource *pc_res,
-		      uint32_t block_size,
-		      const struct pnso_buffer_list *buf_list,
-		      enum mem_pool_type *ret_mpool_type,
-		      uint32_t *ret_total_len);
+crypto_aol_vec_sparse_get(const struct per_core_resource *pc_res,
+		          uint32_t block_size,
+		          const struct service_buf_list *svc_blist,
+		          enum mem_pool_type *ret_mpool_type,
+		          uint32_t *ret_total_len);
 void crypto_aol_put(const struct per_core_resource *pc_res,
 		    enum mem_pool_type mpool_type,
 		    struct crypto_aol *aol);

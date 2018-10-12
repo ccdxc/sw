@@ -10,14 +10,17 @@
 #include "pnso_mpool.h"
 #include "pnso_chain.h"
 #include "pnso_crypto.h"
+#include "pnso_cpdc.h"
 #include "sonic_api_int.h"
 
 #define CRYPTO_NUM_DESCS_PER_AOL_VEC	PNSO_NOMINAL_NUM_BUFS
+#define CRYPTO_NUM_DESCS_PER_SGL_VEC	PNSO_NOMINAL_NUM_BUFS
 
 static void
 deinit_mpools(struct per_core_resource *pc_res)
 {
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
+	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_SGL_VECTOR]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);
 	mpool_destroy(&pc_res->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
@@ -28,7 +31,7 @@ static pnso_error_t
 init_mpools(struct pc_res_init_params *pc_init,
 	    struct per_core_resource *pc_res)
 {
-	uint32_t pad_size, object_size;
+	uint32_t object_size;
 	pnso_error_t err;
 
 	err = mpool_create(MPOOL_TYPE_CRYPTO_DESC, pc_init->max_seq_sq_descs,
@@ -46,14 +49,23 @@ init_mpools(struct pc_res_init_params *pc_init,
 				sizeof(struct crypto_aol), PNSO_MEM_ALIGN_DESC,
 				&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);
 	if (!err) {
-		pad_size = mpool_get_object_pad_size(pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);
-		object_size = (sizeof(struct crypto_aol) +
-			       pad_size) * CRYPTO_NUM_DESCS_PER_AOL_VEC;
+		object_size = sizeof(struct crypto_aol) *
+			      CRYPTO_NUM_DESCS_PER_AOL_VEC;
 
 		err = mpool_create(MPOOL_TYPE_CRYPTO_AOL_VECTOR,
 				pc_init->max_seq_sq_descs,
 				object_size, PNSO_MEM_ALIGN_DESC,
 				&pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
+	}
+
+	if (!err) {
+		object_size = sizeof(struct cpdc_sgl) *
+			      CRYPTO_NUM_DESCS_PER_SGL_VEC;
+
+		err = mpool_create(MPOOL_TYPE_CRYPTO_SGL_VECTOR,
+				pc_init->max_seq_sq_descs,
+				object_size, PNSO_MEM_ALIGN_DESC,
+				&pc_res->mpools[MPOOL_TYPE_CRYPTO_SGL_VECTOR]);
 	}
 
 	if (!err)
@@ -67,6 +79,7 @@ init_mpools(struct pc_res_init_params *pc_init,
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL]);
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_AOL_VECTOR]);
+		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_CRYPTO_SGL_VECTOR]);
 		MPOOL_PPRINT(pc_res->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
 	}
 	return PNSO_OK;
