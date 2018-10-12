@@ -115,6 +115,18 @@ func (naples *naplesNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, e
 	naples.iotaNode.name = in.GetName()
 	naples.worloadMap = make(map[string]workload)
 	naples.logger.Println("Bring up request received for : " + in.GetName())
+
+	nodeuuid := ""
+	if in.GetNaplesConfig().GetControlIntf() != "" {
+		var err error
+		nodeuuid, err = Utils.GetIntfMacAddress(in.GetNaplesConfig().ControlIntf)
+		if err != nil {
+			naples.logger.Errorf("Control interface %s not found",
+				in.GetNaplesConfig().ControlIntf)
+			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
+		}
+	}
+
 	if err := naples.bringUpNaples(in.GetName(),
 		in.GetImage(), in.GetNaplesConfig().GetControlIntf(),
 		in.GetNaplesConfig().GetControlIp(),
@@ -126,7 +138,7 @@ func (naples *naplesNode) init(in *iota.Node, withQemu bool) (resp *iota.Node, e
 	}
 	naples.logger.Println("Naples bring up succesfull")
 
-	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
+	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: nodeuuid}, nil
 }
 
 //Init initalize node type

@@ -64,6 +64,10 @@ func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "en0",
+		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
+		VeniceIps: []string{"10.1.1.3/24"}}}
+
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -101,7 +105,7 @@ func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 func TestAgentService_Node_Venice_Add_Delete(t *testing.T) {
 
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_VENICE, Name: "venice"}
-	iotaNode.NodeInfo = &iota.Node_VeniceConfig{VeniceConfig: &iota.VeniceConfig{ControlIntf: "eth1",
+	iotaNode.NodeInfo = &iota.Node_VeniceConfig{VeniceConfig: &iota.VeniceConfig{ControlIntf: "lo",
 		ControlIp: "10.1.1.3/24", VenicePeers: []*iota.VenicePeer{&iota.VenicePeer{HostName: "test", IpAddress: "1.2.3.4/24"},
 			&iota.VenicePeer{HostName: "Test", IpAddress: "1.2.3.4/24"}}}}
 

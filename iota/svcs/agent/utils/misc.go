@@ -344,5 +344,17 @@ func restHelper(method string, url string, data *[]byte) error {
 	return nil
 }
 
+//GetIntfMacAddress get interface address.
+func GetIntfMacAddress(intfName string) (string, error) {
+	intfs, _ := net.Interfaces()
+	for _, intf := range intfs {
+		if intf.Name == intfName {
+			/* Mac address matched */
+			return intf.HardwareAddr.String(), nil
+		}
+	}
+	return "", errors.New("Interface not found")
+}
+
 //RestHelper is a wrapper for rest
 var RestHelper = restHelper
