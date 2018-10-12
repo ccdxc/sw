@@ -183,8 +183,13 @@ message Workload {
 
     InterfaceType interface_type            = 7;
 
+    // Interface to which workload needs to be attached.
+    uint32 pinned_port                      = 8;
+
+    uint32 uplink_vlan                      = 9;
+
     // Workload Status
-    IotaAPIResponse workload_status         = 8;
+    IotaAPIResponse workload_status         = 10;
 }
 
 enum TriggerOp {

@@ -161,7 +161,9 @@ load_passthrough_config(const char*cfg_file) {
     ptree pt;
     int   ret;
     mac_address_t allowed_mac;
-    std::list<mac_address_t> allowedMacs;
+    mac_config_list mac_configs;
+
+    mac_configs.clear();
 
     if (passThroughswitch == nullptr) {
         TLOG("Hntap not in pass through mode, no config reload.");
@@ -179,16 +181,17 @@ load_passthrough_config(const char*cfg_file) {
           boost::optional< ptree& > allowed_macs =  passthroughCfg.get_child_optional("allowed-macs");
           if (allowed_macs) {
               for (auto& allowedMac : passthroughCfg.get_child("allowed-macs")) {
-                  std::string strMac = allowedMac.second.get_value<std::string>();
+                  std::string strMac = allowedMac.first;
                   ret = str2mac(strMac.c_str(), allowed_mac);
                   if (ret != 0) {
                       TLOG("Invalid mac adddress : %s", (strMac.c_str()));
                       assert(0);
                   }
                   TLOG("Read Allowed mac adddress : %s\n", (strMac.c_str()));
-                  allowedMacs.push_back(allowed_mac);
+                  mac_configs.push_back(std::make_tuple (allowed_mac, ((allowedMac.second.get<int>("port"))-1),
+                          allowedMac.second.get<int>("vlan")));
               }
-              passThroughswitch->AddAllowedMacs(allowedMacs);
+              passThroughswitch->AddMacConfigs(mac_configs);
           }
       }
     }

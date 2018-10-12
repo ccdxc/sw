@@ -37,6 +37,9 @@
 
 typedef std::array<unsigned char, 6> mac_address_t;
 
+typedef std::tuple<mac_address_t, uint32_t, uint32_t> mac_config;
+typedef std::vector<mac_config> mac_config_list;
+
 #define maccpy(_dst, _src) \
 { \
     for (int i = 0; i < 6; i++) { \
@@ -49,6 +52,14 @@ typedef std::array<unsigned char, 6> mac_address_t;
 (_addr >> 8 & 0xFF), \
 (_addr >> 16 & 0xFF), \
 (_addr >> 24 & 0xFF)
+
+
+class mac_config_t {
+public:
+    mac_address_t mac;
+    uint32_t port;
+    uint32_t uplink_vlan;
+};
 
 class HntapPeer {
 };
@@ -138,7 +149,7 @@ public:
     std::string    uplink_intf;
     int sock;
     int if_index;
-    std::map<mac_address_t,bool> allowed_macs;
+    std::map<mac_address_t, mac_config_t*> mac_configs;
     HntapPassThroughSwitch *parent;
 
     HntapPassThroughIntfSwitch(std::string intfname);
@@ -216,8 +227,15 @@ public:
         this->uplink_dev = dev_handle;
     }
 
+    bool isAllowedMac(mac_addr_t macAddr, uint32_t port, uint32_t uplink_vlan);
     bool isAllowedMac(mac_addr_t macAddr);
-    void addAllowedMac(mac_address_t macAddr) { this->allowed_macs[macAddr] = true; }
+    void addMacConfig(mac_address_t macAddr, uint32_t port, uint32_t uplink_vlan) {
+        mac_config_t *cfg = new mac_config_t();
+        cfg->port = port;
+        cfg->mac = macAddr;
+        cfg->uplink_vlan = uplink_vlan;
+        this->mac_configs[cfg->mac] = cfg;
+    }
 
     virtual void* ReceiverThread(void *arg);
     virtual void ProcessPacketFromModelUplink(dev_handle_t *dev_handle,
@@ -279,11 +297,15 @@ public:
             const unsigned char *pkt, uint32_t len) {
 
         struct ether_header *eth = (struct ether_header*)(pkt);
-        mac_addr_t macAddr;
+        mac_addr_t smacAddr,dmacAddr;
 
-        memcpy(&macAddr, eth->ether_shost, sizeof(macAddr));
-        if (this->isRemoteMac(macAddr)) {
-            TLOG("Dropping packet as source MAC is from remote..\n");
+        memcpy(&smacAddr, eth->ether_shost, sizeof(mac_addr_t));
+        memcpy(&dmacAddr, eth->ether_dhost, sizeof(mac_addr_t));
+
+        /* Model might flood the pack back, make sure we drop it */
+        if (this->isRemoteMac(smacAddr)) {
+            TLOG("Dropping packet as source MAC (%s) is from remote..\n",
+                    macaddr2str(smacAddr));
             return;
         }
 
@@ -296,6 +318,8 @@ public:
             assert(0);
         }
 
+        TLOG("Sending packet with smac %s dmac %s to outside uplink.\n",
+                macaddr2str(smacAddr),  macaddr2str(dmacAddr));
         passthroughIntf->ProcessPacketFromModelUplink(dev_handle, pkt, len);
     }
 
@@ -313,6 +337,8 @@ public:
         for (unsigned int i = 0; i < sizeof(mac_addr_t); i++) {
             mac[i] = macAddr[i];
         }
+
+        TLOG("Adding remote mac %s\n", macaddr2str(macAddr));
 
         switch_mutex.lock();
         this->remote_macs[mac] = true;
@@ -333,13 +359,15 @@ public:
         return (it != remote_macs.end()) ? it->second : false;
     }
 
-    void AddAllowedMacs(std::list<mac_address_t> macAddrs) {
+    void AddMacConfigs(mac_config_list macConfigs) {
         for (std::map<std::string,HntapPassThroughIntfSwitch*>::iterator it=model_intf_passthrough_intf.begin();
                 it!=model_intf_passthrough_intf.end(); ++it) {
-            for (mac_address_t macAddr : macAddrs) {
-                TLOG("Adding allowed mac  %02x:%02x:%02x:%02x:%02x:%02x.\n", macAddr[0],
-                        macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
-                it->second->addAllowedMac(macAddr);
+            for (mac_config mac_config : macConfigs) {
+                TLOG("Adding allowed mac  %02x:%02x:%02x:%02x:%02x:%02x.\n", std::get<0>(mac_config)[0],
+                        std::get<0>(mac_config)[1], std::get<0>(mac_config)[2],std::get<0>(mac_config)[3],
+                        std::get<0>(mac_config)[4], std::get<0>(mac_config)[5]);
+                it->second->addMacConfig(std::get<0>(mac_config),
+                        std::get<1>(mac_config), std::get<2>(mac_config));
             }
         }
     }

@@ -141,17 +141,38 @@ void* HntapSwitch::ReceiverThread(void *arg) {
 }
 
 
-bool HntapPassThroughIntfSwitch::isAllowedMac(mac_addr_t macAddr) {
-    std::map<mac_address_t,bool>::iterator it;
+bool HntapPassThroughIntfSwitch::isAllowedMac(mac_addr_t macAddr,
+        uint32_t port, uint32_t uplink_vlan) {
+    std::map<mac_address_t,mac_config_t*>::iterator it;
 
     mac_address_t mac;
     for (unsigned int i = 0; i < sizeof(mac_addr_t); i++) {
         mac[i] = macAddr[i];
     }
-    it = allowed_macs.find(mac);
+    it = mac_configs.find(mac);
 
-    return (it != allowed_macs.end()) ? it->second : false;
+    if (it != mac_configs.end() && it->second->port == port &&
+            it->second->uplink_vlan == uplink_vlan) {
+        return true;
+    }
 
+    return false;
+}
+
+bool HntapPassThroughIntfSwitch::isAllowedMac(mac_addr_t macAddr) {
+    std::map<mac_address_t,mac_config_t*>::iterator it;
+
+    mac_address_t mac;
+    for (unsigned int i = 0; i < sizeof(mac_addr_t); i++) {
+        mac[i] = macAddr[i];
+    }
+    it = mac_configs.find(mac);
+
+    if (it != mac_configs.end()) {
+        return true;
+    }
+
+    return false;
 }
 
 static bool
@@ -175,7 +196,7 @@ union {
 #define VLAN_VALID(hdr, hv)     ((hv)->tp_vlan_tci != 0 || ((hdr)->tp_status & TP_STATUS_VLAN_VALID))
 #define VLAN_TPID(hdr, hv)     (((hv)->tp_vlan_tpid || ((hdr)->tp_status & TP_STATUS_VLAN_TPID_VALID)) ? (hv)->tp_vlan_tpid : ETH_P_8021Q)
 
-int
+static int
 read_vlan_tag(struct msghdr *msg_hdr, uint16_t *tpid, uint16_t* vlan_id) {
    struct cmsghdr *cmsg;
    struct tpacket_auxdata *aux;
@@ -198,8 +219,8 @@ read_vlan_tag(struct msghdr *msg_hdr, uint16_t *tpid, uint16_t* vlan_id) {
                      */
                     continue;
             } else {
-                 *tpid = htons(VLAN_TPID(aux, aux));
-                 *vlan_id = htons(aux->tp_vlan_tci);
+                 *tpid = (VLAN_TPID(aux, aux));
+                 *vlan_id = (aux->tp_vlan_tci);
                  return 0;
             }
      }
@@ -213,7 +234,7 @@ void* HntapPassThroughIntfSwitch::ReceiverThread(void *arg) {
    uint8_t buf[BUF_SIZE];
    uint8_t new_buf[BUF_SIZE];
    uint8_t *final_buf;
-   mac_addr_t macAddr;
+   mac_addr_t dmacAddr;
    mac_addr_t smacAddr;
    struct ether_header *eth;
    struct sockaddr_ll  address;
@@ -246,23 +267,28 @@ void* HntapPassThroughIntfSwitch::ReceiverThread(void *arg) {
         }
 
        eth = (struct ether_header*)(buf);
-       memcpy(&macAddr, eth->ether_dhost, sizeof(macAddr));
-       memcpy(&smacAddr, eth->ether_shost, sizeof(macAddr));
+       memcpy(&dmacAddr, eth->ether_dhost, sizeof(mac_addr_t));
+       memcpy(&smacAddr, eth->ether_shost, sizeof(mac_addr_t));
+       vlan_id = 0;
+       vlan_tpid = 0;
+       read_vlan_tag(&msg, &vlan_tpid, &vlan_id);
+
+
        /* Make sure Smac is not one which is present in this host
         * It could be possible as we are in promiscuous mode.
         * Allow only broadcast and allowed macs only.
         */
        if (!this->isAllowedMac(smacAddr)  &&
-                   (is_broadcast(macAddr)  ||
-                       this->isAllowedMac(macAddr))) {
+                   (is_broadcast(dmacAddr)  ||
+                       this->isAllowedMac(dmacAddr, this->uplink_dev->port, vlan_id))) {
 
            final_buf = buf;
-           if (read_vlan_tag(&msg, &vlan_tpid, &vlan_id) == 0) {
+           if (vlan_tpid != 0) {
                TLOG("Vlan ID read successfully :%d (%d)\n", vlan_id, vlan_tpid);
                memcpy(new_buf, buf, sizeof(ether_header));
                vlan_header_t *vlan_hdr =  (vlan_header_t*)(new_buf);
-               vlan_hdr->tpid = vlan_tpid;
-               vlan_hdr->vlan_tag = vlan_id;
+               vlan_hdr->tpid = htons(vlan_tpid);
+               vlan_hdr->vlan_tag = htons(vlan_id);
                vlan_hdr->etype = ((struct ether_header*)(buf))->ether_type;
                memcpy(new_buf + sizeof(vlan_header_t),
                        buf + sizeof(struct ether_header), numbytes - sizeof(ether_header));
@@ -489,6 +515,7 @@ void HntapPassThroughIntfSwitch::ProcessUplinkReceivedPacket(const unsigned char
     struct ether_header *eth = (struct ether_header*)(pkt);
     mac_addr_t macAddr;
 
+    /* Make sure we don't loop the packet in prom mode */
     memcpy(&macAddr, eth->ether_shost, sizeof(macAddr));
     this->parent->UpdateRemoteMac(macAddr);
 

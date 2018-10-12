@@ -169,6 +169,8 @@ func TestAgentService_Workload_Add_Delete(t *testing.T) {
 	workload.Interface = "test"
 	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
 	workload.EncapVlan = 500
+	workload.PinnedPort = 1
+	workload.UplinkVlan = 100
 	workload.IpAddress = "1.1.1.1/24"
 	hntapCfgTempFile = "test/hntap-cfg.json"
 	workloadDir = "/tmp"
@@ -233,6 +235,8 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 	workload.Interface = "test"
 	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
 	workload.EncapVlan = 500
+	workload.PinnedPort = 1
+	workload.UplinkVlan = 100
 	workload.IpAddress = "1.1.1.1/24"
 
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}

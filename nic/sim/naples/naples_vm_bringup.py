@@ -243,7 +243,7 @@ def __setup_hntap(container_obj, args):
                                 "passthrough-mode" :
                                     {
                                         "uplink-map": {},
-                                        "allowed-macs":[]
+                                        "allowed-macs":{}
                                     }
                                }
         i = 0

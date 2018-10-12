@@ -1,1 +1,54 @@
-{"devices":[{"lif_id":0,"local":false,"name":"pen-intf1","port":1},{"lif_id":0,"local":false,"name":"pen-intf2","port":2}],"switch":{"passthrough-mode":{"allowed-macs":["aa:bb:cc:dd:ee:ff","aa:bb:cc:dd:ee:ff","aa:bb:cc:dd:ee:ff","aa:bb:cc:dd:ee:ff","aa:bb:cc:dd:ee:ff","aa:bb:cc:dd:ee:ff","aa:bb:cc:dd:ee:ff","aa:bb:cc:dd:ee:ff","aa:bb:cc:dd:ee:ff","aa:bb:cc:dd:ee:ff","aa:bb:cc:dd:ee:ff"],"uplink-map":{"pen-intf1":"eth2","pen-intf2":"eth3"}}}}
+{
+	"devices": [
+		{
+			"lif_id": 0,
+			"local": false,
+			"name": "pen-intf1",
+			"port": 1
+		},
+		{
+			"lif_id": 0,
+			"local": false,
+			"name": "pen-intf2",
+			"port": 2
+		}
+	],
+	"switch": {
+		"passthrough-mode": {
+			"allowed-macs": {
+				"00:22:0A:00:03:11": {
+					"port": 1,
+					"vlan": 100
+				},
+				"00:22:0A:00:03:12": {
+					"port": 2,
+					"vlan": 100
+				},
+				"00:22:0A:00:03:13": {
+					"port": 1,
+					"vlan": 100
+				},
+				"00:22:0A:00:03:14": {
+					"port": 2,
+					"vlan": 100
+				},
+				"00:22:0A:00:03:15": {
+					"port": 1,
+					"vlan": 100
+				},
+				"00:22:0A:00:03:16": {
+					"port": 2,
+					"vlan": 100
+				},
+				"aa:bb:cc:dd:ee:ff": {
+					"port": 1,
+					"vlan": 100
+				}
+			},
+			"uplink-map": {
+				"pen-intf1": "eth2",
+				"pen-intf2": "eth3"
+			}
+		}
+	}
+}

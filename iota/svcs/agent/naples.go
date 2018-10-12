@@ -20,6 +20,7 @@ const (
 	naplesCfgDir          = "/naples/nic/conf"
 	hntapCfgFile          = "hntap-cfg.json"
 	hntapProcessName      = "nic_infra_hntap"
+	naplesDataDir         = Common.DstIotaAgentDir + "/naples"
 )
 
 var (
@@ -55,7 +56,7 @@ func (naples *naplesNode) bringUpNaples(name string, image string, ctrlIntf stri
 		return errors.Wrap(err, stdout)
 	}
 	naples.logger.Println("Untar successfull")
-	env := []string{"NAPLES_HOME=" + Common.DstIotaAgentDir, "NAPLES_DATA_DIR=" + Common.DstIotaAgentDir}
+	env := []string{"NAPLES_HOME=" + Common.DstIotaAgentDir, "NAPLES_DATA_DIR=" + naplesDataDir}
 	cmd := []string{"sudo", "-E", "python", naplesVMBringUpScript,
 		"--data-intfs", strings.Join(dataIntfs, ",")}
 
@@ -198,11 +199,14 @@ func (naples *naplesNode) configureWorkloadInHntap(in *iota.Workload) error {
 		return errors.New("Allowed Macs section not found")
 	}
 
-	allowedMacs := passThroughModeData["allowed-macs"].([]interface{})
+	allowedMacs := passThroughModeData["allowed-macs"].(map[string]interface{})
 
-	passThroughModeData["allowed-macs"] = append(allowedMacs, in.GetMacAddress())
+	macData := make(map[string]uint32)
+	macData["port"] = in.GetPinnedPort()
+	macData["vlan"] = in.GetUplinkVlan()
+	allowedMacs[in.GetMacAddress()] = macData
 
-	hntapJSON, _ := json.Marshal(hntapData)
+	hntapJSON, _ := json.MarshalIndent(hntapData, "", "\t")
 	if err := ioutil.WriteFile(hntapCfgTempFile, hntapJSON, 0644); err != nil {
 		naples.logger.Println("Error in hntap file write")
 		return errors.New("Allowed Macs section not found")
