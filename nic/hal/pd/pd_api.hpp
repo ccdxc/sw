@@ -1986,6 +1986,7 @@ typedef struct pd_flow_get_args_s {
     pd_session_t *pd_session;
     flow_role_t   role;
     flow_state_t *flow_state;
+    bool          aug;
 } __PACK__ pd_flow_get_args_t;
 
 // l2seg uplink

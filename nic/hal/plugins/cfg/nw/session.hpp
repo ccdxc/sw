@@ -29,6 +29,7 @@ using session::FlowKey;
 using session::FlowData;
 using session::FlowInfo;
 using session::FlowSpec;
+using session::FlowStatus;
 using session::ConnTrackInfo;
 using session::SessionSpec;
 using session::SessionStatus;
@@ -311,6 +312,8 @@ typedef struct session_state_s {
     uint8_t             tcp_sack_perm_option:1;
     flow_state_t        iflow_state;
     flow_state_t        rflow_state;
+    flow_state_t        iflow_aug_state;
+    flow_state_t        rflow_aug_state;
 } __PACK__ session_state_t;
 
 typedef struct session_cfg_s {

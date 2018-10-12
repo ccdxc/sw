@@ -29,6 +29,8 @@ using session::FlowData;
 using session::ConnTrackInfo;
 using session::FlowStats;
 using session::ConnTrackExceptions;
+using session::FlowInstance;
+using session::FlowDirection;
 using sys::FTEStats;
 using sys::FTEFeatureStats;
 using sys::FTEError;
@@ -534,8 +536,13 @@ flow_state_to_connection_track_response(flow_state_t *flow, ConnTrackInfo *conn_
 }
 
 static void
-flow_to_flow_spec(flow_t *flow, FlowSpec *spec)
+flow_to_flow_resp(flow_t *flow, FlowSpec *spec, FlowStatus *status)
 {
+    status->set_flow_direction((flow->config.key.dir == FLOW_DIR_FROM_UPLINK) ?
+                               session::FLOW_DIRECTION_FROM_UPLINK : session::FLOW_DIRECTION_FROM_HOST);
+    status->set_flow_instance((flow->pgm_attrs.lkp_inst == 0) ?
+                               session::FLOW_INSTANCE_PRIMARY : session::FLOW_INSTANCE_SECONDARY);
+
     spec->mutable_flow_key()->set_src_vrf_id(flow->config.key.svrf_id);
     spec->mutable_flow_key()->set_dst_vrf_id(flow->config.key.dvrf_id);
 
@@ -571,7 +578,6 @@ flow_to_flow_spec(flow_t *flow, FlowSpec *spec)
     }
 
     flow_data_to_flow_data_spec(flow, spec->mutable_flow_data());
-
 }
 
 static void
@@ -585,12 +591,25 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
     response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
     response->mutable_spec()->set_tcp_sack_perm_option(session->config.tcp_sack_perm_option);
 
-    flow_to_flow_spec(session->iflow,
-                      response->mutable_spec()->mutable_initiator_flow());
+    flow_to_flow_resp(session->iflow,
+                      response->mutable_spec()->mutable_initiator_flow(),
+                      response->mutable_status()->mutable_iflow_status());
+    if (session->iflow->assoc_flow) {
+        flow_to_flow_resp(session->iflow->assoc_flow,
+                          response->mutable_spec()->mutable_peer_initiator_flow(),
+                          response->mutable_status()->mutable_peer_iflow_status());
+    }
+
     if (session->rflow) {
         HAL_TRACE_DEBUG("valid rflow session");
-        flow_to_flow_spec(session->rflow,
-                          response->mutable_spec()->mutable_responder_flow());
+        flow_to_flow_resp(session->rflow,
+                          response->mutable_spec()->mutable_responder_flow(),
+                          response->mutable_status()->mutable_rflow_status());
+        if (session->rflow->assoc_flow) {
+            flow_to_flow_resp(session->rflow->assoc_flow,
+                              response->mutable_spec()->mutable_peer_responder_flow(),
+                              response->mutable_status()->mutable_peer_rflow_status());
+        }
     }
 }
 
@@ -652,6 +671,38 @@ session_state_to_session_get_response (session_t *session,
 
         flow_state_to_connection_track_response(&session_state->rflow_state,
            response->mutable_spec()->mutable_responder_flow()->mutable_flow_data()->\
+           mutable_conn_track_info());
+    }
+
+    if (session->iflow->assoc_flow) {
+        HAL_TRACE_DEBUG("valid iflow aug session");
+        // aug iflow age
+        create_ns = session_state->iflow_aug_state.create_ts;
+        age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
+        response->mutable_spec()->mutable_peer_initiator_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_flow_age(age);
+
+        flow_state_to_flow_stats_response(&session_state->iflow_aug_state,
+                response->mutable_stats()->mutable_peer_initiator_flow_stats());
+
+        flow_state_to_connection_track_response(&session_state->iflow_aug_state,
+           response->mutable_spec()->mutable_peer_initiator_flow()->mutable_flow_data()->\
+           mutable_conn_track_info());
+    }
+
+    if (session->rflow->assoc_flow) {
+        HAL_TRACE_DEBUG("valid rflow aug session");
+        // aug iflow age
+        create_ns = session_state->rflow_aug_state.create_ts;
+        age = (ctime_ns - create_ns) / TIME_NSECS_PER_SEC;
+        response->mutable_spec()->mutable_peer_responder_flow()->mutable_flow_data()->\
+              mutable_flow_info()->set_flow_age(age);
+
+        flow_state_to_flow_stats_response(&session_state->rflow_aug_state,
+                response->mutable_stats()->mutable_peer_responder_flow_stats());
+
+        flow_state_to_connection_track_response(&session_state->rflow_aug_state,
+           response->mutable_spec()->mutable_peer_responder_flow()->mutable_flow_data()->\
            mutable_conn_track_info());
     }
 

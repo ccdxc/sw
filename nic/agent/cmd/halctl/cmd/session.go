@@ -375,18 +375,20 @@ func sessionDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func sessionShowHeader(cmd *cobra.Command, args []string) {
-	hdrLine := strings.Repeat("-", 136)
-	fmt.Printf("Legend:\nHandle: Session Handle\tRole: I - Initiator, R - Responder\n")
+	hdrLine := strings.Repeat("-", 120)
+	fmt.Printf("Legend:\nHandle: Session Handle\n")
+	fmt.Printf("Role: Direction/Instance\n")
+	fmt.Printf("      Direction: U (Uplink), H (Host)\n      Instance: P (Primary), S (Secondary)\n")
 	fmt.Printf("KeyType: Flow Key Type\tL2SegID: L2 Segment ID\n")
-	fmt.Printf("SrcVrfID: Source VRF ID\tDstVrfID: Destination VRF ID\n")
+	fmt.Printf("VrfID: Source VRF ID/Destination VRF ID\n")
 	fmt.Printf("SMAC|SIP[:sport]: Source MAC Address | Source IP Address and Port Number\n")
 	fmt.Printf("DMAC|DIP[:dport]: Destination MAC Address | Destination IP Address and Port Number\n")
-	fmt.Printf("Proto|EType: L4 Protocol | Ethernet Type\n")
-	fmt.Printf("TCP State: State for TCP flows\tAge: Age in Secs\n")
+	fmt.Printf("P|E: L4 Protocol | Ethernet Type\n")
+	fmt.Printf("TCP State: State for TCP flows\tAge: Age in mins and secs\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-8s%-6s%-10s%-12s%-10s%-10s%-24s%-24s%-12s%-16s%-6s\n",
-		"Handle", "Role", "KeyType", "L2SegID", "SrcVrfID", "DstVrfID",
-		"SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "Proto|EType", "TCP State",
+	fmt.Printf("%-8s%-6s%-8s%-8s%-10s%-24s%-24s%-6s%-16s%-6s\n",
+		"Handle", "Role", "KeyType", "L2SegID", "VrfID",
+		"SMAC|SIP[:sport]", "DMAC|DIP[:dport]", "P|E", "TCP State",
 		"Age")
 	fmt.Println(hdrLine)
 }
@@ -398,19 +400,28 @@ func sessionShowOneResp(resp *halproto.SessionGetResponse) {
 	// Get initiator and responder flow
 	initiatorFlow := spec.GetInitiatorFlow()
 	responderFlow := spec.GetResponderFlow()
+	peerInitiatorFlow := spec.GetPeerInitiatorFlow()
+	peerResponderFlow := spec.GetPeerResponderFlow()
 
 	if initiatorFlow != nil {
-		flowStr := "I"
-		flowShow(spec, status, initiatorFlow, flowStr)
+		flowShow(spec, status, initiatorFlow, status.GetIflowStatus())
 	}
 
 	if responderFlow != nil {
-		flowStr := "R"
-		flowShow(spec, status, responderFlow, flowStr)
+		flowShow(spec, status, responderFlow, status.GetRflowStatus())
+	}
+
+	if peerInitiatorFlow != nil {
+		flowShow(spec, status, peerInitiatorFlow, status.GetPeerIflowStatus())
+	}
+
+	if peerResponderFlow != nil {
+		flowShow(spec, status, peerResponderFlow, status.GetPeerRflowStatus())
 	}
 }
 
-func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSpec *halproto.FlowSpec, flowStr string) {
+func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus,
+	flowSpec *halproto.FlowSpec, flowStatus *halproto.FlowStatus) {
 	var (
 		keyType   string
 		id        uint64
@@ -423,6 +434,12 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 	)
 	flowKey := flowSpec.GetFlowKey()
 	flowInfo := flowSpec.GetFlowData().GetFlowInfo()
+
+	flowStr := strings.Replace(flowStatus.GetFlowDirection().String(), "FLOW_DIRECTION_FROM_", "", -1)
+	flowStr = flowStr[0:1]
+	flowStr += "/"
+	flowStr += strings.Replace(flowStatus.GetFlowInstance().String(), "FLOW_INSTANCE_", "", -1)
+	flowStr = flowStr[0:3]
 
 	tcpState := "-"
 	switch flowKey.GetFlowKey().(type) {
@@ -543,13 +560,20 @@ func flowShow(spec *halproto.SessionSpec, status *halproto.SessionStatus, flowSp
 	}
 
 	age := flowInfo.GetFlowAge()
+	ageStr := ""
+	if age > 59 {
+		ageStr += strconv.Itoa(int(age/60)) + "m "
+	}
+	ageStr += strconv.Itoa(int(age%60)) + "s"
 
-	fmt.Printf("%-8d%-6s%-10s%-12d%-10d%-10d%-24s%-24s%-12s%-16s%-6d\n",
+	vrfStr := strconv.Itoa(int(srcID)) + "/" + strconv.Itoa(int(dstID))
+
+	fmt.Printf("%-8d%-6s%-8s%-8d%-10s%-24s%-24s%-6s%-16s%-6s\n",
 		status.GetSessionHandle(),
 		flowStr, keyType, id,
-		srcID, dstID,
+		vrfStr,
 		src, dst, ipproto,
-		tcpState, age)
+		tcpState, ageStr)
 
 	natType := flowInfo.GetNatType()
 	snat := false

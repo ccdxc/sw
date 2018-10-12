@@ -212,6 +212,8 @@ message SessionSpec {
   bool                 tcp_sack_perm_option   = 5;   // TCP SACK Permitted option negotiated or not
   FlowSpec             initiator_flow         = 6;   // initiator flow
   FlowSpec             responder_flow         = 7;   // responder flow
+  FlowSpec             peer_initiator_flow    = 8;   // peer initiator flow
+  FlowSpec             peer_responder_flow    = 9;   // peer responder flow
 }
 
 // SessionRequestMsg is batched session request message
@@ -275,16 +277,18 @@ message SessionStatus {
   fixed64                session_handle    = 1;    // id of the session (returned by HAL)
   FlowStatus             iflow_status      = 2;    // operational status of iflow
   FlowStatus             rflow_status      = 3;    // operational status of rflow
-  uint32                 app_id            = 4;    // L7 app id
-  uint32                 app_id_state      = 5;    // L7 app id state
-  nwsec.ALGName          alg               = 6;    // ALG applied on the session
+  FlowStatus             peer_iflow_status = 4;    // operational status of peer iflow
+  FlowStatus             peer_rflow_status = 5;    // operational status of peer rflow
+  uint32                 app_id            = 6;    // L7 app id
+  uint32                 app_id_state      = 7;    // L7 app id state
+  nwsec.ALGName          alg               = 8;    // ALG applied on the session
   oneof alg_info {
-      TFTPALGInfo        tftp_info         = 7;   
-      RPCALGInfo         rpc_info          = 8;
-      SIPALGInfo         sip_info          = 9;
-      RTSPALGInfo        rtsp_info         = 10;
-      DNSALGInfo         dns_info          = 11;
-      FTPALGInfo         ftp_info          = 12;
+      TFTPALGInfo        tftp_info         = 9;   
+      RPCALGInfo         rpc_info          = 10;
+      SIPALGInfo         sip_info          = 11;
+      RTSPALGInfo        rtsp_info         = 12;
+      DNSALGInfo         dns_info          = 13;
+      FTPALGInfo         ftp_info          = 14;
   } 
 }
 
@@ -358,8 +362,10 @@ message FlowStats {
 
 // SessionStats captures statistics of all its constituent flows
 message SessionStats {
-  FlowStats    initiator_flow_stats = 1;     // stats of initiator flow
-  FlowStats    responder_flow_stats = 2;     // stats of responder flow
+  FlowStats    initiator_flow_stats      = 1;     // stats of initiator flow
+  FlowStats    responder_flow_stats      = 2;     // stats of responder flow
+  FlowStats    peer_initiator_flow_stats = 3;     // stats of peer initiator flow
+  FlowStats    peer_responder_flow_stats = 4;     // stats of peer responder flow
 }
 
 // SessionGetResponse is response to one SessionGetRequest

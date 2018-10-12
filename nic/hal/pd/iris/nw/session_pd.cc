@@ -1069,6 +1069,7 @@ pd_session_get (pd_func_args_t *pd_func_args)
     flow_get_args.pd_session = pd_session;
     flow_get_args.role = FLOW_ROLE_INITIATOR;
     flow_get_args.flow_state = &ss->iflow_state;
+    flow_get_args.aug = false;
     pd_func_args1.pd_flow_get = &flow_get_args;
     ret = pd_flow_get(&pd_func_args1);
     if (ret != HAL_RET_OK) {
@@ -1080,12 +1081,41 @@ pd_session_get (pd_func_args_t *pd_func_args)
     flow_get_args.pd_session = pd_session;
     flow_get_args.role = FLOW_ROLE_RESPONDER;
     flow_get_args.flow_state = &ss->rflow_state;
+    flow_get_args.aug = false;
     pd_func_args1.pd_flow_get = &flow_get_args;
     ret = pd_flow_get(&pd_func_args1);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Responder Flow get failed session {}",
                       args->session->config.session_id);
         return ret;
+    }
+
+    if (pd_session->iflow_aug_valid) {
+        flow_get_args.pd_session = pd_session;
+        flow_get_args.role = FLOW_ROLE_INITIATOR;
+        flow_get_args.flow_state = &ss->iflow_aug_state;
+        flow_get_args.aug = true;
+        pd_func_args1.pd_flow_get = &flow_get_args;
+        ret = pd_flow_get(&pd_func_args1);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Initiator Aug Flow get failed session {}",
+                          args->session->config.session_id);
+            return ret;
+        }
+    }
+
+    if (pd_session->rflow_aug_valid) {
+        flow_get_args.pd_session = pd_session;
+        flow_get_args.role = FLOW_ROLE_RESPONDER;
+        flow_get_args.flow_state = &ss->rflow_aug_state;
+        flow_get_args.aug = true;
+        pd_func_args1.pd_flow_get = &flow_get_args;
+        ret = pd_flow_get(&pd_func_args1);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Responder Aug Flow get failed session {}",
+                          args->session->config.session_id);
+            return ret;
+        }
     }
 
     return HAL_RET_OK;
@@ -1113,12 +1143,19 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     HAL_ASSERT(dm != NULL);
 
-    if (args->role == FLOW_ROLE_INITIATOR) {
-        pd_flow = args->pd_session->iflow;
+    if (args->aug == false) {
+        if (args->role == FLOW_ROLE_INITIATOR) {
+            pd_flow = args->pd_session->iflow;
+        } else {
+            pd_flow = args->pd_session->rflow;
+        }
     } else {
-        pd_flow = args->pd_session->rflow;
+        if (args->role == FLOW_ROLE_INITIATOR) {
+            pd_flow = args->pd_session->iflow_aug;
+        } else {
+            pd_flow = args->pd_session->rflow_aug;
+        }
     }
-
     sdk_ret = dm->retrieve(pd_flow.flow_stats_hw_id, &d);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_OK) {
