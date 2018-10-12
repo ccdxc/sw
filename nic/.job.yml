@@ -114,7 +114,7 @@ logfiles:
 warmd:
   target: [ "sh", "-c", "cd /sw && sleep 3000000" ]
   create:
-    image: build-92
+    image: build-94
     count: 6
     resources:
       cpus  : 8
