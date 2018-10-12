@@ -236,6 +236,33 @@ func TestDuration(t *testing.T) {
 	}
 }
 
+func TestRegExp(t *testing.T) {
+	cases := []struct {
+		exp    string
+		val    string
+		result bool
+	}{
+		{exp: "name", val: "Andadaa_98", result: true},
+		{exp: "name", val: "Andadaa_:.98", result: true},
+		{exp: "name", val: "_Andadaa_98", result: false},
+		{exp: "name", val: "Andadaa_ 98", result: false},
+		{exp: "name", val: "Andadaa%_98", result: false},
+		{exp: "name", val: "Andadaa%_98", result: false},
+		{exp: "alphanum", val: "Andadaa98", result: true},
+		{exp: "alphanum", val: "Andadaa_98", result: false},
+		{exp: "alpha", val: "Andadaa", result: true},
+		{exp: "alpha", val: "Andadaa1", result: false},
+		{exp: "num", val: "1123131122", result: true},
+		{exp: "num", val: "112313112a", result: false},
+	}
+	for _, c := range cases {
+		args := []string{c.exp}
+		r := RegExp(c.val, args)
+		if r != c.result {
+			t.Errorf("[%v/[%v] expecting [%v] got [%v]", c.exp, c.val, c.result, r)
+		}
+	}
+}
 func TestValidKind(t *testing.T) {
 	types := map[string]*api.Struct{
 		"test.Type1": &api.Struct{

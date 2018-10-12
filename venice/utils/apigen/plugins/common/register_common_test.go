@@ -586,13 +586,19 @@ func TestFieldProfiles(t *testing.T) {
 				name: 'str_field7'
 				type: TYPE_STRING
 				options:<[venice.check]: "IPv4()">
-				number: 9
+				number: 10
 			>
 			field <
 				name: 'int_field1'
 				type: TYPE_STRING
 				options:<[venice.check]: "IntRange(3, 1000)">
-				number: 9
+				number: 11
+			>
+			field <
+				name: 'regexp_field1'
+				type: TYPE_STRING
+				options:<[venice.check]: "RegExp(name)">
+				number: 12
 			>
 		>
 		enum_type <
@@ -679,6 +685,9 @@ func TestFieldProfiles(t *testing.T) {
 			MinInt:    map[string]int64{"all": int64(3)},
 			MaxInt:    map[string]int64{"all": int64(1000)},
 			DocString: map[string]string{"all": "value should be between 3 and 1000"},
+		},
+		"regexp_field1": FieldProfile{
+			DocString: map[string]string{"all": "must start and end with alpha numeric and can have alphanumeric, -, _, ., :"},
 		},
 	}
 	msg, err := r.LookupMsg("", ".example.TestMsg")

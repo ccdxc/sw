@@ -2,6 +2,7 @@ package impl
 
 import (
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,6 +23,16 @@ var (
 	kindsMap     map[string]string
 	groupMap     map[string][]string
 	kindsMapOnce sync.Once
+)
+
+var (
+	// ATTENTION: When adding new expressions add a help string in utils/apigen/plugins/common/register_common.go
+	regexValidators = map[string]*regexp.Regexp{
+		"name":     regexp.MustCompile(`^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`),
+		"alphanum": regexp.MustCompile(`^[a-zA-Z0-9]+$`),
+		"alpha":    regexp.MustCompile(`^[a-zA-Z]+$`),
+		"num":      regexp.MustCompile(`^[0-9]+$`),
+	}
 )
 
 func populateKindsMap() {
@@ -378,4 +389,17 @@ func ValidGroup(i interface{}) bool {
 	kindsMapOnce.Do(populateKindsMap)
 	_, ok = groupMap[in]
 	return ok
+}
+
+// RegExp validates input string against the named regexp specified in args[0]
+func RegExp(i interface{}, args []string) bool {
+	in, ok := i.(string)
+	if !ok {
+		return false
+	}
+	re, ok := regexValidators[args[0]]
+	if !ok {
+		return false
+	}
+	return re.Match([]byte(in))
 }

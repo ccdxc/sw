@@ -1950,6 +1950,16 @@ func init() {
 	})
 
 	validatorMapExample["PublisherSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapExample["PublisherSpec"]["all"] = append(validatorMapExample["PublisherSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*PublisherSpec)
+		args := make([]string, 0)
+		args = append(args, "alphanum")
+
+		if !validators.RegExp(m.Id, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"Id")
+		}
+		return nil
+	})
 
 	validatorMapExample["PublisherSpec"]["all"] = append(validatorMapExample["PublisherSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*PublisherSpec)

@@ -413,7 +413,10 @@ func fieldFinalizer(obj *genswagger.SwaggerSchemaObject, field *descriptor.Field
 			if ver == "" || ver == "*" {
 				ver = "all"
 			}
-			fn(field, reg, ver, fldv.Args, &profile)
+			err = fn(field, reg, ver, fldv.Args, &profile)
+			if err != nil {
+				glog.Fatalf("cannot parse validator (%s)", err)
+			}
 		}
 		if len(profile.Enum) > 0 {
 			obj.Enum = append(obj.Enum, profile.Enum["all"]...)

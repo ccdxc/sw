@@ -42,7 +42,7 @@ message Publisher {
 message PublisherSpec {
     // cli-tags: id=pubid verobose-only=true
     // cli-help: This is the publisherID
-    string Id  = 2[(gogoproto.jsontag) = "id"];
+    string Id  = 2[(gogoproto.jsontag) = "id", (venice.check) = "RegExp(alphanum)"];
     // cli-tags: ins=pub
     // cli-help: This is the publisher address
     string Address = 3 [(gogoproto.jsontag) = "address"];

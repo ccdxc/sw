@@ -2850,6 +2850,7 @@
       "properties": {
         "id": {
           "type": "string",
+          "description": "must be alpha-numerics",
           "title": "cli-tags: id=pubid verobose-only=true\ncli-help: This is the publisherID"
         },
         "address": {

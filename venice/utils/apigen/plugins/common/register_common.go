@@ -141,6 +141,7 @@ var ValidatorArgMap = map[string][]CheckArgs{
 	"UUID":      {},
 	"Duration":  {},
 	"ProtoPort": {},
+	"RegExp":    {IsValidRegExp},
 }
 
 // FieldProfile defines a profile for a field, including validators, defaults,
@@ -183,6 +184,7 @@ var ValidatorProfileMap = map[string]func(field *descriptor.Field, reg *descript
 	"UUID":      uuidProfile,
 	"Duration":  durationProfile,
 	"ProtoPort": protoPortProfile,
+	"RegExp":    regexpProfile,
 }
 
 // convInt is a utility function to get convert string to integer
@@ -373,10 +375,19 @@ func protoPortProfile(field *descriptor.Field, reg *descriptor.Registry, ver str
 	return nil
 }
 
-// GetFieldProfile returns the FieldProfile for a field by parsing all options defined on the field.
-func GetFieldProfile(field *descriptor.Field, reg *descriptor.Registry) FieldProfile {
-	var ret FieldProfile
-	return ret
+var regexpHelpStrs = map[string]string{
+	"name":     "must start and end with alpha numeric and can have alphanumeric, -, _, ., :",
+	"alphanum": "must be alpha-numerics",
+	"alpha":    "must be only alphabets",
+	"num":      "must be only numerics",
+}
+
+func regexpProfile(_ *descriptor.Field, _ *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
+	if v, ok := regexpHelpStrs[args[0]]; ok {
+		prof.DocString[ver] = v
+		return nil
+	}
+	return fmt.Errorf("unknown regular expression [%s]", args[0])
 }
 
 // ValidateField specifies a validator specified on a field.
@@ -386,10 +397,20 @@ type ValidateField struct {
 	Args []string
 }
 
-// IsString  is s utility function to check if a string is valid
+// IsString is a utility function to check if a string is valid
 func IsString(in string) bool {
 	if len(in) != 0 {
 		return true
+	}
+	return false
+}
+
+// IsValidRegExp validates that the value is one of the valid Regexps
+func IsValidRegExp(in string) bool {
+	if IsString(in) {
+		if _, ok := regexpHelpStrs[in]; ok {
+			return true
+		}
 	}
 	return false
 }
