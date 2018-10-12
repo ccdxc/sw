@@ -41,6 +41,7 @@
 #define LOG_CB_UNIT_SIZE_BYTES 6
 #define CB_UNIT_SIZE_BYTES  64
 #define CB3_OFFSET_BYTES    (3 * 64)
+#define TOTAL_CB_BYTES      (16 * 64)
 #define PAGE_SIZE_4K        4096
 
 #define LOG_SIZEOF_EQCB_T   6   // 2^6 = 64 Bytes
