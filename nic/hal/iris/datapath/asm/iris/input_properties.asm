@@ -11,36 +11,33 @@ struct phv_               p;
 
 input_properties:
   // if table lookup is miss, return
-  K_DBG_WR(0x00)
-  DBG_WR(0x08, r1)
   nop.!c1.e
-  DBG_WR(0x09,  k.capri_intrinsic_lif_sbit0_ebit2)
-  DBG_WR(0x0a,  k.capri_intrinsic_lif_sbit3_ebit10)
-  DBG_WR(0x0b,  d.input_properties_d.dst_lport)
-  DBG_WR(0x0c,  d.input_properties_d.src_lport)
-  DBG_WR(0x0d,  d.input_properties_d.vrf)
-  DBG_WR(0x0e,  d.input_properties_d.flow_miss_idx)
-  phvwr.c1      p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
-  phvwr         p.flow_lkp_metadata_lkp_vrf, d.input_properties_d.vrf
-  phvwrpair     p.control_metadata_dst_lport[10:0], d.input_properties_d.dst_lport, \
-                    p.control_metadata_src_lport[10:0], d.input_properties_d.src_lport
-  phvwrpair     p.control_metadata_src_lif[10:8], k.capri_intrinsic_lif_sbit0_ebit2, \
-                    p.control_metadata_src_lif[7:0], k.capri_intrinsic_lif_sbit3_ebit10
-  phvwr         p.control_metadata_flow_miss_qos_class_id, \
-                    d.input_properties_d.flow_miss_qos_class_id
-  phvwrpair     p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable, \
-                    p.control_metadata_mdest_flow_miss_action, \
-                    d.input_properties_d.mdest_flow_miss_action
-  phvwr         p.control_metadata_allow_flood, d.input_properties_d.allow_flood
+  or            r1, d.input_properties_d.src_lport, \
+                    d.input_properties_d.dst_lport, 16
+  phvwrpair     p.{control_metadata_dst_lport,control_metadata_src_lport}, r1, \
+                    p.flow_lkp_metadata_lkp_vrf, d.input_properties_d.vrf
+  or            r1, k.capri_intrinsic_lif_sbit3_ebit10, \
+                    k.capri_intrinsic_lif_sbit0_ebit2, 8
+  or            r1, d.input_properties_d.flow_miss_idx, r1, 16
+  phvwr         p.{control_metadata_src_lif,control_metadata_flow_miss_idx}, r1
+  or            r1, d.input_properties_d.clear_promiscuous_repl, \
+                    d.input_properties_d.mdest_flow_miss_action, 1
+  or            r1, r1, d.input_properties_d.ipsg_enable, 3
+  phvwr         p.{control_metadata_ipsg_enable,\
+                   control_metadata_mdest_flow_miss_action, \
+                   control_metadata_clear_promiscuous_repl}, r1
+  or            r1, d.input_properties_d.allow_flood, \
+                    d.input_properties_d.flow_miss_qos_class_id, 2
+  phvwrm        p.{control_metadata_flow_miss_qos_class_id, \
+                   l3_metadata_inner_ip_frag, \
+                   control_metadata_allow_flood}, r1, 0x7D
   phvwr         p.flow_miss_metadata_tunnel_vnid, d.input_properties_d.bounce_vnid
   phvwr         p.{control_metadata_mirror_on_drop_en, \
                    control_metadata_mirror_on_drop_session_id}, \
                     d.{input_properties_d.mirror_on_drop_en, \
                        input_properties_d.mirror_on_drop_session_id}
-  phvwr         p.control_metadata_clear_promiscuous_repl, \
-                    d.input_properties_d.clear_promiscuous_repl
-  phvwr         p.control_metadata_nic_mode, d.input_properties_d.nic_mode
-  phvwr.e       p.control_metadata_flow_miss_idx, d.input_properties_d.flow_miss_idx
+  phvwrpair.e   p.control_metadata_nic_mode, d.input_properties_d.nic_mode, \
+                    p.flow_lkp_metadata_lkp_dir, d.input_properties_d.dir
   phvwr.f       p.l4_metadata_profile_idx, d.input_properties_d.l4_profile_idx
 
 /*****************************************************************************/

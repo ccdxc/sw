@@ -10,10 +10,19 @@ struct phv_         p;
 %%
 
 l4_profile:
-  phvwrpair   p.{l4_metadata_ip_normalization_en,l4_metadata_ip_rsvd_flags_action}, \
-                d.{u.l4_profile_d.ip_normalization_en,u.l4_profile_d.ip_rsvd_flags_action}, \
-                p.{l4_metadata_ip_df_action,l4_metadata_ip_options_action,l4_metadata_ip_invalid_len_action}, \
-                d.{u.l4_profile_d.ip_df_action,u.l4_profile_d.ip_options_action,u.l4_profile_d.ip_invalid_len_action}
+  or          r1, d.{u.l4_profile_d.ip_df_action, \
+                u.l4_profile_d.ip_options_action, \
+                u.l4_profile_d.ip_invalid_len_action}, \
+                d.u.l4_profile_d.ip_fragment_drop, 7
+  or          r1, r1, d.{u.l4_profile_d.ip_normalization_en, \
+                u.l4_profile_d.ip_rsvd_flags_action}, 8
+  phvwrm      p.{l4_metadata_ip_normalization_en, \
+                l4_metadata_ip_rsvd_flags_action, \
+                l4_metadata_ip_fragment_drop, \
+                l3_metadata_ip_frag, \
+                l4_metadata_ip_df_action, \
+                l4_metadata_ip_options_action, \
+                l4_metadata_ip_invalid_len_action}, r1, 0x7B7
 
   seq         c1, k.tcp_valid, TRUE
   phvwr.c1    p.l4_metadata_tcp_normalization_en, d.u.l4_profile_d.tcp_normalization_en
@@ -69,23 +78,24 @@ l4_profile:
                  u.l4_profile_d.tcp_flags_nonsyn_noack_drop}
 
   bal         r7, f_ip_normalization_optimal
-  phvwr       p.l4_metadata_ip_fragment_drop, \
-                d.u.l4_profile_d.ip_fragment_drop
   phvwrpair   p.l4_metadata_ip_normalize_ttl, \
                 d.u.l4_profile_d.ip_normalize_ttl, \
                 p.{l4_metadata_tcp_invalid_flags_drop, \
                    l4_metadata_tcp_non_syn_first_pkt_drop}, \
                 d.{u.l4_profile_d.tcp_invalid_flags_drop, \
                    u.l4_profile_d.tcp_non_syn_first_pkt_drop}
-  phvwrpair   p.l4_metadata_tcp_split_handshake_detect_en, \
-                d.u.l4_profile_d.tcp_split_handshake_detect_en, \
+  phvwr       p.{l4_metadata_tcp_split_handshake_detect_en, \
+                l4_metadata_tcp_split_handshake_drop}, \
+                d.{u.l4_profile_d.tcp_split_handshake_detect_en, \
+                u.l4_profile_d.tcp_split_handshake_drop}
+
+  bbeq        k.p4plus_to_p4_valid, TRUE, f_p4plus_to_p4_1
+  phvwrpair   p.l4_metadata_ip_ttl_change_detect_en, \
+                d.u.l4_profile_d.ip_ttl_change_detect_en, \
                 p.l4_metadata_tcp_normalize_mss, \
                 d.u.l4_profile_d.tcp_normalize_mss
-  b           f_p4plus_to_p4_1
-  phvwrpair   p.l4_metadata_tcp_split_handshake_drop, \
-                d.u.l4_profile_d.tcp_split_handshake_drop, \
-                p.l4_metadata_ip_ttl_change_detect_en, \
-                d.u.l4_profile_d.ip_ttl_change_detect_en
+  nop.e
+  nop
 
 
 // c7 will retain the tunnel_terminate state throughout this function
@@ -238,15 +248,15 @@ lb_ipv4_norm_invalid_length:
   // the parsed headers so that we can truncate the packet by the difference of
   // (capri_p4_intrinsic_packet_len - (ipv4.totalLen + Ether header + VLAN (if exists)))
   // Without this we need to have a knowledge of all headers that the parser
-  // is parsing and then do the calculation so that we update the 
+  // is parsing and then do the calculation so that we update the
   // capri_deparser_len_trunc_pkt_len.
   // When editing we need to make sure we don't truncate lower than 64 byte packet
   sle         c2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}, MIN_ETHER_FRAME_LEN
   b.c2        lb_ipv4_norm_ttl
-  // Calculate the total parsed packet length from ethernet header onwards. 
+  // Calculate the total parsed packet length from ethernet header onwards.
   // If we parsed more than the packet length we will not truncate the packet.
-  // Reason being we don't what all headers are parsed and marking them all 
+  // Reason being we don't what all headers are parsed and marking them all
   // invalid might not be striaght forward.
   sub         r2, k.control_metadata_parser_payload_offset, k.control_metadata_parser_outer_eth_offset
   // This case should be ideally catched by parser "packet_len_check" pragma.
@@ -255,7 +265,7 @@ lb_ipv4_norm_invalid_length:
   b.c2        lb_ipv4_norm_ttl
   // Now calculate what is the value to write to capri_deparser_len_trunc_pkt_len.
   sub         r3, r1, r2
-  phvwr       p.capri_deparser_len_trunc_pkt_len, r3 
+  phvwr       p.capri_deparser_len_trunc_pkt_len, r3
   phvwr       p.capri_deparser_len_trunc, 1
   b           lb_ipv4_norm_ttl
   phvwr       p.capri_intrinsic_payload, 0
@@ -265,12 +275,12 @@ lb_ipv4_norm_invalid_length:
  If we really need to do based on tunnel termination for inner then the
  optimal code which checks for bad packets also need to do this check and
  in input_mapping_native/tunnel we need to normalize the ipv4 total length
- to a common field. 
+ to a common field.
 // c1 - Has vlan_valid flag
 lb_ipv4_norm_invalid_length_tunnel_terminate:
   add.c1      r1, k.ipv4_ihl, 34    // 18 (eth+vlan) + 8 (udp) + 8 (vxlan)
   add.!c1     r1, k.ipv4_ihl, 30    // 14 (eth) + 8 (udp) + 8 (vxlan)
-  add         r1, r1, k.inner_ipv4_totalLen 
+  add         r1, r1, k.inner_ipv4_totalLen
   slt         c1, r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}
   b.!c1       lb_ipv4_norm_ttl
@@ -282,13 +292,13 @@ lb_ipv4_norm_invalid_length_tunnel_terminate:
   // the parsed headers so that we can truncate the packet by the difference of
   // (capri_p4_intrinsic_packet_len - (ipv4.totalLen + Ether header + VLAN (if exists)))
   // Without this we need to have a knowledge of all headers that the parser
-  // is parsing and then do the calculation so that we update the 
+  // is parsing and then do the calculation so that we update the
   // capri_deparser_len_trunc_pkt_len.
   // When editing we need to make sure we don't truncate lower than 64 byte packet
-  // For VxLAN terminated packets this is not a isue. 
-  // Calculate the total parsed packet length from ethernet header onwards. 
+  // For VxLAN terminated packets this is not a isue.
+  // Calculate the total parsed packet length from ethernet header onwards.
   // If we parsed more than the packet length we will not truncate the packet.
-  // Reason being we don't what all headers are parsed and marking them all 
+  // Reason being we don't what all headers are parsed and marking them all
   // invalid might not be striaght forward.
   sub         r2, k.control_metadata_parser_payload_offset, k.control_metadata_parser_inner_eth_offset
   // This case should be ideally catched by parser "packet_len_check" pragma.
@@ -297,7 +307,7 @@ lb_ipv4_norm_invalid_length_tunnel_terminate:
   b.c2        lb_ipv4_norm_ttl
   // Now calculate what is the value to write to capri_deparser_len_trunc_pkt_len.
   sub         r3, r1, r2
-  phvwr       p.capri_deparser_len_trunc_pkt_len, r3 
+  phvwr       p.capri_deparser_len_trunc_pkt_len, r3
   phvwr       p.capri_deparser_len_trunc, 1
   b           lb_ipv4_norm_ttl
   phvwr       p.capri_intrinsic_payload, 0
@@ -378,15 +388,15 @@ lb_ipv6_norm_invalid_length:
   // the parsed headers so that we can truncate the packet by the difference of
   // (capri_p4_intrinsic_packet_len - (ipv4.totalLen + Ether header + VLAN (if exists)))
   // Without this we need to have a knowledge of all headers that the parser
-  // is parsing and then do the calculation so that we update the 
+  // is parsing and then do the calculation so that we update the
   // capri_deparser_len_trunc_pkt_len.
   // When editing we need to make sure we don't truncate lower than 64 byte packet
   sle         c2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}, MIN_ETHER_FRAME_LEN
   b.c2        lb_ipv6_norm_hop_limit
-  // Calculate the total parsed packet length from ethernet header onwards. 
+  // Calculate the total parsed packet length from ethernet header onwards.
   // If we parsed more than the packet length we will not truncate the packet.
-  // Reason being we don't what all headers are parsed and marking them all 
+  // Reason being we don't what all headers are parsed and marking them all
   // invalid might not be striaght forward.
   sub         r2, k.control_metadata_parser_payload_offset, k.control_metadata_parser_outer_eth_offset
   // This case should be ideally catched by parser "packet_len_check" pragma.
@@ -395,7 +405,7 @@ lb_ipv6_norm_invalid_length:
   b.c2        lb_ipv6_norm_hop_limit
   // Now calculate what is the value to write to capri_deparser_len_trunc_pkt_len.
   sub         r3, r1, r2
-  phvwr       p.capri_deparser_len_trunc_pkt_len, r3 
+  phvwr       p.capri_deparser_len_trunc_pkt_len, r3
   phvwr       p.capri_deparser_len_trunc, 1
   b           lb_ipv6_norm_hop_limit
   phvwr       p.capri_intrinsic_payload, 0

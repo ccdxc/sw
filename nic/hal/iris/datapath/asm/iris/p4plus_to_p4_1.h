@@ -1,7 +1,4 @@
 f_p4plus_to_p4_1:
-  seq         c1, k.p4plus_to_p4_valid, TRUE
-  nop.!c1.e
-
   // update IP id
   seq         c2, k.p4plus_to_p4_update_ip_id, TRUE
   add         r1, k.ipv4_identification, k.p4plus_to_p4_ip_id_delta

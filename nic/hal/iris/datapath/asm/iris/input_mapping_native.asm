@@ -9,20 +9,16 @@ struct phv_                   p;
 %%
 
 input_mapping_miss:
-  K_DBG_WR(0x10)
   phvwr.e     p.control_metadata_drop_reason[DROP_INPUT_MAPPING], 1
   phvwr.f     p.capri_intrinsic_drop, 1
 
 .align
 nop:
-  K_DBG_WR(0x10)
-  phvwrm.e.f p[1:0], r0, 0
+  nop.e
   nop
 
 .align
 native_ipv4_packet:
-  K_DBG_WR(0x10)
-  DBG_WR(0x18, k.ethernet_dstAddr)
   bbeq          k.ethernet_dstAddr[40], 0, native_ipv4_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -38,11 +34,14 @@ native_ipv4_packet_common:
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr
 
-  phvwr         p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags
-  phvwrpair     p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr, \
-                    p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
-  phvwr         p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
-  phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr
+  or            r1, k.ipv4_ttl, k.ethernet_dstAddr, 8
+  phvwr         p.{flow_lkp_metadata_lkp_dstMacAddr,flow_lkp_metadata_ip_ttl}, r1
+
+  or            r1, k.ipv4_flags, k.ethernet_srcAddr, 3
+  or            r1, r1, k.ipv4_ihl, 51
+  phvwr         p.{flow_lkp_metadata_ipv4_hlen, \
+                   flow_lkp_metadata_lkp_srcMacAddr, \
+                   flow_lkp_metadata_ipv4_flags}, r1
 
   bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
 
@@ -60,7 +59,6 @@ native_ipv4_esp_packet:
 
 .align
 native_ipv6_packet:
-  DBG_WR(0x19, k.ethernet_dstAddr)
   bbeq          k.ethernet_dstAddr[40], 0, native_ipv6_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
@@ -92,8 +90,6 @@ native_ipv6_packet_common:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 native_non_ip_packet:
-  K_DBG_WR(0x10)
-  DBG_WR(0x1a, k.ethernet_dstAddr)
   bbeq          k.ethernet_dstAddr[40], 0, native_non_ip_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
