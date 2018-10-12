@@ -299,7 +299,8 @@ init_service_batch_params(struct batch_info *batch_info,
 	switch (batch_info->bi_svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
-		// svc_batch_info->u.sbi_xts_desc = batch_info->u.bi_xts_desc;
+		svc_batch_info->u.sbi_crypto_desc =
+			batch_info->u.bi_crypto_desc;
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 	case PNSO_SVC_TYPE_DECOMPRESS:

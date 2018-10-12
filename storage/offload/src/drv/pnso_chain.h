@@ -141,7 +141,7 @@ struct service_batch_info {
 	uint16_t sbi_index;
 	union {
 		struct cpdc_desc *sbi_cpdc_desc;
-		struct xts_desc *sbi_xts_desc;
+		struct crypto_desc *sbi_crypto_desc;
 	} u;
 };
 

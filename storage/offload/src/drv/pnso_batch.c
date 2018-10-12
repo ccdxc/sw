@@ -13,7 +13,9 @@
 #include "pnso_mpool.h"
 #include "pnso_batch.h"
 #include "pnso_cpdc.h"
+#include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
+#include "pnso_crypto_cmn.h"
 
 /*
  * NOTE/TODO-batch:
@@ -199,17 +201,14 @@ get_bulk_batch_desc(struct batch_info *batch_info)
 	switch (batch_info->bi_svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
-#if 0
-		/* TODO-batch: add XTS desc vec */
-		mpool = pc_res->mpools[MPOOL_TYPE_XTS_DESC_VECTOR];
-		batch_info->u.bi_xts_desc =
-			xts_get_batch_bulk_desc(mpool);
+		// mpool = pc_res->mpools[batch_info->bi_mpool_type];
+		mpool = pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR];
+		batch_info->u.bi_crypto_desc =
+			crypto_get_batch_bulk_desc(mpool);
 
 		OSAL_LOG_DEBUG("obtained desc pool_type: %d desc: 0x%llxd",
 			batch_info->bi_mpool_type,
-			(uint64_t) batch_info->u.bi_xts_desc);
-#endif
-		OSAL_ASSERT(0);
+			(uint64_t) batch_info->u.bi_crypto_desc);
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 	case PNSO_SVC_TYPE_DECOMPRESS:
@@ -239,18 +238,17 @@ put_bulk_batch_desc(struct batch_info *batch_info)
 	switch (batch_info->bi_svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
-#if 0	/* TODO-batch: add XTS desc vec */
 		pc_res = batch_info->bi_pc_res;
-		// mpool = pc_res->mpools[MPOOL_TYPE_XTS_DESC_VECTOR];
+#if 1
+		mpool = pc_res->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR];
+#else
 		mpool = pc_res->mpools[batch_info->bi_mpool_type];
-		xts_put_batch_bulk_desc(mpool, batch_info->u.bi_xts_desc);
+#endif
+		crypto_put_batch_bulk_desc(mpool, batch_info->u.bi_crypto_desc);
 
 		OSAL_LOG_DEBUG("returned batch desc pool_type: %d desc: 0x%llxd",
 			batch_info->bi_mpool_type,
-			(uint64_t) batch_info->u.bi_xts_desc);
-
-#endif
-		OSAL_ASSERT(0);
+			(uint64_t) batch_info->u.bi_crypto_desc);
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 	case PNSO_SVC_TYPE_DECOMPRESS:
@@ -272,7 +270,6 @@ put_bulk_batch_desc(struct batch_info *batch_info)
 		OSAL_ASSERT(0);
 		break;
 	}
-
 }
 
 static struct batch_info *

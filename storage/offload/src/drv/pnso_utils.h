@@ -81,4 +81,6 @@ void pc_res_mpool_object_put(const struct per_core_resource *pc_res,
 			     void *obj);
 void pprint_chain_sgl_pdma(uint64_t sgl_pa);
 
+bool putil_is_service_in_batch(uint8_t flags);
+
 #endif  /* __PNSO_UTILS_H__ */

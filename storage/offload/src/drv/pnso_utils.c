@@ -7,6 +7,7 @@
 #include "sonic_api_int.h"
 
 #include "pnso_utils.h"
+#include "pnso_chain.h"
 
 pnso_error_t
 ring_spec_info_fill(uint32_t ring_id,
@@ -511,3 +512,10 @@ pprint_chain_sgl_pdma(uint64_t sgl_pa)
 	}
 }
 
+bool
+putil_is_service_in_batch(uint8_t flags)
+{
+	return ((flags & CHAIN_SFLAG_IN_BATCH) &&
+			((flags & CHAIN_SFLAG_LONE_SERVICE) ||
+			 (flags & CHAIN_SFLAG_FIRST_SERVICE))) ? true : false;
+}

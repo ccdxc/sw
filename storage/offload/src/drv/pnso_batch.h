@@ -35,7 +35,7 @@ struct batch_info {
 	uint8_t bi_mpool_type;		/* type of pool type */
 	union {
 		struct cpdc_desc *bi_cpdc_desc;
-		struct xts_desc *bi_xts_desc;
+		struct crypto_desc *bi_crypto_desc;
 	} u;
 
 	struct per_core_resource *bi_pc_res;	/* TODO-batch: why?! */

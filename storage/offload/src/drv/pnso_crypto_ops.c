@@ -18,8 +18,8 @@
 #include "pnso_pbuf.h"
 #include "pnso_chain.h"
 #include "pnso_crypto.h"
-#include "pnso_cpdc.h"
 #include "pnso_crypto_cmn.h"
+#include "pnso_cpdc.h"
 #include "pnso_seq.h"
 #include "pnso_utils.h"
 #include "sonic_api_int.h"
@@ -217,11 +217,19 @@ crypto_setup(struct service_info *svc_info,
 	if (err)
 		return err;
 
+<<<<<<< HEAD
 	pc_res = svc_info->si_pc_res;
 	svc_info->si_desc = pc_res_mpool_object_get(pc_res,
 						    MPOOL_TYPE_CRYPTO_DESC);
 	if (!svc_info->si_desc)
 		return ENOMEM;
+=======
+	svc_info->si_desc = crypto_get_desc_ex(svc_info, false);
+	if (!svc_info->si_desc) {
+		err = ENOMEM;
+		goto out;
+	}
+>>>>>>> 94979a7... pnso_batch/crypto: Enable batching for encryption/decryption
 
 	svc_info->si_status_desc = pc_res_mpool_object_get(pc_res,
 					  MPOOL_TYPE_CRYPTO_STATUS_DESC);
@@ -239,6 +247,7 @@ crypto_setup(struct service_info *svc_info,
 	svc_info->si_desc_flags = 0;
 	crypto_desc_fill(svc_info, svc_params->u.sp_crypto_desc);
 
+<<<<<<< HEAD
 	if (!chn_service_is_in_chain(svc_info) ||
 	     chn_service_is_first(svc_info)) {
 		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
@@ -246,6 +255,28 @@ crypto_setup(struct service_info *svc_info,
 		if (!svc_info->si_seq_info.sqi_desc) {
 			OSAL_LOG_ERROR("failed to setup sequencer desc");
 			return EINVAL;
+=======
+	if (putil_is_service_in_batch(svc_info->si_flags)) {
+		err = crypto_setup_batch_desc(svc_info, svc_info->si_desc);
+		if (err) {
+			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
+					err);
+			goto out;
+>>>>>>> 94979a7... pnso_batch/crypto: Enable batching for encryption/decryption
+		}
+	} else {
+		if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
+				(svc_info->si_flags &
+				 CHAIN_SFLAG_FIRST_SERVICE)) {
+			svc_info->si_seq_info.sqi_desc =
+				seq_setup_desc(svc_info, svc_info->si_desc,
+						sizeof(struct crypto_desc));
+			if (!svc_info->si_seq_info.sqi_desc) {
+				err = EINVAL;
+				OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
+						err);
+				goto out;
+			}
 		}
 	}
 
@@ -379,8 +410,17 @@ crypto_poll(const struct service_info *svc_info)
 	status_desc = svc_info->si_status_desc;
 	cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
 		   CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
+
+#if 0
 	while (status_desc->csd_cpl_data != cpl_data)
-		osal_yield();
+		;
+#else
+	uint64_t i;
+	for (i = 0; i < 100000000; i++) {
+		if (status_desc->csd_cpl_data == cpl_data)
+			break;
+	}
+#endif
 
 	return PNSO_OK;
 }
@@ -432,14 +472,17 @@ crypto_teardown(struct service_info *svc_info)
 	crypto_aol_put(pc_res, &svc_info->si_dst_aol);
 	pc_res_mpool_object_put(pc_res, MPOOL_TYPE_CRYPTO_STATUS_DESC,
 				svc_info->si_status_desc);
-	pc_res_mpool_object_put(pc_res, MPOOL_TYPE_CRYPTO_DESC,
-				svc_info->si_desc);
+
+	crypto_put_desc_ex(svc_info, false, svc_info->si_desc);
+
 	svc_interm_buf_list_put(svc_info);
 	pc_res_mpool_object_put(pc_res, MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
 				svc_info->si_istatus_desc);
 	pc_res_sgl_pdma_put(pc_res, svc_info->si_sgl_pdma);
 	pc_res_sgl_vec_put(pc_res, &svc_info->si_src_sgl);
 	seq_cleanup_crypto_chain(svc_info);
+
+	OSAL_LOG_DEBUG("exit!");
 }
 
 struct service_ops encrypt_ops = {
