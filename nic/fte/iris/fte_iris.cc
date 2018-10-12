@@ -123,8 +123,13 @@ ctx_t::extract_flow_key()
 
         case IPPROTO_UDP:
             udphdr = (udp_header_t*)(pkt_ + cpu_rxhdr_->l4_offset);
-            key_.sport = ntohs(udphdr->sport);
             key_.dport = ntohs(udphdr->dport);
+            //force sport to 0 if dport is UDP_PORT_ROCE_V2
+            if (key_.dport == UDP_PORT_ROCE_V2) {
+                key_.sport = 0;
+            } else {
+                key_.sport = ntohs(udphdr->sport);
+            }
             break;
 
         case IPPROTO_ICMP:
