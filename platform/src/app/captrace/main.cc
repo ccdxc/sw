@@ -68,9 +68,11 @@ int mpu_trace(
     if (status.ok()) {
         for (int i = 0; i < rsp_msg.response().size(); i++) {
             auto rsp = rsp_msg.response(i);
-            assert(rsp.api_status() == types::API_STATUS_OK);
+            if (rsp.api_status() != types::API_STATUS_OK) {
+                std::cerr << __FUNCTION__ << " API status " << rsp.api_status() << std::endl;
+            }
         }
-        std::cerr << __FUNCTION__ << " success!" << std::endl;
+        std::cout<< __FUNCTION__ << " success!" << std::endl;
         return 0;
     } else {
         std::cerr << __FUNCTION__ << ": status = " << status.error_code() << ":" << status.error_message() << std::endl;
@@ -89,6 +91,7 @@ int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
     char *pipeline_name;
     int stage;
     int mpu;
+    bool config = true;
     bool trace_enable = false;
     bool phv_debug = false;
     bool phv_error = false;
@@ -191,40 +194,28 @@ int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
             }
 
             col_num++;
-            //printf("CAP-DEBUG: Option '%s' Value %s !\n", option, value);
+
             switch (trace_options[std::string((const char *)option)]) {
             case 0:
                 printf("Invalid option '%s' ... ignoring!\n", option);
                 break;
             case 1:
-                if (atoi(value) != 0) {
-                    trace_enable = true;
-                }
+                trace_enable = atoi(value);
                 break;
             case 2:
-                if (atoi(value) != 0) {
-                    phv_debug = true;
-                }
+                phv_debug = atoi(value);
                 break;
             case 3:
-                if (atoi(value) != 0) {
-                    phv_error = true;
-                }
+                phv_error = atoi(value);
                 break;
             case 4:
-                if (atoi(value) != 0) {
-                    table_key_enable = true;
-                }
+                table_key_enable = atoi(value);
                 break;
             case 5:
-                if (atoi(value) != 0) {
-                    instr_enable = true;
-                }
+                instr_enable = atoi(value);
                 break;
             case 6:
-                if (atoi(value) != 0) {
-                    wrap = true;
-                }
+                wrap = atoi(value);
                 break;
             case 7:
                 watch_pc = strtoul(value, NULL, 16);
@@ -242,18 +233,12 @@ int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
             }
         } while(token != NULL);
 
-        for (int p = 1; p <= MAX_NUM_PIPELINE; p++) {
-            if (pipeline != (int)debug::MPU_TRACE_PIPELINE_NONE && p != pipeline) {
-                continue;
-            }
+        for (int p = 1; p < MAX_NUM_PIPELINE; p++) {
             for (int s = 0; s <= max_stages[(debug::MpuTracePipelineType)p]; s++) {
-                if (stage != -1 && s != stage) {
-                    continue;
-                }
                 for (int m = 0; m < MAX_MPU; m++) {
-                    if (mpu != -1 && m != mpu) {
-                        continue;
-                    }
+
+                    config = (pipeline == (int)debug::MPU_TRACE_PIPELINE_NONE || p == pipeline) &&
+                                (stage == -1 || s == stage) && (mpu == -1 || m == mpu);
 
                     debug::MpuTraceRequest *req = req_msg.add_request();
 
@@ -261,21 +246,26 @@ int mpu_trace_config(const char *cfg_file, std::string cfg_proto)
                     req->set_stage_id(s);
                     req->set_mpu(m);
 
-                    assert(trace_addr + (trace_size * TRACE_ENTRY_SIZE) < TRACE_END);
-                    assert((trace_addr & 0x3f) == 0x0);
+                    if (config) {
+                        assert(trace_addr + (trace_size * TRACE_ENTRY_SIZE) < TRACE_END);
+                        assert((trace_addr & 0x3f) == 0x0);
 
-                    req->mutable_spec()->set_enable(true);
-                    req->mutable_spec()->set_trace_enable(trace_enable);
-                    req->mutable_spec()->set_phv_debug(phv_debug);
-                    req->mutable_spec()->set_phv_error(phv_error);
-                    req->mutable_spec()->set_watch_pc(watch_pc);
-                    req->mutable_spec()->set_table_key(table_key_enable | instr_enable);
-                    req->mutable_spec()->set_instructions(instr_enable);
-                    req->mutable_spec()->set_wrap(wrap);
-                    req->mutable_spec()->set_base_addr(trace_addr);
-                    req->mutable_spec()->set_buf_size(trace_size);
-                    req->mutable_spec()->set_reset(false);
-                    trace_addr += (trace_size * TRACE_ENTRY_SIZE);
+                        // Erase trace buffer
+                        sdk::lib::pal_mem_set(trace_addr, 0, trace_size);
+
+                        req->mutable_spec()->set_enable(true);
+                        req->mutable_spec()->set_trace_enable(trace_enable);
+                        req->mutable_spec()->set_phv_debug(phv_debug);
+                        req->mutable_spec()->set_phv_error(phv_error);
+                        req->mutable_spec()->set_watch_pc(watch_pc);
+                        req->mutable_spec()->set_table_key(table_key_enable | instr_enable);
+                        req->mutable_spec()->set_instructions(instr_enable);
+                        req->mutable_spec()->set_wrap(wrap);
+                        req->mutable_spec()->set_base_addr(trace_addr);
+                        req->mutable_spec()->set_buf_size(trace_size);
+                        req->mutable_spec()->set_reset(false);
+                        trace_addr += (trace_size * TRACE_ENTRY_SIZE);
+                    }
                 }
             }
         }
@@ -304,8 +294,6 @@ int mpu_trace_enable(std::string cfg_proto)
     debug::MpuTraceRequestMsg req_msg;
     std::shared_ptr<Channel> channel =
         grpc::CreateChannel(svc_endpoint, grpc::InsecureChannelCredentials());
-    uint8_t *buf;
-    uint32_t size;
 
     std::fstream input(cfg_proto, std::ios::in | std::ios::binary);
     if (!req_msg.ParseFromIstream(&input)) {
@@ -313,25 +301,11 @@ int mpu_trace_enable(std::string cfg_proto)
         return -1;
     }
 
-#ifdef __x86_64__
-        assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
-#elif __aarch64__
-        assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
-#endif
-
     for (int i = 0; i < req_msg.request().size(); i++) {
-        auto req = req_msg.request(i);
-        req.mutable_spec()->set_enable(true);
-
-        // TODO: MMAP and memset to avoid allocating buffers
-        size = req.spec().buf_size() * 64;
-        buf = (uint8_t *)malloc(size);
-        if (buf == NULL) {
-            std::cerr << "Failed to allocate memory for erasing trace buffer!" << std::endl;
-            return -1;
+        auto req = req_msg.mutable_request(i);
+        if (req->has_spec()) {
+            req->mutable_spec()->set_enable(true);
         }
-        sdk::lib::pal_mem_write(req.spec().base_addr(), buf, size);
-        free(buf);
     }
 
     mpu_trace(channel, req_msg);
@@ -358,8 +332,10 @@ int mpu_trace_disable(std::string cfg_proto)
     }
 
     for (int i = 0; i < req_msg.request().size(); i++) {
-        auto req = req_msg.request(i);
-        req.mutable_spec()->set_enable(false);
+        auto req = req_msg.mutable_request(i);
+        if (req->has_spec()) {
+            req->mutable_spec()->set_enable(false);
+        }
     }
 
     mpu_trace(channel, req_msg);
@@ -386,9 +362,31 @@ int mpu_trace_reset(std::string cfg_proto)
     }
 
     for (int i = 0; i < req_msg.request().size(); i++) {
+        auto req = req_msg.mutable_request(i);
+        if (req->has_spec()) {
+            req->mutable_spec()->set_enable(false);
+            req->mutable_spec()->set_reset(true);
+        }
+    }
+
+    mpu_trace(channel, req_msg);
+
+    // Erase trace buffer
+    for (int i = 0; i < req_msg.request().size(); i++) {
         auto req = req_msg.request(i);
-        req.mutable_spec()->set_enable(false);
-        req.mutable_spec()->set_reset(true);
+        if (req.has_spec()) {
+            auto trace_addr = req.spec().base_addr();
+            auto trace_size = req.spec().buf_size() * TRACE_ENTRY_SIZE;
+            sdk::lib::pal_mem_set(trace_addr, 0, trace_size);
+        }
+    }
+
+    for (int i = 0; i < req_msg.request().size(); i++) {
+        auto req = req_msg.mutable_request(i);
+        if (req->has_spec()) {
+            req->mutable_spec()->set_enable(true);
+            req->mutable_spec()->set_reset(false);
+        }
     }
 
     mpu_trace(channel, req_msg);
@@ -405,8 +403,7 @@ int mpu_trace_reset(std::string cfg_proto)
 int mpu_trace_dump(const char *dump_file, std::string cfg_proto)
 {
     FILE *fp = NULL;
-    uint8_t *buf;
-    uint32_t size = 0;
+    uint8_t buf[64] = { 0 };
     mpu_trace_record_t record = { 0 };
 
     debug::MpuTraceRequestMsg req_msg;
@@ -422,12 +419,6 @@ int mpu_trace_dump(const char *dump_file, std::string cfg_proto)
         std::cerr << "Failed to open dump file for writing!" << std::endl;
         return -1;
     }
-
-#ifdef __x86_64__
-        assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
-#elif __aarch64__
-        assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
-#endif
 
     for (int i = 0; i < req_msg.request().size(); i++) {
         auto req = req_msg.request(i);
@@ -448,20 +439,17 @@ int mpu_trace_dump(const char *dump_file, std::string cfg_proto)
         record.buf_size      = req.spec().buf_size();
         record.mpu_trace_size = TRACE_ENTRY_SIZE * req.spec().buf_size();
 
-        // Write header
-        fwrite(&record, sizeof(uint8_t), sizeof(record), fp);
+        if (req.has_spec()) {
+            // Write header
+            fwrite(&record, sizeof(uint8_t), sizeof(record), fp);
 
-        // Write trace buffer
-        size = record.buf_size * TRACE_ENTRY_SIZE;
-        // TODO: MMAP the trace buffer to avoid copying
-        buf = (uint8_t *)malloc(size);
-        if (buf == NULL) {
-            std::cerr << "Failed to allocate memory for reading trace buffer!" << std::endl;
-            return -1;
+            // Write trace buffer
+            for (unsigned int i = 0; i < record.buf_size; i++) {
+                sdk::lib::pal_mem_read(record.base_addr, buf, sizeof(buf));
+                fwrite(buf, sizeof(buf[0]), sizeof(buf), fp);
+                record.base_addr += sizeof(buf);
+            }
         }
-        sdk::lib::pal_mem_read(record.base_addr, buf, size);
-        fwrite(buf, sizeof(uint8_t), size, fp);
-        free(buf);
     }
 
     fclose(fp);
@@ -469,7 +457,7 @@ int mpu_trace_dump(const char *dump_file, std::string cfg_proto)
     return 0;
 }
 
-int mpu_trace_cfgshow(std::string cfg_proto)
+int mpu_trace_show(std::string cfg_proto)
 {
     debug::MpuTraceRequestMsg req_msg;
 
@@ -479,33 +467,37 @@ int mpu_trace_cfgshow(std::string cfg_proto)
         return -1;
     }
 
-    //printf("pipeline,stage,mpu,enable,trace_enable,phv_debug,phv_error,watch_pc,base_addr,table_key,instructions,wrap,reset,buf_size,mpu_trace_size\n");
+    printf("%10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s\n",
+            "pipeline", "stage", "mpu",
+            "enable", "wrap", "reset", 
+            "trace", "phv_debug", "phv_error", "watch_pc",
+            "table_kd", "instr",
+            "trace_addr", "trace_nent", "trace_sz");
 
     for (int i = 0; i < req_msg.request().size(); i++) {
         auto req = req_msg.request(i);
-
-        printf("%" PRIu8
-                " %" PRIu32 " %" PRIu32
-                " %" PRIu8  " %" PRIu8  " %" PRIu8 " %" PRIu8
-                " 0x%" PRIx64 " 0x%" PRIx64
-                " %" PRIu8  " %" PRIu8  " %" PRIu8 " %" PRIu8
-                " %" PRIu32 " %" PRIu32 "\n",
-                req.pipeline_type(),
-                req.stage_id(),
-                req.mpu(),
-                req.spec().enable(),
-                req.spec().trace_enable(),
-                req.spec().phv_debug(),
-                req.spec().phv_error(),
-                req.spec().watch_pc(),
-                req.spec().base_addr(),
-                req.spec().table_key(),
-                req.spec().instructions(),
-                req.spec().wrap(),
-                req.spec().reset(),
-                req.spec().buf_size(),
-                TRACE_ENTRY_SIZE * req.spec().buf_size()
-            );
+        if (req.has_spec()) {
+            printf("%10" PRIu8 " %10" PRIu32 " %10" PRIu32
+                    " %10" PRIu8 " %10" PRIu8  " %10" PRIu8
+                    " %10" PRIu8 " %10" PRIu8  " %10" PRIu8
+                    " 0x%08" PRIx64
+                    " %10" PRIu8 " %10" PRIu8
+                    " 0x%08" PRIx64 " %10" PRIu32
+                    " %10" PRIu32 "\n",
+                    // selectors
+                    req.pipeline_type(), req.stage_id(), req.mpu(),
+                    // control
+                    req.spec().enable(), req.spec().wrap(), req.spec().reset(),
+                    // triggers
+                    req.spec().trace_enable(), req.spec().phv_debug(), req.spec().phv_error(),
+                    req.spec().watch_pc(),
+                    // content
+                    req.spec().table_key(), req.spec().instructions(),
+                    // location
+                    req.spec().base_addr(), req.spec().buf_size(),
+                    TRACE_ENTRY_SIZE * req.spec().buf_size()
+                );
+        }
     }
 
     return 0;
@@ -537,8 +529,13 @@ int main(int argc, char *argv[])
         {"dump", 4},
         {"reset", 5},
         {"show", 6},
-        {"fmt", 7}
     };
+
+#ifdef __x86_64__
+        assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
+#elif __aarch64__
+        assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HW) == sdk::lib::PAL_RET_OK);
+#endif
 
     switch (oper[std::string((const char *)argv[1])]) {
     case 1:
@@ -569,10 +566,7 @@ int main(int argc, char *argv[])
         mpu_trace_reset(mpu_trace_proto_file_name);
         break;
     case 6:
-        mpu_trace_cfgshow(mpu_trace_proto_file_name);
-        break;
-    case 7:
-        std::cerr << "pipeline,stage,mpu,<trace_enable,phv_debug,phv_error,table_key_enable,instr_enable,wrap,watch_pc=value,trace_addr=value,trace_size=value>" << std::endl;
+        mpu_trace_show(mpu_trace_proto_file_name);
         break;
     default:
         std::cerr << "Invalid operation " << argv[1] << std::endl;
