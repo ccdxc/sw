@@ -1430,6 +1430,26 @@ func isSpecStatusMessage(msg *descriptor.Message) bool {
 	return spec && status
 }
 
+func hasTypeMeta(msg *descriptor.Message) bool {
+	if isListHelper(msg) || isWatchHelper(msg) {
+		return false
+	}
+	for _, v := range msg.Fields {
+		if *v.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE && *v.TypeName == ".api.TypeMeta" {
+			return true
+		}
+	}
+	return false
+}
+
+func hasListHelper(msg *descriptor.Message) bool {
+	lhelper := "." + msg.File.GoPkg.Name + "." + *msg.Name + "List"
+	if _, err := msg.File.Reg.LookupMsg("", lhelper); err == nil {
+		return true
+	}
+	return false
+}
+
 func getAutoRestOper(meth *descriptor.Method) (string, error) {
 	if v, err := reg.GetExtension("venice.methodAutoGen", meth); err == nil {
 		if v.(bool) == false {
@@ -1782,7 +1802,7 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 	var keys []string
 	for _, msg := range file.Messages {
 		var kind, group string
-		if isSpecStatusMessage(msg) {
+		if isSpecStatusMessage(msg) || (hasTypeMeta(msg) && hasListHelper(msg)) {
 			kind = *msg.Name
 			group = file.GoPkg.Name
 		}

@@ -16,7 +16,7 @@ import (
 var typesMapEvents = map[string]*api.Struct{
 
 	"events.Event": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Event{}) },
+		Kind: "Event", APIGroup: "events", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Event{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 

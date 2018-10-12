@@ -258,7 +258,7 @@ var typesMapExample = map[string]*api.Struct{
 		},
 	},
 	"bookstore.Coupon": &api.Struct{
-		Kind: "", APIGroup: "", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Coupon{}) },
+		Kind: "Coupon", APIGroup: "bookstore", GetTypeFn: func() reflect.Type { return reflect.TypeOf(Coupon{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 

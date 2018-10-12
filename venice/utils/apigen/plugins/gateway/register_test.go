@@ -2992,3 +2992,89 @@ func TestGetProxyPaths(t *testing.T) {
 		t.Fatalf("Proxy paths does not match exp[%+v] got [%+v]", exp, pp)
 	}
 }
+
+func TestGetMsgKindsSchema(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+			name: 'example.proto'
+			package: 'example'
+			syntax: 'proto3'
+			message_type <
+				name: 'msg1'
+				field <
+					name: 'field'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.msg2'
+					number: 1
+				>
+			>
+			message_type <
+				name: 'msg2'
+				field <
+					name: 'T'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.api.TypeMeta'
+					number: 1
+				>
+			>
+			message_type <
+				name: 'msg3'
+				field <
+					name: 'T'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.api.TypeMeta'
+					number: 1
+				>
+			>
+			message_type <
+				name: 'msg3List'
+				field <
+					name: 'T'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.msg2'
+					number: 1
+				>
+			>
+			`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+
+	exp := map[string]struct {
+		hasTypeMeta   bool
+		hasListHelper bool
+	}{
+		"msg1":     {false, false},
+		"msg2":     {true, false},
+		"msg3":     {true, true},
+		"msg3List": {false, false},
+	}
+	for _, msg := range file.Messages {
+		hast, hasl := hasTypeMeta(msg), hasListHelper(msg)
+		if e, ok := exp[*msg.Name]; ok {
+			if hast != e.hasTypeMeta || hasl != e.hasListHelper {
+				t.Errorf("did not match want [%v/%v] got [%v/%v]", e.hasTypeMeta, e.hasListHelper, hast, hasl)
+			}
+		} else {
+			t.Errorf("unknown message [%v]", *msg.Name)
+		}
+	}
+}
