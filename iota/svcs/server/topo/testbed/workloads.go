@@ -9,21 +9,19 @@ import (
 )
 
 // AddWorkload adds a workload on the node
-func (n *TestNode) AddWorkload() error {
-	for _, w := range n.Workloads {
-		log.Infof("TOPO SVC | DEBUG | STATE | WORKLOAD: %v", w)
-		resp, err := n.AgentClient.AddWorkload(context.Background(), w)
-		log.Infof("TOPO SVC | DEBUG | AddWorkload Agent . Received Response Msg: %v", resp)
+func (n *TestNode) AddWorkload(w *iota.Workload) error {
+	log.Infof("TOPO SVC | DEBUG | STATE | WORKLOAD: %v", w)
+	resp, err := n.AgentClient.AddWorkload(context.Background(), w)
+	log.Infof("TOPO SVC | DEBUG | AddWorkload Agent . Received Response Msg: %v", resp)
 
-		if err != nil {
-			log.Errorf("Adding workload on node %v failed. Err: %v", n.Node.Name, err)
-			return err
-		}
+	if err != nil {
+		log.Errorf("Adding workload on node %v failed. Err: %v", n.Node.Name, err)
+		return err
+	}
 
-		if resp.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-			log.Errorf("Adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.WorkloadStatus.ApiStatus)
-			return fmt.Errorf("adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.WorkloadStatus.ApiStatus)
-		}
+	if resp.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		log.Errorf("Adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.WorkloadStatus.ApiStatus)
+		return fmt.Errorf("adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.WorkloadStatus.ApiStatus)
 	}
 
 	return nil

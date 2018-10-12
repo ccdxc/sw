@@ -198,26 +198,22 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 		return req, nil
 	}
 
-	for _, w := range req.Workloads {
-		for idx, n := range ts.Nodes {
-			if w.NodeName == n.Node.Name {
-				ts.Nodes[idx].Workloads = append(ts.Nodes[idx].Workloads, w)
-			}
-		}
-	}
-
 	log.Infof("TOPO SVC | DEBUG | STATE | %v", ts.Nodes)
 
 	// Add workloads
 	addWorkloads := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)
-
-		for _, node := range ts.Nodes {
-			node := node
-			//for range node.Workloads {
-			pool.Go(func() error {
-				return node.AddWorkload()
-			})
+		for _, w := range req.Workloads {
+			w := w
+			for _, node := range ts.Nodes {
+				node := node
+				//for range node.Workloads {
+				if w.NodeName == node.Node.Name {
+					pool.Go(func() error {
+						return node.AddWorkload(w)
+					})
+				}
+			}
 		}
 		return pool.Wait()
 	}
