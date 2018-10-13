@@ -426,7 +426,7 @@ Eth::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_HANG_NOTIFY:
-        NIC_LOG_INFO("lif{}: CMD_OPCODE_HANG_NOTIFY", info.hw_lif_id);
+        status = this->_CmdHangNotify(req, req_data, resp, resp_data);
         status = DEVCMD_SUCCESS;
         break;
 
@@ -578,18 +578,99 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 enum DevcmdStatus
 Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 {
-    uint64_t addr;
-    uint64_t mac_addr;
-    uint16_t vlan;
-
     NIC_LOG_INFO("lif{}: CMD_OPCODE_RESET", info.hw_lif_id);
 
+    for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
+        intr_pba_clear(pci_resources.intrb + intr);
+        intr_drvcfg(pci_resources.intrb + intr);
+    }
+
+    return (DEVCMD_SUCCESS);
+}
+
+enum DevcmdStatus
+Eth::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
+{
+    uint64_t addr;
+    eth_rx_qstate_t rx_qstate;
+    eth_tx_qstate_t tx_qstate;
+    eth_admin_qstate_t adminq_qstate;
+    intr_state_t intr_st;
+
+    NIC_LOG_INFO("lif{}: CMD_OPCODE_HANG_NOTIFY", info.hw_lif_id);
+
+    for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
+        addr = GetQstateAddr(ETH_QTYPE_RX, qid);
+        if (addr == 0) {
+            NIC_LOG_ERR("lif{}: Failed to get qstate address for RX qid {}",
+                info.hw_lif_id, qid);
+            return (DEVCMD_ERROR);
+        }
+        READ_MEM(addr, (uint8_t *)(&rx_qstate), sizeof(rx_qstate), 0);
+        NIC_LOG_INFO("lif{}: rxq{}: p_index0 {:#x} c_index0 {:#x} comp {:#x} intr {}",
+            info.hw_lif_id, qid,
+            rx_qstate.p_index0, rx_qstate.c_index0, rx_qstate.comp_index,
+            rx_qstate.intr_assert_addr);
+    }
+
+    for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
+        addr = GetQstateAddr(ETH_QTYPE_TX, qid);
+        if (addr == 0) {
+            NIC_LOG_ERR("lif{}: Failed to get qstate address for TX qid {}",
+                info.hw_lif_id, qid);
+            return (DEVCMD_ERROR);
+        }
+        READ_MEM(addr, (uint8_t *)(&tx_qstate), sizeof(tx_qstate), 0);
+        NIC_LOG_INFO("lif{}: txq{}: p_index0 {:#x} c_index0 {:#x} comp {:#x} intr {}",
+            info.hw_lif_id, qid,
+            tx_qstate.p_index0, tx_qstate.c_index0, tx_qstate.comp_index,
+            tx_qstate.intr_assert_addr);
+    }
+
+    for (uint32_t qid = 0; qid < spec->adminq_count; qid++) {
+        addr = GetQstateAddr(ETH_QTYPE_ADMIN, qid);
+        if (addr == 0) {
+            NIC_LOG_ERR("lif{}: Failed to get qstate address for ADMIN qid {}",
+                info.hw_lif_id, qid);
+            return (DEVCMD_ERROR);
+        }
+        READ_MEM(addr, (uint8_t *)(&adminq_qstate), sizeof(adminq_qstate), 0);
+        NIC_LOG_INFO("lif{}: adminq{}: p_index0 {:#x} c_index0 {:#x} comp {:#x} intr_addr {}",
+            info.hw_lif_id, qid,
+            adminq_qstate.p_index0, adminq_qstate.c_index0, adminq_qstate.comp_index,
+            adminq_qstate.intr_assert_addr);
+    }
+
+    for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
+        intr_state(pci_resources.intrb + intr, &intr_st);
+        NIC_LOG_INFO("lif{}: intr{}: fwcfg_lif {} fwcfg_function_mask {}"
+            " drvcfg_mask {} drvcfg_int_credits {} drvcfg_mask_on_assert {}",
+            info.hw_lif_id, pci_resources.intrb + intr,
+            intr_st.fwcfg_lif, intr_st.fwcfg_function_mask,
+            intr_st.drvcfg_mask, intr_st.drvcfg_int_credits,
+            intr_st.drvcfg_mask_on_assert);
+    }
+
+    return (DEVCMD_SUCCESS);
+}
+
+enum DevcmdStatus
+Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
+    uint64_t addr;
+    uint64_t mac;
+    uint16_t vlan;
+
+    NIC_LOG_INFO("lif{}: CMD_OPCODE_LIF_INIT: lif_index {}", info.hw_lif_id,
+            cmd->index);
+
     for (auto it = endpoints.cbegin(); it != endpoints.cend(); it++) {
-        mac_addr = get<0>(it->first);
+        mac = get<0>(it->first);
         vlan = get<1>(it->first);
-        if (hal->EndpointDelete(spec->vrf_id, hal->vlan2seg[vlan], spec->enic_id, mac_addr)) {
+        if (hal->EndpointDelete(spec->vrf_id, hal->vlan2seg[vlan], spec->enic_id, mac)) {
             NIC_LOG_ERR("lif{}: Failed to delete endpoint for mac {:#x} vlan {} handle {}",
-                info.hw_lif_id, mac_addr, vlan, it->second);
+                info.hw_lif_id, mac, vlan, it->second);
             return (DEVCMD_ERROR);
         }
         endpoints.erase(it->first);
@@ -619,8 +700,7 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
         }
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, p_index0),
                   (uint8_t *)(&qstate) + offsetof(eth_rx_qstate_t, p_index0),
-                  sizeof(qstate) - offsetof(eth_rx_qstate_t, p_index0),
-		  0);
+                  sizeof(qstate) - offsetof(eth_rx_qstate_t, p_index0), 0);
         invalidate_rxdma_cacheline(addr);
     }
 
@@ -633,8 +713,7 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
         }
         WRITE_MEM(addr + offsetof(eth_tx_qstate_t, p_index0),
                   (uint8_t *)(&qstate) + offsetof(eth_tx_qstate_t, p_index0),
-                  sizeof(qstate) - offsetof(eth_tx_qstate_t, p_index0),
-		  0);
+                  sizeof(qstate) - offsetof(eth_tx_qstate_t, p_index0), 0);
         invalidate_txdma_cacheline(addr);
     }
 
@@ -647,21 +726,9 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
         }
         WRITE_MEM(addr + offsetof(eth_admin_qstate_t, p_index0),
                   (uint8_t *)(&qstate) + offsetof(eth_admin_qstate_t, p_index0),
-                  sizeof(qstate) - offsetof(eth_admin_qstate_t, p_index0),
-		  0);
+                  sizeof(qstate) - offsetof(eth_admin_qstate_t, p_index0), 0);
         invalidate_txdma_cacheline(addr);
     }
-
-    return (DEVCMD_SUCCESS);
-}
-
-enum DevcmdStatus
-Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
-{
-    struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
-
-    NIC_LOG_INFO("lif{}: CMD_OPCODE_LIF_INIT: lif_index {}", info.hw_lif_id,
-            cmd->index);
 
     return (DEVCMD_SUCCESS);
 }

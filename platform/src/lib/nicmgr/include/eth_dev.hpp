@@ -161,6 +161,7 @@ private:
 
     /* Command Handlers */
     enum DevcmdStatus _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
+    enum DevcmdStatus _CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data);

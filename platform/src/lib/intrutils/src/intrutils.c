@@ -89,6 +89,12 @@ intr_pba_cfg_addr(const int lif)
     return INTR_PBA_CFG_BASE + (lif * INTR_PBA_CFG_STRIDE);
 }
 
+u_int64_t
+intr_state_addr(const int intr)
+{
+    return INTR_STATE_BASE + (intr * INTR_STATE_STRIDE);
+}
+
 void
 intr_pba_cfg(const int lif, const int intr_start, const size_t intr_count)
 {
@@ -262,6 +268,14 @@ intr_fwcfg_mode(const int intr, const int legacy, const int fmask)
         pal_reg_wr32w(pa, v.w, NWORDS(v.w));
     }
     intr_fwcfg_function_mask(intr, fmask);
+}
+
+void
+intr_state(const int intr, intr_state_t *v)
+{
+    const u_int64_t pa = intr_state_addr(intr);
+
+    pal_reg_rd32w(pa, v->w, NWORDS(v->w));
 }
 
 /*
