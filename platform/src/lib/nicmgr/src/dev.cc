@@ -226,40 +226,41 @@ DeviceManager::LoadConfig(string path)
             } // foreach l2seg
         } // Create l2segs
 
-        // Create Uplinks
-        if (spec.get_child_optional("network.uplink")) {
-            for (const auto &node : spec.get_child("network.uplink")) {
-                auto val = node.second;
-                auto uplink_handle = hal->UplinkCreate(val.get<uint64_t>("id"),
-                                                val.get<uint64_t>("port"),
-                                                val.get<uint64_t>("native_l2seg", 0));
-                if (uplink_handle == 0) {
-                    NIC_LOG_ERR("Failed to create uplink interface");
-                    return -1;
-                }
-
-                // Add native l2segment on uplink
-                if (hal->AddL2SegmentOnUplink(val.get<uint64_t>("id"),
-                    val.get<uint64_t>("native_l2seg", 0))) {
-                    NIC_LOG_ERR("Failed to add vlan on uplink");
-                    // TODO: Currently hal returns incorrect status, when
-                    // vl2seg is already added on uplink.
-                }
-
-                // Add vlans to uplink
-                if (val.get_optional<string>("nonnative_l2seg")) {
-                    for (const auto &l2seg : val.get_child("nonnative_l2seg")) {
-                        if (hal->AddL2SegmentOnUplink(val.get<uint64_t>("id"),
-                            boost::lexical_cast<uint64_t>(l2seg.second.data()))) {
-                            NIC_LOG_ERR("Failed to add vlan on uplink");
-                            // TODO: Currently hal returns incorrect status, when
-                            // vl2seg is already added on uplink.
-                        }
+        if (hal->get_fwd_mode() == FWD_MODE_CLASSIC_NIC) {
+            // Create Uplinks
+            if (spec.get_child_optional("network.uplink")) {
+                for (const auto &node : spec.get_child("network.uplink")) {
+                    auto val = node.second;
+                    auto uplink_handle = hal->UplinkCreate(val.get<uint64_t>("id"),
+                                                    val.get<uint64_t>("port"),
+                                                    val.get<uint64_t>("native_l2seg", 0));
+                    if (uplink_handle == 0) {
+                        NIC_LOG_ERR("Failed to create uplink interface");
+                        return -1;
                     }
-                } // Add vlans to uplink
-            } // foreach uplink
-        } // Create uplinks
 
+                    // Add native l2segment on uplink
+                    if (hal->AddL2SegmentOnUplink(val.get<uint64_t>("id"),
+                        val.get<uint64_t>("native_l2seg", 0))) {
+                        NIC_LOG_ERR("Failed to add vlan on uplink");
+                        // TODO: Currently hal returns incorrect status, when
+                        // vl2seg is already added on uplink.
+                    }
+
+                    // Add vlans to uplink
+                    if (val.get_optional<string>("nonnative_l2seg")) {
+                        for (const auto &l2seg : val.get_child("nonnative_l2seg")) {
+                            if (hal->AddL2SegmentOnUplink(val.get<uint64_t>("id"),
+                                boost::lexical_cast<uint64_t>(l2seg.second.data()))) {
+                                NIC_LOG_ERR("Failed to add vlan on uplink");
+                                // TODO: Currently hal returns incorrect status, when
+                                // vl2seg is already added on uplink.
+                            }
+                        }
+                    } // Add vlans to uplink
+                } // foreach uplink
+            } // Create uplinks
+        }
     }
 
     // Create MNICs

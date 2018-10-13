@@ -507,7 +507,7 @@ func TestRemoteEndpointPointingToPredefinedUplink(t *testing.T) {
 			//WorkloadUUID:  "testWorkloadUUID",
 			NetworkName:   "default",
 			InterfaceType: "uplink",
-			Interface:     "uplink1",
+			Interface:     "uplink128",
 			NodeUUID:      "some-different-uuid-than-agent",
 			MacAddress:    "42:42:42:42:42:42",
 		},

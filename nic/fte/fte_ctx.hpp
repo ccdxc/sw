@@ -634,6 +634,7 @@ public:
     hal::if_t *dif() const { return dif_; }
     void set_sif(hal::if_t *sif) { sif_ = sif; }
     void set_dif(hal::if_t *dif) { dif_ = dif; }
+    void set_sep(hal::ep_t *ep) { sep_ = ep; sep_handle_ = ep->hal_handle;}
     hal::ep_t *sep() const { return sep_; }
     hal::ep_t *dep() const { return dep_; }
     hal_handle_t sep_handle() { return sep_handle_; }

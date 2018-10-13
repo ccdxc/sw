@@ -1662,6 +1662,36 @@ endpoint_update_ip_op (ep_t *ep, ip_addr_t *ip_addr,
     return ret;
 }
 
+
+hal_ret_t
+endpoint_update_if (ep_t *ep, if_t *new_hal_if) {
+    cfg_op_ctxt_t           cfg_ctxt = { 0 };
+    dhl_entry_t             dhl_entry = { 0 };
+    ep_update_app_ctxt_t    app_ctxt = { 0 };
+    hal_ret_t               ret = HAL_RET_OK;
+
+    app_ctxt.if_change = true;
+    app_ctxt.new_if_handle = new_hal_if->hal_handle;
+
+    ep_make_clone(ep, (ep_t **)&dhl_entry.cloned_obj);
+    // form ctxt and call infra update object
+    dhl_entry.handle = ep->hal_handle;
+    dhl_entry.obj = ep;
+    cfg_ctxt.app_ctxt = &app_ctxt;
+    sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+    sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+    sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_upd_obj(ep->hal_handle, &cfg_ctxt,
+                             endpoint_update_upd_cb,
+                             endpoint_update_commit_cb,
+                             endpoint_update_abort_cb,
+                             endpoint_update_cleanup_cb);
+
+
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
 hal_ret_t
 endpoint_update_ip_add (ep_t *ep, ip_addr_t *ip_addr,
                         uint64_t learn_src_flag)

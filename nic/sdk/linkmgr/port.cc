@@ -817,8 +817,6 @@ port::port_init(linkmgr_cfg_t *cfg)
     char        *cfg_path    = std::getenv("HAL_CONFIG_PATH");
     std::string cfg_file     = "fw/" + serdes_fw_file();
 
-    linkmgr_csr_init();
-
     rc = port_mac_fn_init(cfg);
     if (rc != SDK_RET_OK) {
         SDK_TRACE_ERR("port mac init failed");
@@ -841,6 +839,8 @@ port::port_init(linkmgr_cfg_t *cfg)
 
     // TODO move back to serdes_fn_init
     serdes_get_ip_info(1);
+
+    serdes_sbm_set_sbus_clock_divider(sbm_clk_div());
 
     for (uint32_t asic_port = 0; asic_port < num_asic_ports(0); ++asic_port) {
         uint32_t sbus_addr = sbus_addr_asic_port(0, asic_port);

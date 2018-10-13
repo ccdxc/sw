@@ -199,6 +199,7 @@ hal_ret_t endpoint_free_ip_list(dllist_ctxt_t *iplist);
 hal_ret_t endpoint_cleanup_ip_list(dllist_ctxt_t **list);
 hal_ret_t endpoint_update_ip_add(ep_t *ep, ip_addr_t *ip,
         uint64_t learn_src_flag);
+hal_ret_t endpoint_update_if(ep_t *ep, if_t *new_hal_if);
 hal_ret_t endpoint_update_ip_delete(ep_t *ep, ip_addr_t *ip,
         uint64_t learn_src_flag);
 bool ip_in_ep(ip_addr_t *ip, ep_t *ep, ep_ip_entry_t **ip_entry);

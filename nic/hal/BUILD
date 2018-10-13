@@ -139,12 +139,6 @@ cc_library(
         "//nic/hal/plugins/cfg/telemetry:telemetrycfg",
         "//nic/hal/plugins/cfg/dos:dos",
         "//nic/hal/plugins/cfg/l4lb:l4lb",
-
-        # linkmgr deps
-        "//nic:libaapl",
-        "//nic/linkmgr:linkmgr_includes",
-        "//nic:liblinkmgr",
-        "@sdk//obj:sdk_linkmgr",
     ],
     alwayslink = 1,
 )

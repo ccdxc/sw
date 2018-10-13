@@ -104,6 +104,7 @@ type NetAgent struct {
 	IPSecPolicyLUT   map[string]*IPSecRuleRef            // IPSec Policy to rule look up table. Key: <IPSec SA Type>|<IPSec SA Name> This is used as an in memory binding between an IPSec encrypt/decrypt rule to its allocalted IDs. T
 	NatPoolLUT       map[string]*NatPoolRef              // nat pool look up table. This is used as an in memory binding between a natpool and its corresponding allocated IDs.
 	HwIfDB           map[string]*netproto.Interface      // Has all the Uplinks and Lifs
+	PortDB           map[string]*netproto.Port           // HW Port DB
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent
@@ -219,10 +220,10 @@ type NetDatapathAPI interface {
 	CreateVrf(vrfID uint64, vrfType string) error                                                                                                                    // creates a vrf
 	DeleteVrf(vrfID uint64) error                                                                                                                                    // deletes a vrf
 	UpdateVrf(vrfID uint64) error                                                                                                                                    // updates a vrf
-	CreateInterface(intf *netproto.Interface, lif *netproto.Interface, ns *netproto.Namespace) error                                                                 // creates an interface
+	CreateInterface(intf *netproto.Interface, lif *netproto.Interface, port *netproto.Port, ns *netproto.Namespace) error                                            // creates an interface
 	UpdateInterface(intf *netproto.Interface, ns *netproto.Namespace) error                                                                                          // updates an interface
 	DeleteInterface(intf *netproto.Interface, ns *netproto.Namespace) error                                                                                          // deletes an interface
-	ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.InterfaceGetResponseMsg, error)                                                                         // Lists all the lifs and uplinks from the datapath state
+	ListInterfaces() (*halproto.LifGetResponseMsg, *halproto.PortInfoGetResponseMsg, error)                                                                          // Lists all the lifs and uplinks from the datapath state
 	CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // creates a nat pool in the datapath
 	UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // updates a nat pool in the datapath
 	DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) error                                                                                                // deletes a nat pool in the datapath
@@ -253,6 +254,7 @@ type NetDatapathAPI interface {
 	CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // creates a tcp proxy policy in the datapath
 	UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // updates a tcp proxy policy in the datapath
 	DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netproto.Namespace) error                                                                                 // deletes a tcp proxy policy in the datapath
+	CreatePort(port *netproto.Port) error                                                                                                                            // Creates a port in the datapath
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths

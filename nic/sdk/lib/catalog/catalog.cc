@@ -468,6 +468,9 @@ catalog::populate_serdes(char *dir_name, ptree &prop_tree)
 
     serdes_file = std::string(dir_name) + "/" + serdes_file;
 
+    catalog_db_.sbm_clk_div =
+                        prop_tree.get<std::uint8_t>("serdes.sbm_clk_div", 0);
+
     return parse_serdes_file(serdes_file);
 }
 
@@ -723,6 +726,9 @@ catalog::sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
     uint32_t mac_ch      = asic_port;
     uint32_t l_asic_num  = 0;
     uint32_t l_asic_port = 0;
+
+    return catalog_db_.asics[asic_num].
+                       ports[asic_port + lane].sbus_addr;
 
     // TODO work around until port pd structure is
     // updated to hold asic number and asic port

@@ -39,7 +39,8 @@
         "aacs_server"    : "0",
         "aacs_connect"   : "1",
         "ip"             : "192.168.75.125",
-        "port"           : "90"
+        "port"           : "90",
+        "sbm_clk_div"    : "32"
     },
 
     "num_fp_ports": "3",

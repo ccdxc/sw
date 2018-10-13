@@ -11,6 +11,10 @@ extern "C" void __gcov_flush(void);
 #define HAL_GCOV_FLUSH()     { }
 #endif
 
+using hal::utils::hal_logger;
+using hal::utils::trace_init;
+using hal::utils::trace_debug;
+
 namespace linkmgr {
 
 linkmgr_cfg_t linkmgr_cfg;
@@ -26,8 +30,8 @@ linkmgr_sig_handler (int sig, siginfo_t *info, void *ptr)
     switch (sig) {
     case SIGINT:
         HAL_GCOV_FLUSH();
-        if (hal::utils::hal_logger()) {
-            hal::utils::hal_logger()->flush();
+        if (hal_logger()) {
+            hal_logger()->flush();
         }
         exit(0);
         break;
@@ -35,8 +39,8 @@ linkmgr_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGUSR1:
     case SIGUSR2:
         HAL_GCOV_FLUSH();
-        if(hal::utils::hal_logger()) {
-            hal::utils::hal_logger()->flush();
+        if(hal_logger()) {
+            hal_logger()->flush();
         }
         break;
 
@@ -46,8 +50,8 @@ linkmgr_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGURG:
     case SIGTERM:
     default:
-        if (hal::utils::hal_logger()) {
-            hal::utils::hal_logger()->flush();
+        if (hal_logger()) {
+            hal_logger()->flush();
         }
         break;
     }
@@ -193,8 +197,8 @@ main (int argc, char **argv)
     sdk::lib::thread::control_cores_mask_set(0x1);
 
     // Initialize the logger
-    hal::utils::trace_init("linkmgr", sdk::lib::thread::control_cores_mask(),
-                           true, "linkmgr.log", hal::utils::trace_debug);
+    trace_init("linkmgr", sdk::lib::thread::control_cores_mask(),
+                           true, "linkmgr.log", trace_debug);
     sdk::lib::logger::init(sdk_error_logger, sdk_debug_logger);
 
     linkmgr::linkmgr_cfg_init();

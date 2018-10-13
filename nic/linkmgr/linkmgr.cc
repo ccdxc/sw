@@ -11,11 +11,16 @@
 #include "nic/linkmgr/utils.hpp"
 #include "linkmgr_utils.hpp"
 #include "nic/sdk/include/sdk/periodic.hpp"
+#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "nic/asic/capri/model/utils/cap_csr_py_if.h"
+#include "nic/hal/pd/capri/csr/cpu_hal_if.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
 using boost::property_tree::ptree;
 using sdk::linkmgr::linkmgr_thread_id_t;
+using hal::CFG_OP_WRITE;
+using hal::utils::hal_logger;
 
 namespace linkmgr {
 
@@ -119,7 +124,7 @@ linkmgr_uplink_create (uint32_t uplink_port)
 
     HAL_TRACE_DEBUG("creating uplink port {}",  uplink_port);
 
-    linkmgr::g_linkmgr_state->cfg_db_open(hal::CFG_OP_WRITE);
+    linkmgr::g_linkmgr_state->cfg_db_open(CFG_OP_WRITE);
 
     ret = linkmgr::port_create(&args, &hal_handle);
 
@@ -155,7 +160,7 @@ svc_wait (ServerBuilder *server_builder)
     // assemble the server
     std::unique_ptr<Server> server(server_builder->BuildAndStart());
 
-    hal::utils::hal_logger()->flush();
+    hal_logger()->flush();
 
     // wait for server to shutdown (some other thread must be responsible for
     // shutting down the server or else this call won't return)
@@ -279,6 +284,24 @@ port_event_cb (uint32_t port_num, port_event_t event)
 }
 
 hal_ret_t
+linkmgr_csr_init (void)
+{
+    // register hal cpu interface
+    auto cpu_if = new cpu_hal_if("cpu", "all");
+    cpu::access()->add_if("cpu_if", cpu_if);
+    cpu::access()->set_cur_if_name("cpu_if");
+
+    // Register at top level all MRL classes.
+    cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
+
+    cap0_ptr->init(0);
+    CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
+    register_chip_inst("cap0", 0, 0);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
 {
     hal_ret_t          ret_hal       = HAL_RET_OK;
@@ -327,6 +350,8 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
     sdk_cfg.port_event_cb  = &port_event_cb;
     sdk_cfg.process_mode   = true;
 
+    linkmgr_csr_init();
+
     ret_hal = linkmgr::linkmgr_init(&sdk_cfg);
     if (ret_hal != HAL_RET_OK) {
         HAL_TRACE_ERR("linkmgr init failed");
@@ -341,7 +366,7 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
 
     // start the linkmgr control thread
     // TODO move to linkmgr_src.cc
-    sdk::linkmgr::linkmgr_event_wait();
+    sdk::linkmgr::linkmgr_start();
 
     // register for all gRPC services
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());

@@ -14,11 +14,12 @@ typedef void (*port_event_notify_t)(uint32_t port_num,
                                     port_event_t port_event);
 
 typedef enum linkmgr_thread_id_e {
-    LINKMGR_THREAD_ID_CTRL,
-    LINKMGR_THREAD_ID_PERIODIC,
-    LINKMGR_THREAD_ID_CFG,
-    LINKMGR_THREAD_ID_AACS_SERVER,
-    LINKMGR_THREAD_ID_MAX
+    LINKMGR_THREAD_ID_MIN         = 0,
+    LINKMGR_THREAD_ID_CFG         = LINKMGR_THREAD_ID_MIN,
+    LINKMGR_THREAD_ID_PERIODIC    = 1,
+    LINKMGR_THREAD_ID_AACS_SERVER = 2,
+    LINKMGR_THREAD_ID_CTRL        = 7,  // match with HAL_THREAD_ID_LINKMGR_CTRL
+    LINKMGR_THREAD_ID_MAX         = 8,
 } linkmgr_thread_id_t;
 
 typedef struct linkmgr_cfg_s {
@@ -54,7 +55,7 @@ void      *port_create  (port_args_t *port_args);
 sdk_ret_t port_update   (void *port, port_args_t *port_args);
 sdk_ret_t port_delete   (void *port);
 sdk_ret_t port_get      (void *port, port_args_t *port_args);
-void linkmgr_event_wait (void);
+void linkmgr_start (void);
 void linkmgr_set_link_poll_enable (bool enable);
 
 static inline void

@@ -29,15 +29,24 @@ if [[ ! -f $PLATFORM_DIR/bin/nicmgrd ]]; then
     exit 1
 fi
 
-if [[ "$PLATFORM" == 'hw' ]]; then
-    # start linkmgr
-    $NIC_DIR/tools/start-linkmgr-hw.sh
-    #[[ $? -ne 0 ]] && echo "Aborting Sysinit - LINKMGR failed to start!" && exit 1
-fi
-
 # start HAL
 $NIC_DIR/tools/start-hal-haps.sh "$FWD_MODE" "$PLATFORM"
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - HAL failed to start!" && exit 1
+
+# start netagent
+if [[ "$FWD_MODE" != "classic" ]]; then
+    # Remove logs
+    rm -f agent.log* /tmp/*.db
+
+    $NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
+    [[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
+else
+    # create 100G ports in classic mode
+    $NIC_DIR/tools/port_op.sh --create --port 1 --speed 100 --enable 1
+    $NIC_DIR/tools/port_op.sh --create --port 5 --speed 100 --enable 1
+fi
+
+sleep 5
 
 # start nicmgr
 $PLATFORM_DIR/tools/start-nicmgr-haps.sh "$FWD_MODE"
@@ -46,8 +55,6 @@ $PLATFORM_DIR/tools/start-nicmgr-haps.sh "$FWD_MODE"
 # Renice HAL & LINKMGR so other apps & kernel contexts can run
 renice 20 `pidof hal`
 renice 20 $(ls -1 /proc/`pidof hal`/task)
-renice 20 `pidof linkmgr`
-renice 20 $(ls -1 /proc/`pidof linkmgr`/task)
 
 # Bringup MNIC
 # if [[ "$FWD_MODE" == 'classic' ]]; then
@@ -60,20 +67,5 @@ renice 20 $(ls -1 /proc/`pidof linkmgr`/task)
 #     ifconfig eth0 10.0.0.1 netmask 255.255.255.0 up
 #     ethtool -K eth0 rx off
 # fi
-
-# start netagent
-if [[ "$FWD_MODE" != "classic" ]]; then
-    # Remove logs
-    rm -f agent.log* /tmp/*.db
-
-    $NIC_DIR/bin/netagent -datapath hal -logtofile /agent.log -hostif lo &
-    [[ $? -ne 0 ]] && echo "Failed to start AGENT!" && exit 1
-fi
-
-if [[ "$PLATFORM" == 'hw' ]]; then
-    # enable ports 1 and 2
-    $NIC_DIR/tools/port_op.sh --update --port 1 --enable 1
-    $NIC_DIR/tools/port_op.sh --update --port 2 --enable 1
-fi
 
 echo "All processes brought up, please check ..."

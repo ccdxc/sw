@@ -45,7 +45,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"network-name\":\"infra_nw\",\"interface-type\":\"uplink\",\"interface\":\"uplink2\",\"ipv4-address\":\"192.168.10.12/32\",\"mac-address\":\"00:22:0A:00:02:02\",\"node-uuid\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"network-name\":\"infra_nw\",\"interface-type\":\"uplink\",\"interface\":\"uplink129\",\"ipv4-address\":\"192.168.10.12/32\",\"mac-address\":\"00:22:0A:00:02:02\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"url": {
 					"raw": "{{node1}}/api/endpoints/",

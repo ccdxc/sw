@@ -85,6 +85,12 @@ jtag_id(void)
 }
 
 uint8_t
+sbm_clk_div(void)
+{
+    return g_linkmgr_cfg.catalog->sbm_clk_div();
+}
+
+uint8_t
 num_sbus_rings(void)
 {
     return g_linkmgr_cfg.catalog->num_sbus_rings();
@@ -253,7 +259,7 @@ linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data)
 }
 
 void
-linkmgr_event_wait (void)
+linkmgr_start (void)
 {
     int thread_id = LINKMGR_THREAD_ID_CTRL;
     g_linkmgr_threads[thread_id]->start(g_linkmgr_threads[thread_id]);

@@ -9,6 +9,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -46,7 +47,7 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 		log.Errorf("Could not allocate interface id. {%+v}", err)
 		return err
 	}
-	intf.Status.InterfaceID = intfID + maxNumUplinks
+	intf.Status.InterfaceID = intfID + uplinkOffset
 
 	// Perform interface associations, currently only ENIC interfaces supported as
 	switch intf.Spec.Type {
@@ -75,7 +76,7 @@ func (na *Nagent) CreateInterface(intf *netproto.Interface) error {
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateInterface(intf, lif, ns)
+	err = na.Datapath.CreateInterface(intf, lif, nil, ns)
 	if err != nil {
 		log.Errorf("Error creating interface in datapath. Interface {%+v}. Err: %v", intf, err)
 		return err
@@ -199,7 +200,7 @@ func (na *Nagent) DeleteInterface(tn, namespace, name string) error {
 func (na *Nagent) GetHwInterfaces() error {
 	// LIFs and uplinks can be created outside of Agent's context, by nic mgr. We
 	// need the uplinks currently on the HAL to associate with remote EPs
-	lifs, uplinks, err := na.Datapath.ListInterfaces()
+	lifs, ports, err := na.Datapath.ListInterfaces()
 	if err != nil {
 		return err
 	}
@@ -227,27 +228,49 @@ func (na *Nagent) GetHwInterfaces() error {
 		na.Unlock()
 	}
 
-	for _, uplink := range uplinks.Response {
-		id := uplink.Spec.KeyOrHandle.GetInterfaceId()
-		u := &netproto.Interface{
+	var numLanes uint32
+	// Populate Agent state
+	for _, port := range ports.Response {
+		var portType, speed string
+		id := 1 + numLanes
+		numLanes += port.Spec.NumLanes
+		if port.Spec.PortType == halproto.PortType_PORT_TYPE_MGMT {
+			portType = "TYPE_MANAGEMENT"
+			speed = "SPEED_1G"
+		} else {
+			portType = "TYPE_ETHERNET"
+			speed = "SPEED_100G"
+		}
+		p := &netproto.Port{
 			TypeMeta: api.TypeMeta{
-				Kind: "Interface",
+				Kind: "Port",
 			},
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
 				Namespace: "default",
-				Name:      fmt.Sprintf("uplink%d", id),
+				Name:      fmt.Sprintf("port%d", id),
 			},
-			Spec: netproto.InterfaceSpec{
-				Type: "UPLINK",
+			Spec: netproto.PortSpec{
+				Speed:        speed,
+				BreakoutMode: "BREAKOUT_NONE",
+				AdminStatus:  "UP",
+				Type:         portType,
+				Lanes:        port.Spec.NumLanes,
 			},
-			Status: netproto.InterfaceStatus{
-				InterfaceID: uplink.Spec.KeyOrHandle.GetInterfaceId(),
+			Status: netproto.PortStatus{
+				PortID: uint64(id),
 			},
 		}
-		key := na.Solver.ObjectKey(u.ObjectMeta, u.TypeMeta)
+
+		// Create Ports and Uplinks
+		err = na.createPortAndUplink(p)
+		if err != nil {
+			log.Errorf("could not create {%v} ports. %v", p, err)
+			return err
+		}
+		key := na.Solver.ObjectKey(p.ObjectMeta, p.TypeMeta)
 		na.Lock()
-		na.HwIfDB[key] = u
+		na.PortDB[key] = p
 		na.Unlock()
 	}
 
@@ -306,4 +329,50 @@ func (na *Nagent) getLifs() (lifs []*netproto.Interface) {
 		}
 	}
 	return
+}
+
+func (na *Nagent) createPortAndUplink(p *netproto.Port) error {
+	// TODO Use first class port create methods here
+	// TODO support breakout
+
+	err := na.Datapath.CreatePort(p)
+	if err != nil {
+		return err
+	}
+	id, err := na.Store.GetNextID(types.InterfaceID)
+	if err != nil {
+		log.Errorf("Could not allocate IDs for uplinks. %v", err)
+		return fmt.Errorf("could not allocate IDs for uplinks. %v", err)
+	}
+	id += uint64(uplinkOffset)
+	uplink := &netproto.Interface{
+		TypeMeta: api.TypeMeta{
+			Kind: "Interface",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      fmt.Sprintf("uplink%d", id),
+		},
+		Spec: netproto.InterfaceSpec{
+			Type:        "UPLINK",
+			AdminStatus: "UP",
+		},
+		Status: netproto.InterfaceStatus{
+			InterfaceID: id,
+		},
+	}
+	ns, err := na.FindNamespace(uplink.Tenant, uplink.Namespace)
+	if err != nil {
+		return err
+	}
+	key := na.Solver.ObjectKey(uplink.ObjectMeta, uplink.TypeMeta)
+	na.HwIfDB[key] = uplink
+	err = na.Datapath.CreateInterface(uplink, nil, p, ns)
+	if err != nil {
+		log.Errorf("Failed to create uplinks during init stage. %v", err)
+		return err
+	}
+
+	return nil
 }

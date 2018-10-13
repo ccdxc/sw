@@ -191,6 +191,7 @@ hal_ret_t lif_delete(LifDeleteRequest& req,
 hal_ret_t lif_get(LifGetRequest& req, LifGetResponseMsg *rsp);
 
 lif_t *find_lif_by_hw_lif_id (uint32_t hw_lif_id);
+uint64_t lif_hw_lif_id_get (lif_t *lif);
 
 }    // namespace hal
 

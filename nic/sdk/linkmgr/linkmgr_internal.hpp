@@ -37,6 +37,7 @@ uint32_t       num_asic_ports(uint32_t asic);
 uint32_t       sbus_addr_asic_port(uint32_t asic, uint32_t asic_port);
 uint32_t       jtag_id(void);
 uint8_t        num_sbus_rings(void);
+uint8_t        sbm_clk_div   (void);
 bool           aacs_server_en  (void);
 bool           aacs_connect    (void);
 uint32_t       aacs_server_port(void);

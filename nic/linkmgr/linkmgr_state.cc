@@ -1,7 +1,25 @@
 #include "linkmgr_state.hpp"
 #include "linkmgr_src.hpp"
 #include "nic/include/hal_cfg.hpp"
+#include "nic/include/hal_cfg_db.hpp"
 #include "nic/utils/trace/trace.hpp"
+
+using hal::hal_slab_t;
+using hal::cfg_db_ctxt_t;
+using hal::hal_handle_ht_entry_t;
+using hal::hal_handle_id_ht_entry_t;
+using hal::hal_handle;
+using hal::HAL_MEM_ALLOC_INFRA;
+using hal::CFG_OP_NONE;
+using hal::HAL_OBJ_ID_NONE;
+using hal::HAL_OBJ_ID_MAX;
+using hal::HAL_SLAB_HANDLE;
+using hal::HAL_SLAB_HANDLE_HT_ENTRY;
+using hal::HAL_SLAB_HANDLE_ID_HT_ENTRY;
+using hal::HAL_SLAB_PORT;
+using hal::hal_handle_id_get_key_func;
+using hal::hal_handle_id_compute_hash_func;
+using hal::hal_handle_id_compare_key_func;
 
 namespace linkmgr {
 
@@ -10,6 +28,9 @@ namespace linkmgr {
  ***** cfg_db *****
  ******************
 */
+
+// thread local variables
+thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 
 //------------------------------------------------------------------------------
 // init() function to instantiate all the config db init state
@@ -47,13 +68,13 @@ cfg_db::factory(void)
     void    *mem = NULL;
     cfg_db  *cfg = NULL;
 
-    mem = HAL_CALLOC(hal::HAL_MEM_ALLOC_INFRA, sizeof(cfg_db));
+    mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(cfg_db));
     HAL_ASSERT_RETURN((mem != NULL), NULL);
 
     cfg = new(mem) cfg_db();
     if (cfg->init() == false) {
         cfg->~cfg_db();
-        HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, mem);
+        HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
         return NULL;
     }
 
@@ -78,7 +99,7 @@ hal_ret_t
 cfg_db::db_open(cfg_op_t cfg_op)
 {
     // if the cfg db was already opened by this thread, error out
-    if (hal::t_cfg_db_ctxt.cfg_db_open_) {
+    if (t_cfg_db_ctxt.cfg_db_open_) {
         HAL_TRACE_ERR("Failed to open cfg db, opened already, thread {}",
                       current_thread() != NULL ?
                       current_thread()->name() : "main thread");
@@ -89,8 +110,8 @@ cfg_db::db_open(cfg_op_t cfg_op)
     // mode, for write mode, we will eventually take a write lock when needed
     rlock();
 
-    hal::t_cfg_db_ctxt.cfg_op_ = cfg_op;
-    hal::t_cfg_db_ctxt.cfg_db_open_ = true;
+    t_cfg_db_ctxt.cfg_op_ = cfg_op;
+    t_cfg_db_ctxt.cfg_db_open_ = true;
     HAL_TRACE_DEBUG("{} acquired rlock, opened cfg db, cfg op : {}",
                     current_thread() != NULL ?
                     current_thread()->name() :"main thread",
@@ -111,9 +132,9 @@ cfg_db::db_open(cfg_op_t cfg_op)
 hal_ret_t
 cfg_db::db_close(void)
 {
-    if (hal::t_cfg_db_ctxt.cfg_db_open_) {
-        hal::t_cfg_db_ctxt.cfg_db_open_ = FALSE;
-        hal::t_cfg_db_ctxt.cfg_op_ = hal::CFG_OP_NONE;
+    if (t_cfg_db_ctxt.cfg_db_open_) {
+        t_cfg_db_ctxt.cfg_db_open_ = FALSE;
+        t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
         runlock();
     }
     return HAL_RET_OK;
@@ -125,7 +146,7 @@ cfg_db::db_close(void)
 hal_ret_t
 cfg_db::register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz)
 {
-    if ((obj_id <= hal::HAL_OBJ_ID_NONE) || (obj_id >= hal::HAL_OBJ_ID_MAX)) {
+    if ((obj_id <= HAL_OBJ_ID_NONE) || (obj_id >= HAL_OBJ_ID_MAX)) {
         return HAL_RET_INVALID_ARG;
     }
     obj_meta_[obj_id].obj_sz = obj_sz;
@@ -138,7 +159,7 @@ cfg_db::register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz)
 uint32_t
 cfg_db::object_size(hal_obj_id_t obj_id) const
 {
-    if ((obj_id <= hal::HAL_OBJ_ID_NONE) || (obj_id >= hal::HAL_OBJ_ID_MAX)) {
+    if ((obj_id <= HAL_OBJ_ID_NONE) || (obj_id >= HAL_OBJ_ID_MAX)) {
         return 0;
     }
     return obj_meta_[obj_id].obj_sz;
@@ -158,7 +179,7 @@ mem_db::init(void)
 {
     // initialize slab for HAL handles
     hal_handle_slab_ = slab::factory("hal-handle",
-                                     hal::HAL_SLAB_HANDLE, sizeof(hal::hal_handle),
+                                     HAL_SLAB_HANDLE, sizeof(hal_handle),
                                      64, true, true, true);
     if (NULL == hal_handle_slab_) {
         HAL_TRACE_ERR("hal handle slab allocation failed");
@@ -166,8 +187,8 @@ mem_db::init(void)
     }
 
     hal_handle_ht_entry_slab_ = slab::factory("hal-handle-ht-entry",
-                                              hal::HAL_SLAB_HANDLE_HT_ENTRY,
-                                              sizeof(hal::hal_handle_ht_entry_t),
+                                              HAL_SLAB_HANDLE_HT_ENTRY,
+                                              sizeof(hal_handle_ht_entry_t),
                                               64, true, true, true);
     if (NULL == hal_handle_ht_entry_slab_) {
         HAL_TRACE_ERR("hal handle ht entry allocation failed");
@@ -175,8 +196,8 @@ mem_db::init(void)
     }
 
 	hal_handle_id_ht_entry_slab_ = slab::factory("hal-handle-id-ht-entry",
-                                                 hal::HAL_SLAB_HANDLE_ID_HT_ENTRY,
-                                                 sizeof(hal::hal_handle_id_ht_entry_t),
+                                                 HAL_SLAB_HANDLE_ID_HT_ENTRY,
+                                                 sizeof(hal_handle_id_ht_entry_t),
                                                  64, true, true, true);
     if (NULL == hal_handle_id_ht_entry_slab_) {
         HAL_TRACE_ERR("handle ht allocation failed");
@@ -184,7 +205,7 @@ mem_db::init(void)
     }
 
     // initialize port related data structures
-    port_slab_ = slab::factory("port", hal::HAL_SLAB_PORT,
+    port_slab_ = slab::factory("port", HAL_SLAB_PORT,
                                sizeof(linkmgr::port_t), 8,
                                false, true, true);
     if (NULL == port_slab_) {
@@ -215,13 +236,13 @@ mem_db::factory(void)
     void    *mem = NULL;
     mem_db  *memdb = NULL;
 
-    mem = HAL_CALLOC(hal::HAL_MEM_ALLOC_INFRA, sizeof(mem_db));
+    mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(mem_db));
     HAL_ASSERT_RETURN((mem != NULL), NULL);
 
     memdb = new(mem) mem_db();
     if (memdb->init() == false) {
         memdb->~mem_db();
-        HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, mem);
+        HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
         return NULL;
     }
 
@@ -248,7 +269,7 @@ mem_db::~mem_db()
     }
 
 slab*
-mem_db::get_slab(hal::hal_slab_t slab_id)
+mem_db::get_slab(hal_slab_t slab_id)
 {
     GET_SLAB(hal_handle_slab_);
     GET_SLAB(hal_handle_ht_entry_slab_);
@@ -273,12 +294,12 @@ linkmgr_state::factory(void)
     void          *mem = NULL;
     linkmgr_state *state = NULL;
 
-    mem = HAL_CALLOC(hal::HAL_MEM_ALLOC_INFRA, sizeof(linkmgr_state));
+    mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(linkmgr_state));
     HAL_ABORT(mem != NULL);
     state = new (mem) linkmgr_state();
     if (state->init() != HAL_RET_OK) {
         state->~linkmgr_state();
-        HAL_FREE(hal::HAL_MEM_ALLOC_INFRA, mem);
+        HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
 	    return NULL;
     }
 
@@ -303,9 +324,9 @@ linkmgr_state::init()
     }
 
     hal_handle_id_ht_ = ht::factory(HAL_MAX_HANDLES,
-                                    hal::hal_handle_id_get_key_func,
-                                    hal::hal_handle_id_compute_hash_func,
-                                    hal::hal_handle_id_compare_key_func);
+                                    hal_handle_id_get_key_func,
+                                    hal_handle_id_compute_hash_func,
+                                    hal_handle_id_compare_key_func);
     if (NULL == hal_handle_id_ht_) {
         HAL_TRACE_ERR("hal handle id ht allocation failed");
         return HAL_RET_ERR;

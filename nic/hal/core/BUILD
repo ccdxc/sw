@@ -29,6 +29,13 @@ cc_library(
         "//nic/fte:fte_core_includes",
         "@sdk//obj:sdk_periodic",
         "//nic/hal/core:core_includes",
+
+        # linkmgr deps
+        "//nic/linkmgr:linkmgr_includes",
+	"//nic:libaapl",
+	"//nic:liblinkmgr",
+	"//nic:liblinkmgr_csr",
+        "@sdk//obj:sdk_linkmgr",
     ],
 )
 

@@ -320,18 +320,18 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 	var endpoints []netproto.Endpoint
 	var epMACAddresses []string
 	var err error
-	var lifIDs []int
+	//var lifIDs []int
 	epNetworkIPMap := make(map[string][]string)
 
 	if !genRequired(o) {
 		return o, nil
 	}
 
-	curLif := 0
-	for i := 0; i < len(sdevices); i++ {
-		//TODO : Have to create EP for station devices too.
-		lifIDs = append(lifIDs, sdevices[i].LifID)
-	}
+	//curLif := 0
+	//for i := 0; i < len(sdevices); i++ {
+	//	//TODO : Have to create EP for station devices too.
+	//	lifIDs = append(lifIDs, sdevices[i].LifID)
+	//}
 
 	// EPs need to refer to Namespaces and Networks
 	namespaceRef := objCache["Namespace"]
@@ -402,15 +402,16 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 			ifType = "uplink"
 			ifName = fmt.Sprintf("uplink%d", ((i/networkRef.Count)%UPLINK_COUNT)+UPLINK_START)
 			nodeUUID = "GWUUID" // This will ensure that the EP is remote
-		} else {
-			ifType = "lif"
-			if len(lifIDs) == 0 {
-				ifName = fmt.Sprintf("lif%d", (i%LIF_COUNT)+LIF_START)
-			} else {
-				ifName = fmt.Sprintf("lif%d", lifIDs[curLif])
-				curLif = (curLif + 1) % len(lifIDs)
-			}
 		}
+		//else {
+			//ifType = "lif"
+			//if len(lifIDs) == 0 {
+			//	ifName = fmt.Sprintf("lif%d", (i%LIF_COUNT)+LIF_START)
+			//} else {
+			//	ifName = fmt.Sprintf("lif%d", lifIDs[curLif])
+			//	curLif = (curLif + 1) % len(lifIDs)
+			//}
+		//}
 		ep := netproto.Endpoint{
 			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 			ObjectMeta: api.ObjectMeta{

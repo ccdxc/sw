@@ -19,8 +19,8 @@
     - network2
     - l2Seg1
     - l2Seg2
-    - uplink1
-    - uplink2
+    - uplink128
+    - uplink129
 # Section below describes the objects needed. One yaml section per object type
 ---
   kind: Tenant

@@ -10,6 +10,7 @@
 #include "nic/hal/plugins/eplearn/arp/ndp_learn.hpp"
 #include "nic/hal/plugins/eplearn/dhcp/dhcp_learn.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 
 namespace hal {
 namespace eplearn {
@@ -53,10 +54,20 @@ is_dhcp_ep_learning_enabled(fte::ctx_t &ctx)
 }
 
 /*
- * Check whether packet is host originated for learing based on ARP and flow miss
+ * Check whether packet is host originated.
  */
-static bool is_host_originated_packet(fte::ctx_t &ctx)
-{
+static bool is_host_originated_packet(fte::ctx_t &ctx) {
+
+    if (ctx.direction() == hal::FLOW_DIR_FROM_DMA) {
+        return true;
+    }
+
+    return false;
+}
+
+
+static hal_ret_t
+do_learning_ep_lif_update(fte::ctx_t &ctx) {
     const fte::cpu_rxhdr_t* cpu_hdr = ctx.cpu_rxhdr();
     hal::pd::pd_get_object_from_flow_lkupid_args_t args;
     hal::pd::pd_func_args_t          pd_func_args = {0};
@@ -67,10 +78,18 @@ static bool is_host_originated_packet(fte::ctx_t &ctx)
     ether_header_t * ethhdr;
     ep_t *sep = nullptr;
     if_t *sif;
+    lif_t *lif;
+    if_t *new_hal_if;
+    uint32_t cur_lif_id = 0;
+    hal_handle_t ep_handle;
 
-    if (!is_arp_ep_learning_enabled(ctx)) {
-        return false;
+
+    /* Lif update only for host originated packet */
+    if (!is_host_originated_packet(ctx)) {
+        return ret;
     }
+
+    HAL_TRACE_DEBUG("Doing EP lif update if necessary");
 
     args.flow_lkupid = cpu_hdr->lkp_vrf;
     args.obj_id = &obj_id;
@@ -79,25 +98,75 @@ static bool is_host_originated_packet(fte::ctx_t &ctx)
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, &pd_func_args);
     if (ret != HAL_RET_OK && obj_id != hal::HAL_OBJ_ID_L2SEG) {
         HAL_TRACE_ERR("fte: Invalid obj id: {}, ret:{}", obj_id, ret);
-        return false;
+        return ret;
     }
     l2seg = (hal::l2seg_t *)obj;
 
     ethhdr = GET_L2_HEADER(ctx.pkt(), cpu_hdr);
     sep = hal::find_ep_by_l2_key(l2seg->seg_id, ethhdr->smac);
     if (sep == nullptr) {
-        /* Probably remote endpoint */
-        HAL_TRACE_INFO("Source endpoint not found.");
-        return false;
+        HAL_TRACE_ERR("Source endpoint not found.");
+        ret = HAL_RET_EP_NOT_FOUND;
+        return ret;
     }
 
     sif = hal::find_if_by_handle(sep->if_handle);
-    if (!sif || sif->if_type != intf::IF_TYPE_ENIC) {
-        HAL_TRACE_INFO("Source endpoint interface is not of type ENIC.");
-        return false;
+    if (sif == NULL) {
+        HAL_TRACE_ERR("Source interface not found.");
+        ret = HAL_RET_IF_NOT_FOUND;
+        return ret;
     }
 
-    return true;
+    lif = find_lif_by_handle(sif->lif_handle);
+    if (lif != NULL) {
+        /* get the current lif ID if found */
+        cur_lif_id = hal::lif_hw_lif_id_get(lif);
+    }
+
+    /* Update lif nothing set or LIF id changed */
+    if (cur_lif_id == 0 || cur_lif_id != cpu_hdr->src_lif) {
+
+        lif = hal::find_lif_by_hw_lif_id(cpu_hdr->src_lif);
+
+        if (lif == NULL) {
+            HAL_TRACE_INFO("Could not find lif object for hw_lif{}.", cpu_hdr->src_lif);
+            ret = HAL_RET_LIF_NOT_FOUND;
+            return ret;
+        }
+
+       ret = hal::enic_update_lif(sif, lif, &new_hal_if);
+
+       if (ret != HAL_RET_OK) {
+           HAL_TRACE_ERR("Enic update failed!");
+           return ret;
+       }
+
+       //Remember the ep handle as we are updating.
+      ep_handle = sep->hal_handle;
+      ret = hal::endpoint_update_if(sep, new_hal_if);
+      if (ret != HAL_RET_OK) {
+          HAL_TRACE_ERR("Endpoint interface update failed!");
+          return ret;
+      }
+
+      sep = find_ep_by_handle(ep_handle);
+
+      if (sep == nullptr) {
+          HAL_TRACE_ERR("Endpoint look up failed after update");
+          ret = HAL_RET_EP_NOT_FOUND;
+          return ret;
+      }
+
+      /* Set Source EP so that plugins can process correctly */
+      ctx.set_sep(sep);
+
+      /* Set Interface so that plugins can process correctly */
+      ctx.set_sif(new_hal_if);
+
+    }
+
+
+    return ret;
 }
 
 fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
@@ -109,6 +178,12 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
     }
 
     HAL_TRACE_DEBUG("Invoking EP learning feature");
+
+    ret = do_learning_ep_lif_update(ctx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Ep learning lif update failed!")
+        return fte::PIPELINE_END;
+    }
 
     if (is_dhcp_flow(&ctx.key()) && is_dhcp_ep_learning_enabled(ctx)) {
             HAL_TRACE_INFO("EP_LEARN : DHCP packet processing...");

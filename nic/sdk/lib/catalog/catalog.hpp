@@ -129,6 +129,7 @@ typedef struct catalog_s {
     aacs_info_t              aacs_info;                         // avago aacs info
     uint32_t                 serdes_jtag_id;                    // jtag for serdes
     uint8_t                  num_sbus_rings;                    // number of sbus rings on chip
+    uint8_t                  sbm_clk_div;                       // SBUS master clock divider
     uint32_t                 serdes_build_id;                   // serdes FW build ID
     uint32_t                 serdes_rev_id;                     // serdes FW rev ID
     std::string              serdes_fw_file;                    // serdes FW file
@@ -189,6 +190,7 @@ public:
 
     uint32_t     jtag_id         (void) { return catalog_db_.serdes_jtag_id;  }
     uint32_t     num_sbus_rings  (void) { return catalog_db_.num_sbus_rings;  }
+    uint32_t     sbm_clk_div     (void) { return catalog_db_.sbm_clk_div;     }
     uint32_t     serdes_build_id (void) { return catalog_db_.serdes_build_id; }
     uint32_t     serdes_rev_id   (void) { return catalog_db_.serdes_rev_id;   }
     std::string  serdes_fw_file  (void) { return catalog_db_.serdes_fw_file;  }

@@ -134,7 +134,7 @@ find_lif_by_id (lif_id_t lif_id)
     return NULL;
 }
 
-static inline uint64_t
+uint64_t
 lif_hw_lif_id_get (lif_t *lif)
 {
     hal_ret_t ret = HAL_RET_OK;

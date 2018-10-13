@@ -45,7 +45,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"network-name\":\"infra_nw\",\"interface-type\":\"uplink\",\"interface\":\"uplink2\",\"ipv4-address\":\"192.168.10.12/32\",\"mac-address\":\"00:22:0A:00:02:02\",\"node-uuid\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"remote_tep\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"network-name\":\"infra_nw\",\"interface-type\":\"uplink\",\"interface\":\"uplink129\",\"ipv4-address\":\"192.168.10.12/32\",\"mac-address\":\"00:22:0A:00:02:02\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"url": {
 					"raw": "{{node1}}/api/endpoints/",
@@ -241,7 +241,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"kg1router\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"uplink\",\"interface\":\"uplink2\",\"useg-vlan\":200,\"ipv4-address\":\"20.30.10.1/24\",\"mac-address\":\"00:22:0A:0:03:12\",\"node-uuid\":\"GWUUID\"}}"
+					"raw": "{\"kind\":\"Endpoint\",\"meta\":{\"name\":\"kg1router\",\"tenant\":\"default\",\"namespace\":\"kg1\"},\"spec\":{\"network-name\":\"kg1\",\"interface-type\":\"uplink\",\"interface\":\"uplink129\",\"useg-vlan\":200,\"ipv4-address\":\"20.30.10.1/24\",\"mac-address\":\"00:22:0A:0:03:12\",\"node-uuid\":\"GWUUID\"}}"
 				},
 				"url": {
 					"raw": "{{node1}}/api/endpoints/",
@@ -354,7 +354,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"server\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"ip-prefix\":\"20.30.10.0/24\", \"interface-type\":\"uplink\", \"interface\":\"uplink2\",\"gateway-ip\":\"20.30.10.1\"}}"
+					"raw": "{\"kind\":\"Route\",\"meta\":{\"name\":\"server\",\"tenant\":\"default\",\"namespace\":\"kg1\"}, \"spec\":{\"ip-prefix\":\"20.30.10.0/24\", \"interface-type\":\"uplink\", \"interface\":\"uplink129\",\"gateway-ip\":\"20.30.10.1\"}}"
 				},
 				"url": {
 					"raw": "{{node1}}/api/routes/",

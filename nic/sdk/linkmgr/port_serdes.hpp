@@ -49,6 +49,7 @@ port_serdes_fn_init(platform_type_t platform_type,
                     std::string     ip);
 
 void serdes_get_ip_info(int chip_reset);
+int serdes_sbm_set_sbus_clock_divider (int val);
 
 uint32_t
 sbus_access (uint32_t sbus_addr,

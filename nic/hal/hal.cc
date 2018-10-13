@@ -36,8 +36,6 @@ extern "C" void __gcov_flush(void);
 #define HAL_GCOV_FLUSH()     { }
 #endif
 
-using sdk::linkmgr::linkmgr_cfg_t;
-
 namespace hal {
 
 // process globals
@@ -143,7 +141,7 @@ end:
 }
 
 // TODO remove duplicate in asic_pd
-static platform_type_t
+platform_type_t
 hal_platform_mode_to_sdk_platform_type (hal_platform_mode_t platform_mode)
 {
     switch(platform_mode) {
@@ -195,11 +193,10 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
 hal_ret_t
 hal_init (hal_cfg_t *hal_cfg)
 {
-    int                  tid;
-    char                 *user    = NULL;
-    sdk::lib::catalog    *catalog = NULL;
-    hal_ret_t            ret      = HAL_RET_OK;
-    linkmgr_cfg_t        sdk_cfg;
+    int                tid;
+    char               *user    = NULL;
+    sdk::lib::catalog  *catalog = NULL;
+    hal_ret_t          ret      = HAL_RET_OK;
 
     // check to see if HAL is running with root permissions
     user = getenv("USER");
@@ -278,19 +275,8 @@ hal_init (hal_cfg_t *hal_cfg)
         fte::disable_fte();
     }
 
-    sdk_cfg.platform_type  =
-            hal_platform_mode_to_sdk_platform_type(hal_cfg->platform_mode);
-    sdk_cfg.cfg_path       = hal_cfg->cfg_path.c_str();
-    sdk_cfg.catalog        = catalog;
-    sdk_cfg.server_builder = hal_cfg->server_builder;
-
-    // ret = linkmgr::linkmgr_init(&sdk_cfg);
-    (void)sdk_cfg;
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("linkmgr init failed");
-        return HAL_RET_ERR;
-    }
-    // sdk::linkmgr::linkmgr_event_wait();
+    // linkmgr init
+    hal_linkmgr_init(hal_cfg);
 
     //HAL_ABORT(hal_delphi_thread_init(hal_cfg) == HAL_RET_OK);
 

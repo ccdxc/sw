@@ -107,6 +107,8 @@ class HalClient {
 public:
   HalClient(enum ForwardingMode fwd_mode);
 
+  ForwardingMode get_fwd_mode() { return this->fwd_mode; }
+
   /* Segment APIs */
   int L2SegmentProbe();
 

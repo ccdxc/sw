@@ -16,7 +16,8 @@ enum {
     HAL_THREAD_ID_FTE_MAX       = 4,
     HAL_THREAD_ID_ASIC_RW       = 5,
     HAL_THREAD_ID_DELPHI_CLIENT = 6,
-    HAL_THREAD_ID_MAX           = 7,
+    HAL_THREAD_ID_LINKMGR_CTRL  = 7,
+    HAL_THREAD_ID_MAX           = 8,
 };
 
 #define HAL_MAX_NAME_STR  16

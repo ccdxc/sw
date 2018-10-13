@@ -317,6 +317,16 @@ serdes_get_ip_info(int chip_reset)
     }
 }
 
+int
+serdes_sbm_set_sbus_clock_divider (int val)
+{
+    if (aapl != NULL) {
+        SDK_TRACE_DEBUG("SBUS master clock divider: %d", val);
+        return avago_sbm_set_sbus_clock_divider(aapl, 0, val);
+    }
+    return 0;
+}
+
 Aapl_t*
 serdes_global_init_hw(uint32_t     jtag_id,
                       int          num_sbus_rings,
@@ -339,8 +349,8 @@ serdes_global_init_hw(uint32_t     jtag_id,
     aapl->jtag_idcode[0]       = jtag_id;
     aapl->sbus_rings           = num_sbus_rings;
     aapl->chips                = num_chips;
-    aapl->debug                = 8;
-    aapl->verbose              = 1;
+    // aapl->debug                = 8;
+    // aapl->verbose              = 1;
 
     if (aacs_connect == true) {
         aapl->aacs  = aacs_connect;
