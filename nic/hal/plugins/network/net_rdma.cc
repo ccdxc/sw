@@ -30,8 +30,7 @@ update_flow_for_rdma (fte::ctx_t& ctx)
         return HAL_RET_OK;
     }
 
-    if ((flow_key.sport != UDP_PORT_ROCE_V2) && 
-        (flow_key.dport != UDP_PORT_ROCE_V2)) {
+    if (flow_key.dport != UDP_PORT_ROCE_V2) {
         HAL_TRACE_DEBUG("net-rdma: dport {} is not that of ROCEV2. ignoring", flow_key.sport);
         return HAL_RET_OK;
     }
