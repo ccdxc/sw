@@ -225,7 +225,9 @@ void HntapSwitch::ProcessUplinkReceivedPacket(const unsigned char *pkt, uint32_t
                     macaddr2str(eth->ether_dhost),
                     dev_handle->port);
                 hntap_model_send_process(dev_handle, data, data_pkt_len);
-                break;
+                //In host pinned mode send it to both uplinks
+                //This might have to be revisted for smart mode.
+                //break;
             }
         }
     }
