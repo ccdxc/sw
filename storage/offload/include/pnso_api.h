@@ -141,7 +141,7 @@ struct pnso_buffer_list {
  *
  *	PNSO_HDR_FIELD_TYPE_ALGO - the field is used as input to set an
  *	algorithm type as the value in the compression header, taken from the
- *      hdr_algo field of the compression descriptor.
+ *	hdr_algo field of the compression descriptor.
  *
  */
 enum pnso_header_field_type {
@@ -523,9 +523,9 @@ typedef pnso_error_t (*pnso_poll_fn_t) (void *pnso_poll_ctx);
  *				callback routine.
  * @cb_ctx:		[in]	specifies the caller-supplied context
  *				information.
- * @pnso_poll_fn:	[in]	specifies the polling function, which the caller
+ * @pnso_poll_fn:	[out]	specifies the polling function, which the caller
  *				will use to poll for completion of the request.
- * @pnso_poll_ctx:	[in]	specifies the context for the polling function.
+ * @pnso_poll_ctx:	[out]	specifies the context for the polling function.
  *
  * Caller is responsible for allocation and deallocation of memory for both
  * input and output parameters. Caller should keep the memory intact (ex:
@@ -584,9 +584,9 @@ pnso_error_t pnso_add_to_batch(struct pnso_service_request *svc_req,
  *				callback routine.
  * @cb_ctx:		[in]	specifies the caller-supplied context
  *				information.
- * @pnso_poll_fn:	[in]	specifies the polling function, which the caller
+ * @pnso_poll_fn:	[out]	specifies the polling function, which the caller
  *				will use to poll for completion of the request.
- * @pnso_poll_ctx:	[in]	specifies the context for the polling function.
+ * @pnso_poll_ctx:	[out]	specifies the context for the polling function.
  *
  * Refer to 'pnso_service_result' and 'pnso_service_status' notes above for
  * handling the output data.
