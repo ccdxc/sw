@@ -34,6 +34,7 @@
 
 #include "ionic.h"
 #include "ionic_dbg.h"
+#include "ionic_stats.h"
 
 extern const struct verbs_context_ops fallback_ctx_ops;
 extern const struct verbs_context_ops ionic_ctx_ops;
@@ -50,12 +51,23 @@ static int ionic_env_val(const char *name)
 
 static int ionic_env_fallback(void)
 {
-	return ionic_env_val("IONIC_DEBUG");
+	return ionic_env_val("IONIC_FALLBACK");
 }
 
 static int ionic_env_debug(void)
 {
+	if (!(IONIC_DEBUG))
+		return 0;
+
 	return ionic_env_val("IONIC_DEBUG");
+}
+
+static int ionic_env_stats(void)
+{
+	if (!(IONIC_STATS))
+		return 0;
+
+	return ionic_env_val("IONIC_STATS");
 }
 
 static int ionic_env_lockfree(void)
@@ -153,6 +165,9 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	if (ionic_env_debug())
 		ctx->dbg_file = IONIC_DEBUG_FILE;
 
+	if (ionic_env_stats())
+		ctx->stats = calloc(1, sizeof(*ctx->stats));
+
 	return &ctx->vctx;
 
 err_cmd:
@@ -172,6 +187,9 @@ static void ionic_free_context(struct ibv_context *ibctx)
 	ionic_unmap(ctx->dbpage, 1u << ctx->pg_shift);
 
 	verbs_uninit_context(&ctx->vctx);
+
+	ionic_stats_print(IONIC_DEBUG_FILE, ctx->stats);
+	free(ctx->stats);
 	free(ctx);
 }
 

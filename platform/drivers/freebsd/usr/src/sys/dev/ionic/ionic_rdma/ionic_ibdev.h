@@ -52,7 +52,7 @@
 #define IONIC_DBPAGE_SIZE	0x1000
 #define IONIC_MAX_MRID		0xffffff
 #define IONIC_MAX_QPID		0xffffff
-#define IONIC_MAX_HBM_ORDER	15
+#define IONIC_MAX_CMB_ORDER	15
 
 #define IONIC_META_LAST ((void *)1ul)
 #define IONIC_META_POSTED ((void *)2ul)
@@ -106,6 +106,10 @@ struct ionic_ibdev {
 	u8			eq_qtype;
 
 	u8			max_stride;
+	u8			cl_stride;
+	u8			pte_stride;
+	u8			rrq_stride;
+	u8			rsq_stride;
 
 	struct mutex		tbl_lock; /* for modify cq_tbl, qp_tbl */
 	rwlock_t		tbl_rcu; /* instead of synchronize_rcu() */
@@ -138,8 +142,8 @@ struct ionic_ibdev {
 	u32			size_srqid;
 	u32			next_srqid;
 
-	unsigned long		*inuse_pgtbl;
-	u32			size_pgtbl;
+	unsigned long		*inuse_restbl;
+	u32			size_restbl;
 
 	struct work_struct	admin_work;
 	spinlock_t		admin_lock;
@@ -259,6 +263,9 @@ struct ionic_cq {
 	struct ionic_tbl_res	res;
 
 	u8			compat;
+
+	/* XXX xxx_notify */
+	struct delayed_work	notify_work;
 };
 
 struct ionic_sq_meta {
@@ -307,8 +314,8 @@ struct ionic_qp {
 	u16			sq_msn_cons;
 	u16			sq_npg_cons;
 
-	void			__iomem *sq_hbm_ptr;
-	u16			sq_hbm_prod;
+	void			__iomem *sq_cmb_ptr;
+	u16			sq_cmb_prod;
 
 	spinlock_t		rq_lock; /* for posting and polling */
 	bool			rq_flush;
@@ -316,18 +323,30 @@ struct ionic_qp {
 	struct ionic_rq_meta	*rq_meta;
 	struct ionic_rq_meta	*rq_meta_head;
 
+	void			__iomem *rq_cmb_ptr;
+	u16			rq_cmb_prod;
+
 	/* infrequently accessed, keep at end */
-	bool			sq_is_hbm;
-	int			sq_hbm_order;
-	u32			sq_hbm_pgid;
-	phys_addr_t		sq_hbm_addr;
-	struct ionic_mmap_info	sq_hbm_mmap;
+	bool			sq_is_cmb;
+	int			sq_cmb_order;
+	u32			sq_cmb_pgid;
+	phys_addr_t		sq_cmb_addr;
+	struct ionic_mmap_info	sq_cmb_mmap;
 
 	struct ib_umem		*sq_umem;
 	struct ionic_tbl_res	sq_res;
 
+	bool			rq_is_cmb;
+	int			rq_cmb_order;
+	u32			rq_cmb_pgid;
+	phys_addr_t		rq_cmb_addr;
+	struct ionic_mmap_info	rq_cmb_mmap;
+
 	struct ib_umem		*rq_umem;
 	struct ionic_tbl_res	rq_res;
+
+	struct ionic_tbl_res	rsq_res;
+	struct ionic_tbl_res	rrq_res;
 
 	u8			compat;
 };
@@ -498,5 +517,18 @@ static inline bool ionic_ibop_is_local(enum ib_wr_opcode op)
 
 void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
 void ionic_admin_cancel(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
+
+static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
+{
+	if (mtu >= 4096)
+		return IB_MTU_4096;
+	if (mtu >= 2048)
+		return IB_MTU_2048;
+	if (mtu >= 1024)
+		return IB_MTU_1024;
+	if (mtu >= 512)
+		return IB_MTU_512;
+	return IB_MTU_256;
+}
 
 #endif /* IONIC_IBDEV_H */

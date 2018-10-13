@@ -33,7 +33,6 @@
 #ifndef IONIC_H
 #define IONIC_H
 
-#include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -48,6 +47,7 @@
 
 #include "ionic_memory.h"
 #include "ionic_queue.h"
+#include "ionic_stats.h"
 #include "table.h"
 
 #define IONIC_MIN_RDMA_VERSION	0
@@ -79,6 +79,7 @@ struct ionic_ctx {
 	struct tbl_root		qp_tbl;
 
 	FILE			*dbg_file;
+	struct ionic_stats	*stats;
 };
 
 struct ionic_cq {

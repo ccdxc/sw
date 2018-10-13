@@ -156,6 +156,18 @@ static inline bool ionic_queue_color(struct ionic_queue *q)
 	return q->cons;
 }
 
+/** ionic_queue_color_wrap - Flip the color if prod is wrapped.
+ * @idx:	Queue index just after advancing.
+ * @color:	Queue color just prior to advancing the index.
+ *
+ * Return: color after advancing the index.
+ */
+static inline bool ionic_color_wrap(u16 prod, bool color)
+{
+	/* logical xor color with (prod == 0) */
+	return color != (prod == 0);
+}
+
 /** ionic_queue_color_wrap - Swap the queue color if wrapped.
  * @q:		Queue structure.
  *
@@ -163,8 +175,7 @@ static inline bool ionic_queue_color(struct ionic_queue *q)
  */
 static inline void ionic_queue_color_wrap(struct ionic_queue *q)
 {
-	/* cons logical xor with (prod == 0) */
-	q->cons = q->cons != (q->prod == 0);
+	q->cons = ionic_color_wrap(q->prod, q->cons);
 }
 
 /** ionic_queue_at - Get the element at the given index.

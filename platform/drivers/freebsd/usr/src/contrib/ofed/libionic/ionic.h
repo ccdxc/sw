@@ -33,9 +33,9 @@
 #ifndef IONIC_H
 #define IONIC_H
 
-#include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <pthread.h>
 #include <sys/endian.h>
 
@@ -44,9 +44,9 @@
 
 #include "ionic-abi.h"
 
-#include "ionic_dbg.h"
 #include "ionic_memory.h"
 #include "ionic_queue.h"
+#include "ionic_stats.h"
 #include "table.h"
 #include "list.h"
 
@@ -60,6 +60,7 @@ struct ionic_ctx {
 	struct ibv_context	ibctx;
 
 	bool			fallback;
+	bool			lockfree;
 	uint32_t		pg_shift;
 
 	int			version;
@@ -76,6 +77,9 @@ struct ionic_ctx {
 
 	pthread_mutex_t		mut;
 	struct tbl_root		qp_tbl;
+
+	FILE			*dbg_file;
+	struct ionic_stats	*stats;
 };
 
 struct ionic_cq {
@@ -134,14 +138,17 @@ struct ionic_qp {
 	uint16_t		sq_msn_cons;
 	uint16_t		sq_npg_cons;
 
-	void			*sq_hbm_ptr;
-	uint16_t		sq_hbm_prod;
+	void			*sq_cmb_ptr;
+	uint16_t		sq_cmb_prod;
 
 	pthread_spinlock_t	rq_lock;
 	bool			rq_flush;
 	struct ionic_queue	rq;
 	struct ionic_rq_meta	*rq_meta;
 	struct ionic_rq_meta	*rq_meta_head;
+
+	void			*rq_cmb_ptr;
+	uint16_t		rq_cmb_prod;
 };
 
 struct ionic_ah {

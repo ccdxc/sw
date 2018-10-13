@@ -1779,8 +1779,9 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 static int ionic_lif_rxq_init(struct lif *lif, struct rxque *rxq)
 {
 	struct lro_ctrl *lro = &rxq->lro;
-
+#ifdef RSS
 	cpuset_t        cpu_mask;
+#endif
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rxq_init = {

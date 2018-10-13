@@ -35,6 +35,22 @@
 
 #include <linux/kernel.h>
 
+/* common for ib spec */
+
+enum ionic_mrid_bits {
+	IONIC_MRID_INDEX_SHIFT		= 8,
+};
+
+static inline u32 ionic_mrid(u32 index, u8 key)
+{
+	return (index << IONIC_MRID_INDEX_SHIFT) | key;
+}
+
+static inline u32 ionic_mrid_index(u32 lrkey)
+{
+	return lrkey >> IONIC_MRID_INDEX_SHIFT;
+}
+
 /* common for all versions */
 
 /* wqe scatter gather element */
@@ -101,6 +117,7 @@ enum ionic_qp_flags {
 	IONIC_QPF_MW_BIND		= BIT(4),
 
 	/* bits that determine other qp behavior */
+	IONIC_QPF_SQD_NOTIFY		= BIT(12),
 	IONIC_QPF_SQ_CMB		= BIT(13),
 	IONIC_QPF_RQ_CMB		= BIT(14),
 	IONIC_QPF_PRIVILEGED		= BIT(15),
@@ -580,7 +597,9 @@ struct ionic_v1_admin_wqe {
 			__u8		rrq_depth;
 			__le16		pkey_id;
 			__le32		ah_id_len;
-			__u8		rsvd[12];
+			__u8		rsvd[4];
+			__le32		rrq_index;
+			__le32		rsq_index;
 			__le64		dma_addr;
 		} mod_qp;
 	};
@@ -717,9 +736,6 @@ static inline u32 ionic_v1_eqe_evt_qid(u32 evt)
 }
 
 /* XXX to end of file: makeshift, will be removed */
-
-#define IONIC_NUM_RSQ_WQE         256
-#define IONIC_NUM_RRQ_WQE         256
 
 #define OP_TYPE_RDMA_OPER_WITH_IMM	16
 #define OP_TYPE_SEND_RCVD		17

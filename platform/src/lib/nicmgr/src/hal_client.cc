@@ -1490,6 +1490,11 @@ int HalClient::CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
     if (flags & (1<<13)) {
         NIC_FUNC_INFO("qp send queue in controller memory bar");
 
+        /* exactly one "page" for sqcmb offset */
+        assert(pt_size);
+        assert(sq_pt_size == 1);
+
+        /* sqcmb offset is the first "page" */
         cmb_offset = pt_table[i++];
 
         if (cmb_offset + sq_wqe_size * num_sq_wqes > cmb_bar_size) {
@@ -1497,35 +1502,38 @@ int HalClient::CreateQP(uint64_t lif_id, uint32_t qp_num, uint16_t sq_wqe_size,
             return -1;
         }
 
+        NIC_FUNC_INFO("sqcmb offset {} addr {}", cmb_offset, cmb_bar_base + cmb_offset);
+
         spec->set_num_sq_pages(0);
         spec->set_sq_base_addr(cmb_bar_base + cmb_offset);
         spec->set_sq_in_nic_memory(true);
-    }
-
-    /* receive queue in controller memory, will be the last "page" */
-    if (flags & (1<<14)) {
-        assert(pt_size);
-        --pt_size;
-    }
-
-    /* queues in host memory */
-    for (; i < pt_size; i++) {
-        spec->add_va_pages_phy_addr(pt_table[i]);
     }
 
     /* receive queue in controller memory */
     if (flags & (1<<14)) {
         NIC_FUNC_INFO("qp receive queue in controller memory bar");
 
-        cmb_offset = pt_table[i++];
+        /* exactly one "page" for rqcmb offset */
+        assert(pt_size);
+        assert(pt_size == sq_pt_size + 1);
+
+        /* rqcmb offset is the last "page" */
+        cmb_offset = pt_table[--pt_size];
 
         if (cmb_offset + rq_wqe_size * num_rq_wqes > cmb_bar_size) {
             NIC_FUNC_ERR("rqcmb out of range");
             return -1;
         }
 
+        NIC_FUNC_INFO("rqcmb offset {} addr {}", cmb_offset, cmb_bar_base + cmb_offset);
+
         spec->set_rq_base_addr(cmb_bar_base + cmb_offset);
         spec->set_rq_in_nic_memory(true);
+    }
+
+    /* queues in host memory, i and pt_size adjusted to exclude cmb offsets */
+    for (; i < pt_size; i++) {
+        spec->add_va_pages_phy_addr(pt_table[i]);
     }
 
     Status status = rdma_stub_->RdmaQpCreate(&context, request, &response);

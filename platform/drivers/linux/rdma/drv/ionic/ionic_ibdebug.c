@@ -137,6 +137,12 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "cq_qtype:\t%u\n", dev->cq_qtype);
 	seq_printf(s, "eq_qtype:\t%u\n", dev->eq_qtype);
 
+	seq_printf(s, "max_stride:\t%u\n", dev->max_stride);
+	seq_printf(s, "cl_stride:\t%u\n", dev->cl_stride);
+	seq_printf(s, "pte_stride:\t%u\n", dev->pte_stride);
+	seq_printf(s, "rrq_stride:\t%u\n", dev->rrq_stride);
+	seq_printf(s, "rsq_stride:\t%u\n", dev->rsq_stride);
+
 	/* XXX remove if for relase */
 	if (dev->adminq)
 		seq_printf(s, "adminq:\t%u\n", dev->adminq->aqid);
@@ -172,9 +178,9 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "size_srqid:\t%u\n", dev->size_srqid);
 	seq_printf(s, "next_srqid:\t%u\n", dev->next_srqid);
 
-	seq_printf(s, "inuse_pgtbl:\t%u\n", bitmap_weight(dev->inuse_pgtbl,
-							  dev->size_pgtbl));
-	seq_printf(s, "size_pgtbl:\t%u\n", dev->size_pgtbl);
+	seq_printf(s, "inuse_restbl:\t%u\n", bitmap_weight(dev->inuse_restbl,
+							  dev->size_restbl));
+	seq_printf(s, "size_restbl:\t%u\n", dev->size_restbl);
 
 	return 0;
 }
@@ -354,8 +360,7 @@ static int ionic_mr_info_show(struct seq_file *s, void *v)
 {
 	struct ionic_mr *mr = s->private;
 
-	seq_printf(s, "lkey:\t%u\n", mr->ibmr.lkey);
-	seq_printf(s, "rkey:\t%u\n", mr->ibmr.rkey);
+	seq_printf(s, "mrid:\t%u\n", mr->mrid);
 
 	ionic_tbl_res_show(s, "", &mr->res);
 	ionic_tbl_buf_show(s, "", &mr->buf);
@@ -429,7 +434,7 @@ void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 	if (!dev->debug_mr)
 		return;
 
-	snprintf(name, sizeof(name), "%u", mr->ibmr.lkey);
+	snprintf(name, sizeof(name), "%u", ionic_mrid_index(mr->mrid));
 
 	mr->debug = debugfs_create_dir(name, dev->debug_mr);
 	if (IS_ERR(mr->debug))

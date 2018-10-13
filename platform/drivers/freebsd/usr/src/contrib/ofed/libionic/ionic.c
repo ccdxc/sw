@@ -33,18 +33,46 @@
 #include <stdio.h>
 
 #include "ionic.h"
+#include "ionic_dbg.h"
+#include "ionic_stats.h"
 
 extern void ionic_set_fallback_ops(struct ibv_context *ibctx);
 extern void ionic_set_ops(struct ibv_context *ibctx);
 
-static int ionic_env_fallback(void)
+static int ionic_env_val(const char *name)
 {
-	const char *env = getenv("IONIC_FALLBACK");
+	const char *env = getenv(name);
 
 	if (!env)
 		return 0;
 
 	return atoi(env);
+}
+
+static int ionic_env_fallback(void)
+{
+	return ionic_env_val("IONIC_FALLBACK");
+}
+
+static int ionic_env_debug(void)
+{
+	if (!(IONIC_DEBUG))
+		return 0;
+
+	return ionic_env_val("IONIC_DEBUG");
+}
+
+static int ionic_env_stats(void)
+{
+	if (!(IONIC_STATS))
+		return 0;
+
+	return ionic_env_val("IONIC_STATS");
+}
+
+static int ionic_env_lockfree(void)
+{
+	return ionic_env_val("IONIC_LOCKFREE");
 }
 
 static int ionic_init_context(struct verbs_device *vdev,
@@ -129,6 +157,14 @@ static int ionic_init_context(struct verbs_device *vdev,
 		ionic_set_ops(ibctx);
 	}
 
+	ctx->lockfree = ionic_env_lockfree();
+
+	if (ionic_env_debug())
+		ctx->dbg_file = IONIC_DEBUG_FILE;
+
+	if (ionic_env_stats())
+		ctx->stats = calloc(1, sizeof(*ctx->stats));
+
 out:
 	return rc;
 }
@@ -142,6 +178,9 @@ static void ionic_uninit_context(struct verbs_device *vdev,
 	pthread_mutex_destroy(&ctx->mut);
 
 	ionic_unmap(ctx->dbpage, 1u << ctx->pg_shift);
+
+	ionic_stats_print(IONIC_DEBUG_FILE, ctx->stats);
+	free(ctx->stats);
 }
 
 #define PCI_VENDOR_ID_PENSANDO 0x1dd8

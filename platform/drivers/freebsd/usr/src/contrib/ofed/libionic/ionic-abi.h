@@ -36,7 +36,7 @@
 #include <infiniband/kern-abi.h>
 #include "ionic_fw.h"
 
-#define IONIC_ABI_VERSION	5
+#define IONIC_ABI_VERSION	6
 
 struct uionic_ctx {
 	struct ibv_get_context ibv_cmd;
@@ -101,7 +101,8 @@ struct uionic_qp_resp {
 	struct ibv_create_qp_resp_ex ibv_resp;
 	__u32 qpid;
 	__u32 rsvd;
-	__u64 sq_hbm_offset;
+	__u64 sq_cmb_offset;
+	__u64 rq_cmb_offset;
 };
 
 struct uionic_srq {

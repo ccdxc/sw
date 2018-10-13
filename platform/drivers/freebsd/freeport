@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Port linux rdma changes since commit "$1" to bsd.
+# Optional "$2" to end the range to consider for linux changes.
+#
+# After running, there may be cleanup needed for patch rejects.
+
+: ${FP:=freeport.patch}
+: ${FP_PATH:=../linux}
+
+FP_SRC=(
+# changes in rdma driver should be ported automacically if possible
+"$FP_PATH/rdma"
+
+# changes in eth driver besides ionic_if need to be ported manually
+"$FP_PATH/eth/ionic/ionic_if.h"
+)
+
+FP_SED=(
+# transform linux user library paths for bsd srcs
+'s_linux/rdma/lib/ionic_freebsd/usr/src/contrib/ofed/libionic_g'
+
+# transform linux kernel module paths for bsd srcs
+'s_linux/rdma/drv/ionic_freebsd/usr/src/sys/dev/ionic/ionic\_rdma_g'
+
+# the path to ionic-abi.h is different in bsd srcs
+'s_dev/ionic/ionic\_rdma/uapi_ofed/include/uapi_g'
+
+# transform linux eth driver paths for bsd srcs
+'s_linux/eth/ionic_freebsd/usr/src/sys/dev/ionic/ionic\_eth_g'
+)
+
+# generate the linux patch for the range
+git diff "$1...$2" "${FP_SRC[@]}" > "$FP"
+
+# apply transformations to the patch file
+for FS in "${FP_SED[@]}"; do
+	sed -i "$FS" "$FP"
+done
+
+# apply the patch file to bsd srcs
+patch -f -p4 "-i$FP" "-r$FP.rej"

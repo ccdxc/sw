@@ -107,6 +107,10 @@ struct ionic_ibdev {
 	u8			eq_qtype;
 
 	u8			max_stride;
+	u8			cl_stride;
+	u8			pte_stride;
+	u8			rrq_stride;
+	u8			rsq_stride;
 
 	struct mutex		tbl_lock; /* for modify cq_tbl, qp_tbl */
 
@@ -138,8 +142,8 @@ struct ionic_ibdev {
 	u32			size_srqid;
 	u32			next_srqid;
 
-	unsigned long		*inuse_pgtbl;
-	u32			size_pgtbl;
+	unsigned long		*inuse_restbl;
+	u32			size_restbl;
 
 	struct work_struct	admin_work;
 	spinlock_t		admin_lock;
@@ -347,6 +351,9 @@ struct ionic_qp {
 
 	struct ib_umem		*rq_umem;
 	struct ionic_tbl_res	rq_res;
+
+	struct ionic_tbl_res	rsq_res;
+	struct ionic_tbl_res	rrq_res;
 
 	u8			compat;
 

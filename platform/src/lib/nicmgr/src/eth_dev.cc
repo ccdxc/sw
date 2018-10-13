@@ -1567,23 +1567,20 @@ Eth::_CmdCreateQP(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_INFO("lif{}: CMD_OPCODE_V0_CREATE_QP:"
             " qp_num {} sq_wqe_size {}"
             " rq_wqe_size {} num_sq_wqes {}"
-            " num_rq_wqes {} num_rsq_wqes {}"
-            " num_rrq_wqes {} pd {}"
+            " num_rq_wqes {} pd {}"
             " sq_cq_num {} rq_cq_num {} page_size {}"
             " pmtu {} service {} sq_pt_size {} pt_size {}",
             info.hw_lif_id + cmd->lif_id,
             cmd->qp_num, cmd->sq_wqe_size,
             cmd->rq_wqe_size, cmd->num_sq_wqes,
-            cmd->num_rq_wqes, cmd->num_rsq_wqes,
-            cmd->num_rrq_wqes, cmd->pd,
+            cmd->num_rq_wqes, cmd->pd,
             cmd->sq_cq_num, cmd->rq_cq_num, cmd->host_pg_size,
             cmd->pmtu, cmd->service, cmd->sq_pt_size, cmd->pt_size);
 
     hal->CreateQP(info.hw_lif_id + cmd->lif_id,
                   cmd->qp_num, cmd->sq_wqe_size,
                   cmd->rq_wqe_size, cmd->num_sq_wqes,
-                  cmd->num_rq_wqes, cmd->num_rsq_wqes,
-                  cmd->num_rrq_wqes, cmd->pd,
+                  cmd->num_rq_wqes, 256, 256, cmd->pd,
                   cmd->sq_cq_num, cmd->rq_cq_num, cmd->host_pg_size,
                   cmd->pmtu, cmd->service, cmd->flags,
                   cmd->sq_pt_size, cmd->pt_size, pt_table,
@@ -1615,7 +1612,7 @@ Eth::_CmdModifyQP(void *req, void *req_data, void *resp, void *resp_data)
                   cmd->dest_qp_num, cmd->q_key,
                   cmd->e_psn, cmd->sq_psn,
                   cmd->header_template_ah_id, cmd->header_template_size,
-                  header, cmd->path_mtu, cmd->state);
+                  header, cmd->path_mtu, cmd->state & 7);
 
     return (DEVCMD_SUCCESS);
 }
