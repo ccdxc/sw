@@ -35,7 +35,7 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 		hd.Unlock()
 		return nil
 
-	case "UPLINK":
+	case "UPLINK_ETH", "UPLINK_MGMT":
 		var portID uint32
 
 		// TODO remove hack once hal/dol is fixed with correct mapping

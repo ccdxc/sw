@@ -429,7 +429,7 @@ func (na *Nagent) findIntfID(ep *netproto.Endpoint, epType EndpointType) (uint64
 		return 0, nil
 		// Remote EP Create, interface types unspecified by user. Associate available uplink
 	case epType == Remote && len(ep.Spec.InterfaceType) == 0 && len(ep.Spec.Interface) == 0:
-		uplinkCount, err := na.countIntfs("UPLINK")
+		uplinkCount, err := na.countIntfs("UPLINK_ETH")
 		if err != nil {
 			log.Errorf("could not enumerate uplinks. Err: %v", err)
 			return 0, fmt.Errorf("could not enumerate uplinks. Err: %v", err)

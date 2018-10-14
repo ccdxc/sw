@@ -313,7 +313,8 @@ func (na *Nagent) getUplinks() (uplinks []*netproto.Interface) {
 	na.Lock()
 	defer na.Unlock()
 	for _, intf := range na.HwIfDB {
-		if intf.Spec.Type == "UPLINK" {
+		if intf.Spec.Type == "UPLINK_ETH" {
+			// get the corresponding port.
 			uplinks = append(uplinks, intf)
 		}
 	}
@@ -335,6 +336,8 @@ func (na *Nagent) createPortAndUplink(p *netproto.Port) error {
 	// TODO Use first class port create methods here
 	// TODO support breakout
 
+	var uplinkType string
+
 	err := na.Datapath.CreatePort(p)
 	if err != nil {
 		return err
@@ -345,6 +348,12 @@ func (na *Nagent) createPortAndUplink(p *netproto.Port) error {
 		return fmt.Errorf("could not allocate IDs for uplinks. %v", err)
 	}
 	id += uint64(uplinkOffset)
+
+	if p.Spec.Type == "TYPE_MANAGEMENT" {
+		uplinkType = "UPLINK_MGMT"
+	} else {
+		uplinkType = "UPLINK_ETH"
+	}
 	uplink := &netproto.Interface{
 		TypeMeta: api.TypeMeta{
 			Kind: "Interface",
@@ -355,7 +364,7 @@ func (na *Nagent) createPortAndUplink(p *netproto.Port) error {
 			Name:      fmt.Sprintf("uplink%d", id),
 		},
 		Spec: netproto.InterfaceSpec{
-			Type:        "UPLINK",
+			Type:        uplinkType,
 			AdminStatus: "UP",
 		},
 		Status: netproto.InterfaceStatus{

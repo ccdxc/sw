@@ -43,7 +43,8 @@ message InterfaceSpec {
         NONE                = 0;
         ENIC                = 1;
         LIF                 = 2;
-        UPLINK              = 3;
+        UPLINK_ETH          = 3;
+        UPLINK_MGMT         = 4;
     }
 
     string Type             = 1 [(venice.check) = "StrEnum(InterfaceSpec.IFType)",
