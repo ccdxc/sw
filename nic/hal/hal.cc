@@ -203,7 +203,7 @@ hal_init (hal_cfg_t *hal_cfg)
     if (user && !strcmp(user, "root")) {
         gl_super_user = true;
     }
-    gl_super_user = false;    // TODO: temporary until bringup issues are resolved
+    //gl_super_user = false;    // TODO: temporary until bringup issues are resolved
 
     // do SDK initialization, if any
     hal_sdk_init();
@@ -240,11 +240,11 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // spawn all necessary PI threads
     HAL_ABORT(hal_thread_init(hal_cfg) == HAL_RET_OK);
-    HAL_TRACE_DEBUG("Spawned all HAL thread");
+    HAL_TRACE_DEBUG("Spawned all HAL threads");
 
-    // do platform dependent clock delta comp init
+    // do platform dependent clock delta computation initialization
     HAL_ABORT(hal::pd::hal_pd_clock_delta_comp_init(hal_cfg) == HAL_RET_OK);
-    HAL_TRACE_DEBUG("Platform Clock Delta Comp initialization done");
+    HAL_TRACE_DEBUG("Platform clock delta computation init done");
 
     // do rdma init
     HAL_ABORT(rdma_hal_init() == HAL_RET_OK);

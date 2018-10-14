@@ -70,8 +70,8 @@ $PLATFORM_DIR/tools/start-nicmgr-haps.sh "$FWD_MODE"
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - NICMGR failed to start!" && exit 1
 
 # Renice HAL & LINKMGR so other apps & kernel contexts can run
-renice 20 `pidof hal`
-renice 20 $(ls -1 /proc/`pidof hal`/task)
+# renice 20 `pidof hal`
+# renice 20 $(ls -1 /proc/`pidof hal`/task)
 
 # Bringup MNIC
 # if [[ "$FWD_MODE" == 'classic' ]]; then

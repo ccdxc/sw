@@ -265,10 +265,10 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
     sched_param.sched_priority =
         hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL);
     if (gl_super_user) {
-        HAL_TRACE_DEBUG("Switching to real-time scheduling");
+        HAL_TRACE_DEBUG("Switching to real-time scheduling for main thread");
         rv = sched_setscheduler(0, SCHED_RR, &sched_param);
     } else {
-        HAL_TRACE_DEBUG("Switching to real-time scheduling");
+        HAL_TRACE_DEBUG("Using non-real-time scheduling for main thread");
         rv = sched_setscheduler(0, SCHED_OTHER, &sched_param);
     }
     if (rv != 0) {
