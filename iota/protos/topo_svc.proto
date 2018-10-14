@@ -53,7 +53,7 @@ enum Op {
 }
 
 // NodeInfo encapsulates all topology information for a given iota-server invocation
-message NodeMsg{
+message NodeMsg {
     // API Response for the node
     IotaAPIResponse api_response    = 1;
 
@@ -186,6 +186,7 @@ message Workload {
     // Interface to which workload needs to be attached.
     uint32 pinned_port                      = 8;
 
+    // uplink vlan for the traffic going outside node.
     uint32 uplink_vlan                      = 9;
 
     // Workload Status
@@ -302,4 +303,34 @@ message TestBedMsg {
 
     // Password for logging into the nodes
     string passwd                         = 11;
+}
+
+// WorkloadCopyDirection defines direction whether to copy in or copy out
+enum WorkloadCopyDirection {
+        DIR_NONE    = 0;
+        DIR_IN      = 1;
+        DIR_OUT     = 2;
+}
+
+// WorkloadCopyMsg takes care of copying to workload.
+// If copy in to workload, destination will be prefixed with workload directory on iota node.
+// if copy out from workload, files will be prefixed with workload directory on iota node.
+message WorkloadCopyMsg {
+    // API Response for the copy operation
+    IotaAPIResponse api_response    = 1;
+
+    // Copy Direction.
+    WorkloadCopyDirection direction = 2;
+
+    // Node to do copy operation
+    string node_name                = 3;
+
+    // workload context to do copy operation
+    string workload                 = 4;
+
+    // list of files that needs to be copied
+    repeated string files           = 5;
+
+    // destination directory
+    string dest_dir                 = 6;
 }
