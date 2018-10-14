@@ -203,7 +203,7 @@ hal_init (hal_cfg_t *hal_cfg)
     if (user && !strcmp(user, "root")) {
         gl_super_user = true;
     }
-    //gl_super_user = false;    // TODO: temporary until bringup issues are resolved
+    gl_super_user = false;    // TODO: temporary until bringup issues are resolved
 
     // do SDK initialization, if any
     hal_sdk_init();
