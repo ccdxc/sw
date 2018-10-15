@@ -259,9 +259,10 @@ void test_tls(SSL *ssl)
               exit(-1);
           }
           else {
-              if (bytes_recv == file_size)
+              if (bytes_recv == file_size) {
                   TLOG("Received Data Validation successful\n");
                   return;
+              }
           }
       }
     }
