@@ -24,6 +24,7 @@ struct rqcb1_t d;
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r6
 #define NEW_RSQ_P_INDEX r6
+#define TIMESTAMP r4[15:0]
 
 #define TO_S_CQCB_P to_s6_cqcb_info
 
@@ -155,11 +156,20 @@ check_ack_nak:
     bcf         [!c3], invoke_stats
     nop // BD Slot
 
-    RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
+#ifdef HAPS
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_HW_DB_ONLY(DMA_CMD_BASE,
                                    K_GLOBAL_LIF,
                                    K_GLOBAL_QTYPE,
                                    K_GLOBAL_QID,
+                                   TIMESTAMP,
                                    DB_ADDR, DB_DATA)
+#else
+     RESP_RX_POST_ACK_INFO_TO_TXDMA_DB_ONLY(DMA_CMD_BASE,
+                                    K_GLOBAL_LIF,
+                                    K_GLOBAL_QTYPE,
+                                    K_GLOBAL_QID,
+                                    DB_ADDR, DB_DATA)
+#endif
 
 invoke_stats:
     // invoke stats as mpu only

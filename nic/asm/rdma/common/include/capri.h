@@ -1156,8 +1156,8 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
     memwr.dx   _addr, _data;
 
 #define PREPARE_DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, _ring_id, _pindex, _addr, _data)                   \
-    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
     CAPRI_SETUP_DB_DATA(_qid, _ring_id, _pindex, _data);                                            \
+    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
 
 #define DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, _ring_id, _pindex, _addr, _data)                   \
     PREPARE_DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, _ring_id, _pindex, _addr, _data);                  \

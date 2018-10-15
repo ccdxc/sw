@@ -101,6 +101,15 @@
     phvwr       p.db_data1, _db_data_r.dx; \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, db_data1, db_data1, _db_addr_r); \
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
+
+#define RESP_RX_POST_ACK_INFO_TO_TXDMA_HW_DB_ONLY(_dma_base_r, \
+                                       _lif, _qtype, _qid, _pindex, \
+                                       _db_addr_r, _db_data_r) \
+    DMA_NEXT_CMD_I_BASE_GET(_dma_base_r, 1); \
+    PREPARE_DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, ACK_NAK_RING_ID, _pindex, _db_addr_r, _db_data_r);\
+    phvwr       p.db_data1, _db_data_r.dx; \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, db_data1, db_data1, _db_addr_r); \
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
     
 #define RESP_RX_POST_ACK_INFO_TO_TXDMA(_dma_base_r, _rqcb2_addr_r, _tmp_r, \
                                        _lif, _qtype, _qid, \
