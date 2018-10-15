@@ -156,8 +156,6 @@ install:
 	@# In the future, this can be a shell script, rpm, curl script or whatever..
 	docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0" --rm --no-cache -t pen-install:latest -f tools/docker-files/install/Dockerfile tools/docker-files/install
 	docker save -o bin/tars/pen-install.tar pen-install:latest
-	#todo compress later in the release cycle with better compression level. As of now compression takes too much time for development
-	cd bin && tar -cvf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
 
 deploy:
 	$(MAKE) venice-image
@@ -425,6 +423,8 @@ venice-image:
 	$(MAKE) container-compile
 	$(MAKE) fixtures
 	$(MAKE) install
+	#todo compress later in the release cycle with better compression level. As of now compression takes too much time for development
+	cd bin && tar -cvf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
 venice-release: venice-image
 	docker pull ${REGISTRY_URL}/${DIND_CONTAINER}
 	docker save -o bin/pen-dind.tar ${REGISTRY_URL}/${DIND_CONTAINER}

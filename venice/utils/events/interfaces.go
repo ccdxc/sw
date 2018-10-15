@@ -29,6 +29,8 @@ type Recorder interface {
 	// severity shoule be one of INFO, WARNING, CRITICAL
 	// message is a free form text explaining the reason of the event
 	Event(eventType string, severity events.SeverityLevel, message string, objRef interface{})
+	// StartExport to start the client
+	StartExport()
 }
 
 // Dispatcher processes all the incoming events for any duplication to avoid

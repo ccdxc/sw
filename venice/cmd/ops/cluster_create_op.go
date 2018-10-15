@@ -106,6 +106,12 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	if !env.CertMgr.IsReady() {
 		return nil, errors.NewInternalError(fmt.Errorf("CertMgr not ready"))
 	}
+	// Now that CA has started, Recorderclients can talk RPC to eventsProxy
+	env.Recorder.StartExport()
+	// Launch go routine to monitor health updates of smartNIC objects and update status
+	go func() {
+		env.NICService.MonitorHealth()
+	}()
 
 	// Send prejoin request to all nodes.
 	preJoinReq := &grpc.ClusterPreJoinReq{

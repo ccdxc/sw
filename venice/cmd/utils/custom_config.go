@@ -27,8 +27,7 @@ func readCustomConfigFile(confFile string) customConfig {
 		}
 	}
 	if _, err := os.Stat(confFile); err != nil {
-		// Stat error is treated as not part of cluster.
-		log.Errorf("unable to find confFile %s error: %v", confFile, err)
+		log.Debugf("unable to find confFile %s err: %v", confFile, err)
 		return customConfig{}
 	}
 	var in []byte

@@ -55,6 +55,7 @@ type recorderImpl struct {
 	eventsProxy           *eventsProxy           // event proxy
 	eventsFile            *fileImpl              // events backup store
 	failedEventsForwarder *failedEventsForwarder // used to forward failed events to the proxy
+	started               bool                   // whether client has started
 }
 
 // eventsProxy encapsulates all the proxy details including connection string
@@ -129,6 +130,7 @@ func NewRecorder(config *Config) (events.Recorder, error) {
 		log.Debug("skipping events proxy")
 		recorder.eventsProxy.connectionAlive = false // all the writes will be sent to file
 	} else {
+		recorder.started = true
 		go recorder.createEvtsProxyRPCClient() // create events proxy client
 	}
 
@@ -137,6 +139,13 @@ func NewRecorder(config *Config) (events.Recorder, error) {
 	})
 
 	return recorder, nil
+}
+
+func (r *recorderImpl) StartExport() {
+	if !r.started {
+		r.started = true
+		go r.createEvtsProxyRPCClient() // create events proxy client
+	}
 }
 
 // Event records the event by creating a event using the given type, severity, message, etc.

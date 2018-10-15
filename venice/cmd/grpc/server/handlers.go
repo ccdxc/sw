@@ -121,6 +121,13 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		if err != nil || !env.CertMgr.IsReady() {
 			return nil, fmt.Errorf("Error starting CertMgr: %v", err)
 		}
+		// Now that CA has started, Recorderclients can talk RPC to eventsProxy
+		env.Recorder.StartExport()
+		// Launch go routine to monitor health updates of smartNIC objects and update status
+		go func() {
+			env.NICService.MonitorHealth()
+		}()
+
 		if env.AuthRPCServer == nil {
 			//  start the RPC server after creating the ResolverService (if applicable)
 			//	Hence move the start-Auth-server code towards end of the function
@@ -381,11 +388,6 @@ func RegisterSmartNICRegistrationServer(smgr *cache.Statemgr) {
 
 		// Update NIC service
 		env.NICService = nicServer
-
-		// Launch go routine to monitor health updates of smartNIC objects and update status
-		go func() {
-			env.NICService.MonitorHealth()
-		}()
 
 		// Register smartNIC gRPC server
 		log.Debugf("Registering SmartNIC RPCserver")

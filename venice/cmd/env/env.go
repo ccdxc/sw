@@ -7,6 +7,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/utils/certmgr"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/quorum"
@@ -48,4 +49,5 @@ var (
 	RolloutMgr           types.RolloutMgr
 	VeniceRolloutClient  types.VeniceRolloutClient
 	ServiceRolloutClient types.ServiceRolloutClient
+	Recorder             events.Recorder
 )
