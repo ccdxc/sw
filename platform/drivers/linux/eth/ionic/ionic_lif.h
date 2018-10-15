@@ -99,6 +99,8 @@ struct lif {
 	struct ionic *ionic;
 	bool registered;
 	unsigned int index;
+	unsigned int kern_pid;
+	struct doorbell __iomem *kern_dbpage;
 	spinlock_t adminq_lock;
 	struct qcq *adminqcq;
 	struct qcq **txqcqs;
@@ -117,6 +119,9 @@ struct lif {
 	struct deferred deferred;
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
+	struct mutex dbid_inuse_lock;
+	unsigned long *dbid_inuse;
+	unsigned int dbid_count;
 	void *api_private;
 	struct dentry *debugfs;
 };

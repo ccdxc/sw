@@ -89,11 +89,10 @@ struct ionic_ibdev {
 	struct lif		*lif;
 	int			lif_id;
 
-	u32		__iomem *intr_ctrl;
-
-	phys_addr_t		phys_dbpage_base;
-	u64		__iomem *dbpage;
 	u32			dbid;
+	phys_addr_t		xxx_dbpage_phys;
+	u64		__iomem *dbpage;
+	u32		__iomem *intr_ctrl;
 
 	u16			rdma_version;
 	u8			rdma_compat;

@@ -1315,6 +1315,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	struct ionic_ctx_req req;
 	struct ionic_ctx_resp resp = {};
 	const union identity *ident;
+	phys_addr_t db_phys;
 	int i, rc;
 
 	rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
@@ -1334,10 +1335,12 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	ctx->fallback = req.fallback > 1;
 	if (!ctx->fallback) {
 		/* try to allocate dbid for user ctx */
-		if (ionic_xxx_kdbid)
+		if (ionic_xxx_kdbid) {
 			rc = dev->dbid; /* XXX kernel dbid in user space */
-		else
-			rc = ionic_api_get_dbid(dev->lif);
+			db_phys = dev->xxx_dbpage_phys;
+		} else {
+			rc = ionic_api_get_dbid(dev->lif, &db_phys);
+		}
 		if (rc < 0) {
 			/* maybe allow fallback to kernel space */
 			ctx->fallback = req.fallback > 0;
@@ -1358,8 +1361,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 
 	ctx->mmap_dbell.offset = 0;
 	ctx->mmap_dbell.size = PAGE_SIZE;
-	ctx->mmap_dbell.pfn = PHYS_PFN(dev->phys_dbpage_base +
-				       dev->dbid * PAGE_SIZE);
+	ctx->mmap_dbell.pfn = PHYS_PFN(db_phys);
 	list_add(&ctx->mmap_dbell.ctx_ent, &ctx->mmap_list);
 
 	resp.fallback = ctx->fallback;
@@ -6561,8 +6563,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->lif_id = lif_id;
 
 	ionic_api_get_dbpages(lif, &dev->dbid, &dev->dbpage,
-			      &dev->phys_dbpage_base,
-			      &dev->intr_ctrl);
+			      &dev->xxx_dbpage_phys, &dev->intr_ctrl);
 
 	dev->rdma_version = version;
 	dev->rdma_compat = compat;

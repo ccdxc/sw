@@ -63,11 +63,13 @@ struct dev_cmd_db {
 };
 
 #define IONIC_BARS_MAX		6
+#define IONIC_PCI_BAR_DBELL	1
 
 struct ionic_dev_bar {
 	void __iomem *vaddr;
 	dma_addr_t bus_addr;
 	unsigned long len;
+	int res_index;
 };
 
 /**
@@ -354,7 +356,8 @@ void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 			       unsigned int intr_index);
 
 char *ionic_dev_asic_name(u8 asic_type);
-struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q);
+struct doorbell __iomem *ionic_db_map(struct lif *lif, struct queue *q);
+int ionic_db_page_num(struct ionic_dev *idev, int lif_id, int pid);
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index);

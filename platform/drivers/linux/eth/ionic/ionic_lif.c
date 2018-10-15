@@ -643,20 +643,10 @@ static void ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 	ionic_intr_free(lif, &qcq->intr);
 }
 
-static unsigned int ionic_pid_get(struct lif *lif, unsigned int page)
-{
-	unsigned int ndbpgs_per_lif = lif->ionic->ident->dev.ndbpgs_per_lif;
-
-	BUG_ON(ndbpgs_per_lif < page + 1);
-
-	return lif->index * ndbpgs_per_lif + page;
-}
-
 static int ionic_qcqs_alloc(struct lif *lif)
 {
 	struct device *dev = lif->ionic->dev;
 	unsigned int flags;
-	unsigned int pid;
 	unsigned int i;
 	int err = -ENOMEM;
 
@@ -670,34 +660,31 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	if (!lif->rxqcqs)
 		return -ENOMEM;
 
-	pid = ionic_pid_get(lif, 0);
 	flags = QCQ_F_INTR;
 	err = ionic_qcq_alloc(lif, 0, "admin", flags, 1 << 4,
 			      sizeof(struct admin_cmd),
 			      sizeof(struct admin_comp),
-			      0, pid, &lif->adminqcq);
+			      0, lif->kern_pid, &lif->adminqcq);
 	if (err)
 		return err;
 
-	pid = ionic_pid_get(lif, 0);
 	flags = QCQ_F_TX_STATS | QCQ_F_INTR | QCQ_F_SG;
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		err = ionic_qcq_alloc(lif, i, "tx", flags, ntxq_descs,
 				      sizeof(struct txq_desc),
 				      sizeof(struct txq_comp),
 				      sizeof(struct txq_sg_desc),
-				      pid, &lif->txqcqs[i]);
+				      lif->kern_pid, &lif->txqcqs[i]);
 		if (err)
 			goto err_out_free_adminqcq;
 	}
 
-	pid = ionic_pid_get(lif, 0);
 	flags = QCQ_F_RX_STATS | QCQ_F_INTR;
 	for (i = 0; i < lif->nrxqcqs; i++) {
 		err = ionic_qcq_alloc(lif, i, "rx", flags, nrxq_descs,
 				      sizeof(struct rxq_desc),
 				      sizeof(struct rxq_comp),
-				      0, pid, &lif->rxqcqs[i]);
+				      0, lif->kern_pid, &lif->rxqcqs[i]);
 		if (err)
 			goto err_out_free_txqcqs;
 	}
@@ -731,7 +718,7 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	struct device *dev = ionic->dev;
 	struct net_device *netdev;
 	struct lif *lif;
-	int err;
+	int err, dbpage_num;
 
 	netdev = alloc_etherdev_mqs(sizeof(*lif),
 				    ionic->ntxqs_per_lif,
@@ -766,14 +753,46 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	netdev->min_mtu = IONIC_MIN_MTU;
 	netdev->max_mtu = IONIC_MAX_MTU;
 
+	mutex_init(&lif->dbid_inuse_lock);
+	lif->dbid_count = lif->ionic->ident->dev.ndbpgs_per_lif;
+	if (!lif->dbid_count) {
+		dev_err(dev, "No doorbell pages, aborting\n");
+		err = -EINVAL;
+		goto err_out_free_netdev;
+	}
+
+	lif->dbid_inuse = kzalloc(BITS_TO_LONGS(lif->dbid_count) * sizeof(long),
+				  GFP_KERNEL);
+	if (!lif->dbid_inuse) {
+		dev_err(dev, "Failed alloc doorbell id bitmap, aborting\n");
+		err = -ENOMEM;
+		goto err_out_free_netdev;
+	}
+
+	/* first doorbell id reserved for kernel (dbid aka pid == zero) */
+	set_bit(0, lif->dbid_inuse);
+	lif->kern_pid = 0;
+
+	dbpage_num = ionic_db_page_num(&ionic->idev, index, 0);
+	lif->kern_dbpage = ionic_bus_map_dbpage(ionic, dbpage_num);
+	if (!lif->kern_dbpage) {
+		dev_err(dev, "Cannot map dbpage, aborting\n");
+		err = -ENOMEM;
+		goto err_out_free_dbid;
+	}
+
 	err = ionic_qcqs_alloc(lif);
 	if (err)
-		goto err_out_free_netdev;
+		goto err_out_unmap_dbell;
 
 	list_add_tail(&lif->list, &ionic->lifs);
 
 	return 0;
 
+err_out_unmap_dbell:
+	ionic_bus_unmap_dbpage(ionic, lif->kern_dbpage);
+err_out_free_dbid:
+	kfree(lif->dbid_inuse);
 err_out_free_netdev:
 	free_netdev(netdev);
 
@@ -806,6 +825,8 @@ void ionic_lifs_free(struct ionic *ionic)
 		list_del(&lif->list);
 		flush_scheduled_work();
 		ionic_qcqs_free(lif);
+		ionic_bus_unmap_dbpage(lif->ionic, lif->kern_dbpage);
+		kfree(lif->dbid_inuse);
 		free_netdev(lif->netdev);
 	}
 }
@@ -1011,7 +1032,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	ionic_dev_cmd_comp(idev, &comp);
 	q->qid = comp.qid;
 	q->qtype = comp.qtype;
-	q->db = ionic_db_map(idev, q);
+	q->db = ionic_db_map(lif, q);
 
 	netif_napi_add(lif->netdev, napi, ionic_adminq_napi,
 		       NAPI_POLL_WEIGHT);
@@ -1178,7 +1199,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 
 	q->qid = ctx.comp.txq_init.qid;
 	q->qtype = ctx.comp.txq_init.qtype;
-	q->db = ionic_db_map(q->idev, q);
+	q->db = ionic_db_map(lif, q);
 
 	netif_napi_add(lif->netdev, napi, ionic_tx_napi,
 		       NAPI_POLL_WEIGHT);
@@ -1252,7 +1273,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 
 	q->qid = ctx.comp.rxq_init.qid;
 	q->qtype = ctx.comp.rxq_init.qtype;
-	q->db = ionic_db_map(q->idev, q);
+	q->db = ionic_db_map(lif, q);
 
 	netif_napi_add(lif->netdev, napi, ionic_rx_napi,
 		       NAPI_POLL_WEIGHT);

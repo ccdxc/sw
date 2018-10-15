@@ -223,6 +223,20 @@ static void ionic_unmap_bars(struct ionic *ionic)
 			devm_iounmap(dev, bars[i].vaddr);
 }
 
+void __iomem *ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
+{
+	return ionic->bars[1].vaddr + (page_num << PAGE_SHIFT);
+}
+
+void ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)
+{
+}
+
+phys_addr_t ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
+{
+	return 0;
+}
+
 static int ionic_probe(struct platform_device *pfdev)
 {
 	struct device *dev = &pfdev->dev;

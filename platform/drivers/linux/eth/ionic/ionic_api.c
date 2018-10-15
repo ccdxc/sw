@@ -126,32 +126,50 @@ void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_cmb);
 
-void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
-			   phys_addr_t *phys_dbpage_base,
+void ionic_api_get_dbpages(struct lif *lif, u32 *dbid,
+			   u64 __iomem **dbpage,
+			   phys_addr_t *xxx_dbpage_phys,
 			   u32 __iomem **intr_ctrl)
 {
-	/* XXX dbpage of the eth driver, first page for now */
-	/* XXX kernel should only ioremap one dbpage, not the whole BAR */
-	*dbid = 0;
-	*dbpage = (void *)lif->ionic->idev.db_pages;
+	int dbpage_num;
 
-	*phys_dbpage_base = lif->ionic->idev.phy_db_pages;
+	*dbid = lif->kern_pid;
+	*dbpage = (void __iomem *)lif->kern_dbpage;
+	*intr_ctrl = (void __iomem *)lif->ionic->idev.intr_ctrl;
 
-	*intr_ctrl = (void *)lif->ionic->idev.intr_ctrl;
+	/* XXX remove when rdma drops xxx_kdbid workaround */
+	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, 0);
+	*xxx_dbpage_phys = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_dbpages);
 
-int ionic_api_get_dbid(struct lif *lif)
+int ionic_api_get_dbid(struct lif *lif, phys_addr_t *addr)
 {
-	/* XXX second dbid for rdma driver, eth will use dbid zero.
-	 * TODO: actual allocator here. */
-	return 1;
+	int dbid, dbpage_num;
+
+	mutex_lock(&lif->dbid_inuse_lock);
+
+	dbid = find_first_zero_bit(lif->dbid_inuse, lif->dbid_count);
+
+	if (dbid == lif->dbid_count) {
+		mutex_unlock(&lif->dbid_inuse_lock);
+		return -ENOMEM;
+	}
+
+	set_bit(dbid, lif->dbid_inuse);
+
+	mutex_unlock(&lif->dbid_inuse_lock);
+
+	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, dbid);
+	*addr = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);
+
+	return dbid;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_dbid);
 
 void ionic_api_put_dbid(struct lif *lif, int dbid)
 {
-	/* TODO: actual allocator here. */
+	clear_bit(dbid, lif->dbid_inuse);
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_dbid);
 

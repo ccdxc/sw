@@ -128,19 +128,21 @@ void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order);
  * @lif:		Handle to lif.
  * @dbid:		Doorbell id for use in kernel space.
  * @dbpage:		One ioremapped doorbell page for use in kernel space.
- * @phys_dbpage_base:	Phys base address of doorbell pages for the device.
+ * @xxx_dbpage_phys:	Phys address of doorbell page (to be removed).
  * @intr_ctrl:		Interrupt control registers.
  *
  * The doorbell id and dbpage are special.  Most doorbell ids and pages are for
  * use by user space.  The id and page returned here refer to the one reserved
  * for use in kernel space.
  */
-void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
-			   phys_addr_t *phys_dbpage_base,
+void ionic_api_get_dbpages(struct lif *lif, u32 *dbid,
+			   u64 __iomem **dbpage,
+			   phys_addr_t *xxx_dbpage_phys,
 			   u32 __iomem **intr_ctrl);
 
 /** ionic_api_get_dbid - Reserve a doorbell id.
  * @lif:		Handle to lif.
+ * @addr:		Phys address of doorbell page.
  *
  * Reserve an doorbell id.  This corresponds with exactly one doorbell page at
  * an offset from the doorbell page base address, that can be mapped into a
@@ -148,7 +150,7 @@ void ionic_api_get_dbpages(struct lif *lif, u32 *dbid, u64 __iomem **dbpage,
  *
  * Return: doorbell id or negative error status.
  */
-int ionic_api_get_dbid(struct lif *lif);
+int ionic_api_get_dbid(struct lif *lif, phys_addr_t *addr);
 
 /** ionic_api_put_dbid - Release a doorbell id.
  * @lif:		Handle to lif.

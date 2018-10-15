@@ -199,14 +199,14 @@ char *ionic_dev_asic_name(u8 asic_type)
 	}
 }
 
-struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q)
+struct doorbell __iomem *ionic_db_map(struct lif *lif, struct queue *q)
 {
-	struct doorbell __iomem *db;
+	return lif->kern_dbpage + q->qtype;
+}
 
-	db = (void *)idev->db_pages + (q->pid * PAGE_SIZE);
-	db += q->qtype;
-
-	return db;
+int ionic_db_page_num(struct ionic_dev *dev, int lif_id, int pid)
+{
+	return lif_id * dev->ident->dev.ndbpgs_per_lif + pid;
 }
 
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,

@@ -73,12 +73,20 @@ static int ionic_map_bars(struct ionic *ionic)
 		if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
 			continue;
 		bars[j].len = pci_resource_len(pdev, i);
-		bars[j].vaddr = pci_iomap(pdev, i, bars[j].len);
-		if (!bars[j].vaddr) {
-			dev_err(dev, "Cannot memory-map BAR %d, aborting\n", j);
-			return -ENODEV;
+
+		/* only map the whole bar 0 */
+		if (j > 0) {
+			bars[j].vaddr = NULL;
+		} else {
+			bars[j].vaddr = pci_iomap(pdev, i, bars[j].len);
+			if (!bars[j].vaddr) {
+				dev_err(dev, "Cannot memory-map BAR %d, aborting\n", j);
+				return -ENODEV;
+			}
 		}
+
 		bars[j].bus_addr = pci_resource_start(pdev, i);
+		bars[j].res_index = i;
 		ionic->num_bars++;
 		j++;
 	}
@@ -94,6 +102,24 @@ static void ionic_unmap_bars(struct ionic *ionic)
 	for (i = 0; i < IONIC_BARS_MAX; i++)
 		if (bars[i].vaddr)
 			iounmap(bars[i].vaddr);
+}
+
+void __iomem *ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
+{
+	return pci_iomap_range(ionic->pdev,
+			       ionic->bars[IONIC_PCI_BAR_DBELL].res_index,
+			       page_num << PAGE_SHIFT, PAGE_SIZE);
+}
+
+void ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)
+{
+	iounmap(page);
+}
+
+phys_addr_t ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
+{
+	return ionic->bars[IONIC_PCI_BAR_DBELL].bus_addr +
+		(page_num << PAGE_SHIFT);
 }
 
 static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
