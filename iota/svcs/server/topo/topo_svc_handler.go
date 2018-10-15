@@ -167,7 +167,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 		req.Nodes[idx] = node.Node
 	}
 
-	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	//req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
 }
 
