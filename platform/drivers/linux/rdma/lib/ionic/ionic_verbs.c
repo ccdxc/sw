@@ -343,6 +343,10 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
 	wc->pkey_index = be16toh(cqe->recv.pkey_index);
 
+	if (qp->vqp.qp.qp_type == IBV_QPT_UD) {
+		wc->wc_flags |= IBV_WC_GRH;
+	}
+
 out:
 	ionic_queue_consume(&qp->rq);
 

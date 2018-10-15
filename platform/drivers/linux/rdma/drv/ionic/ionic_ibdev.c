@@ -3021,6 +3021,12 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
 	wc->pkey_index = be16_to_cpu(cqe->recv.pkey_index);
 
+	if (qp->ibqp.qp_type == IB_QPT_UD ||
+	    qp->ibqp.qp_type == IB_QPT_GSI) {
+		wc->wc_flags |= IB_WC_GRH;
+		ether_addr_copy(wc->smac, cqe->recv.src_mac);
+	}
+
 out:
 	ionic_queue_consume(&qp->rq);
 
