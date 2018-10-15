@@ -4,7 +4,7 @@
 uint32_t
 cpu_hal_if::read(uint32_t chip, uint64_t addr,
                  cpu_access_type_e do_backdoor, uint32_t flags) {
-    uint32_t data;
+    uint32_t data = 0;
 
     hal::pd::asic_reg_read(addr, &data, 1);
     return data;
