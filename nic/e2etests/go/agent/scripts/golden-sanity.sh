@@ -17,9 +17,9 @@ function cleanup {
   exit $1
 }
 
+set +x
 echo "Starting Heimdall run in default (host-pinned) mode"
 
-set +x
 go run $HEIMDALL_RUN run --device-file $SIM_DEVICE_JSON  --config-file $HEIMDALL_GOLDEN_CONFIG --enable-sim
 
 OUT=$?
@@ -40,16 +40,16 @@ if [ $OUT -ne 0 ];then
    cleanup $OUT
 fi
 
-echo "Starting Host-Network Traffic tests.."
-
-go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON  --uplink-map $UPLINK_MAP_JSON --config-file $HEIMDALL_GOLDEN_CONFIG --sim-mode
-
-OUT=$?
-if [ $OUT -ne 0 ];then
-   echo "Host-Network traffic test failed"
-   cleanup $OUT
-fi
-
+#echo "Starting Host-Network Traffic tests.."
+#
+#go run $HEIMDALL_RUN traffic --device-file $SIM_DEVICE_JSON  --uplink-map $UPLINK_MAP_JSON --config-file $HEIMDALL_GOLDEN_CONFIG --sim-mode
+#
+#OUT=$?
+#if [ $OUT -ne 0 ];then
+#   echo "Host-Network traffic test failed"
+#   cleanup $OUT
+#fi
+#
 
 echo "Starting Heimdall run in smart nic mode"
 
