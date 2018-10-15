@@ -23,6 +23,11 @@ parser.add_argument('--testbed-json', dest='testbed_json', default="/warmd.json"
                     help='Testbed JSON file')
 parser.add_argument('--no-keep-going', dest='no_keep_going',
                     action='store_true', help='Stop on first error.')
+parser.add_argument('--mode', dest='mode', default=None,
+                    choices=["venice", "netagent"],
+                    help='Test mode - Venice / Agent level tests.')
+parser.add_argument('--pipeline', dest='pipeline', default="iris",
+                    help='Filter tests by Pipeline')
 GlobalOptions = parser.parse_args()
 
 def __validate():

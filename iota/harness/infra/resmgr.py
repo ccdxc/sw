@@ -25,4 +25,5 @@ class IpAddressStep(object):
         #Assuming /24
         return ipaddress.IPv4Address(int(self.start) + 254)
 
-ControlIpAllocator = IpAddressStep("64.0.0.0", "0.0.0.1")
+ControlIpAllocator = IpAddressStep("172.16.100.1", "0.0.0.1")
+WorkloadIpAllocator = IpAddressStep("192.168.100.1", "0.0.0.1")

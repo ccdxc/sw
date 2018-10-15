@@ -19,7 +19,15 @@ class YmlObject(object):
 
 def __discover_testsuites():
     suites = []
-    expr = GlobalOptions.topdir + '/iota/test/**/*.testsuite'
+    if GlobalOptions.mode is None:
+        expr = GlobalOptions.topdir +\
+               '/iota/test/%s/**/*.testsuite' %\
+               (GlobalOptions.pipeline)
+    else:
+        expr = GlobalOptions.topdir +\
+               '/iota/test/%s/%s/**/*.testsuite' %\
+               (GlobalOptions.pipeline, GlobalOptions.mode)
+
     for filename in glob.iglob(expr, recursive = True):
         data = parser.YmlParse(filename)
         suites.append(data)

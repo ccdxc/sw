@@ -32,16 +32,20 @@ class TestSuite:
     def __resolve_testcases(self):
         for tc_spec in self.__spec.testcases:
             tc_spec.packages = self.__spec.packages
-            tc_spec.verifs.extend(self.__spec.common.verifs)
+            if tc_spec.verifs:
+                tc_spec.verifs.extend(self.__spec.common.verifs)
             tc = testcase.Testcase(tc_spec)
             self.__tcs.append(tc)
-        return
+        return types.status.SUCCESS
 
     def __resolve_teardown(self):
+        teardown_spec = getattr(self.__spec, 'teardown', [])
+        if teardown_spec is None:
+            return types.status.SUCCESS
         for s in self.__spec.teardown:
             Logger.debug("Resolving teardown module: %s" % s.step)
             s.step = loader.Import(s.step, self.__spec.packages)
-        return
+        return types.status.SUCCESS
 
     def __parse_setup_topology(self):
         topospec = getattr(self.__spec.setup, 'topology', None)

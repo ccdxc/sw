@@ -14,7 +14,7 @@
           "network-name": "nw0",
           "interface-type": "lif",
           "interface": "lif100",
-          "ipv4-address": "177.75.132.100/32",
+          "ipv4-address": "192.168.100.100/32",
           "mac-address": "46:46:a6:4d:ed:e3",
           "useg-vlan": 1001
         },
@@ -34,7 +34,7 @@
           "network-name": "nw0",
           "interface-type": "lif",
           "interface": "lif101",
-          "ipv4-address": "177.75.132.101/32",
+          "ipv4-address": "192.168.100.101/32",
           "mac-address": "7a:19:12:b5:b3:d2",
           "useg-vlan": 1002
         },

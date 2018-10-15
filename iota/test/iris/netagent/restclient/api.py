@@ -8,10 +8,14 @@ import grpc
 import iota.harness.api as api
 
 AGENT_URL=None
+AGENT_UUID=None
 
-def Init(agent_ip):
+def Init(agent_ip, agent_uuid):
     global AGENT_URL
     AGENT_URL = 'http://%s:9007/' % agent_ip
+
+    global AGENT_UUID
+    AGENT_UUID = agent_uuid
     return
 
 def __rest_api_handler(url, obj):
@@ -59,5 +63,7 @@ def ConfigureNetworks(objlist):
 
 def ConfigureEndpoints(objlist):
     url = AGENT_URL + 'api/endpoints/'
+    for obj in objlist:
+        setattr(obj.spec, "node-uuid", AGENT_UUID)
     __config(objlist, url)
     return

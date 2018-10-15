@@ -3,7 +3,7 @@ meta:
     description : Sample Test Suite
 
 packages:
-    - iota.test.iris
+    - iota.test.iris.venice
 
 # Section: 'images'
 #   List of images to used by this testsuite.
@@ -18,7 +18,7 @@ images:
 #   This is a MANDATORY section with atleast 'topology'
 setup:
     # 'topology' is a MANDATORY parameter.
-    topology: test/iris/topologies/3Naples_3Venice.topology
+    topology: test/iris/venice/topologies/3Naples_3Venice.topology
     
     # 'config' is an OPTIONAL section.
     #   This section can be used to generate/push config 
@@ -29,8 +29,7 @@ setup:
         - step : bringup.make_venice_cluster
         # Invokes: iota/test/iris/bringup/generate_base_config.py
         - step : bringup.generate_base_config
-          spec : test/iris/baseconfig/sample_baseconfig.spec
-        #- step : bringup.push_static_config
+          spec : test/iris/venice/baseconfig/sample_baseconfig.spec
 
 # Section: 'common'
 # List of common actions to be invoked during test phase.
@@ -49,7 +48,7 @@ common:
 #   <all-others>: Opaque to infra, passed to testcase module as native attributes
 #                 of the 'tc'(testcase) object.
 testcases:
-    -   name    : PushBaseConfig
+    -   name    : PushConfig
         testcase: testcases.config.push_config
         verifs  :
             -   step    : verif.config.verify_config_venice    # Verify at Venice Level

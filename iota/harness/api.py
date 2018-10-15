@@ -97,6 +97,12 @@ def MakeCluster(req):
 def GetVeniceMgmtIpAddresses():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVeniceMgmtIpAddresses()
 
+def GetNaplesMgmtIpAddresses():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesMgmtIpAddresses()
+
+def GetNaplesNodeUUIDs():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesUUIDs()
+
 def GetDataVlans():
     return store.GetTestbed().GetDataVlans()
 

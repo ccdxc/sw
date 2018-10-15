@@ -52,6 +52,8 @@ class Testcase:
         Logger.debug("Resolving testcase module: %s" % self.__spec.testcase)
         self.__tc = loader.Import(self.__spec.testcase, self.__spec.packages)
         verifs_spec = getattr(self.__spec, 'verifs', [])
+        if verifs_spec is None:
+            return types.status.SUCCESS
         for v in verifs_spec:
             v.packages = self.__spec.packages
             verif = VerifStep(v)

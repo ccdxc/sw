@@ -13,14 +13,16 @@ if __name__ == '__main__':
     sys.path.append(fullpath)
 
 import iota.harness.api as api
-import iota.test.iris.cfghelpers.agent_api as agent_api
+import iota.test.iris.netagent.restclient.api as agent_api
 
 import iota.protos.pygen.types_pb2 as types_pb2
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
-ENDPOINTS_JSON = "test/iris/bringup/cfgjson/agent/1ten_2seg_4eps/endpoints.json" 
-NETWORKS_JSON = "test/iris/bringup/cfgjson/agent/1ten_2seg_4eps/networks.json" 
-SGPOLICY_JSON = "test/iris/bringup/cfgjson/agent/1ten_2seg_4eps/sgpolicy.json"
+CONFIGS_DIR = "test/iris/netagent/bringup/configs/1ten_2seg_4eps"
+
+ENDPOINTS_JSON = "%s/endpoints.json" % CONFIGS_DIR
+NETWORKS_JSON = "%s/networks.json" % CONFIGS_DIR
+SGPOLICY_JSON = "%s/sgpolicy.json" % CONFIGS_DIR
 
 ep_json_obj = None
 nw_json_obj = None
@@ -76,7 +78,10 @@ def __add_workloads():
 def Main(step):
     api.Logger.SetLoggingLevel(api.types.loglevel.DEBUG)
     api.Init()
-    agent_api.Init('10.8.102.234')
+    agent_ips = api.GetNaplesMgmtIpAddresses()
+    agent_uuids = api.GetNaplesNodeUUIDs()
+    agent_api.Init(agent_ips[0], agent_uuids[0])
+
     __read_jsons()
     __config()
     __add_workloads()

@@ -1,0 +1,57 @@
+meta:
+    name        : sample
+    description : Sample Test Suite
+
+packages:
+    - iota.test.iris.netagent
+
+# Section: 'images'
+#   List of images to used by this testsuite.
+#   This is a MANDATORY section with atleast 1 image entry.
+images:
+    naples: /sw/nic/obj/images/naples-release-v1.tgz
+    venice: /sw/bin/venice.tgz
+    drivers: /sw/platform/drivers.tgz
+
+# Section: 'setup'
+#   List of actions to be taken during the setup phase.
+#   This is a MANDATORY section with atleast 'topology'
+setup:
+    # 'topology' is a MANDATORY parameter.
+    topology: test/iris/netagent/topologies/3Naples.topology
+    
+    # 'config' is an OPTIONAL section.
+    #   This section can be used to generate/push config 
+    #   before the testcases start.
+    #   Each step will be invoked in the order below.
+    config  : 
+        - step : bringup.push_static_config
+
+# Section: 'common'
+# List of common actions to be invoked during test phase.
+#   'verifs' species the list of steps to be appended to each
+#   testcase's verification steps.
+common:
+    verifs:
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+
+# Section: 'testcases'
+# List of testcases. Following are the well-known attributes of this section.
+#   'name'      : Name of the testcases (MANDATORY)
+#   'testcase'  : Testcase module. (MANDATORY)
+#   'verifs'    : Verification steps (OPTIONAL)
+#   <all-others>: Opaque to infra, passed to testcase module as native attributes
+#                 of the 'tc'(testcase) object.
+testcases:
+    -   name    : Ping_FullMesh
+        testcase: testcases.networking.ping_fullmesh
+        verifs  :
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+# Section 'teardown'
+# List of cleanup/collect actions
+# This section is 'OPTIONAL'
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores

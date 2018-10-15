@@ -35,6 +35,9 @@ class Node(object):
     def Role(self):
         return self.__role
 
+    def UUID(self):
+        return self.__uuid
+
     def ControlIpAddress(self):
         return self.__control_ip
 
@@ -68,9 +71,14 @@ class Node(object):
 
         return types.status.SUCCESS
 
+    def ProcessResponse(self, resp):
+        self.__uuid = resp.node_uuid
+        Logger.info("Node: %s UUID: %s" % (self.__name, self.__uuid))
+        return
+
 class Topology(object):
     def __init__(self, spec):
-        self.__nodes = []
+        self.__nodes = {}
 
         assert(spec)
         self.__spec = parser.YmlParse(spec)
@@ -80,18 +88,18 @@ class Topology(object):
     def __parse_nodes(self):
         for node_spec in self.__spec.nodes:
             node = Node(node_spec)
-            self.__nodes.append(node)
+            self.__nodes[node.Name()] = node
         return
 
     def Nodes(self):
-        return self.__nodes
+        return self.__nodes.values()
 
     def Setup(self, testsuite):
         Logger.info("Adding Nodes:")
         req = topo_pb2.NodeMsg()
         req.node_op = topo_pb2.ADD
         
-        for node in self.__nodes:
+        for name,node in self.__nodes.items():
             msg = req.nodes.add()
             ret = node.AddToNodeMsg(msg, self, testsuite)
             assert(ret == types.status.SUCCESS)
@@ -105,18 +113,36 @@ class Topology(object):
                 Logger.error(" - %s: " % types_pb2.APIResponseType.Name(n.node_status))
             return types.status.FAILURE
 
+        for node_resp in resp.nodes:
+            node = self.__nodes[node_resp.name]
+            node.ProcessResponse(node_resp)
+
         return types.status.SUCCESS
 
     def GetVeniceMgmtIpAddresses(self):
         ips = []
-        for n in self.__nodes:
+        for n in self.__nodes.values():
             if n.Role() == topo_pb2.PERSONALITY_VENICE:
                 ips.append(n.MgmtIpAddress())
         return ips
 
+    def GetNaplesMgmtIpAddresses(self):
+        ips = []
+        for n in self.__nodes.values():
+            if n.Role() == topo_pb2.PERSONALITY_NAPLES:
+                ips.append(n.MgmtIpAddress())
+        return ips
+
+    def GetNaplesUUIDs(self):
+        ips = []
+        for n in self.__nodes.values():
+            if n.Role() == topo_pb2.PERSONALITY_NAPLES:
+                ips.append(n.UUID())
+        return ips
+
     def GetVeniceHostnames(self):
         ips = []
-        for n in self.__nodes:
+        for n in self.__nodes.values():
             if n.Role() == topo_pb2.PERSONALITY_VENICE:
                 ips.append(n.Name())
         return ips

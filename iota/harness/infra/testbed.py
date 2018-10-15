@@ -35,8 +35,7 @@ class _Testbed:
         msg = topo_pb2.TestBedMsg()
         if not ts:
             return msg
-        if getattr(self.tbspec, 'n3k', None):
-            msg.switch_port_id = int(self.tbspec.n3k.port)
+        msg.switch_port_id = int(self.tbspec.DataNetworks.DataSwitch.Port)
         msg.naples_image = ts.GetImages().naples
         msg.venice_image = ts.GetImages().venice
         msg.driver_sources = ts.GetImages().drivers
