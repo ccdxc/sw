@@ -30,6 +30,7 @@
 #include "osal_logger.h"
 #include "osal_sys.h"
 #include "osal_mem.h"
+#include "osal_assert.h"
 
 #include "pnso_cpdc.h"
 #include "pnso_crypto.h"
@@ -518,6 +519,8 @@ static int get_seq_q_desc_count(uint32_t status_q_count,
 			ring_id, ring->ring_size);
 		goto done;
 	}
+	dev_info(res->lif->sonic->dev, "get_seq_q_desc_count: hw ring %u: q_entries_per_core=%u.\n",
+		 ring_id, *desc_count);
 
 	err = 0;
 
@@ -669,6 +672,7 @@ static int sonic_lif_per_core_resource_init(struct lif *lif,
 
 	/* Initialize local driver structures */
 	res->lif = lif;
+	res->core_id = -1; /* determined later */
 
 	err = sonic_cpdc_qs_init(res, seq_q_count / 2);
 	if (err)
@@ -716,6 +720,10 @@ static int sonic_lif_per_core_resources_init(struct lif *lif)
 
 	dev_info(lif->sonic->dev, "Init per-core-resources, %u seq_queues_per_lif, %u num_per_core_resources.\n",
 		 lif->sonic->ident->dev.seq_queues_per_lif, lif->sonic->num_per_core_resources);
+
+	for (i = 0; i < MAX_NUM_CORES; i++) {
+		lif->res.core_to_res_map[i] = -1;
+	}
 
 	for (i = 0; i < lif->sonic->num_per_core_resources; i++) {
 		if (lif->res.pc_res[i]) {
@@ -855,15 +863,26 @@ static int assign_per_core_res_id(struct lif *lif, int core_id)
 
 	//TODO: Replace MAX_NUM_CORES with varaible from sonic
 	spin_lock(&lif->res.lock);
+	if (lif->res.core_to_res_map[core_id] >= 0) {
+		/* another thread already did this */
+		spin_unlock(&lif->res.lock);
+		OSAL_LOG_INFO("already assigned per core res_id %d for core_id %d\n",
+			      lif->res.core_to_res_map[core_id], core_id);
+		return 0;
+	}
 	free_res_id = find_first_zero_bit(lif->res.pc_res_bmp, lif->sonic->num_per_core_resources);
 	if (free_res_id == lif->sonic->num_per_core_resources) {
 		spin_unlock(&lif->res.lock);
-		OSAL_LOG_ERROR("Per core resource exhausted");
+		OSAL_LOG_ERROR("Per core resource exhausted\n");
 		return err;
 	}
 	set_bit(free_res_id, lif->res.pc_res_bmp);
-	spin_unlock(&lif->res.lock);
+	OSAL_ASSERT(lif->res.pc_res[free_res_id]->core_id == -1);
+	lif->res.pc_res[free_res_id]->core_id = core_id;
 	lif->res.core_to_res_map[core_id] = free_res_id;
+	spin_unlock(&lif->res.lock);
+	OSAL_LOG_DEBUG("assign per core res_id %d for core_id %d\n",
+		       free_res_id, core_id);
 	return 0;
 }
 
@@ -874,14 +893,18 @@ struct per_core_resource *sonic_get_per_core_res(struct lif *lif)
 	int core_id;
 
 	core_id = osal_get_coreid() % MAX_NUM_CORES;
-	if (lif->res.core_to_res_map[core_id] < 0) {
+	pc_res_idx = lif->res.core_to_res_map[core_id];
+	if (pc_res_idx < 0) {
 		err = assign_per_core_res_id(lif, core_id);
 		if (err != 0) {
-			OSAL_LOG_ERROR("assign_per_core_res_id failed with error %d", err);
+			OSAL_LOG_ERROR("assign_per_core_res_id failed with error %d\n", err);
 			return NULL;
 		}
+		pc_res_idx = lif->res.core_to_res_map[core_id];
+	} else {
+		OSAL_ASSERT(lif->res.pc_res[pc_res_idx]->core_id == core_id);
 	}
-	pc_res_idx = lif->res.core_to_res_map[core_id];
+
 	return lif->res.pc_res[pc_res_idx];
 }
 

@@ -7,6 +7,7 @@
 #include "osal_errno.h"
 #include "osal_mem.h"
 #include "osal_atomic.h"
+#include "osal_setup.h"
 
 #include "sim.h"
 #include "sim_util.h"
@@ -24,53 +25,57 @@ uint32_t sim_buflist_len(const struct pnso_buffer_list *src_list)
 	return len;
 }
 
-/* Copy a buffer list into a flat buffer.
+/* Copy a physaddr buffer list into a flat buffer.
  * Return count of bytes copied.
  * Do not modify the structure members, just the buffer data.
  */
-uint32_t sim_memcpy_list_to_flat_buf(struct pnso_flat_buffer *dst,
-				     const struct pnso_buffer_list *src_list)
+uint32_t sim_memcpy_pa_list_to_flat_buf(struct pnso_flat_buffer *dst,
+					const struct pnso_buffer_list *src_list)
 {
 	const struct pnso_flat_buffer *src;
+	uint8_t *src_buf;
 	uint32_t cpy_len, total = 0;
 	size_t buf_i;
 
 	for (buf_i = 0; buf_i < src_list->count && total < dst->len;
 	     buf_i++) {
 		src = &src_list->buffers[buf_i];
+		src_buf = (uint8_t *) osal_phy_to_virt(src->buf);
 		cpy_len = src->len;
 		if (total + cpy_len > dst->len) {
 			cpy_len = dst->len - total;
 		}
 		memcpy((uint8_t *) dst->buf + total,
-		       (uint8_t *) src->buf, cpy_len);
+		       src_buf, cpy_len);
 		total += cpy_len;
 	}
 
 	return total;
 }
 
-/* Copy a flat buffer into a buffer list.
+/* Copy a flat buffer into a physaddr buffer list.
  * Assumes the buffer list lengths have been filled out with allocated size,
  * or 0 for default block size.
  * Return count of bytes copied.
  * Do not modify the structure members, just the buffer data.
  */
-uint32_t sim_memcpy_flat_buf_to_list(struct pnso_buffer_list *dst_list,
-				     const struct pnso_flat_buffer *src)
+uint32_t sim_memcpy_flat_buf_to_pa_list(struct pnso_buffer_list *dst_list,
+					const struct pnso_flat_buffer *src)
 {
 	struct pnso_flat_buffer *dst;
+	uint8_t *dst_buf;
 	uint32_t cpy_len, total = 0;
 	size_t buf_i;
 
 	for (buf_i = 0; buf_i < dst_list->count && total < src->len;
 	     buf_i++) {
 		dst = &dst_list->buffers[buf_i];
+		dst_buf = (uint8_t *) osal_phy_to_virt(dst->buf);
 		cpy_len = dst->len;
 		if (cpy_len > src->len - total) {
 			cpy_len = src->len - total;
 		}
-		memcpy((uint8_t *) dst->buf, (uint8_t *) src->buf + total,
+		memcpy(dst_buf, (uint8_t *) src->buf + total,
 		       cpy_len);
 		total += cpy_len;
 	}
@@ -280,6 +285,7 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
 
 	return PNSO_OK;
 }
+OSAL_EXPORT_SYMBOL(pnso_set_key_desc_idx);
 
 pnso_error_t sim_get_key_desc_idx(void **key1,
 				  void **key2,

@@ -4,6 +4,7 @@
  *
  */
 #include "osal.h"
+#include "osal_rmem.h"
 #include "pnso_api.h"
 
 #include "pnso_mpool.h"
@@ -17,7 +18,7 @@
  *	- rename/revisit 'objects in object'
  *
  */
-#define PNSO_NUM_OBJECTS		8
+#define PNSO_NUM_OBJECTS		128
 #define PNSO_NUM_OBJECTS_IN_OBJECT	16
 
 uint64_t pad_buffer;

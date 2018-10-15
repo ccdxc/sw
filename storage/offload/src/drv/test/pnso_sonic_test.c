@@ -95,7 +95,9 @@ static struct thread_state osal_test_threads[PNSO_TEST_THREAD_COUNT];
 
 int body(void);
 
+#if 0
 OSAL_LICENSE("Dual BSD/GPL");
+#endif
 
 static void
 comp_cb(void *arg1, struct pnso_service_result *svc_res)
@@ -1558,6 +1560,6 @@ test_fini(void)
 osal_init_fn_t init_fp = test_init;
 osal_init_fn_t fini_fp = test_fini;
 
-#ifndef ENABLE_PNSO_SONIC_TEST
+#if 0
 OSAL_SETUP(init_fp, body, fini_fp);
 #endif

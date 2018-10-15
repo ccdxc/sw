@@ -194,7 +194,6 @@ decompress_setup(struct service_info *svc_info,
 				err);
 		goto out_dc_desc;
 	}
-	memset(status_desc, 0, sizeof(*status_desc));
 
 	err = cpdc_update_service_info_sgls(svc_info, svc_params);
 	if (err) {

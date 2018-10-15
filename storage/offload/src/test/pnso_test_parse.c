@@ -6,7 +6,6 @@
 
 /* TODO: remove userspace specific includes */
 #include <ctype.h>
-#include <limits.h>
 
 #include "osal.h"
 
@@ -21,16 +20,22 @@ struct {
 	pnso_output_fn_t status_output;
 	pnso_alloc_fn_t alloc;
 	pnso_dealloc_fn_t dealloc;
+	pnso_realloc_fn_t realloc;
 } g_hooks;
 
 void *pnso_test_alloc(size_t sz)
 {
-	return g_hooks.alloc(sz);
+	return osal_alloc(sz);
+}
+
+void *pnso_test_alloc_aligned(size_t alignment, size_t sz)
+{
+	return osal_aligned_alloc(alignment, sz);
 }
 
 void pnso_test_free(void *ptr)
 {
-	return g_hooks.dealloc(ptr);
+	return osal_free(ptr);
 }
 
 #if 0
@@ -115,12 +120,13 @@ void pnso_test_init_fns(pnso_submit_req_fn_t submit,
 			pnso_output_fn_t status_output,
 			pnso_alloc_fn_t alloc,
 			pnso_dealloc_fn_t dealloc,
-			pnso_realloc_fn_t reealloc)
+			pnso_realloc_fn_t realloc)
 {
 	g_hooks.submit = submit;
 	g_hooks.status_output = status_output;
 	g_hooks.alloc = alloc;
 	g_hooks.dealloc = dealloc;
+	g_hooks.realloc = realloc;
 
 	//yaml_init_allocators(alloc, dealloc, realloc);
 }
@@ -231,8 +237,8 @@ static void dump_svc(struct test_svc *svc)
 			      svc->svc.u.crypto_desc.algo_type);
 		PNSO_LOG_INFO("        key_desc_idx %u\n",
 			      svc->svc.u.crypto_desc.key_desc_idx);
-		PNSO_LOG_INFO("        iv_addr 0x%lx\n",
-			      svc->svc.u.crypto_desc.iv_addr);
+		PNSO_LOG_INFO("        iv_addr 0x%llx\n",
+			(unsigned long long) svc->svc.u.crypto_desc.iv_addr);
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 		PNSO_LOG_INFO("        algo_type %u\n",
@@ -263,91 +269,12 @@ static void dump_svc(struct test_svc *svc)
 			      svc->svc.u.chksum_desc.flags);
 		break;
 	case PNSO_SVC_TYPE_DECOMPACT:
-		PNSO_LOG_INFO("        vvbn 0x%lx\n",
-			      (uint64_t) svc->svc.u.decompact_desc.vvbn);
+		PNSO_LOG_INFO("        vvbn 0x%llx\n",
+			(unsigned long long) svc->svc.u.decompact_desc.vvbn);
 		break;
 	default:
 		break;
 	}
-}
-
-/* Convert binary to decimal ASCII, returning length */
-static uint32_t safe_itoa(char *dst, uint32_t dst_len, uint32_t val)
-{
-	uint32_t ret, len = 0;
-	uint32_t tmp;
-
-	if (!dst || !dst_len) {
-		return 0;
-	}
-	if (val == 0) {
-		dst[0] = '0';
-		dst[1] = '\0';
-		return 1;
-	}
-
-	/* First calculate length */
-	tmp = val;
-	while (tmp) {
-		len++;
-		tmp /= 10;
-	}
-
-	if (len >= dst_len) {
-		*dst = '\0';
-		return 0;
-	}
-
-	/* Convert to string */
-	ret = len;
-	tmp = val;
-	dst[len] = '\0';
-	while (len) {
-		dst[--len] = '0' + (tmp % 10);
-		tmp /= 10;
-	}
-
-	return ret;
-}
-
-static uint32_t safe_strcpy_tolower(char *dst, const char *src, uint32_t max_len)
-{
-	uint32_t len;
-
-	if (dst == NULL)
-		return 0;
-
-	if (src == NULL) {
-		*dst = '\0';
-		return 0;
-	}
-
-	for (len = 0; src[len] != '\0' && len < (max_len -1); len++) {
-		dst[len] = tolower(src[len]);
-	}
-	dst[len] = '\0';
-
-	return len;
-}
-
-static uint32_t safe_strcpy(char *dst, const char *src, uint32_t max_len)
-{
-	uint32_t len;
-
-	if (dst == NULL)
-		return 0;
-
-	if (src == NULL) {
-		*dst = '\0';
-		return 0;
-	}
-
-	for (len = 0; src[len] != '\0' && len < (max_len -1); len++) {
-		dst[len] = src[len];
-	}
-	dst[len] = '\0';
-
-	return len;
 }
 
 static void dump_svc_chain(struct test_svc_chain *svc_chain)
@@ -474,7 +401,7 @@ void test_dump_desc(struct test_desc *desc)
 	PNSO_LOG_INFO("Global params:\n");
 	PNSO_LOG_INFO("  per_core_qdepth %u\n", desc->init_params.per_core_qdepth);
 	PNSO_LOG_INFO("  block_size %u\n", desc->init_params.block_size);
-	PNSO_LOG_INFO("  cpu_mask 0x%lx\n", desc->cpu_mask);
+	PNSO_LOG_INFO("  cpu_mask 0x%llx\n", (unsigned long long) desc->cpu_mask);
 	PNSO_LOG_INFO("  output_file_prefix %s\n", desc->output_file_prefix);
 	PNSO_LOG_INFO("  output_file_suffix %s\n", desc->output_file_suffix);
 
@@ -554,36 +481,6 @@ static void dump_yaml_event(yaml_event_t *event)
 		PNSO_LOG_ERROR("%sYAML UNKNOWN event\n", indent);
 		break;
 	}
-}
-
-/* String compare which allows NULL inputs */
-/* Treat empty string and NULL string as equivalent */
-static int safe_strcmp(const char *str1, const char *str2)
-{
-        char empty_str[1] = "";
-
-	if (!str1) {
-		str1 = empty_str;
-	}
-	if (!str2) {
-		str2 = empty_str;
-	}
-
-	return strcmp(str1, str2);
-}
-
-static long long safe_strtoll(const char *val)
-{
-	if (!val || !isdigit(*val)) {
-		return -1;
-	}
-
-	if (val[0] == '0' &&
-	    (val[1] == 'x' || val[1] == 'X')) {
-		return strtoll(val, NULL, 16);
-	}
-
-	return strtoll(val, NULL, 10);
 }
 
 static const char *parse_csv_next(const char *str, size_t *len)
@@ -958,13 +855,14 @@ FUNC_SET_STRING(test_set_outfile_prefix, root->output_file_prefix,
 		TEST_MAX_FILE_PREFIX_LEN)
 FUNC_SET_STRING(test_set_outfile_suffix, root->output_file_suffix,
 		TEST_MAX_FILE_PREFIX_LEN)
-FUNC_SET_INT(test_set_delete_output_files, root->delete_output_files, 0, 1)
+FUNC_SET_INT(test_set_store_output_files, root->store_output_files, 0, 1)
 
 FUNC_SET_INT(test_set_idx, parent->idx, 1, UINT_MAX)
 
 FUNC_SET_STRING(test_set_svc_chain_name, ((struct test_svc_chain *)parent)->name,
 		TEST_MAX_NAME_LEN)
 FUNC_SET_INT(test_set_input_random, ((struct test_svc_chain *)parent)->input.random_seed, 0, UINT_MAX)
+FUNC_SET_INT(test_set_input_random_len, ((struct test_svc_chain *)parent)->input.random_len, 0, TEST_MAX_RANDOM_LEN)
 FUNC_SET_INT(test_set_input_offset, ((struct test_svc_chain *)parent)->input.offset, 1, UINT_MAX)
 FUNC_SET_INT(test_set_input_len, ((struct test_svc_chain *)parent)->input.len, 1, UINT_MAX)
 FUNC_SET_INT(test_set_input_min_block, ((struct test_svc_chain *)parent)->input.min_block_size, 0, UINT_MAX)
@@ -1191,7 +1089,8 @@ static pnso_error_t test_set_crypto_iv_data(struct test_desc *root,
 
 	/* Parse hex data */
 	len = (strlen(val)/2) + 1;
-	svc->u.crypto.iv_data = (uint8_t*) TEST_ALLOC(len);
+	/* TODO: reduce alignment to 64 once aligned alloc works */
+	svc->u.crypto.iv_data = (uint8_t*) TEST_ALLOC_ALIGNED(4096, len);
 	err = parse_hex(val, svc->u.crypto.iv_data, &len);
 	if (err != PNSO_OK) {
 		PNSO_LOG_ERROR("Invalid hex data for crypto iv_data\n");
@@ -1465,14 +1364,14 @@ struct test_node *test_node_alloc(size_t size, node_type_t type)
 	struct test_node *default_node;
 
 	if (size < sizeof(*node)) {
-		PNSO_LOG_ERROR("Node size %lu too small\n", size);
+		PNSO_LOG_ERROR("Node size %zu too small\n", size);
 		return NULL;
 	}
 
 	/* Alloc and initialize */
 	node = (struct test_node *) TEST_ALLOC(size);
 	if (!node) {
-		PNSO_LOG_ERROR("Failed to allocate node, type %d, size %lu\n",
+		PNSO_LOG_ERROR("Failed to allocate node, type %d, size %zu\n",
 			       type, size);
 		return NULL;
 	}
@@ -1748,7 +1647,7 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ "global_params", "status_interval", NULL, test_set_status_interval, NULL },
 	{ "global_params", "output_file_prefix", NULL, test_set_outfile_prefix, NULL },
 	{ "global_params", "output_file_suffix", NULL, test_set_outfile_suffix, NULL },
-	{ "global_params", "delete_output_files", NULL, test_set_delete_output_files, NULL },
+	{ "global_params", "store_output_files", NULL, test_set_store_output_files, NULL },
 
 	{ NULL,            "crypto_keys",     NULL, NULL, NULL },
 	{ "crypto_keys",   "key",             test_create_crypto_key, NULL, NULL },
@@ -1770,6 +1669,7 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ "svc_chain",     "ops",             NULL, NULL, NULL },
 
 	{ "input",         "random",          NULL, test_set_input_random, NULL },
+	{ "input",         "random_len",      NULL, test_set_input_random_len, NULL },
 	{ "input",         "offset",          NULL, test_set_input_offset, NULL },
 	{ "input",         "len",             NULL, test_set_input_len, NULL },
 	{ "input",         "file",            NULL, test_set_input_file, NULL },
@@ -1838,43 +1738,43 @@ static struct test_yaml_node_desc node_descs[] = {
 	{ "test",          "validations",     NULL, NULL, NULL },
 
 	{ "validations",   "data_compare",    test_create_validation, NULL, (void*)VALIDATION_DATA_COMPARE },
-	{ "data_compare",  "idx",             NULL, test_set_idx, NULL, NULL },
-	{ "data_compare",  "type",            NULL, test_set_compare_type, NULL, NULL },
-	{ "data_compare",  "file1",           NULL, test_set_validation_file1, NULL, NULL },
-	{ "data_compare",  "file2",           NULL, test_set_validation_file2, NULL, NULL },
+	{ "data_compare",  "idx",             NULL, test_set_idx, NULL },
+	{ "data_compare",  "type",            NULL, test_set_compare_type, NULL },
+	{ "data_compare",  "file1",           NULL, test_set_validation_file1, NULL },
+	{ "data_compare",  "file2",           NULL, test_set_validation_file2, NULL },
 	{ "data_compare",  "pattern",         NULL, test_set_validation_pattern, NULL },
-	{ "data_compare",  "offset",          NULL, test_set_validation_data_offset, NULL, NULL },
-	{ "data_compare",  "len",             NULL, test_set_validation_data_len, NULL, NULL },
+	{ "data_compare",  "offset",          NULL, test_set_validation_data_offset, NULL },
+	{ "data_compare",  "len",             NULL, test_set_validation_data_len, NULL },
 
 	{ "validations",   "size_compare",    test_create_validation, NULL, (void*)VALIDATION_SIZE_COMPARE },
-	{ "size_compare",  "idx",             NULL, test_set_idx, NULL, NULL },
-	{ "size_compare",  "type",            NULL, test_set_compare_type, NULL, NULL },
-	{ "size_compare",  "file1",           NULL, test_set_validation_file1, NULL, NULL },
-	{ "size_compare",  "file2",           NULL, test_set_validation_file2, NULL, NULL },
-	{ "size_compare",  "val",             NULL, test_set_validation_data_len, NULL, NULL },
+	{ "size_compare",  "idx",             NULL, test_set_idx, NULL },
+	{ "size_compare",  "type",            NULL, test_set_compare_type, NULL },
+	{ "size_compare",  "file1",           NULL, test_set_validation_file1, NULL },
+	{ "size_compare",  "file2",           NULL, test_set_validation_file2, NULL },
+	{ "size_compare",  "val",             NULL, test_set_validation_data_len, NULL },
 
 	{ "validations",   "retcode_compare", test_create_validation, NULL, (void*)VALIDATION_RETCODE_COMPARE },
-	{ "retcode_compare", "idx",           NULL, test_set_idx, NULL, NULL },
-	{ "retcode_compare", "type",          NULL, test_set_compare_type, NULL, NULL },
+	{ "retcode_compare", "idx",           NULL, test_set_idx, NULL },
+	{ "retcode_compare", "type",          NULL, test_set_compare_type, NULL },
 	{ "retcode_compare", "svc_chain",     NULL, test_set_validation_svc_chain, NULL },
-	{ "retcode_compare", "retcode",       NULL, test_set_validation_retcode, NULL, NULL },
-	{ "retcode_compare", "svc_retcodes",  NULL, test_set_validation_svc_retcodes, NULL, NULL },
+	{ "retcode_compare", "retcode",       NULL, test_set_validation_retcode, NULL },
+	{ "retcode_compare", "svc_retcodes",  NULL, test_set_validation_svc_retcodes, NULL },
 
-	{ NULL,            "cp_hdr_format",   test_create_cp_hdr_format, NULL, NULL, NULL },
-	{ "cp_hdr_format", "idx",             NULL, test_set_idx, NULL, NULL },
-	{ "cp_hdr_format", "cp_hdr_field",    test_create_cp_hdr_field, NULL, NULL, NULL },
-	{ "cp_hdr_field",  "type",            NULL, test_set_cp_hdr_type, NULL, NULL },
-	{ "cp_hdr_field",  "offset",          NULL, test_set_cp_hdr_offset, NULL, NULL },
-	{ "cp_hdr_field",  "len",             NULL, test_set_cp_hdr_length, NULL, NULL },
-	{ "cp_hdr_field",  "val",             NULL, test_set_cp_hdr_val, NULL, NULL },
+	{ NULL,            "cp_hdr_format",   test_create_cp_hdr_format, NULL, NULL },
+	{ "cp_hdr_format", "idx",             NULL, test_set_idx, NULL },
+	{ "cp_hdr_format", "cp_hdr_field",    test_create_cp_hdr_field, NULL, NULL },
+	{ "cp_hdr_field",  "type",            NULL, test_set_cp_hdr_type, NULL },
+	{ "cp_hdr_field",  "offset",          NULL, test_set_cp_hdr_offset, NULL },
+	{ "cp_hdr_field",  "len",             NULL, test_set_cp_hdr_length, NULL },
+	{ "cp_hdr_field",  "val",             NULL, test_set_cp_hdr_val, NULL },
 
-	{ NULL,            "cp_hdr_mapping",  NULL, NULL, NULL, NULL },
-	{ "cp_hdr_mapping","entry",           test_create_cp_hdr_mapping, NULL, NULL, NULL },
-	{ "entry",         "pnso_algo",       NULL, test_set_cp_hdr_pnso_algo, NULL, NULL },
-	{ "entry",         "hdr_algo",        NULL, test_set_cp_hdr_algo, NULL, NULL },
+	{ NULL,            "cp_hdr_mapping",  NULL, NULL, NULL },
+	{ "cp_hdr_mapping","entry",           test_create_cp_hdr_mapping, NULL, NULL },
+	{ "entry",         "pnso_algo",       NULL, test_set_cp_hdr_pnso_algo, NULL },
+	{ "entry",         "hdr_algo",        NULL, test_set_cp_hdr_algo, NULL },
 
 	/* Must be last */
-	{ NULL, NULL, NULL, NULL }
+	{ NULL, NULL, NULL, NULL, NULL }
 };
 
 static void dump_yaml_desc_children(const char *parent_name, uint32_t indent_len)
@@ -2130,7 +2030,7 @@ pnso_error_t pnso_test_parse_buf(const unsigned char *buf, size_t buf_len,
 	yaml_parser_t parser;
 	int stream_done;
 
-	PNSO_LOG_TRACE("Parsing %lu byte buffer:\n%s\n", buf_len, buf);
+	PNSO_LOG_TRACE("Parsing %zu byte buffer:\n%s\n", buf_len, buf);
 
 	/* Initialize YAML parser */
 	memset(&parser, 0, sizeof(parser));
@@ -2148,7 +2048,7 @@ pnso_error_t pnso_test_parse_buf(const unsigned char *buf, size_t buf_len,
 		goto error;
 	}
 	if (parser.error) {
-		PNSO_LOG_ERROR("YAML parse error %u at line %lu: %s %s\n",
+		PNSO_LOG_ERROR("YAML parse error %u at line %zu: %s %s\n",
 			       parser.error, parser.problem_mark.line,
 			       parser.problem, parser.context);
 		err = EINVAL;
@@ -2168,6 +2068,7 @@ error:
 pnso_error_t pnso_test_parse_file(const char *fname, struct test_desc *desc)
 {
 	pnso_error_t err;
+#ifndef __KERNEL__
 	uint8_t *buf;
 	uint32_t len = 0;
 
@@ -2179,6 +2080,9 @@ pnso_error_t pnso_test_parse_file(const char *fname, struct test_desc *desc)
 
 	err = pnso_test_parse_buf(buf, len, desc);
 	TEST_FREE(buf);
+#else
+	err = EINVAL;
+#endif
 
 	return err;
 }
@@ -2207,7 +2111,7 @@ static uint32_t validation_stats_to_yaml(const struct test_validation *validatio
 	len += safe_strcpy(dst+len, "        failure: ", max_len-len);
 	len += safe_itoa(dst+len, max_len-len, validation->rt_failure_count);
 
-	len += safe_strcpy(dst+len, "\n    },\n", max_len-len);
+	len += safe_strcpy(dst+len, "\n    }},\n", max_len-len);
 
 	return len;
 }
@@ -2219,20 +2123,26 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 {
 	uint32_t i;
 	uint32_t len = 0;
-	uint32_t max_len = 64 + stat_count*(32 + TEST_MAX_STAT_NAME_LEN);
+	uint32_t max_len = 64 + TEST_MAX_NAME_LEN + stat_count*(32 + TEST_MAX_STAT_NAME_LEN);
 	char *dst;
 
 	if (output_validations)
 		max_len += TEST_MAX_VALIDATION_STAT_LEN *
 				test_count_nodes(&testcase->validations);
 
-	dst = osal_alloc(max_len);
+	dst = TEST_ALLOC(max_len);
 	if (!dst)
 		return ENOMEM;
 
 	len += safe_strcpy(dst+len, "{tests: [{ test: {\n  idx: ", max_len-len);
 	len += safe_itoa(dst+len, max_len-len, testcase->node.idx);
-	len += safe_strcpy(dst+len, "\n  stats: {\n", max_len-len);
+	len += safe_strcpy(dst+len, ",\n", max_len-len);
+	if (testcase->name[0]) {
+		len += safe_strcpy(dst+len, "  name: \"", max_len-len);
+		len += safe_strcpy(dst+len, testcase->name, max_len-len);
+		len += safe_strcpy(dst+len, "\",\n", max_len-len);
+	}
+	len += safe_strcpy(dst+len, "  stats: {\n", max_len-len);
 	for (i = 0; i < stat_count; i++) {
 		if (len >= max_len-1)
 			goto nomem;
@@ -2240,24 +2150,33 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 		len += safe_strcpy(dst+len, stats_names[i], TEST_MAX_STAT_NAME_LEN);
 		len += safe_strcpy(dst+len, ": ", max_len-len);
 		len += safe_itoa(dst+len, max_len-len, stats[i]);
-		len += safe_strcpy(dst+len, ",\n", max_len-len);
+		if (i < stat_count-1) {
+			len += safe_strcpy(dst+len, ",\n", max_len-len);
+		} else {
+			/* Last stat, no comma needed */
+			len += safe_strcpy(dst+len, "\n", max_len-len);
+		}
 	}
 	if (len >= max_len-1)
 		goto nomem;
 
-	len += safe_strcpy(dst+len, "  }\n", max_len-len);
-
 	if (output_validations && testcase->validations.head) {
 		struct test_node *node;
 
-		len += safe_strcpy(dst+len, "  validations [\n", max_len-len);
+		len += safe_strcpy(dst+len, "  },\n", max_len-len);
+		len += safe_strcpy(dst+len, "  validations: [\n", max_len-len);
 		FOR_EACH_NODE(testcase->validations) {
 			if (len+TEST_MAX_VALIDATION_STAT_LEN >= max_len-1)
 				goto nomem;
 			len += validation_stats_to_yaml((const struct test_validation *)(node), dst+len);
 		}
-		len += safe_strcpy(dst+len, "  ]\n", max_len-len);
+		/* remove last ",\n" */
+		len -= 2;
+		len += safe_strcpy(dst+len, "\n  ]\n", max_len-len);
+	} else {
+		len += safe_strcpy(dst+len, "  }\n", max_len-len);
 	}
+
 	if (len >= max_len-1)
 		goto nomem;
 
@@ -2266,13 +2185,13 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 	if (len >= max_len-1)
 		goto nomem;
 
-	g_hooks.status_output(dst);
+	g_hooks.status_output(dst, NULL);
 
-	osal_free(dst);
+	TEST_FREE(dst);
 	return PNSO_OK;
 
 nomem:
-	osal_free(dst);
+	TEST_FREE(dst);
 	return ENOMEM;
 }
 

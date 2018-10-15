@@ -39,10 +39,12 @@ $(SONICSIM)-y += third-party/freebsd-crypto/src/xform_aes_xts.o
 
 $(SONICSIM)-y += src/osal/linux/kernel/osal_logger.o 
 $(SONICSIM)-y += src/osal/linux/kernel/osal_sys.o 
-$(SONICSIM)-y += src/osal/linux/kernel/sim/osal_mem.o 
+$(SONICSIM)-y += src/osal/linux/kernel/osal_mem.o 
 $(SONICSIM)-y += src/osal/linux/kernel/osal_thread.o 
 $(SONICSIM)-y += src/osal/linux/kernel/osal_atomic.o 
+ifdef ENABLE_PNSO_SONIC_TEST
 $(SONICSIM)-y += src/osal/test/osal_test.o
+endif
 
 SONIC = sonic
 SONIC_INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/kernel src/drv/test
@@ -73,29 +75,67 @@ $(SONIC)-y += src/drv/linux/kernel/sonic_api_int.o
 $(SONIC)-y += src/osal/linux/kernel/osal_logger.o 
 $(SONIC)-y += src/osal/linux/kernel/osal_sys.o 
 $(SONIC)-y += src/osal/linux/kernel/osal_atomic.o
-$(SONIC)-y += src/osal/linux/kernel/drv/osal_mem.o
+$(SONIC)-y += src/osal/linux/kernel/osal_mem.o
+$(SONIC)-y += src/osal/linux/kernel/osal_rmem.o
 $(SONIC)-y += src/osal/linux/kernel/osal_thread.o
 
+ifdef ENABLE_PNSO_SONIC_TEST
 $(SONIC)-y += src/drv/test/pnso_sonic_test.o
+endif
 $(SONIC)-y += src/common/pnso_pbuf.o
+
+
+PENCAKE = pencake
+PENCAKE_INCDIRS = include src/osal src/test src/drv/linux/kernel src/common third-party/libyaml/include
+
+$(PENCAKE)-y = src/test/pnso_test_module.o
+$(PENCAKE)-y += src/test/pnso_test_parse.o
+$(PENCAKE)-y += src/test/pnso_test_util.o
+$(PENCAKE)-y += src/test/pnso_test.o
+$(PENCAKE)-y += src/common/pnso_pbuf.o
+
+$(PENCAKE)-y += src/osal/linux/kernel/osal_logger.o
+$(PENCAKE)-y += src/osal/linux/kernel/osal_sys.o
+$(PENCAKE)-y += src/osal/linux/kernel/osal_atomic.o
+$(PENCAKE)-y += src/osal/linux/kernel/osal_thread.o
+$(PENCAKE)-y += src/osal/linux/kernel/osal_mem.o
+
+$(PENCAKE)-y += third-party/libyaml/src/api.o
+$(PENCAKE)-y += third-party/libyaml/src/dumper.o
+$(PENCAKE)-y += third-party/libyaml/src/emitter.o
+$(PENCAKE)-y += third-party/libyaml/src/loader.o
+$(PENCAKE)-y += third-party/libyaml/src/parser.o
+$(PENCAKE)-y += third-party/libyaml/src/reader.o
+$(PENCAKE)-y += third-party/libyaml/src/scanner.o
+$(PENCAKE)-y += third-party/libyaml/src/writer.o
 
 KERN_DIR ?= /lib/modules/$(shell uname -r)/build
 
 sonic-sim-var: $(eval obj-m += $(SONICSIM).o)
 sonic-sim-var: $(eval ccflags-y += $(SONICSIM_INCDIRS:%=-I$(PWD)/%))
+ifdef ENABLE_PNSO_SONIC_TEST
+sonic-sim-var: $(eval ccflags-y += -DENABLE_PNSO_SONIC_TEST)
+endif
 sonic-sim: sonic-sim-var modules-compile
 
 sonic-var: $(eval obj-m += $(SONIC).o) 
 sonic-var: $(eval ccflags-y += $(SONIC_INCDIRS:%=-I$(PWD)/%))
 sonic-var: $(eval ccflags-y += -I$(KERN_DIR)/include/linux)
 sonic-var: $(eval ccflags-y += -DHAPS)
+ifdef ENABLE_PNSO_SONIC_TEST
 sonic-var: $(eval ccflags-y += -DENABLE_PNSO_SONIC_TEST)
+endif
 sonic: sonic-var modules-compile
+
+pencake-var: $(eval obj-m += $(PENCAKE).o)
+pencake-var: $(eval ccflags-y += $(PENCAKE_INCDIRS:%=-I$(PWD)/%))
+pencake-var: $(eval ccflags-y += -DHAVE_CONFIG_H=0)
+pencake: pencake-var modules-compile
 
 modules-compile: 
 	make -C $(KERN_DIR) M=$(PWD) modules
 
-modules: sonic-var sonic-sim-var modules-compile
+modules: sonic-var sonic-sim-var pencake-var modules-compile
 
 modules-clean:
 	make -C $(KERN_DIR) M=$(PWD) clean

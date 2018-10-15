@@ -9,12 +9,9 @@
 #ifndef __KERNEL__
 #include <assert.h>
 #define OSAL_ASSERT(x) assert(x)
-#elif __KERNEL__
-#define OSAL_ASSERT(x) BUG_ON(!(x))
-#elif _KERNEL
-#define OSAL_ASSERT(x) BUG_ON(!(x))
 #else
-#error "Invalid build!!"
+#include <linux/bug.h>
+#define OSAL_ASSERT(x) BUG_ON(!(x))
 #endif
 
 #endif	/* __OSAL_ASSERT_H__ */

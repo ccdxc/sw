@@ -303,8 +303,8 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 	cur_svc = &svc_ctxs[0];
 	cur_svc->input.buf = (uint64_t) sess->scratch.data[scratch_bank];
 	cur_svc->input.len = sess->scratch.data_sz;
-	cur_svc->input.len = sim_memcpy_list_to_flat_buf(&cur_svc->input,
-							 svc_req->sgl);
+	cur_svc->input.len = sim_memcpy_pa_list_to_flat_buf(&cur_svc->input,
+							    svc_req->sgl);
 	cur_svc->is_first = 1;
 
 	for (svc_i = 0; svc_i < svc_req->num_services; svc_i++) {
@@ -353,7 +353,7 @@ pnso_error_t sim_execute_request(struct sim_worker_ctx *worker_ctx,
 					rc = ENOMEM;
 					/* TODO: need generic PNSO error */
 				} else {
-					sim_memcpy_flat_buf_to_list(
+					sim_memcpy_flat_buf_to_pa_list(
 						status->u.dst.sgl,
 						&cur_svc->output);
 				}
@@ -662,6 +662,7 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 				     void *opaque)
 {
 	pnso_error_t rc = PNSO_OK;
+	uint8_t *iv_data;
 	uint8_t *key1, *key2;
 	uint32_t key_size;
 
@@ -683,10 +684,11 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 			rc = PNSO_ERR_CRYPTO_WRONG_KEY_TYPE;
 			break;
 		}
+		iv_data = (uint8_t *)
+			osal_phy_to_virt(ctx->cmd.u.crypto_desc.iv_addr);
 #ifdef OPENSSL
 		rc = algo_openssl_encrypt_xts(ctx->sess->scratch.cmd,
-				key1, key2, key_size,
-				(uint8_t *) ctx->cmd.u.crypto_desc.iv_addr,
+				key1, key2, key_size, iv_data,
 				(uint8_t *) ctx->input.buf,
 				ctx->input.len,
 				(uint8_t *) ctx->output.buf,
@@ -694,8 +696,7 @@ static pnso_error_t svc_exec_encrypt(struct sim_svc_ctx *ctx,
 #else
 		/* In-place encryption */
 		rc = algo_encrypt_aes_xts(ctx->sess->scratch.cmd,
-				key1, key2, key_size,
-				(uint8_t *) ctx->cmd.u.crypto_desc.iv_addr,
+				key1, key2, key_size, iv_data,
 				(uint8_t *) ctx->input.buf, ctx->input.len);
 		if (rc == PNSO_OK) {
 			ctx->output = ctx->input;
@@ -720,6 +721,7 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 				     void *opaque)
 {
 	pnso_error_t rc = PNSO_OK;
+	uint8_t *iv_data;
 	uint8_t *key1, *key2;
 	uint32_t key_size;
 
@@ -741,10 +743,11 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 			rc = PNSO_ERR_CRYPTO_WRONG_KEY_TYPE;
 			break;
 		}
+		iv_data = (uint8_t *)
+			osal_phy_to_virt(ctx->cmd.u.crypto_desc.iv_addr);
 #ifdef OPENSSL
 		rc = algo_openssl_decrypt_xts(ctx->sess->scratch.cmd,
-				key1, key2, key_size,
-				(uint8_t *) ctx->cmd.u.crypto_desc.iv_addr,
+				key1, key2, key_size, iv_data,
 				(uint8_t *) ctx->input.buf,
 				ctx->input.len,
 				(uint8_t *) ctx->output.buf,
@@ -752,8 +755,7 @@ static pnso_error_t svc_exec_decrypt(struct sim_svc_ctx *ctx,
 #else
 		/* In-place decryption */
 		rc = algo_decrypt_aes_xts(ctx->sess->scratch.cmd,
-				key1, key2, key_size,
-				(uint8_t *) ctx->cmd.u.crypto_desc.iv_addr,
+				key1, key2, key_size, iv_data,
 				(uint8_t *) ctx->input.buf, ctx->input.len);
 		if (rc == PNSO_OK) {
 			ctx->output = ctx->input;

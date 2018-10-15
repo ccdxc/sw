@@ -8,6 +8,7 @@ cc_library(
         "pnso_test.c",
         "pnso_test_file.c",
         "pnso_test_parse.c",
+        "pnso_test_util.c",
     ],
     hdrs = [
         "pnso_test.h",

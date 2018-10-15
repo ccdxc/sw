@@ -295,6 +295,7 @@ struct seq_queue {
 
 struct per_core_resource {
 	bool initialized;
+	int core_id;
 	struct lif *lif;
 	struct queue cp_seq_q;
 	struct queue dc_seq_q;

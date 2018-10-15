@@ -24,34 +24,44 @@ enum {
 	TEST_VAR_MAX
 };
 
-#define MAX_BUF_LEN (2 * 1024 * 1024)
+#define MAX_INPUT_BUF_LEN (2 * 1024 * 1024)
+#define MAX_OUTPUT_BUF_LEN (64 * 1024)
 #define DEFAULT_BUF_COUNT 16
 #define DEFAULT_BLOCK_SIZE 4096
 #define MAX_INPUT_BUF_COUNT 1024
-#define MAX_OUTPUT_BUF_COUNT (MAX_BUF_LEN / 4096)
+#define MAX_OUTPUT_BUF_COUNT (MAX_OUTPUT_BUF_LEN / 4096)
+#define MAX_COMPRESSION_FACTOR 10
 
 static inline uint32_t get_max_output_len_by_type(uint16_t svc_type,
-						  uint32_t output_flags)
+						  uint32_t output_flags,
+						  uint32_t input_len)
 {
 	switch (svc_type) {
 	case PNSO_SVC_TYPE_ENCRYPT:
 	case PNSO_SVC_TYPE_DECRYPT:
 		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return DEFAULT_BLOCK_SIZE;
+		} else if (output_flags & TEST_OUTPUT_FLAG_JUMBO) {
+			return MAX_OUTPUT_BUF_LEN;
 		} else {
-			return 64 * 1024;
+			return input_len;
 		}
 	case PNSO_SVC_TYPE_COMPRESS:
 		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return DEFAULT_BLOCK_SIZE;
+		} else if (output_flags & TEST_OUTPUT_FLAG_JUMBO) {
+			return MAX_OUTPUT_BUF_LEN;
 		} else {
-			return MAX_BUF_LEN / 8;
+			return input_len;
 		}
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return DEFAULT_BLOCK_SIZE;
+		} else if ((output_flags & TEST_OUTPUT_FLAG_JUMBO) ||
+			   (input_len * MAX_COMPRESSION_FACTOR > MAX_OUTPUT_BUF_LEN)) {
+			return MAX_OUTPUT_BUF_LEN;
 		} else {
-			return MAX_BUF_LEN;
+			return input_len * MAX_COMPRESSION_FACTOR;
 		}
 	case PNSO_SVC_TYPE_HASH:
 		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
@@ -70,7 +80,7 @@ static inline uint32_t get_max_output_len_by_type(uint16_t svc_type,
 		if (output_flags & TEST_OUTPUT_FLAG_TINY) {
 			return PNSO_CHKSUM_TAG_LEN;
 		} else {
-			return 64 * 1024;
+			return MAX_OUTPUT_BUF_LEN;
 		}
 	}
 }
@@ -80,6 +90,8 @@ struct request_context {
 	const struct test_svc_chain *svc_chain;
 
 	uint8_t *input_buffer;
+
+	bool is_sgl_pa; /* physical addr or not */
 
 	/* MUST keep these 2 in order, due to zero-length array */
 	struct pnso_service_request svc_req;
@@ -111,7 +123,10 @@ struct testcase_aggregate_stats {
 	/* calculated only in aggregate */
 	uint64_t total_latency;
 	uint64_t avg_latency;
-	uint64_t bytes_per_sec;
+	uint64_t min_latency;
+	uint64_t max_latency;
+	uint64_t in_bytes_per_sec;
+	uint64_t out_bytes_per_sec;
 	uint64_t svcs_per_sec;
 	uint64_t reqs_per_sec;
 	uint64_t batches_per_sec;
@@ -127,20 +142,11 @@ struct testcase_stats {
 	struct testcase_io_stats io_stats[2];
 };
 
-enum {
-	BATCH_STATE_INIT,
-	BATCH_STATE_PENDING,
-	BATCH_STATE_INPROGRESS,
-	BATCH_STATE_DONE,
-	BATCH_STATE_INVALID
-};
-
 struct batch_context {
 	const struct test_desc *desc;
 	struct testcase_context *test_ctx;
 	uint32_t batch_id;
 	uint32_t worker_id;
-	osal_atomic_int_t batch_state;
 	osal_atomic_int_t cb_count;
 
 	pnso_poll_fn_t poll_fn;
@@ -255,10 +261,36 @@ struct testcase_context {
 	uint32_t vars[TEST_VAR_MAX];
 };
 
+#define FILE_NODE_BLOCK_SZ 4096
+struct test_node_block {
+	struct test_node node;
+	uint64_t file_offset;
+	struct pnso_flat_buffer buf;
+	uint8_t data[FILE_NODE_BLOCK_SZ];
+};
+
+struct test_node_file {
+	struct test_node node;
+	osal_atomic_int_t lock;
+	uint64_t checksum;
+	uint64_t padded_checksum;
+	uint32_t file_size;
+	uint32_t padded_size;
+	uint32_t alloc_size;
+	char filename[TEST_MAX_FULL_PATH_LEN+1];
+
+	struct pnso_buffer_list *buflist;
+	uint8_t *data;
+#if 0
+	/* MUST keep these 2 in order, due to zero-length array */
+	struct pnso_buffer_list buflist;
+	struct pnso_flat_buffer bufs[MAX_INPUT_BUF_COUNT];
+#endif
+};
+
 struct test_file_table {
 	bool initialized;
 	osal_atomic_int_t lookup_lock;
-	osal_atomic_int_t write_lock;
 	struct test_node_table table;
 };
 

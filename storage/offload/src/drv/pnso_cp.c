@@ -417,6 +417,10 @@ compress_read_status(const struct service_info *svc_info)
 		cp_hdr_pa = sonic_devpa_to_hostpa(dst_sgl->cs_addr_0);
 		cp_hdr = (struct pnso_compression_header *)
 			sonic_phy_to_virt(cp_hdr_pa);
+		OSAL_LOG_DEBUG("compress_read_status: dst_sgl=0x%llx, cs_addr_0=0x%llx, cp_hdr-0x%llx\n",
+			       (uint64_t)dst_sgl,
+			       (uint64_t)dst_sgl->cs_addr_0,
+			       (uint64_t)cp_hdr);
 
 		/* TODO-cp: verify hard-coded CP version, etc. */
 
@@ -448,6 +452,8 @@ compress_read_status(const struct service_info *svc_info)
 	}
 
 	err = PNSO_OK;
+	OSAL_LOG_DEBUG("exit!");
+	return err;
 
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);

@@ -13,29 +13,16 @@
 #include "osal_errno.h"
 #include "pnso_test.h"
 
-void status_output_func(const char *status)
+void status_output_func(const char *status, void *opaque)
 {
 	printf("%s", status);
 }
 
-int main(int argc, char *argv[])
-{
-	struct test_desc *cfg = NULL;
-	pnso_error_t err;
-	size_t i;
-	uint32_t ifilenames_count = 0;
-	char **ifilenames = NULL;
-//	char *ofilename = NULL;
-	char *path_prefix = NULL;
-	char *cur_filename;
-	char *literyaml = NULL;
-	char filename[256];
-	char last_opt = '\0';
-	unsigned char test_input[] =
+static const unsigned char default_test_input[] = 
 "global_params:\n"
-"  delete_output_files: 1\n"
+"  store_output_files: 0\n"
 "  per_core_qdepth: 32\n"
-"  block_size: 8192\n"
+"  block_size: 4096\n"
 "  limit_rate: 1000000\n"
 "  status_interval: 5\n"
 "cp_hdr_format:\n"
@@ -93,6 +80,20 @@ int main(int argc, char *argv[])
 "            file1: 'compressed_1.bin'\n"
 "            file2: 'compressed_2.bin'\n"
 "\n";
+
+int main(int argc, char *argv[])
+{
+	struct test_desc *cfg = NULL;
+	pnso_error_t err;
+	size_t i;
+	uint32_t ifilenames_count = 0;
+	char **ifilenames = NULL;
+//	char *ofilename = NULL;
+	char *path_prefix = NULL;
+	char *cur_filename;
+	char *literyaml = NULL;
+	char filename[256];
+	char last_opt = '\0';
 
 	osal_log_init(OSAL_LOG_LEVEL_INFO);
 
@@ -168,7 +169,7 @@ int main(int argc, char *argv[])
 	}
 
 	pnso_test_init_fns(pnso_submit_request, status_output_func,
-			   osal_alloc, osal_free, NULL);
+			   osal_alloc, osal_free, osal_realloc);
 
 	cfg = pnso_test_desc_alloc();
 	if (!cfg) {
@@ -202,19 +203,22 @@ int main(int argc, char *argv[])
 			}
 		}
 	} else {
-		err = pnso_test_parse_buf(test_input,
-					  strlen((const char*)test_input), cfg);
+		err = pnso_test_parse_buf(default_test_input,
+			strlen((const char *)default_test_input), cfg);
 		if (err) {
-			PNSO_LOG_ERROR("Failed to parse test input data\n");
+			PNSO_LOG_ERROR("Failed to parse default test input data\n");
 			goto done;
 		}
 	}
 	test_dump_desc(cfg);
+
+	pnso_run_unit_tests(cfg);
 
 	err = pnso_test_run_all(cfg);
 
 done:
 	pnso_test_desc_free(cfg);
 
+	pnso_test_set_shutdown_complete();
 	return err;
 }
