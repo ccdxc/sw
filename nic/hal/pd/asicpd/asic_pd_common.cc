@@ -662,5 +662,14 @@ asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num,
     return capri_sw_phv_get(type, prof_num, state);
 }
 
+hal_ret_t
+asic_pd_hbm_bw_get (pd_hbm_bw_get_args_t *hbm_bw_args)
+{
+    return capri_hbm_bw(hbm_bw_args->num_samples,
+                        hbm_bw_args->sleep_interval,
+                        true,
+                        hbm_bw_args->hbm_bw);
+}
+
 }    // namespace pd
 }    // namespace hal

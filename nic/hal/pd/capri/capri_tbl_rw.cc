@@ -20,6 +20,7 @@
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 
 #include "nic/include/asic_pd.hpp"
+#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_pic/cap_pict_csr.h"
@@ -176,9 +177,6 @@ typedef enum capri_tbl_rw_logging_levels_ {
     CAP_TBL_RW_LOG_LEVEL_INFO,
     CAP_TBL_RW_LOG_LEVEL_ERROR,
 } capri_tbl_rw_logging_levels;
-
-
-#define HAL_LOG_TBL_UPDATES
 
 void
 capri_program_table_mpu_pc (int tableid, bool ingress, int stage,

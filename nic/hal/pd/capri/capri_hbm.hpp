@@ -1,10 +1,12 @@
 #ifndef __CAPRI_HBM_HPP__
 #define __CAPRI_HBM_HPP__
 
+#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/sdk/include/sdk/platform/capri/capri.hpp"
 
 using sdk::platform::capri_hbm_region_t;
 using sdk::platform::capri_hbm_cache_pipe_t;
+using hal::pd::asic_hbm_bw_t;
 
 #define JP4_PRGM                 "p4_program"
 #define JP4PLUS_PRGM             "p4plus_program"
@@ -201,6 +203,10 @@ typedef struct capri_small_page_s {
         uint64_t        scratch[PAGE_SCRATCH_SIZE_BYTES];
         char            data[ETH_FRAME_SIZE];
 } capri_small_page_t;
+
+hal_ret_t
+capri_hbm_bw (uint32_t samples, uint32_t u_sleep,
+              bool ms_pcie, hal::pd::asic_hbm_bw_t *hbm_bw_arr);
 
 extern hal_ret_t
 capri_hbm_cache_init(capri_cfg_t *cfg);

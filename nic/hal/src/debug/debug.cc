@@ -10,6 +10,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
+#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 
 using sdk::lib::slab;
 
@@ -762,14 +763,30 @@ clock_get(ClockResponse *response)
 
     pd_func_args.pd_clock_detail_get = &clock_args;
     pd::hal_pd_call(pd::PD_FUNC_ID_CLOCK_DETAIL_GET, &pd_func_args);
-  
+
     response->mutable_spec()->set_hardware_clock(clock_args.hw_clock);
     response->mutable_spec()->set_software_delta(clock_args.sw_delta);
     response->mutable_spec()->set_software_clock(clock_args.sw_clock);
 
     response->set_api_status(types::API_STATUS_OK);
- 
+
     return ret;
+}
+
+hal_ret_t
+hbm_bw_get(void *rsp)
+{
+    pd::pd_hbm_bw_get_args_t hbm_bw_args;
+
+    memset(&hbm_bw_args, 0, sizeof(pd::pd_hbm_bw_get_args_t));
+
+    hbm_bw_args.hbm_bw =
+        (hal::pd::asic_hbm_bw_t*)HAL_MALLOC(HAL_MEM_ALLOC_DEBUG_CLI,
+                                    hbm_bw_args.num_samples
+                                    * hal::pd::ASIC_BLOCK_MAX
+                                    * sizeof(hal::pd::asic_hbm_bw_t));
+
+    return pd::asic_pd_hbm_bw_get(&hbm_bw_args);
 }
 
 }    // namespace hal

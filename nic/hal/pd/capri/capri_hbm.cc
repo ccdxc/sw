@@ -18,6 +18,10 @@
 #include "nic/asic/capri/model/cap_pcie/cap_pxb_csr.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "nic/asic/capri/verif/apis/cap_nx_api.h"
+#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
+#include "nic/asic/capri/model/cap_ms/cap_ms_csr.h"
+#include "nic/asic/capri/model/cap_pcie/cap_pxb_csr.h"
 
 namespace pt = boost::property_tree;
 
@@ -341,6 +345,238 @@ capri_hbm_cache_regions_init (void)
             capri_hbm_cache_program_db(reg, p4plus_db_filter_idx);
             p4plus_db_filter_idx++;
         }
+    }
+
+    return HAL_RET_OK;
+}
+
+uint64_t
+capri_hbm_timestamp_get (void)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    pbc_csr.hbm.sta_hbm_timestamp.read();
+
+    return pbc_csr.hbm.sta_hbm_timestamp.all().convert_to<uint64_t>();
+}
+
+hal_ret_t
+capri_tpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pics_csr_t &pics_csr = cap0.tpc.pics;
+
+    pics_csr.sta_axi_bw_mon_rd_bandwidth.read();
+
+    *maxv = pics_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
+    *avrg = pics_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_tpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pics_csr_t &pics_csr = cap0.tpc.pics;
+
+    pics_csr.sta_axi_bw_mon_wr_bandwidth.read();
+
+    *maxv = pics_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
+    *avrg = pics_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_rpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pics_csr_t &pics_csr = cap0.rpc.pics;
+
+    pics_csr.sta_axi_bw_mon_rd_bandwidth.read();
+
+    *maxv = pics_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
+    *avrg = pics_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_rpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pics_csr_t &pics_csr = cap0.rpc.pics;
+
+    pics_csr.sta_axi_bw_mon_wr_bandwidth.read();
+
+    *maxv = pics_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
+    *avrg = pics_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_ms_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_ms_csr_t &ms_csr = cap0.ms.ms;
+
+    ms_csr.sta_axi_bw_mon_rd_bandwidth.read();
+
+    *maxv = ms_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
+    *avrg = ms_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_ms_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_ms_csr_t &ms_csr = cap0.ms.ms;
+
+    ms_csr.sta_axi_bw_mon_wr_bandwidth.read();
+
+    *maxv = ms_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
+    *avrg = ms_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_pxb_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pxb_csr_t &pxb_csr = cap0.pxb.pxb;
+
+    pxb_csr.sta_axi_bw_mon_rd_bandwidth.read();
+
+    *maxv = pxb_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
+    *avrg = pxb_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_pxb_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
+{
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pxb_csr_t &pxb_csr = cap0.pxb.pxb;
+
+    pxb_csr.sta_axi_bw_mon_wr_bandwidth.read();
+
+    *maxv = pxb_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
+    *avrg = pxb_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
+              asic_hbm_bw_t *hbm_bw_arr)
+{
+    uint64_t prev_ts     = 0;
+    uint64_t cur_ts      = 0;
+    uint64_t clk_diff    = 0;
+    uint64_t max_rd      = 0;
+    uint64_t avg_rd      = 0;
+    uint64_t max_wr      = 0;
+    uint64_t avg_wr      = 0;
+    uint32_t num_bits    = 64 * 8;
+    uint64_t rd_cnt      = 0;
+    uint64_t wr_cnt      = 0;
+    uint64_t prev_rd_cnt = 0;
+    uint64_t prev_wr_cnt = 0;
+    int      index       = 0;
+    uint64_t cycle_per_nsec = 0;
+    asic_hbm_bw_t *hbm_bw = NULL;
+
+    prev_ts = capri_hbm_timestamp_get();
+
+    for (uint32_t i = 0; i < samples; ++i) {
+
+        usleep(u_sleep);
+
+        cur_ts = capri_hbm_timestamp_get();
+
+        clk_diff = cur_ts - prev_ts;
+
+        hbm_bw = &hbm_bw_arr[index++];
+        hbm_bw->type = hal::pd::ASIC_BLOCK_TXD;
+        hbm_bw->clk_diff = clk_diff;
+        capri_tpc_bw_mon_rd_get(&max_rd, &avg_rd);
+        capri_tpc_bw_mon_wr_get(&max_wr, &avg_wr);
+        hbm_bw->max.read  = max_rd;
+        hbm_bw->max.write = max_wr;
+        hbm_bw->avg.read  = avg_rd;
+        hbm_bw->avg.write = avg_wr;
+        HAL_TRACE_DEBUG("CLK_DIFF: {}, TXD BW. MAX_RD: {}, MAX_WR: {}"
+                        ", AVG_RD: {}, AVG_WR: {}",
+                        clk_diff, max_rd, max_wr, avg_rd, avg_wr);
+
+        hbm_bw = &hbm_bw_arr[index++];
+        hbm_bw->type = hal::pd::ASIC_BLOCK_RXD;
+        hbm_bw->clk_diff = clk_diff;
+        capri_rpc_bw_mon_rd_get(&max_rd, &avg_rd);
+        capri_rpc_bw_mon_wr_get(&max_wr, &avg_wr);
+        hbm_bw->max.read  = max_rd;
+        hbm_bw->max.write = max_wr;
+        hbm_bw->avg.read  = avg_rd;
+        hbm_bw->avg.write = avg_wr;
+        HAL_TRACE_DEBUG("CLK_DIFF: {}, RXD BW. MAX_RD: {}, MAX_WR: {}"
+                        ", AVG_RD: {}, AVG_WR: {}",
+                        clk_diff, max_rd, max_wr, avg_rd, avg_wr);
+
+        hbm_bw = &hbm_bw_arr[index++];
+        hbm_bw->type = hal::pd::ASIC_BLOCK_MS;
+        hbm_bw->clk_diff = clk_diff;
+        capri_ms_bw_mon_rd_get(&max_rd, &avg_rd);
+        capri_ms_bw_mon_wr_get(&max_wr, &avg_wr);
+        hbm_bw->max.read  = max_rd;
+        hbm_bw->max.write = max_wr;
+        hbm_bw->avg.read  = avg_rd;
+        hbm_bw->avg.write = avg_wr;
+        HAL_TRACE_DEBUG("CLK_DIFF: {}, MS BW. MAX_RD: {}, MAX_WR: {}"
+                        ", AVG_RD: {}, AVG_WR: {}",
+                        clk_diff, max_rd, max_wr, avg_rd, avg_wr);
+
+        hbm_bw = &hbm_bw_arr[index++];
+        hbm_bw->type = hal::pd::ASIC_BLOCK_PCIE;
+        hbm_bw->clk_diff = clk_diff;
+        capri_pxb_bw_mon_rd_get(&max_rd, &avg_rd);
+        capri_pxb_bw_mon_wr_get(&max_wr, &avg_wr);
+        hbm_bw->max.read  = max_rd;
+        hbm_bw->max.write = max_wr;
+        hbm_bw->avg.read  = avg_rd;
+        hbm_bw->avg.write = avg_wr;
+        HAL_TRACE_DEBUG("CLK_DIFF: {}, PCIE BW. MAX_RD: {}, MAX_WR: {}"
+                        ", AVG_RD: {}, AVG_WR: {}",
+                        clk_diff, max_rd, max_wr, avg_rd, avg_wr);
+
+        cycle_per_nsec = ((cur_ts - prev_ts) * 1000) / 830;
+
+        hbm_bw = &hbm_bw_arr[index++];
+        hbm_bw->type = hal::pd::ASIC_BLOCK_PB;
+        hbm_bw->clk_diff = clk_diff;
+        rd_cnt = cap_nx_read_pb_axi_cnt(1);
+        wr_cnt = cap_nx_read_pb_axi_cnt(0);
+
+        // avoid arithmetic exceptions
+        if (cycle_per_nsec != 0) {
+            avg_rd = ((rd_cnt - prev_rd_cnt) * num_bits * 1000) / cycle_per_nsec;
+            avg_wr = ((wr_cnt - prev_wr_cnt) * num_bits * 1000) / cycle_per_nsec;
+        }
+
+        hbm_bw->avg.read  = avg_rd;
+        hbm_bw->avg.write = avg_wr;
+        HAL_TRACE_DEBUG("CLK_DIFF: {}, PB RD AVG: {}. PB WR AVG: {}",
+                        clk_diff, avg_rd, avg_wr);
+
+        prev_rd_cnt = rd_cnt;
+        prev_wr_cnt = wr_cnt;
+        prev_ts     = cur_ts;
     }
 
     return HAL_RET_OK;

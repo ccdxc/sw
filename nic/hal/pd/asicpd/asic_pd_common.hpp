@@ -5,6 +5,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/hal.hpp"
+#include "nic/hal/pd/p4pd/p4pd_api.hpp"
 
 #define HAL_LOG_TBL_UPDATES 1
 
@@ -32,6 +33,33 @@ typedef struct asicpd_sw_phv_state_ {
     uint32_t    no_data_cntr;
     uint32_t    drop_no_data_cntr;
 } asicpd_sw_phv_state_t;
+
+typedef enum asic_block_e {
+    ASIC_BLOCK_PB,
+    ASIC_BLOCK_TXD,
+    ASIC_BLOCK_RXD,
+    ASIC_BLOCK_MS,
+    ASIC_BLOCK_PCIE,
+    ASIC_BLOCK_MAX
+} asic_block_t;
+
+typedef struct asic_bw_s {
+    uint64_t read;
+    uint64_t write;
+} asic_bw_t;
+
+typedef struct asic_hbm_bw_s {
+    asic_block_t type;
+    uint64_t     clk_diff;
+    asic_bw_t    max;
+    asic_bw_t    avg;
+} asic_hbm_bw_t;
+
+typedef struct pd_hbm_bw_get_args_s {
+    uint32_t      num_samples;
+    uint32_t      sleep_interval;
+    asic_hbm_bw_t *hbm_bw;
+} __PACK__ pd_hbm_bw_get_args_t;
 
 int asicpd_table_entry_write(uint32_t tableid, uint32_t index,
                              uint8_t  *hwentry, uint16_t hwentry_bit_len, 
@@ -80,6 +108,9 @@ hal_ret_t asicpd_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num,
 		uint8_t start_idx, uint8_t num_flits, void *data);
 hal_ret_t asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num, 
 	asicpd_sw_phv_state_t *state);
+
+hal_ret_t
+asic_pd_hbm_bw_get(pd_hbm_bw_get_args_t *hbm_bw_args);
 
 }    // namespace pd
 }    // namespace hal

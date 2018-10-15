@@ -433,7 +433,5 @@ end:
     return ret;
 }
 
-
-
 }    // namespace pd
 }    // namespace hal

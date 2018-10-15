@@ -68,6 +68,9 @@ hal_ret_t trace_get(debug::TraceResponseMsg *rsp);
 hal_ret_t flush_logs (FlushLogsResponse *rsp);
 hal_ret_t thread_get (ThreadResponseMsg *rsp);
 
+// HBM BW
+hal_ret_t hbm_bw_get(void *rsp);
+
 // FTE span APIs
 hal_ret_t fte_span_create(FteSpanRequest& req,
                           FteSpanResponse *rsp);
