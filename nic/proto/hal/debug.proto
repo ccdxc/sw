@@ -465,3 +465,36 @@ message ClockResponse {
   ClockStatus       status             = 3;    // clock status
   ClockStats        stats              = 4;    // clock stats
 }
+
+enum CapriBlock {
+  CAPRI_BLOCK_PB    = 0;
+  CAPRI_BLOCK_RXDMA = 1;
+  CAPRI_BLOCK_TXDMA = 2;
+  CAPRI_BLOCK_MS    = 3;
+  CAPRI_BLOCK_PCIE  = 4;
+}
+
+message Bandwidth {
+  uint64 read  = 1;
+  uint64 write = 2;
+}
+
+message HbmBwRequest {
+  uint32 num_samples    = 1;
+  uint32 sleep_interval = 2;
+}
+
+message HbmBwRequestMsg {
+  repeated HbmBwRequest     request = 1;
+}
+
+message HbmBwResponse {
+  CapriBlock type     = 1;
+  Bandwidth  average  = 2;
+  Bandwidth  maximum  = 3; 
+  uint64     clk_diff = 4; 
+}
+
+message HbmBwResponseMsg {
+  repeated HbmBwResponse    response = 1;
+}

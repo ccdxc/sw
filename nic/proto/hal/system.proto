@@ -199,13 +199,22 @@ message BufferStats {
 }
 
 // OflowFifoDropStats captures instantaneous drop counts at the overflow fifo interface
+enum OflowFifoDropType {
+  OCCUPANCY_DROP                = 0;    // Pkts dropped due to fifo full
+  EMERGENCY_STOP_DROP           = 1;    // Pkts dropped due to emergency condition hit due to slow oflow memory to write-buffer communication
+  WRITE_BUFFER_ACK_FILL_UP_DROP = 2;    // Pkts dropped due to write buffer's ack fifo filling up
+  WRITE_BUFFER_ACK_FULL_DROP    = 3;    // Pkts dropped due to write buffer's ack fifo full
+  WRITE_BUFFER_FULL_DROP        = 4;    // Pkts dropped due to write buffer filling up
+  CONTROL_FIFO_FULL_DROP        = 5;    // Pkts dropped due to control fifo full
+}
+
+message OflowFifoDropStatsEntry {
+  OflowFifoDropType     type    = 1;
+  uint32                count   = 2;
+}
+
 message OflowFifoDropStats {
-  uint32 occupancy_drop_count                = 1;    // Pkts dropped due to fifo full
-  uint32 emergency_stop_drop_count           = 2;    // Pkts dropped due to emergency condition hit due to slow oflow memory to write-buffer communication
-  uint32 write_buffer_ack_fill_up_drop_count = 3;    // Pkts dropped due to write buffer's ack fifo filling up
-  uint32 write_buffer_ack_full_drop_count    = 4;    // Pkts dropped due to write buffer's ack fifo full
-  uint32 write_buffer_full_drop_count        = 5;    // Pkts dropped due to write buffer filling up
-  uint32 control_fifo_full_drop_count        = 6;    // Pkts dropped due to control fifo full
+  repeated OflowFifoDropStatsEntry  entry = 1;
 }
 
 // OflowFifoStats captures instantaneous counters at the overflow fifo interface

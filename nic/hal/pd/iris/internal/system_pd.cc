@@ -687,13 +687,18 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
         port_stats->mutable_oflow_fifo_stats()->set_sop_count_out(debug_stats.oflow_fifo_stats.sop_count_out);
         port_stats->mutable_oflow_fifo_stats()->set_eop_count_out(debug_stats.oflow_fifo_stats.eop_count_out);
 
-        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_occupancy_drop_count(debug_stats.oflow_fifo_stats.drop_counts.occupancy_drop_count);
-        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_emergency_stop_drop_count(debug_stats.oflow_fifo_stats.drop_counts.emergency_stop_drop_count);
-        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_write_buffer_ack_fill_up_drop_count(debug_stats.oflow_fifo_stats.drop_counts.write_buffer_ack_fill_up_drop_count);
-        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_write_buffer_ack_full_drop_count(debug_stats.oflow_fifo_stats.drop_counts.write_buffer_ack_full_drop_count);
-        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_write_buffer_full_drop_count(debug_stats.oflow_fifo_stats.drop_counts.write_buffer_full_drop_count);
-        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->set_control_fifo_full_drop_count(debug_stats.oflow_fifo_stats.drop_counts.control_fifo_full_drop_count);
-
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->add_entry()->set_type(sys::OflowFifoDropType::OCCUPANCY_DROP);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(0)->set_count(debug_stats.oflow_fifo_stats.drop_counts.occupancy_drop_count);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->add_entry()->set_type(sys::OflowFifoDropType::EMERGENCY_STOP_DROP);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(1)->set_count(debug_stats.oflow_fifo_stats.drop_counts.emergency_stop_drop_count);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->add_entry()->set_type(sys::OflowFifoDropType::WRITE_BUFFER_ACK_FILL_UP_DROP);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(2)->set_count(debug_stats.oflow_fifo_stats.drop_counts.write_buffer_ack_fill_up_drop_count);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->add_entry()->set_type(sys::OflowFifoDropType::WRITE_BUFFER_ACK_FULL_DROP);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(3)->set_count(debug_stats.oflow_fifo_stats.drop_counts.write_buffer_ack_full_drop_count);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->add_entry()->set_type(sys::OflowFifoDropType::WRITE_BUFFER_FULL_DROP);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(4)->set_count(debug_stats.oflow_fifo_stats.drop_counts.write_buffer_full_drop_count);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->add_entry()->set_type(sys::OflowFifoDropType::CONTROL_FIFO_FULL_DROP);
+        port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(5)->set_count(debug_stats.oflow_fifo_stats.drop_counts.control_fifo_full_drop_count);
     }
 
     return ret;

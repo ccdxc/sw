@@ -223,10 +223,17 @@ func systemPbDropStatsShowPortEntry(entry *halproto.PacketBufferPortStats) {
 	portNum := entry.GetPacketBufferPort().GetPortNum()
 
 	for _, dropStatsEntry := range entry.GetBufferStats().GetDropCounts().GetStatsEntries() {
-		fmt.Printf("%-8d%-9s%-26s%-5d\n",
+		fmt.Printf("%-8d%-9s%-30s%-5d\n",
 			portNum, portType,
 			strings.ToLower(strings.Replace(dropStatsEntry.GetReasons().String(), "_", " ", -1)),
 			dropStatsEntry.GetDropCount())
+	}
+
+	for _, dropStatsEntry := range entry.GetOflowFifoStats().GetDropCounts().GetEntry() {
+		fmt.Printf("%-8d%-9s%-30s%-5d\n",
+			portNum, portType,
+			strings.ToLower(strings.Replace(dropStatsEntry.GetType().String(), "_", " ", -1)),
+			dropStatsEntry.GetCount())
 	}
 }
 
