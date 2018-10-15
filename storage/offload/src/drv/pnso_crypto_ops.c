@@ -217,19 +217,10 @@ crypto_setup(struct service_info *svc_info,
 	if (err)
 		return err;
 
-<<<<<<< HEAD
 	pc_res = svc_info->si_pc_res;
-	svc_info->si_desc = pc_res_mpool_object_get(pc_res,
-						    MPOOL_TYPE_CRYPTO_DESC);
+	svc_info->si_desc = crypto_get_desc_ex(svc_info, false);
 	if (!svc_info->si_desc)
 		return ENOMEM;
-=======
-	svc_info->si_desc = crypto_get_desc_ex(svc_info, false);
-	if (!svc_info->si_desc) {
-		err = ENOMEM;
-		goto out;
-	}
->>>>>>> 94979a7... pnso_batch/crypto: Enable batching for encryption/decryption
 
 	svc_info->si_status_desc = pc_res_mpool_object_get(pc_res,
 					  MPOOL_TYPE_CRYPTO_STATUS_DESC);
@@ -247,22 +238,12 @@ crypto_setup(struct service_info *svc_info,
 	svc_info->si_desc_flags = 0;
 	crypto_desc_fill(svc_info, svc_params->u.sp_crypto_desc);
 
-<<<<<<< HEAD
-	if (!chn_service_is_in_chain(svc_info) ||
-	     chn_service_is_first(svc_info)) {
-		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
-				svc_info->si_desc, sizeof(struct crypto_desc));
-		if (!svc_info->si_seq_info.sqi_desc) {
-			OSAL_LOG_ERROR("failed to setup sequencer desc");
-			return EINVAL;
-=======
 	if (putil_is_service_in_batch(svc_info->si_flags)) {
 		err = crypto_setup_batch_desc(svc_info, svc_info->si_desc);
 		if (err) {
 			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
 					err);
-			goto out;
->>>>>>> 94979a7... pnso_batch/crypto: Enable batching for encryption/decryption
+			return err;
 		}
 	} else {
 		if ((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
@@ -275,7 +256,7 @@ crypto_setup(struct service_info *svc_info,
 				err = EINVAL;
 				OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
 						err);
-				goto out;
+				return err;
 			}
 		}
 	}
@@ -404,6 +385,7 @@ crypto_schedule(const struct service_info *svc_info)
 static pnso_error_t
 crypto_poll(const struct service_info *svc_info)
 {
+	pnso_error_t err;
 	volatile struct crypto_status_desc *status_desc;
 	uint64_t cpl_data;
 
@@ -411,18 +393,9 @@ crypto_poll(const struct service_info *svc_info)
 	cpl_data = svc_info->si_type == PNSO_SVC_TYPE_DECRYPT ?
 		   CRYPTO_DECRYPT_CPL_DATA : CRYPTO_ENCRYPT_CPL_DATA;
 
-#if 0
-	while (status_desc->csd_cpl_data != cpl_data)
-		;
-#else
-	uint64_t i;
-	for (i = 0; i < 100000000; i++) {
-		if (status_desc->csd_cpl_data == cpl_data)
-			break;
-	}
-#endif
+	err = (status_desc->csd_cpl_data == cpl_data) ? PNSO_OK : EBUSY;
 
-	return PNSO_OK;
+	return err;
 }
 
 static pnso_error_t

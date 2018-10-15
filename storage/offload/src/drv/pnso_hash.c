@@ -282,6 +282,7 @@ hash_schedule(const struct service_info *svc_info)
 static pnso_error_t
 hash_poll(const struct service_info *svc_info)
 {
+	pnso_error_t err;
 	volatile struct cpdc_status_desc *status_desc;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -291,25 +292,10 @@ hash_poll(const struct service_info *svc_info)
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc;
 	OSAL_ASSERT(status_desc);
 
-	/*
-	 * TODO-chain: poll service op was added for testing sync requests
-	 * temporarily; remove/readjust when sync/async/batch logic kicks-in
-	 *
-	 */
-#if 0
-	while (status_desc->csd_valid == 0)
-		;
-#else
-	uint64_t i;
-	for (i = 0; i < 100000000; i++) {
-		if (status_desc->csd_valid)
-			break;
-		// osal_yield();
-	}
-#endif
+	err = status_desc->csd_valid ? PNSO_OK : EBUSY;
 
 	OSAL_LOG_DEBUG("exit!");
-	return PNSO_OK;
+	return err;
 }
 
 static inline uint32_t
